@@ -10,8 +10,5 @@
 <h1>Hi, {data.user.name}!</h1>
 <img src={data.user.picture} height="100px" width="100px" alt="profile" />
 <p>Email: {data.user.email}</p>
-<form method="post" use:enhance>
-	<button class="btn"> <Icon icon="mdi:logout" class="h-5 w-5" />Sign out</button>
-</form>
 
-<a href="/user">User</a>
+<a href="/settings" class="btn btn-circle"> <Icon icon="fluent-emoji:gear" class="h-5 w-5" /></a>
