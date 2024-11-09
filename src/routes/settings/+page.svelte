@@ -13,5 +13,3 @@
 <form method="post" use:enhance>
 	<button class="btn"> <Icon icon="mdi:logout" class="h-5 w-5" />Sign out</button>
 </form>
-
-<a href="/user">User</a>

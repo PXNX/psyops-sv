@@ -24,6 +24,10 @@ type RootTranslation = {
 	 * @param {number} apples
 	 */
 	APPLES: RequiredParams<'apples'>
+	/**
+	 * S​i​g​n​ ​i​n​ ​w​i​t​h
+	 */
+	LOGIN: string
 }
 
 export type TranslationFunctions = {
@@ -35,6 +39,10 @@ export type TranslationFunctions = {
 	 * {apples} apple{{s}}
 	 */
 	APPLES: (arg: { apples: number }) => LocalizedString
+	/**
+	 * Sign in with
+	 */
+	LOGIN: () => LocalizedString
 }
 
 export type Formatters = {}
