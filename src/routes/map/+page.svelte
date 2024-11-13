@@ -1,15 +1,15 @@
-<script>
+<script lang="ts">
 	import panzoom from "panzoom";
 
 	let instance;
 
-	function initPanzoom(node) {
+	function initPanzoom(node: HTMLElement | SVGElement) {
 		instance = panzoom(node, { bounds: true });
 	}
 
-	import WorldMap from "$lib/assets/worldmap.svg?component"; // note suffix ?raw
+	import WorldMap from "$lib/assets/worldmap.svg?raw"; // note suffix ?raw or ?component
 
-	function onClick(e) {
+	function onClick(e: { target: { id: string } }) {
 		console.log(e.target.id);
 
 		e.target;
@@ -17,15 +17,17 @@
 			// ...
 		}
 	}
-	function onKeyDown(e) {
+	function onKeyDown(e: any) {
 		// analogous logic to onClick, but check if `Enter` (and no modifier) was pressed
 	}
 </script>
 
-<div use:initPanzoom on:click={onClick} on:keydown={onKeyDown}><WorldMap /></div>
+<div use:initPanzoom on:click={onClick} on:keydown={onKeyDown}>
+	{@html WorldMap}
+</div>
 
 <style>
-	svg {
+	/*svg {
 		width: 100%;
 		height: calc(100dvh-56px);
 	}
@@ -50,5 +52,5 @@
 
 	.uncolonized {
 		fill: #a59890;
-	}
+	}*/
 </style>
