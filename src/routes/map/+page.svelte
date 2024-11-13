@@ -7,7 +7,7 @@
 		instance = panzoom(node, { bounds: true });
 	}
 
-	import squares from "$lib/assets/map.svg?raw"; // note suffix
+	import WorldMap from "$lib/assets/worldmap.svg?component"; // note suffix ?raw
 
 	function onClick(e) {
 		console.log(e.target.id);
@@ -22,9 +22,7 @@
 	}
 </script>
 
-<div use:initPanzoom on:click={onClick} on:keydown={onKeyDown}>
-	{@html squares}
-</div>
+<div use:initPanzoom on:click={onClick} on:keydown={onKeyDown}><WorldMap /></div>
 
 <style>
 	svg {
