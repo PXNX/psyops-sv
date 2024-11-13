@@ -6,6 +6,10 @@ import Icons from "unplugin-icons/vite";
 export default defineConfig({
 	plugins: [
 		sveltekit(),
+		Icons({
+			compiler: "svelte",
+			autoInstall: true
+		}),
 		svg({
 			includePaths: ["./src/assets/"],
 			//"./src/lib/icons/", "./src/assets/icons/",
@@ -21,10 +25,6 @@ export default defineConfig({
 					{ name: "removeAttrs", params: { attrs: "(fill|stroke)" } }
 				]
 			}
-		}),
-		Icons({
-			compiler: "svelte",
-			autoInstall: true
 		})
 	]
 });

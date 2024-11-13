@@ -26,6 +26,12 @@
 		active = page2;
 		goto(`/${page2}`);
 	}
+
+	import FluentEmojiBarChart from "~icons/fluent-emoji/bar-chart";
+	import FluentEmojiNewspaper from "~icons/fluent-emoji/newspaper";
+	import FluentEmojiMilitaryHelmet from "~icons/fluent-emoji/military-helmet";
+	import FluentEmojiNutAndBolt from "~icons/fluent-emoji/nut-and-bolt";
+	import FluentEmojiIdentificationCard from "~icons/fluent-emoji/identification-card";
 </script>
 
 <svelte:head>
@@ -43,25 +49,19 @@
 {#if !$page.url.pathname.includes("login") && $page.status === 200}
 	<nav class="btm-nav btm-nav-md">
 		<button onclick={() => navigateTo("")} class="flinch">
-			<Icon icon="fluent-emoji-flat:bar-chart" class="w-5 h-5" />
-
-			<object
-				type="image/svg+xml"
-				class="w-5 h-5"
-				data="https://upload.wikimedia.org/wikipedia/commons/e/e5/Zeichen_224.svg"
-			></object>
+			<FluentEmojiBarChart />
 		</button>
 		<button onclick={() => navigateTo("news")} class="flinch">
-			<Icon icon="noto:newspaper" class="w-5 h-5" style="width: 24px; height: 24px;" />
+			<FluentEmojiNewspaper />
 		</button>
 		<button onclick={() => navigateTo("training")} class="flinch">
-			<Icon icon="fluent-emoji:military-helmet" class="w-5 h-5" />
+			<FluentEmojiMilitaryHelmet />
 		</button>
 		<a class="flinch" href="/production">
-			<Icon icon="fluent-emoji:nut-and-bolt" class="w-5 h-5" />
+			<FluentEmojiNutAndBolt />
 		</a>
 		<a class="flinch" href="/user">
-			<Icon icon="fluent-emoji:identification-card" class="w-5 h-5" />
+			<FluentEmojiIdentificationCard />
 		</a>
 	</nav>
 {/if}
