@@ -52,6 +52,7 @@
     "editorjs-undo": "2.0.28",
     "editorjs-youtube-embed": "1.0.3",
     "novel-svelte": "^0.1.7",
+    "panzoom": "^9.4.3",
     "simple-image-editorjs": "1.4.0",
     "svelte-editorjs": "0.1.0",
     "svelte-tiptap": "^2.0.3"
