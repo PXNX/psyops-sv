@@ -11,7 +11,7 @@
 <img src={data.user.picture} height="100px" width="100px" alt="profile" />
 <p>Email: {data.user.email}</p>
 <form method="post" use:enhance>
-	<button class="btn"> <Icon icon="mdi:logout" class="h-5 w-5" />Sign out</button>
+	<button class="btn"> <Icon icon="mdi:logout" class="w-5 h-5" />Sign out</button>
 </form>
 
-<a href="/user">User</a>
+<a href="/map">Map</a>

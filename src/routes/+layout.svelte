@@ -35,12 +35,16 @@
 </script>
 
 <svelte:head>
-	<title>Google OAuth example in SvelteKit</title>
+	<title>PsyOps SV</title>
+	<meta
+		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
+		name="viewport"
+	/>
 </svelte:head>
 
 <main class=" flex-1 overflow-y-auto pb-16 w-full h-[100dvh]">
 	{#if $navigating}
-		<span class="loading loading-ring loading-md"></span>
+		<span class="loading loading-ring loading-md place-self-center"></span>
 	{:else}
 		{@render children()}
 	{/if}
@@ -49,19 +53,19 @@
 {#if !$page.url.pathname.includes("login") && $page.status === 200}
 	<nav class="btm-nav btm-nav-md">
 		<button onclick={() => navigateTo("")} class="flinch">
-			<FluentEmojiBarChart />
+			<FluentEmojiBarChart class="w-6 h-6" />
 		</button>
 		<button onclick={() => navigateTo("news")} class="flinch">
-			<FluentEmojiNewspaper />
+			<FluentEmojiNewspaper class="w-6 h-6" />
 		</button>
 		<button onclick={() => navigateTo("training")} class="flinch">
-			<FluentEmojiMilitaryHelmet />
+			<FluentEmojiMilitaryHelmet class="w-6 h-6" />
 		</button>
 		<a class="flinch" href="/production">
-			<FluentEmojiNutAndBolt />
+			<FluentEmojiNutAndBolt class="w-6 h-6" />
 		</a>
 		<a class="flinch" href="/user">
-			<FluentEmojiIdentificationCard />
+			<FluentEmojiIdentificationCard class="w-6 h-6" />
 		</a>
 	</nav>
 {/if}
