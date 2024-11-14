@@ -2,10 +2,12 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
 import svg from "@poppanator/sveltekit-svg";
 import Icons from "unplugin-icons/vite";
+//import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 
 export default defineConfig({
 	plugins: [
 		sveltekit(),
+		//	SvelteKitPWA(),
 		Icons({
 			compiler: "svelte",
 			autoInstall: true

@@ -1,22 +1,28 @@
 <script lang="ts">
-	import Icon from "@iconify/svelte";
-
 	import { LL } from "$lib/i18n/i18n-svelte";
+	import LogosGoogleIcon from "~icons/logos/google-icon";
+	import FluentEmojiEnvelopeWithArrow from "~icons/fluent-emoji/envelope-with-arrow";
+	import FluentColorGlobeShield24 from "~icons/fluent-color/globe-shield-24";
 </script>
 
-<div class="h-full flex flex-col justify-center items-center text-center w-full">
-	<div class="bg-base-200 flex flex-col justify-center items-center text-center m-1 w-3/4 p-1 rounded-md">
-		<Icon icon="fluent-color:globe-shield-24" class="h-16 w-16" />
+<main class="flex flex-col items-center justify-center h-full p-4 text-center">
+	<div
+		class="flex flex-col items-center justify-center gap-1 p-4 text-center border rounded-lg border-fuchsia-900 place-self-center"
+	>
+		<FluentColorGlobeShield24 class="w-12 h-12" />
 
-		<a href="/login/google" class="btn btn-primary btn-sm mt-8 btn-wide">
-			<Icon icon="flat-color-icons:google" class="h-5 w-5 " />
+		<a href="/login/google" class="mt-4 btn btn-primary btn-wide">
+			<LogosGoogleIcon class="w-5 h-5 " />
 			{$LL.LOGIN()} Google
 		</a>
 
-		<p class="text-sm mt-1">
-			By signing up you agree to our <a class="link font-semibold" href="/terms">Terms of Service</a> and
-			<a class="link font-semibold" href="/privacy">Privacy Notice</a>.
+		<p class="text-sm">
+			By signing up you agree to our <a class="font-semibold link" href="/terms">Terms of Service</a> and
+			<a class="font-semibold link" href="/privacy">Privacy Notice</a>.
 		</p>
 	</div>
-	<a class="btn btn-ghost btn-sm btn-wide mt-16" href="/about" role="button">Need help? </a>
-</div>
+
+	<a href="https://t.me/pentexnyx_bot?start=TEST" class="mt-4 btn btn-md btn-wide btn-ghost">
+		<FluentEmojiEnvelopeWithArrow />Need help?</a
+	>
+</main>
