@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LL } from "$lib/i18n/i18n-svelte";
+	import * as m from "$lib/paraglide/messages.js";
 	import LogosGoogleIcon from "~icons/logos/google-icon";
 	import FluentEmojiEnvelopeWithArrow from "~icons/fluent-emoji/envelope-with-arrow";
 	import FluentColorGlobeShield24 from "~icons/fluent-color/globe-shield-24";
@@ -13,7 +13,7 @@
 
 		<a href="/login/google" class="mt-4 btn btn-primary btn-wide">
 			<LogosGoogleIcon class="w-5 h-5 " />
-			{$LL.LOGIN()} Google
+			{m.signUp({ provider: "Google" })}
 		</a>
 
 		<p class="text-sm">
