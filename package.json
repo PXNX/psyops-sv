@@ -14,9 +14,12 @@
   },
   "devDependencies": {
     "@iconify-json/bi": "^1.2.1",
+    "@iconify-json/flat-color-icons": "^1.2.0",
     "@iconify-json/fluent-color": "^1.2.1",
     "@iconify-json/fluent-emoji": "^1.2.1",
     "@iconify-json/logos": "^1.2.3",
+    "@iconify-json/mdi": "^1.2.1",
+    "@inlang/paraglide-js": "1.11.3",
     "@poppanator/sveltekit-svg": "^5.0.0",
     "@sveltejs/adapter-auto": "3.3.1",
     "@sveltejs/kit": "2.8.0",
@@ -36,8 +39,7 @@
     "typesafe-i18n": "5.26.2",
     "typescript": "5.6.3",
     "unplugin-icons": "^0.20.1",
-    "vite": "5.4.11",
-    "@inlang/paraglide-js": "1.11.3"
+    "vite": "5.4.11"
   },
   "type": "module",
   "dependencies": {
@@ -62,6 +64,7 @@
     "editorjs-youtube-embed": "1.0.3",
     "novel-svelte": "^0.1.7",
     "panzoom": "^9.4.3",
+    "postgres": "^3.4.5",
     "simple-image-editorjs": "1.4.0",
     "svelte-editorjs": "0.1.0",
     "svelte-tiptap": "^2.0.3"
