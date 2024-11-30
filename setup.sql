@@ -1,4 +1,4 @@
-CREATE TABLE user (
+CREATE TABLE users (
     id INTEGER NOT NULL PRIMARY KEY,
     google_id TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
@@ -6,10 +6,10 @@ CREATE TABLE user (
     picture TEXT NOT NULL
 );
 
-CREATE INDEX google_id_index ON user(google_id);
+CREATE INDEX google_id_index ON users(google_id);
 
-CREATE TABLE session (
+CREATE TABLE sessions (
     id TEXT NOT NULL PRIMARY KEY,
-    user_id INTEGER NOT NULL REFERENCES user(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
     expires_at INTEGER NOT NULL
 );

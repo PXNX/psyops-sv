@@ -4,11 +4,13 @@ import { defineConfig } from "vite";
 import svg from "@poppanator/sveltekit-svg";
 import Icons from "unplugin-icons/vite";
 //import { SvelteKitPWA } from "@vite-pwa/sveltekit";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
 	plugins: [
 		paraglide({ project: "./project.inlang", outdir: "./src/lib/paraglide" }),
 		sveltekit(),
+
 		//	SvelteKitPWA(),
 		Icons({
 			compiler: "svelte",
@@ -29,6 +31,7 @@ export default defineConfig({
 					{ name: "removeAttrs", params: { attrs: "(fill|stroke)" } }
 				]
 			}
-		})
+		}),
+		tailwindcss()
 	]
 });

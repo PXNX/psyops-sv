@@ -1,38 +1,39 @@
-import { db } from "./db";
+import sql from "$lib/db";
 
-export function createUser(googleId: string, email: string, name: string, picture: string): User {
-	const row = db.queryOne("INSERT INTO user (google_id, email, name, picture) VALUES (?, ?, ?, ?) RETURNING user.id", [
-		googleId,
-		email,
-		name,
-		picture
-	]);
+export async function createUser(googleId: string, email: string, name: string, picture: string): Promise<User> {
+	const row = (
+		await sql`INSERT INTO users (google_id, email, name, picture)
+                        VALUES (${googleId}, ${email}, ${name}, ${picture})
+                        RETURNING user.id`
+	)[0];
 	if (row === null) {
 		throw new Error("Unexpected error");
 	}
-	const user: User = {
+	return {
 		id: row.number(0),
 		googleId,
 		email,
 		name,
 		picture
 	};
-	return user;
 }
 
-export function getUserFromGoogleId(googleId: string): User | null {
-	const row = db.queryOne("SELECT id, google_id, email, name, picture FROM user WHERE google_id = ?", [googleId]);
+export async function getUserFromGoogleId(googleId: string): Promise<User | null> {
+	const row = (
+		await sql`SELECT id, google_id, email, name, picture
+                         FROM users
+                         WHERE google_id = ${googleId}`
+	)[0];
 	if (row === null) {
 		return null;
 	}
-	const user: User = {
+	return {
 		id: row.number(0),
 		googleId: row.string(1),
 		email: row.string(2),
 		name: row.string(3),
 		picture: row.string(4)
 	};
-	return user;
 }
 
 export interface User {
