@@ -1,5 +1,6 @@
-@tailwind base;
-@tailwind components;
+@import "tailwindcss";
+
+/*
 @layer components {
 	.fade_in {
 		animation: fadeInAnimation 0.25s ease-in;
@@ -42,5 +43,4 @@
 		}
 	}
 }
-
-@tailwind utilities;
+*/

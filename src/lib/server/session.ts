@@ -4,17 +4,18 @@ import { sha256 } from "@oslojs/crypto/sha2";
 
 import type { User } from "./user";
 import type { RequestEvent } from "@sveltejs/kit";
+import sql from "$lib/db";
 
-export function validateSessionToken(token: string): SessionValidationResult {
+export async function validateSessionToken(token: string): Promise<SessionValidationResult> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-	const row = db.queryOne(
-		`
-SELECT session.id, session.user_id, session.expires_at, user.id, user.google_id, user.email, user.name, user.picture FROM session
-INNER JOIN user ON session.user_id = user.id
-WHERE session.id = ?
-`,
-		[sessionId]
-	);
+	const row = (
+		await sql`SELECT sessions.id, sessions.user_id, sessions.expires_at, users.id, users.email, users.name, users.picture FROM sessions
+INNER JOIN users ON sessions.user_id = users.id
+WHERE sessions.id = ${sessionId} limit 1;`
+	)[0];
+
+	console.log("ROW----");
+	console.dir(row);
 
 	if (row === null) {
 		return { session: null, user: null };
@@ -32,25 +33,22 @@ WHERE session.id = ?
 		picture: row.string(7)
 	};
 	if (Date.now() >= session.expiresAt.getTime()) {
-		db.execute("DELETE FROM session WHERE id = ?", [session.id]);
+		await sql`DELETE FROM sessions WHERE id = ${sessionId}`;
 		return { session: null, user: null };
 	}
 	if (Date.now() >= session.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
 		session.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
-		db.execute("UPDATE session SET expires_at = ? WHERE session.id = ?", [
-			Math.floor(session.expiresAt.getTime() / 1000),
-			session.id
-		]);
+		await sql`UPDATE sessions SET expires_at = ${Math.floor(session.expiresAt.getTime() / 1000)} WHERE sessions.id = ${session.id}`;
 	}
 	return { session, user };
 }
 
-export function invalidateSession(sessionId: string): void {
-	db.execute("DELETE FROM session WHERE id = ?", [sessionId]);
+export async function invalidateSession(sessionId: string): Promise<void> {
+	await sql`DELETE FROM sessions WHERE id = ${sessionId}`;
 }
 
-export function invalidateUserSessions(userId: number): void {
-	db.execute("DELETE FROM session WHERE user_id = ?", [userId]);
+export async function invalidateUserSessions(userId: number): Promise<void> {
+	await sql`DELETE FROM sessions WHERE user_id = ${userId}`;
 }
 
 export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date): void {
@@ -76,22 +74,18 @@ export function deleteSessionTokenCookie(event: RequestEvent): void {
 export function generateSessionToken(): string {
 	const tokenBytes = new Uint8Array(20);
 	crypto.getRandomValues(tokenBytes);
-	const token = encodeBase32(tokenBytes).toLowerCase();
-	return token;
+	return encodeBase32(tokenBytes).toLowerCase();
 }
 
-export function createSession(token: string, userId: number): Session {
+export async function createSession(token: string, userId: number): Promise<Session> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	const session: Session = {
 		id: sessionId,
 		userId,
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
 	};
-	db.execute("INSERT INTO session (id, user_id, expires_at) VALUES (?, ?, ?)", [
-		session.id,
-		session.userId,
-		Math.floor(session.expiresAt.getTime() / 1000)
-	]);
+	await sql`INSERT INTO sessions (id, user_id, expires_at)
+            VALUES (${session.id   }, ${session.userId  }, ${Math.floor(session.expiresAt.getTime() / 1000)})`;
 	return session;
 }
 
