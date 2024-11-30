@@ -9,7 +9,7 @@ export async function load(event: RequestEvent) {
 		return redirect(302, "/login");
 	}
 
-	const user = await sql`SELECT * FROM users WHERE id = ${event.locals.user.id}`;
+	const user = await sql`SELECT  * FROM users WHERE id = ${event.locals.user.id}`;
 
 	return {
 		user

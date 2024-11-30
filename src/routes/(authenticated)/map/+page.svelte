@@ -62,7 +62,7 @@
 		</div>
 	</form>
 
-	<select class="select select-bordered">
+	<select class="select select-ghost">
 		<option disabled selected>Filter</option>
 		<option>Political</option>
 		<option>Geology</option>
@@ -70,7 +70,7 @@
 </header>
 
 <main class="flex-1 w-full pb-16">
-	<div use:initPanzoom on:click={onClick} on:keydown={onKeyDown}>
+	<div use:initPanzoom onclick={onClick} onkeydown={onKeyDown}>
 		{@html WorldMap}
 	</div>
 </main>
