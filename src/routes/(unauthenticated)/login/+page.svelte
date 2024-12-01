@@ -6,7 +6,7 @@
 </script>
 
 <main
-	class="flex flex-col items-center justify-center h-full p-4 text-center bg-gradient-to-r from-purple-800 to-zinc-800"
+	class="flex flex-col items-center justify-center w-full h-full p-4 text-center bg-gradient-to-r from-purple-800 to-zinc-800"
 >
 	<div
 		class="flex flex-col items-center justify-center gap-1 p-4 text-center border rounded-lg border-fuchsia-900 place-self-center"

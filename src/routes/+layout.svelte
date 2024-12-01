@@ -1,5 +1,5 @@
 <script lang="ts">
-	import "../app.css";
+	/// import "../app.css";
 	import { ParaglideJS } from "@inlang/paraglide-sveltekit";
 	import { i18n } from "$lib/i18n";
 
@@ -31,31 +31,11 @@
 </svelte:head>
 
 <ParaglideJS {i18n}>
-	<main class=" flex-1 overflow-y-auto pb-16 w-full h-[100dvh]">
-		{#if $navigating}
+	{#if $navigating}
+		<main class=" flex-1 overflow-y-auto pb-16 w-full h-[100dvh]">
 			<span class="loading loading-ring loading-md place-self-center"></span>
-		{:else}
-			{@render children()}
-		{/if}
-	</main>
+		</main>
+	{:else}
+		{@render children()}
+	{/if}
 </ParaglideJS>
-
-{#if !$page.url.pathname.includes("login") && $page.status === 200}
-	<nav class="btm-nav btm-nav-md">
-		<button onclick={() => navigateTo("")} class="flinch">
-			<FluentEmojiBarChart class="w-6 h-6" />
-		</button>
-		<button onclick={() => navigateTo("news")} class="flinch">
-			<FluentEmojiNewspaper class="w-6 h-6" />
-		</button>
-		<button onclick={() => navigateTo("training")} class="flinch">
-			<FluentEmojiMilitaryHelmet class="w-6 h-6" />
-		</button>
-		<a class="flinch" href="/production">
-			<FluentEmojiNutAndBolt class="w-6 h-6" />
-		</a>
-		<a class="flinch" href="/user">
-			<FluentEmojiIdentificationCard class="w-6 h-6" />
-		</a>
-	</nav>
-{/if}

@@ -42,13 +42,13 @@ export async function GET(event: RequestEvent): Promise<Response> {
 	const email = claimsParser.getString("email");
 
 	const existingUser = await getUserFromGoogleId(googleId);
-	if (existingUser !== null) {
+
+	console.log("EXISTING USER", existingUser);
+
+	if (existingUser !== null && existingUser !== undefined) {
 		const sessionToken = generateSessionToken();
 		const session = await createSession(sessionToken, existingUser.id);
 		setSessionTokenCookie(event, sessionToken, session.expiresAt);
-
-
-
 
 		return new Response(null, {
 			status: 302,
@@ -58,7 +58,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		});
 	}
 
-	const user =await createUser(googleId, email, name, picture);
+	const user = await createUser(googleId, email, name, picture);
 	const sessionToken = generateSessionToken();
 	const session = await createSession(sessionToken, user.id);
 	setSessionTokenCookie(event, sessionToken, session.expiresAt);
