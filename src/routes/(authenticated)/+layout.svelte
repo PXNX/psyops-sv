@@ -1,5 +1,4 @@
 <script lang="ts">
-	/// import "../app.css";
 	import { ParaglideJS } from "@inlang/paraglide-sveltekit";
 	import { i18n } from "$lib/i18n";
 
@@ -30,12 +29,22 @@
 	/>
 </svelte:head>
 
-<ParaglideJS {i18n}>
-	{#if $navigating}
-		<main class=" flex-1 overflow-y-auto pb-16 w-full h-[100dvh]">
-			<span class="loading loading-ring loading-md place-self-center"></span>
-		</main>
-	{:else}
-		{@render children()}
-	{/if}
-</ParaglideJS>
+{@render children()}
+
+<nav class="btm-nav btm-nav-md">
+	<button onclick={() => navigateTo("")} class="flinch">
+		<FluentEmojiBarChart class="w-6 h-6" />
+	</button>
+	<button onclick={() => navigateTo("news")} class="flinch">
+		<FluentEmojiNewspaper class="w-6 h-6" />
+	</button>
+	<button onclick={() => navigateTo("training")} class="flinch">
+		<FluentEmojiMilitaryHelmet class="w-6 h-6" />
+	</button>
+	<button onclick={() => navigateTo("production")} class="flinch">
+		<FluentEmojiNutAndBolt class="w-6 h-6" />
+	</button>
+	<button onclick={() => navigateTo("user")} class="flinch">
+		<FluentEmojiIdentificationCard class="w-6 h-6" />
+	</button>
+</nav>

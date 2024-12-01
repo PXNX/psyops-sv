@@ -1,5 +1,5 @@
 CREATE TABLE users (
-    id INTEGER NOT NULL PRIMARY KEY,
+    id serial NOT NULL PRIMARY KEY,
     google_id TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,

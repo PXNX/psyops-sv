@@ -53,7 +53,7 @@
 		"@pilcrowjs/db-query": "0.0.2",
 		"@pilcrowjs/object-parser": "0.0.4",
 		"@svitejs/svelte-preprocess-svg": "2.0.0",
-		"@tailwindcss/vite": "^4.0.0-beta.3",
+		"@tailwindcss/vite": "^4.0.0-beta.4",
 		"@tiptap/core": "2.10.3",
 		"@tiptap/pm": "2.10.3",
 		"@tiptap/starter-kit": "2.10.3",
