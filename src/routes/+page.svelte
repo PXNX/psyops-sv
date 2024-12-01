@@ -1,4 +1,5 @@
 <script lang="ts">
+	import "../app.css";
 	import { enhance } from "$app/forms";
 	import Icon from "@iconify/svelte";
 
@@ -7,7 +8,7 @@
 	export let data: PageData;
 </script>
 
-<h1>Hi, {data.user.name}!</h1>
+<h1>Hi, {data.user.name}! ROOT PAGE</h1>
 <img src={data.user.picture} height="100px" width="100px" alt="profile" />
 <p>Email: {data.user.email}</p>
 <form method="post" use:enhance>
