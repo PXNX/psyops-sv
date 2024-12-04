@@ -1,8 +1,26 @@
-import postgres from "postgres";
+import Surreal from "surrealdb";
 
-const sql = postgres("postgres://postgres:area@localhost:5432/rw-sv");
+export const db = new Surreal();
 
-//process.env.DATABASE_URL,
-//ssl: "prefer" //process.env.DB_SSL === "require"
+async function initializeDB() {
+	try {
+		// Connect to the database
+		await db.connect("http://127.0.0.1:8000/rpc", {
+			database: "rw-sv",
+			namespace: "dev"
+		});
 
-export default sql;
+		// Sign in as a namespace admin
+		await db.signin({
+			username: "root",
+			password: "root"
+		});
+
+		// Select a specific namespace and database
+		//    await db.use("dev", "rw-sv");
+
+		console.log("Successfully connected to SurrealDB");
+	} catch (error) {
+		console.error("Error connecting to SurrealDB:", error);
+	}
+}
