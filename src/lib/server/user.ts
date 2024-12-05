@@ -5,10 +5,10 @@ export async function createUser(googleId: string, email: string, name: string, 
 	console.error("createUser id -- sql ", googleId, "before ---");
 
 	const row = await db.insert("user", {
-		google_id: googleId,
 		email,
 		name,
-		picture
+		picture,
+		google_id: googleId
 	});
 	console.error("createUser id -- sql ", googleId, "QUERY", row);
 	if (row === null) {
@@ -20,7 +20,8 @@ export async function createUser(googleId: string, email: string, name: string, 
 		googleId,
 		email,
 		name,
-		picture
+		picture,
+		google_id: googleId
 	};
 }
 
@@ -47,4 +48,5 @@ export type User = {
 	googleId: string;
 	name: string;
 	picture: string;
+	google_id: string;
 };
