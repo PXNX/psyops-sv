@@ -10,6 +10,151 @@
 <h1>Hi, {data.user.name}!</h1>
 <img src={data.user.picture} height="100px" width="100px" alt="profile" />
 <p>Email: {data.user.email}</p>
-<form method="post" use:enhance>
-	<button class="btn"> <Icon icon="mdi:logout" class="h-5 w-5" />Sign out</button>
-</form>
+
+<section class="w-full px-4 pt-4 mb-12 space-y-4">
+	<h2
+		class="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FF8A00] to-[#FF008A] tracking-tighter"
+	>
+		Application
+	</h2>
+
+	<label
+		>Theme
+		<select class="w-full select select-bordered" data-choose-theme>
+			<option value="dark">Default</option>
+			<option value="light">Light</option>
+			<option value="cupcake">Pink</option>
+			<option value="retro">Retro</option>
+			<option value="winter">Winter</option>
+			<option value="cyberpunk">Cyberpunk</option>
+			<option value="cupcake">Pink</option>
+			<option value="bumblebee">Bumblebee</option>
+			<option value="emerald">Emerald</option>
+			<option value="corporate">Corporate</option>
+			<option value="synthwave">Synthwave</option>
+			<option value="valentine">Valentine</option>
+			<option value="halloween">Halloween</option>
+			<option value="garden">Garden</option>
+			<option value="forest">Forest</option>
+			<option value="aqua">Aqua</option>
+			<option value="lofi">Lofi</option>
+			<option value="pastel">Pastel</option>
+			<option value="fantasy">Fantasy</option>
+			<option value="wireframe">Wireframe</option>
+			<option value="black">Black</option>
+			<option value="luxury">Luxury</option>
+			<option value="dracula">Dracula</option>
+			<option value="cmyk">CMYK</option>
+			<option value="autumn">Autumn</option>
+			<option value="business">Business</option>
+			<option value="acid">Acid</option>
+			<option value="lemonade">Lemonade</option>
+			<option value="night">Night</option>
+			<option value="coffee">Coffee</option>
+			<option value="dim">Dim</option>
+			<option value="nord">Nord</option>
+			<option value="sunset">Sunset</option>
+		</select>
+	</label>
+
+	<div class="w-full form-control">
+		<label class="cursor-pointer label">
+			<span class="label-text">Load images</span>
+			<input checked class="toggle toggle-primary" type="checkbox" />
+		</label>
+	</div>
+
+	<label
+		>Language
+		<select class="w-full select select-bordered">
+			<option value="en">English</option>
+		</select>
+	</label>
+
+	<a class="justify-start w-full btn btn-ghost" href="/about" role="button">
+		<svg class="w-5 h-5" fill="currentColor" stroke="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path
+				d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"
+			/>
+		</svg>
+		About
+	</a>
+</section>
+
+<section class="w-full px-4 my-16 space-y-2">
+	<h2 class="text-2xl font-bold">Account</h2>
+
+	<button class="justify-start w-full btn btn-primary">
+		<!--onclick="my_modal_3.showModal()"-->
+
+		<svg class="w-5 h-5" fill="currentColor" stroke="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path
+				d="M2 17V20H10V18.11H3.9V17C3.9 16.36 7.03 14.9 10 14.9C10.96 14.91 11.91 15.04 12.83 15.28L14.35 13.76C12.95 13.29 11.5 13.03 10 13C7.33 13 2 14.33 2 17M10 4C7.79 4 6 5.79 6 8S7.79 12 10 12 14 10.21 14 8 12.21 4 10 4M10 10C8.9 10 8 9.11 8 8S8.9 6 10 6 12 6.9 12 8 11.11 10 10 10M21.7 13.35L20.7 14.35L18.65 12.35L19.65 11.35C19.86 11.14 20.21 11.14 20.42 11.35L21.7 12.63C21.91 12.84 21.91 13.19 21.7 13.4M12 18.94L18.06 12.88L20.11 14.88L14.11 20.95H12V18.94"
+			/>
+		</svg>
+		Edit profile
+	</button>
+
+	<dialog class="modal" id="my_modal_3">
+		<div class="modal-box">
+			<form method="dialog">
+				<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2">✕</button>
+			</form>
+			<h3 class="text-lg font-bold">Edit profile</h3>
+
+			<form class="w-full max-w-xs space-y-4 form-control">
+				<!-- {% include "user/partial/settings_edit.html" %}-->
+			</form>
+		</div>
+	</dialog>
+
+	<script>
+		htmx.on("htmx:beforeSwap", (e) => {
+			// Empty response targeting #dialog => hide the modal
+			if (e.detail.target.id === "my_modal_3" && !e.detail.xhr.response) {
+				my_modal_3.hideModal();
+				e.detail.shouldSwap = false;
+			}
+		});
+	</script>
+
+	<button class="justify-start w-full btn btn-secondary">
+		<!--onclick="my_modal_4.showModal()"-->
+		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<polyline points="20 12 20 22 4 22 4 12"></polyline>
+			<rect height="5" width="20" x="2" y="7"></rect>
+			<line x1="12" x2="12" y1="22" y2="7"></line>
+			<path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+			<path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
+		</svg>
+		Redeem gift
+	</button>
+	<dialog class="modal" id="my_modal_4">
+		<div class="modal-box">
+			<form method="dialog">
+				<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2">✕</button>
+			</form>
+			<h3 class="text-lg font-bold">Redeem gift</h3>
+
+			<form class="w-full max-w-xs space-y-4 form-control">
+				<label
+					>Gift Code
+					<input
+						class="w-full input input-bordered"
+						name="user_name"
+						placeholder="Some code..."
+						required
+						type="text"
+						value=""
+					/>
+				</label>
+
+				<button class="btn btn-primary btn-wide"> Try code </button>
+			</form>
+		</div>
+	</dialog>
+
+	<form method="post" use:enhance>
+		<button class="btn"> <Icon icon="mdi:logout" class="w-5 h-5" />Sign out</button>
+	</form>
+</section>
