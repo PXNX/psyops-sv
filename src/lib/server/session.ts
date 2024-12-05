@@ -4,10 +4,11 @@ import { sha256 } from "@oslojs/crypto/sha2";
 
 import type { RequestEvent } from "@sveltejs/kit";
 import type { User } from "./user";
+import type { RecordId } from "surrealdb";
 
 export type Session = {
 	id: string;
-	userId: string;
+	userId: RecordId<string>;
 	expiresAt: Date;
 };
 
@@ -87,7 +88,7 @@ export function generateSessionToken(): string {
 	return encodeBase32(tokenBytes).toLowerCase();
 }
 
-export async function createSession(token: string, userId: string): Promise<Session> {
+export async function createSession(token: string, userId: RecordId<string>): Promise<Session> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	const session: Session = {
 		id: sessionId,
@@ -95,11 +96,12 @@ export async function createSession(token: string, userId: string): Promise<Sess
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
 	};
 	const expiresAt = Math.floor(session.expiresAt.getTime() / 1000);
-	await db.query(
-		`INSERT INTO sessions (id, user_id, expires_at)
-            VALUES ($session.id, $session.userId, $expiresAt)`,
-		{ expiresAt }
-	);
+	console.error("SESSION ID", sessionId, userId, expiresAt);
+	await db.create("sessions", {
+		id: sessionId,
+		user_id: userId,
+		expires_at: expiresAt
+	});
 	return session;
 }
 
