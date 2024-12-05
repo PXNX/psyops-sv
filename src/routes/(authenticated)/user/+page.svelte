@@ -37,7 +37,7 @@
 	{:else}
 		<div class="avatar placeholder">
 			<div class="w-24 h-24 rounded-full bg-neutral text-neutral-content">
-				<span class="text-3xl">D</span>
+				<span class="text-3xl">NX</span>
 			</div>
 		</div>
 	{/if}
@@ -81,7 +81,7 @@
 				<span class="text-primary">Current Region</span><span> 26.11.2023, 04:20</span>
 			</div>
 		</a>
-		<a class="flex flex-row w-full gap-2 flinch label-text">
+		<a class="flex flex-row w-full gap-2 flinch label-text" href="/region/2">
 			<img class="bg-cover rounded-lg" height="48" src="https://placehold.co/48/svg" width="48" />
 			<div>
 				<b class="block text-lg">Baden-Württemberg</b>

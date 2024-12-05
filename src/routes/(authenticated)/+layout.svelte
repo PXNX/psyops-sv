@@ -35,7 +35,7 @@
 	<button onclick={() => navigateTo("")} class="flinch">
 		<FluentEmojiBarChart class="w-6 h-6" />
 	</button>
-	<button onclick={() => navigateTo("news")} class="flinch">
+	<button onclick={() => navigateTo("posts")} class="flinch">
 		<FluentEmojiNewspaper class="w-6 h-6" />
 	</button>
 	<button onclick={() => navigateTo("training")} class="flinch">
