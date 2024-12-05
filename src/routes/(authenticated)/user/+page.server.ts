@@ -3,7 +3,7 @@ import { deleteSessionTokenCookie, invalidateSession } from "$lib/server/session
 
 import type { Actions, RequestEvent } from "./$types";
 import { db } from "$lib/server/db";
-import { RecordId, u } from "surrealdb";
+import { jsonify, RecordId, u } from "surrealdb";
 import type { User } from "$lib/server/user";
 
 export async function load(event: RequestEvent) {
@@ -12,6 +12,8 @@ export async function load(event: RequestEvent) {
 	}
 
 	const user = await db.select<User>(event.locals.user.id);
+
+	// const data = jsonify(user);
 
 	return {
 		user

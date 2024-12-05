@@ -4,62 +4,63 @@ import { sha256 } from "@oslojs/crypto/sha2";
 
 import type { RequestEvent } from "@sveltejs/kit";
 import type { User } from "./user";
-import type { RecordId } from "surrealdb";
+import { jsonify, RecordId } from "surrealdb";
 
 export type Session = {
-	id: string;
+	id: RecordId<string>;
 	userId: RecordId<string>;
 	expiresAt: Date;
 };
 
-type useression = {
-	sessions: Session;
-	user: User;
-};
-
 export async function validateSessionToken(token: string): Promise<SessionValidationResult> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-	const row = (
-		await db.query<useression[]>(
-			`SELECT sessions.id , sessions.user_id, sessions.expires_at, user.id , user.email, user.name, user.picture FROM sessions
 
-WHERE sessions.id = $sessionId fetch user`
-		)
-	)[0];
+	const session = await db.select<Session>(new RecordId("session", sessionId));
 
-	console.log("ROW----");
-	console.dir(row);
+	console.log("get Session", sessionId);
+	console.dir(jsonify(session));
 
-	if (!row) {
+	const user = await db.select<User>(session.userId);
+
+	console.log("get User", session.userId);
+	console.dir(jsonify(user));
+
+	if (!session) {
 		return { session: null, user: null };
 	}
-	const session: Session = {
-		...row.sessions,
-		expiresAt: new Date(Date.now() * 1000) //todo get actual date from ROW
+	const newSession: Session = {
+		...session,
+		expiresAt: new Date(session.expiresAt.getTime() * 1000) //todo get actual date from ROW
 	};
-	const user: User = {
-		...row.user
-	};
-	if (Date.now() >= session.expiresAt.getTime()) {
-		invalidateSession(sessionId);
+
+	if (Date.now() >= newSession.expiresAt.getTime()) {
+		invalidateSession(new RecordId("session", sessionId));
 		return { session: null, user: null };
 	}
-	if (Date.now() >= session.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
-		session.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
-		await db.query(`UPDATE sessions SET expires_at = $1 WHERE sessions.id = $2`, {
-			$1: Math.floor(session.expiresAt.getTime() / 1000),
-			$2: session.id
+	if (Date.now() >= newSession.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
+		newSession.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
+		await db.query(`UPDATE session SET expiresAt = $1 WHERE session.id = $2`, {
+			$1: Math.floor(newSession.expiresAt.getTime() / 1000),
+			$2: newSession.id
 		});
 	}
+
+	const dataSession = jsonify(session);
+	const dataUser = jsonify(user);
+
+	console.log("before return", dataSession, dataUser);
+
+	console.error("------");
+
 	return { session, user };
 }
 
-export async function invalidateSession(sessionId: string): Promise<void> {
-	await db.query(`DELETE FROM sessions WHERE id = $sessionId`);
+export async function invalidateSession(sessionId: RecordId<string>): Promise<void> {
+	await db.delete(sessionId);
 }
 
-export async function invalidateuseressions(userId: number): Promise<void> {
-	await db.query(`DELETE FROM sessions WHERE user_id = $1`, { $1: userId });
+export async function invalidateuseressions(userId: RecordId<string>): Promise<void> {
+	await db.query(`DELETE FROM session WHERE user_id = $1`, { $1: userId });
 }
 
 export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date): void {
@@ -90,19 +91,14 @@ export function generateSessionToken(): string {
 
 export async function createSession(token: string, userId: RecordId<string>): Promise<Session> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-	const session: Session = {
-		id: sessionId,
+
+	const session = await db.create<Session>("session", {
+		id: new RecordId("session", sessionId),
 		userId,
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
-	};
-	const expiresAt = Math.floor(session.expiresAt.getTime() / 1000);
-	console.error("SESSION ID", sessionId, userId, expiresAt);
-	await db.create("sessions", {
-		id: sessionId,
-		user_id: userId,
-		expires_at: expiresAt
 	});
-	return session;
+	console.error("SESSION ID", sessionId, userId, session[0].expiresAt);
+	return session[0];
 }
 
 type SessionValidationResult = { session: Session; user: User } | { session: null; user: null };
