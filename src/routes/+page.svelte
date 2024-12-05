@@ -8,9 +8,8 @@
 	export let data: PageData;
 </script>
 
-<h1>Hi, {data.user.name}! ROOT PAGE</h1>
-<img src={data.user.picture} height="100px" width="100px" alt="profile" />
-<p>Email: {data.user.email}</p>
+<h1>Hi, {(console.dir(data.user), data.user.id)}! ROOT PAGE</h1>
+
 <form method="post" use:enhance>
 	<button class="btn"> <Icon icon="mdi:logout" class="w-5 h-5" />Sign out</button>
 </form>

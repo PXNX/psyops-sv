@@ -2,6 +2,7 @@
 	import panzoom from "panzoom";
 	import WorldMap from "$lib/assets/worldmap.svg?raw"; // note suffix ?raw or ?component
 	import type { MouseEventHandler } from "svelte/elements";
+	import FluentEmojiMagnifyingGlassTiltedLeft from "~icons/fluent-emoji/magnifying-glass-tilted-left";
 
 	let selectedRegion = $state(-1);
 	let instance;
@@ -39,21 +40,8 @@
 <header class="sticky top-0 flex items-center justify-end gap-2 p-2 bg-base-100 touch-none">
 	<form class="flex-1">
 		<div class="relative">
-			<svg
-				class=" absolute left-2.5 top-2.5 h-4 w-4 text-zinc-500 dark:text-zinc-400"
-				fill="none"
-				height="24"
-				stroke="currentColor"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				stroke-width="2"
-				viewBox="0 0 24 24"
-				width="24"
-				xmlns="http://www.w3.org/2000/svg"
-			>
-				<circle cx="11" cy="11" r="8"></circle>
-				<path d="m21 21-4.3-4.3"></path>
-			</svg>
+			<FluentEmojiMagnifyingGlassTiltedLeft class="w-5 h-5" />
+
 			<input
 				class="flex w-full h-10 px-3 py-2 pl-8 text-sm bg-white border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 				placeholder="Search locations..."
