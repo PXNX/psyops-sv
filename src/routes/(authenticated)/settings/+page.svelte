@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import Icon from "@iconify/svelte";
+	import FluentEmojiWrappedGift from "~icons/fluent-emoji/wrapped-gift";
+	import FluentEmojiPencil from "~icons/fluent-emoji/pencil";
+	import FluentEmojiInformation from "~icons/fluent-emoji/information";
 
 	import type { PageData } from "./$types";
 
@@ -72,11 +75,7 @@
 	</label>
 
 	<a class="justify-start w-full btn btn-ghost" href="/about" role="button">
-		<svg class="w-5 h-5" fill="currentColor" stroke="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-			<path
-				d="M11,9H13V7H11M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M11,17H13V11H11V17Z"
-			/>
-		</svg>
+		<FluentEmojiInformation />
 		About
 	</a>
 </section>
@@ -87,11 +86,7 @@
 	<button class="justify-start w-full btn btn-primary">
 		<!--onclick="my_modal_3.showModal()"-->
 
-		<svg class="w-5 h-5" fill="currentColor" stroke="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-			<path
-				d="M2 17V20H10V18.11H3.9V17C3.9 16.36 7.03 14.9 10 14.9C10.96 14.91 11.91 15.04 12.83 15.28L14.35 13.76C12.95 13.29 11.5 13.03 10 13C7.33 13 2 14.33 2 17M10 4C7.79 4 6 5.79 6 8S7.79 12 10 12 14 10.21 14 8 12.21 4 10 4M10 10C8.9 10 8 9.11 8 8S8.9 6 10 6 12 6.9 12 8 11.11 10 10 10M21.7 13.35L20.7 14.35L18.65 12.35L19.65 11.35C19.86 11.14 20.21 11.14 20.42 11.35L21.7 12.63C21.91 12.84 21.91 13.19 21.7 13.4M12 18.94L18.06 12.88L20.11 14.88L14.11 20.95H12V18.94"
-			/>
-		</svg>
+		<FluentEmojiPencil />
 		Edit profile
 	</button>
 
@@ -120,13 +115,7 @@
 
 	<button class="justify-start w-full btn btn-secondary">
 		<!--onclick="my_modal_4.showModal()"-->
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-			<polyline points="20 12 20 22 4 22 4 12"></polyline>
-			<rect height="5" width="20" x="2" y="7"></rect>
-			<line x1="12" x2="12" y1="22" y2="7"></line>
-			<path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
-			<path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>
-		</svg>
+		<FluentEmojiWrappedGift />
 		Redeem gift
 	</button>
 	<dialog class="modal" id="my_modal_4">
