@@ -7,13 +7,11 @@ export async function initializeDB() {
 		// Connect to the database
 		await db.connect("http://127.0.0.1:8000/rpc", {
 			database: "rw-sv",
-			namespace: "dev"
-		});
-
-		// Sign in as a namespace admin
-		await db.signin({
-			username: "root",
-			password: "root"
+			namespace: "dev",
+			auth: {
+				username: "root",
+				password: "root"
+			}
 		});
 
 		// Select a specific namespace and database
