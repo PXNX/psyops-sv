@@ -1,25 +1,11 @@
 <script lang="ts">
-	/// import "../app.css";
+	import "../app.css";
 	import { ParaglideJS } from "@inlang/paraglide-sveltekit";
 	import { i18n } from "$lib/i18n";
 
-	import { goto } from "$app/navigation";
-	import { page, navigating } from "$app/stores";
-
-	import FluentEmojiBarChart from "~icons/fluent-emoji/bar-chart";
-	import FluentEmojiNewspaper from "~icons/fluent-emoji/newspaper";
-	import FluentEmojiMilitaryHelmet from "~icons/fluent-emoji/military-helmet";
-	import FluentEmojiNutAndBolt from "~icons/fluent-emoji/nut-and-bolt";
-	import FluentEmojiIdentificationCard from "~icons/fluent-emoji/identification-card";
+	import { navigating } from "$app/stores";
 
 	const { children } = $props();
-
-	let active = "home";
-
-	function navigateTo(page2: string) {
-		active = page2;
-		goto(`/${page2}`);
-	}
 </script>
 
 <svelte:head>

@@ -1,9 +1,5 @@
 <script lang="ts">
-	import { ParaglideJS } from "@inlang/paraglide-sveltekit";
-	import { i18n } from "$lib/i18n";
-
 	import { goto } from "$app/navigation";
-	import { page, navigating } from "$app/stores";
 
 	import FluentEmojiBarChart from "~icons/fluent-emoji/bar-chart";
 	import FluentEmojiNewspaper from "~icons/fluent-emoji/newspaper";

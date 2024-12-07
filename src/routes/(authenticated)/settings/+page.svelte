@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import Icon from "@iconify/svelte";
+	import FluentArrowExit20Filled from "~icons/fluent/arrow-exit-20-filled";
 	import FluentEmojiWrappedGift from "~icons/fluent-emoji/wrapped-gift";
 	import FluentEmojiPencil from "~icons/fluent-emoji/pencil";
 	import FluentEmojiInformation from "~icons/fluent-emoji/information";
@@ -144,6 +144,6 @@
 	</dialog>
 
 	<form method="post" use:enhance>
-		<button class="btn"> <Icon icon="mdi:logout" class="w-5 h-5" />Sign out</button>
+		<button class="btn"><FluentArrowExit20Filled />Sign out FORM</button>
 	</form>
 </section>
