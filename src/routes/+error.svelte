@@ -38,7 +38,7 @@
 		>
 	</div>
 
-	<button on:click={() => history.back()} class="mt-4 btn btn-md btn-wide btn-ghost">
+	<button onclick={() => history.back()} class="mt-4 btn btn-md btn-wide btn-ghost">
 		<FluentEmojiLeftArrow />Go back</button
 	>
 </main>

@@ -1,4 +1,6 @@
-const shareLink = (title: string, url = window.location.href) => {
+import type { RecordId } from "surrealdb";
+
+export const shareLink = (title: string, url = window.location.href) => {
 	if (navigator.share) {
 		navigator
 			.share({
@@ -13,3 +15,5 @@ const shareLink = (title: string, url = window.location.href) => {
 		// fallback
 	}
 };
+
+export const extractId = (recordId: RecordId<string>): string => recordId.id.toString();
