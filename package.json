@@ -52,7 +52,7 @@
 		"@pilcrowjs/db-query": "0.0.2",
 		"@pilcrowjs/object-parser": "0.0.4",
 		"@svitejs/svelte-preprocess-svg": "2.0.0",
-		"@tailwindcss/vite": "^4.0.0-beta.5",
+		"@tailwindcss/vite": "^4.0.0-beta.6",
 		"@tiptap/core": "2.10.3",
 		"@tiptap/pm": "2.10.3",
 		"@tiptap/starter-kit": "2.10.3",
@@ -67,7 +67,7 @@
 		"surrealdb": "1.1.0",
 		"svelte-editorjs": "0.1.0",
 		"svelte-tiptap": "2.1.0",
-		"tailwindcss": "^4.0.0-beta.5",
+		"tailwindcss": "^4.0.0-beta.6",
 		"uuid": "11.0.3"
 	}
 }

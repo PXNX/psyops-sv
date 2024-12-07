@@ -16,7 +16,7 @@ export async function createUser(googleId: string, email: string, name: string, 
 		throw new Error("Unexpected error");
 	}
 	return {
-		id: row[0].id,
+		id: extractId(row[0].id),
 		googleId,
 		email,
 		name,
@@ -43,10 +43,12 @@ export async function getUserFromGoogleId(googleId: string): Promise<User | null
 }
 
 export type User = {
-	id: RecordId<string>;
+	id: string;
 	email: string;
 	googleId: string;
 	name: string;
 	picture: string;
 	google_id: string;
 };
+
+const extractId = (recordId: RecordId<string>): string => recordId.id.toString();
