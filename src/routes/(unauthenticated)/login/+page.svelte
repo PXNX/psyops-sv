@@ -19,8 +19,8 @@
 		</a>
 
 		<p class="text-sm">
-			By signing up you agree to our <a class="font-semibold link" href="/terms">Terms of Service</a> and
-			<a class="font-semibold link" href="/privacy">Privacy Notice</a>.
+			By signing up you agree to our <a class="font-semibold link" href="/about/terms">Terms of Service</a> and
+			<a class="font-semibold link" href="/about/privacy">Privacy Notice</a>.
 		</p>
 	</div>
 
