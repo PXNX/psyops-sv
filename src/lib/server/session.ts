@@ -89,12 +89,12 @@ export function generateSessionToken(): string {
 	return encodeBase32(tokenBytes).toLowerCase();
 }
 
-export async function createSession(token: string, userId: RecordId<string>): Promise<Session> {
+export async function createSession(token: string, userId: string): Promise<Session> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
 	const session = await db.create<Session>("session", {
 		id: new RecordId("session", sessionId),
-		userId,
+		userId: new RecordId("user", userId),
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
 	});
 	console.error("SESSION ID", sessionId, userId, session[0].expiresAt);

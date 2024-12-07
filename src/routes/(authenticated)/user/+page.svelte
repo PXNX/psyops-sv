@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { shareLink } from "$lib/util";
 
 	import type { PageData } from "./$types";
 
