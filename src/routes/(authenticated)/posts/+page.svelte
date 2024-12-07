@@ -4,6 +4,7 @@
 	import { goto } from "$app/navigation";
 	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
+	import Avatar from "$lib/component/Avatar.svelte";
 
 	const article = {
 		id: 1,
@@ -36,7 +37,7 @@
 >
 	<!-- hx-get="/article/{{article.id }}"-->
 
-	<img alt="Article Image" class="rounded-lg w-14 h-14" loading="lazy" src={article.author_avatar} />
+	<Avatar image_url={article.author_avatar} />
 
 	<div class="flex flex-col flex-grow text-xs text-gray-600">
 		<span class="font-semibold text-primary" id="article_title">{article.author_name}</span>
