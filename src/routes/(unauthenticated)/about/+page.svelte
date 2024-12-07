@@ -1,0 +1,103 @@
+<script lang="ts">
+	import MaterialSymbolsPrivacyTipRounded from "~icons/material-symbols/privacy-tip-rounded";
+	import FluentDocumentText20Filled from "~icons/fluent/document-text-20-filled";
+
+	const version = "0.0.1";
+</script>
+
+<img alt="app logo" class="flex items-center justify-center w-32 h-32 m-8" src="logo.svg" />
+
+<h2
+	class="text-2xl font-bold mt-8 px-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FF8A00] to-[#FF008A] tracking-tighter"
+>
+	Support
+</h2>
+
+<section class="grid w-full p-2 space-y-1">
+	<a class="justify-start w-full btn btn-primary" href="#">
+		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<rect height="16" rx="2" width="20" x="2" y="4"></rect>
+			<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+		</svg>
+		Contact Us
+	</a>
+
+	<button class="justify-start w-full btn btn-secondary"
+		><!--onclick="my_modal_3.showModal()"-->
+		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path d="m8 2 1.88 1.88"></path>
+			<path d="M14.12 3.88 16 2"></path>
+			<path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path>
+			<path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6"></path>
+			<path d="M12 20v-9"></path>
+			<path d="M6.53 9C4.6 8.8 3 7.1 3 5"></path>
+			<path d="M6 13H2"></path>
+			<path d="M3 21c0-2.1 1.7-3.9 3.8-4"></path>
+			<path d="M20.97 5c0 2.1-1.6 3.8-3.5 4"></path>
+			<path d="M22 13h-4"></path>
+			<path d="M17.2 17c2.1.1 3.8 1.9 3.8 4"></path>
+		</svg>
+		Report Bug
+	</button>
+	<dialog class="modal" id="my_modal_3">
+		<div class="modal-box">
+			<form method="dialog">
+				<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2">✕</button>
+			</form>
+			<h3 class="text-lg font-bold">Describe your bug</h3>
+			<p class="py-4">//Todo</p>
+		</div>
+	</dialog>
+	<a class="justify-start w-full btn btn-ghost" href="/docs">
+		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
+			<path d="M8.5 8.5v.01"></path>
+			<path d="M16 15.5v.01"></path>
+			<path d="M12 12v.01"></path>
+			<path d="M11 17v.01"></path>
+			<path d="M7 14v.01"></path>
+		</svg>
+		Documentation
+	</a>
+	<a class="justify-start w-full btn btn-ghost" href="/docs/intro">
+		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
+			<path d="M8.5 8.5v.01"></path>
+			<path d="M16 15.5v.01"></path>
+			<path d="M12 12v.01"></path>
+			<path d="M11 17v.01"></path>
+			<path d="M7 14v.01"></path>
+		</svg>
+		Wiki
+	</a>
+</section>
+
+<h2
+	class="text-2xl font-bold mt-8 px-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FF8A00] to-[#FF008A] tracking-tighter"
+>
+	Legal
+</h2>
+
+<section class="grid w-full grid-cols-2 gap-1 p-2">
+	<a class="justify-start w-full btn btn-ghost" href="/about/terms">
+		<FluentDocumentText20Filled />
+		Terms of Service
+	</a>
+	<a class="justify-start w-full btn btn-ghost" href="/about/privacy">
+		<MaterialSymbolsPrivacyTipRounded />
+		Privacy Notice
+	</a>
+	<a class="justify-start w-full btn btn-ghost" href="#">
+		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+			<circle cx="7.5" cy="15.5" r="5.5"></circle>
+			<path d="m21 2-9.6 9.6"></path>
+			<path d="m15.5 7.5 3 3L22 7l-3-3"></path>
+		</svg>
+		Licenses
+	</a>
+	<a class="justify-start w-full btn btn-ghost" href="#"> Icons </a>
+</section>
+
+<footer class="self-center">
+	{version}
+</footer>

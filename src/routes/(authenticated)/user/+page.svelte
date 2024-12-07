@@ -4,27 +4,13 @@
 	import type { PageData } from "./$types";
 
 	import FluentEmojiGear from "~icons/fluent-emoji/gear";
-	import FlatColorIconsShare from "~icons/flat-color-icons/share";
+	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 
 	export let data: PageData;
 
 	let user_name = data.user.name;
 
-	function shareLink(title: string, url = window.location.href) {
-		if (navigator.share) {
-			navigator
-				.share({
-					title: title,
-					url: url
-				})
-				.then(() => {
-					console.log("Thanks for sharing!");
-				})
-				.catch(console.error);
-		} else {
-			// fallback
-		}
-	}
+	const shareUser = () => shareLink(user_name, window.location.href + "/" + data.user.id);
 </script>
 
 <div
@@ -45,11 +31,8 @@
 	{/if}
 
 	<div class="flex flex-col gap-2 mt-auto">
-		<button
-			class="btn btn-ghost btn-circle"
-			on:click={() => shareLink(user_name, window.location.href + "/{{ user_id }}")}
-		>
-			<FlatColorIconsShare />
+		<button class="btn btn-ghost btn-circle" onclick={shareUser}>
+			<FluentShareAndroid20Filled />
 		</button>
 
 		<a href="/settings" class="btn btn-circle btn-ghost">
