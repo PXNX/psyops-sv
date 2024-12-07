@@ -27,7 +27,9 @@
 	}
 </script>
 
-<div class="flex justify-between bg-[url('https://source.unsplash.com/random.jpg?soldier')] bg-cover p-2">
+<div
+	class="flex justify-between bg-[url('https://source.unsplash.com/random.jpg?soldier')] bg-cover p-2 bg-linear-to-r/oklch from-indigo-500 to-teal-400"
+>
 	{#if data.user.picture}
 		<div class="avatar">
 			<div class="w-24 h-24 rounded-full">

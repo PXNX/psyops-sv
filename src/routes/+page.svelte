@@ -1,8 +1,6 @@
 <script lang="ts">
-	import "../app.css";
 	import { enhance } from "$app/forms";
-	import Icon from "@iconify/svelte";
-
+	import FluentArrowExit20Filled from "~icons/fluent/arrow-exit-20-filled";
 	import type { PageData } from "./$types";
 
 	export let data: PageData;
@@ -11,7 +9,11 @@
 <h1>Hi, {(console.log("page data"), console.log(data))}! ROOT PAGE</h1>
 
 <form method="post" use:enhance>
-	<button class="btn"> <Icon icon="mdi:logout" class="w-5 h-5" />Sign out</button>
+	<button class="btn"><FluentArrowExit20Filled />Sign out FORM</button>
 </form>
 
 <a href="/map">Map</a>
+
+<a href="/user">User</a>
+
+<a href="/posts">posts</a>
