@@ -1,4 +1,7 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"signUp": "Sign up with {provider}"
+	"signUp": "Sign up with {provider}",
+	"needHelp": "Need help?",
+	"termsOfService": "Terms of Service",
+	"privacyPolicy": "Privacy Policy"
 }
