@@ -11,10 +11,10 @@
 
 	let active = "home";
 
-	function navigateTo(page2: string) {
+	const navigateTo = (page2: string) => {
 		active = page2;
 		goto(`/${page2}`);
-	}
+	};
 </script>
 
 <svelte:head>
@@ -25,7 +25,9 @@
 	/>
 </svelte:head>
 
-{@render children()}
+<div class="flex flex-col h-[100dvh] w-full" data-theme="cupcake">
+	{@render children()}
+</div>
 
 <nav class="btm-nav btm-nav-md">
 	<button onclick={() => navigateTo("")} class="flinch">

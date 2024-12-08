@@ -19,12 +19,13 @@
 		</a>
 
 		<p class="text-sm">
-			By signing up you agree to our <a class="font-semibold link" href="/about/terms">Terms of Service</a> and
-			<a class="font-semibold link" href="/about/privacy">Privacy Notice</a>.
+			By signing up you agree to our <a class="font-semibold link" href="/about/terms"> {m.termsOfService()}</a> and
+			<a class="font-semibold link" href="/about/privacy">{m.privacyPolicy()}</a>.
 		</p>
 	</div>
 
 	<a href="https://t.me/pentexnyx_bot?start=TEST" class="mt-4 btn btn-md btn-wide btn-ghost">
-		<FluentEmojiEnvelopeWithArrow />Need help?</a
-	>
+		<FluentEmojiEnvelopeWithArrow />
+		{m.needHelp()}
+	</a>
 </main>
