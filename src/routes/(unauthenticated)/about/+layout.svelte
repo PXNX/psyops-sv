@@ -10,6 +10,6 @@
 	/>
 </svelte:head>
 
-<main class="p-2 font-bold text-white bg-gradient-to-r from-amber-800 to-zinc-800">
+<main class="p-2 font-bold text-white bg-linear-to-r/oklch from-amber-800 to-zinc-800">
 	{@render children()}
 </main>
