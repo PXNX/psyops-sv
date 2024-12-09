@@ -1,10 +1,8 @@
 <script>
-	import { Editor } from "novel-svelte";
-	import Tiptap from "$lib/component/Tiptap.svelte";
 	import { goto } from "$app/navigation";
 	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
-	import Avatar from "$lib/component/Avatar.svelte";
+	import Avatar from "$lib/component/CircleAvatar.svelte";
 
 	const article = {
 		id: 1,

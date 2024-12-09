@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
+	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
+
 	import { shareLink } from "$lib/util";
 
 	import type { PageData } from "./$types";
@@ -18,11 +21,7 @@
 	class="flex justify-between bg-[url('https://source.unsplash.com/random.jpg?soldier')] bg-cover p-2 bg-linear-to-r/oklch from-indigo-500 to-teal-400"
 >
 	{#if data.user.picture}
-		<div class="avatar">
-			<div class="w-24 h-24 rounded-full">
-				<img src={data.user.picture} />
-			</div>
-		</div>
+		<CircleAvatar image_url={data.user.picture} />
 	{:else}
 		<div class="avatar placeholder">
 			<div class="w-24 h-24 rounded-full bg-neutral text-neutral-content">
@@ -61,14 +60,14 @@
 
 	<section class="p-2 mt-10 space-y-2 border rounded-lg select-bordered">
 		<a class="flex flex-row w-full gap-2 flinch label-text" href="/region/1">
-			<img class="bg-cover rounded-lg" height="48" src="https://placehold.co/48/svg" width="48" />
+			<SquareAvatar image_url={"https://placehold.co/48/svg"} />
 			<div>
 				<b class="block text-lg">Nendeln</b>
 				<span class="text-primary">Current Region</span><span> 26.11.2023, 04:20</span>
 			</div>
 		</a>
 		<a class="flex flex-row w-full gap-2 flinch label-text" href="/region/2">
-			<img class="bg-cover rounded-lg" height="48" src="https://placehold.co/48/svg" width="48" />
+			<SquareAvatar image_url={"https://pcclacehold.co/48/svdexsg"} />
 			<div>
 				<b class="block text-lg">Baden-Württemberg</b>
 				<span class="text-primary">Home Region</span><span> 26.11.2023, 04:20</span>
