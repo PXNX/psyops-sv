@@ -1,7 +1,7 @@
 <script lang="ts">
 	export let image_url: string;
 
-	import FluentColorPerson20 from "~icons/fluent-color/person-20";
+	import FluentColorPerson20 from "~icons/fluent-color/person-24";
 
 	function replaceImg() {
 		error = true;
