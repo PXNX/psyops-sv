@@ -1,8 +1,5 @@
 <script lang="ts">
 	import { page } from "$app/stores";
-	import Icon from "@iconify/svelte";
-
-	// import Eyes from "$lib/assets/eyes.svg";
 
 	import FluentEmojiEyes from "~icons/fluent-emoji/eyes";
 	import FluentEmojiKnockedOutFace from "~icons/fluent-emoji/knocked-out-face";
