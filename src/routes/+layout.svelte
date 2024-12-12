@@ -4,6 +4,7 @@
 	import { i18n } from "$lib/i18n";
 
 	import { navigating } from "$app/stores";
+	import { fade } from "svelte/transition";
 
 	const { children } = $props();
 </script>
@@ -18,7 +19,7 @@
 
 <ParaglideJS {i18n}>
 	{#if $navigating}
-		<main class=" flex-1 overflow-y-auto pb-16 w-full h-[100dvh]">
+		<main class=" flex-1 overflow-y-auto pb-16 w-full h-[100dvh]" transition:fade>
 			<span class="loading loading-ring loading-md place-self-center"></span>
 		</main>
 	{:else}

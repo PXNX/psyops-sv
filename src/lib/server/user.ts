@@ -2,14 +2,14 @@ import { NoNamespaceSpecified, type RecordId } from "surrealdb";
 import { db } from "./db";
 import { extractId } from "$lib/util";
 
-export async function createUser(googleId: string, email: string, name: string, picture: string): Promise<User> {
+export async function createUser(googleId: string, email: string, name: string, avatar: string): Promise<User> {
 	console.error("createUser id -- sql ", googleId, "before ---");
 
 	const row = await db.insert("user", {
 		email,
 		name,
-		picture,
-		google_id: googleId
+		avatar,
+		googleId
 	});
 	console.error("createUser id -- sql ", googleId, "QUERY", row);
 	if (row === null) {
@@ -21,16 +21,15 @@ export async function createUser(googleId: string, email: string, name: string, 
 		googleId,
 		email,
 		name,
-		picture,
-		google_id: googleId
+		avatar
 	};
 }
 
 export async function getUserFromGoogleId(googleId: string): Promise<User | null> {
 	const row = await db.query<[User[]]>(
-		`SELECT id, google_id, email, name, picture
+		`SELECT id, googleId, email, name, picture
                          FROM user
-                         WHERE google_id = $googleId;`
+                         WHERE googleId = $googleId;`
 	);
 
 	console.error("GOOGLE id -- sql ", googleId, "QUERY 1", row);
@@ -48,6 +47,5 @@ export type User = {
 	email: string;
 	googleId: string;
 	name: string;
-	picture: string;
-	google_id: string;
+	avatar: string;
 };
