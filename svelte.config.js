@@ -8,7 +8,7 @@ const config = {
 	// for more information about preprocessors
 	preprocess: [
 		//...
-		vitePreprocess()
+		vitePreprocess({ script: true })
 		// sveltePreprocessSvg must be used AFTER other markup preprocessors like mdsvex
 		//	sveltePreprocessSvg({
 		/* options */
