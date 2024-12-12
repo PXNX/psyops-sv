@@ -1,26 +1,16 @@
 <script>
-	import { Editor } from "novel-svelte";
-	import Tiptap from "$lib/component/Tiptap.svelte";
+	import { superForm } from "sveltekit-superforms";
 
-	import FluentEmojiLeftArrow from "~icons/fluent-emoji/left-arrow";
-	import FluentEmojiFloppyDisk from "~icons/fluent-emoji/floppy-disk";
-	import MdiWindowClose from "~icons/mdi/window-close";
-	import { goto } from "$app/navigation";
+	let { data } = $props();
 
-	let pushblishModal = $state();
-	let cancelModal = $state();
+	// Client API:
+	const { form, enhance, delayed, submitting, timeout } = superForm(data.form);
 </script>
 
-<div class="mx-4 mt-4 mb-12 space-y-4">
-	<div class="flex justify-between w-full gap-2">
-		<h2 class="text-xl font-bold">Create Newspaper</h2>
+<div class="mx-4 mt-4 mb-12 space-y-4 w-full flex flex-col">
+	<h2 class="text-xl font-bold">Create Newspaper</h2>
 
-		<button class="btn btn-circle" onclick={() => history.back()}>
-			<img alt="" class="w-6 h-6" src="/dist/window-close.svg" />
-		</button>
-	</div>
-
-	<form class="w-full space-y-4 form-control" id="publish_article">
+	<form class="w-full space-y-4 form-control" id="publish_article" method="POST" use:enhance>
 		<select class="w-full max-w-sm select select-bordered">
 			<option value="dark">Category or language??</option>
 			<option value="light">Light</option>
@@ -36,6 +26,7 @@
 				placeholder="Newspaper name"
 				required
 				type="text"
+				bind:value={$form.name}
 			/>
 		</label>
 
@@ -47,9 +38,12 @@
 				placeholder="Avatar Url"
 				required
 				type="text"
+				bind:value={$form.avatar}
 			/>
 		</label>
 
-		<button class="btn btn-primary">Create newspaper</button>
+		<button class="btn btn-primary">
+			{#if $submitting}<img src="https://w5.giffitsstatic.com/pics/c504/342435_1.jpg" alt="" />{/if} Create newspaper
+		</button>
 	</form>
 </div>
