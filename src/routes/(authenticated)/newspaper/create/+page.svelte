@@ -12,7 +12,8 @@
 
 	<form class="w-full flex flex-col gap-2" method="POST" use:enhance>
 		<select class="w-full max-w-sm select select-bordered">
-			<option value="dark">Category or language??</option>
+			<option value="" selected disabled hidden>Category or language??</option>
+			<option value="dark">Dark</option>
 			<option value="light">Light</option>
 			<option value="cupcake">Pink</option>
 			<option value="retro">Retro</option>
