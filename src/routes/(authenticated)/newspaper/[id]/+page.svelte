@@ -9,7 +9,7 @@
 
 	let pushblishModal = $state();
 	let cancelModal = $state();
-
+ 
 	const newspaper = {
 		id: 1,
 		name: "Newspaper",

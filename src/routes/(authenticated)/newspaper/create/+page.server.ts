@@ -6,9 +6,9 @@ import { message } from "sveltekit-superforms";
 import { error, fail } from "@sveltejs/kit";
 import { Newspaper, newspaperSchema } from "$lib/server/newspaper";
 import { db } from "$lib/server/db";
+import { Journalist, NewspaperRank } from "../../../../lib/server/journalist";
 
-
-export const load: PageServerLoad = async ({}) => {
+export const load: PageServerLoad = async ({ event: RequestEvent }) => {
 	const form = await superValidate(zod(newspaperSchema));
 
 	// Always return { form } in load functions
@@ -16,7 +16,7 @@ export const load: PageServerLoad = async ({}) => {
 };
 
 export const actions = {
-	default: async ({ request }) => {
+	default: async ({ request, locals }) => {
 		const form = await superValidate(request, zod(newspaperSchema));
 		console.error(".........");
 		console.error(form);
@@ -28,7 +28,15 @@ export const actions = {
 			//	return;
 		}
 
-		await db.create<Newspaper>("newspapers", form.data);
+		const [newspaper] = await db.create<Newspaper>("newspapers", form.data);
+
+		console.log(locals, newspaper, "+++++++++++");
+
+		await db.insert_relation<Journalist>("journalist", {
+			in: locals.user.id,
+			out: newspaper.id,
+			rank: "owner"
+		});
 
 		// TODO: Do something with the validated form.data
 
