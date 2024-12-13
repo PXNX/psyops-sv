@@ -7,6 +7,8 @@
 	import MdiWindowClose from "~icons/mdi/window-close";
 	import { goto } from "$app/navigation";
 
+	const { data } = $props();
+
 	let pushblishModal = $state();
 	let cancelModal = $state();
 </script>
@@ -32,7 +34,25 @@
 			<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2"><MdiWindowClose /></button>
 		</form>
 		<h3 class="text-lg font-bold">Publish!</h3>
+
+		{#if data.newspapers.length > 0}
+			<label class="form-control w-full">
+				Publish article as
+
+				<select class="w-full max-w-sm select select-bordered">
+					<option value="" selected disabled hidden>Select newspaper</option>
+					{#each data.newspapers as newspaper}
+						<option value={newspaper.id}>
+							{newspaper.name}
+						</option>
+					{/each}
+				</select>
+			</label>
+		{/if}
+
 		<p class="py-4">Press ESC key or click on ✕ button to close</p>
+
+		<button class=" btn btn-primary">Publish article</button>
 	</div>
 </dialog>
 
