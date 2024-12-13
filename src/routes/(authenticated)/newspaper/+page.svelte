@@ -1,5 +1,7 @@
 <script lang="ts">
 	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
+	import { extractId } from "$lib/util";
+	const { data } = $props();
 
 	const newspaper = {
 		id: 1,
@@ -22,6 +24,25 @@
 	<hr class="divide-gray-200 dark:divide-gray-700" />
 </header>
 
+{console.log(data)}
+
+{#each data.newspapers as newspaper}
+	{#if newspaper}
+		<a
+			class="flex w-full gap-2 p-2 text-current no-underline flinch label-text"
+			href="/newspaper/{newspaper.id}"
+			oncontextmenu={() => false}
+		>
+			<img alt="Newspaper Image" class="rounded-lg" height="56" loading="lazy" src={newspaper.avatar} width="56" />
+			<!-- style="aspect-ratio: 100 / 100; object-fit: cover;" -->
+			<div>
+				<b class="block text-lg font-bold tracking-tight transition-all duration-3000" id="title">{newspaper.name}</b>
+				<span class="block transition-all text-primary">{newspaper.rank}</span>
+			</div>
+		</a>
+	{/if}
+{/each}
+
 <a
 	class="flex w-full gap-2 p-2 text-current no-underline flinch label-text"
 	href="/newspaper/{newspaper.id}"
@@ -32,6 +53,5 @@
 	<div>
 		<b class="block text-lg font-bold tracking-tight transition-all duration-3000" id="title">{newspaper.name}</b>
 		<span class="block transition-all text-primary">{newspaper.rank}</span>
-		{newspaper.created_at}
 	</div>
 </a>

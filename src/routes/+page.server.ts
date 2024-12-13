@@ -4,7 +4,7 @@ import { deleteSessionTokenCookie, invalidateSession } from "$lib/server/session
 import type { Actions, RequestEvent } from "./$types";
 import { jsonify } from "surrealdb";
 
-export async function load(event: RequestEvent) {
+export const load = async (event: RequestEvent) => {
 	if (event.locals.session === null || event.locals.user === null) {
 		return redirect(302, "/login");
 	}
@@ -16,7 +16,7 @@ export async function load(event: RequestEvent) {
 	return {
 		user: dataUser
 	};
-}
+};
 
 export const actions: Actions = {
 	default: action
