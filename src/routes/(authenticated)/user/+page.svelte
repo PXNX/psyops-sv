@@ -5,16 +5,12 @@
 
 	import { shareLink } from "$lib/util";
 
-	import type { PageData } from "./$types";
-
 	import FluentEmojiGear from "~icons/fluent-emoji/gear";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 
-	export let data: PageData;
+	const { data } = $props();
 
-	let user_name = data.user.name;
-
-	const shareUser = () => shareLink(user_name, window.location.href + "/" + data.user.id);
+	const shareUser = () => shareLink(data.user.name, window.location.href + "/" + data.user.id);
 </script>
 
 <div
@@ -43,7 +39,7 @@
 
 <div class="mx-2 my-4 space-y-4">
 	<div class="flex items-center justify-center w-full">
-		<b class="text-xl">{user_name}</b>
+		<b class="text-xl">{data.user.name}</b>
 		<div class="tooltip tooltip-left hover:tooltip-open" data-tip="Member of staff">
 			<svg
 				class="w-5 h-5 ms-1 stroke-primary hover:stroke-2"

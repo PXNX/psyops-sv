@@ -1,0 +1,57 @@
+<div class="mb-12 mx-4 space-y-4 mt-4">
+	<div class="flex justify-between gap-2 w-full">
+		<h2 class="text-xl font-bold">Newspaper Settings</h2>
+
+		<button class="btn btn-circle btn-sm" onclick={() => history.back()}>
+			<img alt="" class="h-6 w-6" src="/dist/window-close.svg" />
+		</button>
+	</div>
+
+	<form class="form-control w-full space-y-4" hx-ext="debug" hx-put="/n/settings" id="publish_article">
+		<h2 class="text-2xl font-bold mx-2">Appearance</h2>
+
+		<select class="select select-bordered w-full max-w-sm">
+			<option value="dark">Default</option>
+			<option value="light">Light</option>
+			<option value="cupcake">Pink</option>
+			<option value="retro">Retro</option>
+		</select>
+
+		<label>
+			Newspaper name
+			<input
+				class="input input-bordered w-full max-w-sm"
+				name="newspaper_name"
+				placeholder="newspapername"
+				required
+				type="text"
+				value=" newspaper_name "
+			/>
+		</label>
+
+		<label>
+			Newspaper avatar
+			<input
+				class="input input-bordered w-full max-w-sm"
+				name="newspaper_avatar"
+				placeholder="Avatar Url"
+				required
+				type="text"
+				value="newspaper_avatar "
+			/>
+		</label>
+
+		<label>
+			Newspaper background image
+			<input
+				class="input input-bordered w-full max-w-sm"
+				name="newspaper_background"
+				placeholder="Background Url"
+				type="text"
+				value=" newspaper_background"
+			/>
+		</label>
+
+		<button class="btn btn-primary" hx-ext="debug">Save changes</button>
+	</form>
+</div>

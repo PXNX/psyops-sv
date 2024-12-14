@@ -3,7 +3,7 @@
 	import FluentArrowExit20Filled from "~icons/fluent/arrow-exit-20-filled";
 	import type { PageData } from "./$types";
 
-	export let data: PageData;
+	const { data } = $props();
 </script>
 
 <h1>Hi, {((console.log("page data"), console.log(data)), data.user.name)}! ROOT PAGE</h1>

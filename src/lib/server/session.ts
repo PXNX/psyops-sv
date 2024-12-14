@@ -1,7 +1,6 @@
 import { db } from "./db";
 import { encodeBase32, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
-
 import type { RequestEvent } from "@sveltejs/kit";
 import type { User } from "./user";
 import { jsonify, RecordId } from "surrealdb";

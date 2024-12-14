@@ -3,9 +3,6 @@ import { validateSessionToken, setSessionTokenCookie, deleteSessionTokenCookie }
 import { sequence } from "@sveltejs/kit/hooks";
 
 import type { Handle } from "@sveltejs/kit";
-import { initializeDB } from "$lib/server/db";
-
-await initializeDB();
 
 const bucket = new TokenBucket<string>(100, 1);
 

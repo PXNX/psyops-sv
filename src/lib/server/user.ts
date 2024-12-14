@@ -1,10 +1,9 @@
 import { NoNamespaceSpecified, type RecordId } from "surrealdb";
-import { db } from "./db";
+import { db } from "$lib/server/db";
 import { extractId } from "$lib/util";
 
 export async function createUser(googleId: string, email: string, name: string, avatar: string): Promise<User> {
 	console.error("createUser id -- sql ", googleId, "before ---");
-
 	const row = await db.insert("user", {
 		email,
 		name,

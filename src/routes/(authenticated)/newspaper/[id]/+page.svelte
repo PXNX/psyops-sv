@@ -55,7 +55,7 @@
 >
 	<img alt="Newspaper Avatar" class="bg-cover rounded-lg" height="140" src={data.newspaper.avatar} width="140" />
 
-	<a class="mt-auto btn btn-square" href="/newspaper/{data.newspaper.id}/settings" role="button">
+	<a class="mt-auto btn btn-square" href="/newspaper/{data.newspaper.id}/edit" role="button">
 		<FluentEmojiGear />
 	</a>
 </div>
