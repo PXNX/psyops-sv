@@ -1,8 +1,8 @@
-<div
-	class="relative bg-gradient-to-tl from-purple-600 via-indigo-500 to-blue-500 p-6 rounded-lg w-72 shadow-lg shimmer-outline"
->
+<div class="relative bg-purple-600 rounded-lg w-72 shadow-lg shimmer-outline">
 	<!-- Header Image Section -->
-	<div class="w-full h-40 mb-4 rounded-lg overflow-hidden">
+	<div class="w-full h-40 pb-2 rounded-lg flex justify-center relative overflow-hidden">
+		<div class="absolute -inset-0.5 mt-auto bg-gradient-to-b to-purple-600 from-transparent blur h-4" />
+
 		<img
 			src="https://media.cntraveller.com/photos/65291b466ba909a7e4c6ce0d/16:9/w_1280,c_limit/Planet_Earth_III_generic_Best_Places_to_see_wildlife_October23_Credit_BBC_studios.jpg"
 			alt="Header Image"
