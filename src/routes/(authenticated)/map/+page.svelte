@@ -28,13 +28,33 @@
 </script>
 
 <dialog bind:this={regionModal} class="modal">
-	<div class="border rounded-lg modal-box border-fuchsia-900">
-		<form method="dialog">
-			<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2">✕</button>
-		</form>
-		<h3 class="text-lg font-bold">Selected region {selectedRegion}</h3>
-		<p class="py-4">Press ESC key or click on ✕ button to close</p>
+	<div class="bg-gradient-to-br from-fuchsia-800 to-purple-800 p-px rounded-lg w-3/4 m-2 mt-auto">
+		<div
+			class="relative rounded-lg bg-gradient-to-r from-slate-800 via-slate-800 to-purple-800 overflow-hidden w-full pr-4"
+		>
+			<div class="flex items-center">
+				<div class=" w-24 h-24 flex justify-center relative overflow-hidden rounded-md">
+					<img
+						src="https://media.cntraveller.com/photos/65291b466ba909a7e4c6ce0d/16:9/w_1280,c_limit/Planet_Earth_III_generic_Best_Places_to_see_wildlife_October23_Credit_BBC_studios.jpg"
+						alt="Header Image"
+						class="w-full h-full object-cover"
+					/>
+
+					<div class="absolute inset-0 mt-auto bg-gradient-to-r to-slate-800 from-transparent w-24" />
+				</div>
+
+				<div class="-m-4 flex flex-col z-10">
+					<h3 class="text-lg font-bold">Region {selectedRegion}</h3>
+					<a class="text-md text-secondary" href="/state/4">State of Kaan</a>
+				</div>
+
+				<a class="ml-auto btn btn-primary my-4" href="/region/{selectedRegion}">Details</a>
+			</div>
+		</div>
 	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
 </dialog>
 
 <header class="sticky top-0 flex items-center justify-end gap-2 p-2 bg-base-100 touch-none">
