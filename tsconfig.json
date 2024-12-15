@@ -11,9 +11,9 @@
 		"sourceMap": true,
 		"strict": true,
 		"moduleResolution": "bundler",
+
 		"types": ["unplugin-icons/types/svelte"] // add this line
-	},
-	"include": ["./cypress/**/*.js", "./cypress/**/*.ts", "./cypress/**/*.svelte"]
+	}
 	// Path aliases are handled by https://kit.svelte.dev/docs/configuration#alias
 	// except $lib which is handled by https://kit.svelte.dev/docs/configuration#files
 	//

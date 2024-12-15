@@ -91,13 +91,15 @@ export function generateSessionToken(): string {
 export async function createSession(token: string, userId: string): Promise<Session> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
-	const session = await db.create<Session>("session", {
+	console.error("SESSION ID - createSession", sessionId, userId);
+
+	const [session] = await db.create<Session>("session", {
 		id: new RecordId("session", sessionId),
 		userId: new RecordId("user", userId),
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
 	});
-	console.error("SESSION ID", sessionId, userId, session[0].expiresAt);
-	return session[0];
+	console.error("SESSION ID", sessionId, userId, session.expiresAt);
+	return session;
 }
 
 type SessionValidationResult = { session: Session; user: User } | { session: null; user: null };

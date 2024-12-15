@@ -4,7 +4,7 @@ import type { Writable } from "svelte/store";
 
 const MAX_RETRIES = 5;
 const RETRY_TIMEOUT = 2000; // 2 seconds
-const DB_URL = "http://localhost:8000/rpc";
+const DB_URL = "http://127.0.0.1:8000/rpc";
 let _db: Surreal;
 
 const database = {
