@@ -1,7 +1,8 @@
 import { RecordId } from "surrealdb";
 
-export interface Journalist {
-	in: RecordId<string>;
-	out: RecordId<string>;
+export type Journalist = {
+	id: RecordId<"journalist">;
+	in: RecordId<"user">;
+	out: RecordId<"newspaper">;
 	rank: "owner" | "editor";
-}
+};

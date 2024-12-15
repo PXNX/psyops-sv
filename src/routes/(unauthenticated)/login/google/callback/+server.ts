@@ -44,16 +44,19 @@ export async function GET(event: RequestEvent): Promise<Response> {
 	const claims = decodeIdToken(tokens.idToken());
 	const claimsParser = new ObjectParser(claims);
 
+	console.error("CLAIMS", claims);
+
 	const googleId = claimsParser.getString("sub");
 	const name = claimsParser.getString("name");
-	const picture = claimsParser.getString("picture");
+	const avatar = claimsParser.getString("picture");
 	const email = claimsParser.getString("email");
 
 	const existingUser = await getUserFromGoogleId(googleId);
 
 	console.log("EXISTING USER", existingUser);
 
-	if (existingUser !== null && existingUser !== undefined) {
+	if (existingUser) {
+		console.log("User exists.");
 		const sessionToken = generateSessionToken();
 		const session = await createSession(sessionToken, existingUser.id);
 		setSessionTokenCookie(event, sessionToken, session.expiresAt);
@@ -66,7 +69,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		});
 	}
 
-	const user = await createUser(googleId, email, name, picture);
+	const user = await createUser(googleId, email, name, avatar);
 	const sessionToken = generateSessionToken();
 	const session = await createSession(sessionToken, user.id);
 	setSessionTokenCookie(event, sessionToken, session.expiresAt);

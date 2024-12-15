@@ -24,25 +24,16 @@ export async function createUser(googleId: string, email: string, name: string, 
 	};
 }
 
-export async function getUserFromGoogleId(googleId: string): Promise<User | null> {
-	const row = await db.query<[User[]]>(
-		`SELECT id, googleId, email, name, picture
-                         FROM user
-                         WHERE googleId = $googleId;`
-	);
+export async function getUserFromGoogleId(googleId: string): Promise<User> {
+	const [user] = await db.query<[User[]]>("SELECT * FROM user WHERE googleId=$googleId;");
 
-	console.error("GOOGLE id -- sql ", googleId, "QUERY 1", row);
-	if (row === null || row[0].length === 0 || row[0][0] === undefined) {
-		return null;
-	}
+	console.log("GOOGLE id:", googleId, "user:", user);
 
-	console.log("GOOGLE id -- sql ", googleId, "QUERY 2", row[0]);
-
-	return row[0][0];
+	return user[0];
 }
 
 export type User = {
-	id: string;
+	id: RecordId<"user">;
 	email: string;
 	googleId: string;
 	name: string;

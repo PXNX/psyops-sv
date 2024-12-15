@@ -7,7 +7,7 @@
 		</button>
 	</div>
 
-	<form class="form-control w-full space-y-4" hx-ext="debug" hx-put="/n/settings" id="publish_article">
+	<form class="form-control w-full space-y-4" id="publish_article">
 		<h2 class="text-2xl font-bold mx-2">Appearance</h2>
 
 		<select class="select select-bordered w-full max-w-sm">
@@ -52,6 +52,6 @@
 			/>
 		</label>
 
-		<button class="btn btn-primary" hx-ext="debug">Save changes</button>
+		<button class="btn btn-primary">Save changes</button>
 	</form>
 </div>
