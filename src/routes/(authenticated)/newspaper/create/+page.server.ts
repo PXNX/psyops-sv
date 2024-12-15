@@ -4,11 +4,12 @@ import { zod } from "sveltekit-superforms/adapters";
 import { z } from "zod";
 import { message } from "sveltekit-superforms";
 import { error, fail } from "@sveltejs/kit";
-import { Newspaper, newspaperSchema } from "$lib/server/newspaper";
+import { type Newspaper, type NewspaperInput, newspaperSchema } from "$lib/server/newspaper";
 import { db } from "$lib/server/db";
-import { Journalist, NewspaperRank } from "../../../../lib/server/journalist";
+import type { Journalist } from "$lib/server/journalist";
+import { RecordId, StringRecordId } from "surrealdb";
 
-export const load: PageServerLoad = async ({ event: RequestEvent }) => {
+export const load: PageServerLoad = async () => {
 	const form = await superValidate(zod(newspaperSchema));
 
 	// Always return { form } in load functions
@@ -28,12 +29,12 @@ export const actions = {
 			//	return;
 		}
 
-		const [newspaper] = await db.create<Newspaper>("newspapers", form.data);
+		const [newspaper] = await db.create<NewspaperInput>("newspaper", form.data);
 
-		console.log(locals, newspaper, "+++++++++++");
+		console.log(locals, newspaper, "+++++++++++", locals.user!.id, newspaper.id);
 
-		await db.insert_relation<Journalist>("journalist", {
-			in: locals.user.id,
+		await db.insert_relation("journalist", {
+			in: locals.user!.id,
 			out: newspaper.id,
 			rank: "owner"
 		});
