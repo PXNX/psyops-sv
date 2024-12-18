@@ -9,18 +9,18 @@
 
 	const { data } = $props();
 
-	let pushblishModal = $state();
+	let publishModal = $state();
 	let cancelModal = $state();
 </script>
 
 <header class="sticky top-0 bg-base-100">
 	<div class="flex p-2 space-x-2">
-		<button onclick={() => cancelModal.showModal()} class="flinch">
+		<button onclick={() => cancelModal.showModal()} class="btn btn-ghost">
 			<FluentEmojiLeftArrow />
 		</button>
 		<input class="w-full max-w-xs input" placeholder="Enter Title..." type="text" />
 
-		<button onclick={() => pushblishModal.showModal()} class="flinch">
+		<button onclick={() => publishModal.showModal()} class="btn btn-ghost">
 			<FluentEmojiFloppyDisk />
 		</button>
 	</div>
@@ -28,7 +28,7 @@
 	<hr class="divide-gray-200 dark:divide-gray-700" />
 </header>
 
-<dialog class="modal" bind:this={pushblishModal}>
+<dialog class="modal" bind:this={publishModal}>
 	<div class="modal-box">
 		<form method="dialog">
 			<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2"><MdiWindowClose /></button>
