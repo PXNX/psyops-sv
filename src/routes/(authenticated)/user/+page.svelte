@@ -2,32 +2,25 @@
 	import { enhance } from "$app/forms";
 	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
 	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
-
+ 
 	import { shareLink } from "$lib/util";
 
 	import FluentEmojiGear from "~icons/fluent-emoji/gear";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 
 	const { data } = $props();
-
-	const shareUser = () => shareLink(data.user.name, window.location.href + "/" + data.user.id);
 </script>
 
 <div
 	class="flex justify-between bg-[url('https://source.unsplash.com/random.jpg?soldier')] bg-cover p-2 bg-linear-to-r/oklch from-indigo-500 to-teal-400"
 >
-	{#if data.user.picture}
-		<CircleAvatar image_url={data.user.picture} />
-	{:else}
-		<div class="avatar placeholder">
-			<div class="w-24 h-24 rounded-full bg-neutral text-neutral-content">
-				<span class="text-3xl">NX</span>
-			</div>
-		</div>
-	{/if}
+	<CircleAvatar image_url={data.user.avatar} />
 
 	<div class="flex flex-col gap-2 mt-auto">
-		<button class="btn btn-ghost btn-circle" onclick={shareUser}>
+		<button
+			class="btn btn-ghost btn-circle"
+			onclick={() => shareLink(data.user.name, window.location.href + "/" + data.user.id)}
+		>
 			<FluentShareAndroid20Filled />
 		</button>
 
