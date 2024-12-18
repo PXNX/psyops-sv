@@ -3,11 +3,12 @@ import { superValidate } from "sveltekit-superforms";
 import { zod } from "sveltekit-superforms/adapters";
 import { z } from "zod";
 import { message } from "sveltekit-superforms";
-import { error, fail } from "@sveltejs/kit";
+import { error, fail, redirect } from "@sveltejs/kit";
 import { type Newspaper, type NewspaperInput, newspaperSchema } from "$lib/server/newspaper";
 import { db } from "$lib/server/db";
 import type { Journalist } from "$lib/server/journalist";
 import { RecordId, StringRecordId } from "surrealdb";
+import { extractId } from "$lib/util";
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(zod(newspaperSchema));
@@ -42,6 +43,8 @@ export const actions = {
 		// TODO: Do something with the validated form.data
 
 		// Display a success status message
-		return message(form, "Form posted successfully!");
+		//	return message(form, "Form posted successfully!");
+
+		return redirect(302, "/newspaper/" + extractId(newspaper.id));
 	}
 } satisfies Actions;
