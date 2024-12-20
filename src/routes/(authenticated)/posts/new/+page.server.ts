@@ -10,5 +10,10 @@ export const load = async (event: RequestEvent) => {
 		{ userId: event.locals.user?.id }
 	);
 
-	return { newspapers: newspapers.map((newspaper: Newspaper) => ({ ...newspaper, id: extractId(newspaper.id) })) };
+	return {
+		newspapers: [
+			{ id: "1", name: "The Sun", rank: "owner" },
+			{ id: "2", name: "The Times", rank: "owner" }
+		]
+	}; // { newspapers: newspapers?.map((newspaper: Newspaper) => ({ ...newspaper, id: extractId(newspaper?.id) })) };
 };
