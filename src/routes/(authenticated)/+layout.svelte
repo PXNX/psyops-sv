@@ -7,12 +7,14 @@
 	import FluentEmojiNutAndBolt from "~icons/fluent-emoji/nut-and-bolt";
 	import FluentEmojiIdentificationCard from "~icons/fluent-emoji/identification-card";
 
-	const { children } = $props();
+	const { children, data } = $props();
 
 	let active = "home";
 
 	const navigateTo = (page2: string) => {
 		active = page2;
+		console.log("data --------------------");
+		console.dir(data);
 		goto(`/${page2}`);
 	};
 </script>
@@ -42,7 +44,7 @@
 	<button onclick={() => navigateTo("production")} class="flinch">
 		<FluentEmojiNutAndBolt class="w-6 h-6" />
 	</button>
-	<button onclick={() => navigateTo("user")} class="flinch">
+	<button onclick={() => navigateTo("user/" + data.account.id.substring(5))} class="flinch">
 		<FluentEmojiIdentificationCard class="w-6 h-6" />
 	</button>
 </nav>
