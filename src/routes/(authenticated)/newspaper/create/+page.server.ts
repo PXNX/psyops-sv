@@ -1,14 +1,10 @@
-import type { PageServerLoad, Actions } from "./$types";
+import { db } from "$lib/server/db";
+import { type NewspaperInput, newspaperSchema } from "$lib/server/newspaper";
+import { extractId } from "$lib/util";
+import { fail, redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
 import { zod } from "sveltekit-superforms/adapters";
-import { z } from "zod";
-import { message } from "sveltekit-superforms";
-import { error, fail, redirect } from "@sveltejs/kit";
-import { type Newspaper, type NewspaperInput, newspaperSchema } from "$lib/server/newspaper";
-import { db } from "$lib/server/db";
-import type { Journalist } from "$lib/server/journalist";
-import { RecordId, StringRecordId } from "surrealdb";
-import { extractId } from "$lib/util";
+import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(zod(newspaperSchema));
@@ -32,10 +28,10 @@ export const actions = {
 
 		const [newspaper] = await db.create<NewspaperInput>("newspaper", form.data);
 
-		console.log(locals, newspaper, "+++++++++++", locals.user!.id, newspaper.id);
+		console.log(locals, newspaper, "+++++++++++", locals.account!.id, newspaper.id);
 
 		await db.insert_relation("journalist", {
-			in: locals.user!.id,
+			in: locals.account!.id,
 			out: newspaper.id,
 			rank: "owner"
 		});

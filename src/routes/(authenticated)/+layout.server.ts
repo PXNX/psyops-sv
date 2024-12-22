@@ -1,9 +1,5 @@
-import type { LayoutServerLoad } from "./$types";
-
 import { redirect } from "@sveltejs/kit";
 import { jsonify } from "surrealdb";
-import { fail } from "@sveltejs/kit";
-import { deleteSessionTokenCookie, invalidateSession } from "$lib/server/session";
 
 import type { RequestEvent } from "./$types";
 
@@ -12,15 +8,17 @@ const langParam = "hl"; // or maybe better to let user set it and have en defaul
 
 export const load = async (event: RequestEvent) => {
 	//await parent();
-	if (event.locals.session === null || event.locals.user === null) {
+	if (event.locals.session === null || event.locals.account === null) {
 		return redirect(302, "/login?next=" + event.url.pathname);
 	}
 
-	//rptecting just here feels wrong tbh
+	//protecting just here feels wrong tbh
 
-	const dataUser = jsonify(event.locals.user);
+	const dataUser = jsonify(event.locals.account);
+
+	console.log("dataUser", dataUser);
 
 	return {
-		user: dataUser
+		account: dataUser
 	};
 };

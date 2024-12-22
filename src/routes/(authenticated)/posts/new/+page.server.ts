@@ -1,13 +1,11 @@
-import type { PageServerLoad, Actions, RequestEvent } from "./$types";
-import { jsonify } from "surrealdb";
-import type { Newspaper } from "$lib/server/newspaper";
 import { db } from "$lib/server/db";
-import { extractId } from "$lib/util";
+import type { Newspaper } from "$lib/server/newspaper";
+import type { RequestEvent } from "./$types";
 
 export const load = async (event: RequestEvent) => {
 	const newspapers = await db.query<Newspaper[]>(
 		"SELECT *,<-journalist.rank.first() as rank FROM $userId->journalist->newspaper;",
-		{ userId: event.locals.user?.id }
+		{ userId: event.locals.account?.id }
 	);
 
 	return {

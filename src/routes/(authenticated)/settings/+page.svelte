@@ -10,9 +10,9 @@
 	export let data: PageData;
 </script>
 
-<h1>Hi, {data.user.name}!</h1>
-<img src={data.user.picture} height="100px" width="100px" alt="profile" />
-<p>Email: {data.user.email}</p>
+<h1>Hi, {data.account.name}!</h1>
+<img src={data.account.avatar} height="100px" width="100px" alt="profile" />
+<p>Email: {data.account.email}</p>
 
 <section class="w-full px-4 pt-4 mb-12 space-y-4">
 	<h2

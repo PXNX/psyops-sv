@@ -1,9 +1,9 @@
-import { db } from "./db";
-import { encodeBase32, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
+import { encodeBase32, encodeHexLowerCase } from "@oslojs/encoding";
 import type { RequestEvent } from "@sveltejs/kit";
-import type { User } from "./user";
 import { jsonify, RecordId } from "surrealdb";
+import { db } from "./db";
+import type { User } from "./user";
 
 export type Session = {
 	id: RecordId<string>;
@@ -25,7 +25,7 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 	console.dir(jsonify(user));
 
 	if (!session) {
-		return { session: null, user: null };
+		return { session: null, account: null };
 	}
 	const newSession: Session = {
 		...session,
@@ -34,7 +34,7 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 
 	if (Date.now() >= newSession.expiresAt.getTime()) {
 		invalidateSession(new RecordId("session", sessionId));
-		return { session: null, user: null };
+		return { session: null, account: null };
 	}
 	if (Date.now() >= newSession.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
 		newSession.expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30);
@@ -51,7 +51,7 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 
 	console.error("------");
 
-	return { session, user };
+	return { session, account: user };
 }
 
 export async function invalidateSession(sessionId: RecordId<string>): Promise<void> {
@@ -88,18 +88,18 @@ export function generateSessionToken(): string {
 	return encodeBase32(tokenBytes).toLowerCase();
 }
 
-export async function createSession(token: string, userId: string): Promise<Session> {
+export async function createSession(token: string, userId: RecordId<"user">): Promise<Session> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
 	console.error("SESSION ID - createSession", sessionId, userId);
 
 	const [session] = await db.create<Session>("session", {
 		id: new RecordId("session", sessionId),
-		userId: new RecordId("user", userId),
+		userId: userId,
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
 	});
 	console.error("SESSION ID", sessionId, userId, session.expiresAt);
 	return session;
 }
 
-type SessionValidationResult = { session: Session; user: User } | { session: null; user: null };
+type SessionValidationResult = { session: Session; account: User } | { session: null; account: null };

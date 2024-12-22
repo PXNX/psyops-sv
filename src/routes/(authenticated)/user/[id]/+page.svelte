@@ -2,7 +2,7 @@
 	import { enhance } from "$app/forms";
 	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
 	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
- 
+
 	import { shareLink } from "$lib/util";
 
 	import FluentEmojiGear from "~icons/fluent-emoji/gear";
@@ -16,7 +16,7 @@
 >
 	<CircleAvatar image_url={data.user.avatar} />
 
-	<div class="flex flex-col gap-2 mt-auto">
+	<div class="flex gap-2 mt-auto flex-col">
 		<button
 			class="btn btn-ghost btn-circle"
 			onclick={() => shareLink(data.user.name, window.location.href + "/" + data.user.id)}
@@ -24,9 +24,11 @@
 			<FluentShareAndroid20Filled />
 		</button>
 
-		<a href="/settings" class="btn btn-circle btn-ghost">
-			<FluentEmojiGear />
-		</a>
+		{#if data.user.id === data.account.id}
+			<a href="/settings" class="btn btn-circle btn-ghost">
+				<FluentEmojiGear />
+			</a>
+		{/if}
 	</div>
 </div>
 
