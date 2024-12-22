@@ -7,16 +7,70 @@
 
 	import FluentEmojiGear from "~icons/fluent-emoji/gear";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
+	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 
 	const { data } = $props();
 </script>
 
-<div
-	class="flex justify-between bg-[url('https://source.unsplash.com/random.jpg?soldier')] bg-cover p-2 bg-linear-to-r/oklch from-indigo-500 to-teal-400"
+<section
+	class="h-40 bg-cover bg-center relative bg-[url('https://img.freepik.com/fotos-kostenlos/ein-gemaelde-eines-bergsees-mit-einem-berg-im-hintergrund_188544-9126.jpg')]"
 >
-	<CircleAvatar image_url={data.user.avatar} />
+	<div class="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900 opacity-80">
+		<div class="absolute left-4 bottom-2 flex items-center space-x-3">
+			<CircleAvatar image_url={data.user.avatar} />
+			<div>
+				<h2 class="text-xl font-bold text-white">{data.user.name}</h2>
+				<p class="text-xs text-gray-300">Minister of Education</p>
+			</div>
+		</div>
+	</div>
+</section>
 
-	<div class="flex gap-2 mt-auto flex-col">
+<div class="m-2 mt-4 space-y-2">
+	<section class="p-2 space-y-2 bg-gradient-to-r from-green-600 to-teal-600 rounded-lg">
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
+			<div class="flex items-center space-x-3">
+				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
+
+				<div>
+					<p class="font-medium text-sm">Nendeln</p>
+					<p class="text-xs text-gray-300">Current • 15.11.2023, 04:20</p>
+				</div>
+			</div>
+			<FluentChevronRight20Filled class="w-5 h-5 text-white" />
+		</a>
+
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/2">
+			<div class="flex items-center space-x-3">
+				<SquareAvatar image_url={"https://pcclacehold.co/48/svdexsg"} />
+
+				<div>
+					<p class="font-medium text-sm">Baden-Württemberg</p>
+					<p class="text-xs text-gray-300">Home • 26.11.2023, 04:20</p>
+				</div>
+			</div>
+			<FluentChevronRight20Filled class="w-5 h-5 text-white" />
+		</a>
+	</section>
+
+	<section class="p-2 mt-10 space-y-2 border rounded-lg select-bordered">
+		<a class="flex flex-row w-full gap-2 flinch label-text" href="/party/1">
+			<SquareAvatar image_url={"https://placehold.co/48/svg"} />
+			<div>
+				<b class="block text-lg">Wagner PMC</b>
+				<span class="text-primary">Team</span><span> 26.11.2023, 04:20</span>
+			</div>
+		</a>
+		<a class="flex flex-row w-full gap-2 flinch label-text" href="/state/1">
+			<SquareAvatar image_url={"https://placehold.co/48/svg"} />
+			<div>
+				<b class="block text-lg">German Reich</b>
+				<span class="text-primary">Chancellor</span><span> 26.11.2023, 19:33</span>
+			</div>
+		</a>
+	</section>
+
+	<div class="flex justify-end space-x-2 p-1 w-full">
 		<button
 			class="btn btn-ghost btn-circle"
 			onclick={() => shareLink(data.user.name, window.location.href + "/" + data.user.id)}
@@ -32,56 +86,4 @@
 	</div>
 </div>
 
-<div class="mx-2 my-4 space-y-4">
-	<div class="flex items-center justify-center w-full">
-		<b class="text-xl">{data.user.name}</b>
-		<div class="tooltip tooltip-left hover:tooltip-open" data-tip="Member of staff">
-			<svg
-				class="w-5 h-5 ms-1 stroke-primary hover:stroke-2"
-				fill="none"
-				viewBox="0 0 24 24"
-				xmlns="http://www.w3.org/2000/svg"
-			>
-				<path
-					d="M23,12L20.48,9.22L20.9,5.54L17.29,4.72L15.4,1.54L12,3L8.6,1.54L6.71,4.72L3.1,5.53L3.44,9.21L1,12L3.44,14.78L3.1,18.47L6.71,19.29L8.6,22.47L12,21L15.4,22.46L17.29,19.28L20.9,18.46L20.48,14.78L23,12M10,17L6,13L7.41,11.59L10,14.17L16.59,7.58L18,9L10,17Z"
-				/>
-			</svg>
-		</div>
-	</div>
-
-	<section class="p-2 mt-10 space-y-2 border rounded-lg select-bordered">
-		<a class="flex flex-row w-full gap-2 flinch label-text" href="/region/1">
-			<SquareAvatar image_url={"https://placehold.co/48/svg"} />
-			<div>
-				<b class="block text-lg">Nendeln</b>
-				<span class="text-primary">Current Region</span><span> 26.11.2023, 04:20</span>
-			</div>
-		</a>
-		<a class="flex flex-row w-full gap-2 flinch label-text" href="/region/2">
-			<SquareAvatar image_url={"https://pcclacehold.co/48/svdexsg"} />
-			<div>
-				<b class="block text-lg">Baden-Württemberg</b>
-				<span class="text-primary">Home Region</span><span> 26.11.2023, 04:20</span>
-			</div>
-		</a>
-	</section>
-
-	<section class="p-2 mt-10 space-y-2 border rounded-lg select-bordered">
-		<a class="flex flex-row w-full gap-2 flinch label-text" href="/team/1">
-			<img class="bg-cover rounded-lg" height="48" src="https://placehold.co/48/svg" width="48" />
-			<div>
-				<b class="block text-lg">Wagner PMC</b>
-				<span class="text-primary">Team</span><span> 26.11.2023, 04:20</span>
-			</div>
-		</a>
-		<a class="flex flex-row w-full gap-2 flinch label-text" href="/country/1">
-			<img class="bg-cover rounded-lg" height="48" src="https://placehold.co/48/svg" width="48" />
-			<div>
-				<b class="block text-lg">German Reich</b>
-				<span class="text-primary">Chancellor</span><span> 26.11.2023, 19:33</span>
-			</div>
-		</a>
-	</section>
-
-	<!-- todo: add additional info-->
-</div>
+<!-- todo: add additional info-->
