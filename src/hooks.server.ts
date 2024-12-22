@@ -1,8 +1,8 @@
 import { TokenBucket } from "$lib/server/rate-limit";
-import { validateSessionToken, setSessionTokenCookie, deleteSessionTokenCookie } from "$lib/server/session";
+import { deleteSessionTokenCookie, setSessionTokenCookie, validateSessionToken } from "$lib/server/session";
 import { sequence } from "@sveltejs/kit/hooks";
 
-import type { Handle } from "@sveltejs/kit";
+import { error, type Handle } from "@sveltejs/kit";
 
 const bucket = new TokenBucket<string>(100, 1);
 
@@ -19,9 +19,7 @@ const rateLimitHandle: Handle = async ({ event, resolve }) => {
 		cost = 3;
 	}
 	if (!bucket.consume(clientIP, cost)) {
-		return new Response("Too many requests", {
-			status: 429
-		});
+		throw error(429, "Too many requests");
 	}
 	return resolve(event);
 };
@@ -29,12 +27,12 @@ const rateLimitHandle: Handle = async ({ event, resolve }) => {
 const authHandle: Handle = async ({ event, resolve }) => {
 	const token = event.cookies.get("session") ?? null;
 	if (token === null) {
-		event.locals.user = null;
+		event.locals.account = null;
 		event.locals.session = null;
 		return resolve(event);
 	}
 
-	const { session, user } = await validateSessionToken(token);
+	const { session, account } = await validateSessionToken(token);
 	if (session !== null) {
 		setSessionTokenCookie(event, token, session.expiresAt);
 	} else {
@@ -42,7 +40,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	}
 
 	event.locals.session = session;
-	event.locals.user = user;
+	event.locals.account = account;
 	return resolve(event);
 };
 

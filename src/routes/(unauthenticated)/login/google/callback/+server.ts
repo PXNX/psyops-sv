@@ -1,57 +1,42 @@
-import { ObjectParser } from "@pilcrowjs/object-parser";
-import { createUser, getUserFromGoogleId } from "$lib/server/user";
-import { createSession, generateSessionToken, setSessionTokenCookie } from "$lib/server/session";
-import { decodeIdToken } from "arctic";
-
-import type { RequestEvent } from "./$types";
-import type { OAuth2Tokens } from "arctic";
 import { googleProvider } from "$lib/server/oauth";
-import { extractId } from "$lib/util";
+import { createSession, generateSessionToken, setSessionTokenCookie } from "$lib/server/session";
+import { createUser, getUserFromGoogleId } from "$lib/server/user";
+import { error, redirect } from "@sveltejs/kit";
+import type { OAuth2Tokens } from "arctic";
+import { decodeIdToken } from "arctic";
+import type { RequestEvent } from "./$types";
+
+type Claims = {
+	sub: string;
+	name: string;
+	email: string;
+	picture: string;
+};
 
 export async function GET(event: RequestEvent): Promise<Response> {
-	const storedState = event.cookies.get("google_oauth_state") ?? null;
-	const codeVerifier = event.cookies.get("google_code_verifier") ?? null;
 	const code = event.url.searchParams.get("code");
 	const state = event.url.searchParams.get("state");
-
-	if (storedState === null || codeVerifier === null || code === null || state === null) {
-		console.error("Invalid state or code");
-		return new Response("Please restart the process. 1", {
+	const storedState = event.cookies.get("google_oauth_state") ?? null;
+	const codeVerifier = event.cookies.get("google_code_verifier") ?? null;
+	if (code === null || state === null || storedState === null || codeVerifier === null) {
+		return new Response(null, {
 			status: 400
 		});
 	}
-	if (storedState !== state) {
-		console.error("Invalid stored state");
-
-		return new Response("Please restart the process. 2", {
-			status: 400
-		});
+	if (state !== storedState) {
+		throw error(400, "Invalid state");
 	}
-
-	console.log("code", code, codeVerifier);
 
 	let tokens: OAuth2Tokens;
 	try {
 		tokens = await googleProvider.validateAuthorizationCode(code, codeVerifier);
 	} catch (e) {
-		console.error("Invalid validateAuthorizationCode", e);
-
-		return new Response("Please restart the process. 3", {
-			status: 400
-		});
+		throw error(400, "Invalid code or client credentials");
 	}
 
-	const claims = decodeIdToken(tokens.idToken());
-	const claimsParser = new ObjectParser(claims);
+	const { email, picture: avatar, name: username, sub: googleUserId } = decodeIdToken(tokens.idToken()) as Claims;
 
-	console.error("CLAIMS", claims);
-
-	const googleId = claimsParser.getString("sub");
-	const name = claimsParser.getString("name");
-	const avatar = claimsParser.getString("picture");
-	const email = claimsParser.getString("email");
-
-	const existingUser = await getUserFromGoogleId(googleId);
+	const existingUser = await getUserFromGoogleId(googleUserId);
 
 	console.log("EXISTING USER", existingUser);
 
@@ -60,23 +45,12 @@ export async function GET(event: RequestEvent): Promise<Response> {
 		const sessionToken = generateSessionToken();
 		const session = await createSession(sessionToken, existingUser.id);
 		setSessionTokenCookie(event, sessionToken, session.expiresAt);
-
-		return new Response(null, {
-			status: 302,
-			headers: {
-				Location: "/"
-			}
-		});
+		return redirect(302, "/");
 	}
 
-	const user = await createUser(googleId, email, name, avatar);
+	const user = await createUser(googleUserId, email, username, avatar);
 	const sessionToken = generateSessionToken();
 	const session = await createSession(sessionToken, user.id);
 	setSessionTokenCookie(event, sessionToken, session.expiresAt);
-	return new Response(null, {
-		status: 302,
-		headers: {
-			Location: "/"
-		}
-	});
+	return redirect(302, "/welcome");
 }
