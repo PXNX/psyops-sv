@@ -16,6 +16,16 @@
 	import { Color } from "@tiptap/extension-color";
 	import ListItem from "@tiptap/extension-list-item";
 	import TextStyle from "@tiptap/extension-text-style";
+	import Document from "@tiptap/extension-document";
+	import Gapcursor from "@tiptap/extension-gapcursor";
+	import Paragraph from "@tiptap/extension-paragraph";
+	import Table from "@tiptap/extension-table";
+	import TableCell from "@tiptap/extension-table-cell";
+	import TableHeader from "@tiptap/extension-table-header";
+	import TableRow from "@tiptap/extension-table-row";
+	import Text from "@tiptap/extension-text";
+	import BulletList from "@tiptap/extension-bullet-list";
+	import OrderedList from "@tiptap/extension-ordered-list";
 
 	import { onMount } from "svelte";
 	import type { Readable } from "svelte/store";
@@ -29,7 +39,27 @@
 			extensions: [
 				Color.configure({ types: [TextStyle.name, ListItem.name] }),
 				//	TextStyle.configure({ types: [ListItem.name] }),
-				StarterKit
+				StarterKit,
+				Document,
+				Paragraph,
+				Text,
+				Gapcursor,
+				Table.configure({
+					resizable: true
+				}),
+				TableRow,
+				TableHeader,
+				TableCell,
+				BulletList.configure({
+					HTMLAttributes: {
+						class: "list-disc ml-2"
+					}
+				}),
+				OrderedList.configure({
+					HTMLAttributes: {
+						class: "list-decimal ml-2"
+					}
+				})
 			],
 			content: `
 			  <h2>
@@ -60,7 +90,12 @@
 				<br />
 				— Mom
 			  </blockquote>
-			`
+			`,
+			editorProps: {
+				attributes: {
+					class: " appearance-none h-full    w-full p-2 bg-white text-black   leading-tight focus:outline-none "
+				}
+			}
 		});
 	});
 
