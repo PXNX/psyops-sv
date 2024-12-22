@@ -24,24 +24,38 @@
 			<CircleAvatar image_url={data.user.avatar} />
 			<div>
 				<h2 class="text-xl font-bold text-white">{data.user.name}</h2>
-				<p class="text-xs text-gray-300">Minister of Education</p>
+				<p class="text-sm">Minister of Education</p>
 			</div>
 		</div>
 	</div>
 </section>
 
-<div class="m-2 mt-4 space-y-2">
-	<section class="p-2 space-y-2 rounded-lg x">
+<div class="m-2 space-y-2">
+	<section class="p-1 space-y-2 rounded-lg bg-gradient-to-r via-yellow-600 from-orange-600 to-transparent">
 		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
 			<div class="flex items-center space-x-3">
 				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
 
-				<div class="bg-gradient-to-r from-yellow-600 to-orange-600 text-transparent bg-clip-text">
-					<p class="font-medium text-md capitalize">Wagner PMC</p>
-					<p class="text-sm opacity-75 capitalize">Party • 15.11.2023, 04:20</p>
+				<div>
+					<p class="font-bold text-md capitalize">Wagner PMC</p>
+					<p class="text-sm capitalize">Party • 15.11.2023, 04:20</p>
 				</div>
 			</div>
 			<FluentChevronRight20Filled class="w-5 h-5 text-orange-600" />
+		</a>
+	</section>
+
+	<section class="p-1 space-y-2 rounded-lg bg-gradient-to-r via-blue-600 from-purple-600 to-transparent">
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
+			<div class="flex items-center space-x-3">
+				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
+
+				<div>
+					<p class="font-bold text-md capitalize">German Reich</p>
+					<p class="text-sm capitalize">Chancellor • 15.11.2023, 04:20</p>
+				</div>
+			</div>
+			<FluentChevronRight20Filled class="w-5 h-5 text-purple-600" />
 		</a>
 	</section>
 
@@ -65,20 +79,6 @@
 				<div>
 					<p class="font-medium text-sm">Baden-Württemberg</p>
 					<p class="text-xs text-gray-300">Home • 26.11.2023, 04:20</p>
-				</div>
-			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-white" />
-		</a>
-	</section>
-
-	<section class="p-2 space-y-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg">
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
-			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
-
-				<div>
-					<p class="font-medium text-sm">German Reich</p>
-					<p class="text-xs text-gray-300">Chancellor • 15.11.2023, 04:20</p>
 				</div>
 			</div>
 			<FluentChevronRight20Filled class="w-5 h-5 text-white" />
