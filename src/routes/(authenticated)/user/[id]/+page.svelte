@@ -31,35 +31,83 @@
 </section>
 
 <div class="m-2 space-y-2">
-	<section class="p-1 space-y-2 rounded-lg">
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/party/1">
-			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
+	<section class="grid grid-cols-2 gap-2">
+		<a
+			class="h-18 bg-cover
+			
+					border-1 focus:border-purple-600
+			
+			
+			border-black
+			
+			bg-center flinch rounded-lg overflow-clip relative bg-[url('https://img.freepik.com/fotos-kostenlos/ein-gemaelde-eines-bergsees-mit-einem-berg-im-hintergrund_188544-9126.jpg')]"
+			href="/state/1"
+		>
+			<div class="absolute inset-0 bg-gradient-to-r from-slate-800 to-black text-c-600 opacity-75"></div>
 
-				<div>
-					<p class="font-bold text-md capitalize">Wagner PMC</p>
-					<p class="text-sm capitalize">Party • 15.11.2023, 04:20</p>
-				</div>
-			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-orange-600" />
-		</a>
-	</section>
-
-	<section class="p-1 space-y-2 rounded-lg">
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/state/1">
-			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
-
+			<div class=" absolute inset-0 p-2 w-full flex items-center space-x-2 justify-between">
 				<div>
 					<p class="font-bold text-md capitalize">German Reich</p>
-					<p class="text-sm capitalize">Chancellor • 15.11.2023, 04:20</p>
+					<p class="text-sm capitalize">Chancellor</p>
 				</div>
+
+				<FluentChevronRight20Filled class="w-5 h-5 text-purple-600" />
 			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-purple-600" />
+		</a>
+
+		<a
+			class="h-18
+			
+			
+				border-1 focus:border-orange-600
+			
+			
+			border-black
+			
+			bg-cover bg-center flinch rounded-lg overflow-clip relative bg-[url('https://bilder.deutschlandfunk.de/6b/41/01/d6/6b4101d6-1b80-486b-b085-e97f6d927167/wagner-110-1920x1080.jpg')]"
+			href="/state/1"
+		>
+			<div class="absolute inset-0 bg-gradient-to-r from-slate-800 to-black text-purple-orange opacity-75"></div>
+
+			<div class=" absolute inset-0 p-2 w-full flex items-center space-x-2 justify-between">
+				<div>
+					<p class="font-bold text-md capitalize">Wagner PMC</p>
+					<p class="text-sm capitalize">Party</p>
+				</div>
+
+				<FluentChevronRight20Filled class="w-5 h-5 text-orange-600" />
+			</div>
 		</a>
 	</section>
 
-	<div class="flex justify-end space-x-2 p-1 w-full">
+	<section class="p-1 space-y-2 rounded-lg">
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
+			<div class="flex items-center space-x-3">
+				<SquareAvatar image_url={"https://placehold.co/48/svggfd"} />
+
+				<div>
+					<p class="font-bold text-md capitalize">Baden-Württemberg</p>
+					<p class="text-sm font-bold capitalize">State of Kaan</p>
+					<p class="text-sm capitalize">Current • 15.11.2023, 04:20</p>
+				</div>
+			</div>
+			<FluentChevronRight20Filled class="w-5 h-5 text-green-600" />
+		</a>
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
+			<div class="flex items-center space-x-3">
+				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
+
+				<div>
+					<p class="font-bold text-md capitalize">Baden-Württemberg</p>
+					<p class="text-sm font-bold capitalize">State of Kaan</p>
+					<p class="text-sm capitalize">Home • 15.11.2023, 04:20</p>
+				</div>
+			</div>
+			<FluentChevronRight20Filled class="w-5 h-5 text-green-600" />
+		</a>
+	</section>
+
+	<section class="flex justify-end space-x-2 p-1 w-full">
 		{#if data.user.id !== data.account.id}
 			<button
 				class="btn btn-ghost btn-circle"
@@ -95,65 +143,6 @@
 				<FluentAccessibilityError20Filled />
 			</button>
 		{/if}
-	</div>
-
-	<section class="grid grid-cols-2 gap-2">
-		<a
-			class="h-24 bg-cover bg-center flinch rounded-md overflow-clip relative bg-[url('https://img.freepik.com/fotos-kostenlos/ein-gemaelde-eines-bergsees-mit-einem-berg-im-hintergrund_188544-9126.jpg')]"
-			href="/state/1"
-		>
-			<div class="absolute inset-0 bg-gradient-to-br from-transparent to-black text-purple-600">
-				<div class=" absolute bottom-0 p-3 w-full flex items-center space-x-3 justify-between">
-					<div>
-						<p class="font-bold text-md capitalize">German Reich</p>
-						<p class="text-sm capitalize">Chancellor<br />15.11.2023, 04:20</p>
-					</div>
-
-					<FluentChevronRight20Filled class="w-5 h-5 text-purple-600" />
-				</div>
-			</div>
-		</a>
-
-		<a
-			class="h-24 bg-cover bg-center flinch rounded-md relative overflow-clip bg-[url('https://bilder.deutschlandfunk.de/6b/41/01/d6/6b4101d6-1b80-486b-b085-e97f6d927167/wagner-110-1920x1080.jpg')]"
-			href="/party/1"
-		>
-			<div class="absolute inset-0 bg-gradient-to-br from-transparent to-black text-orange-600">
-				<div class=" absolute bottom-0 p-3 w-full flex items-center space-x-3 justify-between">
-					<div>
-						<p class="font-bold text-md capitalize">Wagner PMC</p>
-						<p class="text-sm capitalize">Party • 15.11.2023, 04:20</p>
-					</div>
-
-					<FluentChevronRight20Filled class="w-5 h-5 text-orange-600" />
-				</div>
-			</div>
-		</a>
-	</section>
-
-	<section class="p-1 space-y-2 rounded-lg">
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
-			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://placehold.co/48/svggfd"} />
-
-				<div>
-					<p class="font-bold text-md capitalize">Baden-Württemberg</p>
-					<p class="text-sm capitalize">Current • 15.11.2023, 04:20</p>
-				</div>
-			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-green-600" />
-		</a>
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
-			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
-
-				<div>
-					<p class="font-bold text-md capitalize">Baden-Württemberg</p>
-					<p class="text-sm capitalize">Home • 15.11.2023, 04:20</p>
-				</div>
-			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-green-600" />
-		</a>
 	</section>
 
 	<div tabindex="0" class="collapse collapse-plus border-base-300 border">
