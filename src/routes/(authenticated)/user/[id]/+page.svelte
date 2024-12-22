@@ -97,6 +97,40 @@
 		{/if}
 	</div>
 
+	<section class="grid grid-cols-2 gap-2">
+		<a
+			class="h-24 bg-cover bg-center flinch rounded-md overflow-clip relative bg-[url('https://img.freepik.com/fotos-kostenlos/ein-gemaelde-eines-bergsees-mit-einem-berg-im-hintergrund_188544-9126.jpg')]"
+			href="/state/1"
+		>
+			<div class="absolute inset-0 bg-gradient-to-br from-transparent to-black text-purple-600">
+				<div class=" absolute bottom-0 p-3 w-full flex items-center space-x-3 justify-between">
+					<div>
+						<p class="font-bold text-md capitalize">German Reich</p>
+						<p class="text-sm capitalize">Chancellor<br />15.11.2023, 04:20</p>
+					</div>
+
+					<FluentChevronRight20Filled class="w-5 h-5 text-purple-600" />
+				</div>
+			</div>
+		</a>
+
+		<a
+			class="h-24 bg-cover bg-center flinch rounded-md relative overflow-clip bg-[url('https://bilder.deutschlandfunk.de/6b/41/01/d6/6b4101d6-1b80-486b-b085-e97f6d927167/wagner-110-1920x1080.jpg')]"
+			href="/party/1"
+		>
+			<div class="absolute inset-0 bg-gradient-to-br from-transparent to-black text-orange-600">
+				<div class=" absolute bottom-0 p-3 w-full flex items-center space-x-3 justify-between">
+					<div>
+						<p class="font-bold text-md capitalize">Wagner PMC</p>
+						<p class="text-sm capitalize">Party • 15.11.2023, 04:20</p>
+					</div>
+
+					<FluentChevronRight20Filled class="w-5 h-5 text-orange-600" />
+				</div>
+			</div>
+		</a>
+	</section>
+
 	<section class="p-1 space-y-2 rounded-lg">
 		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
 			<div class="flex items-center space-x-3">
