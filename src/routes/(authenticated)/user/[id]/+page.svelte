@@ -31,8 +31,8 @@
 </section>
 
 <div class="m-2 space-y-2">
-	<section class="p-1 space-y-2 rounded-lg bg-gradient-to-r via-yellow-600 from-orange-600 to-transparent">
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
+	<section class="p-1 space-y-2 rounded-lg">
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/party/1">
 			<div class="flex items-center space-x-3">
 				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
 
@@ -45,8 +45,8 @@
 		</a>
 	</section>
 
-	<section class="p-1 space-y-2 rounded-lg bg-gradient-to-r via-blue-600 from-purple-600 to-transparent">
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
+	<section class="p-1 space-y-2 rounded-lg">
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/state/1">
 			<div class="flex items-center space-x-3">
 				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
 
@@ -56,32 +56,6 @@
 				</div>
 			</div>
 			<FluentChevronRight20Filled class="w-5 h-5 text-purple-600" />
-		</a>
-	</section>
-
-	<section class="p-2 space-y-2 bg-gradient-to-r from-green-600 to-teal-600 rounded-lg">
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
-			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
-
-				<div>
-					<p class="font-medium text-sm">Nendeln</p>
-					<p class="text-xs text-gray-300">Current • 15.11.2023, 04:20</p>
-				</div>
-			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-white" />
-		</a>
-
-		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/2">
-			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://pcclacehold.co/48/svdexsg"} />
-
-				<div>
-					<p class="font-medium text-sm">Baden-Württemberg</p>
-					<p class="text-xs text-gray-300">Home • 26.11.2023, 04:20</p>
-				</div>
-			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-white" />
 		</a>
 	</section>
 
@@ -123,8 +97,33 @@
 		{/if}
 	</div>
 
-	<div tabindex="0" class="collapse collapse-plus border-base-300 bg-base-200 border">
-		<div class="collapse-title text-xl font-medium">Additional Information</div>
+	<section class="p-1 space-y-2 rounded-lg">
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
+			<div class="flex items-center space-x-3">
+				<SquareAvatar image_url={"https://placehold.co/48/svggfd"} />
+
+				<div>
+					<p class="font-bold text-md capitalize">Baden-Württemberg</p>
+					<p class="text-sm capitalize">Current • 15.11.2023, 04:20</p>
+				</div>
+			</div>
+			<FluentChevronRight20Filled class="w-5 h-5 text-green-600" />
+		</a>
+		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
+			<div class="flex items-center space-x-3">
+				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
+
+				<div>
+					<p class="font-bold text-md capitalize">Baden-Württemberg</p>
+					<p class="text-sm capitalize">Home • 15.11.2023, 04:20</p>
+				</div>
+			</div>
+			<FluentChevronRight20Filled class="w-5 h-5 text-green-600" />
+		</a>
+	</section>
+
+	<div tabindex="0" class="collapse collapse-plus border-base-300 border">
+		<div class="collapse-title text-md font-medium">Additional Information</div>
 		<div class="collapse-content">
 			<p>tabindex="0" attribute is necessary to make the div focusable</p>
 		</div>
