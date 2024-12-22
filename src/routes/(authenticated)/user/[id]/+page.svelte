@@ -31,17 +31,17 @@
 </section>
 
 <div class="m-2 mt-4 space-y-2">
-	<section class="p-2 space-y-2 bg-gradient-to-r from-yellow-600 to-orange-600 rounded-lg">
+	<section class="p-2 space-y-2 rounded-lg x">
 		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
 			<div class="flex items-center space-x-3">
 				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
 
-				<div>
-					<p class="font-medium text-sm">wagner PMC</p>
-					<p class="text-xs text-gray-300">Party • 15.11.2023, 04:20</p>
+				<div class="bg-gradient-to-r from-yellow-600 to-orange-600 text-transparent bg-clip-text">
+					<p class="font-medium text-md capitalize">Wagner PMC</p>
+					<p class="text-sm opacity-75 capitalize">Party • 15.11.2023, 04:20</p>
 				</div>
 			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-white" />
+			<FluentChevronRight20Filled class="w-5 h-5 text-orange-600" />
 		</a>
 	</section>
 
