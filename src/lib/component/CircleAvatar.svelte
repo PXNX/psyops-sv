@@ -1,13 +1,13 @@
 <script lang="ts">
-	export let image_url: string;
-
 	import FluentColorPerson20 from "~icons/fluent-color/person-24";
+
+	const { src, bgColor }: { src: string; bgColor?: string } = $props();
 
 	function replaceImg() {
 		error = true;
 	}
 
-	let error = false;
+	let error = $state(false);
 
 	/**
 	 * todo: Newspaper with rounded corners, user as circle avatar.
@@ -17,14 +17,14 @@
 </script>
 
 {#if error}
-	<FluentColorPerson20 class="rounded-full w-14 h-14 bg-indigo-800 p-1" />
+	<FluentColorPerson20 class="rounded-circle w-14 h-14 bg-indigo-800 p-1" />
 {:else}
 	<img
 		alt="Avatar"
-		class="rounded-lg w-14 h-14"
+		class={`rounded-circle w-14 h-14 ${bgColor} bg-cover bg-center`}
 		loading="lazy"
 		onerror={() => replaceImg()}
-		src={image_url}
+		{src}
 		width="140"
 	/>
 {/if}

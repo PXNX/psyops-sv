@@ -1,13 +1,13 @@
-import { db } from "$lib/server/db";
-import { type NewspaperInput, newspaperSchema } from "$lib/server/newspaper";
-import { extractId } from "$lib/util";
-import { fail, redirect } from "@sveltejs/kit";
+import { fail } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
-import { zod } from "sveltekit-superforms/adapters";
+import { valibot } from "sveltekit-superforms/adapters";
 import type { Actions, PageServerLoad } from "./$types";
+import { newspaperSchema } from "./schema";
 
 export const load: PageServerLoad = async () => {
-	const form = await superValidate(zod(newspaperSchema));
+	const form = await superValidate(valibot(newspaperSchema), {
+		strict: true
+	});
 
 	// Always return { form } in load functions
 	return { form };
@@ -15,7 +15,7 @@ export const load: PageServerLoad = async () => {
 
 export const actions = {
 	default: async ({ request, locals }) => {
-		const form = await superValidate(request, zod(newspaperSchema));
+		const form = await superValidate(request, valibot(newspaperSchema));
 		console.error(".........");
 		console.error(form);
 
@@ -26,7 +26,7 @@ export const actions = {
 			//	return;
 		}
 
-		const [newspaper] = await db.create<NewspaperInput>("newspaper", form.data);
+			const [newspaper] = await db.create<NewspaperInput>("newspaper", form.data);
 
 		console.log(locals, newspaper, "+++++++++++", locals.account!.id, newspaper.id);
 
@@ -41,6 +41,6 @@ export const actions = {
 		// Display a success status message
 		//	return message(form, "Form posted successfully!");
 
-		return redirect(302, "/newspaper/" + extractId(newspaper.id));
+		return redirect(302, "/newspaper/" + extractId(newspaper.id)); */
 	}
 } satisfies Actions;
