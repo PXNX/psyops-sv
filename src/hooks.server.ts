@@ -4,6 +4,8 @@ import { sequence } from "@sveltejs/kit/hooks";
 
 import { error, type Handle } from "@sveltejs/kit";
 
+import "@valibot/i18n/de/schema";
+
 const bucket = new TokenBucket<string>(100, 1);
 
 const rateLimitHandle: Handle = async ({ event, resolve }) => {

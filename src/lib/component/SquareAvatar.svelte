@@ -1,7 +1,7 @@
 <script lang="ts">
 	import FluentColorPeople20 from "~icons/fluent-color/people-24";
 
-	const { image_url } = $props();
+	const { src, bgColor }: { src: string; bgColor?: string } = $props();
 
 	function replaceImg() {
 		error = true;
@@ -21,10 +21,10 @@
 {:else}
 	<img
 		alt="Avatar"
-		class="rounded-lg w-14 h-14"
+		class={`rounded-lg w-14 h-14 ${bgColor} bg-cover bg-center`}
 		loading="lazy"
 		onerror={() => replaceImg()}
-		src={image_url}
+		{src}
 		width="140"
 	/>
 {/if}

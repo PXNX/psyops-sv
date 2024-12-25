@@ -4,6 +4,7 @@
 	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
 
 	import { shareLink } from "$lib/util";
+	import ProfileItem from "$lib/component/ProfileItem.svelte";
 
 	import FluentSettingsCogMultiple20Filled from "~icons/fluent/settings-cog-multiple-20-filled";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
@@ -21,7 +22,7 @@
 >
 	<div class="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900">
 		<div class="absolute left-4 bottom-2 flex items-center space-x-3">
-			<CircleAvatar image_url={data.user.avatar} />
+			<CircleAvatar src={data.user.avatar} />
 			<div>
 				<h2 class="text-xl font-bold text-white">{data.user.name}</h2>
 				<p class="text-sm">Minister of Education</p>
@@ -35,7 +36,7 @@
 		<a
 			class="h-18 bg-cover
 			
-					border-1 focus:border-purple-600
+					border-1 hover:border-purple-600
 			
 			
 			border-black
@@ -51,7 +52,7 @@
 					<p class="text-sm capitalize">Chancellor</p>
 				</div>
 
-				<FluentChevronRight20Filled class="w-5 h-5 text-purple-600" />
+				<FluentChevronRight20Filled class="size-5 text-purple-600" />
 			</div>
 		</a>
 
@@ -59,7 +60,7 @@
 			class="h-18
 			
 			
-				border-1 focus:border-orange-600
+				border-1 hover:border-orange-600
 			
 			
 			border-black
@@ -75,15 +76,15 @@
 					<p class="text-sm capitalize">Party</p>
 				</div>
 
-				<FluentChevronRight20Filled class="w-5 h-5 text-orange-600" />
+				<FluentChevronRight20Filled class="size-5 text-orange-600" />
 			</div>
 		</a>
 	</section>
 
-	<section class="p-1 space-y-2 rounded-lg">
+	<section class="p-1 space-y-2 rounded-lg bg-green-400">
 		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
 			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://placehold.co/48/svggfd"} />
+				<SquareAvatar src={"https://placehold.co/48/svggfd"} />
 
 				<div>
 					<p class="font-bold text-md capitalize">Baden-Württemberg</p>
@@ -91,11 +92,11 @@
 					<p class="text-sm capitalize">Current • 15.11.2023, 04:20</p>
 				</div>
 			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-green-600" />
+			<FluentChevronRight20Filled class="size-5 text-green-600" />
 		</a>
 		<a class="flex items-center justify-between gap-2 flinch label-text" href="/region/1">
 			<div class="flex items-center space-x-3">
-				<SquareAvatar image_url={"https://placehold.co/48/svg"} />
+				<SquareAvatar src={"https://placehold.co/48/svg"} />
 
 				<div>
 					<p class="font-bold text-md capitalize">Baden-Württemberg</p>
@@ -103,9 +104,16 @@
 					<p class="text-sm capitalize">Home • 15.11.2023, 04:20</p>
 				</div>
 			</div>
-			<FluentChevronRight20Filled class="w-5 h-5 text-green-600" />
+			<FluentChevronRight20Filled class="size-5 text-green-600" />
 		</a>
 	</section>
+
+	<ProfileItem
+		name={"Minister of Education"}
+		description={"Chancellor"}
+		avatar={"https://placehold.co/48/svg"}
+		bgColor={"bg-purple-600"}
+	/>
 
 	<section class="flex justify-end space-x-2 p-1 w-full">
 		{#if data.user.id !== data.account.id}
@@ -145,7 +153,8 @@
 		{/if}
 	</section>
 
-	<div tabindex="0" class="collapse collapse-plus border-base-300 border">
+	<div class="collapse collapse-arrow border-base-300 border">
+		<input type="checkbox" />
 		<div class="collapse-title text-md font-medium">Additional Information</div>
 		<div class="collapse-content">
 			<p>tabindex="0" attribute is necessary to make the div focusable</p>

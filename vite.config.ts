@@ -1,8 +1,8 @@
 import { paraglide } from "@inlang/paraglide-sveltekit/vite";
-import { sveltekit } from "@sveltejs/kit/vite";
-import { defineConfig } from "vite";
 import svg from "@poppanator/sveltekit-svg";
+import { sveltekit } from "@sveltejs/kit/vite";
 import Icons from "unplugin-icons/vite";
+import { defineConfig } from "vite";
 //import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -33,5 +33,8 @@ export default defineConfig({
 			}
 		}),
 		tailwindcss()
-	]
+	],
+	server: {
+		host: true
+	}
 });

@@ -11,10 +11,10 @@
 	<div
 		class="flex flex-col items-center justify-center gap-1 p-4 text-center border rounded-lg border-fuchsia-900 place-self-center"
 	>
-		<FluentColorGlobeShield24 class="w-12 h-12" />
+		<FluentColorGlobeShield24 class="size-12" />
 
 		<a href="/login/google" class="mt-4 btn btn-primary btn-wide glass">
-			<LogosGoogleIcon class="w-5 h-5 " />
+			<LogosGoogleIcon class="size-5" />
 			{m.signUp({ provider: "Google" })}
 		</a>
 

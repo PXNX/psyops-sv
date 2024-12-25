@@ -17,3 +17,5 @@ export const shareLink = (title: string, url = window.location.href) => {
 };
 
 export const extractId = (recordId: RecordId<string>): string => recordId.id.toString();
+
+export const FILETYPE_PATTERN = /\.(png|webp|jpg|jpeg|svg)$/;
