@@ -15,7 +15,7 @@
 
 <section class="grid w-full p-2 space-y-1">
 	<a class="justify-start w-full btn btn-primary" href="#">
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+		<svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 			<rect height="16" rx="2" width="20" x="2" y="4"></rect>
 			<path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
 		</svg>
@@ -24,7 +24,7 @@
 
 	<button class="justify-start w-full btn btn-secondary"
 		><!--onclick="my_modal_3.showModal()"-->
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+		<svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 			<path d="m8 2 1.88 1.88"></path>
 			<path d="M14.12 3.88 16 2"></path>
 			<path d="M9 7.13v-1a3.003 3.003 0 1 1 6 0v1"></path>
@@ -49,7 +49,7 @@
 		</div>
 	</dialog>
 	<a class="justify-start w-full btn btn-ghost" href="/docs">
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+		<svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 			<path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
 			<path d="M8.5 8.5v.01"></path>
 			<path d="M16 15.5v.01"></path>
@@ -60,7 +60,7 @@
 		Documentation
 	</a>
 	<a class="justify-start w-full btn btn-ghost" href="/docs/intro">
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+		<svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 			<path d="M12 2a10 10 0 1 0 10 10 4 4 0 0 1-5-5 4 4 0 0 1-5-5"></path>
 			<path d="M8.5 8.5v.01"></path>
 			<path d="M16 15.5v.01"></path>
@@ -88,7 +88,7 @@
 		Privacy Notice
 	</a>
 	<a class="justify-start w-full btn btn-ghost" href="#">
-		<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+		<svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
 			<circle cx="7.5" cy="15.5" r="5.5"></circle>
 			<path d="m21 2-9.6 9.6"></path>
 			<path d="m15.5 7.5 3 3L22 7l-3-3"></path>

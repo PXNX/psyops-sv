@@ -31,7 +31,7 @@
 	{@render children()}
 </div>
 
-<nav class="btm-nav btm-nav-md">
+<nav class="dock-md dock">
 	<button onclick={() => navigateTo("")} class="flinch">
 		<FluentEmojiBarChart class="w-6 h-6" />
 	</button>
