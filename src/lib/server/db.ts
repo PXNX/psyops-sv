@@ -1,53 +1,42 @@
 import Surreal from "surrealdb";
 
-const MAX_RETRIES = 5;
-const RETRY_TIMEOUT = 2000; // 2 seconds
-const DB_URL = "http://127.0.0.1:8000/rpc";
-let _db: Surreal;
+interface DbConfig {
+	url: string;
+	namespace: string;
+	database: string;
+	username: string;
+	password: string;
+}
 
-const database = {
-	get instance() {
-		if (!_db) {
-			let retries = 1;
-
-			const tryConnect = async () => {
-				try {
-					if (retries > 1) {
-						console.log(`Database connection retry, attempt number ${retries} of ${MAX_RETRIES}`);
-					}
-					_db = new Surreal();
-
-					if (!DB_URL) {
-						return null;
-					}
-					await _db.connect(DB_URL, {
-						namespace: "dev",
-						database: "rw-sv",
-						auth: {
-							username: "root",
-							password: "root"
-						}
-					});
-					console.log("✅ Database connection successful.");
-				} catch (error) {
-					if (retries < MAX_RETRIES) {
-						retries++;
-						setTimeout(tryConnect, RETRY_TIMEOUT);
-					} else {
-						console.log("Database connection failed.");
-						throw error;
-					}
-				}
-			};
-
-			tryConnect();
-		}
-		//	console.log(_db);
-		return _db;
-	}
+const DEFAULT_CONFIG: DbConfig = {
+	url: "http://127.0.0.1:8000/rpc",
+	namespace: "dev",
+	database: "rw-sv",
+	username: "root",
+	password: "root"
 };
 
-export const db = database.instance;
+export async function getDb(config: DbConfig = DEFAULT_CONFIG): Promise<Surreal> {
+	const db = new Surreal();
+
+	try {
+		await db.connect(config.url, {
+			namespace: config.namespace,
+			database: config.database,
+			auth: {
+				password: config.password,
+				username: config.username
+			}
+		});
+		//await db.use({ namespace: config.namespace, database: config.database });
+		console.log("DB-Connection established.");
+		return db;
+	} catch (err) {
+		console.error("Failed to connect to SurrealDB:", err instanceof Error ? err.message : String(err));
+		await db.close();
+		throw err;
+	}
+}
 
 /*
 export const observeLive = async <T extends Record<string, unknown>>(thing: string, store: Writable<T[]>) => {
@@ -73,3 +62,4 @@ export const USER = "user";
 export const STATE = "state";
 export const REGION = "region";
 export const ARTICLE = "article";
+export const SESSION = "session";

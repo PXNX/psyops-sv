@@ -1,4 +1,4 @@
-import { db, NEWSPAPER } from "$lib/server/db";
+import { getDb, NEWSPAPER } from "$lib/server/db";
 import { extractId } from "$lib/util";
 import { fail, redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
@@ -27,6 +27,8 @@ export const actions = {
 			//	throw error(400, "User not found.");
 			//	return;
 		}
+
+		const db = await getDb();
 
 		const [newspaper] = await db.create<NewspaperSchema>(NEWSPAPER, form.data);
 

@@ -9,10 +9,10 @@
 	import FluentSettingsCogMultiple20Filled from "~icons/fluent/settings-cog-multiple-20-filled";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-
 	import FluentAccessibilityError20Filled from "~icons/fluent/accessibility-error-20-filled";
 	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
+	import MdiNewspaperPlus from "~icons/mdi/newspaper-plus";
 
 	const { data } = $props();
 </script>
@@ -129,6 +129,10 @@
 				onclick={() => shareLink(data.user.name, window.location.href + "/" + data.user.id)}
 			>
 				<FluentGiftCardArrowRight20Filled />
+			</button>
+
+			<button class="btn btn-sm" onclick={() => shareLink(data.user.name, window.location.href + "/" + data.user.id)}>
+				<MdiNewspaperPlus /> Add as author
 			</button>
 		{/if}
 

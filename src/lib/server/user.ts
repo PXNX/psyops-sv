@@ -1,8 +1,9 @@
-import { db } from "$lib/server/db";
+import { getDb } from "$lib/server/db";
 import { RecordId } from "surrealdb";
 
 export async function createUser(googleId: string, email: string, name: string, avatar: string): Promise<User> {
 	console.error("createUser id -- sql ", googleId, "before ---");
+	const db = await getDb();
 	const row = await db.insert("user", {
 		email,
 		name,
@@ -24,6 +25,7 @@ export async function createUser(googleId: string, email: string, name: string, 
 }
 
 export async function getUserFromGoogleId(googleId: string): Promise<User> {
+	const db = await getDb();
 	const [user] = await db.query<[User[]]>("SELECT * FROM user WHERE googleId=$googleId;");
 
 	console.log("GOOGLE id:", googleId, "user:", user);
