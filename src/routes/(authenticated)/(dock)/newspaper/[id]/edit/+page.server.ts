@@ -1,10 +1,9 @@
-import { getDb, NEWSPAPER } from "$lib/server/db";
-import { extractId } from "$lib/util";
-import { fail, redirect } from "@sveltejs/kit";
-import { superValidate } from "sveltekit-superforms";
+import { getDb } from "$lib/server/db";
+import { fail } from "@sveltejs/kit";
+import { message, superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import type { Actions, PageServerLoad } from "./$types";
-import { newspaperSchema, type NewspaperSchema } from "./schema";
+import { newspaperSchema } from "./schema";
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(valibot(newspaperSchema), {
@@ -32,7 +31,7 @@ export const actions = {
 
 		const db = await getDb();
 
-		const [newspaper] = await db.create<NewspaperSchema>(NEWSPAPER, form.data);
+		/*	const [newspaper] = await db.create<NewspaperSchema>(NEWSPAPER, form.data);
 
 		console.log(locals, newspaper, "+++++++++++", locals.account!.id, newspaper.id);
 
@@ -40,13 +39,13 @@ export const actions = {
 			in: locals.account!.id,
 			out: newspaper.id,
 			rank: "owner"
-		});
+		}); */
 
 		// TODO: Do something with the validated form.data
 
 		// Display a success status message
-		//	return message(form, "Form posted successfully!");
+		return message(form, "Form posted successfully!");
 
-		return redirect(302, "/newspaper/" + extractId(newspaper.id));
+		//	return redirect(302, "/newspaper/" + extractId(newspaper.id));
 	}
 } satisfies Actions;

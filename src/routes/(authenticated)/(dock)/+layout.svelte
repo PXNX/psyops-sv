@@ -29,7 +29,7 @@
 	/>
 </svelte:head>
 
-<div class="flex flex-col h-[100dvh] mb-16 pb-4 w-full overflow-y-scroll" data-theme="cupcake" transition:fade>
+<div class="flex flex-col h-screen pb-16 w-screen overflow-y-auto">
 	{@render children()}
 </div>
 

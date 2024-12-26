@@ -4,6 +4,7 @@ import { sequence } from "@sveltejs/kit/hooks";
 
 import { error, type Handle } from "@sveltejs/kit";
 
+import { themes } from "$lib/themes";
 import "@valibot/i18n/de/schema";
 
 const bucket = new TokenBucket<string>(100, 1);
@@ -46,4 +47,18 @@ const authHandle: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle = sequence(rateLimitHandle, authHandle);
+export const themesHandle: Handle = async ({ event, resolve }) => {
+	const theme = event.cookies.get("theme");
+
+	if (!theme || !themes.includes(theme)) {
+		return await resolve(event);
+	}
+
+	return await resolve(event, {
+		transformPageChunk: ({ html }) => {
+			return html.replace('data-theme=""', `data-theme="${theme}"`);
+		}
+	});
+};
+
+export const handle = sequence(rateLimitHandle, authHandle, themesHandle);

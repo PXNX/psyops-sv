@@ -16,3 +16,5 @@
 <a href="/user">User</a>
 
 <a href="/posts">posts</a>
+
+<a href="/welcome">Welcome</a>
