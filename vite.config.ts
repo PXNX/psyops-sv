@@ -16,8 +16,9 @@ export default defineConfig({
 			compiler: "svelte",
 			autoInstall: true
 		}),
+
 		svg({
-			includePaths: ["./src/assets/"],
+			includePaths: ["./src/assets/", "./src/lib/assets/"],
 			//"./src/lib/icons/", "./src/assets/icons/",
 			svgoOptions: {
 				multipass: true,
