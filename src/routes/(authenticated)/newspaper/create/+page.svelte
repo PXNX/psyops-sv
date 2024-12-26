@@ -1,13 +1,10 @@
 <script>
-	import { Control, Description, Field, FieldErrors, Label } from "formsnap";
+	import { Control, Field, FieldErrors, Label } from "formsnap";
 	import { superForm } from "sveltekit-superforms";
-	import { valibot, valibotClient, zodClient } from "sveltekit-superforms/adapters";
+	import { valibotClient } from "sveltekit-superforms/adapters";
 	import SuperDebug from "sveltekit-superforms";
 	import { newspaperSchema } from "./schema";
 	let { data } = $props();
-
-	// Client API:
-	/// const { form, enhance, delayed, submitting, timeout, errors } = superForm(data.form);
 
 	const form = superForm(data.form, {
 		validators: valibotClient(newspaperSchema)
@@ -35,7 +32,7 @@
 					<input {...props} bind:value={$formData.name} />
 				{/snippet}
 			</Control>
-			<Description>Be sure to use your real name.</Description>
+
 			<FieldErrors />
 		</Field>
 		<Field {form} name="avatar">

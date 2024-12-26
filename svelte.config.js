@@ -4,6 +4,7 @@ import { sveltePreprocessSvg } from "@svitejs/svelte-preprocess-svg";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
+	runes: true,
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
 	// for more information about preprocessors
 	preprocess: [
@@ -20,8 +21,7 @@ const config = {
 		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
 		// See https://kit.svelte.dev/docs/adapters for more information about adapters.
 		adapter: adapter()
-	},
-	runes: true
+	}
 };
 
 export default config;
