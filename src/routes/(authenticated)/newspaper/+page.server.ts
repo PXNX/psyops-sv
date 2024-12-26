@@ -1,6 +1,6 @@
 import type { PageServerLoad, RequestEvent } from "./$types";
 
-import { db, NEWSPAPER } from "$lib/server/db";
+import { getDb, NEWSPAPER } from "$lib/server/db";
 import { extractId } from "$lib/util";
 import type { RecordId } from "surrealdb";
 
@@ -12,6 +12,7 @@ export type NewspaperEntry = {
 };
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
+	const db = await getDb();
 	const [newspapers] = await db.query<[NewspaperEntry[]]>(
 		"SELECT id,name,avatar,<-journalist.rank.first() as rank FROM $userId->journalist->newspaper;",
 		{

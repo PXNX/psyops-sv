@@ -6,18 +6,20 @@
 		name,
 		avatar,
 		description,
+		href,
 		bgColor
 	}: {
 		name: string;
 		description: string;
 		avatar: string;
+		href: string;
 		bgColor: string;
 	} = $props();
 </script>
 
 <a
 	class={`flinch flex items-center justify-between group ${bgColor}/50 hover:${bgColor}/20 rounded-lg p-3 transition-colors `}
-	href="/team/1"
+	{href}
 >
 	<div class="flex items-center space-x-4">
 		<div class={`w-12 h-12 ${bgColor} rounded-full flex items-center justify-center shadow-inner overflow-hidden`}>
