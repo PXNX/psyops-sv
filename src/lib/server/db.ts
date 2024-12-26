@@ -1,7 +1,5 @@
 import Surreal from "surrealdb";
 
-import type { Writable } from "svelte/store";
-
 const MAX_RETRIES = 5;
 const RETRY_TIMEOUT = 2000; // 2 seconds
 const DB_URL = "http://127.0.0.1:8000/rpc";
@@ -68,3 +66,10 @@ export const observeLive = async <T extends Record<string, unknown>>(thing: stri
 	});
 };
 */
+
+export const NEWSPAPER = "newspaper";
+export const JOURNALIST = "journalist";
+export const USER = "user";
+export const STATE = "state";
+export const REGION = "region";
+export const ARTICLE = "article";

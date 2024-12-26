@@ -1,15 +1,23 @@
-import type { Newspaper } from "$lib/server/newspaper";
 import type { PageServerLoad, RequestEvent } from "./$types";
 
-import { db } from "$lib/server/db";
+import { db, NEWSPAPER } from "$lib/server/db";
 import { extractId } from "$lib/util";
+import type { RecordId } from "surrealdb";
+
+export type NewspaperEntry = {
+	id: RecordId<typeof NEWSPAPER>;
+	name: string;
+	avatar: string;
+	rank: string;
+};
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
-	const [newspapers] = await db.query<[Newspaper[]]>(
-		"SELECT *,<-journalist.rank.first() as rank FROM $userId->journalist->newspaper;",
+	const [newspapers] = await db.query<[NewspaperEntry[]]>(
+		"SELECT id,name,avatar,<-journalist.rank.first() as rank FROM $userId->journalist->newspaper;",
 		{
 			userId: event.locals.account!.id
 		}
 	);
-	return { newspapers: newspapers.map((newspaper: Newspaper) => ({ ...newspaper, id: extractId(newspaper.id) })) };
+	console.log(JSON.stringify(newspapers));
+	return { newspapers: newspapers.map((newspaper: NewspaperEntry) => ({ ...newspaper, id: extractId(newspaper.id) })) };
 };

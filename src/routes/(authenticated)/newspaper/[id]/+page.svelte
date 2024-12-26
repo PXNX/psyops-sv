@@ -1,32 +1,12 @@
 <script>
-	import { Editor } from "novel-svelte";
-	import Tiptap from "$lib/component/Tiptap.svelte";
-
-	import FluentEmojiLeftArrow from "~icons/fluent-emoji/left-arrow";
-	import FluentEmojiFloppyDisk from "~icons/fluent-emoji/floppy-disk";
-	import MdiWindowClose from "~icons/mdi/window-close";
-	import { goto } from "$app/navigation";
-	import FluentHeartCircle16Regular from "~icons/fluent/heart-circle-16-regular";
 	import MdiHeart from "~icons/mdi/heart";
 	import FluentEmojiGear from "~icons/fluent-emoji/gear";
-
+	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
+	import * as m from "$lib/paraglide/messages.js";
 	let pushblishModal = $state();
 	let cancelModal = $state();
 
 	const { data } = $props();
-
-	const newspaper = {
-		id: 1,
-		name: "Newspaper",
-		avatar: "https://victorypark.com.ua/wp-content/uploads/2023/04/banner_azov.jpeg",
-		rank: 1,
-		created_at: "2023-04-01",
-		owner: {
-			id: 1,
-			name: "Pentexnyx",
-			avatar: "https://victorypark.com.ua/wp-content/uploads/2023/04/banner_azov.jpeg"
-		}
-	};
 
 	const articles = [
 		{
@@ -66,13 +46,14 @@
 			class="text-2xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-[#FF8A00] to-[#FF008A] tracking-tighter"
 			>{data.newspaper.name}</b
 		>
+		Established {Intl.DateTimeFormat().format(new Date(data.newspaper.createdAt))}
 		<aside>Some description of this newspaper.</aside>
 
-		<a class="flex flex-row w-full gap-2 flinch label-text" href="/user/{newspaper.owner.id}" role="button">
-			<img class="bg-cover rounded-lg" height="48" src={newspaper.owner.avatar} width="48" />
+		<a class="flex flex-row w-full gap-2 flinch label-text" href="/user/{data.newspaper.owner.id}" role="button">
+			<CircleAvatar src={data.newspaper.owner.avatar} />
 			<div>
-				<b class="block text-md" id="author_name">{newspaper.owner.name}</b>
-				<span class=" text-primary">Publisher</span> since {newspaper.created_at}
+				<b class="block text-md" id="author_name">{data.newspaper.owner.name}</b>
+				<span class=" text-primary">Owner</span>
 			</div>
 		</a>
 	</section>
