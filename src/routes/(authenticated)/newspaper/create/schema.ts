@@ -1,5 +1,5 @@
 import { FILETYPE_PATTERN } from "$lib/util";
-import { config, maxLength, minLength, object, optional, pipe, regex, string, url } from "valibot";
+import { config, maxLength, minLength, object, optional, pipe, regex, string, url, type InferInput } from "valibot";
 
 export const newspaperSchema = config(
 	object({
@@ -9,4 +9,4 @@ export const newspaperSchema = config(
 	}),
 	{ abortPipeEarly: true }
 );
-export type NewspaperSchema = typeof newspaperSchema;
+export type NewspaperSchema = InferInput<typeof newspaperSchema>;

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
-	import { extractId } from "$lib/util";
 	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
+
 	const { data } = $props();
 </script>
 
