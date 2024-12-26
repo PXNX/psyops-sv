@@ -39,14 +39,15 @@
 		{/each}
 	</ul>
 {:else}
-	<div class="flex my-auto flex-col items-center justify-center gap-4 text-center place-self-center w-1/2">
-		<FluentEmojiRolledUpNewspaper class="size-12" />
-		<p class="text-md">
-			{"You don't work for any newspapers yet."}
-			<br />
-			Newspapers allow you to share events and your views with the community in a more uniform way. You can also ask other
-			users to become a journalist for a newspaper they own.
-		</p>
-		<a class="btn btn-wide btn-primary" href="/newspaper/create" role="button"> Start creating newspaper </a>
+	<div class=" h-screen flex flex-col justify-center items-center">
+		<div class="max-w-md flex-col space-y-4 flex justify-center items-center text-center">
+			<FluentEmojiRolledUpNewspaper class="size-12 " />
+			<h3 class="text-2xl font-bold">You don't work for a newspaper</h3>
+			<p>
+				Newspapers allow you to share events and your views with the community in a more uniform way. You can also ask
+				other users to become a journalist for a newspaper they own.
+			</p>
+			<a class="btn btn-primary" href="/newspaper/create" role="button"> Get started </a>
+		</div>
 	</div>
 {/if}

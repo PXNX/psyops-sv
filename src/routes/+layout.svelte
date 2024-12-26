@@ -18,11 +18,11 @@
 </svelte:head>
 
 <ParaglideJS {i18n}>
-	{#if navigating}
+	{#if $navigating}
 		<main class="flex items-center justify-center w-full h-screen" transition:fade>
 			<span class="loading loading-ring loading-md"></span>
 		</main>
-	{:else}
-		{@render children()}
-	{/if}
+	{:else}{/if}
+
+	{@render children()}
 </ParaglideJS>
