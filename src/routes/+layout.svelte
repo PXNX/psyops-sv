@@ -3,8 +3,8 @@
 	import { ParaglideJS } from "@inlang/paraglide-sveltekit";
 	import { i18n } from "$lib/i18n";
 
-	import { navigating } from "$app/stores";
 	import { fade } from "svelte/transition";
+	import { navigating } from "$app/stores";
 
 	const { children } = $props();
 </script>
@@ -18,9 +18,9 @@
 </svelte:head>
 
 <ParaglideJS {i18n}>
-	{#if $navigating}
-		<main class=" flex-1 overflow-y-auto pb-16 w-full h-[100dvh]" transition:fade>
-			<span class="loading loading-ring loading-md place-self-center"></span>
+	{#if navigating}
+		<main class="flex items-center justify-center w-full h-screen" transition:fade>
+			<span class="loading loading-ring loading-md"></span>
 		</main>
 	{:else}
 		{@render children()}

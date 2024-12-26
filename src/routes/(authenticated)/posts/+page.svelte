@@ -1,6 +1,10 @@
 <script>
 	import { goto } from "$app/navigation";
 	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
+	import MdiCardsHeartOutline from "~icons/mdi/cards-heart-outline";
+	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+
+	import MdiClockTimeEightOutline from "~icons/mdi/clock-time-eight-outline";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import Avatar from "$lib/component/CircleAvatar.svelte";
 
@@ -29,17 +33,22 @@
 	<hr class="divide-gray-200 dark:divide-gray-700" />
 </header>
 
-<a
-	class="flex items-center w-full gap-1 p-2 text-current no-underline rounded-lg flinch label-text"
-	href="/posts/{article.id}"
->
-	<!-- hx-get="/article/{{article.id }}"-->
+<ul class="list">
+	<a href="/posts/{article.id}">
+		<li class="list-row flinch flex items-center">
+			<Avatar src={article.author_avatar} />
+			<div class="text-sm">
+				{article.author_name}
+				<h3 class="text-base font-semibold line-clamp-1">{article.title}</h3>
+				<p class="text-sm flex flex-row items-center gap-0.5">
+					<MdiClockTimeEightOutline class="size-4" />
+					{article.publish_date}
 
-	<Avatar image_url={article.author_avatar} />
-
-	<div class="flex flex-col flex-grow text-xs text-gray-600">
-		<span class="font-semibold text-primary" id="article_title">{article.author_name}</span>
-		<span class="text-lg font-bold text-white transition">{article.title}</span>
-		{article.publish_date} // {article.upvote_count} Likes
-	</div>
-</a>
+					<MdiCardsHeartOutline class="ms-1 size-4" />
+					{article.upvote_count}
+				</p>
+			</div>
+			<FluentChevronRight20Filled class="size-5 text-gray-400 group-hover:text-yellow-500 transition-colors" />
+		</li>
+	</a>
+</ul>

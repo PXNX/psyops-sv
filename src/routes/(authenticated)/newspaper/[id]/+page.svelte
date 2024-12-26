@@ -46,7 +46,7 @@
 	</div>
 </section>
 
-<div class="m-2 space-y-2">
+<div class="mt-2 space-y-2">
 	<p class="text-sm text-muted-foreground bg-amber-500">Your trusted source for daily news and in-depth analysis.</p>
 
 	<ProfileItem

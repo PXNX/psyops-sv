@@ -112,6 +112,7 @@
 		name={"Minister of Education"}
 		description={"Chancellor"}
 		avatar={"https://placehold.co/48/svg"}
+		href={"/state/" + data.user.id}
 		bgColor={"bg-purple-600"}
 	/>
 

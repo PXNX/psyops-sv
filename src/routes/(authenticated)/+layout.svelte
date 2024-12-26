@@ -6,6 +6,8 @@
 	import FluentEmojiMilitaryHelmet from "~icons/fluent-emoji/military-helmet";
 	import FluentEmojiNutAndBolt from "~icons/fluent-emoji/nut-and-bolt";
 	import FluentEmojiIdentificationCard from "~icons/fluent-emoji/identification-card";
+	import { page } from "$app/state";
+	import { fade } from "svelte/transition";
 
 	const { children, data } = $props();
 
@@ -27,24 +29,26 @@
 	/>
 </svelte:head>
 
-<div class="flex flex-col h-[100dvh] mb-16 pb-4 w-full overflow-y-scroll" data-theme="cupcake">
+<div class="flex flex-col h-[100dvh] mb-16 pb-4 w-full overflow-y-scroll" data-theme="cupcake" transition:fade>
 	{@render children()}
 </div>
 
-<nav class="dock-md dock">
-	<button onclick={() => navigateTo("")} class="flinch">
-		<FluentEmojiBarChart class="w-6 h-6" />
-	</button>
-	<button onclick={() => navigateTo("posts")} class="flinch">
-		<FluentEmojiNewspaper class="w-6 h-6" />
-	</button>
-	<button onclick={() => navigateTo("training")} class="flinch">
-		<FluentEmojiMilitaryHelmet class="w-6 h-6" />
-	</button>
-	<button onclick={() => navigateTo("production")} class="flinch">
-		<FluentEmojiNutAndBolt class="w-6 h-6" />
-	</button>
-	<button onclick={() => navigateTo("user/" + data.account.id.substring(5))} class="flinch">
-		<FluentEmojiIdentificationCard class="w-6 h-6" />
-	</button>
-</nav>
+{#if page.url.pathname !== "/posts/new" && page.url.pathname !== "posts/id/edit"}
+	<nav class="dock-md dock">
+		<button onclick={() => navigateTo("")} class="flinch">
+			<FluentEmojiBarChart class="w-6 h-6" />
+		</button>
+		<button onclick={() => navigateTo("posts")} class="flinch">
+			<FluentEmojiNewspaper class="w-6 h-6" />
+		</button>
+		<button onclick={() => navigateTo("training")} class="flinch">
+			<FluentEmojiMilitaryHelmet class="w-6 h-6" />
+		</button>
+		<button onclick={() => navigateTo("production")} class="flinch">
+			<FluentEmojiNutAndBolt class="w-6 h-6" />
+		</button>
+		<button onclick={() => navigateTo("user/" + data.account.id.substring(5))} class="flinch">
+			<FluentEmojiIdentificationCard class="w-6 h-6" />
+		</button>
+	</nav>
+{/if}
