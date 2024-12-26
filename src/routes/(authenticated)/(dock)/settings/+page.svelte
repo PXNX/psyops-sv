@@ -4,10 +4,33 @@
 	import FluentEmojiWrappedGift from "~icons/fluent-emoji/wrapped-gift";
 	import FluentEmojiPencil from "~icons/fluent-emoji/pencil";
 	import FluentEmojiInformation from "~icons/fluent-emoji/information";
+	import { themes } from "$lib/themes";
 
-	import type { PageData } from "./$types";
+	const { data } = $props();
 
-	export let data: PageData;
+	let current_theme = $state("");
+
+	$effect(() => {
+		if (typeof window !== "undefined") {
+			const theme = window.localStorage.getItem("theme");
+			if (theme && themes.includes(theme)) {
+				document.documentElement.setAttribute("data-theme", theme);
+				current_theme = theme;
+			}
+		}
+	});
+
+	function set_theme(event: Event) {
+		const select = event.target as HTMLSelectElement;
+		const theme = select.value;
+		if (themes.includes(theme)) {
+			const one_year = 60 * 60 * 24 * 365;
+			window.localStorage.setItem("theme", theme);
+			document.cookie = `theme=${theme}; max-age=${one_year}; path=/; SameSite=Lax`;
+			document.documentElement.setAttribute("data-theme", theme);
+			current_theme = theme;
+		}
+	}
 </script>
 
 <h1>Hi, {data.account.name}!</h1>
@@ -23,40 +46,15 @@
 
 	<label
 		>Theme
-		<select class="w-full select select-bordered" data-choose-theme>
-			<option value="dark">Default</option>
-			<option value="light">Light</option>
-			<option value="cupcake">Pink</option>
-			<option value="retro">Retro</option>
-			<option value="winter">Winter</option>
-			<option value="cyberpunk">Cyberpunk</option>
-			<option value="cupcake">Pink</option>
-			<option value="bumblebee">Bumblebee</option>
-			<option value="emerald">Emerald</option>
-			<option value="corporate">Corporate</option>
-			<option value="synthwave">Synthwave</option>
-			<option value="valentine">Valentine</option>
-			<option value="halloween">Halloween</option>
-			<option value="garden">Garden</option>
-			<option value="forest">Forest</option>
-			<option value="aqua">Aqua</option>
-			<option value="lofi">Lofi</option>
-			<option value="pastel">Pastel</option>
-			<option value="fantasy">Fantasy</option>
-			<option value="wireframe">Wireframe</option>
-			<option value="black">Black</option>
-			<option value="luxury">Luxury</option>
-			<option value="dracula">Dracula</option>
-			<option value="cmyk">CMYK</option>
-			<option value="autumn">Autumn</option>
-			<option value="business">Business</option>
-			<option value="acid">Acid</option>
-			<option value="lemonade">Lemonade</option>
-			<option value="night">Night</option>
-			<option value="coffee">Coffee</option>
-			<option value="dim">Dim</option>
-			<option value="nord">Nord</option>
-			<option value="sunset">Sunset</option>
+		<select
+			bind:value={current_theme}
+			data-choose-theme
+			class="select select-bordered w-full capitalize"
+			onchange={set_theme}
+		>
+			{#each themes as theme}
+				<option value={theme} class="capitalize">{theme}</option>
+			{/each}
 		</select>
 	</label>
 

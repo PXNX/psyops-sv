@@ -16,8 +16,6 @@
 	<title>PsyOps | Welcome</title>
 </svelte:head>
 
-{#key page.url}
-	<div class=" h-full flex flex-col justify-center items-center" in:fly={{ y: 200, duration: 400 }} out:fade>
-		{@render children()}
-	</div>
-{/key}
+<div class=" h-full flex flex-col justify-center items-center">
+	{@render children()}
+</div>
