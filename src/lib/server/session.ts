@@ -2,7 +2,7 @@ import { sha256 } from "@oslojs/crypto/sha2";
 import { encodeBase32, encodeHexLowerCase } from "@oslojs/encoding";
 import type { RequestEvent } from "@sveltejs/kit";
 import { jsonify, RecordId } from "surrealdb";
-import { db } from "./db";
+import { getDb, SESSION } from "./db";
 import type { User } from "./user";
 
 export type Session = {
@@ -12,9 +12,10 @@ export type Session = {
 };
 
 export async function validateSessionToken(token: string): Promise<SessionValidationResult> {
+	const db = await getDb();
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
-	const session = await db.select<Session>(new RecordId("session", sessionId));
+	const session = await db.select<Session>(new RecordId(SESSION, sessionId));
 
 	console.log("get Session", sessionId);
 	console.dir(jsonify(session));
@@ -33,7 +34,7 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 	};
 
 	if (Date.now() >= newSession.expiresAt.getTime()) {
-		invalidateSession(new RecordId("session", sessionId));
+		invalidateSession(new RecordId(SESSION, sessionId));
 		return { session: null, account: null };
 	}
 	if (Date.now() >= newSession.expiresAt.getTime() - 1000 * 60 * 60 * 24 * 15) {
@@ -55,15 +56,17 @@ export async function validateSessionToken(token: string): Promise<SessionValida
 }
 
 export async function invalidateSession(sessionId: RecordId<string>): Promise<void> {
+	const db = await getDb();
 	await db.delete(sessionId);
 }
 
 export async function invalidateuseressions(userId: RecordId<string>): Promise<void> {
+	const db = await getDb();
 	await db.query(`DELETE FROM session WHERE user_id = $1`, { $1: userId });
 }
 
 export function setSessionTokenCookie(event: RequestEvent, token: string, expiresAt: Date): void {
-	event.cookies.set("session", token, {
+	event.cookies.set(SESSION, token, {
 		httpOnly: true,
 		path: "/",
 		secure: import.meta.env.PROD,
@@ -73,7 +76,7 @@ export function setSessionTokenCookie(event: RequestEvent, token: string, expire
 }
 
 export function deleteSessionTokenCookie(event: RequestEvent): void {
-	event.cookies.set("session", "", {
+	event.cookies.set(SESSION, "", {
 		httpOnly: true,
 		path: "/",
 		secure: import.meta.env.PROD,
@@ -89,12 +92,13 @@ export function generateSessionToken(): string {
 }
 
 export async function createSession(token: string, userId: RecordId<"user">): Promise<Session> {
+	const db = await getDb();
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 
 	console.error("SESSION ID - createSession", sessionId, userId);
 
-	const [session] = await db.create<Session>("session", {
-		id: new RecordId("session", sessionId),
+	const [session] = await db.create<Session>(SESSION, {
+		id: new RecordId(SESSION, sessionId),
 		userId: userId,
 		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30)
 	});

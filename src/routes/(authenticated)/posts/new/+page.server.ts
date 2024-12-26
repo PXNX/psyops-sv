@@ -1,8 +1,9 @@
-import { db } from "$lib/server/db";
+import { getDb } from "$lib/server/db";
 import type { Newspaper } from "$lib/server/newspaper";
 import type { RequestEvent } from "./$types";
 
 export const load = async (event: RequestEvent) => {
+	const db = await getDb();
 	const newspapers = await db.query<Newspaper[]>(
 		"SELECT *,<-journalist.rank.first() as rank FROM $userId->journalist->newspaper;",
 		{ userId: event.locals.account?.id }
