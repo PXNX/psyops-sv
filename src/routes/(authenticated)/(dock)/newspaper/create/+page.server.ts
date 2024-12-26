@@ -17,6 +17,8 @@ export const load: PageServerLoad = async () => {
 
 export const actions = {
 	default: async ({ request, locals }) => {
+		await new Promise((r) => setTimeout(r, 2000));
+
 		const form = await superValidate(request, valibot(newspaperSchema));
 		console.error(".........");
 		console.error(form);
