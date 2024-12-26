@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nodes } from "./../../../../.svelte-kit/generated/client-optimized/app.js";
 	import panzoom from "panzoom";
 	import WorldMap from "$lib/assets/worldmap.svg?raw"; // note suffix ?raw or ?component
 	import type { MouseEventHandler } from "svelte/elements";
@@ -8,8 +9,35 @@
 	let instance;
 	let regionModal: HTMLDialogElement;
 
+	let node2 = $state();
+
 	function initPanzoom(node: HTMLElement | SVGElement) {
-		instance = panzoom(node, { bounds: true });
+		instance = panzoom(node, { bounds: true, maxZoom: 15, minZoom: 1, boundsPadding: 0.1 });
+
+		instance.on("transform", function (e) {
+			const bounds = getViewportBounds();
+			const { x, y } = instance.getTransform();
+
+			const constrainedX = Math.max(bounds.minX, Math.min(bounds.maxX, x));
+			const constrainedY = Math.max(bounds.minY, Math.min(bounds.maxY, y));
+
+			if (x !== constrainedX || y !== constrainedY) {
+				instance.moveTo(constrainedX, constrainedY);
+			}
+		});
+
+		function getViewportBounds() {
+			const elementRect = node2.getBoundingClientRect();
+			const viewportWidth = window.innerWidth;
+			const viewportHeight = window.innerHeight;
+
+			return {
+				minX: Math.min(0, viewportWidth - elementRect.width),
+				maxX: 0,
+				minY: Math.min(0, viewportHeight - elementRect.height),
+				maxY: 0
+			};
+		}
 	}
 
 	function onClick(e: Event & { target: EventTarget & HTMLInputElement }) {
@@ -26,6 +54,27 @@
 		// analogous logic to onClick, but check if `Enter` (and no modifier) was pressed
 	}
 </script>
+
+<header class="sticky top-0 flex items-center justify-end gap-2 p-2 bg-base-100 touch-none">
+	<form class="flex-1">
+		<label class="input">
+			<input type="search" required placeholder="Search" />
+			<button class="btn btn-ghost btn-sm btn-circle"><FluentEmojiMagnifyingGlassTiltedLeft /></button>
+		</label>
+	</form>
+
+	<select class="select select-ghost">
+		<option disabled selected>Filter</option>
+		<option>Political</option>
+		<option>Geology</option>
+	</select>
+</header>
+
+<main class="flex-1 w-full pb-16">
+	<div use:initPanzoom onclick={onClick} onkeydown={onKeyDown} bind:this={node2}>
+		{@html WorldMap}
+	</div>
+</main>
 
 <dialog bind:this={regionModal} class="modal">
 	<div class="bg-gradient-to-br from-fuchsia-800 to-purple-800 p-px rounded-lg w-3/4 m-2 mt-auto">
@@ -56,32 +105,6 @@
 		<button>close</button>
 	</form>
 </dialog>
-
-<header class="sticky top-0 flex items-center justify-end gap-2 p-2 bg-base-100 touch-none">
-	<form class="flex-1">
-		<div class="relative">
-			<FluentEmojiMagnifyingGlassTiltedLeft class="size-5" />
-
-			<input
-				class="flex w-full h-10 px-3 py-2 pl-8 text-sm bg-white border rounded-md border-input ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-				placeholder="Search locations..."
-				type="search"
-			/>
-		</div>
-	</form>
-
-	<select class="select select-ghost">
-		<option disabled selected>Filter</option>
-		<option>Political</option>
-		<option>Geology</option>
-	</select>
-</header>
-
-<main class="flex-1 w-full pb-16">
-	<div use:initPanzoom onclick={onClick} onkeydown={onKeyDown}>
-		{@html WorldMap}
-	</div>
-</main>
 
 <style>
 	/*svg {
