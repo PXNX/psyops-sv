@@ -1,11 +1,11 @@
 <script lang="ts">
 	import Tiptap from "$lib/component/Tiptap.svelte";
 
-	import FluentEmojiLeftArrow from "~icons/fluent-emoji/left-arrow";
 	import FluentEmojiFloppyDisk from "~icons/fluent-emoji/floppy-disk";
 	import MdiWindowClose from "~icons/mdi/window-close";
 	import FluentArrowHookUpLeft20Regular from "~icons/fluent/arrow-hook-up-left-20-regular";
 	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
+	import MdiCloseCircle from "~icons/mdi/close-circle";
 	import { goto } from "$app/navigation";
 
 	const { data } = $props();
@@ -104,8 +104,8 @@
 
 <header class="sticky top-0 bg-base-100">
 	<div class="flex p-2 space-x-2">
-		<button onclick={() => cancelModal.showModal()} class="btn btn-ghost">
-			<FluentEmojiLeftArrow />
+		<button onclick={() => publishModal.showModal()} class="btn btn-circle btn-ghost">
+			<FluentEmojiFloppyDisk />
 		</button>
 
 		{#if editor}
@@ -125,8 +125,8 @@
 			</button>
 		{/if}
 
-		<button onclick={() => publishModal.showModal()} class="btn btn-ghost">
-			<FluentEmojiFloppyDisk />
+		<button onclick={() => cancelModal.showModal()} class="btn btn-circle btn-ghost ms-auto">
+			<MdiWindowClose />
 		</button>
 	</div>
 
