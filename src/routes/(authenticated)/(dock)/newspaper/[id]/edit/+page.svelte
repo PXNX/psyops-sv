@@ -79,7 +79,7 @@
 
 		<button class="btn btn-primary" disabled={$delayed || $submitting} type="submit">
 			{#if $submitting}
-				<span class="loading loading-spinner"></span>{/if} Create newspaper
+				<span class="loading loading-spinner"></span>{/if} Save changes
 		</button>
 	</form>
 

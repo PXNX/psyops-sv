@@ -1,33 +1,30 @@
 <script lang="ts">
-	import { nodes } from "./../../../../.svelte-kit/generated/client-optimized/app.js";
-	import panzoom from "panzoom";
+	import panzoom, { type PanZoom } from "panzoom";
 	import WorldMap from "$lib/assets/worldmap.svg?raw"; // note suffix ?raw or ?component
 	import type { MouseEventHandler } from "svelte/elements";
 	import FluentEmojiMagnifyingGlassTiltedLeft from "~icons/fluent-emoji/magnifying-glass-tilted-left";
 
 	let selectedRegion = $state(-1);
-	let instance;
+	let instance: null | PanZoom = $state(null);
 	let regionModal: HTMLDialogElement;
-
-	let node2 = $state();
 
 	function initPanzoom(node: HTMLElement | SVGElement) {
 		instance = panzoom(node, { bounds: true, maxZoom: 15, minZoom: 1, boundsPadding: 0.1 });
 
 		instance.on("transform", function (e) {
 			const bounds = getViewportBounds();
-			const { x, y } = instance.getTransform();
+			const { x, y } = instance!.getTransform();
 
 			const constrainedX = Math.max(bounds.minX, Math.min(bounds.maxX, x));
 			const constrainedY = Math.max(bounds.minY, Math.min(bounds.maxY, y));
 
 			if (x !== constrainedX || y !== constrainedY) {
-				instance.moveTo(constrainedX, constrainedY);
+				instance!.moveTo(constrainedX, constrainedY);
 			}
 		});
 
 		function getViewportBounds() {
-			const elementRect = node2.getBoundingClientRect();
+			const elementRect = node.getBoundingClientRect();
 			const viewportWidth = window.innerWidth;
 			const viewportHeight = window.innerHeight;
 
@@ -43,7 +40,7 @@
 	function onClick(e: Event & { target: EventTarget & HTMLInputElement }) {
 		console.log(e.target.id);
 
-		if (typeof e.target.id != "string") return false;
+		if (typeof e.target.id != "string") return;
 
 		if (!isNaN(Number(e.target.id)) && !isNaN(parseFloat(e.target.id))) {
 			selectedRegion = Number(e.target.id);
@@ -71,7 +68,7 @@
 </header>
 
 <main class="flex-1 w-full pb-16">
-	<div use:initPanzoom onclick={onClick} onkeydown={onKeyDown} bind:this={node2}>
+	<div use:initPanzoom onclick={onClick} onkeydown={onKeyDown} role="button" tabindex="0">
 		{@html WorldMap}
 	</div>
 </main>
