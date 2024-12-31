@@ -21,7 +21,7 @@
 	import { onMount } from "svelte";
 	import type { Readable } from "svelte/store";
 
-	import MdiLinkPlus from "~icons/mdi/link-plus";
+	import MdiLink from "~icons/mdi/link";
 	import MdiImagePlus from "~icons/mdi/image-plus";
 	import MdiTablePlus from "~icons/mdi/table-plus";
 	import MdiFormatClear from "~icons/mdi/format-clear";
@@ -132,7 +132,7 @@
 	<BubbleMenu
 		tippyOptions={{ duration: 100 }}
 		editor={$editor}
-		class="flex flex-wrap gap-1 p-1 rounded-lg bg-base-200 shadow-lg"
+		class="flex justify-center items-center flex-wrap gap-1 p-1 rounded-lg bg-base-200 shadow-lg"
 	>
 		<FormattingOptions editor={$editor} />
 
@@ -143,49 +143,55 @@
 			aria-label="List Options">List</button
 		>
 
+		{#if showListOptions}
+			<ListOptions editor={$editor} />
+			<hr class="w-1 h-full border-t-2 border-slate-700" />
+		{/if}
+
 		<button
 			class="btn btn-square btn-ghost"
 			class:bg-primary={showAlignmentOptions}
 			onclick={() => (showAlignmentOptions = !showAlignmentOptions)}
 			aria-label="Alignment Options">Align</button
 		>
+		{#if showAlignmentOptions}
+			<AlignmentOptions editor={$editor} />
+		{/if}
 
-		<button class="btn btn-square btn-ghost" onclick={() => (showLinkInput = !showLinkInput)} aria-label="Add Link">
-			<MdiLinkPlus />
+		<button
+			class="btn btn-square btn-ghost"
+			onclick={() => (showLinkInput = !showLinkInput)}
+			class:bg-primary={showLinkInput}
+			aria-label="Add Link"
+		>
+			<MdiLink />
 		</button>
-		<button class="btn btn-square btn-ghost" onclick={() => (showImageInput = !showImageInput)} aria-label="Add Image">
+		{#if showLinkInput}
+			<input type="url" bind:value={linkUrl} placeholder="Enter URL" class="input input-bordered input-sm w-20" />
+			<button class="btn btn-square btn-ghost" onclick={setLink}>Add</button>
+		{/if}
+
+		<button
+			class="btn btn-square btn-ghost"
+			onclick={() => (showImageInput = !showImageInput)}
+			class:bg-primary={showImageInput}
+			aria-label="Add Image"
+		>
 			<MdiImagePlus />
 		</button>
+		{#if showImageInput}
+			<input
+				type="url"
+				bind:value={imageUrl}
+				placeholder="Enter Image URL"
+				class="input input-bordered input-sm w-20"
+			/>
+			<button class="btn btn-square btn-ghost" onclick={addImage}>Add</button>
+		{/if}
+
 		<button class="btn btn-square btn-ghost" onclick={tableActions.insertTable} aria-label="Add Table">
 			<MdiTablePlus />
 		</button>
-
-		<div class="flex justify-center bg-slate-800 rounded-full">
-			{#if showListOptions}
-				<ListOptions editor={$editor} />
-				<hr class="w-1 h-full border-t-2 border-slate-700" />
-			{/if}
-
-			{#if showAlignmentOptions}
-				<AlignmentOptions editor={$editor} />
-			{/if}
-		</div>
-
-		<!-- Link Input -->
-		{#if showLinkInput}
-			<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
-				<input type="url" bind:value={linkUrl} placeholder="Enter URL" class="input input-bordered input-sm" />
-				<button class="btn btn-square btn-ghost" onclick={setLink}>Add</button>
-			</div>
-		{/if}
-
-		<!-- Image Input -->
-		{#if showImageInput}
-			<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
-				<input type="url" bind:value={imageUrl} placeholder="Enter Image URL" class="input input-bordered input-sm" />
-				<button class="btn btn-square btn-ghost" onclick={addImage}>Add</button>
-			</div>
-		{/if}
 
 		<!-- Table Actions -->
 		{#if isTableActive}
