@@ -61,4 +61,15 @@ export const themesHandle: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handle = sequence(rateLimitHandle, authHandle, themesHandle);
+export const cacheHandle: Handle = async ({ event, resolve }) => {
+	const response = await resolve(event);
+
+	// Add cache headers for SVG files
+	if (event.url.pathname.endsWith(".svg")) {
+		response.headers.set("Cache-Control", "public, max-age=31536000, immutable");
+	}
+
+	return response;
+};
+
+export const handle = sequence(rateLimitHandle, authHandle, themesHandle, cacheHandle);
