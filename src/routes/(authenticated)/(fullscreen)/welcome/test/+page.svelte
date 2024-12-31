@@ -21,29 +21,19 @@
 	import { onMount } from "svelte";
 	import type { Readable } from "svelte/store";
 
-	// MDI Icons
-	import FormatBold from "~icons/mdi/format-bold";
-	import FormatItalic from "~icons/mdi/format-italic";
-	import FormatStrikethrough from "~icons/mdi/format-strikethrough";
-	import FormatListBulleted from "~icons/mdi/format-list-bulleted";
-	import FormatListNumbered from "~icons/mdi/format-list-numbered";
-	import FormatAlignLeft from "~icons/mdi/format-align-left";
-	import FormatAlignCenter from "~icons/mdi/format-align-center";
-	import FormatAlignRight from "~icons/mdi/format-align-right";
-	import FormatAlignJustify from "~icons/mdi/format-align-justify";
-	import FormatIndentIncrease from "~icons/mdi/format-indent-increase";
-	import FormatIndentDecrease from "~icons/mdi/format-indent-decrease";
-
 	import MdiLinkPlus from "~icons/mdi/link-plus";
 	import MdiImagePlus from "~icons/mdi/image-plus";
 	import MdiTablePlus from "~icons/mdi/table-plus";
+	import AlignmentOptions from "./AlignmentOptions.svelte";
+	import ListOptions from "./ListOptions.svelte";
+	import FormattingOptions from "./FormattingOptions.svelte";
 
 	let editor = $state() as Readable<Editor>;
 	let linkUrl = $state("");
 	let imageUrl = $state("");
 	let showLinkInput = $state(false);
 	let showImageInput = $state(false);
-	let isTableActive = false;
+	let isTableActive = $state(false);
 
 	onMount(() => {
 		editor = createEditor({
@@ -90,21 +80,6 @@
 		};
 	});
 
-	// Text formatting handlers
-	const textFormatting = {
-		toggleBold: () => $editor.chain().focus().toggleBold().run(),
-		toggleItalic: () => $editor.chain().focus().toggleItalic().run(),
-		toggleStrike: () => $editor.chain().focus().toggleStrike().run()
-	};
-
-	// List formatting handlers
-	const listFormatting = {
-		toggleBulletList: () => $editor.chain().focus().toggleBulletList().run(),
-		toggleOrderedList: () => $editor.chain().focus().toggleOrderedList().run(),
-		sinkListItem: () => $editor.chain().focus().sinkListItem("listItem").run(),
-		liftListItem: () => $editor.chain().focus().liftListItem("listItem").run()
-	};
-
 	// Link handlers
 	function setLink() {
 		if (linkUrl) {
@@ -123,9 +98,12 @@
 		}
 	}
 
+	let showAlignmentOptions = $state(false);
+	let showListOptions = $state(false);
+
 	// Table handlers
 	const tableActions = {
-		insertTable: () => $editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+		insertTable: () => $editor.chain().focus().insertTable({ rows: 3, cols: 2, withHeaderRow: true }).run(),
 		addColumnBefore: () => $editor.chain().focus().addColumnBefore().run(),
 		addColumnAfter: () => $editor.chain().focus().addColumnAfter().run(),
 		deleteColumn: () => $editor.chain().focus().deleteColumn().run(),
@@ -134,26 +112,6 @@
 		deleteRow: () => $editor.chain().focus().deleteRow().run(),
 		deleteTable: () => $editor.chain().focus().deleteTable().run()
 	};
-
-	// Alignment handlers
-	const alignmentActions = {
-		alignLeft: () => $editor.chain().focus().setTextAlign("left").run(),
-		alignCenter: () => $editor.chain().focus().setTextAlign("center").run(),
-		alignRight: () => $editor.chain().focus().setTextAlign("right").run(),
-		alignJustify: () => $editor.chain().focus().setTextAlign("justify").run()
-	};
-
-	let isListActive = {
-		bullet: $editor?.isActive("bulletList") ?? false,
-		ordered: $editor?.isActive("orderedList") ?? false
-	};
-
-	let isAlignmentActive = {
-		left: $editor?.isActive({ textAlign: "left" }) ?? false,
-		center: $editor?.isActive({ textAlign: "center" }) ?? false,
-		right: $editor?.isActive({ textAlign: "right" }) ?? false,
-		justify: $editor?.isActive({ textAlign: "justify" }) ?? false
-	};
 </script>
 
 <div class="w-full max-w-4xl mx-auto p-4">
@@ -161,99 +119,31 @@
 		{#if $editor}
 			<BubbleMenu tippyOptions={{ duration: 100 }} editor={$editor}>
 				<div class="flex flex-wrap gap-2 p-2 rounded-lg bg-base-200 shadow-lg">
-					<!-- Group: Text Formatting -->
-					<div>
-						<button class="btn btn-sm" onclick={textFormatting.toggleBold} aria-label="Bold">
-							<FormatBold />
-						</button>
-						<button class="btn btn-sm" onclick={textFormatting.toggleItalic} aria-label="Italic">
-							<FormatItalic />
-						</button>
-						<button class="btn btn-sm" onclick={textFormatting.toggleStrike} aria-label="Strike">
-							<FormatStrikethrough />
-						</button>
-					</div>
+					<FormattingOptions {editor} />
 
-					<!-- Group: List and Indentation -->
-					<div class="dropdown dropdown-hover">
-						<button class="btn btn-sm" aria-label="Alignment Options"> List </button>
-						<ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-							<li>
-								<button
-									class="btn btn-sm join-item"
-									class:btn-primary={isListActive.bullet}
-									onclick={listFormatting.toggleBulletList}
-									aria-label="Bullet List"
-								>
-									<FormatListBulleted />
-								</button>
-							</li>
-							<li>
-								<button
-									class="btn btn-sm join-item"
-									class:btn-primary={isListActive.ordered}
-									onclick={listFormatting.toggleOrderedList}
-									aria-label="Numbered List"
-								>
-									<FormatListNumbered />
-								</button>
-							</li>
-							<li>
-								<button class="btn btn-sm join-item" onclick={listFormatting.sinkListItem} aria-label="Indent">
-									<FormatIndentIncrease />
-								</button>
-							</li>
-							<li>
-								<button class="btn btn-sm join-item" onclick={listFormatting.liftListItem} aria-label="Outdent">
-									<FormatIndentDecrease />
-								</button>
-							</li>
-						</ul>
-					</div>
+					{#if showListOptions}
+						<ListOptions editor={$editor} onClose={() => (showListOptions = false)} />
+					{:else}
+						<button class="btn btn-sm" onclick={() => (showListOptions = true)} aria-label="List Options">List</button>
+					{/if}
 
-					<!-- Group: Alignment -->
-					<div class="dropdown dropdown-hover">
-						<button class="btn btn-sm" aria-label="Alignment Options"> Alignment </button>
-						<ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-							<li>
-								<button class="btn-sm" class:btn-primary={isAlignmentActive.left} onclick={alignmentActions.alignLeft}
-									>Align Left</button
-								>
-							</li>
-							<li>
-								<button
-									class="btn-sm"
-									class:btn-primary={isAlignmentActive.center}
-									onclick={alignmentActions.alignCenter}>Align Center</button
-								>
-							</li>
-							<li>
-								<button class="btn-sm" class:btn-primary={isAlignmentActive.right} onclick={alignmentActions.alignRight}
-									>Align Right</button
-								>
-							</li>
-							<li>
-								<button
-									class="btn-sm"
-									class:btn-primary={isAlignmentActive.justify}
-									onclick={alignmentActions.alignJustify}>Align Justify</button
-								>
-							</li>
-						</ul>
-					</div>
+					{#if showAlignmentOptions}
+						<AlignmentOptions editor={$editor} onClose={() => (showAlignmentOptions = false)} />
+					{:else}
+						<button class="btn btn-sm" onclick={() => (showAlignmentOptions = true)} aria-label="Alignment Options"
+							>Align</button
+						>
+					{/if}
 
-					<!-- Group: Insert Items -->
-					<div>
-						<button class="btn btn-sm" onclick={() => (showLinkInput = !showLinkInput)} aria-label="Add Link">
-							<MdiLinkPlus />
-						</button>
-						<button class="btn btn-sm" onclick={() => (showImageInput = !showImageInput)} aria-label="Add Image">
-							<MdiImagePlus />
-						</button>
-						<button class="btn btn-sm" onclick={tableActions.insertTable} aria-label="Add Table">
-							<MdiTablePlus />
-						</button>
-					</div>
+					<button class="btn btn-sm" onclick={() => (showLinkInput = !showLinkInput)} aria-label="Add Link">
+						<MdiLinkPlus />
+					</button>
+					<button class="btn btn-sm" onclick={() => (showImageInput = !showImageInput)} aria-label="Add Image">
+						<MdiImagePlus />
+					</button>
+					<button class="btn btn-sm" onclick={tableActions.insertTable} aria-label="Add Table">
+						<MdiTablePlus />
+					</button>
 				</div>
 
 				<!-- Link Input -->
