@@ -27,12 +27,13 @@
 	import FormatStrikethrough from "~icons/mdi/format-strikethrough";
 	import FormatListBulleted from "~icons/mdi/format-list-bulleted";
 	import FormatListNumbered from "~icons/mdi/format-list-numbered";
-	import FormatIndentIncrease from "~icons/mdi/format-indent-increase";
-	import FormatIndentDecrease from "~icons/mdi/format-indent-decrease";
 	import FormatAlignLeft from "~icons/mdi/format-align-left";
 	import FormatAlignCenter from "~icons/mdi/format-align-center";
 	import FormatAlignRight from "~icons/mdi/format-align-right";
 	import FormatAlignJustify from "~icons/mdi/format-align-justify";
+	import FormatIndentIncrease from "~icons/mdi/format-indent-increase";
+	import FormatIndentDecrease from "~icons/mdi/format-indent-decrease";
+
 	import MdiLinkPlus from "~icons/mdi/link-plus";
 	import MdiImagePlus from "~icons/mdi/image-plus";
 	import MdiTablePlus from "~icons/mdi/table-plus";
@@ -42,6 +43,7 @@
 	let imageUrl = $state("");
 	let showLinkInput = $state(false);
 	let showImageInput = $state(false);
+	let isTableActive = false;
 
 	onMount(() => {
 		editor = createEditor({
@@ -75,7 +77,10 @@
 				TableHeader,
 				TableRow
 			],
-			content: "<p>Welcome to the editor! Try selecting some text...</p>"
+			content: "<p>Welcome to the editor! Try selecting some text...</p>",
+			onTransaction(props) {
+				isTableActive = props.editor.state.selection.$anchor.parent.type.name === "tableCell";
+			}
 		});
 	});
 
@@ -127,25 +132,15 @@
 		addRowBefore: () => $editor.chain().focus().addRowBefore().run(),
 		addRowAfter: () => $editor.chain().focus().addRowAfter().run(),
 		deleteRow: () => $editor.chain().focus().deleteRow().run(),
-		deleteTable: () => $editor.chain().focus().deleteTable().run(),
-		mergeCells: () => $editor.chain().focus().mergeCells().run(),
-		splitCell: () => $editor.chain().focus().splitCell().run()
+		deleteTable: () => $editor.chain().focus().deleteTable().run()
 	};
 
-	// Text alignment handlers
+	// Alignment handlers
 	const alignmentActions = {
 		alignLeft: () => $editor.chain().focus().setTextAlign("left").run(),
 		alignCenter: () => $editor.chain().focus().setTextAlign("center").run(),
 		alignRight: () => $editor.chain().focus().setTextAlign("right").run(),
 		alignJustify: () => $editor.chain().focus().setTextAlign("justify").run()
-	};
-
-	// Active states
-	let isTextFormatActive = {
-		bold: $editor?.isActive("bold") ?? false,
-		italic: $editor?.isActive("italic") ?? false,
-		strike: $editor?.isActive("strike") ?? false,
-		link: $editor?.isActive("link") ?? false
 	};
 
 	let isListActive = {
@@ -165,123 +160,127 @@
 	<div class="relative border rounded-lg">
 		{#if $editor}
 			<BubbleMenu tippyOptions={{ duration: 100 }} editor={$editor}>
-				<div class="flex flex-wrap gap-1 p-1 rounded-lg bg-base-200 shadow-lg">
-					<!-- Text Formatting Group -->
-					<div class="join">
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isTextFormatActive.bold}
-							onclick={textFormatting.toggleBold}
-							aria-label="Bold"
-						>
+				<div class="flex flex-wrap gap-2 p-2 rounded-lg bg-base-200 shadow-lg">
+					<!-- Group: Text Formatting -->
+					<div>
+						<button class="btn btn-sm" onclick={textFormatting.toggleBold} aria-label="Bold">
 							<FormatBold />
 						</button>
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isTextFormatActive.italic}
-							onclick={textFormatting.toggleItalic}
-							aria-label="Italic"
-						>
+						<button class="btn btn-sm" onclick={textFormatting.toggleItalic} aria-label="Italic">
 							<FormatItalic />
 						</button>
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isTextFormatActive.strike}
-							onclick={textFormatting.toggleStrike}
-							aria-label="Strike"
-						>
+						<button class="btn btn-sm" onclick={textFormatting.toggleStrike} aria-label="Strike">
 							<FormatStrikethrough />
 						</button>
 					</div>
 
-					<!-- List Formatting Group -->
-					<div class="join">
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isListActive.bullet}
-							onclick={listFormatting.toggleBulletList}
-							aria-label="Bullet List"
-						>
-							<FormatListBulleted />
-						</button>
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isListActive.ordered}
-							onclick={listFormatting.toggleOrderedList}
-							aria-label="Numbered List"
-						>
-							<FormatListNumbered />
-						</button>
-						<button class="btn btn-sm join-item" onclick={listFormatting.sinkListItem} aria-label="Indent">
-							<FormatIndentIncrease />
-						</button>
-						<button class="btn btn-sm join-item" onclick={listFormatting.liftListItem} aria-label="Outdent">
-							<FormatIndentDecrease />
-						</button>
+					<!-- Group: List and Indentation -->
+					<div class="dropdown dropdown-hover">
+						<button class="btn btn-sm" aria-label="Alignment Options"> List </button>
+						<ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+							<li>
+								<button
+									class="btn btn-sm join-item"
+									class:btn-primary={isListActive.bullet}
+									onclick={listFormatting.toggleBulletList}
+									aria-label="Bullet List"
+								>
+									<FormatListBulleted />
+								</button>
+							</li>
+							<li>
+								<button
+									class="btn btn-sm join-item"
+									class:btn-primary={isListActive.ordered}
+									onclick={listFormatting.toggleOrderedList}
+									aria-label="Numbered List"
+								>
+									<FormatListNumbered />
+								</button>
+							</li>
+							<li>
+								<button class="btn btn-sm join-item" onclick={listFormatting.sinkListItem} aria-label="Indent">
+									<FormatIndentIncrease />
+								</button>
+							</li>
+							<li>
+								<button class="btn btn-sm join-item" onclick={listFormatting.liftListItem} aria-label="Outdent">
+									<FormatIndentDecrease />
+								</button>
+							</li>
+						</ul>
 					</div>
 
-					<!-- Alignment Group -->
-					<div class="join">
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isAlignmentActive.left}
-							onclick={alignmentActions.alignLeft}
-							aria-label="Align Left"
-						>
-							<FormatAlignLeft />
-						</button>
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isAlignmentActive.center}
-							onclick={alignmentActions.alignCenter}
-							aria-label="Align Center"
-						>
-							<FormatAlignCenter />
-						</button>
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isAlignmentActive.right}
-							onclick={alignmentActions.alignRight}
-							aria-label="Align Right"
-						>
-							<FormatAlignRight />
-						</button>
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isAlignmentActive.justify}
-							onclick={alignmentActions.alignJustify}
-							aria-label="Align Justify"
-						>
-							<FormatAlignJustify />
-						</button>
+					<!-- Group: Alignment -->
+					<div class="dropdown dropdown-hover">
+						<button class="btn btn-sm" aria-label="Alignment Options"> Alignment </button>
+						<ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+							<li>
+								<button class="btn-sm" class:btn-primary={isAlignmentActive.left} onclick={alignmentActions.alignLeft}
+									>Align Left</button
+								>
+							</li>
+							<li>
+								<button
+									class="btn-sm"
+									class:btn-primary={isAlignmentActive.center}
+									onclick={alignmentActions.alignCenter}>Align Center</button
+								>
+							</li>
+							<li>
+								<button class="btn-sm" class:btn-primary={isAlignmentActive.right} onclick={alignmentActions.alignRight}
+									>Align Right</button
+								>
+							</li>
+							<li>
+								<button
+									class="btn-sm"
+									class:btn-primary={isAlignmentActive.justify}
+									onclick={alignmentActions.alignJustify}>Align Justify</button
+								>
+							</li>
+						</ul>
 					</div>
 
-					<!-- Link & Image -->
-					<div class="join">
-						<button
-							class="btn btn-sm join-item"
-							class:btn-primary={isTextFormatActive.link}
-							onclick={() => (showLinkInput = !showLinkInput)}
-							aria-label="Add Link"
-						>
+					<!-- Group: Insert Items -->
+					<div>
+						<button class="btn btn-sm" onclick={() => (showLinkInput = !showLinkInput)} aria-label="Add Link">
 							<MdiLinkPlus />
 						</button>
-						<button
-							class="btn btn-sm join-item"
-							onclick={() => (showImageInput = !showImageInput)}
-							aria-label="Add Image"
-						>
+						<button class="btn btn-sm" onclick={() => (showImageInput = !showImageInput)} aria-label="Add Image">
 							<MdiImagePlus />
 						</button>
-					</div>
-
-					<!-- Table Actions Dropdown -->
-					<div class="dropdown dropdown-hover">
-						<button class="btn btn-sm" aria-label="Table Actions">
+						<button class="btn btn-sm" onclick={tableActions.insertTable} aria-label="Add Table">
 							<MdiTablePlus />
 						</button>
-						<ul class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
-							<li><button onclick={tableActions.insertTable}>Insert Table</button></li>
+					</div>
+				</div>
+
+				<!-- Link Input -->
+				{#if showLinkInput}
+					<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
+						<input type="url" bind:value={linkUrl} placeholder="Enter URL" class="input input-bordered input-sm" />
+						<button class="btn btn-sm" onclick={setLink}>Add</button>
+					</div>
+				{/if}
+
+				<!-- Image Input -->
+				{#if showImageInput}
+					<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
+						<input
+							type="url"
+							bind:value={imageUrl}
+							placeholder="Enter Image URL"
+							class="input input-bordered input-sm"
+						/>
+						<button class="btn btn-sm" onclick={addImage}>Add</button>
+					</div>
+				{/if}
+
+				<!-- Table Actions -->
+				{#if isTableActive}
+					<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
+						<ul class="menu">
 							<li><button onclick={tableActions.addColumnBefore}>Add Column Before</button></li>
 							<li><button onclick={tableActions.addColumnAfter}>Add Column After</button></li>
 							<li><button onclick={tableActions.deleteColumn}>Delete Column</button></li>
@@ -289,39 +288,7 @@
 							<li><button onclick={tableActions.addRowAfter}>Add Row After</button></li>
 							<li><button onclick={tableActions.deleteRow}>Delete Row</button></li>
 							<li><button onclick={tableActions.deleteTable}>Delete Table</button></li>
-							<li><button onclick={tableActions.mergeCells}>Merge Cells</button></li>
-							<li><button onclick={tableActions.splitCell}>Split Cell</button></li>
 						</ul>
-					</div>
-				</div>
-
-				<!-- Link Input -->
-				{#if showLinkInput}
-					<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
-						<div class="join">
-							<input
-								type="url"
-								bind:value={linkUrl}
-								placeholder="Enter URL"
-								class="input input-bordered input-sm join-item"
-							/>
-							<button class="btn btn-sm join-item" onclick={setLink}> Add </button>
-						</div>
-					</div>
-				{/if}
-
-				<!-- Image Input -->
-				{#if showImageInput}
-					<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
-						<div class="join">
-							<input
-								type="url"
-								bind:value={imageUrl}
-								placeholder="Enter image URL"
-								class="input input-bordered input-sm join-item"
-							/>
-							<button class="btn btn-sm join-item" onclick={addImage}> Add </button>
-						</div>
 					</div>
 				{/if}
 			</BubbleMenu>
