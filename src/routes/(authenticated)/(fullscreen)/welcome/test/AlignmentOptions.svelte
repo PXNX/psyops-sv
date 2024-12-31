@@ -1,65 +1,62 @@
 <script lang="ts">
-	import { writable } from "svelte/store";
+	import FormatAlignLeft from "~icons/mdi/format-align-left";
+	import FormatAlignCenter from "~icons/mdi/format-align-center";
+	import FormatAlignRight from "~icons/mdi/format-align-right";
+	import FormatAlignJustify from "~icons/mdi/format-align-justify";
+	import MdiClose from "~icons/mdi/close";
 
-	export let editor;
+	const { editor, onClose } = $props();
 
-	// Alignment actions
+	const isAlignmentActive = $derived({
+		left: editor?.isActive({ textAlign: "left" }),
+		center: editor?.isActive({ textAlign: "center" }),
+		right: editor?.isActive({ textAlign: "right" }),
+		justify: editor?.isActive({ textAlign: "justify" })
+	});
+
 	const alignmentActions = {
 		alignLeft: () => editor.chain().focus().setTextAlign("left").run(),
 		alignCenter: () => editor.chain().focus().setTextAlign("center").run(),
 		alignRight: () => editor.chain().focus().setTextAlign("right").run(),
 		alignJustify: () => editor.chain().focus().setTextAlign("justify").run()
 	};
-
-	// Check active alignment state
-	const isAlignmentActive = writable({
-		left: false,
-		center: false,
-		right: false,
-		justify: false
-	});
-
-	$: if (editor) {
-		isAlignmentActive.set({
-			left: editor.isActive({ textAlign: "left" }),
-			center: editor.isActive({ textAlign: "center" }),
-			right: editor.isActive({ textAlign: "right" }),
-			justify: editor.isActive({ textAlign: "justify" })
-		});
-	}
 </script>
 
-<div class="join">
+<div class="flex justify-center w-full">
 	<button
-		class="btn btn-sm join-item"
-		class:btn-primary={$isAlignmentActive.left}
+		class="btn btn-square btn-ghost"
+		class:text-primary={isAlignmentActive.left}
 		onclick={alignmentActions.alignLeft}
 		aria-label="Align Left"
 	>
-		Align Left
+		<FormatAlignLeft />
 	</button>
 	<button
-		class="btn btn-sm join-item"
-		class:btn-primary={$isAlignmentActive.center}
+		class="btn btn-square btn-ghost"
+		class:text-primary={isAlignmentActive.center}
 		onclick={alignmentActions.alignCenter}
 		aria-label="Align Center"
 	>
-		Align Center
+		<FormatAlignCenter />
 	</button>
 	<button
-		class="btn btn-sm join-item"
-		class:btn-primary={$isAlignmentActive.right}
+		class="btn btn-square btn-ghost"
+		class:text-primary={isAlignmentActive.right}
 		onclick={alignmentActions.alignRight}
 		aria-label="Align Right"
 	>
-		Align Right
+		<FormatAlignRight />
 	</button>
 	<button
-		class="btn btn-sm join-item"
-		class:btn-primary={$isAlignmentActive.justify}
+		class="btn btn-square btn-ghost"
+		class:text-primary={isAlignmentActive.justify}
 		onclick={alignmentActions.alignJustify}
 		aria-label="Align Justify"
 	>
-		Align Justify
+		<FormatAlignJustify />
+	</button>
+
+	<button class="ms-auto btn btn-sm btn-square btn-ghost" onclick={onClose} aria-label="Close">
+		<MdiClose />
 	</button>
 </div>
