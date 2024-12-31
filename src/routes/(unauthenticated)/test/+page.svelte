@@ -24,9 +24,14 @@
 	import MdiLinkPlus from "~icons/mdi/link-plus";
 	import MdiImagePlus from "~icons/mdi/image-plus";
 	import MdiTablePlus from "~icons/mdi/table-plus";
+	import MdiFormatClear from "~icons/mdi/format-clear";
 	import AlignmentOptions from "./AlignmentOptions.svelte";
 	import ListOptions from "./ListOptions.svelte";
 	import FormattingOptions from "./FormattingOptions.svelte";
+	import Placeholder from "@tiptap/extension-placeholder";
+	import StarterKit from "@tiptap/starter-kit";
+	import Typography from "@tiptap/extension-typography";
+	import { fade } from "svelte/transition";
 
 	let editor = $state() as Readable<Editor>;
 	let linkUrl = $state("");
@@ -56,20 +61,29 @@
 				TextAlign.configure({
 					types: ["paragraph", "heading"]
 				}),
-				BulletList,
-				OrderedList,
+				StarterKit,
 				ListItem,
-				Gapcursor,
+
 				Table.configure({
 					resizable: true
 				}),
 				TableCell,
 				TableHeader,
-				TableRow
+				TableRow,
+				Typography,
+				Placeholder.configure({
+					// Use a placeholder:
+					placeholder: "Write something …"
+				})
 			],
 			content: "<p>Welcome to the editor! Try selecting some text...</p>",
 			onTransaction(props) {
 				isTableActive = props.editor.state.selection.$anchor.parent.type.name === "tableCell";
+			},
+			editorProps: {
+				attributes: {
+					class: "prose prose-sm sm:prose lg:prose-lg xl:prose-2xl m-4 focus:outline-none"
+				}
 			}
 		});
 	});
@@ -114,78 +128,88 @@
 	};
 </script>
 
-<div class="w-full max-w-4xl mx-auto p-4">
-	<div class="relative border rounded-lg">
-		{#if $editor}
-			<BubbleMenu tippyOptions={{ duration: 100 }} editor={$editor}>
-				<div class="flex flex-wrap gap-2 p-2 rounded-lg bg-base-200 shadow-lg">
-					<FormattingOptions {editor} />
+{#if $editor}
+	<BubbleMenu
+		tippyOptions={{ duration: 100 }}
+		editor={$editor}
+		class="flex flex-wrap gap-1 p-1 rounded-lg bg-base-200 shadow-lg"
+	>
+		<FormattingOptions editor={$editor} />
 
-					{#if showListOptions}
-						<ListOptions editor={$editor} onClose={() => (showListOptions = false)} />
-					{:else}
-						<button class="btn btn-sm" onclick={() => (showListOptions = true)} aria-label="List Options">List</button>
-					{/if}
+		<button
+			class="btn btn-square btn-ghost"
+			class:bg-primary={showListOptions}
+			onclick={() => (showListOptions = !showListOptions)}
+			aria-label="List Options">List</button
+		>
 
-					{#if showAlignmentOptions}
-						<AlignmentOptions editor={$editor} onClose={() => (showAlignmentOptions = false)} />
-					{:else}
-						<button class="btn btn-sm" onclick={() => (showAlignmentOptions = true)} aria-label="Alignment Options"
-							>Align</button
-						>
-					{/if}
+		<button
+			class="btn btn-square btn-ghost"
+			class:bg-primary={showAlignmentOptions}
+			onclick={() => (showAlignmentOptions = !showAlignmentOptions)}
+			aria-label="Alignment Options">Align</button
+		>
 
-					<button class="btn btn-sm" onclick={() => (showLinkInput = !showLinkInput)} aria-label="Add Link">
-						<MdiLinkPlus />
-					</button>
-					<button class="btn btn-sm" onclick={() => (showImageInput = !showImageInput)} aria-label="Add Image">
-						<MdiImagePlus />
-					</button>
-					<button class="btn btn-sm" onclick={tableActions.insertTable} aria-label="Add Table">
-						<MdiTablePlus />
-					</button>
-				</div>
+		<button class="btn btn-square btn-ghost" onclick={() => (showLinkInput = !showLinkInput)} aria-label="Add Link">
+			<MdiLinkPlus />
+		</button>
+		<button class="btn btn-square btn-ghost" onclick={() => (showImageInput = !showImageInput)} aria-label="Add Image">
+			<MdiImagePlus />
+		</button>
+		<button class="btn btn-square btn-ghost" onclick={tableActions.insertTable} aria-label="Add Table">
+			<MdiTablePlus />
+		</button>
 
-				<!-- Link Input -->
-				{#if showLinkInput}
-					<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
-						<input type="url" bind:value={linkUrl} placeholder="Enter URL" class="input input-bordered input-sm" />
-						<button class="btn btn-sm" onclick={setLink}>Add</button>
-					</div>
-				{/if}
+		<div class="flex justify-center bg-slate-800 rounded-full">
+			{#if showListOptions}
+				<ListOptions editor={$editor} />
+				<hr class="w-1 h-full border-t-2 border-slate-700" />
+			{/if}
 
-				<!-- Image Input -->
-				{#if showImageInput}
-					<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
-						<input
-							type="url"
-							bind:value={imageUrl}
-							placeholder="Enter Image URL"
-							class="input input-bordered input-sm"
-						/>
-						<button class="btn btn-sm" onclick={addImage}>Add</button>
-					</div>
-				{/if}
+			{#if showAlignmentOptions}
+				<AlignmentOptions editor={$editor} />
+			{/if}
+		</div>
 
-				<!-- Table Actions -->
-				{#if isTableActive}
-					<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
-						<ul class="menu">
-							<li><button onclick={tableActions.addColumnBefore}>Add Column Before</button></li>
-							<li><button onclick={tableActions.addColumnAfter}>Add Column After</button></li>
-							<li><button onclick={tableActions.deleteColumn}>Delete Column</button></li>
-							<li><button onclick={tableActions.addRowBefore}>Add Row Before</button></li>
-							<li><button onclick={tableActions.addRowAfter}>Add Row After</button></li>
-							<li><button onclick={tableActions.deleteRow}>Delete Row</button></li>
-							<li><button onclick={tableActions.deleteTable}>Delete Table</button></li>
-						</ul>
-					</div>
-				{/if}
-			</BubbleMenu>
-			<EditorContent editor={$editor} class="prose max-w-none p-4" />
+		<!-- Link Input -->
+		{#if showLinkInput}
+			<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
+				<input type="url" bind:value={linkUrl} placeholder="Enter URL" class="input input-bordered input-sm" />
+				<button class="btn btn-square btn-ghost" onclick={setLink}>Add</button>
+			</div>
 		{/if}
-	</div>
-</div>
+
+		<!-- Image Input -->
+		{#if showImageInput}
+			<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
+				<input type="url" bind:value={imageUrl} placeholder="Enter Image URL" class="input input-bordered input-sm" />
+				<button class="btn btn-square btn-ghost" onclick={addImage}>Add</button>
+			</div>
+		{/if}
+
+		<!-- Table Actions -->
+		{#if isTableActive}
+			<div class="absolute mt-2 p-2 bg-base-200 rounded-lg shadow-lg">
+				<ul class="menu">
+					<li><button onclick={tableActions.addColumnBefore}>Add Column Before</button></li>
+					<li><button onclick={tableActions.addColumnAfter}>Add Column After</button></li>
+					<li><button onclick={tableActions.deleteColumn}>Delete Column</button></li>
+					<li><button onclick={tableActions.addRowBefore}>Add Row Before</button></li>
+					<li><button onclick={tableActions.addRowAfter}>Add Row After</button></li>
+					<li><button onclick={tableActions.deleteRow}>Delete Row</button></li>
+					<li><button onclick={tableActions.deleteTable}>Delete Table</button></li>
+				</ul>
+			</div>
+		{/if}
+
+		<button
+			class="btn btn-square btn-ghost"
+			onclick={() => $editor.chain().focus().unsetAllMarks().run()}
+			aria-label="Clear Format"><MdiFormatClear /></button
+		>
+	</BubbleMenu>
+	<EditorContent editor={$editor} class="prose max-w-none p-4" />
+{/if}
 
 <style>
 	:global(.ProseMirror) {
@@ -195,13 +219,13 @@
 	:global(.ProseMirror table) {
 		border-collapse: collapse;
 		margin: 0;
-		overflow: hidden;
+		/*overflow: hidden; */
 		table-layout: fixed;
 		width: 100%;
 	}
 	:global(.ProseMirror td),
 	:global(.ProseMirror th) {
-		border: 2px solid hsl(var(--bc) / 0.2);
+		border: 4px solid hsl(var(--bc) / 0.2);
 		box-sizing: border-box;
 		min-width: 1em;
 		padding: 3px 5px;
