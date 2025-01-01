@@ -35,7 +35,13 @@
 	import StarterKit from "@tiptap/starter-kit";
 	import Typography from "@tiptap/extension-typography";
 	import { fade } from "svelte/transition";
-	import type { NodeViewRenderer, NodeViewRendererProps, ChainedCommands, SingleCommands } from "@tiptap/core";
+	import {
+		type NodeViewRenderer,
+		type NodeViewRendererProps,
+		type ChainedCommands,
+		type SingleCommands,
+		findParentNode
+	} from "@tiptap/core";
 
 	let editor = $state() as Readable<Editor>;
 	let linkUrl = $state("");
@@ -58,72 +64,181 @@
 	import MdiTableRowPlusBefore from "~icons/mdi/table-row-plus-before";
 	import MdiTableRowPlusAfter from "~icons/mdi/table-row-plus-after";
 	import MdiTableRowRemove from "~icons/mdi/table-row-remove";
+	import TableImproved from "./TableImproved";
 
-	export const CustomTable = Table.extend({
+	const CustomTable = Table.extend({
 		addProseMirrorPlugins() {
-			return new Plugin({
-			
-			props: {
-				decorations(state) {
-					//	return this.getState(state);
+			const basePlugins = this.parent?.() || [];
 
-					return updateDecorations(state.doc);
-				}
-			}
-		});
+			return [
+				...basePlugins,
+				new Plugin({
+					key: new PluginKey("tableControls"),
+					view(editorView) {
+						const controls = document.createElement("div");
+						controls.className = "fixed flex gap-2 p-2 bg-base-100 rounded-lg shadow-lg border border-base-300";
+
+						// Add Column Button
+						const addColumnBtn = document.createElement("button");
+						addColumnBtn.className = "btn ";
+						addColumnBtn.innerHTML = "+Col";
+						addColumnBtn.onclick = () => {
+							const { state } = editorView;
+							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
+
+							if (tablePos) {
+								// Get table node and its position
+								const table = tablePos.node;
+								const map = table.content.firstChild?.content.size || 0;
+
+								// Create a selection at the last cell of the first row
+								const pos = tablePos.pos + table.nodeSize - 2;
+								const selection = state.selection.near(state.doc.resolve(pos));
+
+								// Create and dispatch transaction
+								const tr = state.tr.setSelection(selection);
+								editorView.dispatch(tr);
+
+								// Add column at the end
+								editorView.state.editor.chain().focus().addColumnAfter().run();
+							}
+						};
+
+						// Remove Last Column Button
+						const removeColumnBtn = document.createElement("button");
+						removeColumnBtn.className = "btn ";
+						removeColumnBtn.innerHTML = "-Col";
+						removeColumnBtn.onclick = () => {
+							const { state } = editorView;
+							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
+
+							if (tablePos) {
+								// Get table node and its position
+								const table = tablePos.node;
+								const map = table.content.firstChild?.content.size || 0;
+
+								// Select the last column's cell in the first row
+								const pos = tablePos.pos + table.nodeSize - 2;
+								const selection = state.selection.constructor.near(state.doc.resolve(pos));
+
+								// Create and dispatch transaction
+								const tr = state.tr.setSelection(selection);
+								editorView.dispatch(tr);
+
+								// Delete the last column
+								editorView.state.editor.chain().focus().deleteColumn().run();
+							}
+						};
+
+						// Add Row Button
+						const addRowBtn = document.createElement("button");
+						addRowBtn.className = "btn ";
+						addRowBtn.innerHTML = "+Row";
+						addRowBtn.onclick = () => {
+							const { state } = editorView;
+							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
+
+							if (tablePos) {
+								// Get table node and position of last row
+								const table = tablePos.node;
+								const pos = tablePos.pos + table.nodeSize - 2;
+
+								// Create selection at the last row
+								const selection = state.selection.constructor.near(state.doc.resolve(pos));
+
+								// Create and dispatch transaction
+								const tr = state.tr.setSelection(selection);
+								editorView.dispatch(tr);
+
+								// Add row at the end
+								editorView.state.editor.chain().focus().addRowAfter().run();
+							}
+						};
+
+						// Remove Row Button
+						const removeRowBtn = document.createElement("button");
+						removeRowBtn.className = "btn ";
+						removeRowBtn.innerHTML = "-Row";
+						removeRowBtn.onclick = () => {
+							const { state } = editorView;
+							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
+
+							if (tablePos) {
+								// Get table node and position of last row
+								const table = tablePos.node;
+								const pos = tablePos.pos + table.nodeSize - 2;
+
+								// Create selection at the last row
+								const selection = state.selection.constructor.near(state.doc.resolve(pos));
+
+								// Create and dispatch transaction
+								const tr = state.tr.setSelection(selection);
+								editorView.dispatch(tr);
+
+								// Delete the last row
+								editorView.state.editor.chain().focus().deleteRow().run();
+							}
+						};
+
+						// Divider between column and row controls
+						const divider = document.createElement("div");
+						divider.className = "divider divider-horizontal mx-1";
+
+						// Add elements to controls
+						controls.appendChild(addColumnBtn);
+						controls.appendChild(removeColumnBtn);
+						controls.appendChild(divider);
+						controls.appendChild(addRowBtn);
+						controls.appendChild(removeRowBtn);
+
+						// Add controls to editor
+						editorView.dom.parentElement?.appendChild(controls);
+
+						// Show/hide controls when cursor is in/out of table
+						editorView.dom.addEventListener("click", () => {
+							const { state } = editorView;
+							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
+
+							if (tablePos) {
+								const editorRect = editorView.dom.getBoundingClientRect();
+								const tableRect = editorView.nodeDOM(tablePos.pos)?.getBoundingClientRect();
+
+								if (tableRect) {
+									controls.style.display = "flex";
+									controls.style.top = `${tableRect.top - editorRect.top - 48}px`;
+									controls.style.left = `${tableRect.left - editorRect.left}px`;
+
+									// Update button states
+									const table = tablePos.node;
+									const hasMultipleCols = table.content.firstChild?.content.size ?? 0 > 1;
+									const hasMultipleRows = table.content.size > 1;
+
+									removeColumnBtn.disabled = !hasMultipleCols;
+									removeRowBtn.disabled = !hasMultipleRows;
+								}
+							} else {
+								controls.style.display = "none";
+							}
+						});
+
+						return {
+							destroy() {
+								controls.remove();
+							}
+						};
+					}
+				})
+			];
 		}
 	});
 
+	// --------------------
 
+	const CustomLinkExtension = Link.extend({
+		inclusive: false
+	});
 
-	function updateDecorations(doc: ProseMirrorNode) {
-			const decorations: Decoration[] = [];
-
-			doc.descendants((node: Node, pos: number) => {
-				if (node.type.name === "table") {
-					const tablePos = pos;
-					const rowCount = node.childCount;
-					const colCount = node.firstChild?.childCount ?? 0;
-
-					// Add buttons for columns
-					for (let colIndex = 0; colIndex < colCount; colIndex++) {
-						const colButton = createColumnButtonDecoration(tablePos + colIndex); // tablePos ??
-						decorations.push(colButton);
-					}
-
-					// Add buttons for rows
-					for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
-						const rowButton = createRowButtonDecoration(tablePos);
-						decorations.push(rowButton);
-					}
-				}
-			});
-
-			return DecorationSet.create(doc, decorations);
-		}
-
-		function createColumnButtonDecoration(tablePos: number) {
-			const button = document.createElement("button");
-			button.textContent = "+C";
-			button.className = "add-column text-primary";
-			button.addEventListener("click", () => {
-				editor.chain().focus().addColumnAfter().run();
-			});
-
-			return Decoration.widget(tablePos, button, { side: -1 });
-		}
-
-		function createRowButtonDecoration(tablePos: number) {
-			const button = document.createElement("button");
-			button.textContent = "+R";
-			button.className = "add-row text-primary";
-			button.addEventListener("click", () => {
-				editor.chain().focus().addRowAfter().run();
-			});
-
-			return Decoration.widget(tablePos, button, { side: -1 });
-		}
-	};
+	//---
 
 	onMount(() => {
 		editor = createEditor({
@@ -151,9 +266,26 @@
 				Heading.configure({
 					levels: [1]
 				}),
-				CustomTable.configure({
+
+				TableImproved.configure({
 					resizable: true
 				}),
+				CustomLinkExtension.configure({
+					// autolink is generally useful for changing text into links if they
+					// appear to be URLs (like someone types in literally "example.com"),
+					// though it comes with the caveat that if you then *remove* the link
+					// from the text, and then add a space or newline directly after the
+					// text, autolink will turn the text back into a link again. Not ideal,
+					// but probably still overall worth having autolink enabled, and that's
+					// how a lot of other tools behave as well.
+					autolink: true,
+					linkOnPaste: true,
+					openOnClick: false
+				}),
+
+				//  LinkBubbleMenuHandler,
+
+				//  HeadingWithAnchor,
 
 				TableCell,
 				TableHeader,
@@ -310,6 +442,9 @@
 			<MdiTablePlus />
 		</button>
 	</FloatingMenu>
+
+	<LinkBubbleMenu />
+	<TableBubbleMenu />
 
 	<EditorContent editor={$editor} class="prose max-w-none p-4" />
 {/if}
