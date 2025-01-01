@@ -62,20 +62,7 @@
 	export const CustomTable = Table.extend({
 		addProseMirrorPlugins() {
 			return new Plugin({
-			key: new PluginKey("tableDecoration"),
-
-			/*state: {
-				init(_, { doc }) {
-					return DecorationSet.empty;
-				},
-				apply(tr, old) {
-					if (tr.docChanged) {
-						return updateDecorations(tr.doc);
-					}
-					return old;
-				}
-			}, */
-
+			
 			props: {
 				decorations(state) {
 					//	return this.getState(state);
@@ -89,7 +76,7 @@
 
 
 
-		function updateDecorations(doc: ProseMirrorNode) {
+	function updateDecorations(doc: ProseMirrorNode) {
 			const decorations: Decoration[] = [];
 
 			doc.descendants((node: Node, pos: number) => {
