@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { createEditor, Editor, EditorContent, BubbleMenu } from "svelte-tiptap";
+	import { createEditor, Editor, EditorContent, BubbleMenu, FloatingMenu } from "svelte-tiptap";
 	import Document from "@tiptap/extension-document";
 	import Paragraph from "@tiptap/extension-paragraph";
 	import Text from "@tiptap/extension-text";
 	import TextStyle from "@tiptap/extension-text-style";
-	import BulletList from "@tiptap/extension-bullet-list";
-	import OrderedList from "@tiptap/extension-ordered-list";
 	import ListItem from "@tiptap/extension-list-item";
-	import Gapcursor from "@tiptap/extension-gapcursor";
+	import Heading from "@tiptap/extension-heading";
+	import Collaboration from "@tiptap/extension-collaboration";
+	import type { NodeType } from "@tiptap/pm/model";
+	import { Node as ProseMirrorNode } from "prosemirror-model";
 	import Table from "@tiptap/extension-table";
 	import TableCell from "@tiptap/extension-table-cell";
 	import TableHeader from "@tiptap/extension-table-header";
@@ -21,6 +22,8 @@
 	import { onMount } from "svelte";
 	import type { Readable } from "svelte/store";
 
+	import MdiClose from "~icons/mdi/close";
+
 	import MdiLink from "~icons/mdi/link";
 	import MdiImagePlus from "~icons/mdi/image-plus";
 	import MdiTablePlus from "~icons/mdi/table-plus";
@@ -32,6 +35,7 @@
 	import StarterKit from "@tiptap/starter-kit";
 	import Typography from "@tiptap/extension-typography";
 	import { fade } from "svelte/transition";
+	import type { NodeViewRenderer, NodeViewRendererProps, ChainedCommands, SingleCommands } from "@tiptap/core";
 
 	let editor = $state() as Readable<Editor>;
 	let linkUrl = $state("");
@@ -39,6 +43,100 @@
 	let showLinkInput = $state(false);
 	let showImageInput = $state(false);
 	let isTableActive = $state(false);
+
+	let tableElement;
+
+	import { Plugin, PluginKey, EditorState } from "prosemirror-state";
+	import { Decoration, DecorationSet, type DecorationSource } from "prosemirror-view";
+	import { Node } from "prosemirror-model";
+	import type { Component } from "svelte";
+	import type { EditorView } from "prosemirror-view";
+	import type { SVGAttributes } from "svelte/elements";
+	import MdiTableColumnPlusBefore from "~icons/mdi/table-column-plus-before";
+	import MdiTableColumnPlusAfter from "~icons/mdi/table-column-plus-after";
+	import MdiTableColumnRemove from "~icons/mdi/table-column-remove";
+	import MdiTableRowPlusBefore from "~icons/mdi/table-row-plus-before";
+	import MdiTableRowPlusAfter from "~icons/mdi/table-row-plus-after";
+	import MdiTableRowRemove from "~icons/mdi/table-row-remove";
+
+	export const CustomTable = Table.extend({
+		addProseMirrorPlugins() {
+			return new Plugin({
+			key: new PluginKey("tableDecoration"),
+
+			/*state: {
+				init(_, { doc }) {
+					return DecorationSet.empty;
+				},
+				apply(tr, old) {
+					if (tr.docChanged) {
+						return updateDecorations(tr.doc);
+					}
+					return old;
+				}
+			}, */
+
+			props: {
+				decorations(state) {
+					//	return this.getState(state);
+
+					return updateDecorations(state.doc);
+				}
+			}
+		});
+		}
+	});
+
+
+
+		function updateDecorations(doc: ProseMirrorNode) {
+			const decorations: Decoration[] = [];
+
+			doc.descendants((node: Node, pos: number) => {
+				if (node.type.name === "table") {
+					const tablePos = pos;
+					const rowCount = node.childCount;
+					const colCount = node.firstChild?.childCount ?? 0;
+
+					// Add buttons for columns
+					for (let colIndex = 0; colIndex < colCount; colIndex++) {
+						const colButton = createColumnButtonDecoration(tablePos + colIndex); // tablePos ??
+						decorations.push(colButton);
+					}
+
+					// Add buttons for rows
+					for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+						const rowButton = createRowButtonDecoration(tablePos);
+						decorations.push(rowButton);
+					}
+				}
+			});
+
+			return DecorationSet.create(doc, decorations);
+		}
+
+		function createColumnButtonDecoration(tablePos: number) {
+			const button = document.createElement("button");
+			button.textContent = "+C";
+			button.className = "add-column text-primary";
+			button.addEventListener("click", () => {
+				editor.chain().focus().addColumnAfter().run();
+			});
+
+			return Decoration.widget(tablePos, button, { side: -1 });
+		}
+
+		function createRowButtonDecoration(tablePos: number) {
+			const button = document.createElement("button");
+			button.textContent = "+R";
+			button.className = "add-row text-primary";
+			button.addEventListener("click", () => {
+				editor.chain().focus().addRowAfter().run();
+			});
+
+			return Decoration.widget(tablePos, button, { side: -1 });
+		}
+	};
 
 	onMount(() => {
 		editor = createEditor({
@@ -59,14 +157,17 @@
 					allowBase64: true
 				}),
 				TextAlign.configure({
-					types: ["paragraph", "heading"]
+					types: ["paragraph"]
 				}),
 				StarterKit,
 				ListItem,
-
-				Table.configure({
+				Heading.configure({
+					levels: [1]
+				}),
+				CustomTable.configure({
 					resizable: true
 				}),
+
 				TableCell,
 				TableHeader,
 				TableRow,
@@ -76,9 +177,14 @@
 					placeholder: "Write something …"
 				})
 			],
-			content: "<p>Welcome to the editor! Try selecting some text...</p>",
+			content: window.localStorage.getItem("editor-content"),
+			onUpdate: ({ editor }) => {
+				window.localStorage.setItem("editor-content", editor.getHTML());
+			},
 			onTransaction(props) {
-				isTableActive = props.editor.state.selection.$anchor.parent.type.name === "tableCell";
+				console.log("---- hm ---");
+				console.dir(props.editor.state.selection);
+				//		isTableActive = props.editor.state.selection.$anchor.node.type.name === "tableCell";
 			},
 			editorProps: {
 				attributes: {
@@ -134,64 +240,49 @@
 		editor={$editor}
 		class="flex justify-center items-center flex-wrap gap-1 p-1 rounded-lg bg-base-200 shadow-lg"
 	>
-		<FormattingOptions editor={$editor} />
-
-		<button
-			class="btn btn-square btn-ghost"
-			class:bg-primary={showListOptions}
-			onclick={() => (showListOptions = !showListOptions)}
-			aria-label="List Options">List</button
-		>
-
-		{#if showListOptions}
-			<ListOptions editor={$editor} />
-			<hr class="w-1 h-full border-t-2 border-slate-700" />
-		{/if}
-
-		<button
-			class="btn btn-square btn-ghost"
-			class:bg-primary={showAlignmentOptions}
-			onclick={() => (showAlignmentOptions = !showAlignmentOptions)}
-			aria-label="Alignment Options">Align</button
-		>
-		{#if showAlignmentOptions}
-			<AlignmentOptions editor={$editor} />
-		{/if}
-
-		<button
-			class="btn btn-square btn-ghost"
-			onclick={() => (showLinkInput = !showLinkInput)}
-			class:bg-primary={showLinkInput}
-			aria-label="Add Link"
-		>
-			<MdiLink />
-		</button>
 		{#if showLinkInput}
-			<input type="url" bind:value={linkUrl} placeholder="Enter URL" class="input input-bordered input-sm w-20" />
-			<button class="btn btn-square btn-ghost" onclick={setLink}>Add</button>
-		{/if}
+			<input type="url" bind:value={linkUrl} placeholder="Enter URL" class="input input-bordered input-sm w-full" />
+			<button class="btn btn-square btn-ghost ms-auto" onclick={setLink}>Add</button>
+		{:else}
+			<FormattingOptions editor={$editor} />
 
-		<button
-			class="btn btn-square btn-ghost"
-			onclick={() => (showImageInput = !showImageInput)}
-			class:bg-primary={showImageInput}
-			aria-label="Add Image"
-		>
-			<MdiImagePlus />
-		</button>
-		{#if showImageInput}
-			<input
-				type="url"
-				bind:value={imageUrl}
-				placeholder="Enter Image URL"
-				class="input input-bordered input-sm w-20"
-			/>
-			<button class="btn btn-square btn-ghost" onclick={addImage}>Add</button>
-		{/if}
+			<button
+				class="btn btn-square btn-ghost"
+				class:bg-primary={showListOptions}
+				onclick={() => (showListOptions = !showListOptions)}
+				aria-label="List Options">List</button
+			>
 
-		<button class="btn btn-square btn-ghost" onclick={tableActions.insertTable} aria-label="Add Table">
-			<MdiTablePlus />
-		</button>
+			{#if showListOptions}
+				<ListOptions editor={$editor} />
+				<hr class="w-1 h-full border-t-2 border-slate-700" />
+			{/if}
+
+			<button
+				class="btn btn-square btn-ghost"
+				class:bg-primary={showAlignmentOptions}
+				onclick={() => (showAlignmentOptions = !showAlignmentOptions)}
+				aria-label="Alignment Options">Align</button
+			>
+			{#if showAlignmentOptions}
+				<AlignmentOptions editor={$editor} />
+			{/if}
+
+			<button
+				class="btn btn-square btn-ghost"
+				onclick={() => $editor.chain().focus().unsetAllMarks().run()}
+				aria-label="Clear Format"><MdiFormatClear /></button
+			>
+
+			<button
+				class="btn btn-square btn-ghost"
+				onclick={() => (showLinkInput = !showLinkInput)}
+				class:bg-primary={showLinkInput}
+				aria-label="Add Link"
+			>
+				<MdiLink />
+			</button>
+		{/if}
 
 		<!-- Table Actions -->
 		{#if isTableActive}
@@ -207,13 +298,32 @@
 				</ul>
 			</div>
 		{/if}
+	</BubbleMenu>
 
+	<FloatingMenu editor={$editor} tippyOptions={{ duration: 100 }}>
 		<button
 			class="btn btn-square btn-ghost"
-			onclick={() => $editor.chain().focus().unsetAllMarks().run()}
-			aria-label="Clear Format"><MdiFormatClear /></button
+			onclick={() => (showImageInput = !showImageInput)}
+			class:bg-primary={showImageInput}
+			aria-label="Add Image"
 		>
-	</BubbleMenu>
+			<MdiImagePlus />
+		</button>
+		{#if showImageInput}
+			<input
+				type="url"
+				bind:value={imageUrl}
+				placeholder="Enter Image URL"
+				class="input input-bordered input-sm w-20"
+			/>
+			<button class="btn btn-square btn-ghost" onclick={addImage}>Add (Dialog)</button>
+		{/if}
+
+		<button class="btn btn-square btn-ghost" onclick={tableActions.insertTable} aria-label="Add Table">
+			<MdiTablePlus />
+		</button>
+	</FloatingMenu>
+
 	<EditorContent editor={$editor} class="prose max-w-none p-4" />
 {/if}
 
@@ -245,5 +355,93 @@
 	:global(.ProseMirror ul),
 	:global(.ProseMirror ol) {
 		padding-left: 1.5rem;
+	}
+
+	:global(.ProseMirror > h2) {
+		color: var(--bg-primary);
+	}
+
+	:global(.ProseMirror > h3) {
+		color: var(--bg-secondary);
+	}
+
+	:global(.table-wrapper) {
+		position: relative;
+		margin: 1rem 0;
+		padding-left: 2rem;
+		padding-top: 2rem;
+	}
+
+	:global(.column-controls) {
+		position: absolute;
+		top: 0;
+		left: 2rem;
+		right: 0;
+		display: flex;
+		gap: 0;
+	}
+
+	:global(.col-control) {
+		flex: 1;
+		display: flex;
+		justify-content: center;
+		gap: 0.25rem;
+		padding: 0.25rem;
+	}
+
+	:global(.row-controls) {
+		position: absolute;
+		left: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.25rem;
+		background: #f8f9fa;
+		border: none !important;
+	}
+
+	:global(.row-controls button),
+	:global(.col-control button) {
+		width: 24px;
+		height: 24px;
+		padding: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background: white;
+		border: 1px solid #dee2e6;
+		border-radius: 4px;
+		cursor: pointer;
+		font-size: 12px;
+		color: #4b5563;
+	}
+
+	:global(.row-controls button:hover),
+	:global(.col-control button:hover) {
+		background: #f1f5f9;
+		color: #1f2937;
+	}
+
+	:global(.ProseMirror) {
+		outline: none;
+	}
+
+	:global(.ProseMirror table) {
+		border-collapse: collapse;
+		margin: 0;
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	:global(.ProseMirror td, .ProseMirror th) {
+		border: 2px solid #ced4da;
+		padding: 0.5rem;
+		position: relative;
+		min-width: 100px;
+	}
+
+	:global(.ProseMirror th) {
+		background: #f8f9fa;
+		font-weight: bold;
 	}
 </style>
