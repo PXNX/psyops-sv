@@ -1,6 +1,5 @@
 import adapter from "@sveltejs/adapter-auto";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
-import { sveltePreprocessSvg } from "@svitejs/svelte-preprocess-svg";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -11,9 +10,6 @@ const config = {
 		//...
 		vitePreprocess()
 		// sveltePreprocessSvg must be used AFTER other markup preprocessors like mdsvex
-		//	sveltePreprocessSvg({
-		/* options */
-		//		})
 	],
 
 	kit: {

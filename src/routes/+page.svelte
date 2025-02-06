@@ -11,10 +11,12 @@
 	<button class="btn"><FluentArrowExit20Filled />Sign out FORM</button>
 </form>
 
-<a href="/map">Map</a>
+<a class="btn" href="/map">Map</a>
 
-<a href="/user">User</a>
+<a class="btn" href="/user">User</a>
 
-<a href="/posts">posts</a>
+<a class="btn" href="/posts">posts</a>
 
-<a href="/welcome">Welcome</a>
+<a class="btn" href="/welcome">Welcome</a>
+
+<a class="btn" href="/test">Test</a>
