@@ -41,6 +41,29 @@ const TableImproved = Table.extend({
 				allowTableNodeSelection: this.options.allowTableNodeSelection
 			})
 		];
+	},
+
+	renderHTML({ HTMLAttributes }) {
+		return [
+			"table",
+			this.options.HTMLAttributes,
+			[
+				"thead",
+				{},
+				[
+					"tr",
+					{},
+					[
+						"th",
+						{ colspan: "100%", class: "bg-primary" }, // 100% spans all columns
+						// Add your buttons here
+						["button", { onclick: "alert('Add Row')" }, "Add Row"],
+						["button", { onclick: "alert('Delete Row')" }, "Delete Row"]
+					]
+				]
+			],
+			["tbody", {}, 0] // Render the rest of the table
+		];
 	}
 });
 

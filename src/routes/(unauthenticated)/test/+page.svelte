@@ -52,6 +52,8 @@
 
 	let tableElement;
 
+	import { NodeView } from "@tiptap/core";
+
 	import { Plugin, PluginKey, EditorState } from "prosemirror-state";
 	import { Decoration, DecorationSet, type DecorationSource } from "prosemirror-view";
 	import { Node } from "prosemirror-model";
@@ -65,172 +67,7 @@
 	import MdiTableRowPlusAfter from "~icons/mdi/table-row-plus-after";
 	import MdiTableRowRemove from "~icons/mdi/table-row-remove";
 	import TableImproved from "./TableImproved";
-
-	const CustomTable = Table.extend({
-		addProseMirrorPlugins() {
-			const basePlugins = this.parent?.() || [];
-
-			return [
-				...basePlugins,
-				new Plugin({
-					key: new PluginKey("tableControls"),
-					view(editorView) {
-						const controls = document.createElement("div");
-						controls.className = "fixed flex gap-2 p-2 bg-base-100 rounded-lg shadow-lg border border-base-300";
-
-						// Add Column Button
-						const addColumnBtn = document.createElement("button");
-						addColumnBtn.className = "btn ";
-						addColumnBtn.innerHTML = "+Col";
-						addColumnBtn.onclick = () => {
-							const { state } = editorView;
-							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
-
-							if (tablePos) {
-								// Get table node and its position
-								const table = tablePos.node;
-								const map = table.content.firstChild?.content.size || 0;
-
-								// Create a selection at the last cell of the first row
-								const pos = tablePos.pos + table.nodeSize - 2;
-								const selection = state.selection.near(state.doc.resolve(pos));
-
-								// Create and dispatch transaction
-								const tr = state.tr.setSelection(selection);
-								editorView.dispatch(tr);
-
-								// Add column at the end
-								editorView.state.editor.chain().focus().addColumnAfter().run();
-							}
-						};
-
-						// Remove Last Column Button
-						const removeColumnBtn = document.createElement("button");
-						removeColumnBtn.className = "btn ";
-						removeColumnBtn.innerHTML = "-Col";
-						removeColumnBtn.onclick = () => {
-							const { state } = editorView;
-							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
-
-							if (tablePos) {
-								// Get table node and its position
-								const table = tablePos.node;
-								const map = table.content.firstChild?.content.size || 0;
-
-								// Select the last column's cell in the first row
-								const pos = tablePos.pos + table.nodeSize - 2;
-								const selection = state.selection.constructor.near(state.doc.resolve(pos));
-
-								// Create and dispatch transaction
-								const tr = state.tr.setSelection(selection);
-								editorView.dispatch(tr);
-
-								// Delete the last column
-								editorView.state.editor.chain().focus().deleteColumn().run();
-							}
-						};
-
-						// Add Row Button
-						const addRowBtn = document.createElement("button");
-						addRowBtn.className = "btn ";
-						addRowBtn.innerHTML = "+Row";
-						addRowBtn.onclick = () => {
-							const { state } = editorView;
-							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
-
-							if (tablePos) {
-								// Get table node and position of last row
-								const table = tablePos.node;
-								const pos = tablePos.pos + table.nodeSize - 2;
-
-								// Create selection at the last row
-								const selection = state.selection.constructor.near(state.doc.resolve(pos));
-
-								// Create and dispatch transaction
-								const tr = state.tr.setSelection(selection);
-								editorView.dispatch(tr);
-
-								// Add row at the end
-								editorView.state.editor.chain().focus().addRowAfter().run();
-							}
-						};
-
-						// Remove Row Button
-						const removeRowBtn = document.createElement("button");
-						removeRowBtn.className = "btn ";
-						removeRowBtn.innerHTML = "-Row";
-						removeRowBtn.onclick = () => {
-							const { state } = editorView;
-							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
-
-							if (tablePos) {
-								// Get table node and position of last row
-								const table = tablePos.node;
-								const pos = tablePos.pos + table.nodeSize - 2;
-
-								// Create selection at the last row
-								const selection = state.selection.constructor.near(state.doc.resolve(pos));
-
-								// Create and dispatch transaction
-								const tr = state.tr.setSelection(selection);
-								editorView.dispatch(tr);
-
-								// Delete the last row
-								editorView.state.editor.chain().focus().deleteRow().run();
-							}
-						};
-
-						// Divider between column and row controls
-						const divider = document.createElement("div");
-						divider.className = "divider divider-horizontal mx-1";
-
-						// Add elements to controls
-						controls.appendChild(addColumnBtn);
-						controls.appendChild(removeColumnBtn);
-						controls.appendChild(divider);
-						controls.appendChild(addRowBtn);
-						controls.appendChild(removeRowBtn);
-
-						// Add controls to editor
-						editorView.dom.parentElement?.appendChild(controls);
-
-						// Show/hide controls when cursor is in/out of table
-						editorView.dom.addEventListener("click", () => {
-							const { state } = editorView;
-							const tablePos = findParentNode((node) => node.type.name === "table")(state.selection);
-
-							if (tablePos) {
-								const editorRect = editorView.dom.getBoundingClientRect();
-								const tableRect = editorView.nodeDOM(tablePos.pos)?.getBoundingClientRect();
-
-								if (tableRect) {
-									controls.style.display = "flex";
-									controls.style.top = `${tableRect.top - editorRect.top - 48}px`;
-									controls.style.left = `${tableRect.left - editorRect.left}px`;
-
-									// Update button states
-									const table = tablePos.node;
-									const hasMultipleCols = table.content.firstChild?.content.size ?? 0 > 1;
-									const hasMultipleRows = table.content.size > 1;
-
-									removeColumnBtn.disabled = !hasMultipleCols;
-									removeRowBtn.disabled = !hasMultipleRows;
-								}
-							} else {
-								controls.style.display = "none";
-							}
-						});
-
-						return {
-							destroy() {
-								controls.remove();
-							}
-						};
-					}
-				})
-			];
-		}
-	});
+	import TableBubbleMenu from "./TableBubbleMenu.svelte";
 
 	// --------------------
 
@@ -240,9 +77,152 @@
 
 	//---
 
+	// Create a plugin key for our table controls
+	const tableControlsKey = new PluginKey("tableControls");
+
+	export const CustomTable = Table.extend({
+		addProseMirrorPlugins() {
+			const { editor } = this;
+
+			return [
+				...(this.parent?.() || []),
+				new Plugin({
+					key: tableControlsKey,
+					props: {
+						decorations(state: EditorState): DecorationSet {
+							const { doc } = state;
+							const decorations: Decoration[] = [];
+
+							doc.descendants((node: ProseMirrorNode, pos: number) => {
+								if (node.type.name === "table") {
+									const decoration = Decoration.widget(
+										pos,
+										() => {
+											// Create the controls container
+											const controls = document.createElement("div");
+											controls.className = "table-controls";
+
+											// Add Row button
+											const addButton = document.createElement("button");
+											addButton.textContent = "Add Row";
+											addButton.className = "table-control-button btn";
+											addButton.onclick = (e) => {
+												e.preventDefault(); // Prevent losing editor focus
+												editor.commands.addRowBefore();
+											};
+
+											// Remove Row button
+											const removeButton = document.createElement("button");
+											removeButton.textContent = "Remove Row";
+											removeButton.className = "table-control-button";
+											removeButton.addEventListener("mousedown", (e) => {
+												e.preventDefault(); // Prevent losing editor focus
+												editor.commands.deleteRow();
+											});
+
+											controls.appendChild(addButton);
+											controls.appendChild(removeButton);
+
+											return controls;
+										},
+										{
+											side: -1,
+											stopEvent: () => true
+										}
+									);
+
+									decorations.push(decoration);
+								}
+							});
+
+							return DecorationSet.create(doc, decorations);
+						}
+					}
+				})
+			];
+		}
+	});
+
+	// --------
+
+	const CustomTable2 = Table.extend({
+		addNodeView(): NodeViewRenderer {
+			return (props: NodeViewRendererProps) => {
+				// Create DOM elements
+				const dom = document.createElement("div");
+				const table = document.createElement("table");
+				const controls = document.createElement("div");
+
+				controls.className = "bg-base-200 rounded-lg shadow-lg mb-1 flex flex-row gap-1 justify-center items-center";
+				dom.className = "table-wrapper";
+				dom.appendChild(controls);
+				dom.appendChild(table);
+
+				const eventHandlers: { element: HTMLElement; handler: (event: Event) => void }[] = [];
+
+				// Helper function to create buttons
+				const createButton = (label: string, onClick: (event: Event) => void): HTMLButtonElement => {
+					const button = document.createElement("button");
+					button.textContent = label;
+					button.className = "btn btn-sm btn-primary"; // Add your CSS framework classes
+					button.addEventListener("click", onClick);
+					eventHandlers.push({ element: button, handler: onClick }); // Track for cleanup
+					return button;
+				};
+
+				controls.appendChild(
+					createButton("Add Column", () => {
+						$editor?.chain().focus().addColumnAfter().run();
+					})
+				);
+
+				controls.appendChild(
+					createButton("Remove Column", () => {
+						$editor?.chain().focus().deleteColumn().run();
+					})
+				);
+
+				controls.appendChild(
+					createButton("Add Row", () => {
+						$editor?.chain().focus().addRowAfter().run();
+					})
+				);
+
+				controls.appendChild(
+					createButton("Remove Row", () => {
+						$editor?.chain().focus().deleteRow().run();
+					})
+				);
+
+				// Return the NodeView object
+				return {
+					dom,
+					contentDOM: table,
+					destroy: () => {
+						// Cleanup event listeners
+						eventHandlers.forEach(({ element, handler }) => {
+							element.removeEventListener("click", handler);
+						});
+					}
+				};
+			};
+		}
+	});
+
+	function addRow() {
+		$editor.chain().focus().addRowAfter().run();
+	}
+
+	function addColumn() {
+		$editor.chain().focus().addColumnAfter().run();
+	}
+
 	onMount(() => {
 		editor = createEditor({
 			extensions: [
+				CustomTable.configure({
+					resizable: true
+				}),
 				Document,
 				Paragraph,
 				Text,
@@ -267,9 +247,6 @@
 					levels: [1]
 				}),
 
-				TableImproved.configure({
-					resizable: true
-				}),
 				CustomLinkExtension.configure({
 					// autolink is generally useful for changing text into links if they
 					// appear to be URLs (like someone types in literally "example.com"),
@@ -443,8 +420,8 @@
 		</button>
 	</FloatingMenu>
 
-	<LinkBubbleMenu />
-	<TableBubbleMenu />
+	<!-- 	<LinkBubbleMenu /> -->
+	<TableBubbleMenu editor={$editor} />
 
 	<EditorContent editor={$editor} class="prose max-w-none p-4" />
 {/if}
