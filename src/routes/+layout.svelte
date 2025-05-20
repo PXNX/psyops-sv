@@ -1,11 +1,8 @@
 <script lang="ts">
 	import "../app.css";
-	import { ParaglideJS } from "@inlang/paraglide-sveltekit";
-	import { i18n } from "$lib/i18n";
 
 	import { fade } from "svelte/transition";
-	import { navigating } from "$app/stores";
-	import { page } from "$app/state";
+	import { page, navigating } from "$app/state";
 
 	const { children } = $props();
 </script>
@@ -18,16 +15,14 @@
 	/>
 </svelte:head>
 
-<ParaglideJS {i18n}>
-	{#key page.url}
-		<div transition:fade>
-			{#if $navigating}
-				<main class="flex items-center justify-center w-full h-screen">
-					<span class="loading loading-ring loading-md"></span>
-				</main>
-			{:else}
-				{@render children()}
-			{/if}
-		</div>
-	{/key}
-</ParaglideJS>
+{#key page.url}
+	<div transition:fade>
+		{#if navigating.to}
+			<main class=" flex h-dvh">
+				<span class="loading loading-ring loading-md m-auto"></span>
+			</main>
+		{:else}
+			{@render children()}
+		{/if}
+	</div>
+{/key}

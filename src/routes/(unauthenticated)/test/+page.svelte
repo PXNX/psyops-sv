@@ -6,7 +6,6 @@
 	import TextStyle from "@tiptap/extension-text-style";
 	import ListItem from "@tiptap/extension-list-item";
 	import Heading from "@tiptap/extension-heading";
-	import Collaboration from "@tiptap/extension-collaboration";
 	import type { NodeType } from "@tiptap/pm/model";
 	import { Node as ProseMirrorNode } from "prosemirror-model";
 	import Table from "@tiptap/extension-table";
