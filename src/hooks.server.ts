@@ -2,6 +2,7 @@ import { TokenBucket } from "$lib/server/rate-limit";
 import { deleteSessionTokenCookie, setSessionTokenCookie, validateSessionToken } from "$lib/server/session";
 import { sequence } from "@sveltejs/kit/hooks";
 
+import { paraglideMiddleware } from "$lib/paraglide/server";
 import { error, type Handle } from "@sveltejs/kit";
 
 import { themes } from "$lib/themes";
@@ -72,4 +73,15 @@ export const cacheHandle: Handle = async ({ event, resolve }) => {
 	return response;
 };
 
-export const handle = sequence(rateLimitHandle, authHandle, themesHandle, cacheHandle);
+// creating a handle to use the paraglide middleware
+const paraglideHandle: Handle = ({ event, resolve }) =>
+	paraglideMiddleware(event.request, ({ request: localizedRequest, locale }) => {
+		event.request = localizedRequest;
+		return resolve(event, {
+			transformPageChunk: ({ html }) => {
+				return html.replace("%lang%", locale);
+			}
+		});
+	});
+
+export const handle = sequence(rateLimitHandle, authHandle, paraglideHandle, themesHandle, cacheHandle);

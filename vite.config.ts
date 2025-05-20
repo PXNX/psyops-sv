@@ -1,16 +1,20 @@
-import { paraglide } from "@inlang/paraglide-sveltekit/vite";
+import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import svg from "@poppanator/sveltekit-svg";
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
-import { SvelteKitPWA } from "@vite-pwa/sveltekit";
+//import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 import Icons from "unplugin-icons/vite";
 import { defineConfig } from "vite";
 
 export default defineConfig({
 	plugins: [
-		paraglide({ project: "./project.inlang", outdir: "./src/lib/paraglide" }),
+		paraglideVitePlugin({
+			project: "./project.inlang",
+			outdir: "./src/lib/paraglide",
+			strategy: ["url", "cookie", "baseLocale"]
+		}),
 		sveltekit(),
-		SvelteKitPWA(),
+		//	SvelteKitPWA(),
 		Icons({
 			compiler: "svelte",
 			autoInstall: true,
