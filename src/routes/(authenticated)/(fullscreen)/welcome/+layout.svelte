@@ -16,6 +16,6 @@
 	<title>PsyOps | Welcome</title>
 </svelte:head>
 
-<div class=" h-full flex flex-col justify-center items-center">
+<div class="h-dvh flex flex-col justify-center items-center space-y-4 text-center">
 	{@render children()}
 </div>

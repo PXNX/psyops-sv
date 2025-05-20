@@ -5,12 +5,8 @@
 	import FluentColorGlobeShield24 from "~icons/fluent-color/globe-shield-24";
 </script>
 
-<main
-	class="flex flex-col items-center justify-center w-full h-full p-4 text-center bg-gradient-to-r from-purple-800 to-zinc-800"
->
-	<div
-		class="flex flex-col items-center justify-center gap-1 p-4 text-center border rounded-lg border-fuchsia-900 place-self-center"
-	>
+<main class="flex flex-col h-dvh justify-center items-center w-full p-4 bg-gradient-to-b from-purple-800 to-zinc-800">
+	<div class="flex flex-col items-center space-x-2">
 		<FluentColorGlobeShield24 class="size-12" />
 
 		<a href="/login/google" class="mt-4 btn btn-primary btn-wide glass">
@@ -24,7 +20,7 @@
 		</p>
 	</div>
 
-	<a href="https://t.me/pentexnyx_bot?start=TEST" class="mt-4 btn btn-md btn-wide btn-ghost">
+	<a href="https://t.me/pentexnyx_bot?start=TEST" class="btn btn-md btn-wide btn-ghost mt-auto">
 		<FluentEmojiEnvelopeWithArrow />
 		{m.needHelp()}
 	</a>
