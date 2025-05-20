@@ -13,7 +13,7 @@
 	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import MdiNewspaperPlus from "~icons/mdi/newspaper-plus";
-
+	import FluentClockToolbox20Filled from "~icons/fluent/clock-toolbox-20-filled";
 	const { data } = $props();
 </script>
 
@@ -157,6 +157,27 @@
 			</button>
 		{/if}
 	</section>
+
+	<div class="bg-gray-800/50 rounded-lg p-3 border-l-2 border-purple-500">
+		<h3 class="font-medium text-purple-300">Minister of Finance</h3>
+		<p class="text-xs text-gray-400">Cabinet member since 2023</p>
+	</div>
+
+	<div class="collapse collapse-arrow border-base-300 border">
+		<input type="checkbox" />
+
+		<div class="collapse-title text-md flex-row flex gap-2 font-medium items-center">
+			<FluentClockToolbox20Filled class="size-6 text-gray-300" />
+			Former positions
+		</div>
+
+		<ul class="collapse-content text-sm text-gray-300 space-y-1">
+			<li>• Minister of Finance (2023-2023)</li>
+			<li>• Deputy Minister of Trade (2021-2023)</li>
+			<li>• Parliamentary Secretary (2019-2021)</li>
+		</ul>
+		<!-- todo: group it by state -->
+	</div>
 
 	<div class="collapse collapse-arrow border-base-300 border">
 		<input type="checkbox" />
