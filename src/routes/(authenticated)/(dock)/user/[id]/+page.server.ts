@@ -11,6 +11,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 		error(404);
 	}
 	const dataUser = jsonify(user);
+	//todo: remove user: from id
 	console.log("user/id: " + dataUser);
 	return { user: dataUser };
 };
