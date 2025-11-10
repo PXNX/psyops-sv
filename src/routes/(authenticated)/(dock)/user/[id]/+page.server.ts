@@ -1,17 +1,32 @@
-import { getDb } from "$lib/server/db";
-import type { User } from "$lib/server/user";
+// src/routes/(authenticated)/(dock)/user/[id]/+page.server.ts
+import { db } from "$lib/server/db";
+import { accounts } from "$lib/server/schema";
 import { error } from "@sveltejs/kit";
-import { jsonify, RecordId } from "surrealdb";
-import type { PageServerLoad, RequestEvent } from "./$types";
+import { eq } from "drizzle-orm";
+import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async (event: RequestEvent) => {
-	const db = await getDb();
-	const user = await db.select<User>(new RecordId("user", event.params.id));
+export const load: PageServerLoad = async ({ params }) => {
+	// Query account with its profile
+	const user = await db.query.accounts.findFirst({
+		where: eq(accounts.id, params.id),
+		with: {
+			profile: true
+		}
+	});
+
 	if (!user) {
-		error(404);
+		error(404, "User not found");
 	}
-	const dataUser = jsonify(user);
-	//todo: remove user: from id
-	console.log("user/id: " + dataUser);
-	return { user: dataUser };
+
+	return {
+		user: {
+			id: user.id,
+			email: user.email,
+			role: user.role,
+			name: user.profile?.name,
+			avatar: user.profile?.avatar,
+			bio: user.profile?.bio,
+			createdAt: user.createdAt
+		}
+	};
 };

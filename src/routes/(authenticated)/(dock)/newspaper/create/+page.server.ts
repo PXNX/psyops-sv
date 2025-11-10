@@ -1,17 +1,16 @@
-import { getDb, NEWSPAPER } from "$lib/server/db";
-import { extractId } from "$lib/util";
+// src/routes/(authenticated)/(dock)/newspaper/create/+page.server.ts
+import { db } from "$lib/server/db";
+import { journalists, newspapers } from "$lib/server/schema";
 import { fail, redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import type { Actions, PageServerLoad } from "./$types";
-import { newspaperSchema, type NewspaperSchema } from "./schema";
+import { newspaperSchema } from "./schema";
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(valibot(newspaperSchema), {
 		strict: true
 	});
-
-	// Always return { form } in load functions
 	return { form };
 };
 
@@ -24,29 +23,28 @@ export const actions = {
 		console.error(form);
 
 		if (!form.valid) {
-			// Again, return { form } and things will just work.
 			return fail(400, { form });
-			//	throw error(400, "User not found.");
-			//	return;
 		}
 
-		const db = await getDb();
-
-		const [newspaper] = await db.create<NewspaperSchema>(NEWSPAPER, form.data);
+		// Create newspaper
+		const [newspaper] = await db
+			.insert(newspapers)
+			.values({
+				name: form.data.name,
+				avatar: form.data.avatar || null,
+				background: form.data.background || null
+			})
+			.returning();
 
 		console.log(locals, newspaper, "+++++++++++", locals.account!.id, newspaper.id);
 
-		await db.insert_relation("journalist", {
-			in: locals.account!.id,
-			out: newspaper.id,
+		// Create journalist relationship (owner)
+		await db.insert(journalists).values({
+			userId: locals.account!.id,
+			newspaperId: newspaper.id,
 			rank: "owner"
 		});
 
-		// TODO: Do something with the validated form.data
-
-		// Display a success status message
-		//	return message(form, "Form posted successfully!");
-
-		return redirect(302, "/newspaper/" + extractId(newspaper.id));
+		return redirect(302, "/newspaper/" + newspaper.id);
 	}
 } satisfies Actions;

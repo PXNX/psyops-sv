@@ -1,18 +1,32 @@
-import { getDb } from "$lib/server/db";
-import type { Newspaper } from "$lib/server/newspaper";
-import type { RequestEvent } from "./$types";
+// src/routes/(authenticated)/(fullscreen)/posts/new/+page.server.ts
+import { db } from "$lib/server/db";
+import { journalists, newspapers } from "$lib/server/schema";
+import { eq } from "drizzle-orm";
+import type { PageServerLoad } from "./$types";
 
-export const load = async (event: RequestEvent) => {
-	const db = await getDb();
-	const newspapers = await db.query<Newspaper[]>(
-		"SELECT *,<-journalist.rank.first() as rank FROM $userId->journalist->newspaper;",
-		{ userId: event.locals.account?.id }
-	);
+export const load: PageServerLoad = async ({ locals }) => {
+	if (!locals.account) {
+		return { newspapers: [] };
+	}
+
+	// Query newspapers where the user is a journalist
+	const userNewspapers = await db
+		.select({
+			id: newspapers.id,
+			name: newspapers.name,
+			avatar: newspapers.avatar,
+			rank: journalists.rank
+		})
+		.from(journalists)
+		.innerJoin(newspapers, eq(journalists.newspaperId, newspapers.id))
+		.where(eq(journalists.userId, locals.account.id));
 
 	return {
-		newspapers: [
-			{ id: "1", name: "The Sun", rank: "owner" },
-			{ id: "2", name: "The Times", rank: "owner" }
-		]
-	}; // { newspapers: newspapers?.map((newspaper: Newspaper) => ({ ...newspaper, id: extractId(newspaper?.id) })) };
+		newspapers: userNewspapers.map((n) => ({
+			id: n.id,
+			name: n.name,
+			avatar: n.avatar,
+			rank: n.rank
+		}))
+	};
 };

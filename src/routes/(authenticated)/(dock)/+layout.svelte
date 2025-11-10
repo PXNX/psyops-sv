@@ -33,7 +33,8 @@
 	{@render children()}
 </div>
 
-{#if page.url.pathname !== "/posts/new" && page.url.pathname !== "posts/id/edit" && !page.url.pathname.startsWith("/welcome")}
+{#if page.url.pathname !== "/posts/new" && !page.url.pathname.startsWith("/welcome")}
+	<!-- TODO && page.url.pathname !== "posts/[id]/edit" -->
 	<nav class="dock-md dock">
 		<button onclick={() => navigateTo("")} class="flinch">
 			<FluentEmojiBarChart class="w-6 h-6" />
