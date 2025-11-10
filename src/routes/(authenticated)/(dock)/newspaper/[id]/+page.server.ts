@@ -1,36 +1,59 @@
-import { getDb, NEWSPAPER, USER } from "$lib/server/db";
-import { Gap, RecordId, surql } from "surrealdb";
-import type { RequestEvent } from "./$types";
+// src/routes/(authenticated)/(dock)/newspaper/[id]/+page.server.ts
+import { db } from "$lib/server/db";
+import { accounts, journalists, newspapers } from "$lib/server/schema";
+import { error } from "@sveltejs/kit";
+import { and, eq } from "drizzle-orm";
+import type { PageServerLoad } from "./$types";
 
 export type NewspaperDetail = {
 	newspaper: {
-		id: RecordId<typeof NEWSPAPER>;
+		id: string;
 		name: string;
-		avatar: string;
+		avatar: string | null;
 		createdAt: Date;
 	};
 	owner: {
-		id: RecordId<typeof USER>;
+		id: string;
 		name: string;
-		avatar: string;
+		avatar: string | null;
 	};
 };
 
-const newspaperId = new Gap<RecordId<typeof NEWSPAPER>>();
-const query = surql`SELECT ->newspaper.{id,name,avatar,createdAt}.first() AS newspaper, <-user.{id,name,avatar}.first() AS owner FROM ${newspaperId}<-journalist WHERE rank = 'owner'`;
+export const load: PageServerLoad = async ({ params }) => {
+	// Query newspaper with owner information
+	const result = await db
+		.select({
+			newspaperId: newspapers.id,
+			newspaperName: newspapers.name,
+			newspaperAvatar: newspapers.avatar,
+			newspaperCreatedAt: newspapers.createdAt,
+			ownerId: accounts.id,
+			ownerName: accounts.name,
+			ownerAvatar: accounts.avatar
+		})
+		.from(newspapers)
+		.innerJoin(journalists, and(eq(journalists.newspaperId, newspapers.id), eq(journalists.rank, "owner")))
+		.innerJoin(accounts, eq(journalists.userId, accounts.id))
+		.where(eq(newspapers.id, params.id))
+		.limit(1);
 
-export const load = async (event: RequestEvent) => {
-	const db = await getDb();
-	const [[newspaper]] = await db.query<[NewspaperDetail[]]>(query, [
-		newspaperId.fill(new RecordId(NEWSPAPER, event.params.id))
-	]);
+	if (!result || result.length === 0) {
+		throw error(404, "Newspaper not found");
+	}
 
-	console.log(event.params.id, JSON.stringify(newspaper));
+	const data = result[0];
+
 	return {
 		owner: {
-			...newspaper.owner,
-			id: newspaper.owner.id.id
+			id: data.ownerId,
+			name: data.ownerName,
+			avatar: data.ownerAvatar
 		},
-		newspaper: { ...newspaper.newspaper, id: newspaper.newspaper.id.id }
+		newspaper: {
+			id: data.newspaperId,
+			name: data.newspaperName,
+			avatar: data.newspaperAvatar,
+			createdAt: data.newspaperCreatedAt
+		}
 	};
 };

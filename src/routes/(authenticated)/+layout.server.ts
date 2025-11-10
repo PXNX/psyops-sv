@@ -9,7 +9,7 @@ const langParam = "hl"; // or maybe better to let user set it and have en defaul
 export const load = async (event: RequestEvent) => {
 	//await parent();
 	if (event.locals.session === null || event.locals.account === null) {
-		return redirect(302, "/login?next=" + event.url.pathname);
+		return redirect(302, "/auth/login?next=" + event.url.pathname);
 	}
 
 	//protecting just here feels wrong tbh
