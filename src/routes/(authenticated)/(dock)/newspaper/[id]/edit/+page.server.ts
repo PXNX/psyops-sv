@@ -1,4 +1,6 @@
-import { getDb } from "$lib/server/db";
+// src/routes/(authenticated)/(dock)/newspaper/[id]/edit/+page.server.ts
+import { db } from "$lib/server/db";
+import { journalists, newspapers } from "$lib/server/schema";
 import { fail } from "@sveltejs/kit";
 import { message, superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
@@ -10,42 +12,41 @@ export const load: PageServerLoad = async () => {
 		strict: true
 	});
 
-	// Always return { form } in load functions
 	return { form };
 };
 
 export const actions = {
 	default: async ({ request, locals }) => {
-		await new Promise((r) => setTimeout(r, 2000));
+		// Optional: Simulate delay
+		// await new Promise((r) => setTimeout(r, 2000));
 
 		const form = await superValidate(request, valibot(newspaperSchema));
-		console.error(".........");
-		console.error(form);
 
 		if (!form.valid) {
-			// Again, return { form } and things will just work.
 			return fail(400, { form });
-			//	throw error(400, "User not found.");
-			//	return;
 		}
 
-		const db = await getDb();
+		if (!locals.account) {
+			return fail(401, { form });
+		}
 
-		/*	const [newspaper] = await db.create<NewspaperSchema>(NEWSPAPER, form.data);
+		// Create newspaper
+		const [newspaper] = await db
+			.insert(newspapers)
+			.values({
+				name: form.data.name,
+				avatar: form.data.avatar || null,
+				background: form.data.background || null
+			})
+			.returning();
 
-		console.log(locals, newspaper, "+++++++++++", locals.account!.id, newspaper.id);
-
-		await db.insert_relation("journalist", {
-			in: locals.account!.id,
-			out: newspaper.id,
+		// Create journalist relationship with owner rank
+		await db.insert(journalists).values({
+			userId: locals.account.id,
+			newspaperId: newspaper.id,
 			rank: "owner"
-		}); */
+		});
 
-		// TODO: Do something with the validated form.data
-
-		// Display a success status message
-		return message(form, "Form posted successfully!");
-
-		//	return redirect(302, "/newspaper/" + extractId(newspaper.id));
+		return message(form, "Newspaper created successfully!");
 	}
 } satisfies Actions;

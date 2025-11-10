@@ -5,11 +5,11 @@
 	import FluentColorGlobeShield24 from "~icons/fluent-color/globe-shield-24";
 </script>
 
-<main class="flex flex-col h-dvh justify-center items-center w-full p-4 bg-gradient-to-b from-purple-800 to-zinc-800">
+<main class="flex flex-col h-dvh justify-center items-center w-full p-4 bg-linear-to-b from-purple-800 to-zinc-800">
 	<div class="flex flex-col items-center space-x-2">
 		<FluentColorGlobeShield24 class="size-12" />
 
-		<a href="/login/google" class="mt-4 btn btn-primary btn-wide glass">
+		<a href="/auth/login/google" class="mt-4 btn btn-primary btn-wide glass">
 			<LogosGoogleIcon class="size-5" />
 			{m.signUp({ provider: "Google" })}
 		</a>

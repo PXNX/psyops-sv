@@ -1,24 +1,32 @@
-import type { PageServerLoad, RequestEvent } from "./$types";
-
-import { getDb, NEWSPAPER } from "$lib/server/db";
-import { extractId } from "$lib/util";
-import type { RecordId } from "surrealdb";
+// src/routes/(authenticated)/(dock)/newspaper/+page.server.ts
+import { db } from "$lib/server/db";
+import { journalists, newspapers } from "$lib/server/schema";
+import { eq } from "drizzle-orm";
+import type { PageServerLoad } from "./$types";
 
 export type NewspaperEntry = {
-	id: RecordId<typeof NEWSPAPER>;
+	id: string;
 	name: string;
-	avatar: string;
-	rank: string;
+	avatar: string | null;
+	rank: "author" | "editor" | "owner";
 };
 
-export const load: PageServerLoad = async (event: RequestEvent) => {
-	const db = await getDb();
-	const [newspapers] = await db.query<[NewspaperEntry[]]>(
-		"SELECT id,name,avatar,<-journalist.rank.first() as rank FROM $userId->journalist->newspaper;",
-		{
-			userId: event.locals.account!.id
-		}
-	);
-	console.log(JSON.stringify(newspapers));
-	return { newspapers: newspapers.map((newspaper: NewspaperEntry) => ({ ...newspaper, id: extractId(newspaper.id) })) };
+export const load: PageServerLoad = async ({ locals }) => {
+	// Query newspapers the user is a journalist for
+	const result = await db
+		.select({
+			id: newspapers.id,
+			name: newspapers.name,
+			avatar: newspapers.avatar,
+			rank: journalists.rank
+		})
+		.from(journalists)
+		.innerJoin(newspapers, eq(journalists.newspaperId, newspapers.id))
+		.where(eq(journalists.userId, locals.account!.id));
+
+	console.log(JSON.stringify(result));
+
+	return {
+		newspapers: result
+	};
 };

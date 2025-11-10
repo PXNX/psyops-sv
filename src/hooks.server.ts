@@ -1,11 +1,18 @@
 import { TokenBucket } from "$lib/server/rate-limit";
-import { deleteSessionTokenCookie, setSessionTokenCookie, validateSessionToken } from "$lib/server/session";
 import { sequence } from "@sveltejs/kit/hooks";
 
 import { paraglideMiddleware } from "$lib/paraglide/server";
 import { error, type Handle } from "@sveltejs/kit";
 
 import { themes } from "$lib/themes";
+import "@valibot/i18n/de/schema";
+
+// src/hooks.server.ts
+
+import { validateSessionToken } from "$lib/server/auth";
+
+import type { HandleServerError } from "@sveltejs/kit";
+
 import "@valibot/i18n/de/schema";
 
 const bucket = new TokenBucket<string>(100, 1);
@@ -29,23 +36,45 @@ const rateLimitHandle: Handle = async ({ event, resolve }) => {
 };
 
 const authHandle: Handle = async ({ event, resolve }) => {
-	const token = event.cookies.get("session") ?? null;
-	if (token === null) {
+	console.log("🔍 Session - Checking session");
+	const sessionToken = event.cookies.get("session");
+
+	if (!sessionToken) {
 		event.locals.account = null;
 		event.locals.session = null;
 		return resolve(event);
 	}
 
-	const { session, account } = await validateSessionToken(token);
-	if (session !== null) {
-		setSessionTokenCookie(event, token, session.expiresAt);
-	} else {
-		deleteSessionTokenCookie(event);
+	const result = await validateSessionToken(sessionToken);
+
+	if (!result) {
+		event.locals.account = null;
+		event.locals.session = null;
+		event.cookies.delete("session", { path: "/" });
+		return resolve(event);
 	}
 
-	event.locals.session = session;
-	event.locals.account = account;
+	event.locals.account = result.account;
+	event.locals.session = result.session;
+
 	return resolve(event);
+};
+
+export const handleError: HandleServerError = async ({ error, event }) => {
+	const errorId = crypto.randomUUID();
+
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	//@ts-ignore
+	event.locals.error = error?.toString() || undefined;
+	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+	//@ts-ignore
+	event.locals.errorStackTrace = error?.stack || undefined;
+	event.locals.errorId = errorId;
+	//log(500, event);
+	return {
+		message: "An unexpected error occurred.",
+		errorId
+	};
 };
 
 export const themesHandle: Handle = async ({ event, resolve }) => {
@@ -62,17 +91,6 @@ export const themesHandle: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const cacheHandle: Handle = async ({ event, resolve }) => {
-	const response = await resolve(event);
-
-	// Add cache headers for SVG files
-	if (event.url.pathname.endsWith(".svg")) {
-		response.headers.set("Cache-Control", "public, max-age=31536000, immutable");
-	}
-
-	return response;
-};
-
 // creating a handle to use the paraglide middleware
 const paraglideHandle: Handle = ({ event, resolve }) =>
 	paraglideMiddleware(event.request, ({ request: localizedRequest, locale }) => {
@@ -84,4 +102,4 @@ const paraglideHandle: Handle = ({ event, resolve }) =>
 		});
 	});
 
-export const handle = sequence(rateLimitHandle, authHandle, paraglideHandle, themesHandle, cacheHandle);
+export const handle = sequence(rateLimitHandle, authHandle, paraglideHandle, themesHandle);
