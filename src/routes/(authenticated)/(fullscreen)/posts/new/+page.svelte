@@ -1,12 +1,8 @@
-<script lang="ts">
-	import Tiptap from "$lib/component/Tiptap.svelte";
-
+<!--<script lang="ts">
 	import FluentEmojiFloppyDisk from "~icons/fluent-emoji/floppy-disk";
 	import MdiWindowClose from "~icons/mdi/window-close";
 	import FluentArrowHookUpLeft20Regular from "~icons/fluent/arrow-hook-up-left-20-regular";
 	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
-	import MdiCloseCircle from "~icons/mdi/close-circle";
-	import { goto } from "$app/navigation";
 
 	const { data } = $props();
 
@@ -19,7 +15,7 @@
 	import Document from "@tiptap/extension-document";
 	import Gapcursor from "@tiptap/extension-gapcursor";
 	import Paragraph from "@tiptap/extension-paragraph";
-	import Table from "@tiptap/extension-table";
+	import { Table } from "@tiptap/extension-table";
 	import TableCell from "@tiptap/extension-table-cell";
 	import TableHeader from "@tiptap/extension-table-header";
 	import TableRow from "@tiptap/extension-table-row";
@@ -159,10 +155,10 @@
 
 		<button class=" btn btn-primary">Publish article</button>
 	</div>
-</dialog>
+</dialog>-->
 
 <!-- todo: make this own componentn and also provide i18n to separeate header slot and children slot-->
-<dialog class="modal" bind:this={cancelModal}>
+<!--<dialog class="modal" bind:this={cancelModal}>
 	<div class="modal-box">
 		<form method="dialog">
 			<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2"><MdiWindowClose /></button>
@@ -293,4 +289,132 @@
 			</div>
 		</div>
 	</BubbleMenu>
-{/if}
+{/if}-->
+
+<!-- +page.svelte - Example usage page -->
+<script>
+	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
+
+	let editorComponent = $state(null);
+	let savedContent = $state("");
+	let loadedContent = $state("");
+
+	// Simulate saving to database
+	const saveToDatabase = async () => {
+		const content = editorComponent?.getContent();
+		if (!content) return;
+
+		try {
+			// In a real app, you'd make an API call here
+			const response = await fetch("/api/save-content", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ content })
+			});
+
+			if (response.ok) {
+				savedContent = content;
+				alert("Content saved successfully!");
+			}
+		} catch (error) {
+			console.error("Save failed:", error);
+			// For demo purposes, just save to state
+			savedContent = content;
+			alert("Content saved locally (demo mode)!");
+		}
+	};
+
+	// Simulate loading from database
+	const loadFromDatabase = async () => {
+		try {
+			// In a real app, you'd fetch from your API here
+			const response = await fetch("/api/get-content");
+
+			if (response.ok) {
+				const data = await response.json();
+				editorComponent?.setContent(data.content);
+				loadedContent = data.content;
+			}
+		} catch (error) {
+			console.error("Load failed:", error);
+			// For demo purposes, load from saved state
+			if (savedContent) {
+				editorComponent?.setContent(savedContent);
+				loadedContent = savedContent;
+				alert("Content loaded from local state (demo mode)!");
+			}
+		}
+	};
+
+	// Clear editor
+	const clearEditor = () => {
+		if (confirm("Are you sure you want to clear all content?")) {
+			editorComponent?.clearContent();
+		}
+	};
+
+	// Handle real-time content changes
+	const handleContentChange = (content) => {
+		console.log("Content changed, length:", content.length);
+		// You could auto-save here or update UI state
+	};
+
+	// Export content as JSON
+	const exportContent = () => {
+		const content = editorComponent?.getContent();
+		const dataStr = JSON.stringify({ content, timestamp: new Date().toISOString() }, null, 2);
+		const dataBlob = new Blob([dataStr], { type: "application/json" });
+		const url = URL.createObjectURL(dataBlob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = "editor-content.json";
+		link.click();
+		URL.revokeObjectURL(url);
+	};
+
+	// Import content from JSON file
+	const importContent = (event) => {
+		const file = event.target.files?.[0];
+		if (!file) return;
+
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			try {
+				const data = JSON.parse(e.target.result);
+				if (data.content) {
+					editorComponent?.setContent(data.content);
+					alert("Content imported successfully!");
+				}
+			} catch (error) {
+				alert("Invalid file format");
+			}
+		};
+		reader.readAsText(file);
+	};
+</script>
+
+<div class="min-h-screen bg-base-200 p-8">
+	<div class="max-w-5xl mx-auto">
+		<div class="flex justify-between items-center mb-6">
+			<h1 class="text-4xl font-bold">WYSIWYG Editor Demo</h1>
+
+			<div class="flex gap-2">
+				<button class="btn btn-success" onclick={saveToDatabase}> 💾 Save to DB </button>
+				<button class="btn btn-info" onclick={loadFromDatabase}> 📥 Load from DB </button>
+				<button class="btn btn-warning" onclick={clearEditor}> 🗑️ Clear </button>
+				<button class="btn btn-primary" onclick={exportContent}> 📤 Export JSON </button>
+				<label class="btn btn-secondary">
+					📂 Import JSON
+					<input type="file" accept=".json" class="hidden" onchange={importContent} />
+				</label>
+			</div>
+		</div>
+
+		<WysiwygEditor
+			bind:this={editorComponent}
+			initialContent={loadedContent}
+			onContentChange={handleContentChange}
+			placeholder="Start writing your content here..."
+		/>
+	</div>
+</div>
