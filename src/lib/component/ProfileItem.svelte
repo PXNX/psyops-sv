@@ -1,7 +1,7 @@
+<!-- src/lib/component/ProfileItem.svelte -->
 <script lang="ts">
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import SquareAvatar from "./SquareAvatar.svelte";
-	import type { SvelteHTMLElements, SVGAttributes } from "svelte/elements";
 	import type { Component } from "svelte";
 
 	let {
@@ -24,19 +24,25 @@
 </script>
 
 <a
-	class={`flinch flex items-center justify-between group ${bgColor}/50 hover:${bgColor}/20 rounded-lg px-2 py-1 transition-colors `}
+	class="group flex items-center justify-between bg-slate-800/20 hover:bg-slate-700/30 rounded-lg px-3 py-3 transition-all duration-200 border border-transparent hover:border-white/5"
 	{href}
 >
-	<div class="flex items-center space-x-4">
-		<div class={`size-12 ${bgColor} rounded-full flex items-center justify-center shadow-inner overflow-hidden`}>
-			<SquareAvatar src={avatar} {bgColor} />
+	<div class="flex items-center gap-3 min-w-0">
+		<div class="relative shrink-0">
+			<div class="{bgColor} size-11 rounded-lg flex items-center justify-center shadow-lg ring-1 ring-white/10">
+				<Component class="size-5 text-white" />
+			</div>
 		</div>
-		<div>
-			<p class="font-medium">{name}</p>
-			<p class="text-xs text-gray-400 flex items-center">
-				{description} • {date.toLocaleDateString()}
+		<div class="min-w-0 flex-1">
+			<p class="font-semibold text-gray-100 truncate">{name}</p>
+			<p class="text-xs text-gray-400 flex items-center gap-1">
+				<span class="truncate">{description}</span>
+				<span class="text-gray-600">•</span>
+				<time class="shrink-0">{date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}</time>
 			</p>
 		</div>
 	</div>
-	<Component class="size-5 text-gray-200 group-hover:text-yellow-500 transition-colors" />
+	<FluentChevronRight20Filled
+		class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors shrink-0 ml-2"
+	/>
 </a>
