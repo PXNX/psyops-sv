@@ -8,7 +8,7 @@
 	import Heading from "@tiptap/extension-heading";
 	import type { NodeType } from "@tiptap/pm/model";
 	import { Node as ProseMirrorNode } from "prosemirror-model";
-	import Table from "@tiptap/extension-table";
+	import { Table } from "@tiptap/extension-table";
 	import TableCell from "@tiptap/extension-table-cell";
 	import TableHeader from "@tiptap/extension-table-header";
 	import TableRow from "@tiptap/extension-table-row";
