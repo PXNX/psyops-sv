@@ -1,3 +1,4 @@
+<!-- src/routes/(unauthenticated)/map/+page.svelte -->
 <script lang="ts">
 	import panzoom, { type PanZoom } from "panzoom";
 	import WorldMap from "$lib/assets/worldmap.svg?raw"; // note suffix ?raw or ?component
