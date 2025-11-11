@@ -1,17 +1,37 @@
 import { relations } from "drizzle-orm";
-import { index, pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+	bigint,
+	index,
+	integer,
+	pgEnum,
+	pgTable,
+	text,
+	timestamp,
+	uniqueIndex,
+	uuid,
+	varchar
+} from "drizzle-orm/pg-core";
 
 // Enums
 export const journalistRankEnum = pgEnum("journalist_rank", ["author", "editor", "owner"]);
-export const userRoleEnum = pgEnum("user_role", ["user", "moderator", "admin"]); // Berechtigungen (permissions)
+export const userRoleEnum = pgEnum("user_role", ["user", "moderator", "admin"]);
+export const ministryTypeEnum = pgEnum("ministry_type", [
+	"education",
+	"defense",
+	"finance",
+	"health",
+	"infrastructure",
+	"justice",
+	"foreign_affairs"
+]);
 
-// Accounts table - updated for OAuth2
+// Accounts table
 export const accounts = pgTable(
 	"account",
 	{
-		id: text("id").primaryKey(), // Changed to text to use Google's sub (subject identifier)
+		id: text("id").primaryKey(),
 		email: varchar("email", { length: 255 }).notNull().unique(),
-		role: userRoleEnum("role").notNull().default("user"), // Berechtigungen
+		role: userRoleEnum("role").notNull().default("user"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull()
 	},
@@ -20,7 +40,7 @@ export const accounts = pgTable(
 	})
 );
 
-// User Profiles table - stores additional user information
+// User Profiles table
 export const userProfiles = pgTable("user_profiles", {
 	id: uuid("id").defaultRandom().primaryKey(),
 	accountId: text("account_id")
@@ -34,7 +54,7 @@ export const userProfiles = pgTable("user_profiles", {
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
-// Sessions table - for managing user sessions
+// Sessions table
 export const sessions = pgTable(
 	"sessions",
 	{
@@ -51,7 +71,7 @@ export const sessions = pgTable(
 	})
 );
 
-// OAuth Tokens table - stores Google OAuth tokens
+// OAuth Tokens tablef
 export const oauthTokens = pgTable(
 	"oauth_tokens",
 	{
@@ -72,6 +92,133 @@ export const oauthTokens = pgTable(
 	})
 );
 
+// States table
+export const states = pgTable("states", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	name: varchar("name", { length: 100 }).notNull(),
+	avatar: text("avatar"),
+	background: text("background"),
+	description: text("description"),
+	population: integer("population").default(0),
+	rating: integer("rating").default(0),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Regions table (belongs to states)
+export const regions = pgTable("regions", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(), // Add .primaryKey()
+	name: varchar("name", { length: 100 }).notNull(),
+	avatar: text("avatar"),
+	background: text("background"),
+	description: text("description"),
+	stateId: uuid("state_id").references(() => states.id, { onDelete: "cascade" }),
+	population: integer("population").default(0),
+	rating: integer("rating").default(0),
+	development: integer("development").default(0),
+	infrastructure: integer("infrastructure").default(0),
+	economy: integer("economy").default(0),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Governors table (one per region)
+export const governors = pgTable(
+	"governors",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" })
+			.unique(),
+		appointedAt: timestamp("appointed_at").defaultNow().notNull(),
+		term: integer("term").default(1)
+	},
+	(table) => ({
+		userRegionIdx: index("idx_governor_user_region").on(table.userId, table.regionId)
+	})
+);
+
+// Presidents table (one per state)
+export const presidents = pgTable(
+	"presidents",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		stateId: uuid("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" })
+			.unique(),
+		electedAt: timestamp("elected_at").defaultNow().notNull(),
+		term: integer("term").default(1)
+	},
+	(table) => ({
+		userStateIdx: index("idx_president_user_state").on(table.userId, table.stateId)
+	})
+);
+
+// Ministers table (multiple per state)
+export const ministers = pgTable(
+	"ministers",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		stateId: uuid("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		ministry: ministryTypeEnum("ministry").notNull(),
+		appointedAt: timestamp("appointed_at").defaultNow().notNull()
+	},
+	(table) => ({
+		userStateMinistryIdx: uniqueIndex("idx_minister_unique").on(table.userId, table.stateId, table.ministry),
+		stateMinistryIdx: uniqueIndex("idx_state_ministry_unique").on(table.stateId, table.ministry)
+	})
+);
+
+// Parliament Members table
+export const parliamentMembers = pgTable(
+	"parliament_members",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		stateId: uuid("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		partyAffiliation: varchar("party_affiliation", { length: 100 }),
+		electedAt: timestamp("elected_at").defaultNow().notNull(),
+		term: integer("term").default(1)
+	},
+	(table) => ({
+		userStateIdx: uniqueIndex("idx_parliament_user_state").on(table.userId, table.stateId)
+	})
+);
+
+// Residences table (tracks where users live)
+export const residences = pgTable(
+	"residences",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		isPrimary: integer("is_primary").default(0), // 1 for primary residence, 0 for secondary
+		movedInAt: timestamp("moved_in_at").defaultNow().notNull()
+	},
+	(table) => ({
+		userRegionIdx: index("idx_residence_user_region").on(table.userId, table.regionId)
+	})
+);
+
 // Newspapers table
 export const newspapers = pgTable("newspapers", {
 	id: uuid("id").defaultRandom().primaryKey(),
@@ -81,7 +228,7 @@ export const newspapers = pgTable("newspapers", {
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
-// Journalists table (junction table for accounts and newspapers)
+// Journalists table
 export const journalists = pgTable(
 	"journalists",
 	{
@@ -130,9 +277,6 @@ export const upvotes = pgTable(
 	})
 );
 
-// OAuth state table - removed as it's being handled by cookies in your implementation
-// If you want to store state in DB instead of cookies, keep this table
-
 // Relations
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
 	profile: one(userProfiles, {
@@ -146,7 +290,12 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 	sessions: many(sessions),
 	journalists: many(journalists),
 	articles: many(articles),
-	upvotes: many(upvotes)
+	upvotes: many(upvotes),
+	governorships: many(governors),
+	presidencies: many(presidents),
+	ministries: many(ministers),
+	parliamentSeats: many(parliamentMembers),
+	residences: many(residences)
 }));
 
 export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
@@ -167,6 +316,77 @@ export const oauthTokensRelations = relations(oauthTokens, ({ one }) => ({
 	account: one(accounts, {
 		fields: [oauthTokens.accountId],
 		references: [accounts.id]
+	})
+}));
+
+export const statesRelations = relations(states, ({ one, many }) => ({
+	regions: many(regions),
+	president: one(presidents),
+	ministers: many(ministers),
+	parliamentMembers: many(parliamentMembers)
+}));
+
+export const regionsRelations = relations(regions, ({ one, many }) => ({
+	state: one(states, {
+		fields: [regions.stateId],
+		references: [states.id]
+	}),
+	governor: one(governors),
+	residences: many(residences)
+}));
+
+export const governorsRelations = relations(governors, ({ one }) => ({
+	user: one(accounts, {
+		fields: [governors.userId],
+		references: [accounts.id]
+	}),
+	region: one(regions, {
+		fields: [governors.regionId],
+		references: [regions.id]
+	})
+}));
+
+export const presidentsRelations = relations(presidents, ({ one }) => ({
+	user: one(accounts, {
+		fields: [presidents.userId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [presidents.stateId],
+		references: [states.id]
+	})
+}));
+
+export const ministersRelations = relations(ministers, ({ one }) => ({
+	user: one(accounts, {
+		fields: [ministers.userId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [ministers.stateId],
+		references: [states.id]
+	})
+}));
+
+export const parliamentMembersRelations = relations(parliamentMembers, ({ one }) => ({
+	user: one(accounts, {
+		fields: [parliamentMembers.userId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [parliamentMembers.stateId],
+		references: [states.id]
+	})
+}));
+
+export const residencesRelations = relations(residences, ({ one }) => ({
+	user: one(accounts, {
+		fields: [residences.userId],
+		references: [accounts.id]
+	}),
+	region: one(regions, {
+		fields: [residences.regionId],
+		references: [regions.id]
 	})
 }));
 
@@ -209,7 +429,241 @@ export const upvotesRelations = relations(upvotes, ({ one }) => ({
 	})
 }));
 
-// TypeScript types (inferred from schema)
+export const resourceTypeEnum = pgEnum("resource_type", ["iron", "copper", "steel", "gunpowder", "wood", "coal"]);
+export const productTypeEnum = pgEnum("product_type", ["rifles", "ammunition", "artillery", "vehicles", "explosives"]);
+export const factoryTypeEnum = pgEnum("factory_type", ["mine", "refinery", "armaments", "general"]);
+export const jobTypeEnum = pgEnum("job_type", ["miner", "refiner", "assembler", "general_worker"]);
+
+// Companies table
+export const companies = pgTable("companies", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	name: varchar("name", { length: 100 }).notNull(),
+	logo: text("logo"), // URL or path to logo
+	ownerId: text("owner_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	description: text("description"),
+	foundedAt: timestamp("founded_at").defaultNow().notNull()
+});
+
+// Resources Inventory table
+export const resourceInventory = pgTable(
+	"resource_inventory",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		resourceType: resourceTypeEnum("resource_type").notNull(),
+		quantity: integer("quantity").default(0).notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(table) => ({
+		userResourceIdx: uniqueIndex("idx_user_resource").on(table.userId, table.resourceType)
+	})
+);
+
+// Products Inventory table
+export const productInventory = pgTable(
+	"product_inventory",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		productType: productTypeEnum("product_type").notNull(),
+		quantity: integer("quantity").default(0).notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(table) => ({
+		userProductIdx: uniqueIndex("idx_user_product").on(table.userId, table.productType)
+	})
+);
+
+// Factories table
+export const factories = pgTable("factories", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	name: varchar("name", { length: 100 }).notNull(),
+	companyId: uuid("company_id")
+		.notNull()
+		.references(() => companies.id, { onDelete: "cascade" }),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+	factoryType: factoryTypeEnum("factory_type").notNull(),
+	resourceOutput: resourceTypeEnum("resource_output"), // For mines
+	productOutput: productTypeEnum("product_output"), // For armament factories
+	maxWorkers: integer("max_workers").default(10).notNull(),
+	workerWage: bigint("worker_wage", { mode: "number" }).default(1500).notNull(),
+	productionRate: integer("production_rate").default(10).notNull(), // Resources produced per shift
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Factory Workers table
+export const factoryWorkers = pgTable("factory_workers", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(), // One job per user
+	factoryId: uuid("factory_id")
+		.notNull()
+		.references(() => factories.id, { onDelete: "cascade" }),
+	jobType: jobTypeEnum("job_type").notNull(),
+	hiredAt: timestamp("hired_at").defaultNow().notNull(),
+	lastWorked: timestamp("last_worked")
+});
+
+// Production Queue table (one active slot per user)
+export const productionQueue = pgTable("production_queue", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	productType: productTypeEnum("product_type").notNull(),
+	quantity: integer("quantity").notNull(),
+	startedAt: timestamp("started_at").defaultNow().notNull(),
+	completesAt: timestamp("completes_at").notNull()
+});
+
+// Market Listings table
+export const marketListings = pgTable("market_listings", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	sellerId: text("seller_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	itemType: varchar("item_type", { length: 20 }).notNull(), // 'resource' or 'product'
+	itemName: varchar("item_name", { length: 50 }).notNull(), // e.g., 'iron', 'rifles'
+	quantity: integer("quantity").notNull(),
+	pricePerUnit: bigint("price_per_unit", { mode: "number" }).notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Market Transactions table
+export const marketTransactions = pgTable("market_transactions", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	listingId: uuid("listing_id")
+		.notNull()
+		.references(() => marketListings.id, { onDelete: "cascade" }),
+	buyerId: text("buyer_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	sellerId: text("seller_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	quantity: integer("quantity").notNull(),
+	totalPrice: bigint("total_price", { mode: "number" }).notNull(),
+	completedAt: timestamp("completed_at").defaultNow().notNull()
+});
+
+// User Wallet table
+export const userWallets = pgTable("user_wallets", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	balance: bigint("balance", { mode: "number" }).default(10000).notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Relations
+export const companiesRelations = relations(companies, ({ one, many }) => ({
+	owner: one(accounts, {
+		fields: [companies.ownerId],
+		references: [accounts.id]
+	}),
+	factories: many(factories)
+}));
+
+export const resourceInventoryRelations = relations(resourceInventory, ({ one }) => ({
+	user: one(accounts, {
+		fields: [resourceInventory.userId],
+		references: [accounts.id]
+	})
+}));
+
+export const productInventoryRelations = relations(productInventory, ({ one }) => ({
+	user: one(accounts, {
+		fields: [productInventory.userId],
+		references: [accounts.id]
+	})
+}));
+
+export const factoriesRelations = relations(factories, ({ one, many }) => ({
+	company: one(companies, {
+		fields: [factories.companyId],
+		references: [companies.id]
+	}),
+	region: one(regions, {
+		fields: [factories.regionId],
+		references: [regions.id]
+	}),
+	workers: many(factoryWorkers)
+}));
+
+export const factoryWorkersRelations = relations(factoryWorkers, ({ one }) => ({
+	user: one(accounts, {
+		fields: [factoryWorkers.userId],
+		references: [accounts.id]
+	}),
+	factory: one(factories, {
+		fields: [factoryWorkers.factoryId],
+		references: [factories.id]
+	})
+}));
+
+export const productionQueueRelations = relations(productionQueue, ({ one }) => ({
+	user: one(accounts, {
+		fields: [productionQueue.userId],
+		references: [accounts.id]
+	})
+}));
+
+export const marketListingsRelations = relations(marketListings, ({ one }) => ({
+	seller: one(accounts, {
+		fields: [marketListings.sellerId],
+		references: [accounts.id]
+	})
+}));
+
+export const userWalletsRelations = relations(userWallets, ({ one }) => ({
+	user: one(accounts, {
+		fields: [userWallets.userId],
+		references: [accounts.id]
+	})
+}));
+
+// TypeScript types
+export type Company = typeof companies.$inferSelect;
+export type NewCompany = typeof companies.$inferInsert;
+
+export type ResourceInventory = typeof resourceInventory.$inferSelect;
+export type NewResourceInventory = typeof resourceInventory.$inferInsert;
+
+export type ProductInventory = typeof productInventory.$inferSelect;
+export type NewProductInventory = typeof productInventory.$inferInsert;
+
+export type Factory = typeof factories.$inferSelect;
+export type NewFactory = typeof factories.$inferInsert;
+
+export type FactoryWorker = typeof factoryWorkers.$inferSelect;
+export type NewFactoryWorker = typeof factoryWorkers.$inferInsert;
+
+export type ProductionQueue = typeof productionQueue.$inferSelect;
+export type NewProductionQueue = typeof productionQueue.$inferInsert;
+
+export type MarketListing = typeof marketListings.$inferSelect;
+export type NewMarketListing = typeof marketListings.$inferInsert;
+
+export type MarketTransaction = typeof marketTransactions.$inferSelect;
+export type NewMarketTransaction = typeof marketTransactions.$inferInsert;
+
+export type UserWallet = typeof userWallets.$inferSelect;
+export type NewUserWallet = typeof userWallets.$inferInsert;
+
+// TypeScript types
 export type Account = typeof accounts.$inferSelect;
 export type NewAccount = typeof accounts.$inferInsert;
 
@@ -221,6 +675,27 @@ export type NewSession = typeof sessions.$inferInsert;
 
 export type OAuthToken = typeof oauthTokens.$inferSelect;
 export type NewOAuthToken = typeof oauthTokens.$inferInsert;
+
+export type State = typeof states.$inferSelect;
+export type NewState = typeof states.$inferInsert;
+
+export type Region = typeof regions.$inferSelect;
+export type NewRegion = typeof regions.$inferInsert;
+
+export type Governor = typeof governors.$inferSelect;
+export type NewGovernor = typeof governors.$inferInsert;
+
+export type President = typeof presidents.$inferSelect;
+export type NewPresident = typeof presidents.$inferInsert;
+
+export type Minister = typeof ministers.$inferSelect;
+export type NewMinister = typeof ministers.$inferInsert;
+
+export type ParliamentMember = typeof parliamentMembers.$inferSelect;
+export type NewParliamentMember = typeof parliamentMembers.$inferInsert;
+
+export type Residence = typeof residences.$inferSelect;
+export type NewResidence = typeof residences.$inferInsert;
 
 export type Newspaper = typeof newspapers.$inferSelect;
 export type NewNewspaper = typeof newspapers.$inferInsert;
