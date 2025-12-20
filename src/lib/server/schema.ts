@@ -635,6 +635,18 @@ export const userWalletsRelations = relations(userWallets, ({ one }) => ({
 	})
 }));
 
+export const files = pgTable("files", {
+	id: text("id").primaryKey(),
+	key: text("key").notNull().unique(),
+	fileName: text("file_name").notNull(),
+	contentType: text("content_type").notNull(),
+	sizeBytes: integer("size_bytes").notNull(),
+	uploadedBy: text("uploaded_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow()
+});
+
 // Add these to your existing schema.ts file
 
 // Enums for parliament system
@@ -652,16 +664,69 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"general"
 ]);
 
-// Political Parties table
 export const politicalParties = pgTable("political_parties", {
 	id: uuid("id").defaultRandom().primaryKey(),
-	name: varchar("name", { length: 100 }).notNull(),
+	name: varchar("name", { length: 100 }).notNull().unique(),
 	abbreviation: varchar("abbreviation", { length: 10 }),
-	color: varchar("color", { length: 7 }).default("#6366f1"), // Hex color
-	ideology: text("ideology"),
+	color: varchar("color", { length: 7 }).default("#6366f1").notNull(), // Hex color
+	logo: text("logo"), // File ID reference to files table
+	ideology: varchar("ideology", { length: 50 }), // e.g., "Liberal", "Conservative", "Socialist"
 	description: text("description"),
-	foundedAt: timestamp("founded_at").defaultNow().notNull()
+	founderId: text("founder_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	foundedAt: timestamp("founded_at").defaultNow().notNull(),
+	memberCount: integer("member_count").default(1).notNull()
 });
+
+// Party Members table
+export const partyMembers = pgTable(
+	"party_members",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		partyId: uuid("party_id")
+			.notNull()
+			.references(() => politicalParties.id, { onDelete: "cascade" }),
+		role: varchar("role", { length: 20 }).default("member").notNull(), // member, leader, deputy
+		joinedAt: timestamp("joined_at").defaultNow().notNull()
+	},
+	(table) => ({
+		userPartyIdx: uniqueIndex("idx_user_party").on(table.userId, table.partyId)
+	})
+);
+
+// Relations
+export const politicalPartiesRelations = relations(politicalParties, ({ one, many }) => ({
+	founder: one(accounts, {
+		fields: [politicalParties.founderId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [politicalParties.stateId],
+		references: [states.id]
+	}),
+	members: many(partyMembers)
+}));
+
+export const partyMembersRelations = relations(partyMembers, ({ one }) => ({
+	user: one(accounts, {
+		fields: [partyMembers.userId],
+		references: [accounts.id]
+	}),
+	party: one(politicalParties, {
+		fields: [partyMembers.partyId],
+		references: [politicalParties.id]
+	})
+}));
+
+export type PartyMember = typeof partyMembers.$inferSelect;
+export type NewPartyMember = typeof partyMembers.$inferInsert;
 
 // Update parliament members to reference parties
 // Add this column to parliamentMembers table:
@@ -704,23 +769,6 @@ export const parliamentaryVotes = pgTable(
 		proposalVoterIdx: uniqueIndex("idx_proposal_voter").on(table.proposalId, table.voterId)
 	})
 );
-
-// Relations
-export const politicalPartiesRelations = relations(politicalParties, ({ many }) => ({
-	members: many(parliamentMembers)
-}));
-
-export const parliamentaryProposalsRelations = relations(parliamentaryProposals, ({ one, many }) => ({
-	state: one(states, {
-		fields: [parliamentaryProposals.stateId],
-		references: [states.id]
-	}),
-	proposer: one(accounts, {
-		fields: [parliamentaryProposals.proposedBy],
-		references: [accounts.id]
-	}),
-	votes: many(parliamentaryVotes)
-}));
 
 export const parliamentaryVotesRelations = relations(parliamentaryVotes, ({ one }) => ({
 	proposal: one(parliamentaryProposals, {
