@@ -14,55 +14,73 @@
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import MdiNewspaperPlus from "~icons/mdi/newspaper-plus";
 	import FluentClockToolbox20Filled from "~icons/fluent/clock-toolbox-20-filled";
-	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
+	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
+	import FluentHome20Filled from "~icons/fluent/home-20-filled";
+	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
+	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 
 	const { data } = $props();
 
-	// Helper to get ministry icon color
-	function getMinistryColor(ministry: string) {
-		const colors: Record<string, string> = {
-			education: "bg-blue-600",
-			defense: "bg-red-600",
-			finance: "bg-green-600",
-			health: "bg-pink-600",
-			infrastructure: "bg-orange-600",
-			justice: "bg-purple-600",
-			foreign_affairs: "bg-indigo-600"
-		};
-		return colors[ministry] || "bg-gray-600";
-	}
-
 	// Helper to format ministry name
-	function formatMinistry(ministry: string) {
-		return ministry
-			.split("_")
-			.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-			.join(" ");
+	function formatDate(date: Date | string) {
+		return new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 	}
 </script>
 
 <div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
-	<!-- Hero Section -->
+	<!-- Hero Section with Party Background -->
 	<div class="relative">
 		<div
-			class="w-full bg-gradient-to-br from-slate-900 via-purple-900/20 to-slate-900 rounded-2xl p-8 flex flex-col items-center relative overflow-hidden border border-white/5 shadow-2xl"
-			style="background-image: url('{data.profile?.avatar ||
-				'https://placehold.co/600x200/1e293b/ffffff?text=RPG+Worldscape'}'); background-size: cover; background-position: center;"
+			class="w-full rounded-2xl p-8 flex flex-col items-center relative overflow-hidden border border-white/5 shadow-2xl"
+			style="background: linear-gradient(135deg, {data.party?.color || '#1e293b'}20 0%, {data.party?.color ||
+				'#1e293b'}40 100%);"
 		>
+			<!-- Party background pattern -->
+			<div
+				class="absolute inset-0 opacity-10"
+				style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.party?.color ||
+					'#ffffff'}20 35px, {data.party?.color || '#ffffff'}20 70px);"
+			></div>
+
 			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-2xl"></div>
 
 			<div class="relative z-10 flex flex-col items-center space-y-3">
-				<div class="ring-4 ring-white/10 rounded-full">
-					<CircleAvatar src={data.profile?.avatar} />
+				<!-- Profile Picture -->
+				<div class="ring-4 ring-white/10 rounded-full relative group">
+					{#if data.user.avatar}
+						<div class="size-24 rounded-full overflow-hidden bg-base-200">
+							<img src={data.user.avatar} alt={data.user.name || "User avatar"} class="w-full h-full object-cover" />
+						</div>
+					{:else}
+						<div class="size-24 rounded-full bg-base-200 flex items-center justify-center">
+							<FluentImageOff20Filled class="size-8 text-base-content/20" />
+						</div>
+					{/if}
+
+					<!-- Party badge overlay -->
+					{#if data.party}
+						<div
+							class="absolute -bottom-2 -right-2 size-10 rounded-full flex items-center justify-center ring-2 ring-base-100"
+							style="background-color: {data.party.color};"
+							title={data.party.name}
+						>
+							{#if data.party.logo}
+								<img src={data.party.logo} alt={data.party.name} class="size-6 object-contain" />
+							{:else}
+								<FluentPeople20Filled class="size-5 text-white" />
+							{/if}
+						</div>
+					{/if}
 				</div>
+
 				<div class="text-center space-y-1">
-					<h1 class="text-3xl font-bold text-white tracking-tight">{data.profile?.name || "Anonymous User"}</h1>
+					<h1 class="text-3xl font-bold text-white tracking-tight">{data.user.name || "Anonymous User"}</h1>
 					<p class="text-sm text-gray-400 font-mono">#{data.user.id}</p>
-					{#if data.profile?.bio}
-						<p class="text-sm text-gray-300 max-w-md mt-2">{data.profile.bio}</p>
+					{#if data.user.bio}
+						<p class="text-sm text-gray-300 max-w-md mt-2">{data.user.bio}</p>
 					{/if}
 				</div>
 			</div>
@@ -82,7 +100,7 @@
 
 			<button
 				class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
-				onclick={() => shareLink(data.profile?.name || "User", window.location.href)}
+				onclick={() => shareLink(data.user.name || "User", window.location.href)}
 			>
 				<FluentGiftCardArrowRight20Filled class="size-4" />
 				<span class="hidden sm:inline">Gift</span>
@@ -90,7 +108,7 @@
 
 			<button
 				class="btn btn-sm gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 border-emerald-500/20 text-emerald-300 hover:text-emerald-200 transition-all"
-				onclick={() => shareLink(data.profile?.name || "User", window.location.href)}
+				onclick={() => shareLink(data.user.name || "User", window.location.href)}
 			>
 				<MdiNewspaperPlus class="size-4" />
 				<span class="hidden sm:inline">Add Author</span>
@@ -98,7 +116,7 @@
 
 			<button
 				class="btn btn-sm gap-2 bg-red-600/10 hover:bg-red-600/20 border-red-500/20 text-red-300 hover:text-red-200 transition-all"
-				onclick={() => shareLink(data.profile?.name || "User", window.location.href)}
+				onclick={() => shareLink(data.user.name || "User", window.location.href)}
 			>
 				<FluentAccessibilityError20Filled class="size-4" />
 				<span class="hidden sm:inline">Report</span>
@@ -107,7 +125,7 @@
 
 		<button
 			class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
-			onclick={() => shareLink(data.profile?.name || "User", window.location.href)}
+			onclick={() => shareLink(data.user.name || "User", window.location.href)}
 		>
 			<FluentShareAndroid20Filled class="size-4" />
 			<span class="hidden sm:inline">Share</span>
@@ -124,25 +142,76 @@
 		{/if}
 	</section>
 
-	<!-- Location Section -->
-	{#if data.residences && data.residences.length > 0}
-		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Location</h2>
-			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
-				{#each data.residences as residence}
-					<ProfileItem
-						name={residence.region.name}
-						description={residence.isPrimary ? "Primary Residence" : "Secondary Residence"}
-						date={residence.movedInAt}
-						avatar="/static/region/{residence.region.id}"
+	<!-- Location & Activity Section -->
+	<section class="space-y-3">
+		<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Location & Activity</h2>
+		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
+			<!-- Primary Residence -->
+			{#if data.primaryResidence}
+				<a
+					href="/region/{data.primaryResidence.region.id}"
+					class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+				>
+					<div class="size-12 bg-emerald-600/20 rounded-lg flex items-center justify-center">
+						<FluentHome20Filled class="size-6 text-emerald-400" />
+					</div>
+					<div class="flex-1 min-w-0">
+						<p class="font-semibold text-white group-hover:text-emerald-400 transition-colors truncate">
+							{data.primaryResidence.region.name}
+						</p>
+						<p class="text-xs text-gray-400 truncate">
+							Primary Residence
+							{#if data.primaryResidence.region.stateName}
+								• {data.primaryResidence.region.stateName}
+							{/if}
+						</p>
+					</div>
+					<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-emerald-400 transition-colors" />
+				</a>
+			{/if}
+
+			<!-- Additional Residences -->
+			{#if data.residences && data.residences.length > 1}
+				{#each data.residences.filter((r) => !r.isPrimary) as residence}
+					<a
 						href="/region/{residence.region.id}"
-						Component={FluentClockToolbox20Filled}
-						bgColor={residence.isPrimary ? "bg-purple-600" : "bg-indigo-600"}
-					/>
+						class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+					>
+						<div class="size-12 bg-indigo-600/20 rounded-lg flex items-center justify-center">
+							<FluentLocation20Filled class="size-6 text-indigo-400" />
+						</div>
+						<div class="flex-1 min-w-0">
+							<p class="font-semibold text-white group-hover:text-indigo-400 transition-colors truncate">
+								{residence.region.name}
+							</p>
+							<p class="text-xs text-gray-400 truncate">
+								Secondary Residence • Since {formatDate(residence.movedInAt)}
+							</p>
+						</div>
+						<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-indigo-400 transition-colors" />
+					</a>
 				{/each}
-			</div>
-		</section>
-	{/if}
+			{/if}
+
+			<!-- Articles Published -->
+			<a
+				href="/user/{data.user.id}/articles"
+				class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+			>
+				<div class="size-12 bg-purple-600/20 rounded-lg flex items-center justify-center">
+					<FluentDocument20Filled class="size-6 text-purple-400" />
+				</div>
+				<div class="flex-1 min-w-0">
+					<p class="font-semibold text-white group-hover:text-purple-400 transition-colors truncate">
+						{data.articleCount}
+						{data.articleCount === 1 ? "Article" : "Articles"} Published
+					</p>
+					<p class="text-xs text-gray-400 truncate">View all publications</p>
+				</div>
+				<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors" />
+			</a>
+		</div>
+	</section>
 
 	<!-- Career & Politics Section -->
 	<section class="space-y-3">
@@ -175,7 +244,12 @@
 							{#if data.party.ideology}
 								{data.party.ideology} •
 							{/if}
-							{data.partyRole === "leader" ? "Party Leader" : data.partyRole === "deputy" ? "Deputy Leader" : "Member"}
+							{data.party.role === "leader"
+								? "Party Leader"
+								: data.party.role === "deputy"
+									? "Deputy Leader"
+									: "Member"}
+							• Joined {formatDate(data.party.joinedAt)}
 						</p>
 					</div>
 					<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors" />
@@ -198,60 +272,6 @@
 						<p class="text-xs text-gray-400">Start your own political movement</p>
 					</div>
 				</a>
-			{/if}
-
-			<!-- President Position -->
-			{#if data.presidency}
-				<ProfileItem
-					name="President"
-					description={data.presidency.state.name}
-					date={data.presidency.electedAt}
-					avatar="/static/state/{data.presidency.state.id}"
-					href="/state/{data.presidency.state.id}"
-					Component={FluentBriefcase20Filled}
-					bgColor="bg-yellow-600"
-				/>
-			{/if}
-
-			<!-- Minister Positions -->
-			{#if data.ministries && data.ministries.length > 0}
-				{#each data.ministries as ministry}
-					<ProfileItem
-						name="Minister of {formatMinistry(ministry.ministry)}"
-						description={ministry.state.name}
-						date={ministry.appointedAt}
-						avatar="/static/state/{ministry.state.id}"
-						href="/state/{ministry.state.id}"
-						Component={FluentBriefcase20Filled}
-						bgColor={getMinistryColor(ministry.ministry)}
-					/>
-				{/each}
-			{/if}
-
-			<!-- Governor Position -->
-			{#if data.governorship}
-				<ProfileItem
-					name="Governor"
-					description={data.governorship.region.name}
-					date={data.governorship.appointedAt}
-					avatar="/static/region/{data.governorship.region.id}"
-					href="/region/{data.governorship.region.id}"
-					Component={FluentBriefcase20Filled}
-					bgColor="bg-cyan-600"
-				/>
-			{/if}
-
-			<!-- Parliament Member -->
-			{#if data.parliamentSeat}
-				<ProfileItem
-					name="Parliament Member"
-					description={data.parliamentSeat.state.name}
-					date={data.parliamentSeat.electedAt}
-					avatar="/static/state/{data.parliamentSeat.state.id}"
-					href="/state/{data.parliamentSeat.state.id}"
-					Component={FluentPeople20Filled}
-					bgColor="bg-emerald-600"
-				/>
 			{/if}
 
 			<a

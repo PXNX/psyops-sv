@@ -862,3 +862,133 @@ export type NewArticle = typeof articles.$inferInsert;
 
 export type Upvote = typeof upvotes.$inferSelect;
 export type NewUpvote = typeof upvotes.$inferInsert;
+
+// Gift code resource type enum
+export const giftCodeResourceTypeEnum = pgEnum("gift_code_resource_type", [
+	"iron",
+	"copper",
+	"steel",
+	"gunpowder",
+	"wood",
+	"coal",
+	"rifles",
+	"ammunition",
+	"artillery",
+	"vehicles",
+	"explosives",
+	"currency"
+]);
+
+// Gift Codes table
+export const giftCodes = pgTable("gift_codes", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	code: varchar("code", { length: 50 }).notNull().unique(),
+	description: text("description"),
+
+	// Rewards
+	currencyAmount: bigint("currency_amount", { mode: "number" }).default(0).notNull(),
+
+	// Usage limits
+	maxRedemptions: integer("max_redemptions"), // null = unlimited
+	currentRedemptions: integer("current_redemptions").default(0).notNull(),
+
+	// Time limits
+	expiresAt: timestamp("expires_at"),
+
+	// Metadata
+	createdBy: text("created_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	isActive: integer("is_active").default(1).notNull() // 1 = active, 0 = inactive
+});
+
+// Gift Code Resources - many-to-many for multiple resource rewards
+export const giftCodeResources = pgTable("gift_code_resources", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	giftCodeId: uuid("gift_code_id")
+		.notNull()
+		.references(() => giftCodes.id, { onDelete: "cascade" }),
+	resourceType: giftCodeResourceTypeEnum("resource_type").notNull(),
+	quantity: integer("quantity").notNull()
+});
+
+// Gift Code Redemptions - track who claimed what
+export const giftCodeRedemptions = pgTable(
+	"gift_code_redemptions",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		giftCodeId: uuid("gift_code_id")
+			.notNull()
+			.references(() => giftCodes.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		redeemedAt: timestamp("redeemed_at").defaultNow().notNull(),
+
+		// Store what they received for history
+		currencyReceived: bigint("currency_received", { mode: "number" }).default(0).notNull()
+	},
+	(table) => ({
+		userCodeIdx: uniqueIndex("idx_user_gift_code").on(table.userId, table.giftCodeId)
+	})
+);
+
+// Gift Code Redemption Resources - track specific resources received
+export const giftCodeRedemptionResources = pgTable("gift_code_redemption_resources", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	redemptionId: uuid("redemption_id")
+		.notNull()
+		.references(() => giftCodeRedemptions.id, { onDelete: "cascade" }),
+	resourceType: giftCodeResourceTypeEnum("resource_type").notNull(),
+	quantity: integer("quantity").notNull()
+});
+
+// Relations
+export const giftCodesRelations = relations(giftCodes, ({ one, many }) => ({
+	creator: one(accounts, {
+		fields: [giftCodes.createdBy],
+		references: [accounts.id]
+	}),
+	resources: many(giftCodeResources),
+	redemptions: many(giftCodeRedemptions)
+}));
+
+export const giftCodeResourcesRelations = relations(giftCodeResources, ({ one }) => ({
+	giftCode: one(giftCodes, {
+		fields: [giftCodeResources.giftCodeId],
+		references: [giftCodes.id]
+	})
+}));
+
+export const giftCodeRedemptionsRelations = relations(giftCodeRedemptions, ({ one, many }) => ({
+	giftCode: one(giftCodes, {
+		fields: [giftCodeRedemptions.giftCodeId],
+		references: [giftCodes.id]
+	}),
+	user: one(accounts, {
+		fields: [giftCodeRedemptions.userId],
+		references: [accounts.id]
+	}),
+	resources: many(giftCodeRedemptionResources)
+}));
+
+export const giftCodeRedemptionResourcesRelations = relations(giftCodeRedemptionResources, ({ one }) => ({
+	redemption: one(giftCodeRedemptions, {
+		fields: [giftCodeRedemptionResources.redemptionId],
+		references: [giftCodeRedemptions.id]
+	})
+}));
+
+// TypeScript types
+export type GiftCode = typeof giftCodes.$inferSelect;
+export type NewGiftCode = typeof giftCodes.$inferInsert;
+
+export type GiftCodeResource = typeof giftCodeResources.$inferSelect;
+export type NewGiftCodeResource = typeof giftCodeResources.$inferInsert;
+
+export type GiftCodeRedemption = typeof giftCodeRedemptions.$inferSelect;
+export type NewGiftCodeRedemption = typeof giftCodeRedemptions.$inferInsert;
+
+export type GiftCodeRedemptionResource = typeof giftCodeRedemptionResources.$inferSelect;
+export type NewGiftCodeRedemptionResource = typeof giftCodeRedemptionResources.$inferInsert;

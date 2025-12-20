@@ -1,8 +1,8 @@
 import { db } from "$lib/server/db";
-import { accounts, partyMembers, files } from "$lib/server/schema";
+import { accounts, partyMembers, files, residences, articles } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error } from "@sveltejs/kit";
-import { eq } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -19,6 +19,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	const account = locals.account!;
+
+	// Get user's residences
+	const userResidences = await db.query.residences.findMany({
+		where: eq(residences.userId, params.id),
+		with: {
+			region: {
+				with: {
+					state: true
+				}
+			}
+		},
+		orderBy: (residences, { desc }) => [desc(residences.isPrimary)]
+	});
+
+	// Get primary residence
+	const primaryResidence = userResidences.find((r) => r.isPrimary === 1);
+
+	// Get article count
+	const articleCount = await db.select({ count: count() }).from(articles).where(eq(articles.authorId, params.id));
 
 	// Check if user is in a party
 	const partyMembership = await db.query.partyMembers.findFirst({
@@ -43,13 +62,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	}
 
+	// Get user avatar URL if exists
+	let avatarUrl = user.profile?.avatar || null;
+	if (avatarUrl && !avatarUrl.startsWith("http")) {
+		// If it's a file ID, fetch the signed URL
+		const avatarFile = await db.query.files.findFirst({
+			where: eq(files.id, avatarUrl)
+		});
+		if (avatarFile) {
+			avatarUrl = await getSignedDownloadUrl(avatarFile.key);
+		}
+	}
+
 	return {
 		user: {
 			id: user.id,
 			email: user.email,
 			role: user.role,
 			name: user.profile?.name,
-			avatar: user.profile?.avatar,
+			avatar: avatarUrl,
 			bio: user.profile?.bio,
 			createdAt: user.createdAt
 		},
@@ -66,6 +97,29 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					joinedAt: partyMembership.joinedAt
 				}
 			: null,
+		residences: userResidences.map((r) => ({
+			id: r.id,
+			isPrimary: r.isPrimary === 1,
+			movedInAt: r.movedInAt,
+			region: {
+				id: r.region.id,
+				name: r.region.name,
+				avatar: r.region.avatar,
+				stateName: r.region.state?.name
+			}
+		})),
+		primaryResidence: primaryResidence
+			? {
+					id: primaryResidence.id,
+					region: {
+						id: primaryResidence.region.id,
+						name: primaryResidence.region.name,
+						avatar: primaryResidence.region.avatar,
+						stateName: primaryResidence.region.state?.name
+					}
+				}
+			: null,
+		articleCount: articleCount[0]?.count || 0,
 		isOwnProfile: account.id === params.id
 	};
 };
