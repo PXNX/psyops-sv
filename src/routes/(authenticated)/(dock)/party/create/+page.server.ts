@@ -1,41 +1,11 @@
+// src/routes/party/create/+page.server.ts
 import { db } from "$lib/server/db";
-import {
-	politicalParties,
-	partyMembers,
-	files,
-	residences,
-	stateFormationPeriods,
-	stateFormationProposals
-} from "$lib/server/schema";
-import { uploadImageWithPreset } from "$lib/server/backblaze";
-import { fail, redirect } from "@sveltejs/kit";
+import { politicalParties, partyMembers, files, residences, regions, states } from "$lib/server/schema";
+import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
-import { superValidate } from "sveltekit-superforms";
-import { zod } from "sveltekit-superforms/adapters";
-import { z } from "zod";
 import type { Actions, PageServerLoad } from "./$types";
-
-const partySchema = z.object({
-	name: z
-		.string()
-		.min(3, "Party name must be at least 3 characters")
-		.max(100, "Party name must be at most 100 characters"),
-	abbreviation: z.string().max(10, "Abbreviation must be 10 characters or less").optional(),
-	color: z
-		.string()
-		.regex(/^#[0-9A-F]{6}$/i, "Invalid color format")
-		.default("#6366f1"),
-	ideology: z.string().optional(),
-	description: z.string().optional(),
-	// State formation fields
-	proposedStateName: z.string().min(3, "State name must be at least 3 characters").max(100).optional(),
-	stateDescription: z.string().optional(),
-	stateMapColor: z
-		.string()
-		.regex(/^#[0-9A-F]{6}$/i, "Invalid color format")
-		.default("#3b82f6")
-});
+import { uploadImage } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -46,7 +16,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	if (existingMembership) {
-		redirect(302, `/party/${existingMembership.partyId}`);
+		throw redirect(302, `/party/${existingMembership.partyId}`);
 	}
 
 	// Get user's primary residence to determine their region
@@ -63,23 +33,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// If user has no primary residence, they need to select one first
 	if (!userResidence) {
-		redirect(302, "/regions?message=needPrimaryResidence");
+		throw redirect(302, "/regions?message=needPrimaryResidence");
 	}
 
 	const isIndependentRegion = !userResidence.region.stateId;
 
-	// If independent region, check for existing formation period
-	let formationPeriod = null;
-	if (isIndependentRegion) {
-		formationPeriod = await db.query.stateFormationPeriods.findFirst({
-			where: eq(stateFormationPeriods.regionId, userResidence.regionId)
-		});
-	}
-
-	const form = await superValidate(zod(partySchema));
-
 	return {
-		form,
 		userState: userResidence.region.state
 			? {
 					id: userResidence.region.state.id,
@@ -91,29 +50,46 @@ export const load: PageServerLoad = async ({ locals }) => {
 			id: userResidence.region.id,
 			name: userResidence.region.name
 		},
-		isIndependentRegion,
-		formationPeriod: formationPeriod
-			? {
-					id: formationPeriod.id,
-					status: formationPeriod.status,
-					endsAt: formationPeriod.endsAt
-				}
-			: null
+		isIndependentRegion
 	};
 };
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const account = locals.account!;
-
 		const formData = await request.formData();
-		const form = await superValidate(formData, zod(partySchema));
 
-		if (!form.valid) {
-			return fail(400, { form });
+		const name = formData.get("name") as string;
+		const abbreviation = formData.get("abbreviation") as string;
+		const color = formData.get("color") as string;
+		const ideology = formData.get("ideology") as string;
+		const description = formData.get("description") as string;
+		const logoFile = formData.get("logo");
+
+		console.log("Form data:", formData);
+		console.log("Logo file:", logoFile);
+
+		// Validation
+		if (!name || name.trim().length === 0) {
+			return fail(400, { message: "Party name is required", field: "name" });
 		}
 
-		const logoFile = formData.get("logo") as File;
+		if (name.trim().length < 3) {
+			return fail(400, { message: "Party name must be at least 3 characters", field: "name" });
+		}
+
+		if (name.trim().length > 100) {
+			return fail(400, { message: "Party name must be at most 100 characters", field: "name" });
+		}
+
+		if (abbreviation && abbreviation.trim().length > 10) {
+			return fail(400, { message: "Abbreviation must be 10 characters or less", field: "abbreviation" });
+		}
+
+		// Validate color format
+		if (color && !/^#[0-9A-F]{6}$/i.test(color)) {
+			return fail(400, { message: "Invalid color format", field: "color" });
+		}
 
 		// Get user's primary residence
 		const userResidence = await db.query.residences.findFirst({
@@ -128,50 +104,20 @@ export const actions: Actions = {
 		});
 
 		if (!userResidence) {
-			return fail(400, {
-				form,
-				message: "You must have a primary residence before creating a party"
-			});
+			return fail(400, { message: "You must have a primary residence before creating a party" });
 		}
 
 		const isIndependentRegion = !userResidence.region.stateId;
 		const regionId = userResidence.regionId;
 		const stateId = userResidence.region.stateId;
 
-		// Validate state name if creating in independent region
-		if (isIndependentRegion && !form.data.proposedStateName) {
-			return fail(400, {
-				form,
-				message: "Proposed state name is required for independent regions"
-			});
-		}
-
-		// Validate logo file if provided
-		if (logoFile && logoFile.size > 0) {
-			if (logoFile.size > 5 * 1024 * 1024) {
-				return fail(400, {
-					form,
-					message: "Logo file size must be less than 5MB"
-				});
-			}
-			if (!logoFile.type.startsWith("image/")) {
-				return fail(400, {
-					form,
-					message: "Logo must be an image file"
-				});
-			}
-		}
-
 		// Check if party name already exists
 		const existingParty = await db.query.politicalParties.findFirst({
-			where: eq(politicalParties.name, form.data.name)
+			where: eq(politicalParties.name, name.trim())
 		});
 
 		if (existingParty) {
-			return fail(400, {
-				form,
-				message: "A party with this name already exists"
-			});
+			return fail(400, { message: "A party with this name already exists", field: "name" });
 		}
 
 		// Check if user already in a party
@@ -180,27 +126,24 @@ export const actions: Actions = {
 		});
 
 		if (existingMembership) {
-			return fail(400, {
-				form,
-				message: "You are already a member of a political party"
-			});
+			return fail(400, { message: "You are already a member of a political party" });
 		}
 
 		try {
-			let logoFileId = null;
+			let logoFileId: string | null = null;
 
-			// Upload logo if provided
+			// Upload logo if we have a valid file
 			if (logoFile && logoFile.size > 0) {
-				const uploadResult = await uploadImageWithPreset(logoFile, "logo");
+				// Validate file type
+
+				// Use the preset 'logo' (96x96)
+				const uploadResult = await uploadImage(logoFile);
 
 				if (!uploadResult.success) {
-					return fail(400, {
-						form,
-						message: uploadResult.error || "Logo upload failed"
-					});
+					return fail(400, { message: uploadResult.error, field: "logo" });
 				}
 
-				// Store file metadata in database
+				// Save uploadResult.key to your DB
 				const fileId = randomUUID();
 				await db.insert(files).values({
 					id: fileId,
@@ -208,24 +151,59 @@ export const actions: Actions = {
 					fileName: logoFile.name,
 					contentType: logoFile.type,
 					sizeBytes: logoFile.size,
-					uploadedBy: account.id
+					uploadedBy: locals.account.id
 				});
 
 				logoFileId = fileId;
+			}
+
+			// If independent region, create state first
+			let finalStateId: string | null = stateId;
+			if (isIndependentRegion) {
+				const region = await db.query.regions.findFirst({
+					where: eq(regions.id, regionId)
+				});
+
+				if (!region) {
+					return fail(404, { message: "Region not found" });
+				}
+
+				// Create new state
+				const [newState] = await db
+					.insert(states)
+					.values({
+						name: `State of ${region.name}`,
+						avatar: region.avatar,
+						background: region.background,
+						description: `Newly formed state from ${region.name}`,
+						population: region.population || 0,
+						rating: 0
+					})
+					.returning();
+
+				// Link region to state
+				await db.update(regions).set({ stateId: newState.id }).where(eq(regions.id, regionId));
+
+				finalStateId = newState.id;
+			}
+
+			// Ensure finalStateId is not null
+			if (!finalStateId) {
+				return fail(400, { message: "Could not determine state for party" });
 			}
 
 			// Create the party
 			const [newParty] = await db
 				.insert(politicalParties)
 				.values({
-					name: form.data.name,
-					abbreviation: form.data.abbreviation || null,
-					color: form.data.color,
+					name: name.trim(),
+					abbreviation: abbreviation?.trim() || null,
+					color: color || "#6366f1",
 					logo: logoFileId,
-					ideology: form.data.ideology || null,
-					description: form.data.description || null,
+					ideology: ideology?.trim() || null,
+					description: description?.trim() || null,
 					founderId: account.id,
-					stateId: isIndependentRegion ? null : stateId,
+					stateId: finalStateId,
 					memberCount: 1
 				})
 				.returning();
@@ -237,51 +215,14 @@ export const actions: Actions = {
 				role: "leader"
 			});
 
-			// If independent region, handle state formation
-			if (isIndependentRegion) {
-				// Check if formation period already exists
-				let formationPeriod = await db.query.stateFormationPeriods.findFirst({
-					where: eq(stateFormationPeriods.regionId, regionId)
-				});
-
-				// Create formation period if it doesn't exist
-				if (!formationPeriod) {
-					const endsAt = new Date();
-					endsAt.setDate(endsAt.getDate() + 3); // 3 days from now
-
-					[formationPeriod] = await db
-						.insert(stateFormationPeriods)
-						.values({
-							regionId,
-							status: "active",
-							endsAt
-						})
-						.returning();
-				}
-
-				// Create state formation proposal
-				await db.insert(stateFormationProposals).values({
-					formationPeriodId: formationPeriod.id,
-					proposedBy: account.id,
-					stateName: form.data.proposedStateName!,
-					description: form.data.stateDescription || null,
-					mapColor: form.data.stateMapColor,
-					logo: logoFileId,
-					voteCount: 0
-				});
-
-				// Redirect to state formation page
-				redirect(303, `/region/${regionId}/state-formation`);
-			}
-
 			// Redirect to the new party page
-			redirect(303, `/party/${newParty.id}`);
-		} catch (error) {
-			console.error("Party creation error:", error);
-			return fail(500, {
-				form,
-				message: "Failed to create party"
-			});
+			throw redirect(303, `/party/${newParty.id}`);
+		} catch (err) {
+			if (err instanceof Response) {
+				throw err;
+			}
+			console.error("Party creation error:", err);
+			return fail(500, { message: "Failed to create party" });
 		}
 	}
 };
