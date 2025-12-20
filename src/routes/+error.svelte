@@ -5,6 +5,7 @@
 	import FluentEmojiKnockedOutFace from "~icons/fluent-emoji/knocked-out-face";
 	import FluentEmojiLeftArrow from "~icons/fluent-emoji/left-arrow";
 	import FluentEmojiEnvelopeWithArrow from "~icons/fluent-emoji/envelope-with-arrow";
+	import { error } from "@sveltejs/kit";
 </script>
 
 <main class="flex flex-col items-center justify-center h-full p-4 text-center">
@@ -39,3 +40,5 @@
 		<FluentEmojiLeftArrow />Go back</button
 	>
 </main>
+
+{JSON.stringify(page.error)}

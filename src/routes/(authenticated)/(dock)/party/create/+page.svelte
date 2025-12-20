@@ -1,6 +1,8 @@
 <!-- src/routes/party/create/+page.svelte -->
 <script lang="ts">
-	import { enhance } from "$app/forms";
+	import { superForm } from "sveltekit-superforms";
+	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { createPartySchema } from "./schema";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -8,28 +10,21 @@
 	import FluentColor20Filled from "~icons/fluent/color-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
-	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import { page } from "$app/state";
 
 	let { data } = $props();
-	let form = page.form;
-	let isSubmitting = $state(false);
 
-	let selectedFile = $state<File | null>(null);
+	const { form, errors, message, enhance, submitting, delayed } = superForm(data.form, {
+		validators: valibotClient(createPartySchema),
+		multipleSubmits: "prevent",
+		clearOnSubmit: "none",
+		taintedMessage: null
+	});
+
 	let previewUrl = $state<string | null>(null);
-	let fileInput: HTMLInputElement;
 	let dragActive = $state(false);
-
-	// Form values
-	let partyName = $state("");
-	let abbreviation = $state("");
-	let partyColor = $state("#6366f1");
-	let ideology = $state("");
-	let description = $state("");
-
-	const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+	let fileInput: HTMLInputElement;
 
 	const colorPresets = [
 		{ name: "Blue", value: "#3b82f6" },
@@ -60,14 +55,20 @@
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
-		processImage(file);
+		if (file) {
+			$form.logo = file;
+			updatePreview(file);
+		}
 	}
 
 	function handleDrop(event: DragEvent) {
 		event.preventDefault();
 		dragActive = false;
 		const file = event.dataTransfer?.files[0];
-		processImage(file);
+		if (file) {
+			$form.logo = file;
+			updatePreview(file);
+		}
 	}
 
 	function handleDragOver(event: DragEvent) {
@@ -79,37 +80,17 @@
 		dragActive = false;
 	}
 
-	function processImage(file: File | undefined) {
-		if (!file) return;
-
-		if (!file.type.startsWith("image/")) {
-			alert("Please select an image file");
-			return;
-		}
-
-		if (file.size > MAX_IMAGE_SIZE) {
-			alert("Image size must be less than 5MB");
-			return;
-		}
-
-		if (file.size === 0) {
-			alert("Image file is empty");
-			return;
-		}
-
-		selectedFile = file;
-
+	function updatePreview(file: File) {
 		if (previewUrl) {
 			URL.revokeObjectURL(previewUrl);
 		}
-
 		previewUrl = URL.createObjectURL(file);
 	}
 
 	function clearImage() {
-		if (isSubmitting) return;
+		if ($submitting) return;
 
-		selectedFile = null;
+		$form.logo = undefined;
 
 		if (previewUrl) {
 			URL.revokeObjectURL(previewUrl);
@@ -180,26 +161,15 @@
 		</div>
 	{/if}
 
-	<!-- Error Display -->
-	{#if form?.message}
+	<!-- Error Message -->
+	{#if $message}
 		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{form.message}</p>
+			<p class="text-red-300 text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
 	<!-- Form -->
-	<form
-		method="POST"
-		enctype="multipart/form-data"
-		use:enhance={() => {
-			isSubmitting = true;
-			return async ({ update }) => {
-				await update();
-				isSubmitting = false;
-			};
-		}}
-		class="space-y-6"
-	>
+	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Party Name -->
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
 			<div class="flex items-center gap-2">
@@ -216,17 +186,17 @@
 						type="text"
 						id="name"
 						name="name"
-						bind:value={partyName}
+						bind:value={$form.name}
 						placeholder="e.g., Progressive Alliance Party"
-						required
 						maxlength="100"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-						class:input-error={form?.field === "name"}
+						class:input-error={$errors.name}
+						disabled={$submitting}
 					/>
-					{#if form?.field === "name"}
-						<p class="text-xs text-red-400 mt-1">{form.message}</p>
+					{#if $errors.name}
+						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">{partyName.length}/100 characters</p>
+						<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/100 characters</p>
 					{/if}
 				</div>
 
@@ -238,16 +208,17 @@
 						type="text"
 						id="abbreviation"
 						name="abbreviation"
-						bind:value={abbreviation}
-						placeholder="e.g., PAP"
-						maxlength="10"
+						bind:value={$form.abbreviation}
+						placeholder="e.g., PROG"
+						maxlength="4"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-						class:input-error={form?.field === "abbreviation"}
+						class:input-error={$errors.abbreviation}
+						disabled={$submitting}
 					/>
-					{#if form?.field === "abbreviation"}
-						<p class="text-xs text-red-400 mt-1">{form.message}</p>
+					{#if $errors.abbreviation}
+						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">{abbreviation.length}/10 characters</p>
+						<p class="text-xs text-gray-400 mt-1">{$form.abbreviation?.length || 0}/4 characters • Alphanumeric only</p>
 					{/if}
 				</div>
 			</div>
@@ -269,25 +240,25 @@
 					accept="image/*"
 					class="hidden"
 					onchange={handleFileSelect}
-					disabled={isSubmitting}
+					disabled={$submitting}
 				/>
 
 				<button
 					type="button"
 					onclick={() => fileInput?.click()}
-					disabled={isSubmitting}
+					disabled={$submitting}
 					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
 					class:border-purple-500={dragActive}
 					class:bg-purple-600-10={dragActive}
-					class:border-purple-500-30={!dragActive && !selectedFile}
-					class:border-success={selectedFile && !dragActive}
-					class:bg-success-5={selectedFile && !dragActive}
-					class:hover:border-purple-500-50={!isSubmitting && !selectedFile}
-					class:hover:bg-purple-600-10={!isSubmitting && !selectedFile}
-					class:opacity-50={isSubmitting}
-					class:input-error={form?.field === "logo"}
+					class:border-purple-500-30={!dragActive && !$form.logo}
+					class:border-success={$form.logo && !dragActive}
+					class:bg-success-5={$form.logo && !dragActive}
+					class:hover:border-purple-500-50={!$submitting && !$form.logo}
+					class:hover:bg-purple-600-10={!$submitting && !$form.logo}
+					class:opacity-50={$submitting}
+					class:input-error={$errors.logo}
 				>
-					{#if !selectedFile}
+					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
 							<div class="rounded-full bg-purple-600/20 p-3 transition-transform group-hover:scale-110">
 								<FluentImage20Filled class="size-8 text-purple-400" />
@@ -296,13 +267,13 @@
 								<p class="text-base font-semibold text-white">
 									{#if dragActive}
 										Drop logo here
-									{:else if isSubmitting}
+									{:else if $submitting}
 										Uploading...
 									{:else}
 										Tap to upload party logo
 									{/if}
 								</p>
-								{#if !isSubmitting}
+								{#if !$submitting}
 									<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
 								{/if}
 							</div>
@@ -323,25 +294,29 @@
 									e.stopPropagation();
 									clearImage();
 								}}
-								disabled={isSubmitting}
+								disabled={$submitting}
 								class="btn absolute top-2 right-2 btn-circle btn-sm bg-slate-800 hover:bg-slate-700"
 							>
 								✕
 							</button>
 						</div>
 						<div class="border-t border-slate-700 p-3 bg-slate-900/30">
-							<p class="truncate text-sm font-medium text-white" title={selectedFile.name}>
-								{selectedFile.name}
+							<p class="truncate text-sm font-medium text-white" title={$form.logo.name}>
+								{$form.logo.name}
 							</p>
 							<p class="text-xs text-gray-400">
-								{Math.round(selectedFile.size / 1024)} KB
+								{Math.round($form.logo.size / 1024)} KB
 							</p>
 						</div>
 					{/if}
 				</button>
 			</div>
 
-			<p class="text-xs text-gray-400">Recommended: 96x96 pixels, PNG or JPG, max 5MB</p>
+			{#if $errors.logo}
+				<p class="text-xs text-red-400">{$errors.logo}</p>
+			{:else}
+				<p class="text-xs text-gray-400">Will be converted to 96x96 WebP • Max 5MB</p>
+			{/if}
 		</div>
 
 		<!-- Party Color -->
@@ -357,10 +332,11 @@
 						type="button"
 						class="size-12 rounded-lg transition-all hover:scale-110 focus:scale-110 focus:outline-none"
 						style="background-color: {color.value}"
-						class:ring-4={partyColor === color.value}
-						class:ring-white={partyColor === color.value}
+						class:ring-4={$form.color === color.value}
+						class:ring-white={$form.color === color.value}
 						title={color.name}
-						onclick={() => (partyColor = color.value)}
+						onclick={() => ($form.color = color.value)}
+						disabled={$submitting}
 					/>
 				{/each}
 			</div>
@@ -371,16 +347,21 @@
 					type="color"
 					id="color"
 					name="color"
-					bind:value={partyColor}
+					bind:value={$form.color}
 					class="h-10 w-20 rounded-lg border-2 border-slate-600 bg-slate-700 cursor-pointer"
+					disabled={$submitting}
 				/>
-				<span class="text-sm text-gray-400">{partyColor}</span>
+				<span class="text-sm text-gray-400">{$form.color}</span>
 			</div>
 
+			{#if $errors.color}
+				<p class="text-xs text-red-400">{$errors.color}</p>
+			{/if}
+
 			<!-- Preview -->
-			<div class="p-4 rounded-lg" style="background-color: {partyColor}20; border: 2px solid {partyColor}40">
+			<div class="p-4 rounded-lg" style="background-color: {$form.color}20; border: 2px solid {$form.color}40">
 				<div class="flex items-center gap-3">
-					<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {partyColor}">
+					<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {$form.color}">
 						{#if previewUrl}
 							<img src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
 						{:else}
@@ -388,8 +369,8 @@
 						{/if}
 					</div>
 					<div>
-						<p class="font-semibold text-white">{partyName || "Your Party Name"}</p>
-						<p class="text-sm" style="color: {partyColor}">{abbreviation || "Abbreviation"}</p>
+						<p class="font-semibold text-white">{$form.name || "Your Party Name"}</p>
+						<p class="text-sm" style="color: {$form.color}">{$form.abbreviation || "Abbreviation"}</p>
 					</div>
 				</div>
 			</div>
@@ -402,17 +383,27 @@
 				<h2 class="text-lg font-semibold text-white">Political Alignment</h2>
 			</div>
 
-			<select
-				id="ideology"
-				name="ideology"
-				bind:value={ideology}
-				class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-			>
-				<option value="">Select an ideology...</option>
-				{#each ideologies as ideologyOption}
-					<option value={ideologyOption.toLowerCase()}>{ideologyOption}</option>
-				{/each}
-			</select>
+			<div>
+				<label for="ideology" class="block text-sm font-medium text-gray-300 mb-2">
+					Ideology <span class="text-red-400">*</span>
+				</label>
+				<select
+					id="ideology"
+					name="ideology"
+					bind:value={$form.ideology}
+					class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class:input-error={$errors.ideology}
+					disabled={$submitting}
+				>
+					<option value="">Select an ideology...</option>
+					{#each ideologies as ideologyOption}
+						<option value={ideologyOption.toLowerCase()}>{ideologyOption}</option>
+					{/each}
+				</select>
+				{#if $errors.ideology}
+					<p class="text-xs text-red-400 mt-1">{$errors.ideology}</p>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Description -->
@@ -425,10 +416,11 @@
 			<textarea
 				id="description"
 				name="description"
-				bind:value={description}
+				bind:value={$form.description}
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+				disabled={$submitting}
 			></textarea>
 		</div>
 
@@ -437,15 +429,16 @@
 			<a
 				href="/user"
 				class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
+				class:btn-disabled={$submitting}
 			>
 				Cancel
 			</a>
 			<button
 				type="submit"
-				disabled={isSubmitting}
+				disabled={$submitting}
 				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
 			>
-				{#if isSubmitting}
+				{#if $delayed}
 					<span class="loading loading-spinner loading-sm"></span>
 					Creating...
 				{:else}
