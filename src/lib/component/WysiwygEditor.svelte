@@ -601,18 +601,28 @@
 	const handleEditorClick = (e: MouseEvent): void => {
 		const target = e.target as HTMLElement;
 
-		// Handle link clicks (but not the icon)
+		// Handle link clicks
 		if (target.tagName === "A" || target.closest("a")) {
 			e.preventDefault();
+			e.stopPropagation();
 			const link = (target.tagName === "A" ? target : target.closest("a")) as HTMLAnchorElement;
+
+			elementToDelete = link;
+
+			// Position delete button near the link
+			const rect = link.getBoundingClientRect();
+			const editorRect = editor?.getBoundingClientRect();
+			if (editorRect) {
+				deleteButtonPosition = {
+					top: rect.top - editorRect.top,
+					left: rect.right - editorRect.left + 5
+				};
+			}
+
+			showDeleteButton = true;
+
+			// Store link info for editing
 			editingElement = link;
-			isEditMode = true;
-			linkUrl = link.href;
-			// Remove the icon from the text
-			const iconSpan = link.querySelector(".external-link-icon");
-			linkText = link.textContent?.replace("↗", "").trim() || "";
-			showLinkDialog = true;
-			showDeleteButton = false;
 			return;
 		}
 
@@ -634,8 +644,8 @@
 			const editorRect = editor?.getBoundingClientRect();
 			if (editorRect) {
 				deleteButtonPosition = {
-					top: rect.top - editorRect.top,
-					left: rect.right - editorRect.left - 40
+					top: rect.top - editorRect.top + 5,
+					left: rect.right - editorRect.left - 90
 				};
 			}
 
@@ -736,6 +746,17 @@
 				showImageDialog = true;
 				showDeleteButton = false;
 			}
+		}
+	};
+
+	const editLink = (): void => {
+		if (elementToDelete instanceof HTMLAnchorElement) {
+			editingElement = elementToDelete;
+			isEditMode = true;
+			linkUrl = elementToDelete.href;
+			linkText = elementToDelete.textContent?.replace("↗", "").trim() || "";
+			showLinkDialog = true;
+			showDeleteButton = false;
 		}
 	};
 

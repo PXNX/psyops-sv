@@ -1,11 +1,37 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-	themes: all;
-}
 @plugin "@tailwindcss/typography";
-/*@plugin "@tailwindcss/forms"; */
+@plugin "@tailwindcss/forms";
+@plugin 'daisyui' {
+	themes: dark --default;
+}
 
 @layer components {
+	@theme {
+		--font-sans: "HPSimplified", system-ui, sans-serif;
+	}
+
+	@font-face {
+		font-family: "HPSimplified";
+		src: url("/fonts/HPSimplified.ttf") format("truetype");
+
+		font-weight: 400;
+		font-style: normal;
+		font-display: swap;
+	}
+
+	@keyframes slide-up {
+		from {
+			transform: translateY(100%);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	.animate-slide-up {
+		animation: slide-up 0.3s ease-out;
+	}
+
 	.fade_in {
 		animation: fadeInAnimation 0.25s ease-in;
 	}
