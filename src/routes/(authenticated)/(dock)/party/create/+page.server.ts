@@ -5,7 +5,7 @@ import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadImage } from "$lib/server/backblaze";
+import { uploadImageWithPreset } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -64,10 +64,7 @@ export const actions: Actions = {
 		const color = formData.get("color") as string;
 		const ideology = formData.get("ideology") as string;
 		const description = formData.get("description") as string;
-		const logoFile = formData.get("logo");
-
-		console.log("Form data:", formData);
-		console.log("Logo file:", logoFile);
+		const logoFile = formData.get("logo") as File;
 
 		// Validation
 		if (!name || name.trim().length === 0) {
@@ -132,29 +129,50 @@ export const actions: Actions = {
 		try {
 			let logoFileId: string | null = null;
 
-			// Upload logo if we have a valid file
+			// Upload logo if provided (optional)
 			if (logoFile && logoFile.size > 0) {
 				// Validate file type
-
-				// Use the preset 'logo' (96x96)
-				const uploadResult = await uploadImage(logoFile);
-
-				if (!uploadResult.success) {
-					return fail(400, { message: uploadResult.error, field: "logo" });
+				if (!logoFile.type.startsWith("image/")) {
+					return fail(400, {
+						message: "File must be an image",
+						field: "logo"
+					});
 				}
 
-				// Save uploadResult.key to your DB
-				const fileId = randomUUID();
-				await db.insert(files).values({
-					id: fileId,
-					key: uploadResult.key,
-					fileName: logoFile.name,
-					contentType: logoFile.type,
-					sizeBytes: logoFile.size,
-					uploadedBy: locals.account.id
-				});
+				const maxSize = 5 * 1024 * 1024; // 5MB
+				if (logoFile.size > maxSize) {
+					return fail(400, {
+						message: "Image size must be less than 5MB",
+						field: "logo"
+					});
+				}
 
-				logoFileId = fileId;
+				// Upload with preset 'logo' (96x96)
+				const logoUploadResult = await uploadImageWithPreset(logoFile, "logo");
+
+				if (!logoUploadResult.success) {
+					return fail(500, {
+						message: logoUploadResult.error || "Failed to upload logo",
+						field: "logo"
+					});
+				}
+
+				// Create file record in database
+				const fileId = randomUUID();
+				try {
+					await db.insert(files).values({
+						id: fileId,
+						key: logoUploadResult.key,
+						fileName: logoFile.name,
+						contentType: logoFile.type,
+						sizeBytes: logoFile.size,
+						uploadedBy: account.id
+					});
+					logoFileId = fileId;
+				} catch (e) {
+					console.error("Failed to create file record:", e);
+					return fail(500, { message: "Failed to save logo information" });
+				}
 			}
 
 			// If independent region, create state first
