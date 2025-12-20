@@ -8,6 +8,8 @@
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
+	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
+	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import { shareLink } from "$lib/util";
 	import { enhance } from "$app/forms";
 
@@ -53,6 +55,37 @@
 						<h1 class="text-2xl font-bold text-white">{data.region.name}</h1>
 						<p class="text-sm text-gray-400">Ranking #{data.region.rating || 934}</p>
 					</div>
+
+					<!-- Independent Region Banner -->
+					{#if !data.state}
+						<div class="bg-amber-600/20 border border-amber-500/30 rounded-xl p-4">
+							<div class="flex items-start gap-3">
+								<div class="size-10 bg-amber-600/30 rounded-lg flex items-center justify-center shrink-0">
+									<FluentWarning20Filled class="size-5 text-amber-400" />
+								</div>
+								<div class="flex-1">
+									<p class="font-semibold text-amber-300 mb-1">Independent Region</p>
+									<p class="text-sm text-amber-200/90 mb-3">
+										This region is not part of any state. A political party must be formed to establish democratic
+										governance.
+									</p>
+									{#if data.userResidence}
+										<a
+											href="/party/create"
+											class="btn btn-sm bg-amber-600 hover:bg-amber-500 border-0 text-white gap-2"
+										>
+											<FluentAdd20Filled class="size-4" />
+											Create Political Party
+										</a>
+									{:else}
+										<p class="text-xs text-amber-300/80">
+											You must be a resident to create a political party in this region.
+										</p>
+									{/if}
+								</div>
+							</div>
+						</div>
+					{/if}
 
 					<!-- Residence Status Banner -->
 					{#if data.userResidence}

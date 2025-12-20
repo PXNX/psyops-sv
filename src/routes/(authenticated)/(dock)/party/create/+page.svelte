@@ -1,5 +1,6 @@
+<!-- src/routes/party/create/+page.svelte -->
 <script lang="ts">
-	import { superForm } from "sveltekit-superforms";
+	import { enhance } from "$app/forms";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -9,19 +10,26 @@
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
-	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import { page } from "$app/state";
 
-	const { data } = $props();
-
-	const { form, errors, enhance, message, submitting } = superForm(data.form, {
-		resetForm: false,
-		taintedMessage: null
-	});
+	let { data } = $props();
+	let form = page.form;
+	let isSubmitting = $state(false);
 
 	let selectedFile = $state<File | null>(null);
 	let previewUrl = $state<string | null>(null);
 	let fileInput: HTMLInputElement;
+	let dragActive = $state(false);
+
+	// Form values
+	let partyName = $state("");
+	let abbreviation = $state("");
+	let partyColor = $state("#6366f1");
+	let ideology = $state("");
+	let description = $state("");
+
+	const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 	const colorPresets = [
 		{ name: "Blue", value: "#3b82f6" },
@@ -52,16 +60,55 @@
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
-		if (file) {
-			selectedFile = file;
-			if (previewUrl) {
-				URL.revokeObjectURL(previewUrl);
-			}
-			previewUrl = URL.createObjectURL(file);
+		processImage(file);
+	}
+
+	function handleDrop(event: DragEvent) {
+		event.preventDefault();
+		dragActive = false;
+		const file = event.dataTransfer?.files[0];
+		processImage(file);
+	}
+
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault();
+		dragActive = true;
+	}
+
+	function handleDragLeave() {
+		dragActive = false;
+	}
+
+	function processImage(file: File | undefined) {
+		if (!file) return;
+
+		if (!file.type.startsWith("image/")) {
+			alert("Please select an image file");
+			return;
 		}
+
+		if (file.size > MAX_IMAGE_SIZE) {
+			alert("Image size must be less than 5MB");
+			return;
+		}
+
+		if (file.size === 0) {
+			alert("Image file is empty");
+			return;
+		}
+
+		selectedFile = file;
+
+		if (previewUrl) {
+			URL.revokeObjectURL(previewUrl);
+		}
+
+		previewUrl = URL.createObjectURL(file);
 	}
 
 	function removeFile() {
+		if (isSubmitting) return;
+
 		selectedFile = null;
 		if (previewUrl) {
 			URL.revokeObjectURL(previewUrl);
@@ -70,15 +117,6 @@
 		if (fileInput) {
 			fileInput.value = "";
 		}
-	}
-
-	function getTimeRemaining(endsAt: string) {
-		const now = new Date();
-		const end = new Date(endsAt);
-		const diff = end.getTime() - now.getTime();
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-		return `${days}d ${hours}h`;
 	}
 
 	$effect(() => {
@@ -108,45 +146,31 @@
 			<div class="flex items-start gap-3">
 				<FluentWarning20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
 				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-amber-300 text-lg">Independent Region Detected</h3>
+					<h3 class="font-semibold text-amber-300 text-lg">Independent Region</h3>
 					<p class="text-amber-200/90 text-sm leading-relaxed">
-						{data.userRegion.name} is not part of any state. Creating a party here will initiate a
-						<strong class="text-amber-100">3-day state formation period</strong>.
+						{data.userRegion.name} is not part of any state. Creating a party here will automatically establish
+						<strong class="text-amber-100">the State of {data.userRegion.name}</strong> with democratic governance.
 					</p>
-					<div class="bg-amber-900/30 rounded-lg p-3 space-y-2">
-						<p class="text-amber-100 text-sm font-medium">What happens during state formation:</p>
+					<div class="bg-amber-900/30 rounded-lg p-3">
+						<p class="text-amber-100 text-sm font-medium mb-2">What happens when you create this party:</p>
 						<ul class="text-amber-200/90 text-sm space-y-1 list-disc list-inside">
-							<li>Citizens can move to {data.userRegion.name} and join parties</li>
-							<li>Multiple parties can propose state names and designs</li>
-							<li>After 3 days, a democratic election will determine the state name</li>
-							<li>All parties will compete in the founding election</li>
+							<li>A new state is formed: "State of {data.userRegion.name}"</li>
+							<li>Your party becomes the founding political party</li>
+							<li>Other citizens can join or create competing parties</li>
+							<li>Democratic elections will determine government positions</li>
 						</ul>
 					</div>
 				</div>
 			</div>
 		</div>
-
-		{#if data.formationPeriod && data.formationPeriod.status === "active"}
-			<div class="bg-blue-600/20 border border-blue-500/30 rounded-xl p-4">
-				<div class="flex items-center gap-3">
-					<FluentCalendar20Filled class="size-5 text-blue-400" />
-					<div>
-						<p class="text-sm text-blue-300 font-medium">State Formation in Progress</p>
-						<p class="text-xs text-blue-200/80">
-							Time remaining: {getTimeRemaining(data.formationPeriod.endsAt)}
-						</p>
-					</div>
-				</div>
-			</div>
-		{/if}
-	{:else}
+	{:else if data.userState}
 		<!-- Current State Info -->
 		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
 			<div class="flex items-center gap-3">
 				<FluentLocation20Filled class="size-5 text-blue-400" />
 				<div>
 					<p class="text-sm text-blue-300">Your party will be created in:</p>
-					<p class="font-semibold text-white">{data.userState?.name}</p>
+					<p class="font-semibold text-white">{data.userState.name}</p>
 					<p class="text-xs text-gray-400">Based on your residence in {data.userRegion.name}</p>
 				</div>
 			</div>
@@ -154,74 +178,25 @@
 	{/if}
 
 	<!-- Error Display -->
-	{#if $message}
+	{#if form?.message}
 		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{$message}</p>
+			<p class="text-red-300 text-sm font-medium">{form.message}</p>
 		</div>
 	{/if}
 
 	<!-- Form -->
-	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
-		<!-- State Formation Section (Only for Independent Regions) -->
-		{#if data.isIndependentRegion}
-			<div class="bg-slate-800/50 rounded-xl border border-amber-500/20 p-5 space-y-4">
-				<div class="flex items-center gap-2">
-					<FluentBuildingGovernment20Filled class="size-5 text-amber-400" />
-					<h2 class="text-lg font-semibold text-white">Proposed State Details</h2>
-				</div>
-
-				<div>
-					<label for="proposedStateName" class="block text-sm font-medium text-gray-300 mb-2">
-						Proposed State Name <span class="text-red-400">*</span>
-					</label>
-					<input
-						type="text"
-						id="proposedStateName"
-						name="proposedStateName"
-						bind:value={$form.proposedStateName}
-						placeholder="e.g., Republic of {data.userRegion.name}"
-						required={data.isIndependentRegion}
-						maxlength="100"
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
-						class:input-error={$errors.proposedStateName}
-					/>
-					{#if $errors.proposedStateName}
-						<p class="text-xs text-red-400 mt-1">{$errors.proposedStateName}</p>
-					{:else}
-						<p class="text-xs text-gray-400 mt-1">This will be voted on during state formation</p>
-					{/if}
-				</div>
-
-				<div>
-					<label for="stateDescription" class="block text-sm font-medium text-gray-300 mb-2">
-						State Vision (Optional)
-					</label>
-					<textarea
-						id="stateDescription"
-						name="stateDescription"
-						bind:value={$form.stateDescription}
-						rows="3"
-						placeholder="Describe the vision for the new state..."
-						class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
-					></textarea>
-				</div>
-
-				<div>
-					<label for="stateMapColor" class="block text-sm font-medium text-gray-300 mb-2"> Proposed State Color </label>
-					<div class="flex items-center gap-3">
-						<input
-							type="color"
-							id="stateMapColor"
-							name="stateMapColor"
-							bind:value={$form.stateMapColor}
-							class="h-10 w-20 rounded-lg border-2 border-slate-600 bg-slate-700 cursor-pointer"
-						/>
-						<span class="text-sm text-gray-400">{$form.stateMapColor}</span>
-					</div>
-				</div>
-			</div>
-		{/if}
-
+	<form
+		method="POST"
+		enctype="multipart/form-data"
+		use:enhance={() => {
+			isSubmitting = true;
+			return async ({ update }) => {
+				await update();
+				isSubmitting = false;
+			};
+		}}
+		class="space-y-6"
+	>
 		<!-- Party Name -->
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
 			<div class="flex items-center gap-2">
@@ -238,17 +213,17 @@
 						type="text"
 						id="name"
 						name="name"
-						bind:value={$form.name}
+						bind:value={partyName}
 						placeholder="e.g., Progressive Alliance Party"
 						required
 						maxlength="100"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-						class:input-error={$errors.name}
+						class:input-error={form?.field === "name"}
 					/>
-					{#if $errors.name}
-						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+					{#if form?.field === "name"}
+						<p class="text-xs text-red-400 mt-1">{form.message}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/100 characters</p>
+						<p class="text-xs text-gray-400 mt-1">{partyName.length}/100 characters</p>
 					{/if}
 				</div>
 
@@ -260,16 +235,16 @@
 						type="text"
 						id="abbreviation"
 						name="abbreviation"
-						bind:value={$form.abbreviation}
+						bind:value={abbreviation}
 						placeholder="e.g., PAP"
 						maxlength="10"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-						class:input-error={$errors.abbreviation}
+						class:input-error={form?.field === "abbreviation"}
 					/>
-					{#if $errors.abbreviation}
-						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
+					{#if form?.field === "abbreviation"}
+						<p class="text-xs text-red-400 mt-1">{form.message}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">{$form.abbreviation?.length || 0}/10 characters</p>
+						<p class="text-xs text-gray-400 mt-1">{abbreviation.length}/10 characters</p>
 					{/if}
 				</div>
 			</div>
@@ -290,36 +265,49 @@
 				accept="image/*"
 				class="hidden"
 				onchange={handleFileSelect}
+				disabled={isSubmitting}
 			/>
 
-			{#if previewUrl}
-				<div class="flex items-center gap-4 p-3 bg-slate-700/30 rounded-lg">
-					<img src={previewUrl} alt="Party logo preview" class="size-16 object-contain rounded-lg bg-white/5" />
-					<div class="flex-1">
-						<p class="text-sm font-medium text-white">{selectedFile?.name}</p>
-						<p class="text-xs text-gray-400">
-							{selectedFile ? Math.round(selectedFile.size / 1024) : 0} KB
-						</p>
+			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
+				{#if previewUrl}
+					<div class="flex items-center gap-4 p-3 bg-slate-700/30 rounded-lg">
+						<img src={previewUrl} alt="Party logo preview" class="size-16 object-contain rounded-lg bg-white/5" />
+						<div class="flex-1">
+							<p class="text-sm font-medium text-white">{selectedFile?.name}</p>
+							<p class="text-xs text-gray-400">
+								{selectedFile ? Math.round(selectedFile.size / 1024) : 0} KB
+							</p>
+						</div>
+						<button
+							type="button"
+							onclick={removeFile}
+							disabled={isSubmitting}
+							class="btn btn-sm bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-300 hover:text-red-200"
+						>
+							<FluentDismiss20Filled class="size-4" />
+							Remove
+						</button>
 					</div>
+				{:else}
 					<button
 						type="button"
-						onclick={removeFile}
-						class="btn btn-sm bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-300 hover:text-red-200"
+						onclick={() => fileInput?.click()}
+						disabled={isSubmitting}
+						class="w-full p-4 border-2 border-dashed rounded-lg transition-all flex items-center justify-center gap-2 group"
+						class:border-purple-500-50={dragActive}
+						class:bg-purple-600-10={dragActive}
+						class:border-purple-500-30={!dragActive}
+						class:hover:border-purple-500-50={!isSubmitting}
+						class:hover:bg-purple-600-10={!isSubmitting}
+						class:opacity-50={isSubmitting}
 					>
-						<FluentDismiss20Filled class="size-4" />
-						Remove
+						<FluentImage20Filled class="size-5 text-purple-400 group-hover:text-purple-300" />
+						<span class="text-purple-400 group-hover:text-purple-300 font-medium">
+							{dragActive ? "Drop logo here" : "Select Logo"}
+						</span>
 					</button>
-				</div>
-			{:else}
-				<button
-					type="button"
-					onclick={() => fileInput?.click()}
-					class="w-full p-4 border-2 border-dashed border-purple-500/30 rounded-lg hover:border-purple-500/50 hover:bg-purple-600/10 transition-all flex items-center justify-center gap-2 group"
-				>
-					<FluentImage20Filled class="size-5 text-purple-400 group-hover:text-purple-300" />
-					<span class="text-purple-400 group-hover:text-purple-300 font-medium">Select Logo</span>
-				</button>
-			{/if}
+				{/if}
+			</div>
 
 			<p class="text-xs text-gray-400">Recommended: 96x96 pixels, PNG or JPG, max 5MB</p>
 		</div>
@@ -337,10 +325,10 @@
 						type="button"
 						class="size-12 rounded-lg transition-all hover:scale-110 focus:scale-110 focus:outline-none"
 						style="background-color: {color.value}"
-						class:ring-4={$form.color === color.value}
-						class:ring-white={$form.color === color.value}
+						class:ring-4={partyColor === color.value}
+						class:ring-white={partyColor === color.value}
 						title={color.name}
-						onclick={() => ($form.color = color.value)}
+						onclick={() => (partyColor = color.value)}
 					/>
 				{/each}
 			</div>
@@ -351,16 +339,16 @@
 					type="color"
 					id="color"
 					name="color"
-					bind:value={$form.color}
+					bind:value={partyColor}
 					class="h-10 w-20 rounded-lg border-2 border-slate-600 bg-slate-700 cursor-pointer"
 				/>
-				<span class="text-sm text-gray-400">{$form.color}</span>
+				<span class="text-sm text-gray-400">{partyColor}</span>
 			</div>
 
 			<!-- Preview -->
-			<div class="p-4 rounded-lg" style="background-color: {$form.color}20; border: 2px solid {$form.color}40">
+			<div class="p-4 rounded-lg" style="background-color: {partyColor}20; border: 2px solid {partyColor}40">
 				<div class="flex items-center gap-3">
-					<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {$form.color}">
+					<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {partyColor}">
 						{#if previewUrl}
 							<img src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
 						{:else}
@@ -368,8 +356,8 @@
 						{/if}
 					</div>
 					<div>
-						<p class="font-semibold text-white">{$form.name || "Your Party Name"}</p>
-						<p class="text-sm" style="color: {$form.color}">{$form.abbreviation || "Abbreviation"}</p>
+						<p class="font-semibold text-white">{partyName || "Your Party Name"}</p>
+						<p class="text-sm" style="color: {partyColor}">{abbreviation || "Abbreviation"}</p>
 					</div>
 				</div>
 			</div>
@@ -385,12 +373,12 @@
 			<select
 				id="ideology"
 				name="ideology"
-				bind:value={$form.ideology}
+				bind:value={ideology}
 				class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 			>
 				<option value="">Select an ideology...</option>
-				{#each ideologies as ideology}
-					<option value={ideology.toLowerCase()}>{ideology}</option>
+				{#each ideologies as ideologyOption}
+					<option value={ideologyOption.toLowerCase()}>{ideologyOption}</option>
 				{/each}
 			</select>
 		</div>
@@ -405,7 +393,7 @@
 			<textarea
 				id="description"
 				name="description"
-				bind:value={$form.description}
+				bind:value={description}
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
@@ -422,15 +410,15 @@
 			</a>
 			<button
 				type="submit"
-				disabled={$submitting}
+				disabled={isSubmitting}
 				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
 			>
-				{#if $submitting}
+				{#if isSubmitting}
 					<span class="loading loading-spinner loading-sm"></span>
 					Creating...
 				{:else}
 					<FluentCheckmark20Filled class="size-5" />
-					{data.isIndependentRegion ? "Create Party & Initiate State Formation" : "Create Party"}
+					{data.isIndependentRegion ? "Create Party & Form State" : "Create Party"}
 				{/if}
 			</button>
 		</div>
@@ -440,7 +428,7 @@
 			<p class="text-sm text-blue-300">
 				💡 <strong>Note:</strong>
 				{data.isIndependentRegion
-					? "Creating this party will start a 3-day democratic state formation process. Other citizens can join and propose alternatives."
+					? "Creating this party will immediately establish a new state. You'll be the founding party leader and can begin recruiting members."
 					: "Once created, you will be the party leader. You can recruit members, participate in elections, and shape your state's political landscape."}
 			</p>
 		</div>
