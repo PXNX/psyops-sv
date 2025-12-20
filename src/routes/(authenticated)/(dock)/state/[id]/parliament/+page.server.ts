@@ -1,254 +1,329 @@
+import { error } from "@sveltejs/kit";
+import type { PageServerLoad } from "./$types";
+import { db } from "$lib/server/db";
+import { eq, and, gte, desc } from "drizzle-orm";
+import {
+	states,
+	parliamentMembers,
+	politicalParties,
+	partyMembers,
+	parliamentaryProposals,
+	parliamentaryVotes,
+	accounts,
+	userProfiles,
+	ministers
+} from "$lib/server/schema";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
+
 import { fail } from "@sveltejs/kit";
-import type { Actions, PageServerLoad } from "./$types";
+import type { Actions } from "./$types";
+
+import { superValidate } from "sveltekit-superforms";
+import { valibot } from "sveltekit-superforms/adapters";
+import { createProposalSchema } from "./schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	// Mock state data
-
 	const account = locals.account!;
 
-	const state = {
-		id: params.id,
-		name: "Republic of Innovation"
-	};
+	const form = await superValidate(valibot(createProposalSchema));
 
-	// Mock party distribution
-	const partyDistribution = {
-		"Progressive Alliance": 45,
-		"Conservative Union": 38,
-		"Green Coalition": 22,
-		"Liberal Democrats": 18,
-		Independent: 7
-	};
+	// Get state
+	const state = await db.query.states.findFirst({
+		where: eq(states.id, params.id)
+	});
 
-	const totalSeats = Object.values(partyDistribution).reduce((a, b) => a + b, 0);
-
-	// Mock parliament members
-	const mockMembers = [
-		{
-			name: "Sarah Johnson",
-			party: "Progressive Alliance",
-			avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah"
-		},
-		{
-			name: "Michael Chen",
-			party: "Progressive Alliance",
-			avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=michael"
-		},
-		{
-			name: "Emma Rodriguez",
-			party: "Conservative Union",
-			avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma"
-		},
-		{
-			name: "James O'Brien",
-			party: "Conservative Union",
-			avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=james"
-		},
-		{ name: "Aisha Patel", party: "Green Coalition", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=aisha" },
-		{ name: "David Kim", party: "Green Coalition", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=david" },
-		{
-			name: "Lisa Anderson",
-			party: "Liberal Democrats",
-			avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=lisa"
-		},
-		{
-			name: "Robert Martinez",
-			party: "Liberal Democrats",
-			avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=robert"
-		},
-		{ name: "Nina Kowalski", party: "Independent", avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=nina" },
-		{
-			name: "Thomas Wright",
-			party: "Progressive Alliance",
-			avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=thomas"
-		}
-	];
-
-	// Generate more members to match party distribution
-	const parliamentMembers = [];
-	let userId = 1;
-
-	for (const [party, count] of Object.entries(partyDistribution)) {
-		for (let i = 0; i < Math.min(count, 10); i++) {
-			// Limit to 10 per party for mock
-			const baseMember = mockMembers[Math.floor(Math.random() * mockMembers.length)];
-			parliamentMembers.push({
-				userId: `user_${userId++}`,
-				name: `${baseMember.name} ${i > 0 ? i : ""}`,
-				avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${party}${i}`,
-				partyAffiliation: party,
-				electedAt: new Date(2024, 0, 15).toISOString(),
-				term: 1
-			});
-		}
+	if (!state) {
+		throw error(404, "State not found");
 	}
 
-	// Mock active proposals
+	// Get all parliament members with their profiles and party info
+	const members = await db
+		.select({
+			userId: parliamentMembers.userId,
+			partyAffiliation: parliamentMembers.partyAffiliation,
+			electedAt: parliamentMembers.electedAt,
+			term: parliamentMembers.term,
+			name: userProfiles.name,
+			avatar: userProfiles.avatar
+		})
+		.from(parliamentMembers)
+		.leftJoin(accounts, eq(parliamentMembers.userId, accounts.id))
+		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
+		.where(eq(parliamentMembers.stateId, params.id))
+		.orderBy(desc(parliamentMembers.electedAt));
+
+	// Process avatars
+	const processedMembers = await Promise.all(
+		members.map(async (member) => {
+			let avatarUrl = member.avatar;
+			if (avatarUrl && !avatarUrl.startsWith("http")) {
+				try {
+					avatarUrl = await getSignedDownloadUrl(avatarUrl);
+				} catch {
+					avatarUrl = null;
+				}
+			}
+			return { ...member, avatar: avatarUrl };
+		})
+	);
+
+	// Calculate party distribution
+	const partyDistribution: Record<string, number> = {};
+	processedMembers.forEach((member) => {
+		const party = member.partyAffiliation || "Independent";
+		partyDistribution[party] = (partyDistribution[party] || 0) + 1;
+	});
+
+	const totalSeats = processedMembers.length;
+
+	// Check if current user is a parliament member
+	const userMembership = await db.query.parliamentMembers.findFirst({
+		where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
+	});
+
+	// Check if user is a minister (specifically finance minister for economic laws)
+	const userMinistry = await db.query.ministers.findFirst({
+		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, params.id))
+	});
+
+	// Get active proposals with vote counts and user's votes
 	const now = new Date();
-	const proposals = [
-		{
-			id: "proposal_1",
-			title: "Universal Healthcare Expansion Act",
-			description:
-				"A comprehensive bill to expand healthcare coverage to all citizens, including dental and vision care. This proposal aims to reduce out-of-pocket costs by 40% and increase access to preventive care services.",
-			proposalType: "healthcare",
-			status: "active",
-			proposedBy: {
-				id: "user_1",
-				name: "Sarah Johnson",
-				avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=sarah"
-			},
-			votingStartsAt: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-			votingEndsAt: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-			requiredMajority: 60,
-			voteCounts: {
-				for: 67,
-				against: 42,
-				abstain: 8
-			},
-			totalVotes: 117,
-			percentageFor: 57.26,
-			userVote: null
-		},
-		{
-			id: "proposal_2",
-			title: "Green Energy Infrastructure Investment",
-			description:
-				"Allocate $500M for renewable energy infrastructure including solar farms, wind turbines, and electric vehicle charging stations across all regions.",
-			proposalType: "infrastructure",
-			status: "active",
-			proposedBy: {
-				id: "user_5",
-				name: "Aisha Patel",
-				avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=aisha"
-			},
-			votingStartsAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-			votingEndsAt: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-			requiredMajority: 50,
-			voteCounts: {
-				for: 78,
-				against: 31,
-				abstain: 12
-			},
-			totalVotes: 121,
-			percentageFor: 64.46,
-			userVote: null
-		},
-		{
-			id: "proposal_3",
-			title: "Education Technology Modernization Bill",
-			description:
-				"Fund the installation of high-speed internet and modern computing equipment in all public schools. Includes teacher training programs for digital literacy.",
-			proposalType: "education",
-			status: "active",
-			proposedBy: {
-				id: "user_10",
-				name: "Thomas Wright",
-				avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=thomas"
-			},
-			votingStartsAt: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-			votingEndsAt: new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-			requiredMajority: 50,
-			voteCounts: {
-				for: 89,
-				against: 18,
-				abstain: 6
-			},
-			totalVotes: 113,
-			percentageFor: 78.76,
-			userVote: null
-		},
-		{
-			id: "proposal_4",
-			title: "Small Business Tax Relief Package",
-			description:
-				"Reduce corporate tax rates for businesses with annual revenue under $5M by 15%. Includes streamlined business registration and licensing processes.",
-			proposalType: "tax",
-			status: "active",
-			proposedBy: {
-				id: "user_3",
-				name: "Emma Rodriguez",
-				avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=emma"
-			},
-			votingStartsAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
-			votingEndsAt: new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-			requiredMajority: 55,
-			voteCounts: {
-				for: 52,
-				against: 58,
-				abstain: 15
-			},
-			totalVotes: 125,
-			percentageFor: 41.6,
-			userVote: null
-		},
-		{
-			id: "proposal_5",
-			title: "Criminal Justice Reform Initiative",
-			description:
-				"Implement restorative justice programs, reform sentencing guidelines for non-violent offenses, and increase funding for rehabilitation services.",
-			proposalType: "justice",
-			status: "active",
-			proposedBy: {
-				id: "user_7",
-				name: "Lisa Anderson",
-				avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=lisa"
-			},
-			votingStartsAt: new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-			votingEndsAt: new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000).toISOString(),
-			requiredMajority: 50,
-			voteCounts: {
-				for: 61,
-				against: 47,
-				abstain: 9
-			},
-			totalVotes: 117,
-			percentageFor: 52.14,
-			userVote: null
-		}
-	];
+	const activeProposals = await db
+		.select()
+		.from(parliamentaryProposals)
+		.where(
+			and(
+				eq(parliamentaryProposals.stateId, params.id),
+				eq(parliamentaryProposals.status, "active"),
+				gte(parliamentaryProposals.votingEndsAt, now)
+			)
+		)
+		.orderBy(desc(parliamentaryProposals.createdAt));
 
-	// Check if user is a parliament member (mock - you can adjust this logic)
+	// Get vote counts and user votes for each proposal
+	const proposalsWithVotes = await Promise.all(
+		activeProposals.map(async (proposal) => {
+			// Get all votes for this proposal
+			const votes = await db.select().from(parliamentaryVotes).where(eq(parliamentaryVotes.proposalId, proposal.id));
 
-	const isParliamentMember = !!account.id; // For demo, any logged-in user is a member
-	const userParty = isParliamentMember ? "Progressive Alliance" : null;
+			const voteCounts = {
+				for: votes.filter((v) => v.voteType === "for").length,
+				against: votes.filter((v) => v.voteType === "against").length,
+				abstain: votes.filter((v) => v.voteType === "abstain").length
+			};
 
-	// If user is member, add their votes to some proposals
-	if (isParliamentMember) {
-		proposals[0].userVote = "for";
-		proposals[2].userVote = "for";
-		proposals[4].userVote = "abstain";
-	}
+			const totalVotes = votes.length;
+			const percentageFor = totalVotes > 0 ? (voteCounts.for / totalVotes) * 100 : 0;
+
+			// Get user's vote if they voted
+			const userVote = votes.find((v) => v.voterId === account.id);
+
+			// Get proposer info
+			const proposer = await db.query.userProfiles.findFirst({
+				where: eq(userProfiles.accountId, proposal.proposedBy)
+			});
+
+			let proposerAvatar = proposer?.avatar;
+			if (proposerAvatar && !proposerAvatar.startsWith("http")) {
+				try {
+					proposerAvatar = await getSignedDownloadUrl(proposerAvatar);
+				} catch {
+					proposerAvatar = null;
+				}
+			}
+
+			return {
+				...proposal,
+				voteCounts,
+				totalVotes,
+				percentageFor,
+				userVote: userVote?.voteType || null,
+				proposedBy: {
+					id: proposal.proposedBy,
+					name: proposer?.name || "Unknown",
+					avatar: proposerAvatar
+				}
+			};
+		})
+	);
 
 	return {
 		state,
-		parliamentMembers: parliamentMembers.slice(0, 50), // Return first 50 for display
+		parliamentMembers: processedMembers,
 		partyDistribution,
 		totalSeats,
-		proposals,
-		isParliamentMember,
-		userParty
+		proposals: proposalsWithVotes,
+		isParliamentMember: !!userMembership,
+		userParty: userMembership?.partyAffiliation || null,
+		userMinistry: userMinistry?.ministry || null,
+		isFinanceMinister: userMinistry?.ministry === "finance",
+		form
 	};
 };
 
 export const actions: Actions = {
-	vote: async ({ request, locals }) => {
+	vote: async ({ request, locals, params }) => {
 		const account = locals.account!;
 
 		const formData = await request.formData();
 		const proposalId = formData.get("proposalId") as string;
 		const voteType = formData.get("voteType") as "for" | "against" | "abstain";
 
-		// Mock validation
 		if (!proposalId || !voteType) {
 			return fail(400, { error: "Invalid vote data" });
 		}
 
-		// Simulate successful vote
-		console.log(`User ${account.id} voted ${voteType} on proposal ${proposalId}`);
+		// Check if user is a parliament member
+		const membership = await db.query.parliamentMembers.findFirst({
+			where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
+		});
 
-		// In a real app, you'd update the database here
-		// For now, just return success
-		return { success: true };
+		if (!membership) {
+			return fail(403, { error: "You must be a parliament member to vote" });
+		}
+
+		// Check if proposal exists and is active
+		const proposal = await db.query.parliamentaryProposals.findFirst({
+			where: eq(parliamentaryProposals.id, proposalId)
+		});
+
+		if (!proposal || proposal.status !== "active") {
+			return fail(404, { error: "Proposal not found or not active" });
+		}
+
+		// Check if voting period is still active
+		if (new Date() > new Date(proposal.votingEndsAt)) {
+			return fail(400, { error: "Voting period has ended" });
+		}
+
+		// Check if user already voted
+		const existingVote = await db.query.parliamentaryVotes.findFirst({
+			where: and(eq(parliamentaryVotes.proposalId, proposalId), eq(parliamentaryVotes.voterId, account.id))
+		});
+
+		if (existingVote) {
+			// Update existing vote
+			await db
+				.update(parliamentaryVotes)
+				.set({
+					voteType,
+					votedAt: new Date()
+				})
+				.where(eq(parliamentaryVotes.id, existingVote.id));
+		} else {
+			// Create new vote
+			await db.insert(parliamentaryVotes).values({
+				proposalId,
+				voterId: account.id,
+				voteType
+			});
+		}
+
+		return { success: true, message: "Vote recorded successfully" };
+	},
+
+	createProposal: async ({ request, locals, params }) => {
+		const account = locals.account;
+		if (!account) {
+			return fail(401, { error: "Unauthorized" });
+		}
+
+		const form = await superValidate(request, valibot(createProposalSchema));
+
+		if (!form.valid) {
+			return fail(400, { form });
+		}
+
+		// Check if user is a parliament member
+		const membership = await db.query.parliamentMembers.findFirst({
+			where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
+		});
+
+		if (!membership) {
+			return fail(403, { error: "You must be a parliament member to create proposals" });
+		}
+
+		const { title, description, proposalType, votingDays, requiredMajority } = form.data;
+
+		const votingStartsAt = new Date();
+		const votingEndsAt = new Date();
+		votingEndsAt.setDate(votingEndsAt.getDate() + votingDays);
+
+		await db.insert(parliamentaryProposals).values({
+			stateId: params.id,
+			title,
+			description,
+			proposalType,
+			proposedBy: account.id,
+			votingStartsAt,
+			votingEndsAt,
+			requiredMajority,
+			status: "active"
+		});
+
+		return { form, success: true, message: "Proposal created successfully" };
+	},
+
+	executeMinisterialAction: async ({ request, locals, params }) => {
+		const account = locals.account;
+		if (!account) {
+			return fail(401, { error: "Unauthorized" });
+		}
+
+		const form = await superValidate(request, valibot(createProposalSchema));
+
+		if (!form.valid) {
+			return fail(400, { form });
+		}
+
+		// Check if user is a minister
+		const ministry = await db.query.ministers.findFirst({
+			where: and(eq(ministers.userId, account.id), eq(ministers.stateId, params.id))
+		});
+
+		if (!ministry) {
+			return fail(403, { error: "You must be a minister to execute direct actions" });
+		}
+
+		const { proposalType } = form.data;
+
+		// Define which ministries can execute which types directly
+		const ministryPermissions: Record<string, string[]> = {
+			finance: ["tax", "budget"],
+			infrastructure: ["infrastructure"],
+			education: ["education"],
+			defense: ["defense"],
+			health: ["healthcare"],
+			environment: ["environment"],
+			justice: ["justice"]
+		};
+
+		const allowedTypes = ministryPermissions[ministry.ministry] || [];
+
+		if (!allowedTypes.includes(proposalType)) {
+			return fail(403, {
+				error: `Your ministry (${ministry.ministry}) cannot execute ${proposalType} actions directly`
+			});
+		}
+
+		const { title, description, votingDays, requiredMajority } = form.data;
+
+		// Create proposal but mark as passed immediately
+		const votingStartsAt = new Date();
+		const votingEndsAt = new Date();
+
+		await db.insert(parliamentaryProposals).values({
+			stateId: params.id,
+			title,
+			description,
+			proposalType,
+			proposedBy: account.id,
+			votingStartsAt,
+			votingEndsAt,
+			requiredMajority,
+			status: "passed" // Immediately passed
+		});
+
+		return { form, success: true, message: "Ministerial action executed successfully" };
 	}
 };

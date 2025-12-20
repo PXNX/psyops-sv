@@ -992,3 +992,105 @@ export type NewGiftCodeRedemption = typeof giftCodeRedemptions.$inferInsert;
 
 export type GiftCodeRedemptionResource = typeof giftCodeRedemptionResources.$inferSelect;
 export type NewGiftCodeRedemptionResource = typeof giftCodeRedemptionResources.$inferInsert;
+
+export const electionStatusEnum = pgEnum("election_status", ["scheduled", "active", "completed"]);
+
+// Parliamentary Elections table
+export const parliamentaryElections = pgTable("parliamentary_elections", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	startDate: timestamp("start_date").notNull(),
+	endDate: timestamp("end_date").notNull(),
+	status: electionStatusEnum("status").notNull().default("scheduled"),
+	totalSeats: integer("total_seats").default(0).notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Election Votes table (tracks user votes for parties)
+export const electionVotes = pgTable(
+	"election_votes",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		electionId: uuid("election_id")
+			.notNull()
+			.references(() => parliamentaryElections.id, { onDelete: "cascade" }),
+		voterId: text("voter_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		partyId: uuid("party_id")
+			.notNull()
+			.references(() => politicalParties.id, { onDelete: "cascade" }),
+		votedAt: timestamp("voted_at").defaultNow().notNull()
+	},
+	(table) => ({
+		electionVoterIdx: uniqueIndex("idx_election_voter").on(table.electionId, table.voterId)
+	})
+);
+
+// Election Results table (stores final seat distribution)
+export const electionResults = pgTable(
+	"election_results",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		electionId: uuid("election_id")
+			.notNull()
+			.references(() => parliamentaryElections.id, { onDelete: "cascade" }),
+		partyId: uuid("party_id")
+			.notNull()
+			.references(() => politicalParties.id, { onDelete: "cascade" }),
+		votes: integer("votes").default(0).notNull(),
+		seatsWon: integer("seats_won").default(0).notNull(),
+		votePercentage: integer("vote_percentage").default(0).notNull()
+	},
+	(table) => ({
+		electionPartyIdx: uniqueIndex("idx_election_party_result").on(table.electionId, table.partyId)
+	})
+);
+
+// Relations
+export const parliamentaryElectionsRelations = relations(parliamentaryElections, ({ one, many }) => ({
+	state: one(states, {
+		fields: [parliamentaryElections.stateId],
+		references: [states.id]
+	}),
+	votes: many(electionVotes),
+	results: many(electionResults)
+}));
+
+export const electionVotesRelations = relations(electionVotes, ({ one }) => ({
+	election: one(parliamentaryElections, {
+		fields: [electionVotes.electionId],
+		references: [parliamentaryElections.id]
+	}),
+	voter: one(accounts, {
+		fields: [electionVotes.voterId],
+		references: [accounts.id]
+	}),
+	party: one(politicalParties, {
+		fields: [electionVotes.partyId],
+		references: [politicalParties.id]
+	})
+}));
+
+export const electionResultsRelations = relations(electionResults, ({ one }) => ({
+	election: one(parliamentaryElections, {
+		fields: [electionResults.electionId],
+		references: [parliamentaryElections.id]
+	}),
+	party: one(politicalParties, {
+		fields: [electionResults.partyId],
+		references: [politicalParties.id]
+	})
+}));
+
+// TypeScript types
+export type ParliamentaryElection = typeof parliamentaryElections.$inferSelect;
+export type NewParliamentaryElection = typeof parliamentaryElections.$inferInsert;
+
+export type ElectionVote = typeof electionVotes.$inferSelect;
+export type NewElectionVote = typeof electionVotes.$inferInsert;
+
+export type ElectionResult = typeof electionResults.$inferSelect;
+export type NewElectionResult = typeof electionResults.$inferInsert;

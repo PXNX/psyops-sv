@@ -6,6 +6,7 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import FluentEmojiBallotBoxWithBallot from "~icons/fluent-emoji/ballot-box-with-ballot";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentColor20Filled from "~icons/fluent/color-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
@@ -130,19 +131,32 @@
 			<div class="flex items-start gap-3">
 				<FluentWarning20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
 				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-amber-300 text-lg">Independent Region</h3>
+					<h3 class="font-semibold text-amber-300 text-lg">Independent Region - State Formation</h3>
 					<p class="text-amber-200/90 text-sm leading-relaxed">
 						{data.userRegion.name} is not part of any state. Creating a party here will automatically establish
 						<strong class="text-amber-100">the State of {data.userRegion.name}</strong> with democratic governance.
 					</p>
-					<div class="bg-amber-900/30 rounded-lg p-3">
-						<p class="text-amber-100 text-sm font-medium mb-2">What happens when you create this party:</p>
-						<ul class="text-amber-200/90 text-sm space-y-1 list-disc list-inside">
-							<li>A new state is formed: "State of {data.userRegion.name}"</li>
-							<li>Your party becomes the founding political party</li>
-							<li>Other citizens can join or create competing parties</li>
-							<li>Democratic elections will determine government positions</li>
-						</ul>
+					<div class="bg-amber-900/30 rounded-lg p-3 space-y-3">
+						<div>
+							<p class="text-amber-100 text-sm font-medium mb-2">What happens when you create this party:</p>
+							<ul class="text-amber-200/90 text-sm space-y-1 list-disc list-inside">
+								<li>A new state is formed: "State of {data.userRegion.name}"</li>
+								<li>Your party becomes the founding political party</li>
+								<li>Other citizens can join or create competing parties</li>
+							</ul>
+						</div>
+						<div class="border-t border-amber-500/30 pt-3">
+							<p class="text-amber-100 text-sm font-semibold mb-2 flex items-center gap-2">
+								<FluentEmojiBallotBoxWithBallot class="size-4" />
+								Inaugural Election Schedule:
+							</p>
+							<ul class="text-amber-200/90 text-sm space-y-1 list-disc list-inside">
+								<li><strong>Start:</strong> 3 days after state formation</li>
+								<li><strong>Duration:</strong> 2 days of voting</li>
+								<li><strong>Seats:</strong> 50 parliament seats available</li>
+								<li><strong>Purpose:</strong> Allows other parties time to establish themselves</li>
+							</ul>
+						</div>
 					</div>
 				</div>
 			</div>
