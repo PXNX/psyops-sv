@@ -1,6 +1,6 @@
 import { db } from "$lib/server/db";
-import { politicalParties, partyMembers, states, files } from "$lib/server/schema";
-import { uploadImageWithPreset, getSignedDownloadUrl } from "$lib/server/backblaze";
+import { politicalParties, partyMembers, files, residences } from "$lib/server/schema";
+import { uploadImageWithPreset } from "$lib/server/backblaze";
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -18,22 +18,38 @@ export const load: PageServerLoad = async ({ locals }) => {
 		redirect(302, `/party/${existingMembership.partyId}`);
 	}
 
-	// Get available states for party registration
-	const availableStates = await db.query.states.findMany({
-		orderBy: (states, { asc }) => [asc(states.name)]
+	// Get user's primary residence to determine their state
+	const userResidence = await db.query.residences.findFirst({
+		where: eq(residences.userId, account.id),
+		with: {
+			region: {
+				with: {
+					state: true
+				}
+			}
+		}
 	});
 
+	// If user has no residence, they need to select one first
+	if (!userResidence) {
+		redirect(302, "/regions?selectResidence=true");
+	}
+
 	return {
-		states: availableStates.map((state) => ({
-			id: state.id,
-			name: state.name,
-			avatar: state.avatar
-		}))
+		userState: {
+			id: userResidence.region.state.id,
+			name: userResidence.region.state.name,
+			avatar: userResidence.region.state.avatar
+		},
+		userRegion: {
+			id: userResidence.region.id,
+			name: userResidence.region.name
+		}
 	};
 };
 
 export const actions: Actions = {
-	create: async ({ request, locals }) => {
+	default: async ({ request, locals }) => {
 		const account = locals.account!;
 
 		const formData = await request.formData();
@@ -42,8 +58,25 @@ export const actions: Actions = {
 		const color = formData.get("color") as string;
 		const ideology = formData.get("ideology") as string;
 		const description = formData.get("description") as string;
-		const stateId = formData.get("stateId") as string;
-		const logoFileId = formData.get("logoFileId") as string;
+		const logoFile = formData.get("logo") as File;
+
+		// Get user's state from their residence
+		const userResidence = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id),
+			with: {
+				region: {
+					with: {
+						state: true
+					}
+				}
+			}
+		});
+
+		if (!userResidence) {
+			return fail(400, { error: "You must have a residence before creating a party" });
+		}
+
+		const stateId = userResidence.region.state.id;
 
 		// Validation
 		if (!name || name.length < 3 || name.length > 100) {
@@ -54,11 +87,17 @@ export const actions: Actions = {
 			return fail(400, { error: "Abbreviation must be 10 characters or less" });
 		}
 
-		if (!stateId) {
-			return fail(400, { error: "Please select a state" });
+		// Validate logo file if provided
+		if (logoFile && logoFile.size > 0) {
+			if (logoFile.size > 5 * 1024 * 1024) {
+				return fail(400, { error: "Logo file size must be less than 5MB" });
+			}
+			if (!logoFile.type.startsWith("image/")) {
+				return fail(400, { error: "Logo must be an image file" });
+			}
 		}
 
-		// Check if party name already exists
+		// Check if party name already exists in this state
 		const existingParty = await db.query.politicalParties.findFirst({
 			where: eq(politicalParties.name, name)
 		});
@@ -77,6 +116,30 @@ export const actions: Actions = {
 		}
 
 		try {
+			let logoFileId = null;
+
+			// Upload logo if provided
+			if (logoFile && logoFile.size > 0) {
+				const uploadResult = await uploadImageWithPreset(logoFile, "logo");
+
+				if (!uploadResult.success) {
+					return fail(400, { error: uploadResult.error || "Logo upload failed" });
+				}
+
+				// Store file metadata in database with correct field names
+				const fileId = randomUUID();
+				await db.insert(files).values({
+					id: fileId,
+					key: uploadResult.key,
+					fileName: logoFile.name,
+					contentType: logoFile.type,
+					sizeBytes: logoFile.size,
+					uploadedBy: account.id
+				});
+
+				logoFileId = fileId;
+			}
+
 			// Create the party
 			const [newParty] = await db
 				.insert(politicalParties)
@@ -84,7 +147,7 @@ export const actions: Actions = {
 					name,
 					abbreviation: abbreviation || null,
 					color: color || "#6366f1",
-					logo: logoFileId || null,
+					logo: logoFileId,
 					ideology: ideology || null,
 					description: description || null,
 					founderId: account.id,
@@ -105,50 +168,6 @@ export const actions: Actions = {
 		} catch (error) {
 			console.error("Party creation error:", error);
 			return fail(500, { error: "Failed to create party" });
-		}
-	},
-
-	uploadLogo: async ({ request, locals }) => {
-		const account = locals.account!;
-
-		const formData = await request.formData();
-		const file = formData.get("file") as File;
-
-		if (!file || file.size === 0) {
-			return fail(400, { error: "No file provided" });
-		}
-
-		try {
-			// Upload logo with preset dimensions (96x96)
-			const uploadResult = await uploadImageWithPreset(file, "logo");
-
-			if (!uploadResult.success) {
-				return fail(400, { error: uploadResult.error || "Upload failed" });
-			}
-
-			// Store file metadata in database
-			const fileId = randomUUID();
-			await db.insert(files).values({
-				id: fileId,
-				key: uploadResult.key,
-				fileName: file.name,
-				mimeType: file.type,
-				size: file.size,
-				uploadedBy: account.id
-			});
-
-			// Get signed URL for preview
-			const signedUrl = await getSignedDownloadUrl(uploadResult.key);
-
-			return {
-				success: true,
-				fileId,
-				url: signedUrl,
-				fileName: file.name
-			};
-		} catch (error) {
-			console.error("Logo upload error:", error);
-			return fail(500, { error: "Failed to upload logo" });
 		}
 	}
 };
