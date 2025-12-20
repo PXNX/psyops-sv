@@ -1,8 +1,8 @@
 <!-- src/lib/components/FileUpload.svelte -->
 <script lang="ts">
-	import { enhance } from '$app/forms';
-	import IconCloudArrowUp from '~icons/fluent/cloud-arrow-up-24-regular';
-	import IconImage from '~icons/fluent/image-24-regular';
+	import { enhance } from "$app/forms";
+	import IconCloudArrowUp from "~icons/fluent/cloud-arrow-up-24-regular";
+	import IconImage from "~icons/fluent/image-24-regular";
 
 	interface Props {
 		action?: string;
@@ -15,9 +15,9 @@
 	}
 
 	let {
-		action = '?/upload',
+		action = "?/upload",
 		maxSizeBytes = 5 * 1024 * 1024,
-		acceptedTypes = 'image/*',
+		acceptedTypes = "image/*",
 		disabled = false,
 		onSuccess,
 		onError,
@@ -63,10 +63,10 @@
 		if (!file) return;
 
 		// Validate file type
-		const typePattern = acceptedTypes.replace('*', '.*');
+		const typePattern = acceptedTypes.replace("*", ".*");
 		const regex = new RegExp(typePattern);
 		if (!regex.test(file.type)) {
-			onError?.('Invalid file type');
+			onError?.("Invalid file type");
 			return;
 		}
 
@@ -77,7 +77,7 @@
 		}
 
 		if (file.size === 0) {
-			onError?.('File is empty');
+			onError?.("File is empty");
 			return;
 		}
 
@@ -87,7 +87,7 @@
 		}
 
 		// Only create preview for images
-		if (file.type.startsWith('image/')) {
+		if (file.type.startsWith("image/")) {
 			previewUrl = URL.createObjectURL(file);
 		} else {
 			previewUrl = null;
@@ -102,7 +102,7 @@
 			previewUrl = null;
 		}
 		if (fileInput) {
-			fileInput.value = '';
+			fileInput.value = "";
 		}
 	}
 
@@ -149,15 +149,15 @@
 		return async ({ result, update }) => {
 			uploading = false;
 
-			if (result.type === 'success' && result.data) {
+			if (result.type === "success" && result.data) {
 				const data = result.data as { url?: string; fileName?: string; key?: string };
 				if (data.url && data.fileName && data.key) {
 					onSuccess?.(data as { url: string; fileName: string; key: string });
 					clearFile();
 				}
-			} else if (result.type === 'failure' && result.data) {
+			} else if (result.type === "failure" && result.data) {
 				const errorData = result.data as { error?: string };
-				onError?.(errorData.error || 'Upload failed');
+				onError?.(errorData.error || "Upload failed");
 			}
 
 			await update();
@@ -167,12 +167,7 @@
 >
 	<!-- File Drop Zone -->
 	<div class="form-control">
-		<div
-			class="relative"
-			ondrop={handleDrop}
-			ondragover={handleDragOver}
-			ondragleave={handleDragLeave}
-		>
+		<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
 			<input
 				bind:this={fileInput}
 				id="file"
@@ -219,7 +214,7 @@
 							</p>
 							{#if !uploading && !disabled}
 								<p class="mt-1 text-xs text-base-content/60">
-									{acceptedTypes.replace('image/*', 'Images')} • {maxSizeMB}MB max
+									{acceptedTypes.replace("image/*", "Images")} • {maxSizeMB}MB max
 								</p>
 							{/if}
 						</div>
@@ -234,9 +229,7 @@
 								</div>
 							</div>
 						{:else}
-							<div
-								class="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg bg-base-200"
-							>
+							<div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg bg-base-200">
 								<IconImage class="h-8 w-8 text-base-content/40" />
 							</div>
 						{/if}

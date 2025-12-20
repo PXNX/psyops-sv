@@ -106,19 +106,22 @@
 		previewUrl = URL.createObjectURL(file);
 	}
 
-	function removeFile() {
+	function clearImage() {
 		if (isSubmitting) return;
 
 		selectedFile = null;
+
 		if (previewUrl) {
 			URL.revokeObjectURL(previewUrl);
 			previewUrl = null;
 		}
+
 		if (fileInput) {
 			fileInput.value = "";
 		}
 	}
 
+	// Cleanup on unmount
 	$effect(() => {
 		return () => {
 			if (previewUrl) {
@@ -257,56 +260,85 @@
 				<h2 class="text-lg font-semibold text-white">Party Logo (Optional)</h2>
 			</div>
 
-			<input
-				bind:this={fileInput}
-				type="file"
-				id="logo"
-				name="logo"
-				accept="image/*"
-				class="hidden"
-				onchange={handleFileSelect}
-				disabled={isSubmitting}
-			/>
-
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
-				{#if previewUrl}
-					<div class="flex items-center gap-4 p-3 bg-slate-700/30 rounded-lg">
-						<img src={previewUrl} alt="Party logo preview" class="size-16 object-contain rounded-lg bg-white/5" />
-						<div class="flex-1">
-							<p class="text-sm font-medium text-white">{selectedFile?.name}</p>
+				<input
+					bind:this={fileInput}
+					type="file"
+					id="logo"
+					name="logo"
+					accept="image/*"
+					class="hidden"
+					onchange={handleFileSelect}
+					disabled={isSubmitting}
+				/>
+
+				<button
+					type="button"
+					onclick={() => fileInput?.click()}
+					disabled={isSubmitting}
+					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
+					class:border-purple-500={dragActive}
+					class:bg-purple-600-10={dragActive}
+					class:border-purple-500-30={!dragActive && !selectedFile}
+					class:border-success={selectedFile && !dragActive}
+					class:bg-success-5={selectedFile && !dragActive}
+					class:hover:border-purple-500-50={!isSubmitting && !selectedFile}
+					class:hover:bg-purple-600-10={!isSubmitting && !selectedFile}
+					class:opacity-50={isSubmitting}
+					class:input-error={form?.field === "logo"}
+				>
+					{#if !selectedFile}
+						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
+							<div class="rounded-full bg-purple-600/20 p-3 transition-transform group-hover:scale-110">
+								<FluentImage20Filled class="size-8 text-purple-400" />
+							</div>
+							<div class="text-center">
+								<p class="text-base font-semibold text-white">
+									{#if dragActive}
+										Drop logo here
+									{:else if isSubmitting}
+										Uploading...
+									{:else}
+										Tap to upload party logo
+									{/if}
+								</p>
+								{#if !isSubmitting}
+									<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
+								{/if}
+							</div>
+						</div>
+					{:else}
+						<div class="relative">
+							<div class="flex items-center justify-center p-6 bg-slate-900/50">
+								<img src={previewUrl} alt="Party logo preview" class="size-24 object-contain rounded-lg" />
+							</div>
+							<div
+								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+							>
+								<p class="text-base font-semibold text-white">Tap to change</p>
+							</div>
+							<button
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation();
+									clearImage();
+								}}
+								disabled={isSubmitting}
+								class="btn absolute top-2 right-2 btn-circle btn-sm bg-slate-800 hover:bg-slate-700"
+							>
+								✕
+							</button>
+						</div>
+						<div class="border-t border-slate-700 p-3 bg-slate-900/30">
+							<p class="truncate text-sm font-medium text-white" title={selectedFile.name}>
+								{selectedFile.name}
+							</p>
 							<p class="text-xs text-gray-400">
-								{selectedFile ? Math.round(selectedFile.size / 1024) : 0} KB
+								{Math.round(selectedFile.size / 1024)} KB
 							</p>
 						</div>
-						<button
-							type="button"
-							onclick={removeFile}
-							disabled={isSubmitting}
-							class="btn btn-sm bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-300 hover:text-red-200"
-						>
-							<FluentDismiss20Filled class="size-4" />
-							Remove
-						</button>
-					</div>
-				{:else}
-					<button
-						type="button"
-						onclick={() => fileInput?.click()}
-						disabled={isSubmitting}
-						class="w-full p-4 border-2 border-dashed rounded-lg transition-all flex items-center justify-center gap-2 group"
-						class:border-purple-500-50={dragActive}
-						class:bg-purple-600-10={dragActive}
-						class:border-purple-500-30={!dragActive}
-						class:hover:border-purple-500-50={!isSubmitting}
-						class:hover:bg-purple-600-10={!isSubmitting}
-						class:opacity-50={isSubmitting}
-					>
-						<FluentImage20Filled class="size-5 text-purple-400 group-hover:text-purple-300" />
-						<span class="text-purple-400 group-hover:text-purple-300 font-medium">
-							{dragActive ? "Drop logo here" : "Select Logo"}
-						</span>
-					</button>
-				{/if}
+					{/if}
+				</button>
 			</div>
 
 			<p class="text-xs text-gray-400">Recommended: 96x96 pixels, PNG or JPG, max 5MB</p>

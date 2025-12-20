@@ -1,26 +1,26 @@
 <!-- /src/lib/components/Modal.svelte -->
 <script lang="ts">
-	import IconDismiss from '~icons/fluent/dismiss-24-regular';
-	import IconArrowLeft from '~icons/fluent/arrow-left-24-regular';
+	import IconDismiss from "~icons/fluent/dismiss-24-regular";
+	import IconArrowLeft from "~icons/fluent/arrow-left-24-regular";
 
 	let {
 		open = $bindable(false),
-		title = '',
+		title = "",
 		onBack = null,
-		size = 'default',
+		size = "default",
 		children
 	}: {
 		open: boolean;
 		title?: string;
 		onBack?: (() => void) | null;
-		size?: 'default' | 'small' | 'large';
+		size?: "default" | "small" | "large";
 		children: any;
 	} = $props();
 
 	const sizeClasses = {
-		small: 'max-w-sm',
-		default: 'max-w-lg',
-		large: 'max-w-2xl'
+		small: "max-w-sm",
+		default: "max-w-lg",
+		large: "max-w-2xl"
 	};
 
 	function handleClose() {
