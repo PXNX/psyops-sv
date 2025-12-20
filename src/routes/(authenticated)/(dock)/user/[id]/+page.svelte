@@ -15,6 +15,8 @@
 	import MdiNewspaperPlus from "~icons/mdi/newspaper-plus";
 	import FluentClockToolbox20Filled from "~icons/fluent/clock-toolbox-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
+	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 
 	const { data } = $props();
 </script>
@@ -84,7 +86,7 @@
 			<span class="hidden sm:inline">Share</span>
 		</button>
 
-		{#if data.user.id === data.account.id}
+		{#if data.isOwnProfile}
 			<a
 				href="/settings"
 				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
@@ -121,19 +123,65 @@
 		</div>
 	</section>
 
-	<!-- Career Section -->
+	<!-- Career & Politics Section -->
 	<section class="space-y-3">
 		<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Career & Politics</h2>
 		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
-			<ProfileItem
-				name="Order of the Phoenix"
-				description="Nationalist"
-				date={new Date()}
-				avatar="https://placehold.co/48/svg"
-				href="/party/{data.user.id}"
-				Component={FluentClockToolbox20Filled}
-				bgColor="bg-amber-600"
-			/>
+			<!-- Political Party -->
+			{#if data.party}
+				<a
+					href="/party/{data.party.id}"
+					class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+				>
+					<div
+						class="size-12 rounded-lg flex items-center justify-center"
+						style="background-color: {data.party.color}20;"
+					>
+						{#if data.party.logo}
+							<img src={data.party.logo} alt={data.party.name} class="size-8 object-contain" />
+						{:else}
+							<FluentPeople20Filled class="size-6" style="color: {data.party.color}" />
+						{/if}
+					</div>
+					<div class="flex-1 min-w-0">
+						<p class="font-semibold text-white group-hover:text-purple-400 transition-colors truncate">
+							{data.party.name}
+							{#if data.party.abbreviation}
+								<span class="text-gray-400">({data.party.abbreviation})</span>
+							{/if}
+						</p>
+						<p class="text-xs text-gray-400 truncate">
+							{#if data.party.ideology}
+								{data.party.ideology} •
+							{/if}
+							{data.party.role === "leader"
+								? "Party Leader"
+								: data.party.role === "deputy"
+									? "Deputy Leader"
+									: "Member"}
+						</p>
+					</div>
+					<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors" />
+				</a>
+			{:else if data.isOwnProfile}
+				<!-- Create Party Button -->
+				<a
+					href="/party/create"
+					class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-purple-500/30 rounded-lg hover:border-purple-500/50 hover:bg-purple-600/10 transition-all group"
+				>
+					<div
+						class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center group-hover:bg-purple-600/30 transition-colors"
+					>
+						<FluentAdd20Filled class="size-5 text-purple-400" />
+					</div>
+					<div class="text-center">
+						<p class="font-semibold text-purple-400 group-hover:text-purple-300 transition-colors">
+							Create Political Party
+						</p>
+						<p class="text-xs text-gray-400">Start your own political movement</p>
+					</div>
+				</a>
+			{/if}
 
 			<ProfileItem
 				name="Minister of Education"
