@@ -9,6 +9,7 @@
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import { shareLink } from "$lib/util";
+	import ElectionBanner from "./ElectionBanner.svelte";
 
 	const { data } = $props();
 
@@ -198,6 +199,15 @@
 			{/if}
 		</div>
 	{/if}
+
+	<a
+		href="/state/{data.state.id}/parliament"
+		class="btn btn-sm w-full mt-3 bg-transparent hover:bg-blue-600/10 border-blue-500/20 text-blue-400 hover:text-blue-300"
+	>
+		Parliament
+	</a>
+
+	<ElectionBanner election={data.nextElection} stateId={data.state.id} />
 
 	<!-- Regions List -->
 	{#if data.regions && data.regions.length > 0}
