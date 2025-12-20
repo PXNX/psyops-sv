@@ -3,5 +3,6 @@
 	"signUp": "Einloggen mit {provider}",
 	"needHelp": "Brauchen Sie Hilfe?",
 	"termsOfService": "Nutzungsbedingungen",
-	"privacyPolicy": "Datenschutzrichtlinie"
+	"privacyPolicy": "Datenschutzrichtlinie",
+	"training": "Ausbildung"
 }
