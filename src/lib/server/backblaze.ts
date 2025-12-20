@@ -27,96 +27,50 @@ export interface UploadResult {
 	error?: string;
 }
 
-export interface ImageDimensions {
-	width: number;
-	height: number;
-	fit?: "cover" | "contain" | "fill" | "inside" | "outside";
-	quality?: number; // JPEG quality (1-100)
-}
-
-// Predefined image sizes
-export const IMAGE_SIZES = {
-	logo: { width: 96, height: 96, fit: "cover" as const, quality: 90 },
-	locationImage: { width: 420, height: 256, fit: "cover" as const, quality: 85 }
-} as const;
+// Fixed image dimensions - all images converted to 96x96 WebP
+const IMAGE_SIZE = 96;
+const WEBP_QUALITY = 85;
 
 /**
- * Resize and optimize an image
+ * Convert image to 96x96 WebP format
  * @param buffer - Original image buffer
- * @param dimensions - Target dimensions and options
- * @returns Processed image buffer
+ * @returns Processed WebP image buffer
  */
-async function processImage(buffer: Buffer, dimensions: ImageDimensions): Promise<Buffer> {
-	const { width, height, fit = "cover", quality = 85 } = dimensions;
-
-	let sharpInstance = sharp(buffer).resize(width, height, {
-		fit,
-		position: "center",
-		withoutEnlargement: false
-	});
-
-	// Auto-detect format and optimize
-	const metadata = await sharp(buffer).metadata();
-
-	if (metadata.format === "png" && !metadata.hasAlpha) {
-		// Convert PNG without transparency to JPEG for smaller size
-		sharpInstance = sharpInstance.jpeg({ quality, progressive: true });
-	} else if (metadata.format === "png") {
-		// Keep PNG with transparency, but optimize
-		sharpInstance = sharpInstance.png({ compressionLevel: 9, progressive: true });
-	} else {
-		// Default to JPEG
-		sharpInstance = sharpInstance.jpeg({ quality, progressive: true });
-	}
-
-	return await sharpInstance.toBuffer();
+async function processImageToWebP(buffer: Buffer): Promise<Buffer> {
+	return await sharp(buffer)
+		.resize(IMAGE_SIZE, IMAGE_SIZE, {
+			fit: "cover",
+			position: "center",
+			withoutEnlargement: false
+		})
+		.webp({ quality: WEBP_QUALITY })
+		.toBuffer();
 }
 
 /**
- * Upload a file buffer to Backblaze B2
+ * Upload a file buffer to Backblaze B2 (converted to 96x96 WebP)
  * @param buffer - File buffer to upload
  * @param fileName - Original filename (for reference)
- * @param contentType - MIME type of the file
- * @param dimensions - Optional image dimensions for resizing
  * @returns Upload result with storage key
  */
-export async function uploadFile(
-	buffer: Buffer,
-	fileName: string,
-	contentType: string,
-	dimensions?: ImageDimensions
-): Promise<UploadResult> {
+export async function uploadFile(buffer: Buffer, fileName: string): Promise<UploadResult> {
 	try {
-		let processedBuffer = buffer;
-		let finalContentType = contentType;
+		// Always process to 96x96 WebP
+		const processedBuffer = await processImageToWebP(buffer);
 
-		// Process image if dimensions provided and file is an image
-		if (dimensions && contentType.startsWith("image/")) {
-			try {
-				processedBuffer = await processImage(buffer, dimensions);
-				// Update content type based on processed image
-				const metadata = await sharp(processedBuffer).metadata();
-				finalContentType = `image/${metadata.format}`;
-			} catch (error) {
-				console.error("Image processing failed, using original:", error);
-				// Continue with original buffer if processing fails
-			}
-		}
-
-		// Generate unique key with file extension
-		const extension = fileName.split(".").pop() || "";
-		const uniqueKey = `${randomUUID()}.${extension}`;
+		// Generate unique key with .webp extension
+		const uniqueKey = `${randomUUID()}.webp`;
 
 		const command = new PutObjectCommand({
 			Bucket: BACKBLAZE_BUCKET_NAME,
 			Key: uniqueKey,
 			Body: processedBuffer,
-			ContentType: finalContentType,
+			ContentType: "image/webp",
 			CacheControl: "public, max-age=31536000, immutable",
 			Metadata: {
 				originalName: fileName,
 				uploadedAt: new Date().toISOString(),
-				...(dimensions && { resized: `${dimensions.width}x${dimensions.height}` })
+				resized: `${IMAGE_SIZE}x${IMAGE_SIZE}`
 			}
 		});
 
@@ -137,12 +91,11 @@ export async function uploadFile(
 }
 
 /**
- * Upload a file directly from FormData with optional resizing
+ * Upload a file directly from FormData (converted to 96x96 WebP)
  * @param file - File from form input
- * @param dimensions - Optional image dimensions for resizing
  * @returns Upload result with storage key
  */
-export async function uploadFileFromForm(file: File, dimensions?: ImageDimensions): Promise<UploadResult> {
+export async function uploadFileFromForm(file: File): Promise<UploadResult> {
 	if (!file || file.size === 0) {
 		return {
 			success: false,
@@ -161,37 +114,26 @@ export async function uploadFileFromForm(file: File, dimensions?: ImageDimension
 		};
 	}
 
-	// Validate image type if dimensions provided
-	if (dimensions && !file.type.startsWith("image/")) {
+	// Validate that it's an image
+	if (!file.type.startsWith("image/")) {
 		return {
 			success: false,
 			key: "",
-			error: "File must be an image for resizing"
+			error: "File must be an image"
 		};
 	}
 
 	// Convert to buffer
 	const buffer = Buffer.from(await file.arrayBuffer());
 
-	return uploadFile(buffer, file.name, file.type, dimensions);
+	return uploadFile(buffer, file.name);
 }
 
-/**
- * Upload image with predefined size preset
- * @param file - File from form input
- * @param sizePreset - Predefined size from IMAGE_SIZES
- * @returns Upload result with storage key
- */
-export async function uploadImageWithPreset(file: File, sizePreset: keyof typeof IMAGE_SIZES): Promise<UploadResult> {
-	const dimensions = IMAGE_SIZES[sizePreset];
-	return uploadFileFromForm(file, dimensions);
-}
-
-export async function getPresignedUploadUrl(key: string, contentType: string): Promise<string> {
+export async function getPresignedUploadUrl(key: string): Promise<string> {
 	const command = new PutObjectCommand({
 		Bucket: BACKBLAZE_BUCKET_NAME,
 		Key: key,
-		ContentType: contentType,
+		ContentType: "image/webp",
 		CacheControl: "public, max-age=31536000, immutable"
 	});
 
@@ -211,7 +153,7 @@ export async function getSignedDownloadUrl(
 	const command = new GetObjectCommand({
 		Bucket: BACKBLAZE_BUCKET_NAME,
 		Key: key,
-		ResponseCacheControl: "public, max-age={" + expiresIn + "}, immutable"
+		ResponseCacheControl: `public, max-age=${expiresIn}, immutable`
 	});
 
 	return await getSignedUrl(s3Client, command, { expiresIn });

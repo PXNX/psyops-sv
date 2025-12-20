@@ -1,11 +1,14 @@
 // src/routes/party/create/+page.server.ts
 import { db } from "$lib/server/db";
 import { politicalParties, partyMembers, files, residences, regions, states } from "$lib/server/schema";
-import { redirect, error, fail } from "@sveltejs/kit";
+import { redirect, error } from "@sveltejs/kit";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadImageWithPreset } from "$lib/server/backblaze";
+import { uploadFileFromForm } from "$lib/server/backblaze";
+import { superValidate, message } from "sveltekit-superforms";
+import { valibot } from "sveltekit-superforms/adapters";
+import { createPartySchema } from "./schema";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -38,7 +41,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const isIndependentRegion = !userResidence.region.stateId;
 
+	const form = await superValidate(valibot(createPartySchema));
+
 	return {
+		form,
 		userState: userResidence.region.state
 			? {
 					id: userResidence.region.state.id,
@@ -57,36 +63,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const account = locals.account!;
-		const formData = await request.formData();
+		const form = await superValidate(request, valibot(createPartySchema));
 
-		const name = formData.get("name") as string;
-		const abbreviation = formData.get("abbreviation") as string;
-		const color = formData.get("color") as string;
-		const ideology = formData.get("ideology") as string;
-		const description = formData.get("description") as string;
-		const logoFile = formData.get("logo") as File;
-
-		// Validation
-		if (!name || name.trim().length === 0) {
-			return fail(400, { message: "Party name is required", field: "name" });
+		if (!form.valid) {
+			return message(form, "Please fix the validation errors", { status: 400 });
 		}
 
-		if (name.trim().length < 3) {
-			return fail(400, { message: "Party name must be at least 3 characters", field: "name" });
-		}
-
-		if (name.trim().length > 100) {
-			return fail(400, { message: "Party name must be at most 100 characters", field: "name" });
-		}
-
-		if (abbreviation && abbreviation.trim().length > 10) {
-			return fail(400, { message: "Abbreviation must be 10 characters or less", field: "abbreviation" });
-		}
-
-		// Validate color format
-		if (color && !/^#[0-9A-F]{6}$/i.test(color)) {
-			return fail(400, { message: "Invalid color format", field: "color" });
-		}
+		const { name, abbreviation, color, ideology, description, logo } = form.data;
 
 		// Get user's primary residence
 		const userResidence = await db.query.residences.findFirst({
@@ -101,7 +84,9 @@ export const actions: Actions = {
 		});
 
 		if (!userResidence) {
-			return fail(400, { message: "You must have a primary residence before creating a party" });
+			return message(form, "You must have a primary residence before creating a party", {
+				status: 400
+			});
 		}
 
 		const isIndependentRegion = !userResidence.region.stateId;
@@ -110,11 +95,11 @@ export const actions: Actions = {
 
 		// Check if party name already exists
 		const existingParty = await db.query.politicalParties.findFirst({
-			where: eq(politicalParties.name, name.trim())
+			where: eq(politicalParties.name, name)
 		});
 
 		if (existingParty) {
-			return fail(400, { message: "A party with this name already exists", field: "name" });
+			return message(form, "A party with this name already exists", { status: 400 });
 		}
 
 		// Check if user already in a party
@@ -123,71 +108,49 @@ export const actions: Actions = {
 		});
 
 		if (existingMembership) {
-			return fail(400, { message: "You are already a member of a political party" });
+			return message(form, "You are already a member of a political party", { status: 400 });
 		}
 
-		try {
+		// Use transaction for everything including file upload
+		const newParty = await db.transaction(async (tx) => {
 			let logoFileId: string | null = null;
 
-			// Upload logo if provided (optional)
-			if (logoFile && logoFile.size > 0) {
-				// Validate file type
-				if (!logoFile.type.startsWith("image/")) {
-					return fail(400, {
-						message: "File must be an image",
-						field: "logo"
-					});
-				}
-
-				const maxSize = 5 * 1024 * 1024; // 5MB
-				if (logoFile.size > maxSize) {
-					return fail(400, {
-						message: "Image size must be less than 5MB",
-						field: "logo"
-					});
-				}
-
-				// Upload with preset 'logo' (96x96)
-				const logoUploadResult = await uploadImageWithPreset(logoFile, "logo");
+			// Upload logo if provided
+			if (logo) {
+				const logoUploadResult = await uploadFileFromForm(logo);
 
 				if (!logoUploadResult.success) {
-					return fail(500, {
-						message: logoUploadResult.error || "Failed to upload logo",
-						field: "logo"
-					});
+					tx.rollback();
+					return null;
 				}
 
 				// Create file record in database
 				const fileId = randomUUID();
-				try {
-					await db.insert(files).values({
-						id: fileId,
-						key: logoUploadResult.key,
-						fileName: logoFile.name,
-						contentType: logoFile.type,
-						sizeBytes: logoFile.size,
-						uploadedBy: account.id
-					});
-					logoFileId = fileId;
-				} catch (e) {
-					console.error("Failed to create file record:", e);
-					return fail(500, { message: "Failed to save logo information" });
-				}
+				await tx.insert(files).values({
+					id: fileId,
+					key: logoUploadResult.key,
+					fileName: logo.name,
+					contentType: "image/webp", // All images are converted to WebP
+					sizeBytes: logo.size,
+					uploadedBy: account.id
+				});
+				logoFileId = fileId;
 			}
 
 			// If independent region, create state first
 			let finalStateId: string | null = stateId;
 			if (isIndependentRegion) {
-				const region = await db.query.regions.findFirst({
+				const region = await tx.query.regions.findFirst({
 					where: eq(regions.id, regionId)
 				});
 
 				if (!region) {
-					return fail(404, { message: "Region not found" });
+					tx.rollback();
+					return null;
 				}
 
 				// Create new state
-				const [newState] = await db
+				const [newState] = await tx
 					.insert(states)
 					.values({
 						name: `State of ${region.name}`,
@@ -200,26 +163,27 @@ export const actions: Actions = {
 					.returning();
 
 				// Link region to state
-				await db.update(regions).set({ stateId: newState.id }).where(eq(regions.id, regionId));
+				await tx.update(regions).set({ stateId: newState.id }).where(eq(regions.id, regionId));
 
 				finalStateId = newState.id;
 			}
 
 			// Ensure finalStateId is not null
 			if (!finalStateId) {
-				return fail(400, { message: "Could not determine state for party" });
+				tx.rollback();
+				return null;
 			}
 
 			// Create the party
-			const [newParty] = await db
+			const [party] = await tx
 				.insert(politicalParties)
 				.values({
-					name: name.trim(),
-					abbreviation: abbreviation?.trim() || null,
-					color: color || "#6366f1",
+					name,
+					abbreviation: abbreviation || null,
+					color,
 					logo: logoFileId,
-					ideology: ideology?.trim() || null,
-					description: description?.trim() || null,
+					ideology,
+					description: description || null,
 					founderId: account.id,
 					stateId: finalStateId,
 					memberCount: 1
@@ -227,20 +191,20 @@ export const actions: Actions = {
 				.returning();
 
 			// Add founder as party leader
-			await db.insert(partyMembers).values({
+			await tx.insert(partyMembers).values({
 				userId: account.id,
-				partyId: newParty.id,
+				partyId: party.id,
 				role: "leader"
 			});
 
-			// Redirect to the new party page
-			throw redirect(303, `/party/${newParty.id}`);
-		} catch (err) {
-			if (err instanceof Response) {
-				throw err;
-			}
-			console.error("Party creation error:", err);
-			return fail(500, { message: "Failed to create party" });
+			return party;
+		});
+
+		if (!newParty) {
+			return message(form, "Failed to create party", { status: 500 });
 		}
+
+		// Redirect to the new party page
+		throw redirect(303, `/party/${newParty.id}`);
 	}
 };

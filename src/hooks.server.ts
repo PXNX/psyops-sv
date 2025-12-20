@@ -70,6 +70,7 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 	//@ts-ignore
 	event.locals.errorStackTrace = error?.stack || undefined;
 	event.locals.errorId = errorId;
+	console.log(500, event);
 	//log(500, event);
 	return {
 		message: "An unexpected error occurred.",
