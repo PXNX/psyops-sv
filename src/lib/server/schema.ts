@@ -635,6 +635,114 @@ export const userWalletsRelations = relations(userWallets, ({ one }) => ({
 	})
 }));
 
+// Add these to your existing schema.ts file
+
+// Enums for parliament system
+export const proposalStatusEnum = pgEnum("proposal_status", ["active", "passed", "rejected", "expired"]);
+export const voteTypeEnum = pgEnum("vote_type", ["for", "against", "abstain"]);
+export const proposalTypeEnum = pgEnum("proposal_type", [
+	"budget",
+	"tax",
+	"infrastructure",
+	"education",
+	"defense",
+	"healthcare",
+	"environment",
+	"justice",
+	"general"
+]);
+
+// Political Parties table
+export const politicalParties = pgTable("political_parties", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	name: varchar("name", { length: 100 }).notNull(),
+	abbreviation: varchar("abbreviation", { length: 10 }),
+	color: varchar("color", { length: 7 }).default("#6366f1"), // Hex color
+	ideology: text("ideology"),
+	description: text("description"),
+	foundedAt: timestamp("founded_at").defaultNow().notNull()
+});
+
+// Update parliament members to reference parties
+// Add this column to parliamentMembers table:
+// partyId: uuid("party_id").references(() => politicalParties.id, { onDelete: "set null" })
+
+// Parliamentary Proposals/Laws table
+export const parliamentaryProposals = pgTable("parliamentary_proposals", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	title: varchar("title", { length: 200 }).notNull(),
+	description: text("description").notNull(),
+	proposalType: proposalTypeEnum("proposal_type").notNull(),
+	proposedBy: text("proposed_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	status: proposalStatusEnum("status").notNull().default("active"),
+	votingStartsAt: timestamp("voting_starts_at").defaultNow().notNull(),
+	votingEndsAt: timestamp("voting_ends_at").notNull(),
+	requiredMajority: integer("required_majority").default(50).notNull(), // Percentage needed to pass
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Parliamentary Votes table
+export const parliamentaryVotes = pgTable(
+	"parliamentary_votes",
+	{
+		id: uuid("id").defaultRandom().primaryKey(),
+		proposalId: uuid("proposal_id")
+			.notNull()
+			.references(() => parliamentaryProposals.id, { onDelete: "cascade" }),
+		voterId: text("voter_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		voteType: voteTypeEnum("vote_type").notNull(),
+		votedAt: timestamp("voted_at").defaultNow().notNull()
+	},
+	(table) => ({
+		proposalVoterIdx: uniqueIndex("idx_proposal_voter").on(table.proposalId, table.voterId)
+	})
+);
+
+// Relations
+export const politicalPartiesRelations = relations(politicalParties, ({ many }) => ({
+	members: many(parliamentMembers)
+}));
+
+export const parliamentaryProposalsRelations = relations(parliamentaryProposals, ({ one, many }) => ({
+	state: one(states, {
+		fields: [parliamentaryProposals.stateId],
+		references: [states.id]
+	}),
+	proposer: one(accounts, {
+		fields: [parliamentaryProposals.proposedBy],
+		references: [accounts.id]
+	}),
+	votes: many(parliamentaryVotes)
+}));
+
+export const parliamentaryVotesRelations = relations(parliamentaryVotes, ({ one }) => ({
+	proposal: one(parliamentaryProposals, {
+		fields: [parliamentaryVotes.proposalId],
+		references: [parliamentaryProposals.id]
+	}),
+	voter: one(accounts, {
+		fields: [parliamentaryVotes.voterId],
+		references: [accounts.id]
+	})
+}));
+
+// TypeScript types
+export type PoliticalParty = typeof politicalParties.$inferSelect;
+export type NewPoliticalParty = typeof politicalParties.$inferInsert;
+
+export type ParliamentaryProposal = typeof parliamentaryProposals.$inferSelect;
+export type NewParliamentaryProposal = typeof parliamentaryProposals.$inferInsert;
+
+export type ParliamentaryVote = typeof parliamentaryVotes.$inferSelect;
+export type NewParliamentaryVote = typeof parliamentaryVotes.$inferInsert;
+
 // TypeScript types
 export type Company = typeof companies.$inferSelect;
 export type NewCompany = typeof companies.$inferInsert;
