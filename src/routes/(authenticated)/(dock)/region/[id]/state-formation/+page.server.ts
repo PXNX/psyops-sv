@@ -7,7 +7,8 @@ import {
 	stateFormationVotes,
 	politicalParties,
 	states,
-	presidents
+	presidents,
+	residences
 } from "$lib/server/schema";
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
@@ -33,6 +34,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(400, "This region is already part of a state");
 	}
 
+	// Check if user has residence in this region
+	const userResidence = await db.query.residences.findFirst({
+		where: and(eq(residences.userId, account.id), eq(residences.regionId, parseInt(params.id)))
+	});
+
 	const formationPeriod = await db.query.stateFormationPeriods.findFirst({
 		where: eq(stateFormationPeriods.regionId, parseInt(params.id)),
 		with: {
@@ -51,8 +57,42 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	console.log("formationPeriod", formationPeriod);
 
+	// If no formation period exists, return data to show "start formation" state
 	if (!formationPeriod) {
-		error(404, "No state formation period in progress");
+		// Get all parties in this region
+		const parties = await db.query.politicalParties.findMany({
+			where: sql`${politicalParties.stateId} IS NULL`,
+			with: {
+				founder: {
+					with: {
+						profile: true
+					}
+				},
+				members: true
+			}
+		});
+
+		return {
+			region: {
+				id: region.id,
+				name: region.name,
+				avatar: region.avatar,
+				population: region.population
+			},
+			formationPeriod: null,
+			proposals: [],
+			parties: parties.map((p) => ({
+				id: p.id,
+				name: p.name,
+				abbreviation: p.abbreviation,
+				color: p.color,
+				memberCount: p.memberCount,
+				founder: {
+					name: p.founder.profile?.name || "Anonymous"
+				}
+			})),
+			userVote: null
+		};
 	}
 
 	// Get all parties in this region
@@ -103,7 +143,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			logo: p.logo,
 			voteCount: p.votes.length,
 			proposer: {
-				name: p.proposer.profile?.name || "Anonymous",
+				id: p.proposer.id,
+				name: p.proposer.profile?.name || p.proposer.username,
 				avatar: p.proposer.profile?.avatar
 			}
 		})),
@@ -114,10 +155,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			color: p.color,
 			memberCount: p.memberCount,
 			founder: {
-				name: p.founder.profile?.name || "Anonymous"
+				id: p.founder.id,
+				name: p.founder.profile?.name || p.founder.username,
+				avatar: p.founder.profile?.avatar
 			}
 		})),
-		userVote: userVote ? { proposalId: userVote.proposalId } : null
+		userVote: userVote ? { proposalId: userVote.proposalId } : null,
+		userResidence
 	};
 };
 

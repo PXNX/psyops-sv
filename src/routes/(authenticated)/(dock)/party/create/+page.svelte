@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from "$app/forms";
+	import { superForm } from "sveltekit-superforms";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -12,13 +12,13 @@
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 
-	const { data, form } = $props();
+	const { data } = $props();
 
-	let selectedColor = $state("#6366f1");
-	let stateMapColor = $state("#3b82f6");
-	let partyName = $state("");
-	let abbreviation = $state("");
-	let proposedStateName = $state("");
+	const { form, errors, enhance, message, submitting } = superForm(data.form, {
+		resetForm: false,
+		taintedMessage: null
+	});
+
 	let selectedFile = $state<File | null>(null);
 	let previewUrl = $state<string | null>(null);
 	let fileInput: HTMLInputElement;
@@ -154,9 +154,9 @@
 	{/if}
 
 	<!-- Error Display -->
-	{#if form?.error}
+	{#if $message}
 		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{form.error}</p>
+			<p class="text-red-300 text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
@@ -178,13 +178,18 @@
 						type="text"
 						id="proposedStateName"
 						name="proposedStateName"
-						bind:value={proposedStateName}
+						bind:value={$form.proposedStateName}
 						placeholder="e.g., Republic of {data.userRegion.name}"
 						required={data.isIndependentRegion}
 						maxlength="100"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
+						class:input-error={$errors.proposedStateName}
 					/>
-					<p class="text-xs text-gray-400 mt-1">This will be voted on during state formation</p>
+					{#if $errors.proposedStateName}
+						<p class="text-xs text-red-400 mt-1">{$errors.proposedStateName}</p>
+					{:else}
+						<p class="text-xs text-gray-400 mt-1">This will be voted on during state formation</p>
+					{/if}
 				</div>
 
 				<div>
@@ -194,6 +199,7 @@
 					<textarea
 						id="stateDescription"
 						name="stateDescription"
+						bind:value={$form.stateDescription}
 						rows="3"
 						placeholder="Describe the vision for the new state..."
 						class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20"
@@ -207,10 +213,10 @@
 							type="color"
 							id="stateMapColor"
 							name="stateMapColor"
-							bind:value={stateMapColor}
+							bind:value={$form.stateMapColor}
 							class="h-10 w-20 rounded-lg border-2 border-slate-600 bg-slate-700 cursor-pointer"
 						/>
-						<span class="text-sm text-gray-400">{stateMapColor}</span>
+						<span class="text-sm text-gray-400">{$form.stateMapColor}</span>
 					</div>
 				</div>
 			</div>
@@ -232,13 +238,18 @@
 						type="text"
 						id="name"
 						name="name"
-						bind:value={partyName}
+						bind:value={$form.name}
 						placeholder="e.g., Progressive Alliance Party"
 						required
 						maxlength="100"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+						class:input-error={$errors.name}
 					/>
-					<p class="text-xs text-gray-400 mt-1">{partyName.length}/100 characters</p>
+					{#if $errors.name}
+						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+					{:else}
+						<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/100 characters</p>
+					{/if}
 				</div>
 
 				<div>
@@ -249,12 +260,17 @@
 						type="text"
 						id="abbreviation"
 						name="abbreviation"
-						bind:value={abbreviation}
+						bind:value={$form.abbreviation}
 						placeholder="e.g., PAP"
 						maxlength="10"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+						class:input-error={$errors.abbreviation}
 					/>
-					<p class="text-xs text-gray-400 mt-1">{abbreviation.length}/10 characters</p>
+					{#if $errors.abbreviation}
+						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
+					{:else}
+						<p class="text-xs text-gray-400 mt-1">{$form.abbreviation?.length || 0}/10 characters</p>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -321,10 +337,10 @@
 						type="button"
 						class="size-12 rounded-lg transition-all hover:scale-110 focus:scale-110 focus:outline-none"
 						style="background-color: {color.value}"
-						class:ring-4={selectedColor === color.value}
-						class:ring-white={selectedColor === color.value}
+						class:ring-4={$form.color === color.value}
+						class:ring-white={$form.color === color.value}
 						title={color.name}
-						onclick={() => (selectedColor = color.value)}
+						onclick={() => ($form.color = color.value)}
 					/>
 				{/each}
 			</div>
@@ -335,16 +351,16 @@
 					type="color"
 					id="color"
 					name="color"
-					bind:value={selectedColor}
+					bind:value={$form.color}
 					class="h-10 w-20 rounded-lg border-2 border-slate-600 bg-slate-700 cursor-pointer"
 				/>
-				<span class="text-sm text-gray-400">{selectedColor}</span>
+				<span class="text-sm text-gray-400">{$form.color}</span>
 			</div>
 
 			<!-- Preview -->
-			<div class="p-4 rounded-lg" style="background-color: {selectedColor}20; border: 2px solid {selectedColor}40">
+			<div class="p-4 rounded-lg" style="background-color: {$form.color}20; border: 2px solid {$form.color}40">
 				<div class="flex items-center gap-3">
-					<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {selectedColor}">
+					<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {$form.color}">
 						{#if previewUrl}
 							<img src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
 						{:else}
@@ -352,8 +368,8 @@
 						{/if}
 					</div>
 					<div>
-						<p class="font-semibold text-white">{partyName || "Your Party Name"}</p>
-						<p class="text-sm" style="color: {selectedColor}">{abbreviation || "Abbreviation"}</p>
+						<p class="font-semibold text-white">{$form.name || "Your Party Name"}</p>
+						<p class="text-sm" style="color: {$form.color}">{$form.abbreviation || "Abbreviation"}</p>
 					</div>
 				</div>
 			</div>
@@ -369,6 +385,7 @@
 			<select
 				id="ideology"
 				name="ideology"
+				bind:value={$form.ideology}
 				class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 			>
 				<option value="">Select an ideology...</option>
@@ -388,6 +405,7 @@
 			<textarea
 				id="description"
 				name="description"
+				bind:value={$form.description}
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
@@ -404,10 +422,16 @@
 			</a>
 			<button
 				type="submit"
-				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
+				disabled={$submitting}
+				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
 			>
-				<FluentCheckmark20Filled class="size-5" />
-				{data.isIndependentRegion ? "Create Party & Initiate State Formation" : "Create Party"}
+				{#if $submitting}
+					<span class="loading loading-spinner loading-sm"></span>
+					Creating...
+				{:else}
+					<FluentCheckmark20Filled class="size-5" />
+					{data.isIndependentRegion ? "Create Party & Initiate State Formation" : "Create Party"}
+				{/if}
 			</button>
 		</div>
 
