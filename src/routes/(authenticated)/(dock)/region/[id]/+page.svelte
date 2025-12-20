@@ -6,9 +6,15 @@
 	import FluentChartMultiple20Filled from "~icons/fluent/chart-multiple-20-filled";
 	import FluentCopy20Filled from "~icons/fluent/copy-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
+	import FluentHome20Filled from "~icons/fluent/home-20-filled";
+	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import { shareLink } from "$lib/util";
+	import { enhance } from "$app/forms";
 
 	const { data } = $props();
+
+	let isSubmitting = $state(false);
+	let showSuccess = $state(false);
 </script>
 
 <div class="max-w-2xl mx-auto px-4 py-6">
@@ -29,9 +35,13 @@
 					<!-- Floating Avatar -->
 					<div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
 						<div class="ring-4 ring-slate-800 rounded-2xl">
-							<div class="bg-gradient-to-br from-purple-600 to-blue-600 p-3 rounded-2xl">
-								<FluentGlobe20Filled class="size-12 text-white" />
-							</div>
+							{#if data.region.avatar}
+								<img src={data.region.avatar} alt={data.region.name} class="size-20 rounded-2xl object-cover" />
+							{:else}
+								<div class="bg-gradient-to-br from-purple-600 to-blue-600 p-3 rounded-2xl">
+									<FluentGlobe20Filled class="size-12 text-white" />
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>
@@ -43,6 +53,60 @@
 						<h1 class="text-2xl font-bold text-white">{data.region.name}</h1>
 						<p class="text-sm text-gray-400">Ranking #{data.region.rating || 934}</p>
 					</div>
+
+					<!-- Residence Status Banner -->
+					{#if data.userResidence}
+						<div
+							class="bg-gradient-to-r from-emerald-600/20 to-teal-600/20 border border-emerald-500/30 rounded-xl p-4"
+						>
+							<div class="flex items-center gap-3">
+								<div class="size-10 bg-emerald-600/30 rounded-lg flex items-center justify-center shrink-0">
+									<FluentHome20Filled class="size-5 text-emerald-400" />
+								</div>
+								<div class="flex-1">
+									<div class="flex items-center gap-2">
+										<p class="font-semibold text-white">Resident</p>
+										{#if data.userResidence.isPrimary === 1}
+											<span
+												class="px-2 py-0.5 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs text-emerald-400 font-medium"
+											>
+												Primary
+											</span>
+										{/if}
+									</div>
+									<p class="text-sm text-gray-400">
+										Since {new Date(data.userResidence.movedInAt).toLocaleDateString("en-US", {
+											month: "short",
+											day: "numeric",
+											year: "numeric"
+										})}
+									</p>
+								</div>
+								{#if data.userResidence.isPrimary !== 1}
+									<form
+										method="POST"
+										action="?/setPrimaryResidence"
+										use:enhance={() => {
+											isSubmitting = true;
+											return async ({ update }) => {
+												await update();
+												isSubmitting = false;
+											};
+										}}
+									>
+										<button
+											type="submit"
+											disabled={isSubmitting}
+											class="btn btn-sm bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/30 text-emerald-400 hover:text-emerald-300 gap-2"
+										>
+											<FluentCheckmark20Filled class="size-4" />
+											Set Primary
+										</button>
+									</form>
+								{/if}
+							</div>
+						</div>
+					{/if}
 
 					<!-- Stats Grid -->
 					<div class="space-y-3">
@@ -131,20 +195,61 @@
 						<span class="text-lg font-bold text-white">{(data.region.population || 0).toLocaleString()}</span>
 					</div>
 
+					<!-- Success Message -->
+					{#if showSuccess}
+						<div class="bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-3">
+							<FluentCheckmark20Filled class="size-5 text-emerald-400 shrink-0" />
+							<p class="text-sm text-emerald-400">Residence permit granted successfully!</p>
+						</div>
+					{/if}
+
 					<!-- Actions -->
 					<div class="flex gap-2">
-						<button
-							class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
-						>
-							<FluentGlobe20Filled class="size-5" />
-							Upgrade
-						</button>
+						{#if !data.userResidence}
+							<form
+								method="POST"
+								action="?/requestResidence"
+								class="flex-1"
+								use:enhance={() => {
+									isSubmitting = true;
+									return async ({ result, update }) => {
+										await update();
+										isSubmitting = false;
+										if (result.type === "success") {
+											showSuccess = true;
+											setTimeout(() => (showSuccess = false), 3000);
+										}
+									};
+								}}
+							>
+								<button
+									type="submit"
+									disabled={isSubmitting}
+									class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+								>
+									{#if isSubmitting}
+										<span class="loading loading-spinner loading-sm"></span>
+										Requesting...
+									{:else}
+										<FluentHome20Filled class="size-5" />
+										{data.hasPrimaryResidence ? "Request Secondary Residence" : "Request Residence Permit"}
+									{/if}
+								</button>
+							</form>
+						{:else}
+							<button
+								class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
+							>
+								<FluentGlobe20Filled class="size-5" />
+								Upgrade
+							</button>
+						{/if}
 						<button
 							class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
 							onclick={() => shareLink(data.region.name, window.location.href)}
 						>
 							<FluentCopy20Filled class="size-5" />
-							Copy Link
+							Copy
 						</button>
 					</div>
 
