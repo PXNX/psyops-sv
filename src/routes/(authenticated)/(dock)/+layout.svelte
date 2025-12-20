@@ -48,7 +48,7 @@
 		<button onclick={() => navigateTo("production")} class="flinch">
 			<FluentEmojiNutAndBolt class="w-6 h-6" />
 		</button>
-		<button onclick={() => navigateTo("user/" + data.account.id.substring(5))} class="flinch">
+		<button onclick={() => navigateTo("user/" + data.account.id)} class="flinch">
 			<FluentEmojiIdentificationCard class="w-6 h-6" />
 		</button>
 	</nav>

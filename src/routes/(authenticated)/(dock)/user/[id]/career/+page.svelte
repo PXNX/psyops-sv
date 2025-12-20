@@ -5,7 +5,6 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
-	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 
 	const { data } = $props();
@@ -54,41 +53,6 @@
 			<div class="flex-1">
 				<h1 class="text-2xl font-bold">{data.user.name}</h1>
 				<p class="text-sm opacity-70">Career Overview</p>
-			</div>
-		</div>
-
-		<!-- Stats Grid -->
-		<div class="grid grid-cols-2 gap-3">
-			<div class="bg-base-200/50 backdrop-blur-sm rounded-lg p-4 border border-base-300">
-				<div class="flex items-center gap-2 mb-1">
-					<FluentDocument20Filled class="text-primary text-lg" />
-					<span class="text-xs opacity-60">Articles</span>
-				</div>
-				<p class="text-2xl font-bold">{data.career.stats.totalArticles}</p>
-			</div>
-
-			<div class="bg-base-200/50 backdrop-blur-sm rounded-lg p-4 border border-base-300">
-				<div class="flex items-center gap-2 mb-1">
-					<FluentCalendar20Filled class="text-success text-lg" />
-					<span class="text-xs opacity-60">Upvotes</span>
-				</div>
-				<p class="text-2xl font-bold">{data.career.stats.totalUpvotes}</p>
-			</div>
-
-			<div class="bg-base-200/50 backdrop-blur-sm rounded-lg p-4 border border-base-300">
-				<div class="flex items-center gap-2 mb-1">
-					<FluentCalendar20Filled class="text-secondary text-lg" />
-					<span class="text-xs opacity-60">Newspapers</span>
-				</div>
-				<p class="text-2xl font-bold">{data.career.stats.newspaperCount}</p>
-			</div>
-
-			<div class="bg-base-200/50 backdrop-blur-sm rounded-lg p-4 border border-base-300">
-				<div class="flex items-center gap-2 mb-1">
-					<FluentStar20Filled class="text-warning text-lg" />
-					<span class="text-xs opacity-60">Avg. Votes</span>
-				</div>
-				<p class="text-2xl font-bold">{data.career.stats.averageUpvotes}</p>
 			</div>
 		</div>
 	</div>
@@ -141,60 +105,6 @@
 	{/if}
 </div>
 
-<!-- Recent Articles -->
-<div class="p-4">
-	<div class="flex items-center gap-2 mb-4">
-		<FluentDocument20Filled class="text-lg" />
-		<h2 class="text-lg font-bold">Recent Articles</h2>
-	</div>
-
-	{#if data.career.recentArticles.length === 0}
-		<div class="text-center py-8 opacity-60">
-			<p>No articles published yet</p>
-		</div>
-	{:else}
-		<div class="space-y-2">
-			{#each data.career.recentArticles as article}
-				<a href="/article/{article.id}" class="block card bg-base-200 hover:bg-base-300 transition-colors">
-					<div class="card-body p-3">
-						<div class="flex items-start justify-between gap-3">
-							<div class="flex-1 min-w-0">
-								<h3 class="font-semibold text-sm mb-1 line-clamp-2">
-									{article.title}
-								</h3>
-								<div class="flex items-center gap-2 text-xs opacity-60">
-									<span class="flex items-center gap-1">
-										<FluentCalendar20Filled class="text-[10px]" />
-										{article.newspaperName}
-									</span>
-									<span>•</span>
-									<span class="flex items-center gap-1">
-										<FluentCalendar20Filled class="text-[10px]" />
-										{formatDate(article.createdAt)}
-									</span>
-								</div>
-							</div>
-							<div class="flex items-center gap-1 text-xs">
-								<FluentCalendar20Filled class="text-success" />
-								<span class="font-semibold">{article.upvoteCount}</span>
-							</div>
-						</div>
-					</div>
-				</a>
-			{/each}
-		</div>
-
-		{#if data.career.stats.totalArticles > 10}
-			<div class="text-center mt-4">
-				<a href="/user/{data.user.id}/articles" class="btn btn-sm btn-ghost">
-					View All Articles
-					<FluentChevronRight20Filled />
-				</a>
-			</div>
-		{/if}
-	{/if}
-</div>
-
 <!-- Career Timeline (Optional Enhancement) -->
 <div class="p-4">
 	<div class="flex items-center gap-2 mb-4">
@@ -205,7 +115,7 @@
 	<div class="space-y-3">
 		<div class="flex gap-3">
 			<div class="flex flex-col items-center">
-				<div class="w-2 h-2 rounded-full bg-primary"></div>
+				<div class="size-2 rounded-full bg-primary"></div>
 				<div class="w-px flex-1 bg-base-300"></div>
 			</div>
 			<div class="flex-1 pb-4">
@@ -217,7 +127,7 @@
 		{#if data.career.stats.totalArticles > 0}
 			<div class="flex gap-3">
 				<div class="flex flex-col items-center">
-					<div class="w-2 h-2 rounded-full bg-success"></div>
+					<div class="size-2 rounded-full bg-success"></div>
 					<div class="w-px flex-1 bg-base-300"></div>
 				</div>
 				<div class="flex-1 pb-4">
