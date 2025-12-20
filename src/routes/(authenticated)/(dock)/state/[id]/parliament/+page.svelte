@@ -1,5 +1,5 @@
 <script lang="ts">
-	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
+	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -7,9 +7,30 @@
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
+	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
 	import { enhance } from "$app/forms";
+	import { superForm } from "sveltekit-superforms";
+	import { valibotClient } from "sveltekit-superforms/adapters";
+	import { createProposalSchema } from "./schema.js";
 
 	const { data } = $props();
+
+	let showCreateModal = $state(false);
+	let isMinisterialAction = $state(false);
+
+	const form = superForm(data.form, {
+		validators: valibotClient(createProposalSchema),
+		resetForm: true,
+		onResult: ({ result }) => {
+			if (result.type === "success") {
+				showCreateModal = false;
+				isMinisterialAction = false;
+			}
+		}
+	});
+
+	const { form: formData, errors, enhance: formEnhance, delayed, submitting } = form;
 
 	const proposalTypeColors: Record<string, string> = {
 		budget: "bg-green-600/20 text-green-400 border-green-500/30",
@@ -49,7 +70,6 @@
 		return `${hours}h remaining`;
 	}
 
-	// Generate party colors for visualization
 	const partyColors: Record<string, string> = {};
 	const colorPalette = [
 		"#ef4444",
@@ -68,6 +88,22 @@
 		partyColors[party] = colorPalette[colorIndex % colorPalette.length];
 		colorIndex++;
 	});
+
+	// Check ministerial permissions
+	const ministryPermissions: Record<string, string[]> = {
+		finance: ["tax", "budget"],
+		infrastructure: ["infrastructure"],
+		education: ["education"],
+		defense: ["defense"],
+		health: ["healthcare"],
+		environment: ["environment"],
+		justice: ["justice"]
+	};
+
+	const canExecuteDirectly = (type: string) => {
+		if (!data.userMinistry) return false;
+		return ministryPermissions[data.userMinistry]?.includes(type) || false;
+	};
 </script>
 
 <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
@@ -92,7 +128,6 @@
 	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
 		<h2 class="text-xl font-semibold text-white mb-4">Seat Distribution</h2>
 
-		<!-- Visual bar chart -->
 		<div class="flex w-full h-12 rounded-lg overflow-hidden mb-4">
 			{#each Object.entries(data.partyDistribution) as [party, seats]}
 				<div
@@ -105,7 +140,6 @@
 			{/each}
 		</div>
 
-		<!-- Legend -->
 		<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
 			{#each Object.entries(data.partyDistribution).sort((a, b) => b[1] - a[1]) as [party, seats]}
 				<div class="flex items-center gap-2">
@@ -119,22 +153,53 @@
 		</div>
 	</div>
 
-	<!-- User Status -->
+	<!-- User Status & Actions -->
 	{#if data.isParliamentMember}
 		<div class="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-xl border border-blue-500/30 p-4">
-			<div class="flex items-center gap-3">
-				<FluentCheckmark20Filled class="size-6 text-blue-400" />
-				<div>
-					<p class="font-semibold text-white">You are a Parliament Member</p>
-					<p class="text-sm text-gray-300">
-						Party: <span class="font-medium">{data.userParty || "Independent"}</span>
-					</p>
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<FluentCheckmark20Filled class="size-6 text-blue-400" />
+					<div>
+						<p class="font-semibold text-white">You are a Parliament Member</p>
+						<p class="text-sm text-gray-300">
+							Party: <span class="font-medium">{data.userParty || "Independent"}</span>
+							{#if data.userMinistry}
+								• Minister of <span class="font-medium capitalize">{data.userMinistry}</span>
+							{/if}
+						</p>
+					</div>
+				</div>
+				<div class="flex gap-2">
+					<button
+						onclick={() => {
+							isMinisterialAction = false;
+							showCreateModal = true;
+						}}
+						class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2"
+					>
+						<FluentAdd20Filled class="size-4" />
+						Create Proposal
+					</button>
+					{#if data.userMinistry}
+						<button
+							onclick={() => {
+								isMinisterialAction = true;
+								showCreateModal = true;
+							}}
+							class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
+						>
+							<FluentShieldTask20Filled class="size-4" />
+							Ministerial Action
+						</button>
+					{/if}
 				</div>
 			</div>
 		</div>
 	{:else}
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4">
-			<p class="text-sm text-gray-400 text-center">You must be a parliament member to vote on proposals</p>
+			<p class="text-sm text-gray-400 text-center">
+				You must be a parliament member to vote on proposals or create laws
+			</p>
 		</div>
 	{/if}
 
@@ -152,7 +217,6 @@
 		{:else}
 			{#each data.proposals as proposal}
 				<div class="bg-slate-800/50 rounded-xl border border-white/5 overflow-hidden">
-					<!-- Header -->
 					<div class="p-5 border-b border-white/5">
 						<div class="flex items-start justify-between gap-4 mb-3">
 							<div class="flex-1">
@@ -175,16 +239,17 @@
 							</div>
 						</div>
 
-						<div class="flex items-center gap-2 text-sm text-gray-400">
-							<CircleAvatar src={proposal.proposedBy.avatar} size="xs" />
-							<span>Proposed by <span class="text-white">{proposal.proposedBy.name}</span></span>
-						</div>
+						<a
+							href="/user/{proposal.proposedBy.id}"
+							class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors w-fit"
+						>
+							<SquareAvatar src={proposal.proposedBy.avatar} alt={proposal.proposedBy.name} size="sm" />
+							<span>Proposed by <span class="text-white font-medium">{proposal.proposedBy.name}</span></span>
+						</a>
 					</div>
 
-					<!-- Vote Progress -->
 					<div class="p-5 bg-slate-700/30">
 						<div class="space-y-3">
-							<!-- For votes -->
 							<div>
 								<div class="flex justify-between text-sm mb-1">
 									<span class="text-green-400 font-medium flex items-center gap-1">
@@ -198,7 +263,6 @@
 								</div>
 							</div>
 
-							<!-- Against votes -->
 							<div>
 								<div class="flex justify-between text-sm mb-1">
 									<span class="text-red-400 font-medium flex items-center gap-1">
@@ -215,7 +279,6 @@
 								</div>
 							</div>
 
-							<!-- Abstain votes -->
 							<div>
 								<div class="flex justify-between text-sm mb-1">
 									<span class="text-gray-400 font-medium flex items-center gap-1">
@@ -241,7 +304,6 @@
 						</div>
 					</div>
 
-					<!-- Voting Actions -->
 					{#if data.isParliamentMember}
 						<div class="p-5 border-t border-white/5">
 							{#if proposal.userVote}
@@ -293,10 +355,6 @@
 								</button>
 							</form>
 						</div>
-					{:else}
-						<div class="p-5 border-t border-white/5 text-center">
-							<p class="text-sm text-gray-400">Parliament members only</p>
-						</div>
 					{/if}
 				</div>
 			{/each}
@@ -312,7 +370,7 @@
 					href="/user/{member.userId}"
 					class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
 				>
-					<CircleAvatar src={member.avatar} size="sm" />
+					<SquareAvatar src={member.avatar} alt={member.name} size="sm" />
 					<div class="flex-1 min-w-0">
 						<p class="font-medium text-white group-hover:text-blue-400 transition-colors truncate">
 							{member.name}
@@ -329,3 +387,198 @@
 		</div>
 	</div>
 </div>
+
+<!-- Create Proposal Modal -->
+{#if showCreateModal}
+	<div class="modal modal-open">
+		<div class="modal-box max-w-2xl bg-slate-800 border border-white/10">
+			<h3 class="font-bold text-2xl text-white mb-4 flex items-center gap-2">
+				{#if isMinisterialAction}
+					<FluentShieldTask20Filled class="size-6 text-purple-400" />
+					Execute Ministerial Action
+				{:else}
+					<FluentDocument20Filled class="size-6 text-blue-400" />
+					Create Proposal
+				{/if}
+			</h3>
+
+			{#if isMinisterialAction}
+				<div class="alert bg-purple-600/20 border border-purple-500/30 mb-4">
+					<FluentShieldTask20Filled class="size-5 text-purple-400" />
+					<div class="text-sm">
+						<p class="font-semibold text-white">Ministerial Authority</p>
+						<p class="text-gray-300">
+							As Minister of <span class="capitalize">{data.userMinistry}</span>, you can execute certain actions
+							immediately without a vote.
+						</p>
+					</div>
+				</div>
+			{/if}
+
+			<form
+				method="POST"
+				action={isMinisterialAction ? "?/executeMinisterialAction" : "?/createProposal"}
+				use:formEnhance
+				class="space-y-4"
+			>
+				<div>
+					<label for="title" class="block text-sm font-medium text-gray-300 mb-2">
+						Title <span class="text-red-400">*</span>
+					</label>
+					<input
+						type="text"
+						id="title"
+						name="title"
+						bind:value={$formData.title}
+						placeholder="Proposal title..."
+						maxlength="200"
+						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+						class:input-error={$errors.title}
+						disabled={$submitting}
+					/>
+					{#if $errors.title}
+						<p class="text-xs text-red-400 mt-1">{$errors.title}</p>
+					{:else}
+						<p class="text-xs text-gray-400 mt-1">{$formData.title?.length || 0}/200 characters</p>
+					{/if}
+				</div>
+
+				<div>
+					<label for="description" class="block text-sm font-medium text-gray-300 mb-2">
+						Description <span class="text-red-400">*</span>
+					</label>
+					<textarea
+						id="description"
+						name="description"
+						bind:value={$formData.description}
+						rows="6"
+						placeholder="Detailed description of the proposal..."
+						maxlength="2000"
+						class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+						class:textarea-error={$errors.description}
+						disabled={$submitting}
+					></textarea>
+					{#if $errors.description}
+						<p class="text-xs text-red-400 mt-1">{$errors.description}</p>
+					{:else}
+						<p class="text-xs text-gray-400 mt-1">{$formData.description?.length || 0}/2000 characters</p>
+					{/if}
+				</div>
+
+				<div>
+					<label for="proposalType" class="block text-sm font-medium text-gray-300 mb-2">
+						Type <span class="text-red-400">*</span>
+					</label>
+					<select
+						id="proposalType"
+						name="proposalType"
+						bind:value={$formData.proposalType}
+						class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+						class:select-error={$errors.proposalType}
+						disabled={$submitting}
+					>
+						<option value="" disabled>Select proposal type</option>
+						{#each ["budget", "tax", "infrastructure", "education", "defense", "healthcare", "environment", "justice", "general"] as type}
+							<option value={type}>
+								{proposalTypeIcons[type]}
+								{type.replace("_", " ").toUpperCase()}
+								{#if isMinisterialAction && canExecuteDirectly(type)}
+									✓ Can execute directly
+								{/if}
+							</option>
+						{/each}
+					</select>
+					{#if $errors.proposalType}
+						<p class="text-xs text-red-400 mt-1">{$errors.proposalType}</p>
+					{/if}
+				</div>
+
+				{#if !isMinisterialAction}
+					<div class="grid grid-cols-2 gap-4">
+						<div>
+							<label for="votingDays" class="block text-sm font-medium text-gray-300 mb-2">
+								Voting Period (days) <span class="text-red-400">*</span>
+							</label>
+							<input
+								type="number"
+								id="votingDays"
+								name="votingDays"
+								bind:value={$formData.votingDays}
+								min="1"
+								max="30"
+								placeholder="7"
+								class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+								class:input-error={$errors.votingDays}
+								disabled={$submitting}
+							/>
+							{#if $errors.votingDays}
+								<p class="text-xs text-red-400 mt-1">{$errors.votingDays}</p>
+							{/if}
+						</div>
+
+						<div>
+							<label for="requiredMajority" class="block text-sm font-medium text-gray-300 mb-2">
+								Required Majority (%) <span class="text-red-400">*</span>
+							</label>
+							<input
+								type="number"
+								id="requiredMajority"
+								name="requiredMajority"
+								bind:value={$formData.requiredMajority}
+								min="50"
+								max="100"
+								placeholder="50"
+								class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+								class:input-error={$errors.requiredMajority}
+								disabled={$submitting}
+							/>
+							{#if $errors.requiredMajority}
+								<p class="text-xs text-red-400 mt-1">{$errors.requiredMajority}</p>
+							{/if}
+						</div>
+					</div>
+				{/if}
+
+				{#if isMinisterialAction && $formData.proposalType && !canExecuteDirectly($formData.proposalType)}
+					<div class="alert alert-warning">
+						<span class="text-sm">
+							⚠️ Your ministry cannot execute {$formData.proposalType} actions directly. This will require a parliamentary
+							vote.
+						</span>
+					</div>
+				{/if}
+
+				<div class="modal-action">
+					<button
+						type="button"
+						onclick={() => {
+							showCreateModal = false;
+							isMinisterialAction = false;
+						}}
+						class="btn bg-slate-700 hover:bg-slate-600 border-0 text-white"
+						disabled={$submitting}
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						disabled={$submitting}
+						class="btn bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 border-0 text-white gap-2"
+					>
+						{#if $delayed}
+							<span class="loading loading-spinner loading-sm"></span>
+							{isMinisterialAction ? "Executing..." : "Creating..."}
+						{:else if isMinisterialAction && $formData.proposalType && canExecuteDirectly($formData.proposalType)}
+							<FluentShieldTask20Filled class="size-5" />
+							Execute Immediately
+						{:else}
+							<FluentDocument20Filled class="size-5" />
+							Create Proposal
+						{/if}
+					</button>
+				</div>
+			</form>
+		</div>
+		<div class="modal-backdrop" onclick={() => (showCreateModal = false)}></div>
+	</div>
+{/if}
