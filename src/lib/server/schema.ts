@@ -1095,3 +1095,73 @@ export type NewElectionVote = typeof electionVotes.$inferInsert;
 
 export type ElectionResult = typeof electionResults.$inferSelect;
 export type NewElectionResult = typeof electionResults.$inferInsert;
+
+// Party Creation Attempts table - tracks cooldowns
+export const partyCreationAttempts = pgTable("party_creation_attempts", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(), // One cooldown per user
+	lastAttemptAt: timestamp("last_attempt_at").defaultNow().notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Party Edit History table - tracks when parties were last edited
+export const partyEditHistory = pgTable("party_edit_history", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	partyId: uuid("party_id")
+		.notNull()
+		.references(() => politicalParties.id, { onDelete: "cascade" })
+		.unique(), // One record per party
+	lastEditAt: timestamp("last_edit_at").defaultNow().notNull(),
+	lastEditBy: text("last_edit_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+});
+
+// Profile Edit History table - tracks when profiles were last edited
+export const profileEditHistory = pgTable("profile_edit_history", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(), // One record per user
+	lastEditAt: timestamp("last_edit_at").defaultNow().notNull()
+});
+
+// Relations
+export const partyCreationAttemptsRelations = relations(partyCreationAttempts, ({ one }) => ({
+	user: one(accounts, {
+		fields: [partyCreationAttempts.userId],
+		references: [accounts.id]
+	})
+}));
+
+export const partyEditHistoryRelations = relations(partyEditHistory, ({ one }) => ({
+	party: one(politicalParties, {
+		fields: [partyEditHistory.partyId],
+		references: [politicalParties.id]
+	}),
+	editor: one(accounts, {
+		fields: [partyEditHistory.lastEditBy],
+		references: [accounts.id]
+	})
+}));
+
+export const profileEditHistoryRelations = relations(profileEditHistory, ({ one }) => ({
+	user: one(accounts, {
+		fields: [profileEditHistory.userId],
+		references: [accounts.id]
+	})
+}));
+
+// TypeScript types
+export type PartyCreationAttempt = typeof partyCreationAttempts.$inferSelect;
+export type NewPartyCreationAttempt = typeof partyCreationAttempts.$inferInsert;
+
+export type PartyEditHistory = typeof partyEditHistory.$inferSelect;
+export type NewPartyEditHistory = typeof partyEditHistory.$inferInsert;
+
+export type ProfileEditHistory = typeof profileEditHistory.$inferSelect;
+export type NewProfileEditHistory = typeof profileEditHistory.$inferInsert;

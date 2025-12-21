@@ -13,6 +13,8 @@
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 
 	let { data } = $props();
 
@@ -52,6 +54,36 @@
 		"Social Democrat",
 		"Other"
 	];
+
+	// Calculate time remaining for cooldown
+	function formatTimeRemaining(cooldownEnd: string): string {
+		const now = new Date();
+		const end = new Date(cooldownEnd);
+		const diff = end.getTime() - now.getTime();
+
+		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+		if (days > 0) {
+			return `${days} day${days !== 1 ? "s" : ""}, ${hours} hour${hours !== 1 ? "s" : ""}`;
+		} else if (hours > 0) {
+			return `${hours} hour${hours !== 1 ? "s" : ""}, ${minutes} minute${minutes !== 1 ? "s" : ""}`;
+		} else {
+			return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
+		}
+	}
+
+	function formatCooldownDate(cooldownEnd: string): string {
+		return new Date(cooldownEnd).toLocaleString("en-US", {
+			month: "long",
+			day: "numeric",
+			year: "numeric",
+			hour: "numeric",
+			minute: "2-digit",
+			hour12: true
+		});
+	}
 
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -111,6 +143,8 @@
 			}
 		};
 	});
+
+	const canCreate = !data.isOnCooldown && data.canAfford;
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
@@ -124,6 +158,82 @@
 		<h1 class="text-3xl font-bold text-white">Create Political Party</h1>
 		<p class="text-gray-400">Start your own political movement and shape the future</p>
 	</div>
+
+	<!-- Cost & Balance Info -->
+	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+		<!-- Balance -->
+		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+			<div class="flex items-center gap-3">
+				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+					<FluentMoney20Filled class="size-5 text-green-400" />
+				</div>
+				<div>
+					<p class="text-xs text-gray-400">Your Balance</p>
+					<p class="text-lg font-bold text-white">{data.userBalance.toLocaleString()}</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Cost -->
+		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+			<div class="flex items-center gap-3">
+				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+					<FluentFlag20Filled class="size-5 text-purple-400" />
+				</div>
+				<div>
+					<p class="text-xs text-gray-400">Creation Cost</p>
+					<p class="text-lg font-bold text-white">{data.creationCost.toLocaleString()}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Cooldown Warning -->
+	{#if data.isOnCooldown && data.cooldownEndsAt}
+		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5 space-y-3">
+			<div class="flex items-start gap-3">
+				<FluentClock20Filled class="size-6 text-red-400 shrink-0 mt-0.5" />
+				<div class="space-y-2 flex-1">
+					<h3 class="font-semibold text-red-300 text-lg">Party Creation Cooldown Active</h3>
+					<p class="text-red-200/90 text-sm leading-relaxed">
+						You must wait before creating another political party. This cooldown period helps maintain political
+						stability.
+					</p>
+					<div class="bg-red-900/30 rounded-lg p-3 space-y-2">
+						<div class="flex items-center justify-between">
+							<span class="text-red-100 text-sm font-medium">Time Remaining:</span>
+							<span class="text-red-100 text-sm font-bold">{formatTimeRemaining(data.cooldownEndsAt)}</span>
+						</div>
+						<div class="flex items-center justify-between text-xs">
+							<span class="text-red-200/70">Available on:</span>
+							<span class="text-red-200/90">{formatCooldownDate(data.cooldownEndsAt)}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Insufficient Funds Warning -->
+	{#if !data.canAfford && !data.isOnCooldown}
+		<div class="bg-amber-600/20 border border-amber-500/30 rounded-xl p-5 space-y-3">
+			<div class="flex items-start gap-3">
+				<FluentMoney20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
+				<div class="space-y-2 flex-1">
+					<h3 class="font-semibold text-amber-300 text-lg">Insufficient Funds</h3>
+					<p class="text-amber-200/90 text-sm leading-relaxed">
+						You need <strong>{data.creationCost.toLocaleString()}</strong> currency to create a political party. You
+						currently have <strong>{data.userBalance.toLocaleString()}</strong>.
+					</p>
+					<div class="bg-amber-900/30 rounded-lg p-3">
+						<p class="text-amber-100 text-sm font-medium">
+							Needed: {(data.creationCost - data.userBalance).toLocaleString()} more currency
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Independent Region Warning -->
 	{#if data.isIndependentRegion}
@@ -205,7 +315,7 @@
 						maxlength="100"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 						class:input-error={$errors.name}
-						disabled={$submitting}
+						disabled={$submitting || !canCreate}
 					/>
 					{#if $errors.name}
 						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
@@ -227,7 +337,7 @@
 						maxlength="4"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 						class:input-error={$errors.abbreviation}
-						disabled={$submitting}
+						disabled={$submitting || !canCreate}
 					/>
 					{#if $errors.abbreviation}
 						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
@@ -254,22 +364,22 @@
 					accept="image/*"
 					class="hidden"
 					onchange={handleFileSelect}
-					disabled={$submitting}
+					disabled={$submitting || !canCreate}
 				/>
 
 				<button
 					type="button"
 					onclick={() => fileInput?.click()}
-					disabled={$submitting}
+					disabled={$submitting || !canCreate}
 					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
 					class:border-purple-500={dragActive}
 					class:bg-purple-600-10={dragActive}
 					class:border-purple-500-30={!dragActive && !$form.logo}
 					class:border-success={$form.logo && !dragActive}
 					class:bg-success-5={$form.logo && !dragActive}
-					class:hover:border-purple-500-50={!$submitting && !$form.logo}
-					class:hover:bg-purple-600-10={!$submitting && !$form.logo}
-					class:opacity-50={$submitting}
+					class:hover:border-purple-500-50={!$submitting && !$form.logo && canCreate}
+					class:hover:bg-purple-600-10={!$submitting && !$form.logo && canCreate}
+					class:opacity-50={$submitting || !canCreate}
 					class:input-error={$errors.logo}
 				>
 					{#if !$form.logo}
@@ -287,7 +397,7 @@
 										Tap to upload party logo
 									{/if}
 								</p>
-								{#if !$submitting}
+								{#if !$submitting && canCreate}
 									<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
 								{/if}
 							</div>
@@ -308,7 +418,7 @@
 									e.stopPropagation();
 									clearImage();
 								}}
-								disabled={$submitting}
+								disabled={$submitting || !canCreate}
 								class="btn absolute top-2 right-2 btn-circle btn-sm bg-slate-800 hover:bg-slate-700"
 							>
 								✕
@@ -348,9 +458,10 @@
 						style="background-color: {color.value}"
 						class:ring-4={$form.color === color.value}
 						class:ring-white={$form.color === color.value}
+						class:opacity-50={!canCreate}
 						title={color.name}
 						onclick={() => ($form.color = color.value)}
-						disabled={$submitting}
+						disabled={$submitting || !canCreate}
 					/>
 				{/each}
 			</div>
@@ -363,7 +474,7 @@
 					name="color"
 					bind:value={$form.color}
 					class="h-10 w-20 rounded-lg border-2 border-slate-600 bg-slate-700 cursor-pointer"
-					disabled={$submitting}
+					disabled={$submitting || !canCreate}
 				/>
 				<span class="text-sm text-gray-400">{$form.color}</span>
 			</div>
@@ -407,7 +518,7 @@
 					bind:value={$form.ideology}
 					class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 					class:input-error={$errors.ideology}
-					disabled={$submitting}
+					disabled={$submitting || !canCreate}
 				>
 					<option value="">Select an ideology...</option>
 					{#each ideologies as ideologyOption}
@@ -434,7 +545,7 @@
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-				disabled={$submitting}
+				disabled={$submitting || !canCreate}
 			></textarea>
 		</div>
 
@@ -449,7 +560,7 @@
 			</a>
 			<button
 				type="submit"
-				disabled={$submitting}
+				disabled={$submitting || !canCreate}
 				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
 			>
 				{#if $delayed}
@@ -457,18 +568,24 @@
 					Creating...
 				{:else}
 					<FluentCheckmark20Filled class="size-5" />
-					{data.isIndependentRegion ? "Create Party & Form State" : "Create Party"}
+					{data.isIndependentRegion
+						? "Create Party & Form State"
+						: `Create Party (${data.creationCost.toLocaleString()})`}
 				{/if}
 			</button>
 		</div>
 
 		<!-- Info Box -->
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
+		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
 			<p class="text-sm text-blue-300">
 				💡 <strong>Note:</strong>
 				{data.isIndependentRegion
 					? "Creating this party will immediately establish a new state. You'll be the founding party leader and can begin recruiting members."
 					: "Once created, you will be the party leader. You can recruit members, participate in elections, and shape your state's political landscape."}
+			</p>
+			<p class="text-xs text-blue-300/70">
+				<strong>Cooldown:</strong> After creating a party, you must wait {data.cooldownDays} days before creating another
+				one.
 			</p>
 		</div>
 	</form>

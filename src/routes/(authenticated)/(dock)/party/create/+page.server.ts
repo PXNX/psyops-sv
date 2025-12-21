@@ -7,7 +7,9 @@ import {
 	residences,
 	regions,
 	states,
-	parliamentaryElections
+	parliamentaryElections,
+	userWallets,
+	partyCreationAttempts
 } from "$lib/server/schema";
 import { redirect, error } from "@sveltejs/kit";
 import { eq, and } from "drizzle-orm";
@@ -17,6 +19,7 @@ import { uploadFileFromForm } from "$lib/server/backblaze";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createPartySchema } from "./schema";
+import { PARTY_CREATION_CONFIG } from "$lib/config/party";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -47,6 +50,32 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, "/regions?message=needPrimaryResidence");
 	}
 
+	// Get user's wallet
+	const wallet = await db.query.userWallets.findFirst({
+		where: eq(userWallets.userId, account.id)
+	});
+
+	const userBalance = wallet?.balance ?? 0;
+	const canAfford = userBalance >= PARTY_CREATION_CONFIG.COST;
+
+	// Check cooldown
+	const lastAttempt = await db.query.partyCreationAttempts.findFirst({
+		where: eq(partyCreationAttempts.userId, account.id)
+	});
+
+	let cooldownEndsAt: Date | null = null;
+	let isOnCooldown = false;
+
+	if (lastAttempt) {
+		const cooldownEnd = new Date(lastAttempt.lastAttemptAt);
+		cooldownEnd.setDate(cooldownEnd.getDate() + PARTY_CREATION_CONFIG.COOLDOWN_DAYS);
+
+		if (new Date() < cooldownEnd) {
+			isOnCooldown = true;
+			cooldownEndsAt = cooldownEnd;
+		}
+	}
+
 	const isIndependentRegion = !userResidence.region.stateId;
 
 	const form = await superValidate(valibot(createPartySchema));
@@ -64,7 +93,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			id: userResidence.region.id,
 			name: userResidence.region.name
 		},
-		isIndependentRegion
+		isIndependentRegion,
+		userBalance,
+		creationCost: PARTY_CREATION_CONFIG.COST,
+		canAfford,
+		isOnCooldown,
+		cooldownEndsAt: cooldownEndsAt?.toISOString() ?? null,
+		cooldownDays: PARTY_CREATION_CONFIG.COOLDOWN_DAYS
 	};
 };
 
@@ -78,6 +113,39 @@ export const actions: Actions = {
 		}
 
 		const { name, abbreviation, color, ideology, description, logo } = form.data;
+
+		// Get user's wallet
+		const wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		});
+
+		const userBalance = wallet?.balance ?? 0;
+
+		// Check if user can afford
+		if (userBalance < PARTY_CREATION_CONFIG.COST) {
+			return message(
+				form,
+				`Insufficient funds. You need ${PARTY_CREATION_CONFIG.COST.toLocaleString()} currency to create a party.`,
+				{ status: 400 }
+			);
+		}
+
+		// Check cooldown
+		const lastAttempt = await db.query.partyCreationAttempts.findFirst({
+			where: eq(partyCreationAttempts.userId, account.id)
+		});
+
+		if (lastAttempt) {
+			const cooldownEnd = new Date(lastAttempt.lastAttemptAt);
+			cooldownEnd.setDate(cooldownEnd.getDate() + PARTY_CREATION_CONFIG.COOLDOWN_DAYS);
+
+			if (new Date() < cooldownEnd) {
+				const daysRemaining = Math.ceil((cooldownEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+				return message(form, `You must wait ${daysRemaining} more day(s) before creating another party.`, {
+					status: 400
+				});
+			}
+		}
 
 		// Get user's primary residence
 		const userResidence = await db.query.residences.findFirst({
@@ -119,8 +187,30 @@ export const actions: Actions = {
 			return message(form, "You are already a member of a political party", { status: 400 });
 		}
 
-		// Use transaction for everything including file upload
+		// Use transaction for everything
 		const newParty = await db.transaction(async (tx) => {
+			// Deduct cost from wallet
+			await tx
+				.update(userWallets)
+				.set({
+					balance: userBalance - PARTY_CREATION_CONFIG.COST,
+					updatedAt: new Date()
+				})
+				.where(eq(userWallets.userId, account.id));
+
+			// Update or create cooldown record
+			if (lastAttempt) {
+				await tx
+					.update(partyCreationAttempts)
+					.set({ lastAttemptAt: new Date() })
+					.where(eq(partyCreationAttempts.userId, account.id));
+			} else {
+				await tx.insert(partyCreationAttempts).values({
+					userId: account.id,
+					lastAttemptAt: new Date()
+				});
+			}
+
 			let logoFileId: string | null = null;
 
 			// Upload logo if provided
@@ -138,7 +228,7 @@ export const actions: Actions = {
 					id: fileId,
 					key: logoUploadResult.key,
 					fileName: logo.name,
-					contentType: "image/webp", // All images are converted to WebP
+					contentType: "image/webp",
 					sizeBytes: logo.size,
 					uploadedBy: account.id
 				});
@@ -227,7 +317,7 @@ export const actions: Actions = {
 					startDate,
 					endDate,
 					status: "scheduled",
-					totalSeats: 50, // Default inaugural parliament size
+					totalSeats: 50,
 					isInaugural: 1
 				});
 			}

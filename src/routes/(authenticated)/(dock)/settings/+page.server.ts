@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/settings/+page.server.ts
 import { db } from "$lib/server/db";
-import { userProfiles, files } from "$lib/server/schema";
+import { userProfiles, files, userWallets, profileEditHistory } from "$lib/server/schema";
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -9,6 +9,7 @@ import { uploadFileFromForm, getSignedDownloadUrl } from "$lib/server/backblaze"
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { updateProfileSchema } from "./schema";
+import { PROFILE_EDIT_CONFIG } from "$lib/config/party";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -29,6 +30,32 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
+	// Get user's wallet
+	const wallet = await db.query.userWallets.findFirst({
+		where: eq(userWallets.userId, account.id)
+	});
+
+	const userBalance = wallet?.balance ?? 0;
+	const canAfford = userBalance >= PROFILE_EDIT_CONFIG.COST;
+
+	// Check edit cooldown
+	const lastEdit = await db.query.profileEditHistory.findFirst({
+		where: eq(profileEditHistory.userId, account.id)
+	});
+
+	let cooldownEndsAt: Date | null = null;
+	let isOnCooldown = false;
+
+	if (lastEdit) {
+		const cooldownEnd = new Date(lastEdit.lastEditAt);
+		cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
+
+		if (new Date() < cooldownEnd) {
+			isOnCooldown = true;
+			cooldownEndsAt = cooldownEnd;
+		}
+	}
+
 	const form = await superValidate(
 		{
 			name: profile?.name || account.email.split("@")[0],
@@ -43,7 +70,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			name: profile?.name,
 			bio: profile?.bio,
 			avatar: avatarUrl
-		}
+		},
+		userBalance,
+		editCost: PROFILE_EDIT_CONFIG.COST,
+		canAfford,
+		isOnCooldown,
+		cooldownEndsAt: cooldownEndsAt?.toISOString() ?? null,
+		cooldownHours: PROFILE_EDIT_CONFIG.COOLDOWN_HOURS
 	};
 };
 
@@ -58,8 +91,63 @@ export const actions: Actions = {
 
 		const { name, bio, avatar } = form.data;
 
+		// Get user's wallet
+		const wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		});
+
+		const userBalance = wallet?.balance ?? 0;
+
+		// Check if user can afford
+		if (userBalance < PROFILE_EDIT_CONFIG.COST) {
+			return message(
+				form,
+				`Insufficient funds. You need ${PROFILE_EDIT_CONFIG.COST.toLocaleString()} currency to edit your profile.`,
+				{ status: 400 }
+			);
+		}
+
+		// Check cooldown
+		const lastEdit = await db.query.profileEditHistory.findFirst({
+			where: eq(profileEditHistory.userId, account.id)
+		});
+
+		if (lastEdit) {
+			const cooldownEnd = new Date(lastEdit.lastEditAt);
+			cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
+
+			if (new Date() < cooldownEnd) {
+				const minutesRemaining = Math.ceil((cooldownEnd.getTime() - Date.now()) / (1000 * 60));
+				return message(form, `You must wait ${minutesRemaining} more minute(s) before editing your profile again.`, {
+					status: 400
+				});
+			}
+		}
+
 		try {
 			await db.transaction(async (tx) => {
+				// Deduct cost from wallet
+				await tx
+					.update(userWallets)
+					.set({
+						balance: userBalance - PROFILE_EDIT_CONFIG.COST,
+						updatedAt: new Date()
+					})
+					.where(eq(userWallets.userId, account.id));
+
+				// Update or create edit history
+				if (lastEdit) {
+					await tx
+						.update(profileEditHistory)
+						.set({ lastEditAt: new Date() })
+						.where(eq(profileEditHistory.userId, account.id));
+				} else {
+					await tx.insert(profileEditHistory).values({
+						userId: account.id,
+						lastEditAt: new Date()
+					});
+				}
+
 				let avatarFileId: string | undefined;
 
 				// Upload new avatar if provided
