@@ -1,6 +1,6 @@
 // src/routes/party/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { politicalParties, partyMembers, files } from "$lib/server/schema";
+import { politicalParties, partyMembers, files, regions } from "$lib/server/schema";
 import { eq, sql } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
@@ -33,7 +33,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			where: eq(files.id, party.logo)
 		});
 		if (logoFile) {
-			// Construct the URL based on your file storage setup
 			logoUrl = `https://your-cdn.com/${logoFile.key}`;
 		}
 	}
@@ -72,7 +71,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	}
 
-	// Calculate party rank (simplified - you'd want more complex logic)
+	// Calculate party rank
 	const allParties = await db
 		.select({ id: politicalParties.id, memberCount: politicalParties.memberCount })
 		.from(politicalParties)
@@ -117,7 +116,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		memberSince,
 		canJoin,
 		partyRank,
-		parliamentSeats: 0 // TODO: Calculate from parliamentMembers table
+		parliamentSeats: 0
 	};
 };
 
@@ -179,21 +178,21 @@ export const actions: Actions = {
 
 		const partyId = params.id;
 
-		// Check if user is a member
-		const membership = await db.query.partyMembers.findFirst({
-			where: sql`${partyMembers.userId} = ${account.id} AND ${partyMembers.partyId} = ${partyId}`
-		});
-
-		if (!membership) {
-			return fail(400, { error: "You are not a member of this party" });
-		}
-
-		// Prevent leader from leaving (they must transfer leadership first)
-		if (membership.role === "leader") {
-			return fail(400, { error: "Party leaders cannot leave. Transfer leadership first or disband the party." });
-		}
-
 		try {
+			// Check if user is a member
+			const membership = await db.query.partyMembers.findFirst({
+				where: sql`${partyMembers.userId} = ${account.id} AND ${partyMembers.partyId} = ${partyId}`
+			});
+
+			if (!membership) {
+				return fail(400, { error: "You are not a member of this party" });
+			}
+
+			// Prevent leader from leaving (they must delete party if alone or transfer leadership)
+			if (membership.role === "leader") {
+				return fail(400, { error: "Party leaders cannot leave. Delete the party or transfer leadership first." });
+			}
+
 			// Remove membership
 			await db
 				.delete(partyMembers)
@@ -207,10 +206,68 @@ export const actions: Actions = {
 				})
 				.where(eq(politicalParties.id, partyId));
 
-			redirect(303, "/parties");
-		} catch (error) {
-			console.error("Leave party error:", error);
+			throw redirect(303, "/party");
+		} catch (err) {
+			// Re-throw redirect errors
+			if (err instanceof Response && err.status === 303) {
+				throw err;
+			}
+			console.error("Leave party error:", err);
 			return fail(500, { error: "Failed to leave party" });
+		}
+	},
+
+	delete: async ({ params, locals }) => {
+		const account = locals.account;
+		if (!account) {
+			return fail(401, { error: "You must be logged in" });
+		}
+
+		const partyId = params.id;
+
+		try {
+			// Get party details
+			const party = await db.query.politicalParties.findFirst({
+				where: eq(politicalParties.id, partyId),
+				with: {
+					members: true
+				}
+			});
+
+			if (!party) {
+				return fail(404, { error: "Party not found" });
+			}
+
+			// Check if user is the leader
+			const membership = party.members.find((m) => m.userId === account.id);
+			if (!membership || membership.role !== "leader") {
+				return fail(403, { error: "Only the party leader can delete the party" });
+			}
+
+			// Check if leader is the only member
+			if (party.memberCount > 1) {
+				return fail(400, { error: "Cannot delete party with other members. All members must leave first." });
+			}
+
+			// Make all regions in this state independent
+			await db
+				.update(regions)
+				.set({
+					stateId: null
+				})
+				.where(eq(regions.stateId, party.stateId));
+
+			// Delete party (cascade will handle party members)
+			await db.delete(politicalParties).where(eq(politicalParties.id, partyId));
+
+			throw redirect(303, "/party");
+		} catch (err) {
+			// Re-throw redirect errors
+			if (err instanceof Response && err.status === 303) {
+				throw err;
+			}
+			console.error("Delete party error:", err);
+			return fail(500, { error: "Failed to delete party" });
 		}
 	}
 };

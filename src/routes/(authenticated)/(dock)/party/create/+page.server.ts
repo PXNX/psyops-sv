@@ -1,6 +1,14 @@
 // src/routes/party/create/+page.server.ts
 import { db } from "$lib/server/db";
-import { politicalParties, partyMembers, files, residences, regions, states } from "$lib/server/schema";
+import {
+	politicalParties,
+	partyMembers,
+	files,
+	residences,
+	regions,
+	states,
+	parliamentaryElections
+} from "$lib/server/schema";
 import { redirect, error } from "@sveltejs/kit";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -139,6 +147,7 @@ export const actions: Actions = {
 
 			// If independent region, create state first
 			let finalStateId: string | null = stateId;
+			let isNewState = false;
 			if (isIndependentRegion) {
 				const region = await tx.query.regions.findFirst({
 					where: eq(regions.id, regionId)
@@ -166,6 +175,7 @@ export const actions: Actions = {
 				await tx.update(regions).set({ stateId: newState.id }).where(eq(regions.id, regionId));
 
 				finalStateId = newState.id;
+				isNewState = true;
 			}
 
 			// Ensure finalStateId is not null
@@ -196,6 +206,31 @@ export const actions: Actions = {
 				partyId: party.id,
 				role: "leader"
 			});
+
+			// If this is a new state, automatically schedule inaugural election
+			if (isNewState && finalStateId) {
+				const now = new Date();
+
+				// Election starts in 3 days (72 hours)
+				const startDate = new Date(now);
+				startDate.setDate(startDate.getDate() + 3);
+				startDate.setHours(0, 0, 0, 0);
+
+				// Election runs for 2 days
+				const endDate = new Date(startDate);
+				endDate.setDate(endDate.getDate() + 2);
+				endDate.setHours(23, 59, 59, 999);
+
+				// Create inaugural election with default 50 seats
+				await tx.insert(parliamentaryElections).values({
+					stateId: finalStateId,
+					startDate,
+					endDate,
+					status: "scheduled",
+					totalSeats: 50, // Default inaugural parliament size
+					isInaugural: 1
+				});
+			}
 
 			return party;
 		});
