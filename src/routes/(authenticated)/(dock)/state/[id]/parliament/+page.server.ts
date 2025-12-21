@@ -1,3 +1,4 @@
+// src/routes/state/[id]/parliament/+page.server.ts
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { db } from "$lib/server/db";
@@ -9,22 +10,20 @@ import {
 	partyMembers,
 	parliamentaryProposals,
 	parliamentaryVotes,
+	parliamentaryElections,
 	accounts,
 	userProfiles,
 	ministers
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
-
 import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";
-
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProposalSchema } from "./schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
-
 	const form = await superValidate(valibot(createProposalSchema));
 
 	// Get state
@@ -81,13 +80,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
 	});
 
-	// Check if user is a minister (specifically finance minister for economic laws)
+	// Check if user is a minister
 	const userMinistry = await db.query.ministers.findFirst({
 		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, params.id))
 	});
 
-	// Get active proposals with vote counts and user's votes
+	// Get next or active election
 	const now = new Date();
+	const nextElection = await db.query.parliamentaryElections.findFirst({
+		where: and(eq(parliamentaryElections.stateId, params.id), gte(parliamentaryElections.endDate, now)),
+		orderBy: parliamentaryElections.startDate
+	});
+
+	// Get active proposals with vote counts and user's votes
 	const activeProposals = await db
 		.select()
 		.from(parliamentaryProposals)
@@ -103,7 +108,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Get vote counts and user votes for each proposal
 	const proposalsWithVotes = await Promise.all(
 		activeProposals.map(async (proposal) => {
-			// Get all votes for this proposal
 			const votes = await db.select().from(parliamentaryVotes).where(eq(parliamentaryVotes.proposalId, proposal.id));
 
 			const voteCounts = {
@@ -114,11 +118,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 			const totalVotes = votes.length;
 			const percentageFor = totalVotes > 0 ? (voteCounts.for / totalVotes) * 100 : 0;
-
-			// Get user's vote if they voted
 			const userVote = votes.find((v) => v.voterId === account.id);
 
-			// Get proposer info
 			const proposer = await db.query.userProfiles.findFirst({
 				where: eq(userProfiles.accountId, proposal.proposedBy)
 			});
@@ -157,6 +158,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		userParty: userMembership?.partyAffiliation || null,
 		userMinistry: userMinistry?.ministry || null,
 		isFinanceMinister: userMinistry?.ministry === "finance",
+		nextElection: nextElection
+			? {
+					id: nextElection.id,
+					startDate: nextElection.startDate,
+					endDate: nextElection.endDate,
+					status: nextElection.status,
+					totalSeats: nextElection.totalSeats,
+					isInaugural: nextElection.isInaugural === 1
+				}
+			: null,
 		form
 	};
 };
@@ -164,7 +175,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 export const actions: Actions = {
 	vote: async ({ request, locals, params }) => {
 		const account = locals.account!;
-
 		const formData = await request.formData();
 		const proposalId = formData.get("proposalId") as string;
 		const voteType = formData.get("voteType") as "for" | "against" | "abstain";
@@ -173,7 +183,6 @@ export const actions: Actions = {
 			return fail(400, { error: "Invalid vote data" });
 		}
 
-		// Check if user is a parliament member
 		const membership = await db.query.parliamentMembers.findFirst({
 			where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
 		});
@@ -182,7 +191,6 @@ export const actions: Actions = {
 			return fail(403, { error: "You must be a parliament member to vote" });
 		}
 
-		// Check if proposal exists and is active
 		const proposal = await db.query.parliamentaryProposals.findFirst({
 			where: eq(parliamentaryProposals.id, proposalId)
 		});
@@ -191,18 +199,15 @@ export const actions: Actions = {
 			return fail(404, { error: "Proposal not found or not active" });
 		}
 
-		// Check if voting period is still active
 		if (new Date() > new Date(proposal.votingEndsAt)) {
 			return fail(400, { error: "Voting period has ended" });
 		}
 
-		// Check if user already voted
 		const existingVote = await db.query.parliamentaryVotes.findFirst({
 			where: and(eq(parliamentaryVotes.proposalId, proposalId), eq(parliamentaryVotes.voterId, account.id))
 		});
 
 		if (existingVote) {
-			// Update existing vote
 			await db
 				.update(parliamentaryVotes)
 				.set({
@@ -211,7 +216,6 @@ export const actions: Actions = {
 				})
 				.where(eq(parliamentaryVotes.id, existingVote.id));
 		} else {
-			// Create new vote
 			await db.insert(parliamentaryVotes).values({
 				proposalId,
 				voterId: account.id,
@@ -234,7 +238,6 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		// Check if user is a parliament member
 		const membership = await db.query.parliamentMembers.findFirst({
 			where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
 		});
@@ -276,7 +279,6 @@ export const actions: Actions = {
 			return fail(400, { form });
 		}
 
-		// Check if user is a minister
 		const ministry = await db.query.ministers.findFirst({
 			where: and(eq(ministers.userId, account.id), eq(ministers.stateId, params.id))
 		});
@@ -287,7 +289,6 @@ export const actions: Actions = {
 
 		const { proposalType } = form.data;
 
-		// Define which ministries can execute which types directly
 		const ministryPermissions: Record<string, string[]> = {
 			finance: ["tax", "budget"],
 			infrastructure: ["infrastructure"],
@@ -306,9 +307,8 @@ export const actions: Actions = {
 			});
 		}
 
-		const { title, description, votingDays, requiredMajority } = form.data;
+		const { title, description } = form.data;
 
-		// Create proposal but mark as passed immediately
 		const votingStartsAt = new Date();
 		const votingEndsAt = new Date();
 
@@ -320,8 +320,8 @@ export const actions: Actions = {
 			proposedBy: account.id,
 			votingStartsAt,
 			votingEndsAt,
-			requiredMajority,
-			status: "passed" // Immediately passed
+			requiredMajority: 0,
+			status: "passed"
 		});
 
 		return { form, success: true, message: "Ministerial action executed successfully" };

@@ -1005,8 +1005,13 @@ export const parliamentaryElections = pgTable("parliamentary_elections", {
 	endDate: timestamp("end_date").notNull(),
 	status: electionStatusEnum("status").notNull().default("scheduled"),
 	totalSeats: integer("total_seats").default(0).notNull(),
+	isInaugural: integer("is_inaugural").default(0).notNull(), // ADD THIS LINE: 1 = first election, 0 = regular
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
+
+// Also update the TypeScript type
+export type ParliamentaryElection = typeof parliamentaryElections.$inferSelect;
+export type NewParliamentaryElection = typeof parliamentaryElections.$inferInsert;
 
 // Election Votes table (tracks user votes for parties)
 export const electionVotes = pgTable(
@@ -1084,10 +1089,6 @@ export const electionResultsRelations = relations(electionResults, ({ one }) => 
 		references: [politicalParties.id]
 	})
 }));
-
-// TypeScript types
-export type ParliamentaryElection = typeof parliamentaryElections.$inferSelect;
-export type NewParliamentaryElection = typeof parliamentaryElections.$inferInsert;
 
 export type ElectionVote = typeof electionVotes.$inferSelect;
 export type NewElectionVote = typeof electionVotes.$inferInsert;

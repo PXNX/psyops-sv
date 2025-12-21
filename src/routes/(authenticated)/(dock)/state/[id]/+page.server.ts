@@ -7,7 +7,6 @@ import type { PageServerLoad } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ params }) => {
-	// Query state with all related data
 	const state = await db.query.states.findFirst({
 		where: eq(states.id, params.id),
 		with: {
@@ -37,7 +36,7 @@ export const load: PageServerLoad = async ({ params }) => {
 						}
 					}
 				},
-				limit: 20 // Limit parliament members in initial load
+				limit: 20
 			},
 			regions: true
 		}
@@ -54,7 +53,6 @@ export const load: PageServerLoad = async ({ params }) => {
 		orderBy: parliamentaryElections.startDate
 	});
 
-	// Process avatars
 	const processAvatar = async (avatar: string | null) => {
 		if (avatar && !avatar.startsWith("http")) {
 			try {
@@ -117,7 +115,7 @@ export const load: PageServerLoad = async ({ params }) => {
 					endDate: nextElection.endDate,
 					status: nextElection.status,
 					totalSeats: nextElection.totalSeats,
-					isInaugural: nextElection.isInaugural
+					isInaugural: nextElection.isInaugural === 1
 				}
 			: null
 	};
