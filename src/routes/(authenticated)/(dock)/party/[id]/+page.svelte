@@ -59,10 +59,13 @@
 										{data.party.ideology}
 									</span>
 								{/if}
-								<span class="flex items-center gap-1">
+								<a
+									href="/state/{data.party.state.id}"
+									class="flex items-center gap-1 hover:text-purple-400 transition-colors"
+								>
 									<FluentBuildingGovernment20Filled class="size-4" />
 									{data.party.state.name}
-								</span>
+								</a>
 								<span class="flex items-center gap-1">
 									<FluentCalendar20Filled class="size-4" />
 									Founded {new Date(data.party.foundedAt).toLocaleDateString()}
@@ -91,19 +94,19 @@
 
 	<!-- Stats -->
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+		<a href="/party/{data.party.id}/member" class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 			<div class="flex items-center gap-3">
 				<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {data.party.color}20">
 					<FluentPeople20Filled class="size-6" style="color: {data.party.color}" />
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Total Members</p>
+					<p class="text-xs text-gray-400">Members</p>
 					<p class="text-2xl font-bold text-white">{data.party.memberCount}</p>
 				</div>
 			</div>
-		</div>
+		</a>
 
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+		<a href="/state/{data.party.state.id}/parliament" class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 			<div class="flex items-center gap-3">
 				<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {data.party.color}20">
 					<FluentBuildingGovernment20Filled class="size-6" style="color: {data.party.color}" />
@@ -113,7 +116,7 @@
 					<p class="text-2xl font-bold text-white">{data.parliamentSeats || 0}</p>
 				</div>
 			</div>
-		</div>
+		</a>
 
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 			<div class="flex items-center gap-3">
@@ -166,13 +169,13 @@
 
 	<!-- Error/Success Messages -->
 	{#if form?.error}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{form.error}</p>
+		<div class="alert alert-error">
+			<p>{form.error}</p>
 		</div>
 	{/if}
 	{#if form?.success}
-		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
-			<p class="text-green-300 text-sm font-medium">{form.success}</p>
+		<div class="alert alert-success">
+			<p>{form.success}</p>
 		</div>
 	{/if}
 
@@ -217,51 +220,5 @@
 				</div>
 			{/each}
 		</div>
-	</div>
-
-	<!-- Party Members -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
-		<h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-			<FluentPeople20Filled class="size-5" style="color: {data.party.color}" />
-			Party Members ({data.members.length})
-		</h2>
-
-		{#if data.members.length > 0}
-			<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-				{#each data.members.filter((m) => m.role !== "leader") as member}
-					<a
-						href="/user/{member.userId}"
-						class="bg-slate-700/30 rounded-lg p-4 border border-white/5 hover:border-white/10 transition-all group"
-					>
-						{#if member.user.profile?.avatar}
-							<img
-								src={member.user.profile.avatar}
-								alt={member.user.profile.name || "Member"}
-								class="size-16 rounded-lg mb-2 mx-auto"
-							/>
-						{:else}
-							<div
-								class="size-16 rounded-lg flex items-center justify-center mb-2 mx-auto"
-								style="background-color: {data.party.color}40"
-							>
-								<FluentPeople20Filled class="size-8" style="color: {data.party.color}" />
-							</div>
-						{/if}
-						<p
-							class="text-sm font-medium text-white text-center truncate group-hover:text-purple-400 transition-colors"
-						>
-							{member.user.profile?.name || member.user.email}
-						</p>
-						{#if member.role === "deputy"}
-							<p class="text-xs text-center mt-1" style="color: {data.party.color}">Deputy</p>
-						{/if}
-					</a>
-				{/each}
-			</div>
-		{:else}
-			<div class="text-center py-8">
-				<p class="text-gray-400">No other members yet</p>
-			</div>
-		{/if}
 	</div>
 </div>
