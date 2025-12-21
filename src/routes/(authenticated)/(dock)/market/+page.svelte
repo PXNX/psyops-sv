@@ -1,4 +1,4 @@
-<!-- src/routes/market/+page.svelte -->
+<!-- src/routes/market/+page.svelte - TYPE FIXES -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentShoppingCart20Filled from "~icons/fluent/cart-20-filled";
@@ -14,15 +14,19 @@
 
 	let { data } = $props();
 
-	let selectedItemType = $state("resource");
-	let selectedItemName = $state("iron");
+	// Type-safe resource and product types
+	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
+	type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
+
+	let selectedItemType = $state<"resource" | "product">("resource");
+	let selectedItemName = $state<string>("iron");
 	let listingQuantity = $state(1);
 	let listingPrice = $state(1000);
 	let buyQuantities = $state<Record<string, number>>({});
 	let filterType = $state<string>("all");
 	let cooldownTimeRemaining = $state(data.cooldownRemaining);
 
-	const resourceIcons: Record<string, string> = {
+	const resourceIcons: Record<ResourceType, string> = {
 		iron: "⛏️",
 		copper: "🔶",
 		steel: "⚙️",
@@ -31,7 +35,7 @@
 		coal: "🪨"
 	};
 
-	const productIcons: Record<string, string> = {
+	const productIcons: Record<ProductType, string> = {
 		rifles: "🔫",
 		ammunition: "🔫",
 		artillery: "💣",
@@ -52,9 +56,9 @@
 
 	const availableQuantity = $derived.by(() => {
 		if (selectedItemType === "resource") {
-			return resourceMap.get(selectedItemName) || 0;
+			return resourceMap.get(selectedItemName as ResourceType) || 0;
 		}
-		return productMap.get(selectedItemName) || 0;
+		return productMap.get(selectedItemName as ProductType) || 0;
 	});
 
 	const canCreateListing = $derived(availableQuantity >= listingQuantity && listingQuantity >= 1);
@@ -84,7 +88,6 @@
 			<p class="text-gray-400">Buy and sell resources and products</p>
 		</div>
 
-		<!-- Quick Actions -->
 		<div class="flex gap-3">
 			<a
 				href="/production"
@@ -149,7 +152,7 @@
 				</div>
 
 				<div class="space-y-2">
-					{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
+					{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as ResourceType[] as resource}
 						{@const quantity = resourceMap.get(resource) || 0}
 						<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30">
 							<div class="flex items-center gap-2">
@@ -176,7 +179,7 @@
 				</div>
 
 				<div class="space-y-2">
-					{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
+					{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as ProductType[] as product}
 						{@const quantity = productMap.get(product) || 0}
 						<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30">
 							<div class="flex items-center gap-2">
@@ -255,14 +258,14 @@
 						class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50"
 					>
 						{#if selectedItemType === "resource"}
-							{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
+							{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as ResourceType[] as resource}
 								<option value={resource}>
 									{resourceIcons[resource]}
 									{resource.charAt(0).toUpperCase() + resource.slice(1)}
 								</option>
 							{/each}
 						{:else}
-							{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
+							{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as ProductType[] as product}
 								<option value={product}>
 									{productIcons[product]}
 									{product.charAt(0).toUpperCase() + product.slice(1)}
@@ -367,7 +370,6 @@
 						<h2 class="text-lg font-semibold text-white">Market Listings</h2>
 					</div>
 
-					<!-- Filter -->
 					<div class="flex items-center gap-2">
 						<FluentFilter20Filled class="size-4 text-gray-400" />
 						<select bind:value={filterType} class="select select-sm bg-slate-700/50 border-slate-600/30 text-white">
@@ -394,10 +396,9 @@
 						{/if}
 
 						{#each filteredStateExports as stateExport}
-							{@const icon = resourceIcons[stateExport.resourceType]}
+							{@const icon = resourceIcons[stateExport.resourceType as ResourceType]}
 							<div class="bg-blue-700/20 rounded-xl p-4 border-2 border-blue-500/30">
 								<div class="flex items-center justify-between gap-4">
-									<!-- Item Info -->
 									<div class="flex items-center gap-3 flex-1">
 										<div class="text-4xl">{icon}</div>
 										<div class="flex-1">
@@ -416,7 +417,6 @@
 										</div>
 									</div>
 
-									<!-- Price Info -->
 									<div class="text-right">
 										<div class="text-xs text-gray-400">Price per unit</div>
 										<div class="text-2xl font-bold text-green-400">
@@ -427,7 +427,6 @@
 										</div>
 									</div>
 
-									<!-- Buy Action -->
 									<div class="min-w-[140px]">
 										<form method="POST" action="?/buyStateExport" use:enhance>
 											<input type="hidden" name="listingId" value={stateExport.id} />
@@ -478,7 +477,6 @@
 										: 'border-slate-600/30'}"
 							>
 								<div class="flex items-center justify-between gap-4">
-									<!-- Item Info -->
 									<div class="flex items-center gap-3 flex-1">
 										<div class="text-4xl">{icon}</div>
 										<div class="flex-1">
@@ -508,7 +506,6 @@
 										</div>
 									</div>
 
-									<!-- Price Info -->
 									<div class="text-right">
 										<div class="text-xs text-gray-400">Price per unit</div>
 										<div class="text-2xl font-bold text-green-400">
@@ -519,7 +516,6 @@
 										</div>
 									</div>
 
-									<!-- Action -->
 									<div class="min-w-[140px]">
 										{#if isOwnListing}
 											<form method="POST" action="?/removeListing" use:enhance>
