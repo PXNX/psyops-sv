@@ -1,4 +1,4 @@
-// src/routes/market/+page.server.ts
+// src/routes/market/+page.server.ts - FIXED VERSION
 import { db } from "$lib/server/db";
 import {
 	marketListings,
@@ -11,7 +11,8 @@ import {
 	marketListingCooldowns,
 	stateExportListings,
 	stateTreasury,
-	stateResourceInventory
+	stateResourceInventory,
+	stateSanctions
 } from "$lib/server/schema";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
@@ -36,7 +37,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
 	if (!wallet) {
-		// Create wallet if doesn't exist
 		await db.insert(userWallets).values({
 			userId: account.id,
 			balance: 10000
@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Get user's products
 	const products = await db.select().from(productInventory).where(eq(productInventory.userId, account.id));
 
-	// Get all market listings with seller state info
+	// Get all market listings with seller state and sanction info
 	const listings = await db
 		.select({
 			id: marketListings.id,
@@ -59,17 +59,34 @@ export const load: PageServerLoad = async ({ locals }) => {
 			quantity: marketListings.quantity,
 			pricePerUnit: marketListings.pricePerUnit,
 			createdAt: marketListings.createdAt,
-			sellerStateId: regions.stateId,
-			// fixme: sanctionsshould only block purchases for normal users
-			isStateSanctioned: states.isSanctioned
+			sellerStateId: regions.stateId
 		})
 		.from(marketListings)
 		.leftJoin(residences, and(eq(marketListings.sellerId, residences.userId), eq(residences.isPrimary, 1)))
 		.leftJoin(regions, eq(residences.regionId, regions.id))
-		.leftJoin(states, eq(regions.stateId, states.id))
 		.orderBy(desc(marketListings.createdAt));
 
-	// Get state export listings (resources only)
+	// Get active sanctions to check if listings are from sanctioned states
+	const activeSanctions = await db
+		.select({
+			targetStateId: stateSanctions.targetStateId,
+			sanctioningStateId: stateSanctions.sanctioningStateId
+		})
+		.from(stateSanctions)
+		.where(eq(stateSanctions.isActive, 1));
+
+	// Check if each listing is from a sanctioned state (from user's perspective)
+	const listingsWithSanctions = listings.map((listing) => {
+		const isSanctioned = activeSanctions.some(
+			(s) => s.targetStateId === listing.sellerStateId && s.sanctioningStateId === residence?.stateId
+		);
+		return {
+			...listing,
+			isStateSanctioned: isSanctioned ? 1 : 0
+		};
+	});
+
+	// Get state export listings
 	const stateExportListingsData = await db
 		.select({
 			id: stateExportListings.id,
@@ -84,7 +101,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.innerJoin(states, eq(stateExportListings.stateId, states.id))
 		.orderBy(desc(stateExportListings.createdAt));
 
-	// Check if user has listing cooldown
+	// Check cooldown
 	const [cooldown] = await db
 		.select()
 		.from(marketListingCooldowns)
@@ -101,7 +118,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		wallet: wallet || { balance: 10000, userId: account.id },
 		resources,
 		products,
-		marketListings: listings,
+		marketListings: listingsWithSanctions,
 		stateExports: stateExportListingsData,
 		userStateId: residence?.stateId || null,
 		cooldownRemaining
@@ -112,7 +129,6 @@ export const actions: Actions = {
 	createListing: async ({ request, locals }) => {
 		const account = locals.account!;
 
-		// Check for cooldown
 		const [cooldown] = await db
 			.select()
 			.from(marketListingCooldowns)
@@ -138,12 +154,10 @@ export const actions: Actions = {
 		const quantity = parseInt(formData.get("quantity") as string);
 		const pricePerUnit = parseInt(formData.get("pricePerUnit") as string);
 
-		// Validate inputs
 		if (!itemType || !itemName || quantity < 1 || pricePerUnit < 100) {
 			return fail(400, { message: "Invalid listing data" });
 		}
 
-		// Check if user has enough items
 		if (itemType === "resource") {
 			const [resource] = await db
 				.select()
@@ -154,7 +168,6 @@ export const actions: Actions = {
 				return fail(400, { message: "Insufficient resources" });
 			}
 
-			// Deduct from inventory
 			await db
 				.update(resourceInventory)
 				.set({
@@ -172,7 +185,6 @@ export const actions: Actions = {
 				return fail(400, { message: "Insufficient products" });
 			}
 
-			// Deduct from inventory
 			await db
 				.update(productInventory)
 				.set({
@@ -182,7 +194,6 @@ export const actions: Actions = {
 				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
 		}
 
-		// Create listing
 		await db.insert(marketListings).values({
 			sellerId: account.id,
 			itemType,
@@ -196,13 +207,11 @@ export const actions: Actions = {
 
 	buyListing: async ({ request, locals }) => {
 		const account = locals.account!;
-
 		const formData = await request.formData();
 
 		const listingId = formData.get("listingId") as string;
 		const quantity = parseInt(formData.get("quantity") as string);
 
-		// Get listing with seller's state info
 		const [listingData] = await db
 			.select({
 				listing: marketListings,
@@ -219,8 +228,6 @@ export const actions: Actions = {
 
 		const listing = listingData.listing;
 
-		// Note: Sanctions no longer block purchases
-
 		if (listing.sellerId === account.id) {
 			return fail(400, { message: "Cannot buy your own listing" });
 		}
@@ -229,7 +236,6 @@ export const actions: Actions = {
 			return fail(400, { message: "Invalid quantity" });
 		}
 
-		// Get buyer's residence to determine state for taxes
 		const [buyerResidence] = await db
 			.select({
 				stateId: regions.stateId
@@ -241,7 +247,6 @@ export const actions: Actions = {
 
 		const grossAmount = listing.pricePerUnit * quantity;
 
-		// Calculate and collect market transaction tax (buyer pays)
 		let taxCalculation = {
 			grossAmount,
 			taxAmount: 0,
@@ -258,9 +263,8 @@ export const actions: Actions = {
 			);
 		}
 
-		const totalCost = taxCalculation.netAmount + taxCalculation.taxAmount; // Full cost including tax
+		const totalCost = taxCalculation.netAmount + taxCalculation.taxAmount;
 
-		// Check buyer's wallet
 		const [buyerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
 		if (!buyerWallet || buyerWallet.balance < totalCost) {
@@ -274,15 +278,12 @@ export const actions: Actions = {
 			});
 		}
 
-		// Get seller's wallet
 		const [sellerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
 
 		if (!sellerWallet) {
 			return fail(500, { message: "Seller wallet not found" });
 		}
 
-		// Process transaction
-		// Deduct from buyer (including tax)
 		await db
 			.update(userWallets)
 			.set({
@@ -291,7 +292,6 @@ export const actions: Actions = {
 			})
 			.where(eq(userWallets.userId, account.id));
 
-		// Pay seller (net amount only, tax already collected)
 		await db
 			.update(userWallets)
 			.set({
@@ -300,7 +300,6 @@ export const actions: Actions = {
 			})
 			.where(eq(userWallets.userId, listing.sellerId));
 
-		// Add items to buyer's inventory
 		if (listing.itemType === "resource") {
 			const [existing] = await db
 				.select()
@@ -351,12 +350,9 @@ export const actions: Actions = {
 			}
 		}
 
-		// Update or remove listing
 		if (quantity === listing.quantity) {
-			// Remove listing completely
 			await db.delete(marketListings).where(eq(marketListings.id, listingId));
 		} else {
-			// Update remaining quantity
 			await db
 				.update(marketListings)
 				.set({
@@ -374,11 +370,9 @@ export const actions: Actions = {
 
 	removeListing: async ({ request, locals }) => {
 		const account = locals.account!;
-
 		const formData = await request.formData();
 		const listingId = formData.get("listingId") as string;
 
-		// Get listing
 		const [listing] = await db.select().from(marketListings).where(eq(marketListings.id, listingId));
 
 		if (!listing) {
@@ -389,7 +383,6 @@ export const actions: Actions = {
 			return fail(403, { message: "Not your listing" });
 		}
 
-		// Return items to inventory
 		if (listing.itemType === "resource") {
 			const [existing] = await db
 				.select()
@@ -419,7 +412,7 @@ export const actions: Actions = {
 			const [existing] = await db
 				.select()
 				.from(productInventory)
-				.where(and(eq(productInventory.userId, userId), eq(productInventory.productType, listing.itemName as any)));
+				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any)));
 
 			if (existing) {
 				await db
@@ -440,10 +433,8 @@ export const actions: Actions = {
 			}
 		}
 
-		// Delete listing
 		await db.delete(marketListings).where(eq(marketListings.id, listingId));
 
-		// Set cooldown
 		const [existingCooldown] = await db
 			.select()
 			.from(marketListingCooldowns)
@@ -474,7 +465,6 @@ export const actions: Actions = {
 		const listingId = formData.get("listingId") as string;
 		const quantity = parseInt(formData.get("quantity") as string);
 
-		// Get state export listing
 		const [listing] = await db.select().from(stateExportListings).where(eq(stateExportListings.id, listingId));
 
 		if (!listing) {
@@ -485,7 +475,6 @@ export const actions: Actions = {
 			return fail(400, { message: "Invalid quantity" });
 		}
 
-		// Get buyer's residence to determine state for taxes
 		const [buyerResidence] = await db
 			.select({
 				stateId: regions.stateId
@@ -497,7 +486,6 @@ export const actions: Actions = {
 
 		const grossAmount = listing.pricePerUnit * quantity;
 
-		// Calculate and collect market transaction tax (buyer pays)
 		let taxCalculation = {
 			grossAmount,
 			taxAmount: 0,
@@ -516,7 +504,6 @@ export const actions: Actions = {
 
 		const totalCost = taxCalculation.netAmount + taxCalculation.taxAmount;
 
-		// Check buyer's wallet
 		const [buyerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
 		if (!buyerWallet || buyerWallet.balance < totalCost) {
@@ -530,7 +517,6 @@ export const actions: Actions = {
 			});
 		}
 
-		// Get selling state's treasury
 		const [stateTreasuryRecord] = await db
 			.select()
 			.from(stateTreasury)
@@ -540,8 +526,6 @@ export const actions: Actions = {
 			return fail(500, { message: "State treasury not found" });
 		}
 
-		// Process transaction
-		// Deduct from buyer (including tax)
 		await db
 			.update(userWallets)
 			.set({
@@ -550,7 +534,6 @@ export const actions: Actions = {
 			})
 			.where(eq(userWallets.userId, account.id));
 
-		// Pay to state treasury (net amount)
 		await db
 			.update(stateTreasury)
 			.set({
@@ -560,7 +543,6 @@ export const actions: Actions = {
 			})
 			.where(eq(stateTreasury.stateId, listing.stateId));
 
-		// Add resource to buyer's inventory
 		const [existing] = await db
 			.select()
 			.from(resourceInventory)
@@ -582,7 +564,6 @@ export const actions: Actions = {
 			});
 		}
 
-		// Update or remove listing
 		if (quantity === listing.quantity) {
 			await db.delete(stateExportListings).where(eq(stateExportListings.id, listingId));
 		} else {

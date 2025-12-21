@@ -1,9 +1,9 @@
-// src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.server.ts
+// src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.server.ts - FIXED
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "$lib/server/db";
 import { eq, and, ne } from "drizzle-orm";
-import { states, ministers, regions, stateSanctions, residenceApplications } from "$lib/server/schema";
+import { states, ministers, regions, stateSanctions, residenceApplications, residences } from "$lib/server/schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account;
@@ -141,17 +141,6 @@ export const actions: Actions = {
 			isActive: 1
 		});
 
-		// Update target state
-		await db
-			.update(states)
-			.set({
-				isSanctioned: 1,
-				sanctionedBy: account.id,
-				sanctionedAt: new Date(),
-				sanctionReason: reason
-			})
-			.where(eq(states.id, targetStateId));
-
 		return { success: true, message: "Sanction imposed successfully" };
 	},
 
@@ -194,28 +183,6 @@ export const actions: Actions = {
 		// Mark sanction as inactive
 		await db.update(stateSanctions).set({ isActive: 0 }).where(eq(stateSanctions.id, sanctionId));
 
-		// Check if there are any other active sanctions on this state from any country
-		const otherActiveSanctions = await db.query.stateSanctions.findMany({
-			where: and(
-				eq(stateSanctions.targetStateId, sanction.targetStateId),
-				eq(stateSanctions.isActive, 1),
-				ne(stateSanctions.id, sanctionId)
-			)
-		});
-
-		// If no other active sanctions, update state
-		if (otherActiveSanctions.length === 0) {
-			await db
-				.update(states)
-				.set({
-					isSanctioned: 0,
-					sanctionedBy: null,
-					sanctionedAt: null,
-					sanctionReason: null
-				})
-				.where(eq(states.id, sanction.targetStateId));
-		}
-
 		return { success: true, message: "Sanction lifted successfully" };
 	},
 
@@ -240,7 +207,7 @@ export const actions: Actions = {
 
 		const formData = await request.formData();
 		const regionId = parseInt(formData.get("regionId") as string);
-		const autoApprove = formData.get("autoApprove") === "1" ? 1 : 0;
+		const autoApprove = formData.get("autoApprove") === "on" ? 1 : 0;
 
 		// Verify region belongs to this state
 		const region = await db.query.regions.findFirst({
@@ -263,7 +230,7 @@ export const actions: Actions = {
 			return fail(401, { error: "Unauthorized" });
 		}
 
-		// Verify foreign minister or governor status
+		// Verify foreign minister status
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -309,8 +276,6 @@ export const actions: Actions = {
 
 		// If approved, create residence
 		if (decision === "approved") {
-			const { residences } = await import("$lib/server/schema");
-
 			// Check if user already has residence
 			const existingResidence = await db.query.residences.findFirst({
 				where: and(eq(residences.userId, application.userId), eq(residences.regionId, application.regionId))

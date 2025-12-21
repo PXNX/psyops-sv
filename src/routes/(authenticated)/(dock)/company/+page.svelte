@@ -32,6 +32,8 @@
 
 		return filtered;
 	});
+
+	// todo: make this one just list all companies and have a button to create own company
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">

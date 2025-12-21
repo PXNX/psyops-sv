@@ -101,14 +101,12 @@ export const states = pgTable("states", {
 	description: text("description"),
 	population: integer("population").default(0),
 	rating: integer("rating").default(0),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	// todo: create a separate table to distinguish what state sanctions this state, so that users from the sanctioning state cant buy from the sanctioned state
-	is_sanctioned: integer("is_sanctioned").default(0).notNull()
+	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
 // Regions table (belongs to states)
 export const regions = pgTable("regions", {
-	id: integer("id").generatedByDefaultAsIdentity().primaryKey(), // Add .primaryKey()
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull(),
 	avatar: text("avatar"),
 	background: text("background"),
@@ -119,6 +117,7 @@ export const regions = pgTable("regions", {
 	development: integer("development").default(0),
 	infrastructure: integer("infrastructure").default(0),
 	economy: integer("economy").default(0),
+	autoApproveResidency: integer("auto_approve_residency").default(0).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -325,7 +324,9 @@ export const statesRelations = relations(states, ({ one, many }) => ({
 	regions: many(regions),
 	president: one(presidents),
 	ministers: many(ministers),
-	parliamentMembers: many(parliamentMembers)
+	parliamentMembers: many(parliamentMembers),
+	sanctionsImposed: many(stateSanctions, { relationName: "sanctioning_state" }), // ADD THIS
+	sanctionsReceived: many(stateSanctions, { relationName: "target_state" }) // ADD THIS
 }));
 
 export const regionsRelations = relations(regions, ({ one, many }) => ({
@@ -1518,17 +1519,24 @@ export const residenceApplicationsRelations = relations(residenceApplications, (
 export const stateSanctionsRelations = relations(stateSanctions, ({ one }) => ({
 	targetState: one(states, {
 		fields: [stateSanctions.targetStateId],
-		references: [states.id]
+		references: [states.id],
+		relationName: "target_state" // ADD THIS
 	}),
 	sanctioningState: one(states, {
 		fields: [stateSanctions.sanctioningStateId],
-		references: [states.id]
+		references: [states.id],
+		relationName: "sanctioning_state" // ADD THIS
 	}),
 	sanctioner: one(accounts, {
 		fields: [stateSanctions.sanctionedBy],
 		references: [accounts.id]
 	})
 }));
+
+export type StateWithSanctions = State & {
+	isSanctioned: boolean;
+	activeSanctions: StateSanction[];
+};
 
 // TypeScript types
 export type ResidenceApplication = typeof residenceApplications.$inferSelect;
