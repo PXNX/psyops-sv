@@ -68,6 +68,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.where(eq(productionQueue.userId, account.id))
 		.limit(1);
 
+	// Check if user owns a company
+	const [userCompany] = await db.select().from(companies).where(eq(companies.ownerId, account.id));
+
 	if (activeProduction.length > 0) {
 		const prod = activeProduction[0];
 		if (new Date(prod.completesAt) <= new Date()) {
@@ -107,7 +110,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.where(eq(userWallets.userId, account.id))
 					.then((r) => r[0] || { balance: 10000 }),
 				currentJob: null,
-				stateEnergy: null
+				stateEnergy: null,
+				userCompany: null
 			};
 		}
 	}
@@ -147,7 +151,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		recipes: PRODUCTION_RECIPES,
 		wallet: wallet || { balance: 10000 },
 		currentJob: currentJob || null,
-		stateEnergy: stateEnergyData
+		stateEnergy: stateEnergyData,
+		userCompany: userCompany || null
 	};
 };
 
