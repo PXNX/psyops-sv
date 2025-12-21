@@ -50,40 +50,44 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		if (existingAccount.length === 0) {
 			console.log("✨ Creating new account");
 
-			// Create new account with user role (default Berechtigung)
+			// Create new account with user role (default permission)
 			const newAccount = await db
 				.insert(accounts)
 				.values({
 					id: googleUser.sub,
 					email: googleUser.email,
-					role: "user" // Default Berechtigung
+					role: "user" // Default permission
 				})
 				.returning();
 
 			account = newAccount[0];
 
-			// Create corresponding user profile with Google data
+			// Create corresponding user profile WITHOUT name (to trigger welcome flow)
+			// This ensures new users go through the welcome process
 			await db.insert(userProfiles).values({
 				accountId: account.id,
-				name: googleUser.name || null,
-				avatar: googleUser.picture || null
+				name: null, // Intentionally null - user must complete profile
+				avatar: null,
+				bio: null
 			});
 
 			isNewUser = true;
+			// New users always go to welcome, regardless of original redirect
 			redirectTo = "/welcome";
 		} else {
 			console.log("✅ Account already exists");
 			account = existingAccount[0];
 
-			// Optionally update user profile with latest Google data
-			await db
-				.update(userProfiles)
-				.set({
-					name: googleUser.name || null,
-					avatar: googleUser.picture || null,
-					updatedAt: new Date()
-				})
-				.where(eq(userProfiles.accountId, account.id));
+			// Check if profile is incomplete (no name set)
+			const profile = await db.query.userProfiles.findFirst({
+				where: eq(userProfiles.accountId, account.id)
+			});
+
+			// If profile exists but has no name, redirect to welcome
+			if (!profile?.name) {
+				redirectTo = "/welcome";
+			}
+			// Otherwise keep the original redirect destination
 		}
 
 		// Create session
@@ -103,7 +107,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		cookies.delete("google_code_verifier", { path: "/" });
 
 		console.log("✅ Login successful, redirecting to:", redirectTo);
-		console.log("👤 User role (Berechtigung):", account.role);
+		console.log("👤 User role (Permission):", account.role);
 
 		return new Response(null, {
 			status: 302,
