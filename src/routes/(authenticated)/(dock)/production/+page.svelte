@@ -13,10 +13,11 @@
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 
 	let { data } = $props();
 
-	let selectedProduct = $state("rifles");
+	let selectedProduct = $state<keyof typeof data.recipes>("rifles");
 	let productionQuantity = $state(1);
 
 	const resourceIcons: Record<string, string> = {
@@ -84,15 +85,21 @@
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<div>
 			<h1 class="text-3xl font-bold text-white">Production Facility</h1>
 			<p class="text-gray-400">Manufacture weapons and equipment for your military</p>
 		</div>
 
-		<!-- Quick Actions -->
 		<div class="flex gap-3">
+			<a
+				href="/company"
+				class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+			>
+				<FluentBuilding20Filled class="size-5" />
+				My Company
+			</a>
+
 			<a
 				href="/market"
 				class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
@@ -111,7 +118,6 @@
 		</div>
 	</div>
 
-	<!-- Balance & Status -->
 	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
 			<div class="flex items-center gap-3">
@@ -170,11 +176,8 @@
 		{/if}
 	</div>
 
-	<!-- Main Content -->
 	<div class="grid lg:grid-cols-3 gap-6">
-		<!-- Inventory Sidebar -->
 		<div class="space-y-6">
-			<!-- Resources -->
 			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
 				<div class="flex items-center gap-2">
 					<FluentBox20Filled class="size-5 text-purple-400" />
@@ -201,7 +204,6 @@
 				</div>
 			</div>
 
-			<!-- Products -->
 			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
 				<div class="flex items-center gap-2">
 					<FluentCube20Filled class="size-5 text-purple-400" />
@@ -229,10 +231,8 @@
 			</div>
 		</div>
 
-		<!-- Production Area -->
 		<div class="lg:col-span-2">
 			{#if activeProduction}
-				<!-- Active Production Display -->
 				<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
 					<div class="flex items-center gap-2">
 						<FluentFactory20Filled class="size-5 text-purple-400" />
@@ -274,7 +274,6 @@
 					</div>
 				</div>
 			{:else}
-				<!-- Production Form -->
 				<form
 					method="POST"
 					action="?/startProduction"
@@ -286,7 +285,6 @@
 						<h2 class="text-lg font-semibold text-white">Start Production</h2>
 					</div>
 
-					<!-- Product Selection -->
 					<div>
 						<label for="productType" class="block text-sm font-medium text-gray-300 mb-2">
 							Product Type <span class="text-red-400">*</span>
@@ -306,7 +304,6 @@
 						</select>
 					</div>
 
-					<!-- Batch Multiplier -->
 					<div>
 						<label for="quantity" class="block text-sm font-medium text-gray-300 mb-2">
 							Batch Size: <span class="text-white font-bold">×{productionQuantity}</span>
@@ -327,7 +324,6 @@
 						</div>
 					</div>
 
-					<!-- Recipe Display -->
 					{#if data.recipes[selectedProduct]}
 						<div class="bg-slate-700/30 rounded-xl p-5 space-y-4 border border-slate-600/30">
 							<div class="flex items-center justify-between">
@@ -337,7 +333,6 @@
 								</div>
 							</div>
 
-							<!-- Output -->
 							<div class="bg-green-600/10 border-2 border-green-500/30 rounded-lg p-4">
 								<p class="text-xs font-semibold text-green-400 mb-2">OUTPUT</p>
 								<div class="flex items-center gap-3">
@@ -351,7 +346,6 @@
 								</div>
 							</div>
 
-							<!-- Required Resources -->
 							<div class="space-y-2">
 								<p class="text-xs font-semibold text-gray-400">REQUIRED RESOURCES</p>
 								{#each Object.entries(data.recipes[selectedProduct].inputs) as [resource, amount]}
@@ -377,7 +371,6 @@
 								{/each}
 							</div>
 
-							<!-- Production Time -->
 							<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
 								<div class="flex items-center gap-2">
 									<FluentClock20Filled class="size-4 text-gray-400" />
@@ -390,7 +383,6 @@
 						</div>
 					{/if}
 
-					<!-- Submit -->
 					<button
 						type="submit"
 						disabled={!canProduce}
@@ -405,7 +397,6 @@
 						{/if}
 					</button>
 
-					<!-- Info -->
 					{#if !canProduce}
 						<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">
 							<p class="text-sm text-amber-300">

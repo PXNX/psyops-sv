@@ -1557,3 +1557,25 @@ export const marketListingCooldownsRelations = relations(marketListingCooldowns,
 // TypeScript types
 export type MarketListingCooldown = typeof marketListingCooldowns.$inferSelect;
 export type NewMarketListingCooldown = typeof marketListingCooldowns.$inferInsert;
+
+// Company Creation Cooldown table
+export const companyCreationCooldown = pgTable("company_creation_cooldown", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	lastCreationAt: timestamp("last_creation_at").defaultNow().notNull()
+});
+
+// Relations
+export const companyCreationCooldownRelations = relations(companyCreationCooldown, ({ one }) => ({
+	user: one(accounts, {
+		fields: [companyCreationCooldown.userId],
+		references: [accounts.id]
+	})
+}));
+
+// TypeScript types
+export type CompanyCreationCooldown = typeof companyCreationCooldown.$inferSelect;
+export type NewCompanyCreationCooldown = typeof companyCreationCooldown.$inferInsert;

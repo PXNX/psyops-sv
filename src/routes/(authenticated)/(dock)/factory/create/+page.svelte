@@ -1,7 +1,7 @@
 <!-- src/routes/factory/create/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import FluentFactory20Filled from "~icons/fluent/factory-20-filled";
+	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
