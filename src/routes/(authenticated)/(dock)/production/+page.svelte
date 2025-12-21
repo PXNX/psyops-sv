@@ -266,12 +266,7 @@
 						</div>
 					</div>
 
-					<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-						<p class="text-sm text-blue-300">
-							<FluentFlash20Filled class="inline size-4" />
-							Production will complete automatically. Items will be added to your inventory.
-						</p>
-					</div>
+					<!-- todo: force the usr to collect a procuced item -->
 				</div>
 			{:else}
 				<form
