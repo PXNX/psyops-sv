@@ -12,6 +12,8 @@
 	import FluentDataUsage20Filled from "~icons/fluent/data-usage-20-filled";
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
+	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import { themes } from "$lib/themes";
 	import { updateProfileSchema } from "./schema.js";
 
@@ -29,8 +31,6 @@
 	let fileInput: HTMLInputElement;
 	let current_theme = $state("");
 	let loadImages = $state(true);
-	let giftCode = $state("");
-	let giftCodeMessage = $state<{ type: "success" | "error"; text: string } | null>(null);
 
 	$effect(() => {
 		if (typeof window !== "undefined") {
@@ -67,37 +67,28 @@
 		document.cookie = `loadImages=${loadImages}; max-age=${one_year}; path=/; SameSite=Lax`;
 	}
 
-	async function redeemGiftCode() {
-		if (!giftCode.trim()) {
-			giftCodeMessage = { type: "error", text: "Please enter a gift code" };
-			return;
+	function formatTimeRemaining(cooldownEnd: string): string {
+		const now = new Date();
+		const end = new Date(cooldownEnd);
+		const diff = end.getTime() - now.getTime();
+
+		const minutes = Math.floor(diff / (1000 * 60));
+
+		if (minutes >= 60) {
+			return "1 hour";
+		} else {
+			return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
 		}
+	}
 
-		try {
-			const response = await fetch("?/redeemGiftCode", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/x-www-form-urlencoded"
-				},
-				body: new URLSearchParams({ giftCode: giftCode.trim() })
-			});
-
-			const result = await response.json();
-
-			if (result.type === "success") {
-				giftCodeMessage = { type: "success", text: result.data.message || "Gift code redeemed successfully!" };
-				giftCode = "";
-			} else {
-				giftCodeMessage = { type: "error", text: result.error?.message || "Invalid gift code" };
-			}
-		} catch (error) {
-			giftCodeMessage = { type: "error", text: "Failed to redeem gift code" };
-		}
-
-		// Clear message after 5 seconds
-		setTimeout(() => {
-			giftCodeMessage = null;
-		}, 5000);
+	function formatCooldownDate(cooldownEnd: string): string {
+		return new Date(cooldownEnd).toLocaleString("en-US", {
+			month: "short",
+			day: "numeric",
+			hour: "numeric",
+			minute: "2-digit",
+			hour12: true
+		});
 	}
 
 	function handleFileSelect(event: Event) {
@@ -158,6 +149,8 @@
 			}
 		};
 	});
+
+	const canEdit = !data.isOnCooldown && data.canAfford;
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
@@ -172,10 +165,92 @@
 		<p class="text-gray-400">Manage your account preferences</p>
 	</div>
 
+	<!-- Cost & Balance Info -->
+	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+		<!-- Balance -->
+		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+			<div class="flex items-center gap-3">
+				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+					<FluentMoney20Filled class="size-5 text-green-400" />
+				</div>
+				<div>
+					<p class="text-xs text-gray-400">Your Balance</p>
+					<p class="text-lg font-bold text-white">{data.userBalance.toLocaleString()}</p>
+				</div>
+			</div>
+		</div>
+
+		<!-- Cost -->
+		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+			<div class="flex items-center gap-3">
+				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+					<FluentPerson20Filled class="size-5 text-purple-400" />
+				</div>
+				<div>
+					<p class="text-xs text-gray-400">Profile Edit Cost</p>
+					<p class="text-lg font-bold text-white">{data.editCost.toLocaleString()}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Cooldown Warning -->
+	{#if data.isOnCooldown && data.cooldownEndsAt}
+		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5 space-y-3">
+			<div class="flex items-start gap-3">
+				<FluentClock20Filled class="size-6 text-red-400 shrink-0 mt-0.5" />
+				<div class="space-y-2 flex-1">
+					<h3 class="font-semibold text-red-300 text-lg">Profile Edit Cooldown Active</h3>
+					<p class="text-red-200/90 text-sm leading-relaxed">
+						Your profile was recently edited. You must wait before making another change.
+					</p>
+					<div class="bg-red-900/30 rounded-lg p-3 space-y-2">
+						<div class="flex items-center justify-between">
+							<span class="text-red-100 text-sm font-medium">Time Remaining:</span>
+							<span class="text-red-100 text-sm font-bold">{formatTimeRemaining(data.cooldownEndsAt)}</span>
+						</div>
+						<div class="flex items-center justify-between text-xs">
+							<span class="text-red-200/70">Available on:</span>
+							<span class="text-red-200/90">{formatCooldownDate(data.cooldownEndsAt)}</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Insufficient Funds Warning -->
+	{#if !data.canAfford && !data.isOnCooldown}
+		<div class="bg-amber-600/20 border border-amber-500/30 rounded-xl p-5 space-y-3">
+			<div class="flex items-start gap-3">
+				<FluentMoney20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
+				<div class="space-y-2 flex-1">
+					<h3 class="font-semibold text-amber-300 text-lg">Insufficient Funds</h3>
+					<p class="text-amber-200/90 text-sm leading-relaxed">
+						You need <strong>{data.editCost.toLocaleString()}</strong> currency to edit your profile. You currently have
+						<strong>{data.userBalance.toLocaleString()}</strong>.
+					</p>
+					<div class="bg-amber-900/30 rounded-lg p-3">
+						<p class="text-amber-100 text-sm font-medium">
+							Needed: {(data.editCost - data.userBalance).toLocaleString()} more currency
+						</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Success Message -->
-	{#if $message}
+	{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("wait") && !$message.includes("Insufficient")}
 		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
 			<p class="text-green-300 text-sm font-medium">{$message}</p>
+		</div>
+	{/if}
+
+	<!-- Error Message -->
+	{#if $message && ($message.includes("error") || $message.includes("failed") || $message.includes("wait") || $message.includes("Insufficient"))}
+		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
+			<p class="text-red-300 text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
@@ -197,22 +272,22 @@
 					accept="image/*"
 					class="hidden"
 					onchange={handleFileSelect}
-					disabled={$submitting}
+					disabled={$submitting || !canEdit}
 				/>
 
 				<button
 					type="button"
 					onclick={() => fileInput?.click()}
-					disabled={$submitting}
+					disabled={$submitting || !canEdit}
 					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
 					class:border-purple-500={dragActive}
 					class:bg-purple-600-10={dragActive}
 					class:border-purple-500-30={!dragActive && !previewUrl}
 					class:border-success={previewUrl && !dragActive}
 					class:bg-success-5={previewUrl && !dragActive}
-					class:hover:border-purple-500-50={!$submitting && !previewUrl}
-					class:hover:bg-purple-600-10={!$submitting && !previewUrl}
-					class:opacity-50={$submitting}
+					class:hover:border-purple-500-50={!$submitting && !previewUrl && canEdit}
+					class:hover:bg-purple-600-10={!$submitting && !previewUrl && canEdit}
+					class:opacity-50={$submitting || !canEdit}
 					class:input-error={$errors.avatar}
 				>
 					{#if !previewUrl}
@@ -230,7 +305,7 @@
 										Tap to upload profile picture
 									{/if}
 								</p>
-								{#if !$submitting}
+								{#if !$submitting && canEdit}
 									<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
 								{/if}
 							</div>
@@ -249,7 +324,7 @@
 							>
 								<p class="text-base font-semibold text-white">Tap to change</p>
 							</div>
-							{#if previewUrl !== data.profile.avatar}
+							{#if previewUrl !== data.profile.avatar && canEdit}
 								<button
 									type="button"
 									onclick={(e) => {
@@ -294,7 +369,7 @@
 					maxlength="50"
 					class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 					class:input-error={$errors.name}
-					disabled={$submitting}
+					disabled={$submitting || !canEdit}
 				/>
 				{#if $errors.name}
 					<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
@@ -314,7 +389,7 @@
 					maxlength="500"
 					class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 					class:input-error={$errors.bio}
-					disabled={$submitting}
+					disabled={$submitting || !canEdit}
 				></textarea>
 				{#if $errors.bio}
 					<p class="text-xs text-red-400 mt-1">{$errors.bio}</p>
@@ -327,7 +402,7 @@
 		<!-- Save Button -->
 		<button
 			type="submit"
-			disabled={$submitting}
+			disabled={$submitting || !canEdit}
 			class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
 		>
 			{#if $delayed}
@@ -335,9 +410,17 @@
 				Saving...
 			{:else}
 				<FluentCheckmark20Filled class="size-5" />
-				Save Changes
+				Save Changes ({data.editCost.toLocaleString()})
 			{/if}
 		</button>
+
+		<!-- Info Box -->
+		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
+			<p class="text-sm text-blue-300">
+				💡 <strong>Note:</strong> Profile changes cost {data.editCost.toLocaleString()} currency and have a
+				{data.cooldownHours}-hour cooldown to prevent frequent modifications.
+			</p>
+		</div>
 	</form>
 
 	<!-- Application Settings -->
