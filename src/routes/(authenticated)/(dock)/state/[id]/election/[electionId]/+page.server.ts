@@ -12,20 +12,36 @@ import {
 	residences,
 	accounts,
 	userProfiles,
-	partyMembers
+	partyMembers,
+	files
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 
-	// Get state
+	// Get state with logo
 	const state = await db.query.states.findFirst({
 		where: eq(states.id, params.id)
 	});
 
 	if (!state) {
 		throw error(404, "State not found");
+	}
+
+	// Fetch state logo
+	let stateLogo = `/static/state/${state.id}`;
+	if (state.logo) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, state.logo)
+		});
+		if (logoFile) {
+			try {
+				stateLogo = await getSignedDownloadUrl(logoFile.key);
+			} catch {
+				// Keep default static logo
+			}
+		}
 	}
 
 	// Get election
@@ -54,19 +70,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const canVote = userResidence?.region?.stateId === params.id && isActive;
 
 	// Get all parties in this state with member counts
-	const parties = await db.query.politicalParties.findAll({
+	const parties = await db.query.politicalParties.findMany({
 		where: eq(politicalParties.stateId, params.id)
 	});
 
-	// Process party logos
+	// Process party logos and leader info
 	const processedParties = await Promise.all(
 		parties.map(async (party) => {
-			let logoUrl = party.logo;
-			if (logoUrl && !logoUrl.startsWith("http")) {
-				try {
-					logoUrl = await getSignedDownloadUrl(logoUrl);
-				} catch {
-					logoUrl = null;
+			// Fetch party logo from files table
+			let logoUrl = null;
+			if (party.logo) {
+				const logoFile = await db.query.files.findFirst({
+					where: eq(files.id, party.logo)
+				});
+				if (logoFile) {
+					try {
+						logoUrl = await getSignedDownloadUrl(logoFile.key);
+					} catch {
+						logoUrl = null;
+					}
 				}
 			}
 
@@ -87,11 +109,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					where: eq(userProfiles.accountId, leader.userId)
 				});
 
-				if (leaderProfile?.avatar && !leaderProfile.avatar.startsWith("http")) {
-					try {
-						leaderProfile.avatar = await getSignedDownloadUrl(leaderProfile.avatar);
-					} catch {
-						leaderProfile.avatar = null;
+				// Fetch leader avatar from files table
+				if (leaderProfile?.avatar) {
+					const avatarFile = await db.query.files.findFirst({
+						where: eq(files.id, leaderProfile.avatar)
+					});
+					if (avatarFile) {
+						try {
+							leaderProfile.avatar = await getSignedDownloadUrl(avatarFile.key);
+						} catch {
+							leaderProfile.avatar = null;
+						}
 					}
 				}
 			}
@@ -121,7 +149,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	});
 
 	return {
-		state,
+		state: {
+			...state,
+			logo: stateLogo
+		},
 		election,
 		parties: processedParties,
 		canVote,
@@ -155,10 +186,23 @@ export const actions: Actions = {
 			return fail(404, { error: "Election not found" });
 		}
 
-		// Check if election is active
+		// Check if election is active - STRICT validation
 		const now = new Date();
-		const isActive = now >= new Date(election.startDate) && now <= new Date(election.endDate);
+		const startDate = new Date(election.startDate);
+		const endDate = new Date(election.endDate);
 
+		// Check if voting hasn't started yet
+		if (now < startDate) {
+			return fail(400, { error: "Voting has not started yet. Please wait until the election opens." });
+		}
+
+		// Check if voting has ended
+		if (now > endDate) {
+			return fail(400, { error: "Voting has ended. This election is now closed." });
+		}
+
+		// Double-check election is currently active
+		const isActive = now >= startDate && now <= endDate;
 		if (!isActive) {
 			return fail(400, { error: "Election is not currently active" });
 		}
@@ -175,13 +219,22 @@ export const actions: Actions = {
 			return fail(403, { error: "You must live in this state to vote" });
 		}
 
-		// Check if party exists in this state
+		// Check if party exists in this state and has at least 3 members
 		const party = await db.query.politicalParties.findFirst({
 			where: and(eq(politicalParties.id, partyId), eq(politicalParties.stateId, params.id))
 		});
 
 		if (!party) {
 			return fail(404, { error: "Party not found" });
+		}
+
+		// Verify party has at least 3 members
+		const partyMemberCount = await db.select().from(partyMembers).where(eq(partyMembers.partyId, partyId));
+
+		if (partyMemberCount.length < 3) {
+			return fail(400, {
+				error: "This party does not have enough members to participate in elections (minimum 3 required)"
+			});
 		}
 
 		// Check if user already voted
