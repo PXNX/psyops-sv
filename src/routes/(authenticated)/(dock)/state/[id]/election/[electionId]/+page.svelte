@@ -209,12 +209,6 @@
 				{/if}
 			</p>
 		</div>
-	{:else if !hasStarted}
-		<div class="bg-blue-600/20 border border-blue-500/30 rounded-xl p-4">
-			<p class="text-sm text-blue-300 text-center font-medium">
-				Voting will open soon. Check back when the countdown reaches zero!
-			</p>
-		</div>
 	{/if}
 
 	<!-- Election Stats -->
