@@ -101,7 +101,9 @@ export const states = pgTable("states", {
 	description: text("description"),
 	population: integer("population").default(0),
 	rating: integer("rating").default(0),
-	createdAt: timestamp("created_at").defaultNow().notNull()
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	// todo: create a separate table to distinguish what state sanctions this state, so that users from the sanctioning state cant buy from the sanctioned state
+	is_sanctioned: integer("is_sanctioned").default(0).notNull()
 });
 
 // Regions table (belongs to states)
@@ -332,7 +334,8 @@ export const regionsRelations = relations(regions, ({ one, many }) => ({
 		references: [states.id]
 	}),
 	governor: one(governors),
-	residences: many(residences)
+	residences: many(residences),
+	applications: many(residenceApplications)
 }));
 
 export const governorsRelations = relations(governors, ({ one }) => ({
@@ -1334,3 +1337,223 @@ export type NewTaxRevenue = typeof taxRevenue.$inferInsert;
 
 export type StateTreasury = typeof stateTreasury.$inferSelect;
 export type NewStateTreasury = typeof stateTreasury.$inferInsert;
+
+// State Resource Inventory (for exports)
+export const stateResourceInventory = pgTable("state_resource_inventory", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	resourceType: resourceTypeEnum("resource_type").notNull(),
+	quantity: integer("quantity").default(0).notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// State Export Listings (state-owned market listings)
+export const stateExportListings = pgTable("state_export_listings", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	resourceType: resourceTypeEnum("resource_type").notNull(),
+	quantity: integer("quantity").notNull(),
+	pricePerUnit: bigint("price_per_unit", { mode: "number" }).notNull(),
+	listedBy: text("listed_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Power Plants
+export const powerPlantTypeEnum = pgEnum("power_plant_type", [
+	"coal", // 100 MW, 500k cost
+	"gas", // 150 MW, 750k cost
+	"nuclear", // 500 MW, 2.5M cost
+	"solar", // 50 MW, 400k cost
+	"wind", // 75 MW, 600k cost
+	"hydro" // 200 MW, 1M cost
+]);
+
+export const powerPlants = pgTable("power_plants", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	plantType: powerPlantTypeEnum("plant_type").notNull(),
+	powerOutput: integer("power_output").notNull(), // in MW
+	constructionCost: bigint("construction_cost", { mode: "number" }).notNull(),
+	isOperational: integer("is_operational").default(1).notNull(),
+	builtBy: text("built_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	builtAt: timestamp("built_at").defaultNow().notNull()
+});
+
+// State Export Transactions (tracking state sales)
+export const stateExportTransactions = pgTable("state_export_transactions", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	listingId: uuid("listing_id")
+		.notNull()
+		.references(() => stateExportListings.id, { onDelete: "cascade" }),
+	buyerId: text("buyer_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	quantity: integer("quantity").notNull(),
+	totalPrice: bigint("total_price", { mode: "number" }).notNull(),
+	completedAt: timestamp("completed_at").defaultNow().notNull()
+});
+
+// Relations
+export const stateResourceInventoryRelations = relations(stateResourceInventory, ({ one }) => ({
+	state: one(states, {
+		fields: [stateResourceInventory.stateId],
+		references: [states.id]
+	})
+}));
+
+export const stateExportListingsRelations = relations(stateExportListings, ({ one, many }) => ({
+	state: one(states, {
+		fields: [stateExportListings.stateId],
+		references: [states.id]
+	}),
+	listedBy: one(accounts, {
+		fields: [stateExportListings.listedBy],
+		references: [accounts.id]
+	}),
+	transactions: many(stateExportTransactions)
+}));
+
+export const powerPlantsRelations = relations(powerPlants, ({ one }) => ({
+	state: one(states, {
+		fields: [powerPlants.stateId],
+		references: [states.id]
+	}),
+	builder: one(accounts, {
+		fields: [powerPlants.builtBy],
+		references: [accounts.id]
+	})
+}));
+
+export const stateExportTransactionsRelations = relations(stateExportTransactions, ({ one }) => ({
+	listing: one(stateExportListings, {
+		fields: [stateExportTransactions.listingId],
+		references: [stateExportListings.id]
+	}),
+	buyer: one(accounts, {
+		fields: [stateExportTransactions.buyerId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [stateExportTransactions.stateId],
+		references: [states.id]
+	})
+}));
+
+// TypeScript types
+export type StateResourceInventory = typeof stateResourceInventory.$inferSelect;
+export type NewStateResourceInventory = typeof stateResourceInventory.$inferInsert;
+
+export type StateExportListing = typeof stateExportListings.$inferSelect;
+export type NewStateExportListing = typeof stateExportListings.$inferInsert;
+
+export type PowerPlant = typeof powerPlants.$inferSelect;
+export type NewPowerPlant = typeof powerPlants.$inferInsert;
+
+export type StateExportTransaction = typeof stateExportTransactions.$inferSelect;
+export type NewStateExportTransaction = typeof stateExportTransactions.$inferInsert;
+
+// Residence Applications table
+export const residenceApplications = pgTable("residence_applications", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+	status: text("status").notNull().default("pending"), // pending, approved, rejected
+	appliedAt: timestamp("applied_at").defaultNow().notNull(),
+	reviewedAt: timestamp("reviewed_at"),
+	reviewedBy: text("reviewed_by").references(() => accounts.id, { onDelete: "set null" }),
+	reviewNote: text("review_note")
+});
+
+// State Sanctions History table
+export const stateSanctions = pgTable("state_sanctions", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	targetStateId: uuid("target_state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	sanctioningStateId: uuid("sanctioning_state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	sanctionedBy: text("sanctioned_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	reason: text("reason").notNull(),
+	sanctionedAt: timestamp("sanctioned_at").defaultNow().notNull(),
+	isActive: integer("is_active").default(1).notNull() // 1 = active, 0 = lifted
+});
+
+// Relations
+export const residenceApplicationsRelations = relations(residenceApplications, ({ one }) => ({
+	user: one(accounts, {
+		fields: [residenceApplications.userId],
+		references: [accounts.id]
+	}),
+	region: one(regions, {
+		fields: [residenceApplications.regionId],
+		references: [regions.id]
+	}),
+	reviewer: one(accounts, {
+		fields: [residenceApplications.reviewedBy],
+		references: [accounts.id]
+	})
+}));
+
+export const stateSanctionsRelations = relations(stateSanctions, ({ one }) => ({
+	targetState: one(states, {
+		fields: [stateSanctions.targetStateId],
+		references: [states.id]
+	}),
+	sanctioningState: one(states, {
+		fields: [stateSanctions.sanctioningStateId],
+		references: [states.id]
+	}),
+	sanctioner: one(accounts, {
+		fields: [stateSanctions.sanctionedBy],
+		references: [accounts.id]
+	})
+}));
+
+// TypeScript types
+export type ResidenceApplication = typeof residenceApplications.$inferSelect;
+export type NewResidenceApplication = typeof residenceApplications.$inferInsert;
+
+export type StateSanction = typeof stateSanctions.$inferSelect;
+export type NewStateSanction = typeof stateSanctions.$inferInsert;
+
+// Market Listing Cooldowns table
+export const marketListingCooldowns = pgTable("market_listing_cooldowns", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	lastRemovedAt: timestamp("last_removed_at").defaultNow().notNull()
+});
+// Relations
+export const marketListingCooldownsRelations = relations(marketListingCooldowns, ({ one }) => ({
+	user: one(accounts, {
+		fields: [marketListingCooldowns.userId],
+		references: [accounts.id]
+	})
+}));
+
+// TypeScript types
+export type MarketListingCooldown = typeof marketListingCooldowns.$inferSelect;
+export type NewMarketListingCooldown = typeof marketListingCooldowns.$inferInsert;
