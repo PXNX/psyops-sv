@@ -1587,3 +1587,129 @@ export const companyCreationCooldownRelations = relations(companyCreationCooldow
 // TypeScript types
 export type CompanyCreationCooldown = typeof companyCreationCooldown.$inferSelect;
 export type NewCompanyCreationCooldown = typeof companyCreationCooldown.$inferInsert;
+
+// Military Unit Type Enum
+export const militaryUnitTypeEnum = pgEnum("military_unit_type", [
+	"air_defence",
+	"heavy_armor",
+	"ifv",
+	"artillery",
+	"light_infantry",
+	"bomber_squadron",
+	"fighter_squadron"
+]);
+
+// Military Unit Size Enum (NATO standard)
+export const militaryUnitSizeEnum = pgEnum("military_unit_size", ["brigade", "division", "corps"]);
+
+// Military Units table
+export const militaryUnits = pgTable("military_units", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	name: varchar("name", { length: 100 }).notNull(),
+	ownerId: text("owner_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+
+	// Unit specifications
+	unitType: militaryUnitTypeEnum("unit_type").notNull(),
+	unitSize: militaryUnitSizeEnum("unit_size").notNull().default("brigade"),
+
+	// Combat stats
+	attack: integer("attack").notNull(),
+	defense: integer("defense").notNull(),
+	organization: integer("organization").default(100).notNull(), // 0-100
+
+	// Supply status
+	supplyLevel: integer("supply_level").default(100).notNull(), // 0-100
+
+	// Training status
+	isTraining: integer("is_training").default(0).notNull(), // 1 = training, 0 = ready
+	trainingStartedAt: timestamp("training_started_at"),
+	trainingCompletesAt: timestamp("training_completed_at"),
+
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Military Unit Templates (cost and requirements)
+export const militaryUnitTemplates = pgTable("military_unit_templates", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	unitType: militaryUnitTypeEnum("unit_type").notNull().unique(),
+	displayName: varchar("display_name", { length: 100 }).notNull(),
+	description: text("description"),
+
+	// Base stats for brigade size
+	baseAttack: integer("base_attack").notNull(),
+	baseDefense: integer("base_defense").notNull(),
+
+	// Training requirements
+	trainingDuration: integer("training_duration").notNull(), // in hours
+	currencyCost: bigint("currency_cost", { mode: "number" }).notNull(),
+
+	// Resource costs
+	ironCost: integer("iron_cost").default(0).notNull(),
+	steelCost: integer("steel_cost").default(0).notNull(),
+	gunpowderCost: integer("gunpowder_cost").default(0).notNull(),
+
+	// Product costs
+	riflesCost: integer("rifles_cost").default(0).notNull(),
+	ammunitionCost: integer("ammunition_cost").default(0).notNull(),
+	artilleryCost: integer("artillery_cost").default(0).notNull(),
+	vehiclesCost: integer("vehicles_cost").default(0).notNull(),
+	explosivesCost: integer("explosives_cost").default(0).notNull()
+});
+
+// Military Unit Supply Consumption
+export const militarySupplyConsumption = pgTable("military_supply_consumption", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	unitId: uuid("unit_id")
+		.notNull()
+		.references(() => militaryUnits.id, { onDelete: "cascade" })
+		.unique(),
+	lastSupplyCheck: timestamp("last_supply_check").defaultNow().notNull(),
+	dailyAmmunitionConsumption: integer("daily_ammunition_consumption").default(10).notNull(),
+	dailyFuelConsumption: integer("daily_fuel_consumption").default(5).notNull()
+});
+
+// Relations
+export const militaryUnitsRelations = relations(militaryUnits, ({ one }) => ({
+	owner: one(accounts, {
+		fields: [militaryUnits.ownerId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [militaryUnits.stateId],
+		references: [states.id]
+	}),
+	region: one(regions, {
+		fields: [militaryUnits.regionId],
+		references: [regions.id]
+	}),
+	supplyConsumption: one(militarySupplyConsumption, {
+		fields: [militaryUnits.id],
+		references: [militarySupplyConsumption.unitId]
+	})
+}));
+
+export const militarySupplyConsumptionRelations = relations(militarySupplyConsumption, ({ one }) => ({
+	unit: one(militaryUnits, {
+		fields: [militarySupplyConsumption.unitId],
+		references: [militaryUnits.id]
+	})
+}));
+
+// TypeScript types
+export type MilitaryUnit = typeof militaryUnits.$inferSelect;
+export type NewMilitaryUnit = typeof militaryUnits.$inferInsert;
+
+export type MilitaryUnitTemplate = typeof militaryUnitTemplates.$inferSelect;
+export type NewMilitaryUnitTemplate = typeof militaryUnitTemplates.$inferInsert;
+
+export type MilitarySupplyConsumption = typeof militarySupplyConsumption.$inferSelect;
+export type NewMilitarySupplyConsumption = typeof militarySupplyConsumption.$inferInsert;
