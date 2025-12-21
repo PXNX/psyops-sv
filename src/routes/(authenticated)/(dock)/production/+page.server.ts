@@ -23,31 +23,32 @@ const PRODUCTION_RECIPES = {
 	rifles: {
 		inputs: { iron: 5, steel: 3, wood: 2 },
 		output: 10,
-		duration: 60 * 60 // 1 hour in seconds
+		duration: 60 * 60
 	},
 	ammunition: {
 		inputs: { copper: 3, gunpowder: 2 },
 		output: 100,
-		duration: 30 * 60 // 30 minutes
+		duration: 30 * 60
 	},
 	artillery: {
 		inputs: { steel: 10, iron: 8, gunpowder: 5 },
 		output: 2,
-		duration: 120 * 60 // 2 hours
+		duration: 120 * 60
 	},
 	vehicles: {
 		inputs: { steel: 15, iron: 10, copper: 5 },
 		output: 1,
-		duration: 180 * 60 // 3 hours
+		duration: 180 * 60
 	},
 	explosives: {
 		inputs: { gunpowder: 10, steel: 3 },
 		output: 20,
-		duration: 45 * 60 // 45 minutes
+		duration: 45 * 60
 	}
-};
+} as const;
 
-// Raw resources that can be mined from regions
+type ProductType = keyof typeof PRODUCTION_RECIPES;
+
 const MINABLE_RESOURCES = ["iron", "copper", "coal", "wood"] as const;
 type MinableResource = (typeof MINABLE_RESOURCES)[number];
 
@@ -58,24 +59,18 @@ function isMinableResource(resource: string): resource is MinableResource {
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Get user's resources
 	const resources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
-
-	// Get user's products
 	const products = await db.select().from(productInventory).where(eq(productInventory.userId, account.id));
 
-	// Get active production
 	const activeProduction = await db
 		.select()
 		.from(productionQueue)
 		.where(eq(productionQueue.userId, account.id))
 		.limit(1);
 
-	// Check for completed production
 	if (activeProduction.length > 0) {
 		const prod = activeProduction[0];
 		if (new Date(prod.completesAt) <= new Date()) {
-			// Production complete - add to inventory
 			await db.transaction(async (tx) => {
 				const existing = await tx
 					.select()
@@ -98,11 +93,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 					});
 				}
 
-				// Remove from queue
 				await tx.delete(productionQueue).where(eq(productionQueue.id, prod.id));
 			});
 
-			// Reload after completion
 			return {
 				resources: await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
 				products: await db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
@@ -119,10 +112,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
-	// Get user's wallet
 	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
-	// Get user's current job with region and state info
 	const [currentJob] = await db
 		.select({
 			id: factoryWorkers.id,
@@ -144,9 +135,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.innerJoin(regions, eq(factories.regionId, regions.id))
 		.where(eq(factoryWorkers.userId, account.id));
 
-	// Get state energy if user has a job
 	let stateEnergyData = null;
-	if (currentJob && currentJob.stateId) {
+	if (currentJob?.stateId) {
 		[stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, currentJob.stateId));
 	}
 
@@ -169,22 +159,19 @@ export const actions: Actions = {
 		const productType = data.get("productType") as string;
 		const quantityMultiplier = parseInt(data.get("quantity") as string) || 1;
 
-		if (!PRODUCTION_RECIPES[productType as keyof typeof PRODUCTION_RECIPES]) {
+		if (!productType || !(productType in PRODUCTION_RECIPES)) {
 			return fail(400, { error: "Invalid product type" });
 		}
 
-		const recipe = PRODUCTION_RECIPES[productType as keyof typeof PRODUCTION_RECIPES];
+		const recipe = PRODUCTION_RECIPES[productType as ProductType];
 
-		// Check if already producing
 		const existing = await db.select().from(productionQueue).where(eq(productionQueue.userId, account.id));
 
 		if (existing.length > 0) {
 			return fail(400, { error: "Already producing something" });
 		}
 
-		// Check resources
 		const userResources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
-
 		const resourceMap = new Map(userResources.map((r) => [r.resourceType, r.quantity]));
 
 		for (const [resource, required] of Object.entries(recipe.inputs)) {
@@ -196,9 +183,7 @@ export const actions: Actions = {
 			}
 		}
 
-		// Start production
 		await db.transaction(async (tx) => {
-			// Deduct resources
 			for (const [resource, required] of Object.entries(recipe.inputs)) {
 				const [inv] = await tx
 					.select()
@@ -216,7 +201,6 @@ export const actions: Actions = {
 				}
 			}
 
-			// Add to production queue
 			const completesAt = new Date(Date.now() + recipe.duration * 1000 * quantityMultiplier);
 			await tx.insert(productionQueue).values({
 				userId: account.id,
@@ -235,7 +219,6 @@ export const actions: Actions = {
 		const data = await request.formData();
 		const factoryId = data.get("factoryId") as string;
 
-		// Get factory with region and state info
 		const [factory] = await db
 			.select({
 				id: factories.id,
@@ -260,26 +243,22 @@ export const actions: Actions = {
 			return fail(400, { error: "Factory must be in a valid state" });
 		}
 
-		// Check state energy
-		if (factory.stateId) {
-			const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, factory.stateId));
+		const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, factory.stateId));
 
-			if (energy) {
-				const availableEnergy = energy.totalProduction - energy.usedProduction;
-				if (availableEnergy < 0) {
-					return fail(400, {
-						error: "Insufficient state energy. This factory cannot operate until the state increases energy production."
-					});
-				}
+		if (energy) {
+			const availableEnergy = energy.totalProduction - energy.usedProduction;
+			if (availableEnergy < 0) {
+				return fail(400, {
+					error: "Insufficient state energy. This factory cannot operate until the state increases energy production."
+				});
 			}
 		}
 
-		// Check work cooldown
 		const [existingJob] = await db.select().from(factoryWorkers).where(eq(factoryWorkers.userId, account.id));
 
-		if (existingJob && existingJob.lastWorked) {
+		if (existingJob?.lastWorked) {
 			const timeSinceWork = Date.now() - new Date(existingJob.lastWorked).getTime();
-			const COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
+			const COOLDOWN = 24 * 60 * 60 * 1000;
 
 			if (timeSinceWork < COOLDOWN) {
 				const hoursLeft = Math.ceil((COOLDOWN - timeSinceWork) / (60 * 60 * 1000));
@@ -289,7 +268,6 @@ export const actions: Actions = {
 			}
 		}
 
-		// Check regional resources for mines (only for raw resources)
 		if (factory.factoryType === "mine" && factory.resourceOutput && isMinableResource(factory.resourceOutput)) {
 			const [resource] = await db
 				.select()
@@ -314,32 +292,32 @@ export const actions: Actions = {
 			}
 		}
 
-		// Execute work
-		await db.transaction(async (tx) => {
-			// Calculate tax on mining income
-			const taxResult = await calculateAndCollectTax(factory.stateId!, "income", factory.workerWage, account.id);
+		let taxAmount = 0;
+		let netAmount = factory.workerWage;
 
-			// Pay worker (after tax)
+		await db.transaction(async (tx) => {
+			const taxResult = await calculateAndCollectTax(factory.stateId!, "income", factory.workerWage, account.id);
+			taxAmount = taxResult.taxAmount;
+			netAmount = taxResult.netAmount;
+
 			const [workerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
 			if (workerWallet) {
 				await tx
 					.update(userWallets)
 					.set({
-						balance: sql`${userWallets.balance} + ${taxResult.netAmount}`,
+						balance: sql`${userWallets.balance} + ${netAmount}`,
 						updatedAt: new Date()
 					})
 					.where(eq(userWallets.userId, account.id));
 			} else {
 				await tx.insert(userWallets).values({
 					userId: account.id,
-					balance: taxResult.netAmount
+					balance: netAmount
 				});
 			}
 
-			// Give owner resources (if mine)
 			if (factory.factoryType === "mine" && factory.resourceOutput) {
-				// Only deduct from regional reserves if it's a raw minable resource
 				if (isMinableResource(factory.resourceOutput)) {
 					await tx
 						.update(regionalResources)
@@ -354,7 +332,6 @@ export const actions: Actions = {
 						);
 				}
 
-				// Add to owner's inventory
 				const [ownerInv] = await tx
 					.select()
 					.from(resourceInventory)
@@ -382,7 +359,6 @@ export const actions: Actions = {
 				}
 			}
 
-			// Update work record
 			if (existingJob) {
 				await tx
 					.update(factoryWorkers)
@@ -404,9 +380,9 @@ export const actions: Actions = {
 		return {
 			success: true,
 			earned: factory.workerWage,
-			netEarned: taxResult.netAmount,
-			taxPaid: taxResult.taxAmount,
-			message: `Worked successfully! Earned ${factory.workerWage.toLocaleString()} currency (${taxResult.netAmount.toLocaleString()} after ${taxResult.taxAmount.toLocaleString()} tax).`
+			netEarned: netAmount,
+			taxPaid: taxAmount,
+			message: `Worked successfully! Earned ${factory.workerWage.toLocaleString()} currency (${netAmount.toLocaleString()} after ${taxAmount.toLocaleString()} tax).`
 		};
 	}
 };
