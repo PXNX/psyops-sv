@@ -205,8 +205,6 @@ export const actions: Actions = {
 					memberCount: sql`${politicalParties.memberCount} - 1`
 				})
 				.where(eq(politicalParties.id, partyId));
-
-			throw redirect(303, "/party");
 		} catch (err) {
 			// Re-throw redirect errors
 			if (err instanceof Response && err.status === 303) {
@@ -215,6 +213,8 @@ export const actions: Actions = {
 			console.error("Leave party error:", err);
 			return fail(500, { error: "Failed to leave party" });
 		}
+
+		redirect(303, "/party");
 	},
 
 	delete: async ({ params, locals }) => {
@@ -259,8 +259,6 @@ export const actions: Actions = {
 
 			// Delete party (cascade will handle party members)
 			await db.delete(politicalParties).where(eq(politicalParties.id, partyId));
-
-			throw redirect(303, "/party");
 		} catch (err) {
 			// Re-throw redirect errors
 			if (err instanceof Response && err.status === 303) {
@@ -269,5 +267,7 @@ export const actions: Actions = {
 			console.error("Delete party error:", err);
 			return fail(500, { error: "Failed to delete party" });
 		}
+
+		redirect(303, "/party");
 	}
 };

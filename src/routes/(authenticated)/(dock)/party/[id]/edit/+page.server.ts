@@ -304,8 +304,6 @@ export const actions: Actions = {
 
 			// Delete party (cascade will handle party members and edit history)
 			await db.delete(politicalParties).where(eq(politicalParties.id, partyId));
-
-			throw redirect(303, "/party");
 		} catch (err) {
 			// Re-throw redirect errors
 			if (err instanceof Response && err.status === 303) {
@@ -314,5 +312,7 @@ export const actions: Actions = {
 			console.error("Delete party error:", err);
 			return fail(500, { error: "Failed to delete party" });
 		}
+
+		redirect(303, "/party");
 	}
 };
