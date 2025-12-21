@@ -1,13 +1,24 @@
+<!-- src/routes/production/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import FluentChartMultiple20Filled from "~icons/fluent/chart-multiple-20-filled";
+	import FluentProduction20Filled from "~icons/fluent/production-20-filled";
+	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
+	import FluentBox20Filled from "~icons/fluent/box-20-filled";
+	import FluentCube20Filled from "~icons/fluent/cube-20-filled";
+	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
+	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
+	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import FluentEmojiShoppingCart from "~icons/fluent-emoji/shopping-cart";
+	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
+	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
+	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 
 	let { data } = $props();
 
 	let selectedProduct = $state("rifles");
 	let productionQuantity = $state(1);
 
-	// Resource icons/logos (using emoji as placeholders)
 	const resourceIcons: Record<string, string> = {
 		iron: "⛏️",
 		copper: "🔶",
@@ -26,9 +37,7 @@
 	};
 
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
-
 	const productMap = $derived(new Map(data.products.map((p) => [p.productType, p.quantity])));
-
 	const activeProduction = $derived(data.activeProduction[0]);
 
 	const canProduce = $derived.by(() => {
@@ -53,12 +62,15 @@
 		if (!activeProduction) return "";
 		const remaining = new Date(activeProduction.completesAt).getTime() - Date.now();
 		if (remaining <= 0) return "Complete!";
-		const minutes = Math.floor(remaining / 60000);
+		const hours = Math.floor(remaining / 3600000);
+		const minutes = Math.floor((remaining % 3600000) / 60000);
 		const seconds = Math.floor((remaining % 60000) / 1000);
-		return `${minutes}m ${seconds}s`;
+
+		if (hours > 0) return `${hours}h ${minutes}m`;
+		if (minutes > 0) return `${minutes}m ${seconds}s`;
+		return `${seconds}s`;
 	});
 
-	// Auto-refresh for production progress
 	$effect(() => {
 		if (activeProduction) {
 			const interval = setInterval(() => {
@@ -71,343 +83,339 @@
 	});
 </script>
 
-<div class="container mx-auto p-4 max-w-7xl">
+<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
-	<div class="mb-6">
-		<div class="flex items-center justify-between">
-			<div>
-				<h1 class="text-4xl font-bold flex items-center gap-3">
-					<FluentChartMultiple20Filled class="w-10 h-10" />
-					Arms Production
-				</h1>
-				<p class="text-base-content/70 mt-2">Manufacture weapons and equipment</p>
-			</div>
+	<div class="flex items-center justify-between">
+		<div>
+			<h1 class="text-3xl font-bold text-white">Production Facility</h1>
+			<p class="text-gray-400">Manufacture weapons and equipment for your military</p>
+		</div>
 
-			<!-- Quick Stats -->
-			<div class="stats shadow">
-				<div class="stat">
-					<div class="stat-figure text-primary">
-						<FluentChartMultiple20Filled class="w-8 h-8" />
-					</div>
-					<div class="stat-title">Balance</div>
-					<div class="stat-value text-primary text-2xl">${(data.wallet.balance / 100).toFixed(2)}</div>
-				</div>
+		<!-- Quick Actions -->
+		<div class="flex gap-3">
+			<a
+				href="/market"
+				class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+			>
+				<FluentEmojiShoppingCart class="size-5" />
+				Market
+			</a>
 
-				<div class="stat">
-					<div class="stat-figure text-secondary">
-						<FluentChartMultiple20Filled class="w-8 h-8" />
-					</div>
-					<div class="stat-title">Production Slot</div>
-					<div class="stat-value text-secondary text-2xl">
-						{#if activeProduction}
-							<span class="loading loading-spinner loading-md"></span>
-						{:else}
-							<span class="text-success">Ready</span>
-						{/if}
-					</div>
-				</div>
-			</div>
+			<a
+				href="/factory/create"
+				class="btn bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
+			>
+				<FluentAdd20Filled class="size-5" />
+				Create Factory
+			</a>
 		</div>
 	</div>
 
-	<!-- Main Content Grid -->
+	<!-- Balance & Status -->
+	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+			<div class="flex items-center gap-3">
+				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+					<FluentMoney20Filled class="size-5 text-green-400" />
+				</div>
+				<div>
+					<p class="text-xs text-gray-400">Balance</p>
+					<p class="text-lg font-bold text-white">{data.wallet.balance.toLocaleString()}</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+			<div class="flex items-center gap-3">
+				<div
+					class="size-10 rounded-lg flex items-center justify-center {activeProduction
+						? 'bg-amber-600/20'
+						: 'bg-emerald-600/20'}"
+				>
+					<FluentFactory20Filled class="size-5 {activeProduction ? 'text-amber-400' : 'text-emerald-400'}" />
+				</div>
+				<div>
+					<p class="text-xs text-gray-400">Production Status</p>
+					<p class="text-lg font-bold {activeProduction ? 'text-amber-400' : 'text-emerald-400'}">
+						{activeProduction ? "Active" : "Ready"}
+					</p>
+				</div>
+			</div>
+		</div>
+
+		{#if data.currentJob}
+			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+				<div class="flex items-center gap-3">
+					<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+						<FluentBriefcase20Filled class="size-5 text-blue-400" />
+					</div>
+					<div>
+						<p class="text-xs text-gray-400">Current Job</p>
+						<p class="text-sm font-bold text-white truncate">{data.currentJob.factoryName}</p>
+					</div>
+				</div>
+			</div>
+		{:else}
+			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+				<div class="flex items-center gap-3">
+					<div class="size-10 bg-gray-600/20 rounded-lg flex items-center justify-center">
+						<FluentBriefcase20Filled class="size-5 text-gray-400" />
+					</div>
+					<div>
+						<p class="text-xs text-gray-400">Employment</p>
+						<p class="text-sm font-bold text-gray-300">Unemployed</p>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</div>
+
+	<!-- Main Content -->
 	<div class="grid lg:grid-cols-3 gap-6">
-		<!-- Left Column - Inventory -->
+		<!-- Inventory Sidebar -->
 		<div class="space-y-6">
 			<!-- Resources -->
-			<div class="card bg-base-200 shadow-xl">
-				<div class="card-body">
-					<h2 class="card-title text-lg">
-						<FluentChartMultiple20Filled class="w-5 h-5" />
-						Resources
-					</h2>
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+				<div class="flex items-center gap-2">
+					<FluentBox20Filled class="size-5 text-purple-400" />
+					<h2 class="text-lg font-semibold text-white">Resources</h2>
+				</div>
 
-					<div class="space-y-2">
-						{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
-							{@const quantity = resourceMap.get(resource) || 0}
-							<div
-								class="flex items-center justify-between p-2 bg-base-300 rounded-lg hover:bg-base-300/70 transition-colors"
-							>
-								<div class="flex items-center gap-2">
-									<span class="text-2xl">{resourceIcons[resource]}</span>
-									<span class="font-medium capitalize">{resource}</span>
-								</div>
-								<span class="badge badge-lg {quantity > 0 ? 'badge-primary' : 'badge-ghost'} font-bold">
-									{quantity}
-								</span>
+				<div class="space-y-2">
+					{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
+						{@const quantity = resourceMap.get(resource) || 0}
+						<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30">
+							<div class="flex items-center gap-2">
+								<span class="text-xl">{resourceIcons[resource]}</span>
+								<span class="font-medium capitalize text-gray-300">{resource}</span>
 							</div>
-						{/each}
-					</div>
+							<span
+								class="badge {quantity > 0
+									? 'bg-purple-600/20 text-purple-300 border-purple-500/30'
+									: 'bg-slate-700 text-gray-400 border-slate-600'} font-bold"
+							>
+								{quantity}
+							</span>
+						</div>
+					{/each}
 				</div>
 			</div>
 
 			<!-- Products -->
-			<div class="card bg-base-200 shadow-xl">
-				<div class="card-body">
-					<h2 class="card-title text-lg">
-						<FluentChartMultiple20Filled class="w-5 h-5" />
-						Products
-					</h2>
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+				<div class="flex items-center gap-2">
+					<FluentCube20Filled class="size-5 text-purple-400" />
+					<h2 class="text-lg font-semibold text-white">Products</h2>
+				</div>
 
-					<div class="space-y-2">
-						{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
-							{@const quantity = productMap.get(product) || 0}
-							<div
-								class="flex items-center justify-between p-2 bg-base-300 rounded-lg hover:bg-base-300/70 transition-colors"
-							>
-								<div class="flex items-center gap-2">
-									<span class="text-2xl">{productIcons[product]}</span>
-									<span class="font-medium capitalize">{product}</span>
-								</div>
-								<span class="badge badge-lg {quantity > 0 ? 'badge-success' : 'badge-ghost'} font-bold">
-									{quantity}
-								</span>
+				<div class="space-y-2">
+					{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
+						{@const quantity = productMap.get(product) || 0}
+						<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30">
+							<div class="flex items-center gap-2">
+								<span class="text-xl">{productIcons[product]}</span>
+								<span class="font-medium capitalize text-gray-300">{product}</span>
 							</div>
-						{/each}
-					</div>
+							<span
+								class="badge {quantity > 0
+									? 'bg-green-600/20 text-green-300 border-green-500/30'
+									: 'bg-slate-700 text-gray-400 border-slate-600'} font-bold"
+							>
+								{quantity}
+							</span>
+						</div>
+					{/each}
 				</div>
 			</div>
 		</div>
 
-		<!-- Middle Column - Production Slot -->
+		<!-- Production Area -->
 		<div class="lg:col-span-2">
-			<div class="card bg-gradient-to-br from-base-200 to-base-300 shadow-xl">
-				<div class="card-body">
-					<h2 class="card-title text-xl mb-4">
-						<FluentChartMultiple20Filled class="w-6 h-6" />
-						Production Facility
-					</h2>
+			{#if activeProduction}
+				<!-- Active Production Display -->
+				<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+					<div class="flex items-center gap-2">
+						<FluentFactory20Filled class="size-5 text-purple-400" />
+						<h2 class="text-lg font-semibold text-white">Production In Progress</h2>
+					</div>
 
-					{#if activeProduction}
-						<!-- Active Production -->
-						<div class="space-y-4">
-							<div class="alert alert-info shadow-lg">
-								<div class="flex-1">
-									<div class="flex items-center gap-3 mb-2">
-										<span class="text-3xl">{productIcons[activeProduction.productType]}</span>
-										<div>
-											<h3 class="font-bold text-lg">
-												Producing {activeProduction.productType}
-											</h3>
-											<p class="text-sm opacity-70">
-												Quantity: {activeProduction.quantity} units
-											</p>
-										</div>
-									</div>
-								</div>
+					<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-5 space-y-4">
+						<div class="flex items-start gap-4">
+							<span class="text-4xl">{productIcons[activeProduction.productType]}</span>
+							<div class="flex-1">
+								<h3 class="text-xl font-bold text-white capitalize mb-1">{activeProduction.productType}</h3>
+								<p class="text-gray-400">Producing {activeProduction.quantity} units</p>
 							</div>
-
-							<div class="bg-base-100 rounded-lg p-4">
-								<div class="flex justify-between items-center mb-2">
-									<span class="text-sm font-medium">Production Progress</span>
-									<span class="text-sm font-bold">{Math.floor(productionProgress)}%</span>
-								</div>
-								<progress class="progress progress-primary w-full h-4" value={productionProgress} max="100"></progress>
-
-								<div class="mt-3 text-center">
-									<div class="text-xs text-base-content/60">Time Remaining</div>
-									<div class="text-2xl font-bold text-primary">{timeRemaining}</div>
-								</div>
-							</div>
-
-							<div class="alert">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									class="stroke-info shrink-0 w-6 h-6"
-									><path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-									></path></svg
-								>
-								<span class="text-sm"
-									>Your production will complete automatically. Items will be added to your inventory.</span
-								>
+							<div class="text-right">
+								<p class="text-xs text-gray-400">Remaining</p>
+								<p class="text-2xl font-bold text-amber-400">{timeRemaining}</p>
 							</div>
 						</div>
-					{:else}
-						<!-- Production Form -->
-						<form method="POST" action="?/startProduction" use:enhance class="space-y-6">
-							<!-- Product Selection -->
-							<div class="form-control">
-								<label class="label">
-									<span class="label-text font-semibold">Select Product to Manufacture</span>
-								</label>
-								<select name="productType" class="select select-bordered select-lg" bind:value={selectedProduct}>
-									{#each Object.keys(data.recipes) as product}
-										<option value={product}>
-											{productIcons[product]}
-											{product.charAt(0).toUpperCase() + product.slice(1)}
-										</option>
-									{/each}
-								</select>
-							</div>
 
-							<!-- Quantity Multiplier -->
-							<div class="form-control">
-								<label class="label">
-									<span class="label-text font-semibold">Batch Multiplier</span>
-									<span class="label-text-alt">1-10 batches</span>
-								</label>
-								<input
-									type="range"
-									name="quantity"
-									min="1"
-									max="10"
-									class="range range-primary"
-									bind:value={productionQuantity}
-								/>
-								<div class="w-full flex justify-between text-xs px-2 mt-1">
-									<span>1×</span>
-									<span>2×</span>
-									<span>3×</span>
-									<span>4×</span>
-									<span>5×</span>
-									<span>6×</span>
-									<span>7×</span>
-									<span>8×</span>
-									<span>9×</span>
-									<span>10×</span>
+						<div>
+							<div class="flex justify-between items-center mb-2">
+								<span class="text-sm font-medium text-gray-300">Progress</span>
+								<span class="text-sm font-bold text-white">{Math.floor(productionProgress)}%</span>
+							</div>
+							<div class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
+								<div
+									class="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000"
+									style="width: {productionProgress}%"
+								></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
+						<p class="text-sm text-blue-300">
+							<FluentFlash20Filled class="inline size-4" />
+							Production will complete automatically. Items will be added to your inventory.
+						</p>
+					</div>
+				</div>
+			{:else}
+				<!-- Production Form -->
+				<form
+					method="POST"
+					action="?/startProduction"
+					use:enhance
+					class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-5"
+				>
+					<div class="flex items-center gap-2">
+						<FluentProduction20Filled class="size-5 text-purple-400" />
+						<h2 class="text-lg font-semibold text-white">Start Production</h2>
+					</div>
+
+					<!-- Product Selection -->
+					<div>
+						<label for="productType" class="block text-sm font-medium text-gray-300 mb-2">
+							Product Type <span class="text-red-400">*</span>
+						</label>
+						<select
+							id="productType"
+							name="productType"
+							bind:value={selectedProduct}
+							class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+						>
+							{#each Object.keys(data.recipes) as product}
+								<option value={product}>
+									{productIcons[product]}
+									{product.charAt(0).toUpperCase() + product.slice(1)}
+								</option>
+							{/each}
+						</select>
+					</div>
+
+					<!-- Batch Multiplier -->
+					<div>
+						<label for="quantity" class="block text-sm font-medium text-gray-300 mb-2">
+							Batch Size: <span class="text-white font-bold">×{productionQuantity}</span>
+						</label>
+						<input
+							type="range"
+							id="quantity"
+							name="quantity"
+							min="1"
+							max="10"
+							bind:value={productionQuantity}
+							class="range range-primary"
+						/>
+						<div class="flex justify-between text-xs text-gray-400 px-2 mt-1">
+							<span>1</span>
+							<span>5</span>
+							<span>10</span>
+						</div>
+					</div>
+
+					<!-- Recipe Display -->
+					{#if data.recipes[selectedProduct]}
+						<div class="bg-slate-700/30 rounded-xl p-5 space-y-4 border border-slate-600/30">
+							<div class="flex items-center justify-between">
+								<h3 class="font-semibold text-white">Production Recipe</h3>
+								<div class="badge bg-purple-600/20 text-purple-300 border-purple-500/30">
+									×{productionQuantity} batch{productionQuantity > 1 ? "es" : ""}
 								</div>
 							</div>
 
-							<!-- Recipe Display -->
-							{#if data.recipes[selectedProduct]}
-								<div class="bg-base-100 rounded-xl p-6 border-2 border-base-300">
-									<div class="flex items-center justify-between mb-4">
-										<h3 class="text-lg font-bold">Production Recipe</h3>
-										<div class="badge badge-lg badge-outline">×{productionQuantity}</div>
+							<!-- Output -->
+							<div class="bg-green-600/10 border-2 border-green-500/30 rounded-lg p-4">
+								<p class="text-xs font-semibold text-green-400 mb-2">OUTPUT</p>
+								<div class="flex items-center gap-3">
+									<span class="text-3xl">{productIcons[selectedProduct]}</span>
+									<div>
+										<p class="text-2xl font-bold text-green-400">
+											{data.recipes[selectedProduct].output * productionQuantity}
+										</p>
+										<p class="text-sm text-gray-300 capitalize">{selectedProduct}</p>
 									</div>
+								</div>
+							</div>
 
-									<!-- Output -->
-									<div class="bg-success/10 border-2 border-success/30 rounded-lg p-4 mb-4">
-										<div class="text-xs text-success font-semibold mb-1">OUTPUT</div>
-										<div class="flex items-center gap-3">
-											<span class="text-4xl">{productIcons[selectedProduct]}</span>
-											<div>
-												<div class="text-2xl font-bold text-success">
-													{data.recipes[selectedProduct].output * productionQuantity}
-												</div>
-												<div class="text-sm capitalize">{selectedProduct}</div>
-											</div>
+							<!-- Required Resources -->
+							<div class="space-y-2">
+								<p class="text-xs font-semibold text-gray-400">REQUIRED RESOURCES</p>
+								{#each Object.entries(data.recipes[selectedProduct].inputs) as [resource, amount]}
+									{@const available = resourceMap.get(resource) || 0}
+									{@const needed = amount * productionQuantity}
+									{@const hasEnough = available >= needed}
+									<div
+										class="flex items-center justify-between p-3 rounded-lg border-2 {hasEnough
+											? 'bg-green-600/5 border-green-500/20'
+											: 'bg-red-600/5 border-red-500/20'}"
+									>
+										<div class="flex items-center gap-2">
+											<span class="text-lg">{resourceIcons[resource]}</span>
+											<span class="font-medium capitalize text-gray-300">{resource}</span>
+										</div>
+										<div class="text-right">
+											<p class="font-bold {hasEnough ? 'text-green-400' : 'text-red-400'}">
+												{needed} needed
+											</p>
+											<p class="text-xs text-gray-400">{available} available</p>
 										</div>
 									</div>
+								{/each}
+							</div>
 
-									<!-- Inputs -->
-									<div class="space-y-2 mb-4">
-										<div class="text-xs font-semibold text-base-content/60">REQUIRED RESOURCES</div>
-										{#each Object.entries(data.recipes[selectedProduct].inputs) as [resource, amount]}
-											{@const available = resourceMap.get(resource) || 0}
-											{@const needed = amount * productionQuantity}
-											{@const hasEnough = available >= needed}
-											<div
-												class="flex items-center justify-between p-3 bg-base-200 rounded-lg border-2 {hasEnough
-													? 'border-success/30'
-													: 'border-error/30'}"
-											>
-												<div class="flex items-center gap-2">
-													<span class="text-xl">{resourceIcons[resource]}</span>
-													<span class="font-medium capitalize">{resource}</span>
-												</div>
-												<div class="text-right">
-													<div class="font-bold {hasEnough ? 'text-success' : 'text-error'}">
-														{needed} required
-													</div>
-													<div class="text-xs text-base-content/60">
-														{available} available
-													</div>
-												</div>
-											</div>
-										{/each}
-									</div>
-
-									<!-- Production Time -->
-									<div class="flex items-center justify-between text-sm">
-										<span class="text-base-content/60">Production Time:</span>
-										<span class="font-bold"
-											>{Math.floor((data.recipes[selectedProduct].duration * productionQuantity) / 60)} minutes</span
-										>
-									</div>
+							<!-- Production Time -->
+							<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+								<div class="flex items-center gap-2">
+									<FluentClock20Filled class="size-4 text-gray-400" />
+									<span class="text-sm text-gray-400">Production Time</span>
 								</div>
-							{/if}
-
-							<!-- Submit Button -->
-							<button type="submit" class="btn btn-primary btn-lg w-full" disabled={!canProduce}>
-								{#if canProduce}
-									<FluentChartMultiple20Filled class="w-5 h-5" />
-									Start Production
-								{:else}
-									<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5 stroke-current"
-										><path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-										></path></svg
-									>
-									Insufficient Resources
-								{/if}
-							</button>
-						</form>
+								<span class="font-bold text-white">
+									{Math.floor((data.recipes[selectedProduct].duration * productionQuantity) / 60)} minutes
+								</span>
+							</div>
+						</div>
 					{/if}
-				</div>
-			</div>
 
-			<!-- Production Tips -->
-			{#if !activeProduction}
-				<div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-					<div class="alert alert-info">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							class="stroke-current shrink-0 w-6 h-6"
-							><path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-							></path></svg
-						>
-						<span class="text-xs">Only 1 production slot available at a time</span>
-					</div>
-					<div class="alert alert-success">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							class="stroke-current shrink-0 w-6 h-6"
-							><path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-							></path></svg
-						>
-						<span class="text-xs">Resources are consumed when production starts</span>
-					</div>
-					<div class="alert">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							class="stroke-current shrink-0 w-6 h-6"
-							><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"
-							></path></svg
-						>
-						<span class="text-xs">Batch production multiplies time and resources</span>
-					</div>
-				</div>
+					<!-- Submit -->
+					<button
+						type="submit"
+						disabled={!canProduce}
+						class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
+					>
+						{#if canProduce}
+							<FluentCheckmark20Filled class="size-5" />
+							Start Production
+						{:else}
+							<FluentWarning20Filled class="size-5" />
+							Insufficient Resources
+						{/if}
+					</button>
+
+					<!-- Info -->
+					{#if !canProduce}
+						<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">
+							<p class="text-sm text-amber-300">
+								<FluentWarning20Filled class="inline size-4" />
+								You need more resources to start this production. Visit the market or work at a factory to earn resources.
+							</p>
+						</div>
+					{/if}
+				</form>
 			{/if}
 		</div>
 	</div>
 </div>
-
-<style>
-	:global(body) {
-		min-height: 100vh;
-	}
-</style>

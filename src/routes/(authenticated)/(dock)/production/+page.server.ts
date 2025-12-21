@@ -1,3 +1,4 @@
+// src/routes/production/+page.server.ts
 import { db } from "$lib/server/db";
 import {
 	companies,
@@ -6,9 +7,13 @@ import {
 	marketListings,
 	productInventory,
 	productionQueue,
+	regionalResources,
+	regions,
 	resourceInventory,
+	stateEnergy,
 	userWallets
 } from "$lib/server/schema";
+import { calculateAndCollectTax } from "$lib/server/taxes";
 import { fail } from "@sveltejs/kit";
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -41,6 +46,14 @@ const PRODUCTION_RECIPES = {
 		duration: 45 * 60 // 45 minutes
 	}
 };
+
+// Raw resources that can be mined from regions
+const MINABLE_RESOURCES = ["iron", "copper", "coal", "wood"] as const;
+type MinableResource = (typeof MINABLE_RESOURCES)[number];
+
+function isMinableResource(resource: string): resource is MinableResource {
+	return MINABLE_RESOURCES.includes(resource as any);
+}
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -91,16 +104,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 			// Reload after completion
 			return {
-				resources,
+				resources: await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
 				products: await db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
 				activeProduction: [],
 				recipes: PRODUCTION_RECIPES,
-				wallet: { balance: 0 },
-				marketListings: [],
-				factories: [],
+				wallet: await db
+					.select()
+					.from(userWallets)
+					.where(eq(userWallets.userId, account.id))
+					.then((r) => r[0] || { balance: 10000 }),
 				currentJob: null,
-				marketStats: { totalListings: 0, totalVolume: 0 },
-				resourcePrices: []
+				stateEnergy: null
 			};
 		}
 	}
@@ -108,39 +122,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Get user's wallet
 	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
-	// Get market listings
-	const listings = await db
-		.select({
-			id: marketListings.id,
-			sellerId: marketListings.sellerId,
-			itemType: marketListings.itemType,
-			itemName: marketListings.itemName,
-			quantity: marketListings.quantity,
-			pricePerUnit: marketListings.pricePerUnit,
-			createdAt: marketListings.createdAt
-		})
-		.from(marketListings)
-		.orderBy(desc(marketListings.createdAt));
-
-	// Get available factories with company info
-	const availableFactories = await db
-		.select({
-			id: factories.id,
-			name: factories.name,
-			factoryType: factories.factoryType,
-			resourceOutput: factories.resourceOutput,
-			workerWage: factories.workerWage,
-			productionRate: factories.productionRate,
-			maxWorkers: factories.maxWorkers,
-			companyId: companies.id,
-			companyName: companies.name,
-			companyLogo: companies.logo
-		})
-		.from(factories)
-		.innerJoin(companies, eq(factories.companyId, companies.id))
-		.limit(20);
-
-	// Get user's current job
+	// Get user's current job with region and state info
 	const [currentJob] = await db
 		.select({
 			id: factoryWorkers.id,
@@ -148,46 +130,25 @@ export const load: PageServerLoad = async ({ locals }) => {
 			jobType: factoryWorkers.jobType,
 			lastWorked: factoryWorkers.lastWorked,
 			factoryName: factories.name,
+			factoryType: factories.factoryType,
+			resourceOutput: factories.resourceOutput,
 			companyName: companies.name,
 			companyLogo: companies.logo,
-			wage: factories.workerWage
+			wage: factories.workerWage,
+			regionId: factories.regionId,
+			stateId: regions.stateId
 		})
 		.from(factoryWorkers)
 		.innerJoin(factories, eq(factoryWorkers.factoryId, factories.id))
 		.innerJoin(companies, eq(factories.companyId, companies.id))
+		.innerJoin(regions, eq(factories.regionId, regions.id))
 		.where(eq(factoryWorkers.userId, account.id));
 
-	// Get market statistics for charts
-	const marketStats = {
-		totalListings: listings.length,
-		totalVolume: listings.reduce((sum, l) => sum + l.quantity, 0)
-	};
-
-	// Calculate average prices per resource/product for charts
-	const resourcePrices = listings.reduce(
-		(acc, listing) => {
-			const key = `${listing.itemType}-${listing.itemName}`;
-			if (!acc[key]) {
-				acc[key] = {
-					name: listing.itemName,
-					type: listing.itemType,
-					prices: [],
-					quantities: []
-				};
-			}
-			acc[key].prices.push(listing.pricePerUnit);
-			acc[key].quantities.push(listing.quantity);
-			return acc;
-		},
-		{} as Record<string, any>
-	);
-
-	const priceData = Object.values(resourcePrices).map((item: any) => ({
-		name: item.name,
-		type: item.type,
-		avgPrice: Math.floor(item.prices.reduce((a: number, b: number) => a + b, 0) / item.prices.length),
-		totalQuantity: item.quantities.reduce((a: number, b: number) => a + b, 0)
-	}));
+	// Get state energy if user has a job
+	let stateEnergyData = null;
+	if (currentJob && currentJob.stateId) {
+		[stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, currentJob.stateId));
+	}
 
 	return {
 		resources,
@@ -195,11 +156,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		activeProduction,
 		recipes: PRODUCTION_RECIPES,
 		wallet: wallet || { balance: 10000 },
-		marketListings: listings,
-		factories: availableFactories,
-		currentJob,
-		marketStats,
-		resourcePrices: priceData
+		currentJob: currentJob || null,
+		stateEnergy: stateEnergyData
 	};
 };
 
@@ -230,7 +188,7 @@ export const actions: Actions = {
 		const resourceMap = new Map(userResources.map((r) => [r.resourceType, r.quantity]));
 
 		for (const [resource, required] of Object.entries(recipe.inputs)) {
-			const available = resourceMap.get(resource) || 0;
+			const available = resourceMap.get(resource as any) || 0;
 			if (available < required * quantityMultiplier) {
 				return fail(400, {
 					error: `Insufficient ${resource}: need ${required * quantityMultiplier}, have ${available}`
@@ -271,207 +229,13 @@ export const actions: Actions = {
 		return { success: true };
 	},
 
-	createListing: async ({ request, locals }) => {
-		const account = locals.account!;
-
-		const data = await request.formData();
-		const itemType = data.get("itemType") as string;
-		const itemName = data.get("itemName") as string;
-		const quantity = parseInt(data.get("quantity") as string);
-		const pricePerUnit = parseFloat(data.get("pricePerUnit") as string);
-
-		if (!itemType || !itemName || !quantity || !pricePerUnit) {
-			return fail(400, { error: "Missing fields" });
-		}
-
-		// Check if user has the items
-		if (itemType === "resource") {
-			const [inv] = await db
-				.select()
-				.from(resourceInventory)
-				.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, itemName as any)));
-
-			if (!inv || inv.quantity < quantity) {
-				return fail(400, { error: "Insufficient resources" });
-			}
-
-			// Deduct from inventory and create listing
-			await db.transaction(async (tx) => {
-				await tx
-					.update(resourceInventory)
-					.set({
-						quantity: sql`${resourceInventory.quantity} - ${quantity}`,
-						updatedAt: new Date()
-					})
-					.where(eq(resourceInventory.id, inv.id));
-
-				await tx.insert(marketListings).values({
-					sellerId: account.id,
-					itemType,
-					itemName,
-					quantity,
-					pricePerUnit: pricePerUnit
-				});
-			});
-		} else {
-			const [inv] = await db
-				.select()
-				.from(productInventory)
-				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
-
-			if (!inv || inv.quantity < quantity) {
-				return fail(400, { error: "Insufficient products" });
-			}
-
-			await db.transaction(async (tx) => {
-				await tx
-					.update(productInventory)
-					.set({
-						quantity: sql`${productInventory.quantity} - ${quantity}`,
-						updatedAt: new Date()
-					})
-					.where(eq(productInventory.id, inv.id));
-
-				await tx.insert(marketListings).values({
-					sellerId: account.id,
-					itemType,
-					itemName,
-					quantity,
-					pricePerUnit: pricePerUnit
-				});
-			});
-		}
-
-		return { success: true };
-	},
-
-	buyListing: async ({ request, locals }) => {
-		const account = locals.account!;
-
-		const data = await request.formData();
-		const listingId = data.get("listingId") as string;
-		const quantity = parseInt(data.get("quantity") as string);
-
-		const [listing] = await db.select().from(marketListings).where(eq(marketListings.id, listingId));
-
-		if (!listing) {
-			return fail(404, { error: "Listing not found" });
-		}
-
-		if (listing.sellerId === account.id) {
-			return fail(400, { error: "Cannot buy your own listing" });
-		}
-
-		if (quantity > listing.quantity) {
-			return fail(400, { error: "Not enough quantity available" });
-		}
-
-		const totalPrice = listing.pricePerUnit * quantity;
-
-		// Check buyer's balance
-		const [buyerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-		if (!buyerWallet || buyerWallet.balance < totalPrice) {
-			return fail(400, { error: "Insufficient funds" });
-		}
-
-		// Execute transaction
-		await db.transaction(async (tx) => {
-			// Transfer money
-			await tx
-				.update(userWallets)
-				.set({
-					balance: sql`${userWallets.balance} - ${totalPrice}`,
-					updatedAt: new Date()
-				})
-				.where(eq(userWallets.userId, account.id));
-
-			const [sellerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
-
-			if (sellerWallet) {
-				await tx
-					.update(userWallets)
-					.set({
-						balance: sql`${userWallets.balance} + ${totalPrice}`,
-						updatedAt: new Date()
-					})
-					.where(eq(userWallets.userId, listing.sellerId));
-			} else {
-				await tx.insert(userWallets).values({
-					userId: listing.sellerId,
-					balance: totalPrice
-				});
-			}
-
-			// Transfer items
-			if (listing.itemType === "resource") {
-				const [inv] = await tx
-					.select()
-					.from(resourceInventory)
-					.where(
-						and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, listing.itemName as any))
-					);
-
-				if (inv) {
-					await tx
-						.update(resourceInventory)
-						.set({
-							quantity: sql`${resourceInventory.quantity} + ${quantity}`,
-							updatedAt: new Date()
-						})
-						.where(eq(resourceInventory.id, inv.id));
-				} else {
-					await tx.insert(resourceInventory).values({
-						userId: account.id,
-						resourceType: listing.itemName as any,
-						quantity
-					});
-				}
-			} else {
-				const [inv] = await tx
-					.select()
-					.from(productInventory)
-					.where(
-						and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any))
-					);
-
-				if (inv) {
-					await tx
-						.update(productInventory)
-						.set({
-							quantity: sql`${productInventory.quantity} + ${quantity}`,
-							updatedAt: new Date()
-						})
-						.where(eq(productInventory.id, inv.id));
-				} else {
-					await tx.insert(productInventory).values({
-						userId: account.id,
-						productType: listing.itemName as any,
-						quantity
-					});
-				}
-			}
-
-			// Update or remove listing
-			if (quantity === listing.quantity) {
-				await tx.delete(marketListings).where(eq(marketListings.id, listingId));
-			} else {
-				await tx
-					.update(marketListings)
-					.set({ quantity: listing.quantity - quantity })
-					.where(eq(marketListings.id, listingId));
-			}
-		});
-
-		return { success: true };
-	},
-
 	work: async ({ request, locals }) => {
 		const account = locals.account!;
 
 		const data = await request.formData();
 		const factoryId = data.get("factoryId") as string;
 
+		// Get factory with region and state info
 		const [factory] = await db
 			.select({
 				id: factories.id,
@@ -479,22 +243,44 @@ export const actions: Actions = {
 				factoryType: factories.factoryType,
 				resourceOutput: factories.resourceOutput,
 				workerWage: factories.workerWage,
-				productionRate: factories.productionRate
+				productionRate: factories.productionRate,
+				regionId: factories.regionId,
+				stateId: regions.stateId
 			})
 			.from(factories)
 			.innerJoin(companies, eq(factories.companyId, companies.id))
+			.innerJoin(regions, eq(factories.regionId, regions.id))
 			.where(eq(factories.id, factoryId));
 
 		if (!factory) {
 			return fail(404, { error: "Factory not found" });
 		}
 
-		// Check if already working
+		if (!factory.stateId) {
+			return fail(400, { error: "Factory must be in a valid state" });
+		}
+
+		// Check state energy
+		if (factory.stateId) {
+			const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, factory.stateId));
+
+			if (energy) {
+				const availableEnergy = energy.totalProduction - energy.usedProduction;
+				if (availableEnergy < 0) {
+					return fail(400, {
+						error: "Insufficient state energy. This factory cannot operate until the state increases energy production."
+					});
+				}
+			}
+		}
+
+		// Check work cooldown
 		const [existingJob] = await db.select().from(factoryWorkers).where(eq(factoryWorkers.userId, account.id));
 
 		if (existingJob && existingJob.lastWorked) {
 			const timeSinceWork = Date.now() - new Date(existingJob.lastWorked).getTime();
 			const COOLDOWN = 24 * 60 * 60 * 1000; // 24 hours
+
 			if (timeSinceWork < COOLDOWN) {
 				const hoursLeft = Math.ceil((COOLDOWN - timeSinceWork) / (60 * 60 * 1000));
 				return fail(400, {
@@ -503,28 +289,72 @@ export const actions: Actions = {
 			}
 		}
 
-		// Pay worker and give owner resources
+		// Check regional resources for mines (only for raw resources)
+		if (factory.factoryType === "mine" && factory.resourceOutput && isMinableResource(factory.resourceOutput)) {
+			const [resource] = await db
+				.select()
+				.from(regionalResources)
+				.where(
+					and(
+						eq(regionalResources.regionId, factory.regionId),
+						eq(regionalResources.resourceType, factory.resourceOutput)
+					)
+				);
+
+			if (!resource || resource.remainingReserves <= 0) {
+				return fail(400, {
+					error: "This mine has exhausted its resource reserves"
+				});
+			}
+
+			if (resource.remainingReserves < factory.productionRate) {
+				return fail(400, {
+					error: `Only ${resource.remainingReserves} units of ${factory.resourceOutput} remaining in this region`
+				});
+			}
+		}
+
+		// Execute work
 		await db.transaction(async (tx) => {
-			// Pay worker
+			// Calculate tax on mining income
+			const taxResult = await calculateAndCollectTax(factory.stateId!, "income", factory.workerWage, account.id);
+
+			// Pay worker (after tax)
 			const [workerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
 			if (workerWallet) {
 				await tx
 					.update(userWallets)
 					.set({
-						balance: sql`${userWallets.balance} + ${factory.workerWage}`,
+						balance: sql`${userWallets.balance} + ${taxResult.netAmount}`,
 						updatedAt: new Date()
 					})
 					.where(eq(userWallets.userId, account.id));
 			} else {
 				await tx.insert(userWallets).values({
 					userId: account.id,
-					balance: factory.workerWage
+					balance: taxResult.netAmount
 				});
 			}
 
 			// Give owner resources (if mine)
 			if (factory.factoryType === "mine" && factory.resourceOutput) {
+				// Only deduct from regional reserves if it's a raw minable resource
+				if (isMinableResource(factory.resourceOutput)) {
+					await tx
+						.update(regionalResources)
+						.set({
+							remainingReserves: sql`${regionalResources.remainingReserves} - ${factory.productionRate}`
+						})
+						.where(
+							and(
+								eq(regionalResources.regionId, factory.regionId),
+								eq(regionalResources.resourceType, factory.resourceOutput)
+							)
+						);
+				}
+
+				// Add to owner's inventory
 				const [ownerInv] = await tx
 					.select()
 					.from(resourceInventory)
@@ -571,6 +401,12 @@ export const actions: Actions = {
 			}
 		});
 
-		return { success: true, earned: factory.workerWage };
+		return {
+			success: true,
+			earned: factory.workerWage,
+			netEarned: taxResult.netAmount,
+			taxPaid: taxResult.taxAmount,
+			message: `Worked successfully! Earned ${factory.workerWage.toLocaleString()} currency (${taxResult.netAmount.toLocaleString()} after ${taxResult.taxAmount.toLocaleString()} tax).`
+		};
 	}
 };

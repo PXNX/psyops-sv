@@ -1165,3 +1165,172 @@ export type NewPartyEditHistory = typeof partyEditHistory.$inferInsert;
 
 export type ProfileEditHistory = typeof profileEditHistory.$inferSelect;
 export type NewProfileEditHistory = typeof profileEditHistory.$inferInsert;
+export const regionalResourcesEnum = pgEnum("regional_resource", ["iron", "copper", "coal", "wood"]);
+
+export const regionalResources = pgTable("regional_resources", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+	resourceType: regionalResourcesEnum("resource_type").notNull(),
+	totalReserves: integer("total_reserves").notNull(), // Total available
+	remainingReserves: integer("remaining_reserves").notNull(), // What's left
+	extractionRate: integer("extraction_rate").default(100).notNull(), // Per work cycle
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// State Energy Production
+export const stateEnergy = pgTable("state_energy", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" })
+		.unique(),
+	totalProduction: integer("total_production").default(1000).notNull(), // Total MW available
+	usedProduction: integer("used_production").default(0).notNull(), // Currently consumed
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Factory Creation Cooldown
+export const factoryCreationCooldown = pgTable("factory_creation_cooldown", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	lastCreationAt: timestamp("last_creation_at").defaultNow().notNull()
+});
+
+// Relations
+export const regionalResourcesRelations = relations(regionalResources, ({ one }) => ({
+	region: one(regions, {
+		fields: [regionalResources.regionId],
+		references: [regions.id]
+	})
+}));
+
+export const stateEnergyRelations = relations(stateEnergy, ({ one }) => ({
+	state: one(states, {
+		fields: [stateEnergy.stateId],
+		references: [states.id]
+	})
+}));
+
+export const factoryCreationCooldownRelations = relations(factoryCreationCooldown, ({ one }) => ({
+	user: one(accounts, {
+		fields: [factoryCreationCooldown.userId],
+		references: [accounts.id]
+	})
+}));
+
+// TypeScript types
+export type RegionalResource = typeof regionalResources.$inferSelect;
+export type NewRegionalResource = typeof regionalResources.$inferInsert;
+
+export type StateEnergy = typeof stateEnergy.$inferSelect;
+export type NewStateEnergy = typeof stateEnergy.$inferInsert;
+
+export type FactoryCreationCooldown = typeof factoryCreationCooldown.$inferSelect;
+export type NewFactoryCreationCooldown = typeof factoryCreationCooldown.$inferInsert;
+
+// Tax Types Enum
+export const taxTypeEnum = pgEnum("tax_type", [
+	"mining", // Tax on mining operations
+	"production", // Tax on manufacturing
+	"market_transaction", // Tax on market sales
+	"income" // Tax on wages/earnings
+]);
+
+// State Taxes table
+export const stateTaxes = pgTable("state_taxes", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	taxType: taxTypeEnum("tax_type").notNull(),
+	taxRate: integer("tax_rate").notNull(), // Percentage (e.g., 10 = 10%)
+	taxName: varchar("tax_name", { length: 100 }).notNull(),
+	description: text("description"),
+	proposalId: uuid("proposal_id").references(() => parliamentaryProposals.id, { onDelete: "set null" }), // Track which proposal created this
+	implementedAt: timestamp("implemented_at").defaultNow().notNull(),
+	isActive: integer("is_active").default(1).notNull(), // 1 = active, 0 = repealed
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Tax Revenue Collection tracking
+export const taxRevenue = pgTable("tax_revenue", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	taxId: uuid("tax_id")
+		.notNull()
+		.references(() => stateTaxes.id, { onDelete: "cascade" }),
+	amount: bigint("amount", { mode: "number" }).notNull(),
+	collectedFrom: text("collected_from")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	transactionType: varchar("transaction_type", { length: 50 }).notNull(), // "mining", "production", "market_sale"
+	collectedAt: timestamp("collected_at").defaultNow().notNull()
+});
+
+// State Treasury to hold tax revenue
+export const stateTreasury = pgTable("state_treasury", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" })
+		.unique(),
+	balance: bigint("balance", { mode: "number" }).default(0).notNull(),
+	totalCollected: bigint("total_collected", { mode: "number" }).default(0).notNull(),
+	totalSpent: bigint("total_spent", { mode: "number" }).default(0).notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// Add tax metadata to parliamentary proposals
+// This is additional data stored as JSON in the proposal description or as separate fields
+
+// Relations
+export const stateTaxesRelations = relations(stateTaxes, ({ one, many }) => ({
+	state: one(states, {
+		fields: [stateTaxes.stateId],
+		references: [states.id]
+	}),
+	proposal: one(parliamentaryProposals, {
+		fields: [stateTaxes.proposalId],
+		references: [parliamentaryProposals.id]
+	}),
+	revenue: many(taxRevenue)
+}));
+
+export const taxRevenueRelations = relations(taxRevenue, ({ one }) => ({
+	state: one(states, {
+		fields: [taxRevenue.stateId],
+		references: [states.id]
+	}),
+	tax: one(stateTaxes, {
+		fields: [taxRevenue.taxId],
+		references: [stateTaxes.id]
+	}),
+	payer: one(accounts, {
+		fields: [taxRevenue.collectedFrom],
+		references: [accounts.id]
+	})
+}));
+
+export const stateTreasuryRelations = relations(stateTreasury, ({ one }) => ({
+	state: one(states, {
+		fields: [stateTreasury.stateId],
+		references: [states.id]
+	})
+}));
+
+// TypeScript types
+export type StateTax = typeof stateTaxes.$inferSelect;
+export type NewStateTax = typeof stateTaxes.$inferInsert;
+
+export type TaxRevenue = typeof taxRevenue.$inferSelect;
+export type NewTaxRevenue = typeof taxRevenue.$inferInsert;
+
+export type StateTreasury = typeof stateTreasury.$inferSelect;
+export type NewStateTreasury = typeof stateTreasury.$inferInsert;

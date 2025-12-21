@@ -3,7 +3,7 @@ import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "$lib/server/db";
 import { eq, and } from "drizzle-orm";
-import { states, parliamentMembers, ministers, parliamentaryProposals } from "$lib/server/schema";
+import { states, parliamentMembers, ministers, parliamentaryProposals, stateTaxes } from "$lib/server/schema";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProposalSchema } from "./schema";
@@ -69,23 +69,50 @@ export const actions: Actions = {
 			return fail(403, { error: "You must be a parliament member to create proposals" });
 		}
 
-		const { title, description, proposalType, votingDays, requiredMajority } = form.data;
+		const { title, description, proposalType, votingDays, requiredMajority, taxType, taxRate, taxName } = form.data;
+
+		// Validate tax fields if proposal is tax type
+		if (proposalType === "tax") {
+			if (!taxType || !taxRate || !taxName) {
+				return fail(400, {
+					form,
+					error: "Tax proposals require tax type, rate, and name"
+				});
+			}
+		}
 
 		const votingStartsAt = new Date();
 		const votingEndsAt = new Date();
-		votingEndsAt.setDate(votingEndsAt.getDate() + votingDays);
+		votingEndsAt.setDate(votingEndsAt.getDate() + (votingDays || 7));
 
-		await db.insert(parliamentaryProposals).values({
-			stateId: params.id,
-			title,
-			description,
-			proposalType,
-			proposedBy: account.id,
-			votingStartsAt,
-			votingEndsAt,
-			requiredMajority,
-			status: "active"
-		});
+		// Create the proposal with tax metadata in description if applicable
+		let fullDescription = description;
+		if (proposalType === "tax" && taxType && taxRate && taxName) {
+			fullDescription = `${description}
+
+--- TAX CONFIGURATION ---
+Tax Name: ${taxName}
+Tax Type: ${taxType}
+Tax Rate: ${taxRate}%`;
+		}
+
+		const [proposal] = await db
+			.insert(parliamentaryProposals)
+			.values({
+				stateId: params.id,
+				title,
+				description: fullDescription,
+				proposalType,
+				proposedBy: account.id,
+				votingStartsAt,
+				votingEndsAt,
+				requiredMajority: requiredMajority || 50,
+				status: "active"
+			})
+			.returning();
+
+		// If tax proposal, store metadata (will be implemented when passed)
+		// For now, the tax info is embedded in the description and will be extracted when the proposal passes
 
 		throw redirect(302, `/state/${params.id}/parliament`);
 	},
@@ -111,7 +138,7 @@ export const actions: Actions = {
 			return fail(403, { error: "You must be a minister to execute direct actions" });
 		}
 
-		const { proposalType } = form.data;
+		const { proposalType, taxType, taxRate, taxName } = form.data;
 
 		// Define which ministries can execute which types directly
 		const ministryPermissions: Record<string, string[]> = {
@@ -132,22 +159,48 @@ export const actions: Actions = {
 			});
 		}
 
+		// Validate tax fields for tax proposals
+		if (proposalType === "tax") {
+			if (!taxType || !taxRate || !taxName) {
+				return fail(400, {
+					form,
+					error: "Tax actions require tax type, rate, and name"
+				});
+			}
+		}
+
 		const { title, description } = form.data;
 
 		const votingStartsAt = new Date();
 		const votingEndsAt = new Date();
 
-		await db.insert(parliamentaryProposals).values({
-			stateId: params.id,
-			title,
-			description,
-			proposalType,
-			proposedBy: account.id,
-			votingStartsAt,
-			votingEndsAt,
-			requiredMajority: 0,
-			status: "passed"
-		});
+		const [proposal] = await db
+			.insert(parliamentaryProposals)
+			.values({
+				stateId: params.id,
+				title,
+				description,
+				proposalType,
+				proposedBy: account.id,
+				votingStartsAt,
+				votingEndsAt,
+				requiredMajority: 0,
+				status: "passed"
+			})
+			.returning();
+
+		// If tax action, implement it immediately
+		if (proposalType === "tax" && taxType && taxRate && taxName) {
+			await db.insert(stateTaxes).values({
+				stateId: params.id,
+				taxType: taxType as any,
+				taxRate,
+				taxName,
+				description,
+				proposalId: proposal.id,
+				isActive: 1
+			});
+		}
 
 		throw redirect(302, `/state/${params.id}/parliament`);
 	}
