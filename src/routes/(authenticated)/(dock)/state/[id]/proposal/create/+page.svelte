@@ -3,6 +3,7 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
+	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
@@ -41,6 +42,20 @@
 		general: "📋"
 	};
 
+	const taxTypeIcons: Record<string, string> = {
+		mining: "⛏️",
+		production: "🏭",
+		market_transaction: "🛒",
+		income: "💵"
+	};
+
+	const taxTypeDescriptions: Record<string, string> = {
+		mining: "Tax applied when workers mine resources from factories",
+		production: "Tax applied when manufacturing products",
+		market_transaction: "Tax applied on market sales (paid by seller)",
+		income: "Tax applied on wages and earnings from work"
+	};
+
 	const ministryPermissions: Record<string, string[]> = {
 		finance: ["tax", "budget"],
 		infrastructure: ["infrastructure"],
@@ -55,6 +70,8 @@
 		if (!data.userMinistry) return false;
 		return ministryPermissions[data.userMinistry]?.includes(type) || false;
 	};
+
+	const isTaxProposal = $derived($formData.proposalType === "tax");
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-6">
@@ -167,7 +184,7 @@
 					id="title"
 					name="title"
 					bind:value={$formData.title}
-					placeholder="e.g., Infrastructure Development Bill 2025"
+					placeholder="e.g., Mining Tax Act 2025"
 					maxlength="200"
 					class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
 					class:input-error={$errors.title}
@@ -241,6 +258,131 @@
 				{/if}
 			</div>
 
+			<!-- Tax-Specific Fields -->
+			{#if isTaxProposal}
+				<div class="border-t border-white/5 pt-6 space-y-6">
+					<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">
+						<div class="flex items-center gap-2 mb-2">
+							<FluentMoney20Filled class="size-5 text-amber-400" />
+							<h3 class="text-lg font-semibold text-white">Tax Configuration</h3>
+						</div>
+						<p class="text-sm text-gray-300">
+							Configure the details of the tax. Revenue will be deposited into the state treasury.
+						</p>
+					</div>
+
+					<!-- Tax Name -->
+					<div>
+						<label for="taxName" class="block text-sm font-medium text-gray-300 mb-2">
+							Tax Name <span class="text-red-400">*</span>
+						</label>
+						<input
+							type="text"
+							id="taxName"
+							name="taxName"
+							bind:value={$formData.taxName}
+							placeholder="e.g., Regional Mining Tax"
+							maxlength="100"
+							class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50"
+							class:input-error={$errors.taxName}
+							disabled={$submitting}
+						/>
+						{#if $errors.taxName}
+							<p class="text-xs text-red-400 mt-1">{$errors.taxName}</p>
+						{:else}
+							<p class="text-xs text-gray-400 mt-1">Short name for this tax</p>
+						{/if}
+					</div>
+
+					<!-- Tax Type -->
+					<div>
+						<label for="taxType" class="block text-sm font-medium text-gray-300 mb-2">
+							Tax Type <span class="text-red-400">*</span>
+						</label>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+							{#each ["mining", "production", "market_transaction", "income"] as type}
+								<button
+									type="button"
+									class="p-4 rounded-lg border-2 text-left transition-all {$formData.taxType === type
+										? 'bg-amber-600/20 border-amber-500/50'
+										: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
+									onclick={() => ($formData.taxType = type)}
+									disabled={$submitting}
+								>
+									<div class="flex items-center gap-3 mb-2">
+										<span class="text-2xl">{taxTypeIcons[type]}</span>
+										<h4 class="font-bold text-white capitalize">{type.replace("_", " ")}</h4>
+									</div>
+									<p class="text-xs text-gray-400">{taxTypeDescriptions[type]}</p>
+								</button>
+							{/each}
+						</div>
+						<input type="hidden" name="taxType" value={$formData.taxType} />
+						{#if $errors.taxType}
+							<p class="text-xs text-red-400 mt-1">{$errors.taxType}</p>
+						{/if}
+					</div>
+
+					<!-- Tax Rate -->
+					<div>
+						<label for="taxRate" class="block text-sm font-medium text-gray-300 mb-2">
+							Tax Rate: <span class="text-white font-bold">{$formData.taxRate || 0}%</span>
+						</label>
+						<input
+							type="range"
+							id="taxRate"
+							name="taxRate"
+							min="1"
+							max="50"
+							bind:value={$formData.taxRate}
+							class="range range-warning"
+							disabled={$submitting}
+						/>
+						<div class="flex justify-between text-xs text-gray-400 px-2 mt-1">
+							<span>1%</span>
+							<span>10%</span>
+							<span>25%</span>
+							<span>50%</span>
+						</div>
+						{#if $errors.taxRate}
+							<p class="text-xs text-red-400 mt-1">{$errors.taxRate}</p>
+						{/if}
+
+						<!-- Tax Impact Preview -->
+						{#if $formData.taxRate && $formData.taxType}
+							<div class="bg-slate-700/30 rounded-lg p-4 mt-3 space-y-2">
+								<p class="text-sm font-semibold text-white">Tax Impact Example:</p>
+								{#if $formData.taxType === "mining"}
+									<p class="text-sm text-gray-300">
+										On a 1,500 currency wage: <strong class="text-amber-400"
+											>{Math.floor(1500 * ($formData.taxRate / 100))} currency tax</strong
+										>, worker receives <strong>{1500 - Math.floor(1500 * ($formData.taxRate / 100))}</strong>
+									</p>
+								{:else if $formData.taxType === "production"}
+									<p class="text-sm text-gray-300">
+										On 10,000 currency production cost: <strong class="text-amber-400"
+											>{Math.floor(10000 * ($formData.taxRate / 100))} currency tax</strong
+										>
+									</p>
+								{:else if $formData.taxType === "market_transaction"}
+									<p class="text-sm text-gray-300">
+										On 5,000 currency sale: <strong class="text-amber-400"
+											>{Math.floor(5000 * ($formData.taxRate / 100))} currency tax</strong
+										>, seller receives <strong>{5000 - Math.floor(5000 * ($formData.taxRate / 100))}</strong>
+									</p>
+								{:else if $formData.taxType === "income"}
+									<p class="text-sm text-gray-300">
+										On 2,000 currency income: <strong class="text-amber-400"
+											>{Math.floor(2000 * ($formData.taxRate / 100))} currency tax</strong
+										>, earner receives <strong>{2000 - Math.floor(2000 * ($formData.taxRate / 100))}</strong>
+									</p>
+								{/if}
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
 			{#if !isMinisterialAction || (isMinisterialAction && $formData.proposalType && !canExecuteDirectly($formData.proposalType))}
 				<!-- Voting Settings -->
 				<div class="border-t border-white/5 pt-6">
@@ -308,7 +450,7 @@
 				</a>
 				<button
 					type="submit"
-					disabled={$submitting}
+					disabled={$submitting || (isTaxProposal && (!$formData.taxType || !$formData.taxRate || !$formData.taxName))}
 					class="btn flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 border-0 text-white gap-2"
 				>
 					{#if $delayed}
