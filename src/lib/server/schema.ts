@@ -108,9 +108,14 @@ export const states = pgTable("states", {
 export const regions = pgTable("regions", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	rating: integer("rating").default(0),
-	development: integer("development").default(0),
 	infrastructure: integer("infrastructure").default(0),
-	economy: integer("economy").default(0),
+	economy: integer("powerplants").default(0),
+
+	// New infrastructure fields
+	education: integer("education").default(0),
+	hospitals: integer("hospitals").default(0),
+	fortifications: integer("fortifications").default(0),
+
 	oil: integer("oil").default(0),
 	aluminium: integer("aluminium").default(0),
 	rubber: integer("rubber").default(0),
@@ -1714,3 +1719,76 @@ export type NewMilitaryUnitTemplate = typeof militaryUnitTemplates.$inferInsert;
 
 export type MilitarySupplyConsumption = typeof militarySupplyConsumption.$inferSelect;
 export type NewMilitarySupplyConsumption = typeof militarySupplyConsumption.$inferInsert;
+
+export const travelStatusEnum = pgEnum("travel_status", ["in_progress", "completed", "cancelled"]);
+
+// User Travels table
+export const userTravels = pgTable("user_travels", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(), // One active travel per user
+
+	// Origin and destination
+	fromRegionId: integer("from_region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+	toRegionId: integer("to_region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+
+	// Timing
+	departureTime: timestamp("departure_time").defaultNow().notNull(),
+	arrivalTime: timestamp("arrival_time").notNull(),
+	travelDuration: integer("travel_duration").notNull(), // in minutes
+
+	// Status
+	status: travelStatusEnum("status").notNull().default("in_progress"),
+
+	// Metadata
+	distanceKm: integer("distance_km").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Region Coordinates - store center points for distance calculations
+export const regionCoordinates = pgTable("region_coordinates", {
+	id: uuid("id").defaultRandom().primaryKey(),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" })
+		.unique(),
+	centerX: integer("center_x").notNull(), // SVG X coordinate
+	centerY: integer("center_y").notNull(), // SVG Y coordinate
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Relations
+export const userTravelsRelations = relations(userTravels, ({ one }) => ({
+	user: one(accounts, {
+		fields: [userTravels.userId],
+		references: [accounts.id]
+	}),
+	fromRegion: one(regions, {
+		fields: [userTravels.fromRegionId],
+		references: [regions.id]
+	}),
+	toRegion: one(regions, {
+		fields: [userTravels.toRegionId],
+		references: [regions.id]
+	})
+}));
+
+export const regionCoordinatesRelations = relations(regionCoordinates, ({ one }) => ({
+	region: one(regions, {
+		fields: [regionCoordinates.regionId],
+		references: [regions.id]
+	})
+}));
+
+// TypeScript types
+export type UserTravel = typeof userTravels.$inferSelect;
+export type NewUserTravel = typeof userTravels.$inferInsert;
+
+export type RegionCoordinate = typeof regionCoordinates.$inferSelect;
+export type NewRegionCoordinate = typeof regionCoordinates.$inferInsert;
