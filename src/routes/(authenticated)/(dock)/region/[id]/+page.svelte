@@ -12,11 +12,21 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import { shareLink } from "$lib/util";
 	import { enhance } from "$app/forms";
+	import * as m from "$lib/paraglide/messages";
 
 	const { data } = $props();
 
 	let isSubmitting = $state(false);
 	let showSuccess = $state(false);
+
+	// Get the region name from paraglide based on region ID
+	const regionName = $derived(() => {
+		const key = `region_${data.region.id}`;
+		return m[key]();
+	});
+
+	// Get the region logo path
+	const regionLogoPath = $derived(`/coats/${data.region.id}.svg`);
 </script>
 
 <div class="max-w-2xl mx-auto px-4 py-6">
@@ -29,7 +39,7 @@
 					<img
 						src={data.region.background ||
 							"https://media.cntraveller.com/photos/65291b466ba909a7e4c6ce0d/16:9/w_1280,c_limit/Planet_Earth_III_generic_Best_Places_to_see_wildlife_October23_Credit_BBC_studios.jpg"}
-						alt={data.region.name}
+						alt={regionName()}
 						class="w-full h-full object-cover"
 					/>
 					<div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-800" />
@@ -37,13 +47,10 @@
 					<!-- Floating Avatar -->
 					<div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
 						<div class="ring-4 ring-slate-800 rounded-2xl">
-							{#if data.region.avatar}
-								<img src={data.region.avatar} alt={data.region.name} class="size-20 rounded-2xl object-cover" />
-							{:else}
-								<div class="bg-gradient-to-br from-purple-600 to-blue-600 p-3 rounded-2xl">
-									<FluentGlobe20Filled class="size-12 text-white" />
-								</div>
-							{/if}
+							<img src={regionLogoPath} alt={regionName()} class="size-20 rounded-2xl object-cover" />
+							<div class="bg-gradient-to-br from-purple-600 to-blue-600 p-3 rounded-2xl" style="display: none;">
+								<FluentGlobe20Filled class="size-12 text-white" />
+							</div>
 						</div>
 					</div>
 				</div>
@@ -52,7 +59,7 @@
 				<div class="px-6 pt-10 pb-6 space-y-6">
 					<!-- Title and Rating -->
 					<div class="text-center space-y-1">
-						<h1 class="text-2xl font-bold text-white">{data.region.name}</h1>
+						<h1 class="text-2xl font-bold text-white">{regionName()}</h1>
 						<p class="text-sm text-gray-400">Ranking #{data.region.rating || 934}</p>
 					</div>
 
@@ -279,7 +286,7 @@
 						{/if}
 						<button
 							class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-							onclick={() => shareLink(data.region.name, window.location.href)}
+							onclick={() => shareLink(regionName(), window.location.href)}
 						>
 							<FluentCopy20Filled class="size-5" />
 							Copy

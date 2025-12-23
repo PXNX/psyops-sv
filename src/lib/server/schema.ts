@@ -107,17 +107,18 @@ export const states = pgTable("states", {
 // Regions table (belongs to states)
 export const regions = pgTable("regions", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
-	name: varchar("name", { length: 100 }).notNull(),
-	avatar: text("avatar"),
-	background: text("background"),
-	description: text("description"),
-	stateId: uuid("state_id").references(() => states.id, { onDelete: "cascade" }),
-	population: integer("population").default(0),
 	rating: integer("rating").default(0),
 	development: integer("development").default(0),
 	infrastructure: integer("infrastructure").default(0),
 	economy: integer("economy").default(0),
-	autoApproveResidency: integer("auto_approve_residency").default(0).notNull(),
+	oil: integer("oil").default(0),
+	aluminium: integer("aluminium").default(0),
+	rubber: integer("rubber").default(0),
+	tungsten: integer("tungsten").default(0),
+	steel: integer("steel").default(0),
+	chromium: integer("chromium").default(0),
+	stateId: uuid("state_id").references(() => states.id, { onDelete: "cascade" }),
+
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 

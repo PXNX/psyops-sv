@@ -3,6 +3,8 @@
 	import panzoom, { type PanZoom } from "panzoom";
 	import WorldMap from "$lib/assets/worldmap.svg?raw"; // note suffix ?raw or ?component
 	import type { MouseEventHandler } from "svelte/elements";
+	import * as m from "$lib/paraglide/messages";
+
 	import FluentEmojiMagnifyingGlassTiltedLeft from "~icons/fluent-emoji/magnifying-glass-tilted-left";
 
 	let selectedRegion = $state(-1);
@@ -51,6 +53,14 @@
 	function onKeyDown(e: any) {
 		// analogous logic to onClick, but check if `Enter` (and no modifier) was pressed
 	}
+
+	const regionName = $derived(() => {
+		const key = `region_${selectedRegion}`;
+		return m[key]?.() || "";
+	});
+
+	// Get the region logo path
+	const regionLogoPath = $derived(`/coats/${selectedRegion}.svg`);
 </script>
 
 <header class="sticky top-0 flex items-center justify-end gap-2 p-2 bg-base-100 touch-none">
@@ -81,17 +91,13 @@
 		>
 			<div class="flex items-center">
 				<div class=" w-24 h-24 flex justify-center relative overflow-hidden rounded-md">
-					<img
-						src="https://media.cntraveller.com/photos/65291b466ba909a7e4c6ce0d/16:9/w_1280,c_limit/Planet_Earth_III_generic_Best_Places_to_see_wildlife_October23_Credit_BBC_studios.jpg"
-						alt="Header Image"
-						class="w-full h-full object-cover"
-					/>
+					<img src={regionLogoPath} class="w-full h-full object-cover" />
 
 					<div class="absolute inset-0 mt-auto bg-gradient-to-r to-slate-800 from-transparent w-24" />
 				</div>
 
 				<div class="-m-4 flex flex-col z-10">
-					<h3 class="text-lg font-bold">Region {selectedRegion}</h3>
+					<h3 class="text-lg font-bold">Region {selectedRegion} - {regionName()}</h3>
 					<a class="text-md text-secondary" href="/state/4">State of Kaan</a>
 				</div>
 
