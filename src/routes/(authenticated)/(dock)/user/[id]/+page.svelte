@@ -22,6 +22,13 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 
+	import * as m from "$lib/paraglide/messages";
+
+	const regionName = $derived(() => {
+		const key = `region_${data.primaryResidence.region.id}` as keyof typeof m;
+		return m[key]();
+	});
+
 	const { data } = $props();
 
 	// Helper to format ministry name
@@ -153,11 +160,15 @@
 					class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
 				>
 					<div class="size-12 bg-emerald-600/20 rounded-lg flex items-center justify-center">
-						<FluentHome20Filled class="size-6 text-emerald-400" />
+						<img
+							src={"/coats/" + data.primaryResidence.region.id + ".svg"}
+							alt={regionName()}
+							class="size-6 object-contain"
+						/>
 					</div>
 					<div class="flex-1 min-w-0">
 						<p class="font-semibold text-white group-hover:text-emerald-400 transition-colors truncate">
-							{data.primaryResidence.region.name}
+							{regionName()}
 						</p>
 						<p class="text-xs text-gray-400 truncate">
 							Primary Residence

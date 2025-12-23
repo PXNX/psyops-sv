@@ -1,23 +1,28 @@
+<!-- src/routes/(authenticated)/(dock)/region/[id]/+page.svelte -->
 <script lang="ts">
 	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
-	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
-	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
-	import FluentChartMultiple20Filled from "~icons/fluent/chart-multiple-20-filled";
+	import TravelProgress from "$lib/component/TravelProgress.svelte";
 	import FluentCopy20Filled from "~icons/fluent/copy-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentVehicleAirplaneTakeOff20Filled from "~icons/fluent/airplane-20-filled";
+	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import FluentChartMultiple20Filled from "~icons/fluent/chart-multiple-20-filled";
 	import { shareLink } from "$lib/util";
 	import { enhance } from "$app/forms";
 	import * as m from "$lib/paraglide/messages";
+	import { calculateDistance, calculateTravelDuration, formatDuration, getRegionCenter } from "$lib/utils/travel";
 
 	const { data } = $props();
 
 	let isSubmitting = $state(false);
 	let showSuccess = $state(false);
+	let showTravelModal = $state(false);
+	let travelDetails = $state<{ distance: number; duration: number } | null>(null);
 
 	// Get the region name from paraglide based on region ID
 	const regionName = $derived(() => {
@@ -27,6 +32,65 @@
 
 	// Get the region logo path
 	const regionLogoPath = $derived(`/coats/${data.region.id}.svg`);
+
+	// Check if user can travel to this region
+	const canTravel = $derived(data.userLocation && data.region.id !== data.userLocation.regionId && !data.activeTravel);
+
+	function openTravelModal() {
+		if (!data.userLocation) return;
+
+		const fromCenter = getRegionCenter(data.userLocation.regionId);
+		const toCenter = getRegionCenter(data.region.id);
+
+		if (!fromCenter || !toCenter) {
+			alert("Could not calculate travel route!");
+			return;
+		}
+
+		const distance = Math.round(calculateDistance(fromCenter, toCenter));
+		const duration = calculateTravelDuration(distance);
+
+		travelDetails = { distance, duration };
+		showTravelModal = true;
+	}
+
+	async function startTravel() {
+		if (!travelDetails || !data.userLocation) return;
+
+		try {
+			// todo: to travlling via page.server.ts
+			const response = await fetch("/api/travel/start", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					fromRegionId: data.userLocation.regionId,
+					toRegionId: data.region.id,
+					distanceKm: travelDetails.distance,
+					durationMinutes: travelDetails.duration
+				})
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				alert(error.error || "Failed to start travel");
+				return;
+			}
+
+			// Reload page to show travel progress
+			window.location.reload();
+		} catch (error) {
+			console.error("Travel error:", error);
+			alert("Failed to start travel");
+		}
+	}
+
+	function handleTravelComplete() {
+		window.location.reload();
+	}
+
+	function handleTravelCancel() {
+		window.location.reload();
+	}
 </script>
 
 <div class="max-w-2xl mx-auto px-4 py-6">
@@ -34,23 +98,15 @@
 		<!-- Shimmer border wrapper -->
 		<div class="bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-cyan-500/20 p-px rounded-2xl shimmer-outline">
 			<div class="relative rounded-2xl bg-slate-800 overflow-hidden">
-				<!-- Header Image Section -->
+				<!-- Header Image Section -- todo: remove, just us the color like for the party -->
 				<div class="w-full h-48 relative overflow-hidden">
-					<img
-						src={data.region.background ||
-							"https://media.cntraveller.com/photos/65291b466ba909a7e4c6ce0d/16:9/w_1280,c_limit/Planet_Earth_III_generic_Best_Places_to_see_wildlife_October23_Credit_BBC_studios.jpg"}
-						alt={regionName()}
-						class="w-full h-full object-cover"
-					/>
+					<img src={data.state.color || "#6366f1"} alt={regionName()} class="w-full h-full object-cover" />
 					<div class="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-800" />
 
 					<!-- Floating Avatar -->
 					<div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
 						<div class="ring-4 ring-slate-800 rounded-2xl">
 							<img src={regionLogoPath} alt={regionName()} class="size-20 rounded-2xl object-cover" />
-							<div class="bg-gradient-to-br from-purple-600 to-blue-600 p-3 rounded-2xl" style="display: none;">
-								<FluentGlobe20Filled class="size-12 text-white" />
-							</div>
 						</div>
 					</div>
 				</div>
@@ -62,6 +118,16 @@
 						<h1 class="text-2xl font-bold text-white">{regionName()}</h1>
 						<p class="text-sm text-gray-400">Ranking #{data.region.rating || 934}</p>
 					</div>
+
+					<!-- Active Travel Progress -->
+					{#if data.activeTravel}
+						<TravelProgress
+							travel={data.activeTravel}
+							showCancel={true}
+							onComplete={handleTravelComplete}
+							onCancel={handleTravelCancel}
+						/>
+					{/if}
 
 					<!-- Independent Region Banner -->
 					{#if !data.state}
@@ -246,36 +312,54 @@
 					<!-- Actions -->
 					<div class="flex gap-2">
 						{#if !data.userResidence}
-							<form
-								method="POST"
-								action="?/requestResidence"
-								class="flex-1"
-								use:enhance={() => {
-									isSubmitting = true;
-									return async ({ result, update }) => {
-										await update();
-										isSubmitting = false;
-										if (result.type === "success") {
-											showSuccess = true;
-											setTimeout(() => (showSuccess = false), 3000);
-										}
-									};
-								}}
-							>
+							{#if canTravel}
 								<button
-									type="submit"
-									disabled={isSubmitting}
-									class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+									onclick={openTravelModal}
+									class="btn flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 text-white gap-2"
 								>
-									{#if isSubmitting}
-										<span class="loading loading-spinner loading-sm"></span>
-										Requesting...
-									{:else}
-										<FluentHome20Filled class="size-5" />
-										{data.hasPrimaryResidence ? "Request Secondary Residence" : "Request Residence Permit"}
-									{/if}
+									<FluentVehicleAirplaneTakeOff20Filled class="size-5" />
+									Travel Here
 								</button>
-							</form>
+							{:else if data.activeTravel}
+								<button
+									disabled
+									class="btn flex-1 bg-gradient-to-r from-gray-600 to-gray-700 border-0 text-white gap-2 cursor-not-allowed"
+								>
+									<FluentVehicleAirplaneTakeOff20Filled class="size-5" />
+									Traveling...
+								</button>
+							{:else}
+								<form
+									method="POST"
+									action="?/requestResidence"
+									class="flex-1"
+									use:enhance={() => {
+										isSubmitting = true;
+										return async ({ result, update }) => {
+											await update();
+											isSubmitting = false;
+											if (result.type === "success") {
+												showSuccess = true;
+												setTimeout(() => (showSuccess = false), 3000);
+											}
+										};
+									}}
+								>
+									<button
+										type="submit"
+										disabled={isSubmitting}
+										class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+									>
+										{#if isSubmitting}
+											<span class="loading loading-spinner loading-sm"></span>
+											Requesting...
+										{:else}
+											<FluentHome20Filled class="size-5" />
+											{data.hasPrimaryResidence ? "Request Secondary Residence" : "Request Residence Permit"}
+										{/if}
+									</button>
+								</form>
+							{/if}
 						{:else}
 							<button
 								class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
@@ -320,28 +404,41 @@
 	</div>
 </div>
 
-<style>
-	@keyframes shimmer {
-		0% {
-			box-shadow:
-				0 0 10px rgba(168, 85, 247, 0.4),
-				0 0 20px rgba(59, 130, 246, 0.3),
-				0 0 30px rgba(6, 182, 212, 0.2);
-		}
-		50% {
-			box-shadow:
-				0 0 20px rgba(168, 85, 247, 0.6),
-				0 0 30px rgba(59, 130, 246, 0.5),
-				0 0 40px rgba(6, 182, 212, 0.4);
-		}
-		100% {
-			box-shadow:
-				0 0 10px rgba(168, 85, 247, 0.4),
-				0 0 20px rgba(59, 130, 246, 0.3),
-				0 0 30px rgba(6, 182, 212, 0.2);
-		}
-	}
-	.shimmer-outline {
-		animation: shimmer 3s ease-in-out infinite;
-	}
-</style>
+<!-- Travel Confirmation Modal -->
+{#if showTravelModal && travelDetails}
+	<div class="modal modal-open">
+		<div class="modal-box">
+			<h3 class="text-2xl font-bold flex items-center gap-2 mb-4">
+				<FluentVehicleAirplaneTakeOff20Filled class="text-blue-500" />
+				Confirm Travel
+			</h3>
+
+			<div class="space-y-3 mb-6">
+				<div class="flex justify-between">
+					<span class="text-base-content/70">Destination:</span>
+					<span class="font-semibold">{regionName()}</span>
+				</div>
+				<div class="flex justify-between">
+					<span class="text-base-content/70">Distance:</span>
+					<span class="font-semibold">{travelDetails.distance} km</span>
+				</div>
+				<div class="flex justify-between">
+					<span class="text-base-content/70">Duration:</span>
+					<span class="font-semibold">{formatDuration(travelDetails.duration)}</span>
+				</div>
+			</div>
+
+			<div class="alert alert-warning mb-6">
+				<span class="text-sm">You will not be able to perform region-specific actions while traveling.</span>
+			</div>
+
+			<div class="modal-action">
+				<button class="btn" onclick={() => (showTravelModal = false)}>Cancel</button>
+				<button class="btn btn-primary gap-2" onclick={startTravel}>
+					<FluentVehicleAirplaneTakeOff20Filled />
+					Start Travel
+				</button>
+			</div>
+		</div>
+	</div>
+{/if}

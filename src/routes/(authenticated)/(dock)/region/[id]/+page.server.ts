@@ -1,18 +1,17 @@
 // src/routes/(authenticated)/(dock)/region/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { regions, residences } from "$lib/server/schema";
+import { regions, residences, userTravels, factories, powerPlants } from "$lib/server/schema";
 import { error, fail } from "@sveltejs/kit";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
-import fs from "fs";
-import path from "path";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
+	const regionId = parseInt(params.id);
 
 	// Query region with all related data
 	const region = await db.query.regions.findFirst({
-		where: eq(regions.id, parseInt(params.id)),
+		where: eq(regions.id, regionId),
 		with: {
 			state: true,
 			governor: {
@@ -31,30 +30,33 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, "Region not found");
 	}
 
-	// Check for static region assets
-	const staticPath = path.join(process.cwd(), "static", "region");
-	let regionImage = null;
-	let regionName = region.name;
+	// Count residences (population)
+	const populationResult = await db
+		.select({ count: sql<number>`count(*)::int` })
+		.from(residences)
+		.where(eq(residences.regionId, regionId));
+	const population = populationResult[0]?.count || 0;
 
-	// Try to find PNG or SVG
-	const pngPath = `/region/${params.id}.png`;
-	const svgPath = `/region/${params.id}.svg`;
+	// Count factories in this region
+	const factoriesResult = await db
+		.select({ count: sql<number>`count(*)::int` })
+		.from(factories)
+		.where(eq(factories.regionId, regionId));
+	const factoryCount = factoriesResult[0]?.count || 0;
 
-	if (fs.existsSync(path.join(staticPath, `${params.id}.png`))) {
-		regionImage = pngPath;
-	} else if (fs.existsSync(path.join(staticPath, `${params.id}.svg`))) {
-		regionImage = svgPath;
-	}
-
-	// Try to read region name from text file
-	const namePath = path.join(staticPath, `${params.id}.txt`);
-	if (fs.existsSync(namePath)) {
-		regionName = fs.readFileSync(namePath, "utf-8").trim();
+	// Count power plants in this region's state
+	let powerPlantCount = 0;
+	if (region.stateId) {
+		const powerPlantsResult = await db
+			.select({ count: sql<number>`count(*)::int` })
+			.from(powerPlants)
+			.where(eq(powerPlants.stateId, region.stateId));
+		powerPlantCount = powerPlantsResult[0]?.count || 0;
 	}
 
 	// Check if user already has a residence in this region
 	const userResidence = await db.query.residences.findFirst({
-		where: and(eq(residences.userId, account.id), eq(residences.regionId, parseInt(params.id)))
+		where: and(eq(residences.userId, account.id), eq(residences.regionId, regionId))
 	});
 
 	// Get all user's residences to check if they have a primary one
@@ -62,25 +64,39 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		where: eq(residences.userId, account.id)
 	});
 	const hasPrimaryResidence = userResidences.some((r) => r.isPrimary === 1);
+	const primaryResidence = userResidences.find((r) => r.isPrimary === 1);
+
+	// Get active travel if any
+	const activeTravel = await db.query.userTravels.findFirst({
+		where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
+	});
 
 	return {
 		region: {
 			id: region.id,
-			name: region.name,
-			avatar: region.avatar,
-			background: region.background,
-			description: region.description,
-			population: region.population,
 			rating: region.rating,
-			development: region.development,
+
 			infrastructure: region.infrastructure,
-			economy: region.economy,
-			createdAt: region.createdAt
+			powerplants: region.powerplants,
+			education: region.education,
+			hospitals: region.hospitals,
+			fortifications: region.fortifications,
+			oil: region.oil,
+			aluminum: region.aluminium,
+			rubber: region.rubber,
+			tungsten: region.tungsten,
+			steel: region.steel,
+			chromium: region.chromium,
+			createdAt: region.createdAt,
+			population,
+			factoryCount,
+			powerPlantCount
 		},
 		state: region.state
 			? {
 					id: region.state.id,
-					name: region.state.name
+					name: region.state.name,
+					avatar: region.state.avatar
 				}
 			: null,
 		governor: region.governor
@@ -93,17 +109,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				}
 			: null,
 		userResidence,
-		hasPrimaryResidence
+		hasPrimaryResidence,
+		userLocation: primaryResidence ? { regionId: primaryResidence.regionId } : null,
+		activeTravel
 	};
 };
 
 export const actions: Actions = {
 	requestResidence: async ({ params, locals }) => {
 		const account = locals.account!;
+		const regionId = parseInt(params.id);
 
 		// Check if region exists
 		const region = await db.query.regions.findFirst({
-			where: eq(regions.id, parseInt(params.id))
+			where: eq(regions.id, regionId)
 		});
 
 		if (!region) {
@@ -112,7 +131,7 @@ export const actions: Actions = {
 
 		// Check if user already has residence in this region
 		const existingResidence = await db.query.residences.findFirst({
-			where: and(eq(residences.userId, account.id), eq(residences.regionId, parseInt(params.id)))
+			where: and(eq(residences.userId, account.id), eq(residences.regionId, regionId))
 		});
 
 		if (existingResidence) {
@@ -129,28 +148,21 @@ export const actions: Actions = {
 		// Create new residence
 		await db.insert(residences).values({
 			userId: account.id,
-			regionId: parseInt(params.id),
+			regionId,
 			isPrimary,
 			movedInAt: new Date()
 		});
-
-		// Update region population
-		await db
-			.update(regions)
-			.set({
-				population: (region.population || 0) + 1
-			})
-			.where(eq(regions.id, parseInt(params.id)));
 
 		return { success: true };
 	},
 
 	setPrimaryResidence: async ({ params, locals }) => {
 		const account = locals.account!;
+		const regionId = parseInt(params.id);
 
 		// Check if user has residence in this region
 		const residence = await db.query.residences.findFirst({
-			where: and(eq(residences.userId, account.id), eq(residences.regionId, parseInt(params.id)))
+			where: and(eq(residences.userId, account.id), eq(residences.regionId, regionId))
 		});
 
 		if (!residence) {
