@@ -1,3 +1,4 @@
+<!-- src/routes/(authenticated)/(dock)/state/[id]/+page.svelte -->
 <script lang="ts">
 	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
@@ -8,10 +9,18 @@
 	import FluentShieldPerson20Filled from "~icons/fluent/shield-person-20-filled";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentChevronDown20Filled from "~icons/fluent/chevron-down-20-filled";
+	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
+	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentLightbulb20Filled from "~icons/fluent/lightbulb-20-filled";
+	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import { shareLink } from "$lib/util";
 	import ElectionBanner from "./ElectionBanner.svelte";
 
 	const { data } = $props();
+
+	let taxesExpanded = $state(false);
+	let energyExpanded = $state(false);
 
 	const ministryIcons = {
 		education: "🎓",
@@ -22,6 +31,15 @@
 		justice: "⚖️",
 		foreign_affairs: "🌐"
 	};
+
+	const taxTypeLabels = {
+		mining: "Mining Tax",
+		production: "Production Tax",
+		market_transaction: "Market Transaction Tax",
+		income: "Income Tax"
+	};
+
+	import { enhance } from "$app/forms";
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
@@ -59,26 +77,54 @@
 
 					<!-- Stats -->
 					<div class="grid grid-cols-2 gap-4">
-						<div class="bg-slate-700/30 rounded-xl border border-white/5 p-4 text-center">
+						<a class="bg-slate-700/30 rounded-xl border border-white/5 p-4 text-center" href="/state?sort=population">
 							<FluentPeople20Filled class="size-8 text-blue-400 mx-auto mb-2" />
 							<p class="text-2xl font-bold text-white">{(data.state.population || 0).toLocaleString()}</p>
 							<p class="text-xs text-gray-400 mt-1">Population</p>
-						</div>
-						<div class="bg-slate-700/30 rounded-xl border border-white/5 p-4 text-center">
+						</a>
+						<a
+							class="bg-slate-700/30 rounded-xl border border-white/5 p-4 text-center"
+							href={"/state/" + data.state.id + "/region"}
+						>
 							<FluentGlobe20Filled class="size-8 text-purple-400 mx-auto mb-2" />
 							<p class="text-2xl font-bold text-white">{data.regions?.length || 0}</p>
 							<p class="text-xs text-gray-400 mt-1">Regions</p>
-						</div>
+						</a>
 					</div>
 
 					<!-- Actions -->
 					<div class="flex gap-2">
-						<button
-							class="btn flex-1 bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 border-0 text-white gap-2"
-						>
-							<FluentGlobe20Filled class="size-5" />
-							Upgrade
-						</button>
+						{#if data.isPresident}
+							<a
+								href="/state/{data.state.id}/edit"
+								class="btn flex-1 bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 border-0 text-white gap-2"
+							>
+								<FluentEdit20Filled class="size-5" />
+								Edit State
+							</a>
+						{:else if data.isForeignMinister}
+							<form method="POST" action="?/sanction" use:enhance>
+								<button
+									type="submit"
+									onclick={(e) => {
+										if (!confirm(`Are you sure you want to sanction ${data.state.name}?`)) {
+											e.preventDefault();
+										}
+									}}
+									class="btn flex-1 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 border-0 text-white gap-2"
+								>
+									<FluentWarning20Filled class="size-5" />
+									Sanction State
+								</button>
+							</form>
+						{:else}
+							<button
+								class="btn flex-1 bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 border-0 text-white gap-2"
+							>
+								<FluentGlobe20Filled class="size-5" />
+								Upgrade
+							</button>
+						{/if}
 						<button
 							class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
 							onclick={() => shareLink(data.state.name, window.location.href)}
@@ -91,7 +137,119 @@
 		</div>
 	</div>
 
-	<!-- President Section -->
+	<!-- State Overview Sections -->
+	{#if data.taxes.length > 0 || data.energy}
+		<div class="space-y-3">
+			<!-- Taxes Overview -->
+			{#if data.taxes.length > 0}
+				<div class="bg-slate-800/50 rounded-xl border border-white/5 overflow-hidden">
+					<button
+						onclick={() => (taxesExpanded = !taxesExpanded)}
+						class="w-full flex items-center justify-between p-4 hover:bg-slate-700/30 transition-colors"
+					>
+						<div class="flex items-center gap-3">
+							<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+								<FluentMoney20Filled class="size-5 text-green-400" />
+							</div>
+							<div class="text-left">
+								<h3 class="text-base font-semibold text-white">Active Taxes</h3>
+								<p class="text-xs text-gray-400">
+									{data.taxes.length} tax {data.taxes.length === 1 ? "policy" : "policies"} in effect
+								</p>
+							</div>
+						</div>
+						<div class="transition-transform" class:rotate-180={taxesExpanded}>
+							<FluentChevronDown20Filled class="size-5 text-gray-400" />
+						</div>
+					</button>
+
+					{#if taxesExpanded}
+						<div class="px-4 pb-4 space-y-2 border-t border-white/5 pt-3">
+							{#each data.taxes as tax}
+								<div class="bg-slate-700/20 rounded-lg p-3">
+									<div class="flex justify-between items-start">
+										<div>
+											<p class="font-medium text-white text-sm">{tax.taxName}</p>
+											<p class="text-xs text-gray-400 capitalize">{taxTypeLabels[tax.taxType] || tax.taxType}</p>
+										</div>
+										<span class="text-sm font-semibold text-green-400">{tax.taxRate}%</span>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			{/if}
+
+			<!-- Energy Overview -->
+			{#if data.energy}
+				<div class="bg-slate-800/50 rounded-xl border border-white/5 overflow-hidden">
+					<button
+						onclick={() => (energyExpanded = !energyExpanded)}
+						class="w-full flex items-center justify-between p-4 hover:bg-slate-700/30 transition-colors"
+					>
+						<div class="flex items-center gap-3">
+							<div
+								class={`size-10 rounded-lg flex items-center justify-center ${
+									data.energy.available < 0 ? "bg-red-600/20" : "bg-yellow-600/20"
+								}`}
+							>
+								<FluentLightbulb20Filled
+									class={`size-5 ${data.energy.available < 0 ? "text-red-400" : "text-yellow-400"}`}
+								/>
+							</div>
+							<div class="text-left">
+								<h3 class="text-base font-semibold text-white">Energy Status</h3>
+								<p class="text-xs text-gray-400">
+									{#if data.energy.available < 0}
+										<span class="text-red-400 font-medium">Deficit: {Math.abs(data.energy.available)} MW</span>
+									{:else}
+										<span class="text-green-400 font-medium">Available: {data.energy.available} MW</span>
+									{/if}
+								</p>
+							</div>
+						</div>
+						<div class="transition-transform" class:rotate-180={energyExpanded}>
+							<FluentChevronDown20Filled class="size-5 text-gray-400" />
+						</div>
+					</button>
+
+					{#if energyExpanded}
+						<div class="px-4 pb-4 space-y-3 border-t border-white/5 pt-3">
+							<div class="space-y-2">
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-400">Total Capacity</span>
+									<span class="text-white font-medium">{data.energy.totalProduction.toLocaleString()} MW</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-400">Current Usage</span>
+									<span class="text-white font-medium">{data.energy.usedProduction.toLocaleString()} MW</span>
+								</div>
+								<div class="flex justify-between text-sm">
+									<span class="text-gray-400">Power Plants</span>
+									<span class="text-white font-medium">{data.powerPlants}</span>
+								</div>
+							</div>
+
+							<!-- Progress Bar -->
+							<div class="relative w-full h-2 bg-slate-700 rounded-full overflow-hidden">
+								<div
+									class={`absolute top-0 left-0 h-full rounded-full transition-all ${
+										data.energy.usedProduction > data.energy.totalProduction ? "bg-red-500" : "bg-green-500"
+									}`}
+									style={`width: ${Math.min((data.energy.usedProduction / data.energy.totalProduction) * 100, 100)}%`}
+								/>
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	<!-- State Overview Sections -->
+	<!-- fix this	{#if data.taxes.length > 0 || data.energy}
+		<div class="space-y-3"> -->
 	{#if data.president}
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 			<div class="flex items-center gap-2 mb-4">
@@ -240,38 +398,12 @@
 
 	<!-- Footer Links -->
 	<div class="flex justify-center gap-4 pt-4 border-t border-white/5">
-		<a href="/states" class="text-sm text-gray-400 hover:text-white underline underline-offset-2 transition-colors">
+		<a href="/state" class="text-sm text-gray-400 hover:text-white underline underline-offset-2 transition-colors">
 			All States
 		</a>
 		<span class="text-gray-600">•</span>
-		<a href="/regions" class="text-sm text-gray-400 hover:text-white underline underline-offset-2 transition-colors">
+		<a href="/region" class="text-sm text-gray-400 hover:text-white underline underline-offset-2 transition-colors">
 			All Regions
 		</a>
 	</div>
 </div>
-
-<style>
-	@keyframes shimmer {
-		0% {
-			box-shadow:
-				0 0 10px rgba(245, 158, 11, 0.4),
-				0 0 20px rgba(244, 63, 94, 0.3),
-				0 0 30px rgba(168, 85, 247, 0.2);
-		}
-		50% {
-			box-shadow:
-				0 0 20px rgba(245, 158, 11, 0.6),
-				0 0 30px rgba(244, 63, 94, 0.5),
-				0 0 40px rgba(168, 85, 247, 0.4);
-		}
-		100% {
-			box-shadow:
-				0 0 10px rgba(245, 158, 11, 0.4),
-				0 0 20px rgba(244, 63, 94, 0.3),
-				0 0 30px rgba(168, 85, 247, 0.2);
-		}
-	}
-	.shimmer-outline {
-		animation: shimmer 3s ease-in-out infinite;
-	}
-</style>

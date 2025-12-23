@@ -1,6 +1,17 @@
 // src/routes/(authenticated)/(dock)/region/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { regions, residences, userTravels, factories, powerPlants } from "$lib/server/schema";
+import {
+	regions,
+	residences,
+	userTravels,
+	factories,
+	powerPlants,
+	states,
+	userWallets,
+	governors,
+	ministers,
+	stateTaxes
+} from "$lib/server/schema";
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
@@ -71,13 +82,40 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
 	});
 
+	// Check if user is governor of this region
+	const isGovernor = region.governor?.userId === account.id;
+
+	// Check if user is minister of infrastructure in this state
+	let isInfrastructureMinister = false;
+	if (region.stateId) {
+		const minister = await db.query.ministers.findFirst({
+			where: and(
+				eq(ministers.userId, account.id),
+				eq(ministers.stateId, region.stateId),
+				eq(ministers.ministry, "infrastructure")
+			)
+		});
+		isInfrastructureMinister = !!minister;
+	}
+
+	// User can build if they're governor or infrastructure minister
+	const canBuild = isGovernor || isInfrastructureMinister;
+
+	// Get travel tax rate for this state
+	let travelTaxRate = 0;
+	if (region.stateId) {
+		const travelTax = await db.query.stateTaxes.findFirst({
+			where: and(eq(stateTaxes.stateId, region.stateId), eq(stateTaxes.taxType, "income"), eq(stateTaxes.isActive, 1))
+		});
+		travelTaxRate = travelTax?.taxRate || 0;
+	}
+
 	return {
 		region: {
 			id: region.id,
 			rating: region.rating,
-
 			infrastructure: region.infrastructure,
-			powerplants: region.powerplants,
+			economy: region.economy,
 			education: region.education,
 			hospitals: region.hospitals,
 			fortifications: region.fortifications,
@@ -111,7 +149,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		userResidence,
 		hasPrimaryResidence,
 		userLocation: primaryResidence ? { regionId: primaryResidence.regionId } : null,
-		activeTravel
+		activeTravel,
+		canBuild,
+		travelTaxRate
 	};
 };
 
@@ -182,5 +222,108 @@ export const actions: Actions = {
 		}
 
 		return { success: true };
+	},
+
+	startTravel: async ({ params, locals, request }) => {
+		const account = locals.account!;
+		const regionId = parseInt(params.id);
+		const formData = await request.formData();
+
+		const distanceKm = parseInt(formData.get("distanceKm") as string);
+		const durationMinutes = parseInt(formData.get("durationMinutes") as string);
+		const fromRegionId = parseInt(formData.get("fromRegionId") as string);
+
+		// Validate inputs
+		if (!distanceKm || !durationMinutes || !fromRegionId) {
+			return fail(400, { error: "Invalid travel parameters" });
+		}
+
+		// Check if user has active travel
+		const existingTravel = await db.query.userTravels.findFirst({
+			where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
+		});
+
+		if (existingTravel) {
+			return fail(400, { error: "You already have an active travel" });
+		}
+
+		// Get destination region to check for visa requirement and taxes
+		const destinationRegion = await db.query.regions.findFirst({
+			where: eq(regions.id, regionId),
+			with: { state: true }
+		});
+
+		if (!destinationRegion) {
+			return fail(404, { error: "Destination region not found" });
+		}
+
+		// Calculate travel cost (base: 100 per 100km)
+		const baseCost = Math.ceil((distanceKm / 100) * 100);
+
+		// Add state travel tax if applicable
+		let travelTax = 0;
+		let totalCost = baseCost;
+
+		if (destinationRegion.stateId) {
+			const stateTax = await db.query.stateTaxes.findFirst({
+				where: and(
+					eq(stateTaxes.stateId, destinationRegion.stateId),
+					eq(stateTaxes.taxType, "income"),
+					eq(stateTaxes.isActive, 1)
+				)
+			});
+
+			if (stateTax) {
+				travelTax = Math.ceil((baseCost * stateTax.taxRate) / 100);
+				totalCost = baseCost + travelTax;
+			}
+		}
+
+		// Check if user has required residence (visa)
+		const hasVisa = await db.query.residences.findFirst({
+			where: and(eq(residences.userId, account.id), eq(residences.regionId, regionId))
+		});
+
+		if (!hasVisa) {
+			return fail(403, { error: "You need a residence permit (visa) to travel to this region" });
+		}
+
+		// Check user wallet balance
+		const wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		});
+
+		if (!wallet || wallet.balance < totalCost) {
+			return fail(400, { error: `Insufficient funds. Travel costs $${totalCost.toLocaleString()}` });
+		}
+
+		// Deduct travel cost
+		await db
+			.update(userWallets)
+			.set({
+				balance: sql`${userWallets.balance} - ${totalCost}`,
+				updatedAt: new Date()
+			})
+			.where(eq(userWallets.userId, account.id));
+
+		// Create travel record
+		const now = new Date();
+		const arrivalTime = new Date(now.getTime() + durationMinutes * 60000);
+
+		await db.insert(userTravels).values({
+			userId: account.id,
+			fromRegionId,
+			toRegionId: regionId,
+			departureTime: now,
+			arrivalTime,
+			travelDuration: durationMinutes,
+			distanceKm,
+			status: "in_progress"
+		});
+
+		return {
+			success: true,
+			message: `Travel started! Cost: $${baseCost.toLocaleString()} + Tax: $${travelTax.toLocaleString()}`
+		};
 	}
 };
