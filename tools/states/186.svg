@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="Coat_of_arms_of_the_Regno_di_Morea.svg"
+   inkscape:version="1.0 (4035a4f, 2020-05-01)"
+   id="svg27443"
+   version="1.1"
+   viewBox="0 0 114.801 119.94451"
+   height="119.94451mm"
+   width="114.801mm">
+  <defs
+     id="defs27437" />
+  <sodipodi:namedview
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     inkscape:window-maximized="0"
+     inkscape:window-y="25"
+     inkscape:window-x="0"
+     inkscape:window-height="793"
+     inkscape:window-width="1252"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="521.24867"
+     inkscape:cx="149.17427"
+     inkscape:zoom="0.25"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata27440">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-61.685503,-97.309191)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <g
+       transform="matrix(0.79375002,0,0,0.79375002,311.09472,-388.3264)"
+       id="g28810">
+      <path
+         id="path60473-6-1-1-6-8"
+         d="M -313.88293,719.29894 V 612.15758 h 143.96455 l -8e-5,107.14136 c 0.44959,36.64897 -26.7048,36.41252 -53.80353,36.2193 -18.20202,-0.19309 -18.20202,7.08772 -18.20202,7.08772 0,0 0,-7.28081 -18.20202,-7.08772 -26.97802,0.23643 -54.48189,0.42967 -53.7569,-36.2193 z"
+         style="font-variation-settings:normal;display:inline;overflow:visible;visibility:visible;opacity:1;vector-effect:none;fill:#ce0f25;fill-opacity:1;stroke:#554400;stroke-width:0.666457;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate;stop-color:#000000;stop-opacity:1"
+         sodipodi:nodetypes="cccccccc" />
+      <path
+         sodipodi:nodetypes="cccccccccccccc"
+         d="m -259.64323,612.15758 v 52.51789 h -54.23987 v 35.47656 h 54.23987 v 55.2155 c 17.69282,-0.0532 17.71922,7.23843 17.71922,7.23843 0,0 0.0254,-7.30423 17.75735,-7.24038 v -55.21355 h 54.24828 v -35.47656 h -54.24828 v -52.51789 z"
+         style="display:inline;overflow:visible;visibility:visible;fill:#fee46e;fill-opacity:1;stroke:#554400;stroke-width:0.666457;stroke-linecap:square;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker:none;enable-background:accumulate"
+         id="path60473-6-1-1-6-3" />
+    </g>
+  </g>
+</svg>
