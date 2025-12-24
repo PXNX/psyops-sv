@@ -1,8 +1,9 @@
+// src/routes/(authenticated)/user/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, partyMembers, files, residences, articles } from "$lib/server/schema";
+import { accounts, partyMembers, files, residences, articles, userVisas } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error } from "@sveltejs/kit";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and, count, gt } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -20,8 +21,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const account = locals.account!;
 
-	// Get user's residences
-	const userResidences = await db.query.residences.findMany({
+	// Get user's single residence
+	const residence = await db.query.residences.findFirst({
 		where: eq(residences.userId, params.id),
 		with: {
 			region: {
@@ -29,12 +30,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					state: true
 				}
 			}
-		},
-		orderBy: (residences, { desc }) => [desc(residences.isPrimary)]
+		}
 	});
 
-	// Get primary residence
-	const primaryResidence = userResidences.find((r) => r.isPrimary === 1);
+	// Get user's active visas
+	const activeVisas = await db.query.userVisas.findMany({
+		where: and(eq(userVisas.userId, params.id), eq(userVisas.status, "active"), gt(userVisas.expiresAt, new Date())),
+		with: {
+			state: true
+		},
+		orderBy: (visas, { asc }) => [asc(visas.expiresAt)]
+	});
 
 	// Get article count
 	const articleCount = await db.select({ count: count() }).from(articles).where(eq(articles.authorId, params.id));
@@ -65,7 +71,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Get user avatar URL if exists
 	let avatarUrl = user.profile?.avatar || null;
 	if (avatarUrl && !avatarUrl.startsWith("http")) {
-		// If it's a file ID, fetch the signed URL
 		const avatarFile = await db.query.files.findFirst({
 			where: eq(files.id, avatarUrl)
 		});
@@ -97,28 +102,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					joinedAt: partyMembership.joinedAt
 				}
 			: null,
-		residences: userResidences.map((r) => ({
-			id: r.id,
-			isPrimary: r.isPrimary === 1,
-			movedInAt: r.movedInAt,
-			region: {
-				id: r.region.id,
-				name: r.region.name,
-				avatar: r.region.avatar,
-				stateName: r.region.state?.name
-			}
-		})),
-		primaryResidence: primaryResidence
+		residence: residence
 			? {
-					id: primaryResidence.id,
+					id: residence.id,
+					movedInAt: residence.movedInAt,
 					region: {
-						id: primaryResidence.region.id,
-						name: primaryResidence.region.name,
-						avatar: primaryResidence.region.avatar,
-						stateName: primaryResidence.region.state?.name
+						id: residence.region.id,
+
+						stateName: residence.region.state?.name
 					}
 				}
 			: null,
+		activeVisas: activeVisas.map((v) => ({
+			id: v.id,
+			stateId: v.stateId,
+			stateName: v.state.name,
+			stateAvatar: v.state.avatar,
+			expiresAt: v.expiresAt,
+			issuedAt: v.issuedAt,
+			cost: v.cost
+		})),
 		articleCount: articleCount[0]?.count || 0,
 		isOwnProfile: account.id === params.id
 	};

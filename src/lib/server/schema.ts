@@ -1,6 +1,7 @@
 import { relations } from "drizzle-orm";
 import {
 	bigint,
+	boolean,
 	index,
 	integer,
 	pgEnum,
@@ -167,6 +168,25 @@ export const presidents = pgTable(
 	})
 );
 
+// Update residences table - ONE residence per user
+export const residences = pgTable(
+	"residences",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" })
+			.unique(), // ONE residence per user
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		movedInAt: timestamp("moved_in_at").defaultNow().notNull()
+	},
+	(table) => ({
+		userRegionIdx: index("idx_residence_user_region").on(table.userId, table.regionId)
+	})
+);
+
 // Ministers table (multiple per state)
 export const ministers = pgTable(
 	"ministers",
@@ -204,25 +224,6 @@ export const parliamentMembers = pgTable(
 	},
 	(table) => ({
 		userStateIdx: uniqueIndex("idx_parliament_user_state").on(table.userId, table.stateId)
-	})
-);
-
-// Residences table (tracks where users live)
-export const residences = pgTable(
-	"residences",
-	{
-		id: uuid("id").defaultRandom().primaryKey(),
-		userId: text("user_id")
-			.notNull()
-			.references(() => accounts.id, { onDelete: "cascade" }),
-		regionId: integer("region_id")
-			.notNull()
-			.references(() => regions.id, { onDelete: "cascade" }),
-		isPrimary: integer("is_primary").default(0), // 1 for primary residence, 0 for secondary
-		movedInAt: timestamp("moved_in_at").defaultNow().notNull()
-	},
-	(table) => ({
-		userRegionIdx: index("idx_residence_user_region").on(table.userId, table.regionId)
 	})
 );
 
@@ -324,15 +325,6 @@ export const oauthTokensRelations = relations(oauthTokens, ({ one }) => ({
 		fields: [oauthTokens.accountId],
 		references: [accounts.id]
 	})
-}));
-
-export const statesRelations = relations(states, ({ one, many }) => ({
-	regions: many(regions),
-	president: one(presidents),
-	ministers: many(ministers),
-	parliamentMembers: many(parliamentMembers),
-	sanctionsImposed: many(stateSanctions, { relationName: "sanctioning_state" }), // ADD THIS
-	sanctionsReceived: many(stateSanctions, { relationName: "target_state" }) // ADD THIS
 }));
 
 export const regionsRelations = relations(regions, ({ one, many }) => ({
@@ -523,6 +515,52 @@ export const factoryWorkers = pgTable("factory_workers", {
 	hiredAt: timestamp("hired_at").defaultNow().notNull(),
 	lastWorked: timestamp("last_worked")
 });
+
+// Visa Status Enum
+export const visaStatusEnum = pgEnum("visa_status", ["active", "expired", "revoked"]);
+
+// State Visa Settings
+export const stateVisaSettings = pgTable("state_visa_settings", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" })
+		.unique(),
+	visaRequired: boolean("visa_required").default(false).notNull(),
+	visaCost: bigint("visa_cost", { mode: "number" }).default(5000).notNull(),
+	visaTaxRate: integer("visa_tax_rate").default(20).notNull(), // Percentage going to state
+	autoApprove: boolean("auto_approve").default(true).notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// User Visas
+export const userVisas = pgTable("user_visas", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	stateId: uuid("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	status: visaStatusEnum("status").notNull().default("active"),
+
+	// Visa details
+	issuedAt: timestamp("issued_at").defaultNow().notNull(),
+	expiresAt: timestamp("expires_at").notNull(), // 2 weeks from issue
+	cost: bigint("cost", { mode: "number" }).notNull(),
+	taxPaid: bigint("tax_paid", { mode: "number" }).notNull(),
+
+	// Approval
+	approvedBy: text("approved_by").references(() => accounts.id, { onDelete: "set null" }),
+	approvedAt: timestamp("approved_at"),
+
+	// Revocation
+	revokedBy: text("revoked_by").references(() => accounts.id, { onDelete: "set null" }),
+	revokedAt: timestamp("revoked_at"),
+	revocationReason: text("revocation_reason")
+});
+
+// Visa Applications (for manual approval)
 
 // Production Queue table (one active slot per user)
 export const productionQueue = pgTable("production_queue", {
@@ -1473,25 +1511,30 @@ export type NewPowerPlant = typeof powerPlants.$inferInsert;
 export type StateExportTransaction = typeof stateExportTransactions.$inferSelect;
 export type NewStateExportTransaction = typeof stateExportTransactions.$inferInsert;
 
-// Residence Applications table
-export const residenceApplications = pgTable("residence_applications", {
-	id: uuid("id").defaultRandom().primaryKey(),
+// Updated Database Schema with Visa System - Booleans & Integer IDs
+
+// Visa Applications (for manual approval)
+export const visaApplications = pgTable("visa_applications", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	userId: text("user_id")
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" }),
-	regionId: integer("region_id")
+	stateId: uuid("state_id")
 		.notNull()
-		.references(() => regions.id, { onDelete: "cascade" }),
+		.references(() => states.id, { onDelete: "cascade" }),
 	status: text("status").notNull().default("pending"), // pending, approved, rejected
+
+	purpose: text("purpose"), // Travel, work, etc.
 	appliedAt: timestamp("applied_at").defaultNow().notNull(),
-	reviewedAt: timestamp("reviewed_at"),
+
 	reviewedBy: text("reviewed_by").references(() => accounts.id, { onDelete: "set null" }),
+	reviewedAt: timestamp("reviewed_at"),
 	reviewNote: text("review_note")
 });
 
-// State Sanctions History table
+// Update other tables to use booleans
 export const stateSanctions = pgTable("state_sanctions", {
-	id: uuid("id").defaultRandom().primaryKey(),
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	targetStateId: uuid("target_state_id")
 		.notNull()
 		.references(() => states.id, { onDelete: "cascade" }),
@@ -1503,24 +1546,88 @@ export const stateSanctions = pgTable("state_sanctions", {
 		.references(() => accounts.id, { onDelete: "cascade" }),
 	reason: text("reason").notNull(),
 	sanctionedAt: timestamp("sanctioned_at").defaultNow().notNull(),
-	isActive: integer("is_active").default(1).notNull() // 1 = active, 0 = lifted
+	isActive: boolean("is_active").default(true).notNull()
+});
+
+export const residenceApplications = pgTable("residence_applications", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+	status: text("status").notNull().default("pending"),
+	appliedAt: timestamp("applied_at").defaultNow().notNull(),
+	reviewedAt: timestamp("reviewed_at"),
+	reviewedBy: text("reviewed_by").references(() => accounts.id, { onDelete: "set null" }),
+	reviewNote: text("review_note")
 });
 
 // Relations
-export const residenceApplicationsRelations = relations(residenceApplications, ({ one }) => ({
+export const stateVisaSettingsRelations = relations(stateVisaSettings, ({ one }) => ({
+	state: one(states, {
+		fields: [stateVisaSettings.stateId],
+		references: [states.id]
+	})
+}));
+
+export const userVisasRelations = relations(userVisas, ({ one }) => ({
 	user: one(accounts, {
-		fields: [residenceApplications.userId],
+		fields: [userVisas.userId],
 		references: [accounts.id]
 	}),
-	region: one(regions, {
-		fields: [residenceApplications.regionId],
-		references: [regions.id]
+	state: one(states, {
+		fields: [userVisas.stateId],
+		references: [states.id]
 	}),
-	reviewer: one(accounts, {
-		fields: [residenceApplications.reviewedBy],
+	approver: one(accounts, {
+		fields: [userVisas.approvedBy],
+		references: [accounts.id]
+	}),
+	revoker: one(accounts, {
+		fields: [userVisas.revokedBy],
 		references: [accounts.id]
 	})
 }));
+
+export const visaApplicationsRelations = relations(visaApplications, ({ one }) => ({
+	user: one(accounts, {
+		fields: [visaApplications.userId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [visaApplications.stateId],
+		references: [states.id]
+	}),
+	reviewer: one(accounts, {
+		fields: [visaApplications.reviewedBy],
+		references: [accounts.id]
+	})
+}));
+
+// Update statesRelations
+export const statesRelations = relations(states, ({ one, many }) => ({
+	regions: many(regions),
+	president: one(presidents),
+	ministers: many(ministers),
+	parliamentMembers: many(parliamentMembers),
+	sanctionsImposed: many(stateSanctions, { relationName: "sanctioning_state" }),
+	sanctionsReceived: many(stateSanctions, { relationName: "target_state" }),
+	visaSettings: one(stateVisaSettings),
+	visas: many(userVisas),
+	visaApplications: many(visaApplications)
+}));
+
+// TypeScript types
+export type StateVisaSettings = typeof stateVisaSettings.$inferSelect;
+export type NewStateVisaSettings = typeof stateVisaSettings.$inferInsert;
+
+export type UserVisa = typeof userVisas.$inferSelect;
+export type NewUserVisa = typeof userVisas.$inferInsert;
+
+export type VisaApplication = typeof visaApplications.$inferSelect;
+export type NewVisaApplication = typeof visaApplications.$inferInsert;
 
 export const stateSanctionsRelations = relations(stateSanctions, ({ one }) => ({
 	targetState: one(states, {
