@@ -3,26 +3,24 @@ import { db } from "$lib/server/db";
 import {
 	regions,
 	residences,
-	userTravels,
-	factories,
-	powerPlants,
-	states,
-	userWallets,
 	governors,
-	ministers,
-	stateTaxes
+	factories,
+	userVisas,
+	stateVisaSettings,
+	visaApplications,
+	userWallets,
+	stateTreasury
 } from "$lib/server/schema";
-import { error, fail } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
+import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
-	const regionId = parseInt(params.id);
 
-	// Query region with all related data
+	// Get region with state
 	const region = await db.query.regions.findFirst({
-		where: eq(regions.id, regionId),
+		where: eq(regions.id, parseInt(params.id)),
 		with: {
 			state: true,
 			governor: {
@@ -41,74 +39,77 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, "Region not found");
 	}
 
-	// Count residences (population)
+	// Get population
 	const populationResult = await db
 		.select({ count: sql<number>`count(*)::int` })
 		.from(residences)
-		.where(eq(residences.regionId, regionId));
+		.where(eq(residences.regionId, parseInt(params.id)));
+
 	const population = populationResult[0]?.count || 0;
 
-	// Count factories in this region
-	const factoriesResult = await db
-		.select({ count: sql<number>`count(*)::int` })
-		.from(factories)
-		.where(eq(factories.regionId, regionId));
-	const factoryCount = factoriesResult[0]?.count || 0;
-
-	// Count power plants in this region's state
-	let powerPlantCount = 0;
-	if (region.stateId) {
-		const powerPlantsResult = await db
-			.select({ count: sql<number>`count(*)::int` })
-			.from(powerPlants)
-			.where(eq(powerPlants.stateId, region.stateId));
-		powerPlantCount = powerPlantsResult[0]?.count || 0;
-	}
-
-	// Check if user already has a residence in this region
+	// Check if user has residence here
 	const userResidence = await db.query.residences.findFirst({
-		where: and(eq(residences.userId, account.id), eq(residences.regionId, regionId))
-	});
-
-	// Get all user's residences to check if they have a primary one
-	const userResidences = await db.query.residences.findMany({
 		where: eq(residences.userId, account.id)
 	});
-	const hasPrimaryResidence = userResidences.some((r) => r.isPrimary === 1);
-	const primaryResidence = userResidences.find((r) => r.isPrimary === 1);
 
-	// Get active travel if any
-	const activeTravel = await db.query.userTravels.findFirst({
-		where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
-	});
+	const hasResidence = userResidence?.regionId === parseInt(params.id);
 
-	// Check if user is governor of this region
-	const isGovernor = region.governor?.userId === account.id;
+	// Get user's residence state
+	let userResidenceState = null;
+	if (userResidence) {
+		const userRegion = await db.query.regions.findFirst({
+			where: eq(regions.id, userResidence.regionId),
+			with: { state: true }
+		});
+		userResidenceState = userRegion?.state;
+	}
 
-	// Check if user is minister of infrastructure in this state
-	let isInfrastructureMinister = false;
-	if (region.stateId) {
-		const minister = await db.query.ministers.findFirst({
+	// Check if user needs a visa for this state
+	let needsVisa = false;
+	let hasActiveVisa = false;
+	let hasPendingApplication = false;
+	let visaSettings = null;
+	let activeVisa = null;
+
+	if (region.stateId && userResidenceState?.id !== region.stateId) {
+		needsVisa = true;
+
+		// Get visa settings
+		visaSettings = await db.query.stateVisaSettings.findFirst({
+			where: eq(stateVisaSettings.stateId, region.stateId)
+		});
+
+		// Check for active visa
+		activeVisa = await db.query.userVisas.findFirst({
 			where: and(
-				eq(ministers.userId, account.id),
-				eq(ministers.stateId, region.stateId),
-				eq(ministers.ministry, "infrastructure")
+				eq(userVisas.userId, account.id),
+				eq(userVisas.stateId, region.stateId),
+				eq(userVisas.status, "active")
 			)
 		});
-		isInfrastructureMinister = !!minister;
-	}
 
-	// User can build if they're governor or infrastructure minister
-	const canBuild = isGovernor || isInfrastructureMinister;
+		hasActiveVisa = !!activeVisa && new Date(activeVisa.expiresAt) > new Date();
 
-	// Get travel tax rate for this state
-	let travelTaxRate = 0;
-	if (region.stateId) {
-		const travelTax = await db.query.stateTaxes.findFirst({
-			where: and(eq(stateTaxes.stateId, region.stateId), eq(stateTaxes.taxType, "income"), eq(stateTaxes.isActive, 1))
+		// Check for pending application
+		const pendingApp = await db.query.visaApplications.findFirst({
+			where: and(
+				eq(visaApplications.userId, account.id),
+				eq(visaApplications.stateId, region.stateId),
+				eq(visaApplications.status, "pending")
+			)
 		});
-		travelTaxRate = travelTax?.taxRate || 0;
+
+		hasPendingApplication = !!pendingApp;
 	}
+
+	// Get factories in region
+	const regionFactories = await db.query.factories.findMany({
+		where: eq(factories.regionId, parseInt(params.id)),
+		with: {
+			company: true
+		},
+		limit: 10
+	});
 
 	return {
 		region: {
@@ -120,210 +121,229 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			hospitals: region.hospitals,
 			fortifications: region.fortifications,
 			oil: region.oil,
-			aluminum: region.aluminium,
+			aluminium: region.aluminium,
 			rubber: region.rubber,
 			tungsten: region.tungsten,
 			steel: region.steel,
 			chromium: region.chromium,
-			createdAt: region.createdAt,
-			population,
-			factoryCount,
-			powerPlantCount
+			stateId: region.stateId,
+			stateName: region.state?.name,
+			stateAvatar: region.state?.avatar
 		},
-		state: region.state
-			? {
-					id: region.state.id,
-					name: region.state.name,
-					avatar: region.state.avatar
-				}
-			: null,
+		population,
+		hasResidence,
 		governor: region.governor
 			? {
 					userId: region.governor.userId,
 					name: region.governor.user.profile?.name,
-					avatar: region.governor.user.profile?.avatar,
-					appointedAt: region.governor.appointedAt,
-					term: region.governor.term
+					appointedAt: region.governor.appointedAt
 				}
 			: null,
-		userResidence,
-		hasPrimaryResidence,
-		userLocation: primaryResidence ? { regionId: primaryResidence.regionId } : null,
-		activeTravel,
-		canBuild,
-		travelTaxRate
+		factories: regionFactories,
+		visa: {
+			needsVisa,
+			hasActiveVisa,
+			hasPendingApplication,
+			settings: visaSettings,
+			activeVisa: activeVisa
+				? {
+						expiresAt: activeVisa.expiresAt.toISOString(),
+						cost: activeVisa.cost,
+						taxPaid: activeVisa.taxPaid
+					}
+				: null
+		}
 	};
 };
 
 export const actions: Actions = {
-	requestResidence: async ({ params, locals }) => {
+	purchaseVisa: async ({ params, request, locals }) => {
 		const account = locals.account!;
-		const regionId = parseInt(params.id);
 
-		// Check if region exists
+		// Get region to find state
 		const region = await db.query.regions.findFirst({
-			where: eq(regions.id, regionId)
-		});
-
-		if (!region) {
-			return fail(404, { error: "Region not found" });
-		}
-
-		// Check if user already has residence in this region
-		const existingResidence = await db.query.residences.findFirst({
-			where: and(eq(residences.userId, account.id), eq(residences.regionId, regionId))
-		});
-
-		if (existingResidence) {
-			return fail(400, { error: "You already have a residence in this region" });
-		}
-
-		// Check if user has any residences
-		const userResidences = await db.query.residences.findMany({
-			where: eq(residences.userId, account.id)
-		});
-
-		const isPrimary = userResidences.length === 0 ? 1 : 0;
-
-		// Create new residence
-		await db.insert(residences).values({
-			userId: account.id,
-			regionId,
-			isPrimary,
-			movedInAt: new Date()
-		});
-
-		return { success: true };
-	},
-
-	setPrimaryResidence: async ({ params, locals }) => {
-		const account = locals.account!;
-		const regionId = parseInt(params.id);
-
-		// Check if user has residence in this region
-		const residence = await db.query.residences.findFirst({
-			where: and(eq(residences.userId, account.id), eq(residences.regionId, regionId))
-		});
-
-		if (!residence) {
-			return fail(404, { error: "You don't have a residence in this region" });
-		}
-
-		// Remove primary status from all other residences
-		const allResidences = await db.query.residences.findMany({
-			where: eq(residences.userId, account.id)
-		});
-
-		for (const res of allResidences) {
-			await db
-				.update(residences)
-				.set({ isPrimary: res.id === residence.id ? 1 : 0 })
-				.where(eq(residences.id, res.id));
-		}
-
-		return { success: true };
-	},
-
-	startTravel: async ({ params, locals, request }) => {
-		const account = locals.account!;
-		const regionId = parseInt(params.id);
-		const formData = await request.formData();
-
-		const distanceKm = parseInt(formData.get("distanceKm") as string);
-		const durationMinutes = parseInt(formData.get("durationMinutes") as string);
-		const fromRegionId = parseInt(formData.get("fromRegionId") as string);
-
-		// Validate inputs
-		if (!distanceKm || !durationMinutes || !fromRegionId) {
-			return fail(400, { error: "Invalid travel parameters" });
-		}
-
-		// Check if user has active travel
-		const existingTravel = await db.query.userTravels.findFirst({
-			where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
-		});
-
-		if (existingTravel) {
-			return fail(400, { error: "You already have an active travel" });
-		}
-
-		// Get destination region to check for visa requirement and taxes
-		const destinationRegion = await db.query.regions.findFirst({
-			where: eq(regions.id, regionId),
+			where: eq(regions.id, parseInt(params.id)),
 			with: { state: true }
 		});
 
-		if (!destinationRegion) {
-			return fail(404, { error: "Destination region not found" });
+		if (!region || !region.stateId) {
+			return fail(400, { error: "Region has no state" });
 		}
 
-		// Calculate travel cost (base: 100 per 100km)
-		const baseCost = Math.ceil((distanceKm / 100) * 100);
+		const stateId = region.stateId;
 
-		// Add state travel tax if applicable
-		let travelTax = 0;
-		let totalCost = baseCost;
-
-		if (destinationRegion.stateId) {
-			const stateTax = await db.query.stateTaxes.findFirst({
-				where: and(
-					eq(stateTaxes.stateId, destinationRegion.stateId),
-					eq(stateTaxes.taxType, "income"),
-					eq(stateTaxes.isActive, 1)
-				)
-			});
-
-			if (stateTax) {
-				travelTax = Math.ceil((baseCost * stateTax.taxRate) / 100);
-				totalCost = baseCost + travelTax;
+		// Get user's residence
+		const residence = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id),
+			with: {
+				region: {
+					with: { state: true }
+				}
 			}
-		}
-
-		// Check if user has required residence (visa)
-		const hasVisa = await db.query.residences.findFirst({
-			where: and(eq(residences.userId, account.id), eq(residences.regionId, regionId))
 		});
 
-		if (!hasVisa) {
-			return fail(403, { error: "You need a residence permit (visa) to travel to this region" });
+		// Check if user is already a resident of this state
+		if (residence?.region.stateId === stateId) {
+			return fail(400, { error: "You are already a resident of this state" });
 		}
 
-		// Check user wallet balance
-		const wallet = await db.query.userWallets.findFirst({
+		// Get visa settings
+		let visaSettings = await db.query.stateVisaSettings.findFirst({
+			where: eq(stateVisaSettings.stateId, stateId)
+		});
+
+		// Create default if doesn't exist
+		if (!visaSettings) {
+			[visaSettings] = await db
+				.insert(stateVisaSettings)
+				.values({
+					stateId,
+					visaRequired: false,
+					visaCost: 5000,
+					visaTaxRate: 20,
+					autoApprove: true
+				})
+				.returning();
+		}
+
+		// Check if visa is required
+		if (!visaSettings.visaRequired) {
+			// Grant free visa
+			const expiresAt = new Date();
+			expiresAt.setDate(expiresAt.getDate() + 14);
+
+			await db.insert(userVisas).values({
+				userId: account.id,
+				stateId,
+				status: "active",
+				expiresAt,
+				cost: 0,
+				taxPaid: 0,
+				approvedAt: new Date()
+			});
+
+			return {
+				success: true,
+				message: "Free visa granted for open borders state"
+			};
+		}
+
+		// Check if user already has an active visa
+		const existingVisa = await db.query.userVisas.findFirst({
+			where: and(eq(userVisas.userId, account.id), eq(userVisas.stateId, stateId), eq(userVisas.status, "active"))
+		});
+
+		if (existingVisa && new Date(existingVisa.expiresAt) > new Date()) {
+			return fail(400, { error: "You already have an active visa for this state" });
+		}
+
+		// Check for pending application
+		const pendingApplication = await db.query.visaApplications.findFirst({
+			where: and(
+				eq(visaApplications.userId, account.id),
+				eq(visaApplications.stateId, stateId),
+				eq(visaApplications.status, "pending")
+			)
+		});
+
+		if (pendingApplication) {
+			return fail(400, { error: "You already have a pending visa application" });
+		}
+
+		// If manual approval required, create application
+		if (!visaSettings.autoApprove) {
+			await db.insert(visaApplications).values({
+				userId: account.id,
+				stateId,
+				status: "pending",
+				purpose: "Visit and work"
+			});
+
+			return {
+				success: true,
+				message: "Visa application submitted for review by Foreign Minister"
+			};
+		}
+
+		// Auto-approve: Process payment
+		const visaCost = Number(visaSettings.visaCost);
+		const taxRate = visaSettings.visaTaxRate;
+		const taxAmount = Math.floor(visaCost * (taxRate / 100));
+
+		// Get user wallet
+		let wallet = await db.query.userWallets.findFirst({
 			where: eq(userWallets.userId, account.id)
 		});
 
-		if (!wallet || wallet.balance < totalCost) {
-			return fail(400, { error: `Insufficient funds. Travel costs $${totalCost.toLocaleString()}` });
+		if (!wallet) {
+			[wallet] = await db
+				.insert(userWallets)
+				.values({
+					userId: account.id,
+					balance: 10000
+				})
+				.returning();
 		}
 
-		// Deduct travel cost
+		// Check if user has enough money
+		if (wallet.balance < visaCost) {
+			return fail(400, {
+				error: `Insufficient funds. Need $${visaCost.toLocaleString()}, have $${Number(wallet.balance).toLocaleString()}`
+			});
+		}
+
+		// Deduct from user wallet
 		await db
 			.update(userWallets)
 			.set({
-				balance: sql`${userWallets.balance} - ${totalCost}`,
+				balance: Number(wallet.balance) - visaCost,
 				updatedAt: new Date()
 			})
 			.where(eq(userWallets.userId, account.id));
 
-		// Create travel record
-		const now = new Date();
-		const arrivalTime = new Date(now.getTime() + durationMinutes * 60000);
+		// Add tax to state treasury
+		let treasury = await db.query.stateTreasury.findFirst({
+			where: eq(stateTreasury.stateId, stateId)
+		});
 
-		await db.insert(userTravels).values({
+		if (!treasury) {
+			[treasury] = await db
+				.insert(stateTreasury)
+				.values({
+					stateId,
+					balance: 0,
+					totalCollected: 0,
+					totalSpent: 0
+				})
+				.returning();
+		}
+
+		await db
+			.update(stateTreasury)
+			.set({
+				balance: Number(treasury.balance) + taxAmount,
+				totalCollected: Number(treasury.totalCollected) + taxAmount,
+				updatedAt: new Date()
+			})
+			.where(eq(stateTreasury.stateId, stateId));
+
+		// Create visa
+		const expiresAt = new Date();
+		expiresAt.setDate(expiresAt.getDate() + 14);
+
+		await db.insert(userVisas).values({
 			userId: account.id,
-			fromRegionId,
-			toRegionId: regionId,
-			departureTime: now,
-			arrivalTime,
-			travelDuration: durationMinutes,
-			distanceKm,
-			status: "in_progress"
+			stateId,
+			status: "active",
+			expiresAt,
+			cost: visaCost,
+			taxPaid: taxAmount,
+			approvedAt: new Date()
 		});
 
 		return {
 			success: true,
-			message: `Travel started! Cost: $${baseCost.toLocaleString()} + Tax: $${travelTax.toLocaleString()}`
+			message: `Visa purchased for $${visaCost.toLocaleString()} (tax: $${taxAmount.toLocaleString()})`
 		};
 	}
 };
