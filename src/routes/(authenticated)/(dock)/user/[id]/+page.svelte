@@ -1,11 +1,6 @@
+<!-- src/routes/(authenticated)/user/[id]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
-	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
-
-	import { shareLink } from "$lib/util";
-	import ProfileItem from "$lib/component/ProfileItem.svelte";
-
 	import FluentSettingsCogMultiple20Filled from "~icons/fluent/settings-cog-multiple-20-filled";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
@@ -13,28 +8,25 @@
 	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import MdiNewspaperPlus from "~icons/mdi/newspaper-plus";
-	import FluentClockToolbox20Filled from "~icons/fluent/clock-toolbox-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
-	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
+	import FluentPassport20Filled from "~icons/fluent/passport-20-filled";
 
 	import * as m from "$lib/paraglide/messages";
-
-	const regionName = $derived(() => {
-		const key = `region_${data.primaryResidence.region.id}` as keyof typeof m;
-		return m[key]();
-	});
+	import { shareLink } from "$lib/util";
+	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
 
-	// Helper to format ministry name
-	function formatDate(date: Date | string) {
-		return new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
-	}
+	const regionName = $derived(() => {
+		if (!data.residence) return "";
+		const key = `region_${data.residence.region.id}` as keyof typeof m;
+		return m[key]();
+	});
 </script>
 
 <div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -45,13 +37,11 @@
 			style="background: linear-gradient(135deg, {data.party?.color || '#1e293b'}20 0%, {data.party?.color ||
 				'#1e293b'}40 100%);"
 		>
-			<!-- Party background pattern -->
 			<div
 				class="absolute inset-0 opacity-10"
 				style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.party?.color ||
 					'#ffffff'}20 35px, {data.party?.color || '#ffffff'}20 70px);"
 			></div>
-
 			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-2xl"></div>
 
 			<div class="relative z-10 flex flex-col items-center space-y-3">
@@ -67,7 +57,6 @@
 						</div>
 					{/if}
 
-					<!-- Party badge overlay -->
 					{#if data.party}
 						<div
 							class="absolute -bottom-2 -right-2 size-10 rounded-full flex items-center justify-center ring-2 ring-base-100"
@@ -96,7 +85,7 @@
 
 	<!-- Action Buttons -->
 	<section class="flex gap-2 justify-center flex-wrap">
-		{#if data.user.id !== data.account.id}
+		{#if data.user.id !== data.account?.id}
 			<a
 				class="btn btn-sm gap-2 bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/20 text-purple-300 hover:text-purple-200 transition-all"
 				href="/chat/u/{data.user.id}"
@@ -153,55 +142,88 @@
 	<section class="space-y-3">
 		<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Location & Activity</h2>
 		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
-			<!-- Primary Residence -->
-			{#if data.primaryResidence}
+			<!-- Residence -->
+			{#if data.residence}
 				<a
-					href="/region/{data.primaryResidence.region.id}"
+					href="/region/{data.residence.region.id}"
 					class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
 				>
 					<div class="size-12 bg-emerald-600/20 rounded-lg flex items-center justify-center">
-						<img
-							src={"/coats/" + data.primaryResidence.region.id + ".svg"}
-							alt={regionName()}
-							class="size-6 object-contain"
-						/>
+						<img src={"/coats/" + data.residence.region.id + ".svg"} alt={regionName()} class="size-6 object-contain" />
 					</div>
 					<div class="flex-1 min-w-0">
 						<p class="font-semibold text-white group-hover:text-emerald-400 transition-colors truncate">
 							{regionName()}
 						</p>
 						<p class="text-xs text-gray-400 truncate">
-							Primary Residence
-							{#if data.primaryResidence.region.stateName}
-								• {data.primaryResidence.region.stateName}
+							Residence
+							{#if data.residence.region.stateName}
+								• {data.residence.region.stateName}
 							{/if}
+							• Since {formatDate(data.residence.movedInAt)}
 						</p>
 					</div>
 					<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-emerald-400 transition-colors" />
 				</a>
+			{:else}
+				<div class="flex items-center gap-3 p-2 text-gray-500">
+					<div class="size-12 bg-slate-700/30 rounded-lg flex items-center justify-center">
+						<FluentHome20Filled class="size-6" />
+					</div>
+					<p class="text-sm">No permanent residence</p>
+				</div>
 			{/if}
 
-			<!-- Additional Residences -->
-			{#if data.residences && data.residences.length > 1}
-				{#each data.residences.filter((r) => !r.isPrimary) as residence}
-					<a
-						href="/region/{residence.region.id}"
-						class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
-					>
-						<div class="size-12 bg-indigo-600/20 rounded-lg flex items-center justify-center">
-							<FluentLocation20Filled class="size-6 text-indigo-400" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<p class="font-semibold text-white group-hover:text-indigo-400 transition-colors truncate">
-								{residence.region.name}
-							</p>
-							<p class="text-xs text-gray-400 truncate">
-								Secondary Residence • Since {formatDate(residence.movedInAt)}
-							</p>
-						</div>
-						<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-indigo-400 transition-colors" />
-					</a>
-				{/each}
+			<!-- Active Visas -->
+			{#if data.activeVisas && data.activeVisas.length > 0}
+				<div class="pt-2 border-t border-white/5 space-y-2">
+					<div class="flex items-center gap-2 px-2">
+						<FluentPassport20Filled class="size-4 text-purple-400" />
+						<span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Visas</span>
+					</div>
+					{#each data.activeVisas as visa}
+						{@const daysLeft = getDaysRemaining(visa.expiresAt)}
+						<a
+							href="/state/{visa.stateId}"
+							class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+						>
+							<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+								<img
+									src={visa.stateAvatar || "/placeholder.png"}
+									alt={visa.stateName}
+									class="size-6 object-contain rounded"
+								/>
+							</div>
+							<div class="flex-1 min-w-0">
+								<p class="font-medium text-white group-hover:text-purple-400 transition-colors text-sm truncate">
+									{visa.stateName}
+								</p>
+								<p class="text-xs text-gray-400 truncate">
+									{daysLeft} day{daysLeft === 1 ? "" : "s"} remaining
+								</p>
+							</div>
+							<div
+								class="text-xs px-2 py-1 rounded-full"
+								class:bg-emerald-500-20={daysLeft > 3}
+								class:text-emerald-400={daysLeft > 3}
+								class:bg-amber-500-20={daysLeft <= 3}
+								class:text-amber-400={daysLeft <= 3}
+							>
+								{daysLeft}d
+							</div>
+						</a>
+					{/each}
+				</div>
+			{/if}
+
+			{#if data.isOwnProfile}
+				<a
+					href="/visas"
+					class="btn btn-sm w-full gap-2 bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/20 text-purple-400 hover:text-purple-300 transition-all mt-2"
+				>
+					<FluentPassport20Filled class="size-4" />
+					Manage Visas
+				</a>
 			{/if}
 
 			<!-- Articles Published -->
@@ -228,7 +250,6 @@
 	<section class="space-y-3">
 		<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Career & Politics</h2>
 		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
-			<!-- Political Party -->
 			{#if data.party}
 				<a
 					href="/party/{data.party.id}"
@@ -252,9 +273,7 @@
 							{/if}
 						</p>
 						<p class="text-xs text-gray-400 truncate">
-							{#if data.party.ideology}
-								{data.party.ideology} •
-							{/if}
+							{#if data.party.ideology}{data.party.ideology} •{/if}
 							{data.party.role === "leader"
 								? "Party Leader"
 								: data.party.role === "deputy"
@@ -266,7 +285,6 @@
 					<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors" />
 				</a>
 			{:else if data.isOwnProfile}
-				<!-- Create Party Button -->
 				<a
 					href="/party/create"
 					class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-purple-500/30 rounded-lg hover:border-purple-500/50 hover:bg-purple-600/10 transition-all group"

@@ -1,15 +1,24 @@
-// src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.server.ts - FIXED
+// src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.server.ts - WITH VISA MANAGEMENT
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "$lib/server/db";
 import { eq, and, ne } from "drizzle-orm";
-import { states, ministers, regions, stateSanctions, residenceApplications, residences } from "$lib/server/schema";
+import {
+	states,
+	ministers,
+	regions,
+	stateSanctions,
+	residenceApplications,
+	residences,
+	stateVisaSettings,
+	visaApplications,
+	userVisas,
+	stateTreasury,
+	userWallets
+} from "$lib/server/schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const account = locals.account;
-	if (!account) {
-		throw redirect(302, "/login");
-	}
+	const account = locals.account!;
 
 	// Get state
 	const state = await db.query.states.findFirst({
@@ -38,9 +47,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		where: ne(states.id, params.id)
 	});
 
-	// Get active sanctions imposed by this state
+	// Get active sanctions
 	const sanctions = await db.query.stateSanctions.findMany({
-		where: and(eq(stateSanctions.sanctioningStateId, params.id), eq(stateSanctions.isActive, 1)),
+		where: and(eq(stateSanctions.sanctioningStateId, params.id), eq(stateSanctions.isActive, true)),
 		with: {
 			targetState: true,
 			sanctioner: {
@@ -51,7 +60,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	});
 
-	// Get regions in this state
+	// Get regions
 	const stateRegions = await db.query.regions.findMany({
 		where: eq(regions.stateId, params.id)
 	});
@@ -69,27 +78,71 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	});
 
-	// Filter applications for this state's regions
 	const stateRegionIds = stateRegions.map((r) => r.id);
 	const statePendingApplications = pendingApplications.filter((app) => stateRegionIds.includes(app.regionId));
+
+	// Get visa settings
+	let visaSettings = await db.query.stateVisaSettings.findFirst({
+		where: eq(stateVisaSettings.stateId, params.id)
+	});
+
+	// Create default if doesn't exist
+	if (!visaSettings) {
+		[visaSettings] = await db
+			.insert(stateVisaSettings)
+			.values({
+				stateId: params.id,
+				visaRequired: false,
+				visaCost: 5000,
+				visaTaxRate: 20,
+				autoApprove: true
+			})
+			.returning();
+	}
+
+	// Get pending visa applications
+	const pendingVisaApplications = await db.query.visaApplications.findMany({
+		where: and(eq(visaApplications.stateId, params.id), eq(visaApplications.status, "pending")),
+		with: {
+			user: {
+				with: {
+					profile: true
+				}
+			}
+		},
+		orderBy: (visaApplications, { desc }) => [desc(visaApplications.appliedAt)]
+	});
+
+	// Get active visas for this state
+	const activeVisas = await db.query.userVisas.findMany({
+		where: and(eq(userVisas.stateId, params.id), eq(userVisas.status, "active")),
+		with: {
+			user: {
+				with: {
+					profile: true
+				}
+			}
+		},
+		orderBy: (userVisas, { asc }) => [asc(userVisas.expiresAt)]
+	});
 
 	return {
 		state,
 		regions: stateRegions,
 		otherStates,
 		sanctionedStates: sanctions,
-		pendingApplications: statePendingApplications
+		pendingApplications: statePendingApplications,
+		visaSettings,
+		pendingVisaApplications,
+		activeVisas
 	};
 };
 
 export const actions: Actions = {
+	// Existing actions...
 	sanctionState: async ({ request, locals, params }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Unauthorized" });
-		}
+		const account = locals.account!;
 
-		// Verify foreign minister status
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -110,21 +163,11 @@ export const actions: Actions = {
 			return fail(400, { error: "Missing required fields" });
 		}
 
-		// Check if target state exists
-		const targetState = await db.query.states.findFirst({
-			where: eq(states.id, targetStateId)
-		});
-
-		if (!targetState) {
-			return fail(404, { error: "Target state not found" });
-		}
-
-		// Check if already sanctioned
 		const existingSanction = await db.query.stateSanctions.findFirst({
 			where: and(
 				eq(stateSanctions.targetStateId, targetStateId),
 				eq(stateSanctions.sanctioningStateId, params.id),
-				eq(stateSanctions.isActive, 1)
+				eq(stateSanctions.isActive, true)
 			)
 		});
 
@@ -132,13 +175,12 @@ export const actions: Actions = {
 			return fail(400, { error: "This state is already sanctioned" });
 		}
 
-		// Create sanction record
 		await db.insert(stateSanctions).values({
 			targetStateId,
 			sanctioningStateId: params.id,
 			sanctionedBy: account.id,
 			reason,
-			isActive: 1
+			isActive: true
 		});
 
 		return { success: true, message: "Sanction imposed successfully" };
@@ -150,7 +192,6 @@ export const actions: Actions = {
 			return fail(401, { error: "Unauthorized" });
 		}
 
-		// Verify foreign minister status
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -164,35 +205,28 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
-		const sanctionId = formData.get("sanctionId") as string;
+		const sanctionId = parseInt(formData.get("sanctionId") as string);
 
-		// Get sanction
 		const sanction = await db.query.stateSanctions.findFirst({
 			where: eq(stateSanctions.id, sanctionId)
 		});
 
-		if (!sanction) {
-			return fail(404, { error: "Sanction not found" });
+		if (!sanction || sanction.sanctioningStateId !== params.id) {
+			return fail(403, { error: "Invalid sanction" });
 		}
 
-		// Verify this sanction belongs to this state
-		if (sanction.sanctioningStateId !== params.id) {
-			return fail(403, { error: "You can only lift sanctions imposed by your state" });
-		}
-
-		// Mark sanction as inactive
-		await db.update(stateSanctions).set({ isActive: 0 }).where(eq(stateSanctions.id, sanctionId));
+		await db.update(stateSanctions).set({ isActive: false }).where(eq(stateSanctions.id, sanctionId));
 
 		return { success: true, message: "Sanction lifted successfully" };
 	},
 
-	updateResidencyPolicy: async ({ request, locals, params }) => {
+	// NEW: Update visa settings
+	updateVisaSettings: async ({ request, locals, params }) => {
 		const account = locals.account;
 		if (!account) {
 			return fail(401, { error: "Unauthorized" });
 		}
 
-		// Verify foreign minister status
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -202,35 +236,45 @@ export const actions: Actions = {
 		});
 
 		if (!ministry) {
-			return fail(403, { error: "Only the Foreign Minister can update residency policies" });
+			return fail(403, { error: "Only the Foreign Minister can update visa settings" });
 		}
 
 		const formData = await request.formData();
-		const regionId = parseInt(formData.get("regionId") as string);
-		const autoApprove = formData.get("autoApprove") === "on" ? 1 : 0;
+		const visaRequired = formData.get("visaRequired") === "true";
+		const visaCost = parseInt(formData.get("visaCost") as string);
+		const visaTaxRate = parseInt(formData.get("visaTaxRate") as string);
+		const autoApprove = formData.get("autoApprove") === "true";
 
-		// Verify region belongs to this state
-		const region = await db.query.regions.findFirst({
-			where: eq(regions.id, regionId)
-		});
-
-		if (!region || region.stateId !== params.id) {
-			return fail(403, { error: "This region does not belong to your state" });
+		// Validate
+		if (visaCost < 0 || visaCost > 1000000) {
+			return fail(400, { error: "Visa cost must be between $0 and $1,000,000" });
 		}
 
-		// Update region policy
-		await db.update(regions).set({ autoApproveResidency: autoApprove }).where(eq(regions.id, regionId));
+		if (visaTaxRate < 0 || visaTaxRate > 100) {
+			return fail(400, { error: "Tax rate must be between 0% and 100%" });
+		}
 
-		return { success: true, message: "Residency policy updated successfully" };
+		await db
+			.update(stateVisaSettings)
+			.set({
+				visaRequired,
+				visaCost,
+				visaTaxRate,
+				autoApprove,
+				updatedAt: new Date()
+			})
+			.where(eq(stateVisaSettings.stateId, params.id));
+
+		return { success: true, message: "Visa settings updated successfully" };
 	},
 
-	reviewApplication: async ({ request, locals, params }) => {
+	// NEW: Review visa application
+	reviewVisaApplication: async ({ request, locals, params }) => {
 		const account = locals.account;
 		if (!account) {
 			return fail(401, { error: "Unauthorized" });
 		}
 
-		// Verify foreign minister status
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -240,72 +284,148 @@ export const actions: Actions = {
 		});
 
 		if (!ministry) {
-			return fail(403, { error: "Only the Foreign Minister can review applications" });
+			return fail(403, { error: "Only the Foreign Minister can review visa applications" });
 		}
 
 		const formData = await request.formData();
-		const applicationId = formData.get("applicationId") as string;
+		const applicationId = parseInt(formData.get("applicationId") as string);
 		const decision = formData.get("decision") as "approved" | "rejected";
 
-		// Get application
-		const application = await db.query.residenceApplications.findFirst({
-			where: eq(residenceApplications.id, applicationId),
-			with: {
-				region: true
-			}
+		const application = await db.query.visaApplications.findFirst({
+			where: eq(visaApplications.id, applicationId)
 		});
 
-		if (!application) {
+		if (!application || application.stateId !== params.id) {
 			return fail(404, { error: "Application not found" });
-		}
-
-		// Verify region belongs to this state
-		if (application.region?.stateId !== params.id) {
-			return fail(403, { error: "This application is not for your state" });
 		}
 
 		// Update application
 		await db
-			.update(residenceApplications)
+			.update(visaApplications)
 			.set({
 				status: decision,
 				reviewedAt: new Date(),
 				reviewedBy: account.id
 			})
-			.where(eq(residenceApplications.id, applicationId));
+			.where(eq(visaApplications.id, applicationId));
 
-		// If approved, create residence
+		// If approved, process payment and create visa
 		if (decision === "approved") {
-			// Check if user already has residence
-			const existingResidence = await db.query.residences.findFirst({
-				where: and(eq(residences.userId, application.userId), eq(residences.regionId, application.regionId))
+			const visaSettings = await db.query.stateVisaSettings.findFirst({
+				where: eq(stateVisaSettings.stateId, params.id)
 			});
 
-			if (!existingResidence) {
-				// Check if user has any residences
-				const userResidences = await db.query.residences.findMany({
-					where: eq(residences.userId, application.userId)
-				});
-
-				const isPrimary = userResidences.length === 0 ? 1 : 0;
-
-				await db.insert(residences).values({
-					userId: application.userId,
-					regionId: application.regionId,
-					isPrimary,
-					movedInAt: new Date()
-				});
-
-				// Update region population
-				await db
-					.update(regions)
-					.set({
-						population: (application.region?.population || 0) + 1
-					})
-					.where(eq(regions.id, application.regionId));
+			if (!visaSettings) {
+				return fail(500, { error: "Visa settings not found" });
 			}
+
+			const visaCost = Number(visaSettings.visaCost);
+			const taxAmount = Math.floor(visaCost * (visaSettings.visaTaxRate / 100));
+
+			// Get user wallet
+			const wallet = await db.query.userWallets.findFirst({
+				where: eq(userWallets.userId, application.userId)
+			});
+
+			if (!wallet || wallet.balance < visaCost) {
+				return fail(400, { error: "User has insufficient funds" });
+			}
+
+			// Deduct from user
+			await db
+				.update(userWallets)
+				.set({
+					balance: Number(wallet.balance) - visaCost,
+					updatedAt: new Date()
+				})
+				.where(eq(userWallets.userId, application.userId));
+
+			// Add to treasury
+			let treasury = await db.query.stateTreasury.findFirst({
+				where: eq(stateTreasury.stateId, params.id)
+			});
+
+			if (!treasury) {
+				[treasury] = await db
+					.insert(stateTreasury)
+					.values({
+						stateId: params.id,
+						balance: 0,
+						totalCollected: 0,
+						totalSpent: 0
+					})
+					.returning();
+			}
+
+			await db
+				.update(stateTreasury)
+				.set({
+					balance: Number(treasury.balance) + taxAmount,
+					totalCollected: Number(treasury.totalCollected) + taxAmount,
+					updatedAt: new Date()
+				})
+				.where(eq(stateTreasury.stateId, params.id));
+
+			// Create visa
+			const expiresAt = new Date();
+			expiresAt.setDate(expiresAt.getDate() + 14);
+
+			await db.insert(userVisas).values({
+				userId: application.userId,
+				stateId: params.id,
+				status: "active",
+				expiresAt,
+				cost: visaCost,
+				taxPaid: taxAmount,
+				approvedBy: account.id,
+				approvedAt: new Date()
+			});
 		}
 
-		return { success: true, message: `Application ${decision} successfully` };
+		return { success: true, message: `Visa application ${decision}` };
+	},
+
+	// NEW: Revoke visa
+	revokeVisa: async ({ request, locals, params }) => {
+		const account = locals.account;
+		if (!account) {
+			return fail(401, { error: "Unauthorized" });
+		}
+
+		const ministry = await db.query.ministers.findFirst({
+			where: and(
+				eq(ministers.userId, account.id),
+				eq(ministers.stateId, params.id),
+				eq(ministers.ministry, "foreign_affairs")
+			)
+		});
+
+		if (!ministry) {
+			return fail(403, { error: "Only the Foreign Minister can revoke visas" });
+		}
+
+		const formData = await request.formData();
+		const visaId = parseInt(formData.get("visaId") as string);
+		const reason = formData.get("reason") as string;
+
+		const visa = await db.query.userVisas.findFirst({
+			where: eq(userVisas.id, visaId)
+		});
+
+		if (!visa || visa.stateId !== params.id) {
+			return fail(404, { error: "Visa not found" });
+		}
+
+		await db
+			.update(userVisas)
+			.set({
+				status: "revoked",
+				revokedBy: account.id,
+				revokedAt: new Date(),
+				revocationReason: reason || "Revoked by foreign minister"
+			})
+			.where(eq(userVisas.id, visaId));
+
+		return { success: true, message: "Visa revoked successfully" };
 	}
 };
