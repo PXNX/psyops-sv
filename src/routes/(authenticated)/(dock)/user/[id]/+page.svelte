@@ -14,7 +14,7 @@
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
-	import FluentPassport20Filled from "~icons/fluent/passport-20-filled";
+	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 
 	import * as m from "$lib/paraglide/messages";
 	import { shareLink } from "$lib/util";
@@ -174,54 +174,12 @@
 				</div>
 			{/if}
 
-			<!-- Active Visas -->
-			{#if data.activeVisas && data.activeVisas.length > 0}
-				<div class="pt-2 border-t border-white/5 space-y-2">
-					<div class="flex items-center gap-2 px-2">
-						<FluentPassport20Filled class="size-4 text-purple-400" />
-						<span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Active Visas</span>
-					</div>
-					{#each data.activeVisas as visa}
-						{@const daysLeft = getDaysRemaining(visa.expiresAt)}
-						<a
-							href="/state/{visa.stateId}"
-							class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
-						>
-							<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-								<img
-									src={visa.stateAvatar || "/placeholder.png"}
-									alt={visa.stateName}
-									class="size-6 object-contain rounded"
-								/>
-							</div>
-							<div class="flex-1 min-w-0">
-								<p class="font-medium text-white group-hover:text-purple-400 transition-colors text-sm truncate">
-									{visa.stateName}
-								</p>
-								<p class="text-xs text-gray-400 truncate">
-									{daysLeft} day{daysLeft === 1 ? "" : "s"} remaining
-								</p>
-							</div>
-							<div
-								class="text-xs px-2 py-1 rounded-full"
-								class:bg-emerald-500-20={daysLeft > 3}
-								class:text-emerald-400={daysLeft > 3}
-								class:bg-amber-500-20={daysLeft <= 3}
-								class:text-amber-400={daysLeft <= 3}
-							>
-								{daysLeft}d
-							</div>
-						</a>
-					{/each}
-				</div>
-			{/if}
-
 			{#if data.isOwnProfile}
 				<a
 					href="/visas"
 					class="btn btn-sm w-full gap-2 bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/20 text-purple-400 hover:text-purple-300 transition-all mt-2"
 				>
-					<FluentPassport20Filled class="size-4" />
+					<FluentBookCompass24Filled class="size-4" />
 					Manage Visas
 				</a>
 			{/if}

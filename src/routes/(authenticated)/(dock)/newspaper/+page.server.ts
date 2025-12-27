@@ -17,7 +17,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.select({
 			id: newspapers.id,
 			name: newspapers.name,
-			avatar: newspapers.avatar,
+			logo: newspapers.logo,
 			rank: journalists.rank
 		})
 		.from(journalists)

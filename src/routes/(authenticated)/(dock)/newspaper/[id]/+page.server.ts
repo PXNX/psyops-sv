@@ -1,59 +1,116 @@
 // src/routes/(authenticated)/(dock)/newspaper/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, journalists, newspapers } from "$lib/server/schema";
+import { journalists, newspapers, files, userProfiles, articles } from "$lib/server/schema";
 import { error } from "@sveltejs/kit";
-import { and, eq } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
 
-export type NewspaperDetail = {
-	newspaper: {
-		id: string;
-		name: string;
-		avatar: string | null;
-		createdAt: Date;
-	};
-	owner: {
-		id: string;
-		name: string;
-		avatar: string | null;
-	};
-};
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const newspaperId = parseInt(params.id);
+	const account = locals.account;
 
-export const load: PageServerLoad = async ({ params }) => {
-	// Query newspaper with owner information
-	const result = await db
-		.select({
-			newspaperId: newspapers.id,
-			newspaperName: newspapers.name,
-			newspaperAvatar: newspapers.avatar,
-			newspaperCreatedAt: newspapers.createdAt,
-			ownerId: accounts.id,
-			ownerName: accounts.name,
-			ownerAvatar: accounts.avatar
-		})
-		.from(newspapers)
-		.innerJoin(journalists, and(eq(journalists.newspaperId, newspapers.id), eq(journalists.rank, "owner")))
-		.innerJoin(accounts, eq(journalists.userId, accounts.id))
-		.where(eq(newspapers.id, params.id))
-		.limit(1);
+	// Get newspaper with owner information
+	const newspaper = await db.query.newspapers.findFirst({
+		where: eq(newspapers.id, newspaperId),
+		with: {
+			journalists: {
+				where: eq(journalists.rank, "owner"),
+				with: {
+					user: {
+						with: {
+							profile: true
+						}
+					}
+				},
+				limit: 1
+			}
+		}
+	});
 
-	if (!result || result.length === 0) {
+	if (!newspaper) {
 		throw error(404, "Newspaper not found");
 	}
 
-	const data = result[0];
+	const owner = newspaper.journalists[0];
+	if (!owner) {
+		throw error(500, "Newspaper has no owner");
+	}
+
+	// Get logo URL if exists
+	let logoUrl = null;
+	if (newspaper.logo) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, newspaper.logo)
+		});
+		if (logoFile) {
+			try {
+				logoUrl = await getSignedDownloadUrl(logoFile.key);
+			} catch {
+				logoUrl = null;
+			}
+		}
+	}
+
+	// Get owner profile logo
+	let ownerLogoUrl = null;
+	if (owner.user.profile?.logo) {
+		const ownerLogoFile = await db.query.files.findFirst({
+			where: eq(files.id, owner.user.profile.logo)
+		});
+		if (ownerLogoFile) {
+			try {
+				ownerLogoUrl = await getSignedDownloadUrl(ownerLogoFile.key);
+			} catch {
+				ownerLogoUrl = null;
+			}
+		}
+	}
+
+	// Get recent articles
+	const recentArticles = await db.query.articles.findMany({
+		where: eq(articles.newspaperId, newspaperId),
+		orderBy: [desc(articles.createdAt)],
+		limit: 10,
+		with: {
+			author: {
+				with: {
+					profile: true
+				}
+			},
+			upvotes: true
+		}
+	});
+
+	// Check if current user is a journalist
+	let userRole: "owner" | "editor" | "author" | null = null;
+	if (account) {
+		const membership = await db.query.journalists.findFirst({
+			where: and(eq(journalists.userId, account.id), eq(journalists.newspaperId, newspaperId))
+		});
+		userRole = membership?.rank ?? null;
+	}
 
 	return {
-		owner: {
-			id: data.ownerId,
-			name: data.ownerName,
-			avatar: data.ownerAvatar
-		},
 		newspaper: {
-			id: data.newspaperId,
-			name: data.newspaperName,
-			avatar: data.newspaperAvatar,
-			createdAt: data.newspaperCreatedAt
-		}
+			id: newspaper.id,
+			name: newspaper.name,
+			logoUrl,
+			background: newspaper.background,
+			createdAt: newspaper.createdAt
+		},
+		owner: {
+			id: owner.userId,
+			name: owner.user.profile?.name ?? "Unknown",
+			logoUrl: ownerLogoUrl
+		},
+		articles: recentArticles.map((article) => ({
+			id: article.id,
+			title: article.title,
+			publishDate: article.createdAt,
+			upvoteCount: article.upvotes.length,
+			authorName: article.author.profile?.name ?? "Unknown"
+		})),
+		userRole
 	};
 };

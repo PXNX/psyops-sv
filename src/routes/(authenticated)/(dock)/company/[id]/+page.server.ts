@@ -7,7 +7,7 @@ import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
-	const companyId = params.id;
+	const companyId = parseInt(params.id);
 
 	// Get company details
 	const [company] = await db
@@ -47,7 +47,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			maxWorkers: factories.maxWorkers,
 			workerWage: factories.workerWage,
 			regionId: factories.regionId,
-			regionName: regions.name,
+
 			stateId: regions.stateId,
 			stateName: states.name
 		})
@@ -81,9 +81,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		).values()
 	);
 
-	const uniqueRegions = Array.from(
-		new Map(companyFactories.map((f) => [f.regionId, { id: f.regionId, name: f.regionName }])).values()
-	);
+	const uniqueRegions = Array.from(new Map(companyFactories.map((f) => [f.regionId, { id: f.regionId }])).values());
 
 	return {
 		company: {

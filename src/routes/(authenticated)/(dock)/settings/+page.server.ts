@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/settings/+page.server.ts
 import { db } from "$lib/server/db";
-import { userProfiles, files, userWallets, profileEditHistory } from "$lib/server/schema";
+import { userProfiles, userWallets } from "$lib/server/schema";
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -19,14 +19,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		where: eq(userProfiles.accountId, account.id)
 	});
 
-	// Get avatar URL if it's a file ID
+	// Get avatar URL if it's stored in profile
 	let avatarUrl = profile?.avatar || null;
 	if (avatarUrl && !avatarUrl.startsWith("http")) {
-		const avatarFile = await db.query.files.findFirst({
-			where: eq(files.id, avatarUrl)
-		});
-		if (avatarFile) {
-			avatarUrl = await getSignedDownloadUrl(avatarFile.key);
+		try {
+			avatarUrl = await getSignedDownloadUrl(avatarUrl);
+		} catch {
+			avatarUrl = null;
 		}
 	}
 
@@ -35,19 +34,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		where: eq(userWallets.userId, account.id)
 	});
 
-	const userBalance = wallet?.balance ?? 0;
+	const userBalance = Number(wallet?.balance ?? 0);
 	const canAfford = userBalance >= PROFILE_EDIT_CONFIG.COST;
 
-	// Check edit cooldown
-	const lastEdit = await db.query.profileEditHistory.findFirst({
-		where: eq(profileEditHistory.userId, account.id)
-	});
-
+	// Check edit cooldown using updatedAt from profile
 	let cooldownEndsAt: Date | null = null;
 	let isOnCooldown = false;
 
-	if (lastEdit) {
-		const cooldownEnd = new Date(lastEdit.lastEditAt);
+	if (profile?.updatedAt) {
+		const cooldownEnd = new Date(profile.updatedAt);
 		cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
 
 		if (new Date() < cooldownEnd) {
@@ -96,7 +91,7 @@ export const actions: Actions = {
 			where: eq(userWallets.userId, account.id)
 		});
 
-		const userBalance = wallet?.balance ?? 0;
+		const userBalance = Number(wallet?.balance ?? 0);
 
 		// Check if user can afford
 		if (userBalance < PROFILE_EDIT_CONFIG.COST) {
@@ -107,13 +102,13 @@ export const actions: Actions = {
 			);
 		}
 
-		// Check cooldown
-		const lastEdit = await db.query.profileEditHistory.findFirst({
-			where: eq(profileEditHistory.userId, account.id)
+		// Check cooldown using profile's updatedAt
+		const existingProfile = await db.query.userProfiles.findFirst({
+			where: eq(userProfiles.accountId, account.id)
 		});
 
-		if (lastEdit) {
-			const cooldownEnd = new Date(lastEdit.lastEditAt);
+		if (existingProfile?.updatedAt) {
+			const cooldownEnd = new Date(existingProfile.updatedAt);
 			cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
 
 			if (new Date() < cooldownEnd) {
@@ -135,20 +130,7 @@ export const actions: Actions = {
 					})
 					.where(eq(userWallets.userId, account.id));
 
-				// Update or create edit history
-				if (lastEdit) {
-					await tx
-						.update(profileEditHistory)
-						.set({ lastEditAt: new Date() })
-						.where(eq(profileEditHistory.userId, account.id));
-				} else {
-					await tx.insert(profileEditHistory).values({
-						userId: account.id,
-						lastEditAt: new Date()
-					});
-				}
-
-				let avatarFileId: string | undefined;
+				let avatarKey: string | undefined;
 
 				// Upload new avatar if provided
 				if (avatar && avatar.size > 0) {
@@ -159,23 +141,8 @@ export const actions: Actions = {
 						throw new Error("Failed to upload avatar");
 					}
 
-					// Create file record
-					const fileId = randomUUID();
-					await tx.insert(files).values({
-						id: fileId,
-						key: uploadResult.key,
-						fileName: avatar.name,
-						contentType: "image/webp",
-						sizeBytes: avatar.size,
-						uploadedBy: account.id
-					});
-					avatarFileId = fileId;
+					avatarKey = uploadResult.key;
 				}
-
-				// Check if profile exists
-				const existingProfile = await tx.query.userProfiles.findFirst({
-					where: eq(userProfiles.accountId, account.id)
-				});
 
 				if (existingProfile) {
 					// Update existing profile
@@ -184,7 +151,7 @@ export const actions: Actions = {
 						.set({
 							name,
 							bio: bio || null,
-							...(avatarFileId ? { avatar: avatarFileId } : {}),
+							...(avatarKey ? { avatar: avatarKey } : {}),
 							updatedAt: new Date()
 						})
 						.where(eq(userProfiles.accountId, account.id));
@@ -194,7 +161,7 @@ export const actions: Actions = {
 						accountId: account.id,
 						name,
 						bio: bio || null,
-						avatar: avatarFileId || null
+						avatar: avatarKey || null
 					});
 				}
 			});

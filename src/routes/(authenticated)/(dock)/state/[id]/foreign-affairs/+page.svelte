@@ -7,7 +7,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentSettings20Filled from "~icons/fluent/settings-20-filled";
-	import FluentPassport20Filled from "~icons/fluent/passport-20-filled";
+	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
@@ -147,7 +147,7 @@
 					class="w-full flex items-center justify-between p-5 hover:bg-slate-700/30 transition-colors"
 				>
 					<div class="flex items-center gap-2">
-						<FluentPassport20Filled class="size-5 text-purple-400" />
+						<FluentBookCompass24Filled class="size-5 text-purple-400" />
 						<h2 class="text-lg font-semibold text-white">Visa Policy</h2>
 					</div>
 					<FluentSettings20Filled class="size-5 text-gray-400" />

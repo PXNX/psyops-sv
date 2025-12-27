@@ -1,50 +1,83 @@
 // src/routes/(authenticated)/(dock)/newspaper/create/+page.server.ts
 import { db } from "$lib/server/db";
-import { journalists, newspapers } from "$lib/server/schema";
-import { fail, redirect } from "@sveltejs/kit";
-import { superValidate } from "sveltekit-superforms";
+import { journalists, newspapers, files } from "$lib/server/schema";
+import { redirect } from "@sveltejs/kit";
+import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import type { Actions, PageServerLoad } from "./$types";
 import { newspaperSchema } from "./schema";
+import { uploadFileFromForm } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async () => {
-	const form = await superValidate(valibot(newspaperSchema), {
-		strict: true
-	});
+	const form = await superValidate(valibot(newspaperSchema));
 	return { form };
 };
 
-export const actions = {
+export const actions: Actions = {
 	default: async ({ request, locals }) => {
-		await new Promise((r) => setTimeout(r, 2000));
-
+		const account = locals.account!;
 		const form = await superValidate(request, valibot(newspaperSchema));
-		console.error(".........");
-		console.error(form);
 
 		if (!form.valid) {
-			return fail(400, { form });
+			return message(form, "Please fix the validation errors", { status: 400 });
 		}
 
-		// Create newspaper
-		const [newspaper] = await db
-			.insert(newspapers)
-			.values({
-				name: form.data.name,
-				avatar: form.data.avatar || null,
-				background: form.data.background || null
-			})
-			.returning();
+		const { name, background, logo } = form.data;
 
-		console.log(locals, newspaper, "+++++++++++", locals.account!.id, newspaper.id);
-
-		// Create journalist relationship (owner)
-		await db.insert(journalists).values({
-			userId: locals.account!.id,
-			newspaperId: newspaper.id,
-			rank: "owner"
+		// Check if user already owns a newspaper
+		const existingNewspaper = await db.query.journalists.findFirst({
+			where: (journalists, { and, eq }) => and(eq(journalists.userId, account.id), eq(journalists.rank, "owner"))
 		});
 
-		return redirect(302, "/newspaper/" + newspaper.id);
+		if (existingNewspaper) {
+			return message(form, "You already own a newspaper", { status: 400 });
+		}
+
+		try {
+			let logoFileId: number | null = null;
+
+			// Upload logo if provided
+			if (logo) {
+				const logoUploadResult = await uploadFileFromForm(logo);
+
+				if (!logoUploadResult.success) {
+					return message(form, "Failed to upload logo", { status: 500 });
+				}
+
+				const [fileRecord] = await db
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+				logoFileId = fileRecord.id;
+			}
+
+			// Create newspaper
+			const [newspaper] = await db
+				.insert(newspapers)
+				.values({
+					name,
+					logo: logoFileId,
+					background: background || null
+				})
+				.returning();
+
+			// Create journalist relationship (owner)
+			await db.insert(journalists).values({
+				userId: account.id,
+				newspaperId: newspaper.id,
+				rank: "owner"
+			});
+		} catch (err) {
+			console.error("Create newspaper error:", err);
+			return message(form, "Failed to create newspaper", { status: 500 });
+		}
+
+		redirect(303, `/newspaper/${newspaper.id}`);
 	}
-} satisfies Actions;
+};

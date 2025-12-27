@@ -1,9 +1,8 @@
 // src/routes/(authenticated)/(fullscreen)/welcome/create/+page.server.ts
 import { db } from "$lib/server/db";
-import { userProfiles, userWallets, files, profileEditHistory } from "$lib/server/schema";
+import { userProfiles, userWallets, files } from "$lib/server/schema";
 import { redirect, error } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
-import { randomUUID } from "crypto";
 import type { Actions, PageServerLoad } from "./$types";
 import { uploadFileFromForm } from "$lib/server/backblaze";
 import { superValidate, message } from "sveltekit-superforms";
@@ -57,7 +56,7 @@ export const actions: Actions = {
 		try {
 			// Use transaction for everything
 			await db.transaction(async (tx) => {
-				let avatarFileId: string | null = null;
+				let avatarFileId: number | null = null;
 
 				// Upload avatar if provided
 				if (avatar) {
@@ -69,16 +68,17 @@ export const actions: Actions = {
 					}
 
 					// Create file record in database
-					const fileId = randomUUID();
-					await tx.insert(files).values({
-						id: fileId,
-						key: avatarUploadResult.key,
-						fileName: avatar.name,
-						contentType: "image/webp",
-						sizeBytes: avatar.size,
-						uploadedBy: account.id
-					});
-					avatarFileId = fileId;
+					const [fileResult] = await tx
+						.insert(files)
+						.values({
+							key: avatarUploadResult.key,
+							fileName: avatar.name,
+							contentType: "image/webp",
+							sizeBytes: avatar.size,
+							uploadedBy: account.id
+						})
+						.returning();
+					avatarFileId = fileResult.id;
 				}
 
 				// Build bio with political views if provided
@@ -97,7 +97,7 @@ export const actions: Actions = {
 						.set({
 							name,
 							bio: fullBio || null,
-							avatar: avatarFileId,
+							logo: avatarFileId,
 							updatedAt: new Date()
 						})
 						.where(eq(userProfiles.accountId, account.id));
@@ -106,16 +106,12 @@ export const actions: Actions = {
 						accountId: account.id,
 						name,
 						bio: fullBio || null,
-						avatar: avatarFileId
+						logo: avatarFileId
 					});
 				}
 
-				// todo : dont set a user updat history record for the first time
-				// Create profile edit history record
-				await tx.insert(profileEditHistory).values({
-					userId: account.id,
-					lastEditAt: new Date()
-				});
+				// Don't create profile edit history for first-time setup
+				// This will be created on subsequent edits
 
 				// Check if user already has a wallet
 				const existingWallet = await tx.query.userWallets.findFirst({

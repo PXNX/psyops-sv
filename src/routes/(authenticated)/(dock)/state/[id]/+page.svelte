@@ -14,6 +14,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentLightbulb20Filled from "~icons/fluent/lightbulb-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import { shareLink } from "$lib/util";
 	import ElectionBanner from "./ElectionBanner.svelte";
 
@@ -137,6 +138,24 @@
 		</div>
 	</div>
 
+	<!-- Bloc Information -->
+	{#if data.bloc}
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<div class="flex items-center gap-3 mb-3">
+				<div class="size-10 rounded-lg flex items-center justify-center" style="background-color: {data.bloc.color}20">
+					<FluentFlag20Filled class="size-5" style="color: {data.bloc.color}" />
+				</div>
+				<div>
+					<h2 class="text-lg font-semibold text-white">Member of {data.bloc.name}</h2>
+					<p class="text-xs text-gray-400">Political-Military Alliance</p>
+				</div>
+			</div>
+			{#if data.bloc.description}
+				<p class="text-sm text-gray-300 mt-2">{data.bloc.description}</p>
+			{/if}
+		</div>
+	{/if}
+
 	<!-- State Overview Sections -->
 	{#if data.taxes.length > 0 || data.energy}
 		<div class="space-y-3">
@@ -247,9 +266,7 @@
 		</div>
 	{/if}
 
-	<!-- State Overview Sections -->
-	<!-- fix this	{#if data.taxes.length > 0 || data.energy}
-		<div class="space-y-3"> -->
+	<!-- President Section -->
 	{#if data.president}
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 			<div class="flex items-center gap-2 mb-4">

@@ -468,11 +468,10 @@
 						{#each filteredListings as listing}
 							{@const icon = allIcons[listing.itemName]}
 							{@const isOwnListing = listing.sellerId === data.wallet?.userId}
-							{@const isSanctioned = listing.isStateSanctioned === 1}
 							<div
 								class="bg-slate-700/30 rounded-xl p-4 border-2 {isOwnListing
 									? 'border-amber-500/30'
-									: isSanctioned
+									: listing.isStateSanctioned
 										? 'border-red-500/30'
 										: 'border-slate-600/30'}"
 							>
@@ -489,7 +488,7 @@
 												>
 													{listing.itemType}
 												</span>
-												{#if isSanctioned}
+												{#if listing.isStateSanctioned}
 													<span class="badge badge-sm bg-red-600/20 text-red-300 border-red-500/30">
 														⚠️ Sanctioned State
 													</span>

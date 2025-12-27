@@ -2,7 +2,7 @@
 import { db } from "$lib/server/db";
 import { residences, userTravels, userWallets, companies, articles, userProfiles } from "$lib/server/schema";
 import { eq, and, desc } from "drizzle-orm";
-import type { PageServerLoad } from "./dashboard/$types";
+import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Get user's primary residence (current location)
 	const primaryResidence = await db.query.residences.findFirst({
-		where: and(eq(residences.userId, account.id), eq(residences.isPrimary, 1))
+		where: and(eq(residences.userId, account.id))
 	});
 
 	// Get active travel if any
