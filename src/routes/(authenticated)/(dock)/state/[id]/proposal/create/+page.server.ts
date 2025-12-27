@@ -9,10 +9,7 @@ import { valibot } from "sveltekit-superforms/adapters";
 import { createProposalSchema } from "./schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const account = locals.account;
-	if (!account) {
-		throw redirect(302, "/login");
-	}
+	const account = locals.account!;
 
 	// Get state
 	const state = await db.query.states.findFirst({

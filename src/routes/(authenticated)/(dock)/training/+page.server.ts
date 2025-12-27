@@ -10,9 +10,10 @@ import {
 	userWallets,
 	residences,
 	states,
-	regions
+	regions,
+	blocs
 } from "$lib/server/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, inArray } from "drizzle-orm";
 import { db } from "$lib/server/db";
 
 type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
@@ -43,16 +44,12 @@ function generateUnitName(unitType: string, existingUnits: any[]): string {
 			return match ? parseInt(match[1]) : 0;
 		});
 
-	// Find the next available number
 	let number = 1;
 	while (usedNumbers.includes(number)) {
 		number++;
 	}
 
-	// Get ordinal suffix
 	const suffix = number === 1 ? "st" : number === 2 ? "nd" : number === 3 ? "rd" : "th";
-
-	// Pick a random name variant
 	const baseName = possibleNames[Math.floor(Math.random() * possibleNames.length)];
 
 	return `${number}${suffix} ${baseName}`;
@@ -61,27 +58,24 @@ function generateUnitName(unitType: string, existingUnits: any[]): string {
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Get user's primary residence to determine their state/region
+	// Get user's primary residence with state and bloc info
 	const [residence] = await db
 		.select({
 			regionId: residences.regionId,
-			region: {
-				id: regions.id,
-				name: regions.name,
-				stateId: regions.stateId
-			},
-			state: {
-				id: states.id,
-				name: states.name
-			}
+			stateId: states.id,
+			stateName: states.name,
+			blocId: blocs.id,
+			blocName: blocs.name,
+			blocColor: blocs.color
 		})
 		.from(residences)
 		.leftJoin(regions, eq(residences.regionId, regions.id))
 		.leftJoin(states, eq(regions.stateId, states.id))
-		.where(and(eq(residences.userId, account.id), eq(residences.isPrimary, 1)))
+		.leftJoin(blocs, eq(states.blocId, blocs.id))
+		.where(and(eq(residences.userId, account.id)))
 		.limit(1);
 
-	if (!residence || !residence.region || !residence.state) {
+	if (!residence || !residence.stateId) {
 		throw error(400, "You must have a primary residence to train military units");
 	}
 
@@ -99,8 +93,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			isTraining: militaryUnits.isTraining,
 			trainingStartedAt: militaryUnits.trainingStartedAt,
 			trainingCompletesAt: militaryUnits.trainingCompletesAt,
-			createdAt: militaryUnits.createdAt,
-			regionName: regions.name
+			createdAt: militaryUnits.createdAt
 		})
 		.from(militaryUnits)
 		.leftJoin(regions, eq(militaryUnits.regionId, regions.id))
@@ -119,7 +112,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				description: "Basic infantry battalion with rifles and light equipment",
 				baseAttack: 15,
 				baseDefense: 20,
-				trainingDuration: 6, // 6 hours
+				trainingDuration: 6,
 				currencyCost: 50000,
 				ironCost: 0,
 				steelCost: 50,
@@ -251,12 +244,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		units,
-		templates,
+		templates: [], //todo: add statically,,
 		residence: {
 			regionId: residence.regionId,
-			regionName: residence.region.name,
-			stateId: residence.region.stateId,
-			stateName: residence.state.name
+			regionName: residence.regionName,
+			stateId: residence.stateId,
+			stateName: residence.stateName,
+			bloc: residence.blocId
+				? {
+						id: residence.blocId,
+						name: residence.blocName,
+						color: residence.blocColor
+					}
+				: null
 		},
 		inventory: {
 			currency: wallet?.balance || 0,
@@ -271,32 +271,36 @@ export const actions: Actions = {
 		const account = locals.account!;
 		const formData = await request.formData();
 
-		const templateId = formData.get("templateId") as string;
+		const templateId = parseInt(formData.get("templateId") as string);
+		const unitName = formData.get("unitName") as string;
+		const unitSize = formData.get("unitSize") as string;
 
 		// Validation
-		if (!templateId) {
+		if (!templateId || !unitName || !unitSize) {
 			return fail(400, { error: "Missing required fields" });
+		}
+
+		if (!["brigade", "division", "corps"].includes(unitSize)) {
+			return fail(400, { error: "Invalid unit size" });
 		}
 
 		// Get user's primary residence
 		const [residence] = await db
 			.select({
 				regionId: residences.regionId,
-				region: {
-					stateId: regions.stateId
-				}
+				stateId: states.id
 			})
 			.from(residences)
 			.leftJoin(regions, eq(residences.regionId, regions.id))
-			.where(and(eq(residences.userId, account.id), eq(residences.isPrimary, 1)))
+			.leftJoin(states, eq(regions.stateId, states.id))
+			.where(and(eq(residences.userId, account.id)))
 			.limit(1);
 
-		if (!residence || !residence.region || !residence.region.stateId) {
+		if (!residence || !residence.stateId) {
 			return fail(400, { error: "You must have a primary residence to train units" });
 		}
 
-		// Extract stateId for type safety
-		const stateId = residence.region.stateId;
+		const stateId = residence.stateId;
 		const regionId = residence.regionId;
 
 		// Get template
@@ -310,22 +314,24 @@ export const actions: Actions = {
 			return fail(404, { error: "Template not found" });
 		}
 
-		// Get existing units to generate name
-		const existingUnits = await db
-			.select({
-				name: militaryUnits.name,
-				unitType: militaryUnits.unitType
-			})
-			.from(militaryUnits)
-			.where(eq(militaryUnits.ownerId, account.id));
+		// Calculate multiplier based on unit size
+		const multiplier = unitSize === "brigade" ? 1 : unitSize === "division" ? 1.5 : 2;
 
-		// Generate unit name
-		const unitName = generateUnitName(template.unitType, existingUnits);
+		// Calculate costs
+		const currencyCost = Math.round(template.currencyCost * multiplier);
+		const ironCost = Math.round(template.ironCost * multiplier);
+		const steelCost = Math.round(template.steelCost * multiplier);
+		const gunpowderCost = Math.round(template.gunpowderCost * multiplier);
+		const riflesCost = Math.round(template.riflesCost * multiplier);
+		const ammunitionCost = Math.round(template.ammunitionCost * multiplier);
+		const artilleryCost = Math.round(template.artilleryCost * multiplier);
+		const vehiclesCost = Math.round(template.vehiclesCost * multiplier);
+		const explosivesCost = Math.round(template.explosivesCost * multiplier);
 
 		// Check currency
 		const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id)).limit(1);
 
-		if (!wallet || wallet.balance < template.currencyCost) {
+		if (!wallet || wallet.balance < currencyCost) {
 			return fail(400, { error: "Insufficient currency" });
 		}
 
@@ -355,14 +361,14 @@ export const actions: Actions = {
 		};
 
 		// Validate all resources
-		const hasIron = await checkResource("iron", template.ironCost);
-		const hasSteel = await checkResource("steel", template.steelCost);
-		const hasGunpowder = await checkResource("gunpowder", template.gunpowderCost);
-		const hasRifles = await checkProduct("rifles", template.riflesCost);
-		const hasAmmunition = await checkProduct("ammunition", template.ammunitionCost);
-		const hasArtillery = await checkProduct("artillery", template.artilleryCost);
-		const hasVehicles = await checkProduct("vehicles", template.vehiclesCost);
-		const hasExplosives = await checkProduct("explosives", template.explosivesCost);
+		const hasIron = await checkResource("iron", ironCost);
+		const hasSteel = await checkResource("steel", steelCost);
+		const hasGunpowder = await checkResource("gunpowder", gunpowderCost);
+		const hasRifles = await checkProduct("rifles", riflesCost);
+		const hasAmmunition = await checkProduct("ammunition", ammunitionCost);
+		const hasArtillery = await checkProduct("artillery", artilleryCost);
+		const hasVehicles = await checkProduct("vehicles", vehiclesCost);
+		const hasExplosives = await checkProduct("explosives", explosivesCost);
 
 		if (!hasIron) return fail(400, { error: "Insufficient iron" });
 		if (!hasSteel) return fail(400, { error: "Insufficient steel" });
@@ -374,13 +380,12 @@ export const actions: Actions = {
 		if (!hasExplosives) return fail(400, { error: "Insufficient explosives" });
 
 		try {
-			// Start transaction
 			await db.transaction(async (tx) => {
 				// Deduct currency
 				await tx
 					.update(userWallets)
 					.set({
-						balance: sql`${userWallets.balance} - ${template.currencyCost}`,
+						balance: sql`${userWallets.balance} - ${currencyCost}`,
 						updatedAt: new Date()
 					})
 					.where(eq(userWallets.userId, account.id));
@@ -408,32 +413,37 @@ export const actions: Actions = {
 						.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, type)));
 				};
 
-				await deductResource("iron", template.ironCost);
-				await deductResource("steel", template.steelCost);
-				await deductResource("gunpowder", template.gunpowderCost);
-				await deductProduct("rifles", template.riflesCost);
-				await deductProduct("ammunition", template.ammunitionCost);
-				await deductProduct("artillery", template.artilleryCost);
-				await deductProduct("vehicles", template.vehiclesCost);
-				await deductProduct("explosives", template.explosivesCost);
+				await deductResource("iron", ironCost);
+				await deductResource("steel", steelCost);
+				await deductResource("gunpowder", gunpowderCost);
+				await deductProduct("rifles", riflesCost);
+				await deductProduct("ammunition", ammunitionCost);
+				await deductProduct("artillery", artilleryCost);
+				await deductProduct("vehicles", vehiclesCost);
+				await deductProduct("explosives", explosivesCost);
 
 				// Calculate training completion time
 				const trainingStartedAt = new Date();
-				const trainingCompletesAt = new Date(trainingStartedAt.getTime() + template.trainingDuration * 3600000);
+				const trainingDuration = Math.round(template.trainingDuration * multiplier);
+				const trainingCompletesAt = new Date(trainingStartedAt.getTime() + trainingDuration * 3600000);
 
-				// Create military unit (battalion)
+				// Calculate stats
+				const attack = Math.round(template.baseAttack * multiplier);
+				const defense = Math.round(template.baseDefense * multiplier);
+
+				// Create military unit
 				await tx.insert(militaryUnits).values({
 					name: unitName,
 					ownerId: account.id,
 					stateId: stateId,
 					regionId: regionId,
 					unitType: template.unitType,
-					unitSize: "brigade", // Always battalion, but we keep the field for future brigade organization
-					attack: template.baseAttack,
-					defense: template.baseDefense,
+					unitSize: unitSize as "brigade" | "division" | "corps",
+					attack,
+					defense,
 					organization: 100,
 					supplyLevel: 100,
-					isTraining: 1,
+					isTraining: true,
 					trainingStartedAt,
 					trainingCompletesAt
 				});
@@ -449,13 +459,12 @@ export const actions: Actions = {
 	completeTraining: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
-		const unitId = formData.get("unitId") as string;
+		const unitId = parseInt(formData.get("unitId") as string);
 
 		if (!unitId) {
 			return fail(400, { error: "Missing unit ID" });
 		}
 
-		// Get unit
 		const [unit] = await db
 			.select()
 			.from(militaryUnits)
@@ -470,16 +479,14 @@ export const actions: Actions = {
 			return fail(400, { error: "Unit is not training" });
 		}
 
-		// Check if training is complete
 		if (unit.trainingCompletesAt && unit.trainingCompletesAt > new Date()) {
 			return fail(400, { error: "Training not yet complete" });
 		}
 
-		// Update unit
 		await db
 			.update(militaryUnits)
 			.set({
-				isTraining: 0,
+				isTraining: false,
 				trainingStartedAt: null,
 				trainingCompletesAt: null,
 				updatedAt: new Date()
@@ -492,13 +499,12 @@ export const actions: Actions = {
 	disbandUnit: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
-		const unitId = formData.get("unitId") as string;
+		const unitId = parseInt(formData.get("unitId") as string);
 
 		if (!unitId) {
 			return fail(400, { error: "Missing unit ID" });
 		}
 
-		// Get unit
 		const [unit] = await db
 			.select()
 			.from(militaryUnits)
@@ -509,7 +515,6 @@ export const actions: Actions = {
 			return fail(404, { error: "Unit not found" });
 		}
 
-		// Delete unit
 		await db.delete(militaryUnits).where(eq(militaryUnits.id, unitId));
 
 		return { success: true, message: "Unit disbanded" };

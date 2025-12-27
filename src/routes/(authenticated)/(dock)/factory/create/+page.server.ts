@@ -5,13 +5,12 @@ import {
 	factories,
 	factoryCreationCooldown,
 	regions,
-	regionalResources,
 	stateEnergy,
 	states,
 	userWallets
 } from "$lib/server/schema";
 import { fail, redirect } from "@sveltejs/kit";
-import { and, eq, sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 
 const FACTORY_COST = 50000;
@@ -43,25 +42,40 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
-	// Get all regions with their states and available resources
+	// Get all regions with their states
 	const allRegions = await db
 		.select({
 			id: regions.id,
-			name: regions.name,
 			stateName: states.name,
 			stateId: regions.stateId,
-			population: regions.population,
-			development: regions.development
+			rating: regions.rating,
+			infrastructure: regions.infrastructure,
+			economy: regions.economy,
+			education: regions.education,
+			hospitals: regions.hospitals,
+			fortifications: regions.fortifications,
+			// Resources from new schema
+			oil: regions.oil,
+			aluminium: regions.aluminium,
+			rubber: regions.rubber,
+			tungsten: regions.tungsten,
+			steel: regions.steel,
+			chromium: regions.chromium
 		})
 		.from(regions)
 		.innerJoin(states, eq(regions.stateId, states.id));
 
-	// Get regional resources
-	const resources = await db.select().from(regionalResources);
-
+	// Format regions with available resources
 	const regionsWithResources = allRegions.map((region) => ({
 		...region,
-		resources: resources.filter((r) => r.regionId === region.id)
+		resources: [
+			{ type: "oil", amount: region.oil },
+			{ type: "aluminium", amount: region.aluminium },
+			{ type: "rubber", amount: region.rubber },
+			{ type: "tungsten", amount: region.tungsten },
+			{ type: "steel", amount: region.steel },
+			{ type: "chromium", amount: region.chromium }
+		].filter((r) => r.amount ?? 0 > 0)
 	}));
 
 	// Get user's company (or create one if they don't have one)
@@ -72,16 +86,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		[company] = await db
 			.insert(companies)
 			.values({
-				name: `${account.email.split("@")[0]}'s Company`,
+				name: `${locals.account!.email.split("@")[0]}'s Company`,
 				ownerId: account.id,
 				description: "Personal company"
 			})
 			.returning();
 	}
 
-	// Get state energy (assuming user's first region's state for now)
-	// In a real app, you'd select based on the chosen region
-	const [energy] = await db.select().from(stateEnergy).limit(1);
+	// Get state energy for all states
+	const stateEnergyData = await db.select().from(stateEnergy);
 
 	return {
 		userBalance: wallet?.balance || 0,
@@ -89,7 +102,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		cooldownEndsAt,
 		regions: regionsWithResources,
 		companyId: company.id,
-		stateEnergy: energy || { totalProduction: 1000, usedProduction: 0 }
+		stateEnergy: stateEnergyData
 	};
 };
 
@@ -143,27 +156,15 @@ export const actions: Actions = {
 			.from(regions)
 			.where(eq(regions.id, regionId));
 
-		if (!region) {
+		if (!region || !region.stateId) {
 			return fail(404, { error: "Region not found" });
 		}
 
 		// Check state energy
-		const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId!));
+		const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId));
 
 		if (!energy || energy.totalProduction - energy.usedProduction < ENERGY_REQUIRED) {
 			return fail(400, { error: "Insufficient state energy capacity" });
-		}
-
-		// If mining, check regional resources
-		if (factoryType === "mine") {
-			const [resource] = await db
-				.select()
-				.from(regionalResources)
-				.where(and(eq(regionalResources.regionId, regionId), eq(regionalResources.resourceType, output as any)));
-
-			if (!resource || resource.remainingReserves <= 0) {
-				return fail(400, { error: "This resource is not available in the selected region" });
-			}
 		}
 
 		// Get or create company

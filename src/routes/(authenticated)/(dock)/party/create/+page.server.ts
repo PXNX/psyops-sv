@@ -12,8 +12,7 @@ import {
 	partyCreationAttempts
 } from "$lib/server/schema";
 import { redirect, error } from "@sveltejs/kit";
-import { eq, and } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { eq, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { uploadFileFromForm } from "$lib/server/backblaze";
 import { superValidate, message } from "sveltekit-superforms";
@@ -33,21 +32,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, `/party/${existingMembership.partyId}`);
 	}
 
-	// Get user's primary residence to determine their region
-	const userResidence = await db.query.residences.findFirst({
-		where: and(eq(residences.userId, account.id), eq(residences.isPrimary, 1)),
-		with: {
-			region: {
-				with: {
-					state: true
-				}
-			}
-		}
-	});
+	// Get user's residence to determine their region (isPrimary removed)
+	const userResidence = await db
+		.select({
+			regionId: residences.regionId,
+			region: regions,
+			state: states
+		})
+		.from(residences)
+		.innerJoin(regions, eq(residences.regionId, regions.id))
+		.leftJoin(states, eq(regions.stateId, states.id))
+		.where(eq(residences.userId, account.id))
+		.limit(1)
+		.then((rows) => rows[0]);
 
-	// If user has no primary residence, they need to select one first
 	if (!userResidence) {
-		throw redirect(302, "/regions?message=needPrimaryResidence");
+		throw error(400, "You must have a residence before creating a party");
 	}
 
 	// Get user's wallet
@@ -82,16 +82,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		form,
-		userState: userResidence.region.state
+		userState: userResidence.state
 			? {
-					id: userResidence.region.state.id,
-					name: userResidence.region.state.name,
-					avatar: userResidence.region.state.avatar
+					id: userResidence.state.id,
+					name: userResidence.state.name,
+					logo: userResidence.state.logo
 				}
 			: null,
 		userRegion: {
-			id: userResidence.region.id,
-			name: userResidence.region.name
+			id: userResidence.region.id
 		},
 		isIndependentRegion,
 		userBalance,
@@ -147,20 +146,22 @@ export const actions: Actions = {
 			}
 		}
 
-		// Get user's primary residence
-		const userResidence = await db.query.residences.findFirst({
-			where: and(eq(residences.userId, account.id), eq(residences.isPrimary, 1)),
-			with: {
-				region: {
-					with: {
-						state: true
-					}
-				}
-			}
-		});
+		// Get user's residence (isPrimary removed)
+		const userResidence = await db
+			.select({
+				regionId: residences.regionId,
+				region: regions,
+				state: states
+			})
+			.from(residences)
+			.innerJoin(regions, eq(residences.regionId, regions.id))
+			.leftJoin(states, eq(regions.stateId, states.id))
+			.where(eq(residences.userId, account.id))
+			.limit(1)
+			.then((rows) => rows[0]);
 
 		if (!userResidence) {
-			return message(form, "You must have a primary residence before creating a party", {
+			return message(form, "You must have a residence before creating a party", {
 				status: 400
 			});
 		}
@@ -211,7 +212,7 @@ export const actions: Actions = {
 				});
 			}
 
-			let logoFileId: string | null = null;
+			let logoFileId: number | null = null;
 
 			// Upload logo if provided
 			if (logo) {
@@ -223,21 +224,23 @@ export const actions: Actions = {
 				}
 
 				// Create file record in database
-				const fileId = randomUUID();
-				await tx.insert(files).values({
-					id: fileId,
-					key: logoUploadResult.key,
-					fileName: logo.name,
-					contentType: "image/webp",
-					sizeBytes: logo.size,
-					uploadedBy: account.id
-				});
-				logoFileId = fileId;
+				const [fileRecord] = await tx
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+				logoFileId = fileRecord.id;
 			}
 
 			// If independent region, create state first
-			let finalStateId: string | null = stateId;
+			let finalStateId: number | null = stateId;
 			let isNewState = false;
+
 			if (isIndependentRegion) {
 				const region = await tx.query.regions.findFirst({
 					where: eq(regions.id, regionId)
@@ -252,12 +255,7 @@ export const actions: Actions = {
 				const [newState] = await tx
 					.insert(states)
 					.values({
-						name: `State of ${region.name}`,
-						avatar: region.avatar,
-						background: region.background,
-						description: `Newly formed state from ${region.name}`,
-						population: region.population || 0,
-						rating: 0
+						name: `State of ${regionId}`
 					})
 					.returning();
 
@@ -300,7 +298,6 @@ export const actions: Actions = {
 			// If this is a new state, automatically schedule inaugural election
 			if (isNewState && finalStateId) {
 				const now = new Date();
-
 				// Election starts in 3 days (72 hours)
 				const startDate = new Date(now);
 				startDate.setDate(startDate.getDate() + 3);
@@ -318,7 +315,7 @@ export const actions: Actions = {
 					endDate,
 					status: "scheduled",
 					totalSeats: 50,
-					isInaugural: 1
+					isInaugural: true
 				});
 			}
 

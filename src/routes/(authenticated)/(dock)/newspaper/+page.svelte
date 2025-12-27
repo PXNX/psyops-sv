@@ -39,7 +39,7 @@
 		{/each}
 	</ul>
 {:else}
-	<div class=" h-screen flex flex-col justify-center items-center">
+	<div class="h-full flex flex-col justify-center items-center">
 		<div class="max-w-md flex-col space-y-4 flex justify-center items-center text-center">
 			<FluentEmojiRolledUpNewspaper class="size-12 " />
 			<h3 class="text-2xl font-bold">You don't work for a newspaper</h3>

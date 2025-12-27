@@ -1,13 +1,14 @@
 // src/routes/party/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { politicalParties, partyMembers, files, regions } from "$lib/server/schema";
-import { eq, sql } from "drizzle-orm";
+import { politicalParties, partyMembers, files, userProfiles } from "$lib/server/schema";
+import { and, eq, sql } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account;
-	const partyId = params.id;
+	const partyId = parseInt(params.id);
 
 	// Get party details
 	const party = await db.query.politicalParties.findFirst({
@@ -33,22 +34,64 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			where: eq(files.id, party.logo)
 		});
 		if (logoFile) {
-			logoUrl = `https://your-cdn.com/${logoFile.key}`;
+			try {
+				logoUrl = await getSignedDownloadUrl(logoFile.key);
+			} catch {
+				logoUrl = null;
+			}
 		}
 	}
 
-	// Get all party members
-	const members = await db.query.partyMembers.findMany({
-		where: eq(partyMembers.partyId, partyId),
-		with: {
-			user: {
-				with: {
-					profile: true
+	// Get all party members with their profiles
+	const members = await db
+		.select({
+			id: partyMembers.id,
+			userId: partyMembers.userId,
+			role: partyMembers.role,
+			joinedAt: partyMembers.joinedAt
+		})
+		.from(partyMembers)
+		.where(eq(partyMembers.partyId, partyId))
+		.orderBy(sql`${partyMembers.joinedAt} DESC`);
+
+	// Get user profiles for all members
+	const membersWithProfiles = await Promise.all(
+		members.map(async (member) => {
+			const userProfile = await db.query.userProfiles.findFirst({
+				where: eq(userProfiles.accountId, member.userId)
+			});
+
+			// Get logo URL if exists
+			let logoUrl = null;
+			if (userProfile?.logo) {
+				const logoFile = await db.query.files.findFirst({
+					where: eq(files.id, userProfile.logo)
+				});
+				if (logoFile) {
+					try {
+						logoUrl = await getSignedDownloadUrl(logoFile.key);
+					} catch {
+						logoUrl = null;
+					}
 				}
 			}
-		},
-		orderBy: (partyMembers, { desc }) => [desc(partyMembers.joinedAt)]
-	});
+
+			return {
+				id: member.id,
+				userId: member.userId,
+				role: member.role,
+				joinedAt: member.joinedAt.toISOString(),
+				user: {
+					profile: userProfile
+						? {
+								name: userProfile.name,
+								logo: logoUrl
+							}
+						: null
+				}
+			};
+		})
+	);
 
 	// Check if current user is a member
 	let isMember = false;
@@ -96,21 +139,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				name: party.state.name
 			}
 		},
-		members: members.map((m) => ({
-			id: m.id,
-			userId: m.userId,
-			role: m.role,
-			joinedAt: m.joinedAt.toISOString(),
-			user: {
-				email: m.user.email,
-				profile: m.user.profile
-					? {
-							name: m.user.profile.name,
-							avatar: m.user.profile.avatar
-						}
-					: null
-			}
-		})),
+		members: membersWithProfiles,
 		isMember,
 		isLeader,
 		memberSince,
@@ -127,7 +156,7 @@ export const actions: Actions = {
 			return fail(401, { error: "You must be logged in to join a party" });
 		}
 
-		const partyId = params.id;
+		const partyId = parseInt(params.id);
 
 		// Check if user already in a party
 		const existingMembership = await db.query.partyMembers.findFirst({
@@ -176,12 +205,12 @@ export const actions: Actions = {
 			return fail(401, { error: "You must be logged in" });
 		}
 
-		const partyId = params.id;
+		const partyId = parseInt(params.id);
 
 		try {
 			// Check if user is a member
 			const membership = await db.query.partyMembers.findFirst({
-				where: sql`${partyMembers.userId} = ${account.id} AND ${partyMembers.partyId} = ${partyId}`
+				where: and(eq(partyMembers.userId, account.id), eq(partyMembers.partyId, partyId))
 			});
 
 			if (!membership) {
@@ -190,13 +219,13 @@ export const actions: Actions = {
 
 			// Prevent leader from leaving (they must delete party if alone or transfer leadership)
 			if (membership.role === "leader") {
-				return fail(400, { error: "Party leaders cannot leave. Delete the party or transfer leadership first." });
+				return fail(400, {
+					error: "Party leaders cannot leave. Delete the party or transfer leadership first."
+				});
 			}
 
 			// Remove membership
-			await db
-				.delete(partyMembers)
-				.where(sql`${partyMembers.userId} = ${account.id} AND ${partyMembers.partyId} = ${partyId}`);
+			await db.delete(partyMembers).where(eq(partyMembers.id, membership.id));
 
 			// Decrement member count
 			await db
@@ -223,7 +252,7 @@ export const actions: Actions = {
 			return fail(401, { error: "You must be logged in" });
 		}
 
-		const partyId = params.id;
+		const partyId = parseInt(params.id);
 
 		try {
 			// Get party details
@@ -248,14 +277,6 @@ export const actions: Actions = {
 			if (party.memberCount > 1) {
 				return fail(400, { error: "Cannot delete party with other members. All members must leave first." });
 			}
-
-			// Make all regions in this state independent
-			await db
-				.update(regions)
-				.set({
-					stateId: null
-				})
-				.where(eq(regions.stateId, party.stateId));
 
 			// Delete party (cascade will handle party members)
 			await db.delete(politicalParties).where(eq(politicalParties.id, partyId));
