@@ -1,14 +1,13 @@
 // src/routes/party/[id]/edit/+page.server.ts
 import { db } from "$lib/server/db";
-import { politicalParties, partyMembers, files, regions, userWallets, partyEditHistory } from "$lib/server/schema";
+import { politicalParties, partyMembers, files, userWallets, partyEditHistory } from "$lib/server/schema";
 import { redirect, error, fail } from "@sveltejs/kit";
-import { eq, sql } from "drizzle-orm";
-import { randomUUID } from "crypto";
+import { eq, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm } from "$lib/server/backblaze";
+import { uploadFileFromForm, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
-import { createPartySchema } from "../../create/schema";
+import { createPartySchema } from "./schema";
 
 // Configuration constants
 const EDIT_COST = 5000;
@@ -16,7 +15,7 @@ const COOLDOWN_HOURS = 24;
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
-	const partyId = params.id;
+	const partyId = parseInt(params.id);
 
 	// Get party details
 	const party = await db.query.politicalParties.findFirst({
@@ -37,7 +36,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if user is the leader
 	const membership = await db.query.partyMembers.findFirst({
-		where: sql`${partyMembers.userId} = ${account.id} AND ${partyMembers.partyId} = ${partyId}`
+		where: and(eq(partyMembers.userId, account.id), eq(partyMembers.partyId, partyId))
 	});
 
 	if (!membership || membership.role !== "leader") {
@@ -54,7 +53,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const [newWallet] = await db
 			.insert(userWallets)
 			.values({
-				id: randomUUID(),
 				userId: account.id,
 				balance: 10000
 			})
@@ -90,7 +88,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			where: eq(files.id, party.logo)
 		});
 		if (logoFile) {
-			logoUrl = `https://your-cdn.com/${logoFile.key}`;
+			try {
+				logoUrl = await getSignedDownloadUrl(logoFile.key);
+			} catch {
+				logoUrl = null;
+			}
 		}
 	}
 
@@ -134,7 +136,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 export const actions: Actions = {
 	update: async ({ request, params, locals }) => {
 		const account = locals.account!;
-		const partyId = params.id;
+		const partyId = parseInt(params.id);
 		const form = await superValidate(request, valibot(createPartySchema));
 
 		if (!form.valid) {
@@ -196,7 +198,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			let logoFileId: string | null = party.logo;
+			let logoFileId: number | null = party.logo;
 
 			// Upload new logo if provided
 			if (logo) {
@@ -207,16 +209,17 @@ export const actions: Actions = {
 				}
 
 				// Create file record in database
-				const fileId = randomUUID();
-				await db.insert(files).values({
-					id: fileId,
-					key: logoUploadResult.key,
-					fileName: logo.name,
-					contentType: "image/webp",
-					sizeBytes: logo.size,
-					uploadedBy: account.id
-				});
-				logoFileId = fileId;
+				const [fileRecord] = await db
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+				logoFileId = fileRecord.id;
 			}
 
 			// Deduct cost from user's wallet
@@ -252,7 +255,6 @@ export const actions: Actions = {
 					.where(eq(partyEditHistory.partyId, partyId));
 			} else {
 				await db.insert(partyEditHistory).values({
-					id: randomUUID(),
 					partyId,
 					lastEditAt: new Date(),
 					lastEditBy: account.id
@@ -268,7 +270,7 @@ export const actions: Actions = {
 
 	delete: async ({ params, locals }) => {
 		const account = locals.account!;
-		const partyId = params.id;
+		const partyId = parseInt(params.id);
 
 		try {
 			// Get party details
@@ -293,14 +295,6 @@ export const actions: Actions = {
 			if (party.memberCount > 1) {
 				return fail(400, { error: "Cannot delete party with other members. All members must leave first." });
 			}
-
-			// Make all regions in this state independent
-			await db
-				.update(regions)
-				.set({
-					stateId: null
-				})
-				.where(eq(regions.stateId, party.stateId));
 
 			// Delete party (cascade will handle party members and edit history)
 			await db.delete(politicalParties).where(eq(politicalParties.id, partyId));

@@ -1,8 +1,9 @@
-// src/routes/(authenticated)/regions/+page.server.ts
+// src/routes/(authenticated)/welcome/region/+page.server.ts
 import { db } from "$lib/server/db";
-import { regions, residences, states, userProfiles } from "$lib/server/schema";
+import { regions, residences, states, userProfiles, files } from "$lib/server/schema";
 import { eq, sql, and } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
 
 // Simple IP geolocation (you can replace with a proper service)
 async function getLocationFromIP(ip: string): Promise<{ country: string; city: string } | null> {
@@ -23,30 +24,25 @@ async function getLocationFromIP(ip: string): Promise<{ country: string; city: s
 	return null;
 }
 
-// Map countries to nearby regions (you'll need to customize this based on your regions)
-const COUNTRY_TO_REGION_MAP: Record<string, string[]> = {
-	Germany: ["Baden-Württemberg", "Bavaria", "Berlin", "Hamburg"],
-	"United States": ["California", "New York", "Texas", "Florida"],
-	"United Kingdom": ["England", "Scotland", "Wales", "Northern Ireland"],
-	France: ["Île-de-France", "Provence", "Brittany", "Normandy"],
-	Spain: ["Catalonia", "Andalusia", "Madrid", "Valencia"],
-	Italy: ["Lombardy", "Lazio", "Sicily", "Tuscany"]
+// Map countries to nearby region IDs (you'll need to customize this based on your actual region IDs)
+const COUNTRY_TO_REGION_IDS: Record<string, number[]> = {
+	Germany: [1, 2, 3, 4], // Example region IDs
+	"United States": [5, 6, 7, 8],
+	"United Kingdom": [9, 10, 11, 12],
+	France: [13, 14, 15, 16],
+	Spain: [17, 18, 19, 20],
+	Italy: [21, 22, 23, 24]
 	// Add more mappings as needed
 };
 
 interface RegionWithPopulation {
 	id: number;
-	name: string;
-	avatar: string | null;
-	background: string | null;
-	description: string | null;
-	stateId: string | null;
-	autoApproveResidency: number;
+	stateId: number | null;
 	populationCount: number;
 	state: {
-		id: string;
+		id: number;
 		name: string;
-		avatar: string | null;
+		logo: string | null;
 	} | null;
 }
 
@@ -58,8 +54,6 @@ export const load: PageServerLoad = async ({ locals, getClientAddress }) => {
 		where: eq(userProfiles.accountId, account.id)
 	});
 
-	//todo: check if user has a residence set already. if yes, redirect to /
-
 	const clientIP = getClientAddress();
 
 	// Get user location based on IP
@@ -67,19 +61,14 @@ export const load: PageServerLoad = async ({ locals, getClientAddress }) => {
 
 	// Check if user has a primary residence
 	const primaryResidence = await db.query.residences.findFirst({
-		where: and(eq(residences.userId, account.id), eq(residences.isPrimary, 1))
+		where: eq(residences.userId, account.id)
 	});
 
 	// Get all regions with their population count (calculated from actual residences)
 	const allRegions = await db
 		.select({
 			id: regions.id,
-			name: regions.name,
-			avatar: regions.avatar,
-			background: regions.background,
-			description: regions.description,
 			stateId: regions.stateId,
-			autoApproveResidency: regions.autoApproveResidency,
 			populationCount: sql<number>`CAST(COUNT(DISTINCT ${residences.userId}) AS INTEGER)`.as("populationCount")
 		})
 		.from(regions)
@@ -88,20 +77,49 @@ export const load: PageServerLoad = async ({ locals, getClientAddress }) => {
 		.orderBy(sql`populationCount ASC`); // Sort by population (low to high)
 
 	// Get state information for regions
-	const stateIds = [...new Set(allRegions.map((r) => r.stateId).filter(Boolean))] as string[];
+	const stateIds = [...new Set(allRegions.map((r) => r.stateId).filter(Boolean))] as number[];
 	const statesData =
 		stateIds.length > 0
 			? await db
 					.select({
 						id: states.id,
 						name: states.name,
-						avatar: states.avatar
+						logo: states.logo
 					})
 					.from(states)
-					.where(sql`${states.id} IN ${sql.raw(`(${stateIds.map((id) => `'${id}'`).join(",")})`)}`)
+					.where(
+						sql`${states.id} IN (${sql.join(
+							stateIds.map((id) => sql`${id}`),
+							sql`, `
+						)})`
+					)
 			: [];
 
-	const stateMap = new Map(statesData.map((s) => [s.id, s]));
+	// Process state logos
+	const statesWithLogos = await Promise.all(
+		statesData.map(async (state) => {
+			let logoUrl: string | null = null;
+			if (state.logo) {
+				try {
+					const logoFile = await db.query.files.findFirst({
+						where: eq(files.id, state.logo)
+					});
+					if (logoFile) {
+						logoUrl = await getSignedDownloadUrl(logoFile.key);
+					}
+				} catch (error) {
+					console.error("Failed to get logo URL:", error);
+				}
+			}
+			return {
+				id: state.id,
+				name: state.name,
+				logo: logoUrl
+			};
+		})
+	);
+
+	const stateMap = new Map(statesWithLogos.map((s) => [s.id, s]));
 
 	// Attach state data to regions
 	const regionsWithStates: RegionWithPopulation[] = allRegions.map((region) => ({
@@ -110,20 +128,19 @@ export const load: PageServerLoad = async ({ locals, getClientAddress }) => {
 	}));
 
 	// Determine nearby regions based on user location
-	let nearbyRegionNames: string[] = [];
+	let nearbyRegionIds: number[] = [];
 	if (userLocation?.country) {
-		nearbyRegionNames = COUNTRY_TO_REGION_MAP[userLocation.country] || [];
+		nearbyRegionIds = COUNTRY_TO_REGION_IDS[userLocation.country] || [];
 	}
 
 	// Filter nearby regions and prioritize them
-	const nearbyRegions = regionsWithStates
-		.filter((r) =>
-			nearbyRegionNames.some(
-				(name) => r.name.toLowerCase().includes(name.toLowerCase()) || name.toLowerCase().includes(r.name.toLowerCase())
-			)
-		)
-		.sort((a, b) => a.populationCount - b.populationCount) // Prioritize low population
-		.slice(0, 6); // Limit to 6 nearby regions
+	const nearbyRegions =
+		nearbyRegionIds.length > 0
+			? regionsWithStates
+					.filter((r) => nearbyRegionIds.includes(r.id))
+					.sort((a, b) => a.populationCount - b.populationCount) // Prioritize low population
+					.slice(0, 6) // Limit to 6 nearby regions
+			: regionsWithStates.sort((a, b) => a.populationCount - b.populationCount).slice(0, 6);
 
 	return {
 		regions: regionsWithStates,

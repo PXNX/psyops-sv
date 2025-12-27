@@ -1,9 +1,18 @@
 // src/routes/(authenticated)/user/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, partyMembers, files, residences, articles, userVisas } from "$lib/server/schema";
+import {
+	accounts,
+	partyMembers,
+	files,
+	residences,
+	articles,
+	regions,
+	states,
+	politicalParties
+} from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { error } from "@sveltejs/kit";
-import { eq, and, count, gt } from "drizzle-orm";
+import { error, fail } from "@sveltejs/kit";
+import { eq, count } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -21,61 +30,77 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const account = locals.account!;
 
-	// Get user's single residence
-	const residence = await db.query.residences.findFirst({
-		where: eq(residences.userId, params.id),
-		with: {
-			region: {
-				with: {
-					state: true
-				}
-			}
-		}
-	});
+	// Get user's primary residence
+	const [residence] = await db
+		.select({
+			id: residences.id,
+			movedInAt: residences.movedInAt,
+			regionId: residences.regionId,
 
-	// Get user's active visas
-	const activeVisas = await db.query.userVisas.findMany({
-		where: and(eq(userVisas.userId, params.id), eq(userVisas.status, "active"), gt(userVisas.expiresAt, new Date())),
-		with: {
-			state: true
-		},
-		orderBy: (visas, { asc }) => [asc(visas.expiresAt)]
-	});
+			stateId: states.id,
+			stateName: states.name,
+			stateLogo: states.logo
+		})
+		.from(residences)
+		.leftJoin(regions, eq(residences.regionId, regions.id))
+		.leftJoin(states, eq(regions.stateId, states.id))
+		.where(eq(residences.userId, params.id))
+		.limit(1);
 
 	// Get article count
-	const articleCount = await db.select({ count: count() }).from(articles).where(eq(articles.authorId, params.id));
+	const [articleCountResult] = await db
+		.select({ count: count() })
+		.from(articles)
+		.where(eq(articles.authorId, params.id));
 
 	// Check if user is in a party
-	const partyMembership = await db.query.partyMembers.findFirst({
-		where: eq(partyMembers.userId, params.id),
-		with: {
-			party: {
-				with: {
-					state: true
-				}
-			}
-		}
-	});
+	const [partyMembership] = await db
+		.select({
+			partyId: partyMembers.partyId,
+			role: partyMembers.role,
+			joinedAt: partyMembers.joinedAt,
+			partyName: politicalParties.name,
+			partyAbbreviation: politicalParties.abbreviation,
+			partyColor: politicalParties.color,
+			partyLogo: politicalParties.logo,
+			partyIdeology: politicalParties.ideology,
+			stateId: politicalParties.stateId
+		})
+		.from(partyMembers)
+		.leftJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+		.where(eq(partyMembers.userId, params.id))
+		.limit(1);
 
-	// Get party logo URL if exists
+	// Get party state and logo URL if party exists
 	let partyLogoUrl = null;
-	if (partyMembership?.party.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, partyMembership.party.logo)
-		});
-		if (logoFile) {
-			partyLogoUrl = await getSignedDownloadUrl(logoFile.key);
+	let partyStateName = null;
+	if (partyMembership) {
+		const [partyState] = await db
+			.select({ name: states.name })
+			.from(states)
+			.where(eq(states.id, partyMembership.stateId!))
+			.limit(1);
+
+		partyStateName = partyState?.name || null;
+
+		if (partyMembership.partyLogo) {
+			const logoFile = await db.query.files.findFirst({
+				where: eq(files.id, partyMembership.partyLogo)
+			});
+			if (logoFile) {
+				partyLogoUrl = await getSignedDownloadUrl(logoFile.key);
+			}
 		}
 	}
 
-	// Get user avatar URL if exists
-	let avatarUrl = user.profile?.avatar || null;
-	if (avatarUrl && !avatarUrl.startsWith("http")) {
-		const avatarFile = await db.query.files.findFirst({
-			where: eq(files.id, avatarUrl)
+	// Get user logo URL if exists
+	let logoUrl: string | null = null;
+	if (user.profile?.logo) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, user.profile?.logo!)
 		});
-		if (avatarFile) {
-			avatarUrl = await getSignedDownloadUrl(avatarFile.key);
+		if (logoFile) {
+			logoUrl = await getSignedDownloadUrl(logoFile.key);
 		}
 	}
 
@@ -85,20 +110,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			email: user.email,
 			role: user.role,
 			name: user.profile?.name,
-			avatar: avatarUrl,
+			logo: logoUrl,
 			bio: user.profile?.bio,
 			createdAt: user.createdAt
 		},
 		party: partyMembership
 			? {
-					id: partyMembership.party.id,
-					name: partyMembership.party.name,
-					abbreviation: partyMembership.party.abbreviation,
-					color: partyMembership.party.color,
+					id: partyMembership.partyId,
+					name: partyMembership.partyName,
+					abbreviation: partyMembership.partyAbbreviation,
+					color: partyMembership.partyColor,
 					logo: partyLogoUrl,
-					ideology: partyMembership.party.ideology,
+					ideology: partyMembership.partyIdeology,
 					role: partyMembership.role,
-					stateName: partyMembership.party.state.name,
+					stateName: partyStateName,
 					joinedAt: partyMembership.joinedAt
 				}
 			: null,
@@ -107,22 +132,83 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					id: residence.id,
 					movedInAt: residence.movedInAt,
 					region: {
-						id: residence.region.id,
-
-						stateName: residence.region.state?.name
+						id: residence.regionId,
+						// todo: add regionname from paraglide
+						stateId: residence.stateId,
+						stateName: residence.stateName,
+						stateLogo: residence.stateLogo
 					}
 				}
 			: null,
-		activeVisas: activeVisas.map((v) => ({
-			id: v.id,
-			stateId: v.stateId,
-			stateName: v.state.name,
-			stateAvatar: v.state.avatar,
-			expiresAt: v.expiresAt,
-			issuedAt: v.issuedAt,
-			cost: v.cost
-		})),
-		articleCount: articleCount[0]?.count || 0,
+		articleCount: articleCountResult?.count || 0,
 		isOwnProfile: account.id === params.id
+	};
+
+	awardMedal: async ({ request, params, locals }) => {
+		const account = locals.account;
+		if (!account) {
+			return fail(401, { error: "Not authenticated" });
+		}
+
+		// Check if user is a president
+		const presidency = await db.query.presidents.findFirst({
+			where: eq(presidents.userId, account.id)
+		});
+
+		if (!presidency) {
+			return fail(403, { error: "Only presidents can award medals" });
+		}
+
+		// Check if already awarded this month
+		const startOfMonth = new Date();
+		startOfMonth.setDate(1);
+		startOfMonth.setHours(0, 0, 0, 0);
+
+		const existingAward = await db.query.userMedals.findFirst({
+			where: and(
+				eq(userMedals.awardedBy, account.id)
+				// Add date comparison if your DB supports it
+			)
+		});
+
+		if (existingAward && new Date(existingAward.awardedAt) >= startOfMonth) {
+			return fail(400, { error: "You can only award one medal per month" });
+		}
+
+		// Cannot award to self
+		if (account.id === params.id) {
+			return fail(400, { error: "Cannot award medal to yourself" });
+		}
+
+		const formData = await request.formData();
+		const medalType = formData.get("medalType") as string;
+		const reason = formData.get("reason") as string;
+
+		if (!medalType || !reason) {
+			return fail(400, { error: "Medal type and reason are required" });
+		}
+
+		if (!["honor", "valor", "excellence", "service", "leadership"].includes(medalType)) {
+			return fail(400, { error: "Invalid medal type" });
+		}
+
+		if (reason.length < 10 || reason.length > 500) {
+			return fail(400, { error: "Reason must be between 10 and 500 characters" });
+		}
+
+		try {
+			await db.insert(userMedals).values({
+				userId: params.id,
+				stateId: presidency.stateId,
+				medalType: medalType as any,
+				reason,
+				awardedBy: account.id
+			});
+
+			return { success: true };
+		} catch (error) {
+			console.error("Error awarding medal:", error);
+			return fail(500, { error: "Failed to award medal" });
+		}
 	};
 };

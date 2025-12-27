@@ -1,14 +1,14 @@
 // src/lib/server/taxes.ts
 import { db } from "$lib/server/db";
 import { stateTaxes, taxRevenue, stateTreasury } from "$lib/server/schema";
-import { eq, and, sql, type SQL } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 export interface TaxCalculation {
 	grossAmount: number;
 	taxAmount: number;
 	netAmount: number;
 	applicableTaxes: Array<{
-		id: string;
+		id: number;
 		name: string;
 		rate: number;
 		amount: number;
@@ -24,7 +24,7 @@ export interface TaxCalculation {
  * @returns Tax calculation breakdown
  */
 export async function calculateAndCollectTax(
-	stateId: string,
+	stateId: number,
 	taxType: "mining" | "production" | "market_transaction" | "income",
 	grossAmount: number,
 	userId: string
@@ -33,7 +33,7 @@ export async function calculateAndCollectTax(
 	const activeTaxes = await db
 		.select()
 		.from(stateTaxes)
-		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxType), eq(stateTaxes.isActive, 1)));
+		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxType), eq(stateTaxes.isActive, true)));
 
 	if (activeTaxes.length === 0) {
 		return {
@@ -102,25 +102,25 @@ export async function calculateAndCollectTax(
 /**
  * Get all active taxes for a state
  */
-export async function getActiveTaxes(stateId: string) {
+export async function getActiveTaxes(stateId: number) {
 	return await db
 		.select()
 		.from(stateTaxes)
-		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.isActive, 1)));
+		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.isActive, true)));
 }
 
 /**
  * Preview tax amount without collecting
  */
 export async function previewTax(
-	stateId: string,
+	stateId: number,
 	taxType: "mining" | "production" | "market_transaction" | "income",
 	grossAmount: number
 ): Promise<{ taxAmount: number; netAmount: number }> {
 	const activeTaxes = await db
 		.select()
 		.from(stateTaxes)
-		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxType), eq(stateTaxes.isActive, 1)));
+		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxType), eq(stateTaxes.isActive, true)));
 
 	let totalTaxAmount = 0;
 	for (const tax of activeTaxes) {

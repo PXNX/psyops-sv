@@ -4,7 +4,6 @@ import {
 	giftCodes,
 	giftCodeResources,
 	giftCodeRedemptions,
-	giftCodeRedemptionResources,
 	userWallets,
 	resourceInventory,
 	productInventory
@@ -19,38 +18,43 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Get user's redemption history
 	const redemptions = await db
 		.select({
-			id: giftCodeRedemptions.id,
-			code: giftCodes.code,
-			description: giftCodes.description,
+			redemptionId: giftCodeRedemptions.id,
 			currencyReceived: giftCodeRedemptions.currencyReceived,
 			redeemedAt: giftCodeRedemptions.redeemedAt,
-			resources: sql<Array<{ type: string; quantity: number }>>`
-				COALESCE(
-					json_agg(
-						json_build_object(
-							'type', ${giftCodeRedemptionResources.resourceType},
-							'quantity', ${giftCodeRedemptionResources.quantity}
-						)
-					) FILTER (WHERE ${giftCodeRedemptionResources.id} IS NOT NULL),
-					'[]'
-				)
-			`
+			code: giftCodes.code,
+			description: giftCodes.description
 		})
 		.from(giftCodeRedemptions)
 		.innerJoin(giftCodes, eq(giftCodeRedemptions.giftCodeId, giftCodes.id))
-		.leftJoin(giftCodeRedemptionResources, eq(giftCodeRedemptions.id, giftCodeRedemptionResources.redemptionId))
 		.where(eq(giftCodeRedemptions.userId, account.id))
-		.groupBy(
-			giftCodeRedemptions.id,
-			giftCodes.code,
-			giftCodes.description,
-			giftCodeRedemptions.currencyReceived,
-			giftCodeRedemptions.redeemedAt
-		)
 		.orderBy(sql`${giftCodeRedemptions.redeemedAt} DESC`);
 
+	// Get resources for each redemption
+	const formattedRedemptions = await Promise.all(
+		redemptions.map(async (redemption) => {
+			const resources = await db
+				.select({
+					type: giftCodeResources.resourceType,
+					quantity: giftCodeResources.quantity
+				})
+				.from(giftCodeResources)
+				.innerJoin(giftCodes, eq(giftCodeResources.giftCodeId, giftCodes.id))
+				.innerJoin(giftCodeRedemptions, eq(giftCodeRedemptions.giftCodeId, giftCodes.id))
+				.where(eq(giftCodeRedemptions.id, redemption.redemptionId));
+
+			return {
+				id: redemption.redemptionId,
+				code: redemption.code,
+				description: redemption.description,
+				currencyReceived: redemption.currencyReceived,
+				redeemedAt: redemption.redeemedAt,
+				resources
+			};
+		})
+	);
+
 	return {
-		redemptions
+		redemptions: formattedRedemptions
 	};
 };
 
@@ -104,14 +108,11 @@ export const actions: Actions = {
 			// Redeem the code in a transaction
 			await db.transaction(async (tx) => {
 				// Create redemption record
-				const [redemption] = await tx
-					.insert(giftCodeRedemptions)
-					.values({
-						giftCodeId: giftCode.id,
-						userId: account.id,
-						currencyReceived: giftCode.currencyAmount
-					})
-					.returning();
+				await tx.insert(giftCodeRedemptions).values({
+					giftCodeId: giftCode.id,
+					userId: account.id,
+					currencyReceived: giftCode.currencyAmount
+				});
 
 				// Add currency to wallet if applicable
 				if (giftCode.currencyAmount > 0) {
@@ -137,14 +138,7 @@ export const actions: Actions = {
 
 				// Add resources to inventory
 				for (const resource of giftCode.resources) {
-					// Record in redemption history
-					await tx.insert(giftCodeRedemptionResources).values({
-						redemptionId: redemption.id,
-						resourceType: resource.resourceType,
-						quantity: resource.quantity
-					});
-
-					// Determine if it's a resource or product
+					// Determine if it's a resource or product based on type
 					const isProduct = ["rifles", "ammunition", "artillery", "vehicles", "explosives"].includes(
 						resource.resourceType
 					);

@@ -1,11 +1,14 @@
 // src/routes/(authenticated)/(dock)/user/[id]/career/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, articles, journalists } from "$lib/server/schema";
+import { accounts, articles, journalists, userMedals, presidents, files } from "$lib/server/schema";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error } from "@sveltejs/kit";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, and } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const account = locals.account;
+
 	// Query account with all career-related data
 	const user = await db.query.accounts.findFirst({
 		where: eq(accounts.id, params.id),
@@ -15,21 +18,58 @@ export const load: PageServerLoad = async ({ params }) => {
 				with: {
 					newspaper: true
 				},
-				orderBy: [desc(journalists.id)] // Most recent first
+				orderBy: [desc(journalists.id)]
 			},
 			articles: {
 				orderBy: [desc(articles.createdAt)],
 				with: {
 					newspaper: true,
 					upvotes: true
-				},
-				limit: 10 // Show recent articles
+				}
 			}
 		}
 	});
 
 	if (!user) {
 		error(404, "User not found");
+	}
+
+	// Get user medals
+	const medals = await db.query.userMedals.findMany({
+		where: eq(userMedals.userId, params.id),
+		with: {
+			awardedByUser: {
+				with: {
+					profile: true
+				}
+			},
+			state: true
+		},
+		orderBy: [desc(userMedals.awardedAt)]
+	});
+
+	// Get user profile logo if exists
+	let logoUrl: string | null = null;
+	if (user.profile?.logo) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, user.profile.logo)
+		});
+		if (logoFile) {
+			logoUrl = await getSignedDownloadUrl(logoFile.key);
+		}
+	}
+
+	// Get newspaper logos
+	const newspaperLogos = new Map<number, string>();
+	for (const journalist of user.journalists) {
+		if (journalist.newspaper.logo) {
+			const logoFile = await db.query.files.findFirst({
+				where: eq(files.id, journalist.newspaper.logo)
+			});
+			if (logoFile) {
+				newspaperLogos.set(journalist.newspaper.id, await getSignedDownloadUrl(logoFile.key));
+			}
+		}
 	}
 
 	// Calculate career statistics
@@ -43,19 +83,17 @@ export const load: PageServerLoad = async ({ params }) => {
 			const existing = acc.find((n) => n.newspaperId === j.newspaper.id);
 			if (existing) {
 				existing.positions.push({
-					rank: j.rank,
-					joinedAt: j.id
+					rank: j.rank
 				});
 			} else {
 				acc.push({
 					newspaperId: j.newspaper.id,
 					newspaperName: j.newspaper.name,
-					newspaperAvatar: j.newspaper.avatar,
+					newspaperAvatar: newspaperLogos.get(j.newspaper.id) || null,
 					newspaperBackground: j.newspaper.background,
 					positions: [
 						{
-							rank: j.rank,
-							joinedAt: j.id
+							rank: j.rank
 						}
 					]
 				});
@@ -63,53 +101,73 @@ export const load: PageServerLoad = async ({ params }) => {
 			return acc;
 		},
 		[] as Array<{
-			newspaperId: string;
+			newspaperId: number;
 			newspaperName: string;
 			newspaperAvatar: string | null;
 			newspaperBackground: string | null;
-			positions: Array<{ rank: string; joinedAt: string }>;
+			positions: Array<{ rank: string }>;
 		}>
 	);
 
-	// Find most prolific newspaper (where user wrote most articles)
-	const articlesByNewspaper = user.articles.reduce(
-		(acc, article) => {
-			acc[article.newspaperId] = (acc[article.newspaperId] || 0) + 1;
-			return acc;
-		},
-		{} as Record<string, number>
-	);
+	// Check if current user can award medals
+	let canAwardMedal = false;
+	let hasAwardedThisMonth = false;
+	if (account) {
+		const presidency = await db.query.presidents.findFirst({
+			where: eq(presidents.userId, account.id)
+		});
 
-	const mostActiveNewspaper = Object.entries(articlesByNewspaper).sort(([, a], [, b]) => b - a)[0];
+		if (presidency) {
+			canAwardMedal = true;
+
+			// Check if already awarded this month
+			const startOfMonth = new Date();
+			startOfMonth.setDate(1);
+			startOfMonth.setHours(0, 0, 0, 0);
+
+			const thisMonthAwards = await db.query.userMedals.findFirst({
+				where: and(
+					eq(userMedals.awardedBy, account.id)
+					// Add date comparison here if needed
+				)
+			});
+
+			if (thisMonthAwards && new Date(thisMonthAwards.awardedAt) >= startOfMonth) {
+				hasAwardedThisMonth = true;
+			}
+		}
+	}
 
 	return {
 		user: {
 			id: user.id,
-			email: user.email,
-			role: user.role,
 			name: user.profile?.name,
-			avatar: user.profile?.avatar,
+			avatar: logoUrl,
 			bio: user.profile?.bio,
 			createdAt: user.createdAt
 		},
 		career: {
 			newspaperPositions,
-			recentArticles: user.articles.map((a) => ({
-				id: a.id,
-				title: a.title,
-				newspaperName: a.newspaper.name,
-				newspaperId: a.newspaper.id,
-				createdAt: a.createdAt,
-				upvoteCount: a.upvotes.length
+			medals: medals.map((m) => ({
+				id: m.id,
+				medalType: m.medalType,
+				reason: m.reason,
+				awardedAt: m.awardedAt,
+				awardedBy: {
+					name: m.awardedByUser.profile?.name || "Unknown",
+					avatar: null // Can be enhanced later
+				},
+				stateName: m.state.name
 			})),
 			stats: {
 				totalArticles,
 				totalUpvotes,
 				newspaperCount,
 				averageUpvotes: totalArticles > 0 ? Math.round(totalUpvotes / totalArticles) : 0,
-				mostActiveNewspaperId: mostActiveNewspaper?.[0],
-				mostActiveNewspaperCount: mostActiveNewspaper?.[1] || 0
+				medalCount: medals.length
 			}
-		}
+		},
+		canAwardMedal: canAwardMedal && !hasAwardedThisMonth && account?.id !== params.id,
+		isOwnProfile: account?.id === params.id
 	};
 };

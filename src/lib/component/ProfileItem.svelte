@@ -11,7 +11,7 @@
 		date,
 		href,
 		bgColor,
-		Component
+		icon
 	}: {
 		name: string;
 		description: string;
@@ -19,7 +19,7 @@
 		avatar: string;
 		href: string;
 		bgColor: string;
-		Component: Component;
+		icon: Component;
 	} = $props();
 </script>
 
@@ -30,7 +30,7 @@
 	<div class="flex items-center gap-3 min-w-0">
 		<div class="relative shrink-0">
 			<div class="{bgColor} size-11 rounded-lg flex items-center justify-center shadow-lg ring-1 ring-white/10">
-				<Component class="size-5 text-white" />
+				<svelte:component this={icon} class="size-5 text-white" />
 			</div>
 		</div>
 		<div class="min-w-0 flex-1">

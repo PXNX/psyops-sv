@@ -1,4 +1,4 @@
-<!-- src/routes/(authenticated)/regions/+page.svelte -->
+<!-- src/routes/(authenticated)/welcome/region/+page.svelte -->
 <script lang="ts">
 	import { page } from "$app/stores";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";

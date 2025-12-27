@@ -4,10 +4,8 @@ import {
 	companies,
 	factories,
 	factoryWorkers,
-	marketListings,
 	productInventory,
 	productionQueue,
-	regionalResources,
 	regions,
 	resourceInventory,
 	stateEnergy,
@@ -15,7 +13,7 @@ import {
 } from "$lib/server/schema";
 import { calculateAndCollectTax } from "$lib/server/taxes";
 import { fail } from "@sveltejs/kit";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 
 // Production recipes
@@ -131,7 +129,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			companyLogo: companies.logo,
 			wage: factories.workerWage,
 			regionId: factories.regionId,
-			stateId: regions.stateId
+			stateId: regions.stateId,
+			ownerId: companies.ownerId,
+			productionRate: factories.productionRate
 		})
 		.from(factoryWorkers)
 		.innerJoin(factories, eq(factoryWorkers.factoryId, factories.id))
@@ -222,7 +222,7 @@ export const actions: Actions = {
 		const account = locals.account!;
 
 		const data = await request.formData();
-		const factoryId = data.get("factoryId") as string;
+		const factoryId = parseInt(data.get("factoryId") as string);
 
 		const [factory] = await db
 			.select({
@@ -273,35 +273,16 @@ export const actions: Actions = {
 			}
 		}
 
-		if (factory.factoryType === "mine" && factory.resourceOutput && isMinableResource(factory.resourceOutput)) {
-			const [resource] = await db
-				.select()
-				.from(regionalResources)
-				.where(
-					and(
-						eq(regionalResources.regionId, factory.regionId),
-						eq(regionalResources.resourceType, factory.resourceOutput)
-					)
-				);
-
-			if (!resource || resource.remainingReserves <= 0) {
-				return fail(400, {
-					error: "This mine has exhausted its resource reserves"
-				});
-			}
-
-			if (resource.remainingReserves < factory.productionRate) {
-				return fail(400, {
-					error: `Only ${resource.remainingReserves} units of ${factory.resourceOutput} remaining in this region`
-				});
-			}
-		}
-
 		let taxAmount = 0;
-		let netAmount = factory.workerWage;
+		let netAmount = Number(factory.workerWage);
 
 		await db.transaction(async (tx) => {
-			const taxResult = await calculateAndCollectTax(factory.stateId!, "income", factory.workerWage, account.id);
+			const taxResult = await calculateAndCollectTax(
+				factory.stateId!,
+				"income",
+				Number(factory.workerWage),
+				account.id
+			);
 			taxAmount = taxResult.taxAmount;
 			netAmount = taxResult.netAmount;
 
@@ -323,20 +304,6 @@ export const actions: Actions = {
 			}
 
 			if (factory.factoryType === "mine" && factory.resourceOutput) {
-				if (isMinableResource(factory.resourceOutput)) {
-					await tx
-						.update(regionalResources)
-						.set({
-							remainingReserves: sql`${regionalResources.remainingReserves} - ${factory.productionRate}`
-						})
-						.where(
-							and(
-								eq(regionalResources.regionId, factory.regionId),
-								eq(regionalResources.resourceType, factory.resourceOutput)
-							)
-						);
-				}
-
 				const [ownerInv] = await tx
 					.select()
 					.from(resourceInventory)
@@ -384,10 +351,10 @@ export const actions: Actions = {
 
 		return {
 			success: true,
-			earned: factory.workerWage,
+			earned: Number(factory.workerWage),
 			netEarned: netAmount,
 			taxPaid: taxAmount,
-			message: `Worked successfully! Earned ${factory.workerWage.toLocaleString()} currency (${netAmount.toLocaleString()} after ${taxAmount.toLocaleString()} tax).`
+			message: `Worked successfully! Earned ${Number(factory.workerWage).toLocaleString()} currency (${netAmount.toLocaleString()} after ${taxAmount.toLocaleString()} tax).`
 		};
 	}
 };

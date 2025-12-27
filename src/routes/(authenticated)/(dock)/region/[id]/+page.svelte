@@ -4,10 +4,12 @@
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
-	import FluentPassport20Filled from "~icons/fluent/passport-20-filled";
+	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
+	import FluentLocationLive20Filled from "~icons/fluent/location-live-20-filled";
 	import * as m from "$lib/paraglide/messages";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 
@@ -17,6 +19,8 @@
 		const key = `region_${data.region.id}`;
 		return m[key]();
 	});
+
+	const isIndependent = $derived(!data.region.stateId);
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -36,7 +40,10 @@
 					</a>
 				</p>
 			{:else}
-				<p class="text-amber-400 mt-1">Independent Region</p>
+				<p class="text-amber-400 mt-1 flex items-center gap-2">
+					<FluentFlag20Filled class="size-4" />
+					Independent Region
+				</p>
 			{/if}
 		</div>
 	</div>
@@ -56,12 +63,99 @@
 		</div>
 	{/if}
 
+	<!-- Independent Region Claim Banner -->
+	{#if isIndependent}
+		<div
+			class="bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-6 space-y-4"
+		>
+			<div class="flex items-start gap-4">
+				<div class="size-12 bg-amber-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentFlag20Filled class="size-6 text-amber-400" />
+				</div>
+				<div class="flex-1">
+					<h2 class="text-xl font-bold text-white mb-2">Unclaimed Territory</h2>
+					<p class="text-gray-300 text-sm mb-4">
+						This region is independent and can be claimed by founding a new state. Create a political party here to
+						establish your government and claim this territory.
+					</p>
+					<div class="flex flex-wrap gap-3">
+						<a
+							href="/party/create?regionId={data.region.id}"
+							class="btn btn-sm bg-amber-600 hover:bg-amber-500 border-0 text-white gap-2"
+						>
+							<FluentFlag20Filled class="size-4" />
+							Found a State
+						</a>
+						<a href="/parties" class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white gap-2">
+							View Existing Parties
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Easy Residence Change for Independent Regions -->
+		{#if !data.hasResidence}
+			<div class="bg-emerald-900/20 border border-emerald-500/30 rounded-xl p-5">
+				<div class="flex items-start gap-4">
+					<div class="size-12 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+						<FluentLocationLive20Filled class="size-6 text-emerald-400" />
+					</div>
+					<div class="flex-1">
+						<h3 class="text-lg font-semibold text-white mb-2">Free Movement</h3>
+						<p class="text-sm text-gray-300 mb-4">
+							Independent regions have open borders. You can move here instantly without approval.
+						</p>
+						<form method="POST" action="?/changeResidence" use:enhance>
+							<button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
+								<FluentHome20Filled class="size-4" />
+								Move Here Now
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		{/if}
+	{:else}
+		<!-- Residence Change for State Regions -->
+		{#if !data.hasResidence}
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+				<div class="flex items-start gap-4">
+					<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+						<FluentHome20Filled class="size-6 text-blue-400" />
+					</div>
+					<div class="flex-1">
+						<h3 class="text-lg font-semibold text-white mb-2">Change Residence</h3>
+						{#if data.hasPendingResidenceApp}
+							<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-3 mb-3">
+								<p class="text-sm text-amber-300 flex items-center gap-2">
+									<FluentClock20Filled class="size-4" />
+									Application pending - awaiting governor approval
+								</p>
+							</div>
+						{:else}
+							<p class="text-sm text-gray-300 mb-4">
+								Apply to move to this region. The governor must approve your application.
+							</p>
+							<form method="POST" action="?/changeResidence" use:enhance>
+								<button type="submit" class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2">
+									<FluentHome20Filled class="size-4" />
+									Apply for Residency
+								</button>
+							</form>
+						{/if}
+					</div>
+				</div>
+			</div>
+		{/if}
+	{/if}
+
 	<!-- Visa Status / Requirements -->
 	{#if data.visa.needsVisa}
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
 			<div class="flex items-center gap-3">
 				<div class="size-12 bg-purple-600/20 rounded-xl flex items-center justify-center">
-					<FluentPassport20Filled class="size-6 text-purple-400" />
+					<FluentBookCompass24Filled class="size-6 text-purple-400" />
 				</div>
 				<div>
 					<h2 class="text-lg font-semibold text-white">Visa Required</h2>
@@ -149,7 +243,7 @@
 
 								<form method="POST" action="?/purchaseVisa" use:enhance>
 									<button type="submit" class="btn w-full bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2">
-										<FluentPassport20Filled class="size-5" />
+										<FluentBookCompass24Filled class="size-5" />
 										{#if data.visa.settings.autoApprove}
 											Purchase Visa
 										{:else}
@@ -219,27 +313,34 @@
 		</div>
 	</div>
 
-	<!-- Governor -->
-	{#if data.governor}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
-			<h2 class="text-lg font-semibold text-white mb-4">Governor</h2>
-			<a
-				href="/user/{data.governor.userId}"
-				class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
-			>
-				<div class="size-10 bg-amber-600/20 rounded-lg flex items-center justify-center">
-					<span class="text-xl">👑</span>
-				</div>
-				<div class="flex-1">
-					<p class="font-semibold text-white group-hover:text-amber-400 transition-colors">
-						{data.governor.name}
-					</p>
-					<p class="text-xs text-gray-400">
-						Appointed {formatDate(data.governor.appointedAt)}
-					</p>
-				</div>
-			</a>
-		</div>
+	<!-- Governor (only show for state regions) -->
+	{#if !isIndependent}
+		{#if data.governor}
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+				<h2 class="text-lg font-semibold text-white mb-4">Governor</h2>
+				<a
+					href="/user/{data.governor.userId}"
+					class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
+				>
+					<div class="size-10 bg-amber-600/20 rounded-lg flex items-center justify-center">
+						<span class="text-xl">👑</span>
+					</div>
+					<div class="flex-1">
+						<p class="font-semibold text-white group-hover:text-amber-400 transition-colors">
+							{data.governor.name}
+						</p>
+						<p class="text-xs text-gray-400">
+							Appointed {formatDate(data.governor.appointedAt)}
+						</p>
+					</div>
+				</a>
+			</div>
+		{:else}
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+				<h2 class="text-lg font-semibold text-white mb-2">Governor</h2>
+				<p class="text-sm text-gray-400">No governor appointed</p>
+			</div>
+		{/if}
 	{/if}
 
 	<!-- Factories -->

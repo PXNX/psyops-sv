@@ -1,6 +1,6 @@
 // src/routes/map/+page.server.ts
 import { db } from "$lib/server/db";
-import { regions, states, regionalResources } from "$lib/server/schema";
+import { regions, states } from "$lib/server/schema";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async () => {
@@ -11,10 +11,12 @@ export const load: PageServerLoad = async () => {
 				id: regions.id,
 				stateId: regions.stateId,
 				rating: regions.rating,
-				development: regions.development,
+				education: regions.education,
 				infrastructure: regions.infrastructure,
 				economy: regions.economy,
-				// Resource data
+				hospitals: regions.hospitals,
+				fortifications: regions.fortifications,
+				// Resource data from regions table
 				oil: regions.oil,
 				aluminium: regions.aluminium,
 				rubber: regions.rubber,
@@ -35,25 +37,17 @@ export const load: PageServerLoad = async () => {
 			})
 			.from(states);
 
-		// Fetch regional resources (iron, copper, coal, wood)
-		const allRegionalResources = await db
-			.select({
-				regionId: regionalResources.regionId,
-				resourceType: regionalResources.resourceType,
-				remainingReserves: regionalResources.remainingReserves,
-				totalReserves: regionalResources.totalReserves
-			})
-			.from(regionalResources);
-
 		// Create a map of region data for efficient lookup
 		const regionMap: Record<
 			number,
 			{
-				stateId: string | null;
+				stateId: number | null;
 				rating: number;
-				development: number;
+				education: number;
 				infrastructure: number;
 				economy: number;
+				hospitals: number;
+				fortifications: number;
 				resources: {
 					oil: number;
 					aluminium: number;
@@ -62,13 +56,6 @@ export const load: PageServerLoad = async () => {
 					steel: number;
 					chromium: number;
 				};
-				regionalResources: Record<
-					string,
-					{
-						remaining: number;
-						total: number;
-					}
-				>;
 			}
 		> = {};
 
@@ -76,9 +63,11 @@ export const load: PageServerLoad = async () => {
 			regionMap[r.id] = {
 				stateId: r.stateId,
 				rating: r.rating || 0,
-				development: r.development || 0,
+				education: r.education || 0,
 				infrastructure: r.infrastructure || 0,
 				economy: r.economy || 0,
+				hospitals: r.hospitals || 0,
+				fortifications: r.fortifications || 0,
 				resources: {
 					oil: r.oil || 0,
 					aluminium: r.aluminium || 0,
@@ -86,23 +75,12 @@ export const load: PageServerLoad = async () => {
 					tungsten: r.tungsten || 0,
 					steel: r.steel || 0,
 					chromium: r.chromium || 0
-				},
-				regionalResources: {}
+				}
 			};
 		}
 
-		// Add regional resources to the map
-		for (const rr of allRegionalResources) {
-			if (regionMap[rr.regionId]) {
-				regionMap[rr.regionId].regionalResources[rr.resourceType] = {
-					remaining: rr.remainingReserves || 0,
-					total: rr.totalReserves || 0
-				};
-			}
-		}
-
 		// Create state color map (assign unique colors to states)
-		const stateColorMap: Record<string, string> = {};
+		const stateColorMap: Record<number, string> = {};
 		const colors = [
 			"#ef4444", // red
 			"#f59e0b", // amber

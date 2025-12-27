@@ -1,4 +1,4 @@
-// src/routes/state/[id]/parliament/election/[electionId]/+page.server.ts
+// src/routes/state/[id]/election/[electionId]/+page.server.ts
 
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
@@ -22,18 +22,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Get state with logo
 	const state = await db.query.states.findFirst({
-		where: eq(states.id, params.id)
+		where: eq(states.id, parseInt(params.id))
 	});
 
 	if (!state) {
 		throw error(404, "State not found");
 	}
 
-	// Fetch state logo
-	let stateLogo = `/static/state/${state.id}`;
-	if (state.logo) {
+	// Fetch state logo (avatar field in schema)
+	let stateLogo;
+	if (state.avatar) {
 		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, state.logo)
+			where: eq(files.id, state.avatar)
 		});
 		if (logoFile) {
 			try {
@@ -46,10 +46,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Get election
 	const election = await db.query.parliamentaryElections.findFirst({
-		where: eq(parliamentaryElections.id, params.electionId)
+		where: eq(parliamentaryElections.id, parseInt(params.electionId))
 	});
 
-	if (!election || election.stateId !== params.id) {
+	if (!election || election.stateId !== parseInt(params.id)) {
 		throw error(404, "Election not found");
 	}
 
@@ -59,19 +59,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const hasEnded = now > new Date(election.endDate);
 	const hasStarted = now >= new Date(election.startDate);
 
-	// Check if user lives in this state
+	// Check if user lives in this state (isPrimary removed from schema)
 	const userResidence = await db.query.residences.findFirst({
-		where: and(eq(residences.userId, account.id), eq(residences.isPrimary, 1)),
+		where: eq(residences.userId, account.id),
 		with: {
 			region: true
 		}
 	});
 
-	const canVote = userResidence?.region?.stateId === params.id && isActive;
+	const canVote = userResidence?.region?.stateId === parseInt(params.id) && isActive;
 
 	// Get all parties in this state with member counts
 	const parties = await db.query.politicalParties.findMany({
-		where: eq(politicalParties.stateId, params.id)
+		where: eq(politicalParties.stateId, parseInt(params.id))
 	});
 
 	// Process party logos and leader info
@@ -134,9 +134,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	);
 
 	// Get vote counts
-	const allVotes = await db.select().from(electionVotes).where(eq(electionVotes.electionId, params.electionId));
+	const allVotes = await db
+		.select()
+		.from(electionVotes)
+		.where(eq(electionVotes.electionId, parseInt(params.electionId)));
 
-	const votesByParty: Record<string, number> = {};
+	const votesByParty: Record<number, number> = {};
 	processedParties.forEach((party) => {
 		votesByParty[party.id] = allVotes.filter((v) => v.partyId === party.id).length;
 	});
@@ -145,7 +148,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if user has voted
 	const userVote = await db.query.electionVotes.findFirst({
-		where: and(eq(electionVotes.electionId, params.electionId), eq(electionVotes.voterId, account.id))
+		where: and(eq(electionVotes.electionId, parseInt(params.electionId)), eq(electionVotes.voterId, account.id))
 	});
 
 	return {
@@ -159,7 +162,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isActive,
 		hasEnded,
 		hasStarted,
-		userResidence: userResidence?.region?.stateId === params.id,
+		userResidence: userResidence?.region?.stateId === parseInt(params.id),
 		userVote: userVote?.partyId || null,
 		votesByParty,
 		totalVotes
@@ -171,7 +174,7 @@ export const actions: Actions = {
 		const account = locals.account!;
 
 		const formData = await request.formData();
-		const partyId = formData.get("partyId") as string;
+		const partyId = parseInt(formData.get("partyId") as string);
 
 		if (!partyId) {
 			return fail(400, { error: "Invalid party selection" });
@@ -179,7 +182,7 @@ export const actions: Actions = {
 
 		// Get election
 		const election = await db.query.parliamentaryElections.findFirst({
-			where: eq(parliamentaryElections.id, params.electionId)
+			where: eq(parliamentaryElections.id, parseInt(params.electionId))
 		});
 
 		if (!election) {
@@ -207,21 +210,21 @@ export const actions: Actions = {
 			return fail(400, { error: "Election is not currently active" });
 		}
 
-		// Check if user lives in this state
+		// Check if user lives in this state (isPrimary removed)
 		const userResidence = await db.query.residences.findFirst({
-			where: and(eq(residences.userId, account.id), eq(residences.isPrimary, 1)),
+			where: eq(residences.userId, account.id),
 			with: {
 				region: true
 			}
 		});
 
-		if (userResidence?.region?.stateId !== params.id) {
+		if (userResidence?.region?.stateId !== parseInt(params.id)) {
 			return fail(403, { error: "You must live in this state to vote" });
 		}
 
 		// Check if party exists in this state and has at least 3 members
 		const party = await db.query.politicalParties.findFirst({
-			where: and(eq(politicalParties.id, partyId), eq(politicalParties.stateId, params.id))
+			where: and(eq(politicalParties.id, partyId), eq(politicalParties.stateId, parseInt(params.id)))
 		});
 
 		if (!party) {
@@ -239,7 +242,7 @@ export const actions: Actions = {
 
 		// Check if user already voted
 		const existingVote = await db.query.electionVotes.findFirst({
-			where: and(eq(electionVotes.electionId, params.electionId), eq(electionVotes.voterId, account.id))
+			where: and(eq(electionVotes.electionId, parseInt(params.electionId)), eq(electionVotes.voterId, account.id))
 		});
 
 		if (existingVote) {
@@ -254,7 +257,7 @@ export const actions: Actions = {
 		} else {
 			// Create new vote
 			await db.insert(electionVotes).values({
-				electionId: params.electionId,
+				electionId: parseInt(params.electionId),
 				voterId: account.id,
 				partyId
 			});

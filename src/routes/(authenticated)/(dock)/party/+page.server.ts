@@ -6,11 +6,7 @@ import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const account = locals.account;
-
-	if (!account) {
-		throw error(401, "You must be logged in to view parties");
-	}
+	const account = locals.account!;
 
 	// Get user's primary residence to determine their state
 	const residence = await db.query.residences.findFirst({
