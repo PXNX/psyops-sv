@@ -398,7 +398,7 @@
 							<div
 								class="size-10 bg-gradient-to-br from-purple-600/30 to-blue-600/30 rounded-lg flex items-center justify-center"
 							>
-								<FluentGlobe20Filled class="size-5 text-purple-400" />
+								<img src={region.logo} alt={region.name} class="size-5 object-contain" />
 							</div>
 							<h3 class="font-semibold text-white group-hover:text-purple-400 transition-colors">
 								{region.name}

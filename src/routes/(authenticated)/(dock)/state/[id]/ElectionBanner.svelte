@@ -7,14 +7,14 @@
 	// Props passed from page data
 	let { election, stateId } = $props<{
 		election: {
-			id: string;
+			id: number;
 			startDate: Date;
 			endDate: Date;
 			status: string;
 			isInaugural: number;
 			totalSeats: number;
 		} | null;
-		stateId: string;
+		stateId: number;
 	}>();
 
 	function getTimeUntilStart(startDate: Date) {
@@ -66,7 +66,7 @@
 
 				<div class="flex gap-2 pt-2">
 					<a
-						href="/state/{stateId}/parliament/election/{election.id}"
+						href="/state/{stateId}/election/{election.id}"
 						class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
 					>
 						<FluentVote20Filled class="size-4" />
@@ -90,7 +90,7 @@
 				</div>
 			</div>
 			<a
-				href="/state/{stateId}/parliament/election/{election.id}"
+				href="/state/{stateId}/election/{election.id}"
 				class="btn btn-sm bg-green-600 hover:bg-green-500 border-0 text-white gap-2 animate-pulse"
 			>
 				<FluentVote20Filled class="size-4" />

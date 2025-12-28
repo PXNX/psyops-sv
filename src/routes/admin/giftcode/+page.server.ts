@@ -94,7 +94,7 @@ export const actions: Actions = {
 		const account = locals.account!;
 
 		const formData = await request.formData();
-		const codeId = parseInt(formData.get("codeId"));
+		const codeId = parseInt(formData.get("codeId")?.toString() || "");
 
 		if (!codeId) {
 			return fail(400, { error: "Code ID is required" });
@@ -112,7 +112,7 @@ export const actions: Actions = {
 			await db
 				.update(giftCodes)
 				.set({
-					isActive: code.isActive
+					isActive: !code.isActive
 				})
 				.where(eq(giftCodes.id, codeId));
 
@@ -127,7 +127,7 @@ export const actions: Actions = {
 		const account = locals.account!;
 
 		const formData = await request.formData();
-		const codeId = formData.get("codeId")?.toString();
+		const codeId = parseInt(formData.get("codeId")?.toString() || "");
 
 		if (!codeId) {
 			return fail(400, { error: "Code ID is required" });

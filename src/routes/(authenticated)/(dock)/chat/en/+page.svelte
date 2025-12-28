@@ -2,6 +2,7 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { goto, invalidateAll } from "$app/navigation";
+	import { onMount, onDestroy } from "svelte";
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
@@ -9,6 +10,10 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
+	import FluentNews20Filled from "~icons/fluent/news-20-filled";
+	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
+	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
+	import ExternalLinkWarning from "$lib/component/ExternalLinkWarning.svelte";
 
 	const { data, form } = $props();
 
@@ -17,23 +22,62 @@
 	let chatContainer: HTMLDivElement;
 	let isLoadingMore = $state(false);
 	let hasMoreMessages = $state(true);
+	let eventSource: EventSource | null = null;
+	let messages = $state(data.messages || []);
+	let showExternalWarning = $state(false);
+	let externalUrl = $state("");
 
-	// Auto-scroll to bottom when messages update (but not when loading more)
+	// SSE Connection
+	function connectSSE() {
+		const lastId = messages.length > 0 ? Math.max(...messages.map((m) => m.id)) : 0;
+		eventSource = new EventSource(`/chat/en/events?lastId=${lastId}`);
+
+		eventSource.onmessage = (event) => {
+			try {
+				const data = JSON.parse(event.data);
+
+				if (data.type === "messages" && data.data) {
+					const newMessages = data.data;
+					messages = [...messages, ...newMessages];
+
+					// Auto-scroll to bottom for new messages
+					setTimeout(() => {
+						if (chatContainer) {
+							chatContainer.scrollTop = chatContainer.scrollHeight;
+						}
+					}, 100);
+				}
+			} catch (error) {
+				console.error("Failed to parse SSE message:", error);
+			}
+		};
+
+		eventSource.onerror = (error) => {
+			console.error("SSE error:", error);
+			eventSource?.close();
+
+			// Reconnect after 5 seconds
+			setTimeout(() => {
+				connectSSE();
+			}, 5000);
+		};
+	}
+
+	onMount(() => {
+		connectSSE();
+	});
+
+	onDestroy(() => {
+		eventSource?.close();
+	});
+
+	// Auto-scroll to bottom on initial load
 	$effect(() => {
-		if (chatContainer && data.messages.length > 0 && !isLoadingMore) {
+		if (chatContainer && messages.length > 0 && !isLoadingMore) {
 			setTimeout(() => {
 				chatContainer.scrollTop = chatContainer.scrollHeight;
 			}, 100);
 		}
-	});
-
-	// Auto-refresh every 5 seconds
-	let refreshInterval: number;
-	$effect(() => {
-		refreshInterval = setInterval(() => {
-			invalidateAll();
-		}, 5000);
-		return () => clearInterval(refreshInterval);
 	});
 
 	// Load more messages on scroll
@@ -44,10 +88,10 @@
 	}
 
 	async function loadMoreMessages() {
-		if (isLoadingMore || !hasMoreMessages) return;
+		if (isLoadingMore || !hasMoreMessages || messages.length === 0) return;
 
 		isLoadingMore = true;
-		const oldestMessageId = data.messages[0]?.id;
+		const oldestMessageId = messages[0]?.id;
 
 		try {
 			const response = await fetch(`/chat/en/load-more?before=${oldestMessageId}`);
@@ -59,7 +103,7 @@
 
 			if (newMessages.length > 0) {
 				const oldScrollHeight = chatContainer.scrollHeight;
-				data.messages = [...newMessages, ...data.messages];
+				messages = [...newMessages, ...messages];
 
 				setTimeout(() => {
 					chatContainer.scrollTop = chatContainer.scrollHeight - oldScrollHeight;
@@ -94,6 +138,24 @@
 		return text.match(urlRegex) || [];
 	}
 
+	function isInternalUrl(url: string): boolean {
+		try {
+			const urlObj = new URL(url);
+			const currentHost = window.location.hostname;
+			return urlObj.hostname === currentHost || urlObj.hostname === "localhost";
+		} catch {
+			return url.startsWith("/");
+		}
+	}
+
+	function handleUrlClick(event: MouseEvent, url: string) {
+		if (!isInternalUrl(url)) {
+			event.preventDefault();
+			externalUrl = url;
+			showExternalWarning = true;
+		}
+	}
+
 	function parseMessage(content: string) {
 		const urls = extractUrls(content);
 		const parts: Array<{ type: "text" | "image" | "url"; content: string }> = [];
@@ -121,15 +183,42 @@
 		return parts.length > 0 ? parts : [{ type: "text", content }];
 	}
 
-	function extractLinkPreview(url: string): { type: "user" | "party" | null; id: string | null } {
+	function extractLinkPreview(url: string): { type: string | null; id: string | null } {
 		const userMatch = url.match(/\/user\/([a-zA-Z0-9_-]+)/);
 		const partyMatch = url.match(/\/party\/(\d+)/);
+		const newspaperMatch = url.match(/\/newspaper\/(\d+)/);
+		const stateMatch = url.match(/\/state\/(\d+)/);
+		const blocMatch = url.match(/\/bloc\/(\d+)/);
+		const articleMatch = url.match(/\/article\/(\d+)/);
 
 		if (userMatch) return { type: "user", id: userMatch[1] };
 		if (partyMatch) return { type: "party", id: partyMatch[1] };
+		if (newspaperMatch) return { type: "newspaper", id: newspaperMatch[1] };
+		if (stateMatch) return { type: "state", id: stateMatch[1] };
+		if (blocMatch) return { type: "bloc", id: blocMatch[1] };
+		if (articleMatch) return { type: "article", id: articleMatch[1] };
 		return { type: null, id: null };
 	}
+
+	function getLinkPreviewIcon(type: string) {
+		switch (type) {
+			case "user":
+				return FluentPerson20Filled;
+			case "party":
+				return FluentPeople20Filled;
+			case "newspaper":
+				return FluentNews20Filled;
+			case "state":
+				return FluentGlobe20Filled;
+			case "article":
+				return FluentDocument20Filled;
+			default:
+				return FluentChevronRight20Filled;
+		}
+	}
 </script>
+
+<ExternalLinkWarning bind:open={showExternalWarning} url={externalUrl} />
 
 <!-- Header -->
 <div class="bg-slate-800/50 rounded-t-xl border border-white/5 p-4">
@@ -161,12 +250,12 @@
 		</div>
 	{/if}
 
-	{#if data.messages.length === 0}
+	{#if messages.length === 0}
 		<div class="flex items-center justify-center h-full">
 			<p class="text-gray-400 text-center">No messages yet. Be the first to say something!</p>
 		</div>
 	{:else}
-		{#each data.messages as msg}
+		{#each messages as msg}
 			<div class="flex gap-3 group hover:bg-slate-700/20 p-2 rounded-lg transition-colors">
 				<a href="/user/{msg.senderId}" class="flex-shrink-0">
 					{#if msg.senderLogo}
@@ -199,45 +288,46 @@
 								/>
 							{:else if part.type === "url"}
 								{@const preview = extractLinkPreview(part.content)}
-								{#if preview.type === "user" && msg.linkPreview?.type === "user"}
+								{#if preview.type && msg.linkPreview?.type === preview.type}
 									<a
-										href="/user/{preview.id}"
+										href={part.content}
+										onclick={(e) => handleUrlClick(e, part.content)}
 										class="flex items-center gap-3 bg-slate-700/50 hover:bg-slate-700 border border-white/10 rounded-lg p-3 transition-colors max-w-md"
 									>
 										{#if msg.linkPreview.logo}
 											<img src={msg.linkPreview.logo} alt="" class="size-10 rounded-full" />
+										{:else if msg.linkPreview.color}
+											<div
+												class="size-10 rounded-full flex items-center justify-center"
+												style="background-color: {msg.linkPreview.color}"
+											>
+												<svelte:component this={getLinkPreviewIcon(preview.type)} class="size-5 text-white" />
+											</div>
 										{:else}
 											<div class="size-10 rounded-full bg-slate-600 flex items-center justify-center">
-												<FluentPerson20Filled class="size-5 text-gray-400" />
+												<svelte:component this={getLinkPreviewIcon(preview.type)} class="size-5 text-gray-400" />
 											</div>
 										{/if}
 										<div class="flex-1 min-w-0">
-											<p class="font-semibold text-white truncate">{msg.linkPreview.name || "User"}</p>
-											<p class="text-sm text-gray-400">View profile</p>
-										</div>
-										<FluentChevronRight20Filled class="size-5 text-gray-400" />
-									</a>
-								{:else if preview.type === "party" && msg.linkPreview?.type === "party"}
-									<a
-										href="/party/{preview.id}"
-										class="flex items-center gap-3 bg-slate-700/50 hover:bg-slate-700 border border-white/10 rounded-lg p-3 transition-colors max-w-md"
-									>
-										{#if msg.linkPreview.logo}
-											<img src={msg.linkPreview.logo} alt="" class="size-10 rounded-full" />
-										{:else}
-											<div class="size-10 rounded-full bg-emerald-600 flex items-center justify-center">
-												<FluentPeople20Filled class="size-5 text-white" />
-											</div>
-										{/if}
-										<div class="flex-1 min-w-0">
-											<p class="font-semibold text-white truncate">{msg.linkPreview.name || "Party"}</p>
-											<p class="text-sm text-gray-400">{msg.linkPreview.memberCount || 0} members</p>
+											<p class="font-semibold text-white truncate">
+												{msg.linkPreview.name || msg.linkPreview.title || "Unknown"}
+											</p>
+											{#if msg.linkPreview.memberCount !== undefined}
+												<p class="text-sm text-gray-400">{msg.linkPreview.memberCount} members</p>
+											{:else if msg.linkPreview.population !== undefined}
+												<p class="text-sm text-gray-400">Population: {msg.linkPreview.population.toLocaleString()}</p>
+											{:else if msg.linkPreview.authorName}
+												<p class="text-sm text-gray-400">By {msg.linkPreview.authorName}</p>
+											{:else if preview.type}
+												<p class="text-sm text-gray-400">View {preview.type}</p>
+											{/if}
 										</div>
 										<FluentChevronRight20Filled class="size-5 text-gray-400" />
 									</a>
 								{:else}
 									<a
 										href={part.content}
+										onclick={(e) => handleUrlClick(e, part.content)}
 										target="_blank"
 										rel="noopener noreferrer"
 										class="text-blue-400 hover:text-blue-300 underline break-all"
@@ -270,7 +360,6 @@
 				await update();
 				message = "";
 				isSubmitting = false;
-				invalidateAll();
 			};
 		}}
 		class="flex gap-2"
