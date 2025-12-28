@@ -1,12 +1,6 @@
 // src/routes/(authenticated)/chat/party/+page.server.ts
 import { db } from "$lib/server/db";
-import {
-	chatMessages,
-	partyMembers,
-	politicalParties,
-	userProfiles,
-	files
-} from "$lib/server/schema";
+import { chatMessages, partyMembers, politicalParties, userProfiles, files } from "$lib/server/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
@@ -17,11 +11,11 @@ const PAGE_SIZE = 20;
 // Sanitize input to prevent XSS
 function sanitizeInput(input: string): string {
 	return input
-		.replace(/[<>]/g, '') // Remove < and > to prevent HTML injection
+		.replace(/[<>]/g, "") // Remove < and > to prevent HTML injection
 		.trim();
 }
 
-function extractUrls(text: string): string[] {
+async function extractUrls(text: string): string[] {
 	const account = locals.account;
 	if (!account) {
 		return { party: null, messages: [] };
@@ -90,7 +84,7 @@ function extractUrls(text: string): string[] {
 
 			const urls = extractUrls(msg.content);
 			let linkPreview = null;
-			
+
 			for (const url of urls) {
 				const preview = await getLinkPreview(url);
 				if (preview) {
@@ -117,7 +111,7 @@ function extractUrls(text: string): string[] {
 		},
 		messages: processedMessages.reverse()
 	};
-};
+}
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
@@ -155,16 +149,14 @@ export const actions: Actions = {
 
 		// Basic rate limiting
 		const recentMessage = await db.query.chatMessages.findFirst({
-			where: and(
-				eq(chatMessages.senderId, account.id),
-				eq(chatMessages.messageType, "party")
-			),
+			where: and(eq(chatMessages.senderId, account.id), eq(chatMessages.messageType, "party")),
 			orderBy: desc(chatMessages.sentAt)
 		});
 
 		if (recentMessage) {
 			const timeSinceLastMessage = Date.now() - recentMessage.sentAt.getTime();
-			if (timeSinceLastMessage < 2000) { // 2 second cooldown
+			if (timeSinceLastMessage < 2000) {
+				// 2 second cooldown
 				return fail(429, { error: "Please wait before sending another message" });
 			}
 		}

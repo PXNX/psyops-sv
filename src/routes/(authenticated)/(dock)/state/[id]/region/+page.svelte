@@ -1,10 +1,10 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/region/+page.svelte -->
 <script lang="ts">
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
-	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import * as m from "$lib/paraglide/messages";
+	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
+	import Logo from "$lib/component/Logo.svelte";
 	import { goto } from "$app/navigation";
 
 	const { data } = $props();
@@ -19,34 +19,14 @@
 		{ value: "economy", label: "Economy" },
 		{ value: "education", label: "Education" },
 		{ value: "hospitals", label: "Hospitals" },
-		{ value: "fortifications", label: "Fortifications" },
-		{ value: "oil", label: "Oil" },
-		{ value: "aluminium", label: "Aluminium" },
-		{ value: "rubber", label: "Rubber" },
-		{ value: "tungsten", label: "Tungsten" },
-		{ value: "steel", label: "Steel" },
-		{ value: "chromium", label: "Chromium" }
+		{ value: "fortifications", label: "Fortifications" }
 	];
 
 	function applyFilters() {
 		const params = new URLSearchParams();
 		if (searchInput) params.set("search", searchInput);
 		if (selectedSort) params.set("sort", selectedSort);
-		goto(`/region?${params.toString()}`);
-	}
-
-	function handleSortChange(sort: string) {
-		selectedSort = sort;
-		applyFilters();
-	}
-
-	function getRegionName(id: number) {
-		const key = `region_${id}`;
-		return m[key]();
-	}
-
-	function getRegionColor(region: any) {
-		return region.stateColor || "#6366f1";
+		goto(`/state/${data.state.id}/region?${params.toString()}`);
 	}
 </script>
 
@@ -54,9 +34,14 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="text-3xl font-bold text-white">Regions of <span class="text-purple-400">{data.state.name}</span></h1>
-			<p class="text-gray-400 mt-1">{data.regions.length} regions available</p>
+			<h1 class="text-3xl font-bold text-white">
+				Regions of <span class="text-purple-400">{data.state.name}</span>
+			</h1>
+			<p class="text-gray-400 mt-1">{data.regions.length} regions</p>
 		</div>
+		<a href="/state/{data.state.id}" class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white">
+			Back to State
+		</a>
 	</div>
 
 	<!-- Search and Filters -->
@@ -96,20 +81,19 @@
 				href="/region/{region.id}"
 				class="group bg-slate-800 rounded-xl border border-white/5 hover:border-purple-500/30 transition-all overflow-hidden"
 			>
-				<!-- Region Header with State Color -->
-				<div
-					class="h-24 relative"
-					style="background: linear-gradient(135deg, {getRegionColor(region)}40, {getRegionColor(region)}20)"
-				>
+				<!-- Region Header -->
+				<div class="h-24 relative bg-gradient-to-br from-purple-900/30 to-blue-900/30">
 					<div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800" />
 
 					<!-- Region Logo -->
 					<div class="absolute bottom-0 left-4 translate-y-1/2">
 						<div class="ring-4 ring-slate-800 rounded-xl">
-							<img
+							<Logo
 								src="/coats/{region.id}.svg"
-								alt={getRegionName(region.id)}
-								class="size-16 rounded-xl object-cover"
+								alt={region.name}
+								class="size-16 rounded-xl"
+								placeholderIcon={FluentShield20Filled}
+								placeholderGradient="from-purple-500 to-blue-500"
 							/>
 						</div>
 					</div>
@@ -132,16 +116,10 @@
 					<!-- Name and Rating -->
 					<div>
 						<h3 class="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
-							{getRegionName(region.id)}
+							{region.name}
 						</h3>
 						<div class="flex items-center gap-3 text-sm text-gray-400 mt-1">
-							<span>#{region.rating || 0}</span>
-							{#if region.stateName}
-								<span>•</span>
-								<span>{region.stateName}</span>
-							{:else}
-								<span class="text-amber-400">• Independent</span>
-							{/if}
+							<span>Rating: {region.rating || 0}</span>
 						</div>
 					</div>
 
@@ -151,15 +129,9 @@
 							<FluentPeople20Filled class="size-3" />
 							<span>{region.population.toLocaleString()}</span>
 						</div>
-						<div class="text-gray-400">
-							Infrastructure: {region.infrastructure || 0}
-						</div>
-						<div class="text-gray-400">
-							Economy: {region.economy || 0}
-						</div>
-						<div class="text-gray-400">
-							Education: {region.education || 0}
-						</div>
+						<div class="text-gray-400">Infrastructure: {region.infrastructure || 0}</div>
+						<div class="text-gray-400">Economy: {region.economy || 0}</div>
+						<div class="text-gray-400">Education: {region.education || 0}</div>
 					</div>
 
 					<!-- Resources (if any) -->
@@ -168,24 +140,24 @@
 							<div class="flex flex-wrap gap-1">
 								{#if region.oil}
 									<span class="px-2 py-0.5 bg-amber-600/20 border border-amber-600/30 rounded text-xs text-amber-400">
-										Oil: {region.oil}
+										Oil
 									</span>
 								{/if}
 								{#if region.steel}
 									<span class="px-2 py-0.5 bg-gray-600/20 border border-gray-600/30 rounded text-xs text-gray-400">
-										Steel: {region.steel}
+										Steel
 									</span>
 								{/if}
 								{#if region.chromium}
 									<span class="px-2 py-0.5 bg-blue-600/20 border border-blue-600/30 rounded text-xs text-blue-400">
-										Chromium: {region.chromium}
+										Chromium
 									</span>
 								{/if}
 								{#if region.tungsten}
 									<span
 										class="px-2 py-0.5 bg-purple-600/20 border border-purple-600/30 rounded text-xs text-purple-400"
 									>
-										Tungsten: {region.tungsten}
+										Tungsten
 									</span>
 								{/if}
 							</div>

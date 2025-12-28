@@ -10,6 +10,9 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentLocationLive20Filled from "~icons/fluent/location-live-20-filled";
+	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
+	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
+	import Logo from "$lib/component/Logo.svelte";
 	import * as m from "$lib/paraglide/messages";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 
@@ -21,10 +24,12 @@
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div class="flex items-center gap-4">
-		<img
+		<Logo
 			src="/coats/{data.region.id}.svg"
 			alt={data.region.name}
-			class="size-20 rounded-xl object-cover ring-2 ring-white/10"
+			class="size-20 rounded-xl ring-2 ring-white/10"
+			placeholderIcon={FluentShield20Filled}
+			placeholderGradient="from-purple-500 to-blue-500"
 		/>
 		<div class="flex-1">
 			<h1 class="text-3xl font-bold text-white">{data.region.name}</h1>
@@ -58,6 +63,38 @@
 		</div>
 	{/if}
 
+	<!-- Free Movement Banner -->
+	{#if data.allowsFreeMovement}
+		<div
+			class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/30 rounded-xl p-6 space-y-4"
+		>
+			<div class="flex items-start gap-4">
+				<div class="size-12 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentLocationLive20Filled class="size-6 text-emerald-400" />
+				</div>
+				<div class="flex-1">
+					<h2 class="text-xl font-bold text-white mb-2">Free Movement Zone</h2>
+					<p class="text-gray-300 text-sm mb-4">
+						{#if isIndependent}
+							This independent region has open borders. You can move here instantly without approval.
+						{:else if !data.hasInauguralElection}
+							This state has not held its inaugural election yet. Free movement is available until the government is
+							established.
+						{/if}
+					</p>
+					{#if !data.hasResidence}
+						<form method="POST" action="?/changeResidence" use:enhance>
+							<button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
+								<FluentHome20Filled class="size-4" />
+								Move Here Now
+							</button>
+						</form>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Independent Region Claim Banner -->
 	{#if isIndependent}
 		<div
@@ -88,31 +125,8 @@
 				</div>
 			</div>
 		</div>
-
-		<!-- Easy Residence Change for Independent Regions -->
-		{#if !data.hasResidence}
-			<div class="bg-emerald-900/20 border border-emerald-500/30 rounded-xl p-5">
-				<div class="flex items-start gap-4">
-					<div class="size-12 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
-						<FluentLocationLive20Filled class="size-6 text-emerald-400" />
-					</div>
-					<div class="flex-1">
-						<h3 class="text-lg font-semibold text-white mb-2">Free Movement</h3>
-						<p class="text-sm text-gray-300 mb-4">
-							Independent regions have open borders. You can move here instantly without approval.
-						</p>
-						<form method="POST" action="?/changeResidence" use:enhance>
-							<button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
-								<FluentHome20Filled class="size-4" />
-								Move Here Now
-							</button>
-						</form>
-					</div>
-				</div>
-			</div>
-		{/if}
-	{:else}
-		<!-- Residence Change for State Regions -->
+	{:else if !data.allowsFreeMovement}
+		<!-- Residence Change for Established State Regions -->
 		{#if !data.hasResidence}
 			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 				<div class="flex items-start gap-4">
