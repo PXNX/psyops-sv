@@ -13,41 +13,45 @@ import {
 	accounts,
 	userProfiles,
 	partyMembers,
-	files
+	files,
+	regions
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 
-	// Get state with logo
-	const state = await db.query.states.findFirst({
-		where: eq(states.id, parseInt(params.id))
-	});
+	// Get state with logo - manual query
+	const [state] = await db
+		.select()
+		.from(states)
+		.where(eq(states.id, parseInt(params.id)))
+		.limit(1);
 
 	if (!state) {
 		throw error(404, "State not found");
 	}
 
-	// Fetch state logo (logo field in schema)
-	let stateLogo;
+	// Fetch state logo
+	let stateLogo = null;
 	if (state.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, state.logo)
-		});
+		const [logoFile] = await db.select().from(files).where(eq(files.id, state.logo)).limit(1);
+
 		if (logoFile) {
 			try {
 				stateLogo = await getSignedDownloadUrl(logoFile.key);
 			} catch {
-				// Keep default static logo
+				// Keep null
 			}
 		}
 	}
 
-	// Get election
-	const election = await db.query.parliamentaryElections.findFirst({
-		where: eq(parliamentaryElections.id, parseInt(params.electionId))
-	});
+	// Get election - manual query
+	const [election] = await db
+		.select()
+		.from(parliamentaryElections)
+		.where(eq(parliamentaryElections.id, parseInt(params.electionId)))
+		.limit(1);
 
 	if (!election || election.stateId !== parseInt(params.id)) {
 		throw error(404, "Election not found");
@@ -59,20 +63,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const hasEnded = now > new Date(election.endDate);
 	const hasStarted = now >= new Date(election.startDate);
 
-	// Check if user lives in this state (isPrimary removed from schema)
-	const userResidence = await db.query.residences.findFirst({
-		where: eq(residences.userId, account.id),
-		with: {
-			region: true
-		}
-	});
+	// Check if user lives in this state - manual join
+	const [userResidence] = await db
+		.select({
+			userId: residences.userId,
+			regionId: residences.regionId,
+			stateId: regions.stateId
+		})
+		.from(residences)
+		.innerJoin(regions, eq(residences.regionId, regions.id))
+		.where(eq(residences.userId, account.id))
+		.limit(1);
 
-	const canVote = userResidence?.region?.stateId === parseInt(params.id) && isActive;
+	const canVote = userResidence?.stateId === parseInt(params.id) && isActive;
 
-	// Get all parties in this state with member counts
-	const parties = await db.query.politicalParties.findMany({
-		where: eq(politicalParties.stateId, parseInt(params.id))
-	});
+	// Get all parties in this state
+	const parties = await db
+		.select()
+		.from(politicalParties)
+		.where(eq(politicalParties.stateId, parseInt(params.id)));
 
 	// Process party logos and leader info
 	const processedParties = await Promise.all(
@@ -80,9 +89,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			// Fetch party logo from files table
 			let logoUrl = null;
 			if (party.logo) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, party.logo)
-				});
+				const [logoFile] = await db.select().from(files).where(eq(files.id, party.logo)).limit(1);
+
 				if (logoFile) {
 					try {
 						logoUrl = await getSignedDownloadUrl(logoFile.key);
@@ -103,22 +111,28 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 			const leader = members.find((m) => m.role === "leader");
 			let leaderProfile = null;
+			let leaderLogoUrl = null;
 
 			if (leader) {
-				leaderProfile = await db.query.userProfiles.findFirst({
-					where: eq(userProfiles.accountId, leader.userId)
-				});
+				const [profile] = await db
+					.select()
+					.from(userProfiles)
+					.where(eq(userProfiles.accountId, leader.userId))
+					.limit(1);
 
-				// Fetch leader logo from files table
-				if (leaderProfile?.logo) {
-					const logoFile = await db.query.files.findFirst({
-						where: eq(files.id, leaderProfile.logo)
-					});
-					if (logoFile) {
-						try {
-							leaderProfile.logo = await getSignedDownloadUrl(logoFile.key);
-						} catch {
-							leaderProfile.logo = null;
+				if (profile) {
+					leaderProfile = profile;
+
+					// Fetch leader logo from files table
+					if (profile.logo) {
+						const [logoFile] = await db.select().from(files).where(eq(files.id, profile.logo)).limit(1);
+
+						if (logoFile) {
+							try {
+								leaderLogoUrl = await getSignedDownloadUrl(logoFile.key);
+							} catch {
+								leaderLogoUrl = null;
+							}
 						}
 					}
 				}
@@ -128,7 +142,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				...party,
 				logo: logoUrl,
 				memberCount: members.length,
-				leader: leaderProfile
+				leader: {
+					...leaderProfile,
+					logo: leaderLogoUrl
+				}
 			};
 		})
 	);
@@ -147,9 +164,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const totalVotes = allVotes.length;
 
 	// Check if user has voted
-	const userVote = await db.query.electionVotes.findFirst({
-		where: and(eq(electionVotes.electionId, parseInt(params.electionId)), eq(electionVotes.voterId, account.id))
-	});
+	const [userVote] = await db
+		.select()
+		.from(electionVotes)
+		.where(and(eq(electionVotes.electionId, parseInt(params.electionId)), eq(electionVotes.voterId, account.id)))
+		.limit(1);
 
 	return {
 		state: {
@@ -162,7 +181,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isActive,
 		hasEnded,
 		hasStarted,
-		userResidence: userResidence?.region?.stateId === parseInt(params.id),
+		userResidence: userResidence?.stateId === parseInt(params.id),
 		userVote: userVote?.partyId || null,
 		votesByParty,
 		totalVotes
@@ -180,10 +199,12 @@ export const actions: Actions = {
 			return fail(400, { error: "Invalid party selection" });
 		}
 
-		// Get election
-		const election = await db.query.parliamentaryElections.findFirst({
-			where: eq(parliamentaryElections.id, parseInt(params.electionId))
-		});
+		// Get election - manual query
+		const [election] = await db
+			.select()
+			.from(parliamentaryElections)
+			.where(eq(parliamentaryElections.id, parseInt(params.electionId)))
+			.limit(1);
 
 		if (!election) {
 			return fail(404, { error: "Election not found" });
@@ -210,22 +231,28 @@ export const actions: Actions = {
 			return fail(400, { error: "Election is not currently active" });
 		}
 
-		// Check if user lives in this state (isPrimary removed)
-		const userResidence = await db.query.residences.findFirst({
-			where: eq(residences.userId, account.id),
-			with: {
-				region: true
-			}
-		});
+		// Check if user lives in this state - manual join
+		const [userResidence] = await db
+			.select({
+				userId: residences.userId,
+				regionId: residences.regionId,
+				stateId: regions.stateId
+			})
+			.from(residences)
+			.innerJoin(regions, eq(residences.regionId, regions.id))
+			.where(eq(residences.userId, account.id))
+			.limit(1);
 
-		if (userResidence?.region?.stateId !== parseInt(params.id)) {
+		if (userResidence?.stateId !== parseInt(params.id)) {
 			return fail(403, { error: "You must live in this state to vote" });
 		}
 
 		// Check if party exists in this state and has at least 3 members
-		const party = await db.query.politicalParties.findFirst({
-			where: and(eq(politicalParties.id, partyId), eq(politicalParties.stateId, parseInt(params.id)))
-		});
+		const [party] = await db
+			.select()
+			.from(politicalParties)
+			.where(and(eq(politicalParties.id, partyId), eq(politicalParties.stateId, parseInt(params.id))))
+			.limit(1);
 
 		if (!party) {
 			return fail(404, { error: "Party not found" });
@@ -241,9 +268,11 @@ export const actions: Actions = {
 		}
 
 		// Check if user already voted
-		const existingVote = await db.query.electionVotes.findFirst({
-			where: and(eq(electionVotes.electionId, parseInt(params.electionId)), eq(electionVotes.voterId, account.id))
-		});
+		const [existingVote] = await db
+			.select()
+			.from(electionVotes)
+			.where(and(eq(electionVotes.electionId, parseInt(params.electionId)), eq(electionVotes.voterId, account.id)))
+			.limit(1);
 
 		if (existingVote) {
 			// Update existing vote

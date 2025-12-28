@@ -234,14 +234,20 @@ export const governors = pgTable("governors", {
 });
 
 export const regionsRelations = relations(regions, ({ one, many }) => ({
-	state: one(states, { fields: [regions.stateId], references: [states.id] }),
+	state: one(states, {
+		fields: [regions.stateId],
+		references: [states.id]
+	}),
 	governor: one(governors, {
 		fields: [regions.id],
 		references: [governors.regionId]
 	}),
 	factories: many(factories),
 	residences: many(residences),
-	coordinates: one(regionCoordinates),
+	coordinates: one(regionCoordinates, {
+		fields: [regions.id],
+		references: [regionCoordinates.regionId]
+	}),
 	militaryUnits: many(militaryUnits)
 }));
 
@@ -942,21 +948,36 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 }));
 
 export const statesRelations = relations(states, ({ one, many }) => ({
-	regions: many(regions),
-	president: one(presidents),
+	regions: many(regions), // This should reference the regions table
+	president: one(presidents, {
+		fields: [states.id],
+		references: [presidents.stateId]
+	}),
 	ministers: many(ministers),
 	parliamentMembers: many(parliamentMembers),
 	parties: many(politicalParties),
-	treasury: one(stateTreasury),
-	energy: one(stateEnergy),
-	visaSettings: one(stateVisaSettings),
+	treasury: one(stateTreasury, {
+		fields: [states.id],
+		references: [stateTreasury.stateId]
+	}),
+	energy: one(stateEnergy, {
+		fields: [states.id],
+		references: [stateEnergy.stateId]
+	}),
+	visaSettings: one(stateVisaSettings, {
+		fields: [states.id],
+		references: [stateVisaSettings.stateId]
+	}),
 	proposals: many(parliamentaryProposals),
 	sanctionsImposed: many(stateSanctions, { relationName: "sanctioning_state" }),
 	sanctionsReceived: many(stateSanctions, { relationName: "target_state" }),
 	chatMessages: many(chatMessages),
-	inboxMessages: many(inboxMessages)
+	inboxMessages: many(inboxMessages),
+	bloc: one(blocs, {
+		fields: [states.blocId],
+		references: [blocs.id]
+	})
 }));
-
 export const companiesRelations = relations(companies, ({ one, many }) => ({
 	owner: one(accounts, { fields: [companies.ownerId], references: [accounts.id] }),
 	factories: many(factories)
@@ -1028,6 +1049,13 @@ export const partyEditHistory = pgTable("party_edit_history", {
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" })
 });
+
+export const giftCodeResourcesRelations = relations(giftCodeResources, ({ one }) => ({
+	giftCode: one(giftCodes, {
+		fields: [giftCodeResources.giftCodeId],
+		references: [giftCodes.id]
+	})
+}));
 
 // --- TYPES ---
 export type Account = typeof accounts.$inferSelect;
@@ -1151,7 +1179,6 @@ export const chatMessages = pgTable(
 			.references(() => accounts.id, { onDelete: "cascade" }),
 		recipientId: text("recipient_id").references(() => accounts.id, { onDelete: "cascade" }), // For direct messages
 		messageType: messageTypeEnum("message_type").notNull(),
-		stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
 		partyId: integer("party_id").references(() => politicalParties.id, { onDelete: "cascade" }),
 		content: text("content").notNull(),
 		isDeleted: boolean("is_deleted").default(false).notNull(),
@@ -1163,7 +1190,6 @@ export const chatMessages = pgTable(
 	},
 	(t) => ({
 		messageTypeIdx: index("idx_chat_message_type").on(t.messageType),
-		stateIdx: index("idx_chat_state").on(t.stateId),
 		partyIdx: index("idx_chat_party").on(t.partyId),
 		recipientIdx: index("idx_chat_recipient").on(t.recipientId),
 		directConvoIdx: index("idx_chat_direct_convo").on(t.senderId, t.recipientId),

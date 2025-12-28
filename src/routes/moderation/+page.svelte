@@ -10,6 +10,7 @@
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import { formatDateTime } from "$lib/utils/formatting.js";
 
 	const { data, form } = $props();
 
@@ -29,18 +30,6 @@
 		{ value: "privacy_violation", label: "Privacy Violation" },
 		{ value: "other", label: "Other" }
 	];
-
-	function formatTime(dateString: string) {
-		const date = new Date(dateString);
-		return (
-			date.toLocaleDateString() +
-			" " +
-			date.toLocaleTimeString([], {
-				hour: "2-digit",
-				minute: "2-digit"
-			})
-		);
-	}
 
 	function getStatusColor(status: string) {
 		switch (status) {
@@ -205,9 +194,10 @@
 								</div>
 								<p class="text-sm text-gray-300 line-clamp-2 mb-2">{report.messageContent}</p>
 								<p class="text-xs text-gray-500">
-									Reported by {report.reporterName} • {formatTime(report.reportedAt)}
+									Reported by {report.reporterName} • {formatDateTime(report.reportedAt)}
 								</p>
 							</div>
+							s
 						</div>
 					</button>
 				{/each}

@@ -1,27 +1,18 @@
-// src/routes/(authenticated)/chat/en/load-more/+server.ts
+// src/routes/(authenticated)/chat/en/events/+server.ts
 import { db } from "$lib/server/db";
-import {
-	chatMessages,
-	userProfiles,
-	files,
-	politicalParties,
-	newspapers,
-	states,
-	blocs,
-	articles
-} from "$lib/server/schema";
-import { eq, and, desc, lt } from "drizzle-orm";
-import { json, error } from "@sveltejs/kit";
+import { chatMessages, userProfiles, files } from "$lib/server/schema";
+import { eq, and, desc, gt } from "drizzle-orm";
+import { error } from "@sveltejs/kit";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import type { RequestHandler } from "./$types";
 
-const PAGE_SIZE = 20;
-
+// Helper function to extract URLs
 function extractUrls(text: string): string[] {
 	const urlRegex = /(https?:\/\/[^\s]+)/g;
 	return text.match(urlRegex) || [];
 }
 
+// Get link preview data
 async function getLinkPreview(url: string) {
 	try {
 		// User preview
@@ -147,32 +138,22 @@ async function getLinkPreview(url: string) {
 				where: eq(articles.id, articleId),
 				with: {
 					newspaper: { with: { logo: true } },
-					author: true
+					author: { with: { profile: true } }
 				}
 			});
 
 			if (article) {
 				let logoUrl = null;
-				if (article.newspaper?.logo) {
+				if (article.newspaper.logo) {
 					try {
 						logoUrl = await getSignedDownloadUrl(article.newspaper.logo.key);
 					} catch {}
 				}
-
-				// Get author profile
-				let authorName = "Unknown";
-				if (article.author) {
-					const authorProfile = await db.query.userProfiles.findFirst({
-						where: eq(userProfiles.accountId, article.authorId)
-					});
-					authorName = authorProfile?.name || "Unknown";
-				}
-
 				return {
 					type: "article",
 					title: article.title,
-					newspaperName: article.newspaper?.name,
-					authorName,
+					newspaperName: article.newspaper.name,
+					authorName: article.author.profile?.name,
 					logo: logoUrl
 				};
 			}
@@ -184,74 +165,120 @@ async function getLinkPreview(url: string) {
 	return null;
 }
 
+// Process message with link preview
+async function processMessage(msg: any) {
+	let senderLogoUrl = null;
+	if (msg.senderLogo) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, msg.senderLogo)
+		});
+		if (logoFile) {
+			try {
+				senderLogoUrl = await getSignedDownloadUrl(logoFile.key);
+			} catch {}
+		}
+	}
+
+	const urls = extractUrls(msg.content);
+	let linkPreview = null;
+
+	for (const url of urls) {
+		const preview = await getLinkPreview(url);
+		if (preview) {
+			linkPreview = preview;
+			break;
+		}
+	}
+
+	return {
+		...msg,
+		senderLogo: senderLogoUrl,
+		sentAt: msg.sentAt.toISOString(),
+		linkPreview
+	};
+}
+
 export const GET: RequestHandler = async ({ locals, url }) => {
 	const account = locals.account;
 	if (!account) {
 		throw error(401, "Not authenticated");
 	}
 
-	const beforeId = url.searchParams.get("before");
-	if (!beforeId) {
-		throw error(400, "Missing 'before' parameter");
-	}
+	// Get the last message ID the client has seen
+	const lastIdParam = url.searchParams.get("lastId");
+	const lastId = lastIdParam ? parseInt(lastIdParam) : 0;
 
-	const beforeIdNum = parseInt(beforeId);
-	if (isNaN(beforeIdNum)) {
-		throw error(400, "Invalid 'before' parameter");
-	}
+	// Create a readable stream for SSE
+	const stream = new ReadableStream({
+		async start(controller) {
+			const encoder = new TextEncoder();
 
-	// Get messages before the specified ID
-	const messages = await db
-		.select({
-			id: chatMessages.id,
-			content: chatMessages.content,
-			sentAt: chatMessages.sentAt,
-			senderId: chatMessages.senderId,
-			senderName: userProfiles.name,
-			senderLogo: userProfiles.logo
-		})
-		.from(chatMessages)
-		.leftJoin(userProfiles, eq(chatMessages.senderId, userProfiles.accountId))
-		.where(
-			and(eq(chatMessages.messageType, "global"), eq(chatMessages.isDeleted, false), lt(chatMessages.id, beforeIdNum))
-		)
-		.orderBy(desc(chatMessages.sentAt))
-		.limit(PAGE_SIZE);
-
-	// Process messages
-	const processedMessages = await Promise.all(
-		messages.map(async (msg) => {
-			let senderLogoUrl = null;
-			if (msg.senderLogo) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, msg.senderLogo)
-				});
-				if (logoFile) {
-					try {
-						senderLogoUrl = await getSignedDownloadUrl(logoFile.key);
-					} catch {}
-				}
-			}
-
-			const urls = extractUrls(msg.content);
-			let linkPreview = null;
-
-			for (const url of urls) {
-				const preview = await getLinkPreview(url);
-				if (preview) {
-					linkPreview = preview;
-					break;
-				}
-			}
-
-			return {
-				...msg,
-				senderLogo: senderLogoUrl,
-				sentAt: msg.sentAt.toISOString(),
-				linkPreview
+			// Function to send SSE message
+			const sendEvent = (data: any) => {
+				controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
 			};
-		})
-	);
 
-	return json(processedMessages.reverse());
+			// Send initial heartbeat
+			sendEvent({ type: "connected" });
+
+			// Poll for new messages every 2 seconds
+			const intervalId = setInterval(async () => {
+				try {
+					const newMessages = await db
+						.select({
+							id: chatMessages.id,
+							content: chatMessages.content,
+							sentAt: chatMessages.sentAt,
+							senderId: chatMessages.senderId,
+							senderName: userProfiles.name,
+							senderLogo: userProfiles.logo
+						})
+						.from(chatMessages)
+						.leftJoin(userProfiles, eq(chatMessages.senderId, userProfiles.accountId))
+						.where(
+							and(
+								eq(chatMessages.messageType, "global"),
+								eq(chatMessages.isDeleted, false),
+								gt(chatMessages.id, lastId)
+							)
+						)
+						.orderBy(desc(chatMessages.sentAt))
+						.limit(50);
+
+					if (newMessages.length > 0) {
+						const processedMessages = await Promise.all(newMessages.map((msg) => processMessage(msg)));
+
+						sendEvent({
+							type: "messages",
+							data: processedMessages.reverse()
+						});
+
+						// Update lastId for next poll
+						lastId = Math.max(...newMessages.map((m) => m.id));
+					}
+
+					// Send heartbeat every 30 seconds to keep connection alive
+					if (Date.now() % 30000 < 2000) {
+						sendEvent({ type: "heartbeat" });
+					}
+				} catch (err) {
+					console.error("SSE error:", err);
+					sendEvent({ type: "error", message: "Failed to fetch messages" });
+				}
+			}, 2000);
+
+			// Cleanup on connection close
+			return () => {
+				clearInterval(intervalId);
+			};
+		}
+	});
+
+	return new Response(stream, {
+		headers: {
+			"Content-Type": "text/event-stream",
+			"Cache-Control": "no-cache",
+			Connection: "keep-alive"
+		}
+	});
 };
