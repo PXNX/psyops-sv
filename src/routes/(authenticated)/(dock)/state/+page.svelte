@@ -6,6 +6,7 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import * as m from "$lib/paraglide/messages";
 	import { goto } from "$app/navigation";
+	import { getRegionName } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -80,7 +81,7 @@
 				<!-- Region Header with State Color -->
 				<div
 					class="h-24 relative"
-					style="background: linear-gradient(135deg, {getRegionColor(region)}40, {getRegionColor(region)}20)"
+					style="background: linear-gradient(135deg, {region.state.color}40, {region.state.color}20)"
 				>
 					<div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800" />
 

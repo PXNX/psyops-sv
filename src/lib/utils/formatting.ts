@@ -5,6 +5,16 @@ export function formatDate(date: Date | string) {
 	return new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
+function formatDateTime(dateString: string) {
+	return new Date(dateString).toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "short",
+		day: "numeric",
+		hour: "2-digit",
+		minute: "2-digit"
+	});
+}
+
 export function getDaysRemaining(expiresAt: Date | string) {
 	const now = new Date();
 	const expires = new Date(expiresAt);
