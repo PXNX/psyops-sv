@@ -902,10 +902,19 @@ export const giftCodeRedemptions = pgTable(
 
 // --- RELATIONS ---
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
-	profile: one(userProfiles, { fields: [accounts.id], references: [userProfiles.accountId] }),
-	wallet: one(userWallets, { fields: [accounts.id], references: [userWallets.userId] }),
+	profile: one(userProfiles, {
+		fields: [accounts.id],
+		references: [userProfiles.accountId]
+	}),
+	wallet: one(userWallets, {
+		fields: [accounts.id],
+		references: [userWallets.userId]
+	}),
 	sessions: many(sessions),
-	oauthTokens: one(oauthTokens, { fields: [accounts.id], references: [oauthTokens.accountId] }),
+	oauthTokens: one(oauthTokens, {
+		fields: [accounts.id],
+		references: [oauthTokens.accountId]
+	}),
 	residence: one(residences),
 	companies: many(companies),
 	journalists: many(journalists),
@@ -917,7 +926,9 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 	parliamentSeats: many(parliamentMembers),
 	medalsReceived: many(userMedals, { relationName: "medal_recipient" }),
 	medalsAwarded: many(userMedals, { relationName: "medal_awarder" }),
-	sentChatMessages: many(chatMessages),
+	sentChatMessages: many(chatMessages, { relationName: "message_sender" }),
+	receivedChatMessages: many(chatMessages, { relationName: "message_recipient" }),
+	deletedChatMessages: many(chatMessages, { relationName: "message_deleter" }),
 	receivedInboxMessages: many(inboxMessages, { relationName: "inbox_recipient" }),
 	sentInboxMessages: many(inboxMessages, { relationName: "inbox_sender" }),
 	rulesAcceptance: one(chatRulesAcceptance),
@@ -1079,7 +1090,8 @@ export const userMedalsRelations = relations(userMedals, ({ one }) => ({
 }));
 
 // ============= CHAT & MESSAGING =============
-export const messageTypeEnum = pgEnum("message_type", ["global", "state", "party"]);
+export const messageTypeEnum = pgEnum("message_type", ["global", "state", "party", "direct"]);
+
 export const inboxMessageTypeEnum = pgEnum("inbox_message_type", ["state_broadcast", "party_broadcast", "system"]);
 export const violationReasonEnum = pgEnum("violation_reason", [
 	"insult",
@@ -1129,6 +1141,7 @@ export const chatRestrictionsRelations = relations(chatRestrictions, ({ one }) =
 	})
 }));
 
+// Update the chatMessages table to include recipientId
 export const chatMessages = pgTable(
 	"chat_messages",
 	{
@@ -1136,6 +1149,7 @@ export const chatMessages = pgTable(
 		senderId: text("sender_id")
 			.notNull()
 			.references(() => accounts.id, { onDelete: "cascade" }),
+		recipientId: text("recipient_id").references(() => accounts.id, { onDelete: "cascade" }), // For direct messages
 		messageType: messageTypeEnum("message_type").notNull(),
 		stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
 		partyId: integer("party_id").references(() => politicalParties.id, { onDelete: "cascade" }),
@@ -1151,6 +1165,8 @@ export const chatMessages = pgTable(
 		messageTypeIdx: index("idx_chat_message_type").on(t.messageType),
 		stateIdx: index("idx_chat_state").on(t.stateId),
 		partyIdx: index("idx_chat_party").on(t.partyId),
+		recipientIdx: index("idx_chat_recipient").on(t.recipientId),
+		directConvoIdx: index("idx_chat_direct_convo").on(t.senderId, t.recipientId),
 		sentAtIdx: index("idx_chat_sent_at").on(t.sentAt),
 		deletedIdx: index("idx_chat_deleted").on(t.isDeleted)
 	})
@@ -1184,9 +1200,26 @@ export const inboxMessages = pgTable(
 
 // Relations
 export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
-	sender: one(accounts, { fields: [chatMessages.senderId], references: [accounts.id] }),
-	state: one(states, { fields: [chatMessages.stateId], references: [states.id] }),
-	party: one(politicalParties, { fields: [chatMessages.partyId], references: [politicalParties.id] })
+	sender: one(accounts, {
+		fields: [chatMessages.senderId],
+		references: [accounts.id],
+		relationName: "message_sender"
+	}),
+	recipient: one(accounts, {
+		fields: [chatMessages.recipientId],
+		references: [accounts.id],
+		relationName: "message_recipient"
+	}),
+
+	party: one(politicalParties, {
+		fields: [chatMessages.partyId],
+		references: [politicalParties.id]
+	}),
+	deletedByUser: one(accounts, {
+		fields: [chatMessages.deletedBy],
+		references: [accounts.id],
+		relationName: "message_deleter"
+	})
 }));
 
 export const inboxMessagesRelations = relations(inboxMessages, ({ one }) => ({

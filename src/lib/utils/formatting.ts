@@ -5,7 +5,7 @@ export function formatDate(date: Date | string) {
 	return new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }
 
-function formatDateTime(dateString: string) {
+export function formatDateTime(dateString: string) {
 	return new Date(dateString).toLocaleDateString("en-US", {
 		year: "numeric",
 		month: "short",
@@ -13,6 +13,18 @@ function formatDateTime(dateString: string) {
 		hour: "2-digit",
 		minute: "2-digit"
 	});
+}
+
+export function formatTime(dateString: string) {
+	const date = new Date(dateString);
+	return (
+		date.toLocaleDateString() +
+		" " +
+		date.toLocaleTimeString([], {
+			hour: "2-digit",
+			minute: "2-digit"
+		})
+	);
 }
 
 export function getDaysRemaining(expiresAt: Date | string) {
