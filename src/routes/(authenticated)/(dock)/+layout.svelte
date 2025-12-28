@@ -37,19 +37,19 @@
 	<!-- TODO && page.url.pathname !== "posts/[id]/edit" -->
 	<nav class="dock-md dock">
 		<button onclick={() => navigateTo("")} class="flinch">
-			<FluentEmojiBarChart class="w-6 h-6" />
+			<FluentEmojiBarChart class="size-6" />
 		</button>
 		<button onclick={() => navigateTo("posts")} class="flinch">
-			<FluentEmojiNewspaper class="w-6 h-6" />
+			<FluentEmojiNewspaper class="size-6" />
 		</button>
 		<button onclick={() => navigateTo("training")} class="flinch">
-			<FluentEmojiMilitaryHelmet class="w-6 h-6" />
+			<FluentEmojiMilitaryHelmet class="size-6" />
 		</button>
 		<button onclick={() => navigateTo("production")} class="flinch">
-			<FluentEmojiNutAndBolt class="w-6 h-6" />
+			<FluentEmojiNutAndBolt class="size-6" />
 		</button>
 		<button onclick={() => navigateTo("user/" + data.account.id)} class="flinch">
-			<FluentEmojiIdentificationCard class="w-6 h-6" />
+			<FluentEmojiIdentificationCard class="size-6" />
 		</button>
 	</nav>
 {/if}
