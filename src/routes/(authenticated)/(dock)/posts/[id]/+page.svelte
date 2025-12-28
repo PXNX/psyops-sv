@@ -1,65 +1,217 @@
-<script>
+<!-- src/routes/(authenticated)/(fullscreen)/posts/[id]/+page.svelte -->
+<script lang="ts">
+	import { enhance } from "$app/forms";
 	import { goto } from "$app/navigation";
-	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
-	import MdiCardsHeartOutline from "~icons/mdi/cards-heart-outline";
-	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-
-	import MdiClockTimeEightOutline from "~icons/mdi/clock-time-eight-outline";
+	import FluentHeart20Regular from "~icons/fluent/heart-20-regular";
+	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
+	import FluentClock20Regular from "~icons/fluent/clock-20-regular";
+	import FluentArrowLeft20Regular from "~icons/fluent/arrow-left-20-regular";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
-	import Logo from "$lib/component/CircleLogo.svelte";
-	import { shareLink } from "$lib/util";
-	import CircleLogo from "$lib/component/CircleLogo.svelte";
+	import FluentShare20Filled from "~icons/fluent/share-20-filled";
+	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
+	import Logo from "$lib/component/Logo.svelte";
+	import { formatDistanceToNow, format } from "date-fns";
+	import { formatDateTime } from "$lib/utils/formatting.js";
 
-	const article = {
-		id: 1,
-		author_name: "John Doe",
-		author_logo: "https://placehold.co/48/svg",
-		title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-		publish_date: "2023-01-01",
-		upvote_count: 10
+	const { data, form } = $props();
+
+	let hasUpvoted = $state(data.hasUpvoted);
+	let upvoteCount = $state(data.article.upvoteCount);
+	let isSubmitting = $state(false);
+
+	const handleShare = async () => {
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: data.article.title,
+					url: window.location.href
+				});
+			} catch (err) {
+				if (err.name !== "AbortError") {
+					await navigator.clipboard.writeText(window.location.href);
+					alert("Link copied to clipboard!");
+				}
+			}
+		} else {
+			await navigator.clipboard.writeText(window.location.href);
+			alert("Link copied to clipboard!");
+		}
 	};
 </script>
 
-<header class="sticky top-0 flex w-full items-center justify-center bg-base-100 p-2">
-	<h2
-		class="overflow-ellipsis text-xl font-semibold fade_in transition-opacity duration-500 ease-in"
-		id="article_title"
-	>
-		{article.title}
-	</h2>
-</header>
+<svelte:head>
+	<title>{data.article.title}</title>
+	<meta name="description" content={data.article.content.substring(0, 160)} />
+</svelte:head>
 
-<section class="fade_in transition-opacity duration-500 ease-in">
-	{article.content}
-</section>
+<div class="min-h-screen bg-gradient-to-b from-slate-900 via-slate-800 to-slate-900">
+	<!-- Header -->
+	<header class="sticky top-0 z-10 backdrop-blur-xl bg-slate-900/80 border-b border-white/5 shadow-2xl">
+		<div class="max-w-4xl mx-auto px-4 py-3">
+			<div class="flex items-center gap-3">
+				<button
+					onclick={() => history.back()}
+					class="btn btn-sm btn-circle bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 transition-all"
+					title="Go back"
+				>
+					<FluentArrowLeft20Regular class="size-5 text-gray-300" />
+				</button>
 
-<section class="flex w-full gap-2 p-2">
-	<a class="flinch label-text flex flex-grow flex-row gap-2" href={"" + article.id} role="button">
-		<CircleLogo src={article.author_logo} />
-		<div>
-			<b class="block text-lg" id="author_name">{article.author_name}</b>
-			<span class="text-primary">Published</span><span> {article.publish_date}</span>
+				<div class="flex-1 min-w-0">
+					<h1 class="text-sm sm:text-base font-semibold text-white truncate">
+						{data.article.title}
+					</h1>
+				</div>
+
+				{#if data.isAuthor}
+					<button
+						onclick={() => goto(`/posts/${data.article.id}/edit`)}
+						class="btn btn-sm gap-2 bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30 text-purple-300"
+					>
+						<FluentEdit20Filled class="size-4" />
+						<span class="hidden sm:inline">Edit</span>
+					</button>
+				{/if}
+			</div>
 		</div>
-	</a>
+	</header>
 
-	<a class="btn btn-square btn-primary" href="/article/{article.id}/edit" role="button" type="button">
-		<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-			<path
-				d="M18.13 12L19.39 10.74C19.83 10.3 20.39 10.06 21 10V9L15 3H5C3.89 3 3 3.89 3 5V19C3 20.1 3.89 21 5 21H11V19.13L11.13 19H5V5H12V12H18.13M14 4.5L19.5 10H14V4.5M19.13 13.83L21.17 15.87L15.04 22H13V19.96L19.13 13.83M22.85 14.19L21.87 15.17L19.83 13.13L20.81 12.15C21 11.95 21.33 11.95 21.53 12.15L22.85 13.47C23.05 13.67 23.05 14 22.85 14.19Z"
-			/>
-		</svg>
-	</a>
+	<!-- Main Content -->
+	<main class="max-w-4xl mx-auto px-4 py-8">
+		<!-- Article Card -->
+		<article class="bg-slate-800/30 rounded-2xl border border-white/5 shadow-2xl overflow-hidden">
+			<!-- Article Header -->
+			<div class="p-6 sm:p-8 border-b border-white/5">
+				<!-- Title -->
+				<h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+					{data.article.title}
+				</h1>
 
-	<button
-		class="share-button btn btn-square"
-		onclick={() => shareLink("{{ article_title }}")}
-		title="Share this article"
-		type="button"
-	>
-		<svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-			<path
-				d="M18,16.08C17.24,16.08 16.56,16.38 16.04,16.85L8.91,12.7C8.96,12.47 9,12.24 9,12C9,11.76 8.96,11.53 8.91,11.3L15.96,7.19C16.5,7.69 17.21,8 18,8A3,3 0 0,0 21,5A3,3 0 0,0 18,2A3,3 0 0,0 15,5C15,5.24 15.04,5.47 15.09,5.7L8.04,9.81C7.5,9.31 6.79,9 6,9A3,3 0 0,0 3,12A3,3 0 0,0 6,15C6.79,15 7.5,14.69 8.04,14.19L15.16,18.34C15.11,18.55 15.08,18.77 15.08,19C15.08,20.61 16.39,21.91 18,21.91C19.61,21.91 20.92,20.61 20.92,19A2.92,2.92 0 0,0 18,16.08Z"
-			/>
-		</svg></button
-	>
-</section>
+				<!-- Metadata -->
+				<div class="flex flex-wrap items-center gap-3 text-sm text-gray-500">
+					<span class="flex items-center gap-1.5">
+						<FluentClock20Regular class="size-4" />
+						{formatDateTime(data.article.createdAt)}
+					</span>
+
+					<span class="text-gray-600">•</span>
+
+					<span class="flex items-center gap-1.5">
+						{#if hasUpvoted}
+							<FluentHeart20Filled class="size-4 text-red-400" />
+						{:else}
+							<FluentHeart20Regular class="size-4" />
+						{/if}
+						<span>{upvoteCount} {upvoteCount === 1 ? "upvote" : "upvotes"}</span>
+					</span>
+				</div>
+			</div>
+
+			<!-- Article Content -->
+			<div class="p-6 sm:p-8">
+				<div class="prose prose-invert prose-lg max-w-none">
+					<div class="article-content text-gray-300 leading-relaxed">
+						{@html data.article.content}
+					</div>
+				</div>
+			</div>
+
+			<!-- Author Info - Bottom -->
+			<div class="p-6 sm:p-8 border-t border-white/5 bg-slate-900/30">
+				<div class="flex items-center gap-4">
+					<a href="/profile/{data.article.authorId}" class="flex-shrink-0">
+						<div
+							class="size-14 sm:size-16 rounded-full ring-2 ring-white/10 hover:ring-purple-500/30 transition-all overflow-hidden"
+						>
+							<Logo
+								src={data.article.authorLogo}
+								alt={data.article.authorName || "Author"}
+								class="w-full h-full object-cover"
+							/>
+						</div>
+					</a>
+
+					<div class="flex-1 min-w-0">
+						<p class="text-xs text-gray-500 mb-1">Written by</p>
+						<div class="flex flex-wrap items-center gap-2">
+							<a
+								href="/profile/{data.article.authorId}"
+								class="font-bold text-lg text-white hover:text-purple-400 transition-colors truncate"
+							>
+								{data.article.authorName || "Anonymous"}
+							</a>
+
+							{#if data.article.newspaperName}
+								<span class="text-gray-600 hidden sm:inline">•</span>
+								<a
+									href="/newspaper/{data.article.newspaperId}"
+									class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-purple-400 transition-colors truncate"
+								>
+									<FluentEmojiRolledUpNewspaper class="size-4" />
+									{data.article.newspaperName}
+								</a>
+							{/if}
+						</div>
+					</div>
+				</div>
+			</div>
+		</article>
+
+		<!-- Action Bar -->
+		<div
+			class="sticky bottom-0 mt-8 py-4 backdrop-blur-xl bg-slate-900/80 border-t border-white/5 -mx-4 px-4 sm:-mx-0 sm:px-0 rounded-t-2xl"
+		>
+			<div class="flex items-center justify-between gap-4 max-w-4xl mx-auto">
+				<form
+					method="POST"
+					action="?/upvote"
+					use:enhance={() => {
+						isSubmitting = true;
+						return async ({ update }) => {
+							await update();
+							isSubmitting = false;
+						};
+					}}
+				>
+					<button
+						type="submit"
+						class="btn gap-2 {hasUpvoted
+							? 'bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-400'
+							: 'bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300'} transition-all"
+						disabled={isSubmitting}
+					>
+						{#if hasUpvoted}
+							<FluentHeart20Filled class="size-5" />
+						{:else}
+							<FluentHeart20Regular class="size-5" />
+						{/if}
+						<span class="hidden sm:inline font-semibold">
+							{hasUpvoted ? "Upvoted" : "Upvote"}
+						</span>
+						<span class="font-mono">({upvoteCount})</span>
+					</button>
+				</form>
+
+				<div class="flex gap-2">
+					<button
+						class="btn gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 transition-all"
+						onclick={handleShare}
+					>
+						<FluentShare20Filled class="size-5" />
+						<span class="hidden sm:inline">Share</span>
+					</button>
+
+					{#if data.isAuthor}
+						<button
+							class="btn gap-2 bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30 text-purple-300 transition-all"
+							onclick={() => goto(`/posts/${data.article.id}/edit`)}
+						>
+							<FluentEdit20Filled class="size-5" />
+							<span class="hidden sm:inline">Edit Article</span>
+						</button>
+					{/if}
+				</div>
+			</div>
+		</div>
+	</main>
+</div>
