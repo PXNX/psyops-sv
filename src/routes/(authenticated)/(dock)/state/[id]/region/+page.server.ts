@@ -1,60 +1,33 @@
 // src/routes/(authenticated)/(dock)/state/[id]/region/+page.server.ts
 import { db } from "$lib/server/db";
-import { regions, residences, factories, powerPlants, states } from "$lib/server/schema";
-import { sql, eq, ilike, or, desc, asc } from "drizzle-orm";
+import { regions, residences, factories, states } from "$lib/server/schema";
+import { sql, eq } from "drizzle-orm";
+import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
+import { getRegionName } from "$lib/utils/formatting";
 
-export const load: PageServerLoad = async ({ url, locals }) => {
+export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const account = locals.account!;
+	const stateId = parseInt(params.id);
+
+	// Get state info
+	const state = await db.query.states.findFirst({
+		where: eq(states.id, stateId)
+	});
+
+	if (!state) {
+		error(404, "State not found");
+	}
 
 	// Get query parameters
 	const search = url.searchParams.get("search") || "";
 	const sortBy = url.searchParams.get("sort") || "rating";
 
-	// Build base query
-	let query = db
-		.select({
-			id: regions.id,
-			rating: regions.rating,
-			infrastructure: regions.infrastructure,
-			economy: regions.economy,
-			education: regions.education,
-			hospitals: regions.hospitals,
-			fortifications: regions.fortifications,
-			oil: regions.oil,
-			aluminium: regions.aluminium,
-			rubber: regions.rubber,
-			tungsten: regions.tungsten,
-			steel: regions.steel,
-			chromium: regions.chromium,
-			stateId: regions.stateId,
-			stateName: states.name,
-			stateColor: states.logo,
-			createdAt: regions.createdAt
-		})
-		.from(regions)
-		.leftJoin(states, eq(regions.stateId, states.id));
-
-	// Apply sorting
-	const sortColumn =
-		{
-			rating: regions.rating,
-			population: sql<number>`(SELECT COUNT(*)::int FROM ${residences} WHERE ${residences.regionId} = ${regions.id})`,
-			infrastructure: regions.infrastructure,
-			economy: regions.economy,
-			education: regions.education,
-			hospitals: regions.hospitals,
-			fortifications: regions.fortifications,
-			oil: regions.oil,
-			aluminium: regions.aluminium,
-			rubber: regions.rubber,
-			tungsten: regions.tungsten,
-			steel: regions.steel,
-			chromium: regions.chromium
-		}[sortBy] || regions.rating;
-
-	// Get all regions with stats
-	const allRegions = await query;
+	// Get all regions for this state
+	const stateRegions = await db.query.regions.findMany({
+		where: eq(regions.stateId, stateId),
+		orderBy: (regions, { desc }) => [desc(regions.rating)]
+	});
 
 	// Get population counts for all regions
 	const populationCounts = await db
@@ -79,8 +52,21 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const factoryMap = new Map(factoryCounts.map((f) => [f.regionId, f.count]));
 
 	// Combine data and apply search filter
-	let regionsWithStats = allRegions.map((r) => ({
-		...r,
+	let regionsWithStats = stateRegions.map((r) => ({
+		id: r.id,
+		name: getRegionName(r.id),
+		rating: r.rating,
+		infrastructure: r.infrastructure,
+		economy: r.economy,
+		education: r.education,
+		hospitals: r.hospitals,
+		fortifications: r.fortifications,
+		oil: r.oil,
+		aluminium: r.aluminium,
+		rubber: r.rubber,
+		tungsten: r.tungsten,
+		steel: r.steel,
+		chromium: r.chromium,
 		population: populationMap.get(r.id) || 0,
 		factoryCount: factoryMap.get(r.id) || 0
 	}));
@@ -88,7 +74,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	// Apply search filter if provided
 	if (search) {
 		const searchLower = search.toLowerCase();
-		regionsWithStats = regionsWithStats.filter((r) => `region_${r.id}`.toLowerCase().includes(searchLower));
+		regionsWithStats = regionsWithStats.filter((r) => r.name.toLowerCase().includes(searchLower));
 	}
 
 	// Sort regions
@@ -120,30 +106,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 				aVal = a.fortifications || 0;
 				bVal = b.fortifications || 0;
 				break;
-			case "oil":
-				aVal = a.oil || 0;
-				bVal = b.oil || 0;
-				break;
-			case "aluminium":
-				aVal = a.aluminium || 0;
-				bVal = b.aluminium || 0;
-				break;
-			case "rubber":
-				aVal = a.rubber || 0;
-				bVal = b.rubber || 0;
-				break;
-			case "tungsten":
-				aVal = a.tungsten || 0;
-				bVal = b.tungsten || 0;
-				break;
-			case "steel":
-				aVal = a.steel || 0;
-				bVal = b.steel || 0;
-				break;
-			case "chromium":
-				aVal = a.chromium || 0;
-				bVal = b.chromium || 0;
-				break;
 			default:
 				aVal = a.rating || 0;
 				bVal = b.rating || 0;
@@ -152,16 +114,21 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		return bVal - aVal;
 	});
 
-	// Get user's residences
-	const userResidences = await db.query.residences.findMany({
+	// Get user's residence
+	const userResidence = await db.query.residences.findFirst({
 		where: eq(residences.userId, account.id)
 	});
 
-	const userRegionIds = new Set(userResidences.map((r) => r.regionId));
+	const userRegionIds = userResidence ? [userResidence.regionId] : [];
 
 	return {
+		state: {
+			id: state.id,
+			name: state.name,
+			logo: state.logo
+		},
 		regions: regionsWithStats,
-		userRegionIds: Array.from(userRegionIds),
+		userRegionIds,
 		search,
 		sortBy
 	};
