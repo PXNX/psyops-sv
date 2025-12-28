@@ -2,7 +2,7 @@
 <script lang="ts">
 	import MdiHeart from "~icons/mdi/heart";
 	import FluentEmojiGear from "~icons/fluent-emoji/gear";
-	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
+	import CircleLogo from "$lib/component/CircleLogo.svelte";
 	import ProfileItem from "$lib/component/ProfileItem.svelte";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 	import MdiNewspaper from "~icons/mdi/newspaper";
@@ -25,7 +25,7 @@
 	<div class="absolute inset-0 bg-gradient-to-b from-transparent to-gray-900">
 		<div class="absolute left-4 bottom-2 flex items-center space-x-3">
 			{#if data.newspaper.logoUrl}
-				<CircleAvatar src={data.newspaper.logoUrl} />
+				<CircleLogo src={data.newspaper.logoUrl} />
 			{:else}
 				<div class="size-16 rounded-full bg-blue-600 flex items-center justify-center">
 					<MdiNewspaper class="size-8 text-white" />
@@ -47,7 +47,7 @@
 		icon={FluentPerson20Filled}
 		name={data.owner.name}
 		description="Owner"
-		avatar={data.owner.logoUrl}
+		logo={data.owner.logoUrl}
 		date={data.newspaper.createdAt}
 		href="/user/{data.owner.id}"
 		bgColor="bg-purple-600"

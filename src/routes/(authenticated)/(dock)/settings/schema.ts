@@ -8,7 +8,7 @@ export const updateProfileSchema = v.object({
 		v.maxLength(50, "Name must be at most 50 characters")
 	),
 	bio: v.optional(v.pipe(v.string(), v.maxLength(500, "Bio must be at most 500 characters"))),
-	avatar: v.optional(
+	logo: v.optional(
 		v.pipe(
 			v.file("Logo must be a file"),
 			v.mimeType(["image/jpeg", "image/png", "image/webp", "image/gif"], "Logo must be an image"),

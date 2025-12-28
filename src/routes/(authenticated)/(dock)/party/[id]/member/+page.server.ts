@@ -106,7 +106,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				profile: m.user.profile
 					? {
 							name: m.user.profile.name,
-							avatar: m.user.profile.avatar
+							logo: m.user.profile.logo
 						}
 					: null
 			}

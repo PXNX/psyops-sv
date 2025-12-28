@@ -15,18 +15,13 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
+	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 
 	import * as m from "$lib/paraglide/messages";
 	import { shareLink } from "$lib/util";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
-
-	const regionName = $derived(() => {
-		if (!data.residence) return "";
-		const key = `region_${data.residence.region.id}` as keyof typeof m;
-		return m[key]();
-	});
 </script>
 
 <div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -47,9 +42,9 @@
 			<div class="relative z-10 flex flex-col items-center space-y-3">
 				<!-- Profile Picture -->
 				<div class="ring-4 ring-white/10 rounded-full relative group">
-					{#if data.user.avatar}
+					{#if data.user.logo}
 						<div class="size-24 rounded-full overflow-hidden bg-base-200">
-							<img src={data.user.avatar} alt={data.user.name || "User avatar"} class="w-full h-full object-cover" />
+							<img src={data.user.logo} alt={data.user.name || "User logo"} class="w-full h-full object-cover" />
 						</div>
 					{:else}
 						<div class="size-24 rounded-full bg-base-200 flex items-center justify-center">
@@ -129,6 +124,14 @@
 
 		{#if data.isOwnProfile}
 			<a
+				href="/inbox"
+				class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
+			>
+				<FluentMail20Filled class="size-4" />
+				<span class="hidden sm:inline">Inbox</span>
+			</a>
+
+			<a
 				href="/settings"
 				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
 			>
@@ -149,16 +152,16 @@
 					class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
 				>
 					<div class="size-12 bg-emerald-600/20 rounded-lg flex items-center justify-center">
-						<img src={"/coats/" + data.residence.region.id + ".svg"} alt={regionName()} class="size-6 object-contain" />
+						<img src={data.residence.region.logo} alt={data.residence.region.name} class="size-6 object-contain" />
 					</div>
 					<div class="flex-1 min-w-0">
 						<p class="font-semibold text-white group-hover:text-emerald-400 transition-colors truncate">
-							{regionName()}
+							{data.residence.region.name}
 						</p>
 						<p class="text-xs text-gray-400 truncate">
 							Residence
-							{#if data.residence.region.stateName}
-								• {data.residence.region.stateName}
+							{#if data.residence.region.state}
+								• {data.residence.region.state.name}
 							{/if}
 							• Since {formatDate(data.residence.movedInAt)}
 						</p>

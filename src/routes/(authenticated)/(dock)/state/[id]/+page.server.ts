@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select({
 			id: states.id,
 			name: states.name,
-			avatar: states.avatar,
+			logo: states.logo,
 			background: states.background,
 			description: states.description,
 			rating: states.rating,
@@ -79,7 +79,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			electedAt: parliamentMembers.electedAt,
 			term: parliamentMembers.term,
 			profileName: userProfiles.name,
-			profileAvatar: userProfiles.avatar
+			profileLogo: userProfiles.logo
 		})
 		.from(parliamentMembers)
 		.leftJoin(userProfiles, eq(parliamentMembers.userId, userProfiles.accountId))
@@ -134,22 +134,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isForeignMinister = !!foreignMinistry && foreignMinistry.stateId !== stateId;
 	}
 
-	const processAvatar = async (avatar: string | null) => {
-		if (avatar && !avatar.startsWith("http")) {
+	const processLogo = async (logo: string | null) => {
+		if (logo && !logo.startsWith("http")) {
 			try {
-				return await getSignedDownloadUrl(avatar);
+				return await getSignedDownloadUrl(logo);
 			} catch {
 				return null;
 			}
 		}
-		return avatar;
+		return logo;
 	};
 
 	return {
 		state: {
 			id: state.id,
 			name: state.name,
-			avatar: state.avatar,
+			logo: state.logo,
 			background: state.background,
 			description: state.description,
 			population: actualPopulation,
@@ -168,7 +168,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			? {
 					userId: president.userId,
 					name: president.user.profile?.name,
-					avatar: await processAvatar(president.user.profile?.avatar || null),
+					logo: await processLogo(president.user.profile?.logo || null),
 					electedAt: president.electedAt,
 					term: president.term
 				}
@@ -177,7 +177,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			stateMinisters.map(async (minister) => ({
 				userId: minister.userId,
 				name: minister.user.profile?.name,
-				avatar: await processAvatar(minister.user.profile?.avatar || null),
+				logo: await processLogo(minister.user.profile?.logo || null),
 				ministry: minister.ministry,
 				appointedAt: minister.appointedAt
 			}))
@@ -186,7 +186,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			parliamentMembersRaw.map(async (member) => ({
 				userId: member.userId,
 				name: member.profileName,
-				avatar: await processAvatar(member.profileAvatar || null),
+				logo: await processLogo(member.profileLogo || null),
 				partyAffiliation: member.partyAffiliation,
 				electedAt: member.electedAt,
 				term: member.term

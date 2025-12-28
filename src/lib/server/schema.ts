@@ -916,7 +916,18 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 	ministries: many(ministers),
 	parliamentSeats: many(parliamentMembers),
 	medalsReceived: many(userMedals, { relationName: "medal_recipient" }),
-	medalsAwarded: many(userMedals, { relationName: "medal_awarder" })
+	medalsAwarded: many(userMedals, { relationName: "medal_awarder" }),
+	sentChatMessages: many(chatMessages),
+	receivedInboxMessages: many(inboxMessages, { relationName: "inbox_recipient" }),
+	sentInboxMessages: many(inboxMessages, { relationName: "inbox_sender" }),
+	rulesAcceptance: one(chatRulesAcceptance),
+	warnings: many(userWarnings, { relationName: "warned_user" }),
+	issuedWarnings: many(userWarnings, { relationName: "warning_issuer" }),
+	restriction: one(chatRestrictions),
+	issuedRestrictions: many(chatRestrictions, { relationName: "restrictor" }),
+	reportsSubmitted: many(generalReports, { relationName: "general_reporter" }),
+	reportsReviewed: many(generalReports, { relationName: "general_reviewer" }),
+	flaggedContent: many(contentFlags)
 }));
 
 export const statesRelations = relations(states, ({ one, many }) => ({
@@ -930,7 +941,9 @@ export const statesRelations = relations(states, ({ one, many }) => ({
 	visaSettings: one(stateVisaSettings),
 	proposals: many(parliamentaryProposals),
 	sanctionsImposed: many(stateSanctions, { relationName: "sanctioning_state" }),
-	sanctionsReceived: many(stateSanctions, { relationName: "target_state" })
+	sanctionsReceived: many(stateSanctions, { relationName: "target_state" }),
+	chatMessages: many(chatMessages),
+	inboxMessages: many(inboxMessages)
 }));
 
 export const companiesRelations = relations(companies, ({ one, many }) => ({
@@ -971,7 +984,9 @@ export const upvotesRelations = relations(upvotes, ({ one }) => ({
 export const politicalPartiesRelations = relations(politicalParties, ({ one, many }) => ({
 	founder: one(accounts, { fields: [politicalParties.founderId], references: [accounts.id] }),
 	state: one(states, { fields: [politicalParties.stateId], references: [states.id] }),
-	members: many(partyMembers)
+	members: many(partyMembers),
+	chatMessages: many(chatMessages),
+	inboxMessages: many(inboxMessages)
 }));
 
 export const parliamentaryProposalsRelations = relations(parliamentaryProposals, ({ one, many }) => ({
@@ -1063,4 +1078,249 @@ export const userMedalsRelations = relations(userMedals, ({ one }) => ({
 	})
 }));
 
-// Update accountsRelations to include medals
+// ============= CHAT & MESSAGING =============
+export const messageTypeEnum = pgEnum("message_type", ["global", "state", "party"]);
+export const inboxMessageTypeEnum = pgEnum("inbox_message_type", ["state_broadcast", "party_broadcast", "system"]);
+export const violationReasonEnum = pgEnum("violation_reason", [
+	"insult",
+	"spam",
+	"pornography",
+	"hate_speech",
+	"graphic_violence",
+	"privacy_violation",
+	"other"
+]);
+
+export const reportStatusEnum = pgEnum("report_status", ["pending", "resolved", "dismissed"]);
+export const reportTargetTypeEnum = pgEnum("report_target_type", ["message", "account", "party"]);
+
+export const moderationActionEnum = pgEnum("moderation_action", [
+	"warning",
+	"message_delete",
+	"restriction",
+	"ban",
+	"name_reset",
+	"logo_reset"
+]);
+
+export const chatRestrictions = pgTable("chat_restrictions", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	reason: text("reason").notNull(),
+	restrictedBy: text("restricted_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	restrictedAt: timestamp("restricted_at").defaultNow().notNull(),
+	expiresAt: timestamp("expires_at"),
+	isPermanent: boolean("is_permanent").default(false).notNull()
+});
+
+export const chatRestrictionsRelations = relations(chatRestrictions, ({ one }) => ({
+	user: one(accounts, {
+		fields: [chatRestrictions.userId],
+		references: [accounts.id]
+	}),
+	restrictor: one(accounts, {
+		fields: [chatRestrictions.restrictedBy],
+		references: [accounts.id]
+	})
+}));
+
+export const chatMessages = pgTable(
+	"chat_messages",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		senderId: text("sender_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		messageType: messageTypeEnum("message_type").notNull(),
+		stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
+		partyId: integer("party_id").references(() => politicalParties.id, { onDelete: "cascade" }),
+		content: text("content").notNull(),
+		isDeleted: boolean("is_deleted").default(false).notNull(),
+		deletedBy: text("deleted_by").references(() => accounts.id, { onDelete: "set null" }),
+		deletedAt: timestamp("deleted_at"),
+		deletionReason: violationReasonEnum("deletion_reason"),
+		deletionNote: text("deletion_note"),
+		sentAt: timestamp("sent_at").defaultNow().notNull()
+	},
+	(t) => ({
+		messageTypeIdx: index("idx_chat_message_type").on(t.messageType),
+		stateIdx: index("idx_chat_state").on(t.stateId),
+		partyIdx: index("idx_chat_party").on(t.partyId),
+		sentAtIdx: index("idx_chat_sent_at").on(t.sentAt),
+		deletedIdx: index("idx_chat_deleted").on(t.isDeleted)
+	})
+);
+
+// User inbox for broadcast messages
+export const inboxMessages = pgTable(
+	"inbox_messages",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		recipientId: text("recipient_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		senderId: text("sender_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		messageType: inboxMessageTypeEnum("message_type").notNull(),
+		stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
+		partyId: integer("party_id").references(() => politicalParties.id, { onDelete: "cascade" }),
+		subject: varchar("subject", { length: 200 }).notNull(),
+		content: text("content").notNull(),
+		isRead: boolean("is_read").default(false).notNull(),
+		sentAt: timestamp("sent_at").defaultNow().notNull()
+	},
+	(t) => ({
+		recipientIdx: index("idx_inbox_recipient").on(t.recipientId),
+		unreadIdx: index("idx_inbox_unread").on(t.recipientId, t.isRead),
+		sentAtIdx: index("idx_inbox_sent_at").on(t.sentAt)
+	})
+);
+
+// Relations
+export const chatMessagesRelations = relations(chatMessages, ({ one }) => ({
+	sender: one(accounts, { fields: [chatMessages.senderId], references: [accounts.id] }),
+	state: one(states, { fields: [chatMessages.stateId], references: [states.id] }),
+	party: one(politicalParties, { fields: [chatMessages.partyId], references: [politicalParties.id] })
+}));
+
+export const inboxMessagesRelations = relations(inboxMessages, ({ one }) => ({
+	recipient: one(accounts, {
+		fields: [inboxMessages.recipientId],
+		references: [accounts.id],
+		relationName: "inbox_recipient"
+	}),
+	sender: one(accounts, {
+		fields: [inboxMessages.senderId],
+		references: [accounts.id],
+		relationName: "inbox_sender"
+	}),
+	state: one(states, { fields: [inboxMessages.stateId], references: [states.id] }),
+	party: one(politicalParties, { fields: [inboxMessages.partyId], references: [politicalParties.id] })
+}));
+
+// Track if user has accepted chat rules
+export const chatRulesAcceptance = pgTable("chat_rules_acceptance", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	acceptedAt: timestamp("accepted_at").defaultNow().notNull(),
+	ipAddress: varchar("ip_address", { length: 45 })
+});
+
+// User warnings and moderation history
+export const userWarnings = pgTable(
+	"user_warnings",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		reason: violationReasonEnum("reason").notNull(),
+		description: text("description").notNull(),
+		issuedBy: text("issued_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		issuedAt: timestamp("issued_at").defaultNow().notNull()
+	},
+	(t) => ({
+		userIdx: index("idx_warning_user").on(t.userId),
+		issuedAtIdx: index("idx_warning_issued_at").on(t.issuedAt)
+	})
+);
+
+// Enhanced reports - now includes accounts and parties
+export const generalReports = pgTable(
+	"general_reports",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		targetType: reportTargetTypeEnum("target_type").notNull(),
+		targetId: text("target_id").notNull(), // Can be message ID, account ID, or party ID
+		reporterId: text("reporter_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		reason: text("reason").notNull(),
+		violationType: violationReasonEnum("violation_type"),
+		status: reportStatusEnum("status").notNull().default("pending"),
+		reviewedBy: text("reviewed_by").references(() => accounts.id, { onDelete: "set null" }),
+		reviewedAt: timestamp("reviewed_at"),
+		reviewNote: text("review_note"),
+		actionTaken: moderationActionEnum("action_taken"),
+		reportedAt: timestamp("reported_at").defaultNow().notNull()
+	},
+	(t) => ({
+		targetIdx: index("idx_report_target").on(t.targetType, t.targetId),
+		statusIdx: index("idx_general_report_status").on(t.status),
+		reportedAtIdx: index("idx_general_report_reported_at").on(t.reportedAt)
+	})
+);
+
+// Flagged content requiring name/logo change
+export const contentFlags = pgTable(
+	"content_flags",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		targetType: text("target_type").notNull(), // "account" or "party"
+		targetId: text("target_id").notNull(),
+		flagType: text("flag_type").notNull(), // "name" or "logo"
+		reason: text("reason").notNull(),
+		flaggedBy: text("flagged_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		flaggedAt: timestamp("flagged_at").defaultNow().notNull(),
+		resolvedAt: timestamp("resolved_at"),
+		isResolved: boolean("is_resolved").default(false).notNull()
+	},
+	(t) => ({
+		targetIdx: index("idx_flag_target").on(t.targetType, t.targetId),
+		resolvedIdx: index("idx_flag_resolved").on(t.isResolved)
+	})
+);
+
+// Relations
+export const chatRulesAcceptanceRelations = relations(chatRulesAcceptance, ({ one }) => ({
+	user: one(accounts, {
+		fields: [chatRulesAcceptance.userId],
+		references: [accounts.id]
+	})
+}));
+
+export const userWarningsRelations = relations(userWarnings, ({ one }) => ({
+	user: one(accounts, {
+		fields: [userWarnings.userId],
+		references: [accounts.id],
+		relationName: "warned_user"
+	}),
+	issuer: one(accounts, {
+		fields: [userWarnings.issuedBy],
+		references: [accounts.id],
+		relationName: "warning_issuer"
+	})
+}));
+
+export const generalReportsRelations = relations(generalReports, ({ one }) => ({
+	reporter: one(accounts, {
+		fields: [generalReports.reporterId],
+		references: [accounts.id],
+		relationName: "general_reporter"
+	}),
+	reviewer: one(accounts, {
+		fields: [generalReports.reviewedBy],
+		references: [accounts.id],
+		relationName: "general_reviewer"
+	})
+}));
+
+export const contentFlagsRelations = relations(contentFlags, ({ one }) => ({
+	flagger: one(accounts, {
+		fields: [contentFlags.flaggedBy],
+		references: [accounts.id]
+	})
+}));

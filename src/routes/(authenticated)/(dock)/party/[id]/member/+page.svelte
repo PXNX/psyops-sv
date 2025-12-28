@@ -27,9 +27,9 @@
 					href="/user/{member.userId}"
 					class="bg-slate-700/30 rounded-lg p-4 border border-white/5 hover:border-white/10 transition-all group"
 				>
-					{#if member.user.profile?.avatar}
+					{#if member.user.profile?.logo}
 						<img
-							src={member.user.profile.avatar}
+							src={member.user.profile.logo}
 							alt={member.user.profile.name || "Member"}
 							class="size-16 rounded-lg mb-2 mx-auto"
 						/>

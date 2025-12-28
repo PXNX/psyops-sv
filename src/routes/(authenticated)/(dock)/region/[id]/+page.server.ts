@@ -15,6 +15,7 @@ import {
 import { eq, and, sql } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
+import { getRegionName } from "$lib/utils/formatting";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -124,6 +125,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		region: {
 			id: region.id,
+			name: getRegionName(region.id),
 			rating: region.rating,
 			infrastructure: region.infrastructure,
 			economy: region.economy,

@@ -1,6 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/parliament/+page.svelte -->
 <script lang="ts">
-	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
+	import SquareLogo from "$lib/component/SquareLogo.svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -337,7 +337,7 @@
 								href="/user/{proposal.proposedBy.id}"
 								class="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors w-fit"
 							>
-								<SquareAvatar src={proposal.proposedBy.avatar} alt={proposal.proposedBy.name} size="sm" />
+								<SquareLogo src={proposal.proposedBy.logo} alt={proposal.proposedBy.name} size="sm" />
 								<span>Proposed by <span class="text-white font-medium">{proposal.proposedBy.name}</span></span>
 							</a>
 						</div>
@@ -471,7 +471,7 @@
 						href="/user/{member.userId}"
 						class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
 					>
-						<SquareAvatar src={member.avatar} alt={member.name} size="sm" />
+						<SquareLogo src={member.logo} alt={member.name} size="sm" />
 						<div class="flex-1 min-w-0">
 							<p class="font-medium text-white group-hover:text-blue-400 transition-colors truncate">
 								{member.name}

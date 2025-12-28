@@ -7,7 +7,7 @@
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
-	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
+	import CircleLogo from "$lib/component/CircleLogo.svelte";
 
 	const { data } = $props();
 

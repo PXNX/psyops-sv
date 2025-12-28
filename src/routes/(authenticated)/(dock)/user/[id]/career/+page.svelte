@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/user/[id]/career/+page.svelte -->
 <script lang="ts">
-	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
-	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
+	import CircleLogo from "$lib/component/CircleLogo.svelte";
+	import SquareLogo from "$lib/component/SquareLogo.svelte";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
@@ -117,9 +117,9 @@
 
 			<div class="relative z-10 flex flex-col items-center space-y-3">
 				<div class="ring-4 ring-white/10 rounded-full relative group">
-					{#if data.user.avatar}
+					{#if data.user.logo}
 						<div class="size-24 rounded-full overflow-hidden bg-base-200">
-							<img src={data.user.avatar} alt={data.user.name || "User avatar"} class="w-full h-full object-cover" />
+							<img src={data.user.logo} alt={data.user.name || "User logo"} class="w-full h-full object-cover" />
 						</div>
 					{:else}
 						<div class="size-24 rounded-full bg-base-200 flex items-center justify-center">
@@ -246,10 +246,10 @@
 					>
 						<div class="p-4">
 							<div class="flex items-start gap-3">
-								{#if newspaper.newspaperAvatar}
+								{#if newspaper.newspaperLogo}
 									<div class="size-14 rounded-lg overflow-hidden bg-slate-700/30">
 										<img
-											src={newspaper.newspaperAvatar}
+											src={newspaper.newspaperLogo}
 											alt={newspaper.newspaperName}
 											class="w-full h-full object-cover"
 										/>

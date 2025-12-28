@@ -6,12 +6,12 @@
 
 	import MdiClockTimeEightOutline from "~icons/mdi/clock-time-eight-outline";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
-	import Avatar from "$lib/component/CircleAvatar.svelte";
+	import Logo from "$lib/component/CircleLogo.svelte";
 
 	const article = {
 		id: 1,
 		author_name: "John Doe",
-		author_avatar: "https://placehold.co/48/svg",
+		author_logo: "https://placehold.co/48/svg",
 		title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		publish_date: "2023-01-01",
 		upvote_count: 10
@@ -36,7 +36,7 @@
 <ul class="list">
 	<a href="/posts/{article.id}">
 		<li class="list-row flinch flex items-center">
-			<Avatar src={article.author_avatar} />
+			<Logo src={article.author_logo} />
 			<div class="text-sm">
 				{article.author_name}
 				<h3 class="text-base font-semibold line-clamp-1">{article.title}</h3>

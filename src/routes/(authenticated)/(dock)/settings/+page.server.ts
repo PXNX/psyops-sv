@@ -19,13 +19,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 		where: eq(userProfiles.accountId, account.id)
 	});
 
-	// Get avatar URL if it's stored in profile
-	let avatarUrl = profile?.avatar || null;
-	if (avatarUrl && !avatarUrl.startsWith("http")) {
+	// Get logo URL if it's stored in profile
+	let logoUrl = profile?.logo || null;
+	if (logoUrl && !logoUrl.startsWith("http")) {
 		try {
-			avatarUrl = await getSignedDownloadUrl(avatarUrl);
+			logoUrl = await getSignedDownloadUrl(logoUrl);
 		} catch {
-			avatarUrl = null;
+			logoUrl = null;
 		}
 	}
 
@@ -64,7 +64,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		profile: {
 			name: profile?.name,
 			bio: profile?.bio,
-			avatar: avatarUrl
+			logo: logoUrl
 		},
 		userBalance,
 		editCost: PROFILE_EDIT_CONFIG.COST,
@@ -84,7 +84,7 @@ export const actions: Actions = {
 			return message(form, "Please fix the validation errors", { status: 400 });
 		}
 
-		const { name, bio, avatar } = form.data;
+		const { name, bio, logo } = form.data;
 
 		// Get user's wallet
 		const wallet = await db.query.userWallets.findFirst({
@@ -130,18 +130,18 @@ export const actions: Actions = {
 					})
 					.where(eq(userWallets.userId, account.id));
 
-				let avatarKey: string | undefined;
+				let logoKey: string | undefined;
 
-				// Upload new avatar if provided
-				if (avatar && avatar.size > 0) {
-					const uploadResult = await uploadFileFromForm(avatar);
+				// Upload new logo if provided
+				if (logo && logo.size > 0) {
+					const uploadResult = await uploadFileFromForm(logo);
 
 					if (!uploadResult.success) {
 						tx.rollback();
-						throw new Error("Failed to upload avatar");
+						throw new Error("Failed to upload logo");
 					}
 
-					avatarKey = uploadResult.key;
+					logoKey = uploadResult.key;
 				}
 
 				if (existingProfile) {
@@ -151,7 +151,7 @@ export const actions: Actions = {
 						.set({
 							name,
 							bio: bio || null,
-							...(avatarKey ? { avatar: avatarKey } : {}),
+							...(logoKey ? { logo: logoKey } : {}),
 							updatedAt: new Date()
 						})
 						.where(eq(userProfiles.accountId, account.id));
@@ -161,7 +161,7 @@ export const actions: Actions = {
 						accountId: account.id,
 						name,
 						bio: bio || null,
-						avatar: avatarKey || null
+						logo: logoKey || null
 					});
 				}
 			});

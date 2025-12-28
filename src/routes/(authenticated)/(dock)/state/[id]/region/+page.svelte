@@ -103,7 +103,7 @@
 				>
 					<div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800" />
 
-					<!-- Region Avatar -->
+					<!-- Region Logo -->
 					<div class="absolute bottom-0 left-4 translate-y-1/2">
 						<div class="ring-4 ring-slate-800 rounded-xl">
 							<img
