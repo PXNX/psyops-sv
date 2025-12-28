@@ -30,10 +30,6 @@ export const actions: Actions = {
 	create: async ({ request, locals }) => {
 		const account = locals.account!;
 
-		if (account.role !== "admin") {
-			return fail(403, { error: "Unauthorized" });
-		}
-
 		const formData = await request.formData();
 		const code = formData.get("code")?.toString()?.trim().toUpperCase();
 		const description = formData.get("description")?.toString()?.trim();
@@ -68,7 +64,7 @@ export const actions: Actions = {
 						maxRedemptions: maxRedemptions ? parseInt(maxRedemptions) : null,
 						expiresAt: expiresAt && expiresAt.trim() !== "" ? new Date(expiresAt) : null,
 						createdBy: account.id,
-						isActive: 1
+						isActive: true
 					})
 					.returning();
 
@@ -97,12 +93,8 @@ export const actions: Actions = {
 	toggle: async ({ request, locals }) => {
 		const account = locals.account!;
 
-		if (account.role !== "admin") {
-			return fail(403, { error: "Unauthorized" });
-		}
-
 		const formData = await request.formData();
-		const codeId = formData.get("codeId")?.toString();
+		const codeId = parseInt(formData.get("codeId"));
 
 		if (!codeId) {
 			return fail(400, { error: "Code ID is required" });
@@ -120,7 +112,7 @@ export const actions: Actions = {
 			await db
 				.update(giftCodes)
 				.set({
-					isActive: code.isActive ? 0 : 1
+					isActive: code.isActive
 				})
 				.where(eq(giftCodes.id, codeId));
 
