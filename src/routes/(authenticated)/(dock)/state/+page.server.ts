@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			chromium: regions.chromium,
 			stateId: regions.stateId,
 			stateName: states.name,
-			stateColor: states.logo,
+			stateColor: states.background,
 			createdAt: regions.createdAt
 		})
 		.from(regions)
@@ -81,8 +81,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	// Combine data and apply search filter
 	let regionsWithStats = allRegions.map((r) => ({
 		...r,
-		name: getRegionName(r.id),
-		logo: "/coats/" + r.id + ".svg",
 		population: populationMap.get(r.id) || 0,
 		factoryCount: factoryMap.get(r.id) || 0
 	}));

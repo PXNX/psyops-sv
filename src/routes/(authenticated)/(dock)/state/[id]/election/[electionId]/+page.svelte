@@ -1,5 +1,4 @@
 <script lang="ts">
-	import SquareLogo from "$lib/component/SquareLogo.svelte";
 	import Logo from "$lib/component/Logo.svelte";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -53,7 +52,6 @@
 		}
 
 		const diff = targetDate.getTime() - now.getTime();
-
 		if (diff <= 0) return null;
 
 		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -71,7 +69,6 @@
 		return ((data.votesByParty[partyId] || 0) / data.totalVotes) * 100;
 	}
 
-	// Sort parties by votes
 	const sortedParties = $derived(
 		[...data.parties].sort((a, b) => (data.votesByParty[b.id] || 0) - (data.votesByParty[a.id] || 0))
 	);
@@ -83,82 +80,56 @@
 		<a href="/state/{data.state.id}/parliament" class="text-sm text-gray-400 hover:text-white mb-2 inline-block">
 			← Back to Parliament
 		</a>
-		<div class="flex items-start justify-between gap-4 flex-wrap">
-			<div class="flex items-start gap-4">
-				<!-- State Logo -->
-				<a href="/state/{data.state.id}" class="flex-shrink-0">
-					<Logo
-						src={data.state.logo}
-						alt={data.state.name}
-						class="size-16 rounded-xl border-2 border-white/10 hover:border-white/30 transition-all shadow-lg"
-						placeholderIcon={FluentBuildingGovernment20Filled}
-						placeholderGradient="from-amber-500 to-rose-500"
-					/>
-				</a>
+		<div class="flex items-center gap-4">
+			<a href="/state/{data.state.id}">
+				<Logo
+					src={data.state.logo}
+					alt={data.state.name}
+					class="size-16 rounded-xl border-2 border-white/10 hover:border-white/30 transition-all shadow-lg"
+					placeholderIcon={FluentBuildingGovernment20Filled}
+					placeholderGradient="from-amber-500 to-rose-500"
+				/>
+			</a>
 
-				<div>
-					<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-						<FluentVote20Filled class="size-8 text-purple-400" />
-						{data.election.isInaugural ? "Inaugural" : "Parliamentary"} Elections
-					</h1>
-					<a
-						href="/state/{data.state.id}"
-						class="text-lg text-gray-400 hover:text-white mt-1 inline-block transition-colors"
-					>
-						{data.state.name}
-					</a>
-					{#if data.election.isInaugural}
-						<p class="text-sm text-purple-400 mt-2 flex items-center gap-2">
-							<span class="badge badge-sm bg-purple-600/20 border-purple-500/30">First Election</span>
-							Establishing the founding parliament
-						</p>
-					{/if}
-				</div>
+			<div class="flex-1">
+				<h1 class="text-3xl font-bold text-white flex items-center gap-3">
+					<FluentVote20Filled class="size-8 text-purple-400" />
+					{data.election.isInaugural ? "Inaugural" : "Parliamentary"} Elections
+				</h1>
+				<a href="/state/{data.state.id}" class="text-lg text-gray-400 hover:text-white mt-1 inline-block">
+					{data.state.name}
+				</a>
 			</div>
 
-			<!-- Timeline Status - Compact -->
-			{#if isActive || hasEnded}
-				<div class="bg-slate-800/70 border border-white/10 rounded-xl p-4 min-w-[200px]">
-					{#if isActive}
-						<div class="flex items-center gap-3 mb-2">
-							<div class="size-3 rounded-full bg-green-500 animate-pulse"></div>
-							<p class="text-sm font-semibold text-green-400">Voting Active</p>
-						</div>
-					{:else if hasEnded}
-						<div class="flex items-center gap-3 mb-2">
-							<FluentCheckmark20Filled class="size-4 text-gray-400" />
-							<p class="text-sm font-semibold text-gray-400">Concluded</p>
-						</div>
-						<p class="text-xs text-gray-500 mb-3">Final Results</p>
-					{/if}
-
-					<div class="border-t border-white/10 pt-3 space-y-2 text-xs text-gray-400">
-						<div class="flex justify-between items-center">
-							<span>Opens:</span>
-							<span class="text-gray-300">{new Date(data.election.startDate).toLocaleDateString()}</span>
-						</div>
-						<div class="flex justify-between items-center">
-							<span>Closes:</span>
-							<span class="text-gray-300">{new Date(data.election.endDate).toLocaleDateString()}</span>
-						</div>
+			<!-- Status Badge -->
+			{#if isActive}
+				<div class="bg-green-600/20 border border-green-500/30 rounded-lg px-4 py-2">
+					<div class="flex items-center gap-2 mb-1">
+						<div class="size-2 rounded-full bg-green-500 animate-pulse"></div>
+						<p class="text-sm font-semibold text-green-400">Live</p>
 					</div>
+					<p class="text-xs text-gray-400">Voting Active</p>
+				</div>
+			{:else if hasEnded}
+				<div class="bg-slate-700/50 border border-slate-600/30 rounded-lg px-4 py-2">
+					<div class="flex items-center gap-2 mb-1">
+						<FluentCheckmark20Filled class="size-4 text-gray-400" />
+						<p class="text-sm font-semibold text-gray-400">Concluded</p>
+					</div>
+					<p class="text-xs text-gray-500">Final Results</p>
 				</div>
 			{/if}
 		</div>
 	</div>
 
-	<!-- Countdown Banner - Full Width for Upcoming -->
+	<!-- Countdown -->
 	{#if countdown}
 		<div
 			class="bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 border border-blue-500/30 rounded-xl p-6"
 		>
 			<div class="text-center">
 				<p class="text-sm text-blue-300 font-medium mb-3">
-					{#if !hasStarted}
-						⏰ Election starts soon
-					{:else}
-						⏰ Voting closes soon
-					{/if}
+					{!hasStarted ? "⏰ Election starts soon" : "⏰ Voting closes soon"}
 				</p>
 				<div class="flex items-center justify-center gap-3">
 					<div class="bg-slate-900/50 rounded-lg p-3 min-w-[70px]">
@@ -185,65 +156,52 @@
 						<div class="text-xs text-gray-400 mt-1">Seconds</div>
 					</div>
 				</div>
-				<p class="text-xs text-gray-400 mt-3">{countdown.label}</p>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Voter Status -->
 	{#if !data.userResidence}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-sm text-red-300 text-center">
-				⚠️ You must be a resident of {data.state.name} to vote in these elections
-			</p>
+		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4 text-center">
+			<p class="text-sm text-red-300">⚠️ You must be a resident of {data.state.name} to vote</p>
 		</div>
 	{:else if data.userVote && isActive}
-		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
+		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4 text-center">
 			<div class="flex items-center justify-center gap-2 text-green-300">
 				<FluentCheckmark20Filled class="size-5" />
-				<span class="text-sm font-medium"> You have voted! You can change your vote until the election ends. </span>
+				<span class="text-sm font-medium">You have voted! You can change your vote until the election ends.</span>
 			</div>
 		</div>
 	{:else if canVote}
-		<div class="bg-blue-600/20 border border-blue-500/30 rounded-xl p-4">
-			<p class="text-sm text-blue-300 text-center font-medium">
-				{#if data.election.isInaugural}
-					🎉 Cast your vote in the inaugural election to establish {data.state.name}'s first parliament!
-				{:else}
-					Cast your vote below to help decide the next parliament
-				{/if}
+		<div class="bg-blue-600/20 border border-blue-500/30 rounded-xl p-4 text-center">
+			<p class="text-sm text-blue-300 font-medium">
+				{data.election.isInaugural ? "🎉 Cast your vote in the inaugural election!" : "Cast your vote below"}
 			</p>
 		</div>
 	{/if}
 
-	<!-- Election Stats -->
+	<!-- Stats -->
 	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 		<div class="bg-gradient-to-br from-purple-600/20 to-purple-700/10 rounded-xl border border-purple-500/20 p-5">
-			<p class="text-sm text-purple-300 mb-1 font-medium">Total Votes Cast</p>
+			<p class="text-sm text-purple-300 mb-1 font-medium">Total Votes</p>
 			<p class="text-4xl font-bold text-white">{data.totalVotes.toLocaleString()}</p>
 		</div>
 		<div class="bg-gradient-to-br from-blue-600/20 to-blue-700/10 rounded-xl border border-blue-500/20 p-5">
-			<p class="text-sm text-blue-300 mb-1 font-medium">Competing Parties</p>
+			<p class="text-sm text-blue-300 mb-1 font-medium">Parties</p>
 			<p class="text-4xl font-bold text-white">{data.parties.length}</p>
 		</div>
 		<div class="bg-gradient-to-br from-green-600/20 to-green-700/10 rounded-xl border border-green-500/20 p-5">
-			<p class="text-sm text-green-300 mb-1 font-medium">Parliament Seats</p>
+			<p class="text-sm text-green-300 mb-1 font-medium">Seats</p>
 			<p class="text-4xl font-bold text-white">{data.election.totalSeats}</p>
 		</div>
 	</div>
 
 	<!-- Parties -->
 	<div class="space-y-4">
-		<h2 class="text-2xl font-bold text-white flex items-center gap-2">
-			<FluentPeople20Filled class="size-6 text-blue-400" />
-			Political Parties
-		</h2>
-
 		{#if data.parties.length === 0}
 			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-12 text-center">
 				<FluentPeople20Filled class="size-12 text-gray-600 mx-auto mb-3" />
 				<p class="text-gray-400 text-lg">No political parties registered yet</p>
-				<p class="text-gray-500 text-sm mt-1">Parties will appear here once registered</p>
 			</div>
 		{:else}
 			<div class="grid gap-4">
@@ -255,13 +213,11 @@
 					{@const canVoteForParty = canVote && hasEnoughMembers}
 
 					<div
-						class="group bg-slate-800/50 hover:bg-slate-800/70 rounded-xl border overflow-hidden transition-all duration-200 relative"
+						class="group bg-slate-800/50 hover:bg-slate-800/70 rounded-xl border overflow-hidden transition-all relative"
 						class:border-white-5={!isUserVote}
 						class:border-green-500-50={isUserVote}
 						class:ring-2={isUserVote}
 						class:ring-green-500-30={isUserVote}
-						class:shadow-lg={isUserVote}
-						class:shadow-green-500-20={isUserVote}
 					>
 						<!-- Position Badge -->
 						{#if hasStarted && index < 3}
@@ -306,23 +262,19 @@
 								<div class="flex-1 min-w-0">
 									<div class="flex items-start justify-between gap-4 mb-3">
 										<div class="flex-1">
-											<div class="flex items-center gap-2 mb-1">
-												<a href="/party/{party.id}" class="group/link">
-													<h3
-														class="text-2xl font-bold text-white group-hover/link:text-blue-400 transition-colors flex items-center gap-2"
-													>
-														{party.name}
-														<FluentChevronRight20Filled
-															class="size-5 opacity-0 group-hover/link:opacity-100 transition-opacity"
-														/>
-													</h3>
-												</a>
-												{#if isUserVote}
-													<span class="badge badge-sm bg-green-600/30 text-green-300 border-green-500/50">
-														✓ Your Vote
-													</span>
-												{/if}
-											</div>
+											<a href="/party/{party.id}" class="group/link">
+												<h3
+													class="text-2xl font-bold text-white group-hover/link:text-blue-400 transition-colors flex items-center gap-2"
+												>
+													{party.name}
+													{#if isUserVote}
+														<span class="badge badge-sm bg-green-600/30 text-green-300 border-green-500/50">✓</span>
+													{/if}
+													<FluentChevronRight20Filled
+														class="size-5 opacity-0 group-hover/link:opacity-100 transition-opacity"
+													/>
+												</h3>
+											</a>
 											{#if party.abbreviation}
 												<p class="text-sm text-gray-400 font-medium">{party.abbreviation}</p>
 											{/if}
@@ -331,9 +283,7 @@
 										{#if hasStarted}
 											<div class="text-right bg-slate-700/50 rounded-lg px-4 py-2">
 												<p class="text-3xl font-bold text-white">{votes}</p>
-												<p class="text-xs text-gray-400 font-medium">
-													{percentage.toFixed(1)}%
-												</p>
+												<p class="text-xs text-gray-400 font-medium">{percentage.toFixed(1)}%</p>
 											</div>
 										{/if}
 									</div>
@@ -355,24 +305,20 @@
 										{#if party.leader}
 											<a
 												href="/user/{party.leader.accountId}"
-												class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group/leader"
+												class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
 											>
 												<Logo
 													src={party.leader.logo}
 													alt={party.leader.name}
 													placeholderIcon={FluentPerson20Filled}
-													class="ring-2 ring-white/10 group-hover/leader:ring-white/30 transition-all"
+													class="ring-2 ring-white/10 hover:ring-white/30 transition-all"
 												/>
-												<span class="flex items-center gap-1">
-													<FluentPerson20Filled class="size-4" />
-													<span class="font-medium text-white">{party.leader.name}</span>
-												</span>
+												<span class="font-medium text-white">{party.leader.name}</span>
 											</a>
 										{/if}
 										<span class="text-gray-400 flex items-center gap-1.5" class:text-red-400={!hasEnoughMembers}>
 											<FluentPeople20Filled class="size-4" />
-											<span class="font-medium">{party.memberCount}</span>
-											<span>member{party.memberCount !== 1 ? "s" : ""}</span>
+											<span class="font-medium">{party.memberCount} member{party.memberCount !== 1 ? "s" : ""}</span>
 											{#if !hasEnoughMembers}
 												<span class="text-xs bg-red-600/20 border border-red-500/30 px-2 py-0.5 rounded">
 													Needs {3 - party.memberCount} more
@@ -404,29 +350,23 @@
 						{#if data.userResidence}
 							<div class="border-t border-white/10 p-4 bg-slate-900/30">
 								{#if !hasEnoughMembers}
-									<div class="text-center py-2">
-										<p class="text-sm text-red-400">
-											⚠️ This party needs at least 3 members to participate in elections
-										</p>
-									</div>
+									<p class="text-sm text-red-400 text-center py-2">
+										⚠️ This party needs at least 3 members to participate
+									</p>
 								{:else}
 									<form method="POST" action="?/vote" use:enhance class="w-full">
 										<input type="hidden" name="partyId" value={party.id} />
 										<button
 											type="submit"
 											disabled={!canVoteForParty}
-											class="btn w-full gap-2 font-semibold transition-all duration-200"
+											class="btn w-full gap-2 font-semibold transition-all"
 											class:bg-green-600={isUserVote && canVote}
 											class:hover:bg-green-500={isUserVote && canVote}
-											class:shadow-lg={isUserVote && canVote}
-											class:shadow-green-500-30={isUserVote && canVote}
 											class:btn-disabled={!canVoteForParty}
 											class:opacity-50={!canVoteForParty}
-											class:cursor-not-allowed={!canVoteForParty}
 											style:background={!isUserVote && canVoteForParty ? party.color : ""}
 											style:border-color={party.color}
 											class:border-2={!isUserVote && canVoteForParty}
-											class:hover:shadow-lg={!isUserVote && canVoteForParty}
 											class:text-white={true}
 										>
 											{#if !canVote && !hasStarted}
@@ -437,10 +377,10 @@
 												Voting Closed
 											{:else if isUserVote}
 												<FluentCheckmark20Filled class="size-5" />
-												Voted for {party.name}
+												Voted
 											{:else}
 												<FluentVote20Filled class="size-5" />
-												Vote for {party.name}
+												Vote
 											{/if}
 										</button>
 									</form>
@@ -463,7 +403,6 @@
 			transform: translateX(100%);
 		}
 	}
-
 	.animate-shimmer {
 		animation: shimmer 2s infinite;
 	}
