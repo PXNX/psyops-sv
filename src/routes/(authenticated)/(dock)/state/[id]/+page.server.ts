@@ -13,12 +13,15 @@ import {
 	presidents,
 	userProfiles,
 	parliamentMembers,
-	stateSanctions
+	stateSanctions,
+	accounts,
+	files
 } from "$lib/server/schema";
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, gte, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getRegionName } from "$lib/utils/formatting";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
@@ -47,31 +50,36 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, "State not found");
 	}
 
-	// Get president
-	const president = await db.query.presidents.findFirst({
-		where: eq(presidents.stateId, stateId),
-		with: {
-			user: {
-				with: {
-					profile: true
-				}
-			}
-		}
-	});
+	// Get president - manual join
+	const [presidentData] = await db
+		.select({
+			userId: presidents.userId,
+			electedAt: presidents.electedAt,
+			term: presidents.term,
+			profileName: userProfiles.name,
+			profileLogo: userProfiles.logo
+		})
+		.from(presidents)
+		.leftJoin(accounts, eq(presidents.userId, accounts.id))
+		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
+		.where(eq(presidents.stateId, stateId))
+		.limit(1);
 
-	// Get ministers
-	const stateMinisters = await db.query.ministers.findMany({
-		where: eq(ministers.stateId, stateId),
-		with: {
-			user: {
-				with: {
-					profile: true
-				}
-			}
-		}
-	});
+	// Get ministers - manual join
+	const stateMinistersRaw = await db
+		.select({
+			userId: ministers.userId,
+			ministry: ministers.ministry,
+			appointedAt: ministers.appointedAt,
+			profileName: userProfiles.name,
+			profileLogo: userProfiles.logo
+		})
+		.from(ministers)
+		.leftJoin(accounts, eq(ministers.userId, accounts.id))
+		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
+		.where(eq(ministers.stateId, stateId));
 
-	// Get parliament members - manual query since relations aren't fully defined
+	// Get parliament members
 	const parliamentMembersRaw = await db
 		.select({
 			userId: parliamentMembers.userId,
@@ -86,10 +94,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.where(eq(parliamentMembers.stateId, stateId))
 		.limit(20);
 
-	// Get regions
-	const stateRegions = await db.query.regions.findMany({
-		where: eq(regions.stateId, stateId)
-	});
+	// Get regions with population count
+	const stateRegions = await db
+		.select({
+			id: regions.id,
+			stateId: regions.stateId,
+			rating: regions.rating,
+			population: sql<number>`count(${residences.id})::int`
+		})
+		.from(regions)
+		.leftJoin(residences, eq(residences.regionId, regions.id))
+		.where(eq(regions.stateId, stateId))
+		.groupBy(regions.id);
 
 	// Calculate actual population from residences
 	const populationResult = await db
@@ -102,47 +118,53 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Get next or active election
 	const now = new Date();
-	const nextElection = await db.query.parliamentaryElections.findFirst({
-		where: and(eq(parliamentaryElections.stateId, stateId), gte(parliamentaryElections.endDate, now)),
-		orderBy: (elections, { asc }) => [asc(elections.startDate)]
-	});
+	const [nextElection] = await db
+		.select()
+		.from(parliamentaryElections)
+		.where(and(eq(parliamentaryElections.stateId, stateId), gte(parliamentaryElections.endDate, now)))
+		.orderBy(parliamentaryElections.startDate)
+		.limit(1);
 
 	// Get active taxes
-	const activeTaxes = await db.query.stateTaxes.findMany({
-		where: and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.isActive, true))
-	});
+	const activeTaxes = await db
+		.select()
+		.from(stateTaxes)
+		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.isActive, true)));
 
 	// Get energy data
-	const energyData = await db.query.stateEnergy.findFirst({
-		where: eq(stateEnergy.stateId, stateId)
-	});
+	const [energyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, stateId)).limit(1);
 
 	// Get power plants
-	const plants = await db.query.powerPlants.findMany({
-		where: eq(powerPlants.stateId, stateId)
-	});
+	const plants = await db.select().from(powerPlants).where(eq(powerPlants.stateId, stateId));
 
 	// Check if current user is president of this state
-	const isPresident = president?.userId === locals.account?.id;
+	const isPresident = presidentData?.userId === locals.account?.id;
 
 	// Check if current user is a foreign minister of another state
 	let isForeignMinister = false;
 	if (locals.account?.id) {
-		const foreignMinistry = await db.query.ministers.findFirst({
-			where: and(eq(ministers.userId, locals.account.id), eq(ministers.ministry, "foreign_affairs"))
-		});
+		const [foreignMinistry] = await db
+			.select()
+			.from(ministers)
+			.where(and(eq(ministers.userId, locals.account.id), eq(ministers.ministry, "foreign_affairs")))
+			.limit(1);
+
 		isForeignMinister = !!foreignMinistry && foreignMinistry.stateId !== stateId;
 	}
 
-	const processLogo = async (logo: string | null) => {
-		if (logo && !logo.startsWith("http")) {
-			try {
-				return await getSignedDownloadUrl(logo);
-			} catch {
-				return null;
+	const processLogo = async (logoId: number | null) => {
+		if (!logoId) return null;
+
+		try {
+			const [file] = await db.select().from(files).where(eq(files.id, logoId)).limit(1);
+
+			if (file) {
+				return await getSignedDownloadUrl(file.key);
 			}
+		} catch {
+			return null;
 		}
-		return logo;
+		return null;
 	};
 
 	return {
@@ -164,20 +186,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					description: state.blocDescription
 				}
 			: null,
-		president: president
+		president: presidentData
 			? {
-					userId: president.userId,
-					name: president.user.profile?.name,
-					logo: await processLogo(president.user.profile?.logo || null),
-					electedAt: president.electedAt,
-					term: president.term
+					userId: presidentData.userId,
+					name: presidentData.profileName || "Unknown",
+					logo: await processLogo(presidentData.profileLogo || null),
+					electedAt: presidentData.electedAt,
+					term: presidentData.term
 				}
 			: null,
 		ministers: await Promise.all(
-			stateMinisters.map(async (minister) => ({
+			stateMinistersRaw.map(async (minister) => ({
 				userId: minister.userId,
-				name: minister.user.profile?.name,
-				logo: await processLogo(minister.user.profile?.logo || null),
+				name: minister.profileName || "Unknown",
+				logo: await processLogo(minister.profileLogo || null),
 				ministry: minister.ministry,
 				appointedAt: minister.appointedAt
 			}))
@@ -185,7 +207,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		parliamentMembers: await Promise.all(
 			parliamentMembersRaw.map(async (member) => ({
 				userId: member.userId,
-				name: member.profileName,
+				name: member.profileName || "Unknown",
 				logo: await processLogo(member.profileLogo || null),
 				partyAffiliation: member.partyAffiliation,
 				electedAt: member.electedAt,
@@ -194,7 +216,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		),
 		regions: stateRegions.map((region) => ({
 			id: region.id,
-			rating: region.rating
+			name: getRegionName(region.id),
+			logo: "/coats/" + region.id + ".svg",
+			rating: region.rating,
+			population: region.population || 0
 		})),
 		nextElection: nextElection
 			? {
@@ -231,9 +256,11 @@ export const actions: Actions = {
 		const stateId = parseInt(params.id);
 
 		// Verify user is a foreign minister
-		const foreignMinistry = await db.query.ministers.findFirst({
-			where: and(eq(ministers.userId, account.id), eq(ministers.ministry, "foreign_affairs"))
-		});
+		const [foreignMinistry] = await db
+			.select()
+			.from(ministers)
+			.where(and(eq(ministers.userId, account.id), eq(ministers.ministry, "foreign_affairs")))
+			.limit(1);
 
 		if (!foreignMinistry) {
 			return fail(403, { message: "Only foreign ministers can impose sanctions" });
@@ -245,13 +272,17 @@ export const actions: Actions = {
 		}
 
 		// Check if sanction already exists and is active
-		const existingSanction = await db.query.stateSanctions.findFirst({
-			where: and(
-				eq(stateSanctions.targetStateId, stateId),
-				eq(stateSanctions.sanctioningStateId, foreignMinistry.stateId),
-				eq(stateSanctions.isActive, true)
+		const [existingSanction] = await db
+			.select()
+			.from(stateSanctions)
+			.where(
+				and(
+					eq(stateSanctions.targetStateId, stateId),
+					eq(stateSanctions.sanctioningStateId, foreignMinistry.stateId),
+					eq(stateSanctions.isActive, true)
+				)
 			)
-		});
+			.limit(1);
 
 		if (existingSanction) {
 			return fail(400, { message: "This state is already sanctioned by your state" });

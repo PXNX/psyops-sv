@@ -90,7 +90,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 				}
 			: null,
 		userRegion: {
-			id: userResidence.region.id
+			id: userResidence.region.id,
+			name: getRegionName(userResidence.region.id)
 		},
 		isIndependentRegion,
 		userBalance,

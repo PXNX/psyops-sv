@@ -1,11 +1,14 @@
 <script lang="ts">
 	import SquareLogo from "$lib/component/SquareLogo.svelte";
+	import Logo from "$lib/component/Logo.svelte";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import { enhance } from "$app/forms";
 	import { onMount, onDestroy } from "svelte";
 
@@ -84,10 +87,12 @@
 			<div class="flex items-start gap-4">
 				<!-- State Logo -->
 				<a href="/state/{data.state.id}" class="flex-shrink-0">
-					<img
+					<Logo
 						src={data.state.logo}
 						alt={data.state.name}
-						class="size-16 rounded-xl object-cover border-2 border-white/10 hover:border-white/30 transition-all shadow-lg"
+						class="size-16 rounded-xl border-2 border-white/10 hover:border-white/30 transition-all shadow-lg"
+						placeholderIcon={FluentBuildingGovernment20Filled}
+						placeholderGradient="from-amber-500 to-rose-500"
 					/>
 				</a>
 
@@ -250,7 +255,7 @@
 					{@const canVoteForParty = canVote && hasEnoughMembers}
 
 					<div
-						class="group bg-slate-800/50 hover:bg-slate-800/70 rounded-xl border overflow-hidden transition-all duration-200"
+						class="group bg-slate-800/50 hover:bg-slate-800/70 rounded-xl border overflow-hidden transition-all duration-200 relative"
 						class:border-white-5={!isUserVote}
 						class:border-green-500-50={isUserVote}
 						class:ring-2={isUserVote}
@@ -280,11 +285,12 @@
 								<!-- Party Logo -->
 								<a href="/party/{party.id}" class="flex-shrink-0 group/logo">
 									{#if party.logo}
-										<img
+										<Logo
 											src={party.logo}
 											alt={party.name}
-											class="size-20 rounded-xl object-cover border-3 shadow-lg transition-transform group-hover/logo:scale-105"
-											style="border-color: {party.color}"
+											class="size-20 rounded-xl border-3 shadow-lg transition-transform group-hover/logo:scale-105"
+											placeholderIcon={FluentFlag20Filled}
+											placeholderGradient="from-{party.color}/80 to-{party.color}/60"
 										/>
 									{:else}
 										<div
@@ -351,8 +357,10 @@
 												href="/user/{party.leader.accountId}"
 												class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group/leader"
 											>
-												<SquareLogo
+												<Logo
 													src={party.leader.logo}
+													alt={party.leader.name}
+													placeholderIcon={FluentPerson20Filled}
 													class="ring-2 ring-white/10 group-hover/leader:ring-white/30 transition-all"
 												/>
 												<span class="flex items-center gap-1">

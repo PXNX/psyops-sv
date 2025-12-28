@@ -1,6 +1,15 @@
 // src/routes/(authenticated)/chat/en/load-more/+server.ts
 import { db } from "$lib/server/db";
-import { chatMessages, userProfiles, files, politicalParties } from "$lib/server/schema";
+import {
+	chatMessages,
+	userProfiles,
+	files,
+	politicalParties,
+	newspapers,
+	states,
+	blocs,
+	articles
+} from "$lib/server/schema";
 import { eq, and, desc, lt } from "drizzle-orm";
 import { json, error } from "@sveltejs/kit";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
@@ -14,51 +23,162 @@ function extractUrls(text: string): string[] {
 }
 
 async function getLinkPreview(url: string) {
-	const userMatch = url.match(/\/user\/([a-zA-Z0-9_-]+)/);
-	if (userMatch) {
-		const userId = userMatch[1];
-		const profile = await db.query.userProfiles.findFirst({
-			where: eq(userProfiles.accountId, userId),
-			with: { logo: true }
-		});
+	try {
+		// User preview
+		const userMatch = url.match(/\/user\/([a-zA-Z0-9_-]+)/);
+		if (userMatch) {
+			const userId = userMatch[1];
+			const profile = await db.query.userProfiles.findFirst({
+				where: eq(userProfiles.accountId, userId),
+				with: { logo: true }
+			});
 
-		if (profile) {
-			let logoUrl = null;
-			if (profile.logo) {
-				try {
-					logoUrl = await getSignedDownloadUrl(profile.logo!.key);
-				} catch {}
+			if (profile) {
+				let logoUrl = null;
+				if (profile.logo) {
+					try {
+						logoUrl = await getSignedDownloadUrl(profile.logo.key);
+					} catch {}
+				}
+				return {
+					type: "user",
+					name: profile.name,
+					logo: logoUrl
+				};
 			}
-			return {
-				type: "user",
-				name: profile.name,
-				logo: logoUrl
-			};
 		}
-	}
 
-	const partyMatch = url.match(/\/party\/(\d+)/);
-	if (partyMatch) {
-		const partyId = parseInt(partyMatch[1]);
-		const party = await db.query.politicalParties.findFirst({
-			where: eq(politicalParties.id, partyId),
-			with: { logo: true }
-		});
+		// Party preview
+		const partyMatch = url.match(/\/party\/(\d+)/);
+		if (partyMatch) {
+			const partyId = parseInt(partyMatch[1]);
+			const party = await db.query.politicalParties.findFirst({
+				where: eq(politicalParties.id, partyId),
+				with: { logo: true }
+			});
 
-		if (party) {
-			let logoUrl = null;
-			if (party.logo) {
-				try {
-					logoUrl = await getSignedDownloadUrl(party.logo!.key);
-				} catch {}
+			if (party) {
+				let logoUrl = null;
+				if (party.logo) {
+					try {
+						logoUrl = await getSignedDownloadUrl(party.logo.key);
+					} catch {}
+				}
+				return {
+					type: "party",
+					name: party.name,
+					logo: logoUrl,
+					memberCount: party.memberCount
+				};
 			}
-			return {
-				type: "party",
-				name: party.name,
-				logo: logoUrl,
-				memberCount: party.memberCount
-			};
 		}
+
+		// Newspaper preview
+		const newspaperMatch = url.match(/\/newspaper\/(\d+)/);
+		if (newspaperMatch) {
+			const newspaperId = parseInt(newspaperMatch[1]);
+			const newspaper = await db.query.newspapers.findFirst({
+				where: eq(newspapers.id, newspaperId),
+				with: { logo: true }
+			});
+
+			if (newspaper) {
+				let logoUrl = null;
+				if (newspaper.logo) {
+					try {
+						logoUrl = await getSignedDownloadUrl(newspaper.logo.key);
+					} catch {}
+				}
+				return {
+					type: "newspaper",
+					name: newspaper.name,
+					logo: logoUrl
+				};
+			}
+		}
+
+		// State preview
+		const stateMatch = url.match(/\/state\/(\d+)/);
+		if (stateMatch) {
+			const stateId = parseInt(stateMatch[1]);
+			const state = await db.query.states.findFirst({
+				where: eq(states.id, stateId),
+				with: { logo: true }
+			});
+
+			if (state) {
+				let logoUrl = null;
+				if (state.logo) {
+					try {
+						logoUrl = await getSignedDownloadUrl(state.logo.key);
+					} catch {}
+				}
+				return {
+					type: "state",
+					name: state.name,
+					logo: logoUrl,
+					population: state.population
+				};
+			}
+		}
+
+		// Bloc preview
+		const blocMatch = url.match(/\/bloc\/(\d+)/);
+		if (blocMatch) {
+			const blocId = parseInt(blocMatch[1]);
+			const bloc = await db.query.blocs.findFirst({
+				where: eq(blocs.id, blocId)
+			});
+
+			if (bloc) {
+				return {
+					type: "bloc",
+					name: bloc.name,
+					color: bloc.color
+				};
+			}
+		}
+
+		// Article preview
+		const articleMatch = url.match(/\/article\/(\d+)/);
+		if (articleMatch) {
+			const articleId = parseInt(articleMatch[1]);
+			const article = await db.query.articles.findFirst({
+				where: eq(articles.id, articleId),
+				with: {
+					newspaper: { with: { logo: true } },
+					author: true
+				}
+			});
+
+			if (article) {
+				let logoUrl = null;
+				if (article.newspaper?.logo) {
+					try {
+						logoUrl = await getSignedDownloadUrl(article.newspaper.logo.key);
+					} catch {}
+				}
+
+				// Get author profile
+				let authorName = "Unknown";
+				if (article.author) {
+					const authorProfile = await db.query.userProfiles.findFirst({
+						where: eq(userProfiles.accountId, article.authorId)
+					});
+					authorName = authorProfile?.name || "Unknown";
+				}
+
+				return {
+					type: "article",
+					title: article.title,
+					newspaperName: article.newspaper?.name,
+					authorName,
+					logo: logoUrl
+				};
+			}
+		}
+	} catch (err) {
+		console.error("Error getting link preview:", err);
 	}
 
 	return null;
@@ -75,7 +195,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
 		throw error(400, "Missing 'before' parameter");
 	}
 
-	// Validate beforeId is a number
 	const beforeIdNum = parseInt(beforeId);
 	if (isNaN(beforeIdNum)) {
 		throw error(400, "Invalid 'before' parameter");
