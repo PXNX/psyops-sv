@@ -1,5 +1,7 @@
 <script lang="ts">
 	const { children } = $props();
+
+	export const prerender = true;
 </script>
 
 <svelte:head>

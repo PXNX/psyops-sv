@@ -2,6 +2,7 @@ import { relations } from "drizzle-orm";
 import {
 	bigint,
 	boolean,
+	decimal,
 	index,
 	integer,
 	pgEnum,
@@ -147,6 +148,8 @@ export const states = pgTable("states", {
 
 export const regions = pgTable("regions", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	latitude: decimal("latitude").notNull(),
+	longitude: decimal("longitude").notNull(),
 	stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
 	rating: integer("rating").default(0),
 	infrastructure: integer("infrastructure").default(0),
@@ -244,10 +247,7 @@ export const regionsRelations = relations(regions, ({ one, many }) => ({
 	}),
 	factories: many(factories),
 	residences: many(residences),
-	coordinates: one(regionCoordinates, {
-		fields: [regions.id],
-		references: [regionCoordinates.regionId]
-	}),
+
 	militaryUnits: many(militaryUnits)
 }));
 
@@ -851,17 +851,6 @@ export const userTravels = pgTable("user_travels", {
 	travelDuration: integer("travel_duration").notNull(),
 	status: travelStatusEnum("status").notNull().default("in_progress"),
 	distanceKm: integer("distance_km").notNull(),
-	createdAt: timestamp("created_at").defaultNow().notNull()
-});
-
-export const regionCoordinates = pgTable("region_coordinates", {
-	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
-	regionId: integer("region_id")
-		.notNull()
-		.references(() => regions.id, { onDelete: "cascade" })
-		.unique(),
-	centerX: integer("center_x").notNull(),
-	centerY: integer("center_y").notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 

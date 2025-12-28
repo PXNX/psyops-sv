@@ -17,6 +17,7 @@ import { error, fail } from "@sveltejs/kit";
 import { eq, count, and } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
+import { sendMedalNotification } from "$lib/server/service/inbox";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	// Query account with its profile
