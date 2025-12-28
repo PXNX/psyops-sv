@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.select({
 			id: newspapers.id,
 			name: newspapers.name,
-			avatar: newspapers.avatar,
+			logo: newspapers.logo,
 			rank: journalists.rank
 		})
 		.from(journalists)
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		newspapers: userNewspapers.map((n) => ({
 			id: n.id,
 			name: n.name,
-			avatar: n.avatar,
+			logo: n.logo,
 			rank: n.rank
 		}))
 	};

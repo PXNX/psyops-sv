@@ -9,7 +9,7 @@ export const createProfileSchema = v.object({
 		v.maxLength(50, "Name must not exceed 50 characters")
 	),
 	bio: v.optional(v.pipe(v.string(), v.maxLength(500, "Bio must not exceed 500 characters"))),
-	avatar: v.optional(
+	logo: v.optional(
 		v.pipe(
 			v.file("Please upload an image file"),
 			v.mimeType(["image/jpeg", "image/png", "image/webp", "image/gif"], "Only image files are allowed"),

@@ -8,12 +8,15 @@ import {
 	articles,
 	regions,
 	states,
-	politicalParties
+	politicalParties,
+	userMedals,
+	presidents
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error, fail } from "@sveltejs/kit";
-import { eq, count } from "drizzle-orm";
-import type { PageServerLoad } from "./$types";
+import { eq, count, and } from "drizzle-orm";
+import type { Actions, PageServerLoad } from "./$types";
+import { getRegionName } from "$lib/utils/formatting";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	// Query account with its profile
@@ -133,22 +136,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					movedInAt: residence.movedInAt,
 					region: {
 						id: residence.regionId,
-						// todo: add regionname from paraglide
-						stateId: residence.stateId,
-						stateName: residence.stateName,
-						stateLogo: residence.stateLogo
+
+						name: getRegionName(residence.regionId),
+						logo: "/coats/" + residence.regionId + ".svg",
+						state: {
+							id: residence.stateId,
+							name: residence.stateName,
+							logo: residence.stateLogo
+						}
 					}
 				}
 			: null,
 		articleCount: articleCountResult?.count || 0,
 		isOwnProfile: account.id === params.id
 	};
+};
 
+export const actions: Actions = {
 	awardMedal: async ({ request, params, locals }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Not authenticated" });
-		}
+		const account = locals.account!;
 
 		// Check if user is a president
 		const presidency = await db.query.presidents.findFirst({
@@ -197,6 +203,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 
 		try {
+			// Award the medal
 			await db.insert(userMedals).values({
 				userId: params.id,
 				stateId: presidency.stateId,
@@ -205,10 +212,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				awardedBy: account.id
 			});
 
+			// Send inbox notification
+			await sendMedalNotification({
+				recipientId: params.id,
+				awarderId: account.id,
+				medalType,
+				reason,
+				stateId: presidency.stateId
+			});
+
 			return { success: true };
 		} catch (error) {
 			console.error("Error awarding medal:", error);
 			return fail(500, { error: "Failed to award medal" });
 		}
-	};
+	}
 };

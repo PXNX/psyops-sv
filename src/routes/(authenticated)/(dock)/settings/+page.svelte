@@ -26,7 +26,7 @@
 		taintedMessage: null
 	});
 
-	let previewUrl = $state<string | null>(data.profile.avatar);
+	let previewUrl = $state<string | null>(data.profile.logo);
 	let dragActive = $state(false);
 	let fileInput: HTMLInputElement;
 	let current_theme = $state("");
@@ -95,7 +95,7 @@
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
-			$form.avatar = file;
+			$form.logo = file;
 			updatePreview(file);
 		}
 	}
@@ -105,7 +105,7 @@
 		dragActive = false;
 		const file = event.dataTransfer?.files[0];
 		if (file) {
-			$form.avatar = file;
+			$form.logo = file;
 			updatePreview(file);
 		}
 	}
@@ -120,7 +120,7 @@
 	}
 
 	function updatePreview(file: File) {
-		if (previewUrl && previewUrl !== data.profile.avatar) {
+		if (previewUrl && previewUrl !== data.profile.logo) {
 			URL.revokeObjectURL(previewUrl);
 		}
 		previewUrl = URL.createObjectURL(file);
@@ -129,12 +129,12 @@
 	function clearImage() {
 		if ($submitting) return;
 
-		$form.avatar = undefined;
+		$form.logo = undefined;
 
-		if (previewUrl && previewUrl !== data.profile.avatar) {
+		if (previewUrl && previewUrl !== data.profile.logo) {
 			URL.revokeObjectURL(previewUrl);
 		}
-		previewUrl = data.profile.avatar;
+		previewUrl = data.profile.logo;
 
 		if (fileInput) {
 			fileInput.value = "";
@@ -144,7 +144,7 @@
 	// Cleanup on unmount
 	$effect(() => {
 		return () => {
-			if (previewUrl && previewUrl !== data.profile.avatar) {
+			if (previewUrl && previewUrl !== data.profile.logo) {
 				URL.revokeObjectURL(previewUrl);
 			}
 		};
@@ -267,8 +267,8 @@
 				<input
 					bind:this={fileInput}
 					type="file"
-					id="avatar"
-					name="avatar"
+					id="logo"
+					name="logo"
 					accept="image/*"
 					class="hidden"
 					onchange={handleFileSelect}
@@ -288,7 +288,7 @@
 					class:hover:border-purple-500-50={!$submitting && !previewUrl && canEdit}
 					class:hover:bg-purple-600-10={!$submitting && !previewUrl && canEdit}
 					class:opacity-50={$submitting || !canEdit}
-					class:input-error={$errors.avatar}
+					class:input-error={$errors.logo}
 				>
 					{#if !previewUrl}
 						<div class="flex min-h-[160px] flex-col items-center justify-center gap-3 p-6">
@@ -324,7 +324,7 @@
 							>
 								<p class="text-base font-semibold text-white">Tap to change</p>
 							</div>
-							{#if previewUrl !== data.profile.avatar && canEdit}
+							{#if previewUrl !== data.profile.logo && canEdit}
 								<button
 									type="button"
 									onclick={(e) => {
@@ -342,8 +342,8 @@
 				</button>
 			</div>
 
-			{#if $errors.avatar}
-				<p class="text-xs text-red-400">{$errors.avatar}</p>
+			{#if $errors.logo}
+				<p class="text-xs text-red-400">{$errors.logo}</p>
 			{:else}
 				<p class="text-xs text-gray-400">Will be converted to 96x96 WebP • Max 5MB</p>
 			{/if}
@@ -531,7 +531,7 @@
 	<!-- Info Box -->
 	<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
 		<p class="text-sm text-blue-300">
-			💡 <strong>Tip:</strong> Your profile information will be visible to other users. Make sure to choose a name and avatar
+			💡 <strong>Tip:</strong> Your profile information will be visible to other users. Make sure to choose a name and logo
 			that represent you well in the political landscape!
 		</p>
 	</div>

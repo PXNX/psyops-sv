@@ -29,11 +29,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "State not found");
 	}
 
-	// Fetch state logo (avatar field in schema)
+	// Fetch state logo (logo field in schema)
 	let stateLogo;
-	if (state.avatar) {
+	if (state.logo) {
 		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, state.avatar)
+			where: eq(files.id, state.logo)
 		});
 		if (logoFile) {
 			try {
@@ -109,16 +109,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					where: eq(userProfiles.accountId, leader.userId)
 				});
 
-				// Fetch leader avatar from files table
-				if (leaderProfile?.avatar) {
-					const avatarFile = await db.query.files.findFirst({
-						where: eq(files.id, leaderProfile.avatar)
+				// Fetch leader logo from files table
+				if (leaderProfile?.logo) {
+					const logoFile = await db.query.files.findFirst({
+						where: eq(files.id, leaderProfile.logo)
 					});
-					if (avatarFile) {
+					if (logoFile) {
 						try {
-							leaderProfile.avatar = await getSignedDownloadUrl(avatarFile.key);
+							leaderProfile.logo = await getSignedDownloadUrl(logoFile.key);
 						} catch {
-							leaderProfile.avatar = null;
+							leaderProfile.logo = null;
 						}
 					}
 				}

@@ -29,7 +29,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			chromium: regions.chromium,
 			stateId: regions.stateId,
 			stateName: states.name,
-			stateColor: states.avatar,
+			stateColor: states.logo,
 			createdAt: regions.createdAt
 		})
 		.from(regions)

@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			electedAt: parliamentMembers.electedAt,
 			term: parliamentMembers.term,
 			name: userProfiles.name,
-			avatar: userProfiles.avatar
+			logo: userProfiles.logo
 		})
 		.from(parliamentMembers)
 		.leftJoin(accounts, eq(parliamentMembers.userId, accounts.id))
@@ -51,18 +51,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.where(eq(parliamentMembers.stateId, params.id))
 		.orderBy(desc(parliamentMembers.electedAt));
 
-	// Process avatars
+	// Process logos
 	const processedMembers = await Promise.all(
 		members.map(async (member) => {
-			let avatarUrl = member.avatar;
-			if (avatarUrl && !avatarUrl.startsWith("http")) {
+			let logoUrl = member.logo;
+			if (logoUrl && !logoUrl.startsWith("http")) {
 				try {
-					avatarUrl = await getSignedDownloadUrl(avatarUrl);
+					logoUrl = await getSignedDownloadUrl(logoUrl);
 				} catch {
-					avatarUrl = null;
+					logoUrl = null;
 				}
 			}
-			return { ...member, avatar: avatarUrl };
+			return { ...member, logo: logoUrl };
 		})
 	);
 
@@ -124,12 +124,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				where: eq(userProfiles.accountId, proposal.proposedBy)
 			});
 
-			let proposerAvatar = proposer?.avatar;
-			if (proposerAvatar && !proposerAvatar.startsWith("http")) {
+			let proposerLogo = proposer?.logo;
+			if (proposerLogo && !proposerLogo.startsWith("http")) {
 				try {
-					proposerAvatar = await getSignedDownloadUrl(proposerAvatar);
+					proposerLogo = await getSignedDownloadUrl(proposerLogo);
 				} catch {
-					proposerAvatar = null;
+					proposerLogo = null;
 				}
 			}
 
@@ -142,7 +142,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				proposedBy: {
 					id: proposal.proposedBy,
 					name: proposer?.name || "Unknown",
-					avatar: proposerAvatar
+					logo: proposerLogo
 				}
 			};
 		})

@@ -42,7 +42,7 @@ export const actions: Actions = {
 			return message(form, "Please fix the validation errors", { status: 400 });
 		}
 
-		const { name, bio, avatar, politicalViews } = form.data;
+		const { name, bio, logo, politicalViews } = form.data;
 
 		// Check if profile already exists
 		const existingProfile = await db.query.userProfiles.findFirst({
@@ -56,29 +56,29 @@ export const actions: Actions = {
 		try {
 			// Use transaction for everything
 			await db.transaction(async (tx) => {
-				let avatarFileId: number | null = null;
+				let logoFileId: number | null = null;
 
-				// Upload avatar if provided
-				if (avatar) {
-					const avatarUploadResult = await uploadFileFromForm(avatar);
+				// Upload logo if provided
+				if (logo) {
+					const logoUploadResult = await uploadFileFromForm(logo);
 
-					if (!avatarUploadResult.success) {
+					if (!logoUploadResult.success) {
 						tx.rollback();
-						throw new Error("Failed to upload avatar");
+						throw new Error("Failed to upload logo");
 					}
 
 					// Create file record in database
 					const [fileResult] = await tx
 						.insert(files)
 						.values({
-							key: avatarUploadResult.key,
-							fileName: avatar.name,
+							key: logoUploadResult.key,
+							fileName: logo.name,
 							contentType: "image/webp",
-							sizeBytes: avatar.size,
+							sizeBytes: logo.size,
 							uploadedBy: account.id
 						})
 						.returning();
-					avatarFileId = fileResult.id;
+					logoFileId = fileResult.id;
 				}
 
 				// Build bio with political views if provided
@@ -97,7 +97,7 @@ export const actions: Actions = {
 						.set({
 							name,
 							bio: fullBio || null,
-							logo: avatarFileId,
+							logo: logoFileId,
 							updatedAt: new Date()
 						})
 						.where(eq(userProfiles.accountId, account.id));
@@ -106,7 +106,7 @@ export const actions: Actions = {
 						accountId: account.id,
 						name,
 						bio: fullBio || null,
-						logo: avatarFileId
+						logo: logoFileId
 					});
 				}
 

@@ -15,11 +15,6 @@
 
 	const { data, form } = $props();
 
-	const regionName = $derived(() => {
-		const key = `region_${data.region.id}`;
-		return m[key]();
-	});
-
 	const isIndependent = $derived(!data.region.stateId);
 </script>
 
@@ -28,11 +23,11 @@
 	<div class="flex items-center gap-4">
 		<img
 			src="/coats/{data.region.id}.svg"
-			alt={regionName()}
+			alt={data.region.name}
 			class="size-20 rounded-xl object-cover ring-2 ring-white/10"
 		/>
 		<div class="flex-1">
-			<h1 class="text-3xl font-bold text-white">{regionName()}</h1>
+			<h1 class="text-3xl font-bold text-white">{data.region.name}</h1>
 			{#if data.region.stateName}
 				<p class="text-gray-400 mt-1">
 					<a href="/state/{data.region.stateId}" class="hover:text-purple-400 transition-colors">

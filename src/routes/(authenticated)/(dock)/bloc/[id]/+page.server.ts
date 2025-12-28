@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select({
 			id: states.id,
 			name: states.name,
-			avatar: states.avatar,
+			logo: states.logo,
 			population: states.population,
 			rating: states.rating,
 			presidentId: presidents.id,
@@ -78,7 +78,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		memberStates: memberStates.map((state) => ({
 			id: state.id,
 			name: state.name,
-			avatar: state.avatar,
+			logo: state.logo,
 			population: state.population || 0,
 			rating: state.rating || 0,
 			president: state.presidentUserId

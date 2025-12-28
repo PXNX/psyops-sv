@@ -1,12 +1,12 @@
 <!-- src/lib/component/ProfileItem.svelte -->
 <script lang="ts">
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-	import SquareAvatar from "./SquareAvatar.svelte";
+	import SquareLogo from "./SquareLogo.svelte";
 	import type { Component } from "svelte";
 
 	let {
 		name,
-		avatar,
+		logo,
 		description,
 		date,
 		href,
@@ -16,7 +16,7 @@
 		name: string;
 		description: string;
 		date: Date;
-		avatar: string;
+		logo: string;
 		href: string;
 		bgColor: string;
 		icon: Component;
