@@ -10,7 +10,8 @@ import {
 	visaApplications,
 	userWallets,
 	stateTreasury,
-	residenceApplications
+	residenceApplications,
+	parliamentaryElections
 } from "$lib/server/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
@@ -75,6 +76,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		userResidenceState = userRegion?.state;
 	}
 
+	// Check if state has had inaugural election
+	let hasInauguralElection = false;
+	if (region.stateId) {
+		const inauguration = await db.query.parliamentaryElections.findFirst({
+			where: and(eq(parliamentaryElections.stateId, region.stateId), eq(parliamentaryElections.isInaugural, true))
+		});
+		hasInauguralElection = !!inauguration;
+	}
+
+	// Determine if this region allows free movement
+	const allowsFreeMovement = !region.stateId || !hasInauguralElection;
+
 	// Check if user needs a visa for this state
 	let needsVisa = false;
 	let hasActiveVisa = false;
@@ -82,7 +95,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	let visaSettings = null;
 	let activeVisa = null;
 
-	if (region.stateId && userResidenceState?.id !== region.stateId) {
+	if (region.stateId && userResidenceState?.id !== region.stateId && hasInauguralElection) {
 		needsVisa = true;
 
 		// Get visa settings
@@ -145,6 +158,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		population,
 		hasResidence,
 		hasPendingResidenceApp: !!pendingResidenceApp,
+		allowsFreeMovement,
+		hasInauguralElection,
 		governor: region.governor
 			? {
 					userId: region.governor.userId,
@@ -207,8 +222,20 @@ export const actions: Actions = {
 			return fail(400, { error: "You already have a pending residence application for this region" });
 		}
 
-		// Independent regions allow free movement
-		if (!targetRegion.stateId) {
+		// Check if state has had inaugural election
+		let hasInauguralElection = false;
+		if (targetRegion.stateId) {
+			const inauguration = await db.query.parliamentaryElections.findFirst({
+				where: and(
+					eq(parliamentaryElections.stateId, targetRegion.stateId),
+					eq(parliamentaryElections.isInaugural, true)
+				)
+			});
+			hasInauguralElection = !!inauguration;
+		}
+
+		// Independent regions or regions before inaugural election allow free movement
+		if (!targetRegion.stateId || !hasInauguralElection) {
 			// Direct move - no approval needed
 			if (currentResidence) {
 				await db
@@ -227,11 +254,13 @@ export const actions: Actions = {
 
 			return {
 				success: true,
-				message: "Successfully moved to independent region!"
+				message: hasInauguralElection
+					? "Successfully moved to region!"
+					: "Successfully moved! (Free movement before inaugural election)"
 			};
 		}
 
-		// For regions with states, create application (governor approval required)
+		// For regions with established states, create application (governor approval required)
 		await db.insert(residenceApplications).values({
 			userId: account.id,
 			regionId: regionId,
@@ -258,6 +287,15 @@ export const actions: Actions = {
 		}
 
 		const stateId = region.stateId;
+
+		// Check if state has had inaugural election
+		const inauguration = await db.query.parliamentaryElections.findFirst({
+			where: and(eq(parliamentaryElections.stateId, stateId), eq(parliamentaryElections.isInaugural, true))
+		});
+
+		if (!inauguration) {
+			return fail(400, { error: "This state has not held its inaugural election yet. Visas are not required." });
+		}
 
 		// Get user's residence
 		const residence = await db.query.residences.findFirst({
