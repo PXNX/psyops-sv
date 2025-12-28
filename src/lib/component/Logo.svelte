@@ -1,4 +1,4 @@
-<!-- src/lib/component/PreviewImage.svelte -->
+<!-- src/lib/component/Logo.svelte -->
 <script lang="ts">
 	import type { Component } from "svelte";
 	import FluentImage24Regular from "~icons/fluent/image-24-regular";

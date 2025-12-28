@@ -1,420 +1,194 @@
-<!--<script lang="ts">
+<!-- src/routes/(authenticated)/(fullscreen)/posts/new/+page.svelte -->
+<script lang="ts">
+	import { enhance } from "$app/forms";
+	import { goto } from "$app/navigation";
 	import FluentEmojiFloppyDisk from "~icons/fluent-emoji/floppy-disk";
 	import MdiWindowClose from "~icons/mdi/window-close";
 	import FluentArrowHookUpLeft20Regular from "~icons/fluent/arrow-hook-up-left-20-regular";
 	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
+	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
+	import Logo from "$lib/component/Logo.svelte";
+	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 
 	const { data } = $props();
 
+	let editorComponent = $state(null);
 	let publishModal: HTMLDialogElement;
 	let cancelModal: HTMLDialogElement;
+	let title = $state("");
+	let selectedNewspaperId = $state("");
+	let isSubmitting = $state(false);
 
-	import { Color } from "@tiptap/extension-color";
-	import ListItem from "@tiptap/extension-list-item";
-	import TextStyle from "@tiptap/extension-text-style";
-	import Document from "@tiptap/extension-document";
-	import Gapcursor from "@tiptap/extension-gapcursor";
-	import Paragraph from "@tiptap/extension-paragraph";
-	import { Table } from "@tiptap/extension-table";
-	import TableCell from "@tiptap/extension-table-cell";
-	import TableHeader from "@tiptap/extension-table-header";
-	import TableRow from "@tiptap/extension-table-row";
-	import Text from "@tiptap/extension-text";
-	import BulletList from "@tiptap/extension-bullet-list";
-	import OrderedList from "@tiptap/extension-ordered-list";
+	const handlePublish = async () => {
+		const content = editorComponent?.getContent();
 
-	import { onMount } from "svelte";
-	import type { Readable } from "svelte/store";
-	import { createEditor, Editor, EditorContent, BubbleMenu, FloatingMenu } from "svelte-tiptap";
-	import StarterKit from "@tiptap/starter-kit";
+		if (!title.trim()) {
+			alert("Please enter a title");
+			return;
+		}
 
-	let editor = $state() as Readable<Editor>;
+		if (!content || content.trim().length < 50) {
+			alert("Please write at least 50 characters of content");
+			return;
+		}
 
-	onMount(() => {
-		editor = createEditor({
-			extensions: [
-				Color.configure({ types: [TextStyle.name, ListItem.name] }),
-				//	TextStyle.configure({ types: [ListItem.name] }),
-				StarterKit,
-				Document,
-				Paragraph,
-				Text,
-				Gapcursor,
-				Table.configure({
-					resizable: true
-				}),
-				TableRow,
-				TableHeader,
-				TableCell,
-				BulletList.configure({
-					HTMLAttributes: {
-						class: "list-disc ml-2"
-					}
-				}),
-				OrderedList.configure({
-					HTMLAttributes: {
-						class: "list-decimal ml-2"
-					}
-				})
-			],
-			content: `
-			  <h2>
-				Hi there,
-			  </h2>
-			  <p>
-				this is a <em>basic</em> example of <strong>Tiptap</strong>. Sure, there are all kind of basic text styles you’d probably expect from a text editor. But wait until you see the lists:
-			  </p>
-			  <ul>
-				<li>
-				  That’s a bullet list with one …
-				</li>
-				<li>
-				  … or two list items.
-				</li>
-			  </ul>
-			  <p>
-				Isn’t that great? And all of that is editable. But wait, there’s more. Let’s try a code block:
-			  </p>
-			  <pre><code class="language-css">body {
-	display: none;
-  }</code></pre>
-			  <p>
-				I know, I know, this is impressive. It’s only the tip of the iceberg though. Give it a try and click a little bit around. Don’t forget to check the other examples too.
-			  </p>
-			  <blockquote>
-				Wow, that’s amazing. Good work, boy! 👏
-				<br />
-				— Mom
-			  </blockquote>
-			`,
-			editorProps: {
-				attributes: {
-					class: " appearance-none h-full    w-full p-2 bg-white text-black   leading-tight focus:outline-none "
-				}
-			}
-		});
-	});
+		if (title.length > 200) {
+			alert("Title must be 200 characters or less");
+			return;
+		}
 
-	const isActive = (name: string, attrs = {}) => $editor.isActive(name, attrs);
+		publishModal.showModal();
+	};
+
+	const handleCancel = () => {
+		if (title || editorComponent?.getContent()) {
+			cancelModal.showModal();
+		} else {
+			history.back();
+		}
+	};
 </script>
 
-<header class="sticky top-0 bg-base-100">
-	<div class="flex p-2 space-x-2">
-		<button onclick={() => publishModal.showModal()} class="btn btn-circle btn-ghost">
-			<FluentEmojiFloppyDisk />
+<svelte:head>
+	<title>Create Post</title>
+</svelte:head>
+
+<header class="sticky top-0 z-10 bg-base-100 shadow-sm">
+	<div class="flex items-center gap-2 p-2 sm:p-3">
+		<button onclick={handlePublish} class="btn btn-circle btn-sm sm:btn-md btn-primary" title="Publish">
+			<FluentEmojiFloppyDisk class="text-xl sm:text-2xl" />
 		</button>
 
-		{#if editor}
-			<button
-				class="btn btn-circle"
-				onclick={() => $editor.chain().focus().undo().run()}
-				disabled={!$editor.can().chain().focus().undo().run()}
-			>
-				<FluentArrowHookUpLeft20Regular />
+		{#if editorComponent}
+			<button class="btn btn-circle btn-sm sm:btn-md" onclick={() => editorComponent.undo()} title="Undo">
+				<FluentArrowHookUpLeft20Regular class="w-5 h-5" />
 			</button>
-			<button
-				class="btn btn-circle"
-				onclick={() => $editor.chain().focus().redo().run()}
-				disabled={!$editor.can().chain().focus().redo().run()}
-			>
-				<FluentArrowHookUpRight20Regular />
+			<button class="btn btn-circle btn-sm sm:btn-md" onclick={() => editorComponent.redo()} title="Redo">
+				<FluentArrowHookUpRight20Regular class="w-5 h-5" />
 			</button>
 		{/if}
 
-		<button onclick={() => cancelModal.showModal()} class="btn btn-circle btn-ghost ms-auto">
-			<MdiWindowClose />
+		<button onclick={handleCancel} class="btn btn-circle btn-sm sm:btn-md btn-ghost ml-auto" title="Cancel">
+			<MdiWindowClose class="w-5 h-5" />
 		</button>
 	</div>
-
 	<hr class="divide-gray-200 dark:divide-gray-700" />
 </header>
 
+<main class="container mx-auto px-2 sm:px-4 py-4 max-w-4xl">
+	<!-- Title Input -->
+	<input
+		class="input input-bordered w-full text-lg sm:text-2xl font-bold mb-4"
+		placeholder="Enter your title..."
+		type="text"
+		bind:value={title}
+		maxlength="200"
+	/>
+
+	<!-- Character Count -->
+	<div class="text-xs sm:text-sm text-gray-500 mb-4 text-right">
+		{title.length}/200 characters
+	</div>
+
+	<!-- Editor -->
+	<div class="bg-base-100 rounded-lg shadow-sm min-h-[50vh]">
+		<WysiwygEditor bind:this={editorComponent} placeholder="Start writing your article..." />
+	</div>
+</main>
+
+<!-- Publish Modal -->
 <dialog class="modal" bind:this={publishModal}>
-	<div class="modal-box">
+	<div class="modal-box w-11/12 max-w-md">
 		<form method="dialog">
-			<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2"><MdiWindowClose /></button>
+			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+				<MdiWindowClose />
+			</button>
 		</form>
-		<h3 class="text-lg font-bold">Are you ready to publish?</h3>
 
-		<input class="w-full max-w-xs input" placeholder="Enter Title..." type="text" />
+		<h3 class="font-bold text-lg mb-4">Ready to publish?</h3>
 
-		{#if data.newspapers.length > 0}
-			<label class="form-control w-full">
-				Publish article as
+		<form
+			method="POST"
+			action="?/publish"
+			use:enhance={() => {
+				isSubmitting = true;
+				return async ({ update }) => {
+					await update();
+					isSubmitting = false;
+				};
+			}}
+		>
+			<input type="hidden" name="title" value={title} />
+			<input type="hidden" name="content" value={editorComponent?.getContent() || ""} />
 
-				<select class="w-full max-w-sm select select-bordered">
-					<option value="" selected disabled hidden>Select newspaper</option>
-					{#each data.newspapers as newspaper}
-						<option value={newspaper.id}>
-							{newspaper.name}
-						</option>
-					{/each}
-				</select>
-			</label>
-		{/if}
+			<!-- Preview -->
+			<div class="bg-base-200 p-3 rounded-lg mb-4">
+				<p class="text-sm font-semibold line-clamp-2">{title || "Untitled"}</p>
+			</div>
 
-		<button class=" btn btn-primary">Publish article</button>
-	</div>
-</dialog>-->
+			{#if data.newspapers.length > 0}
+				<label class="form-control w-full mb-4">
+					<div class="label">
+						<span class="label-text">Publish as</span>
+					</div>
+					<select class="select select-bordered w-full" name="newspaperId" bind:value={selectedNewspaperId}>
+						<option value="">Personal Post</option>
+						{#each data.newspapers as newspaper}
+							<option value={newspaper.id}>
+								{newspaper.name}
+								{#if newspaper.rank === "owner"}
+									<span class="badge badge-primary badge-xs">Owner</span>
+								{:else if newspaper.rank === "editor"}
+									<span class="badge badge-secondary badge-xs">Editor</span>
+								{/if}
+							</option>
+						{/each}
+					</select>
+				</label>
 
-<!-- todo: make this own componentn and also provide i18n to separeate header slot and children slot-->
-<!--<dialog class="modal" bind:this={cancelModal}>
-	<div class="modal-box">
-		<form method="dialog">
-			<button class="absolute btn btn-sm btn-circle btn-ghost right-2 top-2"><MdiWindowClose /></button>
+				{#if selectedNewspaperId}
+					{@const selectedNewspaper = data.newspapers.find((n) => n.id === parseInt(selectedNewspaperId))}
+					{#if selectedNewspaper}
+						<div class="alert alert-info mb-4">
+							<FluentEmojiRolledUpNewspaper class="w-6 h-6" />
+							<div class="text-sm">
+								Publishing to <strong>{selectedNewspaper.name}</strong>
+							</div>
+						</div>
+					{/if}
+				{/if}
+			{/if}
+
+			<button class="btn btn-primary w-full" type="submit" disabled={isSubmitting}>
+				{isSubmitting ? "Publishing..." : "Publish Article"}
+			</button>
 		</form>
-		<h3 class="text-lg font-bold">Cancel!</h3>
-		<p class="py-4">Press ESC key or click on ✕ button to close</p>
-
-		<button class=" btn btn-primary" onclick={() => history.back()}>Revert changes</button>
 	</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
 </dialog>
 
-<EditorContent editor={$editor} />
+<!-- Cancel Modal -->
+<dialog class="modal" bind:this={cancelModal}>
+	<div class="modal-box">
+		<form method="dialog">
+			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+				<MdiWindowClose />
+			</button>
+		</form>
 
-{#if editor}
-	<BubbleMenu
-		class="flex w-fit max-w-[90vw] overflow-hidden rounded  bg-black shadow-xl p-1"
-		tippyOptions={{ duration: 100 }}
-		editor={$editor}
-	>
-		<div class="control-group">
-			<div class="button-group">
-				<button
-					onclick={() => $editor.chain().focus().toggleBold().run()}
-					disabled={!$editor.can().chain().focus().toggleBold().run()}
-					class={isActive("bold") ? "border  border-yellow-300 m-4" : ""}
-				>
-					Bold
-				</button>
+		<h3 class="font-bold text-lg">Discard changes?</h3>
+		<p class="py-4">Your unsaved work will be lost.</p>
 
-				<button
-					onclick={() => $editor.chain().focus().toggleItalic().run()}
-					disabled={!$editor.can().chain().focus().toggleItalic().run()}
-					class={isActive("italic") ? "is-active" : ""}
-				>
-					Italic
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleStrike().run()}
-					disabled={!$editor.can().chain().focus().toggleStrike().run()}
-					class={isActive("strike") ? "is-active" : ""}
-				>
-					Strike
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleCode().run()}
-					disabled={!$editor.can().chain().focus().toggleCode().run()}
-					class={isActive("code") ? "is-active" : ""}
-				>
-					Code
-				</button>
-				<button onclick={() => $editor.chain().focus().unsetAllMarks().run()}>Clear marks</button>
-				<button onclick={() => $editor.chain().focus().clearNodes().run()}>Clear nodes</button>
-				<button
-					onclick={() => $editor.chain().focus().setParagraph().run()}
-					class={isActive("paragraph") ? "is-active" : ""}
-				>
-					Paragraph
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleHeading({ level: 1 }).run()}
-					class={isActive("heading", { level: 1 }) ? "is-active" : ""}
-				>
-					H1
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleHeading({ level: 2 }).run()}
-					class={isActive("heading", { level: 2 }) ? "is-active" : ""}
-				>
-					H2
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleHeading({ level: 3 }).run()}
-					class={isActive("heading", { level: 3 }) ? "is-active" : ""}
-				>
-					H3
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleHeading({ level: 4 }).run()}
-					class={isActive("heading", { level: 4 }) ? "is-active" : ""}
-				>
-					H4
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleHeading({ level: 5 }).run()}
-					class={isActive("heading", { level: 5 }) ? "is-active" : ""}
-				>
-					H5
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleHeading({ level: 6 }).run()}
-					class={isActive("heading", { level: 6 }) ? "is-active" : ""}
-				>
-					H6
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleBulletList().run()}
-					class={isActive("bulletList") ? "is-active" : ""}
-				>
-					Bullet list
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleOrderedList().run()}
-					class={isActive("orderedList") ? "is-active" : ""}
-				>
-					Ordered list
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleCodeBlock().run()}
-					class={isActive("codeBlock") ? "is-active" : ""}
-				>
-					Code block
-				</button>
-				<button
-					onclick={() => $editor.chain().focus().toggleBlockquote().run()}
-					class={isActive("blockquote") ? "is-active" : ""}
-				>
-					Blockquote
-				</button>
-				<button onclick={() => $editor.chain().focus().setHorizontalRule().run()}> Horizontal rule </button>
-				<button onclick={() => $editor.chain().focus().setHardBreak().run()}>Hard break</button>
-
-				<button
-					onclick={() => $editor.chain().focus().setColor("#958DF1").run()}
-					class={isActive("textStyle", { color: "#958DF1" }) ? "is-active" : ""}
-				>
-					Purple
-				</button>
-			</div>
+		<div class="modal-action">
+			<form method="dialog">
+				<button class="btn">Keep Editing</button>
+			</form>
+			<button class="btn btn-error" onclick={() => history.back()}> Discard </button>
 		</div>
-	</BubbleMenu>
-{/if}-->
-
-<!-- +page.svelte - Example usage page -->
-<script>
-	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
-
-	let editorComponent = $state(null);
-	let savedContent = $state("");
-	let loadedContent = $state("");
-
-	// Simulate saving to database
-	const saveToDatabase = async () => {
-		const content = editorComponent?.getContent();
-		if (!content) return;
-
-		try {
-			// In a real app, you'd make an API call here
-			const response = await fetch("/api/save-content", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ content })
-			});
-
-			if (response.ok) {
-				savedContent = content;
-				alert("Content saved successfully!");
-			}
-		} catch (error) {
-			console.error("Save failed:", error);
-			// For demo purposes, just save to state
-			savedContent = content;
-			alert("Content saved locally (demo mode)!");
-		}
-	};
-
-	// Simulate loading from database
-	const loadFromDatabase = async () => {
-		try {
-			// In a real app, you'd fetch from your API here
-			const response = await fetch("/api/get-content");
-
-			if (response.ok) {
-				const data = await response.json();
-				editorComponent?.setContent(data.content);
-				loadedContent = data.content;
-			}
-		} catch (error) {
-			console.error("Load failed:", error);
-			// For demo purposes, load from saved state
-			if (savedContent) {
-				editorComponent?.setContent(savedContent);
-				loadedContent = savedContent;
-				alert("Content loaded from local state (demo mode)!");
-			}
-		}
-	};
-
-	// Clear editor
-	const clearEditor = () => {
-		if (confirm("Are you sure you want to clear all content?")) {
-			editorComponent?.clearContent();
-		}
-	};
-
-	// Handle real-time content changes
-	const handleContentChange = (content) => {
-		console.log("Content changed, length:", content.length);
-		// You could auto-save here or update UI state
-	};
-
-	// Export content as JSON
-	const exportContent = () => {
-		const content = editorComponent?.getContent();
-		const dataStr = JSON.stringify({ content, timestamp: new Date().toISOString() }, null, 2);
-		const dataBlob = new Blob([dataStr], { type: "application/json" });
-		const url = URL.createObjectURL(dataBlob);
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = "editor-content.json";
-		link.click();
-		URL.revokeObjectURL(url);
-	};
-
-	// Import content from JSON file
-	const importContent = (event) => {
-		const file = event.target.files?.[0];
-		if (!file) return;
-
-		const reader = new FileReader();
-		reader.onload = (e) => {
-			try {
-				const data = JSON.parse(e.target.result);
-				if (data.content) {
-					editorComponent?.setContent(data.content);
-					alert("Content imported successfully!");
-				}
-			} catch (error) {
-				alert("Invalid file format");
-			}
-		};
-		reader.readAsText(file);
-	};
-</script>
-
-<div class="min-h-screen bg-base-200 p-8">
-	<div class="max-w-5xl mx-auto">
-		<div class="flex justify-between items-center mb-6">
-			<h1 class="text-4xl font-bold">WYSIWYG Editor Demo</h1>
-
-			<div class="flex gap-2">
-				<button class="btn btn-success" onclick={saveToDatabase}> 💾 Save to DB </button>
-				<button class="btn btn-info" onclick={loadFromDatabase}> 📥 Load from DB </button>
-				<button class="btn btn-warning" onclick={clearEditor}> 🗑️ Clear </button>
-				<button class="btn btn-primary" onclick={exportContent}> 📤 Export JSON </button>
-				<label class="btn btn-secondary">
-					📂 Import JSON
-					<input type="file" accept=".json" class="hidden" onchange={importContent} />
-				</label>
-			</div>
-		</div>
-
-		<WysiwygEditor
-			bind:this={editorComponent}
-			initialContent={loadedContent}
-			onContentChange={handleContentChange}
-			placeholder="Start writing your content here..."
-		/>
 	</div>
-</div>
+	<form method="dialog" class="modal-backdrop">
+		<button>close</button>
+	</form>
+</dialog>
