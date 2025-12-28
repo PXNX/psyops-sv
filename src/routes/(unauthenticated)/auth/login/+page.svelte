@@ -29,11 +29,10 @@
 					class="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-full blur-2xl opacity-50 animate-pulse"
 				></div>
 
-				<!-- Logo Container -->
 				<div
-					class="relative size-24 bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl ring-4 ring-white/10"
+					class="relative size-32 bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl ring-4 ring-white/10"
 				>
-					<FluentColorGlobeShield24 class="size-16" />
+					<img alt="app logo" class="size-24" src="/logo.svg" />
 				</div>
 			</div>
 
@@ -58,29 +57,8 @@
 				<span class="font-semibold">{m.signUp({ provider: "Google" })}</span>
 			</a>
 
-			<!-- Divider -->
-			<div class="divider text-gray-500 text-xs">SECURE AUTHENTICATION</div>
-
-			<!-- Security Features -->
-			<div class="space-y-3">
-				<div class="flex items-start gap-3 text-sm">
-					<FluentShieldCheckmark20Filled class="size-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-					<div>
-						<p class="text-gray-300 font-medium">End-to-end encrypted</p>
-						<p class="text-gray-500 text-xs">Your data is always protected</p>
-					</div>
-				</div>
-				<div class="flex items-start gap-3 text-sm">
-					<FluentInfo20Filled class="size-5 text-blue-400 flex-shrink-0 mt-0.5" />
-					<div>
-						<p class="text-gray-300 font-medium">No password needed</p>
-						<p class="text-gray-500 text-xs">Sign in securely with Google</p>
-					</div>
-				</div>
-			</div>
-
 			<!-- Terms & Privacy -->
-			<div class="pt-4 border-t border-white/5">
+			<div class=" border-t border-white/5">
 				<p class="text-xs text-center text-gray-400 leading-relaxed">
 					By signing up you agree to our
 					<a class="font-semibold link link-hover text-purple-400 hover:text-purple-300" href="/about/terms">
@@ -93,44 +71,13 @@
 				</p>
 			</div>
 		</div>
-
-		<!-- Features Grid -->
-		<div class="w-full grid grid-cols-3 gap-3 text-center">
-			<div class="bg-slate-800/30 backdrop-blur-sm border border-white/5 rounded-xl p-3">
-				<p class="text-2xl font-bold text-purple-400">🌍</p>
-				<p class="text-xs text-gray-400 mt-1">Global</p>
-			</div>
-			<div class="bg-slate-800/30 backdrop-blur-sm border border-white/5 rounded-xl p-3">
-				<p class="text-2xl font-bold text-pink-400">🔒</p>
-				<p class="text-xs text-gray-400 mt-1">Secure</p>
-			</div>
-			<div class="bg-slate-800/30 backdrop-blur-sm border border-white/5 rounded-xl p-3">
-				<p class="text-2xl font-bold text-blue-400">⚡</p>
-				<p class="text-xs text-gray-400 mt-1">Fast</p>
-			</div>
-		</div>
 	</div>
 
 	<!-- Help Button - Bottom -->
 	<div class="relative z-10 mt-auto w-full max-w-md">
-		<a
-			href="https://t.me/pentexnyx_bot?start=TEST"
-			class="btn btn-lg w-full gap-3 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white backdrop-blur-sm transition-all"
-		>
+		<a href="https://t.me/pentexnyx_bot?start=TEST" class="btn btn-lg btn-ghost w-full gap-3">
 			<FluentEmojiEnvelopeWithArrow class="size-5" />
 			<span>{m.needHelp()}</span>
 		</a>
 	</div>
 </main>
-
-<style>
-	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 0.5;
-		}
-		50% {
-			opacity: 0.3;
-		}
-	}
-</style>

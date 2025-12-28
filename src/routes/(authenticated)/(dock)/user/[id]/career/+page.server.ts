@@ -89,7 +89,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				acc.push({
 					newspaperId: j.newspaper.id,
 					newspaperName: j.newspaper.name,
-					newspaperAvatar: newspaperLogos.get(j.newspaper.id) || null,
+					newspaperLogo: newspaperLogos.get(j.newspaper.id) || null,
 					newspaperBackground: j.newspaper.background,
 					positions: [
 						{
@@ -103,7 +103,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		[] as Array<{
 			newspaperId: number;
 			newspaperName: string;
-			newspaperAvatar: string | null;
+			newspaperLogo: string | null;
 			newspaperBackground: string | null;
 			positions: Array<{ rank: string }>;
 		}>
@@ -142,7 +142,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		user: {
 			id: user.id,
 			name: user.profile?.name,
-			avatar: logoUrl,
+			logo: logoUrl,
 			bio: user.profile?.bio,
 			createdAt: user.createdAt
 		},
@@ -155,7 +155,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				awardedAt: m.awardedAt,
 				awardedBy: {
 					name: m.awardedByUser.profile?.name || "Unknown",
-					avatar: null // Can be enhanced later
+					logo: null // Can be enhanced later
 				},
 				stateName: m.state.name
 			})),

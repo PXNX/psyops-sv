@@ -41,7 +41,7 @@
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
-			$form.avatar = file;
+			$form.logo = file;
 			updatePreview(file);
 		}
 	}
@@ -51,7 +51,7 @@
 		dragActive = false;
 		const file = event.dataTransfer?.files[0];
 		if (file) {
-			$form.avatar = file;
+			$form.logo = file;
 			updatePreview(file);
 		}
 	}
@@ -75,7 +75,7 @@
 	function clearImage() {
 		if ($submitting) return;
 
-		$form.avatar = undefined;
+		$form.logo = undefined;
 
 		if (previewUrl) {
 			URL.revokeObjectURL(previewUrl);
@@ -130,8 +130,8 @@
 				<input
 					bind:this={fileInput}
 					type="file"
-					id="avatar"
-					name="avatar"
+					id="logo"
+					name="logo"
 					accept="image/*"
 					class="hidden"
 					onchange={handleFileSelect}
@@ -145,15 +145,15 @@
 					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
 					class:border-purple-500={dragActive}
 					class:bg-purple-600-10={dragActive}
-					class:border-purple-500-30={!dragActive && !$form.avatar}
-					class:border-success={$form.avatar && !dragActive}
-					class:bg-success-5={$form.avatar && !dragActive}
-					class:hover:border-purple-500-50={!$submitting && !$form.avatar}
-					class:hover:bg-purple-600-10={!$submitting && !$form.avatar}
+					class:border-purple-500-30={!dragActive && !$form.logo}
+					class:border-success={$form.logo && !dragActive}
+					class:bg-success-5={$form.logo && !dragActive}
+					class:hover:border-purple-500-50={!$submitting && !$form.logo}
+					class:hover:bg-purple-600-10={!$submitting && !$form.logo}
 					class:opacity-50={$submitting}
-					class:input-error={$errors.avatar}
+					class:input-error={$errors.logo}
 				>
-					{#if !$form.avatar}
+					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
 							<div class="rounded-full bg-purple-600/20 p-3 transition-transform group-hover:scale-110">
 								<FluentPerson20Filled class="size-8 text-purple-400" />
@@ -165,7 +165,7 @@
 									{:else if $submitting}
 										Uploading...
 									{:else}
-										Tap to upload avatar
+										Tap to upload logo
 									{/if}
 								</p>
 								{#if !$submitting}
@@ -176,7 +176,7 @@
 					{:else}
 						<div class="relative">
 							<div class="flex items-center justify-center p-6 bg-slate-900/50">
-								<img src={previewUrl} alt="Avatar preview" class="size-32 object-cover rounded-full" />
+								<img src={previewUrl} alt="Logo preview" class="size-32 object-cover rounded-full" />
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
@@ -196,19 +196,19 @@
 							</button>
 						</div>
 						<div class="border-t border-slate-700 p-3 bg-slate-900/30">
-							<p class="truncate text-sm font-medium text-white" title={$form.avatar.name}>
-								{$form.avatar.name}
+							<p class="truncate text-sm font-medium text-white" title={$form.logo.name}>
+								{$form.logo.name}
 							</p>
 							<p class="text-xs text-gray-400">
-								{Math.round($form.avatar.size / 1024)} KB
+								{Math.round($form.logo.size / 1024)} KB
 							</p>
 						</div>
 					{/if}
 				</button>
 			</div>
 
-			{#if $errors.avatar}
-				<p class="text-xs text-red-400">{$errors.avatar}</p>
+			{#if $errors.logo}
+				<p class="text-xs text-red-400">{$errors.logo}</p>
 			{:else}
 				<p class="text-xs text-gray-400">Will be converted to 128x128 WebP</p>
 			{/if}

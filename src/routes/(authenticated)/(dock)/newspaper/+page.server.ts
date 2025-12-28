@@ -7,7 +7,7 @@ import type { PageServerLoad } from "./$types";
 export type NewspaperEntry = {
 	id: string;
 	name: string;
-	avatar: string | null;
+	logo: string | null;
 	rank: "author" | "editor" | "owner";
 };
 

@@ -202,9 +202,9 @@
 					class="group bg-slate-800/50 border-2 border-blue-500/30 rounded-xl p-5 space-y-3 hover:bg-slate-800/70 hover:border-blue-500/50 transition-all duration-300 hover:scale-[1.02]"
 				>
 					<!-- Region Image -->
-					{#if region.avatar}
+					{#if region.logo}
 						<div class="aspect-video rounded-lg overflow-hidden bg-slate-900/50">
-							<img src={region.avatar} alt={region.name} class="w-full h-full object-cover" />
+							<img src={region.logo} alt={region.name} class="w-full h-full object-cover" />
 						</div>
 					{/if}
 
@@ -283,9 +283,9 @@
 						class="group bg-slate-800/50 border border-white/5 rounded-xl p-5 space-y-3 hover:bg-slate-800/70 hover:border-purple-500/30 transition-all duration-300 hover:scale-[1.02]"
 					>
 						<!-- Region Image -->
-						{#if region.avatar}
+						{#if region.logo}
 							<div class="aspect-video rounded-lg overflow-hidden bg-slate-900/50">
-								<img src={region.avatar} alt={region.name} class="w-full h-full object-cover" />
+								<img src={region.logo} alt={region.name} class="w-full h-full object-cover" />
 							</div>
 						{/if}
 

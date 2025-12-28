@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SquareAvatar from "$lib/component/SquareAvatar.svelte";
+	import SquareLogo from "$lib/component/SquareLogo.svelte";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -351,8 +351,8 @@
 												href="/user/{party.leader.accountId}"
 												class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors group/leader"
 											>
-												<SquareAvatar
-													src={party.leader.avatar}
+												<SquareLogo
+													src={party.leader.logo}
 													class="ring-2 ring-white/10 group-hover/leader:ring-white/30 transition-all"
 												/>
 												<span class="flex items-center gap-1">

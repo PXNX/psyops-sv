@@ -67,7 +67,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			await db.insert(userProfiles).values({
 				accountId: account.id,
 				name: null, // Intentionally null - user must complete profile
-				avatar: null,
+				logo: null,
 				bio: null
 			});
 

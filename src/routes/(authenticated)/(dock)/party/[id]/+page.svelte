@@ -9,6 +9,8 @@
 	import FluentCrown20Filled from "~icons/fluent/crown-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
+	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
+	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 
 	const { data, form } = $props();
 </script>
@@ -189,9 +191,9 @@
 		<div class="space-y-4">
 			{#each data.members.filter((m) => m.role === "leader") as member}
 				<div class="flex items-center gap-4 p-4 bg-slate-700/30 rounded-lg border border-white/5">
-					{#if member.user.profile?.avatar}
+					{#if member.user.profile?.logo}
 						<img
-							src={member.user.profile.avatar}
+							src={member.user.profile.logo}
 							alt={member.user.profile.name || "Leader"}
 							class="size-16 rounded-xl border-2"
 							style="border-color: {data.party.color}40"
@@ -221,4 +223,38 @@
 			{/each}
 		</div>
 	</div>
+
+	{#if data.isLeader}
+		<div class="flex gap-2">
+			<a
+				href="/party/{data.party.id}/edit"
+				class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+			>
+				<FluentEdit20Filled class="size-4" />
+				Edit Party
+			</a>
+			<a
+				href="/chat?type=party"
+				class="btn btn-sm bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/30 text-emerald-300 hover:text-emerald-200 gap-2"
+			>
+				<FluentChat20Filled class="size-4" />
+				Party Chat
+			</a>
+			<a
+				href="/inbox"
+				class="btn btn-sm bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/30 text-blue-300 hover:text-blue-200 gap-2"
+			>
+				<FluentMail20Filled class="size-4" />
+				Broadcast
+			</a>
+		</div>
+	{:else if data.isMember}
+		<a
+			href="/chat?type=party"
+			class="btn btn-sm bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/30 text-emerald-300 hover:text-emerald-200 gap-2"
+		>
+			<FluentChat20Filled class="size-4" />
+			Party Chat
+		</a>
+	{/if}
 </div>

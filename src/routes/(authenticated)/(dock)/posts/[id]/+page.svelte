@@ -6,14 +6,14 @@
 
 	import MdiClockTimeEightOutline from "~icons/mdi/clock-time-eight-outline";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
-	import Avatar from "$lib/component/CircleAvatar.svelte";
+	import Logo from "$lib/component/CircleLogo.svelte";
 	import { shareLink } from "$lib/util";
-	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
+	import CircleLogo from "$lib/component/CircleLogo.svelte";
 
 	const article = {
 		id: 1,
 		author_name: "John Doe",
-		author_avatar: "https://placehold.co/48/svg",
+		author_logo: "https://placehold.co/48/svg",
 		title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		publish_date: "2023-01-01",
 		upvote_count: 10
@@ -35,7 +35,7 @@
 
 <section class="flex w-full gap-2 p-2">
 	<a class="flinch label-text flex flex-grow flex-row gap-2" href={"" + article.id} role="button">
-		<CircleAvatar src={article.author_avatar} />
+		<CircleLogo src={article.author_logo} />
 		<div>
 			<b class="block text-lg" id="author_name">{article.author_name}</b>
 			<span class="text-primary">Published</span><span> {article.publish_date}</span>

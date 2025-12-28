@@ -1,6 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/+page.svelte -->
 <script lang="ts">
-	import CircleAvatar from "$lib/component/CircleAvatar.svelte";
+	import CircleLogo from "$lib/component/CircleLogo.svelte";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -58,7 +58,7 @@
 					/>
 					<div class="absolute inset-0 bg-gradient-to-b from-transparent via-slate-900/50 to-slate-800" />
 
-					<!-- Floating Avatar -->
+					<!-- Floating Logo -->
 					<div class="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
 						<div class="ring-4 ring-slate-800 rounded-2xl">
 							<div class="bg-gradient-to-br from-amber-600 via-rose-600 to-purple-600 p-4 rounded-2xl">
@@ -279,7 +279,7 @@
 				href="/user/{data.president.userId}"
 				class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
 			>
-				<CircleAvatar src={data.president.avatar} />
+				<CircleLogo src={data.president.logo} />
 				<div class="flex-1">
 					<p class="font-semibold text-white group-hover:text-amber-400 transition-colors">
 						{data.president.name}
@@ -352,7 +352,7 @@
 						href="/user/{member.userId}"
 						class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
 					>
-						<CircleAvatar src={member.avatar} size="sm" />
+						<CircleLogo src={member.logo} size="sm" />
 						<div class="flex-1 min-w-0">
 							<p class="font-medium text-white group-hover:text-blue-400 transition-colors truncate text-sm">
 								{member.name}
