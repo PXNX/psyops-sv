@@ -8,6 +8,7 @@
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentProhibited20Filled from "~icons/fluent/prohibited-20-filled";
 	import { formatTime } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
@@ -139,19 +140,37 @@
 			{#each data.directChats as chat}
 				<button
 					onclick={() => goto(`/chat/user/${chat.otherUserId}`)}
-					class="w-full bg-slate-700/50 hover:bg-slate-700 border border-white/5 rounded-lg p-4 transition-colors text-left group"
+					class="w-full bg-slate-700/50 hover:bg-slate-700 border border-white/5 rounded-lg p-4 transition-colors text-left group {chat.isBlocked
+						? 'opacity-60'
+						: ''}"
 				>
 					<div class="flex items-center gap-4">
 						{#if chat.otherUserLogo}
-							<img src={chat.otherUserLogo} alt={chat.otherUserName} class="size-12 rounded-full flex-shrink-0" />
+							<img
+								src={chat.otherUserLogo}
+								alt={chat.otherUserName}
+								class="size-12 rounded-full flex-shrink-0 {chat.isBlocked ? 'opacity-50' : ''}"
+							/>
 						{:else}
-							<div class="size-12 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0">
+							<div
+								class="size-12 rounded-full bg-slate-600 flex items-center justify-center flex-shrink-0 {chat.isBlocked
+									? 'opacity-50'
+									: ''}"
+							>
 								<FluentImageOff20Filled class="size-6 text-gray-400" />
 							</div>
 						{/if}
 
 						<div class="flex-1 min-w-0">
-							<h3 class="font-semibold text-white mb-1">{chat.otherUserName || "Anonymous"}</h3>
+							<div class="flex items-center gap-2 mb-1">
+								<h3 class="font-semibold text-white">{chat.otherUserName || "Anonymous"}</h3>
+								{#if chat.isBlocked}
+									<span class="badge badge-sm bg-red-600/20 text-red-400 border-red-600/30 flex items-center gap-1">
+										<FluentProhibited20Filled class="size-3" />
+										Blocked
+									</span>
+								{/if}
+							</div>
 							{#if chat.lastMessage}
 								<p class="text-sm text-gray-400 truncate">
 									{chat.lastMessage.isFromCurrentUser ? "You: " : ""}{chat.lastMessage.content}
@@ -163,7 +182,7 @@
 						</div>
 
 						<div class="flex items-center gap-2 flex-shrink-0">
-							{#if chat.unreadCount > 0}
+							{#if chat.unreadCount > 0 && !chat.isBlocked}
 								<div class="badge badge-sm bg-blue-600 text-white border-0">
 									{chat.unreadCount}
 								</div>

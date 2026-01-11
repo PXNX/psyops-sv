@@ -19,25 +19,19 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const account = locals.account!;
 	const otherUserId = params.id;
 
-	// Check if user has blocked the other user or vice versa
-	const blockCheck = await db.query.userBlocks?.findFirst({
-		where: or(
-			and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, otherUserId)),
-			and(eq(userBlocks.userId, otherUserId), eq(userBlocks.blockedUserId, account.id))
-		)
-	});
-
-	if (blockCheck) {
-		throw redirect(303, "/chat");
-	}
-
 	// Verify other user exists
 	const otherUserAccount = await db.query.accounts.findFirst({
 		where: eq(accounts.id, otherUserId)
 	});
 
 	if (!otherUserAccount) {
-		return { otherUser: null, messages: [], currentUserId: account.id };
+		return {
+			otherUser: null,
+			messages: [],
+			currentUserId: account.id,
+			isBlocked: false,
+			blockedByCurrentUser: false
+		};
 	}
 
 	// Get other user's profile
@@ -58,7 +52,15 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		}
 	}
 
-	// Get messages between the two users
+	// Check if user has blocked the other user or vice versa
+	const blockCheck = await db.query.userBlocks?.findFirst({
+		where: or(
+			and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, otherUserId)),
+			and(eq(userBlocks.userId, otherUserId), eq(userBlocks.blockedUserId, account.id))
+		)
+	});
+
+	// Get messages between the two users (even if blocked, so users can see history)
 	const messages = await db
 		.select({
 			id: chatMessages.id,
@@ -111,6 +113,10 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		}))
 		.reverse();
 
+	// Determine if blocked and by whom
+	const isBlocked = !!blockCheck;
+	const blockedByCurrentUser = blockCheck ? blockCheck.userId === account.id : false;
+
 	return {
 		otherUser: {
 			id: otherUserId,
@@ -118,7 +124,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 			logo: otherUserLogo
 		},
 		messages: processedMessages,
-		currentUserId: account.id
+		currentUserId: account.id,
+		isBlocked,
+		blockedByCurrentUser
 	};
 };
 
@@ -246,5 +254,29 @@ export const actions: Actions = {
 		});
 
 		return { success: true, message: "User blocked successfully" };
+	},
+
+	unblockUser: async ({ request, locals, params }) => {
+		const account = locals.account!;
+
+		const formData = await request.formData();
+		const blockedUserId = (formData.get("blockedUserId") as string) || params.id;
+
+		if (!blockedUserId) {
+			return fail(400, { error: "Missing user ID" });
+		}
+
+		// Find and delete the block
+		const existing = await db.query.userBlocks?.findFirst({
+			where: and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, blockedUserId))
+		});
+
+		if (!existing) {
+			return fail(400, { error: "User is not blocked" });
+		}
+
+		await db.delete(userBlocks).where(eq(userBlocks.id, existing.id));
+
+		return { success: true, message: "User unblocked successfully" };
 	}
 };

@@ -83,7 +83,7 @@
 		{#if data.user.id !== data.account?.id}
 			<a
 				class="btn btn-sm gap-2 bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/20 text-purple-300 hover:text-purple-200 transition-all"
-				href="/chat/u/{data.user.id}"
+				href="/chat/user/{data.user.id}"
 			>
 				<FluentChat20Filled class="size-4" />
 				<span class="hidden sm:inline">Message</span>
