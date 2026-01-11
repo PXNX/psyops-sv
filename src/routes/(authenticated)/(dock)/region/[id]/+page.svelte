@@ -48,6 +48,21 @@
 		</div>
 	</div>
 
+	<!-- Current Residence Banner -->
+	{#if data.hasResidence}
+		<div class="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-500/30 rounded-xl p-6">
+			<div class="flex items-start gap-4">
+				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentHome20Filled class="size-6 text-blue-400" />
+				</div>
+				<div class="flex-1">
+					<h2 class="text-xl font-bold text-white mb-2">Your Current Residence</h2>
+					<p class="text-gray-300 text-sm">You are currently a resident of this region.</p>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Alerts -->
 	{#if form?.error}
 		<div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
@@ -64,7 +79,7 @@
 	{/if}
 
 	<!-- Free Movement Banner -->
-	{#if data.allowsFreeMovement}
+	{#if data.allowsFreeMovement && !data.hasResidence}
 		<div
 			class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/30 rounded-xl p-6 space-y-4"
 		>
@@ -82,14 +97,12 @@
 							established.
 						{/if}
 					</p>
-					{#if !data.hasResidence}
-						<form method="POST" action="?/changeResidence" use:enhance>
-							<button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
-								<FluentHome20Filled class="size-4" />
-								Move Here Now
-							</button>
-						</form>
-					{/if}
+					<form method="POST" action="?/changeResidence" use:enhance>
+						<button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
+							<FluentHome20Filled class="size-4" />
+							Move Here Now
+						</button>
+					</form>
 				</div>
 			</div>
 		</div>
@@ -291,11 +304,14 @@
 
 	<!-- Stats Grid -->
 	<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4">
-			<FluentPeople20Filled class="size-8 text-blue-400 mb-2" />
+		<a
+			href="/region/{data.region.id}/population"
+			class="bg-slate-800/50 rounded-xl border border-white/5 p-4 hover:border-white/10 transition-all cursor-pointer group"
+		>
+			<FluentPeople20Filled class="size-8 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
 			<p class="text-2xl font-bold text-white">{data.population.toLocaleString()}</p>
-			<p class="text-xs text-gray-400 mt-1">Population</p>
-		</div>
+			<p class="text-xs text-gray-400 mt-1 group-hover:text-blue-400 transition-colors">Population →</p>
+		</a>
 
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4">
 			<div class="size-8 bg-purple-600/20 rounded-lg flex items-center justify-center mb-2">

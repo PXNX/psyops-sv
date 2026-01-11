@@ -1372,3 +1372,25 @@ export const contentFlagsRelations = relations(contentFlags, ({ one }) => ({
 		references: [accounts.id]
 	})
 }));
+
+export const partyMembersRelations = relations(partyMembers, ({ one }) => ({
+	user: one(accounts, {
+		fields: [partyMembers.userId],
+		references: [accounts.id]
+	}),
+	party: one(politicalParties, {
+		fields: [partyMembers.partyId],
+		references: [politicalParties.id]
+	})
+}));
+
+export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
+	account: one(accounts, {
+		fields: [userProfiles.accountId],
+		references: [accounts.id]
+	}),
+	logoFile: one(files, {
+		fields: [userProfiles.logo],
+		references: [files.id]
+	})
+}));
