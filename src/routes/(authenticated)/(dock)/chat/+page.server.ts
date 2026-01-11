@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/chat/+page.server.ts
 import { db } from "$lib/server/db";
-import { chatMessages, partyMembers, politicalParties, userProfiles, files } from "$lib/server/schema";
+import { chatMessages, partyMembers, politicalParties, userProfiles, files, userBlocks } from "$lib/server/schema";
 import { eq, and, desc, or } from "drizzle-orm";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import type { PageServerLoad } from "./$types";
@@ -105,6 +105,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
+	// Get all blocks involving this user
+	const userBlocksList = await db.query.userBlocks.findMany({
+		where: or(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, account.id))
+	});
+
+	// Create a set of blocked user IDs for quick lookup
+	const blockedUserIds = new Set(
+		userBlocksList.map((block) => (block.userId === account.id ? block.blockedUserId : block.userId))
+	);
+
 	// Get all direct messages involving this user
 	const directMessages = await db
 		.select({
@@ -168,6 +178,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 				}
 			}
 
+			// Check if this user is blocked
+			const isBlocked = blockedUserIds.has(conv.otherUserId);
+
 			return {
 				otherUserId: conv.otherUserId,
 				otherUserName: otherUser?.name || "Anonymous",
@@ -177,7 +190,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					sentAt: conv.lastSentAt.toISOString(),
 					isFromCurrentUser: conv.isFromCurrentUser
 				},
-				unreadCount: 0
+				unreadCount: 0,
+				isBlocked
 			};
 		})
 	);

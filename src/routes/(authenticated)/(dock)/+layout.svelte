@@ -29,7 +29,7 @@
 	/>
 </svelte:head>
 
-<div class="flex flex-col pb-20">
+<div class="flex flex-col pb-16">
 	{@render children()}
 </div>
 
