@@ -266,47 +266,5 @@ export const actions: Actions = {
 			console.error("Update party error:", err);
 			return message(form, "Failed to update party", { status: 500 });
 		}
-	},
-
-	delete: async ({ params, locals }) => {
-		const account = locals.account!;
-		const partyId = parseInt(params.id);
-
-		try {
-			// Get party details
-			const party = await db.query.politicalParties.findFirst({
-				where: eq(politicalParties.id, partyId),
-				with: {
-					members: true
-				}
-			});
-
-			if (!party) {
-				return fail(404, { error: "Party not found" });
-			}
-
-			// Check if user is the leader
-			const membership = party.members.find((m) => m.userId === account.id);
-			if (!membership || membership.role !== "leader") {
-				return fail(403, { error: "Only the party leader can delete the party" });
-			}
-
-			// Check if leader is the only member
-			if (party.memberCount > 1) {
-				return fail(400, { error: "Cannot delete party with other members. All members must leave first." });
-			}
-
-			// Delete party (cascade will handle party members and edit history)
-			await db.delete(politicalParties).where(eq(politicalParties.id, partyId));
-		} catch (err) {
-			// Re-throw redirect errors
-			if (err instanceof Response && err.status === 303) {
-				throw err;
-			}
-			console.error("Delete party error:", err);
-			return fail(500, { error: "Failed to delete party" });
-		}
-
-		redirect(303, "/party");
 	}
 };

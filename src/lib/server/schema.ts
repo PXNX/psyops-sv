@@ -518,6 +518,36 @@ export const productInventory = pgTable(
 	(t) => ({ userProductIdx: uniqueIndex("idx_user_product").on(t.userId, t.productType) })
 );
 
+export const userBlocks = pgTable(
+	"user_blocks",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		blockedUserId: text("blocked_user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		blockedAt: timestamp("blocked_at").defaultNow().notNull()
+	},
+	(t) => ({
+		userBlockedIdx: uniqueIndex("idx_user_blocked").on(t.userId, t.blockedUserId)
+	})
+);
+
+export const userBlocksRelations = relations(userBlocks, ({ one }) => ({
+	user: one(accounts, {
+		fields: [userBlocks.userId],
+		references: [accounts.id],
+		relationName: "blocker"
+	}),
+	blockedUser: one(accounts, {
+		fields: [userBlocks.blockedUserId],
+		references: [accounts.id],
+		relationName: "blocked"
+	})
+}));
+
 export const factories = pgTable("factories", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull(),
@@ -933,7 +963,9 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 	issuedRestrictions: many(chatRestrictions, { relationName: "restrictor" }),
 	reportsSubmitted: many(generalReports, { relationName: "general_reporter" }),
 	reportsReviewed: many(generalReports, { relationName: "general_reviewer" }),
-	flaggedContent: many(contentFlags)
+	flaggedContent: many(contentFlags),
+	blockedUsers: many(userBlocks, { relationName: "blocker" }),
+	blockedBy: many(userBlocks, { relationName: "blocked" })
 }));
 
 export const statesRelations = relations(states, ({ one, many }) => ({

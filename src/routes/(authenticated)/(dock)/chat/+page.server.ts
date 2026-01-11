@@ -1,15 +1,12 @@
 // src/routes/(authenticated)/chat/+page.server.ts
 import { db } from "$lib/server/db";
-import { chatMessages, partyMembers, politicalParties, userProfiles, files, accounts } from "$lib/server/schema";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { chatMessages, partyMembers, politicalParties, userProfiles, files } from "$lib/server/schema";
+import { eq, and, desc, or } from "drizzle-orm";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const account = locals.account;
-	if (!account) {
-		return { globalChat: null, partyChat: null, directChats: [] };
-	}
+	const account = locals.account!;
 
 	// Get last message in global chat
 	const globalLastMessage = await db
@@ -49,13 +46,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	let partyChat = null;
 	if (partyMembership) {
-		// Get party details
 		const party = await db.query.politicalParties.findFirst({
 			where: eq(politicalParties.id, partyMembership.partyId)
 		});
 
 		if (party) {
-			// Get last message in party chat
 			const lastMessage = await db
 				.select({
 					id: chatMessages.id,
@@ -74,7 +69,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 				.orderBy(desc(chatMessages.sentAt))
 				.limit(1);
 
-			// Get party logo
 			let logoUrl = null;
 			if (party.logo) {
 				const logoFile = await db.query.files.findFirst({
@@ -111,58 +105,55 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
-	// Get direct message conversations
-	const sentMessages = await db
+	// Get all direct messages involving this user
+	const directMessages = await db
 		.select({
-			otherUserId: chatMessages.recipientId,
-			lastMessage: sql<string>`MAX(${chatMessages.content})`,
-			lastSentAt: sql<Date>`MAX(${chatMessages.sentAt})`,
-			isFromCurrentUser: sql<boolean>`true`
+			id: chatMessages.id,
+			content: chatMessages.content,
+			sentAt: chatMessages.sentAt,
+			senderId: chatMessages.senderId,
+			recipientId: chatMessages.recipientId
 		})
 		.from(chatMessages)
 		.where(
 			and(
 				eq(chatMessages.messageType, "direct"),
-				eq(chatMessages.senderId, account.id),
-				eq(chatMessages.isDeleted, false)
+				eq(chatMessages.isDeleted, false),
+				or(eq(chatMessages.senderId, account.id), eq(chatMessages.recipientId, account.id))
 			)
 		)
-		.groupBy(chatMessages.recipientId);
+		.orderBy(desc(chatMessages.sentAt));
 
-	const receivedMessages = await db
-		.select({
-			otherUserId: chatMessages.senderId,
-			lastMessage: sql<string>`MAX(${chatMessages.content})`,
-			lastSentAt: sql<Date>`MAX(${chatMessages.sentAt})`,
-			isFromCurrentUser: sql<boolean>`false`
-		})
-		.from(chatMessages)
-		.where(
-			and(
-				eq(chatMessages.messageType, "direct"),
-				eq(chatMessages.recipientId, account.id),
-				eq(chatMessages.isDeleted, false)
-			)
-		)
-		.groupBy(chatMessages.senderId);
+	// Group by conversation partner
+	const conversationMap = new Map<
+		string,
+		{
+			otherUserId: string;
+			lastMessage: string;
+			lastSentAt: Date;
+			isFromCurrentUser: boolean;
+		}
+	>();
 
-	// Combine and deduplicate conversations
-	const allConversations = [...sentMessages, ...receivedMessages];
-	const conversationMap = new Map();
+	for (const msg of directMessages) {
+		const otherUserId = msg.senderId === account.id ? msg.recipientId : msg.senderId;
+		if (!otherUserId) continue;
 
-	for (const conv of allConversations) {
-		if (!conv.otherUserId) continue; // Skip if no recipient
-
-		const existing = conversationMap.get(conv.otherUserId);
-		if (!existing || new Date(conv.lastSentAt) > new Date(existing.lastSentAt)) {
-			conversationMap.set(conv.otherUserId, conv);
+		if (!conversationMap.has(otherUserId)) {
+			conversationMap.set(otherUserId, {
+				otherUserId,
+				lastMessage: msg.content,
+				lastSentAt: msg.sentAt,
+				isFromCurrentUser: msg.senderId === account.id
+			});
 		}
 	}
 
+	// Fetch user details for each conversation
 	const directChats = await Promise.all(
 		Array.from(conversationMap.values()).map(async (conv) => {
 			const otherUser = await db.query.userProfiles.findFirst({
-				where: eq(userProfiles.accountId, conv.otherUserId!)
+				where: eq(userProfiles.accountId, conv.otherUserId)
 			});
 
 			let logoUrl = null;
@@ -178,7 +169,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}
 
 			return {
-				otherUserId: conv.otherUserId!,
+				otherUserId: conv.otherUserId,
 				otherUserName: otherUser?.name || "Anonymous",
 				otherUserLogo: logoUrl,
 				lastMessage: {
