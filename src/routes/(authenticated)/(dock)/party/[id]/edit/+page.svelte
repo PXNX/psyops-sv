@@ -29,8 +29,6 @@
 	let previewUrl = $state<string | null>(data.party.logoUrl);
 	let dragActive = $state(false);
 	let fileInput: HTMLInputElement;
-	let showDeleteModal = $state(false);
-	let isDeleting = $state(false);
 
 	const colorPresets = [
 		{ name: "Blue", value: "#3b82f6" },
@@ -542,82 +540,4 @@
 			</p>
 		</div>
 	</form>
-
-	<!-- Danger Zone -->
-	{#if data.party.memberCount === 1}
-		<div class="bg-red-600/10 border border-red-500/20 rounded-xl p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentWarning20Filled class="size-5 text-red-400" />
-				<h2 class="text-lg font-semibold text-red-300">Danger Zone</h2>
-			</div>
-
-			<div class="space-y-4">
-				<div>
-					<h3 class="text-base font-semibold text-white mb-1">Delete Party</h3>
-					<p class="text-sm text-gray-400 mb-3">
-						You're the only member. Deleting this party will make all regions in {data.party.state.name} independent.
-					</p>
-					<button
-						type="button"
-						onclick={() => (showDeleteModal = true)}
-						class="btn btn-sm bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-300 hover:text-red-200 gap-2"
-					>
-						<FluentDelete20Filled class="size-4" />
-						Delete Party
-					</button>
-				</div>
-			</div>
-		</div>
-	{:else}
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-5">
-			<div class="flex items-center gap-2 mb-2">
-				<FluentWarning20Filled class="size-5 text-gray-400" />
-				<h2 class="text-lg font-semibold text-gray-300">Cannot Delete Party</h2>
-			</div>
-			<p class="text-sm text-gray-400">
-				This party has {data.party.memberCount} members. All members must leave before the party can be deleted.
-			</p>
-		</div>
-	{/if}
 </div>
-
-<!-- Delete Confirmation Modal -->
-<Modal bind:open={showDeleteModal} title="Delete Party?" size="default">
-	<div class="space-y-4">
-		<p class="text-gray-300">
-			Are you sure you want to delete <strong>{data.party.name}</strong>?
-		</p>
-		<div class="alert alert-warning bg-yellow-600/20 border-yellow-500/30">
-			<FluentFlag20Filled class="size-5 text-yellow-400" />
-			<p class="text-yellow-200 text-sm">
-				<strong>Warning:</strong> This will make all regions in {data.party.state.name} independent. This action cannot be
-				undone.
-			</p>
-		</div>
-		<div class="flex justify-end gap-3 mt-6">
-			<button type="button" onclick={() => (showDeleteModal = false)} class="btn btn-ghost" disabled={isDeleting}>
-				Cancel
-			</button>
-			<form
-				method="POST"
-				action="?/delete"
-				use:svelteEnhance={() => {
-					isDeleting = true;
-					return async ({ update }) => {
-						await update();
-						isDeleting = false;
-					};
-				}}
-			>
-				<button type="submit" class="btn btn-error gap-2" disabled={isDeleting}>
-					{#if isDeleting}
-						<span class="loading loading-spinner loading-sm"></span>
-					{:else}
-						<FluentDelete20Filled class="size-4" />
-					{/if}
-					Delete Party
-				</button>
-			</form>
-		</div>
-	</div>
-</Modal>

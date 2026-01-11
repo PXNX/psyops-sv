@@ -114,10 +114,7 @@ async function processMessages(messages: any[]) {
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
-	const account = locals.account;
-	if (!account) {
-		return { messages: [] };
-	}
+	const account = locals.account!;
 
 	// Get latest messages
 	const messages = await db
