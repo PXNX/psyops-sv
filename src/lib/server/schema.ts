@@ -548,6 +548,51 @@ export const userBlocksRelations = relations(userBlocks, ({ one }) => ({
 	})
 }));
 
+export const marketPriceHistory = pgTable(
+	"market_price_history",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		itemType: varchar("item_type", { length: 20 }).notNull(), // "resource" or "product"
+		itemName: varchar("item_name", { length: 50 }).notNull(),
+		pricePerUnit: integer("price_per_unit").notNull(),
+		quantity: integer("quantity").notNull(),
+		transactionType: varchar("transaction_type", { length: 20 }).notNull(), // "sale" or "listing"
+		recordedAt: timestamp("recorded_at").defaultNow().notNull()
+	},
+	(t) => ({
+		itemIdx: index("idx_price_history_item").on(t.itemType, t.itemName),
+		recordedAtIdx: index("idx_price_history_recorded_at").on(t.recordedAt)
+	})
+);
+
+// Market statistics - aggregated data per item (updated periodically)
+export const marketStatistics = pgTable(
+	"market_statistics",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		itemType: varchar("item_type", { length: 20 }).notNull(),
+		itemName: varchar("item_name", { length: 50 }).notNull(),
+		currentAvgPrice: integer("current_avg_price").notNull(),
+		lowestPrice: integer("lowest_price").notNull(),
+		highestPrice: integer("highest_price").notNull(),
+		totalVolume: integer("total_volume").default(0).notNull(),
+		activeListings: integer("active_listings").default(0).notNull(),
+		lastUpdated: timestamp("last_updated").defaultNow().notNull()
+	},
+	(t) => ({
+		itemIdx: uniqueIndex("idx_market_stats_item").on(t.itemType, t.itemName)
+	})
+);
+
+// Relations
+export const marketPriceHistoryRelations = relations(marketPriceHistory, ({ one }) => ({}));
+
+export const marketStatisticsRelations = relations(marketStatistics, ({ one }) => ({}));
+
+// Types
+export type MarketPriceHistory = typeof marketPriceHistory.$inferSelect;
+export type MarketStatistics = typeof marketStatistics.$inferSelect;
+
 export const factories = pgTable("factories", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull(),

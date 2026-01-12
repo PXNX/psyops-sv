@@ -14,7 +14,7 @@ import {
 	stateSanctions,
 	stateTaxes
 } from "$lib/server/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, min, sql } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
 import { calculateAndCollectTax, type TaxCalculation } from "$lib/server/taxes";
 import type { Actions, PageServerLoad } from "./$types";
@@ -22,7 +22,7 @@ import type { Actions, PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Get user's residence to determine their state (isPrimary removed)
+	// Get user's residence to determine their state
 	const [residence] = await db
 		.select({
 			regionId: residences.regionId,
@@ -79,6 +79,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	});
 
+	// Get lowest prices for each item (excluding user's own listings)
+	const lowestPrices = await db
+		.select({
+			itemType: marketListings.itemType,
+			itemName: marketListings.itemName,
+			lowestPrice: min(marketListings.pricePerUnit).as("lowest_price")
+		})
+		.from(marketListings)
+		.where(sql`${marketListings.sellerId} != ${account.id}`)
+		.groupBy(marketListings.itemType, marketListings.itemName);
+
+	// Convert to a map for easy lookup
+	const lowestPriceMap = new Map(
+		lowestPrices.map((item) => [`${item.itemType}-${item.itemName}`, Number(item.lowestPrice) || 1000])
+	);
+
 	// State exports feature not yet implemented - return empty array
 	const stateExports: any[] = [];
 
@@ -120,7 +136,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		stateExports,
 		userStateId: residence?.stateId || null,
 		cooldownRemaining,
-		taxRate
+		taxRate,
+		lowestPrices: Object.fromEntries(lowestPriceMap)
 	};
 };
 
