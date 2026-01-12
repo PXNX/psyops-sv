@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/chat/party/+page.server.ts
-import { db } from "$lib/server/db";
+import { db, messageNotifier } from "$lib/server/db";
 import {
 	chatMessages,
 	partyMembers,
@@ -21,7 +21,7 @@ function sanitizeInput(input: string): string {
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account;
 	if (!account) {
-		return { party: null, messages: [] };
+		return { party: null, messages: [], currentUserId: null };
 	}
 
 	// Get user's party membership
@@ -30,7 +30,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	if (!membership) {
-		return { party: null, messages: [] };
+		return { party: null, messages: [], currentUserId: account.id };
 	}
 
 	// Get party details
@@ -39,7 +39,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	if (!party) {
-		return { party: null, messages: [] };
+		return { party: null, messages: [], currentUserId: account.id };
 	}
 
 	// Get party logo
@@ -94,6 +94,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 				where: eq(userProfiles.accountId, msg.senderId)
 			});
 
+			// Check if sender is party leader
+			const senderMembership = await db.query.partyMembers.findFirst({
+				where: and(eq(partyMembers.userId, msg.senderId), eq(partyMembers.partyId, membership.partyId))
+			});
+
 			let senderLogoUrl = null;
 			if (senderProfile?.logo) {
 				const logoFile = await db.query.files.findFirst({
@@ -113,7 +118,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 				senderId: msg.senderId,
 				senderName: senderProfile?.name || "Anonymous",
 				senderLogo: senderLogoUrl,
-				isFromCurrentUser: msg.senderId === account.id
+				isFromCurrentUser: msg.senderId === account.id,
+				isLeader: senderMembership?.role === "leader"
 			};
 		})
 	);
@@ -125,7 +131,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			logo: logoUrl,
 			memberCount: party.memberCount
 		},
-		messages: processedMessages.reverse()
+		messages: processedMessages.reverse(),
+		currentUserId: account.id
 	};
 };
 
@@ -181,6 +188,18 @@ export const actions: Actions = {
 			content: content.trim()
 		});
 
+		// Get all party members to notify
+		const allMembers = await db.query.partyMembers.findMany({
+			where: eq(partyMembers.partyId, membership.partyId)
+		});
+
+		const memberIds = allMembers.map((m) => m.userId);
+
+		// Notify all party members
+		messageNotifier.notify(memberIds, {
+			messageType: "party"
+		});
+
 		return { success: true };
 	},
 
@@ -210,39 +229,5 @@ export const actions: Actions = {
 		});
 
 		return { success: true, message: "Report submitted successfully" };
-	},
-
-	blockUser: async ({ request, locals }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Not authenticated" });
-		}
-
-		const formData = await request.formData();
-		const blockedUserId = formData.get("blockedUserId") as string;
-
-		if (!blockedUserId) {
-			return fail(400, { error: "Missing user ID" });
-		}
-
-		if (blockedUserId === account.id) {
-			return fail(400, { error: "You cannot block yourself" });
-		}
-
-		// Check if already blocked
-		const existing = await db.query.userBlocks?.findFirst({
-			where: and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, blockedUserId))
-		});
-
-		if (existing) {
-			return fail(400, { error: "User is already blocked" });
-		}
-
-		await db.insert(userBlocks).values({
-			userId: account.id,
-			blockedUserId: blockedUserId
-		});
-
-		return { success: true, message: "User blocked successfully" };
 	}
 };
