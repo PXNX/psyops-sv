@@ -11,7 +11,8 @@ import {
 	states,
 	marketListingCooldowns,
 	stateTreasury,
-	stateSanctions
+	stateSanctions,
+	stateTaxes
 } from "$lib/server/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
@@ -34,13 +35,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// Get user's wallet
 	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-	if (!wallet) {
-		await db.insert(userWallets).values({
-			userId: account.id,
-			balance: 10000
-		});
-	}
 
 	// Get user's resources
 	const resources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
@@ -85,6 +79,26 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	});
 
+	// State exports feature not yet implemented - return empty array
+	const stateExports: any[] = [];
+
+	// Get market transaction tax rate for user's state
+	let taxRate = 0;
+	if (residence?.stateId) {
+		const [stateTax] = await db
+			.select({ taxRate: stateTaxes.taxRate })
+			.from(stateTaxes)
+			.where(
+				and(
+					eq(stateTaxes.stateId, residence.stateId),
+					eq(stateTaxes.taxType, "market_transaction"),
+					eq(stateTaxes.isActive, true)
+				)
+			)
+			.limit(1);
+		taxRate = stateTax?.taxRate || 0;
+	}
+
 	// Check cooldown
 	const [cooldown] = await db
 		.select()
@@ -103,8 +117,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		resources,
 		products,
 		marketListings: listingsWithSanctions,
+		stateExports,
 		userStateId: residence?.stateId || null,
-		cooldownRemaining
+		cooldownRemaining,
+		taxRate
 	};
 };
 

@@ -4,79 +4,107 @@
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
-	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
-	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import FluentError20Filled from "~icons/fluent/error-circle-20-filled";
+	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
+
+	// Fluent Emoji icons
+	import PickaxeEmoji from "~icons/fluent-emoji/pick";
+	import HammerWrenchEmoji from "~icons/fluent-emoji/hammer-and-wrench";
+	import GemStoneEmoji from "~icons/fluent-emoji/gem-stone";
+	import OrangeCircleEmoji from "~icons/fluent-emoji/orange-circle";
+	import BlackCircleEmoji from "~icons/fluent-emoji/black-circle";
+	import WoodEmoji from "~icons/fluent-emoji/wood";
+	import HammerEmoji from "~icons/fluent-emoji/hammer";
+	import FireEmoji from "~icons/fluent-emoji/fire";
+
+	import BombEmoji from "~icons/fluent-emoji/bomb";
+	import AutomobileEmoji from "~icons/fluent-emoji/automobile";
+	import FireworksEmoji from "~icons/fluent-emoji/fireworks";
 
 	let { data } = $props();
 
-	let selectedRegion = $state("");
 	let selectedFactoryType = $state("mine");
 	let selectedOutput = $state("");
 	let factoryName = $state("");
 	let maxWorkers = $state(10);
 	let workerWage = $state(1500);
 
-	const FACTORY_COST = 50000;
 	const COOLDOWN_DAYS = 7;
 
 	const factoryTypes = [
-		{ value: "mine", label: "Mine", icon: "⛏️", desc: "Extract raw resources from the region" },
-		{ value: "refinery", label: "Refinery", icon: "⚙️", desc: "Process raw materials into refined resources" },
-		{ value: "armaments", label: "Armaments", icon: "🔫", desc: "Manufacture weapons and military equipment" }
+		{
+			value: "mine",
+			label: "Mine",
+			icon: PickaxeEmoji,
+			desc: "Extract raw resources",
+			costs: { currency: 50000, energy: 50 }
+		},
+		{
+			value: "refinery",
+			label: "Refinery",
+			icon: HammerWrenchEmoji,
+			desc: "Process raw materials",
+			costs: { currency: 50000, energy: 50 }
+		},
+		{
+			value: "armaments",
+			label: "Armaments",
+			icon: FluentFactory20Filled,
+			desc: "Manufacture weapons",
+			costs: { currency: 50000, energy: 50, iron: 100, steel: 50, gunpowder: 25 }
+		}
 	];
 
 	const resourceOutputs = [
-		{ value: "iron", label: "Iron", icon: "⛏️" },
-		{ value: "copper", label: "Copper", icon: "🔶" },
-		{ value: "coal", label: "Coal", icon: "🪨" },
-		{ value: "wood", label: "Wood", icon: "🪵" }
+		{ value: "iron", label: "Iron", icon: GemStoneEmoji },
+		{ value: "copper", label: "Copper", icon: OrangeCircleEmoji },
+		{ value: "coal", label: "Coal", icon: BlackCircleEmoji },
+		{ value: "wood", label: "Wood", icon: WoodEmoji }
 	];
 
 	const refineryOutputs = [
-		{ value: "steel", label: "Steel", icon: "⚙️", requires: ["iron", "coal"] },
-		{ value: "gunpowder", label: "Gunpowder", icon: "💥", requires: ["coal"] }
+		{ value: "steel", label: "Steel", icon: HammerEmoji },
+		{ value: "gunpowder", label: "Gunpowder", icon: FireEmoji }
 	];
 
 	const productOutputs = [
-		{ value: "rifles", label: "Rifles", icon: "🔫" },
-		{ value: "ammunition", label: "Ammunition", icon: "🔫" },
-		{ value: "artillery", label: "Artillery", icon: "💣" },
-		{ value: "vehicles", label: "Vehicles", icon: "🚗" },
-		{ value: "explosives", label: "Explosives", icon: "💥" }
+		{ value: "rifles", label: "Rifles", icon: FluentFactory20Filled },
+		{ value: "ammunition", label: "Ammunition", icon: FluentFactory20Filled },
+		{ value: "artillery", label: "Artillery", icon: BombEmoji },
+		{ value: "vehicles", label: "Vehicles", icon: AutomobileEmoji },
+		{ value: "explosives", label: "Explosives", icon: FireworksEmoji }
 	];
 
-	const selectedRegionData = $derived(data.regions.find((r) => r.id === parseInt(selectedRegion)));
-
-	const availableResources = $derived(selectedRegionData?.resources || []);
-
-	const canAfford = $derived(data.userBalance >= FACTORY_COST);
+	const selectedFactoryTypeData = $derived(factoryTypes.find((t) => t.value === selectedFactoryType));
+	const availableResources = $derived(data.region?.resources || []);
 	const isOnCooldown = $derived(data.isOnCooldown);
+
+	const hasEnoughCurrency = $derived(
+		selectedFactoryTypeData ? data.userBalance >= selectedFactoryTypeData.costs.currency : false
+	);
 	const hasEnoughEnergy = $derived.by(() => {
-		if (!selectedRegionData) return false;
-		const energyNeeded = 50; // Base energy requirement
-		return data.stateEnergy.totalProduction - data.stateEnergy.usedProduction >= energyNeeded;
+		if (!data.stateEnergy || !selectedFactoryTypeData) return false;
+		return data.stateEnergy.totalProduction - data.stateEnergy.usedProduction >= selectedFactoryTypeData.costs.energy;
 	});
 
 	const canResourceBeMined = $derived.by(() => {
-		if (selectedFactoryType !== "mine" || !selectedOutput || !selectedRegionData) return false;
-		return availableResources.some((r) => r.resourceType === selectedOutput && r.remainingReserves > 0);
+		if (selectedFactoryType !== "mine" || !selectedOutput) return false;
+		return availableResources.some((r) => r.resourceType === selectedOutput && r.amount > 0);
 	});
 
 	const canCreate = $derived(
-		canAfford &&
+		hasEnoughCurrency &&
+			hasEnoughEnergy &&
 			!isOnCooldown &&
 			factoryName.trim() &&
-			selectedRegion &&
-			selectedFactoryType &&
-			hasEnoughEnergy &&
+			data.region &&
+			data.companyId &&
 			(selectedFactoryType !== "mine" || canResourceBeMined) &&
-			((selectedFactoryType === "mine" && selectedOutput) ||
-				(selectedFactoryType === "refinery" && selectedOutput) ||
-				(selectedFactoryType === "armaments" && selectedOutput))
+			selectedOutput
 	);
 
 	function formatTimeRemaining(cooldownEnd: string): string {
@@ -91,134 +119,159 @@
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-4">
-			<a href="/production" class="btn btn-circle btn-ghost hover:bg-slate-700/50">←</a>
-			<div>
-				<h1 class="text-3xl font-bold text-white">Create Factory</h1>
-				<p class="text-gray-400">Establish a new production facility</p>
-			</div>
+	<div class="flex items-center gap-4">
+		<a href="/production" class="btn btn-circle btn-ghost hover:bg-slate-700/50">←</a>
+		<div>
+			<h1 class="text-3xl font-bold text-white">Create Factory</h1>
+			<p class="text-gray-400">Establish a production facility in your region</p>
 		</div>
 	</div>
 
-	<!-- Cost & Balance -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-green-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Your Balance</p>
-					<p class="text-lg font-bold text-white">{data.userBalance.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-					<FluentFactory20Filled class="size-5 text-purple-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Creation Cost</p>
-					<p class="text-lg font-bold text-white">{FACTORY_COST.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Cooldown Warning -->
-	{#if isOnCooldown && data.cooldownEndsAt}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5 space-y-3">
+	{#if data.error}
+		<!-- Error -->
+		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5">
 			<div class="flex items-start gap-3">
-				<FluentClock20Filled class="size-6 text-red-400 shrink-0 mt-0.5" />
+				<FluentError20Filled class="size-6 text-red-400 shrink-0" />
 				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-red-300 text-lg">Factory Creation Cooldown</h3>
-					<p class="text-red-200/90 text-sm leading-relaxed">
-						You recently created a factory. You must wait {COOLDOWN_DAYS} days between factory creations.
-					</p>
-					<div class="bg-red-900/30 rounded-lg p-3">
-						<div class="flex items-center justify-between">
-							<span class="text-red-100 text-sm font-medium">Time Remaining:</span>
-							<span class="text-red-100 text-sm font-bold">{formatTimeRemaining(data.cooldownEndsAt)}</span>
-						</div>
+					<h3 class="font-semibold text-red-300">Cannot Create Factory</h3>
+					<p class="text-red-200 text-sm">{data.error}</p>
+					<div class="flex gap-2 mt-3">
+						{#if data.error.includes("company")}
+							<a href="/companies/create" class="btn btn-sm bg-red-600/30 border-red-500/50 text-red-100">
+								Create Company
+							</a>
+						{/if}
+						<a href="/production" class="btn btn-sm bg-slate-700/50 border-slate-600/30 text-gray-300"> Go Back </a>
 					</div>
 				</div>
 			</div>
 		</div>
-	{/if}
-
-	<!-- Insufficient Funds -->
-	{#if !canAfford && !isOnCooldown}
-		<div class="bg-amber-600/20 border border-amber-500/30 rounded-xl p-5 space-y-3">
-			<div class="flex items-start gap-3">
-				<FluentMoney20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
-				<div class="space-y-2">
-					<h3 class="font-semibold text-amber-300 text-lg">Insufficient Funds</h3>
-					<p class="text-amber-200/90 text-sm">
-						You need <strong>{FACTORY_COST.toLocaleString()}</strong> to create a factory. You currently have
-						<strong>{data.userBalance.toLocaleString()}</strong>.
-					</p>
-					<div class="bg-amber-900/30 rounded-lg p-3">
-						<p class="text-amber-100 text-sm font-medium">
-							Needed: {(FACTORY_COST - data.userBalance).toLocaleString()} more
+	{:else}
+		<!-- Cooldown -->
+		{#if isOnCooldown && data.cooldownEndsAt}
+			<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
+				<div class="flex items-start gap-3">
+					<FluentError20Filled class="size-5 text-red-400 shrink-0" />
+					<div>
+						<h3 class="font-semibold text-red-300">Cooldown Active</h3>
+						<p class="text-red-200 text-sm mt-1">
+							Next factory available in: <strong>{formatTimeRemaining(data.cooldownEndsAt)}</strong>
 						</p>
 					</div>
 				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
 
-	<!-- Energy Status -->
-	<div class="bg-slate-800/50 border border-white/5 rounded-xl p-5 space-y-3">
-		<div class="flex items-center gap-2">
-			<FluentFlash20Filled class="size-5 text-yellow-400" />
-			<h2 class="text-lg font-semibold text-white">State Energy Grid</h2>
-		</div>
+		<!-- Construction Costs -->
+		{#if selectedFactoryTypeData}
+			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-5 space-y-3">
+				<h2 class="font-semibold text-white">Construction Costs</h2>
 
-		<div class="space-y-3">
-			<div class="flex justify-between items-center">
-				<span class="text-gray-400">Available Energy</span>
-				<span class="font-bold text-white">
-					{(data.stateEnergy.totalProduction - data.stateEnergy.usedProduction).toLocaleString()} /
-					{data.stateEnergy.totalProduction.toLocaleString()} MW
-				</span>
-			</div>
+				<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+					<div class="bg-slate-700/30 rounded-lg p-3">
+						<div class="flex items-center gap-1.5 mb-1">
+							<FluentMoney20Filled class="size-4 text-green-400" />
+							<p class="text-xs text-gray-400">Currency</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<p class="font-bold text-white">{selectedFactoryTypeData.costs.currency.toLocaleString()}</p>
+							{#if !hasEnoughCurrency}
+								<FluentWarning20Filled class="size-4 text-red-400" />
+							{/if}
+						</div>
+						{#if !hasEnoughCurrency}
+							<p class="text-xs text-red-400">Have: {data.userBalance.toLocaleString()}</p>
+						{/if}
+					</div>
 
-			<div class="w-full bg-slate-700 rounded-full h-3">
-				<div
-					class="h-full rounded-full {hasEnoughEnergy
-						? 'bg-gradient-to-r from-green-600 to-green-400'
-						: 'bg-gradient-to-r from-red-600 to-red-400'}"
-					style="width: {(data.stateEnergy.usedProduction / data.stateEnergy.totalProduction) * 100}%"
-				></div>
-			</div>
+					<div class="bg-slate-700/30 rounded-lg p-3">
+						<div class="flex items-center gap-1.5 mb-1">
+							<FluentFlash20Filled class="size-4 text-yellow-400" />
+							<p class="text-xs text-gray-400">Energy</p>
+						</div>
+						<div class="flex items-center gap-2">
+							<p class="font-bold text-yellow-400">{selectedFactoryTypeData.costs.energy} MW</p>
+							{#if !hasEnoughEnergy}
+								<FluentWarning20Filled class="size-4 text-red-400" />
+							{/if}
+						</div>
+						{#if data.stateEnergy && !hasEnoughEnergy}
+							<p class="text-xs text-red-400">
+								Available: {data.stateEnergy.totalProduction - data.stateEnergy.usedProduction} MW
+							</p>
+						{/if}
+					</div>
 
-			{#if !hasEnoughEnergy}
-				<div class="bg-red-600/10 border border-red-500/20 rounded-lg p-3">
-					<p class="text-sm text-red-300">
-						<FluentWarning20Filled class="inline size-4" />
-						Insufficient energy capacity. Your state needs to increase energy production before more factories can be built.
-					</p>
+					{#if selectedFactoryTypeData.costs.iron}
+						<div class="bg-slate-700/30 rounded-lg p-3">
+							<div class="flex items-center gap-1.5 mb-1">
+								<GemStoneEmoji class="size-4" />
+								<p class="text-xs text-gray-400">Iron</p>
+							</div>
+							<div class="flex items-center gap-2">
+								<p class="font-bold text-orange-400">{selectedFactoryTypeData.costs.iron}</p>
+								<FluentWarning20Filled class="size-4 text-amber-400" />
+							</div>
+						</div>
+					{/if}
+
+					{#if selectedFactoryTypeData.costs.steel}
+						<div class="bg-slate-700/30 rounded-lg p-3">
+							<div class="flex items-center gap-1.5 mb-1">
+								<HammerEmoji class="size-4" />
+								<p class="text-xs text-gray-400">Steel</p>
+							</div>
+							<div class="flex items-center gap-2">
+								<p class="font-bold text-gray-300">{selectedFactoryTypeData.costs.steel}</p>
+								<FluentWarning20Filled class="size-4 text-amber-400" />
+							</div>
+						</div>
+					{/if}
+
+					{#if selectedFactoryTypeData.costs.gunpowder}
+						<div class="bg-slate-700/30 rounded-lg p-3">
+							<div class="flex items-center gap-1.5 mb-1">
+								<FireEmoji class="size-4" />
+								<p class="text-xs text-gray-400">Gunpowder</p>
+							</div>
+							<div class="flex items-center gap-2">
+								<p class="font-bold text-amber-400">{selectedFactoryTypeData.costs.gunpowder}</p>
+								<FluentWarning20Filled class="size-4 text-amber-400" />
+							</div>
+						</div>
+					{/if}
 				</div>
-			{/if}
-		</div>
-	</div>
-
-	<!-- Form -->
-	<form method="POST" use:enhance class="space-y-6">
-		<!-- Factory Name -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentFactory20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Factory Details</h2>
 			</div>
+		{/if}
 
-			<div>
-				<label for="name" class="block text-sm font-medium text-gray-300 mb-2">
-					Factory Name <span class="text-red-400">*</span>
-				</label>
+		<!-- Location -->
+		{#if data.region}
+			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+				<div class="flex items-center gap-2 mb-3">
+					<FluentLocation20Filled class="size-5 text-purple-400" />
+					<h2 class="font-semibold text-white">Location: {data.region.name}</h2>
+				</div>
+
+				{#if availableResources.length > 0}
+					<div>
+						<p class="text-xs text-gray-400 mb-2">RESOURCE YIELDS</p>
+						<div class="flex flex-wrap gap-2">
+							{#each availableResources as resource}
+								<div class="badge bg-purple-600/20 text-purple-300 border-purple-500/30">
+									{resource.resourceType}: {resource.amount}%
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
+
+		<!-- Form -->
+		<form method="POST" use:enhance class="space-y-5">
+			<!-- Name -->
+			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+				<label for="name" class="block text-sm font-medium text-gray-300 mb-2"> Factory Name </label>
 				<input
 					type="text"
 					id="name"
@@ -226,237 +279,145 @@
 					bind:value={factoryName}
 					placeholder="e.g., Steel Works #1"
 					maxlength="100"
-					class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50"
-					disabled={!canAfford || isOnCooldown}
+					class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
+					disabled={isOnCooldown}
 				/>
 			</div>
-		</div>
 
-		<!-- Region Selection -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentLocation20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Location</h2>
-			</div>
-
-			<div>
-				<label for="region" class="block text-sm font-medium text-gray-300 mb-2">
-					Select Region <span class="text-red-400">*</span>
-				</label>
-				<select
-					id="region"
-					name="regionId"
-					bind:value={selectedRegion}
-					class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50"
-					disabled={!canAfford || isOnCooldown}
-				>
-					<option value="">Choose a region...</option>
-					{#each data.regions as region}
-						<option value={region.id}>{region.name} ({region.stateName})</option>
-					{/each}
-				</select>
-			</div>
-
-			{#if selectedRegionData}
-				<div class="bg-slate-700/30 border border-slate-600/30 rounded-lg p-4 space-y-2">
-					<h3 class="font-semibold text-white">{selectedRegionData.name}</h3>
-					<div class="grid grid-cols-2 gap-2 text-sm">
-						<div>
-							<span class="text-gray-400">Population:</span>
-							<span class="font-medium text-white ml-2">{selectedRegionData.population.toLocaleString()}</span>
-						</div>
-						<div>
-							<span class="text-gray-400">Development:</span>
-							<span class="font-medium text-white ml-2">{selectedRegionData.development}%</span>
-						</div>
-					</div>
-
-					{#if availableResources.length > 0}
-						<div class="mt-3">
-							<p class="text-xs font-semibold text-gray-400 mb-2">AVAILABLE RESOURCES</p>
-							<div class="flex flex-wrap gap-2">
-								{#each availableResources as resource}
-									<div class="badge bg-purple-600/20 text-purple-300 border-purple-500/30">
-										{resource.resourceType}: {resource.remainingReserves.toLocaleString()} / {resource.totalReserves.toLocaleString()}
-									</div>
-								{/each}
-							</div>
-						</div>
-					{:else}
-						<div class="mt-3 bg-amber-600/10 border border-amber-500/20 rounded-lg p-3">
-							<p class="text-sm text-amber-300">
-								<FluentWarning20Filled class="inline size-4" />
-								This region has no minable resources available.
-							</p>
-						</div>
-					{/if}
+			<!-- Type -->
+			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 space-y-3">
+				<div class="flex items-center gap-2">
+					<FluentBox20Filled class="size-5 text-purple-400" />
+					<h2 class="font-semibold text-white">Factory Type</h2>
 				</div>
-			{/if}
-		</div>
 
-		<!-- Factory Type -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentBox20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Factory Type</h2>
+				<div class="grid grid-cols-3 gap-3">
+					{#each factoryTypes as type}
+						<button
+							type="button"
+							class="p-3 rounded-lg border-2 transition-all {selectedFactoryType === type.value
+								? 'bg-purple-600/20 border-purple-500/50'
+								: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
+							onclick={() => {
+								selectedFactoryType = type.value;
+								selectedOutput = "";
+							}}
+							disabled={isOnCooldown}
+						>
+							<svelte:component this={type.icon} class="size-8 mb-1 mx-auto" />
+							<h3 class="font-bold text-white text-sm">{type.label}</h3>
+							<p class="text-xs text-gray-400">{type.desc}</p>
+						</button>
+					{/each}
+				</div>
+				<input type="hidden" name="factoryType" value={selectedFactoryType} />
 			</div>
 
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-				{#each factoryTypes as type}
-					<button
-						type="button"
-						class="p-4 rounded-lg border-2 transition-all {selectedFactoryType === type.value
-							? 'bg-purple-600/20 border-purple-500/50'
-							: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
-						onclick={() => {
-							selectedFactoryType = type.value;
-							selectedOutput = "";
-						}}
-						disabled={!canAfford || isOnCooldown}
-					>
-						<div class="text-3xl mb-2">{type.icon}</div>
-						<h3 class="font-bold text-white">{type.label}</h3>
-						<p class="text-xs text-gray-400 mt-1">{type.desc}</p>
-					</button>
-				{/each}
-			</div>
-
-			<input type="hidden" name="factoryType" value={selectedFactoryType} />
-		</div>
-
-		<!-- Output Selection -->
-		{#if selectedFactoryType}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
-				<h2 class="text-lg font-semibold text-white">
-					{selectedFactoryType === "mine"
-						? "Resource to Mine"
-						: selectedFactoryType === "refinery"
-							? "Refined Product"
-							: "Military Product"}
+			<!-- Output -->
+			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 space-y-3">
+				<h2 class="font-semibold text-white">
+					{selectedFactoryType === "mine" ? "Resource" : selectedFactoryType === "refinery" ? "Product" : "Output"}
 				</h2>
 
-				<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+				<div class="grid grid-cols-4 gap-2">
 					{#if selectedFactoryType === "mine"}
 						{#each resourceOutputs as output}
-							{@const canMine = availableResources.some(
-								(r) => r.resourceType === output.value && r.remainingReserves > 0
-							)}
+							{@const canMine = availableResources.some((r) => r.resourceType === output.value && r.amount > 0)}
 							<button
 								type="button"
-								class="p-3 rounded-lg border-2 transition-all {selectedOutput === output.value
+								class="p-2 rounded-lg border-2 transition-all {selectedOutput === output.value
 									? 'bg-purple-600/20 border-purple-500/50'
 									: 'bg-slate-700/30 border-slate-600/30'}"
 								class:opacity-50={!canMine}
 								onclick={() => (selectedOutput = output.value)}
-								disabled={!canAfford || isOnCooldown || !canMine}
+								disabled={isOnCooldown || !canMine}
 							>
-								<div class="text-2xl mb-1">{output.icon}</div>
-								<div class="font-medium text-white text-sm">{output.label}</div>
-								{#if !canMine}
-									<div class="text-xs text-red-400 mt-1">Not available</div>
-								{/if}
+								<svelte:component this={output.icon} class="size-6 mx-auto" />
+								<div class="text-xs text-white mt-1">{output.label}</div>
 							</button>
 						{/each}
 					{:else if selectedFactoryType === "refinery"}
 						{#each refineryOutputs as output}
 							<button
 								type="button"
-								class="p-3 rounded-lg border-2 transition-all {selectedOutput === output.value
+								class="p-2 rounded-lg border-2 transition-all {selectedOutput === output.value
 									? 'bg-purple-600/20 border-purple-500/50'
 									: 'bg-slate-700/30 border-slate-600/30'}"
 								onclick={() => (selectedOutput = output.value)}
-								disabled={!canAfford || isOnCooldown}
+								disabled={isOnCooldown}
 							>
-								<div class="text-2xl mb-1">{output.icon}</div>
-								<div class="font-medium text-white text-sm">{output.label}</div>
+								<svelte:component this={output.icon} class="size-6 mx-auto" />
+								<div class="text-xs text-white mt-1">{output.label}</div>
 							</button>
 						{/each}
 					{:else}
 						{#each productOutputs as output}
 							<button
 								type="button"
-								class="p-3 rounded-lg border-2 transition-all {selectedOutput === output.value
+								class="p-2 rounded-lg border-2 transition-all {selectedOutput === output.value
 									? 'bg-purple-600/20 border-purple-500/50'
 									: 'bg-slate-700/30 border-slate-600/30'}"
 								onclick={() => (selectedOutput = output.value)}
-								disabled={!canAfford || isOnCooldown}
+								disabled={isOnCooldown}
 							>
-								<div class="text-2xl mb-1">{output.icon}</div>
-								<div class="font-medium text-white text-sm">{output.label}</div>
+								<svelte:component this={output.icon} class="size-6 mx-auto" />
+								<div class="text-xs text-white mt-1">{output.label}</div>
 							</button>
 						{/each}
 					{/if}
 				</div>
-
 				<input type="hidden" name="output" value={selectedOutput} />
 			</div>
-		{/if}
 
-		<!-- Worker Settings -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-			<div class="flex items-center gap-2">
-				<FluentPeople20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Worker Configuration</h2>
-			</div>
-
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<div>
-					<label for="maxWorkers" class="block text-sm font-medium text-gray-300 mb-2">
-						Max Workers: {maxWorkers}
-					</label>
-					<input
-						type="range"
-						id="maxWorkers"
-						name="maxWorkers"
-						min="5"
-						max="50"
-						step="5"
-						bind:value={maxWorkers}
-						class="range range-primary"
-						disabled={!canAfford || isOnCooldown}
-					/>
+			<!-- Workers -->
+			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 space-y-3">
+				<div class="flex items-center gap-2">
+					<FluentPeople20Filled class="size-5 text-purple-400" />
+					<h2 class="font-semibold text-white">Workers</h2>
 				</div>
 
-				<div>
-					<label for="workerWage" class="block text-sm font-medium text-gray-300 mb-2">
-						Worker Wage: {workerWage.toLocaleString()}
-					</label>
-					<input
-						type="range"
-						id="workerWage"
-						name="workerWage"
-						min="1000"
-						max="5000"
-						step="100"
-						bind:value={workerWage}
-						class="range range-primary"
-						disabled={!canAfford || isOnCooldown}
-					/>
+				<div class="grid grid-cols-2 gap-4">
+					<div>
+						<label class="block text-sm text-gray-300 mb-2">Max: {maxWorkers}</label>
+						<input
+							type="range"
+							name="maxWorkers"
+							min="5"
+							max="50"
+							step="5"
+							bind:value={maxWorkers}
+							class="range range-primary"
+							disabled={isOnCooldown}
+						/>
+					</div>
+					<div>
+						<label class="block text-sm text-gray-300 mb-2">Wage: {workerWage.toLocaleString()}</label>
+						<input
+							type="range"
+							name="workerWage"
+							min="1000"
+							max="5000"
+							step="100"
+							bind:value={workerWage}
+							class="range range-primary"
+							disabled={isOnCooldown}
+						/>
+					</div>
 				</div>
 			</div>
-		</div>
 
-		<!-- Submit -->
-		<div class="flex gap-3">
-			<a href="/production" class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300">
-				Cancel
-			</a>
-			<button
-				type="submit"
-				disabled={!canCreate}
-				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
-			>
-				<FluentCheckmark20Filled class="size-5" />
-				Create Factory ({FACTORY_COST.toLocaleString()})
-			</button>
-		</div>
-
-		<!-- Info -->
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-			<p class="text-sm text-blue-300">
-				💡 <strong>Note:</strong> Factory creation costs {FACTORY_COST.toLocaleString()} and has a {COOLDOWN_DAYS}-day
-				cooldown. Factories require energy to operate and can only mine resources available in their region.
-			</p>
-		</div>
-	</form>
+			<!-- Submit -->
+			<div class="flex gap-3">
+				<a href="/production" class="btn flex-1 bg-slate-700/50 border-slate-600/30 text-gray-300"> Cancel </a>
+				<button
+					type="submit"
+					disabled={!canCreate}
+					class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white gap-2 disabled:opacity-50"
+				>
+					<FluentCheckmark20Filled class="size-5" />
+					Create Factory
+				</button>
+			</div>
+		</form>
+	{/if}
 </div>
