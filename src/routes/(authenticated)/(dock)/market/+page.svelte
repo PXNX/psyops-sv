@@ -1,4 +1,4 @@
-<!-- src/routes/market/+page.svelte - TYPE FIXES -->
+<!-- src/routes/market/+page.svelte - SIMPLIFIED -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentShoppingCart20Filled from "~icons/fluent/cart-20-filled";
@@ -8,13 +8,10 @@
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
-	import FluentProduction20Filled from "~icons/fluent/production-20-filled";
 
-	let { data } = $props();
+	let { data, form } = $props();
 
-	// Type-safe resource and product types
 	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
 	type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
 
@@ -52,8 +49,6 @@
 		filterType === "all" ? data.marketListings : data.marketListings.filter((l) => l.itemType === filterType)
 	);
 
-	const filteredStateExports = $derived(filterType === "all" || filterType === "resource" ? data.stateExports : []);
-
 	const availableQuantity = $derived.by(() => {
 		if (selectedItemType === "resource") {
 			return resourceMap.get(selectedItemName as ResourceType) || 0;
@@ -88,19 +83,6 @@
 			<p class="text-gray-400">Buy and sell resources and products</p>
 		</div>
 
-		<div class="flex gap-3">
-			<a
-				href="/production"
-				class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-			>
-				<FluentProduction20Filled class="size-5" />
-				Production
-			</a>
-		</div>
-	</div>
-
-	<!-- Balance & Stats -->
-	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
 			<div class="flex items-center gap-3">
 				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
@@ -108,33 +90,7 @@
 				</div>
 				<div>
 					<p class="text-xs text-gray-400">Your Balance</p>
-					<p class="text-lg font-bold text-white">${(data.wallet.balance / 100).toFixed(2)}</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-					<FluentShoppingCart20Filled class="size-5 text-blue-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Active Listings</p>
-					<p class="text-lg font-bold text-white">{data.marketListings.length}</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-					<FluentBox20Filled class="size-5 text-purple-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Your Listings</p>
-					<p class="text-lg font-bold text-white">
-						{data.marketListings.filter((l) => l.sellerId === data.wallet?.userId).length}
-					</p>
+					<p class="text-xl font-bold text-white">${data.wallet.balance.toLocaleString()}</p>
 				</div>
 			</div>
 		</div>
@@ -278,16 +234,28 @@
 				<!-- Quantity -->
 				<div>
 					<label for="quantity" class="block text-sm font-medium text-gray-300 mb-2"> Quantity </label>
-					<input
-						type="number"
-						id="quantity"
-						name="quantity"
-						min="1"
-						max={availableQuantity}
-						bind:value={listingQuantity}
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50"
-						placeholder="Enter quantity"
-					/>
+					<div class="join w-full">
+						<input
+							type="number"
+							id="quantity"
+							name="quantity"
+							min="1"
+							max={availableQuantity}
+							bind:value={listingQuantity}
+							class="input join-item flex-1 bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50"
+							placeholder="Enter quantity"
+						/>
+						<button
+							type="button"
+							class="btn join-item bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300"
+							onclick={() => {
+								listingQuantity = availableQuantity;
+							}}
+							disabled={availableQuantity === 0}
+						>
+							Max
+						</button>
+					</div>
 				</div>
 
 				<!-- Price Per Unit -->
@@ -299,15 +267,13 @@
 							type="number"
 							id="pricePerUnit"
 							name="pricePerUnit"
-							min="100"
-							step="100"
+							min="1"
+							step="1"
 							bind:value={listingPrice}
 							class="input join-item flex-1 bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50"
 							placeholder="1000"
 						/>
-						<span class="join-item btn bg-slate-700/50 border-slate-600/30 text-gray-300">.00</span>
 					</div>
-					<p class="text-xs text-gray-500 mt-1">Price in cents (1000 = $10.00)</p>
 				</div>
 
 				<!-- Summary -->
@@ -325,12 +291,12 @@
 					</div>
 					<div class="flex justify-between text-sm">
 						<span class="text-gray-400">Unit Price:</span>
-						<span class="font-bold text-white">${(listingPrice / 100).toFixed(2)}</span>
+						<span class="font-bold text-white">${listingPrice.toLocaleString()}</span>
 					</div>
 					<div class="divider my-1"></div>
 					<div class="flex justify-between text-lg font-bold text-purple-400">
 						<span>Total Value:</span>
-						<span>${((listingQuantity * listingPrice) / 100).toFixed(2)}</span>
+						<span>${(listingQuantity * listingPrice).toLocaleString()}</span>
 					</div>
 				</div>
 
@@ -380,7 +346,7 @@
 					</div>
 				</div>
 
-				{#if filteredListings.length === 0 && filteredStateExports.length === 0}
+				{#if filteredListings.length === 0}
 					<div class="text-center py-12">
 						<FluentShoppingCart20Filled class="size-16 mx-auto opacity-20 mb-4 text-gray-500" />
 						<p class="text-lg text-gray-400">No listings available</p>
@@ -388,86 +354,14 @@
 					</div>
 				{:else}
 					<div class="space-y-3">
-						<!-- State Export Listings -->
-						{#if filteredStateExports.length > 0}
-							<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-3 mb-4">
-								<p class="text-sm font-semibold text-blue-300">🏛️ State Exports - Revenue goes to state treasuries</p>
-							</div>
-						{/if}
-
-						{#each filteredStateExports as stateExport}
-							{@const icon = resourceIcons[stateExport.resourceType as ResourceType]}
-							<div class="bg-blue-700/20 rounded-xl p-4 border-2 border-blue-500/30">
-								<div class="flex items-center justify-between gap-4">
-									<div class="flex items-center gap-3 flex-1">
-										<div class="text-4xl">{icon}</div>
-										<div class="flex-1">
-											<div class="font-bold text-lg capitalize flex items-center gap-2 text-white">
-												{stateExport.resourceType}
-												<span class="badge badge-sm bg-blue-600/20 text-blue-300 border-blue-500/30">
-													🏛️ State Export
-												</span>
-												<span class="badge badge-sm bg-purple-600/20 text-purple-300 border-purple-500/30">
-													{stateExport.stateName}
-												</span>
-											</div>
-											<div class="text-sm text-gray-400">
-												<span class="font-semibold">{stateExport.quantity}</span> units available
-											</div>
-										</div>
-									</div>
-
-									<div class="text-right">
-										<div class="text-xs text-gray-400">Price per unit</div>
-										<div class="text-2xl font-bold text-green-400">
-											${(stateExport.pricePerUnit / 100).toFixed(2)}
-										</div>
-										<div class="text-xs text-gray-400 mt-1">
-											Total: ${((stateExport.pricePerUnit * stateExport.quantity) / 100).toFixed(2)}
-										</div>
-									</div>
-
-									<div class="min-w-[140px]">
-										<form method="POST" action="?/buyStateExport" use:enhance>
-											<input type="hidden" name="listingId" value={stateExport.id} />
-											<div class="space-y-2">
-												<label class="text-xs text-gray-400">Quantity</label>
-												<div class="join w-full">
-													<input
-														type="number"
-														name="quantity"
-														min="1"
-														max={stateExport.quantity}
-														value={buyQuantities[stateExport.id] || 1}
-														class="input input-sm join-item w-16 bg-slate-700/50 border-slate-600/30 text-white"
-														onchange={(e) => {
-															buyQuantities[stateExport.id] = parseInt(e.currentTarget.value);
-														}}
-													/>
-													<button
-														type="submit"
-														class="btn btn-sm btn-primary join-item bg-gradient-to-r from-blue-600 to-purple-600"
-													>
-														Buy
-													</button>
-												</div>
-											</div>
-										</form>
-									</div>
-								</div>
-							</div>
-						{/each}
-
-						<!-- Regular User Listings -->
-						{#if filteredListings.length > 0 && filteredStateExports.length > 0}
-							<div class="bg-slate-600/10 border border-slate-500/20 rounded-xl p-3 my-4">
-								<p class="text-sm font-semibold text-gray-400">📦 User Listings</p>
-							</div>
-						{/if}
-
 						{#each filteredListings as listing}
 							{@const icon = allIcons[listing.itemName]}
 							{@const isOwnListing = listing.sellerId === data.wallet?.userId}
+							{@const buyQty = buyQuantities[listing.id] || 1}
+							{@const itemCost = listing.pricePerUnit * buyQty}
+							{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
+							{@const totalCost = itemCost + taxAmount}
+
 							<div
 								class="bg-slate-700/30 rounded-xl p-4 border-2 {isOwnListing
 									? 'border-amber-500/30'
@@ -490,7 +384,7 @@
 												</span>
 												{#if listing.isStateSanctioned}
 													<span class="badge badge-sm bg-red-600/20 text-red-300 border-red-500/30">
-														⚠️ Sanctioned State
+														⚠️ Sanctioned
 													</span>
 												{/if}
 												{#if isOwnListing}
@@ -508,10 +402,10 @@
 									<div class="text-right">
 										<div class="text-xs text-gray-400">Price per unit</div>
 										<div class="text-2xl font-bold text-green-400">
-											${(listing.pricePerUnit / 100).toFixed(2)}
+											${listing.pricePerUnit.toLocaleString()}
 										</div>
 										<div class="text-xs text-gray-400 mt-1">
-											Total: ${((listing.pricePerUnit * listing.quantity) / 100).toFixed(2)}
+											Total: ${(listing.pricePerUnit * listing.quantity).toLocaleString()}
 										</div>
 									</div>
 
@@ -537,7 +431,7 @@
 															name="quantity"
 															min="1"
 															max={listing.quantity}
-															value={buyQuantities[listing.id] || 1}
+															value={buyQty}
 															class="input input-sm join-item w-16 bg-slate-700/50 border-slate-600/30 text-white"
 															onchange={(e) => {
 																buyQuantities[listing.id] = parseInt(e.currentTarget.value);
@@ -550,6 +444,22 @@
 															Buy
 														</button>
 													</div>
+													{#if taxAmount > 0}
+														<div class="text-xs text-gray-400 space-y-1">
+															<div class="flex justify-between">
+																<span>Item Cost:</span>
+																<span>${itemCost.toLocaleString()}</span>
+															</div>
+															<div class="flex justify-between text-amber-400">
+																<span>Tax ({data.taxRate}%):</span>
+																<span>${taxAmount.toLocaleString()}</span>
+															</div>
+															<div class="flex justify-between font-bold text-white border-t border-slate-600 pt-1">
+																<span>Total:</span>
+																<span>${totalCost.toLocaleString()}</span>
+															</div>
+														</div>
+													{/if}
 												</div>
 											</form>
 										{/if}
@@ -559,24 +469,6 @@
 						{/each}
 					</div>
 				{/if}
-			</div>
-
-			<!-- Market Info -->
-			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-				<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-					<FluentInfo20Filled class="inline size-4 text-blue-400 mb-1" />
-					<p class="text-xs text-blue-300">State exports provide resources and generate treasury revenue</p>
-				</div>
-				<div class="bg-green-600/10 border border-green-500/20 rounded-xl p-4">
-					<FluentCheckmark20Filled class="inline size-4 text-green-400 mb-1" />
-					<p class="text-xs text-green-300">Instant transactions - no waiting!</p>
-				</div>
-				<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">
-					<FluentWarning20Filled class="inline size-4 text-amber-400 mb-1" />
-					<p class="text-xs text-amber-300">
-						Market taxes may apply based on your state. Sanctions are for display only.
-					</p>
-				</div>
 			</div>
 		</div>
 	</div>

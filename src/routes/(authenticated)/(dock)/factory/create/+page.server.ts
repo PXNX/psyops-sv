@@ -5,12 +5,14 @@ import {
 	factories,
 	factoryCreationCooldown,
 	regions,
+	residences,
+	resourceInventory,
 	stateEnergy,
 	states,
 	userWallets
 } from "$lib/server/schema";
 import { fail, redirect } from "@sveltejs/kit";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 
 const FACTORY_COST = 50000;
@@ -19,6 +21,43 @@ const ENERGY_REQUIRED = 50;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
+
+	// Get user's company (must own a company to create factories)
+	const [company] = await db.select().from(companies).where(eq(companies.ownerId, account.id));
+
+	if (!company) {
+		return {
+			error: "You must own a company to create factories. Please create a company first.",
+			userBalance: 0,
+			isOnCooldown: false,
+			cooldownEndsAt: null,
+			region: null,
+			companyId: null,
+			stateEnergy: null
+		};
+	}
+
+	// Get user's residence (must have a residence to create factories)
+	const [residence] = await db
+		.select({
+			id: residences.id,
+			regionId: residences.regionId,
+			userId: residences.userId
+		})
+		.from(residences)
+		.where(eq(residences.userId, account.id));
+
+	if (!residence) {
+		return {
+			error: "You must have a residence to create factories. Please establish a residence first.",
+			userBalance: 0,
+			isOnCooldown: false,
+			cooldownEndsAt: null,
+			region: null,
+			companyId: company.id,
+			stateEnergy: null
+		};
+	}
 
 	// Get user's wallet
 	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
@@ -42,10 +81,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
-	// Get all regions with their states
-	const allRegions = await db
+	// Get the user's current region with details
+	const [region] = await db
 		.select({
 			id: regions.id,
+			name: states.name,
 			stateName: states.name,
 			stateId: regions.stateId,
 			rating: regions.rating,
@@ -54,7 +94,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			education: regions.education,
 			hospitals: regions.hospitals,
 			fortifications: regions.fortifications,
-			// Resources from new schema
 			oil: regions.oil,
 			aluminium: regions.aluminium,
 			rubber: regions.rubber,
@@ -63,46 +102,85 @@ export const load: PageServerLoad = async ({ locals }) => {
 			chromium: regions.chromium
 		})
 		.from(regions)
-		.innerJoin(states, eq(regions.stateId, states.id));
+		.innerJoin(states, eq(regions.stateId, states.id))
+		.where(eq(regions.id, residence.regionId));
 
-	// Format regions with available resources
-	const regionsWithResources = allRegions.map((region) => ({
-		...region,
-		resources: [
-			{ type: "oil", amount: region.oil },
-			{ type: "aluminium", amount: region.aluminium },
-			{ type: "rubber", amount: region.rubber },
-			{ type: "tungsten", amount: region.tungsten },
-			{ type: "steel", amount: region.steel },
-			{ type: "chromium", amount: region.chromium }
-		].filter((r) => r.amount ?? 0 > 0)
-	}));
-
-	// Get user's company (or create one if they don't have one)
-	let [company] = await db.select().from(companies).where(eq(companies.ownerId, account.id));
-
-	if (!company) {
-		// Auto-create a personal company
-		[company] = await db
-			.insert(companies)
-			.values({
-				name: `${locals.account!.email.split("@")[0]}'s Company`,
-				ownerId: account.id,
-				description: "Personal company"
-			})
-			.returning();
+	if (!region) {
+		return {
+			error: "Your current residence region could not be found.",
+			userBalance: wallet?.balance || 0,
+			isOnCooldown,
+			cooldownEndsAt,
+			region: null,
+			companyId: company.id,
+			stateEnergy: null
+		};
 	}
 
-	// Get state energy for all states
-	const stateEnergyData = await db.select().from(stateEnergy);
+	// Format region with available resources
+	const regionWithResources = {
+		...region,
+		population: 0,
+		development: 0,
+		resources: [
+			{
+				type: "oil",
+				amount: region.oil,
+				resourceType: "oil",
+				remainingReserves: region.oil || 0,
+				totalReserves: region.oil || 0
+			},
+			{
+				type: "aluminium",
+				amount: region.aluminium,
+				resourceType: "aluminium",
+				remainingReserves: region.aluminium || 0,
+				totalReserves: region.aluminium || 0
+			},
+			{
+				type: "rubber",
+				amount: region.rubber,
+				resourceType: "rubber",
+				remainingReserves: region.rubber || 0,
+				totalReserves: region.rubber || 0
+			},
+			{
+				type: "tungsten",
+				amount: region.tungsten,
+				resourceType: "tungsten",
+				remainingReserves: region.tungsten || 0,
+				totalReserves: region.tungsten || 0
+			},
+			{
+				type: "steel",
+				amount: region.steel,
+				resourceType: "steel",
+				remainingReserves: region.steel || 0,
+				totalReserves: region.steel || 0
+			},
+			{
+				type: "chromium",
+				amount: region.chromium,
+				resourceType: "chromium",
+				remainingReserves: region.chromium || 0,
+				totalReserves: region.chromium || 0
+			}
+		].filter((r) => (r.amount ?? 0) > 0)
+	};
+
+	// Get state energy
+	const [stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId!));
 
 	return {
 		userBalance: wallet?.balance || 0,
 		isOnCooldown,
 		cooldownEndsAt,
-		regions: regionsWithResources,
+		region: regionWithResources,
 		companyId: company.id,
-		stateEnergy: stateEnergyData
+		stateEnergy: stateEnergyData || {
+			totalProduction: 0,
+			usedProduction: 0
+		}
 	};
 };
 
@@ -112,15 +190,32 @@ export const actions: Actions = {
 		const data = await request.formData();
 
 		const name = data.get("name") as string;
-		const regionId = parseInt(data.get("regionId") as string);
 		const factoryType = data.get("factoryType") as string;
 		const output = data.get("output") as string;
 		const maxWorkers = parseInt(data.get("maxWorkers") as string);
 		const workerWage = parseInt(data.get("workerWage") as string);
 
 		// Validation
-		if (!name || !regionId || !factoryType || !output || !maxWorkers || !workerWage) {
+		if (!name || !factoryType || !output || !maxWorkers || !workerWage) {
 			return fail(400, { error: "All fields are required" });
+		}
+
+		// Check if user owns a company
+		const [company] = await db.select().from(companies).where(eq(companies.ownerId, account.id));
+
+		if (!company) {
+			return fail(400, {
+				error: "You must own a company to create factories. Please create a company first."
+			});
+		}
+
+		// Get user's residence
+		const [residence] = await db.select().from(residences).where(eq(residences.userId, account.id));
+
+		if (!residence) {
+			return fail(400, {
+				error: "You must have a residence to create factories. Please establish a residence first."
+			});
 		}
 
 		// Check cooldown
@@ -147,14 +242,38 @@ export const actions: Actions = {
 			return fail(400, { error: "Insufficient funds" });
 		}
 
-		// Get region's state
+		// Check resource requirements for armaments factory
+		if (factoryType === "armaments") {
+			const requiredResources = [
+				{ type: "iron", amount: 100 },
+				{ type: "steel", amount: 50 },
+				{ type: "gunpowder", amount: 25 }
+			];
+
+			for (const required of requiredResources) {
+				const [inventory] = await db
+					.select()
+					.from(resourceInventory)
+					.where(
+						and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, required.type as any))
+					);
+
+				if (!inventory || inventory.quantity < required.amount) {
+					return fail(400, {
+						error: `Insufficient ${required.type}. You need ${required.amount} but have ${inventory?.quantity || 0}.`
+					});
+				}
+			}
+		}
+
+		// Get region's state (using the residence region)
 		const [region] = await db
 			.select({
 				id: regions.id,
 				stateId: regions.stateId
 			})
 			.from(regions)
-			.where(eq(regions.id, regionId));
+			.where(eq(regions.id, residence.regionId));
 
 		if (!region || !region.stateId) {
 			return fail(404, { error: "Region not found" });
@@ -165,19 +284,6 @@ export const actions: Actions = {
 
 		if (!energy || energy.totalProduction - energy.usedProduction < ENERGY_REQUIRED) {
 			return fail(400, { error: "Insufficient state energy capacity" });
-		}
-
-		// Get or create company
-		let [company] = await db.select().from(companies).where(eq(companies.ownerId, account.id));
-
-		if (!company) {
-			[company] = await db
-				.insert(companies)
-				.values({
-					name: `${account.email.split("@")[0]}'s Company`,
-					ownerId: account.id
-				})
-				.returning();
 		}
 
 		// Create factory
@@ -191,11 +297,32 @@ export const actions: Actions = {
 				})
 				.where(eq(userWallets.userId, account.id));
 
-			// Create factory
+			// Deduct resources for armaments factory
+			if (factoryType === "armaments") {
+				const requiredResources = [
+					{ type: "iron", amount: 100 },
+					{ type: "steel", amount: 50 },
+					{ type: "gunpowder", amount: 25 }
+				];
+
+				for (const required of requiredResources) {
+					await tx
+						.update(resourceInventory)
+						.set({
+							quantity: sql`${resourceInventory.quantity} - ${required.amount}`,
+							updatedAt: new Date()
+						})
+						.where(
+							and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, required.type as any))
+						);
+				}
+			}
+
+			// Create factory in user's residence region
 			const factoryData: any = {
 				name,
 				companyId: company.id,
-				regionId,
+				regionId: residence.regionId, // Always use residence region
 				factoryType,
 				maxWorkers,
 				workerWage,
