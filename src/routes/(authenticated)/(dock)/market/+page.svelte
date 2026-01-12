@@ -1,4 +1,4 @@
-<!-- src/routes/market/+page.svelte - SIMPLIFIED -->
+<!-- src/routes/market/+page.svelte - WITH LOWEST PRICES -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentShoppingCart20Filled from "~icons/fluent/cart-20-filled";
@@ -9,6 +9,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
+	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 
 	let { data, form } = $props();
 
@@ -56,6 +57,11 @@
 		return productMap.get(selectedItemName as ProductType) || 0;
 	});
 
+	const currentLowestPrice = $derived.by(() => {
+		const key = `${selectedItemType}-${selectedItemName}`;
+		return data.lowestPrices[key] || 1000;
+	});
+
 	const canCreateListing = $derived(availableQuantity >= listingQuantity && listingQuantity >= 1);
 
 	const cooldownDisplay = $derived.by(() => {
@@ -72,6 +78,11 @@
 			}, 1000);
 			return () => clearInterval(interval);
 		}
+	});
+
+	// Update price when item selection changes
+	$effect(() => {
+		listingPrice = currentLowestPrice;
 	});
 </script>
 
@@ -110,7 +121,10 @@
 				<div class="space-y-2">
 					{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as ResourceType[] as resource}
 						{@const quantity = resourceMap.get(resource) || 0}
-						<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30">
+						<a
+							href="/market/{resource}"
+							class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30 hover:bg-slate-600/50 hover:border-slate-500/50 transition-all cursor-pointer"
+						>
 							<div class="flex items-center gap-2">
 								<span class="text-xl">{resourceIcons[resource]}</span>
 								<span class="font-medium capitalize text-gray-300">{resource}</span>
@@ -122,7 +136,7 @@
 							>
 								{quantity}
 							</span>
-						</div>
+						</a>
 					{/each}
 				</div>
 			</div>
@@ -137,7 +151,10 @@
 				<div class="space-y-2">
 					{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as ProductType[] as product}
 						{@const quantity = productMap.get(product) || 0}
-						<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30">
+						<a
+							href="/market/{product}"
+							class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30 hover:bg-slate-600/50 hover:border-slate-500/50 transition-all cursor-pointer"
+						>
 							<div class="flex items-center gap-2">
 								<span class="text-xl">{productIcons[product]}</span>
 								<span class="font-medium capitalize text-gray-300">{product}</span>
@@ -149,7 +166,7 @@
 							>
 								{quantity}
 							</span>
-						</div>
+						</a>
 					{/each}
 				</div>
 			</div>
@@ -260,7 +277,15 @@
 
 				<!-- Price Per Unit -->
 				<div>
-					<label for="pricePerUnit" class="block text-sm font-medium text-gray-300 mb-2"> Price Per Unit </label>
+					<label for="pricePerUnit" class="block text-sm font-medium text-gray-300 mb-2">
+						Price Per Unit
+						{#if currentLowestPrice > 0}
+							<span class="text-xs text-blue-400 ml-2">
+								<FluentInfo20Filled class="inline size-3 mb-0.5" />
+								Current lowest: ${currentLowestPrice.toLocaleString()}
+							</span>
+						{/if}
+					</label>
 					<div class="join w-full">
 						<span class="join-item btn bg-slate-700/50 border-slate-600/30 text-gray-300">$</span>
 						<input
@@ -271,7 +296,7 @@
 							step="1"
 							bind:value={listingPrice}
 							class="input join-item flex-1 bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50"
-							placeholder="1000"
+							placeholder={currentLowestPrice.toString()}
 						/>
 					</div>
 				</div>
@@ -293,6 +318,17 @@
 						<span class="text-gray-400">Unit Price:</span>
 						<span class="font-bold text-white">${listingPrice.toLocaleString()}</span>
 					</div>
+					{#if listingPrice < currentLowestPrice && currentLowestPrice > 0}
+						<div class="bg-green-600/10 border border-green-500/20 rounded-lg p-2 text-xs text-green-300">
+							<FluentInfo20Filled class="inline size-3 mb-0.5" />
+							Your price is ${(currentLowestPrice - listingPrice).toLocaleString()} below market
+						</div>
+					{:else if listingPrice > currentLowestPrice && currentLowestPrice > 0}
+						<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-2 text-xs text-amber-300">
+							<FluentWarning20Filled class="inline size-3 mb-0.5" />
+							Your price is ${(listingPrice - currentLowestPrice).toLocaleString()} above market
+						</div>
+					{/if}
 					<div class="divider my-1"></div>
 					<div class="flex justify-between text-lg font-bold text-purple-400">
 						<span>Total Value:</span>
@@ -370,7 +406,10 @@
 										: 'border-slate-600/30'}"
 							>
 								<div class="flex items-center justify-between gap-4">
-									<div class="flex items-center gap-3 flex-1">
+									<a
+										href="/market/{listing.itemName}"
+										class="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity"
+									>
 										<div class="text-4xl">{icon}</div>
 										<div class="flex-1">
 											<div class="font-bold text-lg capitalize flex items-center gap-2 text-white">
@@ -397,7 +436,7 @@
 												<span class="font-semibold">{listing.quantity}</span> units available
 											</div>
 										</div>
-									</div>
+									</a>
 
 									<div class="text-right">
 										<div class="text-xs text-gray-400">Price per unit</div>
