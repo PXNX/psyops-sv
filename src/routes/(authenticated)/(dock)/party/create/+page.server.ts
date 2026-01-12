@@ -19,6 +19,7 @@ import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createPartySchema } from "./schema";
 import { PARTY_CREATION_CONFIG } from "$lib/config/party";
+import { getRegionName } from "$lib/utils/formatting";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
