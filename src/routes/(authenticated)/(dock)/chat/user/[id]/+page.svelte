@@ -7,7 +7,7 @@
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
-	import ChatMessageMenu from "$lib/component/ChatMessageMenu.svelte";
+	import Modal from "$lib/component/Modal.svelte";
 	import ReportMessageModal from "$lib/component/ReportMessageModal.svelte";
 	import BlockUserModal from "$lib/component/BlockUserModal.svelte";
 
@@ -23,6 +23,9 @@
 	let showBlockModal = $state(false);
 	let selectedMessageId = $state<number | null>(null);
 	let selectedSenderId = $state<string | null>(null);
+
+	let showExternalLinkWarning = $state(false);
+	let pendingExternalLink = $state<string | null>(null);
 
 	// Optimistic messages
 	let optimisticMessages = $state<any[]>([]);
@@ -126,19 +129,6 @@
 		}
 	});
 
-	function formatTime(dateString: string) {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diff = now.getTime() - date.getTime();
-		const minutes = Math.floor(diff / 60000);
-		const hours = Math.floor(diff / 3600000);
-
-		if (minutes < 1) return "Just now";
-		if (minutes < 60) return `${minutes}m ago`;
-		if (hours < 24) return `${hours}h ago`;
-		return date.toLocaleDateString();
-	}
-
 	function formatGroupTime(dateString: string) {
 		const date = new Date(dateString);
 		return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -160,6 +150,47 @@
 		selectedSenderId = senderId;
 		showReportModal = true;
 	}
+
+	function isImageUrl(url: string): boolean {
+		return /\.(png|jpg|jpeg|gif|webp)$/i.test(url);
+	}
+
+	function isLocalhost(url: string): boolean {
+		try {
+			const urlObj = new URL(url);
+			return urlObj.hostname === "localhost" || urlObj.hostname === "127.0.0.1" || urlObj.port === "5173";
+		} catch {
+			return false;
+		}
+	}
+
+	function handleLinkClick(e: MouseEvent, url: string) {
+		if (!isLocalhost(url)) {
+			e.preventDefault();
+			pendingExternalLink = url;
+			showExternalLinkWarning = true;
+		}
+	}
+
+	function proceedToExternalLink() {
+		if (pendingExternalLink) {
+			window.open(pendingExternalLink, "_blank");
+			pendingExternalLink = null;
+			showExternalLinkWarning = false;
+		}
+	}
+
+	function renderMessageContent(content: string) {
+		const urlRegex = /(https?:\/\/[^\s]+)/g;
+		const parts = content.split(urlRegex);
+
+		return parts.map((part, index) => {
+			if (urlRegex.test(part)) {
+				return { type: "url", content: part, index };
+			}
+			return { type: "text", content: part, index };
+		});
+	}
 </script>
 
 <ReportMessageModal
@@ -178,6 +209,31 @@
 	userName={data.otherUser?.name || null}
 	onClose={() => {}}
 />
+
+<Modal bind:open={showExternalLinkWarning} title="External Link Warning" size="small">
+	<div class="space-y-4">
+		<p class="text-gray-300">
+			You are about to visit an external website. Please be careful and make sure you trust this link.
+		</p>
+		<div class="bg-slate-700/50 rounded p-3 break-all text-sm text-gray-400">
+			{pendingExternalLink}
+		</div>
+		<div class="flex gap-2 justify-end">
+			<button
+				onclick={() => {
+					showExternalLinkWarning = false;
+					pendingExternalLink = null;
+				}}
+				class="btn btn-ghost"
+			>
+				Cancel
+			</button>
+			<button onclick={proceedToExternalLink} class="btn bg-blue-600 hover:bg-blue-700 border-0 text-white">
+				Continue
+			</button>
+		</div>
+	</div>
+</Modal>
 
 {#if !data.otherUser}
 	<div class="max-w-5xl mx-auto px-4 py-6">
@@ -216,7 +272,7 @@
 			</div>
 		</div>
 
-		<!-- Messages container - same as normal view -->
+		<!-- Messages container -->
 		<div
 			bind:this={chatContainer}
 			onscroll={handleScroll}
@@ -244,7 +300,27 @@
 								<div class="flex flex-col gap-1 items-end">
 									{#each group.messages as msg}
 										<div class="chat-bubble bg-blue-600 text-white">
-											{msg.content}
+											{#each renderMessageContent(msg.content) as part}
+												{#if part.type === "url"}
+													{#if isImageUrl(part.content)}
+														<div class="my-2">
+															<img src={part.content} alt="Shared image" class="max-w-sm rounded" />
+														</div>
+													{:else}
+														<a
+															href={part.content}
+															onclick={(e) => handleLinkClick(e, part.content)}
+															class="underline hover:text-blue-200"
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															{part.content}
+														</a>
+													{/if}
+												{:else}
+													{part.content}
+												{/if}
+											{/each}
 										</div>
 									{/each}
 								</div>
@@ -256,9 +332,29 @@
 							<!-- Other user's messages group -->
 							<div class="chat chat-start mb-4">
 								<div class="flex flex-col gap-1 items-start">
-									{#each group.messages as msg, idx}
+									{#each group.messages as msg}
 										<div class="chat-bubble bg-slate-700 text-gray-200">
-											{msg.content}
+											{#each renderMessageContent(msg.content) as part}
+												{#if part.type === "url"}
+													{#if isImageUrl(part.content)}
+														<div class="my-2">
+															<img src={part.content} alt="Shared image" class="max-w-sm rounded" />
+														</div>
+													{:else}
+														<a
+															href={part.content}
+															onclick={(e) => handleLinkClick(e, part.content)}
+															class="underline hover:text-blue-400"
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															{part.content}
+														</a>
+													{/if}
+												{:else}
+													{part.content}
+												{/if}
+											{/each}
 										</div>
 									{/each}
 								</div>
@@ -366,7 +462,27 @@
 								<div class="flex flex-col gap-1 items-end">
 									{#each group.messages as msg}
 										<div class="chat-bubble bg-blue-600 text-white {msg.isOptimistic ? 'opacity-70' : ''}">
-											{msg.content}
+											{#each renderMessageContent(msg.content) as part}
+												{#if part.type === "url"}
+													{#if isImageUrl(part.content)}
+														<div class="my-2">
+															<img src={part.content} alt="Shared image" class="max-w-sm rounded" />
+														</div>
+													{:else}
+														<a
+															href={part.content}
+															onclick={(e) => handleLinkClick(e, part.content)}
+															class="underline hover:text-blue-200"
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															{part.content}
+														</a>
+													{/if}
+												{:else}
+													{part.content}
+												{/if}
+											{/each}
 										</div>
 									{/each}
 								</div>
@@ -378,12 +494,35 @@
 							<!-- Other user's messages group -->
 							<div class="chat chat-start mb-4">
 								<div class="flex flex-col gap-1 items-start">
-									{#each group.messages as msg, idx}
+									{#each group.messages as msg}
 										<button
 											onclick={() => handleReportMessage(msg.id, msg.senderId)}
 											class="chat-bubble bg-slate-700 text-gray-200 hover:bg-slate-600/80 transition-colors text-left cursor-pointer"
 										>
-											{msg.content}
+											{#each renderMessageContent(msg.content) as part}
+												{#if part.type === "url"}
+													{#if isImageUrl(part.content)}
+														<div class="my-2">
+															<img src={part.content} alt="Shared image" class="max-w-sm rounded" />
+														</div>
+													{:else}
+														<a
+															href={part.content}
+															onclick={(e) => {
+																e.stopPropagation();
+																handleLinkClick(e, part.content);
+															}}
+															class="underline hover:text-blue-400"
+															target="_blank"
+															rel="noopener noreferrer"
+														>
+															{part.content}
+														</a>
+													{/if}
+												{:else}
+													{part.content}
+												{/if}
+											{/each}
 										</button>
 									{/each}
 								</div>
@@ -440,7 +579,6 @@
 					return async ({ result, update }) => {
 						if (result.type === "success") {
 							// Message sent successfully - SSE will trigger reload
-							// and clear optimistic messages
 						} else {
 							// Error - remove optimistic message and restore input
 							optimisticMessages = optimisticMessages.filter((m) => m.id !== optimisticMsg.id);
