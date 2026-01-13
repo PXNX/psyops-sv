@@ -89,7 +89,7 @@ export const userProfiles = pgTable("user_profiles", {
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" })
 		.unique(),
-	name: text("name"),
+	name: text("name").notNull().default("New user"),
 	logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
 	bio: text("bio"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),

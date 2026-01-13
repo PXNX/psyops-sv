@@ -15,7 +15,7 @@ import {
 	userProfiles,
 	ministers
 } from "$lib/server/schema";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";
 import { superValidate } from "sveltekit-superforms";
@@ -24,11 +24,12 @@ import { createProposalSchema } from "./schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
+	const stateId = parseInt(params.id);
 	const form = await superValidate(valibot(createProposalSchema));
 
 	// Get state
 	const state = await db.query.states.findFirst({
-		where: eq(states.id, params.id)
+		where: eq(states.id, stateId)
 	});
 
 	if (!state) {
@@ -48,22 +49,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.from(parliamentMembers)
 		.leftJoin(accounts, eq(parliamentMembers.userId, accounts.id))
 		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
-		.where(eq(parliamentMembers.stateId, params.id))
+		.where(eq(parliamentMembers.stateId, stateId))
 		.orderBy(desc(parliamentMembers.electedAt));
 
 	// Process logos
 	const processedMembers = await Promise.all(
-		members.map(async (member) => {
-			let logoUrl = member.logo;
-			if (logoUrl && !logoUrl.startsWith("http")) {
-				try {
-					logoUrl = await getSignedDownloadUrl(logoUrl);
-				} catch {
-					logoUrl = null;
-				}
-			}
-			return { ...member, logo: logoUrl };
-		})
+		members.map(async (member) => ({
+			...member,
+			logo: await getLogoUrl(member.logo)
+		}))
 	);
 
 	// Calculate party distribution
@@ -77,18 +71,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if current user is a parliament member
 	const userMembership = await db.query.parliamentMembers.findFirst({
-		where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
+		where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, stateId))
 	});
 
 	// Check if user is a minister
 	const userMinistry = await db.query.ministers.findFirst({
-		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, params.id))
+		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
 	});
 
 	// Get next or active election
 	const now = new Date();
 	const nextElection = await db.query.parliamentaryElections.findFirst({
-		where: and(eq(parliamentaryElections.stateId, params.id), gte(parliamentaryElections.endDate, now)),
+		where: and(eq(parliamentaryElections.stateId, stateId), gte(parliamentaryElections.endDate, now)),
 		orderBy: parliamentaryElections.startDate
 	});
 
@@ -98,7 +92,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.from(parliamentaryProposals)
 		.where(
 			and(
-				eq(parliamentaryProposals.stateId, params.id),
+				eq(parliamentaryProposals.stateId, stateId),
 				eq(parliamentaryProposals.status, "active"),
 				gte(parliamentaryProposals.votingEndsAt, now)
 			)
@@ -124,15 +118,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				where: eq(userProfiles.accountId, proposal.proposedBy)
 			});
 
-			let proposerLogo = proposer?.logo;
-			if (proposerLogo && !proposerLogo.startsWith("http")) {
-				try {
-					proposerLogo = await getSignedDownloadUrl(proposerLogo);
-				} catch {
-					proposerLogo = null;
-				}
-			}
-
 			return {
 				...proposal,
 				voteCounts,
@@ -142,7 +127,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				proposedBy: {
 					id: proposal.proposedBy,
 					name: proposer?.name || "Unknown",
-					logo: proposerLogo
+					logo: await getLogoUrl(proposer?.logo)
 				}
 			};
 		})
@@ -165,7 +150,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					endDate: nextElection.endDate,
 					status: nextElection.status,
 					totalSeats: nextElection.totalSeats,
-					isInaugural: nextElection.isInaugural === 1
+					isInaugural: nextElection.isInaugural
 				}
 			: null,
 		form
@@ -175,8 +160,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 export const actions: Actions = {
 	vote: async ({ request, locals, params }) => {
 		const account = locals.account!;
+		const stateId = parseInt(params.id);
 		const formData = await request.formData();
-		const proposalId = formData.get("proposalId") as string;
+		const proposalId = parseInt(formData.get("proposalId") as string);
 		const voteType = formData.get("voteType") as "for" | "against" | "abstain";
 
 		if (!proposalId || !voteType) {
@@ -184,7 +170,7 @@ export const actions: Actions = {
 		}
 
 		const membership = await db.query.parliamentMembers.findFirst({
-			where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
+			where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, stateId))
 		});
 
 		if (!membership) {
@@ -224,106 +210,5 @@ export const actions: Actions = {
 		}
 
 		return { success: true, message: "Vote recorded successfully" };
-	},
-
-	createProposal: async ({ request, locals, params }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Unauthorized" });
-		}
-
-		const form = await superValidate(request, valibot(createProposalSchema));
-
-		if (!form.valid) {
-			return fail(400, { form });
-		}
-
-		const membership = await db.query.parliamentMembers.findFirst({
-			where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, params.id))
-		});
-
-		if (!membership) {
-			return fail(403, { error: "You must be a parliament member to create proposals" });
-		}
-
-		const { title, description, proposalType, votingDays, requiredMajority } = form.data;
-
-		const votingStartsAt = new Date();
-		const votingEndsAt = new Date();
-		votingEndsAt.setDate(votingEndsAt.getDate() + votingDays);
-
-		await db.insert(parliamentaryProposals).values({
-			stateId: params.id,
-			title,
-			description,
-			proposalType,
-			proposedBy: account.id,
-			votingStartsAt,
-			votingEndsAt,
-			requiredMajority,
-			status: "active"
-		});
-
-		return { form, success: true, message: "Proposal created successfully" };
-	},
-
-	executeMinisterialAction: async ({ request, locals, params }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Unauthorized" });
-		}
-
-		const form = await superValidate(request, valibot(createProposalSchema));
-
-		if (!form.valid) {
-			return fail(400, { form });
-		}
-
-		const ministry = await db.query.ministers.findFirst({
-			where: and(eq(ministers.userId, account.id), eq(ministers.stateId, params.id))
-		});
-
-		if (!ministry) {
-			return fail(403, { error: "You must be a minister to execute direct actions" });
-		}
-
-		const { proposalType } = form.data;
-
-		const ministryPermissions: Record<string, string[]> = {
-			finance: ["tax", "budget"],
-			infrastructure: ["infrastructure"],
-			education: ["education"],
-			defense: ["defense"],
-			health: ["healthcare"],
-			environment: ["environment"],
-			justice: ["justice"]
-		};
-
-		const allowedTypes = ministryPermissions[ministry.ministry] || [];
-
-		if (!allowedTypes.includes(proposalType)) {
-			return fail(403, {
-				error: `Your ministry (${ministry.ministry}) cannot execute ${proposalType} actions directly`
-			});
-		}
-
-		const { title, description } = form.data;
-
-		const votingStartsAt = new Date();
-		const votingEndsAt = new Date();
-
-		await db.insert(parliamentaryProposals).values({
-			stateId: params.id,
-			title,
-			description,
-			proposalType,
-			proposedBy: account.id,
-			votingStartsAt,
-			votingEndsAt,
-			requiredMajority: 0,
-			status: "passed"
-		});
-
-		return { form, success: true, message: "Ministerial action executed successfully" };
 	}
 };

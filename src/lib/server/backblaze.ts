@@ -10,6 +10,9 @@ import {
 	BACKBLAZE_REGION,
 	BACKBLAZE_ENDPOINT
 } from "$env/static/private";
+import { files } from "./schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm/sql/expressions";
 
 const s3Client = new S3Client({
 	endpoint: BACKBLAZE_ENDPOINT,
@@ -172,4 +175,20 @@ export async function getSignedDownloadUrlShort(key: string): Promise<string> {
 	});
 
 	return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+}
+
+export async function getLogoUrl(logoId: number | null | undefined): Promise<string | null> {
+	if (!logoId) return null;
+
+	const logoFile = await db.query.files.findFirst({
+		where: eq(files.id, logoId!)
+	});
+
+	if (!logoFile) return null;
+
+	try {
+		return await getSignedDownloadUrl(logoFile.key);
+	} catch {
+		return null;
+	}
 }
