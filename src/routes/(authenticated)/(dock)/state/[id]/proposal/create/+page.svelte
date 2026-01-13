@@ -5,7 +5,7 @@
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
-	import SuperDebug, { superForm } from "sveltekit-superforms";
+	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
 	import { getRegionName } from "$lib/utils/formatting";
@@ -19,6 +19,13 @@
 	});
 
 	const { form: formData, errors, enhance, delayed, submitting } = form;
+
+	// Set default quantity to 1
+	$effect(() => {
+		if (!$formData.quantity) {
+			$formData.quantity = 1;
+		}
+	});
 
 	type ProposalType = "tax" | "hospital" | "school" | "power_plant" | "infrastructure";
 	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure";
@@ -105,7 +112,7 @@
 
 	const isTaxProposal = $derived($formData.proposalType === "tax");
 	const isBuildingProposal = $derived(
-		["hospital", "school", "power_plant", "infrastructure"].includes($formData.proposalType)
+		["hospital", "school", "power_plant", "infrastructure"].includes($formData.proposalType || "")
 	);
 
 	// Type guard to check if proposalType is a valid BuildingType
@@ -394,22 +401,14 @@
 					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
 						{@const template = data.buildingTemplates[$formData.proposalType]}
 						<div class="bg-slate-700/30 rounded-lg p-4 space-y-3">
-							<div class="flex items-start justify-between">
-								<div>
-									<p class="text-sm font-medium text-gray-300 mb-1">Cost per Building:</p>
-									{#if template}
-										<p class="text-sm text-gray-400">{formatBuildingCosts($formData.proposalType)}</p>
-									{:else}
-										<p class="text-sm text-red-400">Template not found for {$formData.proposalType}</p>
-									{/if}
-								</div>
-								{#if selectedRegion() && currentBuildingCount > 0}
+							{#if selectedRegion() && currentBuildingCount > 0}
+								<div class="flex items-center justify-between mb-2">
+									<p class="text-sm font-medium text-gray-300">Existing in Region:</p>
 									<div class="bg-blue-600/20 border border-blue-500/30 rounded px-3 py-1">
-										<p class="text-xs text-blue-400">Existing in Region</p>
-										<p class="text-lg font-bold text-white text-center">{currentBuildingCount}</p>
+										<p class="text-lg font-bold text-white">{currentBuildingCount}</p>
 									</div>
-								{/if}
-							</div>
+								</div>
+							{/if}
 
 							{#if template}
 								<div class="grid grid-cols-3 gap-2 text-xs text-gray-400 pt-2 border-t border-white/5">
@@ -435,28 +434,36 @@
 						<label for="regionId" class="block text-sm font-medium text-gray-300 mb-2">
 							Region <span class="text-red-400">*</span>
 						</label>
-						<select
-							id="regionId"
-							name="regionId"
-							bind:value={$formData.regionId}
-							class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-blue-500/50"
-							class:select-error={$errors.regionId}
-							disabled={$submitting}
-						>
-							<option value="" disabled>Select region to build in</option>
+						<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
 							{#each data.regions as region}
 								{@const buildingCount = $formData.proposalType
 									? getBuildingCount(region.id.toString(), $formData.proposalType)
 									: 0}
-								<option value={region.id}>
-									{getRegionName(region.id)}
-									(Infra: {region.infrastructure ?? 0}{#if buildingCount > 0}, {proposalTypeIcons[
-											$formData.proposalType || ""
-										]}
-										{buildingCount}{/if})
-								</option>
+								<button
+									type="button"
+									class="p-4 rounded-lg border-2 text-left transition-all flex items-center gap-3"
+									class:bg-blue-600-20={$formData.regionId === region.id.toString()}
+									class:border-blue-500-50={$formData.regionId === region.id.toString()}
+									class:bg-slate-700-30={$formData.regionId !== region.id.toString()}
+									class:border-slate-600-30={$formData.regionId !== region.id.toString()}
+									class:hover:border-slate-500-50={$formData.regionId !== region.id.toString()}
+									onclick={() => ($formData.regionId = region.id.toString())}
+									disabled={$submitting}
+								>
+									<img src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="w-12 h-12 rounded" />
+									<div class="flex-1">
+										<h4 class="font-bold text-white">{getRegionName(region.id)}</h4>
+										<p class="text-xs text-gray-400">
+											Infrastructure: {region.infrastructure ?? 0}
+											{#if buildingCount > 0}
+												• {proposalTypeIcons[$formData.proposalType || ""]} {buildingCount}
+											{/if}
+										</p>
+									</div>
+								</button>
 							{/each}
-						</select>
+						</div>
+						<input type="hidden" name="regionId" value={$formData.regionId} />
 						{#if $errors.regionId}
 							<p class="text-xs text-red-400 mt-1">{$errors.regionId}</p>
 						{/if}
@@ -499,16 +506,18 @@
 								{#each Object.entries(costs) as [resource, amount]}
 									{@const available =
 										resource === "currency" ? data.treasury?.balance || 0 : data.stateResources?.[resource] || 0}
-									{@const hasEnough = amount <= available}
+									{@const hasEnough = (amount as number) <= available}
 									<div class="flex justify-between text-sm items-center">
 										<span class="text-gray-400 capitalize flex items-center gap-2">
-											{#if resource !== "currency"}
+											{#if resource === "currency"}
+												<FluentMoney20Filled class="size-4 text-amber-400" />
+											{:else}
 												<span>{getResourceIcon(resource)}</span>
 											{/if}
 											{resource}:
 										</span>
 										<span class="font-mono" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
-											{amount.toLocaleString()}
+											{(amount as number).toLocaleString()}
 											<span class="text-gray-500">/ {available.toLocaleString()}</span>
 											{#if hasEnough}
 												<span class="text-green-400 ml-1">✓</span>
@@ -530,31 +539,13 @@
 						{/if}
 					{/if}
 
-					<!-- Building Name -->
-					<div>
-						<label for="buildingName" class="block text-sm font-medium text-gray-300 mb-2">
-							Building Name <span class="text-red-400">*</span>
-						</label>
-						<input
-							type="text"
-							id="buildingName"
-							name="buildingName"
-							bind:value={$formData.buildingName}
-							placeholder="e.g., Central City Hospital"
-							maxlength="100"
-							class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50"
-							class:input-error={$errors.buildingName}
-							disabled={$submitting}
-						/>
-						{#if $errors.buildingName}
-							<p class="text-xs text-red-400 mt-1">{$errors.buildingName}</p>
-						{/if}
-						{#if $formData.quantity && $formData.quantity > 1}
-							<p class="text-xs text-gray-400 mt-1">
-								Buildings will be numbered automatically (e.g., {$formData.buildingName} 1, {$formData.buildingName} 2...)
+					{#if $formData.quantity && $formData.quantity > 1}
+						<div class="bg-blue-600/10 border border-blue-500/20 rounded-lg p-3">
+							<p class="text-xs text-gray-300">
+								Buildings will be numbered automatically (e.g., Building 1, Building 2, Building 3...)
 							</p>
-						{/if}
-					</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
@@ -569,9 +560,8 @@
 				<button
 					type="submit"
 					disabled={$submitting ||
-						(isTaxProposal && (!$formData.taxType || !$formData.taxRate || !$formData.taxName)) ||
-						(isBuildingProposal &&
-							(!$formData.buildingName || !$formData.regionId || !$formData.quantity || !canAfford()))}
+						(isTaxProposal && (!$formData.taxType || !$formData.taxRate)) ||
+						(isBuildingProposal && (!$formData.regionId || !$formData.quantity || !canAfford()))}
 					class="btn flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 border-0 text-white gap-2"
 				>
 					{#if $delayed}
