@@ -3,7 +3,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
-import { parliamentaryProposals, proposalVotes, stateTaxes, parliamentMembers } from "$lib/server/schema";
+import { parliamentaryProposals, parliamentaryVotes, stateTaxes, parliamentMembers } from "$lib/server/schema";
 import { eq, and, lte } from "drizzle-orm";
 
 export const GET: RequestHandler = async ({ request }) => {
@@ -74,11 +74,11 @@ async function processProposal(proposal: any) {
 	}
 
 	// Get all votes for this proposal
-	const votes = await db.select().from(proposalVotes).where(eq(proposalVotes.proposalId, proposal.id));
+	const votes = await db.select().from(parliamentaryVotes).where(eq(parliamentaryVotes.proposalId, proposal.id));
 
 	// Count yes and no votes
-	const yesVotes = votes.filter((v) => v.vote === "yes").length;
-	const noVotes = votes.filter((v) => v.vote === "no").length;
+	const yesVotes = votes.filter((v) => v.voteType === "for").length;
+	const noVotes = votes.filter((v) => v.voteType === "against").length;
 	const totalVotes = yesVotes + noVotes;
 
 	// Calculate percentage of yes votes out of TOTAL MEMBERS (not just voters)
@@ -119,12 +119,10 @@ async function implementProposal(proposal: any) {
 
 	if (proposal.proposalType === "tax") {
 		// Extract tax configuration from description
-		const taxNameMatch = description.match(/Tax Name: (.+)/);
 		const taxTypeMatch = description.match(/Tax Type: (.+)/);
 		const taxRateMatch = description.match(/Tax Rate: (\d+)%/);
 
-		if (taxNameMatch && taxTypeMatch && taxRateMatch) {
-			const taxName = taxNameMatch[1];
+		if (taxTypeMatch && taxRateMatch) {
 			const taxType = taxTypeMatch[1];
 			const taxRate = parseInt(taxRateMatch[1]);
 
@@ -136,13 +134,12 @@ async function implementProposal(proposal: any) {
 					stateId: proposal.stateId,
 					taxType: taxType as any,
 					taxRate,
-					taxName,
-					description: proposal.description,
+
 					proposalId: proposal.id,
-					isActive: 1
+					isActive: true
 				});
 
-				console.log(`✅ Tax "${taxName}" (${taxRate}% ${taxType}) created for state ${proposal.stateId}`);
+				console.log(`✅ Tax  (${taxRate}% ${taxType}) created for state ${proposal.stateId}`);
 			} else {
 				console.log(`ℹ️  Tax for proposal ${proposal.id} already exists, skipping`);
 			}
