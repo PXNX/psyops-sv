@@ -6,7 +6,6 @@
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
 	import FluentCube20Filled from "~icons/fluent/cube-20-filled";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
-	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentEmojiShoppingCart from "~icons/fluent-emoji/shopping-cart";
@@ -14,6 +13,8 @@
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
+	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 
 	let { data } = $props();
 
@@ -72,6 +73,27 @@
 		return `${seconds}s`;
 	});
 
+	const jobStatus = $derived.by(() => {
+		if (!data.currentJob) return null;
+		if (!data.currentJob.lastWorked) return { status: "ready", text: "Ready for shift" };
+
+		const SHIFT_DURATION = 8 * 60 * 60 * 1000;
+		const timeSinceWork = Date.now() - new Date(data.currentJob.lastWorked).getTime();
+
+		if (timeSinceWork < SHIFT_DURATION) {
+			const remaining = SHIFT_DURATION - timeSinceWork;
+			const hours = Math.floor(remaining / 3600000);
+			const minutes = Math.floor((remaining % 3600000) / 60000);
+			return {
+				status: "working",
+				text: `${hours}h ${minutes}m remaining`,
+				progress: (timeSinceWork / SHIFT_DURATION) * 100
+			};
+		}
+
+		return { status: "complete", text: "Shift complete!" };
+	});
+
 	$effect(() => {
 		if (activeProduction) {
 			const interval = setInterval(() => {
@@ -87,8 +109,8 @@
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="text-3xl font-bold text-white">Production Facility</h1>
-			<p class="text-gray-400">Manufacture weapons and equipment for your military</p>
+			<h1 class="text-3xl font-bold text-white">Production & Employment</h1>
+			<p class="text-gray-400">Work at factories and manufacture military equipment</p>
 		</div>
 
 		<div class="flex gap-3">
@@ -150,17 +172,20 @@
 		</div>
 
 		{#if data.currentJob}
-			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+			<a
+				href="/factory/{data.currentJob.factoryId}"
+				class="bg-slate-800/50 border border-white/5 rounded-xl p-4 hover:bg-slate-700/50 transition-colors"
+			>
 				<div class="flex items-center gap-3">
 					<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
 						<FluentBriefcase20Filled class="size-5 text-blue-400" />
 					</div>
-					<div>
+					<div class="flex-1 min-w-0">
 						<p class="text-xs text-gray-400">Current Job</p>
 						<p class="text-sm font-bold text-white truncate">{data.currentJob.factoryName}</p>
 					</div>
 				</div>
-			</div>
+			</a>
 		{:else}
 			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
 				<div class="flex items-center gap-3">
@@ -175,6 +200,48 @@
 			</div>
 		{/if}
 	</div>
+
+	<!-- Current Job Status -->
+	{#if data.currentJob && jobStatus}
+		<a
+			href="/factory/{data.currentJob.factoryId}"
+			class="block bg-slate-800/50 border border-white/5 rounded-xl p-5 hover:bg-slate-700/50 transition-colors"
+		>
+			<div class="flex items-center justify-between mb-3">
+				<div>
+					<h2 class="text-lg font-semibold text-white">{data.currentJob.factoryName}</h2>
+					<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
+				</div>
+				<div class="text-right">
+					<p class="text-xs text-gray-400">Wage</p>
+					<p class="text-lg font-bold text-green-400">{data.currentJob.wage.toLocaleString()}</p>
+				</div>
+			</div>
+
+			{#if jobStatus.status === "working"}
+				<div>
+					<div class="flex justify-between items-center mb-2">
+						<span class="text-sm font-medium text-gray-300">Shift Progress</span>
+						<span class="text-sm font-bold text-amber-400">{jobStatus.text}</span>
+					</div>
+					<div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+						<div
+							class="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all"
+							style="width: {jobStatus.progress}%"
+						></div>
+					</div>
+				</div>
+			{:else if jobStatus.status === "complete"}
+				<div class="bg-green-600/10 border border-green-500/20 rounded-lg p-3">
+					<p class="text-green-300 font-medium">✓ {jobStatus.text} Click to collect payment.</p>
+				</div>
+			{:else}
+				<div class="bg-blue-600/10 border border-blue-500/20 rounded-lg p-3">
+					<p class="text-blue-300 font-medium">→ {jobStatus.text} Click to start a new shift.</p>
+				</div>
+			{/if}
+		</a>
+	{/if}
 
 	<div class="grid lg:grid-cols-3 gap-6">
 		<div class="space-y-6">
@@ -231,7 +298,52 @@
 			</div>
 		</div>
 
-		<div class="lg:col-span-2">
+		<div class="lg:col-span-2 space-y-6">
+			<!-- Available Factories -->
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+				<div class="flex items-center justify-between">
+					<div class="flex items-center gap-2">
+						<FluentFactory20Filled class="size-5 text-purple-400" />
+						<h2 class="text-lg font-semibold text-white">Available Factories</h2>
+					</div>
+					<span class="text-sm text-gray-400">{data.availableFactories.length} factories</span>
+				</div>
+
+				<div class="space-y-2 max-h-96 overflow-y-auto">
+					{#each data.availableFactories as factory}
+						<a
+							href="/factory/{factory.id}"
+							class="block bg-slate-700/30 hover:bg-slate-700/50 rounded-xl p-4 border border-slate-600/30 hover:border-slate-500/50 transition-all"
+						>
+							<div class="flex items-center justify-between mb-2">
+								<div class="flex-1">
+									<h3 class="font-semibold text-white">{factory.name}</h3>
+									<p class="text-xs text-gray-400">{factory.companyName} • {factory.stateName}</p>
+								</div>
+								<FluentArrowRight20Filled class="size-5 text-gray-400" />
+							</div>
+
+							<div class="flex items-center justify-between text-sm">
+								<div class="flex items-center gap-3">
+									<div class="flex items-center gap-1">
+										<FluentMoney20Filled class="size-4 text-green-400" />
+										<span class="text-green-400 font-medium">{factory.workerWage.toLocaleString()}</span>
+									</div>
+									<div class="flex items-center gap-1">
+										<FluentPeople20Filled class="size-4 text-blue-400" />
+										<span class="text-gray-300">{factory.currentWorkers}/{factory.maxWorkers}</span>
+									</div>
+								</div>
+								<div class="badge bg-purple-600/20 text-purple-300 border-purple-500/30 capitalize">
+									{factory.factoryType}
+								</div>
+							</div>
+						</a>
+					{/each}
+				</div>
+			</div>
+
+			<!-- Production -->
 			{#if activeProduction}
 				<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
 					<div class="flex items-center gap-2">
@@ -265,8 +377,6 @@
 							</div>
 						</div>
 					</div>
-
-					<!-- todo: force the usr to collect a procuced item -->
 				</div>
 			{:else}
 				<form
@@ -396,7 +506,7 @@
 						<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">
 							<p class="text-sm text-amber-300">
 								<FluentWarning20Filled class="inline size-4" />
-								You need more resources to start this production. Visit the market or work at a factory to earn resources.
+								You need more resources to start this production. Work at a factory to earn resources and wages.
 							</p>
 						</div>
 					{/if}

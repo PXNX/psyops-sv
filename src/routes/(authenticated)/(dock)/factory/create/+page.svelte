@@ -137,7 +137,7 @@
 					<p class="text-red-200 text-sm">{data.error}</p>
 					<div class="flex gap-2 mt-3">
 						{#if data.error.includes("company")}
-							<a href="/companies/create" class="btn btn-sm bg-red-600/30 border-red-500/50 text-red-100">
+							<a href="/company/create" class="btn btn-sm bg-red-600/30 border-red-500/50 text-red-100">
 								Create Company
 							</a>
 						{/if}

@@ -8,10 +8,9 @@ import {
 	productionQueue,
 	regions,
 	resourceInventory,
-	stateEnergy,
+	states,
 	userWallets
 } from "$lib/server/schema";
-import { calculateAndCollectTax } from "$lib/server/taxes";
 import { fail } from "@sveltejs/kit";
 import { and, eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -46,13 +45,6 @@ const PRODUCTION_RECIPES = {
 } as const;
 
 type ProductType = keyof typeof PRODUCTION_RECIPES;
-
-const MINABLE_RESOURCES = ["iron", "copper", "coal", "wood"] as const;
-type MinableResource = (typeof MINABLE_RESOURCES)[number];
-
-function isMinableResource(resource: string): resource is MinableResource {
-	return MINABLE_RESOURCES.includes(resource as any);
-}
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -108,8 +100,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.where(eq(userWallets.userId, account.id))
 					.then((r) => r[0] || { balance: 10000 }),
 				currentJob: null,
-				stateEnergy: null,
-				userCompany: null
+				userCompany: null,
+				availableFactories: []
 			};
 		}
 	}
@@ -139,10 +131,42 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.innerJoin(regions, eq(factories.regionId, regions.id))
 		.where(eq(factoryWorkers.userId, account.id));
 
-	let stateEnergyData = null;
-	if (currentJob?.stateId) {
-		[stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, currentJob.stateId));
-	}
+	// Get available factories to work at
+	const availableFactories = await db
+		.select({
+			id: factories.id,
+			name: factories.name,
+			factoryType: factories.factoryType,
+			resourceOutput: factories.resourceOutput,
+			productOutput: factories.productOutput,
+			workerWage: factories.workerWage,
+			maxWorkers: factories.maxWorkers,
+			productionRate: factories.productionRate,
+			companyName: companies.name,
+			stateName: states.name,
+			regionId: factories.regionId
+		})
+		.from(factories)
+		.innerJoin(companies, eq(factories.companyId, companies.id))
+		.innerJoin(regions, eq(factories.regionId, regions.id))
+		.innerJoin(states, eq(regions.stateId, states.id))
+		.limit(20);
+
+	// Get worker counts for each factory
+	const workerCounts = await db
+		.select({
+			factoryId: factoryWorkers.factoryId,
+			count: sql<number>`count(*)::int`
+		})
+		.from(factoryWorkers)
+		.groupBy(factoryWorkers.factoryId);
+
+	const workerCountMap = new Map(workerCounts.map((w) => [w.factoryId, w.count]));
+
+	const factoriesWithCounts = availableFactories.map((f) => ({
+		...f,
+		currentWorkers: workerCountMap.get(f.id) || 0
+	}));
 
 	return {
 		resources,
@@ -151,8 +175,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		recipes: PRODUCTION_RECIPES,
 		wallet: wallet || { balance: 10000 },
 		currentJob: currentJob || null,
-		stateEnergy: stateEnergyData,
-		userCompany: userCompany || null
+		userCompany: userCompany || null,
+		availableFactories: factoriesWithCounts
 	};
 };
 
@@ -216,145 +240,5 @@ export const actions: Actions = {
 		});
 
 		return { success: true };
-	},
-
-	work: async ({ request, locals }) => {
-		const account = locals.account!;
-
-		const data = await request.formData();
-		const factoryId = parseInt(data.get("factoryId") as string);
-
-		const [factory] = await db
-			.select({
-				id: factories.id,
-				ownerId: companies.ownerId,
-				factoryType: factories.factoryType,
-				resourceOutput: factories.resourceOutput,
-				workerWage: factories.workerWage,
-				productionRate: factories.productionRate,
-				regionId: factories.regionId,
-				stateId: regions.stateId
-			})
-			.from(factories)
-			.innerJoin(companies, eq(factories.companyId, companies.id))
-			.innerJoin(regions, eq(factories.regionId, regions.id))
-			.where(eq(factories.id, factoryId));
-
-		if (!factory) {
-			return fail(404, { error: "Factory not found" });
-		}
-
-		if (!factory.stateId) {
-			return fail(400, { error: "Factory must be in a valid state" });
-		}
-
-		const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, factory.stateId));
-
-		if (energy) {
-			const availableEnergy = energy.totalProduction - energy.usedProduction;
-			if (availableEnergy < 0) {
-				return fail(400, {
-					error: "Insufficient state energy. This factory cannot operate until the state increases energy production."
-				});
-			}
-		}
-
-		const [existingJob] = await db.select().from(factoryWorkers).where(eq(factoryWorkers.userId, account.id));
-
-		if (existingJob?.lastWorked) {
-			const timeSinceWork = Date.now() - new Date(existingJob.lastWorked).getTime();
-			const COOLDOWN = 24 * 60 * 60 * 1000;
-
-			if (timeSinceWork < COOLDOWN) {
-				const hoursLeft = Math.ceil((COOLDOWN - timeSinceWork) / (60 * 60 * 1000));
-				return fail(400, {
-					error: `Must wait ${hoursLeft} hours before working again`
-				});
-			}
-		}
-
-		let taxAmount = 0;
-		let netAmount = Number(factory.workerWage);
-
-		await db.transaction(async (tx) => {
-			const taxResult = await calculateAndCollectTax(
-				factory.stateId!,
-				"income",
-				Number(factory.workerWage),
-				account.id
-			);
-			taxAmount = taxResult.taxAmount;
-			netAmount = taxResult.netAmount;
-
-			const [workerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-			if (workerWallet) {
-				await tx
-					.update(userWallets)
-					.set({
-						balance: sql`${userWallets.balance} + ${netAmount}`,
-						updatedAt: new Date()
-					})
-					.where(eq(userWallets.userId, account.id));
-			} else {
-				await tx.insert(userWallets).values({
-					userId: account.id,
-					balance: netAmount
-				});
-			}
-
-			if (factory.factoryType === "mine" && factory.resourceOutput) {
-				const [ownerInv] = await tx
-					.select()
-					.from(resourceInventory)
-					.where(
-						and(
-							eq(resourceInventory.userId, factory.ownerId),
-							eq(resourceInventory.resourceType, factory.resourceOutput)
-						)
-					);
-
-				if (ownerInv) {
-					await tx
-						.update(resourceInventory)
-						.set({
-							quantity: sql`${resourceInventory.quantity} + ${factory.productionRate}`,
-							updatedAt: new Date()
-						})
-						.where(eq(resourceInventory.id, ownerInv.id));
-				} else {
-					await tx.insert(resourceInventory).values({
-						userId: factory.ownerId,
-						resourceType: factory.resourceOutput,
-						quantity: factory.productionRate
-					});
-				}
-			}
-
-			if (existingJob) {
-				await tx
-					.update(factoryWorkers)
-					.set({
-						lastWorked: new Date(),
-						factoryId: factoryId
-					})
-					.where(eq(factoryWorkers.id, existingJob.id));
-			} else {
-				await tx.insert(factoryWorkers).values({
-					userId: account.id,
-					factoryId,
-					jobType: "miner",
-					lastWorked: new Date()
-				});
-			}
-		});
-
-		return {
-			success: true,
-			earned: Number(factory.workerWage),
-			netEarned: netAmount,
-			taxPaid: taxAmount,
-			message: `Worked successfully! Earned ${Number(factory.workerWage).toLocaleString()} currency (${netAmount.toLocaleString()} after ${taxAmount.toLocaleString()} tax).`
-		};
 	}
 };

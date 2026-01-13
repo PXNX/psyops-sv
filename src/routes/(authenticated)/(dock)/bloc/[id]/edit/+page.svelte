@@ -228,7 +228,7 @@
 					onclick={() => toggleTemplate(template.id)}
 					class="text-left bg-slate-700/30 rounded-lg p-4 border-2 transition-all hover:bg-slate-700/50"
 					class:border-purple-500={selectedTemplates.has(template.id)}
-					class:border-white/5={!selectedTemplates.has(template.id)}
+					class:border-white-5={!selectedTemplates.has(template.id)}
 					disabled={isSavingRecommendations}
 				>
 					<div class="flex items-start gap-3">
@@ -287,8 +287,8 @@
 	<!-- Info Box -->
 	<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
 		<p class="text-sm text-blue-300">
-			💡 <strong>Note:</strong> As a president of a member state, you can manage the bloc's name, color, description,
-			and recommended military units. These recommendations will be highlighted to all member states during unit training.
+			💡 <strong>Note:</strong> As a president of a member state, you can manage the bloc's name, color, description, and
+			recommended military units. These recommendations will be highlighted to all member states during unit training.
 		</p>
 	</div>
 </div>

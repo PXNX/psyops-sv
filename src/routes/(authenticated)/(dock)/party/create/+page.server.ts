@@ -297,18 +297,18 @@ export const actions: Actions = {
 				role: "leader"
 			});
 
-			// If this is a new state, automatically schedule inaugural election
+			// ⭐ FIXED: If this is a new state, automatically schedule inaugural election
 			if (isNewState && finalStateId) {
 				const now = new Date();
-				// Election starts in 3 days (72 hours)
-				const startDate = new Date(now);
-				startDate.setDate(startDate.getDate() + 3);
-				startDate.setHours(0, 0, 0, 0);
 
-				// Election runs for 2 days
+				// Election starts at the next full hour
+				const startDate = new Date(now);
+				startDate.setMinutes(0, 0, 0); // Reset minutes, seconds, milliseconds
+				startDate.setHours(startDate.getHours() + 1); // Move to next hour
+
+				// Election runs for 48 hours from start
 				const endDate = new Date(startDate);
-				endDate.setDate(endDate.getDate() + 2);
-				endDate.setHours(23, 59, 59, 999);
+				endDate.setHours(endDate.getHours() + 48);
 
 				// Create inaugural election with default 50 seats
 				await tx.insert(parliamentaryElections).values({
@@ -319,6 +319,10 @@ export const actions: Actions = {
 					totalSeats: 50,
 					isInaugural: true
 				});
+
+				console.log(`📅 Scheduled inaugural election for state ${finalStateId}`);
+				console.log(`   Start: ${startDate.toISOString()}`);
+				console.log(`   End: ${endDate.toISOString()}`);
 			}
 
 			return party;

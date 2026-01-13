@@ -1,9 +1,13 @@
 // src/routes/company/create/+page.server.ts
 import { db } from "$lib/server/db";
-import { companies, companyCreationCooldown, userWallets } from "$lib/server/schema";
-import { fail, redirect } from "@sveltejs/kit";
+import { companies, companyCreationCooldown, userWallets, files } from "$lib/server/schema";
+import { redirect } from "@sveltejs/kit";
 import { eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
+import { uploadFileFromForm } from "$lib/server/backblaze";
+import { superValidate, message } from "sveltekit-superforms";
+import { valibot } from "sveltekit-superforms/adapters";
+import { createCompanySchema } from "./schema";
 
 const COMPANY_COST = 100000;
 const COOLDOWN_DAYS = 30;
@@ -12,16 +16,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
 	// Get user's wallet
-	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
+	const wallet = await db.query.userWallets.findFirst({
+		where: eq(userWallets.userId, account.id)
+	});
+
+	const userBalance = wallet?.balance ?? 0;
+	const canAfford = userBalance >= COMPANY_COST;
 
 	// Check cooldown
-	const [cooldown] = await db
-		.select()
-		.from(companyCreationCooldown)
-		.where(eq(companyCreationCooldown.userId, account.id));
+	const cooldown = await db.query.companyCreationCooldown.findFirst({
+		where: eq(companyCreationCooldown.userId, account.id)
+	});
 
 	let isOnCooldown = false;
-	let cooldownEndsAt: string | null = null;
+	let cooldownEndsAt: Date | null = null;
 
 	if (cooldown) {
 		const cooldownEnd = new Date(cooldown.lastCreationAt);
@@ -29,84 +37,95 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 		if (new Date() < cooldownEnd) {
 			isOnCooldown = true;
-			cooldownEndsAt = cooldownEnd.toISOString();
+			cooldownEndsAt = cooldownEnd;
 		}
 	}
 
+	// Check if user already has a company
+	const existingCompany = await db.query.companies.findFirst({
+		where: eq(companies.ownerId, account.id)
+	});
+
+	if (existingCompany) {
+		throw redirect(302, `/company/${existingCompany.id}`);
+	}
+
+	const form = await superValidate(valibot(createCompanySchema));
+
 	return {
-		userBalance: wallet?.balance || 0,
+		form,
+		userBalance,
+		companyCost: COMPANY_COST,
+		canAfford,
 		isOnCooldown,
-		cooldownEndsAt
+		cooldownEndsAt: cooldownEndsAt?.toISOString() ?? null,
+		cooldownDays: COOLDOWN_DAYS
 	};
 };
 
 export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const account = locals.account!;
-		const data = await request.formData();
+		const form = await superValidate(request, valibot(createCompanySchema));
 
-		const name = data.get("name") as string;
-		const logo = data.get("logo") as string;
-		const description = data.get("description") as string;
-
-		// Validation
-		if (!name || name.trim().length === 0) {
-			return fail(400, { error: "Company name is required" });
+		if (!form.valid) {
+			return message(form, "Please fix the validation errors", { status: 400 });
 		}
 
-		if (name.length > 100) {
-			return fail(400, { error: "Company name must be 100 characters or less" });
+		const { name, description, logo } = form.data;
+
+		// Get user's wallet
+		const wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		});
+
+		const userBalance = wallet?.balance ?? 0;
+
+		// Check if user can afford
+		if (userBalance < COMPANY_COST) {
+			return message(
+				form,
+				`Insufficient funds. You need ${COMPANY_COST.toLocaleString()} currency to create a company.`,
+				{ status: 400 }
+			);
 		}
 
 		// Check cooldown
-		const [cooldown] = await db
-			.select()
-			.from(companyCreationCooldown)
-			.where(eq(companyCreationCooldown.userId, account.id));
+		const cooldown = await db.query.companyCreationCooldown.findFirst({
+			where: eq(companyCreationCooldown.userId, account.id)
+		});
 
 		if (cooldown) {
 			const cooldownEnd = new Date(cooldown.lastCreationAt);
 			cooldownEnd.setDate(cooldownEnd.getDate() + COOLDOWN_DAYS);
 
 			if (new Date() < cooldownEnd) {
-				return fail(400, {
-					error: `Company creation is on cooldown. Try again after ${cooldownEnd.toLocaleDateString()}`
+				const daysRemaining = Math.ceil((cooldownEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+				return message(form, `You must wait ${daysRemaining} more day(s) before creating another company.`, {
+					status: 400
 				});
 			}
 		}
 
-		// Check balance
-		const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-		if (!wallet || wallet.balance < COMPANY_COST) {
-			return fail(400, { error: "Insufficient funds" });
-		}
-
 		// Check if user already has a company
-		const [existingCompany] = await db.select().from(companies).where(eq(companies.ownerId, account.id));
+		const existingCompany = await db.query.companies.findFirst({
+			where: eq(companies.ownerId, account.id)
+		});
 
 		if (existingCompany) {
-			return fail(400, { error: "You already own a company" });
+			return message(form, "You already own a company", { status: 400 });
 		}
 
-		// Create company
-		const company = await db.transaction(async (tx) => {
+		// Create company with transaction
+		const newCompany = await db.transaction(async (tx) => {
 			// Deduct cost
 			await tx
 				.update(userWallets)
 				.set({
-					balance: sql`${userWallets.balance} - ${COMPANY_COST}`,
+					balance: userBalance - COMPANY_COST,
 					updatedAt: new Date()
 				})
 				.where(eq(userWallets.userId, account.id));
-
-			// Create company
-			await tx.insert(companies).values({
-				name: name.trim(),
-				logo: logo || null,
-				description: description || null,
-				ownerId: account.id
-			});
 
 			// Update or create cooldown
 			if (cooldown) {
@@ -120,8 +139,51 @@ export const actions: Actions = {
 					lastCreationAt: new Date()
 				});
 			}
+
+			let logoFileId: number | null = null;
+
+			// Upload logo if provided
+			if (logo) {
+				const logoUploadResult = await uploadFileFromForm(logo);
+
+				if (!logoUploadResult.success) {
+					tx.rollback();
+					return null;
+				}
+
+				// Create file record in database
+				const [fileRecord] = await tx
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+
+				logoFileId = fileRecord.id;
+			}
+
+			// Create company
+			const [company] = await tx
+				.insert(companies)
+				.values({
+					name: name.trim(),
+					logo: logoFileId,
+					description: description?.trim() || null,
+					ownerId: account.id
+				})
+				.returning();
+
+			return company;
 		});
 
-		throw redirect(303, "/company" + "/" + company.id);
+		if (!newCompany) {
+			return message(form, "Failed to create company", { status: 500 });
+		}
+
+		throw redirect(303, `/company/${newCompany.id}`);
 	}
 };
