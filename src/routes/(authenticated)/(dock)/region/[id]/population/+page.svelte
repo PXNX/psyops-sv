@@ -51,113 +51,112 @@
 	</div>
 
 	<!-- Population Section -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
-		<div class="flex items-center justify-between mb-6">
-			<div class="flex items-center gap-3">
-				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center">
-					<FluentPeople20Filled class="size-6 text-blue-400" />
-				</div>
-				<div>
-					<h2 class="text-2xl font-bold text-white">
-						{data.totalResidents}
-						{data.totalResidents === 1 ? "Resident" : "Residents"}
-					</h2>
-				</div>
-			</div>
 
-			<!-- Sort Button -->
-			<button onclick={toggleSort} class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white gap-2">
-				<FluentArrowSort20Filled class="size-4" />
-				{data.sortOrder === "asc" ? "Oldest First" : "Newest First"}
-			</button>
+	<div class="flex items-center justify-between mb-6">
+		<div class="flex items-center gap-3">
+			<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center">
+				<FluentPeople20Filled class="size-6 text-blue-400" />
+			</div>
+			<div>
+				<h2 class="text-2xl font-bold text-white">
+					{data.totalResidents}
+					{data.totalResidents === 1 ? "Resident" : "Residents"}
+				</h2>
+			</div>
 		</div>
 
-		{#if data.residents.length === 0}
-			<div class="text-center py-12">
-				<div class="size-16 bg-slate-700/30 rounded-full flex items-center justify-center mx-auto mb-4">
-					<FluentPeople20Filled class="size-8 text-gray-500" />
-				</div>
-				<p class="text-gray-400">No residents in this region yet</p>
-			</div>
-		{:else}
-			<div class="space-y-2">
-				{#each data.residents as resident}
-					<a
-						href="/user/{resident.userId}"
-						class="flex items-center gap-4 bg-slate-700/30 rounded-lg p-4 border border-white/5 hover:border-white/10 hover:bg-slate-700/50 transition-all group"
-					>
-						<!-- User Avatar -->
-						<div class="shrink-0">
-							<div class="relative">
-								<div
-									class="size-14 rounded-lg overflow-hidden ring-2 ring-white/5 group-hover:ring-white/10 transition-all"
-								>
-									<Logo
-										src={resident.user.logo}
-										alt={resident.user.name || "Resident"}
-										class="size-full"
-										placeholderIcon={FluentPeople20Filled}
-										placeholderGradient="from-slate-600 to-slate-700"
-									/>
-								</div>
-								{#if resident.userId === data.currentUserId}
-									<div
-										class="absolute -top-1 -right-1 size-6 bg-blue-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-slate-800"
-									>
-										<FluentHome20Filled class="size-3 text-white" />
-									</div>
-								{/if}
-							</div>
-						</div>
-
-						<!-- User Info -->
-						<div class="flex-1 min-w-0">
-							<p
-								class="text-base font-semibold text-white truncate group-hover:text-purple-400 transition-colors flex items-center gap-2"
-							>
-								{resident.user.name || "Anonymous"}
-								{#if resident.userId === data.currentUserId}
-									<span class="badge badge-sm bg-blue-600/20 border-blue-600/30 text-blue-400">You</span>
-								{/if}
-							</p>
-							<div class="flex items-center gap-1 text-xs text-gray-500 mt-1">
-								<FluentCalendar20Filled class="size-3" />
-								<span>Moved in {formatDate(resident.movedInAt)}</span>
-							</div>
-						</div>
-
-						<!-- Chevron -->
-						<div class="shrink-0">
-							<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors" />
-						</div>
-					</a>
-				{/each}
-			</div>
-
-			<!-- Pagination -->
-			{#if totalPages > 1}
-				<div class="flex items-center justify-center gap-2 mt-6 pt-6 border-t border-white/5">
-					<button
-						class="btn btn-sm btn-ghost"
-						disabled={data.currentPage === 1}
-						onclick={() => goToPage(data.currentPage - 1)}
-					>
-						<FluentChevronLeft20Filled class="size-4" />
-					</button>
-
-					<span class="text-sm text-gray-400">
-						Page {data.currentPage} of {totalPages}
-					</span>
-
-					<button
-						class="btn btn-sm btn-ghost"
-						disabled={data.currentPage === totalPages}
-						onclick={() => goToPage(data.currentPage + 1)}
-					>
-						<FluentChevronRight20Filled class="size-4" />
-					</button>
-				</div>
-			{/if}
-		{/if}
+		<!-- Sort Button -->
+		<button onclick={toggleSort} class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white gap-2">
+			<FluentArrowSort20Filled class="size-4" />
+			{data.sortOrder === "asc" ? "Oldest First" : "Newest First"}
+		</button>
 	</div>
+
+	{#if data.residents.length === 0}
+		<div class="text-center py-12">
+			<div class="size-16 bg-slate-700/30 rounded-full flex items-center justify-center mx-auto mb-4">
+				<FluentPeople20Filled class="size-8 text-gray-500" />
+			</div>
+			<p class="text-gray-400">No residents in this region yet</p>
+		</div>
+	{:else}
+		<div class="space-y-2">
+			{#each data.residents as resident}
+				<a
+					href="/user/{resident.userId}"
+					class="flex items-center gap-4 bg-slate-700/30 rounded-lg p-4 border border-white/5 hover:border-white/10 hover:bg-slate-700/50 transition-all group"
+				>
+					<!-- User Avatar -->
+					<div class="shrink-0">
+						<div class="relative">
+							<div
+								class="size-14 rounded-lg overflow-hidden ring-2 ring-white/5 group-hover:ring-white/10 transition-all"
+							>
+								<Logo
+									src={resident.user.logo}
+									alt={resident.user.name || "Resident"}
+									class="size-full"
+									placeholderIcon={FluentPeople20Filled}
+									placeholderGradient="from-slate-600 to-slate-700"
+								/>
+							</div>
+							{#if resident.userId === data.currentUserId}
+								<div
+									class="absolute -top-1 -right-1 size-6 bg-blue-600 rounded-full flex items-center justify-center shadow-lg ring-2 ring-slate-800"
+								>
+									<FluentHome20Filled class="size-3 text-white" />
+								</div>
+							{/if}
+						</div>
+					</div>
+
+					<!-- User Info -->
+					<div class="flex-1 min-w-0">
+						<p
+							class="text-base font-semibold text-white truncate group-hover:text-purple-400 transition-colors flex items-center gap-2"
+						>
+							{resident.user.name || "Anonymous"}
+							{#if resident.userId === data.currentUserId}
+								<span class="badge badge-sm bg-blue-600/20 border-blue-600/30 text-blue-400">You</span>
+							{/if}
+						</p>
+						<div class="flex items-center gap-1 text-xs text-gray-500 mt-1">
+							<FluentCalendar20Filled class="size-3" />
+							<span>Moved in {formatDate(resident.movedInAt)}</span>
+						</div>
+					</div>
+
+					<!-- Chevron -->
+					<div class="shrink-0">
+						<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors" />
+					</div>
+				</a>
+			{/each}
+		</div>
+
+		<!-- Pagination -->
+		{#if totalPages > 1}
+			<div class="flex items-center justify-center gap-2 mt-6 pt-6 border-t border-white/5">
+				<button
+					class="btn btn-sm btn-ghost"
+					disabled={data.currentPage === 1}
+					onclick={() => goToPage(data.currentPage - 1)}
+				>
+					<FluentChevronLeft20Filled class="size-4" />
+				</button>
+
+				<span class="text-sm text-gray-400">
+					Page {data.currentPage} of {totalPages}
+				</span>
+
+				<button
+					class="btn btn-sm btn-ghost"
+					disabled={data.currentPage === totalPages}
+					onclick={() => goToPage(data.currentPage + 1)}
+				>
+					<FluentChevronRight20Filled class="size-4" />
+				</button>
+			</div>
+		{/if}
+	{/if}
 </div>
