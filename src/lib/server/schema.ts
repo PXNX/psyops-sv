@@ -36,13 +36,11 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"budget",
 	"tax",
 	"infrastructure",
-	"education",
-	"defense",
-	"healthcare",
-	"environment",
-	"justice",
-	"general"
+	"hospital",
+	"school",
+	"power_plant"
 ]);
+
 export const taxTypeEnum = pgEnum("tax_type", ["mining", "production", "market_transaction", "income"]);
 export const electionStatusEnum = pgEnum("election_status", ["scheduled", "active", "completed"]);
 export const militaryUnitTypeEnum = pgEnum("military_unit_type", [
@@ -333,8 +331,7 @@ export const parliamentaryProposals = pgTable("parliamentary_proposals", {
 	stateId: integer("state_id")
 		.notNull()
 		.references(() => states.id, { onDelete: "cascade" }),
-	title: varchar("title", { length: 200 }).notNull(),
-	description: text("description").notNull(),
+
 	proposalType: proposalTypeEnum("proposal_type").notNull(),
 	proposedBy: text("proposed_by")
 		.notNull()
@@ -788,8 +785,7 @@ export const stateTaxes = pgTable("state_taxes", {
 		.references(() => states.id, { onDelete: "cascade" }),
 	taxType: taxTypeEnum("tax_type").notNull(),
 	taxRate: integer("tax_rate").notNull(),
-	taxName: varchar("tax_name", { length: 100 }).notNull(),
-	description: text("description"),
+
 	proposalId: integer("proposal_id").references(() => parliamentaryProposals.id, { onDelete: "set null" }),
 	implementedAt: timestamp("implemented_at").defaultNow().notNull(),
 	isActive: boolean("is_active").default(true).notNull(),
@@ -1471,3 +1467,46 @@ export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
 		references: [files.id]
 	})
 }));
+
+export const buildingTypeEnum = pgEnum("building_type", ["hospital", "school", "power_plant", "road", "bridge"]);
+
+export const stateBuildings = pgTable("state_buildings", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	name: varchar("name", { length: 100 }).notNull(),
+	buildingType: buildingTypeEnum("building_type").notNull(),
+
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+	stateId: integer("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+
+	proposalId: integer("proposal_id").references(() => parliamentaryProposals.id, { onDelete: "set null" }),
+	builtBy: text("built_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const stateBuildingsRelations = relations(stateBuildings, ({ one }) => ({
+	region: one(regions, {
+		fields: [stateBuildings.regionId],
+		references: [regions.id]
+	}),
+	state: one(states, {
+		fields: [stateBuildings.stateId],
+		references: [states.id]
+	}),
+	proposal: one(parliamentaryProposals, {
+		fields: [stateBuildings.proposalId],
+		references: [parliamentaryProposals.id]
+	}),
+	builder: one(accounts, {
+		fields: [stateBuildings.builtBy],
+		references: [accounts.id]
+	})
+}));
+
+export type StateBuilding = typeof stateBuildings.$inferSelect;

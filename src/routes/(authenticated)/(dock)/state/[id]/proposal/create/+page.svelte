@@ -1,13 +1,14 @@
-<!-- src/routes/(authenticated)/(dock)/state/[id]/proposal/create/+page.svelte -->
 <script lang="ts">
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
-	import { superForm } from "sveltekit-superforms";
+	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
+	import SuperDebug, { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
+	import { getRegionName } from "$lib/utils/formatting";
 
 	const { data } = $props();
 
@@ -19,13 +20,53 @@
 
 	const { form: formData, errors, enhance, delayed, submitting } = form;
 
+	type ProposalType = "tax" | "hospital" | "school" | "power_plant" | "infrastructure";
+	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure";
+
+	// Helper function to format building costs
+	function formatBuildingCosts(type: BuildingType): string {
+		const template = data.buildingTemplates[type];
+		if (!template) return "";
+
+		const costs: string[] = [];
+		for (const [resource, amount] of Object.entries(template.costs)) {
+			if (resource === "currency") {
+				costs.push(`${(amount as number).toLocaleString()} 💰`);
+			} else {
+				const icon = getResourceIcon(resource);
+				costs.push(`${amount as number} ${icon} ${resource}`);
+			}
+		}
+		return costs.join(", ");
+	}
+
+	function getResourceIcon(resource: string): string {
+		const icons: Record<string, string> = {
+			iron: "⚙️",
+			copper: "🔶",
+			steel: "🔩",
+			gunpowder: "💥",
+			wood: "🪵",
+			coal: "⚫"
+		};
+		return icons[resource] || "📦";
+	}
+
+	// Get building count for selected region and type
+	function getBuildingCount(regionId: string | undefined, buildingType: string | undefined): number {
+		if (!regionId || !buildingType) return 0;
+		const regionIdNum = parseInt(regionId);
+		const count = data.buildingsByRegion[regionIdNum]?.[buildingType] || 0;
+		console.log(`Getting count for region ${regionId}, type ${buildingType}:`, count);
+		return count;
+	}
+
 	const proposalTypeColors: Record<string, string> = {
 		tax: "bg-amber-600/20 text-amber-400 border-amber-500/30",
 		hospital: "bg-pink-600/20 text-pink-400 border-pink-500/30",
 		school: "bg-purple-600/20 text-purple-400 border-purple-500/30",
 		power_plant: "bg-yellow-600/20 text-yellow-400 border-yellow-500/30",
-		road: "bg-blue-600/20 text-blue-400 border-blue-500/30",
-		bridge: "bg-cyan-600/20 text-cyan-400 border-cyan-500/30"
+		infrastructure: "bg-blue-600/20 text-blue-400 border-blue-500/30"
 	};
 
 	const proposalTypeIcons: Record<string, string> = {
@@ -33,8 +74,7 @@
 		hospital: "🏥",
 		school: "🏫",
 		power_plant: "⚡",
-		road: "🛣️",
-		bridge: "🌉"
+		infrastructure: "🛣️"
 	};
 
 	const taxTypeIcons: Record<string, string> = {
@@ -53,7 +93,7 @@
 
 	const ministryPermissions: Record<string, string[]> = {
 		finance: ["tax"],
-		infrastructure: ["road", "bridge", "power_plant"],
+		infrastructure: ["infrastructure"],
 		education: ["school"],
 		health: ["hospital"]
 	};
@@ -65,8 +105,71 @@
 
 	const isTaxProposal = $derived($formData.proposalType === "tax");
 	const isBuildingProposal = $derived(
-		["hospital", "school", "power_plant", "road", "bridge"].includes($formData.proposalType || "")
+		["hospital", "school", "power_plant", "infrastructure"].includes($formData.proposalType)
 	);
+
+	// Type guard to check if proposalType is a valid BuildingType
+	const isValidBuildingType = (type: string | undefined): type is BuildingType => {
+		return type !== undefined && ["hospital", "school", "power_plant", "infrastructure"].includes(type);
+	};
+
+	// Calculate total costs based on quantity
+	const totalCosts = $derived(() => {
+		if (!$formData.proposalType || !isBuildingProposal || !$formData.quantity) return null;
+		if (!isValidBuildingType($formData.proposalType)) return null;
+
+		const template = data.buildingTemplates[$formData.proposalType];
+		if (!template) return null;
+
+		const quantity = $formData.quantity || 1;
+		const costs: Record<string, number> = {};
+
+		for (const [resource, amount] of Object.entries(template.costs)) {
+			costs[resource] = (amount as number) * quantity;
+		}
+
+		return costs;
+	});
+
+	// Check if state has sufficient resources
+	const canAfford = $derived(() => {
+		if (!totalCosts) return true;
+
+		const costs = totalCosts();
+		if (!costs) return true;
+
+		// Check treasury balance
+		if (costs.currency > (data.treasury?.balance || 0)) return false;
+
+		// Check each resource
+		for (const [resource, required] of Object.entries(costs)) {
+			if (resource === "currency") continue;
+			const available = data.stateResources?.[resource] || 0;
+			if (available < required) return false;
+		}
+
+		return true;
+	});
+
+	// Get selected region data
+	const selectedRegion = $derived(() => {
+		if (!$formData.regionId) return null;
+		return data.regions.find((r) => r.id === parseInt($formData.regionId || ""));
+	});
+
+	// Get current building count in selected region
+	const currentBuildingCount = $derived(getBuildingCount($formData.regionId, $formData.proposalType));
+
+	// Debug effect to check data
+	$effect(() => {
+		console.log("Debug Info:", {
+			buildingsByRegion: data.buildingsByRegion,
+			selectedRegionId: $formData.regionId,
+			proposalType: $formData.proposalType,
+			currentCount: currentBuildingCount,
+			selectedRegion: selectedRegion()
+		});
+	});
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-6">
@@ -168,42 +271,19 @@
 			use:enhance
 			class="space-y-6"
 		>
-			<!-- Description -->
-			<div>
-				<label for="description" class="block text-sm font-medium text-gray-300 mb-2">
-					Description <span class="text-red-400">*</span>
-				</label>
-				<textarea
-					id="description"
-					name="description"
-					bind:value={$formData.description}
-					rows="10"
-					placeholder="Provide a detailed description of the proposal, including objectives, methods, and expected outcomes..."
-					maxlength="2000"
-					class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
-					class:textarea-error={$errors.description}
-					disabled={$submitting}
-				></textarea>
-				{#if $errors.description}
-					<p class="text-xs text-red-400 mt-1">{$errors.description}</p>
-				{:else}
-					<p class="text-xs text-gray-400 mt-1">{$formData.description?.length || 0}/2000 characters</p>
-				{/if}
-			</div>
-
 			<!-- Proposal Type -->
 			<div>
 				<label for="proposalType" class="block text-sm font-medium text-gray-300 mb-2">
 					Proposal Type <span class="text-red-400">*</span>
 				</label>
 				<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-					{#each ["tax", "hospital", "school", "power_plant", "road", "bridge"] as type}
+					{#each ["tax", "hospital", "school", "power_plant", "infrastructure"] as type}
 						<button
 							type="button"
 							class="p-4 rounded-lg border-2 text-left transition-all {$formData.proposalType === type
 								? proposalTypeColors[type]
 								: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
-							onclick={() => ($formData.proposalType = type)}
+							onclick={() => ($formData.proposalType = type as ProposalType)}
 							disabled={$submitting}
 						>
 							<div class="flex flex-col gap-2">
@@ -242,27 +322,6 @@
 						<p class="text-sm text-gray-300">Revenue will be deposited into the state treasury.</p>
 					</div>
 
-					<!-- Tax Name -->
-					<div>
-						<label for="taxName" class="block text-sm font-medium text-gray-300 mb-2">
-							Tax Name <span class="text-red-400">*</span>
-						</label>
-						<input
-							type="text"
-							id="taxName"
-							name="taxName"
-							bind:value={$formData.taxName}
-							placeholder="e.g., Regional Mining Tax"
-							maxlength="100"
-							class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50"
-							class:input-error={$errors.taxName}
-							disabled={$submitting}
-						/>
-						{#if $errors.taxName}
-							<p class="text-xs text-red-400 mt-1">{$errors.taxName}</p>
-						{/if}
-					</div>
-
 					<!-- Tax Type -->
 					<div>
 						<label for="taxType" class="block text-sm font-medium text-gray-300 mb-2">
@@ -275,7 +334,7 @@
 									class="p-4 rounded-lg border-2 text-left transition-all {$formData.taxType === type
 										? 'bg-amber-600/20 border-amber-500/50'
 										: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
-									onclick={() => ($formData.taxType = type)}
+									onclick={() => ($formData.taxType = type as any)}
 									disabled={$submitting}
 								>
 									<div class="flex items-center gap-3 mb-2">
@@ -304,7 +363,7 @@
 							min="1"
 							max="50"
 							bind:value={$formData.taxRate}
-							class="range range-warning"
+							class="range range-warning w-full"
 							disabled={$submitting}
 						/>
 						<div class="flex justify-between text-xs text-gray-400 px-2 mt-1">
@@ -315,38 +374,6 @@
 						</div>
 						{#if $errors.taxRate}
 							<p class="text-xs text-red-400 mt-1">{$errors.taxRate}</p>
-						{/if}
-
-						<!-- Tax Impact Preview -->
-						{#if $formData.taxRate && $formData.taxType}
-							<div class="bg-slate-700/30 rounded-lg p-4 mt-3 space-y-2">
-								<p class="text-sm font-semibold text-white">Tax Impact Example:</p>
-								{#if $formData.taxType === "mining"}
-									<p class="text-sm text-gray-300">
-										On 1,500 currency wage: <strong class="text-amber-400"
-											>{Math.floor(1500 * ($formData.taxRate / 100))} tax</strong
-										>, worker receives <strong>{1500 - Math.floor(1500 * ($formData.taxRate / 100))}</strong>
-									</p>
-								{:else if $formData.taxType === "production"}
-									<p class="text-sm text-gray-300">
-										On 10,000 currency cost: <strong class="text-amber-400"
-											>{Math.floor(10000 * ($formData.taxRate / 100))} tax</strong
-										>
-									</p>
-								{:else if $formData.taxType === "market_transaction"}
-									<p class="text-sm text-gray-300">
-										On 5,000 currency sale: <strong class="text-amber-400"
-											>{Math.floor(5000 * ($formData.taxRate / 100))} tax</strong
-										>, seller receives <strong>{5000 - Math.floor(5000 * ($formData.taxRate / 100))}</strong>
-									</p>
-								{:else if $formData.taxType === "income"}
-									<p class="text-sm text-gray-300">
-										On 2,000 currency income: <strong class="text-amber-400"
-											>{Math.floor(2000 * ($formData.taxRate / 100))} tax</strong
-										>, earner receives <strong>{2000 - Math.floor(2000 * ($formData.taxRate / 100))}</strong>
-									</p>
-								{/if}
-							</div>
 						{/if}
 					</div>
 				</div>
@@ -360,8 +387,148 @@
 							<FluentBuildingBank20Filled class="size-5 text-blue-400" />
 							<h3 class="text-lg font-semibold text-white">Construction Project</h3>
 						</div>
-						<p class="text-sm text-gray-300">Funds will be taken from the state treasury.</p>
+						<p class="text-sm text-gray-300">Resources will be taken from the state treasury and inventory.</p>
 					</div>
+
+					<!-- Building Cost Display -->
+					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
+						{@const template = data.buildingTemplates[$formData.proposalType]}
+						<div class="bg-slate-700/30 rounded-lg p-4 space-y-3">
+							<div class="flex items-start justify-between">
+								<div>
+									<p class="text-sm font-medium text-gray-300 mb-1">Cost per Building:</p>
+									{#if template}
+										<p class="text-sm text-gray-400">{formatBuildingCosts($formData.proposalType)}</p>
+									{:else}
+										<p class="text-sm text-red-400">Template not found for {$formData.proposalType}</p>
+									{/if}
+								</div>
+								{#if selectedRegion() && currentBuildingCount > 0}
+									<div class="bg-blue-600/20 border border-blue-500/30 rounded px-3 py-1">
+										<p class="text-xs text-blue-400">Existing in Region</p>
+										<p class="text-lg font-bold text-white text-center">{currentBuildingCount}</p>
+									</div>
+								{/if}
+							</div>
+
+							{#if template}
+								<div class="grid grid-cols-3 gap-2 text-xs text-gray-400 pt-2 border-t border-white/5">
+									<div>
+										<span class="text-gray-500">Construction:</span>
+										<div class="text-white">{template.constructionTime} days</div>
+									</div>
+									<div>
+										<span class="text-gray-500">Infrastructure:</span>
+										<div class="text-white">{template.infrastructureRequired}</div>
+									</div>
+									<div>
+										<span class="text-gray-500">Power:</span>
+										<div class="text-white">{template.powerConsumption} MW</div>
+									</div>
+								</div>
+							{/if}
+						</div>
+					{/if}
+
+					<!-- Region Selection -->
+					<div>
+						<label for="regionId" class="block text-sm font-medium text-gray-300 mb-2">
+							Region <span class="text-red-400">*</span>
+						</label>
+						<select
+							id="regionId"
+							name="regionId"
+							bind:value={$formData.regionId}
+							class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-blue-500/50"
+							class:select-error={$errors.regionId}
+							disabled={$submitting}
+						>
+							<option value="" disabled>Select region to build in</option>
+							{#each data.regions as region}
+								{@const buildingCount = $formData.proposalType
+									? getBuildingCount(region.id.toString(), $formData.proposalType)
+									: 0}
+								<option value={region.id}>
+									{getRegionName(region.id)}
+									(Infra: {region.infrastructure ?? 0}{#if buildingCount > 0}, {proposalTypeIcons[
+											$formData.proposalType || ""
+										]}
+										{buildingCount}{/if})
+								</option>
+							{/each}
+						</select>
+						{#if $errors.regionId}
+							<p class="text-xs text-red-400 mt-1">{$errors.regionId}</p>
+						{/if}
+					</div>
+
+					<!-- Quantity -->
+					<div>
+						<label for="quantity" class="block text-sm font-medium text-gray-300 mb-2">
+							Quantity <span class="text-red-400">*</span>
+						</label>
+						<input
+							type="number"
+							id="quantity"
+							name="quantity"
+							bind:value={$formData.quantity}
+							min="1"
+							max="100"
+							placeholder="1"
+							class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50"
+							class:input-error={$errors.quantity}
+							disabled={$submitting}
+						/>
+						{#if $errors.quantity}
+							<p class="text-xs text-red-400 mt-1">{$errors.quantity}</p>
+						{/if}
+						{#if $formData.quantity && currentBuildingCount > 0}
+							<p class="text-xs text-gray-400 mt-1">
+								<FluentInfo20Filled class="inline size-3" />
+								After construction: {currentBuildingCount + ($formData.quantity || 0)} total in region
+							</p>
+						{/if}
+					</div>
+
+					<!-- Total Cost Display -->
+					{#if totalCosts()}
+						{@const costs = totalCosts()}
+						{#if costs}
+							<div class="bg-slate-700/30 rounded-lg p-4 space-y-2">
+								<p class="text-sm font-medium text-gray-300">Total Cost ({$formData.quantity || 1}x):</p>
+								{#each Object.entries(costs) as [resource, amount]}
+									{@const available =
+										resource === "currency" ? data.treasury?.balance || 0 : data.stateResources?.[resource] || 0}
+									{@const hasEnough = amount <= available}
+									<div class="flex justify-between text-sm items-center">
+										<span class="text-gray-400 capitalize flex items-center gap-2">
+											{#if resource !== "currency"}
+												<span>{getResourceIcon(resource)}</span>
+											{/if}
+											{resource}:
+										</span>
+										<span class="font-mono" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
+											{amount.toLocaleString()}
+											<span class="text-gray-500">/ {available.toLocaleString()}</span>
+											{#if hasEnough}
+												<span class="text-green-400 ml-1">✓</span>
+											{:else}
+												<span class="text-red-400 ml-1">✗</span>
+											{/if}
+										</span>
+									</div>
+								{/each}
+
+								{#if !canAfford()}
+									<div class="alert alert-error mt-2">
+										<span class="text-sm"
+											>⚠️ Insufficient state resources to build {$formData.quantity || 1} building(s)!</span
+										>
+									</div>
+								{/if}
+							</div>
+						{/if}
+					{/if}
 
 					<!-- Building Name -->
 					<div>
@@ -382,53 +549,12 @@
 						{#if $errors.buildingName}
 							<p class="text-xs text-red-400 mt-1">{$errors.buildingName}</p>
 						{/if}
-					</div>
-
-					<!-- Region Selection -->
-					<div>
-						<label for="regionId" class="block text-sm font-medium text-gray-300 mb-2">
-							Region <span class="text-red-400">*</span>
-						</label>
-						<select
-							id="regionId"
-							name="regionId"
-							bind:value={$formData.regionId}
-							class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-blue-500/50"
-							class:select-error={$errors.regionId}
-							disabled={$submitting}
-						>
-							<option value="" disabled>Select region</option>
-							{#each data.regions as region}
-								<option value={region.id}>{region.name}</option>
-							{/each}
-						</select>
-						{#if $errors.regionId}
-							<p class="text-xs text-red-400 mt-1">{$errors.regionId}</p>
+						{#if $formData.quantity && $formData.quantity > 1}
+							<p class="text-xs text-gray-400 mt-1">
+								Buildings will be numbered automatically (e.g., {$formData.buildingName} 1, {$formData.buildingName} 2...)
+							</p>
 						{/if}
 					</div>
-
-					<!-- Estimated Cost -->
-					<div>
-						<label for="estimatedCost" class="block text-sm font-medium text-gray-300 mb-2">
-							Estimated Cost (currency) <span class="text-red-400">*</span>
-						</label>
-						<input
-							type="number"
-							id="estimatedCost"
-							name="estimatedCost"
-							bind:value={$formData.estimatedCost}
-							min="1000"
-							placeholder="50000"
-							class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50"
-							class:input-error={$errors.estimatedCost}
-							disabled={$submitting}
-						/>
-						{#if $errors.estimatedCost}
-							<p class="text-xs text-red-400 mt-1">{$errors.estimatedCost}</p>
-						{/if}
-					</div>
-
-					<input type="hidden" name="buildingType" value={$formData.proposalType} />
 				</div>
 			{/if}
 
@@ -444,7 +570,8 @@
 					type="submit"
 					disabled={$submitting ||
 						(isTaxProposal && (!$formData.taxType || !$formData.taxRate || !$formData.taxName)) ||
-						(isBuildingProposal && (!$formData.buildingName || !$formData.regionId || !$formData.estimatedCost))}
+						(isBuildingProposal &&
+							(!$formData.buildingName || !$formData.regionId || !$formData.quantity || !canAfford()))}
 					class="btn flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 border-0 text-white gap-2"
 				>
 					{#if $delayed}

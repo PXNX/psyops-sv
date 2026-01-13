@@ -14,27 +14,7 @@ import {
 } from "$lib/server/schema";
 import { eq, and, lte } from "drizzle-orm";
 
-// Verify the request is from Vercel Cron (using authorization header)
-function isValidCronRequest(request: Request): boolean {
-	const authHeader = request.headers.get("authorization");
-	// Vercel Cron sends: Authorization: Bearer <CRON_SECRET>
-	// You should set CRON_SECRET in your Vercel environment variables
-	const cronSecret = process.env.CRON_SECRET;
-
-	if (!cronSecret) {
-		// If no secret is set, allow in development
-		return process.env.NODE_ENV === "development";
-	}
-
-	return authHeader === `Bearer ${cronSecret}`;
-}
-
 export const GET: RequestHandler = async ({ request }) => {
-	// Security check
-	if (!isValidCronRequest(request)) {
-		return json({ error: "Unauthorized" }, { status: 401 });
-	}
-
 	try {
 		const now = new Date();
 		let processed = 0;
