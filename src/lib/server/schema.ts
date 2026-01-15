@@ -16,15 +16,7 @@ import {
 // --- ENUMS ---
 export const journalistRankEnum = pgEnum("journalist_rank", ["author", "editor", "owner"]);
 export const userRoleEnum = pgEnum("user_role", ["user", "moderator", "admin"]);
-export const ministryTypeEnum = pgEnum("ministry_type", [
-	"education",
-	"defense",
-	"finance",
-	"health",
-	"infrastructure",
-	"justice",
-	"foreign_affairs"
-]);
+export const ministryTypeEnum = pgEnum("ministry_type", ["economy", "defense", "foreign_affairs"]);
 export const resourceTypeEnum = pgEnum("resource_type", ["iron", "copper", "steel", "gunpowder", "wood", "coal"]);
 export const productTypeEnum = pgEnum("product_type", ["rifles", "ammunition", "artillery", "vehicles", "explosives"]);
 export const factoryTypeEnum = pgEnum("factory_type", ["mine", "refinery", "armaments", "general"]);
@@ -1510,3 +1502,174 @@ export const stateBuildingsRelations = relations(stateBuildings, ({ one }) => ({
 }));
 
 export type StateBuilding = typeof stateBuildings.$inferSelect;
+// Add this to your schema.ts file - Missing relations for stateSanctions
+
+export const stateSanctionsRelations = relations(stateSanctions, ({ one }) => ({
+	targetState: one(states, {
+		fields: [stateSanctions.targetStateId],
+		references: [states.id],
+		relationName: "target_state"
+	}),
+	sanctioningState: one(states, {
+		fields: [stateSanctions.sanctioningStateId],
+		references: [states.id],
+		relationName: "sanctioning_state"
+	}),
+	sanctioner: one(accounts, {
+		fields: [stateSanctions.sanctionedBy],
+		references: [accounts.id]
+	})
+}));
+
+// Update statesRelations to include the logo file relation
+export const statesRelationsUpdated = relations(states, ({ one, many }) => ({
+	regions: many(regions),
+	president: one(presidents, {
+		fields: [states.id],
+		references: [presidents.stateId]
+	}),
+	ministers: many(ministers),
+	parliamentMembers: many(parliamentMembers),
+	parties: many(politicalParties),
+	treasury: one(stateTreasury, {
+		fields: [states.id],
+		references: [stateTreasury.stateId]
+	}),
+	energy: one(stateEnergy, {
+		fields: [states.id],
+		references: [stateEnergy.stateId]
+	}),
+	visaSettings: one(stateVisaSettings, {
+		fields: [states.id],
+		references: [stateVisaSettings.stateId]
+	}),
+	proposals: many(parliamentaryProposals),
+	sanctionsImposed: many(stateSanctions, { relationName: "sanctioning_state" }),
+	sanctionsReceived: many(stateSanctions, { relationName: "target_state" }),
+	chatMessages: many(chatMessages),
+	inboxMessages: many(inboxMessages),
+	bloc: one(blocs, {
+		fields: [states.blocId],
+		references: [blocs.id]
+	}),
+	logoFile: one(files, {
+		fields: [states.logo],
+		references: [files.id]
+	})
+}));
+
+// Also add relations for visaApplications and userVisas if missing
+
+export const visaApplicationsRelations = relations(visaApplications, ({ one }) => ({
+	user: one(accounts, {
+		fields: [visaApplications.userId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [visaApplications.stateId],
+		references: [states.id]
+	}),
+	reviewer: one(accounts, {
+		fields: [visaApplications.reviewedBy],
+		references: [accounts.id]
+	})
+}));
+
+export const userVisasRelations = relations(userVisas, ({ one }) => ({
+	user: one(accounts, {
+		fields: [userVisas.userId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [userVisas.stateId],
+		references: [states.id]
+	}),
+	approver: one(accounts, {
+		fields: [userVisas.approvedBy],
+		references: [accounts.id]
+	}),
+	revoker: one(accounts, {
+		fields: [userVisas.revokedBy],
+		references: [accounts.id]
+	})
+}));
+
+export const stateVisaSettingsRelations = relations(stateVisaSettings, ({ one }) => ({
+	state: one(states, {
+		fields: [stateVisaSettings.stateId],
+		references: [states.id]
+	})
+}));
+
+export const residenceApplicationsRelations = relations(residenceApplications, ({ one }) => ({
+	user: one(accounts, {
+		fields: [residenceApplications.userId],
+		references: [accounts.id]
+	}),
+	region: one(regions, {
+		fields: [residenceApplications.regionId],
+		references: [regions.id]
+	}),
+	reviewer: one(accounts, {
+		fields: [residenceApplications.reviewedBy],
+		references: [accounts.id]
+	})
+}));
+
+export const residencesRelations = relations(residences, ({ one }) => ({
+	user: one(accounts, {
+		fields: [residences.userId],
+		references: [accounts.id]
+	}),
+	region: one(regions, {
+		fields: [residences.regionId],
+		references: [regions.id]
+	})
+}));
+
+export const presidentsRelations = relations(presidents, ({ one }) => ({
+	user: one(accounts, {
+		fields: [presidents.userId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [presidents.stateId],
+		references: [states.id]
+	})
+}));
+
+export const ministersRelations = relations(ministers, ({ one }) => ({
+	user: one(accounts, {
+		fields: [ministers.userId],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [ministers.stateId],
+		references: [states.id]
+	})
+}));
+
+export const stateTreasuryRelations = relations(stateTreasury, ({ one }) => ({
+	state: one(states, {
+		fields: [stateTreasury.stateId],
+		references: [states.id]
+	})
+}));
+
+export const stateEnergyRelations = relations(stateEnergy, ({ one }) => ({
+	state: one(states, {
+		fields: [stateEnergy.stateId],
+		references: [states.id]
+	})
+}));
+
+export const powerPlantsRelations = relations(powerPlants, ({ one }) => ({
+	state: one(states, {
+		fields: [powerPlants.stateId],
+		references: [states.id]
+	}),
+	builder: one(accounts, {
+		fields: [powerPlants.builtBy],
+		references: [accounts.id]
+	})
+}));

@@ -1,11 +1,12 @@
-// src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.server.ts - WITH VISA MANAGEMENT
+// src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.server.ts - WITH PRESIDENT ACCESS
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "$lib/server/db";
-import { eq, and, ne } from "drizzle-orm";
+import { eq, and, ne, or } from "drizzle-orm";
 import {
 	states,
 	ministers,
+	presidents,
 	regions,
 	stateSanctions,
 	residenceApplications,
@@ -29,7 +30,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "State not found");
 	}
 
-	// Check if user is foreign minister
+	// Check if user is foreign minister OR president
 	const ministry = await db.query.ministers.findFirst({
 		where: and(
 			eq(ministers.userId, account.id),
@@ -38,8 +39,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		)
 	});
 
-	if (!ministry) {
-		throw error(403, "You must be the Foreign Minister to access this page");
+	const presidency = await db.query.presidents.findFirst({
+		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+	});
+
+	if (!ministry && !presidency) {
+		throw error(403, "You must be the Foreign Minister or President to access this page");
 	}
 
 	// Get all other states
@@ -134,15 +139,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		pendingApplications: statePendingApplications,
 		visaSettings,
 		pendingVisaApplications,
-		activeVisas
+		activeVisas,
+		isPresident: !!presidency
 	};
 };
 
 export const actions: Actions = {
-	// Existing actions...
 	sanctionState: async ({ request, locals, params }) => {
 		const account = locals.account!;
 
+		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -151,8 +157,12 @@ export const actions: Actions = {
 			)
 		});
 
-		if (!ministry) {
-			return fail(403, { error: "Only the Foreign Minister can impose sanctions" });
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+		});
+
+		if (!ministry && !presidency) {
+			return fail(403, { error: "Only the Foreign Minister or President can impose sanctions" });
 		}
 
 		const formData = await request.formData();
@@ -192,6 +202,7 @@ export const actions: Actions = {
 			return fail(401, { error: "Unauthorized" });
 		}
 
+		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -200,8 +211,12 @@ export const actions: Actions = {
 			)
 		});
 
-		if (!ministry) {
-			return fail(403, { error: "Only the Foreign Minister can lift sanctions" });
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+		});
+
+		if (!ministry && !presidency) {
+			return fail(403, { error: "Only the Foreign Minister or President can lift sanctions" });
 		}
 
 		const formData = await request.formData();
@@ -220,13 +235,13 @@ export const actions: Actions = {
 		return { success: true, message: "Sanction lifted successfully" };
 	},
 
-	// NEW: Update visa settings
 	updateVisaSettings: async ({ request, locals, params }) => {
 		const account = locals.account;
 		if (!account) {
 			return fail(401, { error: "Unauthorized" });
 		}
 
+		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -235,8 +250,12 @@ export const actions: Actions = {
 			)
 		});
 
-		if (!ministry) {
-			return fail(403, { error: "Only the Foreign Minister can update visa settings" });
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+		});
+
+		if (!ministry && !presidency) {
+			return fail(403, { error: "Only the Foreign Minister or President can update visa settings" });
 		}
 
 		const formData = await request.formData();
@@ -268,13 +287,13 @@ export const actions: Actions = {
 		return { success: true, message: "Visa settings updated successfully" };
 	},
 
-	// NEW: Review visa application
 	reviewVisaApplication: async ({ request, locals, params }) => {
 		const account = locals.account;
 		if (!account) {
 			return fail(401, { error: "Unauthorized" });
 		}
 
+		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -283,8 +302,12 @@ export const actions: Actions = {
 			)
 		});
 
-		if (!ministry) {
-			return fail(403, { error: "Only the Foreign Minister can review visa applications" });
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+		});
+
+		if (!ministry && !presidency) {
+			return fail(403, { error: "Only the Foreign Minister or President can review visa applications" });
 		}
 
 		const formData = await request.formData();
@@ -385,13 +408,13 @@ export const actions: Actions = {
 		return { success: true, message: `Visa application ${decision}` };
 	},
 
-	// NEW: Revoke visa
 	revokeVisa: async ({ request, locals, params }) => {
 		const account = locals.account;
 		if (!account) {
 			return fail(401, { error: "Unauthorized" });
 		}
 
+		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
@@ -400,8 +423,12 @@ export const actions: Actions = {
 			)
 		});
 
-		if (!ministry) {
-			return fail(403, { error: "Only the Foreign Minister can revoke visas" });
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+		});
+
+		if (!ministry && !presidency) {
+			return fail(403, { error: "Only the Foreign Minister or President can revoke visas" });
 		}
 
 		const formData = await request.formData();
@@ -422,7 +449,7 @@ export const actions: Actions = {
 				status: "revoked",
 				revokedBy: account.id,
 				revokedAt: new Date(),
-				revocationReason: reason || "Revoked by foreign minister"
+				revocationReason: reason || "Revoked by government"
 			})
 			.where(eq(userVisas.id, visaId));
 

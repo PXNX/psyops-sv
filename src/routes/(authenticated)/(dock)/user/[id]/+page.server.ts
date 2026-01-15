@@ -10,7 +10,9 @@ import {
 	states,
 	politicalParties,
 	userMedals,
-	presidents
+	presidents,
+	ministers,
+	governors
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error, fail } from "@sveltejs/kit";
@@ -40,7 +42,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			id: residences.id,
 			movedInAt: residences.movedInAt,
 			regionId: residences.regionId,
-
 			stateId: states.id,
 			stateName: states.name,
 			stateLogo: states.logo
@@ -108,6 +109,64 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	}
 
+	// Check if user is a president
+	const presidency = await db.query.presidents.findFirst({
+		where: eq(presidents.userId, params.id),
+		with: {
+			state: true
+		}
+	});
+
+	// Get state logo URL if president
+	let presidencyLogoUrl: string | null = null;
+	if (presidency?.state?.logo) {
+		const stateLogoFile = await db.query.files.findFirst({
+			where: eq(files.id, presidency.state.logo)
+		});
+		if (stateLogoFile) {
+			presidencyLogoUrl = await getSignedDownloadUrl(stateLogoFile.key);
+		}
+	}
+
+	// Check if user is a governor
+	const governorship = await db.query.governors.findFirst({
+		where: eq(governors.userId, params.id),
+		with: {
+			region: {
+				with: {
+					state: true
+				}
+			}
+		}
+	});
+
+	// Get all ministries user holds
+	const ministries = await db.query.ministers.findMany({
+		where: eq(ministers.userId, params.id),
+		with: {
+			state: true
+		}
+	});
+
+	// Check if current user is a president (for appointment ability)
+	const currentUserPresidency = await db.query.presidents.findFirst({
+		where: eq(presidents.userId, account.id)
+	});
+
+	// Get available ministries if current user is president and viewing someone else
+	let availableMinistries: string[] = [];
+	if (currentUserPresidency && account.id !== params.id) {
+		// Get all occupied ministries in this state
+		const occupiedMinistries = await db.query.ministers.findMany({
+			where: eq(ministers.stateId, currentUserPresidency.stateId)
+		});
+
+		const allMinistries = ["economy", "defense", "foreign_affairs"];
+
+		const occupied = occupiedMinistries.map((m) => m.ministry);
+		availableMinistries = allMinistries.filter((m) => !occupied.includes(m));
+	}
+
 	return {
 		user: {
 			id: user.id,
@@ -137,7 +196,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					movedInAt: residence.movedInAt,
 					region: {
 						id: residence.regionId,
-
 						name: getRegionName(residence.regionId),
 						logo: "/coats/" + residence.regionId + ".svg",
 						state: {
@@ -149,7 +207,40 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				}
 			: null,
 		articleCount: articleCountResult?.count || 0,
-		isOwnProfile: account.id === params.id
+		isOwnProfile: account.id === params.id,
+		presidency: presidency
+			? {
+					stateId: presidency.stateId,
+					stateName: presidency.state.name,
+					stateLogo: presidencyLogoUrl,
+					electedAt: presidency.electedAt,
+					term: presidency.term
+				}
+			: null,
+		governorship: governorship
+			? {
+					regionId: governorship.regionId,
+					regionName: getRegionName(governorship.regionId),
+					stateId: governorship.region.stateId,
+					stateName: governorship.region.state?.name,
+					appointedAt: governorship.appointedAt,
+					term: governorship.term
+				}
+			: null,
+		ministries: ministries.map((m) => ({
+			id: m.id,
+			ministry: m.ministry,
+			stateId: m.stateId,
+			stateName: m.state.name,
+			appointedAt: m.appointedAt
+		})),
+		canAppointMinister: !!currentUserPresidency && account.id !== params.id,
+		availableMinistries,
+		currentUserPresidency: currentUserPresidency
+			? {
+					stateId: currentUserPresidency.stateId
+				}
+			: null
 	};
 };
 
@@ -172,10 +263,7 @@ export const actions: Actions = {
 		startOfMonth.setHours(0, 0, 0, 0);
 
 		const existingAward = await db.query.userMedals.findFirst({
-			where: and(
-				eq(userMedals.awardedBy, account.id)
-				// Add date comparison if your DB supports it
-			)
+			where: and(eq(userMedals.awardedBy, account.id))
 		});
 
 		if (existingAward && new Date(existingAward.awardedAt) >= startOfMonth) {
@@ -204,7 +292,6 @@ export const actions: Actions = {
 		}
 
 		try {
-			// Award the medal
 			await db.insert(userMedals).values({
 				userId: params.id,
 				stateId: presidency.stateId,
@@ -213,7 +300,6 @@ export const actions: Actions = {
 				awardedBy: account.id
 			});
 
-			// Send inbox notification
 			await sendMedalNotification({
 				recipientId: params.id,
 				awarderId: account.id,
@@ -226,6 +312,108 @@ export const actions: Actions = {
 		} catch (error) {
 			console.error("Error awarding medal:", error);
 			return fail(500, { error: "Failed to award medal" });
+		}
+	},
+
+	appointMinister: async ({ request, params, locals }) => {
+		const account = locals.account!;
+
+		// Check if user is a president
+		const presidency = await db.query.presidents.findFirst({
+			where: eq(presidents.userId, account.id)
+		});
+
+		if (!presidency) {
+			return fail(403, { error: "Only presidents can appoint ministers" });
+		}
+
+		// Cannot appoint self
+		if (account.id === params.id) {
+			return fail(400, { error: "Cannot appoint yourself as minister" });
+		}
+
+		const formData = await request.formData();
+		const ministry = formData.get("ministry") as string;
+
+		if (!ministry) {
+			return fail(400, { error: "Ministry is required" });
+		}
+
+		const validMinistries = ["economy", "defense", "foreign_affairs"];
+
+		if (!validMinistries.includes(ministry)) {
+			return fail(400, { error: "Invalid ministry" });
+		}
+
+		// Check if ministry is already occupied
+		const existingMinister = await db.query.ministers.findFirst({
+			where: and(eq(ministers.stateId, presidency.stateId), eq(ministers.ministry, ministry as any))
+		});
+
+		if (existingMinister) {
+			return fail(400, { error: "This ministry is already occupied" });
+		}
+
+		// Check if user lives in the state
+		const userResidence = await db
+			.select({
+				regionId: residences.regionId,
+				stateId: regions.stateId
+			})
+			.from(residences)
+			.leftJoin(regions, eq(residences.regionId, regions.id))
+			.where(eq(residences.userId, params.id))
+			.limit(1);
+
+		if (!userResidence.length || userResidence[0].stateId !== presidency.stateId) {
+			return fail(400, { error: "User must be a resident of your state to be appointed" });
+		}
+
+		try {
+			await db.insert(ministers).values({
+				userId: params.id,
+				stateId: presidency.stateId,
+				ministry: ministry as any
+			});
+
+			return { success: true, message: `Successfully appointed as ${ministry.replace("_", " ")} minister` };
+		} catch (error) {
+			console.error("Error appointing minister:", error);
+			return fail(500, { error: "Failed to appoint minister" });
+		}
+	},
+
+	dismissMinister: async ({ request, params, locals }) => {
+		const account = locals.account!;
+
+		// Check if user is a president
+		const presidency = await db.query.presidents.findFirst({
+			where: eq(presidents.userId, account.id)
+		});
+
+		if (!presidency) {
+			return fail(403, { error: "Only presidents can dismiss ministers" });
+		}
+
+		const formData = await request.formData();
+		const ministerId = parseInt(formData.get("ministerId") as string);
+
+		// Verify the minister belongs to the president's state
+		const minister = await db.query.ministers.findFirst({
+			where: eq(ministers.id, ministerId)
+		});
+
+		if (!minister || minister.stateId !== presidency.stateId) {
+			return fail(403, { error: "Invalid minister" });
+		}
+
+		try {
+			await db.delete(ministers).where(eq(ministers.id, ministerId));
+
+			return { success: true, message: "Minister dismissed successfully" };
+		} catch (error) {
+			console.error("Error dismissing minister:", error);
+			return fail(500, { error: "Failed to dismiss minister" });
 		}
 	}
 };

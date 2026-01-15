@@ -17,8 +17,34 @@
 
 	const { data } = $props();
 
-	const isNewState = $derived(data.nextElection?.isInaugural && data.nextElection.status === "scheduled");
 	const hasGovernment = $derived(!!data.president || data.ministers.length > 0 || data.parliamentMembers.length > 0);
+
+	function getTimeRemaining(endDate: string | Date) {
+		const now = new Date();
+		const end = new Date(endDate);
+		const diff = end.getTime() - now.getTime();
+
+		if (diff <= 0) return null;
+
+		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+		if (days > 0) return `${days}d ${hours}h`;
+		if (hours > 0) return `${hours}h ${minutes}m`;
+		return `${minutes}m`;
+	}
+
+	const electionState = $derived(() => {
+		if (!data.nextElection) return null;
+		const now = new Date();
+		const start = new Date(data.nextElection.startDate);
+		const end = new Date(data.nextElection.endDate);
+
+		if (now < start) return "scheduled";
+		if (now >= start && now <= end) return "active";
+		return null;
+	});
 </script>
 
 <div class="max-w-5xl mx-auto px-4 py-6 space-y-6">
@@ -118,37 +144,142 @@
 		</div>
 	</section>
 
-	<!-- Inaugural Election Banner -->
-	{#if isNewState}
-		<div class="bg-gradient-to-br from-amber-900/40 to-orange-900/40 border-2 border-amber-500/40 rounded-xl p-6">
-			<div class="flex items-start gap-4">
-				<div class="size-14 bg-amber-500/20 rounded-xl flex items-center justify-center flex-shrink-0">
-					<FluentVote20Filled class="size-7 text-amber-400" />
-				</div>
-				<div class="flex-1">
-					<h2 class="text-2xl font-bold text-white mb-2">Inaugural Election in Progress</h2>
-					<p class="text-gray-300 mb-4">
-						This newly formed state is holding its first democratic election to establish the government.
-					</p>
-					<div class="flex items-center gap-4 text-sm flex-wrap">
-						<div class="flex items-center gap-2 text-amber-400">
-							<FluentCalendar20Filled class="size-4" />
-							<span>Started: {formatDate(data.nextElection.startDate)}</span>
+	<!-- Election Banners -->
+	{#if data.nextElection && electionState()}
+		{@const state = electionState()}
+
+		{#if data.nextElection.isInaugural && state === "scheduled"}
+			<!-- Inaugural Election - Scheduled -->
+			<div
+				class="bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/30 rounded-xl p-5 space-y-3"
+			>
+				<div class="flex items-start gap-3">
+					<div class="size-12 bg-purple-600/20 rounded-lg flex items-center justify-center shrink-0">
+						<FluentVote20Filled class="size-6 text-purple-400" />
+					</div>
+					<div class="flex-1 space-y-2">
+						<h3 class="font-bold text-white text-lg">Inaugural Election Scheduled! 🎉</h3>
+						<p class="text-purple-200 text-sm">
+							This state is brand new! The first democratic election will establish the founding parliament of
+							<strong>{data.nextElection.totalSeats} seats</strong>.
+						</p>
+
+						<div class="bg-purple-900/30 rounded-lg p-3 space-y-2">
+							<div class="flex items-center gap-2 text-sm">
+								<FluentCalendar20Filled class="size-4 text-purple-400" />
+								<span class="text-purple-100">
+									<strong>Voting starts in:</strong>
+									{getTimeRemaining(data.nextElection.startDate) || "Starting soon!"}
+								</span>
+							</div>
+							<div class="text-xs text-purple-200/80">
+								<strong>Start:</strong>
+								{formatDate(data.nextElection.startDate)}<br />
+								<strong>End:</strong>
+								{formatDate(data.nextElection.endDate)}
+							</div>
 						</div>
-						<div class="flex items-center gap-2 text-amber-400">
-							<FluentCalendar20Filled class="size-4" />
-							<span>Ends: {formatDate(data.nextElection.endDate)}</span>
+
+						<div class="flex gap-2 pt-2">
+							<a
+								href="/state/{data.state.id}/election/{data.nextElection.id}"
+								class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
+							>
+								<FluentVote20Filled class="size-4" />
+								View Election Details
+							</a>
+							<a href="/party/create" class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white">
+								Create a Party
+							</a>
+						</div>
+					</div>
+				</div>
+			</div>
+		{:else if data.nextElection.isInaugural && state === "active"}
+			<!-- Inaugural Election - Active -->
+			<div class="bg-gradient-to-r from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-xl p-4">
+				<div class="flex items-center justify-between gap-4">
+					<div class="flex items-center gap-3">
+						<FluentVote20Filled class="size-6 text-green-400 animate-pulse" />
+						<div>
+							<p class="font-semibold text-white">Inaugural Election Now Active!</p>
+							<p class="text-sm text-green-200">Help establish the founding parliament - vote now!</p>
 						</div>
 					</div>
 					<a
 						href="/state/{data.state.id}/election/{data.nextElection.id}"
-						class="btn btn-sm bg-amber-600 hover:bg-amber-500 border-0 text-white mt-4"
+						class="btn btn-sm bg-green-600 hover:bg-green-500 border-0 text-white gap-2 animate-pulse"
+					>
+						<FluentVote20Filled class="size-4" />
+						Vote Now
+					</a>
+				</div>
+			</div>
+		{:else if !data.nextElection.isInaugural && state === "scheduled"}
+			<!-- Regular Election - Scheduled -->
+			<div class="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-xl border border-blue-500/30 p-5">
+				<div class="flex items-center justify-between gap-4">
+					<div class="flex items-center gap-4 flex-1">
+						<div class="size-12 bg-blue-600/30 rounded-xl flex items-center justify-center">
+							<FluentCalendar20Filled class="size-6 text-blue-400" />
+						</div>
+						<div>
+							<div class="flex items-center gap-2 mb-1">
+								<h3 class="text-lg font-bold text-white">Election Scheduled</h3>
+								<span
+									class="px-2 py-1 rounded-lg text-xs font-semibold border bg-blue-600/20 text-blue-400 border-blue-500/30"
+								>
+									Upcoming
+								</span>
+							</div>
+							<p class="text-sm text-gray-400">
+								{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} •
+								{data.nextElection.totalSeats} seats • starts in {getTimeRemaining(data.nextElection.startDate)}
+							</p>
+						</div>
+					</div>
+					<a
+						href="/state/{data.state.id}/election/{data.nextElection.id}"
+						class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white"
 					>
 						View Election
 					</a>
 				</div>
 			</div>
-		</div>
+		{:else if !data.nextElection.isInaugural && state === "active"}
+			<!-- Regular Election - Active -->
+			<div class="bg-gradient-to-r from-green-900/50 to-emerald-900/50 rounded-xl border border-green-500/30 p-5">
+				<div class="flex items-center justify-between gap-4">
+					<div class="flex items-center gap-4 flex-1">
+						<div class="size-12 bg-green-600/30 rounded-xl flex items-center justify-center">
+							<FluentVote20Filled class="size-6 text-green-400" />
+						</div>
+						<div>
+							<div class="flex items-center gap-2 mb-1">
+								<h3 class="text-lg font-bold text-white">Election Active</h3>
+								<span
+									class="px-2 py-1 rounded-lg text-xs font-semibold border bg-green-600/20 text-green-400 border-green-500/30"
+								>
+									Voting Now
+								</span>
+							</div>
+							<p class="text-sm text-gray-400">
+								{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} •
+								{data.nextElection.totalSeats} seats •
+								{getTimeRemaining(data.nextElection.endDate)} remaining
+							</p>
+						</div>
+					</div>
+					<a
+						href="/state/{data.state.id}/election/{data.nextElection.id}"
+						class="btn btn-sm bg-green-600 hover:bg-green-500 border-0 text-white gap-2 animate-pulse"
+					>
+						<FluentVote20Filled class="size-4" />
+						Vote Now
+					</a>
+				</div>
+			</div>
+		{/if}
 	{/if}
 
 	<!-- Government Section -->
@@ -263,6 +394,58 @@
 			</a>
 		{/if}
 	</section>
+
+	<!-- Tax Overview -->
+	{#if data.taxes.length > 0}
+		<section class="space-y-3">
+			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Tax Policies</h2>
+			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-6">
+				<div class="grid md:grid-cols-2 gap-4">
+					{#each data.taxes as tax}
+						<div class="bg-slate-700/30 rounded-lg border border-white/5 p-4">
+							<div class="flex items-start justify-between mb-3">
+								<div class="flex items-center gap-2">
+									<div class="size-10 bg-emerald-600/20 rounded-lg flex items-center justify-center">
+										<FluentMoney20Filled class="size-5 text-emerald-400" />
+									</div>
+									<div>
+										<h3 class="font-semibold text-white capitalize">
+											{tax.taxType.replace(/_/g, " ")}
+										</h3>
+										<p class="text-xs text-gray-400">Active Tax</p>
+									</div>
+								</div>
+								<div class="text-right">
+									<p class="text-2xl font-bold text-emerald-400">{tax.taxRate}%</p>
+								</div>
+							</div>
+							<div class="text-xs text-gray-400 space-y-1">
+								{#if tax.taxType === "mining"}
+									<p>Applied to resource extraction operations</p>
+								{:else if tax.taxType === "production"}
+									<p>Applied to manufactured goods production</p>
+								{:else if tax.taxType === "market_transaction"}
+									<p>Applied to marketplace sales</p>
+								{:else if tax.taxType === "income"}
+									<p>Applied to worker wages and salaries</p>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+
+				{#if data.taxes.length === 0}
+					<div class="text-center py-8">
+						<div class="size-16 bg-slate-700/30 rounded-full flex items-center justify-center mx-auto mb-3">
+							<FluentMoney20Filled class="size-8 text-gray-500" />
+						</div>
+						<p class="text-gray-400 text-sm">No active tax policies</p>
+						<p class="text-gray-500 text-xs mt-1">Parliament can propose new tax legislation</p>
+					</div>
+				{/if}
+			</div>
+		</section>
+	{/if}
 
 	<!-- State Information -->
 	{#if data.state.background}

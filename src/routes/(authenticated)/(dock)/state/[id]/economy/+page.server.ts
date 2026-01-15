@@ -1,9 +1,9 @@
-// src/routes/(authenticated)/(dock)/state/[id]/economy/+page.server.ts
+// src/routes/(authenticated)/(dock)/state/[id]/economy/+page.server.ts - WITH PRESIDENT ACCESS
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "$lib/server/db";
 import { eq, and } from "drizzle-orm";
-import { states, ministers, powerPlants, stateTreasury, stateEnergy } from "$lib/server/schema";
+import { states, ministers, presidents, powerPlants, stateTreasury, stateEnergy } from "$lib/server/schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -19,13 +19,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "State not found");
 	}
 
-	// Check if user is economy minister
+	// Check if user is economy minister OR president
 	const ministry = await db.query.ministers.findFirst({
 		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId), eq(ministers.ministry, "finance"))
 	});
 
-	if (!ministry) {
-		throw error(403, "You must be the Economy Minister to access this page");
+	const presidency = await db.query.presidents.findFirst({
+		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+	});
+
+	if (!ministry && !presidency) {
+		throw error(403, "You must be the Economy Minister or President to access this page");
 	}
 
 	// Get state treasury
@@ -73,7 +77,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			totalSpent: Number(treasury.totalSpent)
 		},
 		powerPlants: statePowerPlants,
-		energyInfo
+		energyInfo,
+		isPresident: !!presidency
 	};
 };
 
@@ -83,13 +88,17 @@ export const actions: Actions = {
 
 		const stateId = parseInt(params.id);
 
-		// Verify economy minister status
+		// Check authorization - economy minister OR president
 		const ministry = await db.query.ministers.findFirst({
 			where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId), eq(ministers.ministry, "finance"))
 		});
 
-		if (!ministry) {
-			return fail(403, { error: "Only the Economy Minister can build power plants" });
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		});
+
+		if (!ministry && !presidency) {
+			return fail(403, { error: "Only the Economy Minister or President can build power plants" });
 		}
 
 		const formData = await request.formData();

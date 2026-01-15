@@ -2,7 +2,7 @@
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { db } from "$lib/server/db";
-import { eq, and, gte, desc } from "drizzle-orm";
+import { eq, and, gte, desc, inArray } from "drizzle-orm";
 import {
 	states,
 	parliamentMembers,
@@ -18,14 +18,10 @@ import {
 import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";
-import { superValidate } from "sveltekit-superforms";
-import { valibot } from "sveltekit-superforms/adapters";
-import { createProposalSchema } from "./schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const stateId = parseInt(params.id);
-	const form = await superValidate(valibot(createProposalSchema));
 
 	// Get state
 	const state = await db.query.states.findFirst({
@@ -126,11 +122,42 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				userVote: userVote?.voteType || null,
 				proposedBy: {
 					id: proposal.proposedBy,
-					name: proposer?.name || "Unknown",
+					name: proposer?.name,
 					logo: await getLogoUrl(proposer?.logo)
 				}
 			};
 		})
+	);
+
+	// Get party colors and logos from database
+	const partyNames = Object.keys(partyDistribution).filter((name) => name !== "Independent");
+	const parties =
+		partyNames.length > 0
+			? await db
+					.select({
+						name: politicalParties.name,
+						color: politicalParties.color,
+						logo: politicalParties.logo
+					})
+					.from(politicalParties)
+					.where(and(eq(politicalParties.stateId, stateId), inArray(politicalParties.name, partyNames)))
+			: [];
+
+	const partyColors: Record<string, string> = {
+		Independent: "#6b7280" // Gray for independents
+	};
+
+	parties.forEach((party) => {
+		partyColors[party.name] = party.color;
+	});
+
+	// Process party logos
+	const processedParties = await Promise.all(
+		parties.map(async (party) => ({
+			name: party.name,
+			color: party.color,
+			logo: await getLogoUrl(party.logo)
+		}))
 	);
 
 	return {
@@ -153,7 +180,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					isInaugural: nextElection.isInaugural
 				}
 			: null,
-		form
+		partyColors,
+		parties: processedParties
 	};
 };
 

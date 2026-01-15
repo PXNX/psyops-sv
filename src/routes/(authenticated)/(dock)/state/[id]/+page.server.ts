@@ -20,7 +20,7 @@ import {
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, gte, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { getRegionName } from "$lib/utils/formatting";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -152,26 +152,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isForeignMinister = !!foreignMinistry && foreignMinistry.stateId !== stateId;
 	}
 
-	const processLogo = async (logoId: number | null) => {
-		if (!logoId) return null;
-
-		try {
-			const [file] = await db.select().from(files).where(eq(files.id, logoId)).limit(1);
-
-			if (file) {
-				return await getSignedDownloadUrl(file.key);
-			}
-		} catch {
-			return null;
-		}
-		return null;
-	};
-
 	return {
 		state: {
 			id: state.id,
 			name: state.name,
-			logo: state.logo,
+			logo: await getLogoUrl(state.logo),
 			background: state.background,
 			description: state.description,
 			population: actualPopulation,
@@ -189,8 +174,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		president: presidentData
 			? {
 					userId: presidentData.userId,
-					name: presidentData.profileName || "Unknown",
-					logo: await processLogo(presidentData.profileLogo || null),
+					name: presidentData.profileName,
+					logo: await getLogoUrl(presidentData.profileLogo),
 					electedAt: presidentData.electedAt,
 					term: presidentData.term
 				}
@@ -198,8 +183,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		ministers: await Promise.all(
 			stateMinistersRaw.map(async (minister) => ({
 				userId: minister.userId,
-				name: minister.profileName || "Unknown",
-				logo: await processLogo(minister.profileLogo || null),
+				name: minister.profileName,
+				logo: await getLogoUrl(minister.profileLogo),
 				ministry: minister.ministry,
 				appointedAt: minister.appointedAt
 			}))
@@ -207,8 +192,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		parliamentMembers: await Promise.all(
 			parliamentMembersRaw.map(async (member) => ({
 				userId: member.userId,
-				name: member.profileName || "Unknown",
-				logo: await processLogo(member.profileLogo || null),
+				name: member.profileName,
+				logo: await getLogoUrl(member.profileLogo),
 				partyAffiliation: member.partyAffiliation,
 				electedAt: member.electedAt,
 				term: member.term
@@ -233,9 +218,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		taxes: activeTaxes.map((tax) => ({
 			id: tax.id,
-			taxName: tax.taxName,
 			taxType: tax.taxType,
-			taxRate: tax.taxRate
+			taxRate: tax.taxRate,
+			implementedAt: tax.implementedAt
 		})),
 		energy: energyData
 			? {
