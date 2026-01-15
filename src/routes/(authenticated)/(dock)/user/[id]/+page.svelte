@@ -16,12 +16,33 @@
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
+	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
+	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
+	import FluentPersonDelete20Filled from "~icons/fluent/person-delete-20-filled";
 
+	import Modal from "$lib/component/Modal.svelte";
 	import * as m from "$lib/paraglide/messages";
 	import { shareLink } from "$lib/util";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 
-	const { data } = $props();
+	const { data, form } = $props();
+
+	let showAppointDialog = $state(false);
+	let selectedMinistry = $state("");
+	let isAppointingMinister = $state(false);
+	let appointmentError = $state<string | null>(null);
+
+	const ministryNames: Record<string, string> = {
+		economy: "Economy",
+		defense: "Defense",
+		foreign_affairs: "Foreign Affairs"
+	};
+
+	const ministryIcons: Record<string, string> = {
+		economy: "💰",
+		defense: "🛡️",
+		foreign_affairs: "🌍"
+	};
 </script>
 
 <div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -73,6 +94,26 @@
 					{#if data.user.bio}
 						<p class="text-sm text-gray-300 max-w-md mt-2">{data.user.bio}</p>
 					{/if}
+
+					<!-- Government Positions Badges -->
+					<div class="flex gap-2 justify-center flex-wrap mt-3">
+						{#if data.presidency}
+							<div class="badge badge-lg gap-2 bg-yellow-600/20 border-yellow-500/30 text-yellow-300">
+								👑 President of {data.presidency.stateName}
+							</div>
+						{/if}
+						{#if data.governorship}
+							<div class="badge badge-lg gap-2 bg-blue-600/20 border-blue-500/30 text-blue-300">
+								🏛️ Governor of {data.governorship.regionName}
+							</div>
+						{/if}
+						{#each data.ministries as ministry}
+							<div class="badge badge-lg gap-2 bg-purple-600/20 border-purple-500/30 text-purple-300">
+								{ministryIcons[ministry.ministry]}
+								{ministryNames[ministry.ministry]} Minister
+							</div>
+						{/each}
+					</div>
 				</div>
 			</div>
 		</div>
@@ -104,6 +145,16 @@
 				<MdiNewspaperPlus class="size-4" />
 				<span class="hidden sm:inline">Add Author</span>
 			</button>
+
+			{#if data.canAppointMinister}
+				<button
+					class="btn btn-sm gap-2 bg-amber-600/10 hover:bg-amber-600/20 border-amber-500/20 text-amber-300 hover:text-amber-200 transition-all"
+					onclick={() => (showAppointDialog = true)}
+				>
+					<FluentShieldTask20Filled class="size-4" />
+					<span class="hidden sm:inline">Appoint Minister</span>
+				</button>
+			{/if}
 
 			<button
 				class="btn btn-sm gap-2 bg-red-600/10 hover:bg-red-600/20 border-red-500/20 text-red-300 hover:text-red-200 transition-all"
@@ -140,6 +191,89 @@
 			</a>
 		{/if}
 	</section>
+
+	<!-- Government Positions Section -->
+	{#if data.presidency || data.governorship || data.ministries.length > 0}
+		<section class="space-y-3">
+			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Government Positions</h2>
+			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
+				{#if data.presidency}
+					<a
+						href="/state/{data.presidency.stateId}"
+						class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+					>
+						<div class="size-12 bg-yellow-600/20 rounded-lg flex items-center justify-center overflow-hidden">
+							{#if data.presidency.stateLogo}
+								<img src={data.presidency.stateLogo} alt={data.presidency.stateName} class="size-8 object-contain" />
+							{:else}
+								<span class="text-2xl">👑</span>
+							{/if}
+						</div>
+						<div class="flex-1 min-w-0">
+							<p class="font-semibold text-white group-hover:text-yellow-400 transition-colors truncate">
+								President of {data.presidency.stateName}
+							</p>
+							<p class="text-xs text-gray-400 truncate">
+								Term {data.presidency.term} • Since {formatDate(data.presidency.electedAt)}
+							</p>
+						</div>
+						<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-yellow-400 transition-colors" />
+					</a>
+				{/if}
+
+				{#if data.governorship}
+					<a
+						href="/region/{data.governorship.regionId}"
+						class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+					>
+						<div class="size-12 bg-blue-600/20 rounded-lg flex items-center justify-center">
+							<span class="text-2xl">🏛️</span>
+						</div>
+						<div class="flex-1 min-w-0">
+							<p class="font-semibold text-white group-hover:text-blue-400 transition-colors truncate">
+								Governor of {data.governorship.regionName}
+							</p>
+							<p class="text-xs text-gray-400 truncate">
+								{data.governorship.stateName} • Since {formatDate(data.governorship.appointedAt)}
+							</p>
+						</div>
+						<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-blue-400 transition-colors" />
+					</a>
+				{/if}
+
+				{#each data.ministries as ministry}
+					<div class="flex items-center gap-3 hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all">
+						<div class="size-12 bg-purple-600/20 rounded-lg flex items-center justify-center">
+							<span class="text-2xl">{ministryIcons[ministry.ministry]}</span>
+						</div>
+						<div class="flex-1 min-w-0">
+							<p class="font-semibold text-white truncate">{ministryNames[ministry.ministry]} Minister</p>
+							<p class="text-xs text-gray-400 truncate">
+								{ministry.stateName} • Since {formatDate(ministry.appointedAt)}
+							</p>
+						</div>
+						{#if data.currentUserPresidency?.stateId === ministry.stateId}
+							<form method="POST" action="?/dismissMinister" use:enhance>
+								<input type="hidden" name="ministerId" value={ministry.id} />
+								<button
+									type="submit"
+									class="btn btn-xs gap-1 bg-red-600/10 hover:bg-red-600/20 border-red-500/20 text-red-400 hover:text-red-300"
+									onclick={(e) => {
+										if (!confirm("Are you sure you want to dismiss this minister?")) {
+											e.preventDefault();
+										}
+									}}
+								>
+									<FluentPersonDelete20Filled class="size-3" />
+									Dismiss
+								</button>
+							</form>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
 	<!-- Location & Activity Section -->
 	<section class="space-y-3">
@@ -275,3 +409,92 @@
 		</div>
 	</section>
 </div>
+
+<!-- Appoint Minister Modal -->
+<Modal bind:open={showAppointDialog} title="Appoint {data.user.name} as Minister">
+	<form
+		method="POST"
+		action="?/appointMinister"
+		use:enhance={() => {
+			isAppointingMinister = true;
+			appointmentError = null;
+			return async ({ result, update }) => {
+				isAppointingMinister = false;
+
+				if (result.type === "success") {
+					await update();
+					showAppointDialog = false;
+					selectedMinistry = "";
+				} else if (result.type === "failure") {
+					appointmentError = result.data?.error || "Failed to appoint minister";
+					await update();
+				} else {
+					await update();
+				}
+			};
+		}}
+	>
+		<div class="space-y-4">
+			{#if appointmentError}
+				<div class="alert alert-error bg-red-600/10 border-red-500/20 text-red-300">
+					<span>{appointmentError}</span>
+				</div>
+			{/if}
+
+			<div class="form-control">
+				<label class="label">
+					<span class="label-text text-gray-300">Select Ministry</span>
+				</label>
+				<select
+					name="ministry"
+					class="select select-bordered bg-slate-900 text-white border-white/10"
+					bind:value={selectedMinistry}
+					disabled={isAppointingMinister}
+					required
+				>
+					<option value="" disabled>Choose a ministry...</option>
+					{#each data.availableMinistries as ministry}
+						<option value={ministry}>
+							{ministryIcons[ministry]}
+							{ministryNames[ministry]}
+						</option>
+					{/each}
+				</select>
+			</div>
+
+			{#if data.availableMinistries.length === 0}
+				<div class="alert alert-warning bg-yellow-600/10 border-yellow-500/20 text-yellow-300">
+					<span>All ministries are currently occupied.</span>
+				</div>
+			{/if}
+
+			<div class="flex gap-2 justify-end">
+				<button
+					type="button"
+					class="btn btn-ghost"
+					disabled={isAppointingMinister}
+					onclick={() => {
+						showAppointDialog = false;
+						selectedMinistry = "";
+						appointmentError = null;
+					}}
+				>
+					Cancel
+				</button>
+				<button
+					type="submit"
+					class="btn bg-purple-600 hover:bg-purple-700 text-white border-none gap-2"
+					disabled={!selectedMinistry || isAppointingMinister}
+				>
+					{#if isAppointingMinister}
+						<span class="loading loading-spinner loading-sm"></span>
+						Appointing...
+					{:else}
+						<FluentShieldTask20Filled class="size-4" />
+						Appoint Minister
+					{/if}
+				</button>
+			</div>
+		</div>
+	</form>
+</Modal>
