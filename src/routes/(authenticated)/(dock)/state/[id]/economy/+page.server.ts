@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if user is economy minister OR president
 	const ministry = await db.query.ministers.findFirst({
-		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId), eq(ministers.ministry, "finance"))
+		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId), eq(ministers.ministry, "economy"))
 	});
 
 	const presidency = await db.query.presidents.findFirst({

@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "State not found");
 	}
 
-	// Get all parliament members with their profiles and party info
+	// Get all parliament members with their profiles and party roles
 	const members = await db
 		.select({
 			userId: parliamentMembers.userId,
@@ -40,20 +40,41 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			electedAt: parliamentMembers.electedAt,
 			term: parliamentMembers.term,
 			name: userProfiles.name,
-			logo: userProfiles.logo
+			logo: userProfiles.logo,
+			partyRole: partyMembers.role
 		})
 		.from(parliamentMembers)
 		.leftJoin(accounts, eq(parliamentMembers.userId, accounts.id))
 		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
+		.leftJoin(partyMembers, eq(parliamentMembers.userId, partyMembers.userId))
 		.where(eq(parliamentMembers.stateId, stateId))
 		.orderBy(desc(parliamentMembers.electedAt));
 
-	// Process logos
+	// Process logos and match party roles correctly
 	const processedMembers = await Promise.all(
-		members.map(async (member) => ({
-			...member,
-			logo: await getLogoUrl(member.logo)
-		}))
+		members.map(async (member) => {
+			// Get the correct party for this member
+			const memberParty = member.partyAffiliation
+				? await db.query.politicalParties.findFirst({
+						where: and(eq(politicalParties.name, member.partyAffiliation), eq(politicalParties.stateId, stateId))
+					})
+				: null;
+
+			// Get the correct party membership role
+			let partyRole = null;
+			if (memberParty) {
+				const membership = await db.query.partyMembers.findFirst({
+					where: and(eq(partyMembers.userId, member.userId), eq(partyMembers.partyId, memberParty.id))
+				});
+				partyRole = membership?.role || null;
+			}
+
+			return {
+				...member,
+				logo: await getLogoUrl(member.logo),
+				partyRole
+			};
+		})
 	);
 
 	// Calculate party distribution
@@ -137,14 +158,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					.select({
 						name: politicalParties.name,
 						color: politicalParties.color,
-						logo: politicalParties.logo
+						logo: politicalParties.logo,
+						ideology: politicalParties.ideology
 					})
 					.from(politicalParties)
 					.where(and(eq(politicalParties.stateId, stateId), inArray(politicalParties.name, partyNames)))
 			: [];
 
 	const partyColors: Record<string, string> = {
-		Independent: "#6b7280" // Gray for independents
+		Independent: "#6b7280"
 	};
 
 	parties.forEach((party) => {
@@ -156,7 +178,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		parties.map(async (party) => ({
 			name: party.name,
 			color: party.color,
-			logo: await getLogoUrl(party.logo)
+			logo: await getLogoUrl(party.logo),
+			ideology: party.ideology
 		}))
 	);
 

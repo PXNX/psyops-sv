@@ -13,16 +13,11 @@
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentFilterDismiss20Filled from "~icons/fluent/filter-dismiss-20-filled";
+	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import { enhance } from "$app/forms";
 	import { formatDate } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
-
-	// Debug logging
-	$effect(() => {
-		console.log("Party data:", data.parties);
-		console.log("Party distribution:", data.partyDistribution);
-	});
 
 	let selectedParty = $state<string | null>(null);
 
@@ -62,7 +57,18 @@
 
 	const filteredMembers = $derived(
 		selectedParty
-			? data.parliamentMembers.filter((m) => (m.partyAffiliation || "Independent") === selectedParty)
+			? data.parliamentMembers
+					.filter((m) => (m.partyAffiliation || "Independent") === selectedParty)
+					.sort((a, b) => {
+						// Leader first
+						if (a.partyRole === "leader") return -1;
+						if (b.partyRole === "leader") return 1;
+						// Deputy second
+						if (a.partyRole === "deputy") return -1;
+						if (b.partyRole === "deputy") return 1;
+						// Then by elected date (earliest first for seniority)
+						return new Date(a.electedAt).getTime() - new Date(b.electedAt).getTime();
+					})
 			: data.parliamentMembers
 	);
 
@@ -264,112 +270,146 @@
 
 	<!-- Parliament Composition -->
 	{#if data.totalSeats > 0}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
-			<div class="flex items-center justify-between mb-4">
-				<h2 class="text-lg font-semibold text-white">Seat Distribution</h2>
-				{#if selectedParty}
-					<button type="button" onclick={clearFilter} class="btn btn-xs btn-ghost gap-1 text-gray-400">
-						<FluentFilterDismiss20Filled class="size-3" />
-						Clear Filter
-					</button>
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 overflow-hidden">
+			<!-- Header -->
+			<div class="p-5 border-b border-white/10">
+				<div class="flex items-center justify-between mb-4">
+					<h2 class="text-lg font-semibold text-white">
+						{#if selectedParty}
+							{selectedParty} Members
+						{:else}
+							Seat Distribution
+						{/if}
+					</h2>
+					{#if selectedParty}
+						<button type="button" onclick={clearFilter} class="btn btn-xs btn-ghost gap-1 text-gray-400">
+							<FluentFilterDismiss20Filled class="size-3" />
+							Clear Filter
+						</button>
+					{/if}
+				</div>
+
+				<!-- Seat Bar -->
+				<div class="flex w-full h-12 rounded-lg overflow-hidden mb-4">
+					{#each Object.entries(data.partyDistribution) as [party, seats]}
+						<button
+							type="button"
+							onclick={() => togglePartyFilter(party)}
+							style="width: {(seats / data.totalSeats) * 100}%; background-color: {data.partyColors[party] ||
+								'#6b7280'}"
+							class="flex items-center justify-center text-white font-semibold text-sm transition-all hover:brightness-110 {selectedParty ===
+							party
+								? 'ring-2 ring-white ring-inset'
+								: ''}"
+							title="{party}: {seats} seats"
+						>
+							{seats}
+						</button>
+					{/each}
+				</div>
+
+				<!-- Party List -->
+				{#if !selectedParty}
+					<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+						{#each Object.entries(data.partyDistribution).sort((a, b) => b[1] - a[1]) as [party, seats]}
+							{@const partyData = data.parties?.find((p) => p.name === party)}
+							<button
+								type="button"
+								onclick={() => togglePartyFilter(party)}
+								class="flex items-center gap-2 p-3 rounded-lg transition-all hover:bg-slate-700/30"
+							>
+								<div
+									class="size-8 rounded flex-shrink-0"
+									style="background-color: {data.partyColors[party] || '#6b7280'}"
+								/>
+
+								<div class="flex-1 min-w-0 text-left">
+									<p class="text-sm font-medium text-white truncate">{party}</p>
+									<p class="text-xs text-gray-400">{seats} ({Math.round((seats / data.totalSeats) * 100)}%)</p>
+								</div>
+							</button>
+						{/each}
+					</div>
 				{/if}
 			</div>
 
-			<!-- Seat Bar -->
-			<div class="flex w-full h-12 rounded-lg overflow-hidden mb-4">
-				{#each Object.entries(data.partyDistribution) as [party, seats]}
-					<button
-						type="button"
-						onclick={() => togglePartyFilter(party)}
-						style="width: {(seats / data.totalSeats) * 100}%; background-color: {data.partyColors[party] || '#6b7280'}"
-						class="flex items-center justify-center text-white font-semibold text-sm transition-all hover:brightness-110 {selectedParty ===
-						party
-							? 'ring-2 ring-white ring-inset'
-							: ''}"
-						title="{party}: {seats} seats"
-					>
-						{seats}
-					</button>
-				{/each}
-			</div>
+			<!-- Members Grid (when party selected) -->
+			{#if selectedParty}
+				{@const partyData = data.parties?.find((p) => p.name === selectedParty)}
 
-			<!-- Party List -->
-			<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-				{#each Object.entries(data.partyDistribution).sort((a, b) => b[1] - a[1]) as [party, seats]}
-					{@const partyData = data.parties?.find((p) => p.name === party)}
-					<!-- Debug party: {party}, found: {partyData ? 'yes' : 'no'}, logo: {partyData?.logo || 'none'} -->
-					<button
-						type="button"
-						onclick={() => togglePartyFilter(party)}
-						class="flex items-center gap-2 p-3 rounded-lg transition-all hover:bg-slate-700/30 {selectedParty === party
-							? 'bg-slate-700/50 ring-1 ring-white/20'
-							: ''}"
+				<div class="p-5 space-y-4" style="background-color: {data.partyColors[selectedParty]}05">
+					<!-- Party Info Banner -->
+					<a
+						href="/party/{selectedParty}"
+						class="flex items-center gap-3 p-4 rounded-lg border border-white/10"
+						style="background-color: {data.partyColors[selectedParty]}20"
 					>
 						{#if partyData?.logo}
-							<Logo src={partyData.logo} alt={party} class="size-8 rounded flex-shrink-0" />
+							<Logo src={partyData.logo} alt={selectedParty} class="size-12 rounded flex-shrink-0" />
 						{:else}
 							<div
-								class="size-8 rounded flex-shrink-0"
-								style="background-color: {data.partyColors[party] || '#6b7280'}"
-							/>
-						{/if}
-						<div class="flex-1 min-w-0 text-left">
-							<p class="text-sm font-medium text-white truncate">{party}</p>
-							<p class="text-xs text-gray-400">{seats} ({Math.round((seats / data.totalSeats) * 100)}%)</p>
-						</div>
-					</button>
-				{/each}
-			</div>
-		</div>
-
-		<!-- Members Grid -->
-		{#if selectedParty}
-			{@const partyData = data.parties?.find((p) => p.name === selectedParty)}
-
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 overflow-hidden">
-				<div
-					class="p-4 border-b border-white/10 flex items-center justify-between"
-					style="background-color: {data.partyColors[selectedParty]}20"
-				>
-					<div class="flex items-center gap-3">
-						{#if partyData?.logo}
-							<Logo src={partyData.logo} alt={selectedParty} class="size-6 rounded" />
-						{:else}
-							<div
-								class="size-6 rounded"
+								class="size-12 rounded flex-shrink-0"
 								style="background-color: {data.partyColors[selectedParty] || '#6b7280'}"
 							></div>
 						{/if}
-						<h3 class="font-semibold text-white">
-							{selectedParty}
-						</h3>
-						<span class="text-sm text-gray-400">
-							({filteredMembers.length})
-						</span>
+						<div class="flex-1 min-w-0">
+							<h3 class="font-bold text-lg text-white mb-1">{selectedParty}</h3>
+							<div class="flex items-center gap-2 flex-wrap text-sm">
+								{#if partyData?.ideology}
+									<span class="px-2 py-0.5 rounded-md bg-white/10 text-gray-300 font-medium">
+										{partyData.ideology}
+									</span>
+								{/if}
+								<span class="text-gray-400">
+									{filteredMembers.length} seat{filteredMembers.length !== 1 ? "s" : ""}
+								</span>
+								<span class="text-gray-600">•</span>
+								<span class="text-gray-400">
+									{Math.round((filteredMembers.length / data.totalSeats) * 100)}% of parliament
+								</span>
+							</div>
+						</div>
+
+						<FluentChevronRight20Filled class="size-4 text-gray-500 group-hover:text-blue-400 flex-shrink-0" />
+					</a>
+
+					<!-- All Members Grid -->
+					<div class="grid grid-cols-1 lg:grid-cols-3 gap-2">
+						{#each filteredMembers as member}
+							{@const isLeader = member.partyRole === "leader"}
+							{@const isDeputy = member.partyRole === "deputy"}
+							<a
+								href="/user/{member.userId}"
+								class="flex items-center gap-3 group rounded-lg p-3 transition-all {isLeader
+									? 'bg-gradient-to-r from-yellow-600/10 to-amber-600/10 border-2 border-yellow-500/50 hover:border-yellow-400/70 hover:from-yellow-600/20 hover:to-amber-600/20'
+									: isDeputy
+										? 'border border-blue-500/30 hover:bg-slate-700/50'
+										: 'hover:bg-slate-700/50'}"
+							>
+								<div class="relative">
+									<Logo src={member.logo} alt={member.name} />
+								</div>
+								<div class="flex-1 min-w-0">
+									<p
+										class="font-medium text-white group-hover:text-blue-400 transition-colors truncate {isLeader
+											? 'font-bold'
+											: ''}"
+									>
+										{member.name}
+									</p>
+									{#if isLeader}
+										<p class="text-xs text-yellow-400">Party Leader</p>
+									{:else if isDeputy}
+										<p class="text-xs text-blue-400">Deputy</p>
+									{/if}
+								</div>
+								<FluentChevronRight20Filled class="size-4 text-gray-500 group-hover:text-blue-400 flex-shrink-0" />
+							</a>
+						{/each}
 					</div>
 				</div>
-
-				<div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-					{#each filteredMembers as member}
-						<a
-							href="/user/{member.userId}"
-							class="flex items-center gap-3 group rounded-lg p-3 hover:bg-slate-700/50 transition-all"
-						>
-							<Logo src={member.logo} alt={member.name} />
-							<div class="flex-1 min-w-0">
-								<p class="font-medium text-white group-hover:text-blue-400 transition-colors truncate">
-									{member.name}
-								</p>
-								<p class="text-xs text-gray-400 truncate">
-									{member.partyAffiliation || "Independent"}
-								</p>
-							</div>
-							<FluentChevronRight20Filled class="size-4 text-gray-500 group-hover:text-blue-400 flex-shrink-0" />
-						</a>
-					{/each}
-				</div>
-			</div>
-		{/if}
+			{/if}
+		</div>
 	{:else}
 		<!-- No Parliament -->
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-8 text-center">
