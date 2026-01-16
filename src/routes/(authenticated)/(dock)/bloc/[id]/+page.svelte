@@ -186,7 +186,7 @@
 		<form method="POST" action="?/join" use:enhance>
 			<div class="flex items-center justify-between">
 				<div>
-					<h3 class="text-lg font-semibold text-white mb-1">Join This Party</h3>
+					<h3 class="text-lg font-semibold text-white mb-1">Join This Bloc</h3>
 					<p class="text-sm text-gray-400">Become a member and help shape the political landscape</p>
 				</div>
 				<button type="submit" class="btn gap-2" style="background-color: cyan; border: none;">

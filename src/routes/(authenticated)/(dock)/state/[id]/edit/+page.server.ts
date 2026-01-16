@@ -1,12 +1,13 @@
 // src/routes/(authenticated)/(dock)/state/[id]/edit/+page.server.ts
 import { db } from "$lib/server/db";
-import { states, presidents, stateEditCooldowns } from "$lib/server/schema";
+import { states, presidents, stateEditCooldowns, files } from "$lib/server/schema";
 import { error, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editStateSchema } from "./schema";
+import { uploadFileFromForm, getSignedDownloadUrl } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -35,9 +36,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const now = new Date();
 	const cooldownEndTime = cooldown ? new Date(cooldown.lastEditAt.getTime() + 24 * 60 * 60 * 1000) : null;
-
 	const onCooldown = cooldownEndTime && now < cooldownEndTime;
 	const timeRemaining = onCooldown ? Math.ceil((cooldownEndTime!.getTime() - now.getTime()) / (1000 * 60 * 60)) : 0;
+
+	// Get logo URL if exists
+	let logoUrl = null;
+	if (state.logo) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, state.logo)
+		});
+		if (logoFile) {
+			try {
+				logoUrl = await getSignedDownloadUrl(logoFile.key);
+			} catch {
+				logoUrl = null;
+			}
+		}
+	}
 
 	const form = await superValidate(
 		{
@@ -52,7 +67,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		state: {
 			id: state.id,
 			name: state.name,
-			background: state.background
+			background: state.background,
+			logoUrl
 		},
 		onCooldown,
 		timeRemaining
@@ -67,6 +83,13 @@ export const actions: Actions = {
 
 		if (!form.valid) {
 			return message(form, "Please fix the validation errors", { status: 400 });
+		}
+
+		// Get current state
+		const [state] = await db.select().from(states).where(eq(states.id, stateId)).limit(1);
+
+		if (!state) {
+			return message(form, "State not found", { status: 404 });
 		}
 
 		// Verify president
@@ -94,11 +117,42 @@ export const actions: Actions = {
 			}
 		}
 
-		const { name, background } = form.data;
+		const { name, background, logo } = form.data;
 
 		try {
+			let logoFileId: number | null = state.logo;
+
+			// Upload new logo if provided
+			if (logo) {
+				const logoUploadResult = await uploadFileFromForm(logo);
+
+				if (!logoUploadResult.success) {
+					return message(form, "Failed to upload logo", { status: 500 });
+				}
+
+				// Create file record in database
+				const [fileRecord] = await db
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+				logoFileId = fileRecord.id;
+			}
+
 			await db.transaction(async (tx) => {
-				await tx.update(states).set({ name, background }).where(eq(states.id, stateId));
+				await tx
+					.update(states)
+					.set({
+						name,
+						background,
+						logo: logoFileId
+					})
+					.where(eq(states.id, stateId));
 
 				await tx
 					.insert(stateEditCooldowns)
