@@ -137,9 +137,9 @@
 							<option value={newspaper.id}>
 								{newspaper.name}
 								{#if newspaper.rank === "owner"}
-									<span class="badge badge-primary badge-xs">Owner</span>
+									Owner
 								{:else if newspaper.rank === "editor"}
-									<span class="badge badge-secondary badge-xs">Editor</span>
+									Editor
 								{/if}
 							</option>
 						{/each}

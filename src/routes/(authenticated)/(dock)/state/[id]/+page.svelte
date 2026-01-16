@@ -11,11 +11,17 @@
 	import FluentLightbulb20Filled from "~icons/fluent/lightbulb-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
+	import FluentShieldError20Filled from "~icons/fluent/shield-error-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
 	import ProfileItem from "$lib/component/ProfileItem.svelte";
+	import Modal from "$lib/component/Modal.svelte";
 	import { formatDate } from "$lib/utils/formatting.js";
+	import { enhance } from "$app/forms";
 
 	const { data } = $props();
+
+	let showWarModal = $state(false);
+	let isDeclaringWar = $state(false);
 
 	const hasGovernment = $derived(!!data.president || data.ministers.length > 0 || data.parliamentMembers.length > 0);
 
@@ -125,6 +131,31 @@
 					Join Bloc
 				</a>
 			{/if}
+		</div>
+	{/if}
+
+	<!-- War Declaration Button (for foreign presidents) -->
+	{#if data.canDeclareWar}
+		<div class="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
+			<div class="flex items-start gap-4">
+				<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentShieldError20Filled class="size-6 text-red-400" />
+				</div>
+				<div class="flex-1">
+					<h3 class="text-lg font-bold text-white mb-2">Military Actions</h3>
+					<p class="text-sm text-gray-300 mb-4">
+						As a President, you can declare war on this state. This action will have significant consequences.
+					</p>
+					<button
+						type="button"
+						onclick={() => (showWarModal = true)}
+						class="btn btn-sm bg-red-600 hover:bg-red-500 border-0 text-white gap-2"
+					>
+						<FluentShieldError20Filled class="size-4" />
+						Declare War
+					</button>
+				</div>
+			</div>
 		</div>
 	{/if}
 
@@ -466,3 +497,77 @@
 		</section>
 	{/if}
 </div>
+
+<!-- War Declaration Modal -->
+<Modal bind:open={showWarModal} title="Declare War" size="default">
+	<div class="space-y-4">
+		<div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+			<div class="flex items-start gap-3">
+				<FluentWarning20Filled class="size-6 text-red-400 mt-0.5 flex-shrink-0" />
+				<div class="space-y-2">
+					<h4 class="font-bold text-white">⚠️ Critical Warning</h4>
+					<p class="text-sm text-gray-300">
+						You are about to declare war on <strong>{data.state.name}</strong>. This action:
+					</p>
+					<ul class="text-sm text-gray-300 space-y-1 ml-4 list-disc">
+						<li>Cannot be undone</li>
+						<li>Will initiate military conflict</li>
+						<li>May have severe diplomatic consequences</li>
+						<li>Could trigger alliance obligations</li>
+					</ul>
+
+					{#if data.bloc}
+						<div class="mt-3 bg-yellow-900/30 border border-yellow-500/30 rounded-lg p-3">
+							<div class="flex items-start gap-2">
+								<FluentFlag20Filled class="size-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+								<div>
+									<p class="font-semibold text-yellow-300 text-sm">Bloc Member Warning</p>
+									<p class="text-xs text-yellow-200 mt-1">
+										This state is a member of <strong>{data.bloc.name}</strong>. Declaring war may trigger collective
+										defense mechanisms and bring you into conflict with the entire bloc.
+									</p>
+								</div>
+							</div>
+						</div>
+					{/if}
+				</div>
+			</div>
+		</div>
+
+		<form
+			method="POST"
+			action="?/declareWar"
+			use:enhance={() => {
+				isDeclaringWar = true;
+				return async ({ result }) => {
+					isDeclaringWar = false;
+					showWarModal = false;
+				};
+			}}
+		>
+			<div class="flex gap-3 justify-end pt-4">
+				<button
+					type="button"
+					onclick={() => (showWarModal = false)}
+					class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white"
+					disabled={isDeclaringWar}
+				>
+					Cancel
+				</button>
+				<button
+					type="submit"
+					class="btn btn-sm bg-red-600 hover:bg-red-500 border-0 text-white gap-2"
+					disabled={isDeclaringWar}
+				>
+					{#if isDeclaringWar}
+						<span class="loading loading-spinner loading-xs"></span>
+						Declaring...
+					{:else}
+						<FluentShieldError20Filled class="size-4" />
+						Confirm Declaration
+					{/if}
+				</button>
+			</div>
+		</form>
+	</div>
+</Modal>

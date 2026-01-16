@@ -152,6 +152,27 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isForeignMinister = !!foreignMinistry && foreignMinistry.stateId !== stateId;
 	}
 
+	// NEW: Check if current user is president of ANOTHER state
+	let userPresidency = null;
+	let canDeclareWar = false;
+	if (locals.account?.id) {
+		const [userPres] = await db
+			.select({
+				stateId: presidents.stateId,
+				stateBlocId: states.blocId
+			})
+			.from(presidents)
+			.leftJoin(states, eq(presidents.stateId, states.id))
+			.where(eq(presidents.userId, locals.account.id))
+			.limit(1);
+
+		if (userPres && userPres.stateId !== stateId) {
+			userPresidency = userPres;
+			// Can declare war if: not in same bloc (or either has no bloc)
+			canDeclareWar = userPres.stateBlocId !== state.blocId || !userPres.stateBlocId || !state.blocId;
+		}
+	}
+
 	return {
 		state: {
 			id: state.id,
@@ -231,7 +252,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		powerPlants: plants.length,
 		isPresident,
-		isForeignMinister
+		isForeignMinister,
+		canDeclareWar
 	};
 };
 
@@ -283,5 +305,54 @@ export const actions: Actions = {
 		});
 
 		return { success: true, message: "Sanction applied successfully" };
+	},
+
+	declareWar: async ({ params, locals, request }) => {
+		const account = locals.account!;
+		const targetStateId = parseInt(params.id);
+
+		// Verify user is a president
+		const [presidency] = await db
+			.select({
+				stateId: presidents.stateId,
+				stateBlocId: states.blocId
+			})
+			.from(presidents)
+			.leftJoin(states, eq(presidents.stateId, states.id))
+			.where(eq(presidents.userId, account.id))
+			.limit(1);
+
+		if (!presidency) {
+			return fail(403, { message: "Only presidents can declare war" });
+		}
+
+		// Can't declare war on own state
+		if (presidency.stateId === targetStateId) {
+			return fail(400, { message: "Cannot declare war on your own state" });
+		}
+
+		// Get target state bloc info
+		const [targetState] = await db
+			.select({
+				blocId: states.blocId
+			})
+			.from(states)
+			.where(eq(states.id, targetStateId))
+			.limit(1);
+
+		if (!targetState) {
+			return fail(404, { message: "Target state not found" });
+		}
+
+		// Can't declare war on bloc members
+		if (presidency.stateBlocId && targetState.blocId === presidency.stateBlocId) {
+			return fail(400, { message: "Cannot declare war on a state in your own bloc" });
+		}
+
+		// TODO: Add war declaration logic here
+		// For now, this is a placeholder - you'll need to add a wars table to your schema
+		// and implement the actual war mechanics
+
+		return { success: true, message: `War declared on state ${targetStateId}` };
 	}
 };
