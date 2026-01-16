@@ -420,7 +420,7 @@
 							min="1"
 							max="10"
 							bind:value={productionQuantity}
-							class="range range-primary"
+							class="range range-primary w-full"
 						/>
 						<div class="flex justify-between text-xs text-gray-400 px-2 mt-1">
 							<span>1</span>
