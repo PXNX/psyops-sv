@@ -7,7 +7,11 @@
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
+	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
+	import FluentPersonAdd20Filled from "~icons/fluent/person-add-20-filled";
+
 	import CircleLogo from "$lib/component/CircleLogo.svelte";
+	import { enhance } from "$app/forms";
 
 	const { data } = $props();
 
@@ -175,3 +179,39 @@
 		</p>
 	</div>
 </div>
+
+<!-- Join/Leave Bloc -->
+{#if true}
+	<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-6">
+		<form method="POST" action="?/join" use:enhance>
+			<div class="flex items-center justify-between">
+				<div>
+					<h3 class="text-lg font-semibold text-white mb-1">Join This Party</h3>
+					<p class="text-sm text-gray-400">Become a member and help shape the political landscape</p>
+				</div>
+				<button type="submit" class="btn gap-2" style="background-color: cyan; border: none;">
+					<FluentPersonAdd20Filled class="size-5" />
+					Join Bloc
+				</button>
+			</div>
+		</form>
+	</div>
+{:else if !data.isLeader}
+	<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
+		<form method="POST" action="?/leave" use:enhance>
+			<div class="flex items-center justify-between">
+				<div>
+					<h3 class="text-lg font-semibold text-white mb-1">You're a Member</h3>
+					<p class="text-sm text-gray-400">Active since {new Date().toLocaleDateString()}</p>
+				</div>
+				<button
+					type="submit"
+					class="btn btn-sm bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-300 hover:text-red-200 gap-2"
+				>
+					<FluentDismiss20Filled class="size-4" />
+					Leave Bloc
+				</button>
+			</div>
+		</form>
+	</div>
+{/if}

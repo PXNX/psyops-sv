@@ -60,7 +60,7 @@
 
 			<button
 				onclick={() => goto("/newspaper")}
-				class="btn btn-sm btn-circle bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 transition-all"
+				class="btn btn-sm btn-circle bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 transition-all p-2"
 				title="View newspapers"
 			>
 				<FluentEmojiRolledUpNewspaper class="text-xl" />
@@ -92,7 +92,8 @@
 	{:else}
 		<div class="space-y-3 w-full">
 			{#each filteredArticles as article (article.id)}
-				<a href="/posts/{article.id}"
+				<a
+					href="/posts/{article.id}"
 					class="group bg-slate-800/30 rounded-xl border border-white/5 hover:border-white/10 hover:bg-slate-800/50 transition-all shadow-lg hover:shadow-xl w-full"
 				>
 					<div class="p-4">
@@ -147,16 +148,14 @@
 									</span>
 								</div>
 
-								
-									<h3
-										class="font-bold text-lg text-white group-hover:text-purple-400 transition-colors line-clamp-2 mb-3"
-									>
-										{article.title}
-									</h3>
-								</div>
-
-								<FluentChevronRight20Filled class="size-4" />
+								<h3
+									class="font-bold text-lg text-white group-hover:text-purple-400 transition-colors line-clamp-2 mb-3"
+								>
+									{article.title}
+								</h3>
 							</div>
+
+							<FluentChevronRight20Filled class="size-4" />
 						</div>
 					</div>
 				</a>

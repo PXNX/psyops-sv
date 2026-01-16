@@ -1673,3 +1673,31 @@ export const powerPlantsRelations = relations(powerPlants, ({ one }) => ({
 		references: [accounts.id]
 	})
 }));
+
+export const blocActionCooldowns = pgTable("bloc_action_cooldowns", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	lastActionAt: timestamp("last_action_at").defaultNow().notNull()
+});
+
+export const stateEditCooldowns = pgTable("state_edit_cooldowns", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	lastEditAt: timestamp("last_edit_at").defaultNow().notNull()
+});
+
+export const blocRecommendedTemplates = pgTable("bloc_recommended_templates", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	blocId: integer("bloc_id")
+		.notNull()
+		.references(() => blocs.id, { onDelete: "cascade" }),
+	templateId: integer("template_id")
+		.notNull()
+		.references(() => militaryUnitTemplates.id, { onDelete: "cascade" })
+});

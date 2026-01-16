@@ -293,15 +293,19 @@
 						href="/user/{data.president.userId}"
 						class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
 					>
-						<div class="size-12 bg-amber-600/20 rounded-lg flex items-center justify-center">
+						<div
+							class="size-12 rounded-lg flex items-center justify-center"
+							style="background-color: {data.state.background}20"
+						>
+							<!-- todo: use colors from state background properly data.state.background -->
 							{#if data.president.logo}
 								<img src={data.president.logo} alt={data.president.name} class="size-8 rounded object-cover" />
 							{:else}
-								<FluentShield20Filled class="size-6 text-amber-400" />
+								<FluentShield20Filled class="size-6 text-[{data.state.background}]" />
 							{/if}
 						</div>
 						<div class="flex-1 min-w-0">
-							<p class="font-semibold text-white group-hover:text-amber-400 transition-colors truncate">
+							<p class="font-semibold text-white group-hover:text-[{data.state.background}] transition-colors truncate">
 								{data.president.name}
 							</p>
 							<p class="text-xs text-gray-400 truncate">
@@ -447,17 +451,6 @@
 		</section>
 	{/if}
 
-	<!-- State Information -->
-	{#if data.state.background}
-		<section class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
-			<h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-				<FluentInfo20Filled class="size-6 text-gray-400" />
-				Background
-			</h2>
-			<p class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap">{data.state.background}</p>
-		</section>
-	{/if}
-
 	<!-- Sanction Warning (for foreign ministers) -->
 	{#if data.isForeignMinister}
 		<section class="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
@@ -478,3 +471,25 @@
 		</section>
 	{/if}
 </div>
+
+<!-- todo: integrat buttons better and with correct states. show both only if user is president of this state -->
+<a
+	href="/state/{data.state.id}/edit"
+	class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+>
+	Edit State
+</a>
+<!-- todo: only show thi if user is president and stat is not membr of a bloc, otherwise link th bloc -->
+<a
+	href="/bloc"
+	class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+>
+	Join Bloc
+</a>
+
+<!-- todo: remove this. this functionality belongs to page /bloc -->
+<a
+	href="/bloc/create"
+	class="btn btn-sm bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/30 text-emerald-300 hover:text-emerald-200 gap-2"
+	>Create Bloc
+</a>

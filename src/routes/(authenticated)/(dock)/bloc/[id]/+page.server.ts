@@ -1,9 +1,16 @@
 // src/routes/bloc/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { blocs, states, presidents, blocRecommendedTemplates, militaryUnitTemplates } from "$lib/server/schema";
-import { error } from "@sveltejs/kit";
+import {
+	blocs,
+	states,
+	presidents,
+	blocRecommendedTemplates,
+	militaryUnitTemplates,
+	blocActionCooldowns
+} from "$lib/server/schema";
+import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
-import type { PageServerLoad } from "./$types";
+import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const blocId = parseInt(params.id);
@@ -101,4 +108,101 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isLeader,
 		blocLeaderId: blocLeader
 	};
+};
+
+export const actions: Actions = {
+	join: async ({ params, locals }) => {
+		const account = locals.account!;
+		const blocId = parseInt(params.id);
+
+		// Check if user is president
+		const [presidency] = await db
+			.select({ stateId: presidents.stateId, currentBlocId: states.blocId })
+			.from(presidents)
+			.innerJoin(states, eq(presidents.stateId, states.id))
+			.where(eq(presidents.userId, account.id))
+			.limit(1);
+
+		if (!presidency) {
+			return fail(403, { error: "Only state presidents can join blocs" });
+		}
+
+		if (presidency.currentBlocId) {
+			return fail(400, { error: "Your state is already in a bloc" });
+		}
+
+		// Check cooldown
+		const [cooldown] = await db
+			.select()
+			.from(blocActionCooldowns)
+			.where(eq(blocActionCooldowns.userId, account.id))
+			.limit(1);
+
+		const now = new Date();
+		if (cooldown) {
+			const cooldownEnd = new Date(cooldown.lastActionAt.getTime() + 24 * 60 * 60 * 1000);
+			if (now < cooldownEnd) {
+				const hoursLeft = Math.ceil((cooldownEnd.getTime() - now.getTime()) / (1000 * 60 * 60));
+				return fail(429, { error: `Wait ${hoursLeft}h before joining/leaving a bloc` });
+			}
+		}
+
+		await db.transaction(async (tx) => {
+			await tx.update(states).set({ blocId }).where(eq(states.id, presidency.stateId));
+
+			await tx
+				.insert(blocActionCooldowns)
+				.values({ userId: account.id, lastActionAt: now })
+				.onConflictDoUpdate({
+					target: blocActionCooldowns.userId,
+					set: { lastActionAt: now }
+				});
+		});
+
+		return { success: true };
+	},
+
+	leave: async ({ params, locals }) => {
+		const account = locals.account!;
+
+		const [presidency] = await db
+			.select({ stateId: presidents.stateId })
+			.from(presidents)
+			.where(eq(presidents.userId, account.id))
+			.limit(1);
+
+		if (!presidency) {
+			return fail(403, { error: "Only state presidents can leave blocs" });
+		}
+
+		// Check cooldown
+		const [cooldown] = await db
+			.select()
+			.from(blocActionCooldowns)
+			.where(eq(blocActionCooldowns.userId, account.id))
+			.limit(1);
+
+		const now = new Date();
+		if (cooldown) {
+			const cooldownEnd = new Date(cooldown.lastActionAt.getTime() + 24 * 60 * 60 * 1000);
+			if (now < cooldownEnd) {
+				const hoursLeft = Math.ceil((cooldownEnd.getTime() - now.getTime()) / (1000 * 60 * 60));
+				return fail(429, { error: `Wait ${hoursLeft}h` });
+			}
+		}
+
+		await db.transaction(async (tx) => {
+			await tx.update(states).set({ blocId: null }).where(eq(states.id, presidency.stateId));
+
+			await tx
+				.insert(blocActionCooldowns)
+				.values({ userId: account.id, lastActionAt: now })
+				.onConflictDoUpdate({
+					target: blocActionCooldowns.userId,
+					set: { lastActionAt: now }
+				});
+		});
+
+		redirect(303, "/state/" + presidency.stateId);
+	}
 };
