@@ -66,7 +66,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			// This ensures new users go through the welcome process
 			await db.insert(userProfiles).values({
 				accountId: account.id,
-				name: null, // Intentionally null - user must complete profile
 				logo: null,
 				bio: null
 			});
