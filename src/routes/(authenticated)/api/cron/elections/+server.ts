@@ -48,10 +48,10 @@ export const GET: RequestHandler = async ({ request }) => {
 
 			// 3. Schedule next election (1 week from now)
 			const nextElectionStart = new Date(now);
-			nextElectionStart.setDate(nextElectionStart.getDate() + 7); // Start in 1 week
+			nextElectionStart.setDate(nextElectionStart.getDate() + 7);
 
 			const nextElectionEnd = new Date(nextElectionStart);
-			nextElectionEnd.setDate(nextElectionEnd.getDate() + 3); // 3-day voting period
+			nextElectionEnd.setDate(nextElectionEnd.getDate() + 3);
 
 			await db.insert(parliamentaryElections).values({
 				stateId: election.stateId,
@@ -59,7 +59,7 @@ export const GET: RequestHandler = async ({ request }) => {
 				endDate: nextElectionEnd,
 				status: "scheduled",
 				totalSeats: election.totalSeats,
-				isInaugural: false // Subsequent elections are not inaugural
+				isInaugural: false
 			});
 
 			scheduled++;
@@ -90,7 +90,7 @@ export const GET: RequestHandler = async ({ request }) => {
 async function processElectionResults(election: any) {
 	console.log(`Processing election ${election.id} for state ${election.stateId}`);
 
-	// Check if already processed (idempotency check)
+	// Check if already processed
 	const existingResults = await db
 		.select()
 		.from(electionResults)
@@ -102,23 +102,17 @@ async function processElectionResults(election: any) {
 		return;
 	}
 
-	// Get all votes for this election
 	const votes = await db.select().from(electionVotes).where(eq(electionVotes.electionId, election.id));
-
-	// Count votes per party
 	const votesByParty: Record<number, number> = {};
 	votes.forEach((vote) => {
 		votesByParty[vote.partyId] = (votesByParty[vote.partyId] || 0) + 1;
 	});
 
 	const totalVotes = votes.length;
-
-	// Get all parties in the state
 	const parties = await db.select().from(politicalParties).where(eq(politicalParties.stateId, election.stateId));
 
 	if (parties.length === 0) {
 		console.warn(`No parties found for state ${election.stateId}`);
-		// Mark as completed anyway
 		await db
 			.update(parliamentaryElections)
 			.set({ status: "completed" })
@@ -130,11 +124,9 @@ async function processElectionResults(election: any) {
 	if (totalVotes === 0) {
 		console.warn(`No votes cast in election ${election.id}, using equal distribution`);
 
-		// Get member counts for each party
 		const partiesWithMembers = await Promise.all(
 			parties.map(async (party) => {
 				const members = await db.select().from(partyMembers).where(eq(partyMembers.partyId, party.id));
-
 				return {
 					...party,
 					memberCount: members.length,
@@ -143,16 +135,13 @@ async function processElectionResults(election: any) {
 			})
 		);
 
-		// Sort parties: most members first, then by creation date (oldest first)
 		const sortedParties = partiesWithMembers.sort((a, b) => {
 			if (b.memberCount !== a.memberCount) {
-				return b.memberCount - a.memberCount; // Most members first
+				return b.memberCount - a.memberCount;
 			}
-			// If same member count, oldest party wins
 			return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
 		});
 
-		// Distribute seats equally among all parties
 		const seatsPerParty = Math.floor(election.totalSeats / parties.length);
 		const remainderSeats = election.totalSeats % parties.length;
 
@@ -164,10 +153,8 @@ async function processElectionResults(election: any) {
 			seats: number;
 		}> = [];
 
-		// Assign seats equally (order doesn't matter for seat distribution)
 		for (let i = 0; i < parties.length; i++) {
 			const party = parties[i];
-			// Distribute remainder seats evenly (first N parties get +1)
 			const seats = seatsPerParty + (i < remainderSeats ? 1 : 0);
 
 			partyResults.push({
@@ -178,7 +165,6 @@ async function processElectionResults(election: any) {
 				seats: seats
 			});
 
-			// Store results
 			await db.insert(electionResults).values({
 				electionId: election.id,
 				partyId: party.id,
@@ -188,18 +174,19 @@ async function processElectionResults(election: any) {
 			});
 		}
 
-		// Clear current parliament
 		await db.delete(parliamentMembers).where(eq(parliamentMembers.stateId, election.stateId));
 
-		// Assign parliament members
 		for (const result of partyResults) {
 			if (result.seats > 0) {
 				const partyWithMembers = sortedParties.find((p) => p.id === result.partyId);
 				if (!partyWithMembers) continue;
 
+				// Sort members: leader first, then deputy, then by seniority
 				const sortedMembers = partyWithMembers.members.sort((a, b) => {
 					if (a.role === "leader") return -1;
 					if (b.role === "leader") return 1;
+					if (a.role === "deputy") return -1;
+					if (b.role === "deputy") return 1;
 					return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
 				});
 
@@ -226,10 +213,7 @@ async function processElectionResults(election: any) {
 			}
 		}
 
-		// Winning party is the one with most members (first in sorted list)
 		const winningParty = sortedParties[0];
-
-		// Get leader of winning party
 		const leaderMember = await db
 			.select()
 			.from(partyMembers)
@@ -238,15 +222,11 @@ async function processElectionResults(election: any) {
 
 		if (leaderMember.length > 0) {
 			const leader = leaderMember[0];
-
-			// Remove current president
 			await db.delete(presidents).where(eq(presidents.stateId, election.stateId));
 
-			// Calculate term
 			const previousPresidents = await db.select().from(presidents).where(eq(presidents.userId, leader.userId));
 			const newTerm = previousPresidents.length + 1;
 
-			// Assign president
 			await db.insert(presidents).values({
 				userId: leader.userId,
 				stateId: election.stateId,
@@ -257,11 +237,8 @@ async function processElectionResults(election: any) {
 			console.log(
 				`🎉 ${winningParty.name} (${winningParty.memberCount} members) leader appointed as President - no votes cast`
 			);
-		} else {
-			console.warn(`⚠️  Winning party ${winningParty.name} has no leader to appoint as president`);
 		}
 
-		// Mark election as completed
 		await db
 			.update(parliamentaryElections)
 			.set({ status: "completed" })
@@ -271,11 +248,10 @@ async function processElectionResults(election: any) {
 			`✅ Election ${election.id} processed with zero votes - seats distributed equally, ${winningParty.name} wins presidency`
 		);
 
-		return; // Exit early, don't run the normal vote-counting logic
+		return;
 	}
 
-	// NORMAL VOTE-COUNTING LOGIC (when totalVotes > 0)
-	// Calculate seat distribution using D'Hondt method (proportional representation)
+	// NORMAL VOTE-COUNTING LOGIC
 	const partyResults: Array<{
 		partyId: number;
 		partyName: string;
@@ -284,20 +260,19 @@ async function processElectionResults(election: any) {
 		seats: number;
 	}> = [];
 
-	// D'Hondt method for seat allocation
 	const seatAllocations: Record<number, number> = {};
 	parties.forEach((party) => {
 		seatAllocations[party.id] = 0;
 	});
 
-	// Allocate seats one by one using D'Hondt quotients
+	// D'Hondt method
 	for (let seat = 0; seat < election.totalSeats; seat++) {
 		let maxQuotient = 0;
 		let winningParty = parties[0].id;
 
 		parties.forEach((party) => {
 			const partyVotes = votesByParty[party.id] || 0;
-			if (partyVotes === 0) return; // Skip parties with no votes
+			if (partyVotes === 0) return;
 
 			const quotient = partyVotes / (seatAllocations[party.id] + 1);
 			if (quotient > maxQuotient) {
@@ -309,7 +284,6 @@ async function processElectionResults(election: any) {
 		seatAllocations[winningParty]++;
 	}
 
-	// Build results array
 	for (const party of parties) {
 		const partyVotes = votesByParty[party.id] || 0;
 		const percentage = totalVotes > 0 ? (partyVotes / totalVotes) * 100 : 0;
@@ -324,7 +298,6 @@ async function processElectionResults(election: any) {
 		});
 	}
 
-	// Store results in database
 	for (const result of partyResults) {
 		await db.insert(electionResults).values({
 			electionId: election.id,
@@ -335,51 +308,45 @@ async function processElectionResults(election: any) {
 		});
 	}
 
-	// Clear current parliament members for this state
 	await db.delete(parliamentMembers).where(eq(parliamentMembers.stateId, election.stateId));
 
-	// Assign new parliament members based on party results
 	for (const result of partyResults) {
 		if (result.seats > 0) {
-			// Get party members
 			const members = await db.select().from(partyMembers).where(eq(partyMembers.partyId, result.partyId));
 
-			// Sort: leader first, then by join date (seniority)
+			// Sort: leader first, then deputy, then by seniority
 			const sortedMembers = members.sort((a, b) => {
 				if (a.role === "leader") return -1;
 				if (b.role === "leader") return 1;
+				if (a.role === "deputy") return -1;
+				if (b.role === "deputy") return 1;
 				return new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime();
 			});
 
-			// Take the first N members based on seats won
 			const selectedMembers = sortedMembers.slice(0, result.seats);
 
-			// Create parliament member entries for selected members
 			for (const member of selectedMembers) {
 				await db.insert(parliamentMembers).values({
 					userId: member.userId,
 					stateId: election.stateId,
 					partyAffiliation: result.partyName,
-					term: 1 // Could be calculated based on election cycle
+					term: 1
 				});
 			}
 
 			console.log(`✅ Party ${result.partyName} won ${result.seats} seats, assigned ${selectedMembers.length} members`);
 
-			// If party doesn't have enough members, log a warning
 			if (members.length < result.seats) {
 				console.warn(`⚠️  Party ${result.partyName} won ${result.seats} seats but only has ${members.length} members`);
 			}
 		}
 	}
 
-	// Find the party with the most votes and make their leader president
 	const winningParty = partyResults.reduce((prev, current) => {
 		return current.votes > prev.votes ? current : prev;
 	});
 
 	if (winningParty.votes > 0) {
-		// Get the leader of the winning party
 		const leaderMember = await db
 			.select()
 			.from(partyMembers)
@@ -388,16 +355,11 @@ async function processElectionResults(election: any) {
 
 		if (leaderMember.length > 0) {
 			const leader = leaderMember[0];
-
-			// Remove current president (if any)
 			await db.delete(presidents).where(eq(presidents.stateId, election.stateId));
 
-			// Calculate new term number
 			const previousPresidents = await db.select().from(presidents).where(eq(presidents.userId, leader.userId));
-
 			const newTerm = previousPresidents.length + 1;
 
-			// Assign new president
 			await db.insert(presidents).values({
 				userId: leader.userId,
 				stateId: election.stateId,
@@ -408,14 +370,9 @@ async function processElectionResults(election: any) {
 			console.log(
 				`🎉 ${winningParty.partyName} leader (user ${leader.userId}) appointed as President of state ${election.stateId}`
 			);
-		} else {
-			console.warn(`⚠️  Winning party ${winningParty.partyName} has no leader to appoint as president`);
 		}
-	} else {
-		console.warn(`⚠️  No party received any votes in election ${election.id}`);
 	}
 
-	// Mark election as completed
 	await db
 		.update(parliamentaryElections)
 		.set({ status: "completed" })
