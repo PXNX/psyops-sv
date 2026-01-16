@@ -1,12 +1,13 @@
 // src/routes/(authenticated)/(dock)/bloc/create/+page.server.ts
 import { db } from "$lib/server/db";
-import { blocs, states, presidents, blocActionCooldowns } from "$lib/server/schema";
+import { blocs, states, presidents, blocActionCooldowns, files } from "$lib/server/schema";
 import { error, redirect } from "@sveltejs/kit";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createBlocSchema } from "./schema";
+import { uploadFileFromForm } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -40,7 +41,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const now = new Date();
 	const cooldownEndTime = cooldown ? new Date(cooldown.lastActionAt.getTime() + 24 * 60 * 60 * 1000) : null;
-
 	const onCooldown = cooldownEndTime && now < cooldownEndTime;
 	const timeRemaining = onCooldown ? Math.ceil((cooldownEndTime!.getTime() - now.getTime()) / (1000 * 60 * 60)) : 0;
 
@@ -96,24 +96,48 @@ export const actions: Actions = {
 			}
 		}
 
-		const { name, color, description } = form.data;
+		const { name, color, description, logo } = form.data;
 
 		// Check if name already exists
 		const [existing] = await db.select().from(blocs).where(eq(blocs.name, name)).limit(1);
-
 		if (existing) {
 			return message(form, "A bloc with this name already exists", { status: 400 });
 		}
 
 		try {
 			const result = await db.transaction(async (tx) => {
+				let logoFileId: number | null = null;
+
+				// Upload logo if provided
+				if (logo) {
+					const logoUploadResult = await uploadFileFromForm(logo);
+
+					if (!logoUploadResult.success) {
+						throw new Error("Failed to upload logo");
+					}
+
+					// Create file record in database
+					const [fileRecord] = await tx
+						.insert(files)
+						.values({
+							key: logoUploadResult.key,
+							fileName: logo.name,
+							contentType: "image/webp",
+							sizeBytes: logo.size,
+							uploadedBy: account.id
+						})
+						.returning();
+					logoFileId = fileRecord.id;
+				}
+
 				// Create the bloc
 				const [newBloc] = await tx
 					.insert(blocs)
 					.values({
 						name,
 						color,
-						description: description || null
+						description: description || null,
+						logo: logoFileId
 					})
 					.returning();
 
@@ -135,9 +159,12 @@ export const actions: Actions = {
 				return newBloc;
 			});
 
-			redirect(303, `/bloc/${result.id}`);
+			throw redirect(303, `/bloc/${result.id}`);
 		} catch (e) {
 			console.error("Error creating bloc:", e);
+			if (e instanceof Error && e.message === "Failed to upload logo") {
+				return message(form, "Failed to upload logo", { status: 500 });
+			}
 			return message(form, "Failed to create bloc", { status: 500 });
 		}
 	}

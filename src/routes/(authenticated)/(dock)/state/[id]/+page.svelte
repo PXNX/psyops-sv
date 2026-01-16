@@ -8,11 +8,11 @@
 	import FluentOrganization20Filled from "~icons/fluent/organization-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
-	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
-	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentLightbulb20Filled from "~icons/fluent/lightbulb-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
+	import ProfileItem from "$lib/component/ProfileItem.svelte";
 	import { formatDate } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
@@ -89,9 +89,13 @@
 				<div class="text-center space-y-1">
 					<h1 class="text-3xl font-bold text-white tracking-tight">{data.state.name}</h1>
 					{#if data.bloc}
-						<p class="text-sm font-medium" style="color: {data.bloc.color};">
+						<a
+							href="/bloc/{data.bloc.id}"
+							class="text-sm font-medium hover:underline inline-block"
+							style="color: {data.bloc.color};"
+						>
 							{data.bloc.name}
-						</p>
+						</a>
 					{/if}
 					{#if data.state.description}
 						<p class="text-sm text-gray-300 max-w-md mt-2">{data.state.description}</p>
@@ -100,6 +104,29 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- President Action Buttons -->
+	{#if data.isPresident}
+		<div class="flex gap-2 flex-wrap">
+			<a
+				href="/state/{data.state.id}/edit"
+				class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+			>
+				<FluentEdit20Filled class="size-4" />
+				Edit State
+			</a>
+
+			{#if !data.bloc}
+				<a
+					href="/bloc"
+					class="btn btn-sm bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30 text-purple-300 hover:text-purple-200 gap-2"
+				>
+					<FluentFlag20Filled class="size-4" />
+					Join Bloc
+				</a>
+			{/if}
+		</div>
+	{/if}
 
 	<!-- Stats Grid -->
 	<section class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -289,78 +316,46 @@
 			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
 				<!-- President -->
 				{#if data.president}
-					<a
+					<ProfileItem
 						href="/user/{data.president.userId}"
-						class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
-					>
-						<div
-							class="size-12 rounded-lg flex items-center justify-center"
-							style="background-color: {data.state.background}20"
-						>
-							<!-- todo: use colors from state background properly data.state.background -->
-							{#if data.president.logo}
-								<img src={data.president.logo} alt={data.president.name} class="size-8 rounded object-cover" />
-							{:else}
-								<FluentShield20Filled class="size-6 text-[{data.state.background}]" />
-							{/if}
-						</div>
-						<div class="flex-1 min-w-0">
-							<p class="font-semibold text-white group-hover:text-[{data.state.background}] transition-colors truncate">
-								{data.president.name}
-							</p>
-							<p class="text-xs text-gray-400 truncate">
-								President • Term {data.president.term} • {formatDate(data.president.electedAt)}
-							</p>
-						</div>
-						<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-amber-400 transition-colors" />
-					</a>
+						logo={data.president.logo}
+						logoAlt={data.president.name}
+						placeholderIcon={FluentShield20Filled}
+						placeholderGradient="from-amber-600/20 to-amber-700/10"
+						title={data.president.name}
+						subtitle="President • Term {data.president.term} • {formatDate(data.president.electedAt)}"
+						hoverColor="yellow"
+					/>
 				{/if}
 
 				<!-- Ministers -->
 				{#if data.ministers.length > 0}
 					<div class="grid md:grid-cols-2 gap-2 pt-2">
 						{#each data.ministers as minister}
-							<a
+							<ProfileItem
 								href="/user/{minister.userId}"
-								class="flex items-center gap-2 group bg-slate-700/30 rounded-lg p-2 hover:bg-slate-700/50 transition-all"
-							>
-								<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center flex-shrink-0">
-									{#if minister.logo}
-										<img src={minister.logo} alt={minister.name} class="size-6 rounded object-cover" />
-									{:else}
-										<FluentShield20Filled class="size-5 text-purple-400" />
-									{/if}
-								</div>
-								<div class="flex-1 min-w-0">
-									<p class="text-sm font-semibold text-white group-hover:text-purple-400 transition-colors truncate">
-										{minister.name}
-									</p>
-									<p class="text-xs text-gray-400 capitalize truncate">
-										{minister.ministry.replace("_", " ")}
-									</p>
-								</div>
-							</a>
+								logo={minister.logo}
+								logoAlt={minister.name}
+								placeholderIcon={FluentShield20Filled}
+								placeholderGradient="from-purple-600/20 to-purple-700/10"
+								title={minister.name}
+								subtitle={minister.ministry.replace("_", " ")}
+								hoverColor="purple"
+							/>
 						{/each}
 					</div>
 				{/if}
 
 				<!-- Parliament Link -->
 				{#if data.parliamentMembers.length > 0}
-					<a
+					<ProfileItem
 						href="/state/{data.state.id}/parliament"
-						class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all mt-2"
-					>
-						<div class="size-12 bg-indigo-600/20 rounded-lg flex items-center justify-center">
-							<FluentOrganization20Filled class="size-6 text-indigo-400" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<p class="font-semibold text-white group-hover:text-indigo-400 transition-colors truncate">
-								{data.parliamentMembers.length} Parliament Members
-							</p>
-							<p class="text-xs text-gray-400 truncate">View legislature</p>
-						</div>
-						<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-indigo-400 transition-colors" />
-					</a>
+						placeholderIcon={FluentOrganization20Filled}
+						placeholderGradient="from-indigo-600/20 to-indigo-700/10"
+						title="{data.parliamentMembers.length} Parliament Members"
+						subtitle="View legislature"
+						hoverColor="purple"
+					/>
 				{/if}
 			</div>
 		</section>
@@ -471,25 +466,3 @@
 		</section>
 	{/if}
 </div>
-
-<!-- todo: integrat buttons better and with correct states. show both only if user is president of this state -->
-<a
-	href="/state/{data.state.id}/edit"
-	class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
->
-	Edit State
-</a>
-<!-- todo: only show thi if user is president and stat is not membr of a bloc, otherwise link th bloc -->
-<a
-	href="/bloc"
-	class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
->
-	Join Bloc
-</a>
-
-<!-- todo: remove this. this functionality belongs to page /bloc -->
-<a
-	href="/bloc/create"
-	class="btn btn-sm bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/30 text-emerald-300 hover:text-emerald-200 gap-2"
-	>Create Bloc
-</a>

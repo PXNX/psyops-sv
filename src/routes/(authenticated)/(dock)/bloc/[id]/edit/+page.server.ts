@@ -1,12 +1,13 @@
 // src/routes/bloc/[id]/edit/+page.server.ts
 import { db } from "$lib/server/db";
-import { blocs, states, presidents, militaryUnitTemplates, blocRecommendedTemplates } from "$lib/server/schema";
+import { blocs, states, presidents, militaryUnitTemplates, blocRecommendedTemplates, files } from "$lib/server/schema";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, inArray } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editBlocSchema } from "./schema";
+import { uploadFileFromForm, getSignedDownloadUrl } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -47,6 +48,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const recommendedTemplateIds = currentRecommendations.map((r) => r.templateId);
 
+	// Get logo URL if exists
+	let logoUrl = null;
+	if (bloc.logo) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, bloc.logo)
+		});
+		if (logoFile) {
+			try {
+				logoUrl = await getSignedDownloadUrl(logoFile.key);
+			} catch {
+				logoUrl = null;
+			}
+		}
+	}
+
 	// Initialize form with current values
 	const form = await superValidate(
 		{
@@ -63,7 +79,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			id: bloc.id,
 			name: bloc.name,
 			color: bloc.color,
-			description: bloc.description
+			description: bloc.description,
+			logoUrl
 		},
 		allTemplates: allTemplates.map((t) => ({
 			id: t.id,
@@ -85,6 +102,13 @@ export const actions: Actions = {
 			return message(form, "Please fix the validation errors", { status: 400 });
 		}
 
+		// Get current bloc
+		const [bloc] = await db.select().from(blocs).where(eq(blocs.id, blocId)).limit(1);
+
+		if (!bloc) {
+			return message(form, "Bloc not found", { status: 404 });
+		}
+
 		// Verify user is president of a member state
 		const memberStates = await db
 			.select({
@@ -101,27 +125,48 @@ export const actions: Actions = {
 			return message(form, "Only presidents of member states can edit the bloc", { status: 403 });
 		}
 
-		const { name, color, description } = form.data;
+		const { name, color, description, logo } = form.data;
 
 		// Check if name is already taken by another bloc
-		const existingBloc = await db
-			.select()
-			.from(blocs)
-			.where(and(eq(blocs.name, name), eq(blocs.id, blocId)))
-			.limit(1);
+		const existingBloc = await db.select().from(blocs).where(eq(blocs.name, name)).limit(1);
 
 		if (existingBloc.length > 0 && existingBloc[0].id !== blocId) {
 			return message(form, "A bloc with this name already exists", { status: 400 });
 		}
 
 		try {
+			let logoFileId: number | null = bloc.logo;
+
+			// Upload new logo if provided
+			if (logo) {
+				const logoUploadResult = await uploadFileFromForm(logo);
+
+				if (!logoUploadResult.success) {
+					return message(form, "Failed to upload logo", { status: 500 });
+				}
+
+				// Create file record in database
+				const [fileRecord] = await db
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+				logoFileId = fileRecord.id;
+			}
+
 			// Update bloc
 			await db
 				.update(blocs)
 				.set({
 					name,
 					color,
-					description: description || null
+					description: description || null,
+					logo: logoFileId
 				})
 				.where(eq(blocs.id, blocId));
 
