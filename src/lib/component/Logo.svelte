@@ -40,7 +40,7 @@
 	const shouldShow = $derived(!!src && !error);
 </script>
 
-<div class="relative overflow-hidden {className}">
+<div class="relative overflow-hidden {className} rounded-sm size-10">
 	{#if shouldShow}
 		<img
 			bind:this={img}

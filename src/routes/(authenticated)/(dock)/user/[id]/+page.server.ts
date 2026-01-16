@@ -12,7 +12,10 @@ import {
 	userMedals,
 	presidents,
 	ministers,
-	governors
+	governors,
+	newspapers,
+	journalists,
+	generalReports
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error, fail } from "@sveltejs/kit";
@@ -167,6 +170,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		availableMinistries = allMinistries.filter((m) => !occupied.includes(m));
 	}
 
+	// Get newspapers owned by current user (for add author feature)
+	let ownedNewspapers: Array<{ id: number; name: string }> = [];
+	if (account.id !== params.id) {
+		const journalistRecords = await db.query.journalists.findMany({
+			where: and(eq(journalists.userId, account.id), eq(journalists.rank, "owner")),
+			with: {
+				newspaper: true
+			}
+		});
+
+		ownedNewspapers = journalistRecords.map((j) => ({
+			id: j.newspaper.id,
+			name: j.newspaper.name
+		}));
+	}
+
 	return {
 		user: {
 			id: user.id,
@@ -240,7 +259,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			? {
 					stateId: currentUserPresidency.stateId
 				}
-			: null
+			: null,
+		ownedNewspapers,
+		account
 	};
 };
 
@@ -414,6 +435,117 @@ export const actions: Actions = {
 		} catch (error) {
 			console.error("Error dismissing minister:", error);
 			return fail(500, { error: "Failed to dismiss minister" });
+		}
+	},
+
+	reportAccount: async ({ request, params, locals }) => {
+		const account = locals.account!;
+
+		// Cannot report self
+		if (account.id === params.id) {
+			return fail(400, { error: "Cannot report yourself" });
+		}
+
+		const formData = await request.formData();
+		const reason = formData.get("reason") as string;
+		const violationType = formData.get("violationType") as string;
+
+		if (!reason || reason.length < 10) {
+			return fail(400, { error: "Please provide a detailed reason (at least 10 characters)" });
+		}
+
+		if (reason.length > 500) {
+			return fail(400, { error: "Reason must be less than 500 characters" });
+		}
+
+		const validViolationTypes = [
+			"insult",
+			"spam",
+			"pornography",
+			"hate_speech",
+			"graphic_violence",
+			"privacy_violation",
+			"other"
+		];
+
+		if (!validViolationTypes.includes(violationType)) {
+			return fail(400, { error: "Invalid violation type" });
+		}
+
+		try {
+			await db.insert(generalReports).values({
+				targetType: "account",
+				targetId: params.id,
+				reporterId: account.id,
+				reason,
+				violationType: violationType as any,
+				status: "pending"
+			});
+
+			return {
+				success: true,
+				message: "Report submitted successfully. Thank you for helping keep our community safe."
+			};
+		} catch (error) {
+			console.error("Error submitting report:", error);
+			return fail(500, { error: "Failed to submit report" });
+		}
+	},
+
+	addAuthor: async ({ request, params, locals }) => {
+		const account = locals.account!;
+
+		// Cannot add self
+		if (account.id === params.id) {
+			return fail(400, { error: "Cannot add yourself as an author" });
+		}
+
+		const formData = await request.formData();
+		const newspaperId = parseInt(formData.get("newspaperId") as string);
+		const rank = formData.get("rank") as string;
+
+		if (!newspaperId) {
+			return fail(400, { error: "Newspaper is required" });
+		}
+
+		const validRanks = ["author", "editor"];
+		if (!validRanks.includes(rank)) {
+			return fail(400, { error: "Invalid rank" });
+		}
+
+		// Verify ownership
+		const ownership = await db.query.journalists.findFirst({
+			where: and(
+				eq(journalists.newspaperId, newspaperId),
+				eq(journalists.userId, account.id),
+				eq(journalists.rank, "owner")
+			)
+		});
+
+		if (!ownership) {
+			return fail(403, { error: "You don't own this newspaper" });
+		}
+
+		// Check if user is already an author/editor
+		const existingJournalist = await db.query.journalists.findFirst({
+			where: and(eq(journalists.newspaperId, newspaperId), eq(journalists.userId, params.id))
+		});
+
+		if (existingJournalist) {
+			return fail(400, { error: "This user is already a journalist at this newspaper" });
+		}
+
+		try {
+			await db.insert(journalists).values({
+				userId: params.id,
+				newspaperId,
+				rank: rank as any
+			});
+
+			return { success: true, message: `Successfully added as ${rank}` };
+		} catch (error) {
+			console.error("Error adding author:", error);
+			return fail(500, { error: "Failed to add author" });
 		}
 	}
 };
