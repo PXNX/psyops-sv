@@ -324,7 +324,7 @@
 								/>
 
 								<div class="flex-1 min-w-0 text-left">
-									<p class="text-sm font-medium text-white truncate">{party}</p>
+									<p class="text-sm font-medium text-white truncate">{partyData?.abbreviation || party}</p>
 									<p class="text-xs text-gray-400">{seats} ({Math.round((seats / data.totalSeats) * 100)}%)</p>
 								</div>
 							</button>

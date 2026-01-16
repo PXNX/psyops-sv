@@ -12,6 +12,7 @@
 	import Logo from "$lib/component/Logo.svelte";
 	import { formatDistanceToNow, format } from "date-fns";
 	import { formatDateTime } from "$lib/utils/formatting.js";
+	import ShareButton from "$lib/component/ShareButton.svelte";
 
 	const { data, form } = $props();
 
@@ -193,13 +194,7 @@
 				</form>
 
 				<div class="flex gap-2">
-					<button
-						class="btn gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 transition-all"
-						onclick={handleShare}
-					>
-						<FluentShare20Filled class="size-5" />
-						<span class="hidden sm:inline">Share</span>
-					</button>
+					<ShareButton title={data.article.title} />
 
 					{#if data.isAuthor}
 						<button

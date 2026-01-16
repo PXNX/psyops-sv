@@ -1,3 +1,4 @@
+// src/lib/util.ts
 export const shareLink = (title: string, url = window.location.href) => {
 	if (navigator.share) {
 		navigator

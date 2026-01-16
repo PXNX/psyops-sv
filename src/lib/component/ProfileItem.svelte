@@ -1,48 +1,70 @@
 <!-- src/lib/component/ProfileItem.svelte -->
 <script lang="ts">
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-	import SquareLogo from "./SquareLogo.svelte";
-	import type { Component } from "svelte";
+	import Logo from "$lib/component/Logo.svelte";
+
+	interface Props {
+		href?: string;
+		logo?: string | null;
+		logoAlt?: string;
+		placeholderIcon?: any;
+		placeholderGradient?: string;
+		title: string;
+		subtitle: string;
+		hoverColor?: string;
+		icon?: string;
+		onclick?: () => void;
+	}
 
 	let {
-		name,
-		logo,
-		description,
-		date,
 		href,
-		bgColor,
-		icon
-	}: {
-		name: string;
-		description: string;
-		date: Date;
-		logo: string;
-		href: string;
-		bgColor: string;
-		icon: Component;
-	} = $props();
+		logo = null,
+		logoAlt = "",
+		placeholderIcon,
+		placeholderGradient,
+		title,
+		subtitle,
+		hoverColor = "purple",
+		icon,
+		onclick
+	}: Props = $props();
+
+	const hoverColors: Record<string, string> = {
+		yellow: "group-hover:text-yellow-400",
+		blue: "group-hover:text-blue-400",
+		purple: "group-hover:text-purple-400",
+		emerald: "group-hover:text-emerald-400",
+		red: "group-hover:text-red-400"
+	};
+
+	const Component = href ? "a" : "div";
 </script>
 
-<a
-	class="group flex items-center justify-between bg-slate-800/20 hover:bg-slate-700/30 rounded-lg px-3 py-3 transition-all duration-200 border border-transparent hover:border-white/5"
+<svelte:element
+	this={Component}
 	{href}
+	{onclick}
+	class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+	class:cursor-pointer={onclick}
 >
-	<div class="flex items-center gap-3 min-w-0">
-		<div class="relative shrink-0">
-			<div class="{bgColor} size-11 rounded-lg flex items-center justify-center shadow-lg ring-1 ring-white/10">
-				<svelte:component this={icon} class="size-5 text-white" />
-			</div>
+	{#if logo !== undefined}
+		<Logo src={logo} alt={logoAlt} {placeholderIcon} {placeholderGradient} />
+	{:else if icon}
+		<div class="size-12 bg-{hoverColor}-600/20 rounded-lg flex items-center justify-center">
+			<span class="text-2xl">{icon}</span>
 		</div>
-		<div class="min-w-0 flex-1">
-			<p class="font-semibold text-gray-100 truncate">{name}</p>
-			<p class="text-xs text-gray-400 flex items-center gap-1">
-				<span class="truncate">{description}</span>
-				<span class="text-gray-600">•</span>
-				<time class="shrink-0">{date.toLocaleDateString("en-US", { month: "short", year: "numeric" })}</time>
-			</p>
-		</div>
+	{/if}
+
+	<div class="flex-1 min-w-0">
+		<p class="font-semibold text-white {hoverColors[hoverColor]} transition-colors truncate">
+			{title}
+		</p>
+		<p class="text-xs text-gray-400 truncate">
+			{subtitle}
+		</p>
 	</div>
-	<FluentChevronRight20Filled
-		class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors shrink-0 ml-2"
-	/>
-</a>
+
+	{#if href || onclick}
+		<FluentChevronRight20Filled class="size-5 text-gray-500 {hoverColors[hoverColor]} transition-colors" />
+	{/if}
+</svelte:element>
