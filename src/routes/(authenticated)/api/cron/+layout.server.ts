@@ -1,7 +1,6 @@
 // src/routes/(authenticated)/api/cron/+layout.server.ts
 
-import { error, redirect } from "@sveltejs/kit";
-import { jsonify } from "surrealdb";
+import { error, json, redirect } from "@sveltejs/kit";
 
 import type { RequestEvent } from "./$types";
 
@@ -13,7 +12,7 @@ export const load = async (event: RequestEvent) => {
 
 	//protecting just here feels wrong tbh
 
-	const dataUser = jsonify(event.locals.account);
+	const dataUser = json(event.locals.account);
 
 	console.log("dataUser", dataUser);
 

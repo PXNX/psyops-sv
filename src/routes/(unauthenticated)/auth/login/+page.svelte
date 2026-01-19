@@ -58,7 +58,7 @@
 			</a>
 
 			<!-- Terms & Privacy -->
-			<div class=" border-t border-white/5">
+			<div>
 				<p class="text-xs text-center text-gray-400 leading-relaxed">
 					By signing up you agree to our
 					<a class="font-semibold link link-hover text-purple-400 hover:text-purple-300" href="/about/terms">

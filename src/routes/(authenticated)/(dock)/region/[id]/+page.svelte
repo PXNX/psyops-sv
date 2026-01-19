@@ -12,13 +12,17 @@
 	import FluentLocationLive20Filled from "~icons/fluent/location-live-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
+	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
+
 	import Logo from "$lib/component/Logo.svelte";
 	import * as m from "$lib/paraglide/messages";
-	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
+	import { formatDate, getDaysRemaining } from "$lib/utils/formatting";
 
 	const { data, form } = $props();
 
 	const isIndependent = $derived(!data.region.stateId);
+
+	let isStartingBattle = $state(false);
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -440,3 +444,76 @@
 		</div>
 	{/if}
 </div>
+
+{#if data.ongoingBattle}
+	<!-- Ongoing Battle Alert -->
+	<div class="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
+		<div class="flex items-start gap-4">
+			<FluentFire20Filled class="size-8 text-red-500 flex-shrink-0" />
+			<div class="flex-1">
+				<h2 class="text-2xl font-bold text-red-400 mb-2">Battle in Progress!</h2>
+				<p class="text-gray-300 mb-4">
+					{data.ongoingBattle.attackerState.name} is attacking this region from {data.ongoingBattle.defenderState.name}
+				</p>
+				<a
+					href="/battle/{data.ongoingBattle.id}"
+					class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg text-white font-medium transition-colors"
+				>
+					<FluentShield20Filled class="size-5" />
+					View Battle
+				</a>
+			</div>
+		</div>
+	</div>
+{:else if data.activeWars.length > 0}
+	<!-- Active Wars - Can Start Battle -->
+	<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
+		<div class="flex items-center gap-3 mb-4">
+			<FluentWarning20Filled class="size-6 text-amber-500" />
+			<h2 class="text-xl font-bold text-white">Active Wars</h2>
+		</div>
+		<p class="text-gray-400 mb-4">
+			This region is involved in active conflicts. You can start a battle here if you're on the attacking side.
+		</p>
+		<div class="space-y-3">
+			{#each data.activeWars as war}
+				<div class="bg-slate-700/30 rounded-lg p-4 border border-white/5">
+					<div class="flex items-center justify-between">
+						<div class="flex-1">
+							<div class="flex items-center gap-3 mb-2">
+								<span class="font-bold text-white">{war.attacker.name}</span>
+								<span class="text-gray-400">vs</span>
+								<span class="font-bold text-white">{war.defender.name}</span>
+							</div>
+							<div class="flex gap-4">
+								<a href="/war/{war.id}" class="text-sm text-purple-400 hover:text-purple-300 transition-colors">
+									View War Details →
+								</a>
+							</div>
+						</div>
+						<form
+							method="POST"
+							action="?/startBattle"
+							use:enhance={() => {
+								isStartingBattle = true;
+								return async ({ update }) => {
+									await update();
+									isStartingBattle = false;
+								};
+							}}
+						>
+							<input type="hidden" name="warId" value={war.id} />
+							<button
+								type="submit"
+								disabled={isStartingBattle}
+								class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 rounded-lg text-white font-medium transition-colors whitespace-nowrap"
+							>
+								{isStartingBattle ? "Starting..." : "Start Battle"}
+							</button>
+						</form>
+					</div>
+				</div>
+			{/each}
+		</div>
+	</div>
+{/if}
