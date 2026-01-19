@@ -1,5 +1,4 @@
-import { error, fail, redirect } from "@sveltejs/kit";
-import { jsonify } from "surrealdb";
+import { error, fail, json, redirect } from "@sveltejs/kit";
 
 import type { RequestEvent } from "./$types";
 
@@ -13,13 +12,5 @@ export const load = async (event: RequestEvent) => {
 		return error(403, "Only admins can access this page");
 	}
 
-	//protecting just here feels wrong tbh
-
-	const dataUser = jsonify(event.locals.account);
-
-	console.log("dataUser", dataUser);
-
-	return {
-		account: dataUser
-	};
+	return { account: event.locals.account! };
 };

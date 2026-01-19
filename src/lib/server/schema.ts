@@ -859,6 +859,7 @@ export const militaryUnits = pgTable("military_units", {
 	defense: integer("defense").notNull(),
 	organization: integer("organization").default(100).notNull(),
 	supplyLevel: integer("supply_level").default(100).notNull(),
+	health: integer("health").default(100).notNull(),
 	isTraining: boolean("is_training").default(false).notNull(),
 	trainingStartedAt: timestamp("training_started_at"),
 	trainingCompletesAt: timestamp("training_completed_at"),
@@ -1701,3 +1702,228 @@ export const blocRecommendedTemplates = pgTable("bloc_recommended_templates", {
 		.notNull()
 		.references(() => militaryUnitTemplates.id, { onDelete: "cascade" })
 });
+
+// Add these enums and tables to your schema.ts file
+
+export const warStatusEnum = pgEnum("war_status", ["active", "ended"]);
+export const battleStatusEnum = pgEnum("battle_status", ["ongoing", "attacker_won", "defender_won"]);
+export const surrenderTypeEnum = pgEnum("surrender_type", ["full", "conditional"]);
+
+// Wars table
+export const wars = pgTable("wars", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	attackerId: integer("attacker_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	defenderId: integer("defender_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	attackerBlocId: integer("attacker_bloc_id").references(() => blocs.id, {
+		onDelete: "set null"
+	}),
+	defenderBlocId: integer("defender_bloc_id").references(() => blocs.id, {
+		onDelete: "set null"
+	}),
+	declaredBy: text("declared_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	status: warStatusEnum("status").notNull().default("active"),
+	surrenderedBy: integer("surrendered_by").references(() => states.id, {
+		onDelete: "set null"
+	}),
+	declaredAt: timestamp("declared_at").defaultNow().notNull(),
+	endedAt: timestamp("ended_at")
+});
+
+// Battles table
+export const battles = pgTable("battles", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	warId: integer("war_id")
+		.notNull()
+		.references(() => wars.id, { onDelete: "cascade" }),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+	attackerStateId: integer("attacker_state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	defenderStateId: integer("defender_state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	status: battleStatusEnum("status").notNull().default("ongoing"),
+	startedBy: text("started_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	startedAt: timestamp("started_at").defaultNow().notNull(),
+	endedAt: timestamp("ended_at")
+});
+
+// Battle participants - links military units to battles
+export const battleParticipants = pgTable(
+	"battle_participants",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		battleId: integer("battle_id")
+			.notNull()
+			.references(() => battles.id, { onDelete: "cascade" }),
+		unitId: integer("unit_id")
+			.notNull()
+			.references(() => militaryUnits.id, { onDelete: "cascade" }),
+		side: varchar("side", { length: 10 }).notNull(), // "attacker" or "defender"
+		currentHealth: integer("current_health").notNull(),
+		currentOrganization: integer("current_organization").notNull(),
+		damageTaken: integer("damage_taken").default(0).notNull(),
+		damageDealt: integer("damage_dealt").default(0).notNull(),
+		joinedAt: timestamp("joined_at").defaultNow().notNull(),
+		lastActionAt: timestamp("last_action_at")
+	},
+	(t) => ({
+		battleUnitIdx: uniqueIndex("idx_battle_unit").on(t.battleId, t.unitId)
+	})
+);
+
+// Battle rounds - tracks each attack round
+export const battleRounds = pgTable("battle_rounds", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	battleId: integer("battle_id")
+		.notNull()
+		.references(() => battles.id, { onDelete: "cascade" }),
+	attackingUnitId: integer("attacking_unit_id")
+		.notNull()
+		.references(() => militaryUnits.id, { onDelete: "cascade" }),
+	defendingUnitId: integer("defending_unit_id")
+		.notNull()
+		.references(() => militaryUnits.id, { onDelete: "cascade" }),
+	attackerDamage: integer("attacker_damage").notNull(),
+	defenderDamage: integer("defender_damage").notNull(),
+	attackerOrganizationLoss: integer("attacker_organization_loss").notNull(),
+	defenderOrganizationLoss: integer("defender_organization_loss").notNull(),
+	roundedAt: timestamp("rounded_at").defaultNow().notNull()
+});
+
+// War surrenders
+export const warSurrenders = pgTable("war_surrenders", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	warId: integer("war_id")
+		.notNull()
+		.references(() => wars.id, { onDelete: "cascade" }),
+	stateId: integer("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	surrenderType: surrenderTypeEnum("surrender_type").notNull(),
+	surrenderedBy: text("surrendered_by")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	reason: text("reason"),
+	surrenderedAt: timestamp("surrendered_at").defaultNow().notNull()
+});
+
+// Relations
+export const warsRelations = relations(wars, ({ one, many }) => ({
+	attacker: one(states, {
+		fields: [wars.attackerId],
+		references: [states.id],
+		relationName: "war_attacker"
+	}),
+	defender: one(states, {
+		fields: [wars.defenderId],
+		references: [states.id],
+		relationName: "war_defender"
+	}),
+	attackerBloc: one(blocs, {
+		fields: [wars.attackerBlocId],
+		references: [blocs.id],
+		relationName: "war_attacker_bloc"
+	}),
+	defenderBloc: one(blocs, {
+		fields: [wars.defenderBlocId],
+		references: [blocs.id],
+		relationName: "war_defender_bloc"
+	}),
+	declarer: one(accounts, {
+		fields: [wars.declaredBy],
+		references: [accounts.id]
+	}),
+	battles: many(battles),
+	surrenders: many(warSurrenders)
+}));
+
+export const battlesRelations = relations(battles, ({ one, many }) => ({
+	war: one(wars, {
+		fields: [battles.warId],
+		references: [wars.id]
+	}),
+	region: one(regions, {
+		fields: [battles.regionId],
+		references: [regions.id]
+	}),
+	attackerState: one(states, {
+		fields: [battles.attackerStateId],
+		references: [states.id],
+		relationName: "battle_attacker"
+	}),
+	defenderState: one(states, {
+		fields: [battles.defenderStateId],
+		references: [states.id],
+		relationName: "battle_defender"
+	}),
+	starter: one(accounts, {
+		fields: [battles.startedBy],
+		references: [accounts.id]
+	}),
+	participants: many(battleParticipants),
+	rounds: many(battleRounds)
+}));
+
+export const battleParticipantsRelations = relations(battleParticipants, ({ one }) => ({
+	battle: one(battles, {
+		fields: [battleParticipants.battleId],
+		references: [battles.id]
+	}),
+	unit: one(militaryUnits, {
+		fields: [battleParticipants.unitId],
+		references: [militaryUnits.id]
+	})
+}));
+
+export const battleRoundsRelations = relations(battleRounds, ({ one }) => ({
+	battle: one(battles, {
+		fields: [battleRounds.battleId],
+		references: [battles.id]
+	}),
+	attackingUnit: one(militaryUnits, {
+		fields: [battleRounds.attackingUnitId],
+		references: [militaryUnits.id],
+		relationName: "round_attacker"
+	}),
+	defendingUnit: one(militaryUnits, {
+		fields: [battleRounds.defendingUnitId],
+		references: [militaryUnits.id],
+		relationName: "round_defender"
+	})
+}));
+
+export const warSurrendersRelations = relations(warSurrenders, ({ one }) => ({
+	war: one(wars, {
+		fields: [warSurrenders.warId],
+		references: [wars.id]
+	}),
+	state: one(states, {
+		fields: [warSurrenders.stateId],
+		references: [states.id]
+	}),
+	surrenderer: one(accounts, {
+		fields: [warSurrenders.surrenderedBy],
+		references: [accounts.id]
+	})
+}));
+
+// Types
+export type War = typeof wars.$inferSelect;
+export type Battle = typeof battles.$inferSelect;
+export type BattleParticipant = typeof battleParticipants.$inferSelect;
+export type BattleRound = typeof battleRounds.$inferSelect;
+export type WarSurrender = typeof warSurrenders.$inferSelect;
+
+// Update militaryUnits table to include health (add this field)
+// health: integer("health").default(100).notNull(),

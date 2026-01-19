@@ -1,5 +1,4 @@
-import { redirect } from "@sveltejs/kit";
-import { jsonify } from "surrealdb";
+import { json, redirect } from "@sveltejs/kit";
 
 import type { RequestEvent } from "./$types";
 
@@ -12,13 +11,7 @@ export const load = async (event: RequestEvent) => {
 		return redirect(302, "/auth/login?next=" + event.url.pathname);
 	}
 
-	//protecting just here feels wrong tbh
-
-	const dataUser = jsonify(event.locals.account);
-
-	console.log("dataUser", dataUser);
-
 	return {
-		account: dataUser
+		account: event.locals.account
 	};
 };

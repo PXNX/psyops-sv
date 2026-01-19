@@ -11,9 +11,11 @@ import {
 	userWallets,
 	stateTreasury,
 	residenceApplications,
-	parliamentaryElections
+	parliamentaryElections,
+	battles,
+	wars
 } from "$lib/server/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, or } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
@@ -21,11 +23,17 @@ import { getRegionName } from "$lib/utils/formatting";
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 
+	const regionId = parseInt(params.id);
+
 	// Get region with state
 	const region = await db.query.regions.findFirst({
-		where: eq(regions.id, parseInt(params.id)),
+		where: eq(regions.id, regionId),
 		with: {
-			state: true,
+			state: {
+				with: {
+					bloc: true
+				}
+			},
 			governor: {
 				with: {
 					user: {
@@ -135,6 +143,38 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		limit: 10
 	});
 
+	let activeWars: any[] = [];
+	if (region?.stateId) {
+		activeWars = await db.query.wars.findMany({
+			where: and(
+				eq(wars.status, "active"),
+				or(
+					eq(wars.defenderId, region.stateId),
+					region.state?.blocId ? eq(wars.defenderBlocId, region.state.blocId) : sql`false`
+				)
+			),
+			with: {
+				attacker: true,
+				defender: true
+			}
+		});
+	}
+
+	// Check for ongoing battles in this region
+	const ongoingBattle = await db.query.battles.findFirst({
+		where: and(eq(battles.regionId, regionId), eq(battles.status, "ongoing")),
+		with: {
+			war: {
+				with: {
+					attacker: true,
+					defender: true
+				}
+			},
+			attackerState: true,
+			defenderState: true
+		}
+	});
+
 	return {
 		region: {
 			id: region.id,
@@ -180,7 +220,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 						taxPaid: Number(activeVisa.taxPaid)
 					}
 				: null
-		}
+		},
+
+		activeWars,
+		ongoingBattle
 	};
 };
 
@@ -475,5 +518,89 @@ export const actions: Actions = {
 			success: true,
 			message: `Visa purchased for $${visaCost.toLocaleString()} (tax: $${taxAmount.toLocaleString()})`
 		};
+	},
+
+	startBattle: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const regionId = parseInt(params.id);
+		const formData = await request.formData();
+		const warId = parseInt(formData.get("warId") as string);
+
+		// Verify war exists and is active
+		const war = await db.query.wars.findFirst({
+			where: eq(wars.id, warId),
+			with: {
+				attacker: true,
+				defender: true
+			}
+		});
+
+		if (!war || war.status !== "active") {
+			return fail(400, { error: "War is not active" });
+		}
+
+		// Get region details
+		const region = await db.query.regions.findFirst({
+			where: eq(regions.id, regionId),
+			with: {
+				state: true
+			}
+		});
+
+		if (!region) {
+			return fail(404, { error: "Region not found" });
+		}
+
+		// Verify user has permission to start battle
+		const userResidence = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id),
+			with: {
+				region: {
+					with: {
+						state: true
+					}
+				}
+			}
+		});
+
+		if (!userResidence) {
+			return fail(403, { error: "No residence found" });
+		}
+
+		// Check if user is on attacking side
+		const isAttacker =
+			userResidence.region.stateId === war.attackerId ||
+			(war.attackerBlocId && userResidence.region.state?.blocId === war.attackerBlocId);
+
+		if (!isAttacker) {
+			return fail(403, { error: "You must be part of the attacking side" });
+		}
+
+		// Check if battle already exists for this region in this war
+		const existingBattle = await db.query.battles.findFirst({
+			where: and(eq(battles.warId, warId), eq(battles.regionId, regionId), eq(battles.status, "ongoing"))
+		});
+
+		if (existingBattle) {
+			return fail(400, { error: "Battle already ongoing in this region" });
+		}
+
+		// Determine defender state
+		const defenderStateId = region.stateId;
+
+		if (!defenderStateId) {
+			return fail(400, { error: "Region has no state to defend it" });
+		}
+
+		// Create battle
+		await db.insert(battles).values({
+			warId,
+			regionId,
+			attackerStateId: userResidence.region.stateId ?? 0, // todo: user may not have a residence???
+			defenderStateId,
+			startedBy: account.id
+		});
+
+		return { success: true };
 	}
 };
