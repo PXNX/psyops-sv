@@ -1,9 +1,28 @@
 -- Region Borders Population Script
--- Generated: 2026-01-20T01:24:53.789Z
+-- Generated: 2026-01-20T01:31:28.468Z
 -- Total borders: 2219
+-- Based on 749 regions with coordinates
+
+-- IMPORTANT: Make sure insert-regions.sql has been run first!
+-- This script assumes regions with IDs 1 to 762 exist.
 
 -- Clear existing borders (optional - uncomment if needed)
 -- DELETE FROM region_borders;
+
+-- Verify regions exist first (returns count of missing regions)
+-- This should return 0 if all regions exist
+DO $
+DECLARE
+  missing_count INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO missing_count
+  FROM (VALUES (1), (2), (3), (4), (5), (6), (7), (8), (9), (10)) AS required_ids(id)
+  WHERE NOT EXISTS (SELECT 1 FROM regions WHERE regions.id = required_ids.id);
+  
+  IF missing_count > 0 THEN
+    RAISE EXCEPTION 'Missing % regions! Run insert-regions.sql first.', missing_count;
+  END IF;
+END $;
 
 -- Insert region borders
 INSERT INTO region_borders (region_id, neighbor_id, distance_km)
@@ -2234,3 +2253,15 @@ ON CONFLICT DO NOTHING;
 -- Average distance: 688.97 km
 -- Min distance: 0.07 km
 -- Max distance: 9730.92 km
+
+-- Sample borders:
+-- Region 274 ↔ Region 298: 944.16 km
+-- Region 298 ↔ Region 700: 362.78 km
+-- Region 274 ↔ Region 700: 1213.72 km
+-- Region 272 ↔ Region 700: 645.69 km
+-- Region 272 ↔ Region 274: 1557.87 km
+-- Region 272 ↔ Region 557: 700.21 km
+-- Region 274 ↔ Region 557: 1775.74 km
+-- Region 700 ↔ Region 701: 735.81 km
+-- Region 272 ↔ Region 701: 284.79 km
+-- Region 557 ↔ Region 701: 876.06 km
