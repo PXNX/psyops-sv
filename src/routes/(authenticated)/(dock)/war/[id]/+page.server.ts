@@ -2,7 +2,7 @@
 import { db } from "$lib/server/db";
 import { wars, battles, warSurrenders, states, blocs, accounts, userProfiles, regions } from "$lib/server/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
-import type { PageServerLoad } from "./$types";
+import type { PageServerLoad } from "../$types";
 import { error } from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ params, locals }) => {

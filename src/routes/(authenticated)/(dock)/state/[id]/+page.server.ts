@@ -15,10 +15,11 @@ import {
 	parliamentMembers,
 	stateSanctions,
 	accounts,
-	files
+	files,
+	wars
 } from "$lib/server/schema";
 import { error, fail } from "@sveltejs/kit";
-import { eq, and, gte, sql } from "drizzle-orm";
+import { eq, and, gte, sql, or } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { getRegionName } from "$lib/utils/formatting";
@@ -152,7 +153,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isForeignMinister = !!foreignMinistry && foreignMinistry.stateId !== stateId;
 	}
 
-	// NEW: Check if current user is president of ANOTHER state
+	// Check if current user is president of ANOTHER state
 	let userPresidency = null;
 	let canDeclareWar = false;
 	if (locals.account?.id) {
@@ -172,6 +173,53 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			canDeclareWar = userPres.stateBlocId !== state.blocId || !userPres.stateBlocId || !state.blocId;
 		}
 	}
+
+	// Get active wars involving this state
+	const activeWarsRaw = await db
+		.select({
+			id: wars.id,
+			attackerId: wars.attackerId,
+			defenderId: wars.defenderId,
+			declaredBy: wars.declaredBy,
+			declaredAt: wars.declaredAt,
+			status: wars.status,
+			attackerName: sql<string>`attacker.name`,
+			attackerLogo: sql<number>`attacker.logo`,
+			defenderName: sql<string>`defender.name`,
+			defenderLogo: sql<number>`defender.logo`,
+			declarerName: userProfiles.name
+		})
+		.from(wars)
+		.innerJoin(sql`states AS attacker`, sql`attacker.id = ${wars.attackerId}`)
+		.innerJoin(sql`states AS defender`, sql`defender.id = ${wars.defenderId}`)
+		.leftJoin(accounts, eq(wars.declaredBy, accounts.id))
+		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
+		.where(and(or(eq(wars.attackerId, stateId), eq(wars.defenderId, stateId)), eq(wars.status, "active")));
+
+	const activeWars = await Promise.all(
+		activeWarsRaw.map(async (war) => ({
+			id: war.id,
+			attackerId: war.attackerId,
+			defenderId: war.defenderId,
+			declaredBy: war.declaredBy,
+			declaredAt: war.declaredAt,
+			status: war.status,
+			attacker: {
+				id: war.attackerId,
+				name: war.attackerName,
+				logo: await getLogoUrl(war.attackerLogo)
+			},
+			defender: {
+				id: war.defenderId,
+				name: war.defenderName,
+				logo: await getLogoUrl(war.defenderLogo)
+			},
+			declarer: {
+				name: war.declarerName
+			},
+			isAttacker: war.attackerId === stateId
+		}))
+	);
 
 	return {
 		state: {
@@ -253,7 +301,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		powerPlants: plants.length,
 		isPresident,
 		isForeignMinister,
-		canDeclareWar
+		canDeclareWar,
+		activeWars
 	};
 };
 
@@ -307,7 +356,7 @@ export const actions: Actions = {
 		return { success: true, message: "Sanction applied successfully" };
 	},
 
-	declareWar: async ({ params, locals, request }) => {
+	declareWar: async ({ params, locals }) => {
 		const account = locals.account!;
 		const targetStateId = parseInt(params.id);
 
@@ -349,10 +398,42 @@ export const actions: Actions = {
 			return fail(400, { message: "Cannot declare war on a state in your own bloc" });
 		}
 
-		// TODO: Add war declaration logic here
-		// For now, this is a placeholder - you'll need to add a wars table to your schema
-		// and implement the actual war mechanics
+		// Check if war already exists between these states
+		const [existingWar] = await db
+			.select()
+			.from(wars)
+			.where(
+				and(
+					eq(wars.status, "active"),
+					sql`(
+						(${wars.attackerId} = ${presidency.stateId} AND ${wars.defenderId} = ${targetStateId}) OR
+						(${wars.attackerId} = ${targetStateId} AND ${wars.defenderId} = ${presidency.stateId})
+					)`
+				)
+			)
+			.limit(1);
 
-		return { success: true, message: `War declared on state ${targetStateId}` };
+		if (existingWar) {
+			return fail(400, { message: "A war already exists between these states" });
+		}
+
+		// Create the war
+		const [newWar] = await db
+			.insert(wars)
+			.values({
+				attackerId: presidency.stateId,
+				defenderId: targetStateId,
+				attackerBlocId: presidency.stateBlocId,
+				defenderBlocId: targetState.blocId,
+				declaredBy: account.id,
+				status: "active"
+			})
+			.returning();
+
+		return {
+			success: true,
+			message: `War declared successfully!`,
+			warId: newWar.id
+		};
 	}
 };
