@@ -116,13 +116,56 @@ async function populateRegionBorders() {
 
 	console.log(`Found ${bordersList.length} unique borders\n`);
 
+	// Validate that all region IDs exist in our data
+	const validRegionIds = new Set(regionsWithCoords.map((r) => r.id));
+	const invalidBorders = bordersList.filter(
+		(b) => !validRegionIds.has(b.regionId) || !validRegionIds.has(b.neighborId)
+	);
+
+	if (invalidBorders.length > 0) {
+		console.log(`Warning: Found ${invalidBorders.length} borders with invalid region IDs`);
+		console.log("These will be excluded from the output.\n");
+
+		// Show a few examples
+		invalidBorders.slice(0, 3).forEach((b) => {
+			console.log(`  Invalid: Region ${b.regionId} ↔ Region ${b.neighborId}`);
+		});
+	}
+
+	// Filter to only valid borders
+	const validBorders = bordersList.filter((b) => validRegionIds.has(b.regionId) && validRegionIds.has(b.neighborId));
+
+	console.log(`\nValid borders after filtering: ${validBorders.length}\n`);
+
 	// Generate SQL file
 	let sql = `-- Region Borders Population Script
 -- Generated: ${new Date().toISOString()}
 -- Total borders: ${bordersList.length}
+-- Based on ${regionsWithCoords.length} regions with coordinates
+
+-- IMPORTANT: Make sure insert-regions.sql has been run first!
+-- This script assumes regions with IDs ${Math.min(...regionsWithCoords.map((r) => r.id))} to ${Math.max(...regionsWithCoords.map((r) => r.id))} exist.
 
 -- Clear existing borders (optional - uncomment if needed)
 -- DELETE FROM region_borders;
+
+-- Verify regions exist first (returns count of missing regions)
+-- This should return 0 if all regions exist
+DO $
+DECLARE
+  missing_count INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO missing_count
+  FROM (VALUES ${regionsWithCoords
+		.slice(0, 10)
+		.map((r) => `(${r.id})`)
+		.join(", ")}) AS required_ids(id)
+  WHERE NOT EXISTS (SELECT 1 FROM regions WHERE regions.id = required_ids.id);
+  
+  IF missing_count > 0 THEN
+    RAISE EXCEPTION 'Missing % regions! Run insert-regions.sql first.', missing_count;
+  END IF;
+END $;
 
 -- Insert region borders
 INSERT INTO region_borders (region_id, neighbor_id, distance_km)
@@ -142,22 +185,34 @@ VALUES\n`;
 -- Total borders: ${bordersList.length}
 -- Average distance: ${avgDistance.toFixed(2)} km
 -- Min distance: ${minDistance.toFixed(2)} km
--- Max distance: ${maxDistance.toFixed(2)} km\n`;
+-- Max distance: ${maxDistance.toFixed(2)} km
+
+-- Sample borders:`;
+
+	// Add sample borders as comments
+	for (let i = 0; i < Math.min(10, bordersList.length); i++) {
+		const border = bordersList[i];
+		sql += `\n-- Region ${border.regionId} ↔ Region ${border.neighborId}: ${border.distanceKm} km`;
+	}
+
+	sql += "\n";
 
 	// Write to file
 	await writeFile("./region_borders.sql", sql);
 
 	console.log("✓ Created region_borders.sql");
 	console.log("\nStatistics:");
-	console.log(`  Total borders: ${bordersList.length}`);
+	console.log(`  Total borders calculated: ${bordersList.length}`);
+	console.log(`  Valid borders: ${validBorders.length}`);
+	console.log(`  Filtered out: ${bordersList.length - validBorders.length}`);
 	console.log(`  Average distance: ${avgDistance.toFixed(2)} km`);
 	console.log(`  Min distance: ${minDistance.toFixed(2)} km`);
 	console.log(`  Max distance: ${maxDistance.toFixed(2)} km`);
 
 	// Sample some borders
 	console.log("\nSample borders:");
-	for (let i = 0; i < Math.min(5, bordersList.length); i++) {
-		const border = bordersList[i];
+	for (let i = 0; i < Math.min(5, validBorders.length); i++) {
+		const border = validBorders[i];
 		console.log(`  Region ${border.regionId} ↔ Region ${border.neighborId}: ${border.distanceKm} km`);
 	}
 }
