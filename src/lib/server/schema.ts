@@ -1,7 +1,8 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
 	bigint,
 	boolean,
+	check,
 	decimal,
 	index,
 	integer,
@@ -1925,5 +1926,32 @@ export type BattleParticipant = typeof battleParticipants.$inferSelect;
 export type BattleRound = typeof battleRounds.$inferSelect;
 export type WarSurrender = typeof warSurrenders.$inferSelect;
 
-// Update militaryUnits table to include health (add this field)
-// health: integer("health").default(100).notNull(),
+export const regionBorders = pgTable(
+	"region_borders",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		neighborId: integer("neighbor_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		distanceKm: decimal("distance_km", { precision: 10, scale: 2 }).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		uniqueBorder: uniqueIndex("idx_unique_border").on(t.regionId, t.neighborId),
+		checkOrder: check("check_region_order", sql`${t.regionId} < ${t.neighborId}`)
+	})
+);
+
+export const regionBordersRelations = relations(regionBorders, ({ one }) => ({
+	region: one(regions, {
+		fields: [regionBorders.regionId],
+		references: [regions.id]
+	}),
+	neighbor: one(regions, {
+		fields: [regionBorders.neighborId],
+		references: [regions.id]
+	})
+}));

@@ -13,7 +13,7 @@ import {
 	residences
 } from "$lib/server/schema";
 import { eq, desc, and, sql } from "drizzle-orm";
-import type { PageServerLoad, Actions } from "./$types";
+import type { PageServerLoad, Actions } from "../$types";
 import { error, fail } from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ params, locals }) => {

@@ -358,7 +358,7 @@
 			<p class="text-xs text-blue-300">Sanctions affect trade and diplomatic relations with other states</p>
 		</div>
 		<div class="bg-purple-600/10 border border-purple-500/20 rounded-xl p-4">
-			<FluentPassport20Filled class="inline size-4 text-purple-400 mb-1" />
+			<FluentBookCompass24Filled class="inline size-4 text-purple-400 mb-1" />
 			<p class="text-xs text-purple-300">Visas are valid for 2 weeks and generate tax revenue for the state</p>
 		</div>
 		<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">

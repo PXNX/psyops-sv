@@ -90,13 +90,13 @@
 		"prettier-plugin-tailwindcss": "0.7.2",
 		"sharp": "0.34.5",
 		"sveaflet": "0.1.4",
-		"svelte": "5.47.0",
+		"svelte": "5.47.1",
 		"svelte-tiptap": "3.0.1",
 		"sveltekit-superforms": "2.29.1",
 		"tailwindcss": "4.1.18",
 		"tiptap-table-plus": "3.1.0",
 		"typescript": "5.9.3",
-		"typescript-eslint": "8.53.0",
+		"typescript-eslint": "8.53.1",
 		"unplugin-icons": "23.0.1",
 		"uuid": "13.0.0",
 		"valibot": "1.2.0",
@@ -104,5 +104,8 @@
 		"web-push": "3.6.7",
 		"workbox-window": "7.4.0",
 		"zod": "^4.3.5"
+	},
+	"dependencies": {
+		"delaunator": "^5.0.1"
 	}
 }
