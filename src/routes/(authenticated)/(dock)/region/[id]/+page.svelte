@@ -13,16 +13,28 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
+	import FluentNavigation20Filled from "~icons/fluent/navigation-20-filled";
+	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 
 	import Logo from "$lib/component/Logo.svelte";
 	import * as m from "$lib/paraglide/messages";
-	import { formatDate, getDaysRemaining } from "$lib/utils/formatting";
+	import { formatDate, getDaysRemaining, getRegionName } from "$lib/utils/formatting";
+	import Modal from "$lib/component/Modal.svelte";
 
 	const { data, form } = $props();
 
 	const isIndependent = $derived(!data.region.stateId);
 
 	let isStartingBattle = $state(false);
+	let showBattleModal = $state(false);
+	let selectedWarId = $state<number | null>(null);
+	let selectedAttackRegion = $state<number | null>(null);
+
+	function closeBattleModal() {
+		showBattleModal = false;
+		selectedAttackRegion = null;
+		selectedWarId = null;
+	}
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -31,7 +43,7 @@
 		<Logo
 			src="/coats/{data.region.id}.svg"
 			alt={data.region.name}
-			class="size-20 rounded-xl ring-2 ring-white/10"
+			class="size-20 rounded-xl "
 			placeholderIcon={FluentShield20Filled}
 			placeholderGradient="from-purple-500 to-blue-500"
 		/>
@@ -67,6 +79,47 @@
 		</div>
 	{/if}
 
+	<!-- Active Travel Banner -->
+	{#if data.activeTravel}
+		{@const arrivalDate = new Date(data.activeTravel.arrivalTime)}
+		{@const now = new Date()}
+		{@const timeLeftMs = arrivalDate.getTime() - now.getTime()}
+		{@const hoursLeft = Math.max(0, Math.ceil(timeLeftMs / (1000 * 60 * 60)))}
+
+		<div class="bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-6">
+			<div class="flex items-start gap-4">
+				<div class="size-12 bg-amber-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentNavigation20Filled class="size-6 text-amber-400" />
+				</div>
+				<div class="flex-1">
+					<h2 class="text-xl font-bold text-white mb-2">Currently Traveling</h2>
+					<p class="text-gray-300 text-sm mb-2">
+						You are traveling to {getRegionName(data.activeTravel.toRegionId)}
+					</p>
+					<div class="flex items-center gap-4 text-sm">
+						<div class="flex items-center gap-2">
+							<FluentClock20Filled class="size-4 text-amber-400" />
+							<span class="text-white">
+								{#if hoursLeft > 0}
+									Arrives in {hoursLeft} hour{hoursLeft === 1 ? "" : "s"}
+								{:else}
+									Arriving now...
+								{/if}
+							</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<FluentNavigation20Filled class="size-4 text-blue-400" />
+							<span class="text-white">{data.activeTravel.distanceKm} km</span>
+						</div>
+					</div>
+					<p class="text-xs text-gray-500 mt-2">
+						Expected arrival: {formatDate(data.activeTravel.arrivalTime)}
+					</p>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Alerts -->
 	{#if form?.error}
 		<div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
@@ -82,11 +135,43 @@
 		</div>
 	{/if}
 
+	<!-- Travel Info Banner (if not living here) -->
+	{#if data.travelInfo && !data.hasResidence}
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<div class="flex items-start gap-4">
+				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentNavigation20Filled class="size-6 text-blue-400" />
+				</div>
+				<div class="flex-1">
+					<h3 class="text-lg font-semibold text-white mb-2">Travel Information</h3>
+					<div class="grid grid-cols-3 gap-4 text-sm">
+						<div>
+							<p class="text-gray-400">Distance</p>
+							<p class="text-white font-semibold">{data.travelInfo.distanceKm} km</p>
+						</div>
+						<div>
+							<p class="text-gray-400">Cost</p>
+							<p class="text-white font-semibold flex items-center gap-1">
+								<FluentMoney20Filled class="size-4 text-green-400" />
+								${data.travelInfo.cost.toLocaleString()}
+							</p>
+						</div>
+						<div>
+							<p class="text-gray-400">Travel Time</p>
+							<p class="text-white font-semibold flex items-center gap-1">
+								<FluentClock20Filled class="size-4 text-amber-400" />
+								{data.travelInfo.timeHours}h
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Free Movement Banner -->
 	{#if data.allowsFreeMovement && !data.hasResidence}
-		<div
-			class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/30 rounded-xl p-6 space-y-4"
-		>
+		<div class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/30 rounded-xl p-6">
 			<div class="flex items-start gap-4">
 				<div class="size-12 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
 					<FluentLocationLive20Filled class="size-6 text-emerald-400" />
@@ -95,16 +180,21 @@
 					<h2 class="text-xl font-bold text-white mb-2">Free Movement Zone</h2>
 					<p class="text-gray-300 text-sm mb-4">
 						{#if isIndependent}
-							This independent region has open borders. You can move here instantly without approval.
+							This independent region has open borders.
 						{:else if !data.hasInauguralElection}
-							This state has not held its inaugural election yet. Free movement is available until the government is
-							established.
+							Free movement available until inaugural election.
+						{/if}
+						{#if data.travelInfo}
+							Moving costs ${data.travelInfo.cost.toLocaleString()} and takes {data.travelInfo.timeHours} hours.
 						{/if}
 					</p>
 					<form method="POST" action="?/changeResidence" use:enhance>
 						<button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
 							<FluentHome20Filled class="size-4" />
-							Move Here Now
+							Move Here
+							{#if data.travelInfo}
+								(${data.travelInfo.cost.toLocaleString()})
+							{/if}
 						</button>
 					</form>
 				</div>
@@ -114,9 +204,7 @@
 
 	<!-- Independent Region Claim Banner -->
 	{#if isIndependent}
-		<div
-			class="bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-6 space-y-4"
-		>
+		<div class="bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-6">
 			<div class="flex items-start gap-4">
 				<div class="size-12 bg-amber-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
 					<FluentFlag20Filled class="size-6 text-amber-400" />
@@ -124,8 +212,7 @@
 				<div class="flex-1">
 					<h2 class="text-xl font-bold text-white mb-2">Unclaimed Territory</h2>
 					<p class="text-gray-300 text-sm mb-4">
-						This region is independent and can be claimed by founding a new state. Create a political party here to
-						establish your government and claim this territory.
+						This region can be claimed by founding a new state. Create a political party to establish your government.
 					</p>
 					<div class="flex flex-wrap gap-3">
 						<a
@@ -135,45 +222,43 @@
 							<FluentFlag20Filled class="size-4" />
 							Found a State
 						</a>
-						<a href="/parties" class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white gap-2">
-							View Existing Parties
-						</a>
 					</div>
 				</div>
 			</div>
 		</div>
-	{:else if !data.allowsFreeMovement}
-		<!-- Residence Change for Established State Regions -->
-		{#if !data.hasResidence}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
-				<div class="flex items-start gap-4">
-					<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
-						<FluentHome20Filled class="size-6 text-blue-400" />
-					</div>
-					<div class="flex-1">
-						<h3 class="text-lg font-semibold text-white mb-2">Change Residence</h3>
-						{#if data.hasPendingResidenceApp}
-							<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-3 mb-3">
-								<p class="text-sm text-amber-300 flex items-center gap-2">
-									<FluentClock20Filled class="size-4" />
-									Application pending - awaiting governor approval
-								</p>
-							</div>
-						{:else}
-							<p class="text-sm text-gray-300 mb-4">
-								Apply to move to this region. The governor must approve your application.
+	{:else if !data.allowsFreeMovement && !data.hasResidence}
+		<!-- Residence Change for Established States -->
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<div class="flex items-start gap-4">
+				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentHome20Filled class="size-6 text-blue-400" />
+				</div>
+				<div class="flex-1">
+					<h3 class="text-lg font-semibold text-white mb-2">Change Residence</h3>
+					{#if data.hasPendingResidenceApp}
+						<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-3 mb-3">
+							<p class="text-sm text-amber-300 flex items-center gap-2">
+								<FluentClock20Filled class="size-4" />
+								Application pending - awaiting governor approval
 							</p>
-							<form method="POST" action="?/changeResidence" use:enhance>
-								<button type="submit" class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2">
-									<FluentHome20Filled class="size-4" />
-									Apply for Residency
-								</button>
-							</form>
+						</div>
+					{:else}
+						<p class="text-sm text-gray-300 mb-2">Apply to move to this region. Governor approval required.</p>
+						{#if data.travelInfo}
+							<p class="text-xs text-gray-400 mb-4">
+								Cost: ${data.travelInfo.cost.toLocaleString()} • Travel time: {data.travelInfo.timeHours}h
+							</p>
 						{/if}
-					</div>
+						<form method="POST" action="?/changeResidence" use:enhance>
+							<button type="submit" class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2">
+								<FluentHome20Filled class="size-4" />
+								Apply for Residency
+							</button>
+						</form>
+					{/if}
 				</div>
 			</div>
-		{/if}
+		</div>
 	{/if}
 
 	<!-- Visa Status / Requirements -->
@@ -445,19 +530,19 @@
 	{/if}
 </div>
 
+<!-- Active Wars Section -->
 {#if data.ongoingBattle}
-	<!-- Ongoing Battle Alert -->
 	<div class="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
 		<div class="flex items-start gap-4">
 			<FluentFire20Filled class="size-8 text-red-500 flex-shrink-0" />
 			<div class="flex-1">
 				<h2 class="text-2xl font-bold text-red-400 mb-2">Battle in Progress!</h2>
 				<p class="text-gray-300 mb-4">
-					{data.ongoingBattle.attackerState.name} is attacking this region from {data.ongoingBattle.defenderState.name}
+					{data.ongoingBattle.attackerState.name} is attacking this region
 				</p>
 				<a
 					href="/battle/{data.ongoingBattle.id}"
-					class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg text-white font-medium transition-colors"
+					class="inline-flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg text-white font-medium"
 				>
 					<FluentShield20Filled class="size-5" />
 					View Battle
@@ -465,16 +550,13 @@
 			</div>
 		</div>
 	</div>
-{:else if data.activeWars.length > 0}
-	<!-- Active Wars - Can Start Battle -->
+{:else if data.activeWars.length > 0 && data.borderingRegionsForAttack.length > 0}
 	<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
 		<div class="flex items-center gap-3 mb-4">
 			<FluentWarning20Filled class="size-6 text-amber-500" />
 			<h2 class="text-xl font-bold text-white">Active Wars</h2>
 		</div>
-		<p class="text-gray-400 mb-4">
-			This region is involved in active conflicts. You can start a battle here if you're on the attacking side.
-		</p>
+		<p class="text-gray-400 mb-4">You can attack this region from your bordering territories.</p>
 		<div class="space-y-3">
 			{#each data.activeWars as war}
 				<div class="bg-slate-700/30 rounded-lg p-4 border border-white/5">
@@ -485,35 +567,75 @@
 								<span class="text-gray-400">vs</span>
 								<span class="font-bold text-white">{war.defender.name}</span>
 							</div>
-							<div class="flex gap-4">
-								<a href="/war/{war.id}" class="text-sm text-purple-400 hover:text-purple-300 transition-colors">
-									View War Details →
-								</a>
-							</div>
+							<a href="/war/{war.id}" class="text-sm text-purple-400 hover:text-purple-300"> View War Details → </a>
 						</div>
-						<form
-							method="POST"
-							action="?/startBattle"
-							use:enhance={() => {
-								isStartingBattle = true;
-								return async ({ update }) => {
-									await update();
-									isStartingBattle = false;
-								};
+						<button
+							onclick={() => {
+								selectedWarId = war.id;
+								showBattleModal = true;
 							}}
+							class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-white font-medium"
 						>
-							<input type="hidden" name="warId" value={war.id} />
-							<button
-								type="submit"
-								disabled={isStartingBattle}
-								class="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 rounded-lg text-white font-medium transition-colors whitespace-nowrap"
-							>
-								{isStartingBattle ? "Starting..." : "Start Battle"}
-							</button>
-						</form>
+							Start Battle
+						</button>
 					</div>
 				</div>
 			{/each}
 		</div>
 	</div>
 {/if}
+
+<!-- Battle Region Selection Modal -->
+<Modal bind:open={showBattleModal} title="Select Attack Origin" size="default">
+	<div class="space-y-4">
+		<p class="text-sm text-gray-400">
+			Select which of your regions will launch the attack on {data.region.name}:
+		</p>
+
+		<div class="space-y-2 max-h-96 overflow-y-auto">
+			{#each data.borderingRegionsForAttack as region}
+				<button
+					onclick={() => {
+						selectedAttackRegion = region.id;
+					}}
+					class="w-full flex items-center justify-between p-4 rounded-lg border transition-all"
+					class:border-white-10={selectedAttackRegion !== region.id}
+					class:bg-slate-700-30={selectedAttackRegion !== region.id}
+					class:border-purple-500={selectedAttackRegion === region.id}
+					class:bg-purple-600-10={selectedAttackRegion === region.id}
+				>
+					<div class="text-left">
+						<p class="font-semibold text-white">{region.name}</p>
+						<p class="text-xs text-gray-400">{region.distanceKm} km to target</p>
+					</div>
+					{#if selectedAttackRegion === region.id}
+						<FluentCheckmark20Filled class="size-5 text-purple-400" />
+					{/if}
+				</button>
+			{/each}
+		</div>
+
+		<form
+			method="POST"
+			action="?/startBattle"
+			use:enhance={() => {
+				isStartingBattle = true;
+				return async ({ update }) => {
+					await update();
+					isStartingBattle = false;
+					showBattleModal = false;
+				};
+			}}
+		>
+			<input type="hidden" name="warId" value={selectedWarId} />
+			<input type="hidden" name="attackFromRegionId" value={selectedAttackRegion} />
+			<button
+				type="submit"
+				disabled={!selectedAttackRegion || isStartingBattle}
+				class="btn w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 border-0 text-white"
+			>
+				{isStartingBattle ? "Starting Battle..." : "Launch Attack"}
+			</button>
+		</form>
+	</div>
+</Modal>
