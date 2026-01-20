@@ -134,6 +134,95 @@
 		</div>
 	{/if}
 
+	<!-- Active Wars -->
+	{#if data.activeWars && data.activeWars.length > 0}
+		<section class="space-y-3">
+			<h2 class="text-sm font-semibold text-red-400 uppercase tracking-wider px-1 flex items-center gap-2">
+				<FluentShieldError20Filled class="size-4" />
+				Active Wars
+			</h2>
+			<div class="space-y-3">
+				{#each data.activeWars as war}
+					<div class="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
+						<div class="flex items-start gap-4">
+							<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+								<FluentShieldError20Filled class="size-6 text-red-400 animate-pulse" />
+							</div>
+							<div class="flex-1">
+								<div class="flex items-start justify-between gap-4 mb-3">
+									<div>
+										<h3 class="text-lg font-bold text-white mb-1">
+											{war.isAttacker ? "War of Aggression" : "Defensive War"}
+										</h3>
+										<p class="text-sm text-gray-300">
+											Declared by {war.declarer.name} on {formatDate(war.declaredAt)}
+										</p>
+									</div>
+									<span
+										class="px-3 py-1 rounded-full text-xs font-semibold bg-red-600/20 text-red-400 border border-red-500/30"
+									>
+										Active
+									</span>
+								</div>
+
+								<div class="bg-red-950/30 rounded-lg p-4 mb-4">
+									<div class="grid md:grid-cols-2 gap-4">
+										<div class="space-y-2">
+											<p class="text-xs text-red-300 font-semibold uppercase tracking-wider">Attacker</p>
+											<a href="/state/{war.attacker.id}" class="flex items-center gap-3 group">
+												{#if war.attacker.logo}
+													<img src={war.attacker.logo} alt={war.attacker.name} class="size-10 rounded-lg" />
+												{:else}
+													<div class="size-10 bg-base-200 rounded-lg flex items-center justify-center">
+														<FluentFlag20Filled class="size-5 text-base-content/20" />
+													</div>
+												{/if}
+												<span class="text-white font-medium group-hover:text-red-400 transition-colors">
+													{war.attacker.name}
+												</span>
+											</a>
+										</div>
+
+										<div class="space-y-2">
+											<p class="text-xs text-blue-300 font-semibold uppercase tracking-wider">Defender</p>
+											<a href="/state/{war.defender.id}" class="flex items-center gap-3 group">
+												{#if war.defender.logo}
+													<img src={war.defender.logo} alt={war.defender.name} class="size-10 rounded-lg" />
+												{:else}
+													<div class="size-10 bg-base-200 rounded-lg flex items-center justify-center">
+														<FluentFlag20Filled class="size-5 text-base-content/20" />
+													</div>
+												{/if}
+												<span class="text-white font-medium group-hover:text-blue-400 transition-colors">
+													{war.defender.name}
+												</span>
+											</a>
+										</div>
+									</div>
+								</div>
+
+								<div class="flex gap-2">
+									<a href="/war/{war.id}" class="btn btn-sm bg-red-600 hover:bg-red-500 border-0 text-white gap-2">
+										<FluentShieldError20Filled class="size-4" />
+										View War Details
+									</a>
+									{#if data.isPresident}
+										<a
+											href="/war/{war.id}/battles"
+											class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white"
+										>
+											Manage Battles
+										</a>
+									{/if}
+								</div>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
+
 	<!-- War Declaration Button (for foreign presidents) -->
 	{#if data.canDeclareWar}
 		<div class="bg-red-900/20 border border-red-500/30 rounded-xl p-6">

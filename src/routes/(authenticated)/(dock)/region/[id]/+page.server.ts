@@ -13,16 +13,26 @@ import {
 	residenceApplications,
 	parliamentaryElections,
 	battles,
-	wars
+	wars,
+	presidents,
+	userTravels
 } from "$lib/server/schema";
 import { eq, and, sql, or } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
+import {
+	getBorderingRegions,
+	areRegionsAdjacent,
+	getBorderDistance,
+	getStateBorderingRegions,
+	getDistanceBetweenRegions,
+	calculateTravelCost,
+	calculateTravelTime
+} from "$lib/utils/regionBorders";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
-
 	const regionId = parseInt(params.id);
 
 	// Get region with state
@@ -31,7 +41,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		with: {
 			state: {
 				with: {
-					bloc: true
+					bloc: true,
+					president: {
+						with: {
+							user: true
+						}
+					}
 				}
 			},
 			governor: {
@@ -54,22 +69,45 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const populationResult = await db
 		.select({ count: sql<number>`count(*)::int` })
 		.from(residences)
-		.where(eq(residences.regionId, parseInt(params.id)));
+		.where(eq(residences.regionId, regionId));
 
 	const population = populationResult[0]?.count || 0;
 
-	// Check if user has residence here
-	const userResidence = await db.query.residences.findFirst({
-		where: eq(residences.userId, account.id)
+	// Check for active travel
+	const activeTravel = await db.query.userTravels.findFirst({
+		where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
 	});
 
-	const hasResidence = userResidence?.regionId === parseInt(params.id);
+	// Get user's current residence
+	const userResidence = await db.query.residences.findFirst({
+		where: eq(residences.userId, account.id),
+		with: {
+			region: {
+				with: { state: true }
+			}
+		}
+	});
+
+	const hasResidence = userResidence?.regionId === regionId;
+
+	// Calculate travel distance and cost if user has residence elsewhere
+	let travelInfo = null;
+	if (userResidence && userResidence.regionId !== regionId) {
+		const distance = await getDistanceBetweenRegions(userResidence.regionId, regionId);
+		if (distance) {
+			travelInfo = {
+				distanceKm: Math.round(distance * 100) / 100, // Round to 2 decimals
+				cost: calculateTravelCost(distance),
+				timeHours: calculateTravelTime(distance)
+			};
+		}
+	}
 
 	// Check for pending residence application
 	const pendingResidenceApp = await db.query.residenceApplications.findFirst({
 		where: and(
 			eq(residenceApplications.userId, account.id),
-			eq(residenceApplications.regionId, parseInt(params.id)),
+			eq(residenceApplications.regionId, regionId),
 			eq(residenceApplications.status, "pending")
 		)
 	});
@@ -77,11 +115,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Get user's residence state
 	let userResidenceState = null;
 	if (userResidence) {
-		const userRegion = await db.query.regions.findFirst({
-			where: eq(regions.id, userResidence.regionId),
-			with: { state: true }
-		});
-		userResidenceState = userRegion?.state;
+		userResidenceState = userResidence.region.state;
 	}
 
 	// Check if state has had inaugural election
@@ -93,10 +127,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		hasInauguralElection = !!inauguration;
 	}
 
-	// Determine if this region allows free movement
 	const allowsFreeMovement = !region.stateId || !hasInauguralElection;
 
-	// Check if user needs a visa for this state
+	// Visa logic (unchanged)
 	let needsVisa = false;
 	let hasActiveVisa = false;
 	let hasPendingApplication = false;
@@ -105,13 +138,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	if (region.stateId && userResidenceState?.id !== region.stateId && hasInauguralElection) {
 		needsVisa = true;
-
-		// Get visa settings
 		visaSettings = await db.query.stateVisaSettings.findFirst({
 			where: eq(stateVisaSettings.stateId, region.stateId)
 		});
 
-		// Check for active visa
 		activeVisa = await db.query.userVisas.findFirst({
 			where: and(
 				eq(userVisas.userId, account.id),
@@ -122,7 +152,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 		hasActiveVisa = !!activeVisa && new Date(activeVisa.expiresAt) > new Date();
 
-		// Check for pending application
 		const pendingApp = await db.query.visaApplications.findFirst({
 			where: and(
 				eq(visaApplications.userId, account.id),
@@ -134,16 +163,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		hasPendingApplication = !!pendingApp;
 	}
 
-	// Get factories in region
+	// Get factories
 	const regionFactories = await db.query.factories.findMany({
-		where: eq(factories.regionId, parseInt(params.id)),
-		with: {
-			company: true
-		},
+		where: eq(factories.regionId, regionId),
+		with: { company: true },
 		limit: 10
 	});
 
+	// Check for active wars
 	let activeWars: any[] = [];
+	let borderingRegionsForAttack: any[] = [];
+
 	if (region?.stateId) {
 		activeWars = await db.query.wars.findMany({
 			where: and(
@@ -158,9 +188,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				defender: true
 			}
 		});
+
+		// Check if user is president and can attack
+		if (userResidence?.region.stateId && activeWars.length > 0) {
+			const isPresident = await db.query.presidents.findFirst({
+				where: and(eq(presidents.userId, account.id), eq(presidents.stateId, userResidence.region.stateId))
+			});
+
+			if (isPresident) {
+				// Get bordering regions from user's state
+				borderingRegionsForAttack = await getStateBorderingRegions(userResidence.region.stateId, regionId);
+			}
+		}
 	}
 
-	// Check for ongoing battles in this region
+	// Check for ongoing battle
 	const ongoingBattle = await db.query.battles.findFirst({
 		where: and(eq(battles.regionId, regionId), eq(battles.status, "ongoing")),
 		with: {
@@ -200,6 +242,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		hasPendingResidenceApp: !!pendingResidenceApp,
 		allowsFreeMovement,
 		hasInauguralElection,
+		travelInfo,
+		activeTravel: activeTravel
+			? {
+					toRegionId: activeTravel.toRegionId,
+					arrivalTime: activeTravel.arrivalTime.toISOString(),
+					distanceKm: activeTravel.distanceKm
+				}
+			: null,
 		governor: region.governor
 			? {
 					userId: region.governor.userId,
@@ -221,8 +271,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					}
 				: null
 		},
-
 		activeWars,
+		borderingRegionsForAttack,
 		ongoingBattle
 	};
 };
@@ -232,7 +282,6 @@ export const actions: Actions = {
 		const account = locals.account!;
 		const regionId = parseInt(params.id);
 
-		// Get target region
 		const targetRegion = await db.query.regions.findFirst({
 			where: eq(regions.id, regionId),
 			with: { state: true }
@@ -242,17 +291,45 @@ export const actions: Actions = {
 			return fail(404, { error: "Region not found" });
 		}
 
-		// Get current residence
 		const currentResidence = await db.query.residences.findFirst({
 			where: eq(residences.userId, account.id)
 		});
 
-		// Check if already living here
 		if (currentResidence?.regionId === regionId) {
 			return fail(400, { error: "You already live in this region" });
 		}
 
-		// Check for pending application
+		// Calculate travel cost and deduct from wallet
+		if (currentResidence) {
+			const distance = await getDistanceBetweenRegions(currentResidence.regionId, regionId);
+
+			if (!distance) {
+				return fail(400, { error: "Unable to calculate travel distance" });
+			}
+
+			const cost = calculateTravelCost(distance);
+
+			// Check wallet
+			const wallet = await db.query.userWallets.findFirst({
+				where: eq(userWallets.userId, account.id)
+			});
+
+			if (!wallet || Number(wallet.balance) < cost) {
+				return fail(400, {
+					error: `Insufficient funds. Travel costs ${cost.toLocaleString()} (${Math.round(distance)} km)`
+				});
+			}
+
+			// Deduct cost
+			await db
+				.update(userWallets)
+				.set({
+					balance: Number(wallet.balance) - cost,
+					updatedAt: new Date()
+				})
+				.where(eq(userWallets.userId, account.id));
+		}
+
 		const pendingApp = await db.query.residenceApplications.findFirst({
 			where: and(
 				eq(residenceApplications.userId, account.id),
@@ -262,10 +339,9 @@ export const actions: Actions = {
 		});
 
 		if (pendingApp) {
-			return fail(400, { error: "You already have a pending residence application for this region" });
+			return fail(400, { error: "You already have a pending residence application" });
 		}
 
-		// Check if state has had inaugural election
 		let hasInauguralElection = false;
 		if (targetRegion.stateId) {
 			const inauguration = await db.query.parliamentaryElections.findFirst({
@@ -277,9 +353,7 @@ export const actions: Actions = {
 			hasInauguralElection = !!inauguration;
 		}
 
-		// Independent regions or regions before inaugural election allow free movement
 		if (!targetRegion.stateId || !hasInauguralElection) {
-			// Direct move - no approval needed
 			if (currentResidence) {
 				await db
 					.update(residences)
@@ -295,15 +369,9 @@ export const actions: Actions = {
 				});
 			}
 
-			return {
-				success: true,
-				message: hasInauguralElection
-					? "Successfully moved to region!"
-					: "Successfully moved! (Free movement before inaugural election)"
-			};
+			return { success: true, message: "Successfully moved to region!" };
 		}
 
-		// For regions with established states, create application (governor approval required)
 		await db.insert(residenceApplications).values({
 			userId: account.id,
 			regionId: regionId,
@@ -525,8 +593,9 @@ export const actions: Actions = {
 		const regionId = parseInt(params.id);
 		const formData = await request.formData();
 		const warId = parseInt(formData.get("warId") as string);
+		const attackFromRegionId = parseInt(formData.get("attackFromRegionId") as string);
 
-		// Verify war exists and is active
+		// Verify war exists
 		const war = await db.query.wars.findFirst({
 			where: eq(wars.id, warId),
 			with: {
@@ -539,65 +608,63 @@ export const actions: Actions = {
 			return fail(400, { error: "War is not active" });
 		}
 
-		// Get region details
-		const region = await db.query.regions.findFirst({
-			where: eq(regions.id, regionId),
-			with: {
-				state: true
-			}
-		});
-
-		if (!region) {
-			return fail(404, { error: "Region not found" });
-		}
-
-		// Verify user has permission to start battle
+		// Verify user is president
 		const userResidence = await db.query.residences.findFirst({
 			where: eq(residences.userId, account.id),
 			with: {
-				region: {
-					with: {
-						state: true
-					}
-				}
+				region: { with: { state: true } }
 			}
 		});
 
-		if (!userResidence) {
-			return fail(403, { error: "No residence found" });
+		if (!userResidence?.region.stateId) {
+			return fail(403, { error: "No state residence found" });
 		}
 
-		// Check if user is on attacking side
-		const isAttacker =
-			userResidence.region.stateId === war.attackerId ||
-			(war.attackerBlocId && userResidence.region.state?.blocId === war.attackerBlocId);
+		const isPresident = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, userResidence.region.stateId))
+		});
 
-		if (!isAttacker) {
-			return fail(403, { error: "You must be part of the attacking side" });
+		if (!isPresident) {
+			return fail(403, { error: "Only the president can start battles" });
 		}
 
-		// Check if battle already exists for this region in this war
+		// Verify attacking region belongs to user's state
+		const attackingRegion = await db.query.regions.findFirst({
+			where: eq(regions.id, attackFromRegionId)
+		});
+
+		if (attackingRegion?.stateId !== userResidence.region.stateId) {
+			return fail(403, { error: "Selected region does not belong to your state" });
+		}
+
+		// Verify regions are adjacent
+		const isAdjacent = await areRegionsAdjacent(attackFromRegionId, regionId);
+		if (!isAdjacent) {
+			return fail(400, { error: "Regions must be adjacent to start a battle" });
+		}
+
+		// Check for existing battle
 		const existingBattle = await db.query.battles.findFirst({
 			where: and(eq(battles.warId, warId), eq(battles.regionId, regionId), eq(battles.status, "ongoing"))
 		});
 
 		if (existingBattle) {
-			return fail(400, { error: "Battle already ongoing in this region" });
+			return fail(400, { error: "Battle already ongoing" });
 		}
 
-		// Determine defender state
-		const defenderStateId = region.stateId;
+		const region = await db.query.regions.findFirst({
+			where: eq(regions.id, regionId)
+		});
 
-		if (!defenderStateId) {
-			return fail(400, { error: "Region has no state to defend it" });
+		if (!region?.stateId) {
+			return fail(400, { error: "Region has no defending state" });
 		}
 
-		// Create battle
 		await db.insert(battles).values({
 			warId,
 			regionId,
-			attackerStateId: userResidence.region.stateId ?? 0, // todo: user may not have a residence???
-			defenderStateId,
+			attackerStateId: userResidence.region.stateId,
+			defenderStateId: region.stateId,
 			startedBy: account.id
 		});
 
