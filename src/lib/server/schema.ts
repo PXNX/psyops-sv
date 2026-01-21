@@ -282,7 +282,7 @@ export const politicalParties = pgTable("political_parties", {
 		.notNull()
 		.references(() => states.id, { onDelete: "cascade" }),
 	foundedAt: timestamp("founded_at").defaultNow().notNull(),
-	memberCount: integer("member_count").default(1).notNull()
+	autoAcceptMembers: boolean("auto_accept_members").default(false).notNull()
 });
 
 export const partyMembers = pgTable(
@@ -296,10 +296,26 @@ export const partyMembers = pgTable(
 			.notNull()
 			.references(() => politicalParties.id, { onDelete: "cascade" }),
 		role: varchar("role", { length: 20 }).default("member").notNull(),
-		joinedAt: timestamp("joined_at").defaultNow().notNull()
+		joinedAt: timestamp("joined_at").defaultNow().notNull(),
+		acceptedBy: text("accepted_by").references(() => accounts.id, { onDelete: "set null" })
 	},
 	(t) => ({ userPartyIdx: uniqueIndex("idx_user_party").on(t.userId, t.partyId) })
 );
+
+export const partyMembershipApplications = pgTable("party_membership_applications", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	partyId: integer("party_id")
+		.notNull()
+		.references(() => politicalParties.id, { onDelete: "cascade" }),
+	status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, accepted, rejected
+	appliedAt: timestamp("applied_at").defaultNow().notNull(),
+	reviewedBy: text("reviewed_by").references(() => accounts.id, { onDelete: "set null" }),
+	reviewedAt: timestamp("reviewed_at"),
+	reviewNote: text("review_note")
+});
 
 export const parliamentMembers = pgTable(
 	"parliament_members",
@@ -1073,6 +1089,7 @@ export const politicalPartiesRelations = relations(politicalParties, ({ one, man
 	founder: one(accounts, { fields: [politicalParties.founderId], references: [accounts.id] }),
 	state: one(states, { fields: [politicalParties.stateId], references: [states.id] }),
 	members: many(partyMembers),
+	applications: many(partyMembershipApplications),
 	chatMessages: many(chatMessages),
 	inboxMessages: many(inboxMessages)
 }));
@@ -1448,6 +1465,26 @@ export const partyMembersRelations = relations(partyMembers, ({ one }) => ({
 	party: one(politicalParties, {
 		fields: [partyMembers.partyId],
 		references: [politicalParties.id]
+	}),
+	acceptedByUser: one(accounts, {
+		fields: [partyMembers.acceptedBy],
+		references: [accounts.id],
+		relationName: "member_acceptor"
+	})
+}));
+
+export const partyMembershipApplicationsRelations = relations(partyMembershipApplications, ({ one }) => ({
+	user: one(accounts, {
+		fields: [partyMembershipApplications.userId],
+		references: [accounts.id]
+	}),
+	party: one(politicalParties, {
+		fields: [partyMembershipApplications.partyId],
+		references: [politicalParties.id]
+	}),
+	reviewer: one(accounts, {
+		fields: [partyMembershipApplications.reviewedBy],
+		references: [accounts.id]
 	})
 }));
 

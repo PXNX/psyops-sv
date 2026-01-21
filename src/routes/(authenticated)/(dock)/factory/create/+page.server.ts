@@ -11,6 +11,7 @@ import {
 	states,
 	userWallets
 } from "$lib/server/schema";
+import { getRegionName } from "$lib/utils/formatting";
 import { fail, redirect } from "@sveltejs/kit";
 import { and, eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -74,19 +75,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (cooldown) {
 		const cooldownEnd = new Date(cooldown.lastCreationAt);
 		cooldownEnd.setDate(cooldownEnd.getDate() + COOLDOWN_DAYS);
-
 		if (new Date() < cooldownEnd) {
 			isOnCooldown = true;
 			cooldownEndsAt = cooldownEnd.toISOString();
 		}
 	}
 
-	// Get the user's current region with details
+	// Get the user's current region
 	const [region] = await db
 		.select({
 			id: regions.id,
-			name: states.name,
-			stateName: states.name,
 			stateId: regions.stateId,
 			rating: regions.rating,
 			infrastructure: regions.infrastructure,
@@ -102,7 +100,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			chromium: regions.chromium
 		})
 		.from(regions)
-		.innerJoin(states, eq(regions.stateId, states.id))
 		.where(eq(regions.id, residence.regionId));
 
 	if (!region) {
@@ -117,9 +114,30 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 
+	// Check if region is independent (no state)
+	if (!region.stateId) {
+		return {
+			error:
+				"Cannot create factories in independent regions. Factories require state infrastructure and energy supply.",
+			userBalance: wallet?.balance || 0,
+			isOnCooldown,
+			cooldownEndsAt,
+			region: null,
+			companyId: company.id,
+			stateEnergy: null
+		};
+	}
+
+	// Get state name for display
+	const [state] = await db.select({ name: states.name }).from(states).where(eq(states.id, region.stateId));
+
+	const regionName = getRegionName(region.id);
+
 	// Format region with available resources
 	const regionWithResources = {
 		...region,
+		name: regionName,
+		stateName: state?.name || regionName,
 		population: 0,
 		development: 0,
 		resources: [
@@ -169,7 +187,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	};
 
 	// Get state energy
-	const [stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId!));
+	const [stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId));
 
 	return {
 		userBalance: wallet?.balance || 0,
@@ -177,10 +195,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		cooldownEndsAt,
 		region: regionWithResources,
 		companyId: company.id,
-		stateEnergy: stateEnergyData || {
-			totalProduction: 0,
-			usedProduction: 0
-		}
+		stateEnergy: stateEnergyData || { totalProduction: 0, usedProduction: 0 }
 	};
 };
 
@@ -188,7 +203,6 @@ export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const account = locals.account!;
 		const data = await request.formData();
-
 		const name = data.get("name") as string;
 		const factoryType = data.get("factoryType") as string;
 		const output = data.get("output") as string;
@@ -227,7 +241,6 @@ export const actions: Actions = {
 		if (cooldown) {
 			const cooldownEnd = new Date(cooldown.lastCreationAt);
 			cooldownEnd.setDate(cooldownEnd.getDate() + COOLDOWN_DAYS);
-
 			if (new Date() < cooldownEnd) {
 				return fail(400, {
 					error: `Factory creation is on cooldown. Try again after ${cooldownEnd.toLocaleDateString()}`
@@ -275,8 +288,15 @@ export const actions: Actions = {
 			.from(regions)
 			.where(eq(regions.id, residence.regionId));
 
-		if (!region || !region.stateId) {
+		if (!region) {
 			return fail(404, { error: "Region not found" });
+		}
+
+		if (!region.stateId) {
+			return fail(400, {
+				error:
+					"Cannot create factories in independent regions. Factories require state infrastructure and energy supply."
+			});
 		}
 
 		// Check state energy
@@ -322,7 +342,7 @@ export const actions: Actions = {
 			const factoryData: any = {
 				name,
 				companyId: company.id,
-				regionId: residence.regionId, // Always use residence region
+				regionId: residence.regionId,
 				factoryType,
 				maxWorkers,
 				workerWage,
