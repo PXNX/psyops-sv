@@ -11,6 +11,9 @@
 	import FluentArrowDown20Filled from "~icons/fluent/arrow-down-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
+	import FluentSettings20Filled from "~icons/fluent/settings-20-filled";
+	import FluentPersonAvailable20Filled from "~icons/fluent/person-available-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
 	import Modal from "$lib/component/Modal.svelte";
 	import { formatDate } from "$lib/utils/formatting.js";
@@ -24,6 +27,8 @@
 	let promotingMemberId = $state<string | null>(null);
 	let demotingMemberId = $state<string | null>(null);
 	let disbanding = $state(false);
+	let togglingAutoAccept = $state(false);
+	let processingApplicationId = $state<number | null>(null);
 
 	const canManageMembers = $derived(data.isLeader || data.isDeputy);
 	const isOnlyMember = $derived(data.members.length === 1 && data.isLeader);
@@ -54,6 +59,140 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Auto-Accept Settings (Leader only) -->
+	{#if data.isLeader}
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="size-10 rounded-lg flex items-center justify-center bg-blue-600/20">
+						<FluentSettings20Filled class="size-5 text-blue-400" />
+					</div>
+					<div>
+						<h3 class="font-bold text-white">Membership Settings</h3>
+						<p class="text-sm text-gray-400">
+							{#if data.party.autoAcceptMembers}
+								New members are automatically accepted
+							{:else}
+								New members require approval from leadership
+							{/if}
+						</p>
+					</div>
+				</div>
+				<form
+					method="POST"
+					action="?/toggleAutoAccept"
+					use:enhance={() => {
+						togglingAutoAccept = true;
+						return async ({ update }) => {
+							await update();
+							togglingAutoAccept = false;
+						};
+					}}
+				>
+					<label class="label cursor-pointer gap-3">
+						<span class="label-text text-gray-300">Auto-accept members</span>
+						<input
+							type="checkbox"
+							class="toggle toggle-success"
+							checked={data.party.autoAcceptMembers}
+							disabled={togglingAutoAccept}
+							onchange={(e) => e.currentTarget.form?.requestSubmit()}
+						/>
+					</label>
+				</form>
+			</div>
+		</div>
+	{/if}
+
+	<!-- Pending Applications (Leader/Deputy only) -->
+	{#if canManageMembers && data.pendingApplications.length > 0}
+		<div class="bg-slate-800/50 rounded-xl border border-orange-500/30 p-6">
+			<div class="flex items-center gap-3 mb-4">
+				<div class="size-10 rounded-lg flex items-center justify-center bg-orange-600/20">
+					<FluentPersonAvailable20Filled class="size-5 text-orange-400" />
+				</div>
+				<div>
+					<h3 class="font-bold text-white">Pending Applications</h3>
+					<p class="text-sm text-gray-400">{data.pendingApplications.length} member(s) waiting for approval</p>
+				</div>
+			</div>
+
+			<div class="space-y-2">
+				{#each data.pendingApplications as application}
+					<div class="bg-slate-700/30 rounded-lg p-4 border border-white/5">
+						<div class="flex items-center gap-4">
+							<!-- Applicant Avatar -->
+							<div class="size-12 rounded-lg overflow-hidden ring-2 ring-orange-500/30">
+								<Logo
+									src={application.user.logo}
+									alt={application.user.name}
+									class="size-full"
+									placeholderIcon={FluentPeople20Filled}
+									placeholderGradient="from-slate-600 to-slate-700"
+								/>
+							</div>
+
+							<!-- Applicant Info -->
+							<div class="flex-1 min-w-0">
+								<p class="text-base font-semibold text-white truncate">{application.user.name}</p>
+								<div class="flex items-center gap-1 text-xs text-gray-500">
+									<FluentCalendar20Filled class="size-3" />
+									<span>Applied {formatDate(application.appliedAt)}</span>
+								</div>
+							</div>
+
+							<!-- Actions -->
+							<div class="flex items-center gap-2">
+								<form
+									method="POST"
+									action="?/acceptApplication"
+									use:enhance={() => {
+										processingApplicationId = application.id;
+										return async ({ update }) => {
+											await update();
+											processingApplicationId = null;
+										};
+									}}
+								>
+									<input type="hidden" name="applicationId" value={application.id} />
+									<button
+										type="submit"
+										class="btn btn-sm btn-success gap-2"
+										disabled={processingApplicationId === application.id}
+									>
+										<FluentCheckmark20Filled class="size-4" />
+										Accept
+									</button>
+								</form>
+								<form
+									method="POST"
+									action="?/rejectApplication"
+									use:enhance={() => {
+										processingApplicationId = application.id;
+										return async ({ update }) => {
+											await update();
+											processingApplicationId = null;
+										};
+									}}
+								>
+									<input type="hidden" name="applicationId" value={application.id} />
+									<button
+										type="submit"
+										class="btn btn-sm btn-error gap-2"
+										disabled={processingApplicationId === application.id}
+									>
+										<FluentDismiss20Filled class="size-4" />
+										Reject
+									</button>
+								</form>
+							</div>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
+	{/if}
 
 	<!-- Disband Warning (only for solo leader) -->
 	{#if isOnlyMember}
@@ -130,7 +269,7 @@
 									{member.user.name || "Anonymous"}
 								</p>
 							</a>
-							<div class="flex items-center gap-3 mt-1">
+							<div class="flex items-center gap-3 mt-1 flex-wrap">
 								{#if member.role === "leader"}
 									<div class="badge badge-sm border-0" style="background-color: {data.party.color}; color: white">
 										<FluentCrown20Filled class="size-3 mr-1" />
@@ -149,6 +288,12 @@
 									<FluentCalendar20Filled class="size-3" />
 									<span>Joined {formatDate(member.joinedAt)}</span>
 								</div>
+								{#if member.acceptedByName}
+									<span class="text-xs text-gray-500">•</span>
+									<span class="text-xs text-gray-400">
+										Accepted by <span class="text-gray-300 font-medium">{member.acceptedByName}</span>
+									</span>
+								{/if}
 							</div>
 						</div>
 
@@ -222,7 +367,7 @@
 		</div>
 	</div>
 
-	<!-- Join Button (if applicable) -->
+	<!-- Join/Apply Button (if applicable) -->
 	{#if data.canJoin && !data.isMember}
 		<div class="card bg-gradient-to-br from-slate-800/50 to-slate-700/50 border border-white/5 shadow-xl">
 			<div class="card-body items-center text-center">
@@ -234,21 +379,35 @@
 				</div>
 				<h3 class="card-title text-white">Interested in joining?</h3>
 				<p class="text-gray-400 max-w-md">
-					Become a member of <span class="font-semibold" style="color: {data.party.color}">{data.party.name}</span> and
-					help shape the political landscape of {data.party.state.name}
+					{#if data.party.autoAcceptMembers}
+						Become a member of <span class="font-semibold" style="color: {data.party.color}">{data.party.name}</span>
+						and help shape the political landscape of {data.party.state.name}
+					{:else}
+						Apply to join <span class="font-semibold" style="color: {data.party.color}">{data.party.name}</span>. Your
+						application will be reviewed by party leadership.
+					{/if}
 				</p>
 				<div class="card-actions justify-center mt-4">
-					<form method="POST" action="?/join">
+					<form method="POST" action="/party/{data.party.id}?/join">
 						<button
 							type="submit"
 							class="btn btn-lg gap-2 border-0 text-white"
 							style="background-color: {data.party.color}"
 						>
 							<FluentPersonAdd20Filled class="size-5" />
-							Join {data.party.name}
+							{data.party.autoAcceptMembers ? "Join" : "Apply to Join"}
+							{data.party.name}
 						</button>
 					</form>
 				</div>
+			</div>
+		</div>
+	{:else if data.hasApplied}
+		<div class="alert alert-info bg-blue-600/10 border-blue-500/30">
+			<FluentPersonAvailable20Filled class="size-5" />
+			<div>
+				<h3 class="font-bold">Application Pending</h3>
+				<p class="text-sm">Your membership application is awaiting review from party leadership.</p>
 			</div>
 		</div>
 	{/if}

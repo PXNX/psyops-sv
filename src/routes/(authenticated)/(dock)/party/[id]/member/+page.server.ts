@@ -1,7 +1,14 @@
 // src/routes/party/[id]/member/+page.server.ts
 import { db } from "$lib/server/db";
-import { politicalParties, partyMembers, files, states, regions } from "$lib/server/schema";
-import { eq, sql, and } from "drizzle-orm";
+import {
+	politicalParties,
+	partyMembers,
+	partyMembershipApplications,
+	files,
+	states,
+	regions
+} from "$lib/server/schema";
+import { eq, sql, and, count } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
@@ -46,10 +53,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				with: {
 					profile: true
 				}
+			},
+			acceptedByUser: {
+				with: {
+					profile: true
+				}
 			}
 		},
 		orderBy: (partyMembers, { desc }) => [desc(partyMembers.joinedAt)]
 	});
+
+	// Calculate member count
+	const memberCount = members.length;
 
 	// Process member logos
 	const membersWithLogos = await Promise.all(
@@ -68,16 +83,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				}
 			}
 
-			// todo: 		{@const sortedMembers = data.members.slice().sort((a, b) => {
-			// 	const roleOrder = { leader: 0, deputy: 1, member: 2 };
-			// 	return roleOrder[a.role] - roleOrder[b.role];
-			// 	})}
-
 			return {
 				id: m.id,
 				userId: m.userId,
 				role: m.role,
 				joinedAt: m.joinedAt,
+				acceptedBy: m.acceptedBy,
+				acceptedByName: m.acceptedByUser?.profile?.name || null,
 				user: {
 					name: m.user.profile?.name || null,
 					logo: memberLogoUrl
@@ -86,14 +98,61 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		})
 	);
 
+	// Get pending applications if user is leader or deputy
+	let pendingApplications: any[] = [];
+	const membership = membersWithLogos.find((m) => m.userId === account.id);
+	const canManageMembers = membership && (membership.role === "leader" || membership.role === "deputy");
+
+	if (canManageMembers) {
+		const applications = await db.query.partyMembershipApplications.findMany({
+			where: and(eq(partyMembershipApplications.partyId, partyId), eq(partyMembershipApplications.status, "pending")),
+			with: {
+				user: {
+					with: {
+						profile: true
+					}
+				}
+			},
+			orderBy: (apps, { asc }) => [asc(apps.appliedAt)]
+		});
+
+		pendingApplications = await Promise.all(
+			applications.map(async (app) => {
+				let logoUrl = null;
+				if (app.user.profile?.logo) {
+					try {
+						const logoFile = await db.query.files.findFirst({
+							where: eq(files.id, app.user.profile.logo)
+						});
+						if (logoFile) {
+							logoUrl = await getSignedDownloadUrl(logoFile.key);
+						}
+					} catch (err) {
+						console.error("Failed to get applicant logo:", err);
+					}
+				}
+
+				return {
+					id: app.id,
+					userId: app.userId,
+					appliedAt: app.appliedAt,
+					user: {
+						name: app.user.profile?.name || "Anonymous",
+						logo: logoUrl
+					}
+				};
+			})
+		);
+	}
+
 	// Check if current user is a member
 	let isMember = false;
 	let isLeader = false;
 	let isDeputy = false;
 	let memberSince = null;
 	let canJoin = false;
+	let hasApplied = false;
 
-	const membership = membersWithLogos.find((m) => m.userId === account.id);
 	if (membership) {
 		isMember = true;
 		isLeader = membership.role === "leader";
@@ -104,20 +163,36 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const existingMembership = await db.query.partyMembers.findFirst({
 			where: eq(partyMembers.userId, account.id)
 		});
-		canJoin = !existingMembership;
+
+		// Check if user has a pending application
+		const existingApplication = await db.query.partyMembershipApplications.findFirst({
+			where: and(
+				eq(partyMembershipApplications.userId, account.id),
+				eq(partyMembershipApplications.partyId, partyId),
+				eq(partyMembershipApplications.status, "pending")
+			)
+		});
+
+		hasApplied = !!existingApplication;
+		canJoin = !existingMembership && !hasApplied;
 	}
 
-	// Calculate party rank
-	const allParties = await db
-		.select({ id: politicalParties.id, memberCount: politicalParties.memberCount })
+	// Calculate party rank - get all parties with their member counts
+	const allPartiesWithCounts = await db
+		.select({
+			id: politicalParties.id,
+			memberCount: count(partyMembers.id)
+		})
 		.from(politicalParties)
+		.leftJoin(partyMembers, eq(politicalParties.id, partyMembers.partyId))
 		.where(eq(politicalParties.stateId, party.stateId))
-		.orderBy(sql`${politicalParties.memberCount} DESC`);
+		.groupBy(politicalParties.id)
+		.orderBy(sql`count(${partyMembers.id}) DESC`);
 
-	const partyRank = allParties.findIndex((p) => p.id === partyId) + 1;
+	const partyRank = allPartiesWithCounts.findIndex((p) => p.id === partyId) + 1;
 
 	// Check if this is the only party in the state
-	const isOnlyPartyInState = allParties.length === 1;
+	const isOnlyPartyInState = allPartiesWithCounts.length === 1;
 
 	// Get state statistics for disband warning
 	let stateRegionCount = 0;
@@ -144,18 +219,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			ideology: party.ideology,
 			description: party.description,
 			foundedAt: party.foundedAt.toISOString(),
-			memberCount: party.memberCount,
+			memberCount,
+			autoAcceptMembers: party.autoAcceptMembers,
 			state: {
 				id: party.state.id,
 				name: party.state.name
 			}
 		},
 		members: membersWithLogos,
+		pendingApplications,
 		isMember,
 		isLeader,
 		isDeputy,
 		memberSince,
 		canJoin,
+		hasApplied,
 		partyRank,
 		isOnlyPartyInState,
 		stateRegionCount,
@@ -165,6 +243,119 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	toggleAutoAccept: async ({ params, locals }) => {
+		const account = locals.account!;
+		const partyId = parseInt(params.id);
+
+		// Check if user is the leader
+		const membership = await db.query.partyMembers.findFirst({
+			where: and(eq(partyMembers.partyId, partyId), eq(partyMembers.userId, account.id))
+		});
+
+		if (!membership || membership.role !== "leader") {
+			return fail(403, { error: "Only the party leader can change this setting" });
+		}
+
+		// Get current setting
+		const party = await db.query.politicalParties.findFirst({
+			where: eq(politicalParties.id, partyId)
+		});
+
+		if (!party) {
+			return fail(404, { error: "Party not found" });
+		}
+
+		// Toggle the setting
+		await db
+			.update(politicalParties)
+			.set({ autoAcceptMembers: !party.autoAcceptMembers })
+			.where(eq(politicalParties.id, partyId));
+
+		return { success: true, message: `Auto-accept ${!party.autoAcceptMembers ? "enabled" : "disabled"}` };
+	},
+
+	acceptApplication: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const partyId = parseInt(params.id);
+		const formData = await request.formData();
+		const applicationId = parseInt(formData.get("applicationId") as string);
+
+		// Check if requester is leader or deputy
+		const requesterMembership = await db.query.partyMembers.findFirst({
+			where: and(eq(partyMembers.partyId, partyId), eq(partyMembers.userId, account.id))
+		});
+
+		if (!requesterMembership || (requesterMembership.role !== "leader" && requesterMembership.role !== "deputy")) {
+			return fail(403, { error: "You don't have permission to accept applications" });
+		}
+
+		// Get the application
+		const application = await db.query.partyMembershipApplications.findFirst({
+			where: eq(partyMembershipApplications.id, applicationId)
+		});
+
+		if (!application || application.partyId !== partyId) {
+			return fail(404, { error: "Application not found" });
+		}
+
+		// Add user as member
+		await db.insert(partyMembers).values({
+			userId: application.userId,
+			partyId,
+			role: "member",
+			acceptedBy: account.id
+		});
+
+		// Update application status
+		await db
+			.update(partyMembershipApplications)
+			.set({
+				status: "accepted",
+				reviewedBy: account.id,
+				reviewedAt: new Date()
+			})
+			.where(eq(partyMembershipApplications.id, applicationId));
+
+		return { success: true, message: "Application accepted" };
+	},
+
+	rejectApplication: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const partyId = parseInt(params.id);
+		const formData = await request.formData();
+		const applicationId = parseInt(formData.get("applicationId") as string);
+
+		// Check if requester is leader or deputy
+		const requesterMembership = await db.query.partyMembers.findFirst({
+			where: and(eq(partyMembers.partyId, partyId), eq(partyMembers.userId, account.id))
+		});
+
+		if (!requesterMembership || (requesterMembership.role !== "leader" && requesterMembership.role !== "deputy")) {
+			return fail(403, { error: "You don't have permission to reject applications" });
+		}
+
+		// Get the application
+		const application = await db.query.partyMembershipApplications.findFirst({
+			where: eq(partyMembershipApplications.id, applicationId)
+		});
+
+		if (!application || application.partyId !== partyId) {
+			return fail(404, { error: "Application not found" });
+		}
+
+		// Update application status
+		await db
+			.update(partyMembershipApplications)
+			.set({
+				status: "rejected",
+				reviewedBy: account.id,
+				reviewedAt: new Date()
+			})
+			.where(eq(partyMembershipApplications.id, applicationId));
+
+		return { success: true, message: "Application rejected" };
+	},
+
 	kick: async ({ request, params, locals }) => {
 		const account = locals.account!;
 		const partyId = parseInt(params.id);
@@ -205,12 +396,6 @@ export const actions: Actions = {
 
 		// Delete the membership
 		await db.delete(partyMembers).where(eq(partyMembers.id, targetMembership.id));
-
-		// Update member count
-		await db
-			.update(politicalParties)
-			.set({ memberCount: sql`${politicalParties.memberCount} - 1` })
-			.where(eq(politicalParties.id, partyId));
 
 		return { success: true, message: "Member kicked successfully" };
 	},
@@ -325,7 +510,7 @@ export const actions: Actions = {
 			}
 
 			// Check if leader is the only member
-			if (party.memberCount > 1) {
+			if (party.members.length > 1) {
 				return fail(400, { error: "Cannot disband party with other members. All members must leave first." });
 			}
 

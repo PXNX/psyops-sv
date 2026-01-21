@@ -11,6 +11,7 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
+	import FluentPersonAvailable20Filled from "~icons/fluent/person-available-20-filled";
 
 	const { data, form } = $props();
 </script>
@@ -139,15 +140,33 @@
 			<form method="POST" action="?/join" use:enhance>
 				<div class="flex items-center justify-between">
 					<div>
-						<h3 class="text-lg font-semibold text-white mb-1">Join This Party</h3>
-						<p class="text-sm text-gray-400">Become a member and help shape the political landscape</p>
+						<h3 class="text-lg font-semibold text-white mb-1">
+							{data.party.autoAcceptMembers ? "Join This Party" : "Apply to Join"}
+						</h3>
+						<p class="text-sm text-gray-400">
+							{#if data.party.autoAcceptMembers}
+								Become a member and help shape the political landscape
+							{:else}
+								Submit an application to join this party. Leadership will review your request.
+							{/if}
+						</p>
 					</div>
 					<button type="submit" class="btn gap-2" style="background-color: {data.party.color}; border: none;">
 						<FluentPersonAdd20Filled class="size-5" />
-						Join Party
+						{data.party.autoAcceptMembers ? "Join Party" : "Apply"}
 					</button>
 				</div>
 			</form>
+		</div>
+	{:else if data.hasApplied}
+		<div class="bg-orange-600/10 border border-orange-500/20 rounded-xl p-6">
+			<div class="flex items-center gap-3">
+				<FluentPersonAvailable20Filled class="size-8 text-orange-400" />
+				<div>
+					<h3 class="text-lg font-semibold text-white mb-1">Application Pending</h3>
+					<p class="text-sm text-gray-400">Your membership application is awaiting review from party leadership.</p>
+				</div>
+			</div>
 		</div>
 	{:else if data.isMember && !data.isLeader}
 		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">

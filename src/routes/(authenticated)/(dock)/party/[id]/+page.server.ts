@@ -1,7 +1,7 @@
 // src/routes/party/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { politicalParties, partyMembers, files, userProfiles } from "$lib/server/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { politicalParties, partyMembers, partyMembershipApplications, files, userProfiles } from "$lib/server/schema";
+import { and, eq, sql, count } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
@@ -54,6 +54,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.where(eq(partyMembers.partyId, partyId))
 		.orderBy(sql`${partyMembers.joinedAt} DESC`);
 
+	// Calculate member count
+	const memberCount = members.length;
+
 	// Get user profiles for all members
 	const membersWithProfiles = await Promise.all(
 		members.map(async (member) => {
@@ -98,6 +101,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	let isLeader = false;
 	let memberSince = null;
 	let canJoin = false;
+	let hasApplied = false;
 
 	if (account) {
 		const membership = members.find((m) => m.userId === account.id);
@@ -110,18 +114,34 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			const existingMembership = await db.query.partyMembers.findFirst({
 				where: eq(partyMembers.userId, account.id)
 			});
-			canJoin = !existingMembership;
+
+			// Check if user has a pending application
+			const existingApplication = await db.query.partyMembershipApplications.findFirst({
+				where: and(
+					eq(partyMembershipApplications.userId, account.id),
+					eq(partyMembershipApplications.partyId, partyId),
+					eq(partyMembershipApplications.status, "pending")
+				)
+			});
+
+			hasApplied = !!existingApplication;
+			canJoin = !existingMembership && !hasApplied;
 		}
 	}
 
-	// Calculate party rank
-	const allParties = await db
-		.select({ id: politicalParties.id, memberCount: politicalParties.memberCount })
+	// Calculate party rank - get all parties with their member counts
+	const allPartiesWithCounts = await db
+		.select({
+			id: politicalParties.id,
+			memberCount: count(partyMembers.id)
+		})
 		.from(politicalParties)
+		.leftJoin(partyMembers, eq(politicalParties.id, partyMembers.partyId))
 		.where(eq(politicalParties.stateId, party.stateId))
-		.orderBy(sql`${politicalParties.memberCount} DESC`);
+		.groupBy(politicalParties.id)
+		.orderBy(sql`count(${partyMembers.id}) DESC`);
 
-	const partyRank = allParties.findIndex((p) => p.id === partyId) + 1;
+	const partyRank = allPartiesWithCounts.findIndex((p) => p.id === partyId) + 1;
 
 	return {
 		party: {
@@ -133,7 +153,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			ideology: party.ideology,
 			description: party.description,
 			foundedAt: party.foundedAt.toISOString(),
-			memberCount: party.memberCount,
+			memberCount,
+			autoAcceptMembers: party.autoAcceptMembers,
 			state: {
 				id: party.state.id,
 				name: party.state.name
@@ -144,6 +165,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isLeader,
 		memberSince,
 		canJoin,
+		hasApplied,
 		partyRank,
 		parliamentSeats: 0
 	};
@@ -167,6 +189,19 @@ export const actions: Actions = {
 			return fail(400, { error: "You are already a member of another party" });
 		}
 
+		// Check if user has already applied
+		const existingApplication = await db.query.partyMembershipApplications.findFirst({
+			where: and(
+				eq(partyMembershipApplications.userId, account.id),
+				eq(partyMembershipApplications.partyId, partyId),
+				eq(partyMembershipApplications.status, "pending")
+			)
+		});
+
+		if (existingApplication) {
+			return fail(400, { error: "You already have a pending application to this party" });
+		}
+
 		// Check if party exists
 		const party = await db.query.politicalParties.findFirst({
 			where: eq(politicalParties.id, partyId)
@@ -177,22 +212,26 @@ export const actions: Actions = {
 		}
 
 		try {
-			// Add user as member
-			await db.insert(partyMembers).values({
-				userId: account.id,
-				partyId,
-				role: "member"
-			});
+			if (party.autoAcceptMembers) {
+				// Auto-accept: Add user directly as member
+				await db.insert(partyMembers).values({
+					userId: account.id,
+					partyId,
+					role: "member",
+					acceptedBy: party.founderId // Founder is credited with auto-accepts
+				});
 
-			// Increment member count
-			await db
-				.update(politicalParties)
-				.set({
-					memberCount: sql`${politicalParties.memberCount} + 1`
-				})
-				.where(eq(politicalParties.id, partyId));
+				return { success: "Successfully joined the party!" };
+			} else {
+				// Manual approval: Create application
+				await db.insert(partyMembershipApplications).values({
+					userId: account.id,
+					partyId,
+					status: "pending"
+				});
 
-			return { success: "Successfully joined the party!" };
+				return { success: "Application submitted! Waiting for approval from party leadership." };
+			}
 		} catch (error) {
 			console.error("Join party error:", error);
 			return fail(500, { error: "Failed to join party" });
@@ -226,14 +265,6 @@ export const actions: Actions = {
 
 			// Remove membership
 			await db.delete(partyMembers).where(eq(partyMembers.id, membership.id));
-
-			// Decrement member count
-			await db
-				.update(politicalParties)
-				.set({
-					memberCount: sql`${politicalParties.memberCount} - 1`
-				})
-				.where(eq(politicalParties.id, partyId));
 		} catch (err) {
 			// Re-throw redirect errors
 			if (err instanceof Response && err.status === 303) {
@@ -274,7 +305,7 @@ export const actions: Actions = {
 			}
 
 			// Check if leader is the only member
-			if (party.memberCount > 1) {
+			if (party.members.length > 1) {
 				return fail(400, { error: "Cannot delete party with other members. All members must leave first." });
 			}
 
