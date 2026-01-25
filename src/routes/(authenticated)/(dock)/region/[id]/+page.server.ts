@@ -96,7 +96,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const distance = await getDistanceBetweenRegions(userResidence.regionId, regionId);
 		if (distance) {
 			travelInfo = {
-				distanceKm: Math.round(distance * 100) / 100, // Round to 2 decimals
+				distanceKm: Math.round(distance * 100) / 100,
 				cost: calculateTravelCost(distance),
 				timeHours: calculateTravelTime(distance)
 			};
@@ -129,7 +129,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const allowsFreeMovement = !region.stateId || !hasInauguralElection;
 
-	// Visa logic (unchanged)
+	// Visa logic
 	let needsVisa = false;
 	let hasActiveVisa = false;
 	let hasPendingApplication = false;
@@ -196,7 +196,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			});
 
 			if (isPresident) {
-				// Get bordering regions from user's state
 				borderingRegionsForAttack = await getStateBorderingRegions(userResidence.region.stateId, regionId);
 			}
 		}
@@ -217,7 +216,46 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	});
 
-	return {
+	// Get bordering regions with state information
+	const borderingRegionsData = await getBorderingRegions(regionId);
+	const borderingRegions = await Promise.all(
+		borderingRegionsData.map(async (border) => {
+			const borderRegion = await db.query.regions.findFirst({
+				where: eq(regions.id, border.id),
+				with: {
+					state: true
+				}
+			});
+
+			if (!borderRegion) return null;
+
+			const popResult = await db
+				.select({ count: sql<number>`count(*)::int` })
+				.from(residences)
+				.where(eq(residences.regionId, border.id));
+
+			return {
+				id: borderRegion.id,
+				name: getRegionName(borderRegion.id),
+				distanceKm: Math.round(border.distanceKm * 100) / 100,
+				population: popResult[0]?.count || 0,
+				stateId: borderRegion.stateId,
+				stateName: borderRegion.state?.name || null,
+				resources: {
+					oil: borderRegion.oil || 0,
+					steel: borderRegion.steel || 0,
+					chromium: borderRegion.chromium || 0,
+					tungsten: borderRegion.tungsten || 0,
+					rubber: borderRegion.rubber || 0,
+					aluminium: borderRegion.aluminium || 0
+				}
+			};
+		})
+	);
+
+	const validBorderingRegions = borderingRegions.filter((r) => r !== null);
+
+	const result = {
 		region: {
 			id: region.id,
 			name: getRegionName(region.id),
@@ -273,14 +311,28 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		},
 		activeWars,
 		borderingRegionsForAttack,
-		ongoingBattle
+		ongoingBattle,
+		borderingRegions: validBorderingRegions
 	};
+
+	console.log(JSON.stringify(result, null, 2));
+
+	return result;
 };
 
 export const actions: Actions = {
-	changeResidence: async ({ params, locals }) => {
+	startTravel: async ({ params, locals }) => {
 		const account = locals.account!;
 		const regionId = parseInt(params.id);
+
+		// Check if user already has active travel
+		const existingTravel = await db.query.userTravels.findFirst({
+			where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
+		});
+
+		if (existingTravel) {
+			return fail(400, { error: "You are already traveling" });
+		}
 
 		const targetRegion = await db.query.regions.findFirst({
 			where: eq(regions.id, regionId),
@@ -295,53 +347,36 @@ export const actions: Actions = {
 			where: eq(residences.userId, account.id)
 		});
 
-		if (currentResidence?.regionId === regionId) {
+		if (!currentResidence) {
+			return fail(400, { error: "You must have a residence to travel" });
+		}
+
+		if (currentResidence.regionId === regionId) {
 			return fail(400, { error: "You already live in this region" });
 		}
 
-		// Calculate travel cost and deduct from wallet
-		if (currentResidence) {
-			const distance = await getDistanceBetweenRegions(currentResidence.regionId, regionId);
+		// Calculate travel distance and cost
+		const distance = await getDistanceBetweenRegions(currentResidence.regionId, regionId);
 
-			if (!distance) {
-				return fail(400, { error: "Unable to calculate travel distance" });
-			}
-
-			const cost = calculateTravelCost(distance);
-
-			// Check wallet
-			const wallet = await db.query.userWallets.findFirst({
-				where: eq(userWallets.userId, account.id)
-			});
-
-			if (!wallet || Number(wallet.balance) < cost) {
-				return fail(400, {
-					error: `Insufficient funds. Travel costs ${cost.toLocaleString()} (${Math.round(distance)} km)`
-				});
-			}
-
-			// Deduct cost
-			await db
-				.update(userWallets)
-				.set({
-					balance: Number(wallet.balance) - cost,
-					updatedAt: new Date()
-				})
-				.where(eq(userWallets.userId, account.id));
+		if (!distance) {
+			return fail(400, { error: "Unable to calculate travel distance" });
 		}
 
-		const pendingApp = await db.query.residenceApplications.findFirst({
-			where: and(
-				eq(residenceApplications.userId, account.id),
-				eq(residenceApplications.regionId, regionId),
-				eq(residenceApplications.status, "pending")
-			)
+		const cost = calculateTravelCost(distance);
+		const travelTimeHours = calculateTravelTime(distance);
+
+		// Check wallet
+		const wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
 		});
 
-		if (pendingApp) {
-			return fail(400, { error: "You already have a pending residence application" });
+		if (!wallet || Number(wallet.balance) < cost) {
+			return fail(400, {
+				error: `Insufficient funds. Travel costs $${cost.toLocaleString()} (${Math.round(distance)} km)`
+			});
 		}
 
+		// Check for pending application if needed
 		let hasInauguralElection = false;
 		if (targetRegion.stateId) {
 			const inauguration = await db.query.parliamentaryElections.findFirst({
@@ -353,41 +388,61 @@ export const actions: Actions = {
 			hasInauguralElection = !!inauguration;
 		}
 
-		if (!targetRegion.stateId || !hasInauguralElection) {
-			if (currentResidence) {
-				await db
-					.update(residences)
-					.set({
-						regionId: regionId,
-						movedInAt: new Date()
-					})
-					.where(eq(residences.userId, account.id));
-			} else {
-				await db.insert(residences).values({
-					userId: account.id,
-					regionId: regionId
-				});
+		// For established states, check if residence application exists
+		if (targetRegion.stateId && hasInauguralElection) {
+			const pendingApp = await db.query.residenceApplications.findFirst({
+				where: and(
+					eq(residenceApplications.userId, account.id),
+					eq(residenceApplications.regionId, regionId),
+					eq(residenceApplications.status, "pending")
+				)
+			});
+
+			if (pendingApp) {
+				return fail(400, { error: "You already have a pending residence application for this region" });
 			}
 
-			return { success: true, message: "Successfully moved to region!" };
+			// Create residence application
+			await db.insert(residenceApplications).values({
+				userId: account.id,
+				regionId: regionId,
+				status: "pending"
+			});
 		}
 
-		await db.insert(residenceApplications).values({
+		// Deduct cost from wallet
+		await db
+			.update(userWallets)
+			.set({
+				balance: Number(wallet.balance) - cost,
+				updatedAt: new Date()
+			})
+			.where(eq(userWallets.userId, account.id));
+
+		// Create travel record
+		const departureTime = new Date();
+		const arrivalTime = new Date(departureTime.getTime() + travelTimeHours * 60 * 60 * 1000);
+
+		await db.insert(userTravels).values({
 			userId: account.id,
-			regionId: regionId,
-			status: "pending"
+			fromRegionId: currentResidence.regionId,
+			toRegionId: regionId,
+			departureTime,
+			arrivalTime,
+			travelDuration: travelTimeHours,
+			status: "in_progress",
+			distanceKm: Math.round(distance)
 		});
 
 		return {
 			success: true,
-			message: "Residence application submitted. Awaiting governor approval."
+			message: `Started traveling to ${getRegionName(regionId)}. Arrival in ${travelTimeHours} hour${travelTimeHours === 1 ? "" : "s"}.`
 		};
 	},
 
 	purchaseVisa: async ({ params, request, locals }) => {
 		const account = locals.account!;
 
-		// Get region to find state
 		const region = await db.query.regions.findFirst({
 			where: eq(regions.id, parseInt(params.id)),
 			with: { state: true }
@@ -399,7 +454,6 @@ export const actions: Actions = {
 
 		const stateId = region.stateId;
 
-		// Check if state has had inaugural election
 		const inauguration = await db.query.parliamentaryElections.findFirst({
 			where: and(eq(parliamentaryElections.stateId, stateId), eq(parliamentaryElections.isInaugural, true))
 		});
@@ -408,7 +462,6 @@ export const actions: Actions = {
 			return fail(400, { error: "This state has not held its inaugural election yet. Visas are not required." });
 		}
 
-		// Get user's residence
 		const residence = await db.query.residences.findFirst({
 			where: eq(residences.userId, account.id),
 			with: {
@@ -418,17 +471,14 @@ export const actions: Actions = {
 			}
 		});
 
-		// Check if user is already a resident of this state
 		if (residence?.region.stateId === stateId) {
 			return fail(400, { error: "You are already a resident of this state" });
 		}
 
-		// Get visa settings
 		let visaSettings = await db.query.stateVisaSettings.findFirst({
 			where: eq(stateVisaSettings.stateId, stateId)
 		});
 
-		// Create default if doesn't exist
 		if (!visaSettings) {
 			[visaSettings] = await db
 				.insert(stateVisaSettings)
@@ -442,9 +492,7 @@ export const actions: Actions = {
 				.returning();
 		}
 
-		// Check if visa is required
 		if (!visaSettings.visaRequired) {
-			// Grant free visa
 			const expiresAt = new Date();
 			expiresAt.setDate(expiresAt.getDate() + 14);
 
@@ -464,7 +512,6 @@ export const actions: Actions = {
 			};
 		}
 
-		// Check if user already has an active visa
 		const existingVisa = await db.query.userVisas.findFirst({
 			where: and(eq(userVisas.userId, account.id), eq(userVisas.stateId, stateId), eq(userVisas.status, "active"))
 		});
@@ -473,7 +520,6 @@ export const actions: Actions = {
 			return fail(400, { error: "You already have an active visa for this state" });
 		}
 
-		// Check for pending application
 		const pendingApplication = await db.query.visaApplications.findFirst({
 			where: and(
 				eq(visaApplications.userId, account.id),
@@ -486,7 +532,6 @@ export const actions: Actions = {
 			return fail(400, { error: "You already have a pending visa application" });
 		}
 
-		// If manual approval required, create application
 		if (!visaSettings.autoApprove) {
 			await db.insert(visaApplications).values({
 				userId: account.id,
@@ -501,12 +546,10 @@ export const actions: Actions = {
 			};
 		}
 
-		// Auto-approve: Process payment
 		const visaCost = Number(visaSettings.visaCost);
 		const taxRate = visaSettings.visaTaxRate;
 		const taxAmount = Math.floor(visaCost * (taxRate / 100));
 
-		// Get user wallet
 		let wallet = await db.query.userWallets.findFirst({
 			where: eq(userWallets.userId, account.id)
 		});
@@ -523,14 +566,12 @@ export const actions: Actions = {
 
 		const walletBalance = Number(wallet.balance);
 
-		// Check if user has enough money
 		if (walletBalance < visaCost) {
 			return fail(400, {
 				error: `Insufficient funds. Need $${visaCost.toLocaleString()}, have $${walletBalance.toLocaleString()}`
 			});
 		}
 
-		// Deduct from user wallet
 		await db
 			.update(userWallets)
 			.set({
@@ -539,7 +580,6 @@ export const actions: Actions = {
 			})
 			.where(eq(userWallets.userId, account.id));
 
-		// Add tax to state treasury
 		let treasury = await db.query.stateTreasury.findFirst({
 			where: eq(stateTreasury.stateId, stateId)
 		});
@@ -568,7 +608,6 @@ export const actions: Actions = {
 			})
 			.where(eq(stateTreasury.stateId, stateId));
 
-		// Create visa
 		const expiresAt = new Date();
 		expiresAt.setDate(expiresAt.getDate() + 14);
 
@@ -595,7 +634,6 @@ export const actions: Actions = {
 		const warId = parseInt(formData.get("warId") as string);
 		const attackFromRegionId = parseInt(formData.get("attackFromRegionId") as string);
 
-		// Verify war exists
 		const war = await db.query.wars.findFirst({
 			where: eq(wars.id, warId),
 			with: {
@@ -608,7 +646,6 @@ export const actions: Actions = {
 			return fail(400, { error: "War is not active" });
 		}
 
-		// Verify user is president
 		const userResidence = await db.query.residences.findFirst({
 			where: eq(residences.userId, account.id),
 			with: {
@@ -628,7 +665,6 @@ export const actions: Actions = {
 			return fail(403, { error: "Only the president can start battles" });
 		}
 
-		// Verify attacking region belongs to user's state
 		const attackingRegion = await db.query.regions.findFirst({
 			where: eq(regions.id, attackFromRegionId)
 		});
@@ -637,13 +673,11 @@ export const actions: Actions = {
 			return fail(403, { error: "Selected region does not belong to your state" });
 		}
 
-		// Verify regions are adjacent
 		const isAdjacent = await areRegionsAdjacent(attackFromRegionId, regionId);
 		if (!isAdjacent) {
 			return fail(400, { error: "Regions must be adjacent to start a battle" });
 		}
 
-		// Check for existing battle
 		const existingBattle = await db.query.battles.findFirst({
 			where: and(eq(battles.warId, warId), eq(battles.regionId, regionId), eq(battles.status, "ongoing"))
 		});

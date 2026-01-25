@@ -1,8 +1,8 @@
-// src/lib/server/utils/regionBorders.ts
+// src/lib/utils/regionBorders.ts
 import { db } from "$lib/server/db";
 import { regionBorders, regions } from "$lib/server/schema";
-import { eq, or, and, sql } from "drizzle-orm";
-import { getRegionName } from "./formatting";
+import { eq, or, and, sql, inArray } from "drizzle-orm";
+import { getRegionName } from "$lib/utils/formatting";
 
 /**
  * Get all regions that border a given region
@@ -65,9 +65,14 @@ export async function getStateBorderingRegions(
 		where: eq(regions.stateId, stateId)
 	});
 
+	if (stateRegions.length === 0) {
+		return [];
+	}
+
 	const stateRegionIds = stateRegions.map((r) => r.id);
 
 	// Get borders where one side is the target and the other is in the state
+	// We need to check both directions since borders are stored with smaller ID first
 	const borders = await db
 		.select({
 			regionId: regionBorders.regionId,
@@ -77,24 +82,33 @@ export async function getStateBorderingRegions(
 		.from(regionBorders)
 		.where(
 			or(
-				and(eq(regionBorders.regionId, targetRegionId), sql`${regionBorders.neighborId} = ANY(${stateRegionIds})`),
-				and(eq(regionBorders.neighborId, targetRegionId), sql`${regionBorders.regionId} = ANY(${stateRegionIds})`)
+				// Target region is on the left side, state region is on the right
+				and(eq(regionBorders.regionId, targetRegionId), inArray(regionBorders.neighborId, stateRegionIds)),
+				// Target region is on the right side, state region is on the left
+				and(eq(regionBorders.neighborId, targetRegionId), inArray(regionBorders.regionId, stateRegionIds))
 			)
 		);
 
 	// Map to region details
-	const borderingRegionIds = borders.map((b) => (b.regionId === targetRegionId ? b.neighborId : b.regionId));
+	const result: Array<{ id: number; name: string; distanceKm: number }> = [];
 
-	const borderingRegions = stateRegions.filter((r) => borderingRegionIds.includes(r.id));
+	for (const border of borders) {
+		// Determine which region ID is the state's region
+		const stateRegionId = border.regionId === targetRegionId ? border.neighborId : border.regionId;
 
-	return borderingRegions.map((r) => {
-		const border = borders.find((b) => b.regionId === r.id || b.neighborId === r.id);
-		return {
-			id: r.id,
-			name: getRegionName(r.id), // You'll need to import this
-			distanceKm: Number(border?.distanceKm || 0)
-		};
-	});
+		// Find the region details
+		const region = stateRegions.find((r) => r.id === stateRegionId);
+
+		if (region) {
+			result.push({
+				id: region.id,
+				name: getRegionName(region.id),
+				distanceKm: Number(border.distanceKm)
+			});
+		}
+	}
+
+	return result;
 }
 
 /**
