@@ -15,6 +15,68 @@ interface StateResource {
 	};
 }
 
+// Enhanced name cleaning for better geocoding results
+function cleanStateName(name: string): string {
+	return name
+		.replace(/\(.*?\)/g, "") // Remove parentheses
+		.replace(/\d+/g, "") // Remove numbers
+		.trim();
+}
+
+// Try multiple search strategies
+async function getCoordinatesWithFallback(stateName: string): Promise<{ lat: number; lon: number } | null> {
+	// Strategy 1: Try exact name with Wikipedia
+	let coords = await getCoordinatesFromWikipedia(stateName);
+	if (coords) return coords;
+
+	// Strategy 2: Try exact name with OSM
+	coords = await getCoordinatesFromOSM(stateName);
+	if (coords) return coords;
+
+	// Strategy 3: Try cleaned name with Wikipedia
+	const cleanedName = cleanStateName(stateName);
+	if (cleanedName !== stateName) {
+		coords = await getCoordinatesFromWikipedia(cleanedName);
+		if (coords) return coords;
+
+		coords = await getCoordinatesFromOSM(cleanedName);
+		if (coords) return coords;
+	}
+
+	// Strategy 4: Try adding country context for ambiguous names
+	const withCountry = await tryWithCountryContext(stateName);
+	if (withCountry) return withCountry;
+
+	return null;
+}
+
+async function tryWithCountryContext(stateName: string): Promise<{ lat: number; lon: number } | null> {
+	// Common HOI4 state patterns
+	const countryHints = [
+		"Germany",
+		"France",
+		"United Kingdom",
+		"Soviet Union",
+		"United States",
+		"Japan",
+		"Italy",
+		"Poland"
+	];
+
+	for (const country of countryHints.slice(0, 2)) {
+		// Limit to avoid too many requests
+		const searchTerm = `${stateName}, ${country}`;
+		const coords = await getCoordinatesFromOSM(searchTerm);
+		if (coords) {
+			console.log(`  ✓ Found with context: ${country}`);
+			return coords;
+		}
+		await new Promise((resolve) => setTimeout(resolve, 300));
+	}
+
+	return null;
+}
+
 async function fetchStateResources(): Promise<StateResource[]> {
 	console.log("Fetching HOI4 state resources from hoi4cheats.com...\n");
 
@@ -41,11 +103,8 @@ async function fetchStateResources(): Promise<StateResource[]> {
 
 			console.log(`Processing ${++count}: ${name} (ID: ${id})`);
 
-			// Try Wikipedia first, then OSM
-			let coords = await getCoordinatesFromWikipedia(name);
-			if (!coords) {
-				coords = await getCoordinatesFromOSM(name);
-			}
+			// Use enhanced geocoding with fallbacks
+			const coords = await getCoordinatesWithFallback(name);
 
 			// Extract resources
 			const resources: StateResource["resources"] = {};
@@ -78,7 +137,7 @@ async function fetchStateResources(): Promise<StateResource[]> {
 			});
 
 			// Rate limiting for API calls
-			await new Promise((resolve) => setTimeout(resolve, 500));
+			await new Promise((resolve) => setTimeout(resolve, 600));
 		}
 
 		console.log(`\nFound ${states.length} states\n`);
@@ -91,7 +150,6 @@ async function fetchStateResources(): Promise<StateResource[]> {
 
 async function getCoordinatesFromWikipedia(stateName: string): Promise<{ lat: number; lon: number } | null> {
 	try {
-		// Step 1: Search Wikipedia for the location
 		const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&list=search&srsearch=${encodeURIComponent(stateName)}&srlimit=1&origin=*`;
 
 		const searchResponse = await fetch(searchUrl);
@@ -104,7 +162,6 @@ async function getCoordinatesFromWikipedia(stateName: string): Promise<{ lat: nu
 
 		const pageTitle = searchData.query.search[0].title;
 
-		// Step 2: Get coordinates from the page
 		const coordUrl = `https://en.wikipedia.org/w/api.php?action=query&format=json&prop=coordinates&titles=${encodeURIComponent(pageTitle)}&origin=*`;
 
 		const coordResponse = await fetch(coordUrl);
@@ -130,14 +187,13 @@ async function getCoordinatesFromWikipedia(stateName: string): Promise<{ lat: nu
 		console.log(`  ⚠ Wikipedia: No coordinates in article`);
 		return null;
 	} catch (error) {
-		console.log(`  ✗ Wikipedia error:`, error);
+		console.log(`  ✗ Wikipedia error`);
 		return null;
 	}
 }
 
 async function getCoordinatesFromOSM(stateName: string): Promise<{ lat: number; lon: number } | null> {
 	try {
-		// Use Nominatim (OpenStreetMap's geocoding service)
 		const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(stateName)}&limit=1`;
 
 		const response = await fetch(url, {
@@ -160,7 +216,7 @@ async function getCoordinatesFromOSM(stateName: string): Promise<{ lat: number; 
 		console.log(`  ⚠ OSM: No results found`);
 		return null;
 	} catch (error) {
-		console.log(`  ✗ OSM error:`, error);
+		console.log(`  ✗ OSM error`);
 		return null;
 	}
 }
@@ -174,110 +230,66 @@ function generateSQLInserts(states: StateResource[]): string {
 	lines.push(`-- Regions with coordinates: ${states.filter((s) => s.latitude && s.longitude).length}`);
 	lines.push(`-- Generated at: ${new Date().toISOString()}`);
 	lines.push("");
-	lines.push("BEGIN;");
-	lines.push("");
+	lines.push("-- Insert regions with coordinates");
+	lines.push("INSERT INTO regions (id, latitude, longitude, oil, aluminium, rubber, tungsten, steel, chromium)");
+	lines.push("VALUES");
+
+	const rows: string[] = [];
 
 	for (const state of states) {
-		const columns = ["id"];
 		const values: (string | number)[] = [state.id];
 
-		// Only add lat/lon if we have them
+		// Only include states with coordinates for the main insert
 		if (state.latitude !== undefined && state.longitude !== undefined) {
-			columns.push("latitude", "longitude");
 			values.push(state.latitude, state.longitude);
-		}
+			values.push(state.resources.oil ?? 0);
+			values.push(state.resources.aluminium ?? 0);
+			values.push(state.resources.rubber ?? 0);
+			values.push(state.resources.tungsten ?? 0);
+			values.push(state.resources.steel ?? 0);
+			values.push(state.resources.chromium ?? 0);
 
-		// Add all resource columns if they exist
-		if (state.resources.oil !== undefined) {
-			columns.push("oil");
-			values.push(state.resources.oil);
+			rows.push(`  (${values.join(", ")})`);
 		}
-		if (state.resources.aluminium !== undefined) {
-			columns.push("aluminium");
-			values.push(state.resources.aluminium);
-		}
-		if (state.resources.rubber !== undefined) {
-			columns.push("rubber");
-			values.push(state.resources.rubber);
-		}
-		if (state.resources.tungsten !== undefined) {
-			columns.push("tungsten");
-			values.push(state.resources.tungsten);
-		}
-		if (state.resources.steel !== undefined) {
-			columns.push("steel");
-			values.push(state.resources.steel);
-		}
-		if (state.resources.chromium !== undefined) {
-			columns.push("chromium");
-			values.push(state.resources.chromium);
-		}
-
-		const insert = `INSERT INTO regions (${columns.join(", ")}) VALUES (${values.join(", ")});`;
-		lines.push(insert);
 	}
 
+	lines.push(rows.join(",\n"));
+	lines.push("ON CONFLICT (id) DO NOTHING;");
 	lines.push("");
-	lines.push("COMMIT;");
+
+	// Separate section for regions without coordinates
+	const statesWithoutCoords = states.filter((s) => !s.latitude || !s.longitude);
+	if (statesWithoutCoords.length > 0) {
+		lines.push("-- Regions without coordinates (needs manual geocoding)");
+		lines.push("-- Uncomment and add coordinates once available");
+		for (const state of statesWithoutCoords) {
+			lines.push(`-- INSERT INTO regions (id, latitude, longitude) VALUES (${state.id}, NULL, NULL); -- ${state.name}`);
+		}
+	}
 
 	return lines.join("\n");
 }
 
-function generateUpdatedSchema(): string {
-	return `-- Updated regions table schema matching your actual schema
-
-export const regions = pgTable("regions", {
-	id: integer("id").primaryKey(), // Changed from generatedByDefaultAsIdentity - use HOI4 state ID
-	latitude: decimal("latitude"), // Changed from notNull() to optional
-	longitude: decimal("longitude"), // Changed from notNull() to optional
-	stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
-	rating: integer("rating").default(0),
-	infrastructure: integer("infrastructure").default(0),
-	economy: integer("powerplants").default(0),
-	education: integer("education").default(0),
-	hospitals: integer("hospitals").default(0),
-	fortifications: integer("fortifications").default(0),
-	oil: integer("oil").default(0),
-	aluminium: integer("aluminium").default(0),
-	rubber: integer("rubber").default(0),
-	tungsten: integer("tungsten").default(0),
-	steel: integer("steel").default(0),
-	chromium: integer("chromium").default(0),
-	createdAt: timestamp("created_at").defaultNow().notNull()
-});
-
-// Note: Make sure to remove .generatedByDefaultAsIdentity() from id
-// and remove .notNull() from latitude/longitude to allow null values`;
-}
-
-function generateRegionMapping(states: StateResource[]): string {
+function generateMissingCoordinatesReport(states: StateResource[]): string {
+	const missing = states.filter((s) => !s.latitude || !s.longitude);
 	const lines: string[] = [];
 
-	lines.push("// HOI4 Region ID to Name mapping");
-	lines.push("export const REGION_NAMES: Record<number, string> = {");
+	lines.push("# Missing Coordinates Report");
+	lines.push(`Generated: ${new Date().toISOString()}`);
+	lines.push(`Total missing: ${missing.length}\n`);
+	lines.push("## Regions requiring manual geocoding:\n");
 
-	for (const state of states) {
-		lines.push(`  ${state.id}: "${state.name.replace(/"/g, '\\"')}",`);
+	for (const state of missing) {
+		lines.push(`- ID ${state.id}: ${state.name}`);
+		lines.push(`  - Google search: https://www.google.com/search?q=${encodeURIComponent(state.name + " coordinates")}`);
+		lines.push("");
 	}
-
-	lines.push("};");
-	lines.push("");
-	lines.push("// Region coordinates for mapping (only regions with known coordinates)");
-	lines.push("export const REGION_COORDS: Record<number, { lat: number; lon: number }> = {");
-
-	for (const state of states) {
-		if (state.latitude !== undefined && state.longitude !== undefined) {
-			lines.push(`  ${state.id}: { lat: ${state.latitude}, lon: ${state.longitude} },`);
-		}
-	}
-
-	lines.push("};");
 
 	return lines.join("\n");
 }
 
 async function main() {
-	console.log("HOI4 SQL Insert Generator with Wikipedia + OSM Geocoding\n");
+	console.log("Enhanced HOI4 SQL Insert Generator\n");
 	console.log("=".repeat(50) + "\n");
 
 	const states = await fetchStateResources();
@@ -287,7 +299,6 @@ async function main() {
 		return;
 	}
 
-	const statesWithResources = states.filter((s) => Object.keys(s.resources).length > 0);
 	const statesWithCoords = states.filter((s) => s.latitude !== undefined && s.longitude !== undefined);
 	const statesWithoutCoords = states.filter((s) => s.latitude === undefined || s.longitude === undefined);
 
@@ -295,52 +306,24 @@ async function main() {
 	console.log("STATISTICS");
 	console.log("=".repeat(50));
 	console.log(`Total states: ${states.length}`);
-	console.log(`States with resources: ${statesWithResources.length}`);
-	console.log(`States with coordinates: ${statesWithCoords.length}`);
+	console.log(
+		`States with coordinates: ${statesWithCoords.length} (${((statesWithCoords.length / states.length) * 100).toFixed(1)}%)`
+	);
 	console.log(`States without coordinates: ${statesWithoutCoords.length}\n`);
-
-	if (statesWithoutCoords.length > 0) {
-		console.log("States without coordinates:");
-		statesWithoutCoords.slice(0, 10).forEach((state) => {
-			console.log(`  - ${state.name} (ID: ${state.id})`);
-		});
-		if (statesWithoutCoords.length > 10) {
-			console.log(`  ... and ${statesWithoutCoords.length - 10} more`);
-		}
-		console.log("");
-	}
-
-	if (statesWithResources.length > 0) {
-		console.log("Sample states with resources:");
-		statesWithResources.slice(0, 3).forEach((state) => {
-			console.log(`  ${state.name} (ID: ${state.id})`);
-			if (state.latitude && state.longitude) {
-				console.log(`    Location: ${state.latitude.toFixed(4)}, ${state.longitude.toFixed(4)}`);
-			} else {
-				console.log(`    Location: No coordinates found`);
-			}
-			Object.entries(state.resources).forEach(([resource, amount]) => {
-				console.log(`    - ${resource}: ${amount}`);
-			});
-		});
-		console.log("  ...\n");
-	}
 
 	const sql = generateSQLInserts(states);
 	await writeFile("./insert_regions.sql", sql);
 	console.log("✓ Generated insert_regions.sql");
 
-	const schema = generateUpdatedSchema();
-	await writeFile("./regions_schema.ts", schema);
-	console.log("✓ Generated regions_schema.ts");
-
-	const regionMapping = generateRegionMapping(states);
-	await writeFile("./region_mapping.ts", regionMapping);
-	console.log("✓ Generated region_mapping.ts");
+	const missingReport = generateMissingCoordinatesReport(states);
+	await writeFile("./missing_coordinates.md", missingReport);
+	console.log("✓ Generated missing_coordinates.md");
 
 	console.log("\n✓ All files generated successfully!");
-	console.log("\nNote: Coordinates sourced from Wikipedia API and OpenStreetMap.");
-	console.log("Regions without coordinates will need manual geocoding or can be left null.");
+	console.log("\nNext steps:");
+	console.log("1. Review missing_coordinates.md for regions without coordinates");
+	console.log("2. Manually add coordinates for missing regions");
+	console.log("3. Run insert_regions.sql to populate your database");
 }
 
 main().catch(console.error);

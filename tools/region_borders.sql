@@ -1,5 +1,5 @@
 -- Region Borders Population Script
--- Generated: 2026-01-20T01:31:28.468Z
+-- Generated: 2026-01-25T09:52:38.146Z
 -- Total borders: 2219
 -- Based on 749 regions with coordinates
 
