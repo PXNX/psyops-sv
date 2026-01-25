@@ -31,11 +31,14 @@ async function parseRegionsFromSQL(): Promise<Region[]> {
 	const sqlContent = await readFile("./insert_regions.sql", "utf-8");
 	const regions: Region[] = [];
 
-	// Parse INSERT statements: INSERT INTO regions (id, latitude, longitude) VALUES (1, 42, 9);
-	const insertRegex = /INSERT INTO regions \(id, latitude, longitude\) VALUES \((\d+), ([-\d.]+), ([-\d.]+)\);/g;
+	// Updated regex to match new SQL format with all resource columns
+	// INSERT INTO regions (id, latitude, longitude, oil, aluminium, rubber, tungsten, steel, chromium)
+	// VALUES (1, 42.1234, 9.5678, 0, 0, 0, 0, 0, 0),
+	const valueRegex =
+		/\(\s*(\d+)\s*,\s*([-\d.]+)\s*,\s*([-\d.]+)\s*,\s*[-\d.]+\s*,\s*[-\d.]+\s*,\s*[-\d.]+\s*,\s*[-\d.]+\s*,\s*[-\d.]+\s*,\s*[-\d.]+\s*\)/g;
 
 	let match;
-	while ((match = insertRegex.exec(sqlContent)) !== null) {
+	while ((match = valueRegex.exec(sqlContent)) !== null) {
 		const id = parseInt(match[1]);
 		const latitude = parseFloat(match[2]);
 		const longitude = parseFloat(match[3]);
@@ -52,7 +55,7 @@ async function parseRegionsFromSQL(): Promise<Region[]> {
 async function populateRegionBorders() {
 	console.log("Generating region borders SQL file...\n");
 
-	// Parse regions from insert-regions.sql
+	// Parse regions from insert_regions.sql
 	const regionsWithCoords = await parseRegionsFromSQL();
 
 	console.log(`Found ${regionsWithCoords.length} regions with coordinates\n`);
@@ -135,15 +138,15 @@ async function populateRegionBorders() {
 	// Filter to only valid borders
 	const validBorders = bordersList.filter((b) => validRegionIds.has(b.regionId) && validRegionIds.has(b.neighborId));
 
-	console.log(`\nValid borders after filtering: ${validBorders.length}\n`);
+	console.log(`Valid borders after filtering: ${validBorders.length}\n`);
 
 	// Generate SQL file
 	let sql = `-- Region Borders Population Script
 -- Generated: ${new Date().toISOString()}
--- Total borders: ${bordersList.length}
+-- Total borders: ${validBorders.length}
 -- Based on ${regionsWithCoords.length} regions with coordinates
 
--- IMPORTANT: Make sure insert-regions.sql has been run first!
+-- IMPORTANT: Make sure insert_regions.sql has been run first!
 -- This script assumes regions with IDs ${Math.min(...regionsWithCoords.map((r) => r.id))} to ${Math.max(...regionsWithCoords.map((r) => r.id))} exist.
 
 -- Clear existing borders (optional - uncomment if needed)
@@ -151,7 +154,7 @@ async function populateRegionBorders() {
 
 -- Verify regions exist first (returns count of missing regions)
 -- This should return 0 if all regions exist
-DO $
+DO $$
 DECLARE
   missing_count INTEGER;
 BEGIN
@@ -163,26 +166,28 @@ BEGIN
   WHERE NOT EXISTS (SELECT 1 FROM regions WHERE regions.id = required_ids.id);
   
   IF missing_count > 0 THEN
-    RAISE EXCEPTION 'Missing % regions! Run insert-regions.sql first.', missing_count;
+    RAISE EXCEPTION 'Missing % regions! Run insert_regions.sql first.', missing_count;
   END IF;
-END $;
+END $$;
 
 -- Insert region borders
 INSERT INTO region_borders (region_id, neighbor_id, distance_km)
-VALUES\n`;
+VALUES
+`;
 
-	// Add values
-	const values = bordersList.map((b) => `  (${b.regionId}, ${b.neighborId}, ${b.distanceKm})`);
+	// Add values (use validBorders instead of bordersList)
+	const values = validBorders.map((b) => `  (${b.regionId}, ${b.neighborId}, ${b.distanceKm})`);
 	sql += values.join(",\n");
-	sql += "\nON CONFLICT DO NOTHING;\n";
+	sql += "\nON CONFLICT (region_id, neighbor_id) DO UPDATE SET";
+	sql += "\n  distance_km = EXCLUDED.distance_km;";
 
 	// Add statistics as comments
-	const avgDistance = bordersList.reduce((sum, b) => sum + b.distanceKm, 0) / bordersList.length;
-	const maxDistance = Math.max(...bordersList.map((b) => b.distanceKm));
-	const minDistance = Math.min(...bordersList.map((b) => b.distanceKm));
+	const avgDistance = validBorders.reduce((sum, b) => sum + b.distanceKm, 0) / validBorders.length;
+	const maxDistance = Math.max(...validBorders.map((b) => b.distanceKm));
+	const minDistance = Math.min(...validBorders.map((b) => b.distanceKm));
 
-	sql += `\n-- Statistics:
--- Total borders: ${bordersList.length}
+	sql += `\n\n-- Statistics:
+-- Total borders: ${validBorders.length}
 -- Average distance: ${avgDistance.toFixed(2)} km
 -- Min distance: ${minDistance.toFixed(2)} km
 -- Max distance: ${maxDistance.toFixed(2)} km
@@ -190,8 +195,8 @@ VALUES\n`;
 -- Sample borders:`;
 
 	// Add sample borders as comments
-	for (let i = 0; i < Math.min(10, bordersList.length); i++) {
-		const border = bordersList[i];
+	for (let i = 0; i < Math.min(10, validBorders.length); i++) {
+		const border = validBorders[i];
 		sql += `\n-- Region ${border.regionId} ↔ Region ${border.neighborId}: ${border.distanceKm} km`;
 	}
 
@@ -202,9 +207,7 @@ VALUES\n`;
 
 	console.log("✓ Created region_borders.sql");
 	console.log("\nStatistics:");
-	console.log(`  Total borders calculated: ${bordersList.length}`);
-	console.log(`  Valid borders: ${validBorders.length}`);
-	console.log(`  Filtered out: ${bordersList.length - validBorders.length}`);
+	console.log(`  Total borders calculated: ${validBorders.length}`);
 	console.log(`  Average distance: ${avgDistance.toFixed(2)} km`);
 	console.log(`  Min distance: ${minDistance.toFixed(2)} km`);
 	console.log(`  Max distance: ${maxDistance.toFixed(2)} km`);

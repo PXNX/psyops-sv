@@ -1,0 +1,5438 @@
+[
+  {
+    "id": 1,
+    "name": "Corsica",
+    "latitude": 42.18809795,
+    "longitude": 9.068313873528677,
+    "resources": {}
+  },
+  {
+    "id": 2,
+    "name": "Latium",
+    "latitude": 41.9808038,
+    "longitude": 12.7662312,
+    "resources": {}
+  },
+  {
+    "id": 3,
+    "name": "Switzerland",
+    "latitude": 38.8249258,
+    "longitude": -85.0373975,
+    "resources": {}
+  },
+  {
+    "id": 4,
+    "name": "Lower Austria",
+    "latitude": 48.2817813,
+    "longitude": 15.7632457,
+    "resources": {}
+  },
+  {
+    "id": 5,
+    "name": "Ostpreussen",
+    "latitude": 47.460233,
+    "longitude": 13.116032277213872,
+    "resources": {}
+  },
+  {
+    "id": 6,
+    "name": "Vlaanderen",
+    "latitude": 51.0377778,
+    "longitude": 4.2405556,
+    "resources": {}
+  },
+  {
+    "id": 7,
+    "name": "Holland",
+    "latitude": 51.9966792,
+    "longitude": 4.5597397,
+    "resources": {}
+  },
+  {
+    "id": 8,
+    "name": "Luxemburg",
+    "latitude": 42.6027722,
+    "longitude": -91.0740206,
+    "resources": {}
+  },
+  {
+    "id": 9,
+    "name": "Bohemia",
+    "latitude": 40.770609,
+    "longitude": -73.12007033869867,
+    "resources": {}
+  },
+  {
+    "id": 10,
+    "name": "Warszawa",
+    "latitude": 52.2319581,
+    "longitude": 21.0067249,
+    "resources": {}
+  },
+  {
+    "id": 11,
+    "name": "Kaunas",
+    "latitude": 54.8982139,
+    "longitude": 23.9044817,
+    "resources": {}
+  },
+  {
+    "id": 12,
+    "name": "Vidzeme",
+    "latitude": 57.4079124,
+    "longitude": 25.8769654,
+    "resources": {}
+  },
+  {
+    "id": 13,
+    "name": "Harju",
+    "latitude": 59.409009,
+    "longitude": 24.736957184871756,
+    "resources": {}
+  },
+  {
+    "id": 14,
+    "name": "Brittany",
+    "latitude": 48.2640845,
+    "longitude": -2.9202408,
+    "resources": {}
+  },
+  {
+    "id": 15,
+    "name": "Normandy",
+    "latitude": 49.0677708,
+    "longitude": 0.3138532,
+    "resources": {}
+  },
+  {
+    "id": 16,
+    "name": "Ile de France",
+    "latitude": 48.6443057,
+    "longitude": 2.7537863,
+    "resources": {}
+  },
+  {
+    "id": 17,
+    "name": "Lorraine",
+    "latitude": 48.7253,
+    "longitude": 7.0853,
+    "resources": {}
+  },
+  {
+    "id": 18,
+    "name": "Champagne",
+    "latitude": 48.873065999999994,
+    "longitude": 4.207909950341709,
+    "resources": {}
+  },
+  {
+    "id": 19,
+    "name": "Aquitaine",
+    "latitude": 44.8378,
+    "longitude": -0.5792,
+    "resources": {}
+  },
+  {
+    "id": 20,
+    "name": "Rhone",
+    "latitude": 45.6113382,
+    "longitude": 5.6322327,
+    "resources": {}
+  },
+  {
+    "id": 21,
+    "name": "Provence",
+    "latitude": 43.5298424,
+    "longitude": 5.4474738,
+    "resources": {}
+  },
+  {
+    "id": 22,
+    "name": "Languedoc",
+    "latitude": 43.65420305,
+    "longitude": 3.674669940206605,
+    "resources": {}
+  },
+  {
+    "id": 23,
+    "name": "Poitou",
+    "latitude": 46.13244785,
+    "longitude": -0.15455354898441043,
+    "resources": {}
+  },
+  {
+    "id": 24,
+    "name": "Centre",
+    "latitude": 4.686267,
+    "longitude": 11.9414512,
+    "resources": {}
+  },
+  {
+    "id": 25,
+    "name": "Limousin",
+    "latitude": 45.6879095,
+    "longitude": 1.6347606412875264,
+    "resources": {}
+  },
+  {
+    "id": 26,
+    "name": "Auvergne",
+    "latitude": 45.2968119,
+    "longitude": 4.6604809,
+    "resources": {}
+  },
+  {
+    "id": 27,
+    "name": "Bourgogne",
+    "latitude": 47.27808725,
+    "longitude": 4.222486304306048,
+    "resources": {}
+  },
+  {
+    "id": 28,
+    "name": "Alsace",
+    "latitude": 47.91213215,
+    "longitude": 7.5723666,
+    "resources": {}
+  },
+  {
+    "id": 29,
+    "name": "Pas de Calais",
+    "latitude": 50.5289634,
+    "longitude": 2.454515765955904,
+    "resources": {}
+  },
+  {
+    "id": 30,
+    "name": "Loire",
+    "latitude": 47.91387245,
+    "longitude": 2.3075036458463853,
+    "resources": {}
+  },
+  {
+    "id": 31,
+    "name": "Midi Pyrenees",
+    "latitude": 43.8099068,
+    "longitude": 1.4344926056549236,
+    "resources": {}
+  },
+  {
+    "id": 32,
+    "name": "Alpes",
+    "latitude": 45.2968119,
+    "longitude": 4.6604809,
+    "resources": {}
+  },
+  {
+    "id": 33,
+    "name": "Centre-Sud",
+    "latitude": 11.5833646,
+    "longitude": -1.0556300580745341,
+    "resources": {}
+  },
+  {
+    "id": 34,
+    "name": "Wallonie",
+    "latitude": 50.3154983,
+    "longitude": 5.0097962,
+    "resources": {}
+  },
+  {
+    "id": 35,
+    "name": "Brabant",
+    "latitude": 51.6017723,
+    "longitude": 5.4441391,
+    "resources": {}
+  },
+  {
+    "id": 36,
+    "name": "Friesland",
+    "latitude": 53.467993,
+    "longitude": 8.0221914,
+    "resources": {}
+  },
+  {
+    "id": 37,
+    "name": "Sjaelland",
+    "latitude": 55.7495999,
+    "longitude": 13.187154869183168,
+    "resources": {}
+  },
+  {
+    "id": 38,
+    "name": "Norrland",
+    "latitude": 57.50154,
+    "longitude": 18.65982485,
+    "resources": {}
+  },
+  {
+    "id": 39,
+    "name": "South Tyrol",
+    "latitude": 46.655945450000004,
+    "longitude": 11.23021287087526,
+    "resources": {}
+  },
+  {
+    "id": 40,
+    "name": "Barnaul",
+    "latitude": 53.3475493,
+    "longitude": 83.7788448,
+    "resources": {
+      "steel": 20
+    }
+  },
+  {
+    "id": 41,
+    "name": "Madrid",
+    "latitude": 40.416782,
+    "longitude": -3.703507,
+    "resources": {
+      "tungsten": 120
+    }
+  },
+  {
+    "id": 42,
+    "name": "Moselland",
+    "latitude": 49.9286294,
+    "longitude": 7.0607637,
+    "resources": {}
+  },
+  {
+    "id": 43,
+    "name": "Northern Hungary",
+    "latitude": 47.9437605,
+    "longitude": 20.3212889,
+    "resources": {}
+  },
+  {
+    "id": 44,
+    "name": "Albania",
+    "latitude": 41.000028,
+    "longitude": 19.9999619,
+    "resources": {}
+  },
+  {
+    "id": 45,
+    "name": "Vojvodina",
+    "latitude": 45.4831323,
+    "longitude": 19.9918584,
+    "resources": {}
+  },
+  {
+    "id": 46,
+    "name": "Muntenia",
+    "latitude": 44.7083549,
+    "longitude": 25.8887852,
+    "resources": {}
+  },
+  {
+    "id": 47,
+    "name": "Thessaly",
+    "latitude": 39.5060878,
+    "longitude": 22.3191881,
+    "resources": {}
+  },
+  {
+    "id": 48,
+    "name": "Sofia",
+    "latitude": 42.6977028,
+    "longitude": 23.3217359,
+    "resources": {
+      "chromium": 18
+    }
+  },
+  {
+    "id": 49,
+    "name": "Ankara",
+    "latitude": 39.9207759,
+    "longitude": 32.8540497,
+    "resources": {}
+  },
+  {
+    "id": 50,
+    "name": "Württemberg",
+    "latitude": 48.53775,
+    "longitude": 9.041169,
+    "resources": {}
+  },
+  {
+    "id": 51,
+    "name": "Rhineland",
+    "latitude": 45.636623,
+    "longitude": -89.412075,
+    "resources": {}
+  },
+  {
+    "id": 52,
+    "name": "Oberbayern",
+    "latitude": 48.240583349999994,
+    "longitude": 11.969915243254572,
+    "resources": {}
+  },
+  {
+    "id": 53,
+    "name": "Niederbayern",
+    "latitude": 48.6901497,
+    "longitude": 12.747685915956366,
+    "resources": {}
+  },
+  {
+    "id": 54,
+    "name": "Franken",
+    "latitude": 47.6023966,
+    "longitude": 7.3545333,
+    "resources": {}
+  },
+  {
+    "id": 55,
+    "name": "Hessen",
+    "latitude": 50.6080651,
+    "longitude": 9.0284647,
+    "resources": {}
+  },
+  {
+    "id": 56,
+    "name": "Weser-Ems",
+    "latitude": 52.87619255,
+    "longitude": 7.878583924020074,
+    "resources": {}
+  },
+  {
+    "id": 57,
+    "name": "Westfalen",
+    "latitude": 51.4789205,
+    "longitude": 7.5543751,
+    "resources": {}
+  },
+  {
+    "id": 58,
+    "name": "Schleswig-Holstein",
+    "latitude": 54.1853998,
+    "longitude": 9.8220089,
+    "resources": {}
+  },
+  {
+    "id": 59,
+    "name": "Hannover",
+    "latitude": 52.3744779,
+    "longitude": 9.7385532,
+    "resources": {}
+  },
+  {
+    "id": 60,
+    "name": "Thüringen",
+    "latitude": 50.9014721,
+    "longitude": 11.0377839,
+    "resources": {}
+  },
+  {
+    "id": 61,
+    "name": "Mecklenburg",
+    "latitude": 53.7735064,
+    "longitude": 12.5755471,
+    "resources": {}
+  },
+  {
+    "id": 62,
+    "name": "Pommern",
+    "latitude": 50.1699365,
+    "longitude": 7.2740995,
+    "resources": {}
+  },
+  {
+    "id": 63,
+    "name": "Hinterpommern",
+    "latitude": 53.7833,
+    "longitude": 15.5833,
+    "resources": {}
+  },
+  {
+    "id": 64,
+    "name": "Brandenburg",
+    "latitude": 52.8455492,
+    "longitude": 13.2461296,
+    "resources": {}
+  },
+  {
+    "id": 65,
+    "name": "Sachsen",
+    "latitude": 50.9295798,
+    "longitude": 13.4585052,
+    "resources": {
+      "steel": 70
+    }
+  },
+  {
+    "id": 66,
+    "name": "Niederschlesien",
+    "latitude": 51.20832315,
+    "longitude": 14.639196277414928,
+    "resources": {
+      "steel": 12
+    }
+  },
+  {
+    "id": 67,
+    "name": "Oberschlesien",
+    "latitude": 51.0281551,
+    "longitude": 18.4222682,
+    "resources": {}
+  },
+  {
+    "id": 68,
+    "name": "Ostmark",
+    "latitude": 59.8377712,
+    "longitude": 10.985261942685687,
+    "resources": {}
+  },
+  {
+    "id": 69,
+    "name": "Sudetenland",
+    "latitude": 49.79783595,
+    "longitude": 7.70788302471791,
+    "resources": {}
+  },
+  {
+    "id": 70,
+    "name": "Western Slovakia",
+    "latitude": 48.054621049999994,
+    "longitude": 17.56486224540773,
+    "resources": {}
+  },
+  {
+    "id": 71,
+    "name": "Eastern Slovakia",
+    "latitude": 48.896744999999996,
+    "longitude": 21.309940582554724,
+    "resources": {}
+  },
+  {
+    "id": 72,
+    "name": "Zaolzie",
+    "latitude": 50.5469203,
+    "longitude": 23.3988206,
+    "resources": {}
+  },
+  {
+    "id": 73,
+    "name": "Carpathian Ruthenia",
+    "latitude": 48.1399755,
+    "longitude": 24.4417772,
+    "resources": {}
+  },
+  {
+    "id": 74,
+    "name": "Eastern Sudetenland",
+    "latitude": 49.8209,
+    "longitude": 18.2625,
+    "resources": {}
+  },
+  {
+    "id": 75,
+    "name": "Moravia",
+    "latitude": 10.0076988,
+    "longitude": -84.01295035098013,
+    "resources": {}
+  },
+  {
+    "id": 76,
+    "name": "North Transylvania",
+    "latitude": 35.1982216,
+    "longitude": -82.7724889,
+    "resources": {}
+  },
+  {
+    "id": 77,
+    "name": "Dobrudja",
+    "latitude": 43.96834,
+    "longitude": 27.57553,
+    "resources": {}
+  },
+  {
+    "id": 78,
+    "name": "Bessarabia",
+    "latitude": 45.33399075,
+    "longitude": 28.83299192161489,
+    "resources": {}
+  },
+  {
+    "id": 79,
+    "name": "Moldova",
+    "latitude": 47.2879608,
+    "longitude": 28.5670941,
+    "resources": {}
+  },
+  {
+    "id": 80,
+    "name": "Bucovina",
+    "latitude": 47.7551115,
+    "longitude": 25.9601372,
+    "resources": {}
+  },
+  {
+    "id": 81,
+    "name": "Oltenia",
+    "latitude": 44.4491118,
+    "longitude": 23.8688248,
+    "resources": {}
+  },
+  {
+    "id": 82,
+    "name": "Banat",
+    "latitude": 45,
+    "longitude": 22.1666667,
+    "resources": {}
+  },
+  {
+    "id": 83,
+    "name": "Crisana",
+    "latitude": 46.967247,
+    "longitude": 22.0124913,
+    "resources": {}
+  },
+  {
+    "id": 84,
+    "name": "Transylvania",
+    "latitude": 35.1982216,
+    "longitude": -82.7724889,
+    "resources": {
+      "chromium": 18
+    }
+  },
+  {
+    "id": 85,
+    "name": "Danzig",
+    "latitude": 54.3706858,
+    "longitude": 18.61298309190141,
+    "resources": {}
+  },
+  {
+    "id": 86,
+    "name": "Poznan",
+    "latitude": 52.4082663,
+    "longitude": 16.9335199,
+    "resources": {}
+  },
+  {
+    "id": 87,
+    "name": "Lodz",
+    "latitude": 51.7687323,
+    "longitude": 19.4569911,
+    "resources": {}
+  },
+  {
+    "id": 88,
+    "name": "Krakow",
+    "latitude": 50.0619474,
+    "longitude": 19.9368564,
+    "resources": {}
+  },
+  {
+    "id": 89,
+    "name": "Stanislawow",
+    "latitude": 52.2897723,
+    "longitude": 21.5471724,
+    "resources": {}
+  },
+  {
+    "id": 90,
+    "name": "Kielce",
+    "latitude": 50.85402845,
+    "longitude": 20.60991568734511,
+    "resources": {}
+  },
+  {
+    "id": 91,
+    "name": "Lwow",
+    "latitude": 51.1108891,
+    "longitude": 15.5850018,
+    "resources": {}
+  },
+  {
+    "id": 92,
+    "name": "Lublin",
+    "latitude": 51.250559,
+    "longitude": 22.5701022,
+    "resources": {}
+  },
+  {
+    "id": 93,
+    "name": "Wolyn",
+    "latitude": 51.8918549,
+    "longitude": 19.4860267,
+    "resources": {}
+  },
+  {
+    "id": 94,
+    "name": "Polesie",
+    "latitude": 51.9550456,
+    "longitude": 18.9389287,
+    "resources": {}
+  },
+  {
+    "id": 95,
+    "name": "Nowogrodek",
+    "latitude": 52.9116499,
+    "longitude": 15.0272248,
+    "resources": {}
+  },
+  {
+    "id": 96,
+    "name": "Wilno",
+    "latitude": 53.8980167,
+    "longitude": 20.0622586,
+    "resources": {}
+  },
+  {
+    "id": 97,
+    "name": "Bialystok",
+    "latitude": 53.132398,
+    "longitude": 23.1591679,
+    "resources": {}
+  },
+  {
+    "id": 98,
+    "name": "Plock",
+    "latitude": 52.535347099999996,
+    "longitude": 19.713630138580008,
+    "resources": {}
+  },
+  {
+    "id": 99,
+    "name": "Jutland",
+    "latitude": 55.93969045,
+    "longitude": 9.318056168486901,
+    "resources": {}
+  },
+  {
+    "id": 100,
+    "name": "Iceland",
+    "latitude": 64.9841821,
+    "longitude": -18.1059013,
+    "resources": {}
+  },
+  {
+    "id": 101,
+    "name": "Greenland",
+    "latitude": 75,
+    "longitude": -10.0000001,
+    "resources": {}
+  },
+  {
+    "id": 102,
+    "name": "Slovenia",
+    "latitude": 46.1199444,
+    "longitude": 14.8153333,
+    "resources": {}
+  },
+  {
+    "id": 103,
+    "name": "Dalmatia",
+    "latitude": 40.6542515,
+    "longitude": -76.9024752,
+    "resources": {}
+  },
+  {
+    "id": 104,
+    "name": "Bosnia",
+    "latitude": 44.3053476,
+    "longitude": 17.5961467,
+    "resources": {}
+  },
+  {
+    "id": 105,
+    "name": "Montenegro",
+    "latitude": 42.7755624,
+    "longitude": 19.2022423,
+    "resources": {}
+  },
+  {
+    "id": 106,
+    "name": "Macedonia",
+    "latitude": 41.6171214,
+    "longitude": 21.7168387,
+    "resources": {}
+  },
+  {
+    "id": 107,
+    "name": "Serbia",
+    "latitude": 44.024322850000004,
+    "longitude": 21.07657433209902,
+    "resources": {}
+  },
+  {
+    "id": 108,
+    "name": "Morava",
+    "latitude": 50.2051284,
+    "longitude": 16.8493899,
+    "resources": {}
+  },
+  {
+    "id": 109,
+    "name": "Croatia",
+    "latitude": 45.3658443,
+    "longitude": 15.6575209,
+    "resources": {}
+  },
+  {
+    "id": 110,
+    "name": "Ostlandet",
+    "latitude": 59.9056001,
+    "longitude": 10.6821197,
+    "resources": {}
+  },
+  {
+    "id": 111,
+    "name": "Uusimaa",
+    "latitude": 60.2246684,
+    "longitude": 25.12726308225769,
+    "resources": {}
+  },
+  {
+    "id": 112,
+    "name": "Lisbon",
+    "latitude": 38.7077507,
+    "longitude": -9.1365919,
+    "resources": {}
+  },
+  {
+    "id": 113,
+    "name": "Leinster",
+    "latitude": 53.11846495,
+    "longitude": -6.991818291829787,
+    "resources": {}
+  },
+  {
+    "id": 114,
+    "name": "Sardinia",
+    "latitude": 40.0912813,
+    "longitude": 9.0305773,
+    "resources": {}
+  },
+  {
+    "id": 115,
+    "name": "Sicily",
+    "latitude": 37.587794,
+    "longitude": 14.155048,
+    "resources": {}
+  },
+  {
+    "id": 116,
+    "name": "Malta",
+    "latitude": 35.9311442,
+    "longitude": 14.3951627,
+    "resources": {}
+  },
+  {
+    "id": 117,
+    "name": "Campania",
+    "latitude": 40.860672,
+    "longitude": 14.843984,
+    "resources": {}
+  },
+  {
+    "id": 118,
+    "name": "Gibraltar",
+    "latitude": 36.1285933,
+    "longitude": -5.3474761,
+    "resources": {}
+  },
+  {
+    "id": 119,
+    "name": "Northern Ireland",
+    "latitude": 54.5859836,
+    "longitude": -6.9591554,
+    "resources": {}
+  },
+  {
+    "id": 120,
+    "name": "Scottish Highlands",
+    "latitude": 56.8,
+    "longitude": -5,
+    "resources": {}
+  },
+  {
+    "id": 121,
+    "name": "Lothian",
+    "latitude": 55.916667,
+    "longitude": -3.5,
+    "resources": {}
+  },
+  {
+    "id": 122,
+    "name": "Wales",
+    "latitude": 52.2928116,
+    "longitude": -3.73893,
+    "resources": {}
+  },
+  {
+    "id": 123,
+    "name": "Cornwall",
+    "latitude": 50.416667,
+    "longitude": -4.75,
+    "resources": {}
+  },
+  {
+    "id": 124,
+    "name": "Gotland",
+    "latitude": 57.4174802,
+    "longitude": 18.536957927499856,
+    "resources": {}
+  },
+  {
+    "id": 125,
+    "name": "East Anglia",
+    "latitude": 52.62106225,
+    "longitude": 1.2356187242525833,
+    "resources": {}
+  },
+  {
+    "id": 126,
+    "name": "Greater London Area",
+    "latitude": 52.9020468,
+    "longitude": -0.59595839167559,
+    "resources": {}
+  },
+  {
+    "id": 127,
+    "name": "Sussex",
+    "latitude": 50.9097,
+    "longitude": -0.1373,
+    "resources": {}
+  },
+  {
+    "id": 128,
+    "name": "West Midlands",
+    "latitude": 52.505432,
+    "longitude": -1.9646781758425385,
+    "resources": {}
+  },
+  {
+    "id": 129,
+    "name": "East Midlands",
+    "latitude": 52.828086549999995,
+    "longitude": -1.332669481847069,
+    "resources": {}
+  },
+  {
+    "id": 130,
+    "name": "Yorkshire",
+    "latitude": 53.741427099999996,
+    "longitude": -1.7202003766777243,
+    "resources": {}
+  },
+  {
+    "id": 131,
+    "name": "Northern England",
+    "latitude": 51.5090306,
+    "longitude": -0.08502560506772358,
+    "resources": {}
+  },
+  {
+    "id": 132,
+    "name": "Lancashire",
+    "latitude": 53.861171150000004,
+    "longitude": -2.5650944730209586,
+    "resources": {}
+  },
+  {
+    "id": 133,
+    "name": "Lanark",
+    "latitude": 55.6736271,
+    "longitude": -3.7780361,
+    "resources": {}
+  },
+  {
+    "id": 134,
+    "name": "Connaught",
+    "latitude": 28.6314022,
+    "longitude": 77.2193791,
+    "resources": {}
+  },
+  {
+    "id": 135,
+    "name": "Munster",
+    "latitude": 52.307621600000004,
+    "longitude": -8.57089727301717,
+    "resources": {}
+  },
+  {
+    "id": 136,
+    "name": "Aberdeenshire",
+    "latitude": 57.166667,
+    "longitude": -2.666667,
+    "resources": {}
+  },
+  {
+    "id": 137,
+    "name": "Crimea",
+    "latitude": 45.28350435,
+    "longitude": 34.20081877526554,
+    "resources": {}
+  },
+  {
+    "id": 138,
+    "name": "Scania",
+    "latitude": 41.070246749999995,
+    "longitude": 28.647953139836588,
+    "resources": {}
+  },
+  {
+    "id": 139,
+    "name": "Småland",
+    "latitude": 56.87576435,
+    "longitude": 14.807099345040498,
+    "resources": {}
+  },
+  {
+    "id": 140,
+    "name": "Västergötland",
+    "latitude": 58.1025615,
+    "longitude": 13.220142100005596,
+    "resources": {}
+  },
+  {
+    "id": 141,
+    "name": "Svealand",
+    "latitude": 60.3324039,
+    "longitude": 14.532963680948475,
+    "resources": {}
+  },
+  {
+    "id": 142,
+    "name": "Vestlandet",
+    "latitude": 60.36887575,
+    "longitude": 5.351111541486731,
+    "resources": {}
+  },
+  {
+    "id": 143,
+    "name": "Trondelag",
+    "latitude": 63.87759235,
+    "longitude": 10.195050547141093,
+    "resources": {}
+  },
+  {
+    "id": 144,
+    "name": "Nord-Norge",
+    "latitude": 68.1633439,
+    "longitude": 15.299453703982625,
+    "resources": {}
+  },
+  {
+    "id": 145,
+    "name": "Aland",
+    "latitude": 60.2166218,
+    "longitude": 19.9438638,
+    "resources": {}
+  },
+  {
+    "id": 146,
+    "name": "Karjala",
+    "latitude": 60.7862021,
+    "longitude": 22.0739244,
+    "resources": {}
+  },
+  {
+    "id": 147,
+    "name": "Salla",
+    "latitude": 66.8318774,
+    "longitude": 28.6668631,
+    "resources": {}
+  },
+  {
+    "id": 148,
+    "name": "Lappi",
+    "latitude": 67.69223705,
+    "longitude": 26.72813902817753,
+    "resources": {}
+  },
+  {
+    "id": 149,
+    "name": "Pohjanmaa",
+    "latitude": 62.7901424,
+    "longitude": 22.8299449,
+    "resources": {}
+  },
+  {
+    "id": 150,
+    "name": "Savo",
+    "latitude": 45.494895150000005,
+    "longitude": 6.384660381375652,
+    "resources": {}
+  },
+  {
+    "id": 151,
+    "name": "Eastern Switzerland",
+    "latitude": 45.428141,
+    "longitude": -75.6747799588068,
+    "resources": {}
+  },
+  {
+    "id": 152,
+    "name": "Upper Austria",
+    "latitude": 48.25,
+    "longitude": 14,
+    "resources": {}
+  },
+  {
+    "id": 153,
+    "name": "Tyrol",
+    "latitude": 47.223193,
+    "longitude": 11.5261028,
+    "resources": {}
+  },
+  {
+    "id": 154,
+    "name": "Alföld",
+    "latitude": 51.109864650000006,
+    "longitude": -0.5180171543006505,
+    "resources": {}
+  },
+  {
+    "id": 155,
+    "name": "Transdanubia",
+    "latitude": 46.879830150000004,
+    "longitude": 17.53611413296516,
+    "resources": {}
+  },
+  {
+    "id": 156,
+    "name": "Calabria",
+    "latitude": 39.0565974,
+    "longitude": 16.5249864,
+    "resources": {}
+  },
+  {
+    "id": 157,
+    "name": "Abruzzo",
+    "latitude": 42.227681,
+    "longitude": 13.854983,
+    "resources": {}
+  },
+  {
+    "id": 158,
+    "name": "Piedmont",
+    "latitude": 45.060735,
+    "longitude": 7.923549,
+    "resources": {
+      "steel": 50
+    }
+  },
+  {
+    "id": 159,
+    "name": "Lombardy",
+    "latitude": 45.5703694,
+    "longitude": 9.7732524,
+    "resources": {
+      "steel": 36
+    }
+  },
+  {
+    "id": 160,
+    "name": "Veneto",
+    "latitude": 45.6476663,
+    "longitude": 11.8665254,
+    "resources": {}
+  },
+  {
+    "id": 161,
+    "name": "Emilia Romagna",
+    "latitude": 44.525696,
+    "longitude": 11.039437,
+    "resources": {}
+  },
+  {
+    "id": 162,
+    "name": "Tuscany",
+    "latitude": 43.4586541,
+    "longitude": 11.1389204,
+    "resources": {}
+  },
+  {
+    "id": 163,
+    "name": "Zara",
+    "latitude": 41.6521342,
+    "longitude": -0.8809428,
+    "resources": {}
+  },
+  {
+    "id": 164,
+    "name": "Dodecanese",
+    "latitude": 48.0357166,
+    "longitude": -110.0820234,
+    "resources": {}
+  },
+  {
+    "id": 165,
+    "name": "Catalonia",
+    "latitude": 41.8523094,
+    "longitude": 1.5745043,
+    "resources": {}
+  },
+  {
+    "id": 166,
+    "name": "Aragon",
+    "latitude": 41.3787291,
+    "longitude": -0.7639373,
+    "resources": {}
+  },
+  {
+    "id": 167,
+    "name": "Valencia",
+    "latitude": 39.4697065,
+    "longitude": -0.3763353,
+    "resources": {}
+  },
+  {
+    "id": 168,
+    "name": "Murcia",
+    "latitude": 37.9923795,
+    "longitude": -1.1305431,
+    "resources": {}
+  },
+  {
+    "id": 169,
+    "name": "Andalusia",
+    "latitude": 37.3399964,
+    "longitude": -4.5811614,
+    "resources": {
+      "tungsten": 48
+    }
+  },
+  {
+    "id": 170,
+    "name": "Extremadura",
+    "latitude": 39.1748426,
+    "longitude": -6.1529891,
+    "resources": {}
+  },
+  {
+    "id": 171,
+    "name": "Galicia",
+    "latitude": 42.61946,
+    "longitude": -7.863112,
+    "resources": {}
+  },
+  {
+    "id": 172,
+    "name": "Navarre",
+    "latitude": 42.7027944,
+    "longitude": -1.7086231,
+    "resources": {}
+  },
+  {
+    "id": 173,
+    "name": "Granada",
+    "latitude": 37.1734995,
+    "longitude": -3.5995337,
+    "resources": {}
+  },
+  {
+    "id": 174,
+    "name": "Leon",
+    "latitude": 42.5989995,
+    "longitude": -5.5682413,
+    "resources": {}
+  },
+  {
+    "id": 175,
+    "name": "La Mancha",
+    "latitude": 39.4177902,
+    "longitude": -2.6232332,
+    "resources": {}
+  },
+  {
+    "id": 176,
+    "name": "Castille",
+    "latitude": 40.3752299,
+    "longitude": -2.1405708,
+    "resources": {}
+  },
+  {
+    "id": 177,
+    "name": "Balearic Islands",
+    "latitude": 39.613432,
+    "longitude": 2.8829184529439633,
+    "resources": {}
+  },
+  {
+    "id": 178,
+    "name": "Canary islands",
+    "latitude": 28.2935785,
+    "longitude": -16.621447121144122,
+    "resources": {}
+  },
+  {
+    "id": 179,
+    "name": "Beja",
+    "latitude": 37.8250335,
+    "longitude": -7.933855145708009,
+    "resources": {}
+  },
+  {
+    "id": 180,
+    "name": "Porto",
+    "latitude": 41.1502195,
+    "longitude": -8.6103497,
+    "resources": {}
+  },
+  {
+    "id": 181,
+    "name": "Guarda",
+    "latitude": 40.7046066,
+    "longitude": -7.195139236071309,
+    "resources": {
+      "tungsten": 60
+    }
+  },
+  {
+    "id": 182,
+    "name": "Crete",
+    "latitude": 35.308495199999996,
+    "longitude": 24.46334231842296,
+    "resources": {}
+  },
+  {
+    "id": 183,
+    "name": "Cyprus",
+    "latitude": 34.9174159,
+    "longitude": 32.889902651331866,
+    "resources": {}
+  },
+  {
+    "id": 184,
+    "name": "Thrace",
+    "latitude": 41.1206665,
+    "longitude": 24.4781056,
+    "resources": {}
+  },
+  {
+    "id": 185,
+    "name": "Epirus",
+    "latitude": 39.5501591,
+    "longitude": 20.7486368,
+    "resources": {}
+  },
+  {
+    "id": 186,
+    "name": "Peloponnese",
+    "latitude": 37.363372,
+    "longitude": 22.23949841034598,
+    "resources": {}
+  },
+  {
+    "id": 187,
+    "name": "Aegean Islands",
+    "latitude": 36.251702550000005,
+    "longitude": 25.203141054129908,
+    "resources": {}
+  },
+  {
+    "id": 188,
+    "name": "Memel",
+    "latitude": 3.7774662,
+    "longitude": 10.735704,
+    "resources": {}
+  },
+  {
+    "id": 189,
+    "name": "Siauliai",
+    "latitude": 55.9340823,
+    "longitude": 23.3157775,
+    "resources": {}
+  },
+  {
+    "id": 190,
+    "name": "Kurzeme",
+    "latitude": 56.96042275,
+    "longitude": 23.99801455,
+    "resources": {}
+  },
+  {
+    "id": 191,
+    "name": "Tartu",
+    "latitude": 58.3779528,
+    "longitude": 26.7290023,
+    "resources": {}
+  },
+  {
+    "id": 192,
+    "name": "Odessa",
+    "latitude": 31.8457149,
+    "longitude": -102.367687,
+    "resources": {}
+  },
+  {
+    "id": 193,
+    "name": "Chernihiv",
+    "latitude": 51.494099,
+    "longitude": 31.294332,
+    "resources": {}
+  },
+  {
+    "id": 194,
+    "name": "Mozyr",
+    "latitude": 54.4434446,
+    "longitude": 21.4785209,
+    "resources": {}
+  },
+  {
+    "id": 195,
+    "name": "Leningrad",
+    "latitude": 60.1853296,
+    "longitude": 32.3925325,
+    "resources": {}
+  },
+  {
+    "id": 196,
+    "name": "Kherson",
+    "latitude": 46.6401295,
+    "longitude": 32.6143922,
+    "resources": {}
+  },
+  {
+    "id": 197,
+    "name": "Mykolaiv",
+    "latitude": 46.9758615,
+    "longitude": 31.9939666,
+    "resources": {}
+  },
+  {
+    "id": 198,
+    "name": "Vinnytsia",
+    "latitude": 49.2320162,
+    "longitude": 28.467975,
+    "resources": {}
+  },
+  {
+    "id": 199,
+    "name": "Khmelnytskyi",
+    "latitude": 49.4196404,
+    "longitude": 26.9793793,
+    "resources": {}
+  },
+  {
+    "id": 200,
+    "name": "Zaporozhe",
+    "latitude": 47.3746798,
+    "longitude": 37.9720943,
+    "resources": {}
+  },
+  {
+    "id": 201,
+    "name": "Zhytomyr",
+    "latitude": 50.2601065,
+    "longitude": 28.6696281,
+    "resources": {}
+  },
+  {
+    "id": 202,
+    "name": "Kiev",
+    "latitude": 53.2747285,
+    "longitude": 12.5951417,
+    "resources": {}
+  },
+  {
+    "id": 203,
+    "name": "Cherkasy",
+    "latitude": 49.4447056,
+    "longitude": 32.0588085,
+    "resources": {}
+  },
+  {
+    "id": 204,
+    "name": "Bobruysk",
+    "latitude": 54.508347,
+    "longitude": 21.331469,
+    "resources": {}
+  },
+  {
+    "id": 205,
+    "name": "Kaluga",
+    "latitude": 54.5101087,
+    "longitude": 36.2598115,
+    "resources": {}
+  },
+  {
+    "id": 206,
+    "name": "Minsk",
+    "latitude": 53.9024716,
+    "longitude": 27.5618225,
+    "resources": {}
+  },
+  {
+    "id": 207,
+    "name": "Vitebsk",
+    "latitude": 55.194987,
+    "longitude": 30.1850569,
+    "resources": {}
+  },
+  {
+    "id": 208,
+    "name": "Luga",
+    "latitude": 46.0050102,
+    "longitude": 8.9520281,
+    "resources": {}
+  },
+  {
+    "id": 209,
+    "name": "Pskov",
+    "latitude": 57.8173923,
+    "longitude": 28.3343465,
+    "resources": {}
+  },
+  {
+    "id": 210,
+    "name": "Nevel",
+    "latitude": 56.017616,
+    "longitude": 29.917128,
+    "resources": {}
+  },
+  {
+    "id": 211,
+    "name": "Burgas",
+    "latitude": 42.4936616,
+    "longitude": 27.4721276,
+    "resources": {}
+  },
+  {
+    "id": 212,
+    "name": "Plovdiv",
+    "latitude": 42.1418541,
+    "longitude": 24.7499297,
+    "resources": {}
+  },
+  {
+    "id": 213,
+    "name": "Murmansk",
+    "latitude": 68.970665,
+    "longitude": 33.07497,
+    "resources": {}
+  },
+  {
+    "id": 214,
+    "name": "Arkhangelsk",
+    "latitude": 64.543022,
+    "longitude": 40.537121,
+    "resources": {}
+  },
+  {
+    "id": 215,
+    "name": "Onega",
+    "latitude": 63.911644,
+    "longitude": 38.094822,
+    "resources": {}
+  },
+  {
+    "id": 216,
+    "name": "Olonets",
+    "latitude": 60.979276,
+    "longitude": 32.9749376,
+    "resources": {}
+  },
+  {
+    "id": 217,
+    "name": "Stalingrad",
+    "latitude": 48.8842416,
+    "longitude": 2.3670741,
+    "resources": {}
+  },
+  {
+    "id": 218,
+    "name": "Rostov",
+    "latitude": 47.2222596,
+    "longitude": 39.7198736,
+    "resources": {}
+  },
+  {
+    "id": 219,
+    "name": "Moscow",
+    "latitude": 55.625578,
+    "longitude": 37.6063916,
+    "resources": {
+      "steel": 44
+    }
+  },
+  {
+    "id": 220,
+    "name": "Kursk",
+    "latitude": 51.7309249,
+    "longitude": 36.1923123,
+    "resources": {}
+  },
+  {
+    "id": 221,
+    "name": "Kharkov",
+    "latitude": 47.338032,
+    "longitude": 35.816265,
+    "resources": {}
+  },
+  {
+    "id": 222,
+    "name": "Orel",
+    "latitude": 49.9193093,
+    "longitude": 15.8390302,
+    "resources": {}
+  },
+  {
+    "id": 223,
+    "name": "Tula",
+    "latitude": 54.1930321,
+    "longitude": 37.61754,
+    "resources": {}
+  },
+  {
+    "id": 224,
+    "name": "Bryansk",
+    "latitude": 53.2423778,
+    "longitude": 34.3668288,
+    "resources": {}
+  },
+  {
+    "id": 225,
+    "name": "Sumy",
+    "latitude": 50.9119775,
+    "longitude": 34.8027723,
+    "resources": {}
+  },
+  {
+    "id": 226,
+    "name": "Dnipropetrovsk",
+    "latitude": 48.662589,
+    "longitude": 34.9501715,
+    "resources": {}
+  },
+  {
+    "id": 227,
+    "name": "Stalino",
+    "latitude": 40.33354,
+    "longitude": 46.8255542,
+    "resources": {}
+  },
+  {
+    "id": 228,
+    "name": "Voroshilovgrad",
+    "latitude": 48.40642294514251,
+    "longitude": 38.09116627337022,
+    "resources": {}
+  },
+  {
+    "id": 229,
+    "name": "Azerbaijan",
+    "latitude": 40.3936294,
+    "longitude": 47.7872508,
+    "resources": {
+      "chromium": 15,
+      "oil": 12
+    }
+  },
+  {
+    "id": 230,
+    "name": "Armenia",
+    "latitude": 40.7696272,
+    "longitude": 44.6736646,
+    "resources": {}
+  },
+  {
+    "id": 231,
+    "name": "Georgia",
+    "latitude": 32.3293809,
+    "longitude": -83.1137366,
+    "resources": {}
+  },
+  {
+    "id": 232,
+    "name": "Grozny",
+    "latitude": 43.3197031,
+    "longitude": 45.6934308,
+    "resources": {}
+  },
+  {
+    "id": 233,
+    "name": "Caucasus Mountains",
+    "latitude": 42.4913744,
+    "longitude": 44.9961252,
+    "resources": {}
+  },
+  {
+    "id": 234,
+    "name": "Krasnodar",
+    "latitude": 45.0351532,
+    "longitude": 38.9772396,
+    "resources": {}
+  },
+  {
+    "id": 235,
+    "name": "Stravropol",
+    "latitude": 45.0428,
+    "longitude": 41.9734,
+    "resources": {}
+  },
+  {
+    "id": 236,
+    "name": "Astrakhan",
+    "latitude": 46.3498308,
+    "longitude": 48.0326203,
+    "resources": {}
+  },
+  {
+    "id": 237,
+    "name": "Elista",
+    "latitude": 46.3073288,
+    "longitude": 44.2692214,
+    "resources": {}
+  },
+  {
+    "id": 238,
+    "name": "Volgodonsk",
+    "latitude": 47.5182668,
+    "longitude": 42.1525935,
+    "resources": {}
+  },
+  {
+    "id": 239,
+    "name": "Saratov",
+    "latitude": 51.530018,
+    "longitude": 46.034683,
+    "resources": {}
+  },
+  {
+    "id": 240,
+    "name": "Belgorod",
+    "latitude": 50.5955595,
+    "longitude": 36.5873394,
+    "resources": {}
+  },
+  {
+    "id": 241,
+    "name": "Gomel",
+    "latitude": 49.2430108,
+    "longitude": 6.4696598,
+    "resources": {}
+  },
+  {
+    "id": 242,
+    "name": "Smolensk",
+    "latitude": 54.7814057,
+    "longitude": 32.0461261,
+    "resources": {}
+  },
+  {
+    "id": 243,
+    "name": "Roslavl",
+    "latitude": 53.9483965,
+    "longitude": 32.8606696,
+    "resources": {}
+  },
+  {
+    "id": 244,
+    "name": "Volkhov",
+    "latitude": 59.9275868,
+    "longitude": 32.3276803,
+    "resources": {}
+  },
+  {
+    "id": 245,
+    "name": "Millerovo",
+    "latitude": 48.9196264,
+    "longitude": 40.391854,
+    "resources": {}
+  },
+  {
+    "id": 246,
+    "name": "Rzhev",
+    "latitude": 56.2565207,
+    "longitude": 34.328649,
+    "resources": {}
+  },
+  {
+    "id": 247,
+    "name": "Kalinin",
+    "latitude": 54.710128,
+    "longitude": 20.5105838,
+    "resources": {}
+  },
+  {
+    "id": 248,
+    "name": "Yaroslavl",
+    "latitude": 57.6263877,
+    "longitude": 39.8933705,
+    "resources": {}
+  },
+  {
+    "id": 249,
+    "name": "Kazan",
+    "latitude": 55.7946485,
+    "longitude": 49.1115022,
+    "resources": {}
+  },
+  {
+    "id": 250,
+    "name": "Ulyanovsky",
+    "latitude": 54.365995850000004,
+    "longitude": 48.06597020936266,
+    "resources": {}
+  },
+  {
+    "id": 251,
+    "name": "Kuibyshev",
+    "latitude": 44.4848905,
+    "longitude": 34.0990399,
+    "resources": {}
+  },
+  {
+    "id": 252,
+    "name": "Gorki",
+    "latitude": 51.565621,
+    "longitude": 19.5066948,
+    "resources": {}
+  },
+  {
+    "id": 253,
+    "name": "Ivanovo",
+    "latitude": 56.9956855,
+    "longitude": 40.9812104,
+    "resources": {}
+  },
+  {
+    "id": 254,
+    "name": "Ryazan",
+    "latitude": 54.6702523,
+    "longitude": 39.68844236231995,
+    "resources": {}
+  },
+  {
+    "id": 255,
+    "name": "Penza",
+    "latitude": 53.1953477,
+    "longitude": 45.0190437,
+    "resources": {}
+  },
+  {
+    "id": 256,
+    "name": "Cheboksary",
+    "latitude": 56.1399598,
+    "longitude": 47.2480999,
+    "resources": {}
+  },
+  {
+    "id": 257,
+    "name": "Tambov",
+    "latitude": 52.7216164,
+    "longitude": 41.4523988,
+    "resources": {}
+  },
+  {
+    "id": 258,
+    "name": "Lipetsk",
+    "latitude": 52.6051488,
+    "longitude": 39.5963775,
+    "resources": {}
+  },
+  {
+    "id": 259,
+    "name": "Poltava",
+    "latitude": 49.5897423,
+    "longitude": 34.5507948,
+    "resources": {}
+  },
+  {
+    "id": 260,
+    "name": "Voronezh",
+    "latitude": 51.6605982,
+    "longitude": 39.2005858,
+    "resources": {}
+  },
+  {
+    "id": 261,
+    "name": "Ohio",
+    "latitude": 40.2253569,
+    "longitude": -82.6881395,
+    "resources": {}
+  },
+  {
+    "id": 262,
+    "name": "Pechora",
+    "latitude": 65.7109698,
+    "longitude": 54.8179912,
+    "resources": {}
+  },
+  {
+    "id": 263,
+    "name": "Novgorod",
+    "latitude": 56.3264816,
+    "longitude": 44.0051395,
+    "resources": {}
+  },
+  {
+    "id": 264,
+    "name": "Tikhvin",
+    "latitude": 59.644323,
+    "longitude": 33.5418624,
+    "resources": {}
+  },
+  {
+    "id": 265,
+    "name": "Mikhaylovka",
+    "latitude": 50.0797109,
+    "longitude": 43.2342365,
+    "resources": {}
+  },
+  {
+    "id": 266,
+    "name": "Tehran",
+    "latitude": 35.6892523,
+    "longitude": 51.3896004,
+    "resources": {}
+  },
+  {
+    "id": 267,
+    "name": "Kabul",
+    "latitude": 34.5269503,
+    "longitude": 69.1850584,
+    "resources": {}
+  },
+  {
+    "id": 268,
+    "name": "French Somaliland",
+    "latitude": 11.6,
+    "longitude": 43.16666667,
+    "resources": {}
+  },
+  {
+    "id": 269,
+    "name": "British Somaliland",
+    "latitude": 9.55459515,
+    "longitude": 44.046146909988636,
+    "resources": {}
+  },
+  {
+    "id": 270,
+    "name": "Pitcairn Island",
+    "latitude": -25.0657719,
+    "longitude": -130.101782,
+    "resources": {}
+  },
+  {
+    "id": 271,
+    "name": "Ethiopia",
+    "latitude": 10.2116702,
+    "longitude": 38.6521203,
+    "resources": {}
+  },
+  {
+    "id": 272,
+    "name": "Senegal",
+    "latitude": 14.4750607,
+    "longitude": -14.4529612,
+    "resources": {}
+  },
+  {
+    "id": 273,
+    "name": "Libyan Desert",
+    "latitude": 24.1698921,
+    "longitude": 24.8766349,
+    "resources": {}
+  },
+  {
+    "id": 274,
+    "name": "Ghana",
+    "latitude": 8.0300284,
+    "longitude": -1.0800271,
+    "resources": {}
+  },
+  {
+    "id": 275,
+    "name": "Transvaal",
+    "latitude": 52.35386365,
+    "longitude": 4.920172387174354,
+    "resources": {
+      "chromium": 96,
+      "steel": 36
+    }
+  },
+  {
+    "id": 276,
+    "name": "Southern Ontario",
+    "latitude": 44.4909101,
+    "longitude": -76.035572,
+    "resources": {}
+  },
+  {
+    "id": 277,
+    "name": "Mexico City",
+    "latitude": 19.4326296,
+    "longitude": -99.1331785,
+    "resources": {}
+  },
+  {
+    "id": 278,
+    "name": "Pampas",
+    "latitude": -8.1950956,
+    "longitude": -77.8957296,
+    "resources": {}
+  },
+  {
+    "id": 279,
+    "name": "Santiago",
+    "latitude": -33.4377756,
+    "longitude": -70.6504502,
+    "resources": {}
+  },
+  {
+    "id": 280,
+    "name": "Mato Grosso",
+    "latitude": -12.2115009,
+    "longitude": -55.5716547,
+    "resources": {}
+  },
+  {
+    "id": 281,
+    "name": "Maldives",
+    "latitude": 3.7203503,
+    "longitude": 73.2244152,
+    "resources": {}
+  },
+  {
+    "id": 282,
+    "name": "Kanto",
+    "latitude": 35.30289995,
+    "longitude": 139.83402816219004,
+    "resources": {}
+  },
+  {
+    "id": 283,
+    "name": "Gansu",
+    "latitude": 38.0000001,
+    "longitude": 101.9999999,
+    "resources": {
+      "tungsten": 12
+    }
+  },
+  {
+    "id": 284,
+    "name": "North Island",
+    "latitude": -38.00353045,
+    "longitude": 175.95782102762962,
+    "resources": {}
+  },
+  {
+    "id": 285,
+    "name": "New South Wales",
+    "latitude": -31.8759835,
+    "longitude": 147.2869493,
+    "resources": {
+      "aluminium": 36
+    }
+  },
+  {
+    "id": 286,
+    "name": "Southern Indochina",
+    "latitude": 10.7769,
+    "longitude": 106.7009,
+    "resources": {}
+  },
+  {
+    "id": 287,
+    "name": "Taklamakan",
+    "latitude": 38.94225435,
+    "longitude": 83.9630965766332,
+    "resources": {}
+  },
+  {
+    "id": 288,
+    "name": "Burma",
+    "latitude": 14.7037865,
+    "longitude": 25.9224696,
+    "resources": {
+      "rubber": 36
+    }
+  },
+  {
+    "id": 289,
+    "name": "Siam",
+    "latitude": 39.920782,
+    "longitude": 8.7610449,
+    "resources": {
+      "oil": 21,
+      "rubber": 24
+    }
+  },
+  {
+    "id": 290,
+    "name": "Spanish Africa",
+    "latitude": 35.7595,
+    "longitude": -5.834,
+    "resources": {}
+  },
+  {
+    "id": 291,
+    "name": "Baghdad",
+    "latitude": 33.3061701,
+    "longitude": 44.3872213,
+    "resources": {}
+  },
+  {
+    "id": 292,
+    "name": "Nejd",
+    "latitude": 50.3247878,
+    "longitude": 12.7332967,
+    "resources": {
+      "oil": 80
+    }
+  },
+  {
+    "id": 293,
+    "name": "Yemen",
+    "latitude": 16.3471243,
+    "longitude": 47.8915271,
+    "resources": {
+      "oil": 12
+    }
+  },
+  {
+    "id": 294,
+    "name": "Oman",
+    "latitude": 21.0000287,
+    "longitude": 57.0036901,
+    "resources": {
+      "oil": 8
+    }
+  },
+  {
+    "id": 295,
+    "name": "Leopoldville",
+    "latitude": -4.32171,
+    "longitude": 15.3122511,
+    "resources": {}
+  },
+  {
+    "id": 296,
+    "name": "Portuguese Guinea",
+    "latitude": 12.277048,
+    "longitude": -16.1672689,
+    "resources": {}
+  },
+  {
+    "id": 297,
+    "name": "Equatorial Guinea",
+    "latitude": 1.613172,
+    "longitude": 10.5170357,
+    "resources": {}
+  },
+  {
+    "id": 298,
+    "name": "Liberia",
+    "latitude": 5.7499721,
+    "longitude": -9.3658524,
+    "resources": {}
+  },
+  {
+    "id": 299,
+    "name": "Falkland Islands",
+    "latitude": -51.9492937,
+    "longitude": -59.5383657,
+    "resources": {}
+  },
+  {
+    "id": 300,
+    "name": "Uruguay",
+    "latitude": -32.8755548,
+    "longitude": -56.0201525,
+    "resources": {}
+  },
+  {
+    "id": 301,
+    "name": "Paraguay",
+    "latitude": -23.3165935,
+    "longitude": -58.1693445,
+    "resources": {}
+  },
+  {
+    "id": 302,
+    "name": "La Paz",
+    "latitude": -16.4955455,
+    "longitude": -68.1336229,
+    "resources": {}
+  },
+  {
+    "id": 303,
+    "name": "Lima",
+    "latitude": -12.0459808,
+    "longitude": -77.0305912,
+    "resources": {}
+  },
+  {
+    "id": 304,
+    "name": "Panama",
+    "latitude": 8.559559,
+    "longitude": -81.1308434,
+    "resources": {}
+  },
+  {
+    "id": 305,
+    "name": "Ecuador",
+    "latitude": -1.3397668,
+    "longitude": -79.3666965,
+    "resources": {}
+  },
+  {
+    "id": 306,
+    "name": "Cundinamarca",
+    "latitude": 5.1096596,
+    "longitude": -74.0995854,
+    "resources": {}
+  },
+  {
+    "id": 307,
+    "name": "Miranda",
+    "latitude": 10.2343499,
+    "longitude": -66.3807249,
+    "resources": {}
+  },
+  {
+    "id": 308,
+    "name": "Leeward Islands",
+    "latitude": 17.65,
+    "longitude": -63.235,
+    "resources": {}
+  },
+  {
+    "id": 309,
+    "name": "Suriname",
+    "latitude": 4.1413025,
+    "longitude": -56.0771187,
+    "resources": {}
+  },
+  {
+    "id": 310,
+    "name": "French Guiana",
+    "latitude": 4.0039882,
+    "longitude": -52.999998,
+    "resources": {}
+  },
+  {
+    "id": 311,
+    "name": "British Mexico",
+    "latitude": 49.6617701,
+    "longitude": -124.9255932865765,
+    "resources": {}
+  },
+  {
+    "id": 312,
+    "name": "Honduras",
+    "latitude": 15.2572432,
+    "longitude": -86.0755145,
+    "resources": {}
+  },
+  {
+    "id": 313,
+    "name": "Guatemala",
+    "latitude": 15.5855545,
+    "longitude": -90.345759,
+    "resources": {}
+  },
+  {
+    "id": 314,
+    "name": "El Salvador",
+    "latitude": 13.8000382,
+    "longitude": -88.9140683,
+    "resources": {}
+  },
+  {
+    "id": 315,
+    "name": "Cuba",
+    "latitude": 23.0131338,
+    "longitude": -80.8328748,
+    "resources": {}
+  },
+  {
+    "id": 316,
+    "name": "Costa Rica",
+    "latitude": 10.2735633,
+    "longitude": -84.0739102,
+    "resources": {}
+  },
+  {
+    "id": 317,
+    "name": "Nicaragua",
+    "latitude": 12.3506436,
+    "longitude": -85.7841006,
+    "resources": {}
+  },
+  {
+    "id": 318,
+    "name": "Haiti",
+    "latitude": 19.1399952,
+    "longitude": -72.3570972,
+    "resources": {}
+  },
+  {
+    "id": 319,
+    "name": "Dominican Republic",
+    "latitude": 19.0974031,
+    "longitude": -70.3028026,
+    "resources": {}
+  },
+  {
+    "id": 320,
+    "name": "French India",
+    "latitude": 38.5502547,
+    "longitude": -86.6199659,
+    "resources": {}
+  },
+  {
+    "id": 321,
+    "name": "Goa",
+    "latitude": 15.3004543,
+    "longitude": 74.0855134,
+    "resources": {}
+  },
+  {
+    "id": 322,
+    "name": "Tibet",
+    "latitude": 31.8280766,
+    "longitude": 87.4064278,
+    "resources": {}
+  },
+  {
+    "id": 323,
+    "name": "Nepal",
+    "latitude": 28.3780464,
+    "longitude": 83.9999901,
+    "resources": {}
+  },
+  {
+    "id": 324,
+    "name": "Bhutan",
+    "latitude": 27.549511,
+    "longitude": 90.5119273,
+    "resources": {}
+  },
+  {
+    "id": 325,
+    "name": "Yunnan",
+    "latitude": 1.3445543,
+    "longitude": 103.6948787,
+    "resources": {
+      "tungsten": 30
+    }
+  },
+  {
+    "id": 326,
+    "name": "Hong Kong",
+    "latitude": 22.2792968,
+    "longitude": 114.1628907,
+    "resources": {
+      "tungsten": 7
+    }
+  },
+  {
+    "id": 327,
+    "name": "Manila",
+    "latitude": 14.5904492,
+    "longitude": 120.9803621,
+    "resources": {}
+  },
+  {
+    "id": 328,
+    "name": "Kirin",
+    "latitude": -0.46887805,
+    "longitude": 37.30276810393241,
+    "resources": {}
+  },
+  {
+    "id": 329,
+    "name": "Tannu Tuva",
+    "latitude": 51.0684572,
+    "longitude": 92.3807728,
+    "resources": {}
+  },
+  {
+    "id": 330,
+    "name": "Mongolia",
+    "latitude": 46.8250388,
+    "longitude": 103.8499736,
+    "resources": {}
+  },
+  {
+    "id": 331,
+    "name": "Newfoundland",
+    "latitude": 49.12119115,
+    "longitude": -56.64034020332219,
+    "resources": {}
+  },
+  {
+    "id": 332,
+    "name": "Labrador",
+    "latitude": 56.6832524,
+    "longitude": -53.271457,
+    "resources": {}
+  },
+  {
+    "id": 333,
+    "name": "North Borneo",
+    "latitude": 5.9817102,
+    "longitude": 116.0746698,
+    "resources": {}
+  },
+  {
+    "id": 334,
+    "name": "Kalimantan",
+    "latitude": 0.7884397,
+    "longitude": 116.2419977,
+    "resources": {
+      "rubber": 36,
+      "oil": 18
+    }
+  },
+  {
+    "id": 335,
+    "name": "Java",
+    "latitude": -7.327969400000001,
+    "longitude": 109.6139109880134,
+    "resources": {
+      "rubber": 8,
+      "oil": 4
+    }
+  },
+  {
+    "id": 336,
+    "name": "Singapore",
+    "latitude": 1.2899175,
+    "longitude": 103.8519072,
+    "resources": {}
+  },
+  {
+    "id": 337,
+    "name": "Faroe Islands",
+    "latitude": 62.0282362,
+    "longitude": -6.8819254,
+    "resources": {}
+  },
+  {
+    "id": 338,
+    "name": "Gloucestershire",
+    "latitude": 51.8333313,
+    "longitude": -2.1666674,
+    "resources": {}
+  },
+  {
+    "id": 339,
+    "name": "Izmir",
+    "latitude": 38.4192537,
+    "longitude": 27.128469,
+    "resources": {}
+  },
+  {
+    "id": 340,
+    "name": "Bursa",
+    "latitude": 40.1825734,
+    "longitude": 29.0675039,
+    "resources": {}
+  },
+  {
+    "id": 341,
+    "name": "Istanbul",
+    "latitude": 41.006381,
+    "longitude": 28.9758715,
+    "resources": {}
+  },
+  {
+    "id": 342,
+    "name": "Antalya",
+    "latitude": 36.8865728,
+    "longitude": 30.7030242,
+    "resources": {}
+  },
+  {
+    "id": 343,
+    "name": "Afyon",
+    "latitude": 38.6852729,
+    "longitude": 30.6427411,
+    "resources": {}
+  },
+  {
+    "id": 344,
+    "name": "Adana",
+    "latitude": 36.9863599,
+    "longitude": 35.3252861,
+    "resources": {}
+  },
+  {
+    "id": 345,
+    "name": "Mersin",
+    "latitude": 36.7978381,
+    "longitude": 34.6298391,
+    "resources": {}
+  },
+  {
+    "id": 346,
+    "name": "Konya",
+    "latitude": 37.872734,
+    "longitude": 32.4924376,
+    "resources": {}
+  },
+  {
+    "id": 347,
+    "name": "Izmit",
+    "latitude": 40.7721138,
+    "longitude": 29.9505623,
+    "resources": {}
+  },
+  {
+    "id": 348,
+    "name": "Kayseri",
+    "latitude": 38.7219011,
+    "longitude": 35.4873214,
+    "resources": {}
+  },
+  {
+    "id": 349,
+    "name": "Sivas",
+    "latitude": 39.7503574,
+    "longitude": 37.0145173,
+    "resources": {}
+  },
+  {
+    "id": 350,
+    "name": "Malatya",
+    "latitude": 38.4820156,
+    "longitude": 38.1035355,
+    "resources": {}
+  },
+  {
+    "id": 351,
+    "name": "Vologda",
+    "latitude": 59.2189391,
+    "longitude": 39.8933913,
+    "resources": {}
+  },
+  {
+    "id": 352,
+    "name": "Van",
+    "latitude": 38.3249599,
+    "longitude": 43.6589825,
+    "resources": {}
+  },
+  {
+    "id": 353,
+    "name": "Erzurum",
+    "latitude": 39.90632,
+    "longitude": 41.2727715,
+    "resources": {}
+  },
+  {
+    "id": 354,
+    "name": "Trabzon",
+    "latitude": 41.0054605,
+    "longitude": 39.7301463,
+    "resources": {}
+  },
+  {
+    "id": 355,
+    "name": "Samsun",
+    "latitude": 41.2946149,
+    "longitude": 36.3320596,
+    "resources": {}
+  },
+  {
+    "id": 356,
+    "name": "Kastamonu",
+    "latitude": 41.3680217,
+    "longitude": 33.7619177,
+    "resources": {}
+  },
+  {
+    "id": 357,
+    "name": "New England",
+    "latitude": 44.2057083,
+    "longitude": -70.75378387447887,
+    "resources": {}
+  },
+  {
+    "id": 358,
+    "name": "New York",
+    "latitude": 40.7127281,
+    "longitude": -74.0060152,
+    "resources": {}
+  },
+  {
+    "id": 359,
+    "name": "New Jersey",
+    "latitude": 40.0757384,
+    "longitude": -74.4041622,
+    "resources": {}
+  },
+  {
+    "id": 360,
+    "name": "Pennsylvania",
+    "latitude": 40.9699889,
+    "longitude": -77.7278831,
+    "resources": {
+      "steel": 48
+    }
+  },
+  {
+    "id": 361,
+    "name": "Maryland",
+    "latitude": 39.5162401,
+    "longitude": -76.9382069,
+    "resources": {}
+  },
+  {
+    "id": 362,
+    "name": "Virginia",
+    "latitude": 37.1232245,
+    "longitude": -78.4927721,
+    "resources": {}
+  },
+  {
+    "id": 363,
+    "name": "North Carolina",
+    "latitude": 35.6729639,
+    "longitude": -79.0392919,
+    "resources": {}
+  },
+  {
+    "id": 364,
+    "name": "South Carolina",
+    "latitude": 33.6874388,
+    "longitude": -80.4363743,
+    "resources": {}
+  },
+  {
+    "id": 365,
+    "name": "Georgia",
+    "latitude": 32.3293809,
+    "longitude": -83.1137366,
+    "resources": {}
+  },
+  {
+    "id": 366,
+    "name": "Florida",
+    "latitude": 27.7567667,
+    "longitude": -81.4639835,
+    "resources": {}
+  },
+  {
+    "id": 367,
+    "name": "Alabama",
+    "latitude": 33.2588817,
+    "longitude": -86.8295337,
+    "resources": {}
+  },
+  {
+    "id": 368,
+    "name": "Tennessee",
+    "latitude": 35.7730076,
+    "longitude": -86.2820081,
+    "resources": {}
+  },
+  {
+    "id": 369,
+    "name": "Kentucky",
+    "latitude": 37.5726028,
+    "longitude": -85.1551411,
+    "resources": {}
+  },
+  {
+    "id": 370,
+    "name": "Mississippi",
+    "latitude": 32.9715285,
+    "longitude": -89.7348497,
+    "resources": {}
+  },
+  {
+    "id": 371,
+    "name": "Louisiana",
+    "latitude": 30.8703881,
+    "longitude": -92.007126,
+    "resources": {}
+  },
+  {
+    "id": 372,
+    "name": "Arkansas",
+    "latitude": 35.2048883,
+    "longitude": -92.4479108,
+    "resources": {}
+  },
+  {
+    "id": 373,
+    "name": "Missouri",
+    "latitude": 38.7604815,
+    "longitude": -92.5617875,
+    "resources": {}
+  },
+  {
+    "id": 374,
+    "name": "Oklahoma",
+    "latitude": 34.9550817,
+    "longitude": -97.2684063,
+    "resources": {}
+  },
+  {
+    "id": 375,
+    "name": "Texas",
+    "latitude": 31.2638905,
+    "longitude": -98.5456116,
+    "resources": {
+      "oil": 171,
+      "steel": 60
+    }
+  },
+  {
+    "id": 376,
+    "name": "New Mexico",
+    "latitude": 34.5802074,
+    "longitude": -105.996047,
+    "resources": {}
+  },
+  {
+    "id": 377,
+    "name": "Arizona",
+    "latitude": 34.395342,
+    "longitude": -111.763275,
+    "resources": {}
+  },
+  {
+    "id": 378,
+    "name": "California",
+    "latitude": 36.7014631,
+    "longitude": -118.755997,
+    "resources": {
+      "oil": 32
+    }
+  },
+  {
+    "id": 379,
+    "name": "Nevada",
+    "latitude": 39.5158825,
+    "longitude": -116.853722,
+    "resources": {}
+  },
+  {
+    "id": 380,
+    "name": "Utah",
+    "latitude": 39.4225192,
+    "longitude": -111.714358,
+    "resources": {}
+  },
+  {
+    "id": 381,
+    "name": "Wyoming",
+    "latitude": 43.1700264,
+    "longitude": -107.568534,
+    "resources": {}
+  },
+  {
+    "id": 382,
+    "name": "Colorado",
+    "latitude": 38.7251776,
+    "longitude": -105.607716,
+    "resources": {}
+  },
+  {
+    "id": 383,
+    "name": "Kansas",
+    "latitude": 38.27312,
+    "longitude": -98.5821872,
+    "resources": {}
+  },
+  {
+    "id": 384,
+    "name": "Nebraska",
+    "latitude": 41.7370229,
+    "longitude": -99.5873816,
+    "resources": {}
+  },
+  {
+    "id": 385,
+    "name": "Oregon",
+    "latitude": 43.9792797,
+    "longitude": -120.737257,
+    "resources": {}
+  },
+  {
+    "id": 386,
+    "name": "Washington",
+    "latitude": 38.8950368,
+    "longitude": -77.0365427,
+    "resources": {}
+  },
+  {
+    "id": 387,
+    "name": "Idaho",
+    "latitude": 43.6447642,
+    "longitude": -114.015407,
+    "resources": {}
+  },
+  {
+    "id": 388,
+    "name": "Montana",
+    "latitude": 47.3752671,
+    "longitude": -109.638757,
+    "resources": {}
+  },
+  {
+    "id": 389,
+    "name": "North Dakota",
+    "latitude": 47.6201461,
+    "longitude": -100.540737,
+    "resources": {}
+  },
+  {
+    "id": 390,
+    "name": "South Dakota",
+    "latitude": 44.6471761,
+    "longitude": -100.348761,
+    "resources": {}
+  },
+  {
+    "id": 391,
+    "name": "Minnesota",
+    "latitude": 45.9896587,
+    "longitude": -94.6113288,
+    "resources": {}
+  },
+  {
+    "id": 392,
+    "name": "Iowa",
+    "latitude": 41.9216734,
+    "longitude": -93.3122705,
+    "resources": {}
+  },
+  {
+    "id": 393,
+    "name": "Michigan",
+    "latitude": 43.6211955,
+    "longitude": -84.6824346,
+    "resources": {
+      "steel": 54
+    }
+  },
+  {
+    "id": 394,
+    "name": "Wisconsin",
+    "latitude": 44.4308975,
+    "longitude": -89.6884637,
+    "resources": {}
+  },
+  {
+    "id": 395,
+    "name": "Illinois",
+    "latitude": 40.0796606,
+    "longitude": -89.4337288,
+    "resources": {
+      "steel": 30
+    }
+  },
+  {
+    "id": 396,
+    "name": "Indiana",
+    "latitude": 40.3270127,
+    "longitude": -86.1746933,
+    "resources": {}
+  },
+  {
+    "id": 397,
+    "name": "Syktyvkar",
+    "latitude": 61.6685237,
+    "longitude": 50.8352024,
+    "resources": {}
+  },
+  {
+    "id": 398,
+    "name": "Perm",
+    "latitude": 58.0108531,
+    "longitude": 56.2318528,
+    "resources": {}
+  },
+  {
+    "id": 399,
+    "name": "Izhevsk",
+    "latitude": 56.86051745,
+    "longitude": 53.197730742455306,
+    "resources": {}
+  },
+  {
+    "id": 400,
+    "name": "Kirov",
+    "latitude": 58.6035661,
+    "longitude": 49.6666241,
+    "resources": {}
+  },
+  {
+    "id": 401,
+    "name": "Engels",
+    "latitude": 51.5013775,
+    "longitude": 46.1233093,
+    "resources": {}
+  },
+  {
+    "id": 402,
+    "name": "Akhtubinsk",
+    "latitude": 48.2848132,
+    "longitude": 46.1643706,
+    "resources": {}
+  },
+  {
+    "id": 403,
+    "name": "Tyumen",
+    "latitude": 57.153534,
+    "longitude": 65.542274,
+    "resources": {}
+  },
+  {
+    "id": 404,
+    "name": "Kyzyl Orda",
+    "latitude": 44.8426778,
+    "longitude": 65.5036151,
+    "resources": {}
+  },
+  {
+    "id": 405,
+    "name": "Tashkent",
+    "latitude": 41.3123363,
+    "longitude": 69.2787079,
+    "resources": {}
+  },
+  {
+    "id": 406,
+    "name": "Gurev",
+    "latitude": 42.2511677,
+    "longitude": 19.3937512,
+    "resources": {
+      "oil": 14
+    }
+  },
+  {
+    "id": 407,
+    "name": "Uralsk",
+    "latitude": 56.415451,
+    "longitude": 61.917797,
+    "resources": {}
+  },
+  {
+    "id": 408,
+    "name": "Vladivostok",
+    "latitude": 43.1150678,
+    "longitude": 131.8855768,
+    "resources": {}
+  },
+  {
+    "id": 409,
+    "name": "Khabarovsk",
+    "latitude": 48.4812568,
+    "longitude": 135.0762968,
+    "resources": {}
+  },
+  {
+    "id": 410,
+    "name": "Sistan",
+    "latitude": 28.1292481,
+    "longitude": 60.8236848,
+    "resources": {
+      "oil": 3
+    }
+  },
+  {
+    "id": 411,
+    "name": "Isfahan",
+    "latitude": 32.6707877,
+    "longitude": 51.6650002,
+    "resources": {}
+  },
+  {
+    "id": 412,
+    "name": "Fars",
+    "latitude": 29.2051447,
+    "longitude": 53.4327752,
+    "resources": {}
+  },
+  {
+    "id": 413,
+    "name": "Khuzestan",
+    "latitude": 31.5563051,
+    "longitude": 49.0058885,
+    "resources": {
+      "oil": 36
+    }
+  },
+  {
+    "id": 414,
+    "name": "Kerman",
+    "latitude": 30.2924085,
+    "longitude": 57.0645647,
+    "resources": {}
+  },
+  {
+    "id": 415,
+    "name": "Herat",
+    "latitude": 34.3491443,
+    "longitude": 62.2163252,
+    "resources": {}
+  },
+  {
+    "id": 416,
+    "name": "Khorasan",
+    "latitude": 35.4795009,
+    "longitude": 59.0237291,
+    "resources": {}
+  },
+  {
+    "id": 417,
+    "name": "Hamadan",
+    "latitude": 34.7992888,
+    "longitude": 48.5152464,
+    "resources": {}
+  },
+  {
+    "id": 418,
+    "name": "Semnan",
+    "latitude": 35.3843145,
+    "longitude": 54.6209302,
+    "resources": {}
+  },
+  {
+    "id": 419,
+    "name": "Tibriz",
+    "latitude": 38.0962,
+    "longitude": 46.2738,
+    "resources": {}
+  },
+  {
+    "id": 420,
+    "name": "Gilan",
+    "latitude": 37.1515627,
+    "longitude": 49.6389743,
+    "resources": {}
+  },
+  {
+    "id": 421,
+    "name": "Kurdistan",
+    "latitude": 35.6727813,
+    "longitude": 47.0127981,
+    "resources": {}
+  },
+  {
+    "id": 422,
+    "name": "Ceylon",
+    "latitude": 43.5335672,
+    "longitude": -94.6316462,
+    "resources": {}
+  },
+  {
+    "id": 423,
+    "name": "Madurai",
+    "latitude": 9.9261153,
+    "longitude": 78.1140983,
+    "resources": {}
+  },
+  {
+    "id": 424,
+    "name": "Madras",
+    "latitude": 44.6334544,
+    "longitude": -121.129487,
+    "resources": {}
+  },
+  {
+    "id": 425,
+    "name": "Mysore",
+    "latitude": 12.3052915,
+    "longitude": 76.6539249338108,
+    "resources": {}
+  },
+  {
+    "id": 426,
+    "name": "Orissa",
+    "latitude": 20.5431241,
+    "longitude": 84.6897321,
+    "resources": {}
+  },
+  {
+    "id": 427,
+    "name": "Hyderabad",
+    "latitude": 17.360589,
+    "longitude": 78.4740613,
+    "resources": {}
+  },
+  {
+    "id": 428,
+    "name": "Gujarat",
+    "latitude": 22.3850051,
+    "longitude": 71.745261,
+    "resources": {}
+  },
+  {
+    "id": 429,
+    "name": "Bombay",
+    "latitude": 44.939043,
+    "longitude": -74.567986,
+    "resources": {}
+  },
+  {
+    "id": 430,
+    "name": "East Bengal",
+    "latitude": 22.55897705,
+    "longitude": 88.34379850519677,
+    "resources": {}
+  },
+  {
+    "id": 431,
+    "name": "West Bengal",
+    "latitude": 22.9964948,
+    "longitude": 87.6855882,
+    "resources": {}
+  },
+  {
+    "id": 432,
+    "name": "Assam",
+    "latitude": 26.4073841,
+    "longitude": 93.2551303,
+    "resources": {}
+  },
+  {
+    "id": 433,
+    "name": "Rajahsthan",
+    "latitude": 26.9124,
+    "longitude": 75.7873,
+    "resources": {}
+  },
+  {
+    "id": 434,
+    "name": "Arunachal Pradesh",
+    "latitude": 28.0937702,
+    "longitude": 94.5921326,
+    "resources": {}
+  },
+  {
+    "id": 435,
+    "name": "Bihar",
+    "latitude": 25.6440845,
+    "longitude": 85.906508,
+    "resources": {}
+  },
+  {
+    "id": 436,
+    "name": "Jabalpur",
+    "latitude": 23.1701522,
+    "longitude": 79.9324505,
+    "resources": {}
+  },
+  {
+    "id": 437,
+    "name": "Indore",
+    "latitude": 22.7203616,
+    "longitude": 75.8681996,
+    "resources": {}
+  },
+  {
+    "id": 438,
+    "name": "Lucknow",
+    "latitude": 26.8381,
+    "longitude": 80.9346001,
+    "resources": {}
+  },
+  {
+    "id": 439,
+    "name": "Delhi",
+    "latitude": 28.6328027,
+    "longitude": 77.2197713,
+    "resources": {}
+  },
+  {
+    "id": 440,
+    "name": "Punjab",
+    "latitude": 30.9293211,
+    "longitude": 75.5004841,
+    "resources": {}
+  },
+  {
+    "id": 441,
+    "name": "Kashmir",
+    "latitude": 33.6649297,
+    "longitude": 75.1629584,
+    "resources": {}
+  },
+  {
+    "id": 442,
+    "name": "Peshawar",
+    "latitude": 34.0123846,
+    "longitude": 71.5787458,
+    "resources": {}
+  },
+  {
+    "id": 443,
+    "name": "Sind",
+    "latitude": 25.5,
+    "longitude": 69,
+    "resources": {
+      "oil": 3
+    }
+  },
+  {
+    "id": 444,
+    "name": "Baluchistan",
+    "latitude": 25.0242472,
+    "longitude": 66.8880538,
+    "resources": {}
+  },
+  {
+    "id": 445,
+    "name": "Quetta",
+    "latitude": 30.1957677,
+    "longitude": 67.0172447,
+    "resources": {}
+  },
+  {
+    "id": 446,
+    "name": "Cairo",
+    "latitude": 30.0443879,
+    "longitude": 31.2357257,
+    "resources": {}
+  },
+  {
+    "id": 447,
+    "name": "Alexandria",
+    "latitude": 38.8051095,
+    "longitude": -77.0470229,
+    "resources": {}
+  },
+  {
+    "id": 448,
+    "name": "Tripoli",
+    "latitude": 32.896672,
+    "longitude": 13.1777923,
+    "resources": {
+      "oil": 12
+    }
+  },
+  {
+    "id": 449,
+    "name": "El Agheila",
+    "latitude": 29.907238256118553,
+    "longitude": 34.68157019910348,
+    "resources": {}
+  },
+  {
+    "id": 450,
+    "name": "Benghasi",
+    "latitude": -36.778005253115865,
+    "longitude": 144.25057230555123,
+    "resources": {}
+  },
+  {
+    "id": 451,
+    "name": "Derna",
+    "latitude": 47.204854,
+    "longitude": 22.3078138,
+    "resources": {}
+  },
+  {
+    "id": 452,
+    "name": "Marsa Matruh",
+    "latitude": 31.3528567,
+    "longitude": 27.2395262,
+    "resources": {
+      "oil": 2
+    }
+  },
+  {
+    "id": 453,
+    "name": "Sinai",
+    "latitude": 29.52316965,
+    "longitude": 33.805472576508,
+    "resources": {}
+  },
+  {
+    "id": 454,
+    "name": "Palestine",
+    "latitude": 31.7621153,
+    "longitude": -95.6307891,
+    "resources": {}
+  },
+  {
+    "id": 455,
+    "name": "Jordan",
+    "latitude": 31.1667049,
+    "longitude": 36.941628,
+    "resources": {}
+  },
+  {
+    "id": 456,
+    "name": "Aswan",
+    "latitude": 24.091071,
+    "longitude": 32.897306,
+    "resources": {}
+  },
+  {
+    "id": 457,
+    "name": "Eastern Desert",
+    "latitude": 27.963496,
+    "longitude": 31.98187,
+    "resources": {}
+  },
+  {
+    "id": 458,
+    "name": "Tunisia",
+    "latitude": 33.8439408,
+    "longitude": 9.400138,
+    "resources": {}
+  },
+  {
+    "id": 459,
+    "name": "Algiers",
+    "latitude": 36.7729333,
+    "longitude": 3.0588445,
+    "resources": {}
+  },
+  {
+    "id": 460,
+    "name": "Constantine",
+    "latitude": 36.3641642,
+    "longitude": 6.6084281,
+    "resources": {}
+  },
+  {
+    "id": 461,
+    "name": "Casablanca",
+    "latitude": 33.5945144,
+    "longitude": -7.6200284,
+    "resources": {}
+  },
+  {
+    "id": 462,
+    "name": "Marrakech",
+    "latitude": 31.6258257,
+    "longitude": -7.9891608,
+    "resources": {}
+  },
+  {
+    "id": 463,
+    "name": "Alaska",
+    "latitude": 64.4459613,
+    "longitude": -149.680909,
+    "resources": {}
+  },
+  {
+    "id": 464,
+    "name": "Nova Scotia",
+    "latitude": 45.1960403,
+    "longitude": -63.1653789,
+    "resources": {}
+  },
+  {
+    "id": 465,
+    "name": "New Brunswick",
+    "latitude": 46.500283,
+    "longitude": -66.750183,
+    "resources": {}
+  },
+  {
+    "id": 466,
+    "name": "Quebec",
+    "latitude": 52.4760892,
+    "longitude": -71.8258668,
+    "resources": {}
+  },
+  {
+    "id": 467,
+    "name": "Manitoba",
+    "latitude": 55.001251,
+    "longitude": -97.001038,
+    "resources": {}
+  },
+  {
+    "id": 468,
+    "name": "Saint Lawrence",
+    "latitude": 44.4973591,
+    "longitude": -75.0657043,
+    "resources": {}
+  },
+  {
+    "id": 469,
+    "name": "Saskatchewan",
+    "latitude": 55.5321257,
+    "longitude": -106.141224,
+    "resources": {}
+  },
+  {
+    "id": 470,
+    "name": "Alberta",
+    "latitude": 55.001251,
+    "longitude": -115.002136,
+    "resources": {}
+  },
+  {
+    "id": 471,
+    "name": "Northwestern Canada",
+    "latitude": 51.96722115,
+    "longitude": -88.83336919999999,
+    "resources": {}
+  },
+  {
+    "id": 472,
+    "name": "Northern Canada",
+    "latitude": 57.7281481,
+    "longitude": -117.8123499,
+    "resources": {}
+  },
+  {
+    "id": 473,
+    "name": "British Columbia",
+    "latitude": 55.001251,
+    "longitude": -125.002441,
+    "resources": {}
+  },
+  {
+    "id": 474,
+    "name": "Yucatan",
+    "latitude": 20.6845957,
+    "longitude": -88.8755669,
+    "resources": {}
+  },
+  {
+    "id": 475,
+    "name": "Chiapas",
+    "latitude": 16.5000001,
+    "longitude": -92.5000001,
+    "resources": {}
+  },
+  {
+    "id": 476,
+    "name": "Oaxaca",
+    "latitude": 17,
+    "longitude": -96.5,
+    "resources": {}
+  },
+  {
+    "id": 477,
+    "name": "Veracruz",
+    "latitude": 19.333333,
+    "longitude": -96.666667,
+    "resources": {}
+  },
+  {
+    "id": 478,
+    "name": "Jalisco",
+    "latitude": 20.3333331,
+    "longitude": -103.6666671,
+    "resources": {}
+  },
+  {
+    "id": 479,
+    "name": "Tamaulipas",
+    "latitude": 23.9891553,
+    "longitude": -98.7026825,
+    "resources": {}
+  },
+  {
+    "id": 480,
+    "name": "Coahuila",
+    "latitude": 27.3333331,
+    "longitude": -102.0000001,
+    "resources": {}
+  },
+  {
+    "id": 481,
+    "name": "Durango",
+    "latitude": 24.833333,
+    "longitude": -104.833333,
+    "resources": {}
+  },
+  {
+    "id": 482,
+    "name": "Chihuahua",
+    "latitude": 28.5000001,
+    "longitude": -106.0000001,
+    "resources": {}
+  },
+  {
+    "id": 483,
+    "name": "Sonora",
+    "latitude": 29.3333331,
+    "longitude": -110.6666671,
+    "resources": {}
+  },
+  {
+    "id": 484,
+    "name": "Baja California",
+    "latitude": 30.0338923,
+    "longitude": -115.1425107,
+    "resources": {
+      "oil": 56
+    }
+  },
+  {
+    "id": 485,
+    "name": "Guerrero",
+    "latitude": 17.666667,
+    "longitude": -100,
+    "resources": {}
+  },
+  {
+    "id": 486,
+    "name": "Meta",
+    "latitude": 3.5000086,
+    "longitude": -73.0000086,
+    "resources": {}
+  },
+  {
+    "id": 487,
+    "name": "Santa Cruz",
+    "latitude": 36.9743626,
+    "longitude": -122.0294673,
+    "resources": {}
+  },
+  {
+    "id": 488,
+    "name": "Bolivar",
+    "latitude": 6.2003493,
+    "longitude": -63.2775558,
+    "resources": {}
+  },
+  {
+    "id": 489,
+    "name": "Zulia",
+    "latitude": 9.8910697,
+    "longitude": -72.087479,
+    "resources": {}
+  },
+  {
+    "id": 490,
+    "name": "Pastaza",
+    "latitude": -1.916667,
+    "longitude": -77,
+    "resources": {}
+  },
+  {
+    "id": 491,
+    "name": "Loreto",
+    "latitude": -5,
+    "longitude": -75,
+    "resources": {}
+  },
+  {
+    "id": 492,
+    "name": "Arequipa",
+    "latitude": -16.3988667,
+    "longitude": -71.5369607,
+    "resources": {}
+  },
+  {
+    "id": 493,
+    "name": "La Libertad",
+    "latitude": -8,
+    "longitude": -78.5,
+    "resources": {}
+  },
+  {
+    "id": 494,
+    "name": "Ucayali",
+    "latitude": -9,
+    "longitude": -73.5,
+    "resources": {}
+  },
+  {
+    "id": 495,
+    "name": "Amazonas",
+    "latitude": -4.479925,
+    "longitude": -63.5185396,
+    "resources": {}
+  },
+  {
+    "id": 496,
+    "name": "Para",
+    "latitude": -4.7493933,
+    "longitude": -52.8973006,
+    "resources": {}
+  },
+  {
+    "id": 497,
+    "name": "Maranhao",
+    "latitude": -5.2085503,
+    "longitude": -45.3930262,
+    "resources": {}
+  },
+  {
+    "id": 498,
+    "name": "Rio Grande",
+    "latitude": -29.8425284,
+    "longitude": -53.7680577,
+    "resources": {}
+  },
+  {
+    "id": 499,
+    "name": "Bahia",
+    "latitude": -12.285251,
+    "longitude": -41.9294776,
+    "resources": {}
+  },
+  {
+    "id": 500,
+    "name": "Rio de Janeiro",
+    "latitude": -22.9110137,
+    "longitude": -43.2093727,
+    "resources": {}
+  },
+  {
+    "id": 501,
+    "name": "Sao Paulo",
+    "latitude": -23.5506507,
+    "longitude": -46.6333824,
+    "resources": {}
+  },
+  {
+    "id": 502,
+    "name": "Rio Grande Sul",
+    "latitude": -29.8425284,
+    "longitude": -53.7680577,
+    "resources": {}
+  },
+  {
+    "id": 503,
+    "name": "Santa Catarina",
+    "latitude": -27.0628367,
+    "longitude": -51.114965,
+    "resources": {}
+  },
+  {
+    "id": 504,
+    "name": "Iguacu",
+    "latitude": -25.5304023,
+    "longitude": -54.5830692,
+    "resources": {}
+  },
+  {
+    "id": 505,
+    "name": "Goias",
+    "latitude": -15.9323662,
+    "longitude": -50.1392928,
+    "resources": {}
+  },
+  {
+    "id": 506,
+    "name": "Antofagasta",
+    "latitude": -23.6463741,
+    "longitude": -70.3980033,
+    "resources": {}
+  },
+  {
+    "id": 507,
+    "name": "Magallanes",
+    "latitude": -53.327593199999995,
+    "longitude": -72.50000875344307,
+    "resources": {}
+  },
+  {
+    "id": 508,
+    "name": "Tucuman",
+    "latitude": -27.0448424,
+    "longitude": -65.3657954,
+    "resources": {}
+  },
+  {
+    "id": 509,
+    "name": "Chaco Austral",
+    "latitude": -26.801175,
+    "longitude": -60.4468538,
+    "resources": {}
+  },
+  {
+    "id": 510,
+    "name": "Mesopotamia",
+    "latitude": 34.90348665,
+    "longitude": 42.05888055600657,
+    "resources": {}
+  },
+  {
+    "id": 511,
+    "name": "Mendoza",
+    "latitude": -32.8894155,
+    "longitude": -68.8446177,
+    "resources": {}
+  },
+  {
+    "id": 512,
+    "name": "Patagonia",
+    "latitude": 31.5402016,
+    "longitude": -110.753927,
+    "resources": {}
+  },
+  {
+    "id": 513,
+    "name": "Tlemcen",
+    "latitude": 34.881789,
+    "longitude": -1.316699,
+    "resources": {}
+  },
+  {
+    "id": 514,
+    "name": "Algerian Desert",
+    "latitude": 26.3351,
+    "longitude": 2.8869,
+    "resources": {}
+  },
+  {
+    "id": 515,
+    "name": "Southern Sahara",
+    "latitude": 55.42268451185149,
+    "longitude": 9.348442390692462,
+    "resources": {}
+  },
+  {
+    "id": 516,
+    "name": "Northwest Siberia",
+    "latitude": 52.369338799999994,
+    "longitude": 104.1797329402851,
+    "resources": {}
+  },
+  {
+    "id": 517,
+    "name": "Victoria",
+    "latitude": -36.5986096,
+    "longitude": 144.6780052,
+    "resources": {
+      "aluminium": 48,
+      "chromium": 12
+    }
+  },
+  {
+    "id": 518,
+    "name": "Tasmania",
+    "latitude": -42.035067,
+    "longitude": 146.6366887,
+    "resources": {}
+  },
+  {
+    "id": 519,
+    "name": "South Australia",
+    "latitude": -30.5343665,
+    "longitude": 135.6301212,
+    "resources": {
+      "aluminium": 24
+    }
+  },
+  {
+    "id": 520,
+    "name": "Northern Territory",
+    "latitude": -19.8516101,
+    "longitude": 133.2303375,
+    "resources": {}
+  },
+  {
+    "id": 521,
+    "name": "Queensland",
+    "latitude": -22.1646782,
+    "longitude": 144.5844903,
+    "resources": {}
+  },
+  {
+    "id": 522,
+    "name": "Western Australia",
+    "latitude": -25.2303005,
+    "longitude": 121.0187246,
+    "resources": {
+      "aluminium": 36
+    }
+  },
+  {
+    "id": 523,
+    "name": "Papua",
+    "latitude": -5.6816069,
+    "longitude": 144.2489081,
+    "resources": {}
+  },
+  {
+    "id": 524,
+    "name": "Taiwan",
+    "latitude": 23.9739374,
+    "longitude": 120.9820179,
+    "resources": {}
+  },
+  {
+    "id": 525,
+    "name": "South Korea",
+    "latitude": 36.638392,
+    "longitude": 127.6961188,
+    "resources": {}
+  },
+  {
+    "id": 526,
+    "name": "Okinawa",
+    "latitude": 26.5707754,
+    "longitude": 128.0255901,
+    "resources": {}
+  },
+  {
+    "id": 527,
+    "name": "North Korea",
+    "latitude": 40.3736611,
+    "longitude": 127.0870417,
+    "resources": {}
+  },
+  {
+    "id": 528,
+    "name": "Kyushu",
+    "latitude": 32.48214205,
+    "longitude": 131.10089656440624,
+    "resources": {}
+  },
+  {
+    "id": 529,
+    "name": "Chugoku",
+    "latitude": 34.806092436328356,
+    "longitude": 135.51374189363614,
+    "resources": {}
+  },
+  {
+    "id": 530,
+    "name": "Shikoku",
+    "latitude": 33.560875,
+    "longitude": 133.37188573946167,
+    "resources": {}
+  },
+  {
+    "id": 531,
+    "name": "Kansai",
+    "latitude": 34.43420455,
+    "longitude": 135.2225230169576,
+    "resources": {}
+  },
+  {
+    "id": 532,
+    "name": "Tokai",
+    "latitude": 35.0228927,
+    "longitude": 136.9023574,
+    "resources": {}
+  },
+  {
+    "id": 533,
+    "name": "Tohoku",
+    "latitude": 39.17361835,
+    "longitude": 140.7319146963863,
+    "resources": {}
+  },
+  {
+    "id": 534,
+    "name": "Hokuriku",
+    "latitude": 37.63186609304495,
+    "longitude": 138.9273010233267,
+    "resources": {}
+  },
+  {
+    "id": 535,
+    "name": "Koshinetsu",
+    "latitude": 36.6514,
+    "longitude": 138.1811,
+    "resources": {}
+  },
+  {
+    "id": 536,
+    "name": "Hokkaido",
+    "latitude": 43.4519831,
+    "longitude": 142.8197834,
+    "resources": {}
+  },
+  {
+    "id": 537,
+    "name": "South Sakhalin",
+    "latitude": 46.9505166,
+    "longitude": 142.790058,
+    "resources": {}
+  },
+  {
+    "id": 538,
+    "name": "Central Congo",
+    "latitude": -5.3102193,
+    "longitude": 14.2972115,
+    "resources": {}
+  },
+  {
+    "id": 539,
+    "name": "Gabon",
+    "latitude": -0.8999695,
+    "longitude": 11.6899699,
+    "resources": {}
+  },
+  {
+    "id": 540,
+    "name": "Angola",
+    "latitude": -11.8775768,
+    "longitude": 17.5691241,
+    "resources": {
+      "chromium": 12
+    }
+  },
+  {
+    "id": 541,
+    "name": "South West Africa",
+    "latitude": -33.546977,
+    "longitude": 20.72753,
+    "resources": {}
+  },
+  {
+    "id": 542,
+    "name": "Bechuanaland",
+    "latitude": -23.1681782,
+    "longitude": 24.5928742,
+    "resources": {}
+  },
+  {
+    "id": 543,
+    "name": "Madagascar",
+    "latitude": -18.9249604,
+    "longitude": 46.4416422,
+    "resources": {
+      "chromium": 12
+    }
+  },
+  {
+    "id": 544,
+    "name": "Mozambique",
+    "latitude": -19.302233,
+    "longitude": 34.9144977,
+    "resources": {}
+  },
+  {
+    "id": 545,
+    "name": "Rhodesia",
+    "latitude": 53.3144605,
+    "longitude": -1.1531982,
+    "resources": {}
+  },
+  {
+    "id": 546,
+    "name": "Tanganyika",
+    "latitude": -6.0789144,
+    "longitude": 29.46966321973214,
+    "resources": {}
+  },
+  {
+    "id": 547,
+    "name": "Kenya",
+    "latitude": 1.4419683,
+    "longitude": 38.4313975,
+    "resources": {}
+  },
+  {
+    "id": 548,
+    "name": "Uganda",
+    "latitude": 1.5333554,
+    "longitude": 32.2166578,
+    "resources": {}
+  },
+  {
+    "id": 549,
+    "name": "Sudan",
+    "latitude": 7.8699431,
+    "longitude": 29.6667897,
+    "resources": {}
+  },
+  {
+    "id": 550,
+    "name": "Eritrea",
+    "latitude": 15.9500319,
+    "longitude": 37.9999668,
+    "resources": {}
+  },
+  {
+    "id": 551,
+    "name": "Khartoum",
+    "latitude": 15.5635972,
+    "longitude": 32.5349123,
+    "resources": {}
+  },
+  {
+    "id": 552,
+    "name": "Western Desert",
+    "latitude": -25.03,
+    "longitude": 125.5,
+    "resources": {}
+  },
+  {
+    "id": 553,
+    "name": "Lebanon",
+    "latitude": 33.8750629,
+    "longitude": 35.843409,
+    "resources": {}
+  },
+  {
+    "id": 554,
+    "name": "Damascus",
+    "latitude": 33.5130695,
+    "longitude": 36.3095814,
+    "resources": {}
+  },
+  {
+    "id": 555,
+    "name": "Kuril Islands",
+    "latitude": 50.3840378,
+    "longitude": 155.83221429055388,
+    "resources": {}
+  },
+  {
+    "id": 556,
+    "name": "French West Africa",
+    "latitude": 14.4974,
+    "longitude": -14.4524,
+    "resources": {}
+  },
+  {
+    "id": 557,
+    "name": "Mauritania",
+    "latitude": 20.2540382,
+    "longitude": -9.2399263,
+    "resources": {}
+  },
+  {
+    "id": 558,
+    "name": "Nigeria",
+    "latitude": 9.6000359,
+    "longitude": 7.9999721,
+    "resources": {}
+  },
+  {
+    "id": 559,
+    "name": "Somaliland",
+    "latitude": 9.7277474,
+    "longitude": 46.0099127,
+    "resources": {}
+  },
+  {
+    "id": 560,
+    "name": "Nikolayevsk",
+    "latitude": 50.03146,
+    "longitude": 45.454487,
+    "resources": {}
+  },
+  {
+    "id": 561,
+    "name": "Amur",
+    "latitude": 49.188785346553935,
+    "longitude": 129.80523696766252,
+    "resources": {}
+  },
+  {
+    "id": 562,
+    "name": "Okhotsk",
+    "latitude": 55,
+    "longitude": 150,
+    "resources": {}
+  },
+  {
+    "id": 563,
+    "name": "Chita",
+    "latitude": 52.033409,
+    "longitude": 113.500893,
+    "resources": {}
+  },
+  {
+    "id": 564,
+    "name": "Ulan Ude",
+    "latitude": 51.8357841,
+    "longitude": 107.5839105,
+    "resources": {}
+  },
+  {
+    "id": 565,
+    "name": "Bodaybo",
+    "latitude": 57.8499525,
+    "longitude": 114.2039967,
+    "resources": {}
+  },
+  {
+    "id": 566,
+    "name": "Irkutsk",
+    "latitude": 52.2891225,
+    "longitude": 104.279829,
+    "resources": {}
+  },
+  {
+    "id": 567,
+    "name": "Bratsk",
+    "latitude": 56.1517085,
+    "longitude": 101.6334907,
+    "resources": {}
+  },
+  {
+    "id": 568,
+    "name": "Krasnoyarsk",
+    "latitude": 56.0091173,
+    "longitude": 92.872586,
+    "resources": {}
+  },
+  {
+    "id": 569,
+    "name": "Kemerovo",
+    "latitude": 55.3550907,
+    "longitude": 86.0871213,
+    "resources": {}
+  },
+  {
+    "id": 570,
+    "name": "Novosibirsk",
+    "latitude": 55.0288307,
+    "longitude": 82.9226887,
+    "resources": {}
+  },
+  {
+    "id": 571,
+    "name": "Omsk",
+    "latitude": 54.991375,
+    "longitude": 73.371529,
+    "resources": {}
+  },
+  {
+    "id": 572,
+    "name": "Chelyabinsk",
+    "latitude": 55.1598408,
+    "longitude": 61.4025547,
+    "resources": {}
+  },
+  {
+    "id": 573,
+    "name": "Zlatoust",
+    "latitude": 55.1674213,
+    "longitude": 59.6792625,
+    "resources": {}
+  },
+  {
+    "id": 574,
+    "name": "Yakutsk",
+    "latitude": 62.0274078,
+    "longitude": 129.7319787,
+    "resources": {}
+  },
+  {
+    "id": 575,
+    "name": "Kirensk",
+    "latitude": 57.776356,
+    "longitude": 108.116295,
+    "resources": {}
+  },
+  {
+    "id": 576,
+    "name": "Yeniseisk",
+    "latitude": 59.521623500000004,
+    "longitude": 89.57091567871419,
+    "resources": {}
+  },
+  {
+    "id": 577,
+    "name": "Surgut",
+    "latitude": 61.254032,
+    "longitude": 73.3964,
+    "resources": {}
+  },
+  {
+    "id": 578,
+    "name": "Tomsk",
+    "latitude": 56.4887526,
+    "longitude": 84.9523434,
+    "resources": {}
+  },
+  {
+    "id": 579,
+    "name": "Salekhard",
+    "latitude": 66.5298656,
+    "longitude": 66.6146311,
+    "resources": {}
+  },
+  {
+    "id": 580,
+    "name": "Tobolsk",
+    "latitude": 58.1998048,
+    "longitude": 68.2512924,
+    "resources": {}
+  },
+  {
+    "id": 581,
+    "name": "Northern Urals",
+    "latitude": 63.4024577,
+    "longitude": 62.5336027,
+    "resources": {}
+  },
+  {
+    "id": 582,
+    "name": "Magnitogorsk",
+    "latitude": 53.4070173,
+    "longitude": 58.9811297,
+    "resources": {}
+  },
+  {
+    "id": 583,
+    "name": "Kustanay",
+    "latitude": 53.2146604,
+    "longitude": 63.632607,
+    "resources": {}
+  },
+  {
+    "id": 584,
+    "name": "Ashkhabad",
+    "latitude": 37.6706422,
+    "longitude": 61.757743611629216,
+    "resources": {}
+  },
+  {
+    "id": 585,
+    "name": "Urgench",
+    "latitude": 41.5517903,
+    "longitude": 60.631281,
+    "resources": {}
+  },
+  {
+    "id": 586,
+    "name": "Alma-Ata",
+    "latitude": 43.2363924,
+    "longitude": 76.9457275,
+    "resources": {
+      "aluminium": 12
+    }
+  },
+  {
+    "id": 587,
+    "name": "Ust Urt",
+    "latitude": 46.5737833,
+    "longitude": 11.6755835,
+    "resources": {}
+  },
+  {
+    "id": 588,
+    "name": "Semipalatinsk",
+    "latitude": 50.136791599999995,
+    "longitude": 77.972207696255,
+    "resources": {}
+  },
+  {
+    "id": 589,
+    "name": "Ayaguz",
+    "latitude": 47.817891,
+    "longitude": 79.9529579,
+    "resources": {}
+  },
+  {
+    "id": 590,
+    "name": "Akmolinsk",
+    "latitude": 47.840969776486,
+    "longitude": 33.44794580947072,
+    "resources": {}
+  },
+  {
+    "id": 591,
+    "name": "Hainan",
+    "latitude": 19.2000001,
+    "longitude": 109.5999999,
+    "resources": {
+      "tungsten": 24
+    }
+  },
+  {
+    "id": 592,
+    "name": "Guangzhou",
+    "latitude": 23.1288454,
+    "longitude": 113.2590064,
+    "resources": {}
+  },
+  {
+    "id": 593,
+    "name": "Guangdong",
+    "latitude": 23.1357694,
+    "longitude": 113.1982688,
+    "resources": {}
+  },
+  {
+    "id": 594,
+    "name": "Nanning",
+    "latitude": 22.8157737,
+    "longitude": 108.318024,
+    "resources": {}
+  },
+  {
+    "id": 595,
+    "name": "Fujian",
+    "latitude": 26.193218,
+    "longitude": 118.2208721,
+    "resources": {}
+  },
+  {
+    "id": 596,
+    "name": "Zhejiang",
+    "latitude": 29.0000001,
+    "longitude": 119.9999999,
+    "resources": {}
+  },
+  {
+    "id": 597,
+    "name": "Shandong",
+    "latitude": 36.398987,
+    "longitude": 118.5055691,
+    "resources": {}
+  },
+  {
+    "id": 598,
+    "name": "Jiangsu",
+    "latitude": 33.0000001,
+    "longitude": 119.9999999,
+    "resources": {}
+  },
+  {
+    "id": 599,
+    "name": "Guangxi",
+    "latitude": 24,
+    "longitude": 109,
+    "resources": {}
+  },
+  {
+    "id": 600,
+    "name": "Jiangxi",
+    "latitude": 28,
+    "longitude": 116,
+    "resources": {}
+  },
+  {
+    "id": 601,
+    "name": "Xikang",
+    "latitude": 39.1111279,
+    "longitude": 117.1817258,
+    "resources": {}
+  },
+  {
+    "id": 602,
+    "name": "Hunan",
+    "latitude": 27.6662087,
+    "longitude": 111.7487063,
+    "resources": {}
+  },
+  {
+    "id": 603,
+    "name": "Guizhou",
+    "latitude": 27,
+    "longitude": 107,
+    "resources": {}
+  },
+  {
+    "id": 604,
+    "name": "Qinghai",
+    "latitude": 36,
+    "longitude": 96,
+    "resources": {}
+  },
+  {
+    "id": 605,
+    "name": "Sichuan",
+    "latitude": 30.5000001,
+    "longitude": 102.4999999,
+    "resources": {}
+  },
+  {
+    "id": 606,
+    "name": "Anhui",
+    "latitude": 32,
+    "longitude": 117,
+    "resources": {}
+  },
+  {
+    "id": 607,
+    "name": "Henan",
+    "latitude": 34.0000001,
+    "longitude": 113.9999999,
+    "resources": {}
+  },
+  {
+    "id": 608,
+    "name": "Beijing",
+    "latitude": 39.9057136,
+    "longitude": 116.3912972,
+    "resources": {}
+  },
+  {
+    "id": 609,
+    "name": "East Hebei",
+    "latitude": 40.19550045,
+    "longitude": 117.6546269862549,
+    "resources": {}
+  },
+  {
+    "id": 610,
+    "name": "Jehol",
+    "latitude": 47.1719483,
+    "longitude": -1.62651865,
+    "resources": {}
+  },
+  {
+    "id": 611,
+    "name": "South Chahar",
+    "latitude": 40.94664865,
+    "longitude": 113.08762502056439,
+    "resources": {}
+  },
+  {
+    "id": 612,
+    "name": "Chahar",
+    "latitude": 36.367886,
+    "longitude": 67.240291,
+    "resources": {}
+  },
+  {
+    "id": 613,
+    "name": "Shanghai",
+    "latitude": 31.2323437,
+    "longitude": 121.4691024,
+    "resources": {}
+  },
+  {
+    "id": 614,
+    "name": "Hebei",
+    "latitude": 39.0000001,
+    "longitude": 116,
+    "resources": {}
+  },
+  {
+    "id": 615,
+    "name": "Shanxi",
+    "latitude": 37,
+    "longitude": 112,
+    "resources": {}
+  },
+  {
+    "id": 616,
+    "name": "Ningxia",
+    "latitude": 28.2794129,
+    "longitude": 112.5465696,
+    "resources": {}
+  },
+  {
+    "id": 617,
+    "name": "Urumqi",
+    "latitude": 43.8244074,
+    "longitude": 87.6139038,
+    "resources": {}
+  },
+  {
+    "id": 618,
+    "name": "Dzungaria",
+    "latitude": 45.3631509,
+    "longitude": 82.4341279,
+    "resources": {}
+  },
+  {
+    "id": 619,
+    "name": "Yarkand",
+    "latitude": 38.4170434,
+    "longitude": 77.2411446,
+    "resources": {}
+  },
+  {
+    "id": 620,
+    "name": "Hubei",
+    "latitude": 31,
+    "longitude": 112,
+    "resources": {}
+  },
+  {
+    "id": 621,
+    "name": "Suiyuan",
+    "latitude": 29.95768106406108,
+    "longitude": 121.43465295758722,
+    "resources": {}
+  },
+  {
+    "id": 622,
+    "name": "Shaanxi",
+    "latitude": 35.5895959,
+    "longitude": 109.3013107,
+    "resources": {}
+  },
+  {
+    "id": 623,
+    "name": "Luzon",
+    "latitude": 15.5504104,
+    "longitude": 120.74344355071662,
+    "resources": {}
+  },
+  {
+    "id": 624,
+    "name": "Central islands",
+    "latitude": 23.85461375,
+    "longitude": 58.06614931122128,
+    "resources": {}
+  },
+  {
+    "id": 625,
+    "name": "Samar",
+    "latitude": 11.833333,
+    "longitude": 125,
+    "resources": {}
+  },
+  {
+    "id": 626,
+    "name": "Palawan",
+    "latitude": 11.0798978,
+    "longitude": 120.93734215474105,
+    "resources": {}
+  },
+  {
+    "id": 627,
+    "name": "Mindanao",
+    "latitude": 7.6305008999999995,
+    "longitude": 125.17963650571699,
+    "resources": {}
+  },
+  {
+    "id": 628,
+    "name": "Cebu",
+    "latitude": 10.47,
+    "longitude": 123.83,
+    "resources": {}
+  },
+  {
+    "id": 629,
+    "name": "Hawaii",
+    "latitude": 19.593801499999998,
+    "longitude": -155.42837009716908,
+    "resources": {}
+  },
+  {
+    "id": 630,
+    "name": "Johnston Atoll",
+    "latitude": 16.752446149999997,
+    "longitude": -169.51070155661202,
+    "resources": {}
+  },
+  {
+    "id": 631,
+    "name": "Midway Island",
+    "latitude": 28.2417536,
+    "longitude": -177.37543,
+    "resources": {}
+  },
+  {
+    "id": 632,
+    "name": "Wake Island",
+    "latitude": 19.2960859,
+    "longitude": 166.6269779024801,
+    "resources": {}
+  },
+  {
+    "id": 633,
+    "name": "Marshall Islands",
+    "latitude": 8.230816999999998,
+    "longitude": 167.7953223704529,
+    "resources": {}
+  },
+  {
+    "id": 634,
+    "name": "Solomon Islands",
+    "latitude": -8.7053941,
+    "longitude": 159.1070693851845,
+    "resources": {}
+  },
+  {
+    "id": 635,
+    "name": "New Caledonia",
+    "latitude": -21.3019905,
+    "longitude": 165.4880773,
+    "resources": {}
+  },
+  {
+    "id": 636,
+    "name": "Fiji",
+    "latitude": -18.1239696,
+    "longitude": 179.0122737,
+    "resources": {}
+  },
+  {
+    "id": 637,
+    "name": "Kamchatka",
+    "latitude": 57.1914882,
+    "longitude": 160.0383819,
+    "resources": {}
+  },
+  {
+    "id": 638,
+    "name": "Guam",
+    "latitude": 13.45011745,
+    "longitude": 144.7577087765826,
+    "resources": {}
+  },
+  {
+    "id": 639,
+    "name": "Gilbert Islands",
+    "latitude": -1.2394555500000002,
+    "longitude": 175.29694553869794,
+    "resources": {}
+  },
+  {
+    "id": 640,
+    "name": "Mandalay",
+    "latitude": 21.9596834,
+    "longitude": 96.0948743,
+    "resources": {}
+  },
+  {
+    "id": 641,
+    "name": "Tahiti",
+    "latitude": -17.68734395,
+    "longitude": -149.44516811423745,
+    "resources": {}
+  },
+  {
+    "id": 642,
+    "name": "Phoenix Island",
+    "latitude": -4.45304385,
+    "longitude": -171.24688135668373,
+    "resources": {}
+  },
+  {
+    "id": 643,
+    "name": "Ellice Islands",
+    "latitude": -8.6405212,
+    "longitude": 179.1582918181797,
+    "resources": {}
+  },
+  {
+    "id": 644,
+    "name": "Northeast Siberia",
+    "latitude": -5.722821,
+    "longitude": -45.778595,
+    "resources": {}
+  },
+  {
+    "id": 645,
+    "name": "Iwo Jima",
+    "latitude": 24.7851883,
+    "longitude": 141.3241156880049,
+    "resources": {}
+  },
+  {
+    "id": 646,
+    "name": "Saipan",
+    "latitude": 15.1909825,
+    "longitude": 145.746743003024,
+    "resources": {}
+  },
+  {
+    "id": 647,
+    "name": "Palau",
+    "latitude": 5.3783537,
+    "longitude": 132.9102573,
+    "resources": {}
+  },
+  {
+    "id": 648,
+    "name": "Marcus Island",
+    "latitude": -33.0445,
+    "longitude": 17.965665000096074,
+    "resources": {}
+  },
+  {
+    "id": 649,
+    "name": "Galapagos Islands",
+    "latitude": -0.62881505,
+    "longitude": -90.3638752022324,
+    "resources": {}
+  },
+  {
+    "id": 650,
+    "name": "Attu Island",
+    "latitude": 52.8783112,
+    "longitude": 173.0272627516499,
+    "resources": {}
+  },
+  {
+    "id": 651,
+    "name": "Ufa",
+    "latitude": 54.7261409,
+    "longitude": 55.947499,
+    "resources": {}
+  },
+  {
+    "id": 652,
+    "name": "Orenburg",
+    "latitude": 51.7671248,
+    "longitude": 55.0978517,
+    "resources": {}
+  },
+  {
+    "id": 653,
+    "name": "Sverdlovsk",
+    "latitude": 58.6414755,
+    "longitude": 61.8021546,
+    "resources": {}
+  },
+  {
+    "id": 654,
+    "name": "Gorno-Altaysk",
+    "latitude": 51.957775,
+    "longitude": 85.963653,
+    "resources": {}
+  },
+  {
+    "id": 655,
+    "name": "North Sakhalin",
+    "latitude": 51.65,
+    "longitude": 143,
+    "resources": {}
+  },
+  {
+    "id": 656,
+    "name": "Kuwait",
+    "latitude": 29.2733964,
+    "longitude": 47.4979476,
+    "resources": {}
+  },
+  {
+    "id": 657,
+    "name": "Birobidzhan",
+    "latitude": 48.79329,
+    "longitude": 132.9269836,
+    "resources": {}
+  },
+  {
+    "id": 658,
+    "name": "Abu Dhabi",
+    "latitude": 24.4538352,
+    "longitude": 54.3774014,
+    "resources": {}
+  },
+  {
+    "id": 659,
+    "name": "Aden",
+    "latitude": 12.789585,
+    "longitude": 45.028504,
+    "resources": {}
+  },
+  {
+    "id": 660,
+    "name": "Equatorial Africa",
+    "latitude": 0.3476,
+    "longitude": 25,
+    "resources": {}
+  },
+  {
+    "id": 661,
+    "name": "Tripolitania",
+    "latitude": 42.684182391226905,
+    "longitude": 14.010842319661077,
+    "resources": {}
+  },
+  {
+    "id": 662,
+    "name": "Sirte",
+    "latitude": 31.2059625,
+    "longitude": 16.5836206,
+    "resources": {}
+  },
+  {
+    "id": 663,
+    "name": "Cyrenaica",
+    "latitude": 32.7087595,
+    "longitude": 20.9506691,
+    "resources": {}
+  },
+  {
+    "id": 664,
+    "name": "Southern Slovakia",
+    "latitude": 48.758375,
+    "longitude": 20.0590959,
+    "resources": {}
+  },
+  {
+    "id": 665,
+    "name": "Gabes",
+    "latitude": 33.8878082,
+    "longitude": 10.10044,
+    "resources": {}
+  },
+  {
+    "id": 666,
+    "name": "Lappland",
+    "latitude": 67.69223705,
+    "longitude": 26.72813902817753,
+    "resources": {}
+  },
+  {
+    "id": 667,
+    "name": "Lesser Sunda Islands",
+    "latitude": -9,
+    "longitude": 120,
+    "resources": {
+      "rubber": 4
+    }
+  },
+  {
+    "id": 668,
+    "name": "The Moluccas",
+    "latitude": -7.6712564,
+    "longitude": 131.036633,
+    "resources": {}
+  },
+  {
+    "id": 669,
+    "name": "West Papua",
+    "latitude": -2.8553556,
+    "longitude": 133.4738171,
+    "resources": {}
+  },
+  {
+    "id": 670,
+    "name": "Laos",
+    "latitude": 20.0171109,
+    "longitude": 103.378253,
+    "resources": {
+      "tungsten": 12
+    }
+  },
+  {
+    "id": 671,
+    "name": "Tonkin",
+    "latitude": 19.5001053,
+    "longitude": 107.36448024145798,
+    "resources": {}
+  },
+  {
+    "id": 672,
+    "name": "Sumatra",
+    "latitude": -0.14329415,
+    "longitude": 101.62410241439257,
+    "resources": {
+      "rubber": 96,
+      "oil": 32
+    }
+  },
+  {
+    "id": 673,
+    "name": "Sulawesi",
+    "latitude": -1.0074826,
+    "longitude": 121.47984106635917,
+    "resources": {}
+  },
+  {
+    "id": 674,
+    "name": "Central Australia",
+    "latitude": -35.29652355,
+    "longitude": 149.12957364767345,
+    "resources": {}
+  },
+  {
+    "id": 675,
+    "name": "Al Hajara",
+    "latitude": 14.8984198,
+    "longitude": 42.8819914,
+    "resources": {}
+  },
+  {
+    "id": 676,
+    "name": "Mosul",
+    "latitude": 36.3415843,
+    "longitude": 43.1291386,
+    "resources": {}
+  },
+  {
+    "id": 677,
+    "name": "Aleppo",
+    "latitude": 36.19924,
+    "longitude": 37.1637253,
+    "resources": {}
+  },
+  {
+    "id": 678,
+    "name": "Rub al Khali",
+    "latitude": 21,
+    "longitude": 51,
+    "resources": {}
+  },
+  {
+    "id": 679,
+    "name": "Hejaz",
+    "latitude": 32.745640339901826,
+    "longitude": 35.76997497869345,
+    "resources": {}
+  },
+  {
+    "id": 680,
+    "name": "Deir-az-Zur",
+    "latitude": 18.25,
+    "longitude": 30.866667,
+    "resources": {}
+  },
+  {
+    "id": 681,
+    "name": "Cape",
+    "latitude": -33.9288301,
+    "longitude": 18.4172197,
+    "resources": {
+      "chromium": 60
+    }
+  },
+  {
+    "id": 682,
+    "name": "Northern Ontario",
+    "latitude": 46.463637750000004,
+    "longitude": -80.96392150650772,
+    "resources": {}
+  },
+  {
+    "id": 683,
+    "name": "Northeastern Canada",
+    "latitude": 45.9810237,
+    "longitude": -81.9266062,
+    "resources": {}
+  },
+  {
+    "id": 684,
+    "name": "Caroline Islands",
+    "latitude": 8,
+    "longitude": 147,
+    "resources": {}
+  },
+  {
+    "id": 685,
+    "name": "Panama Canal",
+    "latitude": 9.06202482229129,
+    "longitude": -79.66430804051603,
+    "resources": {}
+  },
+  {
+    "id": 686,
+    "name": "Puerto Rico",
+    "latitude": 18.2247706,
+    "longitude": -66.4858295,
+    "resources": {}
+  },
+  {
+    "id": 687,
+    "name": "British Guyana",
+    "latitude": 6.8231985,
+    "longitude": -58.158321361971296,
+    "resources": {}
+  },
+  {
+    "id": 688,
+    "name": "Chaco Boreal",
+    "latitude": -22.3856615,
+    "longitude": -60.03262951968109,
+    "resources": {}
+  },
+  {
+    "id": 689,
+    "name": "Jamaica",
+    "latitude": 18.1850507,
+    "longitude": -77.3947693,
+    "resources": {}
+  },
+  {
+    "id": 690,
+    "name": "Northern Bahamas",
+    "latitude": 25.04426912685683,
+    "longitude": -77.39074031524173,
+    "resources": {}
+  },
+  {
+    "id": 691,
+    "name": "Trinidad",
+    "latitude": 10.44359905,
+    "longitude": -61.26131799485799,
+    "resources": {}
+  },
+  {
+    "id": 692,
+    "name": "Windward Islands",
+    "latitude": 13.4,
+    "longitude": -61.16,
+    "resources": {}
+  },
+  {
+    "id": 693,
+    "name": "Southern Bahamas",
+    "latitude": 26.2287626,
+    "longitude": -77.55492395452154,
+    "resources": {}
+  },
+  {
+    "id": 694,
+    "name": "French Caribbean",
+    "latitude": 12.4647963,
+    "longitude": -83.4467156,
+    "resources": {}
+  },
+  {
+    "id": 695,
+    "name": "Curacao",
+    "latitude": 12.21351355,
+    "longitude": -69.04089204044595,
+    "resources": {}
+  },
+  {
+    "id": 696,
+    "name": "Bermuda",
+    "latitude": 32.3040273,
+    "longitude": -64.7563086,
+    "resources": {}
+  },
+  {
+    "id": 697,
+    "name": "Madeira",
+    "latitude": 32.751750099999995,
+    "longitude": -16.98174865726062,
+    "resources": {}
+  },
+  {
+    "id": 698,
+    "name": "Azores",
+    "latitude": 37.80855645,
+    "longitude": -25.473137391245295,
+    "resources": {}
+  },
+  {
+    "id": 699,
+    "name": "Rio de Oro",
+    "latitude": 8.2924446,
+    "longitude": -73.385798,
+    "resources": {}
+  },
+  {
+    "id": 700,
+    "name": "Sierra Leone",
+    "latitude": 8.6400349,
+    "longitude": -11.8400269,
+    "resources": {}
+  },
+  {
+    "id": 701,
+    "name": "Gambia",
+    "latitude": 13.470062,
+    "longitude": -15.4900464,
+    "resources": {}
+  },
+  {
+    "id": 702,
+    "name": "Cape Verde",
+    "latitude": 16.0000552,
+    "longitude": -24.0083947,
+    "resources": {}
+  },
+  {
+    "id": 703,
+    "name": "Ascension",
+    "latitude": -7.94110725,
+    "longitude": -14.363118886394432,
+    "resources": {}
+  },
+  {
+    "id": 704,
+    "name": "Saint Helena",
+    "latitude": -15.9690718,
+    "longitude": -5.71295,
+    "resources": {}
+  },
+  {
+    "id": 705,
+    "name": "Sao Tome",
+    "latitude": 0.9713095,
+    "longitude": 7.02255,
+    "resources": {}
+  },
+  {
+    "id": 706,
+    "name": "Reunion",
+    "latitude": -21.1309332,
+    "longitude": 55.5265771,
+    "resources": {}
+  },
+  {
+    "id": 707,
+    "name": "Mauritius",
+    "latitude": -20.2759451,
+    "longitude": 57.5703566,
+    "resources": {}
+  },
+  {
+    "id": 708,
+    "name": "Comoro Islands",
+    "latitude": -12.226568050000001,
+    "longitude": 44.41070486098224,
+    "resources": {}
+  },
+  {
+    "id": 709,
+    "name": "Seychelles",
+    "latitude": -4.6574977,
+    "longitude": 55.4540146,
+    "resources": {}
+  },
+  {
+    "id": 710,
+    "name": "Diego Garcia",
+    "latitude": -7.338358449999999,
+    "longitude": 72.47181546315355,
+    "resources": {}
+  },
+  {
+    "id": 711,
+    "name": "Christmas Island",
+    "latitude": -10.4837768,
+    "longitude": 105.64723,
+    "resources": {}
+  },
+  {
+    "id": 712,
+    "name": "Cocos Islands",
+    "latitude": -12.0728315,
+    "longitude": 96.8409375,
+    "resources": {}
+  },
+  {
+    "id": 713,
+    "name": "Kerguelen",
+    "latitude": -49.237441950000004,
+    "longitude": 69.62275903679347,
+    "resources": {}
+  },
+  {
+    "id": 714,
+    "name": "Heilungkiang",
+    "latitude": 48.0000047,
+    "longitude": 127.999992,
+    "resources": {}
+  },
+  {
+    "id": 715,
+    "name": "Liaoning",
+    "latitude": 41.2374106,
+    "longitude": 122.9955469,
+    "resources": {}
+  },
+  {
+    "id": 716,
+    "name": "Liaotung",
+    "latitude": 39,
+    "longitude": 121.6,
+    "resources": {}
+  },
+  {
+    "id": 717,
+    "name": "Sungkiang",
+    "latitude": 47.35,
+    "longitude": 130.3667,
+    "resources": {}
+  },
+  {
+    "id": 718,
+    "name": "Stanleyville",
+    "latitude": 36.202205,
+    "longitude": -80.2809315,
+    "resources": {}
+  },
+  {
+    "id": 719,
+    "name": "Natal",
+    "latitude": -5.805398,
+    "longitude": -35.2080905,
+    "resources": {}
+  },
+  {
+    "id": 720,
+    "name": "South Georgia",
+    "latitude": -54.43393195,
+    "longitude": -36.49465186334665,
+    "resources": {}
+  },
+  {
+    "id": 721,
+    "name": "Portuguese Timor",
+    "latitude": -8.4749964,
+    "longitude": 126.5984615,
+    "resources": {}
+  },
+  {
+    "id": 722,
+    "name": "Petsamo",
+    "latitude": 61.5073442,
+    "longitude": 23.796602,
+    "resources": {}
+  },
+  {
+    "id": 723,
+    "name": "South Island",
+    "latitude": -43.586562,
+    "longitude": 171.21232939964904,
+    "resources": {}
+  },
+  {
+    "id": 724,
+    "name": "Northern Malay",
+    "latitude": 8.1550421,
+    "longitude": 125.1305726,
+    "resources": {}
+  },
+  {
+    "id": 725,
+    "name": "Nauru",
+    "latitude": -0.5252306,
+    "longitude": 166.9324426,
+    "resources": {}
+  },
+  {
+    "id": 726,
+    "name": "Samoa",
+    "latitude": -13.7693895,
+    "longitude": -172.12005,
+    "resources": {}
+  },
+  {
+    "id": 727,
+    "name": "Line Islands",
+    "latitude": 1.8709601500000002,
+    "longitude": -157.4351584789303,
+    "resources": {}
+  },
+  {
+    "id": 728,
+    "name": "Guangzhouwan",
+    "latitude": 21.1911,
+    "longitude": 110.3577,
+    "resources": {}
+  },
+  {
+    "id": 729,
+    "name": "Macau",
+    "latitude": 22.1899448,
+    "longitude": 113.5380454,
+    "resources": {}
+  },
+  {
+    "id": 730,
+    "name": "St Pierre and Miquelon",
+    "latitude": 47.10159555,
+    "longitude": -56.3833488334905,
+    "resources": {}
+  },
+  {
+    "id": 731,
+    "name": "Central Macedonia",
+    "latitude": 40.8899865,
+    "longitude": 22.7693631,
+    "resources": {}
+  },
+  {
+    "id": 732,
+    "name": "Pamir",
+    "latitude": 39.6,
+    "longitude": 70.68,
+    "resources": {}
+  },
+  {
+    "id": 733,
+    "name": "Andaman",
+    "latitude": 10.0000001,
+    "longitude": 94.9999999,
+    "resources": {}
+  },
+  {
+    "id": 734,
+    "name": "Nendo",
+    "latitude": -10.75839385,
+    "longitude": 165.88741697487777,
+    "resources": {}
+  },
+  {
+    "id": 735,
+    "name": "Savoy",
+    "latitude": 45.494895150000005,
+    "longitude": 6.384660381375652,
+    "resources": {}
+  },
+  {
+    "id": 736,
+    "name": "Istria",
+    "latitude": 44.5719392,
+    "longitude": 28.7094998,
+    "resources": {}
+  },
+  {
+    "id": 737,
+    "name": "Bismarck",
+    "latitude": -4,
+    "longitude": 148,
+    "resources": {}
+  },
+  {
+    "id": 738,
+    "name": "Aru Islands",
+    "latitude": -6.2281475,
+    "longitude": 134.49796567482778,
+    "resources": {}
+  },
+  {
+    "id": 739,
+    "name": "Haida Gwaii",
+    "latitude": 52.689423399999995,
+    "longitude": -131.89408073186445,
+    "resources": {}
+  },
+  {
+    "id": 740,
+    "name": "Vancouver Island",
+    "latitude": 49.592949450000006,
+    "longitude": -125.70255696124094,
+    "resources": {}
+  },
+  {
+    "id": 741,
+    "name": "Cambodia",
+    "latitude": 12.5433216,
+    "longitude": 104.8144914,
+    "resources": {}
+  },
+  {
+    "id": 742,
+    "name": "Stalinabad",
+    "latitude": 38.5762709,
+    "longitude": 68.7863573,
+    "resources": {}
+  },
+  {
+    "id": 743,
+    "name": "Qingdao",
+    "latitude": 36.0663249,
+    "longitude": 120.3777659,
+    "resources": {}
+  },
+  {
+    "id": 744,
+    "name": "Xian",
+    "latitude": 27.8328352,
+    "longitude": 112.9388078,
+    "resources": {}
+  },
+  {
+    "id": 745,
+    "name": "Dalian",
+    "latitude": 38.9130495,
+    "longitude": 121.6098013,
+    "resources": {}
+  },
+  {
+    "id": 746,
+    "name": "Ordos",
+    "latitude": 39.4602947,
+    "longitude": 108.8134284,
+    "resources": {}
+  },
+  {
+    "id": 747,
+    "name": "Dali Bai",
+    "latitude": 25.5969683,
+    "longitude": 100.2468841,
+    "resources": {}
+  },
+  {
+    "id": 748,
+    "name": "Zunyi",
+    "latitude": 27.6912954,
+    "longitude": 106.9155974,
+    "resources": {}
+  },
+  {
+    "id": 749,
+    "name": "Huangshan",
+    "latitude": 29.7172627,
+    "longitude": 118.3324811,
+    "resources": {}
+  },
+  {
+    "id": 750,
+    "name": "Changde",
+    "latitude": 29.034552,
+    "longitude": 111.6928724,
+    "resources": {}
+  },
+  {
+    "id": 751,
+    "name": "Liangshan",
+    "latitude": 35.7660857,
+    "longitude": 116.1258857,
+    "resources": {}
+  },
+  {
+    "id": 752,
+    "name": "Chamdo",
+    "latitude": 31.1434873,
+    "longitude": 97.1712342,
+    "resources": {}
+  },
+  {
+    "id": 753,
+    "name": "Gannan",
+    "latitude": 47.980015,
+    "longitude": 123.8597389,
+    "resources": {}
+  },
+  {
+    "id": 754,
+    "name": "Golog",
+    "latitude": 45.6103715,
+    "longitude": 27.2651475,
+    "resources": {}
+  },
+  {
+    "id": 755,
+    "name": "Haixi",
+    "latitude": 38.1406662,
+    "longitude": 117.4908501,
+    "resources": {}
+  },
+  {
+    "id": 756,
+    "name": "Jiuquan",
+    "latitude": 39.7321262,
+    "longitude": 98.4936839,
+    "resources": {}
+  },
+  {
+    "id": 757,
+    "name": "Shigatse",
+    "latitude": 29.2713756,
+    "longitude": 88.8806823,
+    "resources": {}
+  },
+  {
+    "id": 758,
+    "name": "Ngari",
+    "latitude": 32.502433,
+    "longitude": 80.1056099,
+    "resources": {}
+  },
+  {
+    "id": 759,
+    "name": "Kunlun",
+    "latitude": 35.31,
+    "longitude": 80.97,
+    "resources": {}
+  },
+  {
+    "id": 760,
+    "name": "Dabancheng",
+    "latitude": 43.363726,
+    "longitude": 88.3020701,
+    "resources": {}
+  },
+  {
+    "id": 761,
+    "name": "Hulunbuir",
+    "latitude": 49.2125235,
+    "longitude": 119.7370167,
+    "resources": {}
+  },
+  {
+    "id": 762,
+    "name": "Silesian Voivodeship",
+    "latitude": 50.5687422,
+    "longitude": 19.2343995,
+    "resources": {}
+  }
+]
