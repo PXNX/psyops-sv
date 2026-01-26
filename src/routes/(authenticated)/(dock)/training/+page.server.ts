@@ -22,10 +22,10 @@ type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosi
 // NATO naming convention for battalions
 const natoUnitNames: Record<string, string[]> = {
 	air_defence: ["Air Defense Battalion", "SAM Battalion", "Anti-Air Battalion", "SHORAD Battalion"],
-	heavy_armor: ["Armored Battalion", "Tank Battalion", "Heavy Armor Battalion", "Panzer Battalion"],
-	ifv: ["Infantry Fighting Vehicle Battalion", "IFV Battalion", "Mechanized Infantry Battalion"],
+	armor: ["Armored Battalion", "Tank Battalion", "Heavy Armor Battalion", "Panzer Battalion"],
+	mechanzied: ["Infantry Fighting Vehicle Battalion", "IFV Battalion", "Mechanized Infantry Battalion"],
 	artillery: ["Artillery Battalion", "Field Artillery Battalion", "Howitzer Battalion", "Rocket Artillery Battalion"],
-	light_infantry: ["Infantry Battalion", "Light Infantry Battalion", "Rifle Battalion", "Airborne Battalion"],
+	infantry: ["Infantry Battalion", "Light Infantry Battalion", "Rifle Battalion", "Airborne Battalion"],
 	bomber_squadron: ["Bomber Squadron", "Strategic Bomber Squadron", "Heavy Bomber Squadron"],
 	fighter_squadron: [
 		"Fighter Squadron",
@@ -103,7 +103,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (templates.length === 0) {
 		const defaultTemplates = [
 			{
-				unitType: "light_infantry" as const,
+				unitType: "infantry" as const,
 				displayName: "Light Infantry",
 				description: "Basic infantry battalion - low cost, decent defense",
 				baseAttack: 15,
@@ -120,7 +120,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				explosivesCost: 50
 			},
 			{
-				unitType: "heavy_armor" as const,
+				unitType: "armor" as const,
 				displayName: "Heavy Armor",
 				description: "Tank battalion - high attack, can break through enemy lines",
 				baseAttack: 50,
@@ -137,7 +137,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				explosivesCost: 100
 			},
 			{
-				unitType: "ifv" as const,
+				unitType: "mechanzied" as const,
 				displayName: "Infantry Fighting Vehicles",
 				description: "Mechanized infantry - balanced attack and defense",
 				baseAttack: 30,
