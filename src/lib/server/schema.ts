@@ -63,6 +63,23 @@ export const giftCodeResourceTypeEnum = pgEnum("gift_code_resource_type", [
 ]);
 export const powerPlantTypeEnum = pgEnum("power_plant_type", ["coal", "gas", "nuclear", "solar", "wind", "hydro"]);
 
+export const battlePhaseEnum = pgEnum("battle_phase", [
+	"preparation", // Units can join, no combat
+	"planning", // Combat can begin, planning bonus builds
+	"active", // Full combat with planning bonus
+	"ended" // Battle concluded
+]);
+
+export const terrainTypeEnum = pgEnum("terrain_type", [
+	"plains",
+	"forest",
+	"hills",
+	"mountain",
+	"urban",
+	"desert",
+	"jungle"
+]);
+
 // --- AUTH ---
 export const accounts = pgTable(
 	"account",
@@ -1788,10 +1805,24 @@ export const battles = pgTable("battles", {
 	defenderStateId: integer("defender_state_id")
 		.notNull()
 		.references(() => states.id, { onDelete: "cascade" }),
+
+	// NEW: Phase system
+	phase: battlePhaseEnum("phase").notNull().default("preparation"),
+	terrain: terrainTypeEnum("terrain").notNull().default("plains"),
+
+	// Planning bonus (builds during planning phase)
+	attackerPlanningBonus: integer("attacker_planning_bonus").default(0).notNull(),
+	defenderPlanningBonus: integer("defender_planning_bonus").default(0).notNull(),
+
 	status: battleStatusEnum("status").notNull().default("ongoing"),
 	startedBy: text("started_by")
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" }),
+
+	// Phase timestamps
+	preparationEndsAt: timestamp("preparation_ends_at"),
+	planningStartedAt: timestamp("planning_started_at"),
+
 	startedAt: timestamp("started_at").defaultNow().notNull(),
 	endedAt: timestamp("ended_at")
 });
@@ -1808,36 +1839,65 @@ export const battleParticipants = pgTable(
 			.notNull()
 			.references(() => militaryUnits.id, { onDelete: "cascade" }),
 		side: varchar("side", { length: 10 }).notNull(), // "attacker" or "defender"
-		currentHealth: integer("current_health").notNull(),
+
+		// Combat stats (snapshot at join time)
+		currentStrength: integer("current_strength").notNull(), // renamed from health
 		currentOrganization: integer("current_organization").notNull(),
+		maxStrength: integer("max_strength").notNull().default(100),
+
+		// Combat tracking
 		damageTaken: integer("damage_taken").default(0).notNull(),
 		damageDealt: integer("damage_dealt").default(0).notNull(),
+
+		// NEW: Engagement status
+		isEngaged: boolean("is_engaged").default(false).notNull(), // Currently in combat width
+		isExhausted: boolean("is_exhausted").default(false).notNull(), // Org below threshold
+
+		// Timing
 		joinedAt: timestamp("joined_at").defaultNow().notNull(),
-		lastActionAt: timestamp("last_action_at")
+		lastActionAt: timestamp("last_action_at"),
+		destroyedAt: timestamp("destroyed_at")
 	},
 	(t) => ({
-		battleUnitIdx: uniqueIndex("idx_battle_unit").on(t.battleId, t.unitId)
+		battleUnitIdx: uniqueIndex("idx_battle_unit").on(t.battleId, t.unitId),
+		engagedIdx: index("idx_participant_engaged").on(t.battleId, t.isEngaged),
+		sideIdx: index("idx_participant_side").on(t.battleId, t.side)
 	})
 );
 
 // Battle rounds - tracks each attack round
-export const battleRounds = pgTable("battle_rounds", {
-	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
-	battleId: integer("battle_id")
-		.notNull()
-		.references(() => battles.id, { onDelete: "cascade" }),
-	attackingUnitId: integer("attacking_unit_id")
-		.notNull()
-		.references(() => militaryUnits.id, { onDelete: "cascade" }),
-	defendingUnitId: integer("defending_unit_id")
-		.notNull()
-		.references(() => militaryUnits.id, { onDelete: "cascade" }),
-	attackerDamage: integer("attacker_damage").notNull(),
-	defenderDamage: integer("defender_damage").notNull(),
-	attackerOrganizationLoss: integer("attacker_organization_loss").notNull(),
-	defenderOrganizationLoss: integer("defender_organization_loss").notNull(),
-	roundedAt: timestamp("rounded_at").defaultNow().notNull()
-});
+export const battleRounds = pgTable(
+	"battle_rounds",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		battleId: integer("battle_id")
+			.notNull()
+			.references(() => battles.id, { onDelete: "cascade" }),
+		roundNumber: integer("round_number").notNull(), // Sequential round counter
+
+		// Phase during this round
+		battlePhase: battlePhaseEnum("battle_phase").notNull(),
+
+		// Aggregate combat results for the round
+		attackerUnitsEngaged: integer("attacker_units_engaged").notNull(),
+		defenderUnitsEngaged: integer("defender_units_engaged").notNull(),
+
+		attackerTotalDamage: integer("attacker_total_damage").notNull(),
+		defenderTotalDamage: integer("defender_total_damage").notNull(),
+
+		attackerOrgLoss: integer("attacker_org_loss").notNull(),
+		defenderOrgLoss: integer("defender_org_loss").notNull(),
+
+		// Modifiers applied
+		attackerPlanningBonus: integer("attacker_planning_bonus").default(0).notNull(),
+		defenderPlanningBonus: integer("defender_planning_bonus").default(0).notNull(),
+
+		roundedAt: timestamp("rounded_at").defaultNow().notNull()
+	},
+	(t) => ({
+		battleRoundIdx: index("idx_battle_round").on(t.battleId, t.roundNumber)
+	})
+);
 
 // War surrenders
 export const warSurrenders = pgTable("war_surrenders", {
@@ -1913,7 +1973,7 @@ export const battlesRelations = relations(battles, ({ one, many }) => ({
 	rounds: many(battleRounds)
 }));
 
-export const battleParticipantsRelations = relations(battleParticipants, ({ one }) => ({
+export const battleParticipantsRelations = relations(battleParticipants, ({ one, many }) => ({
 	battle: one(battles, {
 		fields: [battleParticipants.battleId],
 		references: [battles.id]
@@ -1921,24 +1981,16 @@ export const battleParticipantsRelations = relations(battleParticipants, ({ one 
 	unit: one(militaryUnits, {
 		fields: [battleParticipants.unitId],
 		references: [militaryUnits.id]
-	})
+	}),
+	actions: many(battleUnitActions)
 }));
 
-export const battleRoundsRelations = relations(battleRounds, ({ one }) => ({
+export const battleRoundsRelations = relations(battleRounds, ({ one, many }) => ({
 	battle: one(battles, {
 		fields: [battleRounds.battleId],
 		references: [battles.id]
 	}),
-	attackingUnit: one(militaryUnits, {
-		fields: [battleRounds.attackingUnitId],
-		references: [militaryUnits.id],
-		relationName: "round_attacker"
-	}),
-	defendingUnit: one(militaryUnits, {
-		fields: [battleRounds.defendingUnitId],
-		references: [militaryUnits.id],
-		relationName: "round_defender"
-	})
+	unitActions: many(battleUnitActions)
 }));
 
 export const warSurrendersRelations = relations(warSurrenders, ({ one }) => ({
@@ -1990,5 +2042,44 @@ export const regionBordersRelations = relations(regionBorders, ({ one }) => ({
 	neighbor: one(regions, {
 		fields: [regionBorders.neighborId],
 		references: [regions.id]
+	})
+}));
+
+// Schema additions for HoI4-style battles
+export const battleUnitActions = pgTable(
+	"battle_unit_actions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		roundId: integer("round_id")
+			.notNull()
+			.references(() => battleRounds.id, { onDelete: "cascade" }),
+		participantId: integer("participant_id")
+			.notNull()
+			.references(() => battleParticipants.id, { onDelete: "cascade" }),
+
+		// What this unit did
+		damageDealt: integer("damage_dealt").notNull(),
+		damageTaken: integer("damage_taken").notNull(),
+		orgLoss: integer("org_loss").notNull(),
+
+		// State after action
+		strengthAfter: integer("strength_after").notNull(),
+		organizationAfter: integer("organization_after").notNull(),
+
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		roundParticipantIdx: index("idx_round_participant").on(t.roundId, t.participantId)
+	})
+);
+
+export const battleUnitActionsRelations = relations(battleUnitActions, ({ one }) => ({
+	round: one(battleRounds, {
+		fields: [battleUnitActions.roundId],
+		references: [battleRounds.id]
+	}),
+	participant: one(battleParticipants, {
+		fields: [battleUnitActions.participantId],
+		references: [battleParticipants.id]
 	})
 }));

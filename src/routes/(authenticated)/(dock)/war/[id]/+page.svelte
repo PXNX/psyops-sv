@@ -81,6 +81,8 @@
 					<span class="text-sm font-medium text-red-400">Attacker</span>
 				</div>
 				<div class="flex items-center gap-3">
+					<!-- todo: use Logo component and get image url from backblaze -->
+
 					<img
 						src={data.war.attacker.logoFile ? `/api/files/${data.war.attacker.logoFile.key}` : "/default-state.svg"}
 						alt={data.war.attacker.name}
@@ -112,6 +114,7 @@
 					<span class="text-sm font-medium text-blue-400">Defender</span>
 				</div>
 				<div class="flex items-center gap-3">
+					<!-- todo: use Logo component and get image url from backblaze -->
 					<img
 						src={data.war.defender.logoFile ? `/api/files/${data.war.defender.logoFile.key}` : "/default-state.svg"}
 						alt={data.war.defender.name}
