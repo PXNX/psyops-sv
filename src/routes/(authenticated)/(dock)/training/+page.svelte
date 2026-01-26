@@ -3,7 +3,6 @@
 	import { enhance } from "$app/forms";
 	import type { PageData } from "./$types";
 	import FluentEmojiMilitaryHelmet from "~icons/fluent-emoji/military-helmet";
-
 	import IconAdd from "~icons/fluent/add-24-filled";
 	import IconDelete from "~icons/fluent/delete-24-filled";
 	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
@@ -79,7 +78,7 @@
 			{
 				type: "ammunition",
 				icon: "📦",
-				name: "Ammunition",
+				name: "Ammo",
 				required: template.ammunitionCost,
 				available: data.inventory.products.ammunition || 0
 			},
@@ -108,6 +107,12 @@
 
 		return requirements;
 	}
+
+	function calculateOrgaRecoveryTime(organization: number): string {
+		if (organization >= 100) return "Full";
+		const hoursToFull = Math.ceil((100 - organization) / 5); // Assuming 5 org/hour recovery
+		return `${hoursToFull}h`;
+	}
 </script>
 
 <div class="container mx-auto p-6 max-w-7xl">
@@ -117,7 +122,7 @@
 				<FluentEmojiMilitaryHelmet class="w-8 h-8" />
 				Military Training
 			</h1>
-			<p class="text-base-content/70 mt-1">Train military units for your nation</p>
+			<p class="text-base-content/70 mt-1">Train and manage your military forces</p>
 		</div>
 		{#if data.residence.bloc}
 			<div
@@ -129,177 +134,234 @@
 		{/if}
 	</div>
 
-	<!-- Unit Templates Grid -->
-	<div class="mb-8">
-		<h2 class="text-xl font-bold mb-4">Available Unit Types</h2>
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-			{#each data.templates as template}
-				{@const affordable = canAfford(template)}
-				{@const resources = getResourceStatus(template)}
-				<button
-					class="card bg-base-200 hover:bg-base-300 transition-all cursor-pointer border-2 {selectedTemplate?.id ===
-					template.id
-						? 'border-primary shadow-lg'
-						: 'border-transparent'}"
-					onclick={() => (selectedTemplate = selectedTemplate?.id === template.id ? null : template)}
-				>
-					<div class="card-body p-4">
-						<div class="flex items-start justify-between mb-2">
-							<img src={getUnitIconPath(template.unitType)} alt={template.displayName} class="w-10 h-10" />
-							{#if selectedTemplate?.id === template.id}
-								<div class="badge badge-primary badge-sm">
-									<IconCheckmark class="w-4 h-4" />
+	<div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+		<!-- Left Column: Unit Templates -->
+		<div class="xl:col-span-2">
+			<h2 class="text-xl font-bold mb-4">Train New Units</h2>
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+				{#each data.templates as template}
+					{@const affordable = canAfford(template)}
+					{@const resources = getResourceStatus(template)}
+					{@const selected = selectedTemplate?.id === template.id}
+					<button
+						class="card bg-base-200 hover:bg-base-300 transition-all cursor-pointer border-2 {selected
+							? 'border-primary shadow-lg'
+							: 'border-transparent'}"
+						onclick={() => (selectedTemplate = selected ? null : template)}
+					>
+						<div class="card-body p-4">
+							<div class="flex items-center gap-3 mb-3">
+								<div class="w-16 h-12 flex-shrink-0">
+									<img
+										src={getUnitIconPath(template.unitType)}
+										alt={template.displayName}
+										class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]"
+									/>
 								</div>
+								<div class="flex-1 min-w-0">
+									<h3 class="font-bold text-base truncate">{template.displayName}</h3>
+									<p class="text-xs text-base-content/60">{template.description}</p>
+								</div>
+								{#if selected}
+									<IconCheckmark class="w-5 h-5 text-primary flex-shrink-0" />
+								{/if}
+							</div>
+
+							<div class="grid grid-cols-3 gap-2 text-xs mb-3 bg-base-300 rounded-lg p-2">
+								<div class="text-center">
+									<div class="text-base-content/60">ATK</div>
+									<div class="font-bold text-sm">{template.baseAttack}</div>
+								</div>
+								<div class="text-center">
+									<div class="text-base-content/60">DEF</div>
+									<div class="font-bold text-sm">{template.baseDefense}</div>
+								</div>
+								<div class="text-center">
+									<div class="text-base-content/60">Time</div>
+									<div class="font-bold text-sm">{template.trainingDuration}h</div>
+								</div>
+							</div>
+
+							<!-- Compact Resource Display -->
+							<div class="flex flex-wrap gap-1">
+								{#each resources as resource}
+									{@const hasEnough = resource.available >= resource.required}
+									<div class="badge badge-sm {hasEnough ? 'badge-outline' : 'badge-error'} gap-1">
+										<span>{hasEnough ? "✓" : "✗"}</span>
+										<span>{resource.icon}</span>
+										<span class="font-mono text-xs">{resource.required}</span>
+									</div>
+								{/each}
+							</div>
+
+							{#if !affordable}
+								<div class="text-xs text-error mt-2 font-medium">Insufficient resources</div>
 							{/if}
 						</div>
+					</button>
+				{/each}
+			</div>
 
-						<h3 class="font-bold text-lg">{template.displayName}</h3>
-						<p class="text-sm text-base-content/70 mb-3">{template.description}</p>
+			<!-- Train Button -->
+			{#if selectedTemplate}
+				<div class="mt-4">
+					<form
+						method="POST"
+						action="?/train"
+						use:enhance={() => {
+							isSubmitting = true;
+							return async ({ update }) => {
+								await update();
+								isSubmitting = false;
+								selectedTemplate = null;
+							};
+						}}
+					>
+						<input type="hidden" name="templateId" value={selectedTemplate.id} />
+						<button
+							type="submit"
+							class="btn btn-primary btn-block"
+							disabled={isSubmitting || !canAfford(selectedTemplate)}
+						>
+							{#if isSubmitting}
+								<span class="loading loading-spinner"></span>
+							{:else}
+								<IconAdd class="w-5 h-5" />
+							{/if}
+							Start Training {selectedTemplate.displayName}
+						</button>
+					</form>
+				</div>
+			{/if}
+		</div>
 
-						<div class="grid grid-cols-2 gap-2 text-sm mb-3">
-							<div>
-								<span class="text-base-content/70">Attack:</span>
-								<span class="font-bold ml-1">{template.baseAttack}</span>
-							</div>
-							<div>
-								<span class="text-base-content/70">Defense:</span>
-								<span class="font-bold ml-1">{template.baseDefense}</span>
-							</div>
-							<div>
-								<span class="text-base-content/70">Cost:</span>
-								<span class="font-bold ml-1">{formatCurrency(template.currencyCost)}</span>
-							</div>
-							<div>
-								<span class="text-base-content/70">Time:</span>
-								<span class="font-bold ml-1">{template.trainingDuration}h</span>
-							</div>
-						</div>
-
-						<div class="divider my-2"></div>
-
-						<!-- Resource Requirements -->
-						<div class="space-y-1">
-							{#each resources as resource}
-								{@const hasEnough = resource.available >= resource.required}
-								<div class="flex items-center justify-between text-xs {hasEnough ? 'text-success' : 'text-error'}">
-									<span class="flex items-center gap-1">
-										<span>{resource.icon}</span>
-										<span>{resource.name}</span>
-									</span>
-									<span class="font-mono">
-										{resource.available >= resource.required ? "✓" : "✗"}
-										{resource.available}/{resource.required}
-									</span>
+		<!-- Right Column: Active Units -->
+		<div>
+			<h2 class="text-xl font-bold mb-4">Active Units ({data.units.filter((u) => !u.isTraining).length})</h2>
+			<div class="space-y-3">
+				{#each data.units.filter((u) => !u.isTraining) as unit}
+					<div class="card bg-base-200 border border-base-300">
+						<div class="card-body p-4">
+							<div class="flex items-center gap-3 mb-2">
+								<div class="w-12 h-9 flex-shrink-0">
+									<img
+										src={getUnitIconPath(unit.unitType)}
+										alt={unit.unitType}
+										class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]"
+									/>
 								</div>
-							{/each}
-						</div>
+								<div class="flex-1 min-w-0">
+									<h3 class="font-bold text-sm truncate">{unit.name}</h3>
+									<p class="text-xs text-base-content/60 capitalize">{unit.unitType.replace(/_/g, " ")}</p>
+								</div>
+							</div>
 
-						{#if !affordable}
-							<div class="badge badge-error badge-sm mt-2 w-full">Insufficient Resources</div>
-						{:else}
-							<div class="badge badge-success badge-sm mt-2 w-full">Can Afford</div>
-						{/if}
+							<!-- Status Bars -->
+							<div class="space-y-2">
+								<div>
+									<div class="flex justify-between text-xs mb-1">
+										<span class="text-base-content/70">Organization</span>
+										<span class="font-bold">{unit.organization}%</span>
+									</div>
+									<progress class="progress progress-primary w-full h-2" value={unit.organization} max="100"></progress>
+									{#if unit.organization < 100}
+										<div class="text-xs text-base-content/60 mt-1">
+											Recovers in {calculateOrgaRecoveryTime(unit.organization)}
+										</div>
+									{/if}
+								</div>
+
+								<div>
+									<div class="flex justify-between text-xs mb-1">
+										<span class="text-base-content/70">Strength</span>
+										<span class="font-bold">{unit.health}%</span>
+									</div>
+									<progress class="progress progress-success w-full h-2" value={unit.health} max="100"></progress>
+								</div>
+
+								<div>
+									<div class="flex justify-between text-xs mb-1">
+										<span class="text-base-content/70">Supply</span>
+										<span class="font-bold">{unit.supplyLevel}%</span>
+									</div>
+									<progress class="progress progress-warning w-full h-2" value={unit.supplyLevel} max="100"></progress>
+								</div>
+							</div>
+
+							<!-- Stats -->
+							<div class="grid grid-cols-2 gap-2 mt-3 text-xs bg-base-300 rounded p-2">
+								<div>
+									<span class="text-base-content/60">Attack:</span>
+									<span class="font-bold ml-1">{unit.attack}</span>
+								</div>
+								<div>
+									<span class="text-base-content/60">Defense:</span>
+									<span class="font-bold ml-1">{unit.defense}</span>
+								</div>
+							</div>
+
+							<!-- Actions -->
+							<form method="POST" action="?/disbandUnit" use:enhance class="mt-3">
+								<input type="hidden" name="unitId" value={unit.id} />
+								<button type="submit" class="btn btn-error btn-sm btn-block">
+									<IconDelete class="w-4 h-4" />
+									Disband
+								</button>
+							</form>
+						</div>
 					</div>
-				</button>
-			{/each}
+				{/each}
+
+				{#if data.units.filter((u) => !u.isTraining).length === 0}
+					<div class="text-center text-base-content/60 py-8">
+						<p class="text-sm">No active units</p>
+						<p class="text-xs mt-1">Train your first unit to get started</p>
+					</div>
+				{/if}
+			</div>
+
+			<!-- Training Queue -->
+			{#if data.units.some((u) => u.isTraining)}
+				<h2 class="text-xl font-bold mb-4 mt-6">Training ({data.units.filter((u) => u.isTraining).length})</h2>
+				<div class="space-y-3">
+					{#each data.units.filter((u) => u.isTraining) as unit}
+						<div class="card bg-base-200 border border-warning">
+							<div class="card-body p-4">
+								<div class="flex items-center gap-3 mb-2">
+									<div class="w-8 h-8 flex-shrink-0">
+										<img
+											src={getUnitIconPath(unit.unitType)}
+											alt={unit.unitType}
+											class="w-full h-full [filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]"
+										/>
+									</div>
+									<div class="flex-1 min-w-0">
+										<h3 class="font-bold text-sm truncate">{unit.name}</h3>
+										<div class="flex items-center gap-2 text-xs text-base-content/60">
+											<span class="loading loading-spinner loading-xs"></span>
+											<span>Training...</span>
+										</div>
+									</div>
+								</div>
+
+								{#if unit.trainingCompletesAt && new Date(unit.trainingCompletesAt) <= new Date()}
+									<form method="POST" action="?/completeTraining" use:enhance>
+										<input type="hidden" name="unitId" value={unit.id} />
+										<button type="submit" class="btn btn-success btn-sm btn-block">
+											<IconCheckmark class="w-4 h-4" />
+											Complete Training
+										</button>
+									</form>
+								{:else if unit.trainingCompletesAt}
+									<div class="text-xs text-base-content/60 text-center">
+										Completes {new Date(unit.trainingCompletesAt).toLocaleString()}
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
-
-	<!-- Train Button -->
-	{#if selectedTemplate}
-		<div class="alert alert-info mb-6">
-			<div class="flex-1">
-				<h3 class="font-bold">Selected: {selectedTemplate.displayName}</h3>
-				<p class="text-sm">Click the button below to begin training this unit</p>
-			</div>
-			<form
-				method="POST"
-				action="?/train"
-				use:enhance={() => {
-					isSubmitting = true;
-					return async ({ update }) => {
-						await update();
-						isSubmitting = false;
-						selectedTemplate = null;
-					};
-				}}
-			>
-				<input type="hidden" name="templateId" value={selectedTemplate.id} />
-				<button type="submit" class="btn btn-primary" disabled={isSubmitting || !canAfford(selectedTemplate)}>
-					{#if isSubmitting}
-						<span class="loading loading-spinner"></span>
-					{:else}
-						<IconAdd class="w-5 h-5" />
-					{/if}
-					Start Training
-				</button>
-			</form>
-		</div>
-	{/if}
-
-	<!-- Current Units -->
-	{#if data.units.length > 0}
-		<div class="mb-6">
-			<h2 class="text-xl font-bold mb-4">Your Units</h2>
-			<div class="overflow-x-auto">
-				<table class="table table-zebra">
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Type</th>
-							<th>Attack</th>
-							<th>Defense</th>
-							<th>Status</th>
-							<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each data.units as unit}
-							<tr>
-								<td class="font-medium">{unit.name}</td>
-								<td>
-									<div class="flex items-center gap-2">
-										<img src={getUnitIconPath(unit.unitType)} alt={unit.unitType} class="w-6 h-6" />
-										<span class="capitalize">{unit.unitType.replace(/_/g, " ")}</span>
-									</div>
-								</td>
-								<td>{unit.attack}</td>
-								<td>{unit.defense}</td>
-								<td>
-									{#if unit.isTraining}
-										<div class="flex items-center gap-2">
-											<span class="loading loading-spinner loading-xs"></span>
-											<span class="text-sm">Training...</span>
-										</div>
-									{:else}
-										<span class="badge badge-success">Ready</span>
-									{/if}
-								</td>
-								<td>
-									<div class="flex gap-2">
-										{#if unit.isTraining && unit.trainingCompletesAt && new Date(unit.trainingCompletesAt) <= new Date()}
-											<form method="POST" action="?/completeTraining" use:enhance>
-												<input type="hidden" name="unitId" value={unit.id} />
-												<button type="submit" class="btn btn-success btn-sm">
-													<IconCheckmark class="w-4 h-4" />
-													Complete
-												</button>
-											</form>
-										{/if}
-										<form method="POST" action="?/disbandUnit" use:enhance>
-											<input type="hidden" name="unitId" value={unit.id} />
-											<button type="submit" class="btn btn-error btn-sm">
-												<IconDelete class="w-4 h-4" />
-												Disband
-											</button>
-										</form>
-									</div>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		</div>
-	{/if}
 </div>
