@@ -17,16 +17,6 @@
      style="fill:none;stroke:#000000;stroke-width:10;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
      id="path3883"
      d="M 595,5 5,395" />
-  <text
-     style="font-style:normal;font-weight:normal;font-size:50px;line-height:0%;font-family:sans-serif;text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none"
-     xml:space="preserve"
-     id="text2988-0"
-     y="371.65375"
-     x="295.06836"><tspan
-       style="font-size:100px;font-family:sans-serif"
-       id="tspan2990-0"
-       y="371.65375"
-       x="295.06836">L</tspan></text>
   <path
      id="Friendly Frame"
      d="M 5,5 H 595 V 395 H 5 Z"
