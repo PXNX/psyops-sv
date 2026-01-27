@@ -94,6 +94,15 @@
 		return { status: "complete", text: "Shift complete!" };
 	});
 
+	const betterWageFactory = $derived.by(() => {
+		if (!data.currentJob) return null;
+		const currentWage = data.currentJob.wage;
+		const currentRegion = data.currentJob.regionId;
+
+		// Find factory with higher wage in the same region
+		return data.availableFactories.find((f) => f.regionId === currentRegion && f.workerWage > currentWage);
+	});
+
 	$effect(() => {
 		if (activeProduction) {
 			const interval = setInterval(() => {
@@ -112,10 +121,8 @@
 		<div
 			class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-cyan-600/10 rounded-2xl blur-3xl"
 		></div>
-		<div class="relative flex items-center justify-between">
-			<div>
-				<h1 class="text-4xl font-bold">Production</h1>
-			</div>
+		<div class="relative">
+			<h1 class="text-4xl font-bold mb-4">Production</h1>
 
 			<div class="flex gap-3">
 				{#if data.userCompany}
@@ -190,9 +197,11 @@
 					<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
 				</div>
 				<div class="text-right">
-					<p class="text-xs text-gray-400 mb-1">Daily Wage</p>
+					<p class="text-xs text-gray-400 mb-1">Wage</p>
 					<p class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
-						${data.currentJob.wage.toLocaleString()}
+						<FluentMoney20Filled class="size-5 text-emerald-400" />
+
+						{data.currentJob.wage.toLocaleString()}
 					</p>
 				</div>
 			</div>
@@ -312,72 +321,40 @@
 
 		<!-- Main Content Area -->
 		<div class="lg:col-span-2 space-y-6">
-			<!-- Available Factories -->
-			<div
-				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-6"
-			>
-				<div class="absolute top-0 left-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl"></div>
+			<!-- Better Wage Opportunity -->
+			{#if betterWageFactory && data.currentJob}
+				<a
+					href="/region/{data.currentJob.regionId}/factories"
+					class="block relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950/40 to-green-950/30 border border-emerald-500/30 p-6
+					       hover:border-emerald-400/50 transition-all duration-300 group"
+				>
+					<div
+						class="absolute inset-0 bg-gradient-to-br from-emerald-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+					></div>
 
-				<div class="relative space-y-4">
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-3">
+					<div class="relative flex items-start justify-between">
+						<div class="flex items-center gap-4">
 							<div
-								class="size-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center"
+								class="size-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-green-500/30 flex items-center justify-center"
 							>
-								<FluentFactory20Filled class="size-5 text-blue-400" />
+								<FluentFactory20Filled class="size-6 text-emerald-400" />
 							</div>
-							<h2 class="text-xl font-semibold text-white">Available Factories</h2>
+							<div>
+								<h3 class="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+									Better Wage Available!
+									<span class="text-emerald-400">✨</span>
+								</h3>
+								<p class="text-sm text-gray-300">
+									Factories in your region are offering up to
+									<span class="font-bold text-emerald-400">💰{betterWageFactory.workerWage.toLocaleString()}</span>
+									per day
+								</p>
+							</div>
 						</div>
-						<span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-sm font-medium">
-							{data.availableFactories.length} open
-						</span>
+						<FluentArrowRight20Filled class="size-6 text-emerald-400 group-hover:translate-x-1 transition-transform" />
 					</div>
-
-					<div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-						{#each data.availableFactories as factory}
-							<a
-								href="/factory/{factory.id}"
-								class="block group relative overflow-hidden bg-slate-800/30 hover:bg-slate-800/50 rounded-xl p-4 border border-slate-700/50
-								       hover:border-blue-500/50 transition-all duration-300"
-							>
-								<div
-									class="absolute inset-0 bg-gradient-to-r from-blue-600/0 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity"
-								></div>
-
-								<div class="relative">
-									<div class="flex items-start justify-between mb-3">
-										<div class="flex-1">
-											<h3 class="font-semibold text-white group-hover:text-blue-300 transition-colors">
-												{factory.name}
-											</h3>
-											<p class="text-xs text-gray-400 mt-0.5">{factory.companyName} • {factory.stateName}</p>
-										</div>
-										<FluentArrowRight20Filled
-											class="size-5 text-slate-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all"
-										/>
-									</div>
-
-									<div class="flex items-center justify-between">
-										<div class="flex items-center gap-4 text-sm">
-											<div class="flex items-center gap-1.5">
-												<FluentMoney20Filled class="size-4 text-emerald-400" />
-												<span class="text-emerald-400 font-semibold">${factory.workerWage.toLocaleString()}</span>
-											</div>
-											<div class="flex items-center gap-1.5">
-												<FluentPeople20Filled class="size-4 text-blue-400" />
-												<span class="text-gray-300">{factory.currentWorkers}/{factory.maxWorkers}</span>
-											</div>
-										</div>
-										<div class="px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-300 text-xs font-medium capitalize">
-											{factory.factoryType}
-										</div>
-									</div>
-								</div>
-							</a>
-						{/each}
-					</div>
-				</div>
-			</div>
+				</a>
+			{/if}
 
 			<!-- Production Section -->
 			{#if activeProduction}
@@ -480,19 +457,51 @@
 							{/each}
 						</div>
 
+						<!-- Current Stock Display -->
+						{#if selectedProduct}
+							{@const currentStock = productMap.get(selectedProduct) || 0}
+							<div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
+								<div class="flex items-center justify-between">
+									<div class="flex items-center gap-2">
+										<span class="text-2xl">{productIcons[selectedProduct]}</span>
+										<div>
+											<p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Current Stock</p>
+											<p class="text-lg font-semibold text-white capitalize">{selectedProduct}</p>
+										</div>
+									</div>
+									<div class="text-right">
+										<span
+											class="text-3xl font-bold {currentStock > 0
+												? 'bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent'
+												: 'text-slate-500'}"
+										>
+											{currentStock}
+										</span>
+										<p class="text-xs text-slate-400 mt-1">units available</p>
+									</div>
+								</div>
+							</div>
+						{/if}
+
 						<div>
 							<label for="quantity" class="block text-sm font-medium text-gray-300 mb-3">
 								Batch Size: <span class="text-white font-bold">×{productionQuantity}</span>
 							</label>
-							<input
-								type="range"
-								id="quantity"
-								name="quantity"
-								min="1"
-								max="10"
-								bind:value={productionQuantity}
-								class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-							/>
+							<div class="relative">
+								<input
+									type="range"
+									id="quantity"
+									name="quantity"
+									min="1"
+									max="10"
+									bind:value={productionQuantity}
+									class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
+									style="background: linear-gradient(to right, rgb(168 85 247) 0%, rgb(168 85 247) {((productionQuantity -
+										1) /
+										9) *
+										100}%, rgb(51 65 85) {((productionQuantity - 1) / 9) * 100}%, rgb(51 65 85) 100%)"
+								/>
+							</div>
 							<div class="flex justify-between text-xs text-gray-500 mt-1 px-1">
 								<span>1</span>
 								<span>5</span>
