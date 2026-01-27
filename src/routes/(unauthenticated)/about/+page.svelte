@@ -1,5 +1,5 @@
 <script lang="ts">
-	import MaterialSymbolsPrivacyTipRounded from "~icons/material-symbols/privacy-tip-rounded";
+	import FluentPersonShield24Regular from "~icons/fluent/person-shield-24-regular";
 	import FluentDocumentText20Filled from "~icons/fluent/document-text-20-filled";
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 	import FluentBug20Filled from "~icons/fluent/bug-20-filled";
@@ -160,7 +160,7 @@
 						<div
 							class="size-10 bg-pink-600/20 rounded-lg flex items-center justify-center group-hover:bg-pink-600/30 transition-colors"
 						>
-							<MaterialSymbolsPrivacyTipRounded class="size-5 text-pink-400" />
+							<FluentPersonShield24Regular class="size-5 text-pink-400" />
 						</div>
 						<div class="flex-1">
 							<p class="text-white font-medium">Privacy Policy</p>
