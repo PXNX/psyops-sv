@@ -21,7 +21,7 @@ type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosi
 
 // Standardized unit names - no NATO variety, just consistent naming
 const unitTypeNames: Record<string, string> = {
-	air_defence: "Air Defense Battalion",
+	air_defence: "Air Defence Battalion",
 	armor: "Armored Battalion",
 	mechanzied: "Mechanized Battalion",
 	artillery: "Artillery Battalion",
@@ -97,7 +97,6 @@ async function getOrCreateTemplates() {
 			{
 				unitType: "infantry" as const,
 				displayName: "Infantry Battalion",
-				description: "Standard infantry unit",
 				baseAttack: 15,
 				baseDefense: 20,
 				trainingDuration: 6,
@@ -114,7 +113,6 @@ async function getOrCreateTemplates() {
 			{
 				unitType: "armor" as const,
 				displayName: "Armored Battalion",
-				description: "Heavy tank unit",
 				baseAttack: 50,
 				baseDefense: 40,
 				trainingDuration: 12,
@@ -131,7 +129,6 @@ async function getOrCreateTemplates() {
 			{
 				unitType: "mechanzied" as const,
 				displayName: "Mechanized Battalion",
-				description: "Infantry fighting vehicles",
 				baseAttack: 30,
 				baseDefense: 30,
 				trainingDuration: 10,
@@ -148,7 +145,6 @@ async function getOrCreateTemplates() {
 			{
 				unitType: "artillery" as const,
 				displayName: "Artillery Battalion",
-				description: "Long-range artillery",
 				baseAttack: 40,
 				baseDefense: 15,
 				trainingDuration: 8,
@@ -165,7 +161,6 @@ async function getOrCreateTemplates() {
 			{
 				unitType: "air_defence" as const,
 				displayName: "Air Defense Battalion",
-				description: "Anti-aircraft unit",
 				baseAttack: 25,
 				baseDefense: 25,
 				trainingDuration: 10,
@@ -182,7 +177,6 @@ async function getOrCreateTemplates() {
 			{
 				unitType: "fighter_squadron" as const,
 				displayName: "Fighter Squadron",
-				description: "Air superiority fighters",
 				baseAttack: 60,
 				baseDefense: 35,
 				trainingDuration: 16,
@@ -199,7 +193,6 @@ async function getOrCreateTemplates() {
 			{
 				unitType: "bomber_squadron" as const,
 				displayName: "Bomber Squadron",
-				description: "Strategic bombers",
 				baseAttack: 70,
 				baseDefense: 20,
 				trainingDuration: 18,

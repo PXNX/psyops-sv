@@ -7,11 +7,19 @@
 	import IconDelete from "~icons/fluent/delete-24-filled";
 	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
 	import IconClock from "~icons/fluent/clock-24-filled";
+	import Modal from "$lib/component/Modal.svelte";
 
 	let { data }: { data: PageData } = $props();
 
 	let isSubmitting = $state(false);
 	let selectedTemplate = $state<any>(null);
+	let disbandModalOpen = $state(false);
+	let unitToDisband = $state<any>(null);
+
+	function confirmDisband(unit: any) {
+		unitToDisband = unit;
+		disbandModalOpen = true;
+	}
 
 	function getUnitIconPath(unitType: string): string {
 		return `/units/${unitType}.svg`;
@@ -155,12 +163,6 @@
 		}
 		return `${minutes}m`;
 	}
-
-	function getQueuePosition(index: number): string {
-		const pos = index + 1;
-		const suffix = pos === 1 ? "st" : pos === 2 ? "nd" : pos === 3 ? "rd" : "th";
-		return `${pos}${suffix}`;
-	}
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -196,9 +198,7 @@
 				>
 					<div class="p-5">
 						<div class="flex items-center gap-4 mb-4">
-							<div
-								class="w-12 h-12 flex-shrink-0 bg-slate-900/60 rounded-lg border border-slate-700/60 flex items-center justify-center p-2 shadow-lg"
-							>
+							<div class="size-12 flex-shrink-0 flex items-center justify-center">
 								<img
 									src={getUnitIconPath(unit.unitType)}
 									alt={unit.unitType}
@@ -208,26 +208,24 @@
 							<div class="flex-1 min-w-0">
 								<h3 class="font-semibold text-white text-base mb-0.5 tracking-tight">{unit.name}</h3>
 								<div class="flex items-center gap-3 mt-2">
-									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-slate-500 font-medium">ATK</span>
+									<div class="bg-red-900/40 border border-red-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-red-500 font-medium">ATK</span>
 										<span class="text-base font-semibold text-white ml-1.5">{unit.attack}</span>
 									</div>
-									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-slate-500 font-medium">DEF</span>
+									<div class="bg-blue-900/40 border border-blue-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-blue-500 font-medium">DEF</span>
 										<span class="text-base font-semibold text-white ml-1.5">{unit.defense}</span>
 									</div>
 								</div>
 							</div>
-							<form method="POST" action="?/disbandUnit" use:enhance class="flex-shrink-0">
-								<input type="hidden" name="unitId" value={unit.id} />
-								<button
-									type="submit"
-									class="btn btn-ghost btn-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10"
-									title="Disband Unit"
-								>
-									<IconDelete class="size-4" />
-								</button>
-							</form>
+							<button
+								type="button"
+								onclick={() => confirmDisband(unit)}
+								class="btn btn-ghost btn-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
+								title="Disband Unit"
+							>
+								<IconDelete class="size-4" />
+							</button>
 						</div>
 
 						<!-- Compact Status Bars -->
@@ -290,40 +288,48 @@
 				<!-- Selectable Unit Type Cards -->
 				<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
 					{#each data.templates as template}
+						{@const isSelected = selectedTemplate?.id === template.id}
 						<button
 							type="button"
-							class="p-3 rounded-lg border transition-all duration-200 group"
-							class:bg-slate-700-50={selectedTemplate?.id === template.id}
-							class:border-slate-500={selectedTemplate?.id === template.id}
-							class:shadow-lg={selectedTemplate?.id === template.id}
-							class:bg-slate-800-30={selectedTemplate?.id !== template.id}
-							class:border-slate-700-40={selectedTemplate?.id !== template.id}
-							class:hover:border-slate-600-60={selectedTemplate?.id !== template.id}
-							class:hover:bg-slate-800-40={selectedTemplate?.id !== template.id}
+							class="relative p-3 rounded-lg border-2 transition-all duration-200 overflow-hidden group {isSelected
+								? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
+								: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
 							onclick={() => (selectedTemplate = template)}
 							disabled={isSubmitting}
 						>
-							<div class="flex flex-col gap-2 items-center">
+							<!-- Gradient Background -->
+							<div
+								class="absolute inset-0 opacity-0 transition-opacity duration-200"
+								class:opacity-100={isSelected}
+								style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)"
+							></div>
+
+							<!-- Hover Gradient -->
+							<div
+								class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+								class:group-hover:opacity-0={isSelected}
+								style="background: linear-gradient(135deg, rgba(71, 85, 105, 0.1) 0%, rgba(51, 65, 85, 0.05) 100%)"
+							></div>
+
+							<div class="relative flex flex-col gap-2 items-center">
 								<!-- Unit Icon -->
 								<div
-									class="w-12 h-12 flex items-center justify-center p-2 transition-transform group-hover:scale-110 duration-200"
+									class="size-16 flex items-center justify-center transition-transform group-hover:scale-110 duration-200"
 								>
 									<img
 										src={getUnitIconPath(template.unitType)}
 										alt={template.displayName}
 										class="w-full h-full object-contain transition-all duration-200"
-										class:[filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]={selectedTemplate?.id !==
-											template.id}
-										class:[filter:brightness(0)_saturate(100%)_invert(80%)_sepia(20%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(95%)]={selectedTemplate?.id ===
-											template.id}
+										class:[filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]={!isSelected}
+										class:[filter:brightness(0)_saturate(100%)_invert(60%)_sepia(80%)_saturate(1500%)_hue-rotate(200deg)_brightness(100%)_contrast(100%)]={isSelected}
 									/>
 								</div>
 
 								<!-- Unit Name -->
 								<h3
-									class="font-medium text-xs transition-colors text-center leading-tight"
-									class:text-white={selectedTemplate?.id === template.id}
-									class:text-slate-300={selectedTemplate?.id !== template.id}
+									class="font-medium text-md transition-colors text-center leading-tight"
+									class:text-blue-300={isSelected}
+									class:text-slate-300={!isSelected}
 								>
 									{template.displayName}
 								</h3>
@@ -337,9 +343,7 @@
 					<div class="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-5 space-y-5">
 						<!-- Selected Unit Header -->
 						<div class="flex items-center gap-4 mb-5">
-							<div
-								class="w-14 h-14 rounded-lg border border-slate-600/50 bg-slate-900/40 flex items-center justify-center p-2.5 flex-shrink-0 shadow-lg"
-							>
+							<div class="size-14 flex items-center justify-center flex-shrink-0">
 								<img
 									src={getUnitIconPath(selectedTemplate.unitType)}
 									alt={selectedTemplate.displayName}
@@ -349,14 +353,15 @@
 							<div class="flex-1">
 								<h3 class="text-xl font-semibold text-white mb-3 tracking-tight">{selectedTemplate.displayName}</h3>
 								<div class="flex items-center gap-3 text-sm">
-									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-slate-500">ATK</span>
+									<div class="bg-red-900/40 border border-red-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-red-500">ATK</span>
 										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.baseAttack}</span>
 									</div>
-									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-slate-500">DEF</span>
+									<div class="bg-blue-900/40 border border-blue-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-blue-500">DEF</span>
 										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.baseDefense}</span>
 									</div>
+
 									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
 										<span class="text-xs text-slate-500">TIME</span>
 										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.trainingDuration}h</span>
@@ -451,20 +456,9 @@
 
 					<!-- Active Training Unit -->
 					<div class="bg-slate-800/40 border border-amber-500/40 rounded-xl overflow-hidden mb-3 backdrop-blur-sm">
-						<div class="p-3.5">
-							<div class="flex items-center gap-2 mb-2.5">
-								<div
-									class="size-4 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-400 flex items-center justify-center font-semibold text-xs"
-								>
-									1
-								</div>
-								<span class="text-xs font-semibold text-amber-400 tracking-wide">TRAINING</span>
-							</div>
-
-							<div class="flex items-center gap-2.5 mb-2.5">
-								<div
-									class="w-9 h-9 flex-shrink-0 bg-slate-900/40 rounded border border-slate-700/40 flex items-center justify-center p-1.5"
-								>
+						<div class="p-3">
+							<div class="flex items-center gap-2 mb-2">
+								<div class="size-10 flex-shrink-0 flex items-center justify-center">
 									<img
 										src={getUnitIconPath(activeTrainingUnit.unitType)}
 										alt={activeTrainingUnit.unitType}
@@ -492,7 +486,7 @@
 									<input type="hidden" name="unitId" value={activeTrainingUnit.id} />
 									<button type="submit" class="btn btn-success btn-xs w-full gap-1.5">
 										<IconCheckmark class="size-3.5" />
-										Complete
+										Finish training
 									</button>
 								</form>
 							</div>
@@ -502,16 +496,9 @@
 
 				<!-- Queued Units -->
 				{#each queuedUnits as unit, index}
-					<div class="bg-slate-800/30 border border-slate-700/40 rounded-lg p-2.5 mb-2 backdrop-blur-sm">
-						<div class="flex items-center gap-2.5">
-							<div
-								class="size-4 rounded-full bg-slate-700/50 border border-slate-600/50 text-slate-300 flex items-center justify-center font-semibold text-xs flex-shrink-0"
-							>
-								{index + 2}
-							</div>
-							<div
-								class="w-7 h-7 flex-shrink-0 bg-slate-900/30 rounded border border-slate-700/30 flex items-center justify-center p-1"
-							>
+					<div class="bg-slate-800/30 border border-slate-700/40 rounded-lg p-2 mb-2 backdrop-blur-sm">
+						<div class="flex items-center gap-2">
+							<div class="size-8 flex-shrink-0 flex items-center justify-center">
 								<img
 									src={getUnitIconPath(unit.unitType)}
 									alt={unit.unitType}
@@ -536,6 +523,55 @@
 		</div>
 	</div>
 </div>
+
+<!-- Disband Confirmation Modal -->
+<Modal bind:open={disbandModalOpen} title="Disband Unit" size="small">
+	{#if unitToDisband}
+		<div class="space-y-4">
+			<div class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+				<div
+					class="w-10 h-10 flex-shrink-0 bg-slate-900/60 rounded border border-slate-700/60 flex items-center justify-center p-2"
+				>
+					<img
+						src={getUnitIconPath(unitToDisband.unitType)}
+						alt={unitToDisband.unitType}
+						class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
+					/>
+				</div>
+				<div>
+					<h4 class="font-semibold text-white text-sm">{unitToDisband.name}</h4>
+					<p class="text-xs text-slate-400">ATK {unitToDisband.attack} • DEF {unitToDisband.defense}</p>
+				</div>
+			</div>
+
+			<p class="text-sm text-slate-300">
+				Are you sure you want to disband this unit? This action cannot be undone and you will not receive any refunds.
+			</p>
+
+			<div class="flex gap-2 pt-2">
+				<button type="button" onclick={() => (disbandModalOpen = false)} class="btn btn-ghost flex-1"> Cancel </button>
+				<form
+					method="POST"
+					action="?/disbandUnit"
+					use:enhance={() => {
+						return async ({ update }) => {
+							await update();
+							disbandModalOpen = false;
+							unitToDisband = null;
+						};
+					}}
+					class="flex-1"
+				>
+					<input type="hidden" name="unitId" value={unitToDisband.id} />
+					<button type="submit" class="btn btn-error w-full gap-2">
+						<IconDelete class="size-4" />
+						Disband
+					</button>
+				</form>
+			</div>
+		</div>
+	{/if}
+</Modal>
 
 <style>
 	@keyframes shimmer {
