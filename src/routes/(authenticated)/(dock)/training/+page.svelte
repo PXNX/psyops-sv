@@ -7,6 +7,8 @@
 	import IconDelete from "~icons/fluent/delete-24-filled";
 	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
 	import IconClock from "~icons/fluent/clock-24-filled";
+	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+
 	import Modal from "$lib/component/Modal.svelte";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
@@ -133,7 +135,7 @@
 		<div>
 			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
 				<FluentEmojiMilitaryHelmet class="size-8" />
-				Military Training
+				Military
 			</h1>
 			<p class="text-slate-400 mt-1">
 				{data.residence.stateName} • {data.units.filter((u) => !u.isTraining).length} Active • {trainingUnits.length} Training
@@ -152,8 +154,6 @@
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<!-- Active Units - Main Focus -->
 		<div class="lg:col-span-2 space-y-4">
-			<h2 class="text-2xl font-semibold text-white">Active Units ({data.units.filter((u) => !u.isTraining).length})</h2>
-
 			{#each data.units.filter((u) => !u.isTraining) as unit}
 				<div
 					class="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/60 hover:bg-slate-800/50 transition-all duration-300"
@@ -323,16 +323,26 @@
 										<span class="text-xs text-blue-500">DEF</span>
 										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.baseDefense}</span>
 									</div>
-
-									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-slate-500">TIME</span>
-										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.trainingDuration}h</span>
-									</div>
 								</div>
 							</div>
 						</div>
 
-						<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
+						<!-- Resource Requirements using ResourceRequirements component -->
+						<div class="border-t border-slate-700/30 pt-4">
+							<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
+						</div>
+
+						<div
+							class="flex items-center justify-between p-3 md:p-4 bg-slate-700/30 rounded-lg border border-slate-600/50"
+						>
+							<div class="flex items-center gap-2">
+								<FluentClock20Filled class="size-4 md:size-5 text-gray-400" />
+								<span class="text-xs md:text-sm text-gray-400">Training Time</span>
+							</div>
+							<span class="font-bold text-white text-base md:text-lg">
+								{selectedTemplate.trainingDuration}h
+							</span>
+						</div>
 
 						<!-- Training Button -->
 						<form
