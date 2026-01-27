@@ -250,16 +250,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					state: true
 				}
 			},
-			attackerState: {
-				with: {
-					logoFile: true
-				}
-			},
-			defenderState: {
-				with: {
-					logoFile: true
-				}
-			},
+			attackerState: true,
+			defenderState: true,
 			starter: {
 				with: {
 					profile: true
@@ -312,9 +304,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	});
 
+	console.log("=== BATTLE DEPLOYMENT DEBUG ===");
+	console.log("User ID:", account.id);
+	console.log("User residence:", userResidence?.regionId, "State:", userResidence?.region?.stateId);
+	console.log("Battle region:", battle.regionId);
+	console.log("Attacker state:", battle.attackerStateId);
+	console.log("Defender state:", battle.defenderStateId);
+
 	// Get all user units in the battle region
 	const allUserUnitsInRegion = await db.query.militaryUnits.findMany({
 		where: and(eq(militaryUnits.ownerId, account.id), eq(militaryUnits.regionId, battle.regionId))
+	});
+
+	console.log("Total user units in battle region:", allUserUnitsInRegion.length);
+	allUserUnitsInRegion.forEach((u) => {
+		console.log(`  - ${u.name}: training=${u.isTraining}, health=${u.health}, org=${u.organization}`);
 	});
 
 	// Get units already in this battle
@@ -324,6 +328,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.where(eq(battleParticipants.battleId, battleId));
 
 	const unitsInBattleIds = new Set(unitsInBattle.map((u) => u.unitId));
+	console.log("Units already in battle:", unitsInBattleIds.size);
 
 	// Filter to available units
 	const userUnits = allUserUnitsInRegion.filter(
@@ -335,6 +340,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			unit.organization &&
 			unit.organization > 5
 	);
+
+	console.log("Eligible units after filtering:", userUnits.length);
+	console.log("Filter reasons:");
+	allUserUnitsInRegion.forEach((u) => {
+		if (unitsInBattleIds.has(u.id)) console.log(`  - ${u.name}: Already in battle`);
+		else if (u.isTraining) console.log(`  - ${u.name}: Is training`);
+		else if (!u.health || u.health <= 0) console.log(`  - ${u.name}: No health (${u.health})`);
+		else if (!u.organization || u.organization <= 5) console.log(`  - ${u.name}: Low org (${u.organization})`);
+		else console.log(`  - ${u.name}: ✓ ELIGIBLE`);
+	});
+	console.log("=== END DEBUG ===");
 
 	const terrainData = TERRAIN_DATA[battle.terrain as keyof typeof TERRAIN_DATA];
 
