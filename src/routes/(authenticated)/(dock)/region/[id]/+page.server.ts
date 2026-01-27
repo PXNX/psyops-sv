@@ -17,7 +17,7 @@ import {
 	presidents,
 	userTravels
 } from "$lib/server/schema";
-import { eq, and, sql, or } from "drizzle-orm";
+import { eq, and, sql, or, desc, gt, isNotNull } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
@@ -216,6 +216,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	});
 
+	// Check for recent failed conquest (24-hour cooldown)
+	// A failed conquest is when the defender won
+	const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+	const recentFailedBattle = await db.query.battles.findFirst({
+		where: and(
+			eq(battles.regionId, regionId),
+			eq(battles.status, "defender_won"),
+			isNotNull(battles.endedAt),
+			gt(battles.endedAt, twentyFourHoursAgo)
+		),
+		orderBy: [desc(battles.endedAt)]
+	});
+
 	// Get bordering regions with state information
 	const borderingRegionsData = await getBorderingRegions(regionId);
 	const borderingRegions = await Promise.all(
@@ -312,6 +325,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		activeWars,
 		borderingRegionsForAttack,
 		ongoingBattle,
+		recentFailedBattle: recentFailedBattle
+			? {
+					id: recentFailedBattle.id,
+					endedAt: recentFailedBattle.endedAt?.toISOString(),
+					cooldownEndsAt: new Date(recentFailedBattle.endedAt!.getTime() + 24 * 60 * 60 * 1000).toISOString()
+				}
+			: null,
 		borderingRegions: validBorderingRegions
 	};
 
@@ -634,6 +654,11 @@ export const actions: Actions = {
 		const warId = parseInt(formData.get("warId") as string);
 		const attackFromRegionId = parseInt(formData.get("attackFromRegionId") as string);
 
+		// Prevent attacking from the same region as the target
+		if (attackFromRegionId === regionId) {
+			return fail(400, { error: "Cannot attack a region from itself" });
+		}
+
 		const war = await db.query.wars.findFirst({
 			where: eq(wars.id, warId),
 			with: {
@@ -678,12 +703,33 @@ export const actions: Actions = {
 			return fail(400, { error: "Regions must be adjacent to start a battle" });
 		}
 
+		// Check for existing ongoing battle
 		const existingBattle = await db.query.battles.findFirst({
 			where: and(eq(battles.warId, warId), eq(battles.regionId, regionId), eq(battles.status, "ongoing"))
 		});
 
 		if (existingBattle) {
 			return fail(400, { error: "Battle already ongoing" });
+		}
+
+		// Check for 24-hour cooldown after failed conquest
+		const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+		const recentFailedBattle = await db.query.battles.findFirst({
+			where: and(
+				eq(battles.regionId, regionId),
+				eq(battles.status, "defender_won"),
+				isNotNull(battles.endedAt),
+				gt(battles.endedAt, twentyFourHoursAgo)
+			),
+			orderBy: [desc(battles.endedAt)]
+		});
+
+		if (recentFailedBattle) {
+			const cooldownEnds = new Date(recentFailedBattle.endedAt!.getTime() + 24 * 60 * 60 * 1000);
+			const hoursRemaining = Math.ceil((cooldownEnds.getTime() - Date.now()) / (1000 * 60 * 60));
+			return fail(400, {
+				error: `This region successfully defended against an attack recently. You must wait ${hoursRemaining} more hour${hoursRemaining === 1 ? "" : "s"} before attacking again.`
+			});
 		}
 
 		const region = await db.query.regions.findFirst({

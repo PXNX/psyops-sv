@@ -36,6 +36,20 @@
 		selectedAttackRegion = null;
 		selectedWarId = null;
 	}
+
+	// Calculate remaining cooldown time
+	function getCooldownRemaining(cooldownEndsAt: string) {
+		const now = new Date().getTime();
+		const endsAt = new Date(cooldownEndsAt).getTime();
+		const diffMs = endsAt - now;
+
+		if (diffMs <= 0) return null;
+
+		const hours = Math.floor(diffMs / (1000 * 60 * 60));
+		const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+		return { hours, minutes };
+	}
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -424,6 +438,23 @@
 				</div>
 			</div>
 		</div>
+	{:else if data.recentFailedBattle}
+		{@const cooldown = getCooldownRemaining(data.recentFailedBattle.cooldownEndsAt)}
+		{#if cooldown}
+			<div class="bg-amber-900/20 border border-amber-500/30 rounded-xl p-6">
+				<div class="flex items-start gap-4">
+					<FluentShield20Filled class="size-8 text-amber-500 flex-shrink-0" />
+					<div class="flex-1">
+						<h2 class="text-xl font-bold text-amber-400 mb-2">Region Under Protection</h2>
+						<p class="text-gray-300 mb-2">This region successfully defended against a recent attack.</p>
+						<div class="flex items-center gap-2 text-sm text-amber-300">
+							<FluentClock20Filled class="size-4" />
+							<span>Can be attacked again in {cooldown.hours}h {cooldown.minutes}m</span>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
 	{:else if data.activeWars.length > 0 && data.borderingRegionsForAttack.length > 0}
 		<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
 			<div class="flex items-center gap-3 mb-4">
@@ -476,7 +507,8 @@
 					onclick={() => {
 						selectedAttackRegion = region.id;
 					}}
-					class="w-full flex items-center justify-between p-4 rounded-lg border transition-all"
+					disabled={region.id === data.region.id}
+					class="w-full flex items-center justify-between p-4 rounded-lg border transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 					class:border-white-10={selectedAttackRegion !== region.id}
 					class:bg-slate-700-30={selectedAttackRegion !== region.id}
 					class:border-purple-500={selectedAttackRegion === region.id}
@@ -509,7 +541,7 @@
 			<input type="hidden" name="attackFromRegionId" value={selectedAttackRegion} />
 			<button
 				type="submit"
-				disabled={!selectedAttackRegion || isStartingBattle}
+				disabled={!selectedAttackRegion || isStartingBattle || selectedAttackRegion === data.region.id}
 				class="btn w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-600 border-0 text-white"
 			>
 				{isStartingBattle ? "Starting Battle..." : "Launch Attack"}

@@ -106,274 +106,328 @@
 	});
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-white">Production & Employment</h1>
-			<p class="text-gray-400">Work at factories and manufacture military equipment</p>
-		</div>
-
-		<div class="flex gap-3">
-			<a
-				href="/company"
-				class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-			>
-				<FluentBuilding20Filled class="size-5" />
-				My Company
-			</a>
-
-			<a
-				href="/market"
-				class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-			>
-				<FluentEmojiShoppingCart class="size-5" />
-				Market
-			</a>
-
-			<a
-				href="/factory/create"
-				class="btn bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
-			>
-				<FluentAdd20Filled class="size-5" />
-				Create Factory
-			</a>
-		</div>
-	</div>
-
-	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-green-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Balance</p>
-					<p class="text-lg font-bold text-white">{data.wallet.balance.toLocaleString()}</p>
-				</div>
+<div class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+	<!-- Header with gradient accent -->
+	<div class="relative">
+		<div
+			class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-cyan-600/10 rounded-2xl blur-3xl"
+		></div>
+		<div class="relative flex items-center justify-between">
+			<div>
+				<h1 class="text-4xl font-bold">Production</h1>
 			</div>
-		</div>
 
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div
-					class="size-10 rounded-lg flex items-center justify-center {activeProduction
-						? 'bg-amber-600/20'
-						: 'bg-emerald-600/20'}"
+			<div class="flex gap-3">
+				{#if data.userCompany}
+					<a
+						href="/company"
+						class="px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
+						       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2"
+					>
+						<FluentBuilding20Filled class="size-4" />
+						<span>My Company</span>
+					</a>
+				{:else}
+					<a
+						href="/company/create"
+						class="px-4 py-2 bg-gradient-to-br from-emerald-700/80 to-emerald-800/80 hover:from-emerald-600/80 hover:to-emerald-700/80
+						       border border-emerald-500/20 rounded-lg text-emerald-300 hover:text-white transition-all duration-300 flex items-center gap-2"
+					>
+						<FluentAdd20Filled class="size-4" />
+						<span>Create Company</span>
+					</a>
+				{/if}
+
+				<a
+					href="/market"
+					class="px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
+					       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2"
 				>
-					<FluentFactory20Filled class="size-5 {activeProduction ? 'text-amber-400' : 'text-emerald-400'}" />
+					<FluentEmojiShoppingCart class="size-4" />
+					<span>Market</span>
+				</a>
+			</div>
+		</div>
+	</div>
+
+	<!-- Stats Overview - Combined and streamlined -->
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+		<!-- Balance -->
+		<div
+			class="relative group overflow-hidden rounded-xl bg-gradient-to-br from-emerald-950/40 to-emerald-900/20 border border-emerald-500/20 p-5"
+		>
+			<div
+				class="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+			></div>
+			<div class="relative flex items-center gap-4">
+				<div
+					class="size-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center"
+				>
+					<FluentMoney20Filled class="size-6 text-emerald-400" />
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Production Status</p>
-					<p class="text-lg font-bold {activeProduction ? 'text-amber-400' : 'text-emerald-400'}">
-						{activeProduction ? "Active" : "Ready"}
-					</p>
+					<p class="text-xs text-emerald-400/70 uppercase tracking-wide font-medium">Balance</p>
+					<p class="text-2xl font-bold text-white">{data.wallet.balance.toLocaleString()}</p>
 				</div>
 			</div>
 		</div>
-
-		{#if data.currentJob}
-			<a
-				href="/factory/{data.currentJob.factoryId}"
-				class="bg-slate-800/50 border border-white/5 rounded-xl p-4 hover:bg-slate-700/50 transition-colors"
-			>
-				<div class="flex items-center gap-3">
-					<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-						<FluentBriefcase20Filled class="size-5 text-blue-400" />
-					</div>
-					<div class="flex-1 min-w-0">
-						<p class="text-xs text-gray-400">Current Job</p>
-						<p class="text-sm font-bold text-white truncate">{data.currentJob.factoryName}</p>
-					</div>
-				</div>
-			</a>
-		{:else}
-			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-				<div class="flex items-center gap-3">
-					<div class="size-10 bg-gray-600/20 rounded-lg flex items-center justify-center">
-						<FluentBriefcase20Filled class="size-5 text-gray-400" />
-					</div>
-					<div>
-						<p class="text-xs text-gray-400">Employment</p>
-						<p class="text-sm font-bold text-gray-300">Unemployed</p>
-					</div>
-				</div>
-			</div>
-		{/if}
 	</div>
 
-	<!-- Current Job Status -->
+	<!-- Current Job Status - Enhanced with gradient -->
 	{#if data.currentJob && jobStatus}
 		<a
 			href="/factory/{data.currentJob.factoryId}"
-			class="block bg-slate-800/50 border border-white/5 rounded-xl p-5 hover:bg-slate-700/50 transition-colors"
+			class="block relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-6
+			       hover:border-blue-500/30 transition-all duration-300 group"
 		>
-			<div class="flex items-center justify-between mb-3">
+			<div
+				class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+			></div>
+
+			<div class="relative flex items-start justify-between mb-4">
 				<div>
-					<h2 class="text-lg font-semibold text-white">{data.currentJob.factoryName}</h2>
+					<h2 class="text-xl font-semibold text-white mb-1">{data.currentJob.factoryName}</h2>
 					<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
 				</div>
 				<div class="text-right">
-					<p class="text-xs text-gray-400">Wage</p>
-					<p class="text-lg font-bold text-green-400">{data.currentJob.wage.toLocaleString()}</p>
+					<p class="text-xs text-gray-400 mb-1">Daily Wage</p>
+					<p class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
+						${data.currentJob.wage.toLocaleString()}
+					</p>
 				</div>
 			</div>
 
 			{#if jobStatus.status === "working"}
-				<div>
+				<div class="relative">
 					<div class="flex justify-between items-center mb-2">
 						<span class="text-sm font-medium text-gray-300">Shift Progress</span>
 						<span class="text-sm font-bold text-amber-400">{jobStatus.text}</span>
 					</div>
-					<div class="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+					<div class="h-3 bg-slate-800 rounded-full overflow-hidden">
 						<div
-							class="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all"
+							class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-500 relative"
 							style="width: {jobStatus.progress}%"
-						></div>
+						>
+							<div
+								class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
+							></div>
+						</div>
 					</div>
 				</div>
 			{:else if jobStatus.status === "complete"}
-				<div class="bg-green-600/10 border border-green-500/20 rounded-lg p-3">
-					<p class="text-green-300 font-medium">✓ {jobStatus.text} Click to collect payment.</p>
+				<div class="bg-gradient-to-r from-emerald-900/30 to-green-900/30 border border-emerald-500/30 rounded-xl p-4">
+					<p class="text-emerald-300 font-medium flex items-center gap-2">
+						<FluentCheckmark20Filled class="size-5" />
+						{jobStatus.text} Click to collect payment.
+					</p>
 				</div>
 			{:else}
-				<div class="bg-blue-600/10 border border-blue-500/20 rounded-lg p-3">
-					<p class="text-blue-300 font-medium">→ {jobStatus.text} Click to start a new shift.</p>
+				<div class="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-xl p-4">
+					<p class="text-blue-300 font-medium flex items-center gap-2">
+						<FluentClock20Filled class="size-5" />
+						{jobStatus.text}
+					</p>
 				</div>
 			{/if}
 		</a>
 	{/if}
 
 	<div class="grid lg:grid-cols-3 gap-6">
+		<!-- Inventory Sidebar - Consolidated Resources & Products -->
 		<div class="space-y-6">
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
-				<div class="flex items-center gap-2">
-					<FluentBox20Filled class="size-5 text-purple-400" />
-					<h2 class="text-lg font-semibold text-white">Resources</h2>
-				</div>
+			<div
+				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-6"
+			>
+				<div class="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl"></div>
 
-				<div class="space-y-2">
-					{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
-						{@const quantity = resourceMap.get(resource) || 0}
-						<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30">
-							<div class="flex items-center gap-2">
-								<span class="text-xl">{resourceIcons[resource]}</span>
-								<span class="font-medium capitalize text-gray-300">{resource}</span>
-							</div>
-							<span
-								class="badge {quantity > 0
-									? 'bg-purple-600/20 text-purple-300 border-purple-500/30'
-									: 'bg-slate-700 text-gray-400 border-slate-600'} font-bold"
+				<div class="relative space-y-6">
+					<!-- Resources Section -->
+					<div>
+						<div class="flex items-center gap-2 mb-4">
+							<div
+								class="size-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center"
 							>
-								{quantity}
-							</span>
-						</div>
-					{/each}
-				</div>
-			</div>
-
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
-				<div class="flex items-center gap-2">
-					<FluentCube20Filled class="size-5 text-purple-400" />
-					<h2 class="text-lg font-semibold text-white">Products</h2>
-				</div>
-
-				<div class="space-y-2">
-					{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
-						{@const quantity = productMap.get(product) || 0}
-						<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg border border-slate-600/30">
-							<div class="flex items-center gap-2">
-								<span class="text-xl">{productIcons[product]}</span>
-								<span class="font-medium capitalize text-gray-300">{product}</span>
+								<FluentBox20Filled class="size-4 text-purple-400" />
 							</div>
-							<span
-								class="badge {quantity > 0
-									? 'bg-green-600/20 text-green-300 border-green-500/30'
-									: 'bg-slate-700 text-gray-400 border-slate-600'} font-bold"
-							>
-								{quantity}
-							</span>
+							<h2 class="text-lg font-semibold text-white">Resources</h2>
 						</div>
-					{/each}
+
+						<div class="space-y-2">
+							{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
+								{@const quantity = resourceMap.get(resource) || 0}
+								<div
+									class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-purple-500/30 transition-colors"
+								>
+									<div class="flex items-center gap-2">
+										<span class="text-lg">{resourceIcons[resource]}</span>
+										<span class="font-medium capitalize text-gray-300">{resource}</span>
+									</div>
+									<span
+										class="px-2.5 py-1 rounded-md text-sm font-bold {quantity > 0
+											? 'bg-purple-500/20 text-purple-300'
+											: 'bg-slate-700 text-gray-500'}"
+									>
+										{quantity}
+									</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+
+					<!-- Products Section -->
+					<div>
+						<div class="flex items-center gap-2 mb-4">
+							<div
+								class="size-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center"
+							>
+								<FluentCube20Filled class="size-4 text-emerald-400" />
+							</div>
+							<h2 class="text-lg font-semibold text-white">Products</h2>
+						</div>
+
+						<div class="space-y-2">
+							{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
+								{@const quantity = productMap.get(product) || 0}
+								<div
+									class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-emerald-500/30 transition-colors"
+								>
+									<div class="flex items-center gap-2">
+										<span class="text-lg">{productIcons[product]}</span>
+										<span class="font-medium capitalize text-gray-300">{product}</span>
+									</div>
+									<span
+										class="px-2.5 py-1 rounded-md text-sm font-bold {quantity > 0
+											? 'bg-emerald-500/20 text-emerald-300'
+											: 'bg-slate-700 text-gray-500'}"
+									>
+										{quantity}
+									</span>
+								</div>
+							{/each}
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
 
+		<!-- Main Content Area -->
 		<div class="lg:col-span-2 space-y-6">
 			<!-- Available Factories -->
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-				<div class="flex items-center justify-between">
-					<div class="flex items-center gap-2">
-						<FluentFactory20Filled class="size-5 text-purple-400" />
-						<h2 class="text-lg font-semibold text-white">Available Factories</h2>
+			<div
+				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-6"
+			>
+				<div class="absolute top-0 left-0 w-96 h-96 bg-blue-600/5 rounded-full blur-3xl"></div>
+
+				<div class="relative space-y-4">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-3">
+							<div
+								class="size-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center"
+							>
+								<FluentFactory20Filled class="size-5 text-blue-400" />
+							</div>
+							<h2 class="text-xl font-semibold text-white">Available Factories</h2>
+						</div>
+						<span class="px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-sm font-medium">
+							{data.availableFactories.length} open
+						</span>
 					</div>
-					<span class="text-sm text-gray-400">{data.availableFactories.length} factories</span>
-				</div>
 
-				<div class="space-y-2 max-h-96 overflow-y-auto">
-					{#each data.availableFactories as factory}
-						<a
-							href="/factory/{factory.id}"
-							class="block bg-slate-700/30 hover:bg-slate-700/50 rounded-xl p-4 border border-slate-600/30 hover:border-slate-500/50 transition-all"
-						>
-							<div class="flex items-center justify-between mb-2">
-								<div class="flex-1">
-									<h3 class="font-semibold text-white">{factory.name}</h3>
-									<p class="text-xs text-gray-400">{factory.companyName} • {factory.stateName}</p>
-								</div>
-								<FluentArrowRight20Filled class="size-5 text-gray-400" />
-							</div>
+					<div class="space-y-3 max-h-[400px] overflow-y-auto pr-2">
+						{#each data.availableFactories as factory}
+							<a
+								href="/factory/{factory.id}"
+								class="block group relative overflow-hidden bg-slate-800/30 hover:bg-slate-800/50 rounded-xl p-4 border border-slate-700/50
+								       hover:border-blue-500/50 transition-all duration-300"
+							>
+								<div
+									class="absolute inset-0 bg-gradient-to-r from-blue-600/0 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity"
+								></div>
 
-							<div class="flex items-center justify-between text-sm">
-								<div class="flex items-center gap-3">
-									<div class="flex items-center gap-1">
-										<FluentMoney20Filled class="size-4 text-green-400" />
-										<span class="text-green-400 font-medium">{factory.workerWage.toLocaleString()}</span>
+								<div class="relative">
+									<div class="flex items-start justify-between mb-3">
+										<div class="flex-1">
+											<h3 class="font-semibold text-white group-hover:text-blue-300 transition-colors">
+												{factory.name}
+											</h3>
+											<p class="text-xs text-gray-400 mt-0.5">{factory.companyName} • {factory.stateName}</p>
+										</div>
+										<FluentArrowRight20Filled
+											class="size-5 text-slate-500 group-hover:text-blue-400 group-hover:translate-x-1 transition-all"
+										/>
 									</div>
-									<div class="flex items-center gap-1">
-										<FluentPeople20Filled class="size-4 text-blue-400" />
-										<span class="text-gray-300">{factory.currentWorkers}/{factory.maxWorkers}</span>
+
+									<div class="flex items-center justify-between">
+										<div class="flex items-center gap-4 text-sm">
+											<div class="flex items-center gap-1.5">
+												<FluentMoney20Filled class="size-4 text-emerald-400" />
+												<span class="text-emerald-400 font-semibold">${factory.workerWage.toLocaleString()}</span>
+											</div>
+											<div class="flex items-center gap-1.5">
+												<FluentPeople20Filled class="size-4 text-blue-400" />
+												<span class="text-gray-300">{factory.currentWorkers}/{factory.maxWorkers}</span>
+											</div>
+										</div>
+										<div class="px-2.5 py-1 rounded-md bg-purple-500/20 text-purple-300 text-xs font-medium capitalize">
+											{factory.factoryType}
+										</div>
 									</div>
 								</div>
-								<div class="badge bg-purple-600/20 text-purple-300 border-purple-500/30 capitalize">
-									{factory.factoryType}
-								</div>
-							</div>
-						</a>
-					{/each}
+							</a>
+						{/each}
+					</div>
 				</div>
 			</div>
 
-			<!-- Production -->
+			<!-- Production Section -->
 			{#if activeProduction}
-				<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-					<div class="flex items-center gap-2">
-						<FluentFactory20Filled class="size-5 text-purple-400" />
-						<h2 class="text-lg font-semibold text-white">Production In Progress</h2>
-					</div>
+				<div
+					class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-950/40 to-orange-950/30 border border-amber-500/30 p-6"
+				>
+					<div class="absolute inset-0 bg-gradient-to-br from-amber-600/10 to-transparent"></div>
 
-					<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-5 space-y-4">
-						<div class="flex items-start gap-4">
-							<span class="text-4xl">{productIcons[activeProduction.productType]}</span>
-							<div class="flex-1">
-								<h3 class="text-xl font-bold text-white capitalize mb-1">{activeProduction.productType}</h3>
-								<p class="text-gray-400">Producing {activeProduction.quantity} units</p>
+					<div class="relative space-y-5">
+						<div class="flex items-center gap-3">
+							<div
+								class="size-10 rounded-xl bg-gradient-to-br from-amber-500/30 to-orange-500/30 flex items-center justify-center"
+							>
+								<FluentFactory20Filled class="size-5 text-amber-400" />
 							</div>
-							<div class="text-right">
-								<p class="text-xs text-gray-400">Remaining</p>
-								<p class="text-2xl font-bold text-amber-400">{timeRemaining}</p>
-							</div>
+							<h2 class="text-xl font-semibold text-white">Production In Progress</h2>
 						</div>
 
-						<div>
-							<div class="flex justify-between items-center mb-2">
-								<span class="text-sm font-medium text-gray-300">Progress</span>
-								<span class="text-sm font-bold text-white">{Math.floor(productionProgress)}%</span>
+						<div class="bg-slate-900/50 backdrop-blur-sm rounded-xl p-5 space-y-5 border border-amber-500/20">
+							<div class="flex items-start gap-4">
+								<span class="text-5xl">{productIcons[activeProduction.productType]}</span>
+								<div class="flex-1">
+									<h3 class="text-2xl font-bold text-white capitalize mb-1">{activeProduction.productType}</h3>
+									<p class="text-gray-400">Manufacturing {activeProduction.quantity} units</p>
+								</div>
+								<div class="text-right">
+									<p class="text-xs text-amber-400/70 uppercase tracking-wide font-medium mb-1">Time Left</p>
+									<p
+										class="text-3xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent"
+									>
+										{timeRemaining}
+									</p>
+								</div>
 							</div>
-							<div class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
-								<div
-									class="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000"
-									style="width: {productionProgress}%"
-								></div>
+
+							<div>
+								<div class="flex justify-between items-center mb-2">
+									<span class="text-sm font-medium text-gray-300">Production Progress</span>
+									<span class="text-sm font-bold text-amber-400">{Math.floor(productionProgress)}%</span>
+								</div>
+								<div class="h-4 bg-slate-800 rounded-full overflow-hidden">
+									<div
+										class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-1000 relative"
+										style="width: {productionProgress}%"
+									>
+										<div
+											class="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-pulse"
+										></div>
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -383,133 +437,145 @@
 					method="POST"
 					action="?/startProduction"
 					use:enhance
-					class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-5"
+					class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-6"
 				>
-					<div class="flex items-center gap-2">
-						<FluentProduction20Filled class="size-5 text-purple-400" />
-						<h2 class="text-lg font-semibold text-white">Start Production</h2>
-					</div>
+					<div class="absolute top-0 right-0 w-96 h-96 bg-purple-600/5 rounded-full blur-3xl"></div>
 
-					<div>
-						<label for="productType" class="block text-sm font-medium text-gray-300 mb-2">
-							Product Type <span class="text-red-400">*</span>
-						</label>
-						<select
-							id="productType"
-							name="productType"
-							bind:value={selectedProduct}
-							class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-						>
-							{#each Object.keys(data.recipes) as product}
-								<option value={product}>
-									{productIcons[product]}
-									{product.charAt(0).toUpperCase() + product.slice(1)}
-								</option>
-							{/each}
-						</select>
-					</div>
-
-					<div>
-						<label for="quantity" class="block text-sm font-medium text-gray-300 mb-2">
-							Batch Size: <span class="text-white font-bold">×{productionQuantity}</span>
-						</label>
-						<input
-							type="range"
-							id="quantity"
-							name="quantity"
-							min="1"
-							max="10"
-							bind:value={productionQuantity}
-							class="range range-primary w-full"
-						/>
-						<div class="flex justify-between text-xs text-gray-400 px-2 mt-1">
-							<span>1</span>
-							<span>5</span>
-							<span>10</span>
+					<div class="relative space-y-6">
+						<div class="flex items-center gap-3">
+							<div
+								class="size-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center"
+							>
+								<FluentProduction20Filled class="size-5 text-purple-400" />
+							</div>
+							<h2 class="text-xl font-semibold text-white">Start Production</h2>
 						</div>
-					</div>
 
-					{#if data.recipes[selectedProduct]}
-						<div class="bg-slate-700/30 rounded-xl p-5 space-y-4 border border-slate-600/30">
-							<div class="flex items-center justify-between">
-								<h3 class="font-semibold text-white">Production Recipe</h3>
-								<div class="badge bg-purple-600/20 text-purple-300 border-purple-500/30">
-									×{productionQuantity} batch{productionQuantity > 1 ? "es" : ""}
-								</div>
-							</div>
-
-							<div class="bg-green-600/10 border-2 border-green-500/30 rounded-lg p-4">
-								<p class="text-xs font-semibold text-green-400 mb-2">OUTPUT</p>
-								<div class="flex items-center gap-3">
-									<span class="text-3xl">{productIcons[selectedProduct]}</span>
-									<div>
-										<p class="text-2xl font-bold text-green-400">
-											{data.recipes[selectedProduct].output * productionQuantity}
-										</p>
-										<p class="text-sm text-gray-300 capitalize">{selectedProduct}</p>
+						<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+							{#each Object.keys(data.recipes) as product}
+								<button
+									type="button"
+									onclick={() => (selectedProduct = product as keyof typeof data.recipes)}
+									class="relative p-3 rounded-lg border-2 transition-all duration-200 text-center group
+										       {selectedProduct === product
+										? 'bg-purple-500/20 border-purple-500/60 shadow-lg shadow-purple-500/20'
+										: 'bg-slate-800/30 border-slate-700/50 hover:border-slate-600/70 hover:bg-slate-800/50'}"
+								>
+									<input
+										type="radio"
+										name="productType"
+										value={product}
+										checked={selectedProduct === product}
+										class="sr-only"
+									/>
+									<div class="text-3xl mb-1">{productIcons[product]}</div>
+									<div
+										class="text-xs font-medium capitalize {selectedProduct === product
+											? 'text-purple-300'
+											: 'text-gray-400 group-hover:text-gray-300'}"
+									>
+										{product}
 									</div>
-								</div>
-							</div>
+								</button>
+							{/each}
+						</div>
 
-							<div class="space-y-2">
-								<p class="text-xs font-semibold text-gray-400">REQUIRED RESOURCES</p>
+						<div>
+							<label for="quantity" class="block text-sm font-medium text-gray-300 mb-3">
+								Batch Size: <span class="text-white font-bold">×{productionQuantity}</span>
+							</label>
+							<input
+								type="range"
+								id="quantity"
+								name="quantity"
+								min="1"
+								max="10"
+								bind:value={productionQuantity}
+								class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+							/>
+							<div class="flex justify-between text-xs text-gray-500 mt-1 px-1">
+								<span>1</span>
+								<span>5</span>
+								<span>10</span>
+							</div>
+						</div>
+
+						{#if data.recipes[selectedProduct]}
+							<h4 class="text-xs font-medium text-slate-400 mb-2.5 uppercase tracking-wide">Resources Required</h4>
+							<div class="bg-slate-900/30 rounded-lg p-3 space-y-1.5 border border-slate-700/30">
 								{#each Object.entries(data.recipes[selectedProduct].inputs) as [resource, amount]}
 									{@const available = resourceMap.get(resource) || 0}
 									{@const needed = amount * productionQuantity}
 									{@const hasEnough = available >= needed}
-									<div
-										class="flex items-center justify-between p-3 rounded-lg border-2 {hasEnough
-											? 'bg-green-600/5 border-green-500/20'
-											: 'bg-red-600/5 border-red-500/20'}"
-									>
-										<div class="flex items-center gap-2">
-											<span class="text-lg">{resourceIcons[resource]}</span>
-											<span class="font-medium capitalize text-gray-300">{resource}</span>
-										</div>
-										<div class="text-right">
-											<p class="font-bold {hasEnough ? 'text-green-400' : 'text-red-400'}">
-												{needed} needed
-											</p>
-											<p class="text-xs text-gray-400">{available} available</p>
-										</div>
+									<div class="flex justify-between text-xs items-center">
+										<span class="text-slate-400 flex items-center gap-1.5">
+											<span class="text-sm opacity-80">{resourceIcons[resource]}</span>
+											<span class="capitalize">{resource}</span>
+										</span>
+										<span class="font-mono text-xs" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
+											{needed.toLocaleString()}
+											<span class="text-slate-600">/ {available.toLocaleString()}</span>
+											{#if hasEnough}
+												<span class="text-emerald-400 ml-1">✓</span>
+											{:else}
+												<span class="text-red-400 ml-1">✗</span>
+											{/if}
+										</span>
 									</div>
 								{/each}
 							</div>
 
-							<div class="flex items-center justify-between p-3 bg-slate-700/50 rounded-lg">
+							{#if !canProduce}
+								<div class="mt-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
+									<span class="text-xs text-red-400">⚠️ Insufficient resources</span>
+								</div>
+							{/if}
+
+							<div class="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
 								<div class="flex items-center gap-2">
-									<FluentClock20Filled class="size-4 text-gray-400" />
+									<FluentClock20Filled class="size-5 text-gray-400" />
 									<span class="text-sm text-gray-400">Production Time</span>
 								</div>
-								<span class="font-bold text-white">
-									{Math.floor((data.recipes[selectedProduct].duration * productionQuantity) / 60)} minutes
+								<span class="font-bold text-white text-lg">
+									{Math.floor((data.recipes[selectedProduct].duration * productionQuantity) / 60)} min
 								</span>
 							</div>
-						</div>
-					{/if}
-
-					<button
-						type="submit"
-						disabled={!canProduce}
-						class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
-					>
-						{#if canProduce}
-							<FluentCheckmark20Filled class="size-5" />
-							Start Production
-						{:else}
-							<FluentWarning20Filled class="size-5" />
-							Insufficient Resources
 						{/if}
-					</button>
 
-					{#if !canProduce}
-						<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">
-							<p class="text-sm text-amber-300">
-								<FluentWarning20Filled class="inline size-4" />
-								You need more resources to start this production. Work at a factory to earn resources and wages.
-							</p>
-						</div>
-					{/if}
+						<button
+							type="submit"
+							disabled={!canProduce}
+							class="w-full py-4 rounded-xl font-semibold text-white transition-all duration-300
+							       {canProduce
+								? 'bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 hover:from-purple-500 hover:via-blue-500 hover:to-cyan-500 shadow-lg shadow-purple-500/25'
+								: 'bg-slate-700 text-slate-400 cursor-not-allowed'}"
+						>
+							{#if canProduce}
+								<span class="flex items-center justify-center gap-2">
+									<FluentCheckmark20Filled class="size-5" />
+									Start Production
+								</span>
+							{:else}
+								<span class="flex items-center justify-center gap-2">
+									<FluentWarning20Filled class="size-5" />
+									Insufficient Resources
+								</span>
+							{/if}
+						</button>
+
+						{#if !canProduce}
+							<div
+								class="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-4"
+							>
+								<p class="text-sm text-amber-300 flex items-start gap-2">
+									<FluentWarning20Filled class="size-5 flex-shrink-0 mt-0.5" />
+									<span
+										>You need more resources to start this production. Work at a factory to earn resources and wages.</span
+									>
+								</p>
+							</div>
+						{/if}
+					</div>
 				</form>
 			{/if}
 		</div>

@@ -1,529 +1,389 @@
 <script lang="ts">
-	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
-	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
-	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
-	import FluentPlay20Filled from "~icons/fluent/play-20-filled";
-	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import * as m from "$lib/paraglide/messages";
 	import { enhance } from "$app/forms";
+	import { formatDate } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
 
 	let isJoining = $state(false);
 	let isExecuting = $state(false);
-
-	function formatDate(date: string) {
-		return new Date(date).toLocaleDateString("en-US", {
-			month: "short",
-			day: "numeric",
-			hour: "2-digit",
-			minute: "2-digit"
-		});
-	}
-
-	function getRegionName(id: number) {
-		const key = `region_${id}`;
-		return m[key]?.() || `Region ${id}`;
-	}
-
-	function getPhaseColor(phase: string) {
-		switch (phase) {
-			case "preparation":
-				return "bg-blue-500/20 border-blue-500/30 text-blue-400";
-			case "active":
-				return "bg-amber-500/20 border-amber-500/30 text-amber-400";
-			case "ended":
-				return "bg-gray-500/20 border-gray-500/30 text-gray-400";
-			default:
-				return "bg-gray-500/20 border-gray-500/30 text-gray-400";
-		}
-	}
-
-	function getStatusColor(status: string) {
-		switch (status) {
-			case "ongoing":
-				return "bg-emerald-500/20 border-emerald-500/30 text-emerald-400";
-			case "attacker_won":
-				return "bg-red-500/20 border-red-500/30 text-red-400";
-			case "defender_won":
-				return "bg-blue-500/20 border-blue-500/30 text-blue-400";
-			default:
-				return "bg-gray-500/20 border-gray-500/30 text-gray-400";
-		}
-	}
-
-	function getStrengthColor(percent: number) {
-		if (percent > 70) return "bg-emerald-500";
-		if (percent > 30) return "bg-amber-500";
-		return "bg-red-500";
-	}
-
-	function getCombatWidthColor(current: number, max: number): string {
-		const percent = (current / max) * 100;
-		if (percent > 90) return "text-red-400";
-		if (percent > 75) return "text-amber-400";
-		return "text-emerald-400";
-	}
-
-	function getUnitWidth(unitType: string): number {
-		const widths: Record<string, number> = {
-			infantry: 2,
-			armor: 3,
-			mechanized: 2,
-			artillery: 3,
-			air_defence: 2,
-			bomber_squadron: 0,
-			fighter_squadron: 0
-		};
-		return widths[unitType] || 2;
-	}
+	let selectedUnitId = $state<number | null>(null);
 
 	function getTimeRemaining(endsAt: string): string {
 		const now = new Date().getTime();
 		const end = new Date(endsAt).getTime();
 		const diff = end - now;
 
-		if (diff <= 0) return "Ready";
+		if (diff <= 0) return "Phase Over";
 
 		const hours = Math.floor(diff / (1000 * 60 * 60));
 		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-		return `${hours}h ${minutes}m`;
+		return `${hours}h ${minutes}m remaining`;
 	}
 
 	const attackerUnits = $derived(
-		data.battle.participants.filter((p) => p.side === "attacker" && p.currentStrength > 0)
-	);
-	const defenderUnits = $derived(
-		data.battle.participants.filter((p) => p.side === "defender" && p.currentStrength > 0)
+		data.battle.participants
+			.filter((p) => p.side === "attacker" && p.currentStrength > 0)
+			.sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime())
 	);
 
-	const engagedAttackers = $derived(attackerUnits.filter((p) => p.isEngaged));
-	const engagedDefenders = $derived(defenderUnits.filter((p) => p.isEngaged));
+	const defenderUnits = $derived(
+		data.battle.participants
+			.filter((p) => p.side === "defender" && p.currentStrength > 0)
+			.sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime())
+	);
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-	<!-- Battle Header -->
-	<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
-		<div class="flex items-start justify-between mb-4">
-			<div>
-				<div class="flex items-center gap-3 mb-2">
-					<FluentFire20Filled class="size-8 text-red-500" />
-					<h1 class="text-3xl font-bold text-white">
-						Battle of {getRegionName(data.battle.region.id)}
-					</h1>
-					<span class="px-3 py-1 rounded-full text-sm font-medium border {getPhaseColor(data.battle.phase)}">
-						{data.battle.phase}
-					</span>
-					<span class="px-3 py-1 rounded-full text-sm font-medium border {getStatusColor(data.battle.status)}">
-						{data.battle.status.replace("_", " ")}
-					</span>
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+	<div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
+		<!-- Battle Header with Gradient -->
+		<div
+			class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl"
+		>
+			<div class="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-blue-500/5"></div>
+			<div class="relative p-8">
+				<div class="flex items-center justify-between mb-6">
+					<div>
+						<h1
+							class="text-4xl font-bold text-white mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
+						>
+							Battle of Region {data.battle.regionId}
+						</h1>
+					</div>
 				</div>
-				<div class="flex items-center gap-4 text-sm">
-					<div class="flex items-center gap-2 text-gray-400">
-						<FluentCalendar20Filled class="size-4" />
-						<span>Started {formatDate(data.battle.startedAt)}</span>
+
+				<!-- Phase Timer -->
+				{#if data.battle.phase === "preparation"}
+					<div class="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-400/30 rounded-xl p-6 mb-6">
+						<div class="flex items-center justify-between mb-3">
+							<h3 class="text-xl font-bold text-blue-300">⏱️ Preparation Phase</h3>
+							<div class="text-2xl font-mono font-bold text-white">
+								{getTimeRemaining(data.preparationEndsAt)}
+							</div>
+						</div>
+						<p class="text-gray-300">Deploy your units now! Combat begins automatically when the timer ends.</p>
 					</div>
-					<div class="px-3 py-1 bg-slate-700 rounded-lg text-gray-300">
-						Terrain: <span class="text-white font-medium capitalize">{data.battle.terrain}</span>
+				{/if}
+
+				<!-- Battle Stats -->
+				<div class="grid grid-cols-2 gap-4 mb-6">
+					<div class="bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/30 rounded-xl p-6">
+						<div class="text-red-400 text-sm font-medium mb-2">⚔️ ATTACKERS</div>
+						<div class="text-3xl font-bold text-white mb-1">{attackerUnits.length}</div>
+						<div class="text-sm text-gray-400">{data.battle.attackerState.name}</div>
 					</div>
-					{#if data.fortificationBonus > 0}
-						<div class="px-3 py-1 bg-blue-600/20 border border-blue-500/30 rounded-lg text-blue-400">
-							<FluentShield20Filled class="size-4 inline mr-1" />
-							Fortifications: Lv{data.fortificationBonus}
+					<div class="bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/30 rounded-xl p-6">
+						<div class="text-blue-400 text-sm font-medium mb-2">🛡️ DEFENDERS</div>
+						<div class="text-3xl font-bold text-white mb-1">{defenderUnits.length}</div>
+						<div class="text-sm text-gray-400">{data.battle.defenderState.name}</div>
+					</div>
+				</div>
+
+				{#if data.fortificationBonus > 0}
+					<div class="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-400/30 rounded-xl p-4">
+						<div class="flex items-center gap-2 text-blue-300">
+							<span class="text-lg">🏰</span>
+							<span class="font-medium">Fortification Level {data.fortificationBonus}</span>
+							<span class="text-sm text-gray-400"
+								>(-{Math.min(50, data.fortificationBonus * 2)}% damage to defenders)</span
+							>
+						</div>
+					</div>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Deploy Units Section -->
+		{#if data.userSide}
+			<div
+				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl"
+			>
+				<div class="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-pink-500/5"></div>
+				<div class="relative p-8">
+					<h2
+						class="text-2xl font-bold text-white mb-6 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent"
+					>
+						🚀 Deploy Your Units
+					</h2>
+
+					<!-- Debug Info -->
+					<div class="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+						<div class="text-sm text-gray-400 space-y-1">
+							<div>Your Side: <span class="text-white font-medium">{data.userSide}</span></div>
+							<div>Available Units: <span class="text-white font-medium">{data.userUnits.length}</span></div>
+							<div>Can Join: <span class="text-white font-medium">{data.canJoin ? "YES ✓" : "NO ✗"}</span></div>
+							{#if !data.canJoin && data.userSide}
+								<div class="text-amber-400 mt-2">
+									⚠️ {data.userUnits.length === 0 ? "No eligible units in this region" : "Unknown deployment issue"}
+								</div>
+							{/if}
+						</div>
+					</div>
+
+					{#if data.canJoin && data.userUnits.length > 0}
+						<!-- Unit Selection -->
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+							{#each data.userUnits as unit}
+								<button
+									type="button"
+									onclick={() => (selectedUnitId = unit.id)}
+									class="relative group p-5 rounded-xl border-2 transition-all duration-300 text-left {selectedUnitId ===
+									unit.id
+										? 'bg-gradient-to-br from-purple-500/20 to-pink-500/20 border-purple-400/50 scale-[1.02]'
+										: 'bg-slate-800/50 border-slate-700/50 hover:border-slate-600/50 hover:scale-[1.01]'}"
+								>
+									<div
+										class="absolute inset-0 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
+									></div>
+									<div class="relative">
+										<div class="text-sm font-medium text-gray-400 mb-1">{unit.unitType}</div>
+										<div class="text-lg font-bold text-white mb-3">{unit.name}</div>
+										<div class="flex items-center gap-3 text-sm">
+											<div class="flex items-center gap-1">
+												<span class="text-red-400">⚔️</span>
+												<span class="text-white font-medium">{unit.attack}</span>
+											</div>
+											<div class="flex items-center gap-1">
+												<span class="text-blue-400">🛡️</span>
+												<span class="text-white font-medium">{unit.defense}</span>
+											</div>
+											<div class="flex items-center gap-1">
+												<span class="text-emerald-400">❤️</span>
+												<span class="text-white font-medium">{unit.health}%</span>
+											</div>
+										</div>
+									</div>
+								</button>
+							{/each}
+						</div>
+
+						<!-- Deploy Button -->
+						{#if selectedUnitId}
+							<form
+								method="POST"
+								action="?/assignUnit"
+								use:enhance={() => {
+									isJoining = true;
+									return async ({ update }) => {
+										await update();
+										isJoining = false;
+										selectedUnitId = null;
+									};
+								}}
+							>
+								<input type="hidden" name="unitId" value={selectedUnitId} />
+								<button
+									type="submit"
+									disabled={isJoining}
+									class="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:from-gray-600 disabled:to-gray-700 rounded-xl text-white font-bold text-lg shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:scale-100"
+								>
+									{isJoining ? "🚀 Deploying..." : "🚀 Deploy Selected Unit"}
+								</button>
+							</form>
+						{:else}
+							<div class="text-center py-6 text-gray-400">👆 Select a unit above to deploy</div>
+						{/if}
+					{:else if data.userUnits.length === 0}
+						<div class="text-center py-12">
+							<div class="text-6xl mb-4">🏜️</div>
+							<p class="text-xl text-gray-400 mb-2">No units available in this region</p>
+							<p class="text-sm text-gray-500">Train or move units to Region {data.battle.regionId}</p>
 						</div>
 					{/if}
 				</div>
 			</div>
-			<a
-				href="/war/{data.battle.war.id}"
-				class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-white transition-colors"
+		{:else}
+			<div
+				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl"
 			>
-				View War
-			</a>
-		</div>
-
-		<!-- Phase Information -->
-		{#if data.battle.phase === "preparation"}
-			<div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
-				<div class="flex items-center justify-between mb-2">
-					<div class="flex items-center gap-2 text-blue-400">
-						<FluentWarning20Filled class="size-5" />
-						<span class="font-medium">Preparation Phase (24 hours)</span>
-					</div>
-					<div class="text-white font-mono text-lg">
-						{getTimeRemaining(data.preparationEndsAt)}
-					</div>
+				<div class="relative p-12 text-center">
+					<div class="text-6xl mb-4">🚫</div>
+					<p class="text-xl text-gray-400">You are not a citizen of either warring state</p>
 				</div>
-				<p class="text-sm text-gray-300">
-					Both sides can deploy units. Combat begins automatically when preparation ends.
-				</p>
-			</div>
-		{:else if data.battle.phase === "active"}
-			<div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4 mb-4">
-				<div class="flex items-center gap-2 text-amber-400 mb-2">
-					<FluentFire20Filled class="size-5" />
-					<span class="font-medium">Active Combat</span>
-				</div>
-				<p class="text-sm text-gray-300">
-					Battle is active! Units deal damage each round. Earliest deployed units fight first (within combat width).
-				</p>
 			</div>
 		{/if}
 
-		<!-- Fortification Info -->
-		{#if data.fortificationBonus > 0}
-			<div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-4">
-				<div class="flex items-center gap-2 text-blue-400 mb-2">
-					<FluentShield20Filled class="size-5" />
-					<span class="font-medium">Defender Fortification Bonus</span>
+		<!-- Combat Control -->
+		{#if data.battle.phase === "active"}
+			<div
+				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-red-800/90 to-orange-900/90 backdrop-blur-xl border border-red-500/30 shadow-2xl"
+			>
+				<div class="absolute inset-0 bg-gradient-to-br from-red-500/10 via-transparent to-orange-500/10"></div>
+				<div class="relative p-8">
+					<h2 class="text-2xl font-bold text-white mb-6">⚡ Execute Combat Round</h2>
+					<form
+						method="POST"
+						action="?/executeCombatRound"
+						use:enhance={() => {
+							isExecuting = true;
+							return async ({ update }) => {
+								await update();
+								isExecuting = false;
+							};
+						}}
+					>
+						<button
+							type="submit"
+							disabled={isExecuting}
+							class="w-full px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 rounded-xl text-white font-bold text-lg shadow-lg transition-all duration-300 hover:scale-[1.02] disabled:scale-100"
+						>
+							{isExecuting ? "⚔️ Fighting..." : "⚔️ Execute Combat Round"}
+						</button>
+					</form>
 				</div>
-				<p class="text-sm text-gray-300">
-					Fortifications reduce damage to defenders by {Math.min(50, data.fortificationBonus * 2)}%
-				</p>
 			</div>
 		{/if}
 
-		<!-- Combat Width -->
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-			<div class="bg-slate-700/30 rounded-lg p-4 border border-red-500/20">
-				<div class="flex items-center justify-between mb-2">
-					<span class="text-sm font-medium text-red-400">Attacker Combat Width</span>
-					<span
-						class={getCombatWidthColor(data.attackerStats.combatWidth, data.attackerStats.maxCombatWidth) +
-							" font-mono font-bold"}
-					>
-						{data.attackerStats.combatWidth}/{data.attackerStats.maxCombatWidth}
-					</span>
-				</div>
-				<div class="w-full h-3 bg-slate-600 rounded-full overflow-hidden mb-2">
-					<div
-						class="h-full bg-gradient-to-r from-red-500 to-red-600 transition-all"
-						style="width: {Math.min(100, (data.attackerStats.combatWidth / data.attackerStats.maxCombatWidth) * 100)}%"
-					></div>
-				</div>
-				<div class="grid grid-cols-2 gap-2 text-xs">
-					<div class="text-gray-400">
-						Engaged: <span class="text-white">{data.attackerStats.engagedUnits}</span>
-					</div>
-					<div class="text-gray-400">
-						Reserve: <span class="text-white">{data.attackerStats.activeUnits - data.attackerStats.engagedUnits}</span>
-					</div>
-				</div>
-			</div>
-
-			<div class="bg-slate-700/30 rounded-lg p-4 border border-blue-500/20">
-				<div class="flex items-center justify-between mb-2">
-					<span class="text-sm font-medium text-blue-400">Defender Combat Width</span>
-					<span
-						class={getCombatWidthColor(data.defenderStats.combatWidth, data.defenderStats.maxCombatWidth) +
-							" font-mono font-bold"}
-					>
-						{data.defenderStats.combatWidth}/{data.defenderStats.maxCombatWidth}
-					</span>
-				</div>
-				<div class="w-full h-3 bg-slate-600 rounded-full overflow-hidden mb-2">
-					<div
-						class="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all"
-						style="width: {Math.min(100, (data.defenderStats.combatWidth / data.defenderStats.maxCombatWidth) * 100)}%"
-					></div>
-				</div>
-				<div class="grid grid-cols-2 gap-2 text-xs">
-					<div class="text-gray-400">
-						Engaged: <span class="text-white">{data.defenderStats.engagedUnits}</span>
-					</div>
-					<div class="text-gray-400">
-						Reserve: <span class="text-white">{data.defenderStats.activeUnits - data.defenderStats.engagedUnits}</span>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Battle Statistics -->
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-			<div class="bg-slate-700/30 rounded-lg p-4 border border-red-500/20">
-				<div class="flex items-center gap-2 mb-3">
-					<FluentShield20Filled class="size-5 text-red-500" />
-					<span class="text-sm font-medium text-red-400">Attacker - {data.battle.attackerState.name}</span>
-				</div>
-				<div class="grid grid-cols-3 gap-2 text-xs">
-					<div class="text-center">
-						<div class="text-gray-400">Units</div>
-						<div class="text-white font-bold text-lg">{data.attackerStats.activeUnits}</div>
-					</div>
-					<div class="text-center">
-						<div class="text-gray-400">Damage Dealt</div>
-						<div class="text-white font-bold text-lg">{data.attackerStats.totalDamageDealt}</div>
-					</div>
-					<div class="text-center">
-						<div class="text-gray-400">Losses</div>
-						<div class="text-red-400 font-bold text-lg">{data.attackerStats.destroyedUnits}</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="bg-slate-700/30 rounded-lg p-4 border border-blue-500/20">
-				<div class="flex items-center gap-2 mb-3">
-					<FluentShield20Filled class="size-5 text-blue-500" />
-					<span class="text-sm font-medium text-blue-400">Defender - {data.battle.defenderState.name}</span>
-				</div>
-				<div class="grid grid-cols-3 gap-2 text-xs">
-					<div class="text-center">
-						<div class="text-gray-400">Units</div>
-						<div class="text-white font-bold text-lg">{data.defenderStats.activeUnits}</div>
-					</div>
-					<div class="text-center">
-						<div class="text-gray-400">Damage Dealt</div>
-						<div class="text-white font-bold text-lg">{data.defenderStats.totalDamageDealt}</div>
-					</div>
-					<div class="text-center">
-						<div class="text-gray-400">Losses</div>
-						<div class="text-red-400 font-bold text-lg">{data.defenderStats.destroyedUnits}</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Assign Units -->
-	{#if data.canJoin && data.userUnits.length > 0}
-		<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
-			<h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-				<FluentAdd20Filled class="size-6" />
-				Deploy Units to Battle
-			</h2>
-			<form
-				method="POST"
-				action="?/assignUnit"
-				use:enhance={() => {
-					isJoining = true;
-					return async ({ update }) => {
-						await update();
-						isJoining = false;
-					};
-				}}
-				class="space-y-4"
+		<!-- Battle Participants -->
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+			<!-- Attackers -->
+			<div
+				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl"
 			>
-				<select
-					name="unitId"
-					required
-					class="w-full px-4 py-3 bg-slate-700 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500"
-				>
-					<option value="">Select a unit...</option>
-					{#each data.userUnits as unit}
-						<option value={unit.id}>
-							{unit.name} - {unit.unitType} (Width: {getUnitWidth(unit.unitType)}) - ATK: {unit.attack} | DEF: {unit.defense}
-						</option>
-					{/each}
-				</select>
-				<button
-					type="submit"
-					disabled={isJoining}
-					class="w-full px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 rounded-lg text-white font-medium transition-colors"
-				>
-					{isJoining ? "Deploying..." : "Deploy Unit"}
-				</button>
-			</form>
-		</div>
-	{/if}
+				<div class="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-red-600/5"></div>
+				<div class="relative p-6">
+					<h3 class="text-xl font-bold text-red-400 mb-4">⚔️ Attackers ({attackerUnits.length})</h3>
+					<div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+						{#each attackerUnits as unit, index}
+							<div
+								class="relative overflow-hidden p-4 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border {unit.isEngaged
+									? 'border-red-400/50 shadow-lg shadow-red-500/20'
+									: 'border-slate-700/50'}"
+							>
+								{#if unit.isEngaged}
+									<div class="absolute inset-0 bg-gradient-to-r from-red-500/10 to-transparent"></div>
+								{/if}
+								<div class="relative flex items-center justify-between mb-2">
+									<div>
+										<div class="flex items-center gap-2 mb-1">
+											<span class="text-xs font-mono text-gray-500">#{index + 1}</span>
+											<span class="font-bold text-white">{unit.unit.name}</span>
+											{#if unit.isEngaged}
+												<span
+													class="px-2 py-0.5 bg-red-500/20 border border-red-400/30 rounded text-xs text-red-300 font-medium"
+												>
+													ENGAGED
+												</span>
+											{/if}
+										</div>
+										<div class="text-sm text-gray-400">
+											{unit.unit.owner.profile?.name || "Unknown"}
+										</div>
+									</div>
+									<div class="text-right">
+										<div class="text-xs text-gray-400">ATK</div>
+										<div class="text-2xl font-bold text-red-400">{unit.unit.attack}</div>
+									</div>
+								</div>
+								<div class="relative">
+									<div class="flex items-center justify-between text-xs text-gray-400 mb-1">
+										<span>Strength</span>
+										<span class="text-white font-medium">{unit.currentStrength}%</span>
+									</div>
+									<div class="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+										<div
+											class="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500"
+											style="width: {unit.currentStrength}%"
+										></div>
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
 
-	<!-- Combat Controls -->
-	{#if data.battle.phase === "active"}
-		<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
-			<h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-				<FluentFire20Filled class="size-6 text-red-500" />
-				Combat Control
-			</h2>
-
-			<form
-				method="POST"
-				action="?/executeCombatRound"
-				use:enhance={() => {
-					isExecuting = true;
-					return async ({ update }) => {
-						await update();
-						isExecuting = false;
-					};
-				}}
+			<!-- Defenders -->
+			<div
+				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl"
 			>
-				<button
-					type="submit"
-					disabled={isExecuting}
-					class="w-full px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 rounded-lg text-white font-medium transition-colors flex items-center justify-center gap-2"
-				>
-					<FluentFire20Filled class="size-5" />
-					{isExecuting ? "Executing..." : "Execute Combat Round"}
-				</button>
-			</form>
-		</div>
-	{/if}
-
-	<!-- Battle Participants -->
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-		<!-- Attackers -->
-		<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
-			<h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-				<FluentShield20Filled class="size-5 text-red-500" />
-				Attacking Forces ({attackerUnits.length})
-			</h2>
-			<div class="space-y-2 max-h-96 overflow-y-auto">
-				{#each attackerUnits as participant, index}
-					<div
-						class="bg-slate-700/30 rounded-lg p-3 border {participant.isEngaged
-							? 'border-red-500/50'
-							: 'border-white/5'}"
-					>
-						<div class="flex items-center justify-between mb-2">
-							<div class="font-medium text-white flex items-center gap-2">
-								<span class="text-xs text-gray-500">#{index + 1}</span>
-								{participant.unit.name}
-								<span class="text-sm text-gray-400">
-									- {participant.unit.owner.profile?.name || "Unknown"}
-								</span>
-							</div>
-							<div class="flex items-center gap-2">
-								{#if participant.isEngaged}
-									<span class="px-2 py-1 bg-red-500/20 border border-red-500/30 rounded text-xs text-red-400">
-										ENGAGED
-									</span>
+				<div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-blue-600/5"></div>
+				<div class="relative p-6">
+					<h3 class="text-xl font-bold text-blue-400 mb-4">🛡️ Defenders ({defenderUnits.length})</h3>
+					<div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+						{#each defenderUnits as unit, index}
+							<div
+								class="relative overflow-hidden p-4 rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border {unit.isEngaged
+									? 'border-blue-400/50 shadow-lg shadow-blue-500/20'
+									: 'border-slate-700/50'}"
+							>
+								{#if unit.isEngaged}
+									<div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-transparent"></div>
 								{/if}
-								<span class="text-xs px-2 py-1 bg-slate-600 rounded text-gray-300">
-									W:{getUnitWidth(participant.unit.unitType)}
-								</span>
-							</div>
-						</div>
-						<div class="space-y-1 text-xs">
-							<div class="flex items-center gap-2">
-								<span class="text-gray-400 w-24">Strength:</span>
-								<div class="flex-1 h-2 bg-slate-600 rounded-full overflow-hidden">
-									<div
-										class="h-full {getStrengthColor(participant.currentStrength)}"
-										style="width: {participant.currentStrength}%"
-									></div>
+								<div class="relative flex items-center justify-between mb-2">
+									<div>
+										<div class="flex items-center gap-2 mb-1">
+											<span class="text-xs font-mono text-gray-500">#{index + 1}</span>
+											<span class="font-bold text-white">{unit.unit.name}</span>
+											{#if unit.isEngaged}
+												<span
+													class="px-2 py-0.5 bg-blue-500/20 border border-blue-400/30 rounded text-xs text-blue-300 font-medium"
+												>
+													ENGAGED
+												</span>
+											{/if}
+										</div>
+										<div class="text-sm text-gray-400">
+											{unit.unit.owner.profile?.name || "Unknown"}
+										</div>
+									</div>
+									<div class="text-right">
+										<div class="text-xs text-gray-400">DEF</div>
+										<div class="text-2xl font-bold text-blue-400">{unit.unit.defense}</div>
+									</div>
 								</div>
-								<span class="text-white w-12">{participant.currentStrength}%</span>
+								<div class="relative">
+									<div class="flex items-center justify-between text-xs text-gray-400 mb-1">
+										<span>Strength</span>
+										<span class="text-white font-medium">{unit.currentStrength}%</span>
+									</div>
+									<div class="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+										<div
+											class="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-500"
+											style="width: {unit.currentStrength}%"
+										></div>
+									</div>
+								</div>
 							</div>
-							<div class="flex items-center gap-2 text-xs text-gray-400">
-								<span>ATK: {participant.unit.attack}</span>
-								<span>•</span>
-								<span>Joined: {formatDate(participant.joinedAt)}</span>
-							</div>
-						</div>
+						{/each}
 					</div>
-				{/each}
+				</div>
 			</div>
 		</div>
 
-		<!-- Defenders -->
-		<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
-			<h2 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
-				<FluentShield20Filled class="size-5 text-blue-500" />
-				Defending Forces ({defenderUnits.length})
-			</h2>
-			<div class="space-y-2 max-h-96 overflow-y-auto">
-				{#each defenderUnits as participant, index}
-					<div
-						class="bg-slate-700/30 rounded-lg p-3 border {participant.isEngaged
-							? 'border-blue-500/50'
-							: 'border-white/5'}"
-					>
-						<div class="flex items-center justify-between mb-2">
-							<div class="font-medium text-white flex items-center gap-2">
-								<span class="text-xs text-gray-500">#{index + 1}</span>
-								{participant.unit.name}
-								<span class="text-sm text-gray-400">
-									- {participant.unit.owner.profile?.name || "Unknown"}
-								</span>
-							</div>
-							<div class="flex items-center gap-2">
-								{#if participant.isEngaged}
-									<span class="px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-xs text-blue-400">
-										ENGAGED
-									</span>
-								{/if}
-								<span class="text-xs px-2 py-1 bg-slate-600 rounded text-gray-300">
-									W:{getUnitWidth(participant.unit.unitType)}
-								</span>
-							</div>
-						</div>
-						<div class="space-y-1 text-xs">
-							<div class="flex items-center gap-2">
-								<span class="text-gray-400 w-24">Strength:</span>
-								<div class="flex-1 h-2 bg-slate-600 rounded-full overflow-hidden">
-									<div
-										class="h-full {getStrengthColor(participant.currentStrength)}"
-										style="width: {participant.currentStrength}%"
-									></div>
+		<!-- Combat Log -->
+		{#if data.battle.rounds.length > 0}
+			<div
+				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl border border-white/10 shadow-2xl"
+			>
+				<div class="relative p-6">
+					<h3 class="text-xl font-bold text-white mb-4">📜 Combat Log</h3>
+					<div class="space-y-3 max-h-96 overflow-y-auto pr-2">
+						{#each data.battle.rounds as round}
+							<div class="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+								<div class="flex items-center justify-between mb-3">
+									<span class="text-lg font-bold text-white">Round {round.roundNumber}</span>
+									<span class="text-sm text-gray-400">{formatDate(round.roundedAt)}</span>
 								</div>
-								<span class="text-white w-12">{participant.currentStrength}%</span>
+								<div class="grid grid-cols-2 gap-4 text-sm">
+									<div>
+										<div class="text-red-400 font-medium mb-1">Attackers</div>
+										<div class="text-gray-400">
+											{round.attackerUnitsEngaged} units → {round.attackerTotalDamage} damage
+										</div>
+									</div>
+									<div>
+										<div class="text-blue-400 font-medium mb-1">Defenders</div>
+										<div class="text-gray-400">
+											{round.defenderUnitsEngaged} units → {round.defenderTotalDamage} damage
+										</div>
+									</div>
+								</div>
 							</div>
-							<div class="flex items-center gap-2 text-xs text-gray-400">
-								<span>DEF: {participant.unit.defense}</span>
-								<span>•</span>
-								<span>Joined: {formatDate(participant.joinedAt)}</span>
-							</div>
-						</div>
+						{/each}
 					</div>
-				{/each}
+				</div>
 			</div>
-		</div>
-	</div>
-
-	<!-- Battle Log -->
-	<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
-		<h2 class="text-xl font-bold text-white mb-4">Combat Rounds</h2>
-		<div class="space-y-3 max-h-96 overflow-y-auto">
-			{#each data.battle.rounds as round}
-				<div class="bg-slate-700/30 rounded-lg p-4 border border-white/5">
-					<div class="flex items-center justify-between mb-3">
-						<div class="flex items-center gap-3">
-							<span class="text-lg font-bold text-white">Round {round.roundNumber}</span>
-							<span class="px-2 py-1 rounded text-xs border {getPhaseColor(round.battlePhase)}">
-								{round.battlePhase}
-							</span>
-						</div>
-						<span class="text-sm text-gray-400">{formatDate(round.roundedAt)}</span>
-					</div>
-
-					<div class="grid grid-cols-2 gap-4">
-						<div class="space-y-2">
-							<div class="text-sm font-medium text-red-400">Attackers</div>
-							<div class="grid grid-cols-2 gap-2 text-xs">
-								<div>
-									<div class="text-gray-400">Engaged</div>
-									<div class="text-white font-medium">{round.attackerUnitsEngaged}</div>
-								</div>
-								<div>
-									<div class="text-gray-400">Damage</div>
-									<div class="text-red-400 font-medium">{round.attackerTotalDamage}</div>
-								</div>
-							</div>
-						</div>
-
-						<div class="space-y-2">
-							<div class="text-sm font-medium text-blue-400">Defenders</div>
-							<div class="grid grid-cols-2 gap-2 text-xs">
-								<div>
-									<div class="text-gray-400">Engaged</div>
-									<div class="text-white font-medium">{round.defenderUnitsEngaged}</div>
-								</div>
-								<div>
-									<div class="text-gray-400">Damage</div>
-									<div class="text-red-400 font-medium">{round.defenderTotalDamage}</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			{/each}
-
-			{#if data.battle.rounds.length === 0}
-				<div class="text-center py-12 text-gray-400">
-					<FluentWarning20Filled class="size-12 mx-auto mb-2 opacity-50" />
-					<p>No combat rounds yet</p>
-				</div>
-			{/if}
-		</div>
+		{/if}
 	</div>
 </div>
