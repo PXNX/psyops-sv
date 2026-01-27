@@ -40,11 +40,11 @@
 	];
 
 	const unitTypeIcons: Record<string, string> = {
-		heavy_armor: "🚜",
-		ifv: "🚙",
+		armor: "🚜",
+		mechanized: "🚙",
 		artillery: "🎯",
 		air_defence: "🛡️",
-		light_infantry: "🪖",
+		infantry: "🪖",
 		fighter_squadron: "✈️",
 		bomber_squadron: "🛩️"
 	};

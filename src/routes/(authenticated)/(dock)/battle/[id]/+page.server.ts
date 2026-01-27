@@ -17,9 +17,9 @@ import { error, fail } from "@sveltejs/kit";
 
 // Combat width by unit type
 const UNIT_COMBAT_WIDTH: Record<string, number> = {
-	light_infantry: 2,
-	heavy_armor: 3,
-	ifv: 2,
+	infantry: 2,
+	armor: 3,
+	mechanized: 2,
 	artillery: 3,
 	air_defence: 2,
 	bomber_squadron: 0,
