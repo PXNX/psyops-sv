@@ -11,6 +11,7 @@
 	let { data }: { data: PageData } = $props();
 
 	let isSubmitting = $state(false);
+	let selectedTemplate = $state<any>(null);
 
 	function getUnitIconPath(unitType: string): string {
 		return `/units/${unitType}.svg`;
@@ -301,93 +302,150 @@
 			<div class="mt-8">
 				<h2 class="text-2xl font-bold text-white mb-4">Train New Units</h2>
 
-				{#each data.templates as template}
-					{@const affordable = canAfford(template)}
-					{@const resources = getResourceStatus(template)}
-
-					<div
-						class="bg-gradient-to-br from-slate-800/60 to-slate-900/60 hover:from-slate-800/80 hover:to-slate-900/80 rounded-xl border border-white/5 hover:border-white/10 overflow-hidden transition-all mb-3"
-					>
-						<div class="p-4">
-							<div class="flex items-start gap-4">
+				<!-- Selectable Unit Type Cards -->
+				<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+					{#each data.templates as template}
+						<button
+							type="button"
+							class="p-4 rounded-lg border-2 text-center transition-all group"
+							class:bg-blue-600-20={selectedTemplate?.id === template.id}
+							class:border-blue-500-50={selectedTemplate?.id === template.id}
+							class:bg-slate-700-30={selectedTemplate?.id !== template.id}
+							class:border-slate-600-30={selectedTemplate?.id !== template.id}
+							class:hover:border-slate-500-50={selectedTemplate?.id !== template.id}
+							onclick={() => (selectedTemplate = template)}
+							disabled={isSubmitting}
+						>
+							<div class="flex flex-col gap-3 items-center">
 								<!-- Unit Icon -->
-								<div
-									class="w-14 h-11 rounded-lg border border-white/10 bg-slate-900/50 flex items-center justify-center p-2 flex-shrink-0"
-								>
+								<div class="w-20 h-20 flex items-center justify-center p-3">
 									<img
 										src={getUnitIconPath(template.unitType)}
 										alt={template.displayName}
-										class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]"
+										class="w-full h-full object-contain transition-all"
+										class:[filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]={selectedTemplate?.id !==
+											template.id}
+										class:[filter:brightness(0)_saturate(100%)_invert(70%)_sepia(100%)_saturate(2000%)_hue-rotate(200deg)_brightness(100%)_contrast(100%)]={selectedTemplate?.id ===
+											template.id}
 									/>
 								</div>
 
-								<!-- Unit Info -->
-								<div class="flex-1 min-w-0">
-									<h3 class="text-lg font-bold text-white mb-1">{template.displayName}</h3>
-									<p class="text-sm text-gray-400 mb-2">{template.description}</p>
+								<!-- Unit Name -->
+								<h3
+									class="font-bold text-sm transition-colors"
+									class:text-white={selectedTemplate?.id === template.id}
+									class:text-gray-300={selectedTemplate?.id !== template.id}
+								>
+									{template.displayName}
+								</h3>
+							</div>
+						</button>
+					{/each}
+				</div>
 
-									<div class="flex items-center gap-3 mb-3 text-sm">
-										<span class="text-gray-400"
-											>ATK <span class="text-white font-bold">{template.baseAttack}</span></span
-										>
-										<span class="text-gray-400"
-											>DEF <span class="text-white font-bold">{template.baseDefense}</span></span
-										>
-										<span class="text-gray-400"
-											>Time <span class="text-white font-bold">{template.trainingDuration}h</span></span
-										>
+				<!-- Central Training Panel -->
+				{#if selectedTemplate}
+					<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-6">
+						<!-- Selected Unit Header -->
+						<div class="flex items-start gap-4">
+							<div
+								class="w-16 h-16 rounded-lg border border-blue-500/30 bg-blue-600/10 flex items-center justify-center p-3 flex-shrink-0"
+							>
+								<img
+									src={getUnitIconPath(selectedTemplate.unitType)}
+									alt={selectedTemplate.displayName}
+									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(50%)_sepia(100%)_saturate(1000%)_hue-rotate(200deg)_brightness(100%)_contrast(100%)]"
+								/>
+							</div>
+							<div class="flex-1">
+								<h3 class="text-2xl font-bold text-white mb-1">{selectedTemplate.displayName}</h3>
+								<p class="text-sm text-gray-400 mb-3">{selectedTemplate.description}</p>
+								<div class="flex items-center gap-4 text-sm">
+									<div class="bg-red-600/20 border border-red-500/30 rounded px-3 py-1">
+										<span class="text-xs text-red-300">Attack</span>
+										<span class="text-lg font-bold text-white ml-2">{selectedTemplate.baseAttack}</span>
 									</div>
-
-									<!-- Resources -->
-									<div class="flex flex-wrap gap-1.5">
-										{#each resources as resource}
-											{@const hasEnough = resource.available >= resource.required}
-											<div
-												class="badge gap-1.5 px-2.5 py-2.5"
-												class:badge-success={hasEnough}
-												class:badge-error={!hasEnough}
-											>
-												<span class="text-sm">{resource.icon}</span>
-												<span class="font-mono text-xs font-medium">{resource.required.toLocaleString()}</span>
-												<span class="text-xs">{hasEnough ? "✓" : "✗"}</span>
-											</div>
-										{/each}
+									<div class="bg-blue-600/20 border border-blue-500/30 rounded px-3 py-1">
+										<span class="text-xs text-blue-300">Defense</span>
+										<span class="text-lg font-bold text-white ml-2">{selectedTemplate.baseDefense}</span>
+									</div>
+									<div class="bg-purple-600/20 border border-purple-500/30 rounded px-3 py-1">
+										<span class="text-xs text-purple-300">Training</span>
+										<span class="text-lg font-bold text-white ml-2">{selectedTemplate.trainingDuration}h</span>
 									</div>
 								</div>
-
-								<!-- Action Button -->
-								<form
-									method="POST"
-									action="?/train"
-									use:enhance={() => {
-										isSubmitting = true;
-										return async ({ update }) => {
-											await update();
-											isSubmitting = false;
-										};
-									}}
-									class="flex-shrink-0"
-								>
-									<input type="hidden" name="templateId" value={template.id} />
-									<button
-										type="submit"
-										disabled={isSubmitting || !affordable}
-										class="btn gap-2"
-										class:btn-primary={affordable}
-										class:btn-disabled={!affordable}
-									>
-										{#if isSubmitting}
-											<span class="loading loading-spinner loading-sm"></span>
-										{:else}
-											<IconAdd class="size-5" />
-										{/if}
-										Train
-									</button>
-								</form>
 							</div>
 						</div>
+
+						<!-- Resource Requirements -->
+						<div class="border-t border-white/5 pt-6">
+							<h4 class="text-sm font-medium text-gray-300 mb-3">Required Resources</h4>
+							<div class="bg-slate-700/30 rounded-lg p-4 space-y-2">
+								{#each getResourceStatus(selectedTemplate) as resource}
+									{@const hasEnough = resource.available >= resource.required}
+									<div class="flex justify-between text-sm items-center">
+										<span class="text-gray-400 flex items-center gap-2">
+											<span class="text-base">{resource.icon}</span>
+											{resource.name}:
+										</span>
+										<span class="font-mono" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
+											{resource.required.toLocaleString()}
+											<span class="text-gray-500">/ {resource.available.toLocaleString()}</span>
+											{#if hasEnough}
+												<span class="text-green-400 ml-1">✓</span>
+											{:else}
+												<span class="text-red-400 ml-1">✗</span>
+											{/if}
+										</span>
+									</div>
+								{/each}
+							</div>
+
+							{#if !canAfford(selectedTemplate)}
+								<div class="alert alert-error mt-4">
+									<span class="text-sm">⚠️ Insufficient resources to train this unit!</span>
+								</div>
+							{/if}
+						</div>
+
+						<!-- Training Button -->
+						<form
+							method="POST"
+							action="?/train"
+							use:enhance={() => {
+								isSubmitting = true;
+								return async ({ update }) => {
+									await update();
+									isSubmitting = false;
+									selectedTemplate = null;
+								};
+							}}
+						>
+							<input type="hidden" name="templateId" value={selectedTemplate.id} />
+							<button
+								type="submit"
+								disabled={isSubmitting || !canAfford(selectedTemplate)}
+								class="btn w-full gap-2"
+								class:btn-primary={canAfford(selectedTemplate)}
+								class:btn-disabled={!canAfford(selectedTemplate)}
+							>
+								{#if isSubmitting}
+									<span class="loading loading-spinner loading-sm"></span>
+									Training...
+								{:else}
+									<IconAdd class="size-5" />
+									Begin Training
+								{/if}
+							</button>
+						</form>
 					</div>
-				{/each}
+				{:else}
+					<div class="bg-slate-800/30 rounded-xl border border-white/5 p-12 text-center">
+						<FluentEmojiMilitaryHelmet class="size-16 mx-auto mb-4 opacity-30" />
+						<p class="text-gray-400 text-lg">Select a unit type to begin training</p>
+						<p class="text-sm text-gray-500 mt-2">Choose from the available templates above</p>
+					</div>
+				{/if}
 			</div>
 		</div>
 

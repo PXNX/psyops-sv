@@ -1,6 +1,6 @@
 <!-- src/routes/(unauthenticated)/about/privacy/+page.svelte -->
 <script lang="ts">
-	import MaterialSymbolsPrivacyTipRounded from "~icons/material-symbols/privacy-tip-rounded";
+	import FluentPersonShield24Regular from "~icons/fluent/person-shield-24-regular";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentLock20Filled from "~icons/fluent/lock-20-filled";
 	import FluentEye20Filled from "~icons/fluent/eye-20-filled";
@@ -27,7 +27,7 @@
 				<div
 					class="relative size-32 bg-gradient-to-br from-pink-600 via-purple-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl ring-4 ring-white/10"
 				>
-					<MaterialSymbolsPrivacyTipRounded class="size-16 text-white" />
+					<FluentPersonShield24Regular class="size-16 text-white" />
 				</div>
 			</div>
 			<div class="text-center space-y-3">
