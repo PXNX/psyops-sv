@@ -15,6 +15,7 @@
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
 
@@ -115,21 +116,21 @@
 	});
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-8 space-y-8">
+<div class="w-full px-4 py-6 md:py-8 space-y-6 md:space-y-8">
 	<!-- Header with gradient accent -->
 	<div class="relative">
 		<div
 			class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-cyan-600/10 rounded-2xl blur-3xl"
 		></div>
 		<div class="relative">
-			<h1 class="text-4xl font-bold mb-4">Production</h1>
+			<h1 class="text-3xl md:text-4xl font-bold mb-3 md:mb-4">Production</h1>
 
-			<div class="flex gap-3">
+			<div class="flex flex-wrap gap-2 md:gap-3">
 				{#if data.userCompany}
 					<a
 						href="/company"
-						class="px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
-						       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2"
+						class="px-3 md:px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
+						       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
 					>
 						<FluentBuilding20Filled class="size-4" />
 						<span>My Company</span>
@@ -137,8 +138,8 @@
 				{:else}
 					<a
 						href="/company/create"
-						class="px-4 py-2 bg-gradient-to-br from-emerald-700/80 to-emerald-800/80 hover:from-emerald-600/80 hover:to-emerald-700/80
-						       border border-emerald-500/20 rounded-lg text-emerald-300 hover:text-white transition-all duration-300 flex items-center gap-2"
+						class="px-3 md:px-4 py-2 bg-gradient-to-br from-emerald-700/80 to-emerald-800/80 hover:from-emerald-600/80 hover:to-emerald-700/80
+						       border border-emerald-500/20 rounded-lg text-emerald-300 hover:text-white transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
 					>
 						<FluentAdd20Filled class="size-4" />
 						<span>Create Company</span>
@@ -147,8 +148,8 @@
 
 				<a
 					href="/market"
-					class="px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
-					       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2"
+					class="px-3 md:px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
+					       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
 				>
 					<FluentEmojiShoppingCart class="size-4" />
 					<span>Market</span>
@@ -158,23 +159,23 @@
 	</div>
 
 	<!-- Stats Overview - Combined and streamlined -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+	<div class="w-full">
 		<!-- Balance -->
 		<div
-			class="relative group overflow-hidden rounded-xl bg-gradient-to-br from-emerald-950/40 to-emerald-900/20 border border-emerald-500/20 p-5"
+			class="relative group overflow-hidden rounded-xl bg-gradient-to-br from-emerald-950/40 to-emerald-900/20 border border-emerald-500/20 p-4 md:p-5"
 		>
 			<div
 				class="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
 			></div>
-			<div class="relative flex items-center gap-4">
+			<div class="relative flex items-center gap-3 md:gap-4">
 				<div
-					class="size-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center"
+					class="size-10 md:size-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center"
 				>
-					<FluentMoney20Filled class="size-6 text-emerald-400" />
+					<FluentMoney20Filled class="size-5 md:size-6 text-emerald-400" />
 				</div>
 				<div>
 					<p class="text-xs text-emerald-400/70 uppercase tracking-wide font-medium">Balance</p>
-					<p class="text-2xl font-bold text-white">{data.wallet.balance.toLocaleString()}</p>
+					<p class="text-xl md:text-2xl font-bold text-white">{data.wallet.balance.toLocaleString()}</p>
 				</div>
 			</div>
 		</div>
@@ -184,23 +185,24 @@
 	{#if data.currentJob && jobStatus}
 		<a
 			href="/factory/{data.currentJob.factoryId}"
-			class="block relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-6
+			class="block relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6
 			       hover:border-blue-500/30 transition-all duration-300 group"
 		>
 			<div
 				class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
 			></div>
 
-			<div class="relative flex items-start justify-between mb-4">
+			<div class="relative flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
 				<div>
-					<h2 class="text-xl font-semibold text-white mb-1">{data.currentJob.factoryName}</h2>
+					<h2 class="text-lg md:text-xl font-semibold text-white mb-1">{data.currentJob.factoryName}</h2>
 					<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
 				</div>
-				<div class="text-right">
+				<div class="text-left sm:text-right">
 					<p class="text-xs text-gray-400 mb-1">Wage</p>
-					<p class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
-						<FluentMoney20Filled class="size-5 text-emerald-400" />
-
+					<p
+						class="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent"
+					>
+						<FluentMoney20Filled class="size-5 md:size-6 text-emerald-400" />
 						{data.currentJob.wage.toLocaleString()}
 					</p>
 				</div>
@@ -224,16 +226,18 @@
 					</div>
 				</div>
 			{:else if jobStatus.status === "complete"}
-				<div class="bg-gradient-to-r from-emerald-900/30 to-green-900/30 border border-emerald-500/30 rounded-xl p-4">
-					<p class="text-emerald-300 font-medium flex items-center gap-2">
-						<FluentCheckmark20Filled class="size-5" />
+				<div
+					class="bg-gradient-to-r from-emerald-900/30 to-green-900/30 border border-emerald-500/30 rounded-xl p-3 md:p-4"
+				>
+					<p class="text-sm md:text-base text-emerald-300 font-medium flex items-center gap-2">
+						<FluentCheckmark20Filled class="size-4 md:size-5" />
 						{jobStatus.text} Click to collect payment.
 					</p>
 				</div>
 			{:else}
-				<div class="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-xl p-4">
-					<p class="text-blue-300 font-medium flex items-center gap-2">
-						<FluentClock20Filled class="size-5" />
+				<div class="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-xl p-3 md:p-4">
+					<p class="text-sm md:text-base text-blue-300 font-medium flex items-center gap-2">
+						<FluentClock20Filled class="size-4 md:size-5" />
 						{jobStatus.text}
 					</p>
 				</div>
@@ -241,38 +245,38 @@
 		</a>
 	{/if}
 
-	<div class="grid lg:grid-cols-3 gap-6">
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
 		<!-- Inventory Sidebar - Consolidated Resources & Products -->
-		<div class="space-y-6">
+		<div class="space-y-4 md:space-y-6 order-2 lg:order-1">
 			<div
-				class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-6"
+				class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
 			>
-				<div class="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl"></div>
+				<div class="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-purple-600/10 rounded-full blur-3xl"></div>
 
-				<div class="relative space-y-6">
+				<div class="relative space-y-4 md:space-y-6">
 					<!-- Resources Section -->
 					<div>
-						<div class="flex items-center gap-2 mb-4">
+						<div class="flex items-center gap-2 mb-3 md:mb-4">
 							<div
-								class="size-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center"
+								class="size-7 md:size-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center"
 							>
-								<FluentBox20Filled class="size-4 text-purple-400" />
+								<FluentBox20Filled class="size-3.5 md:size-4 text-purple-400" />
 							</div>
-							<h2 class="text-lg font-semibold text-white">Resources</h2>
+							<h2 class="text-base md:text-lg font-semibold text-white">Resources</h2>
 						</div>
 
-						<div class="space-y-2">
+						<div class="space-y-1.5 md:space-y-2">
 							{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
 								{@const quantity = resourceMap.get(resource) || 0}
 								<div
-									class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-purple-500/30 transition-colors"
+									class="flex items-center justify-between p-2.5 md:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-purple-500/30 transition-colors"
 								>
 									<div class="flex items-center gap-2">
-										<span class="text-lg">{resourceIcons[resource]}</span>
-										<span class="font-medium capitalize text-gray-300">{resource}</span>
+										<span class="text-base md:text-lg">{resourceIcons[resource]}</span>
+										<span class="font-medium capitalize text-gray-300 text-sm md:text-base">{resource}</span>
 									</div>
 									<span
-										class="px-2.5 py-1 rounded-md text-sm font-bold {quantity > 0
+										class="px-2 md:px-2.5 py-0.5 md:py-1 rounded-md text-xs md:text-sm font-bold {quantity > 0
 											? 'bg-purple-500/20 text-purple-300'
 											: 'bg-slate-700 text-gray-500'}"
 									>
@@ -285,27 +289,27 @@
 
 					<!-- Products Section -->
 					<div>
-						<div class="flex items-center gap-2 mb-4">
+						<div class="flex items-center gap-2 mb-3 md:mb-4">
 							<div
-								class="size-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center"
+								class="size-7 md:size-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center"
 							>
-								<FluentCube20Filled class="size-4 text-emerald-400" />
+								<FluentCube20Filled class="size-3.5 md:size-4 text-emerald-400" />
 							</div>
-							<h2 class="text-lg font-semibold text-white">Products</h2>
+							<h2 class="text-base md:text-lg font-semibold text-white">Products</h2>
 						</div>
 
-						<div class="space-y-2">
+						<div class="space-y-1.5 md:space-y-2">
 							{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
 								{@const quantity = productMap.get(product) || 0}
 								<div
-									class="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-emerald-500/30 transition-colors"
+									class="flex items-center justify-between p-2.5 md:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-emerald-500/30 transition-colors"
 								>
 									<div class="flex items-center gap-2">
-										<span class="text-lg">{productIcons[product]}</span>
-										<span class="font-medium capitalize text-gray-300">{product}</span>
+										<span class="text-base md:text-lg">{productIcons[product]}</span>
+										<span class="font-medium capitalize text-gray-300 text-sm md:text-base">{product}</span>
 									</div>
 									<span
-										class="px-2.5 py-1 rounded-md text-sm font-bold {quantity > 0
+										class="px-2 md:px-2.5 py-0.5 md:py-1 rounded-md text-xs md:text-sm font-bold {quantity > 0
 											? 'bg-emerald-500/20 text-emerald-300'
 											: 'bg-slate-700 text-gray-500'}"
 									>
@@ -320,38 +324,40 @@
 		</div>
 
 		<!-- Main Content Area -->
-		<div class="lg:col-span-2 space-y-6">
+		<div class="lg:col-span-2 space-y-4 md:space-y-6 order-1 lg:order-2">
 			<!-- Better Wage Opportunity -->
 			{#if betterWageFactory && data.currentJob}
 				<a
 					href="/region/{data.currentJob.regionId}/factories"
-					class="block relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-950/40 to-green-950/30 border border-emerald-500/30 p-6
+					class="block relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-emerald-950/40 to-green-950/30 border border-emerald-500/30 p-4 md:p-6
 					       hover:border-emerald-400/50 transition-all duration-300 group"
 				>
 					<div
 						class="absolute inset-0 bg-gradient-to-br from-emerald-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
 					></div>
 
-					<div class="relative flex items-start justify-between">
-						<div class="flex items-center gap-4">
+					<div class="relative flex items-start justify-between gap-3">
+						<div class="flex items-center gap-3 md:gap-4 flex-1">
 							<div
-								class="size-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-green-500/30 flex items-center justify-center"
+								class="size-10 md:size-12 rounded-xl bg-gradient-to-br from-emerald-500/30 to-green-500/30 flex items-center justify-center flex-shrink-0"
 							>
-								<FluentFactory20Filled class="size-6 text-emerald-400" />
+								<FluentFactory20Filled class="size-5 md:size-6 text-emerald-400" />
 							</div>
 							<div>
-								<h3 class="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+								<h3 class="text-base md:text-lg font-semibold text-white mb-1 flex items-center gap-2">
 									Better Wage Available!
 									<span class="text-emerald-400">✨</span>
 								</h3>
-								<p class="text-sm text-gray-300">
+								<p class="text-xs md:text-sm text-gray-300">
 									Factories in your region are offering up to
 									<span class="font-bold text-emerald-400">💰{betterWageFactory.workerWage.toLocaleString()}</span>
 									per day
 								</p>
 							</div>
 						</div>
-						<FluentArrowRight20Filled class="size-6 text-emerald-400 group-hover:translate-x-1 transition-transform" />
+						<FluentArrowRight20Filled
+							class="size-5 md:size-6 text-emerald-400 group-hover:translate-x-1 transition-transform flex-shrink-0"
+						/>
 					</div>
 				</a>
 			{/if}
@@ -359,31 +365,35 @@
 			<!-- Production Section -->
 			{#if activeProduction}
 				<div
-					class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-950/40 to-orange-950/30 border border-amber-500/30 p-6"
+					class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-amber-950/40 to-orange-950/30 border border-amber-500/30 p-4 md:p-6"
 				>
 					<div class="absolute inset-0 bg-gradient-to-br from-amber-600/10 to-transparent"></div>
 
-					<div class="relative space-y-5">
-						<div class="flex items-center gap-3">
+					<div class="relative space-y-4 md:space-y-5">
+						<div class="flex items-center gap-2 md:gap-3">
 							<div
-								class="size-10 rounded-xl bg-gradient-to-br from-amber-500/30 to-orange-500/30 flex items-center justify-center"
+								class="size-8 md:size-10 rounded-xl bg-gradient-to-br from-amber-500/30 to-orange-500/30 flex items-center justify-center"
 							>
-								<FluentFactory20Filled class="size-5 text-amber-400" />
+								<FluentFactory20Filled class="size-4 md:size-5 text-amber-400" />
 							</div>
-							<h2 class="text-xl font-semibold text-white">Production In Progress</h2>
+							<h2 class="text-lg md:text-xl font-semibold text-white">Production In Progress</h2>
 						</div>
 
-						<div class="bg-slate-900/50 backdrop-blur-sm rounded-xl p-5 space-y-5 border border-amber-500/20">
-							<div class="flex items-start gap-4">
-								<span class="text-5xl">{productIcons[activeProduction.productType]}</span>
+						<div
+							class="bg-slate-900/50 backdrop-blur-sm rounded-xl p-4 md:p-5 space-y-4 md:space-y-5 border border-amber-500/20"
+						>
+							<div class="flex flex-col sm:flex-row items-start gap-3 md:gap-4">
+								<span class="text-4xl md:text-5xl">{productIcons[activeProduction.productType]}</span>
 								<div class="flex-1">
-									<h3 class="text-2xl font-bold text-white capitalize mb-1">{activeProduction.productType}</h3>
-									<p class="text-gray-400">Manufacturing {activeProduction.quantity} units</p>
+									<h3 class="text-xl md:text-2xl font-bold text-white capitalize mb-1">
+										{activeProduction.productType}
+									</h3>
+									<p class="text-sm md:text-base text-gray-400">Manufacturing {activeProduction.quantity} units</p>
 								</div>
-								<div class="text-right">
+								<div class="text-left sm:text-right w-full sm:w-auto">
 									<p class="text-xs text-amber-400/70 uppercase tracking-wide font-medium mb-1">Time Left</p>
 									<p
-										class="text-3xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent"
+										class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent"
 									>
 										{timeRemaining}
 									</p>
@@ -392,10 +402,10 @@
 
 							<div>
 								<div class="flex justify-between items-center mb-2">
-									<span class="text-sm font-medium text-gray-300">Production Progress</span>
-									<span class="text-sm font-bold text-amber-400">{Math.floor(productionProgress)}%</span>
+									<span class="text-xs md:text-sm font-medium text-gray-300">Production Progress</span>
+									<span class="text-xs md:text-sm font-bold text-amber-400">{Math.floor(productionProgress)}%</span>
 								</div>
-								<div class="h-4 bg-slate-800 rounded-full overflow-hidden">
+								<div class="h-3 md:h-4 bg-slate-800 rounded-full overflow-hidden">
 									<div
 										class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-1000 relative"
 										style="width: {productionProgress}%"
@@ -414,18 +424,18 @@
 					method="POST"
 					action="?/startProduction"
 					use:enhance
-					class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-6"
+					class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
 				>
-					<div class="absolute top-0 right-0 w-96 h-96 bg-purple-600/5 rounded-full blur-3xl"></div>
+					<div class="absolute top-0 right-0 w-64 h-64 md:w-96 md:h-96 bg-purple-600/5 rounded-full blur-3xl"></div>
 
-					<div class="relative space-y-6">
-						<div class="flex items-center gap-3">
+					<div class="relative space-y-4 md:space-y-6">
+						<div class="flex items-center gap-2 md:gap-3">
 							<div
-								class="size-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center"
+								class="size-8 md:size-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center"
 							>
-								<FluentProduction20Filled class="size-5 text-purple-400" />
+								<FluentProduction20Filled class="size-4 md:size-5 text-purple-400" />
 							</div>
-							<h2 class="text-xl font-semibold text-white">Start Production</h2>
+							<h2 class="text-lg md:text-xl font-semibold text-white">Start Production</h2>
 						</div>
 
 						<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
@@ -433,7 +443,7 @@
 								<button
 									type="button"
 									onclick={() => (selectedProduct = product as keyof typeof data.recipes)}
-									class="relative p-3 rounded-lg border-2 transition-all duration-200 text-center group
+									class="relative p-2.5 md:p-3 rounded-lg border-2 transition-all duration-200 text-center group
 										       {selectedProduct === product
 										? 'bg-purple-500/20 border-purple-500/60 shadow-lg shadow-purple-500/20'
 										: 'bg-slate-800/30 border-slate-700/50 hover:border-slate-600/70 hover:bg-slate-800/50'}"
@@ -445,7 +455,7 @@
 										checked={selectedProduct === product}
 										class="sr-only"
 									/>
-									<div class="text-3xl mb-1">{productIcons[product]}</div>
+									<div class="text-2xl md:text-3xl mb-1">{productIcons[product]}</div>
 									<div
 										class="text-xs font-medium capitalize {selectedProduct === product
 											? 'text-purple-300'
@@ -460,18 +470,18 @@
 						<!-- Current Stock Display -->
 						{#if selectedProduct}
 							{@const currentStock = productMap.get(selectedProduct) || 0}
-							<div class="bg-slate-900/50 rounded-lg p-4 border border-slate-700/50">
+							<div class="bg-slate-900/50 rounded-lg p-3 md:p-4 border border-slate-700/50">
 								<div class="flex items-center justify-between">
 									<div class="flex items-center gap-2">
-										<span class="text-2xl">{productIcons[selectedProduct]}</span>
+										<span class="text-xl md:text-2xl">{productIcons[selectedProduct]}</span>
 										<div>
 											<p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Current Stock</p>
-											<p class="text-lg font-semibold text-white capitalize">{selectedProduct}</p>
+											<p class="text-base md:text-lg font-semibold text-white capitalize">{selectedProduct}</p>
 										</div>
 									</div>
 									<div class="text-right">
 										<span
-											class="text-3xl font-bold {currentStock > 0
+											class="text-2xl md:text-3xl font-bold {currentStock > 0
 												? 'bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent'
 												: 'text-slate-500'}"
 										>
@@ -484,7 +494,7 @@
 						{/if}
 
 						<div>
-							<label for="quantity" class="block text-sm font-medium text-gray-300 mb-3">
+							<label for="quantity" class="block text-sm font-medium text-gray-300 mb-2 md:mb-3">
 								Batch Size: <span class="text-white font-bold">×{productionQuantity}</span>
 							</label>
 							<div class="relative">
@@ -510,43 +520,23 @@
 						</div>
 
 						{#if data.recipes[selectedProduct]}
-							<h4 class="text-xs font-medium text-slate-400 mb-2.5 uppercase tracking-wide">Resources Required</h4>
-							<div class="bg-slate-900/30 rounded-lg p-3 space-y-1.5 border border-slate-700/30">
-								{#each Object.entries(data.recipes[selectedProduct].inputs) as [resource, amount]}
-									{@const available = resourceMap.get(resource) || 0}
-									{@const needed = amount * productionQuantity}
-									{@const hasEnough = available >= needed}
-									<div class="flex justify-between text-xs items-center">
-										<span class="text-slate-400 flex items-center gap-1.5">
-											<span class="text-sm opacity-80">{resourceIcons[resource]}</span>
-											<span class="capitalize">{resource}</span>
-										</span>
-										<span class="font-mono text-xs" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
-											{needed.toLocaleString()}
-											<span class="text-slate-600">/ {available.toLocaleString()}</span>
-											{#if hasEnough}
-												<span class="text-emerald-400 ml-1">✓</span>
-											{:else}
-												<span class="text-red-400 ml-1">✗</span>
-											{/if}
-										</span>
-									</div>
-								{/each}
-							</div>
+							{@const recipe = data.recipes[selectedProduct]}
+							{@const costs = Object.fromEntries(
+								Object.entries(recipe.inputs).map(([resource, amount]) => [resource, amount * productionQuantity])
+							)}
+							{@const availableResources = Object.fromEntries(Array.from(resourceMap.entries()))}
 
-							{#if !canProduce}
-								<div class="mt-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
-									<span class="text-xs text-red-400">⚠️ Insufficient resources</span>
-								</div>
-							{/if}
+							<ResourceRequirements {costs} available={availableResources} />
 
-							<div class="flex items-center justify-between p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+							<div
+								class="flex items-center justify-between p-3 md:p-4 bg-slate-700/30 rounded-lg border border-slate-600/50"
+							>
 								<div class="flex items-center gap-2">
-									<FluentClock20Filled class="size-5 text-gray-400" />
-									<span class="text-sm text-gray-400">Production Time</span>
+									<FluentClock20Filled class="size-4 md:size-5 text-gray-400" />
+									<span class="text-xs md:text-sm text-gray-400">Production Time</span>
 								</div>
-								<span class="font-bold text-white text-lg">
-									{Math.floor((data.recipes[selectedProduct].duration * productionQuantity) / 60)} min
+								<span class="font-bold text-white text-base md:text-lg">
+									{Math.floor((recipe.duration * productionQuantity) / 60)} min
 								</span>
 							</div>
 						{/if}
@@ -554,19 +544,19 @@
 						<button
 							type="submit"
 							disabled={!canProduce}
-							class="w-full py-4 rounded-xl font-semibold text-white transition-all duration-300
+							class="w-full py-3 md:py-4 rounded-xl font-semibold text-white transition-all duration-300 text-sm md:text-base
 							       {canProduce
 								? 'bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 hover:from-purple-500 hover:via-blue-500 hover:to-cyan-500 shadow-lg shadow-purple-500/25'
 								: 'bg-slate-700 text-slate-400 cursor-not-allowed'}"
 						>
 							{#if canProduce}
 								<span class="flex items-center justify-center gap-2">
-									<FluentCheckmark20Filled class="size-5" />
+									<FluentCheckmark20Filled class="size-4 md:size-5" />
 									Start Production
 								</span>
 							{:else}
 								<span class="flex items-center justify-center gap-2">
-									<FluentWarning20Filled class="size-5" />
+									<FluentWarning20Filled class="size-4 md:size-5" />
 									Insufficient Resources
 								</span>
 							{/if}
@@ -574,10 +564,10 @@
 
 						{#if !canProduce}
 							<div
-								class="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-4"
+								class="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-3 md:p-4"
 							>
-								<p class="text-sm text-amber-300 flex items-start gap-2">
-									<FluentWarning20Filled class="size-5 flex-shrink-0 mt-0.5" />
+								<p class="text-xs md:text-sm text-amber-300 flex items-start gap-2">
+									<FluentWarning20Filled class="size-4 md:size-5 flex-shrink-0 mt-0.5" />
 									<span
 										>You need more resources to start this production. Work at a factory to earn resources and wages.</span
 									>

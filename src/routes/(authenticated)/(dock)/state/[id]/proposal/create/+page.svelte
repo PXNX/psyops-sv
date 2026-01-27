@@ -9,6 +9,7 @@
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
 	import { getRegionName } from "$lib/utils/formatting";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	const { data } = $props();
 
@@ -29,35 +30,6 @@
 
 	type ProposalType = "tax" | "hospital" | "school" | "power_plant" | "infrastructure";
 	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure";
-
-	// Helper function to format building costs
-	function formatBuildingCosts(type: BuildingType): string {
-		const template = data.buildingTemplates[type];
-		if (!template) return "";
-
-		const costs: string[] = [];
-		for (const [resource, amount] of Object.entries(template.costs)) {
-			if (resource === "currency") {
-				costs.push(`${(amount as number).toLocaleString()} 💰`);
-			} else {
-				const icon = getResourceIcon(resource);
-				costs.push(`${amount as number} ${icon} ${resource}`);
-			}
-		}
-		return costs.join(", ");
-	}
-
-	function getResourceIcon(resource: string): string {
-		const icons: Record<string, string> = {
-			iron: "⚙️",
-			copper: "🔶",
-			steel: "🔩",
-			gunpowder: "💥",
-			wood: "🪵",
-			coal: "⚫"
-		};
-		return icons[resource] || "📦";
-	}
 
 	// Get building count for selected region and type
 	function getBuildingCount(regionId: string | undefined, buildingType: string | undefined): number {
@@ -136,6 +108,14 @@
 		}
 
 		return costs;
+	});
+
+	// Build available resources object
+	const availableResources = $derived(() => {
+		return {
+			currency: data.treasury?.balance || 0,
+			...data.stateResources
+		};
 	});
 
 	// Check if state has sufficient resources
@@ -497,45 +477,11 @@
 						{/if}
 					</div>
 
-					<!-- Total Cost Display -->
+					<!-- Total Cost Display using ResourceRequirements component -->
 					{#if totalCosts()}
 						{@const costs = totalCosts()}
 						{#if costs}
-							<div class="bg-slate-700/30 rounded-lg p-4 space-y-2">
-								<p class="text-sm font-medium text-gray-300">Total Cost ({$formData.quantity || 1}x):</p>
-								{#each Object.entries(costs) as [resource, amount]}
-									{@const available =
-										resource === "currency" ? data.treasury?.balance || 0 : data.stateResources?.[resource] || 0}
-									{@const hasEnough = (amount as number) <= available}
-									<div class="flex justify-between text-sm items-center">
-										<span class="text-gray-400 capitalize flex items-center gap-2">
-											{#if resource === "currency"}
-												<FluentMoney20Filled class="size-4 text-amber-400" />
-											{:else}
-												<span>{getResourceIcon(resource)}</span>
-											{/if}
-											{resource}:
-										</span>
-										<span class="font-mono" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
-											{(amount as number).toLocaleString()}
-											<span class="text-gray-500">/ {available.toLocaleString()}</span>
-											{#if hasEnough}
-												<span class="text-green-400 ml-1">✓</span>
-											{:else}
-												<span class="text-red-400 ml-1">✗</span>
-											{/if}
-										</span>
-									</div>
-								{/each}
-
-								{#if !canAfford()}
-									<div class="alert alert-error mt-2">
-										<span class="text-sm"
-											>⚠️ Insufficient state resources to build {$formData.quantity || 1} building(s)!</span
-										>
-									</div>
-								{/if}
-							</div>
+							<ResourceRequirements {costs} available={availableResources()} />
 						{/if}
 					{/if}
 

@@ -8,6 +8,7 @@
 	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
 	import IconClock from "~icons/fluent/clock-24-filled";
 	import Modal from "$lib/component/Modal.svelte";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data }: { data: PageData } = $props();
 
@@ -47,74 +48,35 @@
 		);
 	}
 
-	function getResourceStatus(template: any) {
-		const requirements = [
-			{
-				type: "currency",
-				icon: "💰",
-				name: "Currency",
-				required: template.currencyCost,
-				available: data.inventory.currency
-			},
-			{
-				type: "iron",
-				icon: "⚙️",
-				name: "Iron",
-				required: template.ironCost,
-				available: data.inventory.resources.iron || 0
-			},
-			{
-				type: "steel",
-				icon: "🔩",
-				name: "Steel",
-				required: template.steelCost,
-				available: data.inventory.resources.steel || 0
-			},
-			{
-				type: "gunpowder",
-				icon: "💥",
-				name: "Gunpowder",
-				required: template.gunpowderCost,
-				available: data.inventory.resources.gunpowder || 0
-			},
-			{
-				type: "rifles",
-				icon: "🔫",
-				name: "Rifles",
-				required: template.riflesCost,
-				available: data.inventory.products.rifles || 0
-			},
-			{
-				type: "ammunition",
-				icon: "📦",
-				name: "Ammo",
-				required: template.ammunitionCost,
-				available: data.inventory.products.ammunition || 0
-			},
-			{
-				type: "artillery",
-				icon: "🎯",
-				name: "Artillery",
-				required: template.artilleryCost,
-				available: data.inventory.products.artillery || 0
-			},
-			{
-				type: "vehicles",
-				icon: "🚗",
-				name: "Vehicles",
-				required: template.vehiclesCost,
-				available: data.inventory.products.vehicles || 0
-			},
-			{
-				type: "explosives",
-				icon: "💣",
-				name: "Explosives",
-				required: template.explosivesCost,
-				available: data.inventory.products.explosives || 0
-			}
-		].filter((r) => r.required > 0);
+	// Build costs and available objects for ResourceRequirements component
+	function getTemplateCosts(template: any): Record<string, number> {
+		const costs: Record<string, number> = {};
 
-		return requirements;
+		if (template.currencyCost > 0) costs.currency = template.currencyCost;
+		if (template.ironCost > 0) costs.iron = template.ironCost;
+		if (template.steelCost > 0) costs.steel = template.steelCost;
+		if (template.gunpowderCost > 0) costs.gunpowder = template.gunpowderCost;
+		if (template.riflesCost > 0) costs.rifles = template.riflesCost;
+		if (template.ammunitionCost > 0) costs.ammunition = template.ammunitionCost;
+		if (template.artilleryCost > 0) costs.artillery = template.artilleryCost;
+		if (template.vehiclesCost > 0) costs.vehicles = template.vehiclesCost;
+		if (template.explosivesCost > 0) costs.explosives = template.explosivesCost;
+
+		return costs;
+	}
+
+	function getAvailableResources(): Record<string, number> {
+		return {
+			currency: data.inventory.currency,
+			iron: data.inventory.resources.iron || 0,
+			steel: data.inventory.resources.steel || 0,
+			gunpowder: data.inventory.resources.gunpowder || 0,
+			rifles: data.inventory.products.rifles || 0,
+			ammunition: data.inventory.products.ammunition || 0,
+			artillery: data.inventory.products.artillery || 0,
+			vehicles: data.inventory.products.vehicles || 0,
+			explosives: data.inventory.products.explosives || 0
+		};
 	}
 
 	function calculateOrgaRecoveryTime(organization: number): string {
@@ -370,36 +332,7 @@
 							</div>
 						</div>
 
-						<!-- Resource Requirements -->
-						<div class="border-t border-slate-700/30 pt-4">
-							<h4 class="text-xs font-medium text-slate-400 mb-2.5 uppercase tracking-wide">Resources Required</h4>
-							<div class="bg-slate-900/30 rounded-lg p-3 space-y-1.5 border border-slate-700/30">
-								{#each getResourceStatus(selectedTemplate) as resource}
-									{@const hasEnough = resource.available >= resource.required}
-									<div class="flex justify-between text-xs items-center">
-										<span class="text-slate-400 flex items-center gap-1.5">
-											<span class="text-sm opacity-80">{resource.icon}</span>
-											{resource.name}
-										</span>
-										<span class="font-mono text-xs" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
-											{resource.required.toLocaleString()}
-											<span class="text-slate-600">/ {resource.available.toLocaleString()}</span>
-											{#if hasEnough}
-												<span class="text-emerald-400 ml-1">✓</span>
-											{:else}
-												<span class="text-red-400 ml-1">✗</span>
-											{/if}
-										</span>
-									</div>
-								{/each}
-							</div>
-
-							{#if !canAfford(selectedTemplate)}
-								<div class="mt-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
-									<span class="text-xs text-red-400">⚠️ Insufficient resources</span>
-								</div>
-							{/if}
-						</div>
+						<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
 
 						<!-- Training Button -->
 						<form
