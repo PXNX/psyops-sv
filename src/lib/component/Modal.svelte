@@ -1,4 +1,4 @@
-<!-- /src/lib/components/Modal.svelte -->
+<!-- /src/lib/component/Modal.svelte -->
 <script lang="ts">
 	import IconDismiss from "~icons/fluent/dismiss-24-regular";
 	import IconArrowLeft from "~icons/fluent/arrow-left-24-regular";
