@@ -19,28 +19,24 @@ import { db } from "$lib/server/db";
 type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
 type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
 
-// NATO naming convention for battalions
-const natoUnitNames: Record<string, string[]> = {
-	air_defence: ["Air Defense Battalion", "SAM Battalion", "Anti-Air Battalion", "SHORAD Battalion"],
-	armor: ["Armored Battalion", "Tank Battalion", "Heavy Armor Battalion", "Panzer Battalion"],
-	mechanzied: ["Infantry Fighting Vehicle Battalion", "IFV Battalion", "Mechanized Infantry Battalion"],
-	artillery: ["Artillery Battalion", "Field Artillery Battalion", "Howitzer Battalion", "Rocket Artillery Battalion"],
-	infantry: ["Infantry Battalion", "Light Infantry Battalion", "Rifle Battalion", "Airborne Battalion"],
-	bomber_squadron: ["Bomber Squadron", "Strategic Bomber Squadron", "Heavy Bomber Squadron"],
-	fighter_squadron: [
-		"Fighter Squadron",
-		"Air Superiority Squadron",
-		"Interceptor Squadron",
-		"Tactical Fighter Squadron"
-	]
+// Standardized unit names - no NATO variety, just consistent naming
+const unitTypeNames: Record<string, string> = {
+	air_defence: "Air Defense Battalion",
+	armor: "Armored Battalion",
+	mechanzied: "Mechanized Battalion",
+	artillery: "Artillery Battalion",
+	infantry: "Infantry Battalion",
+	bomber_squadron: "Bomber Squadron",
+	fighter_squadron: "Fighter Squadron"
 };
 
 function generateUnitName(unitType: string, existingUnits: any[]): string {
-	const possibleNames = natoUnitNames[unitType] || ["Battalion"];
+	const baseName = unitTypeNames[unitType] || "Battalion";
+
 	const usedNumbers = existingUnits
 		.filter((u) => u.unitType === unitType)
 		.map((u) => {
-			const match = u.name.match(/(\d+)(st|nd|rd|th)/);
+			const match = u.name.match(/^(\d+)(st|nd|rd|th)/);
 			return match ? parseInt(match[1]) : 0;
 		});
 
@@ -50,14 +46,10 @@ function generateUnitName(unitType: string, existingUnits: any[]): string {
 	}
 
 	const suffix = number === 1 ? "st" : number === 2 ? "nd" : number === 3 ? "rd" : "th";
-	const baseName = possibleNames[Math.floor(Math.random() * possibleNames.length)];
-
 	return `${number}${suffix} ${baseName}`;
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
-	const account = locals.account!;
-
+async function getUserResidence(userId: string) {
 	const [residence] = await db
 		.select({
 			regionId: residences.regionId,
@@ -71,41 +63,41 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.leftJoin(regions, eq(residences.regionId, regions.id))
 		.leftJoin(states, eq(regions.stateId, states.id))
 		.leftJoin(blocs, eq(states.blocId, blocs.id))
-		.where(and(eq(residences.userId, account.id)))
+		.where(eq(residences.userId, userId))
 		.limit(1);
 
 	if (!residence || !residence.stateId) {
 		throw error(400, "You must have a primary residence to train military units");
 	}
 
-	const units = await db
-		.select({
-			id: militaryUnits.id,
-			name: militaryUnits.name,
-			unitType: militaryUnits.unitType,
-			attack: militaryUnits.attack,
-			defense: militaryUnits.defense,
-			organization: militaryUnits.organization,
-			health: militaryUnits.health,
-			supplyLevel: militaryUnits.supplyLevel,
-			isTraining: militaryUnits.isTraining,
-			trainingStartedAt: militaryUnits.trainingStartedAt,
-			trainingCompletesAt: militaryUnits.trainingCompletesAt,
-			createdAt: militaryUnits.createdAt
-		})
-		.from(militaryUnits)
-		.leftJoin(regions, eq(militaryUnits.regionId, regions.id))
-		.where(eq(militaryUnits.ownerId, account.id))
-		.orderBy(militaryUnits.createdAt);
+	return residence;
+}
 
+async function getUserInventory(userId: string) {
+	const resources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, userId));
+	const resourceMap = Object.fromEntries(resources.map((r) => [r.resourceType, r.quantity]));
+
+	const products = await db.select().from(productInventory).where(eq(productInventory.userId, userId));
+	const productMap = Object.fromEntries(products.map((p) => [p.productType, p.quantity]));
+
+	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, userId)).limit(1);
+
+	return {
+		currency: wallet?.balance || 0,
+		resources: resourceMap,
+		products: productMap
+	};
+}
+
+async function getOrCreateTemplates() {
 	let templates = await db.select().from(militaryUnitTemplates).orderBy(militaryUnitTemplates.displayName);
 
 	if (templates.length === 0) {
 		const defaultTemplates = [
 			{
 				unitType: "infantry" as const,
-				displayName: "Light Infantry",
-				description: "Basic infantry battalion - low cost, decent defense",
+				displayName: "Infantry Battalion",
+				description: "Standard infantry unit",
 				baseAttack: 15,
 				baseDefense: 20,
 				trainingDuration: 6,
@@ -121,8 +113,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			},
 			{
 				unitType: "armor" as const,
-				displayName: "Heavy Armor",
-				description: "Tank battalion - high attack, can break through enemy lines",
+				displayName: "Armored Battalion",
+				description: "Heavy tank unit",
 				baseAttack: 50,
 				baseDefense: 40,
 				trainingDuration: 12,
@@ -138,8 +130,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			},
 			{
 				unitType: "mechanzied" as const,
-				displayName: "Infantry Fighting Vehicles",
-				description: "Mechanized infantry - balanced attack and defense",
+				displayName: "Mechanized Battalion",
+				description: "Infantry fighting vehicles",
 				baseAttack: 30,
 				baseDefense: 30,
 				trainingDuration: 10,
@@ -155,8 +147,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			},
 			{
 				unitType: "artillery" as const,
-				displayName: "Artillery",
-				description: "Long-range artillery - high attack, low defense",
+				displayName: "Artillery Battalion",
+				description: "Long-range artillery",
 				baseAttack: 40,
 				baseDefense: 15,
 				trainingDuration: 8,
@@ -172,8 +164,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			},
 			{
 				unitType: "air_defence" as const,
-				displayName: "Air Defense",
-				description: "Anti-aircraft battalion - counters air units",
+				displayName: "Air Defense Battalion",
+				description: "Anti-aircraft unit",
 				baseAttack: 25,
 				baseDefense: 25,
 				trainingDuration: 10,
@@ -190,7 +182,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			{
 				unitType: "fighter_squadron" as const,
 				displayName: "Fighter Squadron",
-				description: "Air superiority fighters - doesn't use combat width",
+				description: "Air superiority fighters",
 				baseAttack: 60,
 				baseDefense: 35,
 				trainingDuration: 16,
@@ -207,7 +199,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			{
 				unitType: "bomber_squadron" as const,
 				displayName: "Bomber Squadron",
-				description: "Strategic bombers - doesn't use combat width",
+				description: "Strategic bombers",
 				baseAttack: 70,
 				baseDefense: 20,
 				trainingDuration: 18,
@@ -227,13 +219,34 @@ export const load: PageServerLoad = async ({ locals }) => {
 		templates = await db.select().from(militaryUnitTemplates).orderBy(militaryUnitTemplates.displayName);
 	}
 
-	const resources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
-	const resourceMap = Object.fromEntries(resources.map((r) => [r.resourceType, r.quantity]));
+	return templates;
+}
 
-	const products = await db.select().from(productInventory).where(eq(productInventory.userId, account.id));
-	const productMap = Object.fromEntries(products.map((p) => [p.productType, p.quantity]));
+export const load: PageServerLoad = async ({ locals }) => {
+	const account = locals.account!;
 
-	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id)).limit(1);
+	const residence = await getUserResidence(account.id);
+	const inventory = await getUserInventory(account.id);
+	const templates = await getOrCreateTemplates();
+
+	const units = await db
+		.select({
+			id: militaryUnits.id,
+			name: militaryUnits.name,
+			unitType: militaryUnits.unitType,
+			attack: militaryUnits.attack,
+			defense: militaryUnits.defense,
+			organization: militaryUnits.organization,
+			health: militaryUnits.health,
+			supplyLevel: militaryUnits.supplyLevel,
+			isTraining: militaryUnits.isTraining,
+			trainingStartedAt: militaryUnits.trainingStartedAt,
+			trainingCompletesAt: militaryUnits.trainingCompletesAt,
+			createdAt: militaryUnits.createdAt
+		})
+		.from(militaryUnits)
+		.where(eq(militaryUnits.ownerId, account.id))
+		.orderBy(militaryUnits.createdAt);
 
 	return {
 		units,
@@ -250,43 +263,181 @@ export const load: PageServerLoad = async ({ locals }) => {
 					}
 				: null
 		},
-		inventory: {
-			currency: wallet?.balance || 0,
-			resources: resourceMap,
-			products: productMap
-		}
+		inventory
 	};
 };
+
+async function checkResourceAvailability(
+	userId: string,
+	template: {
+		currencyCost: number;
+		ironCost: number;
+		steelCost: number;
+		gunpowderCost: number;
+		riflesCost: number;
+		ammunitionCost: number;
+		artilleryCost: number;
+		vehiclesCost: number;
+		explosivesCost: number;
+	}
+) {
+	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, userId)).limit(1);
+
+	if (!wallet || wallet.balance < template.currencyCost) {
+		return { valid: false, error: "Insufficient currency" };
+	}
+
+	const resourceChecks = [
+		{
+			type: "iron" as ResourceType,
+			required: template.ironCost,
+			table: resourceInventory,
+			typeCol: resourceInventory.resourceType
+		},
+		{
+			type: "steel" as ResourceType,
+			required: template.steelCost,
+			table: resourceInventory,
+			typeCol: resourceInventory.resourceType
+		},
+		{
+			type: "gunpowder" as ResourceType,
+			required: template.gunpowderCost,
+			table: resourceInventory,
+			typeCol: resourceInventory.resourceType
+		}
+	];
+
+	const productChecks = [
+		{
+			type: "rifles" as ProductType,
+			required: template.riflesCost,
+			table: productInventory,
+			typeCol: productInventory.productType
+		},
+		{
+			type: "ammunition" as ProductType,
+			required: template.ammunitionCost,
+			table: productInventory,
+			typeCol: productInventory.productType
+		},
+		{
+			type: "artillery" as ProductType,
+			required: template.artilleryCost,
+			table: productInventory,
+			typeCol: productInventory.productType
+		},
+		{
+			type: "vehicles" as ProductType,
+			required: template.vehiclesCost,
+			table: productInventory,
+			typeCol: productInventory.productType
+		},
+		{
+			type: "explosives" as ProductType,
+			required: template.explosivesCost,
+			table: productInventory,
+			typeCol: productInventory.productType
+		}
+	];
+
+	for (const { type, required, table, typeCol } of [...resourceChecks, ...productChecks]) {
+		if (required === 0) continue;
+
+		const [item] = await db
+			.select()
+			.from(table)
+			.where(and(eq(table.userId, userId), eq(typeCol, type)))
+			.limit(1);
+
+		if (!item || item.quantity < required) {
+			return { valid: false, error: `Insufficient ${type}` };
+		}
+	}
+
+	return { valid: true };
+}
+
+async function deductResources(
+	tx: any,
+	userId: string,
+	template: {
+		currencyCost: number;
+		ironCost: number;
+		steelCost: number;
+		gunpowderCost: number;
+		riflesCost: number;
+		ammunitionCost: number;
+		artilleryCost: number;
+		vehiclesCost: number;
+		explosivesCost: number;
+	}
+) {
+	// Deduct currency
+	await tx
+		.update(userWallets)
+		.set({
+			balance: sql`${userWallets.balance} - ${template.currencyCost}`,
+			updatedAt: new Date()
+		})
+		.where(eq(userWallets.userId, userId));
+
+	// Deduct resources
+	const deductions = [
+		{ table: resourceInventory, type: "iron", amount: template.ironCost, typeCol: resourceInventory.resourceType },
+		{ table: resourceInventory, type: "steel", amount: template.steelCost, typeCol: resourceInventory.resourceType },
+		{
+			table: resourceInventory,
+			type: "gunpowder",
+			amount: template.gunpowderCost,
+			typeCol: resourceInventory.resourceType
+		},
+		{ table: productInventory, type: "rifles", amount: template.riflesCost, typeCol: productInventory.productType },
+		{
+			table: productInventory,
+			type: "ammunition",
+			amount: template.ammunitionCost,
+			typeCol: productInventory.productType
+		},
+		{
+			table: productInventory,
+			type: "artillery",
+			amount: template.artilleryCost,
+			typeCol: productInventory.productType
+		},
+		{ table: productInventory, type: "vehicles", amount: template.vehiclesCost, typeCol: productInventory.productType },
+		{
+			table: productInventory,
+			type: "explosives",
+			amount: template.explosivesCost,
+			typeCol: productInventory.productType
+		}
+	];
+
+	for (const { table, type, amount, typeCol } of deductions) {
+		if (amount === 0) continue;
+
+		await tx
+			.update(table)
+			.set({
+				quantity: sql`${table.quantity} - ${amount}`,
+				updatedAt: new Date()
+			})
+			.where(and(eq(table.userId, userId), eq(typeCol, type)));
+	}
+}
 
 export const actions: Actions = {
 	train: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
-
 		const templateId = parseInt(formData.get("templateId") as string);
 
 		if (!templateId) {
 			return fail(400, { error: "Missing template ID" });
 		}
 
-		const [residence] = await db
-			.select({
-				regionId: residences.regionId,
-				stateId: states.id
-			})
-			.from(residences)
-			.leftJoin(regions, eq(residences.regionId, regions.id))
-			.leftJoin(states, eq(regions.stateId, states.id))
-			.where(and(eq(residences.userId, account.id)))
-			.limit(1);
-
-		if (!residence || !residence.stateId) {
-			return fail(400, { error: "You must have a primary residence to train units" });
-		}
-
-		const stateId = residence.stateId;
-		const regionId = residence.regionId;
-
+		const residence = await getUserResidence(account.id);
 		const [template] = await db
 			.select()
 			.from(militaryUnitTemplates)
@@ -297,117 +448,30 @@ export const actions: Actions = {
 			return fail(404, { error: "Template not found" });
 		}
 
-		// Get existing units to generate name
-		const existingUnits = await db.select().from(militaryUnits).where(eq(militaryUnits.ownerId, account.id));
-
-		const unitName = generateUnitName(template.unitType, existingUnits);
-
-		// Check currency
-		const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id)).limit(1);
-
-		if (!wallet || wallet.balance < template.currencyCost) {
-			return fail(400, { error: "Insufficient currency" });
+		// Check if user can afford the unit
+		const availabilityCheck = await checkResourceAvailability(account.id, template);
+		if (!availabilityCheck.valid) {
+			return fail(400, { error: availabilityCheck.error });
 		}
 
-		// Check resources
-		const checkResource = async (type: ResourceType, required: number) => {
-			if (required === 0) return true;
-
-			const [resource] = await db
-				.select()
-				.from(resourceInventory)
-				.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, type)))
-				.limit(1);
-
-			return resource && resource.quantity >= required;
-		};
-
-		const checkProduct = async (type: ProductType, required: number) => {
-			if (required === 0) return true;
-
-			const [product] = await db
-				.select()
-				.from(productInventory)
-				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, type)))
-				.limit(1);
-
-			return product && product.quantity >= required;
-		};
-
-		// Validate all resources
-		const hasIron = await checkResource("iron", template.ironCost);
-		const hasSteel = await checkResource("steel", template.steelCost);
-		const hasGunpowder = await checkResource("gunpowder", template.gunpowderCost);
-		const hasRifles = await checkProduct("rifles", template.riflesCost);
-		const hasAmmunition = await checkProduct("ammunition", template.ammunitionCost);
-		const hasArtillery = await checkProduct("artillery", template.artilleryCost);
-		const hasVehicles = await checkProduct("vehicles", template.vehiclesCost);
-		const hasExplosives = await checkProduct("explosives", template.explosivesCost);
-
-		if (!hasIron) return fail(400, { error: "Insufficient iron" });
-		if (!hasSteel) return fail(400, { error: "Insufficient steel" });
-		if (!hasGunpowder) return fail(400, { error: "Insufficient gunpowder" });
-		if (!hasRifles) return fail(400, { error: "Insufficient rifles" });
-		if (!hasAmmunition) return fail(400, { error: "Insufficient ammunition" });
-		if (!hasArtillery) return fail(400, { error: "Insufficient artillery" });
-		if (!hasVehicles) return fail(400, { error: "Insufficient vehicles" });
-		if (!hasExplosives) return fail(400, { error: "Insufficient explosives" });
+		// Get existing units for name generation
+		const existingUnits = await db.select().from(militaryUnits).where(eq(militaryUnits.ownerId, account.id));
+		const unitName = generateUnitName(template.unitType, existingUnits);
 
 		try {
 			await db.transaction(async (tx) => {
-				// Deduct currency
-				await tx
-					.update(userWallets)
-					.set({
-						balance: sql`${userWallets.balance} - ${template.currencyCost}`,
-						updatedAt: new Date()
-					})
-					.where(eq(userWallets.userId, account.id));
+				await deductResources(tx, account.id, template);
 
-				// Deduct resources
-				const deductResource = async (type: ResourceType, amount: number) => {
-					if (amount === 0) return;
-					await tx
-						.update(resourceInventory)
-						.set({
-							quantity: sql`${resourceInventory.quantity} - ${amount}`,
-							updatedAt: new Date()
-						})
-						.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, type)));
-				};
-
-				const deductProduct = async (type: ProductType, amount: number) => {
-					if (amount === 0) return;
-					await tx
-						.update(productInventory)
-						.set({
-							quantity: sql`${productInventory.quantity} - ${amount}`,
-							updatedAt: new Date()
-						})
-						.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, type)));
-				};
-
-				await deductResource("iron", template.ironCost);
-				await deductResource("steel", template.steelCost);
-				await deductResource("gunpowder", template.gunpowderCost);
-				await deductProduct("rifles", template.riflesCost);
-				await deductProduct("ammunition", template.ammunitionCost);
-				await deductProduct("artillery", template.artilleryCost);
-				await deductProduct("vehicles", template.vehiclesCost);
-				await deductProduct("explosives", template.explosivesCost);
-
-				// Calculate training completion time
 				const trainingStartedAt = new Date();
 				const trainingCompletesAt = new Date(trainingStartedAt.getTime() + template.trainingDuration * 3600000);
 
-				// Create military unit with HoI4 stats
 				await tx.insert(militaryUnits).values({
 					name: unitName,
 					ownerId: account.id,
-					stateId: stateId,
-					regionId: regionId,
+					stateId: residence.stateId,
+					regionId: residence.regionId,
 					unitType: template.unitType,
-					unitSize: "brigade", // Default, no longer used in combat
+					unitSize: "brigade",
 					attack: template.baseAttack,
 					defense: template.baseDefense,
 					organization: 100,
