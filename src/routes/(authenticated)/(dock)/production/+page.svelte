@@ -199,10 +199,9 @@
 				</div>
 				<div class="text-left sm:text-right">
 					<p class="text-xs text-gray-400 mb-1">Wage</p>
-					<p
-						class="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent"
-					>
-						<FluentMoney20Filled class="size-5 md:size-6 text-emerald-400" />
+
+					<p class="text-md font-bold text-green-400 flex items-center gap-1">
+						<FluentMoney20Filled class="size-5" />
 						{data.currentJob.wage.toLocaleString()}
 					</p>
 				</div>
