@@ -171,14 +171,14 @@
 				<FluentEmojiMilitaryHelmet class="size-8" />
 				Military Training
 			</h1>
-			<p class="text-gray-400 mt-1">
+			<p class="text-slate-400 mt-1">
 				{data.residence.stateName} • {data.units.filter((u) => !u.isTraining).length} Active • {trainingUnits.length} Training
 			</p>
 		</div>
 		{#if data.residence.bloc}
 			<div
-				class="px-4 py-2 rounded-lg border font-medium"
-				style="background-color: {data.residence.bloc.color}20; border-color: {data.residence.bloc.color}50"
+				class="px-4 py-2 rounded-lg border font-medium backdrop-blur-sm"
+				style="background-color: {data.residence.bloc.color}15; border-color: {data.residence.bloc.color}40"
 			>
 				{data.residence.bloc.name}
 			</div>
@@ -188,153 +188,142 @@
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<!-- Active Units - Main Focus -->
 		<div class="lg:col-span-2 space-y-4">
-			<h2 class="text-2xl font-bold text-white">Active Units ({data.units.filter((u) => !u.isTraining).length})</h2>
+			<h2 class="text-2xl font-semibold text-white">Active Units ({data.units.filter((u) => !u.isTraining).length})</h2>
 
 			{#each data.units.filter((u) => !u.isTraining) as unit}
 				<div
-					class="bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-white/10 rounded-xl overflow-hidden hover:border-white/20 transition-all"
+					class="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/60 hover:bg-slate-800/50 transition-all duration-300"
 				>
 					<div class="p-5">
-						<div class="flex items-start gap-4 mb-4">
+						<div class="flex items-center gap-4 mb-4">
 							<div
-								class="w-16 h-12 flex-shrink-0 bg-slate-900/50 rounded-lg border border-white/10 flex items-center justify-center p-2"
+								class="w-12 h-12 flex-shrink-0 bg-slate-900/60 rounded-lg border border-slate-700/60 flex items-center justify-center p-2 shadow-lg"
 							>
 								<img
 									src={getUnitIconPath(unit.unitType)}
 									alt={unit.unitType}
-									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]"
+									class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="font-bold text-white text-xl mb-1">{unit.name}</h3>
-								<p class="text-sm text-gray-400 capitalize mb-3">{unit.unitType.replace(/_/g, " ")}</p>
+								<h3 class="font-semibold text-white text-base mb-0.5 tracking-tight">{unit.name}</h3>
+								<div class="flex items-center gap-3 mt-2">
+									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-slate-500 font-medium">ATK</span>
+										<span class="text-base font-semibold text-white ml-1.5">{unit.attack}</span>
+									</div>
+									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-slate-500 font-medium">DEF</span>
+										<span class="text-base font-semibold text-white ml-1.5">{unit.defense}</span>
+									</div>
+								</div>
+							</div>
+							<form method="POST" action="?/disbandUnit" use:enhance class="flex-shrink-0">
+								<input type="hidden" name="unitId" value={unit.id} />
+								<button
+									type="submit"
+									class="btn btn-ghost btn-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+									title="Disband Unit"
+								>
+									<IconDelete class="size-4" />
+								</button>
+							</form>
+						</div>
 
-								<div class="flex items-center gap-4">
+						<!-- Compact Status Bars -->
+						<div class="grid grid-cols-3 gap-3">
+							<div>
+								<div class="flex items-center justify-between text-xs mb-1.5">
+									<span class="text-slate-500 font-medium">ORG</span>
+									<span class="font-semibold text-slate-300">{unit.organization}%</span>
+								</div>
+								<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
 									<div
-										class="bg-gradient-to-br from-red-600/30 to-red-700/20 border border-red-500/40 rounded-lg px-3 py-2"
-									>
-										<span class="text-xs text-red-300">Attack</span>
-										<span class="text-xl font-bold text-white ml-2">{unit.attack}</span>
-									</div>
+										class="h-1.5 rounded-full transition-all duration-500"
+										style="width: {unit.organization}%; background: linear-gradient(90deg, #60a5fa, #3b82f6)"
+									></div>
+								</div>
+							</div>
+
+							<div>
+								<div class="flex items-center justify-between text-xs mb-1.5">
+									<span class="text-slate-500 font-medium">STR</span>
+									<span class="font-semibold text-slate-300">{unit.health}%</span>
+								</div>
+								<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
 									<div
-										class="bg-gradient-to-br from-blue-600/30 to-blue-700/20 border border-blue-500/40 rounded-lg px-3 py-2"
-									>
-										<span class="text-xs text-blue-300">Defense</span>
-										<span class="text-xl font-bold text-white ml-2">{unit.defense}</span>
-									</div>
+										class="h-1.5 rounded-full transition-all duration-500"
+										style="width: {unit.health}%; background: linear-gradient(90deg, #34d399, #10b981)"
+									></div>
+								</div>
+							</div>
+
+							<div>
+								<div class="flex items-center justify-between text-xs mb-1.5">
+									<span class="text-slate-500 font-medium">SUP</span>
+									<span class="font-semibold text-slate-300">{unit.supplyLevel}%</span>
+								</div>
+								<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
+									<div
+										class="h-1.5 rounded-full transition-all duration-500"
+										style="width: {unit.supplyLevel}%; background: linear-gradient(90deg, #fbbf24, #f59e0b)"
+									></div>
 								</div>
 							</div>
 						</div>
-
-						<!-- Status Bars -->
-						<div class="space-y-3 mb-4">
-							<div>
-								<div class="flex justify-between text-sm mb-2">
-									<span class="text-gray-400 font-medium">Organization</span>
-									<span class="font-bold text-white">{unit.organization}%</span>
-								</div>
-								<div class="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden shadow-inner">
-									<div
-										class="h-3 rounded-full transition-all relative overflow-hidden"
-										style="width: {unit.organization}%; background: linear-gradient(90deg, #3b82f6, #2563eb)"
-									>
-										<div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-									</div>
-								</div>
-								{#if unit.organization < 100}
-									<p class="text-xs text-gray-500 mt-1">Recovers in {calculateOrgaRecoveryTime(unit.organization)}</p>
-								{/if}
-							</div>
-
-							<div>
-								<div class="flex justify-between text-sm mb-2">
-									<span class="text-gray-400 font-medium">Strength</span>
-									<span class="font-bold text-white">{unit.health}%</span>
-								</div>
-								<div class="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden shadow-inner">
-									<div
-										class="h-3 rounded-full transition-all relative overflow-hidden"
-										style="width: {unit.health}%; background: linear-gradient(90deg, #10b981, #059669)"
-									>
-										<div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-									</div>
-								</div>
-							</div>
-
-							<div>
-								<div class="flex justify-between text-sm mb-2">
-									<span class="text-gray-400 font-medium">Supply</span>
-									<span class="font-bold text-white">{unit.supplyLevel}%</span>
-								</div>
-								<div class="w-full bg-slate-700/50 rounded-full h-3 overflow-hidden shadow-inner">
-									<div
-										class="h-3 rounded-full transition-all relative overflow-hidden"
-										style="width: {unit.supplyLevel}%; background: linear-gradient(90deg, #f59e0b, #d97706)"
-									>
-										<div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<form method="POST" action="?/disbandUnit" use:enhance>
-							<input type="hidden" name="unitId" value={unit.id} />
-							<button type="submit" class="btn btn-error btn-sm gap-2">
-								<IconDelete class="size-4" />
-								Disband Unit
-							</button>
-						</form>
 					</div>
 				</div>
 			{/each}
 
 			{#if data.units.filter((u) => !u.isTraining).length === 0}
-				<div
-					class="bg-gradient-to-br from-slate-800/50 to-slate-900/50 rounded-xl border border-white/5 p-16 text-center"
-				>
-					<FluentEmojiMilitaryHelmet class="size-16 mx-auto mb-4 opacity-30" />
-					<p class="text-gray-400 text-lg">No active units</p>
-					<p class="text-sm text-gray-500 mt-2">Train your first unit to begin</p>
+				<div class="bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30 p-16 text-center">
+					<FluentEmojiMilitaryHelmet class="size-16 mx-auto mb-4 opacity-20" />
+					<p class="text-slate-400 text-lg">No active units</p>
+					<p class="text-sm text-slate-500 mt-2">Train your first unit to begin</p>
 				</div>
 			{/if}
 
 			<!-- Unit Templates -->
 			<div class="mt-8">
-				<h2 class="text-2xl font-bold text-white mb-4">Train New Units</h2>
+				<h2 class="text-2xl font-semibold text-white mb-4">Train New Units</h2>
 
 				<!-- Selectable Unit Type Cards -->
 				<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
 					{#each data.templates as template}
 						<button
 							type="button"
-							class="p-4 rounded-lg border-2 text-center transition-all group"
-							class:bg-blue-600-20={selectedTemplate?.id === template.id}
-							class:border-blue-500-50={selectedTemplate?.id === template.id}
-							class:bg-slate-700-30={selectedTemplate?.id !== template.id}
-							class:border-slate-600-30={selectedTemplate?.id !== template.id}
-							class:hover:border-slate-500-50={selectedTemplate?.id !== template.id}
+							class="p-3 rounded-lg border transition-all duration-200 group"
+							class:bg-slate-700-50={selectedTemplate?.id === template.id}
+							class:border-slate-500={selectedTemplate?.id === template.id}
+							class:shadow-lg={selectedTemplate?.id === template.id}
+							class:bg-slate-800-30={selectedTemplate?.id !== template.id}
+							class:border-slate-700-40={selectedTemplate?.id !== template.id}
+							class:hover:border-slate-600-60={selectedTemplate?.id !== template.id}
+							class:hover:bg-slate-800-40={selectedTemplate?.id !== template.id}
 							onclick={() => (selectedTemplate = template)}
 							disabled={isSubmitting}
 						>
-							<div class="flex flex-col gap-3 items-center">
+							<div class="flex flex-col gap-2 items-center">
 								<!-- Unit Icon -->
-								<div class="w-20 h-20 flex items-center justify-center p-3">
+								<div
+									class="w-12 h-12 flex items-center justify-center p-2 transition-transform group-hover:scale-110 duration-200"
+								>
 									<img
 										src={getUnitIconPath(template.unitType)}
 										alt={template.displayName}
-										class="w-full h-full object-contain transition-all"
-										class:[filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]={selectedTemplate?.id !==
+										class="w-full h-full object-contain transition-all duration-200"
+										class:[filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]={selectedTemplate?.id !==
 											template.id}
-										class:[filter:brightness(0)_saturate(100%)_invert(70%)_sepia(100%)_saturate(2000%)_hue-rotate(200deg)_brightness(100%)_contrast(100%)]={selectedTemplate?.id ===
+										class:[filter:brightness(0)_saturate(100%)_invert(80%)_sepia(20%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(95%)]={selectedTemplate?.id ===
 											template.id}
 									/>
 								</div>
 
 								<!-- Unit Name -->
 								<h3
-									class="font-bold text-sm transition-colors"
+									class="font-medium text-xs transition-colors text-center leading-tight"
 									class:text-white={selectedTemplate?.id === template.id}
-									class:text-gray-300={selectedTemplate?.id !== template.id}
+									class:text-slate-300={selectedTemplate?.id !== template.id}
 								>
 									{template.displayName}
 								</h3>
@@ -345,54 +334,53 @@
 
 				<!-- Central Training Panel -->
 				{#if selectedTemplate}
-					<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-6">
+					<div class="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-5 space-y-5">
 						<!-- Selected Unit Header -->
-						<div class="flex items-start gap-4">
+						<div class="flex items-center gap-4 mb-5">
 							<div
-								class="w-16 h-16 rounded-lg border border-blue-500/30 bg-blue-600/10 flex items-center justify-center p-3 flex-shrink-0"
+								class="w-14 h-14 rounded-lg border border-slate-600/50 bg-slate-900/40 flex items-center justify-center p-2.5 flex-shrink-0 shadow-lg"
 							>
 								<img
 									src={getUnitIconPath(selectedTemplate.unitType)}
 									alt={selectedTemplate.displayName}
-									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(50%)_sepia(100%)_saturate(1000%)_hue-rotate(200deg)_brightness(100%)_contrast(100%)]"
+									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(75%)_sepia(15%)_saturate(400%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
 								/>
 							</div>
 							<div class="flex-1">
-								<h3 class="text-2xl font-bold text-white mb-1">{selectedTemplate.displayName}</h3>
-								<p class="text-sm text-gray-400 mb-3">{selectedTemplate.description}</p>
-								<div class="flex items-center gap-4 text-sm">
-									<div class="bg-red-600/20 border border-red-500/30 rounded px-3 py-1">
-										<span class="text-xs text-red-300">Attack</span>
-										<span class="text-lg font-bold text-white ml-2">{selectedTemplate.baseAttack}</span>
+								<h3 class="text-xl font-semibold text-white mb-3 tracking-tight">{selectedTemplate.displayName}</h3>
+								<div class="flex items-center gap-3 text-sm">
+									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-slate-500">ATK</span>
+										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.baseAttack}</span>
 									</div>
-									<div class="bg-blue-600/20 border border-blue-500/30 rounded px-3 py-1">
-										<span class="text-xs text-blue-300">Defense</span>
-										<span class="text-lg font-bold text-white ml-2">{selectedTemplate.baseDefense}</span>
+									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-slate-500">DEF</span>
+										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.baseDefense}</span>
 									</div>
-									<div class="bg-purple-600/20 border border-purple-500/30 rounded px-3 py-1">
-										<span class="text-xs text-purple-300">Training</span>
-										<span class="text-lg font-bold text-white ml-2">{selectedTemplate.trainingDuration}h</span>
+									<div class="bg-slate-900/40 border border-slate-700/50 rounded px-2.5 py-1">
+										<span class="text-xs text-slate-500">TIME</span>
+										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.trainingDuration}h</span>
 									</div>
 								</div>
 							</div>
 						</div>
 
 						<!-- Resource Requirements -->
-						<div class="border-t border-white/5 pt-6">
-							<h4 class="text-sm font-medium text-gray-300 mb-3">Required Resources</h4>
-							<div class="bg-slate-700/30 rounded-lg p-4 space-y-2">
+						<div class="border-t border-slate-700/30 pt-4">
+							<h4 class="text-xs font-medium text-slate-400 mb-2.5 uppercase tracking-wide">Resources Required</h4>
+							<div class="bg-slate-900/30 rounded-lg p-3 space-y-1.5 border border-slate-700/30">
 								{#each getResourceStatus(selectedTemplate) as resource}
 									{@const hasEnough = resource.available >= resource.required}
-									<div class="flex justify-between text-sm items-center">
-										<span class="text-gray-400 flex items-center gap-2">
-											<span class="text-base">{resource.icon}</span>
-											{resource.name}:
+									<div class="flex justify-between text-xs items-center">
+										<span class="text-slate-400 flex items-center gap-1.5">
+											<span class="text-sm opacity-80">{resource.icon}</span>
+											{resource.name}
 										</span>
-										<span class="font-mono" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
+										<span class="font-mono text-xs" class:text-white={hasEnough} class:text-red-400={!hasEnough}>
 											{resource.required.toLocaleString()}
-											<span class="text-gray-500">/ {resource.available.toLocaleString()}</span>
+											<span class="text-slate-600">/ {resource.available.toLocaleString()}</span>
 											{#if hasEnough}
-												<span class="text-green-400 ml-1">✓</span>
+												<span class="text-emerald-400 ml-1">✓</span>
 											{:else}
 												<span class="text-red-400 ml-1">✗</span>
 											{/if}
@@ -402,8 +390,8 @@
 							</div>
 
 							{#if !canAfford(selectedTemplate)}
-								<div class="alert alert-error mt-4">
-									<span class="text-sm">⚠️ Insufficient resources to train this unit!</span>
+								<div class="mt-3 px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
+									<span class="text-xs text-red-400">⚠️ Insufficient resources</span>
 								</div>
 							{/if}
 						</div>
@@ -425,7 +413,7 @@
 							<button
 								type="submit"
 								disabled={isSubmitting || !canAfford(selectedTemplate)}
-								class="btn w-full gap-2"
+								class="btn w-full gap-2 transition-transform hover:scale-105"
 								class:btn-primary={canAfford(selectedTemplate)}
 								class:btn-disabled={!canAfford(selectedTemplate)}
 							>
@@ -440,10 +428,10 @@
 						</form>
 					</div>
 				{:else}
-					<div class="bg-slate-800/30 rounded-xl border border-white/5 p-12 text-center">
-						<FluentEmojiMilitaryHelmet class="size-16 mx-auto mb-4 opacity-30" />
-						<p class="text-gray-400 text-lg">Select a unit type to begin training</p>
-						<p class="text-sm text-gray-500 mt-2">Choose from the available templates above</p>
+					<div class="bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30 p-12 text-center">
+						<FluentEmojiMilitaryHelmet class="size-16 mx-auto mb-4 opacity-20" />
+						<p class="text-slate-400 text-lg">Select a unit type to begin training</p>
+						<p class="text-sm text-slate-500 mt-2">Choose from the available templates above</p>
 					</div>
 				{/if}
 			</div>
@@ -453,7 +441,7 @@
 		<div class="space-y-6">
 			<!-- Training Queue -->
 			<div>
-				<h2 class="text-xl font-bold text-white mb-4">Training Queue</h2>
+				<h2 class="text-xl font-semibold text-white mb-4">Training Queue</h2>
 
 				{#if activeTrainingUnit}
 					{@const progress = getTrainingProgress(activeTrainingUnit)}
@@ -462,52 +450,48 @@
 						activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt) <= new Date()}
 
 					<!-- Active Training Unit -->
-					<div
-						class="bg-gradient-to-br from-amber-600/20 to-amber-700/10 border border-amber-500/50 rounded-xl overflow-hidden mb-3"
-					>
-						<div class="p-4">
-							<div class="flex items-center gap-2 mb-3">
+					<div class="bg-slate-800/40 border border-amber-500/40 rounded-xl overflow-hidden mb-3 backdrop-blur-sm">
+						<div class="p-3.5">
+							<div class="flex items-center gap-2 mb-2.5">
 								<div
-									class="size-5 rounded-full bg-amber-500 text-amber-900 flex items-center justify-center font-bold text-xs"
+									class="size-4 rounded-full bg-amber-500/20 border border-amber-500/50 text-amber-400 flex items-center justify-center font-semibold text-xs"
 								>
 									1
 								</div>
-								<span class="text-xs font-semibold text-amber-300">TRAINING NOW</span>
+								<span class="text-xs font-semibold text-amber-400 tracking-wide">TRAINING</span>
 							</div>
 
-							<div class="flex items-center gap-3 mb-3">
-								<div class="w-10 h-8 flex-shrink-0">
+							<div class="flex items-center gap-2.5 mb-2.5">
+								<div
+									class="w-9 h-9 flex-shrink-0 bg-slate-900/40 rounded border border-slate-700/40 flex items-center justify-center p-1.5"
+								>
 									<img
 										src={getUnitIconPath(activeTrainingUnit.unitType)}
 										alt={activeTrainingUnit.unitType}
-										class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]"
+										class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(75%)_sepia(15%)_saturate(400%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
 									/>
 								</div>
 								<div class="flex-1 min-w-0">
-									<h3 class="font-bold text-white text-sm truncate">{activeTrainingUnit.name}</h3>
-									<p class="text-xs text-gray-400">{timeRemaining}</p>
+									<h3 class="font-semibold text-white text-xs truncate">{activeTrainingUnit.name}</h3>
+									<p class="text-xs text-slate-400">{timeRemaining}</p>
 								</div>
 							</div>
 
 							<!-- Progress Bar -->
-							<div class="w-full bg-slate-700/50 rounded-full h-2 overflow-hidden">
+							<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
 								<div
-									class="h-2 rounded-full transition-all duration-700 relative overflow-hidden"
-									style="width: {progress}%; background: linear-gradient(90deg, #f59e0b, #f59e0bcc)"
-								>
-									<div
-										class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"
-									></div>
-								</div>
+									class="h-1.5 rounded-full transition-all duration-700"
+									style="width: {progress}%; background: linear-gradient(90deg, #fbbf24, #f59e0b)"
+								></div>
 							</div>
 						</div>
 
 						{#if isComplete}
-							<div class="border-t border-amber-500/30 p-3 bg-slate-900/30">
+							<div class="border-t border-amber-500/20 p-2.5 bg-slate-900/20">
 								<form method="POST" action="?/completeTraining" use:enhance>
 									<input type="hidden" name="unitId" value={activeTrainingUnit.id} />
-									<button type="submit" class="btn btn-success btn-sm w-full gap-2">
-										<IconCheckmark class="size-4" />
+									<button type="submit" class="btn btn-success btn-xs w-full gap-1.5">
+										<IconCheckmark class="size-3.5" />
 										Complete
 									</button>
 								</form>
@@ -518,31 +502,33 @@
 
 				<!-- Queued Units -->
 				{#each queuedUnits as unit, index}
-					<div class="bg-slate-800/50 border border-slate-600/30 rounded-lg p-3 mb-2">
-						<div class="flex items-center gap-3">
+					<div class="bg-slate-800/30 border border-slate-700/40 rounded-lg p-2.5 mb-2 backdrop-blur-sm">
+						<div class="flex items-center gap-2.5">
 							<div
-								class="size-5 rounded-full bg-slate-600 text-slate-200 flex items-center justify-center font-bold text-xs flex-shrink-0"
+								class="size-4 rounded-full bg-slate-700/50 border border-slate-600/50 text-slate-300 flex items-center justify-center font-semibold text-xs flex-shrink-0"
 							>
 								{index + 2}
 							</div>
-							<div class="w-8 h-6 flex-shrink-0">
+							<div
+								class="w-7 h-7 flex-shrink-0 bg-slate-900/30 rounded border border-slate-700/30 flex items-center justify-center p-1"
+							>
 								<img
 									src={getUnitIconPath(unit.unitType)}
 									alt={unit.unitType}
-									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(38%)_sepia(96%)_saturate(7464%)_hue-rotate(230deg)_brightness(98%)_contrast(143%)]"
+									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]"
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="font-medium text-white text-sm truncate">{unit.name}</h3>
-								<p class="text-xs text-gray-500">Queued</p>
+								<h3 class="font-medium text-white text-xs truncate">{unit.name}</h3>
+								<p class="text-xs text-slate-500">Queued</p>
 							</div>
 						</div>
 					</div>
 				{/each}
 
 				{#if trainingUnits.length === 0}
-					<div class="text-center text-gray-500 py-8 text-sm">
-						<IconClock class="size-10 mx-auto mb-2 opacity-30" />
+					<div class="text-center text-slate-500 py-8 text-sm">
+						<IconClock class="size-10 mx-auto mb-2 opacity-20" />
 						<p>No units training</p>
 					</div>
 				{/if}
