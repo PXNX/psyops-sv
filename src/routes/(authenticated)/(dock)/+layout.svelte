@@ -1,24 +1,13 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-
 	import FluentEmojiBarChart from "~icons/fluent-emoji/bar-chart";
 	import FluentEmojiNewspaper from "~icons/fluent-emoji/newspaper";
 	import FluentEmojiMilitaryHelmet from "~icons/fluent-emoji/military-helmet";
 	import FluentEmojiNutAndBolt from "~icons/fluent-emoji/nut-and-bolt";
 	import FluentEmojiIdentificationCard from "~icons/fluent-emoji/identification-card";
-	import { page } from "$app/state";
-	import { fade } from "svelte/transition";
+	import { navigating, page } from "$app/state";
+	import { resolve } from "$app/paths";
 
 	const { children, data } = $props();
-
-	let active = "home";
-
-	const navigateTo = (page2: string) => {
-		active = page2;
-		console.log("data --------------------");
-		console.dir(data);
-		goto(`/${page2}`);
-	};
 </script>
 
 <svelte:head>
@@ -29,27 +18,33 @@
 	/>
 </svelte:head>
 
-<div class="flex flex-col pb-16">
-	{@render children()}
-</div>
+{#if navigating.to}
+	<div class="flex flex-col h-dvh">
+		<span class="loading loading-ring loading-md m-auto"></span>
+	</div>
+{:else}
+	<main class="flex flex-col h-[calc(100dvh-4rem)] overflow-y-auto">
+		{@render children()}
+	</main>
+{/if}
 
 {#if page.url.pathname !== "/posts/new" && !page.url.pathname.startsWith("/welcome")}
 	<!-- TODO && page.url.pathname !== "posts/[id]/edit" -->
 	<nav class="dock-md dock">
-		<button onclick={() => navigateTo("")} class="flinch">
+		<a href={"/"} class="flinch">
 			<FluentEmojiBarChart class="size-6" />
-		</button>
-		<button onclick={() => navigateTo("posts")} class="flinch">
+		</a>
+		<a href={"/posts"} class="flinch">
 			<FluentEmojiNewspaper class="size-6" />
-		</button>
-		<button onclick={() => navigateTo("training")} class="flinch">
+		</a>
+		<a href={"/training"} class="flinch">
 			<FluentEmojiMilitaryHelmet class="size-6" />
-		</button>
-		<button onclick={() => navigateTo("production")} class="flinch">
+		</a>
+		<a href={"/production"} class="flinch">
 			<FluentEmojiNutAndBolt class="size-6" />
-		</button>
-		<button onclick={() => navigateTo("user/" + data.account.id)} class="flinch">
+		</a>
+		<a href={"user/" + data.account.id} class="flinch">
 			<FluentEmojiIdentificationCard class="size-6" />
-		</button>
+		</a>
 	</nav>
 {/if}

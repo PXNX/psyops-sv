@@ -38,10 +38,10 @@ export const taxTypeEnum = pgEnum("tax_type", ["mining", "production", "market_t
 export const electionStatusEnum = pgEnum("election_status", ["scheduled", "active", "completed"]);
 export const militaryUnitTypeEnum = pgEnum("military_unit_type", [
 	"air_defence",
-	"heavy_armor",
-	"ifv",
+	"armor",
+	"mechanized",
 	"artillery",
-	"light_infantry",
+	"infantry",
 	"bomber_squadron",
 	"fighter_squadron"
 ]);

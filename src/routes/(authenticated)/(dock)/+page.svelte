@@ -10,12 +10,6 @@
 
 	let { data }: { data: PageData } = $props();
 
-	const currentRegionName = $derived(() => {
-		if (!data.userLocation) return "Unknown";
-		const key = `region_${data.userLocation.regionId}` as keyof typeof m;
-		return m[key]?.() ?? `Region ${data.userLocation.regionId}`;
-	});
-
 	function handleTravelComplete() {
 		window.location.reload();
 	}

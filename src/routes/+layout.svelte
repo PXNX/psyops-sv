@@ -17,12 +17,6 @@
 
 {#key page.url}
 	<div transition:fade>
-		{#if navigating.to}
-			<main class=" flex h-dvh">
-				<span class="loading loading-ring loading-md m-auto"></span>
-			</main>
-		{:else}
-			{@render children()}
-		{/if}
+		{@render children()}
 	</div>
 {/key}
