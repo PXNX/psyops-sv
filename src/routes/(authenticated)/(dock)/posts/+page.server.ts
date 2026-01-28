@@ -1,13 +1,16 @@
 // src/routes/(authenticated)/(fullscreen)/posts/+page.server.ts
 import { db } from "$lib/server/db";
 import { articles, accounts, newspapers, upvotes, files, userProfiles } from "$lib/server/schema";
-import { eq, desc, sql } from "drizzle-orm";
-import type { PageServerLoad } from "./$types";
+import { eq, desc, sql, lt } from "drizzle-orm";
+import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { json } from "@sveltejs/kit";
 
-export const load: PageServerLoad = async ({ locals }) => {
-	// Query articles with author info and upvote counts
-	const articlesData = await db
+const PAGE_SIZE = 20;
+
+async function fetchArticles(cursor: string | null, accountId: string) {
+	// Build the query
+	let query = db
 		.select({
 			id: articles.id,
 			title: articles.title,
@@ -15,41 +18,126 @@ export const load: PageServerLoad = async ({ locals }) => {
 			createdAt: articles.createdAt,
 			authorId: articles.authorId,
 			authorName: userProfiles.name,
-			authorLogoKey: files.key,
+			authorLogoFileId: userProfiles.logo,
 			newspaperId: articles.newspaperId,
 			newspaperName: newspapers.name,
+			newspaperLogoFileId: newspapers.logo,
 			upvoteCount: sql<number>`cast(count(${upvotes.id}) as int)`
 		})
 		.from(articles)
 		.leftJoin(accounts, eq(articles.authorId, accounts.id))
 		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
-		.leftJoin(files, eq(userProfiles.logo, files.id))
 		.leftJoin(newspapers, eq(articles.newspaperId, newspapers.id))
 		.leftJoin(upvotes, eq(articles.id, upvotes.articleId))
-		.groupBy(articles.id, userProfiles.name, files.key, newspapers.name)
+		.groupBy(
+			articles.id,
+			articles.title,
+			articles.content,
+			articles.createdAt,
+			articles.authorId,
+			articles.newspaperId,
+			userProfiles.name,
+			userProfiles.logo,
+			newspapers.name,
+			newspapers.logo
+		)
 		.orderBy(desc(articles.createdAt))
-		.limit(50);
+		.limit(PAGE_SIZE + 1); // Fetch one extra to check if there are more
+
+	// If cursor is provided, only fetch articles older than the cursor
+	if (cursor) {
+		const cursorDate = new Date(cursor);
+		query = query.where(lt(articles.createdAt, cursorDate)) as any;
+	}
+
+	const articlesData = await query;
+
+	// Check if there are more articles
+	const hasMore = articlesData.length > PAGE_SIZE;
+	const articlesToReturn = hasMore ? articlesData.slice(0, PAGE_SIZE) : articlesData;
 
 	// Get signed URLs for logos
 	const articlesWithUrls = await Promise.all(
-		articlesData.map(async (article) => ({
-			...article,
-			authorLogo: article.authorLogoKey ? await getSignedDownloadUrl(article.authorLogoKey) : null
-		}))
+		articlesToReturn.map(async (article) => {
+			let authorLogo: string | null = null;
+			let newspaperLogo: string | null = null;
+
+			// Get newspaper logo
+			if (article.newspaperId && article.newspaperLogoFileId) {
+				const logoFile = await db.query.files.findFirst({
+					where: eq(files.id, article.newspaperLogoFileId)
+				});
+				if (logoFile) {
+					newspaperLogo = await getSignedDownloadUrl(logoFile.key);
+				}
+			}
+
+			// Get author logo
+			if (article.authorLogoFileId) {
+				const logoFile = await db.query.files.findFirst({
+					where: eq(files.id, article.authorLogoFileId)
+				});
+				if (logoFile) {
+					authorLogo = await getSignedDownloadUrl(logoFile.key);
+				}
+			}
+
+			return {
+				id: article.id,
+				title: article.title,
+				content: article.content,
+				createdAt: article.createdAt,
+				authorId: article.authorId,
+				authorName: article.authorName,
+				authorLogo,
+				newspaperId: article.newspaperId,
+				newspaperName: article.newspaperName,
+				newspaperLogo,
+				upvoteCount: article.upvoteCount,
+				own: accountId === article.authorId
+			};
+		})
 	);
 
-	// Get user's upvoted articles if logged in
-	let userUpvotes: number[] = [];
-	if (locals.account) {
-		const upvotedArticles = await db
-			.select({ articleId: upvotes.articleId })
-			.from(upvotes)
-			.where(eq(upvotes.userId, locals.account.id));
-		userUpvotes = upvotedArticles.map((u) => u.articleId);
-	}
+	// Calculate next cursor
+	const nextCursor =
+		hasMore && articlesToReturn.length > 0
+			? articlesToReturn[articlesToReturn.length - 1].createdAt.toISOString()
+			: null;
 
 	return {
 		articles: articlesWithUrls,
+		hasMore,
+		nextCursor
+	};
+}
+
+export const load: PageServerLoad = async ({ locals }) => {
+	const account = locals.account!;
+
+	const result = await fetchArticles(null, account.id);
+
+	// Get user's upvoted articles
+	const upvotedArticles = await db
+		.select({ articleId: upvotes.articleId })
+		.from(upvotes)
+		.where(eq(upvotes.userId, account.id));
+	const userUpvotes = upvotedArticles.map((u) => u.articleId);
+
+	return {
+		...result,
 		userUpvotes
 	};
 };
+
+export const actions = {
+	loadMore: async ({ request, locals }) => {
+		const account = locals.account!;
+		const formData = await request.formData();
+		const cursor = formData.get("cursor") as string | null;
+
+		const result = await fetchArticles(cursor, account.id);
+
+		return json(result);
+	}
+} satisfies Actions;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
-	import SquareLogo from "$lib/component/SquareLogo.svelte";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
+	import Logo from "$lib/component/Logo.svelte";
 
 	const { data } = $props();
 </script>
@@ -26,7 +26,7 @@
 			{#if newspaper}
 				<a href="/newspaper/{newspaper.id}" oncontextmenu={() => false}>
 					<li class="list-row flinch">
-						<SquareLogo src={newspaper.logo} />
+						<Logo src={newspaper.logo} alt={newspaper.name} />
 						<div>
 							<h3 class="block text-lg font-bold tracking-tight transition-all duration-3000" id="title">
 								{newspaper.name}
