@@ -16,6 +16,7 @@
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import { themes } from "$lib/themes";
 	import { updateProfileSchema } from "./schema.js";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
 
@@ -165,35 +166,6 @@
 		<p class="text-gray-400">Manage your account preferences</p>
 	</div>
 
-	<!-- Cost & Balance Info -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-		<!-- Balance -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-green-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Your Balance</p>
-					<p class="text-lg font-bold text-white">{data.userBalance.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
-
-		<!-- Cost -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-					<FluentPerson20Filled class="size-5 text-purple-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Profile Edit Cost</p>
-					<p class="text-lg font-bold text-white">{data.editCost.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	<!-- Cooldown Warning -->
 	{#if data.isOnCooldown && data.cooldownEndsAt}
 		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5 space-y-3">
@@ -216,41 +188,6 @@
 					</div>
 				</div>
 			</div>
-		</div>
-	{/if}
-
-	<!-- Insufficient Funds Warning -->
-	{#if !data.canAfford && !data.isOnCooldown}
-		<div class="bg-amber-600/20 border border-amber-500/30 rounded-xl p-5 space-y-3">
-			<div class="flex items-start gap-3">
-				<FluentMoney20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
-				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-amber-300 text-lg">Insufficient Funds</h3>
-					<p class="text-amber-200/90 text-sm leading-relaxed">
-						You need <strong>{data.editCost.toLocaleString()}</strong> currency to edit your profile. You currently have
-						<strong>{data.userBalance.toLocaleString()}</strong>.
-					</p>
-					<div class="bg-amber-900/30 rounded-lg p-3">
-						<p class="text-amber-100 text-sm font-medium">
-							Needed: {(data.editCost - data.userBalance).toLocaleString()} more currency
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Success Message -->
-	{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("wait") && !$message.includes("Insufficient")}
-		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
-			<p class="text-green-300 text-sm font-medium">{$message}</p>
-		</div>
-	{/if}
-
-	<!-- Error Message -->
-	{#if $message && ($message.includes("error") || $message.includes("failed") || $message.includes("wait") || $message.includes("Insufficient"))}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
@@ -399,29 +336,39 @@
 			</div>
 		</div>
 
-		<!-- Save Button -->
-		<button
-			type="submit"
-			disabled={$submitting || !canEdit}
-			class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
-		>
-			{#if $delayed}
-				<span class="loading loading-spinner loading-sm"></span>
-				Saving...
-			{:else}
-				<FluentCheckmark20Filled class="size-5" />
-				Save Changes ({data.editCost.toLocaleString()})
-			{/if}
-		</button>
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 
-		<!-- Info Box -->
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-			<p class="text-sm text-blue-300">
-				💡 <strong>Note:</strong> Profile changes cost {data.editCost.toLocaleString()} currency and have a
-				{data.cooldownHours}-hour cooldown to prevent frequent modifications.
-			</p>
+			<!-- Save Button -->
+			<button
+				type="submit"
+				disabled={$submitting || !canEdit}
+				class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
+			>
+				{#if $delayed}
+					<span class="loading loading-spinner loading-sm"></span>
+					Saving...
+				{:else}
+					<FluentCheckmark20Filled class="size-5" />
+					Save Changes
+				{/if}
+			</button>
 		</div>
 	</form>
+
+	<!-- Success Message -->
+	{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("wait") && !$message.includes("Insufficient")}
+		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
+			<p class="text-green-300 text-sm font-medium">{$message}</p>
+		</div>
+	{/if}
+
+	<!-- Error Message -->
+	{#if $message && ($message.includes("error") || $message.includes("failed") || $message.includes("wait") || $message.includes("Insufficient"))}
+		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
+			<p class="text-red-300 text-sm font-medium">{$message}</p>
+		</div>
+	{/if}
 
 	<!-- Application Settings -->
 	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
@@ -515,7 +462,11 @@
 
 	<!-- Account Actions -->
 	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
-		<h2 class="text-lg font-semibold text-white">Account Actions</h2>
+		<h2 class="text-lg font-semibold text-white">Account</h2>
+
+		<div class="bg-slate-700/50 rounded-xl border border-white/5 p-4 space-y-3 text-code">
+			{data.profile.email}
+		</div>
 
 		<form method="POST" action="?/logout" use:enhance>
 			<button
@@ -526,13 +477,5 @@
 				Sign Out
 			</button>
 		</form>
-	</div>
-
-	<!-- Info Box -->
-	<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-		<p class="text-sm text-blue-300">
-			💡 <strong>Tip:</strong> Your profile information will be visible to other users. Make sure to choose a name and logo
-			that represent you well in the political landscape!
-		</p>
 	</div>
 </div>
