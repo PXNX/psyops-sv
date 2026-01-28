@@ -52,7 +52,7 @@
 		<!-- Metadata & Actions -->
 		<div class="flex flex-wrap items-center gap-4 sm:gap-6">
 			<!-- Author -->
-			<a href="/profile/{data.article.authorId}" class="flex items-center gap-3 group">
+			<a href="/user/{data.article.authorId}" class="flex items-center gap-3 group">
 				<div
 					class="size-10 rounded-full ring-1 ring-white/10 group-hover:ring-purple-500/30 transition-all overflow-hidden"
 				>
@@ -60,7 +60,7 @@
 				</div>
 				<div class="flex flex-col">
 					<span class="text-sm font-medium text-white group-hover:text-purple-400 transition-colors">
-						{data.article.authorName || "Anonymous"}
+						{data.article.authorName}
 					</span>
 					{#if data.article.newspaperName}
 						<a

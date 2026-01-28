@@ -79,30 +79,6 @@
 		{/each}
 	</div>
 
-	<!-- Starting Benefits -->
-	<div
-		class="bg-gradient-to-br from-green-600/20 to-emerald-600/20 border border-green-500/30 rounded-xl p-6 space-y-4"
-		in:fly={{ y: 20, duration: 500, delay: 700 }}
-	>
-		<div class="flex items-center gap-3">
-			<div class="size-12 bg-green-600/30 rounded-xl flex items-center justify-center">
-				<FluentMoney20Filled class="size-6 text-green-400" />
-			</div>
-			<div>
-				<h3 class="text-xl font-bold text-white">Your Starting Package</h3>
-				<p class="text-sm text-green-300">Everything you need to begin your political career</p>
-			</div>
-		</div>
-		<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-			{#each startingBenefits as benefit}
-				<div class="flex items-start gap-2">
-					<FluentCheckmark20Filled class="size-5 text-green-400 shrink-0 mt-0.5" />
-					<p class="text-sm text-gray-200">{benefit}</p>
-				</div>
-			{/each}
-		</div>
-	</div>
-
 	<!-- Call to Action -->
 	<div class="text-center space-y-4" in:fly={{ y: 20, duration: 500, delay: 800 }}>
 		<a
