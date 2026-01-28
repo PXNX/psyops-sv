@@ -43,7 +43,7 @@
 		<a href={"/production"} class="flinch">
 			<FluentEmojiNutAndBolt class="size-6" />
 		</a>
-		<a href={"user/" + data.account.id} class="flinch">
+		<a href={"/user/" + data.account.id} class="flinch">
 			<FluentEmojiIdentificationCard class="size-6" />
 		</a>
 	</nav>
