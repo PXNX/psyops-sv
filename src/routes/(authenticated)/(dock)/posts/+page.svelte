@@ -2,11 +2,15 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { goto } from "$app/navigation";
+	import { onMount } from "svelte";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentHeart20Regular from "~icons/fluent/heart-20-regular";
 	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentClock20Regular from "~icons/fluent/clock-20-regular";
+	import IconClock from "~icons/fluent/clock-24-regular";
+	import IconHeart from "~icons/fluent/heart-24-regular";
+	import IconChevronRight from "~icons/fluent/chevron-right-24-regular";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
@@ -15,10 +19,14 @@
 	const { data } = $props();
 
 	let searchQuery = $state("");
-	let upvotingArticleId = $state<number | null>(null);
+	let allArticles = $state([...data.articles]);
+	let hasMore = $state(data.hasMore);
+	let nextCursor = $state(data.nextCursor);
+	let isLoading = $state(false);
+	let loadMoreTrigger: HTMLDivElement;
 
 	const filteredArticles = $derived(
-		data.articles.filter((article) => {
+		allArticles.filter((article) => {
 			const query = searchQuery.toLowerCase();
 			return (
 				article.title.toLowerCase().includes(query) ||
@@ -27,6 +35,52 @@
 			);
 		})
 	);
+
+	async function loadMore() {
+		if (isLoading || !hasMore || !nextCursor) return;
+
+		isLoading = true;
+		try {
+			const formData = new FormData();
+			formData.append("cursor", nextCursor);
+
+			const response = await fetch("?/loadMore", {
+				method: "POST",
+				body: formData
+			});
+
+			const result = await response.json();
+
+			allArticles = [...allArticles, ...result.articles];
+			hasMore = result.hasMore;
+			nextCursor = result.nextCursor;
+		} catch (error) {
+			console.error("Failed to load more articles:", error);
+		} finally {
+			isLoading = false;
+		}
+	}
+
+	onMount(() => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && hasMore && !isLoading) {
+					loadMore();
+				}
+			},
+			{ threshold: 0.1 }
+		);
+
+		if (loadMoreTrigger) {
+			observer.observe(loadMoreTrigger);
+		}
+
+		return () => {
+			if (loadMoreTrigger) {
+				observer.unobserve(loadMoreTrigger);
+			}
+		};
+	});
 </script>
 
 <svelte:head>
@@ -70,7 +124,7 @@
 </header>
 
 <!-- Main Content -->
-<main class="max-w-4xl mx-auto px-4 py-6">
+<main class="max-w-5xl mx-auto px-4 py-6">
 	{#if filteredArticles.length === 0}
 		<div class="text-center py-16">
 			<div class="inline-flex items-center justify-center size-20 bg-slate-800/50 rounded-full mb-4">
@@ -94,72 +148,75 @@
 			{#each filteredArticles as article (article.id)}
 				<a
 					href="/posts/{article.id}"
-					class="group bg-slate-800/30 rounded-xl border border-white/5 hover:border-white/10 hover:bg-slate-800/50 transition-all shadow-lg hover:shadow-xl w-full"
+					class="card border bg-base-200 transition-all cursor-pointer w-full"
+					class:border-base-300={!article.own}
+					class:border-blue-300={article.own}
+					class:hover:border-blue-500={article.own}
+					class:hover:border-purple-500={!article.own}
 				>
-					<div class="p-4">
-						<div class="flex items-start gap-4">
-							<!-- Author/Newspaper Avatar -->
-							{#if article.newspaperName}
-								<a href="/newspaper/{article.newspaperId}" class="flex-shrink-0">
-									<div
-										class="size-12 rounded-full ring-2 ring-white/10 group-hover:ring-purple-500/30 transition-all overflow-hidden bg-slate-700/50 flex items-center justify-center"
-									>
-										<FluentEmojiRolledUpNewspaper class="text-2xl" />
-									</div>
-								</a>
-							{:else}
-								<a href="/profile/{article.authorId}" class="flex-shrink-0">
-									<div
-										class="size-12 rounded-full ring-2 ring-white/10 group-hover:ring-purple-500/30 transition-all overflow-hidden"
-									>
-										<Logo
-											src={article.authorLogo}
-											alt={article.authorName || "Author"}
-											class="w-full h-full object-cover"
-										/>
-									</div>
-								</a>
-							{/if}
+					<div class="card-body p-4">
+						<div class="flex items-start gap-3 w-full">
+							<!-- Logo/Avatar -->
+							<div class="avatar flex-shrink-0">
+								<div class="size-12 rounded-lg">
+									{#if article.newspaperId}
+										<!-- Newspaper logo -->
+										<Logo src={article.newspaperLogo} alt={article.newspaperName!} />
+									{:else}
+										<Logo src={article.authorLogo} alt={article.authorName!} />
+									{/if}
+								</div>
+							</div>
 
 							<!-- Content -->
 							<div class="flex-1 min-w-0">
-								<!-- Newspaper or Author Name -->
-								<div class="flex flex-wrap items-center gap-2 text-sm mb-2">
+								<!-- Author/Newspaper and Date -->
+								<div class="text-sm text-base-content/60 mb-1">
 									{#if article.newspaperName}
-										<a
-											href="/newspaper/{article.newspaperId}"
-											class="font-semibold text-white hover:text-purple-400 transition-colors truncate"
-										>
-											{article.newspaperName}
-										</a>
+										{article.newspaperName}
 									{:else}
-										<a
-											href="/profile/{article.authorId}"
-											class="font-semibold text-white hover:text-purple-400 transition-colors truncate"
-										>
-											{article.authorName || "Anonymous"}
-										</a>
+										{article.authorName}
 									{/if}
-
-									<span class="text-gray-600">•</span>
-									<span class="flex items-center gap-1 text-gray-500 text-xs">
-										<FluentClock20Regular class="size-3" />
-										{formatDateTime(article.createdAt)}
-									</span>
 								</div>
 
-								<h3
-									class="font-bold text-lg text-white group-hover:text-purple-400 transition-colors line-clamp-2 mb-3"
-								>
+								<!-- Title -->
+								<h3 class="card-title text-lg mb-2 line-clamp-2">
 									{article.title}
 								</h3>
+
+								<!-- Meta info: Time and Likes -->
+								<div class="flex items-center gap-4 text-sm text-base-content/60">
+									<div class="flex items-center gap-1">
+										<IconClock class="size-4" />
+										{formatDateTime(article.createdAt)}
+									</div>
+									<div class="flex items-center gap-1">
+										<IconHeart class="size-4" />
+										{article.upvoteCount}
+									</div>
+								</div>
 							</div>
 
-							<FluentChevronRight20Filled class="size-4" />
+							<!-- Chevron Right -->
+							<div class="flex-shrink-0 self-center">
+								<IconChevronRight class="h-5 w-5 text-base-content/40" />
+							</div>
 						</div>
 					</div>
 				</a>
 			{/each}
+
+			<!-- Load More Trigger -->
+			{#if hasMore && !searchQuery}
+				<div bind:this={loadMoreTrigger} class="py-8 text-center">
+					{#if isLoading}
+						<div class="inline-flex items-center gap-2 text-gray-400">
+							<span class="loading loading-spinner loading-sm"></span>
+							<span>Loading more posts...</span>
+						</div>
+					{/if}
+				</div>
+			{/if}
 		</div>
 	{/if}
 </main>

@@ -9,12 +9,15 @@
 	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
 	import Logo from "$lib/component/Logo.svelte";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
+	import Modal from "$lib/component/Modal.svelte";
+	import { on } from "svelte/events";
+	import { is } from "drizzle-orm";
 
 	const { data } = $props();
 
-	let editorComponent = $state(null);
+	let editorComponent = $state<WysiwygEditor | null>(null);
 	let publishModal: HTMLDialogElement;
-	let cancelModal: HTMLDialogElement;
+	let isCancelModalOpen = $state(false);
 	let title = $state("");
 	let selectedNewspaperId = $state("");
 	let isSubmitting = $state(false);
@@ -42,7 +45,7 @@
 
 	const handleCancel = () => {
 		if (title || editorComponent?.getContent()) {
-			cancelModal.showModal();
+			isCancelModalOpen = true;
 		} else {
 			history.back();
 		}
@@ -60,10 +63,10 @@
 		</button>
 
 		{#if editorComponent}
-			<button class="btn btn-circle btn-sm sm:btn-md" onclick={() => editorComponent.undo()} title="Undo">
+			<button class="btn btn-circle btn-sm sm:btn-md" onclick={() => editorComponent?.undo()} title="Undo">
 				<FluentArrowHookUpLeft20Regular class="w-5 h-5" />
 			</button>
-			<button class="btn btn-circle btn-sm sm:btn-md" onclick={() => editorComponent.redo()} title="Redo">
+			<button class="btn btn-circle btn-sm sm:btn-md" onclick={() => editorComponent?.redo()} title="Redo">
 				<FluentArrowHookUpRight20Regular class="w-5 h-5" />
 			</button>
 		{/if}
@@ -170,25 +173,8 @@
 </dialog>
 
 <!-- Cancel Modal -->
-<dialog class="modal" bind:this={cancelModal}>
-	<div class="modal-box">
-		<form method="dialog">
-			<button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-				<MdiWindowClose />
-			</button>
-		</form>
+<Modal open={isCancelModalOpen} title="Discard changes?"
+	>Your unsaved work will be lost.
 
-		<h3 class="font-bold text-lg">Discard changes?</h3>
-		<p class="py-4">Your unsaved work will be lost.</p>
-
-		<div class="modal-action">
-			<form method="dialog">
-				<button class="btn">Keep Editing</button>
-			</form>
-			<button class="btn btn-error" onclick={() => history.back()}> Discard </button>
-		</div>
-	</div>
-	<form method="dialog" class="modal-backdrop">
-		<button>close</button>
-	</form>
-</dialog>
+	<button class="btn btn-error" onclick={handleCancel}> Discard </button>
+</Modal>
