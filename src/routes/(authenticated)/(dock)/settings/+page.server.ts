@@ -64,7 +64,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		profile: {
 			name: profile?.name,
 			bio: profile?.bio,
-			logo: logoUrl
+			logo: logoUrl,
+			email: account.email
 		},
 		userBalance,
 		editCost: PROFILE_EDIT_CONFIG.COST,
