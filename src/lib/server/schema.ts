@@ -144,11 +144,12 @@ export const states = pgTable("states", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull(),
 	logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
-
 	background: text("background"),
 	description: text("description"),
 	population: integer("population").default(0),
 	rating: integer("rating").default(0),
+	capitulated: boolean("capitulated").default(false).notNull(),
+	capitulated_at: timestamp("capitulated_at"),
 	blocId: integer("bloc_id").references(() => blocs.id, { onDelete: "set null" }),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
@@ -1140,6 +1141,8 @@ export const blocs = pgTable("blocs", {
 	logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
 	color: varchar("color", { length: 7 }).notNull(),
 	description: text("description"),
+	capitulated: boolean("capitulated").default(false).notNull(),
+	capitulated_at: timestamp("capitulated_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
