@@ -75,9 +75,8 @@
 		<div>
 			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
 				<FluentMoney20Filled class="size-8 text-green-400" />
-				Economy Ministry
+				{data.state.name} Ministry of Economy
 			</h1>
-			<p class="text-gray-400 mt-2">Manage state finances and infrastructure for {data.state.name}</p>
 			{#if data.isPresident}
 				<p class="text-xs text-yellow-400 mt-1">👑 Accessing as President</p>
 			{/if}
@@ -169,146 +168,6 @@
 				<FluentWarning20Filled class="inline size-3" />
 				Treasury funds come from taxes, state exports, and visa fees
 			</p>
-		</div>
-	</div>
-
-	<!-- Power Plant Construction -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-		<div class="flex items-center gap-2">
-			<FluentFlash20Filled class="size-5 text-amber-400" />
-			<h2 class="text-lg font-semibold text-white">Power Infrastructure</h2>
-		</div>
-
-		<!-- Build Power Plant Form -->
-		<form method="POST" action="?/buildPowerPlant" use:enhance class="space-y-4">
-			<div>
-				<label for="plantType" class="block text-sm font-medium text-gray-300 mb-2"> Plant Type </label>
-				<div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-					{#each Object.entries(plantTypeInfo) as [type, info]}
-						<button
-							type="button"
-							class="p-3 rounded-lg border-2 text-left transition-all {selectedPlantType === type
-								? 'bg-amber-600/20 border-amber-500/50'
-								: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
-							onclick={() => (selectedPlantType = type)}
-						>
-							<div class="flex items-center gap-2 mb-1">
-								<span class="text-xl">{info.icon}</span>
-								<span class="font-bold text-white capitalize">{type}</span>
-							</div>
-							<p class="text-xs text-gray-400">{info.output} MW</p>
-							<p class="text-xs text-green-400 font-bold">${(info.cost / 100).toLocaleString()}</p>
-						</button>
-					{/each}
-				</div>
-				<input type="hidden" name="plantType" value={selectedPlantType} />
-			</div>
-
-			<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">
-				<p class="text-sm font-semibold text-white mb-1">{selectedPlantInfo.description}</p>
-				<div class="grid grid-cols-2 gap-2 text-xs mt-2">
-					<div>
-						<span class="text-gray-400">Power Output:</span>
-						<span class="font-bold text-amber-400 ml-1">{selectedPlantInfo.output} MW</span>
-					</div>
-					<div>
-						<span class="text-gray-400">Construction Cost:</span>
-						<span class="font-bold text-green-400 ml-1">${(selectedPlantInfo.cost / 100).toLocaleString()}</span>
-					</div>
-				</div>
-			</div>
-
-			<div>
-				<label for="plantName" class="block text-sm font-medium text-gray-300 mb-2"> Plant Name </label>
-				<input
-					type="text"
-					id="plantName"
-					name="name"
-					bind:value={plantName}
-					placeholder="e.g., Central Power Station"
-					maxlength="100"
-					class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-amber-500/50"
-				/>
-			</div>
-
-			<button
-				type="submit"
-				disabled={!canBuildPlant}
-				class="btn w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 border-0 text-white gap-2 disabled:opacity-50"
-			>
-				{#if canBuildPlant}
-					<FluentBuildingFactory20Filled class="size-5" />
-					Construct Plant - ${(selectedPlantInfo.cost / 100).toLocaleString()}
-				{:else if data.treasury.balance < selectedPlantInfo.cost}
-					<FluentWarning20Filled class="size-5" />
-					Insufficient Treasury Funds
-				{:else}
-					<FluentWarning20Filled class="size-5" />
-					Enter Plant Name (min 3 characters)
-				{/if}
-			</button>
-		</form>
-
-		<!-- Existing Power Plants -->
-		{#if data.powerPlants.length > 0}
-			<div class="border-t border-white/5 pt-4 space-y-3">
-				<h3 class="text-sm font-semibold text-gray-400 uppercase">Existing Plants ({data.powerPlants.length})</h3>
-				<div class="grid gap-3">
-					{#each data.powerPlants as plant}
-						<div
-							class="bg-slate-700/30 rounded-lg p-4 border-2 {plant.isOperational
-								? 'border-green-500/30'
-								: 'border-red-500/30'}"
-						>
-							<div class="flex items-center justify-between">
-								<div class="flex items-center gap-3">
-									<span class="text-3xl">{plantTypeInfo[plant.plantType].icon}</span>
-									<div>
-										<p class="font-bold text-white">{plant.name}</p>
-										<p class="text-sm text-gray-400 capitalize">
-											{plant.plantType} Plant - {plant.powerOutput} MW
-										</p>
-										<p class="text-xs text-gray-500">
-											Built {new Date(plant.builtAt).toLocaleDateString()} • Cost: ${(
-												Number(plant.constructionCost) / 100
-											).toLocaleString()}
-										</p>
-									</div>
-								</div>
-								<span
-									class="badge {plant.isOperational
-										? 'bg-green-600/20 text-green-300 border-green-500/30'
-										: 'bg-red-600/20 text-red-300 border-red-500/30'}"
-								>
-									{plant.isOperational ? "Operational" : "Offline"}
-								</span>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-		{:else}
-			<div class="bg-slate-700/20 border border-slate-600/30 rounded-xl p-6 text-center">
-				<FluentBuildingFactory20Filled class="size-12 text-gray-600 mx-auto mb-2" />
-				<p class="text-gray-400 text-sm">No power plants built yet</p>
-				<p class="text-gray-500 text-xs mt-1">Construct your first power plant to start generating energy</p>
-			</div>
-		{/if}
-	</div>
-
-	<!-- Info Cards -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-		<div class="bg-green-600/10 border border-green-500/20 rounded-xl p-4">
-			<FluentMoney20Filled class="inline size-4 text-green-400 mb-1" />
-			<p class="text-xs text-green-300">Treasury funds are managed by the Economy Minister and President</p>
-		</div>
-		<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-4">
-			<FluentFlash20Filled class="inline size-4 text-amber-400 mb-1" />
-			<p class="text-xs text-amber-300">Power plants provide energy for state factories and infrastructure</p>
-		</div>
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-			<FluentBuildingFactory20Filled class="inline size-4 text-blue-400 mb-1" />
-			<p class="text-xs text-blue-300">More power plants = more industrial capacity for your state</p>
 		</div>
 	</div>
 </div>

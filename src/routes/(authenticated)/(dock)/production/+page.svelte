@@ -1,6 +1,7 @@
 <!-- src/routes/production/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import Logo from "$lib/component/Logo.svelte";
 	import FluentProduction20Filled from "~icons/fluent/production-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
@@ -15,12 +16,14 @@
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
+	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
 
 	let selectedProduct = $state<keyof typeof data.recipes>("rifles");
 	let productionQuantity = $state(1);
+	let isCollectingWage = $state(false);
 
 	const resourceIcons: Record<string, string> = {
 		iron: "⛏️",
@@ -164,9 +167,7 @@
 		<div
 			class="relative group overflow-hidden rounded-xl bg-gradient-to-br from-emerald-950/40 to-emerald-900/20 border border-emerald-500/20 p-4 md:p-5"
 		>
-			<div
-				class="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-			></div>
+			<div class="absolute inset-0 bg-gradient-to-br from-emerald-600/5 to-transparent opacity-0"></div>
 			<div class="relative flex items-center gap-3 md:gap-4">
 				<div
 					class="size-10 md:size-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 flex items-center justify-center"
@@ -181,67 +182,128 @@
 		</div>
 	</div>
 
-	<!-- Current Job Status - Enhanced with gradient -->
+	<!-- Current Job Status - Enhanced with gradient and logo -->
 	{#if data.currentJob && jobStatus}
-		<a
-			href="/factory/{data.currentJob.factoryId}"
-			class="block relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6
-			       hover:border-blue-500/30 transition-all duration-300 group"
-		>
+		{#if jobStatus.status === "complete"}
 			<div
-				class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
-			></div>
+				class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
+			>
+				<div class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0"></div>
 
-			<div class="relative flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
-				<div>
-					<h2 class="text-lg md:text-xl font-semibold text-white mb-1">{data.currentJob.factoryName}</h2>
-					<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
-				</div>
-				<div class="text-left sm:text-right">
-					<p class="text-xs text-gray-400 mb-1">Wage</p>
+				<div class="relative z-10 flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
+					<a
+						href="/factory/{data.currentJob.factoryId}"
+						class="flex items-center gap-3 hover:opacity-80 transition-opacity"
+					>
+						<Logo
+							src={data.companyLogoUrl}
+							alt={data.currentJob.companyName || "Company logo"}
+							class="size-12 md:size-14  object-cover"
+							placeholderIcon={FluentImageOff20Filled}
+						/>
 
-					<p class="text-md font-bold text-green-400 flex items-center gap-1">
-						<FluentMoney20Filled class="size-5" />
-						{data.currentJob.wage.toLocaleString()}
-					</p>
-				</div>
-			</div>
-
-			{#if jobStatus.status === "working"}
-				<div class="relative">
-					<div class="flex justify-between items-center mb-2">
-						<span class="text-sm font-medium text-gray-300">Shift Progress</span>
-						<span class="text-sm font-bold text-amber-400">{jobStatus.text}</span>
+						<div>
+							<h2 class="text-lg md:text-xl font-semibold text-white mb-1">{data.currentJob.factoryName}</h2>
+							<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
+						</div>
+					</a>
+					<div class="text-left sm:text-right">
+						<p class="text-xs text-gray-400 mb-1">Wage</p>
+						<p class="text-md font-bold text-green-400 flex items-center gap-1">
+							<FluentMoney20Filled class="size-5" />
+							{data.currentJob.wage.toLocaleString()}
+						</p>
 					</div>
-					<div class="h-3 bg-slate-800 rounded-full overflow-hidden">
-						<div
-							class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-500 relative"
-							style="width: {jobStatus.progress}%"
+				</div>
+
+				<form
+					method="POST"
+					action="?/collectWage"
+					use:enhance={() => {
+						isCollectingWage = true;
+						return async ({ update }) => {
+							await update();
+							isCollectingWage = false;
+						};
+					}}
+					class="relative z-10"
+				>
+					<button
+						type="submit"
+						disabled={isCollectingWage}
+						class="relative z-10 w-full bg-gradient-to-r from-emerald-900/30 to-green-900/30 border border-emerald-500/30 rounded-xl p-3 md:p-4
+						       hover:from-emerald-900/50 hover:to-green-900/50 hover:border-emerald-500/50 transition-all duration-300
+						       disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+					>
+						<p
+							class="text-sm md:text-base text-emerald-300 font-medium flex items-center justify-center gap-2 pointer-events-none"
 						>
-							<div
-								class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
-							></div>
+							<FluentCheckmark20Filled class="size-4 md:size-5" />
+							{isCollectingWage ? "Collecting payment..." : `${jobStatus.text} Click to collect payment.`}
+						</p>
+					</button>
+				</form>
+			</div>
+		{:else}
+			<a
+				href="/factory/{data.currentJob.factoryId}"
+				class="block relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6
+				       hover:border-blue-500/30 transition-all duration-300 group"
+			>
+				<div
+					class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+				></div>
+
+				<div class="relative flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
+					<div class="flex items-center gap-3">
+						<Logo
+							src={data.companyLogoUrl}
+							alt={data.currentJob.companyName || "Company logo"}
+							class="size-12 md:size-14 object-cover"
+							placeholderIcon={FluentImageOff20Filled}
+						/>
+
+						<div>
+							<h2 class="text-lg md:text-xl font-semibold text-white mb-1">{data.currentJob.factoryName}</h2>
+							<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
 						</div>
 					</div>
+					<div class="text-left sm:text-right">
+						<p class="text-xs text-gray-400 mb-1">Wage</p>
+						<p class="text-md font-bold text-green-400 flex items-center gap-1">
+							<FluentMoney20Filled class="size-5" />
+							{data.currentJob.wage.toLocaleString()}
+						</p>
+					</div>
 				</div>
-			{:else if jobStatus.status === "complete"}
-				<div
-					class="bg-gradient-to-r from-emerald-900/30 to-green-900/30 border border-emerald-500/30 rounded-xl p-3 md:p-4"
-				>
-					<p class="text-sm md:text-base text-emerald-300 font-medium flex items-center gap-2">
-						<FluentCheckmark20Filled class="size-4 md:size-5" />
-						{jobStatus.text} Click to collect payment.
-					</p>
-				</div>
-			{:else}
-				<div class="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-xl p-3 md:p-4">
-					<p class="text-sm md:text-base text-blue-300 font-medium flex items-center gap-2">
-						<FluentClock20Filled class="size-4 md:size-5" />
-						{jobStatus.text}
-					</p>
-				</div>
-			{/if}
-		</a>
+
+				{#if jobStatus.status === "working"}
+					<div class="relative">
+						<div class="flex justify-between items-center mb-2">
+							<span class="text-sm font-medium text-gray-300">Shift Progress</span>
+							<span class="text-sm font-bold text-amber-400">{jobStatus.text}</span>
+						</div>
+						<div class="h-3 bg-slate-800 rounded-full overflow-hidden">
+							<div
+								class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-500 relative"
+								style="width: {jobStatus.progress}%"
+							>
+								<div
+									class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"
+								></div>
+							</div>
+						</div>
+					</div>
+				{:else}
+					<div class="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-xl p-3 md:p-4">
+						<p class="text-sm md:text-base text-blue-300 font-medium flex items-center gap-2">
+							<FluentClock20Filled class="size-4 md:size-5" />
+							{jobStatus.text}
+						</p>
+					</div>
+				{/if}
+			</a>
+		{/if}
 	{/if}
 
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">

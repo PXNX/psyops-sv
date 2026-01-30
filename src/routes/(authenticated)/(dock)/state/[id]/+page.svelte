@@ -10,6 +10,8 @@
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentLightbulb20Filled from "~icons/fluent/lightbulb-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
+
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentShieldError20Filled from "~icons/fluent/shield-error-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
@@ -291,6 +293,58 @@
 		</div>
 	</section>
 
+	<!-- Government Section -->
+	{#if hasGovernment}
+		<section class="space-y-3">
+			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Government</h2>
+			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
+				<!-- President -->
+				{#if data.president}
+					<ProfileItem
+						href="/user/{data.president.userId}"
+						logo={data.president.logo}
+						logoAlt={data.president.name}
+						placeholderIcon={FluentShield20Filled}
+						placeholderGradient="from-amber-600/20 to-amber-700/10"
+						title={data.president.name}
+						subtitle="President • Term {data.president.term} • {formatDate(data.president.electedAt)}"
+						hoverColor="yellow"
+					/>
+				{/if}
+
+				<!-- Ministers -->
+				{#if data.ministers.length > 0}
+					<div class="grid md:grid-cols-2 gap-2 pt-2">
+						{#each data.ministers as minister}
+							<ProfileItem
+								href="/user/{minister.userId}"
+								logo={minister.logo}
+								logoAlt={minister.name}
+								placeholderIcon={FluentShield20Filled}
+								placeholderGradient="from-purple-600/20 to-purple-700/10"
+								title={minister.name}
+								subtitle={minister.ministry.replace("_", " ")}
+								hoverColor="purple"
+							/>
+						{/each}
+					</div>
+				{/if}
+
+				<!-- Parliament Link -->
+				{#if data.parliamentMembers.length > 0}
+					<ProfileItem
+						href="/state/{data.state.id}/parliament"
+						placeholderIcon={FluentOrganization20Filled}
+						placeholderGradient="from-indigo-600/20 to-indigo-700/10"
+						title="{data.parliamentMembers.length} Parliament Members"
+						subtitle="View legislature"
+						hoverColor="purple"
+					/>
+				{/if}
+			</div>
+		</section>
+	{/if}
+
 	<!-- Election Banners -->
 	{#if data.nextElection && electionState()}
 		{@const state = electionState()}
@@ -372,16 +426,12 @@
 						</div>
 						<div>
 							<div class="flex items-center gap-2 mb-1">
-								<h3 class="text-lg font-bold text-white">Election Scheduled</h3>
-								<span
-									class="px-2 py-1 rounded-lg text-xs font-semibold border bg-blue-600/20 text-blue-400 border-blue-500/30"
-								>
-									Upcoming
-								</span>
+								<h3 class="text-lg font-bold text-white">Upcoming Election</h3>
 							</div>
 							<p class="text-sm text-gray-400">
-								{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} •
-								{data.nextElection.totalSeats} seats • starts in {getTimeRemaining(data.nextElection.startDate)}
+								{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} • starts in {getTimeRemaining(
+									data.nextElection.startDate
+								)}
 							</p>
 						</div>
 					</div>
@@ -429,58 +479,6 @@
 		{/if}
 	{/if}
 
-	<!-- Government Section -->
-	{#if hasGovernment}
-		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Government</h2>
-			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
-				<!-- President -->
-				{#if data.president}
-					<ProfileItem
-						href="/user/{data.president.userId}"
-						logo={data.president.logo}
-						logoAlt={data.president.name}
-						placeholderIcon={FluentShield20Filled}
-						placeholderGradient="from-amber-600/20 to-amber-700/10"
-						title={data.president.name}
-						subtitle="President • Term {data.president.term} • {formatDate(data.president.electedAt)}"
-						hoverColor="yellow"
-					/>
-				{/if}
-
-				<!-- Ministers -->
-				{#if data.ministers.length > 0}
-					<div class="grid md:grid-cols-2 gap-2 pt-2">
-						{#each data.ministers as minister}
-							<ProfileItem
-								href="/user/{minister.userId}"
-								logo={minister.logo}
-								logoAlt={minister.name}
-								placeholderIcon={FluentShield20Filled}
-								placeholderGradient="from-purple-600/20 to-purple-700/10"
-								title={minister.name}
-								subtitle={minister.ministry.replace("_", " ")}
-								hoverColor="purple"
-							/>
-						{/each}
-					</div>
-				{/if}
-
-				<!-- Parliament Link -->
-				{#if data.parliamentMembers.length > 0}
-					<ProfileItem
-						href="/state/{data.state.id}/parliament"
-						placeholderIcon={FluentOrganization20Filled}
-						placeholderGradient="from-indigo-600/20 to-indigo-700/10"
-						title="{data.parliamentMembers.length} Parliament Members"
-						subtitle="View legislature"
-						hoverColor="purple"
-					/>
-				{/if}
-			</div>
-		</section>
-	{/if}
-
 	<!-- Navigation Cards -->
 	<section class="grid md:grid-cols-3 gap-4">
 		{#if hasGovernment}
@@ -511,6 +509,22 @@
 				<p class="text-sm text-gray-400 mb-3">Treasury and tax policies</p>
 				<div class="text-xs text-green-400 flex items-center gap-1">View economy →</div>
 			</a>
+
+			{#if data.isPresident || data.isForeignMinister}
+				<a
+					href="/state/{data.state.id}/foreign-affairs"
+					class="group bg-gradient-to-br from-blue-900/30 to-indigo-900/30 rounded-xl border border-blue-500/20 p-6 hover:border-blue-500/40 transition-all"
+				>
+					<div
+						class="size-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+					>
+						<FluentGlobe20Filled class="size-6 text-blue-400" />
+					</div>
+					<h3 class="text-xl font-bold text-white mb-2 group-hover:text-blue-400 transition-colors">Foreign Affairs</h3>
+					<p class="text-sm text-gray-400 mb-3">Diplomacy, wars, and sanctions</p>
+					<div class="text-xs text-blue-400 flex items-center gap-1">View diplomacy →</div>
+				</a>
+			{/if}
 		{/if}
 	</section>
 
