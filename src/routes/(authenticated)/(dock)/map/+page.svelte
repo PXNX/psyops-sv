@@ -1,7 +1,7 @@
 <!-- src/routes/map/+page.svelte -->
 <script lang="ts">
 	import panzoom, { type PanZoom } from "panzoom";
-	import WorldMap from "$lib/assets/worldmap.svg?raw";
+	import WorldMap from "$lib/assets/worldmap3.svg?raw";
 	import type { Region, State, UserTravel } from "$lib/server/schema";
 	import * as m from "$lib/paraglide/messages";
 	import FluentEmojiMagnifyingGlassTiltedLeft from "~icons/fluent-emoji/magnifying-glass-tilted-left";
@@ -72,8 +72,8 @@
 	function initPanzoom(node: HTMLElement | SVGElement) {
 		colorRegions(node);
 
-		const svgWidth = 5632;
-		const svgHeight = 2048;
+		const svgWidth = 1400;
+		const svgHeight = 600;
 
 		const viewportWidth = window.innerWidth;
 		const viewportHeight = window.innerHeight - 56;

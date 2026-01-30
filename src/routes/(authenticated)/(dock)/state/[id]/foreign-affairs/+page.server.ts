@@ -20,10 +20,11 @@ import {
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
+	const stateId = parseInt(params.id);
 
 	// Get state
 	const state = await db.query.states.findFirst({
-		where: eq(states.id, params.id)
+		where: eq(states.id, stateId)
 	});
 
 	if (!state) {
@@ -34,13 +35,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const ministry = await db.query.ministers.findFirst({
 		where: and(
 			eq(ministers.userId, account.id),
-			eq(ministers.stateId, params.id),
+			eq(ministers.stateId, stateId),
 			eq(ministers.ministry, "foreign_affairs")
 		)
 	});
 
 	const presidency = await db.query.presidents.findFirst({
-		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
 	});
 
 	if (!ministry && !presidency) {
@@ -49,12 +50,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Get all other states
 	const otherStates = await db.query.states.findMany({
-		where: ne(states.id, params.id)
+		where: ne(states.id, stateId)
 	});
 
 	// Get active sanctions
 	const sanctions = await db.query.stateSanctions.findMany({
-		where: and(eq(stateSanctions.sanctioningStateId, params.id), eq(stateSanctions.isActive, true)),
+		where: and(eq(stateSanctions.sanctioningStateId, stateId), eq(stateSanctions.isActive, true)),
 		with: {
 			targetState: true,
 			sanctioner: {
@@ -67,7 +68,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Get regions
 	const stateRegions = await db.query.regions.findMany({
-		where: eq(regions.stateId, params.id)
+		where: eq(regions.stateId, stateId)
 	});
 
 	// Get pending residence applications
@@ -88,7 +89,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Get visa settings
 	let visaSettings = await db.query.stateVisaSettings.findFirst({
-		where: eq(stateVisaSettings.stateId, params.id)
+		where: eq(stateVisaSettings.stateId, stateId)
 	});
 
 	// Create default if doesn't exist
@@ -96,7 +97,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		[visaSettings] = await db
 			.insert(stateVisaSettings)
 			.values({
-				stateId: params.id,
+				stateId,
 				visaRequired: false,
 				visaCost: 5000,
 				visaTaxRate: 20,
@@ -107,7 +108,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Get pending visa applications
 	const pendingVisaApplications = await db.query.visaApplications.findMany({
-		where: and(eq(visaApplications.stateId, params.id), eq(visaApplications.status, "pending")),
+		where: and(eq(visaApplications.stateId, stateId), eq(visaApplications.status, "pending")),
 		with: {
 			user: {
 				with: {
@@ -120,7 +121,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Get active visas for this state
 	const activeVisas = await db.query.userVisas.findMany({
-		where: and(eq(userVisas.stateId, params.id), eq(userVisas.status, "active")),
+		where: and(eq(userVisas.stateId, stateId), eq(userVisas.status, "active")),
 		with: {
 			user: {
 				with: {
@@ -147,18 +148,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 export const actions: Actions = {
 	sanctionState: async ({ request, locals, params }) => {
 		const account = locals.account!;
+		const stateId = parseInt(params.id);
 
 		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
-				eq(ministers.stateId, params.id),
+				eq(ministers.stateId, stateId),
 				eq(ministers.ministry, "foreign_affairs")
 			)
 		});
 
 		const presidency = await db.query.presidents.findFirst({
-			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
 		});
 
 		if (!ministry && !presidency) {
@@ -166,7 +168,7 @@ export const actions: Actions = {
 		}
 
 		const formData = await request.formData();
-		const targetStateId = formData.get("targetStateId") as string;
+		const targetStateId = parseInt(formData.get("targetStateId") as string);
 		const reason = formData.get("reason") as string;
 
 		if (!targetStateId || !reason) {
@@ -176,7 +178,7 @@ export const actions: Actions = {
 		const existingSanction = await db.query.stateSanctions.findFirst({
 			where: and(
 				eq(stateSanctions.targetStateId, targetStateId),
-				eq(stateSanctions.sanctioningStateId, params.id),
+				eq(stateSanctions.sanctioningStateId, stateId),
 				eq(stateSanctions.isActive, true)
 			)
 		});
@@ -187,7 +189,7 @@ export const actions: Actions = {
 
 		await db.insert(stateSanctions).values({
 			targetStateId,
-			sanctioningStateId: params.id,
+			sanctioningStateId: stateId,
 			sanctionedBy: account.id,
 			reason,
 			isActive: true
@@ -197,22 +199,20 @@ export const actions: Actions = {
 	},
 
 	liftSanction: async ({ request, locals, params }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Unauthorized" });
-		}
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
 
 		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
-				eq(ministers.stateId, params.id),
+				eq(ministers.stateId, stateId),
 				eq(ministers.ministry, "foreign_affairs")
 			)
 		});
 
 		const presidency = await db.query.presidents.findFirst({
-			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
 		});
 
 		if (!ministry && !presidency) {
@@ -226,7 +226,7 @@ export const actions: Actions = {
 			where: eq(stateSanctions.id, sanctionId)
 		});
 
-		if (!sanction || sanction.sanctioningStateId !== params.id) {
+		if (!sanction || sanction.sanctioningStateId !== stateId) {
 			return fail(403, { error: "Invalid sanction" });
 		}
 
@@ -236,22 +236,20 @@ export const actions: Actions = {
 	},
 
 	updateVisaSettings: async ({ request, locals, params }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Unauthorized" });
-		}
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
 
 		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
-				eq(ministers.stateId, params.id),
+				eq(ministers.stateId, stateId),
 				eq(ministers.ministry, "foreign_affairs")
 			)
 		});
 
 		const presidency = await db.query.presidents.findFirst({
-			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
 		});
 
 		if (!ministry && !presidency) {
@@ -261,7 +259,6 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const visaRequired = formData.get("visaRequired") === "true";
 		const visaCost = parseInt(formData.get("visaCost") as string);
-		const visaTaxRate = parseInt(formData.get("visaTaxRate") as string);
 		const autoApprove = formData.get("autoApprove") === "true";
 
 		// Validate
@@ -269,41 +266,35 @@ export const actions: Actions = {
 			return fail(400, { error: "Visa cost must be between $0 and $1,000,000" });
 		}
 
-		if (visaTaxRate < 0 || visaTaxRate > 100) {
-			return fail(400, { error: "Tax rate must be between 0% and 100%" });
-		}
-
 		await db
 			.update(stateVisaSettings)
 			.set({
 				visaRequired,
 				visaCost,
-				visaTaxRate,
+
 				autoApprove,
 				updatedAt: new Date()
 			})
-			.where(eq(stateVisaSettings.stateId, params.id));
+			.where(eq(stateVisaSettings.stateId, stateId));
 
 		return { success: true, message: "Visa settings updated successfully" };
 	},
 
 	reviewVisaApplication: async ({ request, locals, params }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Unauthorized" });
-		}
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
 
 		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
-				eq(ministers.stateId, params.id),
+				eq(ministers.stateId, stateId),
 				eq(ministers.ministry, "foreign_affairs")
 			)
 		});
 
 		const presidency = await db.query.presidents.findFirst({
-			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
 		});
 
 		if (!ministry && !presidency) {
@@ -318,7 +309,7 @@ export const actions: Actions = {
 			where: eq(visaApplications.id, applicationId)
 		});
 
-		if (!application || application.stateId !== params.id) {
+		if (!application || application.stateId !== stateId) {
 			return fail(404, { error: "Application not found" });
 		}
 
@@ -335,7 +326,7 @@ export const actions: Actions = {
 		// If approved, process payment and create visa
 		if (decision === "approved") {
 			const visaSettings = await db.query.stateVisaSettings.findFirst({
-				where: eq(stateVisaSettings.stateId, params.id)
+				where: eq(stateVisaSettings.stateId, stateId)
 			});
 
 			if (!visaSettings) {
@@ -365,14 +356,14 @@ export const actions: Actions = {
 
 			// Add to treasury
 			let treasury = await db.query.stateTreasury.findFirst({
-				where: eq(stateTreasury.stateId, params.id)
+				where: eq(stateTreasury.stateId, stateId)
 			});
 
 			if (!treasury) {
 				[treasury] = await db
 					.insert(stateTreasury)
 					.values({
-						stateId: params.id,
+						stateId: stateId,
 						balance: 0,
 						totalCollected: 0,
 						totalSpent: 0
@@ -387,7 +378,7 @@ export const actions: Actions = {
 					totalCollected: Number(treasury.totalCollected) + taxAmount,
 					updatedAt: new Date()
 				})
-				.where(eq(stateTreasury.stateId, params.id));
+				.where(eq(stateTreasury.stateId, stateId));
 
 			// Create visa
 			const expiresAt = new Date();
@@ -395,7 +386,7 @@ export const actions: Actions = {
 
 			await db.insert(userVisas).values({
 				userId: application.userId,
-				stateId: params.id,
+				stateId,
 				status: "active",
 				expiresAt,
 				cost: visaCost,
@@ -409,22 +400,20 @@ export const actions: Actions = {
 	},
 
 	revokeVisa: async ({ request, locals, params }) => {
-		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Unauthorized" });
-		}
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
 
 		// Check authorization
 		const ministry = await db.query.ministers.findFirst({
 			where: and(
 				eq(ministers.userId, account.id),
-				eq(ministers.stateId, params.id),
+				eq(ministers.stateId, stateId),
 				eq(ministers.ministry, "foreign_affairs")
 			)
 		});
 
 		const presidency = await db.query.presidents.findFirst({
-			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, params.id))
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
 		});
 
 		if (!ministry && !presidency) {
@@ -439,7 +428,7 @@ export const actions: Actions = {
 			where: eq(userVisas.id, visaId)
 		});
 
-		if (!visa || visa.stateId !== params.id) {
+		if (!visa || visa.stateId !== stateId) {
 			return fail(404, { error: "Visa not found" });
 		}
 
