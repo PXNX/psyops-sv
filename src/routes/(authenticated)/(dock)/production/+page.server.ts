@@ -196,6 +196,39 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
+	startWork: async ({ locals }) => {
+		const account = locals.account!;
+
+		// Get user's current job
+		const [job] = await db
+			.select({
+				id: factoryWorkers.id,
+				factoryId: factoryWorkers.factoryId,
+				lastWorked: factoryWorkers.lastWorked
+			})
+			.from(factoryWorkers)
+			.where(eq(factoryWorkers.userId, account.id));
+
+		if (!job) {
+			return fail(400, { error: "You don't have a job" });
+		}
+
+		// Check if still on cooldown from previous shift
+		if (job.lastWorked) {
+			const SHIFT_DURATION = 8 * 60 * 60 * 1000;
+			const timeSinceWork = Date.now() - new Date(job.lastWorked).getTime();
+			if (timeSinceWork < SHIFT_DURATION) {
+				const hoursLeft = Math.ceil((SHIFT_DURATION - timeSinceWork) / (60 * 60 * 1000));
+				return fail(400, { error: `Still on cooldown. ${hoursLeft} hours remaining.` });
+			}
+		}
+
+		// Start new shift
+		await db.update(factoryWorkers).set({ lastWorked: new Date() }).where(eq(factoryWorkers.id, job.id));
+
+		return { success: true, message: "Shift started! Work for 8 hours to receive payment." };
+	},
+
 	startProduction: async ({ request, locals }) => {
 		const account = locals.account!;
 
