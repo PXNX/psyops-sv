@@ -4,12 +4,14 @@ import {
 	companies,
 	factories,
 	factoryWorkers,
+	files,
 	regions,
 	resourceInventory,
 	stateEnergy,
 	states,
 	userWallets
 } from "$lib/server/schema";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { calculateAndCollectTax } from "$lib/server/taxes";
 import { error, fail } from "@sveltejs/kit";
 import { and, eq, sql } from "drizzle-orm";
@@ -53,6 +55,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	if (!factory) {
 		throw error(404, "Factory not found");
+	}
+
+	// Get company logo URL if available
+	let companyLogoUrl: string | null = null;
+	if (factory.companyLogo) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, factory.companyLogo)
+		});
+		if (logoFile) {
+			companyLogoUrl = await getSignedDownloadUrl(logoFile.key);
+		}
 	}
 
 	// Get current workers
@@ -114,7 +127,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		shiftEndsAt: shiftEndsAt?.toISOString() || null,
 		stateEnergy: stateEnergyData,
 		wallet: wallet || { balance: 10000 },
-		isOwner: factory.ownerId === account.id
+		isOwner: factory.ownerId === account.id,
+		companyLogoUrl
 	};
 };
 

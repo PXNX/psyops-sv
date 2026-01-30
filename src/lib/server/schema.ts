@@ -699,6 +699,13 @@ export const userWallets = pgTable("user_wallets", {
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+export const userWalletsRelations = relations(userWallets, ({ one }) => ({
+	user: one(accounts, {
+		fields: [userWallets.userId],
+		references: [accounts.id]
+	})
+}));
+
 // --- COOLDOWNS ---
 export const partyCreationAttempts = pgTable("party_creation_attempts", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
@@ -1069,7 +1076,11 @@ export const statesRelations = relations(states, ({ one, many }) => ({
 }));
 export const companiesRelations = relations(companies, ({ one, many }) => ({
 	owner: one(accounts, { fields: [companies.ownerId], references: [accounts.id] }),
-	factories: many(factories)
+	factories: many(factories),
+	budget: one(companyBudgets, {
+		fields: [companies.id],
+		references: [companyBudgets.companyId]
+	})
 }));
 
 export const factoriesRelations = relations(factories, ({ one, many }) => ({
@@ -2081,5 +2092,42 @@ export const battleUnitActionsRelations = relations(battleUnitActions, ({ one })
 	participant: one(battleParticipants, {
 		fields: [battleUnitActions.participantId],
 		references: [battleParticipants.id]
+	})
+}));
+
+export const companyBudgets = pgTable("company_budgets", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	companyId: integer("company_id")
+		.notNull()
+		.references(() => companies.id, { onDelete: "cascade" })
+		.unique(),
+	balance: bigint("balance", { mode: "number" }).default(0).notNull(),
+	totalDeposited: bigint("total_deposited", { mode: "number" }).default(0).notNull(),
+	totalSpent: bigint("total_spent", { mode: "number" }).default(0).notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const companyBudgetsRelations = relations(companyBudgets, ({ one }) => ({
+	company: one(companies, {
+		fields: [companyBudgets.companyId],
+		references: [companies.id]
+	})
+}));
+
+export type CompanyBudget = typeof companyBudgets.$inferSelect;
+
+export const companyEditCooldown = pgTable("company_edit_cooldown", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	lastEditAt: timestamp("last_edit_at").defaultNow().notNull()
+});
+
+export const companyEditCooldownRelations = relations(companyEditCooldown, ({ one }) => ({
+	user: one(accounts, {
+		fields: [companyEditCooldown.userId],
+		references: [accounts.id]
 	})
 }));
