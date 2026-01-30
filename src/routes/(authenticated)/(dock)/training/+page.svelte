@@ -8,6 +8,7 @@
 	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
 	import IconClock from "~icons/fluent/clock-24-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import * as m from "$lib/paraglide/messages";
 
 	import Modal from "$lib/component/Modal.svelte";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
@@ -26,12 +27,6 @@
 
 	function getUnitIconPath(unitType: string): string {
 		return `/units/${unitType}.svg`;
-	}
-
-	function formatCurrency(amount: number): string {
-		if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M`;
-		if (amount >= 1000) return `${(amount / 1000).toFixed(0)}k`;
-		return amount.toString();
 	}
 
 	function canAfford(template: any): boolean {
@@ -172,11 +167,15 @@
 								<div class="flex items-center gap-3 mt-2">
 									<div class="bg-red-900/40 border border-red-700/50 rounded px-2.5 py-1">
 										<span class="text-xs text-red-500 font-medium">ATK</span>
-										<span class="text-base font-semibold text-white ml-1.5">{unit.attack}</span>
+										<span class="text-base font-semibold text-white ml-1.5"
+											>{data.templates[unit.unitType].baseAttack}</span
+										>
 									</div>
 									<div class="bg-blue-900/40 border border-blue-700/50 rounded px-2.5 py-1">
 										<span class="text-xs text-blue-500 font-medium">DEF</span>
-										<span class="text-base font-semibold text-white ml-1.5">{unit.defense}</span>
+										<span class="text-base font-semibold text-white ml-1.5"
+											>{data.templates[unit.unitType].baseDefense}</span
+										>
 									</div>
 								</div>
 							</div>
@@ -249,7 +248,7 @@
 
 				<!-- Selectable Unit Type Cards -->
 				<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
-					{#each data.templates as template}
+					{#each Object.values(data.templates) as template}
 						{@const isSelected = selectedTemplate?.id === template.id}
 						<button
 							type="button"
@@ -280,7 +279,7 @@
 								>
 									<img
 										src={getUnitIconPath(template.unitType)}
-										alt={template.displayName}
+										alt={template.unitType}
 										class="w-full h-full object-contain transition-all duration-200"
 										class:[filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]={!isSelected}
 										class:[filter:brightness(0)_saturate(100%)_invert(60%)_sepia(80%)_saturate(1500%)_hue-rotate(200deg)_brightness(100%)_contrast(100%)]={isSelected}
@@ -293,7 +292,7 @@
 									class:text-blue-300={isSelected}
 									class:text-slate-300={!isSelected}
 								>
-									{template.displayName}
+									{m[template.unitType]()}
 								</h3>
 							</div>
 						</button>
@@ -357,7 +356,7 @@
 								};
 							}}
 						>
-							<input type="hidden" name="templateId" value={selectedTemplate.id} />
+							<input type="hidden" name="unitType" value={selectedTemplate.unitType} />
 							<button
 								type="submit"
 								disabled={isSubmitting || !canAfford(selectedTemplate)}

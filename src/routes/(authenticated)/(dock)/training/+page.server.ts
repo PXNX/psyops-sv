@@ -4,17 +4,18 @@ import type { PageServerLoad, Actions } from "./$types";
 
 import {
 	militaryUnits,
-	militaryUnitTemplates,
 	resourceInventory,
 	productInventory,
 	userWallets,
 	residences,
 	states,
 	regions,
-	blocs
+	blocs,
+	militaryUnitTypeEnum
 } from "$lib/server/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { db } from "$lib/server/db";
+import { MILITARY_UNIT_TEMPLATES, type MilitaryUnitTemplate } from "$lib/config/militaryUnits";
 
 type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
 type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
@@ -89,146 +90,17 @@ async function getUserInventory(userId: string) {
 	};
 }
 
-async function getOrCreateTemplates() {
-	let templates = await db.select().from(militaryUnitTemplates).orderBy(militaryUnitTemplates.displayName);
-
-	if (templates.length === 0) {
-		const defaultTemplates = [
-			{
-				unitType: "infantry" as const,
-				displayName: "Infantry Battalion",
-				baseAttack: 15,
-				baseDefense: 20,
-				trainingDuration: 6,
-				currencyCost: 50000,
-				ironCost: 0,
-				steelCost: 50,
-				gunpowderCost: 100,
-				riflesCost: 500,
-				ammunitionCost: 1000,
-				artilleryCost: 0,
-				vehiclesCost: 0,
-				explosivesCost: 50
-			},
-			{
-				unitType: "armor" as const,
-				displayName: "Armored Battalion",
-				baseAttack: 50,
-				baseDefense: 40,
-				trainingDuration: 12,
-				currencyCost: 200000,
-				ironCost: 200,
-				steelCost: 500,
-				gunpowderCost: 200,
-				riflesCost: 200,
-				ammunitionCost: 2000,
-				artilleryCost: 0,
-				vehiclesCost: 50,
-				explosivesCost: 100
-			},
-			{
-				unitType: "mechanzied" as const,
-				displayName: "Mechanized Battalion",
-				baseAttack: 30,
-				baseDefense: 30,
-				trainingDuration: 10,
-				currencyCost: 150000,
-				ironCost: 100,
-				steelCost: 300,
-				gunpowderCost: 150,
-				riflesCost: 400,
-				ammunitionCost: 1500,
-				artilleryCost: 0,
-				vehiclesCost: 30,
-				explosivesCost: 75
-			},
-			{
-				unitType: "artillery" as const,
-				displayName: "Artillery Battalion",
-				baseAttack: 40,
-				baseDefense: 15,
-				trainingDuration: 8,
-				currencyCost: 100000,
-				ironCost: 150,
-				steelCost: 200,
-				gunpowderCost: 300,
-				riflesCost: 100,
-				ammunitionCost: 3000,
-				artilleryCost: 20,
-				vehiclesCost: 10,
-				explosivesCost: 200
-			},
-			{
-				unitType: "air_defence" as const,
-				displayName: "Air Defense Battalion",
-				baseAttack: 25,
-				baseDefense: 25,
-				trainingDuration: 10,
-				currencyCost: 175000,
-				ironCost: 100,
-				steelCost: 400,
-				gunpowderCost: 100,
-				riflesCost: 200,
-				ammunitionCost: 1000,
-				artilleryCost: 15,
-				vehiclesCost: 20,
-				explosivesCost: 150
-			},
-			{
-				unitType: "fighter_squadron" as const,
-				displayName: "Fighter Squadron",
-				baseAttack: 60,
-				baseDefense: 35,
-				trainingDuration: 16,
-				currencyCost: 300000,
-				ironCost: 200,
-				steelCost: 600,
-				gunpowderCost: 150,
-				riflesCost: 100,
-				ammunitionCost: 2500,
-				artilleryCost: 0,
-				vehiclesCost: 12,
-				explosivesCost: 200
-			},
-			{
-				unitType: "bomber_squadron" as const,
-				displayName: "Bomber Squadron",
-				baseAttack: 70,
-				baseDefense: 20,
-				trainingDuration: 18,
-				currencyCost: 350000,
-				ironCost: 250,
-				steelCost: 700,
-				gunpowderCost: 200,
-				riflesCost: 50,
-				ammunitionCost: 2000,
-				artilleryCost: 0,
-				vehiclesCost: 8,
-				explosivesCost: 500
-			}
-		];
-
-		await db.insert(militaryUnitTemplates).values(defaultTemplates);
-		templates = await db.select().from(militaryUnitTemplates).orderBy(militaryUnitTemplates.displayName);
-	}
-
-	return templates;
-}
-
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
 	const residence = await getUserResidence(account.id);
 	const inventory = await getUserInventory(account.id);
-	const templates = await getOrCreateTemplates();
 
 	const units = await db
 		.select({
 			id: militaryUnits.id,
 			name: militaryUnits.name,
 			unitType: militaryUnits.unitType,
-			attack: militaryUnits.attack,
-			defense: militaryUnits.defense,
 			organization: militaryUnits.organization,
 			health: militaryUnits.health,
 			supplyLevel: militaryUnits.supplyLevel,
@@ -243,7 +115,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		units,
-		templates,
+		templates: MILITARY_UNIT_TEMPLATES,
 		residence: {
 			regionId: residence.regionId,
 			stateId: residence.stateId,
@@ -260,20 +132,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	};
 };
 
-async function checkResourceAvailability(
-	userId: string,
-	template: {
-		currencyCost: number;
-		ironCost: number;
-		steelCost: number;
-		gunpowderCost: number;
-		riflesCost: number;
-		ammunitionCost: number;
-		artilleryCost: number;
-		vehiclesCost: number;
-		explosivesCost: number;
-	}
-) {
+async function checkResourceAvailability(userId: string, template: MilitaryUnitTemplate) {
 	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, userId)).limit(1);
 
 	if (!wallet || wallet.balance < template.currencyCost) {
@@ -343,7 +202,7 @@ async function checkResourceAvailability(
 			.where(and(eq(table.userId, userId), eq(typeCol, type)))
 			.limit(1);
 
-		if (!item || item.quantity < required) {
+		if (required && (!item || item.quantity < required)) {
 			return { valid: false, error: `Insufficient ${type}` };
 		}
 	}
@@ -424,18 +283,14 @@ export const actions: Actions = {
 	train: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
-		const templateId = parseInt(formData.get("templateId") as string);
+		const unitType = formData.get("unitType") as (typeof militaryUnitTypeEnum.enumValues)[number];
 
-		if (!templateId) {
-			return fail(400, { error: "Missing template ID" });
+		if (!unitType) {
+			return fail(400, { error: "Missing unitType" });
 		}
 
 		const residence = await getUserResidence(account.id);
-		const [template] = await db
-			.select()
-			.from(militaryUnitTemplates)
-			.where(eq(militaryUnitTemplates.id, templateId))
-			.limit(1);
+		const template = MILITARY_UNIT_TEMPLATES[unitType];
 
 		if (!template) {
 			return fail(404, { error: "Template not found" });
@@ -464,9 +319,6 @@ export const actions: Actions = {
 					stateId: residence.stateId,
 					regionId: residence.regionId,
 					unitType: template.unitType,
-					unitSize: "brigade",
-					attack: template.baseAttack,
-					defense: template.baseDefense,
 					organization: 100,
 					health: 100,
 					supplyLevel: 100,

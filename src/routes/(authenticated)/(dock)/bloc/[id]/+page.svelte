@@ -10,20 +10,9 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentPersonAdd20Filled from "~icons/fluent/person-add-20-filled";
 
-	import CircleLogo from "$lib/component/CircleLogo.svelte";
 	import { enhance } from "$app/forms";
 
 	const { data } = $props();
-
-	const unitTypeIcons: Record<string, string> = {
-		armor: "🚜",
-		mechanized: "🚙",
-		artillery: "🎯",
-		air_defence: "🛡️",
-		infantry: "🪖",
-		fighter_squadron: "✈️",
-		bomber_squadron: "🛩️"
-	};
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -87,38 +76,6 @@
 			</div>
 		</div>
 	</div>
-
-	<!-- Recommended Military Units -->
-	{#if data.recommendedTemplates.length > 0}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
-			<div class="flex items-center gap-2 mb-4">
-				<div class="size-10 rounded-lg flex items-center justify-center" style="background-color: {data.bloc.color}20">
-					<FluentShield20Filled class="size-5" style="color: {data.bloc.color}" />
-				</div>
-				<div>
-					<h2 class="text-lg font-semibold text-white">Recommended Military Units</h2>
-					<p class="text-xs text-gray-400">Suggested unit types for member states</p>
-				</div>
-			</div>
-
-			<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-				{#each data.recommendedTemplates as template}
-					<div class="bg-slate-700/30 rounded-lg p-4 border border-white/5">
-						<div class="flex items-center gap-3 mb-2">
-							<span class="text-2xl">{unitTypeIcons[template.unitType] || "🎖️"}</span>
-							<div>
-								<p class="font-semibold text-white text-sm">{template.displayName}</p>
-								<p class="text-xs text-gray-400">{template.unitType.replace("_", " ")}</p>
-							</div>
-						</div>
-						{#if template.description}
-							<p class="text-xs text-gray-400 mt-2">{template.description}</p>
-						{/if}
-					</div>
-				{/each}
-			</div>
-		</div>
-	{/if}
 
 	<!-- Member States -->
 	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">

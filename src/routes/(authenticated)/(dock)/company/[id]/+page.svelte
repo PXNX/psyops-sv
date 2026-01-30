@@ -19,6 +19,7 @@
 	import { Chart, Svg, Tooltip } from "layerchart";
 	import { Area, Bars } from "layerchart";
 	import { scaleBand, scaleOrdinal } from "d3-scale";
+	import Logo from "$lib/component/Logo.svelte";
 
 	let { data, form } = $props();
 
@@ -67,17 +68,8 @@
 		<div class="card-body p-4 sm:p-6">
 			<div class="flex flex-col sm:flex-row items-start gap-4">
 				<!-- Company Logo -->
-				<div class="avatar placeholder">
-					<div class="w-16 sm:w-20 rounded-xl bg-primary/10 ring ring-primary/20 ring-offset-2 ring-offset-base-100">
-						<div class="w-full h-full flex items-center justify-center">
-							{#if data.company.logo}
-								<img src={data.company.logo} alt={data.company.name} class="rounded-xl" />
-							{:else}
-								<FluentBuilding20Filled class="w-8 sm:w-10 h-8 sm:h-10 text-primary" />
-							{/if}
-						</div>
-					</div>
-				</div>
+
+				<Logo src={data.company.logo} alt={data.company.name} placeholderIcon={FluentBuilding20Filled} />
 
 				<div class="flex-1 w-full">
 					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
