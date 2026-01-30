@@ -3,7 +3,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
-import { battles, battleParticipants, battleRounds, militaryUnits, regions } from "$lib/server/schema";
+import { battles, battleParticipants, battleRounds, militaryUnits, regions, states, wars } from "$lib/server/schema";
 import { eq, and, sql, count, asc } from "drizzle-orm";
 import { MILITARY_UNIT_TEMPLATES } from "$lib/config/militaryUnits";
 
@@ -259,8 +259,100 @@ async function processCombatRound(battleId: number) {
 		battleEnded = true;
 		winner = "defender";
 	} else if (remainingDefenders[0].count === 0) {
-		// Attacker wins - transfer region
+		// Attacker wins - transfer region and check for capitulation
+		const capturedRegion = await db.query.regions.findFirst({
+			where: eq(regions.id, battle.regionId),
+			with: {
+				state: true
+			}
+		});
+
+		if (!capturedRegion) {
+			throw new Error(`Region ${battle.regionId} not found`);
+		}
+
+		const previousStateId = capturedRegion.stateId;
+
+		// Transfer region to attacker
 		await db.update(regions).set({ stateId: battle.attackerStateId }).where(eq(regions.id, battle.regionId));
+
+		// Check if the defending state has any regions left
+		const remainingRegions = await db
+			.select({ count: count() })
+			.from(regions)
+			.where(eq(regions.stateId, previousStateId!));
+
+		// Get war info to check bloc membership
+		const warInfo = await db.query.wars.findFirst({
+			where: eq(wars.id, battle.warId),
+			with: {
+				defender: {
+					with: {
+						bloc: true
+					}
+				},
+				defenderBloc: true
+			}
+		});
+
+		if (!warInfo) {
+			throw new Error(`War ${battle.warId} not found`);
+		}
+
+		// If state lost its last region
+		if (remainingRegions[0].count === 0) {
+			// Mark state as capitulated
+			await db
+				.update(states)
+				.set({
+					capitulated: true,
+					capitulatedAt: new Date()
+				})
+				.where(eq(states.id, previousStateId!));
+
+			console.log(`  🏳️ State ${previousStateId} has been capitulated (lost all regions)`);
+
+			// Check if this was part of a bloc war
+			if (warInfo.defenderBlocId) {
+				// Check if any defender bloc states still have regions
+				const blocStatesWithRegions = await db
+					.select({
+						stateId: states.id,
+						regionCount: sql<number>`(SELECT COUNT(*) FROM ${regions} WHERE ${regions.stateId} = ${states.id})`
+					})
+					.from(states)
+					.where(and(eq(states.blocId, warInfo.defenderBlocId), eq(states.capitulated, false)));
+
+				const anyBlocStateHasRegions = blocStatesWithRegions.some((s) => Number(s.regionCount) > 0);
+
+				if (!anyBlocStateHasRegions) {
+					// Entire defending bloc has been defeated
+					await db
+						.update(wars)
+						.set({
+							status: "ended",
+							endedAt: new Date()
+						})
+						.where(eq(wars.id, battle.warId));
+
+					console.log(`  🏁 War ${battle.warId} ended - defending bloc completely defeated`);
+				} else {
+					console.log(`  ⚠️ State capitulated but war continues (other bloc members still have regions)`);
+				}
+			} else {
+				// Not a bloc war - single state has been defeated
+				await db
+					.update(wars)
+					.set({
+						status: "ended",
+						endedAt: new Date()
+					})
+					.where(eq(wars.id, battle.warId));
+
+				console.log(`  🏁 War ${battle.warId} ended - defender completely defeated`);
+			}
+		}
+
 		await db
 			.update(battles)
 			.set({ status: "attacker_won", phase: "ended", endedAt: new Date() })

@@ -7,6 +7,7 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
 	import * as m from "$lib/paraglide/messages";
+	import { getRegionName } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -18,11 +19,6 @@
 			hour: "2-digit",
 			minute: "2-digit"
 		});
-	}
-
-	function getRegionName(id: number) {
-		const key = `region_${id}`;
-		return m[key]?.() || `Region ${id}`;
 	}
 
 	function getStatusColor(status: string) {
@@ -81,8 +77,6 @@
 					<span class="text-sm font-medium text-red-400">Attacker</span>
 				</div>
 				<div class="flex items-center gap-3">
-					<!-- todo: use Logo component and get image url from backblaze -->
-
 					<img
 						src={data.war.attacker.logoFile ? `/api/files/${data.war.attacker.logoFile.key}` : "/default-state.svg"}
 						alt={data.war.attacker.name}
@@ -114,7 +108,6 @@
 					<span class="text-sm font-medium text-blue-400">Defender</span>
 				</div>
 				<div class="flex items-center gap-3">
-					<!-- todo: use Logo component and get image url from backblaze -->
 					<img
 						src={data.war.defender.logoFile ? `/api/files/${data.war.defender.logoFile.key}` : "/default-state.svg"}
 						alt={data.war.defender.name}
@@ -130,10 +123,41 @@
 						{#if data.war.defenderBloc}
 							<div class="text-xs text-gray-400">{data.war.defenderBloc.name}</div>
 						{/if}
+						{#if data.war.defender.capitulated}
+							<div class="flex items-center gap-1 mt-1">
+								<span class="px-2 py-0.5 bg-red-500/20 border border-red-400/30 rounded text-xs text-red-300">
+									🏳️ CAPITULATED
+								</span>
+							</div>
+						{/if}
 					</div>
 				</div>
 			</div>
 		</div>
+
+		<!-- Capitulated States (if bloc war) -->
+		{#if data.capitulatedStates.length > 0}
+			<div class="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+				<h3 class="text-sm font-bold text-red-400 mb-3">🏳️ Capitulated States</h3>
+				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+					{#each data.capitulatedStates as state}
+						<div class="flex items-center gap-2 bg-slate-800/50 rounded p-2">
+							<img
+								src={state.logoFile ? `/api/files/${state.logoFile.key}` : "/default-state.svg"}
+								alt={state.name}
+								class="size-8 rounded"
+							/>
+							<div class="flex-1">
+								<div class="text-sm font-medium text-white">{state.name}</div>
+								<div class="text-xs text-gray-500">
+									{formatDate(state.capitulatedAt)}
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- War Statistics -->
@@ -214,6 +238,11 @@
 								<span class="px-2 py-1 rounded-full text-xs font-medium border {getBattleStatusColor(battle.status)}">
 									{battle.status.replace("_", " ")}
 								</span>
+								{#if battle.status === "attacker_won"}
+									<span class="text-xs text-emerald-400">🏆 Region Captured</span>
+								{:else if battle.status === "defender_won"}
+									<span class="text-xs text-blue-400">🛡️ Successfully Defended</span>
+								{/if}
 							</div>
 							<div class="flex items-center gap-4 text-sm text-gray-400">
 								<span>Started {formatDate(battle.startedAt)}</span>

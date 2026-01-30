@@ -48,4 +48,37 @@
 		<FluentGift20Filled class="size-4" />
 		Gift Codes
 	</a>
+
+	<div class="divider my-4"></div>
+	<!-- Broadcast -->
+
+	<a
+		href="/api/cron/battles"
+		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+	>
+		<FluentBuildingGovernment20Filled class="size-4" />
+		Battles
+	</a>
+	<a
+		href="/api/cron/travels"
+		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+	>
+		<FluentSend20Filled class="size-4" />
+		Travels
+	</a>
+	<a
+		href="/api/cron/proposals"
+		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+	>
+		<FluentPeople20Filled class="size-4" />
+		Proposals
+	</a>
+
+	<a
+		href="/api/cron/elections"
+		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+	>
+		<FluentWarning20Filled class="size-4" />
+		Elections
+	</a>
 </div>

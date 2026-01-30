@@ -124,10 +124,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 	}
 
+	// Get capitulated states from both defender bloc and defender state
+	const capitulatedStates = await db.query.states.findMany({
+		where: war.defenderBlocId
+			? and(eq(states.blocId, war.defenderBlocId), eq(states.capitulated, true))
+			: and(eq(states.id, war.defenderId), eq(states.capitulated, true)),
+		with: {
+			logoFile: true
+		}
+	});
+
 	// Calculate war progress
 	const totalRegions = (attackerRegions[0]?.count || 0) + (defenderRegions[0]?.count || 0);
-	const attackerControl = ((attackerRegions[0]?.count || 0) / totalRegions) * 100;
-	const defenderControl = ((defenderRegions[0]?.count || 0) / totalRegions) * 100;
+	const attackerControl = totalRegions > 0 ? ((attackerRegions[0]?.count || 0) / totalRegions) * 100 : 0;
+	const defenderControl = totalRegions > 0 ? ((defenderRegions[0]?.count || 0) / totalRegions) * 100 : 0;
 
 	return {
 		war,
@@ -140,6 +150,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		),
 		attackerStates,
 		defenderStates,
+		capitulatedStates,
 		attackerControl,
 		defenderControl,
 		totalRegions

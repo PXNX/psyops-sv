@@ -86,6 +86,12 @@
 
 					<!-- Government Positions Badges -->
 					<div class="flex gap-2 justify-center flex-wrap mt-3">
+						{#if data.account.role === "moderator"}
+							<div class="badge badge-lg gap-2 bg-purple-600/20 border-purple-500/30 text-purple-300">👑 Moderator</div>
+						{:else if data.account.role === "admin"}
+							<div class="badge badge-lg gap-2 bg-red-600/20 border-red-500/30 text-red-300">👑 Admin</div>
+						{/if}
+
 						{#if data.presidency}
 							<div class="badge badge-lg gap-2 bg-yellow-600/20 border-yellow-500/30 text-yellow-300">
 								👑 President of {data.presidency.stateName}
