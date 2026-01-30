@@ -23,8 +23,6 @@
 	let previewUrl = $state<string | null>(data.bloc.logoUrl);
 	let dragActive = $state(false);
 	let fileInput: HTMLInputElement;
-	let selectedTemplates = $state<Set<number>>(new Set(data.recommendedTemplateIds));
-	let isSavingRecommendations = $state(false);
 
 	const colorPresets = [
 		{ name: "Blue", value: "#3b82f6" },
@@ -38,16 +36,6 @@
 		{ name: "Teal", value: "#14b8a6" },
 		{ name: "Amber", value: "#f59e0b" }
 	];
-
-	const unitTypeIcons: Record<string, string> = {
-		armor: "🚜",
-		mechanized: "🚙",
-		artillery: "🎯",
-		air_defence: "🛡️",
-		infantry: "🪖",
-		fighter_squadron: "✈️",
-		bomber_squadron: "🛩️"
-	};
 
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -97,15 +85,6 @@
 		if (fileInput) {
 			fileInput.value = "";
 		}
-	}
-
-	function toggleTemplate(templateId: number) {
-		if (selectedTemplates.has(templateId)) {
-			selectedTemplates.delete(templateId);
-		} else {
-			selectedTemplates.add(templateId);
-		}
-		selectedTemplates = selectedTemplates;
 	}
 
 	// Cleanup on unmount
@@ -376,81 +355,6 @@
 			</button>
 		</div>
 	</form>
-
-	<!-- Recommended Units -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-2">
-				<FluentShield20Filled class="size-5 text-purple-400" />
-				<div>
-					<h2 class="text-lg font-semibold text-white">Recommended Military Units</h2>
-					<p class="text-xs text-gray-400">Select units to recommend to member states</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-			{#each data.allTemplates as template}
-				<button
-					type="button"
-					onclick={() => toggleTemplate(template.id)}
-					class="text-left bg-slate-700/30 rounded-lg p-4 border-2 transition-all hover:bg-slate-700/50"
-					class:border-purple-500={selectedTemplates.has(template.id)}
-					class:border-white-5={!selectedTemplates.has(template.id)}
-					disabled={isSavingRecommendations}
-				>
-					<div class="flex items-start gap-3">
-						<div class="flex items-center gap-2">
-							<span class="text-2xl">{unitTypeIcons[template.unitType] || "🎖️"}</span>
-							{#if selectedTemplates.has(template.id)}
-								<div class="size-5 bg-purple-600 rounded flex items-center justify-center shrink-0">
-									<FluentCheckmark20Filled class="size-3 text-white" />
-								</div>
-							{:else}
-								<div class="size-5 border-2 border-slate-500 rounded shrink-0"></div>
-							{/if}
-						</div>
-						<div class="flex-1 min-w-0">
-							<p class="font-semibold text-white text-sm">{template.displayName}</p>
-							{#if template.description}
-								<p class="text-xs text-gray-400 mt-1 line-clamp-2">{template.description}</p>
-							{/if}
-						</div>
-					</div>
-				</button>
-			{/each}
-		</div>
-
-		<form
-			method="POST"
-			action="?/updateRecommendations"
-			use:svelteEnhance={() => {
-				isSavingRecommendations = true;
-				return async ({ update }) => {
-					await update();
-					isSavingRecommendations = false;
-				};
-			}}
-		>
-			{#each Array.from(selectedTemplates) as templateId}
-				<input type="hidden" name="templateIds" value={templateId} />
-			{/each}
-
-			<button
-				type="submit"
-				disabled={isSavingRecommendations}
-				class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
-			>
-				{#if isSavingRecommendations}
-					<span class="loading loading-spinner loading-sm"></span>
-					Saving...
-				{:else}
-					<FluentCheckmark20Filled class="size-5" />
-					Update Recommended Units ({selectedTemplates.size} selected)
-				{/if}
-			</button>
-		</form>
-	</div>
 
 	<!-- Info Box -->
 	<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">

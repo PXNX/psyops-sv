@@ -45,7 +45,6 @@ export const militaryUnitTypeEnum = pgEnum("military_unit_type", [
 	"bomber_squadron",
 	"fighter_squadron"
 ]);
-export const militaryUnitSizeEnum = pgEnum("military_unit_size", ["brigade", "division", "corps"]);
 export const travelStatusEnum = pgEnum("travel_status", ["in_progress", "completed", "cancelled"]);
 export const giftCodeResourceTypeEnum = pgEnum("gift_code_resource_type", [
 	"iron",
@@ -895,47 +894,14 @@ export const militaryUnits = pgTable("military_units", {
 		.notNull()
 		.references(() => regions.id, { onDelete: "cascade" }),
 	unitType: militaryUnitTypeEnum("unit_type").notNull(),
-	unitSize: militaryUnitSizeEnum("unit_size").notNull().default("brigade"),
-	attack: integer("attack").notNull(),
-	defense: integer("defense").notNull(),
 	organization: integer("organization").default(100).notNull(),
 	supplyLevel: integer("supply_level").default(100).notNull(),
 	health: integer("health").default(100).notNull(),
-	isTraining: boolean("is_training").default(false).notNull(),
+	isTraining: boolean("is_training").default(true).notNull(),
 	trainingStartedAt: timestamp("training_started_at"),
 	trainingCompletesAt: timestamp("training_completed_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
-});
-
-export const militaryUnitTemplates = pgTable("military_unit_templates", {
-	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
-	unitType: militaryUnitTypeEnum("unit_type").notNull().unique(),
-	displayName: varchar("display_name", { length: 100 }).notNull(),
-	description: text("description"),
-	baseAttack: integer("base_attack").notNull(),
-	baseDefense: integer("base_defense").notNull(),
-	trainingDuration: integer("training_duration").notNull(),
-	currencyCost: bigint("currency_cost", { mode: "number" }).notNull(),
-	ironCost: integer("iron_cost").default(0).notNull(),
-	steelCost: integer("steel_cost").default(0).notNull(),
-	gunpowderCost: integer("gunpowder_cost").default(0).notNull(),
-	riflesCost: integer("rifles_cost").default(0).notNull(),
-	ammunitionCost: integer("ammunition_cost").default(0).notNull(),
-	artilleryCost: integer("artillery_cost").default(0).notNull(),
-	vehiclesCost: integer("vehicles_cost").default(0).notNull(),
-	explosivesCost: integer("explosives_cost").default(0).notNull()
-});
-
-export const militarySupplyConsumption = pgTable("military_supply_consumption", {
-	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
-	unitId: integer("unit_id")
-		.notNull()
-		.references(() => militaryUnits.id, { onDelete: "cascade" })
-		.unique(),
-	lastSupplyCheck: timestamp("last_supply_check").defaultNow().notNull(),
-	dailyAmmunitionConsumption: integer("daily_ammunition_consumption").default(10).notNull(),
-	dailyFuelConsumption: integer("daily_fuel_consumption").default(5).notNull()
 });
 
 // --- TRAVEL ---
@@ -1090,10 +1056,7 @@ export const factoriesRelations = relations(factories, ({ one, many }) => ({
 }));
 
 export const militaryUnitsRelations = relations(militaryUnits, ({ one }) => ({
-	owner: one(accounts, { fields: [militaryUnits.ownerId], references: [accounts.id] }),
-	state: one(states, { fields: [militaryUnits.stateId], references: [states.id] }),
-	region: one(regions, { fields: [militaryUnits.regionId], references: [regions.id] }),
-	supply: one(militarySupplyConsumption)
+	owner: one(accounts, { fields: [militaryUnits.ownerId], references: [accounts.id] })
 }));
 
 export const articlesRelations = relations(articles, ({ one, many }) => ({
@@ -1174,6 +1137,7 @@ export type ParliamentaryProposal = typeof parliamentaryProposals.$inferSelect;
 export const blocs = pgTable("blocs", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	name: varchar("name", { length: 100 }).notNull().unique(),
+	logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
 	color: varchar("color", { length: 7 }).notNull(),
 	description: text("description"),
 	createdAt: timestamp("created_at").defaultNow().notNull()
@@ -1757,16 +1721,6 @@ export const stateEditCooldowns = pgTable("state_edit_cooldowns", {
 		.references(() => accounts.id, { onDelete: "cascade" })
 		.unique(),
 	lastEditAt: timestamp("last_edit_at").defaultNow().notNull()
-});
-
-export const blocRecommendedTemplates = pgTable("bloc_recommended_templates", {
-	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
-	blocId: integer("bloc_id")
-		.notNull()
-		.references(() => blocs.id, { onDelete: "cascade" }),
-	templateId: integer("template_id")
-		.notNull()
-		.references(() => militaryUnitTemplates.id, { onDelete: "cascade" })
 });
 
 // Add these enums and tables to your schema.ts file

@@ -1,6 +1,6 @@
 // src/routes/bloc/[id]/edit/+page.server.ts
 import { db } from "$lib/server/db";
-import { blocs, states, presidents, militaryUnitTemplates, blocRecommendedTemplates, files } from "$lib/server/schema";
+import { blocs, states, presidents, files } from "$lib/server/schema";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, inArray } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
@@ -37,17 +37,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(403, "Only presidents of member states can edit the bloc");
 	}
 
-	// Get all available unit templates
-	const allTemplates = await db.select().from(militaryUnitTemplates).orderBy(militaryUnitTemplates.displayName);
-
-	// Get currently recommended templates
-	const currentRecommendations = await db
-		.select({ templateId: blocRecommendedTemplates.templateId })
-		.from(blocRecommendedTemplates)
-		.where(eq(blocRecommendedTemplates.blocId, blocId));
-
-	const recommendedTemplateIds = currentRecommendations.map((r) => r.templateId);
-
 	// Get logo URL if exists
 	let logoUrl = null;
 	if (bloc.logo) {
@@ -81,14 +70,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			color: bloc.color,
 			description: bloc.description,
 			logoUrl
-		},
-		allTemplates: allTemplates.map((t) => ({
-			id: t.id,
-			unitType: t.unitType,
-			displayName: t.displayName,
-			description: t.description
-		})),
-		recommendedTemplateIds
+		}
 	};
 };
 
@@ -174,51 +156,6 @@ export const actions: Actions = {
 		} catch (e) {
 			console.error("Error updating bloc:", e);
 			return message(form, "Failed to update bloc", { status: 500 });
-		}
-	},
-
-	updateRecommendations: async ({ request, params, locals }) => {
-		const account = locals.account!;
-		const blocId = parseInt(params.id);
-		const formData = await request.formData();
-		const templateIds = formData.getAll("templateIds").map((id) => parseInt(id as string));
-
-		// Verify user is president of a member state
-		const memberStates = await db
-			.select({
-				stateId: states.id,
-				presidentUserId: presidents.userId
-			})
-			.from(states)
-			.leftJoin(presidents, eq(states.id, presidents.stateId))
-			.where(eq(states.blocId, blocId));
-
-		const isPresidentOfMemberState = memberStates.some((s) => s.presidentUserId === account.id);
-
-		if (!isPresidentOfMemberState) {
-			return fail(403, { error: "Only presidents of member states can manage recommendations" });
-		}
-
-		try {
-			await db.transaction(async (tx) => {
-				// Remove all existing recommendations
-				await tx.delete(blocRecommendedTemplates).where(eq(blocRecommendedTemplates.blocId, blocId));
-
-				// Add new recommendations
-				if (templateIds.length > 0) {
-					await tx.insert(blocRecommendedTemplates).values(
-						templateIds.map((templateId) => ({
-							blocId,
-							templateId
-						}))
-					);
-				}
-			});
-
-			return { success: true, message: "Recommended units updated successfully" };
-		} catch (e) {
-			console.error("Error updating recommendations:", e);
-			return fail(500, { error: "Failed to update recommendations" });
 		}
 	}
 };

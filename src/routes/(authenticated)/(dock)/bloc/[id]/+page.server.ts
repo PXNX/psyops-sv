@@ -1,13 +1,6 @@
 // src/routes/bloc/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import {
-	blocs,
-	states,
-	presidents,
-	blocRecommendedTemplates,
-	militaryUnitTemplates,
-	blocActionCooldowns
-} from "$lib/server/schema";
+import { blocs, states, presidents, blocActionCooldowns } from "$lib/server/schema";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -58,18 +51,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Check if current user is the bloc leader
 	const isLeader = locals.account?.id === blocLeader;
 
-	// Get recommended unit templates
-	const recommendedTemplates = await db
-		.select({
-			templateId: blocRecommendedTemplates.templateId,
-			unitType: militaryUnitTemplates.unitType,
-			displayName: militaryUnitTemplates.displayName,
-			description: militaryUnitTemplates.description
-		})
-		.from(blocRecommendedTemplates)
-		.leftJoin(militaryUnitTemplates, eq(blocRecommendedTemplates.templateId, militaryUnitTemplates.id))
-		.where(eq(blocRecommendedTemplates.blocId, blocId));
-
 	// Calculate total population and states
 	const totalPopulation = memberStates.reduce((sum, state) => sum + (state.population || 0), 0);
 	const totalStates = memberStates.length;
@@ -97,12 +78,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					}
 				: null
 		})),
-		recommendedTemplates: recommendedTemplates.map((t) => ({
-			id: t.templateId,
-			unitType: t.unitType,
-			displayName: t.displayName,
-			description: t.description
-		})),
+
 		totalPopulation,
 		totalStates,
 		isLeader,

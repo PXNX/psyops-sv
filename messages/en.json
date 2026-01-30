@@ -6,6 +6,14 @@
 	"privacyPolicy": "Privacy Policy",
 	"training": "Training",
 
+	"infantry": "Infantry",
+	"armor": "Armor",
+	"mechanzied": "Mechanzied",
+	"artillery": "Artillery",
+	"air_defence": "Air Defence",
+	"bomber_squadron": "Bomber Squadron",
+	"fighter_squadron": "Fighter Squadron",
+
 	"region_1": "Corsica",
 	"region_2": "Latium",
 	"region_3": "Switzerland",

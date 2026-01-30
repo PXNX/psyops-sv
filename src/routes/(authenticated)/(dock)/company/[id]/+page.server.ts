@@ -40,6 +40,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Get owner profile name and logo
+	//  TODO this is bullshit. Use backblaze instead.
 	const [ownerProfile] = await db.query.userProfiles.findMany({
 		where: (profiles, { eq }) => eq(profiles.accountId, company.ownerId),
 		with: {

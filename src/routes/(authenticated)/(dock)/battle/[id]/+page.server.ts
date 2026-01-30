@@ -8,22 +8,13 @@ import {
 	wars,
 	regions,
 	states,
-	residences
+	residences,
+	regionBorders
 } from "$lib/server/schema";
-import { eq, desc, and, sql, count, asc } from "drizzle-orm";
+import { eq, desc, and, sql, count, asc, or } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "../$types";
 import { error, fail } from "@sveltejs/kit";
-
-// Combat width by unit type
-const UNIT_COMBAT_WIDTH: Record<string, number> = {
-	infantry: 2,
-	armor: 3,
-	mechanized: 2,
-	artillery: 3,
-	air_defence: 2,
-	bomber_squadron: 0,
-	fighter_squadron: 0
-};
+import { MILITARY_UNIT_TEMPLATES } from "$lib/config/militaryUnits";
 
 // Terrain combat modifiers
 const TERRAIN_DATA = {
@@ -50,7 +41,7 @@ function selectEngagedUnits(participants: any[], maxWidth: number): any[] {
 	let usedWidth = 0;
 
 	for (const unit of available) {
-		const unitWidth = UNIT_COMBAT_WIDTH[unit.unit.unitType] || 2;
+		const unitWidth = MILITARY_UNIT_TEMPLATES[unit.unitType].combatWidth!;
 		if (usedWidth + unitWidth <= maxWidth) {
 			engaged.push(unit);
 			usedWidth += unitWidth;
@@ -311,12 +302,57 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	console.log("Attacker state:", battle.attackerStateId);
 	console.log("Defender state:", battle.defenderStateId);
 
-	// Get all user units in the battle region
-	const allUserUnitsInRegion = await db.query.militaryUnits.findMany({
-		where: and(eq(militaryUnits.ownerId, account.id), eq(militaryUnits.regionId, battle.regionId))
-	});
+	// Determine user side based on region location
+	let userSide: "attacker" | "defender" | null = null;
+	let canJoinReason: string | null = null;
 
-	console.log("Total user units in battle region:", allUserUnitsInRegion.length);
+	if (!userResidence) {
+		canJoinReason = "No residence found";
+	} else {
+		// Check if user can defend (residence is in battle region)
+		if (userResidence.regionId === battle.regionId) {
+			// User is in the battle region
+			if (userResidence.region.stateId === battle.defenderStateId) {
+				userSide = "defender";
+				console.log("User can DEFEND - in battle region");
+			} else {
+				canJoinReason = "You are in the battle region but not a citizen of the defending state";
+			}
+		} else {
+			// Check if user can attack (residence borders battle region)
+			const borderingRegion = await db.query.regionBorders.findFirst({
+				where: or(
+					and(eq(regionBorders.regionId, userResidence.regionId), eq(regionBorders.neighborId, battle.regionId)),
+					and(eq(regionBorders.regionId, battle.regionId), eq(regionBorders.neighborId, userResidence.regionId))
+				)
+			});
+
+			if (borderingRegion) {
+				// User's region borders the battle region
+				if (userResidence.region.stateId === battle.attackerStateId) {
+					userSide = "attacker";
+					console.log("User can ATTACK - in bordering region");
+				} else {
+					canJoinReason = "Your region borders the battle but you are not a citizen of the attacking state";
+				}
+			} else {
+				canJoinReason = "Your region does not border the battle region";
+			}
+		}
+	}
+
+	// Get all user units in the correct region
+	const relevantRegionId = userSide === "defender" ? battle.regionId : userResidence?.regionId;
+
+	let allUserUnitsInRegion: any[] = [];
+	if (relevantRegionId) {
+		allUserUnitsInRegion = await db.query.militaryUnits.findMany({
+			where: and(eq(militaryUnits.ownerId, account.id), eq(militaryUnits.regionId, relevantRegionId))
+		});
+	}
+
+	console.log("Relevant region for units:", relevantRegionId);
+	console.log("Total user units in relevant region:", allUserUnitsInRegion.length);
 	allUserUnitsInRegion.forEach((u) => {
 		console.log(`  - ${u.name}: training=${u.isTraining}, health=${u.health}, org=${u.organization}`);
 	});
@@ -364,7 +400,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		totalUnits: attackerParticipants.length,
 		activeUnits: attackerParticipants.filter((p) => p.currentStrength > 0).length,
 		engagedUnits: engagedAttackers.length,
-		combatWidth: engagedAttackers.reduce((sum, p) => sum + (UNIT_COMBAT_WIDTH[p.unit.unitType] || 2), 0),
+		combatWidth: engagedAttackers.reduce((sum, p) => sum + MILITARY_UNIT_TEMPLATES[p.unit.unitType].combatWidth, 0),
 		maxCombatWidth: terrainData.combatWidth,
 		totalDamageDealt: attackerParticipants.reduce((sum, p) => sum + p.damageDealt, 0),
 		totalDamageTaken: attackerParticipants.reduce((sum, p) => sum + p.damageTaken, 0),
@@ -375,21 +411,29 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		totalUnits: defenderParticipants.length,
 		activeUnits: defenderParticipants.filter((p) => p.currentStrength > 0).length,
 		engagedUnits: engagedDefenders.length,
-		combatWidth: engagedDefenders.reduce((sum, p) => sum + (UNIT_COMBAT_WIDTH[p.unit.unitType] || 2), 0),
+		combatWidth: engagedDefenders.reduce((sum, p) => sum + MILITARY_UNIT_TEMPLATES[p.unit.unitType].combatWidth, 0),
 		maxCombatWidth: terrainData.combatWidth,
 		totalDamageDealt: defenderParticipants.reduce((sum, p) => sum + p.damageDealt, 0),
 		totalDamageTaken: defenderParticipants.reduce((sum, p) => sum + p.damageTaken, 0),
 		destroyedUnits: defenderParticipants.filter((p) => p.currentStrength === 0).length
 	};
 
-	let userSide: "attacker" | "defender" | null = null;
-	if (userResidence?.region.stateId === battle.attackerStateId) {
-		userSide = "attacker";
-	} else if (userResidence?.region.stateId === battle.defenderStateId) {
-		userSide = "defender";
-	}
-
 	const userParticipants = battle.participants.filter((p) => p.unit.ownerId === account.id);
+
+	// Determine final canJoin status and reason
+	let canJoin = false;
+	let finalCanJoinReason = canJoinReason;
+
+	if (battle.phase === "ended") {
+		finalCanJoinReason = "Battle has ended";
+	} else if (userSide === null) {
+		// canJoinReason already set above
+	} else if (userUnits.length === 0) {
+		finalCanJoinReason = `No eligible units in region #${relevantRegionId}`;
+	} else {
+		canJoin = true;
+		finalCanJoinReason = null;
+	}
 
 	return {
 		battle,
@@ -398,11 +442,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		userUnits,
 		userSide,
 		userParticipants,
-		canJoin: userSide !== null && userUnits.length > 0 && battle.phase !== "ended",
+		canJoin,
+		canJoinReason: finalCanJoinReason,
 		terrainData,
 		preparationEndsAt,
 		isPreparationOver,
-		fortificationBonus: battle.region.fortifications || 0
+		fortificationBonus: battle.region.fortifications || 0,
+		userResidenceRegionId: userResidence?.regionId
 	};
 };
 
@@ -410,6 +456,7 @@ export const actions: Actions = {
 	assignUnit: async ({ request, params, locals }) => {
 		const account = locals.account!;
 		const battleId = parseInt(params.id);
+
 		const formData = await request.formData();
 		const unitId = parseInt(formData.get("unitId") as string);
 
@@ -427,10 +474,6 @@ export const actions: Actions = {
 
 		if (!unit) {
 			return fail(400, { error: "Unit not found or you don't own it" });
-		}
-
-		if (unit.regionId !== battle.regionId) {
-			return fail(400, { error: `Unit must be in the battle region` });
 		}
 
 		if (unit.isTraining) {
@@ -463,12 +506,43 @@ export const actions: Actions = {
 		}
 
 		let side: "attacker" | "defender";
-		if (userResidence.region.stateId === battle.attackerStateId) {
-			side = "attacker";
-		} else if (userResidence.region.stateId === battle.defenderStateId) {
-			side = "defender";
+
+		// Determine side based on region location
+		if (userResidence.regionId === battle.regionId) {
+			// User is in battle region - must defend
+			if (userResidence.region.stateId === battle.defenderStateId) {
+				side = "defender";
+
+				// Verify unit is in battle region
+				if (unit.regionId !== battle.regionId) {
+					return fail(400, { error: "Defender units must be in the battle region" });
+				}
+			} else {
+				return fail(400, { error: "You are in the battle region but not a citizen of the defending state" });
+			}
 		} else {
-			return fail(400, { error: "You are not a citizen of either warring state" });
+			// User is not in battle region - check if can attack
+			const borderingRegion = await db.query.regionBorders.findFirst({
+				where: or(
+					and(eq(regionBorders.regionId, userResidence.regionId), eq(regionBorders.neighborId, battle.regionId)),
+					and(eq(regionBorders.regionId, battle.regionId), eq(regionBorders.neighborId, userResidence.regionId))
+				)
+			});
+
+			if (!borderingRegion) {
+				return fail(400, { error: "Your region does not border the battle region" });
+			}
+
+			if (userResidence.region.stateId === battle.attackerStateId) {
+				side = "attacker";
+
+				// Verify unit is in user's residence region
+				if (unit.regionId !== userResidence.regionId) {
+					return fail(400, { error: "Attacker units must be in your residence region (bordering the battle)" });
+				}
+			} else {
+				return fail(400, { error: "You are not a citizen of the attacking state" });
+			}
 		}
 
 		await db.insert(battleParticipants).values({
@@ -502,4 +576,4 @@ export const actions: Actions = {
 
 		return { success: true };
 	}
-};
+} as Actions;
