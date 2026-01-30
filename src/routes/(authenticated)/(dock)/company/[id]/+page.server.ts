@@ -39,9 +39,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "Company not found");
 	}
 
-	// Get owner profile name
+	// Get owner profile name and logo
 	const [ownerProfile] = await db.query.userProfiles.findMany({
-		where: (profiles, { eq }) => eq(profiles.accountId, company.ownerId)
+		where: (profiles, { eq }) => eq(profiles.accountId, company.ownerId),
+		with: {
+			logoFile: true
+		}
 	});
 
 	// Check if current user is the owner
@@ -196,6 +199,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		company: {
 			...company,
 			ownerName: ownerProfile?.name || null,
+			ownerLogo: ownerProfile?.logoFile?.key ? `/api/files/${ownerProfile.logoFile.key}` : null,
 			foundedAt: company.foundedAt.toISOString()
 		},
 		isOwner,
