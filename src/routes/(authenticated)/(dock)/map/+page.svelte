@@ -9,6 +9,8 @@
 	import IconChevronRight from "~icons/fluent/chevron-right-24-regular";
 	import { goto } from "$app/navigation";
 	import type { PageData } from "./$types";
+	import { getRegionName } from "$lib/utils/formatting";
+	import Logo from "$lib/component/Logo.svelte";
 
 	let { data }: { data: PageData } = $props();
 
@@ -22,10 +24,15 @@
 	let searchInputRef: HTMLInputElement | null = $state(null);
 	let highlightedRegionId: number | null = $state(null);
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
+	let stateColor = $state<string | null>(null);
 
-	// Filter options combining political and all resources
+	// Filter options: map layers then resources
 	const filterOptions = [
 		{ value: "political", label: "Political" },
+		{ value: "blocs", label: "Blocs" },
+		{ value: "wars", label: "Active Wars" },
+		{ value: "residents", label: "Residents" },
+		{ value: "powerplants", label: "Power Plants" },
 		{ value: "oil", label: "Oil" },
 		{ value: "aluminium", label: "Aluminium" },
 		{ value: "rubber", label: "Rubber" },
@@ -38,13 +45,14 @@
 		{ value: "wood", label: "Wood" }
 	];
 
+	// Special layers that are not simple numeric resource heatmaps
+	const specialLayers = new Set(["political", "blocs", "wars", "residents", "powerplants"]);
+
 	// Get all region names for search
 	const allRegionNames = $derived(() => {
 		const regions: { id: number; name: string; stateName?: string }[] = [];
 		for (const [id, regionData] of Object.entries(data.regionMap)) {
-			const regionId = parseInt(id, 10);
-			const key = `region_${regionId}` as keyof typeof m;
-			const name = m[key]?.() ?? `Region ${regionId}`;
+			const regionId = parseInt(id);
 
 			let stateName: string | undefined;
 			if (regionData.stateId) {
@@ -54,7 +62,7 @@
 				}
 			}
 
-			regions.push({ id: regionId, name, stateName });
+			regions.push({ id: regionId, name: getRegionName(regionId), stateName });
 		}
 		return regions;
 	});
@@ -80,7 +88,10 @@
 
 		const scaleX = viewportWidth / svgWidth;
 		const scaleY = viewportHeight / svgHeight;
-		const minZoomToFit = Math.min(scaleX, scaleY);
+		// Math.max: fill whichever dimension is larger so the map never
+		// shrinks smaller than the screen on tall/narrow mobile viewports.
+		// The overflow on the other axis is handled by constrainToBounds.
+		const minZoomToFit = Math.max(scaleX, scaleY);
 
 		instance = panzoom(node, {
 			bounds: true,
@@ -155,7 +166,8 @@
 
 			const newScaleX = newViewportWidth / svgWidth;
 			const newScaleY = newViewportHeight / svgHeight;
-			const newMinZoom = Math.min(newScaleX, newScaleY);
+			// Same Math.max here so resize recalculates consistently
+			const newMinZoom = Math.max(newScaleX, newScaleY);
 
 			if (instance) {
 				const currentTransform = instance.getTransform();
@@ -181,20 +193,33 @@
 	function colorRegions(svgElement: HTMLElement | SVGElement) {
 		const paths = svgElement.querySelectorAll("path[id]");
 
+		// For numeric heatmap layers, pre-scan to find the max so we can normalise
 		let maxResourceValue = 0;
-		if (mapFilter !== "political") {
+		if (!specialLayers.has(mapFilter)) {
 			paths.forEach((path) => {
 				const regionId = parseInt(path.id, 10);
 				if (isNaN(regionId)) return;
-
 				const regionData = data.regionMap[regionId];
 				if (!regionData) return;
-
-				const resourceValue = getResourceValue(regionData, mapFilter);
-				if (resourceValue > maxResourceValue) {
-					maxResourceValue = resourceValue;
-				}
+				const v = getResourceValue(regionData, mapFilter);
+				if (v > maxResourceValue) maxResourceValue = v;
 			});
+		}
+
+		// For residents / powerplants we also need a max for normalisation
+		let maxResidents = 0;
+		let maxPowerplants = 0;
+		if (mapFilter === "residents") {
+			for (const rd of Object.values(data.regionMap)) {
+				const v = rd.residentCount ?? 0;
+				if (v > maxResidents) maxResidents = v;
+			}
+		}
+		if (mapFilter === "powerplants") {
+			for (const rd of Object.values(data.regionMap)) {
+				const v = rd.powerplantCount ?? 0;
+				if (v > maxPowerplants) maxPowerplants = v;
+			}
 		}
 
 		paths.forEach((path) => {
@@ -204,14 +229,68 @@
 			const regionData = data.regionMap[regionId];
 			if (!regionData) return;
 
-			let color = "#ffffff";
+			let color = "#1e293b"; // default dark neutral for empty regions
 
-			if (mapFilter === "political") {
-				if (regionData.stateId) {
-					color = data.stateColorMap[regionData.stateId] || "#ffffff";
+			switch (mapFilter) {
+				// ── Political: state colours ──
+				case "political":
+					color = regionData.stateId ? data.stateColorMap[regionData.stateId] || "#1e293b" : "#1e293b";
+					break;
+
+				// ── Blocs: bloc colours, states without a bloc are neutral ──
+				case "blocs":
+					if (regionData.stateId) {
+						color = data.blocColorMap?.[regionData.stateId] || "#1e293b";
+					}
+					break;
+
+				// ── Wars: red = attacker, blue = defender, neutral otherwise ──
+				case "wars":
+					if (regionData.stateId) {
+						if (data.warAttackerStateIds?.has(regionData.stateId)) {
+							color = "#dc2626"; // red-600
+						} else if (data.warDefenderStateIds?.has(regionData.stateId)) {
+							color = "#2563eb"; // blue-600
+						}
+					}
+					break;
+
+				// ── Residents: green heatmap ──
+				case "residents": {
+					const count = regionData.residentCount ?? 0;
+					if (count === 0 || maxResidents === 0) {
+						color = "#1e293b";
+					} else {
+						const n = Math.min(count / maxResidents, 1);
+						// dark teal → bright green
+						const r = Math.round(30 + (74 - 30) * n);
+						const g = Math.round(58 + (222 - 58) * n);
+						const b = Math.round(92 + (68 - 92) * n);
+						color = `rgb(${r},${g},${b})`;
+					}
+					break;
 				}
-			} else {
-				color = getResourceColor(regionData, mapFilter, maxResourceValue);
+
+				// ── Power plants: amber heatmap ──
+				case "powerplants": {
+					const count = regionData.powerplantCount ?? 0;
+					if (count === 0 || maxPowerplants === 0) {
+						color = "#1e293b";
+					} else {
+						const n = Math.min(count / maxPowerplants, 1);
+						// dark amber → bright yellow
+						const r = Math.round(78 + (250 - 78) * n);
+						const g = Math.round(55 + (204 - 55) * n);
+						const b = Math.round(15 + (20 - 15) * n);
+						color = `rgb(${r},${g},${b})`;
+					}
+					break;
+				}
+
+				// ── Resource heatmaps (existing green gradient) ──
+				default:
+					color = getResourceColor(regionData, mapFilter, maxResourceValue);
+					break;
 			}
 
 			(path as SVGElement).style.fill = color;
@@ -221,7 +300,7 @@
 				(path as SVGElement).style.strokeWidth = "3";
 			} else {
 				(path as SVGElement).style.stroke = "#1d232a";
-				(path as SVGElement).style.strokeWidth = "0.5";
+				(path as SVGElement).style.strokeWidth = "0.3";
 			}
 		});
 	}
@@ -264,8 +343,6 @@
 			}
 		}
 	});
-
-	let stateColor = $state<string | null>(null);
 
 	function onClick(e: MouseEvent) {
 		e.stopPropagation();
@@ -324,13 +401,6 @@
 
 	function closeSheet() {
 		showSheet = false;
-	}
-
-	function viewRegionDetail() {
-		if (selectedRegion) {
-			goto(`/region/${selectedRegion.id}`);
-			closeSheet();
-		}
 	}
 
 	function selectSearchResult(regionId: number) {
@@ -406,45 +476,62 @@
 
 	const regionName = $derived(() => {
 		if (!selectedRegion) return "";
-		const key = `region_${selectedRegion.id}` as keyof typeof m;
-		return m[key]?.() ?? `Region ${selectedRegion.id}`;
+		else return getRegionName(selectedRegion.id);
 	});
 </script>
 
+<svelte:head>
+	<style>
+		body {
+			overflow: hidden;
+			touch-action: pan-x pan-y;
+		}
+	</style>
+</svelte:head>
+
 <svelte:window onclick={handleClickOutside} />
 
-<header class="sticky top-0 flex items-center justify-end gap-2 p-2 bg-base-100 z-10 touch-action-header">
-	<form class="flex-1 relative" onsubmit={handleSearchSubmit}>
-		<label class="input">
+<!-- Dark Mode Toolbar -->
+<header
+	class="fixed top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 w-[calc(100%-24px)] max-w-[520px] bg-gray-900/70 backdrop-blur-xl backdrop-saturate-[1.8] border border-white/10 rounded-[14px] shadow-lg shadow-black/20 touch-action-pan-x touch-action-pan-y"
+>
+	<form class="flex-1 relative min-w-0" onsubmit={handleSearchSubmit}>
+		<div class="flex items-center gap-2">
+			<FluentEmojiMagnifyingGlassTiltedLeft class="w-4 h-4 flex-shrink-0 opacity-40 text-white" />
 			<input
 				type="search"
 				bind:value={searchQuery}
 				bind:this={searchInputRef}
 				oninput={handleSearchInput}
 				onfocus={handleSearchFocus}
-				placeholder="Search regions..."
+				placeholder="Search regions…"
+				class="flex-1 w-full min-w-0 bg-transparent border-none outline-none text-sm font-medium text-white placeholder:text-white/40 px-0 py-1.5 tracking-tight leading-none"
 			/>
-			<button type="submit" class="btn btn-ghost btn-sm btn-circle">
-				<FluentEmojiMagnifyingGlassTiltedLeft />
-			</button>
-		</label>
+		</div>
 
 		{#if showSearchResults && searchResults().length > 0}
 			<div
-				class="absolute top-full left-0 right-0 mt-1 bg-base-100 rounded-lg shadow-lg border border-base-300 max-h-96 overflow-y-auto z-50"
+				class="absolute top-[calc(100%+10px)] -left-3.5 -right-3.5 bg-gray-900/70 backdrop-blur-2xl backdrop-saturate-[1.8] border border-white/10 rounded-xl shadow-2xl shadow-black/20 overflow-hidden max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-200"
 			>
-				{#each searchResults() as result}
+				{#each searchResults() as result, i}
 					<button
-						class="w-full px-4 py-3 text-left hover:bg-base-200 transition-colors flex items-center gap-3 border-b border-base-300 last:border-b-0"
+						class="flex items-center gap-2.5 w-full px-3.5 py-2.5 bg-transparent border-b border-white/10 last:border-b-0 cursor-pointer text-left text-white transition-colors hover:bg-white/5 animate-in fade-in slide-in-from-top-1"
+						style="animation-delay: {i * 0.03}s"
 						onclick={() => selectSearchResult(result.id)}
 					>
-						<IconMapPin class="text-lg flex-shrink-0" />
-						<div class="flex-1">
-							<div class="font-medium">{result.name}</div>
+						<IconMapPin class="w-4 h-4 flex-shrink-0 opacity-35" />
+						<div class="flex flex-col gap-px min-w-0">
+							<span class="text-[13.5px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
+								>{result.name}</span
+							>
 							{#if result.stateName}
-								<div class="text-sm text-base-content/70">{result.stateName}</div>
+								<span class="text-[11.5px] opacity-45 whitespace-nowrap overflow-hidden text-ellipsis"
+									>{result.stateName}</span
+								>
 							{:else}
-								<div class="text-sm text-base-content/70 italic">Independent</div>
+								<span class="text-[11.5px] opacity-45 italic whitespace-nowrap overflow-hidden text-ellipsis"
+									>Independent</span
+								>
 							{/if}
 						</div>
 					</button>
@@ -453,15 +540,27 @@
 		{/if}
 	</form>
 
-	<select class="select select-ghost" bind:value={mapFilter}>
-		{#each filterOptions as option}
-			<option value={option.value}>{option.label}</option>
-		{/each}
-	</select>
+	<div class="flex-shrink-0">
+		<select
+			bind:value={mapFilter}
+			class="appearance-none bg-white/10 border border-white/15 rounded-lg px-3 pr-7 py-1.5 text-xs font-semibold tracking-wide text-white cursor-pointer outline-none transition-colors hover:bg-white/15 bg-[length:10px_6px] bg-no-repeat bg-[right_9px_center]"
+			style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white' opacity='.4'/%3E%3C/svg%3E&quot;)"
+		>
+			{#each filterOptions as option}
+				<option value={option.value} class="bg-gray-900 text-white">{option.label}</option>
+			{/each}
+		</select>
+	</div>
 </header>
 
-<main class="flex-1 w-full pb-16 overflow-hidden relative">
-	<div use:initPanzoom onclick={onClick} role="button" tabindex="0" class="map-container">
+<main class="flex-1 w-full overflow-hidden">
+	<div
+		use:initPanzoom
+		onclick={onClick}
+		role="button"
+		tabindex="0"
+		class="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing touch-action-none"
+	>
 		{@html WorldMap}
 	</div>
 </main>
@@ -476,21 +575,15 @@
 			</div>
 
 			<div class="p-6 space-y-4">
-				<button
+				<a
+					href="/region/{selectedRegion.id}"
 					class="w-full flex items-center gap-4 hover:bg-base-200 transition-colors rounded-lg p-4"
-					onclick={viewRegionDetail}
 				>
-					<div class="w-16 h-16 flex-shrink-0 bg-base-300 rounded-lg overflow-hidden flex items-center justify-center">
-						<img
-							src={`/coats/${selectedRegion.id}.svg`}
-							alt="Region {selectedRegion.id}"
-							class="w-full h-full object-cover"
-							onerror={(e) => {
-								e.currentTarget.style.display = "none";
-								e.currentTarget.parentElement!.innerHTML = '<span class="text-2xl">📍</span>';
-							}}
-						/>
-					</div>
+					<Logo
+						src={`/coats/${selectedRegion.id}.svg`}
+						alt={getRegionName(selectedRegion.id)}
+						class="size-16 object-cover"
+					/>
 
 					<div class="flex-1 text-left">
 						<h2 class="text-xl font-bold">{regionName()}</h2>
@@ -502,13 +595,33 @@
 					</div>
 
 					<IconChevronRight class="text-2xl flex-shrink-0" style="color: {stateColor || 'currentColor'}" />
-				</button>
+				</a>
 			</div>
 		</div>
 	</div>
 {/if}
 
 <style>
+	/* ─── SVG Styles ─── */
+	:global(#panzoom-element) {
+		width: 100%;
+		height: 100%;
+	}
+
+	:global(#panzoom-element path) {
+		stroke: #1d232a;
+		stroke-width: 0.3;
+		transition:
+			filter 0.15s ease,
+			opacity 0.15s ease;
+	}
+
+	:global(#panzoom-element path:hover) {
+		filter: brightness(1.12) saturate(1.15);
+		cursor: pointer;
+	}
+
+	/* ─── Sheet animation ─── */
 	@keyframes slide-up {
 		from {
 			transform: translateY(100%);
@@ -520,60 +633,5 @@
 
 	.animate-slide-up {
 		animation: slide-up 0.3s ease-out;
-	}
-
-	.map-container {
-		width: 100%;
-		height: calc(100dvh - 56px);
-		cursor: grab;
-		overflow: hidden;
-		touch-action: none;
-	}
-
-	.map-container:active {
-		cursor: grabbing;
-	}
-
-	:global(#panzoom-element) {
-		width: 100%;
-		height: 100%;
-	}
-
-	:global(#panzoom-element path) {
-		stroke: #1d232a;
-		stroke-width: 0.5;
-		transition: opacity 0.2s;
-	}
-
-	:global(#panzoom-element path:hover) {
-		opacity: 0.8;
-		cursor: pointer;
-	}
-
-	.travel-overlay {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 100%;
-		height: 100%;
-		pointer-events: none;
-		z-index: 5;
-	}
-
-	:global(body) {
-		overflow: hidden;
-		touch-action: pan-x pan-y;
-	}
-
-	main {
-		overflow: hidden;
-	}
-
-	.touch-action-header {
-		touch-action: pan-x pan-y;
-	}
-
-	header * {
-		touch-action: pan-x pan-y;
 	}
 </style>
