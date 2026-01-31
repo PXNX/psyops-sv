@@ -1,0 +1,957 @@
+{
+  "region-1": {
+    "json": "Corsica"
+  },
+  "region-2": {
+    "json": "Latium"
+  },
+  "region-3": {
+    "json": "Switzerland"
+  },
+  "region-4": {
+    "json": "Lower Austria"
+  },
+  "region-5": {
+    "json": "Ostpreussen"
+  },
+  "region-8": {
+    "json": "Luxemburg"
+  },
+  "region-16": {
+    "json": "Ile de France",
+    "suggestion": "Ile_de_France"
+  },
+  "region-17": {
+    "json": "Lorraine"
+  },
+  "region-21": {
+    "json": "Provence"
+  },
+  "region-28": {
+    "json": "Alsace"
+  },
+  "region-29": {
+    "json": "Pas de Calais"
+  },
+  "region-31": {
+    "json": "Midi Pyrenees",
+    "suggestion": "Midi_Pyrenees"
+  },
+  "region-33": {
+    "json": "Centre-Sud",
+    "suggestion": "Centre_Sud"
+  },
+  "region-38": {
+    "json": "Norrland"
+  },
+  "region-39": {
+    "json": "South Tyrol"
+  },
+  "region-40": {
+    "json": "Barnaul"
+  },
+  "region-43": {
+    "json": "Northern Hungary",
+    "suggestion": "Northern_Hungary"
+  },
+  "region-45": {
+    "json": "Vojvodina"
+  },
+  "region-47": {
+    "json": "Thessaly"
+  },
+  "region-56": {
+    "json": "Weser-Ems",
+    "suggestion": "Weser_Ems"
+  },
+  "region-58": {
+    "json": "Schleswig-Holstein"
+  },
+  "region-62": {
+    "json": "Pommern"
+  },
+  "region-69": {
+    "json": "Sudetenland"
+  },
+  "region-70": {
+    "json": "Western Slovakia",
+    "suggestion": "Western_Slovakia"
+  },
+  "region-71": {
+    "json": "Eastern Slovakia",
+    "suggestion": "Eastern_Slovakia"
+  },
+  "region-72": {
+    "json": "Zaolzie"
+  },
+  "region-73": {
+    "json": "Carpathian Ruthenia"
+  },
+  "region-74": {
+    "json": "Eastern Sudetenland"
+  },
+  "region-76": {
+    "json": "North Transylvania",
+    "suggestion": "North_Transylvania"
+  },
+  "region-88": {
+    "json": "Krakow"
+  },
+  "region-89": {
+    "json": "Stanislawow"
+  },
+  "region-91": {
+    "json": "Lwow"
+  },
+  "region-93": {
+    "json": "Wolyn"
+  },
+  "region-95": {
+    "json": "Nowogrodek"
+  },
+  "region-97": {
+    "json": "Bialystok"
+  },
+  "region-98": {
+    "json": "Plock"
+  },
+  "region-99": {
+    "json": "Jutland"
+  },
+  "region-102": {
+    "json": "Slovenia"
+  },
+  "region-110": {
+    "json": "Ostlandet"
+  },
+  "region-114": {
+    "json": "Sardinia"
+  },
+  "region-115": {
+    "json": "Sicily"
+  },
+  "region-119": {
+    "json": "Northern Ireland",
+    "suggestion": "Northern_Ireland"
+  },
+  "region-120": {
+    "json": "Scottish Highlands",
+    "suggestion": "Scottish_Highlands"
+  },
+  "region-123": {
+    "json": "Cornwall"
+  },
+  "region-125": {
+    "json": "East Anglia",
+    "suggestion": "East_Anglia"
+  },
+  "region-126": {
+    "json": "Greater London Area",
+    "suggestion": "Greater_London_Area"
+  },
+  "region-128": {
+    "json": "West Midlands",
+    "suggestion": "West_Midlands"
+  },
+  "region-129": {
+    "json": "East Midlands",
+    "suggestion": "East_Midlands"
+  },
+  "region-131": {
+    "json": "Northern England"
+  },
+  "region-138": {
+    "json": "Scania"
+  },
+  "region-141": {
+    "json": "Svealand"
+  },
+  "region-143": {
+    "json": "Trondelag"
+  },
+  "region-144": {
+    "json": "Nord-Norge"
+  },
+  "region-145": {
+    "json": "Aland"
+  },
+  "region-149": {
+    "json": "Pohjanmaa"
+  },
+  "region-150": {
+    "json": "Savo"
+  },
+  "region-151": {
+    "json": "Eastern Switzerland"
+  },
+  "region-152": {
+    "json": "Upper Austria"
+  },
+  "region-154": {
+    "json": "Alföld"
+  },
+  "region-155": {
+    "json": "Transdanubia"
+  },
+  "region-158": {
+    "json": "Piedmont"
+  },
+  "region-159": {
+    "json": "Lombardy"
+  },
+  "region-161": {
+    "json": "Emilia Romagna",
+    "suggestion": "Emilia_Romagna"
+  },
+  "region-162": {
+    "json": "Tuscany"
+  },
+  "region-165": {
+    "json": "Catalonia"
+  },
+  "region-166": {
+    "json": "Aragon"
+  },
+  "region-169": {
+    "json": "Andalusia"
+  },
+  "region-172": {
+    "json": "Navarre"
+  },
+  "region-174": {
+    "json": "Leon"
+  },
+  "region-175": {
+    "json": "La Mancha"
+  },
+  "region-176": {
+    "json": "Castille"
+  },
+  "region-177": {
+    "json": "Balearic Islands"
+  },
+  "region-178": {
+    "json": "Canary islands"
+  },
+  "region-187": {
+    "json": "Aegean Islands",
+    "suggestion": "Aegean_Islands"
+  },
+  "region-188": {
+    "json": "Memel"
+  },
+  "region-189": {
+    "json": "Siauliai"
+  },
+  "region-193": {
+    "json": "Chernihiv"
+  },
+  "region-199": {
+    "json": "Khmelnytskyi"
+  },
+  "region-202": {
+    "json": "Kiev"
+  },
+  "region-232": {
+    "json": "Grozny"
+  },
+  "region-233": {
+    "json": "Caucasus Mountains"
+  },
+  "region-235": {
+    "json": "Stravropol"
+  },
+  "region-237": {
+    "json": "Elista"
+  },
+  "region-251": {
+    "json": "Kuibyshev"
+  },
+  "region-252": {
+    "json": "Gorki"
+  },
+  "region-256": {
+    "json": "Cheboksary"
+  },
+  "region-268": {
+    "json": "French Somaliland",
+    "suggestion": "French_Somaliland"
+  },
+  "region-269": {
+    "json": "British Somaliland",
+    "suggestion": "British_Somaliland"
+  },
+  "region-270": {
+    "json": "Pitcairn Island",
+    "suggestion": "Pitcairn_Island"
+  },
+  "region-271": {
+    "json": "Ethiopia"
+  },
+  "region-273": {
+    "json": "Libyan Desert",
+    "suggestion": "Libyan_Desert"
+  },
+  "region-276": {
+    "json": "Southern Ontario",
+    "suggestion": "Southern_Ontario"
+  },
+  "region-277": {
+    "json": "Mexico City",
+    "suggestion": "Mexico_City"
+  },
+  "region-278": {
+    "json": "Pampas"
+  },
+  "region-280": {
+    "json": "Mato Grosso",
+    "suggestion": "Mato_Grosso"
+  },
+  "region-284": {
+    "json": "North Island",
+    "suggestion": "North_Island"
+  },
+  "region-285": {
+    "json": "New South Wales",
+    "suggestion": "New_South_Wales"
+  },
+  "region-286": {
+    "json": "Southern Indochina",
+    "suggestion": "Southern_Indochina"
+  },
+  "region-288": {
+    "json": "Burma"
+  },
+  "region-290": {
+    "json": "Spanish Africa",
+    "suggestion": "Spanish_Africa"
+  },
+  "region-293": {
+    "json": "Yemen"
+  },
+  "region-296": {
+    "json": "Portuguese Guinea",
+    "suggestion": "Portuguese_Guinea"
+  },
+  "region-297": {
+    "json": "Equatorial Guinea",
+    "suggestion": "Equatorial_Guinea"
+  },
+  "region-299": {
+    "json": "Falkland Islands",
+    "suggestion": "Falkland_Islands"
+  },
+  "region-300": {
+    "json": "Uruguay"
+  },
+  "region-302": {
+    "json": "La Paz",
+    "suggestion": "La_Paz"
+  },
+  "region-304": {
+    "json": "Panama"
+  },
+  "region-308": {
+    "json": "Leeward Islands",
+    "suggestion": "Leeward_Islands"
+  },
+  "region-310": {
+    "json": "French Guiana",
+    "suggestion": "French_Guiana"
+  },
+  "region-311": {
+    "json": "British Mexico"
+  },
+  "region-314": {
+    "json": "El Salvador",
+    "suggestion": "El_Salvador"
+  },
+  "region-316": {
+    "json": "Costa Rica",
+    "suggestion": "Costa_Rica"
+  },
+  "region-319": {
+    "json": "Dominican Republic",
+    "suggestion": "Dominican_Republic"
+  },
+  "region-320": {
+    "json": "French India",
+    "suggestion": "French_India"
+  },
+  "region-322": {
+    "json": "Tibet"
+  },
+  "region-326": {
+    "json": "Hong Kong",
+    "suggestion": "Hong_Kong"
+  },
+  "region-329": {
+    "json": "Tannu Tuva",
+    "suggestion": "Tannu_Tuva"
+  },
+  "region-330": {
+    "json": "Mongolia"
+  },
+  "region-333": {
+    "json": "North Borneo"
+  },
+  "region-337": {
+    "json": "Faroe Islands",
+    "suggestion": "Faroe_Islands"
+  },
+  "region-344": {
+    "json": "Adana"
+  },
+  "region-353": {
+    "json": "Erzurum"
+  },
+  "region-357": {
+    "json": "New England",
+    "suggestion": "New_England"
+  },
+  "region-358": {
+    "json": "New York",
+    "suggestion": "New_York"
+  },
+  "region-359": {
+    "json": "New Jersey",
+    "suggestion": "New_Jersey"
+  },
+  "region-363": {
+    "json": "North Carolina",
+    "suggestion": "North_Carolina"
+  },
+  "region-364": {
+    "json": "South Carolina",
+    "suggestion": "South_Carolina"
+  },
+  "region-376": {
+    "json": "New Mexico",
+    "suggestion": "New_Mexico"
+  },
+  "region-389": {
+    "json": "North Dakota",
+    "suggestion": "North_Dakota"
+  },
+  "region-390": {
+    "json": "South Dakota",
+    "suggestion": "South_Dakota"
+  },
+  "region-399": {
+    "json": "Izhevsk"
+  },
+  "region-401": {
+    "json": "Engels"
+  },
+  "region-404": {
+    "json": "Kyzyl Orda",
+    "suggestion": "Kyzyl_Orda"
+  },
+  "region-406": {
+    "json": "Gurev"
+  },
+  "region-407": {
+    "json": "Uralsk"
+  },
+  "region-419": {
+    "json": "Tibriz"
+  },
+  "region-423": {
+    "json": "Madurai"
+  },
+  "region-424": {
+    "json": "Madras"
+  },
+  "region-430": {
+    "json": "East Bengal",
+    "suggestion": "East_Bengal"
+  },
+  "region-431": {
+    "json": "West Bengal",
+    "suggestion": "West_Bengal"
+  },
+  "region-434": {
+    "json": "Arunachal Pradesh",
+    "suggestion": "Arunachal_Pradesh"
+  },
+  "region-436": {
+    "json": "Jabalpur"
+  },
+  "region-437": {
+    "json": "Indore"
+  },
+  "region-438": {
+    "json": "Lucknow"
+  },
+  "region-440": {
+    "json": "Punjab"
+  },
+  "region-444": {
+    "json": "Baluchistan"
+  },
+  "region-445": {
+    "json": "Quetta"
+  },
+  "region-449": {
+    "json": "El Agheila",
+    "suggestion": "El_Agheila"
+  },
+  "region-452": {
+    "json": "Marsa Matruh"
+  },
+  "region-457": {
+    "json": "Eastern Desert",
+    "suggestion": "Eastern_Desert"
+  },
+  "region-464": {
+    "json": "Nova Scotia",
+    "suggestion": "Nova_Scotia"
+  },
+  "region-465": {
+    "json": "New Brunswick",
+    "suggestion": "New_Brunswick"
+  },
+  "region-466": {
+    "json": "Quebec"
+  },
+  "region-468": {
+    "json": "Saint Lawrence",
+    "suggestion": "Saint_Lawrence"
+  },
+  "region-471": {
+    "json": "Northwestern Canada"
+  },
+  "region-472": {
+    "json": "Northern Canada"
+  },
+  "region-473": {
+    "json": "British Columbia",
+    "suggestion": "British_Columbia"
+  },
+  "region-484": {
+    "json": "Baja California",
+    "suggestion": "Baja_California"
+  },
+  "region-487": {
+    "json": "Santa Cruz",
+    "suggestion": "Santa_Cruz"
+  },
+  "region-493": {
+    "json": "La Libertad",
+    "suggestion": "La_Libertad"
+  },
+  "region-496": {
+    "json": "Para"
+  },
+  "region-497": {
+    "json": "Maranhao"
+  },
+  "region-498": {
+    "json": "Rio Grande"
+  },
+  "region-500": {
+    "json": "Rio de Janeiro",
+    "suggestion": "Rio_de_Janeiro"
+  },
+  "region-501": {
+    "json": "Sao Paulo"
+  },
+  "region-502": {
+    "json": "Rio Grande Sul"
+  },
+  "region-503": {
+    "json": "Santa Catarina",
+    "suggestion": "Santa_Catarina"
+  },
+  "region-504": {
+    "json": "Iguacu"
+  },
+  "region-505": {
+    "json": "Goias"
+  },
+  "region-508": {
+    "json": "Tucuman"
+  },
+  "region-509": {
+    "json": "Chaco Austral",
+    "suggestion": "Chaco_Austral"
+  },
+  "region-510": {
+    "json": "Mesopotamia"
+  },
+  "region-512": {
+    "json": "Patagonia"
+  },
+  "region-514": {
+    "json": "Algerian Desert",
+    "suggestion": "Algerian_Desert"
+  },
+  "region-515": {
+    "json": "Southern Sahara",
+    "suggestion": "Southern_Sahara"
+  },
+  "region-516": {
+    "json": "Northwest Siberia"
+  },
+  "region-519": {
+    "json": "South Australia",
+    "suggestion": "South_Australia"
+  },
+  "region-520": {
+    "json": "Northern Territory",
+    "suggestion": "Northern_Territory"
+  },
+  "region-522": {
+    "json": "Western Australia",
+    "suggestion": "Western_Australia"
+  },
+  "region-525": {
+    "json": "South Korea"
+  },
+  "region-527": {
+    "json": "North Korea"
+  },
+  "region-528": {
+    "json": "Kyushu"
+  },
+  "region-529": {
+    "json": "Chugoku"
+  },
+  "region-533": {
+    "json": "Tohoku"
+  },
+  "region-537": {
+    "json": "South Sakhalin",
+    "suggestion": "South_Sakhalin"
+  },
+  "region-538": {
+    "json": "Central Congo"
+  },
+  "region-540": {
+    "json": "Angola"
+  },
+  "region-541": {
+    "json": "South West Africa"
+  },
+  "region-544": {
+    "json": "Mozambique"
+  },
+  "region-547": {
+    "json": "Kenya"
+  },
+  "region-549": {
+    "json": "Sudan"
+  },
+  "region-552": {
+    "json": "Western Desert",
+    "suggestion": "Western_Desert"
+  },
+  "region-555": {
+    "json": "Kuril Islands",
+    "suggestion": "Kuril_Islands"
+  },
+  "region-556": {
+    "json": "French West Africa"
+  },
+  "region-558": {
+    "json": "Nigeria"
+  },
+  "region-564": {
+    "json": "Ulan Ude"
+  },
+  "region-569": {
+    "json": "Kemerovo"
+  },
+  "region-581": {
+    "json": "Northern Urals",
+    "suggestion": "Northern_Urals"
+  },
+  "region-583": {
+    "json": "Kustanay"
+  },
+  "region-585": {
+    "json": "Urgench"
+  },
+  "region-586": {
+    "json": "Alma-Ata",
+    "suggestion": "Alma_Ata"
+  },
+  "region-587": {
+    "json": "Ust Urt",
+    "suggestion": "Ust_Urt"
+  },
+  "region-601": {
+    "json": "Xikang"
+  },
+  "region-608": {
+    "json": "Beijing"
+  },
+  "region-609": {
+    "json": "East Hebei",
+    "suggestion": "East_Hebei"
+  },
+  "region-611": {
+    "json": "South Chahar"
+  },
+  "region-622": {
+    "json": "Shaanxi"
+  },
+  "region-624": {
+    "json": "Central islands",
+    "suggestion": "Central_Islands"
+  },
+  "region-625": {
+    "json": "Samar"
+  },
+  "region-627": {
+    "json": "Mindanao"
+  },
+  "region-628": {
+    "json": "Cebu"
+  },
+  "region-630": {
+    "json": "Johnston Atoll",
+    "suggestion": "Johnston_Atoll"
+  },
+  "region-631": {
+    "json": "Midway Island",
+    "suggestion": "Midway_Island"
+  },
+  "region-632": {
+    "json": "Wake Island",
+    "suggestion": "Wake_Island"
+  },
+  "region-633": {
+    "json": "Marshall Islands",
+    "suggestion": "Marshall_Islands"
+  },
+  "region-634": {
+    "json": "Solomon Islands",
+    "suggestion": "Solomon_Islands"
+  },
+  "region-635": {
+    "json": "New Caledonia",
+    "suggestion": "New_Caledonia"
+  },
+  "region-639": {
+    "json": "Gilbert Islands",
+    "suggestion": "Gilbert_Islands"
+  },
+  "region-642": {
+    "json": "Phoenix Island",
+    "suggestion": "Phoenix_Island"
+  },
+  "region-643": {
+    "json": "Ellice Islands",
+    "suggestion": "Ellice_Islands"
+  },
+  "region-644": {
+    "json": "Northeast Siberia"
+  },
+  "region-645": {
+    "json": "Iwo Jima",
+    "suggestion": "Iwo_Jima"
+  },
+  "region-648": {
+    "json": "Marcus Island",
+    "suggestion": "Marcus_Island"
+  },
+  "region-649": {
+    "json": "Galapagos Islands",
+    "suggestion": "Galapagos_Islands"
+  },
+  "region-650": {
+    "json": "Attu Island",
+    "suggestion": "Attu_Island"
+  },
+  "region-654": {
+    "json": "Gorno-Altaysk"
+  },
+  "region-655": {
+    "json": "North Sakhalin",
+    "suggestion": "North_Sakhalin"
+  },
+  "region-658": {
+    "json": "Abu Dhabi",
+    "suggestion": "Abu_Dhabi"
+  },
+  "region-659": {
+    "json": "Aden"
+  },
+  "region-660": {
+    "json": "Equatorial Africa",
+    "suggestion": "Equatorial_Africa"
+  },
+  "region-664": {
+    "json": "Southern Slovakia",
+    "suggestion": "Southern_Slovakia"
+  },
+  "region-665": {
+    "json": "Gabes"
+  },
+  "region-666": {
+    "json": "Lappland"
+  },
+  "region-667": {
+    "json": "Lesser Sunda Islands",
+    "suggestion": "Lesser_Sunda_Islands"
+  },
+  "region-668": {
+    "json": "The Moluccas",
+    "suggestion": "The_Moluccas"
+  },
+  "region-669": {
+    "json": "West Papua",
+    "suggestion": "West_Papua"
+  },
+  "region-674": {
+    "json": "Central Australia",
+    "suggestion": "Central_Australia"
+  },
+  "region-675": {
+    "json": "Al Hajara",
+    "suggestion": "Al_Hajara"
+  },
+  "region-678": {
+    "json": "Rub al Khali",
+    "suggestion": "Rub_al_Khali"
+  },
+  "region-679": {
+    "json": "Hejaz"
+  },
+  "region-680": {
+    "json": "Deir-az-Zur",
+    "suggestion": "Deir_az_Zur"
+  },
+  "region-682": {
+    "json": "Northern Ontario",
+    "suggestion": "Northern_Ontario"
+  },
+  "region-683": {
+    "json": "Northeastern Canada"
+  },
+  "region-684": {
+    "json": "Caroline Islands",
+    "suggestion": "Caroline_Islands"
+  },
+  "region-685": {
+    "json": "Panama Canal"
+  },
+  "region-686": {
+    "json": "Puerto Rico",
+    "suggestion": "Puerto_Rico"
+  },
+  "region-687": {
+    "json": "British Guyana",
+    "suggestion": "British_Guyana"
+  },
+  "region-688": {
+    "json": "Chaco Boreal",
+    "suggestion": "Chaco_Boreal"
+  },
+  "region-690": {
+    "json": "Northern Bahamas",
+    "suggestion": "Northern_Bahamas"
+  },
+  "region-692": {
+    "json": "Windward Islands",
+    "suggestion": "Windward_Islands"
+  },
+  "region-693": {
+    "json": "Southern Bahamas",
+    "suggestion": "Southern_Bahamas"
+  },
+  "region-694": {
+    "json": "French Caribbean",
+    "suggestion": "French_Caribbean"
+  },
+  "region-695": {
+    "json": "Curacao"
+  },
+  "region-699": {
+    "json": "Rio de Oro",
+    "suggestion": "Rio_de_Oro"
+  },
+  "region-700": {
+    "json": "Sierra Leone",
+    "suggestion": "Sierra_Leone"
+  },
+  "region-702": {
+    "json": "Cape Verde"
+  },
+  "region-704": {
+    "json": "Saint Helena",
+    "suggestion": "Saint_Helena"
+  },
+  "region-705": {
+    "json": "Sao Tome",
+    "suggestion": "Sao_Tome"
+  },
+  "region-708": {
+    "json": "Comoro Islands",
+    "suggestion": "Comoro_Islands"
+  },
+  "region-710": {
+    "json": "Diego Garcia",
+    "suggestion": "Diego_Garcia"
+  },
+  "region-711": {
+    "json": "Christmas Island",
+    "suggestion": "Christmas_Island"
+  },
+  "region-712": {
+    "json": "Cocos Islands",
+    "suggestion": "Cocos_Islands"
+  },
+  "region-716": {
+    "json": "Liaotung"
+  },
+  "region-720": {
+    "json": "South Georgia",
+    "suggestion": "South_Georgia"
+  },
+  "region-721": {
+    "json": "Portuguese Timor",
+    "suggestion": "Portuguese_Timor"
+  },
+  "region-723": {
+    "json": "South Island",
+    "suggestion": "South_Island"
+  },
+  "region-724": {
+    "json": "Northern Malay",
+    "suggestion": "Northern_Malay"
+  },
+  "region-727": {
+    "json": "Line Islands",
+    "suggestion": "Line_Islands"
+  },
+  "region-730": {
+    "json": "St Pierre and Miquelon"
+  },
+  "region-731": {
+    "json": "Central Macedonia",
+    "suggestion": "Central_Macedonia"
+  },
+  "region-738": {
+    "json": "Aru Islands",
+    "suggestion": "Aru_Islands"
+  },
+  "region-739": {
+    "json": "Haida Gwaii",
+    "suggestion": "Haida_Gwaii"
+  },
+  "region-740": {
+    "json": "Vancouver Island",
+    "suggestion": "Vancouver_Island"
+  },
+  "region-747": {
+    "json": "Dali Bai"
+  },
+  "region-759": {
+    "json": "Kunlun"
+  },
+  "region-762": {
+    "json": "Silesian Voivodeship"
+  }
+}

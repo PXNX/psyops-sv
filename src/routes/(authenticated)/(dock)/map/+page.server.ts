@@ -1,11 +1,12 @@
 // src/routes/map/+page.server.ts
 import { db } from "$lib/server/db";
-import { regions, states } from "$lib/server/schema";
+import { regions, states, blocs, wars, residences, powerPlants } from "$lib/server/schema";
+import { sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async () => {
 	try {
-		// Fetch all regions with their state associations
+		// ── Core: regions + states (unchanged) ──────────────────────────
 		const allRegions = await db
 			.select({
 				id: regions.id,
@@ -16,7 +17,6 @@ export const load: PageServerLoad = async () => {
 				economy: regions.economy,
 				hospitals: regions.hospitals,
 				fortifications: regions.fortifications,
-				// Resource data from regions table
 				oil: regions.oil,
 				aluminium: regions.aluminium,
 				rubber: regions.rubber,
@@ -26,18 +26,88 @@ export const load: PageServerLoad = async () => {
 			})
 			.from(regions);
 
-		// Fetch all states for color mapping
 		const allStates = await db
 			.select({
 				id: states.id,
 				name: states.name,
 				description: states.description,
 				population: states.population,
-				rating: states.rating
+				rating: states.rating,
+				blocId: states.blocId
 			})
 			.from(states);
 
-		// Create a map of region data for efficient lookup
+		// ── Blocs: fetch id + color for every bloc ──────────────────────
+		const allBlocs = await db
+			.select({
+				id: blocs.id,
+				color: blocs.color
+			})
+			.from(blocs);
+
+		// blocColorMap: stateId → bloc colour string.
+		// States that have no bloc simply won't appear in this map.
+		const blocById = new Map<number, string>();
+		for (const b of allBlocs) {
+			blocById.set(b.id, b.color);
+		}
+		const blocColorMap: Record<number, string> = {};
+		for (const s of allStates) {
+			if (s.blocId && blocById.has(s.blocId)) {
+				blocColorMap[s.id] = blocById.get(s.blocId)!;
+			}
+		}
+
+		// ── Wars: collect attacker & defender state IDs for active wars ─
+		const activeWars = await db
+			.select({
+				attackerId: wars.attackerId,
+				defenderId: wars.defenderId
+			})
+			.from(wars)
+			.where(sql`${wars.status} = 'active'`);
+
+		const warAttackerStateIds = new Set<number>();
+		const warDefenderStateIds = new Set<number>();
+		for (const w of activeWars) {
+			warAttackerStateIds.add(w.attackerId);
+			warDefenderStateIds.add(w.defenderId);
+		}
+
+		// ── Residents: count per region ─────────────────────────────────
+		const residentCounts = await db
+			.select({
+				regionId: residences.regionId,
+				count: sql<number>`count(*)`.as("count")
+			})
+			.from(residences)
+			.groupBy(residences.regionId);
+
+		const residentCountMap = new Map<number, number>();
+		for (const rc of residentCounts) {
+			residentCountMap.set(rc.regionId, rc.count);
+		}
+
+		// ── Power plants: count per region (powerPlants belong to a state,
+		//    but we need them per-region. powerPlants has stateId, not regionId.
+		//    The closest semantic fit: count powerplants per *state*, then
+		//    spread that count evenly across the state's regions so the heatmap
+		//    highlights states with more plants. If your powerPlants table ever
+		//    adds a regionId column you can group directly on that instead.) ──
+		const ppByState = await db
+			.select({
+				stateId: powerPlants.stateId,
+				count: sql<number>`count(*)`.as("count")
+			})
+			.from(powerPlants)
+			.groupBy(powerPlants.stateId);
+
+		const ppStateMap = new Map<number, number>();
+		for (const pp of ppByState) {
+			ppStateMap.set(pp.stateId, pp.count);
+		}
+
+		// ── Assemble regionMap ──────────────────────────────────────────
 		const regionMap: Record<
 			number,
 			{
@@ -56,6 +126,8 @@ export const load: PageServerLoad = async () => {
 					steel: number;
 					chromium: number;
 				};
+				residentCount: number;
+				powerplantCount: number;
 			}
 		> = {};
 
@@ -75,35 +147,38 @@ export const load: PageServerLoad = async () => {
 					tungsten: r.tungsten || 0,
 					steel: r.steel || 0,
 					chromium: r.chromium || 0
-				}
+				},
+				residentCount: residentCountMap.get(r.id) ?? 0,
+				// powerplants are per-state; attribute the state's total to every
+				// region belonging to that state so the heatmap lights up the state.
+				powerplantCount: r.stateId ? (ppStateMap.get(r.stateId) ?? 0) : 0
 			};
 		}
 
-		// Create state color map (assign unique colors to states)
+		// ── State colour map (unchanged logic) ─────────────────────────
 		const stateColorMap: Record<number, string> = {};
 		const colors = [
-			"#ef4444", // red
-			"#f59e0b", // amber
-			"#10b981", // emerald
-			"#3b82f6", // blue
-			"#8b5cf6", // violet
-			"#ec4899", // pink
-			"#14b8a6", // teal
-			"#f97316", // orange
-			"#06b6d4", // cyan
-			"#6366f1", // indigo
-			"#a855f7", // purple
-			"#84cc16", // lime
-			"#f43f5e", // rose
-			"#0ea5e9", // sky
-			"#d946ef", // fuchsia
-			"#22c55e", // green
-			"#eab308", // yellow
-			"#dc2626", // red-600
-			"#7c3aed", // violet-600
-			"#2563eb" // blue-600
+			"#ef4444",
+			"#f59e0b",
+			"#10b981",
+			"#3b82f6",
+			"#8b5cf6",
+			"#ec4899",
+			"#14b8a6",
+			"#f97316",
+			"#06b6d4",
+			"#6366f1",
+			"#a855f7",
+			"#84cc16",
+			"#f43f5e",
+			"#0ea5e9",
+			"#d946ef",
+			"#22c55e",
+			"#eab308",
+			"#dc2626",
+			"#7c3aed",
+			"#2563eb"
 		];
-
 		allStates.forEach((state, idx) => {
 			stateColorMap[state.id] = colors[idx % colors.length];
 		});
@@ -111,16 +186,21 @@ export const load: PageServerLoad = async () => {
 		return {
 			regionMap,
 			stateColorMap,
-			states: allStates
+			states: allStates,
+			// New data for the four additional map layers
+			blocColorMap,
+			warAttackerStateIds,
+			warDefenderStateIds
 		};
 	} catch (error) {
 		console.error("Error loading map data:", error);
-
-		// Return empty data on error
 		return {
 			regionMap: {},
 			stateColorMap: {},
-			states: []
+			states: [],
+			blocColorMap: {},
+			warAttackerStateIds: new Set<number>(),
+			warDefenderStateIds: new Set<number>()
 		};
 	}
 };
