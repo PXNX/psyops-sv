@@ -9,7 +9,7 @@ export interface TaxCalculation {
 	netAmount: number;
 	applicableTaxes: Array<{
 		id: number;
-		name: string;
+		type: "mining" | "production" | "market_transaction" | "income";
 		rate: number;
 		amount: number;
 	}>;
@@ -54,7 +54,7 @@ export async function calculateAndCollectTax(
 
 		applicableTaxes.push({
 			id: tax.id,
-			name: tax.taxName,
+			type: tax.taxType,
 			rate: tax.taxRate,
 			amount: taxAmount
 		});

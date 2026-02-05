@@ -192,3 +192,25 @@ export async function getLogoUrl(logoId: number | null | undefined): Promise<str
 		return null;
 	}
 }
+
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+
+/**
+ * Delete a file from Backblaze B2
+ * @param key - File key to delete
+ * @returns True if deletion was successful
+ */
+export async function deleteFile(key: string): Promise<boolean> {
+	try {
+		const command = new DeleteObjectCommand({
+			Bucket: BACKBLAZE_BUCKET_NAME,
+			Key: key
+		});
+
+		await s3Client.send(command);
+		return true;
+	} catch (error) {
+		console.error("Delete failed:", error);
+		return false;
+	}
+}

@@ -24,7 +24,7 @@ type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosi
 const unitTypeNames: Record<string, string> = {
 	air_defence: "Air Defence Battalion",
 	armor: "Armored Battalion",
-	mechanzied: "Mechanized Battalion",
+	mechanized: "Mechanized Battalion",
 	artillery: "Artillery Battalion",
 	infantry: "Infantry Battalion",
 	bomber_squadron: "Bomber Squadron",

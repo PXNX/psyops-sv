@@ -1,10 +1,11 @@
-// src/routes/party/[id]/edit/+page.server.ts
+// src/routes/party/[id]/edit/+page.server.ts - UPDATED VERSION
 import { db } from "$lib/server/db";
 import { politicalParties, partyMembers, files, userWallets, partyEditHistory } from "$lib/server/schema";
 import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm, getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { replaceLogoInTransaction } from "$lib/server/logo-utils";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createPartySchema } from "./schema";
@@ -198,68 +199,49 @@ export const actions: Actions = {
 		}
 
 		try {
-			let logoFileId: number | null = party.logo;
+			await db.transaction(async (tx) => {
+				// Upload new logo and delete old one if it exists
+				const logoFileId = await replaceLogoInTransaction(tx, logo, account.id, party.logo);
 
-			// Upload new logo if provided
-			if (logo) {
-				const logoUploadResult = await uploadFileFromForm(logo);
-
-				if (!logoUploadResult.success) {
-					return message(form, "Failed to upload logo", { status: 500 });
-				}
-
-				// Create file record in database
-				const [fileRecord] = await db
-					.insert(files)
-					.values({
-						key: logoUploadResult.key,
-						fileName: logo.name,
-						contentType: "image/webp",
-						sizeBytes: logo.size,
-						uploadedBy: account.id
-					})
-					.returning();
-				logoFileId = fileRecord.id;
-			}
-
-			// Deduct cost from user's wallet
-			await db
-				.update(userWallets)
-				.set({
-					balance: sql`${userWallets.balance} - ${EDIT_COST}`,
-					updatedAt: new Date()
-				})
-				.where(eq(userWallets.userId, account.id));
-
-			// Update party
-			await db
-				.update(politicalParties)
-				.set({
-					name,
-					abbreviation: abbreviation || null,
-					color,
-					logo: logoFileId,
-					ideology: ideology || null,
-					description: description || null
-				})
-				.where(eq(politicalParties.id, partyId));
-
-			// Update or create edit history
-			if (editHistory) {
-				await db
-					.update(partyEditHistory)
+				// Deduct cost from user's wallet
+				await tx
+					.update(userWallets)
 					.set({
+						balance: sql`${userWallets.balance} - ${EDIT_COST}`,
+						updatedAt: new Date()
+					})
+					.where(eq(userWallets.userId, account.id));
+
+				// Update party
+				await tx
+					.update(politicalParties)
+					.set({
+						name,
+						abbreviation: abbreviation || null,
+						color,
+						...(logoFileId ? { logo: logoFileId } : {}),
+						ideology: ideology || null,
+						description: description || null
+					})
+					.where(eq(politicalParties.id, partyId));
+
+				// Update or create edit history
+				if (editHistory) {
+					await tx
+						.update(partyEditHistory)
+						.set({
+							lastEditAt: new Date(),
+							lastEditBy: account.id
+						})
+						.where(eq(partyEditHistory.partyId, partyId));
+				} else {
+					await tx.insert(partyEditHistory).values({
+						partyId,
 						lastEditAt: new Date(),
 						lastEditBy: account.id
-					})
-					.where(eq(partyEditHistory.partyId, partyId));
-			} else {
-				await db.insert(partyEditHistory).values({
-					partyId,
-					lastEditAt: new Date(),
-					lastEditBy: account.id
-				});
-			}
+					});
+				}
+			});
 
 			return message(form, "Party updated successfully!");
 		} catch (err) {
