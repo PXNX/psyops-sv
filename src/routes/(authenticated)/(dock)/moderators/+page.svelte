@@ -30,6 +30,8 @@
 			<FluentEye20Filled class="size-4" />
 			View Actions
 		</a>
+
+		<a href="/moderators/reports" class="btn btn-primary gap-2"> View Reports </a>
 	</div>
 
 	<!-- Stats -->

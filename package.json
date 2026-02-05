@@ -14,8 +14,8 @@
 		"i18n": "typesafe-i18n"
 	},
 	"devDependencies": {
-		"@aws-sdk/client-s3": "3.982.0",
-		"@aws-sdk/s3-request-presigner": "3.982.0",
+		"@aws-sdk/client-s3": "3.983.0",
+		"@aws-sdk/s3-request-presigner": "3.983.0",
 		"@eslint/compat": "2.0.2",
 		"@eslint/js": "9.39.2",
 		"@iconify-json/fluent": "1.2.38",
@@ -61,7 +61,7 @@
 		"@vite-pwa/sveltekit": "1.1.0",
 		"arctic": "3.7.0",
 		"d3-scale": "4.0.2",
-		"daisyui": "5.5.17",
+		"daisyui": "5.5.18",
 		"dotenv": "17.2.3",
 		"drizzle-cli": "0.2.1",
 		"drizzle-kit": "0.31.8",
@@ -81,7 +81,7 @@
 		"prettier-plugin-tailwindcss": "0.7.2",
 		"sharp": "0.34.5",
 		"sveaflet": "0.1.4",
-		"svelte": "5.49.1",
+		"svelte": "5.49.2",
 		"svelte-tiptap": "3.0.1",
 		"sveltekit-superforms": "2.29.1",
 		"tailwindcss": "4.1.18",
