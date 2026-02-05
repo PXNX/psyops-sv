@@ -1,11 +1,12 @@
 // src/routes/(authenticated)/(dock)/settings/+page.server.ts
 import { db } from "$lib/server/db";
-import { userProfiles, userWallets } from "$lib/server/schema";
+import { userProfiles, userWallets, files } from "$lib/server/schema";
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm, getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { replaceLogoInTransaction } from "$lib/server/logo-utils";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { updateProfileSchema } from "./schema";
@@ -19,13 +20,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 		where: eq(userProfiles.accountId, account.id)
 	});
 
-	// Get logo URL if it's stored in profile
-	let logoUrl = profile?.logo || null;
-	if (logoUrl && !logoUrl.startsWith("http")) {
-		try {
-			logoUrl = await getSignedDownloadUrl(logoUrl);
-		} catch {
-			logoUrl = null;
+	// Get logo URL if it exists
+	let logoUrl: string | null = null;
+	if (profile?.logo) {
+		// logo is a file ID, fetch the file record
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, profile.logo)
+		});
+
+		if (logoFile) {
+			try {
+				logoUrl = await getSignedDownloadUrl(logoFile.key);
+			} catch {
+				logoUrl = null;
+			}
 		}
 	}
 
@@ -131,19 +139,8 @@ export const actions: Actions = {
 					})
 					.where(eq(userWallets.userId, account.id));
 
-				let logoKey: string | undefined;
-
-				// Upload new logo if provided
-				if (logo && logo.size > 0) {
-					const uploadResult = await uploadFileFromForm(logo);
-
-					if (!uploadResult.success) {
-						tx.rollback();
-						throw new Error("Failed to upload logo");
-					}
-
-					logoKey = uploadResult.key;
-				}
+				// Upload new logo and delete old one if it exists
+				const logoFileId = await replaceLogoInTransaction(tx, logo, account.id, existingProfile?.logo || null);
 
 				if (existingProfile) {
 					// Update existing profile
@@ -152,7 +149,7 @@ export const actions: Actions = {
 						.set({
 							name,
 							bio: bio || null,
-							...(logoKey ? { logo: logoKey } : {}),
+							...(logoFileId ? { logo: logoFileId } : {}),
 							updatedAt: new Date()
 						})
 						.where(eq(userProfiles.accountId, account.id));
@@ -162,7 +159,7 @@ export const actions: Actions = {
 						accountId: account.id,
 						name,
 						bio: bio || null,
-						logo: logoKey || null
+						logo: logoFileId || null
 					});
 				}
 			});

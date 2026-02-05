@@ -56,7 +56,7 @@ export const MILITARY_UNIT_TEMPLATES: Record<(typeof militaryUnitTypeEnum.enumVa
 	},
 	mechanized: {
 		id: 3,
-		unitType: "mechanzied" as const,
+		unitType: "mechanized" as const,
 		baseAttack: 30,
 		baseDefense: 30,
 		combatWidth: 3,
