@@ -119,6 +119,13 @@
 			>
 				<FluentEmojiRolledUpNewspaper class="text-xl" />
 			</button>
+
+			<a
+				href="/moderators"
+				class="btn btn-sm btn-circle bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 transition-all p-2"
+			>
+				Moderators
+			</a>
 		</div>
 	</div>
 </header>
