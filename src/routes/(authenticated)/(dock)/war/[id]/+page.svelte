@@ -8,6 +8,7 @@
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
 	import * as m from "$lib/paraglide/messages";
 	import { getRegionName } from "$lib/utils/formatting.js";
+	import Logo from "$lib/component/Logo.svelte";
 
 	const { data } = $props();
 
@@ -77,11 +78,7 @@
 					<span class="text-sm font-medium text-red-400">Attacker</span>
 				</div>
 				<div class="flex items-center gap-3">
-					<img
-						src={data.war.attacker.logoFile ? `/api/files/${data.war.attacker.logoFile.key}` : "/default-state.svg"}
-						alt={data.war.attacker.name}
-						class="size-12 rounded-lg"
-					/>
+					<Logo src={data.war.attacker.logo} alt={data.war.attacker.name} class="size-12 rounded-lg" />
 					<div>
 						<a
 							href="/state/{data.war.attacker.id}"
@@ -108,11 +105,7 @@
 					<span class="text-sm font-medium text-blue-400">Defender</span>
 				</div>
 				<div class="flex items-center gap-3">
-					<img
-						src={data.war.defender.logoFile ? `/api/files/${data.war.defender.logoFile.key}` : "/default-state.svg"}
-						alt={data.war.defender.name}
-						class="size-12 rounded-lg"
-					/>
+					<Logo src={data.war.defender.logo} alt={data.war.defender.name} class="size-12 rounded-lg" />
 					<div>
 						<a
 							href="/state/{data.war.defender.id}"
@@ -136,22 +129,20 @@
 		</div>
 
 		<!-- Capitulated States (if bloc war) -->
-		{#if data.capitulatedStates.length > 0}
+		{#if data.capitulatedStates && data.capitulatedStates.length > 0}
 			<div class="mt-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
 				<h3 class="text-sm font-bold text-red-400 mb-3">🏳️ Capitulated States</h3>
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
 					{#each data.capitulatedStates as state}
 						<div class="flex items-center gap-2 bg-slate-800/50 rounded p-2">
-							<img
-								src={state.logoFile ? `/api/files/${state.logoFile.key}` : "/default-state.svg"}
-								alt={state.name}
-								class="size-8 rounded"
-							/>
+							<Logo src={state.logo} alt={state.name} class="size-8 rounded" />
 							<div class="flex-1">
 								<div class="text-sm font-medium text-white">{state.name}</div>
-								<div class="text-xs text-gray-500">
-									{formatDate(state.capitulatedAt)}
-								</div>
+								{#if state.capitulatedAt}
+									<div class="text-xs text-gray-500">
+										{formatDate(state.capitulatedAt)}
+									</div>
+								{/if}
 							</div>
 						</div>
 					{/each}
@@ -226,45 +217,45 @@
 	<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
 		<h2 class="text-xl font-bold text-white mb-4">Battles</h2>
 		<div class="space-y-3">
-			{#each data.war.battles as battle}
-				<a
-					href="/battle/{battle.id}"
-					class="block bg-slate-700/30 rounded-lg p-4 border border-white/5 hover:border-purple-500/30 transition-all"
-				>
-					<div class="flex items-center justify-between">
-						<div class="flex-1">
-							<div class="flex items-center gap-3 mb-2">
-								<span class="text-lg font-bold text-white">{getRegionName(battle.region.id)}</span>
-								<span class="px-2 py-1 rounded-full text-xs font-medium border {getBattleStatusColor(battle.status)}">
-									{battle.status.replace("_", " ")}
-								</span>
-								{#if battle.status === "attacker_won"}
-									<span class="text-xs text-emerald-400">🏆 Region Captured</span>
-								{:else if battle.status === "defender_won"}
-									<span class="text-xs text-blue-400">🛡️ Successfully Defended</span>
-								{/if}
+			{#if data.war.battles && data.war.battles.length > 0}
+				{#each data.war.battles as battle}
+					<a
+						href="/battle/{battle.id}"
+						class="block bg-slate-700/30 rounded-lg p-4 border border-white/5 hover:border-purple-500/30 transition-all"
+					>
+						<div class="flex items-center justify-between">
+							<div class="flex-1">
+								<div class="flex items-center gap-3 mb-2">
+									<span class="text-lg font-bold text-white">{getRegionName(battle.region.id)}</span>
+									<span class="px-2 py-1 rounded-full text-xs font-medium border {getBattleStatusColor(battle.status)}">
+										{battle.status.replace("_", " ")}
+									</span>
+									{#if battle.status === "attacker_won"}
+										<span class="text-xs text-emerald-400">🏆 Region Captured</span>
+									{:else if battle.status === "defender_won"}
+										<span class="text-xs text-blue-400">🛡️ Successfully Defended</span>
+									{/if}
+								</div>
+								<div class="flex items-center gap-4 text-sm text-gray-400">
+									<span>Started {formatDate(battle.startedAt)}</span>
+									{#if battle.endedAt}
+										<span>• Ended {formatDate(battle.endedAt)}</span>
+									{/if}
+									<span>• {battle.attackerState.name} vs {battle.defenderState.name}</span>
+								</div>
 							</div>
-							<div class="flex items-center gap-4 text-sm text-gray-400">
-								<span>Started {formatDate(battle.startedAt)}</span>
-								{#if battle.endedAt}
-									<span>• Ended {formatDate(battle.endedAt)}</span>
-								{/if}
-								<span>• {battle.attackerState.name} vs {battle.defenderState.name}</span>
-							</div>
+							<div class="text-gray-400">→</div>
 						</div>
-						<div class="text-gray-400">→</div>
-					</div>
-				</a>
-			{/each}
-
-			{#if data.war.battles.length === 0}
+					</a>
+				{/each}
+			{:else}
 				<div class="text-center py-8 text-gray-400">No battles yet</div>
 			{/if}
 		</div>
 	</div>
 
 	<!-- Surrenders -->
-	{#if data.war.surrenders.length > 0}
+	{#if data.war.surrenders && data.war.surrenders.length > 0}
 		<div class="bg-slate-800 rounded-xl border border-white/5 p-6">
 			<h2 class="text-xl font-bold text-white mb-4">Surrenders</h2>
 			<div class="space-y-3">
