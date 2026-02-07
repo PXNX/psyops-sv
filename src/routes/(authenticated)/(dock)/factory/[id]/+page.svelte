@@ -13,10 +13,10 @@
 	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentPlay20Filled from "~icons/fluent/play-20-filled";
-	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
+	import FluentLockClosed20Filled from "~icons/fluent/lock-closed-20-filled";
 
 	let { data } = $props();
 
@@ -61,16 +61,20 @@
 	});
 
 	const outputIcon = $derived(
-		data.factory.resourceOutput
-			? resourceIcons[data.factory.resourceOutput]
-			: data.factory.productOutput
-				? productIcons[data.factory.productOutput]
-				: "📦"
+		data.output
+			? data.output.type === "resource"
+				? resourceIcons[data.output.name]
+				: productIcons[data.output.name]
+			: "📦"
 	);
 
-	const outputName = $derived(data.factory.resourceOutput || data.factory.productOutput || "Unknown");
+	const outputDisplay = $derived(data.output ? `${data.output.amount} ${data.output.name}/shift` : "Unknown");
 
 	const regionName = $derived(getRegionName(data.factory.regionId));
+
+	// Determine wage to display
+	const displayWage = $derived(data.lockedWage || data.factory.workerWage);
+	const hasLockedWage = $derived(data.lockedWage !== null);
 </script>
 
 <div class="max-w-5xl mx-auto px-4 py-6 md:py-8 space-y-6">
@@ -116,8 +120,9 @@
 	</div>
 
 	<!-- Location Info with Region Coat of Arms -->
-	<div
-		class="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-5"
+	<a
+		href="/region/{data.factory.regionId}"
+		class="block relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-5 hover:border-purple-500/30 transition-all group"
 	>
 		<div class="flex items-center justify-between gap-4">
 			<div class="flex items-center gap-3 md:gap-4">
@@ -131,26 +136,43 @@
 						<FluentLocation20Filled class="size-4 text-purple-400" />
 						<h3 class="text-base md:text-lg font-semibold text-white">Location</h3>
 					</div>
-					<p class="text-sm md:text-base text-gray-300">
-						{regionName}, <span class="text-gray-400">{data.factory.stateName}</span>
+					<p class="text-sm md:text-base text-gray-300 group-hover:text-purple-300 transition-colors">
+						{regionName},
+						<span class="text-gray-400 group-hover:text-purple-400 transition-colors">{data.factory.stateName}</span>
+						<span class="text-purple-400 ml-1">→</span>
 					</p>
 				</div>
 			</div>
 		</div>
-	</div>
+	</a>
+
+	<!-- Budget Warning -->
+	{#if !data.canAffordWage}
+		<div class="bg-red-600/10 border border-red-500/20 rounded-xl p-4">
+			<div class="flex items-center gap-2">
+				<FluentWarning20Filled class="size-5 text-red-400" />
+				<div>
+					<p class="text-red-300 font-semibold">Company Budget Low</p>
+					<p class="text-red-300/80 text-sm">
+						Budget: {data.companyBudget.toLocaleString()} / Required: {data.factory.workerWage.toLocaleString()}
+					</p>
+				</div>
+			</div>
+		</div>
+	{/if}
 
 	<!-- Factory Stats -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
 			<div class="flex items-center gap-3">
 				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
 					<FluentBox20Filled class="size-5 text-purple-400" />
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Output</p>
+					<p class="text-xs text-gray-400">Produces</p>
 					<div class="flex items-center gap-1">
 						<span class="text-lg">{outputIcon}</span>
-						<p class="text-lg font-bold text-white capitalize">{outputName}</p>
+						<p class="text-base font-bold text-white capitalize">{outputDisplay}</p>
 					</div>
 				</div>
 			</div>
@@ -161,9 +183,28 @@
 				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
 					<FluentMoney20Filled class="size-5 text-green-400" />
 				</div>
-				<div>
-					<p class="text-xs text-gray-400">Wage</p>
-					<p class="text-lg font-bold text-white">{data.factory.workerWage.toLocaleString()}</p>
+				<div class="flex-1">
+					<p class="text-xs text-gray-400">Wage per Shift</p>
+					<div class="flex items-center gap-2">
+						<p class="text-lg font-bold text-white">{displayWage.toLocaleString()}</p>
+						{#if hasLockedWage}
+							<div class="relative group">
+								<FluentLockClosed20Filled class="size-4 text-purple-400" />
+								<div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block">
+									<div
+										class="bg-slate-900 border border-purple-500/30 rounded-lg p-2 whitespace-nowrap text-xs text-gray-300"
+									>
+										Wage locked for your shift
+									</div>
+								</div>
+							</div>
+						{/if}
+					</div>
+					{#if hasLockedWage && data.factory.workerWage !== displayWage}
+						<p class="text-xs text-gray-500">
+							Current: {data.factory.workerWage.toLocaleString()}
+						</p>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -178,18 +219,6 @@
 					<p class="text-lg font-bold text-white">
 						{data.workers}/{data.maxWorkers}
 					</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-yellow-600/20 rounded-lg flex items-center justify-center">
-					<FluentFlash20Filled class="size-5 text-yellow-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Production Rate</p>
-					<p class="text-lg font-bold text-white">{data.factory.productionRate}/shift</p>
 				</div>
 			</div>
 		</div>
@@ -225,6 +254,11 @@
 				<div>
 					<h3 class="text-xl font-bold text-white">Shift In Progress</h3>
 					<p class="text-gray-400">Working for 8 hours</p>
+					{#if hasLockedWage}
+						<p class="text-sm text-purple-400 mt-1">
+							Your wage: {displayWage.toLocaleString()}
+						</p>
+					{/if}
 				</div>
 				<div class="text-right">
 					<p class="text-xs text-gray-400">Time Remaining</p>
@@ -252,12 +286,12 @@
 						class="btn w-full bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 border-0 text-white gap-2"
 					>
 						<FluentCheckmark20Filled class="size-5" />
-						Collect Payment ({data.factory.workerWage.toLocaleString()})
+						Collect Payment ({displayWage.toLocaleString()})
 					</button>
 				</form>
 			{/if}
 		</div>
-	{:else if data.currentUserJob && data.currentUserJob.factoryId === data.factory.id}
+	{:else if data.isWorkingHere}
 		<!-- Ready for Next Shift -->
 		<div class="bg-green-600/10 border border-green-500/20 rounded-xl p-5 space-y-3">
 			<div class="flex items-center gap-2">
@@ -265,15 +299,22 @@
 				<h3 class="font-semibold text-green-300">Ready for Next Shift</h3>
 			</div>
 			<p class="text-gray-300 text-sm">You can start a new 8-hour shift at this factory.</p>
-			<form method="POST" action="?/startShift" use:enhance>
-				<button
-					type="submit"
-					class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
-				>
-					<FluentPlay20Filled class="size-5" />
-					Start New Shift
-				</button>
-			</form>
+
+			{#if !data.canAffordWage}
+				<div class="bg-red-600/10 border border-red-500/20 rounded-lg p-3">
+					<p class="text-red-300 text-sm">Cannot start shift - company budget insufficient</p>
+				</div>
+			{:else}
+				<form method="POST" action="?/startShift" use:enhance>
+					<button
+						type="submit"
+						class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
+					>
+						<FluentPlay20Filled class="size-5" />
+						Start New Shift
+					</button>
+				</form>
+			{/if}
 		</div>
 	{:else}
 		<!-- Not Working Here -->
@@ -289,14 +330,23 @@
 						<span class="text-gray-400">Payment:</span>
 						<span class="text-green-400 font-medium">{data.factory.workerWage.toLocaleString()}</span>
 					</div>
-					<div class="flex justify-between">
-						<span class="text-gray-400">Production:</span>
-						<span class="text-white font-medium">{data.factory.productionRate} units</span>
-					</div>
+					{#if data.output}
+						<div class="flex justify-between">
+							<span class="text-gray-400">Produces:</span>
+							<span class="text-white font-medium">{outputIcon} {outputDisplay}</span>
+						</div>
+					{/if}
 				</div>
 			</div>
 
-			{#if data.workers >= data.maxWorkers}
+			{#if !data.canAffordWage}
+				<div class="bg-red-600/10 border border-red-500/20 rounded-xl p-4">
+					<div class="flex items-center gap-2">
+						<FluentWarning20Filled class="size-5 text-red-400" />
+						<p class="text-red-300 text-sm">Company cannot afford to pay wages at this time</p>
+					</div>
+				</div>
+			{:else if data.workers >= data.maxWorkers}
 				<div class="bg-red-600/10 border border-red-500/20 rounded-xl p-4">
 					<div class="flex items-center gap-2">
 						<FluentWarning20Filled class="size-5 text-red-400" />
@@ -317,7 +367,7 @@
 			<form method="POST" action="?/startShift" use:enhance>
 				<button
 					type="submit"
-					disabled={data.workers >= data.maxWorkers}
+					disabled={data.workers >= data.maxWorkers || !data.canAffordWage}
 					class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
 				>
 					<FluentPlay20Filled class="size-5" />

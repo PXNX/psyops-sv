@@ -645,6 +645,8 @@ export const factoryWorkers = pgTable("factory_workers", {
 		.references(() => factories.id, { onDelete: "cascade" }),
 	jobType: jobTypeEnum("job_type").notNull(),
 	hiredAt: timestamp("hired_at").defaultNow().notNull(),
+	wageAtShiftStart: bigint("wage_at_shift_start", { mode: "number" }),
+
 	lastWorked: timestamp("last_worked")
 });
 

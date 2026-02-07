@@ -1,4 +1,4 @@
-<!-- /lib/components/ResourceRequirements.svelte -->
+<!-- /lib/component/ResourceRequirements.svelte -->
 <script lang="ts">
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentEmojiPickaxe from "~icons/fluent-emoji/pick";
