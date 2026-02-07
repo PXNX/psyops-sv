@@ -2,6 +2,7 @@
 import { db } from "$lib/server/db";
 import {
 	companies,
+	companyBudgets,
 	factories,
 	factoryWorkers,
 	files,
@@ -13,8 +14,9 @@ import {
 	userWallets
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { calculateShiftStatus, collectWages, startWorkShift } from "$lib/server/service/factoryWork";
 import { fail } from "@sveltejs/kit";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, sql, inArray } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 
 // Production recipes
@@ -117,11 +119,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			factoryId: factoryWorkers.factoryId,
 			jobType: factoryWorkers.jobType,
 			lastWorked: factoryWorkers.lastWorked,
+			wageAtShiftStart: factoryWorkers.wageAtShiftStart,
 			factoryName: factories.name,
 			factoryType: factories.factoryType,
 			resourceOutput: factories.resourceOutput,
 			companyName: companies.name,
 			companyLogo: companies.logo,
+			companyId: factories.companyId,
 			wage: factories.workerWage,
 			regionId: factories.regionId,
 			stateId: regions.stateId,
@@ -133,6 +137,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.innerJoin(companies, eq(factories.companyId, companies.id))
 		.innerJoin(regions, eq(factories.regionId, regions.id))
 		.where(eq(factoryWorkers.userId, account.id));
+
+	// Calculate shift status if user has a job
+	let shiftStatus = null;
+	if (currentJob?.lastWorked) {
+		shiftStatus = calculateShiftStatus(currentJob.lastWorked);
+	}
+
+	// Get company budget if user has a job
+	let companyBudget: { balance: number } | null = null;
+	if (currentJob) {
+		const [budget] = await db.select().from(companyBudgets).where(eq(companyBudgets.companyId, currentJob.companyId));
+		companyBudget = budget || null;
+	}
 
 	// Get company logo URL if available
 	let companyLogoUrl: string | null = null;
@@ -157,6 +174,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			maxWorkers: factories.maxWorkers,
 			productionRate: factories.productionRate,
 			companyName: companies.name,
+			companyId: factories.companyId,
 			stateName: states.name,
 			regionId: factories.regionId
 		})
@@ -165,6 +183,21 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.innerJoin(regions, eq(factories.regionId, regions.id))
 		.innerJoin(states, eq(regions.stateId, states.id))
 		.limit(20);
+
+	// Get company budgets for all factories
+	const companyIds = [...new Set(availableFactories.map((f) => f.companyId))];
+	const budgets =
+		companyIds.length > 0
+			? await db
+					.select({
+						companyId: companyBudgets.companyId,
+						balance: companyBudgets.balance
+					})
+					.from(companyBudgets)
+					.where(inArray(companyBudgets.companyId, companyIds))
+			: [];
+
+	const budgetMap = new Map(budgets.map((b) => [b.companyId, b.balance]));
 
 	// Get worker counts for each factory
 	const workerCounts = await db
@@ -179,7 +212,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const factoriesWithCounts = availableFactories.map((f) => ({
 		...f,
-		currentWorkers: workerCountMap.get(f.id) || 0
+		currentWorkers: workerCountMap.get(f.id) || 0,
+		companyBalance: budgetMap.get(f.companyId) || 0,
+		canAffordWage: (budgetMap.get(f.companyId) || 0) >= f.workerWage
 	}));
 
 	return {
@@ -189,6 +224,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		recipes: PRODUCTION_RECIPES,
 		wallet: wallet || { balance: 10000 },
 		currentJob: currentJob || null,
+		shiftStatus,
+		companyBudget,
 		userCompany: userCompany || null,
 		availableFactories: factoriesWithCounts,
 		companyLogoUrl
@@ -203,8 +240,7 @@ export const actions: Actions = {
 		const [job] = await db
 			.select({
 				id: factoryWorkers.id,
-				factoryId: factoryWorkers.factoryId,
-				lastWorked: factoryWorkers.lastWorked
+				factoryId: factoryWorkers.factoryId
 			})
 			.from(factoryWorkers)
 			.where(eq(factoryWorkers.userId, account.id));
@@ -213,20 +249,13 @@ export const actions: Actions = {
 			return fail(400, { error: "You don't have a job" });
 		}
 
-		// Check if still on cooldown from previous shift
-		if (job.lastWorked) {
-			const SHIFT_DURATION = 8 * 60 * 60 * 1000;
-			const timeSinceWork = Date.now() - new Date(job.lastWorked).getTime();
-			if (timeSinceWork < SHIFT_DURATION) {
-				const hoursLeft = Math.ceil((SHIFT_DURATION - timeSinceWork) / (60 * 60 * 1000));
-				return fail(400, { error: `Still on cooldown. ${hoursLeft} hours remaining.` });
-			}
+		const result = await startWorkShift(account.id, job.factoryId);
+
+		if (!result.success) {
+			return fail(400, { error: result.error });
 		}
 
-		// Start new shift
-		await db.update(factoryWorkers).set({ lastWorked: new Date() }).where(eq(factoryWorkers.id, job.id));
-
-		return { success: true, message: "Shift started! Work for 8 hours to receive payment." };
+		return { success: true, message: result.message };
 	},
 
 	startProduction: async ({ request, locals }) => {
@@ -296,9 +325,7 @@ export const actions: Actions = {
 		// Get user's current job
 		const [job] = await db
 			.select({
-				id: factoryWorkers.id,
-				factoryId: factoryWorkers.factoryId,
-				lastWorked: factoryWorkers.lastWorked
+				factoryId: factoryWorkers.factoryId
 			})
 			.from(factoryWorkers)
 			.where(eq(factoryWorkers.userId, account.id));
@@ -307,94 +334,24 @@ export const actions: Actions = {
 			return fail(400, { error: "You don't have a job" });
 		}
 
-		if (!job.lastWorked) {
-			return fail(400, { error: "No active shift" });
+		const result = await collectWages(account.id, job.factoryId);
+
+		if (!result.success) {
+			return fail(400, {
+				error: result.error,
+				companyBankrupt: result.companyBankrupt,
+				owedAmount: result.owedAmount,
+				companyBalance: result.companyBalance
+			});
 		}
-
-		// Check if 8 hours have passed
-		const SHIFT_DURATION = 8 * 60 * 60 * 1000;
-		const timeSinceWork = Date.now() - new Date(job.lastWorked).getTime();
-		if (timeSinceWork < SHIFT_DURATION) {
-			const hoursLeft = Math.ceil((SHIFT_DURATION - timeSinceWork) / (60 * 60 * 1000));
-			return fail(400, { error: `Shift not complete. ${hoursLeft} hours remaining.` });
-		}
-
-		// Get factory details
-		const [factory] = await db
-			.select({
-				id: factories.id,
-				ownerId: companies.ownerId,
-				factoryType: factories.factoryType,
-				resourceOutput: factories.resourceOutput,
-				workerWage: factories.workerWage,
-				productionRate: factories.productionRate,
-				stateId: regions.stateId
-			})
-			.from(factories)
-			.innerJoin(companies, eq(factories.companyId, companies.id))
-			.innerJoin(regions, eq(factories.regionId, regions.id))
-			.where(eq(factories.id, job.factoryId));
-
-		if (!factory) {
-			return fail(404, { error: "Factory not found" });
-		}
-
-		await db.transaction(async (tx) => {
-			// Pay worker
-			const [workerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-			if (workerWallet) {
-				await tx
-					.update(userWallets)
-					.set({
-						balance: sql`${userWallets.balance} + ${factory.workerWage}`,
-						updatedAt: new Date()
-					})
-					.where(eq(userWallets.userId, account.id));
-			} else {
-				await tx.insert(userWallets).values({
-					userId: account.id,
-					balance: factory.workerWage
-				});
-			}
-
-			// Add resources to owner (if mine/refinery)
-			if (factory.factoryType === "mine" && factory.resourceOutput) {
-				const [ownerInv] = await tx
-					.select()
-					.from(resourceInventory)
-					.where(
-						and(
-							eq(resourceInventory.userId, factory.ownerId),
-							eq(resourceInventory.resourceType, factory.resourceOutput)
-						)
-					);
-
-				if (ownerInv) {
-					await tx
-						.update(resourceInventory)
-						.set({
-							quantity: sql`${resourceInventory.quantity} + ${factory.productionRate}`,
-							updatedAt: new Date()
-						})
-						.where(eq(resourceInventory.id, ownerInv.id));
-				} else {
-					await tx.insert(resourceInventory).values({
-						userId: factory.ownerId,
-						resourceType: factory.resourceOutput,
-						quantity: factory.productionRate
-					});
-				}
-			}
-
-			// Reset last worked to allow immediate next shift
-			await tx.update(factoryWorkers).set({ lastWorked: null }).where(eq(factoryWorkers.id, job.id));
-		});
 
 		return {
 			success: true,
-			earned: Number(factory.workerWage),
-			message: `Shift complete! Earned ${factory.workerWage.toLocaleString()}`
+			message: result.message,
+			earned: result.earned,
+			grossWage: result.grossWage,
+			taxPaid: result.taxPaid,
+			resourcesProduced: result.resourcesProduced
 		};
 	}
 };

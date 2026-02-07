@@ -34,7 +34,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			cooldownEndsAt: null,
 			region: null,
 			companyId: null,
-			stateEnergy: null
+			stateEnergy: null,
+			regionalTaxes: null,
+			userInventory: {}
 		};
 	}
 
@@ -56,7 +58,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			cooldownEndsAt: null,
 			region: null,
 			companyId: company.id,
-			stateEnergy: null
+			stateEnergy: null,
+			regionalTaxes: null,
+			userInventory: {}
 		};
 	}
 
@@ -110,7 +114,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			cooldownEndsAt,
 			region: null,
 			companyId: company.id,
-			stateEnergy: null
+			stateEnergy: null,
+			regionalTaxes: null,
+			userInventory: {}
 		};
 	}
 
@@ -124,7 +130,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			cooldownEndsAt,
 			region: null,
 			companyId: company.id,
-			stateEnergy: null
+			stateEnergy: null,
+			regionalTaxes: null,
+			userInventory: {}
 		};
 	}
 
@@ -189,13 +197,31 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Get state energy
 	const [stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId));
 
+	// Calculate regional taxes based on region stats
+	// These are example calculations - adjust based on your game's economy
+	const regionalTaxes = {
+		incomeTax: Math.min(Math.floor((region.infrastructure || 0) / 10), 25), // 0-25% based on infrastructure
+		salesTax: Math.min(Math.floor((region.economy || 0) / 15), 20), // 0-20% based on economy
+		propertyTax: Math.min(Math.floor((region.rating || 0) / 20), 15) // 0-15% based on rating
+	};
+
+	// Get user's resource inventory for material requirements
+	const userInventory = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
+
+	const inventoryMap: Record<string, number> = {};
+	userInventory.forEach((item) => {
+		inventoryMap[item.resourceType] = item.quantity;
+	});
+
 	return {
 		userBalance: wallet?.balance || 0,
 		isOnCooldown,
 		cooldownEndsAt,
 		region: regionWithResources,
 		companyId: company.id,
-		stateEnergy: stateEnergyData || { totalProduction: 0, usedProduction: 0 }
+		stateEnergy: stateEnergyData || { totalProduction: 0, usedProduction: 0 },
+		regionalTaxes,
+		userInventory: inventoryMap
 	};
 };
 

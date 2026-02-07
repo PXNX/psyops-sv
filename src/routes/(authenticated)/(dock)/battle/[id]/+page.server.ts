@@ -42,7 +42,8 @@ function selectEngagedUnits(participants: any[], maxWidth: number): any[] {
 	let usedWidth = 0;
 
 	for (const unit of available) {
-		const unitWidth = MILITARY_UNIT_TEMPLATES[unit.unitType].combatWidth!;
+		console.log("unit: ", unit);
+		const unitWidth = MILITARY_UNIT_TEMPLATES[unit.unit.unitType].combatWidth!;
 		if (usedWidth + unitWidth <= maxWidth) {
 			engaged.push(unit);
 			usedWidth += unitWidth;
@@ -97,13 +98,15 @@ async function processCombatRound(battleId: number) {
 
 	// Attackers deal damage based on their attack stat
 	for (const attacker of engagedAttackers) {
-		const damage = attacker.unit.attack;
+		const unitTemplate = MILITARY_UNIT_TEMPLATES[attacker.unit.unitType];
+		const damage = unitTemplate.attack || 0;
 		attackerTotalDamage += damage;
 	}
 
 	// Defenders deal damage based on their defense stat
 	for (const defender of engagedDefenders) {
-		const damage = defender.unit.defense;
+		const unitTemplate = MILITARY_UNIT_TEMPLATES[defender.unit.unitType];
+		const damage = unitTemplate.defense || 0;
 		defenderTotalDamage += damage;
 	}
 
