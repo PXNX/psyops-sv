@@ -1,6 +1,6 @@
 // src/lib/server/service/factoryWork.ts
 import { db } from "$lib/server/db";
-import { companies, companyBudgets, factories, factoryWorkers, regions, resourceInventory } from "$lib/server/schema";
+import { companies, companyBudgets, factories, factoryWorkers, regions, resourceInventory, userWallets } from "$lib/server/schema";
 import { calculateAndCollectTax } from "$lib/server/taxes";
 import { and, eq, sql } from "drizzle-orm";
 
