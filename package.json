@@ -14,8 +14,8 @@
 		"i18n": "typesafe-i18n"
 	},
 	"devDependencies": {
-		"@aws-sdk/client-s3": "3.985.0",
-		"@aws-sdk/s3-request-presigner": "3.985.0",
+		"@aws-sdk/client-s3": "3.986.0",
+		"@aws-sdk/s3-request-presigner": "3.986.0",
 		"@eslint/compat": "2.0.2",
 		"@eslint/js": "10.0.1",
 		"@iconify-json/fluent": "1.2.38",
@@ -64,7 +64,7 @@
 		"daisyui": "5.5.18",
 		"dotenv": "17.2.4",
 		"drizzle-cli": "0.2.1",
-		"drizzle-kit": "0.31.8",
+		"drizzle-kit": "0.31.9",
 		"drizzle-orm": "0.45.1",
 		"eslint": "10.0.0",
 		"eslint-config-prettier": "10.1.8",
@@ -87,7 +87,7 @@
 		"tailwindcss": "4.1.18",
 		"tiptap-table-plus": "3.1.0",
 		"typescript": "5.9.3",
-		"typescript-eslint": "8.54.0",
+		"typescript-eslint": "8.55.0",
 		"unplugin-icons": "23.0.1",
 		"uuid": "13.0.0",
 		"valibot": "1.2.0",
