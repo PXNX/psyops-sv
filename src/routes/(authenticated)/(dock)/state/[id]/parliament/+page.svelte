@@ -14,6 +14,8 @@
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentFilterDismiss20Filled from "~icons/fluent/filter-dismiss-20-filled";
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
+	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
+	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import { enhance } from "$app/forms";
 	import { formatDate } from "$lib/utils/formatting.js";
 
@@ -435,6 +437,9 @@
 						{#if data.userMinistry}
 							<span class="text-gray-400"> • Minister of {data.userMinistry}</span>
 						{/if}
+						{#if data.isPresident}
+							<span class="text-gray-400"> • President</span>
+						{/if}
 					</div>
 				</div>
 				<a
@@ -451,10 +456,16 @@
 	<!-- Active Proposals -->
 	{#if data.totalSeats > 0}
 		<div class="space-y-4">
-			<h2 class="text-xl font-bold text-white flex items-center gap-2">
-				<FluentDocument20Filled class="size-6 text-purple-400" />
-				Active Proposals
-			</h2>
+			<div class="flex items-center justify-between">
+				<h2 class="text-xl font-bold text-white flex items-center gap-2">
+					<FluentDocument20Filled class="size-6 text-purple-400" />
+					Active Proposals
+				</h2>
+				<a href="/state/{data.state.id}/proposal" class="btn btn-sm btn-ghost gap-2 text-gray-400 hover:text-white">
+					<FluentHistory20Filled class="size-4" />
+					View History
+				</a>
+			</div>
 
 			{#if data.proposals.length === 0}
 				<div class="bg-slate-800/50 rounded-xl border border-white/5 p-8 text-center">
@@ -476,6 +487,12 @@
 									<FluentClock20Filled class="size-3" />
 									{getTimeRemaining(proposal.votingEndsAt)}
 								</span>
+							</div>
+
+							<!-- Proposal Details -->
+							<div class="mb-3">
+								<h3 class="text-lg font-bold text-white mb-1">{proposal.changeTitle}</h3>
+								<p class="text-sm text-gray-400">{proposal.changeDescription}</p>
 							</div>
 
 							<a
@@ -539,15 +556,30 @@
 							</div>
 						</div>
 
-						<!-- Voting -->
+						<!-- Voting / Auto-Accept -->
 						{#if data.isParliamentMember}
-							<div class="p-4 border-t border-white/5">
+							<div class="p-4 border-t border-white/5 space-y-3">
 								{#if proposal.userVote}
 									<p class="text-xs text-center text-gray-400 mb-3">
 										You voted: <span class="font-semibold text-white capitalize">{proposal.userVote}</span>
 									</p>
 								{/if}
 
+								<!-- Auto-Accept Button (Ministers/President) -->
+								{#if data.canAutoAccept}
+									<form method="POST" action="?/acceptProposal" use:enhance class="mb-2">
+										<input type="hidden" name="proposalId" value={proposal.id} />
+										<button
+											type="submit"
+											class="btn btn-sm w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white gap-2"
+										>
+											<FluentCheckmarkCircle20Filled class="size-4" />
+											Auto-Accept & Execute Proposal
+										</button>
+									</form>
+								{/if}
+
+								<!-- Regular Voting -->
 								<form method="POST" action="?/vote" use:enhance class="flex gap-2">
 									<input type="hidden" name="proposalId" value={proposal.id} />
 
