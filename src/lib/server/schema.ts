@@ -31,9 +31,11 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"infrastructure",
 	"hospital",
 	"school",
-	"power_plant"
+	"power_plant",
+	"fortifications",
+	"border_control"
 ]);
-
+export const borderStatusEnum = pgEnum("border_status", ["open", "closed"]);
 export const taxTypeEnum = pgEnum("tax_type", ["mining", "production", "market_transaction", "income"]);
 export const electionStatusEnum = pgEnum("election_status", ["scheduled", "active", "completed"]);
 export const militaryUnitTypeEnum = pgEnum("military_unit_type", [
@@ -1033,6 +1035,10 @@ export const statesRelations = relations(states, ({ one, many }) => ({
 		fields: [states.id],
 		references: [stateVisaSettings.stateId]
 	}),
+	border: one(stateBorders, {
+		fields: [states.id],
+		references: [stateBorders.stateId]
+	}),
 	proposals: many(parliamentaryProposals),
 	sanctionsImposed: many(stateSanctions, { relationName: "sanctioning_state" }),
 	sanctionsReceived: many(stateSanctions, { relationName: "target_state" }),
@@ -1051,6 +1057,7 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
 		references: [companyBudgets.companyId]
 	})
 }));
+export type StateBorder = typeof stateBorders.$inferSelect;
 
 export const factoriesRelations = relations(factories, ({ one, many }) => ({
 	company: one(companies, { fields: [factories.companyId], references: [companies.id] }),
@@ -1086,12 +1093,6 @@ export const politicalPartiesRelations = relations(politicalParties, ({ one, man
 	applications: many(partyMembershipApplications),
 	chatMessages: many(chatMessages),
 	inboxMessages: many(inboxMessages)
-}));
-
-export const parliamentaryProposalsRelations = relations(parliamentaryProposals, ({ one, many }) => ({
-	state: one(states, { fields: [parliamentaryProposals.stateId], references: [states.id] }),
-	creator: one(accounts, { fields: [parliamentaryProposals.proposedBy], references: [accounts.id] }),
-	votes: many(parliamentaryVotes)
 }));
 
 export const giftCodesRelations = relations(giftCodes, ({ one, many }) => ({
@@ -2090,3 +2091,117 @@ export const companyEditCooldownRelations = relations(companyEditCooldown, ({ on
 		references: [accounts.id]
 	})
 }));
+
+export const stateBorders = pgTable("state_borders", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	stateId: integer("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" })
+		.unique(),
+	status: borderStatusEnum("status").notNull().default("open"),
+	maintenanceCostPerDay: bigint("maintenance_cost_per_day", { mode: "number" }).default(50000).notNull(),
+	lastMaintenancePaid: timestamp("last_maintenance_paid").defaultNow().notNull(),
+	closedBy: text("closed_by").references(() => accounts.id, { onDelete: "set null" }),
+	closedAt: timestamp("closed_at"),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const stateBordersRelations = relations(stateBorders, ({ one }) => ({
+	state: one(states, {
+		fields: [stateBorders.stateId],
+		references: [states.id]
+	}),
+	closedByUser: one(accounts, {
+		fields: [stateBorders.closedBy],
+		references: [accounts.id]
+	})
+}));
+
+// Add these to your schema.ts file
+
+// Tax proposal details
+export const proposalTaxDetails = pgTable("proposal_tax_details", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	proposalId: integer("proposal_id")
+		.notNull()
+		.references(() => parliamentaryProposals.id, { onDelete: "cascade" })
+		.unique(),
+	taxType: taxTypeEnum("tax_type").notNull(),
+	taxRate: integer("tax_rate").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Building proposal details
+export const proposalBuildingDetails = pgTable("proposal_building_details", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	proposalId: integer("proposal_id")
+		.notNull()
+		.references(() => parliamentaryProposals.id, { onDelete: "cascade" })
+		.unique(),
+	regionId: integer("region_id")
+		.notNull()
+		.references(() => regions.id, { onDelete: "cascade" }),
+	buildingName: text("building_name").notNull(),
+	quantity: integer("quantity").notNull().default(1),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Border control proposal details
+export const proposalBorderDetails = pgTable("proposal_border_details", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	proposalId: integer("proposal_id")
+		.notNull()
+		.references(() => parliamentaryProposals.id, { onDelete: "cascade" })
+		.unique(),
+	borderStatus: borderStatusEnum("border_status").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Relations
+export const parliamentaryProposalsRelations = relations(parliamentaryProposals, ({ one, many }) => ({
+	state: one(states, { fields: [parliamentaryProposals.stateId], references: [states.id] }),
+	creator: one(accounts, { fields: [parliamentaryProposals.proposedBy], references: [accounts.id] }),
+	votes: many(parliamentaryVotes),
+	taxDetails: one(proposalTaxDetails, {
+		fields: [parliamentaryProposals.id],
+		references: [proposalTaxDetails.proposalId]
+	}),
+	buildingDetails: one(proposalBuildingDetails, {
+		fields: [parliamentaryProposals.id],
+		references: [proposalBuildingDetails.proposalId]
+	}),
+	borderDetails: one(proposalBorderDetails, {
+		fields: [parliamentaryProposals.id],
+		references: [proposalBorderDetails.proposalId]
+	})
+}));
+
+export const proposalTaxDetailsRelations = relations(proposalTaxDetails, ({ one }) => ({
+	proposal: one(parliamentaryProposals, {
+		fields: [proposalTaxDetails.proposalId],
+		references: [parliamentaryProposals.id]
+	})
+}));
+
+export const proposalBuildingDetailsRelations = relations(proposalBuildingDetails, ({ one }) => ({
+	proposal: one(parliamentaryProposals, {
+		fields: [proposalBuildingDetails.proposalId],
+		references: [parliamentaryProposals.id]
+	}),
+	region: one(regions, {
+		fields: [proposalBuildingDetails.regionId],
+		references: [regions.id]
+	})
+}));
+
+export const proposalBorderDetailsRelations = relations(proposalBorderDetails, ({ one }) => ({
+	proposal: one(parliamentaryProposals, {
+		fields: [proposalBorderDetails.proposalId],
+		references: [parliamentaryProposals.id]
+	})
+}));
+
+// Types
+export type ProposalTaxDetails = typeof proposalTaxDetails.$inferSelect;
+export type ProposalBuildingDetails = typeof proposalBuildingDetails.$inferSelect;
+export type ProposalBorderDetails = typeof proposalBorderDetails.$inferSelect;

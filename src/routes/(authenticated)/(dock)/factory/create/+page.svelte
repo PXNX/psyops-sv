@@ -316,7 +316,7 @@
 							}}
 							disabled={isOnCooldown}
 						>
-							<svelte:component this={type.icon} class="size-8 mb-1 mx-auto" />
+							<type.icon class="size-8 mb-1 mx-auto" />
 							<h3 class="font-bold text-white text-sm">{type.label}</h3>
 							<p class="text-xs text-gray-400">{type.desc}</p>
 						</button>
@@ -349,7 +349,7 @@
 								disabled={isOnCooldown || !canMine}
 								title={canMine ? `Available in this region` : `Not available in this region`}
 							>
-								<svelte:component this={output.icon} class="size-6 mx-auto" />
+								<output.icon class="size-6 mx-auto" />
 								<div class="text-xs text-white mt-1">{output.label}</div>
 								{#if canMine}
 									<div class="text-xs text-green-400 mt-0.5">✓</div>

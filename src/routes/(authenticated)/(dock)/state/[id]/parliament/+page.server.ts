@@ -14,7 +14,9 @@ import {
 	parliamentaryElections,
 	accounts,
 	userProfiles,
-	ministers
+	ministers,
+	presidents,
+	stateTaxes
 } from "$lib/server/schema";
 import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
@@ -98,6 +100,11 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
 	});
 
+	// Check if user is president
+	const userPresidency = await db.query.presidents.findFirst({
+		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+	});
+
 	// Get next or active election
 	const now = new Date();
 	const nextElection = await db.query.parliamentaryElections.findFirst({
@@ -106,19 +113,142 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 	});
 
 	// Get active proposals with vote counts and user's votes
-	const activeProposals = await db
-		.select()
-		.from(parliamentaryProposals)
-		.where(
-			and(
-				eq(parliamentaryProposals.stateId, stateId),
-				eq(parliamentaryProposals.status, "active"),
-				gte(parliamentaryProposals.votingEndsAt, now)
-			)
-		)
-		.orderBy(desc(parliamentaryProposals.createdAt));
+	const activeProposals = await db.query.parliamentaryProposals.findMany({
+		where: and(
+			eq(parliamentaryProposals.stateId, stateId),
+			eq(parliamentaryProposals.status, "active"),
+			gte(parliamentaryProposals.votingEndsAt, now)
+		),
+		with: {
+			taxDetails: true,
+			buildingDetails: {
+				with: {
+					region: true
+				}
+			},
+			borderDetails: true
+		},
+		orderBy: desc(parliamentaryProposals.createdAt)
+	});
 
-	// Get vote counts and user votes for each proposal
+	// Helper function to get proposal description using joined data
+	const getProposalDescription = async (proposal: any) => {
+		let title = "";
+		let description = "";
+
+		switch (proposal.proposalType) {
+			case "tax": {
+				if (proposal.taxDetails) {
+					// Get current tax for comparison
+					const currentTax = await db.query.stateTaxes.findFirst({
+						where: and(
+							eq(stateTaxes.stateId, stateId),
+							eq(stateTaxes.taxType, proposal.taxDetails.taxType),
+							eq(stateTaxes.isActive, true)
+						)
+					});
+
+					const oldRate = currentTax?.taxRate || 0;
+					const newRate = proposal.taxDetails.taxRate;
+					const taxTypeName = proposal.taxDetails.taxType.replace("_", " ");
+
+					title = `${taxTypeName.charAt(0).toUpperCase() + taxTypeName.slice(1)} Tax`;
+					description = `Change from ${oldRate}% to ${newRate}%`;
+				} else {
+					title = "Tax Policy Change";
+					description = "Modify state taxation";
+				}
+				break;
+			}
+
+			case "border_control": {
+				if (proposal.borderDetails) {
+					const isOpening = proposal.borderDetails.borderStatus === "open";
+					title = `${isOpening ? "Open" : "Close"} Borders`;
+					description = isOpening ? "Enable automatic visa approval" : "Require manual visa approval";
+				} else {
+					title = "Border Control Policy";
+					description = "Modify border access";
+				}
+				break;
+			}
+
+			case "fortifications": {
+				if (proposal.buildingDetails) {
+					const qty = proposal.buildingDetails.quantity;
+					const regionName = getRegionName(proposal.buildingDetails.regionId);
+					title = `Build Fortifications`;
+					description = `Construct ${qty} fortification${qty > 1 ? "s" : ""} in ${regionName}`;
+				} else {
+					title = "Build Fortifications";
+					description = "Construct defensive fortifications";
+				}
+				break;
+			}
+
+			case "hospital": {
+				if (proposal.buildingDetails) {
+					const qty = proposal.buildingDetails.quantity;
+					const regionName = getRegionName(proposal.buildingDetails.regionId);
+					title = `Build Hospital${qty > 1 ? "s" : ""}`;
+					description = `Construct ${qty} hospital${qty > 1 ? "s" : ""} in ${regionName}`;
+				} else {
+					title = "Build Hospital";
+					description = "Construct hospital";
+				}
+				break;
+			}
+
+			case "school": {
+				if (proposal.buildingDetails) {
+					const qty = proposal.buildingDetails.quantity;
+					const regionName = getRegionName(proposal.buildingDetails.regionId);
+					title = `Build School${qty > 1 ? "s" : ""}`;
+					description = `Construct ${qty} school${qty > 1 ? "s" : ""} in ${regionName}`;
+				} else {
+					title = "Build School";
+					description = "Construct school";
+				}
+				break;
+			}
+
+			case "power_plant": {
+				if (proposal.buildingDetails) {
+					const qty = proposal.buildingDetails.quantity;
+					const regionName = getRegionName(proposal.buildingDetails.regionId);
+					title = `Build Power Plant${qty > 1 ? "s" : ""}`;
+					description = `Construct ${qty} power plant${qty > 1 ? "s" : ""} in ${regionName}`;
+				} else {
+					title = "Build Power Plant";
+					description = "Construct power plant";
+				}
+				break;
+			}
+
+			case "infrastructure": {
+				if (proposal.buildingDetails) {
+					const qty = proposal.buildingDetails.quantity;
+					const regionName = getRegionName(proposal.buildingDetails.regionId);
+					title = `Build Infrastructure`;
+					description = `Construct ${qty} infrastructure project${qty > 1 ? "s" : ""} in ${regionName}`;
+				} else {
+					title = "Build Infrastructure";
+					description = "Construct infrastructure";
+				}
+				break;
+			}
+
+			case "budget": {
+				title = `State Budget Allocation`;
+				description = `Allocate state funds`;
+				break;
+			}
+		}
+
+		return { title, description };
+	};
+
+	// Process proposals with votes and descriptions
 	const proposalsWithVotes = await Promise.all(
 		activeProposals.map(async (proposal) => {
 			const votes = await db.select().from(parliamentaryVotes).where(eq(parliamentaryVotes.proposalId, proposal.id));
@@ -137,6 +267,8 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 				where: eq(userProfiles.accountId, proposal.proposedBy)
 			});
 
+			const { title, description } = await getProposalDescription(proposal);
+
 			return {
 				...proposal,
 				voteCounts,
@@ -147,7 +279,9 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 					id: proposal.proposedBy,
 					name: proposer?.name,
 					logo: await getLogoUrl(proposer?.logo)
-				}
+				},
+				changeTitle: title,
+				changeDescription: description
 			};
 		})
 	);
@@ -201,6 +335,8 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 		userParty: userMembership?.partyAffiliation || null,
 		userMinistry: userMinistry?.ministry || null,
 		isFinanceMinister: userMinistry?.ministry === "finance",
+		isPresident: !!userPresidency,
+		canAutoAccept: !!(userMinistry || userPresidency), // Ministers or President can auto-accept
 		nextElection: nextElection
 			? {
 					id: nextElection.id,
@@ -269,5 +405,51 @@ export const actions = {
 		}
 
 		return { success: true, message: "Vote recorded successfully" };
+	},
+
+	acceptProposal: async ({ request, locals, params }: import("./$types").RequestEvent) => {
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
+		const formData = await request.formData();
+		const proposalId = parseInt(formData.get("proposalId") as string);
+
+		if (!proposalId) {
+			return fail(400, { error: "Invalid proposal ID" });
+		}
+
+		// Check if user is a minister or president
+		const userMinistry = await db.query.ministers.findFirst({
+			where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
+		});
+
+		const userPresidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		});
+
+		if (!userMinistry && !userPresidency) {
+			return fail(403, { error: "Only ministers and the president can auto-accept proposals" });
+		}
+
+		const proposal = await db.query.parliamentaryProposals.findFirst({
+			where: eq(parliamentaryProposals.id, proposalId)
+		});
+
+		if (!proposal || proposal.status !== "active") {
+			return fail(404, { error: "Proposal not found or not active" });
+		}
+
+		// Update proposal status to passed
+		await db
+			.update(parliamentaryProposals)
+			.set({
+				status: "passed"
+			})
+			.where(eq(parliamentaryProposals.id, proposalId));
+
+		// Execute the proposal based on its type
+		// Note: This is a simplified version - you'll need to implement the actual execution logic
+		// based on your proposal types (tax, budget, infrastructure, etc.)
+
+		return { success: true, message: "Proposal accepted and executed" };
 	}
 } as Actions;

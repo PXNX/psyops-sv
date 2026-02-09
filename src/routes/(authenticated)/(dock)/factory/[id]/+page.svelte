@@ -253,30 +253,23 @@
 			<div class="flex items-center justify-between">
 				<div>
 					<h3 class="text-xl font-bold text-white">Shift In Progress</h3>
-					<p class="text-gray-400">Working for 8 hours</p>
 					{#if hasLockedWage}
-						<p class="text-sm text-purple-400 mt-1">
-							Your wage: {displayWage.toLocaleString()}
+						<p class="text-sm text-green-400 mt-1 flex flex-row">
+							<FluentMoney20Filled class="size-5 text-green-400" />
+							{displayWage.toLocaleString()}
 						</p>
 					{/if}
 				</div>
 				<div class="text-right">
-					<p class="text-xs text-gray-400">Time Remaining</p>
 					<p class="text-2xl font-bold text-amber-400">{timeRemaining}</p>
 				</div>
 			</div>
 
-			<div>
-				<div class="flex justify-between items-center mb-2">
-					<span class="text-sm font-medium text-gray-300">Progress</span>
-					<span class="text-sm font-bold text-white">{Math.floor(data.shiftProgress)}%</span>
-				</div>
-				<div class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
-					<div
-						class="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000"
-						style="width: {data.shiftProgress}%"
-					></div>
-				</div>
+			<div class="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
+				<div
+					class="h-full bg-gradient-to-r from-amber-600 to-amber-400 transition-all duration-1000"
+					style="width: {data.shiftProgress}%"
+				></div>
 			</div>
 
 			{#if data.shiftProgress >= 100}

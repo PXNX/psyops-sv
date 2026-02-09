@@ -1,3 +1,4 @@
+<!-- src/routes/(authenticated)/(dock)/state/[id]/proposal/create/+page.svelte -->
 <script lang="ts">
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
@@ -5,6 +6,8 @@
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
+	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
+	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
@@ -12,8 +15,6 @@
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	const { data } = $props();
-
-	let isMinisterialAction = $state(false);
 
 	const form = superForm(data.form, {
 		validators: valibotClient(createProposalSchema)
@@ -28,16 +29,20 @@
 		}
 	});
 
-	type ProposalType = "tax" | "hospital" | "school" | "power_plant" | "infrastructure";
-	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure";
+	type ProposalType =
+		| "tax"
+		| "hospital"
+		| "school"
+		| "power_plant"
+		| "infrastructure"
+		| "fortifications"
+		| "border_control";
+	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications";
 
-	// Get building count for selected region and type
 	function getBuildingCount(regionId: string | undefined, buildingType: string | undefined): number {
 		if (!regionId || !buildingType) return 0;
 		const regionIdNum = parseInt(regionId);
-		const count = data.buildingsByRegion[regionIdNum]?.[buildingType] || 0;
-		console.log(`Getting count for region ${regionId}, type ${buildingType}:`, count);
-		return count;
+		return data.buildingsByRegion[regionIdNum]?.[buildingType] || 0;
 	}
 
 	const proposalTypeColors: Record<string, string> = {
@@ -45,7 +50,9 @@
 		hospital: "bg-pink-600/20 text-pink-400 border-pink-500/30",
 		school: "bg-purple-600/20 text-purple-400 border-purple-500/30",
 		power_plant: "bg-yellow-600/20 text-yellow-400 border-yellow-500/30",
-		infrastructure: "bg-blue-600/20 text-blue-400 border-blue-500/30"
+		infrastructure: "bg-blue-600/20 text-blue-400 border-blue-500/30",
+		fortifications: "bg-red-600/20 text-red-400 border-red-500/30",
+		border_control: "bg-green-600/20 text-green-400 border-green-500/30"
 	};
 
 	const proposalTypeIcons: Record<string, string> = {
@@ -53,7 +60,9 @@
 		hospital: "🏥",
 		school: "🏫",
 		power_plant: "⚡",
-		infrastructure: "🛣️"
+		infrastructure: "🛣️",
+		fortifications: "🏰",
+		border_control: "🛂"
 	};
 
 	const taxTypeIcons: Record<string, string> = {
@@ -70,29 +79,40 @@
 		income: "Tax applied on wages and earnings from work"
 	};
 
-	const ministryPermissions: Record<string, string[]> = {
-		finance: ["tax"],
-		infrastructure: ["infrastructure"],
-		education: ["school"],
-		health: ["hospital"]
-	};
+	// Check if user can auto-execute this proposal type
+	const canAutoExecute = $derived(() => {
+		if (!$formData.proposalType) return false;
 
-	const canExecuteDirectly = (type: string) => {
+		if (data.isPresident) {
+			return ["tax", "border_control", "fortifications"].includes($formData.proposalType);
+		}
+
 		if (!data.userMinistry) return false;
-		return ministryPermissions[data.userMinistry]?.includes(type) || false;
-	};
+
+		const ministryPermissions: Record<string, string[]> = {
+			economy: ["tax"],
+			foreign_affairs: ["border_control"],
+			defense: ["fortifications"],
+			infrastructure: ["infrastructure"],
+			education: ["school"],
+			health: ["hospital"]
+		};
+
+		return ministryPermissions[data.userMinistry]?.includes($formData.proposalType) || false;
+	});
 
 	const isTaxProposal = $derived($formData.proposalType === "tax");
+	const isBorderControlProposal = $derived($formData.proposalType === "border_control");
 	const isBuildingProposal = $derived(
-		["hospital", "school", "power_plant", "infrastructure"].includes($formData.proposalType || "")
+		["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes($formData.proposalType || "")
 	);
 
-	// Type guard to check if proposalType is a valid BuildingType
 	const isValidBuildingType = (type: string | undefined): type is BuildingType => {
-		return type !== undefined && ["hospital", "school", "power_plant", "infrastructure"].includes(type);
+		return (
+			type !== undefined && ["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes(type)
+		);
 	};
 
-	// Calculate total costs based on quantity
 	const totalCosts = $derived(() => {
 		if (!$formData.proposalType || !isBuildingProposal || !$formData.quantity) return null;
 		if (!isValidBuildingType($formData.proposalType)) return null;
@@ -110,7 +130,6 @@
 		return costs;
 	});
 
-	// Build available resources object
 	const availableResources = $derived(() => {
 		return {
 			currency: data.treasury?.balance || 0,
@@ -118,17 +137,14 @@
 		};
 	});
 
-	// Check if state has sufficient resources
 	const canAfford = $derived(() => {
 		if (!totalCosts) return true;
 
 		const costs = totalCosts();
 		if (!costs) return true;
 
-		// Check treasury balance
 		if (costs.currency > (data.treasury?.balance || 0)) return false;
 
-		// Check each resource
 		for (const [resource, required] of Object.entries(costs)) {
 			if (resource === "currency") continue;
 			const available = data.stateResources?.[resource] || 0;
@@ -138,25 +154,12 @@
 		return true;
 	});
 
-	// Get selected region data
 	const selectedRegion = $derived(() => {
 		if (!$formData.regionId) return null;
 		return data.regions.find((r) => r.id === parseInt($formData.regionId || ""));
 	});
 
-	// Get current building count in selected region
 	const currentBuildingCount = $derived(getBuildingCount($formData.regionId, $formData.proposalType));
-
-	// Debug effect to check data
-	$effect(() => {
-		console.log("Debug Info:", {
-			buildingsByRegion: data.buildingsByRegion,
-			selectedRegionId: $formData.regionId,
-			proposalType: $formData.proposalType,
-			currentCount: currentBuildingCount,
-			selectedRegion: selectedRegion()
-		});
-	});
 </script>
 
 <div class="max-w-4xl mx-auto px-4 py-6">
@@ -170,72 +173,45 @@
 			Back to Parliament
 		</a>
 		<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-			{#if isMinisterialAction}
+			{#if canAutoExecute()}
 				<FluentShieldTask20Filled class="size-8 text-purple-400" />
-				Execute Ministerial Action
+				Execute Action
 			{:else}
 				<FluentDocument20Filled class="size-8 text-blue-400" />
 				Create Proposal
 			{/if}
 		</h1>
 		<p class="text-gray-400 mt-2">
-			{#if isMinisterialAction}
-				Use your ministerial authority to execute actions immediately
+			{#if canAutoExecute()}
+				Use your {data.isPresident ? "presidential" : "ministerial"} authority to execute actions immediately
 			{:else}
 				Submit a proposal for parliamentary vote (1 day voting, 60% majority required)
 			{/if}
 		</p>
 	</div>
 
-	<!-- Mode Toggle -->
-	{#if data.userMinistry}
+	<!-- Authority Notice -->
+	{#if data.isPresident || data.userMinistry}
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4 mb-6">
-			<div class="flex items-center justify-between">
-				<div class="flex-1">
-					<p class="text-sm font-medium text-white mb-1">Submission Mode</p>
-					<p class="text-xs text-gray-400">
-						As Minister of <span class="capitalize font-medium">{data.userMinistry}</span>, you can execute certain
-						actions immediately
+			<div class="flex items-center gap-3">
+				<FluentShieldTask20Filled class="size-6 text-purple-400" />
+				<div>
+					<p class="text-sm font-medium text-white">
+						{data.isPresident ? "Presidential Authority" : `Minister of ${data.userMinistry}`}
 					</p>
-				</div>
-				<div class="flex gap-2">
-					<button
-						onclick={() => (isMinisterialAction = false)}
-						class="btn btn-sm gap-2"
-						class:bg-blue-600={!isMinisterialAction}
-						class:text-white={!isMinisterialAction}
-						class:bg-slate-700-50={isMinisterialAction}
-						class:text-gray-300={isMinisterialAction}
-					>
-						<FluentDocument20Filled class="size-4" />
-						Proposal
-					</button>
-					<button
-						onclick={() => (isMinisterialAction = true)}
-						class="btn btn-sm gap-2"
-						class:bg-purple-600={isMinisterialAction}
-						class:text-white={isMinisterialAction}
-						class:bg-slate-700-50={!isMinisterialAction}
-						class:text-gray-300={!isMinisterialAction}
-					>
-						<FluentShieldTask20Filled class="size-4" />
-						Ministerial
-					</button>
+					<p class="text-xs text-gray-400">Certain actions can be executed immediately without parliamentary vote</p>
 				</div>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Info Banner -->
-	{#if isMinisterialAction}
+	{#if canAutoExecute()}
 		<div class="alert bg-purple-600/20 border border-purple-500/30 mb-6">
 			<FluentShieldTask20Filled class="size-5 text-purple-400" />
 			<div class="text-sm">
-				<p class="font-semibold text-white">Ministerial Authority</p>
-				<p class="text-gray-300">
-					As Minister of <span class="capitalize">{data.userMinistry}</span>, certain actions can be executed
-					immediately without a parliamentary vote.
-				</p>
+				<p class="font-semibold text-white">Immediate Execution</p>
+				<p class="text-gray-300">This action will be executed immediately upon submission.</p>
 			</div>
 		</div>
 	{:else}
@@ -252,19 +228,14 @@
 
 	<!-- Form -->
 	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
-		<form
-			method="POST"
-			action={isMinisterialAction ? "?/executeMinisterialAction" : "?/createProposal"}
-			use:enhance
-			class="space-y-6"
-		>
+		<form method="POST" action="?/createProposal" use:enhance class="space-y-6">
 			<!-- Proposal Type -->
 			<div>
 				<label for="proposalType" class="block text-sm font-medium text-gray-300 mb-2">
 					Proposal Type <span class="text-red-400">*</span>
 				</label>
 				<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-					{#each ["tax", "hospital", "school", "power_plant", "infrastructure"] as type}
+					{#each ["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control"] as type}
 						<button
 							type="button"
 							class="p-4 rounded-lg border-2 text-left transition-all {$formData.proposalType === type
@@ -276,8 +247,8 @@
 							<div class="flex flex-col gap-2">
 								<span class="text-2xl">{proposalTypeIcons[type]}</span>
 								<h4 class="font-bold text-white capitalize text-sm">{type.replace("_", " ")}</h4>
-								{#if isMinisterialAction && canExecuteDirectly(type)}
-									<span class="text-xs text-green-400">✓ Direct execution</span>
+								{#if canAutoExecute() && ((data.isPresident && ["tax", "border_control", "fortifications"].includes(type)) || (data.userMinistry === "economy" && type === "tax") || (data.userMinistry === "foreign_affairs" && type === "border_control") || (data.userMinistry === "defense" && type === "fortifications") || (data.userMinistry === "infrastructure" && type === "infrastructure") || (data.userMinistry === "education" && type === "school") || (data.userMinistry === "health" && type === "hospital"))}
+									<span class="text-xs text-green-400">✓ Immediate</span>
 								{/if}
 							</div>
 						</button>
@@ -286,15 +257,6 @@
 				<input type="hidden" name="proposalType" value={$formData.proposalType} />
 				{#if $errors.proposalType}
 					<p class="text-xs text-red-400 mt-1">{$errors.proposalType}</p>
-				{/if}
-
-				{#if isMinisterialAction && $formData.proposalType && !canExecuteDirectly($formData.proposalType)}
-					<div class="alert alert-warning mt-3">
-						<span class="text-sm">
-							⚠️ Your ministry cannot execute {$formData.proposalType} actions directly. This will require a parliamentary
-							vote.
-						</span>
-					</div>
 				{/if}
 			</div>
 
@@ -309,7 +271,6 @@
 						<p class="text-sm text-gray-300">Revenue will be deposited into the state treasury.</p>
 					</div>
 
-					<!-- Tax Type -->
 					<div>
 						<label for="taxType" class="block text-sm font-medium text-gray-300 mb-2">
 							Tax Type <span class="text-red-400">*</span>
@@ -338,7 +299,6 @@
 						{/if}
 					</div>
 
-					<!-- Tax Rate -->
 					<div>
 						<label for="taxRate" class="block text-sm font-medium text-gray-300 mb-2">
 							Tax Rate: <span class="text-white font-bold">{$formData.taxRate || 0}%</span>
@@ -366,6 +326,72 @@
 				</div>
 			{/if}
 
+			<!-- Border Control Fields -->
+			{#if isBorderControlProposal}
+				<div class="border-t border-white/5 pt-6 space-y-6">
+					<div class="bg-green-600/10 border border-green-500/20 rounded-xl p-4">
+						<div class="flex items-center gap-2 mb-2">
+							<FluentGlobe20Filled class="size-5 text-green-400" />
+							<h3 class="text-lg font-semibold text-white">Border Control</h3>
+						</div>
+						<p class="text-sm text-gray-300">
+							Manage state border access. Closed borders cost ${data.borderMaintenanceCost.toLocaleString()}/day to
+							maintain.
+						</p>
+					</div>
+
+					<div>
+						<label class="block text-sm font-medium text-gray-300 mb-2">
+							Border Status <span class="text-red-400">*</span>
+						</label>
+						<div class="grid grid-cols-2 gap-3">
+							<button
+								type="button"
+								class="p-4 rounded-lg border-2 text-left transition-all {$formData.borderStatus === 'open'
+									? 'bg-green-600/20 border-green-500/50'
+									: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
+								onclick={() => ($formData.borderStatus = "open")}
+								disabled={$submitting}
+							>
+								<div class="flex items-center gap-3 mb-2">
+									<span class="text-2xl">🌍</span>
+									<h4 class="font-bold text-white">Open Borders</h4>
+								</div>
+								<p class="text-xs text-gray-400">Allow free travel and trade</p>
+								{#if data.border?.status === "open"}
+									<span class="text-xs text-green-400 mt-2 block">✓ Current status</span>
+								{/if}
+							</button>
+
+							<button
+								type="button"
+								class="p-4 rounded-lg border-2 text-left transition-all {$formData.borderStatus === 'closed'
+									? 'bg-red-600/20 border-red-500/50'
+									: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
+								onclick={() => ($formData.borderStatus = "closed")}
+								disabled={$submitting}
+							>
+								<div class="flex items-center gap-3 mb-2">
+									<span class="text-2xl">🚫</span>
+									<h4 class="font-bold text-white">Closed Borders</h4>
+								</div>
+								<p class="text-xs text-gray-400">Restrict travel and trade</p>
+								<p class="text-xs text-amber-400 mt-1">
+									Costs ${data.borderMaintenanceCost.toLocaleString()}/day
+								</p>
+								{#if data.border?.status === "closed"}
+									<span class="text-xs text-red-400 mt-2 block">✓ Current status</span>
+								{/if}
+							</button>
+						</div>
+						<input type="hidden" name="borderStatus" value={$formData.borderStatus} />
+						{#if $errors.borderStatus}
+							<p class="text-xs text-red-400 mt-1">{$errors.borderStatus}</p>
+						{/if}
+					</div>
+				</div>
+			{/if}
+
 			<!-- Building Construction Fields -->
 			{#if isBuildingProposal}
 				<div class="border-t border-white/5 pt-6 space-y-6">
@@ -377,7 +403,6 @@
 						<p class="text-sm text-gray-300">Resources will be taken from the state treasury and inventory.</p>
 					</div>
 
-					<!-- Building Cost Display -->
 					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
 						{@const template = data.buildingTemplates[$formData.proposalType]}
 						<div class="bg-slate-700/30 rounded-lg p-4 space-y-3">
@@ -409,7 +434,6 @@
 						</div>
 					{/if}
 
-					<!-- Region Selection -->
 					<div>
 						<label for="regionId" class="block text-sm font-medium text-gray-300 mb-2">
 							Region <span class="text-red-400">*</span>
@@ -449,7 +473,6 @@
 						{/if}
 					</div>
 
-					<!-- Quantity -->
 					<div>
 						<label for="quantity" class="block text-sm font-medium text-gray-300 mb-2">
 							Quantity <span class="text-red-400">*</span>
@@ -477,7 +500,6 @@
 						{/if}
 					</div>
 
-					<!-- Total Cost Display using ResourceRequirements component -->
 					{#if totalCosts()}
 						{@const costs = totalCosts()}
 						{#if costs}
@@ -507,13 +529,14 @@
 					type="submit"
 					disabled={$submitting ||
 						(isTaxProposal && (!$formData.taxType || !$formData.taxRate)) ||
+						(isBorderControlProposal && !$formData.borderStatus) ||
 						(isBuildingProposal && (!$formData.regionId || !$formData.quantity || !canAfford()))}
 					class="btn flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 border-0 text-white gap-2"
 				>
 					{#if $delayed}
 						<span class="loading loading-spinner loading-sm"></span>
-						{isMinisterialAction ? "Executing..." : "Creating..."}
-					{:else if isMinisterialAction && $formData.proposalType && canExecuteDirectly($formData.proposalType)}
+						{canAutoExecute() ? "Executing..." : "Creating..."}
+					{:else if canAutoExecute()}
 						<FluentShieldTask20Filled class="size-5" />
 						Execute Immediately
 					{:else}
