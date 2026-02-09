@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(fullscreen)/welcome/create/+page.server.ts
 import { db } from "$lib/server/db";
-import { userProfiles, userWallets, files } from "$lib/server/schema";
+import { userProfiles, userWallets, files, residences } from "$lib/server/schema";
 import { redirect, error } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -19,11 +19,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 		where: eq(userProfiles.accountId, account.id)
 	});
 
-	//todo: check if user has a residence aswell. if not, redirect to welcome/region, if yes, redirect to /
-
-	// If profile already has a name, redirect to main app
+	// If profile already has a name, check residence status
 	if (existingProfile?.name) {
-		throw redirect(302, "/");
+		// Check if user has a residence
+		const existingResidence = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id)
+		});
+
+		// If they have both profile and residence, go to dashboard
+		if (existingResidence) {
+			throw redirect(302, "/");
+		}
+
+		// If they have profile but no residence, go to region selection
+		throw redirect(302, "/welcome/region");
 	}
 
 	const form = await superValidate(valibot(createProfileSchema));
