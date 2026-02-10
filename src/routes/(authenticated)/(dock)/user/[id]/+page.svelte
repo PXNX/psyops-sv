@@ -65,17 +65,7 @@
 			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-2xl"></div>
 
 			<div class="relative z-10 flex flex-col items-center space-y-3">
-				<!-- Profile Picture -->
-				<div class="ring-4 ring-white/10 rounded-full relative group">
-					<div class="size-24 rounded-full overflow-hidden bg-base-200">
-						<Logo
-							src={data.user.logo}
-							alt={data.user.name || "User logo"}
-							class="w-full h-full object-cover"
-							placeholderIcon={FluentImageOff20Filled}
-						/>
-					</div>
-				</div>
+				<Logo src={data.user.logo} alt={data.user.name} placeholderIcon={FluentImageOff20Filled} class="size-20" />
 
 				<div class="text-center space-y-1">
 					<h1 class="text-3xl font-bold text-white tracking-tight">{data.user.name || "Anonymous User"}</h1>
