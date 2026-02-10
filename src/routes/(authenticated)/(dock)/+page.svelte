@@ -45,6 +45,7 @@
 					<FluentHome20Filled class="size-5" />
 					Explore Map
 				</a>
+				<a href="/chat" class="btn btn-ghost justify-start"> Chat </a>
 			</div>
 		</div>
 	</div>

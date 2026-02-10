@@ -1,0 +1,26 @@
+<svg width="400" height="250" viewBox="0 0 400 250" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="topGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#83AFD5;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#A6C9E2;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7499BF;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="sideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A79A5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2C527A;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="frontGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#749EC4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#5381AD;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <path d="M120 40 L380 30 Q395 30 395 45 L395 70 L120 85 Z" fill="url(#topGrad)" />
+  <path d="M120 85 L395 70 L395 180 Q395 195 380 195 L120 210 Z" fill="url(#sideGrad)" opacity="0.9" />
+
+  <path d="M25 65 Q20 65 20 70 L20 100 Q20 105 25 105 L60 105 Q75 105 75 125 L75 165 Q75 185 60 185 L25 185 Q20 185 20 190 L20 220 Q20 225 25 225 L115 225 Q120 225 120 220 L120 190 Q120 185 115 185 L85 185 Q70 185 70 165 L70 125 Q70 105 85 105 L115 105 Q120 105 120 100 L120 70 Q120 65 115 65 Z" fill="url(#frontGrad)" stroke="#3E6B93" stroke-width="1"/>
+  
+  <path d="M120 85 L120 210" stroke="#FFFFFF" stroke-width="2" opacity="0.3" fill="none" />
+</svg>
