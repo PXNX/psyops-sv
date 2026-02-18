@@ -9,6 +9,7 @@
 		EditSection,
 		EditImageUpload,
 		EditColorPicker,
+		EditCooldownWarning,
 		EditMessage,
 		EditFormActions,
 		EditInfoBox
@@ -16,11 +17,15 @@
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentColor20Filled from "~icons/fluent/color-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
 
 	const { form, errors, message, enhance, submitting, delayed } = superForm(data.form, {
-		validators: valibotClient(editStateSchema)
+		validators: valibotClient(editStateSchema),
+		multipleSubmits: "prevent",
+		clearOnSubmit: "none",
+		taintedMessage: null
 	});
 
 	// Image upload handling
@@ -38,14 +43,33 @@
 		{ name: "Orange", value: "#f97316" },
 		{ name: "Pink", value: "#ec4899" }
 	];
+
+	// Store initial form values
+	const initialName = data.form.data.name;
+	const initialBackground = data.form.data.background;
+
+	// Track if form has changes
+	const hasChanges = $derived(
+		$form.name !== initialName ||
+		$form.background !== initialBackground ||
+		imageUpload.currentFile !== null
+	);
+
+	// Check if user has sufficient funds
+	const hasSufficientFunds = $derived(
+		data.editCost === undefined || data.userBalance === undefined || data.userBalance >= data.editCost
+	);
+
+	// Determine if submit should be disabled
+	const submitDisabled = $derived(
+		data.onCooldown || !hasSufficientFunds || !hasChanges || $submitting
+	);
 </script>
 
 <EditPageLayout title="Edit State" subtitle={data.state.name} backHref="/state/{data.state.id}">
 	<!-- Cooldown Warning -->
-	{#if data.onCooldown}
-		<div class="bg-orange-600/20 border border-orange-500/30 rounded-xl p-4">
-			<p class="text-orange-300 text-sm">⏰ Wait {data.timeRemaining}h before editing again</p>
-		</div>
+	{#if data.onCooldown && data.cooldownEndsAt}
+		<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="state" />
 	{/if}
 
 	<!-- Messages -->
@@ -63,7 +87,7 @@
 				maxlength="100"
 				class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
 				class:input-error={$errors.name}
-				disabled={$submitting || data.onCooldown}
+				disabled={$submitting === true || data.onCooldown}
 			/>
 			{#if $errors.name}
 				<p class="text-xs text-red-400">{$errors.name}</p>
@@ -78,7 +102,7 @@
 				bind:previewUrl={imageUpload.previewUrl}
 				bind:dragActive={imageUpload.dragActive}
 				bind:fileInputElement={imageUpload.fileInput}
-				disabled={$submitting || data.onCooldown}
+				disabled={$submitting === true || data.onCooldown}
 				error={$errors.logo}
 				entityName="state logo"
 				file={imageUpload.currentFile}
@@ -104,7 +128,7 @@
 		<EditSection title="State Color" icon={FluentColor20Filled}>
 			<EditColorPicker
 				bind:color={$form.background}
-				disabled={$submitting || data.onCooldown}
+				disabled={$submitting === true || data.onCooldown}
 				previewIcon={FluentGlobe20Filled}
 				previewTitle={$form.name || "Your State Name"}
 				previewSubtitle="Sovereign State"
@@ -113,15 +137,28 @@
 			/>
 		</EditSection>
 
-		<!-- Submit -->
-		<EditFormActions
-			cancelHref="/state/{data.state.id}"
-			{submitting}
-			{delayed}
-			disabled={data.onCooldown}
-		/>
+		<!-- Resource Requirements -->
+		{#if data.editCost !== undefined && data.userBalance !== undefined}
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-2">
+				<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
+				<EditFormActions
+					cancelHref="/state/{data.state.id}"
+					submitting={$submitting}
+					delayed={$delayed}
+					disabled={submitDisabled}
+				/>
+			</div>
+		{:else}
+			<!-- Submit -->
+			<EditFormActions
+				cancelHref="/state/{data.state.id}"
+				submitting={$submitting}
+				delayed={$delayed}
+				disabled={submitDisabled}
+			/>
+		{/if}
 
 		<!-- Info Box -->
-		<EditInfoBox message="Changes have a 24-hour cooldown to prevent frequent modifications." />
+		<EditInfoBox cooldownHours={24} />
 	</form>
 </EditPageLayout>

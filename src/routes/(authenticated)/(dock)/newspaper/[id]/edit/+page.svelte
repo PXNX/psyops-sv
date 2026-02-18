@@ -12,6 +12,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import MdiNewspaper from "~icons/mdi/newspaper";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
 
@@ -101,34 +102,7 @@
 		</div>
 	</div>
 
-	<!-- Cost & Balance Info -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-		<!-- Balance -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-green-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Your Balance</p>
-					<p class="text-lg font-bold text-white">{data.userBalance.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
 
-		<!-- Cost -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-					<MdiNewspaper class="size-5 text-blue-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Edit Cost</p>
-					<p class="text-lg font-bold text-white">{data.editCost.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
-	</div>
 
 	<!-- Insufficient Funds Warning -->
 	{#if !data.canAfford}
@@ -315,28 +289,31 @@
 			{/if}
 		</div>
 
-		<!-- Submit -->
-		<div class="flex gap-3">
-			<a
-				href="/newspaper/{data.newspaper.id}"
-				class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
-				class:btn-disabled={$submitting}
-			>
-				Cancel
-			</a>
-			<button
-				type="submit"
-				disabled={$submitting || !canEdit}
-				class="btn flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 text-white gap-2 disabled:opacity-50"
-			>
-				{#if $delayed}
-					<span class="loading loading-spinner loading-sm"></span>
-					Saving...
-				{:else}
-					<FluentCheckmark20Filled class="size-5" />
-					Save Changes ({data.editCost.toLocaleString()})
-				{/if}
-			</button>
+		<!-- Resource Requirements & Submit -->
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-2">
+			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
+			<div class="flex gap-3">
+				<a
+					href="/newspaper/{data.newspaper.id}"
+					class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
+					class:btn-disabled={$submitting}
+				>
+					Cancel
+				</a>
+				<button
+					type="submit"
+					disabled={$submitting || !canEdit}
+					class="btn flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 text-white gap-2 disabled:opacity-50"
+				>
+					{#if $delayed}
+						<span class="loading loading-spinner loading-sm"></span>
+						Saving...
+					{:else}
+						<FluentCheckmark20Filled class="size-5" />
+						Save Changes
+					{/if}
+				</button>
+			</div>
 		</div>
 
 		<!-- Info Box -->

@@ -1,11 +1,17 @@
 /**
- * Schema Limits - Single Source of Truth
- * 
+ * Schema Limits - Server-Side Dynamic Extraction
+ *
+ * @deprecated For client-side validation schemas, use $lib/config/validation/schema-limits instead.
+ * This file should only be used in server-side code that needs dynamic extraction from the database schema.
+ *
  * This module extracts validation limits directly from the database schema,
  * ensuring consistency between database constraints and application validation.
- * 
+ *
+ * IMPORTANT: If you're importing this in a schema.ts file that's used by Svelte components,
+ * use $lib/config/validation/schema-limits instead to avoid leaking server code to the client.
+ *
  * These limits are derived from the varchar/text length constraints defined
- * in src/lib/server/schema.ts and should be used in all validation schemas.
+ * in src/lib/server/schema.ts and should be used in server-only validation.
  */
 
 import {

@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(fullscreen)/welcome/create/schema.ts
 import * as v from "valibot";
-import { SCHEMA_LIMITS } from "$lib/server/schema-limits";
+import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
 
 export const createProfileSchema = v.object({
 	name: v.pipe(

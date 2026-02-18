@@ -24,7 +24,7 @@ import {
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProposalSchema } from "./schema";
-import { getBuildingTemplate, BUILDING_TEMPLATES, BORDER_MAINTENANCE, type BuildingType } from "$lib/server/buildings";
+import { BUILDING_TEMPLATES, BORDER_MAINTENANCE, type BuildingType } from "$lib/config";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -161,7 +161,13 @@ async function executeProposal(
 			throw new Error("Tax proposal details not found");
 		}
 
-		// Execute tax
+		// Deactivate existing taxes of the same type
+		await db
+			.update(stateTaxes)
+			.set({ isActive: false })
+			.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxDetails.taxType), eq(stateTaxes.isActive, true)));
+
+		// Execute tax (create new tax or update existing)
 		await db.insert(stateTaxes).values({
 			stateId,
 			taxType: taxDetails.taxType,
@@ -243,7 +249,7 @@ async function executeProposal(
 			throw new Error("Invalid region");
 		}
 
-		const template = getBuildingTemplate(proposalType as BuildingType);
+		const template = BUILDING_TEMPLATES[proposalType as BuildingType];
 		const buildQuantity = buildingDetails.quantity;
 
 		// ... rest of building execution logic (infrastructure check, costs, etc.) ...
@@ -320,10 +326,10 @@ export const actions: Actions = {
 		const votingEndsAt = shouldAutoExecute
 			? new Date()
 			: (() => {
-					const date = new Date();
-					date.setDate(date.getDate() + 1);
-					return date;
-				})();
+				const date = new Date();
+				date.setDate(date.getDate() + 1);
+				return date;
+			})();
 
 		const [proposal] = await db
 			.insert(parliamentaryProposals)

@@ -1,6 +1,6 @@
 // /src/routes/(authenticated)/(fullscreen)/posts/[id]/edit/schema.ts
 import * as v from "valibot";
-import { SCHEMA_LIMITS } from "$lib/server/schema-limits";
+import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
 
 // TODO: make it possible to send title and content optionally, so that only what has actually changed has to be updated. this may save a ton of network bandwidth when updating only title?
 export const editArticleSchema = v.object({

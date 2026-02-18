@@ -5,7 +5,7 @@ import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
 import { battles, battleParticipants, battleRounds, militaryUnits, regions, states, wars } from "$lib/server/schema";
 import { eq, and, sql, count, asc } from "drizzle-orm";
-import { MILITARY_UNIT_TEMPLATES } from "$lib/config/militaryUnits";
+import { MILITARY_UNIT_TEMPLATES } from "$lib/config";
 
 // Terrain combat modifiers
 const TERRAIN_DATA = {

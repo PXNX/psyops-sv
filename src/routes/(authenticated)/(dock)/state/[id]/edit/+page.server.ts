@@ -38,6 +38,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const cooldownEndTime = cooldown ? new Date(cooldown.lastEditAt.getTime() + 24 * 60 * 60 * 1000) : null;
 	const onCooldown = cooldownEndTime && now < cooldownEndTime;
 	const timeRemaining = onCooldown ? Math.ceil((cooldownEndTime!.getTime() - now.getTime()) / (1000 * 60 * 60)) : 0;
+	const cooldownEndsAt = cooldownEndTime?.toISOString() || null;
 
 	// Get logo URL if exists
 	let logoUrl = null;
@@ -71,7 +72,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			logoUrl
 		},
 		onCooldown,
-		timeRemaining
+		timeRemaining,
+		cooldownEndsAt
 	};
 };
 

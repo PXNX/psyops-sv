@@ -15,7 +15,7 @@ import {
 } from "$lib/server/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { db } from "$lib/server/db";
-import { MILITARY_UNIT_TEMPLATES, type MilitaryUnitTemplate } from "$lib/config/militaryUnits";
+import { MILITARY_UNIT_TEMPLATES, type MilitaryUnitTemplate } from "$lib/config";
 
 type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
 type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
@@ -122,10 +122,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			stateName: residence.stateName,
 			bloc: residence.blocId
 				? {
-						id: residence.blocId,
-						name: residence.blocName,
-						color: residence.blocColor
-					}
+					id: residence.blocId,
+					name: residence.blocName,
+					color: residence.blocColor
+				}
 				: null
 		},
 		inventory

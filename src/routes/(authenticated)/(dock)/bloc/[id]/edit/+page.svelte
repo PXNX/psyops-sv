@@ -10,6 +10,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
 
@@ -331,29 +332,58 @@
 			></textarea>
 		</div>
 
-		<!-- Submit -->
-		<div class="flex gap-3">
-			<a
-				href="/bloc/{data.bloc.id}"
-				class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
-				class:btn-disabled={$submitting}
-			>
-				Cancel
-			</a>
-			<button
-				type="submit"
-				disabled={$submitting}
-				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
-			>
-				{#if $delayed}
-					<span class="loading loading-spinner loading-sm"></span>
-					Saving...
-				{:else}
-					<FluentCheckmark20Filled class="size-5" />
-					Save Changes
-				{/if}
-			</button>
-		</div>
+		<!-- Resource Requirements & Submit -->
+		{#if data.editCost !== undefined && data.userBalance !== undefined}
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-2">
+				<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
+				<div class="flex gap-3">
+					<a
+						href="/bloc/{data.bloc.id}"
+						class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
+						class:btn-disabled={$submitting}
+					>
+						Cancel
+					</a>
+					<button
+						type="submit"
+						disabled={$submitting}
+						class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
+					>
+						{#if $delayed}
+							<span class="loading loading-spinner loading-sm"></span>
+							Saving...
+						{:else}
+							<FluentCheckmark20Filled class="size-5" />
+							Save Changes
+						{/if}
+					</button>
+				</div>
+			</div>
+		{:else}
+			<!-- Submit -->
+			<div class="flex gap-3">
+				<a
+					href="/bloc/{data.bloc.id}"
+					class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
+					class:btn-disabled={$submitting}
+				>
+					Cancel
+				</a>
+				<button
+					type="submit"
+					disabled={$submitting}
+					class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2"
+				>
+					{#if $delayed}
+						<span class="loading loading-spinner loading-sm"></span>
+						Saving...
+					{:else}
+						<FluentCheckmark20Filled class="size-5" />
+						Save Changes
+					{/if}
+				</button>
+			</div>
+		{/if}
 	</form>
 
 	<!-- Info Box -->
