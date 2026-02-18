@@ -5,7 +5,7 @@ import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { replaceLogoInTransaction } from "$lib/server/logo-utils";
+import { getContext } from "$lib/server/context";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createPartySchema } from "./schema";
@@ -201,7 +201,8 @@ export const actions: Actions = {
 		try {
 			await db.transaction(async (tx) => {
 				// Upload new logo and delete old one if it exists
-				const logoFileId = await replaceLogoInTransaction(tx, logo, account.id, party.logo);
+				const fileService = getContext().services.file;
+				const logoFileId = await fileService.replaceLogoInTransaction(tx, logo, account.id, party.logo);
 
 				// Deduct cost from user's wallet
 				await tx

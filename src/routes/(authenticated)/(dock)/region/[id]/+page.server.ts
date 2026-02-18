@@ -21,15 +21,7 @@ import { eq, and, sql, or, desc, gt, isNotNull } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
-import {
-	getBorderingRegions,
-	areRegionsAdjacent,
-	getBorderDistance,
-	getStateBorderingRegions,
-	getDistanceBetweenRegions,
-	calculateTravelCost,
-	calculateTravelTime
-} from "$lib/utils/regionBorders";
+import { getContext } from "$lib/server/context";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -91,14 +83,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const hasResidence = userResidence?.regionId === regionId;
 
 	// Calculate travel distance and cost if user has residence elsewhere
+	const regionService = getContext().services.region;
 	let travelInfo = null;
 	if (userResidence && userResidence.regionId !== regionId) {
-		const distance = await getDistanceBetweenRegions(userResidence.regionId, regionId);
+		const distance = await regionService.getDistanceBetweenRegions(userResidence.regionId, regionId);
 		if (distance) {
 			travelInfo = {
 				distanceKm: Math.round(distance * 100) / 100,
-				cost: calculateTravelCost(distance),
-				timeHours: calculateTravelTime(distance)
+				cost: regionService.calculateTravelCost(distance),
+				timeHours: regionService.calculateTravelTime(distance)
 			};
 		}
 	}
@@ -196,7 +189,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			});
 
 			if (isPresident) {
-				borderingRegionsForAttack = await getStateBorderingRegions(userResidence.region.stateId, regionId);
+				borderingRegionsForAttack = await regionService.getStateBorderingRegions(userResidence.region.stateId, regionId);
 			}
 		}
 	}
@@ -230,7 +223,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	});
 
 	// Get bordering regions with state information
-	const borderingRegionsData = await getBorderingRegions(regionId);
+	const borderingRegionsData = await regionService.getBorderingRegions(regionId);
 	const borderingRegions = await Promise.all(
 		borderingRegionsData.map(async (border) => {
 			const borderRegion = await db.query.regions.findFirst({
@@ -296,17 +289,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		travelInfo,
 		activeTravel: activeTravel
 			? {
-					toRegionId: activeTravel.toRegionId,
-					arrivalTime: activeTravel.arrivalTime.toISOString(),
-					distanceKm: activeTravel.distanceKm
-				}
+				toRegionId: activeTravel.toRegionId,
+				arrivalTime: activeTravel.arrivalTime.toISOString(),
+				distanceKm: activeTravel.distanceKm
+			}
 			: null,
 		governor: region.governor
 			? {
-					userId: region.governor.userId,
-					name: region.governor.user.profile?.name,
-					appointedAt: region.governor.appointedAt
-				}
+				userId: region.governor.userId,
+				name: region.governor.user.profile?.name,
+				appointedAt: region.governor.appointedAt
+			}
 			: null,
 		factories: regionFactories,
 		visa: {
@@ -316,10 +309,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			settings: visaSettings,
 			activeVisa: activeVisa
 				? {
-						expiresAt: activeVisa.expiresAt.toISOString(),
-						cost: Number(activeVisa.cost),
-						taxPaid: Number(activeVisa.taxPaid)
-					}
+					expiresAt: activeVisa.expiresAt.toISOString(),
+					cost: Number(activeVisa.cost),
+					taxPaid: Number(activeVisa.taxPaid)
+				}
 				: null
 		},
 		activeWars,
@@ -327,10 +320,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		ongoingBattle,
 		recentFailedBattle: recentFailedBattle
 			? {
-					id: recentFailedBattle.id,
-					endedAt: recentFailedBattle.endedAt?.toISOString(),
-					cooldownEndsAt: new Date(recentFailedBattle.endedAt!.getTime() + 24 * 60 * 60 * 1000).toISOString()
-				}
+				id: recentFailedBattle.id,
+				endedAt: recentFailedBattle.endedAt?.toISOString(),
+				cooldownEndsAt: new Date(recentFailedBattle.endedAt!.getTime() + 24 * 60 * 60 * 1000).toISOString()
+			}
 			: null,
 		borderingRegions: validBorderingRegions
 	};
@@ -376,14 +369,15 @@ export const actions: Actions = {
 		}
 
 		// Calculate travel distance and cost
-		const distance = await getDistanceBetweenRegions(currentResidence.regionId, regionId);
+		const regionService = getContext().services.region;
+		const distance = await regionService.getDistanceBetweenRegions(currentResidence.regionId, regionId);
 
 		if (!distance) {
 			return fail(400, { error: "Unable to calculate travel distance" });
 		}
 
-		const cost = calculateTravelCost(distance);
-		const travelTimeHours = calculateTravelTime(distance);
+		const cost = regionService.calculateTravelCost(distance);
+		const travelTimeHours = regionService.calculateTravelTime(distance);
 
 		// Check wallet
 		const wallet = await db.query.userWallets.findFirst({
@@ -698,7 +692,8 @@ export const actions: Actions = {
 			return fail(403, { error: "Selected region does not belong to your state" });
 		}
 
-		const isAdjacent = await areRegionsAdjacent(attackFromRegionId, regionId);
+		const regionService = getContext().services.region;
+		const isAdjacent = await regionService.areRegionsAdjacent(attackFromRegionId, regionId);
 		if (!isAdjacent) {
 			return fail(400, { error: "Regions must be adjacent to start a battle" });
 		}

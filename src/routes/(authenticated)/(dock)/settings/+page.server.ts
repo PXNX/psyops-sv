@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { randomUUID } from "crypto";
 import type { Actions, PageServerLoad } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { replaceLogoInTransaction } from "$lib/server/logo-utils";
+import { getContext } from "$lib/server/context";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { updateProfileSchema } from "./schema";
@@ -140,7 +140,8 @@ export const actions: Actions = {
 					.where(eq(userWallets.userId, account.id));
 
 				// Upload new logo and delete old one if it exists
-				const logoFileId = await replaceLogoInTransaction(tx, logo, account.id, existingProfile?.logo || null);
+				const fileService = getContext().services.file;
+				const logoFileId = await fileService.replaceLogoInTransaction(tx, logo, account.id, existingProfile?.logo || null);
 
 				if (existingProfile) {
 					// Update existing profile
