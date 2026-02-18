@@ -1,18 +1,19 @@
 // src/routes/party/create/schema.ts
 import * as v from "valibot";
+import { SCHEMA_LIMITS } from "$lib/server/schema-limits";
 
 export const createPartySchema = v.pipe(
 	v.object({
 		name: v.pipe(
 			v.string("Party name is required"),
-			v.minLength(3, "Party name must be at least 3 characters"),
-			v.maxLength(100, "Party name must be at most 100 characters")
+			v.minLength(SCHEMA_LIMITS.MIN_NAME_LENGTH, `Party name must be at least ${SCHEMA_LIMITS.MIN_NAME_LENGTH} characters`),
+			v.maxLength(SCHEMA_LIMITS.PARTY_NAME_MAX, `Party name must be at most ${SCHEMA_LIMITS.PARTY_NAME_MAX} characters`)
 		),
 		abbreviation: v.optional(
 			v.pipe(
 				v.string(),
 				v.regex(/^[a-zA-Z0-9]*$/, "Abbreviation must be alphanumeric only"),
-				v.maxLength(5, "Abbreviation must be 5 characters or less")
+				v.maxLength(SCHEMA_LIMITS.PARTY_ABBREVIATION_MAX, `Abbreviation must be ${SCHEMA_LIMITS.PARTY_ABBREVIATION_MAX} characters or less`)
 			),
 			""
 		),
@@ -23,7 +24,7 @@ export const createPartySchema = v.pipe(
 			v.pipe(
 				v.file("Logo must be a file"),
 				v.mimeType(["image/jpeg", "image/png", "image/webp", "image/gif"], "Logo must be an image"),
-				v.maxSize(5 * 1024 * 1024, "Logo must be less than 5MB")
+				v.maxSize(SCHEMA_LIMITS.LOGO_MAX_SIZE_MB * 1024 * 1024, `Logo must be less than ${SCHEMA_LIMITS.LOGO_MAX_SIZE_MB}MB`)
 			)
 		)
 	})
