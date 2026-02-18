@@ -6,6 +6,7 @@
 	import FluentChartMultiple20Regular from "~icons/fluent/chart-multiple-20-regular";
 	import FluentShoppingCart20Filled from "~icons/fluent/cart-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import MarketChart from "./MarketChart.svelte";
 
 	let { data } = $props();
 
@@ -30,43 +31,12 @@
 				}[data.itemName]
 	);
 
-	// Format date for chart
-	function formatDate(date: Date) {
-		const d = new Date(date);
-		return `${d.getMonth() + 1}/${d.getDate()}`;
-	}
-
-	// Calculate chart dimensions and points
-	const chartData = $derived.by(() => {
-		if (!data.priceHistory.length) return null;
-
-		const prices = data.priceHistory.map((h) => h.pricePerUnit);
-		const minPrice = Math.min(...prices);
-		const maxPrice = Math.max(...prices);
-		const priceRange = maxPrice - minPrice || 1;
-
-		const width = 800;
-		const height = 300;
-		const padding = 40;
-
-		const points = data.priceHistory.map((h, i) => {
-			const x = padding + (i / (data.priceHistory.length - 1)) * (width - 2 * padding);
-			const y = height - padding - ((h.pricePerUnit - minPrice) / priceRange) * (height - 2 * padding);
-			return { x, y, price: h.pricePerUnit, date: h.recordedAt };
-		});
-
-		const pathData = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ");
-
-		return {
-			points,
-			pathData,
-			minPrice,
-			maxPrice,
-			width,
-			height,
-			padding
-		};
-	});
+	// Get current price (most recent or from statistics)
+	const currentPrice = $derived(
+		data.priceHistory.length > 0
+			? data.priceHistory[data.priceHistory.length - 1].pricePerUnit
+			: data.statistics?.currentAvgPrice ?? 0
+	);
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -125,67 +95,8 @@
 	{/if}
 
 	<!-- Price Chart -->
-	{#if chartData && data.priceHistory.length > 1}
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
-			<div class="flex items-center gap-2 mb-4">
-				<FluentChartMultiple20Regular class="size-5 text-purple-400" />
-				<h2 class="text-xl font-bold text-white">Price History (Last 30 Days)</h2>
-			</div>
-
-			<div class="bg-slate-900/50 rounded-lg p-4">
-				<svg viewBox="0 0 {chartData.width} {chartData.height}" class="w-full" style="max-height: 300px;">
-					<!-- Grid lines -->
-					{#each [0, 0.25, 0.5, 0.75, 1] as tick}
-						{@const y = chartData.padding + tick * (chartData.height - 2 * chartData.padding)}
-						<line
-							x1={chartData.padding}
-							y1={y}
-							x2={chartData.width - chartData.padding}
-							y2={y}
-							stroke="#374151"
-							stroke-width="1"
-							stroke-dasharray="4"
-						/>
-						<text x={chartData.padding - 10} y={y + 5} fill="#9CA3AF" font-size="12" text-anchor="end">
-							${Math.round(chartData.maxPrice - tick * (chartData.maxPrice - chartData.minPrice)).toLocaleString()}
-						</text>
-					{/each}
-
-					<!-- Price line -->
-					<path
-						d={chartData.pathData}
-						fill="none"
-						stroke="#A78BFA"
-						stroke-width="3"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-
-					<!-- Area under line -->
-					<path
-						d="{chartData.pathData} L {chartData.width - chartData.padding} {chartData.height -
-							chartData.padding} L {chartData.padding} {chartData.height - chartData.padding} Z"
-						fill="url(#gradient)"
-						opacity="0.3"
-					/>
-
-					<!-- Data points -->
-					{#each chartData.points as point, i}
-						<circle cx={point.x} cy={point.y} r="4" fill="#A78BFA">
-							<title>{formatDate(point.date)}: ${point.price.toLocaleString()}</title>
-						</circle>
-					{/each}
-
-					<!-- Gradient definition -->
-					<defs>
-						<linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-							<stop offset="0%" style="stop-color:#A78BFA;stop-opacity:0.5" />
-							<stop offset="100%" style="stop-color:#A78BFA;stop-opacity:0" />
-						</linearGradient>
-					</defs>
-				</svg>
-			</div>
-		</div>
+	{#if data.priceHistory.length > 1}
+		<MarketChart priceHistory={data.priceHistory} {currentPrice} />
 	{:else if data.priceHistory.length === 0}
 		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
 			<div class="text-center py-8">
