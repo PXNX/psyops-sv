@@ -178,11 +178,13 @@
 	<!-- Chart Container -->
 	<div class="relative" style="height: 300px; touch-action: none;">
 		{#if chartData.length > 1}
+								{@const baselineY = yScale(chartData[0].y)}
+
 			<Plot
 				data={chartData}
 				{xScale}
 				{yScale}
-				padding={{ top: 20, right: 60, bottom: 40, left: 10 }}
+				padding={10}
 				let:data
 				let:xScale
 				let:yScale
@@ -208,7 +210,6 @@
 						/>
 
 						<!-- Horizontal dotted line at baseline -->
-						{@const baselineY = yScale(chartData[0].y)}
 						<line
 							x1={0}
 							y1={baselineY}
