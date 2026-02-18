@@ -251,7 +251,24 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 	}
 
 	// Calculate income tax
-	const taxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId);
+	const incomeTaxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId);
+
+	// Calculate mining tax if applicable (before transaction)
+	let miningTaxResult = null;
+	let netResourceQuantity = 0;
+	if (factory.factoryType === "mine" && factory.resourceOutput) {
+		// For simplicity, estimate resource value at 100 currency per unit
+		const estimatedResourceValue = factory.productionRate * 100;
+		miningTaxResult = await calculateAndCollectTax(
+			factory.stateId,
+			"mining",
+			estimatedResourceValue,
+			factory.ownerId
+		);
+		// Calculate net resources after tax (resources reduced proportionally to tax)
+		const taxPercentage = miningTaxResult.taxAmount / estimatedResourceValue;
+		netResourceQuantity = Math.floor(factory.productionRate * (1 - taxPercentage));
+	}
 
 	let resourcesProduced = 0;
 
@@ -261,12 +278,12 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			.insert(userWallets)
 			.values({
 				userId,
-				balance: taxResult.netAmount
+				balance: incomeTaxResult.netAmount
 			})
 			.onConflictDoUpdate({
 				target: userWallets.userId,
 				set: {
-					balance: sql`${userWallets.balance} + ${taxResult.netAmount}`,
+					balance: sql`${userWallets.balance} + ${incomeTaxResult.netAmount}`,
 					updatedAt: new Date()
 				}
 			});
@@ -283,19 +300,19 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 
 		// Add resources to company owner (if mine/refinery)
 		if (factory.factoryType === "mine" && factory.resourceOutput) {
-			resourcesProduced = factory.productionRate;
+			resourcesProduced = netResourceQuantity; // Use net quantity after mining tax
 
 			await tx
 				.insert(resourceInventory)
 				.values({
 					userId: factory.ownerId,
 					resourceType: factory.resourceOutput,
-					quantity: factory.productionRate
+					quantity: netResourceQuantity
 				})
 				.onConflictDoUpdate({
 					target: [resourceInventory.userId, resourceInventory.resourceType],
 					set: {
-						quantity: sql`${resourceInventory.quantity} + ${factory.productionRate}`,
+						quantity: sql`${resourceInventory.quantity} + ${netResourceQuantity}`,
 						updatedAt: new Date()
 					}
 				});
@@ -311,12 +328,17 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			.where(eq(factoryWorkers.id, job.id));
 	});
 
+	const totalTaxPaid = incomeTaxResult.taxAmount + (miningTaxResult?.taxAmount || 0);
+	const taxBreakdown = miningTaxResult
+		? `${incomeTaxResult.taxAmount.toLocaleString()} income tax + ${miningTaxResult.taxAmount.toLocaleString()} mining tax`
+		: `${incomeTaxResult.taxAmount.toLocaleString()} income tax`;
+
 	return {
 		success: true,
-		earned: taxResult.netAmount,
+		earned: incomeTaxResult.netAmount,
 		grossWage: wageToCollect,
-		taxPaid: taxResult.taxAmount,
+		taxPaid: totalTaxPaid,
 		resourcesProduced,
-		message: `Shift complete! Earned ${taxResult.netAmount.toLocaleString()} (${taxResult.taxAmount.toLocaleString()} tax)`
+		message: `Shift complete! Earned ${incomeTaxResult.netAmount.toLocaleString()} (${taxBreakdown})`
 	};
 }

@@ -37,7 +37,7 @@
 		disabled={submitting || disabled}
 		class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
 	>
-		{#if delayed}
+		{#if delayed === true}
 			<span class="loading loading-spinner loading-sm"></span>
 			Saving...
 		{:else}

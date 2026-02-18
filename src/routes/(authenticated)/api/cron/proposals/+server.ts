@@ -130,6 +130,12 @@ async function implementProposal(proposal: any) {
 			const existingTax = await db.select().from(stateTaxes).where(eq(stateTaxes.proposalId, proposal.id)).limit(1);
 
 			if (existingTax.length === 0) {
+				// Deactivate existing taxes of the same type
+				await db
+					.update(stateTaxes)
+					.set({ isActive: false })
+					.where(and(eq(stateTaxes.stateId, proposal.stateId), eq(stateTaxes.taxType, taxType as any), eq(stateTaxes.isActive, true)));
+
 				await db.insert(stateTaxes).values({
 					stateId: proposal.stateId,
 					taxType: taxType as any,

@@ -10,7 +10,7 @@ import { getContext } from "$lib/server/context";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { updateProfileSchema } from "./schema";
-import { PROFILE_EDIT_CONFIG } from "$lib/config/party";
+import { PROFILE_EDIT_CONFIG } from "$lib/config/features/party.config";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;

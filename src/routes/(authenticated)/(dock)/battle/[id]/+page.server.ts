@@ -14,7 +14,7 @@ import {
 import { eq, desc, and, sql, count, asc, or } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { error, fail } from "@sveltejs/kit";
-import { MILITARY_UNIT_TEMPLATES } from "$lib/config/militaryUnits";
+import { MILITARY_UNIT_TEMPLATES } from "$lib/config";
 import { getLogoUrl } from "$lib/server/backblaze";
 
 // Terrain combat modifiers

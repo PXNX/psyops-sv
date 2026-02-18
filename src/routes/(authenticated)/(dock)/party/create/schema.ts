@@ -1,6 +1,6 @@
 // src/routes/party/create/schema.ts
 import * as v from "valibot";
-import { SCHEMA_LIMITS } from "$lib/server/schema-limits";
+import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
 
 export const createPartySchema = v.pipe(
 	v.object({

@@ -23,6 +23,7 @@
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
 
@@ -57,13 +58,6 @@
 </script>
 
 <EditPageLayout title="Edit Party" subtitle={data.party.name} backHref="/party/{data.party.id}">
-	{#snippet stats()}
-		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-			<EditStatCard label="Your Balance" value={data.userBalance} icon={FluentMoney20Filled} color="green" />
-			<EditStatCard label="Edit Cost" value={data.editCost} icon={FluentFlag20Filled} color="purple" />
-		</div>
-	{/snippet}
-
 	<!-- Cooldown Warning -->
 	{#if data.isOnCooldown && data.cooldownEndsAt}
 		<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="party" />
@@ -95,7 +89,7 @@
 						maxlength="100"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 						class:input-error={$errors.name}
-						disabled={$submitting || !canEdit}
+						disabled={$submitting}
 					/>
 					{#if $errors.name}
 						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
@@ -117,7 +111,7 @@
 						maxlength="4"
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 						class:input-error={$errors.abbreviation}
-						disabled={$submitting || !canEdit}
+						disabled={$submitting}
 					/>
 					{#if $errors.abbreviation}
 						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
@@ -136,7 +130,7 @@
 				bind:previewUrl={imageUpload.previewUrl}
 				bind:dragActive={imageUpload.dragActive}
 				bind:fileInputElement={imageUpload.fileInput}
-				disabled={$submitting || !canEdit}
+				disabled={$submitting}
 				error={$errors.logo}
 				entityName="party logo"
 				file={imageUpload.currentFile}
@@ -162,7 +156,7 @@
 		<EditSection title="Party Color" icon={FluentColor20Filled}>
 			<EditColorPicker
 				bind:color={$form.color}
-				disabled={$submitting || !canEdit}
+				disabled={$submitting}
 				error={$errors.color}
 				previewIcon={FluentPeople20Filled}
 				previewTitle={$form.name || "Your Party Name"}
@@ -183,7 +177,7 @@
 					bind:value={$form.ideology}
 					class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 					class:input-error={$errors.ideology}
-					disabled={$submitting || !canEdit}
+					disabled={$submitting}
 				>
 					<option value="">Select an ideology...</option>
 					{#each ideologies as ideologyOption}
@@ -205,18 +199,15 @@
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-				disabled={$submitting || !canEdit}
+				disabled={$submitting}
 			></textarea>
 		</EditSection>
 
-		<!-- Submit -->
-		<EditFormActions
-			cancelHref="/party/{data.party.id}"
-			{submitting}
-			{delayed}
-			disabled={!canEdit}
-			editCost={data.editCost}
-		/>
+		<!-- Resource Requirements -->
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-2">
+			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
+			<EditFormActions cancelHref="/party/{data.party.id}" {submitting} {delayed} disabled={!canEdit} />
+		</div>
 
 		<!-- Info Box -->
 		<EditInfoBox editCost={data.editCost} cooldownHours={data.cooldownHours} />

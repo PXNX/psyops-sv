@@ -17,5 +17,7 @@ export const PROFILE_EDIT_CONFIG = {
     NAME_MIN_LENGTH: 3,
     NAME_MAX_LENGTH: 50,
     BIO_MAX_LENGTH: 500,
-    LOGO_MAX_SIZE_MB: 2
+    LOGO_MAX_SIZE_MB: 2,
+    COST: 100,
+    COOLDOWN_HOURS: 24
 } as const;

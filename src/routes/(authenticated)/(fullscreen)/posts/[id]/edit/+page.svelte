@@ -30,7 +30,7 @@
 		}
 	});
 
-	const { form: formData, enhance, errors, delayed, submitting } = form;
+	const { form: formData, enhance, errors, delayed, submitting, allErrors } = form;
 
 	let editorComponent = $state<WysiwygEditor | null>(null);
 	let isPublishModalOpen = $state(false);
@@ -106,7 +106,7 @@
 			onclick={handlePublish}
 			class="btn btn-circle btn-sm sm:btn-md btn-primary"
 			title="Save Changes"
-			disabled={!canSave() || $submitting}
+			disabled={!canSave() || $submitting === true}
 		>
 			<FluentEmojiFloppyDisk class="text-xl sm:text-2xl" />
 		</button>
@@ -116,7 +116,7 @@
 				class="btn btn-circle btn-sm sm:btn-md"
 				onclick={() => editorComponent?.undo()}
 				title="Undo"
-				disabled={$submitting}
+				disabled={$submitting === true}
 			>
 				<FluentArrowHookUpLeft20Regular class="w-5 h-5" />
 			</button>
@@ -124,7 +124,7 @@
 				class="btn btn-circle btn-sm sm:btn-md"
 				onclick={() => editorComponent?.redo()}
 				title="Redo"
-				disabled={$submitting}
+				disabled={$submitting === true}
 			>
 				<FluentArrowHookUpRight20Regular class="w-5 h-5" />
 			</button>
@@ -134,7 +134,7 @@
 			onclick={handleCancel}
 			class="btn btn-circle btn-sm sm:btn-md btn-ghost ml-auto"
 			title="Cancel"
-			disabled={$submitting}
+			disabled={$submitting === true}
 		>
 			<MdiWindowClose class="w-5 h-5" />
 		</button>
@@ -151,7 +151,7 @@
 		type="text"
 		bind:value={$formData.title}
 		maxlength="200"
-		disabled={$submitting}
+		disabled={$submitting === true}
 	/>
 
 	{#if $errors.title}
@@ -183,8 +183,8 @@
 			<p class="text-sm font-semibold line-clamp-2">{$formData.title}</p>
 		</div>
 
-		<button class="btn btn-primary w-full" type="submit" disabled={$submitting || $delayed}>
-			{#if $submitting || $delayed}
+		<button class="btn btn-primary w-full" type="submit" disabled={$submitting === true || $delayed === true}>
+			{#if $submitting === true || $delayed === true}
 				<span class="loading loading-spinner loading-sm"></span>
 				Saving...
 			{:else}

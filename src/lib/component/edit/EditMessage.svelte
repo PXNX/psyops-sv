@@ -17,10 +17,10 @@
 {#if message}
 	<div
 		class="rounded-xl p-4 border"
-		class:bg-green-600/20={!isError}
-		class:border-green-500/30={!isError}
-		class:bg-red-600/20={isError}
-		class:border-red-500/30={isError}
+		class:bg-green-600-20={!isError}
+		class:border-green-500-30={!isError}
+		class:bg-red-600-20={isError}
+		class:border-red-500-30={isError}
 	>
 		<p class="text-sm font-medium" class:text-green-300={!isError} class:text-red-300={isError}>
 			{message}
