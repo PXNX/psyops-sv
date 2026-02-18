@@ -9,6 +9,7 @@ import { CompanyService } from './services/economy/company.service';
 import { FactoryService } from './services/economy/factory.service';
 import { MarketService } from './services/economy/market.service';
 import { WalletService } from './services/economy/wallet.service';
+import { BuildingService } from './services/economy/building.service';
 import { PartyService } from './services/politics/party.service';
 import { ProposalService } from './services/politics/proposal.service';
 import { ElectionService } from './services/politics/election.service';
@@ -17,6 +18,7 @@ import { TravelService } from './services/geography/travel.service';
 import { ChatService } from './services/messaging/chat.service';
 import { InboxService } from './services/messaging/inbox.service';
 import { ModerationService } from './services/moderation/moderation.service';
+import { FileService } from './services/file.service';
 
 export interface AppContext {
     db: typeof db;
@@ -27,6 +29,7 @@ export interface AppContext {
         factory: FactoryService;
         market: MarketService;
         wallet: WalletService;
+        building: BuildingService;
         party: PartyService;
         proposal: ProposalService;
         election: ElectionService;
@@ -35,6 +38,7 @@ export interface AppContext {
         chat: ChatService;
         inbox: InboxService;
         moderation: ModerationService;
+        file: FileService;
     };
 }
 
@@ -53,6 +57,7 @@ export function createContext(): AppContext {
     const factoryService = new FactoryService(db);
     const marketService = new MarketService(db);
     const walletService = new WalletService(db);
+    const buildingService = new BuildingService(db);
     const partyService = new PartyService(db);
     const proposalService = new ProposalService(db);
     const electionService = new ElectionService(db);
@@ -61,6 +66,7 @@ export function createContext(): AppContext {
     const chatService = new ChatService(db);
     const inboxService = new InboxService(db);
     const moderationService = new ModerationService(db);
+    const fileService = new FileService(db);
 
     _context = {
         db,
@@ -71,6 +77,7 @@ export function createContext(): AppContext {
             factory: factoryService,
             market: marketService,
             wallet: walletService,
+            building: buildingService,
             party: partyService,
             proposal: proposalService,
             election: electionService,
@@ -78,7 +85,8 @@ export function createContext(): AppContext {
             travel: travelService,
             chat: chatService,
             inbox: inboxService,
-            moderation: moderationService
+            moderation: moderationService,
+            file: fileService
         }
     };
 
