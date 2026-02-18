@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Plot, Area, Svg, type TooltipContext } from "svelteplot";
+	import { Plot, Area } from "svelteplot";
 	import { scaleTime, scaleLinear } from "d3-scale";
 
 	interface PricePoint {
@@ -192,14 +192,13 @@
 				let:height
 				let:padding
 			>
-				<Svg>
-					<g
-						on:mousemove={(e) => handleMouseMove(e, width, height, padding)}
-						on:touchmove={(e) => handleTouchMove(e, width, height, padding)}
-						on:mouseleave={handleMouseLeave}
-						on:touchend={handleMouseLeave}
-						style="cursor: crosshair;"
-					>
+				<g
+					on:mousemove={(e) => handleMouseMove(e, width, height, padding)}
+					on:touchmove={(e) => handleTouchMove(e, width, height, padding)}
+					on:mouseleave={handleMouseLeave}
+					on:touchend={handleMouseLeave}
+					style="cursor: crosshair;"
+				>
 						<!-- Background rect for interaction -->
 						<rect
 							x={0}
@@ -329,8 +328,7 @@
 							</text>
 						{/each}
 					</g>
-				</Svg>
-			</Plot>
+					</Plot>
 		{:else}
 			<div class="absolute inset-0 flex items-center justify-center">
 				<p class="text-gray-400">Not enough data to display chart</p>
