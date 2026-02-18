@@ -1,6 +1,6 @@
 // Building service - handles building operations and calculations
 import type { Database } from '../../db';
-import { buildings } from '../../schema';
+import { stateBuildings } from '../../schema';
 import { eq } from 'drizzle-orm';
 import { BUILDING_TEMPLATES, BORDER_MAINTENANCE, type BuildingType } from '$lib/config';
 
@@ -125,29 +125,29 @@ export class BuildingService {
     // ============ Building Operations ============
 
     async getBuildingById(buildingId: number) {
-        const result = await this.db.select().from(buildings).where(eq(buildings.id, buildingId));
+        const result = await this.db.select().from(stateBuildings).where(eq(stateBuildings.id, buildingId));
         return result[0] || null;
     }
 
     async getBuildingsByRegion(regionId: number) {
-        return await this.db.select().from(buildings).where(eq(buildings.regionId, regionId));
+        return await this.db.select().from(stateBuildings).where(eq(stateBuildings.regionId, regionId));
     }
 
-    async createBuilding(data: typeof buildings.$inferInsert) {
-        const [building] = await this.db.insert(buildings).values(data).returning();
+    async createBuilding(data: typeof stateBuildings.$inferInsert) {
+        const [building] = await this.db.insert(stateBuildings).values(data).returning();
         return building;
     }
 
-    async updateBuilding(buildingId: number, data: Partial<typeof buildings.$inferInsert>) {
+    async updateBuilding(buildingId: number, data: Partial<typeof stateBuildings.$inferInsert>) {
         const [building] = await this.db
-            .update(buildings)
+            .update(stateBuildings)
             .set(data)
-            .where(eq(buildings.id, buildingId))
+            .where(eq(stateBuildings.id, buildingId))
             .returning();
         return building;
     }
 
     async deleteBuilding(buildingId: number) {
-        await this.db.delete(buildings).where(eq(buildings.id, buildingId));
+        await this.db.delete(stateBuildings).where(eq(stateBuildings.id, buildingId));
     }
 }
