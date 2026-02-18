@@ -18,7 +18,7 @@ import { uploadFileFromForm } from "$lib/server/backblaze";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createPartySchema } from "./schema";
-import { PARTY_CREATION_CONFIG } from "$lib/config/party";
+import { PARTY_CREATION_CONFIG } from "$lib/config";
 import { getRegionName } from "$lib/utils/formatting";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -85,10 +85,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		form,
 		userState: userResidence.state
 			? {
-					id: userResidence.state.id,
-					name: userResidence.state.name,
-					logo: userResidence.state.logo
-				}
+				id: userResidence.state.id,
+				name: userResidence.state.name,
+				logo: userResidence.state.logo
+			}
 			: null,
 		userRegion: {
 			id: userResidence.region.id,
