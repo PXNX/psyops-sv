@@ -1,7 +1,7 @@
 <!-- /src/routes/(authenticated)/(dock)/battle/[id]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import { MILITARY_UNIT_TEMPLATES } from "$lib/config/militaryUnits.js";
+	import { MILITARY_UNIT_TEMPLATES } from "$lib/config";
 	import { formatDate, getRegionName } from "$lib/utils/formatting.js";
 	import { onMount, onDestroy } from "svelte";
 	import { Chart, Svg, Tooltip } from "layerchart";
