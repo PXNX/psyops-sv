@@ -1,0 +1,21 @@
+// Political party configuration
+export const PARTY_CREATION_CONFIG = {
+    NAME_MIN_LENGTH: 3,
+    NAME_MAX_LENGTH: 50,
+    ABBREVIATION_MAX_LENGTH: 5,
+    DESCRIPTION_MAX_LENGTH: 500,
+    CREATION_COOLDOWN_DAYS: 7
+} as const;
+
+export const PARTY_EDIT_CONFIG = {
+    EDIT_COOLDOWN_HOURS: 24,
+    NAME_CHANGE_COOLDOWN_DAYS: 30,
+    LOGO_MAX_SIZE_MB: 2
+} as const;
+
+export const PROFILE_EDIT_CONFIG = {
+    NAME_MIN_LENGTH: 3,
+    NAME_MAX_LENGTH: 50,
+    BIO_MAX_LENGTH: 500,
+    LOGO_MAX_SIZE_MB: 2
+} as const;
