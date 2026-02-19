@@ -1,338 +1,271 @@
 <script lang="ts">
-	import { Plot, Area } from "svelteplot";
-	import { scaleTime, scaleLinear } from "d3-scale";
+	import { onMount } from "svelte";
 
-	interface PricePoint {
-		recordedAt: string;
+	// Matches the shape returned by +page.server.ts
+	type PricePoint = {
+		id: number;
+		itemType: string;
+		itemName: string;
 		pricePerUnit: number;
-	}
-
-	interface Props {
-		priceHistory: PricePoint[];
-		currentPrice: number;
-		selectedRange?: "1D" | "1W" | "1M" | "1Y" | "Max";
-	}
-
-	let { priceHistory, currentPrice, selectedRange = "Max" }: Props = $props();
-
-	// Transform data to proper format
-	const chartData = $derived(
-		priceHistory.map((point) => ({
-			x: new Date(point.recordedAt),
-			y: point.pricePerUnit
-		}))
-	);
-
-	// Calculate price change from first to last
-	const priceChange = $derived.by(() => {
-		if (!priceHistory.length) return { amount: 0, percent: 0 };
-		const firstPrice = priceHistory[0].pricePerUnit;
-		const lastPrice = priceHistory[priceHistory.length - 1].pricePerUnit;
-		const amount = lastPrice - firstPrice;
-		const percent = ((amount / firstPrice) * 100).toFixed(2);
-		return { amount, percent: parseFloat(percent) };
-	});
-
-	// Determine if price is up or down
-	const isPositive = $derived(priceChange.percent >= 0);
-
-	// Interactive state
-	let hoveredIndex = $state<number | null>(null);
-	let isInteracting = $state(false);
-
-	const displayPrice = $derived(
-		hoveredIndex !== null ? chartData[hoveredIndex].y : currentPrice
-	);
-
-	const displayDate = $derived(
-		hoveredIndex !== null ? chartData[hoveredIndex].x : null
-	);
-
-	const displayChange = $derived.by(() => {
-		if (hoveredIndex === null) return priceChange;
-		const firstPrice = chartData[0].y;
-		const hoveredPrice = chartData[hoveredIndex].y;
-		const amount = hoveredPrice - firstPrice;
-		const percent = ((amount / firstPrice) * 100).toFixed(2);
-		return { amount, percent: parseFloat(percent) };
-	});
-
-	// Format date
-	const formatDate = (date: Date) => {
-		const months = ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sept.", "Okt.", "Nov.", "Dez."];
-		return `${date.getDate()} ${months[date.getMonth()]}`;
+		quantity: number;
+		transactionType: string;
+		recordedAt: Date | string;
 	};
 
-	// Format month/year for x-axis
-	const formatAxisDate = (date: Date) => {
-		const months = ["Jan.", "Feb.", "März", "Apr.", "Mai", "Juni", "Juli", "Aug.", "Sept.", "Okt.", "Nov.", "Dez."];
-		return `${months[date.getMonth()]} ${date.getFullYear().toString().slice(2)}`;
-	};
+	export let priceHistory: PricePoint[] = [];
+	export let currentPrice: number = 0;
 
-	// Create scales
-	const xScale = $derived(
-		scaleTime()
-			.domain([chartData[0]?.x ?? new Date(), chartData[chartData.length - 1]?.x ?? new Date()])
-			.nice()
-	);
+	// --- SSR guard ---
+	let mounted = false;
+	onMount(() => {
+		mounted = true;
+	});
 
-	const yMin = $derived(Math.min(...chartData.map((d) => d.y)));
-	const yMax = $derived(Math.max(...chartData.map((d) => d.y)));
-	const yRange = $derived(yMax - yMin);
+	// --- Normalize data to { x: timestamp, y: price } ---
+	$: data = priceHistory.map((p) => ({
+		x: new Date(p.recordedAt).getTime(),
+		y: p.pricePerUnit
+	}));
 
-	const yScale = $derived(
-		scaleLinear()
-			.domain([yMin - yRange * 0.1, yMax + yRange * 0.1])
-			.nice()
-	);
+	// --- Interaction state ---
+	let hoveredIndex: number | null = null;
+	let svgEl: SVGSVGElement;
 
-	// Handle interaction
-	function handleMouseMove(event: MouseEvent, width: number, height: number, padding: { left: number; right: number; top: number; bottom: number }) {
-		if (chartData.length === 0) return;
-		
-		const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
-		const x = event.clientX - rect.left - padding.left;
-		const chartWidth = width - padding.left - padding.right;
-		
-		if (x < 0 || x > chartWidth) {
-			hoveredIndex = null;
-			isInteracting = false;
-			return;
-		}
+	// --- Responsive width ---
+	let containerWidth = 640;
+	const height = 260;
+	const padding = { top: 24, right: 12, bottom: 36, left: 12 };
 
-		isInteracting = true;
-		const index = Math.round((x / chartWidth) * (chartData.length - 1));
-		hoveredIndex = Math.max(0, Math.min(index, chartData.length - 1));
+	$: innerW = containerWidth - padding.left - padding.right;
+	$: innerH = height - padding.top - padding.bottom;
+
+	// --- Scales ---
+	$: xMin = data[0]?.x ?? 0;
+	$: xMax = data[data.length - 1]?.x ?? 1;
+	$: yVals = data.map((d) => d.y);
+	$: yMin = data.length ? Math.min(...yVals) * 0.995 : 0;
+	$: yMax = data.length ? Math.max(...yVals) * 1.005 : 1;
+
+	function sx(x: number) {
+		return padding.left + ((x - xMin) / (xMax - xMin || 1)) * innerW;
+	}
+	function sy(y: number) {
+		return padding.top + (1 - (y - yMin) / (yMax - yMin || 1)) * innerH;
 	}
 
-	function handleTouchMove(event: TouchEvent, width: number, height: number, padding: { left: number; right: number; top: number; bottom: number }) {
-		if (chartData.length === 0) return;
-		event.preventDefault();
-		
-		const rect = (event.currentTarget as SVGElement).getBoundingClientRect();
-		const touch = event.touches[0];
-		const x = touch.clientX - rect.left - padding.left;
-		const chartWidth = width - padding.left - padding.right;
-		
-		if (x < 0 || x > chartWidth) {
-			hoveredIndex = null;
-			isInteracting = false;
-			return;
-		}
+	// --- Derived display values ---
+	$: activeIndex = hoveredIndex ?? data.length - 1;
+	$: activePoint = data[activeIndex] ?? null;
 
-		isInteracting = true;
-		const index = Math.round((x / chartWidth) * (chartData.length - 1));
-		hoveredIndex = Math.max(0, Math.min(index, chartData.length - 1));
+	$: displayPrice = activePoint?.y ?? currentPrice;
+	$: displayDate = activePoint ? new Date(activePoint.x) : null;
+
+	$: firstPrice = data[0]?.y ?? displayPrice;
+	$: change = displayPrice - firstPrice;
+	$: changePct = firstPrice ? (change / firstPrice) * 100 : 0;
+	$: isUp = change >= 0;
+
+	// --- Path ---
+	$: linePath = data.map((d, i) => `${i === 0 ? "M" : "L"} ${sx(d.x).toFixed(1)} ${sy(d.y).toFixed(1)}`).join(" ");
+
+	$: baseY = data.length ? sy(data[0].y) : padding.top + innerH;
+	$: areaPath =
+		data.length > 1
+			? `${linePath} L ${sx(xMax).toFixed(1)} ${baseY.toFixed(1)} L ${sx(xMin).toFixed(1)} ${baseY.toFixed(1)} Z`
+			: "";
+
+	// --- Y-axis ticks ---
+	$: yTicks = Array.from({ length: 4 }, (_, i) => {
+		const val = yMin + (i / 3) * (yMax - yMin);
+		return { val, y: sy(val) };
+	}).reverse();
+
+	// --- X-axis ticks ---
+	$: xTicks = (() => {
+		if (data.length < 2) return [];
+		return [0, 1, 2, 3].map((i) => {
+			const idx = Math.round((i / 3) * (data.length - 1));
+			return data[idx];
+		});
+	})();
+
+	// --- Interaction ---
+	function getIndexFromClientX(clientX: number): number {
+		if (!svgEl) return data.length - 1;
+		const rect = svgEl.getBoundingClientRect();
+		const relX = clientX - rect.left;
+		const frac = (relX - padding.left) / innerW;
+		const idx = Math.round(Math.max(0, Math.min(1, frac)) * (data.length - 1));
+		return idx;
 	}
 
-	function handleMouseLeave() {
+	function onMouseMove(e: MouseEvent) {
+		hoveredIndex = getIndexFromClientX(e.clientX);
+	}
+
+	function onTouchMove(e: TouchEvent) {
+		e.preventDefault();
+		hoveredIndex = getIndexFromClientX(e.touches[0].clientX);
+	}
+
+	function onLeave() {
 		hoveredIndex = null;
-		isInteracting = false;
 	}
 
-	// Calculate percentage labels for right side
-	const percentageLabels = $derived.by(() => {
-		if (chartData.length === 0) return [];
-		const basePrice = chartData[0].y;
-		return [0.049, 0.017, -0.015, -0.047].map(pct => ({
-			percent: pct,
-			label: `${(pct * 100).toFixed(1)} %`
-		}));
-	});
+	// --- Formatting ---
+	function fmtPrice(v: number) {
+		return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+	}
+
+	function fmtDate(d: Date) {
+		return d.toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+			year: "numeric",
+			hour: "2-digit",
+			minute: "2-digit"
+		});
+	}
+
+	function fmtAxisDate(ts: number) {
+		return new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+	}
+
+	const gradId = `mcg-${Math.random().toString(36).slice(2, 7)}`;
+	const clipId = `mcc-${Math.random().toString(36).slice(2, 7)}`;
 </script>
 
-<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6 select-none">
-	<!-- Price Display -->
-	<div class="mb-6">
-		<div class="text-4xl font-bold text-white mb-2">
-			{displayPrice.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+<div class="bg-slate-800/50 border border-white/5 rounded-xl p-5" bind:clientWidth={containerWidth}>
+	<!-- Header: price + date update live as user scrubs -->
+	<div class="mb-4 select-none">
+		<div class="flex items-end gap-3 flex-wrap">
+			<span class="text-3xl font-bold text-white tabular-nums transition-all duration-75">
+				${fmtPrice(displayPrice)}
+			</span>
+			<span class="text-sm font-semibold pb-1 tabular-nums {isUp ? 'text-green-400' : 'text-red-400'}">
+				{isUp ? "▲" : "▼"}
+				{Math.abs(changePct).toFixed(2)}% ({isUp ? "+" : ""}{fmtPrice(change)})
+			</span>
 		</div>
-		<div class="flex items-center gap-3">
-			<div class="flex items-center gap-1 {displayChange.percent >= 0 ? 'text-red-400' : 'text-green-400'}">
-				<span>{displayChange.percent >= 0 ? "▼" : "▲"}</span>
-				<span class="font-semibold text-lg">
-					{Math.abs(displayChange.percent).toFixed(2)} %
-				</span>
-			</div>
+		<p class="text-xs text-gray-400 mt-1 h-4 transition-all duration-75">
 			{#if displayDate}
-				<span class="text-gray-400 text-sm">{formatDate(displayDate)}</span>
+				{fmtDate(displayDate)}
 			{/if}
-		</div>
+		</p>
 	</div>
 
-	<!-- Time Range Selector -->
-	<div class="flex justify-between items-center mb-6">
-		<div class="flex gap-6">
-			{#each ["1T", "1W", "1M", "1J", "Max"] as range}
-				<button
-					class="px-1 py-1 text-base font-medium transition-colors {selectedRange === range
-						? 'text-white font-bold'
-						: 'text-gray-500 hover:text-gray-300'}"
-				>
-					{range}
-				</button>
+	<!-- Chart -->
+	{#if !mounted}
+		<div style="height: {height}px;" class="flex items-center justify-center text-gray-500 text-sm">Loading…</div>
+	{:else if data.length > 1}
+		<svg
+			bind:this={svgEl}
+			width={containerWidth}
+			{height}
+			role="img"
+			aria-label="Price chart"
+			on:mousemove={onMouseMove}
+			on:touchmove|preventDefault={onTouchMove}
+			on:mouseleave={onLeave}
+			on:touchend={onLeave}
+			style="cursor: crosshair; display: block; touch-action: pan-y;"
+		>
+			<defs>
+				<linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+					<stop offset="0%" stop-color={isUp ? "#4ade80" : "#f87171"} stop-opacity="0.20" />
+					<stop offset="100%" stop-color={isUp ? "#4ade80" : "#f87171"} stop-opacity="0" />
+				</linearGradient>
+				<clipPath id={clipId}>
+					<rect x={padding.left} y={padding.top} width={innerW} height={innerH} />
+				</clipPath>
+			</defs>
+
+			<!-- Grid lines -->
+			{#each yTicks as tick}
+				<line
+					x1={padding.left}
+					x2={padding.left + innerW}
+					y1={tick.y}
+					y2={tick.y}
+					stroke="#ffffff"
+					stroke-opacity="0.05"
+					stroke-width="1"
+				/>
 			{/each}
+
+			<!-- Area fill -->
+			<path d={areaPath} fill="url(#{gradId})" clip-path="url(#{clipId})" />
+
+			<!-- Baseline -->
+			<line
+				x1={padding.left}
+				x2={padding.left + innerW}
+				y1={baseY}
+				y2={baseY}
+				stroke={isUp ? "#4ade80" : "#f87171"}
+				stroke-width="1"
+				stroke-dasharray="3 3"
+				stroke-opacity="0.4"
+			/>
+
+			<!-- Price line -->
+			<path
+				d={linePath}
+				fill="none"
+				stroke={isUp ? "#4ade80" : "#f87171"}
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				clip-path="url(#{clipId})"
+			/>
+
+			<!-- X-axis ticks -->
+			{#each xTicks as tick}
+				{@const x = sx(tick.x)}
+				<text {x} y={padding.top + innerH + 20} text-anchor="middle" class="chart-label">
+					{fmtAxisDate(tick.x)}
+				</text>
+			{/each}
+
+			<!-- Y-axis labels (right-aligned) -->
+			{#each yTicks as tick}
+				<text x={padding.left + innerW} y={tick.y - 4} text-anchor="end" class="chart-label">
+					${fmtPrice(tick.val)}
+				</text>
+			{/each}
+
+			<!-- Scrubber line + dot (always visible, snaps to nearest point) -->
+			{#if data.length > 0}
+				{@const hx = sx(data[activeIndex].x)}
+				{@const hy = sy(data[activeIndex].y)}
+
+				<!-- Vertical line -->
+				<line
+					x1={hx}
+					x2={hx}
+					y1={padding.top}
+					y2={padding.top + innerH}
+					stroke="#94a3b8"
+					stroke-width="1"
+					stroke-dasharray={hoveredIndex !== null ? "4 3" : "0"}
+					stroke-opacity={hoveredIndex !== null ? 0.7 : 0}
+				/>
+
+				<!-- Dot -->
+				<circle cx={hx} cy={hy} r="4" fill={isUp ? "#4ade80" : "#f87171"} stroke="#1e293b" stroke-width="2" />
+			{/if}
+		</svg>
+	{:else}
+		<div style="height: {height}px;" class="flex items-center justify-center text-gray-400 text-sm">
+			Not enough data to display chart
 		</div>
-	</div>
-
-	<!-- Chart Container -->
-	<div class="relative" style="height: 300px; touch-action: none;">
-		{#if chartData.length > 1}
-								{@const baselineY = yScale(chartData[0].y)}
-
-			<Plot
-				data={chartData}
-				{xScale}
-				{yScale}
-				padding={10}
-				let:data
-				let:xScale
-				let:yScale
-				let:width
-				let:height
-				let:padding
-			>
-				<g
-					on:mousemove={(e) => handleMouseMove(e, width, height, padding)}
-					on:touchmove={(e) => handleTouchMove(e, width, height, padding)}
-					on:mouseleave={handleMouseLeave}
-					on:touchend={handleMouseLeave}
-					style="cursor: crosshair;"
-				>
-						<!-- Background rect for interaction -->
-						<rect
-							x={0}
-							y={0}
-							{width}
-							{height}
-							fill="transparent"
-						/>
-
-						<!-- Horizontal dotted line at baseline -->
-						<line
-							x1={0}
-							y1={baselineY}
-							x2={width - padding.right}
-							y2={baselineY}
-							stroke="#4B5563"
-							stroke-width="1"
-							stroke-dasharray="4 4"
-							opacity="0.6"
-						/>
-
-						<!-- Area gradient fill -->
-						<defs>
-							<linearGradient id="areaGradient" x1="0" x2="0" y1="0" y2="1">
-								<stop
-									offset="0%"
-									stop-color={isPositive ? "#EF4444" : "#34D399"}
-									stop-opacity="0.3"
-								/>
-								<stop
-									offset="100%"
-									stop-color={isPositive ? "#EF4444" : "#34D399"}
-									stop-opacity="0.05"
-								/>
-							</linearGradient>
-						</defs>
-
-						<!-- Area chart -->
-						<Area
-							{data}
-							x="x"
-							y="y"
-							{xScale}
-							{yScale}
-							fill="url(#areaGradient)"
-							strokeWidth={0}
-						/>
-
-						<!-- Line chart -->
-						<path
-							d={data
-								.map((d, i) => {
-									const x = xScale(d.x);
-									const y = yScale(d.y);
-									return `${i === 0 ? "M" : "L"} ${x} ${y}`;
-								})
-								.join(" ")}
-							fill="none"
-							stroke={isPositive ? "#EF4444" : "#34D399"}
-							stroke-width="2.5"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-
-						<!-- Hover indicator line and dot -->
-						{#if hoveredIndex !== null && isInteracting}
-							{@const hoveredPoint = data[hoveredIndex]}
-							{@const x = xScale(hoveredPoint.x)}
-							{@const y = yScale(hoveredPoint.y)}
-							
-							<!-- Vertical line -->
-							<line
-								x1={x}
-								y1={0}
-								x2={x}
-								y2={height}
-								stroke="#9CA3AF"
-								stroke-width="1.5"
-							/>
-							
-							<!-- Horizontal dotted line -->
-							<line
-								x1={0}
-								y1={y}
-								x2={width - padding.right}
-								y2={y}
-								stroke="#4B5563"
-								stroke-width="1"
-								stroke-dasharray="4 4"
-								opacity="0.6"
-							/>
-							
-							<!-- Dot -->
-							<circle
-								cx={x}
-								cy={y}
-								r="6"
-								fill={isPositive ? "#EF4444" : "#34D399"}
-							/>
-						{/if}
-
-						<!-- X-axis labels -->
-						{#each xScale.ticks(5) as tick}
-							{@const x = xScale(tick)}
-							<text
-								x={x}
-								y={height + 25}
-								fill="#6B7280"
-								font-size="11"
-								text-anchor="middle"
-							>
-								{formatAxisDate(tick)}
-							</text>
-						{/each}
-
-						<!-- Percentage labels on right -->
-						{#each percentageLabels as label, i}
-							{@const y = padding.top + (i / (percentageLabels.length - 1)) * (height - padding.top - padding.bottom)}
-							<text
-								x={width - padding.right + 10}
-								y={y + 4}
-								fill="#6B7280"
-								font-size="11"
-								text-anchor="start"
-							>
-								{label.label}
-							</text>
-						{/each}
-					</g>
-					</Plot>
-		{:else}
-			<div class="absolute inset-0 flex items-center justify-center">
-				<p class="text-gray-400">Not enough data to display chart</p>
-			</div>
-		{/if}
-	</div>
+	{/if}
 </div>
+
+<style>
+	.chart-label {
+		font-family: ui-monospace, "Cascadia Code", monospace;
+		font-size: 10px;
+		fill: #64748b;
+	}
+</style>
