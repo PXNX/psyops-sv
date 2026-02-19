@@ -21,19 +21,18 @@
 		mounted = true;
 	});
 
-	// Normalise all history once, sorted ascending
+	// ── Normalise ────────────────────────────────────────────────────────────────
 	$: allData = priceHistory
 		.map((p) => ({ x: new Date(p.recordedAt).getTime(), y: p.pricePerUnit }))
 		.sort((a, b) => a.x - b.x);
 
-	// ── Range selector ──────────────────────────────────────────────────────────
+	// ── Range ────────────────────────────────────────────────────────────────────
 	let selectedRange: Range = "1M";
 	const RANGES: Range[] = ["1D", "1W", "1M", "All"];
-
 	const RANGE_MS: Record<Range, number> = {
-		"1D": 24 * 60 * 60 * 1000,
-		"1W": 7 * 24 * 60 * 60 * 1000,
-		"1M": 30 * 24 * 60 * 60 * 1000,
+		"1D": 86_400_000,
+		"1W": 604_800_000,
+		"1M": 2_592_000_000,
 		All: Infinity
 	};
 
@@ -47,24 +46,29 @@
 	// ── Interaction ──────────────────────────────────────────────────────────────
 	let hoveredIndex: number | null = null;
 	let svgEl: SVGSVGElement;
-
-	// Reset hover when range changes
 	$: if (selectedRange) hoveredIndex = null;
 
 	// ── Dimensions ───────────────────────────────────────────────────────────────
-	let containerWidth = 640;
-	const height = 260;
-	const PAD = { top: 36, right: 12, bottom: 36, left: 12 };
-
+	let containerWidth = 390;
+	// Taller chart on narrow screens for a more immersive feel
+	$: chartHeight = containerWidth < 480 ? 220 : 260;
+	$: isMobile = containerWidth < 480;
+	// On mobile remove side padding so line spans full width edge-to-edge
+	$: PAD = {
+		top: 36,
+		right: isMobile ? 0 : 4,
+		bottom: 32,
+		left: isMobile ? 0 : 4
+	};
 	$: innerW = containerWidth - PAD.left - PAD.right;
-	$: innerH = height - PAD.top - PAD.bottom;
+	$: innerH = chartHeight - PAD.top - PAD.bottom;
 
 	// ── Scales ───────────────────────────────────────────────────────────────────
 	$: xMin = data[0]?.x ?? 0;
 	$: xMax = data[data.length - 1]?.x ?? 1;
 	$: yVals = data.map((d) => d.y);
-	$: yMin = data.length ? Math.min(...yVals) * 0.994 : 0;
-	$: yMax = data.length ? Math.max(...yVals) * 1.006 : 1;
+	$: yMin = data.length ? Math.min(...yVals) * 0.993 : 0;
+	$: yMax = data.length ? Math.max(...yVals) * 1.007 : 1;
 
 	function sx(x: number): number {
 		return PAD.left + ((x - xMin) / (xMax - xMin || 1)) * innerW;
@@ -84,7 +88,7 @@
 	$: isUp = change >= 0;
 	$: scrubX = data.length ? sx(data[activeIndex].x) : PAD.left + innerW;
 
-	// ── Split paths (colored left / gray right) ──────────────────────────────────
+	// ── Split paths ──────────────────────────────────────────────────────────────
 	$: leftData = data.slice(0, activeIndex + 1);
 	$: leftLine = leftData.map((d, i) => `${i === 0 ? "M" : "L"} ${sx(d.x).toFixed(1)} ${sy(d.y).toFixed(1)}`).join(" ");
 	$: leftArea =
@@ -101,40 +105,33 @@
 			? `${rightLine} L ${sx(rightData[rightData.length - 1].x).toFixed(1)} ${(PAD.top + innerH).toFixed(1)} L ${sx(rightData[0].x).toFixed(1)} ${(PAD.top + innerH).toFixed(1)} Z`
 			: "";
 
-	// Dotted baseline at opening price of selected range
 	$: baselineY = data.length ? sy(firstPrice) : PAD.top + innerH / 2;
 
-	// ── Y ticks ──────────────────────────────────────────────────────────────────
+	// ── Y ticks (for grid lines only, no labels) ──────────────────────────────────
 	$: yTicks = Array.from({ length: 4 }, (_, i) => {
 		const val = yMin + (i / 3) * (yMax - yMin);
-		return { val, y: sy(val) };
-	}).reverse();
+		return sy(val);
+	});
 
-	// ── X ticks: 6 marks at 0 / 20 / 40 / 60 / 80 / 100% of the time range ──────
-	$: xTicks = (() => {
-		if (data.length < 2) return [];
-		return [0, 1, 2, 3, 4, 5].map((i) => xMin + (i / 5) * (xMax - xMin));
-	})();
+	// ── X ticks: fewer on mobile ─────────────────────────────────────────────────
+	// Desktop: 6 labels (0/20/40/60/80/100%)
+	// Mobile:  4 labels (0/33/66/100%) — avoids crowding
+	$: tickCount = isMobile ? 4 : 6;
+	$: xTicks =
+		data.length < 2 ? [] : Array.from({ length: tickCount }, (_, i) => xMin + (i / (tickCount - 1)) * (xMax - xMin));
 
-	// Format x-axis label depending on selected range
+	// ── Formatting ───────────────────────────────────────────────────────────────
 	function fmtAxisDate(ts: number): string {
 		const d = new Date(ts);
-		if (selectedRange === "1D") {
+		if (selectedRange === "1D")
 			return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-		}
-		if (selectedRange === "1W") {
-			return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-		}
-		if (selectedRange === "1M") {
-			return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-		}
-		// All — show month + year
+		if (selectedRange === "1W") return d.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
+		if (selectedRange === "1M") return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 		return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
 	}
 
-	// Format tooltip date based on range granularity
 	function fmtTooltipDate(d: Date): string {
-		if (selectedRange === "1D") {
+		if (selectedRange === "1D")
 			return d.toLocaleString("en-US", {
 				month: "short",
 				day: "numeric",
@@ -142,8 +139,7 @@
 				minute: "2-digit",
 				hour12: false
 			});
-		}
-		if (selectedRange === "1W") {
+		if (selectedRange === "1W")
 			return d.toLocaleString("en-US", {
 				weekday: "short",
 				month: "short",
@@ -152,12 +148,11 @@
 				minute: "2-digit",
 				hour12: false
 			});
-		}
-		return d.toLocaleDateString("en-US", {
-			month: "short",
-			day: "numeric",
-			year: "numeric"
-		});
+		return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+	}
+
+	function fmtPrice(v: number): string {
+		return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 	}
 
 	// ── Interaction handlers ──────────────────────────────────────────────────────
@@ -167,7 +162,6 @@
 		const frac = (clientX - rect.left - PAD.left) / innerW;
 		return Math.round(Math.max(0, Math.min(1, frac)) * (data.length - 1));
 	}
-
 	function onMouseMove(e: MouseEvent) {
 		hoveredIndex = getIndex(e.clientX);
 	}
@@ -179,66 +173,73 @@
 		hoveredIndex = null;
 	}
 
-	// ── Price formatting ──────────────────────────────────────────────────────────
-	function fmtPrice(v: number) {
-		return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-	}
-
-	// ── Stable per-instance SVG IDs ───────────────────────────────────────────────
+	// ── SVG IDs ───────────────────────────────────────────────────────────────────
 	const uid = Math.random().toString(36).slice(2, 7);
 	const gradColorId = `gc-${uid}`;
 	const gradGrayId = `gg-${uid}`;
 	const clipId = `cp-${uid}`;
 
-	// Pill clamped inside chart
-	const PILL_W = 140;
+	// Pill: slightly wider on mobile for touch comfort
+	$: PILL_W = isMobile ? 150 : 140;
 	$: pillX = Math.max(PAD.left + PILL_W / 2, Math.min(PAD.left + innerW - PILL_W / 2, scrubX));
 </script>
 
-<div class="bg-slate-800/50 border border-white/5 rounded-xl p-5" bind:clientWidth={containerWidth}>
-	<!-- ── Price + change ───────────────────────────────────────────────────── -->
-	<div class="select-none">
-		<div class="flex items-end justify-between flex-wrap gap-2">
-			<div class="flex items-end gap-3 flex-wrap">
-				<span class="text-3xl font-bold text-white tabular-nums">
-					${fmtPrice(displayPrice)}
-				</span>
-				<span class="text-sm font-semibold pb-1 tabular-nums {isUp ? 'text-green-400' : 'text-red-400'}">
-					{isUp ? "▲" : "▼"}
-					{Math.abs(changePct).toFixed(2)}% ({isUp ? "+" : ""}{fmtPrice(change)})
-				</span>
-			</div>
+<!--
+  Outer wrapper: no horizontal padding on mobile so the chart bleeds to the
+  card edges. Vertical padding kept so the header breathes.
+-->
+<div class="bg-slate-800/50 border border-white/5 rounded-xl overflow-hidden" bind:clientWidth={containerWidth}>
+	<!-- ── Header ──────────────────────────────────────────────────────────── -->
+	<div class="px-4 pt-4 pb-2 select-none">
+		<!-- Price row -->
+		<div class="flex items-baseline gap-2 flex-wrap">
+			<span class="text-2xl font-bold text-white tabular-nums leading-none">
+				${fmtPrice(displayPrice)}
+			</span>
+			<span class="text-xs font-semibold tabular-nums {isUp ? 'text-green-400' : 'text-red-400'}">
+				{isUp ? "▲" : "▼"}
+				{Math.abs(changePct).toFixed(2)}% ({isUp ? "+" : ""}{fmtPrice(change)})
+			</span>
+		</div>
 
-			<!-- ── Range selector ─────────────────────────────────────────────── -->
-			<div class="flex gap-1 pb-1">
-				{#each RANGES as r}
-					<button class="range-btn" class:active={selectedRange === r} on:click={() => (selectedRange = r)}>
-						{r}
-					</button>
-				{/each}
-			</div>
+		<!-- Range pills — full-width evenly spaced on mobile -->
+		<div class="flex mt-3 gap-1 {isMobile ? 'w-full' : ''}">
+			{#each RANGES as r}
+				<button
+					class="range-btn {isMobile ? 'flex-1' : ''}"
+					class:active={selectedRange === r}
+					on:click={() => (selectedRange = r)}
+				>
+					{r}
+				</button>
+			{/each}
 		</div>
 	</div>
 
-	<!-- ── Chart ────────────────────────────────────────────────────────────── -->
+	<!-- ── Chart ───────────────────────────────────────────────────────────── -->
 	{#if !mounted}
-		<div style="height:{height}px" class="flex items-center justify-center text-gray-500 text-sm">Loading…</div>
+		<div style="height:{chartHeight}px" class="flex items-center justify-center text-gray-500 text-sm">Loading…</div>
 	{:else if data.length > 1}
+		<!--
+      touch-action:none prevents the page scrolling while finger is on the
+      chart, giving full scrub control. We rely on the parent page having
+      normal scroll outside the chart area.
+    -->
 		<svg
 			bind:this={svgEl}
 			width={containerWidth}
-			{height}
+			height={chartHeight}
 			role="img"
 			aria-label="Price chart"
 			on:mousemove={onMouseMove}
 			on:touchmove|preventDefault={onTouchMove}
 			on:mouseleave={onLeave}
 			on:touchend={onLeave}
-			style="cursor:crosshair; display:block; touch-action:pan-y; overflow:visible;"
+			style="display:block; touch-action:none; cursor:crosshair;"
 		>
 			<defs>
 				<linearGradient id={gradColorId} x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color={isUp ? "#4ade80" : "#f87171"} stop-opacity="0.22" />
+					<stop offset="0%" stop-color={isUp ? "#4ade80" : "#f87171"} stop-opacity="0.25" />
 					<stop offset="100%" stop-color={isUp ? "#4ade80" : "#f87171"} stop-opacity="0.02" />
 				</linearGradient>
 				<linearGradient id={gradGrayId} x1="0" y1="0" x2="0" y2="1">
@@ -251,19 +252,19 @@
 			</defs>
 
 			<!-- Grid lines -->
-			{#each yTicks as tick}
+			{#each yTicks as y}
 				<line
 					x1={PAD.left}
 					x2={PAD.left + innerW}
-					y1={tick.y}
-					y2={tick.y}
+					y1={y}
+					y2={y}
 					stroke="#ffffff"
-					stroke-opacity="0.04"
+					stroke-opacity="0.05"
 					stroke-width="1"
 				/>
 			{/each}
 
-			<!-- Dotted baseline at range-open price -->
+			<!-- Dotted open-price baseline -->
 			<line
 				x1={PAD.left}
 				x2={PAD.left + innerW}
@@ -272,10 +273,10 @@
 				stroke="#64748b"
 				stroke-width="1"
 				stroke-dasharray="4 4"
-				stroke-opacity="0.55"
+				stroke-opacity="0.5"
 			/>
 
-			<!-- Gray area + line (right of scrubber) -->
+			<!-- Gray right section -->
 			{#if rightArea}
 				<path d={rightArea} fill="url(#{gradGrayId})" clip-path="url(#{clipId})" />
 			{/if}
@@ -291,7 +292,7 @@
 				/>
 			{/if}
 
-			<!-- Colored area + line (up to scrubber) -->
+			<!-- Colored left section -->
 			{#if leftArea}
 				<path d={leftArea} fill="url(#{gradColorId})" clip-path="url(#{clipId})" />
 			{/if}
@@ -300,14 +301,14 @@
 					d={leftLine}
 					fill="none"
 					stroke={isUp ? "#4ade80" : "#f87171"}
-					stroke-width="2"
+					stroke-width={isMobile ? "2.5" : "2"}
 					stroke-linecap="round"
 					stroke-linejoin="round"
 					clip-path="url(#{clipId})"
 				/>
 			{/if}
 
-			<!-- Vertical scrubber line (hover only) -->
+			<!-- Scrubber line -->
 			{#if hoveredIndex !== null}
 				<line
 					x1={scrubX}
@@ -317,45 +318,46 @@
 					stroke="#94a3b8"
 					stroke-width="1"
 					stroke-dasharray="3 3"
-					stroke-opacity="0.65"
+					stroke-opacity="0.6"
 				/>
 			{/if}
 
-			<!-- Date pill above scrubber (hover only) -->
+			<!-- Date pill (inside PAD.top space) -->
 			{#if hoveredIndex !== null && displayDate}
 				<rect
 					x={pillX - PILL_W / 2}
 					y={PAD.top - 28}
 					width={PILL_W}
-					height={20}
-					rx="4"
+					height={22}
+					rx="5"
 					fill="#1e293b"
 					stroke="#334155"
 					stroke-width="1"
 				/>
-				<text x={pillX} y={PAD.top - 13} text-anchor="middle" class="date-label">
+				<text x={pillX} y={PAD.top - 12} text-anchor="middle" class="date-label">
 					{fmtTooltipDate(displayDate)}
 				</text>
 			{/if}
 
-			<!-- Dot at active point -->
+			<!-- Active dot — larger on mobile for fat-finger friendliness -->
 			{#if activePoint}
 				<circle
 					cx={scrubX}
 					cy={sy(activePoint.y)}
-					r="4"
+					r={isMobile ? 5 : 4}
 					fill={isUp ? "#4ade80" : "#f87171"}
 					stroke="#1e293b"
 					stroke-width="2"
 				/>
 			{/if}
 
-			<!-- X-axis quarter labels -->
+			<!-- X-axis labels -->
 			{#each xTicks as ts, i}
+				{@const last = i === xTicks.length - 1}
 				<text
 					x={sx(ts)}
-					y={PAD.top + innerH + 20}
-					text-anchor={i === 0 ? "start" : i === 5 ? "end" : "middle"}
+					y={PAD.top + innerH + 22}
+					text-anchor={i === 0 ? "start" : last ? "end" : "middle"}
 					class="axis-label"
 				>
 					{fmtAxisDate(ts)}
@@ -363,25 +365,32 @@
 			{/each}
 		</svg>
 	{:else}
-		<div style="height:{height}px" class="flex items-center justify-center text-gray-400 text-sm">Not enough data</div>
+		<div style="height:{chartHeight}px" class="flex items-center justify-center text-gray-400 text-sm px-4">
+			Not enough data
+		</div>
 	{/if}
 </div>
 
 <style>
 	.range-btn {
-		padding: 2px 10px;
-		border-radius: 6px;
-		font-size: 0.72rem;
+		padding: 5px 12px;
+		border-radius: 7px;
+		font-size: 0.75rem;
 		font-weight: 600;
-		letter-spacing: 0.04em;
+		letter-spacing: 0.03em;
 		background: transparent;
 		border: 1px solid transparent;
 		color: #475569;
 		cursor: pointer;
 		transition:
-			color 0.12s,
-			background 0.12s,
-			border-color 0.12s;
+			color 0.1s,
+			background 0.1s,
+			border-color 0.1s;
+		/* Minimum tap target size */
+		min-height: 34px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 	.range-btn:hover {
 		color: #94a3b8;
@@ -390,8 +399,9 @@
 	.range-btn.active {
 		color: #f1f5f9;
 		background: #1e293b;
-		border-color: #334155;
+		border-color: #475569;
 	}
+
 	.axis-label {
 		font-family: ui-monospace, "Cascadia Code", monospace;
 		font-size: 10px;
@@ -399,7 +409,7 @@
 	}
 	.date-label {
 		font-family: ui-monospace, "Cascadia Code", monospace;
-		font-size: 10px;
+		font-size: 11px;
 		fill: #cbd5e1;
 	}
 </style>
