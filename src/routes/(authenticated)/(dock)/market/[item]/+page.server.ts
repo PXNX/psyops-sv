@@ -10,14 +10,14 @@ import {
 	userWallets,
 	residences,
 	regions,
-	stateTaxes
+	stateTaxes,
+	marketListingCooldowns
 } from "$lib/server/schema";
-import { eq, and, desc, gte, sql } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import { calculateAndCollectTax } from "$lib/server/taxes";
 import type { Actions, PageServerLoad } from "./$types";
 
-// Valid resource and product types
 const RESOURCES = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
 const PRODUCTS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"];
 
@@ -25,45 +25,46 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const account = locals.account!;
 	const itemName = params.item;
 
-	// Determine item type
 	let itemType: "resource" | "product";
-	if (RESOURCES.includes(itemName)) {
-		itemType = "resource";
-	} else if (PRODUCTS.includes(itemName)) {
-		itemType = "product";
-	} else {
-		throw error(404, "Item not found");
-	}
+	if (RESOURCES.includes(itemName)) itemType = "resource";
+	else if (PRODUCTS.includes(itemName)) itemType = "product";
+	else throw error(404, "Item not found");
 
-	// Get user's residence for tax calculation
 	const [residence] = await db
-		.select({
-			regionId: residences.regionId,
-			stateId: regions.stateId
-		})
+		.select({ regionId: residences.regionId, stateId: regions.stateId })
 		.from(residences)
 		.innerJoin(regions, eq(residences.regionId, regions.id))
 		.where(eq(residences.userId, account.id))
 		.limit(1);
 
-	// Get user's wallet
-	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
+	let [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 	if (!wallet) {
-		await db.insert(userWallets).values({
-			userId: account.id,
-			balance: 10000
-		});
+		await db.insert(userWallets).values({ userId: account.id, balance: 10000 });
+		[wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 	}
 
-	// Get market statistics for this item
+	// User's inventory for this item
+	let userItemQuantity = 0;
+	if (itemType === "resource") {
+		const [inv] = await db
+			.select()
+			.from(resourceInventory)
+			.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, itemName as any)));
+		userItemQuantity = inv?.quantity ?? 0;
+	} else {
+		const [inv] = await db
+			.select()
+			.from(productInventory)
+			.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
+		userItemQuantity = inv?.quantity ?? 0;
+	}
+
 	const [statistics] = await db
 		.select()
 		.from(marketStatistics)
 		.where(and(eq(marketStatistics.itemType, itemType), eq(marketStatistics.itemName, itemName)))
 		.limit(1);
 
-	// Get price history (last 30 days)
 	const thirtyDaysAgo = new Date();
 	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -79,14 +80,16 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		)
 		.orderBy(marketPriceHistory.recordedAt);
 
-	// Get all active listings for this item
-	const listings = await db
+	// All listings ordered by price, then split
+	const allListings = await db
 		.select()
 		.from(marketListings)
 		.where(and(eq(marketListings.itemType, itemType), eq(marketListings.itemName, itemName)))
-		.orderBy(desc(marketListings.createdAt));
+		.orderBy(marketListings.pricePerUnit);
 
-	// Get market transaction tax rate
+	const myListing = allListings.find((l) => l.sellerId === account.id) ?? null;
+	const otherListings = allListings.filter((l) => l.sellerId !== account.id);
+
 	let taxRate = 0;
 	if (residence?.stateId) {
 		const [stateTax] = await db
@@ -103,57 +106,211 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		taxRate = stateTax?.taxRate || 0;
 	}
 
+	const [cooldown] = await db
+		.select()
+		.from(marketListingCooldowns)
+		.where(eq(marketListingCooldowns.userId, account.id));
+
+	let cooldownRemaining = 0;
+	if (cooldown) {
+		const hourInMs = 60 * 60 * 1000;
+		const timeSinceRemoval = Date.now() - new Date(cooldown.lastRemovedAt).getTime();
+		cooldownRemaining = Math.max(0, hourInMs - timeSinceRemoval);
+	}
+
 	return {
 		wallet: wallet || { balance: 10000, userId: account.id },
 		itemName,
 		itemType,
 		statistics,
 		priceHistory,
-		listings,
-		taxRate
+		myListing,
+		otherListings,
+		taxRate,
+		userItemQuantity,
+		cooldownRemaining
 	};
 };
 
 export const actions: Actions = {
-	buyListing: async ({ request, locals, params }) => {
+	createListing: async ({ request, locals, params }) => {
+		const account = locals.account!;
+		const itemName = params.item;
+
+		let itemType: "resource" | "product";
+		if (RESOURCES.includes(itemName)) itemType = "resource";
+		else if (PRODUCTS.includes(itemName)) itemType = "product";
+		else return fail(400, { message: "Invalid item" });
+
+		// Enforce one listing per user per item
+		const [existingListing] = await db
+			.select()
+			.from(marketListings)
+			.where(
+				and(
+					eq(marketListings.sellerId, account.id),
+					eq(marketListings.itemType, itemType),
+					eq(marketListings.itemName, itemName)
+				)
+			);
+
+		if (existingListing) {
+			return fail(400, { message: "You already have an active listing for this item." });
+		}
+
+		// Check cooldown
+		const [cooldown] = await db
+			.select()
+			.from(marketListingCooldowns)
+			.where(eq(marketListingCooldowns.userId, account.id));
+
+		if (cooldown) {
+			const hourInMs = 60 * 60 * 1000;
+			const timeSinceRemoval = Date.now() - new Date(cooldown.lastRemovedAt).getTime();
+			if (timeSinceRemoval < hourInMs) {
+				const remainingMinutes = Math.ceil((hourInMs - timeSinceRemoval) / 60000);
+				return fail(429, {
+					message: `Wait ${remainingMinutes} more minutes before creating a new listing`,
+					cooldownRemaining: hourInMs - timeSinceRemoval
+				});
+			}
+		}
+
+		const formData = await request.formData();
+		const quantity = parseInt(formData.get("quantity") as string);
+		const pricePerUnit = parseInt(formData.get("pricePerUnit") as string);
+
+		if (!quantity || quantity < 1 || !pricePerUnit || pricePerUnit < 1) {
+			return fail(400, { message: "Invalid listing data" });
+		}
+
+		if (itemType === "resource") {
+			const [resource] = await db
+				.select()
+				.from(resourceInventory)
+				.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, itemName as any)));
+
+			if (!resource || resource.quantity < quantity) return fail(400, { message: "Insufficient resources" });
+
+			await db
+				.update(resourceInventory)
+				.set({ quantity: resource.quantity - quantity, updatedAt: new Date() })
+				.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, itemName as any)));
+		} else {
+			const [product] = await db
+				.select()
+				.from(productInventory)
+				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
+
+			if (!product || product.quantity < quantity) return fail(400, { message: "Insufficient products" });
+
+			await db
+				.update(productInventory)
+				.set({ quantity: product.quantity - quantity, updatedAt: new Date() })
+				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
+		}
+
+		await db.insert(marketListings).values({ sellerId: account.id, itemType, itemName, quantity, pricePerUnit });
+		await updateMarketStatistics(itemType, itemName);
+		return { success: true, message: "Listing created" };
+	},
+
+	updateListing: async ({ request, locals, params }) => {
+		const account = locals.account!;
+		const itemName = params.item;
+
+		let itemType: "resource" | "product";
+		if (RESOURCES.includes(itemName)) itemType = "resource";
+		else if (PRODUCTS.includes(itemName)) itemType = "product";
+		else return fail(400, { message: "Invalid item" });
+
+		const formData = await request.formData();
+		const listingId = parseInt(formData.get("listingId") as string);
+		const newQuantity = parseInt(formData.get("quantity") as string);
+		const newPrice = parseInt(formData.get("pricePerUnit") as string);
+
+		const [listing] = await db.select().from(marketListings).where(eq(marketListings.id, listingId));
+		if (!listing || listing.sellerId !== account.id) return fail(403, { message: "Not your listing" });
+		if (!newQuantity || newQuantity < 1 || !newPrice || newPrice < 1) return fail(400, { message: "Invalid data" });
+
+		const quantityDiff = newQuantity - listing.quantity;
+
+		if (quantityDiff !== 0) {
+			if (itemType === "resource") {
+				const [inv] = await db
+					.select()
+					.from(resourceInventory)
+					.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, itemName as any)));
+
+				if (quantityDiff > 0 && (!inv || inv.quantity < quantityDiff)) {
+					return fail(400, { message: "Insufficient items in inventory" });
+				}
+
+				const newInvQty = (inv?.quantity ?? 0) - quantityDiff;
+				if (inv) {
+					await db
+						.update(resourceInventory)
+						.set({ quantity: newInvQty, updatedAt: new Date() })
+						.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, itemName as any)));
+				} else {
+					await db
+						.insert(resourceInventory)
+						.values({ userId: account.id, resourceType: itemName as any, quantity: newInvQty });
+				}
+			} else {
+				const [inv] = await db
+					.select()
+					.from(productInventory)
+					.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
+
+				if (quantityDiff > 0 && (!inv || inv.quantity < quantityDiff)) {
+					return fail(400, { message: "Insufficient items in inventory" });
+				}
+
+				const newInvQty = (inv?.quantity ?? 0) - quantityDiff;
+				if (inv) {
+					await db
+						.update(productInventory)
+						.set({ quantity: newInvQty, updatedAt: new Date() })
+						.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
+				} else {
+					await db
+						.insert(productInventory)
+						.values({ userId: account.id, productType: itemName as any, quantity: newInvQty });
+				}
+			}
+		}
+
+		await db
+			.update(marketListings)
+			.set({ quantity: newQuantity, pricePerUnit: newPrice })
+			.where(eq(marketListings.id, listingId));
+
+		await updateMarketStatistics(itemType, itemName);
+		return { success: true, message: "Listing updated" };
+	},
+
+	buyListing: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
-		const itemName = params.item;
 
 		const listingId = parseInt(formData.get("listingId") as string);
 		const quantity = parseInt(formData.get("quantity") as string);
 
 		const [listing] = await db.select().from(marketListings).where(eq(marketListings.id, listingId));
-
-		if (!listing) {
-			return fail(404, { message: "Listing not found" });
-		}
-
-		if (listing.sellerId === account.id) {
-			return fail(400, { message: "Cannot buy your own listing" });
-		}
-
-		if (quantity < 1 || quantity > listing.quantity) {
-			return fail(400, { message: "Invalid quantity" });
-		}
+		if (!listing) return fail(404, { message: "Listing not found" });
+		if (listing.sellerId === account.id) return fail(400, { message: "Cannot buy your own listing" });
+		if (quantity < 1 || quantity > listing.quantity) return fail(400, { message: "Invalid quantity" });
 
 		const [buyerResidence] = await db
-			.select({
-				stateId: regions.stateId
-			})
+			.select({ stateId: regions.stateId })
 			.from(residences)
 			.innerJoin(regions, eq(residences.regionId, regions.id))
 			.where(eq(residences.userId, account.id))
 			.limit(1);
 
 		const grossAmount = listing.pricePerUnit * quantity;
-
-		let taxCalculation = {
-			grossAmount,
-			taxAmount: 0,
-			netAmount: grossAmount,
-			applicableTaxes: []
-		};
+		let taxCalculation = { grossAmount, taxAmount: 0, netAmount: grossAmount, applicableTaxes: [] as any[] };
 
 		if (buyerResidence?.stateId) {
 			taxCalculation = await calculateAndCollectTax(
@@ -165,37 +322,22 @@ export const actions: Actions = {
 		}
 
 		const totalCost = taxCalculation.netAmount + taxCalculation.taxAmount;
-
 		const [buyerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
-		if (!buyerWallet || buyerWallet.balance < totalCost) {
-			return fail(400, { message: "Insufficient funds" });
-		}
+		if (!buyerWallet || buyerWallet.balance < totalCost) return fail(400, { message: "Insufficient funds" });
 
 		const [sellerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
+		if (!sellerWallet) return fail(500, { message: "Seller wallet not found" });
 
-		if (!sellerWallet) {
-			return fail(500, { message: "Seller wallet not found" });
-		}
-
-		// Update wallets
 		await db
 			.update(userWallets)
-			.set({
-				balance: buyerWallet.balance - totalCost,
-				updatedAt: new Date()
-			})
+			.set({ balance: buyerWallet.balance - totalCost, updatedAt: new Date() })
 			.where(eq(userWallets.userId, account.id));
-
 		await db
 			.update(userWallets)
-			.set({
-				balance: sellerWallet.balance + taxCalculation.netAmount,
-				updatedAt: new Date()
-			})
+			.set({ balance: sellerWallet.balance + taxCalculation.netAmount, updatedAt: new Date() })
 			.where(eq(userWallets.userId, listing.sellerId));
 
-		// Update inventory
 		if (listing.itemType === "resource") {
 			const [existing] = await db
 				.select()
@@ -203,77 +345,58 @@ export const actions: Actions = {
 				.where(
 					and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, listing.itemName as any))
 				);
-
 			if (existing) {
 				await db
 					.update(resourceInventory)
-					.set({
-						quantity: existing.quantity + quantity,
-						updatedAt: new Date()
-					})
+					.set({ quantity: existing.quantity + quantity, updatedAt: new Date() })
 					.where(
 						and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, listing.itemName as any))
 					);
 			} else {
-				await db.insert(resourceInventory).values({
-					userId: account.id,
-					resourceType: listing.itemName as any,
-					quantity
-				});
+				await db
+					.insert(resourceInventory)
+					.values({ userId: account.id, resourceType: listing.itemName as any, quantity });
 			}
-		} else if (listing.itemType === "product") {
+		} else {
 			const [existing] = await db
 				.select()
 				.from(productInventory)
 				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any)));
-
 			if (existing) {
 				await db
 					.update(productInventory)
-					.set({
-						quantity: existing.quantity + quantity,
-						updatedAt: new Date()
-					})
+					.set({ quantity: existing.quantity + quantity, updatedAt: new Date() })
 					.where(
 						and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any))
 					);
 			} else {
-				await db.insert(productInventory).values({
-					userId: account.id,
-					productType: listing.itemName as any,
-					quantity
-				});
+				await db
+					.insert(productInventory)
+					.values({ userId: account.id, productType: listing.itemName as any, quantity });
 			}
 		}
 
-		// Record price history
-		await db.insert(marketPriceHistory).values({
-			itemType: listing.itemType,
-			itemName: listing.itemName,
-			pricePerUnit: listing.pricePerUnit,
-			quantity,
-			transactionType: "sale"
-		});
+		await db
+			.insert(marketPriceHistory)
+			.values({
+				itemType: listing.itemType,
+				itemName: listing.itemName,
+				pricePerUnit: listing.pricePerUnit,
+				quantity,
+				transactionType: "sale"
+			});
 
-		// Update or delete listing
 		if (quantity === listing.quantity) {
 			await db.delete(marketListings).where(eq(marketListings.id, listingId));
 		} else {
 			await db
 				.update(marketListings)
-				.set({
-					quantity: listing.quantity - quantity
-				})
+				.set({ quantity: listing.quantity - quantity })
 				.where(eq(marketListings.id, listingId));
 		}
 
-		// Update market statistics
 		await updateMarketStatistics(listing.itemType, listing.itemName);
-
-		return {
-			success: true,
-			message: "Purchase successful"
-		};
+		return { success: true, message: "Purchase successful" };
 	},
 
 	removeListing: async ({ request, locals }) => {
@@ -282,16 +405,9 @@ export const actions: Actions = {
 		const listingId = parseInt(formData.get("listingId") as string);
 
 		const [listing] = await db.select().from(marketListings).where(eq(marketListings.id, listingId));
+		if (!listing) return fail(404, { message: "Listing not found" });
+		if (listing.sellerId !== account.id) return fail(403, { message: "Not your listing" });
 
-		if (!listing) {
-			return fail(404, { message: "Listing not found" });
-		}
-
-		if (listing.sellerId !== account.id) {
-			return fail(403, { message: "Not your listing" });
-		}
-
-		// Return items to inventory
 		if (listing.itemType === "resource") {
 			const [existing] = await db
 				.select()
@@ -299,62 +415,57 @@ export const actions: Actions = {
 				.where(
 					and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, listing.itemName as any))
 				);
-
 			if (existing) {
 				await db
 					.update(resourceInventory)
-					.set({
-						quantity: existing.quantity + listing.quantity,
-						updatedAt: new Date()
-					})
+					.set({ quantity: existing.quantity + listing.quantity, updatedAt: new Date() })
 					.where(
 						and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, listing.itemName as any))
 					);
 			} else {
-				await db.insert(resourceInventory).values({
-					userId: account.id,
-					resourceType: listing.itemName as any,
-					quantity: listing.quantity
-				});
+				await db
+					.insert(resourceInventory)
+					.values({ userId: account.id, resourceType: listing.itemName as any, quantity: listing.quantity });
 			}
-		} else if (listing.itemType === "product") {
+		} else {
 			const [existing] = await db
 				.select()
 				.from(productInventory)
 				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any)));
-
 			if (existing) {
 				await db
 					.update(productInventory)
-					.set({
-						quantity: existing.quantity + listing.quantity,
-						updatedAt: new Date()
-					})
+					.set({ quantity: existing.quantity + listing.quantity, updatedAt: new Date() })
 					.where(
 						and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any))
 					);
 			} else {
-				await db.insert(productInventory).values({
-					userId: account.id,
-					productType: listing.itemName as any,
-					quantity: listing.quantity
-				});
+				await db
+					.insert(productInventory)
+					.values({ userId: account.id, productType: listing.itemName as any, quantity: listing.quantity });
 			}
 		}
 
 		await db.delete(marketListings).where(eq(marketListings.id, listingId));
 
-		// Update market statistics
-		await updateMarketStatistics(listing.itemType, listing.itemName);
+		const [existingCooldown] = await db
+			.select()
+			.from(marketListingCooldowns)
+			.where(eq(marketListingCooldowns.userId, account.id));
+		if (existingCooldown) {
+			await db
+				.update(marketListingCooldowns)
+				.set({ lastRemovedAt: new Date() })
+				.where(eq(marketListingCooldowns.userId, account.id));
+		} else {
+			await db.insert(marketListingCooldowns).values({ userId: account.id, lastRemovedAt: new Date() });
+		}
 
-		return {
-			success: true,
-			message: "Listing removed successfully"
-		};
+		await updateMarketStatistics(listing.itemType, listing.itemName);
+		return { success: true, message: "Listing removed. Wait 1 hour before creating a new listing." };
 	}
 };
 
-// Helper function to update market statistics
 async function updateMarketStatistics(itemType: string, itemName: string) {
 	const listings = await db
 		.select()
@@ -362,7 +473,6 @@ async function updateMarketStatistics(itemType: string, itemName: string) {
 		.where(and(eq(marketListings.itemType, itemType), eq(marketListings.itemName, itemName)));
 
 	if (listings.length === 0) {
-		// Delete statistics if no listings exist
 		await db
 			.delete(marketStatistics)
 			.where(and(eq(marketStatistics.itemType, itemType), eq(marketStatistics.itemName, itemName)));
@@ -393,14 +503,16 @@ async function updateMarketStatistics(itemType: string, itemName: string) {
 			})
 			.where(and(eq(marketStatistics.itemType, itemType), eq(marketStatistics.itemName, itemName)));
 	} else {
-		await db.insert(marketStatistics).values({
-			itemType,
-			itemName,
-			currentAvgPrice: avgPrice,
-			lowestPrice,
-			highestPrice,
-			totalVolume,
-			activeListings: listings.length
-		});
+		await db
+			.insert(marketStatistics)
+			.values({
+				itemType,
+				itemName,
+				currentAvgPrice: avgPrice,
+				lowestPrice,
+				highestPrice,
+				totalVolume,
+				activeListings: listings.length
+			});
 	}
 }
