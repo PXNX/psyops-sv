@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/(dock)/transactions/+page.server.ts
 import { db } from "$lib/server/db";
-import { transactionHistory, userProfiles, accounts } from "$lib/server/schema";
-import { eq, sql, desc } from "drizzle-orm";
+import { transactionHistory, userProfiles, accounts, userWallets } from "$lib/server/schema";
+import { eq, sql, desc, gte } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
 const PAGE_SIZE = 20;
@@ -44,6 +44,54 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         .limit(PAGE_SIZE)
         .offset(offset);
 
+    // Get current balance
+    const [wallet] = await db
+        .select({ balance: userWallets.balance })
+        .from(userWallets)
+        .where(eq(userWallets.userId, account.id));
+
+    // Get analytics data (last 30 days)
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    const recentTransactions = await db
+        .select({
+            transactionType: transactionHistory.transactionType,
+            amount: transactionHistory.amount,
+            createdAt: transactionHistory.createdAt
+        })
+        .from(transactionHistory)
+        .where(
+            sql`${transactionHistory.userId} = ${account.id} AND ${transactionHistory.createdAt} >= ${thirtyDaysAgo}`
+        )
+        .orderBy(desc(transactionHistory.createdAt));
+
+    // Calculate analytics
+    let totalIncome = 0;
+    let totalExpenses = 0;
+    const categoryBreakdown: Record<string, { income: number; expenses: number }> = {};
+
+    for (const tx of recentTransactions) {
+        const amount = Number(tx.amount);
+
+        if (amount > 0) {
+            totalIncome += amount;
+        } else {
+            totalExpenses += Math.abs(amount);
+        }
+
+        // Category breakdown
+        if (!categoryBreakdown[tx.transactionType]) {
+            categoryBreakdown[tx.transactionType] = { income: 0, expenses: 0 };
+        }
+
+        if (amount > 0) {
+            categoryBreakdown[tx.transactionType].income += amount;
+        } else {
+            categoryBreakdown[tx.transactionType].expenses += Math.abs(amount);
+        }
+    }
+
     // Format transactions for display
     const formattedTransactions = transactions.map((tx) => ({
         id: tx.id,
@@ -78,6 +126,18 @@ export const load: PageServerLoad = async ({ locals, url }) => {
             pageSize: PAGE_SIZE,
             hasNextPage: page < totalPages,
             hasPreviousPage: page > 1
+        },
+        analytics: {
+            currentBalance: wallet ? Number(wallet.balance) : 0,
+            totalIncome,
+            totalExpenses,
+            netChange: totalIncome - totalExpenses,
+            categoryBreakdown: Object.entries(categoryBreakdown).map(([type, data]) => ({
+                type,
+                income: data.income,
+                expenses: data.expenses,
+                net: data.income - data.expenses
+            }))
         }
     };
 };

@@ -82,6 +82,38 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	});
 
+	// Get author logos for articles
+	const articlesWithLogos = await Promise.all(
+		recentArticles.map(async (article) => {
+			let authorLogoUrl = null;
+			if (article.author.profile?.logo) {
+				const logoFile = await db.query.files.findFirst({
+					where: eq(files.id, article.author.profile.logo)
+				});
+				if (logoFile) {
+					try {
+						authorLogoUrl = await getSignedDownloadUrl(logoFile.key);
+					} catch {
+						authorLogoUrl = null;
+					}
+				}
+			}
+			return { ...article, authorLogoUrl };
+		})
+	);
+
+	// Get staff count
+	const allStaff = await db.query.journalists.findMany({
+		where: eq(journalists.newspaperId, newspaperId)
+	});
+	const staffCount = allStaff.length;
+
+	// Get subscriber count
+	const subscriptions = await db.query.newspaperSubscriptions.findMany({
+		where: eq(newspaperSubscriptions.newspaperId, newspaperId)
+	});
+	const subscriberCount = subscriptions.length;
+
 	// Check if current user is a journalist
 	let userRole: "owner" | "editor" | "author" | null = null;
 	let isSubscribed = false;
@@ -114,15 +146,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			name: owner.user.profile?.name ?? "Unknown",
 			logoUrl: ownerLogoUrl
 		},
-		articles: recentArticles.map((article) => ({
+		articles: articlesWithLogos.map((article) => ({
 			id: article.id,
 			title: article.title,
 			publishDate: article.createdAt,
 			upvoteCount: article.upvotes.length,
-			authorName: article.author.profile?.name ?? "Unknown"
+			authorName: article.author.profile?.name ?? "Unknown",
+			authorLogo: article.authorLogoUrl
 		})),
 		userRole,
-		isSubscribed
+		isSubscribed,
+		staffCount,
+		subscriberCount
 	};
 };
 
