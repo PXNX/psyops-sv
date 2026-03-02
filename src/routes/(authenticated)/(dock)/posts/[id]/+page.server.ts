@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(fullscreen)/posts/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { articles, accounts, newspapers, upvotes, files, userProfiles } from "$lib/server/schema";
+import { articles, accounts, newspapers, upvotes, files, userProfiles, articleViews } from "$lib/server/schema";
 import { eq, sql, and } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
@@ -46,6 +46,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.where(eq(upvotes.articleId, articleId))
 			.limit(1);
 		hasUpvoted = !!upvote;
+	}
+
+	// Track article view
+	// Only track if user is not the author
+	if (!locals.account || locals.account.id !== articleData.authorId) {
+		await db.insert(articleViews).values({
+			articleId,
+			userId: locals.account?.id || null
+		});
 	}
 
 	return {

@@ -1,9 +1,9 @@
 // src/routes/(authenticated)/(dock)/newspaper/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { journalists, newspapers, files, userProfiles, articles } from "$lib/server/schema";
-import { error } from "@sveltejs/kit";
+import { journalists, newspapers, files, userProfiles, articles, newspaperSubscriptions } from "$lib/server/schema";
+import { error, fail } from "@sveltejs/kit";
 import { and, eq, desc } from "drizzle-orm";
-import type { PageServerLoad } from "./$types";
+import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -84,11 +84,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if current user is a journalist
 	let userRole: "owner" | "editor" | "author" | null = null;
+	let isSubscribed = false;
 	if (account) {
 		const membership = await db.query.journalists.findFirst({
 			where: and(eq(journalists.userId, account.id), eq(journalists.newspaperId, newspaperId))
 		});
 		userRole = membership?.rank ?? null;
+
+		// Check if user is subscribed
+		const subscription = await db.query.newspaperSubscriptions.findFirst({
+			where: and(
+				eq(newspaperSubscriptions.userId, account.id),
+				eq(newspaperSubscriptions.newspaperId, newspaperId)
+			)
+		});
+		isSubscribed = !!subscription;
 	}
 
 	return {
@@ -111,6 +121,59 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			upvoteCount: article.upvotes.length,
 			authorName: article.author.profile?.name ?? "Unknown"
 		})),
-		userRole
+		userRole,
+		isSubscribed
 	};
+};
+
+export const actions: Actions = {
+	subscribe: async ({ params, locals }) => {
+		const account = locals.account;
+		if (!account) {
+			return fail(401, { error: "Unauthorized" });
+		}
+
+		const newspaperId = parseInt(params.id);
+
+		// Check if already subscribed
+		const existing = await db.query.newspaperSubscriptions.findFirst({
+			where: and(
+				eq(newspaperSubscriptions.userId, account.id),
+				eq(newspaperSubscriptions.newspaperId, newspaperId)
+			)
+		});
+
+		if (existing) {
+			return fail(400, { error: "Already subscribed" });
+		}
+
+		// Create subscription
+		await db.insert(newspaperSubscriptions).values({
+			userId: account.id,
+			newspaperId
+		});
+
+		return { success: true };
+	},
+
+	unsubscribe: async ({ params, locals }) => {
+		const account = locals.account;
+		if (!account) {
+			return fail(401, { error: "Unauthorized" });
+		}
+
+		const newspaperId = parseInt(params.id);
+
+		// Delete subscription
+		await db
+			.delete(newspaperSubscriptions)
+			.where(
+				and(
+					eq(newspaperSubscriptions.userId, account.id),
+					eq(newspaperSubscriptions.newspaperId, newspaperId)
+				)
+			);
+
+		return { success: true };
+	}
 };
