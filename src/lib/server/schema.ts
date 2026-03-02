@@ -488,7 +488,8 @@ export const journalistsRelations = relations(journalists, ({ one }) => ({
 // Update your newspapersRelations to properly reference journalists
 export const newspapersRelations = relations(newspapers, ({ many }) => ({
 	journalists: many(journalists),
-	articles: many(articles)
+	articles: many(articles),
+	subscriptions: many(newspaperSubscriptions)
 }));
 
 export const articles = pgTable("articles", {
@@ -516,6 +517,42 @@ export const upvotes = pgTable(
 			.references(() => articles.id, { onDelete: "cascade" })
 	},
 	(t) => ({ userArticleIdx: uniqueIndex("user_article_index").on(t.userId, t.articleId) })
+);
+
+// Newspaper subscriptions
+export const newspaperSubscriptions = pgTable(
+	"newspaper_subscriptions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		newspaperId: integer("newspaper_id")
+			.notNull()
+			.references(() => newspapers.id, { onDelete: "cascade" }),
+		subscribedAt: timestamp("subscribed_at").defaultNow().notNull()
+	},
+	(t) => ({
+		userNewspaperIdx: uniqueIndex("idx_user_newspaper_subscription").on(t.userId, t.newspaperId),
+		newspaperIdx: index("idx_subscription_newspaper").on(t.newspaperId)
+	})
+);
+
+// Article views for tracking post views
+export const articleViews = pgTable(
+	"article_views",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		articleId: integer("article_id")
+			.notNull()
+			.references(() => articles.id, { onDelete: "cascade" }),
+		userId: text("user_id").references(() => accounts.id, { onDelete: "set null" }), // null for anonymous views
+		viewedAt: timestamp("viewed_at").defaultNow().notNull()
+	},
+	(t) => ({
+		articleIdx: index("idx_article_views_article").on(t.articleId),
+		viewedAtIdx: index("idx_article_views_viewed_at").on(t.viewedAt)
+	})
 );
 
 // --- ECONOMY: COMPANIES & PRODUCTION ---
@@ -1126,7 +1163,8 @@ export const militaryUnitsRelations = relations(militaryUnits, ({ one }) => ({
 export const articlesRelations = relations(articles, ({ one, many }) => ({
 	author: one(accounts, { fields: [articles.authorId], references: [accounts.id] }),
 	newspaper: one(newspapers, { fields: [articles.newspaperId], references: [newspapers.id] }),
-	upvotes: many(upvotes)
+	upvotes: many(upvotes),
+	views: many(articleViews)
 }));
 
 export const upvotesRelations = relations(upvotes, ({ one }) => ({
@@ -1137,6 +1175,28 @@ export const upvotesRelations = relations(upvotes, ({ one }) => ({
 	article: one(articles, {
 		fields: [upvotes.articleId],
 		references: [articles.id]
+	})
+}));
+
+export const newspaperSubscriptionsRelations = relations(newspaperSubscriptions, ({ one }) => ({
+	user: one(accounts, {
+		fields: [newspaperSubscriptions.userId],
+		references: [accounts.id]
+	}),
+	newspaper: one(newspapers, {
+		fields: [newspaperSubscriptions.newspaperId],
+		references: [newspapers.id]
+	})
+}));
+
+export const articleViewsRelations = relations(articleViews, ({ one }) => ({
+	article: one(articles, {
+		fields: [articleViews.articleId],
+		references: [articles.id]
+	}),
+	user: one(accounts, {
+		fields: [articleViews.userId],
+		references: [accounts.id]
 	})
 }));
 
@@ -2259,3 +2319,5 @@ export const proposalBorderDetailsRelations = relations(proposalBorderDetails, (
 export type ProposalTaxDetails = typeof proposalTaxDetails.$inferSelect;
 export type ProposalBuildingDetails = typeof proposalBuildingDetails.$inferSelect;
 export type ProposalBorderDetails = typeof proposalBorderDetails.$inferSelect;
+export type NewspaperSubscription = typeof newspaperSubscriptions.$inferSelect;
+export type ArticleView = typeof articleViews.$inferSelect;

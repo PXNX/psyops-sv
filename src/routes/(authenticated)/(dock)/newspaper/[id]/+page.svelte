@@ -8,8 +8,13 @@
 	import MdiNewspaper from "~icons/mdi/newspaper";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
+	import MdiBell from "~icons/mdi/bell";
+	import MdiBellOff from "~icons/mdi/bell-off";
+	import MdiChartLine from "~icons/mdi/chart-line";
+	import { enhance } from "$app/forms";
 
 	let { data } = $props();
+	let isSubscribing = $state(false);
 
 	function formatDate(date: Date) {
 		return new Date(date).toLocaleDateString("en-US", {
@@ -55,7 +60,35 @@
 </div>
 
 <!-- Action Buttons -->
-<div class="flex space-x-1 px-4 mt-4">
+<div class="flex flex-wrap gap-2 px-4 mt-4">
+	<!-- Subscribe/Unsubscribe Button - Show prominently -->
+	<form method="POST" action="?/{data.isSubscribed ? 'unsubscribe' : 'subscribe'}" use:enhance={() => {
+		isSubscribing = true;
+		return async ({ update }) => {
+			await update();
+			isSubscribing = false;
+		};
+	}}>
+		<button
+			type="submit"
+			class="btn {data.isSubscribed ? 'btn-ghost' : 'btn-primary'} btn-sm gap-2"
+			disabled={isSubscribing}
+		>
+			{#if isSubscribing}
+				<span class="loading loading-spinner loading-xs"></span>
+				{data.isSubscribed ? 'Unsubscribing...' : 'Subscribing...'}
+			{:else if data.isSubscribed}
+				<MdiBellOff />
+				Unsubscribe
+			{:else}
+				<MdiBell />
+				Subscribe
+			{/if}
+		</button>
+	</form>
+
+	<div class="flex space-x-1">
+
 	<button class="btn btn-ghost btn-circle" title="Share">
 		<FluentShareAndroid20Filled />
 	</button>
@@ -64,12 +97,19 @@
 		<FluentPeople20Filled />
 	</a>
 
+	{#if data.userRole === "owner" || data.userRole === "editor"}
+		<a class="btn btn-ghost btn-circle" href="/newspaper/{data.newspaper.id}/statistics" role="button" title="Statistics">
+			<MdiChartLine />
+		</a>
+	{/if}
+
 	{#if data.userRole === "owner"}
 		<a class="btn btn-ghost btn-circle" href="/newspaper/{data.newspaper.id}/edit" role="button" title="Edit">
 			<FluentEmojiGear />
 		</a>
 	{/if}
-</div>
+	</div>
+	</div>
 
 <!-- Recent Articles -->
 <div class="mx-4 mt-6 space-y-4">
@@ -84,7 +124,7 @@
 		{#each data.articles as article}
 			<a
 				class="block p-4 bg-slate-800/50 hover:bg-slate-700/50 border border-white/5 rounded-xl transition-colors"
-				href="/article/{article.id}"
+				href="/posts/{article.id}"
 			>
 				<h4 class="text-lg font-bold text-white mb-2">{article.title}</h4>
 				<div class="flex items-center gap-4 text-sm text-gray-400">
