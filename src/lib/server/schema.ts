@@ -76,7 +76,20 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
 	"newspaper_edit",
 	"settings_name_change",
 	"settings_logo_change",
-	"tax_payment"
+	"tax_payment",
+	"state_resource_purchase",
+	"state_resource_sale",
+	"state_construction"
+]);
+
+export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_transaction_type", [
+	"resource_purchase",
+	"resource_sale",
+	"construction",
+	"tax_collection",
+	"infrastructure",
+	"military",
+	"other"
 ]);
 
 export const battlePhaseEnum = pgEnum("battle_phase", [
@@ -948,6 +961,67 @@ export const taxRevenue = pgTable("tax_revenue", {
 	collectedAt: timestamp("collected_at").defaultNow().notNull()
 });
 
+// State resource inventory
+export const stateResourceInventory = pgTable(
+	"state_resource_inventory",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		resourceType: resourceTypeEnum("resource_type").notNull(),
+		quantity: integer("quantity").default(0).notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({ stateResourceIdx: uniqueIndex("idx_state_resource").on(t.stateId, t.resourceType) })
+);
+
+// State product inventory
+export const stateProductInventory = pgTable(
+	"state_product_inventory",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		productType: productTypeEnum("product_type").notNull(),
+		quantity: integer("quantity").default(0).notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({ stateProductIdx: uniqueIndex("idx_state_product").on(t.stateId, t.productType) })
+);
+
+// Government budget transactions
+export const governmentBudgetTransactions = pgTable(
+	"government_budget_transactions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		transactionType: governmentBudgetTransactionTypeEnum("transaction_type").notNull(),
+		amount: bigint("amount", { mode: "number" }).notNull(),
+		balanceAfter: bigint("balance_after", { mode: "number" }).notNull(),
+		description: text("description").notNull(),
+		// Who authorized the transaction
+		authorizedBy: text("authorized_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		// Optional related entity data
+		itemType: varchar("item_type", { length: 20 }), // "resource" or "product"
+		itemName: varchar("item_name", { length: 50 }),
+		quantity: integer("quantity"),
+		pricePerUnit: bigint("price_per_unit", { mode: "number" }),
+		metadata: text("metadata"), // JSON string for additional data
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_gov_transaction_state").on(t.stateId),
+		createdAtIdx: index("idx_gov_transaction_created_at").on(t.createdAt),
+		stateCreatedIdx: index("idx_gov_transaction_state_created").on(t.stateId, t.createdAt)
+	})
+);
+
 // --- INFRASTRUCTURE: ENERGY & POWER ---
 export const stateEnergy = pgTable("state_energy", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
@@ -1807,6 +1881,31 @@ export const stateTreasuryRelations = relations(stateTreasury, ({ one }) => ({
 	})
 }));
 
+export const stateResourceInventoryRelations = relations(stateResourceInventory, ({ one }) => ({
+	state: one(states, {
+		fields: [stateResourceInventory.stateId],
+		references: [states.id]
+	})
+}));
+
+export const stateProductInventoryRelations = relations(stateProductInventory, ({ one }) => ({
+	state: one(states, {
+		fields: [stateProductInventory.stateId],
+		references: [states.id]
+	})
+}));
+
+export const governmentBudgetTransactionsRelations = relations(governmentBudgetTransactions, ({ one }) => ({
+	state: one(states, {
+		fields: [governmentBudgetTransactions.stateId],
+		references: [states.id]
+	}),
+	authorizer: one(accounts, {
+		fields: [governmentBudgetTransactions.authorizedBy],
+		references: [accounts.id]
+	})
+}));
+
 export const stateEnergyRelations = relations(stateEnergy, ({ one }) => ({
 	state: one(states, {
 		fields: [stateEnergy.stateId],
@@ -2349,3 +2448,6 @@ export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one })
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NewspaperSubscription = typeof newspaperSubscriptions.$inferSelect;
 export type ArticleView = typeof articleViews.$inferSelect;
+export type StateResourceInventory = typeof stateResourceInventory.$inferSelect;
+export type StateProductInventory = typeof stateProductInventory.$inferSelect;
+export type GovernmentBudgetTransaction = typeof governmentBudgetTransactions.$inferSelect;
