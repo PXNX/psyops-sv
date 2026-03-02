@@ -2319,5 +2319,33 @@ export const proposalBorderDetailsRelations = relations(proposalBorderDetails, (
 export type ProposalTaxDetails = typeof proposalTaxDetails.$inferSelect;
 export type ProposalBuildingDetails = typeof proposalBuildingDetails.$inferSelect;
 export type ProposalBorderDetails = typeof proposalBorderDetails.$inferSelect;
+// Push notification subscriptions
+export const pushSubscriptions = pgTable(
+	"push_subscriptions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		endpoint: text("endpoint").notNull(),
+		p256dhKey: text("p256dh_key").notNull(),
+		authKey: text("auth_key").notNull(),
+		userAgent: text("user_agent"),
+		subscribedAt: timestamp("subscribed_at").defaultNow().notNull()
+	},
+	(t) => ({
+		endpointIdx: uniqueIndex("idx_push_endpoint").on(t.endpoint),
+		userIdx: index("idx_push_user").on(t.userId)
+	})
+);
+
+export const pushSubscriptionsRelations = relations(pushSubscriptions, ({ one }) => ({
+	user: one(accounts, {
+		fields: [pushSubscriptions.userId],
+		references: [accounts.id]
+	})
+}));
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type NewspaperSubscription = typeof newspaperSubscriptions.$inferSelect;
 export type ArticleView = typeof articleViews.$inferSelect;

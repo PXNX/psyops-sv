@@ -82,3 +82,62 @@ self.addEventListener("fetch", (event) => {
 
 	event.respondWith(respond());
 });
+
+// Handle push notifications
+self.addEventListener("push", (event) => {
+	let notificationData = {
+		title: "New Notification",
+		body: "You have a new notification",
+		icon: "/favicon.png",
+		badge: "/badge.png",
+		data: {}
+	};
+
+	if (event.data) {
+		try {
+			notificationData = event.data.json();
+		} catch (error) {
+			console.error("Error parsing push notification:", error);
+		}
+	}
+
+	event.waitUntil(
+		self.registration.showNotification(notificationData.title, {
+			body: notificationData.body,
+			icon: notificationData.icon || "/favicon.png",
+			badge: notificationData.badge || "/badge.png",
+			data: notificationData.data,
+			tag: notificationData.data?.articleId ? `article-${notificationData.data.articleId}` : undefined,
+			renotify: true,
+			requireInteraction: false
+		})
+	);
+});
+
+// Handle notification clicks
+self.addEventListener("notificationclick", (event) => {
+	event.notification.close();
+
+	// Get the URL to open (default to home page)
+	const urlToOpen = event.notification.data?.url || "/";
+
+	event.waitUntil(
+		clients
+			.matchAll({
+				type: "window",
+				includeUncontrolled: true
+			})
+			.then((clientList) => {
+				// Check if there's already a window open
+				for (const client of clientList) {
+					if (client.url === urlToOpen && "focus" in client) {
+						return client.focus();
+					}
+				}
+				// If no window is open, open a new one
+				if (clients.openWindow) {
+					return clients.openWindow(urlToOpen);
+				}
+			})
+	);
+});
