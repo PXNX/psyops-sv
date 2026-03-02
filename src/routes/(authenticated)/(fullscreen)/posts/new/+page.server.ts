@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { notifyNewspaperSubscribers } from "$lib/server/services/push-notification.service";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -79,6 +80,27 @@ export const actions: Actions = {
 					newspaperId: newspaperId ? parseInt(newspaperId) : null
 				})
 				.returning();
+
+			// Send push notifications to newspaper subscribers
+			if (newspaperId) {
+				const newspaper = await db
+					.select({ name: newspapers.name })
+					.from(newspapers)
+					.where(eq(newspapers.id, parseInt(newspaperId)))
+					.limit(1);
+
+				if (newspaper.length > 0) {
+					// Send notifications asynchronously - don't wait for it
+					notifyNewspaperSubscribers({
+						newspaperId: parseInt(newspaperId),
+						newspaperName: newspaper[0].name,
+						articleId: article.id,
+						articleTitle: article.title
+					}).catch((error) => {
+						console.error("Failed to send push notifications:", error);
+					});
+				}
+			}
 
 			throw redirect(303, `/posts/${article.id}`);
 		} catch (error) {
