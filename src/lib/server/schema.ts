@@ -63,6 +63,21 @@ export const giftCodeResourceTypeEnum = pgEnum("gift_code_resource_type", [
 	"currency"
 ]);
 export const powerPlantTypeEnum = pgEnum("power_plant_type", ["coal", "gas", "nuclear", "solar", "wind", "hydro"]);
+export const transactionTypeEnum = pgEnum("transaction_type", [
+	"market_purchase",
+	"market_sale",
+	"gift_code_redemption",
+	"factory_wage",
+	"company_deposit",
+	"company_withdrawal",
+	"visa_purchase",
+	"factory_edit",
+	"company_edit",
+	"newspaper_edit",
+	"settings_name_change",
+	"settings_logo_change",
+	"tax_payment"
+]);
 
 export const battlePhaseEnum = pgEnum("battle_phase", [
 	"preparation", // Units can join, no combat
@@ -709,6 +724,45 @@ export const userWalletsRelations = relations(userWallets, ({ one }) => ({
 		references: [accounts.id]
 	})
 }));
+
+// --- TRANSACTION HISTORY ---
+export const transactionHistory = pgTable(
+	"transaction_history",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		transactionType: transactionTypeEnum("transaction_type").notNull(),
+		amount: bigint("amount", { mode: "number" }).notNull(),
+		balanceAfter: bigint("balance_after", { mode: "number" }).notNull(),
+		description: text("description").notNull(),
+		// Optional related entities
+		relatedUserId: text("related_user_id").references(() => accounts.id, { onDelete: "set null" }),
+		relatedEntityType: varchar("related_entity_type", { length: 50 }), // 'listing', 'company', 'factory', etc.
+		relatedEntityId: integer("related_entity_id"),
+		metadata: text("metadata"), // JSON string for additional data
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		userIdx: index("idx_transaction_user").on(t.userId),
+		createdAtIdx: index("idx_transaction_created_at").on(t.createdAt),
+		userCreatedIdx: index("idx_transaction_user_created").on(t.userId, t.createdAt)
+	})
+);
+
+export const transactionHistoryRelations = relations(transactionHistory, ({ one }) => ({
+	user: one(accounts, {
+		fields: [transactionHistory.userId],
+		references: [accounts.id]
+	}),
+	relatedUser: one(accounts, {
+		fields: [transactionHistory.relatedUserId],
+		references: [accounts.id]
+	})
+}));
+
+export type TransactionHistory = typeof transactionHistory.$inferSelect;
 
 // --- COOLDOWNS ---
 export const partyCreationAttempts = pgTable("party_creation_attempts", {
