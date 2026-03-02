@@ -236,24 +236,24 @@
 {:else}
 	<div class="flex flex-col h-[calc(100vh-4rem)]">
 		<!-- Header -->
-		<div class="bg-slate-800/50 border border-white/5 p-4 flex-shrink-0">
-			<div class="flex items-center gap-3">
-				<button onclick={() => goto("/chat")} class="btn btn-sm btn-ghost text-gray-400 hover:text-white">
+		<div class="bg-slate-900/80 backdrop-blur-sm border-b border-white/10 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
+			<div class="flex items-center gap-2 md:gap-3">
+				<button onclick={() => goto("/chat")} class="btn btn-sm btn-ghost text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0">
 					<FluentArrowLeft20Filled class="size-5" />
 				</button>
 
-				<a href="/parties/{data.party.id}" class="flex items-center gap-3 flex-1 hover:opacity-80 transition-opacity">
+				<a href="/parties/{data.party.id}" class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
 					{#if data.party.logo}
-						<img src={data.party.logo} alt={data.party.name} class="size-10 rounded-full" />
+						<img src={data.party.logo} alt={data.party.name} class="size-11 md:size-10 rounded-full ring-2 ring-emerald-500/20" />
 					{:else}
-						<div class="size-10 rounded-full bg-emerald-600 flex items-center justify-center">
-							<FluentPeople20Filled class="size-5 text-white" />
+						<div class="size-11 md:size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+							<FluentPeople20Filled class="size-6 md:size-5 text-white" />
 						</div>
 					{/if}
 
-					<div>
-						<h1 class="text-xl font-bold text-white">{data.party.name}</h1>
-						<p class="text-sm text-gray-400">{data.party.memberCount} members • Party Chat</p>
+					<div class="min-w-0">
+						<h1 class="text-lg md:text-xl font-bold text-white truncate">{data.party.name}</h1>
+						<p class="text-xs md:text-sm text-gray-400 truncate">{data.party.memberCount} members • Party Chat</p>
 					</div>
 				</a>
 			</div>
@@ -263,41 +263,45 @@
 		<div
 			bind:this={chatContainer}
 			onscroll={handleScroll}
-			class="flex-1 bg-slate-800/30 border-x border-white/5 p-4 overflow-y-auto"
+			class="flex-1 bg-gradient-to-b from-slate-900/50 to-slate-900/30 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent"
 		>
 			{#if allMessages.length === 0}
 				<div class="flex items-center justify-center h-full">
-					<p class="text-gray-400 text-center">No messages yet. Be the first to say something!</p>
+					<div class="text-center">
+						<FluentPeople20Filled class="size-16 text-gray-600 mx-auto mb-4" />
+						<p class="text-gray-400 text-base">No messages yet</p>
+						<p class="text-gray-500 text-sm mt-1">Be the first to say something!</p>
+					</div>
 				</div>
 			{:else}
 				{#each messagesByDay as day}
 					<!-- Day Divider -->
-					<div class="flex items-center gap-4 my-6">
-						<div class="flex-1 h-px bg-white/10"></div>
-						<span class="text-xs text-gray-500 font-medium px-3 py-1 bg-slate-700/50 rounded-full">
+					<div class="flex items-center gap-3 my-6">
+						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+						<span class="text-xs text-gray-400 font-semibold px-4 py-1.5 bg-slate-800/80 rounded-full border border-white/5 shadow-lg">
 							{formatDayDivider(day.date)}
 						</span>
-						<div class="flex-1 h-px bg-white/10"></div>
+						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
 					</div>
 
 					{#each day.groups as group}
 						{#if group.isFromCurrentUser}
 							<!-- My messages group -->
-							<div class="chat chat-end mb-4">
-								<div class="flex flex-col gap-1 items-end">
+							<div class="chat chat-end mb-3 md:mb-4">
+								<div class="flex flex-col gap-1 items-end max-w-[85%] md:max-w-md ml-auto">
 									{#each group.messages as msg}
-										<div class="chat-bubble bg-emerald-600 text-white {msg.isOptimistic ? 'opacity-70' : ''}">
+										<div class="chat-bubble bg-gradient-to-br from-emerald-600 to-emerald-700 text-white shadow-lg {msg.isOptimistic ? 'opacity-70' : ''} text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-br-md break-words">
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-sm rounded" />
+															<img src={part.content} alt="Shared image" class="max-w-full rounded-lg" />
 														</div>
 													{:else}
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-emerald-200"
+															class="underline hover:text-emerald-200 break-all"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -311,50 +315,50 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer opacity-50 text-xs mt-1">
+								<div class="chat-footer opacity-60 text-xs mt-0.5 px-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
 						{:else}
 							<!-- Other user's messages group -->
-							<div class="chat chat-start mb-4">
-								<div class="chat-image avatar">
+							<div class="chat chat-start mb-3 md:mb-4">
+								<div class="chat-image avatar hidden md:block">
 									<a href="/user/{group.senderId}" class="w-10 rounded-full">
 										{#if group.senderLogo}
-											<img src={group.senderLogo} alt={group.senderName || "User"} />
+											<img src={group.senderLogo} alt={group.senderName || "User"} class="ring-2 ring-slate-700/50" />
 										{:else}
-											<div class="w-full h-full bg-slate-700 flex items-center justify-center rounded-full">
-												<FluentImageOff20Filled class="size-5 text-gray-400" />
+											<div class="w-full h-full bg-slate-700/80 flex items-center justify-center rounded-full">
+												<FluentImageOff20Filled class="size-5 text-gray-500" />
 											</div>
 										{/if}
 									</a>
 								</div>
-								<div class="chat-header text-sm mb-1 flex items-center gap-2">
-									<a href="/user/{group.senderId}" class="hover:text-blue-400 transition-colors font-medium">
+								<div class="chat-header text-xs md:text-sm mb-1 flex items-center gap-2 px-1">
+									<a href="/user/{group.senderId}" class="hover:text-blue-400 transition-colors font-semibold">
 										{group.senderName || "Anonymous"}
 									</a>
 									{#if group.isLeader}
-										<span class="badge badge-sm bg-yellow-600/20 text-yellow-400 border-yellow-600/30 gap-1">
+										<span class="badge badge-xs bg-yellow-600/20 text-yellow-400 border-yellow-600/30 gap-1">
 											<FluentShield20Filled class="size-3" />
-											Leader
+											<span class="hidden sm:inline">Leader</span>
 										</span>
 									{/if}
 								</div>
-								<div class="flex flex-col gap-1 items-start">
+								<div class="flex flex-col gap-1 items-start max-w-[85%] md:max-w-md">
 									{#each group.messages as msg}
-										<div class="relative group">
-											<div class="chat-bubble bg-slate-700 text-gray-200">
+										<div class="relative group/msg">
+											<div class="chat-bubble bg-slate-800/80 text-gray-100 shadow-lg text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-bl-md break-words">
 												{#each renderMessageContent(msg.content) as part}
 													{#if part.type === "url"}
 														{#if isImageUrl(part.content)}
 															<div class="my-2">
-																<img src={part.content} alt="Shared image" class="max-w-sm rounded" />
+																<img src={part.content} alt="Shared image" class="max-w-full rounded-lg" />
 															</div>
 														{:else}
 															<a
 																href={part.content}
 																onclick={(e) => handleLinkClick(e, part.content)}
-																class="underline hover:text-blue-400"
+																class="underline hover:text-blue-400 break-all"
 																target="_blank"
 																rel="noopener noreferrer"
 															>
@@ -366,7 +370,7 @@
 													{/if}
 												{/each}
 											</div>
-											<div class="absolute -right-8 top-0 opacity-0 group-hover:opacity-100 transition-opacity">
+											<div class="absolute -right-8 top-0 opacity-0 group-hover/msg:opacity-100 transition-opacity hidden md:block">
 												<div class="dropdown dropdown-end">
 													<label tabindex="0" class="btn btn-ghost btn-xs btn-circle">
 														<FluentMoreVertical20Filled class="size-4" />
@@ -389,7 +393,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer opacity-50 text-xs mt-1">
+								<div class="chat-footer opacity-60 text-xs mt-0.5 px-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -400,7 +404,7 @@
 		</div>
 
 		<!-- Message input -->
-		<div class="bg-slate-800/50 border border-white/5 p-4 flex-shrink-0">
+		<div class="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 p-3 md:p-4 flex-shrink-0">
 			{#if form?.error}
 				<div class="alert alert-error mb-3 text-sm">
 					<p>{form.error}</p>
@@ -448,7 +452,7 @@
 						isSubmitting = false;
 					};
 				}}
-				class="flex gap-2"
+				class="flex gap-2 md:gap-3"
 			>
 				<textarea
 					name="content"
@@ -456,7 +460,7 @@
 					placeholder="Type a message..."
 					maxlength="500"
 					rows="1"
-					class="textarea textarea-bordered flex-1 bg-slate-700/50 border-slate-600/30 text-white placeholder-gray-400 resize-none min-h-[2.5rem] max-h-32"
+					class="textarea textarea-bordered flex-1 bg-slate-800/80 border-slate-700/50 focus:border-emerald-500/50 text-white placeholder-gray-500 resize-none min-h-[2.75rem] md:min-h-[2.5rem] max-h-32 rounded-xl text-base"
 					disabled={isSubmitting}
 					onkeydown={(e) => {
 						if (e.key === "Enter" && !e.shiftKey) {
@@ -467,20 +471,21 @@
 				></textarea>
 				<button
 					type="submit"
-					class="btn bg-emerald-600 hover:bg-emerald-700 border-0 text-white gap-2 min-w-[100px] self-end"
+					class="btn bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 border-0 text-white gap-2 min-w-[80px] md:min-w-[100px] self-end shadow-lg shadow-emerald-600/20 rounded-xl"
 					disabled={isSubmitting || !message.trim()}
 				>
 					{#if isSubmitting}
 						<span class="loading loading-spinner loading-sm"></span>
-						Sending
+						<span class="hidden md:inline">Sending</span>
 					{:else}
 						<FluentSend20Filled class="size-5" />
-						Send
+						<span class="hidden md:inline">Send</span>
 					{/if}
 				</button>
 			</form>
-			<p class="text-xs text-gray-500 mt-2">
-				{message.length}/500 characters • Press Enter to send, Shift+Enter for new line
+			<p class="text-xs text-gray-500 mt-2 px-1">
+				<span class="{message.length > 450 ? 'text-orange-400 font-semibold' : ''}">{message.length}/500</span>
+				<span class="hidden md:inline"> • Press Enter to send, Shift+Enter for new line</span>
 			</p>
 		</div>
 	</div>
