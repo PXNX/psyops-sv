@@ -261,6 +261,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const validBorderingRegions = borderingRegions.filter((r) => r !== null);
 
+	// Get user wallet balance for travel cost display
+	const userWallet = await db.query.userWallets.findFirst({
+		where: eq(userWallets.userId, account.id)
+	});
+	const walletBalance = userWallet ? Number(userWallet.balance) : 0;
+
 	const result = {
 		region: {
 			id: region.id,
@@ -325,7 +331,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				cooldownEndsAt: new Date(recentFailedBattle.endedAt!.getTime() + 24 * 60 * 60 * 1000).toISOString()
 			}
 			: null,
-		borderingRegions: validBorderingRegions
+		borderingRegions: validBorderingRegions,
+		walletBalance
 	};
 
 	console.log(JSON.stringify(result, null, 2));

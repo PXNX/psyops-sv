@@ -473,8 +473,22 @@
 									>
 										Buy
 									</button>
-								</div>
+							</div>
+						</form>
+						{#if data.governmentState}
+							<form method="POST" action="?/buyListingAsState" use:enhance>
+								<input type="hidden" name="listingId" value={listing.id} />
+								<input type="hidden" name="quantity" value={buyQty} />
+								<button
+									type="submit"
+									title="Buy for {data.governmentState.name} (Treasury: ${data.governmentState.treasuryBalance.toLocaleString()})"
+									class="btn btn-sm bg-amber-600/70 hover:bg-amber-600 border-0 text-white px-2 gap-1"
+								>
+									<span>🏛️</span>
+									<span class="hidden sm:inline text-xs">State</span>
+								</button>
 							</form>
+						{/if}
 						</div>
 					</div>
 				{/each}

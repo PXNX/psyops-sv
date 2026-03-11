@@ -19,47 +19,49 @@
 
 <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 	<!-- Party Header -->
-	<div class="bg-slate-800/50 rounded-xl sm:rounded-2xl border border-white/5 overflow-hidden">
+	<div
+		class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl"
+		style="background: linear-gradient(135deg, {data.party.color}20 0%, {data.party.color}10 100%);"
+	>
 		<div
-			class="h-24 sm:h-32 relative"
-			style="background: linear-gradient(135deg, {data.party.color}40 0%, {data.party.color}10 100%)"
-		>
-			<div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800/50"></div>
-		</div>
-
-		<div class="p-4 sm:p-6 -mt-12 sm:-mt-16 relative">
+			class="absolute inset-0 opacity-10"
+			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.party.color}30 35px, {data.party.color}30 70px);"
+		></div>
+		<div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div>
+		<div class="relative z-10 p-5 sm:p-8">
 			<div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
 				<!-- Party Logo/Icon -->
-				<div
-					class="size-20 sm:size-24 rounded-xl sm:rounded-2xl flex items-center justify-center border-4 border-slate-800 relative z-10 shrink-0"
-					style="background-color: {data.party.color}"
-				>
-					{#if data.party.logoUrl}
-						<img src={data.party.logoUrl} alt={data.party.name} class="size-16 sm:size-20 object-contain" />
-					{:else}
-						<FluentPeople20Filled class="size-10 sm:size-12 text-white" />
-					{/if}
+				<div class="ring-4 ring-white/10 rounded-2xl shrink-0">
+					<div
+						class="size-20 sm:size-24 rounded-2xl flex items-center justify-center"
+						style="background-color: {data.party.color}"
+					>
+						{#if data.party.logoUrl}
+							<img src={data.party.logoUrl} alt={data.party.name} class="size-16 sm:size-20 object-contain" />
+						{:else}
+							<FluentPeople20Filled class="size-10 sm:size-12 text-white" />
+						{/if}
+					</div>
 				</div>
 
-				<div class="flex-1 w-full sm:mt-8">
-					<div class="flex flex-col sm:flex-row items-start justify-between gap-3">
-						<div class="w-full sm:w-auto">
-							<div class="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+				<div class="flex-1 min-w-0">
+					<div class="flex flex-col sm:flex-row items-start justify-between gap-3 mb-2">
+						<div class="min-w-0">
+							<div class="flex flex-wrap items-center gap-2 mb-1">
 								<h1 class="text-2xl sm:text-3xl font-bold text-white">{data.party.name}</h1>
 								{#if data.party.abbreviation}
 									<span
-										class="px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-lg text-xs sm:text-sm font-semibold"
-										style="background-color: {data.party.color}20; color: {data.party.color}"
+										class="px-2.5 py-0.5 rounded-lg text-xs font-semibold"
+										style="background-color: {data.party.color}30; color: {data.party.color}"
 									>
 										{data.party.abbreviation}
 									</span>
 								{/if}
 							</div>
-
-							<div class="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-400">
+							<div class="flex flex-wrap items-center gap-3 text-xs text-gray-400">
 								{#if data.party.ideology}
 									<span class="flex items-center gap-1">
-										<FluentFlag20Filled class="size-3.5 sm:size-4" />
+										<FluentFlag20Filled class="size-3.5" />
 										{data.party.ideology}
 									</span>
 								{/if}
@@ -70,31 +72,28 @@
 									{#if data.party.state.logo}
 										<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded" />
 									{:else}
-										<FluentBuildingGovernment20Filled class="size-3.5 sm:size-4" />
+										<FluentBuildingGovernment20Filled class="size-3.5" />
 									{/if}
-									<span class="truncate max-w-[120px] sm:max-w-none">{data.party.state.name}</span>
+									{data.party.state.name}
 								</a>
-								<span class="flex items-center gap-1 whitespace-nowrap">
-									<FluentCalendar20Filled class="size-3.5 sm:size-4" />
-									<span class="hidden sm:inline">Founded</span>
-									{new Date(data.party.foundedAt).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
+								<span class="flex items-center gap-1">
+									<FluentCalendar20Filled class="size-3.5" />
+									Founded {new Date(data.party.foundedAt).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
 								</span>
 							</div>
 						</div>
-
 						{#if data.isLeader}
 							<a
 								href="/party/{data.party.id}/edit"
-								class="btn btn-sm w-full sm:w-auto bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+								class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
 							>
 								<FluentEdit20Filled class="size-4" />
 								Edit Party
 							</a>
 						{/if}
 					</div>
-
 					{#if data.party.description}
-						<p class="text-sm sm:text-base text-gray-300 mt-3 sm:mt-4 leading-relaxed">{data.party.description}</p>
+						<p class="text-sm text-gray-300 mt-2 leading-relaxed">{data.party.description}</p>
 					{/if}
 				</div>
 			</div>

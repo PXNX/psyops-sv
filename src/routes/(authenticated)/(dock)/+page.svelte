@@ -10,8 +10,25 @@
 
 	let { data }: { data: PageData } = $props();
 
-	function handleTravelComplete() {
-		window.location.reload();
+	async function handleTravelComplete() {
+		// Call the server-side arrive endpoint to validate and process arrival
+		try {
+			const response = await fetch("/api/travel/arrive", {
+				method: "POST"
+			});
+			const result = await response.json();
+			if (result.success) {
+				window.location.reload();
+			} else if (result.timeRemaining && result.timeRemaining > 0) {
+				// Server says not yet arrived — wait the remaining time and retry
+				setTimeout(handleTravelComplete, result.timeRemaining * 1000 + 500);
+			} else {
+				// Some other error — reload anyway to reflect current state
+				window.location.reload();
+			}
+		} catch {
+			window.location.reload();
+		}
 	}
 
 	function handleTravelCancel() {

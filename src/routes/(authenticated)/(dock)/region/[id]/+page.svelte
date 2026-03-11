@@ -158,6 +158,7 @@
 			hasInauguralElection={data.hasInauguralElection}
 			hasPendingResidenceApp={data.hasPendingResidenceApp}
 			travelInfo={data.travelInfo}
+			walletBalance={data.walletBalance}
 		/>
 	{/if}
 

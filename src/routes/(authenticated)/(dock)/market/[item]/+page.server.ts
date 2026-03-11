@@ -7,13 +7,20 @@ import {
 	marketStatistics,
 	resourceInventory,
 	productInventory,
+	stateResourceInventory,
+	stateProductInventory,
+	stateTreasury,
+	governmentBudgetTransactions,
 	userWallets,
 	residences,
 	regions,
 	stateTaxes,
-	marketListingCooldowns
+	marketListingCooldowns,
+	presidents,
+	ministers,
+	states
 } from "$lib/server/schema";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and, gte, sql } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import { calculateAndCollectTax } from "$lib/server/taxes";
 import type { Actions, PageServerLoad } from "./$types";
@@ -118,6 +125,33 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		cooldownRemaining = Math.max(0, hourInMs - timeSinceRemoval);
 	}
 
+	// Check if user is president or minister of economy of any state
+	const [presidency] = await db
+		.select({ stateId: presidents.stateId })
+		.from(presidents)
+		.where(eq(presidents.userId, account.id))
+		.limit(1);
+
+	const [economyMinistry] = await db
+		.select({ stateId: ministers.stateId })
+		.from(ministers)
+		.where(and(eq(ministers.userId, account.id), eq(ministers.ministry, "economy")))
+		.limit(1);
+
+	let governmentState: { id: number; name: string; treasuryBalance: number } | null = null;
+	const govStateId = presidency?.stateId ?? economyMinistry?.stateId ?? null;
+	if (govStateId) {
+		const [state] = await db.select({ id: states.id, name: states.name }).from(states).where(eq(states.id, govStateId)).limit(1);
+		const [treasury] = await db.select({ balance: stateTreasury.balance }).from(stateTreasury).where(eq(stateTreasury.stateId, govStateId)).limit(1);
+		if (state) {
+			governmentState = {
+				id: state.id,
+				name: state.name,
+				treasuryBalance: Number(treasury?.balance ?? 0)
+			};
+		}
+	}
+
 	return {
 		wallet: wallet || { balance: 10000, userId: account.id },
 		itemName,
@@ -128,7 +162,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		otherListings,
 		taxRate,
 		userItemQuantity,
-		cooldownRemaining
+		cooldownRemaining,
+		governmentState
 	};
 };
 
@@ -397,6 +432,127 @@ export const actions: Actions = {
 
 		await updateMarketStatistics(listing.itemType, listing.itemName);
 		return { success: true, message: "Purchase successful" };
+	},
+
+	buyListingAsState: async ({ request, locals }) => {
+		const account = locals.account!;
+		const formData = await request.formData();
+
+		const listingId = parseInt(formData.get("listingId") as string);
+		const quantity = parseInt(formData.get("quantity") as string);
+
+		// Verify the user is president or minister of economy
+		const [presidency] = await db
+			.select({ stateId: presidents.stateId })
+			.from(presidents)
+			.where(eq(presidents.userId, account.id))
+			.limit(1);
+
+		const [economyMinistry] = await db
+			.select({ stateId: ministers.stateId })
+			.from(ministers)
+			.where(and(eq(ministers.userId, account.id), eq(ministers.ministry, "economy")))
+			.limit(1);
+
+		const stateId = presidency?.stateId ?? economyMinistry?.stateId ?? null;
+		if (!stateId) return fail(403, { message: "Only the president or minister of economy can buy for the state" });
+
+		const [listing] = await db.select().from(marketListings).where(eq(marketListings.id, listingId));
+		if (!listing) return fail(404, { message: "Listing not found" });
+		if (quantity < 1 || quantity > listing.quantity) return fail(400, { message: "Invalid quantity" });
+
+		const totalCost = listing.pricePerUnit * quantity;
+
+		// Check treasury balance
+		const [treasury] = await db.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId)).limit(1);
+		if (!treasury || Number(treasury.balance) < totalCost) {
+			return fail(400, { message: "Insufficient treasury funds" });
+		}
+
+		// Deduct from treasury
+		const newBalance = Number(treasury.balance) - totalCost;
+		await db
+			.update(stateTreasury)
+			.set({
+				balance: newBalance,
+				totalSpent: sql`${stateTreasury.totalSpent} + ${totalCost}`,
+				updatedAt: new Date()
+			})
+			.where(eq(stateTreasury.stateId, stateId));
+
+		// Pay seller
+		const [sellerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
+		if (sellerWallet) {
+			await db
+				.update(userWallets)
+				.set({ balance: sellerWallet.balance + totalCost, updatedAt: new Date() })
+				.where(eq(userWallets.userId, listing.sellerId));
+		}
+
+		// Add to state inventory
+		if (listing.itemType === "resource") {
+			const [existing] = await db
+				.select()
+				.from(stateResourceInventory)
+				.where(and(eq(stateResourceInventory.stateId, stateId), eq(stateResourceInventory.resourceType, listing.itemName as any)));
+			if (existing) {
+				await db
+					.update(stateResourceInventory)
+					.set({ quantity: existing.quantity + quantity, updatedAt: new Date() })
+					.where(and(eq(stateResourceInventory.stateId, stateId), eq(stateResourceInventory.resourceType, listing.itemName as any)));
+			} else {
+				await db.insert(stateResourceInventory).values({ stateId, resourceType: listing.itemName as any, quantity });
+			}
+		} else {
+			const [existing] = await db
+				.select()
+				.from(stateProductInventory)
+				.where(and(eq(stateProductInventory.stateId, stateId), eq(stateProductInventory.productType, listing.itemName as any)));
+			if (existing) {
+				await db
+					.update(stateProductInventory)
+					.set({ quantity: existing.quantity + quantity, updatedAt: new Date() })
+					.where(and(eq(stateProductInventory.stateId, stateId), eq(stateProductInventory.productType, listing.itemName as any)));
+			} else {
+				await db.insert(stateProductInventory).values({ stateId, productType: listing.itemName as any, quantity });
+			}
+		}
+
+		// Record transaction
+		await db.insert(governmentBudgetTransactions).values({
+			stateId,
+			transactionType: "resource_purchase",
+			amount: -totalCost,
+			balanceAfter: newBalance,
+			description: `Purchased ${quantity}x ${listing.itemName} from market`,
+			authorizedBy: account.id,
+			itemType: listing.itemType,
+			itemName: listing.itemName,
+			quantity,
+			pricePerUnit: listing.pricePerUnit
+		});
+
+		// Record price history
+		await db.insert(marketPriceHistory).values({
+			itemType: listing.itemType,
+			itemName: listing.itemName,
+			pricePerUnit: listing.pricePerUnit,
+			quantity,
+			transactionType: "sale"
+		});
+
+		// Update or remove listing
+		if (quantity === listing.quantity) {
+			await db.delete(marketListings).where(eq(marketListings.id, listingId));
+		} else {
+			await db
+				.update(marketListings)
+				.set({ quantity: listing.quantity - quantity })
+				.where(eq(marketListings.id, listingId));
+		}
+
+		await updateMarketStatistics(listing.itemType, listing.itemName);
+		return { success: true, message: `State purchased ${quantity}x ${listing.itemName} for $${totalCost.toLocaleString()}` };
 	},
 
 	removeListing: async ({ request, locals }) => {

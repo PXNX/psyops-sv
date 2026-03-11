@@ -7,8 +7,9 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
-	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
-
+	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
+	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	const { data } = $props();
 
 	const getRankColor = (rank: string) => {
@@ -353,6 +354,52 @@
 						</div>
 					</div>
 				{/if}
+
+				<!-- State Positions -->
+				{#each data.career.statePositions as position}
+					<div class="flex gap-3">
+						<div class="flex flex-col items-center">
+							<div class="size-10 rounded-full bg-amber-600/20 flex items-center justify-center">
+								<FluentBuildingGovernment20Filled class="size-5 text-amber-400" />
+							</div>
+							<div class="w-px flex-1 bg-base-300 mt-2"></div>
+						</div>
+						<div class="flex-1 pb-4">
+							<p class="text-sm font-semibold text-white">{position.title}</p>
+							<a href="/state/{position.stateId}" class="text-xs text-amber-400 hover:text-amber-300 transition-colors">
+								{position.stateName}
+							</a>
+							{#if position.term}
+								<span class="text-xs text-gray-500 ml-2">Term {position.term}</span>
+							{/if}
+							<p class="text-xs text-gray-500 mt-1">{formatDate(position.appointedAt)}</p>
+						</div>
+					</div>
+				{/each}
+
+				<!-- Party Memberships -->
+				{#each data.career.partyMemberships as membership}
+					<div class="flex gap-3">
+						<div class="flex flex-col items-center">
+							<div class="size-10 rounded-full flex items-center justify-center" style="background-color: {membership.partyColor}20">
+								<FluentFlag20Filled class="size-5" style="color: {membership.partyColor}" />
+							</div>
+							<div class="w-px flex-1 bg-base-300 mt-2"></div>
+						</div>
+						<div class="flex-1 pb-4">
+							<p class="text-sm font-semibold text-white">
+								<span class="capitalize">{membership.role}</span> of
+								<a href="/party/{membership.partyId}" class="hover:underline" style="color: {membership.partyColor}">
+									{membership.partyName}{membership.partyAbbreviation ? ` (${membership.partyAbbreviation})` : ''}
+								</a>
+							</p>
+							<a href="/state/{membership.stateId}" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">
+								{membership.stateName}
+							</a>
+							<p class="text-xs text-gray-500 mt-1">Joined {formatDate(membership.joinedAt)}</p>
+						</div>
+					</div>
+				{/each}
 
 				<!-- Newspaper Positions -->
 				{#if data.career.newspaperPositions.length > 0}

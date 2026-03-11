@@ -5,6 +5,7 @@
 	import FluentLocationLive20Filled from "~icons/fluent/location-live-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	const {
 		regionId,
@@ -13,7 +14,8 @@
 		allowsFreeMovement,
 		hasInauguralElection,
 		hasPendingResidenceApp,
-		travelInfo
+		travelInfo,
+		walletBalance = 0
 	} = $props<{
 		regionId: number;
 		regionName: string;
@@ -22,6 +24,7 @@
 		hasInauguralElection: boolean;
 		hasPendingResidenceApp: boolean;
 		travelInfo: { distanceKm: number; cost: number; timeHours: number } | null;
+		walletBalance?: number;
 	}>();
 </script>
 
@@ -39,20 +42,25 @@
 					{:else if !hasInauguralElection}
 						Free movement available until inaugural election.
 					{/if}
-					{#if travelInfo}
-						Travel costs ${travelInfo.cost.toLocaleString()} and takes {travelInfo.timeHours} hour{travelInfo.timeHours ===
-						1
-							? ""
-							: "s"}.
-					{/if}
 				</p>
+				{#if travelInfo}
+					<div class="mb-4 space-y-3">
+						<div class="flex items-center gap-2 text-sm text-gray-400">
+							<span>🕐</span>
+							<span>{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? '' : 's'} travel time</span>
+							<span class="text-gray-600">·</span>
+							<span>{travelInfo.distanceKm} km</span>
+						</div>
+						<ResourceRequirements
+							costs={{ currency: travelInfo.cost }}
+							available={{ currency: walletBalance }}
+						/>
+					</div>
+				{/if}
 				<form method="POST" action="?/startTravel" use:enhance>
 					<button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
 						<FluentHome20Filled class="size-4" />
 						Start Travel
-						{#if travelInfo}
-							(${travelInfo.cost.toLocaleString()}, {travelInfo.timeHours}h)
-						{/if}
 					</button>
 				</form>
 			</div>
@@ -95,20 +103,26 @@
 						</p>
 					</div>
 				{:else}
-					<p class="text-sm text-gray-300 mb-2">Travel to this region. Governor approval required for residency.</p>
+					<p class="text-sm text-gray-300 mb-3">Travel to this region. Governor approval required for residency.</p>
 				{/if}
 				{#if travelInfo}
-					<p class="text-xs text-gray-400 mb-4">
-						Cost: ${travelInfo.cost.toLocaleString()} • Travel time: {travelInfo.timeHours}h ({travelInfo.distanceKm} km)
-					</p>
+					<div class="mb-4 space-y-3">
+						<div class="flex items-center gap-2 text-sm text-gray-400">
+							<span>🕐</span>
+							<span>{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? '' : 's'} travel time</span>
+							<span class="text-gray-600">·</span>
+							<span>{travelInfo.distanceKm} km</span>
+						</div>
+						<ResourceRequirements
+							costs={{ currency: travelInfo.cost }}
+							available={{ currency: walletBalance }}
+						/>
+					</div>
 				{/if}
 				<form method="POST" action="?/startTravel" use:enhance>
 					<button type="submit" class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2">
 						<FluentHome20Filled class="size-4" />
 						Start Travel
-						{#if travelInfo}
-							(${travelInfo.cost.toLocaleString()})
-						{/if}
 					</button>
 				</form>
 			</div>
