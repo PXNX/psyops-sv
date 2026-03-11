@@ -288,6 +288,55 @@
 		</div>
 	</section>
 
+	<!-- Birthday Reward Section -->
+	{#if data.isOwnProfile && data.birthdayInfo.totalYears >= 1}
+		<section class="space-y-3">
+			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">🎂 Account Birthday</h2>
+			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-4 space-y-3">
+				{#if data.birthdayInfo.isBirthday}
+					<div class="text-center py-2">
+						<p class="text-2xl font-bold text-yellow-300">🎉 Happy Birthday! 🎉</p>
+						<p class="text-sm text-gray-300 mt-1">Your account turns {data.birthdayInfo.totalYears} today!</p>
+					</div>
+				{:else}
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-yellow-600/20 rounded-lg flex items-center justify-center text-2xl">🎂</div>
+						<div>
+							<p class="font-semibold text-white">Account Anniversary</p>
+							<p class="text-xs text-gray-400">{data.birthdayInfo.totalYears} year{data.birthdayInfo.totalYears !== 1 ? 's' : ''} since account creation</p>
+						</div>
+					</div>
+				{/if}
+				{#if data.birthdayInfo.uncollectedYears.length > 0}
+					<div class="bg-yellow-600/10 border border-yellow-500/20 rounded-lg p-3">
+						<p class="text-sm text-yellow-300 font-medium">
+							{#if data.birthdayInfo.uncollectedYears.length === 1}
+								Year {data.birthdayInfo.uncollectedYears[0]} reward available!
+							{:else}
+								{data.birthdayInfo.uncollectedYears.length} uncollected birthday rewards!
+							{/if}
+						</p>
+						<p class="text-xs text-gray-400 mt-1">
+							Collect {data.birthdayInfo.rewardTotal.toLocaleString()} currency
+							({data.birthdayInfo.rewardPerYear.toLocaleString()} × {data.birthdayInfo.uncollectedYears.length} year{data.birthdayInfo.uncollectedYears.length !== 1 ? 's' : ''})
+						</p>
+						<form method="POST" action="?/collectBirthday" use:enhance class="mt-2">
+							<button
+								type="submit"
+								class="btn btn-sm w-full gap-2 bg-yellow-600/20 hover:bg-yellow-600/30 border-yellow-500/30 text-yellow-300 hover:text-yellow-200"
+							>
+								<FluentGiftCardArrowRight20Filled class="size-4" />
+								Collect {data.birthdayInfo.rewardTotal.toLocaleString()} Currency
+							</button>
+						</form>
+					</div>
+				{:else}
+					<p class="text-xs text-gray-500 text-center">All birthday rewards collected ✓</p>
+				{/if}
+			</div>
+		</section>
+	{/if}
+
 	<!-- Career & Politics Section -->
 	<section class="space-y-3">
 		<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Career & Politics</h2>

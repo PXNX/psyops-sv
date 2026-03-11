@@ -17,6 +17,7 @@
 	import { themes } from "$lib/themes";
 	import { updateProfileSchema } from "./schema.js";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import ImageCropper from "$lib/component/ImageCropper.svelte";
 
 	let { data } = $props();
 
@@ -32,6 +33,8 @@
 	let fileInput: HTMLInputElement;
 	let current_theme = $state("");
 	let loadImages = $state(true);
+	let showCropper = $state(false);
+	let cropImageUrl = $state<string | null>(null);
 
 	$effect(() => {
 		if (typeof window !== "undefined") {
@@ -96,8 +99,9 @@
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
-			$form.logo = file;
-			updatePreview(file);
+			const objectUrl = URL.createObjectURL(file);
+			cropImageUrl = objectUrl;
+			showCropper = true;
 		}
 	}
 
@@ -106,8 +110,9 @@
 		dragActive = false;
 		const file = event.dataTransfer?.files[0];
 		if (file) {
-			$form.logo = file;
-			updatePreview(file);
+			const objectUrl = URL.createObjectURL(file);
+			cropImageUrl = objectUrl;
+			showCropper = true;
 		}
 	}
 
@@ -120,11 +125,34 @@
 		dragActive = false;
 	}
 
-	function updatePreview(file: File) {
-		if (previewUrl && previewUrl !== data.profile.logo) {
-			URL.revokeObjectURL(previewUrl);
+	function handleCropComplete(croppedDataUrl: string) {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
 		}
-		previewUrl = URL.createObjectURL(file);
+		// Convert data URL to File
+		fetch(croppedDataUrl)
+			.then((r) => r.blob())
+			.then((blob) => {
+				const croppedFile = new File([blob], "profile-picture.png", { type: "image/png" });
+				$form.logo = croppedFile;
+				if (previewUrl && previewUrl !== data.profile.logo) {
+					URL.revokeObjectURL(previewUrl);
+				}
+				previewUrl = croppedDataUrl;
+			});
+	}
+
+	function handleCropCancel() {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		if (fileInput) {
+			fileInput.value = "";
+		}
 	}
 
 	function clearImage() {
@@ -479,3 +507,14 @@
 		</form>
 	</div>
 </div>
+
+{#if showCropper && cropImageUrl}
+	<ImageCropper
+		imageUrl={cropImageUrl}
+		aspectRatio={1}
+		title="Crop Profile Picture"
+		cropButtonText="Use this crop"
+		onCrop={handleCropComplete}
+		onCancel={handleCropCancel}
+	/>
+{/if}

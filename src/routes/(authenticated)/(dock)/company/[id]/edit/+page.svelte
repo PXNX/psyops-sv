@@ -21,6 +21,7 @@
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import ImageCropper from "$lib/component/ImageCropper.svelte";
 
 	let { data } = $props();
 
@@ -33,12 +34,61 @@
 
 	// Image upload handling
 	const imageUpload = useImageUpload(data.company.logoUrl);
+	let showCropper = $state(false);
+	let cropImageUrl = $state<string | null>(null);
 
 	$effect(() => {
 		return () => imageUpload.cleanup(data.company.logoUrl);
 	});
 
 	const canEdit = $derived(!data.isOnCooldown && data.canAfford);
+
+	function handleFileSelectWithCrop(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (file) {
+			cropImageUrl = URL.createObjectURL(file);
+			showCropper = true;
+		}
+	}
+
+	function handleDropWithCrop(event: DragEvent) {
+		event.preventDefault();
+		imageUpload.handleDragLeave();
+		const file = event.dataTransfer?.files[0];
+		if (file) {
+			cropImageUrl = URL.createObjectURL(file);
+			showCropper = true;
+		}
+	}
+
+	function handleCropComplete(croppedDataUrl: string) {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		fetch(croppedDataUrl)
+			.then((r) => r.blob())
+			.then((blob) => {
+				const croppedFile = new File([blob], 'company-logo.png', { type: 'image/png' });
+				$form.logo = croppedFile;
+				imageUpload.currentFile = croppedFile;
+				if (imageUpload.previewUrl && imageUpload.previewUrl !== data.company.logoUrl) {
+					URL.revokeObjectURL(imageUpload.previewUrl);
+				}
+				imageUpload.previewUrl = croppedDataUrl;
+			});
+	}
+
+	function handleCropCancel() {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		if (imageUpload.fileInput) imageUpload.fileInput.value = '';
+	}
 </script>
 
 <EditPageLayout title="Edit Company" subtitle={data.company.name} backHref="/company/{data.company.id}">
@@ -99,14 +149,8 @@
 				error={$errors.logo}
 				entityName="company logo"
 				file={imageUpload.currentFile}
-				onFileSelect={(e) => {
-					imageUpload.handleFileSelect(e, data.company.logoUrl);
-					$form.logo = imageUpload.currentFile;
-				}}
-				onDrop={(e) => {
-					imageUpload.handleDrop(e, data.company.logoUrl);
-					$form.logo = imageUpload.currentFile;
-				}}
+				onFileSelect={handleFileSelectWithCrop}
+				onDrop={handleDropWithCrop}
 				onDragOver={imageUpload.handleDragOver}
 				onDragLeave={imageUpload.handleDragLeave}
 				onClearImage={() => {
@@ -114,6 +158,7 @@
 					$form.logo = undefined;
 				}}
 				onClickUpload={() => imageUpload.fileInput?.click()}
+				onCropComplete={handleCropComplete}
 			/>
 		</EditSection>
 
@@ -166,3 +211,14 @@
 		<EditInfoBox editCost={data.editCost} cooldownHours={data.cooldownHours} />
 	</form>
 </EditPageLayout>
+
+{#if showCropper && cropImageUrl}
+	<ImageCropper
+		imageUrl={cropImageUrl}
+		aspectRatio={1}
+		title="Crop Company Logo"
+		cropButtonText="Use this crop"
+		onCrop={handleCropComplete}
+		onCancel={handleCropCancel}
+	/>
+{/if}

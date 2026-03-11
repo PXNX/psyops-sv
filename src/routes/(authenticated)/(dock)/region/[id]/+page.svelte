@@ -115,40 +115,6 @@
 		</div>
 	{/if}
 
-	<!-- Travel Info Banner (if not living here) -->
-	{#if data.travelInfo && !data.hasResidence}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
-			<div class="flex items-start gap-4">
-				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
-					<FluentNavigation20Filled class="size-6 text-blue-400" />
-				</div>
-				<div class="flex-1">
-					<h3 class="text-lg font-semibold text-white mb-2">Travel Information</h3>
-					<div class="grid grid-cols-3 gap-4 text-sm">
-						<div>
-							<p class="text-gray-400">Distance</p>
-							<p class="text-white font-semibold">{data.travelInfo.distanceKm} km</p>
-						</div>
-						<div>
-							<p class="text-gray-400">Cost</p>
-							<p class="text-white font-semibold flex items-center gap-1">
-								<FluentMoney20Filled class="size-4 text-green-400" />
-								${data.travelInfo.cost.toLocaleString()}
-							</p>
-						</div>
-						<div>
-							<p class="text-gray-400">Travel Time</p>
-							<p class="text-white font-semibold flex items-center gap-1">
-								<FluentClock20Filled class="size-4 text-amber-400" />
-								{data.travelInfo.timeHours}h
-							</p>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	{/if}
-
 	<!-- Residence/Travel Actions -->
 	{#if !data.hasResidence && !data.activeTravel}
 		<ResidenceActions
@@ -379,22 +345,32 @@
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 			<h2 class="text-lg font-semibold text-white mb-4">Factories</h2>
 			<div class="grid gap-3">
-				{#each data.factories as factory}
-					<a
-						href="/factory/{factory.id}"
-						class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
-					>
-						<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+			{#each data.factories as factory}
+				<a
+					href="/factory/{factory.id}"
+					class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
+				>
+					<div class="size-10 rounded-lg overflow-hidden flex items-center justify-center bg-purple-600/20">
+						{#if factory.companyLogoUrl}
+							<Logo
+								src={factory.companyLogoUrl}
+								alt={factory.company?.name || 'Company'}
+								class="size-10"
+								placeholderIcon={FluentBriefcase20Filled}
+								placeholderGradient="from-purple-600 to-blue-600"
+							/>
+						{:else}
 							<FluentBriefcase20Filled class="size-5 text-purple-400" />
-						</div>
-						<div class="flex-1">
-							<p class="font-semibold text-white group-hover:text-purple-400 transition-colors">
-								{factory.name}
-							</p>
-							<p class="text-xs text-gray-400 capitalize">{factory.factoryType} • {factory.company.name}</p>
-						</div>
-					</a>
-				{/each}
+						{/if}
+					</div>
+					<div class="flex-1">
+						<p class="font-semibold text-white group-hover:text-purple-400 transition-colors">
+							{factory.name}
+						</p>
+						<p class="text-xs text-gray-400 capitalize">{factory.factoryType} • {factory.company?.name}</p>
+					</div>
+				</a>
+			{/each}
 			</div>
 		</div>
 	{/if}

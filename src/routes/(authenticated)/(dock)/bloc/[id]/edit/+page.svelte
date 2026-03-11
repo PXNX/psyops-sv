@@ -11,6 +11,7 @@
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import ImageCropper from "$lib/component/ImageCropper.svelte";
 
 	let { data } = $props();
 
@@ -24,6 +25,8 @@
 	let previewUrl = $state<string | null>(data.bloc.logoUrl);
 	let dragActive = $state(false);
 	let fileInput: HTMLInputElement;
+	let showCropper = $state(false);
+	let cropImageUrl = $state<string | null>(null);
 
 	const colorPresets = [
 		{ name: "Blue", value: "#3b82f6" },
@@ -42,8 +45,9 @@
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
-			$form.logo = file;
-			updatePreview(file);
+			const objectUrl = URL.createObjectURL(file);
+			cropImageUrl = objectUrl;
+			showCropper = true;
 		}
 	}
 
@@ -52,8 +56,9 @@
 		dragActive = false;
 		const file = event.dataTransfer?.files[0];
 		if (file) {
-			$form.logo = file;
-			updatePreview(file);
+			const objectUrl = URL.createObjectURL(file);
+			cropImageUrl = objectUrl;
+			showCropper = true;
 		}
 	}
 
@@ -66,11 +71,29 @@
 		dragActive = false;
 	}
 
-	function updatePreview(file: File) {
-		if (previewUrl && previewUrl !== data.bloc.logoUrl) {
-			URL.revokeObjectURL(previewUrl);
+	function handleCropComplete(croppedDataUrl: string) {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
 		}
-		previewUrl = URL.createObjectURL(file);
+		fetch(croppedDataUrl)
+			.then((r) => r.blob())
+			.then((blob) => {
+				const croppedFile = new File([blob], "bloc-logo.png", { type: "image/png" });
+				$form.logo = croppedFile;
+				if (previewUrl && previewUrl !== data.bloc.logoUrl) URL.revokeObjectURL(previewUrl);
+				previewUrl = croppedDataUrl;
+			});
+	}
+
+	function handleCropCancel() {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		if (fileInput) fileInput.value = "";
 	}
 
 	function clearImage() {
@@ -394,3 +417,14 @@
 		</p>
 	</div>
 </div>
+
+{#if showCropper && cropImageUrl}
+	<ImageCropper
+		imageUrl={cropImageUrl}
+		aspectRatio={1}
+		title="Crop Bloc Logo"
+		cropButtonText="Use this crop"
+		onCrop={handleCropComplete}
+		onCancel={handleCropCancel}
+	/>
+{/if}
