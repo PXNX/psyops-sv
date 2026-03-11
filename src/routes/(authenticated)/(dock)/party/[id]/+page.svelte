@@ -17,6 +17,27 @@
 	const { data, form } = $props();
 </script>
 
+<svelte:head>
+	<title>{data.party.name}</title>
+	<meta name="description" content={data.party.description || `${data.party.name} (${data.party.abbreviation || ''}) political party in ${data.party.state.name} on PsyOps.`} />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content={data.party.name} />
+	<meta property="og:description" content={data.party.description || `${data.party.name} (${data.party.abbreviation || ''}) political party in ${data.party.state.name} on PsyOps.`} />
+	{#if data.party.logoUrl}
+		<meta property="og:image" content={data.party.logoUrl} />
+	{/if}
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content={data.party.name} />
+	<meta name="twitter:description" content={data.party.description || `${data.party.name} (${data.party.abbreviation || ''}) political party in ${data.party.state.name} on PsyOps.`} />
+	{#if data.party.logoUrl}
+		<meta name="twitter:image" content={data.party.logoUrl} />
+	{/if}
+</svelte:head>
+
 <div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 	<!-- Party Header -->
 	<div
