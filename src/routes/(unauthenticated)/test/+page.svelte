@@ -1,23 +1,23 @@
 <script lang="ts">
 	import { createEditor, Editor, EditorContent, BubbleMenu, FloatingMenu } from "svelte-tiptap";
-	import Document from "@tiptap/extension-document";
-	import Paragraph from "@tiptap/extension-paragraph";
-	import Text from "@tiptap/extension-text";
-	import TextStyle from "@tiptap/extension-text-style";
-	import ListItem from "@tiptap/extension-list-item";
-	import Heading from "@tiptap/extension-heading";
+	import { Document } from "@tiptap/extension-document";
+	import { Paragraph } from "@tiptap/extension-paragraph";
+	import { Text } from "@tiptap/extension-text";
+	import { TextStyle } from "@tiptap/extension-text-style";
+	import { ListItem } from "@tiptap/extension-list-item";
+	import { Heading } from "@tiptap/extension-heading";
 	import type { NodeType } from "@tiptap/pm/model";
 	import { Node as ProseMirrorNode } from "prosemirror-model";
 	import { Table } from "@tiptap/extension-table";
-	import TableCell from "@tiptap/extension-table-cell";
-	import TableHeader from "@tiptap/extension-table-header";
-	import TableRow from "@tiptap/extension-table-row";
-	import Bold from "@tiptap/extension-bold";
-	import Italic from "@tiptap/extension-italic";
-	import Strike from "@tiptap/extension-strike";
-	import TextAlign from "@tiptap/extension-text-align";
-	import Link from "@tiptap/extension-link";
-	import Image from "@tiptap/extension-image";
+	import { TableCell } from "@tiptap/extension-table-cell";
+	import { TableHeader } from "@tiptap/extension-table-header";
+	import { TableRow } from "@tiptap/extension-table-row";
+	import { Bold } from "@tiptap/extension-bold";
+	import { Italic } from "@tiptap/extension-italic";
+	import { Strike } from "@tiptap/extension-strike";
+	import { TextAlign } from "@tiptap/extension-text-align";
+	import { Link } from "@tiptap/extension-link";
+	import { Image } from "@tiptap/extension-image";
 	import { onMount } from "svelte";
 	import type { Readable } from "svelte/store";
 
@@ -30,9 +30,9 @@
 	import AlignmentOptions from "./AlignmentOptions.svelte";
 	import ListOptions from "./ListOptions.svelte";
 	import FormattingOptions from "./FormattingOptions.svelte";
-	import Placeholder from "@tiptap/extension-placeholder";
-	import StarterKit from "@tiptap/starter-kit";
-	import Typography from "@tiptap/extension-typography";
+	import { Placeholder } from "@tiptap/extension-placeholder";
+	import { StarterKit } from "@tiptap/starter-kit";
+	import { Typography } from "@tiptap/extension-typography";
 	import { fade } from "svelte/transition";
 	import {
 		type NodeViewRenderer,
