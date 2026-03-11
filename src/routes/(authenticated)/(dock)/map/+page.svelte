@@ -344,27 +344,31 @@
 		}
 	});
 
-	function onClick(e: MouseEvent) {
+	function onPointerUp(e: PointerEvent) {
+		// Only handle primary pointer (left click or single touch)
+		if (!e.isPrimary) return;
+		
+		// If it was a drag, don't trigger click
+		// We can check if the pointer moved significantly, but panzoom handles most of this.
+		// For mobile, we want to ensure a tap triggers the sheet.
+		
 		e.stopPropagation();
-
 		const target = e.target as SVGElement;
 		let element: SVGElement | null = target;
 		let regionId: number | null = null;
-
 		let depth = 0;
 		while (element && element !== e.currentTarget && depth < 5) {
-			if (element.id && element.id !== "panzoom-element") {
+			if (element && element.id && element.id !== "panzoom-element") {
 				const id = parseInt(element.id, 10);
 				if (!isNaN(id) && id > 0) {
 					regionId = id;
 					break;
 				}
 			}
-			element = element.parentElement as SVGElement;
+			element = element?.parentElement as SVGElement;
 			depth++;
 		}
-
-		if (regionId !== null) {
+		if (regionId !== null) {) {
 			const regionData = data.regionMap[regionId];
 			if (!regionData) return;
 
@@ -553,17 +557,17 @@
 	</div>
 </header>
 
-<main class="flex-1 w-full overflow-hidden">
-	<div
-		use:initPanzoom
-		onclick={onClick}
-		role="button"
-		tabindex="0"
-		class="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing touch-action-none"
-	>
-		{@html WorldMap}
-	</div>
-</main>
+	<main class="flex-1 w-full overflow-hidden">
+		<div
+			use:initPanzoom
+			onpointerup={onPointerUp}
+			role="button"
+			tabindex="0"
+			class="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing touch-action-none"
+		>
+			{@html WorldMap}
+		</div>
+	</main>
 
 <!-- Region Sheet Modal -->
 {#if showSheet && selectedRegion}

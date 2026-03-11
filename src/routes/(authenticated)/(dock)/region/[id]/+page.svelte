@@ -11,8 +11,9 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
-	import FluentNavigation20Filled from "~icons/fluent/navigation-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import FluentNavigation20Filled from "~icons/fluent/navigation-20-filled";
+	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 
 	import Logo from "$lib/component/Logo.svelte";
 	import Modal from "$lib/component/Modal.svelte";
@@ -349,6 +350,28 @@
 				<p class="text-sm text-gray-400">No governor appointed</p>
 			</div>
 		{/if}
+	{/if}
+
+	<!-- State Buildings -->
+	{#if data.buildings.length > 0}
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<h2 class="text-lg font-semibold text-white mb-4">State Buildings</h2>
+			<div class="grid gap-3">
+				{#each data.buildings as building}
+					<div class="flex items-center gap-3 bg-slate-700/30 rounded-lg p-3">
+						<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+							<FluentBuilding20Filled class="size-5 text-blue-400" />
+						</div>
+						<div class="flex-1">
+							<p class="font-semibold text-white">
+								{building.name}
+							</p>
+							<p class="text-xs text-gray-400 capitalize">{building.buildingType.replace('_', ' ')}</p>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</div>
 	{/if}
 
 	<!-- Factories -->
