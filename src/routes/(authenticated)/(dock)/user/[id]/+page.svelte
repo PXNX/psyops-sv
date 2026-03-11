@@ -1,6 +1,7 @@
 <!-- src/routes/(authenticated)/user/[id]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import confetti from "canvas-confetti";
 	import FluentSettingsCogMultiple20Filled from "~icons/fluent/settings-cog-multiple-20-filled";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 	import FluentAccessibilityError20Filled from "~icons/fluent/accessibility-error-20-filled";
@@ -320,7 +321,24 @@
 							Collect {data.birthdayInfo.rewardTotal.toLocaleString()} currency
 							({data.birthdayInfo.rewardPerYear.toLocaleString()} × {data.birthdayInfo.uncollectedYears.length} year{data.birthdayInfo.uncollectedYears.length !== 1 ? 's' : ''})
 						</p>
-						<form method="POST" action="?/collectBirthday" use:enhance class="mt-2">
+						<form
+							method="POST"
+							action="?/collectBirthday"
+							use:enhance={() => {
+								return async ({ result, update }) => {
+									await update();
+									if (result.type === 'success') {
+										confetti({
+											particleCount: 150,
+											spread: 80,
+											origin: { y: 0.6 },
+											colors: ['#f59e0b', '#fbbf24', '#fcd34d', '#a78bfa', '#ec4899']
+										});
+									}
+								};
+							}}
+							class="mt-2"
+						>
 							<button
 								type="submit"
 								class="btn btn-sm w-full gap-2 bg-yellow-600/20 hover:bg-yellow-600/30 border-yellow-500/30 text-yellow-300 hover:text-yellow-200"
