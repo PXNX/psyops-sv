@@ -1,22 +1,23 @@
 // src/routes/(authenticated)/(dock)/region/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import {
-	regions,
-	residences,
-	governors,
-	factories,
-	userVisas,
-	stateVisaSettings,
-	visaApplications,
-	userWallets,
-	stateTreasury,
-	residenceApplications,
-	parliamentaryElections,
-	battles,
-	wars,
-	presidents,
-	userTravels
-} from "$lib/server/schema";
+	import {
+		regions,
+		residences,
+		governors,
+		factories,
+		userVisas,
+		stateVisaSettings,
+		visaApplications,
+		userWallets,
+		stateTreasury,
+		residenceApplications,
+		parliamentaryElections,
+		battles,
+		wars,
+		presidents,
+		userTravels,
+		stateBuildings
+	} from "$lib/server/schema";
 import { eq, and, sql, or, desc, gt, isNotNull } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
