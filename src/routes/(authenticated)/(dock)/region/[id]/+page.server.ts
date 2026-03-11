@@ -163,6 +163,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		limit: 10
 	});
 
+	// Get state buildings
+	const regionBuildings = await db.query.stateBuildings.findMany({
+		where: eq(stateBuildings.regionId, regionId),
+		orderBy: [desc(stateBuildings.createdAt)]
+	});
+
 	// Check for active wars
 	let activeWars: any[] = [];
 	let borderingRegionsForAttack: any[] = [];
@@ -308,6 +314,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}
 			: null,
 		factories: regionFactories,
+		buildings: regionBuildings,
 		visa: {
 			needsVisa,
 			hasActiveVisa,
