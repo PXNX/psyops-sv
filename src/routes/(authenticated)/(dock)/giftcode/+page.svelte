@@ -6,6 +6,13 @@
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
+	import FluentEmojiPickaxe from "~icons/fluent-emoji/pick";
+	import FluentEmojiGem from "~icons/fluent-emoji/gem-stone";
+	import FluentEmojiGear from "~icons/fluent-emoji/gear";
+	import FluentEmojiCollision from "~icons/fluent-emoji/collision";
+	import FluentEmojiWood from "~icons/fluent-emoji/wood";
+	import FluentEmojiRock from "~icons/fluent-emoji/rock";
+	import FluentEmojiPackage from "~icons/fluent-emoji/package";
 	import { enhance } from "$app/forms";
 
 	let { data, form } = $props();
@@ -26,6 +33,16 @@
 		vehicles: "🚗",
 		explosives: "💥",
 		currency: "💰"
+	};
+
+	const resourceIconComponents: Record<string, any> = {
+		iron: FluentEmojiPickaxe,
+		copper: FluentEmojiGem,
+		steel: FluentEmojiGear,
+		gunpowder: FluentEmojiCollision,
+		wood: FluentEmojiWood,
+		coal: FluentEmojiRock,
+		currency: FluentMoney20Filled
 	};
 
 	function formatDate(date: Date | string) {
@@ -75,27 +92,43 @@
 		</div>
 
 		{#if form?.success}
-			<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
-				<div class="flex items-start gap-3">
-					<FluentCheckmark20Filled class="size-5 text-green-300 mt-0.5 flex-shrink-0" />
-					<div class="flex-1">
-						<p class="text-green-300 font-medium mb-2">Gift code redeemed successfully!</p>
-						{#if form.rewards}
-							<div class="space-y-1 text-sm text-green-200">
-								{#if form.rewards.currency > 0}
-									<p>💰 {formatNumber(form.rewards.currency)} Currency</p>
-								{/if}
-								{#each form.rewards.resources as resource}
-									<p>
-										{resourceIcons[resource.type] || "📦"}
-										{formatNumber(resource.quantity)}
-										{resource.type}
-									</p>
-								{/each}
-							</div>
-						{/if}
-					</div>
+			<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4 space-y-3">
+				<div class="flex items-center gap-2">
+					<FluentCheckmark20Filled class="size-5 text-green-300 flex-shrink-0" />
+					<p class="text-green-300 font-medium">Gift code redeemed successfully!</p>
 				</div>
+				{#if form.rewards && (form.rewards.currency > 0 || form.rewards.resources.length > 0)}
+					<div class="space-y-2">
+						<h4 class="text-xs font-medium text-slate-400 uppercase tracking-wide">Rewards Received</h4>
+						<div class="bg-slate-900/30 rounded-lg p-2.5 space-y-1.5 border border-slate-700/30">
+							{#if form.rewards.currency > 0}
+								<div class="flex justify-between text-xs items-center">
+									<span class="text-slate-400 flex items-center gap-1.5">
+										<FluentMoney20Filled class="size-3.5 text-emerald-400" />
+										<span class="capitalize">currency</span>
+									</span>
+									<span class="font-mono text-xs text-emerald-400">
+										+{formatNumber(form.rewards.currency)}
+										<span class="text-emerald-400 ml-1">✓</span>
+									</span>
+								</div>
+							{/if}
+							{#each form.rewards.resources as resource}
+								{@const IconComponent = resourceIconComponents[resource.type] || FluentEmojiPackage}
+								<div class="flex justify-between text-xs items-center">
+									<span class="text-slate-400 flex items-center gap-1.5">
+										<IconComponent class="size-3.5" />
+										<span class="capitalize">{resource.type}</span>
+									</span>
+									<span class="font-mono text-xs text-emerald-400">
+										+{formatNumber(resource.quantity)}
+										<span class="text-emerald-400 ml-1">✓</span>
+									</span>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
 			</div>
 		{/if}
 
