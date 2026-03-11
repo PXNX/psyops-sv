@@ -9,7 +9,8 @@
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
 	import { getRegionName } from "$lib/utils/formatting";
-
+	import confetti from "canvas-confetti";
+	
 	let { data } = $props();
 
 	let isSubmitting = $state(false);
@@ -75,13 +76,20 @@
 				<form
 					method="POST"
 					action="?/selectRegion"
-					use:enhance={() => {
-						isSubmitting = true;
-						return async ({ update }) => {
-							await update();
-							isSubmitting = false;
-						};
-					}}
+						use:enhance={() => {
+							isSubmitting = true;
+							return async ({ result, update }) => {
+								if (result.type === "success") {
+									confetti({
+										particleCount: 150,
+										spread: 70,
+										origin: { y: 0.6 }
+									});
+								}
+								await update();
+								isSubmitting = false;
+							};
+						}}
 					in:fly={{ y: 20, duration: 500, delay: 400 + i * 100 }}
 				>
 					<input type="hidden" name="regionId" value={region.id} />
