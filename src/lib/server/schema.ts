@@ -2451,3 +2451,26 @@ export type ArticleView = typeof articleViews.$inferSelect;
 export type StateResourceInventory = typeof stateResourceInventory.$inferSelect;
 export type StateProductInventory = typeof stateProductInventory.$inferSelect;
 export type GovernmentBudgetTransaction = typeof governmentBudgetTransactions.$inferSelect;
+
+// --- BIRTHDAY REWARDS ---
+export const birthdayRewards = pgTable(
+	"birthday_rewards",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		year: integer("year").notNull(),
+		collectedAt: timestamp("collected_at").defaultNow().notNull()
+	},
+	(t) => ({
+		userYearIdx: uniqueIndex("idx_birthday_reward_user_year").on(t.userId, t.year)
+	})
+);
+export const birthdayRewardsRelations = relations(birthdayRewards, ({ one }) => ({
+	user: one(accounts, {
+		fields: [birthdayRewards.userId],
+		references: [accounts.id]
+	})
+}));
+export type BirthdayReward = typeof birthdayRewards.$inferSelect;

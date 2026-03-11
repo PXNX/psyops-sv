@@ -1,28 +1,30 @@
 // src/routes/(authenticated)/(dock)/region/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-	import {
-		regions,
-		residences,
-		governors,
-		factories,
-		userVisas,
-		stateVisaSettings,
-		visaApplications,
-		userWallets,
-		stateTreasury,
-		residenceApplications,
-		parliamentaryElections,
-		battles,
-		wars,
-		presidents,
-		userTravels,
-		stateBuildings
-	} from "$lib/server/schema";
+import {
+	regions,
+	residences,
+	governors,
+	factories,
+	userVisas,
+	stateVisaSettings,
+	visaApplications,
+	userWallets,
+	stateTreasury,
+	residenceApplications,
+	parliamentaryElections,
+	battles,
+	wars,
+	presidents,
+	userTravels,
+	stateBuildings,
+	files
+} from "$lib/server/schema";
 import { eq, and, sql, or, desc, gt, isNotNull } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
 import { getContext } from "$lib/server/context";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -274,6 +276,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	});
 	const walletBalance = userWallet ? Number(userWallet.balance) : 0;
 
+	// Resolve company logos for factories
+	const factoriesWithLogos = await Promise.all(
+		regionFactories.map(async (factory) => {
+			let companyLogoUrl: string | null = null;
+			if (factory.company?.logo) {
+				try {
+					const logoFile = await db.query.files.findFirst({
+						where: eq(files.id, factory.company.logo)
+					});
+					if (logoFile) {
+						companyLogoUrl = await getSignedDownloadUrl(logoFile.key);
+					}
+				} catch {
+					// ignore logo errors
+				}
+			}
+			return { ...factory, companyLogoUrl };
+		})
+	);
+
 	const result = {
 		region: {
 			id: region.id,
@@ -314,7 +336,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				appointedAt: region.governor.appointedAt
 			}
 			: null,
-		factories: regionFactories,
+		factories: factoriesWithLogos,
 		buildings: regionBuildings,
 		visa: {
 			needsVisa,

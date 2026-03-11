@@ -1,4 +1,3 @@
-<!-- src/routes/(authenticated)/(dock)/bloc/create/+page.svelte -->
 <script lang="ts">
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
@@ -8,6 +7,7 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
+	import ImageCropper from "$lib/component/ImageCropper.svelte";
 
 	let { data } = $props();
 
@@ -19,6 +19,8 @@
 	let previewUrl = $state<string | null>(null);
 	let dragActive = $state(false);
 	let fileInput: HTMLInputElement;
+	let showCropper = $state(false);
+	let cropImageUrl = $state<string | null>(null);
 
 	const colorPresets = [
 		{ name: "Blue", value: "#3b82f6" },
@@ -37,8 +39,9 @@
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
-			$form.logo = file;
-			updatePreview(file);
+			const objectUrl = URL.createObjectURL(file);
+			cropImageUrl = objectUrl;
+			showCropper = true;
 		}
 	}
 
@@ -47,8 +50,9 @@
 		dragActive = false;
 		const file = event.dataTransfer?.files[0];
 		if (file) {
-			$form.logo = file;
-			updatePreview(file);
+			const objectUrl = URL.createObjectURL(file);
+			cropImageUrl = objectUrl;
+			showCropper = true;
 		}
 	}
 
@@ -61,11 +65,29 @@
 		dragActive = false;
 	}
 
-	function updatePreview(file: File) {
-		if (previewUrl) {
-			URL.revokeObjectURL(previewUrl);
+	function handleCropComplete(croppedDataUrl: string) {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
 		}
-		previewUrl = URL.createObjectURL(file);
+		fetch(croppedDataUrl)
+			.then((r) => r.blob())
+			.then((blob) => {
+				const croppedFile = new File([blob], "bloc-logo.png", { type: "image/png" });
+				$form.logo = croppedFile;
+				if (previewUrl) URL.revokeObjectURL(previewUrl);
+				previewUrl = croppedDataUrl;
+			});
+	}
+
+	function handleCropCancel() {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		if (fileInput) fileInput.value = "";
 	}
 
 	function clearImage() {
@@ -330,3 +352,14 @@
 		</button>
 	</form>
 </div>
+
+{#if showCropper && cropImageUrl}
+	<ImageCropper
+		imageUrl={cropImageUrl}
+		aspectRatio={1}
+		title="Crop Bloc Logo"
+		cropButtonText="Use this crop"
+		onCrop={handleCropComplete}
+		onCancel={handleCropCancel}
+	/>
+{/if}

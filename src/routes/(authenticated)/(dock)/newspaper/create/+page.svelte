@@ -7,6 +7,7 @@
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
+	import ImageCropper from "$lib/component/ImageCropper.svelte";
 
 	let { data } = $props();
 
@@ -18,13 +19,15 @@
 	let previewUrl = $state<string | null>(null);
 	let dragActive = $state(false);
 	let fileInput: HTMLInputElement;
+	let showCropper = $state(false);
+	let cropImageUrl = $state<string | null>(null);
 
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const file = target.files?.[0];
 		if (file) {
-			$form.logo = file;
-			updatePreview(file);
+			cropImageUrl = URL.createObjectURL(file);
+			showCropper = true;
 		}
 	}
 
@@ -33,8 +36,8 @@
 		dragActive = false;
 		const file = event.dataTransfer?.files[0];
 		if (file) {
-			$form.logo = file;
-			updatePreview(file);
+			cropImageUrl = URL.createObjectURL(file);
+			showCropper = true;
 		}
 	}
 
@@ -73,6 +76,31 @@
 			}
 		};
 	});
+
+	function handleCropComplete(croppedDataUrl: string) {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		fetch(croppedDataUrl)
+			.then((r) => r.blob())
+			.then((blob) => {
+				const croppedFile = new File([blob], 'newspaper-logo.png', { type: 'image/png' });
+				$form.logo = croppedFile;
+				if (previewUrl && !previewUrl.startsWith('http')) URL.revokeObjectURL(previewUrl);
+				previewUrl = croppedDataUrl;
+			});
+	}
+
+	function handleCropCancel() {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		if (fileInput) fileInput.value = '';
+	}
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
@@ -267,3 +295,14 @@
 		</div>
 	</form>
 </div>
+
+{#if showCropper && cropImageUrl}
+	<ImageCropper
+		imageUrl={cropImageUrl}
+		aspectRatio={1}
+		title="Crop Image"
+		cropButtonText="Use this crop"
+		onCrop={handleCropComplete}
+		onCancel={handleCropCancel}
+	/>
+{/if}

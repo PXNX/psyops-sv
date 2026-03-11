@@ -15,11 +15,13 @@ import {
 	governors,
 	newspapers,
 	journalists,
-	generalReports
+	generalReports,
+	birthdayRewards,
+	userWallets
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error, fail } from "@sveltejs/kit";
-import { eq, count, and } from "drizzle-orm";
+import { eq, count, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
 import { sendMedalNotification } from "$lib/server/service/inbox";
@@ -171,6 +173,32 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Get newspapers owned by current user (for add author feature)
+	// Birthday reward calculation
+	const BIRTHDAY_REWARD_AMOUNT = 10000;
+	const now = new Date();
+	const createdAt = new Date(user.createdAt);
+	// Calculate how many full years the account has existed
+	const totalYears = Math.floor(
+		(now.getTime() - createdAt.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+	);
+	// Get already collected birthday rewards
+	const collectedRewards = await db
+		.select({ year: birthdayRewards.year })
+		.from(birthdayRewards)
+		.where(eq(birthdayRewards.userId, params.id));
+	const collectedYears = new Set(collectedRewards.map((r) => r.year));
+	// Determine uncollected years (1-based: year 1 = first anniversary)
+	const uncollectedYears: number[] = [];
+	for (let y = 1; y <= totalYears; y++) {
+		if (!collectedYears.has(y)) {
+			uncollectedYears.push(y);
+		}
+	}
+	const birthdayRewardTotal = uncollectedYears.length * BIRTHDAY_REWARD_AMOUNT;
+	// Check if today is the account's birthday (same month+day)
+	const isBirthday =
+		now.getMonth() === createdAt.getMonth() && now.getDate() === createdAt.getDate();
+
 	let ownedNewspapers: Array<{ id: number; name: string }> = [];
 	if (account.id !== params.id) {
 		const journalistRecords = await db.query.journalists.findMany({
@@ -261,11 +289,76 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				}
 			: null,
 		ownedNewspapers,
-		account
+		account,
+		birthdayInfo: {
+			isBirthday,
+			totalYears,
+			uncollectedYears,
+			rewardTotal: birthdayRewardTotal,
+			rewardPerYear: BIRTHDAY_REWARD_AMOUNT
+		}
 	};
 };
 
 export const actions: Actions = {
+	collectBirthday: async ({ params, locals }) => {
+		const account = locals.account!;
+		// Only the profile owner can collect their own birthday reward
+		if (account.id !== params.id) {
+			return fail(403, { error: "You can only collect your own birthday reward" });
+		}
+		const BIRTHDAY_REWARD_AMOUNT = 10000;
+		const user = await db.query.accounts.findFirst({ where: eq(accounts.id, params.id) });
+		if (!user) return fail(404, { error: "User not found" });
+		const now = new Date();
+		const createdAt = new Date(user.createdAt);
+		const totalYears = Math.floor(
+			(now.getTime() - createdAt.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+		);
+		if (totalYears < 1) {
+			return fail(400, { error: "No birthday reward available yet" });
+		}
+		const collectedRewards = await db
+			.select({ year: birthdayRewards.year })
+			.from(birthdayRewards)
+			.where(eq(birthdayRewards.userId, params.id));
+		const collectedYears = new Set(collectedRewards.map((r) => r.year));
+		const uncollectedYears: number[] = [];
+		for (let y = 1; y <= totalYears; y++) {
+			if (!collectedYears.has(y)) uncollectedYears.push(y);
+		}
+		if (uncollectedYears.length === 0) {
+			return fail(400, { error: "All birthday rewards have already been collected" });
+		}
+		const totalReward = uncollectedYears.length * BIRTHDAY_REWARD_AMOUNT;
+		try {
+			await db.transaction(async (tx) => {
+				// Mark all uncollected years as collected
+				for (const year of uncollectedYears) {
+					await tx.insert(birthdayRewards).values({ userId: params.id, year });
+				}
+				// Add currency to wallet
+				const existingWallet = await tx.query.userWallets.findFirst({
+					where: eq(userWallets.userId, params.id)
+				});
+				if (existingWallet) {
+					await tx
+						.update(userWallets)
+						.set({ balance: sql`${userWallets.balance} + ${totalReward}` })
+						.where(eq(userWallets.userId, params.id));
+				} else {
+					await tx.insert(userWallets).values({
+						userId: params.id,
+						balance: 10000 + totalReward
+					});
+				}
+			});
+			return { success: true, message: `Happy Birthday! You collected ${totalReward.toLocaleString()} currency!` };
+		} catch (err) {
+			console.error("Error collecting birthday reward:", err);
+			return fail(500, { error: "Failed to collect birthday reward" });
+		}
+	},
 	awardMedal: async ({ request, params, locals }) => {
 		const account = locals.account!;
 

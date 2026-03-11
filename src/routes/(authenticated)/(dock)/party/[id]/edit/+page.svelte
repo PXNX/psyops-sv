@@ -24,6 +24,7 @@
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import ImageCropper from "$lib/component/ImageCropper.svelte";
 
 	let { data } = $props();
 
@@ -36,10 +37,59 @@
 
 	// Image upload handling
 	const imageUpload = useImageUpload(data.party.logoUrl);
+	let showCropper = $state(false);
+	let cropImageUrl = $state<string | null>(null);
 
 	$effect(() => {
 		return () => imageUpload.cleanup(data.party.logoUrl);
 	});
+
+	function handleFileSelectWithCrop(event: Event) {
+		const target = event.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (file) {
+			cropImageUrl = URL.createObjectURL(file);
+			showCropper = true;
+		}
+	}
+
+	function handleDropWithCrop(event: DragEvent) {
+		event.preventDefault();
+		imageUpload.handleDragLeave();
+		const file = event.dataTransfer?.files[0];
+		if (file) {
+			cropImageUrl = URL.createObjectURL(file);
+			showCropper = true;
+		}
+	}
+
+	function handleCropComplete(croppedDataUrl: string) {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		fetch(croppedDataUrl)
+			.then((r) => r.blob())
+			.then((blob) => {
+				const croppedFile = new File([blob], 'party-logo.png', { type: 'image/png' });
+				$form.logo = croppedFile;
+				imageUpload.currentFile = croppedFile;
+				if (imageUpload.previewUrl && imageUpload.previewUrl !== data.party.logoUrl) {
+					URL.revokeObjectURL(imageUpload.previewUrl);
+				}
+				imageUpload.previewUrl = croppedDataUrl;
+			});
+	}
+
+	function handleCropCancel() {
+		showCropper = false;
+		if (cropImageUrl) {
+			URL.revokeObjectURL(cropImageUrl);
+			cropImageUrl = null;
+		}
+		if (imageUpload.fileInput) imageUpload.fileInput.value = '';
+	}
 
 	const ideologies = [
 		"Liberal",
@@ -134,14 +184,8 @@
 				error={$errors.logo}
 				entityName="party logo"
 				file={imageUpload.currentFile}
-				onFileSelect={(e) => {
-					imageUpload.handleFileSelect(e, data.party.logoUrl);
-					$form.logo = imageUpload.currentFile;
-				}}
-				onDrop={(e) => {
-					imageUpload.handleDrop(e, data.party.logoUrl);
-					$form.logo = imageUpload.currentFile;
-				}}
+				onFileSelect={handleFileSelectWithCrop}
+				onDrop={handleDropWithCrop}
 				onDragOver={imageUpload.handleDragOver}
 				onDragLeave={imageUpload.handleDragLeave}
 				onClearImage={() => {
@@ -149,6 +193,7 @@
 					$form.logo = undefined;
 				}}
 				onClickUpload={() => imageUpload.fileInput?.click()}
+				onCropComplete={handleCropComplete}
 			/>
 		</EditSection>
 
@@ -213,3 +258,14 @@
 		<EditInfoBox editCost={data.editCost} cooldownHours={data.cooldownHours} />
 	</form>
 </EditPageLayout>
+
+{#if showCropper && cropImageUrl}
+	<ImageCropper
+		imageUrl={cropImageUrl}
+		aspectRatio={1}
+		title="Crop Party Logo"
+		cropButtonText="Use this crop"
+		onCrop={handleCropComplete}
+		onCancel={handleCropCancel}
+	/>
+{/if}
