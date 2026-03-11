@@ -89,7 +89,7 @@
 
 <!-- Header -->
 <header class="sticky top-0 z-10 backdrop-blur-xl bg-slate-900/80 border-b border-white/5 shadow-2xl">
-	<div class="max-w-4xl mx-auto px-4 py-4">
+	<div class="w-full mx-auto px-3 sm:px-4 py-4 sm:max-w-4xl">
 		<div class="flex items-center gap-3">
 			<!-- Search Input -->
 			<div class="relative flex-1">
@@ -131,7 +131,7 @@
 </header>
 
 <!-- Main Content -->
-<main class="max-w-5xl mx-auto px-4 py-6">
+	<main class="w-full mx-auto px-3 sm:px-4 py-6 sm:max-w-5xl">
 	{#if filteredArticles.length === 0}
 		<div class="text-center py-16">
 			<div class="inline-flex items-center justify-center size-20 bg-slate-800/50 rounded-full mb-4">

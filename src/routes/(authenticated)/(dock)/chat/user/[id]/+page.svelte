@@ -237,7 +237,7 @@
 </Modal>
 
 {#if !data.otherUser}
-	<div class="max-w-5xl mx-auto px-4 py-6">
+	<div class="w-full mx-auto px-3 sm:px-4 py-6 sm:max-w-5xl">
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-8 text-center">
 			<h2 class="text-2xl font-bold text-white mb-2">User Not Found</h2>
 			<p class="text-gray-400 mb-4">This user doesn't exist or you don't have permission to message them.</p>
