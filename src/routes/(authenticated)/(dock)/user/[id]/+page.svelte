@@ -50,6 +50,29 @@
 	};
 </script>
 
+<svelte:head>
+	<title>{data.user.name || 'User Profile'}</title>
+	<meta name="description" content={data.user.bio || `View the profile of ${data.user.name || 'this user'} on PsyOps.`} />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="profile" />
+	<meta property="og:title" content={data.user.name || 'User Profile'} />
+	<meta property="og:description" content={data.user.bio || `View the profile of ${data.user.name || 'this user'} on PsyOps.`} />
+	{#if data.user.logo}
+		<meta property="og:image" content={data.user.logo} />
+		<meta property="og:image:width" content="96" />
+		<meta property="og:image:height" content="96" />
+	{/if}
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content={data.user.name || 'User Profile'} />
+	<meta name="twitter:description" content={data.user.bio || `View the profile of ${data.user.name || 'this user'} on PsyOps.`} />
+	{#if data.user.logo}
+		<meta name="twitter:image" content={data.user.logo} />
+	{/if}
+</svelte:head>
+
 <div class="w-full mx-auto px-3 sm:px-4 py-6 space-y-6 sm:max-w-2xl">
 	<!-- Hero Section with Party Background -->
 	<div class="relative">
