@@ -368,7 +368,7 @@
 			element = element?.parentElement as SVGElement;
 			depth++;
 		}
-		if (regionId !== null) {) {
+		if (regionId !== null) {
 			const regionData = data.regionMap[regionId];
 			if (!regionData) return;
 

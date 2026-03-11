@@ -49,7 +49,7 @@
 	};
 </script>
 
-<div class="max-w-2xl mx-auto px-4 py-6 space-y-6">
+<div class="w-full mx-auto px-3 sm:px-4 py-6 space-y-6 sm:max-w-2xl">
 	<!-- Hero Section with Party Background -->
 	<div class="relative">
 		<div

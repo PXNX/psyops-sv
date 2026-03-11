@@ -7,7 +7,6 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
-	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	const { data } = $props();
