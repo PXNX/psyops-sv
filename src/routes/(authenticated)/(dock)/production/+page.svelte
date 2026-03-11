@@ -17,6 +17,7 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
+	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
@@ -156,6 +157,15 @@
 				>
 					<FluentEmojiShoppingCart class="size-4" />
 					<span>Market</span>
+				</a>
+
+				<a
+					href="/transactions"
+					class="px-3 md:px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
+					       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
+				>
+					<FluentHistory20Filled class="size-4" />
+					<span>Transactions</span>
 				</a>
 			</div>
 		</div>
