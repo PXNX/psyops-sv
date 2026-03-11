@@ -24,6 +24,27 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.newspaper.name}</title>
+	<meta name="description" content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`} />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="article" />
+	<meta property="og:title" content={data.newspaper.name} />
+	<meta property="og:description" content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`} />
+	{#if data.newspaper.logoUrl}
+		<meta property="og:image" content={data.newspaper.logoUrl} />
+	{/if}
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content={data.newspaper.name} />
+	<meta name="twitter:description" content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`} />
+	{#if data.newspaper.logoUrl}
+		<meta name="twitter:image" content={data.newspaper.logoUrl} />
+	{/if}
+</svelte:head>
+
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Hero Header -->
 	<div class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-purple-900/30">
