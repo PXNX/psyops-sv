@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/user/[id]/career/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, articles, journalists, userMedals, presidents, files } from "$lib/server/schema";
+import { accounts, articles, journalists, userMedals, presidents, ministers, partyMembers, files } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error } from "@sveltejs/kit";
 import { desc, eq, and } from "drizzle-orm";
@@ -109,6 +109,31 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}>
 	);
 
+	// Get current party memberships
+	const currentPartyMemberships = await db.query.partyMembers.findMany({
+		where: eq(partyMembers.userId, params.id),
+		with: {
+			party: {
+				with: { state: true }
+			}
+		},
+		orderBy: [desc(partyMembers.joinedAt)]
+	});
+
+	// Get current state positions (president)
+	const currentPresidencies = await db.query.presidents.findMany({
+		where: eq(presidents.userId, params.id),
+		with: { state: true },
+		orderBy: [desc(presidents.electedAt)]
+	});
+
+	// Get current state positions (minister)
+	const currentMinistries = await db.query.ministers.findMany({
+		where: eq(ministers.userId, params.id),
+		with: { state: true },
+		orderBy: [desc(ministers.appointedAt)]
+	});
+
 	// Check if current user can award medals
 	let canAwardMedal = false;
 	let hasAwardedThisMonth = false;
@@ -148,6 +173,34 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		},
 		career: {
 			newspaperPositions,
+			partyMemberships: currentPartyMemberships.map((pm) => ({
+				partyId: pm.partyId,
+				partyName: pm.party.name,
+				partyColor: pm.party.color,
+				partyAbbreviation: pm.party.abbreviation,
+				stateName: pm.party.state.name,
+				stateId: pm.party.state.id,
+				role: pm.role,
+				joinedAt: pm.joinedAt
+			})),
+			statePositions: [
+				...currentPresidencies.map((p) => ({
+					type: "president" as const,
+					stateId: p.stateId,
+					stateName: p.state.name,
+					title: "President",
+					term: p.term,
+					appointedAt: p.electedAt
+				})),
+				...currentMinistries.map((m) => ({
+					type: "minister" as const,
+					stateId: m.stateId,
+					stateName: m.state.name,
+					title: `Minister of ${m.ministry.charAt(0).toUpperCase() + m.ministry.slice(1)}`,
+					term: null,
+					appointedAt: m.appointedAt
+				}))
+			].sort((a, b) => new Date(b.appointedAt).getTime() - new Date(a.appointedAt).getTime()),
 			medals: medals.map((m) => ({
 				id: m.id,
 				medalType: m.medalType,

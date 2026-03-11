@@ -64,58 +64,45 @@
 
 <div class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 	<!-- Company Header -->
-	<div class="card bg-base-200 border border-base-300/50 shadow-lg">
-		<div class="card-body p-4 sm:p-6">
-			<div class="flex flex-col sm:flex-row items-start gap-4">
+	<div class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-gradient-to-br from-slate-800/80 via-slate-800/50 to-slate-900/80">
+		<div class="absolute inset-0 opacity-5" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.2) 35px, rgba(255,255,255,0.2) 70px);"></div>
+		<div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70"></div>
+		<div class="relative z-10 p-5 sm:p-8">
+			<div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
 				<!-- Company Logo -->
-
-				<Logo src={data.company.logo} alt={data.company.name} placeholderIcon={FluentBuilding20Filled} />
-
-				<div class="flex-1 w-full">
-					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-						<div>
-							<h1 class="text-2xl sm:text-3xl font-bold text-primary">
-								{data.company.name}
-							</h1>
-							<div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs sm:text-sm opacity-70 mt-2">
-								<span class="flex items-center gap-1.5">
-									<FluentCalendar20Filled class="w-3.5 h-3.5" />
+				<div class="ring-4 ring-white/10 rounded-2xl shrink-0">
+					<Logo src={data.company.logo} alt={data.company.name} placeholderIcon={FluentBuilding20Filled} class="size-20 sm:size-24 rounded-2xl" />
+				</div>
+				<div class="flex-1 min-w-0">
+					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
+						<div class="min-w-0">
+							<h1 class="text-2xl sm:text-3xl font-bold text-white truncate">{data.company.name}</h1>
+							<div class="flex flex-wrap items-center gap-3 text-xs text-gray-400 mt-1">
+								<span class="flex items-center gap-1">
+									<FluentCalendar20Filled class="size-3.5" />
 									Founded {new Date(data.company.foundedAt).toLocaleDateString()}
 								</span>
 								<a
 									href="/user/{data.company.ownerId}"
-									class="flex items-center gap-1.5 hover:text-primary transition-colors"
+									class="flex items-center gap-1.5 hover:text-purple-400 transition-colors"
 								>
-									<span>Owner:</span>
-									<div class="avatar">
-										<div class="w-4 h-4 rounded-full ring ring-primary ring-offset-base-100 ring-offset-1">
-											{#if data.company.ownerLogo}
-												<img src={data.company.ownerLogo} alt="Owner" />
-											{:else}
-												<div class="bg-primary/20 flex items-center justify-center">
-													<span class="text-[8px] font-bold text-primary">
-														{(data.company.ownerName || data.company.ownerEmail).charAt(0).toUpperCase()}
-													</span>
-												</div>
-											{/if}
-										</div>
-									</div>
-									<span class="font-medium opacity-100">{data.company.ownerName || data.company.ownerEmail}</span>
+									{#if data.company.ownerLogo}
+										<img src={data.company.ownerLogo} alt="Owner" class="size-4 rounded-full" />
+									{/if}
+									<span>{data.company.ownerName || data.company.ownerEmail}</span>
 								</a>
 							</div>
 						</div>
-
 						{#if data.isOwner}
-							<a href="/company/{data.company.id}/edit" class="btn btn-ghost btn-sm gap-2">
-								<FluentEdit20Filled class="w-4 h-4" />
-								<span class="hidden sm:inline">Edit</span>
+							<a href="/company/{data.company.id}/edit" class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2">
+								<FluentEdit20Filled class="size-4" />
+								Edit
 							</a>
 						{/if}
 					</div>
-
 					{#if data.company.description}
-						<div class="alert mt-4 bg-base-300/50 border-base-300">
-							<p class="text-xs sm:text-sm">{data.company.description}</p>
+						<div class="mt-2 bg-black/20 rounded-xl p-3 border border-white/10">
+							<p class="text-sm text-gray-300">{data.company.description}</p>
 						</div>
 					{/if}
 				</div>

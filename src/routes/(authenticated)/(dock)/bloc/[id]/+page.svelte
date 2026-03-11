@@ -18,59 +18,56 @@
 
 <div class="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 	<!-- Hero Section -->
-	<div class="relative">
+	<div
+		class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl"
+		style="background: linear-gradient(135deg, {data.bloc.color}20 0%, {data.bloc.color}10 100%);"
+	>
 		<div
-			class="bg-gradient-to-br p-px rounded-xl sm:rounded-2xl shimmer-outline"
-			style="background: linear-gradient(135deg, {data.bloc.color}40, {data.bloc.color}20)"
-		>
-			<div class="relative rounded-xl sm:rounded-2xl bg-slate-800 overflow-hidden">
-				<!-- Header -->
-				<div class="relative p-5 sm:p-8" style="background: linear-gradient(135deg, {data.bloc.color}15, transparent)">
-					<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5 sm:mb-6">
-						<div class="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
-							<Logo src={data.bloc.logo} alt={data.bloc.name} placeholderIcon={FluentFlag20Filled} />
-
-							<div class="flex-1 min-w-0">
-								<h1 class="text-2xl sm:text-3xl font-bold text-white truncate">{data.bloc.name}</h1>
-								<p class="text-xs sm:text-sm text-gray-400">Political-Military Alliance</p>
-							</div>
-						</div>
-
-						{#if data.isLeader}
-							<a
-								href="/bloc/{data.bloc.id}/edit"
-								class="btn btn-sm w-full sm:w-auto bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 border-0 text-white gap-2"
-							>
-								<FluentEdit20Filled class="size-4 sm:size-5" />
-								Edit Bloc
-							</a>
-						{/if}
+			class="absolute inset-0 opacity-10"
+			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.bloc.color}30 35px, {data.bloc.color}30 70px);"
+		></div>
+		<div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div>
+		<div class="relative z-10 p-5 sm:p-8">
+			<!-- Header row -->
+			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-5 sm:mb-6">
+				<div class="flex items-center gap-3 sm:gap-4">
+					<div class="ring-4 ring-white/10 rounded-2xl">
+						<Logo src={data.bloc.logo} alt={data.bloc.name} placeholderIcon={FluentFlag20Filled} class="size-16 sm:size-20" />
 					</div>
-
-					<!-- Stats -->
-					<div class="grid grid-cols-2 gap-3 sm:gap-4">
-						<div class="bg-slate-700/30 rounded-lg sm:rounded-xl border border-white/5 p-3 sm:p-4">
-							<FluentBuildingGovernment20Filled class="size-5 sm:size-6 mb-2" style="color: {data.bloc.color}" />
-							<p class="text-xl sm:text-2xl font-bold text-white">{data.totalStates}</p>
-							<p class="text-[10px] sm:text-xs text-gray-400">Member States</p>
-						</div>
-						<div class="bg-slate-700/30 rounded-lg sm:rounded-xl border border-white/5 p-3 sm:p-4">
-							<FluentPeople20Filled class="size-5 sm:size-6 mb-2" style="color: {data.bloc.color}" />
-							<p class="text-xl sm:text-2xl font-bold text-white">{data.totalPopulation.toLocaleString()}</p>
-							<p class="text-[10px] sm:text-xs text-gray-400">Total Population</p>
-						</div>
+					<div class="flex-1 min-w-0">
+						<h1 class="text-2xl sm:text-3xl font-bold text-white truncate">{data.bloc.name}</h1>
+						<p class="text-xs sm:text-sm text-gray-400 mt-0.5">Political-Military Alliance</p>
 					</div>
 				</div>
-
-				<!-- Description -->
-				{#if data.bloc.description}
-					<div class="px-5 sm:px-8 pb-5 sm:pb-8">
-						<div class="bg-slate-700/20 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-white/5">
-							<p class="text-sm sm:text-base text-gray-300 leading-relaxed">{data.bloc.description}</p>
-						</div>
-					</div>
+				{#if data.isLeader}
+					<a
+						href="/bloc/{data.bloc.id}/edit"
+						class="btn btn-sm w-full sm:w-auto bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 border-0 text-white gap-2"
+					>
+						<FluentEdit20Filled class="size-4" />
+						Edit Bloc
+					</a>
 				{/if}
 			</div>
+			<!-- Stats -->
+			<div class="grid grid-cols-2 gap-3">
+				<div class="bg-black/20 rounded-xl border border-white/10 p-3 sm:p-4">
+					<FluentBuildingGovernment20Filled class="size-5 mb-2" style="color: {data.bloc.color}" />
+					<p class="text-xl sm:text-2xl font-bold text-white">{data.totalStates}</p>
+					<p class="text-xs text-gray-400">Member States</p>
+				</div>
+				<div class="bg-black/20 rounded-xl border border-white/10 p-3 sm:p-4">
+					<FluentPeople20Filled class="size-5 mb-2" style="color: {data.bloc.color}" />
+					<p class="text-xl sm:text-2xl font-bold text-white">{data.totalPopulation.toLocaleString()}</p>
+					<p class="text-xs text-gray-400">Total Population</p>
+				</div>
+			</div>
+			<!-- Description -->
+			{#if data.bloc.description}
+				<div class="mt-4 bg-black/20 rounded-xl p-3 sm:p-4 border border-white/10">
+					<p class="text-sm text-gray-300 leading-relaxed">{data.bloc.description}</p>
+				</div>
+			{/if}
 		</div>
 	</div>
 
