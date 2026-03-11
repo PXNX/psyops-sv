@@ -136,61 +136,60 @@
 		<p class="text-xs text-gray-400">💡 Gift codes are case-insensitive and can only be claimed once per account</p>
 	</form>
 
-	<!-- Redemption History -->
-	{#if data.redemptions && data.redemptions.length > 0}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-4">
-			<div class="flex items-center gap-2">
-				<FluentClock20Filled class="size-6 text-purple-400" />
-				<h2 class="text-xl font-semibold text-white">Redemption History</h2>
-			</div>
+		<!-- Redemption History -->
+		{#if data.redemptions && data.redemptions.length > 0}
+			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-4">
+				<div class="flex items-center gap-2 mb-4">
+					<FluentClock20Filled class="size-6 text-purple-400" />
+					<h2 class="text-xl font-semibold text-white">Redemption History</h2>
+				</div>
 
-			<div class="space-y-3">
-				{#each data.redemptions as redemption}
-					<div class="bg-slate-700/30 rounded-lg p-4 border border-slate-600/20">
-						<div class="flex items-start justify-between mb-3">
-							<div class="flex-1">
-								<div class="flex items-center gap-2 mb-1">
-									<code class="text-purple-300 font-mono font-semibold text-sm">
-										{redemption.code}
-									</code>
-									<span class="badge badge-sm bg-green-600/20 text-green-300 border-green-500/30"> Redeemed </span>
+				<div class="space-y-4">
+					{#each data.redemptions as redemption}
+						<div class="bg-slate-700/30 rounded-lg border border-slate-600/20 overflow-hidden">
+							<!-- Header -->
+							<div class="bg-slate-700/50 px-4 py-3 border-b border-slate-600/20">
+								<div class="flex items-center justify-between">
+									<div class="flex-1">
+										<div class="flex items-center gap-2">
+											<code class="text-purple-300 font-mono font-semibold">
+												{redemption.code}
+											</code>
+											<span class="badge badge-sm bg-green-600/20 text-green-300 border-green-500/30">Redeemed</span>
+										</div>
+										{#if redemption.description}
+											<p class="text-xs text-gray-400 mt-1">{redemption.description}</p>
+										{/if}
+									</div>
+									<div class="text-right">
+										<p class="text-xs text-gray-400">{formatDate(redemption.redeemedAt)}</p>
+									</div>
 								</div>
-								{#if redemption.description}
-									<p class="text-xs text-gray-400">{redemption.description}</p>
-								{/if}
 							</div>
-							<div class="text-right text-xs text-gray-400">
-								{formatDate(redemption.redeemedAt)}
+
+							<!-- Rewards Grid -->
+							<div class="p-4">
+								<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+									{#if redemption.currencyReceived > 0}
+										<div class="bg-yellow-600/10 border border-yellow-500/20 rounded-lg p-3 text-center">
+											<p class="text-xs text-yellow-400 font-medium mb-1">Currency</p>
+											<p class="text-lg font-bold text-yellow-300">{formatNumber(redemption.currencyReceived)}</p>
+										</div>
+									{/if}
+
+									{#each redemption.resources as resource}
+										<div class="bg-blue-600/10 border border-blue-500/20 rounded-lg p-3 text-center">
+											<p class="text-xs text-blue-400 font-medium mb-1 capitalize">{resource.type}</p>
+											<p class="text-lg font-bold text-blue-300">{formatNumber(resource.quantity)}</p>
+										</div>
+									{/each}
+								</div>
 							</div>
 						</div>
-
-						<div class="flex flex-wrap gap-2">
-							{#if redemption.currencyReceived > 0}
-								<div
-									class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-yellow-600/10 border border-yellow-500/20"
-								>
-									<FluentMoney20Filled class="size-4 text-yellow-400" />
-									<span class="text-sm text-yellow-300 font-medium">
-										{formatNumber(redemption.currencyReceived)}
-									</span>
-								</div>
-							{/if}
-
-							{#each redemption.resources as resource}
-								<div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-600/10 border border-blue-500/20">
-									<FluentBox20Filled class="size-4 text-blue-400" />
-									<span class="text-sm text-blue-300 font-medium">
-										{formatNumber(resource.quantity)}
-										{resource.type}
-									</span>
-								</div>
-							{/each}
-						</div>
-					</div>
-				{/each}
+					{/each}
+				</div>
 			</div>
-		</div>
-	{/if}
+		{/if}
 
 	<!-- Active Gift Codes (Optional - for admins or public codes) -->
 	{#if data.publicCodes && data.publicCodes.length > 0}
