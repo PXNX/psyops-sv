@@ -470,6 +470,11 @@ export const actions: Actions = {
 			})
 			.where(eq(userWallets.userId, account.id));
 
+		// Delete any old completed travel record (userId has UNIQUE constraint)
+		await db.delete(userTravels).where(
+			and(eq(userTravels.userId, account.id), eq(userTravels.status, "completed"))
+		);
+
 		// Create travel record
 		const departureTime = new Date();
 		const arrivalTime = new Date(departureTime.getTime() + travelTimeHours * 60 * 60 * 1000);
