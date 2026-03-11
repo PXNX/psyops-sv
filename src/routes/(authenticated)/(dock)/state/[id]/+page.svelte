@@ -55,6 +55,27 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{data.state.name}</title>
+	<meta name="description" content={data.state.description || `State of ${data.state.name} in PsyOps.`} />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content={data.state.name} />
+	<meta property="og:description" content={data.state.description || `State of ${data.state.name} in PsyOps.`} />
+	{#if data.state.logo}
+		<meta property="og:image" content={data.state.logo} />
+	{/if}
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content={data.state.name} />
+	<meta name="twitter:description" content={data.state.description || `State of ${data.state.name} in PsyOps.`} />
+	{#if data.state.logo}
+		<meta name="twitter:image" content={data.state.logo} />
+	{/if}
+</svelte:head>
+
 <div class="max-w-5xl mx-auto px-4 py-6 space-y-6">
 	<!-- Hero Section with Bloc Background -->
 	<div class="relative">

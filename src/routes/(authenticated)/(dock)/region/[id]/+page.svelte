@@ -53,6 +53,23 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{data.region.name}</title>
+	<meta name="description" content={`Region ${data.region.name} ${data.region.stateName ? 'in ' + data.region.stateName : ''} on PsyOps.`} />
+
+	<!-- Open Graph -->
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content={data.region.name} />
+	<meta property="og:description" content={`Region ${data.region.name} ${data.region.stateName ? 'in ' + data.region.stateName : ''} on PsyOps.`} />
+	<meta property="og:image" content={`/coats/${data.region.id}.svg`} />
+
+	<!-- Twitter Card -->
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content={data.region.name} />
+	<meta name="twitter:description" content={`Region ${data.region.name} ${data.region.stateName ? 'in ' + data.region.stateName : ''} on PsyOps.`} />
+	<meta name="twitter:image" content={`/coats/${data.region.id}.svg`} />
+</svelte:head>
+
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div class="flex items-center gap-4">
