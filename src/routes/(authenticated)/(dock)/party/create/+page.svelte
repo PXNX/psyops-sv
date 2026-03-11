@@ -3,6 +3,7 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createPartySchema } from "./schema";
+	import confetti from "canvas-confetti";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -23,7 +24,17 @@
 		validators: valibotClient(createPartySchema),
 		multipleSubmits: "prevent",
 		clearOnSubmit: "none",
-		taintedMessage: null
+		taintedMessage: null,
+		onResult: ({ result }) => {
+			if (result.type === "success") {
+				confetti({
+					particleCount: 200,
+					spread: 90,
+					origin: { y: 0.6 },
+					colors: [$form.color || "#8b5cf6", "#ffffff", "#fcd34d"]
+				});
+			}
+		}
 	});
 
 	let previewUrl = $state<string | null>(null);
