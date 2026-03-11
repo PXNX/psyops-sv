@@ -3,6 +3,7 @@
 	import { enhance } from "$app/forms";
 	import IconCloudArrowUp from "~icons/fluent/cloud-arrow-up-24-regular";
 	import IconImage from "~icons/fluent/image-24-regular";
+	import ImageCropper from "./ImageCropper.svelte";
 
 	interface Props {
 		action?: string;
@@ -12,6 +13,8 @@
 		onSuccess?: (data: { url: string; fileName: string; key: string }) => void;
 		onError?: (error: string) => void;
 		uploadCooldownMs?: number;
+		enableCrop?: boolean;
+		cropAspectRatio?: number;
 	}
 
 	let {
@@ -21,18 +24,23 @@
 		disabled = false,
 		onSuccess,
 		onError,
-		uploadCooldownMs = 2000
+		uploadCooldownMs = 2000,
+		enableCrop = true,
+		cropAspectRatio
 	}: Props = $props();
 
 	let uploading = $state(false);
 	let dragActive = $state(false);
 	let selectedFile = $state<File | null>(null);
 	let previewUrl = $state<string | null>(null);
+	let croppedDataUrl = $state<string | null>(null);
+	let showCropper = $state(false);
 	let lastUploadTime = $state(0);
 	let cooldownRemaining = $state(0);
 	let cooldownInterval: ReturnType<typeof setInterval> | null = null;
 
 	let fileInput: HTMLInputElement;
+	let form: HTMLFormElement;
 
 	const maxSizeMB = maxSizeBytes / (1024 * 1024);
 	const canUpload = $derived(!uploading && selectedFile !== null && cooldownRemaining === 0);
@@ -89,6 +97,9 @@
 		// Only create preview for images
 		if (file.type.startsWith("image/")) {
 			previewUrl = URL.createObjectURL(file);
+			if (enableCrop) {
+				showCropper = true;
+			}
 		} else {
 			previewUrl = null;
 		}
@@ -97,6 +108,7 @@
 	function clearFile() {
 		if (uploading) return; // Prevent clearing during upload
 		selectedFile = null;
+		croppedDataUrl = null;
 		if (previewUrl) {
 			URL.revokeObjectURL(previewUrl);
 			previewUrl = null;
@@ -104,6 +116,16 @@
 		if (fileInput) {
 			fileInput.value = "";
 		}
+	}
+
+	function handleCropComplete(event: CustomEvent<string>) {
+		croppedDataUrl = event.detail;
+		showCropper = false;
+	}
+
+	function handleCropCancel() {
+		showCropper = false;
+		clearFile();
 	}
 
 	function startCooldown() {
@@ -126,6 +148,22 @@
 		}, 100);
 	}
 
+	async function handleSubmit() {
+		if (!form) return;
+
+		// If cropped data exists, convert it to a blob and add to form
+		if (croppedDataUrl) {
+			const blob = await fetch(croppedDataUrl).then((r) => r.blob());
+			const croppedFile = new File([blob], selectedFile?.name || "cropped.png", { type: "image/png" });
+
+			const dataTransfer = new DataTransfer();
+			dataTransfer.items.add(croppedFile);
+			fileInput.files = dataTransfer.files;
+		}
+
+		form.requestSubmit();
+	}
+
 	// Cleanup on unmount
 	$effect(() => {
 		return () => {
@@ -139,7 +177,22 @@
 	});
 </script>
 
+{#if showCropper && previewUrl}
+	<ImageCropper
+		imageUrl={previewUrl}
+		aspectRatio={cropAspectRatio}
+		onCrop={(dataUrl) => {
+			croppedDataUrl = dataUrl;
+			showCropper = false;
+		}}
+		onCancel={handleCropCancel}
+		title="Crop your image"
+		cropButtonText="Apply Crop"
+	/>
+{/if}
+
 <form
+	bind:this={form}
 	method="POST"
 	{action}
 	enctype="multipart/form-data"
@@ -188,14 +241,14 @@
 				class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
 				class:border-primary={dragActive}
 				class:bg-primary-5={dragActive}
-				class:border-base-300={!dragActive && !selectedFile}
-				class:border-success={selectedFile && !dragActive}
-				class:bg-success-5={selectedFile && !dragActive}
+				class:border-base-300={!dragActive && !croppedDataUrl && !selectedFile}
+				class:border-success={(croppedDataUrl || selectedFile) && !dragActive}
+				class:bg-success-5={(croppedDataUrl || selectedFile) && !dragActive}
 				class:hover:border-primary={!uploading && !disabled}
-				class:hover:bg-base-200={!uploading && !disabled && !selectedFile}
+				class:hover:bg-base-200={!uploading && !disabled && !croppedDataUrl && !selectedFile}
 				class:opacity-50={uploading || disabled}
 			>
-				{#if !selectedFile}
+				{#if !croppedDataUrl && !selectedFile}
 					<div class="flex min-h-[140px] flex-col items-center justify-center gap-2 p-4">
 						<div class="rounded-full bg-base-200 p-3 transition-transform group-hover:scale-110">
 							<IconImage class="h-8 w-8 text-base-content/40" />
@@ -222,7 +275,13 @@
 				{:else}
 					<!-- Preview with File Info -->
 					<div class="flex gap-3 p-3">
-						{#if previewUrl}
+						{#if croppedDataUrl}
+							<div class="shrink-0">
+								<div class="h-24 w-24 overflow-hidden rounded-lg">
+									<img src={croppedDataUrl} alt="Preview" class="h-full w-full object-cover" />
+								</div>
+							</div>
+						{:else if previewUrl}
 							<div class="shrink-0">
 								<div class="h-24 w-24 overflow-hidden rounded-lg">
 									<img src={previewUrl} alt="Preview" class="h-full w-full object-cover" />
@@ -234,12 +293,21 @@
 							</div>
 						{/if}
 						<div class="flex min-w-0 flex-1 flex-col justify-center text-left">
-							<p class="truncate text-sm font-medium" title={selectedFile.name}>
-								{selectedFile.name}
+							<p class="truncate text-sm font-medium" title={selectedFile?.name}>
+								{selectedFile?.name}
 							</p>
 							<p class="text-xs text-base-content/60">
-								{Math.round(selectedFile.size / 1024)} KB
+								{Math.round((selectedFile?.size || 0) / 1024)} KB
 							</p>
+							{#if enableCrop && croppedDataUrl}
+								<button
+									type="button"
+									onclick={() => (showCropper = true)}
+									class="text-xs text-primary hover:underline mt-1"
+								>
+									Re-crop
+								</button>
+							{/if}
 						</div>
 					</div>
 				{/if}
@@ -248,7 +316,7 @@
 	</div>
 
 	<!-- Submit Button -->
-	<button type="submit" class="btn btn-block btn-primary" disabled={!canUpload || disabled}>
+	<button type="button" class="btn btn-block btn-primary" disabled={!canUpload || disabled} onclick={handleSubmit}>
 		{#if uploading}
 			<span class="loading loading-spinner"></span>
 			Uploading...
