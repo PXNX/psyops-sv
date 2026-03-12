@@ -101,6 +101,7 @@
 	"dependencies": {
 		"@tiptap/extension-bold": "^3.20.1",
 		"@tiptap/extension-document": "^3.20.1",
+		"@tiptap/extension-gapcursor": "^3.20.1",
 		"@tiptap/extension-italic": "^3.20.1",
 		"@tiptap/extension-list-item": "^3.20.1",
 		"@tiptap/extension-paragraph": "^3.20.1",
