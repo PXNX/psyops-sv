@@ -39,7 +39,7 @@
 	let startCropHeight = $state(0);
 
 	const MIN_SIZE = 50;
-	const HANDLE_SIZE = 12;
+	const HANDLE_SIZE = 24; // Größerer Handle für Touch-Bedienung
 
 	onMount(() => {
 		img.onload = () => {
@@ -128,17 +128,23 @@
 		const handleX = cropX + cropWidth;
 		const handleY = cropY + cropHeight;
 		ctx.fillStyle = "#3b82f6";
-		ctx.fillRect(handleX - HANDLE_SIZE / 2, handleY - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+		ctx.beginPath();
+		ctx.arc(handleX, handleY, HANDLE_SIZE / 2, 0, Math.PI * 2);
+		ctx.fill();
 		ctx.strokeStyle = "white";
 		ctx.lineWidth = 2;
-		ctx.strokeRect(handleX - HANDLE_SIZE / 2, handleY - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
+		ctx.stroke();
 	}
 
-	function getMousePos(event: MouseEvent) {
+	function getEventPos(event: MouseEvent | TouchEvent) {
 		const imgRect = img.getBoundingClientRect();
+		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
 		return {
-			x: event.clientX - imgRect.left,
-			y: event.clientY - imgRect.top
+			x: clientX - imgRect.left,
+			y: clientY - imgRect.top,
+			clientX,
+			clientY
 		};
 	}
 
@@ -153,33 +159,34 @@
 		return x >= cropX && x <= cropX + cropWidth && y >= cropY && y <= cropY + cropHeight;
 	}
 
-	function handleMouseDown(event: MouseEvent) {
-		const pos = getMousePos(event);
+	function handleStart(event: MouseEvent | TouchEvent) {
+		const pos = getEventPos(event);
 
 		if (isNearHandle(pos.x, pos.y)) {
 			isDragging = true;
 			dragHandle = "se";
-			dragStartX = event.clientX;
-			dragStartY = event.clientY;
+			dragStartX = pos.clientX;
+			dragStartY = pos.clientY;
 			startCropWidth = cropWidth;
 			startCropHeight = cropHeight;
-			event.preventDefault();
+			if (event.cancelable) event.preventDefault();
 		} else if (isInCropArea(pos.x, pos.y)) {
 			isDragging = true;
 			dragHandle = "move";
-			dragStartX = event.clientX;
-			dragStartY = event.clientY;
+			dragStartX = pos.clientX;
+			dragStartY = pos.clientY;
 			startCropX = cropX;
 			startCropY = cropY;
-			event.preventDefault();
+			if (event.cancelable) event.preventDefault();
 		}
 	}
 
-	function handleMouseMove(event: MouseEvent) {
+	function handleMove(event: MouseEvent | TouchEvent) {
 		if (!isDragging) return;
 
-		const deltaX = event.clientX - dragStartX;
-		const deltaY = event.clientY - dragStartY;
+		const pos = getEventPos(event);
+		const deltaX = pos.clientX - dragStartX;
+		const deltaY = pos.clientY - dragStartY;
 
 		const imgRect = img.getBoundingClientRect();
 		const displayWidth = imgRect.width;
@@ -223,9 +230,10 @@
 		}
 
 		drawCanvas();
+		if (event.cancelable) event.preventDefault();
 	}
 
-	function handleMouseUp() {
+	function handleEnd() {
 		isDragging = false;
 		dragHandle = null;
 	}
@@ -267,7 +275,12 @@
 	}
 </script>
 
-<svelte:window onmousemove={handleMouseMove} onmouseup={handleMouseUp} />
+<svelte:window 
+	onmousemove={handleMove} 
+	onmouseup={handleEnd}
+	ontouchmove={handleMove}
+	ontouchend={handleEnd}
+/>
 
 <div class="modal modal-open">
 	<div class="modal-box w-full max-w-2xl">
@@ -284,7 +297,8 @@
 				bind:this={canvas}
 				class="absolute top-0 left-0 cursor-move"
 				style="display: block; width: 100%; height: 100%;"
-				onmousedown={handleMouseDown}
+				onmousedown={handleStart}
+				ontouchstart={handleStart}
 			/>
 		</div>
 
@@ -305,5 +319,7 @@
 	canvas {
 		cursor: move;
 		touch-action: none;
+		-webkit-user-select: none;
+		user-select: none;
 	}
 </style>
