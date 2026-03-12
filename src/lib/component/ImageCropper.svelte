@@ -54,11 +54,13 @@
 	});
 
 	function initializeCrop() {
-		const containerRect = container.getBoundingClientRect();
+		if (!img) return;
 		const imgRect = img.getBoundingClientRect();
 
 		const displayWidth = imgRect.width;
 		const displayHeight = imgRect.height;
+
+		if (displayWidth === 0 || displayHeight === 0) return;
 
 		// Calculate initial crop area (80% of image, centered)
 		const initialSize = Math.min(displayWidth, displayHeight) * 0.8;
@@ -68,7 +70,11 @@
 		// Ensure crop area fits within image
 		if (cropHeight > displayHeight) {
 			cropHeight = displayHeight;
-			cropWidth = cropHeight * aspectRatio;
+			cropWidth = cropHeight * (aspectRatio || 1);
+		}
+		if (cropWidth > displayWidth) {
+			cropWidth = displayWidth;
+			cropHeight = cropWidth / (aspectRatio || 1);
 		}
 
 		cropX = (displayWidth - cropWidth) / 2;
@@ -81,11 +87,11 @@
 		const ctx = canvas.getContext("2d");
 		if (!ctx) return;
 
-		const containerRect = container.getBoundingClientRect();
 		const imgRect = img.getBoundingClientRect();
-
 		const displayWidth = imgRect.width;
 		const displayHeight = imgRect.height;
+
+		if (displayWidth === 0 || displayHeight === 0) return;
 
 		canvas.width = displayWidth;
 		canvas.height = displayHeight;
@@ -119,8 +125,8 @@
 		}
 
 		// Draw resize handle
-		const handleX = cropX + cropWidth - HANDLE_SIZE / 2;
-		const handleY = cropY + cropHeight - HANDLE_SIZE / 2;
+		const handleX = cropX + cropWidth;
+		const handleY = cropY + cropHeight;
 		ctx.fillStyle = "#3b82f6";
 		ctx.fillRect(handleX - HANDLE_SIZE / 2, handleY - HANDLE_SIZE / 2, HANDLE_SIZE, HANDLE_SIZE);
 		ctx.strokeStyle = "white";
@@ -140,7 +146,7 @@
 		const handleX = cropX + cropWidth;
 		const handleY = cropY + cropHeight;
 		const distance = Math.sqrt(Math.pow(x - handleX, 2) + Math.pow(y - handleY, 2));
-		return distance < HANDLE_SIZE + 5;
+		return distance < HANDLE_SIZE + 10;
 	}
 
 	function isInCropArea(x: number, y: number): boolean {
@@ -157,6 +163,7 @@
 			dragStartY = event.clientY;
 			startCropWidth = cropWidth;
 			startCropHeight = cropHeight;
+			event.preventDefault();
 		} else if (isInCropArea(pos.x, pos.y)) {
 			isDragging = true;
 			dragHandle = "move";
@@ -164,6 +171,7 @@
 			dragStartY = event.clientY;
 			startCropX = cropX;
 			startCropY = cropY;
+			event.preventDefault();
 		}
 	}
 
@@ -191,11 +199,13 @@
 			newHeight = Math.max(MIN_SIZE, newHeight);
 
 			// Enforce maximum size
-			newWidth = Math.min(newWidth, displayWidth - cropX);
-			newHeight = Math.min(newHeight, displayHeight - cropY);
-
-			if (aspectRatio) {
-				newHeight = newWidth / aspectRatio;
+			if (cropX + newWidth > displayWidth) {
+				newWidth = displayWidth - cropX;
+				if (aspectRatio) newHeight = newWidth / aspectRatio;
+			}
+			if (cropY + newHeight > displayHeight) {
+				newHeight = displayHeight - cropY;
+				if (aspectRatio) newWidth = newHeight * aspectRatio;
 			}
 
 			cropWidth = newWidth;
@@ -268,13 +278,13 @@
 				bind:this={img}
 				src={imageUrl}
 				alt="Crop preview"
-				class="w-full h-auto display-block"
-				onmousedown={handleMouseDown}
+				class="w-full h-auto block pointer-events-none"
 			/>
 			<canvas
 				bind:this={canvas}
 				class="absolute top-0 left-0 cursor-move"
-				style="display: block; width: 100%; height: 100%; object-fit: contain;"
+				style="display: block; width: 100%; height: 100%;"
+				onmousedown={handleMouseDown}
 			/>
 		</div>
 
@@ -294,5 +304,6 @@
 <style>
 	canvas {
 		cursor: move;
+		touch-action: none;
 	}
 </style>
