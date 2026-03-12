@@ -99,11 +99,18 @@
 		"workbox-window": "7.4.0"
 	},
 	"dependencies": {
+		"@iconify-json/mdi": "^1.2.3",
+		"@tiptap/extension-blockquote": "^3.20.1",
 		"@tiptap/extension-bold": "^3.20.1",
+		"@tiptap/extension-bullet-list": "^3.20.1",
+		"@tiptap/extension-code": "^3.20.1",
+		"@tiptap/extension-code-block": "^3.20.1",
 		"@tiptap/extension-document": "^3.20.1",
 		"@tiptap/extension-gapcursor": "^3.20.1",
+		"@tiptap/extension-horizontal-rule": "^3.20.1",
 		"@tiptap/extension-italic": "^3.20.1",
 		"@tiptap/extension-list-item": "^3.20.1",
+		"@tiptap/extension-ordered-list": "^3.20.1",
 		"@tiptap/extension-paragraph": "^3.20.1",
 		"@tiptap/extension-strike": "^3.20.1",
 		"@tiptap/extension-text": "^3.20.1",
