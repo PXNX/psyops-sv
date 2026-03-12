@@ -1,6 +1,6 @@
 // src/lib/server/service/factoryWork.ts
 import { db } from "$lib/server/db";
-import { companies, companyBudgets, factories, factoryWorkers, regions, resourceInventory, userWallets } from "$lib/server/schema";
+import { companies, companyBudgets, factories, factoryWorkers, regions, resourceInventory, userWallets, transactionHistory } from "$lib/server/schema";
 import { calculateAndCollectTax } from "$lib/server/taxes";
 import { and, eq, sql } from "drizzle-orm";
 
@@ -318,15 +318,41 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				});
 		}
 
-		// Reset shift data to allow immediate next shift
-		await tx
-			.update(factoryWorkers)
-			.set({
-				lastWorked: null,
-				wageAtShiftStart: null
-			})
-			.where(eq(factoryWorkers.id, job.id));
-	});
+			// Reset shift data to allow immediate next shift
+			await tx
+				.update(factoryWorkers)
+				.set({
+					lastWorked: null,
+					wageAtShiftStart: null
+				})
+				.where(eq(factoryWorkers.id, job.id));
+
+			// Record transaction for worker
+			const [currentWallet] = await tx.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, userId));
+			await tx.insert(transactionHistory).values({
+				userId,
+				transactionType: "factory_wage",
+				amount: incomeTaxResult.netAmount,
+				balanceAfter: currentWallet?.balance || 0,
+				description: `Received wage for shift at ${factory.name}`,
+				relatedEntityType: "factory",
+				relatedEntityId: factoryId
+			});
+
+			// Record transaction for company (deduction)
+			// Note: We're recording this for the company owner as companies don't have their own transaction history yet
+			const [ownerWallet] = await tx.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, factory.ownerId));
+			await tx.insert(transactionHistory).values({
+				userId: factory.ownerId,
+				transactionType: "factory_wage",
+				amount: -wageToCollect,
+				balanceAfter: ownerWallet?.balance || 0,
+				description: `Paid wage for shift at ${factory.name} to user ${userId}`,
+				relatedEntityType: "factory",
+				relatedEntityId: factoryId,
+				relatedUserId: userId
+			});
+		});
 
 	const totalTaxPaid = incomeTaxResult.taxAmount + (miningTaxResult?.taxAmount || 0);
 	const taxBreakdown = miningTaxResult
