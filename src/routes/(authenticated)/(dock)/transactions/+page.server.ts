@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/(dock)/transactions/+page.server.ts
 import { db } from "$lib/server/db";
 import { transactionHistory, userProfiles, accounts, userWallets } from "$lib/server/schema";
-import { eq, sql, desc, gte } from "drizzle-orm";
+import { eq, sql, desc, gte, and } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
 const PAGE_SIZE = 20;
@@ -62,7 +62,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         })
         .from(transactionHistory)
         .where(
-            sql`${transactionHistory.userId} = ${account.id} AND ${transactionHistory.createdAt} >= ${thirtyDaysAgo}`
+            and(
+                eq(transactionHistory.userId, account.id),
+                gte(transactionHistory.createdAt, thirtyDaysAgo)
+            )
         )
         .orderBy(desc(transactionHistory.createdAt));
 
