@@ -1,8 +1,8 @@
 // src/lib/server/services/push-notification.service.ts
 import webpush from "web-push";
 import { db } from "$lib/server/db";
-import { pushSubscriptions, newspaperSubscriptions } from "$lib/server/schema";
-import { eq } from "drizzle-orm";
+import { pushSubscriptions, newspaperSubscriptions, accounts } from "$lib/server/schema";
+import { eq, and } from "drizzle-orm";
 
 // Set VAPID details (these should be in environment variables in production)
 // You'll need to generate these keys using: npx web-push generate-vapid-keys
@@ -80,11 +80,17 @@ export async function notifyNewspaperSubscribers(params: {
 }): Promise<void> {
     const { newspaperId, newspaperName, articleId, articleTitle } = params;
 
-    // Get all users subscribed to this newspaper
+    // Get all users subscribed to this newspaper who have notifications enabled
     const subscribers = await db
         .select({ userId: newspaperSubscriptions.userId })
         .from(newspaperSubscriptions)
-        .where(eq(newspaperSubscriptions.newspaperId, newspaperId));
+        .innerJoin(accounts, eq(newspaperSubscriptions.userId, accounts.id))
+        .where(
+            and(
+                eq(newspaperSubscriptions.newspaperId, newspaperId),
+                eq(accounts.notifyNewspaperPosts, true)
+            )
+        );
 
     // Create notification payload
     const payload: PushNotificationPayload = {

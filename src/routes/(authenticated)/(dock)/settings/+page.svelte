@@ -9,11 +9,13 @@
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
 	import { themes } from "$lib/themes";
 
 	let { data } = $props();
 
 	let current_theme = $state("");
+	let notifyNewspaperPosts = $state(data.profile.notifyNewspaperPosts);
 	let loadImages = $state(true);
 
 	$effect(() => {
@@ -46,6 +48,16 @@
 		window.localStorage.setItem("loadImages", loadImages.toString());
 		const one_year = 60 * 60 * 24 * 365;
 		document.cookie = `loadImages=${loadImages}; max-age=${one_year}; path=/; SameSite=Lax`;
+	}
+
+	async function toggleNotification(setting: string, value: boolean) {
+		const formData = new FormData();
+		formData.append(setting, value.toString());
+
+		await fetch("?/updateNotifications", {
+			method: "POST",
+			body: formData
+		});
 	}
 </script>
 
@@ -116,8 +128,38 @@
 		</div>
 	</div>
 
-	<!-- Gift Code Link -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+		<!-- Notification Settings -->
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+			<div class="flex items-center gap-2">
+				<FluentAlert20Filled class="size-5 text-blue-400" />
+				<h2 class="text-lg font-semibold text-white">Notifications</h2>
+			</div>
+
+			<div class="pt-2">
+				<label class="flex items-center justify-between cursor-pointer group">
+					<div class="flex items-center gap-3">
+						<div class="bg-blue-600/20 p-2 rounded-lg">
+							<FluentEmojiRolledUpNewspaper class="size-5" />
+						</div>
+						<div>
+							<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
+								Newspaper Posts
+							</p>
+							<p class="text-xs text-gray-500">Get notified when a subscribed newspaper publishes</p>
+						</div>
+					</div>
+					<input
+						type="checkbox"
+						bind:checked={notifyNewspaperPosts}
+						onchange={() => toggleNotification("notifyNewspaperPosts", notifyNewspaperPosts)}
+						class="toggle toggle-info"
+					/>
+				</label>
+			</div>
+		</div>
+
+		<!-- Gift Code Link -->
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 		<a
 			href="/giftcode"
 			class="flex items-center justify-between group hover:bg-slate-700/30 -m-5 p-5 rounded-xl transition-colors"

@@ -115,10 +115,11 @@ export const accounts = pgTable(
 	{
 		id: text("id").primaryKey(), // Auth-managed ID
 		email: varchar("email", { length: 255 }).notNull().unique(),
-		role: userRoleEnum("role").notNull().default("user"),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("updated_at").defaultNow().notNull()
-	},
+			role: userRoleEnum("role").notNull().default("user"),
+			notifyNewspaperPosts: boolean("notify_newspaper_posts").default(true).notNull(),
+			createdAt: timestamp("created_at").defaultNow().notNull(),
+			updatedAt: timestamp("updated_at").defaultNow().notNull()
+		},
 	(t) => ({ emailIdx: uniqueIndex("idx_email").on(t.email) })
 );
 

@@ -112,13 +112,22 @@
 				<span class="hidden sm:inline">New</span>
 			</button>
 
-			<button
-				onclick={() => goto("/newspaper")}
-				class="btn btn-sm btn-circle bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 transition-all p-2"
-				title="View newspapers"
-			>
-				<FluentEmojiRolledUpNewspaper class="text-xl" />
-			</button>
+				<button
+					onclick={() => goto("/posts/subscribed")}
+					class="btn btn-sm gap-2 bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/30 text-blue-300 hover:text-blue-200 transition-all"
+					title="View subscribed newspapers posts"
+				>
+					<FluentEmojiRolledUpNewspaper class="size-4" />
+					<span class="hidden sm:inline">Subscribed</span>
+				</button>
+
+				<button
+					onclick={() => goto("/newspaper")}
+					class="btn btn-sm btn-circle bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 transition-all p-2"
+					title="View newspapers"
+				>
+					<FluentEmojiRolledUpNewspaper class="text-xl" />
+				</button>
 
 			<a
 				href="/moderators"
