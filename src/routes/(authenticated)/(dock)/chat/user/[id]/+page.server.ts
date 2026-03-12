@@ -10,6 +10,7 @@ import {
 	residences,
 	partyMembers
 } from "$lib/server/schema";
+import { sendPushNotificationToUser } from "$lib/server/services/push-notification.service";
 import { eq, and, or, desc } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
@@ -197,6 +198,24 @@ export const actions: Actions = {
 			messageType: "direct"
 		});
 		console.log("NOTIFICATION SENT");
+
+		// Get sender's display name for the push notification
+		const senderProfile = await db.query.userProfiles.findFirst({
+			where: eq(userProfiles.accountId, account.id)
+		});
+		const senderName = senderProfile?.name || "Someone";
+
+		// Send push notification to the recipient
+		await sendPushNotificationToUser(otherUserId, {
+			title: "💬 New Message",
+			body: `${senderName}: ${content.trim().slice(0, 100)}${content.trim().length > 100 ? "…" : ""}`,
+			icon: "/favicon.png",
+			badge: "/badge.png",
+			data: {
+				url: `/chat/user/${account.id}`,
+				tag: `chat-${account.id}`
+			}
+		});
 
 		return { success: true };
 	},
