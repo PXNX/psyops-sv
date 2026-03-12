@@ -164,9 +164,7 @@ export const actions: Actions = {
 			console.error("Profile update error:", error);
 			return message(form, "Failed to update profile", { status: 500 });
 		}
-	}
-};
-,
+	},
 	disconnectTelegram: async ({ locals }) => {
 		const account = locals.account!;
 
