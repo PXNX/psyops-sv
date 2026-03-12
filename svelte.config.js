@@ -1,14 +1,19 @@
 import adapter from "@sveltejs/adapter-auto";
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { mdsvex } from "mdsvex";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	runes: true,
+	extensions: [".svelte", ".md", ".svx"],
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
 	// for more information about preprocessors
 	preprocess: [
 		//https://svelte.dev/docs/svelte/typescript
-		vitePreprocess({ script: true })
+		vitePreprocess({ script: true }),
+		mdsvex({
+			extensions: [".md", ".svx"]
+		})
 		// sveltePreprocessSvg must be used AFTER other markup preprocessors like mdsvex
 	],
 
