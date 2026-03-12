@@ -1,39 +1,27 @@
 // src/routes/auth/login/telegram/+server.ts
 import { redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { TELEGRAM_CLIENT_ID, TELEGRAM_REDIRECT_URI } from "$lib/server/auth";
 
-export const GET: RequestHandler = async ({ url, cookies }) => {
-	// Generate random state for security
-	const randomState = crypto.getRandomValues(new Uint8Array(32));
-	const state = Array.from(randomState)
-		.map((b) => b.toString(16).padStart(2, "0"))
-		.join("");
-
+export const GET: RequestHandler = async ({ url }) => {
 	// Get the 'next' parameter to redirect after login
 	const next = url.searchParams.get("next") || "/";
 
-	// Encode the redirect URL into the state parameter
-	const stateWithRedirect = `${state}|${encodeURIComponent(next)}`;
+	// Build the Telegram login URL with Web App
+	// This uses the Telegram Web App authentication flow
+	const telegramLoginUrl = new URL("https://oauth.telegram.org/tg/start");
 
-	// Store the state for validation
-	cookies.set("telegram_oauth_state", stateWithRedirect, {
-		path: "/",
-		secure: import.meta.env.PROD,
-		httpOnly: true,
-		maxAge: 60 * 10,
-		sameSite: "lax"
-	});
+	// For standalone Telegram login, we need to use the bot's username
+	// The bot_id should be the numeric ID of your Telegram bot
+	// You can get this from BotFather
+	const botId = process.env.TELEGRAM_BOT_ID || "YOUR_BOT_ID";
 
-	// Telegram OAuth2 URL
-	const telegramAuthUrl = new URL("https://oauth.telegram.org/tg/start");
-	telegramAuthUrl.searchParams.set("bot_id", TELEGRAM_CLIENT_ID);
-	telegramAuthUrl.searchParams.set("origin", new URL(url).origin);
-	telegramAuthUrl.searchParams.set("return_to", TELEGRAM_REDIRECT_URI);
-	telegramAuthUrl.searchParams.set("request_access", "write");
+	telegramLoginUrl.searchParams.set("bot_id", botId);
+	telegramLoginUrl.searchParams.set("origin", new URL(url).origin);
+	telegramLoginUrl.searchParams.set("return_to", `${new URL(url).origin}/auth/callback/telegram?next=${encodeURIComponent(next)}`);
+	telegramLoginUrl.searchParams.set("request_access", "write");
 
 	console.log("🔍 Telegram Login - Redirect URL:", next);
-	console.log("🔍 Telegram Login - State with redirect:", stateWithRedirect);
+	console.log("🔍 Telegram Login - Bot ID:", botId);
 
-	redirect(302, telegramAuthUrl.toString());
+	redirect(302, telegramLoginUrl.toString());
 };
