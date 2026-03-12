@@ -5,6 +5,9 @@ import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
 import { parliamentaryProposals, parliamentaryVotes, stateTaxes, parliamentMembers } from "$lib/server/schema";
 import { eq, and, lte } from "drizzle-orm";
+import { ProposalService } from "$lib/server/services/politics/proposal.service";
+
+const proposalService = new ProposalService(db);
 
 export const GET: RequestHandler = async ({ request }) => {
 	try {
@@ -92,15 +95,15 @@ async function processProposal(proposal: any) {
 		`Proposal ${proposal.id}: ${yesVotes} yes, ${noVotes} no out of ${totalMembers} members (${yesPercentage.toFixed(1)}% yes). Required: ${requiredMajority}%`
 	);
 
-	if (hasPassed) {
-		// Mark as passed
-		await db.update(parliamentaryProposals).set({ status: "passed" }).where(eq(parliamentaryProposals.id, proposal.id));
+		if (hasPassed) {
+			// Mark as passed
+			await db.update(parliamentaryProposals).set({ status: "passed" }).where(eq(parliamentaryProposals.id, proposal.id));
 
-		// Implement the proposal based on type
-		await implementProposal(proposal);
+			// Implement the proposal based on type
+			await proposalService.implementProposal(proposal);
 
-		console.log(`✅ Proposal ${proposal.id} PASSED and implemented`);
-	} else {
+			console.log(`✅ Proposal ${proposal.id} PASSED and implemented`);
+		} else {
 		// Mark as rejected
 		await db
 			.update(parliamentaryProposals)
@@ -111,74 +114,4 @@ async function processProposal(proposal: any) {
 	}
 }
 
-async function implementProposal(proposal: any) {
-	console.log(`Implementing proposal ${proposal.id} of type ${proposal.proposalType}`);
 
-	// Parse the description to extract metadata
-	const description = proposal.description || "";
-
-	if (proposal.proposalType === "tax") {
-		// Extract tax configuration from description
-		const taxTypeMatch = description.match(/Tax Type: (.+)/);
-		const taxRateMatch = description.match(/Tax Rate: (\d+)%/);
-
-		if (taxTypeMatch && taxRateMatch) {
-			const taxType = taxTypeMatch[1];
-			const taxRate = parseInt(taxRateMatch[1]);
-
-			// Check if tax already exists (avoid duplicates)
-			const existingTax = await db.select().from(stateTaxes).where(eq(stateTaxes.proposalId, proposal.id)).limit(1);
-
-			if (existingTax.length === 0) {
-				// Deactivate existing taxes of the same type
-				await db
-					.update(stateTaxes)
-					.set({ isActive: false })
-					.where(and(eq(stateTaxes.stateId, proposal.stateId), eq(stateTaxes.taxType, taxType as any), eq(stateTaxes.isActive, true)));
-
-				await db.insert(stateTaxes).values({
-					stateId: proposal.stateId,
-					taxType: taxType as any,
-					taxRate,
-
-					proposalId: proposal.id,
-					isActive: true
-				});
-
-				console.log(`✅ Tax  (${taxRate}% ${taxType}) created for state ${proposal.stateId}`);
-			} else {
-				console.log(`ℹ️  Tax for proposal ${proposal.id} already exists, skipping`);
-			}
-		} else {
-			console.error(`❌ Failed to extract tax configuration from proposal ${proposal.id}`);
-		}
-	} else if (["hospital", "school", "power_plant", "road", "bridge"].includes(proposal.proposalType)) {
-		// Extract construction details
-		const buildingNameMatch = description.match(/Building Name: (.+)/);
-		const regionIdMatch = description.match(/Region: (.+)/);
-		const costMatch = description.match(/Estimated Cost: (\d+) currency/);
-
-		if (buildingNameMatch && regionIdMatch && costMatch) {
-			const buildingName = buildingNameMatch[1];
-			const regionId = regionIdMatch[1];
-			const cost = parseInt(costMatch[1]);
-
-			// TODO: Insert into buildings/infrastructure table
-			// await db.insert(stateBuildings).values({
-			//   stateId: proposal.stateId,
-			//   buildingType: proposal.proposalType,
-			//   buildingName,
-			//   regionId,
-			//   constructionCost: cost,
-			//   proposalId: proposal.id,
-			//   status: "under_construction"
-			// });
-
-			console.log(
-				`✅ Construction project "${buildingName}" (${proposal.proposalType}) approved for region ${regionId} at ${cost} currency`
-			);
-		} else {
-			console.error(`❌ Failed to extract construction details from proposal ${proposal.id}`);
-		}
-	}
-}

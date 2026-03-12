@@ -565,19 +565,31 @@
 									</p>
 								{/if}
 
-								<!-- Auto-Accept Button (Ministers/President) -->
-								{#if data.canAutoAccept}
-									<form method="POST" action="?/acceptProposal" use:enhance class="mb-2">
-										<input type="hidden" name="proposalId" value={proposal.id} />
-										<button
-											type="submit"
-											class="btn btn-sm w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white gap-2"
-										>
-											<FluentCheckmarkCircle20Filled class="size-4" />
-											Auto-Accept & Execute Proposal
-										</button>
-									</form>
-								{/if}
+									<!-- Auto-Accept/Reject Buttons (Ministers/President) -->
+									{#if data.canAutoAccept}
+										<div class="grid grid-cols-2 gap-2 mb-2">
+											<form method="POST" action="?/acceptProposal" use:enhance>
+												<input type="hidden" name="proposalId" value={proposal.id} />
+												<button
+													type="submit"
+													class="btn btn-sm w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white gap-2"
+												>
+													<FluentCheckmarkCircle20Filled class="size-4" />
+													Auto-Accept
+												</button>
+											</form>
+											<form method="POST" action="?/rejectProposal" use:enhance>
+												<input type="hidden" name="proposalId" value={proposal.id} />
+												<button
+													type="submit"
+													class="btn btn-sm w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 border-0 text-white gap-2"
+												>
+													<FluentDismiss20Filled class="size-4" />
+													Auto-Reject
+												</button>
+											</form>
+										</div>
+									{/if}
 
 								<!-- Regular Voting -->
 								<form method="POST" action="?/vote" use:enhance class="flex gap-2">
