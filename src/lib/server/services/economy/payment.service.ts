@@ -1,7 +1,7 @@
 // Centralized payment service - handles all money transfers and creates transaction receipts
 import type { Database } from '../../db';
 import { userWallets, transactionHistory, type TransactionHistory } from '../../schema';
-import { eq, sql } from 'drizzle-orm';
+import { eq, sql, desc } from 'drizzle-orm';
 
 export interface PaymentOptions {
     userId: string;
@@ -299,7 +299,7 @@ export class PaymentService {
             .select()
             .from(transactionHistory)
             .where(eq(transactionHistory.userId, userId))
-            .orderBy(sql`${transactionHistory.createdAt} DESC`)
+            .orderBy(desc(transactionHistory.createdAt))
             .limit(pageSize)
             .offset(offset);
 
