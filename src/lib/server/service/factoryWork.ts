@@ -2,6 +2,7 @@
 import { db } from "$lib/server/db";
 import { companies, companyBudgets, factories, factoryWorkers, regions, resourceInventory, userWallets, transactionHistory } from "$lib/server/schema";
 import { calculateAndCollectTax } from "$lib/server/taxes";
+import { sendPushNotificationToUser } from "$lib/server/services/push-notification.service";
 import { and, eq, sql } from "drizzle-orm";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
@@ -183,6 +184,7 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 	const [factory] = await db
 		.select({
 			id: factories.id,
+			name: factories.name,
 			companyId: factories.companyId,
 			ownerId: companies.ownerId,
 			factoryType: factories.factoryType,
@@ -358,6 +360,18 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 	const taxBreakdown = miningTaxResult
 		? `${incomeTaxResult.taxAmount.toLocaleString()} income tax + ${miningTaxResult.taxAmount.toLocaleString()} mining tax`
 		: `${incomeTaxResult.taxAmount.toLocaleString()} income tax`;
+
+	// Send push notification to the worker about completed shift
+	await sendPushNotificationToUser(userId, {
+		title: "🏭 Shift Complete!",
+		body: `You earned ${incomeTaxResult.netAmount.toLocaleString()} from your shift at ${factory.name}.`,
+		icon: "/favicon.png",
+		badge: "/badge.png",
+		data: {
+			url: `/factory/${factoryId}`,
+			tag: `factory-shift-${factoryId}`
+		}
+	});
 
 	return {
 		success: true,

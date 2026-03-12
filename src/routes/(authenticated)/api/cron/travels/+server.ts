@@ -3,8 +3,9 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
-import { userTravels, residences } from "$lib/server/schema";
+import { userTravels, residences, regions, states } from "$lib/server/schema";
 import { eq, and, lte } from "drizzle-orm";
+import { sendPushNotificationToUser } from "$lib/server/services/push-notification.service";
 
 export const GET: RequestHandler = async ({ request }) => {
 	try {
@@ -82,4 +83,26 @@ async function processTravel(travel: any) {
 	await db.update(userTravels).set({ status: "completed" }).where(eq(userTravels.id, travel.id));
 
 	console.log(`  ✓ Marked travel ${travel.id} as completed`);
+
+	// Resolve destination name for the push notification
+	const [destinationRegion] = await db
+		.select({ stateName: states.name })
+		.from(regions)
+		.innerJoin(states, eq(regions.stateId, states.id))
+		.where(eq(regions.id, travel.toRegionId));
+	const destinationName = destinationRegion?.stateName ?? "your destination";
+
+	// Send push notification to the user who arrived
+	await sendPushNotificationToUser(travel.userId, {
+		title: "✈️ Arrived!",
+		body: `You have arrived in ${destinationName}.`,
+		icon: "/favicon.png",
+		badge: "/badge.png",
+		data: {
+			url: "/travel",
+			tag: "travel-arrival"
+		}
+	});
+
+	console.log(`  ✓ Sent arrival push notification to user ${travel.userId}`);
 }

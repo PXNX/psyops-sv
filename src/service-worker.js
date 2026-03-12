@@ -107,7 +107,8 @@ self.addEventListener("push", (event) => {
 			icon: notificationData.icon || "/favicon.png",
 			badge: notificationData.badge || "/badge.png",
 			data: notificationData.data,
-			tag: notificationData.data?.articleId ? `article-${notificationData.data.articleId}` : undefined,
+			tag: notificationData.data?.tag ??
+			(notificationData.data?.articleId ? `article-${notificationData.data.articleId}` : undefined),
 			renotify: true,
 			requireInteraction: false
 		})
