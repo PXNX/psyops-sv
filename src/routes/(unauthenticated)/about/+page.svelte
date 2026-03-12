@@ -11,6 +11,7 @@
 	import Modal from "$lib/component/Modal.svelte";
 
 	const version = "0.0.1";
+	const buildTime = "2026-03-12 12:30:00";
 	let bugModalOpen = $state(false);
 	let bugForm = $state({
 		title: "",
@@ -51,7 +52,7 @@
 					class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-full"
 				>
 					<FluentInfo20Filled class="size-4 text-purple-400" />
-					<span class="text-sm text-gray-300">Version {version}</span>
+						<span class="text-sm text-gray-300">Version {version} ({buildTime})</span>
 				</div>
 			</div>
 		</div>
