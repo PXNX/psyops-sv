@@ -125,16 +125,18 @@ export const accounts = pgTable(
 
 export const userProfiles = pgTable("user_profiles", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
-	accountId: text("account_id")
-		.notNull()
-		.references(() => accounts.id, { onDelete: "cascade" })
-		.unique(),
-	name: text("name").default("New user").notNull(),
-	logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
-	bio: text("bio"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-	updatedAt: timestamp("updated_at").defaultNow().notNull()
-});
+		accountId: text("account_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" })
+			.unique(),
+		name: text("name").default("New user").notNull(),
+		logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
+		bio: text("bio"),
+		telegramId: bigint("telegram_id", { mode: "number" }).unique(),
+		telegramUsername: text("telegram_username"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	});
 
 export const sessions = pgTable(
 	"sessions",

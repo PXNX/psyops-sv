@@ -67,7 +67,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			name: profile?.name,
 			bio: profile?.bio,
 			logo: logoUrl,
-			email: account.email
+			email: account.email,
+			telegramUsername: profile?.telegramUsername,
+			telegramId: profile?.telegramId
 		},
 		userBalance,
 		editCost: PROFILE_EDIT_CONFIG.COST,
@@ -161,6 +163,27 @@ export const actions: Actions = {
 		} catch (error) {
 			console.error("Profile update error:", error);
 			return message(form, "Failed to update profile", { status: 500 });
+		}
+	}
+};
+,
+	disconnectTelegram: async ({ locals }) => {
+		const account = locals.account!;
+
+		try {
+			await db
+				.update(userProfiles)
+				.set({
+					telegramId: null,
+					telegramUsername: null,
+					updatedAt: new Date()
+				})
+				.where(eq(userProfiles.accountId, account.id));
+
+			return message({ name: "", bio: "" }, "Telegram account disconnected successfully");
+		} catch (error) {
+			console.error("Telegram disconnect error:", error);
+			return message({ name: "", bio: "" }, "Failed to disconnect Telegram account", { status: 500 });
 		}
 	}
 };

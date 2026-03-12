@@ -54,7 +54,7 @@ const authHandle: Handle = async ({ event, resolve }) => {
 };
 
 export const handleError: HandleServerError = async ({ error, event }) => {
-	const errorId = crypto.randomUUID();
+	const requestId = crypto.randomUUID();
 
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	//@ts-ignore
@@ -62,12 +62,17 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 	//@ts-ignore
 	event.locals.errorStackTrace = error?.stack || undefined;
-	event.locals.errorId = errorId;
-	console.log(500, event);
-	//log(500, event);
+	event.locals.requestId = requestId;
+	
+	// Log error with request ID for debugging
+	console.error(`[ERROR ${requestId}] ${error?.toString() || 'Unknown error'}`);
+	if (error?.stack) {
+		console.error(`[STACK ${requestId}]`, error.stack);
+	}
+	
 	return {
 		message: "An unexpected error occurred.",
-		errorId
+		requestId
 	};
 };
 
