@@ -184,23 +184,31 @@
 			<span class="hidden sm:inline">Share</span>
 		</button>
 
-		{#if data.isOwnProfile}
-			<a
-				href="/inbox"
-				class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
-			>
-				<FluentMail20Filled class="size-4" />
-				<span class="hidden sm:inline">Inbox</span>
-			</a>
+			{#if data.isOwnProfile}
+				<a
+					href="/settings/profile"
+					class="btn btn-sm gap-2 bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/20 text-purple-300 hover:text-purple-200 transition-all"
+				>
+					<FluentSettingsCogMultiple20Filled class="size-4" />
+					<span class="hidden sm:inline">Edit Profile</span>
+				</a>
 
-			<a
-				href="/settings"
-				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
-			>
-				<FluentSettingsCogMultiple20Filled class="size-4" />
-				<span class="hidden sm:inline">Settings</span>
-			</a>
-		{/if}
+				<a
+					href="/inbox"
+					class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
+				>
+					<FluentMail20Filled class="size-4" />
+					<span class="hidden sm:inline">Inbox</span>
+				</a>
+
+				<a
+					href="/settings"
+					class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+				>
+					<FluentSettingsCogMultiple20Filled class="size-4" />
+					<span class="hidden sm:inline">Settings</span>
+				</a>
+			{/if}
 	</section>
 
 	<!-- Government Positions Section -->
