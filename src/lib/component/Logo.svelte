@@ -22,6 +22,15 @@
 	let loaded = $state(false);
 	let error = $state(false);
 	let img: HTMLImageElement | undefined = $state();
+	let loadImages = $state(true);
+
+	// Load the loadImages preference from localStorage
+	$effect(() => {
+		if (typeof window !== "undefined") {
+			const imagePreference = window.localStorage.getItem("loadImages");
+			loadImages = imagePreference !== "false";
+		}
+	});
 
 	// Single effect for cache check - runs once when img is bound
 	$effect(() => {
@@ -37,7 +46,7 @@
 		error = false;
 	});
 
-	const shouldShow = $derived(!!src && !error);
+	const shouldShow = $derived(!!src && !error && loadImages);
 </script>
 
 <div class="relative overflow-hidden {className} rounded-sm size-10">

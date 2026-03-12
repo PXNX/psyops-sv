@@ -49,7 +49,6 @@
 	let { initialContent = "", placeholder = "Start writing...", onContentChange }: Props = $props();
 
 	let editor = $state() as Readable<Editor>;
-	let showToolbar = $state(false);
 
 	onMount(() => {
 		editor = createEditor({
@@ -114,15 +113,8 @@
 </script>
 
 <div class="wysiwyg-editor border rounded-lg bg-base-100">
-	<!-- Mobile Toolbar Toggle -->
-	<div class="sm:hidden border-b p-2">
-		<button class="btn btn-sm btn-block btn-ghost" onclick={() => (showToolbar = !showToolbar)}>
-			{showToolbar ? "Hide" : "Show"} Formatting
-		</button>
-	</div>
-
 	<!-- Toolbar -->
-	<div class="border-b p-2 {showToolbar || 'hidden'} sm:block">
+	<div class="border-b p-2 block">
 		<div class="flex flex-wrap gap-1">
 			<!-- Text Formatting -->
 			<div class="btn-group">
