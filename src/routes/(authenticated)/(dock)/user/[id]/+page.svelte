@@ -91,12 +91,23 @@
 			<div class="relative z-10 flex flex-col items-center space-y-3">
 				<Logo src={data.user.logo} alt={data.user.name} placeholderIcon={FluentImageOff20Filled} class="size-20" />
 
-				<div class="text-center space-y-1">
-					<h1 class="text-3xl font-bold text-white tracking-tight">{data.user.name || "Anonymous User"}</h1>
-					<p class="text-sm text-gray-400 font-mono">#{data.user.id}</p>
-					{#if data.user.bio}
-						<p class="text-sm text-gray-300 max-w-md mt-2">{data.user.bio}</p>
-					{/if}
+					<div class="text-center space-y-1">
+						<div class="flex items-center justify-center gap-2">
+							<h1 class="text-3xl font-bold text-white tracking-tight">{data.user.name || "Anonymous User"}</h1>
+							{#if data.isOwnProfile}
+								<a
+									href="/settings/profile"
+									class="size-8 flex items-center justify-center bg-purple-600/20 hover:bg-purple-600/40 rounded-full text-purple-400 transition-all"
+									title="Edit Profile"
+								>
+									<FluentSettingsCogMultiple20Filled class="size-4" />
+								</a>
+							{/if}
+						</div>
+						<p class="text-sm text-gray-400 font-mono">#{data.user.id}</p>
+						{#if data.user.bio}
+							<p class="text-sm text-gray-300 max-w-md mt-2">{data.user.bio}</p>
+						{/if}
 
 					<!-- Government Positions Badges -->
 					<div class="flex gap-2 justify-center flex-wrap mt-3">
@@ -176,39 +187,31 @@
 			</button>
 		{/if}
 
-		<button
-			class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
-			onclick={() => shareLink(data.user.name || "User", window.location.href)}
-		>
-			<FluentShareAndroid20Filled class="size-4" />
-			<span class="hidden sm:inline">Share</span>
-		</button>
+			<button
+				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+				onclick={() => shareLink(data.user.name || "User", window.location.href)}
+			>
+				<FluentShareAndroid20Filled class="size-4" />
+				<span class="hidden sm:inline">Share</span>
+			</button>
 
-			{#if data.isOwnProfile}
-				<a
-					href="/settings/profile"
-					class="btn btn-sm gap-2 bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/20 text-purple-300 hover:text-purple-200 transition-all"
-				>
-					<FluentSettingsCogMultiple20Filled class="size-4" />
-					<span class="hidden sm:inline">Edit Profile</span>
-				</a>
+				{#if data.isOwnProfile}
+					<a
+						href="/inbox"
+						class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
+					>
+						<FluentMail20Filled class="size-4" />
+						<span class="hidden sm:inline">Inbox</span>
+					</a>
 
-				<a
-					href="/inbox"
-					class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
-				>
-					<FluentMail20Filled class="size-4" />
-					<span class="hidden sm:inline">Inbox</span>
-				</a>
-
-				<a
-					href="/settings"
-					class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
-				>
-					<FluentSettingsCogMultiple20Filled class="size-4" />
-					<span class="hidden sm:inline">Settings</span>
-				</a>
-			{/if}
+					<a
+						href="/settings"
+						class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+					>
+						<FluentSettingsCogMultiple20Filled class="size-4" />
+						<span class="hidden sm:inline">Settings</span>
+					</a>
+				{/if}
 	</section>
 
 	<!-- Government Positions Section -->

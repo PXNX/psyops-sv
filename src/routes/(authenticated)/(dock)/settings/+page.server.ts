@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/(dock)/settings/+page.server.ts
 import { db } from "$lib/server/db";
-import { userProfiles } from "$lib/server/schema";
-import { redirect } from "@sveltejs/kit";
+import { userProfiles, accounts } from "$lib/server/schema";
+import { redirect, fail } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -12,16 +12,37 @@ export const load: PageServerLoad = async ({ locals }) => {
 		where: eq(userProfiles.accountId, account.id)
 	});
 
-	return {
-		profile: {
-			email: account.email,
-			name: profile?.name
-		}
-	};
+		return {
+			profile: {
+				email: account.email,
+				name: profile?.name,
+				notifyNewspaperPosts: account.notifyNewspaperPosts
+			}
+		};
 };
 
 export const actions: Actions = {
 	logout: async () => {
-		return redirect(302, "/auth/logout");
-	}
-};
+			return redirect(302, "/auth/logout");
+		},
+		updateNotifications: async ({ request, locals }) => {
+			const account = locals.account!;
+			const formData = await request.formData();
+			const notifyNewspaperPosts = formData.get("notifyNewspaperPosts") === "true";
+
+			try {
+				await db
+					.update(accounts)
+					.set({
+						notifyNewspaperPosts,
+						updatedAt: new Date()
+					})
+					.where(eq(accounts.id, account.id));
+
+				return { success: true };
+			} catch (err) {
+				console.error("Update notifications error:", err);
+				return fail(500, { error: "Failed to update notification settings" });
+			}
+		}
+	};
