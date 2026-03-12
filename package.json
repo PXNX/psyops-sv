@@ -85,6 +85,7 @@
 		"sharp": "0.34.5",
 		"sveaflet": "0.1.4",
 		"svelte": "5.53.6",
+		"svelte-check": "^4.4.5",
 		"svelte-tiptap": "3.0.1",
 		"sveltekit-superforms": "2.30.0",
 		"svelteplot": "0.11.0",
