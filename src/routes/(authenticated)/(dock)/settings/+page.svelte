@@ -9,8 +9,9 @@
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-	import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
-	import { themes } from "$lib/themes";
+		import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
+		import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
+		import { themes } from "$lib/themes";
 
 	let { data } = $props();
 
