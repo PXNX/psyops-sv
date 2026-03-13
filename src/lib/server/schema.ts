@@ -133,10 +133,12 @@ export const userProfiles = pgTable("user_profiles", {
 		logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
 		bio: text("bio"),
 		telegramId: bigint("telegram_id", { mode: "number" }).unique(),
-		telegramUsername: text("telegram_username"),
-		createdAt: timestamp("created_at").defaultNow().notNull(),
-		updatedAt: timestamp("updated_at").defaultNow().notNull()
-	});
+			telegramUsername: text("telegram_username"),
+			theme: text("theme").default("dark").notNull(),
+			loadImages: boolean("load_images").default(true).notNull(),
+			createdAt: timestamp("created_at").defaultNow().notNull(),
+			updatedAt: timestamp("updated_at").defaultNow().notNull()
+		});
 
 export const sessions = pgTable(
 	"sessions",
