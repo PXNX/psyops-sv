@@ -9,28 +9,37 @@
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-		import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
-		import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
-		import { themes } from "$lib/themes";
+	import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
+	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
+	import { themes } from "$lib/themes";
 
 	let { data } = $props();
 
-	let current_theme = $state("");
+	let current_theme = $state(data.profile.theme);
 	let notifyNewspaperPosts = $state(data.profile.notifyNewspaperPosts);
-	let loadImages = $state(true);
+	let loadImages = $state(data.profile.loadImages);
 
 	$effect(() => {
 		if (typeof window !== "undefined") {
-			const theme = window.localStorage.getItem("theme");
-			if (theme && themes.includes(theme)) {
-				document.documentElement.setAttribute("data-theme", theme);
-				current_theme = theme;
-			}
-
-			const imagePreference = window.localStorage.getItem("loadImages");
-			loadImages = imagePreference !== "false";
+			// Apply theme from database/data on mount
+			document.documentElement.setAttribute("data-theme", current_theme);
+			
+			// Sync with localStorage for non-authenticated parts or immediate UI response
+			window.localStorage.setItem("theme", current_theme);
+			window.localStorage.setItem("loadImages", loadImages.toString());
 		}
 	});
+
+	async function updateSettings() {
+		const formData = new FormData();
+		formData.append("theme", current_theme);
+		formData.append("loadImages", loadImages.toString());
+
+		await fetch("?/updateSettings", {
+			method: "POST",
+			body: formData
+		});
+	}
 
 	function set_theme(event: Event) {
 		const select = event.target as HTMLSelectElement;
@@ -41,6 +50,7 @@
 			document.cookie = `theme=${theme}; max-age=${one_year}; path=/; SameSite=Lax`;
 			document.documentElement.setAttribute("data-theme", theme);
 			current_theme = theme;
+			updateSettings();
 		}
 	}
 
@@ -49,6 +59,7 @@
 		window.localStorage.setItem("loadImages", loadImages.toString());
 		const one_year = 60 * 60 * 24 * 365;
 		document.cookie = `loadImages=${loadImages}; max-age=${one_year}; path=/; SameSite=Lax`;
+		updateSettings();
 	}
 
 	async function toggleNotification(setting: string, value: boolean) {
