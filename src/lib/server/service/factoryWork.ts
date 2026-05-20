@@ -252,29 +252,29 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 		};
 	}
 
-	// Calculate income tax
-	const incomeTaxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId);
-
-	// Calculate mining tax if applicable (before transaction)
-	let miningTaxResult = null;
-	let netResourceQuantity = 0;
-	if (factory.factoryType === "mine" && factory.resourceOutput) {
-		// For simplicity, estimate resource value at 100 currency per unit
-		const estimatedResourceValue = factory.productionRate * 100;
-		miningTaxResult = await calculateAndCollectTax(
-			factory.stateId,
-			"mining",
-			estimatedResourceValue,
-			factory.ownerId
-		);
-		// Calculate net resources after tax (resources reduced proportionally to tax)
-		const taxPercentage = miningTaxResult.taxAmount / estimatedResourceValue;
-		netResourceQuantity = Math.floor(factory.productionRate * (1 - taxPercentage));
-	}
-
+	let incomeTaxResult: Awaited<ReturnType<typeof calculateAndCollectTax>>;
+	let miningTaxResult: Awaited<ReturnType<typeof calculateAndCollectTax>> | null = null;
 	let resourcesProduced = 0;
 
 	await db.transaction(async (tx) => {
+		// Calculate income tax (inside transaction for atomicity)
+		incomeTaxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId, tx);
+
+		// Calculate mining tax if applicable
+		let netResourceQuantity = 0;
+		if (factory.factoryType === "mine" && factory.resourceOutput) {
+			const estimatedResourceValue = factory.productionRate * 100;
+			miningTaxResult = await calculateAndCollectTax(
+				factory.stateId,
+				"mining",
+				estimatedResourceValue,
+				factory.ownerId,
+				tx
+			);
+			const taxPercentage = miningTaxResult.taxAmount / estimatedResourceValue;
+			netResourceQuantity = Math.floor(factory.productionRate * (1 - taxPercentage));
+		}
+
 		// Pay worker (net amount after tax)
 		await tx
 			.insert(userWallets)
@@ -302,7 +302,7 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 
 		// Add resources to company owner (if mine/refinery)
 		if (factory.factoryType === "mine" && factory.resourceOutput) {
-			resourcesProduced = netResourceQuantity; // Use net quantity after mining tax
+			resourcesProduced = netResourceQuantity;
 
 			await tx
 				.insert(resourceInventory)
@@ -320,51 +320,50 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				});
 		}
 
-			// Reset shift data to allow immediate next shift
-			await tx
-				.update(factoryWorkers)
-				.set({
-					lastWorked: null,
-					wageAtShiftStart: null
-				})
-				.where(eq(factoryWorkers.id, job.id));
+		// Reset shift data to allow immediate next shift
+		await tx
+			.update(factoryWorkers)
+			.set({
+				lastWorked: null,
+				wageAtShiftStart: null
+			})
+			.where(eq(factoryWorkers.id, job.id));
 
-			// Record transaction for worker
-			const [currentWallet] = await tx.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, userId));
-			await tx.insert(transactionHistory).values({
-				userId,
-				transactionType: "factory_wage",
-				amount: incomeTaxResult.netAmount,
-				balanceAfter: currentWallet?.balance || 0,
-				description: `Received wage for shift at ${factory.name}`,
-				relatedEntityType: "factory",
-				relatedEntityId: factoryId
-			});
-
-			// Record transaction for company (deduction)
-			// Note: We're recording this for the company owner as companies don't have their own transaction history yet
-			const [ownerWallet] = await tx.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, factory.ownerId));
-			await tx.insert(transactionHistory).values({
-				userId: factory.ownerId,
-				transactionType: "factory_wage",
-				amount: -wageToCollect,
-				balanceAfter: ownerWallet?.balance || 0,
-				description: `Paid wage for shift at ${factory.name} to user ${userId}`,
-				relatedEntityType: "factory",
-				relatedEntityId: factoryId,
-				relatedUserId: userId
-			});
+		// Record transaction for worker
+		const [currentWallet] = await tx.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, userId));
+		await tx.insert(transactionHistory).values({
+			userId,
+			transactionType: "factory_wage",
+			amount: incomeTaxResult.netAmount,
+			balanceAfter: currentWallet?.balance || 0,
+			description: `Received wage for shift at ${factory.name}`,
+			relatedEntityType: "factory",
+			relatedEntityId: factoryId
 		});
 
-	const totalTaxPaid = incomeTaxResult.taxAmount + (miningTaxResult?.taxAmount || 0);
+		// Record transaction for company (deduction)
+		const [ownerWallet] = await tx.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, factory.ownerId));
+		await tx.insert(transactionHistory).values({
+			userId: factory.ownerId,
+			transactionType: "factory_wage",
+			amount: -wageToCollect,
+			balanceAfter: ownerWallet?.balance || 0,
+			description: `Paid wage for shift at ${factory.name} to user ${userId}`,
+			relatedEntityType: "factory",
+			relatedEntityId: factoryId,
+			relatedUserId: userId
+		});
+	});
+
+	const totalTaxPaid = incomeTaxResult!.taxAmount + (miningTaxResult?.taxAmount || 0);
 	const taxBreakdown = miningTaxResult
-		? `${incomeTaxResult.taxAmount.toLocaleString()} income tax + ${miningTaxResult.taxAmount.toLocaleString()} mining tax`
-		: `${incomeTaxResult.taxAmount.toLocaleString()} income tax`;
+		? `${incomeTaxResult!.taxAmount.toLocaleString()} income tax + ${miningTaxResult.taxAmount.toLocaleString()} mining tax`
+		: `${incomeTaxResult!.taxAmount.toLocaleString()} income tax`;
 
 	// Send push notification to the worker about completed shift
 	await sendPushNotificationToUser(userId, {
 		title: "🏭 Shift Complete!",
-		body: `You earned ${incomeTaxResult.netAmount.toLocaleString()} from your shift at ${factory.name}.`,
+		body: `You earned ${incomeTaxResult!.netAmount.toLocaleString()} from your shift at ${factory.name}.`,
 		icon: "/favicon.png",
 		badge: "/badge.png",
 		data: {
@@ -375,10 +374,10 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 
 	return {
 		success: true,
-		earned: incomeTaxResult.netAmount,
+		earned: incomeTaxResult!.netAmount,
 		grossWage: wageToCollect,
 		taxPaid: totalTaxPaid,
 		resourcesProduced,
-		message: `Shift complete! Earned ${incomeTaxResult.netAmount.toLocaleString()} (${taxBreakdown})`
+		message: `Shift complete! Earned ${incomeTaxResult!.netAmount.toLocaleString()} (${taxBreakdown})`
 	};
 }

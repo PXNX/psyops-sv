@@ -263,124 +263,122 @@ export const actions: Actions = {
 
 		const grossAmount = listing.pricePerUnit * quantity;
 
-		let taxCalculation: TaxCalculation = {
-			grossAmount,
-			taxAmount: 0,
-			netAmount: grossAmount,
-			applicableTaxes: []
-		};
-
-		if (buyerResidence?.stateId) {
-			taxCalculation = await calculateAndCollectTax(
-				buyerResidence.stateId,
-				"market_transaction",
+		const result = await db.transaction(async (tx) => {
+			let taxCalculation: TaxCalculation = {
 				grossAmount,
-				account.id
-			);
-		}
+				taxAmount: 0,
+				netAmount: grossAmount,
+				applicableTaxes: []
+			};
 
-		const totalCost = taxCalculation.netAmount + taxCalculation.taxAmount;
-
-		const [buyerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-		if (!buyerWallet || buyerWallet.balance < totalCost) {
-			return fail(400, {
-				message: "Insufficient funds",
-				details: {
-					required: totalCost,
-					available: buyerWallet?.balance || 0,
-					tax: taxCalculation.taxAmount
-				}
-			});
-		}
-
-		const [sellerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
-
-		if (!sellerWallet) {
-			throw fail(500, { message: "Seller wallet not found" });
-		}
-
-		await db
-			.update(userWallets)
-			.set({
-				balance: buyerWallet.balance - totalCost,
-				updatedAt: new Date()
-			})
-			.where(eq(userWallets.userId, account.id));
-
-		await db
-			.update(userWallets)
-			.set({
-				balance: sellerWallet.balance + taxCalculation.netAmount,
-				updatedAt: new Date()
-			})
-			.where(eq(userWallets.userId, listing.sellerId));
-
-		if (listing.itemType === "resource") {
-			const [existing] = await db
-				.select()
-				.from(resourceInventory)
-				.where(
-					and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, listing.itemName as any))
+			if (buyerResidence?.stateId) {
+				taxCalculation = await calculateAndCollectTax(
+					buyerResidence.stateId,
+					"market_transaction",
+					grossAmount,
+					account.id,
+					tx
 				);
+			}
 
-			if (existing) {
-				await db
-					.update(resourceInventory)
-					.set({
-						quantity: existing.quantity + quantity,
-						updatedAt: new Date()
-					})
+			const totalCost = taxCalculation.netAmount + taxCalculation.taxAmount;
+
+			const [buyerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, account.id));
+
+			if (!buyerWallet || buyerWallet.balance < totalCost) {
+				throw new Error("Insufficient funds");
+			}
+
+			const [sellerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
+
+			if (!sellerWallet) {
+				throw new Error("Seller wallet not found");
+			}
+
+			await tx
+				.update(userWallets)
+				.set({
+					balance: buyerWallet.balance - totalCost,
+					updatedAt: new Date()
+				})
+				.where(eq(userWallets.userId, account.id));
+
+			await tx
+				.update(userWallets)
+				.set({
+					balance: sellerWallet.balance + taxCalculation.netAmount,
+					updatedAt: new Date()
+				})
+				.where(eq(userWallets.userId, listing.sellerId));
+
+			if (listing.itemType === "resource") {
+				const [existing] = await tx
+					.select()
+					.from(resourceInventory)
 					.where(
 						and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, listing.itemName as any))
 					);
-			} else {
-				await db.insert(resourceInventory).values({
-					userId: account.id,
-					resourceType: listing.itemName as any,
-					quantity
-				});
-			}
-		} else if (listing.itemType === "product") {
-			const [existing] = await db
-				.select()
-				.from(productInventory)
-				.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any)));
 
-			if (existing) {
-				await db
-					.update(productInventory)
+				if (existing) {
+					await tx
+						.update(resourceInventory)
+						.set({
+							quantity: existing.quantity + quantity,
+							updatedAt: new Date()
+						})
+						.where(
+							and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, listing.itemName as any))
+						);
+				} else {
+					await tx.insert(resourceInventory).values({
+						userId: account.id,
+						resourceType: listing.itemName as any,
+						quantity
+					});
+				}
+			} else if (listing.itemType === "product") {
+				const [existing] = await tx
+					.select()
+					.from(productInventory)
+					.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any)));
+
+				if (existing) {
+					await tx
+						.update(productInventory)
+						.set({
+							quantity: existing.quantity + quantity,
+							updatedAt: new Date()
+						})
+						.where(
+							and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any))
+						);
+				} else {
+					await tx.insert(productInventory).values({
+						userId: account.id,
+						productType: listing.itemName as any,
+						quantity
+					});
+				}
+			}
+
+			if (quantity === listing.quantity) {
+				await tx.delete(marketListings).where(eq(marketListings.id, listingId));
+			} else {
+				await tx
+					.update(marketListings)
 					.set({
-						quantity: existing.quantity + quantity,
-						updatedAt: new Date()
+						quantity: listing.quantity - quantity
 					})
-					.where(
-						and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any))
-					);
-			} else {
-				await db.insert(productInventory).values({
-					userId: account.id,
-					productType: listing.itemName as any,
-					quantity
-				});
+					.where(eq(marketListings.id, listingId));
 			}
-		}
 
-		if (quantity === listing.quantity) {
-			await db.delete(marketListings).where(eq(marketListings.id, listingId));
-		} else {
-			await db
-				.update(marketListings)
-				.set({
-					quantity: listing.quantity - quantity
-				})
-				.where(eq(marketListings.id, listingId));
-		}
+			return { taxAmount: taxCalculation.taxAmount };
+		});
 
 		return {
 			success: true,
 			message: "Purchase successful",
-			taxPaid: taxCalculation.taxAmount
+			taxPaid: result.taxAmount
 		};
 	},
 
