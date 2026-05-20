@@ -2,7 +2,7 @@
 import { db } from "$lib/server/db";
 import { politicalParties, residences, files } from "$lib/server/schema";
 import { eq } from "drizzle-orm";
-import { error } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	if (!residence) {
-		throw error(400, "You must have a residence to view parties");
+		throw redirect(303, "/welcome/region");
 	}
 
 	const stateId = residence.region.stateId;

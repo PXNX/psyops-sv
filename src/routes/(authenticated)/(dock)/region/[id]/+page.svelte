@@ -97,6 +97,23 @@
 		</div>
 	</div>
 
+	<!-- Independent Region Info -->
+	{#if isIndependent}
+		<div class="bg-gradient-to-br from-amber-900/20 to-orange-900/20 border border-amber-500/20 rounded-xl p-5">
+			<div class="flex items-start gap-4">
+				<div class="size-12 bg-amber-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentFlag20Filled class="size-6 text-amber-400" />
+				</div>
+				<div class="flex-1">
+					<h2 class="text-lg font-semibold text-white mb-1">No State Established</h2>
+					<p class="text-sm text-gray-300">
+						This region is not part of any state. To establish a state here, <a href="/party/create" class="text-amber-400 hover:text-amber-300 underline underline-offset-2">create a political party</a> — founding a party will create a new state in this region.
+					</p>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 	<!-- Current Residence Banner -->
 	{#if data.hasResidence}
 		<div class="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-500/30 rounded-xl p-6">

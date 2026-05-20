@@ -288,9 +288,9 @@
 					logoAlt={data.residence.region.name}
 					placeholderGradient="from-emerald-600 to-green-600"
 					title={data.residence.region.name}
-					subtitle="Residence{data.residence.region.state
-						? ` • ${data.residence.region.state.name}`
-						: ' • Independent'} • Since {formatDate(data.residence.movedInAt)}"
+					subtitle="Residence{data.residence.region.state?.name
+										? ` • ${data.residence.region.state.name}`
+										: ' • Independent'} • Since {formatDate(data.residence.movedInAt)}"
 					hoverColor="emerald"
 				/>
 			{:else}
