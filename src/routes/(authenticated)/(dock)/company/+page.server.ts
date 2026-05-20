@@ -1,7 +1,8 @@
 // src/routes/company/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, companies, factories, factoryWorkers, regions, states } from "$lib/server/schema";
-import { eq, count, sql } from "drizzle-orm";
+import { accounts, companies, factories, factoryWorkers, regions, states, userProfiles } from "$lib/server/schema";
+import { eq, count } from "drizzle-orm";
+import { getLogoUrl } from "$lib/server/backblaze";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -37,12 +38,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 		userCompanyStats = {
 			...userCompany,
+			logo: await getLogoUrl(userCompany.logo),
 			factoryCount: companyFactories.length,
 			workerCount: totalWorkers
 		};
 	}
 
-	// Get all companies with their stats
+	// Get all companies with their stats and owner profiles
 	const allCompanies = await db
 		.select({
 			id: companies.id,
@@ -50,10 +52,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 			logo: companies.logo,
 			foundedAt: companies.foundedAt,
 			ownerId: companies.ownerId,
-			ownerName: accounts.id // fixme: get username instead of id
+			ownerName: userProfiles.name
 		})
 		.from(companies)
-		.leftJoin(accounts, eq(companies.ownerId, accounts.id));
+		.leftJoin(accounts, eq(companies.ownerId, accounts.id))
+		.leftJoin(userProfiles, eq(companies.ownerId, userProfiles.accountId));
 
 	// Get factory counts and states for each company
 	const companiesWithStats = await Promise.all(
@@ -87,10 +90,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 				).values()
 			);
 
+			const logoUrl = await getLogoUrl(company.logo);
+
 			return {
 				id: company.id,
 				name: company.name,
-				logo: company.logo,
+				logo: logoUrl,
 				foundedAt: company.foundedAt.toISOString(),
 				ownerId: company.ownerId,
 				ownerName: company.ownerName || null,
