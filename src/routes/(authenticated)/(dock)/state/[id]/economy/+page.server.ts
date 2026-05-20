@@ -3,7 +3,7 @@ import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "$lib/server/db";
 import { eq, and } from "drizzle-orm";
-import { states, ministers, presidents, powerPlants, stateTreasury, stateEnergy } from "$lib/server/schema";
+import { states, ministers, presidents, powerPlants, stateTreasury, stateEnergy, stateResourceInventory } from "$lib/server/schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -68,6 +68,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.returning();
 	}
 
+	// Get state resources and products
+	const stateResources = await db
+		.select()
+		.from(stateResourceInventory)
+		.where(eq(stateResourceInventory.stateId, stateId));
+
 	return {
 		state,
 		treasury: {
@@ -78,6 +84,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		},
 		powerPlants: statePowerPlants,
 		energyInfo,
+		resources: stateResources.map((r) => ({
+			resourceType: r.resourceType,
+			quantity: r.quantity
+		})),
 		isPresident: !!presidency
 	};
 };

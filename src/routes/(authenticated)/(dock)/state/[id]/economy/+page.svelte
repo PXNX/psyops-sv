@@ -9,6 +9,8 @@
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentCart20Filled from "~icons/fluent/cart-20-filled";
+	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 
 	let { data } = $props();
 
@@ -67,6 +69,21 @@
 			? Math.round((data.energyInfo.usedProduction / data.energyInfo.totalProduction) * 100)
 			: 0
 	);
+
+	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
+
+	const resourceIcons: Record<ResourceType, string> = {
+		iron: "⛏️",
+		copper: "🔶",
+		steel: "⚙️",
+		gunpowder: "💥",
+		wood: "🪵",
+		coal: "🪨"
+	};
+
+	const allResources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
+
+	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
 </script>
 
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -168,6 +185,35 @@
 				<FluentWarning20Filled class="inline size-3" />
 				Treasury funds come from taxes, state exports, and visa fees
 			</p>
+		</div>
+	</div>
+
+	<!-- State Resources -->
+	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-2">
+				<FluentBox20Filled class="size-5 text-purple-400" />
+				<h2 class="text-lg font-semibold text-white">State Resources</h2>
+			</div>
+			<a
+				href="/state/{data.state.id}/market"
+				class="btn btn-sm bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30 text-purple-300 hover:text-purple-200 gap-1"
+			>
+				<FluentCart20Filled class="size-4" />
+				Gov. Market
+				<FluentArrowRight20Filled class="size-4" />
+			</a>
+		</div>
+
+		<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+			{#each allResources as resource}
+				{@const quantity = resourceMap.get(resource) || 0}
+				<div class="bg-slate-700/30 rounded-lg border border-slate-600/20 p-4 text-center space-y-2">
+					<span class="text-2xl">{resourceIcons[resource]}</span>
+					<p class="text-xs font-medium capitalize text-gray-400">{resource}</p>
+					<p class="text-lg font-bold {quantity > 0 ? 'text-purple-300' : 'text-gray-500'}">{quantity}</p>
+				</div>
+			{/each}
 		</div>
 	</div>
 </div>
