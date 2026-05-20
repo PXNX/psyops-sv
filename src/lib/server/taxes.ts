@@ -1,7 +1,9 @@
 // src/lib/server/taxes.ts
 import { db } from "$lib/server/db";
-import { stateTaxes, taxRevenue, stateTreasury } from "$lib/server/schema";
+import { stateTaxes, taxRevenue, stateTreasury, governmentBudgetTransactions } from "$lib/server/schema";
 import { eq, and, sql } from "drizzle-orm";
+
+export type DbClient = typeof db;
 
 export interface TaxCalculation {
 	grossAmount: number;
@@ -15,22 +17,31 @@ export interface TaxCalculation {
 	}>;
 }
 
+const TAX_TYPE_LABELS: Record<string, string> = {
+	income: "Income tax",
+	mining: "Mining tax",
+	production: "Production tax",
+	market_transaction: "Market transaction tax"
+};
+
 /**
  * Calculate and collect taxes for a transaction
  * @param stateId - The state where the transaction occurs
  * @param taxType - Type of tax to collect (mining, production, market_transaction, income)
  * @param grossAmount - The total amount before taxes
  * @param userId - The user paying the tax
+ * @param dbClient - Optional database client (transaction or db instance)
  * @returns Tax calculation breakdown
  */
 export async function calculateAndCollectTax(
 	stateId: number,
 	taxType: "mining" | "production" | "market_transaction" | "income",
 	grossAmount: number,
-	userId: string
+	userId: string,
+	dbClient: DbClient = db
 ): Promise<TaxCalculation> {
 	// Get active taxes for this state and type
-	const activeTaxes = await db
+	const activeTaxes = await dbClient
 		.select()
 		.from(stateTaxes)
 		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxType), eq(stateTaxes.isActive, true)));
@@ -60,7 +71,7 @@ export async function calculateAndCollectTax(
 		});
 
 		// Record tax collection
-		await db.insert(taxRevenue).values({
+		await dbClient.insert(taxRevenue).values({
 			stateId,
 			taxId: tax.id,
 			amount: taxAmount,
@@ -70,26 +81,39 @@ export async function calculateAndCollectTax(
 	}
 
 	// Update state treasury
-	const [treasury] = await db.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId));
+	const [treasury] = await dbClient.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId));
 
+	let newBalance: number;
 	if (treasury) {
-		await db
+		newBalance = treasury.balance + totalTaxAmount;
+		await dbClient
 			.update(stateTreasury)
 			.set({
-				balance: sql`${stateTreasury.balance} + ${totalTaxAmount}`,
+				balance: newBalance,
 				totalCollected: sql`${stateTreasury.totalCollected} + ${totalTaxAmount}`,
 				updatedAt: new Date()
 			})
 			.where(eq(stateTreasury.stateId, stateId));
 	} else {
-		// Create treasury if it doesn't exist
-		await db.insert(stateTreasury).values({
+		newBalance = totalTaxAmount;
+		await dbClient.insert(stateTreasury).values({
 			stateId,
 			balance: totalTaxAmount,
 			totalCollected: totalTaxAmount,
 			totalSpent: 0
 		});
 	}
+
+	// Record government budget transaction
+	const label = TAX_TYPE_LABELS[taxType] || taxType;
+	await dbClient.insert(governmentBudgetTransactions).values({
+		stateId,
+		transactionType: "tax_collection",
+		amount: totalTaxAmount,
+		balanceAfter: newBalance,
+		description: `${label} collected: $${totalTaxAmount.toLocaleString()} (${applicableTaxes.map((t) => `${t.rate}%`).join(" + ")})`,
+		authorizedBy: userId
+	});
 
 	return {
 		grossAmount,
@@ -102,8 +126,8 @@ export async function calculateAndCollectTax(
 /**
  * Get all active taxes for a state
  */
-export async function getActiveTaxes(stateId: number) {
-	return await db
+export async function getActiveTaxes(stateId: number, dbClient: DbClient = db) {
+	return await dbClient
 		.select()
 		.from(stateTaxes)
 		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.isActive, true)));
@@ -115,9 +139,10 @@ export async function getActiveTaxes(stateId: number) {
 export async function previewTax(
 	stateId: number,
 	taxType: "mining" | "production" | "market_transaction" | "income",
-	grossAmount: number
+	grossAmount: number,
+	dbClient: DbClient = db
 ): Promise<{ taxAmount: number; netAmount: number }> {
-	const activeTaxes = await db
+	const activeTaxes = await dbClient
 		.select()
 		.from(stateTaxes)
 		.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxType), eq(stateTaxes.isActive, true)));
