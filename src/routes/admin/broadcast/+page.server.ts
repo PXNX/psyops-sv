@@ -1,18 +1,28 @@
-// src/routes/(authenticated)/admin/broadcast/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, inboxMessages } from "$lib/server/schema";
-import { error, fail, redirect } from "@sveltejs/kit";
-import { sql } from "drizzle-orm";
+import { broadcasts } from "$lib/server/schema";
+import { fail } from "@sveltejs/kit";
+import { eq, and, desc } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Get total user count
-	const [userCountResult] = await db.select({ count: sql<number>`count(*)::int` }).from(accounts);
+	const activeBroadcast = await db.query.broadcasts.findFirst({
+		where: and(eq(broadcasts.broadcastType, "system"), eq(broadcasts.isActive, true)),
+		orderBy: [desc(broadcasts.createdAt)],
+		with: { issuer: { with: { profile: true } } }
+	});
+
+	const recentBroadcasts = await db.query.broadcasts.findMany({
+		where: eq(broadcasts.broadcastType, "system"),
+		orderBy: [desc(broadcasts.createdAt)],
+		limit: 10,
+		with: { issuer: { with: { profile: true } } }
+	});
 
 	return {
-		totalUsers: userCountResult?.count || 0
+		activeBroadcast,
+		recentBroadcasts
 	};
 };
 
@@ -21,14 +31,14 @@ export const actions: Actions = {
 		const account = locals.account!;
 
 		const formData = await request.formData();
-		const subject = formData.get("subject") as string;
+		const title = formData.get("subject") as string;
 		const content = formData.get("content") as string;
 
-		if (!subject || !content) {
+		if (!title || !content) {
 			return fail(400, { error: "Subject and content are required" });
 		}
 
-		if (subject.length > 200) {
+		if (title.length > 200) {
 			return fail(400, { error: "Subject too long (max 200 characters)" });
 		}
 
@@ -37,37 +47,43 @@ export const actions: Actions = {
 		}
 
 		try {
-			// Get all user IDs
-			const users = await db.select({ id: accounts.id }).from(accounts);
+			// Deactivate any existing active system broadcasts
+			await db
+				.update(broadcasts)
+				.set({ isActive: false })
+				.where(and(eq(broadcasts.broadcastType, "system"), eq(broadcasts.isActive, true)));
 
-			// Create inbox message for each user
-			const messages = users.map((user) => ({
-				recipientId: user.id,
-				senderId: account.id,
-				messageType: "system" as const,
-				subject,
+			await db.insert(broadcasts).values({
+				broadcastType: "system",
+				title,
 				content,
-				isRead: false
-			}));
+				issuedBy: account.id,
+				isActive: true
+			});
 
-			// Batch insert (be careful with large user bases - might want to chunk this)
-			if (messages.length > 0) {
-				// For large databases, you might want to chunk this into smaller batches
-				const BATCH_SIZE = 1000;
-				for (let i = 0; i < messages.length; i += BATCH_SIZE) {
-					const batch = messages.slice(i, i + BATCH_SIZE);
-					await db.insert(inboxMessages).values(batch);
-				}
-			}
-
-			return {
-				success: true,
-				recipientCount: messages.length,
-				message: `Broadcast sent to ${messages.length} user${messages.length !== 1 ? "s" : ""}!`
-			};
+			return { success: true, message: "System broadcast published!" };
 		} catch (err) {
 			console.error("Error sending broadcast:", err);
 			return fail(500, { error: "Failed to send broadcast" });
+		}
+	},
+
+	revokeBroadcast: async ({ request, locals }) => {
+		const account = locals.account!;
+
+		const formData = await request.formData();
+		const broadcastId = Number(formData.get("broadcastId"));
+
+		if (!broadcastId) {
+			return fail(400, { error: "Broadcast ID is required" });
+		}
+
+		try {
+			await db.update(broadcasts).set({ isActive: false }).where(eq(broadcasts.id, broadcastId));
+			return { success: true, message: "Broadcast revoked." };
+		} catch (err) {
+			console.error("Error revoking broadcast:", err);
+			return fail(500, { error: "Failed to revoke broadcast" });
 		}
 	}
 };

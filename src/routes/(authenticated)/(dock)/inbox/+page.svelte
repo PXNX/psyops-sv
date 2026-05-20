@@ -1,20 +1,20 @@
-<!-- src/routes/(authenticated)/inbox/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
+	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
+	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
+	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 
 	const { data, form } = $props();
 
-	let showBroadcastModal = $state(false);
 	let broadcastType = $state<"state" | "party">("state");
 	let broadcastSubject = $state("");
 	let broadcastContent = $state("");
 	let isSubmitting = $state(false);
 
-	// Auto-select the only available broadcast type
 	$effect(() => {
 		if (data.canBroadcastState && !data.canBroadcastParty) {
 			broadcastType = "state";
@@ -34,25 +34,75 @@
 	</div>
 {:else}
 	<div class="max-w-4xl mx-auto px-4 py-6">
-		<div class="flex items-center justify-between mb-6">
-			<div class="flex items-center gap-3">
-				<div class="size-12 bg-purple-600/20 rounded-xl flex items-center justify-center">
-					<FluentSend20Filled class="size-6 text-purple-400" />
-				</div>
-				<div>
-					<h1 class="text-2xl font-bold text-white">Broadcast Messages</h1>
-					<p class="text-sm text-gray-400">
-						Send messages to {data.canBroadcastState ? "state residents" : ""}{data.canBroadcastState &&
-						data.canBroadcastParty
-							? " or "
-							: ""}{data.canBroadcastParty ? "party members" : ""}
-					</p>
-				</div>
+		<div class="flex items-center gap-3 mb-6">
+			<div class="size-12 bg-purple-600/20 rounded-xl flex items-center justify-center">
+				<FluentMegaphone20Filled class="size-6 text-purple-400" />
+			</div>
+			<div>
+				<h1 class="text-2xl font-bold text-white">Broadcast</h1>
+				<p class="text-sm text-gray-400">
+					Publish a broadcast shown on the dashboard of
+					{data.canBroadcastState ? "state residents" : ""}{data.canBroadcastState && data.canBroadcastParty
+						? " or "
+						: ""}{data.canBroadcastParty ? "party members" : ""}
+				</p>
 			</div>
 		</div>
 
+		<!-- Active Broadcasts -->
+		{#if data.activeStateBroadcast}
+			<div class="bg-purple-600/10 rounded-xl border border-purple-500/20 p-5 mb-4">
+				<div class="flex items-start justify-between gap-3">
+					<div class="flex-1">
+						<div class="flex items-center gap-2 mb-2">
+							<FluentBuildingGovernment20Filled class="size-5 text-purple-400" />
+							<h3 class="font-semibold text-purple-400">Active State Broadcast</h3>
+						</div>
+						<h4 class="text-white font-bold mb-1">{data.activeStateBroadcast.title}</h4>
+						<p class="text-gray-300 whitespace-pre-wrap text-sm">{data.activeStateBroadcast.content}</p>
+						<p class="text-xs text-gray-500 mt-2">
+							{new Date(data.activeStateBroadcast.createdAt).toLocaleString()}
+						</p>
+					</div>
+					<form method="POST" action="?/revokeStateBroadcast" use:enhance>
+						<input type="hidden" name="broadcastId" value={data.activeStateBroadcast.id} />
+						<button type="submit" class="btn btn-sm bg-red-600/20 hover:bg-red-600/40 border-red-500/30 text-red-400">
+							<FluentDismiss20Filled class="size-4" />
+							Revoke
+						</button>
+					</form>
+				</div>
+			</div>
+		{/if}
+
+		{#if data.activePartyBroadcast}
+			<div class="bg-emerald-600/10 rounded-xl border border-emerald-500/20 p-5 mb-4">
+				<div class="flex items-start justify-between gap-3">
+					<div class="flex-1">
+						<div class="flex items-center gap-2 mb-2">
+							<FluentPeople20Filled class="size-5 text-emerald-400" />
+							<h3 class="font-semibold text-emerald-400">Active Party Broadcast</h3>
+						</div>
+						<h4 class="text-white font-bold mb-1">{data.activePartyBroadcast.title}</h4>
+						<p class="text-gray-300 whitespace-pre-wrap text-sm">{data.activePartyBroadcast.content}</p>
+						<p class="text-xs text-gray-500 mt-2">
+							{new Date(data.activePartyBroadcast.createdAt).toLocaleString()}
+						</p>
+					</div>
+					<form method="POST" action="?/revokePartyBroadcast" use:enhance>
+						<input type="hidden" name="broadcastId" value={data.activePartyBroadcast.id} />
+						<button type="submit" class="btn btn-sm bg-red-600/20 hover:bg-red-600/40 border-red-500/30 text-red-400">
+							<FluentDismiss20Filled class="size-4" />
+							Revoke
+						</button>
+					</form>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Broadcast Form -->
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
-			<h2 class="text-xl font-bold text-white mb-6">Send New Broadcast</h2>
+			<h2 class="text-lg font-bold text-white mb-4">New Broadcast</h2>
 
 			<form
 				method="POST"
@@ -108,7 +158,7 @@
 							type="text"
 							name="subject"
 							bind:value={broadcastSubject}
-							placeholder="Enter message subject..."
+							placeholder="Enter broadcast subject..."
 							maxlength="200"
 							class="input input-bordered w-full bg-slate-700/50 border-slate-600/30 text-white"
 							required
@@ -123,7 +173,7 @@
 						<textarea
 							name="content"
 							bind:value={broadcastContent}
-							placeholder="Enter your message..."
+							placeholder="Enter your broadcast message..."
 							rows="8"
 							maxlength="2000"
 							class="textarea textarea-bordered w-full bg-slate-700/50 border-slate-600/30 text-white"
@@ -135,25 +185,25 @@
 
 					{#if form?.error}
 						<div class="alert alert-error">
+							<FluentWarning20Filled class="size-5" />
 							<p>{form.error}</p>
 						</div>
 					{/if}
 
 					{#if form?.success}
 						<div class="alert alert-success">
-							<p>
-								Broadcast sent successfully to {form.recipientCount} recipient{form.recipientCount !== 1 ? "s" : ""}!
-							</p>
+							<FluentSend20Filled class="size-5" />
+							<p>Broadcast published!</p>
 						</div>
 					{/if}
 
 					<button
 						type="submit"
 						class="btn w-full bg-blue-600 hover:bg-blue-700 border-0 text-white gap-2"
-						disabled={isSubmitting}
+						disabled={isSubmitting || !broadcastSubject || !broadcastContent}
 					>
 						<FluentSend20Filled class="size-5" />
-						{isSubmitting ? "Sending..." : "Send Broadcast"}
+						{isSubmitting ? "Publishing..." : "Publish Broadcast"}
 					</button>
 				</div>
 			</form>
