@@ -115,30 +115,30 @@ export const accounts = pgTable(
 	{
 		id: text("id").primaryKey(), // Auth-managed ID
 		email: varchar("email", { length: 255 }).notNull().unique(),
-			role: userRoleEnum("role").notNull().default("user"),
-			notifyNewspaperPosts: boolean("notify_newspaper_posts").default(true).notNull(),
-			createdAt: timestamp("created_at").defaultNow().notNull(),
-			updatedAt: timestamp("updated_at").defaultNow().notNull()
-		},
+		role: userRoleEnum("role").notNull().default("user"),
+		notifyNewspaperPosts: boolean("notify_newspaper_posts").default(true).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
 	(t) => ({ emailIdx: uniqueIndex("idx_email").on(t.email) })
 );
 
 export const userProfiles = pgTable("user_profiles", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
-		accountId: text("account_id")
-			.notNull()
-			.references(() => accounts.id, { onDelete: "cascade" })
-			.unique(),
-		name: text("name").default("New user").notNull(),
-		logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
-		bio: text("bio"),
-		telegramId: bigint("telegram_id", { mode: "number" }).unique(),
-			telegramUsername: text("telegram_username"),
-			theme: text("theme").default("dark").notNull(),
-			loadImages: boolean("load_images").default(true).notNull(),
-			createdAt: timestamp("created_at").defaultNow().notNull(),
-			updatedAt: timestamp("updated_at").defaultNow().notNull()
-		});
+	accountId: text("account_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" })
+		.unique(),
+	name: text("name").default("New user").notNull(),
+	logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
+	bio: text("bio"),
+	telegramId: bigint("telegram_id", { mode: "number" }).unique(),
+	telegramUsername: text("telegram_username"),
+	theme: text("theme").default("dark").notNull(),
+	loadImages: boolean("load_images").default(true).notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull(),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
 
 export const sessions = pgTable(
 	"sessions",
@@ -2479,3 +2479,46 @@ export const birthdayRewardsRelations = relations(birthdayRewards, ({ one }) => 
 	})
 }));
 export type BirthdayReward = typeof birthdayRewards.$inferSelect;
+
+// --- BROADCASTS (single record shown on dashboard) ---
+export const broadcastTypeEnum = pgEnum("broadcast_type", ["system", "state", "party"]);
+
+export const broadcasts = pgTable(
+	"broadcasts",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		broadcastType: broadcastTypeEnum("broadcast_type").notNull(),
+		title: varchar("title", { length: 200 }).notNull(),
+		content: text("content").notNull(),
+		issuedBy: text("issued_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
+		partyId: integer("party_id").references(() => politicalParties.id, { onDelete: "cascade" }),
+		isActive: boolean("is_active").default(true).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		activeIdx: index("idx_broadcast_active").on(t.isActive),
+		stateIdx: index("idx_broadcast_state").on(t.stateId, t.isActive),
+		partyIdx: index("idx_broadcast_party").on(t.partyId, t.isActive),
+		typeIdx: index("idx_broadcast_type").on(t.broadcastType, t.isActive)
+	})
+);
+
+export const broadcastsRelations = relations(broadcasts, ({ one }) => ({
+	issuer: one(accounts, {
+		fields: [broadcasts.issuedBy],
+		references: [accounts.id]
+	}),
+	state: one(states, {
+		fields: [broadcasts.stateId],
+		references: [states.id]
+	}),
+	party: one(politicalParties, {
+		fields: [broadcasts.partyId],
+		references: [politicalParties.id]
+	})
+}));
+
+export type Broadcast = typeof broadcasts.$inferSelect;
