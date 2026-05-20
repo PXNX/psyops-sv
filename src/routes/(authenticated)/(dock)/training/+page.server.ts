@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/(dock)/training/+page.server.ts
-import { error, fail } from "@sveltejs/kit";
+import { error, fail, redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 
 import {
@@ -67,8 +67,12 @@ async function getUserResidence(userId: string) {
 		.where(eq(residences.userId, userId))
 		.limit(1);
 
-	if (!residence || !residence.stateId) {
-		throw error(400, "You must have a primary residence to train military units");
+	if (!residence) {
+		throw redirect(303, "/welcome/region");
+	}
+
+	if (!residence.stateId) {
+		throw error(400, "You live in an independent region. Join or create a state through a political party before training military units.");
 	}
 
 	return residence;

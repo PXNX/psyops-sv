@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.then((rows) => rows[0]);
 
 	if (!userResidence) {
-		throw error(400, "You must have a residence before creating a party");
+		throw redirect(303, "/welcome/region");
 	}
 
 	// Get user's wallet
