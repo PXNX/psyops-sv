@@ -3,26 +3,47 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import sharp from "sharp";
 import { randomUUID } from "crypto";
-import {
-	BACKBLAZE_KEY_ID,
-	BACKBLAZE_APPLICATION_KEY,
-	BACKBLAZE_BUCKET_NAME,
-	BACKBLAZE_REGION,
-	BACKBLAZE_ENDPOINT
-} from "$env/static/private";
 import { files } from "./schema";
-import { db } from "./db";
+import { db, isMockMode } from "./db";
 import { eq } from "drizzle-orm/sql/expressions";
+import { existsSync, mkdirSync, writeFileSync, readFileSync, unlinkSync } from "fs";
+import { join, dirname } from "path";
 
-const s3Client = new S3Client({
-	endpoint: BACKBLAZE_ENDPOINT,
-	region: BACKBLAZE_REGION,
-	credentials: {
-		accessKeyId: BACKBLAZE_KEY_ID,
-		secretAccessKey: BACKBLAZE_APPLICATION_KEY
-	},
-	forcePathStyle: true
-});
+// Mock mode: local file storage
+const MOCK_STORAGE_DIR = join(process.cwd(), ".mock-files");
+const MOCK_API_URL = process.env.MOCK_API_URL || "http://localhost:3456";
+
+function getS3Client(): S3Client | null {
+	if (isMockMode) {
+		// Ensure mock storage directory exists
+		if (!existsSync(MOCK_STORAGE_DIR)) {
+			mkdirSync(MOCK_STORAGE_DIR, { recursive: true });
+		}
+		return null;
+	}
+
+	const BACKBLAZE_KEY_ID = process.env.BACKBLAZE_KEY_ID;
+	const BACKBLAZE_APPLICATION_KEY = process.env.BACKBLAZE_APPLICATION_KEY;
+	const BACKBLAZE_REGION = process.env.BACKBLAZE_REGION;
+	const BACKBLAZE_ENDPOINT = process.env.BACKBLAZE_ENDPOINT;
+
+	if (!BACKBLAZE_KEY_ID || !BACKBLAZE_APPLICATION_KEY || !BACKBLAZE_ENDPOINT || !BACKBLAZE_REGION) {
+		throw new Error("Backblaze environment variables are required (set USE_MOCK=true for mock mode)");
+	}
+
+	return new S3Client({
+		endpoint: BACKBLAZE_ENDPOINT,
+		region: BACKBLAZE_REGION,
+		credentials: {
+			accessKeyId: BACKBLAZE_KEY_ID,
+			secretAccessKey: BACKBLAZE_APPLICATION_KEY
+		},
+		forcePathStyle: true
+	});
+}
+
+const s3Client = getS3Client();
+const BACKBLAZE_BUCKET_NAME = process.env.BACKBLAZE_BUCKET_NAME || "mock-bucket";
 
 export interface UploadResult {
 	success: boolean;
@@ -52,17 +73,26 @@ async function processImageToWebP(buffer: Buffer): Promise<Buffer> {
 
 /**
  * Upload a file buffer to Backblaze B2 (converted to 96x96 WebP)
+ * In mock mode, saves to local filesystem instead.
  * @param buffer - File buffer to upload
  * @param fileName - Original filename (for reference)
  * @returns Upload result with storage key
  */
 export async function uploadFile(buffer: Buffer, fileName: string): Promise<UploadResult> {
 	try {
-		// Always process to 96x96 WebP
-		const processedBuffer = await processImageToWebP(buffer);
-
-		// Generate unique key with .webp extension
 		const uniqueKey = `${randomUUID()}.webp`;
+
+		if (isMockMode) {
+			// Mock mode: save to local filesystem without image processing
+			const filePath = join(MOCK_STORAGE_DIR, uniqueKey);
+			const dir = dirname(filePath);
+			if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+			writeFileSync(filePath, buffer);
+			return { success: true, key: uniqueKey };
+		}
+
+		// Production: process and upload to S3
+		const processedBuffer = await processImageToWebP(buffer);
 
 		const command = new PutObjectCommand({
 			Bucket: BACKBLAZE_BUCKET_NAME,
@@ -77,7 +107,7 @@ export async function uploadFile(buffer: Buffer, fileName: string): Promise<Uplo
 			}
 		});
 
-		await s3Client.send(command);
+		await s3Client!.send(command);
 
 		return {
 			success: true,
@@ -133,6 +163,10 @@ export async function uploadFileFromForm(file: File): Promise<UploadResult> {
 }
 
 export async function getPresignedUploadUrl(key: string): Promise<string> {
+	if (isMockMode) {
+		return `${MOCK_API_URL}/mock-files/${key}`;
+	}
+
 	const command = new PutObjectCommand({
 		Bucket: BACKBLAZE_BUCKET_NAME,
 		Key: key,
@@ -140,11 +174,12 @@ export async function getPresignedUploadUrl(key: string): Promise<string> {
 		CacheControl: "public, max-age=31536000, immutable"
 	});
 
-	return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+	return await getSignedUrl(s3Client!, command, { expiresIn: 3600 });
 }
 
 /**
  * Get signed download URL with extended expiration for caching
+ * In mock mode, returns a local URL served by the mock server.
  * @param key - File key in B2
  * @param expiresIn - Expiration time in seconds (default: 7 days for better caching)
  * @returns Signed URL
@@ -153,13 +188,17 @@ export async function getSignedDownloadUrl(
 	key: string,
 	expiresIn: number = 604800 // 7 days
 ): Promise<string> {
+	if (isMockMode) {
+		return `${MOCK_API_URL}/mock-files/${key}`;
+	}
+
 	const command = new GetObjectCommand({
 		Bucket: BACKBLAZE_BUCKET_NAME,
 		Key: key,
 		ResponseCacheControl: `public, max-age=${expiresIn}, immutable`
 	});
 
-	return await getSignedUrl(s3Client, command, { expiresIn });
+	return await getSignedUrl(s3Client!, command, { expiresIn });
 }
 
 /**
@@ -168,13 +207,17 @@ export async function getSignedDownloadUrl(
  * @returns Signed URL with 1 hour expiration
  */
 export async function getSignedDownloadUrlShort(key: string): Promise<string> {
+	if (isMockMode) {
+		return `${MOCK_API_URL}/mock-files/${key}`;
+	}
+
 	const command = new GetObjectCommand({
 		Bucket: BACKBLAZE_BUCKET_NAME,
 		Key: key,
 		ResponseCacheControl: "public, max-age=3600"
 	});
 
-	return await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+	return await getSignedUrl(s3Client!, command, { expiresIn: 3600 });
 }
 
 export async function getLogoUrl(logoId: number | null | undefined): Promise<string | null> {
@@ -196,18 +239,24 @@ export async function getLogoUrl(logoId: number | null | undefined): Promise<str
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 /**
- * Delete a file from Backblaze B2
+ * Delete a file from Backblaze B2 (or local filesystem in mock mode)
  * @param key - File key to delete
  * @returns True if deletion was successful
  */
 export async function deleteFile(key: string): Promise<boolean> {
 	try {
+		if (isMockMode) {
+			const filePath = join(MOCK_STORAGE_DIR, key);
+			if (existsSync(filePath)) unlinkSync(filePath);
+			return true;
+		}
+
 		const command = new DeleteObjectCommand({
 			Bucket: BACKBLAZE_BUCKET_NAME,
 			Key: key
 		});
 
-		await s3Client.send(command);
+		await s3Client!.send(command);
 		return true;
 	} catch (error) {
 		console.error("Delete failed:", error);
