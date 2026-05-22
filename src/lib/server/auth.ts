@@ -1,13 +1,19 @@
 // src/lib/server/auth.ts
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, TELEGRAM_BOT_TOKEN } from "$env/static/private";
 import { Google } from "arctic";
 import { getContext } from "./context";
+import { isMockMode } from "./db";
+
+// In mock mode, use dummy credentials
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "mock-client-id";
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "mock-client-secret";
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || "http://localhost:5173/auth/callback/google";
+const TELEGRAM_BOT_TOKEN_VAL = process.env.TELEGRAM_BOT_TOKEN || "mock-bot-token";
 
 export const google = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI);
 
 // Telegram OAuth2 configuration
-export const TELEGRAM_CLIENT_ID = TELEGRAM_BOT_TOKEN;
-export { TELEGRAM_BOT_TOKEN };
+export const TELEGRAM_CLIENT_ID = TELEGRAM_BOT_TOKEN_VAL;
+export const TELEGRAM_BOT_TOKEN = TELEGRAM_BOT_TOKEN_VAL;
 export const TELEGRAM_REDIRECT_URI = `${process.env.PUBLIC_APP_URL || 'http://localhost:5173'}/auth/callback/telegram`;
 export const TELEGRAM_API_URL = 'https://api.telegram.org';
 

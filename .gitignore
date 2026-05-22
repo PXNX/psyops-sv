@@ -23,3 +23,8 @@ vite.config.ts.timestamp-*
 sqlite.db
 
 .npmrc
+
+# Mock mode
+.mock-files/
+packages/rest-mock/.mock-files/
+packages/rest-mock/dist/
