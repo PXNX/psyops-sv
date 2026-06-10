@@ -141,7 +141,7 @@ describe("seedStore", () => {
 
         expect(store.count("accounts")).toBeGreaterThanOrEqual(5);
         expect(store.count("states")).toBeGreaterThanOrEqual(3);
-        expect(store.count("regions")).toBeGreaterThanOrEqual(5);
+        expect(store.count("regions")).toBeGreaterThanOrEqual(6);
         expect(store.count("userProfiles")).toBeGreaterThanOrEqual(5);
         expect(store.count("userWallets")).toBeGreaterThanOrEqual(5);
         expect(store.count("companies")).toBeGreaterThanOrEqual(2);
@@ -152,6 +152,12 @@ describe("seedStore", () => {
         expect(store.count("militaryUnits")).toBeGreaterThanOrEqual(3);
         expect(store.count("articles")).toBeGreaterThanOrEqual(3);
         expect(store.count("blocs")).toBeGreaterThanOrEqual(2);
+        expect(store.count("wars")).toBeGreaterThanOrEqual(2);
+        expect(store.count("battles")).toBeGreaterThanOrEqual(3);
+        expect(store.count("battleParticipants")).toBeGreaterThanOrEqual(4);
+        expect(store.count("battleRounds")).toBeGreaterThanOrEqual(2);
+        expect(store.count("parliamentaryElections")).toBeGreaterThanOrEqual(2);
+        expect(store.count("electionVotes")).toBeGreaterThanOrEqual(4);
     });
 
     it("should create valid account→profile→wallet relationships", () => {
@@ -169,6 +175,7 @@ describe("seedStore", () => {
         seedStore(store);
 
         for (const region of store.getAll("regions")) {
+            if (region.stateId === null) continue; // skip independent regions
             expect(region.stateId).toBeDefined();
             expect(store.findById("states", region.stateId as number)).toBeDefined();
         }
@@ -180,6 +187,54 @@ describe("seedStore", () => {
 
         for (const border of store.getAll("regionBorders")) {
             expect(Number(border.regionId)).toBeLessThan(Number(border.neighborId));
+        }
+    });
+
+    it("should have an independent region with no state", () => {
+        const store = createMockStore();
+        seedStore(store);
+
+        const independent = store.findWhere("regions", (r) => r.stateId === null);
+        expect(independent.length).toBeGreaterThanOrEqual(1);
+    });
+
+    it("should have active wars", () => {
+        const store = createMockStore();
+        seedStore(store);
+
+        const activeWars = store.findWhere("wars", (w) => w.status === "active");
+        expect(activeWars.length).toBeGreaterThanOrEqual(2);
+        for (const war of activeWars) {
+            expect(war.endedAt).toBeNull();
+            expect(war.attackerId).toBeDefined();
+            expect(war.defenderId).toBeDefined();
+        }
+    });
+
+    it("should have ongoing battles linked to active wars", () => {
+        const store = createMockStore();
+        seedStore(store);
+
+        const ongoingBattles = store.findWhere("battles", (b) => b.status === "ongoing");
+        expect(ongoingBattles.length).toBeGreaterThanOrEqual(3);
+
+        for (const battle of ongoingBattles) {
+            const war = store.findById("wars", battle.warId as number);
+            expect(war).toBeDefined();
+            expect(war!.status).toBe("active");
+        }
+    });
+
+    it("should have ongoing elections with votes", () => {
+        const store = createMockStore();
+        seedStore(store);
+
+        const activeElections = store.findWhere("parliamentaryElections", (e) => e.status === "active");
+        expect(activeElections.length).toBeGreaterThanOrEqual(2);
+
+        for (const election of activeElections) {
+            const votes = store.findWhere("electionVotes", (v) => v.electionId === election.id);
+            expect(votes.length).toBeGreaterThanOrEqual(1);
         }
     });
 });

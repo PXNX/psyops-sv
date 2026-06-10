@@ -253,7 +253,176 @@ export function seedStore(store: MockRecordStore, storage?: MockFileStorage): vo
     // ============ Transaction History ============
     store.insert("transactionHistory", { userId: account1.id, transactionType: "market_sale", amount: 600, balanceAfter: 50600, description: "Sold 50 iron at 12/unit", relatedUserId: account3.id, relatedEntityType: "listing", relatedEntityId: 1, metadata: null, createdAt: new Date(Date.now() - 7200000) });
     store.insert("transactionHistory", { userId: account3.id, transactionType: "market_purchase", amount: -600, balanceAfter: 9400, description: "Purchased 50 iron at 12/unit", relatedUserId: account1.id, relatedEntityType: "listing", relatedEntityId: 1, metadata: null, createdAt: new Date(Date.now() - 7200000) });
-}
+
+    // ============ Independent Region ============
+    const independentRegion = store.insert("regions", {
+        latitude: "41.0082", longitude: "28.9784", stateId: null,
+        rating: 1, infrastructure: 0, economy: 0, education: 0, hospitals: 0,
+        fortifications: 0, oil: 2, aluminium: 0, rubber: 0, tungsten: 0, steel: 0, chromium: 1,
+        createdAt: new Date(),
+    });
+
+    // Border between the independent region and Borduria
+    store.insert("regionBorders", {
+        regionId: Math.min(region5.id as number, independentRegion.id as number),
+        neighborId: Math.max(region5.id as number, independentRegion.id as number),
+        distanceKm: "200.00",
+        createdAt: new Date(),
+    });
+
+    // ============ Active Wars ============
+    const war1 = store.insert("wars", {
+        attackerId: state2.id,
+        defenderId: state1.id,
+        attackerBlocId: bloc2.id,
+        defenderBlocId: bloc1.id,
+        declaredBy: account3.id,
+        status: "active",
+        surrenderedBy: null,
+        declaredAt: new Date(Date.now() - 86400000 * 3),
+        endedAt: null,
+    });
+
+    const war2 = store.insert("wars", {
+        attackerId: state1.id,
+        defenderId: state3.id,
+        attackerBlocId: bloc1.id,
+        defenderBlocId: null,
+        declaredBy: account1.id,
+        status: "active",
+        surrenderedBy: null,
+        declaredAt: new Date(Date.now() - 86400000),
+        endedAt: null,
+    });
+
+    // Battles for war1
+    const battle1 = store.insert("battles", {
+        warId: war1.id,
+        regionId: region2.id,
+        attackerStateId: state2.id,
+        defenderStateId: state1.id,
+        phase: "active",
+        terrain: "plains",
+        attackerPlanningBonus: 5,
+        defenderPlanningBonus: 3,
+        status: "ongoing",
+        startedBy: account3.id,
+        preparationEndsAt: new Date(Date.now() - 3600000 * 6),
+        planningStartedAt: new Date(Date.now() - 3600000 * 4),
+        startedAt: new Date(Date.now() - 3600000 * 8),
+        endedAt: null,
+    });
+
+    const battle2 = store.insert("battles", {
+        warId: war1.id,
+        regionId: region1.id,
+        attackerStateId: state2.id,
+        defenderStateId: state1.id,
+        phase: "preparation",
+        terrain: "urban",
+        attackerPlanningBonus: 0,
+        defenderPlanningBonus: 0,
+        status: "ongoing",
+        startedBy: account5.id,
+        preparationEndsAt: new Date(Date.now() + 3600000 * 2),
+        planningStartedAt: null,
+        startedAt: new Date(Date.now() - 1800000),
+        endedAt: null,
+    });
+
+    // Battle for war2
+    const battle3 = store.insert("battles", {
+        warId: war2.id,
+        regionId: region5.id,
+        attackerStateId: state1.id,
+        defenderStateId: state3.id,
+        phase: "planning",
+        terrain: "hills",
+        attackerPlanningBonus: 2,
+        defenderPlanningBonus: 0,
+        status: "ongoing",
+        startedBy: account1.id,
+        preparationEndsAt: new Date(Date.now() - 3600000),
+        planningStartedAt: new Date(Date.now() - 1800000),
+        startedAt: new Date(Date.now() - 7200000),
+        endedAt: null,
+    });
+
+    // Battle participants
+    store.insert("battleParticipants", {
+        battleId: battle1.id, unitId: 2, side: "attacker",
+        currentStrength: 85, currentOrganization: 70, maxStrength: 100,
+        damageTaken: 15, damageDealt: 25,
+        isEngaged: true, isExhausted: false,
+        joinedAt: new Date(Date.now() - 3600000 * 8), lastActionAt: new Date(Date.now() - 600000), destroyedAt: null,
+    });
+    store.insert("battleParticipants", {
+        battleId: battle1.id, unitId: 1, side: "defender",
+        currentStrength: 90, currentOrganization: 80, maxStrength: 100,
+        damageTaken: 10, damageDealt: 15,
+        isEngaged: true, isExhausted: false,
+        joinedAt: new Date(Date.now() - 3600000 * 8), lastActionAt: new Date(Date.now() - 600000), destroyedAt: null,
+    });
+    store.insert("battleParticipants", {
+        battleId: battle1.id, unitId: 3, side: "attacker",
+        currentStrength: 95, currentOrganization: 75, maxStrength: 100,
+        damageTaken: 5, damageDealt: 20,
+        isEngaged: false, isExhausted: false,
+        joinedAt: new Date(Date.now() - 3600000 * 4), lastActionAt: null, destroyedAt: null,
+    });
+    store.insert("battleParticipants", {
+        battleId: battle3.id, unitId: 1, side: "attacker",
+        currentStrength: 100, currentOrganization: 100, maxStrength: 100,
+        damageTaken: 0, damageDealt: 0,
+        isEngaged: false, isExhausted: false,
+        joinedAt: new Date(Date.now() - 7200000), lastActionAt: null, destroyedAt: null,
+    });
+
+    // Battle rounds for battle1
+    store.insert("battleRounds", {
+        battleId: battle1.id, roundNumber: 1, battlePhase: "active",
+        attackerUnitsEngaged: 1, defenderUnitsEngaged: 1,
+        attackerTotalDamage: 15, defenderTotalDamage: 10,
+        attackerOrgLoss: 10, defenderOrgLoss: 15,
+        attackerPlanningBonus: 5, defenderPlanningBonus: 3,
+        roundedAt: new Date(Date.now() - 3600000 * 2),
+    });
+    store.insert("battleRounds", {
+        battleId: battle1.id, roundNumber: 2, battlePhase: "active",
+        attackerUnitsEngaged: 2, defenderUnitsEngaged: 1,
+        attackerTotalDamage: 20, defenderTotalDamage: 5,
+        attackerOrgLoss: 5, defenderOrgLoss: 10,
+        attackerPlanningBonus: 5, defenderPlanningBonus: 3,
+        roundedAt: new Date(Date.now() - 1800000),
+    });
+
+    // ============ Ongoing Elections ============
+    const election1 = store.insert("parliamentaryElections", {
+        stateId: state1.id,
+        startDate: new Date(Date.now() - 86400000),
+        endDate: new Date(Date.now() + 86400000 * 2),
+        status: "active",
+        totalSeats: 10,
+        isInaugural: false,
+        createdAt: new Date(Date.now() - 86400000 * 3),
+    });
+
+    const election2 = store.insert("parliamentaryElections", {
+        stateId: state2.id,
+        startDate: new Date(Date.now() - 3600000 * 6),
+        endDate: new Date(Date.now() + 86400000),
+        status: "active",
+        totalSeats: 15,
+        isInaugural: true,
+        createdAt: new Date(Date.now() - 86400000 * 2),
+    });
+
+    // Election votes
+    store.insert("electionVotes", { electionId: election1.id, voterId: account1.id, partyId: party1.id, votedAt: new Date(Date.now() - 3600000 * 12) });
+    store.insert("electionVotes", { electionId: election1.id, voterId: account2.id, partyId: party1.id, votedAt: new Date(Date.now() - 3600000 * 10) });
+    store.insert("electionVotes", { electionId: election2.id, voterId: account3.id, partyId: party2.id, votedAt: new Date(Date.now() - 3600000 * 4) });
+    store.insert("electionVotes", { electionId: election2.id, voterId: account5.id, partyId: party2.id, votedAt: new Date(Date.now() - 3600000 * 2) });
+    }
 
 export const MOCK_SESSION_TOKENS = {
     alice: "mock-token-alice",
