@@ -8,7 +8,7 @@
 </script>
 
 <main
-	class="relative flex flex-col h-dvh justify-center items-center w-full p-4 overflow-hidden bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900"
+	class="relative flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20 overflow-hidden bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900"
 >
 	<!-- Animated Background Pattern -->
 	<div
@@ -86,8 +86,8 @@
 	</div>
 
 	<!-- Help Button - Bottom -->
-	<div class="relative z-10 mt-auto w-full max-w-md">
-		<a href="https://t.me/pentexnyx_bot?start=TEST" class="btn btn-lg btn-ghost w-full gap-3">
+	<div class="absolute bottom-4 left-0 right-0 z-10 flex justify-center">
+		<a href="https://t.me/pentexnyx_bot?start=TEST" class="btn btn-lg btn-ghost w-full max-w-md gap-3">
 			<FluentEmojiEnvelopeWithArrow class="size-5" />
 			<span>{m.needHelp()}</span>
 		</a>

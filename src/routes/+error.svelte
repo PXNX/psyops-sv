@@ -8,7 +8,7 @@
 	import { error } from "@sveltejs/kit";
 </script>
 
-<main class="flex flex-col items-center justify-center h-full p-4 text-center">
+<main class="flex flex-col items-center justify-center min-h-dvh p-4 text-center">
 	<div
 		class="flex flex-col items-center justify-center gap-1 p-4 text-center border rounded-lg border-fuchsia-900 place-self-center"
 	>
