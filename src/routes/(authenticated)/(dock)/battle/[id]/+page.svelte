@@ -9,11 +9,13 @@
 	import { Area, Axis, Highlight, RectClipPath } from "layerchart";
 	import * as m from "$lib/paraglide/messages";
 	import Logo from "$lib/component/Logo.svelte";
+	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
 
 	const { data } = $props();
 
 	let isJoining = $state(false);
 	let isExecuting = $state(false);
+	let showBattleAnim = $state(false);
 	let selectedUnitIds = $state<Set<number>>(new Set());
 	let currentTime = $state(new Date());
 	let countdownInterval: ReturnType<typeof setInterval> | null = null;
@@ -522,9 +524,10 @@
 					action="?/executeCombatRound"
 					use:enhance={() => {
 						isExecuting = true;
-						return async ({ update }) => {
+						return async ({ update, result }) => {
 							await update();
 							isExecuting = false;
+							if (result.type === 'success') showBattleAnim = true;
 						};
 					}}
 				>
@@ -952,6 +955,10 @@
 		{/if}
 	</div>
 </div>
+
+{#if showBattleAnim}
+	<ThreeAnimation variant="battle" onComplete={() => (showBattleAnim = false)} />
+{/if}
 
 <style>
 	@keyframes pulse {
