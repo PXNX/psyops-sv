@@ -22,7 +22,11 @@ import {
 	newspapers,
 	journalists,
 	articles,
-	militaryUnits
+	militaryUnits,
+	wars,
+	battles,
+	battleParticipants,
+	battleRounds
 } from "./schema";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 
@@ -394,5 +398,192 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		}
 	]);
 
+	// ============ Wars ============
+	// War 1: Empire of Sylvania attacks Republic of Freedonia (bloc vs bloc)
+	const [war1] = await db
+		.insert(wars)
+		.values({
+			attackerId: state2!.id,
+			defenderId: state1!.id,
+			attackerBlocId: bloc2!.id,
+			defenderBlocId: bloc1!.id,
+			declaredBy: "user-3",
+			status: "active",
+			declaredAt: new Date(Date.now() - 86400000 * 3)
+		})
+		.returning();
+
+	// War 2: Republic of Freedonia attacks Kingdom of Borduria
+	const [war2] = await db
+		.insert(wars)
+		.values({
+			attackerId: state1!.id,
+			defenderId: state3!.id,
+			attackerBlocId: bloc1!.id,
+			declaredBy: "user-1",
+			status: "active",
+			declaredAt: new Date(Date.now() - 86400000)
+		})
+		.returning();
+
+	// ============ Battles ============
+	// Battle 1: War1, active battle in region2 (Freedonia territory)
+	const [battle1] = await db
+		.insert(battles)
+		.values({
+			warId: war1!.id,
+			regionId: region2!.id,
+			attackerStateId: state2!.id,
+			defenderStateId: state1!.id,
+			phase: "active",
+			terrain: "plains",
+			attackerPlanningBonus: 5,
+			defenderPlanningBonus: 3,
+			status: "ongoing",
+			startedBy: "user-3",
+			preparationEndsAt: new Date(Date.now() - 3600000 * 6),
+			planningStartedAt: new Date(Date.now() - 3600000 * 4),
+			startedAt: new Date(Date.now() - 3600000 * 8)
+		})
+		.returning();
+
+	// Battle 2: War1, preparation battle in region1 (Freedonia territory)
+	const [battle2] = await db
+		.insert(battles)
+		.values({
+			warId: war1!.id,
+			regionId: region1!.id,
+			attackerStateId: state2!.id,
+			defenderStateId: state1!.id,
+			phase: "preparation",
+			terrain: "urban",
+			attackerPlanningBonus: 0,
+			defenderPlanningBonus: 0,
+			status: "ongoing",
+			startedBy: "user-5",
+			preparationEndsAt: new Date(Date.now() + 3600000 * 2),
+			startedAt: new Date(Date.now() - 1800000)
+		})
+		.returning();
+
+	// Battle 3: War2, planning battle in region5 (Borduria territory)
+	const [battle3] = await db
+		.insert(battles)
+		.values({
+			warId: war2!.id,
+			regionId: region5!.id,
+			attackerStateId: state1!.id,
+			defenderStateId: state3!.id,
+			phase: "planning",
+			terrain: "hills",
+			attackerPlanningBonus: 2,
+			defenderPlanningBonus: 0,
+			status: "ongoing",
+			startedBy: "user-1",
+			preparationEndsAt: new Date(Date.now() - 3600000),
+			planningStartedAt: new Date(Date.now() - 1800000),
+			startedAt: new Date(Date.now() - 7200000)
+		})
+		.returning();
+
+	// ============ Battle Participants ============
+	// Need unit IDs — they were auto-generated, so query them
+	const allUnits = await db.select().from(militaryUnits);
+	const unit1 = allUnits.find((u) => u.name === "1st Infantry Division")!;
+	const unit2 = allUnits.find((u) => u.name === "2nd Armor Brigade")!;
+	const unit3 = allUnits.find((u) => u.name === "3rd Artillery Regiment")!;
+
+	// Battle 1 participants
+	await db.insert(battleParticipants).values([
+		{
+			battleId: battle1!.id,
+			unitId: unit2.id,
+			side: "attacker",
+			currentStrength: 85,
+			currentOrganization: 70,
+			maxStrength: 100,
+			damageTaken: 15,
+			damageDealt: 25,
+			isEngaged: true,
+			isExhausted: false,
+			joinedAt: new Date(Date.now() - 3600000 * 8),
+			lastActionAt: new Date(Date.now() - 600000)
+		},
+		{
+			battleId: battle1!.id,
+			unitId: unit1.id,
+			side: "defender",
+			currentStrength: 90,
+			currentOrganization: 80,
+			maxStrength: 100,
+			damageTaken: 10,
+			damageDealt: 15,
+			isEngaged: true,
+			isExhausted: false,
+			joinedAt: new Date(Date.now() - 3600000 * 8),
+			lastActionAt: new Date(Date.now() - 600000)
+		},
+		{
+			battleId: battle1!.id,
+			unitId: unit3.id,
+			side: "attacker",
+			currentStrength: 95,
+			currentOrganization: 75,
+			maxStrength: 100,
+			damageTaken: 5,
+			damageDealt: 20,
+			isEngaged: false,
+			isExhausted: false,
+			joinedAt: new Date(Date.now() - 3600000 * 4)
+		}
+	]);
+
+	// Battle 3 participant
+	await db.insert(battleParticipants).values({
+		battleId: battle3!.id,
+		unitId: unit1.id,
+		side: "attacker",
+		currentStrength: 100,
+		currentOrganization: 100,
+		maxStrength: 100,
+		damageTaken: 0,
+		damageDealt: 0,
+		isEngaged: false,
+		isExhausted: false,
+		joinedAt: new Date(Date.now() - 7200000)
+	});
+
+	// ============ Battle Rounds (for battle1) ============
+	await db.insert(battleRounds).values([
+		{
+			battleId: battle1!.id,
+			roundNumber: 1,
+			battlePhase: "active",
+			attackerUnitsEngaged: 1,
+			defenderUnitsEngaged: 1,
+			attackerTotalDamage: 15,
+			defenderTotalDamage: 10,
+			attackerOrgLoss: 10,
+			defenderOrgLoss: 15,
+			attackerPlanningBonus: 5,
+			defenderPlanningBonus: 3,
+			roundedAt: new Date(Date.now() - 3600000 * 2)
+		},
+		{
+			battleId: battle1!.id,
+			roundNumber: 2,
+			battlePhase: "active",
+			attackerUnitsEngaged: 2,
+			defenderUnitsEngaged: 1,
+			attackerTotalDamage: 20,
+			defenderTotalDamage: 5,
+			attackerOrgLoss: 5,
+			defenderOrgLoss: 10,
+			attackerPlanningBonus: 5,
+			defenderPlanningBonus: 3,
+			roundedAt: new Date(Date.now() - 1800000)
+		}
+	]);
+
 	console.log("🌱 Mock database seeded successfully");
-}
+	}
