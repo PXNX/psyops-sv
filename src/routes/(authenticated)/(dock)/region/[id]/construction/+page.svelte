@@ -5,7 +5,6 @@
 	import FluentHeartPulse20Filled from "~icons/fluent/heart-pulse-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentHammer20Filled from "~icons/fluent/wrench-20-filled";
 	import * as m from "$lib/paraglide/messages";
 	import { enhance } from "$app/forms";
@@ -110,27 +109,21 @@
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center gap-4">
-		<a
-			href="/region/{data.region.id}"
-			class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-		>
-			<FluentArrowLeft20Filled class="size-4" />
-			Back
+	<div>
+		<a href="/region/{data.region.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			{regionName()}
 		</a>
-		<div class="flex-1">
-			<h1 class="text-3xl font-bold text-white flex items-center gap-2">
-				<FluentHammer20Filled class="size-8" />
-				Build in {regionName()}
-			</h1>
-			<p class="text-gray-400 mt-1">
-				{#if data.isGovernor}
-					As Governor
-				{:else if data.isInfrastructureMinister}
-					As Infrastructure Minister
-				{/if}
-			</p>
-		</div>
+		<h1 class="text-3xl font-bold text-white flex items-center gap-2 mt-1">
+			<FluentHammer20Filled class="size-8" />
+			Construction
+		</h1>
+		<p class="text-gray-400 mt-1">
+			{#if data.isGovernor}
+				As Governor
+			{:else if data.isInfrastructureMinister}
+				As Infrastructure Minister
+			{/if}
+		</p>
 	</div>
 
 	<!-- Treasury Balance -->

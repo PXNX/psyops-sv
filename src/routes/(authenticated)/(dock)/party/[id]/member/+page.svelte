@@ -41,22 +41,21 @@
 
 <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-4">
-			<a href="/party/{data.party.id}" class="btn btn-ghost btn-sm gap-2"> ← Back to Party </a>
-			<div class="h-6 w-px bg-white/10"></div>
-			<div class="flex items-center gap-2">
-				<div class="size-8 rounded-lg overflow-hidden">
-					<Logo
-						src={data.party.logoUrl}
-						alt={data.party.name}
-						class="size-full"
-						placeholderIcon={FluentShield20Filled}
-						placeholderGradient="from-slate-600 to-slate-700"
-					/>
-				</div>
-				<span class="font-semibold text-white">{data.party.name}</span>
-			</div>
+	<div class="flex items-center gap-4">
+		<div class="size-14 rounded-xl overflow-hidden ring-2 ring-white/10">
+			<Logo
+				src={data.party.logoUrl}
+				alt={data.party.name}
+				class="size-full"
+				placeholderIcon={FluentShield20Filled}
+				placeholderGradient="from-slate-600 to-slate-700"
+			/>
+		</div>
+		<div>
+			<a href="/party/{data.party.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+				{data.party.name}
+			</a>
+			<h1 class="text-2xl font-bold text-white">Members</h1>
 		</div>
 	</div>
 

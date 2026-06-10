@@ -99,7 +99,7 @@
 								</a>
 								<span class="flex items-center gap-1">
 									<FluentCalendar20Filled class="size-3.5" />
-									Founded {new Date(data.party.foundedAt).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
+									Founded {(() => { const d = new Date(data.party.foundedAt); const p = (n) => String(n).padStart(2,'0'); return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`; })()}
 								</span>
 							</div>
 						</div>
@@ -222,7 +222,7 @@
 					<div>
 						<h3 class="text-base sm:text-lg font-semibold text-white mb-1">You're a Member</h3>
 						<p class="text-xs sm:text-sm text-gray-400">
-							Active since {new Date(data.memberSince!).toLocaleDateString()}
+							Active since {(() => { const d = new Date(data.memberSince!); const p = (n) => String(n).padStart(2,'0'); return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`; })()}
 						</p>
 					</div>
 					<button
@@ -270,7 +270,7 @@
 						</a>
 						<p class="text-xs sm:text-sm font-medium truncate" style="color: {data.party.color}">Party Leader</p>
 						<p class="text-[10px] sm:text-xs text-gray-500">
-							Since {new Date(member.joinedAt).toLocaleDateString("en-US", { year: "numeric", month: "short" })}
+							Since {(() => { const d = new Date(member.joinedAt); const p = (n) => String(n).padStart(2,'0'); return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`; })()}
 						</p>
 					</div>
 				</div>

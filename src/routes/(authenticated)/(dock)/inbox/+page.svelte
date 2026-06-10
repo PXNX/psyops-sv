@@ -8,6 +8,8 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 
+	import { formatDateTime } from "$lib/utils/formatting.js";
+
 	const { data, form } = $props();
 
 	let broadcastType = $state<"state" | "party">("state");
@@ -61,7 +63,7 @@
 						<h4 class="text-white font-bold mb-1">{data.activeStateBroadcast.title}</h4>
 						<p class="text-gray-300 whitespace-pre-wrap text-sm">{data.activeStateBroadcast.content}</p>
 						<p class="text-xs text-gray-500 mt-2">
-							{new Date(data.activeStateBroadcast.createdAt).toLocaleString()}
+							{formatDateTime(data.activeStateBroadcast.createdAt)}
 						</p>
 					</div>
 					<form method="POST" action="?/revokeStateBroadcast" use:enhance>
@@ -86,7 +88,7 @@
 						<h4 class="text-white font-bold mb-1">{data.activePartyBroadcast.title}</h4>
 						<p class="text-gray-300 whitespace-pre-wrap text-sm">{data.activePartyBroadcast.content}</p>
 						<p class="text-xs text-gray-500 mt-2">
-							{new Date(data.activePartyBroadcast.createdAt).toLocaleString()}
+							{formatDateTime(data.activePartyBroadcast.createdAt)}
 						</p>
 					</div>
 					<form method="POST" action="?/revokePartyBroadcast" use:enhance>

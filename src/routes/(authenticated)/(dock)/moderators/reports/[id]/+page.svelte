@@ -111,8 +111,11 @@
 
 <div class="max-w-5xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center gap-4">
-		<a href="/moderators/reports" class="btn btn-ghost btn-sm gap-2"> ← Back to My Reports </a>
+	<div>
+		<a href="/moderators/reports" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			My Reports
+		</a>
+		<h1 class="text-2xl font-bold text-white mt-1">Report #{data.report.id}</h1>
 	</div>
 
 	<!-- Status Card -->

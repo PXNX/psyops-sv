@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { MILITARY_UNIT_TEMPLATES } from "$lib/config";
-	import { formatDate, getRegionName } from "$lib/utils/formatting.js";
+	import { formatDate, formatDateTime, getRegionName } from "$lib/utils/formatting.js";
 	import { onMount, onDestroy } from "svelte";
 	import { Chart, Svg, Tooltip } from "layerchart";
 	import { scaleLinear } from "d3-scale";
@@ -30,15 +30,7 @@
 		}
 	});
 
-	function formatDateTime(dateString: string): string {
-		const date = new Date(dateString);
-		const day = String(date.getDate()).padStart(2, "0");
-		const month = String(date.getMonth() + 1).padStart(2, "0");
-		const year = date.getFullYear();
-		const hours = String(date.getHours()).padStart(2, "0");
-		const minutes = String(date.getMinutes()).padStart(2, "0");
-		return `${day}.${month}.${year}, ${hours}:${minutes}`;
-	}
+
 
 	function getUnitIconPath(unitType: string): string {
 		return `/units/${unitType}.svg`;

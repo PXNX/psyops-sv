@@ -3,6 +3,7 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { editCompanySchema } from "./schema";
+	import { formatDate } from "$lib/utils/formatting.js";
 	import { useImageUpload } from "$lib/utils/edit/useImageUpload.svelte";
 	import {
 		EditPageLayout,
@@ -173,7 +174,7 @@
 						</div>
 						<div>
 							<p class="font-bold text-white text-xl">{$form.name || "Your Company Name"}</p>
-							<p class="text-sm text-gray-300">Founded {new Date(data.company.foundedAt).toLocaleDateString()}</p>
+							<p class="text-sm text-gray-300">Founded {formatDate(data.company.foundedAt)}</p>
 						</div>
 					</div>
 				</div>

@@ -8,6 +8,7 @@
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import * as m from "$lib/paraglide/messages";
+	import { formatDateTime, formatDate } from "$lib/utils/formatting.js";
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();
@@ -68,7 +69,7 @@
 								<h3 class="text-white font-bold">{data.systemBroadcast.title}</h3>
 								<p class="text-gray-300 text-sm whitespace-pre-wrap mt-1">{data.systemBroadcast.content}</p>
 								<p class="text-xs text-gray-500 mt-2">
-									{data.systemBroadcast.issuer?.profile?.name || "Admin"} · {new Date(data.systemBroadcast.createdAt).toLocaleDateString()}
+									{data.systemBroadcast.issuer?.profile?.name || "Admin"} · {formatDate(data.systemBroadcast.createdAt)}
 								</p>
 							</div>
 						</div>
@@ -90,7 +91,7 @@
 								<h3 class="text-white font-bold">{data.stateBroadcast.title}</h3>
 								<p class="text-gray-300 text-sm whitespace-pre-wrap mt-1">{data.stateBroadcast.content}</p>
 								<p class="text-xs text-gray-500 mt-2">
-									{data.stateBroadcast.issuer?.profile?.name || "President"} · {new Date(data.stateBroadcast.createdAt).toLocaleDateString()}
+									{data.stateBroadcast.issuer?.profile?.name || "President"} · {formatDate(data.stateBroadcast.createdAt)}
 								</p>
 							</div>
 						</div>
@@ -112,7 +113,7 @@
 								<h3 class="text-white font-bold">{data.partyBroadcast.title}</h3>
 								<p class="text-gray-300 text-sm whitespace-pre-wrap mt-1">{data.partyBroadcast.content}</p>
 								<p class="text-xs text-gray-500 mt-2">
-									{data.partyBroadcast.issuer?.profile?.name || "Party Leader"} · {new Date(data.partyBroadcast.createdAt).toLocaleDateString()}
+									{data.partyBroadcast.issuer?.profile?.name || "Party Leader"} · {formatDate(data.partyBroadcast.createdAt)}
 								</p>
 							</div>
 						</div>

@@ -8,7 +8,6 @@
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 
 	let { data } = $props();
@@ -22,42 +21,16 @@
 <div class="container mx-auto px-4 py-6 max-w-7xl">
 	<!-- Header with State Info -->
 	<div class="mb-6">
-		<div class="flex items-center justify-between mb-4">
-			<a href="/state/{data.state.id}" class="btn btn-ghost btn-sm gap-2 hover:bg-base-200">
-				<FluentArrowLeft20Filled class="size-4" />
-				Back to State
-			</a>
-
-			{#if data.isPresident}
-				<div class="badge badge-warning gap-1">👑 President Access</div>
-			{/if}
-		</div>
-
-		<!-- State Banner -->
-		<div class="card bg-base-200 shadow-xl">
-			<div class="card-body p-6">
-				<div class="flex items-center gap-4">
-					{#if data.state.logoUrl}
-						<div class="avatar">
-							<div class="w-16 h-16 rounded-xl">
-								<img src={data.state.logoUrl} alt="{data.state.name} logo" />
-							</div>
-						</div>
-					{/if}
-					<div class="flex-1">
-						<a href="/state/{data.state.id}" class="link link-hover">
-							<h1 class="text-3xl font-bold flex items-center gap-2">
-								{data.state.name}
-							</h1>
-						</a>
-						<div class="flex items-center gap-2 mt-1 text-base-content/70">
-							<FluentGlobe20Filled class="size-5 text-primary" />
-							<span class="text-lg font-medium">Ministry of Foreign Affairs</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+		<a href="/state/{data.state.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			{data.state.name}
+		</a>
+		<h1 class="text-3xl font-bold text-white flex items-center gap-3 mt-1">
+			<FluentGlobe20Filled class="size-8 text-primary" />
+			Ministry of Foreign Affairs
+		</h1>
+		{#if data.isPresident}
+			<p class="text-xs text-yellow-400 mt-1">👑 Accessing as President</p>
+		{/if}
 	</div>
 
 	<div class="grid lg:grid-cols-2 gap-6">

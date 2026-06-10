@@ -12,6 +12,7 @@
 
 	import { enhance } from "$app/forms";
 	import Logo from "$lib/component/Logo.svelte";
+	import { formatDate } from "$lib/utils/formatting.js";
 
 	const { data, form } = $props();
 </script>
@@ -165,11 +166,7 @@
 
 						<div class="flex items-center gap-3 text-[10px] sm:text-xs text-gray-400">
 							<span
-								>Started {new Date(war.declaredAt).toLocaleDateString("en-US", {
-									month: "short",
-									day: "numeric",
-									year: "numeric"
-								})}</span
+								>Started {formatDate(war.declaredAt)}</span
 							>
 							{#if war.activeBattles > 0}
 								<span class="flex items-center gap-1 text-red-400">

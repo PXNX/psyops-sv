@@ -14,6 +14,7 @@
 
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentShieldError20Filled from "~icons/fluent/shield-error-20-filled";
+	import PageContainer from "$lib/component/PageContainer.svelte";
 	import Logo from "$lib/component/Logo.svelte";
 	import ProfileItem from "$lib/component/ProfileItem.svelte";
 	import Modal from "$lib/component/Modal.svelte";

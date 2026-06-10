@@ -74,29 +74,31 @@
 </svelte:head>
 
 <PageContainer maxWidth="4xl">
-	<!-- Header -->
-	<div class="flex items-center gap-4">
-		<Logo
-			src="/coats/{data.region.id}.svg"
-			alt={data.region.name}
-			class="size-20 rounded-xl"
-			placeholderIcon={FluentShield20Filled}
-			placeholderGradient="from-purple-500 to-blue-500"
-		/>
-		<div class="flex-1">
-			<h1 class="text-3xl font-bold text-white">{data.region.name}</h1>
-			{#if data.region.stateName}
-				<p class="text-gray-400 mt-1">
-					<a href="/state/{data.region.stateId}" class="hover:text-purple-400 transition-colors">
-						{data.region.stateName}
-					</a>
-				</p>
-			{:else}
-				<p class="text-amber-400 mt-1 flex items-center gap-2">
-					<FluentFlag20Filled class="size-4" />
-					Independent Region
-				</p>
-			{/if}
+	<!-- Hero Header -->
+	<div class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-gradient-to-br from-purple-900/30 via-slate-900/50 to-blue-900/30 border-b border-white/5">
+		<div class="max-w-4xl mx-auto flex items-center gap-5">
+			<Logo
+				src="/coats/{data.region.id}.svg"
+				alt={data.region.name}
+				class="size-24 rounded-2xl ring-2 ring-white/10 shadow-2xl"
+				placeholderIcon={FluentShield20Filled}
+				placeholderGradient="from-purple-500 to-blue-500"
+			/>
+			<div class="flex-1">
+				<h1 class="text-3xl sm:text-4xl font-bold text-white">{data.region.name}</h1>
+				{#if data.region.stateName}
+					<p class="text-gray-400 mt-1.5 text-lg">
+						<a href="/state/{data.region.stateId}" class="hover:text-purple-400 transition-colors">
+							{data.region.stateName}
+						</a>
+					</p>
+				{:else}
+					<p class="text-amber-400 mt-1.5 text-lg flex items-center gap-2">
+						<FluentFlag20Filled class="size-5" />
+						Independent Region
+					</p>
+				{/if}
+			</div>
 		</div>
 	</div>
 
@@ -321,7 +323,10 @@
 	{#if !isIndependent}
 		{#if data.governor}
 			<SectionCard>
-				<h2 class="text-lg font-semibold text-white mb-4">Governor</h2>
+				<div class="flex items-center gap-2 mb-4">
+					<span class="text-xl">👑</span>
+					<h2 class="text-lg font-semibold text-white">Governor</h2>
+				</div>
 				<a
 					href="/user/{data.governor.userId}"
 					class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
@@ -336,115 +341,145 @@
 						<p class="text-xs text-gray-400">Appointed {formatDate(data.governor.appointedAt)}</p>
 					</div>
 				</a>
-				</SectionCard>
-				{:else}
-				<SectionCard>
-				<h2 class="text-lg font-semibold text-white mb-2">Governor</h2>
+			</SectionCard>
+		{:else}
+			<SectionCard>
+				<div class="flex items-center gap-2 mb-2">
+					<span class="text-xl">👑</span>
+					<h2 class="text-lg font-semibold text-white">Governor</h2>
+				</div>
 				<p class="text-sm text-gray-400">No governor appointed</p>
-				</SectionCard>
-				{/if}
-				{/if}
+			</SectionCard>
+		{/if}
+	{/if}
 
 				<!-- State Buildings -->
 				{#if data.buildings.length > 0}
-				<SectionCard>
-				<h2 class="text-lg font-semibold text-white mb-4">State Buildings</h2>
-			<div class="grid gap-3">
-				{#each data.buildings as building}
-					<div class="flex items-center gap-3 bg-slate-700/30 rounded-lg p-3">
-						<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+					<SectionCard>
+						<div class="flex items-center gap-2 mb-4">
 							<FluentBuilding20Filled class="size-5 text-blue-400" />
+							<h2 class="text-lg font-semibold text-white">State Buildings</h2>
 						</div>
-						<div class="flex-1">
-							<p class="font-semibold text-white">
-								{building.name}
-							</p>
-							<p class="text-xs text-gray-400 capitalize">{building.buildingType.replace('_', ' ')}</p>
+						<div class="grid gap-3">
+							{#each data.buildings as building}
+								<div class="flex items-center gap-3 bg-slate-700/30 rounded-lg p-3">
+									<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+										<FluentBuilding20Filled class="size-5 text-blue-400" />
+									</div>
+									<div class="flex-1">
+										<p class="font-semibold text-white">
+											{building.name}
+										</p>
+										<p class="text-xs text-gray-400 capitalize">{building.buildingType.replace('_', ' ')}</p>
+									</div>
+								</div>
+							{/each}
 						</div>
-					</div>
-				{/each}
-			</div>
-			</SectionCard>
-			{/if}
+					</SectionCard>
+				{/if}
 
 			<!-- Factories -->
 			{#if data.factories.length > 0}
-			<SectionCard>
-			<h2 class="text-lg font-semibold text-white mb-4">Factories</h2>
-			<div class="grid gap-3">
-			{#each data.factories as factory}
-				<a
-					href="/factory/{factory.id}"
-					class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
-				>
-					<div class="size-10 rounded-lg overflow-hidden flex items-center justify-center bg-purple-600/20">
-						{#if factory.companyLogoUrl}
-							<Logo
-								src={factory.companyLogoUrl}
-								alt={factory.company?.name || 'Company'}
-								class="size-10"
-								placeholderIcon={FluentBriefcase20Filled}
-								placeholderGradient="from-purple-600 to-blue-600"
-							/>
-						{:else}
-							<FluentBriefcase20Filled class="size-5 text-purple-400" />
-						{/if}
+				<SectionCard>
+					<div class="flex items-center gap-2 mb-4">
+						<FluentBriefcase20Filled class="size-5 text-purple-400" />
+						<h2 class="text-lg font-semibold text-white">Factories</h2>
 					</div>
-					<div class="flex-1">
-						<p class="font-semibold text-white group-hover:text-purple-400 transition-colors">
-							{factory.name}
-						</p>
-						<p class="text-xs text-gray-400 capitalize">{factory.factoryType} • {factory.company?.name}</p>
+					<div class="grid gap-3">
+						{#each data.factories as factory}
+							<a
+								href="/factory/{factory.id}"
+								class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
+							>
+								<div class="size-10 rounded-lg overflow-hidden flex items-center justify-center bg-purple-600/20">
+									{#if factory.companyLogoUrl}
+										<Logo
+											src={factory.companyLogoUrl}
+											alt={factory.company?.name || 'Company'}
+											class="size-10"
+											placeholderIcon={FluentBriefcase20Filled}
+											placeholderGradient="from-purple-600 to-blue-600"
+										/>
+									{:else}
+										<FluentBriefcase20Filled class="size-5 text-purple-400" />
+									{/if}
+								</div>
+								<div class="flex-1">
+									<p class="font-semibold text-white group-hover:text-purple-400 transition-colors">
+										{factory.name}
+									</p>
+									<p class="text-xs text-gray-400 capitalize">{factory.factoryType} • {factory.company?.name}</p>
+								</div>
+							</a>
+						{/each}
 					</div>
-				</a>
-			{/each}
-			</div>
-			</SectionCard>
+				</SectionCard>
 			{/if}
 
 			<!-- Resources -->
 			{#if data.region.oil || data.region.steel || data.region.chromium || data.region.tungsten || data.region.rubber || data.region.aluminium}
-			<SectionCard>
-			<h2 class="text-lg font-semibold text-white mb-4">Natural Resources</h2>
-			<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-				{#if data.region.oil}
-					<div class="bg-amber-600/10 border border-amber-600/20 rounded-lg p-3">
-						<p class="text-xs text-amber-400 font-medium">Oil</p>
-						<p class="text-lg font-bold text-white">{data.region.oil}</p>
+				<SectionCard>
+					<div class="flex items-center gap-2 mb-4">
+						<span class="text-lg">⛏️</span>
+						<h2 class="text-lg font-semibold text-white">Natural Resources</h2>
 					</div>
-				{/if}
-				{#if data.region.steel}
-					<div class="bg-gray-600/10 border border-gray-600/20 rounded-lg p-3">
-						<p class="text-xs text-gray-400 font-medium">Steel</p>
-						<p class="text-lg font-bold text-white">{data.region.steel}</p>
+					<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+						{#if data.region.oil}
+							<div class="bg-amber-600/10 border border-amber-600/20 rounded-lg p-3 flex items-center gap-3">
+								<span class="text-2xl">⛽</span>
+								<div>
+									<p class="text-xs text-amber-400 font-medium">Oil</p>
+									<p class="text-lg font-bold text-white">{data.region.oil}</p>
+								</div>
+							</div>
+						{/if}
+						{#if data.region.steel}
+							<div class="bg-gray-600/10 border border-gray-600/20 rounded-lg p-3 flex items-center gap-3">
+								<span class="text-2xl">🔩</span>
+								<div>
+									<p class="text-xs text-gray-400 font-medium">Steel</p>
+									<p class="text-lg font-bold text-white">{data.region.steel}</p>
+								</div>
+							</div>
+						{/if}
+						{#if data.region.chromium}
+							<div class="bg-blue-600/10 border border-blue-600/20 rounded-lg p-3 flex items-center gap-3">
+								<span class="text-2xl">💎</span>
+								<div>
+									<p class="text-xs text-blue-400 font-medium">Chromium</p>
+									<p class="text-lg font-bold text-white">{data.region.chromium}</p>
+								</div>
+							</div>
+						{/if}
+						{#if data.region.tungsten}
+							<div class="bg-purple-600/10 border border-purple-600/20 rounded-lg p-3 flex items-center gap-3">
+								<span class="text-2xl">⚡</span>
+								<div>
+									<p class="text-xs text-purple-400 font-medium">Tungsten</p>
+									<p class="text-lg font-bold text-white">{data.region.tungsten}</p>
+								</div>
+							</div>
+						{/if}
+						{#if data.region.rubber}
+							<div class="bg-green-600/10 border border-green-600/20 rounded-lg p-3 flex items-center gap-3">
+								<span class="text-2xl">🌿</span>
+								<div>
+									<p class="text-xs text-green-400 font-medium">Rubber</p>
+									<p class="text-lg font-bold text-white">{data.region.rubber}</p>
+								</div>
+							</div>
+						{/if}
+						{#if data.region.aluminium}
+							<div class="bg-slate-600/10 border border-slate-600/20 rounded-lg p-3 flex items-center gap-3">
+								<span class="text-2xl">🔘</span>
+								<div>
+									<p class="text-xs text-slate-400 font-medium">Aluminium</p>
+									<p class="text-lg font-bold text-white">{data.region.aluminium}</p>
+								</div>
+							</div>
+						{/if}
 					</div>
-				{/if}
-				{#if data.region.chromium}
-					<div class="bg-blue-600/10 border border-blue-600/20 rounded-lg p-3">
-						<p class="text-xs text-blue-400 font-medium">Chromium</p>
-						<p class="text-lg font-bold text-white">{data.region.chromium}</p>
-					</div>
-				{/if}
-				{#if data.region.tungsten}
-					<div class="bg-purple-600/10 border border-purple-600/20 rounded-lg p-3">
-						<p class="text-xs text-purple-400 font-medium">Tungsten</p>
-						<p class="text-lg font-bold text-white">{data.region.tungsten}</p>
-					</div>
-				{/if}
-				{#if data.region.rubber}
-					<div class="bg-green-600/10 border border-green-600/20 rounded-lg p-3">
-						<p class="text-xs text-green-400 font-medium">Rubber</p>
-						<p class="text-lg font-bold text-white">{data.region.rubber}</p>
-					</div>
-				{/if}
-				{#if data.region.aluminium}
-					<div class="bg-slate-600/10 border border-slate-600/20 rounded-lg p-3">
-						<p class="text-xs text-slate-400 font-medium">Aluminium</p>
-						<p class="text-lg font-bold text-white">{data.region.aluminium}</p>
-					</div>
-				{/if}
-			</div>
-			</SectionCard>
+				</SectionCard>
 			{/if}
 
 			<!-- Active Wars Section -->

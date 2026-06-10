@@ -10,7 +10,6 @@
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import FluentDismissCircle20Filled from "~icons/fluent/dismiss-circle-20-filled";
 	import FluentCalendarClock20Filled from "~icons/fluent/calendar-clock-20-filled";
-	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import { formatDate } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
@@ -95,21 +94,14 @@
 
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<a
-				href="/state/{data.state.id}/parliament"
-				class="text-sm text-gray-400 hover:text-white mb-2 inline-flex items-center gap-1"
-			>
-				<FluentArrowLeft20Filled class="size-3" />
-				Back to Parliament
-			</a>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-				<FluentHistory20Filled class="size-8 text-purple-400" />
-				Proposal History
-			</h1>
-			<p class="text-gray-400 mt-1">{data.state.name}</p>
-		</div>
+	<div>
+		<a href="/state/{data.state.id}/parliament" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			{data.state.name} — Parliament
+		</a>
+		<h1 class="text-3xl font-bold text-white flex items-center gap-3 mt-1">
+			<FluentHistory20Filled class="size-8 text-purple-400" />
+			Proposal History
+		</h1>
 	</div>
 
 	<!-- Tabs -->

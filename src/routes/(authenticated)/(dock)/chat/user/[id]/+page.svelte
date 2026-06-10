@@ -76,7 +76,8 @@
 
 		groupedMessages.forEach((group) => {
 			const msgDate = new Date(group.firstMessageTime);
-			const dateStr = msgDate.toLocaleDateString();
+			const p = (n: number) => String(n).padStart(2, '0');
+		const dateStr = `${p(msgDate.getDate())}.${p(msgDate.getMonth() + 1)}.${msgDate.getFullYear()}`;
 
 			if (!currentDay || currentDay.date !== dateStr) {
 				if (currentDay) days.push(currentDay);
@@ -132,7 +133,8 @@
 
 	function formatGroupTime(dateString: string) {
 		const date = new Date(dateString);
-		return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 	}
 
 	function formatDayDivider(dateStr: string) {
@@ -143,7 +145,8 @@
 
 		if (date.toDateString() === today.toDateString()) return "Today";
 		if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-		return date.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
+		const p = (n: number) => String(n).padStart(2, '0');
+		return `${p(date.getDate())}.${p(date.getMonth() + 1)}.${date.getFullYear()}`;
 	}
 
 	function handleReportMessage(messageId: number, senderId: string) {

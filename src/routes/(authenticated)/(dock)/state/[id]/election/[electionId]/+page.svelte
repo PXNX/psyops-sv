@@ -77,8 +77,8 @@
 <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div>
-		<a href="/state/{data.state.id}/parliament" class="text-sm text-gray-400 hover:text-white mb-2 inline-block">
-			← Back to Parliament
+		<a href="/state/{data.state.id}/parliament" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			{data.state.name} — Parliament
 		</a>
 		<div class="flex items-center gap-4">
 			<a href="/state/{data.state.id}">

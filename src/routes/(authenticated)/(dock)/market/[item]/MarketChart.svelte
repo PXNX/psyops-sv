@@ -123,32 +123,21 @@
 	// ── Formatting ───────────────────────────────────────────────────────────────
 	function fmtAxisDate(ts: number): string {
 		const d = new Date(ts);
+		const pad = (n: number) => String(n).padStart(2, '0');
 		if (selectedRange === "1D")
-			return d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: false });
-		if (selectedRange === "1W") return d.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
-		if (selectedRange === "1M") return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-		return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+			return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		if (selectedRange === "1W") return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
+		if (selectedRange === "1M") return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
+		return `${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`;
 	}
 
 	function fmtTooltipDate(d: Date): string {
+		const pad = (n: number) => String(n).padStart(2, '0');
 		if (selectedRange === "1D")
-			return d.toLocaleString("en-US", {
-				month: "short",
-				day: "numeric",
-				hour: "2-digit",
-				minute: "2-digit",
-				hour12: false
-			});
+			return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 		if (selectedRange === "1W")
-			return d.toLocaleString("en-US", {
-				weekday: "short",
-				month: "short",
-				day: "numeric",
-				hour: "2-digit",
-				minute: "2-digit",
-				hour12: false
-			});
-		return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+			return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 	}
 
 	function fmtPrice(v: number): string {

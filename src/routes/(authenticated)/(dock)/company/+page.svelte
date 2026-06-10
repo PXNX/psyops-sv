@@ -11,6 +11,7 @@
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 
 	import PageContainer from "$lib/component/PageContainer.svelte";
+	import { formatDate } from "$lib/utils/formatting.js";
 
 	let { data } = $props();
 
@@ -102,7 +103,7 @@
 						</span>
 						<span class="flex items-center gap-1.5">
 							<FluentCalendar20Filled class="size-4 text-gray-500" />
-							Founded {new Date(data.userCompany.foundedAt).toLocaleDateString()}
+							Founded {formatDate(data.userCompany.foundedAt)}
 						</span>
 					</div>
 				</div>
@@ -213,7 +214,7 @@
 								</span>
 							{/if}
 							<span class="ml-auto text-xs text-gray-500">
-								{new Date(company.foundedAt).toLocaleDateString()}
+								{formatDate(company.foundedAt)}
 							</span>
 						</div>
 					</div>

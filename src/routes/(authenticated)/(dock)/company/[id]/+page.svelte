@@ -1,6 +1,6 @@
 <!-- src/routes/company/[id]/+page.svelte -->
 <script lang="ts">
-	import { getRegionName } from "$lib/utils/formatting";
+	import { getRegionName, formatDate } from "$lib/utils/formatting";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
@@ -80,7 +80,7 @@
 							<div class="flex flex-wrap items-center gap-3 text-xs text-gray-400 mt-1">
 								<span class="flex items-center gap-1">
 									<FluentCalendar20Filled class="size-3.5" />
-									Founded {new Date(data.company.foundedAt).toLocaleDateString()}
+									Founded {formatDate(data.company.foundedAt)}
 								</span>
 								<a
 									href="/user/{data.company.ownerId}"
@@ -551,7 +551,7 @@
 												<FluentClock20Filled class="w-3 h-3" />
 												Last Work
 											</span>
-											<span>{new Date(factory.lastWorked).toLocaleDateString()}</span>
+											<span>{formatDate(factory.lastWorked)}</span>
 										</div>
 										{#if factory.pendingResources > 0}
 											<div class="flex items-center justify-between">

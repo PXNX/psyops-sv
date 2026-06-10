@@ -1,30 +1,28 @@
 // src/lib/utils/formatting.ts
 import * as m from "$lib/paraglide/messages";
 
+function pad(n: number) {
+	return String(n).padStart(2, "0");
+}
+
+function ddmmyyyyhhmm(d: Date) {
+	return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function ddmmyyyy(d: Date) {
+	return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+}
+
 export function formatDate(date: Date | string) {
-	return new Date(date).toLocaleDateString("en-US", { month: "short", year: "numeric" });
+	return ddmmyyyy(new Date(date));
 }
 
 export function formatDateTime(dateString: string) {
-	return new Date(dateString).toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "short",
-		day: "numeric",
-		hour: "2-digit",
-		minute: "2-digit"
-	});
+	return ddmmyyyyhhmm(new Date(dateString));
 }
 
 export function formatTime(dateString: string) {
-	const date = new Date(dateString);
-	return (
-		date.toLocaleDateString() +
-		" " +
-		date.toLocaleTimeString([], {
-			hour: "2-digit",
-			minute: "2-digit"
-		})
-	);
+	return ddmmyyyyhhmm(new Date(dateString));
 }
 
 export function getDaysRemaining(expiresAt: Date | string) {

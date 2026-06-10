@@ -50,22 +50,15 @@
 	// Format date
 	function formatDate(date: Date | string): string {
 		const d = new Date(date);
-		return new Intl.DateTimeFormat('en-US', {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		}).format(d);
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
 
 	// Format short date
 	function formatShortDate(date: Date | string): string {
 		const d = new Date(date);
-		return new Intl.DateTimeFormat('en-US', {
-			month: 'short',
-			day: 'numeric'
-		}).format(d);
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
 	}
 
 	// Navigate to a specific page
@@ -294,10 +287,7 @@
 									<td class="px-6 py-4 whitespace-nowrap">
 										<div class="text-sm text-slate-900">{formatShortDate(transaction.createdAt)}</div>
 										<div class="text-xs text-slate-500">
-											{new Date(transaction.createdAt).toLocaleTimeString('en-US', { 
-												hour: '2-digit', 
-												minute: '2-digit' 
-											})}
+											{(() => { const d = new Date(transaction.createdAt); const pad = (n) => String(n).padStart(2,'0'); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; })()}
 										</div>
 									</td>
 									<td class="px-6 py-4">

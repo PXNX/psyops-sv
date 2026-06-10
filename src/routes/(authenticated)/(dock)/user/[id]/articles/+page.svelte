@@ -62,28 +62,24 @@
 	<!-- Header -->
 	<div class="flex flex-col gap-4">
 		<div class="flex items-center gap-4">
-			<a href="/user/{data.user.id}" class="btn btn-ghost btn-sm gap-2">
-				<FluentChevronLeft20Filled class="size-4" />
-				Back to Profile
-			</a>
-			<div class="h-6 w-px bg-white/10"></div>
-			<div class="flex items-center gap-3">
-				<div class="size-10 rounded-lg overflow-hidden ring-2 ring-white/10">
-					<Logo
-						src={data.user.logo}
-						alt={data.user.name || "User"}
-						class="size-full"
-						placeholderIcon={FluentDocument20Filled}
-						placeholderGradient="from-purple-500 to-blue-500"
-					/>
-				</div>
-				<div>
-					<h1 class="text-2xl font-bold text-white">{data.user.name || "Anonymous"}'s Articles</h1>
-					<p class="text-sm text-gray-400">
-						{data.totalArticles}
-						{data.totalArticles === 1 ? "Article" : "Articles"}
-					</p>
-				</div>
+			<div class="size-14 rounded-xl overflow-hidden ring-2 ring-white/10">
+				<Logo
+					src={data.user.logo}
+					alt={data.user.name || "User"}
+					class="size-full"
+					placeholderIcon={FluentDocument20Filled}
+					placeholderGradient="from-purple-500 to-blue-500"
+				/>
+			</div>
+			<div>
+				<a href="/user/{data.user.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+					{data.user.name || "Anonymous"}
+				</a>
+				<h1 class="text-2xl font-bold text-white">Articles</h1>
+				<p class="text-sm text-gray-400">
+					{data.totalArticles}
+					{data.totalArticles === 1 ? "Article" : "Articles"}
+				</p>
 			</div>
 		</div>
 

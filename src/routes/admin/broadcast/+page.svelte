@@ -6,6 +6,8 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 
+	import { formatDateTime } from "$lib/utils/formatting.js";
+
 	const { data, form } = $props();
 
 	let subject = $state("");
@@ -44,7 +46,7 @@
 					<h4 class="text-white font-bold text-lg mb-1">{data.activeBroadcast.title}</h4>
 					<p class="text-gray-300 whitespace-pre-wrap text-sm">{data.activeBroadcast.content}</p>
 					<p class="text-xs text-gray-500 mt-2">
-						By {data.activeBroadcast.issuer?.profile?.name || "Admin"} · {new Date(data.activeBroadcast.createdAt).toLocaleString()}
+						By {data.activeBroadcast.issuer?.profile?.name || "Admin"} · {formatDateTime(data.activeBroadcast.createdAt)}
 					</p>
 				</div>
 				<form method="POST" action="?/revokeBroadcast" use:enhance>
@@ -197,7 +199,7 @@
 								</div>
 								<p class="text-gray-400 text-sm mt-1 line-clamp-2">{broadcast.content}</p>
 								<p class="text-xs text-gray-500 mt-1">
-									By {broadcast.issuer?.profile?.name || "Admin"} · {new Date(broadcast.createdAt).toLocaleString()}
+									By {broadcast.issuer?.profile?.name || "Admin"} · {formatDateTime(broadcast.createdAt)}
 								</p>
 							</div>
 						</div>
