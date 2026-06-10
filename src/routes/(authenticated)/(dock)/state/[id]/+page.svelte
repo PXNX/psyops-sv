@@ -76,7 +76,7 @@
 	{/if}
 </svelte:head>
 
-<div class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="5xl">
 	<!-- Hero Section with Bloc Background -->
 	<div class="relative">
 		<div
@@ -620,9 +620,9 @@
 			</div>
 		</section>
 	{/if}
-</div>
+	</PageContainer>
 
-<!-- War Declaration Modal -->
+	<!-- War Declaration Modal -->
 <Modal bind:open={showWarModal} title="Declare War" size="default">
 	<div class="space-y-4">
 		<div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4">

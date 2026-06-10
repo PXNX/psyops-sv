@@ -19,6 +19,7 @@
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import PageContainer from "$lib/component/PageContainer.svelte";
 
 	let { data } = $props();
 
@@ -120,7 +121,7 @@
 	});
 </script>
 
-<div class="w-full px-4 py-6 md:py-8 space-y-6 md:space-y-8">
+<PageContainer maxWidth="7xl">
 	<!-- Header with gradient accent -->
 	<div class="relative">
 		<div
@@ -648,13 +649,13 @@
 									<FluentWarning20Filled class="size-4 md:size-5 flex-shrink-0 mt-0.5" />
 									<span
 										>You need more resources to start this production. Work at a factory to earn resources and wages.</span
-									>
-								</p>
-							</div>
-						{/if}
-					</div>
-				</form>
-			{/if}
-		</div>
-	</div>
-</div>
+										>
+										</p>
+										</div>
+										{/if}
+										</div>
+										</form>
+										{/if}
+										</div>
+										</div>
+										</PageContainer>

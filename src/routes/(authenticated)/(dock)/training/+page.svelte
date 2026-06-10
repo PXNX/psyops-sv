@@ -12,6 +12,9 @@
 
 	import Modal from "$lib/component/Modal.svelte";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import PageContainer from "$lib/component/PageContainer.svelte";
+	import PageHeader from "$lib/component/PageHeader.svelte";
+	import EmptyState from "$lib/component/EmptyState.svelte";
 
 	let { data }: { data: PageData } = $props();
 
@@ -124,27 +127,24 @@
 	}
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="7xl">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-				<FluentEmojiMilitaryHelmet class="size-8" />
-				Military
-			</h1>
-			<p class="text-slate-400 mt-1">
-				{data.residence.stateName} • {data.units.filter((u) => !u.isTraining).length} Active • {trainingUnits.length} Training
-			</p>
-		</div>
+	{#snippet headerActions()}
 		{#if data.residence.bloc}
 			<div
-				class="px-4 py-2 rounded-lg border font-medium backdrop-blur-sm"
+				class="px-3 sm:px-4 py-2 rounded-lg border font-medium backdrop-blur-sm text-sm"
 				style="background-color: {data.residence.bloc.color}15; border-color: {data.residence.bloc.color}40"
 			>
 				{data.residence.bloc.name}
 			</div>
 		{/if}
-	</div>
+	{/snippet}
+	<PageHeader
+		title="Military"
+		subtitle="{data.residence.stateName} • {data.units.filter((u) => !u.isTraining).length} Active • {trainingUnits.length} Training"
+		icon={FluentEmojiMilitaryHelmet}
+		actions={headerActions}
+	/>
 
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<!-- Active Units - Main Focus -->
@@ -235,11 +235,11 @@
 			{/each}
 
 			{#if data.units.filter((u) => !u.isTraining).length === 0}
-				<div class="bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30 p-16 text-center">
-					<FluentEmojiMilitaryHelmet class="size-16 mx-auto mb-4 opacity-20" />
-					<p class="text-slate-400 text-lg">No active units</p>
-					<p class="text-sm text-slate-500 mt-2">Train your first unit to begin</p>
-				</div>
+				<EmptyState
+					icon={FluentEmojiMilitaryHelmet}
+					title="No active units"
+					subtitle="Train your first unit to begin"
+				/>
 			{/if}
 
 			<!-- Unit Templates -->
@@ -247,7 +247,7 @@
 				<h2 class="text-2xl font-semibold text-white mb-4">Train New Units</h2>
 
 				<!-- Selectable Unit Type Cards -->
-				<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 mb-6">
 					{#each Object.values(data.templates) as template}
 						{@const isSelected = selectedTemplate?.id === template.id}
 						<button
@@ -375,11 +375,11 @@
 						</form>
 					</div>
 				{:else}
-					<div class="bg-slate-800/30 backdrop-blur-sm rounded-xl border border-slate-700/30 p-12 text-center">
-						<FluentEmojiMilitaryHelmet class="size-16 mx-auto mb-4 opacity-20" />
-						<p class="text-slate-400 text-lg">Select a unit type to begin training</p>
-						<p class="text-sm text-slate-500 mt-2">Choose from the available templates above</p>
-					</div>
+					<EmptyState
+						icon={FluentEmojiMilitaryHelmet}
+						title="Select a unit type to begin training"
+						subtitle="Choose from the available templates above"
+					/>
 				{/if}
 			</div>
 		</div>
@@ -456,15 +456,16 @@
 				{/each}
 
 				{#if trainingUnits.length === 0}
-					<div class="text-center text-slate-500 py-8 text-sm">
-						<IconClock class="size-10 mx-auto mb-2 opacity-20" />
-						<p>No units training</p>
-					</div>
+				<EmptyState
+					icon={IconClock}
+					title="No units training"
+					class="py-8 p-6 sm:p-8"
+				/>
 				{/if}
 			</div>
 		</div>
 	</div>
-</div>
+</PageContainer>
 
 <!-- Disband Confirmation Modal -->
 <Modal bind:open={disbandModalOpen} title="Disband Unit" size="small">
