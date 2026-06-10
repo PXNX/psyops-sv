@@ -5,13 +5,14 @@ import sharp from "sharp";
 import { randomUUID } from "crypto";
 import { files } from "./schema";
 import { db, isMockMode } from "./db";
+import { env } from "$env/dynamic/private";
 import { eq } from "drizzle-orm/sql/expressions";
 import { existsSync, mkdirSync, writeFileSync, readFileSync, unlinkSync } from "fs";
 import { join, dirname } from "path";
 
 // Mock mode: local file storage
 const MOCK_STORAGE_DIR = join(process.cwd(), ".mock-files");
-const MOCK_API_URL = process.env.MOCK_API_URL || "http://localhost:3456";
+const MOCK_API_URL = env.MOCK_API_URL || "http://localhost:3456";
 
 function getS3Client(): S3Client | null {
 	if (isMockMode) {
@@ -22,10 +23,10 @@ function getS3Client(): S3Client | null {
 		return null;
 	}
 
-	const BACKBLAZE_KEY_ID = process.env.BACKBLAZE_KEY_ID;
-	const BACKBLAZE_APPLICATION_KEY = process.env.BACKBLAZE_APPLICATION_KEY;
-	const BACKBLAZE_REGION = process.env.BACKBLAZE_REGION;
-	const BACKBLAZE_ENDPOINT = process.env.BACKBLAZE_ENDPOINT;
+	const BACKBLAZE_KEY_ID = env.BACKBLAZE_KEY_ID;
+	const BACKBLAZE_APPLICATION_KEY = env.BACKBLAZE_APPLICATION_KEY;
+	const BACKBLAZE_REGION = env.BACKBLAZE_REGION;
+	const BACKBLAZE_ENDPOINT = env.BACKBLAZE_ENDPOINT;
 
 	if (!BACKBLAZE_KEY_ID || !BACKBLAZE_APPLICATION_KEY || !BACKBLAZE_ENDPOINT || !BACKBLAZE_REGION) {
 		throw new Error("Backblaze environment variables are required (set USE_MOCK=true for mock mode)");
@@ -43,7 +44,7 @@ function getS3Client(): S3Client | null {
 }
 
 const s3Client = getS3Client();
-const BACKBLAZE_BUCKET_NAME = process.env.BACKBLAZE_BUCKET_NAME || "mock-bucket";
+const BACKBLAZE_BUCKET_NAME = env.BACKBLAZE_BUCKET_NAME || "mock-bucket";
 
 export interface UploadResult {
 	success: boolean;
