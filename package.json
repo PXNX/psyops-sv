@@ -128,6 +128,7 @@
 		"@tiptap/extension-text": "3.26.0",
 		"@tiptap/extension-text-style": "3.26.0",
 		"canvas-confetti": "1.9.4",
+		"three": "0.172.0",
 		"date-fns": "4.4.0",
 		"prosemirror-model": "1.25.8",
 		"prosemirror-state": "1.4.4",

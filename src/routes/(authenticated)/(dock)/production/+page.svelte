@@ -20,12 +20,15 @@
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 	import PageContainer from "$lib/component/PageContainer.svelte";
+	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
 
 	let { data } = $props();
 
 	let selectedProduct = $state<keyof typeof data.recipes>("rifles");
 	let productionQuantity = $state(1);
 	let isCollectingWage = $state(false);
+	let showCollectAnim = $state(false);
+	let showProductionAnim = $state(false);
 
 	const resourceIcons: Record<string, string> = {
 		iron: "⛏️",
@@ -232,9 +235,10 @@
 					action="?/collectWage"
 					use:enhance={() => {
 						isCollectingWage = true;
-						return async ({ update }) => {
+						return async ({ update, result }) => {
 							await update();
 							isCollectingWage = false;
+							if (result.type === 'success') showCollectAnim = true;
 						};
 					}}
 					class="relative z-10"
@@ -502,7 +506,12 @@
 				<form
 					method="POST"
 					action="?/startProduction"
-					use:enhance
+					use:enhance={() => {
+						return async ({ update, result }) => {
+							await update();
+							if (result.type === 'success') showProductionAnim = true;
+						};
+					}}
 					class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
 				>
 					<div class="absolute top-0 right-0 w-64 h-64 md:w-96 md:h-96 bg-purple-600/5 rounded-full blur-3xl"></div>
@@ -659,3 +668,11 @@
 										</div>
 										</div>
 										</PageContainer>
+
+{#if showCollectAnim}
+	<ThreeAnimation variant="collect" onComplete={() => (showCollectAnim = false)} />
+{/if}
+
+{#if showProductionAnim}
+	<ThreeAnimation variant="production" onComplete={() => (showProductionAnim = false)} />
+{/if}

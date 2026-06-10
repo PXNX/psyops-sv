@@ -3,7 +3,8 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createCompanySchema } from "./schema";
-	import confetti from "canvas-confetti";
+	import { goto } from "$app/navigation";
+	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
@@ -15,19 +16,19 @@
 
 	let { data } = $props();
 
+	let showCompanyAnim = $state(false);
+	let pendingRedirect = $state("");
+
 	const { form, errors, message, enhance, submitting, delayed } = superForm(data.form, {
 		validators: valibotClient(createCompanySchema),
 		multipleSubmits: "prevent",
 		clearOnSubmit: "none",
 		taintedMessage: null,
-		onResult: ({ result }) => {
-			if (result.type === "success") {
-				confetti({
-					particleCount: 150,
-					spread: 70,
-					origin: { y: 0.6 },
-					colors: ["#3b82f6", "#ffffff", "#10b981"]
-				});
+		onResult: ({ result, cancel }) => {
+			if (result.type === "redirect") {
+				cancel();
+				pendingRedirect = result.location;
+				showCompanyAnim = true;
 			}
 		}
 	});
@@ -59,7 +60,7 @@
 
 	function formatCooldownDate(cooldownEnd: string): string {
 		const d = new Date(cooldownEnd);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
 
@@ -133,9 +134,9 @@
 		fetch(croppedDataUrl)
 			.then((r) => r.blob())
 			.then((blob) => {
-				const croppedFile = new File([blob], 'company-logo.png', { type: 'image/png' });
+				const croppedFile = new File([blob], "company-logo.png", { type: "image/png" });
 				$form.logo = croppedFile;
-				if (previewUrl && !previewUrl.startsWith('http')) URL.revokeObjectURL(previewUrl);
+				if (previewUrl && !previewUrl.startsWith("http")) URL.revokeObjectURL(previewUrl);
 				previewUrl = croppedDataUrl;
 			});
 	}
@@ -146,7 +147,7 @@
 			URL.revokeObjectURL(cropImageUrl);
 			cropImageUrl = null;
 		}
-		if (fileInput) fileInput.value = '';
+		if (fileInput) fileInput.value = "";
 	}
 </script>
 
@@ -433,6 +434,16 @@
 		</div>
 	</form>
 </div>
+
+{#if showCompanyAnim}
+	<ThreeAnimation
+		variant="company"
+		onComplete={() => {
+			showCompanyAnim = false;
+			if (pendingRedirect) goto(pendingRedirect);
+		}}
+	/>
+{/if}
 
 {#if showCropper && cropImageUrl}
 	<ImageCropper

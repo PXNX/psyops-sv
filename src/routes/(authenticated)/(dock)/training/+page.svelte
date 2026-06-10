@@ -15,10 +15,12 @@
 	import PageContainer from "$lib/component/PageContainer.svelte";
 	import PageHeader from "$lib/component/PageHeader.svelte";
 	import EmptyState from "$lib/component/EmptyState.svelte";
+	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
 
 	let { data }: { data: PageData } = $props();
 
 	let isSubmitting = $state(false);
+	let showTrainingAnim = $state(false);
 	let selectedTemplate = $state<any>(null);
 	let disbandModalOpen = $state(false);
 	let unitToDisband = $state<any>(null);
@@ -141,7 +143,8 @@
 	{/snippet}
 	<PageHeader
 		title="Military"
-		subtitle="{data.residence.stateName} • {data.units.filter((u) => !u.isTraining).length} Active • {trainingUnits.length} Training"
+		subtitle="{data.residence.stateName} • {data.units.filter((u) => !u.isTraining)
+			.length} Active • {trainingUnits.length} Training"
 		icon={FluentEmojiMilitaryHelmet}
 		actions={headerActions}
 	/>
@@ -349,10 +352,11 @@
 							action="?/train"
 							use:enhance={() => {
 								isSubmitting = true;
-								return async ({ update }) => {
+								return async ({ update, result }) => {
 									await update();
 									isSubmitting = false;
 									selectedTemplate = null;
+									if (result.type === "success") showTrainingAnim = true;
 								};
 							}}
 						>
@@ -456,11 +460,7 @@
 				{/each}
 
 				{#if trainingUnits.length === 0}
-				<EmptyState
-					icon={IconClock}
-					title="No units training"
-					class="py-8 p-6 sm:p-8"
-				/>
+					<EmptyState icon={IconClock} title="No units training" class="py-8 p-6 sm:p-8" />
 				{/if}
 			</div>
 		</div>
@@ -515,6 +515,10 @@
 		</div>
 	{/if}
 </Modal>
+
+{#if showTrainingAnim}
+	<ThreeAnimation variant="training" onComplete={() => (showTrainingAnim = false)} />
+{/if}
 
 <style>
 	@keyframes shimmer {

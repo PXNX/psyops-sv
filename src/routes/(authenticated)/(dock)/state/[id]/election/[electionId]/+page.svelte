@@ -10,11 +10,13 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import { enhance } from "$app/forms";
 	import { onMount, onDestroy } from "svelte";
+	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
 
 	const { data } = $props();
 
 	let currentTime = $state(new Date());
 	let interval: ReturnType<typeof setInterval>;
+	let showVoteAnim = $state(false);
 
 	onMount(() => {
 		interval = setInterval(() => {
@@ -354,7 +356,17 @@
 										⚠️ This party needs at least 3 members to participate
 									</p>
 								{:else}
-									<form method="POST" action="?/vote" use:enhance class="w-full">
+									<form
+							method="POST"
+							action="?/vote"
+							use:enhance={() => {
+								return async ({ update, result }) => {
+									await update();
+									if (result.type === 'success') showVoteAnim = true;
+								};
+							}}
+							class="w-full"
+						>
 										<input type="hidden" name="partyId" value={party.id} />
 										<button
 											type="submit"
@@ -393,6 +405,10 @@
 		{/if}
 	</div>
 </div>
+
+{#if showVoteAnim}
+	<ThreeAnimation variant="vote" onComplete={() => (showVoteAnim = false)} />
+{/if}
 
 <style>
 	@keyframes shimmer {
