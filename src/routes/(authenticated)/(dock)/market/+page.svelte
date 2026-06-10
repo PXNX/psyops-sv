@@ -11,6 +11,9 @@
 	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 
+	import PageContainer from "$lib/component/PageContainer.svelte";
+	import SectionCard from "$lib/component/SectionCard.svelte";
+
 	let { data, form } = $props();
 
 	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
@@ -86,15 +89,15 @@
 	});
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="7xl">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
 		<div>
-			<h1 class="text-3xl font-bold text-white">Arms Market</h1>
-			<p class="text-gray-400">Buy and sell resources and products</p>
+			<h1 class="text-2xl sm:text-3xl font-bold text-white">Arms Market</h1>
+			<p class="text-gray-400 text-sm sm:text-base">Buy and sell resources and products</p>
 		</div>
 
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+		<SectionCard class="shrink-0">
 			<div class="flex items-center gap-3">
 				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
 					<FluentMoney20Filled class="size-5 text-green-400" />
@@ -104,7 +107,7 @@
 					<p class="text-xl font-bold text-white">${data.wallet.balance.toLocaleString()}</p>
 				</div>
 			</div>
-		</div>
+		</SectionCard>
 	</div>
 
 	<!-- Main Content -->
@@ -112,7 +115,7 @@
 		<!-- Inventory Sidebar -->
 		<div class="space-y-6">
 			<!-- Resources -->
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+			<SectionCard class="space-y-3">
 				<div class="flex items-center gap-2">
 					<FluentBox20Filled class="size-5 text-purple-400" />
 					<h2 class="text-lg font-semibold text-white">Resources</h2>
@@ -139,10 +142,10 @@
 						</a>
 					{/each}
 				</div>
-			</div>
+			</SectionCard>
 
 			<!-- Products -->
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+			<SectionCard class="space-y-3">
 				<div class="flex items-center gap-2">
 					<FluentCube20Filled class="size-5 text-purple-400" />
 					<h2 class="text-lg font-semibold text-white">Products</h2>
@@ -169,17 +172,17 @@
 						</a>
 					{/each}
 				</div>
+			</SectionCard>
 			</div>
-		</div>
 
-		<!-- Market Area -->
-		<div class="lg:col-span-2 space-y-6">
+			<!-- Market Area -->
+			<div class="lg:col-span-2 space-y-6">
 			<!-- Create Listing Form -->
 			<form
 				method="POST"
 				action="?/createListing"
 				use:enhance
-				class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-5"
+				class="bg-slate-800/50 rounded-xl border border-white/5 p-4 md:p-5 space-y-5"
 			>
 				<div class="flex items-center gap-2">
 					<FluentAdd20Filled class="size-5 text-purple-400" />
@@ -365,8 +368,8 @@
 			</form>
 
 			<!-- Market Listings -->
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-				<div class="flex items-center justify-between">
+			<SectionCard class="space-y-4">
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
 					<div class="flex items-center gap-2">
 						<FluentShoppingCart20Filled class="size-5 text-purple-400" />
 						<h2 class="text-lg font-semibold text-white">Market Listings</h2>
@@ -507,8 +510,8 @@
 							</div>
 						{/each}
 					</div>
-				{/if}
-			</div>
-		</div>
-	</div>
-</div>
+					{/if}
+					</SectionCard>
+					</div>
+					</div>
+					</PageContainer>

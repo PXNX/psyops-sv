@@ -10,6 +10,8 @@
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 
+	import PageContainer from "$lib/component/PageContainer.svelte";
+
 	let { data } = $props();
 
 	let selectedState = $state("all");
@@ -33,7 +35,7 @@
 	});
 </script>
 
-<div class="w-full px-4 py-6 md:py-8 space-y-6 md:space-y-8">
+<PageContainer maxWidth="7xl">
 	<!-- Header -->
 	<div class="relative">
 		<div class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-cyan-600/10 rounded-2xl blur-3xl"></div>
@@ -237,6 +239,6 @@
 					Be the first to register
 				</a>
 			{/if}
-		</div>
-	{/if}
-</div>
+			</div>
+			{/if}
+			</PageContainer>

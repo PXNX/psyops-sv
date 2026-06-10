@@ -17,6 +17,9 @@
 
 	import Logo from "$lib/component/Logo.svelte";
 	import Modal from "$lib/component/Modal.svelte";
+	import PageContainer from "$lib/component/PageContainer.svelte";
+	import SectionCard from "$lib/component/SectionCard.svelte";
+	import StatCard from "$lib/component/StatCard.svelte";
 
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting";
 	import BorderingRegions from "./BorderingRegions.svelte";
@@ -70,7 +73,7 @@
 	<meta name="twitter:image" content={`/coats/${data.region.id}.svg`} />
 </svelte:head>
 
-<div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="4xl">
 	<!-- Header -->
 	<div class="flex items-center gap-4">
 		<Logo
@@ -289,45 +292,35 @@
 	{/if}
 
 	<!-- Stats Grid -->
-	<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-		<a
+	<div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+		<StatCard
+			icon={FluentPeople20Filled}
+			label="Population"
+			value={data.population}
+			color="blue"
 			href="/region/{data.region.id}/population"
-			class="bg-slate-800/50 rounded-xl border border-white/5 p-4 hover:border-white/10 transition-all cursor-pointer group"
-		>
-			<FluentPeople20Filled class="size-8 text-blue-400 mb-2 group-hover:scale-110 transition-transform" />
-			<p class="text-2xl font-bold text-white">{data.population.toLocaleString()}</p>
-			<p class="text-xs text-gray-400 mt-1 group-hover:text-blue-400 transition-colors">Population →</p>
-		</a>
-
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4">
-			<div class="size-8 bg-purple-600/20 rounded-lg flex items-center justify-center mb-2">
-				<span class="text-lg">🏗️</span>
-			</div>
-			<p class="text-2xl font-bold text-white">{data.region.infrastructure || 0}</p>
-			<p class="text-xs text-gray-400 mt-1">Infrastructure</p>
-		</div>
-
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4">
-			<div class="size-8 bg-green-600/20 rounded-lg flex items-center justify-center mb-2">
-				<span class="text-lg">💰</span>
-			</div>
-			<p class="text-2xl font-bold text-white">{data.region.economy || 0}</p>
-			<p class="text-xs text-gray-400 mt-1">Economy</p>
-		</div>
-
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4">
-			<div class="size-8 bg-amber-600/20 rounded-lg flex items-center justify-center mb-2">
-				<span class="text-lg">🎓</span>
-			</div>
-			<p class="text-2xl font-bold text-white">{data.region.education || 0}</p>
-			<p class="text-xs text-gray-400 mt-1">Education</p>
-		</div>
+		/>
+		<StatCard
+			label="Infrastructure"
+			value={data.region.infrastructure || 0}
+			color="purple"
+		/>
+		<StatCard
+			label="Economy"
+			value={data.region.economy || 0}
+			color="green"
+		/>
+		<StatCard
+			label="Education"
+			value={data.region.education || 0}
+			color="amber"
+		/>
 	</div>
 
 	<!-- Governor -->
 	{#if !isIndependent}
 		{#if data.governor}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<SectionCard>
 				<h2 class="text-lg font-semibold text-white mb-4">Governor</h2>
 				<a
 					href="/user/{data.governor.userId}"
@@ -343,19 +336,19 @@
 						<p class="text-xs text-gray-400">Appointed {formatDate(data.governor.appointedAt)}</p>
 					</div>
 				</a>
-			</div>
-		{:else}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+				</SectionCard>
+				{:else}
+				<SectionCard>
 				<h2 class="text-lg font-semibold text-white mb-2">Governor</h2>
 				<p class="text-sm text-gray-400">No governor appointed</p>
-			</div>
-		{/if}
-	{/if}
+				</SectionCard>
+				{/if}
+				{/if}
 
-	<!-- State Buildings -->
-	{#if data.buildings.length > 0}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
-			<h2 class="text-lg font-semibold text-white mb-4">State Buildings</h2>
+				<!-- State Buildings -->
+				{#if data.buildings.length > 0}
+				<SectionCard>
+				<h2 class="text-lg font-semibold text-white mb-4">State Buildings</h2>
 			<div class="grid gap-3">
 				{#each data.buildings as building}
 					<div class="flex items-center gap-3 bg-slate-700/30 rounded-lg p-3">
@@ -371,12 +364,12 @@
 					</div>
 				{/each}
 			</div>
-		</div>
-	{/if}
+			</SectionCard>
+			{/if}
 
-	<!-- Factories -->
-	{#if data.factories.length > 0}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<!-- Factories -->
+			{#if data.factories.length > 0}
+			<SectionCard>
 			<h2 class="text-lg font-semibold text-white mb-4">Factories</h2>
 			<div class="grid gap-3">
 			{#each data.factories as factory}
@@ -406,12 +399,12 @@
 				</a>
 			{/each}
 			</div>
-		</div>
-	{/if}
+			</SectionCard>
+			{/if}
 
-	<!-- Resources -->
-	{#if data.region.oil || data.region.steel || data.region.chromium || data.region.tungsten || data.region.rubber || data.region.aluminium}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<!-- Resources -->
+			{#if data.region.oil || data.region.steel || data.region.chromium || data.region.tungsten || data.region.rubber || data.region.aluminium}
+			<SectionCard>
 			<h2 class="text-lg font-semibold text-white mb-4">Natural Resources</h2>
 			<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
 				{#if data.region.oil}
@@ -451,10 +444,10 @@
 					</div>
 				{/if}
 			</div>
-		</div>
-	{/if}
+			</SectionCard>
+			{/if}
 
-	<!-- Active Wars Section -->
+			<!-- Active Wars Section -->
 	{#if data.ongoingBattle}
 		<div class="bg-red-900/20 border border-red-500/30 rounded-xl p-6">
 			<div class="flex items-start gap-4">
@@ -526,7 +519,7 @@
 
 	<!-- Bordering Regions -->
 	<BorderingRegions borderingRegions={data.borderingRegions} />
-</div>
+	</PageContainer>
 
 <!-- Battle Region Selection Modal -->
 <Modal bind:open={showBattleModal} title="Select Attack Origin" size="default">

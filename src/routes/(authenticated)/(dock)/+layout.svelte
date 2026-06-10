@@ -23,7 +23,7 @@
 		<span class="loading loading-ring loading-md m-auto"></span>
 	</div>
 {:else}
-	<main class="flex flex-col h-[calc(100dvh-4rem)] overflow-y-auto">
+	<main class="flex flex-col h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden">
 		{@render children()}
 	</main>
 {/if}

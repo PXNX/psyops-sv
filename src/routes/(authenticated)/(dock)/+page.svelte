@@ -1,5 +1,8 @@
 <script lang="ts">
 	import TravelProgress from "$lib/component/TravelProgress.svelte";
+	import PageContainer from "$lib/component/PageContainer.svelte";
+	import PageHeader from "$lib/component/PageHeader.svelte";
+	import SectionCard from "$lib/component/SectionCard.svelte";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -32,13 +35,12 @@
 	}
 </script>
 
-<div class="container mx-auto px-4 py-6 max-w-4xl">
-	<div class="space-y-6">
+<PageContainer maxWidth="4xl">
 		<!-- Header -->
-		<div>
-			<h1 class="text-3xl font-bold text-white mb-2">Dashboard</h1>
-			<p class="text-gray-400">Welcome back, {data.account.profile?.name || "User"}!</p>
-		</div>
+		<PageHeader
+			title="Dashboard"
+			subtitle="Welcome back, {data.account.profile?.name || 'User'}!"
+		/>
 
 		<!-- Active Travel Banner -->
 		{#if data.activeTravel}
@@ -120,7 +122,7 @@
 		{/if}
 
 		<!-- Quick Actions -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
+		<SectionCard>
 			<h2 class="text-xl font-bold text-white mb-4">Quick Actions</h2>
 			<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
 				<a href="/map" class="btn btn-ghost justify-start">
@@ -129,6 +131,5 @@
 				</a>
 				<a href="/chat" class="btn btn-ghost justify-start"> Chat </a>
 			</div>
-		</div>
-	</div>
-</div>
+		</SectionCard>
+		</PageContainer>

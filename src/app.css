@@ -141,6 +141,25 @@
 		}
 	}
 
+	/* Prevent horizontal overflow globally */
+	html,
+	body {
+		overflow-x: hidden;
+		max-width: 100vw;
+	}
+
+	/* Ensure all images respect container bounds */
+	img {
+		max-width: 100%;
+		height: auto;
+	}
+
+	/* Prevent long text from causing overflow */
+	.break-anywhere {
+		overflow-wrap: anywhere;
+		word-break: break-word;
+	}
+
 	:global(.article-content) {
 		line-height: 1.8;
 	}
