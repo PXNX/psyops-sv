@@ -6,6 +6,7 @@ import type { HandleServerError } from "@sveltejs/kit";
 import { paraglideMiddleware } from "$lib/paraglide/server";
 import { error, type Handle } from "@sveltejs/kit";
 import { themes } from "$lib/themes";
+import { isMockMode } from "$lib/server/db";
 import "@valibot/i18n/de/schema";
 
 const bucket = new TokenBucket<string>(100, 1);
@@ -28,30 +29,58 @@ const rateLimitHandle: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-const authHandle: Handle = async ({ event, resolve }) => {
-	console.log("🔍 Session - Checking session");
-	const sessionToken = event.cookies.get("session");
+function createMockAuthHandle(): Handle {
+	const mockAccount = {
+		id: "user-1",
+		email: "alice@example.com",
+		role: "admin" as const,
+		notifyNewspaperPosts: true,
+		createdAt: new Date("2024-01-01"),
+		updatedAt: new Date("2024-01-01")
+	};
 
-	if (!sessionToken) {
-		event.locals.account = null;
-		event.locals.session = null;
+	const mockSession = {
+		id: "mock-session-alice",
+		accountId: "user-1",
+		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
+		createdAt: new Date("2024-01-01")
+	};
+
+	return async ({ event, resolve }) => {
+		event.locals.account = mockAccount;
+		event.locals.session = mockSession;
 		return resolve(event);
-	}
+	};
+}
 
-	const result = await validateSessionToken(sessionToken);
+function createRealAuthHandle(): Handle {
+	return async ({ event, resolve }) => {
+		console.log("🔍 Session - Checking session");
+		const sessionToken = event.cookies.get("session");
 
-	if (!result) {
-		event.locals.account = null;
-		event.locals.session = null;
-		event.cookies.delete("session", { path: "/" });
+		if (!sessionToken) {
+			event.locals.account = null;
+			event.locals.session = null;
+			return resolve(event);
+		}
+
+		const result = await validateSessionToken(sessionToken);
+
+		if (!result) {
+			event.locals.account = null;
+			event.locals.session = null;
+			event.cookies.delete("session", { path: "/" });
+			return resolve(event);
+		}
+
+		event.locals.account = result.account;
+		event.locals.session = result.session;
+
 		return resolve(event);
-	}
+	};
+}
 
-	event.locals.account = result.account;
-	event.locals.session = result.session;
-
-	return resolve(event);
-};
+const authHandle: Handle = isMockMode ? createMockAuthHandle() : createRealAuthHandle();
 
 export const handleError: HandleServerError = async ({ error, event }) => {
 	const requestId = crypto.randomUUID();

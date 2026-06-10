@@ -1,17 +1,18 @@
 // src/lib/server/services/push-notification.service.ts
 import webpush from "web-push";
 import { db } from "$lib/server/db";
+import { env } from "$env/dynamic/private";
 import { pushSubscriptions, newspaperSubscriptions, accounts } from "$lib/server/schema";
 import { eq, and } from "drizzle-orm";
 
 // Set VAPID details (these should be in environment variables in production)
 // You'll need to generate these keys using: npx web-push generate-vapid-keys
 const VAPID_PUBLIC_KEY =
-    process.env.VAPID_PUBLIC_KEY ||
+    env.VAPID_PUBLIC_KEY ||
     "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBrXhqhbdq5sM1ZG5Eyk";
 const VAPID_PRIVATE_KEY =
-    process.env.VAPID_PRIVATE_KEY || "UUxI4O8-FbRouAevSmBQ6O7eDr5PO4p3vxO6bFPzSKk";
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || "mailto:admin@psyops.com";
+    env.VAPID_PRIVATE_KEY || "UUxI4O8-FbRouAevSmBQ6O7eDr5PO4p3vxO6bFPzSKk";
+const VAPID_SUBJECT = env.VAPID_SUBJECT || "mailto:admin@psyops.com";
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 
