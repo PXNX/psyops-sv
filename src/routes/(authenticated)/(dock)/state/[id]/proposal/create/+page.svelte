@@ -2,7 +2,6 @@
 <script lang="ts">
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
-	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
@@ -165,12 +164,8 @@
 <div class="max-w-4xl mx-auto px-4 py-6">
 	<!-- Header -->
 	<div class="mb-6">
-		<a
-			href="/state/{data.state.id}/parliament"
-			class="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white mb-3 transition-colors"
-		>
-			<FluentArrowLeft20Filled class="size-4" />
-			Back to Parliament
+		<a href="/state/{data.state.id}/parliament" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			{data.state.name} — Parliament
 		</a>
 		<h1 class="text-3xl font-bold text-white flex items-center gap-3">
 			{#if canAutoExecute()}

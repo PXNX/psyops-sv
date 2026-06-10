@@ -32,16 +32,12 @@
 
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-white">
-				Regions of <span class="text-purple-400">{data.state.name}</span>
-			</h1>
-			<p class="text-gray-400 mt-1">{data.regions.length} regions</p>
-		</div>
-		<a href="/state/{data.state.id}" class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white">
-			Back to State
+	<div>
+		<a href="/state/{data.state.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			{data.state.name}
 		</a>
+		<h1 class="text-3xl font-bold text-white mt-1">Regions</h1>
+		<p class="text-gray-400 mt-1">{data.regions.length} regions</p>
 	</div>
 
 	<!-- Search and Filters -->

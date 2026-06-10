@@ -58,14 +58,9 @@
 	}
 
 	function formatCooldownDate(cooldownEnd: string): string {
-		return new Date(cooldownEnd).toLocaleString("en-US", {
-			month: "long",
-			day: "numeric",
-			year: "numeric",
-			hour: "numeric",
-			minute: "2-digit",
-			hour12: true
-		});
+		const d = new Date(cooldownEnd);
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
 
 	function handleFileSelect(event: Event) {

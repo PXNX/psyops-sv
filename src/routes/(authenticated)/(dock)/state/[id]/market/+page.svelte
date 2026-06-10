@@ -6,7 +6,6 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
-	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 
 	let { data, form } = $props();
 
@@ -66,22 +65,15 @@
 
 <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-				<FluentCart20Filled class="size-8 text-purple-400" />
-				{data.state.name} Government Market
-			</h1>
-			<p class="text-sm text-gray-400 mt-1">Buy and sell resources on behalf of the state</p>
-		</div>
-
-		<a
-			href="/state/{data.state.id}/economy"
-			class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-		>
-			<FluentArrowLeft20Filled class="size-4" />
-			Back to Economy
+	<div>
+		<a href="/state/{data.state.id}/economy" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			{data.state.name} — Economy
 		</a>
+		<h1 class="text-3xl font-bold text-white flex items-center gap-3 mt-1">
+			<FluentCart20Filled class="size-8 text-purple-400" />
+			Government Market
+		</h1>
+		<p class="text-sm text-gray-400 mt-1">Buy and sell resources on behalf of the state</p>
 	</div>
 
 	{#if !data.canTrade}

@@ -269,7 +269,7 @@ export const actions: Actions = {
 			cooldownEnd.setDate(cooldownEnd.getDate() + COOLDOWN_DAYS);
 			if (new Date() < cooldownEnd) {
 				return fail(400, {
-					error: `Factory creation is on cooldown. Try again after ${cooldownEnd.toLocaleDateString()}`
+					error: `Factory creation is on cooldown. Try again after ${String(cooldownEnd.getDate()).padStart(2,'0')}.${String(cooldownEnd.getMonth()+1).padStart(2,'0')}.${cooldownEnd.getFullYear()}, ${String(cooldownEnd.getHours()).padStart(2,'0')}:${String(cooldownEnd.getMinutes()).padStart(2,'0')}`
 				});
 			}
 		}

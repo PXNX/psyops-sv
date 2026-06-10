@@ -13,6 +13,7 @@
 	import FluentEmojiWood from "~icons/fluent-emoji/wood";
 	import FluentEmojiRock from "~icons/fluent-emoji/rock";
 	import FluentEmojiPackage from "~icons/fluent-emoji/package";
+	import { formatDateTime } from "$lib/utils/formatting.js";
 	import { enhance } from "$app/forms";
 
 	let { data, form } = $props();
@@ -46,13 +47,7 @@
 	};
 
 	function formatDate(date: Date | string) {
-		return new Date(date).toLocaleDateString("en-US", {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-			hour: "2-digit",
-			minute: "2-digit"
-		});
+		return formatDateTime(String(date));
 	}
 
 	function formatNumber(num: number) {

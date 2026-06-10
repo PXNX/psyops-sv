@@ -7,19 +7,13 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
 	import * as m from "$lib/paraglide/messages";
-	import { getRegionName } from "$lib/utils/formatting.js";
+	import { getRegionName, formatDateTime } from "$lib/utils/formatting.js";
 	import Logo from "$lib/component/Logo.svelte";
 
 	const { data } = $props();
 
 	function formatDate(date: string) {
-		return new Date(date).toLocaleDateString("en-US", {
-			month: "short",
-			day: "numeric",
-			year: "numeric",
-			hour: "2-digit",
-			minute: "2-digit"
-		});
+		return formatDateTime(date);
 	}
 
 	function getStatusColor(status: string) {

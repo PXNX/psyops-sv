@@ -88,23 +88,17 @@
 
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-				<FluentMoney20Filled class="size-8 text-green-400" />
-				{data.state.name} Ministry of Economy
-			</h1>
-			{#if data.isPresident}
-				<p class="text-xs text-yellow-400 mt-1">👑 Accessing as President</p>
-			{/if}
-		</div>
-
-		<a
-			href="/state/{data.state.id}"
-			class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-		>
-			Back to State
+	<div>
+		<a href="/state/{data.state.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+			{data.state.name}
 		</a>
+		<h1 class="text-3xl font-bold text-white flex items-center gap-3 mt-1">
+			<FluentMoney20Filled class="size-8 text-green-400" />
+			Ministry of Economy
+		</h1>
+		{#if data.isPresident}
+			<p class="text-xs text-yellow-400 mt-1">👑 Accessing as President</p>
+		{/if}
 	</div>
 
 	<!-- Stats Overview -->

@@ -19,18 +19,15 @@
     }
 
     function formatDate(date: Date | string): string {
-        return new Date(date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-        });
+        const d = new Date(date);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
     }
 
     function formatTime(date: Date | string): string {
-        return new Date(date).toLocaleTimeString("en-US", {
-            hour: "2-digit",
-            minute: "2-digit",
-        });
+        const d = new Date(date);
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
     }
 
     const typeLabels: Record<string, string> = {
@@ -79,12 +76,9 @@
         const yesterday = getDayKey(new Date(Date.now() - 86400000));
         if (dayKey === today) return "Today";
         if (dayKey === yesterday) return "Yesterday";
-        return new Date(dayKey + "T12:00:00").toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-        });
+        const d = new Date(dayKey + "T12:00:00");
+        const pad = (n: number) => String(n).padStart(2, '0');
+        return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
     }
 
     let groupedTransactions = $derived.by(() => {

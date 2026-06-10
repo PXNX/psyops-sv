@@ -227,7 +227,7 @@
 									${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
 								</p>
 								<p class="text-xs text-gray-500 mt-0.5">
-									Listed {new Date(data.myListing.createdAt).toLocaleDateString()}
+									Listed {(() => { const d = new Date(data.myListing.createdAt); const p = (n) => String(n).padStart(2,'0'); return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`; })()}
 								</p>
 							</div>
 						</div>
