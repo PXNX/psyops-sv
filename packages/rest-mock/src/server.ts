@@ -133,6 +133,100 @@ app.get("/api/military/units", (c) => {
     return c.json(units.map((u) => ({ ...u, region: store.findById("regions", u.regionId as number), state: store.findById("states", u.stateId as number) })));
 });
 
+// ============ Wars ============
+app.get("/api/wars", (c) => {
+    const status = c.req.query("status");
+    const stateId = c.req.query("stateId");
+    let warList = store.getAll("wars");
+    if (status) warList = warList.filter((w) => w.status === status);
+    if (stateId) {
+        const sid = Number.parseInt(stateId);
+        warList = warList.filter((w) => w.attackerId === sid || w.defenderId === sid);
+    }
+    return c.json(warList.map((w) => {
+        const attacker = store.findById("states", w.attackerId as number);
+        const defender = store.findById("states", w.defenderId as number);
+        const declarer = w.declaredBy ? store.findById("accounts", w.declaredBy as string) : null;
+        const declarerProfile = declarer ? store.getProfileByAccountId(declarer.id as string) : null;
+        const battleCount = store.findWhere("battles", (b) => b.warId === w.id && b.status === "ongoing").length;
+        return {
+            ...w,
+            attacker: attacker ? { id: attacker.id, name: attacker.name, logo: attacker.logo } : null,
+            defender: defender ? { id: defender.id, name: defender.name, logo: defender.logo } : null,
+            declarer: declarerProfile ? { name: declarerProfile.name } : null,
+            activeBattleCount: battleCount,
+        };
+    }));
+});
+
+app.get("/api/wars/:id", (c) => {
+    const id = Number.parseInt(c.req.param("id"));
+    const war = store.findById("wars", id);
+    if (!war) return c.json({ error: "Not found" }, 404);
+    const attacker = store.findById("states", war.attackerId as number);
+    const defender = store.findById("states", war.defenderId as number);
+    const attackerBloc = war.attackerBlocId ? store.findById("blocs", war.attackerBlocId as number) : null;
+    const defenderBloc = war.defenderBlocId ? store.findById("blocs", war.defenderBlocId as number) : null;
+    const declarer = war.declaredBy ? store.findById("accounts", war.declaredBy as string) : null;
+    const declarerProfile = declarer ? store.getProfileByAccountId(declarer.id as string) : null;
+    const warBattles = store.findWhere("battles", (b) => b.warId === id).map((b) => {
+        const region = store.findById("regions", b.regionId as number);
+        const attackerState = store.findById("states", b.attackerStateId as number);
+        const defenderState = store.findById("states", b.defenderStateId as number);
+        const participants = store.findWhere("battleParticipants", (p) => p.battleId === b.id);
+        return { ...b, region, attackerState, defenderState, participants };
+    });
+    return c.json({
+        ...war,
+        attacker: attacker ? { id: attacker.id, name: attacker.name, logo: attacker.logo } : null,
+        defender: defender ? { id: defender.id, name: defender.name, logo: defender.logo } : null,
+        attackerBloc,
+        defenderBloc,
+        declarer: declarerProfile ? { name: declarerProfile.name } : null,
+        battles: warBattles,
+    });
+});
+
+// ============ Battles ============
+app.get("/api/battles", (c) => {
+    const status = c.req.query("status");
+    const warId = c.req.query("warId");
+    const regionId = c.req.query("regionId");
+    let battleList = store.getAll("battles");
+    if (status) battleList = battleList.filter((b) => b.status === status);
+    if (warId) battleList = battleList.filter((b) => b.warId === Number.parseInt(warId));
+    if (regionId) battleList = battleList.filter((b) => b.regionId === Number.parseInt(regionId));
+    return c.json(battleList.map((b) => {
+        const war = store.findById("wars", b.warId as number);
+        const region = store.findById("regions", b.regionId as number);
+        const attackerState = store.findById("states", b.attackerStateId as number);
+        const defenderState = store.findById("states", b.defenderStateId as number);
+        return { ...b, war, region, attackerState, defenderState };
+    }));
+});
+
+app.get("/api/battles/:id", (c) => {
+    const id = Number.parseInt(c.req.param("id"));
+    const battle = store.findById("battles", id);
+    if (!battle) return c.json({ error: "Not found" }, 404);
+    const war = store.findById("wars", battle.warId as number);
+    const region = store.findById("regions", battle.regionId as number);
+    const attackerState = store.findById("states", battle.attackerStateId as number);
+    const defenderState = store.findById("states", battle.defenderStateId as number);
+    const participants = store.findWhere("battleParticipants", (p) => p.battleId === id).map((p) => {
+        const unit = store.findById("militaryUnits", p.unitId as number);
+        return { ...p, unit };
+    });
+    const rounds = store.findWhere("battleRounds", (r) => r.battleId === id);
+    let warWithStates = null;
+    if (war) {
+        const warAttacker = store.findById("states", war.attackerId as number);
+        const warDefender = store.findById("states", war.defenderId as number);
+        warWithStates = { ...war, attacker: warAttacker, defender: warDefender };
+    }
+    return c.json({ ...battle, war: warWithStates, region, attackerState, defenderState, participants, rounds });
+});
+
 // ============ Newspapers & Articles ============
 app.get("/api/newspapers", (c) => c.json(store.getAll("newspapers")));
 app.get("/api/articles", (c) => c.json(store.getAll("articles").map((a) => ({ ...a, author: store.findById("accounts", a.authorId as string), newspaper: store.findById("newspapers", a.newspaperId as number) }))));
@@ -177,7 +271,7 @@ const port = Number.parseInt(process.env.MOCK_PORT ?? "3456");
 
 console.log(`🎭 Mock REST API server starting on http://localhost:${port}`);
 console.log(`   Store seeded: ${store.count("accounts")} accounts, ${store.count("states")} states, ${store.count("regions")} regions`);
-console.log(`   Endpoints: /api/accounts, /api/states, /api/regions, /api/companies, /api/market/listings, /api/parties, /api/chat/:type, /api/military/units, /api/newspapers, /api/articles, /api/blocs`);
+console.log(`   Endpoints: /api/accounts, /api/states, /api/regions, /api/companies, /api/market/listings, /api/parties, /api/chat/:type, /api/military/units, /api/wars, /api/battles, /api/newspapers, /api/articles, /api/blocs`);
 console.log(`   Admin: POST /api/_admin/reset, GET /api/_admin/tables`);
 
 serve({ fetch: app.fetch, port });
