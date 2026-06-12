@@ -60,15 +60,23 @@
 {/if}
 
 <style>
-	:global(main) {
-		@apply pb-16 md:pb-20;
+	@reference "../../../app.css";
+
+	main {
+		@apply pb-16;
 	}
 
-	:global(.dock-item) {
+	@media (min-width: 768px) {
+		main {
+			@apply pb-20;
+		}
+	}
+
+	.dock-item {
 		@apply flex flex-col sm:flex-row items-center justify-center gap-1 transition-all duration-300;
 	}
 
-	:global(.dock-item.active) {
+	.dock-item.active {
 		@apply text-cyan-200;
 		box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.2);
 	}

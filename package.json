@@ -22,13 +22,12 @@
 		"mock:build": "cd packages/rest-mock && bun run build"
 	},
 	"devDependencies": {
-		
-		"@rstest/core": "0.10.3",
 		"@aws-sdk/client-s3": "3.1065.0",
 		"@aws-sdk/s3-request-presigner": "3.1065.0",
 		"@eslint/compat": "2.1.0",
 		"@eslint/js": "10.0.1",
 		"@iconify-json/fluent": "1.2.48",
+		"@iconify-json/fluent-color": "^1.2.21",
 		"@iconify-json/fluent-emoji": "1.2.7",
 		"@iconify-json/logos": "1.2.11",
 		"@iconify/svelte": "5.2.1",
@@ -37,6 +36,7 @@
 		"@oslojs/crypto": "1.0.1",
 		"@oslojs/oauth2": "0.5.0",
 		"@poppanator/sveltekit-svg": "7.0.0",
+		"@rstest/core": "0.10.3",
 		"@sveltejs/adapter-auto": "7.0.1",
 		"@sveltejs/adapter-vercel": "6.3.3",
 		"@sveltejs/kit": "2.64.0",
