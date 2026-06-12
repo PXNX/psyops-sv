@@ -19,6 +19,34 @@
 		font-display: swap;
 	}
 
+	/* Gaming-style neon effects */
+	@keyframes neon-glow {
+		0%, 100% {
+			text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff, 0 0 30px #00ffff;
+		}
+		50% {
+			text-shadow: 0 0 20px #00ffff, 0 0 30px #00ffff, 0 0 40px #00ffff;
+		}
+	}
+
+	@keyframes neon-border {
+		0%, 100% {
+			box-shadow: 0 0 10px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.1);
+		}
+		50% {
+			box-shadow: 0 0 20px rgba(0, 255, 255, 0.8), inset 0 0 15px rgba(0, 255, 255, 0.2);
+		}
+	}
+
+	@keyframes pulse-neon {
+		0%, 100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.8;
+		}
+	}
+
 	@keyframes slide-up {
 		from {
 			transform: translateY(100%);
@@ -28,8 +56,29 @@
 		}
 	}
 
+	@keyframes scanlines {
+		0% {
+			transform: translateY(0);
+		}
+		100% {
+			transform: translateY(10px);
+		}
+	}
+
 	.animate-slide-up {
 		animation: slide-up 0.3s ease-out;
+	}
+
+	.animate-neon-glow {
+		animation: neon-glow 2s ease-in-out infinite;
+	}
+
+	.animate-neon-border {
+		animation: neon-border 2s ease-in-out infinite;
+	}
+
+	.animate-pulse-neon {
+		animation: pulse-neon 1.5s ease-in-out infinite;
 	}
 
 	.fade_in {
@@ -70,6 +119,149 @@
 
 		100% {
 			transform: scale(1);
+		}
+	}
+
+	/* Gaming UI Components */
+	.gaming-card {
+		@apply relative border border-cyan-500/30 bg-gradient-to-br from-slate-900/80 to-slate-950/80 backdrop-blur-sm;
+		box-shadow: 0 0 20px rgba(0, 255, 255, 0.1), inset 0 0 20px rgba(0, 255, 255, 0.05);
+	}
+
+	.gaming-card-hover {
+		@apply transition-all duration-300 hover:border-cyan-400/60 hover:shadow-lg;
+		box-shadow: 0 0 30px rgba(0, 255, 255, 0.2), inset 0 0 20px rgba(0, 255, 255, 0.1);
+	}
+
+	.gaming-button {
+		@apply relative px-4 py-2 font-semibold text-white bg-gradient-to-r from-cyan-600 to-purple-600 border border-cyan-400/50 rounded-sm transition-all duration-300;
+		box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.1);
+	}
+
+	.gaming-button:hover {
+		@apply border-cyan-300/80;
+		box-shadow: 0 0 25px rgba(0, 255, 255, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.2);
+		transform: translateY(-2px);
+	}
+
+	.gaming-button:active {
+		transform: translateY(0);
+		box-shadow: 0 0 15px rgba(0, 255, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.1);
+	}
+
+	.gaming-input {
+		@apply bg-slate-900/60 border border-cyan-500/30 text-white placeholder-gray-500 rounded-sm transition-all duration-300;
+		box-shadow: inset 0 0 10px rgba(0, 255, 255, 0.05);
+	}
+
+	.gaming-input:focus {
+		@apply border-cyan-400/60 outline-none;
+		box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.1), 0 0 20px rgba(0, 255, 255, 0.2);
+	}
+
+	.gaming-badge {
+		@apply inline-block px-3 py-1 text-xs font-bold text-cyan-300 bg-gradient-to-r from-cyan-900/40 to-purple-900/40 border border-cyan-500/50 rounded-full;
+		box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+	}
+
+	.gaming-header {
+		@apply relative text-white font-bold uppercase tracking-wider;
+		text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+	}
+
+	.gaming-stat {
+		@apply flex items-center justify-between p-3 gaming-card rounded-sm;
+	}
+
+	.gaming-stat-value {
+		@apply text-lg font-bold text-cyan-300;
+		text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+	}
+
+	.gaming-progress {
+		@apply relative h-2 bg-slate-800 border border-cyan-500/30 rounded-full overflow-hidden;
+	}
+
+	.gaming-progress-bar {
+		@apply h-full bg-gradient-to-r from-cyan-500 to-purple-500 transition-all duration-500;
+		box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+	}
+
+	/* Mobile-optimized dock navigation */
+	.dock {
+		@apply fixed bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-950 to-slate-900/80 border-t border-cyan-500/30 flex items-center justify-around px-2;
+		box-shadow: 0 -10px 30px rgba(0, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+		z-index: 40;
+	}
+
+	.dock a {
+		@apply flex items-center justify-center w-12 h-12 rounded-lg transition-all duration-300 text-cyan-300 hover:text-cyan-100;
+		box-shadow: 0 0 10px rgba(0, 255, 255, 0);
+	}
+
+	.dock a:hover {
+		@apply bg-cyan-500/20;
+		box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+	}
+
+	.dock a:active {
+		transform: scale(0.95);
+	}
+
+	/* Mobile space optimization */
+	@media (max-width: 768px) {
+		main {
+			@apply pb-20;
+		}
+
+		.dock {
+			@apply h-14 px-1;
+		}
+
+		.dock a {
+			@apply w-10 h-10;
+		}
+
+		.dock a svg {
+			@apply size-5;
+		}
+
+		.gaming-card {
+			@apply p-3;
+		}
+
+		.gaming-button {
+			@apply px-3 py-2 text-sm;
+		}
+
+		.gaming-header {
+			@apply text-lg;
+		}
+	}
+
+	@media (max-width: 480px) {
+		main {
+			@apply pb-16;
+		}
+
+		.dock {
+			@apply h-12 px-0;
+		}
+
+		.dock a {
+			@apply w-full h-12 rounded-none;
+		}
+
+		.gaming-card {
+			@apply p-2;
+		}
+
+		.gaming-stat {
+			@apply p-2;
+		}
+
+		.gaming-badge {
+			@apply px-2 py-0.5 text-xs;
 		}
 	}
 

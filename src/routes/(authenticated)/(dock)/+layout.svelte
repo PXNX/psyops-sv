@@ -8,6 +8,20 @@
 	import { resolve } from "$app/paths";
 
 	const { children, data } = $props();
+
+	const navItems = [
+		{ href: "/", icon: FluentEmojiBarChart, label: "Dashboard" },
+		{ href: "/posts", icon: FluentEmojiNewspaper, label: "Posts" },
+		{ href: "/training", icon: FluentEmojiMilitaryHelmet, label: "Training" },
+		{ href: "/production", icon: FluentEmojiNutAndBolt, label: "Production" },
+		{ href: "/user/" + data.account.id, icon: FluentEmojiIdentificationCard, label: "Profile" }
+	];
+
+	const isActive = (href: string) => {
+		if (href === "/" && page.url.pathname === "/") return true;
+		if (href !== "/" && page.url.pathname.startsWith(href)) return true;
+		return false;
+	};
 </script>
 
 <svelte:head>
@@ -23,28 +37,39 @@
 		<span class="loading loading-ring loading-md m-auto"></span>
 	</div>
 {:else}
-	<main class="flex flex-col h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden">
+	<main class="flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden">
 		{@render children()}
 	</main>
 {/if}
 
 {#if page.url.pathname !== "/posts/new" && !page.url.pathname.startsWith("/welcome")}
-	<!-- TODO && page.url.pathname !== "posts/[id]/edit" -->
-	<nav class="dock-md dock">
-		<a href={"/"} class="flinch">
-			<FluentEmojiBarChart class="size-6" />
-		</a>
-		<a href={"/posts"} class="flinch">
-			<FluentEmojiNewspaper class="size-6" />
-		</a>
-		<a href={"/training"} class="flinch">
-			<FluentEmojiMilitaryHelmet class="size-6" />
-		</a>
-		<a href={"/production"} class="flinch">
-			<FluentEmojiNutAndBolt class="size-6" />
-		</a>
-		<a href={"/user/" + data.account.id} class="flinch">
-			<FluentEmojiIdentificationCard class="size-6" />
-		</a>
+	<!-- Gaming-style dock navigation -->
+	<nav class="dock">
+		{#each navItems as item (item.href)}
+			<a
+				href={item.href}
+				class="flinch dock-item"
+				class:active={isActive(item.href)}
+				title={item.label}
+			>
+				<svelte:component this={item.icon} class="size-5 md:size-6" />
+				<span class="hidden sm:inline text-xs font-semibold">{item.label}</span>
+			</a>
+		{/each}
 	</nav>
 {/if}
+
+<style>
+	:global(main) {
+		@apply pb-16 md:pb-20;
+	}
+
+	:global(.dock-item) {
+		@apply flex flex-col sm:flex-row items-center justify-center gap-1 transition-all duration-300;
+	}
+
+	:global(.dock-item.active) {
+		@apply text-cyan-200;
+		box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.2);
+	}
+</style>

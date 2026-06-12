@@ -4,51 +4,18 @@ import postgres from "postgres";
 import { env } from "$env/dynamic/private";
 import * as schema from "./schema";
 
-const USE_MOCK = env.USE_MOCK === "true";
-
-async function createMockDb() {
-	const { PGlite } = await import("@electric-sql/pglite");
-	const { drizzle: drizzlePglite } = await import("drizzle-orm/pglite");
-	const { pushSchema } = await import("drizzle-kit/api");
-
-	const client = new PGlite();
-	const mockDb = drizzlePglite({ client, schema });
-
-	// Push the Drizzle schema to the in-memory database
-	const result = await pushSchema(schema, mockDb as any);
-	if (result.statementsToExecute.length > 0) {
-		await result.apply();
-	}
-
-	// Seed with mock data
-	const { seedMockDatabase } = await import("./mock-seed");
-	await seedMockDatabase(mockDb as any);
-
-	return mockDb;
-}
-
 function createRealDb() {
 	const DATABASE_URL = env.DATABASE_URL;
 	if (!DATABASE_URL) {
-		throw new Error("DATABASE_URL environment variable is required (set USE_MOCK=true for mock mode)");
+		throw new Error("DATABASE_URL environment variable is required");
 	}
 	const queryClient = postgres(DATABASE_URL);
 	return drizzle(queryClient, { schema });
 }
 
-let db: ReturnType<typeof createRealDb>;
-
-if (USE_MOCK) {
-	console.log("🎭 Mock mode: using PGlite in-memory database");
-	// Use top-level await for async PGlite initialization
-	db = (await createMockDb()) as any;
-} else {
-	db = createRealDb();
-}
-
-export { db };
+export const db = createRealDb();
 export type Database = typeof db;
-export const isMockMode = USE_MOCK;
+export const isMockMode = false;
 
 // In-memory event emitter for real-time notifications
 class MessageNotifier {
