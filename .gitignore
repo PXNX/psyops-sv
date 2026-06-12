@@ -27,4 +27,4 @@ sqlite.db
 # Mock mode
 .mock-files/
 packages/rest-mock/.mock-files/
-packages/rest-mock/dist/
+packages/rest-mock/dist/.vscode/

@@ -7,22 +7,22 @@
 		"packages/*"
 	],
 	"scripts": {
-		"dev": "vite dev --host",
-		"dev:mock": "USE_MOCK=true vite dev --host",
-		"build": "vite build",
-		"preview": "vite preview",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "prettier --check .",
-		"format": "prettier --write .",
+		"dev": "bun x vite dev --host",
+		"dev:mock": "USE_MOCK=true bun x vite dev --host",
+		"build": "bun x vite build",
+		"preview": "bun x vite preview",
+		"check": "bun x svelte-kit sync && bun x svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "bun x svelte-kit sync && bun x svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "bun x prettier --check .",
+		"format": "bun x prettier --write .",
 		"i18n": "typesafe-i18n",
-		"test": "rstest",
-		"test:watch": "rstest --watch",
+		"test": "bun x rstest",
+		"test:watch": "bun x rstest --watch",
 		"mock:server": "cd packages/rest-mock && bun run dev",
 		"mock:build": "cd packages/rest-mock && bun run build"
 	},
 	"devDependencies": {
-		"@electric-sql/pglite": "^0.5.1",
+		
 		"@rstest/core": "0.10.3",
 		"@aws-sdk/client-s3": "3.1065.0",
 		"@aws-sdk/s3-request-presigner": "3.1065.0",
