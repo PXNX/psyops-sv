@@ -4,9 +4,6 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
-	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import { formatDate } from "$lib/utils/formatting.js";
 
@@ -50,74 +47,138 @@
 	{#if data.activeVisas.length > 0}
 		<div class="mb-8">
 			<h2 class="text-lg font-semibold text-white mb-4">Active Visas</h2>
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 				{#each data.activeVisas as visa}
 					{@const badge = getStatusBadge(visa)}
 					{@const expiryColor = getExpiryColor(visa)}
 					<a
 						href="/state/{visa.stateId}"
-						class="group bg-slate-800/50 rounded-xl border border-white/5 hover:border-blue-500/30 transition-all p-6"
+						class="group relative block overflow-hidden rounded-sm transition-all hover:scale-[1.01] hover:shadow-xl"
+						style="
+							background: linear-gradient(145deg, #f5f0e8 0%, #ede7d9 40%, #e8e0d0 100%);
+							box-shadow: 0 2px 12px rgba(0,0,0,0.3), inset 0 0 60px rgba(0,0,0,0.03);
+						"
 					>
-						<!-- Header -->
-						<div class="flex items-start gap-4 mb-4">
-							{#if visa.stateLogo}
-								<img src={visa.stateLogo} alt={visa.stateName} class="size-14 rounded-lg" />
-							{:else}
-								<div class="size-14 rounded-lg bg-slate-700 flex items-center justify-center">
-									<FluentBuildingGovernment20Filled class="size-7 text-gray-400" />
-								</div>
-							{/if}
+						<!-- Decorative border -->
+						<div class="absolute inset-0 border-2 border-amber-800/30 rounded-sm pointer-events-none"></div>
+						<div class="absolute inset-[3px] border border-amber-800/15 rounded-sm pointer-events-none"></div>
 
-							<div class="flex-1 min-w-0">
-								<h3 class="text-lg font-bold text-white group-hover:text-blue-400 transition-colors">
-									{visa.stateName}
-								</h3>
-								<div class="flex items-center gap-2 mt-1">
-									<span
-										class="px-2 py-0.5 rounded-full text-xs font-medium flex items-center gap-1"
-										style="background-color: var(--{badge.color}-600-20); color: var(--{badge.color}-400)"
+						<!-- Guilloche-style pattern (top & bottom strip) -->
+						<div
+							class="absolute top-0 left-0 right-0 h-7 opacity-[0.07] pointer-events-none"
+							style="background: repeating-linear-gradient(90deg, #4a3728 0px, transparent 1px, transparent 3px, #4a3728 4px);"
+						></div>
+						<div
+							class="absolute bottom-0 left-0 right-0 h-7 opacity-[0.07] pointer-events-none"
+							style="background: repeating-linear-gradient(90deg, #4a3728 0px, transparent 1px, transparent 3px, #4a3728 4px);"
+						></div>
+
+						<!-- Content -->
+						<div class="relative p-5 pt-4">
+							<!-- Header line -->
+							<div class="flex items-center justify-between mb-3">
+								<span class="text-[10px] font-bold tracking-[0.3em] uppercase text-amber-900/50">Travel Visa</span>
+								<span class="text-[10px] font-mono text-amber-800/40">No. {visa.id.slice(0, 8).toUpperCase()}</span>
+							</div>
+
+							<!-- State info row -->
+							<div class="flex items-center gap-3 mb-4">
+								{#if visa.stateLogo}
+									<img
+										src={visa.stateLogo}
+										alt={visa.stateName}
+										class="size-12 rounded-sm border border-amber-900/20 shadow-sm"
+									/>
+								{:else}
+									<div
+										class="size-12 rounded-sm bg-amber-900/10 border border-amber-900/20 flex items-center justify-center"
 									>
-										<svelte:component this={badge.icon} class="size-3" />
-										{badge.text}
-									</span>
+										<FluentBuildingGovernment20Filled class="size-6 text-amber-900/40" />
+									</div>
+								{/if}
+								<div class="flex-1 min-w-0">
+									<h3
+										class="text-lg font-bold text-amber-950 group-hover:text-amber-700 transition-colors leading-tight"
+									>
+										{visa.stateName}
+									</h3>
+									<p class="text-[10px] tracking-[0.15em] uppercase text-amber-800/50 font-medium">Sovereign State</p>
 								</div>
 							</div>
-						</div>
 
-						<!-- Expiry Info -->
-						<div class="bg-slate-700/30 rounded-lg p-4 mb-4">
-							<div class="flex items-center justify-between">
-								<div class="flex items-center gap-2 text-gray-400">
-									<FluentCalendar20Filled class="size-4" />
-									<span class="text-sm">Expires</span>
+							<!-- Divider -->
+							<div class="border-t border-dashed border-amber-900/20 mb-3"></div>
+
+							<!-- Visa fields grid -->
+							<div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
+								<div>
+									<p class="text-[9px] font-bold tracking-[0.2em] uppercase text-amber-800/40 mb-0.5">Date of Issue</p>
+									<p class="text-amber-950 font-semibold text-sm">{formatDate(visa.issuedAt)}</p>
 								</div>
-								<div class="text-right">
-									<p class="font-semibold" style="color: var(--{expiryColor}-400)">
+								<div>
+									<p class="text-[9px] font-bold tracking-[0.2em] uppercase text-amber-800/40 mb-0.5">Valid Until</p>
+									<p
+										class="font-semibold text-sm"
+										class:text-amber-950={expiryColor === "green"}
+										class:text-red-700={expiryColor === "red"}
+										class:text-yellow-700={expiryColor === "yellow"}
+									>
 										{formatDate(visa.expiresAt)}
 									</p>
-									<p class="text-xs text-gray-500">
+								</div>
+								<div>
+									<p class="text-[9px] font-bold tracking-[0.2em] uppercase text-amber-800/40 mb-0.5">Fee Paid</p>
+									<p class="text-amber-950 font-semibold text-sm">${visa.cost.toLocaleString()}</p>
+								</div>
+								<div>
+									<p class="text-[9px] font-bold tracking-[0.2em] uppercase text-amber-800/40 mb-0.5">Remaining</p>
+									<p
+										class="font-semibold text-sm"
+										class:text-amber-950={expiryColor === "green"}
+										class:text-red-700={expiryColor === "red"}
+										class:text-yellow-700={expiryColor === "yellow"}
+									>
 										{#if visa.daysUntilExpiry > 0}
-											{visa.daysUntilExpiry} day{visa.daysUntilExpiry !== 1 ? "s" : ""} remaining
+											{visa.daysUntilExpiry} day{visa.daysUntilExpiry !== 1 ? "s" : ""}
 										{:else}
 											Expired
 										{/if}
 									</p>
 								</div>
 							</div>
+
+							<!-- Status footer -->
+							<div class="border-t border-amber-900/10 pt-2 flex items-center justify-between">
+								<span class="text-[9px] tracking-[0.2em] uppercase text-amber-800/40 font-bold">Status</span>
+								<span
+									class="text-xs font-bold tracking-wider uppercase"
+									class:text-green-700={badge.color === "green"}
+									class:text-yellow-700={badge.color === "yellow"}
+									class:text-red-700={badge.color === "red"}>{badge.text}</span
+								>
+							</div>
 						</div>
 
-						<!-- Additional Info -->
-						<div class="grid grid-cols-2 gap-3 text-sm">
-							<div>
-								<p class="text-gray-500 text-xs mb-1">Issued</p>
-								<p class="text-gray-300">{formatDate(visa.issuedAt)}</p>
-							</div>
-							<div>
-								<p class="text-gray-500 text-xs mb-1">Cost</p>
-								<div class="flex items-center gap-1 text-gray-300">
-									<FluentMoney20Filled class="size-3" />
-									<span>${visa.cost.toLocaleString()}</span>
-								</div>
+						<!-- Stamped circle -->
+						<div
+							class="absolute top-1/2 right-5 -translate-y-1/2 size-24 rounded-full pointer-events-none"
+							style="
+								transform: translateY(-50%) rotate(-18deg);
+								border: 3px solid rgba(22, 101, 52, 0.35);
+							"
+						>
+							<div class="absolute inset-[3px] rounded-full border-2 border-green-800/25"></div>
+							<div class="absolute inset-0 flex flex-col items-center justify-center">
+								<span class="text-[7px] font-bold tracking-[0.2em] uppercase text-green-800/40 leading-none"
+									>Approved</span
+								>
+								<span class="text-[10px] font-black tracking-wider uppercase text-green-800/50 leading-tight mt-0.5"
+									>{visa.stateName?.slice(0, 10)}</span
+								>
+								<div class="w-8 h-px bg-green-800/25 my-0.5"></div>
+								<span class="text-[6px] font-mono text-green-800/35 leading-none"
+									>{formatDate(visa.approvedAt || visa.issuedAt)}</span
+								>
 							</div>
 						</div>
 					</a>

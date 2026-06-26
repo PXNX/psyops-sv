@@ -144,6 +144,7 @@ export const userProfiles = pgTable("user_profiles", {
 	telegramUsername: text("telegram_username"),
 	theme: text("theme").default("dark").notNull(),
 	loadImages: boolean("load_images").default(true).notNull(),
+	onboardingStep: integer("onboarding_step"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

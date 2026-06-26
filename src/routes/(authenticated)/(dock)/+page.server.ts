@@ -5,7 +5,8 @@ import {
 	regions,
 	userProfiles,
 	broadcasts,
-	partyMembers
+	partyMembers,
+	battles
 } from "$lib/server/schema";
 import { eq, and, desc } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
@@ -76,6 +77,41 @@ export const load: PageServerLoad = async ({ locals }) => {
 		});
 	}
 
+	// --- Ongoing battles in user's region ---
+	let ongoingBattles: {
+		id: number;
+		regionId: number;
+		attackerState: { id: number; name: string };
+		defenderState: { id: number; name: string };
+		phase: string;
+		terrain: string;
+		startedAt: Date;
+	}[] = [];
+
+	if (primaryResidence) {
+		const regionBattles = await db.query.battles.findMany({
+			where: and(
+				eq(battles.regionId, primaryResidence.regionId),
+				eq(battles.status, "ongoing")
+			),
+			with: {
+				attackerState: true,
+				defenderState: true
+			},
+			orderBy: [desc(battles.startedAt)]
+		});
+
+		ongoingBattles = regionBattles.map((b) => ({
+			id: b.id,
+			regionId: b.regionId,
+			attackerState: { id: b.attackerStateId, name: b.attackerState.name },
+			defenderState: { id: b.defenderStateId, name: b.defenderState.name },
+			phase: b.phase,
+			terrain: b.terrain,
+			startedAt: b.startedAt
+		}));
+	}
+
 	return {
 		account: {
 			id: account.id,
@@ -87,6 +123,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		activeTravel,
 		systemBroadcast,
 		stateBroadcast,
-		partyBroadcast
+		partyBroadcast,
+		ongoingBattles
 	};
-};
+	};

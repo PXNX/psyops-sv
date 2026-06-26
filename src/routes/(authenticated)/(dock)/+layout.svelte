@@ -4,6 +4,7 @@
 	import FluentEmojiMilitaryHelmet from "~icons/fluent-emoji/military-helmet";
 	import FluentEmojiNutAndBolt from "~icons/fluent-emoji/nut-and-bolt";
 	import FluentEmojiIdentificationCard from "~icons/fluent-emoji/identification-card";
+	import OnboardingSheet from "$lib/component/OnboardingSheet.svelte";
 	import { navigating, page } from "$app/state";
 	import { resolve } from "$app/paths";
 
@@ -46,17 +47,16 @@
 	<!-- Gaming-style dock navigation -->
 	<nav class="dock">
 		{#each navItems as item (item.href)}
-			<a
-				href={item.href}
-				class="flinch dock-item"
-				class:active={isActive(item.href)}
-				title={item.label}
-			>
+			<a href={item.href} class="flinch dock-item" class:active={isActive(item.href)} title={item.label}>
 				<svelte:component this={item.icon} class="size-5 md:size-6" />
 				<span class="hidden sm:inline text-xs font-semibold">{item.label}</span>
 			</a>
 		{/each}
 	</nav>
+{/if}
+
+{#if data.needsOnboarding && data.onboardingStep != null}
+	<OnboardingSheet onboardingStep={data.onboardingStep} profile={data.profile} residence={data.residence} />
 {/if}
 
 <style>
@@ -78,6 +78,8 @@
 
 	.dock-item.active {
 		@apply text-cyan-200;
-		box-shadow: 0 0 15px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.2);
+		box-shadow:
+			0 0 15px rgba(0, 255, 255, 0.4),
+			inset 0 0 10px rgba(0, 255, 255, 0.2);
 	}
 </style>
