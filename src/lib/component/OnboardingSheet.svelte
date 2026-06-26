@@ -198,12 +198,7 @@
 				<div class="flex justify-center gap-1.5 pb-3 shrink-0">
 					{#each Array(TOTAL_STEPS) as _, i}
 						<div
-							class="h-1 rounded-full transition-all duration-300"
-							class:w-6={i === step}
-							class:w-2={i !== step}
-							class:bg-cyan-400={i === step}
-							class:bg-cyan-400/30={i < step && i !== step}
-							class:bg-slate-700={i > step}
+							class="h-1 rounded-full transition-all duration-300 {i === step ? 'w-6 bg-cyan-400' : i < step ? 'w-2 bg-cyan-400/30' : 'w-2 bg-slate-700'}"
 						></div>
 					{/each}
 				</div>

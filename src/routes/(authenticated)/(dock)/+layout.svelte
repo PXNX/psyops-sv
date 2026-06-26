@@ -78,8 +78,5 @@
 
 	.dock-item.active {
 		@apply text-cyan-200;
-		box-shadow:
-			0 0 15px rgba(0, 255, 255, 0.4),
-			inset 0 0 10px rgba(0, 255, 255, 0.2);
 	}
 </style>

@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/(dock)/training/+page.server.ts
-import { error, fail, redirect } from "@sveltejs/kit";
+import { fail, redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 
 import {
@@ -11,7 +11,8 @@ import {
 	states,
 	regions,
 	blocs,
-	militaryUnitTypeEnum
+	militaryUnitTypeEnum,
+	userTravels
 } from "$lib/server/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { db } from "$lib/server/db";
@@ -71,10 +72,6 @@ async function getUserResidence(userId: string) {
 		throw redirect(303, "/welcome/region");
 	}
 
-	if (!residence.stateId) {
-		throw error(400, "You live in an independent region. Join or create a state through a political party before training military units.");
-	}
-
 	return residence;
 }
 
@@ -99,6 +96,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const residence = await getUserResidence(account.id);
 	const inventory = await getUserInventory(account.id);
+
+	const activeTravel = await db.query.userTravels.findFirst({
+		where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
+	});
+
+	const isIndependentRegion = !residence.stateId;
+	const isTraveling = !!activeTravel;
 
 	const units = await db
 		.select({
@@ -132,7 +136,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 				}
 				: null
 		},
-		inventory
+		inventory,
+		isIndependentRegion,
+		isTraveling
 	};
 };
 
@@ -294,6 +300,18 @@ export const actions: Actions = {
 		}
 
 		const residence = await getUserResidence(account.id);
+
+		if (!residence.stateId) {
+			return fail(400, { error: "You live in an independent region. Join or create a state through a political party before training military units." });
+		}
+
+		const activeTravel = await db.query.userTravels.findFirst({
+			where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
+		});
+		if (activeTravel) {
+			return fail(400, { error: "You cannot train units while traveling." });
+		}
+
 		const template = MILITARY_UNIT_TEMPLATES[unitType];
 
 		if (!template) {
