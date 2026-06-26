@@ -124,7 +124,7 @@
 	});
 </script>
 
-<PageContainer maxWidth="7xl">
+<PageContainer maxWidth="full">
 	<!-- Header with gradient accent -->
 	<div class="relative">
 		<div
@@ -238,7 +238,7 @@
 						return async ({ update, result }) => {
 							await update();
 							isCollectingWage = false;
-							if (result.type === 'success') showCollectAnim = true;
+							if (result.type === "success") showCollectAnim = true;
 						};
 					}}
 					class="relative z-10"
@@ -509,7 +509,7 @@
 					use:enhance={() => {
 						return async ({ update, result }) => {
 							await update();
-							if (result.type === 'success') showProductionAnim = true;
+							if (result.type === "success") showProductionAnim = true;
 						};
 					}}
 					class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
@@ -658,16 +658,16 @@
 									<FluentWarning20Filled class="size-4 md:size-5 flex-shrink-0 mt-0.5" />
 									<span
 										>You need more resources to start this production. Work at a factory to earn resources and wages.</span
-										>
-										</p>
-										</div>
-										{/if}
-										</div>
-										</form>
-										{/if}
-										</div>
-										</div>
-										</PageContainer>
+									>
+								</p>
+							</div>
+						{/if}
+					</div>
+				</form>
+			{/if}
+		</div>
+	</div>
+</PageContainer>
 
 {#if showCollectAnim}
 	<ThreeAnimation variant="collect" onComplete={() => (showCollectAnim = false)} />
