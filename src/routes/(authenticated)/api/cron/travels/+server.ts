@@ -5,7 +5,7 @@ import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
 import { userTravels, residences, regions, states } from "$lib/server/schema";
 import { eq, and, lte } from "drizzle-orm";
-import { sendPushNotificationToUser } from "$lib/server/services/push-notification.service";
+import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 
 export const GET: RequestHandler = async ({ request }) => {
 	try {
@@ -92,8 +92,7 @@ async function processTravel(travel: any) {
 		.where(eq(regions.id, travel.toRegionId));
 	const destinationName = destinationRegion?.stateName ?? "your destination";
 
-	// Send push notification to the user who arrived
-	await sendPushNotificationToUser(travel.userId, {
+	await sendNotificationIfEnabled(travel.userId, "notifyTravelComplete", {
 		title: "✈️ Arrived!",
 		body: `You have arrived in ${destinationName}.`,
 		icon: "/favicon.png",

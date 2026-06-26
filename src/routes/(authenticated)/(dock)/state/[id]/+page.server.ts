@@ -23,6 +23,7 @@ import { eq, and, gte, sql, or } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { getRegionName } from "$lib/utils/formatting";
+import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
@@ -430,10 +431,36 @@ export const actions: Actions = {
 			})
 			.returning();
 
+		const [attackerState] = await db.select({ name: states.name }).from(states).where(eq(states.id, presidency.stateId)).limit(1);
+		const [defenderStateInfo] = await db.select({ name: states.name }).from(states).where(eq(states.id, targetStateId)).limit(1);
+
+		for (const sId of [presidency.stateId, targetStateId]) {
+			const citizens = await db
+				.select({ userId: residences.userId })
+				.from(residences)
+				.innerJoin(regions, eq(residences.regionId, regions.id))
+				.where(eq(regions.stateId, sId));
+
+			const isAttacker = sId === presidency.stateId;
+			const payload = {
+				title: "⚔️ War Declared!",
+				body: isAttacker
+					? `Your state declared war on ${defenderStateInfo?.name ?? "an enemy"}!`
+					: `${attackerState?.name ?? "An enemy"} has declared war on your state!`,
+				icon: "/favicon.png",
+				badge: "/badge.png",
+				data: { url: `/war/${newWar.id}`, tag: `war-${newWar.id}` }
+			};
+
+			Promise.allSettled(
+				citizens.map((c) => sendNotificationIfEnabled(c.userId, "notifyWarDeclarations", payload))
+			).catch((err) => console.error("War declaration notification error:", err));
+		}
+
 		return {
 			success: true,
 			message: `War declared successfully!`,
 			warId: newWar.id
 		};
-	}
-};
+		}
+		};

@@ -35,6 +35,14 @@ function createMockAuthHandle(): Handle {
 		email: "alice@example.com",
 		role: "admin" as const,
 		notifyNewspaperPosts: true,
+		notifyDirectMessages: true,
+		notifyWarDeclarations: true,
+		notifyBattleResults: true,
+		notifyElections: true,
+		notifyTravelComplete: true,
+		notifyShiftComplete: true,
+		notifyMarketSales: true,
+		notifyNewProposals: true,
 		createdAt: new Date("2024-01-01"),
 		updatedAt: new Date("2024-01-01")
 	};

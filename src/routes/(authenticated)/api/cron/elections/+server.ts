@@ -10,9 +10,12 @@ import {
 	parliamentMembers,
 	politicalParties,
 	partyMembers,
-	presidents
+	presidents,
+	residences,
+	regions
 } from "$lib/server/schema";
 import { eq, and, lte } from "drizzle-orm";
+import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 
 export const GET: RequestHandler = async ({ request }) => {
 	try {
@@ -34,6 +37,14 @@ export const GET: RequestHandler = async ({ request }) => {
 				.where(eq(parliamentaryElections.id, election.id));
 			activated++;
 			console.log(`✅ Activated election ${election.id} for state ${election.stateId}`);
+
+			notifyStateCitizens(election.stateId, {
+				title: "🗳️ Election Started!",
+				body: "A parliamentary election has begun in your state. Cast your vote!",
+				icon: "/favicon.png",
+				badge: "/badge.png",
+				data: { url: `/state/${election.stateId}`, tag: `election-${election.id}` }
+			}, "notifyElections").catch((err) => console.error("Election notification error:", err));
 		}
 
 		// 2. Process finished elections
@@ -381,4 +392,30 @@ async function processElectionResults(election: any) {
 	console.log(
 		`✅ Election ${election.id} processed successfully - ${totalVotes} votes cast, ${partyResults.reduce((sum, r) => sum + r.seats, 0)} parliament seats filled`
 	);
-}
+
+	const winnerName = partyResults.reduce((prev, current) => (current.votes > prev.votes ? current : prev)).partyName;
+	notifyStateCitizens(election.stateId, {
+		title: "🏛️ Election Results",
+		body: `The election is over! ${winnerName} won the most votes. Check the results.`,
+		icon: "/favicon.png",
+		badge: "/badge.png",
+		data: { url: `/state/${election.stateId}`, tag: `election-result-${election.id}` }
+	}, "notifyElections").catch((err) => console.error("Election result notification error:", err));
+	}
+
+	async function notifyStateCitizens(
+	stateId: number,
+	payload: { title: string; body: string; icon?: string; badge?: string; data?: Record<string, any> },
+	notificationType: "notifyElections" | "notifyWarDeclarations" | "notifyBattleResults"
+	) {
+	const citizens = await db
+		.select({ userId: residences.userId })
+		.from(residences)
+		.innerJoin(regions, eq(residences.regionId, regions.id))
+		.where(eq(regions.stateId, stateId));
+
+	const promises = citizens.map((c) =>
+		sendNotificationIfEnabled(c.userId, notificationType, payload)
+	);
+	await Promise.allSettled(promises);
+	}
