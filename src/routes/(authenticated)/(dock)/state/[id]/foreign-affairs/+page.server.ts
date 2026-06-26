@@ -15,7 +15,8 @@ import {
 	visaApplications,
 	userVisas,
 	stateTreasury,
-	userWallets
+	userWallets,
+	blocs
 } from "$lib/server/schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -132,6 +133,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		orderBy: (userVisas, { asc }) => [asc(userVisas.expiresAt)]
 	});
 
+	// Check if state is in a bloc with visaFreeForMembers
+	let blocVisaOverride = false;
+	let blocInfo = null;
+	if (state.blocId) {
+		const bloc = await db.query.blocs.findFirst({
+			where: eq(blocs.id, state.blocId)
+		});
+		if (bloc) {
+			blocInfo = { id: bloc.id, name: bloc.name, visaFreeForMembers: bloc.visaFreeForMembers };
+			blocVisaOverride = bloc.visaFreeForMembers;
+		}
+	}
+
 	return {
 		state,
 		regions: stateRegions,
@@ -141,9 +155,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		visaSettings,
 		pendingVisaApplications,
 		activeVisas,
-		isPresident: !!presidency
+		isPresident: !!presidency,
+		blocVisaOverride,
+		blocInfo
 	};
-};
+	};
 
 export const actions: Actions = {
 	sanctionState: async ({ request, locals, params }) => {

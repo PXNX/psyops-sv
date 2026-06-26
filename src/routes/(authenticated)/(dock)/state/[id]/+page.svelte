@@ -14,6 +14,8 @@
 
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentShieldError20Filled from "~icons/fluent/shield-error-20-filled";
+	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
+	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import PageContainer from "$lib/component/PageContainer.svelte";
 	import Logo from "$lib/component/Logo.svelte";
 	import ProfileItem from "$lib/component/ProfileItem.svelte";
@@ -216,6 +218,83 @@
 				</div>
 			</div>
 		</div>
+	{/if}
+
+	<!-- Visa Status -->
+	{#if !data.visa.isResident}
+		<section>
+			{#if data.visa.blocVisaFree}
+				<div class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/20 rounded-xl p-5">
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+							<FluentCheckmark20Filled class="size-6 text-emerald-400" />
+						</div>
+						<div>
+							<h3 class="text-lg font-semibold text-white">Visa-Free</h3>
+							<p class="text-sm text-emerald-300">Bloc membership grants visa-free travel</p>
+						</div>
+					</div>
+				</div>
+			{:else if !data.visa.visaRequired}
+				<div class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/20 rounded-xl p-5">
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+							<FluentCheckmark20Filled class="size-6 text-emerald-400" />
+						</div>
+						<div>
+							<h3 class="text-lg font-semibold text-white">Visa-Free</h3>
+							<p class="text-sm text-gray-400">This state has open borders — no visa required</p>
+						</div>
+					</div>
+				</div>
+			{:else if data.visa.hasActiveVisa && data.visa.activeVisa}
+				<div class="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-500/20 rounded-xl p-5">
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+							<FluentBookCompass24Filled class="size-6 text-blue-400" />
+						</div>
+						<div class="flex-1">
+							<h3 class="text-lg font-semibold text-white">Active Visa</h3>
+							<p class="text-sm text-gray-400">Expires {formatDate(data.visa.activeVisa.expiresAt)}</p>
+						</div>
+						<a href="/visas" class="btn btn-sm bg-blue-600/20 border-blue-500/30 text-blue-300 hover:bg-blue-600/30">
+							View Visas
+						</a>
+					</div>
+				</div>
+			{:else if data.visa.blockedReason}
+				<div class="bg-gradient-to-br from-red-900/30 to-slate-900/30 border border-red-500/20 rounded-xl p-5">
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+							<FluentWarning20Filled class="size-6 text-red-400" />
+						</div>
+						<div class="flex-1">
+							<h3 class="text-lg font-semibold text-white">Visa Unavailable</h3>
+							<p class="text-sm text-red-300">{data.visa.blockedReason}</p>
+						</div>
+					</div>
+				</div>
+			{:else}
+				<div class="bg-gradient-to-br from-purple-900/30 to-indigo-900/30 border border-purple-500/20 rounded-xl p-5">
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-purple-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+							<FluentBookCompass24Filled class="size-6 text-purple-400" />
+						</div>
+						<div class="flex-1">
+							<h3 class="text-lg font-semibold text-white">Visa Required</h3>
+							<p class="text-sm text-gray-400">You need a visa to travel to regions in this state</p>
+						</div>
+						<a
+							href="/state/{data.state.id}/region"
+							class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
+						>
+							<FluentBookCompass24Filled class="size-4" />
+							Request Visa
+						</a>
+					</div>
+				</div>
+			{/if}
+		</section>
 	{/if}
 
 	<!-- Stats Grid -->

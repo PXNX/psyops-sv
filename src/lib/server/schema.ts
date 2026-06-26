@@ -1346,6 +1346,7 @@ export const blocs = pgTable("blocs", {
 	logo: integer("logo").references(() => files.id, { onDelete: "set null" }),
 	color: varchar("color", { length: 7 }).notNull(),
 	description: text("description"),
+	visaFreeForMembers: boolean("visa_free_for_members").default(false).notNull(),
 	capitulated: boolean("capitulated").default(false).notNull(),
 	capitulated_at: timestamp("capitulated_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull()

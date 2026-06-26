@@ -17,6 +17,7 @@
 	import PageContainer from "$lib/component/PageContainer.svelte";
 	import SectionCard from "$lib/component/SectionCard.svelte";
 	import StatCard from "$lib/component/StatCard.svelte";
+	import Modal from "$lib/component/Modal.svelte";
 
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting";
 	import BorderingRegions from "./BorderingRegions.svelte";
@@ -24,6 +25,8 @@
 	import TravelBanner from "./TravelBanner.svelte";
 
 	const { data, form } = $props();
+
+	let showVisaSheet = $state(false);
 
 	const isIndependent = $derived(!data.region.stateId);
 
@@ -169,16 +172,52 @@
 	{/if}
 
 	<!-- Visa Status / Requirements -->
-	{#if data.visa.needsVisa}
+	{#if data.visa.blocVisaFree}
+		<!-- Bloc visa-free: no visa needed -->
+		<div class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/20 rounded-xl p-5">
+			<div class="flex items-center gap-3">
+				<div class="size-12 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentCheckmark20Filled class="size-5 text-emerald-400" />
+				</div>
+				<div>
+					<h2 class="text-lg font-semibold text-white">Visa-Free</h2>
+					<p class="text-sm text-emerald-300">Bloc membership grants visa-free travel to this state</p>
+				</div>
+			</div>
+		</div>
+	{:else if data.visa.blockedReason}
+		<!-- Visa blocked by war or sanctions -->
+		<div class="bg-gradient-to-br from-red-900/30 to-slate-900/30 border border-red-500/20 rounded-xl p-5">
+			<div class="flex items-center gap-3">
+				<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+					<FluentWarning20Filled class="size-5 text-red-400" />
+				</div>
+				<div>
+					<h2 class="text-lg font-semibold text-white">Visa Unavailable</h2>
+					<p class="text-sm text-red-300">{data.visa.blockedReason}</p>
+				</div>
+			</div>
+		</div>
+	{:else if data.visa.needsVisa}
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
 			<div class="flex items-center gap-3">
 				<div class="size-12 bg-purple-600/20 rounded-xl flex items-center justify-center">
 					<FluentBookCompass24Filled class="size-6 text-purple-400" />
 				</div>
-				<div>
+				<div class="flex-1">
 					<h2 class="text-lg font-semibold text-white">Visa Required</h2>
 					<p class="text-sm text-gray-400">You need a visa to work in this state</p>
 				</div>
+				{#if !data.visa.hasActiveVisa && !data.visa.hasPendingApplication && data.visa.settings}
+					<button
+						type="button"
+						onclick={() => (showVisaSheet = true)}
+						class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
+					>
+						<FluentBookCompass24Filled class="size-4" />
+						Request Visa
+					</button>
+				{/if}
 			</div>
 
 			{#if data.visa.hasActiveVisa && data.visa.activeVisa}
@@ -224,73 +263,108 @@
 						</div>
 					</div>
 				</div>
-			{:else}
-				<div class="space-y-3">
-					{#if data.visa.settings}
-						{#if data.visa.settings.visaRequired}
-							<div class="bg-slate-700/30 rounded-lg p-4">
-								<div class="flex items-center justify-between mb-3">
-									<div>
-										<p class="font-semibold text-white">Visa Cost</p>
-										<p class="text-sm text-gray-400">Valid for 2 weeks</p>
-									</div>
-									<div class="text-right">
-										<p class="text-2xl font-bold text-white">
-											${Number(data.visa.settings.visaCost).toLocaleString()}
-										</p>
-										<p class="text-xs text-gray-500">
-											Tax: {data.visa.settings.visaTaxRate}% (${Math.floor(
-												(Number(data.visa.settings.visaCost) * data.visa.settings.visaTaxRate) / 100
-											).toLocaleString()})
-										</p>
-									</div>
-								</div>
-
-								{#if !data.visa.settings.autoApprove}
-									<div class="bg-amber-600/10 border border-amber-500/20 rounded p-3 mb-3">
-										<p class="text-xs text-amber-300 flex items-center gap-2">
-											<FluentClock20Filled class="size-4" />
-											Manual approval required - Foreign Minister will review your application
-										</p>
-									</div>
-								{/if}
-
-								<form method="POST" action="?/purchaseVisa" use:enhance>
-									<button type="submit" class="btn w-full bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2">
-										<FluentBookCompass24Filled class="size-5" />
-										{#if data.visa.settings.autoApprove}
-											Purchase Visa
-										{:else}
-											Apply for Visa
-										{/if}
-									</button>
-								</form>
-							</div>
-						{:else}
-							<div class="bg-emerald-600/10 border border-emerald-500/20 rounded-lg p-4">
-								<div class="flex items-center gap-3 mb-3">
-									<FluentCheckmark20Filled class="size-5 text-emerald-400" />
-									<div>
-										<p class="font-semibold text-white">Open Borders</p>
-										<p class="text-sm text-gray-400">Free entry for all visitors</p>
-									</div>
-								</div>
-
-								<form method="POST" action="?/purchaseVisa" use:enhance>
-									<button
-										type="submit"
-										class="btn w-full bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2"
-									>
-										<FluentCheckmark20Filled class="size-5" />
-										Get Free Visa
-									</button>
-								</form>
-							</div>
-						{/if}
-					{/if}
-				</div>
 			{/if}
 		</div>
+	{/if}
+
+	<!-- Visa Request Bottom Sheet -->
+	{#if data.visa.settings && !data.visa.blocVisaFree}
+		<Modal bind:open={showVisaSheet} title="Request Visa" size="default">
+			<div class="space-y-5">
+				<div class="flex items-center gap-4">
+					<div class="size-14 bg-purple-600/20 rounded-xl flex items-center justify-center">
+						<FluentBookCompass24Filled class="size-7 text-purple-400" />
+					</div>
+					<div>
+						<h3 class="text-xl font-bold text-white">{data.region.stateName}</h3>
+						<p class="text-sm text-gray-400">Travel Visa Application</p>
+					</div>
+				</div>
+
+				{#if data.visa.settings.visaRequired}
+					<div class="bg-slate-700/30 rounded-lg p-4 space-y-3">
+						<div class="flex items-center justify-between">
+							<span class="text-sm text-gray-400">Visa Cost</span>
+							<span class="text-xl font-bold text-white">${Number(data.visa.settings.visaCost).toLocaleString()}</span>
+						</div>
+						<div class="flex items-center justify-between">
+							<span class="text-sm text-gray-400">Tax ({data.visa.settings.visaTaxRate}%)</span>
+							<span class="text-sm text-gray-300"
+								>${Math.floor(
+									(Number(data.visa.settings.visaCost) * data.visa.settings.visaTaxRate) / 100
+								).toLocaleString()}</span
+							>
+						</div>
+						<div class="border-t border-white/10 pt-2 flex items-center justify-between">
+							<span class="text-sm text-gray-400">Valid for</span>
+							<span class="text-sm font-medium text-white">14 days</span>
+						</div>
+					</div>
+
+					{#if !data.visa.settings.autoApprove}
+						<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-3">
+							<p class="text-xs text-amber-300 flex items-center gap-2">
+								<FluentClock20Filled class="size-4" />
+								Manual approval required — Foreign Minister will review your application
+							</p>
+						</div>
+					{/if}
+
+					<form
+						method="POST"
+						action="?/purchaseVisa"
+						use:enhance={() => {
+							return async ({ result }) => {
+								showVisaSheet = false;
+								window.location.reload();
+							};
+						}}
+					>
+						<button
+							type="submit"
+							class="btn w-full bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
+							disabled={data.walletBalance < Number(data.visa.settings.visaCost)}
+						>
+							<FluentBookCompass24Filled class="size-5" />
+							{#if data.visa.settings.autoApprove}
+								Purchase Visa — ${Number(data.visa.settings.visaCost).toLocaleString()}
+							{:else}
+								Apply for Visa
+							{/if}
+						</button>
+						{#if data.walletBalance < Number(data.visa.settings.visaCost)}
+							<p class="text-xs text-red-400 text-center mt-2">
+								Insufficient funds — you have ${data.walletBalance.toLocaleString()}
+							</p>
+						{/if}
+					</form>
+				{:else}
+					<div class="bg-emerald-600/10 border border-emerald-500/20 rounded-lg p-4">
+						<div class="flex items-center gap-3 mb-1">
+							<FluentCheckmark20Filled class="size-5 text-emerald-400" />
+							<p class="font-semibold text-white">Open Borders</p>
+						</div>
+						<p class="text-sm text-gray-400">Free entry for all visitors — valid for 14 days</p>
+					</div>
+
+					<form
+						method="POST"
+						action="?/purchaseVisa"
+						use:enhance={() => {
+							return async ({ result }) => {
+								showVisaSheet = false;
+								window.location.reload();
+							};
+						}}
+					>
+						<button type="submit" class="btn w-full bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
+							<FluentCheckmark20Filled class="size-5" />
+							Get Free Visa
+						</button>
+					</form>
+				{/if}
+			</div>
+		</Modal>
 	{/if}
 
 	<!-- Stats Grid -->

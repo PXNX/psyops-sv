@@ -10,6 +10,7 @@ export const editBlocSchema = v.object({
 	),
 	color: v.pipe(v.string(), v.regex(/^#[0-9A-Fa-f]{6}$/, "Must be a valid hex color")),
 	description: v.optional(v.pipe(v.string(), v.maxLength(SCHEMA_LIMITS.BLOC_DESCRIPTION_MAX, `Description must be less than ${SCHEMA_LIMITS.BLOC_DESCRIPTION_MAX} characters`)), ""),
+	visaFreeForMembers: v.optional(v.boolean(), false),
 	logo: v.optional(
 		v.pipe(
 			v.file("Logo must be a file"),

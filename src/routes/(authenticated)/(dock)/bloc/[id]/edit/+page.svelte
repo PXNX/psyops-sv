@@ -10,6 +10,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
+	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
 
@@ -337,6 +338,31 @@
 			</div>
 		</div>
 
+		<!-- Visa-Free for Members -->
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+			<div class="flex items-center gap-2">
+				<FluentBookCompass24Filled class="size-5 text-emerald-400" />
+				<h2 class="text-lg font-semibold text-white">Visa Policy</h2>
+			</div>
+
+			<label class="flex items-start gap-4 cursor-pointer">
+				<input
+					type="checkbox"
+					name="visaFreeForMembers"
+					bind:checked={$form.visaFreeForMembers}
+					class="toggle toggle-success mt-1"
+					disabled={$submitting}
+				/>
+				<div>
+					<span class="font-medium text-white">Visa-Free Travel for Member States</span>
+					<p class="text-sm text-gray-400 mt-1">
+						When enabled, residents of member states can travel to any other member state without a visa, overriding
+						individual state visa policies.
+					</p>
+				</div>
+			</label>
+		</div>
+
 		<!-- Description -->
 		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
 			<div class="flex items-center gap-2">
@@ -351,8 +377,7 @@
 				rows="6"
 				placeholder="Describe the bloc's purpose, values, and strategic objectives..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-				disabled={$submitting}
-			></textarea>
+				disabled={$submitting}></textarea>
 		</div>
 
 		<!-- Resource Requirements & Submit -->
