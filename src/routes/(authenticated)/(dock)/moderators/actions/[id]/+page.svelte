@@ -107,9 +107,7 @@
 				<div class="card-body">
 					<h3 class="text-sm font-semibold text-gray-400 mb-3">Target User</h3>
 					<a href="/user/{data.action.target.id}" class="flex items-center gap-3 group">
-						<div
-							class="size-16 rounded-xl overflow-hidden ring-2 ring-white/10 group-hover:ring-white/30 transition-all"
-						>
+						<div class="size-16 rounded-xl overflow-hidden transition-all">
 							<Logo
 								src={data.action.target.logoUrl}
 								alt={data.action.target.name}
@@ -137,9 +135,7 @@
 						{data.action.type === "report_action" ? "Reviewed By" : "Moderator"}
 					</h3>
 					<a href="/user/{data.action.moderator.id}" class="flex items-center gap-3 group">
-						<div
-							class="size-16 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all"
-						>
+						<div class="size-16 rounded-xl overflow-hidden transition-all">
 							<Logo
 								src={data.action.moderator.logoUrl}
 								alt={data.action.moderator.name}
@@ -171,9 +167,7 @@
 				<div class="card-body">
 					<h3 class="text-sm font-semibold text-gray-400 mb-3">Reported By</h3>
 					<a href="/user/{data.action.reporter.id}" class="flex items-center gap-3 group">
-						<div
-							class="size-16 rounded-xl overflow-hidden ring-2 ring-white/10 group-hover:ring-white/30 transition-all"
-						>
+						<div class="size-16 rounded-xl overflow-hidden transition-all">
 							<Logo
 								src={data.action.reporter.logoUrl}
 								alt={data.action.reporter.name}

@@ -63,11 +63,13 @@
 
 		<div class="flex items-center gap-3 flex-1 min-w-0">
 			{#if data.newspaper.logoUrl}
-				<div class="size-10 rounded-lg overflow-hidden ring-2 ring-white/10 flex-shrink-0">
+				<div class="size-10 rounded-lg overflow-hidden flex-shrink-0">
 					<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 				</div>
 			{:else}
-				<div class="size-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center ring-2 ring-white/10 flex-shrink-0">
+				<div
+					class="size-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center flex-shrink-0"
+				>
 					<MdiNewspaper class="size-5 text-white" />
 				</div>
 			{/if}
@@ -85,7 +87,8 @@
 	<div class="mb-6">
 		<h2 class="text-2xl font-bold text-white mb-2">Staff Members</h2>
 		<p class="text-gray-400">
-			{data.staff.length} {data.staff.length === 1 ? "member" : "members"} working at this newspaper
+			{data.staff.length}
+			{data.staff.length === 1 ? "member" : "members"} working at this newspaper
 		</p>
 	</div>
 
@@ -121,7 +124,11 @@
 							</h3>
 
 							<!-- Role Badge -->
-							<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium {getRoleBadgeColor(member.role)}">
+							<div
+								class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-medium {getRoleBadgeColor(
+									member.role
+								)}"
+							>
 								<svelte:component this={getRoleIcon(member.role)} class="size-3.5" />
 								{formatRole(member.role)}
 							</div>

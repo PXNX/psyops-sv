@@ -134,10 +134,7 @@
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div class="flex items-center gap-3">
-		<a
-			href="/settings"
-			class="btn btn-sm btn-ghost gap-2 text-gray-400 hover:text-white"
-		>
+		<a href="/settings" class="btn btn-sm btn-ghost gap-2 text-gray-400 hover:text-white">
 			<FluentArrowLeft20Filled class="size-4" />
 			Back
 		</a>
@@ -226,11 +223,7 @@
 					{:else}
 						<div class="relative">
 							<div class="flex items-center justify-center p-8 bg-slate-900/50">
-								<img
-									src={previewUrl}
-									alt="Profile picture preview"
-									class="size-32 object-cover rounded-full ring-4 ring-white/10"
-								/>
+								<img src={previewUrl} alt="Profile picture preview" class="size-32 object-cover rounded-full" />
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
@@ -302,8 +295,7 @@
 					maxlength="500"
 					class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 					class:input-error={$errors.bio}
-					disabled={$submitting || !canEdit}
-				></textarea>
+					disabled={$submitting || !canEdit}></textarea>
 				{#if $errors.bio}
 					<p class="text-xs text-red-400 mt-1">{$errors.bio}</p>
 				{:else}
@@ -330,13 +322,15 @@
 				{/if}
 			</button>
 		</div>
-		</form>
+	</form>
 
 	<!-- Telegram Connection -->
 	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
 		<div class="flex items-center gap-2">
 			<svg class="size-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-				<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z" />
+				<path
+					d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
+				/>
 			</svg>
 			<h2 class="text-lg font-semibold text-white">Telegram Account</h2>
 		</div>
@@ -351,16 +345,18 @@
 					<div class="badge badge-success">Connected</div>
 				</div>
 				<form method="POST" action="?/disconnectTelegram" use:enhance>
-					<button type="submit" class="btn btn-sm btn-outline btn-error w-full">
-						Disconnect Telegram
-					</button>
+					<button type="submit" class="btn btn-sm btn-outline btn-error w-full"> Disconnect Telegram </button>
 				</form>
 			</div>
 		{:else}
-			<p class="text-sm text-gray-400">Connect your Telegram account to receive notifications and use Telegram-based features.</p>
+			<p class="text-sm text-gray-400">
+				Connect your Telegram account to receive notifications and use Telegram-based features.
+			</p>
 			<a href="/auth/login/telegram?next=/settings/profile" class="btn btn-primary w-full gap-2">
 				<svg class="size-5" fill="currentColor" viewBox="0 0 24 24">
-					<path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z" />
+					<path
+						d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
+					/>
 				</svg>
 				Connect Telegram Account
 			</a>

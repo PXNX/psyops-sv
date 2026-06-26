@@ -83,7 +83,7 @@
 
 					<!-- Region Logo -->
 					<div class="absolute bottom-0 left-4 translate-y-1/2">
-						<div class="ring-4 ring-slate-800 rounded-xl">
+						<div class="rounded-xl">
 							<Logo
 								src="/coats/{region.id}.svg"
 								alt={region.name}

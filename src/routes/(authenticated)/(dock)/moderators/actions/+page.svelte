@@ -178,9 +178,7 @@
 							<div class="flex items-center gap-3">
 								<div class="text-xs text-gray-500 font-medium min-w-[60px]">Target:</div>
 								<a href="/user/{action.target.id}" class="flex items-center gap-2 group">
-									<div
-										class="size-8 rounded-lg overflow-hidden ring-2 ring-white/5 group-hover:ring-white/20 transition-all"
-									>
+									<div class="size-8 rounded-lg overflow-hidden transition-all">
 										<Logo
 											src={action.target.logoUrl}
 											alt={action.target.name}
@@ -199,9 +197,7 @@
 							<div class="flex items-center gap-3">
 								<div class="text-xs text-gray-500 font-medium min-w-[60px]">Moderator:</div>
 								<a href="/user/{action.moderator.id}" class="flex items-center gap-2 group">
-									<div
-										class="size-8 rounded-lg overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all"
-									>
+									<div class="size-8 rounded-lg overflow-hidden transition-all">
 										<Logo
 											src={action.moderator.logoUrl}
 											alt={action.moderator.name}

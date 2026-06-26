@@ -90,7 +90,7 @@
 
 	const formatDate = (date: string) => {
 		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 	};
 
@@ -114,7 +114,7 @@
 			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-2xl"></div>
 
 			<div class="relative z-10 flex flex-col items-center space-y-3">
-				<div class="ring-4 ring-white/10 rounded-full relative group">
+				<div class="rounded-full relative group">
 					{#if data.user.logo}
 						<div class="size-24 rounded-full overflow-hidden bg-base-200">
 							<img src={data.user.logo} alt={data.user.name || "User logo"} class="w-full h-full object-cover" />
@@ -378,7 +378,10 @@
 				{#each data.career.partyMemberships as membership}
 					<div class="flex gap-3">
 						<div class="flex flex-col items-center">
-							<div class="size-10 rounded-full flex items-center justify-center" style="background-color: {membership.partyColor}20">
+							<div
+								class="size-10 rounded-full flex items-center justify-center"
+								style="background-color: {membership.partyColor}20"
+							>
 								<FluentFlag20Filled class="size-5" style="color: {membership.partyColor}" />
 							</div>
 							<div class="w-px flex-1 bg-base-300 mt-2"></div>
@@ -387,7 +390,7 @@
 							<p class="text-sm font-semibold text-white">
 								<span class="capitalize">{membership.role}</span> of
 								<a href="/party/{membership.partyId}" class="hover:underline" style="color: {membership.partyColor}">
-									{membership.partyName}{membership.partyAbbreviation ? ` (${membership.partyAbbreviation})` : ''}
+									{membership.partyName}{membership.partyAbbreviation ? ` (${membership.partyAbbreviation})` : ""}
 								</a>
 							</p>
 							<a href="/state/{membership.stateId}" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">
@@ -462,8 +465,7 @@
 						class="textarea textarea-bordered h-24"
 						placeholder="Describe why this person deserves this medal..."
 						bind:value={medalForm.reason}
-						required
-					></textarea>
+						required></textarea>
 				</div>
 
 				<div class="modal-action">

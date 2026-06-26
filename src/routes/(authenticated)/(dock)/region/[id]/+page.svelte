@@ -77,7 +77,7 @@
 			<Logo
 				src="/coats/{data.region.id}.svg"
 				alt={data.region.name}
-				class="size-24 rounded-2xl ring-2 ring-white/10 shadow-2xl"
+				class="size-24 rounded-2xl shadow-2xl"
 				placeholderIcon={FluentShield20Filled}
 				placeholderGradient="from-purple-500 to-blue-500"
 			/>
