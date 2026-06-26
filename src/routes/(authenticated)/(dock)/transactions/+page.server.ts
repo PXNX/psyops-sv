@@ -1,7 +1,8 @@
 // src/routes/(authenticated)/(dock)/transactions/+page.server.ts
 import { db } from "$lib/server/db";
-import { transactionHistory, userProfiles, accounts, userWallets } from "$lib/server/schema";
-import { eq, sql, desc, gte, and } from "drizzle-orm";
+import { transactionHistory, userProfiles, accounts, userWallets, factories, companies, states, files } from "$lib/server/schema";
+import { eq, sql, desc, gte, and, inArray } from "drizzle-orm";
+import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import type { PageServerLoad } from "./$types";
 
 const PAGE_SIZE = 20;
@@ -35,7 +36,8 @@ export const load: PageServerLoad = async ({ locals, url }) => {
             metadata: transactionHistory.metadata,
             createdAt: transactionHistory.createdAt,
             // Related user info (for transfers)
-            relatedUserName: userProfiles.name
+            relatedUserName: userProfiles.name,
+            relatedUserLogo: userProfiles.logo
         })
         .from(transactionHistory)
         .leftJoin(userProfiles, eq(transactionHistory.relatedUserId, userProfiles.accountId))
@@ -43,6 +45,65 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         .orderBy(desc(transactionHistory.createdAt))
         .limit(PAGE_SIZE)
         .offset(offset);
+
+    // Batch-resolve entity names and logos for related entities
+    const factoryIds = [...new Set(transactions.filter(t => t.relatedEntityType === "factory" && t.relatedEntityId).map(t => t.relatedEntityId!))];
+    const stateIds = [...new Set(transactions.filter(t => t.relatedEntityType === "state" && t.relatedEntityId).map(t => t.relatedEntityId!))];
+    const companyIds = [...new Set(transactions.filter(t => t.relatedEntityType === "company" && t.relatedEntityId).map(t => t.relatedEntityId!))];
+
+    const [factoryMap, stateMap, companyMap] = await Promise.all([
+        factoryIds.length > 0
+            ? db.select({ id: factories.id, name: factories.name, companyId: factories.companyId, companyName: companies.name, companyLogo: companies.logo })
+                .from(factories)
+                .leftJoin(companies, eq(factories.companyId, companies.id))
+                .where(inArray(factories.id, factoryIds))
+                .then(rows => new Map(rows.map(r => [r.id, r])))
+            : Promise.resolve(new Map<number, { id: number; name: string; companyId: number; companyName: string | null; companyLogo: number | null }>()),
+        stateIds.length > 0
+            ? db.select({ id: states.id, name: states.name, logo: states.logo })
+                .from(states)
+                .where(inArray(states.id, stateIds))
+                .then(rows => new Map(rows.map(r => [r.id, r])))
+            : Promise.resolve(new Map<number, { id: number; name: string; logo: number | null }>()),
+        companyIds.length > 0
+            ? db.select({ id: companies.id, name: companies.name, logo: companies.logo })
+                .from(companies)
+                .where(inArray(companies.id, companyIds))
+                .then(rows => new Map(rows.map(r => [r.id, r])))
+            : Promise.resolve(new Map<number, { id: number; name: string; logo: number | null }>()),
+    ]);
+
+    // Collect all file IDs that need signed URLs
+    const fileIds = new Set<number>();
+    for (const tx of transactions) {
+        if (tx.relatedUserLogo) fileIds.add(tx.relatedUserLogo);
+    }
+    for (const f of factoryMap.values()) {
+        if (f.companyLogo) fileIds.add(f.companyLogo);
+    }
+    for (const s of stateMap.values()) {
+        if (s.logo) fileIds.add(s.logo);
+    }
+    for (const c of companyMap.values()) {
+        if (c.logo) fileIds.add(c.logo);
+    }
+
+    // Batch-fetch file keys and resolve signed URLs
+    const fileUrlMap = new Map<number, string>();
+    if (fileIds.size > 0) {
+        const fileRows = await db.select({ id: files.id, key: files.key }).from(files).where(inArray(files.id, [...fileIds]));
+        const urlResults = await Promise.all(fileRows.map(async (f) => {
+            try {
+                const url = await getSignedDownloadUrl(f.key);
+                return { id: f.id, url };
+            } catch {
+                return { id: f.id, url: null };
+            }
+        }));
+        for (const r of urlResults) {
+            if (r.url) fileUrlMap.set(r.id, r.url);
+        }
+    }
 
     // Get current balance
     const [wallet] = await db
@@ -95,30 +156,78 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         }
     }
 
+    // Resolve entity display info per transaction
+    function resolveEntity(tx: typeof transactions[number]): { name: string | null; avatarUrl: string | null; href: string | null } {
+        const entityType = tx.relatedEntityType;
+        const entityId = tx.relatedEntityId;
+
+        if (entityType === "factory" && entityId) {
+            const factory = factoryMap.get(entityId);
+            if (factory) {
+                return {
+                    name: factory.name,
+                    avatarUrl: factory.companyLogo ? fileUrlMap.get(factory.companyLogo) ?? null : null,
+                    href: `/factory/${entityId}`
+                };
+            }
+        }
+        if (entityType === "state" && entityId) {
+            const state = stateMap.get(entityId);
+            if (state) {
+                return {
+                    name: state.name,
+                    avatarUrl: state.logo ? fileUrlMap.get(state.logo) ?? null : null,
+                    href: `/state/${entityId}`
+                };
+            }
+        }
+        if (entityType === "company" && entityId) {
+            const company = companyMap.get(entityId);
+            if (company) {
+                return {
+                    name: company.name,
+                    avatarUrl: company.logo ? fileUrlMap.get(company.logo) ?? null : null,
+                    href: `/company/${entityId}`
+                };
+            }
+        }
+        if (tx.relatedUserId) {
+            return {
+                name: tx.relatedUserName || "Unknown User",
+                avatarUrl: tx.relatedUserLogo ? fileUrlMap.get(tx.relatedUserLogo) ?? null : null,
+                href: `/user/${tx.relatedUserId}`
+            };
+        }
+        return { name: null, avatarUrl: null, href: null };
+    }
+
     // Format transactions for display
-    const formattedTransactions = transactions.map((tx) => ({
-        id: tx.id,
-        type: tx.transactionType,
-        amount: Number(tx.amount),
-        balanceAfter: Number(tx.balanceAfter),
-        description: tx.description,
-        relatedUser: tx.relatedUserId
-            ? {
-                id: tx.relatedUserId,
-                name: tx.relatedUserName || "Unknown User"
-            }
-            : null,
-        relatedEntity: tx.relatedEntityType
-            ? {
-                type: tx.relatedEntityType,
-                id: tx.relatedEntityId
-            }
-            : null,
-        metadata: tx.metadata ? JSON.parse(tx.metadata) : null,
-        createdAt: tx.createdAt,
-        // Determine if this was income or expense
-        isIncome: Number(tx.amount) > 0
-    }));
+    const formattedTransactions = transactions.map((tx) => {
+        const entity = resolveEntity(tx);
+        return {
+            id: tx.id,
+            type: tx.transactionType,
+            amount: Number(tx.amount),
+            balanceAfter: Number(tx.balanceAfter),
+            description: tx.description,
+            relatedUser: tx.relatedUserId
+                ? {
+                    id: tx.relatedUserId,
+                    name: tx.relatedUserName || "Unknown User"
+                }
+                : null,
+            relatedEntity: tx.relatedEntityType
+                ? {
+                    type: tx.relatedEntityType,
+                    id: tx.relatedEntityId
+                }
+                : null,
+            entity,
+            metadata: tx.metadata ? JSON.parse(tx.metadata) : null,
+            createdAt: tx.createdAt,
+            isIncome: Number(tx.amount) > 0
+        };
+    });
 
     return {
         transactions: formattedTransactions,
