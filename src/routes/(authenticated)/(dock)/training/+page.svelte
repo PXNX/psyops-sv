@@ -25,6 +25,15 @@
 	let disbandModalOpen = $state(false);
 	let unitToDisband = $state<any>(null);
 
+	const trainingDisabled = $derived(data.isIndependentRegion || data.isTraveling);
+	const trainingDisabledReason = $derived(
+		data.isIndependentRegion
+			? "You live in an independent region. Join or create a state through a political party before training military units."
+			: data.isTraveling
+				? "You cannot train units while traveling."
+				: ""
+	);
+
 	function confirmDisband(unit: any) {
 		unitToDisband = unit;
 		disbandModalOpen = true;
@@ -143,11 +152,17 @@
 	{/snippet}
 	<PageHeader
 		title="Military"
-		subtitle="{data.residence.stateName} • {data.units.filter((u) => !u.isTraining)
+		subtitle="{data.residence.stateName ?? 'Independent Region'} • {data.units.filter((u) => !u.isTraining)
 			.length} Active • {trainingUnits.length} Training"
 		icon={FluentEmojiMilitaryHelmet}
 		actions={headerActions}
 	/>
+
+	{#if trainingDisabled}
+		<div class="mb-6 p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 backdrop-blur-sm">
+			<p class="text-sm text-amber-300 font-medium">{trainingDisabledReason}</p>
+		</div>
+	{/if}
 
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<!-- Active Units - Main Focus -->
@@ -257,9 +272,11 @@
 							type="button"
 							class="relative p-3 rounded-lg border-2 transition-all duration-200 overflow-hidden group {isSelected
 								? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
-								: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'}"
+								: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'} {trainingDisabled
+								? 'opacity-50 cursor-not-allowed'
+								: ''}"
 							onclick={() => (selectedTemplate = template)}
-							disabled={isSubmitting}
+							disabled={isSubmitting || trainingDisabled}
 						>
 							<!-- Gradient Background -->
 							<div
@@ -363,10 +380,10 @@
 							<input type="hidden" name="unitType" value={selectedTemplate.unitType} />
 							<button
 								type="submit"
-								disabled={isSubmitting || !canAfford(selectedTemplate)}
+								disabled={isSubmitting || !canAfford(selectedTemplate) || trainingDisabled}
 								class="btn w-full gap-2 transition-transform hover:scale-105"
-								class:btn-primary={canAfford(selectedTemplate)}
-								class:btn-disabled={!canAfford(selectedTemplate)}
+								class:btn-primary={canAfford(selectedTemplate) && !trainingDisabled}
+								class:btn-disabled={!canAfford(selectedTemplate) || trainingDisabled}
 							>
 								{#if isSubmitting}
 									<span class="loading loading-spinner loading-sm"></span>
