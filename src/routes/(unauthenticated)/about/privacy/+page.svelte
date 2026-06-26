@@ -25,7 +25,7 @@
 					class="absolute inset-0 bg-gradient-to-br from-pink-500 via-purple-500 to-blue-500 rounded-full blur-2xl opacity-50"
 				></div>
 				<div
-					class="relative size-32 bg-gradient-to-br from-pink-600 via-purple-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl ring-4 ring-white/10"
+					class="relative size-32 bg-gradient-to-br from-pink-600 via-purple-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl"
 				>
 					<FluentPersonShield24Regular class="size-16 text-white" />
 				</div>

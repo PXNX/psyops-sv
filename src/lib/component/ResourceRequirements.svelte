@@ -53,10 +53,13 @@
 	<div class="bg-slate-900/30 rounded-lg p-2.5 md:p-3 space-y-1.5 border border-slate-700/30">
 		{#each requirements as req}
 			<div class="flex justify-between text-xs items-center">
-				<span class="text-slate-400 flex items-center gap-1.5">
+				<a
+					href="/market/{req.resource}"
+					class="text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
+				>
 					<req.IconComponent class="size-3.5 {req.isCurrency ? 'text-emerald-400' : ''}" />
 					<span class="capitalize">{req.resource}</span>
-				</span>
+				</a>
 				<span class="font-mono text-xs" class:text-white={req.hasEnough} class:text-red-400={!req.hasEnough}>
 					{req.needed.toLocaleString()}
 					<span class="text-slate-600">/ {req.available.toLocaleString()}</span>
@@ -69,10 +72,4 @@
 			</div>
 		{/each}
 	</div>
-
-	{#if !allRequirementsMet}
-		<div class="px-2.5 md:px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
-			<span class="text-xs text-red-400">⚠️ Insufficient resources</span>
-		</div>
-	{/if}
 </div>

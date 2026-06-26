@@ -39,7 +39,9 @@
 <PageContainer maxWidth="7xl">
 	<!-- Header -->
 	<div class="relative">
-		<div class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-cyan-600/10 rounded-2xl blur-3xl"></div>
+		<div
+			class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-cyan-600/10 rounded-2xl blur-3xl"
+		></div>
 		<div class="relative">
 			<h1 class="text-3xl md:text-4xl font-bold mb-3 md:mb-4">Companies</h1>
 			<div class="flex flex-wrap gap-2 md:gap-3">
@@ -73,10 +75,12 @@
 			class="block relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-purple-950/40 to-blue-950/30 border border-purple-500/30 p-4 md:p-6
 			       hover:border-purple-400/50 transition-all duration-300 group"
 		>
-			<div class="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+			<div
+				class="absolute inset-0 bg-gradient-to-br from-purple-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+			></div>
 
 			<div class="relative flex flex-col sm:flex-row items-start gap-4">
-				<div class="ring-4 ring-purple-500/20 rounded-xl shrink-0">
+				<div class="rounded-xl shrink-0">
 					<Logo
 						src={data.userCompany.logo}
 						alt={data.userCompany.name}
@@ -95,11 +99,13 @@
 					<div class="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-gray-400">
 						<span class="flex items-center gap-1.5">
 							<FluentFactory20Filled class="size-4 text-purple-400" />
-							{data.userCompany.factoryCount} {data.userCompany.factoryCount === 1 ? 'factory' : 'factories'}
+							{data.userCompany.factoryCount}
+							{data.userCompany.factoryCount === 1 ? "factory" : "factories"}
 						</span>
 						<span class="flex items-center gap-1.5">
 							<FluentPeople20Filled class="size-4 text-blue-400" />
-							{data.userCompany.workerCount} {data.userCompany.workerCount === 1 ? 'worker' : 'workers'}
+							{data.userCompany.workerCount}
+							{data.userCompany.workerCount === 1 ? "worker" : "workers"}
 						</span>
 						<span class="flex items-center gap-1.5">
 							<FluentCalendar20Filled class="size-4 text-gray-500" />
@@ -108,16 +114,23 @@
 					</div>
 				</div>
 
-				<FluentArrowRight20Filled class="size-5 md:size-6 text-purple-400 group-hover:translate-x-1 transition-transform shrink-0 hidden sm:block" />
+				<FluentArrowRight20Filled
+					class="size-5 md:size-6 text-purple-400 group-hover:translate-x-1 transition-transform shrink-0 hidden sm:block"
+				/>
 			</div>
 		</a>
 	{/if}
 
 	<!-- Filters -->
-	<div class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-5">
+	<div
+		class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-5"
+	>
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
 			<div>
-				<label for="search" class="flex items-center gap-1.5 text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+				<label
+					for="search"
+					class="flex items-center gap-1.5 text-xs font-medium text-gray-400 uppercase tracking-wide mb-2"
+				>
 					<FluentSearch20Filled class="size-3.5" /> Search
 				</label>
 				<input
@@ -130,7 +143,10 @@
 			</div>
 
 			<div>
-				<label for="state" class="flex items-center gap-1.5 text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">
+				<label
+					for="state"
+					class="flex items-center gap-1.5 text-xs font-medium text-gray-400 uppercase tracking-wide mb-2"
+				>
 					<FluentLocation20Filled class="size-3.5" /> State
 				</label>
 				<select
@@ -160,7 +176,9 @@
 					class="block relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10
 					       hover:border-purple-500/30 transition-all duration-300 group"
 				>
-					<div class="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+					<div
+						class="absolute inset-0 bg-gradient-to-br from-purple-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+					></div>
 
 					<div class="relative p-4 md:p-5">
 						<div class="flex items-center gap-3 md:gap-4">
@@ -174,7 +192,7 @@
 
 							<div class="flex-1 min-w-0">
 								<h3 class="font-semibold text-white text-base md:text-lg truncate">{company.name}</h3>
-								<p class="text-xs md:text-sm text-gray-400 truncate">{company.ownerName || 'Unknown owner'}</p>
+								<p class="text-xs md:text-sm text-gray-400 truncate">{company.ownerName || "Unknown owner"}</p>
 							</div>
 
 							<div class="hidden sm:flex items-center gap-4 md:gap-6 shrink-0">
@@ -189,12 +207,14 @@
 								{#if company.states.length > 0}
 									<div class="text-center">
 										<p class="text-lg md:text-xl font-bold text-white">{company.states.length}</p>
-										<p class="text-xs text-gray-500">{company.states.length === 1 ? 'State' : 'States'}</p>
+										<p class="text-xs text-gray-500">{company.states.length === 1 ? "State" : "States"}</p>
 									</div>
 								{/if}
 							</div>
 
-							<FluentArrowRight20Filled class="size-5 text-gray-600 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all shrink-0 hidden md:block" />
+							<FluentArrowRight20Filled
+								class="size-5 text-gray-600 group-hover:text-purple-400 group-hover:translate-x-0.5 transition-all shrink-0 hidden md:block"
+							/>
 						</div>
 
 						<!-- Mobile stats row -->
@@ -210,7 +230,8 @@
 							{#if company.states.length > 0}
 								<span class="flex items-center gap-1 text-xs text-gray-400">
 									<FluentLocation20Filled class="size-3.5 text-green-400" />
-									{company.states.length} {company.states.length === 1 ? 'state' : 'states'}
+									{company.states.length}
+									{company.states.length === 1 ? "state" : "states"}
 								</span>
 							{/if}
 							<span class="ml-auto text-xs text-gray-500">
@@ -222,7 +243,9 @@
 			{/each}
 		</div>
 	{:else}
-		<div class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-10 md:p-16 text-center">
+		<div
+			class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-10 md:p-16 text-center"
+		>
 			<FluentBuilding20Filled class="size-12 md:size-16 text-gray-600 mx-auto mb-4" />
 			<h3 class="text-lg font-semibold text-white mb-2">No Companies Found</h3>
 			<p class="text-sm text-gray-400">
@@ -240,6 +263,6 @@
 					Be the first to register
 				</a>
 			{/if}
-			</div>
-			{/if}
-			</PageContainer>
+		</div>
+	{/if}
+</PageContainer>

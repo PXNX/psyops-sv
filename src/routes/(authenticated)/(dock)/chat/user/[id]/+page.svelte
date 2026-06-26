@@ -76,8 +76,8 @@
 
 		groupedMessages.forEach((group) => {
 			const msgDate = new Date(group.firstMessageTime);
-			const p = (n: number) => String(n).padStart(2, '0');
-		const dateStr = `${p(msgDate.getDate())}.${p(msgDate.getMonth() + 1)}.${msgDate.getFullYear()}`;
+			const p = (n: number) => String(n).padStart(2, "0");
+			const dateStr = `${p(msgDate.getDate())}.${p(msgDate.getMonth() + 1)}.${msgDate.getFullYear()}`;
 
 			if (!currentDay || currentDay.date !== dateStr) {
 				if (currentDay) days.push(currentDay);
@@ -133,7 +133,7 @@
 
 	function formatGroupTime(dateString: string) {
 		const date = new Date(dateString);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
 	}
 
@@ -145,7 +145,7 @@
 
 		if (date.toDateString() === today.toDateString()) return "Today";
 		if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-		const p = (n: number) => String(n).padStart(2, '0');
+		const p = (n: number) => String(n).padStart(2, "0");
 		return `${p(date.getDate())}.${p(date.getMonth() + 1)}.${date.getFullYear()}`;
 	}
 
@@ -255,13 +255,19 @@
 		<!-- Header -->
 		<div class="bg-slate-900/80 backdrop-blur-sm border-b border-white/10 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
 			<div class="flex items-center gap-2 md:gap-3">
-				<button onclick={() => goto("/chat")} class="btn btn-sm btn-ghost text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0">
+				<button
+					onclick={() => goto("/chat")}
+					class="btn btn-sm btn-ghost text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0"
+				>
 					<FluentArrowLeft20Filled class="size-5" />
 				</button>
 
-				<a href="/user/{data.otherUser.id}" class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+				<a
+					href="/user/{data.otherUser.id}"
+					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+				>
 					{#if data.otherUser.logo}
-						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full ring-2 ring-slate-700/50" />
+						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
 						<div class="size-11 md:size-10 rounded-full bg-slate-700/80 flex items-center justify-center">
 							<FluentImageOff20Filled class="size-6 md:size-5 text-gray-500" />
@@ -397,13 +403,19 @@
 		<!-- Header -->
 		<div class="bg-slate-900/80 backdrop-blur-sm border-b border-white/10 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
 			<div class="flex items-center gap-2 md:gap-3">
-				<button onclick={() => goto("/chat")} class="btn btn-sm btn-ghost text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0">
+				<button
+					onclick={() => goto("/chat")}
+					class="btn btn-sm btn-ghost text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0"
+				>
 					<FluentArrowLeft20Filled class="size-5" />
 				</button>
 
-				<a href="/user/{data.otherUser.id}" class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity">
+				<a
+					href="/user/{data.otherUser.id}"
+					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
+				>
 					{#if data.otherUser.logo}
-						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full ring-2 ring-slate-700/50" />
+						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
 						<div class="size-11 md:size-10 rounded-full bg-slate-700/80 flex items-center justify-center">
 							<FluentImageOff20Filled class="size-6 md:size-5 text-gray-500" />
@@ -418,7 +430,10 @@
 
 				<!-- Header Menu Dropdown -->
 				<div class="dropdown dropdown-end">
-					<label tabindex="0" class="btn btn-ghost btn-sm btn-circle text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0">
+					<label
+						tabindex="0"
+						class="btn btn-ghost btn-sm btn-circle text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0"
+					>
 						<FluentMoreVertical20Filled class="size-5" />
 					</label>
 					<ul
@@ -457,7 +472,9 @@
 					<!-- Day Divider -->
 					<div class="flex items-center gap-3 my-6">
 						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-						<span class="text-xs text-gray-400 font-semibold px-4 py-1.5 bg-slate-800/80 rounded-full border border-white/5 shadow-lg">
+						<span
+							class="text-xs text-gray-400 font-semibold px-4 py-1.5 bg-slate-800/80 rounded-full border border-white/5 shadow-lg"
+						>
 							{formatDayDivider(day.date)}
 						</span>
 						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
@@ -469,7 +486,11 @@
 							<div class="chat chat-end mb-3 md:mb-4">
 								<div class="flex flex-col gap-1 items-end max-w-[85%] md:max-w-md ml-auto">
 									{#each group.messages as msg}
-										<div class="chat-bubble bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg {msg.isOptimistic ? 'opacity-70' : ''} text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-br-md break-words">
+										<div
+											class="chat-bubble bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg {msg.isOptimistic
+												? 'opacity-70'
+												: ''} text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-br-md break-words"
+										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
@@ -611,8 +632,7 @@
 							e.preventDefault();
 							e.currentTarget.form?.requestSubmit();
 						}
-					}}
-				></textarea>
+					}}></textarea>
 				<button
 					type="submit"
 					class="btn bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0 text-white gap-2 min-w-[80px] md:min-w-[100px] self-end shadow-lg shadow-blue-600/20 rounded-xl"
@@ -628,7 +648,7 @@
 				</button>
 			</form>
 			<p class="text-xs text-gray-500 mt-2 px-1">
-				<span class="{message.length > 450 ? 'text-orange-400 font-semibold' : ''}">{message.length}/500</span>
+				<span class={message.length > 450 ? "text-orange-400 font-semibold" : ""}>{message.length}/500</span>
 				<span class="hidden md:inline"> • Press Enter to send, Shift+Enter for new line</span>
 			</p>
 		</div>

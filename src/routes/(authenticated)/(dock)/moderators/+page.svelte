@@ -55,9 +55,7 @@
 						<!-- Avatar -->
 						<a href="/user/{moderator.id}" class="shrink-0">
 							<div class="relative">
-								<div
-									class="size-16 rounded-xl overflow-hidden ring-2 ring-purple-500/30 hover:ring-purple-500/50 transition-all"
-								>
+								<div class="size-16 rounded-xl overflow-hidden transition-all">
 									<Logo
 										src={moderator.logoUrl}
 										alt={moderator.name}

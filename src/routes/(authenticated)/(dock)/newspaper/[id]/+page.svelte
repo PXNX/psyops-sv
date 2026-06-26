@@ -17,19 +17,25 @@
 
 	function formatDate(date: Date) {
 		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 	}
 </script>
 
 <svelte:head>
 	<title>{data.newspaper.name}</title>
-	<meta name="description" content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`} />
+	<meta
+		name="description"
+		content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`}
+	/>
 
 	<!-- Open Graph -->
 	<meta property="og:type" content="article" />
 	<meta property="og:title" content={data.newspaper.name} />
-	<meta property="og:description" content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`} />
+	<meta
+		property="og:description"
+		content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`}
+	/>
 	{#if data.newspaper.logoUrl}
 		<meta property="og:image" content={data.newspaper.logoUrl} />
 	{/if}
@@ -37,7 +43,10 @@
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content={data.newspaper.name} />
-	<meta name="twitter:description" content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`} />
+	<meta
+		name="twitter:description"
+		content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`}
+	/>
 	{#if data.newspaper.logoUrl}
 		<meta name="twitter:image" content={data.newspaper.logoUrl} />
 	{/if}
@@ -45,19 +54,26 @@
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Hero Header -->
-	<div class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-purple-900/30">
-		<div class="absolute inset-0 opacity-10" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.1) 35px, rgba(255,255,255,0.1) 70px);"></div>
+	<div
+		class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-purple-900/30"
+	>
+		<div
+			class="absolute inset-0 opacity-10"
+			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.1) 35px, rgba(255,255,255,0.1) 70px);"
+		></div>
 		<div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div>
 		<div class="relative z-10 p-6 sm:p-8">
 			<div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
 				<!-- Logo -->
-				<div class="ring-4 ring-white/10 rounded-2xl shrink-0">
+				<div class="rounded-2xl shrink-0">
 					{#if data.newspaper.logoUrl}
 						<div class="size-20 sm:size-24 rounded-2xl overflow-hidden">
 							<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 						</div>
 					{:else}
-						<div class="size-20 sm:size-24 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+						<div
+							class="size-20 sm:size-24 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+						>
 							<MdiNewspaper class="size-10 sm:size-12 text-white" />
 						</div>
 					{/if}
@@ -75,11 +91,13 @@
 						</span>
 						<span class="flex items-center gap-1">
 							<FluentPeople20Filled class="size-3.5" />
-							{data.staffCount} {data.staffCount === 1 ? 'staff' : 'staff members'}
+							{data.staffCount}
+							{data.staffCount === 1 ? "staff" : "staff members"}
 						</span>
 						<span class="flex items-center gap-1">
 							<FluentBell20Filled class="size-3.5" />
-							{data.subscriberCount} {data.subscriberCount === 1 ? 'subscriber' : 'subscribers'}
+							{data.subscriberCount}
+							{data.subscriberCount === 1 ? "subscriber" : "subscribers"}
 						</span>
 					</div>
 				</div>
@@ -100,7 +118,10 @@
 			/>
 			<div>
 				<p class="text-xs text-gray-500 uppercase tracking-wide font-medium">Owner</p>
-				<a href="/user/{data.owner.id}" class="text-white font-semibold hover:text-purple-400 transition-colors text-sm">
+				<a
+					href="/user/{data.owner.id}"
+					class="text-white font-semibold hover:text-purple-400 transition-colors text-sm"
+				>
 					{data.owner.name}
 				</a>
 			</div>
@@ -108,21 +129,27 @@
 
 		<!-- Action buttons -->
 		<div class="flex flex-wrap gap-2 items-center">
-			<form method="POST" action="?/{data.isSubscribed ? 'unsubscribe' : 'subscribe'}" use:enhance={() => {
-				isSubscribing = true;
-				return async ({ update }) => {
-					await update();
-					isSubscribing = false;
-				};
-			}}>
+			<form
+				method="POST"
+				action="?/{data.isSubscribed ? 'unsubscribe' : 'subscribe'}"
+				use:enhance={() => {
+					isSubscribing = true;
+					return async ({ update }) => {
+						await update();
+						isSubscribing = false;
+					};
+				}}
+			>
 				<button
 					type="submit"
-					class="btn btn-sm {data.isSubscribed ? 'bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300' : 'bg-blue-600 hover:bg-blue-500 border-0 text-white'} gap-2"
+					class="btn btn-sm {data.isSubscribed
+						? 'bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300'
+						: 'bg-blue-600 hover:bg-blue-500 border-0 text-white'} gap-2"
 					disabled={isSubscribing}
 				>
 					{#if isSubscribing}
 						<span class="loading loading-spinner loading-xs"></span>
-						{data.isSubscribed ? 'Unsubscribing...' : 'Subscribing...'}
+						{data.isSubscribed ? "Unsubscribing..." : "Subscribing..."}
 					{:else if data.isSubscribed}
 						<FluentBellOff20Filled class="size-4" />
 						Unsubscribe
@@ -133,20 +160,29 @@
 				</button>
 			</form>
 
-			<a class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2" href="/newspaper/{data.newspaper.id}/staff">
+			<a
+				class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2"
+				href="/newspaper/{data.newspaper.id}/staff"
+			>
 				<FluentPeople20Filled class="size-4" />
 				Staff
 			</a>
 
 			{#if data.userRole === "owner" || data.userRole === "editor"}
-				<a class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2" href="/newspaper/{data.newspaper.id}/statistics">
+				<a
+					class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2"
+					href="/newspaper/{data.newspaper.id}/statistics"
+				>
 					<FluentChartMultiple20Regular class="size-4" />
 					Statistics
 				</a>
 			{/if}
 
 			{#if data.userRole === "owner"}
-				<a class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2" href="/newspaper/{data.newspaper.id}/edit">
+				<a
+					class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2"
+					href="/newspaper/{data.newspaper.id}/edit"
+				>
 					<FluentSettings20Filled class="size-4" />
 					Settings
 				</a>

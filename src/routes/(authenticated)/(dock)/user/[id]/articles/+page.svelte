@@ -62,7 +62,7 @@
 	<!-- Header -->
 	<div class="flex flex-col gap-4">
 		<div class="flex items-center gap-4">
-			<div class="size-14 rounded-xl overflow-hidden ring-2 ring-white/10">
+			<div class="size-14 rounded-xl overflow-hidden">
 				<Logo
 					src={data.user.logo}
 					alt={data.user.name || "User"}
@@ -162,15 +162,11 @@
 						<!-- Icon or Newspaper Logo -->
 						<div class="shrink-0">
 							{#if article.newspaperName}
-								<div
-									class="size-12 rounded-lg bg-slate-700/50 flex items-center justify-center ring-2 ring-white/5 group-hover:ring-purple-500/20 transition-all"
-								>
+								<div class="size-12 rounded-lg bg-slate-700/50 flex items-center justify-center transition-all">
 									<FluentEmojiRolledUpNewspaper class="text-2xl" />
 								</div>
 							{:else}
-								<div
-									class="size-12 rounded-lg bg-purple-600/20 flex items-center justify-center ring-2 ring-purple-500/20 group-hover:ring-purple-500/40 transition-all"
-								>
+								<div class="size-12 rounded-lg bg-purple-600/20 flex items-center justify-center transition-all">
 									<FluentDocument20Filled class="size-6 text-purple-400" />
 								</div>
 							{/if}

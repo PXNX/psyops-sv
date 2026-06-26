@@ -36,7 +36,7 @@
 					class="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-full blur-2xl opacity-50"
 				></div>
 				<div
-					class="relative size-32 bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl ring-4 ring-white/10"
+					class="relative size-32 bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl"
 				>
 					<img alt="app logo" class="w-24 h-24" src="/logo.svg" />
 				</div>
@@ -52,7 +52,7 @@
 					class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-full"
 				>
 					<FluentInfo20Filled class="size-4 text-purple-400" />
-						<span class="text-sm text-gray-300">Version {version} ({buildTime})</span>
+					<span class="text-sm text-gray-300">Version {version} ({buildTime})</span>
 				</div>
 			</div>
 		</div>
@@ -228,8 +228,7 @@
 				id="bug-description"
 				class="textarea textarea-bordered bg-slate-700/50 border-white/10 h-32"
 				placeholder="Describe what happened, what you expected, and steps to reproduce..."
-				bind:value={bugForm.description}
-			></textarea>
+				bind:value={bugForm.description}></textarea>
 		</div>
 
 		<div class="form-control">

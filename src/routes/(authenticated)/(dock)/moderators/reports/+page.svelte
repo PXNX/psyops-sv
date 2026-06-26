@@ -202,9 +202,7 @@
 
 							{#if report.targetType === "account" && report.target}
 								<a href="/user/{report.target.id}" class="flex items-center gap-3 group">
-									<div
-										class="size-10 rounded-lg overflow-hidden ring-2 ring-white/5 group-hover:ring-white/20 transition-all"
-									>
+									<div class="size-10 rounded-lg overflow-hidden transition-all">
 										<Logo
 											src={report.target.logoUrl}
 											alt={report.target.name}
@@ -219,9 +217,7 @@
 								</a>
 							{:else if report.targetType === "party" && report.target}
 								<a href="/party/{report.target.id}" class="flex items-center gap-3 group">
-									<div
-										class="size-10 rounded-lg overflow-hidden ring-2 ring-white/5 group-hover:ring-white/20 transition-all"
-									>
+									<div class="size-10 rounded-lg overflow-hidden transition-all">
 										<Logo
 											src={report.target.logoUrl}
 											alt={report.target.name}
@@ -273,9 +269,7 @@
 									{#if report.reviewer}
 										<div class="flex items-center gap-3">
 											<a href="/user/{report.reviewer.id}" class="flex items-center gap-2 group">
-												<div
-													class="size-8 rounded-lg overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all"
-												>
+												<div class="size-8 rounded-lg overflow-hidden transition-all">
 													<Logo
 														src={report.reviewer.logoUrl}
 														alt={report.reviewer.name}

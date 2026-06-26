@@ -64,14 +64,24 @@
 
 <div class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 	<!-- Company Header -->
-	<div class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-gradient-to-br from-slate-800/80 via-slate-800/50 to-slate-900/80">
-		<div class="absolute inset-0 opacity-5" style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.2) 35px, rgba(255,255,255,0.2) 70px);"></div>
+	<div
+		class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-gradient-to-br from-slate-800/80 via-slate-800/50 to-slate-900/80"
+	>
+		<div
+			class="absolute inset-0 opacity-5"
+			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.2) 35px, rgba(255,255,255,0.2) 70px);"
+		></div>
 		<div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70"></div>
 		<div class="relative z-10 p-5 sm:p-8">
 			<div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
 				<!-- Company Logo -->
-				<div class="ring-4 ring-white/10 rounded-2xl shrink-0">
-					<Logo src={data.company.logo} alt={data.company.name} placeholderIcon={FluentBuilding20Filled} class="size-20 sm:size-24 rounded-2xl" />
+				<div class="rounded-2xl shrink-0">
+					<Logo
+						src={data.company.logo}
+						alt={data.company.name}
+						placeholderIcon={FluentBuilding20Filled}
+						class="size-20 sm:size-24 rounded-2xl"
+					/>
 				</div>
 				<div class="flex-1 min-w-0">
 					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
@@ -94,7 +104,10 @@
 							</div>
 						</div>
 						{#if data.isOwner}
-							<a href="/company/{data.company.id}/edit" class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2">
+							<a
+								href="/company/{data.company.id}/edit"
+								class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+							>
 								<FluentEdit20Filled class="size-4" />
 								Edit
 							</a>

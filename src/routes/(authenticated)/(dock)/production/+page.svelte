@@ -351,7 +351,8 @@
 						<div class="space-y-1.5 md:space-y-2">
 							{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
 								{@const quantity = resourceMap.get(resource) || 0}
-								<div
+								<a
+									href="/market/{resource}"
 									class="flex items-center justify-between p-2.5 md:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-purple-500/30 transition-colors"
 								>
 									<div class="flex items-center gap-2">
@@ -365,7 +366,7 @@
 									>
 										{quantity}
 									</span>
-								</div>
+								</a>
 							{/each}
 						</div>
 					</div>
@@ -384,7 +385,8 @@
 						<div class="space-y-1.5 md:space-y-2">
 							{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
 								{@const quantity = productMap.get(product) || 0}
-								<div
+								<a
+									href="/market/{product}"
 									class="flex items-center justify-between p-2.5 md:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-emerald-500/30 transition-colors"
 								>
 									<div class="flex items-center gap-2">
@@ -398,7 +400,7 @@
 									>
 										{quantity}
 									</span>
-								</div>
+								</a>
 							{/each}
 						</div>
 					</div>
@@ -649,19 +651,6 @@
 								</span>
 							{/if}
 						</button>
-
-						{#if !canProduce}
-							<div
-								class="bg-gradient-to-r from-amber-900/30 to-orange-900/30 border border-amber-500/30 rounded-xl p-3 md:p-4"
-							>
-								<p class="text-xs md:text-sm text-amber-300 flex items-start gap-2">
-									<FluentWarning20Filled class="size-4 md:size-5 flex-shrink-0 mt-0.5" />
-									<span
-										>You need more resources to start this production. Work at a factory to earn resources and wages.</span
-									>
-								</p>
-							</div>
-						{/if}
 					</div>
 				</form>
 			{/if}

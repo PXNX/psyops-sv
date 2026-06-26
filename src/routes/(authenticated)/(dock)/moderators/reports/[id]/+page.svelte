@@ -112,9 +112,7 @@
 <div class="max-w-5xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
 	<div>
-		<a href="/moderators/reports" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
-			My Reports
-		</a>
+		<a href="/moderators/reports" class="text-sm text-gray-400 hover:text-purple-400 transition-colors"> My Reports </a>
 		<h1 class="text-2xl font-bold text-white mt-1">Report #{data.report.id}</h1>
 	</div>
 
@@ -201,9 +199,7 @@
 				<div class="bg-slate-700/30 rounded-lg p-4">
 					{#if data.report.targetType === "account"}
 						<a href="/user/{data.report.target.id}" class="flex items-center gap-3 group">
-							<div
-								class="size-16 rounded-xl overflow-hidden ring-2 ring-white/10 group-hover:ring-white/30 transition-all"
-							>
+							<div class="size-16 rounded-xl overflow-hidden transition-all">
 								<Logo
 									src={data.report.target.logoUrl}
 									alt={data.report.target.name}
@@ -221,9 +217,7 @@
 						</a>
 					{:else if data.report.targetType === "party"}
 						<a href="/party/{data.report.target.id}" class="flex items-center gap-3 group">
-							<div
-								class="size-16 rounded-xl overflow-hidden ring-2 ring-white/10 group-hover:ring-white/30 transition-all"
-							>
+							<div class="size-16 rounded-xl overflow-hidden transition-all">
 								<Logo
 									src={data.report.target.logoUrl}
 									alt={data.report.target.name}
@@ -245,9 +239,7 @@
 								<div class="flex items-center gap-2">
 									<span class="text-sm text-gray-400">From:</span>
 									<a href="/user/{data.report.target.sender.id}" class="flex items-center gap-2 group">
-										<div
-											class="size-8 rounded-lg overflow-hidden ring-2 ring-white/10 group-hover:ring-white/30 transition-all"
-										>
+										<div class="size-8 rounded-lg overflow-hidden transition-all">
 											<Logo
 												src={data.report.target.sender.logoUrl}
 												alt={data.report.target.sender.name}
@@ -328,9 +320,7 @@
 					{#if data.report.reviewer}
 						<div class="flex items-center gap-3 mt-3">
 							<a href="/user/{data.report.reviewer.id}" class="flex items-center gap-3 group">
-								<div
-									class="size-12 rounded-xl overflow-hidden ring-2 ring-purple-500/30 group-hover:ring-purple-500/50 transition-all"
-								>
+								<div class="size-12 rounded-xl overflow-hidden transition-all">
 									<Logo
 										src={data.report.reviewer.logoUrl}
 										alt={data.report.reviewer.name}
