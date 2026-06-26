@@ -339,21 +339,8 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			description: `Received wage for shift at ${factory.name}`,
 			relatedEntityType: "factory",
 			relatedEntityId: factoryId
-		});
-
-		// Record transaction for company (deduction)
-		const [ownerWallet] = await tx.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, factory.ownerId));
-		await tx.insert(transactionHistory).values({
-			userId: factory.ownerId,
-			transactionType: "factory_wage",
-			amount: -wageToCollect,
-			balanceAfter: ownerWallet?.balance || 0,
-			description: `Paid wage for shift at ${factory.name} to user ${userId}`,
-			relatedEntityType: "factory",
-			relatedEntityId: factoryId,
-			relatedUserId: userId
-		});
-	});
+			});
+			});
 
 	const totalTaxPaid = incomeTaxResult!.taxAmount + (miningTaxResult?.taxAmount || 0);
 	const taxBreakdown = miningTaxResult
