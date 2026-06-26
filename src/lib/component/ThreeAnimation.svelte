@@ -15,7 +15,7 @@
 	let el: HTMLDivElement;
 
 	const DURATIONS: Record<string, number> = {
-		battle: 2800,
+		battle: 3200,
 		vote: 1900,
 		collect: 1900,
 		company: 2100,
@@ -78,9 +78,9 @@
 			return new THREE.Color(hex);
 		}
 
-		/* ———— BATTLE: massive multi-phase explosion ———— */
+		/* ———— BATTLE: brutal multi-origin edge-to-edge explosion ———— */
 		function mkBattle(): V {
-			const N = 600;
+			const N = 900;
 			const pos = new Float32Array(N * 3);
 			const vel = new Float32Array(N * 3);
 			const col = new Float32Array(N * 3);
@@ -88,66 +88,98 @@
 			const baseSz = new Float32Array(N);
 			const spawnT = new Float32Array(N);
 
-			/* Phase 1 (0-150): Core blast – huge, white-hot, spherical */
-			for (let i = 0; i < 150; i++) {
+			/* 3 explosion origins spread across the screen */
+			const origins = [
+				[0, 0] /* center */,
+				[-3.5, -1.5] /* bottom-left */,
+				[3.5, 1.0] /* top-right */
+			];
+
+			/* Phase 1 (0-200): Core blasts from all 3 origins – massive, white-hot */
+			for (let i = 0; i < 200; i++) {
+				const origin = origins[i % 3];
 				const th = Math.random() * Math.PI * 2;
 				const ph = Math.acos(2 * Math.random() - 1);
-				const sp = rr(5, 16);
+				const sp = rr(8, 28);
+				pos[i * 3] = origin[0];
+				pos[i * 3 + 1] = origin[1];
 				vel[i * 3] = Math.sin(ph) * Math.cos(th) * sp;
 				vel[i * 3 + 1] = Math.sin(ph) * Math.sin(th) * sp;
-				vel[i * 3 + 2] = Math.cos(ph) * sp * 0.3;
+				vel[i * 3 + 2] = Math.cos(ph) * sp * 0.4;
 				const c = pick([color("#ffffff"), color("#fff4cc"), color("#ffee88"), color("#ffcc00")]);
 				col[i * 3] = c.r;
 				col[i * 3 + 1] = c.g;
 				col[i * 3 + 2] = c.b;
-				baseSz[i] = rr(0.5, 1.4);
-				spawnT[i] = 0;
+				baseSz[i] = rr(0.6, 2.0);
+				spawnT[i] = (i % 3) * 0.04;
 			}
 
-			/* Phase 2 (150-350): Fire debris – delayed, orange/red, with upward bias */
-			for (let i = 150; i < 350; i++) {
+			/* Phase 2 (200-450): Fire debris – violent, edge-reaching */
+			for (let i = 200; i < 450; i++) {
+				const origin = origins[i % 3];
 				const th = Math.random() * Math.PI * 2;
 				const ph = Math.acos(2 * Math.random() - 1);
-				const sp = rr(3, 10);
+				const sp = rr(6, 18);
+				pos[i * 3] = origin[0] + rr(-0.3, 0.3);
+				pos[i * 3 + 1] = origin[1] + rr(-0.3, 0.3);
 				vel[i * 3] = Math.sin(ph) * Math.cos(th) * sp;
-				vel[i * 3 + 1] = Math.sin(ph) * Math.sin(th) * sp + rr(1, 4);
-				vel[i * 3 + 2] = Math.cos(ph) * sp * 0.2;
-				const c = pick([color("#ff3300"), color("#ff5500"), color("#ff7700"), color("#ff9900")]);
+				vel[i * 3 + 1] = Math.sin(ph) * Math.sin(th) * sp + rr(0, 3);
+				vel[i * 3 + 2] = Math.cos(ph) * sp * 0.3;
+				const c = pick([color("#ff2200"), color("#ff4400"), color("#ff6600"), color("#ff0000"), color("#cc0000")]);
 				col[i * 3] = c.r;
 				col[i * 3 + 1] = c.g;
 				col[i * 3 + 2] = c.b;
-				baseSz[i] = rr(0.25, 0.7);
-				spawnT[i] = rr(0.04, 0.18);
+				baseSz[i] = rr(0.3, 1.0);
+				spawnT[i] = rr(0.02, 0.15);
 			}
 
-			/* Phase 3 (350-480): Fast sparks – bright streaks that travel far */
-			for (let i = 350; i < 480; i++) {
+			/* Phase 3 (450-650): Screaming sparks – ultra-fast, reach far edges */
+			for (let i = 450; i < 650; i++) {
+				const origin = origins[i % 3];
 				const th = Math.random() * Math.PI * 2;
-				const sp = rr(8, 22);
+				const sp = rr(15, 40);
+				pos[i * 3] = origin[0];
+				pos[i * 3 + 1] = origin[1];
 				vel[i * 3] = Math.cos(th) * sp;
-				vel[i * 3 + 1] = Math.sin(th) * sp * rr(0.3, 1.0) + rr(2, 5);
-				vel[i * 3 + 2] = rr(-1, 1);
-				const c = pick([color("#ffee66"), color("#ffffff"), color("#ffcc00")]);
+				vel[i * 3 + 1] = Math.sin(th) * sp;
+				vel[i * 3 + 2] = rr(-2, 2);
+				const c = pick([color("#ffee66"), color("#ffffff"), color("#ffcc00"), color("#ff8800")]);
 				col[i * 3] = c.r;
 				col[i * 3 + 1] = c.g;
 				col[i * 3 + 2] = c.b;
-				baseSz[i] = rr(0.08, 0.2);
-				spawnT[i] = rr(0.0, 0.12);
+				baseSz[i] = rr(0.05, 0.18);
+				spawnT[i] = rr(0.0, 0.1);
 			}
 
-			/* Phase 4 (480-600): Embers – tiny, slow, flickering, rising */
-			for (let i = 480; i < N; i++) {
-				const th = Math.random() * Math.PI * 2;
-				const sp = rr(0.5, 3);
-				vel[i * 3] = Math.cos(th) * sp;
-				vel[i * 3 + 1] = rr(1.5, 5);
+			/* Phase 4 (650-800): Edge smoke – large, dark, spread from edges */
+			for (let i = 650; i < 800; i++) {
+				const edge = rr(0, 1) > 0.5 ? 1 : -1;
+				pos[i * 3] = edge * rr(3, 6);
+				pos[i * 3 + 1] = rr(-4, 4);
+				vel[i * 3] = -edge * rr(0.5, 2);
+				vel[i * 3 + 1] = rr(0.5, 3);
+				vel[i * 3 + 2] = rr(-0.2, 0.2);
+				const c = pick([color("#331100"), color("#442200"), color("#221100"), color("#552200")]);
+				col[i * 3] = c.r;
+				col[i * 3 + 1] = c.g;
+				col[i * 3 + 2] = c.b;
+				baseSz[i] = rr(1.5, 4.0);
+				spawnT[i] = rr(0.05, 0.25);
+			}
+
+			/* Phase 5 (800-900): Rising embers everywhere */
+			for (let i = 800; i < N; i++) {
+				pos[i * 3] = rr(-6, 6);
+				pos[i * 3 + 1] = rr(-4, -1);
+				vel[i * 3] = rr(-1, 1);
+				vel[i * 3 + 1] = rr(2, 7);
 				vel[i * 3 + 2] = rr(-0.3, 0.3);
-				const c = pick([color("#ff6600"), color("#ff4400"), color("#ffaa33"), color("#ff8800")]);
+				const c = pick([color("#ff6600"), color("#ff4400"), color("#ffaa33"), color("#ff2200")]);
 				col[i * 3] = c.r;
 				col[i * 3 + 1] = c.g;
 				col[i * 3 + 2] = c.b;
-				baseSz[i] = rr(0.06, 0.18);
-				spawnT[i] = rr(0.1, 0.4);
+				baseSz[i] = rr(0.04, 0.15);
+				spawnT[i] = rr(0.08, 0.45);
 			}
 
 			let elapsed = 0;
@@ -158,8 +190,8 @@
 				tick(t, dt) {
 					elapsed += dt;
 
-					/* Camera shake – aggressive early, tapers off */
-					const shakeAmt = Math.max(0, 1 - t * 3) * 0.2;
+					/* Violent camera shake – harsh early, lingers */
+					const shakeAmt = Math.max(0, 1 - t * 2) * 0.35;
 					cam.position.x = (Math.random() - 0.5) * 2 * shakeAmt;
 					cam.position.y = (Math.random() - 0.5) * 2 * shakeAmt;
 
@@ -173,46 +205,52 @@
 
 						const age = t - spawnT[i];
 
-						/* Pop-in then fade */
-						if (age < 0.04) {
-							sz[i] = baseSz[i] * (age / 0.04);
+						/* Hard pop-in then fade */
+						if (age < 0.03) {
+							sz[i] = baseSz[i] * (age / 0.03);
+						} else if (i >= 650 && i < 800) {
+							/* Smoke fades slower */
+							sz[i] = baseSz[i] * Math.max(0, 1 - age * 0.7);
 						} else {
-							sz[i] = baseSz[i] * Math.max(0, 1 - age * 1.1);
+							sz[i] = baseSz[i] * Math.max(0, 1 - age * 1.0);
 						}
 
-						/* Physics – drag + gravity */
-						const drag = i < 350 ? 0.965 : 0.99;
+						/* Physics */
+						const drag = i < 450 ? 0.96 : i < 650 ? 0.99 : 0.98;
 						vel[i3] *= drag;
 						vel[i3 + 1] *= drag;
 						vel[i3 + 2] *= drag;
-						vel[i3 + 1] -= (i < 480 ? 4.0 : 1.2) * dt;
+						vel[i3 + 1] -= (i >= 800 ? 1.0 : i >= 650 ? 0.3 : 3.5) * dt;
 						pos[i3] += vel[i3] * dt;
 						pos[i3 + 1] += vel[i3 + 1] * dt;
 						pos[i3 + 2] += vel[i3 + 2] * dt;
 
 						/* Ember flicker */
-						if (i >= 480) sz[i] *= 0.6 + 0.4 * Math.sin(elapsed * 18 + i * 5);
+						if (i >= 800) sz[i] *= 0.5 + 0.5 * Math.sin(elapsed * 22 + i * 7);
 					}
 				},
 				extras(sc) {
 					const objs: THREE.Object3D[] = [];
 
-					/* 3 staggered shockwave rings */
-					for (let r = 0; r < 3; r++) {
-						const rg = new THREE.RingGeometry(0.08, 0.3 - r * 0.04, 96);
-						const rm = new THREE.MeshBasicMaterial({
-							color: [0xff6600, 0xff3300, 0xff8800][r],
-							transparent: true,
-							opacity: 1,
-							side: THREE.DoubleSide,
-							blending: THREE.AdditiveBlending
-						});
-						const ring = new THREE.Mesh(rg, rm);
-						sc.add(ring);
-						objs.push(ring);
+					/* 5 shockwave rings from each origin */
+					for (let o = 0; o < 3; o++) {
+						for (let r = 0; r < 2; r++) {
+							const rg = new THREE.RingGeometry(0.1, 0.4 - r * 0.08, 96);
+							const rm = new THREE.MeshBasicMaterial({
+								color: [0xff4400, 0xff2200][r],
+								transparent: true,
+								opacity: 1,
+								side: THREE.DoubleSide,
+								blending: THREE.AdditiveBlending
+							});
+							const ring = new THREE.Mesh(rg, rm);
+							ring.position.set(origins[o][0], origins[o][1], 0);
+							sc.add(ring);
+							objs.push(ring);
+						}
 					}
 
-					/* Big white flash */
+					/* Full-screen white flash */
 					const fg = new THREE.PlaneGeometry(1, 1);
 					const fm = new THREE.MeshBasicMaterial({
 						color: 0xffffff,
@@ -225,12 +263,12 @@
 					sc.add(flash);
 					objs.push(flash);
 
-					/* Warm afterglow */
+					/* Blood-red afterglow covering whole screen */
 					const ag = new THREE.PlaneGeometry(1, 1);
 					const am = new THREE.MeshBasicMaterial({
-						color: 0xff6600,
+						color: 0xff2200,
 						transparent: true,
-						opacity: 0.9,
+						opacity: 0.8,
 						side: THREE.DoubleSide,
 						blending: THREE.AdditiveBlending
 					});
@@ -238,28 +276,31 @@
 					sc.add(glow);
 					objs.push(glow);
 
-					return objs; /* [ring0, ring1, ring2, flash, glow] */
+					return objs; /* [6 rings, flash, glow] */
 				},
 				tickExtras(e, t) {
-					/* Shockwave rings – staggered expansion */
-					for (let r = 0; r < 3; r++) {
-						const ring = e[r] as THREE.Mesh;
-						const rt = Math.max(0, t - r * 0.05);
-						const s = rt * 22;
+					/* Shockwave rings from each origin */
+					for (let i = 0; i < 6; i++) {
+						const ring = e[i] as THREE.Mesh;
+						const originIdx = Math.floor(i / 2);
+						const ringIdx = i % 2;
+						const delay = originIdx * 0.04 + ringIdx * 0.03;
+						const rt = Math.max(0, t - delay);
+						const s = rt * 35;
 						ring.scale.set(s, s, 1);
-						(ring.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - rt * 3);
+						(ring.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - rt * 2.5);
 					}
 
-					/* White flash – punchy, fast fade */
-					const flash = e[3] as THREE.Mesh;
-					(flash.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - t * 7);
-					const fs = 2.5 + t * 12;
+					/* White flash – full screen, fast */
+					const flash = e[6] as THREE.Mesh;
+					(flash.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 1 - t * 5);
+					const fs = 4 + t * 20;
 					flash.scale.set(fs, fs, 1);
 
-					/* Warm afterglow – slower fade, big spread */
-					const glow = e[4] as THREE.Mesh;
-					(glow.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.9 - t * 2);
-					const gs = 1.5 + t * 8;
+					/* Blood-red afterglow – covers entire viewport */
+					const glow = e[7] as THREE.Mesh;
+					(glow.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.8 - t * 1.5);
+					const gs = 3 + t * 15;
 					glow.scale.set(gs, gs, 1);
 				}
 			};

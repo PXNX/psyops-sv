@@ -41,14 +41,11 @@
 		const end = new Date(data.election.endDate);
 
 		let targetDate: Date;
-		let label: string;
 
 		if (now < start) {
 			targetDate = start;
-			label = "until voting opens";
 		} else if (now < end) {
 			targetDate = end;
-			label = "until voting closes";
 		} else {
 			return null;
 		}
@@ -61,7 +58,7 @@
 		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 		const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-		return { days, hours, minutes, seconds, label };
+		return { days, hours, minutes, seconds };
 	}
 
 	const countdown = $derived(getCountdown());
@@ -76,137 +73,149 @@
 	);
 </script>
 
-<div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
-	<!-- Header -->
-	<div>
-		<a href="/state/{data.state.id}/parliament" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
-			{data.state.name} — Parliament
-		</a>
-		<div class="flex items-center gap-4">
-			<a href="/state/{data.state.id}">
-				<Logo
-					src={data.state.logo}
-					alt={data.state.name}
-					class="size-16 rounded-xl border-2 border-white/10 hover:border-white/30 transition-all shadow-lg"
-					placeholderIcon={FluentBuildingGovernment20Filled}
-					placeholderGradient="from-amber-500 to-rose-500"
-				/>
-			</a>
-
-			<div class="flex-1">
-				<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-					<FluentVote20Filled class="size-8 text-purple-400" />
-					{data.election.isInaugural ? "Inaugural" : "Parliamentary"} Elections
-				</h1>
-				<a href="/state/{data.state.id}" class="text-lg text-gray-400 hover:text-white mt-1 inline-block">
-					{data.state.name}
-				</a>
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+	<!-- Command Header -->
+	<div class="border-b border-purple-900/30 bg-slate-900/80 backdrop-blur-xl">
+		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
+			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+				<div class="flex items-center gap-3 sm:gap-5 w-full sm:w-auto">
+					<a href="/state/{data.state.id}" class="relative flex-shrink-0">
+						<div class="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+						<Logo
+							src={data.state.logo}
+							alt={data.state.name}
+							class="relative size-14 sm:size-18 rounded-lg border-2 border-purple-500/30 hover:border-purple-500/50 transition-colors"
+							placeholderIcon={FluentBuildingGovernment20Filled}
+							placeholderGradient="from-purple-500 to-blue-500"
+						/>
+					</a>
+					<div class="flex-1 min-w-0">
+						<div class="flex flex-wrap items-center gap-2 mb-1">
+							<h1 class="text-xl sm:text-2xl font-bold tracking-wider uppercase font-mono text-purple-400">
+								{data.election.isInaugural ? "Inaugural" : "Parliamentary"} Election
+							</h1>
+							{#if isActive}
+								<span
+									class="px-2 py-1 bg-green-500/20 border border-green-400/40 rounded text-green-300 font-bold text-xs font-mono flex items-center gap-1.5"
+								>
+									<div class="size-1.5 bg-green-400 rounded-full animate-pulse"></div>
+									LIVE
+								</span>
+							{:else if hasEnded}
+								<span
+									class="px-2 py-1 bg-slate-500/20 border border-slate-400/40 rounded text-slate-300 font-bold text-xs font-mono"
+								>
+									CONCLUDED
+								</span>
+							{/if}
+						</div>
+						<a
+							href="/state/{data.state.id}"
+							class="text-sm text-slate-400 hover:text-purple-400 transition-colors font-mono"
+						>
+							{data.state.name}
+						</a>
+					</div>
+				</div>
 			</div>
 
-			<!-- Status Badge -->
-			{#if isActive}
-				<div class="bg-green-600/20 border border-green-500/30 rounded-lg px-4 py-2">
-					<div class="flex items-center gap-2 mb-1">
-						<div class="size-2 rounded-full bg-green-500 animate-pulse"></div>
-						<p class="text-sm font-semibold text-green-400">Live</p>
+			<!-- Countdown Timer -->
+			{#if countdown}
+				<div
+					class="mt-4 sm:mt-6 bg-gradient-to-r from-purple-950/50 to-slate-950/50 border border-purple-500/20 rounded-lg p-3 sm:p-4"
+				>
+					<div
+						class="text-purple-400 font-mono text-xs sm:text-sm font-medium uppercase tracking-wide text-center mb-2 sm:mb-3"
+					>
+						{!hasStarted ? "Voting Opens In" : "Voting Closes In"}
 					</div>
-					<p class="text-xs text-gray-400">Voting Active</p>
-				</div>
-			{:else if hasEnded}
-				<div class="bg-slate-700/50 border border-slate-600/30 rounded-lg px-4 py-2">
-					<div class="flex items-center gap-2 mb-1">
-						<FluentCheckmark20Filled class="size-4 text-gray-400" />
-						<p class="text-sm font-semibold text-gray-400">Concluded</p>
+					<div class="flex items-center justify-center gap-2 sm:gap-3">
+						<div class="text-center">
+							<div
+								class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+							>
+								{String(countdown.days).padStart(2, "0")}
+							</div>
+							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">DAYS</div>
+						</div>
+						<div class="text-xl sm:text-2xl font-bold text-purple-500/50">:</div>
+						<div class="text-center">
+							<div
+								class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+							>
+								{String(countdown.hours).padStart(2, "0")}
+							</div>
+							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">HRS</div>
+						</div>
+						<div class="text-xl sm:text-2xl font-bold text-purple-500/50">:</div>
+						<div class="text-center">
+							<div
+								class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+							>
+								{String(countdown.minutes).padStart(2, "0")}
+							</div>
+							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">MIN</div>
+						</div>
+						<div class="text-xl sm:text-2xl font-bold text-purple-500/50">:</div>
+						<div class="text-center">
+							<div
+								class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+							>
+								{String(countdown.seconds).padStart(2, "0")}
+							</div>
+							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">SEC</div>
+						</div>
 					</div>
-					<p class="text-xs text-gray-500">Final Results</p>
 				</div>
 			{/if}
 		</div>
 	</div>
 
-	<!-- Countdown -->
-	{#if countdown}
-		<div
-			class="bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 border border-blue-500/30 rounded-xl p-6"
-		>
-			<div class="text-center">
-				<p class="text-sm text-blue-300 font-medium mb-3">
-					{!hasStarted ? "⏰ Election starts soon" : "⏰ Voting closes soon"}
-				</p>
-				<div class="flex items-center justify-center gap-3">
-					<div class="bg-slate-900/50 rounded-lg p-3 min-w-[70px]">
-						<div class="text-3xl font-bold text-white tabular-nums">{countdown.days}</div>
-						<div class="text-xs text-gray-400 mt-1">Days</div>
-					</div>
-					<div class="text-2xl text-gray-500">:</div>
-					<div class="bg-slate-900/50 rounded-lg p-3 min-w-[70px]">
-						<div class="text-3xl font-bold text-white tabular-nums">{countdown.hours.toString().padStart(2, "0")}</div>
-						<div class="text-xs text-gray-400 mt-1">Hours</div>
-					</div>
-					<div class="text-2xl text-gray-500">:</div>
-					<div class="bg-slate-900/50 rounded-lg p-3 min-w-[70px]">
-						<div class="text-3xl font-bold text-white tabular-nums">
-							{countdown.minutes.toString().padStart(2, "0")}
-						</div>
-						<div class="text-xs text-gray-400 mt-1">Minutes</div>
-					</div>
-					<div class="text-2xl text-gray-500">:</div>
-					<div class="bg-slate-900/50 rounded-lg p-3 min-w-[70px]">
-						<div class="text-3xl font-bold text-white tabular-nums">
-							{countdown.seconds.toString().padStart(2, "0")}
-						</div>
-						<div class="text-xs text-gray-400 mt-1">Seconds</div>
-					</div>
+	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+		<!-- Voter Status -->
+		{#if !data.userResidence}
+			<div class="bg-red-950/30 border border-red-500/30 rounded-lg p-3 text-center">
+				<p class="text-sm text-red-300 font-mono">You must be a resident of {data.state.name} to vote</p>
+			</div>
+		{:else if data.userVote && isActive}
+			<div class="bg-green-950/30 border border-green-500/30 rounded-lg p-3 text-center">
+				<div class="flex items-center justify-center gap-2 text-green-300 font-mono text-sm">
+					<FluentCheckmark20Filled class="size-4" />
+					<span>Vote cast. You can change your vote until the election ends.</span>
 				</div>
 			</div>
-		</div>
-	{/if}
+		{:else if canVote}
+			<div class="bg-purple-950/30 border border-purple-500/30 rounded-lg p-3 text-center">
+				<p class="text-sm text-purple-300 font-mono">
+					{data.election.isInaugural ? "Cast your vote in the inaugural election" : "Cast your vote below"}
+				</p>
+			</div>
+		{/if}
 
-	<!-- Voter Status -->
-	{#if !data.userResidence}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4 text-center">
-			<p class="text-sm text-red-300">⚠️ You must be a resident of {data.state.name} to vote</p>
-		</div>
-	{:else if data.userVote && isActive}
-		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4 text-center">
-			<div class="flex items-center justify-center gap-2 text-green-300">
-				<FluentCheckmark20Filled class="size-5" />
-				<span class="text-sm font-medium">You have voted! You can change your vote until the election ends.</span>
+		<!-- Stats Strip -->
+		<div class="grid grid-cols-3 gap-3 text-center">
+			<div class="bg-purple-950/30 border border-purple-500/20 rounded-lg p-3 sm:p-4">
+				<div class="text-xl sm:text-2xl font-bold text-purple-400 font-mono">{data.totalVotes.toLocaleString()}</div>
+				<div class="text-[10px] sm:text-xs text-purple-400/60 font-mono uppercase tracking-wider">Votes</div>
+			</div>
+			<div class="bg-blue-950/30 border border-blue-500/20 rounded-lg p-3 sm:p-4">
+				<div class="text-xl sm:text-2xl font-bold text-blue-400 font-mono">{data.parties.length}</div>
+				<div class="text-[10px] sm:text-xs text-blue-400/60 font-mono uppercase tracking-wider">Parties</div>
+			</div>
+			<div class="bg-emerald-950/30 border border-emerald-500/20 rounded-lg p-3 sm:p-4">
+				<div class="text-xl sm:text-2xl font-bold text-emerald-400 font-mono">{data.election.totalSeats}</div>
+				<div class="text-[10px] sm:text-xs text-emerald-400/60 font-mono uppercase tracking-wider">Seats</div>
 			</div>
 		</div>
-	{:else if canVote}
-		<div class="bg-blue-600/20 border border-blue-500/30 rounded-xl p-4 text-center">
-			<p class="text-sm text-blue-300 font-medium">
-				{data.election.isInaugural ? "🎉 Cast your vote in the inaugural election!" : "Cast your vote below"}
-			</p>
-		</div>
-	{/if}
 
-	<!-- Stats -->
-	<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-		<div class="bg-gradient-to-br from-purple-600/20 to-purple-700/10 rounded-xl border border-purple-500/20 p-5">
-			<p class="text-sm text-purple-300 mb-1 font-medium">Total Votes</p>
-			<p class="text-4xl font-bold text-white">{data.totalVotes.toLocaleString()}</p>
-		</div>
-		<div class="bg-gradient-to-br from-blue-600/20 to-blue-700/10 rounded-xl border border-blue-500/20 p-5">
-			<p class="text-sm text-blue-300 mb-1 font-medium">Parties</p>
-			<p class="text-4xl font-bold text-white">{data.parties.length}</p>
-		</div>
-		<div class="bg-gradient-to-br from-green-600/20 to-green-700/10 rounded-xl border border-green-500/20 p-5">
-			<p class="text-sm text-green-300 mb-1 font-medium">Seats</p>
-			<p class="text-4xl font-bold text-white">{data.election.totalSeats}</p>
-		</div>
-	</div>
-
-	<!-- Parties -->
-	<div class="space-y-4">
+		<!-- Parties -->
 		{#if data.parties.length === 0}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-12 text-center">
-				<FluentPeople20Filled class="size-12 text-gray-600 mx-auto mb-3" />
-				<p class="text-gray-400 text-lg">No political parties registered yet</p>
+			<div class="bg-slate-900/30 border border-slate-700/30 rounded-xl p-8 sm:p-12 text-center">
+				<div class="text-4xl sm:text-6xl mb-4 opacity-20">🗳️</div>
+				<p class="text-lg text-slate-400 font-mono">No political parties registered</p>
 			</div>
 		{:else}
-			<div class="grid gap-4">
+			<div class="space-y-3">
 				{#each sortedParties as party, index}
 					{@const votes = data.votesByParty[party.id] || 0}
 					{@const percentage = getVotePercentage(party.id)}
@@ -215,184 +224,157 @@
 					{@const canVoteForParty = canVote && hasEnoughMembers}
 
 					<div
-						class="group bg-slate-800/50 hover:bg-slate-800/70 rounded-xl border overflow-hidden transition-all relative"
-						class:border-white-5={!isUserVote}
-						class:border-green-500-50={isUserVote}
-						class:ring-2={isUserVote}
-						class:ring-green-500-30={isUserVote}
+						class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border rounded-xl overflow-hidden transition-all {isUserVote
+							? 'border-green-500/50 ring-1 ring-green-500/20'
+							: 'border-slate-700/50 hover:border-slate-600/60'}"
 					>
-						<!-- Position Badge -->
-						{#if hasStarted && index < 3}
-							<div class="absolute top-4 left-4 z-10">
-								<div
-									class="size-8 rounded-full flex items-center justify-center font-bold text-sm"
-									class:bg-yellow-500={index === 0}
-									class:text-yellow-900={index === 0}
-									class:bg-gray-400={index === 1}
-									class:text-gray-900={index === 1}
-									class:bg-orange-600={index === 2}
-									class:text-orange-100={index === 2}
-								>
-									{index + 1}
-								</div>
-							</div>
-						{/if}
-
-						<div class="p-6">
-							<div class="flex items-start gap-5">
-								<!-- Party Logo -->
-								<a href="/party/{party.id}" class="flex-shrink-0 group/logo">
-									{#if party.logo}
-										<Logo
-											src={party.logo}
-											alt={party.name}
-											class="size-20 rounded-xl border-3 shadow-lg transition-transform group-hover/logo:scale-105"
-											placeholderIcon={FluentFlag20Filled}
-											placeholderGradient="from-{party.color}/80 to-{party.color}/60"
-										/>
-									{:else}
+						<div class="p-4 sm:p-5">
+							<div class="flex items-start gap-4">
+								<!-- Rank + Logo -->
+								<div class="flex flex-col items-center gap-2 flex-shrink-0">
+									{#if hasStarted && index < 3}
 										<div
-											class="size-20 rounded-xl flex items-center justify-center text-2xl font-bold text-white shadow-lg transition-transform group-hover/logo:scale-105"
-											style="background: linear-gradient(135deg, {party.color}, {party.color}dd)"
+											class="size-6 rounded-full flex items-center justify-center font-bold text-xs font-mono"
+											class:bg-yellow-500={index === 0}
+											class:text-yellow-900={index === 0}
+											class:bg-gray-400={index === 1}
+											class:text-gray-900={index === 1}
+											class:bg-orange-600={index === 2}
+											class:text-orange-100={index === 2}
 										>
-											{party.abbreviation || party.name.substring(0, 2)}
+											{index + 1}
 										</div>
 									{/if}
-								</a>
+									<a href="/party/{party.id}" class="group/logo">
+										{#if party.logo}
+											<Logo
+												src={party.logo}
+												alt={party.name}
+												class="size-14 sm:size-16 rounded-lg border-2 border-slate-700/50 group-hover/logo:border-purple-500/50 transition-colors"
+												placeholderIcon={FluentFlag20Filled}
+											/>
+										{:else}
+											<div
+												class="size-14 sm:size-16 rounded-lg flex items-center justify-center text-lg font-bold text-white border-2 border-slate-700/50"
+												style="background: linear-gradient(135deg, {party.color}, {party.color}dd)"
+											>
+												{party.abbreviation || party.name.substring(0, 2)}
+											</div>
+										{/if}
+									</a>
+								</div>
 
 								<!-- Party Info -->
 								<div class="flex-1 min-w-0">
-									<div class="flex items-start justify-between gap-4 mb-3">
-										<div class="flex-1">
+									<div class="flex items-start justify-between gap-3 mb-2">
+										<div class="flex-1 min-w-0">
 											<a href="/party/{party.id}" class="group/link">
 												<h3
-													class="text-2xl font-bold text-white group-hover/link:text-blue-400 transition-colors flex items-center gap-2"
+													class="text-lg sm:text-xl font-bold text-white group-hover/link:text-purple-400 transition-colors flex items-center gap-2 truncate"
 												>
 													{party.name}
 													{#if isUserVote}
-														<span class="badge badge-sm bg-green-600/30 text-green-300 border-green-500/50">✓</span>
+														<FluentCheckmark20Filled class="size-4 text-green-400 flex-shrink-0" />
 													{/if}
-													<FluentChevronRight20Filled
-														class="size-5 opacity-0 group-hover/link:opacity-100 transition-opacity"
-													/>
 												</h3>
 											</a>
-											{#if party.abbreviation}
-												<p class="text-sm text-gray-400 font-medium">{party.abbreviation}</p>
+											{#if party.ideology}
+												<span
+													class="inline-block px-2 py-0.5 rounded text-xs font-mono mt-1"
+													style="background-color: {party.color}20; color: {party.color}; border: 1px solid {party.color}30"
+												>
+													{party.ideology}
+												</span>
 											{/if}
 										</div>
 
 										{#if hasStarted}
-											<div class="text-right bg-slate-700/50 rounded-lg px-4 py-2">
-												<p class="text-3xl font-bold text-white">{votes}</p>
-												<p class="text-xs text-gray-400 font-medium">{percentage.toFixed(1)}%</p>
+											<div class="text-right flex-shrink-0">
+												<div class="text-xl sm:text-2xl font-bold text-white font-mono">{votes}</div>
+												<div class="text-xs text-slate-500 font-mono">{percentage.toFixed(1)}%</div>
 											</div>
 										{/if}
 									</div>
 
-									{#if party.ideology}
-										<span
-											class="inline-block px-3 py-1 rounded-full text-xs font-semibold mb-3"
-											style="background-color: {party.color}25; color: {party.color}; border: 1px solid {party.color}40"
-										>
-											{party.ideology}
-										</span>
-									{/if}
-
-									{#if party.description}
-										<p class="text-sm text-gray-300 leading-relaxed mb-4">{party.description}</p>
-									{/if}
-
-									<div class="flex items-center gap-5 text-sm flex-wrap">
+									<div class="flex items-center gap-4 text-sm flex-wrap mt-2">
 										{#if party.leader}
 											<a
 												href="/user/{party.leader.accountId}"
-												class="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"
+												class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
 											>
 												<Logo
 													src={party.leader.logo}
 													alt={party.leader.name}
 													placeholderIcon={FluentPerson20Filled}
-													class="ring-2 ring-white/10 hover:ring-white/30 transition-all"
+													class="size-6 rounded"
 												/>
-												<span class="font-medium text-white">{party.leader.name}</span>
+												<span class="text-xs font-mono">{party.leader.name}</span>
 											</a>
 										{/if}
-										<span class="text-gray-400 flex items-center gap-1.5" class:text-red-400={!hasEnoughMembers}>
-											<FluentPeople20Filled class="size-4" />
-											<span class="font-medium">{party.memberCount} member{party.memberCount !== 1 ? "s" : ""}</span>
+										<span
+											class="text-xs font-mono flex items-center gap-1.5"
+											class:text-slate-500={hasEnoughMembers}
+											class:text-red-400={!hasEnoughMembers}
+										>
+											<FluentPeople20Filled class="size-3.5" />
+											{party.memberCount}
 											{#if !hasEnoughMembers}
-												<span class="text-xs bg-red-600/20 border border-red-500/30 px-2 py-0.5 rounded">
-													Needs {3 - party.memberCount} more
-												</span>
+												<span class="text-red-400/70">(need {3 - party.memberCount} more)</span>
 											{/if}
 										</span>
 									</div>
+
+									<!-- Vote Bar -->
+									{#if hasStarted && data.totalVotes > 0}
+										<div class="mt-3">
+											<div class="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden">
+												<div
+													class="h-full rounded-full transition-all duration-700 ease-out"
+													style="width: {percentage}%; background: {party.color}"
+												></div>
+											</div>
+										</div>
+									{/if}
 								</div>
 							</div>
-
-							<!-- Vote Progress Bar -->
-							{#if hasStarted && data.totalVotes > 0}
-								<div class="mt-5">
-									<div class="w-full bg-slate-700/50 rounded-full h-4 overflow-hidden shadow-inner">
-										<div
-											class="h-4 rounded-full transition-all duration-700 ease-out relative overflow-hidden"
-											style="width: {percentage}%; background: linear-gradient(90deg, {party.color}, {party.color}cc)"
-										>
-											<div
-												class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer"
-											></div>
-										</div>
-									</div>
-								</div>
-							{/if}
 						</div>
 
-						<!-- Vote Button -->
+						<!-- Vote Action -->
 						{#if data.userResidence}
-							<div class="border-t border-white/10 p-4 bg-slate-900/30">
+							<div class="border-t border-slate-700/40 px-4 sm:px-5 py-3 bg-slate-950/30">
 								{#if !hasEnoughMembers}
-									<p class="text-sm text-red-400 text-center py-2">
-										⚠️ This party needs at least 3 members to participate
-									</p>
+									<p class="text-xs text-red-400/70 text-center font-mono">Needs 3+ members to participate</p>
 								{:else}
 									<form
-							method="POST"
-							action="?/vote"
-							use:enhance={() => {
-								return async ({ update, result }) => {
-									await update();
-									if (result.type === 'success') showVoteAnim = true;
-								};
-							}}
-							class="w-full"
-						>
+										method="POST"
+										action="?/vote"
+										use:enhance={() => {
+											return async ({ update, result }) => {
+												await update();
+												if (result.type === "success") showVoteAnim = true;
+											};
+										}}
+										class="w-full"
+									>
 										<input type="hidden" name="partyId" value={party.id} />
 										<button
 											type="submit"
 											disabled={!canVoteForParty}
-											class="btn w-full gap-2 font-semibold transition-all"
+											class="w-full py-2 rounded-lg font-mono text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
 											class:bg-green-600={isUserVote && canVote}
 											class:hover:bg-green-500={isUserVote && canVote}
-											class:btn-disabled={!canVoteForParty}
-											class:opacity-50={!canVoteForParty}
+											class:text-white={true}
 											style:background={!isUserVote && canVoteForParty ? party.color : ""}
 											style:border-color={party.color}
-											class:border-2={!isUserVote && canVoteForParty}
-											class:text-white={true}
 										>
 											{#if !canVote && !hasStarted}
-												<FluentClock20Filled class="size-5" />
-												Voting Not Yet Open
+												VOTING NOT OPEN
 											{:else if !canVote && hasEnded}
-												<FluentCheckmark20Filled class="size-5" />
-												Voting Closed
+												VOTING CLOSED
 											{:else if isUserVote}
-												<FluentCheckmark20Filled class="size-5" />
-												Voted
+												✓ VOTED
 											{:else}
-												<FluentVote20Filled class="size-5" />
-												Vote
+												VOTE
 											{/if}
 										</button>
 									</form>
@@ -409,17 +391,3 @@
 {#if showVoteAnim}
 	<ThreeAnimation variant="vote" onComplete={() => (showVoteAnim = false)} />
 {/if}
-
-<style>
-	@keyframes shimmer {
-		0% {
-			transform: translateX(-100%);
-		}
-		100% {
-			transform: translateX(100%);
-		}
-	}
-	.animate-shimmer {
-		animation: shimmer 2s infinite;
-	}
-</style>
