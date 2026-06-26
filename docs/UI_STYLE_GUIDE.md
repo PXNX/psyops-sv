@@ -1,423 +1,410 @@
 # UI Style Guide
 
-> Design system and conventions for building modern, mobile-friendly game UI in PsyOps SV.
+> Design system and conventions for building a unified, immersive dark UI in PsyOps SV.
 
 ---
 
 ## Design Philosophy
 
-PsyOps SV uses a **dark, futuristic gaming aesthetic** with **neon cyan accents**. The UI should feel like a military command interface — clean, data-dense, but readable. Every page must be **mobile-first** since most players will be on phones.
+PsyOps SV uses a **dark, immersive warroom aesthetic**. Every page — whether it's a battle, an election, a factory, or a party — should feel like part of the same command interface: dark slate gradients, monospace accents, compact data-dense layouts, and full-width content. The UI is **mobile-first** and prioritizes clarity and atmosphere over decoration.
 
 **Core principles:**
 
 1. **Mobile-first** — Design for 375px width first, then scale up.
-2. **Dark theme** — Slate/gray backgrounds, white text, cyan/purple accents.
-3. **Data density** — Show useful information upfront, don't hide behind tabs.
-4. **Touch-friendly** — Minimum 44px tap targets, generous spacing.
-5. **Fast** — Minimal animations, no heavy assets, instant feedback.
+2. **Full-width dark theme** — Pages use `min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950` as the base. No max-width containers for primary pages.
+3. **Monospace accents** — Labels, stats, badges, and metadata use `font-mono` for a tactical feel.
+4. **Data density** — Show useful information upfront in compact stat strips and inline rows.
+5. **Touch-friendly** — Minimum 44px tap targets, generous spacing.
+6. **No useless buttons** — If something is a link, make it an `<a>` tag, not a button. Remove "View Details →" buttons; make the entire card clickable.
+7. **Consistent sections** — Use bordered card panels with header bars for grouped content.
+
+---
+
+## Page Layout Pattern
+
+Every page follows a two-part structure:
+
+### 1. Command Header (sticky-feeling top bar)
+
+A full-width header with backdrop blur that contains the page identity: logo/emblem, title, status badges, and optional countdown or metadata.
+
+```svelte
+<div class="border-b border-{accent}-900/30 bg-slate-900/80 backdrop-blur-xl">
+	<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
+		<!-- Logo + Title + Status -->
+	</div>
+</div>
+```
+
+### 2. Content Area
+
+Full-width padded content below the header.
+
+```svelte
+<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+	<!-- Stats strip, sections, cards -->
+</div>
+```
+
+### Full Page Template
+
+```svelte
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+	<!-- Command Header -->
+	<div class="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl">
+		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
+			<div class="flex items-center gap-4">
+				<div class="relative flex-shrink-0">
+					<div class="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+					<Logo src={logoUrl} alt={name} class="relative size-14 sm:size-18 rounded-lg border-2 border-purple-500/30" />
+				</div>
+				<div class="flex-1 min-w-0">
+					<h1 class="text-xl sm:text-2xl font-bold text-white tracking-wide">Page Title</h1>
+					<span class="text-xs text-slate-400 font-mono">Subtitle or metadata</span>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Content -->
+	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
+		<!-- Stats strip -->
+		<!-- Section cards -->
+	</div>
+</div>
+```
+
+### When to Use PageContainer
+
+`PageContainer` is still available for pages that benefit from max-width constraints (dashboard, region detail, settings). Use `maxWidth="full"` for data-heavy pages like production.
+
+```svelte
+<PageContainer maxWidth="4xl">  <!-- Dashboard, region, settings -->
+<PageContainer maxWidth="full"> <!-- Production, data-heavy pages -->
+```
 
 ---
 
 ## Color Palette
 
-| Role                 | Color                            | Tailwind Class                         | Usage                           |
-| -------------------- | -------------------------------- | -------------------------------------- | ------------------------------- |
-| **Background**       | `#0f172a` → `#1a1f3a`            | `bg-slate-950`, `bg-slate-900`         | Page background (gradient)      |
-| **Card surface**     | `slate-900/80` to `slate-950/80` | `gaming-card` utility                  | All cards, panels               |
-| **Primary accent**   | Cyan `#00ffff`                   | `text-cyan-300`, `border-cyan-500`     | Headers, values, active states  |
-| **Secondary accent** | Purple `#8b5cf6`                 | `text-purple-400`, `border-purple-500` | Gradients, secondary highlights |
-| **Success**          | Emerald `#10b981`                | `text-emerald-400`                     | Positive values, confirmations  |
-| **Warning**          | Amber `#f59e0b`                  | `text-amber-400`                       | Caution states                  |
-| **Danger**           | Red `#ef4444`                    | `text-red-400`                         | Errors, destructive actions     |
-| **Text primary**     | White                            | `text-white`                           | Headings, important text        |
-| **Text secondary**   | Gray 300–400                     | `text-gray-300`, `text-gray-400`       | Body text, descriptions         |
-| **Text muted**       | Gray 500                         | `text-gray-500`                        | Timestamps, metadata            |
+| Role                | Color                           | Tailwind                                    | Usage                               |
+| ------------------- | ------------------------------- | ------------------------------------------- | ----------------------------------- |
+| **Background**      | `#0f172a` → `#020617`           | `from-slate-950 via-slate-900 to-slate-950` | Page background gradient            |
+| **Header/Panel bg** | `slate-900/80`                  | `bg-slate-900/80 backdrop-blur-xl`          | Header bars, section headers        |
+| **Card surface**    | `slate-900/50` → `slate-950/50` | `from-slate-900/50 to-slate-950/50`         | Content cards                       |
+| **Card border**     | `slate-700/50`                  | `border-slate-700/50`                       | Default card borders                |
+| **Text primary**    | White                           | `text-white`                                | Headings, names, values             |
+| **Text secondary**  | Slate 300–400                   | `text-slate-300`, `text-slate-400`          | Body text, descriptions             |
+| **Text muted**      | Slate 500–600                   | `text-slate-500`, `text-slate-600`          | Timestamps, labels                  |
+| **Accent**          | Purple                          | `text-purple-400`, `border-purple-500`      | Links, hover states, party/politics |
+| **Success**         | Emerald                         | `text-emerald-400`, `border-emerald-500`    | Confirmations, positive             |
+| **Warning**         | Amber                           | `text-amber-400`, `border-amber-500`        | Caution, pending, in-progress       |
+| **Danger/Attacker** | Red                             | `text-red-400`, `border-red-500`            | Errors, destructive, attackers      |
+| **Defender**        | Blue                            | `text-blue-400`, `border-blue-500`          | Defenders, protection               |
 
-### Semantic Color Coding (used in broadcasts, factions, etc.)
+### War/Battle Color Coding
 
-| Context        | Background          | Border                  | Icon Color         |
-| -------------- | ------------------- | ----------------------- | ------------------ |
-| System / Admin | `bg-red-600/10`     | `border-red-500/20`     | `text-red-400`     |
-| State          | `bg-purple-600/10`  | `border-purple-500/20`  | `text-purple-400`  |
-| Party          | `bg-emerald-600/10` | `border-emerald-500/20` | `text-emerald-400` |
-| Attacker       | `bg-red-600/10`     | `border-red-500/20`     | `text-red-400`     |
-| Defender       | `bg-blue-600/10`    | `border-blue-500/20`    | `text-blue-400`    |
+| Side           | Text             | Border                | Background          |
+| -------------- | ---------------- | --------------------- | ------------------- |
+| Attacker       | `text-red-400`   | `border-red-500/30`   | `from-red-950/30`   |
+| Defender       | `text-blue-400`  | `border-blue-500/30`  | `from-blue-950/30`  |
+| Active/Ongoing | `text-amber-400` | `border-amber-500/30` | `from-amber-950/30` |
 
 ---
 
 ## Typography
 
-| Element         | Classes                                       | Notes                |
-| --------------- | --------------------------------------------- | -------------------- |
-| Page title      | `text-2xl sm:text-3xl font-bold text-white`   | Via `PageHeader`     |
-| Section heading | `text-xl font-bold text-white`                | Inside `SectionCard` |
-| Stat value      | `text-lg font-bold text-cyan-300`             | `gaming-stat-value`  |
-| Body text       | `text-sm text-gray-300`                       | Default content      |
-| Label           | `text-xs font-medium uppercase tracking-wide` | Meta labels          |
-| Timestamp       | `text-xs text-gray-500`                       | Dates, times         |
+| Element        | Classes                                                                    | Notes                 |
+| -------------- | -------------------------------------------------------------------------- | --------------------- |
+| Page title     | `text-xl sm:text-2xl font-bold text-white tracking-wide`                   | In command header     |
+| Section header | `text-sm font-bold text-slate-200 font-mono uppercase tracking-wide`       | In section header bar |
+| Stat value     | `text-xl sm:text-2xl font-bold text-white font-mono`                       | In stat strips        |
+| Stat label     | `text-[10px] sm:text-xs text-slate-500 font-mono uppercase tracking-wider` | Above stat values     |
+| Body text      | `text-sm text-slate-300`                                                   | General content       |
+| Metadata       | `text-xs text-slate-500 font-mono`                                         | Dates, IDs, counts    |
+| Badge text     | `text-[10px] font-mono font-bold uppercase`                                | Status indicators     |
 
-**Font:** `HPSimplified` (custom) → system-ui → sans-serif fallback.
+**Font:** `HPSimplified` (custom) → system-ui → sans-serif fallback. Monospace (`font-mono`) for tactical/data elements.
 
 ---
 
-## Custom Gaming Utilities
+## Stats Strip
 
-Defined in `app.css` as `@utility` directives. Use these instead of building from scratch.
+A compact 2–4 column grid of key metrics. Used on nearly every page.
 
-### `gaming-card`
-
-The primary container for content sections.
-
-```html
-<div class="gaming-card rounded-xl p-4 sm:p-6">
-	<!-- content -->
+```svelte
+<div class="grid grid-cols-3 gap-3">
+	<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
+		<div class="flex items-center gap-2 mb-1.5">
+			<Icon class="size-4 text-purple-400" />
+			<span class="text-[10px] sm:text-xs text-slate-500 font-mono uppercase tracking-wider">Label</span>
+		</div>
+		<div class="text-xl sm:text-2xl font-bold text-white font-mono">42</div>
+	</div>
+	<!-- more stat cells -->
 </div>
 ```
 
-- Gradient background (slate-900 → slate-950)
-- Cyan border glow (`border-cyan-500/30`)
-- Backdrop blur
-- Subtle inner glow
+- Always use `font-mono` for values
+- Icon + label on top row, value below
+- Use accent colors for icons matching the domain (red for war, purple for politics, emerald for economy)
 
-### `gaming-card-hover`
+---
 
-Card with hover effects. For clickable cards/links.
+## Section Card Panel
 
-```html
-<a href="/state/1" class="gaming-card gaming-card-hover rounded-xl p-4">
-	<!-- content -->
+Grouped content uses a bordered card with a header bar.
+
+```svelte
+<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden">
+	<!-- Header bar -->
+	<div class="bg-slate-900/80 border-b border-slate-700/50 px-4 sm:px-5 py-3">
+		<h2 class="text-sm font-bold text-slate-200 font-mono uppercase tracking-wide flex items-center gap-2">
+			<Icon class="size-4 text-purple-400" />
+			Section Title
+		</h2>
+	</div>
+	<!-- Content -->
+	<div class="p-3 sm:p-4 space-y-2">
+		<!-- rows -->
+	</div>
+</div>
+```
+
+---
+
+## List Item Row
+
+The standard pattern for clickable items in a list (members, states, battles, etc.).
+
+```svelte
+<a
+	href="/target/{id}"
+	class="flex items-center gap-3 bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 hover:border-slate-600/60 transition-all group"
+>
+	<Logo src={logo} alt={name} class="size-10 sm:size-12 rounded-lg" />
+	<div class="flex-1 min-w-0">
+		<p class="text-sm font-bold text-white group-hover:text-purple-400 transition-colors truncate">{name}</p>
+		<p class="text-xs text-slate-500 font-mono">{metadata}</p>
+	</div>
+	<span class="text-slate-600 group-hover:text-slate-400 transition-colors text-sm">→</span>
 </a>
 ```
 
-### `gaming-button`
+- The entire row is a link — no separate "View" buttons
+- Arrow `→` appears as navigation hint, color-shifts on hover
+- Use `group-hover:text-purple-400` on the title for hover feedback
 
-Primary action button with neon styling.
+---
 
-```html
-<button class="gaming-button">Deploy Units</button>
-```
+## Active War Card
 
-- Cyan-to-purple gradient
-- Neon glow on hover
-- Lift effect on hover (translateY -2px)
-- Press effect on click
+Used on region, state, and bloc pages to show ongoing wars. Always a link, never a button.
 
-### `gaming-input`
-
-Styled form input.
-
-```html
-<input type="text" class="gaming-input w-full p-3" placeholder="Unit name" />
-```
-
-### `gaming-badge`
-
-Small inline label.
-
-```html
-<span class="gaming-badge">Active</span>
-```
-
-### `gaming-header`
-
-Text with neon text-shadow.
-
-```html
-<h2 class="gaming-header text-xl">Battle Status</h2>
-```
-
-### `gaming-stat` / `gaming-stat-value`
-
-Stat display row.
-
-```html
-<div class="gaming-stat">
-	<span class="text-gray-400">Organization</span>
-	<span class="gaming-stat-value">87%</span>
-</div>
-```
-
-### `gaming-progress` / `gaming-progress-bar`
-
-Progress bar.
-
-```html
-<div class="gaming-progress">
-	<div class="gaming-progress-bar" style="width: 75%"></div>
-</div>
+```svelte
+<a
+	href="/war/{war.id}"
+	class="flex items-center gap-3 bg-gradient-to-r from-red-950/25 to-slate-900/50 border border-red-500/20 rounded-xl p-4 hover:border-red-400/40 transition-all group"
+>
+	<div class="relative flex-shrink-0">
+		<div class="absolute inset-0 bg-red-500/20 blur-lg rounded-full animate-pulse"></div>
+		<div class="relative size-10 bg-red-950/60 rounded-lg border border-red-500/30 flex items-center justify-center">
+			<span class="text-xl">⚔️</span>
+		</div>
+	</div>
+	<div class="flex-1 min-w-0">
+		<div class="flex items-center gap-2 mb-0.5">
+			<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
+			<span class="text-[10px] text-red-400/70 font-mono uppercase tracking-widest">Active War</span>
+		</div>
+		<div class="text-sm text-slate-300">
+			<span class="font-bold text-red-400">{attacker}</span>
+			<span class="text-slate-600 mx-1">vs</span>
+			<span class="font-bold text-blue-400">{defender}</span>
+		</div>
+	</div>
+	<span class="text-slate-600 group-hover:text-red-400 transition-colors">→</span>
+</a>
 ```
 
 ---
 
-## Layout Components
+## Logo with Glow
 
-### PageContainer
-
-Wraps page content with max-width and padding.
+Used in command headers for page identity elements.
 
 ```svelte
-<PageContainer maxWidth="4xl">
-	<!-- page content -->
-</PageContainer>
+<div class="relative flex-shrink-0">
+	<div class="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+	<Logo src={logoUrl} alt={name} class="relative size-14 sm:size-18 rounded-lg border-2 border-purple-500/30" />
+</div>
 ```
 
-Use `maxWidth`: `"sm"`, `"md"`, `"lg"`, `"xl"`, `"2xl"`, `"4xl"`.
+- The glow uses the page's accent color (purple for politics, red for war, emerald for economy)
+- `blur-xl` creates the ambient halo
+- Border uses the same accent at `/30` opacity
 
-### PageHeader
+---
 
-Page title with optional icon, subtitle, and action buttons.
+## Buttons and Actions
+
+### Primary Action Button
+
+Full-width gradient button with monospace text.
 
 ```svelte
-<PageHeader title="Battle #42" subtitle="War for Corsica" icon={FluentMilitaryHelmet} />
+<button
+	class="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold font-mono uppercase tracking-wide transition-all"
+>
+	<span class="flex items-center justify-center gap-2">
+		<Icon class="size-5" />
+		Action Label
+	</span>
+</button>
 ```
 
-### SectionCard
+### Compact Action Link
 
-A `gaming-card` with consistent padding and border radius.
+Small inline action (edit, chat, etc.).
 
 ```svelte
-<SectionCard>
-	<h2 class="text-xl font-bold text-white mb-4">Units</h2>
-	<!-- section content -->
-</SectionCard>
+<a
+	href="/target"
+	class="px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 rounded-lg text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-mono"
+>
+	<Icon class="size-3.5" />
+	Label
+</a>
 ```
 
-### EmptyState
-
-Shown when a list has no items.
+### Destructive Action
 
 ```svelte
-<EmptyState icon={FluentPeople} title="No party members" description="Be the first to join!" />
+<button
+	class="px-3 py-1.5 bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 rounded-lg text-red-300 text-xs font-mono font-bold transition-all flex items-center gap-1.5"
+>
+	<Icon class="size-3.5" />
+	Leave
+</button>
 ```
 
-### Logo
+### Icon-Only Action
 
-Renders a user/party/state logo with fallback icon.
+For inline management actions (promote, demote, kick).
 
 ```svelte
-<Logo src={logoUrl} alt="State flag" size="lg" placeholderIcon={FluentFlag} />
-```
-
-### ProfileItem
-
-Clickable row with avatar, name, and metadata.
-
-```svelte
-<ProfileItem href="/user/{userId}" name={userName} logoUrl={userLogo} subtitle="President" />
-```
-
-### Modal
-
-DaisyUI-based modal dialog. Use for complex forms or content that needs a centered overlay on desktop.
-
-```svelte
-<Modal bind:open={showModal} title="Confirm Action">
-	<!-- modal body -->
-</Modal>
-```
-
-### BottomSheet
-
-Slide-up panel anchored to the bottom of the screen. **Prefer this over Modal or custom dropdowns** for action menus, confirmations, short forms, and contextual options — especially on mobile. Bottom sheets feel more natural on touch devices and are easier to reach with one hand.
-
-```svelte
-<script>
-	import BottomSheet from "$lib/component/BottomSheet.svelte";
-	let showSheet = $state(false);
-</script>
-
-<button onclick={() => (showSheet = true)}>Open</button>
-
-<BottomSheet bind:open={showSheet} title="Actions">
-	<!-- sheet content -->
-</BottomSheet>
-```
-
-**Features:**
-
-- Backdrop blur overlay with click-to-dismiss
-- Drag handle indicator at top
-- Escape key to close
-- `max-h-[85vh]` with internal scroll for tall content
-- `animate-slide-up` entrance animation
-- Cyan border accent consistent with design system
-
-**When to use BottomSheet vs Modal:**
-
-| Scenario                                          | Use             |
-| ------------------------------------------------- | --------------- |
-| Action menu (report, block, share, etc.)          | **BottomSheet** |
-| Confirmation dialog (delete, leave, block)        | **BottomSheet** |
-| Short form (report reason, select option)         | **BottomSheet** |
-| Context menu on a message or list item            | **BottomSheet** |
-| "More actions" overflow menu                      | **BottomSheet** |
-| Complex multi-step form (onboarding, editor)      | Modal           |
-| Large content that needs centering (rules, terms) | Modal           |
-
-**Action item pattern inside BottomSheet:**
-
-```html
-<button class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors">
-	<div class="size-10 bg-cyan-600/20 rounded-lg flex items-center justify-center shrink-0">
-		<IconComponent class="size-5 text-cyan-400" />
-	</div>
-	<div>
-		<p class="font-medium text-white">Action Label</p>
-		<p class="text-xs text-gray-400">Short description</p>
-	</div>
+<button class="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-all" title="Promote">
+	<FluentArrowUp20Filled class="size-4" />
 </button>
 ```
 
 ---
 
-## Mobile-First Patterns
+## Status Indicators
 
-### Responsive Grid
-
-```html
-<!-- 1 col mobile, 2 cols tablet, 3–4 cols desktop -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-	<!-- items -->
-</div>
-```
-
-### Responsive Text
+### Live Pulse Dot
 
 ```html
-<h1 class="text-xl sm:text-2xl lg:text-3xl font-bold text-white">Title</h1>
-<p class="text-sm sm:text-base text-gray-300">Description</p>
+<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
 ```
 
-### Responsive Padding
+### Status Badge (monospace)
 
 ```html
-<div class="p-3 sm:p-4 lg:p-6">
-	<!-- content -->
-</div>
+<span class="px-2 py-1 bg-amber-500/20 border border-amber-500/30 rounded text-xs text-amber-400 font-mono font-bold">
+	⚔️ LIVE
+</span>
 ```
 
-### Stack on Mobile, Row on Desktop
+### Outcome Badge
 
 ```html
-<div class="flex flex-col sm:flex-row gap-3 sm:items-center">
-	<div>Left content</div>
-	<div class="sm:ml-auto">Right content</div>
-</div>
+<!-- Attacker won -->
+<span class="px-2 py-1 bg-red-500/20 border border-red-500/30 rounded text-xs text-red-400 font-mono font-bold">
+	🔴 CAPTURED
+</span>
+
+<!-- Defender won -->
+<span class="px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded text-xs text-blue-400 font-mono font-bold">
+	🔵 DEFENDED
+</span>
 ```
-
-### Tap Target Sizing
-
-- Buttons: minimum `h-10` (40px), ideally `h-12` (48px) on mobile.
-- Links in lists: full-width tap area with `p-3` or `p-4` padding.
-- Icon-only buttons: `size-10` or `size-12`.
-
-```html
-<button class="btn btn-primary h-12 w-full sm:w-auto">Full width on mobile</button>
-```
-
-### Bottom Sheet Pattern (for mobile actions)
-
-Instead of popovers, dropdowns, or modals, use the `BottomSheet` component for action menus, confirmations, and short forms. This is the preferred pattern for any contextual UI triggered by user interaction.
-
-```svelte
-<BottomSheet bind:open={showActions} title="Actions">
-	<div class="space-y-1">
-		<button class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors">
-			<div class="size-10 bg-cyan-600/20 rounded-lg flex items-center justify-center shrink-0">
-				<Icon class="size-5 text-cyan-400" />
-			</div>
-			<div>
-				<p class="font-medium text-white">Action</p>
-				<p class="text-xs text-gray-400">Description</p>
-			</div>
-		</button>
-	</div>
-</BottomSheet>
-```
-
-See the `BottomSheet` component section above for full documentation.
 
 ---
 
-## Bottom Dock Navigation
+## Countdown Timer
 
-The primary navigation is a **fixed bottom dock** (mobile tab bar pattern).
+Used for elections, battle preparation, and time-limited events.
 
+```svelte
+<div class="flex items-center justify-center gap-2 sm:gap-3">
+	{#each [{ value: hours, label: "HRS" }, { value: minutes, label: "MIN" }, { value: seconds, label: "SEC" }] as segment, i}
+		{#if i > 0}
+			<div class="text-xl sm:text-2xl font-bold text-purple-500/50">:</div>
+		{/if}
+		<div class="text-center">
+			<div
+				class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+			>
+				{String(segment.value).padStart(2, "0")}
+			</div>
+			<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">{segment.label}</div>
+		</div>
+	{/each}
+</div>
 ```
-┌──────────────────────────────────────┐
-│  Dashboard  Posts  Training  Prod  Me │
-└──────────────────────────────────────┘
-```
-
-- Fixed to bottom of viewport.
-- 5 icons: Dashboard, Posts, Training, Production, Profile.
-- Active tab glows cyan. No hover outline or glow effects on inactive tabs (clean, minimal interaction).
-- Hidden on fullscreen pages (article editor, onboarding).
-
-**Dock breakpoints:**
-| Screen | Dock Height | Icon Size |
-|---|---|---|
-| `> 768px` | `h-16` | `size-6` |
-| `480–768px` | `h-14` | `size-5` |
-| `< 480px` | `h-12` | `size-5` (full-width items) |
-
-**Main content area** must account for dock:
-
-- `h-[calc(100dvh-3.5rem)]` on mobile
-- `h-[calc(100dvh-4rem)]` on desktop
 
 ---
 
-## DaisyUI Component Usage
+## Territory / Progress Bar
 
-Use DaisyUI for standard UI elements. The dark theme is the default.
-
-### Buttons
-
-```html
-<button class="btn btn-primary">Primary Action</button>
-<button class="btn btn-ghost">Secondary</button>
-<button class="btn btn-error btn-outline btn-sm">Delete</button>
-<button class="btn btn-sm">Small Button</button>
-```
-
-For hero actions, use `gaming-button` instead of DaisyUI buttons.
-
-### Badges
-
-```html
-<span class="badge badge-primary">Active</span>
-<span class="badge badge-error">Banned</span>
-<span class="badge badge-sm">Small</span>
-```
-
-### Form Controls
-
-```html
-<input type="text" class="input input-bordered w-full" />
-<select class="select select-bordered w-full">
-	...
-</select>
-<textarea class="textarea textarea-bordered w-full"></textarea>
-```
-
-For gaming-themed inputs, use `gaming-input`.
-
-### Loading States
-
-```html
-<span class="loading loading-ring loading-md"></span> <span class="loading loading-spinner loading-sm"></span>
-```
-
-Full-page loading (used during navigation):
+For territory control, battle momentum, shift progress, etc.
 
 ```svelte
-{#if navigating.to}
-	<div class="flex flex-col h-dvh">
-		<span class="loading loading-ring loading-md m-auto"></span>
+<div class="relative h-8 sm:h-10 bg-slate-950/80 rounded-lg border border-slate-700/50 overflow-hidden">
+	<div
+		class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-red-600 to-red-500 transition-all duration-1000"
+		style="width: {attackerPercent}%"
+	></div>
+	<div
+		class="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-blue-600 to-blue-500 transition-all duration-1000"
+		style="width: {defenderPercent}%"
+	></div>
+	<div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
+		<span class="text-white font-bold text-xs font-mono drop-shadow-lg">{leftLabel}</span>
+		<span class="text-white font-bold text-xs font-mono drop-shadow-lg">{rightLabel}</span>
 	</div>
+</div>
+```
+
+---
+
+## ThreeJS Animation
+
+The `ThreeAnimation` component renders a short full-screen particle effect overlay. Use it for impactful moments.
+
+```svelte
+<script>
+	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
+	let showAnim = $state(false);
+</script>
+
+{#if showAnim}
+	<ThreeAnimation variant="battle" onComplete={() => (showAnim = false)} />
 {/if}
 ```
+
+| Variant      | Usage                                  | Character                                                                 |
+| ------------ | -------------------------------------- | ------------------------------------------------------------------------- |
+| `battle`     | Combat round execution, war page entry | Multi-origin edge-to-edge explosions, 900 particles, violent camera shake |
+| `vote`       | Casting a vote                         | Purple/blue dignified upward rise                                         |
+| `collect`    | Collecting wages                       | Golden fountain                                                           |
+| `company`    | Company creation                       | Blue-gold starburst                                                       |
+| `party`      | Party creation                         | Confetti celebration                                                      |
+| `production` | Starting production                    | Spinning mechanical pulse                                                 |
+| `training`   | Training units                         | Green disciplined columns                                                 |
+
+The battle variant uses 3 explosion origins spread across the screen, ultra-fast sparks that reach screen edges, edge smoke, and a blood-red afterglow. Duration is 3200ms.
 
 ---
 
@@ -425,144 +412,68 @@ Full-page loading (used during navigation):
 
 Use **unplugin-icons** with `~icons/` prefix.
 
-### Primary Icon Sets
+| Set             | Import Prefix          | Usage           |
+| --------------- | ---------------------- | --------------- |
+| Fluent (filled) | `~icons/fluent/`       | UI action icons |
+| Fluent Emoji    | `~icons/fluent-emoji/` | Dock nav        |
 
-| Set             | Import Prefix          | Usage                  |
-| --------------- | ---------------------- | ---------------------- |
-| Fluent (filled) | `~icons/fluent/`       | UI action icons        |
-| Fluent Color    | `~icons/fluent-color/` | Decorative icons       |
-| Fluent Emoji    | `~icons/fluent-emoji/` | Dock nav, fun elements |
-| MDI             | `~icons/mdi/`          | Supplementary icons    |
+### Sizing
 
-### Example
-
-```svelte
-<script>
-	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-</script>
-
-<FluentPeople20Filled class="size-5 text-cyan-300" />
-```
-
-### Icon Sizing
-
-| Context      | Size Class            |
-| ------------ | --------------------- |
-| Inline text  | `size-4`              |
-| Button icon  | `size-5`              |
-| Card icon    | `size-5` or `size-6`  |
-| Section icon | `size-8` or `size-10` |
-| Empty state  | `size-14 sm:size-16`  |
-| Dock nav     | `size-5 md:size-6`    |
+| Context             | Size                   |
+| ------------------- | ---------------------- |
+| Inline/metadata     | `size-3` to `size-4`   |
+| Stat strip icon     | `size-4`               |
+| Section header icon | `size-4`               |
+| Header logo area    | `size-14` to `size-20` |
+| Dock nav            | `size-5 md:size-6`     |
 
 ---
 
-## Animation
+## Bottom Dock Navigation
 
-Keep animations minimal and purposeful:
+Fixed bottom bar with 5 items: Dashboard, Posts, Training, Production, Profile.
 
-| Animation    | Usage                      | CSS Class                  |
-| ------------ | -------------------------- | -------------------------- |
-| Fade in      | Page transitions           | `transition:fade` (Svelte) |
-| Slide up     | Bottom sheets, toasts      | `.animate-slide-up`        |
-| Neon glow    | Header accents (sparingly) | `.animate-neon-glow`       |
-| Button pop   | Touch feedback             | `.flinch` class            |
-| Fade in      | New content appearing      | `.fade_in`                 |
-| Loading ring | Data loading               | DaisyUI `.loading`         |
-
-**Rules:**
-
-- Page transitions: `fade` only.
-- Interactive elements: Use `.flinch` for tap feedback.
-- No scroll-triggered animations.
-- No auto-playing animations except loading spinners.
-- Prefer `transition-all duration-300` for hover/focus states.
+- Active tab glows cyan
+- Hidden on fullscreen pages (editor, onboarding)
+- Main content accounts for dock height: `h-[calc(100dvh-3.5rem)]` mobile, `h-[calc(100dvh-4rem)]` desktop
 
 ---
 
-## Page Layout Template
+## Mobile Patterns
 
-Standard page structure used across the app:
-
-```svelte
-<script lang="ts">
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import PageHeader from "$lib/component/PageHeader.svelte";
-	import SectionCard from "$lib/component/SectionCard.svelte";
-	import type { PageData } from "./$types";
-
-	let { data }: { data: PageData } = $props();
-</script>
-
-<PageContainer maxWidth="4xl">
-	<PageHeader title="Page Title" subtitle="Optional subtitle" />
-
-	<!-- Alert/banner section (if needed) -->
-
-	<SectionCard>
-		<h2 class="text-xl font-bold text-white mb-4">Section Title</h2>
-		<!-- Section content -->
-	</SectionCard>
-
-	<SectionCard>
-		<h2 class="text-xl font-bold text-white mb-4">Another Section</h2>
-		<!-- More content -->
-	</SectionCard>
-</PageContainer>
-```
-
----
-
-## Card Pattern Examples
-
-### Stat Card
+### Responsive Text
 
 ```html
-<div class="gaming-card rounded-xl p-4">
-	<div class="flex items-center gap-3 mb-3">
-		<div class="size-10 bg-cyan-600/20 rounded-lg flex items-center justify-center">
-			<IconComponent class="size-5 text-cyan-400" />
-		</div>
-		<div>
-			<p class="text-xs text-gray-500 uppercase tracking-wide">Label</p>
-			<p class="text-lg font-bold text-white">Value</p>
-		</div>
-	</div>
+<h1 class="text-xl sm:text-2xl font-bold text-white">Title</h1>
+<p class="text-xs sm:text-sm text-slate-400 font-mono">Metadata</p>
+```
+
+### Responsive Padding
+
+```html
+<div class="p-3 sm:p-4"><!-- content --></div>
+<div class="px-4 sm:px-6 py-4 sm:py-6"><!-- full-width content --></div>
+```
+
+### Stack on Mobile, Row on Desktop
+
+```html
+<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+	<div>Left</div>
+	<div>Right</div>
 </div>
 ```
 
-### List Item Card
+---
 
-```html
-<a href="/link" class="gaming-card gaming-card-hover rounded-xl p-4 flex items-center gap-3">
-	<div class="size-12 rounded-lg bg-slate-800 flex items-center justify-center shrink-0">
-		<img src="{logo}" alt="" class="size-8 rounded" />
-	</div>
-	<div class="flex-1 min-w-0">
-		<h3 class="text-white font-semibold truncate">Title</h3>
-		<p class="text-sm text-gray-400 truncate">Subtitle</p>
-	</div>
-	<span class="gaming-badge">Badge</span>
-</a>
-```
+## BottomSheet vs Modal
 
-### Broadcast Banner
-
-```html
-<div class="bg-purple-600/10 rounded-xl border border-purple-500/20 p-5">
-	<div class="flex items-start gap-3">
-		<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center shrink-0">
-			<Icon class="size-5 text-purple-400" />
-		</div>
-		<div class="flex-1 min-w-0">
-			<span class="text-xs font-medium text-purple-400 uppercase tracking-wide">Label</span>
-			<h3 class="text-white font-bold">Title</h3>
-			<p class="text-gray-300 text-sm mt-1">Content</p>
-			<p class="text-xs text-gray-500 mt-2">Meta info</p>
-		</div>
-	</div>
-</div>
-```
+| Scenario                                | Use             |
+| --------------------------------------- | --------------- |
+| Action menu, confirmations, short forms | **BottomSheet** |
+| Context menu on messages/items          | **BottomSheet** |
+| Complex multi-step forms                | Modal           |
+| Large content (rules, terms)            | Modal           |
 
 ---
 
@@ -570,28 +481,28 @@ Standard page structure used across the app:
 
 ### ✅ Do
 
-- Use `gaming-card` for all content containers.
-- Use `PageContainer` + `PageHeader` + `SectionCard` for page structure.
-- Use `rounded-xl` for cards, `rounded-lg` for nested elements.
-- Use `gap-3` or `gap-4` between items.
-- Use `truncate` on text that might overflow.
-- Use `shrink-0` on fixed-size elements (icons, avatars).
-- Use `min-w-0` on flex children that contain truncated text.
-- Provide `alt` text for all images.
-- Use semantic HTML (`<nav>`, `<main>`, `<section>`).
+- Use `min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950` as page base.
+- Use `font-mono` for stats, labels, badges, metadata.
+- Use the command header + content area layout pattern.
+- Make entire cards/rows clickable links — no separate "View" buttons.
+- Use stat strips (grid of 2–4 compact stat cells) for key metrics.
+- Use section card panels with header bars for grouped content.
+- Use `border-slate-700/50` for card borders, `border-{accent}-500/30` for themed borders.
+- Use logo glow effect (`blur-xl` + accent color) in page headers.
+- Use `truncate` on text that might overflow, `min-w-0` on flex containers.
+- Use `transition-all` for hover states.
 - Test at 375px width.
 
 ### ❌ Don't
 
 - Don't use white/light backgrounds.
-- Don't use borders heavier than `border-*-500/30`.
+- Don't add "View Details" buttons — make the row a link.
+- Don't use `max-w-*` containers on primary pages (use full width).
+- Don't use DaisyUI `btn` classes for primary actions — use gradient buttons with `font-mono`.
+- Don't use verbose description paragraphs explaining what a section is.
 - Don't make touch targets smaller than 40px.
-- Don't use horizontal scrolling (except tables/code).
-- Don't rely on hover states for essential interactions (no hover on mobile).
-- Don't use `px` units for font sizes — use Tailwind classes.
-- Don't nest `gaming-card` inside `gaming-card` (use plain `div` for inner sections).
+- Don't nest cards inside cards.
 - Don't use auto-playing animations that cause layout shift.
-- Don't hardcode colors — use Tailwind/DaisyUI utilities.
-- Don't use dropdown menus or popovers for action menus — use `BottomSheet` instead.
-- Don't use modals for simple confirmations or action lists — use `BottomSheet` instead.
-- Don't add hover outlines or glow effects to navigation items (dock tabs should stay clean).
+- Don't use dropdown menus — use `BottomSheet` instead.
+- Don't add hover outlines or glow effects to dock navigation items.
+- Don't use `text-gray-*` — use `text-slate-*` for consistency.

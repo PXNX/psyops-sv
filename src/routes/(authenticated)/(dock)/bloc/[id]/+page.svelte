@@ -9,7 +9,6 @@
 	import FluentPersonAdd20Filled from "~icons/fluent/person-add-20-filled";
 	import { enhance } from "$app/forms";
 	import Logo from "$lib/component/Logo.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
 
 	const { data, form } = $props();
 </script>

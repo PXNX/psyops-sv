@@ -38,6 +38,19 @@
 		return "default";
 	}
 
+	function getFallbackIcon(iconType: TransactionIconType) {
+		switch (iconType) {
+			case "company":
+				return FluentBuilding20Filled;
+			case "state":
+				return FluentBuildingGovernment20Filled;
+			case "player":
+				return FluentPerson20Filled;
+			default:
+				return FluentWallet20Filled;
+		}
+	}
+
 	let { data }: { data: PageData } = $props();
 
 	function formatCurrency(amount: number): string {
@@ -46,12 +59,6 @@
 			currency: "USD",
 			minimumFractionDigits: 2
 		}).format(amount);
-	}
-
-	function formatDate(date: Date | string): string {
-		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 	}
 
 	function formatTime(date: Date | string): string {
@@ -231,51 +238,42 @@
 							{#each group.transactions as tx}
 								{@const color = getTypeColor(tx.type)}
 								{@const iconType = getTransactionIconType(tx)}
+								{@const FallbackIcon = getFallbackIcon(iconType)}
 								<div class="p-4 hover:bg-slate-700/20 transition-colors first:rounded-t-xl last:rounded-b-xl">
-									<div class="flex items-start justify-between gap-3">
-										<!-- Left: Icon + Details -->
-										<div class="flex items-start gap-3 flex-1 min-w-0">
-											<div
-												class="size-10 rounded-lg flex items-center justify-center shrink-0 {tx.isIncome
-													? 'bg-emerald-600/20'
-													: 'bg-red-600/20'}"
-											>
-												{#if iconType === "company"}
-													<FluentBuilding20Filled class="size-5 {tx.isIncome ? 'text-emerald-400' : 'text-red-400'}" />
-												{:else if iconType === "state"}
-													<FluentBuildingGovernment20Filled
-														class="size-5 {tx.isIncome ? 'text-emerald-400' : 'text-red-400'}"
-													/>
-												{:else if iconType === "player"}
-													<FluentPerson20Filled class="size-5 {tx.isIncome ? 'text-emerald-400' : 'text-red-400'}" />
-												{:else}
-													<FluentWallet20Filled class="size-5 {tx.isIncome ? 'text-emerald-400' : 'text-red-400'}" />
-												{/if}
-											</div>
+									<div class="flex items-center justify-between gap-3">
+										<!-- Left: Avatar + Details -->
+										<div class="flex items-center gap-3 flex-1 min-w-0">
+											{#if tx.entity.avatarUrl}
+												<img
+													src={tx.entity.avatarUrl}
+													alt={tx.entity.name || ""}
+													class="size-10 rounded-full object-cover shrink-0"
+												/>
+											{:else}
+												<div
+													class="size-10 rounded-full flex items-center justify-center shrink-0 {tx.isIncome
+														? 'bg-emerald-600/20'
+														: 'bg-red-600/20'}"
+												>
+													<FallbackIcon class="size-5 {tx.isIncome ? 'text-emerald-400' : 'text-red-400'}" />
+												</div>
+											{/if}
 
 											<div class="flex-1 min-w-0">
-												<p class="text-sm font-medium text-white truncate">{tx.description}</p>
-
-												{#if tx.relatedUser}
-													<a
-														href="/user/{tx.relatedUser.id}"
-														class="inline-flex items-center gap-1 text-xs text-purple-400 hover:text-purple-300 transition-colors mt-0.5 group"
-													>
-														<FluentPerson20Filled class="size-3 opacity-70 group-hover:opacity-100" />
-														<span class="group-hover:underline">{tx.relatedUser.name}</span>
-													</a>
-												{/if}
-
-												<div class="flex items-center gap-2 mt-1.5 flex-wrap">
-													<span
-														class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium {color.bg} {color.border} border {color.text}"
-													>
-														{typeLabels[tx.type] || tx.type}
-													</span>
-													<span class="text-[11px] text-gray-500">
-														{formatTime(tx.createdAt)}
-													</span>
+												<div class="flex items-center gap-2">
+													<p class="text-sm font-medium text-white truncate">{typeLabels[tx.type] || tx.type}</p>
+													<span class="text-[11px] text-gray-500 shrink-0">{formatTime(tx.createdAt)}</span>
 												</div>
+
+												{#if tx.entity.name}
+													{#if tx.entity.href}
+														<a href={tx.entity.href} class="text-xs {color.text} hover:underline truncate block mt-0.5">
+															{tx.entity.name}
+														</a>
+													{:else}
+														<p class="text-xs {color.text} truncate mt-0.5">{tx.entity.name}</p>
+													{/if}
+												{/if}
 											</div>
 										</div>
 
