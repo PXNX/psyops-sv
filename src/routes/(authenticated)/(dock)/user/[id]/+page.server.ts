@@ -20,7 +20,7 @@ import {
 	userWallets
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { error, fail } from "@sveltejs/kit";
+import { fail } from "@sveltejs/kit";
 import { eq, count, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
@@ -36,7 +36,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	});
 
 	if (!user) {
-		error(404, "User not found");
+		return {
+			userNotFound: true as const,
+			userId: params.id
+		};
 	}
 
 	const account = locals.account!;
@@ -215,6 +218,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	return {
+		userNotFound: false as const,
 		user: {
 			id: user.id,
 			email: user.email,
