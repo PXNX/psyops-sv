@@ -24,6 +24,7 @@ import { eq, and, gte, sql } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import { calculateAndCollectTax } from "$lib/server/taxes";
 import type { Actions, PageServerLoad } from "./$types";
+import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 
 const RESOURCES = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
 const PRODUCTS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"];
@@ -441,10 +442,22 @@ export const actions: Actions = {
 		});
 
 		await updateMarketStatistics(listing.itemType, listing.itemName);
-		return { success: true, message: "Purchase successful", taxPaid: result.taxAmount };
-	},
 
-	buyListingAsState: async ({ request, locals }) => {
+		sendNotificationIfEnabled(listing.sellerId, "notifyMarketSales", {
+			title: "💰 Market Sale",
+			body: `Someone purchased ${quantity}x ${listing.itemName} from your listing for $${(listing.pricePerUnit * quantity).toLocaleString()}.`,
+			icon: "/favicon.png",
+			badge: "/badge.png",
+			data: {
+				url: `/market/${listing.itemName}`,
+				tag: `market-sale-${listing.id}`
+			}
+		}).catch((err) => console.error("Failed to send market sale notification:", err));
+
+		return { success: true, message: "Purchase successful", taxPaid: result.taxAmount };
+		},
+
+		buyListingAsState: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
 

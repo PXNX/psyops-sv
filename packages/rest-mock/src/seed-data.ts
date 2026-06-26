@@ -148,11 +148,11 @@ export function seedStore(store: MockRecordStore, storage?: MockFileStorage): vo
     }
 
     // ============ Accounts ============
-    const account1 = store.insert("accounts", { id: "user-1", email: "alice@example.com", role: "admin", notifyNewspaperPosts: true, createdAt: new Date(), updatedAt: new Date() });
-    const account2 = store.insert("accounts", { id: "user-2", email: "bob@example.com", role: "moderator", notifyNewspaperPosts: true, createdAt: new Date(), updatedAt: new Date() });
-    const account3 = store.insert("accounts", { id: "user-3", email: "charlie@example.com", role: "user", notifyNewspaperPosts: true, createdAt: new Date(), updatedAt: new Date() });
-    const account4 = store.insert("accounts", { id: "user-4", email: "diana@example.com", role: "user", notifyNewspaperPosts: false, createdAt: new Date(), updatedAt: new Date() });
-    const account5 = store.insert("accounts", { id: "user-5", email: "eve@example.com", role: "user", notifyNewspaperPosts: true, createdAt: new Date(), updatedAt: new Date() });
+    const account1 = store.insert("accounts", { id: "user-1", email: "alice@example.com", role: "admin", notifyNewspaperPosts: true, notifyDirectMessages: true, notifyWarDeclarations: true, notifyBattleResults: true, notifyElections: true, notifyTravelComplete: true, notifyShiftComplete: true, notifyMarketSales: true, notifyNewProposals: true, createdAt: new Date(), updatedAt: new Date() });
+    const account2 = store.insert("accounts", { id: "user-2", email: "bob@example.com", role: "moderator", notifyNewspaperPosts: true, notifyDirectMessages: true, notifyWarDeclarations: true, notifyBattleResults: true, notifyElections: true, notifyTravelComplete: true, notifyShiftComplete: true, notifyMarketSales: true, notifyNewProposals: true, createdAt: new Date(), updatedAt: new Date() });
+    const account3 = store.insert("accounts", { id: "user-3", email: "charlie@example.com", role: "user", notifyNewspaperPosts: true, notifyDirectMessages: true, notifyWarDeclarations: true, notifyBattleResults: true, notifyElections: true, notifyTravelComplete: true, notifyShiftComplete: true, notifyMarketSales: true, notifyNewProposals: true, createdAt: new Date(), updatedAt: new Date() });
+    const account4 = store.insert("accounts", { id: "user-4", email: "diana@example.com", role: "user", notifyNewspaperPosts: false, notifyDirectMessages: true, notifyWarDeclarations: true, notifyBattleResults: true, notifyElections: true, notifyTravelComplete: true, notifyShiftComplete: true, notifyMarketSales: true, notifyNewProposals: true, createdAt: new Date(), updatedAt: new Date() });
+    const account5 = store.insert("accounts", { id: "user-5", email: "eve@example.com", role: "user", notifyNewspaperPosts: true, notifyDirectMessages: true, notifyWarDeclarations: true, notifyBattleResults: true, notifyElections: true, notifyTravelComplete: true, notifyShiftComplete: true, notifyMarketSales: true, notifyNewProposals: true, createdAt: new Date(), updatedAt: new Date() });
 
     // ============ User Profiles ============
     for (const [accId, name, bio, logo, theme] of [

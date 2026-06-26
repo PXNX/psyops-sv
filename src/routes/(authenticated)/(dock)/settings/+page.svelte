@@ -17,13 +17,21 @@
 
 	let current_theme = $state(data.profile.theme);
 	let notifyNewspaperPosts = $state(data.profile.notifyNewspaperPosts);
+	let notifyDirectMessages = $state(data.profile.notifyDirectMessages);
+	let notifyWarDeclarations = $state(data.profile.notifyWarDeclarations);
+	let notifyBattleResults = $state(data.profile.notifyBattleResults);
+	let notifyElections = $state(data.profile.notifyElections);
+	let notifyTravelComplete = $state(data.profile.notifyTravelComplete);
+	let notifyShiftComplete = $state(data.profile.notifyShiftComplete);
+	let notifyMarketSales = $state(data.profile.notifyMarketSales);
+	let notifyNewProposals = $state(data.profile.notifyNewProposals);
 	let loadImages = $state(data.profile.loadImages);
 
 	$effect(() => {
 		if (typeof window !== "undefined") {
 			// Apply theme from database/data on mount
 			document.documentElement.setAttribute("data-theme", current_theme);
-			
+
 			// Sync with localStorage for non-authenticated parts or immediate UI response
 			window.localStorage.setItem("theme", current_theme);
 			window.localStorage.setItem("loadImages", loadImages.toString());
@@ -140,38 +148,161 @@
 		</div>
 	</div>
 
-		<!-- Notification Settings -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-			<div class="flex items-center gap-2">
-				<FluentAlert20Filled class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-white">Notifications</h2>
-			</div>
-
-			<div class="pt-2">
-				<label class="flex items-center justify-between cursor-pointer group">
-					<div class="flex items-center gap-3">
-						<div class="bg-blue-600/20 p-2 rounded-lg">
-							<FluentEmojiRolledUpNewspaper class="size-5" />
-						</div>
-						<div>
-							<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">
-								Newspaper Posts
-							</p>
-							<p class="text-xs text-gray-500">Get notified when a subscribed newspaper publishes</p>
-						</div>
-					</div>
-					<input
-						type="checkbox"
-						bind:checked={notifyNewspaperPosts}
-						onchange={() => toggleNotification("notifyNewspaperPosts", notifyNewspaperPosts)}
-						class="toggle toggle-info"
-					/>
-				</label>
-			</div>
+	<!-- Notification Settings -->
+	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-1">
+		<div class="flex items-center gap-2 mb-3">
+			<FluentAlert20Filled class="size-5 text-blue-400" />
+			<h2 class="text-lg font-semibold text-white">Notifications</h2>
 		</div>
+		<p class="text-xs text-gray-500 mb-3">Choose which events send you push notifications</p>
 
-		<!-- Gift Code Link -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-white/5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">💬</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Direct Messages</p>
+					<p class="text-xs text-gray-500">When someone sends you a private message</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyDirectMessages}
+				onchange={() => toggleNotification("notifyDirectMessages", notifyDirectMessages)}
+				class="toggle toggle-info"
+			/>
+		</label>
+
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-white/5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">📰</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Newspaper Posts</p>
+					<p class="text-xs text-gray-500">When a subscribed newspaper publishes an article</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyNewspaperPosts}
+				onchange={() => toggleNotification("notifyNewspaperPosts", notifyNewspaperPosts)}
+				class="toggle toggle-info"
+			/>
+		</label>
+
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-white/5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">⚔️</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">War Declarations</p>
+					<p class="text-xs text-gray-500">When war is declared on or by your state</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyWarDeclarations}
+				onchange={() => toggleNotification("notifyWarDeclarations", notifyWarDeclarations)}
+				class="toggle toggle-info"
+			/>
+		</label>
+
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-white/5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">🏁</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Battle Results</p>
+					<p class="text-xs text-gray-500">When a battle involving your state ends</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyBattleResults}
+				onchange={() => toggleNotification("notifyBattleResults", notifyBattleResults)}
+				class="toggle toggle-info"
+			/>
+		</label>
+
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-white/5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">🗳️</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Elections</p>
+					<p class="text-xs text-gray-500">When an election starts or results are announced</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyElections}
+				onchange={() => toggleNotification("notifyElections", notifyElections)}
+				class="toggle toggle-info"
+			/>
+		</label>
+
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-white/5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">📜</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">New Proposals</p>
+					<p class="text-xs text-gray-500">When a new parliamentary proposal needs your vote</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyNewProposals}
+				onchange={() => toggleNotification("notifyNewProposals", notifyNewProposals)}
+				class="toggle toggle-info"
+			/>
+		</label>
+
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-white/5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">✈️</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Travel Arrived</p>
+					<p class="text-xs text-gray-500">When you arrive at your travel destination</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyTravelComplete}
+				onchange={() => toggleNotification("notifyTravelComplete", notifyTravelComplete)}
+				class="toggle toggle-info"
+			/>
+		</label>
+
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-white/5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">🏭</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Shift Complete</p>
+					<p class="text-xs text-gray-500">When your factory shift is done and wages are ready</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyShiftComplete}
+				onchange={() => toggleNotification("notifyShiftComplete", notifyShiftComplete)}
+				class="toggle toggle-info"
+			/>
+		</label>
+
+		<label class="flex items-center justify-between cursor-pointer group py-2.5">
+			<div class="flex items-center gap-3">
+				<span class="text-lg">💰</span>
+				<div>
+					<p class="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Market Sales</p>
+					<p class="text-xs text-gray-500">When someone buys from your market listing</p>
+				</div>
+			</div>
+			<input
+				type="checkbox"
+				bind:checked={notifyMarketSales}
+				onchange={() => toggleNotification("notifyMarketSales", notifyMarketSales)}
+				class="toggle toggle-info"
+			/>
+		</label>
+	</div>
+
+	<!-- Gift Code Link -->
+	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
 		<a
 			href="/giftcode"
 			class="flex items-center justify-between group hover:bg-slate-700/30 -m-5 p-5 rounded-xl transition-colors"

@@ -3,6 +3,7 @@ import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "$lib/server/db";
 import { eq, and, sql, or } from "drizzle-orm";
+import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 import {
 	states,
 	parliamentMembers,
@@ -362,6 +363,28 @@ export const actions: Actions = {
 				buildingName: form.data.buildingName!,
 				quantity: form.data.quantity!
 			});
+		}
+
+		// Notify parliament members about the new proposal (only if it needs voting)
+		if (!shouldAutoExecute) {
+			const stateIdNum = parseInt(params.id);
+			db.select({ userId: parliamentMembers.userId })
+				.from(parliamentMembers)
+				.where(eq(parliamentMembers.stateId, stateIdNum))
+				.then((members) => {
+					Promise.allSettled(
+						members.map((m) =>
+							sendNotificationIfEnabled(m.userId, "notifyNewProposals", {
+								title: "📜 New Proposal",
+								body: `A new ${proposalType.replace("_", " ")} proposal needs your vote in parliament.`,
+								icon: "/favicon.png",
+								badge: "/badge.png",
+								data: { url: `/state/${stateIdNum}/proposal`, tag: `proposal-${proposal.id}` }
+							})
+						)
+					);
+				})
+				.catch((err) => console.error("Proposal notification error:", err));
 		}
 
 		// Auto-execute if minister/president

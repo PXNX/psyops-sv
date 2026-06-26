@@ -16,11 +16,19 @@ describe("MockRecordStore", () => {
                 email: "test@example.com",
                 role: "user",
                 notifyNewspaperPosts: true,
+                notifyDirectMessages: true,
+                notifyWarDeclarations: true,
+                notifyBattleResults: true,
+                notifyElections: true,
+                notifyTravelComplete: true,
+                notifyShiftComplete: true,
+                notifyMarketSales: true,
+                notifyNewProposals: true,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-            });
+                });
 
-            expect(account.id).toBe("test-1");
+                expect(account.id).toBe("test-1");
             const found = store.findById("accounts", "test-1");
             expect(found).toBeDefined();
             expect(found!.email).toBe("test@example.com");
@@ -109,8 +117,8 @@ describe("MockRecordStore", () => {
 
     describe("Bulk operations", () => {
         it("updateWhere should update matching rows", () => {
-            store.insert("accounts", { id: "u1", role: "user", notifyNewspaperPosts: true, createdAt: new Date(), updatedAt: new Date() });
-            store.insert("accounts", { id: "u2", role: "user", notifyNewspaperPosts: true, createdAt: new Date(), updatedAt: new Date() });
+            store.insert("accounts", { id: "u1", role: "user", notifyNewspaperPosts: true, notifyDirectMessages: true, notifyWarDeclarations: true, notifyBattleResults: true, notifyElections: true, notifyTravelComplete: true, notifyShiftComplete: true, notifyMarketSales: true, notifyNewProposals: true, createdAt: new Date(), updatedAt: new Date() });
+            store.insert("accounts", { id: "u2", role: "user", notifyNewspaperPosts: true, notifyDirectMessages: true, notifyWarDeclarations: true, notifyBattleResults: true, notifyElections: true, notifyTravelComplete: true, notifyShiftComplete: true, notifyMarketSales: true, notifyNewProposals: true, createdAt: new Date(), updatedAt: new Date() });
             const updated = store.updateWhere("accounts", (a) => a.role === "user", { notifyNewspaperPosts: false });
             expect(updated.length).toBe(2);
             expect(updated.every((a) => !a.notifyNewspaperPosts)).toBe(true);

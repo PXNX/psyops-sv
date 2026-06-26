@@ -17,6 +17,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 			email: account.email,
 			name: profile?.name,
 			notifyNewspaperPosts: account.notifyNewspaperPosts,
+			notifyDirectMessages: account.notifyDirectMessages,
+			notifyWarDeclarations: account.notifyWarDeclarations,
+			notifyBattleResults: account.notifyBattleResults,
+			notifyElections: account.notifyElections,
+			notifyTravelComplete: account.notifyTravelComplete,
+			notifyShiftComplete: account.notifyShiftComplete,
+			notifyMarketSales: account.notifyMarketSales,
+			notifyNewProposals: account.notifyNewProposals,
 			theme: profile?.theme ?? "dark",
 			loadImages: profile?.loadImages ?? true
 		}
@@ -30,15 +38,32 @@ export const actions: Actions = {
 	updateNotifications: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
-		const notifyNewspaperPosts = formData.get("notifyNewspaperPosts") === "true";
+
+		const updates: Record<string, any> = { updatedAt: new Date() };
+
+		const notificationFields = [
+			"notifyNewspaperPosts",
+			"notifyDirectMessages",
+			"notifyWarDeclarations",
+			"notifyBattleResults",
+			"notifyElections",
+			"notifyTravelComplete",
+			"notifyShiftComplete",
+			"notifyMarketSales",
+			"notifyNewProposals"
+		];
+
+		for (const field of notificationFields) {
+			const value = formData.get(field);
+			if (value !== null) {
+				updates[field] = value === "true";
+			}
+		}
 
 		try {
 			await db
 				.update(accounts)
-				.set({
-					notifyNewspaperPosts,
-					updatedAt: new Date()
-				})
+				.set(updates)
 				.where(eq(accounts.id, account.id));
 
 			return { success: true };

@@ -5,6 +5,47 @@ import { env } from "$env/dynamic/private";
 import { pushSubscriptions, newspaperSubscriptions, accounts } from "$lib/server/schema";
 import { eq, and } from "drizzle-orm";
 
+export type NotificationType =
+    | "notifyNewspaperPosts"
+    | "notifyDirectMessages"
+    | "notifyWarDeclarations"
+    | "notifyBattleResults"
+    | "notifyElections"
+    | "notifyTravelComplete"
+    | "notifyShiftComplete"
+    | "notifyMarketSales"
+    | "notifyNewProposals";
+
+/**
+ * Check if a user has a specific notification type enabled
+ */
+export async function isNotificationEnabled(
+    userId: string,
+    type: NotificationType
+): Promise<boolean> {
+    const [account] = await db
+        .select()
+        .from(accounts)
+        .where(eq(accounts.id, userId))
+        .limit(1);
+
+    if (!account) return false;
+    return account[type] ?? true;
+}
+
+/**
+ * Send a push notification only if the user has the given notification type enabled
+ */
+export async function sendNotificationIfEnabled(
+    userId: string,
+    type: NotificationType,
+    payload: PushNotificationPayload
+): Promise<void> {
+    const enabled = await isNotificationEnabled(userId, type);
+    if (!enabled) return;
+    await sendPushNotificationToUser(userId, payload);
+}
+
 // Set VAPID details (these should be in environment variables in production)
 // You'll need to generate these keys using: npx web-push generate-vapid-keys
 const VAPID_PUBLIC_KEY =

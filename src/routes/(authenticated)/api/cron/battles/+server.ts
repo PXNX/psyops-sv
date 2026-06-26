@@ -3,9 +3,10 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
-import { battles, battleParticipants, battleRounds, militaryUnits, regions, states, wars } from "$lib/server/schema";
+import { battles, battleParticipants, battleRounds, militaryUnits, regions, states, wars, residences } from "$lib/server/schema";
 import { eq, and, sql, count, asc } from "drizzle-orm";
 import { MILITARY_UNIT_TEMPLATES } from "$lib/config";
+import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 
 // Terrain combat modifiers
 const TERRAIN_DATA = {
@@ -60,6 +61,10 @@ export const GET: RequestHandler = async ({ request }) => {
 				if (result.battleEnded) {
 					battlesEnded++;
 					console.log(`🏁 Battle ${battle.id} ended - Winner: ${result.winner}`);
+
+					notifyBattleResult(battle, result.winner!).catch((err) =>
+						console.error("Battle notification error:", err)
+					);
 				} else {
 					roundsProcessed++;
 					console.log(`⚔️ Processed combat round ${result.roundNumber} for battle ${battle.id}`);
@@ -366,4 +371,41 @@ async function processCombatRound(battleId: number) {
 		battleEnded,
 		winner
 	};
-}
+	}
+
+	async function notifyBattleResult(battle: any, winner: "attacker" | "defender") {
+	const attackerStateName = await db
+		.select({ name: states.name })
+		.from(states)
+		.where(eq(states.id, battle.attackerStateId))
+		.then((r) => r[0]?.name ?? "Unknown");
+
+	const defenderStateName = await db
+		.select({ name: states.name })
+		.from(states)
+		.where(eq(states.id, battle.defenderStateId))
+		.then((r) => r[0]?.name ?? "Unknown");
+
+	const winnerName = winner === "attacker" ? attackerStateName : defenderStateName;
+	const loserName = winner === "attacker" ? defenderStateName : attackerStateName;
+
+	const payload = {
+		title: "🏁 Battle Ended",
+		body: `${winnerName} defeated ${loserName} in battle!`,
+		icon: "/favicon.png",
+		badge: "/badge.png",
+		data: { url: `/battle/${battle.id}`, tag: `battle-${battle.id}` }
+	};
+
+	for (const stateId of [battle.attackerStateId, battle.defenderStateId]) {
+		const citizens = await db
+			.select({ userId: residences.userId })
+			.from(residences)
+			.innerJoin(regions, eq(residences.regionId, regions.id))
+			.where(eq(regions.stateId, stateId));
+
+		await Promise.allSettled(
+			citizens.map((c) => sendNotificationIfEnabled(c.userId, "notifyBattleResults", payload))
+		);
+	}
+	}

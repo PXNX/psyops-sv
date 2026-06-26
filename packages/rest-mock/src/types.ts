@@ -6,6 +6,14 @@ export interface Account {
     email: string;
     role: "user" | "moderator" | "admin";
     notifyNewspaperPosts: boolean;
+    notifyDirectMessages: boolean;
+    notifyWarDeclarations: boolean;
+    notifyBattleResults: boolean;
+    notifyElections: boolean;
+    notifyTravelComplete: boolean;
+    notifyShiftComplete: boolean;
+    notifyMarketSales: boolean;
+    notifyNewProposals: boolean;
     createdAt: Date;
     updatedAt: Date;
 }

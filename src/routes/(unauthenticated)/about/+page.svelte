@@ -10,14 +10,47 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import Modal from "$lib/component/Modal.svelte";
 
-	const version = "0.0.1";
-	const buildTime = "2026-03-12 12:30:00";
+	let { data } = $props();
+
 	let bugModalOpen = $state(false);
+	let changelogModalOpen = $state(false);
 	let bugForm = $state({
 		title: "",
 		description: "",
 		severity: "Low - Minor issue"
 	});
+
+	function parseChangelog(
+		raw: string
+	): { version: string; date: string; sections: { title: string; items: string[] }[] }[] {
+		const entries: { version: string; date: string; sections: { title: string; items: string[] }[] }[] = [];
+		let current: (typeof entries)[0] | null = null;
+		let currentSection: { title: string; items: string[] } | null = null;
+
+		for (const line of raw.split("\n")) {
+			const versionMatch = line.match(/^## \[(.+?)\]\s*-\s*(.+)$/);
+			if (versionMatch) {
+				if (current) entries.push(current);
+				current = { version: versionMatch[1], date: versionMatch[2].trim(), sections: [] };
+				currentSection = null;
+				continue;
+			}
+			const sectionMatch = line.match(/^### (.+)$/);
+			if (sectionMatch && current) {
+				currentSection = { title: sectionMatch[1], items: [] };
+				current.sections.push(currentSection);
+				continue;
+			}
+			const itemMatch = line.match(/^- (.+)$/);
+			if (itemMatch && currentSection) {
+				currentSection.items.push(itemMatch[1]);
+			}
+		}
+		if (current) entries.push(current);
+		return entries;
+	}
+
+	const changelogEntries = $derived(parseChangelog(data.changelog));
 </script>
 
 <div class="relative min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900 overflow-hidden">
@@ -48,12 +81,14 @@
 					About
 				</h1>
 				<p class="text-gray-400 max-w-md mx-auto">A global political simulation platform</p>
-				<div
-					class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-full"
+				<button
+					class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-full cursor-pointer hover:bg-slate-700/50 hover:border-purple-500/30 transition-all"
+					onclick={() => (changelogModalOpen = true)}
 				>
 					<FluentInfo20Filled class="size-4 text-purple-400" />
-					<span class="text-sm text-gray-300">Version {version} ({buildTime})</span>
-				</div>
+					<span class="text-sm text-gray-300">Version {data.version}</span>
+					<span class="text-xs text-purple-400">View Changelog</span>
+				</button>
 			</div>
 		</div>
 
@@ -203,6 +238,40 @@
 		</div>
 	</div>
 </div>
+
+<!-- Changelog Modal -->
+<Modal bind:open={changelogModalOpen} title="Changelog" size="default">
+	<div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+		{#each changelogEntries as entry}
+			<div class="space-y-3">
+				<div class="flex items-center gap-3">
+					<span class="px-2.5 py-1 bg-purple-600/20 text-purple-300 text-sm font-mono font-semibold rounded-lg"
+						>v{entry.version}</span
+					>
+					<span class="text-xs text-gray-400">{entry.date}</span>
+				</div>
+				{#each entry.sections as section}
+					<div>
+						<h4 class="text-sm font-semibold text-white mb-1.5">{section.title}</h4>
+						<ul class="space-y-1">
+							{#each section.items as item}
+								<li class="text-sm text-gray-300 flex items-start gap-2">
+									<span class="text-purple-400 mt-1">•</span>
+									<span>{item}</span>
+								</li>
+							{/each}
+						</ul>
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<p class="text-gray-400 text-sm">No changelog entries available.</p>
+		{/each}
+	</div>
+	<div class="flex justify-end pt-4">
+		<button class="btn btn-ghost" onclick={() => (changelogModalOpen = false)}>Close</button>
+	</div>
+</Modal>
 
 <!-- Bug Report Modal -->
 <Modal bind:open={bugModalOpen} title="Report a Bug" size="default">
