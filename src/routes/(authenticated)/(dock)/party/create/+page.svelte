@@ -15,9 +15,10 @@
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
+	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import { EditCooldownWarning, EditInsufficientFundsWarning } from "$lib/component/edit";
+	import { EditCooldownWarning } from "$lib/component/edit";
 
 	let { data } = $props();
 
@@ -169,19 +170,9 @@
 		<p class="text-gray-400">Start your own political movement and shape the future</p>
 	</div>
 
-	<!-- Cost & Balance -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
-		<ResourceRequirements costs={{ currency: data.creationCost }} available={{ currency: data.userBalance }} />
-	</div>
-
 	<!-- Cooldown Warning -->
 	{#if data.isOnCooldown && data.cooldownEndsAt}
 		<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="party" />
-	{/if}
-
-	<!-- Insufficient Funds Warning -->
-	{#if !data.canAfford && !data.isOnCooldown}
-		<EditInsufficientFundsWarning editCost={data.creationCost} userBalance={data.userBalance} />
 	{/if}
 
 	<!-- Independent Region Warning -->
@@ -495,6 +486,19 @@
 				placeholder="Describe your party's mission, values, and political platform..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 				disabled={$submitting || !canCreate}></textarea>
+		</div>
+
+		<!-- Cost & Cooldown -->
+		<ResourceRequirements costs={{ currency: data.creationCost }} available={{ currency: data.userBalance }} />
+
+		<div class="flex items-center justify-between p-3 md:p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+			<div class="flex items-center gap-2">
+				<FluentClock20Filled class="size-4 md:size-5 text-gray-400" />
+				<span class="text-xs md:text-sm text-gray-400">Creation Cooldown</span>
+			</div>
+			<span class="font-bold text-white text-base md:text-lg">
+				{data.cooldownDays} days
+			</span>
 		</div>
 
 		<!-- Submit -->

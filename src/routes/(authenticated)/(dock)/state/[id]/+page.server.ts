@@ -18,7 +18,10 @@ import {
 	files,
 	wars,
 	stateVisaSettings,
-	userVisas
+	userVisas,
+	userWallets,
+	stateTreasury,
+	visaApplications
 } from "$lib/server/schema";
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, gte, sql, or } from "drizzle-orm";
@@ -316,6 +319,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	}
 
+	// Get wallet balance
+	let walletBalance = 0;
+	if (locals.account?.id) {
+		const wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, locals.account.id)
+		});
+		walletBalance = wallet ? Number(wallet.balance) : 0;
+	}
+
 	return {
 		state: {
 			id: state.id,
@@ -327,20 +339,23 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			rating: state.rating,
 			createdAt: state.createdAt
 		},
+		walletBalance,
 		visa: {
-			isResident,
-			visaRequired: visaSettings?.visaRequired ?? false,
-			visaCost: visaSettings ? Number(visaSettings.visaCost) : 5000,
-			hasActiveVisa,
-			activeVisa: userActiveVisa
-				? {
-						expiresAt: userActiveVisa.expiresAt.toISOString(),
-						cost: Number(userActiveVisa.cost)
-					}
-				: null,
-			blocVisaFree,
-			blockedReason: visaBlockedReason
-		},
+				isResident,
+				visaRequired: visaSettings?.visaRequired ?? false,
+				visaCost: visaSettings ? Number(visaSettings.visaCost) : 5000,
+				visaTaxRate: visaSettings?.visaTaxRate ?? 20,
+				autoApprove: visaSettings?.autoApprove ?? true,
+				hasActiveVisa,
+				activeVisa: userActiveVisa
+					? {
+							expiresAt: userActiveVisa.expiresAt.toISOString(),
+							cost: Number(userActiveVisa.cost)
+						}
+					: null,
+				blocVisaFree,
+				blockedReason: visaBlockedReason
+			},
 		bloc: state.blocId
 			? {
 					id: state.blocId,
@@ -569,6 +584,193 @@ export const actions: Actions = {
 			success: true,
 			message: `War declared successfully!`,
 			warId: newWar.id
+		};
+		},
+
+		purchaseVisa: async ({ params, locals }) => {
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
+
+		const residence = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id),
+			with: {
+				region: {
+					with: { state: { with: { bloc: true } } }
+				}
+			}
+		});
+
+		if (residence?.region.stateId === stateId) {
+			return fail(400, { error: "You are already a resident of this state" });
+		}
+
+		// Block visa if at war or sanctioned
+		if (residence?.region.stateId) {
+			const userStateId = residence.region.stateId;
+			const userBlocId = residence.region.state?.blocId ?? null;
+
+			const warBlock = await db.query.wars.findFirst({
+				where: and(
+					eq(wars.status, "active"),
+					or(
+						and(eq(wars.attackerId, userStateId), eq(wars.defenderId, stateId)),
+						and(eq(wars.attackerId, stateId), eq(wars.defenderId, userStateId)),
+						...(userBlocId
+							? [
+									and(eq(wars.attackerBlocId, userBlocId), eq(wars.defenderId, stateId)),
+									and(eq(wars.attackerId, stateId), eq(wars.defenderBlocId, userBlocId))
+								]
+							: [])
+					)
+				)
+			});
+
+			if (warBlock) {
+				return fail(400, { error: "Cannot apply for visa — your state is at war with this state" });
+			}
+
+			const sanctionBlock = await db.query.stateSanctions.findFirst({
+				where: and(
+					eq(stateSanctions.sanctioningStateId, stateId),
+					eq(stateSanctions.targetStateId, userStateId),
+					eq(stateSanctions.isActive, true)
+				)
+			});
+
+			if (sanctionBlock) {
+				return fail(400, { error: "Cannot apply for visa — this state has sanctioned your state" });
+			}
+		}
+
+		let visaSettingsData = await db.query.stateVisaSettings.findFirst({
+			where: eq(stateVisaSettings.stateId, stateId)
+		});
+
+		if (!visaSettingsData) {
+			[visaSettingsData] = await db
+				.insert(stateVisaSettings)
+				.values({
+					stateId,
+					visaRequired: false,
+					visaCost: 5000,
+					visaTaxRate: 20,
+					autoApprove: true
+				})
+				.returning();
+		}
+
+		if (!visaSettingsData.visaRequired) {
+			const expiresAt = new Date();
+			expiresAt.setDate(expiresAt.getDate() + 14);
+
+			await db.insert(userVisas).values({
+				userId: account.id,
+				stateId,
+				status: "active",
+				expiresAt,
+				cost: 0,
+				taxPaid: 0,
+				approvedAt: new Date()
+			});
+
+			return { success: true, message: "Free visa granted for open borders state" };
+		}
+
+		const existingVisa = await db.query.userVisas.findFirst({
+			where: and(eq(userVisas.userId, account.id), eq(userVisas.stateId, stateId), eq(userVisas.status, "active"))
+		});
+
+		if (existingVisa && new Date(existingVisa.expiresAt) > new Date()) {
+			return fail(400, { error: "You already have an active visa for this state" });
+		}
+
+		const pendingApp = await db.query.visaApplications.findFirst({
+			where: and(
+				eq(visaApplications.userId, account.id),
+				eq(visaApplications.stateId, stateId),
+				eq(visaApplications.status, "pending")
+			)
+		});
+
+		if (pendingApp) {
+			return fail(400, { error: "You already have a pending visa application" });
+		}
+
+		if (!visaSettingsData.autoApprove) {
+			await db.insert(visaApplications).values({
+				userId: account.id,
+				stateId,
+				status: "pending",
+				purpose: "Visit and work"
+			});
+
+			return { success: true, message: "Visa application submitted for review by Foreign Minister" };
+		}
+
+		const visaCost = Number(visaSettingsData.visaCost);
+		const taxRate = visaSettingsData.visaTaxRate;
+		const taxAmount = Math.floor(visaCost * (taxRate / 100));
+
+		let wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		});
+
+		if (!wallet) {
+			[wallet] = await db
+				.insert(userWallets)
+				.values({ userId: account.id, balance: 10000 })
+				.returning();
+		}
+
+		const walletBal = Number(wallet.balance);
+
+		if (walletBal < visaCost) {
+			return fail(400, {
+				error: `Insufficient funds. Need $${visaCost.toLocaleString()}, have $${walletBal.toLocaleString()}`
+			});
+		}
+
+		await db
+			.update(userWallets)
+			.set({ balance: walletBal - visaCost, updatedAt: new Date() })
+			.where(eq(userWallets.userId, account.id));
+
+		let treasury = await db.query.stateTreasury.findFirst({
+			where: eq(stateTreasury.stateId, stateId)
+		});
+
+		if (!treasury) {
+			[treasury] = await db
+				.insert(stateTreasury)
+				.values({ stateId, balance: 0, totalCollected: 0, totalSpent: 0 })
+				.returning();
+		}
+
+		await db
+			.update(stateTreasury)
+			.set({
+				balance: Number(treasury.balance) + taxAmount,
+				totalCollected: Number(treasury.totalCollected) + taxAmount,
+				updatedAt: new Date()
+			})
+			.where(eq(stateTreasury.stateId, stateId));
+
+		const expiresAt = new Date();
+		expiresAt.setDate(expiresAt.getDate() + 14);
+
+		await db.insert(userVisas).values({
+			userId: account.id,
+			stateId,
+			status: "active",
+			expiresAt,
+			cost: visaCost,
+			taxPaid: taxAmount,
+			approvedAt: new Date()
+		});
+
+		return {
+			success: true,
+			message: `Visa purchased for $${visaCost.toLocaleString()} (tax: $${taxAmount.toLocaleString()})`
 		};
 		}
 		};
