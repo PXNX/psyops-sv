@@ -43,9 +43,7 @@
 	const isOnTraining = $derived(currentPath === "/training");
 
 	// Compact floating bar when we're waiting for the user to navigate
-	const isCompactMode = $derived(
-		(step === 4 && !isOnProduction) || (step === 5 && !isOnTraining)
-	);
+	const isCompactMode = $derived((step === 4 && !isOnProduction) || (step === 5 && !isOnTraining));
 
 	// Pre-load regions when we reach step 2
 	$effect(() => {
@@ -74,9 +72,18 @@
 	async function submitName() {
 		nameError = "";
 		const trimmed = name.trim();
-		if (!trimmed || trimmed.length < 2) { nameError = "Name must be at least 2 characters"; return; }
-		if (trimmed.length > 50) { nameError = "Name must be 50 characters or less"; return; }
-		if (!/^[a-zA-Z0-9\s]+$/.test(trimmed)) { nameError = "Only letters, numbers, and spaces allowed"; return; }
+		if (!trimmed || trimmed.length < 2) {
+			nameError = "Name must be at least 2 characters";
+			return;
+		}
+		if (trimmed.length > 50) {
+			nameError = "Name must be 50 characters or less";
+			return;
+		}
+		if (!/^[a-zA-Z0-9\s]+$/.test(trimmed)) {
+			nameError = "Only letters, numbers, and spaces allowed";
+			return;
+		}
 
 		submitting = true;
 		optimistic = 2;
@@ -120,7 +127,10 @@
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ regionId })
 			});
-			if (!res.ok) { optimistic = null; return; }
+			if (!res.ok) {
+				optimistic = null;
+				return;
+			}
 			await invalidateAll();
 		} finally {
 			submitting = false;
@@ -146,7 +156,9 @@
 			style="box-shadow: 0 0 20px rgba(0,255,255,0.1), inset 0 0 20px rgba(0,255,255,0.03);"
 		>
 			<div class="flex items-center gap-3">
-				<div class="size-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+				<div
+					class="size-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0"
+				>
 					<span class="text-lg">{step === 4 ? "🔧" : "🪖"}</span>
 				</div>
 				<div class="flex-1 min-w-0">
@@ -168,7 +180,7 @@
 		</div>
 	</div>
 
-<!-- ─── Full bottom sheet ─── -->
+	<!-- ─── Full bottom sheet ─── -->
 {:else}
 	<div class="fixed inset-0 z-50" role="dialog" aria-modal="true" in:fade={{ duration: 200 }}>
 		<!-- Backdrop -->
@@ -198,26 +210,32 @@
 				<div class="flex justify-center gap-1.5 pb-3 shrink-0">
 					{#each Array(TOTAL_STEPS) as _, i}
 						<div
-							class="h-1 rounded-full transition-all duration-300 {i === step ? 'w-6 bg-cyan-400' : i < step ? 'w-2 bg-cyan-400/30' : 'w-2 bg-slate-700'}"
+							class="h-1 rounded-full transition-all duration-300 {i === step
+								? 'w-6 bg-cyan-400'
+								: i < step
+									? 'w-2 bg-cyan-400/30'
+									: 'w-2 bg-slate-700'}"
 						></div>
 					{/each}
 				</div>
 
 				<!-- Content -->
 				<div class="px-5 pb-6 overflow-y-auto">
-
 					{#if step === 0}
 						<!-- ── Greeting ── -->
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
-								<div class="size-16 rounded-2xl bg-gradient-to-br from-cyan-600/20 to-purple-600/20 border border-cyan-500/20 flex items-center justify-center">
+								<div
+									class="size-16 rounded-2xl bg-gradient-to-br from-cyan-600/20 to-purple-600/20 border border-cyan-500/20 flex items-center justify-center"
+								>
 									<span class="text-3xl">🎖️</span>
 								</div>
 							</div>
 							<div>
 								<h2 class="text-2xl font-bold text-white tracking-wide">Greeting Commander</h2>
 								<p class="text-slate-400 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
-									Welcome to PsyOps — a political simulation where you shape nations, build empires, and wage wars through strategy and diplomacy.
+									Welcome to PsyOps — a political simulation where you shape nations, build empires, and wage wars
+									through strategy and diplomacy.
 								</p>
 							</div>
 							<button
@@ -231,12 +249,13 @@
 								</span>
 							</button>
 						</div>
-
 					{:else if step === 1}
 						<!-- ── Set Name ── -->
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex items-center gap-3">
-								<div class="size-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0">
+								<div
+									class="size-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0"
+								>
 									<FluentPerson20Filled class="size-5 text-purple-400" />
 								</div>
 								<div>
@@ -253,12 +272,9 @@
 									placeholder="Enter your commander name"
 									maxlength={50}
 									disabled={submitting}
-									class="w-full px-4 py-3 bg-slate-800/80 border rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all"
-									class:border-slate-700/50={!nameError}
-									class:focus:border-cyan-500/50={!nameError}
-									class:focus:ring-cyan-500/20={!nameError}
-									class:border-red-500/50={nameError}
-									class:focus:ring-red-500/20={nameError}
+									class="w-full px-4 py-3 bg-slate-800/80 border rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all {nameError
+										? 'border-red-500/50 focus:ring-red-500/20'
+										: 'border-slate-700/50 focus:border-cyan-500/50 focus:ring-cyan-500/20'}"
 								/>
 								{#if nameError}
 									<p class="text-xs text-red-400 mt-1.5">{nameError}</p>
@@ -285,12 +301,13 @@
 								{/if}
 							</button>
 						</div>
-
 					{:else if step === 2}
 						<!-- ── Choose Region ── -->
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex items-center gap-3">
-								<div class="size-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+								<div
+									class="size-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"
+								>
 									<FluentGlobe20Filled class="size-5 text-blue-400" />
 								</div>
 								<div>
@@ -312,11 +329,17 @@
 											class="w-full text-left bg-slate-800/50 border border-slate-700/40 rounded-xl p-3.5 hover:border-blue-500/40 hover:bg-slate-800/70 transition-all disabled:opacity-50 group"
 										>
 											<div class="flex items-center gap-3">
-												<div class="size-10 rounded-lg bg-slate-700/50 border border-slate-600/30 flex items-center justify-center shrink-0">
-													<FluentGlobe20Filled class="size-5 text-slate-400 group-hover:text-blue-400 transition-colors" />
+												<div
+													class="size-10 rounded-lg bg-slate-700/50 border border-slate-600/30 flex items-center justify-center shrink-0"
+												>
+													<FluentGlobe20Filled
+														class="size-5 text-slate-400 group-hover:text-blue-400 transition-colors"
+													/>
 												</div>
 												<div class="flex-1 min-w-0">
-													<p class="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors truncate">
+													<p
+														class="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors truncate"
+													>
 														{getRegionName(region.id)}
 													</p>
 													<div class="flex items-center gap-2 mt-0.5">
@@ -330,19 +353,20 @@
 														{/if}
 														<span class="text-xs text-slate-600">·</span>
 														<span class="text-xs text-slate-500 flex items-center gap-1">
-																<FluentPeople20Filled class="size-3" />
-																{region.populationCount === 0 ? "No residents" : formatPopulation(region.populationCount)}
+															<FluentPeople20Filled class="size-3" />
+															{region.populationCount === 0 ? "No residents" : formatPopulation(region.populationCount)}
 														</span>
 													</div>
 												</div>
-												<FluentArrowRight20Filled class="size-4 text-slate-600 group-hover:text-blue-400 transition-colors shrink-0" />
+												<FluentArrowRight20Filled
+													class="size-4 text-slate-600 group-hover:text-blue-400 transition-colors shrink-0"
+												/>
 											</div>
 										</button>
 									{/each}
 								</div>
 							{/if}
 						</div>
-
 					{:else if step === 3}
 						<!-- ── Dashboard tour ── -->
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
@@ -350,7 +374,8 @@
 								<span class="text-3xl">🏠</span>
 								<h2 class="text-lg font-bold text-white">Your Command Center</h2>
 								<p class="text-sm text-slate-400 leading-relaxed">
-									This is your dashboard — broadcasts from your state, quick actions, and an overview of your journey all live here.
+									This is your dashboard — broadcasts from your state, quick actions, and an overview of your journey
+									all live here.
 								</p>
 							</div>
 
@@ -384,7 +409,6 @@
 								</span>
 							</button>
 						</div>
-
 					{:else if step === 4 && isOnProduction}
 						<!-- ── Production explanation ── -->
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
@@ -392,7 +416,8 @@
 								<span class="text-3xl">🔧</span>
 								<h2 class="text-lg font-bold text-white">Production</h2>
 								<p class="text-sm text-slate-400 leading-relaxed">
-									This is where you earn money and produce goods. Work at a factory to collect wages, buy resources on the market, and manufacture weapons &amp; equipment.
+									This is where you earn money and produce goods. Work at a factory to collect wages, buy resources on
+									the market, and manufacture weapons &amp; equipment.
 								</p>
 							</div>
 
@@ -431,7 +456,6 @@
 								</span>
 							</button>
 						</div>
-
 					{:else if step === 5 && isOnTraining}
 						<!-- ── Training explanation ── -->
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
@@ -439,7 +463,8 @@
 								<span class="text-3xl">🪖</span>
 								<h2 class="text-lg font-bold text-white">Military Training</h2>
 								<p class="text-sm text-slate-400 leading-relaxed">
-									Build your army here. Train infantry, armor, artillery, and more. Your units are essential for defending your nation and conquering new territory.
+									Build your army here. Train infantry, armor, artillery, and more. Your units are essential for
+									defending your nation and conquering new territory.
 								</p>
 							</div>
 
@@ -478,12 +503,13 @@
 								</span>
 							</button>
 						</div>
-
 					{:else if step === 6}
 						<!-- ── Completion ── -->
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
-								<div class="size-16 rounded-2xl bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 border border-emerald-500/20 flex items-center justify-center">
+								<div
+									class="size-16 rounded-2xl bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 border border-emerald-500/20 flex items-center justify-center"
+								>
 									<FluentCheckmark20Filled class="size-8 text-emerald-400" />
 								</div>
 							</div>

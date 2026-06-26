@@ -7,7 +7,6 @@
 	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
 	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
 	import Modal from "$lib/component/Modal.svelte";
-	import { onMount } from "svelte";
 	import { superForm } from "sveltekit-superforms";
 	import { valibot } from "sveltekit-superforms/adapters";
 	import { editArticleSchema } from "./schema";
@@ -32,7 +31,7 @@
 	let editorComponent = $state<WysiwygEditor | null>(null);
 	let isPublishModalOpen = $state(false);
 	let isCancelModalOpen = $state(false);
-	let initialContent = $state("");
+	let initialContent = $state(data.form.data.content || "");
 
 	const handlePublish = () => {
 		const content = editorComponent?.getContent();
@@ -71,13 +70,6 @@
 	const confirmDiscard = () => {
 		goto("/posts/" + data.articleId);
 	};
-
-	onMount(() => {
-		if (data.form.data.content) {
-			initialContent = data.form.data.content;
-			editorComponent?.setContent(data.form.data.content);
-		}
-	});
 
 	let hasChanges = $derived(() => {
 		const currentContent = editorComponent?.getContent() || "";
@@ -173,7 +165,11 @@
 
 		<!-- Editor -->
 		<div class="min-h-[50vh]">
-			<WysiwygEditor bind:this={editorComponent} placeholder="Start writing your article..." />
+			<WysiwygEditor
+				bind:this={editorComponent}
+				initialContent={data.form.data.content || ""}
+				placeholder="Start writing your article..."
+			/>
 		</div>
 
 		{#if $errors.content}
