@@ -27,6 +27,7 @@
 
 	let showWarModal = $state(false);
 	let isDeclaringWar = $state(false);
+	let showVisaSheet = $state(false);
 
 	const hasGovernment = $derived(!!data.president || data.ministers.length > 0 || data.parliamentMembers.length > 0);
 
@@ -284,13 +285,14 @@
 							<h3 class="text-lg font-semibold text-white">Visa Required</h3>
 							<p class="text-sm text-gray-400">You need a visa to travel to regions in this state</p>
 						</div>
-						<a
-							href="/state/{data.state.id}/region"
+						<button
+							type="button"
+							onclick={() => (showVisaSheet = true)}
 							class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
 						>
 							<FluentBookCompass24Filled class="size-4" />
 							Request Visa
-						</a>
+						</button>
 					</div>
 				</div>
 			{/if}
@@ -721,3 +723,75 @@
 		</form>
 	</div>
 </Modal>
+
+<!-- Visa Request Modal -->
+{#if !data.visa.isResident && !data.visa.blocVisaFree && !data.visa.blockedReason && data.visa.visaRequired}
+	<Modal bind:open={showVisaSheet} title="Request Visa" size="default">
+		<div class="space-y-5">
+			<div class="flex items-center gap-4">
+				<div class="size-14 bg-purple-600/20 rounded-xl flex items-center justify-center">
+					<FluentBookCompass24Filled class="size-7 text-purple-400" />
+				</div>
+				<div>
+					<h3 class="text-xl font-bold text-white">{data.state.name}</h3>
+					<p class="text-sm text-gray-400">Travel Visa Application</p>
+				</div>
+			</div>
+
+			<div class="bg-slate-700/30 rounded-lg p-4 space-y-3">
+				<div class="flex items-center justify-between">
+					<span class="text-sm text-gray-400">Visa Cost</span>
+					<span class="text-xl font-bold text-white">${data.visa.visaCost.toLocaleString()}</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span class="text-sm text-gray-400">Tax ({data.visa.visaTaxRate}%)</span>
+					<span class="text-sm text-gray-300"
+						>${Math.floor((data.visa.visaCost * data.visa.visaTaxRate) / 100).toLocaleString()}</span
+					>
+				</div>
+				<div class="border-t border-white/10 pt-2 flex items-center justify-between">
+					<span class="text-sm text-gray-400">Valid for</span>
+					<span class="text-sm font-medium text-white">14 days</span>
+				</div>
+			</div>
+
+			{#if !data.visa.autoApprove}
+				<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-3">
+					<p class="text-xs text-amber-300 flex items-center gap-2">
+						<FluentWarning20Filled class="size-4" />
+						Manual approval required — Foreign Minister will review your application
+					</p>
+				</div>
+			{/if}
+
+			<form
+				method="POST"
+				action="?/purchaseVisa"
+				use:enhance={() => {
+					return async ({ result }) => {
+						showVisaSheet = false;
+						window.location.reload();
+					};
+				}}
+			>
+				<button
+					type="submit"
+					class="btn w-full bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
+					disabled={data.walletBalance < data.visa.visaCost}
+				>
+					<FluentBookCompass24Filled class="size-5" />
+					{#if data.visa.autoApprove}
+						Purchase Visa — ${data.visa.visaCost.toLocaleString()}
+					{:else}
+						Apply for Visa
+					{/if}
+				</button>
+				{#if data.walletBalance < data.visa.visaCost}
+					<p class="text-xs text-red-400 text-center mt-2">
+						Insufficient funds — you have ${data.walletBalance.toLocaleString()}
+					</p>
+				{/if}
+			</form>
+		</div>
+	</Modal>
+{/if}
