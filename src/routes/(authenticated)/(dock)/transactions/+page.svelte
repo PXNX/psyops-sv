@@ -230,11 +230,11 @@
 						<div class="bg-slate-800/30 rounded-xl border border-white/5 divide-y divide-white/5">
 							{#each group.transactions as tx}
 								{@const color = getTypeColor(tx.type)}
+								{@const iconType = getTransactionIconType(tx)}
 								<div class="p-4 hover:bg-slate-700/20 transition-colors first:rounded-t-xl last:rounded-b-xl">
 									<div class="flex items-start justify-between gap-3">
 										<!-- Left: Icon + Details -->
 										<div class="flex items-start gap-3 flex-1 min-w-0">
-											{@const iconType = getTransactionIconType(tx)}
 											<div
 												class="size-10 rounded-lg flex items-center justify-center shrink-0 {tx.isIncome
 													? 'bg-emerald-600/20'

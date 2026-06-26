@@ -5,7 +5,6 @@
 	import FluentPersonAdd20Filled from "~icons/fluent/person-add-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
-	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentCrown20Filled from "~icons/fluent/crown-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -19,70 +18,71 @@
 
 <svelte:head>
 	<title>{data.party.name}</title>
-	<meta name="description" content={data.party.description || `${data.party.name} (${data.party.abbreviation || ''}) political party in ${data.party.state.name} on PsyOps.`} />
-
-	<!-- Open Graph -->
+	<meta
+		name="description"
+		content={data.party.description ||
+			`${data.party.name} (${data.party.abbreviation || ""}) political party in ${data.party.state.name} on PsyOps.`}
+	/>
 	<meta property="og:type" content="website" />
 	<meta property="og:title" content={data.party.name} />
-	<meta property="og:description" content={data.party.description || `${data.party.name} (${data.party.abbreviation || ''}) political party in ${data.party.state.name} on PsyOps.`} />
+	<meta
+		property="og:description"
+		content={data.party.description ||
+			`${data.party.name} (${data.party.abbreviation || ""}) political party in ${data.party.state.name} on PsyOps.`}
+	/>
 	{#if data.party.logoUrl}
 		<meta property="og:image" content={data.party.logoUrl} />
 	{/if}
-
-	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content={data.party.name} />
-	<meta name="twitter:description" content={data.party.description || `${data.party.name} (${data.party.abbreviation || ''}) political party in ${data.party.state.name} on PsyOps.`} />
+	<meta
+		name="twitter:description"
+		content={data.party.description ||
+			`${data.party.name} (${data.party.abbreviation || ""}) political party in ${data.party.state.name} on PsyOps.`}
+	/>
 	{#if data.party.logoUrl}
 		<meta name="twitter:image" content={data.party.logoUrl} />
 	{/if}
 </svelte:head>
 
-<div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
 	<!-- Party Header -->
-	<div
-		class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl"
-		style="background: linear-gradient(135deg, {data.party.color}20 0%, {data.party.color}10 100%);"
-	>
-		<div
-			class="absolute inset-0 opacity-10"
-			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.party.color}30 35px, {data.party.color}30 70px);"
-		></div>
-		<div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div>
-		<div class="relative z-10 p-5 sm:p-8">
-			<div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-				<!-- Party Logo/Icon -->
-				<div class="ring-4 ring-white/10 rounded-2xl shrink-0">
+	<div class="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl">
+		<div class="w-full px-4 sm:px-6 py-5 sm:py-6">
+			<div class="flex items-start gap-4 sm:gap-5">
+				<!-- Party Logo -->
+				<div class="relative flex-shrink-0">
+					<div class="absolute inset-0 blur-xl rounded-full" style="background-color: {data.party.color}30"></div>
 					<div
-						class="size-20 sm:size-24 rounded-2xl flex items-center justify-center"
-						style="background-color: {data.party.color}"
+						class="relative size-16 sm:size-20 rounded-xl flex items-center justify-center border-2 overflow-hidden"
+						style="background-color: {data.party.color}; border-color: {data.party.color}80"
 					>
 						{#if data.party.logoUrl}
-							<img src={data.party.logoUrl} alt={data.party.name} class="size-16 sm:size-20 object-contain" />
+							<img src={data.party.logoUrl} alt={data.party.name} class="size-12 sm:size-16 object-contain" />
 						{:else}
-							<FluentPeople20Filled class="size-10 sm:size-12 text-white" />
+							<FluentPeople20Filled class="size-8 sm:size-10 text-white" />
 						{/if}
 					</div>
 				</div>
 
 				<div class="flex-1 min-w-0">
-					<div class="flex flex-col sm:flex-row items-start justify-between gap-3 mb-2">
+					<div class="flex items-start justify-between gap-3">
 						<div class="min-w-0">
 							<div class="flex flex-wrap items-center gap-2 mb-1">
-								<h1 class="text-2xl sm:text-3xl font-bold text-white">{data.party.name}</h1>
+								<h1 class="text-xl sm:text-2xl font-bold text-white tracking-wide">{data.party.name}</h1>
 								{#if data.party.abbreviation}
 									<span
-										class="px-2.5 py-0.5 rounded-lg text-xs font-semibold"
-										style="background-color: {data.party.color}30; color: {data.party.color}"
+										class="px-2 py-0.5 rounded text-xs font-mono font-bold"
+										style="background-color: {data.party.color}25; color: {data.party.color}"
 									>
 										{data.party.abbreviation}
 									</span>
 								{/if}
 							</div>
-							<div class="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+							<div class="flex flex-wrap items-center gap-3 text-xs text-slate-400 font-mono">
 								{#if data.party.ideology}
 									<span class="flex items-center gap-1">
-										<FluentFlag20Filled class="size-3.5" />
+										<FluentFlag20Filled class="size-3" />
 										{data.party.ideology}
 									</span>
 								{/if}
@@ -93,223 +93,213 @@
 									{#if data.party.state.logo}
 										<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded" />
 									{:else}
-										<FluentBuildingGovernment20Filled class="size-3.5" />
+										<FluentBuildingGovernment20Filled class="size-3" />
 									{/if}
 									{data.party.state.name}
 								</a>
-								<span class="flex items-center gap-1">
-									<FluentCalendar20Filled class="size-3.5" />
-									Founded {(() => { const d = new Date(data.party.foundedAt); const p = (n) => String(n).padStart(2,'0'); return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`; })()}
-								</span>
 							</div>
 						</div>
 						{#if data.isLeader}
 							<a
 								href="/party/{data.party.id}/edit"
-								class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+								class="px-3 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 hover:border-slate-500/50 rounded-lg text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-mono flex-shrink-0"
 							>
-								<FluentEdit20Filled class="size-4" />
-								Edit Party
+								<FluentEdit20Filled class="size-3.5" />
+								Edit
 							</a>
 						{/if}
 					</div>
 					{#if data.party.description}
-						<p class="text-sm text-gray-300 mt-2 leading-relaxed">{data.party.description}</p>
+						<p class="text-sm text-slate-300/80 mt-2 leading-relaxed">{data.party.description}</p>
 					{/if}
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- Stats -->
-	<div class="grid grid-cols-3 gap-2 sm:gap-4">
-		<a
-			href="/party/{data.party.id}/member"
-			class="bg-slate-800/50 rounded-lg sm:rounded-xl border border-white/5 p-3 sm:p-5 hover:bg-slate-700/50 transition-colors"
-		>
-			<div class="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3">
-				<div
-					class="size-10 sm:size-12 rounded-lg flex items-center justify-center shrink-0"
-					style="background-color: {data.party.color}20"
-				>
-					<FluentPeople20Filled class="size-5 sm:size-6" style="color: {data.party.color}" />
-				</div>
-				<div class="text-center sm:text-left">
-					<p class="text-[10px] sm:text-xs text-gray-400">Members</p>
-					<p class="text-xl sm:text-2xl font-bold text-white">{data.party.memberCount}</p>
-				</div>
-			</div>
-		</a>
-
-		<a
-			href="/state/{data.party.state.id}/parliament"
-			class="bg-slate-800/50 rounded-lg sm:rounded-xl border border-white/5 p-3 sm:p-5 hover:bg-slate-700/50 transition-colors"
-		>
-			<div class="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3">
-				<div
-					class="size-10 sm:size-12 rounded-lg flex items-center justify-center shrink-0"
-					style="background-color: {data.party.color}20"
-				>
-					<FluentBuildingGovernment20Filled class="size-5 sm:size-6" style="color: {data.party.color}" />
-				</div>
-				<div class="text-center sm:text-left">
-					<p class="text-[10px] sm:text-xs text-gray-400">Seats</p>
-					<p class="text-xl sm:text-2xl font-bold text-white">{data.parliamentSeats || 0}</p>
-				</div>
-			</div>
-		</a>
-
-		<div class="bg-slate-800/50 rounded-lg sm:rounded-xl border border-white/5 p-3 sm:p-5">
-			<div class="flex flex-col sm:flex-row items-center sm:items-start gap-2 sm:gap-3">
-				<div
-					class="size-10 sm:size-12 rounded-lg flex items-center justify-center shrink-0"
-					style="background-color: {data.party.color}20"
-				>
-					<FluentCrown20Filled class="size-5 sm:size-6" style="color: {data.party.color}" />
-				</div>
-				<div class="text-center sm:text-left">
-					<p class="text-[10px] sm:text-xs text-gray-400">Rank</p>
-					<p class="text-xl sm:text-2xl font-bold text-white">#{data.partyRank || "N/A"}</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Join/Leave Party -->
-	{#if !data.isMember && data.canJoin}
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4 sm:p-6">
-			<form method="POST" action="?/join" use:enhance>
-				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-					<div class="flex-1">
-						<h3 class="text-base sm:text-lg font-semibold text-white mb-1">
-							{data.party.autoAcceptMembers ? "Join This Party" : "Apply to Join"}
-						</h3>
-						<p class="text-xs sm:text-sm text-gray-400">
-							{#if data.party.autoAcceptMembers}
-								Become a member and help shape the political landscape
-							{:else}
-								Submit an application to join this party. Leadership will review your request.
-							{/if}
-						</p>
-					</div>
-					<button
-						type="submit"
-						class="btn btn-sm sm:btn-md w-full sm:w-auto gap-2"
-						style="background-color: {data.party.color}; border: none;"
-					>
-						<FluentPersonAdd20Filled class="size-4 sm:size-5" />
-						{data.party.autoAcceptMembers ? "Join Party" : "Apply"}
-					</button>
-				</div>
-			</form>
-		</div>
-	{:else if data.hasApplied}
-		<div class="bg-orange-600/10 border border-orange-500/20 rounded-xl p-4 sm:p-6">
-			<div class="flex items-start gap-3">
-				<FluentPersonAvailable20Filled class="size-6 sm:size-8 text-orange-400 shrink-0" />
-				<div>
-					<h3 class="text-base sm:text-lg font-semibold text-white mb-1">Application Pending</h3>
-					<p class="text-xs sm:text-sm text-gray-400">
-						Your membership application is awaiting review from party leadership.
-					</p>
-				</div>
-			</div>
-		</div>
-	{:else if data.isMember && !data.isLeader}
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 sm:p-6">
-			<form method="POST" action="?/leave" use:enhance>
-				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-					<div>
-						<h3 class="text-base sm:text-lg font-semibold text-white mb-1">You're a Member</h3>
-						<p class="text-xs sm:text-sm text-gray-400">
-							Active since {(() => { const d = new Date(data.memberSince!); const p = (n) => String(n).padStart(2,'0'); return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`; })()}
-						</p>
-					</div>
-					<button
-						type="submit"
-						class="btn btn-sm w-full sm:w-auto bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-300 hover:text-red-200 gap-2"
-					>
-						<FluentDismiss20Filled class="size-4" />
-						Leave Party
-					</button>
-				</div>
-			</form>
-		</div>
-	{/if}
-
-	<!-- Error/Success Messages -->
-	{#if form?.error}
-		<div class="alert alert-error text-sm">
-			<p>{form.error}</p>
-		</div>
-	{/if}
-	{#if form?.success}
-		<div class="alert alert-success text-sm">
-			<p>{form.success}</p>
-		</div>
-	{/if}
-
-	<!-- Party Leadership -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4 sm:p-6">
-		<h2 class="text-lg sm:text-xl font-bold text-white mb-4 flex items-center gap-2">
-			<FluentCrown20Filled class="size-4 sm:size-5" style="color: {data.party.color}" />
-			Party Leadership
-		</h2>
-
-		<div class="space-y-3 sm:space-y-4">
-			{#each data.members.filter((m) => m.role === "leader") as member}
-				<div class="flex items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-slate-700/30 rounded-lg border border-white/5">
-					<Logo src={member.user.profile.logo} alt={member.user.profile.name} placeholderIcon={FluentPeople20Filled} />
-
-					<div class="flex-1 min-w-0">
-						<a
-							href="/user/{member.userId}"
-							class="text-base sm:text-lg font-semibold text-white hover:text-purple-400 transition-colors truncate block"
-						>
-							{member.user.profile?.name}
-						</a>
-						<p class="text-xs sm:text-sm font-medium truncate" style="color: {data.party.color}">Party Leader</p>
-						<p class="text-[10px] sm:text-xs text-gray-500">
-							Since {(() => { const d = new Date(member.joinedAt); const p = (n) => String(n).padStart(2,'0'); return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`; })()}
-						</p>
-					</div>
-				</div>
-			{/each}
-		</div>
-	</div>
-
-	<!-- Action Buttons -->
-	{#if data.isLeader}
-		<div class="flex flex-col sm:flex-row gap-2">
+	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
+		<!-- Stats Strip -->
+		<div class="grid grid-cols-3 gap-3">
 			<a
-				href="/party/{data.party.id}/edit"
-				class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
+				href="/party/{data.party.id}/member"
+				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4 hover:border-slate-600/60 transition-all group"
 			>
-				<FluentEdit20Filled class="size-4" />
-				Edit Party
+				<div class="flex items-center gap-2 mb-1.5">
+					<FluentPeople20Filled class="size-4" style="color: {data.party.color}" />
+					<span class="text-[10px] sm:text-xs text-slate-500 font-mono uppercase tracking-wider">Members</span>
+				</div>
+				<div class="text-xl sm:text-2xl font-bold text-white font-mono">{data.party.memberCount}</div>
 			</a>
+
+			<a
+				href="/state/{data.party.state.id}/parliament"
+				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4 hover:border-slate-600/60 transition-all"
+			>
+				<div class="flex items-center gap-2 mb-1.5">
+					<FluentBuildingGovernment20Filled class="size-4" style="color: {data.party.color}" />
+					<span class="text-[10px] sm:text-xs text-slate-500 font-mono uppercase tracking-wider">Seats</span>
+				</div>
+				<div class="text-xl sm:text-2xl font-bold text-white font-mono">{data.parliamentSeats || 0}</div>
+			</a>
+
+			<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
+				<div class="flex items-center gap-2 mb-1.5">
+					<FluentCrown20Filled class="size-4" style="color: {data.party.color}" />
+					<span class="text-[10px] sm:text-xs text-slate-500 font-mono uppercase tracking-wider">Rank</span>
+				</div>
+				<div class="text-xl sm:text-2xl font-bold text-white font-mono">#{data.partyRank || "—"}</div>
+			</div>
+		</div>
+
+		<!-- Join/Leave Party -->
+		{#if !data.isMember && data.canJoin}
+			<div
+				class="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border rounded-xl p-4 sm:p-5"
+				style="border-color: {data.party.color}30"
+			>
+				<form method="POST" action="?/join" use:enhance>
+					<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+						<div class="flex-1">
+							<h3 class="text-sm sm:text-base font-bold text-white">
+								{data.party.autoAcceptMembers ? "Join This Party" : "Apply to Join"}
+							</h3>
+							<p class="text-xs text-slate-400 font-mono mt-0.5">
+								{data.party.autoAcceptMembers ? "Become a member instantly" : "Application reviewed by leadership"}
+							</p>
+						</div>
+						<button
+							type="submit"
+							class="w-full sm:w-auto px-5 py-2.5 rounded-lg font-mono font-bold text-sm text-white transition-all flex items-center justify-center gap-2 hover:brightness-110"
+							style="background-color: {data.party.color}"
+						>
+							<FluentPersonAdd20Filled class="size-4" />
+							{data.party.autoAcceptMembers ? "Join" : "Apply"}
+						</button>
+					</div>
+				</form>
+			</div>
+		{:else if data.hasApplied}
+			<div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-4">
+				<div class="flex items-center gap-3">
+					<FluentPersonAvailable20Filled class="size-5 text-amber-400 flex-shrink-0" />
+					<div>
+						<span class="text-sm font-bold text-amber-300">Application Pending</span>
+						<p class="text-xs text-slate-400 font-mono mt-0.5">Awaiting review from party leadership</p>
+					</div>
+				</div>
+			</div>
+		{:else if data.isMember && !data.isLeader}
+			<div class="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-4">
+				<form method="POST" action="?/leave" use:enhance>
+					<div class="flex items-center justify-between gap-3">
+						<div>
+							<span class="text-sm font-bold text-white">Member</span>
+							<p class="text-xs text-slate-500 font-mono mt-0.5">
+								Since {(() => {
+									const d = new Date(data.memberSince!);
+									const p = (n: number) => String(n).padStart(2, "0");
+									return `${p(d.getDate())}.${p(d.getMonth() + 1)}.${d.getFullYear()}`;
+								})()}
+							</p>
+						</div>
+						<button
+							type="submit"
+							class="px-3 py-1.5 bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 rounded-lg text-red-300 text-xs font-mono font-bold transition-all flex items-center gap-1.5"
+						>
+							<FluentDismiss20Filled class="size-3.5" />
+							Leave
+						</button>
+					</div>
+				</form>
+			</div>
+		{/if}
+
+		<!-- Error/Success -->
+		{#if form?.error}
+			<div class="bg-red-950/30 border border-red-500/30 rounded-lg p-3 text-sm text-red-300 font-mono">
+				{form.error}
+			</div>
+		{/if}
+		{#if form?.success}
+			<div class="bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-3 text-sm text-emerald-300 font-mono">
+				{form.success}
+			</div>
+		{/if}
+
+		<!-- Party Leadership -->
+		<div
+			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+		>
+			<div class="bg-slate-900/80 border-b border-slate-700/50 px-4 sm:px-5 py-3">
+				<h2 class="text-sm font-bold text-slate-200 font-mono uppercase tracking-wide flex items-center gap-2">
+					<FluentCrown20Filled class="size-4" style="color: {data.party.color}" />
+					Leadership
+				</h2>
+			</div>
+			<div class="p-3 sm:p-4 space-y-2">
+				{#each data.members.filter((m) => m.role === "leader") as member}
+					<a
+						href="/user/{member.userId}"
+						class="flex items-center gap-3 p-3 bg-slate-900/40 border border-slate-700/40 rounded-lg hover:border-slate-600/60 transition-all group"
+					>
+						<Logo
+							src={member.user.profile.logo}
+							alt={member.user.profile.name}
+							placeholderIcon={FluentPeople20Filled}
+							class="size-10 rounded-lg"
+						/>
+						<div class="flex-1 min-w-0">
+							<p class="text-sm font-bold text-white group-hover:text-purple-400 transition-colors truncate">
+								{member.user.profile?.name}
+							</p>
+							<p class="text-xs font-mono mt-0.5" style="color: {data.party.color}">Party Leader</p>
+						</div>
+						<span class="text-slate-600 group-hover:text-slate-400 transition-colors text-sm">→</span>
+					</a>
+				{/each}
+			</div>
+		</div>
+
+		<!-- Action Buttons -->
+		{#if data.isLeader}
+			<div class="flex flex-wrap gap-2">
+				<a
+					href="/party/{data.party.id}/edit"
+					class="px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 rounded-lg text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-mono"
+				>
+					<FluentEdit20Filled class="size-3.5" />
+					Edit
+				</a>
+				<a
+					href="/party/{data.party.id}/member"
+					class="px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 rounded-lg text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-mono"
+				>
+					<FluentPeople20Filled class="size-3.5" />
+					Members
+				</a>
+				<a
+					href="/chat?type=party"
+					class="px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 border border-emerald-500/20 rounded-lg text-emerald-300 hover:text-emerald-200 transition-all flex items-center gap-2 text-xs font-mono"
+				>
+					<FluentChat20Filled class="size-3.5" />
+					Chat
+				</a>
+				<a
+					href="/inbox"
+					class="px-3 py-2 bg-blue-950/40 hover:bg-blue-950/60 border border-blue-500/20 rounded-lg text-blue-300 hover:text-blue-200 transition-all flex items-center gap-2 text-xs font-mono"
+				>
+					<FluentMail20Filled class="size-3.5" />
+					Broadcast
+				</a>
+			</div>
+		{:else if data.isMember}
 			<a
 				href="/chat?type=party"
-				class="btn btn-sm bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/30 text-emerald-300 hover:text-emerald-200 gap-2"
+				class="inline-flex px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 border border-emerald-500/20 rounded-lg text-emerald-300 hover:text-emerald-200 transition-all items-center gap-2 text-xs font-mono"
 			>
-				<FluentChat20Filled class="size-4" />
+				<FluentChat20Filled class="size-3.5" />
 				Party Chat
 			</a>
-			<a
-				href="/inbox"
-				class="btn btn-sm bg-blue-600/20 hover:bg-blue-600/30 border-blue-500/30 text-blue-300 hover:text-blue-200 gap-2"
-			>
-				<FluentMail20Filled class="size-4" />
-				Broadcast
-			</a>
-		</div>
-	{:else if data.isMember}
-		<a
-			href="/chat?type=party"
-			class="btn btn-sm bg-emerald-600/20 hover:bg-emerald-600/30 border-emerald-500/30 text-emerald-300 hover:text-emerald-200 gap-2 w-full sm:w-auto"
-		>
-			<FluentChat20Filled class="size-4" />
-			Party Chat
-		</a>
-	{/if}
+		{/if}
+	</div>
 </div>
