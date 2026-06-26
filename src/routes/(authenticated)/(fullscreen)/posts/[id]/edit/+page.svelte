@@ -1,9 +1,8 @@
 <!-- src/routes/(authenticated)/(fullscreen)/posts/[id]/edit/+page.svelte -->
 <script lang="ts">
-	import { is } from "drizzle-orm";
 	import { goto } from "$app/navigation";
-	import FluentEmojiFloppyDisk from "~icons/fluent-emoji/floppy-disk";
-	import MdiWindowClose from "~icons/mdi/window-close";
+	import FluentSave20Filled from "~icons/fluent/save-20-filled";
+	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentArrowHookUpLeft20Regular from "~icons/fluent/arrow-hook-up-left-20-regular";
 	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
 	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
@@ -12,7 +11,6 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibot } from "sveltekit-superforms/adapters";
 	import { editArticleSchema } from "./schema";
-	import { redirect } from "@sveltejs/kit";
 
 	const { data } = $props();
 
@@ -20,7 +18,6 @@
 		validators: valibot(editArticleSchema),
 		dataType: "json",
 		onUpdated: ({ form }) => {
-			// Handle validation errors
 			if (!form.valid) {
 				const firstError = Object.values(form.errors)[0];
 				if (firstError) {
@@ -30,7 +27,7 @@
 		}
 	});
 
-	const { form: formData, enhance, errors, delayed, submitting, allErrors } = form;
+	const { form: formData, enhance, errors, delayed, submitting } = form;
 
 	let editorComponent = $state<WysiwygEditor | null>(null);
 	let isPublishModalOpen = $state(false);
@@ -44,7 +41,6 @@
 			$formData.content = content;
 		}
 
-		// Trigger form validation
 		if (!$formData.title.trim()) {
 			alert("Please enter a title");
 			return;
@@ -68,12 +64,12 @@
 		if ($formData.title !== data.form.data.title || currentContent !== initialContent) {
 			isCancelModalOpen = true;
 		} else {
-			redirect(303, "/posts/" + data.articleId);
+			goto("/posts/" + data.articleId);
 		}
 	};
 
 	const confirmDiscard = () => {
-		redirect(303, "/posts/" + data.articleId);
+		goto("/posts/" + data.articleId);
 	};
 
 	onMount(() => {
@@ -100,92 +96,108 @@
 	<title>Edit Post</title>
 </svelte:head>
 
-<header class="sticky top-0 z-10 bg-base-100 shadow-sm">
-	<div class="flex items-center gap-2 p-2 sm:p-3">
-		<button
-			onclick={handlePublish}
-			class="btn btn-circle btn-sm sm:btn-md btn-primary"
-			title="Save Changes"
-			disabled={!canSave() || $submitting === true}
-		>
-			<FluentEmojiFloppyDisk class="text-xl sm:text-2xl" />
-		</button>
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
+	<!-- Editor Header -->
+	<header class="sticky top-0 z-10 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl">
+		<div class="w-full px-3 sm:px-6 py-3 sm:py-4">
+			<div class="flex items-center gap-2 sm:gap-3">
+				<button
+					onclick={handlePublish}
+					class="p-2 sm:p-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 text-white transition-all"
+					title="Save Changes"
+					disabled={!canSave() || $submitting === true}
+				>
+					<FluentSave20Filled class="size-5" />
+				</button>
 
-		{#if editorComponent}
-			<button
-				class="btn btn-circle btn-sm sm:btn-md"
-				onclick={() => editorComponent?.undo()}
-				title="Undo"
-				disabled={$submitting === true}
-			>
-				<FluentArrowHookUpLeft20Regular class="w-5 h-5" />
-			</button>
-			<button
-				class="btn btn-circle btn-sm sm:btn-md"
-				onclick={() => editorComponent?.redo()}
-				title="Redo"
-				disabled={$submitting === true}
-			>
-				<FluentArrowHookUpRight20Regular class="w-5 h-5" />
-			</button>
+				{#if editorComponent}
+					<button
+						class="p-2 sm:p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-300 hover:text-white transition-all"
+						onclick={() => editorComponent?.undo()}
+						title="Undo"
+						disabled={$submitting === true}
+					>
+						<FluentArrowHookUpLeft20Regular class="size-5" />
+					</button>
+					<button
+						class="p-2 sm:p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-300 hover:text-white transition-all"
+						onclick={() => editorComponent?.redo()}
+						title="Redo"
+						disabled={$submitting === true}
+					>
+						<FluentArrowHookUpRight20Regular class="size-5" />
+					</button>
+				{/if}
+
+				<div class="flex-1"></div>
+
+				<span class="text-xs text-slate-500 font-mono hidden sm:inline">
+					{$formData.title.length}/200
+				</span>
+
+				<button
+					onclick={handleCancel}
+					class="p-2 sm:p-2.5 rounded-lg bg-slate-800/60 hover:bg-red-950/40 border border-slate-600/30 hover:border-red-500/30 text-slate-300 hover:text-red-400 transition-all"
+					title="Cancel"
+					disabled={$submitting === true}
+				>
+					<FluentDismiss20Filled class="size-5" />
+				</button>
+			</div>
+		</div>
+	</header>
+
+	<!-- Editor Content -->
+	<main class="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+		<!-- Title Input -->
+		<input
+			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-white placeholder-slate-600 border-none outline-none mb-2 tracking-wide"
+			class:text-red-400={$errors.title}
+			placeholder="Enter your title..."
+			type="text"
+			bind:value={$formData.title}
+			maxlength="200"
+			disabled={$submitting === true}
+		/>
+
+		{#if $errors.title}
+			<div class="text-red-400 text-xs font-mono mb-3">{$errors.title[0]}</div>
 		{/if}
 
-		<button
-			onclick={handleCancel}
-			class="btn btn-circle btn-sm sm:btn-md btn-ghost ml-auto"
-			title="Cancel"
-			disabled={$submitting === true}
-		>
-			<MdiWindowClose class="w-5 h-5" />
-		</button>
-	</div>
-	<hr class="divide-gray-200 dark:divide-gray-700" />
-</header>
+		<div class="text-xs text-slate-600 font-mono mb-6">
+			{$formData.title.length}/200 characters
+		</div>
 
-<main class="container mx-auto px-2 sm:px-4 py-4 max-w-4xl">
-	<!-- Title Input -->
-	<input
-		class="input input-bordered w-full text-lg sm:text-2xl font-bold mb-4"
-		class:input-error={$errors.title}
-		placeholder="Enter your title..."
-		type="text"
-		bind:value={$formData.title}
-		maxlength="200"
-		disabled={$submitting === true}
-	/>
+		<!-- Divider -->
+		<div class="border-t border-slate-700/50 mb-6"></div>
 
-	{#if $errors.title}
-		<div class="text-error text-sm mb-2">{$errors.title[0]}</div>
-	{/if}
+		<!-- Editor -->
+		<div class="min-h-[50vh]">
+			<WysiwygEditor bind:this={editorComponent} placeholder="Start writing your article..." />
+		</div>
 
-	<!-- Character Count -->
-	<div class="text-xs sm:text-sm text-gray-500 mb-4 text-right">
-		{$formData.title.length}/200 characters
-	</div>
+		{#if $errors.content}
+			<div class="text-red-400 text-xs font-mono mt-3">{$errors.content[0]}</div>
+		{/if}
+	</main>
+</div>
 
-	<!-- Editor -->
-	<div class="bg-base-100 rounded-lg shadow-sm min-h-[50vh]">
-		<WysiwygEditor bind:this={editorComponent} placeholder="Start writing your article..." />
-	</div>
-
-	{#if $errors.content}
-		<div class="text-error text-sm mt-2">{$errors.content[0]}</div>
-	{/if}
-</main>
-
-<!-- Publish Modal -->
+<!-- Save Modal -->
 <Modal bind:open={isPublishModalOpen} title="Save your changes?">
 	<form method="POST" action="?/publish" use:enhance>
 		<input type="hidden" name="title" value={$formData.title} />
 		<input type="hidden" name="content" value={editorComponent?.getContent() || ""} />
 
-		<div class="bg-base-200 p-3 rounded-lg mb-4">
-			<p class="text-sm font-semibold line-clamp-2">{$formData.title}</p>
+		<div class="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3 mb-4">
+			<p class="text-sm font-bold text-white line-clamp-2">{$formData.title}</p>
 		</div>
 
-		<button class="btn btn-primary w-full" type="submit" disabled={$submitting === true || $delayed === true}>
+		<button
+			class="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 text-white font-bold font-mono uppercase tracking-wide transition-all"
+			type="submit"
+			disabled={$submitting === true || $delayed === true}
+		>
 			{#if $submitting === true || $delayed === true}
-				<span class="loading loading-spinner loading-sm"></span>
 				Saving...
 			{:else}
 				Save Changes
@@ -196,10 +208,20 @@
 
 <!-- Cancel Modal -->
 <Modal bind:open={isCancelModalOpen} title="Discard changes?">
-	<p class="mb-4">Your unsaved work will be lost.</p>
+	<p class="text-sm text-slate-400 mb-4">Your unsaved work will be lost.</p>
 
 	<div class="flex gap-2 justify-end">
-		<button class="btn btn-ghost" onclick={() => (isCancelModalOpen = false)}> Keep Editing </button>
-		<button class="btn btn-error" onclick={confirmDiscard}> Discard Changes </button>
+		<button
+			class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 rounded-lg text-slate-300 text-sm font-mono transition-all"
+			onclick={() => (isCancelModalOpen = false)}
+		>
+			Keep Editing
+		</button>
+		<button
+			class="px-4 py-2 bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 rounded-lg text-red-300 text-sm font-mono font-bold transition-all"
+			onclick={confirmDiscard}
+		>
+			Discard
+		</button>
 	</div>
 </Modal>
