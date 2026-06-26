@@ -57,7 +57,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		{
 			name: bloc.name,
 			color: bloc.color,
-			description: bloc.description || ""
+			description: bloc.description || "",
+			visaFreeForMembers: bloc.visaFreeForMembers
 		},
 		valibot(editBlocSchema)
 	);
@@ -69,7 +70,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			name: bloc.name,
 			color: bloc.color,
 			description: bloc.description,
-			logoUrl
+			logoUrl,
+			visaFreeForMembers: bloc.visaFreeForMembers
 		}
 	};
 };
@@ -107,7 +109,7 @@ export const actions: Actions = {
 			return message(form, "Only presidents of member states can edit the bloc", { status: 403 });
 		}
 
-		const { name, color, description, logo } = form.data;
+		const { name, color, description, logo, visaFreeForMembers } = form.data;
 
 		// Check if name is already taken by another bloc
 		const existingBloc = await db.select().from(blocs).where(eq(blocs.name, name)).limit(1);
@@ -148,7 +150,8 @@ export const actions: Actions = {
 					name,
 					color,
 					description: description || null,
-					logo: logoFileId
+					logo: logoFileId,
+					visaFreeForMembers: visaFreeForMembers ?? false
 				})
 				.where(eq(blocs.id, blocId));
 

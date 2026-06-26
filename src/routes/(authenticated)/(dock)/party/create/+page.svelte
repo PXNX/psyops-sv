@@ -15,9 +15,9 @@
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import { EditCooldownWarning, EditInsufficientFundsWarning } from "$lib/component/edit";
 
 	let { data } = $props();
 
@@ -69,31 +69,6 @@
 		"Social Democrat",
 		"Other"
 	];
-
-	// Calculate time remaining for cooldown
-	function formatTimeRemaining(cooldownEnd: string): string {
-		const now = new Date();
-		const end = new Date(cooldownEnd);
-		const diff = end.getTime() - now.getTime();
-
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-		if (days > 0) {
-			return `${days} day${days !== 1 ? "s" : ""}, ${hours} hour${hours !== 1 ? "s" : ""}`;
-		} else if (hours > 0) {
-			return `${hours} hour${hours !== 1 ? "s" : ""}, ${minutes} minute${minutes !== 1 ? "s" : ""}`;
-		} else {
-			return `${minutes} minute${minutes !== 1 ? "s" : ""}`;
-		}
-	}
-
-	function formatCooldownDate(cooldownEnd: string): string {
-		const d = new Date(cooldownEnd);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-	}
 
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;
@@ -194,80 +169,19 @@
 		<p class="text-gray-400">Start your own political movement and shape the future</p>
 	</div>
 
-	<!-- Cost & Balance Info -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-		<!-- Balance -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-green-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Your Balance</p>
-					<p class="text-lg font-bold text-white">{data.userBalance.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
-
-		<!-- Cost -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-					<FluentFlag20Filled class="size-5 text-purple-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Creation Cost</p>
-					<p class="text-lg font-bold text-white">{data.creationCost.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
+	<!-- Cost & Balance -->
+	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+		<ResourceRequirements costs={{ currency: data.creationCost }} available={{ currency: data.userBalance }} />
 	</div>
 
 	<!-- Cooldown Warning -->
 	{#if data.isOnCooldown && data.cooldownEndsAt}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5 space-y-3">
-			<div class="flex items-start gap-3">
-				<FluentClock20Filled class="size-6 text-red-400 shrink-0 mt-0.5" />
-				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-red-300 text-lg">Party Creation Cooldown Active</h3>
-					<p class="text-red-200/90 text-sm leading-relaxed">
-						You must wait before creating another political party. This cooldown period helps maintain political
-						stability.
-					</p>
-					<div class="bg-red-900/30 rounded-lg p-3 space-y-2">
-						<div class="flex items-center justify-between">
-							<span class="text-red-100 text-sm font-medium">Time Remaining:</span>
-							<span class="text-red-100 text-sm font-bold">{formatTimeRemaining(data.cooldownEndsAt)}</span>
-						</div>
-						<div class="flex items-center justify-between text-xs">
-							<span class="text-red-200/70">Available on:</span>
-							<span class="text-red-200/90">{formatCooldownDate(data.cooldownEndsAt)}</span>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
+		<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="party" />
 	{/if}
 
 	<!-- Insufficient Funds Warning -->
 	{#if !data.canAfford && !data.isOnCooldown}
-		<div class="bg-amber-600/20 border border-amber-500/30 rounded-xl p-5 space-y-3">
-			<div class="flex items-start gap-3">
-				<FluentMoney20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
-				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-amber-300 text-lg">Insufficient Funds</h3>
-					<p class="text-amber-200/90 text-sm leading-relaxed">
-						You need <strong>{data.creationCost.toLocaleString()}</strong> currency to create a political party. You
-						currently have <strong>{data.userBalance.toLocaleString()}</strong>.
-					</p>
-					<div class="bg-amber-900/30 rounded-lg p-3">
-						<p class="text-amber-100 text-sm font-medium">
-							Needed: {(data.creationCost - data.userBalance).toLocaleString()} more currency
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
+		<EditInsufficientFundsWarning editCost={data.creationCost} userBalance={data.userBalance} />
 	{/if}
 
 	<!-- Independent Region Warning -->
@@ -580,8 +494,7 @@
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-				disabled={$submitting || !canCreate}
-			></textarea>
+				disabled={$submitting || !canCreate}></textarea>
 		</div>
 
 		<!-- Submit -->
@@ -608,20 +521,6 @@
 						: `Create Party (${data.creationCost.toLocaleString()})`}
 				{/if}
 			</button>
-		</div>
-
-		<!-- Info Box -->
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
-			<p class="text-sm text-blue-300">
-				💡 <strong>Note:</strong>
-				{data.isIndependentRegion
-					? "Creating this party will immediately establish a new state. You'll be the founding party leader and can begin recruiting members."
-					: "Once created, you will be the party leader. You can recruit members, participate in elections, and shape your state's political landscape."}
-			</p>
-			<p class="text-xs text-blue-300/70">
-				<strong>Cooldown:</strong> After creating a party, you must wait {data.cooldownDays} days before creating another
-				one.
-			</p>
 		</div>
 	</form>
 </div>

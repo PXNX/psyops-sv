@@ -8,6 +8,7 @@
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 
 	let { data } = $props();
@@ -75,8 +76,7 @@
 								rows="3"
 								placeholder="Provide a reason for the sanction..."
 								class="textarea textarea-bordered"
-								required
-							></textarea>
+								required></textarea>
 						</div>
 
 						<button
@@ -132,6 +132,22 @@
 						need this to work.
 					</p>
 
+					{#if data.blocVisaOverride && data.blocInfo}
+						<div class="alert bg-emerald-900/30 border border-emerald-500/30 mt-4">
+							<div class="flex items-start gap-3">
+								<FluentFlag20Filled class="size-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+								<div>
+									<p class="font-semibold text-emerald-300">Bloc Visa-Free Override Active</p>
+									<p class="text-sm text-emerald-200/70 mt-1">
+										<a href="/bloc/{data.blocInfo.id}" class="underline hover:text-emerald-200">{data.blocInfo.name}</a>
+										has visa-free travel enabled for member states. Residents of other member states can travel here without
+										a visa, regardless of the visa policy below.
+									</p>
+								</div>
+							</div>
+						</div>
+					{/if}
+
 					<form method="POST" action="?/updateVisaSettings" use:enhance class="space-y-4 mt-4">
 						<!-- Visa Required Toggle -->
 						<div class="form-control">
@@ -145,6 +161,9 @@
 								/>
 								<div>
 									<span class="label-text font-medium">Require Visa for Entry</span>
+									{#if data.blocVisaOverride}
+										<span class="text-xs text-emerald-400 ml-2">(overridden for bloc members)</span>
+									{/if}
 								</div>
 							</label>
 						</div>

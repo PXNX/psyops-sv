@@ -17,7 +17,8 @@ import {
 	presidents,
 	userTravels,
 	stateBuildings,
-	files
+	files,
+	stateSanctions
 } from "$lib/server/schema";
 import { eq, and, sql, or, desc, gt, isNotNull } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
@@ -78,7 +79,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		where: eq(residences.userId, account.id),
 		with: {
 			region: {
-				with: { state: true }
+				with: { state: { with: { bloc: true } } }
 			}
 		}
 	});
@@ -131,9 +132,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	let hasPendingApplication = false;
 	let visaSettings = null;
 	let activeVisa = null;
+	let blocVisaFree = false;
 
 	if (region.stateId && userResidenceState?.id !== region.stateId && hasInauguralElection) {
-		needsVisa = true;
+		// Check bloc visa-free override: if user's residence state and destination state
+		// are in the same bloc with visaFreeForMembers enabled, no visa needed
+		if (userResidence?.region?.state?.blocId && region.state?.blocId) {
+			const userBloc = userResidence.region.state.bloc;
+			if (
+				userResidence.region.state.blocId === region.state.blocId &&
+				userBloc &&
+				userBloc.visaFreeForMembers
+			) {
+				blocVisaFree = true;
+			}
+		}
+
+		if (!blocVisaFree) {
+			needsVisa = true;
+		}
+
 		visaSettings = await db.query.stateVisaSettings.findFirst({
 			where: eq(stateVisaSettings.stateId, region.stateId)
 		});
@@ -157,9 +175,53 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 
 		hasPendingApplication = !!pendingApp;
-	}
+		}
 
-	// Get factories
+		// Check if visa is blocked by war or sanctions
+		let visaBlockedReason: string | null = null;
+		if (region.stateId && userResidenceState?.id && userResidenceState.id !== region.stateId) {
+		const userStateId = userResidenceState.id;
+		const userBlocId = userResidence?.region?.state?.blocId ?? null;
+		const destStateId = region.stateId;
+
+		// Check active wars: user's state (or bloc) vs destination state
+		const warAgainstDest = await db.query.wars.findFirst({
+			where: and(
+				eq(wars.status, "active"),
+				or(
+					and(eq(wars.attackerId, userStateId), eq(wars.defenderId, destStateId)),
+					and(eq(wars.attackerId, destStateId), eq(wars.defenderId, userStateId)),
+					...(userBlocId
+						? [
+								and(eq(wars.attackerBlocId, userBlocId), eq(wars.defenderId, destStateId)),
+								and(eq(wars.attackerId, destStateId), eq(wars.defenderBlocId, userBlocId))
+							]
+						: [])
+				)
+			)
+		});
+
+		if (warAgainstDest) {
+			visaBlockedReason = "Your state is at war with this state";
+		}
+
+		// Check sanctions: destination state has sanctioned user's state
+		if (!visaBlockedReason) {
+			const sanctionAgainstUser = await db.query.stateSanctions.findFirst({
+				where: and(
+					eq(stateSanctions.sanctioningStateId, destStateId),
+					eq(stateSanctions.targetStateId, userStateId),
+					eq(stateSanctions.isActive, true)
+				)
+			});
+
+			if (sanctionAgainstUser) {
+				visaBlockedReason = "This state has sanctioned your state";
+			}
+		}
+		}
+
+		// Get factories
 	const regionFactories = await db.query.factories.findMany({
 		where: eq(factories.regionId, regionId),
 		with: { company: true },
@@ -349,7 +411,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					cost: Number(activeVisa.cost),
 					taxPaid: Number(activeVisa.taxPaid)
 				}
-				: null
+				: null,
+			blocVisaFree,
+			blockedReason: visaBlockedReason
 		},
 		activeWars,
 		borderingRegionsForAttack,
@@ -522,13 +586,51 @@ export const actions: Actions = {
 			where: eq(residences.userId, account.id),
 			with: {
 				region: {
-					with: { state: true }
+					with: { state: { with: { bloc: true } } }
 				}
 			}
 		});
 
 		if (residence?.region.stateId === stateId) {
 			return fail(400, { error: "You are already a resident of this state" });
+		}
+
+		// Block visa if at war or sanctioned
+		if (residence?.region.stateId) {
+			const userStateId = residence.region.stateId;
+			const userBlocId = residence.region.state?.blocId ?? null;
+
+			const warBlock = await db.query.wars.findFirst({
+				where: and(
+					eq(wars.status, "active"),
+					or(
+						and(eq(wars.attackerId, userStateId), eq(wars.defenderId, stateId)),
+						and(eq(wars.attackerId, stateId), eq(wars.defenderId, userStateId)),
+						...(userBlocId
+							? [
+									and(eq(wars.attackerBlocId, userBlocId), eq(wars.defenderId, stateId)),
+									and(eq(wars.attackerId, stateId), eq(wars.defenderBlocId, userBlocId))
+								]
+							: [])
+					)
+				)
+			});
+
+			if (warBlock) {
+				return fail(400, { error: "Cannot apply for visa — your state is at war with this state" });
+			}
+
+			const sanctionBlock = await db.query.stateSanctions.findFirst({
+				where: and(
+					eq(stateSanctions.sanctioningStateId, stateId),
+					eq(stateSanctions.targetStateId, userStateId),
+					eq(stateSanctions.isActive, true)
+				)
+			});
+
+			if (sanctionBlock) {
+				return fail(400, { error: "Cannot apply for visa — this state has sanctioned your state" });
+			}
 		}
 
 		let visaSettings = await db.query.stateVisaSettings.findFirst({
