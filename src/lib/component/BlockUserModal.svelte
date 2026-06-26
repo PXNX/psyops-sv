@@ -1,8 +1,8 @@
 <!-- src/lib/component/BlockUserModal.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentPersonProhibited20Filled from "~icons/fluent/person-prohibited-20-filled";
+	import BottomSheet from "$lib/component/BottomSheet.svelte";
 
 	interface Props {
 		open: boolean;
@@ -21,26 +21,21 @@
 	}
 </script>
 
-{#if open && userId}
-	<div class="modal modal-open">
-		<div class="modal-box bg-slate-800 border border-white/10">
-			<div class="flex items-center justify-between mb-4">
-				<h3 class="font-bold text-lg text-white flex items-center gap-2">
+{#if userId}
+	<BottomSheet bind:open title="Block User">
+		<div class="space-y-4">
+			<div class="flex items-center gap-3">
+				<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center shrink-0">
 					<FluentPersonProhibited20Filled class="size-6 text-red-400" />
-					Block User
-				</h3>
-				<button onclick={handleClose} class="btn btn-ghost btn-sm btn-circle text-gray-400 hover:text-white">
-					<FluentDismiss20Filled class="size-5" />
-				</button>
+				</div>
+				<p class="text-gray-300">
+					Are you sure you want to block <strong class="text-white">{userName || "this user"}</strong>?
+				</p>
 			</div>
 
-			<p class="text-gray-400 mb-4">
-				Are you sure you want to block <strong class="text-white">{userName || "this user"}</strong>?
-			</p>
-
-			<div class="bg-slate-700/50 border border-yellow-600/30 rounded-lg p-3 mb-4">
-				<p class="text-sm text-gray-300">Blocking will:</p>
-				<ul class="list-disc list-inside text-sm text-gray-400 mt-2 space-y-1">
+			<div class="bg-slate-800/80 border border-yellow-600/30 rounded-xl p-4">
+				<p class="text-sm text-gray-300 font-medium mb-2">Blocking will:</p>
+				<ul class="list-disc list-inside text-sm text-gray-400 space-y-1">
 					<li>Hide their messages from you</li>
 					<li>Prevent them from sending you direct messages</li>
 					<li>You can unblock them later from your settings</li>
@@ -63,14 +58,19 @@
 			>
 				<input type="hidden" name="blockedUserId" value={userId || ""} />
 
-				<div class="modal-action">
-					<button type="button" onclick={handleClose} class="btn btn-ghost" disabled={isSubmitting}> Cancel </button>
-					<button type="submit" class="btn bg-red-600 hover:bg-red-700 border-0 text-white" disabled={isSubmitting}>
+				<div class="flex gap-3 pt-2">
+					<button type="button" onclick={handleClose} class="btn flex-1 btn-ghost" disabled={isSubmitting}>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						class="btn flex-1 bg-red-600 hover:bg-red-700 border-0 text-white"
+						disabled={isSubmitting}
+					>
 						{isSubmitting ? "Blocking..." : "Block User"}
 					</button>
 				</div>
 			</form>
 		</div>
-		<div class="modal-backdrop" onclick={handleClose}></div>
-	</div>
+	</BottomSheet>
 {/if}

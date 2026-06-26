@@ -20,9 +20,11 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 
 	import Modal from "$lib/component/Modal.svelte";
+	import BottomSheet from "$lib/component/BottomSheet.svelte";
 	import ReportModal from "$lib/component/ReportModal.svelte";
 	import AddAuthorModal from "./AddAuthorModal.svelte";
 	import ProfileItem from "$lib/component/ProfileItem.svelte";
+	import FluentMoreHorizontal20Filled from "~icons/fluent/more-horizontal-20-filled";
 	import * as m from "$lib/paraglide/messages";
 	import { shareLink } from "$lib/util";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
@@ -33,6 +35,7 @@
 	let showAppointDialog = $state(false);
 	let showReportModal = $state(false);
 	let showAddAuthorModal = $state(false);
+	let showActionsSheet = $state(false);
 	let selectedMinistry = $state("");
 	let isAppointingMinister = $state(false);
 	let appointmentError = $state<string | null>(null);
@@ -51,13 +54,19 @@
 </script>
 
 <svelte:head>
-	<title>{data.user.name || 'User Profile'}</title>
-	<meta name="description" content={data.user.bio || `View the profile of ${data.user.name || 'this user'} on PsyOps.`} />
+	<title>{data.user.name || "User Profile"}</title>
+	<meta
+		name="description"
+		content={data.user.bio || `View the profile of ${data.user.name || "this user"} on PsyOps.`}
+	/>
 
 	<!-- Open Graph -->
 	<meta property="og:type" content="profile" />
-	<meta property="og:title" content={data.user.name || 'User Profile'} />
-	<meta property="og:description" content={data.user.bio || `View the profile of ${data.user.name || 'this user'} on PsyOps.`} />
+	<meta property="og:title" content={data.user.name || "User Profile"} />
+	<meta
+		property="og:description"
+		content={data.user.bio || `View the profile of ${data.user.name || "this user"} on PsyOps.`}
+	/>
 	{#if data.user.logo}
 		<meta property="og:image" content={data.user.logo} />
 		<meta property="og:image:width" content="96" />
@@ -66,8 +75,11 @@
 
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary" />
-	<meta name="twitter:title" content={data.user.name || 'User Profile'} />
-	<meta name="twitter:description" content={data.user.bio || `View the profile of ${data.user.name || 'this user'} on PsyOps.`} />
+	<meta name="twitter:title" content={data.user.name || "User Profile"} />
+	<meta
+		name="twitter:description"
+		content={data.user.bio || `View the profile of ${data.user.name || "this user"} on PsyOps.`}
+	/>
 	{#if data.user.logo}
 		<meta name="twitter:image" content={data.user.logo} />
 	{/if}
@@ -91,23 +103,23 @@
 			<div class="relative z-10 flex flex-col items-center space-y-3">
 				<Logo src={data.user.logo} alt={data.user.name} placeholderIcon={FluentImageOff20Filled} class="size-20" />
 
-					<div class="text-center space-y-1">
-						<div class="flex items-center justify-center gap-2">
-							<h1 class="text-3xl font-bold text-white tracking-tight">{data.user.name || "Anonymous User"}</h1>
-							{#if data.isOwnProfile}
-								<a
-									href="/settings/profile"
-									class="size-8 flex items-center justify-center bg-purple-600/20 hover:bg-purple-600/40 rounded-full text-purple-400 transition-all"
-									title="Edit Profile"
-								>
-									<FluentSettingsCogMultiple20Filled class="size-4" />
-								</a>
-							{/if}
-						</div>
-						<p class="text-sm text-gray-400 font-mono">#{data.user.id}</p>
-						{#if data.user.bio}
-							<p class="text-sm text-gray-300 max-w-md mt-2">{data.user.bio}</p>
+				<div class="text-center space-y-1">
+					<div class="flex items-center justify-center gap-2">
+						<h1 class="text-3xl font-bold text-white tracking-tight">{data.user.name || "Anonymous User"}</h1>
+						{#if data.isOwnProfile}
+							<a
+								href="/settings/profile"
+								class="size-8 flex items-center justify-center bg-purple-600/20 hover:bg-purple-600/40 rounded-full text-purple-400 transition-all"
+								title="Edit Profile"
+							>
+								<FluentSettingsCogMultiple20Filled class="size-4" />
+							</a>
 						{/if}
+					</div>
+					<p class="text-sm text-gray-400 font-mono">#{data.user.id}</p>
+					{#if data.user.bio}
+						<p class="text-sm text-gray-300 max-w-md mt-2">{data.user.bio}</p>
+					{/if}
 
 					<!-- Government Positions Badges -->
 					<div class="flex gap-2 justify-center flex-wrap mt-3">
@@ -149,70 +161,122 @@
 				<FluentChat20Filled class="size-4" />
 				<span class="hidden sm:inline">Message</span>
 			</a>
+		{/if}
 
-			<button
+		<button
+			class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+			onclick={() => shareLink(data.user.name || "User", window.location.href)}
+		>
+			<FluentShareAndroid20Filled class="size-4" />
+			<span class="hidden sm:inline">Share</span>
+		</button>
+
+		{#if data.isOwnProfile}
+			<a
+				href="/inbox"
 				class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
-				onclick={() => shareLink(data.user.name || "User", window.location.href)}
 			>
-				<FluentGiftCardArrowRight20Filled class="size-4" />
-				<span class="hidden sm:inline">Gift</span>
+				<FluentMail20Filled class="size-4" />
+				<span class="hidden sm:inline">Inbox</span>
+			</a>
+
+			<a
+				href="/settings"
+				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+			>
+				<FluentSettingsCogMultiple20Filled class="size-4" />
+				<span class="hidden sm:inline">Settings</span>
+			</a>
+		{/if}
+
+		{#if data.user.id !== data.account?.id || data.canAppointMinister || (data.ownedNewspapers && data.ownedNewspapers.length > 0)}
+			<button
+				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+				onclick={() => (showActionsSheet = true)}
+			>
+				<FluentMoreHorizontal20Filled class="size-4" />
+				<span class="hidden sm:inline">More</span>
 			</button>
+		{/if}
+	</section>
+
+	<!-- More Actions Bottom Sheet -->
+	<BottomSheet bind:open={showActionsSheet} title="Actions">
+		<div class="space-y-1">
+			{#if data.user.id !== data.account?.id}
+				<button
+					onclick={() => {
+						shareLink(data.user.name || "User", window.location.href);
+						showActionsSheet = false;
+					}}
+					class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
+				>
+					<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center shrink-0">
+						<FluentGiftCardArrowRight20Filled class="size-5 text-blue-400" />
+					</div>
+					<div>
+						<p class="font-medium text-white">Send Gift</p>
+						<p class="text-xs text-gray-400">Send currency to this user</p>
+					</div>
+				</button>
+			{/if}
 
 			{#if data.ownedNewspapers && data.ownedNewspapers.length > 0}
 				<button
-					class="btn btn-sm gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 border-emerald-500/20 text-emerald-300 hover:text-emerald-200 transition-all"
-					onclick={() => (showAddAuthorModal = true)}
+					onclick={() => {
+						showAddAuthorModal = true;
+						showActionsSheet = false;
+					}}
+					class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
 				>
-					<MdiNewspaperPlus class="size-4" />
-					<span class="hidden sm:inline">Add Author</span>
+					<div class="size-10 bg-emerald-600/20 rounded-lg flex items-center justify-center shrink-0">
+						<MdiNewspaperPlus class="size-5 text-emerald-400" />
+					</div>
+					<div>
+						<p class="font-medium text-white">Add as Author</p>
+						<p class="text-xs text-gray-400">Add to one of your newspapers</p>
+					</div>
 				</button>
 			{/if}
 
 			{#if data.canAppointMinister}
 				<button
-					class="btn btn-sm gap-2 bg-amber-600/10 hover:bg-amber-600/20 border-amber-500/20 text-amber-300 hover:text-amber-200 transition-all"
-					onclick={() => (showAppointDialog = true)}
+					onclick={() => {
+						showAppointDialog = true;
+						showActionsSheet = false;
+					}}
+					class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
 				>
-					<FluentShieldTask20Filled class="size-4" />
-					<span class="hidden sm:inline">Appoint Minister</span>
+					<div class="size-10 bg-amber-600/20 rounded-lg flex items-center justify-center shrink-0">
+						<FluentShieldTask20Filled class="size-5 text-amber-400" />
+					</div>
+					<div>
+						<p class="font-medium text-white">Appoint Minister</p>
+						<p class="text-xs text-gray-400">Assign a government ministry</p>
+					</div>
 				</button>
 			{/if}
 
-			<button
-				class="btn btn-sm gap-2 bg-red-600/10 hover:bg-red-600/20 border-red-500/20 text-red-300 hover:text-red-200 transition-all"
-				onclick={() => (showReportModal = true)}
-			>
-				<FluentAccessibilityError20Filled class="size-4" />
-				<span class="hidden sm:inline">Report</span>
-			</button>
-		{/if}
-
-			<button
-				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
-				onclick={() => shareLink(data.user.name || "User", window.location.href)}
-			>
-				<FluentShareAndroid20Filled class="size-4" />
-				<span class="hidden sm:inline">Share</span>
-			</button>
-
-				{#if data.isOwnProfile}
-					<a
-						href="/inbox"
-						class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
-					>
-						<FluentMail20Filled class="size-4" />
-						<span class="hidden sm:inline">Inbox</span>
-					</a>
-
-					<a
-						href="/settings"
-						class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
-					>
-						<FluentSettingsCogMultiple20Filled class="size-4" />
-						<span class="hidden sm:inline">Settings</span>
-					</a>
-				{/if}
-	</section>
+			{#if data.user.id !== data.account?.id}
+				<div class="border-t border-white/5 my-2"></div>
+				<button
+					onclick={() => {
+						showReportModal = true;
+						showActionsSheet = false;
+					}}
+					class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
+				>
+					<div class="size-10 bg-red-600/20 rounded-lg flex items-center justify-center shrink-0">
+						<FluentAccessibilityError20Filled class="size-5 text-red-400" />
+					</div>
+					<div>
+						<p class="font-medium text-red-300">Report User</p>
+						<p class="text-xs text-gray-400">Flag for moderation review</p>
+					</div>
+				</button>
+			{/if}
+		</div>
+	</BottomSheet>
 
 	<!-- Government Positions Section -->
 	{#if data.presidency || data.governorship || data.ministries.length > 0}
@@ -289,8 +353,8 @@
 					placeholderGradient="from-emerald-600 to-green-600"
 					title={data.residence.region.name}
 					subtitle="Residence{data.residence.region.state?.name
-										? ` • ${data.residence.region.state.name}`
-										: ' • Independent'} • Since {formatDate(data.residence.movedInAt)}"
+						? ` • ${data.residence.region.state.name}`
+						: ' • Independent'} • Since {formatDate(data.residence.movedInAt)}"
 					hoverColor="emerald"
 				/>
 			{:else}
@@ -338,7 +402,9 @@
 						<div class="size-12 bg-yellow-600/20 rounded-lg flex items-center justify-center text-2xl">🎂</div>
 						<div>
 							<p class="font-semibold text-white">Account Anniversary</p>
-							<p class="text-xs text-gray-400">{data.birthdayInfo.totalYears} year{data.birthdayInfo.totalYears !== 1 ? 's' : ''} since account creation</p>
+							<p class="text-xs text-gray-400">
+								{data.birthdayInfo.totalYears} year{data.birthdayInfo.totalYears !== 1 ? "s" : ""} since account creation
+							</p>
 						</div>
 					</div>
 				{/if}
@@ -352,8 +418,10 @@
 							{/if}
 						</p>
 						<p class="text-xs text-gray-400 mt-1">
-							Collect {data.birthdayInfo.rewardTotal.toLocaleString()} currency
-							({data.birthdayInfo.rewardPerYear.toLocaleString()} × {data.birthdayInfo.uncollectedYears.length} year{data.birthdayInfo.uncollectedYears.length !== 1 ? 's' : ''})
+							Collect {data.birthdayInfo.rewardTotal.toLocaleString()} currency ({data.birthdayInfo.rewardPerYear.toLocaleString()}
+							× {data.birthdayInfo.uncollectedYears.length} year{data.birthdayInfo.uncollectedYears.length !== 1
+								? "s"
+								: ""})
 						</p>
 						<form
 							method="POST"
@@ -361,12 +429,12 @@
 							use:enhance={() => {
 								return async ({ result, update }) => {
 									await update();
-									if (result.type === 'success') {
+									if (result.type === "success") {
 										confetti({
 											particleCount: 150,
 											spread: 80,
 											origin: { y: 0.6 },
-											colors: ['#f59e0b', '#fbbf24', '#fcd34d', '#a78bfa', '#ec4899']
+											colors: ["#f59e0b", "#fbbf24", "#fcd34d", "#a78bfa", "#ec4899"]
 										});
 									}
 								};

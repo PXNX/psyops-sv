@@ -208,12 +208,64 @@ Clickable row with avatar, name, and metadata.
 
 ### Modal
 
-DaisyUI-based modal dialog.
+DaisyUI-based modal dialog. Use for complex forms or content that needs a centered overlay on desktop.
 
 ```svelte
 <Modal bind:open={showModal} title="Confirm Action">
 	<!-- modal body -->
 </Modal>
+```
+
+### BottomSheet
+
+Slide-up panel anchored to the bottom of the screen. **Prefer this over Modal or custom dropdowns** for action menus, confirmations, short forms, and contextual options — especially on mobile. Bottom sheets feel more natural on touch devices and are easier to reach with one hand.
+
+```svelte
+<script>
+	import BottomSheet from "$lib/component/BottomSheet.svelte";
+	let showSheet = $state(false);
+</script>
+
+<button onclick={() => (showSheet = true)}>Open</button>
+
+<BottomSheet bind:open={showSheet} title="Actions">
+	<!-- sheet content -->
+</BottomSheet>
+```
+
+**Features:**
+
+- Backdrop blur overlay with click-to-dismiss
+- Drag handle indicator at top
+- Escape key to close
+- `max-h-[85vh]` with internal scroll for tall content
+- `animate-slide-up` entrance animation
+- Cyan border accent consistent with design system
+
+**When to use BottomSheet vs Modal:**
+
+| Scenario                                          | Use             |
+| ------------------------------------------------- | --------------- |
+| Action menu (report, block, share, etc.)          | **BottomSheet** |
+| Confirmation dialog (delete, leave, block)        | **BottomSheet** |
+| Short form (report reason, select option)         | **BottomSheet** |
+| Context menu on a message or list item            | **BottomSheet** |
+| "More actions" overflow menu                      | **BottomSheet** |
+| Complex multi-step form (onboarding, editor)      | Modal           |
+| Large content that needs centering (rules, terms) | Modal           |
+
+**Action item pattern inside BottomSheet:**
+
+```html
+<button class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors">
+	<div class="size-10 bg-cyan-600/20 rounded-lg flex items-center justify-center shrink-0">
+		<IconComponent class="size-5 text-cyan-400" />
+	</div>
+	<div>
+		<p class="font-medium text-white">Action Label</p>
+		<p class="text-xs text-gray-400">Short description</p>
+	</div>
+</button>
 ```
 
 ---
@@ -265,13 +317,25 @@ DaisyUI-based modal dialog.
 
 ### Bottom Sheet Pattern (for mobile actions)
 
-Instead of popovers or dropdowns, use slide-up sheets on mobile:
+Instead of popovers, dropdowns, or modals, use the `BottomSheet` component for action menus, confirmations, and short forms. This is the preferred pattern for any contextual UI triggered by user interaction.
 
-```html
-<div class="fixed inset-x-0 bottom-0 bg-slate-900 border-t border-cyan-500/30 p-4 rounded-t-2xl animate-slide-up z-50">
-	<!-- actions -->
-</div>
+```svelte
+<BottomSheet bind:open={showActions} title="Actions">
+	<div class="space-y-1">
+		<button class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors">
+			<div class="size-10 bg-cyan-600/20 rounded-lg flex items-center justify-center shrink-0">
+				<Icon class="size-5 text-cyan-400" />
+			</div>
+			<div>
+				<p class="font-medium text-white">Action</p>
+				<p class="text-xs text-gray-400">Description</p>
+			</div>
+		</button>
+	</div>
+</BottomSheet>
 ```
+
+See the `BottomSheet` component section above for full documentation.
 
 ---
 
@@ -287,7 +351,7 @@ The primary navigation is a **fixed bottom dock** (mobile tab bar pattern).
 
 - Fixed to bottom of viewport.
 - 5 icons: Dashboard, Posts, Training, Production, Profile.
-- Active tab glows cyan.
+- Active tab glows cyan. No hover outline or glow effects on inactive tabs (clean, minimal interaction).
 - Hidden on fullscreen pages (article editor, onboarding).
 
 **Dock breakpoints:**
@@ -528,3 +592,6 @@ Standard page structure used across the app:
 - Don't nest `gaming-card` inside `gaming-card` (use plain `div` for inner sections).
 - Don't use auto-playing animations that cause layout shift.
 - Don't hardcode colors — use Tailwind/DaisyUI utilities.
+- Don't use dropdown menus or popovers for action menus — use `BottomSheet` instead.
+- Don't use modals for simple confirmations or action lists — use `BottomSheet` instead.
+- Don't add hover outlines or glow effects to navigation items (dock tabs should stay clean).
