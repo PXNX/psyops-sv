@@ -15,7 +15,7 @@
 	/>
 </svelte:head>
 
-<div class="min-h-screen bg-slate-950">
+<div class="min-h-dvh">
 	{#key page.url}
 		<div transition:fade>
 			{@render children()}

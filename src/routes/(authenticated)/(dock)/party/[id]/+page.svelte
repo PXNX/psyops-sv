@@ -54,11 +54,11 @@
 				<div class="relative flex-shrink-0">
 					<div class="absolute inset-0 blur-xl rounded-full" style="background-color: {data.party.color}30"></div>
 					<div
-						class="relative size-16 sm:size-20 rounded-xl flex items-center justify-center border-2 overflow-hidden"
-						style="background-color: {data.party.color}; border-color: {data.party.color}80"
+						class="relative size-16 sm:size-20 rounded-xl flex items-center justify-center overflow-hidden"
+						style="background-color: {data.party.color}"
 					>
 						{#if data.party.logoUrl}
-							<img src={data.party.logoUrl} alt={data.party.name} class="size-12 sm:size-16 object-contain" />
+							<img src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
 						{:else}
 							<FluentPeople20Filled class="size-8 sm:size-10 text-white" />
 						{/if}

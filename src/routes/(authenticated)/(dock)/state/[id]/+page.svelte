@@ -94,7 +94,7 @@
 
 			<div class="relative z-10 flex flex-col items-center space-y-3">
 				<!-- State Logo -->
-				<div class="ring-4 ring-white/10 rounded-full relative group">
+				<div class="rounded-full relative group">
 					{#if data.state.logo}
 						<div class="size-24 rounded-full overflow-hidden bg-base-200">
 							<img src={data.state.logo} alt={data.state.name} class="w-full h-full object-cover" />
