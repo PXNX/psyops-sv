@@ -1,4 +1,3 @@
-<!-- src/routes/market/[item]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
@@ -15,19 +14,15 @@
 
 	let { data, form } = $props();
 
-	// Buy quantities per listing
 	let buyQuantities = $state<Record<string, number>>({});
 
-	// Create listing form state
 	let createQty = $state(1);
 	let createPrice = $state(data.statistics?.lowestPrice ?? 1000);
 
-	// Edit listing state
 	let isEditing = $state(false);
 	let editQty = $state(data.myListing?.quantity ?? 1);
 	let editPrice = $state(data.myListing?.pricePerUnit ?? 1000);
 
-	// Cooldown timer
 	let cooldownTimeRemaining = $state(data.cooldownRemaining);
 
 	const ITEM_ICONS: Record<string, string> = {
@@ -52,8 +47,9 @@
 			: (data.statistics?.currentAvgPrice ?? 0)
 	);
 
-	// Total available to sell = inventory + what's already listed (since editing returns/takes from inventory)
 	const totalAvailableForListing = $derived(data.userItemQuantity + (data.myListing?.quantity ?? 0));
+
+	const accentColor = $derived(data.itemType === "resource" ? "purple" : "cyan");
 
 	const cooldownDisplay = $derived.by(() => {
 		if (cooldownTimeRemaining <= 0) return null;
@@ -71,7 +67,6 @@
 		}
 	});
 
-	// When entering edit mode, seed values from current listing
 	function startEditing() {
 		editQty = data.myListing?.quantity ?? 1;
 		editPrice = data.myListing?.pricePerUnit ?? 1000;
@@ -82,7 +77,6 @@
 		isEditing = false;
 	}
 
-	// Price comparison helper
 	function priceVsMarket(price: number): { label: string; cls: string } | null {
 		const low = data.statistics?.lowestPrice;
 		if (!low) return null;
@@ -93,149 +87,161 @@
 	}
 </script>
 
-<div class="max-w-5xl mx-auto px-4 py-6 space-y-6">
+<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-8">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-4">
-			<a href="/market" class="btn btn-circle btn-ghost btn-sm">
-				<FluentArrowLeft20Filled class="size-4" />
-			</a>
-			<div class="flex items-center gap-3">
-				<span class="text-4xl">{itemIcon}</span>
-				<div>
-					<h1 class="text-2xl font-bold text-white capitalize">{data.itemName}</h1>
-					<p class="text-sm text-gray-400 capitalize">
-						{data.itemType} · {data.otherListings.length + (data.myListing ? 1 : 0)} active listing{data.otherListings
-							.length +
-							(data.myListing ? 1 : 0) !==
-						1
-							? "s"
-							: ""}
-					</p>
+	<div class="border-b border-{accentColor}-900/30 bg-slate-900/80 backdrop-blur-xl">
+		<div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-3 sm:gap-5">
+					<a
+						href="/market"
+						class="size-10 flex items-center justify-center bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-slate-500/50 transition-colors"
+					>
+						<FluentArrowLeft20Filled class="size-4 text-slate-400" />
+					</a>
+					<div
+						class="size-14 sm:size-16 flex items-center justify-center bg-slate-800/50 rounded-lg border-2 border-{accentColor}-500/30"
+					>
+						<span class="text-3xl sm:text-4xl">{itemIcon}</span>
+					</div>
+					<div>
+						<h1
+							class="text-xl sm:text-3xl font-bold tracking-wider uppercase font-mono text-{accentColor}-400 capitalize"
+						>
+							{data.itemName}
+						</h1>
+						<p class="text-xs sm:text-sm text-slate-500 font-mono capitalize">
+							{data.itemType} · {data.otherListings.length + (data.myListing ? 1 : 0)} listing{data.otherListings
+								.length +
+								(data.myListing ? 1 : 0) !==
+							1
+								? "s"
+								: ""}
+						</p>
+					</div>
 				</div>
-			</div>
-		</div>
-		<div class="flex items-center gap-2 bg-slate-800/50 border border-white/5 rounded-xl px-4 py-3">
-			<FluentMoney20Filled class="size-4 text-green-400" />
-			<div>
-				<p class="text-xs text-gray-400">Balance</p>
-				<p class="text-base font-bold text-white">${data.wallet.balance.toLocaleString()}</p>
+
+				<div class="flex items-center gap-3 bg-slate-800/50 border border-green-500/20 rounded-lg px-4 py-3">
+					<FluentMoney20Filled class="size-4 text-green-400" />
+					<div>
+						<p class="text-xs text-slate-500 font-mono">BALANCE</p>
+						<p class="text-base font-bold text-white font-mono">${data.wallet.balance.toLocaleString()}</p>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- Market stats strip -->
-	{#if data.statistics}
-		<div class="grid grid-cols-4 gap-3">
-			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-3">
-				<p class="text-xs text-gray-500 mb-1">Avg Price</p>
-				<p class="text-lg font-bold text-white">${data.statistics.currentAvgPrice.toLocaleString()}</p>
+	<div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-6">
+		<!-- Stats Strip -->
+		{#if data.statistics}
+			<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+				<div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
+					<p class="text-xs text-slate-500 font-mono mb-1">AVG PRICE</p>
+					<p class="text-lg sm:text-xl font-bold text-white font-mono">
+						${data.statistics.currentAvgPrice.toLocaleString()}
+					</p>
+				</div>
+				<div class="bg-slate-900/50 border border-green-500/20 rounded-xl p-3 sm:p-4">
+					<p class="text-xs text-slate-500 font-mono mb-1">LOWEST</p>
+					<p class="text-lg sm:text-xl font-bold text-green-400 font-mono">
+						${data.statistics.lowestPrice.toLocaleString()}
+					</p>
+				</div>
+				<div class="bg-slate-900/50 border border-red-500/20 rounded-xl p-3 sm:p-4">
+					<p class="text-xs text-slate-500 font-mono mb-1">HIGHEST</p>
+					<p class="text-lg sm:text-xl font-bold text-red-400 font-mono">
+						${data.statistics.highestPrice.toLocaleString()}
+					</p>
+				</div>
+				<div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
+					<p class="text-xs text-slate-500 font-mono mb-1">LISTINGS</p>
+					<p class="text-lg sm:text-xl font-bold text-{accentColor}-400 font-mono">{data.statistics.activeListings}</p>
+				</div>
 			</div>
-			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-3">
-				<p class="text-xs text-gray-500 mb-1">Lowest</p>
-				<p class="text-lg font-bold text-green-400">${data.statistics.lowestPrice.toLocaleString()}</p>
-			</div>
-			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-3">
-				<p class="text-xs text-gray-500 mb-1">Highest</p>
-				<p class="text-lg font-bold text-red-400">${data.statistics.highestPrice.toLocaleString()}</p>
-			</div>
-			<div class="bg-slate-800/50 border border-white/5 rounded-xl p-3">
-				<p class="text-xs text-gray-500 mb-1">Listings</p>
-				<p class="text-lg font-bold text-purple-400">{data.statistics.activeListings}</p>
-			</div>
-		</div>
-	{/if}
+		{/if}
 
-	<!-- Price chart -->
-	{#if data.priceHistory.length > 1}
-		<MarketChart priceHistory={data.priceHistory} {currentPrice} />
-	{:else if data.priceHistory.length === 0}
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6 text-center py-10">
-			<FluentChartMultiple20Regular class="size-10 mx-auto opacity-20 mb-2 text-gray-500" />
-			<p class="text-sm text-gray-500">No price history yet</p>
-		</div>
-	{/if}
+		<!-- Price Chart -->
+		{#if data.priceHistory.length > 1}
+			<MarketChart priceHistory={data.priceHistory} {currentPrice} />
+		{:else if data.priceHistory.length === 0}
+			<div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 text-center py-10">
+				<FluentChartMultiple20Regular class="size-10 mx-auto opacity-20 mb-2 text-slate-500" />
+				<p class="text-sm text-slate-600 font-mono">No price history yet</p>
+			</div>
+		{/if}
 
-	<!-- ═══════════════════════════════════════ YOUR LISTING ═══════════════════════════════════════ -->
-	<div>
-		<h2 class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-3">Your Listing</h2>
-
-		{#if data.myListing}
-			<!-- Existing listing card -->
-			<div class="bg-slate-800/60 border-2 border-amber-500/30 rounded-2xl overflow-hidden">
-				<!-- Top bar: status + actions -->
-				<div class="flex items-center justify-between px-5 py-3 bg-amber-500/5 border-b border-amber-500/20">
-					<div class="flex items-center gap-2">
-						<span class="size-2 rounded-full bg-amber-400 animate-pulse"></span>
-						<span class="text-sm font-semibold text-amber-300">Active listing</span>
-					</div>
-					<div class="flex items-center gap-2">
-						{#if !isEditing}
+		<!-- Your Listing -->
+		<div
+			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-amber-500/20 rounded-xl overflow-hidden"
+		>
+			<div class="bg-amber-950/20 border-b border-amber-500/20 px-4 sm:px-6 py-3 sm:py-4">
+				<div class="flex items-center justify-between">
+					<h2 class="text-sm sm:text-base font-bold text-amber-400 font-mono uppercase tracking-wide">Your Listing</h2>
+					{#if data.myListing && !isEditing}
+						<div class="flex items-center gap-2">
 							<button
-								class="btn btn-xs gap-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-500/30 text-gray-300"
+								class="px-3 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50 rounded-lg text-xs text-slate-300 font-mono transition-colors flex items-center gap-1.5"
 								onclick={startEditing}
 							>
 								<FluentEdit20Filled class="size-3" />
-								Edit
+								EDIT
 							</button>
 							<form method="POST" action="?/removeListing" use:enhance>
 								<input type="hidden" name="listingId" value={data.myListing.id} />
 								<button
 									type="submit"
-									class="btn btn-xs gap-1 bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-300"
+									class="px-3 py-1.5 bg-red-950/30 hover:bg-red-950/50 border border-red-500/30 rounded-lg text-xs text-red-400 font-mono transition-colors flex items-center gap-1.5"
 								>
 									<FluentDelete20Filled class="size-3" />
-									Remove
+									REMOVE
 								</button>
 							</form>
-						{:else}
-							<button
-								class="btn btn-xs gap-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-500/30 text-gray-400"
-								onclick={cancelEditing}
-							>
-								<FluentDismiss20Filled class="size-3" />
-								Cancel
-							</button>
-						{/if}
-					</div>
+						</div>
+					{:else if isEditing}
+						<button
+							class="px-3 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50 rounded-lg text-xs text-slate-400 font-mono transition-colors flex items-center gap-1.5"
+							onclick={cancelEditing}
+						>
+							<FluentDismiss20Filled class="size-3" />
+							CANCEL
+						</button>
+					{/if}
 				</div>
+			</div>
 
-				{#if !isEditing}
+			<div class="p-4 sm:p-6">
+				{#if data.myListing && !isEditing}
 					{@const cmp = priceVsMarket(data.myListing.pricePerUnit)}
-
-					<!-- View mode -->
-					<div class="flex items-center gap-6 px-5 py-4">
-						<span class="text-5xl">{itemIcon}</span>
+					<div class="flex items-center gap-4 sm:gap-6">
+						<span class="text-4xl sm:text-5xl">{itemIcon}</span>
 						<div class="flex-1 grid grid-cols-3 gap-4">
 							<div>
-								<p class="text-xs text-gray-500">Quantity listed</p>
-								<p class="text-2xl font-bold text-white">{data.myListing.quantity}</p>
+								<p class="text-xs text-slate-500 font-mono mb-1">QUANTITY</p>
+								<p class="text-xl sm:text-2xl font-bold text-white font-mono">{data.myListing.quantity}</p>
 								{#if data.userItemQuantity > 0}
-									<p class="text-xs text-gray-500 mt-0.5">+{data.userItemQuantity} in inventory</p>
+									<p class="text-xs text-slate-600 font-mono mt-0.5">+{data.userItemQuantity} in inventory</p>
 								{/if}
 							</div>
 							<div>
-								<p class="text-xs text-gray-500">Price per unit</p>
-								<p class="text-2xl font-bold text-amber-300">${data.myListing.pricePerUnit.toLocaleString()}</p>
-								{#if cmp}
-									<p class="text-xs {cmp.cls} mt-0.5">{cmp.label}</p>
-								{/if}
-							</div>
-							<div>
-								<p class="text-xs text-gray-500">Total value</p>
-								<p class="text-2xl font-bold text-white">
-									${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
+								<p class="text-xs text-slate-500 font-mono mb-1">UNIT PRICE</p>
+								<p class="text-xl sm:text-2xl font-bold text-amber-300 font-mono">
+									${data.myListing.pricePerUnit.toLocaleString()}
 								</p>
-								<p class="text-xs text-gray-500 mt-0.5">
-									Listed {(() => { const d = new Date(data.myListing.createdAt); const p = (n) => String(n).padStart(2,'0'); return `${p(d.getDate())}.${p(d.getMonth()+1)}.${d.getFullYear()}`; })()}
+								{#if cmp}
+									<p class="text-xs {cmp.cls} font-mono mt-0.5">{cmp.label}</p>
+								{/if}
+							</div>
+							<div>
+								<p class="text-xs text-slate-500 font-mono mb-1">TOTAL VALUE</p>
+								<p class="text-xl sm:text-2xl font-bold text-white font-mono">
+									${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
 								</p>
 							</div>
 						</div>
 					</div>
-				{:else}
+				{:else if data.myListing && isEditing}
 					{@const cmp = priceVsMarket(editPrice)}
-
-					<!-- Edit mode — inline form -->
 					<form
 						method="POST"
 						action="?/updateListing"
@@ -244,14 +250,13 @@
 								isEditing = false;
 							}
 						}}
-						class="px-5 py-4 space-y-4"
+						class="space-y-4"
 					>
 						<input type="hidden" name="listingId" value={data.myListing.id} />
 						<div class="grid grid-cols-2 gap-4">
 							<div>
-								<label for="edit-qty" class="block text-xs text-gray-400 mb-1">
-									Quantity
-									<span class="text-gray-600 ml-1">max {totalAvailableForListing}</span>
+								<label for="edit-qty" class="block text-xs text-slate-500 font-mono mb-1.5">
+									QUANTITY <span class="text-slate-600">max {totalAvailableForListing}</span>
 								</label>
 								<div class="join w-full">
 									<input
@@ -261,70 +266,62 @@
 										min="1"
 										max={totalAvailableForListing}
 										bind:value={editQty}
-										class="input input-sm join-item flex-1 bg-slate-700/50 border-slate-600/30 text-white"
+										class="input input-sm join-item flex-1 bg-slate-950/60 border-slate-700/50 text-white font-mono focus:border-amber-500/50"
 									/>
 									<button
 										type="button"
-										class="btn btn-sm join-item bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-400"
-										onclick={() => (editQty = totalAvailableForListing)}>Max</button
+										class="btn btn-sm join-item bg-slate-800/50 hover:bg-slate-700/50 border-slate-700/50 text-slate-400 font-mono"
+										onclick={() => (editQty = totalAvailableForListing)}>MAX</button
 									>
 								</div>
 							</div>
 							<div>
-								<label for="edit-price" class="block text-xs text-gray-400 mb-1">Price per unit</label>
+								<label for="edit-price" class="block text-xs text-slate-500 font-mono mb-1.5">PRICE PER UNIT</label>
 								<div class="join w-full">
-									<span class="join-item btn btn-sm bg-slate-700/50 border-slate-600/30 text-gray-400">$</span>
+									<span class="join-item btn btn-sm bg-slate-800/50 border-slate-700/50 text-slate-500 font-mono"
+										>$</span
+									>
 									<input
 										type="number"
 										id="edit-price"
 										name="pricePerUnit"
 										min="1"
 										bind:value={editPrice}
-										class="input input-sm join-item flex-1 bg-slate-700/50 border-slate-600/30 text-white"
+										class="input input-sm join-item flex-1 bg-slate-950/60 border-slate-700/50 text-white font-mono focus:border-amber-500/50"
 									/>
 								</div>
 								{#if cmp}
-									<p class="text-xs {cmp.cls} mt-1">{cmp.label}</p>
+									<p class="text-xs {cmp.cls} font-mono mt-1.5">{cmp.label}</p>
 								{/if}
 							</div>
 						</div>
-						<div class="flex items-center justify-between">
-							<p class="text-sm text-gray-400">
-								New total value: <span class="text-white font-semibold">${(editQty * editPrice).toLocaleString()}</span>
+						<div class="flex items-center justify-between pt-1">
+							<p class="text-sm text-slate-500 font-mono">
+								New total: <span class="text-white font-bold">${(editQty * editPrice).toLocaleString()}</span>
 							</p>
 							<button
 								type="submit"
-								class="btn btn-sm gap-1.5 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 border-0 text-white"
+								class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-lg text-white font-bold text-sm font-mono uppercase tracking-wide transition-all flex items-center gap-1.5"
 							>
 								<FluentCheckmark20Filled class="size-3.5" />
-								Save changes
+								Save Changes
 							</button>
 						</div>
 					</form>
-				{/if}
-			</div>
-		{:else if data.userItemQuantity > 0 || data.cooldownRemaining <= 0}
-			<!-- Create listing form -->
-			<div class="bg-slate-800/50 border border-dashed border-slate-600/60 rounded-2xl p-5 space-y-4">
-				<div class="flex items-center gap-2 text-gray-400">
-					<FluentAdd20Filled class="size-4" />
-					<span class="text-sm font-medium">
-						{#if data.userItemQuantity > 0}
-							List your {data.itemName} for sale — {data.userItemQuantity} in inventory
-						{:else}
-							You have no {data.itemName} to sell right now
-						{/if}
-					</span>
-				</div>
-
-				{#if data.userItemQuantity > 0 && cooldownTimeRemaining <= 0}
+				{:else if data.userItemQuantity > 0 && cooldownTimeRemaining <= 0}
 					{@const cmp = priceVsMarket(createPrice)}
-
-					<form method="POST" action="?/createListing" use:enhance class="space-y-3">
+					<form method="POST" action="?/createListing" use:enhance class="space-y-4">
+						<div class="flex items-center gap-2 text-slate-400 mb-2">
+							<FluentAdd20Filled class="size-4" />
+							<span class="text-sm font-mono">
+								List your {data.itemName} for sale —
+								<span class="text-slate-300 font-bold">{data.userItemQuantity}</span> in inventory
+							</span>
+						</div>
 						<div class="grid grid-cols-2 gap-3">
 							<div>
-								<label for="create-qty" class="block text-xs text-gray-400 mb-1">
-									Quantity <span class="text-gray-600">max {data.userItemQuantity}</span>
+								<label for="create-qty" class="block text-xs text-slate-500 font-mono mb-1.5">
+									QUANTITY <span class="text-slate-600">max {data.userItemQuantity}</span>
 								</label>
 								<div class="join w-full">
 									<input
@@ -334,165 +331,173 @@
 										min="1"
 										max={data.userItemQuantity}
 										bind:value={createQty}
-										class="input input-sm join-item flex-1 bg-slate-700/50 border-slate-600/30 text-white"
+										class="input input-sm join-item flex-1 bg-slate-950/60 border-slate-700/50 text-white font-mono focus:border-{accentColor}-500/50"
 									/>
 									<button
 										type="button"
-										class="btn btn-sm join-item bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-400"
-										onclick={() => (createQty = data.userItemQuantity)}>Max</button
+										class="btn btn-sm join-item bg-slate-800/50 hover:bg-slate-700/50 border-slate-700/50 text-slate-400 font-mono"
+										onclick={() => (createQty = data.userItemQuantity)}>MAX</button
 									>
 								</div>
 							</div>
 							<div>
-								<label for="create-price" class="block text-xs text-gray-400 mb-1">Price per unit</label>
+								<label for="create-price" class="block text-xs text-slate-500 font-mono mb-1.5">PRICE PER UNIT</label>
 								<div class="join w-full">
-									<span class="join-item btn btn-sm bg-slate-700/50 border-slate-600/30 text-gray-400">$</span>
+									<span class="join-item btn btn-sm bg-slate-800/50 border-slate-700/50 text-slate-500 font-mono"
+										>$</span
+									>
 									<input
 										type="number"
 										id="create-price"
 										name="pricePerUnit"
 										min="1"
 										bind:value={createPrice}
-										class="input input-sm join-item flex-1 bg-slate-700/50 border-slate-600/30 text-white"
+										class="input input-sm join-item flex-1 bg-slate-950/60 border-slate-700/50 text-white font-mono focus:border-{accentColor}-500/50"
 									/>
 								</div>
 								{#if cmp}
-									<p class="text-xs {cmp.cls} mt-1">{cmp.label}</p>
+									<p class="text-xs {cmp.cls} font-mono mt-1.5">{cmp.label}</p>
 								{/if}
 							</div>
 						</div>
 						<div class="flex items-center justify-between pt-1">
-							<p class="text-sm text-gray-400">
-								Total value: <span class="text-white font-semibold">${(createQty * createPrice).toLocaleString()}</span>
+							<p class="text-sm text-slate-500 font-mono">
+								Total value: <span class="text-white font-bold">${(createQty * createPrice).toLocaleString()}</span>
 							</p>
 							<button
 								type="submit"
 								disabled={createQty < 1 || createQty > data.userItemQuantity || createPrice < 1}
-								class="btn btn-sm gap-1.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white disabled:opacity-40"
+								class="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 rounded-lg text-white font-bold text-sm font-mono uppercase tracking-wide transition-all disabled:opacity-40 flex items-center gap-1.5"
 							>
 								<FluentAdd20Filled class="size-3.5" />
-								Create listing
+								Create Listing
 							</button>
 						</div>
 					</form>
 				{:else if cooldownTimeRemaining > 0}
-					<div class="flex items-center gap-2 text-amber-400 text-sm">
-						<FluentWarning20Filled class="size-4" />
-						Cooldown active — {cooldownDisplay} before you can list again
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<!-- No stock, no listing -->
-			<div class="bg-slate-800/30 border border-slate-700/40 rounded-2xl p-5 text-center">
-				<p class="text-sm text-gray-500">You don't have any {data.itemName} in your inventory.</p>
-				<a href="/market" class="btn btn-xs btn-ghost text-purple-400 mt-2">← Back to market</a>
-			</div>
-		{/if}
-	</div>
-
-	<!-- ═══════════════════════════════════════ OTHER LISTINGS ═══════════════════════════════════════ -->
-	<div>
-		<h2 class="text-xs font-semibold uppercase tracking-widest text-gray-500 mb-3">
-			Market Offers
-			{#if data.otherListings.length > 0}
-				<span class="ml-2 normal-case text-gray-600 font-normal tracking-normal">— sorted cheapest first</span>
-			{/if}
-		</h2>
-
-		{#if data.otherListings.length === 0}
-			<div class="bg-slate-800/30 border border-slate-700/40 rounded-2xl p-8 text-center">
-				<FluentShoppingCart20Filled class="size-10 mx-auto opacity-15 mb-3 text-gray-500" />
-				<p class="text-gray-400 font-medium">No other sellers right now</p>
-				{#if !data.myListing && data.userItemQuantity > 0}
-					<p class="text-sm text-gray-600 mt-1">Be the first — list yours above to set the price.</p>
-				{/if}
-			</div>
-		{:else}
-			<div class="space-y-2">
-				{#each data.otherListings as listing, i}
-					{@const buyQty = buyQuantities[listing.id] || 1}
-					{@const itemCost = listing.pricePerUnit * buyQty}
-					{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
-					{@const totalCost = itemCost + taxAmount}
-					{@const isCheapest = i === 0}
-
-					<div class="bg-slate-800/50 border {isCheapest ? 'border-green-500/25' : 'border-white/5'} rounded-xl">
-						<div class="flex items-center gap-4 px-4 py-3">
-							<!-- Rank + icon -->
-							<div class="flex items-center gap-3 w-8">
-								{#if isCheapest}
-									<span
-										class="text-xs font-bold text-green-400 bg-green-500/10 border border-green-500/20 rounded px-1.5 py-0.5"
-										>Best</span
-									>
-								{:else}
-									<span class="text-xs text-gray-600 w-6 text-center">#{i + 1}</span>
-								{/if}
-							</div>
-
-							<!-- Price info -->
-							<div class="flex-1">
-								<div class="flex items-baseline gap-2">
-									<span class="text-xl font-bold {isCheapest ? 'text-green-400' : 'text-white'}"
-										>${listing.pricePerUnit.toLocaleString()}</span
-									>
-									<span class="text-xs text-gray-500">per unit</span>
-								</div>
-								<p class="text-xs text-gray-500 mt-0.5">{listing.quantity} units available</p>
-							</div>
-
-							<!-- Buy form -->
-							<form method="POST" action="?/buyListing" use:enhance class="flex items-center gap-2">
-								<input type="hidden" name="listingId" value={listing.id} />
-
-								<div class="text-right text-xs text-gray-500 min-w-[80px]">
-									{#if taxAmount > 0}
-										<div class="text-amber-400">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
-									{/if}
-									<div class="text-white font-semibold">Total: ${totalCost.toLocaleString()}</div>
-								</div>
-
-								<div class="join">
-									<input
-										type="number"
-										name="quantity"
-										min="1"
-										max={listing.quantity}
-										value={buyQty}
-										class="input input-sm join-item w-16 bg-slate-700/50 border-slate-600/30 text-white text-center"
-										onchange={(e) => {
-											buyQuantities[listing.id] = parseInt(e.currentTarget.value);
-										}}
-									/>
-									<button
-										type="submit"
-										class="btn btn-sm join-item {isCheapest
-											? 'bg-green-600 hover:bg-green-500'
-											: 'bg-purple-600/70 hover:bg-purple-600'} border-0 text-white px-3"
-									>
-										Buy
-									</button>
-							</div>
-						</form>
-						{#if data.governmentState}
-							<form method="POST" action="?/buyListingAsState" use:enhance>
-								<input type="hidden" name="listingId" value={listing.id} />
-								<input type="hidden" name="quantity" value={buyQty} />
-								<button
-									type="submit"
-									title="Buy for {data.governmentState.name} (Treasury: ${data.governmentState.treasuryBalance.toLocaleString()})"
-									class="btn btn-sm bg-amber-600/70 hover:bg-amber-600 border-0 text-white px-2 gap-1"
-								>
-									<span>🏛️</span>
-									<span class="hidden sm:inline text-xs">State</span>
-								</button>
-							</form>
-						{/if}
+					<div class="flex items-center gap-3 text-amber-400">
+						<FluentWarning20Filled class="size-5" />
+						<div>
+							<p class="text-sm font-mono font-bold">Cooldown Active</p>
+							<p class="text-xs text-amber-400/60 font-mono">{cooldownDisplay} before you can list again</p>
 						</div>
 					</div>
-				{/each}
+				{:else}
+					<div class="text-center py-6">
+						<p class="text-sm text-slate-600 font-mono">No {data.itemName} in your inventory to sell.</p>
+						<a href="/market" class="text-xs text-{accentColor}-400 font-mono hover:underline mt-2 inline-block"
+							>← Back to market</a
+						>
+					</div>
+				{/if}
 			</div>
-		{/if}
+		</div>
+
+		<!-- Market Offers -->
+		<div
+			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+		>
+			<div class="bg-slate-900/80 border-b border-slate-700/50 px-4 sm:px-6 py-3 sm:py-4">
+				<div class="flex items-center justify-between">
+					<h2 class="text-sm sm:text-base font-bold text-slate-200 font-mono uppercase tracking-wide">Market Offers</h2>
+					{#if data.otherListings.length > 0}
+						<span class="text-xs text-slate-600 font-mono">sorted cheapest first</span>
+					{/if}
+				</div>
+			</div>
+
+			{#if data.otherListings.length === 0}
+				<div class="p-8 sm:p-12 text-center">
+					<FluentShoppingCart20Filled class="size-10 mx-auto opacity-15 mb-3 text-slate-500" />
+					<p class="text-slate-500 font-mono font-medium">No other sellers right now</p>
+					{#if !data.myListing && data.userItemQuantity > 0}
+						<p class="text-xs text-slate-600 font-mono mt-1">Be the first — list yours above.</p>
+					{/if}
+				</div>
+			{:else}
+				<div class="p-3 sm:p-4 space-y-2">
+					{#each data.otherListings as listing, i}
+						{@const buyQty = buyQuantities[listing.id] || 1}
+						{@const itemCost = listing.pricePerUnit * buyQty}
+						{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
+						{@const totalCost = itemCost + taxAmount}
+						{@const isCheapest = i === 0}
+
+						<div class="bg-slate-900/40 border {isCheapest ? 'border-green-500/25' : 'border-slate-700/40'} rounded-xl">
+							<div class="flex items-center gap-3 sm:gap-4 px-4 py-3">
+								<div class="w-10 flex justify-center">
+									{#if isCheapest}
+										<span
+											class="text-xs font-bold text-green-400 bg-green-500/10 border border-green-500/20 rounded px-1.5 py-0.5 font-mono"
+											>BEST</span
+										>
+									{:else}
+										<span class="text-xs text-slate-600 font-mono">#{i + 1}</span>
+									{/if}
+								</div>
+
+								<div class="flex-1">
+									<div class="flex items-baseline gap-2">
+										<span class="text-xl font-bold font-mono {isCheapest ? 'text-green-400' : 'text-white'}"
+											>${listing.pricePerUnit.toLocaleString()}</span
+										>
+										<span class="text-xs text-slate-600 font-mono">per unit</span>
+									</div>
+									<p class="text-xs text-slate-500 font-mono mt-0.5">{listing.quantity} units available</p>
+								</div>
+
+								<form method="POST" action="?/buyListing" use:enhance class="flex items-center gap-2">
+									<input type="hidden" name="listingId" value={listing.id} />
+
+									<div class="text-right text-xs font-mono min-w-[80px]">
+										{#if taxAmount > 0}
+											<div class="text-amber-400">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
+										{/if}
+										<div class="text-white font-bold">${totalCost.toLocaleString()}</div>
+									</div>
+
+									<div class="join">
+										<input
+											type="number"
+											name="quantity"
+											min="1"
+											max={listing.quantity}
+											value={buyQty}
+											class="input input-sm join-item w-16 bg-slate-950/60 border-slate-700/50 text-white text-center font-mono"
+											onchange={(e) => {
+												buyQuantities[listing.id] = parseInt(e.currentTarget.value);
+											}}
+										/>
+										<button
+											type="submit"
+											class="btn btn-sm join-item border-0 text-white font-mono font-bold {isCheapest
+												? 'bg-green-600 hover:bg-green-500'
+												: 'bg-purple-600/70 hover:bg-purple-600'} px-3"
+										>
+											BUY
+										</button>
+									</div>
+								</form>
+								{#if data.governmentState}
+									<form method="POST" action="?/buyListingAsState" use:enhance>
+										<input type="hidden" name="listingId" value={listing.id} />
+										<input type="hidden" name="quantity" value={buyQty} />
+										<button
+											type="submit"
+											title="Buy for {data.governmentState
+												.name} (Treasury: ${data.governmentState.treasuryBalance.toLocaleString()})"
+											class="btn btn-sm bg-amber-600/70 hover:bg-amber-600 border-0 text-white px-2 gap-1 font-mono"
+										>
+											<span>🏛️</span>
+											<span class="hidden sm:inline text-xs">STATE</span>
+										</button>
+									</form>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</div>
 	</div>
 </div>
