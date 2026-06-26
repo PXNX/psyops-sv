@@ -1,6 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
-import { residences, regions, states } from "$lib/server/schema";
+import { residences, regions, states, userProfiles } from "$lib/server/schema";
 import { eq } from "drizzle-orm";
 
 import type { RequestEvent } from "./$types";
@@ -12,38 +12,48 @@ export const load = async (event: RequestEvent) => {
 
 	const account = event.locals.account;
 
-	// Allow access to the region selection page without a residence
-	const isRegionSelection = event.url.pathname.startsWith("/welcome/region");
+	const profile = await db.query.userProfiles.findFirst({
+		where: eq(userProfiles.accountId, account.id)
+	});
 
-	// Fetch the user's residence (with region/state info) for all non-region-selection pages
-	if (!isRegionSelection) {
-		const userResidence = await db
-			.select({
-				id: residences.id,
-				regionId: residences.regionId,
-				stateId: states.id,
-				stateName: states.name
-			})
-			.from(residences)
-			.leftJoin(regions, eq(residences.regionId, regions.id))
-			.leftJoin(states, eq(regions.stateId, states.id))
-			.where(eq(residences.userId, account.id))
-			.limit(1)
-			.then((rows) => rows[0] ?? null);
+	const userResidence = await db
+		.select({
+			id: residences.id,
+			regionId: residences.regionId,
+			stateId: states.id,
+			stateName: states.name
+		})
+		.from(residences)
+		.leftJoin(regions, eq(residences.regionId, regions.id))
+		.leftJoin(states, eq(regions.stateId, states.id))
+		.where(eq(residences.userId, account.id))
+		.limit(1)
+		.then((rows) => rows[0] ?? null);
 
-		// If no residence, force them to region selection — no other page is accessible
-		if (!userResidence) {
-			throw redirect(303, "/welcome/region");
-		}
+	// No profile → step 0 (greeting). Profile exists → use stored step.
+	// null step = onboarding finished.
+	const onboardingStep: number | null = !profile ? 0 : profile.onboardingStep;
+	const needsOnboarding = onboardingStep != null;
 
-		return {
-			account: event.locals.account,
-			residence: userResidence
-		};
+	const isWelcomePage = event.url.pathname.startsWith("/welcome");
+	const isDashboard = event.url.pathname === "/";
+
+	if (!userResidence && !needsOnboarding && !isWelcomePage) {
+		// Finished onboarding but still has no residence – fall back to the
+		// legacy region-selection page so they aren't stuck.
+		throw redirect(303, "/welcome/region");
+	}
+
+	if (!userResidence && needsOnboarding && !isWelcomePage && !isDashboard) {
+		// Mid-onboarding: keep them on the dashboard until they pick a region.
+		throw redirect(303, "/");
 	}
 
 	return {
 		account: event.locals.account,
-		residence: null
+		profile: profile ?? null,
+		residence: userResidence,
+		needsOnboarding,
+		onboardingStep
 	};
 };
