@@ -137,7 +137,7 @@
 							<div class="card bg-base-300">
 								<div class="card-body p-4">
 									<div class="mb-3">
-										<p class="font-semibold">{application.user?.profile?.name || 'Unknown User'}</p>
+										<p class="font-semibold">{application.user?.profile?.name || "Unknown User"}</p>
 										<p class="text-xs opacity-70">
 											Applied {formatDate(application.appliedAt)}
 										</p>
@@ -167,7 +167,6 @@
 				</div>
 			</div>
 		{/if}
-		</div>
 
 		<!-- Right Column: Visa Management -->
 		<div class="space-y-6">
