@@ -21,11 +21,9 @@
 	import Code from "@tiptap/extension-code";
 	import Heading from "@tiptap/extension-heading";
 	import History from "@tiptap/extension-history";
-	//import Color from "@tiptap/extension-color";
 
 	import { onMount, onDestroy } from "svelte";
-	import { createEditor, EditorContent, BubbleMenu } from "svelte-tiptap";
-	import type { Editor } from "@tiptap/core";
+	import { Editor, EditorContent, BubbleMenu } from "svelte-tiptap";
 
 	import MdiFormatBold from "~icons/mdi/format-bold";
 	import MdiFormatItalic from "~icons/mdi/format-italic";
@@ -49,9 +47,10 @@
 	let { initialContent = "", placeholder = "Start writing...", onContentChange }: Props = $props();
 
 	let editor = $state<Editor>();
+	let _transaction = $state(0);
 
 	onMount(() => {
-		editor = createEditor({
+		editor = new Editor({
 			extensions: [
 				Document,
 				Paragraph,
@@ -62,7 +61,6 @@
 				Italic,
 				Strike,
 				Code,
-				//	Color.configure({ types: [TextStyle.name, ListItem.name] }),
 				TextStyle,
 				Heading.configure({ levels: [1, 2, 3, 4, 5, 6] }),
 				BulletList.configure({
@@ -88,10 +86,13 @@
 					class: "prose prose-sm sm:prose max-w-none focus:outline-none min-h-[300px] p-3 sm:p-4"
 				}
 			},
-			onUpdate: ({ editor }) => {
+			onUpdate: ({ editor: e }) => {
 				if (onContentChange) {
-					onContentChange(editor.getHTML());
+					onContentChange(e.getHTML());
 				}
+			},
+			onTransaction: () => {
+				_transaction++;
 			}
 		});
 	});
@@ -107,7 +108,10 @@
 	export const undo = () => editor?.chain().focus().undo().run();
 	export const redo = () => editor?.chain().focus().redo().run();
 
-	const isActive = (name: string, attrs = {}) => editor?.isActive(name, attrs) || false;
+	const isActive = (name: string, attrs = {}) => {
+		void _transaction;
+		return editor?.isActive(name, attrs) || false;
+	};
 </script>
 
 <div class="wysiwyg-editor border rounded-lg bg-base-100">
