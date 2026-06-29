@@ -49,6 +49,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select({
 			id: residences.id,
 			movedInAt: residences.movedInAt,
+			regionChangedAt: residences.regionChangedAt,
 			regionId: residences.regionId,
 			stateId: states.id,
 			stateName: states.name,
@@ -61,9 +62,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.limit(1);
 
 	// Get user's home (citizenship/residence) region
-	let homeRegionData: { regionId: number; stateId: number | null; stateName: string | null; stateLogo: number | null } | null = null;
+	let homeRegionData: { regionId: number; stateId: number | null; stateName: string | null; stateLogo: number | null; homeRegionChangedAt: Date } | null = null;
 	const [residenceRow] = await db
-		.select({ homeRegionId: residences.homeRegionId })
+		.select({ homeRegionId: residences.homeRegionId, homeRegionChangedAt: residences.homeRegionChangedAt })
 		.from(residences)
 		.where(eq(residences.userId, params.id))
 		.limit(1);
@@ -74,13 +75,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				regionId: regions.id,
 				stateId: states.id,
 				stateName: states.name,
-				stateLogo: states.logo
+				stateLogo: states.logo,
 			})
 			.from(regions)
 			.leftJoin(states, eq(regions.stateId, states.id))
 			.where(eq(regions.id, residenceRow.homeRegionId))
 			.limit(1);
-		homeRegionData = homeRegionResult ?? null;
+		homeRegionData = homeRegionResult ? { ...homeRegionResult, homeRegionChangedAt: residenceRow.homeRegionChangedAt } : null;
 	}
 
 	// Get article count
@@ -268,6 +269,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			? {
 					id: residence.id,
 					movedInAt: residence.movedInAt,
+					regionChangedAt: residence.regionChangedAt,
 					region: {
 						id: residence.regionId,
 						name: getRegionName(residence.regionId),
@@ -285,6 +287,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					id: homeRegionData.regionId,
 					name: getRegionName(homeRegionData.regionId),
 					logo: "/coats/" + homeRegionData.regionId + ".svg",
+					changedAt: homeRegionData.homeRegionChangedAt,
 					state: {
 						id: homeRegionData.stateId,
 						name: homeRegionData.stateName,

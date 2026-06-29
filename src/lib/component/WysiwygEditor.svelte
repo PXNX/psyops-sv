@@ -24,8 +24,8 @@
 	//import Color from "@tiptap/extension-color";
 
 	import { onMount, onDestroy } from "svelte";
-	import type { Readable } from "svelte/store";
-	import { createEditor, Editor, EditorContent, BubbleMenu } from "svelte-tiptap";
+	import { createEditor, EditorContent, BubbleMenu } from "svelte-tiptap";
+	import type { Editor } from "@tiptap/core";
 
 	import MdiFormatBold from "~icons/mdi/format-bold";
 	import MdiFormatItalic from "~icons/mdi/format-italic";
@@ -48,7 +48,7 @@
 
 	let { initialContent = "", placeholder = "Start writing...", onContentChange }: Props = $props();
 
-	let editor = $state() as Readable<Editor>;
+	let editor = $state<Editor>();
 
 	onMount(() => {
 		editor = createEditor({
@@ -97,19 +97,17 @@
 	});
 
 	onDestroy(() => {
-		if ($editor) {
-			$editor.destroy();
-		}
+		editor?.destroy();
 	});
 
 	// Public methods
-	export const getContent = () => $editor?.getHTML() || "";
-	export const setContent = (content: string) => $editor?.commands.setContent(content);
-	export const clearContent = () => $editor?.commands.clearContent();
-	export const undo = () => $editor?.chain().focus().undo().run();
-	export const redo = () => $editor?.chain().focus().redo().run();
+	export const getContent = () => editor?.getHTML() || "";
+	export const setContent = (content: string) => editor?.commands.setContent(content);
+	export const clearContent = () => editor?.commands.clearContent();
+	export const undo = () => editor?.chain().focus().undo().run();
+	export const redo = () => editor?.chain().focus().redo().run();
 
-	const isActive = (name: string, attrs = {}) => $editor?.isActive(name, attrs) || false;
+	const isActive = (name: string, attrs = {}) => editor?.isActive(name, attrs) || false;
 </script>
 
 <div class="wysiwyg-editor border rounded-lg bg-base-100">
@@ -120,32 +118,32 @@
 			<div class="btn-group">
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('bold') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleBold().run()}
-					disabled={!$editor?.can().chain().focus().toggleBold().run()}
+					onclick={() => editor?.chain().focus().toggleBold().run()}
+					disabled={!editor?.can().chain().focus().toggleBold().run()}
 					title="Bold"
 				>
 					<MdiFormatBold class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('italic') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleItalic().run()}
-					disabled={!$editor?.can().chain().focus().toggleItalic().run()}
+					onclick={() => editor?.chain().focus().toggleItalic().run()}
+					disabled={!editor?.can().chain().focus().toggleItalic().run()}
 					title="Italic"
 				>
 					<MdiFormatItalic class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('strike') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleStrike().run()}
-					disabled={!$editor?.can().chain().focus().toggleStrike().run()}
+					onclick={() => editor?.chain().focus().toggleStrike().run()}
+					disabled={!editor?.can().chain().focus().toggleStrike().run()}
 					title="Strikethrough"
 				>
 					<MdiFormatStrikethrough class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('code') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleCode().run()}
-					disabled={!$editor?.can().chain().focus().toggleCode().run()}
+					onclick={() => editor?.chain().focus().toggleCode().run()}
+					disabled={!editor?.can().chain().focus().toggleCode().run()}
 					title="Inline Code"
 				>
 					<MdiCodeTags class="w-4 h-4" />
@@ -156,21 +154,21 @@
 			<div class="btn-group">
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('heading', { level: 1 }) ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+					onclick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
 					title="Heading 1"
 				>
 					<MdiFormatHeader1 class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('heading', { level: 2 }) ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+					onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
 					title="Heading 2"
 				>
 					<MdiFormatHeader2 class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('heading', { level: 3 }) ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+					onclick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
 					title="Heading 3"
 				>
 					<MdiFormatHeader3 class="w-4 h-4" />
@@ -181,14 +179,14 @@
 			<div class="btn-group">
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('bulletList') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleBulletList().run()}
+					onclick={() => editor?.chain().focus().toggleBulletList().run()}
 					title="Bullet List"
 				>
 					<MdiFormatListBulleted class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('orderedList') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleOrderedList().run()}
+					onclick={() => editor?.chain().focus().toggleOrderedList().run()}
 					title="Numbered List"
 				>
 					<MdiFormatListNumbered class="w-4 h-4" />
@@ -199,21 +197,21 @@
 			<div class="btn-group">
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('blockquote') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleBlockquote().run()}
+					onclick={() => editor?.chain().focus().toggleBlockquote().run()}
 					title="Blockquote"
 				>
 					<MdiFormatQuoteClose class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs sm:btn-sm {isActive('codeBlock') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleCodeBlock().run()}
+					onclick={() => editor?.chain().focus().toggleCodeBlock().run()}
 					title="Code Block"
 				>
 					<MdiCodeTags class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs sm:btn-sm"
-					onclick={() => $editor?.chain().focus().setHorizontalRule().run()}
+					onclick={() => editor?.chain().focus().setHorizontalRule().run()}
 					title="Horizontal Rule"
 				>
 					<MdiMinus class="w-4 h-4" />
@@ -223,7 +221,7 @@
 			<!-- Table -->
 			<button
 				class="btn btn-xs sm:btn-sm"
-				onclick={() => $editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+				onclick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
 				title="Insert Table"
 			>
 				<MdiTable class="w-4 h-4" />
@@ -234,38 +232,38 @@
 	<!-- Editor Content -->
 	<div class="relative">
 		{#if editor}
-			<EditorContent editor={$editor} />
+			<EditorContent {editor} />
 
 			<!-- Bubble Menu for Text Selection (Desktop) -->
 			<BubbleMenu
 				class="hidden sm:flex gap-1 bg-base-300 shadow-lg rounded-lg p-1"
 				tippyOptions={{ duration: 100 }}
-				editor={$editor}
+				{editor}
 			>
 				<button
 					class="btn btn-xs {isActive('bold') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleBold().run()}
+					onclick={() => editor?.chain().focus().toggleBold().run()}
 					title="Bold"
 				>
 					<MdiFormatBold class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs {isActive('italic') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleItalic().run()}
+					onclick={() => editor?.chain().focus().toggleItalic().run()}
 					title="Italic"
 				>
 					<MdiFormatItalic class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs {isActive('strike') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleStrike().run()}
+					onclick={() => editor?.chain().focus().toggleStrike().run()}
 					title="Strikethrough"
 				>
 					<MdiFormatStrikethrough class="w-4 h-4" />
 				</button>
 				<button
 					class="btn btn-xs {isActive('code') ? 'btn-active' : ''}"
-					onclick={() => $editor?.chain().focus().toggleCode().run()}
+					onclick={() => editor?.chain().focus().toggleCode().run()}
 					title="Code"
 				>
 					<MdiCodeTags class="w-4 h-4" />
@@ -273,7 +271,7 @@
 			</BubbleMenu>
 		{/if}
 
-		{#if !$editor?.state.doc.textContent && placeholder}
+		{#if !editor?.state.doc.textContent && placeholder}
 			<div class="absolute top-3 left-3 sm:top-4 sm:left-4 text-gray-400 pointer-events-none">
 				{placeholder}
 			</div>
