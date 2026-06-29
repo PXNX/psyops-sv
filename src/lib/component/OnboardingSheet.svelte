@@ -45,9 +45,16 @@
 	// Compact floating bar when we're waiting for the user to navigate
 	const isCompactMode = $derived((step === 4 && !isOnProduction) || (step === 5 && !isOnTraining));
 
+	// Auto-skip region step if user already has a residence
+	$effect(() => {
+		if (step === 2 && residence) {
+			setStep(3);
+		}
+	});
+
 	// Pre-load regions when we reach step 2
 	$effect(() => {
-		if (step === 2 && regions.length === 0 && !loadingRegions) {
+		if (step === 2 && !residence && regions.length === 0 && !loadingRegions) {
 			loadRegions();
 		}
 	});

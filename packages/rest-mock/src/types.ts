@@ -87,6 +87,7 @@ export interface Residence {
     id: number;
     userId: string;
     regionId: number;
+    homeRegionId: number;
     movedInAt: Date;
 }
 

@@ -35,10 +35,14 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	}
 
 	await db.transaction(async (tx) => {
+		const now = new Date();
 		await tx.insert(residences).values({
 			userId: account.id,
 			regionId: regionId,
-			movedInAt: new Date()
+			homeRegionId: regionId,
+			movedInAt: now,
+			regionChangedAt: now,
+			homeRegionChangedAt: now
 		});
 
 		await tx

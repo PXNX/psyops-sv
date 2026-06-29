@@ -368,26 +368,39 @@
 		<section class="space-y-3">
 			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Location & Activity</h2>
 			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
-				<!-- Residence -->
-				{#if data.residence}
+				<!-- Residence (permanent home / citizenship) -->
+				{#if data.homeRegion}
 					<ProfileItem
-						href="/region/{data.residence.region.id}"
-						logo={data.residence.region.logo}
-						logoAlt={data.residence.region.name}
-						placeholderGradient="from-emerald-600 to-green-600"
-						title={data.residence.region.name}
-						subtitle="Residence{data.residence.region.state?.name
-							? ` • ${data.residence.region.state.name}`
-							: ' • Independent'} • Since {formatDate(data.residence.movedInAt)}"
-						hoverColor="emerald"
+						href="/region/{data.homeRegion.id}"
+						logo={data.homeRegion.logo}
+						logoAlt={data.homeRegion.name}
+						placeholderGradient="from-blue-600 to-indigo-600"
+						title={data.homeRegion.name}
+						subtitle="Residence{data.homeRegion.state?.name ? ` • ${data.homeRegion.state.name}` : ' • Independent'}"
+						hoverColor="blue"
 					/>
 				{:else}
 					<div class="flex items-center gap-3 p-2 text-gray-500">
 						<div class="size-12 bg-slate-700/30 rounded-lg flex items-center justify-center">
 							<FluentFlag20Filled class="size-6" />
 						</div>
-						<p class="text-sm">No permanent residence</p>
+						<p class="text-sm">No residence set</p>
 					</div>
+				{/if}
+
+				<!-- Current Region (shown only when different from residence) -->
+				{#if data.residence && data.homeRegion && data.residence.region.id !== data.homeRegion.id}
+					<ProfileItem
+						href="/region/{data.residence.region.id}"
+						logo={data.residence.region.logo}
+						logoAlt={data.residence.region.name}
+						placeholderGradient="from-emerald-600 to-green-600"
+						title={data.residence.region.name}
+						subtitle="Current Region{data.residence.region.state?.name
+							? ` • ${data.residence.region.state.name}`
+							: ' • Independent'} • Since {formatDate(data.residence.movedInAt)}"
+						hoverColor="emerald"
+					/>
 				{/if}
 
 				{#if data.isOwnProfile}

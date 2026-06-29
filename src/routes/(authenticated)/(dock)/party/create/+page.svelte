@@ -212,7 +212,7 @@
 			</div>
 		</div>
 	{:else if data.userState}
-		<!-- Current State Info -->
+		<!-- Home (Citizenship) State Info -->
 		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
 			<div class="flex items-center gap-3">
 				<FluentLocation20Filled class="size-5 text-blue-400" />

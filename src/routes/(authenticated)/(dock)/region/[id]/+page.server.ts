@@ -80,6 +80,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		with: {
 			region: {
 				with: { state: { with: { bloc: true } } }
+			},
+			homeRegion: {
+				with: { state: { with: { bloc: true } } }
 			}
 		}
 	});
@@ -109,10 +112,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		)
 	});
 
-	// Get user's residence state
+	// Get user's residence (citizenship) state — used for visa/immigration checks
+	// This is the permanent home state, not where the user currently is
 	let userResidenceState = null;
 	if (userResidence) {
-		userResidenceState = userResidence.region.state;
+		userResidenceState = userResidence.homeRegion?.state ?? userResidence.region.state;
 	}
 
 	// Check if state has had inaugural election
@@ -135,12 +139,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	let blocVisaFree = false;
 
 	if (region.stateId && userResidenceState?.id !== region.stateId && hasInauguralElection) {
-		// Check bloc visa-free override: if user's residence state and destination state
-		// are in the same bloc with visaFreeForMembers enabled, no visa needed
-		if (userResidence?.region?.state?.blocId && region.state?.blocId) {
-			const userBloc = userResidence.region.state.bloc;
+		// Check bloc visa-free override: if user's residence (citizenship) state and
+		// destination state are in the same bloc with visaFreeForMembers enabled, no visa needed
+		const userHomeState = userResidence?.homeRegion?.state;
+		if (userHomeState?.blocId && region.state?.blocId) {
+			const userBloc = userHomeState.bloc;
 			if (
-				userResidence.region.state.blocId === region.state.blocId &&
+				userHomeState.blocId === region.state.blocId &&
 				userBloc &&
 				userBloc.visaFreeForMembers
 			) {
@@ -177,11 +182,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		hasPendingApplication = !!pendingApp;
 		}
 
-		// Check if visa is blocked by war or sanctions
+		// Check if visa is blocked by war or sanctions (based on residence/citizenship state)
 		let visaBlockedReason: string | null = null;
 		if (region.stateId && userResidenceState?.id && userResidenceState.id !== region.stateId) {
 		const userStateId = userResidenceState.id;
-		const userBlocId = userResidence?.region?.state?.blocId ?? null;
+		const userBlocId = userResidence?.homeRegion?.state?.blocId ?? null;
 		const destStateId = region.stateId;
 
 		// Check active wars: user's state (or bloc) vs destination state
@@ -587,18 +592,23 @@ export const actions: Actions = {
 			with: {
 				region: {
 					with: { state: { with: { bloc: true } } }
+				},
+				homeRegion: {
+					with: { state: { with: { bloc: true } } }
 				}
 			}
 		});
 
-		if (residence?.region.stateId === stateId) {
-			return fail(400, { error: "You are already a resident of this state" });
+		// Check citizenship (residence) state, not current region
+		const citizenshipStateId = residence?.homeRegion?.stateId ?? residence?.region.stateId;
+		if (citizenshipStateId === stateId) {
+			return fail(400, { error: "You are already a citizen of this state" });
 		}
 
-		// Block visa if at war or sanctioned
-		if (residence?.region.stateId) {
-			const userStateId = residence.region.stateId;
-			const userBlocId = residence.region.state?.blocId ?? null;
+		// Block visa if at war or sanctioned (based on citizenship state)
+		if (citizenshipStateId) {
+			const userStateId = citizenshipStateId;
+			const userBlocId = residence?.homeRegion?.state?.blocId ?? residence?.region.state?.blocId ?? null;
 
 			const warBlock = await db.query.wars.findFirst({
 				where: and(

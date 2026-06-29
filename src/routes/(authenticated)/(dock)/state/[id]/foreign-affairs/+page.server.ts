@@ -459,5 +459,112 @@ export const actions: Actions = {
 			.where(eq(userVisas.id, visaId));
 
 		return { success: true, message: "Visa revoked successfully" };
+	},
+
+	approveResidence: async ({ request, locals, params }) => {
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
+
+		const ministry = await db.query.ministers.findFirst({
+			where: and(
+				eq(ministers.userId, account.id),
+				eq(ministers.stateId, stateId),
+				eq(ministers.ministry, "foreign_affairs")
+			)
+		});
+
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		});
+
+		if (!ministry && !presidency) {
+			return fail(403, { error: "Only the Foreign Minister or President can review residence applications" });
+		}
+
+		const formData = await request.formData();
+		const applicationId = parseInt(formData.get("applicationId") as string);
+
+		const application = await db.query.residenceApplications.findFirst({
+			where: eq(residenceApplications.id, applicationId),
+			with: { region: true }
+		});
+
+		if (!application || application.status !== "pending") {
+			return fail(404, { error: "Application not found or already reviewed" });
+		}
+
+		// Verify region belongs to this state
+		if (application.region.stateId !== stateId) {
+			return fail(400, { error: "This application is not for a region in this state" });
+		}
+
+		// Update application status
+		await db
+			.update(residenceApplications)
+			.set({
+				status: "approved",
+				reviewedAt: new Date(),
+				reviewedBy: account.id
+			})
+			.where(eq(residenceApplications.id, applicationId));
+
+		// Update user's home region to grant citizenship
+		await db
+			.update(residences)
+			.set({
+				homeRegionId: application.regionId,
+				homeRegionChangedAt: new Date()
+			})
+			.where(eq(residences.userId, application.userId));
+
+		return { success: true, message: "Residence application approved — citizenship granted" };
+	},
+
+	rejectResidence: async ({ request, locals, params }) => {
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
+
+		const ministry = await db.query.ministers.findFirst({
+			where: and(
+				eq(ministers.userId, account.id),
+				eq(ministers.stateId, stateId),
+				eq(ministers.ministry, "foreign_affairs")
+			)
+		});
+
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		});
+
+		if (!ministry && !presidency) {
+			return fail(403, { error: "Only the Foreign Minister or President can review residence applications" });
+		}
+
+		const formData = await request.formData();
+		const applicationId = parseInt(formData.get("applicationId") as string);
+
+		const application = await db.query.residenceApplications.findFirst({
+			where: eq(residenceApplications.id, applicationId),
+			with: { region: true }
+		});
+
+		if (!application || application.status !== "pending") {
+			return fail(404, { error: "Application not found or already reviewed" });
+		}
+
+		if (application.region.stateId !== stateId) {
+			return fail(400, { error: "This application is not for a region in this state" });
+		}
+
+		await db
+			.update(residenceApplications)
+			.set({
+				status: "rejected",
+				reviewedAt: new Date(),
+				reviewedBy: account.id
+			})
+			.where(eq(residenceApplications.id, applicationId));
+
+		return { success: true, message: "Residence application rejected" };
 	}
-};
+	};

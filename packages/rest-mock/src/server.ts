@@ -58,11 +58,15 @@ app.get("/api/accounts/:id", (c) => {
     const residence = store.getResidenceByUserId(account.id as string);
     let region = null;
     let state = null;
+    let homeRegion = null;
+    let homeState = null;
     if (residence) {
         region = store.findById("regions", residence.regionId as number);
         if (region?.stateId) state = store.findById("states", region.stateId as number);
+        homeRegion = store.findById("regions", residence.homeRegionId as number);
+        if (homeRegion?.stateId) homeState = store.findById("states", homeRegion.stateId as number);
     }
-    return c.json({ ...account, profile, wallet, residence, region, state });
+    return c.json({ ...account, profile, wallet, residence, region, state, homeRegion, homeState });
 });
 
 // ============ States ============

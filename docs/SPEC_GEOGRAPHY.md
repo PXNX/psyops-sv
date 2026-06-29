@@ -72,21 +72,29 @@ Controls whether a state's borders are open or closed.
 
 ### Residence
 
-Each user has exactly **one** residence.
+Each user has exactly **one** residence record with two region references:
 
-| Field       | Type          | Notes      |
-| ----------- | ------------- | ---------- |
-| `userId`    | FK → accounts | **Unique** |
-| `regionId`  | FK → regions  |            |
-| `movedInAt` | timestamp     |            |
+| Field          | Type          | Notes                                                       |
+| -------------- | ------------- | ----------------------------------------------------------- |
+| `userId`       | FK → accounts | **Unique**                                                  |
+| `regionId`     | FK → regions  | **Current region** – where the user physically is right now |
+| `homeRegionId` | FK → regions  | **Residence** – permanent home / citizenship region         |
+| `movedInAt`    | timestamp     | Last time `regionId` changed                                |
 
-A player's residence determines:
+**Current region** (`regionId`) changes every time a user travels. It determines:
 
-- Which state they belong to
+- Where the user can work (factories in the same region)
+- Physical location on the map
+
+**Residence** (`homeRegionId`) is the user's permanent home and citizenship. It determines:
+
+- Which state they belong to (citizenship)
 - Which chat channels they see (state chat)
 - Which elections they can vote in
 - Which battles they can join (defenders: same region; attackers: bordering region)
 - Tax jurisdiction
+- Which state they can create political parties in
+- Whether they need a visa to enter a foreign state
 
 ### Residency Applications
 

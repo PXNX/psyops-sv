@@ -44,7 +44,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const account = locals.account!;
 
-	// Get user's primary residence
+	// Get user's current residence
 	const [residence] = await db
 		.select({
 			id: residences.id,
@@ -59,6 +59,29 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.leftJoin(states, eq(regions.stateId, states.id))
 		.where(eq(residences.userId, params.id))
 		.limit(1);
+
+	// Get user's home (citizenship/residence) region
+	let homeRegionData: { regionId: number; stateId: number | null; stateName: string | null; stateLogo: number | null } | null = null;
+	const [residenceRow] = await db
+		.select({ homeRegionId: residences.homeRegionId })
+		.from(residences)
+		.where(eq(residences.userId, params.id))
+		.limit(1);
+
+	if (residenceRow) {
+		const [homeRegionResult] = await db
+			.select({
+				regionId: regions.id,
+				stateId: states.id,
+				stateName: states.name,
+				stateLogo: states.logo
+			})
+			.from(regions)
+			.leftJoin(states, eq(regions.stateId, states.id))
+			.where(eq(regions.id, residenceRow.homeRegionId))
+			.limit(1);
+		homeRegionData = homeRegionResult ?? null;
+	}
 
 	// Get article count
 	const [articleCountResult] = await db
@@ -254,6 +277,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 							name: residence.stateName,
 							logo: residence.stateLogo
 						}
+					}
+				}
+			: null,
+		homeRegion: homeRegionData
+			? {
+					id: homeRegionData.regionId,
+					name: getRegionName(homeRegionData.regionId),
+					logo: "/coats/" + homeRegionData.regionId + ".svg",
+					state: {
+						id: homeRegionData.stateId,
+						name: homeRegionData.stateName,
+						logo: homeRegionData.stateLogo
 					}
 				}
 			: null,
@@ -472,19 +507,19 @@ export const actions: Actions = {
 			return fail(400, { error: "This ministry is already occupied" });
 		}
 
-		// Check if user lives in the state
+		// Check if user is a citizen (residence) of the state
 		const userResidence = await db
 			.select({
-				regionId: residences.regionId,
-				stateId: regions.stateId
+				homeRegionId: residences.homeRegionId,
+				homeStateId: regions.stateId
 			})
 			.from(residences)
-			.leftJoin(regions, eq(residences.regionId, regions.id))
+			.leftJoin(regions, eq(residences.homeRegionId, regions.id))
 			.where(eq(residences.userId, params.id))
 			.limit(1);
 
-		if (!userResidence.length || userResidence[0].stateId !== presidency.stateId) {
-			return fail(400, { error: "User must be a resident of your state to be appointed" });
+		if (!userResidence.length || userResidence[0].homeStateId !== presidency.stateId) {
+			return fail(400, { error: "User must be a citizen of your state to be appointed" });
 		}
 
 		try {

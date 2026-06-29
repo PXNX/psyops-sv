@@ -122,7 +122,7 @@
 		</div>
 	{/if}
 
-	<!-- Current Residence Banner -->
+	<!-- Current Region Banner -->
 	{#if data.hasResidence}
 		<div class="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-500/30 rounded-xl p-6">
 			<div class="flex items-start gap-4">
@@ -130,8 +130,8 @@
 					<FluentHome20Filled class="size-6 text-blue-400" />
 				</div>
 				<div class="flex-1">
-					<h2 class="text-xl font-bold text-white mb-2">Your Current Residence</h2>
-					<p class="text-gray-300 text-sm">You are currently a resident of this region.</p>
+					<h2 class="text-xl font-bold text-white mb-2">Your Current Region</h2>
+					<p class="text-gray-300 text-sm">You are currently located in this region.</p>
 				</div>
 			</div>
 		</div>
@@ -206,7 +206,7 @@
 				</div>
 				<div class="flex-1">
 					<h2 class="text-lg font-semibold text-white">Visa Required</h2>
-					<p class="text-sm text-gray-400">You need a visa to work in this state</p>
+					<p class="text-sm text-gray-400">A visa is required for non-citizens</p>
 				</div>
 				{#if !data.visa.hasActiveVisa && !data.visa.hasPendingApplication && data.visa.settings}
 					<button

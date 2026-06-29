@@ -42,20 +42,25 @@ export const POST: RequestHandler = async ({ locals }) => {
 		});
 
 		if (existingResidence) {
-			// Update existing residence
+			// Update current region only (not the permanent residence)
 			await db
 				.update(residences)
 				.set({
 					regionId: activeTravel.toRegionId,
-					movedInAt: new Date()
+					movedInAt: new Date(),
+					regionChangedAt: new Date()
 				})
 				.where(eq(residences.userId, account.id));
 		} else {
 			// Create new residence (shouldn't happen normally, but handle it)
+			const now = new Date();
 			await db.insert(residences).values({
 				userId: account.id,
 				regionId: activeTravel.toRegionId,
-				movedInAt: new Date()
+				homeRegionId: activeTravel.toRegionId,
+				movedInAt: now,
+				regionChangedAt: now,
+				homeRegionChangedAt: now
 			});
 		}
 

@@ -6,7 +6,7 @@
 
 ## Overview
 
-Users authenticate via **Google OAuth** or **Telegram OAuth**. Each user has one **account**, one **profile** (name, avatar, bio), one **wallet** (currency balance), and one **residence** (current region). After first login, users go through an onboarding flow to create their profile and choose a starting region.
+Users authenticate via **Google OAuth** or **Telegram OAuth**. Each user has one **account**, one **profile** (name, avatar, bio), one **wallet** (currency balance), and one **residence** record that tracks both their **current region** (where they physically are) and their **residence** (permanent home / citizenship region). After first login, users go through an onboarding flow to create their profile and choose a starting region.
 
 ---
 

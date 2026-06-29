@@ -241,7 +241,12 @@ export const residences = pgTable(
 		regionId: integer("region_id")
 			.notNull()
 			.references(() => regions.id, { onDelete: "cascade" }),
-		movedInAt: timestamp("moved_in_at").defaultNow().notNull()
+		homeRegionId: integer("home_region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		movedInAt: timestamp("moved_in_at").defaultNow().notNull(),
+		regionChangedAt: timestamp("region_changed_at").defaultNow().notNull(),
+		homeRegionChangedAt: timestamp("home_region_changed_at").defaultNow().notNull()
 	},
 	(t) => ({ userRegionIdx: index("idx_residence_user_region").on(t.userId, t.regionId) })
 );
@@ -298,7 +303,8 @@ export const regionsRelations = relations(regions, ({ one, many }) => ({
 		references: [governors.regionId]
 	}),
 	factories: many(factories),
-	residences: many(residences),
+	residences: many(residences, { relationName: "residenceRegion" }),
+	homeResidences: many(residences, { relationName: "homeRegion" }),
 
 	militaryUnits: many(militaryUnits)
 }));
@@ -1863,7 +1869,13 @@ export const residencesRelations = relations(residences, ({ one }) => ({
 	}),
 	region: one(regions, {
 		fields: [residences.regionId],
-		references: [regions.id]
+		references: [regions.id],
+		relationName: "residenceRegion"
+	}),
+	homeRegion: one(regions, {
+		fields: [residences.homeRegionId],
+		references: [regions.id],
+		relationName: "homeRegion"
 	})
 }));
 

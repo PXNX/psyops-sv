@@ -17,6 +17,7 @@
 	let sanctionReason = $state("");
 	let pendingVisasExpanded = $state(true);
 	let activeVisasExpanded = $state(false);
+	let pendingResidenceExpanded = $state(true);
 </script>
 
 <div class="container mx-auto px-4 py-6 max-w-7xl">
@@ -116,6 +117,56 @@
 					{/if}
 				</div>
 			</div>
+		</div>
+
+		<!-- Pending Residence Applications -->
+		{#if data.pendingApplications.length > 0}
+			<div class="collapse collapse-arrow bg-base-200 shadow-xl" class:collapse-open={pendingResidenceExpanded}>
+				<input type="checkbox" bind:checked={pendingResidenceExpanded} />
+				<div class="collapse-title font-semibold flex items-center gap-2">
+					<FluentPeople20Filled class="size-5 text-info" />
+					<span>Pending Residence Applications</span>
+					<div class="badge badge-info">{data.pendingApplications.length}</div>
+				</div>
+				<div class="collapse-content">
+					<p class="text-sm opacity-70 mb-3">
+						These users have applied for residence permits (citizenship) in your state.
+					</p>
+					<div class="space-y-3 pt-2">
+						{#each data.pendingApplications as application}
+							<div class="card bg-base-300">
+								<div class="card-body p-4">
+									<div class="mb-3">
+										<p class="font-semibold">{application.user?.profile?.name || 'Unknown User'}</p>
+										<p class="text-xs opacity-70">
+											Applied {formatDate(application.appliedAt)}
+										</p>
+									</div>
+
+									<div class="flex gap-2">
+										<form method="POST" action="?/approveResidence" use:enhance class="flex-1">
+											<input type="hidden" name="applicationId" value={application.id} />
+											<button type="submit" class="btn btn-success btn-sm w-full gap-2">
+												<FluentCheckmark20Filled class="size-4" />
+												Approve
+											</button>
+										</form>
+
+										<form method="POST" action="?/rejectResidence" use:enhance class="flex-1">
+											<input type="hidden" name="applicationId" value={application.id} />
+											<button type="submit" class="btn btn-error btn-sm w-full gap-2">
+												<FluentDismiss20Filled class="size-4" />
+												Reject
+											</button>
+										</form>
+									</div>
+								</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+			</div>
+		{/if}
 		</div>
 
 		<!-- Right Column: Visa Management -->
