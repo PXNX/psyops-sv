@@ -26,15 +26,16 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		throw error(404, "Region not found");
 	}
 
-	const existingResidence = await db.query.residences.findFirst({
-		where: eq(residences.userId, account.id)
-	});
-
-	if (existingResidence) {
-		throw error(400, "You already have a residence");
-	}
-
 	await db.transaction(async (tx) => {
+		// Check inside the transaction to prevent race conditions
+		const existingResidence = await tx.query.residences.findFirst({
+			where: eq(residences.userId, account.id)
+		});
+
+		if (existingResidence) {
+			throw error(400, "You already have a residence");
+		}
+
 		const now = new Date();
 		await tx.insert(residences).values({
 			userId: account.id,
