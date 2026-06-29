@@ -53,6 +53,20 @@
 
 	let { data }: { data: PageData } = $props();
 
+	let activeFilter = $state<string | null>(null);
+
+	let incomeCategories = $derived(
+		data.analytics.categoryBreakdown.filter((cat) => cat.income > 0).sort((a, b) => b.income - a.income)
+	);
+
+	let expenseCategories = $derived(
+		data.analytics.categoryBreakdown.filter((cat) => cat.expenses > 0).sort((a, b) => b.expenses - a.expenses)
+	);
+
+	function toggleFilter(type: string) {
+		activeFilter = activeFilter === type ? null : type;
+	}
+
 	function formatCurrency(amount: number): string {
 		return new Intl.NumberFormat("en-US", {
 			style: "currency",
@@ -118,10 +132,14 @@
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
 	}
 
+	let filteredTransactions = $derived(
+		activeFilter ? data.transactions.filter((tx) => tx.type === activeFilter) : data.transactions
+	);
+
 	let groupedTransactions = $derived.by(() => {
 		const groups: { day: string; label: string; transactions: typeof data.transactions }[] = [];
 		let currentDay = "";
-		for (const tx of data.transactions) {
+		for (const tx of filteredTransactions) {
 			const day = getDayKey(tx.createdAt);
 			if (day !== currentDay) {
 				currentDay = day;
@@ -141,105 +159,155 @@
 	<!-- Header -->
 	<div>
 		<h1 class="text-3xl font-bold text-white mb-1">Transactions</h1>
-		<p class="text-gray-400 text-sm">Your financial activity over the last 30 days</p>
+		<p class="text-slate-400 text-sm">Your financial activity over the last 30 days</p>
 	</div>
 
-	<!-- Analytics Summary Cards -->
-	<div class="grid grid-cols-2 gap-3">
-		<!-- Current Balance -->
-		<div class="col-span-2 bg-slate-800/30 rounded-xl border border-white/5 p-5">
-			<div class="flex items-center gap-3">
-				<div class="size-11 bg-purple-600/20 rounded-lg flex items-center justify-center shrink-0">
-					<FluentWallet20Filled class="size-6 text-purple-400" />
-				</div>
-				<div class="flex-1 min-w-0">
-					<p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Current Balance</p>
-					<p class="text-2xl font-bold text-white">{formatCurrency(data.analytics.currentBalance)}</p>
-				</div>
+	<!-- Balance -->
+	<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-5">
+		<div class="flex items-center gap-3">
+			<div class="size-11 bg-purple-600/20 rounded-lg flex items-center justify-center shrink-0">
+				<FluentWallet20Filled class="size-6 text-purple-400" />
 			</div>
-		</div>
-
-		<!-- Income -->
-		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-4">
-			<div class="flex items-center gap-2 mb-2">
-				<div class="size-8 bg-emerald-600/20 rounded-lg flex items-center justify-center">
-					<FluentArrowDownload20Filled class="size-4 text-emerald-400" />
-				</div>
-				<p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Income</p>
+			<div class="flex-1 min-w-0">
+				<p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Current Balance</p>
+				<p class="text-2xl font-bold text-white font-mono">{formatCurrency(data.analytics.currentBalance)}</p>
 			</div>
-			<p class="text-lg font-bold text-emerald-400">+{formatCurrency(data.analytics.totalIncome)}</p>
-		</div>
-
-		<!-- Expenses -->
-		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-4">
-			<div class="flex items-center gap-2 mb-2">
-				<div class="size-8 bg-red-600/20 rounded-lg flex items-center justify-center">
-					<FluentArrowUpload20Filled class="size-4 text-red-400" />
-				</div>
-				<p class="text-xs font-medium text-gray-400 uppercase tracking-wide">Expenses</p>
-			</div>
-			<p class="text-lg font-bold text-red-400">-{formatCurrency(data.analytics.totalExpenses)}</p>
 		</div>
 	</div>
 
-	<!-- Category Breakdown -->
-	{#if data.analytics.categoryBreakdown.length > 0}
-		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Breakdown by Type</h2>
-			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-4">
-				<div class="space-y-2">
-					{#each data.analytics.categoryBreakdown.sort((a, b) => Math.abs(b.net) - Math.abs(a.net)) as cat}
-						{@const color = getTypeColor(cat.type)}
-						<div class="flex items-center justify-between py-1.5">
-							<div class="flex items-center gap-2">
-								<span
-									class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {color.bg} {color.border} border {color.text}"
-								>
-									{typeLabels[cat.type] || cat.type}
-								</span>
-							</div>
-							<div class="text-right text-sm">
-								{#if cat.income > 0}
-									<span class="text-emerald-400">+{formatCurrency(cat.income)}</span>
-								{/if}
-								{#if cat.income > 0 && cat.expenses > 0}
-									<span class="text-gray-600 mx-1">/</span>
-								{/if}
-								{#if cat.expenses > 0}
-									<span class="text-red-400">-{formatCurrency(cat.expenses)}</span>
-								{/if}
-							</div>
-						</div>
+	<!-- Income & Expenses Summaries -->
+	<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+		<!-- Income Summary -->
+		<div
+			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+		>
+			<div class="p-4">
+				<div class="flex items-center gap-2 mb-1">
+					<div class="size-8 bg-emerald-600/20 rounded-lg flex items-center justify-center">
+						<FluentArrowDownload20Filled class="size-4 text-emerald-400" />
+					</div>
+					<p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Income</p>
+				</div>
+				<p class="text-xl font-bold text-emerald-400 font-mono">+{formatCurrency(data.analytics.totalIncome)}</p>
+			</div>
+			{#if incomeCategories.length > 0}
+				<div class="border-t border-slate-700/50 px-4 py-2 space-y-0.5">
+					{#each incomeCategories as cat}
+						<button
+							type="button"
+							onclick={() => toggleFilter(cat.type)}
+							class="flex items-center justify-between w-full py-1.5 px-1 rounded-lg transition-all cursor-pointer {activeFilter ===
+							cat.type
+								? 'bg-emerald-500/10'
+								: 'hover:bg-slate-800/60'}"
+						>
+							<span class="text-xs {activeFilter === cat.type ? 'text-emerald-300 font-semibold' : 'text-slate-400'}">
+								{typeLabels[cat.type] || cat.type}
+							</span>
+							<span
+								class="text-xs font-mono {activeFilter === cat.type
+									? 'text-emerald-300 font-semibold'
+									: 'text-emerald-400/70'}"
+							>
+								+{formatCurrency(cat.income)}
+							</span>
+						</button>
 					{/each}
 				</div>
+			{/if}
+		</div>
+
+		<!-- Expenses Summary -->
+		<div
+			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+		>
+			<div class="p-4">
+				<div class="flex items-center gap-2 mb-1">
+					<div class="size-8 bg-red-600/20 rounded-lg flex items-center justify-center">
+						<FluentArrowUpload20Filled class="size-4 text-red-400" />
+					</div>
+					<p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Expenses</p>
+				</div>
+				<p class="text-xl font-bold text-red-400 font-mono">-{formatCurrency(data.analytics.totalExpenses)}</p>
 			</div>
-		</section>
-	{/if}
+			{#if expenseCategories.length > 0}
+				<div class="border-t border-slate-700/50 px-4 py-2 space-y-0.5">
+					{#each expenseCategories as cat}
+						<button
+							type="button"
+							onclick={() => toggleFilter(cat.type)}
+							class="flex items-center justify-between w-full py-1.5 px-1 rounded-lg transition-all cursor-pointer {activeFilter ===
+							cat.type
+								? 'bg-red-500/10'
+								: 'hover:bg-slate-800/60'}"
+						>
+							<span class="text-xs {activeFilter === cat.type ? 'text-red-300 font-semibold' : 'text-slate-400'}">
+								{typeLabels[cat.type] || cat.type}
+							</span>
+							<span
+								class="text-xs font-mono {activeFilter === cat.type ? 'text-red-300 font-semibold' : 'text-red-400/70'}"
+							>
+								-{formatCurrency(cat.expenses)}
+							</span>
+						</button>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</div>
 
 	<!-- Transaction History -->
 	<section class="space-y-3">
 		<div class="flex items-center justify-between px-1">
-			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider">History</h2>
-			<span class="text-xs text-gray-500">{data.pagination.totalCount} transactions</span>
+			<h2 class="text-sm font-bold text-slate-200 font-mono uppercase tracking-wide">History</h2>
+			<div class="flex items-center gap-2">
+				{#if activeFilter}
+					<button
+						type="button"
+						onclick={() => (activeFilter = null)}
+						class="text-xs text-purple-400 hover:text-purple-300 font-mono transition-colors cursor-pointer"
+					>
+						Clear filter
+					</button>
+				{/if}
+				<span class="text-xs text-slate-500 font-mono"
+					>{filteredTransactions.length} of {data.pagination.totalCount}</span
+				>
+			</div>
 		</div>
 
 		{#if groupedTransactions.length === 0}
-			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-8 text-center">
-				<FluentArrowTrendingLines20Filled class="size-10 text-gray-600 mx-auto mb-3" />
-				<p class="text-gray-400 font-medium">No transactions yet</p>
-				<p class="text-gray-500 text-sm mt-1">Your financial activity will appear here</p>
+			<div
+				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-8 text-center"
+			>
+				<FluentArrowTrendingLines20Filled class="size-10 text-slate-600 mx-auto mb-3" />
+				{#if activeFilter}
+					<p class="text-slate-400 font-medium">No {typeLabels[activeFilter] || activeFilter} transactions</p>
+					<button
+						type="button"
+						onclick={() => (activeFilter = null)}
+						class="text-purple-400 hover:text-purple-300 text-sm mt-2 font-mono transition-colors cursor-pointer"
+					>
+						Clear filter
+					</button>
+				{:else}
+					<p class="text-slate-400 font-medium">No transactions yet</p>
+					<p class="text-slate-500 text-sm mt-1">Your financial activity will appear here</p>
+				{/if}
 			</div>
 		{:else}
 			<div class="space-y-5">
 				{#each groupedTransactions as group}
 					<div class="space-y-2">
-						<h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wider px-1">{group.label}</h3>
-						<div class="bg-slate-800/30 rounded-xl border border-white/5 divide-y divide-white/5">
+						<h3 class="text-xs font-semibold text-slate-500 font-mono uppercase tracking-wider px-1">{group.label}</h3>
+						<div
+							class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl divide-y divide-slate-700/30"
+						>
 							{#each group.transactions as tx}
 								{@const color = getTypeColor(tx.type)}
 								{@const iconType = getTransactionIconType(tx)}
 								{@const FallbackIcon = getFallbackIcon(iconType)}
-								<div class="p-4 hover:bg-slate-700/20 transition-colors first:rounded-t-xl last:rounded-b-xl">
+								<div class="p-4 hover:bg-slate-800/40 transition-colors first:rounded-t-xl last:rounded-b-xl">
 									<div class="flex items-center justify-between gap-3">
 										<!-- Left: Avatar + Details -->
 										<div class="flex items-center gap-3 flex-1 min-w-0">
@@ -262,7 +330,7 @@
 											<div class="flex-1 min-w-0">
 												<div class="flex items-center gap-2">
 													<p class="text-sm font-medium text-white truncate">{typeLabels[tx.type] || tx.type}</p>
-													<span class="text-[11px] text-gray-500 shrink-0">{formatTime(tx.createdAt)}</span>
+													<span class="text-[11px] text-slate-500 font-mono shrink-0">{formatTime(tx.createdAt)}</span>
 												</div>
 
 												{#if tx.entity.name}
@@ -282,7 +350,7 @@
 											<p class="text-sm font-bold {tx.isIncome ? 'text-emerald-400' : 'text-red-400'}">
 												{tx.isIncome ? "+" : ""}{formatCurrency(tx.amount)}
 											</p>
-											<p class="text-[11px] text-gray-500 mt-0.5">
+											<p class="text-[11px] text-slate-500 font-mono mt-0.5">
 												Bal: {formatCurrency(tx.balanceAfter)}
 											</p>
 										</div>
@@ -302,13 +370,13 @@
 			{#if data.pagination.hasPreviousPage}
 				<a
 					href="?page={data.pagination.currentPage - 1}"
-					class="btn btn-sm gap-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+					class="btn btn-sm gap-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-slate-300 hover:text-white transition-all"
 				>
 					<FluentChevronLeft20Filled class="size-4" />
 					Prev
 				</a>
 			{:else}
-				<button class="btn btn-sm gap-1 btn-disabled bg-slate-800/30 border-slate-700/20 text-gray-600" disabled>
+				<button class="btn btn-sm gap-1 btn-disabled bg-slate-800/30 border-slate-700/20 text-slate-600" disabled>
 					<FluentChevronLeft20Filled class="size-4" />
 					Prev
 				</button>
@@ -323,12 +391,12 @@
 					{:else if Math.abs(pageNum - data.pagination.currentPage) <= 2 || pageNum === 1 || pageNum === data.pagination.totalPages}
 						<a
 							href="?page={pageNum}"
-							class="btn btn-sm bg-slate-700/30 hover:bg-slate-600/50 border-slate-600/20 text-gray-400 hover:text-white min-w-[2.5rem] transition-all"
+							class="btn btn-sm bg-slate-700/30 hover:bg-slate-600/50 border-slate-600/20 text-slate-400 hover:text-white min-w-[2.5rem] transition-all"
 						>
 							{pageNum}
 						</a>
 					{:else if Math.abs(pageNum - data.pagination.currentPage) === 3}
-						<span class="text-gray-600 px-1">…</span>
+						<span class="text-slate-600 px-1">…</span>
 					{/if}
 				{/each}
 			</div>
@@ -336,13 +404,13 @@
 			{#if data.pagination.hasNextPage}
 				<a
 					href="?page={data.pagination.currentPage + 1}"
-					class="btn btn-sm gap-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+					class="btn btn-sm gap-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-slate-300 hover:text-white transition-all"
 				>
 					Next
 					<FluentChevronRight20Filled class="size-4" />
 				</a>
 			{:else}
-				<button class="btn btn-sm gap-1 btn-disabled bg-slate-800/30 border-slate-700/20 text-gray-600" disabled>
+				<button class="btn btn-sm gap-1 btn-disabled bg-slate-800/30 border-slate-700/20 text-slate-600" disabled>
 					Next
 					<FluentChevronRight20Filled class="size-4" />
 				</button>
