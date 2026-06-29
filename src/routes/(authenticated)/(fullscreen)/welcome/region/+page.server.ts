@@ -197,15 +197,6 @@ export const actions: Actions = {
 			return fail(404, { error: "Region not found" });
 		}
 
-		// Check if user already has a residence - they shouldn't be here if they do
-		const existingResidence = await db.query.residences.findFirst({
-			where: eq(residences.userId, account.id)
-		});
-
-		if (existingResidence) {
-			throw redirect(303, `/region/${existingResidence.regionId}`);
-		}
-
 		const existingProfile = await db.query.userProfiles.findFirst({
 			where: eq(userProfiles.accountId, account.id)
 		});
@@ -214,6 +205,15 @@ export const actions: Actions = {
 		const nextOnboardingStep = hasRealName ? 3 : 1;
 
 		await db.transaction(async (tx) => {
+			// Check inside the transaction to prevent race conditions
+			const existingResidence = await tx.query.residences.findFirst({
+				where: eq(residences.userId, account.id)
+			});
+
+			if (existingResidence) {
+				throw redirect(303, `/region/${existingResidence.regionId}`);
+			}
+
 			const now = new Date();
 			await tx.insert(residences).values({
 				userId: account.id,
