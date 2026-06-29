@@ -142,34 +142,6 @@
 						{#if data.user.bio}
 							<p class="text-sm text-gray-300 max-w-md mt-2">{data.user.bio}</p>
 						{/if}
-
-						<!-- Government Positions Badges -->
-						<div class="flex gap-2 justify-center flex-wrap mt-3">
-							{#if data.account.role === "moderator"}
-								<div class="badge badge-lg gap-2 bg-purple-600/20 border-purple-500/30 text-purple-300">
-									👑 Moderator
-								</div>
-							{:else if data.account.role === "admin"}
-								<div class="badge badge-lg gap-2 bg-red-600/20 border-red-500/30 text-red-300">👑 Admin</div>
-							{/if}
-
-							{#if data.presidency}
-								<div class="badge badge-lg gap-2 bg-yellow-600/20 border-yellow-500/30 text-yellow-300">
-									👑 President of {data.presidency.stateName}
-								</div>
-							{/if}
-							{#if data.governorship}
-								<div class="badge badge-lg gap-2 bg-blue-600/20 border-blue-500/30 text-blue-300">
-									🏛️ Governor of {data.governorship.regionName}
-								</div>
-							{/if}
-							{#each data.ministries as ministry}
-								<div class="badge badge-lg gap-2 bg-purple-600/20 border-purple-500/30 text-purple-300">
-									{ministryIcons[ministry.ministry]}
-									{ministryNames[ministry.ministry]} Minister
-								</div>
-							{/each}
-						</div>
 					</div>
 				</div>
 			</div>
@@ -364,9 +336,9 @@
 			</section>
 		{/if}
 
-		<!-- Location & Activity Section -->
+		<!-- Location Section -->
 		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Location & Activity</h2>
+			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Location</h2>
 			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
 				<!-- Residence (permanent home / citizenship) -->
 				{#if data.homeRegion}
@@ -376,7 +348,9 @@
 						logoAlt={data.homeRegion.name}
 						placeholderGradient="from-blue-600 to-indigo-600"
 						title={data.homeRegion.name}
-						subtitle="Residence{data.homeRegion.state?.name ? ` • ${data.homeRegion.state.name}` : ' • Independent'}"
+						subtitle="Residence{data.homeRegion.state?.name
+							? ` • ${data.homeRegion.state.name}`
+							: ' • Independent'} • Since {formatDate(data.homeRegion.changedAt)}"
 						hoverColor="blue"
 					/>
 				{:else}
@@ -388,8 +362,8 @@
 					</div>
 				{/if}
 
-				<!-- Current Region (shown only when different from residence) -->
-				{#if data.residence && data.homeRegion && data.residence.region.id !== data.homeRegion.id}
+				<!-- Current Region -->
+				{#if data.residence}
 					<ProfileItem
 						href="/region/{data.residence.region.id}"
 						logo={data.residence.region.logo}
@@ -398,9 +372,16 @@
 						title={data.residence.region.name}
 						subtitle="Current Region{data.residence.region.state?.name
 							? ` • ${data.residence.region.state.name}`
-							: ' • Independent'} • Since {formatDate(data.residence.movedInAt)}"
+							: ' • Independent'} • Since {formatDate(data.residence.regionChangedAt)}"
 						hoverColor="emerald"
 					/>
+				{:else}
+					<div class="flex items-center gap-3 p-2 text-gray-500">
+						<div class="size-12 bg-slate-700/30 rounded-lg flex items-center justify-center">
+							<FluentFlag20Filled class="size-6" />
+						</div>
+						<p class="text-sm">No current region</p>
+					</div>
 				{/if}
 
 				{#if data.isOwnProfile}
@@ -412,15 +393,6 @@
 						Manage Visas
 					</a>
 				{/if}
-
-				<!-- Articles Published -->
-				<ProfileItem
-					href="/user/{data.user.id}/articles"
-					icon={FluentDocument20Filled}
-					title="{data.articleCount} {data.articleCount === 1 ? 'Article' : 'Articles'} Published"
-					subtitle="View all publications"
-					hoverColor="purple"
-				/>
 			</div>
 		</section>
 
@@ -498,6 +470,14 @@
 		<section class="space-y-3">
 			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Career & Politics</h2>
 			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
+				<ProfileItem
+					href="/user/{data.user.id}/articles"
+					icon={FluentDocument20Filled}
+					title="{data.articleCount} {data.articleCount === 1 ? 'Article' : 'Articles'} Published"
+					subtitle="View all publications"
+					hoverColor="purple"
+				/>
+
 				{#if data.party}
 					<ProfileItem
 						href="/party/{data.party.id}"

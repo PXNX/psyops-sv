@@ -18,7 +18,8 @@ import {
 	marketListingCooldowns,
 	presidents,
 	ministers,
-	states
+	states,
+	transactionHistory
 } from "$lib/server/schema";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
@@ -429,6 +430,30 @@ export const actions: Actions = {
 					transactionType: "sale"
 				});
 
+			// Record transaction history for buyer
+			await tx.insert(transactionHistory).values({
+				userId: account.id,
+				transactionType: "market_purchase",
+				amount: -totalCost,
+				balanceAfter: buyerWallet.balance - totalCost,
+				description: `Purchased ${quantity}x ${listing.itemName} at $${listing.pricePerUnit}/ea`,
+				relatedUserId: listing.sellerId,
+				relatedEntityType: "listing",
+				relatedEntityId: listing.id
+			});
+
+			// Record transaction history for seller
+			await tx.insert(transactionHistory).values({
+				userId: listing.sellerId,
+				transactionType: "market_sale",
+				amount: taxCalculation.netAmount,
+				balanceAfter: sellerWallet.balance + taxCalculation.netAmount,
+				description: `Sold ${quantity}x ${listing.itemName} at $${listing.pricePerUnit}/ea`,
+				relatedUserId: account.id,
+				relatedEntityType: "listing",
+				relatedEntityId: listing.id
+			});
+
 			if (quantity === listing.quantity) {
 				await tx.delete(marketListings).where(eq(marketListings.id, listingId));
 			} else {
@@ -510,6 +535,17 @@ export const actions: Actions = {
 				.update(userWallets)
 				.set({ balance: sellerWallet.balance + totalCost, updatedAt: new Date() })
 				.where(eq(userWallets.userId, listing.sellerId));
+
+			// Record transaction history for seller
+			await db.insert(transactionHistory).values({
+				userId: listing.sellerId,
+				transactionType: "market_sale",
+				amount: totalCost,
+				balanceAfter: sellerWallet.balance + totalCost,
+				description: `Sold ${quantity}x ${listing.itemName} to state`,
+				relatedEntityType: "listing",
+				relatedEntityId: listing.id
+			});
 		}
 
 		// Add to state inventory
