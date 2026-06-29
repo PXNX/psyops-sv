@@ -93,5 +93,25 @@ export const actions: Actions = {
 			console.error("Update settings error:", err);
 			return fail(500, { error: "Failed to update settings" });
 		}
+	},
+	deleteAccount: async ({ request, locals, cookies }) => {
+		const account = locals.account!;
+		const formData = await request.formData();
+		const confirmation = formData.get("confirmation");
+
+		if (confirmation !== "DELETE") {
+			return fail(400, { deleteError: "Please type DELETE to confirm account deletion." });
+		}
+
+		try {
+			await db.delete(accounts).where(eq(accounts.id, account.id));
+
+			cookies.delete("session", { path: "/" });
+
+			return redirect(302, "/");
+		} catch (err) {
+			console.error("Delete account error:", err);
+			return fail(500, { deleteError: "Failed to delete account. Please try again." });
+		}
 	}
-};
+	};

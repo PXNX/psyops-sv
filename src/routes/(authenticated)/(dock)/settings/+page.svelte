@@ -10,9 +10,14 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
+	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
 	import { themes } from "$lib/themes";
 
-	let { data } = $props();
+	let { data, form } = $props();
+
+	let showDeleteModal = $state(false);
+	let deleteConfirmation = $state("");
+	let isDeleting = $state(false);
 
 	let current_theme = $state(data.profile.theme);
 	let notifyNewspaperPosts = $state(data.profile.notifyNewspaperPosts);
@@ -358,4 +363,124 @@
 			</button>
 		</form>
 	</div>
+
+	<!-- Danger Zone -->
+	<div class="bg-red-950/30 rounded-xl border border-red-500/20 p-5 space-y-3">
+		<div class="flex items-center gap-2">
+			<FluentDelete20Filled class="size-5 text-red-400" />
+			<h2 class="text-lg font-semibold text-red-300">Danger Zone</h2>
+		</div>
+
+		<p class="text-sm text-gray-400">
+			Permanently delete your account and all associated data. This action cannot be undone.
+		</p>
+
+		<button
+			type="button"
+			onclick={() => {
+				showDeleteModal = true;
+				deleteConfirmation = "";
+			}}
+			class="btn w-full justify-start bg-red-600/10 hover:bg-red-600/20 border-red-500/30 text-red-300 hover:text-red-200 gap-2"
+		>
+			<FluentDelete20Filled class="size-5" />
+			Delete Account
+		</button>
+	</div>
 </div>
+
+<!-- Delete Account Confirmation Modal -->
+{#if showDeleteModal}
+	<div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+		<!-- Backdrop -->
+		<button
+			type="button"
+			class="absolute inset-0 bg-black/70 backdrop-blur-sm"
+			onclick={() => {
+				showDeleteModal = false;
+			}}
+			tabindex="-1"
+			aria-label="Close modal"
+		></button>
+
+		<!-- Modal -->
+		<div class="relative bg-slate-800 rounded-2xl border border-red-500/30 p-6 max-w-md w-full space-y-4 shadow-2xl">
+			<div class="flex items-center gap-3">
+				<div class="bg-red-600/20 p-2.5 rounded-xl">
+					<FluentDelete20Filled class="size-6 text-red-400" />
+				</div>
+				<div>
+					<h3 class="text-lg font-bold text-white">Delete Account</h3>
+					<p class="text-sm text-gray-400">This action is irreversible</p>
+				</div>
+			</div>
+
+			<div class="bg-red-950/40 border border-red-500/20 rounded-lg p-3 space-y-2">
+				<p class="text-sm text-red-300 font-medium">The following will be permanently deleted:</p>
+				<ul class="text-sm text-gray-400 space-y-1 list-disc list-inside">
+					<li>Your profile, wallet, and inventory</li>
+					<li>Companies, factories, and market listings</li>
+					<li>Party memberships and political positions</li>
+					<li>Military units and articles</li>
+					<li>All messages, notifications, and history</li>
+				</ul>
+			</div>
+
+			<form
+				method="POST"
+				action="?/deleteAccount"
+				use:enhance={() => {
+					isDeleting = true;
+					return async ({ update }) => {
+						isDeleting = false;
+						await update();
+					};
+				}}
+				class="space-y-4"
+			>
+				<div>
+					<label for="delete-confirmation" class="block text-sm font-medium text-gray-300 mb-2">
+						Type <span class="text-red-400 font-bold">DELETE</span> to confirm
+					</label>
+					<input
+						id="delete-confirmation"
+						name="confirmation"
+						type="text"
+						autocomplete="off"
+						bind:value={deleteConfirmation}
+						class="input w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20"
+						placeholder="DELETE"
+					/>
+				</div>
+
+				{#if form?.deleteError}
+					<p class="text-sm text-red-400">{form.deleteError}</p>
+				{/if}
+
+				<div class="flex gap-3">
+					<button
+						type="button"
+						onclick={() => {
+							showDeleteModal = false;
+						}}
+						class="btn flex-1 bg-slate-700 hover:bg-slate-600 border-slate-600/30 text-gray-300"
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						disabled={deleteConfirmation !== "DELETE" || isDeleting}
+						class="btn flex-1 bg-red-600 hover:bg-red-700 border-red-500/30 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+					>
+						{#if isDeleting}
+							<span class="loading loading-spinner loading-sm"></span>
+							Deleting...
+						{:else}
+							Delete My Account
+						{/if}
+					</button>
+				</div>
+			</form>
+		</div>
+	</div>
+{/if}
