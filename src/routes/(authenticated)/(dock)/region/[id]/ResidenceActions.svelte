@@ -47,14 +47,11 @@
 					<div class="mb-4 space-y-3">
 						<div class="flex items-center gap-2 text-sm text-gray-400">
 							<span>🕐</span>
-							<span>{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? '' : 's'} travel time</span>
+							<span>{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? "" : "s"} travel time</span>
 							<span class="text-gray-600">·</span>
 							<span>{travelInfo.distanceKm} km</span>
 						</div>
-						<ResourceRequirements
-							costs={{ currency: travelInfo.cost }}
-							available={{ currency: walletBalance }}
-						/>
+						<ResourceRequirements costs={{ currency: travelInfo.cost }} available={{ currency: walletBalance }} />
 					</div>
 				{/if}
 				<form method="POST" action="?/startTravel" use:enhance>
@@ -94,7 +91,7 @@
 				<FluentHome20Filled class="size-6 text-blue-400" />
 			</div>
 			<div class="flex-1">
-				<h3 class="text-lg font-semibold text-white mb-2">Travel to Region</h3>
+				<h3 class="text-lg font-semibold text-white mb-2">Travel to this Region</h3>
 				{#if hasPendingResidenceApp}
 					<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-3 mb-3">
 						<p class="text-sm text-amber-300 flex items-center gap-2">
@@ -103,20 +100,17 @@
 						</p>
 					</div>
 				{:else}
-					<p class="text-sm text-gray-300 mb-3">Travel to this region. Governor approval required for residency.</p>
+					<p class="text-sm text-gray-300 mb-3">Travel to this region. Governor approval may be required.</p>
 				{/if}
 				{#if travelInfo}
 					<div class="mb-4 space-y-3">
 						<div class="flex items-center gap-2 text-sm text-gray-400">
 							<span>🕐</span>
-							<span>{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? '' : 's'} travel time</span>
+							<span>{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? "" : "s"} travel time</span>
 							<span class="text-gray-600">·</span>
 							<span>{travelInfo.distanceKm} km</span>
 						</div>
-						<ResourceRequirements
-							costs={{ currency: travelInfo.cost }}
-							available={{ currency: walletBalance }}
-						/>
+						<ResourceRequirements costs={{ currency: travelInfo.cost }} available={{ currency: walletBalance }} />
 					</div>
 				{/if}
 				<form method="POST" action="?/startTravel" use:enhance>

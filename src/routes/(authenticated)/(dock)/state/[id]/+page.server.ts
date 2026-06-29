@@ -21,8 +21,9 @@ import {
 	userVisas,
 	userWallets,
 	stateTreasury,
-	visaApplications
-} from "$lib/server/schema";
+	visaApplications,
+	residenceApplications
+	} from "$lib/server/schema";
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, gte, sql, or } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
@@ -249,18 +250,45 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Check if user is a resident of this state
 	let isResident = false;
 	let userResidenceBloc = null;
+	let canApplyForResidence = false;
+	let hasPendingResidenceApp = false;
+	let userCurrentRegionName: string | null = null;
 	if (locals.account?.id) {
 		const userRes = await db.query.residences.findFirst({
 			where: eq(residences.userId, locals.account.id),
 			with: {
 				region: {
 					with: { state: { with: { bloc: true } } }
+				},
+				homeRegion: {
+					with: { state: true }
 				}
 			}
 		});
 		if (userRes) {
 			isResident = userRes.region.stateId === stateId;
 			userResidenceBloc = userRes.region.state?.bloc ?? null;
+
+			// User can apply for residence if:
+			// 1. Currently physically in a region of this state
+			// 2. Their home region is NOT in this state (different citizenship)
+			const homeStateId = userRes.homeRegion?.stateId;
+			if (userRes.region.stateId === stateId && homeStateId !== stateId) {
+				canApplyForResidence = true;
+				userCurrentRegionName = getRegionName(userRes.regionId);
+
+				// Check for pending residence application in any region of this state
+				const stateRegionIds = stateRegions.map((r) => r.id);
+				const pendingApp = await db.query.residenceApplications.findFirst({
+					where: and(
+						eq(residenceApplications.userId, locals.account.id),
+						eq(residenceApplications.status, "pending")
+					)
+				});
+				if (pendingApp && stateRegionIds.includes(pendingApp.regionId)) {
+					hasPendingResidenceApp = true;
+				}
+			}
 		}
 	}
 
@@ -426,8 +454,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isPresident,
 		isForeignMinister,
 		canDeclareWar,
-		activeWars
-	};
+		activeWars,
+		residencePermit: {
+			canApply: canApplyForResidence,
+			hasPendingApp: hasPendingResidenceApp,
+			currentRegionName: userCurrentRegionName
+		}
+		};
 };
 
 export const actions: Actions = {
@@ -771,6 +804,63 @@ export const actions: Actions = {
 		return {
 			success: true,
 			message: `Visa purchased for $${visaCost.toLocaleString()} (tax: $${taxAmount.toLocaleString()})`
+		};
+		},
+
+		applyResidence: async ({ params, locals }) => {
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
+
+		// Get user's residence with region info
+		const userRes = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id),
+			with: {
+				region: { with: { state: true } },
+				homeRegion: { with: { state: true } }
+			}
+		});
+
+		if (!userRes) {
+			return fail(400, { error: "You must have a residence to apply" });
+		}
+
+		// Must be physically in a region of this state
+		if (userRes.region.stateId !== stateId) {
+			return fail(400, { error: "You must be physically present in this state to apply for residence" });
+		}
+
+		// Home region must NOT already be in this state
+		if (userRes.homeRegion?.stateId === stateId) {
+			return fail(400, { error: "You are already a citizen of this state" });
+		}
+
+		// Check for existing pending application in any region of this state
+		const stateRegionsList = await db.query.regions.findMany({
+			where: eq(regions.stateId, stateId)
+		});
+		const stateRegionIds = stateRegionsList.map((r) => r.id);
+
+		const pendingApp = await db.query.residenceApplications.findFirst({
+			where: and(
+				eq(residenceApplications.userId, account.id),
+				eq(residenceApplications.status, "pending")
+			)
+		});
+
+		if (pendingApp && stateRegionIds.includes(pendingApp.regionId)) {
+			return fail(400, { error: "You already have a pending residence application for this state" });
+		}
+
+		// Create residence application for the user's current region
+		await db.insert(residenceApplications).values({
+			userId: account.id,
+			regionId: userRes.regionId,
+			status: "pending"
+		});
+
+		return {
+			success: true,
+			message: "Residence permit application submitted. It will be reviewed by the government."
 		};
 		}
 		};

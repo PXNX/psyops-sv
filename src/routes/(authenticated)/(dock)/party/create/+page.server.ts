@@ -33,15 +33,15 @@ export const load: PageServerLoad = async ({ locals }) => {
 		throw redirect(302, `/party/${existingMembership.partyId}`);
 	}
 
-	// Get user's residence to determine their region (isPrimary removed)
+	// Get user's home (citizenship) region to determine which state the party belongs to
 	const userResidence = await db
 		.select({
-			regionId: residences.regionId,
+			regionId: residences.homeRegionId,
 			region: regions,
 			state: states
 		})
 		.from(residences)
-		.innerJoin(regions, eq(residences.regionId, regions.id))
+		.innerJoin(regions, eq(residences.homeRegionId, regions.id))
 		.leftJoin(states, eq(regions.stateId, states.id))
 		.where(eq(residences.userId, account.id))
 		.limit(1)
@@ -148,15 +148,15 @@ export const actions: Actions = {
 			}
 		}
 
-		// Get user's residence (isPrimary removed)
+		// Get user's home (citizenship) region for party state assignment
 		const userResidence = await db
 			.select({
-				regionId: residences.regionId,
+				regionId: residences.homeRegionId,
 				region: regions,
 				state: states
 			})
 			.from(residences)
-			.innerJoin(regions, eq(residences.regionId, regions.id))
+			.innerJoin(regions, eq(residences.homeRegionId, regions.id))
 			.leftJoin(states, eq(regions.stateId, states.id))
 			.where(eq(residences.userId, account.id))
 			.limit(1)

@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/welcome/region/+page.server.ts
 import { db } from "$lib/server/db";
-import { regions, residences, states, userProfiles, files } from "$lib/server/schema";
+import { regions, residences, states, userProfiles, userWallets, files } from "$lib/server/schema";
 import { eq, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
@@ -206,14 +206,49 @@ export const actions: Actions = {
 			throw redirect(303, `/region/${existingResidence.regionId}`);
 		}
 
-		// Create new residence
-		await db.insert(residences).values({
-			userId: account.id,
-			regionId: regionId,
-			movedInAt: new Date()
+		const existingProfile = await db.query.userProfiles.findFirst({
+			where: eq(userProfiles.accountId, account.id)
 		});
 
-		// Always redirect to dashboard after setting residence
+		const hasRealName = existingProfile && existingProfile.name !== "New user";
+		const nextOnboardingStep = hasRealName ? 3 : 1;
+
+		await db.transaction(async (tx) => {
+			const now = new Date();
+			await tx.insert(residences).values({
+				userId: account.id,
+				regionId: regionId,
+				homeRegionId: regionId,
+				movedInAt: now,
+				regionChangedAt: now,
+				homeRegionChangedAt: now
+			});
+
+			if (existingProfile) {
+				await tx
+					.update(userProfiles)
+					.set({ onboardingStep: nextOnboardingStep, updatedAt: new Date() })
+					.where(eq(userProfiles.accountId, account.id));
+			} else {
+				await tx.insert(userProfiles).values({
+					accountId: account.id,
+					name: "New user",
+					onboardingStep: nextOnboardingStep
+				});
+			}
+
+			const existingWallet = await tx.query.userWallets.findFirst({
+				where: eq(userWallets.userId, account.id)
+			});
+			if (!existingWallet) {
+				await tx.insert(userWallets).values({
+					userId: account.id,
+					balance: 1000,
+					updatedAt: new Date()
+				});
+			}
+		});
+
 		throw redirect(303, "/");
 	}
 };

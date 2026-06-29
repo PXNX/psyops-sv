@@ -58,22 +58,27 @@ async function processTravel(travel: any) {
 	const existingResidence = await db.select().from(residences).where(eq(residences.userId, travel.userId)).limit(1);
 
 	if (existingResidence.length > 0) {
-		// Update existing residence
+		// Update current region only (not the permanent residence)
 		await db
 			.update(residences)
 			.set({
 				regionId: travel.toRegionId,
-				movedInAt: new Date()
+				movedInAt: new Date(),
+				regionChangedAt: new Date()
 			})
 			.where(eq(residences.userId, travel.userId));
 
 		console.log(`  ✓ Updated residence for user ${travel.userId}`);
 	} else {
 		// Create new residence (shouldn't happen normally, but handle it)
+		const now = new Date();
 		await db.insert(residences).values({
 			userId: travel.userId,
 			regionId: travel.toRegionId,
-			movedInAt: new Date()
+			homeRegionId: travel.toRegionId,
+			movedInAt: now,
+			regionChangedAt: now,
+			homeRegionChangedAt: now
 		});
 
 		console.log(`  ✓ Created new residence for user ${travel.userId}`);

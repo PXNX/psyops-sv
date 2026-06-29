@@ -28,6 +28,7 @@
 	let showWarModal = $state(false);
 	let isDeclaringWar = $state(false);
 	let showVisaSheet = $state(false);
+	let isApplyingResidence = $state(false);
 
 	const hasGovernment = $derived(!!data.president || data.ministers.length > 0 || data.parliamentMembers.length > 0);
 
@@ -293,6 +294,64 @@
 							<FluentBookCompass24Filled class="size-4" />
 							Request Visa
 						</button>
+					</div>
+				</div>
+			{/if}
+		</section>
+	{/if}
+
+	<!-- Residence Permit -->
+	{#if data.residencePermit.canApply}
+		<section>
+			{#if data.residencePermit.hasPendingApp}
+				<div class="bg-gradient-to-br from-amber-900/30 to-orange-900/30 border border-amber-500/20 rounded-xl p-5">
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-amber-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+							<FluentHome20Filled class="size-6 text-amber-400" />
+						</div>
+						<div class="flex-1">
+							<h3 class="text-lg font-semibold text-white">Residence Permit Pending</h3>
+							<p class="text-sm text-amber-300">Your application is awaiting government review</p>
+						</div>
+					</div>
+				</div>
+			{:else}
+				<div class="bg-gradient-to-br from-teal-900/30 to-cyan-900/30 border border-teal-500/20 rounded-xl p-5">
+					<div class="flex items-center gap-3">
+						<div class="size-12 bg-teal-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+							<FluentHome20Filled class="size-6 text-teal-400" />
+						</div>
+						<div class="flex-1">
+							<h3 class="text-lg font-semibold text-white">Apply for Residence Permit</h3>
+							<p class="text-sm text-gray-400">
+								You are currently in {data.residencePermit.currentRegionName}. Apply to become a citizen of this state.
+							</p>
+						</div>
+						<form
+							method="POST"
+							action="?/applyResidence"
+							use:enhance={() => {
+								isApplyingResidence = true;
+								return async ({ update }) => {
+									isApplyingResidence = false;
+									await update();
+								};
+							}}
+						>
+							<button
+								type="submit"
+								class="btn btn-sm bg-teal-600 hover:bg-teal-500 border-0 text-white gap-2"
+								disabled={isApplyingResidence}
+							>
+								{#if isApplyingResidence}
+									<span class="loading loading-spinner loading-xs"></span>
+									Applying...
+								{:else}
+									<FluentHome20Filled class="size-4" />
+									Apply for Residence
+								{/if}
+							</button>
+						</form>
 					</div>
 				</div>
 			{/if}

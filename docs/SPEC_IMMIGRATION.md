@@ -90,7 +90,7 @@ Issued after approval.
 
 - Players without a visa cannot enter the state.
 - Players with an active visa can still enter.
-- Citizens of the state can always enter and leave.
+- Citizens of the state (residence in that state) can always enter and leave.
 
 ---
 
@@ -141,15 +141,20 @@ Does player have an active visa? ──Yes──→ Travel normally
 Apply for visa → Wait for approval → Receive visa → Travel
 ```
 
-### Residency Change
+### Current Region vs Residence
 
-When a player travels to a new region, their **residence** is updated. This changes:
+When a player travels to a new region, only their **current region** is updated. This changes where they can work, but does **not** affect their citizenship.
+
+The player's **residence** (permanent home / citizenship) stays the same. It determines:
 
 - Their state citizenship
 - Their tax jurisdiction
 - Their eligible elections
 - Their chat channels (state chat)
 - Their battle eligibility
+- Whether they need a visa for foreign states
+
+Visa requirements are based on the player's **residence** state vs the destination state, not their current region.
 
 ---
 

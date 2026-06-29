@@ -170,11 +170,16 @@ export function seedStore(store: MockRecordStore, storage?: MockFileStorage): vo
     store.insert("sessions", { id: "mock-session-bob", accountId: account2.id, expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30), createdAt: new Date() });
 
     // ============ Residences ============
-    for (const [userId, regionId] of [
-        [account1.id, region1.id], [account2.id, region1.id], [account3.id, region3.id],
-        [account4.id, region5.id], [account5.id, region3.id],
-    ] as [string, number][]) {
-        store.insert("residences", { userId, regionId, movedInAt: new Date() });
+    // regionId = current region (where user physically is now, changes on travel)
+    // homeRegionId = residence (permanent home / citizenship, doesn't change on travel)
+    for (const [userId, regionId, homeRegionId] of [
+        [account1.id, region1.id, region1.id],
+        [account2.id, region1.id, region1.id],
+        [account3.id, region3.id, region3.id],
+        [account4.id, region5.id, region5.id],
+        [account5.id, region3.id, region1.id], // Eve is currently in region3 but her residence is region1
+    ] as [string, number, number][]) {
+        store.insert("residences", { userId, regionId, homeRegionId, movedInAt: new Date() });
     }
 
     // ============ Wallets ============

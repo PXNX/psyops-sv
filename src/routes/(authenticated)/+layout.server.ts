@@ -20,6 +20,7 @@ export const load = async (event: RequestEvent) => {
 		.select({
 			id: residences.id,
 			regionId: residences.regionId,
+			homeRegionId: residences.homeRegionId,
 			stateId: states.id,
 			stateName: states.name
 		})

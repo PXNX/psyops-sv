@@ -411,7 +411,7 @@ async function processElectionResults(election: any) {
 	const citizens = await db
 		.select({ userId: residences.userId })
 		.from(residences)
-		.innerJoin(regions, eq(residences.regionId, regions.id))
+		.innerJoin(regions, eq(residences.homeRegionId, regions.id))
 		.where(eq(regions.stateId, stateId));
 
 	const promises = citizens.map((c) =>
