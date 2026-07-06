@@ -5,7 +5,6 @@ import { db } from "$lib/server/db";
 import {
 	userProfiles,
 	userWallets,
-	transactionHistory,
 	resourceInventory,
 	productInventory,
 	productionQueue,
@@ -85,97 +84,30 @@ interface PurchaseResult {
 	premiumUntil?: Date;
 }
 
-/** Buy premium for yourself using in-game currency. */
-export async function buyPremiumWithCurrency(accountId: string, planId: string): Promise<PurchaseResult> {
-	if (!isPremiumPlanId(planId)) {
-		return { success: false, error: "Invalid plan" };
-	}
-	const plan = PREMIUM_PLANS[planId];
-
-	try {
-		let premiumUntil: Date | undefined;
-		let failure: string | undefined;
-
-		await db.transaction(async (tx) => {
-			const [wallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, accountId));
-			if (!wallet || wallet.balance < plan.currencyPrice) {
-				failure = "Insufficient funds";
-				return;
-			}
-
-			const newBalance = wallet.balance - plan.currencyPrice;
-			await tx
-				.update(userWallets)
-				.set({ balance: newBalance, updatedAt: new Date() })
-				.where(eq(userWallets.userId, accountId));
-
-			premiumUntil = await grantPremium(accountId, plan.days, tx);
-
-			await tx.insert(transactionHistory).values({
-				userId: accountId,
-				transactionType: "premium_purchase",
-				amount: -plan.currencyPrice,
-				balanceAfter: newBalance,
-				description: `Purchased ${plan.label} premium membership (${plan.days} days)`
-			});
-		});
-
-		if (failure) return { success: false, error: failure };
-		return { success: true, premiumUntil };
-	} catch (err) {
-		console.error("buyPremiumWithCurrency error:", err);
-		return { success: false, error: "Failed to purchase premium" };
-	}
-}
-
-/** Gift premium to another user, paying with your own in-game currency. */
+/**
+ * Gift premium to another user. Premium cannot be bought with in-game currency,
+ * so gifting is free (while real payments are disabled) and simply grants the
+ * membership to the recipient.
+ */
 export async function giftPremium(gifterId: string, recipientId: string, planId: string): Promise<PurchaseResult> {
 	if (!isPremiumPlanId(planId)) {
 		return { success: false, error: "Invalid plan" };
 	}
 	if (gifterId === recipientId) {
-		return { success: false, error: "Use the buy option to purchase premium for yourself" };
+		return { success: false, error: "You cannot gift premium to yourself" };
 	}
 	const plan = PREMIUM_PLANS[planId];
 
 	try {
-		let failure: string | undefined;
+		const [recipient] = await db
+			.select({ accountId: userProfiles.accountId })
+			.from(userProfiles)
+			.where(eq(userProfiles.accountId, recipientId));
+		if (!recipient) {
+			return { success: false, error: "Recipient not found" };
+		}
 
-		await db.transaction(async (tx) => {
-			const [recipient] = await tx
-				.select({ accountId: userProfiles.accountId, name: userProfiles.name })
-				.from(userProfiles)
-				.where(eq(userProfiles.accountId, recipientId));
-			if (!recipient) {
-				failure = "Recipient not found";
-				return;
-			}
-
-			const [wallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, gifterId));
-			if (!wallet || wallet.balance < plan.currencyPrice) {
-				failure = "Insufficient funds";
-				return;
-			}
-
-			const newBalance = wallet.balance - plan.currencyPrice;
-			await tx
-				.update(userWallets)
-				.set({ balance: newBalance, updatedAt: new Date() })
-				.where(eq(userWallets.userId, gifterId));
-
-			await grantPremium(recipientId, plan.days, tx);
-
-			await tx.insert(transactionHistory).values({
-				userId: gifterId,
-				transactionType: "premium_purchase",
-				amount: -plan.currencyPrice,
-				balanceAfter: newBalance,
-				description: `Gifted ${plan.label} premium membership (${plan.days} days)`,
-				relatedUserId: recipientId
-			});
-		});
-
-		if (failure) return { success: false, error: failure };
+		const premiumUntil = await grantPremium(recipientId, plan.days);
 
 		await sendSystemNotification({
 			recipientId,
@@ -184,7 +116,7 @@ export async function giftPremium(gifterId: string, recipientId: string, planId:
 			content: `You have been gifted a ${plan.label} premium membership (${plan.days} days). Automation for production, military training and factory work is now working for you. Manage it on the Premium page.`
 		});
 
-		return { success: true };
+		return { success: true, premiumUntil };
 	} catch (err) {
 		console.error("giftPremium error:", err);
 		return { success: false, error: "Failed to gift premium" };

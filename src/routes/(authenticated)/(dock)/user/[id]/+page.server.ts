@@ -24,7 +24,8 @@ import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
 import { sendMedalNotification } from "$lib/server/service/inbox";
 import { getBirthdayInfo, collectBirthdayRewards } from "$lib/server/service/birthday";
-import { isPremiumActive } from "$lib/config";
+import { isPremiumActive, PREMIUM_PLANS } from "$lib/config";
+import { giftPremium as giftPremiumService } from "$lib/server/service/premium";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	// Query account with its profile
@@ -38,7 +39,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!user) {
 		return {
 			userNotFound: true as const,
-			userId: params.id
+			userId: params.id,
+			premiumPlans: Object.values(PREMIUM_PLANS)
 		};
 	}
 
@@ -322,11 +324,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		ownedNewspapers,
 		account,
-		birthdayInfo
+		birthdayInfo,
+		premiumPlans: Object.values(PREMIUM_PLANS)
 	};
 };
 
 export const actions: Actions = {
+	giftPremium: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		if (account.id === params.id) {
+			return fail(400, { error: "You cannot gift premium to yourself" });
+		}
+		const planId = (await request.formData()).get("planId") as string;
+		const result = await giftPremiumService(account.id, params.id, planId);
+		if (!result.success) {
+			return fail(400, { error: result.error });
+		}
+		return { success: true, message: "Premium membership gifted!" };
+	},
+
 	collectBirthday: async ({ params, locals }) => {
 		const account = locals.account!;
 		// Only the profile owner can collect their own birthday reward

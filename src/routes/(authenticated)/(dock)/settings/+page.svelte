@@ -344,7 +344,7 @@
 				</div>
 				<div>
 					<p class="text-sm font-medium text-white group-hover:text-purple-300 transition-colors">Premium Membership</p>
-					<p class="text-xs text-gray-400">Automate production, training & factory work — buy or gift it</p>
+					<p class="text-xs text-gray-400">Automate production, training & factory work</p>
 				</div>
 			</div>
 			<FluentChevronRight20Filled class="size-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
