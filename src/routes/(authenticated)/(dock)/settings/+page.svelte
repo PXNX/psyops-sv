@@ -7,6 +7,7 @@
 	import FluentPaint20Filled from "~icons/fluent/paint-brush-20-filled";
 	import FluentDataUsage20Filled from "~icons/fluent/data-usage-20-filled";
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
+	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
@@ -329,6 +330,25 @@
 				class="toggle toggle-info"
 			/>
 		</label>
+	</div>
+
+	<!-- Premium Membership Link -->
+	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+		<a
+			href="/premium"
+			class="flex items-center justify-between group hover:bg-slate-700/30 -m-5 p-5 rounded-xl transition-colors"
+		>
+			<div class="flex items-center gap-3">
+				<div class="bg-gradient-to-br from-amber-400 via-pink-500 to-purple-600 p-2 rounded-lg">
+					<FluentStar20Filled class="size-5 text-white" />
+				</div>
+				<div>
+					<p class="text-sm font-medium text-white group-hover:text-purple-300 transition-colors">Premium Membership</p>
+					<p class="text-xs text-gray-400">Automate production, training & factory work — buy or gift it</p>
+				</div>
+			</div>
+			<FluentChevronRight20Filled class="size-5 text-gray-400 group-hover:text-purple-400 transition-colors" />
+		</a>
 	</div>
 
 	<!-- Gift Code Link -->

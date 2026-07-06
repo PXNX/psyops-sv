@@ -95,6 +95,8 @@
 		return `${hoursToFull}h`;
 	}
 
+	const activeUnits = $derived(data.units.filter((u) => !u.isTraining));
+
 	// Sort training units by creation date to establish queue order
 	const trainingUnits = $derived(
 		data.units
@@ -147,7 +149,6 @@
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<!-- Active Units - Main Focus -->
 		<div class="lg:col-span-2 space-y-4">
-			{@const activeUnits = data.units.filter((u) => !u.isTraining)}
 			<div class="flex items-center gap-3">
 				<span class="h-6 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600"></span>
 				<h2 class="text-lg font-semibold tracking-tight text-white">Active Units</h2>
@@ -244,7 +245,7 @@
 				</div>
 			{/each}
 
-			{#if data.units.filter((u) => !u.isTraining).length === 0}
+			{#if activeUnits.length === 0}
 				<EmptyState
 					icon={FluentEmojiMilitaryHelmet}
 					title="No active units"
