@@ -38,6 +38,8 @@ Replace `your_google_client_id`, `your_google_client_secret`, and the `DATABASE_
 
 ### 3. Install Dependencies
 
+> **Use Bun, not yarn.** This project uses Bun exclusively for dependency management and running scripts. Do not use `yarn` (or `npm`) — always use `bun` (e.g., `bun install`, `bun add`, `bun run`).
+
 ```bash
 bun install
 ```
@@ -65,7 +67,7 @@ The application now features a gaming-style user interface with neon elements an
 ## Development
 
 - **Removed `.vscode`**: Editor-specific configurations have been removed to ensure consistency across different development environments.
-- **Bun Workflow**: All scripts and package management now exclusively use Bun.
+- **Bun Workflow**: All scripts and package management now exclusively use Bun. Use `bun`, not `yarn` (or `npm`), for installing dependencies and running scripts.
 
 ## Contributing
 

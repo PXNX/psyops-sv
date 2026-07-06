@@ -106,22 +106,14 @@
 
 <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-				<div class="size-12 rounded-xl flex items-center justify-center bg-blue-600/20">
-					<FluentDocument20Filled class="size-6 text-blue-400" />
-				</div>
-				My Reports
-			</h1>
-			<p class="text-gray-400 mt-2">Track the status of reports you've filed</p>
-		</div>
-		<div class="flex items-center gap-3">
-			<a href="/moderators" class="btn btn-ghost gap-2">
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+		<h1 class="text-2xl font-bold text-white">My Reports</h1>
+		<div class="flex items-center gap-2 flex-wrap">
+			<a href="/moderators" class="btn btn-sm btn-ghost gap-2">
 				<FluentShield20Filled class="size-4" />
-				View Moderators
+				Moderators
 			</a>
-			<a href="/moderators/actions" class="btn btn-ghost gap-2">
+			<a href="/moderators/actions" class="btn btn-sm btn-ghost gap-2">
 				<FluentFlag20Filled class="size-4" />
 				All Actions
 			</a>
@@ -129,37 +121,45 @@
 	</div>
 
 	<!-- Stats -->
-	<div class="stats bg-slate-800/50 border border-white/5 shadow-xl w-full">
-		<div class="stat">
-			<div class="stat-figure text-blue-400">
-				<FluentDocument20Filled class="size-8" />
+	<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+		<div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 border border-white/5 p-4">
+			<div class="size-10 rounded-xl flex items-center justify-center bg-blue-600/20 shrink-0">
+				<FluentDocument20Filled class="size-5 text-blue-400" />
 			</div>
-			<div class="stat-title">Total Reports</div>
-			<div class="stat-value text-blue-400">{data.stats.total}</div>
+			<div>
+				<div class="text-2xl font-bold text-blue-400 leading-none">{data.stats.total}</div>
+				<div class="text-xs text-gray-400 mt-1">Total Reports</div>
+			</div>
 		</div>
 
-		<div class="stat">
-			<div class="stat-figure text-orange-400">
-				<FluentClock20Filled class="size-8" />
+		<div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 border border-white/5 p-4">
+			<div class="size-10 rounded-xl flex items-center justify-center bg-orange-600/20 shrink-0">
+				<FluentClock20Filled class="size-5 text-orange-400" />
 			</div>
-			<div class="stat-title">Pending</div>
-			<div class="stat-value text-orange-400">{data.stats.pending}</div>
+			<div>
+				<div class="text-2xl font-bold text-orange-400 leading-none">{data.stats.pending}</div>
+				<div class="text-xs text-gray-400 mt-1">Pending</div>
+			</div>
 		</div>
 
-		<div class="stat">
-			<div class="stat-figure text-green-400">
-				<FluentCheckmark20Filled class="size-8" />
+		<div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 border border-white/5 p-4">
+			<div class="size-10 rounded-xl flex items-center justify-center bg-green-600/20 shrink-0">
+				<FluentCheckmark20Filled class="size-5 text-green-400" />
 			</div>
-			<div class="stat-title">Resolved</div>
-			<div class="stat-value text-green-400">{data.stats.resolved}</div>
+			<div>
+				<div class="text-2xl font-bold text-green-400 leading-none">{data.stats.resolved}</div>
+				<div class="text-xs text-gray-400 mt-1">Resolved</div>
+			</div>
 		</div>
 
-		<div class="stat">
-			<div class="stat-figure text-gray-400">
-				<FluentDismiss20Filled class="size-8" />
+		<div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 border border-white/5 p-4">
+			<div class="size-10 rounded-xl flex items-center justify-center bg-gray-600/20 shrink-0">
+				<FluentDismiss20Filled class="size-5 text-gray-400" />
 			</div>
-			<div class="stat-title">Dismissed</div>
-			<div class="stat-value text-gray-400">{data.stats.dismissed}</div>
+			<div>
+				<div class="text-2xl font-bold text-gray-400 leading-none">{data.stats.dismissed}</div>
+				<div class="text-xs text-gray-400 mt-1">Dismissed</div>
+			</div>
 		</div>
 	</div>
 

@@ -4,6 +4,7 @@
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentEye20Filled from "~icons/fluent/eye-20-filled";
+	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
 	import { formatDate } from "$lib/utils/formatting.js";
 
@@ -16,33 +17,36 @@
 
 <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-				<div class="size-12 rounded-xl flex items-center justify-center bg-purple-600/20">
-					<FluentShield20Filled class="size-6 text-purple-400" />
-				</div>
-				Moderators
-			</h1>
-			<p class="text-gray-400 mt-2">The moderation team helps maintain a safe and fair environment for all players</p>
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+		<h1 class="text-2xl font-bold text-white">Moderators</h1>
+		<div class="flex items-center gap-2 flex-wrap">
+			<a
+				href="/moderators/actions"
+				class="btn btn-sm gap-2 bg-slate-800/60 hover:bg-slate-700/60 border border-white/5 text-gray-300"
+			>
+				<FluentEye20Filled class="size-4" />
+				Actions
+			</a>
+			<a
+				href="/moderators/reports"
+				class="btn btn-sm gap-2 bg-slate-800/60 hover:bg-slate-700/60 border border-white/5 text-gray-300"
+			>
+				<FluentDocument20Filled class="size-4" />
+				Reports
+			</a>
 		</div>
-		<a href="/moderators/actions" class="btn btn-primary gap-2">
-			<FluentEye20Filled class="size-4" />
-			View Actions
-		</a>
-
-		<a href="/moderators/reports" class="btn btn-primary gap-2"> View Reports </a>
 	</div>
 
 	<!-- Stats -->
-	<div class="stats bg-slate-800/50 border border-white/5 shadow-xl w-full">
-		<div class="stat">
-			<div class="stat-figure text-purple-400">
-				<FluentShield20Filled class="size-8" />
-			</div>
-			<div class="stat-title">Total Moderators</div>
-			<div class="stat-value text-purple-400">{data.moderators.length}</div>
-			<div class="stat-desc">Keeping the community safe</div>
+	<div
+		class="flex items-center gap-4 rounded-2xl bg-slate-800/50 border border-white/5 p-5 w-full sm:w-auto sm:inline-flex"
+	>
+		<div class="size-12 rounded-xl flex items-center justify-center bg-purple-600/20">
+			<FluentShield20Filled class="size-6 text-purple-400" />
+		</div>
+		<div>
+			<div class="text-3xl font-bold text-purple-400 leading-none">{data.moderators.length}</div>
+			<div class="text-sm text-gray-400 mt-1">Total Moderators</div>
 		</div>
 	</div>
 

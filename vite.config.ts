@@ -42,6 +42,34 @@ export default defineConfig({
 		}),
 		tailwindcss()
 	],
+	// Ensure a single instance of every ProseMirror module is used at runtime.
+	// TipTap ships its own copies via @tiptap/pm while the project also depends on
+	// standalone prosemirror-* packages at slightly different versions. Without
+	// deduping, two copies of prosemirror-state get bundled and each mints the same
+	// auto-generated plugin key ("plugin$"), causing the editor to throw
+	// "RangeError: Adding different instances of a keyed plugin (plugin$)" on init.
+	resolve: {
+		dedupe: [
+			"@tiptap/pm",
+			"prosemirror-state",
+			"prosemirror-model",
+			"prosemirror-view",
+			"prosemirror-transform",
+			"prosemirror-keymap",
+			"prosemirror-commands",
+			"prosemirror-schema-list",
+			"prosemirror-dropcursor",
+			"prosemirror-gapcursor",
+			"prosemirror-history",
+			"prosemirror-inputrules",
+			"prosemirror-tables",
+			"prosemirror-collab",
+			"prosemirror-menu",
+			"prosemirror-markdown",
+			"prosemirror-schema-basic",
+			"prosemirror-trailing-node"
+		]
+	},
 	/*server: {
 		host: true
 	}*/

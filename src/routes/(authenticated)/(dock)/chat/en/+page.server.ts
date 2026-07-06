@@ -15,7 +15,8 @@ function sanitizeInput(input: string): string {
 		.trim();
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, depends }) => {
+	depends("app:chat");
 	const account = locals.account!;
 
 	// Get latest messages

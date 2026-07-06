@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/chat/user/[id]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import { goto, invalidateAll } from "$app/navigation";
+	import { goto, invalidate } from "$app/navigation";
 	import { onMount, onDestroy } from "svelte";
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
@@ -115,9 +115,9 @@
 			const sseData = JSON.parse(event.data);
 
 			if (sseData.type === "new_messages") {
-				// Clear optimistic messages and reload
+				// Clear optimistic messages and reload only chat data
 				optimisticMessages = [];
-				invalidateAll();
+				invalidate("app:chat");
 			}
 		});
 

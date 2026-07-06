@@ -4,7 +4,6 @@
 	import { onMount } from "svelte";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
-	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
 	import FluentClock20Regular from "~icons/fluent/clock-20-regular";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
@@ -87,23 +86,8 @@
 	<!-- Command Header -->
 	<div class="border-b border-purple-900/30 bg-slate-900/80 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
-			<div class="flex items-center gap-4">
-				<div class="relative flex-shrink-0">
-					<div class="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
-					<div
-						class="relative size-14 sm:size-18 bg-slate-800/50 rounded-lg border-2 border-purple-500/30 flex items-center justify-center"
-					>
-						<FluentDocument20Filled class="size-7 sm:size-9 text-purple-400" />
-					</div>
-				</div>
-				<div class="flex-1 min-w-0">
-					<h1 class="text-xl sm:text-2xl font-bold text-white tracking-wide">Posts</h1>
-					<span class="text-xs text-slate-400 font-mono">LATEST ARTICLES & NEWS</span>
-				</div>
-			</div>
-
 			<!-- Search & Actions -->
-			<div class="mt-4 flex items-center gap-2 sm:gap-3">
+			<div class="flex items-center gap-2 sm:gap-3">
 				<div class="relative flex-1">
 					<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500" />
 					<input

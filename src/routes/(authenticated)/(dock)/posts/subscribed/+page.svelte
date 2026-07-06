@@ -7,7 +7,6 @@
 	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
 	import FluentClock20Regular from "~icons/fluent/clock-20-regular";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
-	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import Logo from "$lib/component/Logo.svelte";
 	import { formatDateTime } from "$lib/utils/formatting.js";
 
@@ -86,30 +85,15 @@
 	<!-- Command Header -->
 	<div class="border-b border-blue-900/30 bg-slate-900/80 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
-			<div class="flex items-center gap-4">
+			<!-- Search & Actions -->
+			<div class="flex items-center gap-2 sm:gap-3">
 				<a
 					href="/posts"
-					class="flex-shrink-0 p-2 rounded-lg bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-300 hover:text-white transition-all"
+					class="flex-shrink-0 p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-300 hover:text-white transition-all"
 				>
 					<FluentArrowLeft20Filled class="size-5" />
 				</a>
 
-				<div class="relative flex-shrink-0">
-					<div class="absolute inset-0 bg-blue-500/20 blur-xl rounded-full"></div>
-					<div
-						class="relative size-14 sm:size-18 bg-slate-800/50 rounded-lg border-2 border-blue-500/30 flex items-center justify-center"
-					>
-						<FluentEmojiRolledUpNewspaper class="text-2xl sm:text-3xl" />
-					</div>
-				</div>
-				<div class="flex-1 min-w-0">
-					<h1 class="text-xl sm:text-2xl font-bold text-white tracking-wide">Subscribed</h1>
-					<span class="text-xs text-slate-400 font-mono">YOUR NEWSPAPER FEED</span>
-				</div>
-			</div>
-
-			<!-- Search & Actions -->
-			<div class="mt-4 flex items-center gap-2 sm:gap-3">
 				<div class="relative flex-1">
 					<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500" />
 					<input

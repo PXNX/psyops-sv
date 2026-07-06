@@ -164,60 +164,72 @@
 		<p class="text-xs text-gray-400">💡 Gift codes are case-insensitive and can only be claimed once per account</p>
 	</form>
 
-		<!-- Redemption History -->
-		{#if data.redemptions && data.redemptions.length > 0}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-4">
-				<div class="flex items-center gap-2 mb-4">
-					<FluentClock20Filled class="size-6 text-purple-400" />
-					<h2 class="text-xl font-semibold text-white">Redemption History</h2>
-				</div>
+	<!-- Redemption History -->
+	{#if data.redemptions && data.redemptions.length > 0}
+		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-4">
+			<div class="flex items-center gap-2 mb-4">
+				<FluentClock20Filled class="size-6 text-purple-400" />
+				<h2 class="text-xl font-semibold text-white">Redemption History</h2>
+			</div>
 
-				<div class="space-y-4">
-					{#each data.redemptions as redemption}
-						<div class="bg-slate-700/30 rounded-lg border border-slate-600/20 overflow-hidden">
-							<!-- Header -->
-							<div class="bg-slate-700/50 px-4 py-3 border-b border-slate-600/20">
-								<div class="flex items-center justify-between">
-									<div class="flex-1">
-										<div class="flex items-center gap-2">
-											<code class="text-purple-300 font-mono font-semibold">
-												{redemption.code}
-											</code>
-											<span class="badge badge-sm bg-green-600/20 text-green-300 border-green-500/30">Redeemed</span>
-										</div>
-										{#if redemption.description}
-											<p class="text-xs text-gray-400 mt-1">{redemption.description}</p>
-										{/if}
+			<div class="space-y-4">
+				{#each data.redemptions as redemption}
+					<div class="bg-slate-700/30 rounded-lg border border-slate-600/20 overflow-hidden">
+						<!-- Header -->
+						<div class="bg-slate-700/50 px-4 py-3 border-b border-slate-600/20">
+							<div class="flex items-center justify-between">
+								<div class="flex-1">
+									<div class="flex items-center gap-2">
+										<code class="text-purple-300 font-mono font-semibold">
+											{redemption.code}
+										</code>
 									</div>
-									<div class="text-right">
-										<p class="text-xs text-gray-400">{formatDate(redemption.redeemedAt)}</p>
-									</div>
-								</div>
-							</div>
-
-							<!-- Rewards Grid -->
-							<div class="p-4">
-								<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-									{#if redemption.currencyReceived > 0}
-										<div class="bg-yellow-600/10 border border-yellow-500/20 rounded-lg p-3 text-center">
-											<p class="text-xs text-yellow-400 font-medium mb-1">Currency</p>
-											<p class="text-lg font-bold text-yellow-300">{formatNumber(redemption.currencyReceived)}</p>
-										</div>
+									{#if redemption.description}
+										<p class="text-xs text-gray-400 mt-1">{redemption.description}</p>
 									{/if}
-
-									{#each redemption.resources as resource}
-										<div class="bg-blue-600/10 border border-blue-500/20 rounded-lg p-3 text-center">
-											<p class="text-xs text-blue-400 font-medium mb-1 capitalize">{resource.type}</p>
-											<p class="text-lg font-bold text-blue-300">{formatNumber(resource.quantity)}</p>
-										</div>
-									{/each}
+								</div>
+								<div class="text-right">
+									<p class="text-xs text-gray-400">{formatDate(redemption.redeemedAt)}</p>
 								</div>
 							</div>
 						</div>
-					{/each}
-				</div>
+
+						<!-- Rewards Received -->
+						<div class="p-4">
+							<div class="bg-slate-900/30 rounded-lg p-2.5 md:p-3 space-y-1.5 border border-slate-700/30">
+								{#if redemption.currencyReceived > 0}
+									<div class="flex justify-between text-xs items-center">
+										<span class="text-slate-400 flex items-center gap-1.5">
+											<FluentMoney20Filled class="size-3.5 text-emerald-400" />
+											<span class="capitalize">currency</span>
+										</span>
+										<span class="font-mono text-xs text-emerald-400">
+											+{formatNumber(redemption.currencyReceived)}
+											<span class="text-emerald-400 ml-1">✓</span>
+										</span>
+									</div>
+								{/if}
+
+								{#each redemption.resources as resource}
+									{@const IconComponent = resourceIconComponents[resource.type] || FluentEmojiPackage}
+									<div class="flex justify-between text-xs items-center">
+										<span class="text-slate-400 flex items-center gap-1.5">
+											<IconComponent class="size-3.5" />
+											<span class="capitalize">{resource.type}</span>
+										</span>
+										<span class="font-mono text-xs text-emerald-400">
+											+{formatNumber(resource.quantity)}
+											<span class="text-emerald-400 ml-1">✓</span>
+										</span>
+									</div>
+								{/each}
+							</div>
+						</div>
+					</div>
+				{/each}
 			</div>
-		{/if}
+		</div>
+	{/if}
 
 	<!-- Active Gift Codes (Optional - for admins or public codes) -->
 	{#if data.publicCodes && data.publicCodes.length > 0}
@@ -285,4 +297,19 @@
 			our social channels to stay updated on new codes!
 		</p>
 	</div>
+
+	<!-- Telegram Channel Button -->
+	<a
+		href="https://t.me/pentexnyx"
+		target="_blank"
+		rel="noopener noreferrer"
+		class="btn btn-lg w-full gap-3 bg-[#24A1DE] hover:bg-[#2094cc] text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+	>
+		<svg class="size-6" fill="currentColor" viewBox="0 0 24 24">
+			<path
+				d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
+			/>
+		</svg>
+		<span class="font-semibold">Get Gift Codes on Telegram</span>
+	</a>
 </div>

@@ -324,45 +324,6 @@
 		</div>
 	</form>
 
-	<!-- Telegram Connection -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-		<div class="flex items-center gap-2">
-			<svg class="size-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
-				<path
-					d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
-				/>
-			</svg>
-			<h2 class="text-lg font-semibold text-white">Telegram Account</h2>
-		</div>
-
-		{#if data.profile.telegramUsername}
-			<div class="bg-slate-900/50 rounded-lg p-4 space-y-3">
-				<div class="flex items-center justify-between">
-					<div>
-						<p class="text-sm text-gray-400">Connected Telegram Account</p>
-						<p class="text-base font-semibold text-white mt-1">@{data.profile.telegramUsername}</p>
-					</div>
-					<div class="badge badge-success">Connected</div>
-				</div>
-				<form method="POST" action="?/disconnectTelegram" use:enhance>
-					<button type="submit" class="btn btn-sm btn-outline btn-error w-full"> Disconnect Telegram </button>
-				</form>
-			</div>
-		{:else}
-			<p class="text-sm text-gray-400">
-				Connect your Telegram account to receive notifications and use Telegram-based features.
-			</p>
-			<a href="/auth/login/telegram?next=/settings/profile" class="btn btn-primary w-full gap-2">
-				<svg class="size-5" fill="currentColor" viewBox="0 0 24 24">
-					<path
-						d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
-					/>
-				</svg>
-				Connect Telegram Account
-			</a>
-		{/if}
-	</div>
-
 	<!-- Success Message -->
 	{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("wait") && !$message.includes("Insufficient")}
 		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">

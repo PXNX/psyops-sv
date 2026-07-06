@@ -84,31 +84,23 @@
 
 <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-white flex items-center gap-3">
-				<div class="size-12 rounded-xl flex items-center justify-center bg-purple-600/20">
-					<FluentShield20Filled class="size-6 text-purple-400" />
-				</div>
-				Moderator Actions
-			</h1>
-			<p class="text-gray-400 mt-2">Recent moderation activity on the platform</p>
-		</div>
-		<div class="flex items-center gap-3">
+	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+		<h1 class="text-2xl font-bold text-white">Moderator Actions</h1>
+		<div class="flex items-center gap-2 flex-wrap">
 			{#if data.currentUserId}
 				<button
 					onclick={toggleUserFilter}
-					class="btn gap-2"
+					class="btn btn-sm gap-2"
 					class:btn-primary={isFilteringCurrentUser}
 					class:btn-ghost={!isFilteringCurrentUser}
 				>
 					<FluentFilter20Filled class="size-4" />
-					{isFilteringCurrentUser ? "Show All Actions" : "Show My Actions"}
+					{isFilteringCurrentUser ? "Show All" : "My Actions"}
 				</button>
 			{/if}
-			<a href="/moderators" class="btn btn-ghost gap-2">
+			<a href="/moderators" class="btn btn-sm btn-ghost gap-2">
 				<FluentPeople20Filled class="size-4" />
-				View Moderators
+				Moderators
 			</a>
 		</div>
 	</div>
@@ -135,14 +127,15 @@
 	{/if}
 
 	<!-- Stats -->
-	<div class="stats bg-slate-800/50 border border-white/5 shadow-xl w-full">
-		<div class="stat">
-			<div class="stat-figure text-purple-400">
-				<FluentShield20Filled class="size-8" />
-			</div>
-			<div class="stat-title">Total Actions</div>
-			<div class="stat-value text-purple-400">{data.actions.length}</div>
-			<div class="stat-desc">Showing most recent 100</div>
+	<div
+		class="flex items-center gap-4 rounded-2xl bg-slate-800/50 border border-white/5 p-5 w-full sm:w-auto sm:inline-flex"
+	>
+		<div class="size-12 rounded-xl flex items-center justify-center bg-purple-600/20">
+			<FluentShield20Filled class="size-6 text-purple-400" />
+		</div>
+		<div>
+			<div class="text-3xl font-bold text-purple-400 leading-none">{data.actions.length}</div>
+			<div class="text-sm text-gray-400 mt-1">Total Actions</div>
 		</div>
 	</div>
 
