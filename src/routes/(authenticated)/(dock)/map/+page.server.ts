@@ -37,24 +37,28 @@ export const load: PageServerLoad = async () => {
 			})
 			.from(states);
 
-		// ── Blocs: fetch id + color for every bloc ──────────────────────
+		// ── Blocs: fetch id + name + color for every bloc ───────────────
 		const allBlocs = await db
 			.select({
 				id: blocs.id,
+				name: blocs.name,
 				color: blocs.color
 			})
 			.from(blocs);
 
 		// blocColorMap: stateId → bloc colour string.
-		// States that have no bloc simply won't appear in this map.
-		const blocById = new Map<number, string>();
+		// blocNameMap: stateId → bloc name string.
+		// States that have no bloc simply won't appear in these maps.
+		const blocById = new Map<number, { name: string; color: string }>();
 		for (const b of allBlocs) {
-			blocById.set(b.id, b.color);
+			blocById.set(b.id, { name: b.name, color: b.color });
 		}
 		const blocColorMap: Record<number, string> = {};
+		const blocNameMap: Record<number, string> = {};
 		for (const s of allStates) {
 			if (s.blocId && blocById.has(s.blocId)) {
-				blocColorMap[s.id] = blocById.get(s.blocId)!;
+				blocColorMap[s.id] = blocById.get(s.blocId)!.color;
+				blocNameMap[s.id] = blocById.get(s.blocId)!.name;
 			}
 		}
 
@@ -189,9 +193,10 @@ export const load: PageServerLoad = async () => {
 			states: allStates,
 			// New data for the four additional map layers
 			blocColorMap,
+			blocNameMap,
 			warAttackerStateIds,
 			warDefenderStateIds
-		};
+			};
 	} catch (error) {
 		console.error("Error loading map data:", error);
 		return {
@@ -199,6 +204,7 @@ export const load: PageServerLoad = async () => {
 			stateColorMap: {},
 			states: [],
 			blocColorMap: {},
+			blocNameMap: {},
 			warAttackerStateIds: new Set<number>(),
 			warDefenderStateIds: new Set<number>()
 		};

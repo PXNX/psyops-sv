@@ -1,10 +1,11 @@
 import { json, error } from "@sveltejs/kit";
 import { db } from "$lib/server/db";
-import { userProfiles, userWallets } from "$lib/server/schema";
+import { residences, userProfiles, userWallets } from "$lib/server/schema";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
 
 const STARTING_BALANCE = 1000;
+const PLACEHOLDER_NAME = "New user";
 
 export const POST: RequestHandler = async ({ locals, request }) => {
 	if (!locals.account) {
@@ -23,6 +24,22 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 	const existingProfile = await db.query.userProfiles.findFirst({
 		where: eq(userProfiles.accountId, account.id)
 	});
+
+	// A username and a region are required before onboarding can be completed or skipped.
+	if (step === null) {
+		const hasName =
+			!!existingProfile && existingProfile.name.trim().length > 0 && existingProfile.name !== PLACEHOLDER_NAME;
+		if (!hasName) {
+			throw error(400, "Please choose a username before finishing the tutorial");
+		}
+
+		const residence = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id)
+		});
+		if (!residence) {
+			throw error(400, "Please choose a region before finishing the tutorial");
+		}
+	}
 
 	if (existingProfile) {
 		await db

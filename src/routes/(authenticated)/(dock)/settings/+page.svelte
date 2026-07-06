@@ -12,6 +12,7 @@
 	import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
 	import { themes } from "$lib/themes";
+	import { settings } from "$lib/settings.svelte";
 
 	let { data, form } = $props();
 
@@ -19,7 +20,6 @@
 	let deleteConfirmation = $state("");
 	let isDeleting = $state(false);
 
-	let current_theme = $state(data.profile.theme);
 	let notifyNewspaperPosts = $state(data.profile.notifyNewspaperPosts);
 	let notifyDirectMessages = $state(data.profile.notifyDirectMessages);
 	let notifyWarDeclarations = $state(data.profile.notifyWarDeclarations);
@@ -29,23 +29,11 @@
 	let notifyShiftComplete = $state(data.profile.notifyShiftComplete);
 	let notifyMarketSales = $state(data.profile.notifyMarketSales);
 	let notifyNewProposals = $state(data.profile.notifyNewProposals);
-	let loadImages = $state(data.profile.loadImages);
-
-	$effect(() => {
-		if (typeof window !== "undefined") {
-			// Apply theme from database/data on mount
-			document.documentElement.setAttribute("data-theme", current_theme);
-
-			// Sync with localStorage for non-authenticated parts or immediate UI response
-			window.localStorage.setItem("theme", current_theme);
-			window.localStorage.setItem("loadImages", loadImages.toString());
-		}
-	});
 
 	async function updateSettings() {
 		const formData = new FormData();
-		formData.append("theme", current_theme);
-		formData.append("loadImages", loadImages.toString());
+		formData.append("theme", settings.theme);
+		formData.append("loadImages", settings.loadImages.toString());
 
 		await fetch("?/updateSettings", {
 			method: "POST",
@@ -57,20 +45,14 @@
 		const select = event.target as HTMLSelectElement;
 		const theme = select.value;
 		if (themes.includes(theme)) {
-			const one_year = 60 * 60 * 24 * 365;
-			window.localStorage.setItem("theme", theme);
-			document.cookie = `theme=${theme}; max-age=${one_year}; path=/; SameSite=Lax`;
-			document.documentElement.setAttribute("data-theme", theme);
-			current_theme = theme;
+			settings.setTheme(theme);
 			updateSettings();
 		}
 	}
 
-	function toggleLoadImages() {
-		loadImages = !loadImages;
-		window.localStorage.setItem("loadImages", loadImages.toString());
-		const one_year = 60 * 60 * 24 * 365;
-		document.cookie = `loadImages=${loadImages}; max-age=${one_year}; path=/; SameSite=Lax`;
+	function toggleLoadImages(event: Event) {
+		const checked = (event.target as HTMLInputElement).checked;
+		settings.setLoadImages(checked);
 		updateSettings();
 	}
 
@@ -127,7 +109,7 @@
 			<label for="theme" class="block text-sm font-medium text-gray-300 mb-2"> Theme </label>
 			<select
 				id="theme"
-				bind:value={current_theme}
+				value={settings.theme}
 				data-choose-theme
 				class="select w-full bg-slate-700/50 border-slate-600/30 text-white capitalize focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
 				onchange={set_theme}
@@ -147,7 +129,12 @@
 						<p class="text-xs text-gray-500">Disable to save data and improve performance</p>
 					</div>
 				</div>
-				<input type="checkbox" bind:checked={loadImages} onchange={toggleLoadImages} class="toggle toggle-primary" />
+				<input
+					type="checkbox"
+					checked={settings.loadImages}
+					onchange={toggleLoadImages}
+					class="toggle toggle-primary"
+				/>
 			</label>
 		</div>
 	</div>

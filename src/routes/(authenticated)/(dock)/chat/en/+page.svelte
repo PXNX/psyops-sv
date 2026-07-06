@@ -10,6 +10,7 @@
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
 	import Modal from "$lib/component/Modal.svelte";
 	import ReportModal from "$lib/component/ReportModal.svelte";
+	import { settings } from "$lib/settings.svelte";
 
 	const { data, form } = $props();
 
@@ -320,7 +321,7 @@
 						<div class="chat chat-start mb-3 md:mb-4">
 							<div class="chat-image avatar hidden md:block">
 								<a href="/user/{group.senderId}" class="w-10 rounded-full">
-									{#if group.senderLogo}
+									{#if group.senderLogo && settings.loadImages}
 										<img src={group.senderLogo} alt={group.senderName || "User"} class="" />
 									{:else}
 										<div class="w-full h-full bg-slate-700/80 flex items-center justify-center rounded-full">

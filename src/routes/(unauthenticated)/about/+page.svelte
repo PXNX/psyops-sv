@@ -8,17 +8,45 @@
 	import FluentCertificate20Filled from "~icons/fluent/certificate-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
-	import Modal from "$lib/component/Modal.svelte";
+	import FluentOpen20Filled from "~icons/fluent/open-20-filled";
+	import BottomSheet from "$lib/component/BottomSheet.svelte";
 
 	let { data } = $props();
 
-	let bugModalOpen = $state(false);
-	let changelogModalOpen = $state(false);
+	const contactEmail = "support@psyops.app";
+
+	let bugSheetOpen = $state(false);
+	let changelogSheetOpen = $state(false);
+	let contactSheetOpen = $state(false);
+	let licensesSheetOpen = $state(false);
+	let iconsSheetOpen = $state(false);
+
 	let bugForm = $state({
 		title: "",
 		description: "",
 		severity: "Low - Minor issue"
 	});
+
+	let contactForm = $state({
+		name: "",
+		email: "",
+		subject: "",
+		message: ""
+	});
+
+	function submitContact() {
+		const body = `From: ${contactForm.name} <${contactForm.email}>\n\n${contactForm.message}`;
+		const subject = contactForm.subject || "Contact from PsyOps";
+		window.location.href = `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+		contactSheetOpen = false;
+	}
+
+	function submitBug() {
+		const subject = `[Bug] ${bugForm.title || "Untitled"}`;
+		const body = `Severity: ${bugForm.severity}\n\n${bugForm.description}`;
+		window.location.href = `mailto:${contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+		bugSheetOpen = false;
+	}
 
 	function parseChangelog(
 		raw: string
@@ -83,7 +111,7 @@
 				<p class="text-gray-400 max-w-md mx-auto">A global political simulation platform</p>
 				<button
 					class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-full cursor-pointer hover:bg-slate-700/50 hover:border-purple-500/30 transition-all"
-					onclick={() => (changelogModalOpen = true)}
+					onclick={() => (changelogSheetOpen = true)}
 				>
 					<FluentInfo20Filled class="size-4 text-purple-400" />
 					<span class="text-sm text-gray-300">Version {data.version}</span>
@@ -103,24 +131,24 @@
 					Support
 				</h2>
 				<div class="space-y-2">
-					<a
-						class="flex items-center gap-3 p-4 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-white/5 hover:border-purple-500/30 transition-all group"
-						href="#"
+					<button
+						class="flex items-center gap-3 p-4 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-white/5 hover:border-purple-500/30 transition-all group w-full"
+						onclick={() => (contactSheetOpen = true)}
 					>
 						<div
 							class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center group-hover:bg-purple-600/30 transition-colors"
 						>
 							<FluentMail20Filled class="size-5 text-purple-400" />
 						</div>
-						<div class="flex-1">
+						<div class="flex-1 text-left">
 							<p class="text-white font-medium">Contact Us</p>
 							<p class="text-xs text-gray-400">Get help from our team</p>
 						</div>
-					</a>
+					</button>
 
 					<button
 						class="flex items-center gap-3 p-4 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-white/5 hover:border-pink-500/30 transition-all group w-full"
-						onclick={() => (bugModalOpen = true)}
+						onclick={() => (bugSheetOpen = true)}
 					>
 						<div
 							class="size-10 bg-pink-600/20 rounded-lg flex items-center justify-center group-hover:bg-pink-600/30 transition-colors"
@@ -204,44 +232,44 @@
 						</div>
 					</a>
 
-					<a
-						class="flex items-center gap-3 p-4 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-white/5 hover:border-blue-500/30 transition-all group"
-						href="#"
+					<button
+						class="flex items-center gap-3 p-4 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-white/5 hover:border-blue-500/30 transition-all group w-full"
+						onclick={() => (licensesSheetOpen = true)}
 					>
 						<div
 							class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center group-hover:bg-blue-600/30 transition-colors"
 						>
 							<FluentCertificate20Filled class="size-5 text-blue-400" />
 						</div>
-						<div class="flex-1">
+						<div class="flex-1 text-left">
 							<p class="text-white font-medium">Licenses</p>
-							<p class="text-xs text-gray-400">Open source info</p>
+							<p class="text-xs text-gray-400">{data.licenses.length} open source packages</p>
 						</div>
-					</a>
+					</button>
 
-					<a
-						class="flex items-center gap-3 p-4 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-white/5 hover:border-emerald-500/30 transition-all group"
-						href="#"
+					<button
+						class="flex items-center gap-3 p-4 rounded-xl bg-slate-700/30 hover:bg-slate-700/50 border border-white/5 hover:border-emerald-500/30 transition-all group w-full"
+						onclick={() => (iconsSheetOpen = true)}
 					>
 						<div
 							class="size-10 bg-emerald-600/20 rounded-lg flex items-center justify-center group-hover:bg-emerald-600/30 transition-colors"
 						>
 							<FluentImage20Filled class="size-5 text-emerald-400" />
 						</div>
-						<div class="flex-1">
+						<div class="flex-1 text-left">
 							<p class="text-white font-medium">Icons & Assets</p>
 							<p class="text-xs text-gray-400">Design credits</p>
 						</div>
-					</a>
+					</button>
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
 
-<!-- Changelog Modal -->
-<Modal bind:open={changelogModalOpen} title="Changelog" size="default">
-	<div class="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
+<!-- Changelog Sheet -->
+<BottomSheet bind:open={changelogSheetOpen} title="Changelog">
+	<div class="space-y-6">
 		{#each changelogEntries as entry}
 			<div class="space-y-3">
 				<div class="flex items-center gap-3">
@@ -268,45 +296,114 @@
 			<p class="text-gray-400 text-sm">No changelog entries available.</p>
 		{/each}
 	</div>
-	<div class="flex justify-end pt-4">
-		<button class="btn btn-ghost" onclick={() => (changelogModalOpen = false)}>Close</button>
-	</div>
-</Modal>
+</BottomSheet>
 
-<!-- Bug Report Modal -->
-<Modal bind:open={bugModalOpen} title="Report a Bug" size="default">
+<!-- Contact Sheet -->
+<BottomSheet bind:open={contactSheetOpen} title="Contact Us">
 	<div class="space-y-4">
-		<div class="form-control">
+		<p class="text-sm text-gray-400">Have a question or need help? Send us a message and we'll get back to you.</p>
+
+		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+			<div>
+				<label class="label" for="contact-name">
+					<span class="label-text text-gray-300">Name</span>
+				</label>
+				<input
+					id="contact-name"
+					type="text"
+					placeholder="Your name"
+					class="input input-bordered w-full bg-slate-800 border-slate-700 text-white placeholder-gray-500"
+					bind:value={contactForm.name}
+				/>
+			</div>
+			<div>
+				<label class="label" for="contact-email">
+					<span class="label-text text-gray-300">Email</span>
+				</label>
+				<input
+					id="contact-email"
+					type="email"
+					placeholder="you@example.com"
+					class="input input-bordered w-full bg-slate-800 border-slate-700 text-white placeholder-gray-500"
+					bind:value={contactForm.email}
+				/>
+			</div>
+		</div>
+
+		<div>
+			<label class="label" for="contact-subject">
+				<span class="label-text text-gray-300">Subject</span>
+			</label>
+			<input
+				id="contact-subject"
+				type="text"
+				placeholder="What is this about?"
+				class="input input-bordered w-full bg-slate-800 border-slate-700 text-white placeholder-gray-500"
+				bind:value={contactForm.subject}
+			/>
+		</div>
+
+		<div>
+			<label class="label" for="contact-message">
+				<span class="label-text text-gray-300">Message</span>
+			</label>
+			<textarea
+				id="contact-message"
+				rows="4"
+				placeholder="Write your message..."
+				class="textarea textarea-bordered w-full bg-slate-800 border-slate-700 text-white placeholder-gray-500"
+				bind:value={contactForm.message}></textarea>
+		</div>
+
+		<div class="flex gap-3 pt-2">
+			<button type="button" class="btn flex-1 btn-ghost" onclick={() => (contactSheetOpen = false)}> Cancel </button>
+			<button
+				type="button"
+				class="btn flex-1 btn-primary gap-2"
+				disabled={!contactForm.message.trim()}
+				onclick={submitContact}
+			>
+				<FluentMail20Filled class="size-4" />
+				Send Message
+			</button>
+		</div>
+	</div>
+</BottomSheet>
+
+<!-- Bug Report Sheet -->
+<BottomSheet bind:open={bugSheetOpen} title="Report a Bug">
+	<div class="space-y-4">
+		<div>
 			<label class="label" for="bug-title">
-				<span class="label-text">Bug Title</span>
+				<span class="label-text text-gray-300">Bug Title</span>
 			</label>
 			<input
 				id="bug-title"
 				type="text"
 				placeholder="Brief description of the issue"
-				class="input input-bordered bg-slate-700/50 border-white/10"
+				class="input input-bordered w-full bg-slate-800 border-slate-700 text-white placeholder-gray-500"
 				bind:value={bugForm.title}
 			/>
 		</div>
 
-		<div class="form-control">
+		<div>
 			<label class="label" for="bug-description">
-				<span class="label-text">Description</span>
+				<span class="label-text text-gray-300">Description</span>
 			</label>
 			<textarea
 				id="bug-description"
-				class="textarea textarea-bordered bg-slate-700/50 border-white/10 h-32"
+				class="textarea textarea-bordered w-full bg-slate-800 border-slate-700 text-white placeholder-gray-500 h-32"
 				placeholder="Describe what happened, what you expected, and steps to reproduce..."
 				bind:value={bugForm.description}></textarea>
 		</div>
 
-		<div class="form-control">
+		<div>
 			<label class="label" for="bug-severity">
-				<span class="label-text">Severity</span>
+				<span class="label-text text-gray-300">Severity</span>
 			</label>
 			<select
 				id="bug-severity"
-				class="select select-bordered bg-slate-700/50 border-white/10"
+				class="select select-bordered w-full bg-slate-800 border-slate-700 text-white"
 				bind:value={bugForm.severity}
 			>
 				<option>Low - Minor issue</option>
@@ -316,12 +413,92 @@
 			</select>
 		</div>
 
-		<div class="flex gap-2 justify-end pt-4">
-			<button class="btn btn-ghost" onclick={() => (bugModalOpen = false)}> Cancel </button>
-			<button class="btn btn-primary gap-2">
+		<div class="flex gap-3 pt-2">
+			<button type="button" class="btn flex-1 btn-ghost" onclick={() => (bugSheetOpen = false)}> Cancel </button>
+			<button type="button" class="btn flex-1 btn-primary gap-2" disabled={!bugForm.title.trim()} onclick={submitBug}>
 				<FluentBug20Filled class="size-4" />
 				Submit Report
 			</button>
 		</div>
 	</div>
-</Modal>
+</BottomSheet>
+
+<!-- Licenses Sheet -->
+<BottomSheet bind:open={licensesSheetOpen} title="Open Source Licenses">
+	<div class="space-y-3">
+		<p class="text-sm text-gray-400">
+			PsyOps is built with {data.licenses.length} open source packages. Thanks to all their maintainers.
+		</p>
+		<div class="space-y-2">
+			{#each data.licenses as pkg}
+				<div class="flex items-center justify-between gap-3 p-3 rounded-xl bg-slate-800/60 border border-white/5">
+					<div class="min-w-0">
+						{#if pkg.url}
+							<a
+								href={pkg.url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-white font-medium truncate flex items-center gap-1 hover:text-emerald-300 transition-colors"
+							>
+								<span class="truncate">{pkg.name}</span>
+								<FluentOpen20Filled class="size-3.5 shrink-0 text-gray-500" />
+							</a>
+						{:else}
+							<p class="text-white font-medium truncate">{pkg.name}</p>
+						{/if}
+						<p class="text-xs text-gray-500 truncate">
+							v{pkg.version}{pkg.author ? ` • ${pkg.author}` : ""}
+						</p>
+					</div>
+					<span
+						class="shrink-0 px-2 py-1 text-xs font-mono rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/20"
+						>{pkg.license}</span
+					>
+				</div>
+			{/each}
+		</div>
+	</div>
+</BottomSheet>
+
+<!-- Icons & Assets Sheet -->
+<BottomSheet bind:open={iconsSheetOpen} title="Icons & Assets">
+	<div class="space-y-3">
+		<p class="text-sm text-gray-400">Icons are provided by the following open source icon sets via Iconify.</p>
+		<div class="space-y-2">
+			{#each data.iconSets as set}
+				<div class="p-4 rounded-xl bg-slate-800/60 border border-white/5 space-y-1">
+					<div class="flex items-center justify-between gap-3">
+						<p class="text-white font-medium">{set.name}</p>
+						<span
+							class="shrink-0 px-2 py-1 text-xs font-mono rounded-lg bg-emerald-600/20 text-emerald-300 border border-emerald-500/20"
+						>
+							{#if set.licenseUrl}
+								<a href={set.licenseUrl} target="_blank" rel="noopener noreferrer" class="hover:underline"
+									>{set.license}</a
+								>
+							{:else}
+								{set.license}
+							{/if}
+						</span>
+					</div>
+					<p class="text-xs text-gray-500">
+						{#if set.author}
+							{#if set.authorUrl}
+								<a href={set.authorUrl} target="_blank" rel="noopener noreferrer" class="hover:text-emerald-300"
+									>{set.author}</a
+								>
+							{:else}
+								{set.author}
+							{/if}
+						{/if}
+						{#if set.total}
+							{set.author ? " • " : ""}{set.total.toLocaleString()} icons
+						{/if}
+					</p>
+				</div>
+			{:else}
+				<p class="text-gray-400 text-sm">No icon sets found.</p>
+			{/each}
+		</div>
+	</div>
+</BottomSheet>

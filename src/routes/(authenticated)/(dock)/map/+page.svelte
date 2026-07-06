@@ -25,6 +25,15 @@
 	let highlightedRegionId: number | null = $state(null);
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 	let stateColor = $state<string | null>(null);
+	let selectedRegionData = $state<(typeof data.regionMap)[number] | null>(null);
+
+	// Pointer tracking so we can tell a tap/click apart from a drag/pan.
+	// The sheet should only open on a genuine click, never after panning.
+	let pointerDownX = 0;
+	let pointerDownY = 0;
+	let pointerDownTime = 0;
+	// Movement (in px) beyond which the gesture is treated as a drag.
+	const DRAG_THRESHOLD = 8;
 
 	// Filter options: map layers then resources
 	const filterOptions = [
@@ -344,14 +353,25 @@
 		}
 	});
 
+	function onPointerDown(e: PointerEvent) {
+		if (!e.isPrimary) return;
+		pointerDownX = e.clientX;
+		pointerDownY = e.clientY;
+		pointerDownTime = Date.now();
+	}
+
 	function onPointerUp(e: PointerEvent) {
 		// Only handle primary pointer (left click or single touch)
 		if (!e.isPrimary) return;
-		
-		// If it was a drag, don't trigger click
-		// We can check if the pointer moved significantly, but panzoom handles most of this.
-		// For mobile, we want to ensure a tap triggers the sheet.
-		
+
+		// Distinguish a tap/click from a drag/pan: if the pointer moved more
+		// than DRAG_THRESHOLD px between pointerdown and pointerup, the user was
+		// panning the map, so we must NOT open the region sheet.
+		const dx = e.clientX - pointerDownX;
+		const dy = e.clientY - pointerDownY;
+		const movedDistance = Math.hypot(dx, dy);
+		if (movedDistance > DRAG_THRESHOLD) return;
+
 		e.stopPropagation();
 		const target = e.target as SVGElement;
 		let element: SVGElement | null = target;
@@ -387,6 +407,8 @@
 				stateId: regionData.stateId,
 				createdAt: new Date()
 			} as Region;
+
+			selectedRegionData = regionData;
 
 			if (regionData.stateId) {
 				const stateInfo = data.states.find((s) => s.id === regionData.stateId);
@@ -482,6 +504,40 @@
 		if (!selectedRegion) return "";
 		else return getRegionName(selectedRegion.id);
 	});
+
+	// Human-readable labels for the resource layers.
+	const resourceLabels: Record<string, string> = {
+		oil: "Oil",
+		aluminium: "Aluminium",
+		rubber: "Rubber",
+		tungsten: "Tungsten",
+		steel: "Steel",
+		chromium: "Chromium",
+		iron: "Iron",
+		copper: "Copper",
+		coal: "Coal",
+		wood: "Wood"
+	};
+
+	function formatNumber(value: number): string {
+		return new Intl.NumberFormat().format(value);
+	}
+
+	// The war role of the currently selected region's state, if any.
+	const selectedWarRole = $derived(() => {
+		const stateId = selectedRegionData?.stateId;
+		if (!stateId) return null;
+		if (data.warAttackerStateIds?.has(stateId)) return "attacker";
+		if (data.warDefenderStateIds?.has(stateId)) return "defender";
+		return null;
+	});
+
+	// The bloc name of the currently selected region's state, if any.
+	const selectedBlocName = $derived(() => {
+		const stateId = selectedRegionData?.stateId;
+		if (!stateId) return null;
+		return data.blocNameMap?.[stateId] ?? null;
+	});
 </script>
 
 <svelte:head>
@@ -557,17 +613,18 @@
 	</div>
 </header>
 
-	<main class="flex-1 w-full overflow-hidden">
-		<div
-			use:initPanzoom
-			onpointerup={onPointerUp}
-			role="button"
-			tabindex="0"
-			class="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing touch-action-none"
-		>
-			{@html WorldMap}
-		</div>
-	</main>
+<main class="flex-1 w-full overflow-hidden">
+	<div
+		use:initPanzoom
+		onpointerdown={onPointerDown}
+		onpointerup={onPointerUp}
+		role="button"
+		tabindex="0"
+		class="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing touch-action-none"
+	>
+		{@html WorldMap}
+	</div>
+</main>
 
 <!-- Region Sheet Modal -->
 {#if showSheet && selectedRegion}
@@ -600,6 +657,90 @@
 
 					<IconChevronRight class="text-2xl flex-shrink-0" style="color: {stateColor || 'currentColor'}" />
 				</a>
+
+				<!-- Filter-dependent info -->
+				{#if selectedRegionData}
+					{#if mapFilter === "political"}
+						<div class="grid grid-cols-2 gap-2">
+							<div class="rounded-lg bg-base-200 p-3">
+								<p class="text-xs uppercase tracking-wide text-base-content/50">Rating</p>
+								<p class="text-lg font-bold">{formatNumber(selectedRegionData.rating)}</p>
+							</div>
+							<div class="rounded-lg bg-base-200 p-3">
+								<p class="text-xs uppercase tracking-wide text-base-content/50">Economy</p>
+								<p class="text-lg font-bold">{formatNumber(selectedRegionData.economy)}</p>
+							</div>
+							<div class="rounded-lg bg-base-200 p-3">
+								<p class="text-xs uppercase tracking-wide text-base-content/50">Infrastructure</p>
+								<p class="text-lg font-bold">{formatNumber(selectedRegionData.infrastructure)}</p>
+							</div>
+							<div class="rounded-lg bg-base-200 p-3">
+								<p class="text-xs uppercase tracking-wide text-base-content/50">Education</p>
+								<p class="text-lg font-bold">{formatNumber(selectedRegionData.education)}</p>
+							</div>
+						</div>
+					{:else if mapFilter === "blocs"}
+						<div class="rounded-lg bg-base-200 p-4">
+							<p class="text-xs uppercase tracking-wide text-base-content/50">Bloc</p>
+							{#if selectedBlocName()}
+								<div class="mt-1 flex items-center gap-2">
+									<span
+										class="inline-block size-3 rounded-full"
+										style="background-color: {stateColor || 'currentColor'}"
+									></span>
+									<p class="text-lg font-bold">{selectedBlocName()}</p>
+								</div>
+							{:else}
+								<p class="text-lg font-bold italic text-base-content/60">Non-aligned</p>
+							{/if}
+						</div>
+					{:else if mapFilter === "wars"}
+						<div class="rounded-lg bg-base-200 p-4">
+							<p class="text-xs uppercase tracking-wide text-base-content/50">War status</p>
+							{#if selectedWarRole() === "attacker"}
+								<span class="badge badge-error mt-1 gap-1 font-semibold">Attacking in an active war</span>
+							{:else if selectedWarRole() === "defender"}
+								<span class="badge badge-info mt-1 gap-1 font-semibold">Defending in an active war</span>
+							{:else}
+								<p class="text-lg font-bold text-base-content/60">At peace</p>
+							{/if}
+						</div>
+					{:else if mapFilter === "residents"}
+						<div class="rounded-lg bg-base-200 p-4">
+							<p class="text-xs uppercase tracking-wide text-base-content/50">Residents</p>
+							<p class="text-2xl font-bold">{formatNumber(selectedRegionData.residentCount)}</p>
+						</div>
+					{:else if mapFilter === "powerplants"}
+						<div class="rounded-lg bg-base-200 p-4">
+							<p class="text-xs uppercase tracking-wide text-base-content/50">Power plants (state-wide)</p>
+							<p class="text-2xl font-bold">{formatNumber(selectedRegionData.powerplantCount)}</p>
+						</div>
+					{:else}
+						<!-- Resource layers -->
+						{#if resourceLabels[mapFilter]}
+							<div class="rounded-lg bg-base-200 p-4">
+								<p class="text-xs uppercase tracking-wide text-base-content/50">{resourceLabels[mapFilter]}</p>
+								<p class="text-2xl font-bold">
+									{formatNumber((selectedRegionData.resources as Record<string, number>)[mapFilter] ?? 0)}
+								</p>
+							</div>
+						{/if}
+						<div class="grid grid-cols-3 gap-2">
+							{#each Object.entries(selectedRegionData.resources) as [key, value]}
+								<div
+									class="rounded-lg p-2 text-center {key === mapFilter
+										? 'bg-primary/20 ring-1 ring-primary/40'
+										: 'bg-base-200'}"
+								>
+									<p class="text-[10px] uppercase tracking-wide text-base-content/50">
+										{resourceLabels[key] ?? key}
+									</p>
+									<p class="text-sm font-bold">{formatNumber(value)}</p>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				{/if}
 			</div>
 		</div>
 	</div>

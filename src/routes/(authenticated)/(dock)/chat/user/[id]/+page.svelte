@@ -11,6 +11,7 @@
 	import Modal from "$lib/component/Modal.svelte";
 	import ReportMessageModal from "$lib/component/ReportMessageModal.svelte";
 	import BlockUserModal from "$lib/component/BlockUserModal.svelte";
+	import { settings } from "$lib/settings.svelte";
 
 	const { data, form } = $props();
 
@@ -266,7 +267,7 @@
 					href="/user/{data.otherUser.id}"
 					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
 				>
-					{#if data.otherUser.logo}
+					{#if data.otherUser.logo && settings.loadImages}
 						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
 						<div class="size-11 md:size-10 rounded-full bg-slate-700/80 flex items-center justify-center">
@@ -414,7 +415,7 @@
 					href="/user/{data.otherUser.id}"
 					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
 				>
-					{#if data.otherUser.logo}
+					{#if data.otherUser.logo && settings.loadImages}
 						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
 						<div class="size-11 md:size-10 rounded-full bg-slate-700/80 flex items-center justify-center">
