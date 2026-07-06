@@ -698,7 +698,7 @@
 				<div class="flex-1">
 					<h3 class="text-lg font-bold text-white mb-2">Diplomatic Actions</h3>
 					<p class="text-sm text-gray-300 mb-4">As a Foreign Minister, you can impose sanctions on this state.</p>
-					<form method="POST" action="?/sanction">
+					<form method="POST" action="?/sanction" use:enhance>
 						<button type="submit" class="btn btn-sm bg-red-600 hover:bg-red-500 border-0 text-white">
 							Impose Sanction
 						</button>

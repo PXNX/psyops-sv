@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/user/[id]/career/+page.svelte -->
 <script lang="ts">
+	import { enhance } from "$app/forms";
 	import CircleLogo from "$lib/component/CircleLogo.svelte";
 	import SquareLogo from "$lib/component/SquareLogo.svelte";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
@@ -441,7 +442,19 @@
 	<div class="modal modal-open">
 		<div class="modal-box">
 			<h3 class="font-bold text-lg mb-4">Award Medal to {data.user.name}</h3>
-			<form method="POST" action="?/awardMedal" class="space-y-4">
+			<form
+				method="POST"
+				action="?/awardMedal"
+				class="space-y-4"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						await update();
+						if (result.type === "success") {
+							showMedalModal = false;
+						}
+					};
+				}}
+			>
 				<div class="form-control">
 					<label class="label" for="medalType">
 						<span class="label-text">Medal Type</span>

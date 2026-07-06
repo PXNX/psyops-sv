@@ -8,6 +8,7 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
+	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import { enhance } from "$app/forms";
 	import { onMount, onDestroy } from "svelte";
 	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
@@ -91,17 +92,14 @@
 					</a>
 					<div class="flex-1 min-w-0">
 						<div class="flex flex-wrap items-center gap-2 mb-1">
-							<h1 class="text-xl sm:text-2xl font-bold tracking-wider uppercase font-mono text-purple-400">
-								{data.election.isInaugural ? "Inaugural" : "Parliamentary"} Election
+							<h1
+								class="text-xl sm:text-2xl font-bold tracking-wider uppercase font-mono {data.election.isInaugural
+									? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400'
+									: 'text-purple-400'}"
+							>
+								{data.election.isInaugural ? "Founding" : "Parliamentary"} Election
 							</h1>
-							{#if isActive}
-								<span
-									class="px-2 py-1 bg-green-500/20 border border-green-400/40 rounded text-green-300 font-bold text-xs font-mono flex items-center gap-1.5"
-								>
-									<div class="size-1.5 bg-green-400 rounded-full animate-pulse"></div>
-									LIVE
-								</span>
-							{:else if hasEnded}
+							{#if hasEnded}
 								<span
 									class="px-2 py-1 bg-slate-500/20 border border-slate-400/40 rounded text-slate-300 font-bold text-xs font-mono"
 								>
@@ -118,6 +116,26 @@
 					</div>
 				</div>
 			</div>
+
+			<!-- Founding Election Banner -->
+			{#if data.election.isInaugural}
+				<div
+					class="mt-4 sm:mt-6 relative overflow-hidden bg-gradient-to-r from-amber-950/50 via-yellow-900/25 to-amber-950/50 border border-amber-500/30 rounded-lg p-4 sm:p-5 text-center"
+				>
+					<div
+						class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(251,191,36,0.12),_transparent_70%)]"
+					></div>
+					<div class="relative flex items-center justify-center gap-2 text-amber-300 font-mono">
+						<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
+						<span class="text-sm sm:text-lg font-bold uppercase tracking-[0.2em]">A Nation Is Born</span>
+						<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
+					</div>
+					<p class="relative mt-2 text-xs sm:text-sm text-amber-200/70 font-mono">
+						The first free election of the independent state of
+						<span class="text-amber-200 font-bold">{data.state.name}</span>
+					</p>
+				</div>
+			{/if}
 
 			<!-- Countdown Timer -->
 			{#if countdown}

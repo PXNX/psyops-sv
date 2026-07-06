@@ -10,6 +10,7 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentProhibited20Filled from "~icons/fluent/prohibited-20-filled";
 	import { formatTime } from "$lib/utils/formatting.js";
+	import { settings } from "$lib/settings.svelte";
 
 	const { data } = $props();
 
@@ -169,7 +170,7 @@
 							: ''}"
 					>
 						<div class="flex items-center gap-3 md:gap-4">
-							{#if chat.otherUserLogo}
+							{#if chat.otherUserLogo && settings.loadImages}
 								<img
 									src={chat.otherUserLogo}
 									alt={chat.otherUserName}

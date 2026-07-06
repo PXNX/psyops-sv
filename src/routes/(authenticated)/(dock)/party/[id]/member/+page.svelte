@@ -357,7 +357,7 @@
 				class="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border rounded-xl p-4 sm:p-5"
 				style="border-color: {data.party.color}30"
 			>
-				<form method="POST" action="/party/{data.party.id}?/join">
+				<form method="POST" action="/party/{data.party.id}?/join" use:enhance>
 					<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div class="text-center sm:text-left">
 							<span class="text-sm font-bold text-white">Join {data.party.name}</span>

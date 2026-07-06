@@ -1,10 +1,12 @@
 ---
 title: Einführung in PsyOps-SV
+description: Ein kurzer Überblick, um mit PsyOps-SV zu starten.
+order: 1
 ---
 
 # Willkommen bei PsyOps-SV
 
-Dies ist ein einfaches Tutorial, um Ihnen den Einstieg in PsyOps-SV zu erleichtern. 
+Dies ist ein einfaches Tutorial, um Ihnen den Einstieg in PsyOps-SV zu erleichtern.
 
 ## Erste Schritte
 

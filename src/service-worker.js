@@ -1,18 +1,20 @@
 /// <reference types="@sveltejs/kit" />
 import { build, files, version } from "$service-worker";
 
-// Create a unique cache name for this deployment
-const CACHE = `cache-${version}`;
+// Versioned caches so a new deployment starts clean and old data is purged.
+const PRECACHE = `precache-${version}`; // immutable app build + static files
+const RUNTIME = `runtime-${version}`; // runtime assets (images, fonts, etc.)
 
 const ASSETS = [
 	...build, // the app itself
 	...files // everything in `static`
 ];
+const ASSET_SET = new Set(ASSETS);
 
 self.addEventListener("install", (event) => {
 	// Create a new cache and add all files to it
 	async function addFilesToCache() {
-		const cache = await caches.open(CACHE);
+		const cache = await caches.open(PRECACHE);
 		await cache.addAll(ASSETS);
 	}
 
@@ -20,17 +22,89 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
-	// Remove previous cached data from disk
-	async function deleteOldCaches() {
+	async function activate() {
+		// Remove caches from previous deployments
 		for (const key of await caches.keys()) {
-			if (key !== CACHE) {
+			if (key !== PRECACHE && key !== RUNTIME) {
 				await caches.delete(key);
 			}
 		}
+
+		// Speed up network-first navigations by letting the browser start the
+		// request while the service worker boots up.
+		if (self.registration.navigationPreload) {
+			await self.registration.navigationPreload.enable();
+		}
+
+		await self.clients.claim();
 	}
 
-	event.waitUntil(deleteOldCaches());
+	event.waitUntil(activate());
 });
+
+// Runtime asset destinations that are safe to serve cache-first: they are
+// large, rarely change, and instant loading makes the app feel snappier.
+const CACHEABLE_DESTINATIONS = new Set(["image", "font", "audio", "video"]);
+
+function isCacheableResponse(response) {
+	// Only cache complete, successful responses. Opaque (status 0) responses are
+	// still worth caching for cross-origin assets like fonts/images.
+	return response instanceof Response && (response.status === 200 || response.type === "opaque");
+}
+
+// Serve from cache immediately, then refresh the cache in the background.
+async function staleWhileRevalidate(event) {
+	const cache = await caches.open(RUNTIME);
+	const cached = await cache.match(event.request);
+
+	const network = fetch(event.request)
+		.then((response) => {
+			if (isCacheableResponse(response)) {
+				cache.put(event.request, response.clone());
+			}
+			return response;
+		})
+		.catch(() => undefined);
+
+	if (cached) {
+		// Keep the cache warm without blocking the response.
+		event.waitUntil(network);
+		return cached;
+	}
+
+	const response = await network;
+	if (response) {
+		return response;
+	}
+	throw new Error("network and cache both unavailable");
+}
+
+// Try the network first, fall back to the cache when offline.
+async function networkFirst(event, { preloadResponse } = {}) {
+	const cache = await caches.open(RUNTIME);
+
+	try {
+		const response = (await preloadResponse) || (await fetch(event.request));
+
+		// if we're offline, fetch can return a value that is not a Response
+		// instead of throwing - and we can't pass this non-Response to respondWith
+		if (!(response instanceof Response)) {
+			throw new Error("invalid response from fetch");
+		}
+
+		if (response.status === 200) {
+			cache.put(event.request, response.clone());
+		}
+
+		return response;
+	} catch (err) {
+		const response = await cache.match(event.request);
+		if (response) {
+			return response;
+		}
+		throw err;
+	}
+}
 
 self.addEventListener("fetch", (event) => {
 	// ignore POST requests etc
@@ -38,49 +112,34 @@ self.addEventListener("fetch", (event) => {
 		return;
 	}
 
-	async function respond() {
-		const url = new URL(event.request.url);
-		const cache = await caches.open(CACHE);
+	const url = new URL(event.request.url);
+	const isSameOrigin = url.origin === self.location.origin;
 
-		// `build`/`files` can always be served from the cache
-		if (ASSETS.includes(url.pathname)) {
-			const response = await cache.match(url.pathname);
-
-			if (response) {
-				return response;
-			}
-		}
-
-		// for everything else, try the network first, but
-		// fall back to the cache if we're offline
-		try {
-			const response = await fetch(event.request);
-
-			// if we're offline, fetch can return a value that is not a Response
-			// instead of throwing - and we can't pass this non-Response to respondWith
-			if (!(response instanceof Response)) {
-				throw new Error("invalid response from fetch");
-			}
-
-			if (response.status === 200) {
-				cache.put(event.request, response.clone());
-			}
-
-			return response;
-		} catch (err) {
-			const response = await cache.match(event.request);
-
-			if (response) {
-				return response;
-			}
-
-			// if there's no cache, then just error out
-			// as there is nothing we can do to respond to this request
-			throw err;
-		}
+	// `build`/`files` are content-hashed and immutable: always cache-first.
+	if (isSameOrigin && ASSET_SET.has(url.pathname)) {
+		event.respondWith(
+			caches.open(PRECACHE).then((cache) => cache.match(url.pathname).then((r) => r || fetch(event.request)))
+		);
+		return;
 	}
 
-	event.respondWith(respond());
+	// Images/fonts and other heavy static assets: stale-while-revalidate.
+	if (CACHEABLE_DESTINATIONS.has(event.request.destination)) {
+		event.respondWith(staleWhileRevalidate(event));
+		return;
+	}
+
+	// Never cache API calls or other dynamic same-origin endpoints beyond the
+	// network-first fallback; let them hit the network directly when possible.
+	if (isSameOrigin && url.pathname.startsWith("/api/")) {
+		return;
+	}
+
+	// Navigations and remaining same-origin GETs: network-first with an offline
+	// cache fallback so previously visited pages still work without a connection.
+	if (event.request.mode === "navigate" || isSameOrigin) {
+		event.respondWith(networkFirst(event, { preloadResponse: event.preloadResponse }));
+	}
 });
 
 // Handle push notifications

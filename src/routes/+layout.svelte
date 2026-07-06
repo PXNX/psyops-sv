@@ -3,8 +3,20 @@
 
 	import { fade } from "svelte/transition";
 	import { page, navigating } from "$app/state";
+	import { browser } from "$app/environment";
+	import { settings } from "$lib/settings.svelte";
 
 	const { children } = $props();
+
+	// Restore persisted preferences on the client before the first paint.
+	if (browser) {
+		settings.hydrateFromStorage();
+	}
+
+	// Keep the document theme in sync with the reactive setting on every page.
+	$effect(() => {
+		document.documentElement.setAttribute("data-theme", settings.theme);
+	});
 </script>
 
 <svelte:head>

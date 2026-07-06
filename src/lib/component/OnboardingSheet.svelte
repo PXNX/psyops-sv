@@ -20,6 +20,12 @@
 	let { onboardingStep, profile, residence }: Props = $props();
 
 	const TOTAL_STEPS = 7;
+	const PLACEHOLDER_NAME = "New user";
+
+	// A username and a region are required before the tutorial can be skipped/finished.
+	const hasName = $derived(!!profile && profile.name.trim().length > 0 && profile.name !== PLACEHOLDER_NAME);
+	const hasRegion = $derived(!!residence);
+	const canSkip = $derived(hasName && hasRegion);
 
 	// Optimistic local override – falls back to server prop when null
 	let optimistic = $state<number | null>(null);
@@ -65,11 +71,16 @@
 		submitting = true;
 		optimistic = next;
 		try {
-			await fetch("/api/onboarding/step", {
+			const res = await fetch("/api/onboarding/step", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({ step: next })
 			});
+			if (!res.ok) {
+				// Revert to the server-confirmed step (e.g. skip rejected without name/region).
+				optimistic = null;
+				return;
+			}
 			await invalidateAll();
 		} finally {
 			submitting = false;
@@ -176,13 +187,15 @@
 						Tap <strong class="text-cyan-300">{step === 4 ? "Production" : "Training"}</strong> in the bar below
 					</p>
 				</div>
-				<button
-					onclick={() => setStep(null)}
-					disabled={submitting}
-					class="text-xs text-slate-500 hover:text-slate-300 transition-colors shrink-0"
-				>
-					Skip
-				</button>
+				{#if canSkip}
+					<button
+						onclick={() => setStep(null)}
+						disabled={submitting}
+						class="text-xs text-slate-500 hover:text-slate-300 transition-colors shrink-0"
+					>
+						Skip
+					</button>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -203,14 +216,18 @@
 				<div class="flex items-center justify-between px-5 pt-3 pb-1 shrink-0">
 					<div class="w-16"></div>
 					<div class="w-10 h-1 rounded-full bg-slate-700"></div>
-					<button
-						onclick={() => setStep(null)}
-						disabled={submitting}
-						class="w-16 flex items-center justify-end gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
-					>
-						Skip
-						<FluentDismiss20Filled class="size-3.5" />
-					</button>
+					{#if canSkip}
+						<button
+							onclick={() => setStep(null)}
+							disabled={submitting}
+							class="w-16 flex items-center justify-end gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+						>
+							Skip
+							<FluentDismiss20Filled class="size-3.5" />
+						</button>
+					{:else}
+						<div class="w-16"></div>
+					{/if}
 				</div>
 
 				<!-- Progress dots -->

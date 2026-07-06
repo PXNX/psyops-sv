@@ -16,6 +16,17 @@ export const load = async (event: RequestEvent) => {
 		where: eq(userProfiles.accountId, account.id)
 	});
 
+	// Keep the theme cookie in sync with the stored profile so server-side
+	// rendering applies the correct theme on subsequent requests.
+	if (profile?.theme && event.cookies.get("theme") !== profile.theme) {
+		event.cookies.set("theme", profile.theme, {
+			path: "/",
+			maxAge: 60 * 60 * 24 * 365,
+			sameSite: "lax",
+			httpOnly: false
+		});
+	}
+
 	const userResidence = await db
 		.select({
 			id: residences.id,
