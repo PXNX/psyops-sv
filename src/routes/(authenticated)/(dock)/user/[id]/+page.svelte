@@ -17,6 +17,7 @@
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
+	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentPersonDelete20Filled from "~icons/fluent/person-delete-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 
@@ -37,6 +38,10 @@
 	let showReportModal = $state(false);
 	let showAddAuthorModal = $state(false);
 	let showActionsSheet = $state(false);
+	let showGiftPremiumModal = $state(false);
+	let giftPremiumPlanId = $state(data.premiumPlans?.[0]?.id ?? "monthly");
+	let isGiftingPremium = $state(false);
+	let giftPremiumError = $state<string | null>(null);
 	let selectedMinistry = $state("");
 	let isAppointingMinister = $state(false);
 	let appointmentError = $state<string | null>(null);
@@ -218,6 +223,24 @@
 						<div>
 							<p class="font-medium text-white">Send Gift</p>
 							<p class="text-xs text-gray-400">Send currency to this user</p>
+						</div>
+					</button>
+
+					<button
+						onclick={() => {
+							showGiftPremiumModal = true;
+							showActionsSheet = false;
+						}}
+						class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
+					>
+						<div
+							class="size-10 rounded-lg flex items-center justify-center shrink-0 bg-gradient-to-br from-amber-400 via-pink-500 to-purple-600"
+						>
+							<FluentStar20Filled class="size-5 text-white" />
+						</div>
+						<div>
+							<p class="font-medium text-white">Gift Premium</p>
+							<p class="text-xs text-gray-400">Give this user a premium membership</p>
 						</div>
 					</button>
 				{/if}
@@ -642,6 +665,86 @@
 		targetId={data.user.id}
 		targetName={data.user.name || "User"}
 	/>
+
+	<!-- Gift Premium Modal -->
+	<Modal bind:open={showGiftPremiumModal} title="Gift Premium to {data.user.name || 'User'}">
+		<form
+			method="POST"
+			action="?/giftPremium"
+			use:enhance={() => {
+				isGiftingPremium = true;
+				giftPremiumError = null;
+				return async ({ result, update }) => {
+					isGiftingPremium = false;
+					if (result.type === "success") {
+						await update();
+						showGiftPremiumModal = false;
+						confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+					} else if (result.type === "failure") {
+						giftPremiumError = result.data?.error || "Failed to gift premium";
+						await update();
+					} else {
+						await update();
+					}
+				};
+			}}
+		>
+			<div class="space-y-4">
+				<p class="text-sm text-gray-400">
+					Premium automatically runs production, military training and factory work for the recipient.
+				</p>
+
+				{#if giftPremiumError}
+					<div class="alert alert-error bg-red-600/10 border-red-500/20 text-red-300">
+						<span>{giftPremiumError}</span>
+					</div>
+				{/if}
+
+				<div class="form-control">
+					<label class="label">
+						<span class="label-text text-gray-300">Duration</span>
+					</label>
+					<select
+						name="planId"
+						class="select select-bordered bg-slate-900 text-white border-white/10"
+						bind:value={giftPremiumPlanId}
+						disabled={isGiftingPremium}
+					>
+						{#each data.premiumPlans as plan}
+							<option value={plan.id}>{plan.label} ({plan.days} days)</option>
+						{/each}
+					</select>
+				</div>
+
+				<div class="flex gap-2 justify-end">
+					<button
+						type="button"
+						class="btn btn-ghost"
+						disabled={isGiftingPremium}
+						onclick={() => {
+							showGiftPremiumModal = false;
+							giftPremiumError = null;
+						}}
+					>
+						Cancel
+					</button>
+					<button
+						type="submit"
+						class="btn bg-gradient-to-r from-amber-500 to-purple-600 text-white border-none gap-2"
+						disabled={isGiftingPremium}
+					>
+						{#if isGiftingPremium}
+							<span class="loading loading-spinner loading-sm"></span>
+							Gifting...
+						{:else}
+							<FluentStar20Filled class="size-4" />
+							Gift Premium
+						{/if}
+					</button>
+				</div>
+			</div>
+		</form>
+	</Modal>
 
 	<!-- Add Author Modal -->
 	{#if data.ownedNewspapers}

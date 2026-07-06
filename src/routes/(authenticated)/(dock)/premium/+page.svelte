@@ -2,14 +2,11 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
-	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentBot20Filled from "~icons/fluent/bot-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 
-	let { data, form } = $props();
+	let { data } = $props();
 
-	let giftPlanId = $state(data.plans[1]?.id ?? data.plans[0]?.id);
-	let recipientId = $state("");
 	let automation = $state(data.status.automation);
 
 	function formatDate(value: string | Date | null): string {
@@ -34,16 +31,6 @@
 		<p class="text-gray-400">Automate production, military training and factory work</p>
 	</div>
 
-	{#if form?.error}
-		<div class="alert bg-red-600/10 border-red-500/20 text-red-300">
-			<span>{form.error}</span>
-		</div>
-	{:else if form?.success && form?.message}
-		<div class="alert bg-emerald-600/10 border-emerald-500/20 text-emerald-300">
-			<span>{form.message}</span>
-		</div>
-	{/if}
-
 	<!-- Status -->
 	<div
 		class="rounded-xl border p-5 space-y-4 {data.status.active
@@ -55,7 +42,7 @@
 				<p class="text-sm text-gray-400">Membership status</p>
 				{#if data.status.active}
 					<p class="text-lg font-bold text-amber-300">Active</p>
-					<p class="text-xs text-gray-400">Renews / expires {formatDate(data.status.premiumUntil)}</p>
+					<p class="text-xs text-gray-400">Expires {formatDate(data.status.premiumUntil)}</p>
 				{:else}
 					<p class="text-lg font-bold text-gray-300">Inactive</p>
 				{/if}
@@ -105,93 +92,32 @@
 		{/each}
 	</div>
 
-	<!-- Buy with currency -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-		<div class="flex items-center justify-between">
-			<h2 class="text-lg font-semibold text-white">Buy with currency</h2>
-			<span class="text-sm text-gray-400">Balance: {data.balance.toLocaleString()}</span>
-		</div>
-		<div class="grid gap-3 sm:grid-cols-3">
-			{#each data.plans as plan}
-				<div class="bg-slate-900/50 rounded-xl border border-white/5 p-4 flex flex-col gap-3">
-					<div>
-						<p class="font-semibold text-white">{plan.label}</p>
-						<p class="text-xs text-gray-400">{plan.days} days</p>
-					</div>
-					<p class="text-lg font-bold text-amber-300">{plan.currencyPrice.toLocaleString()}</p>
-					<form method="POST" action="?/buy" use:enhance>
-						<input type="hidden" name="planId" value={plan.id} />
-						<button
-							type="submit"
-							disabled={data.balance < plan.currencyPrice}
-							class="btn btn-sm w-full bg-gradient-to-r from-amber-500 to-purple-600 border-none text-white disabled:opacity-40"
-						>
-							Buy
-						</button>
-					</form>
-				</div>
-			{/each}
-		</div>
-	</div>
-
-	<!-- Gift premium -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-		<div class="flex items-center gap-2">
-			<FluentGift20Filled class="size-5 text-pink-400" />
-			<h2 class="text-lg font-semibold text-white">Gift premium to a user</h2>
-		</div>
-		<p class="text-sm text-gray-400">Pay with your currency to give another player a premium membership.</p>
-		<form method="POST" action="?/gift" use:enhance class="space-y-3">
-			<div>
-				<label for="recipientId" class="block text-sm font-medium text-gray-300 mb-1">Recipient user ID</label>
-				<input
-					id="recipientId"
-					name="recipientId"
-					type="text"
-					bind:value={recipientId}
-					placeholder="Enter the recipient's user ID"
-					class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
-				/>
-			</div>
-			<div>
-				<label for="giftPlan" class="block text-sm font-medium text-gray-300 mb-1">Plan</label>
-				<select
-					id="giftPlan"
-					name="planId"
-					bind:value={giftPlanId}
-					class="select w-full bg-slate-700/50 border-slate-600/30 text-white"
-				>
-					{#each data.plans as plan}
-						<option value={plan.id}>{plan.label} — {plan.currencyPrice.toLocaleString()} ({plan.days} days)</option>
-					{/each}
-				</select>
-			</div>
-			<button
-				type="submit"
-				disabled={!recipientId}
-				class="btn btn-sm w-full bg-pink-600 hover:bg-pink-700 border-none text-white gap-2 disabled:opacity-40"
-			>
-				<FluentGift20Filled class="size-4" />
-				Gift Premium
-			</button>
-		</form>
-	</div>
-
-	<!-- Buy via Telegram -->
+	<!-- Get premium via Telegram -->
 	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
 		<div class="flex items-center gap-2">
 			<FluentBot20Filled class="size-5 text-blue-400" />
-			<h2 class="text-lg font-semibold text-white">Buy via Telegram (Stars)</h2>
+			<h2 class="text-lg font-semibold text-white">Get premium via Telegram</h2>
+		</div>
+		<p class="text-xs text-amber-300/80">Payments are disabled for now — premium via the bot is free.</p>
+		<div class="grid gap-2 sm:grid-cols-2">
+			{#each data.plans as plan}
+				<div class="bg-slate-900/50 rounded-lg border border-white/5 p-3">
+					<p class="font-semibold text-white">{plan.label}</p>
+					<p class="text-xs text-gray-400">
+						{plan.days} days — send <code class="px-1 rounded bg-slate-800 text-gray-300">/premium {plan.id}</code>
+					</p>
+				</div>
+			{/each}
 		</div>
 		{#if !data.telegramLinked}
 			<p class="text-sm text-gray-400">
-				Connect your Telegram account in <a href="/settings" class="text-blue-400 underline">Settings</a> first, then pay
-				with Telegram Stars directly in the bot.
+				Connect your Telegram account in <a href="/settings" class="text-blue-400 underline">Settings</a> first, then request
+				premium directly in the bot.
 			</p>
 		{:else}
 			<p class="text-sm text-gray-400">
-				Open the bot and send <code class="px-1.5 py-0.5 rounded bg-slate-900 text-gray-300">/premium</code> to pay with Telegram
-				Stars ⭐️.
+				Open the bot and send <code class="px-1.5 py-0.5 rounded bg-slate-900 text-gray-300">/premium</code> to activate premium
+				for free.
 			</p>
 		{/if}
 		{#if data.botUsername}
@@ -206,4 +132,8 @@
 			</a>
 		{/if}
 	</div>
+
+	<p class="text-center text-xs text-gray-500">
+		Want to gift premium to someone? Open their profile and use the “Gift Premium” action.
+	</p>
 </div>

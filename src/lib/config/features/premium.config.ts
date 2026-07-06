@@ -4,33 +4,22 @@ export type PremiumPlan = {
 	id: string;
 	label: string;
 	days: number;
-	/** Price when purchased with in-game currency. */
-	currencyPrice: number;
 	/** Price in Telegram Stars (XTR) when purchased through the Telegram bot. */
 	telegramStars: number;
 };
 
 export const PREMIUM_PLANS = {
-	weekly: {
-		id: "weekly",
-		label: "Weekly",
-		days: 7,
-		currencyPrice: 100_000,
-		telegramStars: 150
-	},
 	monthly: {
 		id: "monthly",
-		label: "Monthly",
+		label: "1 Month",
 		days: 30,
-		currencyPrice: 300_000,
 		telegramStars: 500
 	},
-	seasonal: {
-		id: "seasonal",
-		label: "Seasonal",
-		days: 90,
-		currencyPrice: 750_000,
-		telegramStars: 1200
+	semiannual: {
+		id: "semiannual",
+		label: "6 Months",
+		days: 180,
+		telegramStars: 2500
 	}
 } as const satisfies Record<string, PremiumPlan>;
 
