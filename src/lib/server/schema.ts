@@ -79,7 +79,8 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
 	"tax_payment",
 	"state_resource_purchase",
 	"state_resource_sale",
-	"state_construction"
+	"state_construction",
+	"premium_purchase"
 ]);
 
 export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_transaction_type", [
@@ -145,6 +146,10 @@ export const userProfiles = pgTable("user_profiles", {
 	theme: text("theme").default("dark").notNull(),
 	loadImages: boolean("load_images").default(true).notNull(),
 	onboardingStep: integer("onboarding_step"),
+	// Premium membership: active while premiumUntil is in the future.
+	premiumUntil: timestamp("premium_until"),
+	// When true, the premium automation job acts on this user's behalf.
+	premiumAutomation: boolean("premium_automation").default(true).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });

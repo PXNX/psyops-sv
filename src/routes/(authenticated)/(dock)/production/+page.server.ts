@@ -15,40 +15,12 @@ import {
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { calculateShiftStatus, collectWages, startWorkShift } from "$lib/server/service/factoryWork";
+import { PRODUCTION_RECIPES, type ProductionType } from "$lib/config";
 import { fail } from "@sveltejs/kit";
 import { and, eq, sql, inArray } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 
-// Production recipes
-const PRODUCTION_RECIPES = {
-	rifles: {
-		inputs: { iron: 5, steel: 3, wood: 2 },
-		output: 10,
-		duration: 60 * 60
-	},
-	ammunition: {
-		inputs: { copper: 3, gunpowder: 2 },
-		output: 100,
-		duration: 30 * 60
-	},
-	artillery: {
-		inputs: { steel: 10, iron: 8, gunpowder: 5 },
-		output: 2,
-		duration: 120 * 60
-	},
-	vehicles: {
-		inputs: { steel: 15, iron: 10, copper: 5 },
-		output: 1,
-		duration: 180 * 60
-	},
-	explosives: {
-		inputs: { gunpowder: 10, steel: 3 },
-		output: 20,
-		duration: 45 * 60
-	}
-} as const;
-
-type ProductType = keyof typeof PRODUCTION_RECIPES;
+type ProductType = ProductionType;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;

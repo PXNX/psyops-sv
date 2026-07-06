@@ -10,6 +10,7 @@
 	import MdiNewspaperPlus from "~icons/mdi/newspaper-plus";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
+	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
@@ -110,6 +111,10 @@
 	<div class="w-full mx-auto px-3 sm:px-4 py-6 space-y-6 sm:max-w-2xl">
 		<!-- Hero Section with Party Background -->
 		<div class="relative">
+			{#if data.user.isPremium}
+				<!-- Colorful animated glow shown for premium members -->
+				<div class="premium-glow" aria-hidden="true"></div>
+			{/if}
 			<div
 				class="w-full rounded-2xl p-8 flex flex-col items-center relative overflow-hidden border border-white/5 shadow-2xl"
 				style="background: linear-gradient(135deg, {data.party?.color || '#1e293b'}20 0%, {data.party?.color ||
@@ -493,6 +498,23 @@
 								: "Member" + "Joined " + formatDate(data.party.foundedAt)}
 						hoverColor={data.party.color}
 					/>
+				{:else if data.isOwnProfile && !data.isIndependentRegion}
+					<a
+						href="/party"
+						class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-purple-500/30 rounded-lg hover:border-purple-500/50 hover:bg-purple-600/10 transition-all group"
+					>
+						<div
+							class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center group-hover:bg-purple-600/30 transition-colors"
+						>
+							<FluentSearch20Filled class="size-5 text-purple-400" />
+						</div>
+						<div class="text-center">
+							<p class="font-semibold text-purple-400 group-hover:text-purple-300 transition-colors">
+								Find a Political Party
+							</p>
+							<p class="text-xs text-gray-400">Browse and join a party in your state</p>
+						</div>
+					</a>
 				{:else if data.isOwnProfile}
 					<a
 						href="/party/create"
@@ -631,3 +653,36 @@
 		/>
 	{/if}
 {/if}
+
+<style>
+	.premium-glow {
+		position: absolute;
+		inset: -6px;
+		z-index: 0;
+		border-radius: 1.25rem;
+		filter: blur(18px);
+		opacity: 0.85;
+		background: linear-gradient(115deg, #f59e0b, #ec4899, #8b5cf6, #3b82f6, #f59e0b);
+		background-size: 300% 300%;
+		animation: premium-glow-shift 6s ease infinite;
+		pointer-events: none;
+	}
+
+	@keyframes premium-glow-shift {
+		0% {
+			background-position: 0% 50%;
+		}
+		50% {
+			background-position: 100% 50%;
+		}
+		100% {
+			background-position: 0% 50%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.premium-glow {
+			animation: none;
+		}
+	}
+</style>

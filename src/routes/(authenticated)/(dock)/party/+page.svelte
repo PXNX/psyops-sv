@@ -24,11 +24,14 @@
 	<div class="flex items-center justify-between">
 		<div>
 			<h1 class="text-3xl font-bold text-white">Political Parties</h1>
-			<p class="text-gray-400 mt-1">Browse parties in {data.stateName}</p>
+			<p class="text-gray-400 mt-1">
+				{data.parties.length}
+				{data.parties.length === 1 ? "party" : "parties"} in {data.stateName}
+			</p>
 		</div>
 		<a href="/party/create" class="btn btn-primary gap-2">
 			<FluentAdd20Filled class="size-5" />
-			Create Party
+			Create your own party
 		</a>
 	</div>
 
@@ -107,7 +110,11 @@
 			<div class="card-body text-center py-12">
 				<FluentPeople20Filled class="size-16 text-gray-600 mx-auto mb-4" />
 				<p class="text-gray-400 text-lg">No parties found</p>
-				<p class="text-gray-500 text-sm mt-1">Try adjusting your search or create a new party</p>
+				<p class="text-gray-500 text-sm mt-1">Try adjusting your search or create your own party</p>
+				<a href="/party/create" class="btn btn-primary gap-2 mt-4 mx-auto">
+					<FluentAdd20Filled class="size-5" />
+					Create your own party
+				</a>
 			</div>
 		</div>
 	{/if}

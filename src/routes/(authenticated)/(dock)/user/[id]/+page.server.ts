@@ -24,6 +24,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
 import { sendMedalNotification } from "$lib/server/service/inbox";
 import { getBirthdayInfo, collectBirthdayRewards } from "$lib/server/service/birthday";
+import { isPremiumActive } from "$lib/config";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	// Query account with its profile
@@ -234,7 +235,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			name: user.profile?.name,
 			logo: logoUrl,
 			bio: user.profile?.bio,
-			createdAt: user.createdAt
+			createdAt: user.createdAt,
+			isPremium: isPremiumActive(user.profile?.premiumUntil)
 		},
 		party: partyMembership
 			? {
@@ -281,6 +283,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		articleCount: articleCountResult?.count || 0,
 		isOwnProfile: account.id === params.id,
+		// Party citizenship is based on the user's home region. Independent regions
+		// (no state) can only create a party (which forms a state); regions inside a
+		// state can browse and join existing parties.
+		isIndependentRegion: homeRegionData ? !homeRegionData.stateId : true,
 		presidency: presidency
 			? {
 					stateId: presidency.stateId,
