@@ -15,16 +15,15 @@ import {
 	governors,
 	newspapers,
 	journalists,
-	generalReports,
-	birthdayRewards,
-	userWallets
+	generalReports
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
-import { eq, count, and, sql } from "drizzle-orm";
+import { eq, count, and } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
 import { sendMedalNotification } from "$lib/server/service/inbox";
+import { getBirthdayInfo, collectBirthdayRewards } from "$lib/server/service/birthday";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	// Query account with its profile
@@ -62,7 +61,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.limit(1);
 
 	// Get user's home (citizenship/residence) region
-	let homeRegionData: { regionId: number; stateId: number | null; stateName: string | null; stateLogo: number | null; homeRegionChangedAt: Date } | null = null;
+	let homeRegionData: {
+		regionId: number;
+		stateId: number | null;
+		stateName: string | null;
+		stateLogo: number | null;
+		homeRegionChangedAt: Date;
+	} | null = null;
 	const [residenceRow] = await db
 		.select({ homeRegionId: residences.homeRegionId, homeRegionChangedAt: residences.homeRegionChangedAt })
 		.from(residences)
@@ -75,13 +80,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				regionId: regions.id,
 				stateId: states.id,
 				stateName: states.name,
-				stateLogo: states.logo,
+				stateLogo: states.logo
 			})
 			.from(regions)
 			.leftJoin(states, eq(regions.stateId, states.id))
 			.where(eq(regions.id, residenceRow.homeRegionId))
 			.limit(1);
-		homeRegionData = homeRegionResult ? { ...homeRegionResult, homeRegionChangedAt: residenceRow.homeRegionChangedAt } : null;
+		homeRegionData = homeRegionResult
+			? { ...homeRegionResult, homeRegionChangedAt: residenceRow.homeRegionChangedAt }
+			: null;
 	}
 
 	// Get article count
@@ -199,33 +206,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		availableMinistries = allMinistries.filter((m) => !occupied.includes(m));
 	}
 
-	// Get newspapers owned by current user (for add author feature)
-	// Birthday reward calculation
-	const BIRTHDAY_REWARD_AMOUNT = 10000;
-	const now = new Date();
-	const createdAt = new Date(user.createdAt);
-	// Calculate how many full years the account has existed
-	const totalYears = Math.floor(
-		(now.getTime() - createdAt.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-	);
-	// Get already collected birthday rewards
-	const collectedRewards = await db
-		.select({ year: birthdayRewards.year })
-		.from(birthdayRewards)
-		.where(eq(birthdayRewards.userId, params.id));
-	const collectedYears = new Set(collectedRewards.map((r) => r.year));
-	// Determine uncollected years (1-based: year 1 = first anniversary)
-	const uncollectedYears: number[] = [];
-	for (let y = 1; y <= totalYears; y++) {
-		if (!collectedYears.has(y)) {
-			uncollectedYears.push(y);
-		}
-	}
-	const birthdayRewardTotal = uncollectedYears.length * BIRTHDAY_REWARD_AMOUNT;
-	// Check if today is the account's birthday (same month+day)
-	const isBirthday =
-		now.getMonth() === createdAt.getMonth() && now.getDate() === createdAt.getDate();
+	// Account birthday (creation anniversary) reward status.
+	const birthdayInfo = await getBirthdayInfo(params.id, user.createdAt);
 
+	// Get newspapers owned by current user (for add author feature)
 	let ownedNewspapers: Array<{ id: number; name: string }> = [];
 	if (account.id !== params.id) {
 		const journalistRecords = await db.query.journalists.findMany({
@@ -332,13 +316,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		ownedNewspapers,
 		account,
-		birthdayInfo: {
-			isBirthday,
-			totalYears,
-			uncollectedYears,
-			rewardTotal: birthdayRewardTotal,
-			rewardPerYear: BIRTHDAY_REWARD_AMOUNT
-		}
+		birthdayInfo
 	};
 };
 
@@ -349,53 +327,17 @@ export const actions: Actions = {
 		if (account.id !== params.id) {
 			return fail(403, { error: "You can only collect your own birthday reward" });
 		}
-		const BIRTHDAY_REWARD_AMOUNT = 10000;
 		const user = await db.query.accounts.findFirst({ where: eq(accounts.id, params.id) });
 		if (!user) return fail(404, { error: "User not found" });
-		const now = new Date();
-		const createdAt = new Date(user.createdAt);
-		const totalYears = Math.floor(
-			(now.getTime() - createdAt.getTime()) / (365.25 * 24 * 60 * 60 * 1000)
-		);
-		if (totalYears < 1) {
-			return fail(400, { error: "No birthday reward available yet" });
-		}
-		const collectedRewards = await db
-			.select({ year: birthdayRewards.year })
-			.from(birthdayRewards)
-			.where(eq(birthdayRewards.userId, params.id));
-		const collectedYears = new Set(collectedRewards.map((r) => r.year));
-		const uncollectedYears: number[] = [];
-		for (let y = 1; y <= totalYears; y++) {
-			if (!collectedYears.has(y)) uncollectedYears.push(y);
-		}
-		if (uncollectedYears.length === 0) {
-			return fail(400, { error: "All birthday rewards have already been collected" });
-		}
-		const totalReward = uncollectedYears.length * BIRTHDAY_REWARD_AMOUNT;
 		try {
-			await db.transaction(async (tx) => {
-				// Mark all uncollected years as collected
-				for (const year of uncollectedYears) {
-					await tx.insert(birthdayRewards).values({ userId: params.id, year });
-				}
-				// Add currency to wallet
-				const existingWallet = await tx.query.userWallets.findFirst({
-					where: eq(userWallets.userId, params.id)
-				});
-				if (existingWallet) {
-					await tx
-						.update(userWallets)
-						.set({ balance: sql`${userWallets.balance} + ${totalReward}` })
-						.where(eq(userWallets.userId, params.id));
-				} else {
-					await tx.insert(userWallets).values({
-						userId: params.id,
-						balance: 10000 + totalReward
-					});
-				}
-			});
-			return { success: true, message: `Happy Birthday! You collected ${totalReward.toLocaleString()} currency!` };
+			const result = await collectBirthdayRewards(params.id, user.createdAt);
+			if (!result.ok) {
+				return fail(400, { error: "No birthday reward available to collect" });
+			}
+			return {
+				success: true,
+				message: `Happy Birthday! You collected ${result.totalReward.toLocaleString()} currency!`
+			};
 		} catch (err) {
 			console.error("Error collecting birthday reward:", err);
 			return fail(500, { error: "Failed to collect birthday reward" });

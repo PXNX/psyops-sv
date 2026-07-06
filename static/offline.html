@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en" data-theme="">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="theme-color" content="#8936FF" />
+		<title>Offline · Psyops</title>
+		<link rel="icon" href="/favicon.png" />
+		<style>
+			:root {
+				color-scheme: dark;
+			}
+
+			* {
+				box-sizing: border-box;
+			}
+
+			html,
+			body {
+				margin: 0;
+				padding: 0;
+				height: 100%;
+			}
+
+			body {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				min-height: 100dvh;
+				padding: 1rem;
+				font-family:
+					system-ui,
+					-apple-system,
+					"Segoe UI",
+					Roboto,
+					Helvetica,
+					Arial,
+					sans-serif;
+				color: #e2e8f0;
+				background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
+				background-attachment: fixed;
+			}
+
+			.card {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.75rem;
+				max-width: 24rem;
+				width: 100%;
+				padding: 2rem 1.5rem;
+				text-align: center;
+				border: 1px solid #701a75;
+				border-radius: 0.75rem;
+				background: rgba(15, 23, 42, 0.5);
+			}
+
+			.icon {
+				width: 3.5rem;
+				height: 3.5rem;
+				color: #8936ff;
+			}
+
+			h1 {
+				margin: 0.5rem 0 0;
+				font-size: 1.375rem;
+				font-weight: 600;
+			}
+
+			p {
+				margin: 0;
+				font-size: 0.95rem;
+				line-height: 1.5;
+				color: #94a3b8;
+			}
+
+			.status {
+				display: inline-flex;
+				align-items: center;
+				gap: 0.5rem;
+				margin-top: 0.25rem;
+				font-size: 0.8rem;
+				color: #cbd5e1;
+			}
+
+			.dot {
+				width: 0.6rem;
+				height: 0.6rem;
+				border-radius: 9999px;
+				background: #f87171;
+				box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.6);
+				animation: pulse 1.6s infinite;
+			}
+
+			.dot.online {
+				background: #34d399;
+				animation: none;
+			}
+
+			@keyframes pulse {
+				0% {
+					box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.6);
+				}
+				70% {
+					box-shadow: 0 0 0 0.5rem rgba(248, 113, 113, 0);
+				}
+				100% {
+					box-shadow: 0 0 0 0 rgba(248, 113, 113, 0);
+				}
+			}
+
+			button {
+				margin-top: 1rem;
+				width: 100%;
+				padding: 0.7rem 1rem;
+				font-size: 0.95rem;
+				font-weight: 600;
+				color: #fff;
+				background: #8936ff;
+				border: none;
+				border-radius: 0.5rem;
+				cursor: pointer;
+				transition: background 0.15s ease;
+			}
+
+			button:hover {
+				background: #7a2ee6;
+			}
+
+			button:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+
+			@media (prefers-reduced-motion: reduce) {
+				.dot {
+					animation: none;
+				}
+			}
+		</style>
+	</head>
+
+	<body>
+		<main class="card">
+			<svg
+				class="icon"
+				viewBox="0 0 24 24"
+				fill="none"
+				stroke="currentColor"
+				stroke-width="1.75"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				aria-hidden="true"
+			>
+				<path d="M1 1l22 22" />
+				<path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55" />
+				<path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39" />
+				<path d="M10.71 5.05A16 16 0 0 1 22.58 9" />
+				<path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88" />
+				<path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+				<line x1="12" y1="20" x2="12.01" y2="20" />
+			</svg>
+
+			<h1>You're offline</h1>
+			<p>
+				We couldn't reach the network and this page isn't available offline yet. Check your connection — we'll reconnect
+				automatically.
+			</p>
+
+			<span class="status">
+				<span class="dot" id="dot"></span>
+				<span id="status-text">No connection</span>
+			</span>
+
+			<button id="retry" type="button">Try again</button>
+		</main>
+
+		<script>
+			(function () {
+				var retry = document.getElementById("retry");
+				var dot = document.getElementById("dot");
+				var statusText = document.getElementById("status-text");
+
+				function reload() {
+					retry.disabled = true;
+					retry.textContent = "Reconnecting…";
+					window.location.reload();
+				}
+
+				function setOnline() {
+					dot.classList.add("online");
+					statusText.textContent = "Back online";
+					// Give the network a beat to settle, then reload.
+					setTimeout(reload, 500);
+				}
+
+				retry.addEventListener("click", reload);
+				window.addEventListener("online", setOnline);
+
+				if (navigator.onLine) {
+					setOnline();
+				}
+			})();
+		</script>
+	</body>
+</html>

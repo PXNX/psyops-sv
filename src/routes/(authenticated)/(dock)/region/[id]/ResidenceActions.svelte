@@ -6,6 +6,7 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import Modal from "$lib/component/Modal.svelte";
 
 	const {
 		regionId,
@@ -26,6 +27,10 @@
 		travelInfo: { distanceKm: number; cost: number; timeHours: number } | null;
 		walletBalance?: number;
 	}>();
+
+	let showTravelSheet = $state(false);
+
+	const canAfford = $derived(!travelInfo || walletBalance >= travelInfo.cost);
 </script>
 
 {#if allowsFreeMovement}
@@ -43,23 +48,14 @@
 						Free movement available until inaugural election.
 					{/if}
 				</p>
-				{#if travelInfo}
-					<div class="mb-4 space-y-3">
-						<div class="flex items-center gap-2 text-sm text-gray-400">
-							<span>🕐</span>
-							<span>{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? "" : "s"} travel time</span>
-							<span class="text-gray-600">·</span>
-							<span>{travelInfo.distanceKm} km</span>
-						</div>
-						<ResourceRequirements costs={{ currency: travelInfo.cost }} available={{ currency: walletBalance }} />
-					</div>
-				{/if}
-				<form method="POST" action="?/startTravel" use:enhance>
-					<button type="submit" class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
-						<FluentHome20Filled class="size-4" />
-						Start Travel
-					</button>
-				</form>
+				<button
+					type="button"
+					onclick={() => (showTravelSheet = true)}
+					class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2"
+				>
+					<FluentHome20Filled class="size-4" />
+					Travel to this Region
+				</button>
 			</div>
 		</div>
 	</div>
@@ -100,26 +96,87 @@
 						</p>
 					</div>
 				{:else}
-					<p class="text-sm text-gray-300 mb-3">Travel to this region. Governor approval may be required.</p>
+					<p class="text-sm text-gray-300 mb-3">
+						Entry requires a visa approved by the Foreign Minister or President, or existing residency.
+					</p>
 				{/if}
-				{#if travelInfo}
-					<div class="mb-4 space-y-3">
-						<div class="flex items-center gap-2 text-sm text-gray-400">
-							<span>🕐</span>
-							<span>{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? "" : "s"} travel time</span>
-							<span class="text-gray-600">·</span>
-							<span>{travelInfo.distanceKm} km</span>
-						</div>
-						<ResourceRequirements costs={{ currency: travelInfo.cost }} available={{ currency: walletBalance }} />
-					</div>
-				{/if}
-				<form method="POST" action="?/startTravel" use:enhance>
-					<button type="submit" class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2">
-						<FluentHome20Filled class="size-4" />
-						Start Travel
-					</button>
-				</form>
+				<button
+					type="button"
+					onclick={() => (showTravelSheet = true)}
+					class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2"
+				>
+					<FluentHome20Filled class="size-4" />
+					Travel to this Region
+				</button>
 			</div>
 		</div>
 	</div>
 {/if}
+
+<!-- Travel Confirmation Bottom Sheet -->
+<Modal bind:open={showTravelSheet} title="Travel to {regionName}" size="default">
+	<div class="space-y-5">
+		<div class="flex items-center gap-4">
+			<div class="size-14 bg-blue-600/20 rounded-xl flex items-center justify-center">
+				<FluentLocationLive20Filled class="size-7 text-blue-400" />
+			</div>
+			<div>
+				<h3 class="text-xl font-bold text-white">{regionName}</h3>
+				<p class="text-sm text-gray-400">Review your journey before departing</p>
+			</div>
+		</div>
+
+		{#if travelInfo}
+			<div class="bg-slate-700/30 rounded-lg p-4 space-y-3">
+				<div class="flex items-center justify-between">
+					<span class="text-sm text-gray-400 flex items-center gap-2">
+						<FluentClock20Filled class="size-4" />
+						Travel Time
+					</span>
+					<span class="text-sm font-medium text-white">
+						{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? "" : "s"}
+					</span>
+				</div>
+				<div class="flex items-center justify-between">
+					<span class="text-sm text-gray-400">Distance</span>
+					<span class="text-sm font-medium text-white">{travelInfo.distanceKm} km</span>
+				</div>
+				<div class="border-t border-white/10 pt-3">
+					<ResourceRequirements costs={{ currency: travelInfo.cost }} available={{ currency: walletBalance }} />
+				</div>
+			</div>
+
+			<form
+				method="POST"
+				action="?/startTravel"
+				use:enhance={() => {
+					return async ({ update }) => {
+						showTravelSheet = false;
+						await update();
+					};
+				}}
+			>
+				<button
+					type="submit"
+					class="btn w-full bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2"
+					disabled={!canAfford}
+				>
+					<FluentHome20Filled class="size-5" />
+					Start Travel — ${travelInfo.cost.toLocaleString()}
+				</button>
+				{#if !canAfford}
+					<p class="text-xs text-red-400 text-center mt-2">
+						Insufficient funds — you have ${walletBalance.toLocaleString()}
+					</p>
+				{/if}
+			</form>
+		{:else}
+			<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-4">
+				<p class="text-sm text-amber-300 flex items-center gap-2">
+					<FluentClock20Filled class="size-4" />
+					You need an existing residence to travel between regions.
+				</p>
+			</div>
+		{/if}
+	</div>
+</Modal>

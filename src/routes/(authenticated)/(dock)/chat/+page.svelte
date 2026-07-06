@@ -1,6 +1,6 @@
 <!-- src/routes/(authenticated)/chat/+page.svelte -->
 <script lang="ts">
-	import { goto, invalidateAll } from "$app/navigation";
+	import { goto, invalidate } from "$app/navigation";
 	import { onMount, onDestroy } from "svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
@@ -24,8 +24,8 @@
 			const data = JSON.parse(event.data);
 
 			if (data.type === "new_messages") {
-				// Refresh data when new messages arrive
-				invalidateAll();
+				// Refresh only chat data when new messages arrive
+				invalidate("app:chat");
 			}
 		});
 

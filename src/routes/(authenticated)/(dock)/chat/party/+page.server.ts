@@ -18,7 +18,8 @@ function sanitizeInput(input: string): string {
 	return input.replace(/[<>]/g, "").trim();
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, depends }) => {
+	depends("app:chat");
 	const account = locals.account;
 	if (!account) {
 		return { party: null, messages: [], currentUserId: null };

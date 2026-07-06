@@ -5,7 +5,8 @@ import { eq, and, desc, or } from "drizzle-orm";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, depends }) => {
+	depends("app:chat");
 	const account = locals.account!;
 
 	// Get last message in global chat

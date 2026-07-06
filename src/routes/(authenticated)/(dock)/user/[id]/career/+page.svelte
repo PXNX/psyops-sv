@@ -7,7 +7,6 @@
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
-	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	const { data } = $props();
@@ -335,23 +334,6 @@
 						</div>
 					</div>
 				{/each}
-
-				<!-- First Article -->
-				{#if data.career.stats.totalArticles > 0}
-					<div class="flex gap-3">
-						<div class="flex flex-col items-center">
-							<div class="size-10 rounded-full bg-emerald-600/20 flex items-center justify-center">
-								<FluentStar20Filled class="size-5 text-emerald-400" />
-							</div>
-							<div class="w-px flex-1 bg-base-300 mt-2"></div>
-						</div>
-						<div class="flex-1 pb-4">
-							<p class="text-sm font-semibold text-white">Published {data.career.stats.totalArticles} Articles</p>
-							<p class="text-xs text-gray-400 mt-1">Total reach: {data.career.stats.totalUpvotes} upvotes</p>
-							<p class="text-xs text-gray-400">Average: {data.career.stats.averageUpvotes} upvotes per article</p>
-						</div>
-					</div>
-				{/if}
 
 				<!-- State Positions -->
 				{#each data.career.statePositions as position}

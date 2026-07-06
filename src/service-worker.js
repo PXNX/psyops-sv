@@ -5,9 +5,12 @@ import { build, files, version } from "$service-worker";
 const PRECACHE = `precache-${version}`; // immutable app build + static files
 const RUNTIME = `runtime-${version}`; // runtime assets (images, fonts, etc.)
 
+// Custom page served when a navigation fails and we have no cached copy.
+const OFFLINE_URL = "/offline.html";
+
 const ASSETS = [
 	...build, // the app itself
-	...files // everything in `static`
+	...files // everything in `static` (includes OFFLINE_URL)
 ];
 const ASSET_SET = new Set(ASSETS);
 
@@ -138,7 +141,20 @@ self.addEventListener("fetch", (event) => {
 	// Navigations and remaining same-origin GETs: network-first with an offline
 	// cache fallback so previously visited pages still work without a connection.
 	if (event.request.mode === "navigate" || isSameOrigin) {
-		event.respondWith(networkFirst(event, { preloadResponse: event.preloadResponse }));
+		event.respondWith(
+			networkFirst(event, { preloadResponse: event.preloadResponse }).catch(async (err) => {
+				// When neither the network nor the runtime cache can serve a page
+				// navigation, show the custom offline page instead of the browser's
+				// default "no internet" screen.
+				if (event.request.mode === "navigate") {
+					const offline = await caches.match(OFFLINE_URL);
+					if (offline) {
+						return offline;
+					}
+				}
+				throw err;
+			})
+		);
 	}
 });
 
@@ -166,8 +182,9 @@ self.addEventListener("push", (event) => {
 			icon: notificationData.icon || "/favicon.png",
 			badge: notificationData.badge || "/badge.png",
 			data: notificationData.data,
-			tag: notificationData.data?.tag ??
-			(notificationData.data?.articleId ? `article-${notificationData.data.articleId}` : undefined),
+			tag:
+				notificationData.data?.tag ??
+				(notificationData.data?.articleId ? `article-${notificationData.data.articleId}` : undefined),
 			renotify: true,
 			requireInteraction: false
 		})

@@ -26,7 +26,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			notifyMarketSales: account.notifyMarketSales,
 			notifyNewProposals: account.notifyNewProposals,
 			theme: profile?.theme ?? "dark",
-			loadImages: profile?.loadImages ?? true
+			loadImages: profile?.loadImages ?? true,
+			telegramUsername: profile?.telegramUsername,
+			telegramId: profile?.telegramId
 		}
 	};
 };
@@ -34,6 +36,25 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
 	logout: async () => {
 		return redirect(302, "/auth/logout");
+	},
+	disconnectTelegram: async ({ locals }) => {
+		const account = locals.account!;
+
+		try {
+			await db
+				.update(userProfiles)
+				.set({
+					telegramId: null,
+					telegramUsername: null,
+					updatedAt: new Date()
+				})
+				.where(eq(userProfiles.accountId, account.id));
+
+			return { success: true };
+		} catch (err) {
+			console.error("Telegram disconnect error:", err);
+			return fail(500, { error: "Failed to disconnect Telegram account" });
+		}
 	},
 	updateNotifications: async ({ request, locals }) => {
 		const account = locals.account!;
@@ -61,10 +82,7 @@ export const actions: Actions = {
 		}
 
 		try {
-			await db
-				.update(accounts)
-				.set(updates)
-				.where(eq(accounts.id, account.id));
+			await db.update(accounts).set(updates).where(eq(accounts.id, account.id));
 
 			return { success: true };
 		} catch (err) {
@@ -114,4 +132,4 @@ export const actions: Actions = {
 			return fail(500, { deleteError: "Failed to delete account. Please try again." });
 		}
 	}
-	};
+};

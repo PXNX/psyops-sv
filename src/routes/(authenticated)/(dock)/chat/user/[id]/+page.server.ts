@@ -16,7 +16,8 @@ import { fail, redirect } from "@sveltejs/kit";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals, params }) => {
+export const load: PageServerLoad = async ({ locals, params, depends }) => {
+	depends("app:chat");
 	const account = locals.account!;
 	const otherUserId = params.id;
 

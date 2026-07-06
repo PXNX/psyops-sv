@@ -93,7 +93,6 @@
 				</div>
 				<div class="flex-1">
 					<h1 class="text-3xl font-bold text-white">{getActionTitle(data.action.type)}</h1>
-					<p class="text-white/80 mt-1">Action ID: #{data.action.id}</p>
 				</div>
 			</div>
 		</div>

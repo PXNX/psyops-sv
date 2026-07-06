@@ -67,9 +67,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			name: profile?.name,
 			bio: profile?.bio,
 			logo: logoUrl,
-			email: account.email,
-			telegramUsername: profile?.telegramUsername,
-			telegramId: profile?.telegramId
+			email: account.email
 		},
 		userBalance,
 		editCost: PROFILE_EDIT_CONFIG.COST,
@@ -135,7 +133,12 @@ export const actions: Actions = {
 
 				// Upload new logo and delete old one if it exists
 				const fileService = getContext().services.file;
-				const logoFileId = await fileService.replaceLogoInTransaction(tx, logo, account.id, existingProfile?.logo || null);
+				const logoFileId = await fileService.replaceLogoInTransaction(
+					tx,
+					logo,
+					account.id,
+					existingProfile?.logo || null
+				);
 
 				if (existingProfile) {
 					// Update existing profile
@@ -163,25 +166,6 @@ export const actions: Actions = {
 		} catch (error) {
 			console.error("Profile update error:", error);
 			return message(form, "Failed to update profile", { status: 500 });
-		}
-	},
-	disconnectTelegram: async ({ locals }) => {
-		const account = locals.account!;
-
-		try {
-			await db
-				.update(userProfiles)
-				.set({
-					telegramId: null,
-					telegramUsername: null,
-					updatedAt: new Date()
-				})
-				.where(eq(userProfiles.accountId, account.id));
-
-			return message({ name: "", bio: "" }, "Telegram account disconnected successfully");
-		} catch (error) {
-			console.error("Telegram disconnect error:", error);
-			return message({ name: "", bio: "" }, "Failed to disconnect Telegram account", { status: 500 });
 		}
 	}
 };

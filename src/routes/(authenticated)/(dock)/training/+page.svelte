@@ -13,7 +13,6 @@
 	import Modal from "$lib/component/Modal.svelte";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 	import PageContainer from "$lib/component/PageContainer.svelte";
-	import PageHeader from "$lib/component/PageHeader.svelte";
 	import EmptyState from "$lib/component/EmptyState.svelte";
 	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
 
@@ -139,25 +138,6 @@
 </script>
 
 <PageContainer maxWidth="7xl">
-	<!-- Header -->
-	{#snippet headerActions()}
-		{#if data.residence.bloc}
-			<div
-				class="px-3 sm:px-4 py-2 rounded-lg border font-medium backdrop-blur-sm text-sm"
-				style="background-color: {data.residence.bloc.color}15; border-color: {data.residence.bloc.color}40"
-			>
-				{data.residence.bloc.name}
-			</div>
-		{/if}
-	{/snippet}
-	<PageHeader
-		title="Military"
-		subtitle="{data.residence.stateName ?? 'Independent Region'} • {data.units.filter((u) => !u.isTraining)
-			.length} Active • {trainingUnits.length} Training"
-		icon={FluentEmojiMilitaryHelmet}
-		actions={headerActions}
-	/>
-
 	{#if trainingDisabled}
 		<div class="mb-6 p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 backdrop-blur-sm">
 			<p class="text-sm text-amber-300 font-medium">{trainingDisabledReason}</p>
@@ -167,7 +147,19 @@
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<!-- Active Units - Main Focus -->
 		<div class="lg:col-span-2 space-y-4">
-			{#each data.units.filter((u) => !u.isTraining) as unit}
+			{@const activeUnits = data.units.filter((u) => !u.isTraining)}
+			<div class="flex items-center gap-3">
+				<span class="h-6 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600"></span>
+				<h2 class="text-lg font-semibold tracking-tight text-white">Active Units</h2>
+				{#if activeUnits.length > 0}
+					<span
+						class="ml-auto text-xs font-medium text-emerald-300/80 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2.5 py-0.5"
+					>
+						{activeUnits.length}
+					</span>
+				{/if}
+			</div>
+			{#each activeUnits as unit}
 				<div
 					class="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/60 hover:bg-slate-800/50 transition-all duration-300"
 				>
@@ -262,7 +254,10 @@
 
 			<!-- Unit Templates -->
 			<div class="mt-8">
-				<h2 class="text-2xl font-semibold text-white mb-4">Train New Units</h2>
+				<div class="flex items-center gap-3 mb-4">
+					<span class="h-6 w-1 rounded-full bg-gradient-to-b from-blue-400 to-blue-600"></span>
+					<h2 class="text-lg font-semibold tracking-tight text-white">Train New Units</h2>
+				</div>
 
 				<!-- Selectable Unit Type Cards -->
 				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 mb-6">
@@ -409,7 +404,17 @@
 		<div class="space-y-6">
 			<!-- Training Queue -->
 			<div>
-				<h2 class="text-xl font-semibold text-white mb-4">Training Queue</h2>
+				<div class="flex items-center gap-3 mb-4">
+					<span class="h-6 w-1 rounded-full bg-gradient-to-b from-amber-400 to-amber-600"></span>
+					<h2 class="text-lg font-semibold tracking-tight text-white">Training Queue</h2>
+					{#if trainingUnits.length > 0}
+						<span
+							class="ml-auto text-xs font-medium text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-full px-2.5 py-0.5"
+						>
+							{trainingUnits.length}
+						</span>
+					{/if}
+				</div>
 
 				{#if activeTrainingUnit}
 					{@const progress = getTrainingProgress(activeTrainingUnit)}

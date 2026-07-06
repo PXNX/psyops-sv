@@ -7,12 +7,12 @@
 	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 
 	let { data } = $props();
 
@@ -163,35 +163,6 @@
 		<p class="text-gray-400">Establish your business empire</p>
 	</div>
 
-	<!-- Cost & Balance Info -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-		<!-- Balance -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-green-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Your Balance</p>
-					<p class="text-lg font-bold text-white">{data.userBalance.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
-
-		<!-- Cost -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-					<FluentBriefcase20Filled class="size-5 text-blue-400" />
-				</div>
-				<div>
-					<p class="text-xs text-gray-400">Creation Cost</p>
-					<p class="text-lg font-bold text-white">{data.companyCost.toLocaleString()}</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
 	<!-- Cooldown Warning -->
 	{#if data.isOnCooldown && data.cooldownEndsAt}
 		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5 space-y-3">
@@ -211,27 +182,6 @@
 							<span class="text-red-200/70">Available on:</span>
 							<span class="text-red-200/90">{formatCooldownDate(data.cooldownEndsAt)}</span>
 						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Insufficient Funds Warning -->
-	{#if !data.canAfford && !data.isOnCooldown}
-		<div class="bg-amber-600/20 border border-amber-500/30 rounded-xl p-5 space-y-3">
-			<div class="flex items-start gap-3">
-				<FluentMoney20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
-				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-amber-300 text-lg">Insufficient Funds</h3>
-					<p class="text-amber-200/90 text-sm leading-relaxed">
-						You need <strong>{data.companyCost.toLocaleString()}</strong> currency to create a company. You currently
-						have <strong>{data.userBalance.toLocaleString()}</strong>.
-					</p>
-					<div class="bg-amber-900/30 rounded-lg p-3">
-						<p class="text-amber-100 text-sm font-medium">
-							Needed: {(data.companyCost - data.userBalance).toLocaleString()} more currency
-						</p>
 					</div>
 				</div>
 			</div>
@@ -388,14 +338,16 @@
 				placeholder="Describe your company's mission, vision, and business focus..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
 				class:input-error={$errors.description}
-				disabled={$submitting || !canCreate}
-			></textarea>
+				disabled={$submitting || !canCreate}></textarea>
 			{#if $errors.description}
 				<p class="text-xs text-red-400">{$errors.description}</p>
 			{:else}
 				<p class="text-xs text-gray-400">{$form.description?.length || 0}/500 characters</p>
 			{/if}
 		</div>
+
+		<!-- Cost -->
+		<ResourceRequirements costs={{ currency: data.companyCost }} available={{ currency: data.userBalance }} />
 
 		<!-- Submit -->
 		<div class="flex gap-3">

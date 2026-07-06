@@ -125,7 +125,6 @@
 				</div>
 				<div class="flex-1">
 					<h1 class="text-3xl font-bold text-white">{getStatusTitle(data.report.status)}</h1>
-					<p class="text-white/80 mt-1">Report ID: #{data.report.id}</p>
 				</div>
 			</div>
 		</div>
