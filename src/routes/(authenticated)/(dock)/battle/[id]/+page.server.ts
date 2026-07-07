@@ -14,7 +14,7 @@ import {
 import { eq, desc, and, sql, count, asc, or } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { error, fail } from "@sveltejs/kit";
-import { MILITARY_UNIT_TEMPLATES } from "$lib/config";
+import { MILITARY_UNIT_TEMPLATES, getExperienceCombatModifier, calculateCombatExperienceLoss } from "$lib/config";
 import { getLogoUrl } from "$lib/server/backblaze";
 
 // Terrain combat modifiers
@@ -96,17 +96,19 @@ async function processCombatRound(battleId: number) {
 	let attackerTotalDamage = 0;
 	let defenderTotalDamage = 0;
 
-	// Attackers deal damage based on their attack stat
+	// Attackers deal damage based on their attack stat, scaled by unit experience
 	for (const attacker of engagedAttackers) {
 		const unitTemplate = MILITARY_UNIT_TEMPLATES[attacker.unit.unitType];
-		const damage = unitTemplate.attack || 0;
+		const experienceModifier = getExperienceCombatModifier(attacker.unit.experience ?? 0);
+		const damage = Math.floor((unitTemplate.baseAttack || 0) * experienceModifier);
 		attackerTotalDamage += damage;
 	}
 
-	// Defenders deal damage based on their defense stat
+	// Defenders deal damage based on their defense stat, scaled by unit experience
 	for (const defender of engagedDefenders) {
 		const unitTemplate = MILITARY_UNIT_TEMPLATES[defender.unit.unitType];
-		const damage = unitTemplate.defense || 0;
+		const experienceModifier = getExperienceCombatModifier(defender.unit.experience ?? 0);
+		const damage = Math.floor((unitTemplate.baseDefense || 0) * experienceModifier);
 		defenderTotalDamage += damage;
 	}
 
@@ -148,6 +150,10 @@ async function processCombatRound(battleId: number) {
 		const newStrength = Math.max(0, attacker.currentStrength - damageTaken);
 		const newOrg = Math.max(0, attacker.currentOrganization - Math.floor(damageTaken / 2)); // Org loss is half damage
 
+		// Casualties dilute the unit's experience (veterans lost, green replacements)
+		const attackerExp = attacker.unit.experience ?? 0;
+		const newExperience = Math.max(0, attackerExp - calculateCombatExperienceLoss(attackerExp, damageTaken));
+
 		await db
 			.update(battleParticipants)
 			.set({
@@ -158,12 +164,13 @@ async function processCombatRound(battleId: number) {
 			})
 			.where(eq(battleParticipants.id, attacker.id));
 
-		// Update military unit health and organization
+		// Update military unit health, organization and experience
 		await db
 			.update(militaryUnits)
 			.set({
 				health: newStrength,
-				organization: newOrg
+				organization: newOrg,
+				experience: newExperience
 			})
 			.where(eq(militaryUnits.id, attacker.unitId));
 	}
@@ -179,6 +186,10 @@ async function processCombatRound(battleId: number) {
 		const newStrength = Math.max(0, defender.currentStrength - damageTaken);
 		const newOrg = Math.max(0, defender.currentOrganization - Math.floor(damageTaken / 2));
 
+		// Casualties dilute the unit's experience (veterans lost, green replacements)
+		const defenderExp = defender.unit.experience ?? 0;
+		const newExperience = Math.max(0, defenderExp - calculateCombatExperienceLoss(defenderExp, damageTaken));
+
 		await db
 			.update(battleParticipants)
 			.set({
@@ -189,12 +200,13 @@ async function processCombatRound(battleId: number) {
 			})
 			.where(eq(battleParticipants.id, defender.id));
 
-		// Update military unit health and organization
+		// Update military unit health, organization and experience
 		await db
 			.update(militaryUnits)
 			.set({
 				health: newStrength,
-				organization: newOrg
+				organization: newOrg,
+				experience: newExperience
 			})
 			.where(eq(militaryUnits.id, defender.unitId));
 	}
@@ -379,6 +391,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		(unit) =>
 			!unitsInBattleIds.has(unit.id) &&
 			!unit.isTraining &&
+			!unit.isExercising &&
 			unit.health &&
 			unit.health > 0 &&
 			unit.organization &&
@@ -526,6 +539,11 @@ export const actions: Actions = {
 
 			if (unit.isTraining) {
 				errors.push(`${unit.name} is still training`);
+				continue;
+			}
+
+			if (unit.isExercising) {
+				errors.push(`${unit.name} is on exercise`);
 				continue;
 			}
 

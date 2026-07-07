@@ -12,11 +12,18 @@ import {
 	regions,
 	blocs,
 	militaryUnitTypeEnum,
-	userTravels
+	userTravels,
+	battles,
+	battleParticipants
 } from "$lib/server/schema";
 import { eq, and, sql } from "drizzle-orm";
 import { db } from "$lib/server/db";
-import { MILITARY_UNIT_TEMPLATES, type MilitaryUnitTemplate } from "$lib/config";
+import {
+	MILITARY_UNIT_TEMPLATES,
+	type MilitaryUnitTemplate,
+	EXERCISE_CONFIG,
+	calculateExerciseExperienceGain
+} from "$lib/config";
 
 type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
 type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
@@ -112,9 +119,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			organization: militaryUnits.organization,
 			health: militaryUnits.health,
 			supplyLevel: militaryUnits.supplyLevel,
+			experience: militaryUnits.experience,
 			isTraining: militaryUnits.isTraining,
 			trainingStartedAt: militaryUnits.trainingStartedAt,
 			trainingCompletesAt: militaryUnits.trainingCompletesAt,
+			isExercising: militaryUnits.isExercising,
+			exerciseStartedAt: militaryUnits.exerciseStartedAt,
+			exerciseCompletesAt: militaryUnits.exerciseCompletesAt,
 			createdAt: militaryUnits.createdAt
 		})
 		.from(militaryUnits)
@@ -124,16 +135,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 	return {
 		units,
 		templates: MILITARY_UNIT_TEMPLATES,
+		exerciseConfig: EXERCISE_CONFIG,
 		residence: {
 			regionId: residence.regionId,
 			stateId: residence.stateId,
 			stateName: residence.stateName,
 			bloc: residence.blocId
 				? {
-					id: residence.blocId,
-					name: residence.blocName,
-					color: residence.blocColor
-				}
+						id: residence.blocId,
+						name: residence.blocName,
+						color: residence.blocColor
+					}
 				: null
 		},
 		inventory,
@@ -141,6 +153,35 @@ export const load: PageServerLoad = async ({ locals }) => {
 		isTraveling
 	};
 };
+
+// Equipment worn out during an exercise costs a fraction of the unit's build cost.
+type EquipmentCost = {
+	currencyCost: number;
+	ironCost: number;
+	steelCost: number;
+	gunpowderCost: number;
+	riflesCost: number;
+	ammunitionCost: number;
+	artilleryCost: number;
+	vehiclesCost: number;
+	explosivesCost: number;
+};
+
+function getExerciseEquipmentCost(template: MilitaryUnitTemplate): EquipmentCost {
+	const factor = EXERCISE_CONFIG.EQUIPMENT_COST_FACTOR;
+	const scale = (value: number | undefined) => Math.floor((value ?? 0) * factor);
+	return {
+		currencyCost: scale(template.currencyCost),
+		ironCost: scale(template.ironCost),
+		steelCost: scale(template.steelCost),
+		gunpowderCost: scale(template.gunpowderCost),
+		riflesCost: scale(template.riflesCost),
+		ammunitionCost: scale(template.ammunitionCost),
+		artilleryCost: scale(template.artilleryCost),
+		vehiclesCost: scale(template.vehiclesCost),
+		explosivesCost: scale(template.explosivesCost)
+	};
+}
 
 async function checkResourceAvailability(userId: string, template: MilitaryUnitTemplate) {
 	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, userId)).limit(1);
@@ -302,7 +343,10 @@ export const actions: Actions = {
 		const residence = await getUserResidence(account.id);
 
 		if (!residence.stateId) {
-			return fail(400, { error: "You live in an independent region. Join or create a state through a political party before training military units." });
+			return fail(400, {
+				error:
+					"You live in an independent region. Join or create a state through a political party before training military units."
+			});
 		}
 
 		const activeTravel = await db.query.userTravels.findFirst({
@@ -395,6 +439,168 @@ export const actions: Actions = {
 			.where(eq(militaryUnits.id, unitId));
 
 		return { success: true, message: "Training completed!" };
+	},
+
+	startExercise: async ({ request, locals }) => {
+		const account = locals.account!;
+		const formData = await request.formData();
+		const unitId = parseInt(formData.get("unitId") as string);
+
+		if (!unitId) {
+			return fail(400, { error: "Missing unit ID" });
+		}
+
+		const [unit] = await db
+			.select()
+			.from(militaryUnits)
+			.where(and(eq(militaryUnits.id, unitId), eq(militaryUnits.ownerId, account.id)))
+			.limit(1);
+
+		if (!unit) {
+			return fail(404, { error: "Unit not found" });
+		}
+
+		if (unit.isTraining) {
+			return fail(400, { error: "Unit is still training" });
+		}
+
+		if (unit.isExercising) {
+			return fail(400, { error: "Unit is already exercising" });
+		}
+
+		if (unit.organization < EXERCISE_CONFIG.MIN_ORG_TO_START) {
+			return fail(400, {
+				error: `Unit needs at least ${EXERCISE_CONFIG.MIN_ORG_TO_START}% organization to exercise`
+			});
+		}
+
+		// Units currently deployed in an ongoing battle cannot exercise.
+		const activeParticipation = await db
+			.select({ id: battleParticipants.id })
+			.from(battleParticipants)
+			.innerJoin(battles, eq(battleParticipants.battleId, battles.id))
+			.where(and(eq(battleParticipants.unitId, unitId), sql`${battles.phase} != 'ended'`))
+			.limit(1);
+
+		if (activeParticipation.length > 0) {
+			return fail(400, { error: "Unit is deployed in an active battle" });
+		}
+
+		const template = MILITARY_UNIT_TEMPLATES[unit.unitType];
+		const equipmentCost = getExerciseEquipmentCost(template);
+
+		// Verify the owner can afford the equipment that will be worn out.
+		const availability = await checkResourceAvailability(account.id, equipmentCost as unknown as MilitaryUnitTemplate);
+		if (!availability.valid) {
+			return fail(400, { error: `Cannot replace exercise equipment: ${availability.error}` });
+		}
+
+		try {
+			await db.transaction(async (tx) => {
+				await deductResources(tx, account.id, equipmentCost);
+
+				const exerciseStartedAt = new Date();
+				const exerciseCompletesAt = new Date(exerciseStartedAt.getTime() + EXERCISE_CONFIG.DURATION_HOURS * 3600000);
+
+				await tx
+					.update(militaryUnits)
+					.set({
+						isExercising: true,
+						exerciseStartedAt,
+						exerciseCompletesAt,
+						updatedAt: new Date()
+					})
+					.where(eq(militaryUnits.id, unitId));
+			});
+
+			return { success: true, message: `${unit.name} sent to exercises` };
+		} catch (e) {
+			console.error("Start exercise error:", e);
+			return fail(500, { error: "Failed to start exercise" });
+		}
+	},
+
+	completeExercise: async ({ request, locals }) => {
+		const account = locals.account!;
+		const formData = await request.formData();
+		const unitId = parseInt(formData.get("unitId") as string);
+
+		if (!unitId) {
+			return fail(400, { error: "Missing unit ID" });
+		}
+
+		const [unit] = await db
+			.select()
+			.from(militaryUnits)
+			.where(and(eq(militaryUnits.id, unitId), eq(militaryUnits.ownerId, account.id)))
+			.limit(1);
+
+		if (!unit) {
+			return fail(404, { error: "Unit not found" });
+		}
+
+		if (!unit.isExercising) {
+			return fail(400, { error: "Unit is not exercising" });
+		}
+
+		if (unit.exerciseCompletesAt && unit.exerciseCompletesAt > new Date()) {
+			return fail(400, { error: "Exercise not yet complete" });
+		}
+
+		const newExperience = calculateExerciseExperienceGain(unit.experience);
+
+		await db
+			.update(militaryUnits)
+			.set({
+				experience: newExperience,
+				organization: Math.max(0, unit.organization - EXERCISE_CONFIG.ORG_COST),
+				supplyLevel: Math.max(0, unit.supplyLevel - EXERCISE_CONFIG.SUPPLY_COST),
+				isExercising: false,
+				exerciseStartedAt: null,
+				exerciseCompletesAt: null,
+				updatedAt: new Date()
+			})
+			.where(eq(militaryUnits.id, unitId));
+
+		return { success: true, message: "Exercise complete!" };
+	},
+
+	cancelExercise: async ({ request, locals }) => {
+		const account = locals.account!;
+		const formData = await request.formData();
+		const unitId = parseInt(formData.get("unitId") as string);
+
+		if (!unitId) {
+			return fail(400, { error: "Missing unit ID" });
+		}
+
+		const [unit] = await db
+			.select()
+			.from(militaryUnits)
+			.where(and(eq(militaryUnits.id, unitId), eq(militaryUnits.ownerId, account.id)))
+			.limit(1);
+
+		if (!unit) {
+			return fail(404, { error: "Unit not found" });
+		}
+
+		if (!unit.isExercising) {
+			return fail(400, { error: "Unit is not exercising" });
+		}
+
+		// Cancelling forfeits the experience but stops further organization/supply drain.
+		// Equipment already spent to start the exercise is not refunded.
+		await db
+			.update(militaryUnits)
+			.set({
+				isExercising: false,
+				exerciseStartedAt: null,
+				exerciseCompletesAt: null,
+				updatedAt: new Date()
+			})
+			.where(eq(militaryUnits.id, unitId));
+
+		return { success: true, message: "Exercise cancelled" };
 	},
 
 	disbandUnit: async ({ request, locals }) => {

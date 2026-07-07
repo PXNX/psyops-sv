@@ -1092,9 +1092,13 @@ export const militaryUnits = pgTable("military_units", {
 	organization: integer("organization").default(100).notNull(),
 	supplyLevel: integer("supply_level").default(100).notNull(),
 	health: integer("health").default(100).notNull(),
+	experience: integer("experience").default(0).notNull(),
 	isTraining: boolean("is_training").default(true).notNull(),
 	trainingStartedAt: timestamp("training_started_at"),
 	trainingCompletesAt: timestamp("training_completed_at"),
+	isExercising: boolean("is_exercising").default(false).notNull(),
+	exerciseStartedAt: timestamp("exercise_started_at"),
+	exerciseCompletesAt: timestamp("exercise_completed_at"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
@@ -1126,6 +1130,7 @@ export const giftCodes = pgTable("gift_codes", {
 	code: varchar("code", { length: 50 }).notNull().unique(),
 	description: text("description"),
 	currencyAmount: bigint("currency_amount", { mode: "number" }).default(0).notNull(),
+	premiumDays: integer("premium_days").default(0).notNull(),
 	maxRedemptions: integer("max_redemptions"),
 	currentRedemptions: integer("current_redemptions").default(0).notNull(),
 	expiresAt: timestamp("expires_at"),
@@ -1156,7 +1161,8 @@ export const giftCodeRedemptions = pgTable(
 			.notNull()
 			.references(() => accounts.id, { onDelete: "cascade" }),
 		redeemedAt: timestamp("redeemed_at").defaultNow().notNull(),
-		currencyReceived: bigint("currency_received", { mode: "number" }).default(0).notNull()
+		currencyReceived: bigint("currency_received", { mode: "number" }).default(0).notNull(),
+		premiumDaysReceived: integer("premium_days_received").default(0).notNull()
 	},
 	(t) => ({ userCodeIdx: uniqueIndex("idx_user_gift_code").on(t.userId, t.giftCodeId) })
 );

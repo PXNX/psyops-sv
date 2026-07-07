@@ -9,6 +9,7 @@
 	import IconClock from "~icons/fluent/clock-24-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import * as m from "$lib/paraglide/messages";
+	import { getExperienceLevel } from "$lib/config";
 
 	import Modal from "$lib/component/Modal.svelte";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
@@ -93,6 +94,33 @@
 		if (organization >= 100) return "Full";
 		const hoursToFull = Math.ceil((100 - organization) / 5);
 		return `${hoursToFull}h`;
+	}
+
+	function getExerciseProgress(unit: any): number {
+		if (!unit.isExercising || !unit.exerciseStartedAt || !unit.exerciseCompletesAt) return 0;
+		const now = new Date().getTime();
+		const start = new Date(unit.exerciseStartedAt).getTime();
+		const end = new Date(unit.exerciseCompletesAt).getTime();
+		const total = end - start;
+		const elapsed = now - start;
+		return Math.min(100, Math.max(0, (elapsed / total) * 100));
+	}
+
+	function getExerciseTimeRemaining(unit: any): string {
+		if (!unit.isExercising || !unit.exerciseCompletesAt) return "";
+		const now = new Date().getTime();
+		const end = new Date(unit.exerciseCompletesAt).getTime();
+		const diff = end - now;
+
+		if (diff <= 0) return "Ready!";
+
+		const hours = Math.floor(diff / (1000 * 60 * 60));
+		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+		if (hours > 0) {
+			return `${hours}h ${minutes}m`;
+		}
+		return `${minutes}m`;
 	}
 
 	const activeUnits = $derived(data.units.filter((u) => !u.isTraining));
@@ -200,6 +228,22 @@
 							</button>
 						</div>
 
+						<!-- Experience -->
+						<div class="mb-3">
+							<div class="flex items-center justify-between text-xs mb-1.5">
+								<span class="text-slate-500 font-medium"
+									>EXP · <span class="text-purple-300">{getExperienceLevel(unit.experience ?? 0).label}</span></span
+								>
+								<span class="font-semibold text-slate-300">{unit.experience ?? 0}%</span>
+							</div>
+							<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
+								<div
+									class="h-1.5 rounded-full transition-all duration-500"
+									style="width: {unit.experience ?? 0}%; background: linear-gradient(90deg, #c084fc, #9333ea)"
+								></div>
+							</div>
+						</div>
+
 						<!-- Compact Status Bars -->
 						<div class="grid grid-cols-3 gap-3">
 							<div>
@@ -241,6 +285,98 @@
 								</div>
 							</div>
 						</div>
+
+						<!-- Exercise -->
+						{#if unit.isExercising}
+							{@const exProgress = getExerciseProgress(unit)}
+							{@const exRemaining = getExerciseTimeRemaining(unit)}
+							{@const exComplete = unit.exerciseCompletesAt && new Date(unit.exerciseCompletesAt) <= new Date()}
+							<div class="mt-4 pt-4 border-t border-slate-700/30">
+								<div class="flex items-center justify-between text-xs mb-1.5">
+									<span class="text-purple-300 font-medium">On exercise</span>
+									<span class="text-slate-400">{exRemaining}</span>
+								</div>
+								<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30 mb-3">
+									<div
+										class="h-1.5 rounded-full transition-all duration-700"
+										style="width: {exProgress}%; background: linear-gradient(90deg, #c084fc, #9333ea)"
+									></div>
+								</div>
+								{#if exComplete}
+									<form
+										method="POST"
+										action="?/completeExercise"
+										use:enhance={() => {
+											isSubmitting = true;
+											return async ({ update }) => {
+												await update();
+												isSubmitting = false;
+											};
+										}}
+									>
+										<input type="hidden" name="unitId" value={unit.id} />
+										<button type="submit" disabled={isSubmitting} class="btn btn-success btn-sm w-full gap-1.5">
+											<IconCheckmark class="size-4" />
+											Complete exercise
+										</button>
+									</form>
+								{:else}
+									<form
+										method="POST"
+										action="?/cancelExercise"
+										use:enhance={() => {
+											isSubmitting = true;
+											return async ({ update }) => {
+												await update();
+												isSubmitting = false;
+											};
+										}}
+									>
+										<input type="hidden" name="unitId" value={unit.id} />
+										<button
+											type="submit"
+											disabled={isSubmitting}
+											class="btn btn-ghost btn-sm w-full text-slate-400 hover:text-red-400"
+										>
+											Cancel exercise
+										</button>
+									</form>
+								{/if}
+							</div>
+						{:else}
+							<div class="mt-4 pt-4 border-t border-slate-700/30">
+								<form
+									method="POST"
+									action="?/startExercise"
+									use:enhance={() => {
+										isSubmitting = true;
+										return async ({ update }) => {
+											await update();
+											isSubmitting = false;
+										};
+									}}
+								>
+									<input type="hidden" name="unitId" value={unit.id} />
+									<button
+										type="submit"
+										disabled={isSubmitting ||
+											trainingDisabled ||
+											unit.organization < data.exerciseConfig.MIN_ORG_TO_START}
+										class="btn btn-outline btn-sm w-full gap-1.5"
+										title={unit.organization < data.exerciseConfig.MIN_ORG_TO_START
+											? `Needs ${data.exerciseConfig.MIN_ORG_TO_START}% organization to exercise`
+											: "Gain experience in exchange for organization, supply and equipment"}
+									>
+										<IconClock class="size-4" />
+										Send to exercise ({data.exerciseConfig.DURATION_HOURS}h)
+									</button>
+								</form>
+								<p class="mt-2 text-[11px] leading-snug text-slate-500">
+									+{data.exerciseConfig.EXPERIENCE_GAIN} XP · −{data.exerciseConfig.ORG_COST} org · −{data
+										.exerciseConfig.SUPPLY_COST} supply · equipment replaced
+								</p>
+							</div>
+						{/if}
 					</div>
 				</div>
 			{/each}

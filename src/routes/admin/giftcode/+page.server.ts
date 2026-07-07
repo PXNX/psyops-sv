@@ -34,6 +34,7 @@ export const actions: Actions = {
 		const code = formData.get("code")?.toString()?.trim().toUpperCase();
 		const description = formData.get("description")?.toString()?.trim();
 		const currencyAmount = parseInt(formData.get("currencyAmount")?.toString() || "0");
+		const premiumDays = parseInt(formData.get("premiumDays")?.toString() || "0");
 		const maxRedemptions = formData.get("maxRedemptions")?.toString();
 		const expiresAt = formData.get("expiresAt")?.toString();
 
@@ -61,6 +62,7 @@ export const actions: Actions = {
 						code,
 						description: description || null,
 						currencyAmount: currencyAmount || 0,
+						premiumDays: premiumDays > 0 ? premiumDays : 0,
 						maxRedemptions: maxRedemptions ? parseInt(maxRedemptions) : null,
 						expiresAt: expiresAt && expiresAt.trim() !== "" ? new Date(expiresAt) : null,
 						createdBy: account.id,
