@@ -128,8 +128,11 @@ Units are trained by individual players and belong to them.
 | `organization`        | int           | 0–100                                          |
 | `health`              | int           | 0–100 (= strength)                             |
 | `supplyLevel`         | int           | 0–100                                          |
+| `experience`          | int           | 0–100 (HoI4-style level, see below)            |
 | `isTraining`          | bool          | Cannot fight while training                    |
 | `trainingCompletesAt` | timestamp     |                                                |
+| `isExercising`        | bool          | Cannot fight or train while exercising         |
+| `exerciseCompletesAt` | timestamp     |                                                |
 
 ### Unit Types
 
@@ -148,6 +151,32 @@ Each type also requires **resources** (iron, steel, gunpowder) and **products** 
 ### Unit Name Generation
 
 Auto-names use ordinal pattern: `1st Infantry Battalion`, `2nd Armored Battalion`, etc. If a number is already taken, it increments.
+
+### Experience & Exercises
+
+Units accumulate combat **experience** (0–100), inspired by HoI4 veterancy. Experience maps to a level that grants a combat effectiveness bonus:
+
+| Level   | Experience | Combat Bonus |
+| ------- | ---------- | ------------ |
+| Recruit | 0–19       | +0%          |
+| Trained | 20–39      | +5%          |
+| Regular | 40–59      | +10%         |
+| Veteran | 60–79      | +15%         |
+| Elite   | 80–100     | +20%         |
+
+**Gaining experience — Exercises.** A player can send an active (non-training, non-deployed) unit on an **exercise** from the `/training` page:
+
+- The unit needs at least `MIN_ORG_TO_START` (30%) organization to begin.
+- Starting an exercise charges an **equipment replacement cost** (a fraction — `EQUIPMENT_COST_FACTOR`, 15% — of the unit's build cost in currency + products) from the owner's inventory, representing gear worn out during drills.
+- The exercise runs for `DURATION_HOURS` (8h). While exercising the unit cannot join battles or train.
+- On completion the unit gains `EXPERIENCE_GAIN` (10) experience, and loses `ORG_COST` (25) organization and `SUPPLY_COST` (20) supply.
+- Exercising alone cannot raise experience above `MAX_EXPERIENCE` (50, i.e. "Regular"). Reaching **Veteran**/**Elite** requires real combat.
+- An exercise in progress can be cancelled, forfeiting the experience (equipment already spent is not refunded).
+
+**Losing experience — Casualties.** When a unit takes casualties in a real battle, veterans are lost and replaced by green reinforcements, diluting experience. Each round, experience is reduced proportionally to the fraction of the unit destroyed:
+`loss = floor(experience × (strengthLost / 100) × COMBAT_EXPERIENCE_LOSS_FACTOR)` (factor 0.8).
+
+See `src/lib/config/game/exercise.config.ts` for constants and pure helpers.
 
 ---
 
@@ -171,12 +200,13 @@ Units are selected for engagement by **earliest join time** (FIFO).
 
 ### Damage Resolution (per round)
 
-1. **Attackers** deal damage = sum of `baseAttack` of engaged units.
-2. **Defenders** deal damage = sum of `baseDefense` of engaged units.
+1. **Attackers** deal damage = sum of `baseAttack` of engaged units, each scaled by the unit's experience combat modifier.
+2. **Defenders** deal damage = sum of `baseDefense` of engaged units, each scaled by the unit's experience combat modifier.
 3. **Fortification** reduces attacker damage by `min(50%, fortLevel × 2%)`.
 4. Damage is applied **sequentially** to engaged units (earliest first).
 5. **Organization** loss = `damageTaken / 2`.
-6. A unit with **strength = 0** is destroyed.
+6. **Experience** loss = casualties dilute veterancy (see Experience & Exercises).
+7. A unit with **strength = 0** is destroyed.
 
 ### Victory Conditions
 
@@ -187,7 +217,7 @@ Units are selected for engagement by **earliest join time** (FIFO).
 
 - **Defenders**: Must have residence **in the battle region** and be a citizen of the defending state.
 - **Attackers**: Must have residence in a region that **borders the battle region** and be a citizen of the attacking state.
-- Units must: not be training, health > 0, organization > 5, be in the correct region, not already in this battle.
+- Units must: not be training, not exercising, health > 0, organization > 5, be in the correct region, not already in this battle.
 
 ---
 
@@ -204,10 +234,11 @@ Units are selected for engagement by **earliest join time** (FIFO).
 
 ## Key Files
 
-| File                                                            | Purpose                                        |
-| --------------------------------------------------------------- | ---------------------------------------------- |
-| `src/lib/config/game/military.config.ts`                        | Unit templates (stats, costs)                  |
-| `src/lib/config/game/combat.config.ts`                          | Combat constants (widths, bonuses, thresholds) |
-| `src/routes/(authenticated)/(dock)/battle/[id]/+page.server.ts` | Battle load + actions (join, combat rounds)    |
-| `src/routes/(authenticated)/(dock)/war/[id]/+page.server.ts`    | War detail loader                              |
-| `src/routes/(authenticated)/(dock)/training/+page.server.ts`    | Unit training (train, complete, disband)       |
+| File                                                            | Purpose                                                        |
+| --------------------------------------------------------------- | -------------------------------------------------------------- |
+| `src/lib/config/game/military.config.ts`                        | Unit templates (stats, costs)                                  |
+| `src/lib/config/game/combat.config.ts`                          | Combat constants (widths, bonuses, thresholds)                 |
+| `src/lib/config/game/exercise.config.ts`                        | Exercise & experience constants + pure helpers                 |
+| `src/routes/(authenticated)/(dock)/battle/[id]/+page.server.ts` | Battle load + actions (join, combat rounds)                    |
+| `src/routes/(authenticated)/(dock)/war/[id]/+page.server.ts`    | War detail loader                                              |
+| `src/routes/(authenticated)/(dock)/training/+page.server.ts`    | Unit training + exercises (train, complete, disband, exercise) |

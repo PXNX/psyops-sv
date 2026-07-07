@@ -10,6 +10,7 @@ import {
 } from "$lib/server/schema";
 import { fail } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
+import { grantPremium } from "$lib/server/service/premium";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -20,6 +21,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.select({
 			redemptionId: giftCodeRedemptions.id,
 			currencyReceived: giftCodeRedemptions.currencyReceived,
+			premiumDaysReceived: giftCodeRedemptions.premiumDaysReceived,
 			redeemedAt: giftCodeRedemptions.redeemedAt,
 			code: giftCodes.code,
 			description: giftCodes.description
@@ -47,6 +49,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				code: redemption.code,
 				description: redemption.description,
 				currencyReceived: redemption.currencyReceived,
+				premiumDaysReceived: redemption.premiumDaysReceived,
 				redeemedAt: redemption.redeemedAt,
 				resources
 			};
@@ -111,8 +114,14 @@ export const actions: Actions = {
 				await tx.insert(giftCodeRedemptions).values({
 					giftCodeId: giftCode.id,
 					userId: account.id,
-					currencyReceived: giftCode.currencyAmount
+					currencyReceived: giftCode.currencyAmount,
+					premiumDaysReceived: giftCode.premiumDays
 				});
+
+				// Grant premium membership if applicable
+				if (giftCode.premiumDays > 0) {
+					await grantPremium(account.id, giftCode.premiumDays, tx);
+				}
 
 				// Add currency to wallet if applicable
 				if (giftCode.currencyAmount > 0) {
@@ -217,6 +226,7 @@ export const actions: Actions = {
 				success: true,
 				rewards: {
 					currency: giftCode.currencyAmount,
+					premiumDays: giftCode.premiumDays,
 					resources: giftCode.resources.map((r) => ({
 						type: r.resourceType,
 						quantity: r.quantity

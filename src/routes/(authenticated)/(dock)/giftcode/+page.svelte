@@ -92,7 +92,7 @@
 					<FluentCheckmark20Filled class="size-5 text-green-300 flex-shrink-0" />
 					<p class="text-green-300 font-medium">Gift code redeemed successfully!</p>
 				</div>
-				{#if form.rewards && (form.rewards.currency > 0 || form.rewards.resources.length > 0)}
+				{#if form.rewards && (form.rewards.currency > 0 || form.rewards.premiumDays > 0 || form.rewards.resources.length > 0)}
 					<div class="space-y-2">
 						<h4 class="text-xs font-medium text-slate-400 uppercase tracking-wide">Rewards Received</h4>
 						<div class="bg-slate-900/30 rounded-lg p-2.5 space-y-1.5 border border-slate-700/30">
@@ -105,6 +105,18 @@
 									<span class="font-mono text-xs text-emerald-400">
 										+{formatNumber(form.rewards.currency)}
 										<span class="text-emerald-400 ml-1">✓</span>
+									</span>
+								</div>
+							{/if}
+							{#if form.rewards.premiumDays > 0}
+								<div class="flex justify-between text-xs items-center">
+									<span class="text-slate-400 flex items-center gap-1.5">
+										<span class="text-amber-400">⭐</span>
+										<span>premium</span>
+									</span>
+									<span class="font-mono text-xs text-amber-400">
+										+{formatNumber(form.rewards.premiumDays)} days
+										<span class="text-amber-400 ml-1">✓</span>
 									</span>
 								</div>
 							{/if}
@@ -210,6 +222,19 @@
 									</div>
 								{/if}
 
+								{#if redemption.premiumDaysReceived > 0}
+									<div class="flex justify-between text-xs items-center">
+										<span class="text-slate-400 flex items-center gap-1.5">
+											<span class="text-amber-400">⭐</span>
+											<span>premium</span>
+										</span>
+										<span class="font-mono text-xs text-amber-400">
+											+{formatNumber(redemption.premiumDaysReceived)} days
+											<span class="text-amber-400 ml-1">✓</span>
+										</span>
+									</div>
+								{/if}
+
 								{#each redemption.resources as resource}
 									{@const IconComponent = resourceIconComponents[resource.type] || FluentEmojiPackage}
 									<div class="flex justify-between text-xs items-center">
@@ -257,6 +282,12 @@
 							{#if code.currencyAmount > 0}
 								<span class="badge badge-sm bg-yellow-600/10 text-yellow-300 border-yellow-500/20">
 									💰 {formatNumber(code.currencyAmount)}
+								</span>
+							{/if}
+
+							{#if code.premiumDays > 0}
+								<span class="badge badge-sm bg-amber-600/10 text-amber-300 border-amber-500/20">
+									⭐ {formatNumber(code.premiumDays)}d premium
 								</span>
 							{/if}
 

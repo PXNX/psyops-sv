@@ -18,6 +18,7 @@
 		code: "",
 		description: "",
 		currencyAmount: 0,
+		premiumDays: 0,
 		maxRedemptions: "",
 		expiresAt: "",
 		resources: [] as Array<{ type: string; quantity: number }>
@@ -70,6 +71,7 @@
 			code: "",
 			description: "",
 			currencyAmount: 0,
+			premiumDays: 0,
 			maxRedemptions: "",
 			expiresAt: "",
 			resources: []
@@ -80,7 +82,7 @@
 	function formatDate(date: Date | string | null) {
 		if (!date) return "Never";
 		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
 
@@ -227,13 +229,18 @@
 											💰 {formatNumber(code.currencyAmount)}
 										</span>
 									{/if}
+									{#if code.premiumDays > 0}
+										<span class="badge badge-sm bg-amber-600/10 text-amber-300 border-amber-500/20">
+											⭐ {formatNumber(code.premiumDays)}d premium
+										</span>
+									{/if}
 									{#each code.resources as resource}
 										<span class="badge badge-sm bg-blue-600/10 text-blue-300 border-blue-500/20">
 											{resourceIcons[resource.resourceType] || "📦"}
 											{formatNumber(resource.quantity)}
 										</span>
 									{/each}
-									{#if code.currencyAmount === 0 && code.resources.length === 0}
+									{#if code.currencyAmount === 0 && code.premiumDays === 0 && code.resources.length === 0}
 										<span class="text-gray-500 text-xs">No rewards</span>
 									{/if}
 								</div>
@@ -372,8 +379,7 @@
 						placeholder="What is this code for?"
 						rows="2"
 						disabled={submitting}
-						class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500"
-					></textarea>
+						class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500"></textarea>
 				</div>
 
 				<!-- Currency Amount -->
@@ -389,6 +395,22 @@
 						disabled={submitting}
 						class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
 					/>
+				</div>
+
+				<!-- Premium Days -->
+				<div class="space-y-2">
+					<label for="premiumDays" class="block text-sm font-medium text-gray-300"> ⭐ Premium Reward (days) </label>
+					<input
+						type="number"
+						id="premiumDays"
+						name="premiumDays"
+						bind:value={newCode.premiumDays}
+						min="0"
+						step="1"
+						disabled={submitting}
+						class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
+					/>
+					<p class="text-xs text-gray-400">Number of premium days granted on redemption (0 = none)</p>
 				</div>
 
 				<!-- Resources -->
