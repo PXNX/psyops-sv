@@ -17,6 +17,14 @@ import {
 import { eq, and, lte } from "drizzle-orm";
 import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 
+// Give the serverless function enough time to process every state's election in
+// a single run. Without this, Vercel terminates the function at the default
+// timeout before it can return the success response, and the external scheduler
+// (cron-job.org) reports a timeout instead of receiving `{ success: true }`.
+export const config = {
+	maxDuration: 60
+};
+
 export const GET: RequestHandler = async ({ request }) => {
 	try {
 		const now = new Date();
@@ -38,13 +46,17 @@ export const GET: RequestHandler = async ({ request }) => {
 			activated++;
 			console.log(`✅ Activated election ${election.id} for state ${election.stateId}`);
 
-			notifyStateCitizens(election.stateId, {
-				title: "🗳️ Election Started!",
-				body: "A parliamentary election has begun in your state. Cast your vote!",
-				icon: "/favicon.png",
-				badge: "/badge.png",
-				data: { url: `/state/${election.stateId}`, tag: `election-${election.id}` }
-			}, "notifyElections").catch((err) => console.error("Election notification error:", err));
+			notifyStateCitizens(
+				election.stateId,
+				{
+					title: "🗳️ Election Started!",
+					body: "A parliamentary election has begun in your state. Cast your vote!",
+					icon: "/favicon.png",
+					badge: "/badge.png",
+					data: { url: `/state/${election.stateId}`, tag: `election-${election.id}` }
+				},
+				"notifyElections"
+			).catch((err) => console.error("Election notification error:", err));
 		}
 
 		// 2. Process finished elections
@@ -150,7 +162,7 @@ async function processElectionResults(election: any) {
 			if (b.memberCount !== a.memberCount) {
 				return b.memberCount - a.memberCount;
 			}
-			return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+			return new Date(a.foundedAt).getTime() - new Date(b.foundedAt).getTime();
 		});
 
 		const seatsPerParty = Math.floor(election.totalSeats / parties.length);
@@ -175,17 +187,28 @@ async function processElectionResults(election: any) {
 				percentage: 0,
 				seats: seats
 			});
+		}
 
-			await db.insert(electionResults).values({
-				electionId: election.id,
-				partyId: party.id,
-				votes: 0,
-				seatsWon: seats,
-				votePercentage: 0
-			});
+		if (partyResults.length > 0) {
+			await db.insert(electionResults).values(
+				partyResults.map((result) => ({
+					electionId: election.id,
+					partyId: result.partyId,
+					votes: 0,
+					seatsWon: result.seats,
+					votePercentage: 0
+				}))
+			);
 		}
 
 		await db.delete(parliamentMembers).where(eq(parliamentMembers.stateId, election.stateId));
+
+		const newMembers: Array<{
+			userId: string;
+			stateId: number;
+			partyAffiliation: string;
+			term: number;
+		}> = [];
 
 		for (const result of partyResults) {
 			if (result.seats > 0) {
@@ -204,7 +227,7 @@ async function processElectionResults(election: any) {
 				const selectedMembers = sortedMembers.slice(0, result.seats);
 
 				for (const member of selectedMembers) {
-					await db.insert(parliamentMembers).values({
+					newMembers.push({
 						userId: member.userId,
 						stateId: election.stateId,
 						partyAffiliation: result.partyName,
@@ -222,6 +245,10 @@ async function processElectionResults(election: any) {
 					);
 				}
 			}
+		}
+
+		if (newMembers.length > 0) {
+			await db.insert(parliamentMembers).values(newMembers);
 		}
 
 		const winningParty = sortedParties[0];
@@ -309,17 +336,26 @@ async function processElectionResults(election: any) {
 		});
 	}
 
-	for (const result of partyResults) {
-		await db.insert(electionResults).values({
-			electionId: election.id,
-			partyId: result.partyId,
-			votes: result.votes,
-			seatsWon: result.seats,
-			votePercentage: Math.round(result.percentage)
-		});
+	if (partyResults.length > 0) {
+		await db.insert(electionResults).values(
+			partyResults.map((result) => ({
+				electionId: election.id,
+				partyId: result.partyId,
+				votes: result.votes,
+				seatsWon: result.seats,
+				votePercentage: Math.round(result.percentage)
+			}))
+		);
 	}
 
 	await db.delete(parliamentMembers).where(eq(parliamentMembers.stateId, election.stateId));
+
+	const newMembers: Array<{
+		userId: string;
+		stateId: number;
+		partyAffiliation: string;
+		term: number;
+	}> = [];
 
 	for (const result of partyResults) {
 		if (result.seats > 0) {
@@ -337,7 +373,7 @@ async function processElectionResults(election: any) {
 			const selectedMembers = sortedMembers.slice(0, result.seats);
 
 			for (const member of selectedMembers) {
-				await db.insert(parliamentMembers).values({
+				newMembers.push({
 					userId: member.userId,
 					stateId: election.stateId,
 					partyAffiliation: result.partyName,
@@ -351,6 +387,10 @@ async function processElectionResults(election: any) {
 				console.warn(`⚠️  Party ${result.partyName} won ${result.seats} seats but only has ${members.length} members`);
 			}
 		}
+	}
+
+	if (newMembers.length > 0) {
+		await db.insert(parliamentMembers).values(newMembers);
 	}
 
 	const winningParty = partyResults.reduce((prev, current) => {
@@ -394,28 +434,30 @@ async function processElectionResults(election: any) {
 	);
 
 	const winnerName = partyResults.reduce((prev, current) => (current.votes > prev.votes ? current : prev)).partyName;
-	notifyStateCitizens(election.stateId, {
-		title: "🏛️ Election Results",
-		body: `The election is over! ${winnerName} won the most votes. Check the results.`,
-		icon: "/favicon.png",
-		badge: "/badge.png",
-		data: { url: `/state/${election.stateId}`, tag: `election-result-${election.id}` }
-	}, "notifyElections").catch((err) => console.error("Election result notification error:", err));
-	}
+	notifyStateCitizens(
+		election.stateId,
+		{
+			title: "🏛️ Election Results",
+			body: `The election is over! ${winnerName} won the most votes. Check the results.`,
+			icon: "/favicon.png",
+			badge: "/badge.png",
+			data: { url: `/state/${election.stateId}`, tag: `election-result-${election.id}` }
+		},
+		"notifyElections"
+	).catch((err) => console.error("Election result notification error:", err));
+}
 
-	async function notifyStateCitizens(
+async function notifyStateCitizens(
 	stateId: number,
 	payload: { title: string; body: string; icon?: string; badge?: string; data?: Record<string, any> },
 	notificationType: "notifyElections" | "notifyWarDeclarations" | "notifyBattleResults"
-	) {
+) {
 	const citizens = await db
 		.select({ userId: residences.userId })
 		.from(residences)
 		.innerJoin(regions, eq(residences.homeRegionId, regions.id))
 		.where(eq(regions.stateId, stateId));
 
-	const promises = citizens.map((c) =>
-		sendNotificationIfEnabled(c.userId, notificationType, payload)
-	);
+	const promises = citizens.map((c) => sendNotificationIfEnabled(c.userId, notificationType, payload));
 	await Promise.allSettled(promises);
-	}
+}

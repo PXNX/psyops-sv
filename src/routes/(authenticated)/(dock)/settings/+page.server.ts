@@ -113,7 +113,16 @@ export const actions: Actions = {
 		}
 	},
 	deleteAccount: async ({ request, locals, cookies }) => {
-		const account = locals.account!;
+		const account = locals.account;
+
+		// The session may already be gone (e.g. the account was deleted on a
+		// previous attempt). Treat that as success and send the user home instead
+		// of dereferencing a null account.
+		if (!account) {
+			cookies.delete("session", { path: "/" });
+			return redirect(302, "/");
+		}
+
 		const formData = await request.formData();
 		const confirmation = formData.get("confirmation");
 
@@ -123,13 +132,15 @@ export const actions: Actions = {
 
 		try {
 			await db.delete(accounts).where(eq(accounts.id, account.id));
-
 			cookies.delete("session", { path: "/" });
-
-			return redirect(302, "/");
 		} catch (err) {
 			console.error("Delete account error:", err);
 			return fail(500, { deleteError: "Failed to delete account. Please try again." });
 		}
+
+		// redirect() signals via a thrown control-flow object, so it must live
+		// outside the try/catch above — otherwise the successful redirect is caught
+		// and logged as an error instead of redirecting the user.
+		return redirect(302, "/");
 	}
 };
