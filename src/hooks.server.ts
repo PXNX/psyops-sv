@@ -72,17 +72,21 @@ function createRealAuthHandle(): Handle {
 			return resolve(event);
 		}
 
-		const result = await validateSessionToken(sessionToken);
+		const { account, session } = await validateSessionToken(sessionToken);
 
-		if (!result) {
+		// validateSessionToken always resolves to an object; when the token is
+		// invalid or expired both fields are null. Clear the stale cookie so the
+		// browser stops sending it (otherwise authenticated routes keep receiving
+		// a null account and crash).
+		if (!account || !session) {
 			event.locals.account = null;
 			event.locals.session = null;
 			event.cookies.delete("session", { path: "/" });
 			return resolve(event);
 		}
 
-		event.locals.account = result.account;
-		event.locals.session = result.session;
+		event.locals.account = account;
+		event.locals.session = session;
 
 		return resolve(event);
 	};
@@ -98,10 +102,30 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 	event.locals.errorStackTrace = err?.stack || undefined;
 	event.locals.requestId = requestId;
 
-	// Log error with request ID for debugging
-	console.error(`[ERROR ${requestId}] ${error?.toString() || "Unknown error"}`);
+	// Include the acting user and session so errors can be traced back to a
+	// specific account (e.g. legacy accounts whose id is a provider identifier).
+	const account = event.locals.account;
+	const session = event.locals.session;
+	const context = {
+		requestId,
+		method: event.request.method,
+		route: event.route.id ?? event.url.pathname,
+		accountId: account?.id ?? null,
+		accountEmail: account?.email ?? null,
+		accountRole: account?.role ?? null,
+		sessionId: session?.id ?? null,
+		sessionExpiresAt: session?.expiresAt ?? null
+	};
+
+	// Log error with request ID and user/session context for debugging
+	console.error(`[ERROR ${requestId}] ${error?.toString() || "Unknown error"}`, context);
 	if (err?.stack) {
 		console.error(`[STACK ${requestId}]`, err.stack);
+	}
+	// Drizzle and other libraries wrap the original failure in `cause`. Surface
+	// it so query errors reveal the underlying database message.
+	if (err?.cause) {
+		console.error(`[CAUSE ${requestId}]`, err.cause);
 	}
 
 	return {
