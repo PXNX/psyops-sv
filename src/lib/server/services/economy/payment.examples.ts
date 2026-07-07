@@ -45,7 +45,6 @@ export async function marketPurchaseWithTaxExample() {
         amount: taxCalculation.netAmount, // 8,000 (after tax)
         transactionType: 'market_purchase',
         description: `Purchased ${quantity}x iron ore`,
-        relatedUserId: sellerId,
         relatedEntityType: 'listing',
         relatedEntityId: listingId,
         metadata: {
@@ -103,7 +102,6 @@ export async function marketPurchaseNoTaxExample() {
         amount: totalPrice,
         transactionType: 'market_purchase',
         description: `Purchased ${quantity}x iron ore`,
-        relatedUserId: sellerId,
         relatedEntityType: 'listing',
         relatedEntityId: listingId,
         metadata: {

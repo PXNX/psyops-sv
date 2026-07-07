@@ -92,21 +92,18 @@ const authHandle: Handle = isMockMode ? createMockAuthHandle() : createRealAuthH
 
 export const handleError: HandleServerError = async ({ error, event }) => {
 	const requestId = crypto.randomUUID();
+	const err = error instanceof Error ? error : undefined;
 
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	//@ts-ignore
 	event.locals.error = error?.toString() || undefined;
-	// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-	//@ts-ignore
-	event.locals.errorStackTrace = error?.stack || undefined;
+	event.locals.errorStackTrace = err?.stack || undefined;
 	event.locals.requestId = requestId;
-	
+
 	// Log error with request ID for debugging
-	console.error(`[ERROR ${requestId}] ${error?.toString() || 'Unknown error'}`);
-	if (error?.stack) {
-		console.error(`[STACK ${requestId}]`, error.stack);
+	console.error(`[ERROR ${requestId}] ${error?.toString() || "Unknown error"}`);
+	if (err?.stack) {
+		console.error(`[STACK ${requestId}]`, err.stack);
 	}
-	
+
 	return {
 		message: "An unexpected error occurred.",
 		requestId

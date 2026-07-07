@@ -3,7 +3,7 @@ import { db } from "$lib/server/db";
 import { stateTaxes, taxRevenue, stateTreasury, governmentBudgetTransactions } from "$lib/server/schema";
 import { eq, and, sql } from "drizzle-orm";
 
-export type DbClient = typeof db;
+export type DbClient = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export interface TaxCalculation {
 	grossAmount: number;
@@ -34,12 +34,22 @@ const TAX_TYPE_LABELS: Record<string, string> = {
  * @returns Tax calculation breakdown
  */
 export async function calculateAndCollectTax(
-	stateId: number,
+	stateId: number | null,
 	taxType: "mining" | "production" | "market_transaction" | "income",
 	grossAmount: number,
 	userId: string,
 	dbClient: DbClient = db
 ): Promise<TaxCalculation> {
+	// No state (e.g. independent region) means no taxes are collected
+	if (stateId === null) {
+		return {
+			grossAmount,
+			taxAmount: 0,
+			netAmount: grossAmount,
+			applicableTaxes: []
+		};
+	}
+
 	// Get active taxes for this state and type
 	const activeTaxes = await dbClient
 		.select()

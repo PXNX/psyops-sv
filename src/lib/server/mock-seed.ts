@@ -197,11 +197,11 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 
 	// ============ Residences ============
 	await db.insert(residences).values([
-		{ userId: "user-1", regionId: region1!.id },
-		{ userId: "user-2", regionId: region1!.id },
-		{ userId: "user-3", regionId: region3!.id },
-		{ userId: "user-4", regionId: region5!.id },
-		{ userId: "user-5", regionId: region3!.id }
+		{ userId: "user-1", regionId: region1!.id, homeRegionId: region1!.id },
+		{ userId: "user-2", regionId: region1!.id, homeRegionId: region1!.id },
+		{ userId: "user-3", regionId: region3!.id, homeRegionId: region3!.id },
+		{ userId: "user-4", regionId: region5!.id, homeRegionId: region5!.id },
+		{ userId: "user-5", regionId: region3!.id, homeRegionId: region3!.id }
 	]);
 
 	// ============ Wallets ============

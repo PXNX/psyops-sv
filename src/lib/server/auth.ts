@@ -15,8 +15,8 @@ export const google = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_
 // Telegram OAuth2 configuration
 export const TELEGRAM_CLIENT_ID = TELEGRAM_BOT_TOKEN_VAL;
 export const TELEGRAM_BOT_TOKEN = TELEGRAM_BOT_TOKEN_VAL;
-export const TELEGRAM_REDIRECT_URI = `${env.PUBLIC_APP_URL || 'http://localhost:5173'}/auth/callback/telegram`;
-export const TELEGRAM_API_URL = 'https://api.telegram.org';
+export const TELEGRAM_REDIRECT_URI = `${env.PUBLIC_APP_URL || "http://localhost:5173"}/auth/callback/telegram`;
+export const TELEGRAM_API_URL = "https://api.telegram.org";
 
 export interface TelegramUser {
 	id: number;
@@ -36,6 +36,11 @@ export async function validateSessionToken(token: string) {
 export function generateSessionToken(): string {
 	const ctx = getContext();
 	return ctx.services.auth.generateSessionToken();
+}
+
+export function generateAccountId(): string {
+	const ctx = getContext();
+	return ctx.services.auth.generateAccountId();
 }
 
 export async function createSession(token: string, accountId: string) {

@@ -1,5 +1,11 @@
 // src/routes/auth/callback/telegram/+server.ts
-import { createSession, generateSessionToken, TELEGRAM_BOT_TOKEN, type TelegramUser } from "$lib/server/auth";
+import {
+	createSession,
+	generateAccountId,
+	generateSessionToken,
+	TELEGRAM_BOT_TOKEN,
+	type TelegramUser
+} from "$lib/server/auth";
 import { db } from "$lib/server/db";
 import { accounts, userProfiles } from "$lib/server/schema";
 import { eq } from "drizzle-orm";
@@ -43,13 +49,13 @@ async function handleTelegramAuth(telegramUser: TelegramUser, cookies: any) {
 		account = existingAccount;
 		console.log("✅ Account already exists with Telegram ID");
 	} else {
-		// Create a new account with Telegram as the identifier
-		// Use Telegram ID as the account ID
-		const telegramAccountId = `telegram_${telegramUser.id}`;
+		// Legacy accounts used `telegram_<id>` as their id. Look those up so
+		// existing users keep working, but brand-new accounts get a short id.
+		const legacyTelegramAccountId = `telegram_${telegramUser.id}`;
 
-		// Check if account with this ID already exists
+		// Check if a legacy account with this ID already exists
 		const existingAccount = await db.query.accounts.findFirst({
-			where: eq(accounts.id, telegramAccountId)
+			where: eq(accounts.id, legacyTelegramAccountId)
 		});
 
 		if (existingAccount) {
@@ -58,11 +64,11 @@ async function handleTelegramAuth(telegramUser: TelegramUser, cookies: any) {
 		} else {
 			console.log("✨ Creating new account with Telegram");
 
-			// Create new account
+			// Create new account with a short, unique id
 			const newAccount = await db
 				.insert(accounts)
 				.values({
-					id: telegramAccountId,
+					id: generateAccountId(),
 					email: `${telegramUser.username || telegramUser.id}@telegram.local`,
 					role: "user"
 				})
@@ -126,15 +132,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		const telegramData: Record<string, string> = {};
 
 		// Extract all Telegram parameters
-		const telegramParams = [
-			"id",
-			"first_name",
-			"last_name",
-			"username",
-			"photo_url",
-			"auth_date",
-			"hash"
-		];
+		const telegramParams = ["id", "first_name", "last_name", "username", "photo_url", "auth_date", "hash"];
 
 		for (const param of telegramParams) {
 			const value = params.get(param);
