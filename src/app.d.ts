@@ -12,7 +12,11 @@ declare global {
 
 			account: Account | null;
 			session: Session | null;
-		}
+
+			error?: string;
+			errorStackTrace?: string;
+			requestId?: string;
+			}
 		interface Error {
 			code?: string;
 			errorId?: string;

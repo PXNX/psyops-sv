@@ -59,11 +59,13 @@ export class WalletService {
     }
 
     async createWallet(userId: string) {
-        const wallet = {
-            userId,
-            balance: ECONOMY_CONFIG.INITIAL_USER_WALLET
-        };
-        await this.db.insert(userWallets).values(wallet);
+        const [wallet] = await this.db
+            .insert(userWallets)
+            .values({
+                userId,
+                balance: ECONOMY_CONFIG.INITIAL_USER_WALLET
+            })
+            .returning();
         return wallet;
     }
 

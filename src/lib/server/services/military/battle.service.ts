@@ -69,16 +69,16 @@ export class BattleService {
     }
 
     async getBattleParticipants(battleId: number, side?: 'attacker' | 'defender') {
-        let query = this.db
-            .select()
-            .from(battleParticipants)
-            .where(eq(battleParticipants.battleId, battleId));
+        const conditions = [eq(battleParticipants.battleId, battleId)];
 
         if (side) {
-            query = query.where(eq(battleParticipants.side, side)) as any;
+            conditions.push(eq(battleParticipants.side, side));
         }
 
-        return await query;
+        return await this.db
+            .select()
+            .from(battleParticipants)
+            .where(and(...conditions));
     }
 
     async addUnitToBattle(battleId: number, unitId: number, side: 'attacker' | 'defender') {

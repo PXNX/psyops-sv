@@ -1,6 +1,15 @@
 // src/lib/server/service/factoryWork.ts
 import { db } from "$lib/server/db";
-import { companies, companyBudgets, factories, factoryWorkers, regions, resourceInventory, userWallets, transactionHistory } from "$lib/server/schema";
+import {
+	companies,
+	companyBudgets,
+	factories,
+	factoryWorkers,
+	regions,
+	resourceInventory,
+	userWallets,
+	transactionHistory
+} from "$lib/server/schema";
 import { calculateAndCollectTax } from "$lib/server/taxes";
 import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 import { and, eq, sql } from "drizzle-orm";
@@ -252,15 +261,13 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 		};
 	}
 
-	let incomeTaxResult: Awaited<ReturnType<typeof calculateAndCollectTax>>;
-	let miningTaxResult: Awaited<ReturnType<typeof calculateAndCollectTax>> | null = null;
-	let resourcesProduced = 0;
-
-	await db.transaction(async (tx) => {
+	const { incomeTaxResult, miningTaxResult, resourcesProduced } = await db.transaction(async (tx) => {
 		// Calculate income tax (inside transaction for atomicity)
-		incomeTaxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId, tx);
+		const incomeTaxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId, tx);
 
 		// Calculate mining tax if applicable
+		let miningTaxResult: Awaited<ReturnType<typeof calculateAndCollectTax>> | null = null;
+		let resourcesProduced = 0;
 		let netResourceQuantity = 0;
 		if (factory.factoryType === "mine" && factory.resourceOutput) {
 			const estimatedResourceValue = factory.productionRate * 100;
@@ -330,7 +337,10 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			.where(eq(factoryWorkers.id, job.id));
 
 		// Record transaction for worker
-		const [currentWallet] = await tx.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, userId));
+		const [currentWallet] = await tx
+			.select({ balance: userWallets.balance })
+			.from(userWallets)
+			.where(eq(userWallets.userId, userId));
 		await tx.insert(transactionHistory).values({
 			userId,
 			transactionType: "factory_wage",
@@ -340,16 +350,18 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			relatedEntityType: "factory",
 			relatedEntityId: factoryId
 			});
+
+			return { incomeTaxResult, miningTaxResult, resourcesProduced };
 			});
 
-	const totalTaxPaid = incomeTaxResult!.taxAmount + (miningTaxResult?.taxAmount || 0);
-	const taxBreakdown = miningTaxResult
-		? `${incomeTaxResult!.taxAmount.toLocaleString()} income tax + ${miningTaxResult.taxAmount.toLocaleString()} mining tax`
-		: `${incomeTaxResult!.taxAmount.toLocaleString()} income tax`;
+			const totalTaxPaid = incomeTaxResult.taxAmount + (miningTaxResult?.taxAmount || 0);
+			const taxBreakdown = miningTaxResult
+			? `${incomeTaxResult.taxAmount.toLocaleString()} income tax + ${miningTaxResult.taxAmount.toLocaleString()} mining tax`
+			: `${incomeTaxResult.taxAmount.toLocaleString()} income tax`;
 
-	await sendNotificationIfEnabled(userId, "notifyShiftComplete", {
-		title: "🏭 Shift Complete!",
-		body: `You earned ${incomeTaxResult!.netAmount.toLocaleString()} from your shift at ${factory.name}.`,
+			await sendNotificationIfEnabled(userId, "notifyShiftComplete", {
+			title: "🏭 Shift Complete!",
+			body: `You earned ${incomeTaxResult.netAmount.toLocaleString()} from your shift at ${factory.name}.`,
 		icon: "/favicon.png",
 		badge: "/badge.png",
 		data: {

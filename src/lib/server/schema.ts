@@ -1411,7 +1411,13 @@ export const userMedalsRelations = relations(userMedals, ({ one }) => ({
 // ============= CHAT & MESSAGING =============
 export const messageTypeEnum = pgEnum("message_type", ["global", "state", "party", "direct"]);
 
-export const inboxMessageTypeEnum = pgEnum("inbox_message_type", ["state_broadcast", "party_broadcast", "system"]);
+export const inboxMessageTypeEnum = pgEnum("inbox_message_type", [
+	"state_broadcast",
+	"party_broadcast",
+	"system",
+	"medal_award",
+	"moderation"
+]);
 export const violationReasonEnum = pgEnum("violation_reason", [
 	"insult",
 	"spam",

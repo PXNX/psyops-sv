@@ -1,5 +1,5 @@
 // src/routes/auth/callback/google/+server.ts
-import { createSession, generateSessionToken, google } from "$lib/server/auth";
+import { createSession, generateAccountId, generateSessionToken, google } from "$lib/server/auth";
 import { db } from "$lib/server/db";
 import { accounts, userProfiles } from "$lib/server/schema";
 import { OAuth2RequestError } from "arctic";
@@ -45,7 +45,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		const existingAccount = await db.select().from(accounts).where(eq(accounts.email, googleUser.email)).limit(1);
 
 		let account;
-		let isNewUser = false;
 
 		if (existingAccount.length === 0) {
 			console.log("✨ Creating new account");
@@ -54,7 +53,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			const newAccount = await db
 				.insert(accounts)
 				.values({
-					id: googleUser.sub,
+					id: generateAccountId(),
 					email: googleUser.email,
 					role: "user" // Default permission
 				})
@@ -70,7 +69,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 				bio: null
 			});
 
-			isNewUser = true;
 			// New users always go to welcome, regardless of original redirect
 			redirectTo = "/welcome";
 		} else {

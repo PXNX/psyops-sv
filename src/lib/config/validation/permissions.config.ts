@@ -44,13 +44,17 @@ export function canAutoExecuteProposal(
     userMinistry: string | null,
     isPresident: boolean
 ): boolean {
-    if (isPresident && PERMISSIONS_CONFIG.PRESIDENTIAL_PERMISSIONS.includes(proposalType)) {
+    if (isPresident && (PERMISSIONS_CONFIG.PRESIDENTIAL_PERMISSIONS as readonly string[]).includes(proposalType)) {
         return true;
     }
 
     if (
         userMinistry &&
-        PERMISSIONS_CONFIG.MINISTRY_PERMISSIONS[userMinistry as MinistryType]?.includes(proposalType)
+        (
+            PERMISSIONS_CONFIG.MINISTRY_PERMISSIONS[userMinistry as MinistryType] as
+                | readonly string[]
+                | undefined
+        )?.includes(proposalType)
     ) {
         return true;
     }

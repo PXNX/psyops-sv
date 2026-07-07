@@ -170,7 +170,7 @@ export class FileService {
     /**
      * Helper to conditionally include logo field in update object
      */
-    includeLogoUpdate(logoFileId: number | undefined): { logo: number } | {} {
+    includeLogoUpdate(logoFileId: number | null | undefined): { logo: number } | {} {
         return logoFileId ? { logo: logoFileId } : {};
     }
 

@@ -53,6 +53,6 @@ export function getDurationText(start: Date | string, end?: Date | string | null
 }
 
 export const getRegionName = (regionId: number): string => {
-	const key = `region_${regionId}`;
-	return m[key]();
+	const messages = m as unknown as Record<string, (() => string) | undefined>;
+	return messages[`region_${regionId}`]?.() ?? `Region ${regionId}`;
 };
