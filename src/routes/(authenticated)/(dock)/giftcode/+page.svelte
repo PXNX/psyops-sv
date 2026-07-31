@@ -5,14 +5,7 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import FluentBox20Filled from "~icons/fluent/box-20-filled";
-	import FluentEmojiPickaxe from "~icons/fluent-emoji/pick";
-	import FluentEmojiGem from "~icons/fluent-emoji/gem-stone";
-	import FluentEmojiGear from "~icons/fluent-emoji/gear";
-	import FluentEmojiCollision from "~icons/fluent-emoji/collision";
-	import FluentEmojiWood from "~icons/fluent-emoji/wood";
-	import FluentEmojiRock from "~icons/fluent-emoji/rock";
-	import FluentEmojiPackage from "~icons/fluent-emoji/package";
+	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 	import { formatDateTime } from "$lib/utils/formatting.js";
 	import { enhance } from "$app/forms";
 
@@ -20,31 +13,6 @@
 
 	let giftCode = $state("");
 	let submitting = $state(false);
-
-	const resourceIcons: Record<string, string> = {
-		iron: "⛏️",
-		copper: "🔶",
-		steel: "🔩",
-		gunpowder: "💥",
-		wood: "🪵",
-		coal: "⚫",
-		rifles: "🔫",
-		ammunition: "🔫",
-		artillery: "💣",
-		vehicles: "🚗",
-		explosives: "💥",
-		currency: "💰"
-	};
-
-	const resourceIconComponents: Record<string, any> = {
-		iron: FluentEmojiPickaxe,
-		copper: FluentEmojiGem,
-		steel: FluentEmojiGear,
-		gunpowder: FluentEmojiCollision,
-		wood: FluentEmojiWood,
-		coal: FluentEmojiRock,
-		currency: FluentMoney20Filled
-	};
 
 	function formatDate(date: Date | string) {
 		return formatDateTime(String(date));
@@ -121,10 +89,13 @@
 								</div>
 							{/if}
 							{#each form.rewards.resources as resource}
-								{@const IconComponent = resourceIconComponents[resource.type] || FluentEmojiPackage}
 								<div class="flex justify-between text-xs items-center">
 									<span class="text-slate-400 flex items-center gap-1.5">
-										<IconComponent class="size-3.5" />
+										{#if resource.type === "currency"}
+											<FluentMoney20Filled class="size-3.5 text-emerald-400" />
+										{:else}
+											<ResourceIcon name={resource.type} class="size-3.5" />
+										{/if}
 										<span class="capitalize">{resource.type}</span>
 									</span>
 									<span class="font-mono text-xs text-emerald-400">
@@ -236,10 +207,13 @@
 								{/if}
 
 								{#each redemption.resources as resource}
-									{@const IconComponent = resourceIconComponents[resource.type] || FluentEmojiPackage}
 									<div class="flex justify-between text-xs items-center">
 										<span class="text-slate-400 flex items-center gap-1.5">
-											<IconComponent class="size-3.5" />
+											{#if resource.type === "currency"}
+												<FluentMoney20Filled class="size-3.5 text-emerald-400" />
+											{:else}
+												<ResourceIcon name={resource.type} class="size-3.5" />
+											{/if}
 											<span class="capitalize">{resource.type}</span>
 										</span>
 										<span class="font-mono text-xs text-emerald-400">
@@ -292,8 +266,8 @@
 							{/if}
 
 							{#each code.resources as resource}
-								<span class="badge badge-sm bg-blue-600/10 text-blue-300 border-blue-500/20">
-									{resourceIcons[resource.type] || "📦"}
+								<span class="badge badge-sm bg-blue-600/10 text-blue-300 border-blue-500/20 gap-1">
+									<ResourceIcon name={resource.type} class="size-3.5" />
 									{formatNumber(resource.quantity)}
 									{resource.type}
 								</span>

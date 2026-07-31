@@ -6,6 +6,7 @@ import {
 	files,
 	residences,
 	articles,
+	upvotes,
 	regions,
 	states,
 	politicalParties,
@@ -98,6 +99,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const [articleCountResult] = await db
 		.select({ count: count() })
 		.from(articles)
+		.where(eq(articles.authorId, params.id));
+
+	// Total upvotes received across all of the user's articles.
+	const [upvoteCountResult] = await db
+		.select({ count: count() })
+		.from(upvotes)
+		.innerJoin(articles, eq(upvotes.articleId, articles.id))
 		.where(eq(articles.authorId, params.id));
 
 	// Check if user is in a party
@@ -284,6 +292,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				}
 			: null,
 		articleCount: articleCountResult?.count || 0,
+		upvoteCount: upvoteCountResult?.count || 0,
 		isOwnProfile: account.id === params.id,
 		// Party citizenship is based on the user's home region. Independent regions
 		// (no state) can only create a party (which forms a state); regions inside a

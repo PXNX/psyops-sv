@@ -502,7 +502,7 @@
 					href="/user/{data.user.id}/articles"
 					icon={FluentDocument20Filled}
 					title="{data.articleCount} {data.articleCount === 1 ? 'Article' : 'Articles'} Published"
-					subtitle="View all publications"
+					subtitle="{data.upvoteCount} total upvote{data.upvoteCount === 1 ? '' : 's'} received • View all publications"
 					hoverColor="purple"
 				/>
 

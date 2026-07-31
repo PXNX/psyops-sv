@@ -1,15 +1,77 @@
 <!-- src/routes/(authenticated)/(dock)/user/[id]/career/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import CircleLogo from "$lib/component/CircleLogo.svelte";
-	import SquareLogo from "$lib/component/SquareLogo.svelte";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
-	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	const { data } = $props();
+
+	type Medal = (typeof data.career.medals)[number];
+	type StatePosition = (typeof data.career.statePositions)[number];
+	type PartyMembership = (typeof data.career.partyMemberships)[number];
+	type NewspaperPosition = (typeof data.career.newspaperPositions)[number];
+
+	type TimelineEntry =
+		| { kind: "medal"; category: "medals"; date: number; medal: Medal }
+		| { kind: "state"; category: "political"; date: number; position: StatePosition }
+		| { kind: "party"; category: "political"; date: number; membership: PartyMembership }
+		| { kind: "newspaper"; category: "other"; date: number; newspaper: NewspaperPosition }
+		| { kind: "joined"; category: "other"; date: number };
+
+	type CareerFilter = "political" | "medals";
+	let activeFilter = $state<CareerFilter | null>(null);
+
+	const toggleFilter = (type: CareerFilter) => {
+		activeFilter = activeFilter === type ? null : type;
+	};
+
+	const hasPoliticalPositions = $derived(
+		data.career.statePositions.length > 0 || data.career.partyMemberships.length > 0
+	);
+
+	// Dated career events (medals + political positions), newest first
+	const datedEntries = $derived.by(() => {
+		const entries: TimelineEntry[] = [];
+		for (const medal of data.career.medals) {
+			entries.push({ kind: "medal", category: "medals", date: new Date(medal.awardedAt).getTime(), medal });
+		}
+		for (const position of data.career.statePositions) {
+			entries.push({
+				kind: "state",
+				category: "political",
+				date: new Date(position.appointedAt).getTime(),
+				position
+			});
+		}
+		for (const membership of data.career.partyMemberships) {
+			entries.push({
+				kind: "party",
+				category: "political",
+				date: new Date(membership.joinedAt).getTime(),
+				membership
+			});
+		}
+		entries.sort((a, b) => b.date - a.date);
+		return entries;
+	});
+
+	// The full timeline, respecting the active filter. Newspaper positions and the
+	// "joined platform" milestone only appear when no filter is active.
+	const timelineEntries = $derived.by(() => {
+		if (activeFilter) {
+			return datedEntries.filter((entry) => entry.category === activeFilter);
+		}
+
+		const entries = [...datedEntries];
+		for (const newspaper of data.career.newspaperPositions) {
+			entries.push({ kind: "newspaper", category: "other", date: 0, newspaper });
+		}
+		entries.push({ kind: "joined", category: "other", date: new Date(data.user.createdAt).getTime() });
+		return entries;
+	});
 
 	const getRankColor = (rank: string) => {
 		switch (rank) {
@@ -71,23 +133,6 @@
 		}
 	};
 
-	const getMedalBorderColor = (medalType: string) => {
-		switch (medalType) {
-			case "honor":
-				return "border-yellow-500/50";
-			case "valor":
-				return "border-blue-500/50";
-			case "excellence":
-				return "border-purple-500/50";
-			case "service":
-				return "border-emerald-500/50";
-			case "leadership":
-				return "border-red-500/50";
-			default:
-				return "border-gray-500/50";
-		}
-	};
-
 	const formatDate = (date: string) => {
 		const d = new Date(date);
 		const pad = (n: number) => String(n).padStart(2, "0");
@@ -144,15 +189,7 @@
 	</div>
 
 	<!-- Stats Cards -->
-	<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-		<div class="bg-purple-600/10 border border-purple-500/20 rounded-xl p-4 text-center">
-			<div class="text-2xl font-bold text-purple-300">{data.career.stats.totalArticles}</div>
-			<div class="text-xs text-gray-400 mt-1">Articles</div>
-		</div>
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4 text-center">
-			<div class="text-2xl font-bold text-blue-300">{data.career.stats.totalUpvotes}</div>
-			<div class="text-xs text-gray-400 mt-1">Upvotes</div>
-		</div>
+	<div class="grid grid-cols-2 gap-3">
 		<div class="bg-emerald-600/10 border border-emerald-500/20 rounded-xl p-4 text-center">
 			<div class="text-2xl font-bold text-emerald-300">{data.career.stats.newspaperCount}</div>
 			<div class="text-xs text-gray-400 mt-1">Newspapers</div>
@@ -162,129 +199,6 @@
 			<div class="text-xs text-gray-400 mt-1">Medals</div>
 		</div>
 	</div>
-
-	<!-- Medals Section -->
-	{#if data.career.medals.length > 0}
-		<section class="space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentTrophy20Filled class="text-lg text-yellow-400" />
-				<h2 class="text-lg font-bold">Medals & Honors</h2>
-			</div>
-
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{#each data.career.medals as medal}
-					<div
-						class="card bg-base-200 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 hover:scale-105 border-2 {getMedalBorderColor(
-							medal.medalType
-						)}"
-						style="transform-style: preserve-3d;"
-					>
-						<div class="card-body p-6">
-							<!-- Medal Header -->
-							<div class="flex items-start gap-4 mb-3">
-								<div
-									class="size-16 rounded-full flex items-center justify-center bg-gradient-to-br {getMedalColor(
-										medal.medalType
-									)} shadow-lg flex-shrink-0"
-								>
-									<span class="text-4xl">{getMedalEmoji(medal.medalType)}</span>
-								</div>
-								<div class="flex-1 min-w-0">
-									<h3 class="font-bold text-lg capitalize text-white">
-										{medal.medalType} Medal
-									</h3>
-									<p class="text-xs text-gray-400 mt-1">
-										Awarded by {medal.awardedBy.name}
-									</p>
-									<div class="badge badge-sm badge-outline mt-2">
-										{medal.stateName}
-									</div>
-								</div>
-							</div>
-
-							<!-- Medal Reason -->
-							<div class="bg-base-300/50 rounded-lg p-3 min-h-[60px]">
-								<p class="text-sm text-gray-300 italic">"{medal.reason}"</p>
-							</div>
-
-							<!-- Medal Date -->
-							<div class="flex items-center justify-between mt-3 pt-3 border-t border-base-300">
-								<div class="flex items-center gap-2 text-xs text-gray-500">
-									<FluentCalendar20Filled class="size-3" />
-									<span>{formatDate(medal.awardedAt)}</span>
-								</div>
-								<div class="text-xs text-gray-500">
-									from {medal.stateName}
-								</div>
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</section>
-	{/if}
-	<section class="space-y-3">
-		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-2">
-				<FluentBriefcase20Filled class="text-lg text-purple-400" />
-				<h2 class="text-lg font-bold">Newspaper Positions</h2>
-			</div>
-		</div>
-
-		{#if data.career.newspaperPositions.length === 0}
-			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-8 text-center">
-				<p class="text-gray-400">No newspaper positions yet</p>
-			</div>
-		{:else}
-			<div class="space-y-3">
-				{#each data.career.newspaperPositions as newspaper}
-					<a
-						href="/newspaper/{newspaper.newspaperId}"
-						class="block bg-slate-800/30 rounded-xl border border-white/5 hover:bg-slate-700/30 hover:border-purple-500/30 transition-all"
-					>
-						<div class="p-4">
-							<div class="flex items-start gap-3">
-								{#if newspaper.newspaperLogo}
-									<div class="size-14 rounded-lg overflow-hidden bg-slate-700/30">
-										<img
-											src={newspaper.newspaperLogo}
-											alt={newspaper.newspaperName}
-											class="w-full h-full object-cover"
-										/>
-									</div>
-								{:else}
-									<div class="size-14 rounded-lg bg-slate-700/30 flex items-center justify-center">
-										<FluentImageOff20Filled class="size-6 text-gray-500" />
-									</div>
-								{/if}
-								<div class="flex-1 min-w-0">
-									<h3
-										class="font-semibold text-base truncate mb-2 text-white group-hover:text-purple-400 transition-colors"
-									>
-										{newspaper.newspaperName}
-									</h3>
-									<div class="flex flex-wrap gap-2">
-										{#each newspaper.positions as position}
-											<div class="badge {getRankColor(position.rank)} badge-sm gap-1">
-												<span>{getRankIcon(position.rank)}</span>
-												<span class="capitalize">{position.rank}</span>
-											</div>
-										{/each}
-									</div>
-									{#if newspaper.newspaperBackground}
-										<p class="text-xs text-gray-400 mt-2 line-clamp-2">
-											{newspaper.newspaperBackground}
-										</p>
-									{/if}
-								</div>
-								<FluentChevronRight20Filled class="size-5 text-gray-500 flex-shrink-0" />
-							</div>
-						</div>
-					</a>
-				{/each}
-			</div>
-		{/if}
-	</section>
 
 	<!-- Career Timeline -->
 	<section class="space-y-3">
@@ -304,117 +218,173 @@
 			{/if}
 		</div>
 
-		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-4">
-			<div class="space-y-4">
-				<!-- Latest Medals in Timeline -->
-				{#each data.career.medals.slice(0, 3) as medal}
-					<div class="flex gap-3">
-						<div class="flex flex-col items-center">
-							<div
-								class="size-10 rounded-full flex items-center justify-center bg-gradient-to-br {getMedalColor(
-									medal.medalType
-								)} shadow-lg"
-							>
-								<span class="text-xl">{getMedalEmoji(medal.medalType)}</span>
-							</div>
-							<div class="w-px flex-1 bg-base-300 mt-2"></div>
-						</div>
-						<div class="flex-1 pb-4">
-							<p class="text-sm font-semibold text-white">
-								Awarded <span class="capitalize">{medal.medalType}</span> Medal
-							</p>
-							<p class="text-xs text-gray-300 mt-1 line-clamp-2">{medal.reason}</p>
-							<div class="flex items-center gap-2 mt-2 flex-wrap">
-								<span class="badge badge-xs badge-outline">{medal.stateName}</span>
-								<p class="text-xs text-gray-400">
-									By {medal.awardedBy.name}
-								</p>
-							</div>
-							<p class="text-xs text-gray-500 mt-1">{formatDate(medal.awardedAt)}</p>
-						</div>
-					</div>
-				{/each}
-
-				<!-- State Positions -->
-				{#each data.career.statePositions as position}
-					<div class="flex gap-3">
-						<div class="flex flex-col items-center">
-							<div class="size-10 rounded-full bg-amber-600/20 flex items-center justify-center">
-								<FluentBuildingGovernment20Filled class="size-5 text-amber-400" />
-							</div>
-							<div class="w-px flex-1 bg-base-300 mt-2"></div>
-						</div>
-						<div class="flex-1 pb-4">
-							<p class="text-sm font-semibold text-white">{position.title}</p>
-							<a href="/state/{position.stateId}" class="text-xs text-amber-400 hover:text-amber-300 transition-colors">
-								{position.stateName}
-							</a>
-							{#if position.term}
-								<span class="text-xs text-gray-500 ml-2">Term {position.term}</span>
-							{/if}
-							<p class="text-xs text-gray-500 mt-1">{formatDate(position.appointedAt)}</p>
-						</div>
-					</div>
-				{/each}
-
-				<!-- Party Memberships -->
-				{#each data.career.partyMemberships as membership}
-					<div class="flex gap-3">
-						<div class="flex flex-col items-center">
-							<div
-								class="size-10 rounded-full flex items-center justify-center"
-								style="background-color: {membership.partyColor}20"
-							>
-								<FluentFlag20Filled class="size-5" style="color: {membership.partyColor}" />
-							</div>
-							<div class="w-px flex-1 bg-base-300 mt-2"></div>
-						</div>
-						<div class="flex-1 pb-4">
-							<p class="text-sm font-semibold text-white">
-								<span class="capitalize">{membership.role}</span> of
-								<a href="/party/{membership.partyId}" class="hover:underline" style="color: {membership.partyColor}">
-									{membership.partyName}{membership.partyAbbreviation ? ` (${membership.partyAbbreviation})` : ""}
-								</a>
-							</p>
-							<a href="/state/{membership.stateId}" class="text-xs text-gray-400 hover:text-gray-300 transition-colors">
-								{membership.stateName}
-							</a>
-							<p class="text-xs text-gray-500 mt-1">Joined {formatDate(membership.joinedAt)}</p>
-						</div>
-					</div>
-				{/each}
-
-				<!-- Newspaper Positions -->
-				{#if data.career.newspaperPositions.length > 0}
-					<div class="flex gap-3">
-						<div class="flex flex-col items-center">
-							<div class="size-10 rounded-full bg-purple-600/20 flex items-center justify-center">
-								<FluentBriefcase20Filled class="size-5 text-purple-400" />
-							</div>
-							<div class="w-px flex-1 bg-base-300 mt-2"></div>
-						</div>
-						<div class="flex-1 pb-4">
-							<p class="text-sm font-semibold text-white">
-								Contributing to {data.career.stats.newspaperCount} Newspapers
-							</p>
-							<p class="text-xs text-gray-400 mt-1">Active journalist</p>
-						</div>
-					</div>
+		<!-- Timeline Filters -->
+		{#if hasPoliticalPositions || data.career.medals.length > 0}
+			<div class="flex items-center gap-2 flex-wrap">
+				{#if hasPoliticalPositions}
+					<button
+						type="button"
+						onclick={() => toggleFilter("political")}
+						class="btn btn-sm gap-2 {activeFilter === 'political'
+							? 'bg-amber-600/20 border-amber-500/40 text-amber-300'
+							: 'bg-slate-800/40 border-white/5 text-gray-400 hover:bg-slate-700/40'}"
+					>
+						<FluentBuildingGovernment20Filled class="size-4" />
+						Political Positions
+					</button>
 				{/if}
-
-				<!-- Joined Platform (Oldest - at bottom) -->
-				<div class="flex gap-3">
-					<div class="flex flex-col items-center">
-						<div class="size-10 rounded-full bg-blue-600/20 flex items-center justify-center">
-							<FluentCalendar20Filled class="size-5 text-blue-400" />
-						</div>
-					</div>
-					<div class="flex-1">
-						<p class="text-sm font-semibold text-white">Joined Platform</p>
-						<p class="text-xs text-gray-400 mt-1">{formatDate(data.user.createdAt)}</p>
-					</div>
-				</div>
+				{#if data.career.medals.length > 0}
+					<button
+						type="button"
+						onclick={() => toggleFilter("medals")}
+						class="btn btn-sm gap-2 {activeFilter === 'medals'
+							? 'bg-yellow-600/20 border-yellow-500/40 text-yellow-300'
+							: 'bg-slate-800/40 border-white/5 text-gray-400 hover:bg-slate-700/40'}"
+					>
+						<FluentTrophy20Filled class="size-4" />
+						Medals
+					</button>
+				{/if}
+				{#if activeFilter}
+					<button
+						type="button"
+						onclick={() => (activeFilter = null)}
+						class="text-xs text-purple-400 hover:text-purple-300 transition-colors cursor-pointer ml-1"
+					>
+						Clear filter
+					</button>
+				{/if}
 			</div>
+		{/if}
+
+		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-4">
+			{#if timelineEntries.length === 0}
+				<p class="text-sm text-gray-400 text-center py-4">
+					{#if activeFilter === "medals"}
+						No medals awarded yet
+					{:else if activeFilter === "political"}
+						No political positions yet
+					{:else}
+						No career activity yet
+					{/if}
+				</p>
+			{:else}
+				<div class="space-y-4">
+					{#each timelineEntries as entry, i (entry.kind + "-" + i)}
+						{@const isLast = i === timelineEntries.length - 1}
+						<div class="flex gap-3">
+							<div class="flex flex-col items-center">
+								{#if entry.kind === "medal"}
+									<div
+										class="size-10 rounded-full flex items-center justify-center bg-gradient-to-br {getMedalColor(
+											entry.medal.medalType
+										)} shadow-lg"
+									>
+										<span class="text-xl">{getMedalEmoji(entry.medal.medalType)}</span>
+									</div>
+								{:else if entry.kind === "state"}
+									<div class="size-10 rounded-full bg-amber-600/20 flex items-center justify-center">
+										<FluentBuildingGovernment20Filled class="size-5 text-amber-400" />
+									</div>
+								{:else if entry.kind === "party"}
+									<div
+										class="size-10 rounded-full flex items-center justify-center"
+										style="background-color: {entry.membership.partyColor}20"
+									>
+										<FluentFlag20Filled class="size-5" style="color: {entry.membership.partyColor}" />
+									</div>
+								{:else if entry.kind === "newspaper"}
+									<div class="size-10 rounded-full bg-purple-600/20 flex items-center justify-center overflow-hidden">
+										{#if entry.newspaper.newspaperLogo}
+											<img
+												src={entry.newspaper.newspaperLogo}
+												alt={entry.newspaper.newspaperName}
+												class="w-full h-full object-cover"
+											/>
+										{:else}
+											<FluentBriefcase20Filled class="size-5 text-purple-400" />
+										{/if}
+									</div>
+								{:else}
+									<div class="size-10 rounded-full bg-blue-600/20 flex items-center justify-center">
+										<FluentCalendar20Filled class="size-5 text-blue-400" />
+									</div>
+								{/if}
+								{#if !isLast}
+									<div class="w-px flex-1 bg-base-300 mt-2"></div>
+								{/if}
+							</div>
+
+							<div class="flex-1 {isLast ? '' : 'pb-4'}">
+								{#if entry.kind === "medal"}
+									<p class="text-sm font-semibold text-white">
+										Awarded <span class="capitalize">{entry.medal.medalType}</span> Medal
+									</p>
+									<p class="text-xs text-gray-300 mt-1">{entry.medal.reason}</p>
+									<div class="flex items-center gap-2 mt-2 flex-wrap">
+										<span class="badge badge-xs badge-outline">{entry.medal.stateName}</span>
+										<p class="text-xs text-gray-400">By {entry.medal.awardedBy.name}</p>
+									</div>
+									<p class="text-xs text-gray-500 mt-1">{formatDate(entry.medal.awardedAt)}</p>
+								{:else if entry.kind === "state"}
+									<p class="text-sm font-semibold text-white">{entry.position.title}</p>
+									<a
+										href="/state/{entry.position.stateId}"
+										class="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+									>
+										{entry.position.stateName}
+									</a>
+									{#if entry.position.term}
+										<span class="text-xs text-gray-500 ml-2">Term {entry.position.term}</span>
+									{/if}
+									<p class="text-xs text-gray-500 mt-1">{formatDate(entry.position.appointedAt)}</p>
+								{:else if entry.kind === "party"}
+									<p class="text-sm font-semibold text-white">
+										<span class="capitalize">{entry.membership.role}</span> of
+										<a
+											href="/party/{entry.membership.partyId}"
+											class="hover:underline"
+											style="color: {entry.membership.partyColor}"
+										>
+											{entry.membership.partyName}{entry.membership.partyAbbreviation
+												? ` (${entry.membership.partyAbbreviation})`
+												: ""}
+										</a>
+									</p>
+									<a
+										href="/state/{entry.membership.stateId}"
+										class="text-xs text-gray-400 hover:text-gray-300 transition-colors"
+									>
+										{entry.membership.stateName}
+									</a>
+									<p class="text-xs text-gray-500 mt-1">Joined {formatDate(entry.membership.joinedAt)}</p>
+								{:else if entry.kind === "newspaper"}
+									<a
+										href="/newspaper/{entry.newspaper.newspaperId}"
+										class="text-sm font-semibold text-white hover:text-purple-400 transition-colors"
+									>
+										{entry.newspaper.newspaperName}
+									</a>
+									<div class="flex flex-wrap gap-2 mt-1">
+										{#each entry.newspaper.positions as position}
+											<div class="badge {getRankColor(position.rank)} badge-sm gap-1">
+												<span>{getRankIcon(position.rank)}</span>
+												<span class="capitalize">{position.rank}</span>
+											</div>
+										{/each}
+									</div>
+									{#if entry.newspaper.newspaperBackground}
+										<p class="text-xs text-gray-400 mt-2 line-clamp-2">{entry.newspaper.newspaperBackground}</p>
+									{/if}
+								{:else}
+									<p class="text-sm font-semibold text-white">Joined Platform</p>
+									<p class="text-xs text-gray-400 mt-1">{formatDate(data.user.createdAt)}</p>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</section>
 </div>

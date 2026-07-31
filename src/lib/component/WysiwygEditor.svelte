@@ -49,6 +49,11 @@
 	let editor = $state<Editor>();
 	let _transaction = $state(0);
 
+	let isEditorEmpty = $derived.by(() => {
+		void _transaction;
+		return !editor?.state.doc.textContent;
+	});
+
 	onMount(() => {
 		editor = new Editor({
 			extensions: [
@@ -83,7 +88,7 @@
 			content: initialContent,
 			editorProps: {
 				attributes: {
-					class: "prose prose-sm sm:prose max-w-none focus:outline-none min-h-[300px] p-3 sm:p-4"
+					class: "prose prose-sm sm:prose prose-invert max-w-none focus:outline-none min-h-[300px] py-3 sm:py-4"
 				}
 			},
 			onUpdate: ({ editor: e }) => {
@@ -114,9 +119,9 @@
 	};
 </script>
 
-<div class="wysiwyg-editor border rounded-lg bg-base-100">
+<div class="wysiwyg-editor">
 	<!-- Toolbar -->
-	<div class="border-b p-2 block">
+	<div class="mb-2 border-b border-slate-700/50 pb-2">
 		<div class="flex flex-wrap gap-1">
 			<!-- Text Formatting -->
 			<div class="btn-group">
@@ -275,8 +280,8 @@
 			</BubbleMenu>
 		{/if}
 
-		{#if !editor?.state.doc.textContent && placeholder}
-			<div class="absolute top-3 left-3 sm:top-4 sm:left-4 text-gray-400 pointer-events-none">
+		{#if isEditorEmpty && placeholder}
+			<div class="absolute top-3 sm:top-4 left-0 text-slate-600 pointer-events-none">
 				{placeholder}
 			</div>
 		{/if}

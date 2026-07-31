@@ -19,6 +19,7 @@
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 	import PageContainer from "$lib/component/PageContainer.svelte";
 	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
 
@@ -29,23 +30,6 @@
 	let isCollectingWage = $state(false);
 	let showCollectAnim = $state(false);
 	let showProductionAnim = $state(false);
-
-	const resourceIcons: Record<string, string> = {
-		iron: "⛏️",
-		copper: "🔶",
-		steel: "⚙️",
-		gunpowder: "💥",
-		wood: "🪵",
-		coal: "🪨"
-	};
-
-	const productIcons: Record<string, string> = {
-		rifles: "🔫",
-		ammunition: "🔫",
-		artillery: "💣",
-		vehicles: "🚗",
-		explosives: "💥"
-	};
 
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
 	const productMap = $derived(new Map(data.products.map((p) => [p.productType, p.quantity])));
@@ -356,7 +340,7 @@
 									class="flex items-center justify-between p-2.5 md:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-purple-500/30 transition-colors"
 								>
 									<div class="flex items-center gap-2">
-										<span class="text-base md:text-lg">{resourceIcons[resource]}</span>
+										<ResourceIcon name={resource} class="size-5 md:size-6" />
 										<span class="font-medium capitalize text-gray-300 text-sm md:text-base">{resource}</span>
 									</div>
 									<span
@@ -390,7 +374,7 @@
 									class="flex items-center justify-between p-2.5 md:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-emerald-500/30 transition-colors"
 								>
 									<div class="flex items-center gap-2">
-										<span class="text-base md:text-lg">{productIcons[product]}</span>
+										<ResourceIcon name={product} class="size-5 md:size-6" />
 										<span class="font-medium capitalize text-gray-300 text-sm md:text-base">{product}</span>
 									</div>
 									<span
@@ -468,7 +452,7 @@
 							class="bg-slate-900/50 backdrop-blur-sm rounded-xl p-4 md:p-5 space-y-4 md:space-y-5 border border-amber-500/20"
 						>
 							<div class="flex flex-col sm:flex-row items-start gap-3 md:gap-4">
-								<span class="text-4xl md:text-5xl">{productIcons[activeProduction.productType]}</span>
+								<ResourceIcon name={activeProduction.productType} class="size-12 md:size-14" />
 								<div class="flex-1">
 									<h3 class="text-xl md:text-2xl font-bold text-white capitalize mb-1">
 										{activeProduction.productType}
@@ -545,7 +529,7 @@
 										checked={selectedProduct === product}
 										class="sr-only"
 									/>
-									<div class="text-2xl md:text-3xl mb-1">{productIcons[product]}</div>
+									<ResourceIcon name={product} class="size-8 md:size-9 mx-auto mb-1" />
 									<div
 										class="text-xs font-medium capitalize {selectedProduct === product
 											? 'text-purple-300'
@@ -563,7 +547,7 @@
 							<div class="bg-slate-900/50 rounded-lg p-3 md:p-4 border border-slate-700/50">
 								<div class="flex items-center justify-between">
 									<div class="flex items-center gap-2">
-										<span class="text-xl md:text-2xl">{productIcons[selectedProduct]}</span>
+										<ResourceIcon name={selectedProduct} class="size-6 md:size-7" />
 										<div>
 											<p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Current Stock</p>
 											<p class="text-base md:text-lg font-semibold text-white capitalize">{selectedProduct}</p>

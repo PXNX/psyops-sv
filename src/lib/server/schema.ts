@@ -537,9 +537,7 @@ export const articles = pgTable("articles", {
 	authorId: text("author_id")
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" }),
-	newspaperId: integer("newspaper_id")
-		.notNull()
-		.references(() => newspapers.id, { onDelete: "cascade" }),
+	newspaperId: integer("newspaper_id").references(() => newspapers.id, { onDelete: "cascade" }),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 

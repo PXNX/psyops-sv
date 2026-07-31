@@ -42,8 +42,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const [upvote] = await db
 			.select()
 			.from(upvotes)
-			.where(eq(upvotes.userId, locals.account.id))
-			.where(eq(upvotes.articleId, articleId))
+			.where(and(eq(upvotes.userId, locals.account.id), eq(upvotes.articleId, articleId)))
 			.limit(1);
 		hasUpvoted = !!upvote;
 	}
