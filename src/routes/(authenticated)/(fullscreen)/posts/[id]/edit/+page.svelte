@@ -140,7 +140,7 @@
 	</header>
 
 	<!-- Editor Content -->
-	<main class="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+	<main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 		<!-- Title Input -->
 		<input
 			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-white placeholder-slate-600 border-none outline-none mb-2 tracking-wide"

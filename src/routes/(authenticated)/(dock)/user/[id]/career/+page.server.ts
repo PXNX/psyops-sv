@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/user/[id]/career/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, articles, journalists, userMedals, presidents, ministers, partyMembers, files } from "$lib/server/schema";
+import { accounts, journalists, userMedals, presidents, ministers, partyMembers, files } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { error } from "@sveltejs/kit";
 import { desc, eq, and } from "drizzle-orm";
@@ -19,13 +19,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					newspaper: true
 				},
 				orderBy: [desc(journalists.id)]
-			},
-			articles: {
-				orderBy: [desc(articles.createdAt)],
-				with: {
-					newspaper: true,
-					upvotes: true
-				}
 			}
 		}
 	});
@@ -73,8 +66,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Calculate career statistics
-	const totalArticles = user.articles.length;
-	const totalUpvotes = user.articles.reduce((sum, article) => sum + article.upvotes.length, 0);
 	const newspaperCount = user.journalists.length;
 
 	// Group journalists by newspaper with their positions
@@ -213,10 +204,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				stateName: m.state.name
 			})),
 			stats: {
-				totalArticles,
-				totalUpvotes,
 				newspaperCount,
-				averageUpvotes: totalArticles > 0 ? Math.round(totalUpvotes / totalArticles) : 0,
 				medalCount: medals.length
 			}
 		},

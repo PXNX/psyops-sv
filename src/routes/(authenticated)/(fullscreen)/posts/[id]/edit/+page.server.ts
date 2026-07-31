@@ -81,19 +81,21 @@ export const actions: Actions = {
 		// TODO: make it possible to send title and content optionally, so that only what has actually changed has to be updated. this may save a ton of network bandwidth when updating only title?
 
 		try {
-			const [updatedArticle] = await db
+			await db
 				.update(articles)
 				.set({
 					title: form.data.title,
 					content: form.data.content
 				})
-				.where(eq(articles.id, articleId))
-				.returning();
-
-			throw redirect(303, `/posts/${updatedArticle.id}`);
+				.where(eq(articles.id, articleId));
 		} catch (error) {
 			console.error("Failed to edit article:", error);
 			return fail(500, { form });
 		}
+
+		// Forward the user to the post.
+		// Note: redirect() throws, so it must live outside the try/catch above,
+		// otherwise the redirect would be swallowed by the catch block.
+		throw redirect(303, `/posts/${articleId}`);
 	}
 };

@@ -8,6 +8,7 @@
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
 	import Modal from "$lib/component/Modal.svelte";
+	import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
 
 	const { data } = $props();
 
@@ -31,8 +32,8 @@
 			return;
 		}
 
-		if (title.length > 200) {
-			alert("Title must be 200 characters or less");
+		if (title.length > SCHEMA_LIMITS.ARTICLE_TITLE_MAX) {
+			alert(`Title must be ${SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters or less`);
 			return;
 		}
 
@@ -89,7 +90,7 @@
 				<div class="flex-1"></div>
 
 				<span class="text-xs text-slate-500 font-mono hidden sm:inline">
-					{title.length}/200
+					{title.length}/{SCHEMA_LIMITS.ARTICLE_TITLE_MAX}
 				</span>
 
 				<button
@@ -104,18 +105,18 @@
 	</header>
 
 	<!-- Editor Content -->
-	<main class="flex-1 w-full max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+	<main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 		<!-- Title Input -->
 		<input
 			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-white placeholder-slate-600 border-none outline-none mb-2 tracking-wide"
 			placeholder="Enter your title..."
 			type="text"
 			bind:value={title}
-			maxlength="200"
+			maxlength={SCHEMA_LIMITS.ARTICLE_TITLE_MAX}
 		/>
 
 		<div class="text-xs text-slate-600 font-mono mb-6">
-			{title.length}/200 characters
+			{title.length}/{SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters
 		</div>
 
 		<!-- Divider -->

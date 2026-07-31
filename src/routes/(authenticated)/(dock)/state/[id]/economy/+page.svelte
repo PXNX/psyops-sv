@@ -11,6 +11,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentCart20Filled from "~icons/fluent/cart-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
+	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 
 	let { data } = $props();
 
@@ -71,15 +72,6 @@
 	);
 
 	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
-
-	const resourceIcons: Record<ResourceType, string> = {
-		iron: "⛏️",
-		copper: "🔶",
-		steel: "⚙️",
-		gunpowder: "💥",
-		wood: "🪵",
-		coal: "🪨"
-	};
 
 	const allResources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
 
@@ -203,7 +195,7 @@
 			{#each allResources as resource}
 				{@const quantity = resourceMap.get(resource) || 0}
 				<div class="bg-slate-700/30 rounded-lg border border-slate-600/20 p-4 text-center space-y-2">
-					<span class="text-2xl">{resourceIcons[resource]}</span>
+					<ResourceIcon name={resource} class="size-7 mx-auto" />
 					<p class="text-xs font-medium capitalize text-gray-400">{resource}</p>
 					<p class="text-lg font-bold {quantity > 0 ? 'text-purple-300' : 'text-gray-500'}">{quantity}</p>
 				</div>

@@ -3,28 +3,12 @@
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
 	import FluentCube20Filled from "~icons/fluent/cube-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
+	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 
 	let { data } = $props();
 
 	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
 	type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
-
-	const resourceIcons: Record<ResourceType, string> = {
-		iron: "⛏️",
-		copper: "🔶",
-		steel: "⚙️",
-		gunpowder: "💥",
-		wood: "🪵",
-		coal: "🪨"
-	};
-
-	const productIcons: Record<ProductType, string> = {
-		rifles: "🔫",
-		ammunition: "🔫",
-		artillery: "💣",
-		vehicles: "🚗",
-		explosives: "💥"
-	};
 
 	const resources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
 	const products: ProductType[] = ["rifles", "ammunition", "artillery", "vehicles", "explosives"];
@@ -71,7 +55,7 @@
 						<div
 							class="size-10 flex-shrink-0 flex items-center justify-center bg-slate-950/60 rounded-lg border border-slate-700/60"
 						>
-							<span class="text-2xl">{resourceIcons[resource]}</span>
+							<ResourceIcon name={resource} class="size-7" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="font-bold text-white text-sm capitalize font-mono">{resource}</div>
@@ -113,7 +97,7 @@
 						<div
 							class="size-10 flex-shrink-0 flex items-center justify-center bg-slate-950/60 rounded-lg border border-slate-700/60"
 						>
-							<span class="text-2xl">{productIcons[product]}</span>
+							<ResourceIcon name={product} class="size-7" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="font-bold text-white text-sm capitalize font-mono">{product}</div>

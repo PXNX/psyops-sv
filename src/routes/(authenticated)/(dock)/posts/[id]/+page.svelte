@@ -28,10 +28,13 @@
 		try {
 			const response = await fetch($page.url.pathname + "?/upvote", {
 				method: "POST",
-				headers: { "x-sveltekit-action": "true" }
+				headers: { "x-sveltekit-action": "true" },
+				body: new FormData()
 			});
 
-			if (!response.ok) {
+			const result = await response.json();
+
+			if (!response.ok || result.type === "error" || result.type === "failure") {
 				hasUpvoted = previousUpvoted;
 				upvoteCount = previousCount;
 			}

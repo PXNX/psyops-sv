@@ -16,25 +16,9 @@
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentLockClosed20Filled from "~icons/fluent/lock-closed-20-filled";
+	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 
 	let { data } = $props();
-
-	const resourceIcons: Record<string, string> = {
-		iron: "⛏️",
-		copper: "🔶",
-		steel: "⚙️",
-		gunpowder: "💥",
-		wood: "🪵",
-		coal: "🪨"
-	};
-
-	const productIcons: Record<string, string> = {
-		rifles: "🔫",
-		ammunition: "🔫",
-		artillery: "💣",
-		vehicles: "🚗",
-		explosives: "💥"
-	};
 
 	const timeRemaining = $derived.by(() => {
 		if (!data.isCurrentlyWorking || !data.shiftEndsAt) return "";
@@ -56,14 +40,6 @@
 			return () => clearInterval(interval);
 		}
 	});
-
-	const outputIcon = $derived(
-		data.output
-			? data.output.type === "resource"
-				? resourceIcons[data.output.name]
-				: productIcons[data.output.name]
-			: "📦"
-	);
 
 	const outputDisplay = $derived(data.output ? `${data.output.amount} ${data.output.name}/shift` : "Unknown");
 
@@ -157,7 +133,9 @@
 					<span class="text-xs text-slate-500 font-mono uppercase tracking-wider">Output</span>
 				</div>
 				<div class="flex items-center gap-1.5">
-					<span class="text-lg">{outputIcon}</span>
+					{#if data.output}
+						<ResourceIcon name={data.output.name} class="size-5" />
+					{/if}
 					<span class="text-sm font-bold text-white capitalize font-mono">{data.output?.name || "—"}</span>
 				</div>
 				<div class="text-xs text-slate-500 font-mono mt-0.5">{data.output?.amount || 0}/shift</div>
@@ -302,7 +280,10 @@
 					{#if data.output}
 						<div>
 							<div class="text-xs text-slate-500 font-mono uppercase tracking-wider mb-1">Output</div>
-							<div class="text-base font-bold text-white font-mono">{outputIcon} {data.output.amount}</div>
+							<div class="flex items-center gap-1.5 text-base font-bold text-white font-mono">
+								<ResourceIcon name={data.output.name} class="size-4" />
+								{data.output.amount}
+							</div>
 						</div>
 					{/if}
 				</div>

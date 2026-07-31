@@ -9,6 +9,7 @@
 	import FluentEyeOff20Filled from "~icons/fluent/eye-off-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 	import { enhance } from "$app/forms";
 
 	let { data, form } = $props();
@@ -235,8 +236,8 @@
 										</span>
 									{/if}
 									{#each code.resources as resource}
-										<span class="badge badge-sm bg-blue-600/10 text-blue-300 border-blue-500/20">
-											{resourceIcons[resource.resourceType] || "📦"}
+										<span class="badge badge-sm bg-blue-600/10 text-blue-300 border-blue-500/20 gap-1">
+											<ResourceIcon name={resource.resourceType} class="size-3.5" />
 											{formatNumber(resource.quantity)}
 										</span>
 									{/each}
@@ -452,8 +453,8 @@
 						<div class="flex flex-wrap gap-2 mt-2">
 							{#each newCode.resources as resource, index}
 								<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-600/10 border border-blue-500/20">
-									<span class="text-sm text-blue-300 font-medium">
-										{resourceIcons[resource.type] || "📦"}
+									<span class="flex items-center gap-1 text-sm text-blue-300 font-medium">
+										<ResourceIcon name={resource.type} class="size-3.5" />
 										{formatNumber(resource.quantity)}
 										{resource.type}
 									</span>

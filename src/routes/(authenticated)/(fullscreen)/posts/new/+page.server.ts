@@ -1,11 +1,12 @@
 // src/routes/(authenticated)/(fullscreen)/posts/new/+page.server.ts
 import { db } from "$lib/server/db";
 import { journalists, newspapers, files, articles } from "$lib/server/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { notifyNewspaperSubscribers } from "$lib/server/services/push-notification.service";
+import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -52,8 +53,10 @@ export const actions: Actions = {
 			return fail(400, { error: "Title and content are required" });
 		}
 
-		if (title.length > 200) {
-			return fail(400, { error: "Title must be 200 characters or less" });
+		if (title.length > SCHEMA_LIMITS.ARTICLE_TITLE_MAX) {
+			return fail(400, {
+				error: `Title must be ${SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters or less`
+			});
 		}
 
 		// If newspaperId provided, verify user is a journalist
@@ -61,14 +64,15 @@ export const actions: Actions = {
 			const journalist = await db
 				.select()
 				.from(journalists)
-				.where(eq(journalists.userId, account.id))
-				.where(eq(journalists.newspaperId, parseInt(newspaperId)))
+				.where(and(eq(journalists.userId, account.id), eq(journalists.newspaperId, parseInt(newspaperId))))
 				.limit(1);
 
 			if (journalist.length === 0) {
 				return fail(403, { error: "You are not authorized to publish for this newspaper" });
 			}
 		}
+
+		let articleId: number;
 
 		try {
 			const [article] = await db
@@ -80,6 +84,8 @@ export const actions: Actions = {
 					newspaperId: newspaperId ? parseInt(newspaperId) : null
 				})
 				.returning();
+
+			articleId = article.id;
 
 			// Send push notifications to newspaper subscribers
 			if (newspaperId) {
@@ -101,11 +107,14 @@ export const actions: Actions = {
 					});
 				}
 			}
-
-			throw redirect(303, `/posts/${article.id}`);
 		} catch (error) {
 			console.error("Failed to create article:", error);
 			return fail(500, { error: "Failed to create article" });
 		}
+
+		// Forward the user to the newly created post.
+		// Note: redirect() throws, so it must live outside the try/catch above,
+		// otherwise the redirect would be swallowed by the catch block.
+		throw redirect(303, `/posts/${articleId}`);
 	}
 };
