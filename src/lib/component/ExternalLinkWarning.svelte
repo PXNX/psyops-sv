@@ -4,6 +4,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentOpen20Filled from "~icons/fluent/open-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
+	import Button from "$lib/component/ui/Button.svelte";
 
 	let {
 		open = $bindable(false),
@@ -60,14 +61,8 @@
 
 		<!-- Action Buttons -->
 		<div class="flex gap-3">
-			<button onclick={handleCancel} class="btn btn-ghost flex-1 gap-2">
-				<FluentDismiss20Filled class="size-5" />
-				Cancel
-			</button>
-			<button onclick={handleContinue} class="btn bg-blue-600 hover:bg-blue-700 border-0 text-white flex-1 gap-2">
-				<FluentOpen20Filled class="size-5" />
-				Continue
-			</button>
+			<Button variant="secondary" grow icon={FluentDismiss20Filled} onclick={handleCancel}>Cancel</Button>
+			<Button variant="info" grow icon={FluentOpen20Filled} onclick={handleContinue}>Continue</Button>
 		</div>
 	</div>
 </Modal>

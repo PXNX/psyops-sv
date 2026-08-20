@@ -2,6 +2,7 @@
 <script lang="ts">
 	import IconDismiss from "~icons/fluent/dismiss-24-regular";
 	import IconArrowLeft from "~icons/fluent/arrow-left-24-regular";
+	import IconButton from "$lib/component/ui/IconButton.svelte";
 
 	let {
 		open = $bindable(false),
@@ -34,22 +35,18 @@
 
 {#if open}
 	<div class="modal-open modal z-5003">
-		<div class="modal-box {sizeClasses[size]} rounded-lg">
+		<div class="modal-box {sizeClasses[size]} rounded-xl border border-white/5 bg-slate-900">
 			<!-- Header with back button (optional) and close button -->
 			<div class="mb-6 flex items-center justify-between">
 				<div class="flex items-center gap-2">
 					{#if onBack}
-						<button onclick={onBack} class="btn btn-circle btn-ghost btn-sm" aria-label="Go back">
-							<IconArrowLeft class="size-5" />
-						</button>
+						<IconButton icon={IconArrowLeft} label="Go back" size="sm" onclick={onBack} />
 					{/if}
 					{#if title}
-						<h3 class="text-xl font-bold">{title}</h3>
+						<h3 class="text-xl font-bold text-white">{title}</h3>
 					{/if}
 				</div>
-				<button onclick={handleClose} class="btn btn-circle btn-ghost btn-sm" aria-label="Close">
-					<IconDismiss class="size-5" />
-				</button>
+				<IconButton icon={IconDismiss} label="Close" size="sm" onclick={handleClose} />
 			</div>
 
 			<!-- Modal content -->

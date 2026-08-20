@@ -31,6 +31,8 @@
 	import { shareLink } from "$lib/util";
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 	import Logo from "$lib/component/Logo.svelte";
+	import Button from "$lib/component/ui/Button.svelte";
+	import ActionListItem from "$lib/component/ui/ActionListItem.svelte";
 
 	const { data, form } = $props();
 
@@ -104,12 +106,7 @@
 					> doesn't exist or has been removed.
 				</p>
 			</div>
-			<button
-				onclick={() => history.back()}
-				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all mt-2"
-			>
-				Go Back
-			</button>
+			<Button variant="secondary" size="sm" class="mt-2" onclick={() => history.back()}>Go Back</Button>
 		</div>
 	</div>
 {:else}
@@ -158,51 +155,41 @@
 		</div>
 
 		<!-- Action Buttons -->
-		<section class="flex gap-2 justify-center flex-wrap">
+		<section class="flex flex-wrap justify-center gap-2">
 			{#if data.user.id !== data.account?.id}
-				<a
-					class="btn btn-sm gap-2 bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/20 text-purple-300 hover:text-purple-200 transition-all"
-					href="/chat/user/{data.user.id}"
-				>
-					<FluentChat20Filled class="size-4" />
+				<Button variant="soft-purple" size="sm" href="/chat/user/{data.user.id}" icon={FluentChat20Filled}>
 					<span class="hidden sm:inline">Message</span>
-				</a>
+				</Button>
 			{/if}
 
-			<button
-				class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+			<Button
+				variant="secondary"
+				size="sm"
+				icon={FluentShareAndroid20Filled}
 				onclick={() => shareLink(data.user.name || "User", window.location.href)}
 			>
-				<FluentShareAndroid20Filled class="size-4" />
 				<span class="hidden sm:inline">Share</span>
-			</button>
+			</Button>
 
 			{#if data.isOwnProfile}
-				<a
-					href="/inbox"
-					class="btn btn-sm gap-2 bg-blue-600/10 hover:bg-blue-600/20 border-blue-500/20 text-blue-300 hover:text-blue-200 transition-all"
-				>
-					<FluentMail20Filled class="size-4" />
+				<Button variant="soft-blue" size="sm" href="/inbox" icon={FluentMail20Filled}>
 					<span class="hidden sm:inline">Inbox</span>
-				</a>
+				</Button>
 
-				<a
-					href="/settings"
-					class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
-				>
-					<FluentSettingsCogMultiple20Filled class="size-4" />
+				<Button variant="secondary" size="sm" href="/settings" icon={FluentSettingsCogMultiple20Filled}>
 					<span class="hidden sm:inline">Settings</span>
-				</a>
+				</Button>
 			{/if}
 
 			{#if data.user.id !== data.account?.id || data.canAppointMinister || (data.ownedNewspapers && data.ownedNewspapers.length > 0)}
-				<button
-					class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all"
+				<Button
+					variant="secondary"
+					size="sm"
+					icon={FluentMoreHorizontal20Filled}
 					onclick={() => (showActionsSheet = true)}
 				>
-					<FluentMoreHorizontal20Filled class="size-4" />
 					<span class="hidden sm:inline">More</span>
-				</button>
+				</Button>
 			{/if}
 		</section>
 
@@ -210,94 +197,68 @@
 		<BottomSheet bind:open={showActionsSheet} title="Actions">
 			<div class="space-y-1">
 				{#if data.user.id !== data.account?.id}
-					<button
+					<ActionListItem
+						icon={FluentGiftCardArrowRight20Filled}
+						tone="blue"
+						title="Send Gift"
+						description="Send currency to this user"
 						onclick={() => {
 							shareLink(data.user.name || "User", window.location.href);
 							showActionsSheet = false;
 						}}
-						class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
-					>
-						<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center shrink-0">
-							<FluentGiftCardArrowRight20Filled class="size-5 text-blue-400" />
-						</div>
-						<div>
-							<p class="font-medium text-white">Send Gift</p>
-							<p class="text-xs text-gray-400">Send currency to this user</p>
-						</div>
-					</button>
+					/>
 
-					<button
+					<ActionListItem
+						icon={FluentStar20Filled}
+						iconTileClass="bg-gradient-to-br from-amber-400 via-pink-500 to-purple-600 text-white"
+						title="Gift Premium"
+						description="Give this user a premium membership"
 						onclick={() => {
 							showGiftPremiumModal = true;
 							showActionsSheet = false;
 						}}
-						class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
-					>
-						<div
-							class="size-10 rounded-lg flex items-center justify-center shrink-0 bg-gradient-to-br from-amber-400 via-pink-500 to-purple-600"
-						>
-							<FluentStar20Filled class="size-5 text-white" />
-						</div>
-						<div>
-							<p class="font-medium text-white">Gift Premium</p>
-							<p class="text-xs text-gray-400">Give this user a premium membership</p>
-						</div>
-					</button>
+					/>
 				{/if}
 
 				{#if data.ownedNewspapers && data.ownedNewspapers.length > 0}
-					<button
+					<ActionListItem
+						icon={MdiNewspaperPlus}
+						tone="emerald"
+						title="Add as Author"
+						description="Add to one of your newspapers"
 						onclick={() => {
 							showAddAuthorModal = true;
 							showActionsSheet = false;
 						}}
-						class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
-					>
-						<div class="size-10 bg-emerald-600/20 rounded-lg flex items-center justify-center shrink-0">
-							<MdiNewspaperPlus class="size-5 text-emerald-400" />
-						</div>
-						<div>
-							<p class="font-medium text-white">Add as Author</p>
-							<p class="text-xs text-gray-400">Add to one of your newspapers</p>
-						</div>
-					</button>
+					/>
 				{/if}
 
 				{#if data.canAppointMinister}
-					<button
+					<ActionListItem
+						icon={FluentShieldTask20Filled}
+						tone="amber"
+						title="Appoint Minister"
+						description="Assign a government ministry"
 						onclick={() => {
 							showAppointDialog = true;
 							showActionsSheet = false;
 						}}
-						class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
-					>
-						<div class="size-10 bg-amber-600/20 rounded-lg flex items-center justify-center shrink-0">
-							<FluentShieldTask20Filled class="size-5 text-amber-400" />
-						</div>
-						<div>
-							<p class="font-medium text-white">Appoint Minister</p>
-							<p class="text-xs text-gray-400">Assign a government ministry</p>
-						</div>
-					</button>
+					/>
 				{/if}
 
 				{#if data.user.id !== data.account?.id}
-					<div class="border-t border-white/5 my-2"></div>
-					<button
+					<div class="my-2 border-t border-white/5"></div>
+					<ActionListItem
+						icon={FluentAccessibilityError20Filled}
+						tone="red"
+						danger
+						title="Report User"
+						description="Flag for moderation review"
 						onclick={() => {
 							showReportModal = true;
 							showActionsSheet = false;
 						}}
-						class="w-full px-4 py-3 text-left hover:bg-slate-800 rounded-lg flex items-center gap-3 transition-colors"
-					>
-						<div class="size-10 bg-red-600/20 rounded-lg flex items-center justify-center shrink-0">
-							<FluentAccessibilityError20Filled class="size-5 text-red-400" />
-						</div>
-						<div>
-							<p class="font-medium text-red-300">Report User</p>
-							<p class="text-xs text-gray-400">Flag for moderation review</p>
-						</div>
-					</button>
+					/>
 				{/if}
 			</div>
 		</BottomSheet>
@@ -344,18 +305,19 @@
 							{#if data.currentUserPresidency?.stateId === ministry.stateId}
 								<form method="POST" action="?/dismissMinister" use:enhance>
 									<input type="hidden" name="ministerId" value={ministry.id} />
-									<button
+									<Button
 										type="submit"
-										class="btn btn-xs gap-1 bg-red-600/10 hover:bg-red-600/20 border-red-500/20 text-red-400 hover:text-red-300"
+										variant="soft-red"
+										size="xs"
+										icon={FluentPersonDelete20Filled}
 										onclick={(e) => {
 											if (!confirm("Are you sure you want to dismiss this minister?")) {
 												e.preventDefault();
 											}
 										}}
 									>
-										<FluentPersonDelete20Filled class="size-3" />
 										Dismiss
-									</button>
+									</Button>
 								</form>
 							{/if}
 						</div>
@@ -413,13 +375,16 @@
 				{/if}
 
 				{#if data.isOwnProfile}
-					<a
+					<Button
 						href="/visas"
-						class="btn btn-sm w-full gap-2 bg-purple-600/10 hover:bg-purple-600/20 border-purple-500/20 text-purple-400 hover:text-purple-300 transition-all mt-2"
+						variant="soft-purple"
+						size="sm"
+						block
+						icon={FluentBookCompass24Filled}
+						class="mt-2"
 					>
-						<FluentBookCompass24Filled class="size-4" />
 						Manage Visas
-					</a>
+					</Button>
 				{/if}
 			</div>
 		</section>
@@ -478,13 +443,9 @@
 								}}
 								class="mt-2"
 							>
-								<button
-									type="submit"
-									class="btn btn-sm w-full gap-2 bg-yellow-600/20 hover:bg-yellow-600/30 border-yellow-500/30 text-yellow-300 hover:text-yellow-200"
-								>
-									<FluentGiftCardArrowRight20Filled class="size-4" />
+								<Button type="submit" variant="soft-amber" size="sm" block icon={FluentGiftCardArrowRight20Filled}>
 									Collect {data.birthdayInfo.rewardTotal.toLocaleString()} Currency
-								</button>
+								</Button>
 							</form>
 						</div>
 					{:else}
@@ -557,14 +518,16 @@
 					</a>
 				{/if}
 
-				<a
+				<Button
 					href="/user/{data.user.id}/career"
-					role="button"
-					class="btn btn-sm w-full gap-2 bg-transparent hover:bg-purple-600/10 border-purple-500/20 text-purple-400 hover:text-purple-300 transition-all mt-2"
+					variant="soft-purple"
+					size="sm"
+					block
+					icon={FluentChevronRight20Filled}
+					class="mt-2"
 				>
-					<FluentChevronRight20Filled class="size-4" />
 					View Full Career Timeline
-				</a>
+				</Button>
 			</div>
 		</section>
 	</div>
@@ -627,10 +590,10 @@
 					</div>
 				{/if}
 
-				<div class="flex gap-2 justify-end">
-					<button
+				<div class="flex justify-end gap-2">
+					<Button
 						type="button"
-						class="btn btn-ghost"
+						variant="secondary"
 						disabled={isAppointingMinister}
 						onclick={() => {
 							showAppointDialog = false;
@@ -639,20 +602,16 @@
 						}}
 					>
 						Cancel
-					</button>
-					<button
+					</Button>
+					<Button
 						type="submit"
-						class="btn bg-purple-600 hover:bg-purple-700 text-white border-none gap-2"
-						disabled={!selectedMinistry || isAppointingMinister}
+						icon={FluentShieldTask20Filled}
+						disabled={!selectedMinistry}
+						loading={isAppointingMinister}
+						loadingText="Appointing..."
 					>
-						{#if isAppointingMinister}
-							<span class="loading loading-spinner loading-sm"></span>
-							Appointing...
-						{:else}
-							<FluentShieldTask20Filled class="size-4" />
-							Appoint Minister
-						{/if}
-					</button>
+						Appoint Minister
+					</Button>
 				</div>
 			</div>
 		</form>
@@ -716,10 +675,10 @@
 					</select>
 				</div>
 
-				<div class="flex gap-2 justify-end">
-					<button
+				<div class="flex justify-end gap-2">
+					<Button
 						type="button"
-						class="btn btn-ghost"
+						variant="secondary"
 						disabled={isGiftingPremium}
 						onclick={() => {
 							showGiftPremiumModal = false;
@@ -727,20 +686,16 @@
 						}}
 					>
 						Cancel
-					</button>
-					<button
+					</Button>
+					<Button
 						type="submit"
-						class="btn bg-gradient-to-r from-amber-500 to-purple-600 text-white border-none gap-2"
-						disabled={isGiftingPremium}
+						variant="premium"
+						icon={FluentStar20Filled}
+						loading={isGiftingPremium}
+						loadingText="Gifting..."
 					>
-						{#if isGiftingPremium}
-							<span class="loading loading-spinner loading-sm"></span>
-							Gifting...
-						{:else}
-							<FluentStar20Filled class="size-4" />
-							Gift Premium
-						{/if}
-					</button>
+						Gift Premium
+					</Button>
 				</div>
 			</div>
 		</form>

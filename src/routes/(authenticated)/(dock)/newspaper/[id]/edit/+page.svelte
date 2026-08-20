@@ -14,6 +14,7 @@
 	import MdiNewspaper from "~icons/mdi/newspaper";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import BackLink from "$lib/component/ui/BackLink.svelte";
 
 	let { data } = $props();
 
@@ -122,7 +123,7 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
-			<a href="/newspaper/{data.newspaper.id}" class="btn btn-circle btn-ghost hover:bg-slate-700/50"> ← </a>
+			<BackLink href="/newspaper/{data.newspaper.id}" />
 			<div>
 				<h1 class="text-3xl font-bold text-white">Edit Newspaper</h1>
 				<p class="text-gray-400">{data.newspaper.name}</p>

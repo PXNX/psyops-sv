@@ -3,6 +3,7 @@
 	import { enhance } from "$app/forms";
 	import FluentPersonProhibited20Filled from "~icons/fluent/person-prohibited-20-filled";
 	import BottomSheet from "$lib/component/BottomSheet.svelte";
+	import FormActions from "$lib/component/ui/FormActions.svelte";
 
 	interface Props {
 		open: boolean;
@@ -58,18 +59,13 @@
 			>
 				<input type="hidden" name="blockedUserId" value={userId || ""} />
 
-				<div class="flex gap-3 pt-2">
-					<button type="button" onclick={handleClose} class="btn flex-1 btn-ghost" disabled={isSubmitting}>
-						Cancel
-					</button>
-					<button
-						type="submit"
-						class="btn flex-1 bg-red-600 hover:bg-red-700 border-0 text-white"
-						disabled={isSubmitting}
-					>
-						{isSubmitting ? "Blocking..." : "Block User"}
-					</button>
-				</div>
+				<FormActions
+					submitLabel="Block User"
+					submittingLabel="Blocking..."
+					submitVariant="danger"
+					submitting={isSubmitting}
+					onCancel={handleClose}
+				/>
 			</form>
 		</div>
 	</BottomSheet>

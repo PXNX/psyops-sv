@@ -15,6 +15,7 @@
 	import FluentChartMultiple20Filled from "~icons/fluent/chart-multiple-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
+	import BackLink from "$lib/component/ui/BackLink.svelte";
 
 	let { data } = $props();
 
@@ -86,7 +87,7 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<div class="flex items-center gap-4">
-			<a href="/factory/{data.factory.id}" class="btn btn-circle btn-ghost hover:bg-slate-700/50"> ← </a>
+			<BackLink href="/factory/{data.factory.id}" />
 			<div>
 				<h1 class="text-3xl font-bold text-white">Edit Factory</h1>
 				<p class="text-gray-400">{data.factory.name}</p>
