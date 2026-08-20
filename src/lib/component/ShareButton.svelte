@@ -2,6 +2,7 @@
 <script lang="ts">
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 	import { shareLink } from "$lib/util";
+	import Button from "$lib/component/ui/Button.svelte";
 
 	interface Props {
 		title: string;
@@ -13,13 +14,14 @@
 	let { title, url, showLabel = true, class: className = "" }: Props = $props();
 </script>
 
-<button
-	class="btn btn-sm gap-2 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white transition-all {className}"
+<Button
+	variant="secondary"
+	size="sm"
+	icon={FluentShareAndroid20Filled}
+	class={className}
 	onclick={() => shareLink(title, url)}
-	title="Share"
 >
-	<FluentShareAndroid20Filled class="size-4" />
 	{#if showLabel}
 		<span class="hidden sm:inline">Share</span>
 	{/if}
-</button>
+</Button>

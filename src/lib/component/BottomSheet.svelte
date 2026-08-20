@@ -1,6 +1,7 @@
 <!-- src/lib/component/BottomSheet.svelte -->
 <script lang="ts">
 	import IconDismiss from "~icons/fluent/dismiss-24-regular";
+	import IconButton from "$lib/component/ui/IconButton.svelte";
 
 	let {
 		open = $bindable(false),
@@ -39,13 +40,7 @@
 					{:else}
 						<div></div>
 					{/if}
-					<button
-						onclick={handleClose}
-						class="size-8 flex items-center justify-center rounded-full bg-slate-800 hover:bg-slate-700 text-gray-400 hover:text-white transition-colors"
-						aria-label="Close"
-					>
-						<IconDismiss class="size-5" />
-					</button>
+					<IconButton icon={IconDismiss} label="Close" variant="subtle" size="sm" onclick={handleClose} />
 				</div>
 
 				<div class="px-5 pb-5 overflow-y-auto">

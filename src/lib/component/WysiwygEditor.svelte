@@ -23,6 +23,8 @@
 	import History from "@tiptap/extension-history";
 
 	import { onMount, onDestroy } from "svelte";
+	import type { Component } from "svelte";
+	import ToolbarButton from "$lib/component/ui/ToolbarButton.svelte";
 	import { Editor, EditorContent, BubbleMenu } from "svelte-tiptap";
 
 	import MdiFormatBold from "~icons/mdi/format-bold";
@@ -117,124 +119,120 @@
 		void _transaction;
 		return editor?.isActive(name, attrs) || false;
 	};
-</script>
 
+	interface ToolbarItem {
+		icon: Component;
+		label: string;
+		run: () => void;
+		active?: () => boolean;
+		enabled?: () => boolean;
+	}
+
+	// Inline marks are shown both in the toolbar and in the selection bubble menu.
+	const inlineMarks: ToolbarItem[] = [
+		{
+			icon: MdiFormatBold,
+			label: "Bold",
+			run: () => editor?.chain().focus().toggleBold().run(),
+			active: () => isActive("bold"),
+			enabled: () => editor?.can().chain().focus().toggleBold().run() ?? false
+		},
+		{
+			icon: MdiFormatItalic,
+			label: "Italic",
+			run: () => editor?.chain().focus().toggleItalic().run(),
+			active: () => isActive("italic"),
+			enabled: () => editor?.can().chain().focus().toggleItalic().run() ?? false
+		},
+		{
+			icon: MdiFormatStrikethrough,
+			label: "Strikethrough",
+			run: () => editor?.chain().focus().toggleStrike().run(),
+			active: () => isActive("strike"),
+			enabled: () => editor?.can().chain().focus().toggleStrike().run() ?? false
+		},
+		{
+			icon: MdiCodeTags,
+			label: "Inline Code",
+			run: () => editor?.chain().focus().toggleCode().run(),
+			active: () => isActive("code"),
+			enabled: () => editor?.can().chain().focus().toggleCode().run() ?? false
+		}
+	];
+
+	const headings: ToolbarItem[] = [
+		{ icon: MdiFormatHeader1, label: "Heading 1", level: 1 },
+		{ icon: MdiFormatHeader2, label: "Heading 2", level: 2 },
+		{ icon: MdiFormatHeader3, label: "Heading 3", level: 3 }
+	].map(({ icon, label, level }) => ({
+		icon,
+		label,
+		run: () => editor?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run(),
+		active: () => isActive("heading", { level })
+	}));
+
+	const lists: ToolbarItem[] = [
+		{
+			icon: MdiFormatListBulleted,
+			label: "Bullet List",
+			run: () => editor?.chain().focus().toggleBulletList().run(),
+			active: () => isActive("bulletList")
+		},
+		{
+			icon: MdiFormatListNumbered,
+			label: "Numbered List",
+			run: () => editor?.chain().focus().toggleOrderedList().run(),
+			active: () => isActive("orderedList")
+		}
+	];
+
+	const blocks: ToolbarItem[] = [
+		{
+			icon: MdiFormatQuoteClose,
+			label: "Blockquote",
+			run: () => editor?.chain().focus().toggleBlockquote().run(),
+			active: () => isActive("blockquote")
+		},
+		{
+			icon: MdiCodeTags,
+			label: "Code Block",
+			run: () => editor?.chain().focus().toggleCodeBlock().run(),
+			active: () => isActive("codeBlock")
+		},
+		{
+			icon: MdiMinus,
+			label: "Horizontal Rule",
+			run: () => editor?.chain().focus().setHorizontalRule().run()
+		},
+		{
+			icon: MdiTable,
+			label: "Insert Table",
+			run: () => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+		}
+	];
+
+	const toolbarGroups: ToolbarItem[][] = [inlineMarks, headings, lists, blocks];
+</script>
 <div class="wysiwyg-editor">
 	<!-- Toolbar -->
 	<div class="mb-2 border-b border-slate-700/50 pb-2">
-		<div class="flex flex-wrap gap-1">
-			<!-- Text Formatting -->
-			<div class="btn-group">
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('bold') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleBold().run()}
-					disabled={!editor?.can().chain().focus().toggleBold().run()}
-					title="Bold"
-				>
-					<MdiFormatBold class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('italic') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleItalic().run()}
-					disabled={!editor?.can().chain().focus().toggleItalic().run()}
-					title="Italic"
-				>
-					<MdiFormatItalic class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('strike') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleStrike().run()}
-					disabled={!editor?.can().chain().focus().toggleStrike().run()}
-					title="Strikethrough"
-				>
-					<MdiFormatStrikethrough class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('code') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleCode().run()}
-					disabled={!editor?.can().chain().focus().toggleCode().run()}
-					title="Inline Code"
-				>
-					<MdiCodeTags class="w-4 h-4" />
-				</button>
-			</div>
-
-			<!-- Headings -->
-			<div class="btn-group">
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('heading', { level: 1 }) ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
-					title="Heading 1"
-				>
-					<MdiFormatHeader1 class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('heading', { level: 2 }) ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
-					title="Heading 2"
-				>
-					<MdiFormatHeader2 class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('heading', { level: 3 }) ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
-					title="Heading 3"
-				>
-					<MdiFormatHeader3 class="w-4 h-4" />
-				</button>
-			</div>
-
-			<!-- Lists -->
-			<div class="btn-group">
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('bulletList') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleBulletList().run()}
-					title="Bullet List"
-				>
-					<MdiFormatListBulleted class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('orderedList') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleOrderedList().run()}
-					title="Numbered List"
-				>
-					<MdiFormatListNumbered class="w-4 h-4" />
-				</button>
-			</div>
-
-			<!-- Blocks -->
-			<div class="btn-group">
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('blockquote') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleBlockquote().run()}
-					title="Blockquote"
-				>
-					<MdiFormatQuoteClose class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs sm:btn-sm {isActive('codeBlock') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleCodeBlock().run()}
-					title="Code Block"
-				>
-					<MdiCodeTags class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs sm:btn-sm"
-					onclick={() => editor?.chain().focus().setHorizontalRule().run()}
-					title="Horizontal Rule"
-				>
-					<MdiMinus class="w-4 h-4" />
-				</button>
-			</div>
-
-			<!-- Table -->
-			<button
-				class="btn btn-xs sm:btn-sm"
-				onclick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-				title="Insert Table"
-			>
-				<MdiTable class="w-4 h-4" />
-			</button>
+		<div class="flex flex-wrap items-center gap-1">
+			{#each toolbarGroups as group, i (i)}
+				{#if i > 0}
+					<div class="mx-1 h-6 w-px bg-slate-700/50"></div>
+				{/if}
+				<div class="flex items-center gap-0.5">
+					{#each group as item (item.label)}
+						<ToolbarButton
+							icon={item.icon}
+							label={item.label}
+							active={item.active?.() ?? false}
+							disabled={item.enabled ? !item.enabled() : false}
+							onclick={item.run}
+						/>
+					{/each}
+				</div>
+			{/each}
 		</div>
 	</div>
 
@@ -245,43 +243,24 @@
 
 			<!-- Bubble Menu for Text Selection (Desktop) -->
 			<BubbleMenu
-				class="hidden sm:flex gap-1 bg-base-300 shadow-lg rounded-lg p-1"
+				class="hidden gap-0.5 rounded-lg border border-white/10 bg-slate-800 p-1 shadow-xl sm:flex"
 				tippyOptions={{ duration: 100 }}
 				{editor}
 			>
-				<button
-					class="btn btn-xs {isActive('bold') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleBold().run()}
-					title="Bold"
-				>
-					<MdiFormatBold class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs {isActive('italic') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleItalic().run()}
-					title="Italic"
-				>
-					<MdiFormatItalic class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs {isActive('strike') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleStrike().run()}
-					title="Strikethrough"
-				>
-					<MdiFormatStrikethrough class="w-4 h-4" />
-				</button>
-				<button
-					class="btn btn-xs {isActive('code') ? 'btn-active' : ''}"
-					onclick={() => editor?.chain().focus().toggleCode().run()}
-					title="Code"
-				>
-					<MdiCodeTags class="w-4 h-4" />
-				</button>
+				{#each inlineMarks as item (item.label)}
+					<ToolbarButton
+						icon={item.icon}
+						label={item.label}
+						size="xs"
+						active={item.active?.() ?? false}
+						onclick={item.run}
+					/>
+				{/each}
 			</BubbleMenu>
 		{/if}
 
 		{#if isEditorEmpty && placeholder}
-			<div class="absolute top-3 sm:top-4 left-0 text-slate-600 pointer-events-none">
+			<div class="pointer-events-none absolute top-3 left-0 text-slate-600 sm:top-4">
 				{placeholder}
 			</div>
 		{/if}

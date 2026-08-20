@@ -3,6 +3,7 @@
 	import { enhance } from "$app/forms";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import BottomSheet from "$lib/component/BottomSheet.svelte";
+	import FormActions from "$lib/component/ui/FormActions.svelte";
 
 	interface Props {
 		open: boolean;
@@ -70,7 +71,7 @@
 						<select
 							name="violationType"
 							bind:value={violationType}
-							class="select select-bordered bg-slate-800 border-slate-700 text-white"
+							class="select select-bordered field-control"
 							required
 						>
 							<option value="" disabled>Select a reason</option>
@@ -87,7 +88,7 @@
 						<textarea
 							name="description"
 							bind:value={description}
-							class="textarea textarea-bordered bg-slate-800 border-slate-700 text-white placeholder-gray-500"
+							class="textarea textarea-bordered field-control"
 							placeholder="Provide any additional context..."
 							rows="3"
 							maxlength="500"></textarea>
@@ -96,18 +97,14 @@
 						</label>
 					</div>
 
-					<div class="flex gap-3 pt-2">
-						<button type="button" onclick={handleClose} class="btn flex-1 btn-ghost" disabled={isSubmitting}>
-							Cancel
-						</button>
-						<button
-							type="submit"
-							class="btn flex-1 bg-red-600 hover:bg-red-700 border-0 text-white"
-							disabled={isSubmitting || !violationType}
-						>
-							{isSubmitting ? "Submitting..." : "Submit Report"}
-						</button>
-					</div>
+					<FormActions
+						submitLabel="Submit Report"
+						submittingLabel="Submitting..."
+						submitVariant="danger"
+						submitting={isSubmitting}
+						submitDisabled={!violationType}
+						onCancel={handleClose}
+					/>
 				</div>
 			</form>
 		</div>

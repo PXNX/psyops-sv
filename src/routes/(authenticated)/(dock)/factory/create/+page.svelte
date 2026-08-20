@@ -28,6 +28,7 @@
 	import FireworksEmoji from "~icons/fluent-emoji/fireworks";
 
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import BackLink from "$lib/component/ui/BackLink.svelte";
 
 	let { data } = $props();
 
@@ -163,7 +164,7 @@
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div class="flex items-center gap-4">
-		<a href="/production" class="btn btn-circle btn-ghost hover:bg-slate-700/50">←</a>
+		<BackLink href="/production" />
 		<div>
 			<h1 class="text-3xl font-bold text-white">Create Factory</h1>
 			<p class="text-gray-400">Establish a production facility in your region</p>

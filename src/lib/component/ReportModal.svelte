@@ -3,6 +3,7 @@
 	import { enhance } from "$app/forms";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import BottomSheet from "$lib/component/BottomSheet.svelte";
+	import FormActions from "$lib/component/ui/FormActions.svelte";
 
 	interface Props {
 		show: boolean;
@@ -66,7 +67,7 @@
 					<select
 						name="violationType"
 						bind:value={violationType}
-						class="select select-bordered w-full bg-slate-800 border-slate-700 text-white"
+						class="select select-bordered field-control w-full"
 					>
 						{#each violationTypes as type}
 							<option value={type.value}>{type.label}</option>
@@ -84,17 +85,12 @@
 						placeholder="Please describe the violation..."
 						rows="4"
 						maxlength="500"
-						class="textarea textarea-bordered w-full bg-slate-800 border-slate-700 text-white placeholder-gray-500"
+						class="textarea textarea-bordered field-control w-full"
 						required></textarea>
 					<p class="text-xs text-gray-500 mt-1">{reason.length}/500 characters</p>
 				</div>
 
-				<div class="flex gap-3 pt-2">
-					<button type="button" onclick={closeModal} class="btn flex-1 btn-ghost"> Cancel </button>
-					<button type="submit" class="btn flex-1 bg-red-600 hover:bg-red-700 border-0 text-white">
-						Submit Report
-					</button>
-				</div>
+				<FormActions submitLabel="Submit Report" submitVariant="danger" onCancel={closeModal} />
 			</div>
 		</form>
 	</div>

@@ -3,6 +3,7 @@
 	import { enhance } from "$app/forms";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
+	import Button from "$lib/component/ui/Button.svelte";
 
 	interface Props {
 		show: boolean;
@@ -13,7 +14,7 @@
 
 {#if show}
 	<div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-		<div class="bg-slate-800 rounded-2xl border border-white/5 p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+		<div class="panel max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-2xl bg-slate-800 p-6">
 			<div class="flex items-center gap-3 mb-6">
 				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center">
 					<FluentShield20Filled class="size-6 text-blue-400" />
@@ -96,10 +97,7 @@
 					};
 				}}
 			>
-				<button type="submit" class="btn w-full bg-blue-600 hover:bg-blue-700 border-0 text-white gap-2">
-					<FluentCheckmark20Filled class="size-5" />
-					I Accept the Chat Rules
-				</button>
+				<Button type="submit" variant="info" block icon={FluentCheckmark20Filled}>I Accept the Chat Rules</Button>
 			</form>
 
 			<p class="text-xs text-gray-500 text-center mt-4">

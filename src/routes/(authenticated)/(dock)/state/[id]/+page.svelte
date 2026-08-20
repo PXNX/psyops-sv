@@ -142,22 +142,12 @@
 	<!-- President Action Buttons -->
 	{#if data.isPresident}
 		<div class="flex gap-2 flex-wrap">
-			<a
-				href="/state/{data.state.id}/edit"
-				class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-			>
-				<FluentEdit20Filled class="size-4" />
+			<Button href="/state/{data.state.id}/edit" variant="secondary" size="sm" icon={FluentEdit20Filled}>
 				Edit State
-			</a>
+			</Button>
 
 			{#if !data.bloc}
-				<a
-					href="/bloc"
-					class="btn btn-sm bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30 text-purple-300 hover:text-purple-200 gap-2"
-				>
-					<FluentFlag20Filled class="size-4" />
-					Join Bloc
-				</a>
+				<Button href="/bloc" variant="soft-purple" size="sm" icon={FluentFlag20Filled}>Join Bloc</Button>
 			{/if}
 		</div>
 	{/if}
@@ -209,14 +199,15 @@
 					<p class="text-sm text-gray-300 mb-4">
 						As a President, you can declare war on this state. This action will have significant consequences.
 					</p>
-					<button
+					<Button
 						type="button"
+						variant="danger"
+						size="sm"
+						icon={FluentShieldError20Filled}
 						onclick={() => (showWarModal = true)}
-						class="btn btn-sm bg-red-600 hover:bg-red-500 border-0 text-white gap-2"
 					>
-						<FluentShieldError20Filled class="size-4" />
 						Declare War
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>
@@ -259,9 +250,7 @@
 							<h3 class="text-lg font-semibold text-white">Active Visa</h3>
 							<p class="text-sm text-gray-400">Expires {formatDate(data.visa.activeVisa.expiresAt)}</p>
 						</div>
-						<a href="/visas" class="btn btn-sm bg-blue-600/20 border-blue-500/30 text-blue-300 hover:bg-blue-600/30">
-							View Visas
-						</a>
+						<Button href="/visas" variant="soft-blue" size="sm">View Visas</Button>
 					</div>
 				</div>
 			{:else if data.visa.blockedReason}
@@ -286,14 +275,14 @@
 							<h3 class="text-lg font-semibold text-white">Visa Required</h3>
 							<p class="text-sm text-gray-400">You need a visa to travel to regions in this state</p>
 						</div>
-						<button
+						<Button
 							type="button"
+							size="sm"
+							icon={FluentBookCompass24Filled}
 							onclick={() => (showVisaSheet = true)}
-							class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
 						>
-							<FluentBookCompass24Filled class="size-4" />
 							Request Visa
-						</button>
+						</Button>
 					</div>
 				</div>
 			{/if}
