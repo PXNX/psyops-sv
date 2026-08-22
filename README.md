@@ -1,13 +1,13 @@
 # PsyOps SV
 
-A SvelteKit application with Google OAuth, now powered by PostgreSQL and Bun, featuring a gaming-inspired UI and optimized for mobile devices.
+A SvelteKit application with Google OAuth, PostgreSQL and Bun, presented through a dark editorial field-ledger interface and optimized for mobile devices.
 
 ## Features
 
 - **Google OAuth**: Secure authentication via Google.
 - **PostgreSQL**: Robust and scalable database management using Drizzle ORM.
 - **Bun**: Fast JavaScript runtime and package manager.
-- **Gaming-inspired UI**: Immersive user experience with neon accents and futuristic design.
+- **Editorial field-ledger UI**: A restrained midnight-ink interface with parchment rules, serif headings and amber interaction cues.
 - **Mobile Optimized**: Responsive layout for seamless experience across devices.
 
 ## Setup
@@ -62,7 +62,7 @@ The application will be available at `http://localhost:5173` (or another port if
 
 ## UI Styling and Mobile Optimization
 
-The application now features a gaming-style user interface with neon elements and a dark theme. It has been optimized to provide a better experience on mobile screens, with responsive navigation and content display.
+The application uses a dark editorial interface inspired by operational field notes: midnight-ink surfaces, parchment-toned rules, serif hierarchy and carefully reserved amber feedback. It remains optimized for mobile screens with responsive navigation and content layouts.
 
 ## Development
 

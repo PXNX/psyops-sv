@@ -25,12 +25,12 @@ export type ButtonShape = "default" | "circle" | "square";
 
 /** Shared by every button: consistent motion, focus ring and disabled treatment. */
 const BUTTON_BASE =
-	"btn gap-2 font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed";
+	"btn gap-2 font-medium rounded-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c1929] disabled:opacity-50 disabled:cursor-not-allowed";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 	// Solid — one per intent. Use for the primary action of a screen or dialog.
 	primary:
-		"bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white shadow-lg shadow-purple-600/20 hover:shadow-purple-500/30 focus-visible:ring-purple-400",
+			"bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] shadow-[0_3px_0_rgba(112,65,10,0.42)] hover:shadow-[0_5px_0_rgba(112,65,10,0.34)] focus-visible:ring-[#e6a527]",
 	danger: "bg-red-600 hover:bg-red-500 border-0 text-white shadow-lg shadow-red-600/20 focus-visible:ring-red-400",
 	success:
 		"bg-emerald-600 hover:bg-emerald-500 border-0 text-white shadow-lg shadow-emerald-600/20 focus-visible:ring-emerald-400",
@@ -40,20 +40,20 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 
 	// Neutral — the default for anything that is not the primary action.
 	secondary:
-		"bg-slate-700/50 hover:bg-slate-600/50 border border-slate-600/30 text-gray-300 hover:text-white focus-visible:ring-slate-400",
+		"bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8] focus-visible:ring-[#e6a527]",
 	subtle:
-		"bg-slate-800/60 hover:bg-slate-700/60 border border-white/5 text-gray-300 hover:text-white focus-visible:ring-slate-400",
-	ghost: "btn-ghost border-0 text-gray-400 hover:text-white hover:bg-white/5 focus-visible:ring-slate-400",
+		"bg-[#102239]/70 hover:bg-[#19304b] border border-[#dfceb0]/15 text-[#d9ccb7] hover:text-[#fff7e8] focus-visible:ring-[#e6a527]",
+	ghost: "btn-ghost border-0 text-[#c7bda9] hover:text-[#fff7e8] hover:bg-[#e6a527]/10 focus-visible:ring-[#e6a527]",
 
 	// Soft/tinted — a coloured hint without competing with the primary action.
 	"soft-purple":
-		"bg-purple-600/10 hover:bg-purple-600/20 border border-purple-500/20 text-purple-300 hover:text-purple-200 focus-visible:ring-purple-400",
+			"bg-[#8c709b]/15 hover:bg-[#8c709b]/25 border border-[#b7a0c5]/30 text-[#d5c4df] hover:text-[#f0e7f5] focus-visible:ring-[#b7a0c5]",
 	"soft-blue":
-		"bg-blue-600/10 hover:bg-blue-600/20 border border-blue-500/20 text-blue-300 hover:text-blue-200 focus-visible:ring-blue-400",
+			"bg-[#315d8d]/18 hover:bg-[#315d8d]/28 border border-[#7ba0c8]/30 text-[#b7d0e6] hover:text-[#e1effa] focus-visible:ring-[#7ba0c8]",
 	"soft-emerald":
-		"bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/20 text-emerald-300 hover:text-emerald-200 focus-visible:ring-emerald-400",
+			"bg-[#587252]/18 hover:bg-[#587252]/28 border border-[#8fae88]/30 text-[#c6dfbf] hover:text-[#edfae7] focus-visible:ring-[#8fae88]",
 	"soft-amber":
-		"bg-amber-600/10 hover:bg-amber-600/20 border border-amber-500/20 text-amber-300 hover:text-amber-200 focus-visible:ring-amber-400",
+			"bg-[#e6a527]/12 hover:bg-[#e6a527]/20 border border-[#e6a527]/35 text-[#f7c56b] hover:text-[#ffe2a4] focus-visible:ring-[#e6a527]",
 	"soft-red":
 		"bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-300 hover:text-red-200 focus-visible:ring-red-400"
 };
@@ -117,11 +117,11 @@ export type BadgeTone =
 export type BadgeSize = "xs" | "sm" | "md";
 
 const BADGE_TONES: Record<BadgeTone, string> = {
-	neutral: "bg-slate-700/50 text-gray-300 border-white/10",
-	purple: "bg-purple-600/20 text-purple-300 border-purple-500/30",
-	blue: "bg-blue-600/20 text-blue-300 border-blue-500/30",
-	green: "bg-emerald-600/20 text-emerald-300 border-emerald-500/30",
-	amber: "bg-amber-600/20 text-amber-300 border-amber-500/30",
+	neutral: "bg-[#14283f] text-[#d9ccb7] border-[#dfceb0]/20",
+	purple: "bg-[#8c709b]/20 text-[#d5c4df] border-[#b7a0c5]/30",
+	blue: "bg-[#315d8d]/20 text-[#b7d0e6] border-[#7ba0c8]/30",
+	green: "bg-[#587252]/20 text-[#c6dfbf] border-[#8fae88]/30",
+	amber: "bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35",
 	orange: "bg-orange-600/20 text-orange-300 border-orange-500/30",
 	red: "bg-red-600/20 text-red-300 border-red-500/30",
 	cyan: "bg-cyan-600/20 text-cyan-300 border-cyan-500/30",

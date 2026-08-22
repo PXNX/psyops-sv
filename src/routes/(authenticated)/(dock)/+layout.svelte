@@ -44,7 +44,7 @@
 {/if}
 
 {#if page.url.pathname !== "/posts/new" && !page.url.pathname.startsWith("/welcome")}
-	<!-- Gaming-style dock navigation -->
+		<!-- Editorial field-ledger dock navigation -->
 	<nav class="dock">
 		{#each navItems as item (item.href)}
 			<a href={item.href} class="flinch dock-item" class:active={isActive(item.href)} title={item.label}>
@@ -76,7 +76,7 @@
 		@apply flex flex-col sm:flex-row items-center justify-center gap-1 transition-all duration-300;
 	}
 
-	.dock-item.active {
-		@apply text-cyan-200;
-	}
+		.dock-item.active {
+			@apply text-[#f7c56b];
+		}
 </style>

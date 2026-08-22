@@ -28,13 +28,13 @@
 	};
 
 	const cardClass = $derived.by(() => {
-		const base = `rounded-xl border ${paddingClasses[padding]}`;
+		const base = `rounded-md border ${paddingClasses[padding]} shadow-[0_14px_32px_rgba(2,10,21,0.18)]`;
 
 		if (variant === "gradient" && gradientFrom) {
-			return `${base} bg-gradient-to-br ${gradientFrom} ${gradientTo} ${borderColor || "border-white/10"} ${className}`.trim();
+			return `${base} bg-[#14283f]/92 ${borderColor || "border-[#dfceb0]/20"} ${className}`.trim();
 		}
 
-		return `${base} bg-slate-800/50 border-white/5 ${className}`.trim();
+		return `${base} bg-[#14283f]/92 border-[#dfceb0]/20 ${className}`.trim();
 	});
 </script>
 
