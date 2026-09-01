@@ -1,9 +1,13 @@
 <!-- src/routes/party/+page.svelte -->
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
+	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
+	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 
 	const { data } = $props();
 
@@ -17,16 +21,26 @@
 				party.ideology?.toLowerCase().includes(searchQuery.toLowerCase())
 		)
 	);
+
+	function updateParams(changes: Record<string, string | null>) {
+		const params = new URLSearchParams(page.url.searchParams);
+		for (const [key, value] of Object.entries(changes)) {
+			if (!value) params.delete(key);
+			else params.set(key, value);
+		}
+		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+	}
 </script>
 
 <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
+	<div class="flex items-center justify-between flex-wrap gap-3">
 		<div>
 			<h1 class="text-3xl font-bold text-white">Political Parties</h1>
 			<p class="text-gray-400 mt-1">
 				{data.parties.length}
-				{data.parties.length === 1 ? "party" : "parties"} in {data.stateName}
+				{data.parties.length === 1 ? "party" : "parties"}
+				{data.scope === "state" ? `in ${data.stateName}` : "across all states"}
 			</p>
 		</div>
 		<a href="/party/create" class="btn btn-primary gap-2">
@@ -35,15 +49,60 @@
 		</a>
 	</div>
 
-	<!-- Search -->
-	<div class="relative">
-		<FluentSearch20Filled class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
-		<input
-			type="text"
-			bind:value={searchQuery}
-			placeholder="Search parties by name, abbreviation, or ideology..."
-			class="input input-bordered w-full pl-12 bg-slate-800/50 border-white/10 text-white placeholder:text-gray-500"
-		/>
+	<!-- Filters -->
+	<div class="flex flex-col sm:flex-row gap-3">
+		<!-- Search -->
+		<div class="relative flex-1">
+			<FluentSearch20Filled class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+			<input
+				type="text"
+				bind:value={searchQuery}
+				placeholder="Search parties by name, abbreviation, or ideology..."
+				class="input input-bordered w-full pl-12 bg-slate-800/50 border-white/10 text-white placeholder:text-gray-500"
+			/>
+		</div>
+
+		<!-- Scope: my state vs global -->
+		<div class="join">
+			<button
+				type="button"
+				class="btn join-item {data.scope === 'state' ? 'btn-primary' : 'btn-ghost bg-slate-800/50 border-white/10'}"
+				onclick={() => updateParams({ scope: null })}
+			>
+				<FluentLocation20Filled class="size-4" />
+				{data.stateName}
+			</button>
+			<button
+				type="button"
+				class="btn join-item {data.scope === 'global' ? 'btn-primary' : 'btn-ghost bg-slate-800/50 border-white/10'}"
+				onclick={() => updateParams({ scope: "global" })}
+			>
+				<FluentGlobe20Filled class="size-4" />
+				Global
+			</button>
+		</div>
+
+		<!-- Sort -->
+		<select
+			value={data.sort}
+			onchange={(e) => updateParams({ sort: e.currentTarget.value })}
+			class="select select-bordered bg-slate-800/50 border-white/10 text-white"
+		>
+			<option value="size">Sort: Size</option>
+			<option value="age">Sort: Age</option>
+		</select>
+
+		<!-- Ideology filter -->
+		<select
+			value={data.ideology ?? ""}
+			onchange={(e) => updateParams({ ideology: e.currentTarget.value || null })}
+			class="select select-bordered bg-slate-800/50 border-white/10 text-white"
+		>
+			<option value="">All ideologies</option>
+			{#each data.ideologies as ideologyOption}
+				<option value={ideologyOption.toLowerCase()}>{ideologyOption}</option>
+			{/each}
+		</select>
 	</div>
 
 	<!-- Party Grid -->
@@ -89,7 +148,7 @@
 						{/if}
 
 						<!-- Stats -->
-						<div class="flex items-center justify-between text-sm">
+						<div class="flex items-center justify-between text-sm flex-wrap gap-2">
 							<div class="flex items-center gap-1 text-gray-400">
 								<FluentPeople20Filled class="size-4" />
 								<span>{party.memberCount} members</span>
@@ -101,6 +160,12 @@
 								</div>
 							{/if}
 						</div>
+						{#if data.scope === "global" && party.stateName}
+							<div class="flex items-center gap-1 text-xs text-gray-500 mt-2">
+								<FluentLocation20Filled class="size-3" />
+								<span>{party.stateName}</span>
+							</div>
+						{/if}
 					</div>
 				</a>
 			{/each}

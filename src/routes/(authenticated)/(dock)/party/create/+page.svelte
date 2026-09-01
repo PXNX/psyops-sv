@@ -18,6 +18,7 @@
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import { PARTY_IDEOLOGIES } from "$lib/config";
 	import { EditCooldownWarning } from "$lib/component/edit";
 
 	let { data } = $props();
@@ -58,18 +59,7 @@
 		{ name: "Amber", value: "#f59e0b" }
 	];
 
-	const ideologies = [
-		"Liberal",
-		"Conservative",
-		"Socialist",
-		"Libertarian",
-		"Green",
-		"Nationalist",
-		"Progressive",
-		"Centrist",
-		"Social Democrat",
-		"Other"
-	];
+	const ideologies = PARTY_IDEOLOGIES;
 
 	function handleFileSelect(event: Event) {
 		const target = event.target as HTMLInputElement;

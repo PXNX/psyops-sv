@@ -1,11 +1,13 @@
 // src/routes/party/+page.server.ts
 import { db } from "$lib/server/db";
-import { politicalParties, residences, files } from "$lib/server/schema";
+import { politicalParties, residences } from "$lib/server/schema";
 import { eq } from "drizzle-orm";
-import { error, redirect } from "@sveltejs/kit";
+import { redirect } from "@sveltejs/kit";
+import { getLogoUrl } from "$lib/server/backblaze";
+import { PARTY_IDEOLOGIES } from "$lib/config";
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const account = locals.account!;
 
 	// Get user's primary residence to determine their state
@@ -27,43 +29,49 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const stateId = residence.region.stateId;
 	const stateName = residence.region.state!.name;
 
-	// Get all parties in the user's state
+	const scope = url.searchParams.get("scope") === "global" ? "global" : "state";
+	const sort = url.searchParams.get("sort") === "age" ? "age" : "size";
+	const ideology = url.searchParams.get("ideology") || null;
+
 	const parties = await db.query.politicalParties.findMany({
-		where: eq(politicalParties.stateId, stateId!),
-		with: {
-			state: true
+		where: (politicalParties, { eq, and }) => {
+			const conditions = [];
+			if (scope === "state") conditions.push(eq(politicalParties.stateId, stateId!));
+			if (ideology) conditions.push(eq(politicalParties.ideology, ideology));
+			return conditions.length ? and(...conditions) : undefined;
 		},
-		orderBy: (politicalParties, { desc }) => [desc(politicalParties.memberCount)]
+		with: {
+			state: true,
+			// Only party membership counts are needed here, not full member rows.
+			members: { columns: { id: true } }
+		}
 	});
 
-	// Get logo URLs for parties
 	const partiesWithLogos = await Promise.all(
-		parties.map(async (party) => {
-			let logoUrl = null;
-			if (party.logo) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, party.logo)
-				});
-				if (logoFile) {
-					logoUrl = `https://your-cdn.com/${logoFile.key}`;
-				}
-			}
+		parties.map(async (party) => ({
+			id: party.id,
+			name: party.name,
+			abbreviation: party.abbreviation,
+			color: party.color,
+			logoUrl: await getLogoUrl(party.logo),
+			ideology: party.ideology,
+			description: party.description,
+			memberCount: party.members.length,
+			foundedAt: party.foundedAt,
+			stateName: party.state?.name ?? null
+		}))
+	);
 
-			return {
-				id: party.id,
-				name: party.name,
-				abbreviation: party.abbreviation,
-				color: party.color,
-				logoUrl,
-				ideology: party.ideology,
-				description: party.description,
-				memberCount: party.memberCount
-			};
-		})
+	partiesWithLogos.sort((a, b) =>
+		sort === "age" ? new Date(a.foundedAt).getTime() - new Date(b.foundedAt).getTime() : b.memberCount - a.memberCount
 	);
 
 	return {
 		parties: partiesWithLogos,
-		stateName
+		stateName,
+		scope,
+		sort,
+		ideology,
+		ideologies: PARTY_IDEOLOGIES
 	};
 };
