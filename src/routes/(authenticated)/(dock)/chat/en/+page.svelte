@@ -226,7 +226,7 @@
 	</div>
 </Modal>
 
-<div class="flex flex-col h-[calc(100vh-4rem)]">
+<div class="flex flex-col h-full">
 	<!-- Header -->
 	<div class="bg-slate-900/80 backdrop-blur-sm border-b border-white/10 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
 		<div class="flex items-center gap-2 md:gap-3">
