@@ -10,9 +10,15 @@ import { db } from "$lib/server/db";
 import { accounts, userProfiles } from "$lib/server/schema";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
-import { createHmac } from "crypto";
+import { createHash, createHmac } from "crypto";
 import { redirect } from "@sveltejs/kit";
 
+// Verification algorithm for Telegram's Login Widget family (login_url
+// buttons and Telegram.Login.auth()), per
+// https://core.telegram.org/widgets/login#checking-authorization:
+// secret_key = SHA256(bot_token), hash = HMAC_SHA256(data_check_string, secret_key).
+// This is NOT the same as Mini App initData verification, which HMAC-keys
+// the bot token with the literal string "WebAppData" instead.
 function verifyTelegramData(data: Record<string, string>, botToken: string): boolean {
 	const checkString = Object.keys(data)
 		.filter((key) => key !== "hash")
@@ -20,7 +26,7 @@ function verifyTelegramData(data: Record<string, string>, botToken: string): boo
 		.map((key) => `${key}=${data[key]}`)
 		.join("\n");
 
-	const secretKey = createHmac("sha256", "WebAppData").update(botToken).digest();
+	const secretKey = createHash("sha256").update(botToken).digest();
 	const hash = createHmac("sha256", secretKey).update(checkString).digest("hex");
 
 	return hash === data.hash;
