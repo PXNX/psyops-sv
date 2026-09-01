@@ -64,7 +64,7 @@
 					<span class="font-semibold">{m.signUp({ provider: "Google" })}</span>
 				</a>
 
-				<TelegramLoginWidget {next} class="flex justify-center" />
+				<TelegramLoginWidget {next} label={m.signUp({ provider: "Telegram" })} />
 			</div>
 
 			<!-- Terms & Privacy -->
