@@ -98,15 +98,13 @@
 			<FluentBot20Filled class="size-5 text-blue-400" />
 			<h2 class="text-lg font-semibold text-white">Get premium via Telegram</h2>
 		</div>
-		<p class="text-xs text-gray-400">Pay with Telegram Stars (or TON, if offered) directly in the bot.</p>
+		<p class="text-xs text-amber-300/80">Payments are mocked for now — premium via the bot is free.</p>
 		<div class="grid gap-2 sm:grid-cols-2">
 			{#each data.plans as plan}
 				<div class="bg-slate-900/50 rounded-lg border border-white/5 p-3">
 					<p class="font-semibold text-white">{plan.label}</p>
 					<p class="text-xs text-gray-400">
-						{plan.days} days — ⭐ {plan.telegramStars} via <code class="px-1 rounded bg-slate-800 text-gray-300"
-							>/premium {plan.id}</code
-						>
+						{plan.days} days — send <code class="px-1 rounded bg-slate-800 text-gray-300">/premium {plan.id}</code>
 					</p>
 				</div>
 			{/each}
@@ -118,8 +116,8 @@
 			</p>
 		{:else}
 			<p class="text-sm text-gray-400">
-				Open the bot and send <code class="px-1.5 py-0.5 rounded bg-slate-900 text-gray-300">/premium</code> to buy or extend
-				your membership.
+				Open the bot and send <code class="px-1.5 py-0.5 rounded bg-slate-900 text-gray-300">/premium</code> to activate premium
+				for free.
 			</p>
 		{/if}
 		{#if data.botUsername}
