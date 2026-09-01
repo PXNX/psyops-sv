@@ -25,6 +25,7 @@
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import { PARTY_IDEOLOGIES } from "$lib/config";
 
 	let { data } = $props();
 
@@ -72,7 +73,7 @@
 		fetch(croppedDataUrl)
 			.then((r) => r.blob())
 			.then((blob) => {
-				const croppedFile = new File([blob], 'party-logo.png', { type: 'image/png' });
+				const croppedFile = new File([blob], "party-logo.png", { type: "image/png" });
 				$form.logo = croppedFile;
 				imageUpload.currentFile = croppedFile;
 				if (imageUpload.previewUrl && imageUpload.previewUrl !== data.party.logoUrl) {
@@ -88,21 +89,10 @@
 			URL.revokeObjectURL(cropImageUrl);
 			cropImageUrl = null;
 		}
-		if (imageUpload.fileInput) imageUpload.fileInput.value = '';
+		if (imageUpload.fileInput) imageUpload.fileInput.value = "";
 	}
 
-	const ideologies = [
-		"Liberal",
-		"Conservative",
-		"Socialist",
-		"Libertarian",
-		"Green",
-		"Nationalist",
-		"Progressive",
-		"Centrist",
-		"Social Democrat",
-		"Other"
-	];
+	const ideologies = PARTY_IDEOLOGIES;
 
 	const canEdit = $derived(!data.isOnCooldown && data.canAfford);
 </script>
@@ -244,8 +234,7 @@
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
 				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
-				disabled={$submitting}
-			></textarea>
+				disabled={$submitting}></textarea>
 		</EditSection>
 
 		<!-- Resource Requirements -->
