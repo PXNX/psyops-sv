@@ -6,6 +6,9 @@
 	import FluentEmojiLeftArrow from "~icons/fluent-emoji/left-arrow";
 	import FluentEmojiEnvelopeWithArrow from "~icons/fluent-emoji/envelope-with-arrow";
 	import { error } from "@sveltejs/kit";
+	import { env } from "$env/dynamic/public";
+
+	const botUsername = env.PUBLIC_TELEGRAM_BOT_USERNAME || "RW_SupportBot";
 </script>
 
 <main class="flex flex-col items-center justify-center min-h-dvh p-4 text-center">
@@ -37,7 +40,7 @@
 				<p>what the fuck</p>
 			{/if}
 
-		<a href="https://t.me/pentexnyx_bot?start=TEST" class="mt-4 btn btn-md btn-wide">
+		<a href={`https://t.me/${botUsername}`} class="mt-4 btn btn-md btn-wide">
 			<FluentEmojiEnvelopeWithArrow />Report error</a
 		>
 	</div>
