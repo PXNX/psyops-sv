@@ -128,7 +128,7 @@
 			<p class="text-sm text-gray-400">
 				Connect your Telegram account to receive notifications and use Telegram-based features.
 			</p>
-			<TelegramLoginWidget next="/settings" class="flex justify-center" />
+			<TelegramLoginWidget next="/settings" label="Connect Telegram Account" />
 		{/if}
 	</div>
 
