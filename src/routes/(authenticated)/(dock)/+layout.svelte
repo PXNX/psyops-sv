@@ -1,9 +1,9 @@
 <script lang="ts">
-	import FluentEmojiBarChart from "~icons/fluent-emoji/bar-chart";
-	import FluentEmojiNewspaper from "~icons/fluent-emoji/newspaper";
-	import FluentEmojiMilitaryHelmet from "~icons/fluent-emoji/military-helmet";
-	import FluentEmojiNutAndBolt from "~icons/fluent-emoji/nut-and-bolt";
-	import FluentEmojiIdentificationCard from "~icons/fluent-emoji/identification-card";
+	import FluentChartMultiple from "~icons/fluent/chart-multiple-24-regular";
+	import FluentNews from "~icons/fluent/news-24-regular";
+	import FluentTarget from "~icons/fluent/target-24-regular";
+	import FluentBuildingFactory from "~icons/fluent/building-factory-24-regular";
+	import FluentContactCard from "~icons/fluent/contact-card-24-regular";
 	import OnboardingSheet from "$lib/component/OnboardingSheet.svelte";
 	import { navigating, page } from "$app/state";
 	import { resolve } from "$app/paths";
@@ -11,11 +11,11 @@
 	const { children, data } = $props();
 
 	const navItems = [
-		{ href: "/", icon: FluentEmojiBarChart, label: "Dashboard" },
-		{ href: "/posts", icon: FluentEmojiNewspaper, label: "Posts" },
-		{ href: "/training", icon: FluentEmojiMilitaryHelmet, label: "Training" },
-		{ href: "/production", icon: FluentEmojiNutAndBolt, label: "Production" },
-		{ href: "/user/" + data.account.id, icon: FluentEmojiIdentificationCard, label: "Profile" }
+		{ href: "/", icon: FluentChartMultiple, label: "Dashboard" },
+		{ href: "/posts", icon: FluentNews, label: "Posts" },
+		{ href: "/training", icon: FluentTarget, label: "Training" },
+		{ href: "/production", icon: FluentBuildingFactory, label: "Production" },
+		{ href: "/user/" + data.account.id, icon: FluentContactCard, label: "Profile" }
 	];
 
 	const isActive = (href: string) => {

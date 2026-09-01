@@ -35,9 +35,3 @@
 	{/key}
 </div>
 
-<style>
-	:global(body) {
-		background: linear-gradient(135deg, #0f172a 0%, #1a1f3a 50%, #0f172a 100%);
-		background-attachment: fixed;
-	}
-</style>

@@ -67,54 +67,7 @@
 	font-family: var(--font-editorial);
 }
 
-@utility gaming-card {
-	@apply relative border border-[#dfceb0]/20 bg-[#14283f]/90;
-	box-shadow: 0 14px 32px rgba(2, 10, 21, 0.22), inset 0 1px 0 rgba(255, 253, 247, 0.05);
-}
-
-@utility gaming-card-hover {
-	@apply transition-all duration-300 hover:border-[#e6a527]/60;
-	box-shadow: 0 18px 38px rgba(2, 10, 21, 0.28), inset 0 1px 0 rgba(255, 253, 247, 0.05);
-}
-
-@utility gaming-button {
-	@apply relative px-4 py-2 font-semibold text-[#172a45] bg-[#e6a527] border border-[#f2c463] rounded-sm transition-all duration-200;
-	box-shadow: 0 3px 0 rgba(112, 65, 10, 0.42);
-}
-
-@utility gaming-input {
-	@apply bg-[#0d1d31] border border-[#dfceb0]/20 text-[#fff7e8] placeholder:text-[#b3a68e]/55 rounded-sm transition-all duration-300;
-	box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.28);
-}
-
-@utility gaming-badge {
-	@apply inline-block px-3 py-1 text-xs font-bold text-[#f7c56b] bg-[#e6a527]/10 border border-[#e6a527]/40 rounded-full;
-}
-
-@utility gaming-header {
-	@apply relative text-[#fff7e8] tracking-wide;
-	font-family: var(--font-editorial);
-}
-
-@utility gaming-stat {
-	@apply flex items-center justify-between p-3 gaming-card rounded-sm;
-}
-
-@utility gaming-stat-value {
-	@apply text-lg font-bold text-[#f7c56b];
-}
-
-@utility gaming-progress {
-	@apply relative h-2 bg-[#0d1d31] border border-[#dfceb0]/15 rounded-full overflow-hidden;
-}
-
-@utility gaming-progress-bar {
-	@apply h-full bg-[#e6a527] transition-all duration-500;
-	box-shadow: 0 0 10px rgba(230, 165, 39, 0.34);
-}
-
 @layer base {
-	/* Gaming-style neon effects */
 	body {
 		color: #fff7e8;
 		background-color: #0c1929;
@@ -128,46 +81,6 @@
 		font-family: var(--font-editorial);
 		letter-spacing: -0.02em;
 	}
-	@keyframes neon-glow {
-		0%,
-		100% {
-			text-shadow:
-				0 0 10px #00ffff,
-				0 0 20px #00ffff,
-				0 0 30px #00ffff;
-		}
-		50% {
-			text-shadow:
-				0 0 20px #00ffff,
-				0 0 30px #00ffff,
-				0 0 40px #00ffff;
-		}
-	}
-
-	@keyframes neon-border {
-		0%,
-		100% {
-			box-shadow:
-				0 0 10px rgba(0, 255, 255, 0.5),
-				inset 0 0 10px rgba(0, 255, 255, 0.1);
-		}
-		50% {
-			box-shadow:
-				0 0 20px rgba(0, 255, 255, 0.8),
-				inset 0 0 15px rgba(0, 255, 255, 0.2);
-		}
-	}
-
-	@keyframes pulse-neon {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.8;
-		}
-	}
-
 	@keyframes slide-up {
 		from {
 			transform: translateY(100%);
@@ -177,26 +90,8 @@
 		}
 	}
 
-	@keyframes scanlines {
-		0% {
-			transform: translateY(0);
-		}
-		100% {
-			transform: translateY(10px);
-		}
-	}
-
 	.animate-slide-up {
 		animation: slide-up 0.3s ease-out;
-	}
-	.animate-neon-glow {
-		animation: neon-glow 2s ease-in-out infinite;
-	}
-	.animate-neon-border {
-		animation: neon-border 2s ease-in-out infinite;
-	}
-	.animate-pulse-neon {
-		animation: pulse-neon 1.5s ease-in-out infinite;
 	}
 	.fade_in {
 		animation: fadeInAnimation 0.25s ease-in;
@@ -236,22 +131,6 @@
 		}
 	}
 
-	.gaming-button:hover {
-		@apply border-[#ffe2a4];
-		box-shadow: 0 5px 0 rgba(112, 65, 10, 0.34);
-		transform: translateY(-2px);
-	}
-
-	.gaming-button:active {
-		transform: translateY(2px) scale(0.98);
-		box-shadow: 0 1px 0 rgba(112, 65, 10, 0.34);
-	}
-
-	.gaming-input:focus {
-		@apply border-[#e6a527]/70 outline-none;
-		box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.28), 0 0 0 3px rgba(230, 165, 39, 0.12);
-	}
-
 	/* Editorial dock navigation */
 	.dock {
 		@apply fixed bottom-0 left-0 right-0 h-16 bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 flex items-center justify-around px-2;
@@ -285,15 +164,6 @@
 		.dock a svg {
 			@apply size-5;
 		}
-		.gaming-card {
-			@apply p-3;
-		}
-		.gaming-button {
-			@apply px-3 py-2 text-sm;
-		}
-		.gaming-header {
-			@apply text-lg;
-		}
 	}
 
 	@media (max-width: 480px) {
@@ -305,15 +175,6 @@
 		}
 		.dock a {
 			@apply w-full h-12 rounded-none;
-		}
-		.gaming-card {
-			@apply p-2;
-		}
-		.gaming-stat {
-			@apply p-2;
-		}
-		.gaming-badge {
-			@apply px-2 py-0.5 text-xs;
 		}
 	}
 
