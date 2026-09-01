@@ -11,7 +11,6 @@ import { accounts, userProfiles } from "$lib/server/schema";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
 import { createHmac } from "crypto";
-import { redirect } from "@sveltejs/kit";
 
 function verifyTelegramData(data: Record<string, string>, botToken: string): boolean {
 	const checkString = Object.keys(data)
@@ -124,66 +123,12 @@ async function handleTelegramAuth(telegramUser: TelegramUser, cookies: any) {
 	};
 }
 
-// Handle GET requests from Telegram Web App
-export const GET: RequestHandler = async ({ url, cookies }) => {
-	try {
-		// Parse Telegram data from URL parameters
-		const params = new URLSearchParams(url.search);
-		const telegramData: Record<string, string> = {};
-
-		// Extract all Telegram parameters
-		const telegramParams = ["id", "first_name", "last_name", "username", "photo_url", "auth_date", "hash"];
-
-		for (const param of telegramParams) {
-			const value = params.get(param);
-			if (value) {
-				telegramData[param] = value;
-			}
-		}
-
-		// Get the next parameter for redirect
-		const next = params.get("next") || "/";
-
-		if (!telegramData.hash || !telegramData.auth_date) {
-			console.error("❌ Missing required Telegram parameters");
-			redirect(302, `/auth/login?error=missing_params&next=${encodeURIComponent(next)}`);
-		}
-
-		// Verify the data from Telegram
-		if (!verifyTelegramData(telegramData, TELEGRAM_BOT_TOKEN)) {
-			console.error("❌ Invalid Telegram data signature");
-			redirect(302, `/auth/login?error=invalid_signature&next=${encodeURIComponent(next)}`);
-		}
-
-		// Check if auth_date is recent (within 5 minutes)
-		const authTime = parseInt(telegramData.auth_date) * 1000;
-		const now = Date.now();
-		if (now - authTime > 5 * 60 * 1000) {
-			console.error("❌ Auth data too old");
-			redirect(302, `/auth/login?error=auth_expired&next=${encodeURIComponent(next)}`);
-		}
-
-		const telegramUser: TelegramUser = {
-			id: parseInt(telegramData.id),
-			first_name: telegramData.first_name,
-			username: telegramData.username,
-			photo_url: telegramData.photo_url,
-			auth_date: parseInt(telegramData.auth_date),
-			hash: telegramData.hash
-		};
-
-		console.log("👤 Telegram user:", telegramUser.username || telegramUser.first_name);
-
-		const result = await handleTelegramAuth(telegramUser, cookies);
-
-		redirect(302, result.redirectTo);
-	} catch (e) {
-		console.error("❌ Error during Telegram authentication:", e);
-		redirect(302, "/auth/login?error=server_error");
-	}
-};
-
-// Handle POST requests from Web App
+// Handle POST requests from the Telegram Login Widget (see
+// src/lib/components/TelegramLoginWidget.svelte). This is the only entry
+// point now — the old GET flow (driven by a raw redirect to
+// oauth.telegram.org/tg/start) was dropped because that endpoint is
+// undocumented and unreliable; the widget's popup-based auth is Telegram's
+// supported integration.
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
 		const body = await request.json();

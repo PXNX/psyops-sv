@@ -12,11 +12,9 @@ const TELEGRAM_BOT_TOKEN_VAL = env.TELEGRAM_BOT_TOKEN || "mock-bot-token";
 
 export const google = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI);
 
-// Telegram OAuth2 configuration
-export const TELEGRAM_CLIENT_ID = TELEGRAM_BOT_TOKEN_VAL;
+// Telegram login (see src/lib/components/TelegramLoginWidget.svelte and
+// src/routes/(unauthenticated)/auth/callback/telegram/+server.ts)
 export const TELEGRAM_BOT_TOKEN = TELEGRAM_BOT_TOKEN_VAL;
-export const TELEGRAM_REDIRECT_URI = `${env.PUBLIC_APP_URL || "http://localhost:5173"}/auth/callback/telegram`;
-export const TELEGRAM_API_URL = "https://api.telegram.org";
 
 export interface TelegramUser {
 	id: number;
