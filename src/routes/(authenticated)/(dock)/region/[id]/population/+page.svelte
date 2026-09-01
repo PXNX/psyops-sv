@@ -32,7 +32,7 @@
 	<div
 		class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-gradient-to-br from-purple-900/30 via-slate-900/50 to-blue-900/30 border-b border-white/5"
 	>
-		<div class="max-w-4xl mx-auto flex items-center gap-5">
+		<div class="max-w-6xl mx-auto flex items-center gap-5">
 			<a href="/region/{data.region.id}" class="shrink-0">
 				<Logo
 					src="/coats/{data.region.id}.svg"

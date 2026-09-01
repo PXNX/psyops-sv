@@ -21,6 +21,12 @@
 				<p class="mt-1 text-base-content">
 					The page <code class="p-1 rounded bg-neutral text-neutral-content">{page.url.pathname}</code> does not exist.
 				</p>
+			{:else if page.status === 403}
+				<FluentEmojiEyes class="w-12 h-12" />
+				<h1 class="mt-2 text-xl font-semibold text-error">Access denied</h1>
+				<p class="mt-1 text-base-content">
+					{page.error?.message || "You don't have permission to access this page."}
+				</p>
 			{:else if page.status === 500}
 				<FluentEmojiKnockedOutFace class="w-12 h-12" />
 
@@ -37,7 +43,11 @@
 					</div>
 				{/if}
 			{:else}
-				<p>what the fuck</p>
+				<FluentEmojiKnockedOutFace class="w-12 h-12" />
+				<h1 class="mt-2 text-xl font-semibold text-error">Error {page.status}</h1>
+				<p class="mt-1 text-base-content">
+					{page.error?.message || "Something went wrong while loading this page."}
+				</p>
 			{/if}
 
 		<a href={`https://t.me/${botUsername}`} class="mt-4 btn btn-md btn-wide">

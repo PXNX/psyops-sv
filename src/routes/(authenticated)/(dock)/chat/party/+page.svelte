@@ -238,7 +238,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="flex flex-col h-full">
+	<div class="flex flex-col h-full min-h-0">
 		<!-- Header -->
 		<div class="bg-slate-900/80 backdrop-blur-sm border-b border-white/10 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
 			<div class="flex items-center gap-2 md:gap-3">
@@ -275,7 +275,7 @@
 		<div
 			bind:this={chatContainer}
 			onscroll={handleScroll}
-			class="flex-1 bg-gradient-to-b from-slate-900/50 to-slate-900/30 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent"
+			class="flex-1 min-h-0 bg-gradient-to-b from-slate-900/50 to-slate-900/30 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent"
 		>
 			{#if allMessages.length === 0}
 				<div class="flex items-center justify-center h-full">
