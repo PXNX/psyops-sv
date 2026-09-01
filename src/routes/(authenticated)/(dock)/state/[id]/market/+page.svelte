@@ -66,18 +66,18 @@
 <div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div>
-		<a href="/state/{data.state.id}/economy" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+		<a href="/state/{data.state.id}/economy" class="text-sm text-[#c7bda9] hover:text-[#f7c56b] transition-colors">
 			{data.state.name} — Economy
 		</a>
-		<h1 class="text-3xl font-bold text-white flex items-center gap-3 mt-1">
-			<FluentCart20Filled class="size-8 text-purple-400" />
+		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3 mt-1">
+			<FluentCart20Filled class="size-8 text-[#e6a527]" />
 			Government Market
 		</h1>
-		<p class="text-sm text-gray-400 mt-1">Buy and sell resources on behalf of the state</p>
+		<p class="text-sm text-[#c7bda9] mt-1">Buy and sell resources on behalf of the state</p>
 	</div>
 
 	{#if !data.canTrade}
-		<div class="bg-amber-600/10 border border-amber-500/20 rounded-xl p-5">
+		<div class="bg-amber-600/10 border border-amber-500/20 rounded-sm p-5">
 			<div class="flex items-start gap-3">
 				<FluentWarning20Filled class="size-5 text-amber-400 flex-shrink-0 mt-0.5" />
 				<div>

@@ -135,14 +135,14 @@
 				bind:value={$form.name}
 				placeholder="e.g., Republic of Liberty"
 				maxlength="100"
-				class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
+				class="field-control w-full rounded-sm px-3 py-2"
 				class:input-error={$errors.name}
 				disabled={$submitting === true || data.onCooldown}
 			/>
 			{#if $errors.name}
-				<p class="text-xs text-red-400">{$errors.name}</p>
+				<p class="field-error">{$errors.name}</p>
 			{:else}
-				<p class="text-xs text-gray-400">{$form.name?.length || 0}/100 characters</p>
+				<p class="field-hint">{$form.name?.length || 0}/100 characters</p>
 			{/if}
 		</EditSection>
 
@@ -184,7 +184,7 @@
 
 		<!-- Resource Requirements -->
 		{#if data.editCost !== undefined && data.userBalance !== undefined}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-2">
+			<div class="panel rounded-sm p-5 space-y-2">
 				<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 				<EditFormActions
 					cancelHref="/state/{data.state.id}"

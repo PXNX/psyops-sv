@@ -9,6 +9,7 @@
 	import Logo from "$lib/component/Logo.svelte";
 	import { formatDateTime } from "$lib/utils/formatting.js";
 	import ShareButton from "$lib/component/ShareButton.svelte";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	const { data } = $props();
 
@@ -75,14 +76,14 @@
 	{/if}
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+<div class="min-h-screen bg-[#0c1929]">
 	<!-- Command Header -->
-	<div class="border-b border-purple-900/30 bg-slate-900/80 backdrop-blur-xl">
+	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
 			<div class="flex items-center gap-4">
 				<button
 					onclick={() => history.back()}
-					class="flex-shrink-0 p-2 rounded-lg bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-300 hover:text-white transition-all"
+					class="flex-shrink-0 p-2 rounded-lg bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8] transition-all"
 				>
 					<FluentArrowLeft20Filled class="size-5" />
 				</button>
@@ -90,25 +91,25 @@
 				<!-- Author Info -->
 				<a href="/user/{data.article.authorId}" class="flex items-center gap-3 group flex-1 min-w-0">
 					<div class="relative flex-shrink-0">
-						<div class="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
-						<div class="relative size-12 sm:size-14 rounded-lg border-2 border-purple-500/30 overflow-hidden">
+						<div class="absolute inset-0 bg-[#e6a527]/15 blur-xl rounded-full"></div>
+						<div class="relative size-12 sm:size-14 rounded-sm border-2 border-[#e6a527]/30 overflow-hidden">
 							<Logo src={data.article.authorLogo} alt={data.article.authorName} />
 						</div>
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="text-sm font-bold text-white group-hover:text-purple-400 transition-colors truncate">
+						<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate">
 							{data.article.authorName}
 						</p>
 						{#if data.article.newspaperName}
 							<a
 								href="/newspaper/{data.article.newspaperId}"
-								class="flex items-center gap-1 text-xs text-slate-500 hover:text-purple-400 transition-colors font-mono"
+								class="flex items-center gap-1 text-xs text-[#a89e8e] hover:text-[#f7c56b] transition-colors font-mono"
 							>
 								<FluentEmojiRolledUpNewspaper class="size-3" />
 								{data.article.newspaperName}
 							</a>
 						{/if}
-						<span class="flex items-center gap-1 text-[10px] text-slate-600 font-mono mt-0.5">
+						<span class="flex items-center gap-1 text-[10px] text-[#a89e8e] font-mono mt-0.5">
 							<FluentClock20Regular class="size-3" />
 							{formatDateTime(data.article.createdAt)}
 						</span>
@@ -118,10 +119,7 @@
 				<!-- Actions -->
 				<div class="flex items-center gap-2 flex-shrink-0">
 					{#if data.isAuthor}
-						<a
-							href="/posts/{data.article.id}/edit"
-							class="px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 rounded-lg text-purple-400 hover:text-purple-300 transition-all flex items-center gap-2 text-xs font-mono"
-						>
+						<a href="/posts/{data.article.id}/edit" class={buttonClass({ variant: "soft-amber", class: "text-xs font-mono" })}>
 							<FluentEdit20Filled class="size-3.5" />
 							<span class="hidden sm:inline">Edit</span>
 						</a>
@@ -135,22 +133,20 @@
 	<div class="w-full px-4 sm:px-6 py-6 sm:py-8">
 		<div class="max-w-4xl mx-auto space-y-8">
 			<!-- Headline -->
-			<h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight tracking-wide">
+			<h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#fff7e8] leading-tight tracking-wide">
 				{data.article.title}
 			</h1>
 
 			<!-- Divider -->
-			<div class="border-t border-slate-700/50"></div>
+			<div class="border-t border-[#dfceb0]/15"></div>
 
 			<!-- Article Body -->
-			<div class="prose prose-invert prose-lg max-w-none">
-				<div class="article-content text-slate-300 leading-relaxed">
-					{@html data.article.content}
-				</div>
+			<div class="article-content">
+				{@html data.article.content}
 			</div>
 
 			<!-- Bottom Divider -->
-			<div class="border-t border-slate-700/50"></div>
+			<div class="border-t border-[#dfceb0]/15"></div>
 
 			<!-- Bottom Actions -->
 			<div class="flex items-center justify-between">
@@ -161,7 +157,7 @@
 						onclick={toggleUpvote}
 						class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-mono transition-all {hasUpvoted
 							? 'bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 text-red-400'
-							: 'bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-400 hover:text-white'}"
+							: 'bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#a89e8e] hover:text-[#fff7e8]'}"
 						disabled={isSubmitting}
 					>
 						{#if hasUpvoted}

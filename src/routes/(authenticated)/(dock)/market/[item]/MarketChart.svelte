@@ -177,12 +177,12 @@
   Outer wrapper: no horizontal padding on mobile so the chart bleeds to the
   card edges. Vertical padding kept so the header breathes.
 -->
-<div class="bg-slate-800/50 border border-white/5 rounded-xl overflow-hidden" bind:clientWidth={containerWidth}>
+<div class="panel rounded-sm overflow-hidden" bind:clientWidth={containerWidth}>
 	<!-- ── Header ──────────────────────────────────────────────────────────── -->
 	<div class="px-4 pt-4 pb-2 select-none">
 		<!-- Price row -->
 		<div class="flex items-baseline gap-2 flex-wrap">
-			<span class="text-2xl font-bold text-white tabular-nums leading-none">
+			<span class="text-2xl font-bold text-[#fff7e8] tabular-nums leading-none">
 				${fmtPrice(displayPrice)}
 			</span>
 			<span class="text-xs font-semibold tabular-nums {isUp ? 'text-green-400' : 'text-red-400'}">
@@ -207,7 +207,7 @@
 
 	<!-- ── Chart ───────────────────────────────────────────────────────────── -->
 	{#if !mounted}
-		<div style="height:{chartHeight}px" class="flex items-center justify-center text-gray-500 text-sm">Loading…</div>
+		<div style="height:{chartHeight}px" class="flex items-center justify-center text-[#a89e8e] text-sm">Loading…</div>
 	{:else if data.length > 1}
 		<!--
       touch-action:none prevents the page scrolling while finger is on the
@@ -232,8 +232,8 @@
 					<stop offset="100%" stop-color={isUp ? "#4ade80" : "#f87171"} stop-opacity="0.02" />
 				</linearGradient>
 				<linearGradient id={gradGrayId} x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color="#94a3b8" stop-opacity="0.10" />
-					<stop offset="100%" stop-color="#94a3b8" stop-opacity="0.01" />
+					<stop offset="0%" stop-color="#a89e8e" stop-opacity="0.10" />
+					<stop offset="100%" stop-color="#a89e8e" stop-opacity="0.01" />
 				</linearGradient>
 				<clipPath id={clipId}>
 					<rect x={PAD.left} y={PAD.top} width={innerW} height={innerH} />
@@ -247,8 +247,8 @@
 					x2={PAD.left + innerW}
 					y1={y}
 					y2={y}
-					stroke="#ffffff"
-					stroke-opacity="0.05"
+					stroke="#dfceb0"
+					stroke-opacity="0.06"
 					stroke-width="1"
 				/>
 			{/each}
@@ -259,7 +259,7 @@
 				x2={PAD.left + innerW}
 				y1={baselineY}
 				y2={baselineY}
-				stroke="#64748b"
+				stroke="#a89e8e"
 				stroke-width="1"
 				stroke-dasharray="4 4"
 				stroke-opacity="0.5"
@@ -273,7 +273,7 @@
 				<path
 					d={rightLine}
 					fill="none"
-					stroke="#475569"
+					stroke="#a89e8e"
 					stroke-width="1.5"
 					stroke-linecap="round"
 					stroke-linejoin="round"
@@ -304,10 +304,10 @@
 					x2={scrubX}
 					y1={PAD.top}
 					y2={PAD.top + innerH}
-					stroke="#94a3b8"
+					stroke="#dfceb0"
 					stroke-width="1"
 					stroke-dasharray="3 3"
-					stroke-opacity="0.6"
+					stroke-opacity="0.4"
 				/>
 			{/if}
 
@@ -319,8 +319,9 @@
 					width={PILL_W}
 					height={22}
 					rx="5"
-					fill="#1e293b"
-					stroke="#334155"
+					fill="#102239"
+					stroke="#dfceb0"
+					stroke-opacity="0.25"
 					stroke-width="1"
 				/>
 				<text x={pillX} y={PAD.top - 12} text-anchor="middle" class="date-label">
@@ -335,7 +336,7 @@
 					cy={sy(activePoint.y)}
 					r={isMobile ? 5 : 4}
 					fill={isUp ? "#4ade80" : "#f87171"}
-					stroke="#1e293b"
+					stroke="#14283f"
 					stroke-width="2"
 				/>
 			{/if}
@@ -354,7 +355,7 @@
 			{/each}
 		</svg>
 	{:else}
-		<div style="height:{chartHeight}px" class="flex items-center justify-center text-gray-400 text-sm px-4">
+		<div style="height:{chartHeight}px" class="flex items-center justify-center text-[#a89e8e] text-sm px-4">
 			Not enough data
 		</div>
 	{/if}
@@ -369,7 +370,7 @@
 		letter-spacing: 0.03em;
 		background: transparent;
 		border: 1px solid transparent;
-		color: #475569;
+		color: #a89e8e;
 		cursor: pointer;
 		transition:
 			color 0.1s,
@@ -382,23 +383,23 @@
 		justify-content: center;
 	}
 	.range-btn:hover {
-		color: #94a3b8;
-		border-color: #334155;
+		color: #d9ccb7;
+		border-color: rgba(223, 206, 176, 0.2);
 	}
 	.range-btn.active {
-		color: #f1f5f9;
-		background: #1e293b;
-		border-color: #475569;
+		color: #f7c56b;
+		background: rgba(230, 165, 39, 0.1);
+		border-color: rgba(230, 165, 39, 0.3);
 	}
 
 	.axis-label {
 		font-family: ui-monospace, "Cascadia Code", monospace;
 		font-size: 10px;
-		fill: #475569;
+		fill: #a89e8e;
 	}
 	.date-label {
 		font-family: ui-monospace, "Cascadia Code", monospace;
 		font-size: 11px;
-		fill: #cbd5e1;
+		fill: #e5d8c1;
 	}
 </style>

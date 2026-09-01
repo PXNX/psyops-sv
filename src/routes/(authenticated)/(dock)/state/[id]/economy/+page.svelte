@@ -12,6 +12,7 @@
 	import FluentCart20Filled from "~icons/fluent/cart-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	let { data } = $props();
 
@@ -81,93 +82,93 @@
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div>
-		<a href="/state/{data.state.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+		<a href="/state/{data.state.id}" class="text-sm text-[#a89e8e] hover:text-[#e6a527] transition-colors">
 			{data.state.name}
 		</a>
-		<h1 class="text-3xl font-bold text-white flex items-center gap-3 mt-1">
-			<FluentMoney20Filled class="size-8 text-green-400" />
+		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3 mt-1">
+			<FluentMoney20Filled class="size-8 text-[#e6a527]" />
 			Ministry of Economy
 		</h1>
 		{#if data.isPresident}
-			<p class="text-xs text-yellow-400 mt-1">👑 Accessing as President</p>
+			<p class="text-xs text-[#f7c56b] mt-1">👑 Accessing as President</p>
 		{/if}
 	</div>
 
 	<!-- Stats Overview -->
 	<div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+		<div class="panel rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<div class="size-10 bg-green-600/20 rounded-lg flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-green-400" />
+				<div class="size-10 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm flex items-center justify-center">
+					<FluentMoney20Filled class="size-5 text-[#c6dfbf]" />
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">State Treasury</p>
-					<p class="text-lg font-bold text-white">${(data.treasury.balance / 100).toFixed(2)}</p>
+					<p class="text-xs text-[#a89e8e]">State Treasury</p>
+					<p class="text-lg font-bold text-[#fff7e8]">${(data.treasury.balance / 100).toFixed(2)}</p>
 				</div>
 			</div>
 		</div>
 
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+		<div class="panel rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<div class="size-10 bg-amber-600/20 rounded-lg flex items-center justify-center">
-					<FluentFlash20Filled class="size-5 text-amber-400" />
+				<div class="size-10 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center">
+					<FluentFlash20Filled class="size-5 text-[#f7c56b]" />
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Power Output</p>
-					<p class="text-lg font-bold text-white">{totalPowerOutput} MW</p>
+					<p class="text-xs text-[#a89e8e]">Power Output</p>
+					<p class="text-lg font-bold text-[#fff7e8]">{totalPowerOutput} MW</p>
 				</div>
 			</div>
 		</div>
 
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+		<div class="panel rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-					<FluentBuildingFactory20Filled class="size-5 text-blue-400" />
+				<div class="size-10 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center">
+					<FluentBuildingFactory20Filled class="size-5 text-[#b7d0e6]" />
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Power Plants</p>
-					<p class="text-lg font-bold text-white">{data.powerPlants.length}</p>
+					<p class="text-xs text-[#a89e8e]">Power Plants</p>
+					<p class="text-lg font-bold text-[#fff7e8]">{data.powerPlants.length}</p>
 				</div>
 			</div>
 		</div>
 
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+		<div class="panel rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-					<span class="text-lg font-bold text-purple-400">{energyUtilization}%</span>
+				<div class="size-10 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm flex items-center justify-center">
+					<span class="text-lg font-bold text-[#d5c4df]">{energyUtilization}%</span>
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Energy Utilization</p>
-					<p class="text-xs text-gray-500">{data.energyInfo.usedProduction}/{data.energyInfo.totalProduction} MW</p>
+					<p class="text-xs text-[#a89e8e]">Energy Utilization</p>
+					<p class="text-xs text-[#a89e8e]">{data.energyInfo.usedProduction}/{data.energyInfo.totalProduction} MW</p>
 				</div>
 			</div>
 		</div>
 	</div>
 
 	<!-- Treasury Overview -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
-		<div class="flex items-center gap-2">
-			<FluentMoney20Filled class="size-5 text-green-400" />
-			<h2 class="text-lg font-semibold text-white">Treasury Overview</h2>
+	<div class="panel rounded-sm p-5 space-y-4">
+		<div class="section-title">
+			<FluentMoney20Filled class="size-5 text-[#e6a527]" />
+			Treasury Overview
 		</div>
 
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-			<div class="bg-slate-700/30 rounded-lg p-4">
-				<p class="text-xs text-gray-400 mb-1">Current Balance</p>
-				<p class="text-2xl font-bold text-green-400">${(data.treasury.balance / 100).toLocaleString()}</p>
+			<div class="panel-muted rounded-sm p-4">
+				<p class="text-xs text-[#a89e8e] mb-1">Current Balance</p>
+				<p class="text-2xl font-bold text-[#f7c56b]">${(data.treasury.balance / 100).toLocaleString()}</p>
 			</div>
-			<div class="bg-slate-700/30 rounded-lg p-4">
-				<p class="text-xs text-gray-400 mb-1">Total Collected</p>
-				<p class="text-2xl font-bold text-blue-400">${(data.treasury.totalCollected / 100).toLocaleString()}</p>
+			<div class="panel-muted rounded-sm p-4">
+				<p class="text-xs text-[#a89e8e] mb-1">Total Collected</p>
+				<p class="text-2xl font-bold text-[#b7d0e6]">${(data.treasury.totalCollected / 100).toLocaleString()}</p>
 			</div>
-			<div class="bg-slate-700/30 rounded-lg p-4">
-				<p class="text-xs text-gray-400 mb-1">Total Spent</p>
+			<div class="panel-muted rounded-sm p-4">
+				<p class="text-xs text-[#a89e8e] mb-1">Total Spent</p>
 				<p class="text-2xl font-bold text-red-400">${(data.treasury.totalSpent / 100).toLocaleString()}</p>
 			</div>
 		</div>
 
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-3">
-			<p class="text-xs text-blue-300">
+		<div class="bg-[#315d8d]/10 border border-[#7ba0c8]/25 rounded-sm p-3">
+			<p class="text-xs text-[#b7d0e6]">
 				<FluentWarning20Filled class="inline size-3" />
 				Treasury funds come from taxes, state exports, and visa fees
 			</p>
@@ -175,16 +176,13 @@
 	</div>
 
 	<!-- State Resources -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+	<div class="panel rounded-sm p-5 space-y-4">
 		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-2">
-				<FluentBox20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">State Resources</h2>
+			<div class="section-title">
+				<FluentBox20Filled class="size-5 text-[#e6a527]" />
+				State Resources
 			</div>
-			<a
-				href="/state/{data.state.id}/market"
-				class="btn btn-sm bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30 text-purple-300 hover:text-purple-200 gap-1"
-			>
+			<a href="/state/{data.state.id}/market" class={buttonClass({ variant: "soft-purple", size: "sm" })}>
 				<FluentCart20Filled class="size-4" />
 				Gov. Market
 				<FluentArrowRight20Filled class="size-4" />
@@ -194,10 +192,10 @@
 		<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
 			{#each allResources as resource}
 				{@const quantity = resourceMap.get(resource) || 0}
-				<div class="bg-slate-700/30 rounded-lg border border-slate-600/20 p-4 text-center space-y-2">
+				<div class="panel-muted rounded-sm p-4 text-center space-y-2">
 					<ResourceIcon name={resource} class="size-7 mx-auto" />
-					<p class="text-xs font-medium capitalize text-gray-400">{resource}</p>
-					<p class="text-lg font-bold {quantity > 0 ? 'text-purple-300' : 'text-gray-500'}">{quantity}</p>
+					<p class="text-xs font-medium capitalize text-[#a89e8e]">{resource}</p>
+					<p class="text-lg font-bold {quantity > 0 ? 'text-[#d5c4df]' : 'text-[#a89e8e]'}">{quantity}</p>
 				</div>
 			{/each}
 		</div>

@@ -10,6 +10,7 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibot } from "sveltekit-superforms/adapters";
 	import { editArticleSchema } from "./schema";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	const { data } = $props();
 
@@ -88,14 +89,14 @@
 	<title>Edit Post</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex flex-col">
+<div class="min-h-screen bg-[#0c1929] flex flex-col">
 	<!-- Editor Header -->
-	<header class="sticky top-0 z-10 border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl">
+	<header class="sticky top-0 z-10 border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
 		<div class="w-full px-3 sm:px-6 py-3 sm:py-4">
 			<div class="flex items-center gap-2 sm:gap-3">
 				<button
 					onclick={handlePublish}
-					class="p-2 sm:p-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 text-white transition-all"
+					class="p-2 sm:p-2.5 rounded-lg bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
 					title="Save Changes"
 					disabled={!canSave() || $submitting === true}
 				>
@@ -104,7 +105,7 @@
 
 				{#if editorComponent}
 					<button
-						class="p-2 sm:p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-300 hover:text-white transition-all"
+						class="p-2 sm:p-2.5 rounded-lg bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8] transition-all"
 						onclick={() => editorComponent?.undo()}
 						title="Undo"
 						disabled={$submitting === true}
@@ -112,7 +113,7 @@
 						<FluentArrowHookUpLeft20Regular class="size-5" />
 					</button>
 					<button
-						class="p-2 sm:p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-300 hover:text-white transition-all"
+						class="p-2 sm:p-2.5 rounded-lg bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8] transition-all"
 						onclick={() => editorComponent?.redo()}
 						title="Redo"
 						disabled={$submitting === true}
@@ -123,13 +124,13 @@
 
 				<div class="flex-1"></div>
 
-				<span class="text-xs text-slate-500 font-mono hidden sm:inline">
+				<span class="text-xs text-[#a89e8e] font-mono hidden sm:inline">
 					{$formData.title.length}/200
 				</span>
 
 				<button
 					onclick={handleCancel}
-					class="p-2 sm:p-2.5 rounded-lg bg-slate-800/60 hover:bg-red-950/40 border border-slate-600/30 hover:border-red-500/30 text-slate-300 hover:text-red-400 transition-all"
+					class="p-2 sm:p-2.5 rounded-lg bg-[#14283f] hover:bg-red-950/40 border border-[#dfceb0]/25 hover:border-red-500/30 text-[#e5d8c1] hover:text-red-400 transition-all"
 					title="Cancel"
 					disabled={$submitting === true}
 				>
