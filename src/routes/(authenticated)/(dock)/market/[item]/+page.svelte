@@ -11,6 +11,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-regular";
 	import MarketChart from "./MarketChart.svelte";
+	import { buttonClass, badgeClass } from "$lib/component/ui/styles";
 
 	let { data, form } = $props();
 
@@ -49,7 +50,12 @@
 
 	const totalAvailableForListing = $derived(data.userItemQuantity + (data.myListing?.quantity ?? 0));
 
-	const accentColor = $derived(data.itemType === "resource" ? "purple" : "cyan");
+	// Editorial accent tokens: resources read as soft-purple, products as soft-blue.
+	const ACCENTS = {
+		resource: { text: "text-[#d5c4df]", border: "border-[#8c709b]/40" },
+		product: { text: "text-[#b7d0e6]", border: "border-[#315d8d]/40" }
+	};
+	const accent = $derived(data.itemType === "resource" ? ACCENTS.resource : ACCENTS.product);
 
 	const cooldownDisplay = $derived.by(() => {
 		if (cooldownTimeRemaining <= 0) return null;
@@ -83,34 +89,32 @@
 		const diff = price - low;
 		if (diff < 0) return { label: `$${Math.abs(diff).toLocaleString()} below market low`, cls: "text-green-400" };
 		if (diff > 0) return { label: `$${diff.toLocaleString()} above market low`, cls: "text-amber-400" };
-		return { label: "Matches market low", cls: "text-blue-400" };
+		return { label: "Matches market low", cls: "text-[#b7d0e6]" };
 	}
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-8">
+<div class="min-h-screen pb-8">
 	<!-- Header -->
-	<div class="border-b border-{accentColor}-900/30 bg-slate-900/80 backdrop-blur-xl">
+	<div class="border-b border-[#dfceb0]/15 bg-[#0c1929]/90 backdrop-blur-xl">
 		<div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-3 sm:gap-5">
 					<a
 						href="/market"
-						class="size-10 flex items-center justify-center bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-slate-500/50 transition-colors"
+						class="size-10 flex items-center justify-center bg-[#102239]/70 rounded-sm border border-[#dfceb0]/15 hover:border-[#dfceb0]/35 transition-colors"
 					>
-						<FluentArrowLeft20Filled class="size-4 text-slate-400" />
+						<FluentArrowLeft20Filled class="size-4 text-[#c7bda9]" />
 					</a>
 					<div
-						class="size-14 sm:size-16 flex items-center justify-center bg-slate-800/50 rounded-lg border-2 border-{accentColor}-500/30"
+						class="size-14 sm:size-16 flex items-center justify-center bg-[#102239]/70 rounded-sm border-2 {accent.border}"
 					>
 						<span class="text-3xl sm:text-4xl">{itemIcon}</span>
 					</div>
 					<div>
-						<h1
-							class="text-xl sm:text-3xl font-bold tracking-wider uppercase font-mono text-{accentColor}-400 capitalize"
-						>
+						<h1 class="text-xl sm:text-3xl font-bold tracking-wider uppercase font-mono {accent.text} capitalize">
 							{data.itemName}
 						</h1>
-						<p class="text-xs sm:text-sm text-slate-500 font-mono capitalize">
+						<p class="text-xs sm:text-sm text-[#a89e8e] font-mono capitalize">
 							{data.itemType} · {data.otherListings.length + (data.myListing ? 1 : 0)} listing{data.otherListings
 								.length +
 								(data.myListing ? 1 : 0) !==
@@ -121,11 +125,11 @@
 					</div>
 				</div>
 
-				<div class="flex items-center gap-3 bg-slate-800/50 border border-green-500/20 rounded-lg px-4 py-3">
+				<div class="flex items-center gap-3 bg-[#102239]/70 border border-green-500/20 rounded-sm px-4 py-3">
 					<FluentMoney20Filled class="size-4 text-green-400" />
 					<div>
-						<p class="text-xs text-slate-500 font-mono">BALANCE</p>
-						<p class="text-base font-bold text-white font-mono">${data.wallet.balance.toLocaleString()}</p>
+						<p class="text-xs text-[#a89e8e] font-mono">BALANCE</p>
+						<p class="text-base font-bold text-[#fff7e8] font-mono">${data.wallet.balance.toLocaleString()}</p>
 					</div>
 				</div>
 			</div>
@@ -136,27 +140,27 @@
 		<!-- Stats Strip -->
 		{#if data.statistics}
 			<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-				<div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
-					<p class="text-xs text-slate-500 font-mono mb-1">AVG PRICE</p>
-					<p class="text-lg sm:text-xl font-bold text-white font-mono">
+				<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm p-3 sm:p-4">
+					<p class="text-xs text-[#a89e8e] font-mono mb-1">AVG PRICE</p>
+					<p class="text-lg sm:text-xl font-bold text-[#fff7e8] font-mono">
 						${data.statistics.currentAvgPrice.toLocaleString()}
 					</p>
 				</div>
-				<div class="bg-slate-900/50 border border-green-500/20 rounded-xl p-3 sm:p-4">
-					<p class="text-xs text-slate-500 font-mono mb-1">LOWEST</p>
+				<div class="bg-[#14283f]/85 border border-green-500/20 rounded-sm p-3 sm:p-4">
+					<p class="text-xs text-[#a89e8e] font-mono mb-1">LOWEST</p>
 					<p class="text-lg sm:text-xl font-bold text-green-400 font-mono">
 						${data.statistics.lowestPrice.toLocaleString()}
 					</p>
 				</div>
-				<div class="bg-slate-900/50 border border-red-500/20 rounded-xl p-3 sm:p-4">
-					<p class="text-xs text-slate-500 font-mono mb-1">HIGHEST</p>
+				<div class="bg-[#14283f]/85 border border-red-500/20 rounded-sm p-3 sm:p-4">
+					<p class="text-xs text-[#a89e8e] font-mono mb-1">HIGHEST</p>
 					<p class="text-lg sm:text-xl font-bold text-red-400 font-mono">
 						${data.statistics.highestPrice.toLocaleString()}
 					</p>
 				</div>
-				<div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
-					<p class="text-xs text-slate-500 font-mono mb-1">LISTINGS</p>
-					<p class="text-lg sm:text-xl font-bold text-{accentColor}-400 font-mono">{data.statistics.activeListings}</p>
+				<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm p-3 sm:p-4">
+					<p class="text-xs text-[#a89e8e] font-mono mb-1">LISTINGS</p>
+					<p class="text-lg sm:text-xl font-bold {accent.text} font-mono">{data.statistics.activeListings}</p>
 				</div>
 			</div>
 		{/if}
@@ -165,44 +169,33 @@
 		{#if data.priceHistory.length > 1}
 			<MarketChart priceHistory={data.priceHistory} {currentPrice} />
 		{:else if data.priceHistory.length === 0}
-			<div class="bg-slate-900/50 border border-slate-700/50 rounded-xl p-6 text-center py-10">
-				<FluentChartMultiple20Regular class="size-10 mx-auto opacity-20 mb-2 text-slate-500" />
-				<p class="text-sm text-slate-600 font-mono">No price history yet</p>
+			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm p-6 text-center py-10">
+				<FluentChartMultiple20Regular class="size-10 mx-auto opacity-20 mb-2 text-[#a89e8e]" />
+				<p class="text-sm text-[#a89e8e]/70 font-mono">No price history yet</p>
 			</div>
 		{/if}
 
 		<!-- Your Listing -->
-		<div
-			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-amber-500/20 rounded-xl overflow-hidden"
-		>
-			<div class="bg-amber-950/20 border-b border-amber-500/20 px-4 sm:px-6 py-3 sm:py-4">
+		<div class="bg-[#14283f]/85 border border-[#e6a527]/30 rounded-sm overflow-hidden">
+			<div class="bg-[#e6a527]/10 border-b border-[#e6a527]/25 px-4 sm:px-6 py-3 sm:py-4">
 				<div class="flex items-center justify-between">
-					<h2 class="text-sm sm:text-base font-bold text-amber-400 font-mono uppercase tracking-wide">Your Listing</h2>
+					<h2 class="text-sm sm:text-base font-bold text-[#f7c56b] font-mono uppercase tracking-wide">Your Listing</h2>
 					{#if data.myListing && !isEditing}
 						<div class="flex items-center gap-2">
-							<button
-								class="px-3 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50 rounded-lg text-xs text-slate-300 font-mono transition-colors flex items-center gap-1.5"
-								onclick={startEditing}
-							>
+							<button class={buttonClass({ variant: "secondary", size: "xs" })} onclick={startEditing}>
 								<FluentEdit20Filled class="size-3" />
 								EDIT
 							</button>
 							<form method="POST" action="?/removeListing" use:enhance>
 								<input type="hidden" name="listingId" value={data.myListing.id} />
-								<button
-									type="submit"
-									class="px-3 py-1.5 bg-red-950/30 hover:bg-red-950/50 border border-red-500/30 rounded-lg text-xs text-red-400 font-mono transition-colors flex items-center gap-1.5"
-								>
+								<button type="submit" class={buttonClass({ variant: "soft-red", size: "xs" })}>
 									<FluentDelete20Filled class="size-3" />
 									REMOVE
 								</button>
 							</form>
 						</div>
 					{:else if isEditing}
-						<button
-							class="px-3 py-1.5 bg-slate-800/50 hover:bg-slate-700/50 border border-slate-600/50 rounded-lg text-xs text-slate-400 font-mono transition-colors flex items-center gap-1.5"
-							onclick={cancelEditing}
-						>
+						<button class={buttonClass({ variant: "secondary", size: "xs" })} onclick={cancelEditing}>
 							<FluentDismiss20Filled class="size-3" />
 							CANCEL
 						</button>
@@ -217,15 +210,15 @@
 						<span class="text-4xl sm:text-5xl">{itemIcon}</span>
 						<div class="flex-1 grid grid-cols-3 gap-4">
 							<div>
-								<p class="text-xs text-slate-500 font-mono mb-1">QUANTITY</p>
-								<p class="text-xl sm:text-2xl font-bold text-white font-mono">{data.myListing.quantity}</p>
+								<p class="text-xs text-[#a89e8e] font-mono mb-1">QUANTITY</p>
+								<p class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{data.myListing.quantity}</p>
 								{#if data.userItemQuantity > 0}
-									<p class="text-xs text-slate-600 font-mono mt-0.5">+{data.userItemQuantity} in inventory</p>
+									<p class="text-xs text-[#a89e8e]/70 font-mono mt-0.5">+{data.userItemQuantity} in inventory</p>
 								{/if}
 							</div>
 							<div>
-								<p class="text-xs text-slate-500 font-mono mb-1">UNIT PRICE</p>
-								<p class="text-xl sm:text-2xl font-bold text-amber-300 font-mono">
+								<p class="text-xs text-[#a89e8e] font-mono mb-1">UNIT PRICE</p>
+								<p class="text-xl sm:text-2xl font-bold text-[#f7c56b] font-mono">
 									${data.myListing.pricePerUnit.toLocaleString()}
 								</p>
 								{#if cmp}
@@ -233,8 +226,8 @@
 								{/if}
 							</div>
 							<div>
-								<p class="text-xs text-slate-500 font-mono mb-1">TOTAL VALUE</p>
-								<p class="text-xl sm:text-2xl font-bold text-white font-mono">
+								<p class="text-xs text-[#a89e8e] font-mono mb-1">TOTAL VALUE</p>
+								<p class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">
 									${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
 								</p>
 							</div>
@@ -255,8 +248,8 @@
 						<input type="hidden" name="listingId" value={data.myListing.id} />
 						<div class="grid grid-cols-2 gap-4">
 							<div>
-								<label for="edit-qty" class="block text-xs text-slate-500 font-mono mb-1.5">
-									QUANTITY <span class="text-slate-600">max {totalAvailableForListing}</span>
+								<label for="edit-qty" class="block text-xs text-[#a89e8e] font-mono mb-1.5">
+									QUANTITY <span class="text-[#a89e8e]/70">max {totalAvailableForListing}</span>
 								</label>
 								<div class="join w-full">
 									<input
@@ -266,28 +259,26 @@
 										min="1"
 										max={totalAvailableForListing}
 										bind:value={editQty}
-										class="input input-sm join-item flex-1 bg-slate-950/60 border-slate-700/50 text-white font-mono focus:border-amber-500/50"
+										class="input input-sm join-item flex-1 bg-[#0d1d31] border-[#dfceb0]/20 text-[#fff7e8] font-mono focus:border-[#e6a527]/70"
 									/>
 									<button
 										type="button"
-										class="btn btn-sm join-item bg-slate-800/50 hover:bg-slate-700/50 border-slate-700/50 text-slate-400 font-mono"
+										class="btn btn-sm join-item bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#c7bda9] font-mono"
 										onclick={() => (editQty = totalAvailableForListing)}>MAX</button
 									>
 								</div>
 							</div>
 							<div>
-								<label for="edit-price" class="block text-xs text-slate-500 font-mono mb-1.5">PRICE PER UNIT</label>
+								<label for="edit-price" class="block text-xs text-[#a89e8e] font-mono mb-1.5">PRICE PER UNIT</label>
 								<div class="join w-full">
-									<span class="join-item btn btn-sm bg-slate-800/50 border-slate-700/50 text-slate-500 font-mono"
-										>$</span
-									>
+									<span class="join-item btn btn-sm bg-[#14283f] border-[#dfceb0]/25 text-[#a89e8e] font-mono">$</span>
 									<input
 										type="number"
 										id="edit-price"
 										name="pricePerUnit"
 										min="1"
 										bind:value={editPrice}
-										class="input input-sm join-item flex-1 bg-slate-950/60 border-slate-700/50 text-white font-mono focus:border-amber-500/50"
+										class="input input-sm join-item flex-1 bg-[#0d1d31] border-[#dfceb0]/20 text-[#fff7e8] font-mono focus:border-[#e6a527]/70"
 									/>
 								</div>
 								{#if cmp}
@@ -296,13 +287,10 @@
 							</div>
 						</div>
 						<div class="flex items-center justify-between pt-1">
-							<p class="text-sm text-slate-500 font-mono">
-								New total: <span class="text-white font-bold">${(editQty * editPrice).toLocaleString()}</span>
+							<p class="text-sm text-[#a89e8e] font-mono">
+								New total: <span class="text-[#fff7e8] font-bold">${(editQty * editPrice).toLocaleString()}</span>
 							</p>
-							<button
-								type="submit"
-								class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 rounded-lg text-white font-bold text-sm font-mono uppercase tracking-wide transition-all flex items-center gap-1.5"
-							>
+							<button type="submit" class={buttonClass({ variant: "primary", size: "sm" })}>
 								<FluentCheckmark20Filled class="size-3.5" />
 								Save Changes
 							</button>
@@ -311,17 +299,17 @@
 				{:else if data.userItemQuantity > 0 && cooldownTimeRemaining <= 0}
 					{@const cmp = priceVsMarket(createPrice)}
 					<form method="POST" action="?/createListing" use:enhance class="space-y-4">
-						<div class="flex items-center gap-2 text-slate-400 mb-2">
+						<div class="flex items-center gap-2 text-[#c7bda9] mb-2">
 							<FluentAdd20Filled class="size-4" />
 							<span class="text-sm font-mono">
 								List your {data.itemName} for sale —
-								<span class="text-slate-300 font-bold">{data.userItemQuantity}</span> in inventory
+								<span class="text-[#e5d8c1] font-bold">{data.userItemQuantity}</span> in inventory
 							</span>
 						</div>
 						<div class="grid grid-cols-2 gap-3">
 							<div>
-								<label for="create-qty" class="block text-xs text-slate-500 font-mono mb-1.5">
-									QUANTITY <span class="text-slate-600">max {data.userItemQuantity}</span>
+								<label for="create-qty" class="block text-xs text-[#a89e8e] font-mono mb-1.5">
+									QUANTITY <span class="text-[#a89e8e]/70">max {data.userItemQuantity}</span>
 								</label>
 								<div class="join w-full">
 									<input
@@ -331,28 +319,26 @@
 										min="1"
 										max={data.userItemQuantity}
 										bind:value={createQty}
-										class="input input-sm join-item flex-1 bg-slate-950/60 border-slate-700/50 text-white font-mono focus:border-{accentColor}-500/50"
+										class="input input-sm join-item flex-1 bg-[#0d1d31] border-[#dfceb0]/20 text-[#fff7e8] font-mono focus:border-[#e6a527]/70"
 									/>
 									<button
 										type="button"
-										class="btn btn-sm join-item bg-slate-800/50 hover:bg-slate-700/50 border-slate-700/50 text-slate-400 font-mono"
+										class="btn btn-sm join-item bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#c7bda9] font-mono"
 										onclick={() => (createQty = data.userItemQuantity)}>MAX</button
 									>
 								</div>
 							</div>
 							<div>
-								<label for="create-price" class="block text-xs text-slate-500 font-mono mb-1.5">PRICE PER UNIT</label>
+								<label for="create-price" class="block text-xs text-[#a89e8e] font-mono mb-1.5">PRICE PER UNIT</label>
 								<div class="join w-full">
-									<span class="join-item btn btn-sm bg-slate-800/50 border-slate-700/50 text-slate-500 font-mono"
-										>$</span
-									>
+									<span class="join-item btn btn-sm bg-[#14283f] border-[#dfceb0]/25 text-[#a89e8e] font-mono">$</span>
 									<input
 										type="number"
 										id="create-price"
 										name="pricePerUnit"
 										min="1"
 										bind:value={createPrice}
-										class="input input-sm join-item flex-1 bg-slate-950/60 border-slate-700/50 text-white font-mono focus:border-{accentColor}-500/50"
+										class="input input-sm join-item flex-1 bg-[#0d1d31] border-[#dfceb0]/20 text-[#fff7e8] font-mono focus:border-[#e6a527]/70"
 									/>
 								</div>
 								{#if cmp}
@@ -361,13 +347,13 @@
 							</div>
 						</div>
 						<div class="flex items-center justify-between pt-1">
-							<p class="text-sm text-slate-500 font-mono">
-								Total value: <span class="text-white font-bold">${(createQty * createPrice).toLocaleString()}</span>
+							<p class="text-sm text-[#a89e8e] font-mono">
+								Total value: <span class="text-[#fff7e8] font-bold">${(createQty * createPrice).toLocaleString()}</span>
 							</p>
 							<button
 								type="submit"
 								disabled={createQty < 1 || createQty > data.userItemQuantity || createPrice < 1}
-								class="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 rounded-lg text-white font-bold text-sm font-mono uppercase tracking-wide transition-all disabled:opacity-40 flex items-center gap-1.5"
+								class={buttonClass({ variant: "primary", size: "sm" })}
 							>
 								<FluentAdd20Filled class="size-3.5" />
 								Create Listing
@@ -375,18 +361,18 @@
 						</div>
 					</form>
 				{:else if cooldownTimeRemaining > 0}
-					<div class="flex items-center gap-3 text-amber-400">
+					<div class="flex items-center gap-3 text-[#f7c56b]">
 						<FluentWarning20Filled class="size-5" />
 						<div>
 							<p class="text-sm font-mono font-bold">Cooldown Active</p>
-							<p class="text-xs text-amber-400/60 font-mono">{cooldownDisplay} before you can list again</p>
+							<p class="text-xs text-[#f7c56b]/60 font-mono">{cooldownDisplay} before you can list again</p>
 						</div>
 					</div>
 				{:else}
 					<div class="text-center py-6">
-						<p class="text-sm text-slate-600 font-mono">No {data.itemName} in your inventory to sell.</p>
-						<a href="/market" class="text-xs text-{accentColor}-400 font-mono hover:underline mt-2 inline-block"
-							>← Back to market</a
+						<p class="text-sm text-[#a89e8e]/70 font-mono">No {data.itemName} in your inventory to sell.</p>
+						<a href="/market" class="text-xs {accent.text} font-mono hover:underline mt-2 inline-block">
+							← Back to market</a
 						>
 					</div>
 				{/if}
@@ -394,24 +380,22 @@
 		</div>
 
 		<!-- Market Offers -->
-		<div
-			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
-		>
-			<div class="bg-slate-900/80 border-b border-slate-700/50 px-4 sm:px-6 py-3 sm:py-4">
+		<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm overflow-hidden">
+			<div class="bg-[#102239]/80 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
 				<div class="flex items-center justify-between">
-					<h2 class="text-sm sm:text-base font-bold text-slate-200 font-mono uppercase tracking-wide">Market Offers</h2>
+					<h2 class="text-sm sm:text-base font-bold text-[#fff7e8] font-mono uppercase tracking-wide">Market Offers</h2>
 					{#if data.otherListings.length > 0}
-						<span class="text-xs text-slate-600 font-mono">sorted cheapest first</span>
+						<span class="text-xs text-[#a89e8e]/70 font-mono">sorted cheapest first</span>
 					{/if}
 				</div>
 			</div>
 
 			{#if data.otherListings.length === 0}
 				<div class="p-8 sm:p-12 text-center">
-					<FluentShoppingCart20Filled class="size-10 mx-auto opacity-15 mb-3 text-slate-500" />
-					<p class="text-slate-500 font-mono font-medium">No other sellers right now</p>
+					<FluentShoppingCart20Filled class="size-10 mx-auto opacity-15 mb-3 text-[#a89e8e]" />
+					<p class="text-[#a89e8e] font-mono font-medium">No other sellers right now</p>
 					{#if !data.myListing && data.userItemQuantity > 0}
-						<p class="text-xs text-slate-600 font-mono mt-1">Be the first — list yours above.</p>
+						<p class="text-xs text-[#a89e8e]/70 font-mono mt-1">Be the first — list yours above.</p>
 					{/if}
 				</div>
 			{:else}
@@ -423,27 +407,26 @@
 						{@const totalCost = itemCost + taxAmount}
 						{@const isCheapest = i === 0}
 
-						<div class="bg-slate-900/40 border {isCheapest ? 'border-green-500/25' : 'border-slate-700/40'} rounded-xl">
+						<div
+							class="bg-[#102239]/70 border {isCheapest ? 'border-green-500/25' : 'border-[#dfceb0]/15'} rounded-sm"
+						>
 							<div class="flex items-center gap-3 sm:gap-4 px-4 py-3">
 								<div class="w-10 flex justify-center">
 									{#if isCheapest}
-										<span
-											class="text-xs font-bold text-green-400 bg-green-500/10 border border-green-500/20 rounded px-1.5 py-0.5 font-mono"
-											>BEST</span
-										>
+										<span class={badgeClass({ tone: "green", size: "xs" })}>BEST</span>
 									{:else}
-										<span class="text-xs text-slate-600 font-mono">#{i + 1}</span>
+										<span class="text-xs text-[#a89e8e]/70 font-mono">#{i + 1}</span>
 									{/if}
 								</div>
 
 								<div class="flex-1">
 									<div class="flex items-baseline gap-2">
-										<span class="text-xl font-bold font-mono {isCheapest ? 'text-green-400' : 'text-white'}"
+										<span class="text-xl font-bold font-mono {isCheapest ? 'text-green-400' : 'text-[#fff7e8]'}"
 											>${listing.pricePerUnit.toLocaleString()}</span
 										>
-										<span class="text-xs text-slate-600 font-mono">per unit</span>
+										<span class="text-xs text-[#a89e8e]/70 font-mono">per unit</span>
 									</div>
-									<p class="text-xs text-slate-500 font-mono mt-0.5">{listing.quantity} units available</p>
+									<p class="text-xs text-[#a89e8e] font-mono mt-0.5">{listing.quantity} units available</p>
 								</div>
 
 								<form method="POST" action="?/buyListing" use:enhance class="flex items-center gap-2">
@@ -451,9 +434,9 @@
 
 									<div class="text-right text-xs font-mono min-w-[80px]">
 										{#if taxAmount > 0}
-											<div class="text-amber-400">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
+											<div class="text-[#f7c56b]">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
 										{/if}
-										<div class="text-white font-bold">${totalCost.toLocaleString()}</div>
+										<div class="text-[#fff7e8] font-bold">${totalCost.toLocaleString()}</div>
 									</div>
 
 									<div class="join">
@@ -463,16 +446,16 @@
 											min="1"
 											max={listing.quantity}
 											value={buyQty}
-											class="input input-sm join-item w-16 bg-slate-950/60 border-slate-700/50 text-white text-center font-mono"
+											class="input input-sm join-item w-16 bg-[#0d1d31] border-[#dfceb0]/20 text-[#fff7e8] text-center font-mono"
 											onchange={(e) => {
 												buyQuantities[listing.id] = parseInt(e.currentTarget.value);
 											}}
 										/>
 										<button
 											type="submit"
-											class="btn btn-sm join-item border-0 text-white font-mono font-bold {isCheapest
-												? 'bg-green-600 hover:bg-green-500'
-												: 'bg-purple-600/70 hover:bg-purple-600'} px-3"
+											class="btn btn-sm join-item border-0 font-mono font-bold px-3 {isCheapest
+												? 'bg-green-600 hover:bg-green-500 text-white'
+												: 'bg-[#e6a527] hover:bg-[#f2b940] text-[#172a45]'}"
 										>
 											BUY
 										</button>

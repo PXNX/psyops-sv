@@ -9,6 +9,7 @@
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
 	import { formatDateTime } from "$lib/utils/formatting.js";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	const { data } = $props();
 
@@ -81,33 +82,30 @@
 	<title>Subscribed Posts</title>
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+<div class="min-h-screen bg-[#0c1929]">
 	<!-- Command Header -->
-	<div class="border-b border-blue-900/30 bg-slate-900/80 backdrop-blur-xl">
+	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
 			<!-- Search & Actions -->
 			<div class="flex items-center gap-2 sm:gap-3">
 				<a
 					href="/posts"
-					class="flex-shrink-0 p-2.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 text-slate-300 hover:text-white transition-all"
+					class="flex-shrink-0 p-2.5 rounded-lg bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8] transition-all"
 				>
 					<FluentArrowLeft20Filled class="size-5" />
 				</a>
 
 				<div class="relative flex-1">
-					<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-500" />
+					<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#a89e8e]" />
 					<input
-						class="w-full pl-10 pr-4 py-2.5 bg-slate-950/60 border border-slate-700/50 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-mono"
+						class="field-control w-full rounded-sm pl-10 pr-4 py-2.5 text-sm font-mono"
 						placeholder="Search subscribed posts..."
 						type="text"
 						bind:value={searchQuery}
 					/>
 				</div>
 
-				<a
-					href="/posts/new"
-					class="px-3 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 rounded-lg text-white text-xs font-mono font-bold uppercase tracking-wide transition-all flex items-center gap-2"
-				>
+				<a href="/posts/new" class={buttonClass({ variant: "primary", class: "text-xs font-mono font-bold uppercase tracking-wide" })}>
 					<FluentAdd20Filled class="size-4" />
 					<span class="hidden sm:inline">New Post</span>
 				</a>
@@ -118,17 +116,15 @@
 	<!-- Content -->
 	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-3">
 		{#if filteredArticles.length === 0}
-			<div
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-12 text-center"
-			>
+			<div class="panel rounded-sm p-12 text-center">
 				<div class="text-5xl mb-4 opacity-30">📰</div>
-				<p class="text-lg text-slate-400 font-mono mb-2">
+				<p class="text-lg text-[#c7bda9] font-mono mb-2">
 					{searchQuery ? "No posts found" : "No posts from subscribed newspapers yet"}
 				</p>
 				{#if !searchQuery}
 					<a
 						href="/newspaper"
-						class="inline-flex items-center gap-2 mt-4 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 rounded-lg text-white text-xs font-mono font-bold uppercase tracking-wide transition-all"
+						class={buttonClass({ variant: "primary", class: "mt-4 text-xs font-mono font-bold uppercase tracking-wide" })}
 					>
 						<FluentSearch20Filled class="size-4" />
 						Discover Newspapers
@@ -139,12 +135,12 @@
 			{#each filteredArticles as article (article.id)}
 				<a
 					href="/posts/{article.id}"
-					class="flex items-center gap-3 bg-slate-900/40 border rounded-lg p-3 sm:p-4 hover:border-slate-600/60 transition-all group {article.own
-						? 'border-purple-500/30 hover:border-purple-400/50'
-						: 'border-slate-700/40'}"
+					class="flex items-center gap-3 bg-[#14283f]/85 border rounded-sm p-3 sm:p-4 hover:border-[#e6a527]/50 transition-all group {article.own
+						? 'border-[#e6a527]/40 hover:border-[#e6a527]/60'
+						: 'border-[#dfceb0]/15'}"
 				>
 					<div class="flex-shrink-0">
-						<div class="size-11 sm:size-12 rounded-lg overflow-hidden">
+						<div class="size-11 sm:size-12 rounded-sm overflow-hidden">
 							{#if article.newspaperId}
 								<Logo src={article.newspaperLogo} alt={article.newspaperName} />
 							{:else}
@@ -154,37 +150,37 @@
 					</div>
 
 					<div class="flex-1 min-w-0">
-						<p class="text-xs text-slate-500 font-mono mb-0.5">
+						<p class="text-xs text-[#a89e8e] font-mono mb-0.5">
 							{#if article.newspaperName}
 								{article.newspaperName}
 							{:else}
 								{article.authorName}
 							{/if}
 						</p>
-						<p class="text-sm font-bold text-white group-hover:text-purple-400 transition-colors truncate">
+						<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate">
 							{article.title}
 						</p>
 						<div class="flex items-center gap-3 mt-1">
-							<span class="flex items-center gap-1 text-[10px] sm:text-xs text-slate-500 font-mono">
+							<span class="flex items-center gap-1 text-[10px] sm:text-xs text-[#a89e8e] font-mono">
 								<FluentClock20Regular class="size-3" />
 								{formatDateTime(article.createdAt)}
 							</span>
-							<span class="flex items-center gap-1 text-[10px] sm:text-xs text-slate-500 font-mono">
+							<span class="flex items-center gap-1 text-[10px] sm:text-xs text-[#a89e8e] font-mono">
 								<FluentHeart20Filled class="size-3 text-red-400/60" />
 								{article.upvoteCount}
 							</span>
 						</div>
 					</div>
 
-					<span class="text-slate-600 group-hover:text-slate-400 transition-colors text-sm">→</span>
+					<span class="text-[#a89e8e] group-hover:text-[#d9ccb7] transition-colors text-sm">→</span>
 				</a>
 			{/each}
 
 			{#if hasMore && !searchQuery}
 				<div bind:this={loadMoreTrigger} class="py-8 text-center">
 					{#if isLoading}
-						<div class="flex items-center justify-center gap-2 text-slate-500 font-mono text-xs">
-							<div class="size-4 border-2 border-slate-600 border-t-blue-400 rounded-full animate-spin"></div>
+						<div class="flex items-center justify-center gap-2 text-[#a89e8e] font-mono text-xs">
+							<div class="size-4 border-2 border-[#dfceb0]/25 border-t-[#e6a527] rounded-full animate-spin"></div>
 							Loading more...
 						</div>
 					{/if}

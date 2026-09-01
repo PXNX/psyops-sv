@@ -74,34 +74,34 @@
 	);
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+<div class="min-h-screen">
 	<!-- Command Header -->
-	<div class="border-b border-purple-900/30 bg-slate-900/80 backdrop-blur-xl">
+	<div class="border-b border-[#dfceb0]/20 bg-[#0e1d2f]/90 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
 			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 				<div class="flex items-center gap-3 sm:gap-5 w-full sm:w-auto">
 					<a href="/state/{data.state.id}" class="relative flex-shrink-0">
-						<div class="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+						<div class="absolute inset-0 bg-[#8c709b]/20 blur-xl rounded-full"></div>
 						<Logo
 							src={data.state.logo}
 							alt={data.state.name}
-							class="relative size-14 sm:size-18 rounded-lg border-2 border-purple-500/30 hover:border-purple-500/50 transition-colors"
+							class="relative size-14 sm:size-18 rounded-sm border-2 border-[#b7a0c5]/40 hover:border-[#e6a527]/55 transition-colors"
 							placeholderIcon={FluentBuildingGovernment20Filled}
-							placeholderGradient="from-purple-500 to-blue-500"
+							placeholderGradient="from-[#315d8d] to-[#8c709b]"
 						/>
 					</a>
 					<div class="flex-1 min-w-0">
 						<div class="flex flex-wrap items-center gap-2 mb-1">
 							<h1
 								class="text-xl sm:text-2xl font-bold tracking-wider uppercase font-mono {data.election.isInaugural
-									? 'text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400'
-									: 'text-purple-400'}"
+									? 'text-transparent bg-clip-text bg-gradient-to-r from-[#f7c56b] via-[#ffe2a4] to-[#e6a527]'
+									: 'text-[#d5c4df]'}"
 							>
 								{data.election.isInaugural ? "Founding" : "Parliamentary"} Election
 							</h1>
 							{#if hasEnded}
 								<span
-									class="px-2 py-1 bg-slate-500/20 border border-slate-400/40 rounded text-slate-300 font-bold text-xs font-mono"
+									class="px-2 py-1 bg-[#14283f] border border-[#dfceb0]/25 rounded-sm text-[#d9ccb7] font-bold text-xs font-mono"
 								>
 									CONCLUDED
 								</span>
@@ -109,7 +109,7 @@
 						</div>
 						<a
 							href="/state/{data.state.id}"
-							class="text-sm text-slate-400 hover:text-purple-400 transition-colors font-mono"
+							class="text-sm text-[#a89e8e] hover:text-[#e6a527] transition-colors font-mono"
 						>
 							{data.state.name}
 						</a>
@@ -120,19 +120,19 @@
 			<!-- Founding Election Banner -->
 			{#if data.election.isInaugural}
 				<div
-					class="mt-4 sm:mt-6 relative overflow-hidden bg-gradient-to-r from-amber-950/50 via-yellow-900/25 to-amber-950/50 border border-amber-500/30 rounded-lg p-4 sm:p-5 text-center"
+					class="mt-4 sm:mt-6 relative overflow-hidden bg-gradient-to-r from-[#e6a527]/15 via-[#f2c463]/10 to-[#e6a527]/15 border border-[#e6a527]/35 rounded-sm p-4 sm:p-5 text-center"
 				>
 					<div
-						class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(251,191,36,0.12),_transparent_70%)]"
+						class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(230,165,39,0.12),_transparent_70%)]"
 					></div>
-					<div class="relative flex items-center justify-center gap-2 text-amber-300 font-mono">
+					<div class="relative flex items-center justify-center gap-2 text-[#f7c56b] font-mono">
 						<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
 						<span class="text-sm sm:text-lg font-bold uppercase tracking-[0.2em]">A Nation Is Born</span>
 						<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
 					</div>
-					<p class="relative mt-2 text-xs sm:text-sm text-amber-200/70 font-mono">
+					<p class="relative mt-2 text-xs sm:text-sm text-[#ffe2a4]/80 font-mono">
 						The first free election of the independent state of
-						<span class="text-amber-200 font-bold">{data.state.name}</span>
+						<span class="text-[#ffe2a4] font-bold">{data.state.name}</span>
 					</p>
 				</div>
 			{/if}
@@ -140,48 +140,48 @@
 			<!-- Countdown Timer -->
 			{#if countdown}
 				<div
-					class="mt-4 sm:mt-6 bg-gradient-to-r from-purple-950/50 to-slate-950/50 border border-purple-500/20 rounded-lg p-3 sm:p-4"
+					class="mt-4 sm:mt-6 bg-gradient-to-r from-[#8c709b]/15 to-[#0c1929]/50 border border-[#b7a0c5]/25 rounded-sm p-3 sm:p-4"
 				>
 					<div
-						class="text-purple-400 font-mono text-xs sm:text-sm font-medium uppercase tracking-wide text-center mb-2 sm:mb-3"
+						class="text-[#d5c4df] font-mono text-xs sm:text-sm font-medium uppercase tracking-wide text-center mb-2 sm:mb-3"
 					>
 						{!hasStarted ? "Voting Opens In" : "Voting Closes In"}
 					</div>
 					<div class="flex items-center justify-center gap-2 sm:gap-3">
 						<div class="text-center">
 							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+								class="text-2xl sm:text-4xl font-mono font-bold text-[#d5c4df] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#b7a0c5]/25"
 							>
 								{String(countdown.days).padStart(2, "0")}
 							</div>
-							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">DAYS</div>
+							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">DAYS</div>
 						</div>
-						<div class="text-xl sm:text-2xl font-bold text-purple-500/50">:</div>
+						<div class="text-xl sm:text-2xl font-bold text-[#b7a0c5]/50">:</div>
 						<div class="text-center">
 							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+								class="text-2xl sm:text-4xl font-mono font-bold text-[#d5c4df] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#b7a0c5]/25"
 							>
 								{String(countdown.hours).padStart(2, "0")}
 							</div>
-							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">HRS</div>
+							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">HRS</div>
 						</div>
-						<div class="text-xl sm:text-2xl font-bold text-purple-500/50">:</div>
+						<div class="text-xl sm:text-2xl font-bold text-[#b7a0c5]/50">:</div>
 						<div class="text-center">
 							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+								class="text-2xl sm:text-4xl font-mono font-bold text-[#d5c4df] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#b7a0c5]/25"
 							>
 								{String(countdown.minutes).padStart(2, "0")}
 							</div>
-							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">MIN</div>
+							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">MIN</div>
 						</div>
-						<div class="text-xl sm:text-2xl font-bold text-purple-500/50">:</div>
+						<div class="text-xl sm:text-2xl font-bold text-[#b7a0c5]/50">:</div>
 						<div class="text-center">
 							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-purple-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-purple-500/20"
+								class="text-2xl sm:text-4xl font-mono font-bold text-[#d5c4df] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#b7a0c5]/25"
 							>
 								{String(countdown.seconds).padStart(2, "0")}
 							</div>
-							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">SEC</div>
+							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">SEC</div>
 						</div>
 					</div>
 				</div>
