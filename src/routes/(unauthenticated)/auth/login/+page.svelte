@@ -6,8 +6,11 @@
 	import FluentShieldCheckmark20Filled from "~icons/fluent/shield-checkmark-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import { env } from "$env/dynamic/public";
+	import { page } from "$app/state";
+	import TelegramLoginWidget from "$lib/components/TelegramLoginWidget.svelte";
 
 	const botUsername = env.PUBLIC_TELEGRAM_BOT_USERNAME || "RW_SupportBot";
+	const next = $derived(page.url.searchParams.get("next") || "/");
 </script>
 
 <main
@@ -61,17 +64,7 @@
 					<span class="font-semibold">{m.signUp({ provider: "Google" })}</span>
 				</a>
 
-				<a
-					href="/auth/login/telegram"
-					class="btn btn-lg w-full gap-3 bg-[#24A1DE] hover:bg-[#2094cc] text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5"
-				>
-					<svg class="size-6" fill="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
-						/>
-					</svg>
-					<span class="font-semibold">{m.signUp({ provider: "Telegram" })}</span>
-				</a>
+				<TelegramLoginWidget {next} class="flex justify-center" />
 			</div>
 
 			<!-- Terms & Privacy -->
