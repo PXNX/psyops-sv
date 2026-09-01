@@ -11,6 +11,7 @@ import { accounts, userProfiles } from "$lib/server/schema";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
 import { createHmac } from "crypto";
+import { redirect } from "@sveltejs/kit";
 
 function verifyTelegramData(data: Record<string, string>, botToken: string): boolean {
 	const checkString = Object.keys(data)
@@ -123,12 +124,66 @@ async function handleTelegramAuth(telegramUser: TelegramUser, cookies: any) {
 	};
 }
 
-// Handle POST requests from the Telegram Login Widget (see
-// src/lib/components/TelegramLoginWidget.svelte). This is the only entry
-// point now — the old GET flow (driven by a raw redirect to
-// oauth.telegram.org/tg/start) was dropped because that endpoint is
-// undocumented and unreliable; the widget's popup-based auth is Telegram's
-// supported integration.
+// Handle GET requests from Telegram's `login_url` button (see
+// bot/private/premium.py's login_cmd in ptb-psyops, which sends a LoginUrl
+// pointing here). This is a different, well-documented Telegram mechanism
+// than the website's own login widget below — Telegram appends the signed
+// auth fields to this URL as a query string and opens it in the user's
+// browser directly, no popup/redirect dance involved.
+export const GET: RequestHandler = async ({ url, cookies }) => {
+	// Validation redirects are kept outside the try/catch below: redirect()
+	// throws internally, and catching that here would swallow it and turn
+	// every one of these into a generic "server_error" redirect instead.
+	const params = url.searchParams;
+	const telegramData: Record<string, string> = {};
+	const telegramParams = ["id", "first_name", "last_name", "username", "photo_url", "auth_date", "hash"];
+
+	for (const param of telegramParams) {
+		const value = params.get(param);
+		if (value) telegramData[param] = value;
+	}
+
+	if (!telegramData.hash || !telegramData.auth_date) {
+		console.error("❌ Missing required Telegram parameters");
+		redirect(302, "/auth/login?error=missing_params");
+	}
+
+	if (!verifyTelegramData(telegramData, TELEGRAM_BOT_TOKEN)) {
+		console.error("❌ Invalid Telegram data signature");
+		redirect(302, "/auth/login?error=invalid_signature");
+	}
+
+	const authTime = parseInt(telegramData.auth_date) * 1000;
+	if (Date.now() - authTime > 5 * 60 * 1000) {
+		console.error("❌ Auth data too old");
+		redirect(302, "/auth/login?error=auth_expired");
+	}
+
+	const telegramUser: TelegramUser = {
+		id: parseInt(telegramData.id),
+		first_name: telegramData.first_name,
+		username: telegramData.username,
+		photo_url: telegramData.photo_url,
+		auth_date: parseInt(telegramData.auth_date),
+		hash: telegramData.hash
+	};
+
+	console.log("👤 Telegram user (bot login_url):", telegramUser.username || telegramUser.first_name);
+
+	let result: Awaited<ReturnType<typeof handleTelegramAuth>>;
+	try {
+		result = await handleTelegramAuth(telegramUser, cookies);
+	} catch (e) {
+		console.error("❌ Error during Telegram authentication:", e);
+		redirect(302, "/auth/login?error=server_error");
+	}
+
+	redirect(302, result.redirectTo);
+};
+
+// Handle POST requests from the website's own Telegram login button (see
+// src/lib/components/TelegramLoginWidget.svelte), which uses
+// Telegram.Login.auth()'s popup + JS callback instead of a redirect.
 export const POST: RequestHandler = async ({ request, cookies }) => {
 	try {
 		const body = await request.json();
