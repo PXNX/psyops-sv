@@ -5,6 +5,9 @@
 	import FluentColorGlobeShield24 from "~icons/fluent-color/globe-shield-24";
 	import FluentShieldCheckmark20Filled from "~icons/fluent/shield-checkmark-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
+	import { env } from "$env/dynamic/public";
+
+	const botUsername = env.PUBLIC_TELEGRAM_BOT_USERNAME || "RW_SupportBot";
 </script>
 
 <main
@@ -89,7 +92,7 @@
 
 	<!-- Help Button - Bottom -->
 	<div class="absolute bottom-4 left-0 right-0 z-10 flex justify-center">
-		<a href="https://t.me/pentexnyx_bot?start=TEST" class="btn btn-lg btn-ghost w-full max-w-md gap-3">
+		<a href={`https://t.me/${botUsername}`} class="btn btn-lg btn-ghost w-full max-w-md gap-3">
 			<FluentEmojiEnvelopeWithArrow class="size-5" />
 			<span>{m.needHelp()}</span>
 		</a>
