@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import type { PageData } from "./$types";
-	import FluentEmojiMilitaryHelmet from "~icons/fluent-emoji/military-helmet";
+	import FluentTarget from "~icons/fluent/target-24-regular";
 	import IconAdd from "~icons/fluent/add-24-filled";
 	import IconDelete from "~icons/fluent/delete-24-filled";
 	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
@@ -383,7 +383,7 @@
 
 			{#if activeUnits.length === 0}
 				<EmptyState
-					icon={FluentEmojiMilitaryHelmet}
+					icon={FluentTarget}
 					title="No active units"
 					subtitle="Train your first unit to begin"
 				/>
@@ -529,7 +529,7 @@
 					</div>
 				{:else}
 					<EmptyState
-						icon={FluentEmojiMilitaryHelmet}
+						icon={FluentTarget}
 						title="Select a unit type to begin training"
 						subtitle="Choose from the available templates above"
 					/>

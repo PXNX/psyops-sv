@@ -2,7 +2,6 @@ import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import svg from "@poppanator/sveltekit-svg";
 import { sveltekit } from "@sveltejs/kit/vite";
 import tailwindcss from "@tailwindcss/vite";
-//import { SvelteKitPWA } from "@vite-pwa/sveltekit";
 import Icons from "unplugin-icons/vite";
 import { defineConfig } from "vite";
 
@@ -14,7 +13,6 @@ export default defineConfig({
 			strategy: ["url", "cookie", "baseLocale"]
 		}),
 		sveltekit(),
-		//	SvelteKitPWA(),
 		Icons({
 			compiler: "svelte",
 			autoInstall: true,

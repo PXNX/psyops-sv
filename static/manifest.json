@@ -1,11 +1,26 @@
 {
-	"theme_color": "#8936FF",
-	"background_color": "#000000",
+	"name": "PsyOps: Command & Control",
+	"short_name": "PsyOps",
+	"description": "Field operations dashboard for PsyOps — manage posts, training, production and your unit from one command console.",
+	"theme_color": "#0c1929",
+	"background_color": "#0c1929",
+	"start_url": "/",
+	"scope": "/",
+	"orientation": "portrait",
+	"display": "standalone",
+	"dir": "ltr",
+	"lang": "en",
 	"icons": [
 		{
+			"purpose": "any",
+			"sizes": "192x192",
+			"src": "icon-192.png",
+			"type": "image/png"
+		},
+		{
 			"purpose": "maskable",
-			"sizes": "512x512",
-			"src": "icon-512.png",
+			"sizes": "192x192",
+			"src": "icon-192.png",
 			"type": "image/png"
 		},
 		{
@@ -13,15 +28,14 @@
 			"sizes": "512x512",
 			"src": "icon-512.png",
 			"type": "image/png"
+		},
+		{
+			"purpose": "maskable",
+			"sizes": "512x512",
+			"src": "icon-512.png",
+			"type": "image/png"
 		}
 	],
-	"orientation": "portrait",
-	"display": "standalone",
-	"dir": "ltr",
-	"lang": "en",
-	"name": "Psyops: Command & Control",
-	"short_name": "Psyops",
-	"description": "Search for train stations in Germany. Find sleeping spots, outlets, toilets & station info",
 	"share_target": {
 		"action": "/giftcode",
 		"method": "GET",
