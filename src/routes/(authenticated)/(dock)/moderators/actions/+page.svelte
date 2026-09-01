@@ -170,7 +170,7 @@
 							<!-- Target User -->
 							<div class="flex items-center gap-3">
 								<div class="text-xs text-gray-500 font-medium min-w-[60px]">Target:</div>
-								<a href="/user/{action.target.id}" class="flex items-center gap-2 group">
+								<a href="/user/{action.target.id}" class="flex items-center gap-2 group flex-1 min-w-0">
 									<div class="size-8 rounded-lg overflow-hidden transition-all">
 										<Logo
 											src={action.target.logoUrl}
@@ -189,7 +189,7 @@
 							<!-- Moderator -->
 							<div class="flex items-center gap-3">
 								<div class="text-xs text-gray-500 font-medium min-w-[60px]">Moderator:</div>
-								<a href="/user/{action.moderator.id}" class="flex items-center gap-2 group">
+								<a href="/user/{action.moderator.id}" class="flex items-center gap-2 group flex-1 min-w-0">
 									<div class="size-8 rounded-lg overflow-hidden transition-all">
 										<Logo
 											src={action.moderator.logoUrl}
