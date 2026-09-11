@@ -350,7 +350,7 @@
 
 			{#if showListOptions}
 				<ListOptions editor={$editor} />
-				<hr class="w-1 h-full border-t-2 border-slate-700" />
+				<hr class="w-1 h-full border-t-2 border-[#dfceb0]/20" />
 			{/if}
 
 			<button
@@ -494,7 +494,7 @@
 		flex-direction: column;
 		gap: 0.25rem;
 		padding: 0.25rem;
-		background: #f8f9fa;
+		background: #102239;
 		border: none !important;
 	}
 
@@ -506,18 +506,18 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: white;
-		border: 1px solid #dee2e6;
+		background: #0d1d31;
+		border: 1px solid rgba(223, 206, 176, 0.2);
 		border-radius: 4px;
 		cursor: pointer;
 		font-size: 12px;
-		color: #4b5563;
+		color: #d9ccb7;
 	}
 
 	:global(.row-controls button:hover),
 	:global(.col-control button:hover) {
-		background: #f1f5f9;
-		color: #1f2937;
+		background: #19304b;
+		color: #fff7e8;
 	}
 
 	:global(.ProseMirror) {
@@ -532,14 +532,14 @@
 	}
 
 	:global(.ProseMirror td, .ProseMirror th) {
-		border: 2px solid #ced4da;
+		border: 2px solid rgba(223, 206, 176, 0.2);
 		padding: 0.5rem;
 		position: relative;
 		min-width: 100px;
 	}
 
 	:global(.ProseMirror th) {
-		background: #f8f9fa;
+		background: #102239;
 		font-weight: bold;
 	}
 </style>

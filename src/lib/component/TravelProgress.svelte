@@ -64,19 +64,19 @@
 	}
 </script>
 
-<div class="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 border border-blue-500/30 rounded-xl p-4">
+<div class="bg-[#315d8d]/15 border border-[#7ba0c8]/30 rounded-xl p-4">
 	<div class="flex items-start gap-3">
 		<!-- Airplane Icon -->
-		<div class="size-10 bg-blue-600/30 rounded-lg flex items-center justify-center shrink-0 animate-pulse">
-			<FluentVehicleAirplaneTakeOff20Filled class="size-5 text-blue-400" />
+		<div class="size-10 bg-[#315d8d]/30 rounded-lg flex items-center justify-center shrink-0 animate-pulse">
+			<FluentVehicleAirplaneTakeOff20Filled class="size-5 text-[#b7d0e6]" />
 		</div>
 
 		<div class="flex-1 space-y-3">
 			<!-- Header -->
 			<div class="flex items-start justify-between">
 				<div>
-					<p class="font-semibold text-white">Traveling to {toRegionName()}</p>
-					<p class="text-sm text-gray-400">From {fromRegionName()}</p>
+					<p class="font-semibold text-[#fff7e8]">Traveling to {toRegionName()}</p>
+					<p class="text-sm text-[#a89e8e]">From {fromRegionName()}</p>
 				</div>
 				{#if showCancel}
 					<button onclick={handleCancel} class="btn btn-ghost btn-sm btn-circle" title="Cancel travel">
@@ -92,19 +92,19 @@
 					<img
 						src={`/coats/${travel.fromRegionId}.svg`}
 						alt="From"
-						class="size-8 rounded-lg border-2 border-blue-500 bg-slate-800"
+						class="size-8 rounded-lg border-2 border-[#7ba0c8] bg-[#102239]"
 					/>
 				</div>
 
 				<!-- Progress Bar -->
-				<div class="h-3 bg-slate-700/50 rounded-full overflow-hidden mx-6">
+				<div class="h-3 bg-[#102239]/70 rounded-full overflow-hidden mx-6">
 					<div
-						class="h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full transition-all duration-1000 relative"
+						class="h-full bg-[#315d8d] rounded-full transition-all duration-1000 relative"
 						style="width: {progressPercent}%"
 					>
 						<!-- Animated Arrow -->
 						<div
-							class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-white rounded-full size-5 flex items-center justify-center shadow-lg animate-bounce"
+							class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-[#fff7e8] rounded-full size-5 flex items-center justify-center shadow-lg animate-bounce"
 						>
 							<span class="text-xs">✈️</span>
 						</div>
@@ -116,7 +116,7 @@
 					<img
 						src={`/coats/${travel.toRegionId}.svg`}
 						alt="To"
-						class="size-8 rounded-lg border-2 border-cyan-500 bg-slate-800"
+						class="size-8 rounded-lg border-2 border-[#7ba0c8] bg-[#102239]"
 					/>
 				</div>
 			</div>
@@ -125,17 +125,17 @@
 			<div class="flex items-center justify-between text-sm">
 				<div class="flex items-center gap-4">
 					<div>
-						<span class="text-gray-400">Progress:</span>
-						<span class="text-white font-semibold ml-1">{progressPercent}%</span>
+						<span class="text-[#a89e8e]">Progress:</span>
+						<span class="text-[#fff7e8] font-semibold ml-1">{progressPercent}%</span>
 					</div>
 					<div>
-						<span class="text-gray-400">Distance:</span>
-						<span class="text-white font-semibold ml-1">{travel.distanceKm} km</span>
+						<span class="text-[#a89e8e]">Distance:</span>
+						<span class="text-[#fff7e8] font-semibold ml-1">{travel.distanceKm} km</span>
 					</div>
 				</div>
 				<div>
-					<span class="text-gray-400">ETA:</span>
-					<span class="text-blue-400 font-semibold ml-1">{formatDuration(timeRemaining)}</span>
+					<span class="text-[#a89e8e]">ETA:</span>
+					<span class="text-[#b7d0e6] font-semibold ml-1">{formatDuration(timeRemaining)}</span>
 				</div>
 			</div>
 		</div>

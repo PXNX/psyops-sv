@@ -41,6 +41,22 @@
 	let showCropper = $state(false);
 	let cropImageUrl = $state<string | null>(null);
 
+	const dropzoneClass = $derived(
+		[
+			"group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
+			dragActive
+				? "border-[#e6a527] bg-[#e6a527]/10"
+				: previewUrl
+					? "border-emerald-500/50 bg-emerald-500/5"
+					: "border-[#e6a527]/30",
+			!disabled && !previewUrl ? "hover:border-[#e6a527]/50 hover:bg-[#e6a527]/10" : "",
+			disabled ? "opacity-50" : "",
+			error ? "input-error" : ""
+		]
+			.filter(Boolean)
+			.join(" ")
+	);
+
 	function handleFileSelectWithCrop(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const selectedFile = target.files?.[0];
@@ -118,28 +134,14 @@
 		{disabled}
 	/>
 
-	<button
-		type="button"
-		onclick={onClickUpload}
-		{disabled}
-		class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
-		class:border-purple-500={dragActive}
-		class:bg-purple-600-10={dragActive}
-		class:border-purple-500-30={!dragActive && !previewUrl}
-		class:border-success={previewUrl && !dragActive}
-		class:bg-success-5={previewUrl && !dragActive}
-		class:hover:border-purple-500-50={!disabled && !previewUrl}
-		class:hover:bg-purple-600-10={!disabled && !previewUrl}
-		class:opacity-50={disabled}
-		class:input-error={error}
-	>
+	<button type="button" onclick={onClickUpload} {disabled} class={dropzoneClass}>
 		{#if !previewUrl}
 			<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-				<div class="rounded-full bg-purple-600/20 p-3 transition-transform group-hover:scale-110">
-					<FluentImage20Filled class="size-8 text-purple-400" />
+				<div class="rounded-full bg-[#e6a527]/15 p-3 transition-transform group-hover:scale-110">
+					<FluentImage20Filled class="size-8 text-[#f7c56b]" />
 				</div>
 				<div class="text-center">
-					<p class="text-base font-semibold text-white">
+					<p class="text-base font-semibold text-[#fff7e8]">
 						{#if dragActive}
 							Drop {entityName} here
 						{:else if disabled}
@@ -149,19 +151,19 @@
 						{/if}
 					</p>
 					{#if !disabled}
-						<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
+						<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
 					{/if}
 				</div>
 			</div>
 		{:else}
 			<div class="relative">
-				<div class="flex items-center justify-center p-6 bg-slate-900/50">
+				<div class="flex items-center justify-center p-6 bg-[#102239]/70">
 					<img src={previewUrl} alt="{entityName} preview" class="size-24 object-contain rounded-lg" />
 				</div>
 				<div
-					class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+					class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/60 opacity-0 transition-opacity group-hover:opacity-100"
 				>
-					<p class="text-base font-semibold text-white">Tap to change</p>
+					<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
 				</div>
 				{#if file && !disabled}
 					<button
@@ -171,18 +173,18 @@
 							onClearImage();
 						}}
 						disabled={disabled}
-						class="btn absolute top-2 right-2 btn-circle btn-sm bg-slate-800 hover:bg-slate-700"
+						class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
 					>
 						✕
 					</button>
 				{/if}
 			</div>
 			{#if file}
-				<div class="border-t border-slate-700 p-3 bg-slate-900/30">
-					<p class="truncate text-sm font-medium text-white" title={file.name}>
+				<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
+					<p class="truncate text-sm font-medium text-[#fff7e8]" title={file.name}>
 						{file.name}
 					</p>
-					<p class="text-xs text-gray-400">
+					<p class="text-xs text-[#a89e8e]">
 						{Math.round(file.size / 1024)} KB
 					</p>
 				</div>
@@ -194,7 +196,7 @@
 {#if error}
 	<p class="text-xs text-red-400 mt-2">{error}</p>
 {:else}
-	<p class="text-xs text-gray-400 mt-2">
+	<p class="text-xs text-[#a89e8e] mt-2">
 		Upload a new {entityName} to replace the current one • Will be converted to 96x96 WebP • Max 5MB
 	</p>
 {/if}

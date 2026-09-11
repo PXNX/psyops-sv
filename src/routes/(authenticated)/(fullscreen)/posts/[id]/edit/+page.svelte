@@ -144,7 +144,7 @@
 	<main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 		<!-- Title Input -->
 		<input
-			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-white placeholder-slate-600 border-none outline-none mb-2 tracking-wide"
+			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#fff7e8] placeholder-[#a89e8e] border-none outline-none mb-2 tracking-wide"
 			class:text-red-400={$errors.title}
 			placeholder="Enter your title..."
 			type="text"
@@ -157,12 +157,12 @@
 			<div class="text-red-400 text-xs font-mono mb-3">{$errors.title[0]}</div>
 		{/if}
 
-		<div class="text-xs text-slate-600 font-mono mb-6">
+		<div class="text-xs text-[#a89e8e] font-mono mb-6">
 			{$formData.title.length}/200 characters
 		</div>
 
 		<!-- Divider -->
-		<div class="border-t border-slate-700/50 mb-6"></div>
+		<div class="border-t border-[#dfceb0]/15 mb-6"></div>
 
 		<!-- Editor -->
 		<div class="min-h-[50vh]">
@@ -185,12 +185,12 @@
 		<input type="hidden" name="title" value={$formData.title} />
 		<input type="hidden" name="content" value={editorComponent?.getContent() || ""} />
 
-		<div class="bg-slate-800/60 border border-slate-700/50 rounded-lg p-3 mb-4">
-			<p class="text-sm font-bold text-white line-clamp-2">{$formData.title}</p>
+		<div class="panel-muted rounded-lg p-3 mb-4">
+			<p class="text-sm font-bold text-[#fff7e8] line-clamp-2">{$formData.title}</p>
 		</div>
 
 		<button
-			class="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 text-white font-bold font-mono uppercase tracking-wide transition-all"
+			class={buttonClass({ variant: "primary", block: true, class: "py-3 font-mono uppercase tracking-wide" })}
 			type="submit"
 			disabled={$submitting === true || $delayed === true}
 		>
@@ -205,11 +205,11 @@
 
 <!-- Cancel Modal -->
 <Modal bind:open={isCancelModalOpen} title="Discard changes?">
-	<p class="text-sm text-slate-400 mb-4">Your unsaved work will be lost.</p>
+	<p class="text-sm text-[#a89e8e] mb-4">Your unsaved work will be lost.</p>
 
 	<div class="flex gap-2 justify-end">
 		<button
-			class="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 rounded-lg text-slate-300 text-sm font-mono transition-all"
+			class="px-4 py-2 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] text-sm font-mono transition-all"
 			onclick={() => (isCancelModalOpen = false)}
 		>
 			Keep Editing

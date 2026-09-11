@@ -34,18 +34,18 @@
 	}: Props = $props();
 
 	const tones: Record<Tone, string> = {
-		blue: "bg-blue-600/20 text-blue-400",
-		purple: "bg-purple-600/20 text-purple-400",
-		green: "bg-green-600/20 text-green-400",
+		blue: "bg-[#315d8d]/18 text-[#b7d0e6]",
+		purple: "bg-[#8c709b]/15 text-[#d5c4df]",
+		green: "bg-[#587252]/18 text-[#c6dfbf]",
 		emerald: "bg-emerald-600/20 text-emerald-400",
-		amber: "bg-amber-600/20 text-amber-400",
+		amber: "bg-[#e6a527]/12 text-[#f7c56b]",
 		yellow: "bg-yellow-600/20 text-yellow-400",
 		red: "bg-red-600/20 text-red-400",
-		slate: "bg-slate-700/50 text-gray-300"
+		slate: "bg-[#102239]/70 text-[#d9ccb7]"
 	};
 
 	const rowClass =
-		"flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-slate-800 disabled:opacity-50";
+		"flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition-colors hover:bg-[#19304b] disabled:opacity-50";
 	const tile = $derived(iconTileClass ?? tones[tone]);
 </script>
 
@@ -54,9 +54,9 @@
 		<Icon class="size-5" />
 	</div>
 	<div class="min-w-0">
-		<p class="font-medium {danger ? 'text-red-300' : 'text-white'}">{title}</p>
+		<p class="font-medium {danger ? 'text-red-300' : 'text-[#fff7e8]'}">{title}</p>
 		{#if description}
-			<p class="text-xs text-gray-400">{description}</p>
+			<p class="text-xs text-[#a89e8e]">{description}</p>
 		{/if}
 	</div>
 {/snippet}

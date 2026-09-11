@@ -45,9 +45,9 @@
 	{/if}
 </svelte:head>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+<div class="min-h-screen bg-[#0c1929]">
 	<!-- Party Header -->
-	<div class="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl">
+	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-5 sm:py-6">
 			<div class="flex items-start gap-4 sm:gap-5">
 				<!-- Party Logo -->
@@ -60,7 +60,7 @@
 						{#if data.party.logoUrl}
 							<img src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
 						{:else}
-							<FluentPeople20Filled class="size-8 sm:size-10 text-white" />
+							<FluentPeople20Filled class="size-8 sm:size-10 text-[#fff7e8]" />
 						{/if}
 					</div>
 				</div>
@@ -69,7 +69,7 @@
 					<div class="flex items-start justify-between gap-3">
 						<div class="min-w-0">
 							<div class="flex flex-wrap items-center gap-2 mb-1">
-								<h1 class="text-xl sm:text-2xl font-bold text-white tracking-wide">{data.party.name}</h1>
+								<h1 class="text-xl sm:text-2xl font-bold text-[#fff7e8] tracking-wide">{data.party.name}</h1>
 								{#if data.party.abbreviation}
 									<span
 										class="px-2 py-0.5 rounded text-xs font-mono font-bold"
@@ -79,7 +79,7 @@
 									</span>
 								{/if}
 							</div>
-							<div class="flex flex-wrap items-center gap-3 text-xs text-slate-400 font-mono">
+							<div class="flex flex-wrap items-center gap-3 text-xs text-[#a89e8e] font-mono">
 								{#if data.party.ideology}
 									<span class="flex items-center gap-1">
 										<FluentFlag20Filled class="size-3" />
@@ -88,7 +88,7 @@
 								{/if}
 								<a
 									href="/state/{data.party.state.id}"
-									class="flex items-center gap-1 hover:text-purple-400 transition-colors"
+									class="flex items-center gap-1 hover:text-[#d5c4df] transition-colors"
 								>
 									{#if data.party.state.logo}
 										<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded" />
@@ -102,7 +102,7 @@
 						{#if data.isLeader}
 							<a
 								href="/party/{data.party.id}/edit"
-								class="px-3 py-1.5 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 hover:border-slate-500/50 rounded-lg text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-mono flex-shrink-0"
+								class="px-3 py-1.5 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all flex items-center gap-2 text-xs font-mono flex-shrink-0"
 							>
 								<FluentEdit20Filled class="size-3.5" />
 								Edit
@@ -110,7 +110,7 @@
 						{/if}
 					</div>
 					{#if data.party.description}
-						<p class="text-sm text-slate-300/80 mt-2 leading-relaxed">{data.party.description}</p>
+						<p class="text-sm text-[#d9ccb7]/80 mt-2 leading-relaxed">{data.party.description}</p>
 					{/if}
 				</div>
 			</div>
@@ -122,48 +122,48 @@
 		<div class="grid grid-cols-3 gap-3">
 			<a
 				href="/party/{data.party.id}/member"
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4 hover:border-slate-600/60 transition-all group"
+				class="panel rounded-xl p-3 sm:p-4 hover:border-[#dfceb0]/30 transition-all group"
 			>
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentPeople20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] sm:text-xs text-slate-500 font-mono uppercase tracking-wider">Members</span>
+					<span class="text-[10px] sm:text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Members</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-white font-mono">{data.party.memberCount}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{data.party.memberCount}</div>
 			</a>
 
 			<a
 				href="/state/{data.party.state.id}/parliament"
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4 hover:border-slate-600/60 transition-all"
+				class="panel rounded-xl p-3 sm:p-4 hover:border-[#dfceb0]/30 transition-all"
 			>
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentBuildingGovernment20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] sm:text-xs text-slate-500 font-mono uppercase tracking-wider">Seats</span>
+					<span class="text-[10px] sm:text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Seats</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-white font-mono">{data.parliamentSeats || 0}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{data.parliamentSeats || 0}</div>
 			</a>
 
-			<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
+			<div class="panel rounded-xl p-3 sm:p-4">
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentCrown20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] sm:text-xs text-slate-500 font-mono uppercase tracking-wider">Rank</span>
+					<span class="text-[10px] sm:text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Rank</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-white font-mono">#{data.partyRank || "—"}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">#{data.partyRank || "—"}</div>
 			</div>
 		</div>
 
 		<!-- Join/Leave Party -->
 		{#if !data.isMember && data.canJoin}
 			<div
-				class="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border rounded-xl p-4 sm:p-5"
+				class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5"
 				style="border-color: {data.party.color}30"
 			>
 				<form method="POST" action="?/join" use:enhance>
 					<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 						<div class="flex-1">
-							<h3 class="text-sm sm:text-base font-bold text-white">
+							<h3 class="text-sm sm:text-base font-bold text-[#fff7e8]">
 								{data.party.autoAcceptMembers ? "Join This Party" : "Apply to Join"}
 							</h3>
-							<p class="text-xs text-slate-400 font-mono mt-0.5">
+							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
 								{data.party.autoAcceptMembers ? "Become a member instantly" : "Application reviewed by leadership"}
 							</p>
 						</div>
@@ -184,17 +184,17 @@
 					<FluentPersonAvailable20Filled class="size-5 text-amber-400 flex-shrink-0" />
 					<div>
 						<span class="text-sm font-bold text-amber-300">Application Pending</span>
-						<p class="text-xs text-slate-400 font-mono mt-0.5">Awaiting review from party leadership</p>
+						<p class="text-xs text-[#a89e8e] font-mono mt-0.5">Awaiting review from party leadership</p>
 					</div>
 				</div>
 			</div>
 		{:else if data.isMember && !data.isLeader}
-			<div class="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-4">
+			<div class="panel rounded-xl p-4">
 				<form method="POST" action="?/leave" use:enhance>
 					<div class="flex items-center justify-between gap-3">
 						<div>
-							<span class="text-sm font-bold text-white">Member</span>
-							<p class="text-xs text-slate-500 font-mono mt-0.5">
+							<span class="text-sm font-bold text-[#fff7e8]">Member</span>
+							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
 								Since {(() => {
 									const d = new Date(data.memberSince!);
 									const p = (n: number) => String(n).padStart(2, "0");
@@ -228,10 +228,10 @@
 
 		<!-- Party Leadership -->
 		<div
-			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+			class="panel rounded-xl overflow-hidden"
 		>
-			<div class="bg-slate-900/80 border-b border-slate-700/50 px-4 sm:px-5 py-3">
-				<h2 class="text-sm font-bold text-slate-200 font-mono uppercase tracking-wide flex items-center gap-2">
+			<div class="bg-[#0e1d2f]/95 border-b border-[#dfceb0]/15 px-4 sm:px-5 py-3">
+				<h2 class="text-sm font-bold text-[#e5d8c1] font-mono uppercase tracking-wide flex items-center gap-2">
 					<FluentCrown20Filled class="size-4" style="color: {data.party.color}" />
 					Leadership
 				</h2>
@@ -240,7 +240,7 @@
 				{#each data.members.filter((m) => m.role === "leader") as member}
 					<a
 						href="/user/{member.userId}"
-						class="flex items-center gap-3 p-3 bg-slate-900/40 border border-slate-700/40 rounded-lg hover:border-slate-600/60 transition-all group"
+						class="flex items-center gap-3 p-3 panel-muted rounded-lg hover:border-[#dfceb0]/25 transition-all group"
 					>
 						<Logo
 							src={member.user.profile.logo}
@@ -249,12 +249,12 @@
 							class="size-10 rounded-lg"
 						/>
 						<div class="flex-1 min-w-0">
-							<p class="text-sm font-bold text-white group-hover:text-purple-400 transition-colors truncate">
+							<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors truncate">
 								{member.user.profile?.name}
 							</p>
 							<p class="text-xs font-mono mt-0.5" style="color: {data.party.color}">Party Leader</p>
 						</div>
-						<span class="text-slate-600 group-hover:text-slate-400 transition-colors text-sm">→</span>
+						<span class="text-[#a89e8e]/60 group-hover:text-[#a89e8e] transition-colors text-sm">→</span>
 					</a>
 				{/each}
 			</div>
@@ -265,14 +265,14 @@
 			<div class="flex flex-wrap gap-2">
 				<a
 					href="/party/{data.party.id}/edit"
-					class="px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 rounded-lg text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-mono"
+					class="px-3 py-2 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all flex items-center gap-2 text-xs font-mono"
 				>
 					<FluentEdit20Filled class="size-3.5" />
 					Edit
 				</a>
 				<a
 					href="/party/{data.party.id}/member"
-					class="px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-slate-600/30 rounded-lg text-slate-300 hover:text-white transition-all flex items-center gap-2 text-xs font-mono"
+					class="px-3 py-2 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all flex items-center gap-2 text-xs font-mono"
 				>
 					<FluentPeople20Filled class="size-3.5" />
 					Members

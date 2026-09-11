@@ -12,6 +12,7 @@
 	import ReportMessageModal from "$lib/component/ReportMessageModal.svelte";
 	import BlockUserModal from "$lib/component/BlockUserModal.svelte";
 	import { settings } from "$lib/settings.svelte";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	const { data, form } = $props();
 
@@ -217,10 +218,10 @@
 
 <Modal bind:open={showExternalLinkWarning} title="External Link Warning" size="small">
 	<div class="space-y-4">
-		<p class="text-gray-300">
+		<p class="text-[#d9ccb7]">
 			You are about to visit an external website. Please be careful and make sure you trust this link.
 		</p>
-		<div class="bg-slate-700/50 rounded p-3 break-all text-sm text-gray-400">
+		<div class="bg-[#102239]/70 rounded p-3 break-all text-sm text-[#a89e8e]">
 			{pendingExternalLink}
 		</div>
 		<div class="flex gap-2 justify-end">
@@ -233,7 +234,7 @@
 			>
 				Cancel
 			</button>
-			<button onclick={proceedToExternalLink} class="btn bg-blue-600 hover:bg-blue-700 border-0 text-white">
+			<button onclick={proceedToExternalLink} class={buttonClass({ variant: "info" })}>
 				Continue
 			</button>
 		</div>
@@ -242,10 +243,10 @@
 
 {#if !data.otherUser}
 	<div class="w-full mx-auto px-3 sm:px-4 py-6 sm:max-w-5xl">
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-8 text-center">
-			<h2 class="text-2xl font-bold text-white mb-2">User Not Found</h2>
-			<p class="text-gray-400 mb-4">This user doesn't exist or you don't have permission to message them.</p>
-			<button onclick={() => goto("/chat")} class="btn bg-blue-600 hover:bg-blue-700 border-0 text-white">
+		<div class="panel rounded-xl p-8 text-center">
+			<h2 class="text-2xl font-bold text-[#fff7e8] mb-2">User Not Found</h2>
+			<p class="text-[#a89e8e] mb-4">This user doesn't exist or you don't have permission to message them.</p>
+			<button onclick={() => goto("/chat")} class={buttonClass({ variant: "info" })}>
 				Back to Messages
 			</button>
 		</div>
@@ -254,11 +255,11 @@
 	<!-- Blocked User View - Show messages but disable input -->
 	<div class="flex flex-col h-full min-h-0">
 		<!-- Header -->
-		<div class="bg-slate-900/80 backdrop-blur-sm border-b border-white/10 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
+		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
 			<div class="flex items-center gap-2 md:gap-3">
 				<button
 					onclick={() => goto("/chat")}
-					class="btn btn-sm btn-ghost text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0"
+					class="btn btn-sm btn-ghost text-[#a89e8e] hover:text-[#fff7e8] min-h-0 h-10 w-10 p-0"
 				>
 					<FluentArrowLeft20Filled class="size-5" />
 				</button>
@@ -270,13 +271,13 @@
 					{#if data.otherUser.logo && settings.loadImages}
 						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
-						<div class="size-11 md:size-10 rounded-full bg-slate-700/80 flex items-center justify-center">
-							<FluentImageOff20Filled class="size-6 md:size-5 text-gray-500" />
+						<div class="size-11 md:size-10 rounded-full bg-[#14283f]/80 flex items-center justify-center">
+							<FluentImageOff20Filled class="size-6 md:size-5 text-[#a89e8e]" />
 						</div>
 					{/if}
 
 					<div class="min-w-0">
-						<h1 class="text-lg md:text-xl font-bold text-white truncate">{data.otherUser.name || "Anonymous"}</h1>
+						<h1 class="text-lg md:text-xl font-bold text-[#fff7e8] truncate">{data.otherUser.name || "Anonymous"}</h1>
 						<p class="text-xs md:text-sm text-red-400">Blocked</p>
 					</div>
 				</a>
@@ -287,21 +288,21 @@
 		<div
 			bind:this={chatContainer}
 			onscroll={handleScroll}
-			class="flex-1 min-h-0 bg-slate-800/30 border-x border-white/5 p-4 overflow-y-auto"
+			class="flex-1 min-h-0 bg-[#102239]/60 border-x border-[#dfceb0]/10 p-4 overflow-y-auto"
 		>
 			{#if allMessages.length === 0}
 				<div class="flex items-center justify-center h-full">
-					<p class="text-gray-400 text-center">No messages yet.</p>
+					<p class="text-[#a89e8e] text-center">No messages yet.</p>
 				</div>
 			{:else}
 				{#each messagesByDay as day}
 					<!-- Day Divider -->
 					<div class="flex items-center gap-4 my-6">
-						<div class="flex-1 h-px bg-white/10"></div>
-						<span class="text-xs text-gray-500 font-medium px-3 py-1 bg-slate-700/50 rounded-full">
+						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
+						<span class="text-xs text-[#a89e8e] font-medium px-3 py-1 bg-[#14283f]/70 rounded-full">
 							{formatDayDivider(day.date)}
 						</span>
-						<div class="flex-1 h-px bg-white/10"></div>
+						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
 					</div>
 
 					{#each day.groups as group}
@@ -344,7 +345,7 @@
 							<div class="chat chat-start mb-4">
 								<div class="flex flex-col gap-1 items-start">
 									{#each group.messages as msg}
-										<div class="chat-bubble bg-slate-700 text-gray-200">
+										<div class="chat-bubble bg-[#14283f] text-[#e5d8c1]">
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
@@ -380,9 +381,9 @@
 		</div>
 
 		<!-- Blocked notice instead of input -->
-		<div class="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 p-3 md:p-4 flex-shrink-0">
-			<div class="bg-slate-800/80 rounded-xl p-4 border border-white/10 text-center shadow-lg">
-				<p class="text-gray-300 mb-3">
+		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-t border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0">
+			<div class="bg-[#14283f]/80 rounded-xl p-4 border border-[#dfceb0]/15 text-center shadow-lg">
+				<p class="text-[#d9ccb7] mb-3">
 					{#if data.blockedByCurrentUser}
 						You have blocked this user. Unblock them to send messages.
 					{:else}
@@ -393,7 +394,7 @@
 				{#if data.blockedByCurrentUser}
 					<form method="POST" action="?/unblockUser" use:enhance>
 						<input type="hidden" name="blockedUserId" value={data.otherUser.id} />
-						<button type="submit" class="btn bg-blue-600 hover:bg-blue-700 border-0 text-white"> Unblock User </button>
+						<button type="submit" class={buttonClass({ variant: "info" })}> Unblock User </button>
 					</form>
 				{/if}
 			</div>
@@ -402,11 +403,11 @@
 {:else}
 	<div class="flex flex-col h-full min-h-0">
 		<!-- Header -->
-		<div class="bg-slate-900/80 backdrop-blur-sm border-b border-white/10 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
+		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
 			<div class="flex items-center gap-2 md:gap-3">
 				<button
 					onclick={() => goto("/chat")}
-					class="btn btn-sm btn-ghost text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0"
+					class="btn btn-sm btn-ghost text-[#a89e8e] hover:text-[#fff7e8] min-h-0 h-10 w-10 p-0"
 				>
 					<FluentArrowLeft20Filled class="size-5" />
 				</button>
@@ -418,14 +419,14 @@
 					{#if data.otherUser.logo && settings.loadImages}
 						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
-						<div class="size-11 md:size-10 rounded-full bg-slate-700/80 flex items-center justify-center">
-							<FluentImageOff20Filled class="size-6 md:size-5 text-gray-500" />
+						<div class="size-11 md:size-10 rounded-full bg-[#14283f]/80 flex items-center justify-center">
+							<FluentImageOff20Filled class="size-6 md:size-5 text-[#a89e8e]" />
 						</div>
 					{/if}
 
 					<div class="min-w-0">
-						<h1 class="text-lg md:text-xl font-bold text-white truncate">{data.otherUser.name || "Anonymous"}</h1>
-						<p class="text-xs md:text-sm text-gray-400 truncate">Direct Message</p>
+						<h1 class="text-lg md:text-xl font-bold text-[#fff7e8] truncate">{data.otherUser.name || "Anonymous"}</h1>
+						<p class="text-xs md:text-sm text-[#a89e8e] truncate">Direct Message</p>
 					</div>
 				</a>
 
@@ -433,13 +434,13 @@
 				<div class="dropdown dropdown-end">
 					<label
 						tabindex="0"
-						class="btn btn-ghost btn-sm btn-circle text-gray-400 hover:text-white min-h-0 h-10 w-10 p-0"
+						class="btn btn-ghost btn-sm btn-circle text-[#a89e8e] hover:text-[#fff7e8] min-h-0 h-10 w-10 p-0"
 					>
 						<FluentMoreVertical20Filled class="size-5" />
 					</label>
 					<ul
 						tabindex="0"
-						class="dropdown-content z-[1] menu p-2 shadow-lg bg-slate-800 border border-white/10 rounded-box w-52 mt-2"
+						class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#14283f] border border-[#dfceb0]/15 rounded-box w-52 mt-2"
 					>
 						<li>
 							<button
@@ -458,27 +459,27 @@
 		<div
 			bind:this={chatContainer}
 			onscroll={handleScroll}
-			class="flex-1 min-h-0 bg-gradient-to-b from-slate-900/50 to-slate-900/30 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent"
+			class="flex-1 min-h-0 bg-[#0c1929]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#dfceb0]/20 scrollbar-track-transparent"
 		>
 			{#if allMessages.length === 0}
 				<div class="flex items-center justify-center h-full">
 					<div class="text-center">
-						<FluentPerson20Filled class="size-16 text-gray-600 mx-auto mb-4" />
-						<p class="text-gray-400 text-base">No messages yet</p>
-						<p class="text-gray-500 text-sm mt-1">Start the conversation!</p>
+						<FluentPerson20Filled class="size-16 text-[#a89e8e]/70 mx-auto mb-4" />
+						<p class="text-[#a89e8e] text-base">No messages yet</p>
+						<p class="text-[#a89e8e] text-sm mt-1">Start the conversation!</p>
 					</div>
 				</div>
 			{:else}
 				{#each messagesByDay as day}
 					<!-- Day Divider -->
 					<div class="flex items-center gap-3 my-6">
-						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-[#dfceb0]/15 to-transparent"></div>
 						<span
-							class="text-xs text-gray-400 font-semibold px-4 py-1.5 bg-slate-800/80 rounded-full border border-white/5 shadow-lg"
+							class="text-xs text-[#a89e8e] font-semibold px-4 py-1.5 bg-[#14283f]/80 rounded-full border border-[#dfceb0]/10 shadow-lg"
 						>
 							{formatDayDivider(day.date)}
 						</span>
-						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-[#dfceb0]/15 to-transparent"></div>
 					</div>
 
 					{#each day.groups as group}
@@ -488,7 +489,7 @@
 								<div class="flex flex-col gap-1 items-end max-w-[85%] md:max-w-md ml-auto">
 									{#each group.messages as msg}
 										<div
-											class="chat-bubble bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg {msg.isOptimistic
+											class="chat-bubble bg-blue-600 text-white shadow-lg {msg.isOptimistic
 												? 'opacity-70'
 												: ''} text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-br-md break-words"
 										>
@@ -527,7 +528,7 @@
 									{#each group.messages as msg}
 										<button
 											onclick={() => handleReportMessage(msg.id, msg.senderId)}
-											class="chat-bubble bg-slate-800/80 text-gray-100 hover:bg-slate-700/80 transition-colors text-left cursor-pointer shadow-lg text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-bl-md break-words"
+											class="chat-bubble bg-[#14283f]/80 text-[#e5d8c1] hover:bg-[#19304b]/80 transition-colors text-left cursor-pointer shadow-lg text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-bl-md break-words"
 										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
@@ -567,7 +568,7 @@
 		</div>
 
 		<!-- Message input - Fixed to bottom -->
-		<div class="bg-slate-900/80 backdrop-blur-sm border-t border-white/10 p-3 md:p-4 flex-shrink-0">
+		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-t border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0">
 			{#if form?.error}
 				<div class="alert alert-error mb-3 text-sm">
 					<p>{form.error}</p>
@@ -626,7 +627,7 @@
 					placeholder="Type a message..."
 					maxlength="500"
 					rows="1"
-					class="textarea textarea-bordered flex-1 bg-slate-800/80 border-slate-700/50 focus:border-blue-500/50 text-white placeholder-gray-500 resize-none min-h-[2.75rem] md:min-h-[2.5rem] max-h-32 rounded-xl text-base"
+					class="textarea textarea-bordered flex-1 bg-[#0d1d31] border-[#dfceb0]/20 focus:border-[#e6a527]/70 text-[#fff7e8] placeholder-[#b3a68e]/60 resize-none min-h-[2.75rem] md:min-h-[2.5rem] max-h-32 rounded-xl text-base"
 					disabled={isSubmitting}
 					onkeydown={(e) => {
 						if (e.key === "Enter" && !e.shiftKey) {
@@ -636,7 +637,7 @@
 					}}></textarea>
 				<button
 					type="submit"
-					class="btn bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 border-0 text-white gap-2 min-w-[80px] md:min-w-[100px] self-end shadow-lg shadow-blue-600/20 rounded-xl"
+					class="btn bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2 min-w-[80px] md:min-w-[100px] self-end shadow-lg shadow-blue-600/20 rounded-xl"
 					disabled={isSubmitting || !message.trim()}
 				>
 					{#if isSubmitting}
@@ -648,7 +649,7 @@
 					{/if}
 				</button>
 			</form>
-			<p class="text-xs text-gray-500 mt-2 px-1">
+			<p class="text-xs text-[#a89e8e] mt-2 px-1">
 				<span class={message.length > 450 ? "text-orange-400 font-semibold" : ""}>{message.length}/500</span>
 				<span class="hidden md:inline"> • Press Enter to send, Shift+Enter for new line</span>
 			</p>

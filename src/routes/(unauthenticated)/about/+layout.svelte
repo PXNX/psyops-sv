@@ -12,6 +12,6 @@
 	/>
 </svelte:head>
 
-<main class="relative min-h-screen bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900 overflow-hidden">
+<main class="relative min-h-screen overflow-hidden">
 	{@render children()}
 </main>

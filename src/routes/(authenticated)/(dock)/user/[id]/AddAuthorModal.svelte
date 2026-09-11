@@ -58,17 +58,17 @@
 			{/if}
 
 			{#if newspapers.length === 0}
-				<div class="alert alert-warning bg-yellow-600/10 border-yellow-500/20 text-yellow-300">
+				<div class="alert alert-warning bg-[#e6a527]/10 border-[#e6a527]/25 text-[#f7c56b]">
 					<span>You don't own any newspapers. Create one first to add authors.</span>
 				</div>
 			{:else}
 				<div class="form-control">
 					<label class="label">
-						<span class="label-text text-gray-300">Select Newspaper</span>
+						<span class="label-text text-[#d9ccb7]">Select Newspaper</span>
 					</label>
 					<select
 						name="newspaperId"
-						class="select select-bordered bg-slate-900 text-white border-white/10"
+						class="select select-bordered field-control"
 						bind:value={selectedNewspaper}
 						disabled={isSubmitting}
 						required
@@ -84,11 +84,11 @@
 
 				<div class="form-control">
 					<label class="label">
-						<span class="label-text text-gray-300">Rank</span>
+						<span class="label-text text-[#d9ccb7]">Rank</span>
 					</label>
 					<select
 						name="rank"
-						class="select select-bordered bg-slate-900 text-white border-white/10"
+						class="select select-bordered field-control"
 						bind:value={selectedRank}
 						disabled={isSubmitting}
 						required

@@ -192,19 +192,19 @@
 	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
 		<!-- Voter Status -->
 		{#if !data.userResidence}
-			<div class="bg-red-950/30 border border-red-500/30 rounded-lg p-3 text-center">
+			<div class="bg-red-600/10 border border-red-500/20 rounded-lg p-3 text-center">
 				<p class="text-sm text-red-300 font-mono">You must be a resident of {data.state.name} to vote</p>
 			</div>
 		{:else if data.userVote && isActive}
-			<div class="bg-green-950/30 border border-green-500/30 rounded-lg p-3 text-center">
-				<div class="flex items-center justify-center gap-2 text-green-300 font-mono text-sm">
+			<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-lg p-3 text-center">
+				<div class="flex items-center justify-center gap-2 text-[#c6dfbf] font-mono text-sm">
 					<FluentCheckmark20Filled class="size-4" />
 					<span>Vote cast. You can change your vote until the election ends.</span>
 				</div>
 			</div>
 		{:else if canVote}
-			<div class="bg-purple-950/30 border border-purple-500/30 rounded-lg p-3 text-center">
-				<p class="text-sm text-purple-300 font-mono">
+			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-lg p-3 text-center">
+				<p class="text-sm text-[#d5c4df] font-mono">
 					{data.election.isInaugural ? "Cast your vote in the inaugural election" : "Cast your vote below"}
 				</p>
 			</div>
@@ -212,25 +212,25 @@
 
 		<!-- Stats Strip -->
 		<div class="grid grid-cols-3 gap-3 text-center">
-			<div class="bg-purple-950/30 border border-purple-500/20 rounded-lg p-3 sm:p-4">
-				<div class="text-xl sm:text-2xl font-bold text-purple-400 font-mono">{data.totalVotes.toLocaleString()}</div>
-				<div class="text-[10px] sm:text-xs text-purple-400/60 font-mono uppercase tracking-wider">Votes</div>
+			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-lg p-3 sm:p-4">
+				<div class="text-xl sm:text-2xl font-bold text-[#d5c4df] font-mono">{data.totalVotes.toLocaleString()}</div>
+				<div class="text-[10px] sm:text-xs text-[#d5c4df]/60 font-mono uppercase tracking-wider">Votes</div>
 			</div>
-			<div class="bg-blue-950/30 border border-blue-500/20 rounded-lg p-3 sm:p-4">
-				<div class="text-xl sm:text-2xl font-bold text-blue-400 font-mono">{data.parties.length}</div>
-				<div class="text-[10px] sm:text-xs text-blue-400/60 font-mono uppercase tracking-wider">Parties</div>
+			<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-lg p-3 sm:p-4">
+				<div class="text-xl sm:text-2xl font-bold text-[#b7d0e6] font-mono">{data.parties.length}</div>
+				<div class="text-[10px] sm:text-xs text-[#b7d0e6]/60 font-mono uppercase tracking-wider">Parties</div>
 			</div>
-			<div class="bg-emerald-950/30 border border-emerald-500/20 rounded-lg p-3 sm:p-4">
-				<div class="text-xl sm:text-2xl font-bold text-emerald-400 font-mono">{data.election.totalSeats}</div>
-				<div class="text-[10px] sm:text-xs text-emerald-400/60 font-mono uppercase tracking-wider">Seats</div>
+			<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-lg p-3 sm:p-4">
+				<div class="text-xl sm:text-2xl font-bold text-[#c6dfbf] font-mono">{data.election.totalSeats}</div>
+				<div class="text-[10px] sm:text-xs text-[#c6dfbf]/60 font-mono uppercase tracking-wider">Seats</div>
 			</div>
 		</div>
 
 		<!-- Parties -->
 		{#if data.parties.length === 0}
-			<div class="bg-slate-900/30 border border-slate-700/30 rounded-xl p-8 sm:p-12 text-center">
+			<div class="panel-muted rounded-xl p-8 sm:p-12 text-center">
 				<div class="text-4xl sm:text-6xl mb-4 opacity-20">🗳️</div>
-				<p class="text-lg text-slate-400 font-mono">No political parties registered</p>
+				<p class="text-lg text-[#a89e8e] font-mono">No political parties registered</p>
 			</div>
 		{:else}
 			<div class="space-y-3">
@@ -242,9 +242,9 @@
 					{@const canVoteForParty = canVote && hasEnoughMembers}
 
 					<div
-						class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border rounded-xl overflow-hidden transition-all {isUserVote
-							? 'border-green-500/50 ring-1 ring-green-500/20'
-							: 'border-slate-700/50 hover:border-slate-600/60'}"
+						class="panel border rounded-xl overflow-hidden transition-all {isUserVote
+							? 'border-[#8fae88]/50 ring-1 ring-[#8fae88]/20'
+							: 'border-[#dfceb0]/15 hover:border-[#dfceb0]/25'}"
 					>
 						<div class="p-4 sm:p-5">
 							<div class="flex items-start gap-4">
@@ -252,13 +252,11 @@
 								<div class="flex flex-col items-center gap-2 flex-shrink-0">
 									{#if hasStarted && index < 3}
 										<div
-											class="size-6 rounded-full flex items-center justify-center font-bold text-xs font-mono"
-											class:bg-yellow-500={index === 0}
-											class:text-yellow-900={index === 0}
-											class:bg-gray-400={index === 1}
-											class:text-gray-900={index === 1}
-											class:bg-orange-600={index === 2}
-											class:text-orange-100={index === 2}
+											class="size-6 rounded-full flex items-center justify-center font-bold text-xs font-mono {index === 0
+												? 'bg-[#e6a527] text-[#172a45]'
+												: index === 1
+													? 'bg-[#a89e8e] text-[#172a45]'
+													: 'bg-orange-600 text-orange-100'}"
 										>
 											{index + 1}
 										</div>
@@ -268,12 +266,12 @@
 											<Logo
 												src={party.logo}
 												alt={party.name}
-												class="size-14 sm:size-16 rounded-lg border-2 border-slate-700/50 group-hover/logo:border-purple-500/50 transition-colors"
+												class="size-14 sm:size-16 rounded-lg border-2 border-[#dfceb0]/20 group-hover/logo:border-[#e6a527]/55 transition-colors"
 												placeholderIcon={FluentFlag20Filled}
 											/>
 										{:else}
 											<div
-												class="size-14 sm:size-16 rounded-lg flex items-center justify-center text-lg font-bold text-white border-2 border-slate-700/50"
+												class="size-14 sm:size-16 rounded-lg flex items-center justify-center text-lg font-bold text-white border-2 border-[#dfceb0]/20"
 												style="background: linear-gradient(135deg, {party.color}, {party.color}dd)"
 											>
 												{party.abbreviation || party.name.substring(0, 2)}
@@ -288,11 +286,11 @@
 										<div class="flex-1 min-w-0">
 											<a href="/party/{party.id}" class="group/link">
 												<h3
-													class="text-lg sm:text-xl font-bold text-white group-hover/link:text-purple-400 transition-colors flex items-center gap-2 truncate"
+													class="text-lg sm:text-xl font-bold text-[#fff7e8] group-hover/link:text-[#f7c56b] transition-colors flex items-center gap-2 truncate"
 												>
 													{party.name}
 													{#if isUserVote}
-														<FluentCheckmark20Filled class="size-4 text-green-400 flex-shrink-0" />
+														<FluentCheckmark20Filled class="size-4 text-[#8fae88] flex-shrink-0" />
 													{/if}
 												</h3>
 											</a>
@@ -308,8 +306,8 @@
 
 										{#if hasStarted}
 											<div class="text-right flex-shrink-0">
-												<div class="text-xl sm:text-2xl font-bold text-white font-mono">{votes}</div>
-												<div class="text-xs text-slate-500 font-mono">{percentage.toFixed(1)}%</div>
+												<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{votes}</div>
+												<div class="text-xs text-[#a89e8e] font-mono">{percentage.toFixed(1)}%</div>
 											</div>
 										{/if}
 									</div>
@@ -318,7 +316,7 @@
 										{#if party.leader}
 											<a
 												href="/user/{party.leader.accountId}"
-												class="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
+												class="flex items-center gap-2 text-[#c7bda9] hover:text-[#fff7e8] transition-colors"
 											>
 												<Logo
 													src={party.leader.logo}
@@ -330,9 +328,9 @@
 											</a>
 										{/if}
 										<span
-											class="text-xs font-mono flex items-center gap-1.5"
-											class:text-slate-500={hasEnoughMembers}
-											class:text-red-400={!hasEnoughMembers}
+											class="text-xs font-mono flex items-center gap-1.5 {hasEnoughMembers
+												? 'text-[#a89e8e]'
+												: 'text-red-400'}"
 										>
 											<FluentPeople20Filled class="size-3.5" />
 											{party.memberCount}
@@ -345,7 +343,7 @@
 									<!-- Vote Bar -->
 									{#if hasStarted && data.totalVotes > 0}
 										<div class="mt-3">
-											<div class="w-full bg-slate-800/80 rounded-full h-2 overflow-hidden">
+											<div class="w-full bg-[#0d1d31] rounded-full h-2 overflow-hidden">
 												<div
 													class="h-full rounded-full transition-all duration-700 ease-out"
 													style="width: {percentage}%; background: {party.color}"
@@ -359,7 +357,7 @@
 
 						<!-- Vote Action -->
 						{#if data.userResidence}
-							<div class="border-t border-slate-700/40 px-4 sm:px-5 py-3 bg-slate-950/30">
+							<div class="border-t border-[#dfceb0]/15 px-4 sm:px-5 py-3 bg-[#0d1d31]/40">
 								{#if !hasEnoughMembers}
 									<p class="text-xs text-red-400/70 text-center font-mono">Needs 3+ members to participate</p>
 								{:else}
@@ -378,10 +376,10 @@
 										<button
 											type="submit"
 											disabled={!canVoteForParty}
-											class="w-full py-2 rounded-lg font-mono text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-											class:bg-green-600={isUserVote && canVote}
-											class:hover:bg-green-500={isUserVote && canVote}
-											class:text-white={true}
+											class="w-full py-2 rounded-lg font-mono text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed text-white {isUserVote &&
+											canVote
+												? 'bg-emerald-600 hover:bg-emerald-500'
+												: ''}"
 											style:background={!isUserVote && canVoteForParty ? party.color : ""}
 											style:border-color={party.color}
 										>

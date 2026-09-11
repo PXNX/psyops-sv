@@ -23,15 +23,15 @@
 <div class="container mx-auto px-4 py-6 max-w-7xl">
 	<!-- Header with State Info -->
 	<div class="mb-6">
-		<a href="/state/{data.state.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+		<a href="/state/{data.state.id}" class="text-sm text-[#a89e8e] hover:text-[#f7c56b] transition-colors">
 			{data.state.name}
 		</a>
-		<h1 class="text-3xl font-bold text-white flex items-center gap-3 mt-1">
+		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3 mt-1">
 			<FluentGlobe20Filled class="size-8 text-primary" />
 			Ministry of Foreign Affairs
 		</h1>
 		{#if data.isPresident}
-			<p class="text-xs text-yellow-400 mt-1">👑 Accessing as President</p>
+			<p class="text-xs text-[#f7c56b] mt-1">👑 Accessing as President</p>
 		{/if}
 	</div>
 
@@ -183,13 +183,13 @@
 					</p>
 
 					{#if data.blocVisaOverride && data.blocInfo}
-						<div class="alert bg-emerald-900/30 border border-emerald-500/30 mt-4">
+						<div class="alert bg-[#587252]/18 border border-[#8fae88]/30 mt-4">
 							<div class="flex items-start gap-3">
-								<FluentFlag20Filled class="size-5 text-emerald-400 mt-0.5 flex-shrink-0" />
+								<FluentFlag20Filled class="size-5 text-[#8fae88] mt-0.5 flex-shrink-0" />
 								<div>
-									<p class="font-semibold text-emerald-300">Bloc Visa-Free Override Active</p>
-									<p class="text-sm text-emerald-200/70 mt-1">
-										<a href="/bloc/{data.blocInfo.id}" class="underline hover:text-emerald-200">{data.blocInfo.name}</a>
+									<p class="font-semibold text-[#c6dfbf]">Bloc Visa-Free Override Active</p>
+									<p class="text-sm text-[#c6dfbf]/70 mt-1">
+										<a href="/bloc/{data.blocInfo.id}" class="underline hover:text-[#edfae7]">{data.blocInfo.name}</a>
 										has visa-free travel enabled for member states. Residents of other member states can travel here without
 										a visa, regardless of the visa policy below.
 									</p>
@@ -212,7 +212,7 @@
 								<div>
 									<span class="label-text font-medium">Require Visa for Entry</span>
 									{#if data.blocVisaOverride}
-										<span class="text-xs text-emerald-400 ml-2">(overridden for bloc members)</span>
+										<span class="text-xs text-[#8fae88] ml-2">(overridden for bloc members)</span>
 									{/if}
 								</div>
 							</label>

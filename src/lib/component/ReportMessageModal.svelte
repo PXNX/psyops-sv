@@ -40,10 +40,10 @@
 	<BottomSheet bind:open title="Report Message">
 		<div class="space-y-4">
 			<div class="flex items-center gap-3">
-				<div class="size-12 bg-yellow-600/20 rounded-xl flex items-center justify-center shrink-0">
-					<FluentWarning20Filled class="size-6 text-yellow-400" />
+				<div class="size-12 bg-[#e6a527]/15 rounded-xl flex items-center justify-center shrink-0">
+					<FluentWarning20Filled class="size-6 text-[#f7c56b]" />
 				</div>
-				<p class="text-sm text-gray-300">Help us understand what's wrong with this message.</p>
+				<p class="text-sm text-[#d9ccb7]">Help us understand what's wrong with this message.</p>
 			</div>
 
 			<form
@@ -66,7 +66,7 @@
 				<div class="space-y-4">
 					<div class="form-control w-full">
 						<label class="label">
-							<span class="label-text text-gray-300">Reason *</span>
+							<span class="label-text text-[#e5d8c1]">Reason *</span>
 						</label>
 						<select
 							name="violationType"
@@ -83,7 +83,7 @@
 
 					<div class="form-control w-full">
 						<label class="label">
-							<span class="label-text text-gray-300">Additional details (optional)</span>
+							<span class="label-text text-[#e5d8c1]">Additional details (optional)</span>
 						</label>
 						<textarea
 							name="description"
@@ -93,7 +93,7 @@
 							rows="3"
 							maxlength="500"></textarea>
 						<label class="label">
-							<span class="label-text-alt text-gray-500">{description.length}/500 characters</span>
+							<span class="label-text-alt text-[#a89e8e]">{description.length}/500 characters</span>
 						</label>
 					</div>
 

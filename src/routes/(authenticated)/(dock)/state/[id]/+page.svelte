@@ -180,7 +180,7 @@
 						<div class="text-sm text-[#c7bda9]">
 							<span class="font-bold text-red-400">{war.attacker.name}</span>
 							<span class="text-[#a89e8e] mx-1">vs</span>
-							<span class="font-bold text-blue-400">{war.defender.name}</span>
+							<span class="font-bold text-[#b7d0e6]">{war.defender.name}</span>
 						</div>
 					</div>
 					<span class="text-[#a89e8e] group-hover:text-red-400 transition-colors">→</span>
@@ -219,10 +219,10 @@
 	{#if !data.visa.isResident}
 		<section>
 			{#if data.visa.blocVisaFree}
-				<div class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/20 rounded-sm p-5">
+				<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-5">
 					<div class="flex items-center gap-3">
-						<div class="size-12 bg-emerald-600/20 rounded-sm flex items-center justify-center flex-shrink-0">
-							<FluentCheckmark20Filled class="size-6 text-emerald-400" />
+						<div class="size-12 bg-[#587252]/25 rounded-sm flex items-center justify-center flex-shrink-0">
+							<FluentCheckmark20Filled class="size-6 text-[#c6dfbf]" />
 						</div>
 						<div>
 							<h3 class="text-lg font-semibold text-[#fff7e8]">Visa-Free</h3>
@@ -231,10 +231,10 @@
 					</div>
 				</div>
 			{:else if !data.visa.visaRequired}
-				<div class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/20 rounded-sm p-5">
+				<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-5">
 					<div class="flex items-center gap-3">
-						<div class="size-12 bg-emerald-600/20 rounded-sm flex items-center justify-center flex-shrink-0">
-							<FluentCheckmark20Filled class="size-6 text-emerald-400" />
+						<div class="size-12 bg-[#587252]/25 rounded-sm flex items-center justify-center flex-shrink-0">
+							<FluentCheckmark20Filled class="size-6 text-[#c6dfbf]" />
 						</div>
 						<div>
 							<h3 class="text-lg font-semibold text-[#fff7e8]">Visa-Free</h3>
@@ -420,7 +420,7 @@
 								logo={minister.logo}
 								logoAlt={minister.name}
 								placeholderIcon={FluentShield20Filled}
-								placeholderGradient="from-purple-600/20 to-purple-700/10"
+								placeholderGradient="from-[#8c709b]/20 to-[#8c709b]/10"
 								title={minister.name}
 								subtitle={minister.ministry.replace("_", " ")}
 								hoverColor="purple"
@@ -441,7 +441,7 @@
 					<ProfileItem
 						href="/state/{data.state.id}/parliament"
 						placeholderIcon={FluentOrganization20Filled}
-						placeholderGradient="from-indigo-600/20 to-indigo-700/10"
+						placeholderGradient="from-[#315d8d]/20 to-[#315d8d]/10"
 						title="{data.parliamentMembers.length} Parliament Members"
 						subtitle="View legislature"
 						hoverColor="purple"

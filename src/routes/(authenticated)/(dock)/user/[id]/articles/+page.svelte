@@ -68,15 +68,15 @@
 					alt={data.user.name || "User"}
 					class="size-full"
 					placeholderIcon={FluentDocument20Filled}
-					placeholderGradient="from-purple-500 to-blue-500"
+					placeholderGradient="from-[#8c709b] to-[#315d8d]"
 				/>
 			</div>
 			<div>
-				<a href="/user/{data.user.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+				<a href="/user/{data.user.id}" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
 					{data.user.name || "Anonymous"}
 				</a>
-				<h1 class="text-2xl font-bold text-white">Articles</h1>
-				<p class="text-sm text-gray-400">
+				<h1 class="text-2xl font-bold text-[#fff7e8]">Articles</h1>
+				<p class="text-sm text-[#a89e8e]">
 					{data.totalArticles}
 					{data.totalArticles === 1 ? "Article" : "Articles"}
 				</p>
@@ -88,9 +88,9 @@
 			<div class="flex flex-col sm:flex-row gap-3">
 				<!-- Search -->
 				<div class="relative flex-1">
-					<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+					<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
 					<input
-						class="w-full pl-10 pr-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all"
+						class="w-full pl-10 pr-4 py-2.5 field-control rounded-xl"
 						placeholder="Search by title..."
 						type="text"
 						bind:value={searchQuery}
@@ -116,7 +116,7 @@
 
 					<button
 						onclick={toggleSortOrder}
-						class="btn btn-sm bg-slate-700 hover:bg-slate-600 border-0 text-white gap-2"
+						class="btn btn-sm bg-[#14283f] hover:bg-[#19304b] border-0 text-[#e5d8c1] gap-2"
 					>
 						<FluentArrowSort20Filled class="size-4" />
 						{data.sortOrder === "asc" ? "Ascending" : "Descending"}
@@ -127,13 +127,13 @@
 	</div>
 
 	<!-- Articles List -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
+	<div class="panel rounded-xl p-6">
 		{#if data.articles.length === 0}
 			<div class="text-center py-12">
-				<div class="size-16 bg-slate-700/30 rounded-full flex items-center justify-center mx-auto mb-4">
-					<FluentDocument20Filled class="size-8 text-gray-500" />
+				<div class="size-16 bg-[#102239]/70 rounded-full flex items-center justify-center mx-auto mb-4">
+					<FluentDocument20Filled class="size-8 text-[#a89e8e]" />
 				</div>
-				<p class="text-gray-400">
+				<p class="text-[#a89e8e]">
 					{#if data.searchQuery}
 						No articles found matching your search
 					{:else if data.isOwnProfile}
@@ -145,7 +145,7 @@
 				{#if data.isOwnProfile && !data.searchQuery}
 					<a
 						href="/posts/new"
-						class="btn btn-sm gap-2 bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/30 text-purple-300 hover:text-purple-200 mt-4"
+						class="btn btn-sm gap-2 bg-[#8c709b]/20 hover:bg-[#8c709b]/30 border-[#b7a0c5]/30 text-[#d5c4df] hover:text-[#f0e7f5] mt-4"
 					>
 						<FluentDocument20Filled class="size-4" />
 						Write Your First Article
@@ -157,38 +157,38 @@
 				{#each data.articles as article}
 					<a
 						href="/posts/{article.id}"
-						class="flex items-center gap-4 bg-slate-700/30 rounded-lg p-4 border border-white/5 hover:border-white/10 hover:bg-slate-700/50 transition-all group"
+						class="flex items-center gap-4 bg-[#102239]/70 rounded-lg p-4 border border-[#dfceb0]/10 hover:border-[#dfceb0]/20 hover:bg-[#19304b] transition-all group"
 					>
 						<!-- Icon or Newspaper Logo -->
 						<div class="shrink-0">
 							{#if article.newspaperName}
-								<div class="size-12 rounded-lg bg-slate-700/50 flex items-center justify-center transition-all">
+								<div class="size-12 rounded-lg bg-[#102239] flex items-center justify-center transition-all">
 									<FluentEmojiRolledUpNewspaper class="text-2xl" />
 								</div>
 							{:else}
-								<div class="size-12 rounded-lg bg-purple-600/20 flex items-center justify-center transition-all">
-									<FluentDocument20Filled class="size-6 text-purple-400" />
+								<div class="size-12 rounded-lg bg-[#8c709b]/20 flex items-center justify-center transition-all">
+									<FluentDocument20Filled class="size-6 text-[#d5c4df]" />
 								</div>
 							{/if}
 						</div>
 
 						<!-- Article Info -->
 						<div class="flex-1 min-w-0">
-							<h3 class="text-base font-semibold text-white truncate group-hover:text-purple-400 transition-colors">
+							<h3 class="text-base font-semibold text-[#fff7e8] truncate group-hover:text-[#d5c4df] transition-colors">
 								{article.title}
 							</h3>
 							<div class="flex items-center gap-3 mt-1">
 								{#if article.newspaperName}
-									<span class="text-xs text-gray-400 flex items-center gap-1">
+									<span class="text-xs text-[#a89e8e] flex items-center gap-1">
 										<FluentEmojiRolledUpNewspaper class="text-sm" />
 										{article.newspaperName}
 									</span>
 								{/if}
-								<span class="text-xs text-gray-500 flex items-center gap-1">
+								<span class="text-xs text-[#a89e8e]/80 flex items-center gap-1">
 									<FluentCalendar20Filled class="size-3" />
 									{formatDateTime(article.createdAt)}
 								</span>
-								<span class="text-xs text-gray-500 flex items-center gap-1">
+								<span class="text-xs text-[#a89e8e]/80 flex items-center gap-1">
 									<FluentHeart20Filled class="size-3" />
 									{article.upvoteCount}
 								</span>
@@ -197,7 +197,7 @@
 
 						<!-- Chevron -->
 						<div class="shrink-0">
-							<FluentChevronRight20Filled class="size-5 text-gray-500 group-hover:text-purple-400 transition-colors" />
+							<FluentChevronRight20Filled class="size-5 text-[#a89e8e]/80 group-hover:text-[#d5c4df] transition-colors" />
 						</div>
 					</a>
 				{/each}
@@ -205,7 +205,7 @@
 
 			<!-- Pagination -->
 			{#if totalPages > 1}
-				<div class="flex items-center justify-center gap-2 mt-6 pt-6 border-t border-white/5">
+				<div class="flex items-center justify-center gap-2 mt-6 pt-6 border-t border-[#dfceb0]/10">
 					<button
 						class="btn btn-sm btn-ghost"
 						disabled={data.currentPage === 1}
@@ -214,7 +214,7 @@
 						<FluentChevronLeft20Filled class="size-4" />
 					</button>
 
-					<span class="text-sm text-gray-400">
+					<span class="text-sm text-[#a89e8e]">
 						Page {data.currentPage} of {totalPages}
 					</span>
 

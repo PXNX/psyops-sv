@@ -118,7 +118,7 @@
 		<!-- Company Name -->
 		<EditSection title="Company Details" icon={FluentBuilding20Filled}>
 			<div>
-				<label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+				<label for="name" class="field-label">
 					Company Name <span class="text-red-400">*</span>
 				</label>
 				<input
@@ -128,14 +128,14 @@
 					bind:value={$form.name}
 					placeholder="e.g., Acme Industrial Corp"
 					maxlength="50"
-					class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class="input field-control w-full"
 					class:input-error={$errors.name}
 					disabled={$submitting || !canEdit}
 				/>
 				{#if $errors.name}
-					<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+					<p class="field-error">{$errors.name}</p>
 				{:else}
-					<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/50 characters</p>
+					<p class="field-hint">{$form.name?.length || 0}/50 characters</p>
 				{/if}
 			</div>
 		</EditSection>
@@ -165,16 +165,16 @@
 
 		<!-- Logo Preview -->
 		{#if imageUpload.previewUrl}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
-				<h3 class="text-sm font-semibold text-gray-300 mb-3">Preview</h3>
-				<div class="bg-gradient-to-br from-purple-600/40 to-blue-600/20 rounded-lg p-6">
+			<div class="panel-muted rounded-xl p-5">
+				<h3 class="text-sm font-semibold text-[#e5d8c1] mb-3">Preview</h3>
+				<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-lg p-6">
 					<div class="flex items-center gap-4">
-						<div class="size-16 rounded-xl bg-slate-800 border-2 border-white/10 flex items-center justify-center">
+						<div class="size-16 rounded-xl bg-[#0d1d31] border-2 border-[#dfceb0]/20 flex items-center justify-center">
 							<img src={imageUpload.previewUrl} alt="Logo preview" class="size-14 object-contain" />
 						</div>
 						<div>
-							<p class="font-bold text-white text-xl">{$form.name || "Your Company Name"}</p>
-							<p class="text-sm text-gray-300">Founded {formatDate(data.company.foundedAt)}</p>
+							<p class="font-bold text-[#fff7e8] text-xl">{$form.name || "Your Company Name"}</p>
+							<p class="text-sm text-[#d9ccb7]">Founded {formatDate(data.company.foundedAt)}</p>
 						</div>
 					</div>
 				</div>
@@ -189,16 +189,16 @@
 				bind:value={$form.description}
 				rows="6"
 				placeholder="Describe your company's mission, industry, and operations..."
-				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+				class="textarea field-control w-full"
 				disabled={$submitting || !canEdit}
 			></textarea>
 			{#if $errors.description}
-				<p class="text-xs text-red-400">{$errors.description}</p>
+				<p class="field-error">{$errors.description}</p>
 			{/if}
 		</EditSection>
 
 		<!-- Resource Requirements -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-2">
+		<div class="panel-muted rounded-xl p-5 space-y-2">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 			<EditFormActions
 				cancelHref="/company/{data.company.id}"

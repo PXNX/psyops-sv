@@ -15,37 +15,37 @@
 
 	const colorMap: Record<string, { bg: string; border: string; iconColor: string; labelColor: string }> = {
 		blue: {
-			bg: "from-blue-600/20 to-blue-700/10",
-			border: "border-blue-500/20 hover:border-blue-500/30",
-			iconColor: "text-blue-400",
-			labelColor: "text-blue-300"
+			bg: "bg-[#315d8d]/18",
+			border: "border-[#7ba0c8]/30 hover:border-[#7ba0c8]/45",
+			iconColor: "text-[#7ba0c8]",
+			labelColor: "text-[#b7d0e6]"
 		},
 		purple: {
-			bg: "from-purple-600/20 to-purple-700/10",
-			border: "border-purple-500/20 hover:border-purple-500/30",
-			iconColor: "text-purple-400",
-			labelColor: "text-purple-300"
+			bg: "bg-[#8c709b]/15",
+			border: "border-[#b7a0c5]/30 hover:border-[#b7a0c5]/45",
+			iconColor: "text-[#b7a0c5]",
+			labelColor: "text-[#d5c4df]"
 		},
 		green: {
-			bg: "from-green-600/20 to-green-700/10",
-			border: "border-green-500/20 hover:border-green-500/30",
-			iconColor: "text-green-400",
-			labelColor: "text-green-300"
+			bg: "bg-[#587252]/18",
+			border: "border-[#8fae88]/30 hover:border-[#8fae88]/45",
+			iconColor: "text-[#8fae88]",
+			labelColor: "text-[#c6dfbf]"
 		},
 		emerald: {
-			bg: "from-emerald-600/20 to-emerald-700/10",
-			border: "border-emerald-500/20 hover:border-emerald-500/30",
-			iconColor: "text-emerald-400",
-			labelColor: "text-emerald-300"
+			bg: "bg-[#587252]/18",
+			border: "border-[#8fae88]/30 hover:border-[#8fae88]/45",
+			iconColor: "text-[#8fae88]",
+			labelColor: "text-[#c6dfbf]"
 		},
 		amber: {
-			bg: "from-amber-600/20 to-amber-700/10",
-			border: "border-amber-500/20 hover:border-amber-500/30",
-			iconColor: "text-amber-400",
-			labelColor: "text-amber-300"
+			bg: "bg-[#e6a527]/12",
+			border: "border-[#e6a527]/35 hover:border-[#e6a527]/50",
+			iconColor: "text-[#f7c56b]",
+			labelColor: "text-[#f7c56b]"
 		},
 		red: {
-			bg: "from-red-600/20 to-red-700/10",
+			bg: "bg-red-600/15",
 			border: "border-red-500/20 hover:border-red-500/30",
 			iconColor: "text-red-400",
 			labelColor: "text-red-300"
@@ -59,7 +59,7 @@
 <svelte:element
 	this={Tag}
 	{href}
-	class="bg-gradient-to-br {colors.bg} rounded-xl border {colors.border} p-4 sm:p-5 transition-all {className}"
+	class="{colors.bg} rounded-xl border {colors.border} p-4 sm:p-5 transition-all {className}"
 >
 	<div class="flex items-center gap-2 mb-1">
 		{#if icon}
@@ -67,5 +67,5 @@
 		{/if}
 		<p class="text-xs sm:text-sm {colors.labelColor} font-medium">{label}</p>
 	</div>
-	<p class="text-2xl sm:text-4xl font-bold text-white">{typeof value === "number" ? value.toLocaleString() : value}</p>
+	<p class="text-2xl sm:text-4xl font-bold text-[#fff7e8]">{typeof value === "number" ? value.toLocaleString() : value}</p>
 </svelte:element>

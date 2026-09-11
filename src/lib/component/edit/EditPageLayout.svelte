@@ -19,9 +19,9 @@
 		<div class="flex items-center gap-4">
 			<BackLink href={backHref} />
 			<div>
-				<h1 class="text-3xl font-bold text-white">{title}</h1>
+				<h1 class="text-3xl font-bold text-[#fff7e8]">{title}</h1>
 				{#if subtitle}
-					<p class="text-gray-400">{subtitle}</p>
+					<p class="text-[#d9ccb7]">{subtitle}</p>
 				{/if}
 			</div>
 		</div>

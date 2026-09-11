@@ -117,7 +117,7 @@
 		<EditSection title="Party Details" icon={FluentFlag20Filled}>
 			<div class="space-y-4">
 				<div>
-					<label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+					<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 						Party Name <span class="text-red-400">*</span>
 					</label>
 					<input
@@ -127,19 +127,19 @@
 						bind:value={$form.name}
 						placeholder="e.g., Progressive Alliance Party"
 						maxlength="100"
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+						class="input w-full field-control"
 						class:input-error={$errors.name}
 						disabled={$submitting}
 					/>
 					{#if $errors.name}
 						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/100 characters</p>
+						<p class="text-xs text-[#a89e8e] mt-1">{$form.name?.length || 0}/100 characters</p>
 					{/if}
 				</div>
 
 				<div>
-					<label for="abbreviation" class="block text-sm font-medium text-gray-300 mb-2">
+					<label for="abbreviation" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 						Abbreviation (Optional)
 					</label>
 					<input
@@ -149,14 +149,14 @@
 						bind:value={$form.abbreviation}
 						placeholder="e.g., PROG"
 						maxlength="4"
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+						class="input w-full field-control"
 						class:input-error={$errors.abbreviation}
 						disabled={$submitting}
 					/>
 					{#if $errors.abbreviation}
 						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">
+						<p class="text-xs text-[#a89e8e] mt-1">
 							{$form.abbreviation?.length || 0}/4 characters • Alphanumeric only
 						</p>
 					{/if}
@@ -203,14 +203,14 @@
 		<!-- Ideology -->
 		<EditSection title="Political Alignment" icon={FluentBuildingGovernment20Filled}>
 			<div>
-				<label for="ideology" class="block text-sm font-medium text-gray-300 mb-2">
+				<label for="ideology" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 					Ideology <span class="text-red-400">*</span>
 				</label>
 				<select
 					id="ideology"
 					name="ideology"
 					bind:value={$form.ideology}
-					class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class="select w-full field-control"
 					class:input-error={$errors.ideology}
 					disabled={$submitting}
 				>
@@ -233,12 +233,12 @@
 				bind:value={$form.description}
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
-				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+				class="textarea w-full field-control"
 				disabled={$submitting}></textarea>
 		</EditSection>
 
 		<!-- Resource Requirements -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-2">
+		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-2">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 			<EditFormActions cancelHref="/party/{data.party.id}" {submitting} {delayed} disabled={!canEdit} />
 		</div>

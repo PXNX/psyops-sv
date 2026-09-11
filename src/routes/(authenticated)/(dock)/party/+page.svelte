@@ -36,8 +36,8 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between flex-wrap gap-3">
 		<div>
-			<h1 class="text-3xl font-bold text-white">Political Parties</h1>
-			<p class="text-gray-400 mt-1">
+			<h1 class="text-3xl font-bold text-[#fff7e8]">Political Parties</h1>
+			<p class="text-[#a89e8e] mt-1">
 				{data.parties.length}
 				{data.parties.length === 1 ? "party" : "parties"}
 				{data.scope === "state" ? `in ${data.stateName}` : "across all states"}
@@ -53,12 +53,12 @@
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Search -->
 		<div class="relative flex-1">
-			<FluentSearch20Filled class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+			<FluentSearch20Filled class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
 			<input
 				type="text"
 				bind:value={searchQuery}
 				placeholder="Search parties by name, abbreviation, or ideology..."
-				class="input input-bordered w-full pl-12 bg-slate-800/50 border-white/10 text-white placeholder:text-gray-500"
+				class="input input-bordered w-full pl-12 field-control"
 			/>
 		</div>
 
@@ -66,7 +66,9 @@
 		<div class="join">
 			<button
 				type="button"
-				class="btn join-item {data.scope === 'state' ? 'btn-primary' : 'btn-ghost bg-slate-800/50 border-white/10'}"
+				class="btn join-item {data.scope === 'state'
+					? 'btn-primary'
+					: 'btn-ghost bg-[#14283f]/85 border-[#dfceb0]/15'}"
 				onclick={() => updateParams({ scope: null })}
 			>
 				<FluentLocation20Filled class="size-4" />
@@ -74,7 +76,9 @@
 			</button>
 			<button
 				type="button"
-				class="btn join-item {data.scope === 'global' ? 'btn-primary' : 'btn-ghost bg-slate-800/50 border-white/10'}"
+				class="btn join-item {data.scope === 'global'
+					? 'btn-primary'
+					: 'btn-ghost bg-[#14283f]/85 border-[#dfceb0]/15'}"
 				onclick={() => updateParams({ scope: "global" })}
 			>
 				<FluentGlobe20Filled class="size-4" />
@@ -86,7 +90,7 @@
 		<select
 			value={data.sort}
 			onchange={(e) => updateParams({ sort: e.currentTarget.value })}
-			class="select select-bordered bg-slate-800/50 border-white/10 text-white"
+			class="select select-bordered field-control"
 		>
 			<option value="size">Sort: Size</option>
 			<option value="age">Sort: Age</option>
@@ -96,7 +100,7 @@
 		<select
 			value={data.ideology ?? ""}
 			onchange={(e) => updateParams({ ideology: e.currentTarget.value || null })}
-			class="select select-bordered bg-slate-800/50 border-white/10 text-white"
+			class="select select-bordered field-control"
 		>
 			<option value="">All ideologies</option>
 			{#each data.ideologies as ideologyOption}
@@ -109,10 +113,7 @@
 	{#if filteredParties.length > 0}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 			{#each filteredParties as party}
-				<a
-					href="/party/{party.id}"
-					class="card bg-slate-800/50 border border-white/5 hover:border-white/10 transition-all group"
-				>
+				<a href="/party/{party.id}" class="card panel-interactive transition-all group">
 					<div class="card-body p-5">
 						<!-- Party Header -->
 						<div class="flex items-start gap-3 mb-3">
@@ -128,7 +129,7 @@
 							</div>
 
 							<div class="flex-1 min-w-0">
-								<h3 class="font-bold text-white group-hover:text-purple-400 transition-colors truncate">
+								<h3 class="font-bold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate">
 									{party.name}
 								</h3>
 								{#if party.abbreviation}
@@ -144,24 +145,24 @@
 
 						<!-- Description -->
 						{#if party.description}
-							<p class="text-sm text-gray-400 line-clamp-2 mb-3">{party.description}</p>
+							<p class="text-sm text-[#c7bda9] line-clamp-2 mb-3">{party.description}</p>
 						{/if}
 
 						<!-- Stats -->
 						<div class="flex items-center justify-between text-sm flex-wrap gap-2">
-							<div class="flex items-center gap-1 text-gray-400">
+							<div class="flex items-center gap-1 text-[#c7bda9]">
 								<FluentPeople20Filled class="size-4" />
 								<span>{party.memberCount} members</span>
 							</div>
 							{#if party.ideology}
-								<div class="flex items-center gap-1 text-gray-400">
+								<div class="flex items-center gap-1 text-[#c7bda9]">
 									<FluentFlag20Filled class="size-4" />
 									<span>{party.ideology}</span>
 								</div>
 							{/if}
 						</div>
 						{#if data.scope === "global" && party.stateName}
-							<div class="flex items-center gap-1 text-xs text-gray-500 mt-2">
+							<div class="flex items-center gap-1 text-xs text-[#a89e8e] mt-2">
 								<FluentLocation20Filled class="size-3" />
 								<span>{party.stateName}</span>
 							</div>
@@ -171,11 +172,11 @@
 			{/each}
 		</div>
 	{:else}
-		<div class="card bg-slate-800/50 border border-white/5">
+		<div class="card panel">
 			<div class="card-body text-center py-12">
-				<FluentPeople20Filled class="size-16 text-gray-600 mx-auto mb-4" />
-				<p class="text-gray-400 text-lg">No parties found</p>
-				<p class="text-gray-500 text-sm mt-1">Try adjusting your search or create your own party</p>
+				<FluentPeople20Filled class="size-16 text-[#a89e8e] mx-auto mb-4" />
+				<p class="text-[#c7bda9] text-lg">No parties found</p>
+				<p class="text-[#a89e8e] text-sm mt-1">Try adjusting your search or create your own party</p>
 				<a href="/party/create" class="btn btn-primary gap-2 mt-4 mx-auto">
 					<FluentAdd20Filled class="size-5" />
 					Create your own party

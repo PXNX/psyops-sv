@@ -8,6 +8,7 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import Button from "$lib/component/ui/Button.svelte";
 
 	let { data } = $props();
 
@@ -107,14 +108,14 @@
 	<!-- Header -->
 	<div class="text-center space-y-2">
 		<FluentEmojiRolledUpNewspaper class="size-16 mx-auto" />
-		<h1 class="text-3xl font-bold text-white">Create Newspaper</h1>
-		<p class="text-gray-400">Start your own news publication</p>
+		<h1 class="text-3xl font-bold text-[#fff7e8]">Create Newspaper</h1>
+		<p class="text-[#a89e8e]">Start your own news publication</p>
 	</div>
 
 	<!-- Success/Error Messages -->
 	{#if $message && !$message.includes("error") && !$message.includes("failed")}
-		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
-			<p class="text-green-300 text-sm font-medium">{$message}</p>
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-xl p-4">
+			<p class="text-[#c6dfbf] text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
@@ -127,14 +128,14 @@
 	<!-- Form -->
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Newspaper Name -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentDocument20Filled class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-white">Basic Information</h2>
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Basic Information</h2>
 			</div>
 
 			<div>
-				<label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+				<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 					Newspaper Name <span class="text-red-400">*</span>
 				</label>
 				<input
@@ -144,19 +145,19 @@
 					bind:value={$form.name}
 					placeholder="e.g., The Daily Chronicle"
 					maxlength="40"
-					class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+					class="input w-full field-control"
 					class:input-error={$errors.name}
 					disabled={$submitting}
 				/>
 				{#if $errors.name}
 					<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
 				{:else}
-					<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/40 characters</p>
+					<p class="text-xs text-[#a89e8e] mt-1">{$form.name?.length || 0}/40 characters</p>
 				{/if}
 			</div>
 
 			<div>
-				<label for="background" class="block text-sm font-medium text-gray-300 mb-2">
+				<label for="background" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 					Background Description (Optional)
 				</label>
 				<textarea
@@ -165,17 +166,17 @@
 					bind:value={$form.background}
 					rows="4"
 					placeholder="Describe your newspaper's mission and values..."
-					class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/20"
+					class="textarea w-full field-control"
 					disabled={$submitting}
 				></textarea>
 			</div>
 		</div>
 
 		<!-- Logo Upload -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentImage20Filled class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-white">Newspaper Logo</h2>
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Newspaper Logo</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -211,7 +212,7 @@
 								<FluentImage20Filled class="size-8 text-blue-400" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-white">
+								<p class="text-base font-semibold text-[#fff7e8]">
 									{#if dragActive}
 										Drop logo here
 									{:else if $submitting}
@@ -221,19 +222,19 @@
 									{/if}
 								</p>
 								{#if !$submitting}
-									<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-slate-900/50">
+							<div class="flex items-center justify-center p-6 bg-[#102239]/70">
 								<img src={previewUrl} alt="Logo preview" class="size-24 object-contain rounded-lg" />
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-white">Tap to change</p>
+								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
 							</div>
 							{#if $form.logo}
 								<button
@@ -243,18 +244,18 @@
 										clearImage();
 									}}
 									disabled={$submitting}
-									class="btn absolute top-2 right-2 btn-circle btn-sm bg-slate-800 hover:bg-slate-700"
+									class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b] text-[#fff7e8]"
 								>
 									✕
 								</button>
 							{/if}
 						</div>
 						{#if $form.logo}
-							<div class="border-t border-slate-700 p-3 bg-slate-900/30">
-								<p class="truncate text-sm font-medium text-white" title={$form.logo.name}>
+							<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
+								<p class="truncate text-sm font-medium text-[#fff7e8]" title={$form.logo.name}>
 									{$form.logo.name}
 								</p>
-								<p class="text-xs text-gray-400">
+								<p class="text-xs text-[#a89e8e]">
 									{Math.round($form.logo.size / 1024)} KB
 								</p>
 							</div>
@@ -266,32 +267,24 @@
 			{#if $errors.logo}
 				<p class="text-xs text-red-400">{$errors.logo}</p>
 			{:else}
-				<p class="text-xs text-gray-400">Logo will be converted to 96x96 WebP format • Max 5MB</p>
+				<p class="text-xs text-[#a89e8e]">Logo will be converted to 96x96 WebP format • Max 5MB</p>
 			{/if}
 		</div>
 
 		<!-- Submit Buttons -->
 		<div class="flex gap-3">
-			<a
-				href="/newspaper"
-				class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
-				class:btn-disabled={$submitting}
-			>
-				Cancel
-			</a>
-			<button
+			<Button href="/newspaper" variant="secondary" grow disabled={$submitting}>Cancel</Button>
+			<Button
 				type="submit"
+				variant="primary"
+				grow
 				disabled={$submitting}
-				class="btn flex-1 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 border-0 text-white gap-2"
+				loading={$delayed}
+				loadingText="Creating..."
+				icon={FluentCheckmark20Filled}
 			>
-				{#if $delayed}
-					<span class="loading loading-spinner loading-sm"></span>
-					Creating...
-				{:else}
-					<FluentCheckmark20Filled class="size-5" />
-					Create Newspaper
-				{/if}
-			</button>
+				Create Newspaper
+			</Button>
 		</div>
 	</form>
 </div>

@@ -11,6 +11,7 @@
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import { formatDateTime } from "$lib/utils/formatting.js";
+	import Button from "$lib/component/ui/Button.svelte";
 
 	const { data, form } = $props();
 
@@ -71,73 +72,79 @@
 				<FluentShield20Filled class="size-6 text-red-400" />
 			</div>
 			<div>
-				<h1 class="text-2xl font-bold text-white">Moderation Panel</h1>
-				<p class="text-sm text-gray-400">Review and manage reported messages</p>
+				<h1 class="text-2xl font-bold text-[#fff7e8]">Moderation Panel</h1>
+				<p class="text-sm text-[#c7bda9]">Review and manage reported messages</p>
 			</div>
 		</div>
 
-		<a href="/chat" class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300">
-			Back to Chat
-		</a>
+		<Button href="/chat" variant="secondary">Back to Chat</Button>
 	</div>
 
 	<!-- Statistics -->
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-		<div class="bg-yellow-600/10 rounded-xl border border-yellow-500/20 p-5">
+		<div class="bg-[#e6a527]/10 rounded-xl border border-[#e6a527]/20 p-5">
 			<div class="flex items-center gap-3">
-				<FluentWarning20Filled class="size-8 text-yellow-400" />
+				<FluentWarning20Filled class="size-8 text-[#e6a527]" />
 				<div>
-					<p class="text-xs text-gray-400">Pending Reports</p>
-					<p class="text-2xl font-bold text-white">{data.stats.pending}</p>
+					<p class="text-xs text-[#c7bda9]">Pending Reports</p>
+					<p class="text-2xl font-bold text-[#fff7e8]">{data.stats.pending}</p>
 				</div>
 			</div>
 		</div>
 
-		<div class="bg-green-600/10 rounded-xl border border-green-500/20 p-5">
+		<div class="bg-emerald-600/10 rounded-xl border border-emerald-500/20 p-5">
 			<div class="flex items-center gap-3">
-				<FluentCheckmark20Filled class="size-8 text-green-400" />
+				<FluentCheckmark20Filled class="size-8 text-emerald-400" />
 				<div>
-					<p class="text-xs text-gray-400">Resolved</p>
-					<p class="text-2xl font-bold text-white">{data.stats.resolved}</p>
+					<p class="text-xs text-[#c7bda9]">Resolved</p>
+					<p class="text-2xl font-bold text-[#fff7e8]">{data.stats.resolved}</p>
 				</div>
 			</div>
 		</div>
 
-		<div class="bg-gray-600/10 rounded-xl border border-gray-500/20 p-5">
+		<div class="panel-muted rounded-xl p-5">
 			<div class="flex items-center gap-3">
-				<FluentDismiss20Filled class="size-8 text-gray-400" />
+				<FluentDismiss20Filled class="size-8 text-[#a89e8e]" />
 				<div>
-					<p class="text-xs text-gray-400">Dismissed</p>
-					<p class="text-2xl font-bold text-white">{data.stats.dismissed}</p>
+					<p class="text-xs text-[#c7bda9]">Dismissed</p>
+					<p class="text-2xl font-bold text-[#fff7e8]">{data.stats.dismissed}</p>
 				</div>
 			</div>
 		</div>
 	</div>
 
 	<!-- Filters -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-4 mb-6">
+	<div class="panel rounded-xl p-4 mb-6">
 		<div class="flex gap-2">
 			<button
 				onclick={() => (filterStatus = "all")}
-				class="btn btn-sm {filterStatus === 'all' ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-gray-300'}"
+				class="btn btn-sm {filterStatus === 'all'
+					? 'bg-[#315d8d] text-[#fff7e8]'
+					: 'bg-[#102239]/70 text-[#d9ccb7]'}"
 			>
 				All Reports
 			</button>
 			<button
 				onclick={() => (filterStatus = "pending")}
-				class="btn btn-sm {filterStatus === 'pending' ? 'bg-yellow-600 text-white' : 'bg-slate-700/50 text-gray-300'}"
+				class="btn btn-sm {filterStatus === 'pending'
+					? 'bg-[#e6a527] text-[#172a45]'
+					: 'bg-[#102239]/70 text-[#d9ccb7]'}"
 			>
 				Pending
 			</button>
 			<button
 				onclick={() => (filterStatus = "resolved")}
-				class="btn btn-sm {filterStatus === 'resolved' ? 'bg-green-600 text-white' : 'bg-slate-700/50 text-gray-300'}"
+				class="btn btn-sm {filterStatus === 'resolved'
+					? 'bg-emerald-600 text-[#fff7e8]'
+					: 'bg-[#102239]/70 text-[#d9ccb7]'}"
 			>
 				Resolved
 			</button>
 			<button
 				onclick={() => (filterStatus = "dismissed")}
-				class="btn btn-sm {filterStatus === 'dismissed' ? 'bg-gray-600 text-white' : 'bg-slate-700/50 text-gray-300'}"
+				class="btn btn-sm {filterStatus === 'dismissed'
+					? 'bg-[#14283f] text-[#fff7e8]'
+					: 'bg-[#102239]/70 text-[#d9ccb7]'}"
 			>
 				Dismissed
 			</button>
@@ -154,12 +161,12 @@
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 		<!-- Reports -->
 		<div class="space-y-3">
-			<h2 class="text-lg font-semibold text-white mb-3">Reports ({filteredReports().length})</h2>
+			<h2 class="text-lg font-semibold text-[#fff7e8] mb-3">Reports ({filteredReports().length})</h2>
 
 			{#if filteredReports().length === 0}
-				<div class="bg-slate-800/30 rounded-xl border border-white/5 p-8 text-center">
-					<FluentCheckmark20Filled class="size-12 text-gray-500 mx-auto mb-3" />
-					<p class="text-gray-400">No reports to show</p>
+				<div class="panel-muted rounded-xl p-8 text-center">
+					<FluentCheckmark20Filled class="size-12 text-[#a89e8e] mx-auto mb-3" />
+					<p class="text-[#c7bda9]">No reports to show</p>
 				</div>
 			{:else}
 				{#each filteredReports() as report}
@@ -167,24 +174,24 @@
 					{@const MessageIcon = getMessageTypeIcon(report.messageType)}
 					<button
 						onclick={() => (selectedReport = report)}
-						class="w-full bg-slate-800/50 hover:bg-slate-700/50 rounded-xl border border-white/5 p-4 text-left transition-all {selectedReport?.reportId ===
+						class="w-full panel-interactive rounded-xl p-4 text-left transition-all {selectedReport?.reportId ===
 						report.reportId
-							? 'ring-2 ring-blue-500'
+							? 'ring-2 ring-[#e6a527]/60'
 							: ''}"
 					>
 						<div class="flex items-start gap-3 mb-3">
 							{#if report.messageSenderLogo}
 								<img src={report.messageSenderLogo} alt={report.messageSenderName} class="size-10 rounded-full" />
 							{:else}
-								<div class="size-10 rounded-full bg-slate-700 flex items-center justify-center">
-									<FluentImageOff20Filled class="size-5 text-gray-400" />
+								<div class="size-10 rounded-full bg-[#102239] flex items-center justify-center">
+									<FluentImageOff20Filled class="size-5 text-[#c7bda9]" />
 								</div>
 							{/if}
 
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2 mb-1">
-									<MessageIcon class="size-4 text-gray-400" />
-									<p class="font-semibold text-white text-sm">{report.messageSenderName}</p>
+									<MessageIcon class="size-4 text-[#c7bda9]" />
+									<p class="font-semibold text-[#fff7e8] text-sm">{report.messageSenderName}</p>
 									<span
 										class="px-2 py-0.5 rounded text-xs font-medium capitalize"
 										style="background-color: var(--{statusColor}-600-20); color: var(--{statusColor}-400)"
@@ -192,12 +199,11 @@
 										{report.status}
 									</span>
 								</div>
-								<p class="text-sm text-gray-300 line-clamp-2 mb-2">{report.messageContent}</p>
-								<p class="text-xs text-gray-500">
+								<p class="text-sm text-[#d9ccb7] line-clamp-2 mb-2">{report.messageContent}</p>
+								<p class="text-xs text-[#a89e8e]">
 									Reported by {report.reporterName} • {formatDateTime(report.reportedAt)}
 								</p>
 							</div>
-							s
 						</div>
 					</button>
 				{/each}
@@ -207,11 +213,11 @@
 		<!-- Report Detail -->
 		<div class="lg:sticky lg:top-6">
 			{#if selectedReport}
-				<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6">
-					<h2 class="text-xl font-bold text-white mb-4">Report Details</h2>
+				<div class="panel rounded-xl p-6">
+					<h2 class="text-xl font-bold text-[#fff7e8] mb-4">Report Details</h2>
 
 					<!-- Message Info -->
-					<div class="mb-6 p-4 bg-slate-700/30 rounded-lg">
+					<div class="mb-6 p-4 panel-muted rounded-lg">
 						<div class="flex items-start gap-3 mb-3">
 							{#if selectedReport.messageSenderLogo}
 								<img
@@ -220,27 +226,27 @@
 									class="size-12 rounded-full"
 								/>
 							{:else}
-								<div class="size-12 rounded-full bg-slate-700 flex items-center justify-center">
-									<FluentImageOff20Filled class="size-6 text-gray-400" />
+								<div class="size-12 rounded-full bg-[#102239] flex items-center justify-center">
+									<FluentImageOff20Filled class="size-6 text-[#c7bda9]" />
 								</div>
 							{/if}
 
 							<div class="flex-1">
-								<a href="/user/{selectedReport.messageSenderId}" class="font-semibold text-white hover:text-blue-400">
+								<a href="/user/{selectedReport.messageSenderId}" class="font-semibold text-[#fff7e8] hover:text-[#f7c56b]">
 									{selectedReport.messageSenderName}
 								</a>
-								<p class="text-xs text-gray-400 capitalize">{selectedReport.messageType} chat</p>
+								<p class="text-xs text-[#c7bda9] capitalize">{selectedReport.messageType} chat</p>
 							</div>
 						</div>
-						<p class="text-gray-300">{selectedReport.messageContent}</p>
+						<p class="text-[#d9ccb7]">{selectedReport.messageContent}</p>
 					</div>
 
 					<!-- Report Info -->
 					<div class="mb-6">
-						<h3 class="text-sm font-semibold text-gray-400 mb-2">Report Reason</h3>
-						<p class="text-gray-300 bg-slate-700/30 rounded-lg p-3">{selectedReport.reason}</p>
-						<p class="text-xs text-gray-500 mt-2">
-							Reported by <a href="/user/{selectedReport.reporterId}" class="text-blue-400 hover:underline"
+						<h3 class="text-sm font-semibold text-[#c7bda9] mb-2">Report Reason</h3>
+						<p class="text-[#d9ccb7] panel-muted rounded-lg p-3">{selectedReport.reason}</p>
+						<p class="text-xs text-[#a89e8e] mt-2">
+							Reported by <a href="/user/{selectedReport.reporterId}" class="text-[#f7c56b] hover:underline"
 								>{selectedReport.reporterName}</a
 							>
 						</p>
@@ -251,11 +257,11 @@
 						<div class="space-y-4">
 							<div>
 								<label class="label">
-									<span class="label-text text-gray-300">Violation Reason</span>
+									<span class="label-text text-[#e5d8c1]">Violation Reason</span>
 								</label>
 								<select
 									bind:value={deletionReason}
-									class="select select-bordered w-full bg-slate-700/50 border-slate-600/30 text-white"
+									class="select select-bordered w-full field-control"
 								>
 									{#each violationReasons as reason}
 										<option value={reason.value}>{reason.label}</option>
@@ -265,20 +271,20 @@
 
 							<div>
 								<label class="label">
-									<span class="label-text text-gray-300">Note (visible to user)</span>
+									<span class="label-text text-[#e5d8c1]">Note (visible to user)</span>
 								</label>
 								<textarea
 									bind:value={deletionNote}
 									placeholder="Explain why this message was deleted..."
 									rows="3"
-									class="textarea textarea-bordered w-full bg-slate-700/50 border-slate-600/30 text-white"
+									class="textarea textarea-bordered w-full field-control"
 								></textarea>
 							</div>
 
 							<div class="form-control">
 								<label class="label cursor-pointer justify-start gap-3">
 									<input type="checkbox" bind:checked={issueWarning} class="checkbox checkbox-warning" />
-									<span class="label-text text-gray-300">Issue warning to user (3 warnings = auto-restriction)</span>
+									<span class="label-text text-[#e5d8c1]">Issue warning to user (3 warnings = auto-restriction)</span>
 								</label>
 							</div>
 
@@ -288,41 +294,39 @@
 								<input type="hidden" name="reason" value={deletionReason} />
 								<input type="hidden" name="note" value={deletionNote} />
 								<input type="hidden" name="issueWarning" value={issueWarning.toString()} />
-								<button type="submit" class="btn w-full bg-red-600 hover:bg-red-700 border-0 text-white gap-2">
-									<FluentDelete20Filled class="size-5" />
+								<Button type="submit" variant="danger" block icon={FluentDelete20Filled}>
 									Delete Message{issueWarning ? " & Issue Warning" : ""}
-								</button>
+								</Button>
 							</form>
 
-							<div class="divider text-gray-500">OR</div>
+							<div class="divider text-[#a89e8e]">OR</div>
 
 							<div>
 								<textarea
 									bind:value={dismissNote}
 									placeholder="Optional: Add a note explaining why this report is being dismissed..."
 									rows="3"
-									class="textarea textarea-bordered w-full bg-slate-700/50 border-slate-600/30 text-white mb-2"
+									class="textarea textarea-bordered w-full field-control mb-2"
 								></textarea>
 								<form method="POST" action="?/dismissReport" use:enhance>
 									<input type="hidden" name="reportId" value={selectedReport.reportId} />
 									<input type="hidden" name="reviewNote" value={dismissNote} />
-									<button type="submit" class="btn w-full bg-gray-600 hover:bg-gray-700 border-0 text-white gap-2">
-										<FluentDismiss20Filled class="size-5" />
+									<Button type="submit" variant="secondary" block icon={FluentDismiss20Filled}>
 										Dismiss Report
-									</button>
+									</Button>
 								</form>
 							</div>
 						</div>
 					{:else}
-						<div class="bg-slate-700/30 rounded-lg p-4 text-center">
-							<p class="text-gray-400 capitalize">This report has been {selectedReport.status}</p>
+						<div class="panel-muted rounded-lg p-4 text-center">
+							<p class="text-[#c7bda9] capitalize">This report has been {selectedReport.status}</p>
 						</div>
 					{/if}
 				</div>
 			{:else}
-				<div class="bg-slate-800/30 rounded-xl border border-white/5 p-12 text-center">
-					<FluentShield20Filled class="size-16 text-gray-500 mx-auto mb-4" />
-					<p class="text-gray-400">Select a report to review</p>
+				<div class="panel-muted rounded-xl p-12 text-center">
+					<FluentShield20Filled class="size-16 text-[#a89e8e] mx-auto mb-4" />
+					<p class="text-[#c7bda9]">Select a report to review</p>
 				</div>
 			{/if}
 		</div>

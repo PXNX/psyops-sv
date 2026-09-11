@@ -46,7 +46,7 @@
 	}
 
 	function getRegionColor(region: any) {
-		return region.stateColor || "#6366f1";
+		return region.stateColor || "#e6a527";
 	}
 </script>
 
@@ -54,23 +54,23 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="text-3xl font-bold text-white">All Regions</h1>
-			<p class="text-gray-400 mt-1">{data.regions.length} regions available</p>
+			<h1 class="text-3xl font-bold text-[#fff7e8]">All Regions</h1>
+			<p class="text-[#a89e8e] mt-1">{data.regions.length} regions available</p>
 		</div>
 	</div>
 
 	<!-- Search and Filters -->
-	<div class="bg-slate-800 rounded-xl border border-white/5 p-4">
+	<div class="panel rounded-xl p-4">
 		<div class="flex flex-col md:flex-row gap-4">
 			<!-- Search -->
 			<div class="flex-1 relative">
-				<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-gray-400" />
+				<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
 				<input
 					type="text"
 					bind:value={searchInput}
 					onkeydown={(e) => e.key === "Enter" && applyFilters()}
 					placeholder="Search regions..."
-					class="w-full pl-10 pr-4 py-2 bg-slate-700/50 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
+					class="w-full pl-10 pr-4 py-2 field-control rounded-lg"
 				/>
 			</div>
 
@@ -79,7 +79,7 @@
 				<select
 					bind:value={selectedSort}
 					onchange={() => applyFilters()}
-					class="px-4 py-2 bg-slate-700/50 border border-white/10 rounded-lg text-white focus:outline-none focus:border-purple-500"
+					class="px-4 py-2 field-control rounded-lg"
 				>
 					{#each sortOptions as option}
 						<option value={option.value}>{option.label}</option>
@@ -94,14 +94,14 @@
 		{#each data.regions as region}
 			<a
 				href="/region/{region.id}"
-				class="group bg-slate-800 rounded-xl border border-white/5 hover:border-purple-500/30 transition-all overflow-hidden"
+				class="group panel rounded-xl hover:border-[#b7a0c5]/40 transition-all overflow-hidden"
 			>
 				<!-- Region Header with State Color -->
 				<div
 					class="h-24 relative"
 					style="background: linear-gradient(135deg, {getRegionColor(region)}40, {getRegionColor(region)}20)"
 				>
-					<div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-800" />
+					<div class="absolute inset-0 bg-gradient-to-b from-transparent to-[#14283f]" />
 
 					<!-- Region Logo -->
 					<div class="absolute bottom-0 left-4 translate-y-1/2">
@@ -131,10 +131,10 @@
 				<div class="px-4 pt-10 pb-4 space-y-3">
 					<!-- Name and Rating -->
 					<div>
-						<h3 class="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
+						<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">
 							{getRegionName(region.id)}
 						</h3>
-						<div class="flex items-center gap-3 text-sm text-gray-400 mt-1">
+						<div class="flex items-center gap-3 text-sm text-[#a89e8e] mt-1">
 							<span>#{region.rating || 0}</span>
 							{#if region.stateName}
 								<span>•</span>
@@ -147,17 +147,17 @@
 
 					<!-- Quick Stats -->
 					<div class="grid grid-cols-2 gap-2 text-xs">
-						<div class="flex items-center gap-1 text-gray-400">
+						<div class="flex items-center gap-1 text-[#a89e8e]">
 							<FluentPeople20Filled class="size-3" />
 							<span>{region.population.toLocaleString()}</span>
 						</div>
-						<div class="text-gray-400">
+						<div class="text-[#a89e8e]">
 							Infrastructure: {region.infrastructure || 0}
 						</div>
-						<div class="text-gray-400">
+						<div class="text-[#a89e8e]">
 							Economy: {region.economy || 0}
 						</div>
-						<div class="text-gray-400">
+						<div class="text-[#a89e8e]">
 							Education: {region.education || 0}
 						</div>
 					</div>
@@ -172,7 +172,7 @@
 									</span>
 								{/if}
 								{#if region.steel}
-									<span class="px-2 py-0.5 bg-gray-600/20 border border-gray-600/30 rounded text-xs text-gray-400">
+									<span class="px-2 py-0.5 bg-[#14283f] border border-[#dfceb0]/20 rounded text-xs text-[#a89e8e]">
 										Steel: {region.steel}
 									</span>
 								{/if}
@@ -183,7 +183,7 @@
 								{/if}
 								{#if region.tungsten}
 									<span
-										class="px-2 py-0.5 bg-purple-600/20 border border-purple-600/30 rounded text-xs text-purple-400"
+										class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded text-xs text-[#d5c4df]"
 									>
 										Tungsten: {region.tungsten}
 									</span>
@@ -199,11 +199,11 @@
 	<!-- Empty State -->
 	{#if data.regions.length === 0}
 		<div class="text-center py-12">
-			<div class="size-20 mx-auto bg-slate-700/30 rounded-full flex items-center justify-center mb-4">
-				<FluentSearch20Filled class="size-10 text-gray-500" />
+			<div class="size-20 mx-auto bg-[#102239]/70 rounded-full flex items-center justify-center mb-4">
+				<FluentSearch20Filled class="size-10 text-[#a89e8e]" />
 			</div>
-			<h3 class="text-xl font-bold text-gray-400 mb-2">No regions found</h3>
-			<p class="text-gray-500">Try adjusting your search or filters</p>
+			<h3 class="text-xl font-bold text-[#d9ccb7] mb-2">No regions found</h3>
+			<p class="text-[#a89e8e]">Try adjusting your search or filters</p>
 		</div>
 	{/if}
 </div>

@@ -13,6 +13,13 @@
 		settings.hydrateFromStorage();
 	}
 
+	// Register the service worker so the PWA install prompt, offline page, and
+	// runtime asset caching (images/fonts) from src/service-worker.js actually
+	// take effect — SvelteKit builds the file but never registers it for you.
+	if (browser && "serviceWorker" in navigator) {
+		navigator.serviceWorker.register("/service-worker.js", { type: "module" });
+	}
+
 	// Keep the document theme in sync with the reactive setting on every page.
 	$effect(() => {
 		document.documentElement.setAttribute("data-theme", settings.theme);

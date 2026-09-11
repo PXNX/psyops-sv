@@ -179,7 +179,7 @@
 		<div class="lg:col-span-2 space-y-4">
 			<div class="flex items-center gap-3">
 				<span class="h-6 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600"></span>
-				<h2 class="text-lg font-semibold tracking-tight text-white">Active Units</h2>
+				<h2 class="text-lg font-semibold tracking-tight text-[#fff7e8]">Active Units</h2>
 				{#if activeUnits.length > 0}
 					<span
 						class="ml-auto text-xs font-medium text-emerald-300/80 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2.5 py-0.5"
@@ -190,7 +190,7 @@
 			</div>
 			{#each activeUnits as unit}
 				<div
-					class="bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-xl overflow-hidden hover:border-slate-600/60 hover:bg-slate-800/50 transition-all duration-300"
+					class="panel-interactive rounded-xl overflow-hidden backdrop-blur-sm"
 				>
 					<div class="p-5">
 						<div class="flex items-center gap-4 mb-4">
@@ -202,17 +202,17 @@
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="font-semibold text-white text-base mb-0.5 tracking-tight">{unit.name}</h3>
+								<h3 class="font-semibold text-[#fff7e8] text-base mb-0.5 tracking-tight">{unit.name}</h3>
 								<div class="flex items-center gap-3 mt-2">
 									<div class="bg-red-900/40 border border-red-700/50 rounded px-2.5 py-1">
 										<span class="text-xs text-red-500 font-medium">ATK</span>
-										<span class="text-base font-semibold text-white ml-1.5"
+										<span class="text-base font-semibold text-[#fff7e8] ml-1.5"
 											>{data.templates[unit.unitType].baseAttack}</span
 										>
 									</div>
 									<div class="bg-blue-900/40 border border-blue-700/50 rounded px-2.5 py-1">
 										<span class="text-xs text-blue-500 font-medium">DEF</span>
-										<span class="text-base font-semibold text-white ml-1.5"
+										<span class="text-base font-semibold text-[#fff7e8] ml-1.5"
 											>{data.templates[unit.unitType].baseDefense}</span
 										>
 									</div>
@@ -221,7 +221,7 @@
 							<button
 								type="button"
 								onclick={() => confirmDisband(unit)}
-								class="btn btn-ghost btn-sm text-slate-400 hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
+								class="btn btn-ghost btn-sm text-[#a89e8e] hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
 								title="Disband Unit"
 							>
 								<IconDelete class="size-4" />
@@ -231,15 +231,15 @@
 						<!-- Experience -->
 						<div class="mb-3">
 							<div class="flex items-center justify-between text-xs mb-1.5">
-								<span class="text-slate-500 font-medium"
-									>EXP · <span class="text-purple-300">{getExperienceLevel(unit.experience ?? 0).label}</span></span
+								<span class="text-[#a89e8e] font-medium"
+									>EXP · <span class="text-[#d5c4df]">{getExperienceLevel(unit.experience ?? 0).label}</span></span
 								>
-								<span class="font-semibold text-slate-300">{unit.experience ?? 0}%</span>
+								<span class="font-semibold text-[#d9ccb7]">{unit.experience ?? 0}%</span>
 							</div>
-							<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
+							<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
 								<div
 									class="h-1.5 rounded-full transition-all duration-500"
-									style="width: {unit.experience ?? 0}%; background: linear-gradient(90deg, #c084fc, #9333ea)"
+									style="width: {unit.experience ?? 0}%; background: #b7a0c5"
 								></div>
 							</div>
 						</div>
@@ -248,39 +248,39 @@
 						<div class="grid grid-cols-3 gap-3">
 							<div>
 								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-slate-500 font-medium">ORG</span>
-									<span class="font-semibold text-slate-300">{unit.organization}%</span>
+									<span class="text-[#a89e8e] font-medium">ORG</span>
+									<span class="font-semibold text-[#d9ccb7]">{unit.organization}%</span>
 								</div>
-								<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
+								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
 									<div
 										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.organization}%; background: linear-gradient(90deg, #60a5fa, #3b82f6)"
+										style="width: {unit.organization}%; background: #7ba0c8"
 									></div>
 								</div>
 							</div>
 
 							<div>
 								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-slate-500 font-medium">STR</span>
-									<span class="font-semibold text-slate-300">{unit.health}%</span>
+									<span class="text-[#a89e8e] font-medium">STR</span>
+									<span class="font-semibold text-[#d9ccb7]">{unit.health}%</span>
 								</div>
-								<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
+								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
 									<div
 										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.health}%; background: linear-gradient(90deg, #34d399, #10b981)"
+										style="width: {unit.health}%; background: #8fae88"
 									></div>
 								</div>
 							</div>
 
 							<div>
 								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-slate-500 font-medium">SUP</span>
-									<span class="font-semibold text-slate-300">{unit.supplyLevel}%</span>
+									<span class="text-[#a89e8e] font-medium">SUP</span>
+									<span class="font-semibold text-[#d9ccb7]">{unit.supplyLevel}%</span>
 								</div>
-								<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
+								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
 									<div
 										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.supplyLevel}%; background: linear-gradient(90deg, #fbbf24, #f59e0b)"
+										style="width: {unit.supplyLevel}%; background: #e6a527"
 									></div>
 								</div>
 							</div>
@@ -291,15 +291,15 @@
 							{@const exProgress = getExerciseProgress(unit)}
 							{@const exRemaining = getExerciseTimeRemaining(unit)}
 							{@const exComplete = unit.exerciseCompletesAt && new Date(unit.exerciseCompletesAt) <= new Date()}
-							<div class="mt-4 pt-4 border-t border-slate-700/30">
+							<div class="mt-4 pt-4 border-t border-[#dfceb0]/10">
 								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-purple-300 font-medium">On exercise</span>
-									<span class="text-slate-400">{exRemaining}</span>
+									<span class="text-[#d5c4df] font-medium">On exercise</span>
+									<span class="text-[#a89e8e]">{exRemaining}</span>
 								</div>
-								<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30 mb-3">
+								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10 mb-3">
 									<div
 										class="h-1.5 rounded-full transition-all duration-700"
-										style="width: {exProgress}%; background: linear-gradient(90deg, #c084fc, #9333ea)"
+										style="width: {exProgress}%; background: #b7a0c5"
 									></div>
 								</div>
 								{#if exComplete}
@@ -336,7 +336,7 @@
 										<button
 											type="submit"
 											disabled={isSubmitting}
-											class="btn btn-ghost btn-sm w-full text-slate-400 hover:text-red-400"
+											class="btn btn-ghost btn-sm w-full text-[#a89e8e] hover:text-red-400"
 										>
 											Cancel exercise
 										</button>
@@ -344,7 +344,7 @@
 								{/if}
 							</div>
 						{:else}
-							<div class="mt-4 pt-4 border-t border-slate-700/30">
+							<div class="mt-4 pt-4 border-t border-[#dfceb0]/10">
 								<form
 									method="POST"
 									action="?/startExercise"
@@ -371,7 +371,7 @@
 										Send to exercise ({data.exerciseConfig.DURATION_HOURS}h)
 									</button>
 								</form>
-								<p class="mt-2 text-[11px] leading-snug text-slate-500">
+								<p class="mt-2 text-[11px] leading-snug text-[#a89e8e]">
 									+{data.exerciseConfig.EXPERIENCE_GAIN} XP · −{data.exerciseConfig.ORG_COST} org · −{data
 										.exerciseConfig.SUPPLY_COST} supply · equipment replaced
 								</p>
@@ -393,7 +393,7 @@
 			<div class="mt-8">
 				<div class="flex items-center gap-3 mb-4">
 					<span class="h-6 w-1 rounded-full bg-gradient-to-b from-blue-400 to-blue-600"></span>
-					<h2 class="text-lg font-semibold tracking-tight text-white">Train New Units</h2>
+					<h2 class="text-lg font-semibold tracking-tight text-[#fff7e8]">Train New Units</h2>
 				</div>
 
 				<!-- Selectable Unit Type Cards -->
@@ -404,7 +404,7 @@
 							type="button"
 							class="relative p-3 rounded-lg border-2 transition-all duration-200 overflow-hidden group {isSelected
 								? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
-								: 'bg-slate-700/30 border-slate-600/30 hover:border-slate-500/50'} {trainingDisabled
+								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/25'} {trainingDisabled
 								? 'opacity-50 cursor-not-allowed'
 								: ''}"
 							onclick={() => (selectedTemplate = template)}
@@ -442,7 +442,7 @@
 								<h3
 									class="font-medium text-md transition-colors text-center leading-tight"
 									class:text-blue-300={isSelected}
-									class:text-slate-300={!isSelected}
+									class:text-[#d9ccb7]={!isSelected}
 								>
 									{m[template.unitType]()}
 								</h3>
@@ -453,7 +453,7 @@
 
 				<!-- Central Training Panel -->
 				{#if selectedTemplate}
-					<div class="bg-slate-800/40 backdrop-blur-sm rounded-xl border border-slate-700/50 p-5 space-y-5">
+					<div class="panel backdrop-blur-sm rounded-xl p-5 space-y-5">
 						<!-- Selected Unit Header -->
 						<div class="flex items-center gap-4 mb-5">
 							<div class="size-14 flex items-center justify-center flex-shrink-0">
@@ -464,33 +464,33 @@
 								/>
 							</div>
 							<div class="flex-1">
-								<h3 class="text-xl font-semibold text-white mb-3 tracking-tight">{selectedTemplate.displayName}</h3>
+								<h3 class="text-xl font-semibold text-[#fff7e8] mb-3 tracking-tight">{selectedTemplate.displayName}</h3>
 								<div class="flex items-center gap-3 text-sm">
 									<div class="bg-red-900/40 border border-red-700/50 rounded px-2.5 py-1">
 										<span class="text-xs text-red-500">ATK</span>
-										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.baseAttack}</span>
+										<span class="text-base font-semibold text-[#fff7e8] ml-1.5">{selectedTemplate.baseAttack}</span>
 									</div>
 									<div class="bg-blue-900/40 border border-blue-700/50 rounded px-2.5 py-1">
 										<span class="text-xs text-blue-500">DEF</span>
-										<span class="text-base font-semibold text-white ml-1.5">{selectedTemplate.baseDefense}</span>
+										<span class="text-base font-semibold text-[#fff7e8] ml-1.5">{selectedTemplate.baseDefense}</span>
 									</div>
 								</div>
 							</div>
 						</div>
 
 						<!-- Resource Requirements using ResourceRequirements component -->
-						<div class="border-t border-slate-700/30 pt-4">
+						<div class="border-t border-[#dfceb0]/10 pt-4">
 							<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
 						</div>
 
 						<div
-							class="flex items-center justify-between p-3 md:p-4 bg-slate-700/30 rounded-lg border border-slate-600/50"
+							class="flex items-center justify-between p-3 md:p-4 bg-[#102239]/70 rounded-lg border border-[#dfceb0]/20"
 						>
 							<div class="flex items-center gap-2">
-								<FluentClock20Filled class="size-4 md:size-5 text-gray-400" />
-								<span class="text-xs md:text-sm text-gray-400">Training Time</span>
+								<FluentClock20Filled class="size-4 md:size-5 text-[#a89e8e]" />
+								<span class="text-xs md:text-sm text-[#a89e8e]">Training Time</span>
 							</div>
-							<span class="font-bold text-white text-base md:text-lg">
+							<span class="font-bold text-[#fff7e8] text-base md:text-lg">
 								{selectedTemplate.trainingDuration}h
 							</span>
 						</div>
@@ -543,7 +543,7 @@
 			<div>
 				<div class="flex items-center gap-3 mb-4">
 					<span class="h-6 w-1 rounded-full bg-gradient-to-b from-amber-400 to-amber-600"></span>
-					<h2 class="text-lg font-semibold tracking-tight text-white">Training Queue</h2>
+					<h2 class="text-lg font-semibold tracking-tight text-[#fff7e8]">Training Queue</h2>
 					{#if trainingUnits.length > 0}
 						<span
 							class="ml-auto text-xs font-medium text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-full px-2.5 py-0.5"
@@ -560,7 +560,7 @@
 						activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt) <= new Date()}
 
 					<!-- Active Training Unit -->
-					<div class="bg-slate-800/40 border border-amber-500/40 rounded-xl overflow-hidden mb-3 backdrop-blur-sm">
+					<div class="bg-[#14283f]/85 border border-amber-500/40 rounded-xl overflow-hidden mb-3 backdrop-blur-sm">
 						<div class="p-3">
 							<div class="flex items-center gap-2 mb-2">
 								<div class="size-10 flex-shrink-0 flex items-center justify-center">
@@ -571,22 +571,22 @@
 									/>
 								</div>
 								<div class="flex-1 min-w-0">
-									<h3 class="font-semibold text-white text-xs truncate">{activeTrainingUnit.name}</h3>
-									<p class="text-xs text-slate-400">{timeRemaining}</p>
+									<h3 class="font-semibold text-[#fff7e8] text-xs truncate">{activeTrainingUnit.name}</h3>
+									<p class="text-xs text-[#a89e8e]">{timeRemaining}</p>
 								</div>
 							</div>
 
 							<!-- Progress Bar -->
-							<div class="w-full bg-slate-900/50 rounded-full h-1.5 overflow-hidden border border-slate-700/30">
+							<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
 								<div
 									class="h-1.5 rounded-full transition-all duration-700"
-									style="width: {progress}%; background: linear-gradient(90deg, #fbbf24, #f59e0b)"
+									style="width: {progress}%; background: #e6a527"
 								></div>
 							</div>
 						</div>
 
 						{#if isComplete}
-							<div class="border-t border-amber-500/20 p-2.5 bg-slate-900/20">
+							<div class="border-t border-amber-500/20 p-2.5 bg-[#0d1d31]/60">
 								<form method="POST" action="?/completeTraining" use:enhance>
 									<input type="hidden" name="unitId" value={activeTrainingUnit.id} />
 									<button type="submit" class="btn btn-success btn-xs w-full gap-1.5">
@@ -601,7 +601,7 @@
 
 				<!-- Queued Units -->
 				{#each queuedUnits as unit, index}
-					<div class="bg-slate-800/30 border border-slate-700/40 rounded-lg p-2 mb-2 backdrop-blur-sm">
+					<div class="bg-[#102239]/70 border border-[#dfceb0]/10 rounded-lg p-2 mb-2 backdrop-blur-sm">
 						<div class="flex items-center gap-2">
 							<div class="size-8 flex-shrink-0 flex items-center justify-center">
 								<img
@@ -611,8 +611,8 @@
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="font-medium text-white text-xs truncate">{unit.name}</h3>
-								<p class="text-xs text-slate-500">Queued</p>
+								<h3 class="font-medium text-[#fff7e8] text-xs truncate">{unit.name}</h3>
+								<p class="text-xs text-[#a89e8e]">Queued</p>
 							</div>
 						</div>
 					</div>
@@ -630,9 +630,9 @@
 <Modal bind:open={disbandModalOpen} title="Disband Unit" size="small">
 	{#if unitToDisband}
 		<div class="space-y-4">
-			<div class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
+			<div class="flex items-center gap-3 p-3 panel-muted rounded-lg">
 				<div
-					class="w-10 h-10 flex-shrink-0 bg-slate-900/60 rounded border border-slate-700/60 flex items-center justify-center p-2"
+					class="w-10 h-10 flex-shrink-0 bg-[#0d1d31]/70 rounded border border-[#dfceb0]/15 flex items-center justify-center p-2"
 				>
 					<img
 						src={getUnitIconPath(unitToDisband.unitType)}
@@ -641,12 +641,12 @@
 					/>
 				</div>
 				<div>
-					<h4 class="font-semibold text-white text-sm">{unitToDisband.name}</h4>
-					<p class="text-xs text-slate-400">ATK {unitToDisband.attack} • DEF {unitToDisband.defense}</p>
+					<h4 class="font-semibold text-[#fff7e8] text-sm">{unitToDisband.name}</h4>
+					<p class="text-xs text-[#a89e8e]">ATK {unitToDisband.attack} • DEF {unitToDisband.defense}</p>
 				</div>
 			</div>
 
-			<p class="text-sm text-slate-300">
+			<p class="text-sm text-[#d9ccb7]">
 				Are you sure you want to disband this unit? This action cannot be undone and you will not receive any refunds.
 			</p>
 

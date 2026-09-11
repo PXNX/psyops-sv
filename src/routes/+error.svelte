@@ -13,7 +13,7 @@
 
 <main class="flex flex-col items-center justify-center min-h-dvh p-4 text-center">
 	<div
-		class="flex flex-col items-center justify-center gap-1 p-4 text-center border rounded-lg border-fuchsia-900 place-self-center"
+		class="flex flex-col items-center justify-center gap-1 p-4 text-center border rounded-lg border-[#dfceb0]/15 place-self-center"
 	>
 			{#if page.status === 404}
 				<FluentEmojiEyes class="w-12 h-12" />
@@ -37,9 +37,9 @@
 					>.
 				</p>
 				{#if page.error?.requestId}
-					<div class="mt-4 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
-						<p class="text-xs text-gray-400 font-mono">Request ID: <span class="text-gray-300 font-semibold">{page.error.requestId}</span></p>
-						<p class="text-xs text-gray-500 mt-2">Please provide this ID when reporting the issue.</p>
+					<div class="mt-4 p-3 panel-muted rounded-lg">
+						<p class="text-xs text-[#c7bda9] font-mono">Request ID: <span class="text-[#d9ccb7] font-semibold">{page.error.requestId}</span></p>
+						<p class="text-xs text-[#a89e8e] mt-2">Please provide this ID when reporting the issue.</p>
 					</div>
 				{/if}
 			{:else}
