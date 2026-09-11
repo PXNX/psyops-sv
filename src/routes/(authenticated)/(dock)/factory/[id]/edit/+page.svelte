@@ -89,8 +89,8 @@
 		<div class="flex items-center gap-4">
 			<BackLink href="/factory/{data.factory.id}" />
 			<div>
-				<h1 class="text-3xl font-bold text-white">Edit Factory</h1>
-				<p class="text-gray-400">{data.factory.name}</p>
+				<h1 class="text-3xl font-bold text-[#fff7e8]">Edit Factory</h1>
+				<p class="text-[#a89e8e]">{data.factory.name}</p>
 			</div>
 		</div>
 	</div>
@@ -98,27 +98,27 @@
 	<!-- Factory Stats -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 		<!-- Workers -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+		<div class="panel rounded-xl p-4">
 			<div class="flex items-center gap-3">
-				<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+				<div class="size-10 bg-[#315d8d]/20 rounded-lg flex items-center justify-center">
 					<FluentPeople20Filled class="size-5 text-blue-400" />
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Workers</p>
-					<p class="text-lg font-bold text-white">{data.factory.currentWorkers}/{data.factory.maxWorkers}</p>
+					<p class="text-xs text-[#a89e8e]">Workers</p>
+					<p class="text-lg font-bold text-[#fff7e8]">{data.factory.currentWorkers}/{data.factory.maxWorkers}</p>
 				</div>
 			</div>
 		</div>
 
 		<!-- Current Wage -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4">
+		<div class="panel rounded-xl p-4">
 			<div class="flex items-center gap-3">
-				<div class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-purple-400" />
+				<div class="size-10 bg-[#8c709b]/20 rounded-lg flex items-center justify-center">
+					<FluentMoney20Filled class="size-5 text-[#d5c4df]" />
 				</div>
 				<div>
-					<p class="text-xs text-gray-400">Current Wage</p>
-					<p class="text-lg font-bold text-white">{data.factory.workerWage.toLocaleString()}</p>
+					<p class="text-xs text-[#a89e8e]">Current Wage</p>
+					<p class="text-lg font-bold text-[#fff7e8]">{data.factory.workerWage.toLocaleString()}</p>
 				</div>
 			</div>
 		</div>
@@ -126,22 +126,22 @@
 
 	<!-- Regional Wage Analysis -->
 	{#if data.wageStats.highestInRegion || data.wageStats.averageInRegion}
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6 space-y-4">
+		<div class="panel rounded-xl p-6 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentChartMultiple20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Regional Wage Analysis</h2>
+				<FluentChartMultiple20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Regional Wage Analysis</h2>
 			</div>
 
 			<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 				<!-- Highest Wage -->
 				{#if data.wageStats.highestInRegion}
-					<div class="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+					<div class="panel-muted rounded-lg p-4">
 						<div class="flex items-center justify-between mb-2">
-							<p class="text-sm text-gray-400">Highest in Region</p>
+							<p class="text-sm text-[#a89e8e]">Highest in Region</p>
 							<FluentArrowTrending20Filled class="size-4 text-green-400" />
 						</div>
-						<p class="text-2xl font-bold text-white">{data.wageStats.highestInRegion.toLocaleString()}</p>
-						<p class="text-xs text-gray-500 mt-1">
+						<p class="text-2xl font-bold text-[#fff7e8]">{data.wageStats.highestInRegion.toLocaleString()}</p>
+						<p class="text-xs text-[#a89e8e] mt-1">
 							{data.wageStats.highestInRegion > data.factory.workerWage
 								? `${(((data.wageStats.highestInRegion - data.factory.workerWage) / data.factory.workerWage) * 100).toFixed(0)}% more`
 								: "You're at the top!"}
@@ -151,26 +151,26 @@
 
 				<!-- Average Wage -->
 				{#if data.wageStats.averageInRegion}
-					<div class="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+					<div class="panel-muted rounded-lg p-4">
 						<div class="flex items-center justify-between mb-2">
-							<p class="text-sm text-gray-400">Regional Average</p>
+							<p class="text-sm text-[#a89e8e]">Regional Average</p>
 							<FluentChartMultiple20Filled class="size-4 text-blue-400" />
 						</div>
-						<p class="text-2xl font-bold text-white">{data.wageStats.averageInRegion.toLocaleString()}</p>
-						<p class="text-xs text-gray-500 mt-1">
+						<p class="text-2xl font-bold text-[#fff7e8]">{data.wageStats.averageInRegion.toLocaleString()}</p>
+						<p class="text-xs text-[#a89e8e] mt-1">
 							Based on {data.wageStats.totalFactoriesInRegion} factories
 						</p>
 					</div>
 				{/if}
 
 				<!-- Your Position -->
-				<div class="bg-slate-700/30 rounded-lg p-4 border border-slate-600/30">
+				<div class="panel-muted rounded-lg p-4">
 					<div class="flex items-center justify-between mb-2">
-						<p class="text-sm text-gray-400">Your Position</p>
-						<FluentLocation20Filled class="size-4 text-purple-400" />
+						<p class="text-sm text-[#a89e8e]">Your Position</p>
+						<FluentLocation20Filled class="size-4 text-[#d5c4df]" />
 					</div>
 					<p class="text-2xl font-bold {getWageColor()}">{getWagePosition()}</p>
-					<p class="text-xs text-gray-500 mt-1">
+					<p class="text-xs text-[#a89e8e] mt-1">
 						{data.wageStats.factoriesPayingMore} factories pay more
 					</p>
 				</div>
@@ -209,15 +209,15 @@
 			<!-- Top Paying Factories -->
 			{#if data.wageStats.topFactories.length > 0}
 				<div>
-					<h3 class="text-sm font-semibold text-gray-300 mb-3">Top Paying Factories in Region</h3>
+					<h3 class="text-sm font-semibold text-[#e5d8c1] mb-3">Top Paying Factories in Region</h3>
 					<div class="space-y-2">
 						{#each data.wageStats.topFactories as factory, i}
-							<div class="flex items-center justify-between bg-slate-700/20 rounded-lg p-3">
+							<div class="flex items-center justify-between panel-muted rounded-lg p-3">
 								<div class="flex items-center gap-3">
-									<span class="text-xs font-bold text-gray-500">#{i + 1}</span>
+									<span class="text-xs font-bold text-[#a89e8e]">#{i + 1}</span>
 									<div>
-										<p class="text-sm font-medium text-white">{factory.name}</p>
-										<p class="text-xs text-gray-400 capitalize">{factory.type}</p>
+										<p class="text-sm font-medium text-[#fff7e8]">{factory.name}</p>
+										<p class="text-xs text-[#a89e8e] capitalize">{factory.type}</p>
 									</div>
 								</div>
 								<span class="text-sm font-bold text-green-400">{factory.wage.toLocaleString()}</span>
@@ -292,16 +292,16 @@
 	<!-- Form -->
 	<form method="POST" action="?/update" use:enhance class="space-y-6">
 		<!-- Factory Details -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+		<div class="panel rounded-xl p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentFactory20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Factory Details</h2>
+				<FluentFactory20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Factory Details</h2>
 			</div>
 
 			<!-- Factory Info (Read-only) -->
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-700/20 rounded-lg p-4 border border-slate-600/20">
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-4 panel-muted rounded-lg p-4">
 				<div>
-					<p class="text-xs text-gray-500 uppercase font-semibold mb-1">Company</p>
+					<p class="text-xs text-[#a89e8e] uppercase font-semibold mb-1">Company</p>
 					<a
 						href="/company/{data.factory.company.id}"
 						class="text-sm text-blue-400 hover:text-blue-300 transition-colors"
@@ -310,23 +310,23 @@
 					</a>
 				</div>
 				<div>
-					<p class="text-xs text-gray-500 uppercase font-semibold mb-1">Type</p>
-					<p class="text-sm text-white capitalize">{data.factory.factoryType}</p>
+					<p class="text-xs text-[#a89e8e] uppercase font-semibold mb-1">Type</p>
+					<p class="text-sm text-[#fff7e8] capitalize">{data.factory.factoryType}</p>
 				</div>
 				<div>
-					<p class="text-xs text-gray-500 uppercase font-semibold mb-1">Output</p>
-					<p class="text-sm text-white capitalize">{data.factory.resourceOutput || data.factory.productOutput}</p>
+					<p class="text-xs text-[#a89e8e] uppercase font-semibold mb-1">Output</p>
+					<p class="text-sm text-[#fff7e8] capitalize">{data.factory.resourceOutput || data.factory.productOutput}</p>
 				</div>
 				<div>
-					<p class="text-xs text-gray-500 uppercase font-semibold mb-1">Production Rate</p>
-					<p class="text-sm text-white">{data.factory.productionRate} per shift</p>
+					<p class="text-xs text-[#a89e8e] uppercase font-semibold mb-1">Production Rate</p>
+					<p class="text-sm text-[#fff7e8]">{data.factory.productionRate} per shift</p>
 				</div>
 			</div>
 
 			<!-- Editable Fields -->
 			<div class="space-y-4">
 				<div>
-					<label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+					<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 						Factory Name <span class="text-red-400">*</span>
 					</label>
 					<input
@@ -336,19 +336,19 @@
 						bind:value={$form.name}
 						placeholder="e.g., Northern Steel Mill"
 						maxlength="100"
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+						class="input w-full field-control"
 						class:input-error={$errors.name}
 						disabled={$submitting || !canEdit}
 					/>
 					{#if $errors.name}
 						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/100 characters</p>
+						<p class="text-xs text-[#a89e8e] mt-1">{$form.name?.length || 0}/100 characters</p>
 					{/if}
 				</div>
 
 				<div>
-					<label for="workerWage" class="block text-sm font-medium text-gray-300 mb-2">
+					<label for="workerWage" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 						Worker Wage per Shift <span class="text-red-400">*</span>
 					</label>
 					<div class="relative">
@@ -360,16 +360,16 @@
 							min="100"
 							max="1000000"
 							step="100"
-							class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 pl-8"
+							class="input w-full field-control pl-8"
 							class:input-error={$errors.workerWage}
 							disabled={$submitting || !canEdit}
 						/>
-						<FluentMoney20Filled class="size-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
+						<FluentMoney20Filled class="size-4 text-[#a89e8e] absolute left-3 top-1/2 -translate-y-1/2" />
 					</div>
 					{#if $errors.workerWage}
 						<p class="text-xs text-red-400 mt-1">{$errors.workerWage}</p>
 					{:else}
-						<div class="flex items-center justify-between text-xs text-gray-400 mt-1">
+						<div class="flex items-center justify-between text-xs text-[#a89e8e] mt-1">
 							<span>Min: 100 • Max: 1,000,000</span>
 							<span class={getWageColor()}>{getWagePosition()}</span>
 						</div>
@@ -377,22 +377,22 @@
 
 					<!-- Wage Impact Preview -->
 					{#if data.factory.currentWorkers > 0}
-						<div class="mt-3 bg-slate-700/20 rounded-lg p-3 border border-slate-600/20">
-							<p class="text-xs text-gray-400 mb-2">💰 Cost Impact per Shift:</p>
+						<div class="mt-3 panel-muted rounded-lg p-3">
+							<p class="text-xs text-[#a89e8e] mb-2">💰 Cost Impact per Shift:</p>
 							<div class="flex items-center justify-between">
-								<span class="text-sm text-gray-300">Current:</span>
-								<span class="text-sm font-semibold text-white">
+								<span class="text-sm text-[#d9ccb7]">Current:</span>
+								<span class="text-sm font-semibold text-[#fff7e8]">
 									{(data.factory.workerWage * data.factory.currentWorkers).toLocaleString()}
 								</span>
 							</div>
 							<div class="flex items-center justify-between">
-								<span class="text-sm text-gray-300">New:</span>
+								<span class="text-sm text-[#d9ccb7]">New:</span>
 								<span class="text-sm font-semibold text-green-400">
 									{($form.workerWage * data.factory.currentWorkers).toLocaleString()}
 								</span>
 							</div>
-							<div class="flex items-center justify-between pt-2 border-t border-slate-600/30 mt-2">
-								<span class="text-sm font-medium text-gray-200">Difference:</span>
+							<div class="flex items-center justify-between pt-2 border-t border-[#dfceb0]/15 mt-2">
+								<span class="text-sm font-medium text-[#e5d8c1]">Difference:</span>
 								<span
 									class="text-sm font-bold {$form.workerWage - data.factory.workerWage > 0
 										? 'text-red-400'
@@ -409,12 +409,12 @@
 		</div>
 
 		<!-- Resource Requirements -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-2">
+		<div class="panel rounded-xl p-5 space-y-2">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 			<div class="flex gap-3">
 				<a
 					href="/factory/{data.factory.id}"
-					class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
+					class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8]"
 					class:btn-disabled={$submitting}
 				>
 					Cancel
@@ -422,7 +422,7 @@
 				<button
 					type="submit"
 					disabled={$submitting || !canEdit}
-					class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
+					class="btn flex-1 bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2 disabled:opacity-50"
 				>
 					{#if $delayed}
 						<span class="loading loading-spinner loading-sm"></span>

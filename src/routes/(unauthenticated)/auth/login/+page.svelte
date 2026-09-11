@@ -14,7 +14,7 @@
 </script>
 
 <main
-	class="relative flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20 overflow-hidden bg-gradient-to-br from-purple-900 via-slate-900 to-blue-900"
+	class="relative flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20 overflow-hidden"
 >
 	<!-- Animated Background Pattern -->
 	<div
@@ -31,29 +31,23 @@
 		<div class="flex flex-col items-center space-y-4">
 			<div class="relative">
 				<!-- Glowing Effect -->
-				<div
-					class="absolute inset-0 bg-gradient-to-br from-purple-500 via-pink-500 to-blue-500 rounded-full blur-2xl opacity-50 animate-pulse"
-				></div>
+				<div class="absolute inset-0 bg-[#e6a527]/25 rounded-full blur-2xl opacity-50 animate-pulse"></div>
 
 				<div
-					class="relative size-32 bg-gradient-to-br from-purple-600 via-pink-600 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl"
+					class="relative size-32 bg-[#14283f] border border-[#dfceb0]/20 rounded-3xl flex items-center justify-center shadow-2xl"
 				>
 					<img alt="app logo" class="size-24" src="/logo.svg" />
 				</div>
 			</div>
 
 			<div class="text-center space-y-2">
-				<h1
-					class="text-4xl font-bold tracking-tight bg-gradient-to-r from-purple-300 via-pink-300 to-blue-300 bg-clip-text text-transparent"
-				>
-					Welcome
-				</h1>
-				<p class="text-gray-400 text-sm">Sign in to continue your journey</p>
+				<h1 class="text-4xl font-bold tracking-tight text-[#fff7e8]">Welcome</h1>
+				<p class="text-[#d9ccb7] text-sm">Sign in to continue your journey</p>
 			</div>
 		</div>
 
 		<!-- Login Card -->
-		<div class="w-full bg-slate-800/50 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-8 space-y-6">
+		<div class="w-full panel backdrop-blur-xl rounded-2xl p-8 space-y-6">
 			<!-- Sign In Buttons -->
 			<div class="space-y-3">
 				<a
@@ -69,13 +63,13 @@
 
 			<!-- Terms & Privacy -->
 			<div>
-				<p class="text-xs text-center text-gray-400 leading-relaxed">
+				<p class="text-xs text-center text-[#a89e8e] leading-relaxed">
 					By signing up you agree to our
-					<a class="font-semibold link link-hover text-purple-400 hover:text-purple-300" href="/about/terms">
+					<a class="font-semibold link link-hover text-[#f7c56b] hover:text-[#ffe2a4]" href="/about/terms">
 						{m.termsOfService()}
 					</a>
 					and
-					<a class="font-semibold link link-hover text-purple-400 hover:text-purple-300" href="/about/privacy">
+					<a class="font-semibold link link-hover text-[#f7c56b] hover:text-[#ffe2a4]" href="/about/privacy">
 						{m.privacyPolicy()}
 					</a>.
 				</p>

@@ -38,9 +38,9 @@
 	}
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+<div class="min-h-screen bg-[#0c1929]">
 	<!-- Header -->
-	<div class="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-xl">
+	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-4 sm:py-5">
 			<div class="flex items-center gap-3 sm:gap-4">
 				<a href="/party/{data.party.id}" class="relative flex-shrink-0">
@@ -52,20 +52,20 @@
 						{#if data.party.logoUrl}
 							<img src={data.party.logoUrl} alt={data.party.name} class="size-10 object-contain" />
 						{:else}
-							<FluentShield20Filled class="size-6 text-white" />
+							<FluentShield20Filled class="size-6 text-[#fff7e8]" />
 						{/if}
 					</div>
 				</a>
 				<div class="flex-1 min-w-0">
 					<a
 						href="/party/{data.party.id}"
-						class="text-xs text-slate-400 hover:text-purple-400 transition-colors font-mono"
+						class="text-xs text-[#a89e8e] hover:text-[#d5c4df] transition-colors font-mono"
 					>
 						{data.party.name}
 					</a>
-					<h1 class="text-lg sm:text-xl font-bold text-white tracking-wide font-mono uppercase">Members</h1>
+					<h1 class="text-lg sm:text-xl font-bold text-[#fff7e8] tracking-wide font-mono uppercase">Members</h1>
 				</div>
-				<div class="px-2 py-1 bg-slate-800/60 border border-slate-700/50 rounded text-xs font-mono text-slate-400">
+				<div class="px-2 py-1 bg-[#14283f] border border-[#dfceb0]/20 rounded text-xs font-mono text-[#a89e8e]">
 					{data.members.length}
 				</div>
 			</div>
@@ -75,13 +75,13 @@
 	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
 		<!-- Auto-Accept Settings -->
 		{#if data.isLeader}
-			<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-4">
+			<div class="panel rounded-xl p-4">
 				<div class="flex items-center justify-between gap-3">
 					<div class="flex items-center gap-3">
 						<FluentSettings20Filled class="size-4 text-blue-400 flex-shrink-0" />
 						<div>
-							<span class="text-sm font-bold text-white">Auto-accept</span>
-							<p class="text-xs text-slate-500 font-mono mt-0.5">
+							<span class="text-sm font-bold text-[#fff7e8]">Auto-accept</span>
+							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
 								{data.party.autoAcceptMembers ? "Members join instantly" : "Requires approval"}
 							</p>
 						</div>
@@ -112,7 +112,7 @@
 		<!-- Pending Applications -->
 		{#if canManageMembers && data.pendingApplications.length > 0}
 			<div
-				class="bg-gradient-to-br from-amber-950/20 to-slate-950/50 border border-amber-500/30 rounded-xl overflow-hidden"
+				class="bg-gradient-to-br from-amber-950/20 to-[#0c1929]/50 border border-amber-500/30 rounded-xl overflow-hidden"
 			>
 				<div class="bg-amber-950/30 border-b border-amber-500/20 px-4 sm:px-5 py-3">
 					<div class="flex items-center justify-between">
@@ -129,17 +129,17 @@
 				</div>
 				<div class="p-3 sm:p-4 space-y-2">
 					{#each data.pendingApplications as application}
-						<div class="flex items-center gap-3 bg-slate-900/40 border border-slate-700/40 rounded-lg p-3">
+						<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
 							<Logo
 								src={application.user.logo}
 								alt={application.user.name}
 								class="size-10 rounded-lg"
 								placeholderIcon={FluentPeople20Filled}
-								placeholderGradient="from-slate-600 to-slate-700"
+								placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 							/>
 							<div class="flex-1 min-w-0">
-								<p class="text-sm font-bold text-white truncate">{application.user.name}</p>
-								<p class="text-xs text-slate-500 font-mono">{formatDate(application.appliedAt)}</p>
+								<p class="text-sm font-bold text-[#fff7e8] truncate">{application.user.name}</p>
+								<p class="text-xs text-[#a89e8e] font-mono">{formatDate(application.appliedAt)}</p>
 							</div>
 							<div class="flex items-center gap-1.5">
 								<form
@@ -215,10 +215,10 @@
 
 		<!-- Members List -->
 		<div
-			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+			class="panel rounded-xl overflow-hidden"
 		>
-			<div class="bg-slate-900/80 border-b border-slate-700/50 px-4 sm:px-5 py-3">
-				<h2 class="text-sm font-bold text-slate-200 font-mono uppercase tracking-wide flex items-center gap-2">
+			<div class="bg-[#0e1d2f]/95 border-b border-[#dfceb0]/15 px-4 sm:px-5 py-3">
+				<h2 class="text-sm font-bold text-[#e5d8c1] font-mono uppercase tracking-wide flex items-center gap-2">
 					<FluentPeople20Filled class="size-4" style="color: {data.party.color}" />
 					All Members
 				</h2>
@@ -226,7 +226,7 @@
 			<div class="p-3 sm:p-4 space-y-2">
 				{#each data.members as member}
 					<div
-						class="flex items-center gap-3 bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 hover:border-slate-600/60 transition-all"
+						class="flex items-center gap-3 panel-muted rounded-lg p-3 hover:border-[#dfceb0]/25 transition-all"
 					>
 						<!-- Avatar -->
 						<a href="/user/{member.userId}" class="relative flex-shrink-0">
@@ -235,18 +235,18 @@
 								alt={member.user.name || "Member"}
 								class="size-10 sm:size-12 rounded-lg"
 								placeholderIcon={FluentPeople20Filled}
-								placeholderGradient="from-slate-600 to-slate-700"
+								placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 							/>
 							{#if member.role === "leader"}
 								<div
-									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-slate-900"
+									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#0c1929]"
 									style="background-color: {data.party.color}"
 								>
 									<FluentCrown20Filled class="size-2.5 text-white" />
 								</div>
 							{:else if member.role === "deputy"}
 								<div
-									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-slate-900"
+									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#0c1929]"
 									style="background-color: {data.party.color}CC"
 								>
 									<FluentShield20Filled class="size-2.5 text-white" />
@@ -257,7 +257,7 @@
 						<!-- Info -->
 						<div class="flex-1 min-w-0">
 							<a href="/user/{member.userId}" class="group">
-								<p class="text-sm font-bold text-white group-hover:text-purple-400 transition-colors truncate">
+								<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors truncate">
 									{member.user.name || "Anonymous"}
 								</p>
 							</a>
@@ -277,9 +277,9 @@
 										DEPUTY
 									</span>
 								{/if}
-								<span class="text-[10px] text-slate-500 font-mono">{formatDate(member.joinedAt)}</span>
+								<span class="text-[10px] text-[#a89e8e] font-mono">{formatDate(member.joinedAt)}</span>
 								{#if member.acceptedByName}
-									<span class="text-[10px] text-slate-600 font-mono">by {member.acceptedByName}</span>
+									<span class="text-[10px] text-[#a89e8e]/70 font-mono">by {member.acceptedByName}</span>
 								{/if}
 							</div>
 						</div>
@@ -354,14 +354,14 @@
 		<!-- Join CTA -->
 		{#if data.canJoin && !data.isMember}
 			<div
-				class="bg-gradient-to-r from-slate-900/50 to-slate-950/50 border rounded-xl p-4 sm:p-5"
+				class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5"
 				style="border-color: {data.party.color}30"
 			>
 				<form method="POST" action="/party/{data.party.id}?/join" use:enhance>
 					<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div class="text-center sm:text-left">
-							<span class="text-sm font-bold text-white">Join {data.party.name}</span>
-							<p class="text-xs text-slate-400 font-mono mt-0.5">
+							<span class="text-sm font-bold text-[#fff7e8]">Join {data.party.name}</span>
+							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
 								{data.party.autoAcceptMembers ? "Instant membership" : "Application reviewed by leadership"}
 							</p>
 						</div>
@@ -396,7 +396,7 @@
 			<div class="flex gap-3 justify-end">
 				<button
 					type="button"
-					class="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 text-sm"
+					class="px-3 py-1.5 bg-[#14283f] border border-[#dfceb0]/20 rounded-lg text-[#d9ccb7] text-sm"
 					onclick={() => {
 						kickModalOpen = false;
 						memberToKick = null;
@@ -448,13 +448,13 @@
 		</div>
 
 		<div>
-			<label class="text-xs text-slate-400 font-mono mb-1 block" for="confirm-text">
+			<label class="text-xs text-[#a89e8e] font-mono mb-1 block" for="confirm-text">
 				Type <strong class="text-red-400">{data.party.name}</strong> to confirm
 			</label>
 			<input
 				id="confirm-text"
 				type="text"
-				class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm"
+				class="w-full field-control rounded-lg px-3 py-2 text-sm"
 				placeholder="Party name"
 			/>
 		</div>
@@ -462,7 +462,7 @@
 		<div class="flex gap-3 justify-end">
 			<button
 				type="button"
-				class="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-300 text-sm"
+				class="px-3 py-1.5 bg-[#14283f] border border-[#dfceb0]/20 rounded-lg text-[#d9ccb7] text-sm"
 				onclick={() => (disbandModalOpen = false)}
 			>
 				Cancel

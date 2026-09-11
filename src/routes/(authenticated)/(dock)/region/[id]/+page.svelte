@@ -74,7 +74,7 @@
 <PageContainer maxWidth="5xl">
 	<!-- Hero Header -->
 	<div
-		class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-gradient-to-br from-purple-900/30 via-slate-900/50 to-blue-900/30 border-b border-white/5"
+		class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-[#14283f]/70 border-b border-[#dfceb0]/10"
 	>
 		<div class="max-w-5xl mx-auto flex items-center gap-5">
 			<Logo
@@ -82,13 +82,13 @@
 				alt={data.region.name}
 				class="size-24 rounded-2xl shadow-2xl"
 				placeholderIcon={FluentShield20Filled}
-				placeholderGradient="from-purple-500 to-blue-500"
+				placeholderGradient="from-[#8c709b] to-[#315d8d]"
 			/>
 			<div class="flex-1">
-				<h1 class="text-3xl sm:text-4xl font-bold text-white">{data.region.name}</h1>
+				<h1 class="text-3xl sm:text-4xl font-bold text-[#fff7e8]">{data.region.name}</h1>
 				{#if data.region.stateName}
-					<p class="text-gray-400 mt-1.5 text-lg">
-						<a href="/state/{data.region.stateId}" class="hover:text-purple-400 transition-colors">
+					<p class="text-[#a89e8e] mt-1.5 text-lg">
+						<a href="/state/{data.region.stateId}" class="hover:text-[#d5c4df] transition-colors">
 							{data.region.stateName}
 						</a>
 					</p>
@@ -110,8 +110,8 @@
 					<FluentFlag20Filled class="size-6 text-amber-400" />
 				</div>
 				<div class="flex-1">
-					<h2 class="text-lg font-semibold text-white mb-1">No State Established</h2>
-					<p class="text-sm text-gray-300">
+					<h2 class="text-lg font-semibold text-[#fff7e8] mb-1">No State Established</h2>
+					<p class="text-sm text-[#d9ccb7]">
 						This region is not part of any state. To establish a state here, <a
 							href="/party/create"
 							class="text-amber-400 hover:text-amber-300 underline underline-offset-2">create a political party</a
@@ -124,14 +124,14 @@
 
 	<!-- Current Region Banner -->
 	{#if data.hasResidence}
-		<div class="bg-gradient-to-br from-blue-900/30 to-indigo-900/30 border border-blue-500/30 rounded-xl p-6">
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-xl p-6">
 			<div class="flex items-start gap-4">
 				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
 					<FluentHome20Filled class="size-6 text-blue-400" />
 				</div>
 				<div class="flex-1">
-					<h2 class="text-xl font-bold text-white mb-2">Your Current Region</h2>
-					<p class="text-gray-300 text-sm">You are currently located in this region.</p>
+					<h2 class="text-xl font-bold text-[#fff7e8] mb-2">Your Current Region</h2>
+					<p class="text-[#d9ccb7] text-sm">You are currently located in this region.</p>
 				</div>
 			</div>
 		</div>
@@ -180,39 +180,39 @@
 					<FluentCheckmark20Filled class="size-5 text-emerald-400" />
 				</div>
 				<div>
-					<h2 class="text-lg font-semibold text-white">Visa-Free</h2>
+					<h2 class="text-lg font-semibold text-[#fff7e8]">Visa-Free</h2>
 					<p class="text-sm text-emerald-300">Bloc membership grants visa-free travel to this state</p>
 				</div>
 			</div>
 		</div>
 	{:else if data.visa.blockedReason}
 		<!-- Visa blocked by war or sanctions -->
-		<div class="bg-gradient-to-br from-red-900/30 to-slate-900/30 border border-red-500/20 rounded-xl p-5">
+		<div class="bg-red-600/10 border border-red-500/20 rounded-xl p-5">
 			<div class="flex items-center gap-3">
 				<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
 					<FluentWarning20Filled class="size-5 text-red-400" />
 				</div>
 				<div>
-					<h2 class="text-lg font-semibold text-white">Visa Unavailable</h2>
+					<h2 class="text-lg font-semibold text-[#fff7e8]">Visa Unavailable</h2>
 					<p class="text-sm text-red-300">{data.visa.blockedReason}</p>
 				</div>
 			</div>
 		</div>
 	{:else if data.visa.needsVisa}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+		<div class="panel rounded-xl p-5 space-y-4">
 			<div class="flex items-center gap-3">
-				<div class="size-12 bg-purple-600/20 rounded-xl flex items-center justify-center">
-					<FluentBookCompass24Filled class="size-6 text-purple-400" />
+				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center">
+					<FluentBookCompass24Filled class="size-6 text-blue-400" />
 				</div>
 				<div class="flex-1">
-					<h2 class="text-lg font-semibold text-white">Visa Required</h2>
-					<p class="text-sm text-gray-400">A visa is required for non-citizens</p>
+					<h2 class="text-lg font-semibold text-[#fff7e8]">Visa Required</h2>
+					<p class="text-sm text-[#a89e8e]">A visa is required for non-citizens</p>
 				</div>
 				{#if !data.visa.hasActiveVisa && !data.visa.hasPendingApplication && data.visa.settings}
 					<button
 						type="button"
 						onclick={() => (showVisaSheet = true)}
-						class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
+						class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2"
 					>
 						<FluentBookCompass24Filled class="size-4" />
 						Request Visa
@@ -227,11 +227,11 @@
 						<div class="flex-1">
 							<div class="flex items-center gap-2 mb-2">
 								<FluentCheckmark20Filled class="size-5 text-emerald-400" />
-								<p class="font-semibold text-white">Active Visa</p>
+								<p class="font-semibold text-[#fff7e8]">Active Visa</p>
 							</div>
-							<p class="text-sm text-gray-300">Expires {formatDate(data.visa.activeVisa.expiresAt)}</p>
+							<p class="text-sm text-[#d9ccb7]">Expires {formatDate(data.visa.activeVisa.expiresAt)}</p>
 							{#if data.visa.activeVisa.cost > 0}
-								<p class="text-xs text-gray-500 mt-1">
+								<p class="text-xs text-[#a89e8e] mt-1">
 									Cost: ${Number(data.visa.activeVisa.cost).toLocaleString()} (Tax: ${Number(
 										data.visa.activeVisa.taxPaid
 									).toLocaleString()})
@@ -258,8 +258,8 @@
 					<div class="flex items-center gap-3">
 						<FluentClock20Filled class="size-5 text-amber-400" />
 						<div>
-							<p class="font-semibold text-white">Application Pending</p>
-							<p class="text-sm text-gray-400 mt-1">Awaiting approval from Foreign Minister</p>
+							<p class="font-semibold text-[#fff7e8]">Application Pending</p>
+							<p class="text-sm text-[#a89e8e] mt-1">Awaiting approval from Foreign Minister</p>
 						</div>
 					</div>
 				</div>
@@ -272,32 +272,32 @@
 		<Modal bind:open={showVisaSheet} title="Request Visa" size="default">
 			<div class="space-y-5">
 				<div class="flex items-center gap-4">
-					<div class="size-14 bg-purple-600/20 rounded-xl flex items-center justify-center">
-						<FluentBookCompass24Filled class="size-7 text-purple-400" />
+					<div class="size-14 bg-blue-600/20 rounded-xl flex items-center justify-center">
+						<FluentBookCompass24Filled class="size-7 text-blue-400" />
 					</div>
 					<div>
-						<h3 class="text-xl font-bold text-white">{data.region.stateName}</h3>
-						<p class="text-sm text-gray-400">Travel Visa Application</p>
+						<h3 class="text-xl font-bold text-[#fff7e8]">{data.region.stateName}</h3>
+						<p class="text-sm text-[#a89e8e]">Travel Visa Application</p>
 					</div>
 				</div>
 
 				{#if data.visa.settings.visaRequired}
-					<div class="bg-slate-700/30 rounded-lg p-4 space-y-3">
+					<div class="panel-muted rounded-lg p-4 space-y-3">
 						<div class="flex items-center justify-between">
-							<span class="text-sm text-gray-400">Visa Cost</span>
-							<span class="text-xl font-bold text-white">${Number(data.visa.settings.visaCost).toLocaleString()}</span>
+							<span class="text-sm text-[#a89e8e]">Visa Cost</span>
+							<span class="text-xl font-bold text-[#fff7e8]">${Number(data.visa.settings.visaCost).toLocaleString()}</span>
 						</div>
 						<div class="flex items-center justify-between">
-							<span class="text-sm text-gray-400">Tax ({data.visa.settings.visaTaxRate}%)</span>
-							<span class="text-sm text-gray-300"
+							<span class="text-sm text-[#a89e8e]">Tax ({data.visa.settings.visaTaxRate}%)</span>
+							<span class="text-sm text-[#d9ccb7]"
 								>${Math.floor(
 									(Number(data.visa.settings.visaCost) * data.visa.settings.visaTaxRate) / 100
 								).toLocaleString()}</span
 							>
 						</div>
 						<div class="border-t border-white/10 pt-2 flex items-center justify-between">
-							<span class="text-sm text-gray-400">Valid for</span>
-							<span class="text-sm font-medium text-white">14 days</span>
+							<span class="text-sm text-[#a89e8e]">Valid for</span>
+							<span class="text-sm font-medium text-[#fff7e8]">14 days</span>
 						</div>
 					</div>
 
@@ -322,7 +322,7 @@
 					>
 						<button
 							type="submit"
-							class="btn w-full bg-purple-600 hover:bg-purple-500 border-0 text-white gap-2"
+							class="btn w-full bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2"
 							disabled={data.walletBalance < Number(data.visa.settings.visaCost)}
 						>
 							<FluentBookCompass24Filled class="size-5" />
@@ -342,9 +342,9 @@
 					<div class="bg-emerald-600/10 border border-emerald-500/20 rounded-lg p-4">
 						<div class="flex items-center gap-3 mb-1">
 							<FluentCheckmark20Filled class="size-5 text-emerald-400" />
-							<p class="font-semibold text-white">Open Borders</p>
+							<p class="font-semibold text-[#fff7e8]">Open Borders</p>
 						</div>
-						<p class="text-sm text-gray-400">Free entry for all visitors — valid for 14 days</p>
+						<p class="text-sm text-[#a89e8e]">Free entry for all visitors — valid for 14 days</p>
 					</div>
 
 					<form
@@ -387,20 +387,20 @@
 			<SectionCard>
 				<div class="flex items-center gap-2 mb-4">
 					<span class="text-xl">👑</span>
-					<h2 class="text-lg font-semibold text-white">Governor</h2>
+					<h2 class="text-lg font-semibold text-[#fff7e8]">Governor</h2>
 				</div>
 				<a
 					href="/user/{data.governor.userId}"
-					class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
+					class="flex items-center gap-3 group panel-muted rounded-lg p-3 hover:bg-[#14283f] transition-all"
 				>
 					<div class="size-10 bg-amber-600/20 rounded-lg flex items-center justify-center">
 						<span class="text-xl">👑</span>
 					</div>
 					<div class="flex-1">
-						<p class="font-semibold text-white group-hover:text-amber-400 transition-colors">
+						<p class="font-semibold text-[#fff7e8] group-hover:text-amber-400 transition-colors">
 							{data.governor.name}
 						</p>
-						<p class="text-xs text-gray-400">Appointed {formatDate(data.governor.appointedAt)}</p>
+						<p class="text-xs text-[#a89e8e]">Appointed {formatDate(data.governor.appointedAt)}</p>
 					</div>
 				</a>
 			</SectionCard>
@@ -408,9 +408,9 @@
 			<SectionCard>
 				<div class="flex items-center gap-2 mb-2">
 					<span class="text-xl">👑</span>
-					<h2 class="text-lg font-semibold text-white">Governor</h2>
+					<h2 class="text-lg font-semibold text-[#fff7e8]">Governor</h2>
 				</div>
-				<p class="text-sm text-gray-400">No governor appointed</p>
+				<p class="text-sm text-[#a89e8e]">No governor appointed</p>
 			</SectionCard>
 		{/if}
 	{/if}
@@ -420,19 +420,19 @@
 		<SectionCard>
 			<div class="flex items-center gap-2 mb-4">
 				<FluentBuilding20Filled class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-white">State Buildings</h2>
+				<h2 class="text-lg font-semibold text-[#fff7e8]">State Buildings</h2>
 			</div>
 			<div class="grid gap-3">
 				{#each data.buildings as building}
-					<div class="flex items-center gap-3 bg-slate-700/30 rounded-lg p-3">
+					<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
 						<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
 							<FluentBuilding20Filled class="size-5 text-blue-400" />
 						</div>
 						<div class="flex-1">
-							<p class="font-semibold text-white">
+							<p class="font-semibold text-[#fff7e8]">
 								{building.name}
 							</p>
-							<p class="text-xs text-gray-400 capitalize">{building.buildingType.replace("_", " ")}</p>
+							<p class="text-xs text-[#a89e8e] capitalize">{building.buildingType.replace("_", " ")}</p>
 						</div>
 					</div>
 				{/each}
@@ -444,33 +444,33 @@
 	{#if data.factories.length > 0}
 		<SectionCard>
 			<div class="flex items-center gap-2 mb-4">
-				<FluentBriefcase20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Factories</h2>
+				<FluentBriefcase20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Factories</h2>
 			</div>
 			<div class="grid gap-3">
 				{#each data.factories as factory}
 					<a
 						href="/factory/{factory.id}"
-						class="flex items-center gap-3 group bg-slate-700/30 rounded-lg p-3 hover:bg-slate-700/50 transition-all"
+						class="flex items-center gap-3 group panel-muted rounded-lg p-3 hover:bg-[#14283f] transition-all"
 					>
-						<div class="size-10 rounded-lg overflow-hidden flex items-center justify-center bg-purple-600/20">
+						<div class="size-10 rounded-lg overflow-hidden flex items-center justify-center bg-[#8c709b]/20">
 							{#if factory.companyLogoUrl}
 								<Logo
 									src={factory.companyLogoUrl}
 									alt={factory.company?.name || "Company"}
 									class="size-10"
 									placeholderIcon={FluentBriefcase20Filled}
-									placeholderGradient="from-purple-600 to-blue-600"
+									placeholderGradient="from-[#8c709b] to-[#315d8d]"
 								/>
 							{:else}
-								<FluentBriefcase20Filled class="size-5 text-purple-400" />
+								<FluentBriefcase20Filled class="size-5 text-[#d5c4df]" />
 							{/if}
 						</div>
 						<div class="flex-1">
-							<p class="font-semibold text-white group-hover:text-purple-400 transition-colors">
+							<p class="font-semibold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">
 								{factory.name}
 							</p>
-							<p class="text-xs text-gray-400 capitalize">{factory.factoryType} • {factory.company?.name}</p>
+							<p class="text-xs text-[#a89e8e] capitalize">{factory.factoryType} • {factory.company?.name}</p>
 						</div>
 					</a>
 				{/each}
@@ -483,7 +483,7 @@
 		<SectionCard>
 			<div class="flex items-center gap-2 mb-4">
 				<span class="text-lg">⛏️</span>
-				<h2 class="text-lg font-semibold text-white">Natural Resources</h2>
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Natural Resources</h2>
 			</div>
 			<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
 				{#if data.region.oil}
@@ -491,16 +491,16 @@
 						<span class="text-2xl">⛽</span>
 						<div>
 							<p class="text-xs text-amber-400 font-medium">Oil</p>
-							<p class="text-lg font-bold text-white">{data.region.oil}</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{data.region.oil}</p>
 						</div>
 					</div>
 				{/if}
 				{#if data.region.steel}
-					<div class="bg-gray-600/10 border border-gray-600/20 rounded-lg p-3 flex items-center gap-3">
+					<div class="bg-[#14283f] border border-[#dfceb0]/15 rounded-lg p-3 flex items-center gap-3">
 						<span class="text-2xl">🔩</span>
 						<div>
-							<p class="text-xs text-gray-400 font-medium">Steel</p>
-							<p class="text-lg font-bold text-white">{data.region.steel}</p>
+							<p class="text-xs text-[#a89e8e] font-medium">Steel</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{data.region.steel}</p>
 						</div>
 					</div>
 				{/if}
@@ -509,16 +509,16 @@
 						<span class="text-2xl">💎</span>
 						<div>
 							<p class="text-xs text-blue-400 font-medium">Chromium</p>
-							<p class="text-lg font-bold text-white">{data.region.chromium}</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{data.region.chromium}</p>
 						</div>
 					</div>
 				{/if}
 				{#if data.region.tungsten}
-					<div class="bg-purple-600/10 border border-purple-600/20 rounded-lg p-3 flex items-center gap-3">
+					<div class="bg-[#8c709b]/12 border border-[#8c709b]/25 rounded-lg p-3 flex items-center gap-3">
 						<span class="text-2xl">⚡</span>
 						<div>
-							<p class="text-xs text-purple-400 font-medium">Tungsten</p>
-							<p class="text-lg font-bold text-white">{data.region.tungsten}</p>
+							<p class="text-xs text-[#d5c4df] font-medium">Tungsten</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{data.region.tungsten}</p>
 						</div>
 					</div>
 				{/if}
@@ -527,16 +527,16 @@
 						<span class="text-2xl">🌿</span>
 						<div>
 							<p class="text-xs text-green-400 font-medium">Rubber</p>
-							<p class="text-lg font-bold text-white">{data.region.rubber}</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{data.region.rubber}</p>
 						</div>
 					</div>
 				{/if}
 				{#if data.region.aluminium}
-					<div class="bg-slate-600/10 border border-slate-600/20 rounded-lg p-3 flex items-center gap-3">
+					<div class="bg-[#14283f] border border-[#dfceb0]/15 rounded-lg p-3 flex items-center gap-3">
 						<span class="text-2xl">🔘</span>
 						<div>
-							<p class="text-xs text-slate-400 font-medium">Aluminium</p>
-							<p class="text-lg font-bold text-white">{data.region.aluminium}</p>
+							<p class="text-xs text-[#a89e8e] font-medium">Aluminium</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{data.region.aluminium}</p>
 						</div>
 					</div>
 				{/if}
@@ -548,7 +548,7 @@
 	{#if data.ongoingBattle}
 		<a
 			href="/battle/{data.ongoingBattle.id}"
-			class="block bg-gradient-to-r from-red-950/40 to-slate-950/30 border-2 border-red-500/40 rounded-xl p-4 sm:p-5 hover:border-red-400/60 transition-all group"
+			class="block bg-gradient-to-r from-red-950/40 to-[#0c1929]/30 border-2 border-red-500/40 rounded-xl p-4 sm:p-5 hover:border-red-400/60 transition-all group"
 		>
 			<div class="flex items-center gap-4">
 				<div class="relative flex-shrink-0">
@@ -564,21 +564,21 @@
 						<div class="size-2 bg-red-500 rounded-full animate-pulse"></div>
 						<span class="text-xs text-red-400 font-mono uppercase tracking-widest font-bold">Battle in Progress</span>
 					</div>
-					<div class="text-sm text-slate-300 font-mono">
+					<div class="text-sm text-[#d9ccb7] font-mono">
 						<span class="text-red-400 font-bold">{data.ongoingBattle.attackerState.name}</span>
-						<span class="text-slate-600"> → </span>
+						<span class="text-[#a89e8e]"> → </span>
 						<span class="text-blue-400 font-bold"
 							>{data.ongoingBattle.defenderState?.name || data.region.stateName}</span
 						>
 					</div>
 				</div>
-				<span class="text-slate-500 group-hover:text-red-400 transition-colors">→</span>
+				<span class="text-[#a89e8e] group-hover:text-red-400 transition-colors">→</span>
 			</div>
 		</a>
 	{:else if data.recentFailedBattle}
 		{@const cooldown = getCooldownRemaining(data.recentFailedBattle.cooldownEndsAt)}
 		{#if cooldown}
-			<div class="bg-gradient-to-r from-amber-950/30 to-slate-950/30 border border-amber-500/30 rounded-xl p-4 sm:p-5">
+			<div class="bg-gradient-to-r from-amber-950/30 to-[#0c1929]/30 border border-amber-500/30 rounded-xl p-4 sm:p-5">
 				<div class="flex items-center gap-3">
 					<div
 						class="size-10 bg-amber-950/60 rounded-lg border border-amber-500/30 flex items-center justify-center flex-shrink-0"
@@ -600,7 +600,7 @@
 			{#each data.activeWars as war}
 				<a
 					href="/war/{war.id}"
-					class="flex items-center gap-3 bg-gradient-to-r from-red-950/20 to-slate-900/50 border border-red-500/20 rounded-xl p-4 hover:border-red-400/40 transition-all group"
+					class="flex items-center gap-3 bg-gradient-to-r from-red-950/20 to-[#0e1d2f]/50 border border-red-500/20 rounded-xl p-4 hover:border-red-400/40 transition-all group"
 				>
 					<div
 						class="size-10 bg-red-950/40 rounded-lg border border-red-500/20 flex items-center justify-center flex-shrink-0"
@@ -612,13 +612,13 @@
 							<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
 							<span class="text-[10px] text-red-400/70 font-mono uppercase tracking-widest">Active War</span>
 						</div>
-						<div class="text-sm text-slate-300">
+						<div class="text-sm text-[#d9ccb7]">
 							<span class="font-bold text-red-400">{war.attacker.name}</span>
-							<span class="text-slate-600 mx-1">vs</span>
+							<span class="text-[#a89e8e] mx-1">vs</span>
 							<span class="font-bold text-blue-400">{war.defender.name}</span>
 						</div>
 					</div>
-					<span class="text-slate-600 group-hover:text-red-400 transition-colors text-sm">→</span>
+					<span class="text-[#a89e8e] group-hover:text-red-400 transition-colors text-sm">→</span>
 				</a>
 			{/each}
 		</div>

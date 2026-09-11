@@ -55,7 +55,7 @@
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Hero Header -->
 	<div
-		class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-gradient-to-br from-blue-900/30 via-slate-800/50 to-purple-900/30"
+		class="relative rounded-2xl overflow-hidden border border-[#dfceb0]/15 shadow-2xl bg-[#14283f]/85"
 	>
 		<div
 			class="absolute inset-0 opacity-10"
@@ -72,19 +72,19 @@
 						</div>
 					{:else}
 						<div
-							class="size-20 sm:size-24 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center"
+							class="size-20 sm:size-24 rounded-2xl bg-[#315d8d]/25 flex items-center justify-center"
 						>
-							<MdiNewspaper class="size-10 sm:size-12 text-white" />
+							<MdiNewspaper class="size-10 sm:size-12 text-[#fff7e8]" />
 						</div>
 					{/if}
 				</div>
 				<!-- Info -->
 				<div class="flex-1 min-w-0">
-					<h1 class="text-2xl sm:text-3xl font-bold text-white mb-1 truncate">{data.newspaper.name}</h1>
+					<h1 class="text-2xl sm:text-3xl font-bold text-[#fff7e8] mb-1 truncate">{data.newspaper.name}</h1>
 					{#if data.newspaper.background}
-						<p class="text-gray-300 text-sm leading-relaxed mb-3 line-clamp-2">{data.newspaper.background}</p>
+						<p class="text-[#d9ccb7] text-sm leading-relaxed mb-3 line-clamp-2">{data.newspaper.background}</p>
 					{/if}
-					<div class="flex flex-wrap gap-3 text-xs text-gray-400">
+					<div class="flex flex-wrap gap-3 text-xs text-[#a89e8e]">
 						<span class="flex items-center gap-1">
 							<FluentCalendar20Filled class="size-3.5" />
 							Founded {formatDate(data.newspaper.createdAt)}
@@ -108,19 +108,19 @@
 	<!-- Owner + Actions row -->
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Owner card -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-4 flex items-center gap-3 flex-1">
+		<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl p-4 flex items-center gap-3 flex-1">
 			<Logo
 				src={data.owner.logoUrl}
 				alt={data.owner.name}
 				class="size-10"
 				placeholderIcon={FluentPerson20Filled}
-				placeholderGradient="from-purple-500 to-pink-500"
+				placeholderGradient="from-[#8c709b] to-[#b7a0c5]"
 			/>
 			<div>
-				<p class="text-xs text-gray-500 uppercase tracking-wide font-medium">Owner</p>
+				<p class="text-xs text-[#a89e8e] uppercase tracking-wide font-medium">Owner</p>
 				<a
 					href="/user/{data.owner.id}"
-					class="text-white font-semibold hover:text-purple-400 transition-colors text-sm"
+					class="text-[#fff7e8] font-semibold hover:text-purple-400 transition-colors text-sm"
 				>
 					{data.owner.name}
 				</a>
@@ -140,78 +140,69 @@
 					};
 				}}
 			>
-				<button
+				<Button
 					type="submit"
-					class="btn btn-sm {data.isSubscribed
-						? 'bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300'
-						: 'bg-blue-600 hover:bg-blue-500 border-0 text-white'} gap-2"
+					size="sm"
+					variant={data.isSubscribed ? "secondary" : "info"}
 					disabled={isSubscribing}
+					loading={isSubscribing}
+					loadingText={data.isSubscribed ? "Unsubscribing..." : "Subscribing..."}
+					icon={data.isSubscribed ? FluentBellOff20Filled : FluentBell20Filled}
 				>
-					{#if isSubscribing}
-						<span class="loading loading-spinner loading-xs"></span>
-						{data.isSubscribed ? "Unsubscribing..." : "Subscribing..."}
-					{:else if data.isSubscribed}
-						<FluentBellOff20Filled class="size-4" />
-						Unsubscribe
-					{:else}
-						<FluentBell20Filled class="size-4" />
-						Subscribe
-					{/if}
-				</button>
+					{data.isSubscribed ? "Unsubscribe" : "Subscribe"}
+				</Button>
 			</form>
 
-			<a
-				class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2"
-				href="/newspaper/{data.newspaper.id}/staff"
-			>
-				<FluentPeople20Filled class="size-4" />
+			<Button size="sm" variant="secondary" href="/newspaper/{data.newspaper.id}/staff" icon={FluentPeople20Filled}>
 				Staff
-			</a>
+			</Button>
 
 			{#if data.userRole === "owner" || data.userRole === "editor"}
-				<a
-					class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2"
+				<Button
+					size="sm"
+					variant="secondary"
 					href="/newspaper/{data.newspaper.id}/statistics"
+					icon={FluentChartMultiple20Regular}
 				>
-					<FluentChartMultiple20Regular class="size-4" />
 					Statistics
-				</a>
+				</Button>
 			{/if}
 
 			{#if data.userRole === "owner"}
-				<a
-					class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 gap-2"
+				<Button
+					size="sm"
+					variant="secondary"
 					href="/newspaper/{data.newspaper.id}/edit"
+					icon={FluentSettings20Filled}
 				>
-					<FluentSettings20Filled class="size-4" />
 					Settings
-				</a>
+				</Button>
 			{/if}
 		</div>
 	</div>
 
 	<!-- Recent Articles -->
-	<div class="bg-slate-800/50 border border-white/5 rounded-xl p-5">
-		<h3 class="text-lg font-semibold text-white mb-4">Recent Articles</h3>
+	<div class="panel rounded-xl p-5">
+		<h3 class="text-lg font-semibold text-[#fff7e8] mb-4">Recent Articles</h3>
 
 		{#if data.articles.length === 0}
 			<div class="py-10 text-center">
-				<div class="inline-flex items-center justify-center size-14 rounded-full bg-slate-700/50 mb-3">
-					<MdiNewspaper class="size-7 text-gray-500" />
+				<div class="inline-flex items-center justify-center size-14 rounded-full bg-[#102239]/70 mb-3">
+					<MdiNewspaper class="size-7 text-[#a89e8e]" />
 				</div>
-				<p class="text-gray-400 text-sm">No articles published yet</p>
+				<p class="text-[#a89e8e] text-sm">No articles published yet</p>
 			</div>
 		{:else}
 			<div class="space-y-3">
 				{#each data.articles as article}
 					<a
-						class="block group bg-slate-700/30 hover:bg-slate-700/50 border border-white/5 hover:border-purple-500/30 rounded-xl p-4 transition-all"
+						class="block group panel-interactive rounded-xl p-4"
 						href="/posts/{article.id}"
 					>
-						<h4 class="text-base font-semibold text-white group-hover:text-purple-400 transition-colors mb-2">
+						<h4 class="text-base font-semibold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors mb-2">
 							{article.title}
 						</h4>
-						<div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
+						<div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-[#a89e8e]">
 							<div class="flex items-center gap-1.5">
 								<Logo
 									src={article.authorLogo}
@@ -219,7 +210,7 @@
 									class="size-5"
 									placeholderIcon={FluentPerson20Filled}
 								/>
-								<span class="text-gray-300">{article.authorName}</span>
+								<span class="text-[#d9ccb7]">{article.authorName}</span>
 							</div>
 							<span>{formatDate(article.publishDate)}</span>
 							<span class="flex items-center gap-1">

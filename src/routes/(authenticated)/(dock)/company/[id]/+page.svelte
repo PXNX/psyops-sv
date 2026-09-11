@@ -20,6 +20,7 @@
 	import { Area, Bars } from "layerchart";
 	import { scaleBand, scaleOrdinal } from "d3-scale";
 	import Logo from "$lib/component/Logo.svelte";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	let { data, form } = $props();
 
@@ -64,14 +65,11 @@
 
 <div class="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
 	<!-- Company Header -->
-	<div
-		class="relative rounded-2xl overflow-hidden border border-white/5 shadow-2xl bg-gradient-to-br from-slate-800/80 via-slate-800/50 to-slate-900/80"
-	>
+	<div class="relative rounded-2xl overflow-hidden panel">
 		<div
 			class="absolute inset-0 opacity-5"
 			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.2) 35px, rgba(255,255,255,0.2) 70px);"
 		></div>
-		<div class="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black/70"></div>
 		<div class="relative z-10 p-5 sm:p-8">
 			<div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
 				<!-- Company Logo -->
@@ -86,15 +84,15 @@
 				<div class="flex-1 min-w-0">
 					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
 						<div class="min-w-0">
-							<h1 class="text-2xl sm:text-3xl font-bold text-white truncate">{data.company.name}</h1>
-							<div class="flex flex-wrap items-center gap-3 text-xs text-gray-400 mt-1">
+							<h1 class="text-2xl sm:text-3xl font-bold text-[#fff7e8] truncate">{data.company.name}</h1>
+							<div class="flex flex-wrap items-center gap-3 text-xs text-[#a89e8e] mt-1">
 								<span class="flex items-center gap-1">
 									<FluentCalendar20Filled class="size-3.5" />
 									Founded {formatDate(data.company.foundedAt)}
 								</span>
 								<a
 									href="/user/{data.company.ownerId}"
-									class="flex items-center gap-1.5 hover:text-purple-400 transition-colors"
+									class="flex items-center gap-1.5 hover:text-[#f7c56b] transition-colors"
 								>
 									{#if data.company.ownerLogo}
 										<img src={data.company.ownerLogo} alt="Owner" class="size-4 rounded-full" />
@@ -104,18 +102,15 @@
 							</div>
 						</div>
 						{#if data.isOwner}
-							<a
-								href="/company/{data.company.id}/edit"
-								class="btn btn-sm bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-							>
+							<a href="/company/{data.company.id}/edit" class={buttonClass({ variant: "secondary", size: "sm" })}>
 								<FluentEdit20Filled class="size-4" />
 								Edit
 							</a>
 						{/if}
 					</div>
 					{#if data.company.description}
-						<div class="mt-2 bg-black/20 rounded-xl p-3 border border-white/10">
-							<p class="text-sm text-gray-300">{data.company.description}</p>
+						<div class="mt-2 panel-muted rounded-xl p-3">
+							<p class="text-sm text-[#d9ccb7]">{data.company.description}</p>
 						</div>
 					{/if}
 				</div>
@@ -140,58 +135,58 @@
 	<!-- Statistics Grid -->
 	<div class="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
 		<!-- Factories -->
-		<div class="stats shadow-lg bg-base-200 border border-purple-500/30">
+		<div class="stats bg-[#14283f]/85 border border-[#b7a0c5]/30">
 			<div class="stat px-3 py-3 sm:px-4">
-				<div class="stat-figure text-purple-500">
+				<div class="stat-figure text-[#d5c4df]">
 					<FluentFactory20Filled class="w-6 h-6 sm:w-8 sm:h-8" />
 				</div>
-				<div class="stat-title text-xs">Factories</div>
-				<div class="stat-value text-xl sm:text-2xl text-purple-500">{data.factories.length}</div>
+				<div class="stat-title text-xs text-[#a89e8e]">Factories</div>
+				<div class="stat-value text-xl sm:text-2xl text-[#d5c4df]">{data.factories.length}</div>
 			</div>
 		</div>
 
 		<!-- Workers -->
-		<div class="stats shadow-lg bg-base-200 border border-blue-500/30">
+		<div class="stats bg-[#14283f]/85 border border-[#7ba0c8]/30">
 			<div class="stat px-3 py-3 sm:px-4">
-				<div class="stat-figure text-blue-500">
+				<div class="stat-figure text-[#b7d0e6]">
 					<FluentPeople20Filled class="w-6 h-6 sm:w-8 sm:h-8" />
 				</div>
-				<div class="stat-title text-xs">Workers</div>
-				<div class="stat-value text-xl sm:text-2xl text-blue-500">{data.totalWorkers}</div>
+				<div class="stat-title text-xs text-[#a89e8e]">Workers</div>
+				<div class="stat-value text-xl sm:text-2xl text-[#b7d0e6]">{data.totalWorkers}</div>
 			</div>
 		</div>
 
 		<!-- States -->
-		<div class="stats shadow-lg bg-base-200 border border-green-500/30">
+		<div class="stats bg-[#14283f]/85 border border-[#8fae88]/30">
 			<div class="stat px-3 py-3 sm:px-4">
-				<div class="stat-figure text-green-500">
+				<div class="stat-figure text-[#c6dfbf]">
 					<FluentLocation20Filled class="w-6 h-6 sm:w-8 sm:h-8" />
 				</div>
-				<div class="stat-title text-xs">States</div>
-				<div class="stat-value text-xl sm:text-2xl text-green-500">{data.uniqueStates.length}</div>
+				<div class="stat-title text-xs text-[#a89e8e]">States</div>
+				<div class="stat-value text-xl sm:text-2xl text-[#c6dfbf]">{data.uniqueStates.length}</div>
 			</div>
 		</div>
 
 		<!-- Wage Cost -->
-		<div class="stats shadow-lg bg-base-200 border border-amber-500/30">
+		<div class="stats bg-[#14283f]/85 border border-[#e6a527]/35">
 			<div class="stat px-3 py-3 sm:px-4">
-				<div class="stat-figure text-amber-500">
+				<div class="stat-figure text-[#f7c56b]">
 					<FluentMoney20Filled class="w-6 h-6 sm:w-8 sm:h-8" />
 				</div>
-				<div class="stat-title text-xs">Wage/Shift</div>
-				<div class="stat-value text-lg sm:text-xl text-amber-500">{data.totalWageCost.toLocaleString()}</div>
+				<div class="stat-title text-xs text-[#a89e8e]">Wage/Shift</div>
+				<div class="stat-value text-lg sm:text-xl text-[#f7c56b]">{data.totalWageCost.toLocaleString()}</div>
 			</div>
 		</div>
 
 		<!-- Budget -->
 		{#if data.isOwner}
-			<div class="stats shadow-lg bg-base-200 border border-emerald-500/30 col-span-2 lg:col-span-1">
+			<div class="stats bg-[#14283f]/85 border border-[#8fae88]/30 col-span-2 lg:col-span-1">
 				<div class="stat px-3 py-3 sm:px-4">
-					<div class="stat-figure text-emerald-500">
+					<div class="stat-figure text-[#c6dfbf]">
 						<FluentWallet20Filled class="w-6 h-6 sm:w-8 sm:h-8" />
 					</div>
-					<div class="stat-title text-xs">Budget</div>
-					<div class="stat-value text-lg sm:text-xl text-emerald-500">{data.budget.balance.toLocaleString()}</div>
+					<div class="stat-title text-xs text-[#a89e8e]">Budget</div>
+					<div class="stat-value text-lg sm:text-xl text-[#c6dfbf]">{data.budget.balance.toLocaleString()}</div>
 				</div>
 			</div>
 		{/if}
@@ -201,10 +196,10 @@
 	{#if data.isOwner && data.resourceProduction.length > 0}
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 			<!-- Production by Resource Type -->
-			<div class="card bg-base-200 border border-base-300/50 shadow-lg">
+			<div class="card panel">
 				<div class="card-body p-4 sm:p-6">
-					<h3 class="card-title text-base sm:text-lg flex items-center gap-2">
-						<FluentChartMultiple20Filled class="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+					<h3 class="card-title text-base sm:text-lg flex items-center gap-2 text-[#fff7e8]">
+						<FluentChartMultiple20Filled class="w-4 h-4 sm:w-5 sm:h-5 text-[#e6a527]" />
 						<span>Production by Type</span>
 					</h3>
 
@@ -223,7 +218,7 @@
 									<Bars
 										radius={8}
 										strokeWidth={2}
-										class="fill-primary/80 stroke-primary hover:fill-primary transition-all"
+										class="fill-[#e6a527]/80 stroke-[#e6a527] hover:fill-[#e6a527] transition-all"
 									/>
 								</Svg>
 								<Tooltip.Root let:data>

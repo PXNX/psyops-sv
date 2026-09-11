@@ -40,8 +40,8 @@
 			<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center shrink-0">
 				<FluentWarning20Filled class="size-6 text-red-400" />
 			</div>
-			<p class="text-gray-300">
-				Reporting: <strong class="text-white">{targetName}</strong>
+			<p class="text-[#d9ccb7]">
+				Reporting: <strong class="text-[#fff7e8]">{targetName}</strong>
 			</p>
 		</div>
 
@@ -62,7 +62,7 @@
 			<div class="space-y-4">
 				<div>
 					<label class="label">
-						<span class="label-text text-gray-300">Violation Type</span>
+						<span class="label-text text-[#e5d8c1]">Violation Type</span>
 					</label>
 					<select
 						name="violationType"
@@ -77,7 +77,7 @@
 
 				<div>
 					<label class="label">
-						<span class="label-text text-gray-300">Reason for reporting</span>
+						<span class="label-text text-[#e5d8c1]">Reason for reporting</span>
 					</label>
 					<textarea
 						name="reason"
@@ -87,7 +87,7 @@
 						maxlength="500"
 						class="textarea textarea-bordered field-control w-full"
 						required></textarea>
-					<p class="text-xs text-gray-500 mt-1">{reason.length}/500 characters</p>
+					<p class="text-xs text-[#a89e8e] mt-1">{reason.length}/500 characters</p>
 				</div>
 
 				<FormActions submitLabel="Submit Report" submitVariant="danger" onCancel={closeModal} />

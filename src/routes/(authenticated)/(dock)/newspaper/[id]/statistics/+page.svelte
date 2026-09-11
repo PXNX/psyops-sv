@@ -42,18 +42,18 @@
 <div class="container mx-auto px-4 py-6 max-w-6xl">
 	<!-- Header -->
 	<div class="mb-6">
-		<h1 class="text-2xl font-bold text-white mb-2">{data.newspaper.name} - Statistics</h1>
-		<p class="text-gray-400">Analytics and insights for your newspaper</p>
+		<h1 class="text-2xl font-bold text-[#fff7e8] mb-2">{data.newspaper.name} - Statistics</h1>
+		<p class="text-[#a89e8e]">Analytics and insights for your newspaper</p>
 	</div>
 
 	<!-- Summary Cards -->
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 		<!-- Total Subscribers -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
+		<div class="panel rounded-xl p-6">
 			<div class="flex items-center justify-between">
 				<div>
-					<p class="text-sm text-gray-400 mb-1">Total Subscribers</p>
-					<p class="text-3xl font-bold text-white">{formatNumber(data.stats.totalSubscribers)}</p>
+					<p class="text-sm text-[#a89e8e] mb-1">Total Subscribers</p>
+					<p class="text-3xl font-bold text-[#fff7e8]">{formatNumber(data.stats.totalSubscribers)}</p>
 				</div>
 				<div class="p-3 bg-blue-600/20 rounded-lg">
 					<MdiAccountMultiple class="size-6 text-blue-400" />
@@ -62,11 +62,11 @@
 		</div>
 
 		<!-- Total Views -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
+		<div class="panel rounded-xl p-6">
 			<div class="flex items-center justify-between">
 				<div>
-					<p class="text-sm text-gray-400 mb-1">Total Views</p>
-					<p class="text-3xl font-bold text-white">{formatNumber(data.stats.totalViews)}</p>
+					<p class="text-sm text-[#a89e8e] mb-1">Total Views</p>
+					<p class="text-3xl font-bold text-[#fff7e8]">{formatNumber(data.stats.totalViews)}</p>
 				</div>
 				<div class="p-3 bg-green-600/20 rounded-lg">
 					<MdiEye class="size-6 text-green-400" />
@@ -75,11 +75,11 @@
 		</div>
 
 		<!-- Total Likes -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
+		<div class="panel rounded-xl p-6">
 			<div class="flex items-center justify-between">
 				<div>
-					<p class="text-sm text-gray-400 mb-1">Total Likes</p>
-					<p class="text-3xl font-bold text-white">{formatNumber(data.stats.totalLikes)}</p>
+					<p class="text-sm text-[#a89e8e] mb-1">Total Likes</p>
+					<p class="text-3xl font-bold text-[#fff7e8]">{formatNumber(data.stats.totalLikes)}</p>
 				</div>
 				<div class="p-3 bg-pink-600/20 rounded-lg">
 					<MdiHeart class="size-6 text-pink-400" />
@@ -91,14 +91,14 @@
 	<!-- Charts Section -->
 	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
 		<!-- Subscriber Growth Chart -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
+		<div class="panel rounded-xl p-6">
 			<div class="flex items-center gap-2 mb-4">
 				<MdiChartLine class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-white">Subscriber Growth (30 Days)</h2>
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Subscriber Growth (30 Days)</h2>
 			</div>
 
 			{#if subscriberChartData.length === 0}
-				<div class="text-center py-12 text-gray-400">
+				<div class="text-center py-12 text-[#a89e8e]">
 					<p>No subscriber data yet</p>
 				</div>
 			{:else}
@@ -134,14 +134,14 @@
 		</div>
 
 		<!-- Post Views Chart -->
-		<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
+		<div class="panel rounded-xl p-6">
 			<div class="flex items-center gap-2 mb-4">
 				<MdiEye class="size-5 text-green-400" />
-				<h2 class="text-lg font-semibold text-white">Post Views (30 Days)</h2>
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Post Views (30 Days)</h2>
 			</div>
 
 			{#if viewsChartData.length === 0}
-				<div class="text-center py-12 text-gray-400">
+				<div class="text-center py-12 text-[#a89e8e]">
 					<p>No view data yet</p>
 				</div>
 			{:else}
@@ -177,40 +177,40 @@
 	</div>
 
 	<!-- Top Articles -->
-	<div class="bg-slate-800/50 border border-white/5 rounded-xl p-6">
+	<div class="panel rounded-xl p-6">
 		<div class="flex items-center gap-2 mb-4">
-			<MdiNewspaper class="size-5 text-purple-400" />
-			<h2 class="text-lg font-semibold text-white">Recent Articles Performance</h2>
+			<MdiNewspaper class="size-5 text-[#d5c4df]" />
+			<h2 class="text-lg font-semibold text-[#fff7e8]">Recent Articles Performance</h2>
 		</div>
 
 		{#if data.stats.topArticles.length === 0}
-			<div class="text-center py-12 text-gray-400">
+			<div class="text-center py-12 text-[#a89e8e]">
 				<p>No articles published yet</p>
 			</div>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="w-full">
 					<thead>
-						<tr class="border-b border-white/5">
-							<th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Article</th>
-							<th class="text-left py-3 px-4 text-sm font-medium text-gray-400">Published</th>
-							<th class="text-center py-3 px-4 text-sm font-medium text-gray-400">
+						<tr class="border-b border-[#dfceb0]/15">
+							<th class="text-left py-3 px-4 text-sm font-medium text-[#a89e8e]">Article</th>
+							<th class="text-left py-3 px-4 text-sm font-medium text-[#a89e8e]">Published</th>
+							<th class="text-center py-3 px-4 text-sm font-medium text-[#a89e8e]">
 								<MdiEye class="inline size-4" /> Views
 							</th>
-							<th class="text-center py-3 px-4 text-sm font-medium text-gray-400">
+							<th class="text-center py-3 px-4 text-sm font-medium text-[#a89e8e]">
 								<MdiHeart class="inline size-4" /> Likes
 							</th>
 						</tr>
 					</thead>
 					<tbody>
 						{#each data.stats.topArticles as article}
-							<tr class="border-b border-white/5 hover:bg-slate-700/30 transition-colors">
+							<tr class="border-b border-[#dfceb0]/15 hover:bg-[#102239]/50 transition-colors">
 								<td class="py-3 px-4">
-									<a href="/posts/{article.id}" class="text-white hover:text-blue-400 font-medium">
+									<a href="/posts/{article.id}" class="text-[#fff7e8] hover:text-blue-400 font-medium">
 										{article.title}
 									</a>
 								</td>
-								<td class="py-3 px-4 text-sm text-gray-400">
+								<td class="py-3 px-4 text-sm text-[#a89e8e]">
 									{formatDate(article.publishDate)}
 								</td>
 								<td class="py-3 px-4 text-center">

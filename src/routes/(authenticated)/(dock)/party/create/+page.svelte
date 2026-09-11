@@ -151,13 +151,11 @@
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div class="text-center space-y-2">
-		<div
-			class="size-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto"
-		>
-			<FluentPeople20Filled class="size-10 text-white" />
+		<div class="size-20 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-2xl flex items-center justify-center mx-auto">
+			<FluentPeople20Filled class="size-10 text-[#b7d0e6]" />
 		</div>
-		<h1 class="text-3xl font-bold text-white">Create Political Party</h1>
-		<p class="text-gray-400">Start your own political movement and shape the future</p>
+		<h1 class="text-3xl font-bold text-[#fff7e8]">Create Political Party</h1>
+		<p class="text-[#a89e8e]">Start your own political movement and shape the future</p>
 	</div>
 
 	<!-- Cooldown Warning -->
@@ -208,8 +206,8 @@
 				<FluentLocation20Filled class="size-5 text-blue-400" />
 				<div>
 					<p class="text-sm text-blue-300">Your party will be created in:</p>
-					<p class="font-semibold text-white">{data.userState.name}</p>
-					<p class="text-xs text-gray-400">Based on your residence in {data.userRegion.name}</p>
+					<p class="font-semibold text-[#fff7e8]">{data.userState.name}</p>
+					<p class="text-xs text-[#a89e8e]">Based on your residence in {data.userRegion.name}</p>
 				</div>
 			</div>
 		</div>
@@ -225,15 +223,15 @@
 	<!-- Form -->
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Party Name -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentFlag20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Party Details</h2>
+				<FluentFlag20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Party Details</h2>
 			</div>
 
 			<div class="space-y-4">
 				<div>
-					<label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+					<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 						Party Name <span class="text-red-400">*</span>
 					</label>
 					<input
@@ -243,19 +241,19 @@
 						bind:value={$form.name}
 						placeholder="e.g., Progressive Alliance Party"
 						maxlength="100"
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+						class="input w-full field-control"
 						class:input-error={$errors.name}
 						disabled={$submitting || !canCreate}
 					/>
 					{#if $errors.name}
 						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/100 characters</p>
+						<p class="text-xs text-[#a89e8e] mt-1">{$form.name?.length || 0}/100 characters</p>
 					{/if}
 				</div>
 
 				<div>
-					<label for="abbreviation" class="block text-sm font-medium text-gray-300 mb-2">
+					<label for="abbreviation" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 						Abbreviation (Optional)
 					</label>
 					<input
@@ -265,24 +263,24 @@
 						bind:value={$form.abbreviation}
 						placeholder="e.g., PROG"
 						maxlength="4"
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+						class="input w-full field-control"
 						class:input-error={$errors.abbreviation}
 						disabled={$submitting || !canCreate}
 					/>
 					{#if $errors.abbreviation}
 						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
 					{:else}
-						<p class="text-xs text-gray-400 mt-1">{$form.abbreviation?.length || 0}/4 characters • Alphanumeric only</p>
+						<p class="text-xs text-[#a89e8e] mt-1">{$form.abbreviation?.length || 0}/4 characters • Alphanumeric only</p>
 					{/if}
 				</div>
 			</div>
 		</div>
 
 		<!-- Party Logo -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Party Logo (Optional)</h2>
+				<FluentImage20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Party Logo (Optional)</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -302,23 +300,23 @@
 					onclick={() => fileInput?.click()}
 					disabled={$submitting || !canCreate}
 					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
-					class:border-purple-500={dragActive}
-					class:bg-purple-600-10={dragActive}
-					class:border-purple-500-30={!dragActive && !$form.logo}
+					class:border-[#e6a527]={dragActive}
+					class:bg-amber-600-10={dragActive}
+					class:border-amber-500-30={!dragActive && !$form.logo}
 					class:border-success={$form.logo && !dragActive}
 					class:bg-success-5={$form.logo && !dragActive}
-					class:hover:border-purple-500-50={!$submitting && !$form.logo && canCreate}
-					class:hover:bg-purple-600-10={!$submitting && !$form.logo && canCreate}
+					class:hover:border-amber-500-50={!$submitting && !$form.logo && canCreate}
+					class:hover:bg-amber-600-10={!$submitting && !$form.logo && canCreate}
 					class:opacity-50={$submitting || !canCreate}
 					class:input-error={$errors.logo}
 				>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-purple-600/20 p-3 transition-transform group-hover:scale-110">
-								<FluentImage20Filled class="size-8 text-purple-400" />
+							<div class="rounded-full bg-[#e6a527]/12 p-3 transition-transform group-hover:scale-110">
+								<FluentImage20Filled class="size-8 text-[#f7c56b]" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-white">
+								<p class="text-base font-semibold text-[#fff7e8]">
 									{#if dragActive}
 										Drop logo here
 									{:else if $submitting}
@@ -328,19 +326,19 @@
 									{/if}
 								</p>
 								{#if !$submitting && canCreate}
-									<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-slate-900/50">
+							<div class="flex items-center justify-center p-6 bg-[#102239]/70">
 								<img src={previewUrl} alt="Party logo preview" class="size-24 object-contain rounded-lg" />
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-white">Tap to change</p>
+								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
 							</div>
 							<button
 								type="button"
@@ -349,16 +347,16 @@
 									clearImage();
 								}}
 								disabled={$submitting || !canCreate}
-								class="btn absolute top-2 right-2 btn-circle btn-sm bg-slate-800 hover:bg-slate-700"
+								class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
 							>
 								✕
 							</button>
 						</div>
-						<div class="border-t border-slate-700 p-3 bg-slate-900/30">
-							<p class="truncate text-sm font-medium text-white" title={$form.logo.name}>
+						<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
+							<p class="truncate text-sm font-medium text-[#fff7e8]" title={$form.logo.name}>
 								{$form.logo.name}
 							</p>
-							<p class="text-xs text-gray-400">
+							<p class="text-xs text-[#a89e8e]">
 								{Math.round($form.logo.size / 1024)} KB
 							</p>
 						</div>
@@ -369,15 +367,15 @@
 			{#if $errors.logo}
 				<p class="text-xs text-red-400">{$errors.logo}</p>
 			{:else}
-				<p class="text-xs text-gray-400">Will be converted to 96x96 WebP • Max 5MB</p>
+				<p class="text-xs text-[#a89e8e]">Will be converted to 96x96 WebP • Max 5MB</p>
 			{/if}
 		</div>
 
 		<!-- Party Color -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentColor20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Party Color</h2>
+				<FluentColor20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Party Color</h2>
 			</div>
 
 			<div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
@@ -397,16 +395,16 @@
 			</div>
 
 			<div class="flex items-center gap-3 pt-2">
-				<label for="color" class="text-sm font-medium text-gray-300">Custom:</label>
+				<label for="color" class="text-sm font-medium text-[#e5d8c1]">Custom:</label>
 				<input
 					type="color"
 					id="color"
 					name="color"
 					bind:value={$form.color}
-					class="h-10 w-20 rounded-lg border-2 border-slate-600 bg-slate-700 cursor-pointer"
+					class="h-10 w-20 rounded-lg border-2 border-[#dfceb0]/20 bg-[#0d1d31] cursor-pointer"
 					disabled={$submitting || !canCreate}
 				/>
-				<span class="text-sm text-gray-400">{$form.color}</span>
+				<span class="text-sm text-[#a89e8e]">{$form.color}</span>
 			</div>
 
 			{#if $errors.color}
@@ -420,11 +418,11 @@
 						{#if previewUrl}
 							<img src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
 						{:else}
-							<FluentPeople20Filled class="size-6 text-white" />
+							<FluentPeople20Filled class="size-6 text-[#fff7e8]" />
 						{/if}
 					</div>
 					<div>
-						<p class="font-semibold text-white">{$form.name || "Your Party Name"}</p>
+						<p class="font-semibold text-[#fff7e8]">{$form.name || "Your Party Name"}</p>
 						<p class="text-sm" style="color: {$form.color}">{$form.abbreviation || "Abbreviation"}</p>
 					</div>
 				</div>
@@ -432,21 +430,21 @@
 		</div>
 
 		<!-- Ideology -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentBuildingGovernment20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Political Alignment</h2>
+				<FluentBuildingGovernment20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Political Alignment</h2>
 			</div>
 
 			<div>
-				<label for="ideology" class="block text-sm font-medium text-gray-300 mb-2">
+				<label for="ideology" class="block text-sm font-medium text-[#e5d8c1] mb-2">
 					Ideology <span class="text-red-400">*</span>
 				</label>
 				<select
 					id="ideology"
 					name="ideology"
 					bind:value={$form.ideology}
-					class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class="select w-full field-control"
 					class:input-error={$errors.ideology}
 					disabled={$submitting || !canCreate}
 				>
@@ -462,10 +460,10 @@
 		</div>
 
 		<!-- Description -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Party Description</h2>
+				<FluentDocument20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Party Description</h2>
 			</div>
 
 			<textarea
@@ -474,19 +472,19 @@
 				bind:value={$form.description}
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
-				class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+				class="textarea w-full field-control"
 				disabled={$submitting || !canCreate}></textarea>
 		</div>
 
 		<!-- Cost & Cooldown -->
 		<ResourceRequirements costs={{ currency: data.creationCost }} available={{ currency: data.userBalance }} />
 
-		<div class="flex items-center justify-between p-3 md:p-4 bg-slate-700/30 rounded-lg border border-slate-600/50">
+		<div class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-lg">
 			<div class="flex items-center gap-2">
-				<FluentClock20Filled class="size-4 md:size-5 text-gray-400" />
-				<span class="text-xs md:text-sm text-gray-400">Creation Cooldown</span>
+				<FluentClock20Filled class="size-4 md:size-5 text-[#a89e8e]" />
+				<span class="text-xs md:text-sm text-[#a89e8e]">Creation Cooldown</span>
 			</div>
-			<span class="font-bold text-white text-base md:text-lg">
+			<span class="font-bold text-[#fff7e8] text-base md:text-lg">
 				{data.cooldownDays} days
 			</span>
 		</div>
@@ -495,7 +493,7 @@
 		<div class="flex gap-3">
 			<a
 				href="/user"
-				class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white"
+				class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8]"
 				class:btn-disabled={$submitting}
 			>
 				Cancel
@@ -503,7 +501,7 @@
 			<button
 				type="submit"
 				disabled={$submitting || !canCreate}
-				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
+				class="btn flex-1 bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2 disabled:opacity-50"
 			>
 				{#if $delayed}
 					<span class="loading loading-spinner loading-sm"></span>

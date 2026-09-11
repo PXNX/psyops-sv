@@ -36,9 +36,9 @@
 			case "resolved":
 				return "text-green-400 bg-green-600/20 border-green-500/30";
 			case "dismissed":
-				return "text-gray-400 bg-gray-600/20 border-gray-500/30";
+				return "text-[#d9ccb7] bg-[#14283f] border-[#dfceb0]/20";
 			default:
-				return "text-gray-400 bg-gray-600/20 border-gray-500/30";
+				return "text-[#d9ccb7] bg-[#14283f] border-[#dfceb0]/20";
 		}
 	}
 
@@ -107,7 +107,7 @@
 <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
 	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-		<h1 class="text-2xl font-bold text-white">My Reports</h1>
+		<h1 class="text-2xl font-bold text-[#fff7e8]">My Reports</h1>
 		<div class="flex items-center gap-2 flex-wrap">
 			<a href="/moderators" class="btn btn-sm btn-ghost gap-2">
 				<FluentShield20Filled class="size-4" />
@@ -122,43 +122,43 @@
 
 	<!-- Stats -->
 	<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-		<div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 border border-white/5 p-4">
+		<div class="flex items-center gap-3 rounded-2xl panel p-4">
 			<div class="size-10 rounded-xl flex items-center justify-center bg-blue-600/20 shrink-0">
 				<FluentDocument20Filled class="size-5 text-blue-400" />
 			</div>
 			<div>
 				<div class="text-2xl font-bold text-blue-400 leading-none">{data.stats.total}</div>
-				<div class="text-xs text-gray-400 mt-1">Total Reports</div>
+				<div class="text-xs text-[#a89e8e] mt-1">Total Reports</div>
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 border border-white/5 p-4">
+		<div class="flex items-center gap-3 rounded-2xl panel p-4">
 			<div class="size-10 rounded-xl flex items-center justify-center bg-orange-600/20 shrink-0">
 				<FluentClock20Filled class="size-5 text-orange-400" />
 			</div>
 			<div>
 				<div class="text-2xl font-bold text-orange-400 leading-none">{data.stats.pending}</div>
-				<div class="text-xs text-gray-400 mt-1">Pending</div>
+				<div class="text-xs text-[#a89e8e] mt-1">Pending</div>
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 border border-white/5 p-4">
+		<div class="flex items-center gap-3 rounded-2xl panel p-4">
 			<div class="size-10 rounded-xl flex items-center justify-center bg-green-600/20 shrink-0">
 				<FluentCheckmark20Filled class="size-5 text-green-400" />
 			</div>
 			<div>
 				<div class="text-2xl font-bold text-green-400 leading-none">{data.stats.resolved}</div>
-				<div class="text-xs text-gray-400 mt-1">Resolved</div>
+				<div class="text-xs text-[#a89e8e] mt-1">Resolved</div>
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3 rounded-2xl bg-slate-800/50 border border-white/5 p-4">
-			<div class="size-10 rounded-xl flex items-center justify-center bg-gray-600/20 shrink-0">
-				<FluentDismiss20Filled class="size-5 text-gray-400" />
+		<div class="flex items-center gap-3 rounded-2xl panel p-4">
+			<div class="size-10 rounded-xl flex items-center justify-center bg-[#14283f] shrink-0">
+				<FluentDismiss20Filled class="size-5 text-[#a89e8e]" />
 			</div>
 			<div>
-				<div class="text-2xl font-bold text-gray-400 leading-none">{data.stats.dismissed}</div>
-				<div class="text-xs text-gray-400 mt-1">Dismissed</div>
+				<div class="text-2xl font-bold text-[#d9ccb7] leading-none">{data.stats.dismissed}</div>
+				<div class="text-xs text-[#a89e8e] mt-1">Dismissed</div>
 			</div>
 		</div>
 	</div>
@@ -168,11 +168,11 @@
 		{#each data.reports as report}
 			{@const StatusIcon = getStatusIcon(report.status)}
 			{@const TargetIcon = getTargetIcon(report.targetType)}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 hover:border-white/10 transition-all">
+			<div class="panel-interactive rounded-xl p-6">
 				<div class="flex items-start gap-4">
 					<!-- Report Icon -->
 					<div class="shrink-0">
-						<div class="size-12 rounded-xl flex items-center justify-center bg-slate-700/50">
+						<div class="size-12 rounded-xl flex items-center justify-center bg-[#102239]/70">
 							<TargetIcon class="size-6 text-blue-400" />
 						</div>
 					</div>
@@ -186,19 +186,19 @@
 									<StatusIcon class="size-3 mr-1" />
 									{getStatusLabel(report.status)}
 								</div>
-								<div class="badge badge-sm bg-slate-700/50 text-gray-300 border-white/5">
+								<div class="badge badge-sm bg-[#14283f] text-[#d9ccb7] border-[#dfceb0]/20">
 									{getViolationLabel(report.violationType)}
 								</div>
 							</div>
-							<div class="flex items-center gap-1 text-xs text-gray-500">
+							<div class="flex items-center gap-1 text-xs text-[#a89e8e]">
 								<FluentCalendar20Filled class="size-3" />
 								<span>Reported {formatDate(report.reportedAt)}</span>
 							</div>
 						</div>
 
 						<!-- Target -->
-						<div class="bg-slate-700/30 rounded-lg p-4 mb-3">
-							<div class="text-xs text-gray-500 font-medium mb-2">Reported {report.targetType}:</div>
+						<div class="panel-muted rounded-lg p-4 mb-3">
+							<div class="text-xs text-[#a89e8e] font-medium mb-2">Reported {report.targetType}:</div>
 
 							{#if report.targetType === "account" && report.target}
 								<a href="/user/{report.target.id}" class="flex items-center gap-3 group">
@@ -208,10 +208,10 @@
 											alt={report.target.name}
 											class="size-full"
 											placeholderIcon={FluentPeople20Filled}
-											placeholderGradient="from-slate-600 to-slate-700"
+											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 										/>
 									</div>
-									<span class="text-sm text-white group-hover:text-blue-400 transition-colors">
+									<span class="text-sm text-[#fff7e8] group-hover:text-blue-400 transition-colors">
 										{report.target.name}
 									</span>
 								</a>
@@ -223,28 +223,28 @@
 											alt={report.target.name}
 											class="size-full"
 											placeholderIcon={FluentShield20Filled}
-											placeholderGradient="from-slate-600 to-slate-700"
+											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 										/>
 									</div>
 									<div>
-										<span class="text-sm text-white group-hover:text-blue-400 transition-colors block">
+										<span class="text-sm text-[#fff7e8] group-hover:text-blue-400 transition-colors block">
 											{report.target.name}
 										</span>
-										<span class="text-xs text-gray-500">Political Party</span>
+										<span class="text-xs text-[#a89e8e]">Political Party</span>
 									</div>
 								</a>
 							{:else if report.targetType === "message" && report.target}
 								<div class="space-y-2">
 									{#if report.target.sender}
 										<div class="flex items-center gap-2">
-											<span class="text-xs text-gray-500">From:</span>
+											<span class="text-xs text-[#a89e8e]">From:</span>
 											<a href="/user/{report.target.sender.id}" class="text-sm text-blue-400 hover:text-blue-300">
 												{report.target.sender.name}
 											</a>
 										</div>
 									{/if}
-									<div class="bg-slate-800/50 rounded p-3 border border-white/5">
-										<p class="text-sm text-gray-300" class:italic={report.target.isDeleted}>
+									<div class="bg-[#0d1d31] rounded p-3 border border-[#dfceb0]/10">
+										<p class="text-sm text-[#d9ccb7]" class:italic={report.target.isDeleted}>
 											{report.target.content}
 										</p>
 										{#if report.target.isDeleted}
@@ -256,14 +256,14 @@
 						</div>
 
 						<!-- Report Reason -->
-						<div class="bg-slate-700/30 rounded-lg p-3 mb-3">
-							<div class="text-xs text-gray-500 font-medium mb-1">Your report:</div>
-							<p class="text-sm text-gray-300">{report.reason}</p>
+						<div class="panel-muted rounded-lg p-3 mb-3">
+							<div class="text-xs text-[#a89e8e] font-medium mb-1">Your report:</div>
+							<p class="text-sm text-[#d9ccb7]">{report.reason}</p>
 						</div>
 
 						<!-- Review Info -->
 						{#if report.status !== "pending"}
-							<div class="border-t border-white/5 pt-3 mt-3">
+							<div class="border-t border-[#dfceb0]/15 pt-3 mt-3">
 								<div class="flex items-start gap-4">
 									<!-- Reviewer -->
 									{#if report.reviewer}
@@ -275,13 +275,13 @@
 														alt={report.reviewer.name}
 														class="size-full"
 														placeholderIcon={FluentShield20Filled}
-														placeholderGradient="from-purple-600 to-purple-700"
+														placeholderGradient="from-[#8c709b] to-[#6a5578]"
 													/>
 												</div>
 												<div class="min-w-0">
-													<span class="text-xs text-gray-500 block">Reviewed by</span>
+													<span class="text-xs text-[#a89e8e] block">Reviewed by</span>
 													<span
-														class="text-sm text-purple-300 group-hover:text-purple-400 transition-colors truncate block"
+														class="text-sm text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors truncate block"
 													>
 														{report.reviewer.name}
 													</span>
@@ -294,7 +294,7 @@
 									<div class="flex-1 min-w-0">
 										{#if report.actionTaken}
 											<div class="mb-2">
-												<span class="text-xs text-gray-500">Action taken:</span>
+												<span class="text-xs text-[#a89e8e]">Action taken:</span>
 												<span class="text-sm text-green-400 ml-2 font-medium">
 													{getActionLabel(report.actionTaken)}
 												</span>
@@ -302,12 +302,12 @@
 										{/if}
 										{#if report.reviewNote}
 											<div>
-												<span class="text-xs text-gray-500">Moderator note:</span>
-												<p class="text-sm text-gray-300 mt-1">{report.reviewNote}</p>
+												<span class="text-xs text-[#a89e8e]">Moderator note:</span>
+												<p class="text-sm text-[#d9ccb7] mt-1">{report.reviewNote}</p>
 											</div>
 										{/if}
 										{#if report.reviewedAt}
-											<div class="flex items-center gap-1 text-xs text-gray-500 mt-2">
+											<div class="flex items-center gap-1 text-xs text-[#a89e8e] mt-2">
 												<FluentCalendar20Filled class="size-3" />
 												<span>Reviewed {formatDate(report.reviewedAt)}</span>
 											</div>
@@ -323,13 +323,13 @@
 	</div>
 
 	{#if data.reports.length === 0}
-		<div class="card bg-slate-800/50 border border-white/5">
+		<div class="card panel">
 			<div class="card-body items-center text-center py-12">
-				<div class="size-16 rounded-full flex items-center justify-center bg-gray-600/20 mb-4">
-					<FluentDocument20Filled class="size-8 text-gray-400" />
+				<div class="size-16 rounded-full flex items-center justify-center bg-[#14283f] mb-4">
+					<FluentDocument20Filled class="size-8 text-[#a89e8e]" />
 				</div>
-				<h3 class="text-xl font-bold text-white">No Reports Filed</h3>
-				<p class="text-gray-400 max-w-md">
+				<h3 class="text-xl font-bold text-[#fff7e8]">No Reports Filed</h3>
+				<p class="text-[#a89e8e] max-w-md">
 					You haven't filed any reports yet. If you encounter rule violations, you can report them to the moderation
 					team.
 				</p>

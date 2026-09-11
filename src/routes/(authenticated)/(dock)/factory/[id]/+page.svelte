@@ -49,29 +49,29 @@
 	const hasLockedWage = $derived(data.lockedWage !== null);
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+<div class="min-h-screen">
 	<!-- Factory Header -->
-	<div class="border-b border-purple-900/30 bg-slate-900/80 backdrop-blur-xl">
+	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
 			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 				<div class="flex items-center gap-4 w-full sm:w-auto">
 					<div class="relative flex-shrink-0">
-						<div class="absolute inset-0 bg-purple-500/20 blur-xl rounded-full"></div>
+						<div class="absolute inset-0 bg-[#8c709b]/20 blur-xl rounded-full"></div>
 						<Logo
 							src={data.companyLogoUrl}
 							alt={data.factory.companyName}
-							class="relative size-14 sm:size-18 rounded-lg border-2 border-purple-500/30"
+							class="relative size-14 sm:size-18 rounded-lg border-2 border-[#b7a0c5]/30"
 							placeholderIcon={FluentImageOff20Filled}
 						/>
 					</div>
 					<div class="flex-1 min-w-0">
-						<h1 class="text-xl sm:text-2xl font-bold text-white tracking-wide">{data.factory.name}</h1>
-						<div class="flex items-center gap-2 text-sm text-slate-400 font-mono mt-1">
+						<h1 class="text-xl sm:text-2xl font-bold text-[#fff7e8] tracking-wide">{data.factory.name}</h1>
+						<div class="flex items-center gap-2 text-sm text-[#a89e8e] font-mono mt-1">
 							<span class="capitalize">{data.factory.factoryType}</span>
-							<span class="text-slate-600">·</span>
+							<span class="text-[#a89e8e]/50">·</span>
 							<a
 								href="/company/{data.factory.companyId}"
-								class="text-purple-400 hover:text-purple-300 transition-colors"
+								class="text-[#d5c4df] hover:text-[#f0e7f5] transition-colors"
 							>
 								{data.factory.companyName}
 							</a>
@@ -82,7 +82,7 @@
 				{#if data.isOwner}
 					<a
 						href="/factory/{data.factory.id}/edit"
-						class="px-3 py-2 bg-slate-800/60 hover:bg-slate-700/60 border border-purple-500/20 hover:border-purple-500/40 rounded-lg text-purple-300 hover:text-white transition-all flex items-center gap-2 text-sm font-mono"
+						class="px-3 py-2 bg-[#8c709b]/15 hover:bg-[#8c709b]/25 border border-[#b7a0c5]/30 hover:border-[#b7a0c5]/50 rounded-lg text-[#d5c4df] hover:text-[#f0e7f5] transition-all flex items-center gap-2 text-sm font-mono"
 					>
 						<FluentEdit20Filled class="size-4" />
 						Edit
@@ -96,7 +96,7 @@
 		<!-- Location -->
 		<a
 			href="/region/{data.factory.regionId}"
-			class="flex items-center gap-3 bg-gradient-to-r from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4 hover:border-purple-500/30 transition-all group"
+			class="flex items-center gap-3 panel-interactive rounded-xl p-3 sm:p-4 group"
 		>
 			<img
 				src="/coats/{data.factory.regionId}.svg"
@@ -104,12 +104,12 @@
 				class="size-10 sm:size-12 object-contain"
 			/>
 			<div class="flex-1 min-w-0">
-				<div class="text-xs text-slate-500 font-mono uppercase tracking-wider">Location</div>
-				<div class="text-sm sm:text-base font-bold text-white group-hover:text-purple-400 transition-colors">
-					{regionName}, <span class="text-slate-400">{data.factory.stateName}</span>
+				<div class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Location</div>
+				<div class="text-sm sm:text-base font-bold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors">
+					{regionName}, <span class="text-[#a89e8e]">{data.factory.stateName}</span>
 				</div>
 			</div>
-			<FluentLocation20Filled class="size-4 text-slate-600 group-hover:text-purple-400 transition-colors" />
+			<FluentLocation20Filled class="size-4 text-[#a89e8e] group-hover:text-[#f7c56b] transition-colors" />
 		</a>
 
 		<!-- Budget Warning -->
@@ -127,60 +127,60 @@
 
 		<!-- Stats Strip -->
 		<div class="grid grid-cols-3 gap-3">
-			<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
+			<div class="panel rounded-xl p-3 sm:p-4">
 				<div class="flex items-center gap-2 mb-2">
-					<FluentBox20Filled class="size-4 text-purple-400" />
-					<span class="text-xs text-slate-500 font-mono uppercase tracking-wider">Output</span>
+					<FluentBox20Filled class="size-4 text-[#d5c4df]" />
+					<span class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Output</span>
 				</div>
 				<div class="flex items-center gap-1.5">
 					{#if data.output}
 						<ResourceIcon name={data.output.name} class="size-5" />
 					{/if}
-					<span class="text-sm font-bold text-white capitalize font-mono">{data.output?.name || "—"}</span>
+					<span class="text-sm font-bold text-[#fff7e8] capitalize font-mono">{data.output?.name || "—"}</span>
 				</div>
-				<div class="text-xs text-slate-500 font-mono mt-0.5">{data.output?.amount || 0}/shift</div>
+				<div class="text-xs text-[#a89e8e] font-mono mt-0.5">{data.output?.amount || 0}/shift</div>
 			</div>
 
-			<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
+			<div class="panel rounded-xl p-3 sm:p-4">
 				<div class="flex items-center gap-2 mb-2">
 					<FluentMoney20Filled class="size-4 text-emerald-400" />
-					<span class="text-xs text-slate-500 font-mono uppercase tracking-wider">Wage</span>
+					<span class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Wage</span>
 				</div>
 				<div class="flex items-center gap-1.5">
-					<span class="text-lg sm:text-xl font-bold text-white font-mono">{displayWage.toLocaleString()}</span>
+					<span class="text-lg sm:text-xl font-bold text-[#fff7e8] font-mono">{displayWage.toLocaleString()}</span>
 					{#if hasLockedWage}
-						<FluentLockClosed20Filled class="size-3.5 text-purple-400" />
+						<FluentLockClosed20Filled class="size-3.5 text-[#d5c4df]" />
 					{/if}
 				</div>
 				{#if hasLockedWage && data.factory.workerWage !== displayWage}
-					<div class="text-xs text-slate-600 font-mono mt-0.5">Current: {data.factory.workerWage.toLocaleString()}</div>
+					<div class="text-xs text-[#a89e8e] font-mono mt-0.5">Current: {data.factory.workerWage.toLocaleString()}</div>
 				{/if}
 			</div>
 
-			<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-3 sm:p-4">
+			<div class="panel rounded-xl p-3 sm:p-4">
 				<div class="flex items-center gap-2 mb-2">
 					<FluentPeople20Filled class="size-4 text-blue-400" />
-					<span class="text-xs text-slate-500 font-mono uppercase tracking-wider">Workers</span>
+					<span class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Workers</span>
 				</div>
-				<div class="text-lg sm:text-xl font-bold text-white font-mono">
-					{data.workers}<span class="text-slate-600">/{data.maxWorkers}</span>
+				<div class="text-lg sm:text-xl font-bold text-[#fff7e8] font-mono">
+					{data.workers}<span class="text-[#a89e8e]">/{data.maxWorkers}</span>
 				</div>
 			</div>
 		</div>
 
 		<!-- Energy -->
 		{#if data.stateEnergy}
-			<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-4">
+			<div class="panel rounded-xl p-4">
 				<div class="flex items-center justify-between mb-2">
 					<div class="flex items-center gap-2">
 						<FluentFlash20Filled class="size-4 text-yellow-400" />
-						<span class="text-sm font-bold text-white font-mono">State Energy</span>
+						<span class="text-sm font-bold text-[#fff7e8] font-mono">State Energy</span>
 					</div>
-					<span class="text-xs text-slate-500 font-mono">
+					<span class="text-xs text-[#a89e8e] font-mono">
 						{data.stateEnergy.totalProduction - data.stateEnergy.usedProduction}/{data.stateEnergy.totalProduction} MW
 					</span>
 				</div>
-				<div class="h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/30">
+				<div class="h-2 bg-[#102239] rounded-full overflow-hidden border border-[#dfceb0]/10">
 					<div
 						class="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all rounded-full"
 						style="width: {((data.stateEnergy.totalProduction - data.stateEnergy.usedProduction) /
@@ -194,7 +194,7 @@
 		<!-- Shift Status -->
 		{#if data.isCurrentlyWorking}
 			<div
-				class="bg-gradient-to-br from-amber-950/30 to-slate-950/30 border-2 border-amber-500/30 rounded-xl p-4 sm:p-5"
+				class="bg-gradient-to-br from-amber-950/30 to-[#0c1929]/30 border-2 border-amber-500/30 rounded-xl p-4 sm:p-5"
 			>
 				<div class="flex items-center justify-between mb-3">
 					<div class="flex items-center gap-2">
@@ -211,7 +211,7 @@
 					</div>
 				{/if}
 
-				<div class="h-3 bg-slate-800 rounded-full overflow-hidden border border-amber-500/20">
+				<div class="h-3 bg-[#102239] rounded-full overflow-hidden border border-amber-500/20">
 					<div
 						class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-1000 relative rounded-full"
 						style="width: {data.shiftProgress}%"
@@ -226,7 +226,7 @@
 					<form method="POST" action="?/collectPayment" use:enhance class="mt-4">
 						<button
 							type="submit"
-							class="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold font-mono uppercase tracking-wide transition-all"
+							class="w-full py-3 rounded-lg bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-[#fff7e8] font-bold font-mono uppercase tracking-wide transition-all"
 						>
 							<span class="flex items-center justify-center gap-2">
 								<FluentCheckmark20Filled class="size-5" />
@@ -238,7 +238,7 @@
 			</div>
 		{:else if data.isWorkingHere}
 			<div
-				class="bg-gradient-to-br from-emerald-950/30 to-slate-950/30 border border-emerald-500/30 rounded-xl p-4 sm:p-5"
+				class="bg-gradient-to-br from-emerald-950/30 to-[#0c1929]/30 border border-emerald-500/30 rounded-xl p-4 sm:p-5"
 			>
 				<div class="flex items-center gap-2 mb-3">
 					<FluentCheckmark20Filled class="size-5 text-emerald-400" />
@@ -253,7 +253,7 @@
 					<form method="POST" action="?/startShift" use:enhance>
 						<button
 							type="submit"
-							class="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold font-mono uppercase tracking-wide transition-all"
+							class="w-full py-3 rounded-lg bg-[#e6a527] hover:bg-[#f2b940] text-[#172a45] font-bold font-mono uppercase tracking-wide transition-all"
 						>
 							<span class="flex items-center justify-center gap-2">
 								<FluentPlay20Filled class="size-5" />
@@ -264,23 +264,21 @@
 				{/if}
 			</div>
 		{:else}
-			<div
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-4 sm:p-5 space-y-4"
-			>
+			<div class="panel rounded-xl p-4 sm:p-5 space-y-4">
 				<!-- Shift Details -->
 				<div class="grid grid-cols-3 gap-3 text-center">
 					<div>
-						<div class="text-xs text-slate-500 font-mono uppercase tracking-wider mb-1">Duration</div>
-						<div class="text-base font-bold text-white font-mono">8h</div>
+						<div class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider mb-1">Duration</div>
+						<div class="text-base font-bold text-[#fff7e8] font-mono">8h</div>
 					</div>
 					<div>
-						<div class="text-xs text-slate-500 font-mono uppercase tracking-wider mb-1">Payment</div>
+						<div class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider mb-1">Payment</div>
 						<div class="text-base font-bold text-emerald-400 font-mono">{data.factory.workerWage.toLocaleString()}</div>
 					</div>
 					{#if data.output}
 						<div>
-							<div class="text-xs text-slate-500 font-mono uppercase tracking-wider mb-1">Output</div>
-							<div class="flex items-center gap-1.5 text-base font-bold text-white font-mono">
+							<div class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider mb-1">Output</div>
+							<div class="flex items-center gap-1.5 text-base font-bold text-[#fff7e8] font-mono">
 								<ResourceIcon name={data.output.name} class="size-4" />
 								{data.output.amount}
 							</div>
@@ -310,7 +308,7 @@
 					<button
 						type="submit"
 						disabled={data.workers >= data.maxWorkers || !data.canAffordWage}
-						class="w-full py-3 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 disabled:from-slate-700 disabled:to-slate-800 disabled:cursor-not-allowed text-white font-bold font-mono uppercase tracking-wide transition-all"
+						class="w-full py-3 rounded-lg bg-[#e6a527] hover:bg-[#f2b940] disabled:bg-[#14283f] disabled:text-[#a89e8e] disabled:cursor-not-allowed text-[#172a45] font-bold font-mono uppercase tracking-wide transition-all"
 					>
 						<span class="flex items-center justify-center gap-2">
 							<FluentPlay20Filled class="size-5" />

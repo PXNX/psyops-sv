@@ -101,17 +101,17 @@
 	};
 
 	const typeColors: Record<string, { bg: string; border: string; text: string }> = {
-		market_purchase: { bg: "bg-blue-600/15", border: "border-blue-500/25", text: "text-blue-300" },
+		market_purchase: { bg: "bg-[#315d8d]/15", border: "border-[#7ba0c8]/25", text: "text-[#b7d0e6]" },
 		market_sale: { bg: "bg-emerald-600/15", border: "border-emerald-500/25", text: "text-emerald-300" },
-		gift_code_redemption: { bg: "bg-yellow-600/15", border: "border-yellow-500/25", text: "text-yellow-300" },
-		factory_wage: { bg: "bg-purple-600/15", border: "border-purple-500/25", text: "text-purple-300" },
+		gift_code_redemption: { bg: "bg-[#e6a527]/15", border: "border-[#e6a527]/30", text: "text-[#f7c56b]" },
+		factory_wage: { bg: "bg-[#8c709b]/15", border: "border-[#b7a0c5]/25", text: "text-[#d5c4df]" },
 		company_deposit: { bg: "bg-cyan-600/15", border: "border-cyan-500/25", text: "text-cyan-300" },
 		company_withdrawal: { bg: "bg-orange-600/15", border: "border-orange-500/25", text: "text-orange-300" },
-		visa_purchase: { bg: "bg-indigo-600/15", border: "border-indigo-500/25", text: "text-indigo-300" },
+		visa_purchase: { bg: "bg-[#315d8d]/15", border: "border-[#7ba0c8]/25", text: "text-[#b7d0e6]" },
 		tax_payment: { bg: "bg-red-600/15", border: "border-red-500/25", text: "text-red-300" }
 	};
 
-	const defaultColor = { bg: "bg-slate-600/15", border: "border-slate-500/25", text: "text-slate-300" };
+	const defaultColor = { bg: "bg-[#14283f]", border: "border-[#dfceb0]/20", text: "text-[#d9ccb7]" };
 
 	function getTypeColor(type: string) {
 		return typeColors[type] || defaultColor;
@@ -158,19 +158,19 @@
 <div class="w-full mx-auto px-3 sm:px-4 py-6 space-y-6 sm:max-w-3xl">
 	<!-- Header -->
 	<div>
-		<h1 class="text-3xl font-bold text-white mb-1">Transactions</h1>
-		<p class="text-slate-400 text-sm">Your financial activity over the last 30 days</p>
+		<h1 class="text-3xl font-bold text-[#fff7e8] mb-1">Transactions</h1>
+		<p class="text-[#a89e8e] text-sm">Your financial activity over the last 30 days</p>
 	</div>
 
 	<!-- Balance -->
-	<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-5">
+	<div class="panel rounded-xl p-5">
 		<div class="flex items-center gap-3">
-			<div class="size-11 bg-purple-600/20 rounded-lg flex items-center justify-center shrink-0">
-				<FluentWallet20Filled class="size-6 text-purple-400" />
+			<div class="size-11 bg-[#8c709b]/20 rounded-lg flex items-center justify-center shrink-0">
+				<FluentWallet20Filled class="size-6 text-[#d5c4df]" />
 			</div>
 			<div class="flex-1 min-w-0">
-				<p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Current Balance</p>
-				<p class="text-2xl font-bold text-white font-mono">{formatCurrency(data.analytics.currentBalance)}</p>
+				<p class="text-[10px] text-[#a89e8e]/80 font-mono uppercase tracking-wider">Current Balance</p>
+				<p class="text-2xl font-bold text-[#fff7e8] font-mono">{formatCurrency(data.analytics.currentBalance)}</p>
 			</div>
 		</div>
 	</div>
@@ -179,19 +179,19 @@
 	<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 		<!-- Income Summary -->
 		<div
-			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+			class="panel rounded-xl overflow-hidden"
 		>
 			<div class="p-4">
 				<div class="flex items-center gap-2 mb-1">
 					<div class="size-8 bg-emerald-600/20 rounded-lg flex items-center justify-center">
 						<FluentArrowDownload20Filled class="size-4 text-emerald-400" />
 					</div>
-					<p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Income</p>
+					<p class="text-[10px] text-[#a89e8e]/80 font-mono uppercase tracking-wider">Income</p>
 				</div>
 				<p class="text-xl font-bold text-emerald-400 font-mono">+{formatCurrency(data.analytics.totalIncome)}</p>
 			</div>
 			{#if incomeCategories.length > 0}
-				<div class="border-t border-slate-700/50 px-4 py-2 space-y-0.5">
+				<div class="border-t border-[#dfceb0]/10 px-4 py-2 space-y-0.5">
 					{#each incomeCategories as cat}
 						<button
 							type="button"
@@ -199,9 +199,9 @@
 							class="flex items-center justify-between w-full py-1.5 px-1 rounded-lg transition-all cursor-pointer {activeFilter ===
 							cat.type
 								? 'bg-emerald-500/10'
-								: 'hover:bg-slate-800/60'}"
+								: 'hover:bg-[#19304b]'}"
 						>
-							<span class="text-xs {activeFilter === cat.type ? 'text-emerald-300 font-semibold' : 'text-slate-400'}">
+							<span class="text-xs {activeFilter === cat.type ? 'text-emerald-300 font-semibold' : 'text-[#a89e8e]'}">
 								{typeLabels[cat.type] || cat.type}
 							</span>
 							<span
@@ -219,19 +219,19 @@
 
 		<!-- Expenses Summary -->
 		<div
-			class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+			class="panel rounded-xl overflow-hidden"
 		>
 			<div class="p-4">
 				<div class="flex items-center gap-2 mb-1">
 					<div class="size-8 bg-red-600/20 rounded-lg flex items-center justify-center">
 						<FluentArrowUpload20Filled class="size-4 text-red-400" />
 					</div>
-					<p class="text-[10px] text-slate-500 font-mono uppercase tracking-wider">Expenses</p>
+					<p class="text-[10px] text-[#a89e8e]/80 font-mono uppercase tracking-wider">Expenses</p>
 				</div>
 				<p class="text-xl font-bold text-red-400 font-mono">-{formatCurrency(data.analytics.totalExpenses)}</p>
 			</div>
 			{#if expenseCategories.length > 0}
-				<div class="border-t border-slate-700/50 px-4 py-2 space-y-0.5">
+				<div class="border-t border-[#dfceb0]/10 px-4 py-2 space-y-0.5">
 					{#each expenseCategories as cat}
 						<button
 							type="button"
@@ -239,9 +239,9 @@
 							class="flex items-center justify-between w-full py-1.5 px-1 rounded-lg transition-all cursor-pointer {activeFilter ===
 							cat.type
 								? 'bg-red-500/10'
-								: 'hover:bg-slate-800/60'}"
+								: 'hover:bg-[#19304b]'}"
 						>
-							<span class="text-xs {activeFilter === cat.type ? 'text-red-300 font-semibold' : 'text-slate-400'}">
+							<span class="text-xs {activeFilter === cat.type ? 'text-red-300 font-semibold' : 'text-[#a89e8e]'}">
 								{typeLabels[cat.type] || cat.type}
 							</span>
 							<span
@@ -259,18 +259,18 @@
 	<!-- Transaction History -->
 	<section class="space-y-3">
 		<div class="flex items-center justify-between px-1">
-			<h2 class="text-sm font-bold text-slate-200 font-mono uppercase tracking-wide">History</h2>
+			<h2 class="text-sm font-bold text-[#d9ccb7] font-mono uppercase tracking-wide">History</h2>
 			<div class="flex items-center gap-2">
 				{#if activeFilter}
 					<button
 						type="button"
 						onclick={() => (activeFilter = null)}
-						class="text-xs text-purple-400 hover:text-purple-300 font-mono transition-colors cursor-pointer"
+						class="text-xs text-[#d5c4df] hover:text-[#f0e7f5] font-mono transition-colors cursor-pointer"
 					>
 						Clear filter
 					</button>
 				{/if}
-				<span class="text-xs text-slate-500 font-mono"
+				<span class="text-xs text-[#a89e8e]/80 font-mono"
 					>{filteredTransactions.length} of {data.pagination.totalCount}</span
 				>
 			</div>
@@ -278,36 +278,36 @@
 
 		{#if groupedTransactions.length === 0}
 			<div
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-8 text-center"
+				class="panel rounded-xl p-8 text-center"
 			>
-				<FluentArrowTrendingLines20Filled class="size-10 text-slate-600 mx-auto mb-3" />
+				<FluentArrowTrendingLines20Filled class="size-10 text-[#a89e8e]/60 mx-auto mb-3" />
 				{#if activeFilter}
-					<p class="text-slate-400 font-medium">No {typeLabels[activeFilter] || activeFilter} transactions</p>
+					<p class="text-[#a89e8e] font-medium">No {typeLabels[activeFilter] || activeFilter} transactions</p>
 					<button
 						type="button"
 						onclick={() => (activeFilter = null)}
-						class="text-purple-400 hover:text-purple-300 text-sm mt-2 font-mono transition-colors cursor-pointer"
+						class="text-[#d5c4df] hover:text-[#f0e7f5] text-sm mt-2 font-mono transition-colors cursor-pointer"
 					>
 						Clear filter
 					</button>
 				{:else}
-					<p class="text-slate-400 font-medium">No transactions yet</p>
-					<p class="text-slate-500 text-sm mt-1">Your financial activity will appear here</p>
+					<p class="text-[#a89e8e] font-medium">No transactions yet</p>
+					<p class="text-[#a89e8e]/70 text-sm mt-1">Your financial activity will appear here</p>
 				{/if}
 			</div>
 		{:else}
 			<div class="space-y-5">
 				{#each groupedTransactions as group}
 					<div class="space-y-2">
-						<h3 class="text-xs font-semibold text-slate-500 font-mono uppercase tracking-wider px-1">{group.label}</h3>
+						<h3 class="text-xs font-semibold text-[#a89e8e]/80 font-mono uppercase tracking-wider px-1">{group.label}</h3>
 						<div
-							class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl divide-y divide-slate-700/30"
+							class="panel rounded-xl divide-y divide-[#dfceb0]/10"
 						>
 							{#each group.transactions as tx}
 								{@const color = getTypeColor(tx.type)}
 								{@const iconType = getTransactionIconType(tx)}
 								{@const FallbackIcon = getFallbackIcon(iconType)}
-								<div class="p-4 hover:bg-slate-800/40 transition-colors first:rounded-t-xl last:rounded-b-xl">
+								<div class="p-4 hover:bg-[#19304b] transition-colors first:rounded-t-xl last:rounded-b-xl">
 									<div class="flex items-center justify-between gap-3">
 										<!-- Left: Avatar + Details -->
 										<div class="flex items-center gap-3 flex-1 min-w-0">
@@ -329,8 +329,8 @@
 
 											<div class="flex-1 min-w-0">
 												<div class="flex items-center gap-2">
-													<p class="text-sm font-medium text-white truncate">{typeLabels[tx.type] || tx.type}</p>
-													<span class="text-[11px] text-slate-500 font-mono shrink-0">{formatTime(tx.createdAt)}</span>
+													<p class="text-sm font-medium text-[#fff7e8] truncate">{typeLabels[tx.type] || tx.type}</p>
+													<span class="text-[11px] text-[#a89e8e]/80 font-mono shrink-0">{formatTime(tx.createdAt)}</span>
 												</div>
 
 												{#if tx.entity.name}
@@ -350,7 +350,7 @@
 											<p class="text-sm font-bold {tx.isIncome ? 'text-emerald-400' : 'text-red-400'}">
 												{tx.isIncome ? "+" : ""}{formatCurrency(tx.amount)}
 											</p>
-											<p class="text-[11px] text-slate-500 font-mono mt-0.5">
+											<p class="text-[11px] text-[#a89e8e]/80 font-mono mt-0.5">
 												Bal: {formatCurrency(tx.balanceAfter)}
 											</p>
 										</div>
@@ -370,13 +370,13 @@
 			{#if data.pagination.hasPreviousPage}
 				<a
 					href="?page={data.pagination.currentPage - 1}"
-					class="btn btn-sm gap-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-slate-300 hover:text-white transition-all"
+					class="btn btn-sm gap-1 bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#d9ccb7] hover:text-[#fff7e8] transition-all"
 				>
 					<FluentChevronLeft20Filled class="size-4" />
 					Prev
 				</a>
 			{:else}
-				<button class="btn btn-sm gap-1 btn-disabled bg-slate-800/30 border-slate-700/20 text-slate-600" disabled>
+				<button class="btn btn-sm gap-1 btn-disabled bg-[#102239]/70 border-[#dfceb0]/10 text-[#a89e8e]/50" disabled>
 					<FluentChevronLeft20Filled class="size-4" />
 					Prev
 				</button>
@@ -385,18 +385,18 @@
 			<div class="flex items-center gap-1">
 				{#each Array.from({ length: data.pagination.totalPages }, (_, i) => i + 1) as pageNum}
 					{#if pageNum === data.pagination.currentPage}
-						<span class="btn btn-sm bg-purple-600/30 border-purple-500/30 text-purple-300 min-w-[2.5rem]">
+						<span class="btn btn-sm bg-[#e6a527]/25 border-[#e6a527]/35 text-[#f7c56b] min-w-[2.5rem]">
 							{pageNum}
 						</span>
 					{:else if Math.abs(pageNum - data.pagination.currentPage) <= 2 || pageNum === 1 || pageNum === data.pagination.totalPages}
 						<a
 							href="?page={pageNum}"
-							class="btn btn-sm bg-slate-700/30 hover:bg-slate-600/50 border-slate-600/20 text-slate-400 hover:text-white min-w-[2.5rem] transition-all"
+							class="btn btn-sm bg-[#102239]/70 hover:bg-[#19304b] border-[#dfceb0]/15 text-[#a89e8e] hover:text-[#fff7e8] min-w-[2.5rem] transition-all"
 						>
 							{pageNum}
 						</a>
 					{:else if Math.abs(pageNum - data.pagination.currentPage) === 3}
-						<span class="text-slate-600 px-1">…</span>
+						<span class="text-[#a89e8e]/60 px-1">…</span>
 					{/if}
 				{/each}
 			</div>
@@ -404,13 +404,13 @@
 			{#if data.pagination.hasNextPage}
 				<a
 					href="?page={data.pagination.currentPage + 1}"
-					class="btn btn-sm gap-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-slate-300 hover:text-white transition-all"
+					class="btn btn-sm gap-1 bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#d9ccb7] hover:text-[#fff7e8] transition-all"
 				>
 					Next
 					<FluentChevronRight20Filled class="size-4" />
 				</a>
 			{:else}
-				<button class="btn btn-sm gap-1 btn-disabled bg-slate-800/30 border-slate-700/20 text-slate-600" disabled>
+				<button class="btn btn-sm gap-1 btn-disabled bg-[#102239]/70 border-[#dfceb0]/10 text-[#a89e8e]/50" disabled>
 					Next
 					<FluentChevronRight20Filled class="size-4" />
 				</button>

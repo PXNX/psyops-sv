@@ -113,20 +113,20 @@
 	<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 		<div class="flex items-center gap-4">
 			<div
-				class="size-12 sm:size-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shrink-0"
+				class="size-12 sm:size-16 bg-[#8c709b]/20 rounded-2xl flex items-center justify-center shrink-0"
 			>
-				<FluentGift20Filled class="size-6 sm:size-8 text-white" />
+				<FluentGift20Filled class="size-6 sm:size-8 text-[#d5c4df]" />
 			</div>
 			<div>
-				<h1 class="text-2xl sm:text-3xl font-bold text-white">Gift Code Management</h1>
-				<p class="text-sm sm:text-base text-gray-400">Create and manage promotional gift codes</p>
+				<h1 class="text-2xl sm:text-3xl font-bold text-[#fff7e8]">Gift Code Management</h1>
+				<p class="text-sm sm:text-base text-[#a89e8e]">Create and manage promotional gift codes</p>
 			</div>
 		</div>
 
 		<button
 			type="button"
 			onclick={() => (showCreateModal = true)}
-			class="btn btn-sm sm:btn-md bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 text-white gap-2 w-full sm:w-auto"
+			class="btn btn-sm sm:btn-md bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2 w-full sm:w-auto"
 		>
 			<FluentAdd20Filled class="size-5" />
 			Create Code
@@ -135,10 +135,10 @@
 
 	<!-- Success/Error Messages -->
 	{#if form?.success}
-		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-xl p-4">
 			<div class="flex items-center gap-3">
-				<FluentCheckmark20Filled class="size-5 text-green-300 shrink-0" />
-				<p class="text-green-300 font-medium">{form.message || "Operation successful"}</p>
+				<FluentCheckmark20Filled class="size-5 text-[#c6dfbf] shrink-0" />
+				<p class="text-[#c6dfbf] font-medium">{form.message || "Operation successful"}</p>
 			</div>
 		</div>
 	{/if}
@@ -155,40 +155,40 @@
 	<!-- Stats -->
 	{#if data.giftCodes && data.giftCodes.length > 0}
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<div class="panel rounded-xl p-5">
 				<div class="flex items-center gap-3">
-					<div class="bg-blue-600/20 p-3 rounded-lg shrink-0">
-						<FluentGift20Filled class="size-6 text-blue-400" />
+					<div class="bg-[#315d8d]/20 p-3 rounded-lg shrink-0">
+						<FluentGift20Filled class="size-6 text-[#7ba0c8]" />
 					</div>
 					<div>
-						<p class="text-sm text-gray-400">Total Codes</p>
-						<p class="text-2xl font-bold text-white">{data.giftCodes.length}</p>
+						<p class="text-sm text-[#a89e8e]">Total Codes</p>
+						<p class="text-2xl font-bold text-[#fff7e8]">{data.giftCodes.length}</p>
 					</div>
 				</div>
 			</div>
 
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<div class="panel rounded-xl p-5">
 				<div class="flex items-center gap-3">
-					<div class="bg-green-600/20 p-3 rounded-lg shrink-0">
-						<FluentCheckmark20Filled class="size-6 text-green-400" />
+					<div class="bg-[#587252]/20 p-3 rounded-lg shrink-0">
+						<FluentCheckmark20Filled class="size-6 text-[#c6dfbf]" />
 					</div>
 					<div>
-						<p class="text-sm text-gray-400">Active Codes</p>
-						<p class="text-2xl font-bold text-white">
+						<p class="text-sm text-[#a89e8e]">Active Codes</p>
+						<p class="text-2xl font-bold text-[#fff7e8]">
 							{data.giftCodes.filter((c) => c.isActive).length}
 						</p>
 					</div>
 				</div>
 			</div>
 
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5">
+			<div class="panel rounded-xl p-5">
 				<div class="flex items-center gap-3">
-					<div class="bg-purple-600/20 p-3 rounded-lg shrink-0">
-						<FluentPeople20Filled class="size-6 text-purple-400" />
+					<div class="bg-[#8c709b]/20 p-3 rounded-lg shrink-0">
+						<FluentPeople20Filled class="size-6 text-[#d5c4df]" />
 					</div>
 					<div>
-						<p class="text-sm text-gray-400">Total Redemptions</p>
-						<p class="text-2xl font-bold text-white">
+						<p class="text-sm text-[#a89e8e]">Total Redemptions</p>
+						<p class="text-2xl font-bold text-[#fff7e8]">
 							{data.giftCodes.reduce((sum, c) => sum + c.currentRedemptions, 0)}
 						</p>
 					</div>
@@ -198,11 +198,11 @@
 	{/if}
 
 	<!-- Gift Codes Table -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 overflow-hidden">
+	<div class="panel rounded-xl overflow-hidden">
 		<div class="overflow-x-auto">
 			<table class="table w-full">
-				<thead class="bg-slate-700/50">
-					<tr class="text-gray-300">
+				<thead class="bg-[#102239]/70">
+					<tr class="text-[#d9ccb7]">
 						<th class="font-semibold">Code</th>
 						<th class="font-semibold">Description</th>
 						<th class="font-semibold">Rewards</th>
@@ -214,48 +214,48 @@
 				</thead>
 				<tbody>
 					{#each data.giftCodes as code}
-						<tr class="hover:bg-slate-700/30 transition-colors">
+						<tr class="hover:bg-[#19304b]/40 transition-colors">
 							<td>
-								<code class="text-purple-300 font-mono font-semibold text-xs sm:text-sm">{code.code}</code>
+								<code class="text-[#d5c4df] font-mono font-semibold text-xs sm:text-sm">{code.code}</code>
 							</td>
 							<td>
-								<p class="text-sm text-gray-300 max-w-xs truncate">
+								<p class="text-sm text-[#d9ccb7] max-w-xs truncate">
 									{code.description || "—"}
 								</p>
 							</td>
 							<td>
 								<div class="flex flex-wrap gap-1.5">
 									{#if code.currencyAmount > 0}
-										<span class="badge badge-sm bg-yellow-600/10 text-yellow-300 border-yellow-500/20">
+										<span class="badge badge-sm bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35">
 											💰 {formatNumber(code.currencyAmount)}
 										</span>
 									{/if}
 									{#if code.premiumDays > 0}
-										<span class="badge badge-sm bg-amber-600/10 text-amber-300 border-amber-500/20">
+										<span class="badge badge-sm bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35">
 											⭐ {formatNumber(code.premiumDays)}d premium
 										</span>
 									{/if}
 									{#each code.resources as resource}
-										<span class="badge badge-sm bg-blue-600/10 text-blue-300 border-blue-500/20 gap-1">
+										<span class="badge badge-sm bg-[#315d8d]/20 text-[#b7d0e6] border-[#7ba0c8]/30 gap-1">
 											<ResourceIcon name={resource.resourceType} class="size-3.5" />
 											{formatNumber(resource.quantity)}
 										</span>
 									{/each}
 									{#if code.currencyAmount === 0 && code.premiumDays === 0 && code.resources.length === 0}
-										<span class="text-gray-500 text-xs">No rewards</span>
+										<span class="text-[#a89e8e] text-xs">No rewards</span>
 									{/if}
 								</div>
 							</td>
 							<td>
 								<div class="text-sm">
-									<span class="text-white font-medium">{code.currentRedemptions}</span>
-									<span class="text-gray-400">
+									<span class="text-[#fff7e8] font-medium">{code.currentRedemptions}</span>
+									<span class="text-[#a89e8e]">
 										/ {code.maxRedemptions ? code.maxRedemptions : "∞"}
 									</span>
 								</div>
 							</td>
 							<td>
-								<div class="text-xs sm:text-sm text-gray-300 whitespace-nowrap">
+								<div class="text-xs sm:text-sm text-[#d9ccb7] whitespace-nowrap">
 									{formatDate(code.expiresAt)}
 								</div>
 							</td>
@@ -265,8 +265,8 @@
 									<button
 										type="submit"
 										class="badge badge-sm gap-1.5 transition-colors cursor-pointer hover:opacity-80 {code.isActive
-											? 'bg-green-600/20 text-green-300 border-green-500/30'
-											: 'bg-gray-600/20 text-gray-400 border-gray-500/30'}"
+											? 'bg-[#587252]/20 text-[#c6dfbf] border-[#8fae88]/30'
+											: 'bg-[#14283f] text-[#d9ccb7] border-[#dfceb0]/20'}"
 									>
 										{#if code.isActive}
 											<FluentEye20Filled class="size-3" />
@@ -297,7 +297,7 @@
 						</tr>
 					{:else}
 						<tr>
-							<td colspan="7" class="text-center py-8 text-gray-400">
+							<td colspan="7" class="text-center py-8 text-[#a89e8e]">
 								No gift codes created yet. Click "Create Code" to get started.
 							</td>
 						</tr>
@@ -316,7 +316,7 @@
 			if (e.target === e.currentTarget && !submitting) resetForm();
 		}}
 	>
-		<div class="bg-slate-800 rounded-2xl border border-white/10 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+		<div class="panel rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
 			<form
 				method="POST"
 				action="?/create"
@@ -330,12 +330,12 @@
 				class="p-6 space-y-5"
 			>
 				<!-- Header -->
-				<div class="flex items-center justify-between border-b border-white/5 pb-4">
+				<div class="flex items-center justify-between border-b border-[#dfceb0]/10 pb-4">
 					<div class="flex items-center gap-3">
-						<div class="bg-gradient-to-br from-purple-600 to-pink-600 p-2 rounded-lg shrink-0">
-							<FluentGift20Filled class="size-6 text-white" />
+						<div class="bg-[#8c709b]/20 p-2 rounded-lg shrink-0">
+							<FluentGift20Filled class="size-6 text-[#fff7e8]" />
 						</div>
-						<h2 class="text-xl sm:text-2xl font-bold text-white">Create Gift Code</h2>
+						<h2 class="text-xl sm:text-2xl font-bold text-[#fff7e8]">Create Gift Code</h2>
 					</div>
 					<button type="button" onclick={resetForm} class="btn btn-ghost btn-sm btn-circle" disabled={submitting}>
 						<FluentDismiss20Filled class="size-5" />
@@ -344,7 +344,7 @@
 
 				<!-- Code -->
 				<div class="space-y-2">
-					<label for="code" class="block text-sm font-medium text-gray-300">
+					<label for="code" class="block text-sm font-medium text-[#e5d8c1]">
 						Code <span class="text-red-400">*</span>
 					</label>
 					<div class="flex gap-2">
@@ -356,23 +356,23 @@
 							placeholder="e.g., WELCOME2025"
 							required
 							disabled={submitting}
-							class="input flex-1 bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 font-mono uppercase"
+							class="input flex-1 field-control font-mono uppercase"
 						/>
 						<button
 							type="button"
 							onclick={generateRandomCode}
 							disabled={submitting}
-							class="btn bg-slate-700 hover:bg-slate-600 border-slate-600/30 text-white"
+							class="btn bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8]"
 						>
 							Generate
 						</button>
 					</div>
-					<p class="text-xs text-gray-400">Codes are case-insensitive and must be unique</p>
+					<p class="text-xs text-[#a89e8e]">Codes are case-insensitive and must be unique</p>
 				</div>
 
 				<!-- Description -->
 				<div class="space-y-2">
-					<label for="description" class="block text-sm font-medium text-gray-300"> Description </label>
+					<label for="description" class="block text-sm font-medium text-[#e5d8c1]"> Description </label>
 					<textarea
 						id="description"
 						name="description"
@@ -380,12 +380,12 @@
 						placeholder="What is this code for?"
 						rows="2"
 						disabled={submitting}
-						class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500"></textarea>
+						class="textarea w-full field-control"></textarea>
 				</div>
 
 				<!-- Currency Amount -->
 				<div class="space-y-2">
-					<label for="currencyAmount" class="block text-sm font-medium text-gray-300"> Currency Reward </label>
+					<label for="currencyAmount" class="block text-sm font-medium text-[#e5d8c1]"> Currency Reward </label>
 					<input
 						type="number"
 						id="currencyAmount"
@@ -394,13 +394,13 @@
 						min="0"
 						step="100"
 						disabled={submitting}
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
+						class="input w-full field-control"
 					/>
 				</div>
 
 				<!-- Premium Days -->
 				<div class="space-y-2">
-					<label for="premiumDays" class="block text-sm font-medium text-gray-300"> ⭐ Premium Reward (days) </label>
+					<label for="premiumDays" class="block text-sm font-medium text-[#e5d8c1]"> ⭐ Premium Reward (days) </label>
 					<input
 						type="number"
 						id="premiumDays"
@@ -409,20 +409,20 @@
 						min="0"
 						step="1"
 						disabled={submitting}
-						class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
+						class="input w-full field-control"
 					/>
-					<p class="text-xs text-gray-400">Number of premium days granted on redemption (0 = none)</p>
+					<p class="text-xs text-[#a89e8e]">Number of premium days granted on redemption (0 = none)</p>
 				</div>
 
 				<!-- Resources -->
 				<div class="space-y-3">
-					<label class="block text-sm font-medium text-gray-300">Resource Rewards</label>
+					<label class="block text-sm font-medium text-[#e5d8c1]">Resource Rewards</label>
 
 					<div class="flex gap-2">
 						<select
 							bind:value={newResource.type}
 							disabled={submitting}
-							class="select bg-slate-700/50 border-slate-600/30 text-white flex-1"
+							class="select field-control flex-1"
 						>
 							{#each resourceTypes as type}
 								<option value={type}>
@@ -437,13 +437,13 @@
 							min="1"
 							placeholder="Qty"
 							disabled={submitting}
-							class="input bg-slate-700/50 border-slate-600/30 text-white w-24"
+							class="input field-control w-24"
 						/>
 						<button
 							type="button"
 							onclick={addResource}
 							disabled={submitting || newResource.quantity <= 0}
-							class="btn bg-purple-600 hover:bg-purple-500 border-0 text-white"
+							class="btn bg-[#8c709b]/25 hover:bg-[#8c709b]/40 border border-[#b7a0c5]/30 text-[#d5c4df]"
 						>
 							<FluentAdd20Filled class="size-5" />
 						</button>
@@ -452,8 +452,8 @@
 					{#if newCode.resources.length > 0}
 						<div class="flex flex-wrap gap-2 mt-2">
 							{#each newCode.resources as resource, index}
-								<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-600/10 border border-blue-500/20">
-									<span class="flex items-center gap-1 text-sm text-blue-300 font-medium">
+								<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#315d8d]/18 border border-[#7ba0c8]/30">
+									<span class="flex items-center gap-1 text-sm text-[#b7d0e6] font-medium">
 										<ResourceIcon name={resource.type} class="size-3.5" />
 										{formatNumber(resource.quantity)}
 										{resource.type}
@@ -462,7 +462,7 @@
 										type="button"
 										onclick={() => removeResource(index)}
 										disabled={submitting}
-										class="btn btn-ghost btn-xs btn-circle text-blue-400 hover:text-blue-300"
+										class="btn btn-ghost btn-xs btn-circle text-[#7ba0c8] hover:text-[#b7d0e6]"
 									>
 										<FluentDismiss20Filled class="size-3" />
 									</button>
@@ -477,7 +477,7 @@
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 					<!-- Max Redemptions -->
 					<div class="space-y-2">
-						<label for="maxRedemptions" class="block text-sm font-medium text-gray-300"> Max Redemptions </label>
+						<label for="maxRedemptions" class="block text-sm font-medium text-[#e5d8c1]"> Max Redemptions </label>
 						<input
 							type="number"
 							id="maxRedemptions"
@@ -486,40 +486,40 @@
 							min="1"
 							placeholder="Unlimited"
 							disabled={submitting}
-							class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
+							class="input w-full field-control"
 						/>
-						<p class="text-xs text-gray-400">Leave empty for unlimited</p>
+						<p class="text-xs text-[#a89e8e]">Leave empty for unlimited</p>
 					</div>
 
 					<!-- Expires At -->
 					<div class="space-y-2">
-						<label for="expiresAt" class="block text-sm font-medium text-gray-300"> Expires At </label>
+						<label for="expiresAt" class="block text-sm font-medium text-[#e5d8c1]"> Expires At </label>
 						<input
 							type="datetime-local"
 							id="expiresAt"
 							name="expiresAt"
 							bind:value={newCode.expiresAt}
 							disabled={submitting}
-							class="input w-full bg-slate-700/50 border-slate-600/30 text-white"
+							class="input w-full field-control"
 						/>
-						<p class="text-xs text-gray-400">Leave empty for no expiration</p>
+						<p class="text-xs text-[#a89e8e]">Leave empty for no expiration</p>
 					</div>
 				</div>
 
 				<!-- Actions -->
-				<div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/5">
+				<div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#dfceb0]/10">
 					<button
 						type="button"
 						onclick={resetForm}
 						disabled={submitting}
-						class="btn flex-1 bg-slate-700 hover:bg-slate-600 border-slate-600/30 text-white"
+						class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8]"
 					>
 						Cancel
 					</button>
 					<button
 						type="submit"
 						disabled={submitting || !newCode.code}
-						class="btn flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 text-white gap-2"
+						class="btn flex-1 bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2"
 					>
 						{#if submitting}
 							<span class="loading loading-spinner loading-sm"></span>

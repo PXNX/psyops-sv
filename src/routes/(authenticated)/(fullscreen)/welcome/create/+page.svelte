@@ -11,6 +11,7 @@
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import PsyopsLogo from "$lib/assets/logo.svg";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	let { data } = $props();
 
@@ -67,6 +68,22 @@
 	function handleDragLeave() {
 		dragActive = false;
 	}
+
+	const uploadBoxClass = $derived(
+		[
+			"group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
+			$errors.logo
+				? "border-red-500/50"
+				: dragActive
+					? "border-[#e6a527] bg-[#e6a527]/10"
+					: $form.logo
+						? "border-[#587252]/60 bg-[#587252]/5"
+						: `border-[#e6a527]/30${$submitting ? "" : " hover:border-[#e6a527]/50 hover:bg-[#e6a527]/10"}`,
+			$submitting ? "opacity-50" : ""
+		]
+			.filter(Boolean)
+			.join(" ")
+	);
 
 	function updatePreview(file: File) {
 		if (previewUrl) {
@@ -129,13 +146,13 @@
 	<div class="text-center space-y-3">
 		<div class="flex justify-center">
 			<div
-				class="size-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl shadow-purple-500/20"
+				class="size-16 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-2xl flex items-center justify-center"
 			>
-				<PsyopsLogo class="size-10 text-white" />
+				<PsyopsLogo class="size-10 text-[#d5c4df]" />
 			</div>
 		</div>
-		<h1 class="text-3xl font-bold text-white">Complete Your Profile</h1>
-		<p class="text-gray-400 max-w-md mx-auto">Tell us about yourself to get started in PsyOps</p>
+		<h1 class="text-3xl font-bold text-[#fff7e8]">Complete Your Profile</h1>
+		<p class="text-[#d9ccb7] max-w-md mx-auto">Tell us about yourself to get started in PsyOps</p>
 	</div>
 
 	<!-- Error Message -->
@@ -148,10 +165,10 @@
 	<!-- Form -->
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Profile Picture -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="panel rounded-xl p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Profile Picture (Optional)</h2>
+				<FluentImage20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Profile Picture (Optional)</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -166,28 +183,14 @@
 					disabled={$submitting}
 				/>
 
-				<button
-					type="button"
-					onclick={() => fileInput?.click()}
-					disabled={$submitting}
-					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
-					class:border-purple-500={dragActive}
-					class:bg-purple-600-10={dragActive}
-					class:border-purple-500-30={!dragActive && !$form.logo}
-					class:border-success={$form.logo && !dragActive}
-					class:bg-success-5={$form.logo && !dragActive}
-					class:hover:border-purple-500-50={!$submitting && !$form.logo}
-					class:hover:bg-purple-600-10={!$submitting && !$form.logo}
-					class:opacity-50={$submitting}
-					class:input-error={$errors.logo}
-				>
+				<button type="button" onclick={() => fileInput?.click()} disabled={$submitting} class={uploadBoxClass}>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-purple-600/20 p-3 transition-transform group-hover:scale-110">
-								<FluentPerson20Filled class="size-8 text-purple-400" />
+							<div class="rounded-full bg-[#e6a527]/12 p-3 transition-transform group-hover:scale-110">
+								<FluentPerson20Filled class="size-8 text-[#f7c56b]" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-white">
+								<p class="text-base font-semibold text-[#fff7e8]">
 									{#if dragActive}
 										Drop image here
 									{:else if $submitting}
@@ -197,19 +200,19 @@
 									{/if}
 								</p>
 								{#if !$submitting}
-									<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-slate-900/50">
+							<div class="flex items-center justify-center p-6 bg-[#102239]/70">
 								<img src={previewUrl} alt="Logo preview" class="size-32 object-cover rounded-full" />
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-white">Tap to change</p>
+								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
 							</div>
 							<button
 								type="button"
@@ -218,16 +221,16 @@
 									clearImage();
 								}}
 								disabled={$submitting}
-								class="btn absolute top-2 right-2 btn-circle btn-sm bg-slate-800 hover:bg-slate-700"
+								class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
 							>
 								✕
 							</button>
 						</div>
-						<div class="border-t border-slate-700 p-3 bg-slate-900/30">
-							<p class="truncate text-sm font-medium text-white" title={$form.logo.name}>
+						<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
+							<p class="truncate text-sm font-medium text-[#fff7e8]" title={$form.logo.name}>
 								{$form.logo.name}
 							</p>
-							<p class="text-xs text-gray-400">
+							<p class="text-xs text-[#a89e8e]">
 								{Math.round($form.logo.size / 1024)} KB
 							</p>
 						</div>
@@ -238,19 +241,19 @@
 			{#if $errors.logo}
 				<p class="text-xs text-red-400">{$errors.logo}</p>
 			{:else}
-				<p class="text-xs text-gray-400">Will be converted to 128x128 WebP</p>
+				<p class="text-xs text-[#a89e8e]">Will be converted to 128x128 WebP</p>
 			{/if}
 		</div>
 
 		<!-- Username -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="panel rounded-xl p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentPerson20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Your Identity</h2>
+				<FluentPerson20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Your Identity</h2>
 			</div>
 
 			<div>
-				<label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+				<label for="name" class="field-label">
 					Username <span class="text-red-400">*</span>
 				</label>
 				<input
@@ -260,32 +263,32 @@
 					bind:value={$form.name}
 					placeholder="Enter your username"
 					maxlength="50"
-					class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class="input w-full field-control"
 					class:input-error={$errors.name}
 					disabled={$submitting}
 				/>
 				{#if $errors.name}
-					<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+					<p class="field-error">{$errors.name}</p>
 				{:else}
-					<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/50 characters</p>
+					<p class="field-hint">{$form.name?.length || 0}/50 characters</p>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Political Views -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="panel rounded-xl p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentBuildingGovernment20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Political Alignment (Optional)</h2>
+				<FluentBuildingGovernment20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Political Alignment (Optional)</h2>
 			</div>
 
 			<div>
-				<label for="politicalViews" class="block text-sm font-medium text-gray-300 mb-2"> Your Political Views </label>
+				<label for="politicalViews" class="field-label"> Your Political Views </label>
 				<select
 					id="politicalViews"
 					name="politicalViews"
 					bind:value={$form.politicalViews}
-					class="select w-full bg-slate-700/50 border-slate-600/30 text-white focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class="select w-full field-control"
 					disabled={$submitting}
 				>
 					<option value="">Select your political alignment...</option>
@@ -293,19 +296,19 @@
 						<option value={option.toLowerCase()}>{option}</option>
 					{/each}
 				</select>
-				<p class="text-xs text-gray-400 mt-1">This helps others understand your political stance</p>
+				<p class="field-hint">This helps others understand your political stance</p>
 			</div>
 		</div>
 
 		<!-- Bio -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="panel rounded-xl p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">About You (Optional)</h2>
+				<FluentDocument20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">About You (Optional)</h2>
 			</div>
 
 			<div>
-				<label for="bio" class="block text-sm font-medium text-gray-300 mb-2"> Short Bio </label>
+				<label for="bio" class="field-label"> Short Bio </label>
 				<textarea
 					id="bio"
 					name="bio"
@@ -313,25 +316,21 @@
 					rows="4"
 					placeholder="Tell others about yourself, your goals, and what you hope to achieve in PsyOps..."
 					maxlength="500"
-					class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class="textarea w-full field-control"
 					class:input-error={$errors.bio}
 					disabled={$submitting}
 				></textarea>
 				{#if $errors.bio}
-					<p class="text-xs text-red-400 mt-1">{$errors.bio}</p>
+					<p class="field-error">{$errors.bio}</p>
 				{:else}
-					<p class="text-xs text-gray-400 mt-1">{$form.bio?.length || 0}/500 characters</p>
+					<p class="field-hint">{$form.bio?.length || 0}/500 characters</p>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Submit Buttons -->
 		<div class="flex gap-3">
-			<button
-				type="submit"
-				disabled={$submitting}
-				class="btn flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
-			>
+			<button type="submit" disabled={$submitting} class={buttonClass({ variant: "primary", block: true })}>
 				{#if $delayed}
 					<span class="loading loading-spinner loading-sm"></span>
 					Creating Profile...
@@ -343,11 +342,11 @@
 		</div>
 
 		<!-- Info Box -->
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
-			<p class="text-sm text-blue-300">
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-xl p-4 space-y-2">
+			<p class="text-sm text-[#b7d0e6]">
 				💡 <strong>Note:</strong> You can update your profile information later from your account settings.
 			</p>
-			<p class="text-xs text-blue-300/70">
+			<p class="text-xs text-[#b7d0e6]/70">
 				<strong>Privacy:</strong> Your email address is never displayed publicly. Only your username and chosen information
 				is visible to others.
 			</p>

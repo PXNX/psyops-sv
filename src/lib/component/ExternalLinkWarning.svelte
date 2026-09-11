@@ -45,15 +45,15 @@
 
 		<!-- Warning Message -->
 		<div class="space-y-2 text-center">
-			<p class="text-gray-300">You are about to leave this site and visit an external link:</p>
-			<div class="rounded-lg bg-slate-700/50 p-3">
-				<p class="break-all text-sm font-mono text-blue-400">{getDomain(url)}</p>
+			<p class="text-[#d9ccb7]">You are about to leave this site and visit an external link:</p>
+			<div class="rounded-lg panel-muted p-3">
+				<p class="break-all text-sm font-mono text-[#b7d0e6]">{getDomain(url)}</p>
 			</div>
 		</div>
 
 		<!-- Safety Notice -->
-		<div class="rounded-lg bg-slate-700/30 border border-warning/30 p-4">
-			<p class="text-sm text-gray-400">
+		<div class="rounded-lg panel-muted border-warning/30 p-4">
+			<p class="text-sm text-[#a89e8e]">
 				<strong class="text-warning">Safety Notice:</strong> This link leads to an external website. We cannot guarantee the
 				safety or content of external sites. Please exercise caution when sharing personal information.
 			</p>

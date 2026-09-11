@@ -96,11 +96,11 @@
 				button: "bg-red-600 hover:bg-red-500"
 			},
 			purple: {
-				bg: "bg-purple-600/20",
-				border: "border-purple-500/30",
-				text: "text-purple-400",
-				hover: "hover:bg-purple-600/30",
-				button: "bg-purple-600 hover:bg-purple-500"
+				bg: "bg-[#8c709b]/20",
+				border: "border-[#b7a0c5]/30",
+				text: "text-[#d5c4df]",
+				hover: "hover:bg-[#8c709b]/30",
+				button: "bg-[#8c709b] hover:bg-[#7a5e89]"
 			}
 		};
 		return colors[color as keyof typeof colors];
@@ -110,14 +110,14 @@
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div>
-		<a href="/region/{data.region.id}" class="text-sm text-gray-400 hover:text-purple-400 transition-colors">
+		<a href="/region/{data.region.id}" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
 			{regionName()}
 		</a>
-		<h1 class="text-3xl font-bold text-white flex items-center gap-2 mt-1">
+		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-2 mt-1">
 			<FluentHammer20Filled class="size-8" />
 			Construction
 		</h1>
-		<p class="text-gray-400 mt-1">
+		<p class="text-[#a89e8e] mt-1">
 			{#if data.isGovernor}
 				As Governor
 			{:else if data.isInfrastructureMinister}
@@ -127,14 +127,14 @@
 	</div>
 
 	<!-- Treasury Balance -->
-	<div class="bg-slate-800 rounded-xl border border-white/5 p-4">
+	<div class="panel rounded-xl p-4">
 		<div class="flex items-center justify-between">
 			<div>
-				<p class="text-sm text-gray-400">State Treasury Balance</p>
-				<p class="text-2xl font-bold text-white">${data.treasuryBalance.toLocaleString()}</p>
+				<p class="text-sm text-[#a89e8e]">State Treasury Balance</p>
+				<p class="text-2xl font-bold text-[#fff7e8]">${data.treasuryBalance.toLocaleString()}</p>
 			</div>
 			{#if data.state}
-				<a href="/state/{data.state.id}" class="text-sm text-purple-400 hover:text-purple-300 underline">
+				<a href="/state/{data.state.id}" class="text-sm text-[#d5c4df] hover:text-[#f0e7f5] underline">
 					View {data.state.name}
 				</a>
 			{/if}
@@ -156,7 +156,7 @@
 			{@const canAfford = canBuild(building)}
 			{@const isMaxed = building.current >= building.max}
 
-			<div class="bg-slate-800 rounded-xl border border-white/5 overflow-hidden">
+			<div class="panel rounded-xl overflow-hidden">
 				<!-- Header -->
 				<div class="{colors.bg} {colors.border} border-b p-4">
 					<div class="flex items-start gap-3">
@@ -164,8 +164,8 @@
 							<svelte:component this={building.icon} class="size-6 {colors.text}" />
 						</div>
 						<div class="flex-1">
-							<h3 class="text-lg font-bold text-white">{building.name}</h3>
-							<p class="text-sm text-gray-400">{building.description}</p>
+							<h3 class="text-lg font-bold text-[#fff7e8]">{building.name}</h3>
+							<p class="text-sm text-[#a89e8e]">{building.description}</p>
 						</div>
 					</div>
 				</div>
@@ -175,12 +175,12 @@
 					<!-- Progress -->
 					<div>
 						<div class="flex items-center justify-between mb-2">
-							<span class="text-sm text-gray-400">Level</span>
+							<span class="text-sm text-[#a89e8e]">Level</span>
 							<span class="text-sm font-semibold {colors.text}">
 								{building.current} / {building.max}
 							</span>
 						</div>
-						<div class="h-2 bg-slate-700/50 rounded-full overflow-hidden">
+						<div class="h-2 bg-[#102239] rounded-full overflow-hidden">
 							<div
 								class="h-full {colors.button} rounded-full transition-all"
 								style="width: {(building.current / building.max) * 100}%"
@@ -190,10 +190,10 @@
 
 					<!-- Benefits -->
 					<div>
-						<p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Benefits</p>
+						<p class="text-xs font-semibold text-[#a89e8e] uppercase tracking-wider mb-2">Benefits</p>
 						<ul class="space-y-1">
 							{#each building.benefits as benefit}
-								<li class="text-sm text-gray-300 flex items-start gap-2">
+								<li class="text-sm text-[#d9ccb7] flex items-start gap-2">
 									<span class="{colors.text} mt-0.5">•</span>
 									<span>{benefit}</span>
 								</li>
@@ -204,19 +204,19 @@
 					<!-- Cost -->
 					<div class="pt-3 border-t border-white/5">
 						<div class="flex items-center justify-between mb-3">
-							<span class="text-sm text-gray-400">Construction Cost</span>
-							<span class="text-lg font-bold text-white">
+							<span class="text-sm text-[#a89e8e]">Construction Cost</span>
+							<span class="text-lg font-bold text-[#fff7e8]">
 								${building.cost.toLocaleString()}
 							</span>
 						</div>
 
 						<!-- Build Button -->
 						{#if isMaxed}
-							<button disabled class="btn w-full bg-slate-600/50 border-0 text-gray-400 cursor-not-allowed">
+							<button disabled class="btn w-full bg-[#102239] border-0 text-[#a89e8e] cursor-not-allowed">
 								Maximum Level Reached
 							</button>
 						{:else if !canAfford}
-							<button disabled class="btn w-full bg-slate-600/50 border-0 text-gray-400 cursor-not-allowed">
+							<button disabled class="btn w-full bg-[#102239] border-0 text-[#a89e8e] cursor-not-allowed">
 								Insufficient Funds
 							</button>
 						{:else}

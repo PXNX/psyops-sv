@@ -96,13 +96,13 @@
 {#if data.userNotFound}
 	<div class="w-full mx-auto px-3 sm:px-4 py-6 sm:max-w-2xl">
 		<div class="flex flex-col items-center justify-center gap-4 py-20">
-			<div class="size-20 bg-slate-800/50 rounded-full flex items-center justify-center border border-white/5">
-				<FluentImageOff20Filled class="size-10 text-gray-500" />
+			<div class="size-20 bg-[#102239]/70 rounded-full flex items-center justify-center border border-[#dfceb0]/10">
+				<FluentImageOff20Filled class="size-10 text-[#a89e8e]" />
 			</div>
 			<div class="text-center space-y-2">
-				<h1 class="text-2xl font-bold text-white">User Not Found</h1>
-				<p class="text-sm text-gray-400">
-					The user <code class="px-1.5 py-0.5 rounded bg-slate-800 text-gray-300 font-mono text-xs">#{data.userId}</code
+				<h1 class="text-2xl font-bold text-[#fff7e8]">User Not Found</h1>
+				<p class="text-sm text-[#c7bda9]">
+					The user <code class="px-1.5 py-0.5 rounded bg-[#0d1d31] text-[#d9ccb7] font-mono text-xs">#{data.userId}</code
 					> doesn't exist or has been removed.
 				</p>
 			</div>
@@ -134,20 +134,20 @@
 
 					<div class="text-center space-y-1">
 						<div class="flex items-center justify-center gap-2">
-							<h1 class="text-3xl font-bold text-white tracking-tight">{data.user.name || "Anonymous User"}</h1>
+							<h1 class="text-3xl font-bold text-[#fff7e8] tracking-tight">{data.user.name || "Anonymous User"}</h1>
 							{#if data.isOwnProfile}
 								<a
 									href="/settings/profile"
-									class="size-8 flex items-center justify-center bg-purple-600/20 hover:bg-purple-600/40 rounded-full text-purple-400 transition-all"
+									class="size-8 flex items-center justify-center bg-[#8c709b]/15 hover:bg-[#8c709b]/25 rounded-full text-[#d5c4df] transition-all"
 									title="Edit Profile"
 								>
 									<FluentSettingsCogMultiple20Filled class="size-4" />
 								</a>
 							{/if}
 						</div>
-						<p class="text-sm text-gray-400 font-mono">#{data.user.id}</p>
+						<p class="text-sm text-[#a89e8e] font-mono">#{data.user.id}</p>
 						{#if data.user.bio}
-							<p class="text-sm text-gray-300 max-w-md mt-2">{data.user.bio}</p>
+							<p class="text-sm text-[#d9ccb7] max-w-md mt-2">{data.user.bio}</p>
 						{/if}
 					</div>
 				</div>
@@ -210,7 +210,7 @@
 
 					<ActionListItem
 						icon={FluentStar20Filled}
-						iconTileClass="bg-gradient-to-br from-amber-400 via-pink-500 to-purple-600 text-white"
+						iconTileClass="bg-gradient-to-br from-amber-500 to-yellow-500 text-slate-900"
 						title="Gift Premium"
 						description="Give this user a premium membership"
 						onclick={() => {
@@ -266,8 +266,8 @@
 		<!-- Government Positions Section -->
 		{#if data.presidency || data.governorship || data.ministries.length > 0}
 			<section class="space-y-3">
-				<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Government Positions</h2>
-				<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
+				<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Government Positions</h2>
+				<div class="panel-muted rounded-xl p-3 space-y-2">
 					{#if data.presidency}
 						<ProfileItem
 							href="/state/{data.presidency.stateId}"
@@ -292,13 +292,13 @@
 					{/if}
 
 					{#each data.ministries as ministry}
-						<div class="flex items-center gap-3 hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all">
-							<div class="size-12 bg-purple-600/20 rounded-lg flex items-center justify-center">
+						<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-lg p-2 -m-2 transition-all">
+							<div class="size-12 bg-[#8c709b]/15 rounded-lg flex items-center justify-center">
 								<span class="text-2xl">{ministryIcons[ministry.ministry]}</span>
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="font-semibold text-white truncate">{ministryNames[ministry.ministry]} Minister</p>
-								<p class="text-xs text-gray-400 truncate">
+								<p class="font-semibold text-[#fff7e8] truncate">{ministryNames[ministry.ministry]} Minister</p>
+								<p class="text-xs text-[#a89e8e] truncate">
 									{ministry.stateName} • Since {formatDate(ministry.appointedAt)}
 								</p>
 							</div>
@@ -328,15 +328,15 @@
 
 		<!-- Location Section -->
 		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Location</h2>
-			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
+			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Location</h2>
+			<div class="panel-muted rounded-xl p-3 space-y-2">
 				<!-- Residence (permanent home / citizenship) -->
 				{#if data.homeRegion}
 					<ProfileItem
 						href="/region/{data.homeRegion.id}"
 						logo={data.homeRegion.logo}
 						logoAlt={data.homeRegion.name}
-						placeholderGradient="from-blue-600 to-indigo-600"
+						placeholderGradient="from-[#315d8d] to-[#1e3a5f]"
 						title={data.homeRegion.name}
 						subtitle="Residence{data.homeRegion.state?.name
 							? ` • ${data.homeRegion.state.name}`
@@ -344,8 +344,8 @@
 						hoverColor="blue"
 					/>
 				{:else}
-					<div class="flex items-center gap-3 p-2 text-gray-500">
-						<div class="size-12 bg-slate-700/30 rounded-lg flex items-center justify-center">
+					<div class="flex items-center gap-3 p-2 text-[#a89e8e]">
+						<div class="size-12 bg-[#102239]/70 rounded-lg flex items-center justify-center">
 							<FluentFlag20Filled class="size-6" />
 						</div>
 						<p class="text-sm">No residence set</p>
@@ -358,7 +358,7 @@
 						href="/region/{data.residence.region.id}"
 						logo={data.residence.region.logo}
 						logoAlt={data.residence.region.name}
-						placeholderGradient="from-emerald-600 to-green-600"
+						placeholderGradient="from-[#587252] to-[#3f5a3b]"
 						title={data.residence.region.name}
 						subtitle="Current Region{data.residence.region.state?.name
 							? ` • ${data.residence.region.state.name}`
@@ -366,8 +366,8 @@
 						hoverColor="emerald"
 					/>
 				{:else}
-					<div class="flex items-center gap-3 p-2 text-gray-500">
-						<div class="size-12 bg-slate-700/30 rounded-lg flex items-center justify-center">
+					<div class="flex items-center gap-3 p-2 text-[#a89e8e]">
+						<div class="size-12 bg-[#102239]/70 rounded-lg flex items-center justify-center">
 							<FluentFlag20Filled class="size-6" />
 						</div>
 						<p class="text-sm">No current region</p>
@@ -392,19 +392,19 @@
 		<!-- Birthday Reward Section -->
 		{#if data.isOwnProfile && data.birthdayInfo.totalYears >= 1}
 			<section class="space-y-3">
-				<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">🎂 Account Birthday</h2>
-				<div class="bg-slate-800/30 rounded-xl border border-white/5 p-4 space-y-3">
+				<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">🎂 Account Birthday</h2>
+				<div class="panel-muted rounded-xl p-4 space-y-3">
 					{#if data.birthdayInfo.isBirthday}
 						<div class="text-center py-2">
 							<p class="text-2xl font-bold text-yellow-300">🎉 Happy Birthday! 🎉</p>
-							<p class="text-sm text-gray-300 mt-1">Your account turns {data.birthdayInfo.totalYears} today!</p>
+							<p class="text-sm text-[#d9ccb7] mt-1">Your account turns {data.birthdayInfo.totalYears} today!</p>
 						</div>
 					{:else}
 						<div class="flex items-center gap-3">
 							<div class="size-12 bg-yellow-600/20 rounded-lg flex items-center justify-center text-2xl">🎂</div>
 							<div>
-								<p class="font-semibold text-white">Account Anniversary</p>
-								<p class="text-xs text-gray-400">
+								<p class="font-semibold text-[#fff7e8]">Account Anniversary</p>
+								<p class="text-xs text-[#a89e8e]">
 									{data.birthdayInfo.totalYears} year{data.birthdayInfo.totalYears !== 1 ? "s" : ""} since account creation
 								</p>
 							</div>
@@ -419,7 +419,7 @@
 									{data.birthdayInfo.uncollectedYears.length} uncollected birthday rewards!
 								{/if}
 							</p>
-							<p class="text-xs text-gray-400 mt-1">
+							<p class="text-xs text-[#a89e8e] mt-1">
 								Collect {data.birthdayInfo.rewardTotal.toLocaleString()} currency ({data.birthdayInfo.rewardPerYear.toLocaleString()}
 								× {data.birthdayInfo.uncollectedYears.length} year{data.birthdayInfo.uncollectedYears.length !== 1
 									? "s"
@@ -449,7 +449,7 @@
 							</form>
 						</div>
 					{:else}
-						<p class="text-xs text-gray-500 text-center">All birthday rewards collected ✓</p>
+						<p class="text-xs text-[#a89e8e] text-center">All birthday rewards collected ✓</p>
 					{/if}
 				</div>
 			</section>
@@ -457,8 +457,8 @@
 
 		<!-- Career & Politics Section -->
 		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider px-1">Career & Politics</h2>
-			<div class="bg-slate-800/30 rounded-xl border border-white/5 p-3 space-y-2">
+			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Career & Politics</h2>
+			<div class="panel-muted rounded-xl p-3 space-y-2">
 				<ProfileItem
 					href="/user/{data.user.id}/articles"
 					icon={FluentDocument20Filled}
@@ -473,7 +473,7 @@
 						logo={data.party.logo}
 						logoAlt={data.party.name}
 						placeholderIcon={FluentPeople20Filled}
-						placeholderGradient="from-purple-600 to-blue-600"
+						placeholderGradient="from-[#8c709b] to-[#315d8d]"
 						title={data.party.name}
 						subtitle={data.party.role === "leader"
 							? " Leader"
@@ -485,35 +485,35 @@
 				{:else if data.isOwnProfile && !data.isIndependentRegion}
 					<a
 						href="/party"
-						class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-purple-500/30 rounded-lg hover:border-purple-500/50 hover:bg-purple-600/10 transition-all group"
+						class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-[#b7a0c5]/30 rounded-lg hover:border-[#b7a0c5]/50 hover:bg-[#8c709b]/10 transition-all group"
 					>
 						<div
-							class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center group-hover:bg-purple-600/30 transition-colors"
+							class="size-10 bg-[#8c709b]/15 rounded-lg flex items-center justify-center group-hover:bg-[#8c709b]/25 transition-colors"
 						>
-							<FluentSearch20Filled class="size-5 text-purple-400" />
+							<FluentSearch20Filled class="size-5 text-[#d5c4df]" />
 						</div>
 						<div class="text-center">
-							<p class="font-semibold text-purple-400 group-hover:text-purple-300 transition-colors">
+							<p class="font-semibold text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors">
 								Find a Political Party
 							</p>
-							<p class="text-xs text-gray-400">Browse and join a party in your state</p>
+							<p class="text-xs text-[#a89e8e]">Browse and join a party in your state</p>
 						</div>
 					</a>
 				{:else if data.isOwnProfile}
 					<a
 						href="/party/create"
-						class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-purple-500/30 rounded-lg hover:border-purple-500/50 hover:bg-purple-600/10 transition-all group"
+						class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-[#b7a0c5]/30 rounded-lg hover:border-[#b7a0c5]/50 hover:bg-[#8c709b]/10 transition-all group"
 					>
 						<div
-							class="size-10 bg-purple-600/20 rounded-lg flex items-center justify-center group-hover:bg-purple-600/30 transition-colors"
+							class="size-10 bg-[#8c709b]/15 rounded-lg flex items-center justify-center group-hover:bg-[#8c709b]/25 transition-colors"
 						>
-							<FluentAdd20Filled class="size-5 text-purple-400" />
+							<FluentAdd20Filled class="size-5 text-[#d5c4df]" />
 						</div>
 						<div class="text-center">
-							<p class="font-semibold text-purple-400 group-hover:text-purple-300 transition-colors">
+							<p class="font-semibold text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors">
 								Create Political Party
 							</p>
-							<p class="text-xs text-gray-400">Start your own political movement</p>
+							<p class="text-xs text-[#a89e8e]">Start your own political movement</p>
 						</div>
 					</a>
 				{/if}
@@ -565,11 +565,11 @@
 
 				<div class="form-control">
 					<label class="label">
-						<span class="label-text text-gray-300">Select Ministry</span>
+						<span class="label-text text-[#e5d8c1]">Select Ministry</span>
 					</label>
 					<select
 						name="ministry"
-						class="select select-bordered bg-slate-900 text-white border-white/10"
+						class="select select-bordered field-control"
 						bind:value={selectedMinistry}
 						disabled={isAppointingMinister}
 						required
@@ -649,7 +649,7 @@
 			}}
 		>
 			<div class="space-y-4">
-				<p class="text-sm text-gray-400">
+				<p class="text-sm text-[#a89e8e]">
 					Premium automatically runs production, military training and factory work for the recipient.
 				</p>
 
@@ -661,11 +661,11 @@
 
 				<div class="form-control">
 					<label class="label">
-						<span class="label-text text-gray-300">Duration</span>
+						<span class="label-text text-[#e5d8c1]">Duration</span>
 					</label>
 					<select
 						name="planId"
-						class="select select-bordered bg-slate-900 text-white border-white/10"
+						class="select select-bordered field-control"
 						bind:value={giftPremiumPlanId}
 						disabled={isGiftingPremium}
 					>

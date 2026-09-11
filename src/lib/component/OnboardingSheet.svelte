@@ -10,6 +10,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	interface Props {
 		onboardingStep: number;
@@ -159,6 +160,13 @@
 		if (e.key === "Enter") submitName();
 	}
 
+	const nameInputClass = $derived(
+		[
+			"w-full px-4 py-3 bg-[#0d1d31] border rounded-xl text-[#fff7e8] placeholder:text-[#a89e8e] focus:outline-none focus:ring-2 transition-all",
+			nameError ? "border-red-500/50 focus:ring-red-500/20" : "border-[#dfceb0]/20 focus:border-[#e6a527]/70 focus:ring-[#e6a527]/15"
+		].join(" ")
+	);
+
 	function formatPopulation(count: number): string {
 		if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
 		if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
@@ -169,29 +177,26 @@
 <!-- ─── Compact floating prompt (navigate-to-page steps) ─── -->
 {#if isCompactMode}
 	<div class="fixed bottom-16 md:bottom-20 left-3 right-3 z-50" in:fly={{ y: 20, duration: 300 }}>
-		<div
-			class="bg-slate-900/95 backdrop-blur-md border border-cyan-500/30 rounded-xl p-4 shadow-xl"
-			style="box-shadow: 0 0 20px rgba(0,255,255,0.1), inset 0 0 20px rgba(0,255,255,0.03);"
-		>
+		<div class="panel backdrop-blur-md rounded-xl p-4">
 			<div class="flex items-center gap-3">
 				<div
-					class="size-10 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0"
+					class="size-10 rounded-lg bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
 				>
 					<span class="text-lg">{step === 4 ? "🔧" : "🪖"}</span>
 				</div>
 				<div class="flex-1 min-w-0">
-					<p class="text-sm font-semibold text-white">
+					<p class="text-sm font-semibold text-[#fff7e8]">
 						{step === 4 ? "Navigate to Production" : "Navigate to Training"}
 					</p>
-					<p class="text-xs text-slate-400 mt-0.5">
-						Tap <strong class="text-cyan-300">{step === 4 ? "Production" : "Training"}</strong> in the bar below
+					<p class="text-xs text-[#d9ccb7] mt-0.5">
+						Tap <strong class="text-[#f7c56b]">{step === 4 ? "Production" : "Training"}</strong> in the bar below
 					</p>
 				</div>
 				{#if canSkip}
 					<button
 						onclick={() => setStep(null)}
 						disabled={submitting}
-						class="text-xs text-slate-500 hover:text-slate-300 transition-colors shrink-0"
+						class="text-xs text-[#a89e8e] hover:text-[#d9ccb7] transition-colors shrink-0"
 					>
 						Skip
 					</button>
@@ -208,19 +213,16 @@
 
 		<!-- Sheet -->
 		<div class="absolute inset-x-0 bottom-0 animate-slide-up">
-			<div
-				class="bg-gradient-to-b from-slate-900 to-slate-950 border-t border-cyan-500/20 rounded-t-2xl max-h-[80vh] flex flex-col"
-				style="box-shadow: 0 -10px 40px rgba(0,0,0,0.5), 0 0 30px rgba(0,255,255,0.05);"
-			>
+			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-2xl max-h-[80vh] flex flex-col">
 				<!-- Drag handle + skip -->
 				<div class="flex items-center justify-between px-5 pt-3 pb-1 shrink-0">
 					<div class="w-16"></div>
-					<div class="w-10 h-1 rounded-full bg-slate-700"></div>
+					<div class="w-10 h-1 rounded-full bg-[#dfceb0]/25"></div>
 					{#if canSkip}
 						<button
 							onclick={() => setStep(null)}
 							disabled={submitting}
-							class="w-16 flex items-center justify-end gap-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+							class="w-16 flex items-center justify-end gap-1 text-xs text-[#a89e8e] hover:text-[#d9ccb7] transition-colors"
 						>
 							Skip
 							<FluentDismiss20Filled class="size-3.5" />
@@ -235,10 +237,10 @@
 					{#each Array(TOTAL_STEPS) as _, i}
 						<div
 							class="h-1 rounded-full transition-all duration-300 {i === step
-								? 'w-6 bg-cyan-400'
+								? 'w-6 bg-[#e6a527]'
 								: i < step
-									? 'w-2 bg-cyan-400/30'
-									: 'w-2 bg-slate-700'}"
+									? 'w-2 bg-[#e6a527]/30'
+									: 'w-2 bg-[#dfceb0]/15'}"
 						></div>
 					{/each}
 				</div>
@@ -250,23 +252,19 @@
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
 								<div
-									class="size-16 rounded-2xl bg-gradient-to-br from-cyan-600/20 to-purple-600/20 border border-cyan-500/20 flex items-center justify-center"
+									class="size-16 rounded-2xl bg-[#e6a527]/12 border border-[#e6a527]/35 flex items-center justify-center"
 								>
 									<span class="text-3xl">🎖️</span>
 								</div>
 							</div>
 							<div>
-								<h2 class="text-2xl font-bold text-white tracking-wide">Greeting Commander</h2>
-								<p class="text-slate-400 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+								<h2 class="text-2xl font-bold text-[#fff7e8] tracking-wide">Greeting Commander</h2>
+								<p class="text-[#d9ccb7] text-sm mt-2 max-w-sm mx-auto leading-relaxed">
 									Welcome to PsyOps — a political simulation where you shape nations, build empires, and wage wars
 									through strategy and diplomacy.
 								</p>
 							</div>
-							<button
-								onclick={() => setStep(1)}
-								disabled={submitting}
-								class="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
-							>
+							<button onclick={() => setStep(1)} disabled={submitting} class={buttonClass({ variant: "primary", block: true })}>
 								<span class="flex items-center justify-center gap-2">
 									Let's Begin
 									<FluentArrowRight20Filled class="size-5" />
@@ -278,13 +276,13 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex items-center gap-3">
 								<div
-									class="size-10 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shrink-0"
+									class="size-10 rounded-lg bg-[#8c709b]/15 border border-[#b7a0c5]/30 flex items-center justify-center shrink-0"
 								>
-									<FluentPerson20Filled class="size-5 text-purple-400" />
+									<FluentPerson20Filled class="size-5 text-[#d5c4df]" />
 								</div>
 								<div>
-									<h2 class="text-lg font-bold text-white">Choose Your Name</h2>
-									<p class="text-xs text-slate-500">This is how other players will know you</p>
+									<h2 class="text-lg font-bold text-[#fff7e8]">Choose Your Name</h2>
+									<p class="text-xs text-[#a89e8e]">This is how other players will know you</p>
 								</div>
 							</div>
 
@@ -296,21 +294,19 @@
 									placeholder="Enter your commander name"
 									maxlength={50}
 									disabled={submitting}
-									class="w-full px-4 py-3 bg-slate-800/80 border rounded-xl text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 transition-all {nameError
-										? 'border-red-500/50 focus:ring-red-500/20'
-										: 'border-slate-700/50 focus:border-cyan-500/50 focus:ring-cyan-500/20'}"
+									class={nameInputClass}
 								/>
 								{#if nameError}
 									<p class="text-xs text-red-400 mt-1.5">{nameError}</p>
 								{:else}
-									<p class="text-xs text-slate-600 mt-1.5">{name.length}/50 — letters, numbers, spaces</p>
+									<p class="text-xs text-[#a89e8e] mt-1.5">{name.length}/50 — letters, numbers, spaces</p>
 								{/if}
 							</div>
 
 							<button
 								onclick={submitName}
 								disabled={submitting || !name.trim()}
-								class="w-full py-3 rounded-xl font-semibold text-white transition-all disabled:opacity-40 disabled:cursor-not-allowed bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 shadow-lg shadow-purple-500/20"
+								class={buttonClass({ variant: "primary", block: true })}
 							>
 								{#if submitting}
 									<span class="flex items-center justify-center gap-2">
@@ -330,19 +326,19 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex items-center gap-3">
 								<div
-									class="size-10 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0"
+									class="size-10 rounded-lg bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
 								>
-									<FluentGlobe20Filled class="size-5 text-blue-400" />
+									<FluentGlobe20Filled class="size-5 text-[#b7d0e6]" />
 								</div>
 								<div>
-									<h2 class="text-lg font-bold text-white">Choose Your Region</h2>
-									<p class="text-xs text-slate-500">Pick a region to call home</p>
+									<h2 class="text-lg font-bold text-[#fff7e8]">Choose Your Region</h2>
+									<p class="text-xs text-[#a89e8e]">Pick a region to call home</p>
 								</div>
 							</div>
 
 							{#if loadingRegions}
 								<div class="flex items-center justify-center py-8">
-									<span class="loading loading-ring loading-md text-cyan-400"></span>
+									<span class="loading loading-ring loading-md text-[#e6a527]"></span>
 								</div>
 							{:else}
 								<div class="space-y-2 max-h-[40vh] overflow-y-auto">
@@ -350,40 +346,40 @@
 										<button
 											onclick={() => selectRegion(region.id)}
 											disabled={submitting}
-											class="w-full text-left bg-slate-800/50 border border-slate-700/40 rounded-xl p-3.5 hover:border-blue-500/40 hover:bg-slate-800/70 transition-all disabled:opacity-50 group"
+											class="w-full text-left panel-interactive rounded-xl p-3.5 disabled:opacity-50 group"
 										>
 											<div class="flex items-center gap-3">
 												<div
-													class="size-10 rounded-lg bg-slate-700/50 border border-slate-600/30 flex items-center justify-center shrink-0"
+													class="size-10 rounded-lg bg-[#102239]/70 border border-[#dfceb0]/15 flex items-center justify-center shrink-0"
 												>
 													<FluentGlobe20Filled
-														class="size-5 text-slate-400 group-hover:text-blue-400 transition-colors"
+														class="size-5 text-[#a89e8e] group-hover:text-[#b7d0e6] transition-colors"
 													/>
 												</div>
 												<div class="flex-1 min-w-0">
 													<p
-														class="text-sm font-semibold text-white group-hover:text-blue-400 transition-colors truncate"
+														class="text-sm font-semibold text-[#fff7e8] group-hover:text-[#b7d0e6] transition-colors truncate"
 													>
 														{getRegionName(region.id)}
 													</p>
 													<div class="flex items-center gap-2 mt-0.5">
 														{#if region.state}
-															<span class="text-xs text-slate-500 flex items-center gap-1">
+															<span class="text-xs text-[#a89e8e] flex items-center gap-1">
 																<FluentBuildingGovernment20Filled class="size-3" />
 																{region.state.name}
 															</span>
 														{:else}
-															<span class="text-xs text-purple-400">Independent</span>
+															<span class="text-xs text-[#d5c4df]">Independent</span>
 														{/if}
-														<span class="text-xs text-slate-600">·</span>
-														<span class="text-xs text-slate-500 flex items-center gap-1">
+														<span class="text-xs text-[#a89e8e]">·</span>
+														<span class="text-xs text-[#a89e8e] flex items-center gap-1">
 															<FluentPeople20Filled class="size-3" />
 															{region.populationCount === 0 ? "No residents" : formatPopulation(region.populationCount)}
 														</span>
 													</div>
 												</div>
 												<FluentArrowRight20Filled
-													class="size-4 text-slate-600 group-hover:text-blue-400 transition-colors shrink-0"
+													class="size-4 text-[#a89e8e] group-hover:text-[#b7d0e6] transition-colors shrink-0"
 												/>
 											</div>
 										</button>
@@ -396,37 +392,33 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="text-center space-y-3">
 								<span class="text-3xl">🏠</span>
-								<h2 class="text-lg font-bold text-white">Your Command Center</h2>
-								<p class="text-sm text-slate-400 leading-relaxed">
+								<h2 class="text-lg font-bold text-[#fff7e8]">Your Command Center</h2>
+								<p class="text-sm text-[#d9ccb7] leading-relaxed">
 									This is your dashboard — broadcasts from your state, quick actions, and an overview of your journey
 									all live here.
 								</p>
 							</div>
 
 							<div class="grid grid-cols-2 gap-2">
-								<div class="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3 text-center">
+								<div class="panel-muted rounded-lg p-3 text-center">
 									<span class="text-lg">📰</span>
-									<p class="text-xs text-slate-400 mt-1">Read news &amp; posts</p>
+									<p class="text-xs text-[#a89e8e] mt-1">Read news &amp; posts</p>
 								</div>
-								<div class="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3 text-center">
+								<div class="panel-muted rounded-lg p-3 text-center">
 									<span class="text-lg">🗺️</span>
-									<p class="text-xs text-slate-400 mt-1">Explore the map</p>
+									<p class="text-xs text-[#a89e8e] mt-1">Explore the map</p>
 								</div>
-								<div class="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3 text-center">
+								<div class="panel-muted rounded-lg p-3 text-center">
 									<span class="text-lg">💬</span>
-									<p class="text-xs text-slate-400 mt-1">Chat with players</p>
+									<p class="text-xs text-[#a89e8e] mt-1">Chat with players</p>
 								</div>
-								<div class="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3 text-center">
+								<div class="panel-muted rounded-lg p-3 text-center">
 									<span class="text-lg">🏛️</span>
-									<p class="text-xs text-slate-400 mt-1">Join a party</p>
+									<p class="text-xs text-[#a89e8e] mt-1">Join a party</p>
 								</div>
 							</div>
 
-							<button
-								onclick={() => setStep(4)}
-								disabled={submitting}
-								class="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
-							>
+							<button onclick={() => setStep(4)} disabled={submitting} class={buttonClass({ variant: "primary", block: true })}>
 								<span class="flex items-center justify-center gap-2">
 									Next
 									<FluentArrowRight20Filled class="size-5" />
@@ -438,42 +430,38 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="text-center space-y-3">
 								<span class="text-3xl">🔧</span>
-								<h2 class="text-lg font-bold text-white">Production</h2>
-								<p class="text-sm text-slate-400 leading-relaxed">
+								<h2 class="text-lg font-bold text-[#fff7e8]">Production</h2>
+								<p class="text-sm text-[#d9ccb7] leading-relaxed">
 									This is where you earn money and produce goods. Work at a factory to collect wages, buy resources on
 									the market, and manufacture weapons &amp; equipment.
 								</p>
 							</div>
 
 							<div class="space-y-2">
-								<div class="flex items-center gap-3 bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
 									<span class="text-lg">💰</span>
 									<div>
-										<p class="text-sm font-medium text-white">Work for Wages</p>
-										<p class="text-xs text-slate-500">Find a factory job and complete shifts</p>
+										<p class="text-sm font-medium text-[#fff7e8]">Work for Wages</p>
+										<p class="text-xs text-[#a89e8e]">Find a factory job and complete shifts</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-3 bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
 									<span class="text-lg">🏭</span>
 									<div>
-										<p class="text-sm font-medium text-white">Produce Goods</p>
-										<p class="text-xs text-slate-500">Craft weapons from raw materials</p>
+										<p class="text-sm font-medium text-[#fff7e8]">Produce Goods</p>
+										<p class="text-xs text-[#a89e8e]">Craft weapons from raw materials</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-3 bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
 									<span class="text-lg">🏪</span>
 									<div>
-										<p class="text-sm font-medium text-white">Trade on the Market</p>
-										<p class="text-xs text-slate-500">Buy and sell resources &amp; products</p>
+										<p class="text-sm font-medium text-[#fff7e8]">Trade on the Market</p>
+										<p class="text-xs text-[#a89e8e]">Buy and sell resources &amp; products</p>
 									</div>
 								</div>
 							</div>
 
-							<button
-								onclick={() => setStep(5)}
-								disabled={submitting}
-								class="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
-							>
+							<button onclick={() => setStep(5)} disabled={submitting} class={buttonClass({ variant: "primary", block: true })}>
 								<span class="flex items-center justify-center gap-2">
 									Next
 									<FluentArrowRight20Filled class="size-5" />
@@ -485,42 +473,38 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="text-center space-y-3">
 								<span class="text-3xl">🪖</span>
-								<h2 class="text-lg font-bold text-white">Military Training</h2>
-								<p class="text-sm text-slate-400 leading-relaxed">
+								<h2 class="text-lg font-bold text-[#fff7e8]">Military Training</h2>
+								<p class="text-sm text-[#d9ccb7] leading-relaxed">
 									Build your army here. Train infantry, armor, artillery, and more. Your units are essential for
 									defending your nation and conquering new territory.
 								</p>
 							</div>
 
 							<div class="space-y-2">
-								<div class="flex items-center gap-3 bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
 									<span class="text-lg">⚔️</span>
 									<div>
-										<p class="text-sm font-medium text-white">Train Units</p>
-										<p class="text-xs text-slate-500">Select a unit type and begin training</p>
+										<p class="text-sm font-medium text-[#fff7e8]">Train Units</p>
+										<p class="text-xs text-[#a89e8e]">Select a unit type and begin training</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-3 bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
 									<span class="text-lg">🛡️</span>
 									<div>
-										<p class="text-sm font-medium text-white">Manage Your Army</p>
-										<p class="text-xs text-slate-500">Monitor organization, strength, and supply</p>
+										<p class="text-sm font-medium text-[#fff7e8]">Manage Your Army</p>
+										<p class="text-xs text-[#a89e8e]">Monitor organization, strength, and supply</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-3 bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
 									<span class="text-lg">🗡️</span>
 									<div>
-										<p class="text-sm font-medium text-white">Join Battles</p>
-										<p class="text-xs text-slate-500">Deploy units in wars to fight for your state</p>
+										<p class="text-sm font-medium text-[#fff7e8]">Join Battles</p>
+										<p class="text-xs text-[#a89e8e]">Deploy units in wars to fight for your state</p>
 									</div>
 								</div>
 							</div>
 
-							<button
-								onclick={() => setStep(6)}
-								disabled={submitting}
-								class="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 transition-all shadow-lg shadow-cyan-500/20 disabled:opacity-50"
-							>
+							<button onclick={() => setStep(6)} disabled={submitting} class={buttonClass({ variant: "primary", block: true })}>
 								<span class="flex items-center justify-center gap-2">
 									Next
 									<FluentArrowRight20Filled class="size-5" />
@@ -532,14 +516,14 @@
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
 								<div
-									class="size-16 rounded-2xl bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 border border-emerald-500/20 flex items-center justify-center"
+									class="size-16 rounded-2xl bg-[#587252]/18 border border-[#8fae88]/30 flex items-center justify-center"
 								>
-									<FluentCheckmark20Filled class="size-8 text-emerald-400" />
+									<FluentCheckmark20Filled class="size-8 text-[#c6dfbf]" />
 								</div>
 							</div>
 							<div>
-								<h2 class="text-2xl font-bold text-white">You're Ready, Commander</h2>
-								<p class="text-slate-400 text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+								<h2 class="text-2xl font-bold text-[#fff7e8]">You're Ready, Commander</h2>
+								<p class="text-[#d9ccb7] text-sm mt-2 max-w-sm mx-auto leading-relaxed">
 									You've got the basics. Go explore, build your economy, raise an army, and make your mark on the world.
 								</p>
 							</div>
@@ -547,7 +531,7 @@
 							<button
 								onclick={() => setStep(null)}
 								disabled={submitting}
-								class="w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 transition-all shadow-lg shadow-emerald-500/20 disabled:opacity-50"
+								class={buttonClass({ variant: "success", block: true })}
 							>
 								{#if submitting}
 									<span class="flex items-center justify-center gap-2">

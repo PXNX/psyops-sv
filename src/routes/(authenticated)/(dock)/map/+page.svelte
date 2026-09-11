@@ -553,11 +553,11 @@
 
 <!-- Dark Mode Toolbar -->
 <header
-	class="fixed top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 w-[calc(100%-24px)] max-w-[520px] bg-gray-900/70 backdrop-blur-xl backdrop-saturate-[1.8] border border-white/10 rounded-[14px] shadow-lg shadow-black/20 touch-action-pan-x touch-action-pan-y"
+	class="fixed top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 w-[calc(100%-24px)] max-w-[520px] bg-[#0e1d2f]/85 backdrop-blur-xl backdrop-saturate-[1.8] border border-[#dfceb0]/15 rounded-[14px] shadow-lg shadow-black/20 touch-action-pan-x touch-action-pan-y"
 >
 	<form class="flex-1 relative min-w-0" onsubmit={handleSearchSubmit}>
 		<div class="flex items-center gap-2">
-			<FluentEmojiMagnifyingGlassTiltedLeft class="w-4 h-4 flex-shrink-0 opacity-40 text-white" />
+			<FluentEmojiMagnifyingGlassTiltedLeft class="w-4 h-4 flex-shrink-0 opacity-40 text-[#fff7e8]" />
 			<input
 				type="search"
 				bind:value={searchQuery}
@@ -565,17 +565,17 @@
 				oninput={handleSearchInput}
 				onfocus={handleSearchFocus}
 				placeholder="Search regions…"
-				class="flex-1 w-full min-w-0 bg-transparent border-none outline-none text-sm font-medium text-white placeholder:text-white/40 px-0 py-1.5 tracking-tight leading-none"
+				class="flex-1 w-full min-w-0 bg-transparent border-none outline-none text-sm font-medium text-[#fff7e8] placeholder:text-[#fff7e8]/40 px-0 py-1.5 tracking-tight leading-none"
 			/>
 		</div>
 
 		{#if showSearchResults && searchResults().length > 0}
 			<div
-				class="absolute top-[calc(100%+10px)] -left-3.5 -right-3.5 bg-gray-900/70 backdrop-blur-2xl backdrop-saturate-[1.8] border border-white/10 rounded-xl shadow-2xl shadow-black/20 overflow-hidden max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-200"
+				class="absolute top-[calc(100%+10px)] -left-3.5 -right-3.5 bg-[#0e1d2f]/85 backdrop-blur-2xl backdrop-saturate-[1.8] border border-[#dfceb0]/15 rounded-xl shadow-2xl shadow-black/20 overflow-hidden max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-200"
 			>
 				{#each searchResults() as result, i}
 					<button
-						class="flex items-center gap-2.5 w-full px-3.5 py-2.5 bg-transparent border-b border-white/10 last:border-b-0 cursor-pointer text-left text-white transition-colors hover:bg-white/5 animate-in fade-in slide-in-from-top-1"
+						class="flex items-center gap-2.5 w-full px-3.5 py-2.5 bg-transparent border-b border-[#dfceb0]/15 last:border-b-0 cursor-pointer text-left text-[#fff7e8] transition-colors hover:bg-[#dfceb0]/10 animate-in fade-in slide-in-from-top-1"
 						style="animation-delay: {i * 0.03}s"
 						onclick={() => selectSearchResult(result.id)}
 					>
@@ -603,11 +603,11 @@
 	<div class="flex-shrink-0">
 		<select
 			bind:value={mapFilter}
-			class="appearance-none bg-white/10 border border-white/15 rounded-lg px-3 pr-7 py-1.5 text-xs font-semibold tracking-wide text-white cursor-pointer outline-none transition-colors hover:bg-white/15 bg-[length:10px_6px] bg-no-repeat bg-[right_9px_center]"
+			class="appearance-none bg-[#dfceb0]/10 border border-[#dfceb0]/20 rounded-lg px-3 pr-7 py-1.5 text-xs font-semibold tracking-wide text-[#fff7e8] cursor-pointer outline-none transition-colors hover:bg-[#dfceb0]/15 bg-[length:10px_6px] bg-no-repeat bg-[right_9px_center]"
 			style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white' opacity='.4'/%3E%3C/svg%3E&quot;)"
 		>
 			{#each filterOptions as option}
-				<option value={option.value} class="bg-gray-900 text-white">{option.label}</option>
+				<option value={option.value} class="bg-[#0e1d2f] text-[#fff7e8]">{option.label}</option>
 			{/each}
 		</select>
 	</div>

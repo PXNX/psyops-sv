@@ -8,6 +8,7 @@
 	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 	import { formatDateTime } from "$lib/utils/formatting.js";
 	import { enhance } from "$app/forms";
+	import Button from "$lib/component/ui/Button.svelte";
 
 	let { data, form } = $props();
 
@@ -27,12 +28,12 @@
 	<!-- Header -->
 	<div class="text-center space-y-2">
 		<div
-			class="size-20 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto"
+			class="size-20 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-2xl flex items-center justify-center mx-auto"
 		>
-			<FluentGift20Filled class="size-10 text-white" />
+			<FluentGift20Filled class="size-10 text-[#d5c4df]" />
 		</div>
-		<h1 class="text-3xl font-bold text-white">Gift Codes</h1>
-		<p class="text-gray-400">Redeem codes for exclusive rewards</p>
+		<h1 class="text-3xl font-bold text-[#fff7e8]">Gift Codes</h1>
+		<p class="text-[#a89e8e]">Redeem codes for exclusive rewards</p>
 	</div>
 
 	<!-- Redeem Section -->
@@ -47,26 +48,26 @@
 				giftCode = "";
 			};
 		}}
-		class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-4"
+		class="panel rounded-xl p-6 space-y-4"
 	>
 		<div class="flex items-center gap-2 mb-4">
-			<FluentGift20Filled class="size-6 text-purple-400" />
-			<h2 class="text-xl font-semibold text-white">Redeem Gift Code</h2>
+			<FluentGift20Filled class="size-6 text-[#d5c4df]" />
+			<h2 class="text-xl font-semibold text-[#fff7e8]">Redeem Gift Code</h2>
 		</div>
 
 		{#if form?.success}
-			<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4 space-y-3">
+			<div class="bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 space-y-3">
 				<div class="flex items-center gap-2">
-					<FluentCheckmark20Filled class="size-5 text-green-300 flex-shrink-0" />
-					<p class="text-green-300 font-medium">Gift code redeemed successfully!</p>
+					<FluentCheckmark20Filled class="size-5 text-emerald-300 flex-shrink-0" />
+					<p class="text-emerald-300 font-medium">Gift code redeemed successfully!</p>
 				</div>
 				{#if form.rewards && (form.rewards.currency > 0 || form.rewards.premiumDays > 0 || form.rewards.resources.length > 0)}
 					<div class="space-y-2">
-						<h4 class="text-xs font-medium text-slate-400 uppercase tracking-wide">Rewards Received</h4>
-						<div class="bg-slate-900/30 rounded-lg p-2.5 space-y-1.5 border border-slate-700/30">
+						<h4 class="text-xs font-medium text-[#a89e8e] uppercase tracking-wide">Rewards Received</h4>
+						<div class="panel-muted rounded-lg p-2.5 space-y-1.5">
 							{#if form.rewards.currency > 0}
 								<div class="flex justify-between text-xs items-center">
-									<span class="text-slate-400 flex items-center gap-1.5">
+									<span class="text-[#a89e8e] flex items-center gap-1.5">
 										<FluentMoney20Filled class="size-3.5 text-emerald-400" />
 										<span class="capitalize">currency</span>
 									</span>
@@ -78,7 +79,7 @@
 							{/if}
 							{#if form.rewards.premiumDays > 0}
 								<div class="flex justify-between text-xs items-center">
-									<span class="text-slate-400 flex items-center gap-1.5">
+									<span class="text-[#a89e8e] flex items-center gap-1.5">
 										<span class="text-amber-400">⭐</span>
 										<span>premium</span>
 									</span>
@@ -90,7 +91,7 @@
 							{/if}
 							{#each form.rewards.resources as resource}
 								<div class="flex justify-between text-xs items-center">
-									<span class="text-slate-400 flex items-center gap-1.5">
+									<span class="text-[#a89e8e] flex items-center gap-1.5">
 										{#if resource.type === "currency"}
 											<FluentMoney20Filled class="size-3.5 text-emerald-400" />
 										{:else}
@@ -126,63 +127,53 @@
 				bind:value={giftCode}
 				placeholder="Enter gift code"
 				disabled={submitting}
-				class="input flex-1 bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20 uppercase"
+				class="input field-control flex-1 uppercase"
 				class:input-error={form?.error}
 			/>
-			<button
-				type="submit"
-				disabled={submitting || !giftCode.trim()}
-				class="btn bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 border-0 text-white gap-2 min-w-[120px]"
-			>
-				{#if submitting}
-					<span class="loading loading-spinner loading-sm"></span>
-					Redeeming...
-				{:else}
-					<FluentGift20Filled class="size-5" />
-					Redeem
-				{/if}
-			</button>
+			<Button type="submit" variant="soft-purple" disabled={!giftCode.trim()} loading={submitting} loadingText="Redeeming..." icon={FluentGift20Filled} class="min-w-[120px]">
+				Redeem
+			</Button>
 		</div>
 
-		<p class="text-xs text-gray-400">💡 Gift codes are case-insensitive and can only be claimed once per account</p>
+		<p class="text-xs text-[#a89e8e]">💡 Gift codes are case-insensitive and can only be claimed once per account</p>
 	</form>
 
 	<!-- Redemption History -->
 	{#if data.redemptions && data.redemptions.length > 0}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-4">
+		<div class="panel rounded-xl p-6 space-y-4">
 			<div class="flex items-center gap-2 mb-4">
-				<FluentClock20Filled class="size-6 text-purple-400" />
-				<h2 class="text-xl font-semibold text-white">Redemption History</h2>
+				<FluentClock20Filled class="size-6 text-[#d5c4df]" />
+				<h2 class="text-xl font-semibold text-[#fff7e8]">Redemption History</h2>
 			</div>
 
 			<div class="space-y-4">
 				{#each data.redemptions as redemption}
-					<div class="bg-slate-700/30 rounded-lg border border-slate-600/20 overflow-hidden">
+					<div class="panel-muted rounded-lg overflow-hidden">
 						<!-- Header -->
-						<div class="bg-slate-700/50 px-4 py-3 border-b border-slate-600/20">
+						<div class="bg-[#14283f]/60 px-4 py-3 border-b border-[#dfceb0]/15">
 							<div class="flex items-center justify-between">
 								<div class="flex-1">
 									<div class="flex items-center gap-2">
-										<code class="text-purple-300 font-mono font-semibold">
+										<code class="text-[#d5c4df] font-mono font-semibold">
 											{redemption.code}
 										</code>
 									</div>
 									{#if redemption.description}
-										<p class="text-xs text-gray-400 mt-1">{redemption.description}</p>
+										<p class="text-xs text-[#a89e8e] mt-1">{redemption.description}</p>
 									{/if}
 								</div>
 								<div class="text-right">
-									<p class="text-xs text-gray-400">{formatDate(redemption.redeemedAt)}</p>
+									<p class="text-xs text-[#a89e8e]">{formatDate(redemption.redeemedAt)}</p>
 								</div>
 							</div>
 						</div>
 
 						<!-- Rewards Received -->
 						<div class="p-4">
-							<div class="bg-slate-900/30 rounded-lg p-2.5 md:p-3 space-y-1.5 border border-slate-700/30">
+							<div class="bg-[#102239]/70 rounded-lg p-2.5 md:p-3 space-y-1.5 border border-[#dfceb0]/10">
 								{#if redemption.currencyReceived > 0}
 									<div class="flex justify-between text-xs items-center">
-										<span class="text-slate-400 flex items-center gap-1.5">
+										<span class="text-[#a89e8e] flex items-center gap-1.5">
 											<FluentMoney20Filled class="size-3.5 text-emerald-400" />
 											<span class="capitalize">currency</span>
 										</span>
@@ -195,7 +186,7 @@
 
 								{#if redemption.premiumDaysReceived > 0}
 									<div class="flex justify-between text-xs items-center">
-										<span class="text-slate-400 flex items-center gap-1.5">
+										<span class="text-[#a89e8e] flex items-center gap-1.5">
 											<span class="text-amber-400">⭐</span>
 											<span>premium</span>
 										</span>
@@ -208,7 +199,7 @@
 
 								{#each redemption.resources as resource}
 									<div class="flex justify-between text-xs items-center">
-										<span class="text-slate-400 flex items-center gap-1.5">
+										<span class="text-[#a89e8e] flex items-center gap-1.5">
 											{#if resource.type === "currency"}
 												<FluentMoney20Filled class="size-3.5 text-emerald-400" />
 											{:else}
@@ -232,41 +223,41 @@
 
 	<!-- Active Gift Codes (Optional - for admins or public codes) -->
 	{#if data.publicCodes && data.publicCodes.length > 0}
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 space-y-4">
+		<div class="panel rounded-xl p-6 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentGift20Filled class="size-6 text-pink-400" />
-				<h2 class="text-xl font-semibold text-white">Available Codes</h2>
+				<FluentGift20Filled class="size-6 text-[#d5c4df]" />
+				<h2 class="text-xl font-semibold text-[#fff7e8]">Available Codes</h2>
 			</div>
 
 			<div class="grid gap-3 sm:grid-cols-2">
 				{#each data.publicCodes as code}
-					<div class="bg-slate-700/30 rounded-lg p-4 border border-slate-600/20">
+					<div class="panel-muted rounded-lg p-4">
 						<div class="flex items-start justify-between mb-2">
 							<div class="flex-1">
-								<code class="text-purple-300 font-mono font-semibold">
+								<code class="text-[#d5c4df] font-mono font-semibold">
 									{code.code}
 								</code>
 								{#if code.description}
-									<p class="text-xs text-gray-400 mt-1">{code.description}</p>
+									<p class="text-xs text-[#a89e8e] mt-1">{code.description}</p>
 								{/if}
 							</div>
 						</div>
 
 						<div class="flex flex-wrap gap-2 mb-3">
 							{#if code.currencyAmount > 0}
-								<span class="badge badge-sm bg-yellow-600/10 text-yellow-300 border-yellow-500/20">
+								<span class="badge badge-sm bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35">
 									💰 {formatNumber(code.currencyAmount)}
 								</span>
 							{/if}
 
 							{#if code.premiumDays > 0}
-								<span class="badge badge-sm bg-amber-600/10 text-amber-300 border-amber-500/20">
+								<span class="badge badge-sm bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35">
 									⭐ {formatNumber(code.premiumDays)}d premium
 								</span>
 							{/if}
 
 							{#each code.resources as resource}
-								<span class="badge badge-sm bg-blue-600/10 text-blue-300 border-blue-500/20 gap-1">
+								<span class="badge badge-sm bg-[#315d8d]/20 text-[#b7d0e6] border-[#7ba0c8]/30 gap-1">
 									<ResourceIcon name={resource.type} class="size-3.5" />
 									{formatNumber(resource.quantity)}
 									{resource.type}
@@ -276,15 +267,15 @@
 
 						<div class="flex items-center justify-between text-xs">
 							{#if code.expiresAt}
-								<span class="text-gray-400">
+								<span class="text-[#a89e8e]">
 									Expires: {formatDate(code.expiresAt)}
 								</span>
 							{:else}
-								<span class="text-gray-400">No expiration</span>
+								<span class="text-[#a89e8e]">No expiration</span>
 							{/if}
 
 							{#if code.maxRedemptions}
-								<span class="text-gray-400">
+								<span class="text-[#a89e8e]">
 									{code.currentRedemptions}/{code.maxRedemptions} used
 								</span>
 							{/if}
@@ -296,8 +287,8 @@
 	{/if}
 
 	<!-- Info Box -->
-	<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-		<p class="text-sm text-blue-300">
+	<div class="bg-[#315d8d]/10 border border-[#7ba0c8]/20 rounded-xl p-4">
+		<p class="text-sm text-[#b7d0e6]">
 			💡 <strong>Tip:</strong> Gift codes are distributed through special events, promotions, and community activities. Follow
 			our social channels to stay updated on new codes!
 		</p>

@@ -30,22 +30,22 @@
 		</div>
 		<div>
 			<h1 class="text-2xl font-bold text-white">Global Broadcast</h1>
-			<p class="text-sm text-gray-400">Publish a broadcast visible on every user's dashboard</p>
+			<p class="text-sm text-[#a89e8e]">Publish a broadcast visible on every user's dashboard</p>
 		</div>
 	</div>
 
 	<!-- Current Active Broadcast -->
 	{#if data.activeBroadcast}
-		<div class="bg-amber-600/10 rounded-xl border border-amber-500/20 p-5 mb-6">
+		<div class="bg-[#e6a527]/12 rounded-xl border border-[#e6a527]/35 p-5 mb-6">
 			<div class="flex items-start justify-between gap-3">
 				<div class="flex-1">
 					<div class="flex items-center gap-2 mb-2">
-						<FluentMegaphone20Filled class="size-5 text-amber-400" />
-						<h3 class="font-semibold text-amber-400">Active Broadcast</h3>
+						<FluentMegaphone20Filled class="size-5 text-[#f7c56b]" />
+						<h3 class="font-semibold text-[#f7c56b]">Active Broadcast</h3>
 					</div>
 					<h4 class="text-white font-bold text-lg mb-1">{data.activeBroadcast.title}</h4>
-					<p class="text-gray-300 whitespace-pre-wrap text-sm">{data.activeBroadcast.content}</p>
-					<p class="text-xs text-gray-500 mt-2">
+					<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{data.activeBroadcast.content}</p>
+					<p class="text-xs text-[#a89e8e] mt-2">
 						By {data.activeBroadcast.issuer?.profile?.name || "Admin"} · {formatDateTime(data.activeBroadcast.createdAt)}
 					</p>
 				</div>
@@ -61,7 +61,7 @@
 	{/if}
 
 	<!-- Broadcast Form -->
-	<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 mb-6">
+	<div class="panel rounded-xl p-6 mb-6">
 		<h2 class="text-lg font-bold text-white mb-4">New Broadcast</h2>
 		<form
 			method="POST"
@@ -80,8 +80,8 @@
 			<div class="space-y-4">
 				<div>
 					<label class="label">
-						<span class="label-text text-gray-300">Subject</span>
-						<span class="label-text-alt text-gray-500">{subject.length}/200</span>
+						<span class="label-text text-[#d9ccb7]">Subject</span>
+						<span class="label-text-alt text-[#a89e8e]">{subject.length}/200</span>
 					</label>
 					<input
 						type="text"
@@ -89,7 +89,7 @@
 						bind:value={subject}
 						placeholder="Enter broadcast subject..."
 						maxlength="200"
-						class="input input-bordered w-full bg-slate-700/50 border-slate-600/30 text-white"
+						class="input input-bordered w-full field-control"
 						required
 						disabled={isSubmitting}
 					/>
@@ -97,8 +97,8 @@
 
 				<div>
 					<label class="label">
-						<span class="label-text text-gray-300">Message</span>
-						<span class="label-text-alt text-gray-500">{content.length}/2000</span>
+						<span class="label-text text-[#d9ccb7]">Message</span>
+						<span class="label-text-alt text-[#a89e8e]">{content.length}/2000</span>
 					</label>
 					<textarea
 						name="content"
@@ -106,7 +106,7 @@
 						placeholder="Enter your broadcast message..."
 						rows="8"
 						maxlength="2000"
-						class="textarea textarea-bordered w-full bg-slate-700/50 border-slate-600/30 text-white font-mono text-sm"
+						class="textarea textarea-bordered w-full field-control font-mono text-sm"
 						required
 						disabled={isSubmitting}
 					></textarea>
@@ -114,17 +114,17 @@
 
 				<!-- Preview -->
 				{#if subject || content}
-					<div class="bg-slate-700/30 rounded-lg p-4 border border-white/5">
+					<div class="panel-muted rounded-lg p-4">
 						<div class="flex items-center gap-2 mb-3">
 							<FluentInfo20Filled class="size-4 text-blue-400" />
-							<h3 class="text-sm font-semibold text-gray-300">Preview</h3>
+							<h3 class="text-sm font-semibold text-[#d9ccb7]">Preview</h3>
 						</div>
 						<div class="space-y-2">
 							{#if subject}
 								<p class="text-white font-semibold">{subject}</p>
 							{/if}
 							{#if content}
-								<p class="text-gray-300 whitespace-pre-wrap text-sm">{content}</p>
+								<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{content}</p>
 							{/if}
 						</div>
 					</div>
@@ -146,9 +146,9 @@
 
 				<!-- Confirmation -->
 				<div class="form-control">
-					<label class="label cursor-pointer justify-start gap-3 bg-slate-700/30 rounded-lg p-4">
+					<label class="label cursor-pointer justify-start gap-3 panel-muted rounded-lg p-4">
 						<input type="checkbox" bind:checked={showConfirmation} class="checkbox checkbox-error" />
-						<span class="label-text text-gray-300">
+						<span class="label-text text-[#d9ccb7]">
 							I confirm this broadcast should be shown to all users
 							{#if data.activeBroadcast}
 								(replaces the current active broadcast)
@@ -162,14 +162,14 @@
 					<button
 						type="button"
 						onclick={resetForm}
-						class="btn flex-1 bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300"
+						class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8]"
 						disabled={isSubmitting}
 					>
 						Clear
 					</button>
 					<button
 						type="submit"
-						class="btn flex-1 bg-red-600 hover:bg-red-700 border-0 text-white gap-2"
+						class="btn flex-1 bg-red-600 hover:bg-red-500 border-0 text-white shadow-lg shadow-red-600/20 gap-2"
 						disabled={isSubmitting || !showConfirmation || !subject || !content}
 					>
 						<FluentMegaphone20Filled class="size-5" />
@@ -182,23 +182,23 @@
 
 	<!-- Recent Broadcasts -->
 	{#if data.recentBroadcasts.length > 0}
-		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-6">
+		<div class="panel-muted rounded-xl p-6">
 			<h3 class="text-lg font-semibold text-white mb-4">Recent Broadcasts</h3>
 			<div class="space-y-3">
 				{#each data.recentBroadcasts as broadcast}
-					<div class="bg-slate-700/30 rounded-lg p-4 border {broadcast.isActive ? 'border-amber-500/30' : 'border-white/5'}">
+					<div class="bg-[#102239]/70 rounded-lg p-4 border {broadcast.isActive ? 'border-[#e6a527]/35' : 'border-[#dfceb0]/10'}">
 						<div class="flex items-start justify-between gap-2">
 							<div class="flex-1">
 								<div class="flex items-center gap-2">
 									<h4 class="text-white font-semibold">{broadcast.title}</h4>
 									{#if broadcast.isActive}
-										<span class="badge badge-sm bg-amber-600/30 text-amber-400 border-amber-500/30">Active</span>
+										<span class="badge badge-sm bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35">Active</span>
 									{:else}
-										<span class="badge badge-sm bg-slate-600/30 text-gray-400 border-slate-500/30">Inactive</span>
+										<span class="badge badge-sm bg-[#14283f] text-[#d9ccb7] border-[#dfceb0]/20">Inactive</span>
 									{/if}
 								</div>
-								<p class="text-gray-400 text-sm mt-1 line-clamp-2">{broadcast.content}</p>
-								<p class="text-xs text-gray-500 mt-1">
+								<p class="text-[#a89e8e] text-sm mt-1 line-clamp-2">{broadcast.content}</p>
+								<p class="text-xs text-[#a89e8e] mt-1">
 									By {broadcast.issuer?.profile?.name || "Admin"} · {formatDateTime(broadcast.createdAt)}
 								</p>
 							</div>

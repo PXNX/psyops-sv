@@ -37,7 +37,7 @@
 		</div>
 		<div>
 			<h1 class="text-2xl font-bold text-white">My Visas</h1>
-			<p class="text-sm text-gray-400">
+			<p class="text-sm text-[#a89e8e]">
 				{data.activeVisas.length} active visa{data.activeVisas.length !== 1 ? "s" : ""}
 			</p>
 		</div>
@@ -186,13 +186,13 @@
 			</div>
 		</div>
 	{:else}
-		<div class="bg-slate-800/30 rounded-xl border border-white/5 p-12 text-center mb-8">
-			<FluentBookCompass24Filled class="size-16 text-gray-500 mx-auto mb-4" />
+		<div class="panel-muted rounded-xl p-12 text-center mb-8">
+			<FluentBookCompass24Filled class="size-16 text-[#a89e8e] mx-auto mb-4" />
 			<h3 class="text-xl font-bold text-white mb-2">No Active Visas</h3>
-			<p class="text-gray-400 mb-4">
+			<p class="text-[#d9ccb7] mb-4">
 				You don't have any active visas. Visit other states to purchase visas and explore new regions!
 			</p>
-			<a href="/state" class="btn bg-blue-600 hover:bg-blue-700 border-0 text-white"> Browse States </a>
+			<a href="/state" class="btn bg-blue-600 hover:bg-blue-500 border-0 text-white shadow-lg shadow-blue-600/20"> Browse States </a>
 		</div>
 	{/if}
 
@@ -203,20 +203,20 @@
 			<div class="space-y-3">
 				{#each data.expiredVisas as visa}
 					{@const badge = getStatusBadge(visa)}
-					<div class="bg-slate-800/30 rounded-xl border border-white/5 p-4">
+					<div class="panel-muted rounded-xl p-4">
 						<div class="flex items-start gap-4">
 							{#if visa.stateLogo}
 								<img src={visa.stateLogo} alt={visa.stateName} class="size-12 rounded-lg opacity-60" />
 							{:else}
-								<div class="size-12 rounded-lg bg-slate-700/50 flex items-center justify-center opacity-60">
-									<FluentBuildingGovernment20Filled class="size-6 text-gray-400" />
+								<div class="size-12 rounded-lg bg-[#102239]/70 flex items-center justify-center opacity-60">
+									<FluentBuildingGovernment20Filled class="size-6 text-[#a89e8e]" />
 								</div>
 							{/if}
 
 							<div class="flex-1">
 								<div class="flex items-start justify-between mb-2">
 									<div>
-										<h3 class="font-semibold text-gray-300">{visa.stateName}</h3>
+										<h3 class="font-semibold text-[#e5d8c1]">{visa.stateName}</h3>
 										<span
 											class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium mt-1"
 											style="background-color: var(--{badge.color}-600-20); color: var(--{badge.color}-400)"
@@ -226,8 +226,8 @@
 										</span>
 									</div>
 									<div class="text-right text-sm">
-										<p class="text-gray-500">Expired</p>
-										<p class="text-gray-400">{formatDate(visa.expiresAt)}</p>
+										<p class="text-[#a89e8e]">Expired</p>
+										<p class="text-[#a89e8e]">{formatDate(visa.expiresAt)}</p>
 									</div>
 								</div>
 
@@ -240,7 +240,7 @@
 									</div>
 								{/if}
 
-								<div class="flex gap-6 text-xs text-gray-500 mt-2">
+								<div class="flex gap-6 text-xs text-[#a89e8e] mt-2">
 									<span>Issued: {formatDate(visa.issuedAt)}</span>
 									<span>Cost: ${visa.cost.toLocaleString()}</span>
 								</div>

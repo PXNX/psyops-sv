@@ -11,6 +11,7 @@
 	import { updateProfileSchema } from "./schema.js";
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	let { data } = $props();
 
@@ -129,18 +130,29 @@
 	});
 
 	const canEdit = !data.isOnCooldown && data.canAfford;
+
+	const dropzoneClass = $derived(
+		[
+			"group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
+			dragActive ? "border-[#e6a527] bg-[#e6a527]/10" : previewUrl ? "border-[#8fae88]/60" : "border-[#dfceb0]/25",
+			$submitting || !canEdit ? "opacity-50" : "",
+			$errors.logo ? "input-error" : ""
+		]
+			.filter(Boolean)
+			.join(" ")
+	);
 </script>
 
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div class="flex items-center gap-3">
-		<a href="/settings" class="btn btn-sm btn-ghost gap-2 text-gray-400 hover:text-white">
+		<a href="/settings" class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]">
 			<FluentArrowLeft20Filled class="size-4" />
 			Back
 		</a>
 		<div>
-			<h1 class="text-2xl font-bold text-white">Edit Profile</h1>
-			<p class="text-gray-400 text-sm">Update your display name, bio and picture</p>
+			<h1 class="text-2xl font-bold text-[#fff7e8]">Edit Profile</h1>
+			<p class="text-[#a89e8e] text-sm">Update your display name, bio and picture</p>
 		</div>
 	</div>
 
@@ -172,10 +184,10 @@
 	<!-- Profile Form -->
 	<form method="POST" action="?/updateProfile" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Profile Picture -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-3">
+		<div class="panel rounded-xl p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Profile Picture</h2>
+				<FluentImage20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Profile Picture</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -194,19 +206,15 @@
 					type="button"
 					onclick={() => fileInput?.click()}
 					disabled={$submitting || !canEdit}
-					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
-					class:border-purple-500={dragActive}
-					class:border-success={previewUrl && !dragActive}
-					class:opacity-50={$submitting || !canEdit}
-					class:input-error={$errors.logo}
+					class={dropzoneClass}
 				>
 					{#if !previewUrl}
 						<div class="flex min-h-[160px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-purple-600/20 p-3 transition-transform group-hover:scale-110">
-								<FluentImageOff20Filled class="size-10 text-purple-400" />
+							<div class="rounded-full bg-[#8c709b]/20 p-3 transition-transform group-hover:scale-110">
+								<FluentImageOff20Filled class="size-10 text-[#d5c4df]" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-white">
+								<p class="text-base font-semibold text-[#fff7e8]">
 									{#if dragActive}
 										Drop image here
 									{:else if $submitting}
@@ -216,19 +224,19 @@
 									{/if}
 								</p>
 								{#if !$submitting && canEdit}
-									<p class="mt-1 text-sm text-gray-400">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-8 bg-slate-900/50">
+							<div class="flex items-center justify-center p-8 bg-[#102239]/70">
 								<img src={previewUrl} alt="Profile picture preview" class="size-32 object-cover rounded-full" />
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-white">Tap to change</p>
+								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
 							</div>
 							{#if previewUrl !== data.profile.logo && canEdit}
 								<button
@@ -238,7 +246,7 @@
 										clearImage();
 									}}
 									disabled={$submitting}
-									class="btn absolute top-2 right-2 btn-circle btn-sm bg-slate-800 hover:bg-slate-700"
+									class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
 								>
 									✕
 								</button>
@@ -251,19 +259,19 @@
 			{#if $errors.logo}
 				<p class="text-xs text-red-400">{$errors.logo}</p>
 			{:else}
-				<p class="text-xs text-gray-400">Will be converted to 96x96 WebP • Max 5MB</p>
+				<p class="text-xs text-[#a89e8e]">Will be converted to 96x96 WebP • Max 5MB</p>
 			{/if}
 		</div>
 
 		<!-- Name & Bio -->
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+		<div class="panel rounded-xl p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentPerson20Filled class="size-5 text-purple-400" />
-				<h2 class="text-lg font-semibold text-white">Profile Information</h2>
+				<FluentPerson20Filled class="size-5 text-[#d5c4df]" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Profile Information</h2>
 			</div>
 
 			<div>
-				<label for="name" class="block text-sm font-medium text-gray-300 mb-2">
+				<label for="name" class="field-label">
 					Display Name <span class="text-red-400">*</span>
 				</label>
 				<input
@@ -273,19 +281,19 @@
 					bind:value={$form.name}
 					placeholder="Your display name"
 					maxlength="50"
-					class="input w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class="input w-full field-control"
 					class:input-error={$errors.name}
 					disabled={$submitting || !canEdit}
 				/>
 				{#if $errors.name}
-					<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+					<p class="field-error">{$errors.name}</p>
 				{:else}
-					<p class="text-xs text-gray-400 mt-1">{$form.name?.length || 0}/50 characters</p>
+					<p class="field-hint">{$form.name?.length || 0}/50 characters</p>
 				{/if}
 			</div>
 
 			<div>
-				<label for="bio" class="block text-sm font-medium text-gray-300 mb-2"> Bio (Optional) </label>
+				<label for="bio" class="field-label"> Bio (Optional) </label>
 				<textarea
 					id="bio"
 					name="bio"
@@ -293,25 +301,25 @@
 					rows="4"
 					placeholder="Tell others about yourself..."
 					maxlength="500"
-					class="textarea w-full bg-slate-700/50 border-slate-600/30 text-white placeholder:text-gray-500 focus:border-purple-500/50 focus:ring-2 focus:ring-purple-500/20"
+					class="textarea w-full field-control"
 					class:input-error={$errors.bio}
 					disabled={$submitting || !canEdit}></textarea>
 				{#if $errors.bio}
-					<p class="text-xs text-red-400 mt-1">{$errors.bio}</p>
+					<p class="field-error">{$errors.bio}</p>
 				{:else}
-					<p class="text-xs text-gray-400 mt-1">{$form.bio?.length || 0}/500 characters</p>
+					<p class="field-hint">{$form.bio?.length || 0}/500 characters</p>
 				{/if}
 			</div>
 		</div>
 
-		<div class="bg-slate-800/50 rounded-xl border border-white/5 p-5 space-y-4">
+		<div class="panel rounded-xl p-5 space-y-4">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 
 			<!-- Save Button -->
 			<button
 				type="submit"
 				disabled={$submitting || !canEdit}
-				class="btn w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 border-0 text-white gap-2 disabled:opacity-50"
+				class={buttonClass({ variant: "primary", block: true, class: "gap-2" })}
 			>
 				{#if $delayed}
 					<span class="loading loading-spinner loading-sm"></span>
@@ -326,8 +334,8 @@
 
 	<!-- Success Message -->
 	{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("wait") && !$message.includes("Insufficient")}
-		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
-			<p class="text-green-300 text-sm font-medium">{$message}</p>
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-xl p-4">
+			<p class="text-[#c6dfbf] text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 

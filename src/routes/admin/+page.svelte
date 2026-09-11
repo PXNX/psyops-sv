@@ -8,6 +8,7 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import Button from "$lib/component/ui/Button.svelte";
 
 	const { data, form } = $props();
 
@@ -30,55 +31,19 @@
 			<FluentMegaphone20Filled class="size-6 text-red-400" />
 		</div>
 		<div>
-			<h1 class="text-2xl font-bold text-white">Admin Panel</h1>
+			<h1 class="text-2xl font-bold text-[#fff7e8]">Admin Panel</h1>
 		</div>
 	</div>
 
-	<a
-		href="/admin/broadcast"
-		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-	>
-		<FluentMegaphone20Filled class="size-4" />
-		Broadcast
-	</a>
-	<a
-		href="/admin/giftcode"
-		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-	>
-		<FluentGift20Filled class="size-4" />
-		Gift Codes
-	</a>
+	<Button href="/admin/broadcast" variant="secondary" icon={FluentMegaphone20Filled}>Broadcast</Button>
+	<Button href="/admin/giftcode" variant="secondary" icon={FluentGift20Filled}>Gift Codes</Button>
 
 	<div class="divider my-4"></div>
 	<!-- Broadcast -->
 
-	<a
-		href="/api/cron/battles"
-		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-	>
-		<FluentBuildingGovernment20Filled class="size-4" />
-		Battles
-	</a>
-	<a
-		href="/api/cron/travels"
-		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-	>
-		<FluentSend20Filled class="size-4" />
-		Travels
-	</a>
-	<a
-		href="/api/cron/proposals"
-		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-	>
-		<FluentPeople20Filled class="size-4" />
-		Proposals
-	</a>
+	<Button href="/api/cron/battles" variant="secondary" icon={FluentBuildingGovernment20Filled}>Battles</Button>
+	<Button href="/api/cron/travels" variant="secondary" icon={FluentSend20Filled}>Travels</Button>
+	<Button href="/api/cron/proposals" variant="secondary" icon={FluentPeople20Filled}>Proposals</Button>
 
-	<a
-		href="/api/cron/elections"
-		class="btn bg-slate-700/50 hover:bg-slate-600/50 border-slate-600/30 text-gray-300 hover:text-white gap-2"
-	>
-		<FluentWarning20Filled class="size-4" />
-		Elections
-	</a>
+	<Button href="/api/cron/elections" variant="secondary" icon={FluentWarning20Filled}>Elections</Button>
 </div>

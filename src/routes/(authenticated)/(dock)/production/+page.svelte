@@ -111,9 +111,7 @@
 <PageContainer maxWidth="full">
 	<!-- Header with gradient accent -->
 	<div class="relative">
-		<div
-			class="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-cyan-600/10 rounded-2xl blur-3xl"
-		></div>
+		<div class="absolute inset-0 bg-[#e6a527]/8 rounded-2xl blur-3xl"></div>
 		<div class="relative">
 			<h1 class="text-3xl md:text-4xl font-bold mb-3 md:mb-4">Production</h1>
 
@@ -121,8 +119,8 @@
 				{#if data.userCompany}
 					<a
 						href="/company"
-						class="px-3 md:px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
-						       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
+						class="px-3 md:px-4 py-2 bg-[#14283f] hover:bg-[#19304b]
+						       border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
 					>
 						<FluentBuilding20Filled class="size-4" />
 						<span>My Company</span>
@@ -130,8 +128,8 @@
 				{:else}
 					<a
 						href="/company/create"
-						class="px-3 md:px-4 py-2 bg-gradient-to-br from-emerald-700/80 to-emerald-800/80 hover:from-emerald-600/80 hover:to-emerald-700/80
-						       border border-emerald-500/20 rounded-lg text-emerald-300 hover:text-white transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
+						class="px-3 md:px-4 py-2 bg-[#587252]/25 hover:bg-[#587252]/35
+						       border border-[#8fae88]/30 rounded-lg text-[#c6dfbf] hover:text-[#fff7e8] transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
 					>
 						<FluentAdd20Filled class="size-4" />
 						<span>Create Company</span>
@@ -140,8 +138,8 @@
 
 				<a
 					href="/market"
-					class="px-3 md:px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
-					       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
+					class="px-3 md:px-4 py-2 bg-[#14283f] hover:bg-[#19304b]
+					       border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
 				>
 					<FluentEmojiShoppingCart class="size-4" />
 					<span>Market</span>
@@ -149,8 +147,8 @@
 
 				<a
 					href="/transactions"
-					class="px-3 md:px-4 py-2 bg-gradient-to-br from-slate-700/80 to-slate-800/80 hover:from-slate-600/80 hover:to-slate-700/80
-					       border border-white/10 rounded-lg text-gray-300 hover:text-white transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
+					class="px-3 md:px-4 py-2 bg-[#14283f] hover:bg-[#19304b]
+					       border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all duration-300 flex items-center gap-2 text-sm md:text-base"
 				>
 					<FluentHistory20Filled class="size-4" />
 					<span>Transactions</span>
@@ -174,7 +172,7 @@
 				</div>
 				<div>
 					<p class="text-xs text-emerald-400/70 uppercase tracking-wide font-medium">Balance</p>
-					<p class="text-xl md:text-2xl font-bold text-white">{data.wallet.balance.toLocaleString()}</p>
+					<p class="text-xl md:text-2xl font-bold text-[#fff7e8]">{data.wallet.balance.toLocaleString()}</p>
 				</div>
 			</div>
 		</div>
@@ -184,9 +182,9 @@
 	{#if data.currentJob && jobStatus}
 		{#if jobStatus.status === "complete"}
 			<div
-				class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
+				class="relative overflow-hidden rounded-xl md:rounded-2xl panel p-4 md:p-6"
 			>
-				<div class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent opacity-0"></div>
+				<div class="absolute inset-0 bg-gradient-to-br from-[#315d8d]/5 to-transparent opacity-0"></div>
 
 				<div class="relative z-10 flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
 					<a
@@ -201,12 +199,12 @@
 						/>
 
 						<div>
-							<h2 class="text-lg md:text-xl font-semibold text-white mb-1">{data.currentJob.factoryName}</h2>
-							<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
+							<h2 class="text-lg md:text-xl font-semibold text-[#fff7e8] mb-1">{data.currentJob.factoryName}</h2>
+							<p class="text-sm text-[#a89e8e]">{data.currentJob.companyName}</p>
 						</div>
 					</a>
 					<div class="text-left sm:text-right">
-						<p class="text-xs text-gray-400 mb-1">Wage</p>
+						<p class="text-xs text-[#a89e8e] mb-1">Wage</p>
 						<p class="text-md font-bold text-green-400 flex items-center gap-1">
 							<FluentMoney20Filled class="size-5" />
 							{data.currentJob.wage.toLocaleString()}
@@ -245,7 +243,7 @@
 			</div>
 		{:else}
 			<div
-				class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
+				class="relative overflow-hidden rounded-xl md:rounded-2xl panel p-4 md:p-6"
 			>
 				<div class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent"></div>
 
@@ -262,12 +260,12 @@
 						/>
 
 						<div>
-							<h2 class="text-lg md:text-xl font-semibold text-white mb-1">{data.currentJob.factoryName}</h2>
-							<p class="text-sm text-gray-400">{data.currentJob.companyName}</p>
+							<h2 class="text-lg md:text-xl font-semibold text-[#fff7e8] mb-1">{data.currentJob.factoryName}</h2>
+							<p class="text-sm text-[#a89e8e]">{data.currentJob.companyName}</p>
 						</div>
 					</a>
 					<div class="text-left sm:text-right">
-						<p class="text-xs text-gray-400 mb-1">Wage</p>
+						<p class="text-xs text-[#a89e8e] mb-1">Wage</p>
 						<p class="text-md font-bold text-green-400 flex items-center gap-1">
 							<FluentMoney20Filled class="size-5" />
 							{data.currentJob.wage.toLocaleString()}
@@ -278,10 +276,10 @@
 				{#if jobStatus.status === "working"}
 					<div class="relative z-10">
 						<div class="flex justify-between items-center mb-2">
-							<span class="text-sm font-medium text-gray-300">Shift Progress</span>
+							<span class="text-sm font-medium text-[#e5d8c1]">Shift Progress</span>
 							<span class="text-sm font-bold text-amber-400">{jobStatus.text}</span>
 						</div>
-						<div class="h-3 bg-slate-800 rounded-full overflow-hidden">
+						<div class="h-3 bg-[#102239] rounded-full overflow-hidden">
 							<div
 								class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-500 relative"
 								style="width: {jobStatus.progress}%"
@@ -296,8 +294,8 @@
 					<form method="POST" action="?/startWork" use:enhance class="relative z-10">
 						<button
 							type="submit"
-							class="w-full bg-gradient-to-r from-blue-900/30 to-cyan-900/30 border border-blue-500/30 rounded-xl p-3 md:p-4
-							       hover:from-blue-900/50 hover:to-cyan-900/50 hover:border-blue-500/50 transition-all duration-300 cursor-pointer"
+							class="w-full bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-xl p-3 md:p-4
+							       hover:bg-[#315d8d]/28 hover:border-[#7ba0c8]/50 transition-all duration-300 cursor-pointer"
 						>
 							<p
 								class="text-sm md:text-base text-blue-300 font-medium flex items-center justify-center gap-2 pointer-events-none"
@@ -315,21 +313,17 @@
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
 		<!-- Inventory Sidebar - Consolidated Resources & Products -->
 		<div class="space-y-4 md:space-y-6 order-2 lg:order-1">
-			<div
-				class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
-			>
-				<div class="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-purple-600/10 rounded-full blur-3xl"></div>
+			<div class="relative overflow-hidden rounded-xl md:rounded-2xl panel p-4 md:p-6">
+				<div class="absolute top-0 right-0 w-48 h-48 md:w-64 md:h-64 bg-[#8c709b]/10 rounded-full blur-3xl"></div>
 
 				<div class="relative space-y-4 md:space-y-6">
 					<!-- Resources Section -->
 					<div>
 						<div class="flex items-center gap-2 mb-3 md:mb-4">
-							<div
-								class="size-7 md:size-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center"
-							>
-								<FluentBox20Filled class="size-3.5 md:size-4 text-purple-400" />
+							<div class="size-7 md:size-8 rounded-lg bg-[#8c709b]/20 flex items-center justify-center">
+								<FluentBox20Filled class="size-3.5 md:size-4 text-[#d5c4df]" />
 							</div>
-							<h2 class="text-base md:text-lg font-semibold text-white">Resources</h2>
+							<h2 class="text-base md:text-lg font-semibold text-[#fff7e8]">Resources</h2>
 						</div>
 
 						<div class="space-y-1.5 md:space-y-2">
@@ -337,16 +331,16 @@
 								{@const quantity = resourceMap.get(resource) || 0}
 								<a
 									href="/market/{resource}"
-									class="flex items-center justify-between p-2.5 md:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-purple-500/30 transition-colors"
+									class="flex items-center justify-between p-2.5 md:p-3 panel-muted rounded-lg hover:border-[#b7a0c5]/30 transition-colors"
 								>
 									<div class="flex items-center gap-2">
 										<ResourceIcon name={resource} class="size-5 md:size-6" />
-										<span class="font-medium capitalize text-gray-300 text-sm md:text-base">{resource}</span>
+										<span class="font-medium capitalize text-[#d9ccb7] text-sm md:text-base">{resource}</span>
 									</div>
 									<span
 										class="px-2 md:px-2.5 py-0.5 md:py-1 rounded-md text-xs md:text-sm font-bold {quantity > 0
-											? 'bg-purple-500/20 text-purple-300'
-											: 'bg-slate-700 text-gray-500'}"
+											? 'bg-[#8c709b]/20 text-[#d5c4df]'
+											: 'bg-[#102239] text-[#a89e8e]'}"
 									>
 										{quantity}
 									</span>
@@ -358,12 +352,10 @@
 					<!-- Products Section -->
 					<div>
 						<div class="flex items-center gap-2 mb-3 md:mb-4">
-							<div
-								class="size-7 md:size-8 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-500/20 flex items-center justify-center"
-							>
+							<div class="size-7 md:size-8 rounded-lg bg-[#587252]/20 flex items-center justify-center">
 								<FluentCube20Filled class="size-3.5 md:size-4 text-emerald-400" />
 							</div>
-							<h2 class="text-base md:text-lg font-semibold text-white">Products</h2>
+							<h2 class="text-base md:text-lg font-semibold text-[#fff7e8]">Products</h2>
 						</div>
 
 						<div class="space-y-1.5 md:space-y-2">
@@ -371,16 +363,16 @@
 								{@const quantity = productMap.get(product) || 0}
 								<a
 									href="/market/{product}"
-									class="flex items-center justify-between p-2.5 md:p-3 bg-slate-800/50 rounded-lg border border-slate-700/50 hover:border-emerald-500/30 transition-colors"
+									class="flex items-center justify-between p-2.5 md:p-3 panel-muted rounded-lg hover:border-emerald-500/30 transition-colors"
 								>
 									<div class="flex items-center gap-2">
 										<ResourceIcon name={product} class="size-5 md:size-6" />
-										<span class="font-medium capitalize text-gray-300 text-sm md:text-base">{product}</span>
+										<span class="font-medium capitalize text-[#d9ccb7] text-sm md:text-base">{product}</span>
 									</div>
 									<span
 										class="px-2 md:px-2.5 py-0.5 md:py-1 rounded-md text-xs md:text-sm font-bold {quantity > 0
 											? 'bg-emerald-500/20 text-emerald-300'
-											: 'bg-slate-700 text-gray-500'}"
+											: 'bg-[#102239] text-[#a89e8e]'}"
 									>
 										{quantity}
 									</span>
@@ -413,11 +405,11 @@
 								<FluentFactory20Filled class="size-5 md:size-6 text-emerald-400" />
 							</div>
 							<div>
-								<h3 class="text-base md:text-lg font-semibold text-white mb-1 flex items-center gap-2">
+								<h3 class="text-base md:text-lg font-semibold text-[#fff7e8] mb-1 flex items-center gap-2">
 									Better Wage Available!
 									<span class="text-emerald-400">✨</span>
 								</h3>
-								<p class="text-xs md:text-sm text-gray-300">
+								<p class="text-xs md:text-sm text-[#d9ccb7]">
 									Factories in your region are offering up to
 									<span class="font-bold text-emerald-400">💰{betterWageFactory.workerWage.toLocaleString()}</span>
 									per day
@@ -445,19 +437,19 @@
 							>
 								<FluentFactory20Filled class="size-4 md:size-5 text-amber-400" />
 							</div>
-							<h2 class="text-lg md:text-xl font-semibold text-white">Production In Progress</h2>
+							<h2 class="text-lg md:text-xl font-semibold text-[#fff7e8]">Production In Progress</h2>
 						</div>
 
 						<div
-							class="bg-slate-900/50 backdrop-blur-sm rounded-xl p-4 md:p-5 space-y-4 md:space-y-5 border border-amber-500/20"
+							class="bg-[#0d1d31]/70 backdrop-blur-sm rounded-xl p-4 md:p-5 space-y-4 md:space-y-5 border border-amber-500/20"
 						>
 							<div class="flex flex-col sm:flex-row items-start gap-3 md:gap-4">
 								<ResourceIcon name={activeProduction.productType} class="size-12 md:size-14" />
 								<div class="flex-1">
-									<h3 class="text-xl md:text-2xl font-bold text-white capitalize mb-1">
+									<h3 class="text-xl md:text-2xl font-bold text-[#fff7e8] capitalize mb-1">
 										{activeProduction.productType}
 									</h3>
-									<p class="text-sm md:text-base text-gray-400">Manufacturing {activeProduction.quantity} units</p>
+									<p class="text-sm md:text-base text-[#a89e8e]">Manufacturing {activeProduction.quantity} units</p>
 								</div>
 								<div class="text-left sm:text-right w-full sm:w-auto">
 									<p class="text-xs text-amber-400/70 uppercase tracking-wide font-medium mb-1">Time Left</p>
@@ -471,10 +463,10 @@
 
 							<div>
 								<div class="flex justify-between items-center mb-2">
-									<span class="text-xs md:text-sm font-medium text-gray-300">Production Progress</span>
+									<span class="text-xs md:text-sm font-medium text-[#d9ccb7]">Production Progress</span>
 									<span class="text-xs md:text-sm font-bold text-amber-400">{Math.floor(productionProgress)}%</span>
 								</div>
-								<div class="h-3 md:h-4 bg-slate-800 rounded-full overflow-hidden">
+								<div class="h-3 md:h-4 bg-[#102239] rounded-full overflow-hidden">
 									<div
 										class="h-full bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 transition-all duration-1000 relative"
 										style="width: {productionProgress}%"
@@ -498,18 +490,18 @@
 							if (result.type === "success") showProductionAnim = true;
 						};
 					}}
-					class="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-br from-slate-900/50 to-slate-800/30 border border-white/10 p-4 md:p-6"
+					class="relative overflow-hidden rounded-xl md:rounded-2xl panel p-4 md:p-6"
 				>
-					<div class="absolute top-0 right-0 w-64 h-64 md:w-96 md:h-96 bg-purple-600/5 rounded-full blur-3xl"></div>
+					<div class="absolute top-0 right-0 w-64 h-64 md:w-96 md:h-96 bg-[#8c709b]/10 rounded-full blur-3xl"></div>
 
 					<div class="relative space-y-4 md:space-y-6">
 						<div class="flex items-center gap-2 md:gap-3">
 							<div
-								class="size-8 md:size-10 rounded-xl bg-gradient-to-br from-purple-500/20 to-blue-500/20 flex items-center justify-center"
+								class="size-8 md:size-10 rounded-xl bg-[#8c709b]/20 flex items-center justify-center"
 							>
-								<FluentProduction20Filled class="size-4 md:size-5 text-purple-400" />
+								<FluentProduction20Filled class="size-4 md:size-5 text-[#d5c4df]" />
 							</div>
-							<h2 class="text-lg md:text-xl font-semibold text-white">Start Production</h2>
+							<h2 class="text-lg md:text-xl font-semibold text-[#fff7e8]">Start Production</h2>
 						</div>
 
 						<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
@@ -519,8 +511,8 @@
 									onclick={() => (selectedProduct = product as keyof typeof data.recipes)}
 									class="relative p-2.5 md:p-3 rounded-lg border-2 transition-all duration-200 text-center group
 										       {selectedProduct === product
-										? 'bg-purple-500/20 border-purple-500/60 shadow-lg shadow-purple-500/20'
-										: 'bg-slate-800/30 border-slate-700/50 hover:border-slate-600/70 hover:bg-slate-800/50'}"
+										? 'bg-[#8c709b]/25 border-[#b7a0c5]/60'
+										: 'bg-[#102239]/40 border-[#dfceb0]/10 hover:border-[#dfceb0]/20 hover:bg-[#102239]/70'}"
 								>
 									<input
 										type="radio"
@@ -532,8 +524,8 @@
 									<ResourceIcon name={product} class="size-8 md:size-9 mx-auto mb-1" />
 									<div
 										class="text-xs font-medium capitalize {selectedProduct === product
-											? 'text-purple-300'
-											: 'text-gray-400 group-hover:text-gray-300'}"
+											? 'text-[#d5c4df]'
+											: 'text-[#a89e8e] group-hover:text-[#d9ccb7]'}"
 									>
 										{product}
 									</div>
@@ -544,32 +536,32 @@
 						<!-- Current Stock Display -->
 						{#if selectedProduct}
 							{@const currentStock = productMap.get(selectedProduct) || 0}
-							<div class="bg-slate-900/50 rounded-lg p-3 md:p-4 border border-slate-700/50">
+							<div class="panel-muted rounded-lg p-3 md:p-4">
 								<div class="flex items-center justify-between">
 									<div class="flex items-center gap-2">
 										<ResourceIcon name={selectedProduct} class="size-6 md:size-7" />
 										<div>
-											<p class="text-xs text-slate-400 uppercase tracking-wide font-medium">Current Stock</p>
-											<p class="text-base md:text-lg font-semibold text-white capitalize">{selectedProduct}</p>
+											<p class="text-xs text-[#a89e8e] uppercase tracking-wide font-medium">Current Stock</p>
+											<p class="text-base md:text-lg font-semibold text-[#fff7e8] capitalize">{selectedProduct}</p>
 										</div>
 									</div>
 									<div class="text-right">
 										<span
 											class="text-2xl md:text-3xl font-bold {currentStock > 0
 												? 'bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent'
-												: 'text-slate-500'}"
+												: 'text-[#a89e8e]'}"
 										>
 											{currentStock}
 										</span>
-										<p class="text-xs text-slate-400 mt-1">units available</p>
+										<p class="text-xs text-[#a89e8e] mt-1">units available</p>
 									</div>
 								</div>
 							</div>
 						{/if}
 
 						<div>
-							<label for="quantity" class="block text-sm font-medium text-gray-300 mb-2 md:mb-3">
-								Batch Size: <span class="text-white font-bold">×{productionQuantity}</span>
+							<label for="quantity" class="block text-sm font-medium text-[#e5d8c1] mb-2 md:mb-3">
+								Batch Size: <span class="text-[#fff7e8] font-bold">×{productionQuantity}</span>
 							</label>
 							<div class="relative">
 								<input
@@ -579,14 +571,14 @@
 									min="1"
 									max="10"
 									bind:value={productionQuantity}
-									class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
-									style="background: linear-gradient(to right, rgb(168 85 247) 0%, rgb(168 85 247) {((productionQuantity -
+									class="w-full h-2 bg-[#102239] rounded-lg appearance-none cursor-pointer"
+									style="background: linear-gradient(to right, rgb(230 165 39) 0%, rgb(230 165 39) {((productionQuantity -
 										1) /
 										9) *
-										100}%, rgb(51 65 85) {((productionQuantity - 1) / 9) * 100}%, rgb(51 65 85) 100%)"
+										100}%, rgb(16 34 57) {((productionQuantity - 1) / 9) * 100}%, rgb(16 34 57) 100%)"
 								/>
 							</div>
-							<div class="flex justify-between text-xs text-gray-500 mt-1 px-1">
+							<div class="flex justify-between text-xs text-[#a89e8e] mt-1 px-1">
 								<span>1</span>
 								<span>5</span>
 								<span>10</span>
@@ -603,13 +595,13 @@
 							<ResourceRequirements {costs} available={availableResources} />
 
 							<div
-								class="flex items-center justify-between p-3 md:p-4 bg-slate-700/30 rounded-lg border border-slate-600/50"
+								class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-lg"
 							>
 								<div class="flex items-center gap-2">
-									<FluentClock20Filled class="size-4 md:size-5 text-gray-400" />
-									<span class="text-xs md:text-sm text-gray-400">Production Time</span>
+									<FluentClock20Filled class="size-4 md:size-5 text-[#a89e8e]" />
+									<span class="text-xs md:text-sm text-[#a89e8e]">Production Time</span>
 								</div>
-								<span class="font-bold text-white text-base md:text-lg">
+								<span class="font-bold text-[#fff7e8] text-base md:text-lg">
 									{Math.floor((recipe.duration * productionQuantity) / 60)} min
 								</span>
 							</div>
@@ -618,10 +610,10 @@
 						<button
 							type="submit"
 							disabled={!canProduce}
-							class="w-full py-3 md:py-4 rounded-xl font-semibold text-white transition-all duration-300 text-sm md:text-base
+							class="w-full py-3 md:py-4 rounded-xl font-semibold transition-all duration-300 text-sm md:text-base
 							       {canProduce
-								? 'bg-gradient-to-r from-purple-600 via-blue-600 to-cyan-600 hover:from-purple-500 hover:via-blue-500 hover:to-cyan-500 shadow-lg shadow-purple-500/25'
-								: 'bg-slate-700 text-slate-400 cursor-not-allowed'}"
+								? 'bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45]'
+								: 'bg-[#102239] text-[#a89e8e] cursor-not-allowed'}"
 						>
 							{#if canProduce}
 								<span class="flex items-center justify-center gap-2">

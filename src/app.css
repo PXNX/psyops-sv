@@ -201,7 +201,7 @@
 		@apply mb-3;
 	}
 	.wysiwyg-editor blockquote {
-		@apply border-l-4 border-primary pl-4 italic my-4 text-gray-600;
+		@apply border-l-4 border-primary pl-4 italic my-4 text-[#a89e8e];
 	}
 	.wysiwyg-editor code {
 		@apply bg-base-200 px-1 py-0.5 rounded text-sm;

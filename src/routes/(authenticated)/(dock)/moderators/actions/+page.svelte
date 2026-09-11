@@ -13,6 +13,7 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
 	import { formatDate } from "$lib/utils/formatting.js";
+	import { badgeClass } from "$lib/component/ui/styles";
 
 	const { data } = $props();
 
@@ -44,9 +45,9 @@
 			case "report_action":
 				return "text-blue-400";
 			case "content_flag":
-				return "text-yellow-400";
+				return "text-[#f7c56b]";
 			default:
-				return "text-gray-400";
+				return "text-[#a89e8e]";
 		}
 	}
 
@@ -85,7 +86,7 @@
 <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->
 	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-		<h1 class="text-2xl font-bold text-white">Moderator Actions</h1>
+		<h1 class="text-2xl font-bold text-[#fff7e8]">Moderator Actions</h1>
 		<div class="flex items-center gap-2 flex-wrap">
 			{#if data.currentUserId}
 				<button
@@ -127,15 +128,13 @@
 	{/if}
 
 	<!-- Stats -->
-	<div
-		class="flex items-center gap-4 rounded-2xl bg-slate-800/50 border border-white/5 p-5 w-full sm:w-auto sm:inline-flex"
-	>
-		<div class="size-12 rounded-xl flex items-center justify-center bg-purple-600/20">
-			<FluentShield20Filled class="size-6 text-purple-400" />
+	<div class="flex items-center gap-4 rounded-2xl panel p-5 w-full sm:w-auto sm:inline-flex">
+		<div class="size-12 rounded-xl flex items-center justify-center bg-[#8c709b]/20">
+			<FluentShield20Filled class="size-6 text-[#d5c4df]" />
 		</div>
 		<div>
-			<div class="text-3xl font-bold text-purple-400 leading-none">{data.actions.length}</div>
-			<div class="text-sm text-gray-400 mt-1">Total Actions</div>
+			<div class="text-3xl font-bold text-[#d5c4df] leading-none">{data.actions.length}</div>
+			<div class="text-sm text-[#a89e8e] mt-1">Total Actions</div>
 		</div>
 	</div>
 
@@ -143,11 +142,11 @@
 	<div class="space-y-3">
 		{#each data.actions as action}
 			{@const ActionIcon = getActionIcon(action.type)}
-			<div class="bg-slate-800/50 rounded-xl border border-white/5 p-6 hover:border-white/10 transition-all">
+			<div class="panel rounded-xl p-6 hover:border-[#dfceb0]/25 transition-all">
 				<div class="flex items-start gap-4">
 					<!-- Action Icon -->
 					<div class="shrink-0">
-						<div class="size-12 rounded-xl flex items-center justify-center bg-slate-700/50">
+						<div class="size-12 rounded-xl flex items-center justify-center bg-[#102239]/70">
 							<ActionIcon class="size-6 {getActionColor(action.type)}" />
 						</div>
 					</div>
@@ -156,10 +155,10 @@
 					<div class="flex-1 min-w-0">
 						<!-- Header -->
 						<div class="flex items-center gap-3 mb-3 flex-wrap">
-							<span class="badge badge-sm border-0 {getActionColor(action.type)} bg-slate-700/50">
+							<span class="badge badge-sm border-0 {getActionColor(action.type)} bg-[#102239]/70">
 								{getActionLabel(action.type)}
 							</span>
-							<div class="flex items-center gap-1 text-xs text-gray-500">
+							<div class="flex items-center gap-1 text-xs text-[#a89e8e]">
 								<FluentCalendar20Filled class="size-3" />
 								<span>{formatDate(action.timestamp)}</span>
 							</div>
@@ -169,7 +168,7 @@
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
 							<!-- Target User -->
 							<div class="flex items-center gap-3">
-								<div class="text-xs text-gray-500 font-medium min-w-[60px]">Target:</div>
+								<div class="text-xs text-[#a89e8e] font-medium min-w-[60px]">Target:</div>
 								<a href="/user/{action.target.id}" class="flex items-center gap-2 group flex-1 min-w-0">
 									<div class="size-8 rounded-lg overflow-hidden transition-all">
 										<Logo
@@ -177,10 +176,10 @@
 											alt={action.target.name}
 											class="size-full"
 											placeholderIcon={FluentPeople20Filled}
-											placeholderGradient="from-slate-600 to-slate-700"
+											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 										/>
 									</div>
-									<span class="text-sm text-white group-hover:text-purple-400 transition-colors truncate">
+									<span class="text-sm text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors truncate">
 										{action.target.name}
 									</span>
 								</a>
@@ -188,7 +187,7 @@
 
 							<!-- Moderator -->
 							<div class="flex items-center gap-3">
-								<div class="text-xs text-gray-500 font-medium min-w-[60px]">Moderator:</div>
+								<div class="text-xs text-[#a89e8e] font-medium min-w-[60px]">Moderator:</div>
 								<a href="/user/{action.moderator.id}" class="flex items-center gap-2 group flex-1 min-w-0">
 									<div class="size-8 rounded-lg overflow-hidden transition-all">
 										<Logo
@@ -196,16 +195,16 @@
 											alt={action.moderator.name}
 											class="size-full"
 											placeholderIcon={FluentShield20Filled}
-											placeholderGradient="from-purple-600 to-purple-700"
+											placeholderGradient="from-[#8c709b] to-[#6a5578]"
 										/>
 									</div>
-									<span class="text-sm text-purple-300 group-hover:text-purple-400 transition-colors truncate">
+									<span class="text-sm text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors truncate">
 										{action.moderator.name}
 									</span>
 									{#if action.moderator.role === "admin"}
-										<div class="badge badge-xs bg-red-600/20 text-red-400 border-red-500/30">Admin</div>
+										<div class={badgeClass({ tone: "red", size: "xs" })}>Admin</div>
 									{:else if action.moderator.role === "moderator"}
-										<div class="badge badge-xs bg-purple-600/20 text-purple-400 border-purple-500/30">Mod</div>
+										<div class={badgeClass({ tone: "purple", size: "xs" })}>Mod</div>
 									{/if}
 								</a>
 							</div>
@@ -213,17 +212,17 @@
 
 						<!-- Reason & Note -->
 						{#if action.reason || action.note}
-							<div class="bg-slate-700/30 rounded-lg p-3 space-y-2">
+							<div class="bg-[#102239]/60 rounded-lg p-3 space-y-2">
 								{#if action.reason}
 									<div>
-										<span class="text-xs text-gray-500 font-medium">Reason:</span>
-										<span class="text-sm text-gray-300 ml-2">{action.reason}</span>
+										<span class="text-xs text-[#a89e8e] font-medium">Reason:</span>
+										<span class="text-sm text-[#d9ccb7] ml-2">{action.reason}</span>
 									</div>
 								{/if}
 								{#if action.note}
 									<div>
-										<span class="text-xs text-gray-500 font-medium">Note:</span>
-										<p class="text-sm text-gray-300 mt-1">{action.note}</p>
+										<span class="text-xs text-[#a89e8e] font-medium">Note:</span>
+										<p class="text-sm text-[#d9ccb7] mt-1">{action.note}</p>
 									</div>
 								{/if}
 							</div>
@@ -235,13 +234,13 @@
 	</div>
 
 	{#if data.actions.length === 0}
-		<div class="card bg-slate-800/50 border border-white/5">
+		<div class="card panel">
 			<div class="card-body items-center text-center py-12">
-				<div class="size-16 rounded-full flex items-center justify-center bg-gray-600/20 mb-4">
-					<FluentShield20Filled class="size-8 text-gray-400" />
+				<div class="size-16 rounded-full flex items-center justify-center bg-[#14283f] mb-4">
+					<FluentShield20Filled class="size-8 text-[#a89e8e]" />
 				</div>
-				<h3 class="text-xl font-bold text-white">No Actions Found</h3>
-				<p class="text-gray-400 max-w-md">
+				<h3 class="text-xl font-bold text-[#fff7e8]">No Actions Found</h3>
+				<p class="text-[#a89e8e] max-w-md">
 					{#if data.filterUserId}
 						No moderation actions have been taken against this user.
 					{:else}

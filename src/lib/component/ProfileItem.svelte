@@ -30,11 +30,19 @@
 	}: Props = $props();
 
 	const hoverColors: Record<string, string> = {
-		yellow: "group-hover:text-yellow-400",
-		blue: "group-hover:text-blue-400",
-		purple: "group-hover:text-purple-400",
-		emerald: "group-hover:text-emerald-400",
+		yellow: "group-hover:text-[#f7c56b]",
+		blue: "group-hover:text-[#b7d0e6]",
+		purple: "group-hover:text-[#d5c4df]",
+		emerald: "group-hover:text-[#c6dfbf]",
 		red: "group-hover:text-red-400"
+	};
+
+	const tileColors: Record<string, string> = {
+		yellow: "bg-[#e6a527]/15",
+		blue: "bg-[#315d8d]/18",
+		purple: "bg-[#8c709b]/15",
+		emerald: "bg-[#587252]/18",
+		red: "bg-red-600/20"
 	};
 
 	const Component = href ? "a" : "div";
@@ -44,27 +52,27 @@
 	this={Component}
 	{href}
 	{onclick}
-	class="flex items-center gap-3 group hover:bg-slate-700/30 rounded-lg p-2 -m-2 transition-all"
+	class="flex items-center gap-3 group hover:bg-[#19304b] rounded-lg p-2 -m-2 transition-all"
 	class:cursor-pointer={onclick}
 >
 	{#if logo !== undefined}
 		<Logo src={logo} alt={logoAlt} {placeholderIcon} {placeholderGradient} />
 	{:else if icon}
-		<div class="size-12 bg-{hoverColor}-600/20 rounded-lg flex items-center justify-center">
+		<div class="size-12 {tileColors[hoverColor] ?? tileColors.purple} rounded-lg flex items-center justify-center">
 			<span class="text-2xl">{icon}</span>
 		</div>
 	{/if}
 
 	<div class="flex-1 min-w-0">
-		<p class="font-semibold text-white {hoverColors[hoverColor]} transition-colors truncate">
+		<p class="font-semibold text-[#fff7e8] {hoverColors[hoverColor]} transition-colors truncate">
 			{title}
 		</p>
-		<p class="text-xs text-gray-400 truncate">
+		<p class="text-xs text-[#a89e8e] truncate">
 			{subtitle}
 		</p>
 	</div>
 
 	{#if href || onclick}
-		<FluentChevronRight20Filled class="size-5 text-gray-500 {hoverColors[hoverColor]} transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] {hoverColors[hoverColor]} transition-colors" />
 	{/if}
 </svelte:element>

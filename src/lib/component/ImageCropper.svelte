@@ -2,6 +2,7 @@
 	import { onMount } from "svelte";
 	import IconClose from "~icons/fluent/dismiss-20-filled";
 	import IconCheck from "~icons/fluent/checkmark-20-filled";
+	import { buttonClass } from "$lib/component/ui/styles";
 
 	interface Props {
 		imageUrl: string;
@@ -104,12 +105,12 @@
 		ctx.clearRect(cropX, cropY, cropWidth, cropHeight);
 
 		// Draw crop border
-		ctx.strokeStyle = "#3b82f6";
+		ctx.strokeStyle = "#e6a527";
 		ctx.lineWidth = 2;
 		ctx.strokeRect(cropX, cropY, cropWidth, cropHeight);
 
 		// Draw grid lines
-		ctx.strokeStyle = "rgba(59, 130, 246, 0.3)";
+		ctx.strokeStyle = "rgba(230, 165, 39, 0.3)";
 		ctx.lineWidth = 1;
 		for (let i = 1; i < 3; i++) {
 			const x = cropX + (cropWidth / 3) * i;
@@ -127,7 +128,7 @@
 		// Draw resize handle
 		const handleX = cropX + cropWidth;
 		const handleY = cropY + cropHeight;
-		ctx.fillStyle = "#3b82f6";
+		ctx.fillStyle = "#e6a527";
 		ctx.beginPath();
 		ctx.arc(handleX, handleY, HANDLE_SIZE / 2, 0, Math.PI * 2);
 		ctx.fill();
@@ -283,10 +284,10 @@
 />
 
 <div class="modal modal-open">
-	<div class="modal-box w-full max-w-2xl">
-		<h3 class="font-bold text-lg mb-4">{title}</h3>
+	<div class="modal-box w-full max-w-2xl panel">
+		<h3 class="font-bold text-lg mb-4 text-[#fff7e8]">{title}</h3>
 
-		<div class="relative bg-black rounded-lg overflow-hidden mb-4" bind:this={container}>
+		<div class="relative bg-[#102239] rounded-lg overflow-hidden mb-4" bind:this={container}>
 			<img
 				bind:this={img}
 				src={imageUrl}
@@ -303,11 +304,11 @@
 		</div>
 
 		<div class="modal-action">
-			<button class="btn btn-ghost" onclick={onCancel}>
+			<button class={buttonClass({ variant: "ghost" })} onclick={onCancel}>
 				<IconClose class="w-5 h-5" />
 				Cancel
 			</button>
-			<button class="btn btn-primary" onclick={handleCrop}>
+			<button class={buttonClass({ variant: "primary" })} onclick={handleCrop}>
 				<IconCheck class="w-5 h-5" />
 				{cropButtonText}
 			</button>

@@ -35,7 +35,7 @@
 
 {#if open}
 	<div class="modal-open modal z-5003">
-		<div class="modal-box {sizeClasses[size]} rounded-xl border border-white/5 bg-slate-900">
+		<div class="modal-box {sizeClasses[size]} rounded-xl panel">
 			<!-- Header with back button (optional) and close button -->
 			<div class="mb-6 flex items-center justify-between">
 				<div class="flex items-center gap-2">
@@ -43,7 +43,7 @@
 						<IconButton icon={IconArrowLeft} label="Go back" size="sm" onclick={onBack} />
 					{/if}
 					{#if title}
-						<h3 class="text-xl font-bold text-white">{title}</h3>
+						<h3 class="text-xl font-bold text-[#fff7e8]">{title}</h3>
 					{/if}
 				</div>
 				<IconButton icon={IconDismiss} label="Close" size="sm" onclick={handleClose} />

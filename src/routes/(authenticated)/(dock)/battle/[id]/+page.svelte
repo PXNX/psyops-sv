@@ -128,18 +128,18 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 pb-8">
+<div class="min-h-screen pb-8">
 	<!-- Command Header -->
-	<div class="border-b border-red-900/30 bg-slate-900/80 backdrop-blur-xl">
+	<div class="border-b border-[#dfceb0]/15 bg-[#102239]/90 backdrop-blur-xl">
 		<div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
 			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 				<div class="flex items-center gap-3 sm:gap-6 w-full sm:w-auto">
 					<!-- Region Emblem -->
 					<div class="relative flex-shrink-0">
-						<div class="absolute inset-0 bg-red-500/20 blur-xl rounded-full"></div>
+						<div class="absolute inset-0 bg-[#e6a527]/10 blur-xl rounded-full"></div>
 						<a
 							href="/region/{data.battle.regionId}"
-							class="relative size-16 sm:size-20 bg-slate-800/50 rounded-lg border-2 border-red-500/30 p-2 flex items-center justify-center hover:border-red-500/50 transition-colors"
+							class="relative size-16 sm:size-20 bg-[#102239]/70 rounded-lg border-2 border-[#e6a527]/30 p-2 flex items-center justify-center hover:border-[#e6a527]/50 transition-colors"
 						>
 							<Logo
 								src={getRegionCoatPath(data.battle.regionId)}
@@ -180,9 +180,9 @@
 								{/if}
 							{/if}
 						</div>
-						<div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-slate-400 font-mono">
+						<div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[#a89e8e] font-mono">
 							<span class="uppercase">{data.battle.terrain}</span>
-							<span class="text-slate-600 hidden sm:inline">|</span>
+							<span class="text-[#a89e8e]/70 hidden sm:inline">|</span>
 							<span class="hidden sm:inline">{formatDateTime(data.battle.startedAt)}</span>
 						</div>
 					</div>
@@ -192,7 +192,7 @@
 			<!-- Mission Timer -->
 			{#if data.battle.phase === "preparation"}
 				<div
-					class="mt-4 sm:mt-6 bg-gradient-to-r from-blue-950/50 to-slate-950/50 border border-blue-500/20 rounded-lg p-3 sm:p-4"
+					class="mt-4 sm:mt-6 bg-[#315d8d]/12 border border-[#7ba0c8]/25 rounded-lg p-3 sm:p-4"
 				>
 					<div class="flex items-center justify-between mb-2 sm:mb-3">
 						<div class="text-blue-400 font-mono text-xs sm:text-sm font-medium uppercase tracking-wide">
@@ -202,29 +202,29 @@
 					<div class="flex items-center justify-center gap-2 sm:gap-3">
 						<div class="text-center">
 							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
+								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-[#0d1d31]/90 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
 							>
 								{String(timeRemaining.hours).padStart(2, "0")}
 							</div>
-							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">HRS</div>
+							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">HRS</div>
 						</div>
 						<div class="text-xl sm:text-2xl font-bold text-blue-500/50">:</div>
 						<div class="text-center">
 							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
+								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-[#0d1d31]/90 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
 							>
 								{String(timeRemaining.minutes).padStart(2, "0")}
 							</div>
-							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">MIN</div>
+							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">MIN</div>
 						</div>
 						<div class="text-xl sm:text-2xl font-bold text-blue-500/50">:</div>
 						<div class="text-center">
 							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-slate-950/80 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
+								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-[#0d1d31]/90 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
 							>
 								{String(timeRemaining.seconds).padStart(2, "0")}
 							</div>
-							<div class="text-xs text-slate-500 mt-1 sm:mt-1.5 font-mono">SEC</div>
+							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">SEC</div>
 						</div>
 					</div>
 				</div>
@@ -234,7 +234,7 @@
 
 	<div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-8">
 		<!-- Battle Progress Bar -->
-		<div class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl p-4 sm:p-6">
+		<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl p-4 sm:p-6">
 			<div class="flex items-center justify-between mb-4">
 				<div class="flex items-center gap-2 sm:gap-3">
 					<a
@@ -251,7 +251,7 @@
 						<span class="text-sm sm:text-base font-bold text-red-400">{data.battle.attackerState.name}</span>
 					</a>
 				</div>
-				<div class="text-xs sm:text-sm text-slate-500 font-mono">BATTLE MOMENTUM</div>
+				<div class="text-xs sm:text-sm text-[#a89e8e] font-mono">BATTLE MOMENTUM</div>
 				<div class="flex items-center gap-2 sm:gap-3">
 					<a
 						href="/state/{data.battle.defenderState.id}"
@@ -270,7 +270,7 @@
 			</div>
 
 			<!-- Horizontal Progress Bar -->
-			<div class="relative h-12 sm:h-16 bg-slate-950/80 rounded-lg border border-slate-700/50 overflow-hidden">
+			<div class="relative h-12 sm:h-16 bg-[#0d1d31]/90 rounded-lg border border-[#dfceb0]/15 overflow-hidden">
 				<!-- Defender territory (left side) -->
 				<div
 					class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-blue-600 to-blue-500 transition-all duration-1000"
@@ -284,7 +284,7 @@
 				></div>
 
 				<!-- Center line -->
-				<div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-400/50 transform -translate-x-1/2"></div>
+				<div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[#dfceb0]/30 transform -translate-x-1/2"></div>
 
 				<!-- Battle icon at momentum point -->
 				<div
@@ -321,7 +321,7 @@
 
 		<!-- Fortifications Info -->
 		{#if data.fortificationBonus > 0}
-			<div class="bg-gradient-to-r from-blue-950/30 to-slate-950/30 border border-blue-500/30 rounded-lg p-3 sm:p-4">
+			<div class="bg-[#315d8d]/10 border border-[#7ba0c8]/30 rounded-lg p-3 sm:p-4">
 				<div class="flex items-center gap-3">
 					<div class="text-3xl sm:text-4xl">🏰</div>
 					<div class="flex-1">
@@ -346,14 +346,14 @@
 		<!-- Unit Deployment Section -->
 		{#if data.userSide}
 			<div
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-{userSideColor()}-500/30 rounded-xl p-4 sm:p-6"
+				class="bg-[#14283f]/85 border border-{userSideColor()}-500/30 rounded-xl p-4 sm:p-6"
 			>
 				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-					<h2 class="text-lg sm:text-xl font-bold text-slate-200 font-mono uppercase tracking-wide">Deploy Forces</h2>
+					<h2 class="text-lg sm:text-xl font-bold text-[#fff7e8] font-mono uppercase tracking-wide">Deploy Forces</h2>
 					<div
 						class="px-3 py-1 bg-{userSideColor()}-500/20 border border-{userSideColor()}-500/50 rounded text-xs sm:text-sm w-fit"
 					>
-						<span class="text-slate-400 font-mono">FIGHTING AS:</span>
+						<span class="text-[#a89e8e] font-mono">FIGHTING AS:</span>
 						<span class="ml-2 text-{userSideColor()}-300 font-bold uppercase">{data.userSide}</span>
 					</div>
 				</div>
@@ -370,11 +370,11 @@
 									: 'hover:scale-[1.01]'}"
 							>
 								<div
-									class="relative overflow-hidden bg-slate-800/40 border-2 rounded-xl p-3 sm:p-4 {selectedUnitIds.has(
+									class="relative overflow-hidden bg-[#102239]/70 border-2 rounded-xl p-3 sm:p-4 {selectedUnitIds.has(
 										unit.id
 									)
 										? 'border-emerald-500/50 bg-emerald-950/20'
-										: 'border-slate-700/50 hover:border-slate-600/50'}"
+										: 'border-[#dfceb0]/15 hover:border-[#dfceb0]/25'}"
 								>
 									{#if selectedUnitIds.has(unit.id)}
 										<div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent"></div>
@@ -390,7 +390,7 @@
 
 									<div class="relative flex items-center gap-2 sm:gap-3 mb-3">
 										<div
-											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-slate-900/60 rounded border border-slate-700/60 p-1.5 sm:p-2"
+											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-[#0d1d31] rounded border border-[#dfceb0]/20 p-1.5 sm:p-2"
 										>
 											<img
 												src={getUnitIconPath(unit.unitType)}
@@ -399,7 +399,7 @@
 											/>
 										</div>
 										<div class="flex-1 min-w-0">
-											<div class="text-xs text-slate-500 font-mono mb-0.5">{m[unit.unitType]()}</div>
+											<div class="text-xs text-[#a89e8e] font-mono mb-0.5">{m[unit.unitType]()}</div>
 											<div class="text-sm sm:text-base font-bold text-white truncate">{unit.name}</div>
 											<div class="flex items-center gap-2 mt-1">
 												<span class="text-xs text-red-400 font-mono">⚔️ {template.baseAttack}</span>
@@ -411,11 +411,11 @@
 									<div class="relative space-y-2">
 										<!-- Health (Blue) -->
 										<div>
-											<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 												<span>HEALTH</span>
 												<span class="text-blue-400 font-medium">{unit.health}%</span>
 											</div>
-											<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 												<div
 													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-400"
 													style="width: {unit.health}%"
@@ -425,11 +425,11 @@
 
 										<!-- Organization (Green) -->
 										<div>
-											<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 												<span>ORGANIZATION</span>
 												<span class="text-emerald-400 font-medium">{unit.organization}%</span>
 											</div>
-											<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 												<div
 													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-emerald-400"
 													style="width: {unit.organization}%"
@@ -439,11 +439,11 @@
 
 										<!-- Supply (Orange) -->
 										<div>
-											<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 												<span>SUPPLY</span>
 												<span class="text-orange-400 font-medium">{unit.supplyLevel}%</span>
 											</div>
-											<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 												<div
 													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-orange-500 to-orange-400"
 													style="width: {unit.supplyLevel}%"
@@ -475,7 +475,7 @@
 							<button
 								type="submit"
 								disabled={isJoining}
-								class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 disabled:from-slate-700 disabled:to-slate-800 rounded-lg text-white font-bold text-base sm:text-lg shadow-lg transition-all duration-300 hover:scale-[1.01] disabled:scale-100 font-mono uppercase tracking-wide"
+								class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 disabled:from-[#1f3450] disabled:to-[#172a45] rounded-lg text-white font-bold text-base sm:text-lg shadow-lg transition-all duration-300 hover:scale-[1.01] disabled:scale-100 font-mono uppercase tracking-wide"
 							>
 								{isJoining
 									? "⚡ Deploying..."
@@ -483,13 +483,13 @@
 							</button>
 						</form>
 					{:else}
-						<div class="text-center py-6 sm:py-8 text-slate-500 font-mono text-sm">← Select units to deploy</div>
+						<div class="text-center py-6 sm:py-8 text-[#a89e8e] font-mono text-sm">← Select units to deploy</div>
 					{/if}
 				{:else if data.userUnits.length === 0}
-					<div class="text-center py-8 sm:py-12 bg-slate-900/30 rounded-lg border border-slate-700/30">
+					<div class="text-center py-8 sm:py-12 bg-[#102239]/50 rounded-lg border border-[#dfceb0]/10">
 						<div class="text-4xl sm:text-6xl mb-4 opacity-30">🚫</div>
-						<p class="text-base sm:text-lg text-slate-400 font-mono mb-2">No eligible units</p>
-						<p class="text-xs sm:text-sm text-slate-600">
+						<p class="text-base sm:text-lg text-[#a89e8e] font-mono mb-2">No eligible units</p>
+						<p class="text-xs sm:text-sm text-[#a89e8e]/70">
 							{#if data.userSide === "defender"}
 								Units must be in Region #{data.battle.regionId}
 							{:else}
@@ -500,10 +500,10 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="bg-slate-900/30 border border-slate-700/30 rounded-xl p-8 sm:p-12 text-center">
+			<div class="bg-[#102239]/50 border border-[#dfceb0]/10 rounded-xl p-8 sm:p-12 text-center">
 				<div class="text-4xl sm:text-6xl mb-4 opacity-20">⛔</div>
-				<p class="text-lg sm:text-xl text-slate-400 font-mono mb-2">Cannot Deploy</p>
-				<p class="text-xs sm:text-sm text-slate-600">{data.canJoinReason || "Unknown reason"}</p>
+				<p class="text-lg sm:text-xl text-[#a89e8e] font-mono mb-2">Cannot Deploy</p>
+				<p class="text-xs sm:text-sm text-[#a89e8e]/70">{data.canJoinReason || "Unknown reason"}</p>
 			</div>
 		{/if}
 
@@ -534,7 +534,7 @@
 					<button
 						type="submit"
 						disabled={isExecuting}
-						class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-slate-700 disabled:to-slate-800 rounded-lg text-white font-bold text-base sm:text-lg shadow-lg transition-all duration-300 hover:scale-[1.01] disabled:scale-100 font-mono uppercase tracking-wide"
+						class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-[#1f3450] disabled:to-[#172a45] rounded-lg text-white font-bold text-base sm:text-lg shadow-lg transition-all duration-300 hover:scale-[1.01] disabled:scale-100 font-mono uppercase tracking-wide"
 					>
 						{isExecuting ? "⚔️ Executing..." : "⚔️ Execute Round"}
 					</button>
@@ -545,7 +545,7 @@
 		<!-- My Engaged Units -->
 		{#if myUnits.length > 0}
 			<div
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border-2 border-{userSideColor()}-500/50 rounded-xl"
+				class="bg-[#14283f]/85 border-2 border-{userSideColor()}-500/50 rounded-xl"
 			>
 				<div class="bg-{userSideColor()}-950/30 border-b border-{userSideColor()}-500/30 px-4 sm:px-6 py-3 sm:py-4">
 					<div class="flex items-center justify-between">
@@ -564,9 +564,9 @@
 						{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
 						{@const sideColor = participant.side === "attacker" ? "red" : "blue"}
 						<div
-							class="relative overflow-hidden bg-slate-900/40 border rounded-lg p-3 sm:p-4 {participant.isEngaged
+							class="relative overflow-hidden bg-[#102239]/60 border rounded-lg p-3 sm:p-4 {participant.isEngaged
 								? `border-${sideColor}-500/50 bg-${sideColor}-950/10`
-								: 'border-slate-700/50'}"
+								: 'border-[#dfceb0]/15'}"
 						>
 							{#if participant.isEngaged}
 								<div class="absolute top-2 right-2">
@@ -580,7 +580,7 @@
 
 							<div class="flex items-center gap-2 sm:gap-3 mb-3">
 								<div
-									class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-slate-950/60 rounded border border-slate-700/60 p-1.5 sm:p-2"
+									class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-[#0d1d31] rounded border border-[#dfceb0]/20 p-1.5 sm:p-2"
 								>
 									<img
 										src={getUnitIconPath(participant.unit.unitType)}
@@ -589,7 +589,7 @@
 									/>
 								</div>
 								<div class="flex-1 min-w-0">
-									<div class="text-xs text-slate-500 font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
+									<div class="text-xs text-[#a89e8e] font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
 									<div class="font-bold text-white text-sm sm:text-base truncate">{participant.unit.name}</div>
 									<div class="flex items-center gap-2 mt-1">
 										<span class="text-xs text-red-400 font-mono">⚔️ {template.baseAttack}</span>
@@ -601,11 +601,11 @@
 							<div class="space-y-2">
 								<!-- Health -->
 								<div>
-									<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+									<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 										<span>HEALTH</span>
 										<span class="text-blue-400 font-medium">{participant.currentStrength}%</span>
 									</div>
-									<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+									<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 										<div
 											class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-400"
 											style="width: {participant.currentStrength}%"
@@ -615,11 +615,11 @@
 
 								<!-- Organization -->
 								<div>
-									<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+									<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 										<span>ORGANIZATION</span>
 										<span class="text-emerald-400 font-medium">{participant.currentOrganization}%</span>
 									</div>
-									<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+									<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 										<div
 											class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-emerald-400"
 											style="width: {participant.currentOrganization}%"
@@ -629,11 +629,11 @@
 
 								<!-- Supply -->
 								<div>
-									<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+									<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 										<span>SUPPLY</span>
 										<span class="text-orange-400 font-medium">{participant.unit.supplyLevel}%</span>
 									</div>
-									<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+									<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 										<div
 											class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-orange-500 to-orange-400"
 											style="width: {participant.unit.supplyLevel}%"
@@ -653,7 +653,7 @@
 				<!-- Other Attackers -->
 				{#if otherAttackerUnits.length > 0}
 					<div
-						class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-red-500/30 rounded-xl overflow-hidden"
+						class="bg-[#14283f]/85 border border-red-500/30 rounded-xl overflow-hidden"
 					>
 						<div class="bg-red-950/30 border-b border-red-500/30 px-4 sm:px-6 py-3 sm:py-4">
 							<div class="flex items-center justify-between">
@@ -669,9 +669,9 @@
 							{#each otherAttackerUnits as participant}
 								{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
 								<div
-									class="relative overflow-hidden bg-slate-900/40 border rounded-lg p-3 sm:p-4 {participant.isEngaged
+									class="relative overflow-hidden bg-[#102239]/60 border rounded-lg p-3 sm:p-4 {participant.isEngaged
 										? 'border-red-500/50 bg-red-950/10'
-										: 'border-slate-700/50'}"
+										: 'border-[#dfceb0]/15'}"
 								>
 									{#if participant.isEngaged}
 										<div class="absolute top-2 right-2">
@@ -685,7 +685,7 @@
 
 									<div class="flex items-center gap-2 sm:gap-3 mb-3">
 										<div
-											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-slate-950/60 rounded border border-slate-700/60 p-1.5 sm:p-2"
+											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-[#0d1d31] rounded border border-[#dfceb0]/20 p-1.5 sm:p-2"
 										>
 											<img
 												src={getUnitIconPath(participant.unit.unitType)}
@@ -694,9 +694,9 @@
 											/>
 										</div>
 										<div class="flex-1 min-w-0">
-											<div class="text-xs text-slate-500 font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
+											<div class="text-xs text-[#a89e8e] font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
 											<div class="font-bold text-white text-sm sm:text-base truncate">{participant.unit.name}</div>
-											<div class="text-xs text-slate-600">{participant.unit.owner.profile?.name || "Unknown"}</div>
+											<div class="text-xs text-[#a89e8e]/70">{participant.unit.owner.profile?.name || "Unknown"}</div>
 											<div class="flex items-center gap-2 mt-0.5">
 												<span class="text-xs text-red-400 font-mono">⚔️ {template.baseAttack}</span>
 												<span class="text-xs text-blue-400 font-mono">🛡️ {template.baseDefense}</span>
@@ -706,11 +706,11 @@
 
 									<div class="space-y-2">
 										<div>
-											<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 												<span>HEALTH</span>
 												<span class="text-blue-400 font-medium">{participant.currentStrength}%</span>
 											</div>
-											<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 												<div
 													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-400"
 													style="width: {participant.currentStrength}%"
@@ -718,11 +718,11 @@
 											</div>
 										</div>
 										<div>
-											<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 												<span>ORG</span>
 												<span class="text-emerald-400 font-medium">{participant.currentOrganization}%</span>
 											</div>
-											<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 												<div
 													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-emerald-400"
 													style="width: {participant.currentOrganization}%"
@@ -739,7 +739,7 @@
 				<!-- Other Defenders -->
 				{#if otherDefenderUnits.length > 0}
 					<div
-						class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-blue-500/30 rounded-xl overflow-hidden"
+						class="bg-[#14283f]/85 border border-blue-500/30 rounded-xl overflow-hidden"
 					>
 						<div class="bg-blue-950/30 border-b border-blue-500/30 px-4 sm:px-6 py-3 sm:py-4">
 							<div class="flex items-center justify-between">
@@ -757,9 +757,9 @@
 							{#each otherDefenderUnits as participant}
 								{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
 								<div
-									class="relative overflow-hidden bg-slate-900/40 border rounded-lg p-3 sm:p-4 {participant.isEngaged
+									class="relative overflow-hidden bg-[#102239]/60 border rounded-lg p-3 sm:p-4 {participant.isEngaged
 										? 'border-blue-500/50 bg-blue-950/10'
-										: 'border-slate-700/50'}"
+										: 'border-[#dfceb0]/15'}"
 								>
 									{#if participant.isEngaged}
 										<div class="absolute top-2 right-2">
@@ -773,7 +773,7 @@
 
 									<div class="flex items-center gap-2 sm:gap-3 mb-3">
 										<div
-											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-slate-950/60 rounded border border-slate-700/60 p-1.5 sm:p-2"
+											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-[#0d1d31] rounded border border-[#dfceb0]/20 p-1.5 sm:p-2"
 										>
 											<img
 												src={getUnitIconPath(participant.unit.unitType)}
@@ -782,9 +782,9 @@
 											/>
 										</div>
 										<div class="flex-1 min-w-0">
-											<div class="text-xs text-slate-500 font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
+											<div class="text-xs text-[#a89e8e] font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
 											<div class="font-bold text-white text-sm sm:text-base truncate">{participant.unit.name}</div>
-											<div class="text-xs text-slate-600">{participant.unit.owner.profile?.name || "Unknown"}</div>
+											<div class="text-xs text-[#a89e8e]/70">{participant.unit.owner.profile?.name || "Unknown"}</div>
 											<div class="flex items-center gap-2 mt-0.5">
 												<span class="text-xs text-red-400 font-mono">⚔️ {template.baseAttack}</span>
 												<span class="text-xs text-blue-400 font-mono">🛡️ {template.baseDefense}</span>
@@ -794,11 +794,11 @@
 
 									<div class="space-y-2">
 										<div>
-											<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 												<span>HEALTH</span>
 												<span class="text-blue-400 font-medium">{participant.currentStrength}%</span>
 											</div>
-											<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 												<div
 													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-400"
 													style="width: {participant.currentStrength}%"
@@ -806,11 +806,11 @@
 											</div>
 										</div>
 										<div>
-											<div class="flex items-center justify-between text-xs text-slate-500 mb-1 font-mono">
+											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
 												<span>ORG</span>
 												<span class="text-emerald-400 font-medium">{participant.currentOrganization}%</span>
 											</div>
-											<div class="h-1.5 bg-slate-950/50 rounded-full overflow-hidden border border-slate-700/30">
+											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
 												<div
 													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-emerald-400"
 													style="width: {participant.currentOrganization}%"
@@ -829,34 +829,34 @@
 		<!-- Combat Log -->
 		{#if data.battle.rounds.length > 0}
 			<div
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden"
 			>
-				<div class="bg-slate-900/80 border-b border-slate-700/50 px-4 sm:px-6 py-3 sm:py-4">
-					<h3 class="text-base sm:text-lg font-bold text-slate-200 font-mono uppercase tracking-wide">Combat Log</h3>
+				<div class="bg-[#102239]/90 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
+					<h3 class="text-base sm:text-lg font-bold text-[#fff7e8] font-mono uppercase tracking-wide">Combat Log</h3>
 				</div>
 				<div class="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
 					{#each data.battle.rounds as round}
-						<div class="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 sm:p-4">
+						<div class="bg-[#102239]/60 border border-[#dfceb0]/12 rounded-lg p-3 sm:p-4">
 							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3">
 								<div class="flex items-center gap-2 sm:gap-3">
-									<div class="px-2 py-1 bg-slate-800/50 border border-slate-600/50 rounded">
-										<span class="text-slate-400 font-mono text-xs">ROUND</span>
+									<div class="px-2 py-1 bg-[#102239]/70 border border-[#dfceb0]/25 rounded">
+										<span class="text-[#a89e8e] font-mono text-xs">ROUND</span>
 										<span class="text-white font-bold font-mono text-sm ml-2">{round.roundNumber}</span>
 									</div>
 								</div>
-								<span class="text-xs text-slate-600 font-mono">{formatDateTime(round.roundedAt)}</span>
+								<span class="text-xs text-[#a89e8e]/70 font-mono">{formatDateTime(round.roundedAt)}</span>
 							</div>
 							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
 								<div class="bg-red-950/20 border border-red-800/30 rounded p-2 sm:p-3">
 									<div class="text-red-400/70 font-mono text-xs mb-1 uppercase">Attackers</div>
-									<div class="text-slate-400">
+									<div class="text-[#a89e8e]">
 										<span class="text-white font-bold">{round.attackerUnitsEngaged}</span> units dealt
 										<span class="text-red-400 font-bold">{round.attackerTotalDamage}</span> damage
 									</div>
 								</div>
 								<div class="bg-blue-950/20 border border-blue-800/30 rounded p-2 sm:p-3">
 									<div class="text-blue-400/70 font-mono text-xs mb-1 uppercase">Defenders</div>
-									<div class="text-slate-400">
+									<div class="text-[#a89e8e]">
 										<span class="text-white font-bold">{round.defenderUnitsEngaged}</span> units dealt
 										<span class="text-blue-400 font-bold">{round.defenderTotalDamage}</span> damage
 									</div>
@@ -869,10 +869,10 @@
 
 			<!-- Battle Statistics Chart -->
 			<div
-				class="bg-gradient-to-br from-slate-900/50 to-slate-950/50 border border-slate-700/50 rounded-xl overflow-hidden"
+				class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden"
 			>
-				<div class="bg-slate-900/80 border-b border-slate-700/50 px-4 sm:px-6 py-3 sm:py-4">
-					<h3 class="text-base sm:text-lg font-bold text-slate-200 font-mono uppercase tracking-wide">
+				<div class="bg-[#102239]/90 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
+					<h3 class="text-base sm:text-lg font-bold text-[#fff7e8] font-mono uppercase tracking-wide">
 						Damage Analysis
 					</h3>
 				</div>
@@ -940,15 +940,15 @@
 						<div class="flex items-center justify-center gap-4 sm:gap-8 mt-4 sm:mt-6">
 							<div class="flex items-center gap-2">
 								<div class="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full"></div>
-								<span class="text-xs sm:text-sm text-slate-400 font-mono">Attacker</span>
+								<span class="text-xs sm:text-sm text-[#a89e8e] font-mono">Attacker</span>
 							</div>
 							<div class="flex items-center gap-2">
 								<div class="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-full"></div>
-								<span class="text-xs sm:text-sm text-slate-400 font-mono">Defender</span>
+								<span class="text-xs sm:text-sm text-[#a89e8e] font-mono">Defender</span>
 							</div>
 						</div>
 					{:else}
-						<div class="text-center py-8 sm:py-12 text-slate-600 font-mono text-sm">No combat data yet</div>
+						<div class="text-center py-8 sm:py-12 text-[#a89e8e]/70 font-mono text-sm">No combat data yet</div>
 					{/if}
 				</div>
 			</div>

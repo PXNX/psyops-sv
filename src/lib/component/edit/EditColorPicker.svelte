@@ -60,16 +60,16 @@
 
 	<!-- Custom Color Picker -->
 	<div class="flex items-center gap-3 pt-2">
-		<label for="color" class="text-sm font-medium text-gray-300">Custom:</label>
+		<label for="color" class="text-sm font-medium text-[#e5d8c1]">Custom:</label>
 		<input
 			type="color"
 			id="color"
 			name="color"
 			bind:value={color}
-			class="h-10 w-20 rounded-lg border-2 border-slate-600 bg-slate-700 cursor-pointer"
+			class="h-10 w-20 rounded-lg border-2 border-[#dfceb0]/25 bg-[#0d1d31] cursor-pointer"
 			{disabled}
 		/>
-		<span class="text-sm text-gray-400">{color}</span>
+		<span class="text-sm text-[#a89e8e]">{color}</span>
 	</div>
 
 	{#if error}
@@ -83,11 +83,11 @@
 				{#if previewImageUrl}
 					<img src={previewImageUrl} alt="Logo preview" class="size-10 object-contain" />
 				{:else if PreviewIcon}
-					<PreviewIcon class="size-6 text-white" />
+					<PreviewIcon class="size-6 text-[#fff7e8]" />
 				{/if}
 			</div>
 			<div>
-				<p class="font-semibold text-white">{previewTitle}</p>
+				<p class="font-semibold text-[#fff7e8]">{previewTitle}</p>
 				<p class="text-sm" style="color: {color}">{previewSubtitle}</p>
 			</div>
 		</div>
