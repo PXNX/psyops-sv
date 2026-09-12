@@ -131,10 +131,11 @@
 		}
 	}
 
-	/* Editorial dock navigation */
+	/* Editorial dock navigation — shares the panel system's border/shadow recipe
+	   so it reads as the same surface language as the rest of the UI. */
 	.dock {
-		@apply fixed bottom-0 left-0 right-0 h-16 bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 flex items-center justify-around px-2;
-		box-shadow: 0 -12px 30px rgba(2, 10, 21, 0.24);
+		@apply fixed bottom-0 left-0 right-0 h-16 bg-[#0e1d2f]/95 backdrop-blur-md border-t border-[#dfceb0]/15 flex items-center justify-around px-2;
+		box-shadow: 0 -14px 32px rgba(2, 10, 21, 0.2), inset 0 1px 0 rgba(255, 253, 247, 0.04);
 		z-index: 40;
 	}
 
@@ -143,7 +144,7 @@
 	}
 
 	.dock a.active {
-		@apply text-[#f7c56b] bg-[#e6a527]/10 border border-[#e6a527]/30;
+		@apply text-[#f7c56b] bg-[#e6a527]/15 border border-[#e6a527]/35;
 	}
 
 	.dock a:active {

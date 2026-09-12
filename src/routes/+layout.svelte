@@ -1,8 +1,7 @@
 <script>
 	import "../app.css";
 
-	import { fade } from "svelte/transition";
-	import { page, navigating } from "$app/state";
+	import { onNavigate } from "$app/navigation";
 	import { browser } from "$app/environment";
 	import { settings } from "$lib/settings.svelte";
 
@@ -24,6 +23,22 @@
 	$effect(() => {
 		document.documentElement.setAttribute("data-theme", settings.theme);
 	});
+
+	// Cross-fade between pages using the View Transitions API instead of
+	// keying the whole tree on the URL. Keying on `page.url` used to destroy
+	// and remount every layout (including the dock nav) on every navigation,
+	// which is what made page-to-page navigation feel slow. This transitions
+	// the DOM diff in place — no remount, no lost component state.
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 </script>
 
 <svelte:head>
@@ -35,10 +50,6 @@
 </svelte:head>
 
 <div class="min-h-dvh">
-	{#key page.url}
-		<div transition:fade>
-			{@render children()}
-		</div>
-	{/key}
+	{@render children()}
 </div>
 
