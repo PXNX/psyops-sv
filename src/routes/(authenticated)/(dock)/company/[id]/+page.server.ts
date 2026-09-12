@@ -4,16 +4,23 @@ import {
 	accounts,
 	companies,
 	companyBudgets,
+	companyShares,
+	shareHoldings,
+	shareListings,
+	shareTransactions,
 	factories,
 	factoryWorkers,
 	regions,
 	states,
 	resourceInventory,
 	productInventory,
-	userWallets
+	userWallets,
+	transactionHistory
 } from "$lib/server/schema";
-import { eq, count, sum, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, count, sum, sql, inArray } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
+import { ECONOMY_CONFIG } from "$lib/config";
+import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 import type { PageServerLoad, Actions } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -196,6 +203,69 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const ownerBalance = ownerWallet ? Number(ownerWallet.balance) : 0;
 
+	// --- Stock market ---
+	const [shares] = await db.select().from(companyShares).where(eq(companyShares.companyId, companyId));
+
+	let myHolding = 0;
+	let listings: Array<{
+		id: number;
+		sellerId: string;
+		sellerName: string | null;
+		quantity: number;
+		pricePerUnit: number;
+		isMine: boolean;
+	}> = [];
+	let topHolders: Array<{ userId: string; name: string | null; quantity: number; percent: number }> = [];
+	let floatOutstanding = 0;
+
+	if (shares) {
+		const [myHoldingRow] = await db
+			.select({ quantity: shareHoldings.quantity })
+			.from(shareHoldings)
+			.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, account.id)));
+		myHolding = myHoldingRow?.quantity ?? 0;
+
+		const rawListings = await db
+			.select()
+			.from(shareListings)
+			.where(eq(shareListings.companyId, companyId))
+			.orderBy(shareListings.pricePerUnit);
+
+		floatOutstanding = rawListings.reduce((sum, l) => sum + l.quantity, 0);
+
+		const holderRows = await db
+			.select({ userId: shareHoldings.userId, quantity: shareHoldings.quantity })
+			.from(shareHoldings)
+			.where(and(eq(shareHoldings.companyId, companyId), sql`${shareHoldings.quantity} > 0`))
+			.orderBy(desc(shareHoldings.quantity))
+			.limit(10);
+
+		const holderIds = Array.from(new Set([...holderRows.map((h) => h.userId), ...rawListings.map((l) => l.sellerId)]));
+		const profiles =
+			holderIds.length > 0
+				? await db.query.userProfiles.findMany({
+						where: (profiles, { inArray }) => inArray(profiles.accountId, holderIds)
+					})
+				: [];
+		const nameByUserId = new Map(profiles.map((p) => [p.accountId, p.name]));
+
+		listings = rawListings.map((l) => ({
+			id: l.id,
+			sellerId: l.sellerId,
+			sellerName: nameByUserId.get(l.sellerId) ?? null,
+			quantity: l.quantity,
+			pricePerUnit: Number(l.pricePerUnit),
+			isMine: l.sellerId === account.id
+		}));
+
+		topHolders = holderRows.map((h) => ({
+			userId: h.userId,
+			name: nameByUserId.get(h.userId) ?? null,
+			quantity: h.quantity,
+			percent: Math.round((h.quantity / shares.totalShares) * 1000) / 10
+		}));
+	}
+
 	return {
 		company: {
 			...company,
@@ -217,7 +287,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			totalSpent: Number(budget.totalSpent)
 		},
 		shiftsAffordable,
-		ownerBalance
+		ownerBalance,
+		shares: shares
+			? {
+					totalShares: shares.totalShares,
+					founderLockedShares: shares.founderLockedShares,
+					ipoPrice: Number(shares.ipoPrice),
+					ipoAt: shares.ipoAt.toISOString()
+				}
+			: null,
+		myHolding,
+		listings,
+		topHolders,
+		floatOutstanding,
+		ipoConfig: {
+			totalShares: ECONOMY_CONFIG.IPO_TOTAL_SHARES,
+			founderLockedPercent: ECONOMY_CONFIG.IPO_FOUNDER_LOCKED_PERCENT,
+			minPrice: ECONOMY_CONFIG.MIN_SHARE_PRICE
+		}
 	};
 };
 
@@ -566,5 +653,240 @@ export const actions: Actions = {
 			totalCost,
 			message: `Successfully funded ${shifts} shift${shifts > 1 ? "s" : ""} for ${totalCost.toLocaleString()} currency`
 		};
+	},
+
+	// Take the company public: issue a fixed share count, lock the founder's
+	// controlling block, and auto-list the remaining float at the chosen price.
+	goPublic: async ({ params, locals, request }) => {
+		const account = locals.account!;
+		const companyId = parseInt(params.id);
+		const formData = await request.formData();
+		const startingPrice = parseInt(formData.get("startingPrice") as string);
+
+		if (!startingPrice || startingPrice < ECONOMY_CONFIG.MIN_SHARE_PRICE) {
+			return fail(400, { error: "Invalid starting share price" });
+		}
+
+		const [company] = await db.select({ ownerId: companies.ownerId }).from(companies).where(eq(companies.id, companyId));
+		if (!company || company.ownerId !== account.id) {
+			return fail(403, { error: "Only the company owner can take it public" });
+		}
+
+		const [existing] = await db.select().from(companyShares).where(eq(companyShares.companyId, companyId));
+		if (existing) {
+			return fail(400, { error: "Company is already public" });
+		}
+
+		const totalShares = ECONOMY_CONFIG.IPO_TOTAL_SHARES;
+		const founderLockedShares = Math.ceil((totalShares * ECONOMY_CONFIG.IPO_FOUNDER_LOCKED_PERCENT) / 100);
+		const floatShares = totalShares - founderLockedShares;
+
+		await db.transaction(async (tx) => {
+			await tx.insert(companyShares).values({
+				companyId,
+				totalShares,
+				founderLockedShares,
+				ipoPrice: startingPrice
+			});
+
+			await tx.insert(shareHoldings).values({
+				companyId,
+				userId: account.id,
+				quantity: founderLockedShares
+			});
+
+			if (floatShares > 0) {
+				await tx.insert(shareListings).values({
+					companyId,
+					sellerId: account.id,
+					quantity: floatShares,
+					pricePerUnit: startingPrice
+				});
+			}
+		});
+
+		return {
+			success: true,
+			message: `Company is now public: ${totalShares.toLocaleString()} shares issued at $${startingPrice.toLocaleString()}/share`
+		};
+	},
+
+	// List shares for sale. The founder can never list below their locked block.
+	createShareListing: async ({ params, locals, request }) => {
+		const account = locals.account!;
+		const companyId = parseInt(params.id);
+		const formData = await request.formData();
+		const quantity = parseInt(formData.get("quantity") as string);
+		const pricePerUnit = parseInt(formData.get("pricePerUnit") as string);
+
+		if (!quantity || quantity < 1 || !pricePerUnit || pricePerUnit < ECONOMY_CONFIG.MIN_SHARE_PRICE) {
+			return fail(400, { error: "Invalid listing data" });
+		}
+
+		const [company] = await db.select({ ownerId: companies.ownerId }).from(companies).where(eq(companies.id, companyId));
+		if (!company) return fail(404, { error: "Company not found" });
+
+		const [shares] = await db.select().from(companyShares).where(eq(companyShares.companyId, companyId));
+		if (!shares) return fail(400, { error: "Company is not public" });
+
+		const [holding] = await db
+			.select()
+			.from(shareHoldings)
+			.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, account.id)));
+
+		if (!holding || holding.quantity < quantity) {
+			return fail(400, { error: "You don't own enough shares" });
+		}
+
+		if (account.id === company.ownerId && holding.quantity - quantity < shares.founderLockedShares) {
+			return fail(400, {
+				error: `As the founder you must keep at least ${shares.founderLockedShares.toLocaleString()} locked shares`
+			});
+		}
+
+		await db.transaction(async (tx) => {
+			await tx
+				.update(shareHoldings)
+				.set({ quantity: holding.quantity - quantity, updatedAt: new Date() })
+				.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, account.id)));
+
+			await tx.insert(shareListings).values({ companyId, sellerId: account.id, quantity, pricePerUnit });
+		});
+
+		return { success: true, message: "Share listing created" };
+	},
+
+	// Cancel one of your own share listings, returning the shares to your holding.
+	removeShareListing: async ({ locals, request }) => {
+		const account = locals.account!;
+		const formData = await request.formData();
+		const listingId = parseInt(formData.get("listingId") as string);
+
+		const [listing] = await db.select().from(shareListings).where(eq(shareListings.id, listingId));
+		if (!listing) return fail(404, { error: "Listing not found" });
+		if (listing.sellerId !== account.id) return fail(403, { error: "Not your listing" });
+
+		await db.transaction(async (tx) => {
+			const [holding] = await tx
+				.select()
+				.from(shareHoldings)
+				.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
+
+			if (holding) {
+				await tx
+					.update(shareHoldings)
+					.set({ quantity: holding.quantity + listing.quantity, updatedAt: new Date() })
+					.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
+			} else {
+				await tx.insert(shareHoldings).values({ companyId: listing.companyId, userId: account.id, quantity: listing.quantity });
+			}
+
+			await tx.delete(shareListings).where(eq(shareListings.id, listingId));
+		});
+
+		return { success: true, message: "Listing removed" };
+	},
+
+	// Buy shares from another shareholder's listing.
+	buyShareListing: async ({ locals, request }) => {
+		const account = locals.account!;
+		const formData = await request.formData();
+		const listingId = parseInt(formData.get("listingId") as string);
+		const quantity = parseInt(formData.get("quantity") as string);
+
+		const [listing] = await db.select().from(shareListings).where(eq(shareListings.id, listingId));
+		if (!listing) return fail(404, { error: "Listing not found" });
+		if (listing.sellerId === account.id) return fail(400, { error: "Cannot buy your own listing" });
+		if (!quantity || quantity < 1 || quantity > listing.quantity) return fail(400, { error: "Invalid quantity" });
+
+		const totalPrice = Number(listing.pricePerUnit) * quantity;
+
+		const [buyerWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
+		if (!buyerWallet || Number(buyerWallet.balance) < totalPrice) {
+			return fail(400, { error: "Insufficient funds" });
+		}
+
+		await db.transaction(async (tx) => {
+			const [sellerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
+
+			const buyerBalanceAfter = Number(buyerWallet.balance) - totalPrice;
+			const sellerBalanceAfter = Number(sellerWallet?.balance ?? 0) + totalPrice;
+
+			await tx
+				.update(userWallets)
+				.set({ balance: buyerBalanceAfter, updatedAt: new Date() })
+				.where(eq(userWallets.userId, account.id));
+
+			if (sellerWallet) {
+				await tx
+					.update(userWallets)
+					.set({ balance: sellerBalanceAfter, updatedAt: new Date() })
+					.where(eq(userWallets.userId, listing.sellerId));
+			}
+
+			const [buyerHolding] = await tx
+				.select()
+				.from(shareHoldings)
+				.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
+
+			if (buyerHolding) {
+				await tx
+					.update(shareHoldings)
+					.set({ quantity: buyerHolding.quantity + quantity, updatedAt: new Date() })
+					.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
+			} else {
+				await tx.insert(shareHoldings).values({ companyId: listing.companyId, userId: account.id, quantity });
+			}
+
+			if (quantity === listing.quantity) {
+				await tx.delete(shareListings).where(eq(shareListings.id, listingId));
+			} else {
+				await tx.update(shareListings).set({ quantity: listing.quantity - quantity }).where(eq(shareListings.id, listingId));
+			}
+
+			await tx.insert(shareTransactions).values({
+				companyId: listing.companyId,
+				listingId: listing.id,
+				buyerId: account.id,
+				sellerId: listing.sellerId,
+				quantity,
+				totalPrice
+			});
+
+			await tx.insert(transactionHistory).values({
+				userId: account.id,
+				transactionType: "share_purchase",
+				amount: -totalPrice,
+				balanceAfter: buyerBalanceAfter,
+				description: `Bought ${quantity.toLocaleString()} share${quantity > 1 ? "s" : ""} for $${totalPrice.toLocaleString()}`,
+				relatedUserId: listing.sellerId,
+				relatedEntityType: "company",
+				relatedEntityId: listing.companyId
+			});
+
+			await tx.insert(transactionHistory).values({
+				userId: listing.sellerId,
+				transactionType: "share_sale",
+				amount: totalPrice,
+				balanceAfter: sellerBalanceAfter,
+				description: `Sold ${quantity.toLocaleString()} share${quantity > 1 ? "s" : ""} for $${totalPrice.toLocaleString()}`,
+				relatedUserId: account.id,
+				relatedEntityType: "company",
+				relatedEntityId: listing.companyId
+			});
+		});
+
+		sendNotificationIfEnabled(listing.sellerId, "notifyMarketSales", {
+			title: "📈 Shares Sold",
+			body: `Someone bought ${quantity.toLocaleString()} of your shares for $${totalPrice.toLocaleString()}.`,
+			icon: "/favicon.png",
+			badge: "/badge.png",
+			data: {
+				url: `/company/${listing.companyId}`,
+				tag: `share-sale-${listing.id}`
+			}
+		}).catch((err) => console.error("Failed to send share sale notification:", err));
+
+		return { success: true, message: "Purchase successful" };
 	}
 };

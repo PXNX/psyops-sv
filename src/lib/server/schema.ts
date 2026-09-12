@@ -80,7 +80,10 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
 	"state_resource_purchase",
 	"state_resource_sale",
 	"state_construction",
-	"premium_purchase"
+	"premium_purchase",
+	"share_purchase",
+	"share_sale",
+	"dividend_payout"
 ]);
 
 export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_transaction_type", [
@@ -1249,7 +1252,13 @@ export const companiesRelations = relations(companies, ({ one, many }) => ({
 	budget: one(companyBudgets, {
 		fields: [companies.id],
 		references: [companyBudgets.companyId]
-	})
+	}),
+	shares: one(companyShares, {
+		fields: [companies.id],
+		references: [companyShares.companyId]
+	}),
+	shareHoldings: many(shareHoldings),
+	shareListings: many(shareListings)
 }));
 export type StateBorder = typeof stateBorders.$inferSelect;
 
@@ -2330,6 +2339,136 @@ export const companyBudgetsRelations = relations(companyBudgets, ({ one }) => ({
 }));
 
 export type CompanyBudget = typeof companyBudgets.$inferSelect;
+
+// --- STOCK MARKET: COMPANY SHARES ---
+// A company "goes public" once via an IPO action, which fixes its total share
+// count and locks a controlling block to the founder (companies.ownerId) that
+// can never be listed for sale. Only the remaining float is tradeable, using
+// the same listing/order-book model as the goods market.
+export const companyShares = pgTable("company_shares", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	companyId: integer("company_id")
+		.notNull()
+		.references(() => companies.id, { onDelete: "cascade" })
+		.unique(),
+	totalShares: integer("total_shares").notNull(),
+	founderLockedShares: integer("founder_locked_shares").notNull(),
+	ipoPrice: bigint("ipo_price", { mode: "number" }).notNull(),
+	ipoAt: timestamp("ipo_at").defaultNow().notNull(),
+	lastDividendAt: timestamp("last_dividend_at")
+});
+
+export const companySharesRelations = relations(companyShares, ({ one }) => ({
+	company: one(companies, {
+		fields: [companyShares.companyId],
+		references: [companies.id]
+	})
+}));
+
+export type CompanyShares = typeof companyShares.$inferSelect;
+
+// Per-user share ownership. The founder's row includes their locked block, so
+// the sum of all holdings for a company always equals its totalShares.
+export const shareHoldings = pgTable(
+	"share_holdings",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		companyId: integer("company_id")
+			.notNull()
+			.references(() => companies.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		quantity: integer("quantity").default(0).notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		companyUserIdx: uniqueIndex("idx_share_holding_company_user").on(t.companyId, t.userId),
+		companyIdx: index("idx_share_holding_company").on(t.companyId)
+	})
+);
+
+export const shareHoldingsRelations = relations(shareHoldings, ({ one }) => ({
+	company: one(companies, { fields: [shareHoldings.companyId], references: [companies.id] }),
+	user: one(accounts, { fields: [shareHoldings.userId], references: [accounts.id] })
+}));
+
+// Sell-side order book, mirroring marketListings. Shares are moved out of the
+// seller's holding into escrow as soon as a listing is created.
+export const shareListings = pgTable(
+	"share_listings",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		companyId: integer("company_id")
+			.notNull()
+			.references(() => companies.id, { onDelete: "cascade" }),
+		sellerId: text("seller_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		quantity: integer("quantity").notNull(),
+		pricePerUnit: bigint("price_per_unit", { mode: "number" }).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({ companyIdx: index("idx_share_listing_company").on(t.companyId) })
+);
+
+export const shareListingsRelations = relations(shareListings, ({ one }) => ({
+	company: one(companies, { fields: [shareListings.companyId], references: [companies.id] }),
+	seller: one(accounts, { fields: [shareListings.sellerId], references: [accounts.id] })
+}));
+
+export const shareTransactions = pgTable(
+	"share_transactions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		companyId: integer("company_id")
+			.notNull()
+			.references(() => companies.id, { onDelete: "cascade" }),
+		listingId: integer("listing_id").references(() => shareListings.id, { onDelete: "set null" }),
+		buyerId: text("buyer_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		sellerId: text("seller_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		quantity: integer("quantity").notNull(),
+		totalPrice: bigint("total_price", { mode: "number" }).notNull(),
+		completedAt: timestamp("completed_at").defaultNow().notNull()
+	},
+	(t) => ({ companyIdx: index("idx_share_transaction_company").on(t.companyId) })
+);
+
+export const shareTransactionsRelations = relations(shareTransactions, ({ one }) => ({
+	company: one(companies, { fields: [shareTransactions.companyId], references: [companies.id] }),
+	buyer: one(accounts, { fields: [shareTransactions.buyerId], references: [accounts.id] }),
+	seller: one(accounts, { fields: [shareTransactions.sellerId], references: [accounts.id] })
+}));
+
+// Log of periodic dividend payouts, so shareholders can see their history.
+export const dividendPayouts = pgTable(
+	"dividend_payouts",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		companyId: integer("company_id")
+			.notNull()
+			.references(() => companies.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		amount: bigint("amount", { mode: "number" }).notNull(),
+		sharesHeld: integer("shares_held").notNull(),
+		paidAt: timestamp("paid_at").defaultNow().notNull()
+	},
+	(t) => ({
+		companyIdx: index("idx_dividend_company").on(t.companyId),
+		userIdx: index("idx_dividend_user").on(t.userId)
+	})
+);
+
+export const dividendPayoutsRelations = relations(dividendPayouts, ({ one }) => ({
+	company: one(companies, { fields: [dividendPayouts.companyId], references: [companies.id] }),
+	user: one(accounts, { fields: [dividendPayouts.userId], references: [accounts.id] })
+}));
 
 export const companyEditCooldown = pgTable("company_edit_cooldown", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
