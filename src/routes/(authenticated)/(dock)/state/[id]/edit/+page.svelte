@@ -66,7 +66,7 @@
 		fetch(croppedDataUrl)
 			.then((r) => r.blob())
 			.then((blob) => {
-				const croppedFile = new File([blob], 'state-logo.png', { type: 'image/png' });
+				const croppedFile = new File([blob], "state-logo.png", { type: "image/png" });
 				$form.logo = croppedFile;
 				imageUpload.currentFile = croppedFile;
 				if (imageUpload.previewUrl && imageUpload.previewUrl !== data.state.logoUrl) {
@@ -82,7 +82,7 @@
 			URL.revokeObjectURL(cropImageUrl);
 			cropImageUrl = null;
 		}
-		if (imageUpload.fileInput) imageUpload.fileInput.value = '';
+		if (imageUpload.fileInput) imageUpload.fileInput.value = "";
 	}
 
 	const colorPresets = [
@@ -100,9 +100,7 @@
 
 	// Track if form has changes
 	const hasChanges = $derived(
-		$form.name !== initialName ||
-		$form.background !== initialBackground ||
-		imageUpload.currentFile !== null
+		$form.name !== initialName || $form.background !== initialBackground || imageUpload.currentFile !== null
 	);
 
 	// Check if user has sufficient funds
@@ -111,17 +109,10 @@
 	);
 
 	// Determine if submit should be disabled
-	const submitDisabled = $derived(
-		data.onCooldown || !hasSufficientFunds || !hasChanges || $submitting
-	);
+	const submitDisabled = $derived(data.onCooldown || !hasSufficientFunds || !hasChanges || $submitting);
 </script>
 
 <EditPageLayout title="Edit State" subtitle={data.state.name} backHref="/state/{data.state.id}">
-	<!-- Cooldown Warning -->
-	{#if data.onCooldown && data.cooldownEndsAt}
-		<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="state" />
-	{/if}
-
 	<!-- Messages -->
 	<EditMessage message={$message} />
 
@@ -182,10 +173,13 @@
 			/>
 		</EditSection>
 
-		<!-- Resource Requirements -->
+		<!-- Cost & Cooldown -->
 		{#if data.editCost !== undefined && data.userBalance !== undefined}
 			<div class="panel rounded-sm p-5 space-y-2">
 				<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
+				{#if data.onCooldown && data.cooldownEndsAt}
+					<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="state" />
+				{/if}
 				<EditFormActions
 					cancelHref="/state/{data.state.id}"
 					submitting={$submitting}
@@ -195,6 +189,9 @@
 			</div>
 		{:else}
 			<!-- Submit -->
+			{#if data.onCooldown && data.cooldownEndsAt}
+				<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="state" />
+			{/if}
 			<EditFormActions
 				cancelHref="/state/{data.state.id}"
 				submitting={$submitting}

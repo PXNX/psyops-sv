@@ -98,11 +98,6 @@
 </script>
 
 <EditPageLayout title="Edit Party" subtitle={data.party.name} backHref="/party/{data.party.id}">
-	<!-- Cooldown Warning -->
-	{#if data.isOnCooldown && data.cooldownEndsAt}
-		<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="party" />
-	{/if}
-
 	<!-- Insufficient Funds Warning -->
 	{#if !data.canAfford && !data.isOnCooldown}
 		<EditInsufficientFundsWarning editCost={data.editCost} userBalance={data.userBalance} />
@@ -237,10 +232,18 @@
 				disabled={$submitting}></textarea>
 		</EditSection>
 
-		<!-- Resource Requirements -->
+		<!-- Cost & Cooldown -->
 		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-2">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
-			<EditFormActions cancelHref="/party/{data.party.id}" {submitting} {delayed} disabled={!canEdit} />
+			{#if data.isOnCooldown && data.cooldownEndsAt}
+				<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="party" />
+			{/if}
+			<EditFormActions
+				cancelHref="/party/{data.party.id}"
+				submitting={$submitting}
+				delayed={$delayed}
+				disabled={!canEdit}
+			/>
 		</div>
 
 		<!-- Info Box -->
