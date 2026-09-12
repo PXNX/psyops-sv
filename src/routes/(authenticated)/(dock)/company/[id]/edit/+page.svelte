@@ -72,7 +72,7 @@
 		fetch(croppedDataUrl)
 			.then((r) => r.blob())
 			.then((blob) => {
-				const croppedFile = new File([blob], 'company-logo.png', { type: 'image/png' });
+				const croppedFile = new File([blob], "company-logo.png", { type: "image/png" });
 				$form.logo = croppedFile;
 				imageUpload.currentFile = croppedFile;
 				if (imageUpload.previewUrl && imageUpload.previewUrl !== data.company.logoUrl) {
@@ -88,7 +88,7 @@
 			URL.revokeObjectURL(cropImageUrl);
 			cropImageUrl = null;
 		}
-		if (imageUpload.fileInput) imageUpload.fileInput.value = '';
+		if (imageUpload.fileInput) imageUpload.fileInput.value = "";
 	}
 </script>
 
@@ -99,11 +99,6 @@
 			<EditStatCard label="Workers" value={data.company.workerCount} icon={FluentPeople20Filled} color="blue" />
 		</div>
 	{/snippet}
-
-	<!-- Cooldown Warning -->
-	{#if data.isOnCooldown && data.cooldownEndsAt}
-		<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="company" />
-	{/if}
 
 	<!-- Insufficient Funds Warning -->
 	{#if !data.canAfford && !data.isOnCooldown}
@@ -190,20 +185,22 @@
 				rows="6"
 				placeholder="Describe your company's mission, industry, and operations..."
 				class="textarea field-control w-full"
-				disabled={$submitting || !canEdit}
-			></textarea>
+				disabled={$submitting || !canEdit}></textarea>
 			{#if $errors.description}
 				<p class="field-error">{$errors.description}</p>
 			{/if}
 		</EditSection>
 
-		<!-- Resource Requirements -->
+		<!-- Cost & Cooldown -->
 		<div class="panel-muted rounded-xl p-5 space-y-2">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
+			{#if data.isOnCooldown && data.cooldownEndsAt}
+				<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="company" />
+			{/if}
 			<EditFormActions
 				cancelHref="/company/{data.company.id}"
-				{submitting}
-				{delayed}
+				submitting={$submitting}
+				delayed={$delayed}
 				disabled={!canEdit}
 			/>
 		</div>
