@@ -277,12 +277,7 @@
 							<h3 class="text-lg font-semibold text-[#fff7e8]">Visa Required</h3>
 							<p class="text-sm text-[#a89e8e]">You need a visa to travel to regions in this state</p>
 						</div>
-						<Button
-							type="button"
-							size="sm"
-							icon={FluentBookCompass24Filled}
-							onclick={() => (showVisaSheet = true)}
-						>
+						<Button type="button" size="sm" icon={FluentBookCompass24Filled} onclick={() => (showVisaSheet = true)}>
 							Request Visa
 						</Button>
 					</div>
@@ -408,6 +403,8 @@
 						title={data.president.name}
 						subtitle="President • Term {data.president.term} • {formatDate(data.president.electedAt)}"
 						hoverColor="yellow"
+						partyAbbreviation={data.president.partyAbbreviation}
+						partyColor={data.president.partyColor}
 					/>
 				{/if}
 
@@ -424,6 +421,8 @@
 								title={minister.name}
 								subtitle={minister.ministry.replace("_", " ")}
 								hoverColor="purple"
+								partyAbbreviation={minister.partyAbbreviation}
+								partyColor={minister.partyColor}
 							/>
 						{/each}
 					</div>
@@ -529,9 +528,9 @@
 											<h3 class="text-lg font-bold text-[#fff7e8]">Upcoming Election</h3>
 										</div>
 										<p class="text-sm text-[#a89e8e]">
-											{formatDate(data.nextElection.startDate)} - {formatDate(
-												data.nextElection.endDate
-											)} • starts in {getTimeRemaining(data.nextElection.startDate)}
+											{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} • starts in {getTimeRemaining(
+												data.nextElection.startDate
+											)}
 										</p>
 									</div>
 								</div>

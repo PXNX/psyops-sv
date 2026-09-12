@@ -11,6 +11,7 @@
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 
 	import PageContainer from "$lib/component/PageContainer.svelte";
+	import PartyTag from "$lib/component/PartyTag.svelte";
 	import { formatDate } from "$lib/utils/formatting.js";
 
 	let { data } = $props();
@@ -174,7 +175,12 @@
 
 							<div class="flex-1 min-w-0">
 								<h3 class="font-semibold text-[#fff7e8] text-base md:text-lg truncate">{company.name}</h3>
-								<p class="text-xs md:text-sm text-[#a89e8e] truncate">{company.ownerName || "Unknown owner"}</p>
+								<p class="text-xs md:text-sm text-[#a89e8e] truncate">
+									{#if company.ownerPartyAbbreviation}
+										<PartyTag abbreviation={company.ownerPartyAbbreviation} color={company.ownerPartyColor} />
+									{/if}
+									{company.ownerName || "Unknown owner"}
+								</p>
 							</div>
 
 							<div class="hidden sm:flex items-center gap-4 md:gap-6 shrink-0">

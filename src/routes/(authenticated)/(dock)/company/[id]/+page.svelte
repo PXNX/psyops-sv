@@ -20,13 +20,24 @@
 	import { Area, Bars } from "layerchart";
 	import { scaleBand, scaleOrdinal } from "d3-scale";
 	import Logo from "$lib/component/Logo.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import PartyTag from "$lib/component/PartyTag.svelte";
+	import { buttonClass, badgeClass } from "$lib/component/ui/styles";
 
 	let { data, form } = $props();
 
 	let depositAmount = $state(10000);
 	let isCollecting = $state(false);
 	let isDepositing = $state(false);
+
+	let ipoPrice = $state(1000);
+	let isGoingPublic = $state(false);
+
+	let listQuantity = $state(1);
+	let listPrice = $state(data.shares?.ipoPrice ?? 100);
+	let isListing = $state(false);
+
+	let buyQuantities = $state<Record<number, number>>({});
+	let isBuying = $state<Record<number, boolean>>({});
 
 	// Prepare chart data
 	const productionChartData = data.resourceProduction.map((resource) => ({
@@ -96,6 +107,9 @@
 								>
 									{#if data.company.ownerLogo}
 										<img src={data.company.ownerLogo} alt="Owner" class="size-4 rounded-full" />
+									{/if}
+									{#if data.company.ownerPartyAbbreviation}
+										<PartyTag abbreviation={data.company.ownerPartyAbbreviation} color={data.company.ownerPartyColor} />
 									{/if}
 									<span>{data.company.ownerName || data.company.ownerEmail}</span>
 								</a>
@@ -189,6 +203,201 @@
 					<div class="stat-value text-lg sm:text-xl text-[#c6dfbf]">{data.budget.balance.toLocaleString()}</div>
 				</div>
 			</div>
+		{/if}
+	</div>
+
+	<!-- Stock Market -->
+	<div class="panel rounded-2xl p-5 sm:p-6 space-y-4">
+		<h2 class="section-title">
+			<FluentChartMultiple20Filled class="size-5 text-[#e6a527]" />
+			Stock Market
+		</h2>
+
+		{#if !data.shares}
+			{#if data.isOwner}
+				<p class="text-sm text-[#a89e8e]">
+					Take {data.company.name} public to issue {data.ipoConfig.totalShares.toLocaleString()} shares. You'll keep a locked
+					{data.ipoConfig.founderLockedPercent}% controlling block; the rest lists immediately at your starting price.
+				</p>
+				<form
+					method="POST"
+					action="?/goPublic"
+					use:enhance={() => {
+						isGoingPublic = true;
+						return async ({ update }) => {
+							await update();
+							isGoingPublic = false;
+						};
+					}}
+					class="flex flex-col sm:flex-row gap-3 sm:items-end"
+				>
+					<div class="flex-1">
+						<label class="field-label" for="startingPrice">Starting share price</label>
+						<input
+							id="startingPrice"
+							type="number"
+							name="startingPrice"
+							bind:value={ipoPrice}
+							min={data.ipoConfig.minPrice}
+							class="field-control rounded-lg px-3 py-2 w-full"
+							required
+						/>
+					</div>
+					<button type="submit" disabled={isGoingPublic} class={buttonClass({ variant: "primary" })}>
+						{isGoingPublic ? "Going public…" : "Take Company Public"}
+					</button>
+				</form>
+			{:else}
+				<p class="text-sm text-[#a89e8e]">This company hasn't gone public yet.</p>
+			{/if}
+		{:else}
+			<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+				<div class="panel-muted rounded-xl p-3">
+					<div class="field-hint">Total shares</div>
+					<div class="text-lg font-bold text-[#fff7e8]">{data.shares.totalShares.toLocaleString()}</div>
+				</div>
+				<div class="panel-muted rounded-xl p-3">
+					<div class="field-hint">Founder locked</div>
+					<div class="text-lg font-bold text-[#fff7e8]">{data.shares.founderLockedShares.toLocaleString()}</div>
+				</div>
+				<div class="panel-muted rounded-xl p-3">
+					<div class="field-hint">IPO price</div>
+					<div class="text-lg font-bold text-[#f7c56b]">${data.shares.ipoPrice.toLocaleString()}</div>
+				</div>
+				<div class="panel-muted rounded-xl p-3">
+					<div class="field-hint">Your holding</div>
+					<div class="text-lg font-bold text-[#c6dfbf]">{data.myHolding.toLocaleString()}</div>
+				</div>
+			</div>
+
+			{#if data.topHolders.length > 0}
+				<div>
+					<h3 class="text-sm font-semibold text-[#e5d8c1] mb-2">Top Holders</h3>
+					<div class="space-y-1.5">
+						{#each data.topHolders as holder}
+							<div class="flex items-center justify-between text-sm panel-muted rounded-lg px-3 py-2">
+								<span class="text-[#d9ccb7]">{holder.name || "Unknown"}</span>
+								<span class="flex items-center gap-2">
+									<span class="text-[#a89e8e]">{holder.quantity.toLocaleString()}</span>
+									<span class={badgeClass({ tone: "amber", size: "xs" })}>{holder.percent}%</span>
+								</span>
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			<div>
+				<div class="flex items-center justify-between mb-2">
+					<h3 class="text-sm font-semibold text-[#e5d8c1]">Order Book</h3>
+					<span class="field-hint">{data.floatOutstanding.toLocaleString()} shares listed</span>
+				</div>
+
+				{#if data.listings.length > 0}
+					<div class="space-y-1.5">
+						{#each data.listings as listing (listing.id)}
+							<div class="flex items-center justify-between gap-3 panel-muted rounded-lg px-3 py-2 text-sm">
+								<div class="min-w-0">
+									<div class="text-[#fff7e8] font-semibold">${listing.pricePerUnit.toLocaleString()} / share</div>
+									<div class="text-xs text-[#a89e8e] truncate">
+										{listing.quantity.toLocaleString()} available · {listing.isMine
+											? "You"
+											: listing.sellerName || "Unknown"}
+									</div>
+								</div>
+
+								{#if listing.isMine}
+									<form method="POST" action="?/removeShareListing" use:enhance>
+										<input type="hidden" name="listingId" value={listing.id} />
+										<button type="submit" class={buttonClass({ variant: "subtle", size: "sm" })}>Cancel</button>
+									</form>
+								{:else}
+									<form
+										method="POST"
+										action="?/buyShareListing"
+										use:enhance={() => {
+											isBuying[listing.id] = true;
+											return async ({ update }) => {
+												await update();
+												isBuying[listing.id] = false;
+											};
+										}}
+										class="flex items-center gap-2 shrink-0"
+									>
+										<input type="hidden" name="listingId" value={listing.id} />
+										<input
+											type="number"
+											name="quantity"
+											bind:value={buyQuantities[listing.id]}
+											min="1"
+											max={listing.quantity}
+											placeholder="Qty"
+											class="field-control rounded-lg px-2 py-1 w-20 text-sm"
+											required
+										/>
+										<button
+											type="submit"
+											disabled={isBuying[listing.id]}
+											class={buttonClass({ variant: "primary", size: "sm" })}
+										>
+											Buy
+										</button>
+									</form>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<p class="text-sm text-[#a89e8e]">No shares currently listed for sale.</p>
+				{/if}
+			</div>
+
+			{#if data.myHolding > 0}
+				<div class="panel-muted rounded-xl p-4">
+					<h3 class="text-sm font-semibold text-[#e5d8c1] mb-3">List Shares For Sale</h3>
+					<form
+						method="POST"
+						action="?/createShareListing"
+						use:enhance={() => {
+							isListing = true;
+							return async ({ update }) => {
+								await update();
+								isListing = false;
+							};
+						}}
+						class="flex flex-col sm:flex-row gap-3 sm:items-end"
+					>
+						<div>
+							<label class="field-label" for="listQuantity">Quantity</label>
+							<input
+								id="listQuantity"
+								type="number"
+								name="quantity"
+								bind:value={listQuantity}
+								min="1"
+								max={data.myHolding}
+								class="field-control rounded-lg px-3 py-2 w-28"
+								required
+							/>
+						</div>
+						<div>
+							<label class="field-label" for="listPrice">Price / share</label>
+							<input
+								id="listPrice"
+								type="number"
+								name="pricePerUnit"
+								bind:value={listPrice}
+								min={data.ipoConfig.minPrice}
+								class="field-control rounded-lg px-3 py-2 w-28"
+								required
+							/>
+						</div>
+						<button type="submit" disabled={isListing} class={buttonClass({ variant: "secondary" })}>
+							{isListing ? "Listing…" : "List Shares"}
+						</button>
+					</form>
+				</div>
+			{/if}
 		{/if}
 	</div>
 

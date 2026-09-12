@@ -22,10 +22,12 @@ import {
 	userWallets,
 	stateTreasury,
 	visaApplications,
-	residenceApplications
+	residenceApplications,
+	partyMembers,
+	politicalParties
 	} from "$lib/server/schema";
 import { error, fail } from "@sveltejs/kit";
-import { eq, and, gte, sql, or } from "drizzle-orm";
+import { eq, and, gte, sql, or, inArray } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { getRegionName } from "$lib/utils/formatting";
@@ -86,6 +88,28 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.leftJoin(accounts, eq(ministers.userId, accounts.id))
 		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
 		.where(eq(ministers.stateId, stateId));
+
+	// Current party (abbreviation + color) for the president and ministers,
+	// so their names can carry a party tag like on the company/parliament pages.
+	const governmentUserIds = [presidentData?.userId, ...stateMinistersRaw.map((m) => m.userId)].filter(
+		(id): id is string => !!id
+	);
+	const partyByUserId = new Map<string, { abbreviation: string | null; color: string }>();
+	if (governmentUserIds.length > 0) {
+		const membershipRows = await db
+			.select({
+				userId: partyMembers.userId,
+				abbreviation: politicalParties.abbreviation,
+				color: politicalParties.color
+			})
+			.from(partyMembers)
+			.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+			.where(inArray(partyMembers.userId, governmentUserIds));
+
+		for (const row of membershipRows) {
+			partyByUserId.set(row.userId, { abbreviation: row.abbreviation, color: row.color });
+		}
+	}
 
 	// Get parliament members
 	const parliamentMembersRaw = await db
@@ -398,7 +422,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					name: presidentData.profileName,
 					logo: await getLogoUrl(presidentData.profileLogo),
 					electedAt: presidentData.electedAt,
-					term: presidentData.term
+					term: presidentData.term,
+					partyAbbreviation: partyByUserId.get(presidentData.userId)?.abbreviation ?? null,
+					partyColor: partyByUserId.get(presidentData.userId)?.color ?? null
 				}
 			: null,
 		ministers: await Promise.all(
@@ -407,7 +433,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				name: minister.profileName,
 				logo: await getLogoUrl(minister.profileLogo),
 				ministry: minister.ministry,
-				appointedAt: minister.appointedAt
+				appointedAt: minister.appointedAt,
+				partyAbbreviation: partyByUserId.get(minister.userId)?.abbreviation ?? null,
+				partyColor: partyByUserId.get(minister.userId)?.color ?? null
 			}))
 		),
 		parliamentMembers: await Promise.all(
