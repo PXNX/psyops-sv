@@ -28,6 +28,16 @@ export const ECONOMY_CONFIG = {
     COMPANY_CREATION_COST: 50000,
     FACTORY_CREATION_COST: 100000,
 
+    // Stock market
+    // Fixed share count issued at IPO; the founder's block is locked (never
+    // listable) and only the remaining float trades on the open market.
+    IPO_TOTAL_SHARES: 1000,
+    IPO_FOUNDER_LOCKED_PERCENT: 51,
+    MIN_SHARE_PRICE: 1,
+    // % of a public company's budget balance paid out to shareholders per
+    // dividend cycle (run by the dividends cron), split pro-rata by holding.
+    DIVIDEND_RATE_PERCENT: 5,
+
     // Visas
     DEFAULT_VISA_COST: 5000,
     DEFAULT_VISA_DURATION_DAYS: 30,
