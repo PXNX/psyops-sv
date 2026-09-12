@@ -85,10 +85,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		form,
 		userState: userResidence.state
 			? {
-				id: userResidence.state.id,
-				name: userResidence.state.name,
-				logo: userResidence.state.logo
-			}
+					id: userResidence.state.id,
+					name: userResidence.state.name,
+					logo: userResidence.state.logo
+				}
 			: null,
 		userRegion: {
 			id: userResidence.region.id,
@@ -179,6 +179,24 @@ export const actions: Actions = {
 
 		if (existingParty) {
 			return message(form, "A party with this name already exists", { status: 400 });
+		}
+
+		// Abbreviations only need to be unique within the state they're founded
+		// in (an independent region forms a brand-new state, so no party there
+		// can collide yet).
+		if (abbreviation && stateId) {
+			const existingAbbreviation = await db.query.politicalParties.findFirst({
+				where: and(
+					eq(politicalParties.stateId, stateId),
+					sql`lower(${politicalParties.abbreviation}) = lower(${abbreviation})`
+				)
+			});
+
+			if (existingAbbreviation) {
+				return message(form, `The abbreviation "${abbreviation}" is already used by another party in this state`, {
+					status: 400
+				});
+			}
 		}
 
 		// Check if user already in a party

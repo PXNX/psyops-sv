@@ -2,7 +2,7 @@
 import { db } from "$lib/server/db";
 import { politicalParties, partyMembers, files, userWallets, partyEditHistory } from "$lib/server/schema";
 import { redirect, error, fail } from "@sveltejs/kit";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, ne, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { getContext } from "$lib/server/context";
@@ -195,6 +195,23 @@ export const actions: Actions = {
 
 			if (existingParty) {
 				return message(form, "A party with this name already exists", { status: 400 });
+			}
+		}
+
+		// Abbreviations only need to be unique within the party's own state.
+		if (abbreviation && party.stateId) {
+			const existingAbbreviation = await db.query.politicalParties.findFirst({
+				where: and(
+					eq(politicalParties.stateId, party.stateId),
+					ne(politicalParties.id, partyId),
+					sql`lower(${politicalParties.abbreviation}) = lower(${abbreviation})`
+				)
+			});
+
+			if (existingAbbreviation) {
+				return message(form, `The abbreviation "${abbreviation}" is already used by another party in this state`, {
+					status: 400
+				});
 			}
 		}
 
