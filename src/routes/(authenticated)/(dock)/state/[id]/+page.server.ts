@@ -48,6 +48,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			createdAt: states.createdAt,
 			blocId: blocs.id,
 			blocName: blocs.name,
+			blocLogo: blocs.logo,
 			blocColor: blocs.color,
 			blocDescription: blocs.description
 		})
@@ -429,6 +430,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			? {
 					id: state.blocId,
 					name: state.blocName,
+					logo: await getLogoUrl(state.blocLogo),
 					color: state.blocColor,
 					description: state.blocDescription
 				}
