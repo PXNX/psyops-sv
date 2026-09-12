@@ -11,6 +11,7 @@
 	import FluentLightbulb20Filled from "~icons/fluent/lightbulb-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
+	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentShieldError20Filled from "~icons/fluent/shield-error-20-filled";
@@ -98,6 +99,17 @@
 			></div>
 			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-sm"></div>
 
+			{#if data.isPresident}
+				<a
+					href="/state/{data.state.id}/edit"
+					class="absolute top-3 right-3 z-20 p-2 bg-black/30 hover:bg-black/50 border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all backdrop-blur-sm"
+					title="Edit State"
+					aria-label="Edit State"
+				>
+					<FluentEdit20Filled class="size-4" />
+				</a>
+			{/if}
+
 			<div class="relative z-10 flex flex-col items-center space-y-3">
 				<!-- State Logo -->
 				<div class="rounded-full relative group">
@@ -146,15 +158,9 @@
 	</div>
 
 	<!-- President Action Buttons -->
-	{#if data.isPresident}
+	{#if data.isPresident && !data.bloc}
 		<div class="flex gap-2 flex-wrap">
-			<Button href="/state/{data.state.id}/edit" variant="secondary" size="sm" icon={FluentEdit20Filled}>
-				Edit State
-			</Button>
-
-			{#if !data.bloc}
-				<Button href="/bloc" variant="soft-purple" size="sm" icon={FluentFlag20Filled}>Join Bloc</Button>
-			{/if}
+			<Button href="/bloc" variant="soft-purple" size="sm" icon={FluentFlag20Filled}>Join Bloc</Button>
 		</div>
 	{/if}
 
@@ -583,6 +589,20 @@
 
 	<!-- Navigation Cards -->
 	<section class="grid md:grid-cols-2 gap-4">
+		<a
+			href="/state/{data.state.id}/region"
+			class="group bg-[#e6a527]/12 rounded-sm border border-[#e6a527]/30 p-6 hover:border-[#e6a527]/50 transition-all"
+		>
+			<div
+				class="size-12 bg-[#e6a527]/20 rounded-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+			>
+				<FluentBuilding20Filled class="size-6 text-[#f7c56b]" />
+			</div>
+			<h3 class="text-xl font-bold text-[#fff7e8] mb-2 group-hover:text-[#f7c56b] transition-colors">Construction</h3>
+			<p class="text-sm text-[#a89e8e] mb-3">Current construction efforts across the state's regions</p>
+			<div class="text-xs text-[#f7c56b] flex items-center gap-1">View regions →</div>
+		</a>
+
 		{#if hasGovernment}
 			<a
 				href="/state/{data.state.id}/economy"
@@ -622,50 +642,43 @@
 	{#if data.taxes.length > 0}
 		<section class="space-y-3">
 			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Tax Policies</h2>
-			<div class="panel-muted rounded-sm p-6">
-				<div class="grid md:grid-cols-2 gap-4">
-					{#each data.taxes as tax}
-						<div class="panel rounded-sm p-4">
-							<div class="flex items-start justify-between mb-3">
-								<div class="flex items-center gap-2">
-									<div class="size-10 bg-emerald-600/20 rounded-sm flex items-center justify-center">
-										<FluentMoney20Filled class="size-5 text-emerald-400" />
-									</div>
-									<div>
-										<h3 class="font-semibold text-[#fff7e8] capitalize">
-											{tax.taxType.replace(/_/g, " ")}
-										</h3>
-										<p class="text-xs text-[#a89e8e]">Active Tax</p>
-									</div>
-								</div>
-								<div class="text-right">
-									<p class="text-2xl font-bold text-emerald-400">{tax.taxRate}%</p>
-								</div>
-							</div>
-							<div class="text-xs text-[#a89e8e] space-y-1">
-								{#if tax.taxType === "mining"}
-									<p>Applied to resource extraction operations</p>
-								{:else if tax.taxType === "production"}
-									<p>Applied to manufactured goods production</p>
-								{:else if tax.taxType === "market_transaction"}
-									<p>Applied to marketplace sales</p>
-								{:else if tax.taxType === "income"}
-									<p>Applied to worker wages and salaries</p>
-								{/if}
-							</div>
-						</div>
-					{/each}
-				</div>
-
-				{#if data.taxes.length === 0}
-					<div class="text-center py-8">
-						<div class="size-16 bg-[#102239] rounded-full flex items-center justify-center mx-auto mb-3">
-							<FluentMoney20Filled class="size-8 text-[#a89e8e]" />
-						</div>
-						<p class="text-[#a89e8e] text-sm">No active tax policies</p>
-						<p class="text-[#a89e8e]/70 text-xs mt-1">Parliament can propose new tax legislation</p>
-					</div>
-				{/if}
+			<div class="panel rounded-sm overflow-hidden">
+				<table class="w-full">
+					<thead class="bg-[#102239]/70 border-b border-[#dfceb0]/15">
+						<tr>
+							<th class="px-4 py-3 text-left text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
+								Tax Type
+							</th>
+							<th class="px-4 py-3 text-left text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
+								Applies To
+							</th>
+							<th class="px-4 py-3 text-right text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
+								Rate
+							</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-[#dfceb0]/10">
+						{#each data.taxes as tax}
+							<tr class="hover:bg-[#19304b] transition-colors">
+								<td class="px-4 py-3 font-medium text-[#fff7e8] capitalize">
+									{tax.taxType.replace(/_/g, " ")}
+								</td>
+								<td class="px-4 py-3 text-sm text-[#a89e8e]">
+									{#if tax.taxType === "mining"}
+										Resource extraction operations
+									{:else if tax.taxType === "production"}
+										Manufactured goods production
+									{:else if tax.taxType === "market_transaction"}
+										Marketplace sales
+									{:else if tax.taxType === "income"}
+										Worker wages and salaries
+									{/if}
+								</td>
+								<td class="px-4 py-3 text-right font-bold text-emerald-400">{tax.taxRate}%</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
 			</div>
 		</section>
 	{/if}
