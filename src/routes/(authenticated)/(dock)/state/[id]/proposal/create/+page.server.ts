@@ -168,7 +168,9 @@ async function executeProposal(
 		await db
 			.update(stateTaxes)
 			.set({ isActive: false })
-			.where(and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxDetails.taxType), eq(stateTaxes.isActive, true)));
+			.where(
+				and(eq(stateTaxes.stateId, stateId), eq(stateTaxes.taxType, taxDetails.taxType), eq(stateTaxes.isActive, true))
+			);
 
 		// Execute tax (create new tax or update existing)
 		await db.insert(stateTaxes).values({
@@ -384,10 +386,10 @@ export const actions: Actions = {
 		const votingEndsAt = shouldAutoExecute
 			? new Date()
 			: (() => {
-				const date = new Date();
-				date.setDate(date.getDate() + 1);
-				return date;
-			})();
+					const date = new Date();
+					date.setDate(date.getDate() + 1);
+					return date;
+				})();
 
 		const [proposal] = await db
 			.insert(parliamentaryProposals)
@@ -414,10 +416,17 @@ export const actions: Actions = {
 				borderStatus: form.data.borderStatus as any
 			});
 		} else if (["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes(proposalType)) {
+			// The create-proposal form doesn't collect a building name, so
+			// derive one from the proposal type (e.g. "power_plant" -> "Power Plant").
+			const defaultBuildingName = proposalType
+				.split("_")
+				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+				.join(" ");
+
 			await db.insert(proposalBuildingDetails).values({
 				proposalId: proposal.id,
 				regionId: parseInt(form.data.regionId!),
-				buildingName: form.data.buildingName!,
+				buildingName: form.data.buildingName || defaultBuildingName,
 				quantity: form.data.quantity!
 			});
 		}
