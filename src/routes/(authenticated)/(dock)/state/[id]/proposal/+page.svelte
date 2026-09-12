@@ -1,6 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/proposal/+page.svelte -->
 <script lang="ts">
 	import Logo from "$lib/component/Logo.svelte";
+	import PartyTag from "$lib/component/PartyTag.svelte";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
@@ -12,7 +13,7 @@
 
 	const { data } = $props();
 
-	let selectedTab = $state<"all" | "passed" | "rejected" | "expired">("all");
+	let selectedTab = $state<"all" | "passed" | "rejected">("all");
 
 	const displayedProposals = $derived.by(() => {
 		switch (selectedTab) {
@@ -20,8 +21,6 @@
 				return data.passedProposals;
 			case "rejected":
 				return data.rejectedProposals;
-			case "expired":
-				return data.expiredProposals;
 			default:
 				return data.allProposals;
 		}
@@ -42,11 +41,20 @@
 
 	<!-- Tabs -->
 	<div class="panel rounded-xl overflow-hidden">
-		<div class="flex overflow-x-auto border-b border-[#dfceb0]/15">
+		<div class="flex border-b border-[#dfceb0]/15">
+			<button
+				type="button"
+				onclick={() => (selectedTab = "all")}
+				class="flex-1 px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab === 'all'
+					? 'text-[#fff7e8] border-[#dfceb0]/40 bg-[#14283f]'
+					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
+			>
+				All ({data.allProposals.length})
+			</button>
 			<button
 				type="button"
 				onclick={() => (selectedTab = "passed")}
-				class="px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap {selectedTab === 'passed'
+				class="flex-1 px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab === 'passed'
 					? 'text-[#fff7e8] border-[#8fae88] bg-[#587252]/15'
 					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
 			>
@@ -55,20 +63,11 @@
 			<button
 				type="button"
 				onclick={() => (selectedTab = "rejected")}
-				class="px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap {selectedTab === 'rejected'
+				class="flex-1 px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab === 'rejected'
 					? 'text-[#fff7e8] border-red-500 bg-red-500/10'
 					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
 			>
 				Rejected ({data.rejectedProposals.length})
-			</button>
-			<button
-				type="button"
-				onclick={() => (selectedTab = "expired")}
-				class="px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap {selectedTab === 'expired'
-					? 'text-[#fff7e8] border-[#dfceb0]/40 bg-[#14283f]'
-					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
-			>
-				Expired ({data.expiredProposals.length})
 			</button>
 		</div>
 
@@ -119,10 +118,10 @@
 								class="flex items-center gap-2 text-sm text-[#a89e8e] hover:text-[#fff7e8] transition-colors w-fit"
 							>
 								<Logo src={proposal.proposedBy.logo} alt={proposal.proposedBy.name} />
-								<span>
+								<span class="inline-flex items-center gap-1.5">
 									by <span class="text-[#fff7e8] font-medium">{proposal.proposedBy.name}</span>
 									{#if proposal.proposedBy.party}
-										<span class="text-[#a89e8e]">({proposal.proposedBy.party.abbreviation})</span>
+										<PartyTag abbreviation={proposal.proposedBy.party.abbreviation} color={proposal.proposedBy.party.color} />
 									{/if}
 								</span>
 							</a>

@@ -171,7 +171,7 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			});
 
 			const proposerPartyRows = await db
-				.select({ abbreviation: politicalParties.abbreviation, name: politicalParties.name })
+				.select({ abbreviation: politicalParties.abbreviation, name: politicalParties.name, color: politicalParties.color })
 				.from(partyMembers)
 				.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
 				.where(and(eq(partyMembers.userId, proposal.proposedBy), eq(politicalParties.stateId, stateId)))
@@ -207,10 +207,14 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 		})
 	);
 
-	// Separate into categories - only show completed proposals
+	// Separate into categories - only show completed proposals. Proposals
+	// whose voting window closed without reaching the required majority are
+	// rejected (there's no separate "expired" state — the cron job just
+	// hasn't flipped the status yet).
 	const passedProposals = proposalsWithVotes.filter((p) => p.status === "passed");
-	const rejectedProposals = proposalsWithVotes.filter((p) => p.status === "rejected");
-	const expiredProposals = proposalsWithVotes.filter((p) => p.status === "active" && p.votingEnded);
+	const rejectedProposals = proposalsWithVotes.filter(
+		(p) => p.status === "rejected" || (p.status === "active" && p.votingEnded)
+	);
 
 	// Only include non-active proposals in the history
 	const historicalProposals = proposalsWithVotes.filter((p) => !p.isActive);
@@ -219,7 +223,6 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 		state,
 		passedProposals,
 		rejectedProposals,
-		expiredProposals,
 		allProposals: historicalProposals
 	};
 };
