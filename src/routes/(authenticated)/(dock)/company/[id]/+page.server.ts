@@ -15,7 +15,9 @@ import {
 	resourceInventory,
 	productInventory,
 	userWallets,
-	transactionHistory
+	transactionHistory,
+	partyMembers,
+	politicalParties
 } from "$lib/server/schema";
 import { eq, and, desc, count, sum, sql, inArray } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
@@ -54,6 +56,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			logoFile: true
 		}
 	});
+
+	// Owner's current party (abbreviation + color), for the party tag next to their name.
+	const [ownerParty] = await db
+		.select({ abbreviation: politicalParties.abbreviation, color: politicalParties.color })
+		.from(partyMembers)
+		.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+		.where(eq(partyMembers.userId, company.ownerId));
 
 	// Check if current user is the owner
 	const isOwner = company.ownerId === account.id;
@@ -271,6 +280,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			...company,
 			ownerName: ownerProfile?.name || null,
 			ownerLogo: ownerProfile?.logoFile?.key ? `/api/files/${ownerProfile.logoFile.key}` : null,
+			ownerPartyAbbreviation: ownerParty?.abbreviation ?? null,
+			ownerPartyColor: ownerParty?.color ?? null,
 			foundedAt: company.foundedAt.toISOString()
 		},
 		isOwner,

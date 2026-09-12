@@ -2,6 +2,7 @@
 <script lang="ts">
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
+	import PartyTag from "$lib/component/PartyTag.svelte";
 
 	interface Props {
 		href?: string;
@@ -14,6 +15,8 @@
 		hoverColor?: string;
 		icon?: string;
 		onclick?: () => void;
+		partyAbbreviation?: string | null;
+		partyColor?: string | null;
 	}
 
 	let {
@@ -26,7 +29,9 @@
 		subtitle,
 		hoverColor = "purple",
 		icon,
-		onclick
+		onclick,
+		partyAbbreviation,
+		partyColor
 	}: Props = $props();
 
 	const hoverColors: Record<string, string> = {
@@ -65,6 +70,9 @@
 
 	<div class="flex-1 min-w-0">
 		<p class="font-semibold text-[#fff7e8] {hoverColors[hoverColor]} transition-colors truncate">
+			{#if partyAbbreviation}
+				<PartyTag abbreviation={partyAbbreviation} color={partyColor} />
+			{/if}
 			{title}
 		</p>
 		<p class="text-xs text-[#a89e8e] truncate">

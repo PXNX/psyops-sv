@@ -1,7 +1,17 @@
 // src/routes/company/+page.server.ts
 import { db } from "$lib/server/db";
-import { accounts, companies, factories, factoryWorkers, regions, states, userProfiles } from "$lib/server/schema";
-import { eq, count } from "drizzle-orm";
+import {
+	accounts,
+	companies,
+	factories,
+	factoryWorkers,
+	regions,
+	states,
+	userProfiles,
+	partyMembers,
+	politicalParties
+} from "$lib/server/schema";
+import { eq, count, inArray } from "drizzle-orm";
 import { getLogoUrl } from "$lib/server/backblaze";
 import type { PageServerLoad } from "./$types";
 
@@ -58,6 +68,25 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.leftJoin(accounts, eq(companies.ownerId, accounts.id))
 		.leftJoin(userProfiles, eq(companies.ownerId, userProfiles.accountId));
 
+	// Current party (abbreviation + color) for each owner, for the party tag next to their name.
+	const ownerIds = Array.from(new Set(allCompanies.map((c) => c.ownerId)));
+	const partyByOwnerId = new Map<string, { abbreviation: string | null; color: string }>();
+	if (ownerIds.length > 0) {
+		const membershipRows = await db
+			.select({
+				userId: partyMembers.userId,
+				abbreviation: politicalParties.abbreviation,
+				color: politicalParties.color
+			})
+			.from(partyMembers)
+			.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+			.where(inArray(partyMembers.userId, ownerIds));
+
+		for (const row of membershipRows) {
+			partyByOwnerId.set(row.userId, { abbreviation: row.abbreviation, color: row.color });
+		}
+	}
+
 	// Get factory counts and states for each company
 	const companiesWithStats = await Promise.all(
 		allCompanies.map(async (company) => {
@@ -99,6 +128,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 				foundedAt: company.foundedAt.toISOString(),
 				ownerId: company.ownerId,
 				ownerName: company.ownerName || null,
+				ownerPartyAbbreviation: partyByOwnerId.get(company.ownerId)?.abbreviation ?? null,
+				ownerPartyColor: partyByOwnerId.get(company.ownerId)?.color ?? null,
 				factoryCount: companyFactories.length,
 				workerCount: totalWorkers,
 				states: uniqueStates
