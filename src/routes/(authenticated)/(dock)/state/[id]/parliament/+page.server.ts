@@ -22,6 +22,7 @@ import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";
 import { ProposalService } from "$lib/server/services/politics/proposal.service";
+import { getRegionName } from "$lib/utils/formatting";
 
 const proposalService = new ProposalService(db);
 
@@ -410,132 +411,132 @@ export const actions = {
 		return { success: true, message: "Vote recorded successfully" };
 	},
 
-		acceptProposal: async ({ request, locals, params }: import("./$types").RequestEvent) => {
-			const account = locals.account!;
-			const stateId = parseInt(params.id);
-			const formData = await request.formData();
-			const proposalId = parseInt(formData.get("proposalId") as string);
+	acceptProposal: async ({ request, locals, params }: import("./$types").RequestEvent) => {
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
+		const formData = await request.formData();
+		const proposalId = parseInt(formData.get("proposalId") as string);
 
-			if (!proposalId) {
-				return fail(400, { error: "Invalid proposal ID" });
-			}
-
-			// Check if user is a minister or president
-			const userMinistry = await db.query.ministers.findFirst({
-				where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
-			});
-
-			const userPresidency = await db.query.presidents.findFirst({
-				where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
-			});
-
-			if (!userMinistry && !userPresidency) {
-				return fail(403, { error: "Only ministers and the president can auto-accept proposals" });
-			}
-
-			const proposal = await db.query.parliamentaryProposals.findFirst({
-				where: eq(parliamentaryProposals.id, proposalId)
-			});
-
-			if (!proposal || proposal.status !== "active") {
-				return fail(404, { error: "Proposal not found or not active" });
-			}
-
-			// Ensure at least one "for" vote exists (the authority's vote)
-			const existingVote = await db.query.parliamentaryVotes.findFirst({
-				where: and(eq(parliamentaryVotes.proposalId, proposalId), eq(parliamentaryVotes.voterId, account.id))
-			});
-
-			if (existingVote) {
-				await db
-					.update(parliamentaryVotes)
-					.set({
-						voteType: "for",
-						votedAt: new Date()
-					})
-					.where(eq(parliamentaryVotes.id, existingVote.id));
-			} else {
-				await db.insert(parliamentaryVotes).values({
-					proposalId,
-					voterId: account.id,
-					voteType: "for"
-				});
-			}
-
-			// Update proposal status to passed
-			await db
-				.update(parliamentaryProposals)
-				.set({
-					status: "passed"
-				})
-				.where(eq(parliamentaryProposals.id, proposalId));
-
-			// Execute the proposal
-			await proposalService.implementProposal(proposal);
-
-			return { success: true, message: "Proposal accepted and executed" };
-		},
-
-		rejectProposal: async ({ request, locals, params }: import("./$types").RequestEvent) => {
-			const account = locals.account!;
-			const stateId = parseInt(params.id);
-			const formData = await request.formData();
-			const proposalId = parseInt(formData.get("proposalId") as string);
-
-			if (!proposalId) {
-				return fail(400, { error: "Invalid proposal ID" });
-			}
-
-			// Check if user is a minister or president
-			const userMinistry = await db.query.ministers.findFirst({
-				where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
-			});
-
-			const userPresidency = await db.query.presidents.findFirst({
-				where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
-			});
-
-			if (!userMinistry && !userPresidency) {
-				return fail(403, { error: "Only ministers and the president can auto-reject proposals" });
-			}
-
-			const proposal = await db.query.parliamentaryProposals.findFirst({
-				where: eq(parliamentaryProposals.id, proposalId)
-			});
-
-			if (!proposal || proposal.status !== "active") {
-				return fail(404, { error: "Proposal not found or not active" });
-			}
-
-			// Ensure at least one "against" vote exists (the authority's vote)
-			const existingVote = await db.query.parliamentaryVotes.findFirst({
-				where: and(eq(parliamentaryVotes.proposalId, proposalId), eq(parliamentaryVotes.voterId, account.id))
-			});
-
-			if (existingVote) {
-				await db
-					.update(parliamentaryVotes)
-					.set({
-						voteType: "against",
-						votedAt: new Date()
-					})
-					.where(eq(parliamentaryVotes.id, existingVote.id));
-			} else {
-				await db.insert(parliamentaryVotes).values({
-					proposalId,
-					voterId: account.id,
-					voteType: "against"
-				});
-			}
-
-			// Update proposal status to rejected
-			await db
-				.update(parliamentaryProposals)
-				.set({
-					status: "rejected"
-				})
-				.where(eq(parliamentaryProposals.id, proposalId));
-
-			return { success: true, message: "Proposal rejected" };
+		if (!proposalId) {
+			return fail(400, { error: "Invalid proposal ID" });
 		}
+
+		// Check if user is a minister or president
+		const userMinistry = await db.query.ministers.findFirst({
+			where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
+		});
+
+		const userPresidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		});
+
+		if (!userMinistry && !userPresidency) {
+			return fail(403, { error: "Only ministers and the president can auto-accept proposals" });
+		}
+
+		const proposal = await db.query.parliamentaryProposals.findFirst({
+			where: eq(parliamentaryProposals.id, proposalId)
+		});
+
+		if (!proposal || proposal.status !== "active") {
+			return fail(404, { error: "Proposal not found or not active" });
+		}
+
+		// Ensure at least one "for" vote exists (the authority's vote)
+		const existingVote = await db.query.parliamentaryVotes.findFirst({
+			where: and(eq(parliamentaryVotes.proposalId, proposalId), eq(parliamentaryVotes.voterId, account.id))
+		});
+
+		if (existingVote) {
+			await db
+				.update(parliamentaryVotes)
+				.set({
+					voteType: "for",
+					votedAt: new Date()
+				})
+				.where(eq(parliamentaryVotes.id, existingVote.id));
+		} else {
+			await db.insert(parliamentaryVotes).values({
+				proposalId,
+				voterId: account.id,
+				voteType: "for"
+			});
+		}
+
+		// Update proposal status to passed
+		await db
+			.update(parliamentaryProposals)
+			.set({
+				status: "passed"
+			})
+			.where(eq(parliamentaryProposals.id, proposalId));
+
+		// Execute the proposal
+		await proposalService.implementProposal(proposal);
+
+		return { success: true, message: "Proposal accepted and executed" };
+	},
+
+	rejectProposal: async ({ request, locals, params }: import("./$types").RequestEvent) => {
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
+		const formData = await request.formData();
+		const proposalId = parseInt(formData.get("proposalId") as string);
+
+		if (!proposalId) {
+			return fail(400, { error: "Invalid proposal ID" });
+		}
+
+		// Check if user is a minister or president
+		const userMinistry = await db.query.ministers.findFirst({
+			where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
+		});
+
+		const userPresidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		});
+
+		if (!userMinistry && !userPresidency) {
+			return fail(403, { error: "Only ministers and the president can auto-reject proposals" });
+		}
+
+		const proposal = await db.query.parliamentaryProposals.findFirst({
+			where: eq(parliamentaryProposals.id, proposalId)
+		});
+
+		if (!proposal || proposal.status !== "active") {
+			return fail(404, { error: "Proposal not found or not active" });
+		}
+
+		// Ensure at least one "against" vote exists (the authority's vote)
+		const existingVote = await db.query.parliamentaryVotes.findFirst({
+			where: and(eq(parliamentaryVotes.proposalId, proposalId), eq(parliamentaryVotes.voterId, account.id))
+		});
+
+		if (existingVote) {
+			await db
+				.update(parliamentaryVotes)
+				.set({
+					voteType: "against",
+					votedAt: new Date()
+				})
+				.where(eq(parliamentaryVotes.id, existingVote.id));
+		} else {
+			await db.insert(parliamentaryVotes).values({
+				proposalId,
+				voterId: account.id,
+				voteType: "against"
+			});
+		}
+
+		// Update proposal status to rejected
+		await db
+			.update(parliamentaryProposals)
+			.set({
+				status: "rejected"
+			})
+			.where(eq(parliamentaryProposals.id, proposalId));
+
+		return { success: true, message: "Proposal rejected" };
+	}
 } as Actions;
