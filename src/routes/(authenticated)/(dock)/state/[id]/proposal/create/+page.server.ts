@@ -15,7 +15,7 @@ import {
 	stateTreasury,
 	stateBorders,
 	regions,
-	resourceInventory,
+	stateResourceInventory,
 	userWallets,
 	proposalTaxDetails,
 	proposalBorderDetails,
@@ -62,9 +62,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(403, "You must be a parliament member, minister, or president to create proposals");
 	}
 
-	// Get state resources
-	const stateResources = await db.query.resourceInventory.findMany({
-		where: eq(resourceInventory.userId, state.id.toString())
+	// Get state resources. These live in stateResourceInventory (keyed by
+	// stateId) — not resourceInventory, which holds per-player resources
+	// keyed by userId and would never match a state here.
+	const stateResources = await db.query.stateResourceInventory.findMany({
+		where: eq(stateResourceInventory.stateId, state.id)
 	});
 
 	// Get existing buildings
@@ -253,8 +255,63 @@ async function executeProposal(
 		const template = BUILDING_TEMPLATES[proposalType as BuildingType];
 		const buildQuantity = buildingDetails.quantity;
 
-		// ... rest of building execution logic (infrastructure check, costs, etc.) ...
-		// This part stays the same as before, just use buildingDetails.regionId, buildingDetails.quantity, etc.
+		if ((region.infrastructure ?? 0) < template.infrastructureRequired) {
+			throw new Error(
+				`This region needs at least ${template.infrastructureRequired} infrastructure to build ${template.type.replace("_", " ")}`
+			);
+		}
+
+		// Total cost for the requested quantity: currency comes out of the
+		// state treasury, and any listed resources (steel, wood, ...) come
+		// out of the state's resource stockpile.
+		const currencyCost = template.costs.currency * buildQuantity;
+		const resourceCosts = Object.entries(template.costs).filter(([key]) => key !== "currency") as Array<
+			[string, number]
+		>;
+
+		const treasury = await db.query.stateTreasury.findFirst({
+			where: eq(stateTreasury.stateId, stateId)
+		});
+
+		if (!treasury || treasury.balance < currencyCost) {
+			throw new Error("Insufficient state treasury funds for this construction");
+		}
+
+		const stateResourceRows = await db.query.stateResourceInventory.findMany({
+			where: eq(stateResourceInventory.stateId, stateId)
+		});
+		const stateResourceQuantities = new Map<string, number>(stateResourceRows.map((r) => [r.resourceType, r.quantity]));
+
+		for (const [resourceType, perUnit] of resourceCosts) {
+			const needed = perUnit * buildQuantity;
+			if ((stateResourceQuantities.get(resourceType) ?? 0) < needed) {
+				throw new Error(`Insufficient ${resourceType} in the state stockpile for this construction`);
+			}
+		}
+
+		// Deduct currency from the state treasury.
+		await db
+			.update(stateTreasury)
+			.set({
+				balance: sql`${stateTreasury.balance} - ${currencyCost}`,
+				totalSpent: sql`${stateTreasury.totalSpent} + ${currencyCost}`,
+				updatedAt: new Date()
+			})
+			.where(eq(stateTreasury.stateId, stateId));
+
+		// Deduct resources from the state stockpile.
+		for (const [resourceType, perUnit] of resourceCosts) {
+			const needed = perUnit * buildQuantity;
+			await db
+				.update(stateResourceInventory)
+				.set({
+					quantity: sql`${stateResourceInventory.quantity} - ${needed}`,
+					updatedAt: new Date()
+				})
+				.where(
+					and(eq(stateResourceInventory.stateId, stateId), eq(stateResourceInventory.resourceType, resourceType as any))
+				);
+		}
 
 		// Create buildings
 		for (let i = 0; i < buildQuantity; i++) {
