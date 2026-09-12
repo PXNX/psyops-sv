@@ -201,7 +201,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		if (userPres && userPres.stateId !== stateId) {
 			userPresidency = userPres;
 			// Can declare war if: not in same bloc (or either has no bloc)
-			canDeclareWar = userPres.stateBlocId !== state.blocId || !userPres.stateBlocId || !state.blocId;
+			const notSameBloc = userPres.stateBlocId !== state.blocId || !userPres.stateBlocId || !state.blocId;
+
+			// ...and not already at war with this state
+			const [existingWar] = await db
+				.select({ id: wars.id })
+				.from(wars)
+				.where(
+					and(
+						eq(wars.status, "active"),
+						or(
+							and(eq(wars.attackerId, userPres.stateId), eq(wars.defenderId, stateId)),
+							and(eq(wars.attackerId, stateId), eq(wars.defenderId, userPres.stateId))
+						)
+					)
+				)
+				.limit(1);
+
+			canDeclareWar = notSameBloc && !existingWar;
 		}
 	}
 

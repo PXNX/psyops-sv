@@ -241,6 +241,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check for active wars
 	let activeWars: any[] = [];
+	let attackableWars: any[] = [];
 	let borderingRegionsForAttack: any[] = [];
 
 	if (region?.stateId) {
@@ -265,7 +266,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			});
 
 			if (isPresident) {
-				borderingRegionsForAttack = await regionService.getStateBorderingRegions(userResidence.region.stateId, regionId);
+				const presidentStateId = userResidence.region.stateId;
+				const presidentBlocId = userResidence.region.state?.blocId ?? null;
+
+				// Only wars where the president's own state (or bloc) is the attacker
+				attackableWars = activeWars.filter(
+					(war) =>
+						war.attackerId === presidentStateId ||
+						(presidentBlocId !== null && war.attackerBlocId === presidentBlocId)
+				);
+
+				if (attackableWars.length > 0) {
+					borderingRegionsForAttack = await regionService.getStateBorderingRegions(presidentStateId, regionId);
+				}
 			}
 		}
 	}
@@ -421,6 +434,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			blockedReason: visaBlockedReason
 		},
 		activeWars,
+		attackableWars,
 		borderingRegionsForAttack,
 		ongoingBattle,
 		recentFailedBattle: recentFailedBattle
@@ -838,11 +852,23 @@ export const actions: Actions = {
 			return fail(403, { error: "Only the president can start battles" });
 		}
 
+		const presidentStateId = userResidence.region.stateId;
+		const presidentBlocId = userResidence.region.state?.blocId ?? null;
+
+		// The caller's state (or bloc) must actually be the attacker in this war
+		const isAttackerForThisWar =
+			war.attackerId === presidentStateId ||
+			(presidentBlocId !== null && war.attackerBlocId === presidentBlocId);
+
+		if (!isAttackerForThisWar) {
+			return fail(403, { error: "Your state is not the attacker in this war" });
+		}
+
 		const attackingRegion = await db.query.regions.findFirst({
 			where: eq(regions.id, attackFromRegionId)
 		});
 
-		if (attackingRegion?.stateId !== userResidence.region.stateId) {
+		if (attackingRegion?.stateId !== presidentStateId) {
 			return fail(403, { error: "Selected region does not belong to your state" });
 		}
 
@@ -882,21 +908,31 @@ export const actions: Actions = {
 		}
 
 		const region = await db.query.regions.findFirst({
-			where: eq(regions.id, regionId)
+			where: eq(regions.id, regionId),
+			with: { state: true }
 		});
 
 		if (!region?.stateId) {
 			return fail(400, { error: "Region has no defending state" });
 		}
 
+		// The region's state (or bloc) must actually be the defender in this war
+		const isDefenderForThisWar =
+			war.defenderId === region.stateId ||
+			(region.state?.blocId != null && war.defenderBlocId === region.state.blocId);
+
+		if (!isDefenderForThisWar) {
+			return fail(400, { error: "This region's state is not the defender in this war" });
+		}
+
 		await db.insert(battles).values({
 			warId,
 			regionId,
-			attackerStateId: userResidence.region.stateId,
+			attackerStateId: presidentStateId,
 			defenderStateId: region.stateId,
 			startedBy: account.id
 		});
 
-		return { success: true };
+		return { success: true, message: "Attack launched!" };
 	}
 };
