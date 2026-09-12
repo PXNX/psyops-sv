@@ -315,10 +315,16 @@ async function executeProposal(
 				);
 		}
 
-		// Create buildings
+		// Create buildings. Construction is purely about raising the region's
+		// building-type level, so the name is just a display label derived
+		// from the type — nothing the user needs to choose.
+		const displayName = template.type
+			.split("_")
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+			.join(" ");
 		for (let i = 0; i < buildQuantity; i++) {
 			await db.insert(stateBuildings).values({
-				name: buildQuantity > 1 ? `${buildingDetails.buildingName} ${i + 1}` : buildingDetails.buildingName,
+				name: buildQuantity > 1 ? `${displayName} ${i + 1}` : displayName,
 				buildingType: proposalType as any,
 				regionId: buildingDetails.regionId,
 				stateId,
@@ -416,17 +422,11 @@ export const actions: Actions = {
 				borderStatus: form.data.borderStatus as any
 			});
 		} else if (["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes(proposalType)) {
-			// The create-proposal form doesn't collect a building name, so
-			// derive one from the proposal type (e.g. "power_plant" -> "Power Plant").
-			const defaultBuildingName = proposalType
-				.split("_")
-				.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-				.join(" ");
-
+			// Construction is just about raising the region's building-type
+			// level by `quantity` — there's no per-building name to collect.
 			await db.insert(proposalBuildingDetails).values({
 				proposalId: proposal.id,
 				regionId: parseInt(form.data.regionId!),
-				buildingName: form.data.buildingName || defaultBuildingName,
 				quantity: form.data.quantity!
 			});
 		}

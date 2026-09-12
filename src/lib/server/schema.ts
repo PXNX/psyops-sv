@@ -2535,7 +2535,6 @@ export const proposalBuildingDetails = pgTable("proposal_building_details", {
 	regionId: integer("region_id")
 		.notNull()
 		.references(() => regions.id, { onDelete: "cascade" }),
-	buildingName: text("building_name").notNull(),
 	quantity: integer("quantity").notNull().default(1),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
