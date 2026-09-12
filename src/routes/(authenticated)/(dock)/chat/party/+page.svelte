@@ -303,7 +303,7 @@
 						{#if group.isFromCurrentUser}
 							<!-- My messages group -->
 							<div class="chat chat-end mb-3 md:mb-4">
-								<div class="flex flex-col gap-1 items-end max-w-[85%] md:max-w-md ml-auto">
+								<div class="flex flex-col gap-1 items-end w-full max-w-[85%] md:max-w-md ml-auto">
 									{#each group.messages as msg}
 										<div
 											class="chat-bubble bg-gradient-to-br from-emerald-600 to-emerald-700 text-white shadow-lg {msg.isOptimistic
@@ -363,7 +363,7 @@
 										</span>
 									{/if}
 								</div>
-								<div class="flex flex-col gap-1 items-start max-w-[85%] md:max-w-md">
+								<div class="flex flex-col gap-1 items-start w-full max-w-[85%] md:max-w-md">
 									{#each group.messages as msg}
 										<div class="relative group/msg">
 											<div

@@ -63,16 +63,6 @@
 <style>
 	@reference "../../../app.css";
 
-	main {
-		@apply pb-16;
-	}
-
-	@media (min-width: 768px) {
-		main {
-			@apply pb-20;
-		}
-	}
-
 	.dock-item {
 		@apply flex flex-col sm:flex-row items-center justify-center gap-1 transition-all duration-300;
 	}

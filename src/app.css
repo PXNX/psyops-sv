@@ -153,9 +153,6 @@
 
 	/* Mobile space optimization */
 	@media (max-width: 768px) {
-		main {
-			@apply pb-20;
-		}
 		.dock {
 			@apply h-14 px-1;
 		}
@@ -168,9 +165,6 @@
 	}
 
 	@media (max-width: 480px) {
-		main {
-			@apply pb-16;
-		}
 		.dock {
 			@apply h-12 px-0;
 		}
