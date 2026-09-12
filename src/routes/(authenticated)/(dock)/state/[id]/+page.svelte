@@ -113,11 +113,15 @@
 
 					{#if data.bloc}
 						<div
-							class="absolute -bottom-2 -right-2 size-10 rounded-full flex items-center justify-center ring-2 ring-[#0c1929]"
+							class="absolute -bottom-2 -right-2 size-10 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#0c1929]"
 							style="background-color: {data.bloc.color};"
 							title={data.bloc.name}
 						>
-							<FluentFlag20Filled class="size-5 text-[#fff7e8]" />
+							{#if data.bloc.logo}
+								<img src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
+							{:else}
+								<FluentFlag20Filled class="size-5 text-[#fff7e8]" />
+							{/if}
 						</div>
 					{/if}
 				</div>

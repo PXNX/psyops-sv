@@ -14,6 +14,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.select({
 			id: blocs.id,
 			name: blocs.name,
+			logo: blocs.logo,
 			color: blocs.color,
 			description: blocs.description,
 			createdAt: blocs.createdAt
@@ -155,6 +156,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		bloc: {
 			id: bloc.id,
 			name: bloc.name,
+			logo: await getLogoUrl(bloc.logo),
 			color: bloc.color,
 			description: bloc.description,
 			createdAt: bloc.createdAt
