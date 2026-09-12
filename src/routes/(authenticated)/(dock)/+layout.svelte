@@ -34,14 +34,15 @@
 </svelte:head>
 
 {#if navigating.to}
-	<div class="flex flex-col h-dvh">
-		<span class="loading loading-ring loading-md m-auto"></span>
-	</div>
-{:else}
-	<main class="flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden">
-		{@render children()}
-	</main>
+	<!-- Non-blocking progress hint: the outgoing page stays visible and
+	     interactive while the next one loads, instead of being replaced by a
+	     full-screen spinner (which made every navigation feel like a reload). -->
+	<div class="nav-progress" aria-hidden="true"></div>
 {/if}
+
+<main class="flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden">
+	{@render children()}
+</main>
 
 {#if page.url.pathname !== "/posts/new" && !page.url.pathname.startsWith("/welcome")}
 		<!-- Editorial field-ledger dock navigation -->
@@ -76,7 +77,25 @@
 		@apply flex flex-col sm:flex-row items-center justify-center gap-1 transition-all duration-300;
 	}
 
-		.dock-item.active {
-			@apply text-[#f7c56b];
+	.nav-progress {
+		@apply fixed top-0 left-0 right-0 z-50 h-0.5 overflow-hidden bg-[#e6a527]/10;
+	}
+
+	.nav-progress::after {
+		content: "";
+		display: block;
+		height: 100%;
+		width: 40%;
+		background: #e6a527;
+		animation: nav-progress-slide 0.9s ease-in-out infinite;
+	}
+
+	@keyframes nav-progress-slide {
+		0% {
+			transform: translateX(-100%);
 		}
+		100% {
+			transform: translateX(350%);
+		}
+	}
 </style>

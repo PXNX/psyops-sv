@@ -12,9 +12,29 @@ export const load = async (event: RequestEvent) => {
 
 	const account = event.locals.account;
 
-	const profile = await db.query.userProfiles.findFirst({
-		where: eq(userProfiles.accountId, account.id)
-	});
+	// This load reruns on every client-side navigation (it reads
+	// event.url.pathname below to gate onboarding/welcome redirects), so the
+	// two independent lookups run in parallel rather than back-to-back —
+	// halving the DB round-trip cost this layout adds to every page change.
+	const [profile, userResidence] = await Promise.all([
+		db.query.userProfiles.findFirst({
+			where: eq(userProfiles.accountId, account.id)
+		}),
+		db
+			.select({
+				id: residences.id,
+				regionId: residences.regionId,
+				homeRegionId: residences.homeRegionId,
+				stateId: states.id,
+				stateName: states.name
+			})
+			.from(residences)
+			.leftJoin(regions, eq(residences.regionId, regions.id))
+			.leftJoin(states, eq(regions.stateId, states.id))
+			.where(eq(residences.userId, account.id))
+			.limit(1)
+			.then((rows) => rows[0] ?? null)
+	]);
 
 	// Keep the theme cookie in sync with the stored profile so server-side
 	// rendering applies the correct theme on subsequent requests.
@@ -26,21 +46,6 @@ export const load = async (event: RequestEvent) => {
 			httpOnly: false
 		});
 	}
-
-	const userResidence = await db
-		.select({
-			id: residences.id,
-			regionId: residences.regionId,
-			homeRegionId: residences.homeRegionId,
-			stateId: states.id,
-			stateName: states.name
-		})
-		.from(residences)
-		.leftJoin(regions, eq(residences.regionId, regions.id))
-		.leftJoin(states, eq(regions.stateId, states.id))
-		.where(eq(residences.userId, account.id))
-		.limit(1)
-		.then((rows) => rows[0] ?? null);
 
 	// No profile → step 0 (greeting). Profile exists → use stored step.
 	// null step = onboarding finished.
