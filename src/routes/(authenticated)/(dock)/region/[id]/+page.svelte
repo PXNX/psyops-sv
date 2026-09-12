@@ -27,6 +27,7 @@
 	const { data, form } = $props();
 
 	let showVisaSheet = $state(false);
+	let isAttacking = $state(false);
 
 	const isIndependent = $derived(!data.region.stateId);
 
@@ -43,6 +44,13 @@
 
 		return { hours, minutes };
 	}
+
+	const canAttack = $derived(
+		!data.ongoingBattle &&
+			!(data.recentFailedBattle && getCooldownRemaining(data.recentFailedBattle.cooldownEndsAt)) &&
+			data.attackableWars.length > 0 &&
+			data.borderingRegionsForAttack.length > 0
+	);
 </script>
 
 <svelte:head>
@@ -622,6 +630,59 @@
 				</a>
 			{/each}
 		</div>
+	{/if}
+
+	<!-- Launch Attack -->
+	{#if canAttack}
+		<SectionCard>
+			<div class="flex items-center gap-2 mb-4">
+				<FluentFire20Filled class="size-5 text-red-500" />
+				<h2 class="text-lg font-semibold text-[#fff7e8]">Launch Attack</h2>
+			</div>
+			<form
+				method="POST"
+				action="?/startBattle"
+				use:enhance={() => {
+					isAttacking = true;
+					return async ({ update }) => {
+						isAttacking = false;
+						await update();
+					};
+				}}
+				class="space-y-4"
+			>
+				{#if data.attackableWars.length > 1}
+					<div>
+						<label class="text-sm text-[#a89e8e] block mb-1" for="warId">War</label>
+						<select id="warId" name="warId" class="select select-bordered w-full">
+							{#each data.attackableWars as war}
+								<option value={war.id}>{war.attacker.name} vs {war.defender.name}</option>
+							{/each}
+						</select>
+					</div>
+				{:else}
+					<input type="hidden" name="warId" value={data.attackableWars[0].id} />
+				{/if}
+
+				<div>
+					<label class="text-sm text-[#a89e8e] block mb-1" for="attackFromRegionId">Attack From</label>
+					<select id="attackFromRegionId" name="attackFromRegionId" class="select select-bordered w-full">
+						{#each data.borderingRegionsForAttack as border}
+							<option value={border.id}>{border.name} ({Math.round(border.distanceKm)} km)</option>
+						{/each}
+					</select>
+				</div>
+
+				<button
+					type="submit"
+					class="btn w-full bg-red-600 hover:bg-red-500 border-0 text-white gap-2"
+					disabled={isAttacking}
+				>
+					<FluentFire20Filled class="size-5" />
+					{isAttacking ? "Launching Attack..." : "Launch Attack"}
+				</button>
+			</form>
+		</SectionCard>
 	{/if}
 
 	<!-- Bordering Regions -->
