@@ -55,15 +55,28 @@ function isCacheableResponse(response) {
 	return response instanceof Response && (response.status === 200 || response.type === "opaque");
 }
 
+// Cross-origin avatar/logo URLs are presigned (Backblaze) and carry a
+// signature + expiry query string that's regenerated on every page render,
+// even though the underlying file at that path never changes. Keying the
+// runtime cache by origin+pathname (dropping the query) lets repeat views of
+// the same avatar/logo hit the cache instantly instead of being treated as a
+// brand new, never-before-seen URL on every single request.
+function runtimeCacheKey(request, isSameOrigin) {
+	if (isSameOrigin) return request;
+	const url = new URL(request.url);
+	return `${url.origin}${url.pathname}`;
+}
+
 // Serve from cache immediately, then refresh the cache in the background.
-async function staleWhileRevalidate(event) {
+async function staleWhileRevalidate(event, { isSameOrigin } = {}) {
 	const cache = await caches.open(RUNTIME);
-	const cached = await cache.match(event.request);
+	const cacheKey = runtimeCacheKey(event.request, isSameOrigin);
+	const cached = await cache.match(cacheKey);
 
 	const network = fetch(event.request)
 		.then((response) => {
 			if (isCacheableResponse(response)) {
-				cache.put(event.request, response.clone());
+				cache.put(cacheKey, response.clone());
 			}
 			return response;
 		})
@@ -128,7 +141,7 @@ self.addEventListener("fetch", (event) => {
 
 	// Images/fonts and other heavy static assets: stale-while-revalidate.
 	if (CACHEABLE_DESTINATIONS.has(event.request.destination)) {
-		event.respondWith(staleWhileRevalidate(event));
+		event.respondWith(staleWhileRevalidate(event, { isSameOrigin }));
 		return;
 	}
 
