@@ -15,8 +15,18 @@
 
 <div class="min-h-screen bg-[#0c1929]">
 	<!-- Bloc Header -->
-	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
-		<div class="w-full px-4 sm:px-6 py-5 sm:py-6">
+	<div class="relative border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
+		{#if data.isLeader}
+			<a
+				href="/bloc/{data.bloc.id}/edit"
+				class="absolute top-3 right-3 sm:top-4 sm:right-4 z-10 p-2 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all"
+				title="Edit Bloc"
+				aria-label="Edit Bloc"
+			>
+				<FluentEdit20Filled class="size-4" />
+			</a>
+		{/if}
+		<div class="w-full px-4 sm:px-6 py-5 sm:py-6 pr-14 sm:pr-16">
 			<div class="flex items-start gap-4 sm:gap-5">
 				<!-- Bloc Logo -->
 				<div class="relative flex-shrink-0">
@@ -31,20 +41,9 @@
 				</div>
 
 				<div class="flex-1 min-w-0">
-					<div class="flex items-start justify-between gap-3">
-						<div class="min-w-0">
-							<h1 class="text-xl sm:text-2xl font-bold text-[#fff7e8] tracking-wide">{data.bloc.name}</h1>
-							<span class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Alliance</span>
-						</div>
-						{#if data.isLeader}
-							<a
-								href="/bloc/{data.bloc.id}/edit"
-								class="px-3 py-1.5 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all flex items-center gap-2 text-xs font-mono flex-shrink-0"
-							>
-								<FluentEdit20Filled class="size-3.5" />
-								Edit
-							</a>
-						{/if}
+					<div class="min-w-0">
+						<h1 class="text-xl sm:text-2xl font-bold text-[#fff7e8] tracking-wide">{data.bloc.name}</h1>
+						<span class="text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Alliance</span>
 					</div>
 					{#if data.bloc.description}
 						<p class="text-sm text-[#d9ccb7]/80 mt-2 leading-relaxed">{data.bloc.description}</p>
