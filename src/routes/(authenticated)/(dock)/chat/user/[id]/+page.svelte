@@ -11,6 +11,7 @@
 	import Modal from "$lib/component/Modal.svelte";
 	import ReportMessageModal from "$lib/component/ReportMessageModal.svelte";
 	import BlockUserModal from "$lib/component/BlockUserModal.svelte";
+	import PartyTag from "$lib/component/PartyTag.svelte";
 	import { settings } from "$lib/settings.svelte";
 	import { buttonClass } from "$lib/component/ui/styles";
 
@@ -277,7 +278,12 @@
 					{/if}
 
 					<div class="min-w-0">
-						<h1 class="text-lg md:text-xl font-bold text-[#fff7e8] truncate">{data.otherUser.name || "Anonymous"}</h1>
+						<h1 class="text-lg md:text-xl font-bold text-[#fff7e8] truncate">
+							{#if data.otherUser.partyAbbreviation}
+								<PartyTag abbreviation={data.otherUser.partyAbbreviation} color={data.otherUser.partyColor} />
+							{/if}
+							{data.otherUser.name || "Anonymous"}
+						</h1>
 						<p class="text-xs md:text-sm text-red-400">Blocked</p>
 					</div>
 				</a>
@@ -425,7 +431,12 @@
 					{/if}
 
 					<div class="min-w-0">
-						<h1 class="text-lg md:text-xl font-bold text-[#fff7e8] truncate">{data.otherUser.name || "Anonymous"}</h1>
+						<h1 class="text-lg md:text-xl font-bold text-[#fff7e8] truncate">
+							{#if data.otherUser.partyAbbreviation}
+								<PartyTag abbreviation={data.otherUser.partyAbbreviation} color={data.otherUser.partyColor} />
+							{/if}
+							{data.otherUser.name || "Anonymous"}
+						</h1>
 						<p class="text-xs md:text-sm text-[#a89e8e] truncate">Direct Message</p>
 					</div>
 				</a>

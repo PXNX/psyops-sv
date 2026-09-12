@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/chat/en/+page.server.ts
 import { db, messageNotifier } from "$lib/server/db";
-import { chatMessages, accounts, userProfiles, files, politicalParties } from "$lib/server/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { chatMessages, accounts, userProfiles, files, politicalParties, partyMembers } from "$lib/server/schema";
+import { eq, and, desc, inArray } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import type { Actions, PageServerLoad } from "./$types";
@@ -35,6 +35,25 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 		.orderBy(desc(chatMessages.sentAt))
 		.limit(PAGE_SIZE);
 
+	// Current party (abbreviation + color) for each sender, for the party tag next to their name.
+	const senderIds = Array.from(new Set(messages.map((m) => m.senderId)));
+	const partyBySenderId = new Map<string, { abbreviation: string | null; color: string }>();
+	if (senderIds.length > 0) {
+		const membershipRows = await db
+			.select({
+				userId: partyMembers.userId,
+				abbreviation: politicalParties.abbreviation,
+				color: politicalParties.color
+			})
+			.from(partyMembers)
+			.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+			.where(inArray(partyMembers.userId, senderIds));
+
+		for (const row of membershipRows) {
+			partyBySenderId.set(row.userId, { abbreviation: row.abbreviation, color: row.color });
+		}
+	}
+
 	// Process messages
 	const processedMessages = await Promise.all(
 		messages.map(async (msg) => {
@@ -57,6 +76,8 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 				senderId: msg.senderId,
 				senderName: msg.senderName || "Anonymous",
 				senderLogo: senderLogoUrl,
+				senderPartyAbbreviation: partyBySenderId.get(msg.senderId)?.abbreviation ?? null,
+				senderPartyColor: partyBySenderId.get(msg.senderId)?.color ?? null,
 				isFromCurrentUser: msg.senderId === account.id
 			};
 		})
