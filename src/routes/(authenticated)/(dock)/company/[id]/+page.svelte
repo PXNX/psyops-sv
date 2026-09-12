@@ -81,54 +81,47 @@
 			class="absolute inset-0 opacity-5"
 			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.2) 35px, rgba(255,255,255,0.2) 70px);"
 		></div>
-		<div class="relative z-10 p-5 sm:p-8">
-			<div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-				<!-- Company Logo -->
-				<div class="rounded-2xl shrink-0">
-					<Logo
-						src={data.company.logo}
-						alt={data.company.name}
-						placeholderIcon={FluentBuilding20Filled}
-						class="size-20 sm:size-24 rounded-2xl"
-					/>
-				</div>
-				<div class="flex-1 min-w-0">
-					<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-2">
-						<div class="min-w-0">
-							<h1 class="text-2xl sm:text-3xl font-bold text-[#fff7e8] truncate">{data.company.name}</h1>
-							<div class="flex flex-wrap items-center gap-3 text-xs text-[#a89e8e] mt-1">
-								<span class="flex items-center gap-1">
-									<FluentCalendar20Filled class="size-3.5" />
-									Founded {formatDate(data.company.foundedAt)}
-								</span>
-								<a
-									href="/user/{data.company.ownerId}"
-									class="flex items-center gap-1.5 hover:text-[#f7c56b] transition-colors"
-								>
-									{#if data.company.ownerLogo}
-										<img src={data.company.ownerLogo} alt="Owner" class="size-4 rounded-full" />
-									{/if}
-									{#if data.company.ownerPartyAbbreviation}
-										<PartyTag abbreviation={data.company.ownerPartyAbbreviation} color={data.company.ownerPartyColor} />
-									{/if}
-									<span>{data.company.ownerName || data.company.ownerEmail}</span>
-								</a>
-							</div>
-						</div>
-						{#if data.isOwner}
-							<a href="/company/{data.company.id}/edit" class={buttonClass({ variant: "secondary", size: "sm" })}>
-								<FluentEdit20Filled class="size-4" />
-								Edit
-							</a>
-						{/if}
-					</div>
-					{#if data.company.description}
-						<div class="mt-2 panel-muted rounded-xl p-3">
-							<p class="text-sm text-[#d9ccb7]">{data.company.description}</p>
-						</div>
+		{#if data.isOwner}
+			<a
+				href="/company/{data.company.id}/edit"
+				class="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 size-9 flex items-center justify-center bg-[#8c709b]/15 hover:bg-[#8c709b]/25 rounded-full text-[#d5c4df] transition-all"
+				title="Edit Company"
+			>
+				<FluentEdit20Filled class="size-4" />
+			</a>
+		{/if}
+		<div class="relative z-10 p-5 sm:p-8 flex flex-col items-center text-center">
+			<!-- Company Logo -->
+			<Logo
+				src={data.company.logo}
+				alt={data.company.name}
+				placeholderIcon={FluentBuilding20Filled}
+				class="size-20 sm:size-24 rounded-2xl"
+			/>
+			<h1 class="text-2xl sm:text-3xl font-bold text-[#fff7e8] mt-4">{data.company.name}</h1>
+			<div class="flex flex-wrap items-center justify-center gap-3 text-xs text-[#a89e8e] mt-2">
+				<span class="flex items-center gap-1">
+					<FluentCalendar20Filled class="size-3.5" />
+					Founded {formatDate(data.company.foundedAt)}
+				</span>
+				<a
+					href="/user/{data.company.ownerId}"
+					class="flex items-center gap-1.5 text-sm text-[#d9ccb7] hover:text-[#f7c56b] transition-colors"
+				>
+					{#if data.company.ownerLogo}
+						<img src={data.company.ownerLogo} alt="Owner" class="size-5 rounded-full" />
 					{/if}
-				</div>
+					{#if data.company.ownerPartyAbbreviation}
+						<PartyTag abbreviation={data.company.ownerPartyAbbreviation} color={data.company.ownerPartyColor} />
+					{/if}
+					<span class="font-medium">{data.company.ownerName || data.company.ownerEmail}</span>
+				</a>
 			</div>
+			{#if data.company.description}
+				<div class="mt-3 panel-muted rounded-xl p-3 max-w-md">
+					<p class="text-sm text-[#d9ccb7]">{data.company.description}</p>
+				</div>
+			{/if}
 		</div>
 	</div>
 
@@ -496,17 +489,13 @@
 			<!-- Budget Management -->
 			<div class="card bg-base-200 border border-emerald-500/30 shadow-lg">
 				<div class="card-body p-4 sm:p-6">
-					<h3 class="card-title text-base sm:text-lg">
-						<FluentWallet20Filled class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
-						Company Budget
+					<h3 class="card-title text-base sm:text-lg items-center justify-between">
+						<span class="flex items-center gap-2">
+							<FluentWallet20Filled class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500" />
+							Company Budget
+						</span>
+						<span class="text-emerald-500 font-bold text-base sm:text-lg">{data.budget.balance.toLocaleString()}</span>
 					</h3>
-
-					<div class="stats bg-base-300/30 mb-4 shadow">
-						<div class="stat place-items-center py-2 sm:py-4">
-							<div class="stat-title text-xs">Balance</div>
-							<div class="stat-value text-xl sm:text-2xl text-emerald-500">{data.budget.balance.toLocaleString()}</div>
-						</div>
-					</div>
 
 					<div class="grid grid-cols-2 gap-3 mb-4">
 						<div class="text-center p-2 sm:p-3 bg-base-300/20 rounded-lg">
@@ -617,25 +606,7 @@
 					{/if}
 
 					{#if data.resourceProduction.some((r) => r.pendingTotal > 0)}
-						<div class="divider my-2"></div>
-						<div class="space-y-2">
-							<h4 class="text-xs font-medium opacity-60 uppercase tracking-wide">Ready to Collect</h4>
-							<div class="bg-base-300/30 rounded-lg p-2.5 sm:p-3 space-y-1.5 border border-base-300">
-								{#each data.resourceProduction as resource}
-									{#if resource.pendingTotal > 0}
-										<div class="flex justify-between items-center text-xs sm:text-sm">
-											<span class="flex items-center gap-1.5 opacity-80">
-												<span class="w-2 h-2 rounded-full" style="background-color: {getColor(resource.type)}"></span>
-												<span class="capitalize">{resource.type}</span>
-											</span>
-											<span class="font-mono font-bold text-sm sm:text-base" style="color: {getColor(resource.type)}">
-												{resource.pendingTotal.toLocaleString()}
-											</span>
-										</div>
-									{/if}
-								{/each}
-							</div>
-						</div>
+						<p class="text-xs opacity-60 text-center mt-1">See the breakdown per resource below.</p>
 					{/if}
 				</div>
 			</div>

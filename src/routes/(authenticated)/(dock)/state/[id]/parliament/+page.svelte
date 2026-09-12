@@ -5,7 +5,7 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import FluentSubtractCircle20Filled from "~icons/fluent/subtract-circle-20-filled";
+	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
@@ -493,6 +493,22 @@
 							<div class="mb-3">
 								<h3 class="text-lg font-bold text-[#fff7e8] mb-1">{proposal.changeTitle}</h3>
 								<p class="text-sm text-[#a89e8e]">{proposal.changeDescription}</p>
+
+								{#if proposal.region}
+									<a
+										href="/region/{proposal.region.id}"
+										class="inline-flex items-center gap-2 mt-2 text-sm text-[#b7d0e6] hover:text-[#fff7e8] transition-colors w-fit"
+									>
+										<Logo
+											src="/coats/{proposal.region.id}.svg"
+											alt={proposal.region.name}
+											class="size-6 rounded"
+											placeholderIcon={FluentShield20Filled}
+											placeholderGradient="from-[#315d8d] to-[#315d8d]"
+										/>
+										<span>in {proposal.region.name}</span>
+									</a>
+								{/if}
 							</div>
 
 							<a
@@ -500,54 +516,31 @@
 								class="flex items-center gap-2 text-sm text-[#a89e8e] hover:text-[#fff7e8] transition-colors w-fit"
 							>
 								<Logo src={proposal.proposedBy.logo} alt={proposal.proposedBy.name} />
-								<span>by <span class="text-[#fff7e8] font-medium">{proposal.proposedBy.name}</span></span>
+								<span>
+									by <span class="text-[#fff7e8] font-medium">{proposal.proposedBy.name}</span>
+									{#if proposal.proposedBy.party}
+										<span class="text-[#a89e8e]">({proposal.proposedBy.party.abbreviation})</span>
+									{/if}
+								</span>
 							</a>
 						</div>
 
 						<!-- Votes -->
 						<div class="p-4 space-y-3">
 							<div>
-								<div class="flex justify-between text-sm mb-1">
-									<span class="text-[#8fae88] font-medium flex items-center gap-1">
+								<div class="flex items-center justify-between text-sm mb-1 gap-2">
+									<span class="text-emerald-400 font-medium flex items-center gap-1">
 										<FluentCheckmark20Filled class="size-4" />
-										For
+										For: {proposal.voteCounts.for} ({proposal.percentageFor.toFixed(1)}%)
 									</span>
-									<span class="text-[#fff7e8]">{proposal.voteCounts.for} ({proposal.percentageFor.toFixed(1)}%)</span>
-								</div>
-								<div class="w-full bg-[#0d1d31] rounded-full h-2">
-									<div class="bg-emerald-500 h-2 rounded-full transition-all" style="width: {proposal.percentageFor}%" />
-								</div>
-							</div>
-
-							<div>
-								<div class="flex justify-between text-sm mb-1">
 									<span class="text-red-400 font-medium flex items-center gap-1">
+										Against: {proposal.voteCounts.against} ({proposal.percentageAgainst.toFixed(1)}%)
 										<FluentDismiss20Filled class="size-4" />
-										Against
 									</span>
-									<span class="text-[#fff7e8]">{proposal.voteCounts.against}</span>
 								</div>
-								<div class="w-full bg-[#0d1d31] rounded-full h-2">
-									<div
-										class="bg-red-500 h-2 rounded-full transition-all"
-										style="width: {(proposal.voteCounts.against / proposal.totalVotes) * 100 || 0}%"
-									/>
-								</div>
-							</div>
-
-							<div>
-								<div class="flex justify-between text-sm mb-1">
-									<span class="text-[#a89e8e] font-medium flex items-center gap-1">
-										<FluentSubtractCircle20Filled class="size-4" />
-										Abstain
-									</span>
-									<span class="text-[#fff7e8]">{proposal.voteCounts.abstain}</span>
-								</div>
-								<div class="w-full bg-[#0d1d31] rounded-full h-2">
-									<div
-										class="bg-[#a89e8e] h-2 rounded-full transition-all"
-										style="width: {(proposal.voteCounts.abstain / proposal.totalVotes) * 100 || 0}%"
-									/>
+								<div class="w-full bg-[#0d1d31] rounded-full h-3 flex overflow-hidden">
+									<div class="bg-emerald-500 h-full transition-all" style="width: {proposal.percentageFor}%"></div>
+									<div class="bg-red-500 h-full transition-all" style="width: {proposal.percentageAgainst}%"></div>
 								</div>
 							</div>
 
@@ -619,19 +612,6 @@
 									>
 										<FluentDismiss20Filled class="size-4" />
 										Against
-									</button>
-
-									<button
-										type="submit"
-										name="voteType"
-										value="abstain"
-										class="btn btn-sm flex-1 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] {proposal.userVote ===
-										'abstain'
-											? 'ring-2 ring-[#dfceb0]/50'
-											: ''}"
-									>
-										<FluentSubtractCircle20Filled class="size-4" />
-										Abstain
 									</button>
 								</form>
 							</div>

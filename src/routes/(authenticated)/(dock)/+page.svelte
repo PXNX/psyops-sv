@@ -19,6 +19,7 @@
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
+	import FluentShieldLock20Filled from "~icons/fluent/shield-lock-20-filled";
 	import { formatDate, getRegionName } from "$lib/utils/formatting.js";
 	import { buttonClass } from "$lib/component/ui/styles";
 	import type { PageData } from "./$types";
@@ -412,6 +413,18 @@
 				<FluentBuildingBank20Filled class="size-5" />
 				Fallen States
 			</a>
+			{#if data.account.role === "admin" || data.account.role === "moderator"}
+				<a href="/moderators" class="btn btn-ghost justify-start">
+					<FluentShield20Filled class="size-5" />
+					Moderator Panel
+				</a>
+			{/if}
+			{#if data.account.role === "admin"}
+				<a href="/admin" class="btn btn-ghost justify-start">
+					<FluentShieldLock20Filled class="size-5" />
+					Admin Panel
+				</a>
+			{/if}
 		</div>
 	</SectionCard>
 </PageContainer>

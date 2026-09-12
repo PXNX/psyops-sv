@@ -11,6 +11,7 @@
 	import FluentProhibited20Filled from "~icons/fluent/prohibited-20-filled";
 	import { formatTime } from "$lib/utils/formatting.js";
 	import { settings } from "$lib/settings.svelte";
+	import PartyTag from "$lib/component/PartyTag.svelte";
 
 	const { data } = $props();
 
@@ -72,7 +73,12 @@
 					</div>
 					{#if data.globalChat?.lastMessage}
 						<p class="text-sm md:text-xs text-[#a89e8e] truncate leading-relaxed">
-							<span class="font-medium text-[#d9ccb7]">{data.globalChat.lastMessage.senderName}:</span>
+							<span class="font-medium text-[#d9ccb7]"
+								>{#if data.globalChat.lastMessage.senderPartyAbbreviation}<PartyTag
+										abbreviation={data.globalChat.lastMessage.senderPartyAbbreviation}
+										color={data.globalChat.lastMessage.senderPartyColor}
+									/>{/if}{data.globalChat.lastMessage.senderName}:</span
+							>
 							{data.globalChat.lastMessage.content}
 						</p>
 						<p class="text-xs text-[#a89e8e] mt-1">{formatTime(data.globalChat.lastMessage.sentAt)}</p>
@@ -189,6 +195,9 @@
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2 mb-1.5">
 									<h3 class="font-semibold text-white text-base md:text-sm truncate">
+										{#if chat.otherUserPartyAbbreviation}
+											<PartyTag abbreviation={chat.otherUserPartyAbbreviation} color={chat.otherUserPartyColor} />
+										{/if}
 										{chat.otherUserName || "Anonymous"}
 									</h3>
 									{#if chat.isBlocked}

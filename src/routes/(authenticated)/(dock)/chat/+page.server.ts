@@ -5,6 +5,19 @@ import { eq, and, desc, or } from "drizzle-orm";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import type { PageServerLoad } from "./$types";
 
+// Current party (abbreviation + color) for a user, for the party tag shown next to their name.
+async function getPartyTag(userId: string) {
+	const membership = await db.query.partyMembers.findFirst({
+		where: eq(partyMembers.userId, userId)
+	});
+	if (!membership) return { abbreviation: null as string | null, color: null as string | null };
+
+	const party = await db.query.politicalParties.findFirst({
+		where: eq(politicalParties.id, membership.partyId)
+	});
+	return { abbreviation: party?.abbreviation ?? null, color: party?.color ?? null };
+}
+
 export const load: PageServerLoad = async ({ locals, depends }) => {
 	depends("app:chat");
 	const account = locals.account!;
@@ -23,7 +36,13 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 		.limit(1);
 
 	let globalChat = {
-		lastMessage: null as { content: string; senderName: string; sentAt: string } | null,
+		lastMessage: null as {
+			content: string;
+			senderName: string;
+			senderPartyAbbreviation: string | null;
+			senderPartyColor: string | null;
+			sentAt: string;
+		} | null,
 		unreadCount: 0
 	};
 
@@ -32,10 +51,13 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 		const senderProfile = await db.query.userProfiles.findFirst({
 			where: eq(userProfiles.accountId, msg.senderId)
 		});
+		const senderParty = await getPartyTag(msg.senderId);
 
 		globalChat.lastMessage = {
 			content: msg.content,
 			senderName: senderProfile?.name || "Anonymous",
+			senderPartyAbbreviation: senderParty.abbreviation,
+			senderPartyColor: senderParty.color,
 			sentAt: msg.sentAt.toISOString()
 		};
 	}
@@ -181,10 +203,13 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 
 			// Check if this user is blocked
 			const isBlocked = blockedUserIds.has(conv.otherUserId);
+			const otherUserParty = await getPartyTag(conv.otherUserId);
 
 			return {
 				otherUserId: conv.otherUserId,
 				otherUserName: otherUser?.name || "Anonymous",
+				otherUserPartyAbbreviation: otherUserParty.abbreviation,
+				otherUserPartyColor: otherUserParty.color,
 				otherUserLogo: logoUrl,
 				lastMessage: {
 					content: conv.lastMessage,

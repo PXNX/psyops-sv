@@ -10,6 +10,7 @@
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
 	import Modal from "$lib/component/Modal.svelte";
 	import ReportModal from "$lib/component/ReportModal.svelte";
+	import PartyTag from "$lib/component/PartyTag.svelte";
 	import { settings } from "$lib/settings.svelte";
 	import { buttonClass } from "$lib/component/ui/styles";
 
@@ -56,6 +57,8 @@
 					senderId: msg.senderId,
 					senderName: msg.senderName,
 					senderLogo: msg.senderLogo,
+					senderPartyAbbreviation: msg.senderPartyAbbreviation,
+					senderPartyColor: msg.senderPartyColor,
 					isFromCurrentUser: msg.isFromCurrentUser,
 					messages: [msg],
 					firstMessageTime: msg.sentAt,
@@ -331,7 +334,10 @@
 									{/if}
 								</a>
 							</div>
-							<div class="chat-header text-xs md:text-sm mb-1 px-1">
+							<div class="chat-header text-xs md:text-sm mb-1 px-1 items-center">
+								{#if group.senderPartyAbbreviation}
+									<PartyTag abbreviation={group.senderPartyAbbreviation} color={group.senderPartyColor} />
+								{/if}
 								<a href="/user/{group.senderId}" class="hover:text-blue-400 transition-colors font-semibold">
 									{group.senderName || "Anonymous"}
 								</a>

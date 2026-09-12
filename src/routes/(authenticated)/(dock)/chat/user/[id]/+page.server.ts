@@ -8,7 +8,8 @@ import {
 	generalReports,
 	userBlocks,
 	residences,
-	partyMembers
+	partyMembers,
+	politicalParties
 } from "$lib/server/schema";
 import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 import { eq, and, or, desc } from "drizzle-orm";
@@ -40,6 +41,17 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 	const otherUserProfile = await db.query.userProfiles.findFirst({
 		where: eq(userProfiles.accountId, otherUserId)
 	});
+
+	// Current party (abbreviation + color) for the other user, for the party tag next to their name.
+	const otherUserMembership = await db.query.partyMembers.findFirst({
+		where: eq(partyMembers.userId, otherUserId)
+	});
+	let otherUserParty = null;
+	if (otherUserMembership) {
+		otherUserParty = await db.query.politicalParties.findFirst({
+			where: eq(politicalParties.id, otherUserMembership.partyId)
+		});
+	}
 
 	// Get other user's logo file separately if it exists
 	let otherUserLogo = null;
@@ -123,7 +135,9 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 		otherUser: {
 			id: otherUserId,
 			name: otherUserProfile?.name || "Anonymous",
-			logo: otherUserLogo
+			logo: otherUserLogo,
+			partyAbbreviation: otherUserParty?.abbreviation ?? null,
+			partyColor: otherUserParty?.color ?? null
 		},
 		messages: processedMessages,
 		currentUserId: account.id,

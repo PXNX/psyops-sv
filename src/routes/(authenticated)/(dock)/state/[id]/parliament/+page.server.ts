@@ -139,6 +139,9 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 	const getProposalDescription = async (proposal: any) => {
 		let title = "";
 		let description = "";
+		let region: { id: number; name: string } | null = proposal.buildingDetails
+			? { id: proposal.buildingDetails.regionId, name: getRegionName(proposal.buildingDetails.regionId) }
+			: null;
 
 		switch (proposal.proposalType) {
 			case "tax": {
@@ -178,13 +181,11 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			}
 
 			case "fortifications": {
+				title = "Build Fortifications";
 				if (proposal.buildingDetails) {
 					const qty = proposal.buildingDetails.quantity;
-					const regionName = getRegionName(proposal.buildingDetails.regionId);
-					title = `Build Fortifications`;
-					description = `Construct ${qty} fortification${qty > 1 ? "s" : ""} in ${regionName}`;
+					description = `Construct ${qty} fortification${qty > 1 ? "s" : ""}`;
 				} else {
-					title = "Build Fortifications";
 					description = "Construct defensive fortifications";
 				}
 				break;
@@ -193,9 +194,8 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			case "hospital": {
 				if (proposal.buildingDetails) {
 					const qty = proposal.buildingDetails.quantity;
-					const regionName = getRegionName(proposal.buildingDetails.regionId);
 					title = `Build Hospital${qty > 1 ? "s" : ""}`;
-					description = `Construct ${qty} hospital${qty > 1 ? "s" : ""} in ${regionName}`;
+					description = `Construct ${qty} hospital${qty > 1 ? "s" : ""}`;
 				} else {
 					title = "Build Hospital";
 					description = "Construct hospital";
@@ -206,9 +206,8 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			case "school": {
 				if (proposal.buildingDetails) {
 					const qty = proposal.buildingDetails.quantity;
-					const regionName = getRegionName(proposal.buildingDetails.regionId);
 					title = `Build School${qty > 1 ? "s" : ""}`;
-					description = `Construct ${qty} school${qty > 1 ? "s" : ""} in ${regionName}`;
+					description = `Construct ${qty} school${qty > 1 ? "s" : ""}`;
 				} else {
 					title = "Build School";
 					description = "Construct school";
@@ -219,9 +218,8 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			case "power_plant": {
 				if (proposal.buildingDetails) {
 					const qty = proposal.buildingDetails.quantity;
-					const regionName = getRegionName(proposal.buildingDetails.regionId);
 					title = `Build Power Plant${qty > 1 ? "s" : ""}`;
-					description = `Construct ${qty} power plant${qty > 1 ? "s" : ""} in ${regionName}`;
+					description = `Construct ${qty} power plant${qty > 1 ? "s" : ""}`;
 				} else {
 					title = "Build Power Plant";
 					description = "Construct power plant";
@@ -230,13 +228,11 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			}
 
 			case "infrastructure": {
+				title = "Build Infrastructure";
 				if (proposal.buildingDetails) {
 					const qty = proposal.buildingDetails.quantity;
-					const regionName = getRegionName(proposal.buildingDetails.regionId);
-					title = `Build Infrastructure`;
-					description = `Construct ${qty} infrastructure project${qty > 1 ? "s" : ""} in ${regionName}`;
+					description = `Construct ${qty} infrastructure project${qty > 1 ? "s" : ""}`;
 				} else {
-					title = "Build Infrastructure";
 					description = "Construct infrastructure";
 				}
 				break;
@@ -249,7 +245,7 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			}
 		}
 
-		return { title, description };
+		return { title, description, region };
 	};
 
 	// Process proposals with votes and descriptions
@@ -259,33 +255,43 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 
 			const voteCounts = {
 				for: votes.filter((v) => v.voteType === "for").length,
-				against: votes.filter((v) => v.voteType === "against").length,
-				abstain: votes.filter((v) => v.voteType === "abstain").length
+				against: votes.filter((v) => v.voteType === "against").length
 			};
 
-			const totalVotes = votes.length;
+			const totalVotes = voteCounts.for + voteCounts.against;
 			const percentageFor = totalVotes > 0 ? (voteCounts.for / totalVotes) * 100 : 0;
+			const percentageAgainst = totalVotes > 0 ? (voteCounts.against / totalVotes) * 100 : 0;
 			const userVote = votes.find((v) => v.voterId === account.id);
 
 			const proposer = await db.query.userProfiles.findFirst({
 				where: eq(userProfiles.accountId, proposal.proposedBy)
 			});
 
-			const { title, description } = await getProposalDescription(proposal);
+			const proposerPartyRows = await db
+				.select({ abbreviation: politicalParties.abbreviation, name: politicalParties.name })
+				.from(partyMembers)
+				.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+				.where(and(eq(partyMembers.userId, proposal.proposedBy), eq(politicalParties.stateId, stateId)))
+				.limit(1);
+
+			const { title, description, region } = await getProposalDescription(proposal);
 
 			return {
 				...proposal,
 				voteCounts,
 				totalVotes,
 				percentageFor,
+				percentageAgainst,
 				userVote: userVote?.voteType || null,
 				proposedBy: {
 					id: proposal.proposedBy,
 					name: proposer?.name,
-					logo: await getLogoUrl(proposer?.logo)
+					logo: await getLogoUrl(proposer?.logo),
+					party: proposerPartyRows[0] || null
 				},
 				changeTitle: title,
-				changeDescription: description
+				changeDescription: description,
+				region
 			};
 		})
 	);
