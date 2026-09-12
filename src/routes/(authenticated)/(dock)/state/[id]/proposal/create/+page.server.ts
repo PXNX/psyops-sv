@@ -10,6 +10,7 @@ import {
 	ministers,
 	presidents,
 	parliamentaryProposals,
+	parliamentaryVotes,
 	stateTaxes,
 	stateBuildings,
 	stateTreasury,
@@ -129,8 +130,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 // Helper function to check if user can auto-execute
 function canAutoExecute(proposalType: string, userMinistry: string | null, isPresident: boolean): boolean {
 	if (isPresident) {
-		// Presidents can auto-execute: tax, border_control, and fortifications
-		return ["tax", "border_control", "fortifications"].includes(proposalType);
+		// Presidents can auto-execute any proposal type
+		return true;
 	}
 
 	if (!userMinistry) return false;
@@ -430,6 +431,13 @@ export const actions: Actions = {
 				quantity: form.data.quantity!
 			});
 		}
+
+		// The proposer automatically votes "for" their own proposal.
+		await db.insert(parliamentaryVotes).values({
+			proposalId: proposal.id,
+			voterId: account.id,
+			voteType: "for"
+		});
 
 		// Notify parliament members about the new proposal (only if it needs voting)
 		if (!shouldAutoExecute) {

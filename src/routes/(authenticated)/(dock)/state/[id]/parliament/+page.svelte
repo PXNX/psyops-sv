@@ -2,6 +2,7 @@
 <script lang="ts">
 	import SquareLogo from "$lib/component/SquareLogo.svelte";
 	import Logo from "$lib/component/Logo.svelte";
+	import PartyTag from "$lib/component/PartyTag.svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -516,10 +517,10 @@
 								class="flex items-center gap-2 text-sm text-[#a89e8e] hover:text-[#fff7e8] transition-colors w-fit"
 							>
 								<Logo src={proposal.proposedBy.logo} alt={proposal.proposedBy.name} />
-								<span>
+								<span class="inline-flex items-center gap-1.5">
 									by <span class="text-[#fff7e8] font-medium">{proposal.proposedBy.name}</span>
 									{#if proposal.proposedBy.party}
-										<span class="text-[#a89e8e]">({proposal.proposedBy.party.abbreviation})</span>
+										<PartyTag abbreviation={proposal.proposedBy.party.abbreviation} color={proposal.proposedBy.party.color} />
 									{/if}
 								</span>
 							</a>

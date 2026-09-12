@@ -77,7 +77,7 @@
 		if (!$formData.proposalType) return false;
 
 		if (data.isPresident) {
-			return ["tax", "border_control", "fortifications"].includes($formData.proposalType);
+			return true;
 		}
 
 		if (!data.userMinistry) return false;

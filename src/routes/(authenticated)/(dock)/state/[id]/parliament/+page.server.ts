@@ -268,7 +268,7 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			});
 
 			const proposerPartyRows = await db
-				.select({ abbreviation: politicalParties.abbreviation, name: politicalParties.name })
+				.select({ abbreviation: politicalParties.abbreviation, name: politicalParties.name, color: politicalParties.color })
 				.from(partyMembers)
 				.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
 				.where(and(eq(partyMembers.userId, proposal.proposedBy), eq(politicalParties.stateId, stateId)))
