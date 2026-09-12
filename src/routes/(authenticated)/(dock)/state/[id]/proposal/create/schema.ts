@@ -17,7 +17,6 @@ export const createProposalSchema = v.object({
 
 	// Building construction fields (includes fortifications)
 	regionId: v.optional(v.string("Please select a region")),
-	buildingName: v.optional(v.pipe(v.string(), v.minLength(5), v.maxLength(100))),
 	quantity: v.optional(
 		v.pipe(v.number(), v.minValue(1, "Quantity must be at least 1"), v.maxValue(100, "Maximum 100 buildings at once"))
 	),

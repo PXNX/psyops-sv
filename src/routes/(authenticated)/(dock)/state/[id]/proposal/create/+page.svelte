@@ -29,13 +29,7 @@
 	});
 
 	type ProposalType =
-		| "tax"
-		| "hospital"
-		| "school"
-		| "power_plant"
-		| "infrastructure"
-		| "fortifications"
-		| "border_control";
+		"tax" | "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "border_control";
 	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications";
 
 	function getBuildingCount(regionId: string | undefined, buildingType: string | undefined): number {
@@ -398,34 +392,14 @@
 						<p class="text-sm text-[#d9ccb7]">Resources will be taken from the state treasury and inventory.</p>
 					</div>
 
-					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
-						{@const template = data.buildingTemplates[$formData.proposalType]}
-						<div class="panel-muted rounded-lg p-4 space-y-3">
-							{#if selectedRegion() && currentBuildingCount > 0}
-								<div class="flex items-center justify-between mb-2">
-									<p class="text-sm font-medium text-[#d9ccb7]">Existing in Region:</p>
-									<div class="bg-[#315d8d]/20 border border-[#7ba0c8]/30 rounded px-3 py-1">
-										<p class="text-lg font-bold text-[#fff7e8]">{currentBuildingCount}</p>
-									</div>
+					{#if selectedRegion() && currentBuildingCount > 0}
+						<div class="panel-muted rounded-lg p-4">
+							<div class="flex items-center justify-between">
+								<p class="text-sm font-medium text-[#d9ccb7]">Existing in Region:</p>
+								<div class="bg-[#315d8d]/20 border border-[#7ba0c8]/30 rounded px-3 py-1">
+									<p class="text-lg font-bold text-[#fff7e8]">{currentBuildingCount}</p>
 								</div>
-							{/if}
-
-							{#if template}
-								<div class="grid grid-cols-3 gap-2 text-xs text-[#a89e8e] pt-2 border-t border-[#dfceb0]/10">
-									<div>
-										<span class="text-[#a89e8e]/70">Construction:</span>
-										<div class="text-[#fff7e8]">{template.constructionTime} days</div>
-									</div>
-									<div>
-										<span class="text-[#a89e8e]/70">Infrastructure:</span>
-										<div class="text-[#fff7e8]">{template.infrastructureRequired}</div>
-									</div>
-									<div>
-										<span class="text-[#a89e8e]/70">Power:</span>
-										<div class="text-[#fff7e8]">{template.powerConsumption} MW</div>
-									</div>
-								</div>
-							{/if}
+							</div>
 						</div>
 					{/if}
 
@@ -506,6 +480,26 @@
 								Buildings will be numbered automatically (e.g., Building 1, Building 2, Building 3...)
 							</p>
 						</div>
+					{/if}
+
+					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
+						{@const template = data.buildingTemplates[$formData.proposalType]}
+						{#if template}
+							<div class="grid grid-cols-3 gap-2 text-xs text-[#a89e8e] panel-muted rounded-lg p-4">
+								<div>
+									<span class="text-[#a89e8e]/70">Construction:</span>
+									<div class="text-[#fff7e8]">{template.constructionTime} days</div>
+								</div>
+								<div>
+									<span class="text-[#a89e8e]/70">Infrastructure:</span>
+									<div class="text-[#fff7e8]">{template.infrastructureRequired}</div>
+								</div>
+								<div>
+									<span class="text-[#a89e8e]/70">Power:</span>
+									<div class="text-[#fff7e8]">{template.powerConsumption} MW</div>
+								</div>
+							</div>
+						{/if}
 					{/if}
 				</div>
 			{/if}
