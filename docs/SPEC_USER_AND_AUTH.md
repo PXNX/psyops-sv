@@ -220,10 +220,9 @@ Shows:
 | `/auth/login/telegram`    | Telegram OAuth redirect                   |
 | `/auth/callback/telegram` | Telegram callback                         |
 | `/auth/logout`            | Logout (clear session)                    |
-| `/user/[id]`              | User profile                              |
+| `/user/[id]`              | User profile (own profile has an edit icon on the card, opening a bottom sheet to change name, avatar, bio) |
 | `/user/[id]/career`       | Career page (articles, medals, positions) |
 | `/settings`               | Settings overview                         |
-| `/settings/profile`       | Edit profile (name, avatar, bio)          |
 | `/giftcode`               | Redeem gift codes                         |
 | `/welcome/*`              | Onboarding flow                           |
 

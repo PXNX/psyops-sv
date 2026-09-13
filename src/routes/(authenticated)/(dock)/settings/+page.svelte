@@ -84,7 +84,7 @@
 	<!-- Edit Profile Link -->
 	<div class="panel rounded-xl p-5">
 		<a
-			href="/settings/profile"
+			href="/user/{data.accountId}"
 			class="flex items-center justify-between group hover:bg-[#19304b] -m-5 p-5 rounded-xl transition-colors"
 		>
 			<div class="flex items-center gap-3">

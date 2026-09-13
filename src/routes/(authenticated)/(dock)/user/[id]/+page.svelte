@@ -20,11 +20,13 @@
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentPersonDelete20Filled from "~icons/fluent/person-delete-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 
 	import Modal from "$lib/component/Modal.svelte";
 	import BottomSheet from "$lib/component/BottomSheet.svelte";
 	import ReportModal from "$lib/component/ReportModal.svelte";
 	import AddAuthorModal from "./AddAuthorModal.svelte";
+	import EditProfileSheet from "./EditProfileSheet.svelte";
 	import ProfileItem from "$lib/component/ProfileItem.svelte";
 	import FluentMoreHorizontal20Filled from "~icons/fluent/more-horizontal-20-filled";
 	import * as m from "$lib/paraglide/messages";
@@ -32,6 +34,7 @@
 	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
 	import Logo from "$lib/component/Logo.svelte";
 	import Button from "$lib/component/ui/Button.svelte";
+	import IconButton from "$lib/component/ui/IconButton.svelte";
 	import ActionListItem from "$lib/component/ui/ActionListItem.svelte";
 
 	const { data, form } = $props();
@@ -41,6 +44,7 @@
 	let showAddAuthorModal = $state(false);
 	let showActionsSheet = $state(false);
 	let showGiftPremiumModal = $state(false);
+	let showEditProfileSheet = $state(false);
 	let giftPremiumPlanId = $state(data.premiumPlans?.[0]?.id ?? "monthly");
 	let isGiftingPremium = $state(false);
 	let giftPremiumError = $state<string | null>(null);
@@ -129,22 +133,22 @@
 				></div>
 				<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-2xl"></div>
 
+				{#if data.isOwnProfile}
+					<IconButton
+						icon={FluentEdit20Filled}
+						label="Edit Profile"
+						variant="soft-purple"
+						size="sm"
+						class="absolute top-4 right-4 z-20"
+						onclick={() => (showEditProfileSheet = true)}
+					/>
+				{/if}
+
 				<div class="relative z-10 flex flex-col items-center space-y-3">
 					<Logo src={data.user.logo} alt={data.user.name} placeholderIcon={FluentImageOff20Filled} class="size-20" />
 
 					<div class="text-center space-y-1">
-						<div class="flex items-center justify-center gap-2">
-							<h1 class="text-3xl font-bold text-[#fff7e8] tracking-tight">{data.user.name || "Anonymous User"}</h1>
-							{#if data.isOwnProfile}
-								<a
-									href="/settings/profile"
-									class="size-8 flex items-center justify-center bg-[#8c709b]/15 hover:bg-[#8c709b]/25 rounded-full text-[#d5c4df] transition-all"
-									title="Edit Profile"
-								>
-									<FluentSettingsCogMultiple20Filled class="size-4" />
-								</a>
-							{/if}
-						</div>
+						<h1 class="text-3xl font-bold text-[#fff7e8] tracking-tight">{data.user.name || "Anonymous User"}</h1>
 						<p class="text-sm text-[#a89e8e] font-mono">#{data.user.id}</p>
 						{#if data.user.bio}
 							<p class="text-sm text-[#d9ccb7] max-w-md mt-2">{data.user.bio}</p>
@@ -708,6 +712,20 @@
 			userId={data.user.id}
 			userName={data.user.name || "User"}
 			newspapers={data.ownedNewspapers}
+		/>
+	{/if}
+
+	<!-- Edit Profile Bottom Sheet -->
+	{#if data.isOwnProfile && data.editForm}
+		<EditProfileSheet
+			bind:open={showEditProfileSheet}
+			editForm={data.editForm}
+			currentLogo={data.user.logo}
+			editCost={data.profileEditCost}
+			userBalance={data.userBalance}
+			canAfford={data.canAffordProfileEdit}
+			isOnCooldown={data.isProfileEditOnCooldown}
+			cooldownEndsAt={data.profileEditCooldownEndsAt}
 		/>
 	{/if}
 {/if}
