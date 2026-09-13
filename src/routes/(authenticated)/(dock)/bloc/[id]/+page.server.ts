@@ -1,6 +1,15 @@
 // src/routes/bloc/[id]/+page.server.ts
 import { db } from "$lib/server/db";
-import { blocs, states, presidents, blocActionCooldowns, wars, battles } from "$lib/server/schema";
+import {
+	blocs,
+	states,
+	presidents,
+	blocActionCooldowns,
+	blocLeaders,
+	blocDiplomats,
+	wars,
+	battles
+} from "$lib/server/schema";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, or, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -109,11 +118,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}));
 	}
 
-	// Get bloc leader (first president of member states, or you can implement specific leader logic)
-	const blocLeader = memberStates.find((s) => s.presidentUserId)?.presidentUserId || null;
+	// Bloc leader (persisted appointment, up to 2 diplomats)
+	const leaderRow = await db.query.blocLeaders.findFirst({
+		where: eq(blocLeaders.blocId, blocId),
+		with: { user: { with: { profile: true } } }
+	});
 
-	// Check if current user is the bloc leader
-	const isLeader = locals.account?.id === blocLeader;
+	const diplomatRows = await db.query.blocDiplomats.findMany({
+		where: eq(blocDiplomats.blocId, blocId),
+		with: { user: { with: { profile: true } } },
+		orderBy: (t, { asc }) => asc(t.appointedAt)
+	});
+
+	const isLeader = locals.account?.id === leaderRow?.userId;
 
 	// Check if user is a president and get their state
 	let userState = null;
@@ -148,10 +165,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}
 	}
 
-	// Calculate total population and states
-	const totalPopulation = memberStates.reduce((sum, state) => sum + (state.population || 0), 0);
-	const totalStates = memberStates.length;
-
 	return {
 		bloc: {
 			id: bloc.id,
@@ -179,12 +192,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}))
 		),
 
-		totalPopulation,
-		totalStates,
+		leader: leaderRow
+			? {
+					userId: leaderRow.userId,
+					name: leaderRow.user.profile?.name || "Anonymous",
+					logo: await getLogoUrl(leaderRow.user.profile?.logo),
+					appointedAt: leaderRow.appointedAt
+				}
+			: null,
+		diplomats: await Promise.all(
+			diplomatRows.map(async (d) => ({
+				id: d.id,
+				userId: d.userId,
+				name: d.user.profile?.name || "Anonymous",
+				logo: await getLogoUrl(d.user.profile?.logo),
+				appointedAt: d.appointedAt
+			}))
+		),
 		isLeader,
-		blocLeaderId: blocLeader,
+		isMemberPresident: isMember,
 		userState,
-		isMember,
 		canJoin,
 		activeWars: await Promise.all(
 			activeWars.map(async (war) => ({
