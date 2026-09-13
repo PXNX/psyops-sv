@@ -16,7 +16,9 @@ import {
 	governors,
 	newspapers,
 	journalists,
-	generalReports
+	generalReports,
+	userProfiles,
+	userWallets
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
@@ -27,6 +29,11 @@ import { sendMedalNotification } from "$lib/server/service/inbox";
 import { getBirthdayInfo, collectBirthdayRewards } from "$lib/server/service/birthday";
 import { isPremiumActive, PREMIUM_PLANS } from "$lib/config";
 import { giftPremium as giftPremiumService } from "$lib/server/service/premium";
+import { superValidate, message } from "sveltekit-superforms";
+import { valibot } from "sveltekit-superforms/adapters";
+import { updateProfileSchema } from "./schema";
+import { PROFILE_EDIT_CONFIG } from "$lib/config/features/party.config";
+import { getContext } from "$lib/server/context";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	// Query account with its profile
@@ -236,6 +243,41 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		}));
 	}
 
+	const isOwnProfile = account.id === params.id;
+
+	// Data for the "Edit Profile" bottom sheet — only needed when viewing your own profile.
+	let editForm: Awaited<ReturnType<typeof superValidate<typeof updateProfileSchema>>> | null = null;
+	let profileEditCost = PROFILE_EDIT_CONFIG.COST;
+	let userBalance = 0;
+	let canAffordProfileEdit = false;
+	let isProfileEditOnCooldown = false;
+	let profileEditCooldownEndsAt: string | null = null;
+
+	if (isOwnProfile) {
+		const wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		});
+		userBalance = Number(wallet?.balance ?? 0);
+		canAffordProfileEdit = userBalance >= PROFILE_EDIT_CONFIG.COST;
+
+		if (user.profile?.updatedAt) {
+			const cooldownEnd = new Date(user.profile.updatedAt);
+			cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
+			if (new Date() < cooldownEnd) {
+				isProfileEditOnCooldown = true;
+				profileEditCooldownEndsAt = cooldownEnd.toISOString();
+			}
+		}
+
+		editForm = await superValidate(
+			{
+				name: user.profile?.name || account.email.split("@")[0],
+				bio: user.profile?.bio || ""
+			},
+			valibot(updateProfileSchema)
+		);
+	}
+
 	return {
 		userNotFound: false as const,
 		user: {
@@ -293,7 +335,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		articleCount: articleCountResult?.count || 0,
 		upvoteCount: upvoteCountResult?.count || 0,
-		isOwnProfile: account.id === params.id,
+		isOwnProfile,
+		editForm,
+		profileEditCost,
+		userBalance,
+		canAffordProfileEdit,
+		isProfileEditOnCooldown,
+		profileEditCooldownEndsAt,
 		// Party citizenship is based on the user's home region. Independent regions
 		// (no state) can only create a party (which forms a state); regions inside a
 		// state can browse and join existing parties.
@@ -339,6 +387,93 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	updateProfile: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const form = await superValidate(request, valibot(updateProfileSchema));
+
+		if (account.id !== params.id) {
+			return message(form, "You can only edit your own profile", { status: 403 });
+		}
+
+		if (!form.valid) {
+			return message(form, "Please fix the validation errors", { status: 400 });
+		}
+
+		const { name, bio, logo } = form.data;
+
+		const wallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		});
+		const userBalance = Number(wallet?.balance ?? 0);
+
+		if (userBalance < PROFILE_EDIT_CONFIG.COST) {
+			return message(
+				form,
+				`Insufficient funds. You need ${PROFILE_EDIT_CONFIG.COST.toLocaleString()} currency to edit your profile.`,
+				{ status: 400 }
+			);
+		}
+
+		const existingProfile = await db.query.userProfiles.findFirst({
+			where: eq(userProfiles.accountId, account.id)
+		});
+
+		if (existingProfile?.updatedAt) {
+			const cooldownEnd = new Date(existingProfile.updatedAt);
+			cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
+			if (new Date() < cooldownEnd) {
+				const minutesRemaining = Math.ceil((cooldownEnd.getTime() - Date.now()) / (1000 * 60));
+				return message(form, `You must wait ${minutesRemaining} more minute(s) before editing your profile again.`, {
+					status: 400
+				});
+			}
+		}
+
+		try {
+			await db.transaction(async (tx) => {
+				await tx
+					.update(userWallets)
+					.set({
+						balance: userBalance - PROFILE_EDIT_CONFIG.COST,
+						updatedAt: new Date()
+					})
+					.where(eq(userWallets.userId, account.id));
+
+				const fileService = getContext().services.file;
+				const logoFileId = await fileService.replaceLogoInTransaction(
+					tx,
+					logo,
+					account.id,
+					existingProfile?.logo || null
+				);
+
+				if (existingProfile) {
+					await tx
+						.update(userProfiles)
+						.set({
+							name,
+							bio: bio || null,
+							...(logoFileId ? { logo: logoFileId } : {}),
+							updatedAt: new Date()
+						})
+						.where(eq(userProfiles.accountId, account.id));
+				} else {
+					await tx.insert(userProfiles).values({
+						accountId: account.id,
+						name,
+						bio: bio || null,
+						logo: logoFileId || null
+					});
+				}
+			});
+
+			return message(form, "Profile updated successfully");
+		} catch (error) {
+			console.error("Profile update error:", error);
+			return message(form, "Failed to update profile", { status: 500 });
+		}
+	},
+
 	giftPremium: async ({ request, params, locals }) => {
 		const account = locals.account!;
 		if (account.id === params.id) {

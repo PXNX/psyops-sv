@@ -1,4 +1,4 @@
-// src/routes/(authenticated)/(dock)/settings/schema.ts
+// src/routes/(authenticated)/(dock)/user/[id]/schema.ts
 import * as v from "valibot";
 import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
 

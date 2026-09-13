@@ -13,6 +13,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	return {
+		accountId: account.id,
 		profile: {
 			email: account.email,
 			name: profile?.name,
