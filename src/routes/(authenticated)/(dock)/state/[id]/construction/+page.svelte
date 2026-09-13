@@ -53,8 +53,8 @@
 <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div>
-		<a href="/state/{data.state.id}/parliament" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
-			{data.state.name} — Parliament
+		<a href="/state/{data.state.id}" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
+			← {data.state.name}
 		</a>
 		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3 mt-1">
 			<FluentBuildingFactory20Filled class="size-8 text-amber-400" />

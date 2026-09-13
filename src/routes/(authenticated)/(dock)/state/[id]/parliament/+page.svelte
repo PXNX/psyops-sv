@@ -17,9 +17,8 @@
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
-	import FluentBuildingFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import { enhance } from "$app/forms";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import { formatDate, formatDateTime } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -100,12 +99,14 @@
 				Parliament
 			</h1>
 		</div>
-		{#if data.totalSeats > 0}
-			<div class="text-right">
-				<p class="text-sm text-[#a89e8e]">Total Seats</p>
-				<p class="text-3xl font-bold text-[#fff7e8]">{data.totalSeats}</p>
-			</div>
-		{/if}
+		<div class="text-right">
+			<p class="text-sm text-[#a89e8e]">Next Election</p>
+			{#if data.nextElection}
+				<p class="text-lg font-bold text-[#fff7e8]">{formatDateTime(data.nextElection.startDate)}</p>
+			{:else}
+				<p class="text-lg font-bold text-[#fff7e8]">—</p>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Parliament Composition -->
@@ -464,13 +465,6 @@
 					Active Proposals
 				</h2>
 				<div class="flex gap-2">
-					<a
-						href="/state/{data.state.id}/construction"
-						class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]"
-					>
-						<FluentBuildingFactory20Filled class="size-4" />
-						Construction Queue
-					</a>
 					<a href="/state/{data.state.id}/proposal" class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]">
 						<FluentHistory20Filled class="size-4" />
 						View History
@@ -555,8 +549,9 @@
 								</div>
 							</div>
 
-							<div class="pt-2 border-t border-[#dfceb0]/10 text-xs text-[#a89e8e]">
-								{proposal.totalVotes} / {data.totalSeats} votes • {proposal.requiredMajority}% required
+							<div class="pt-2 border-t border-[#dfceb0]/10 text-xs text-[#a89e8e] flex items-center justify-between gap-2">
+								<span>{proposal.totalVotes} / {data.totalSeats} votes • {proposal.requiredMajority}% required</span>
+								<span class="text-[#b7d0e6]">Voting ends {formatDateTime(proposal.votingEndsAt)}</span>
 							</div>
 						</div>
 

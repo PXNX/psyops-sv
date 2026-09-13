@@ -9,7 +9,7 @@
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import FluentDismissCircle20Filled from "~icons/fluent/dismiss-circle-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import { formatDateTime } from "$lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -86,7 +86,7 @@
 							<div class="flex items-start justify-between gap-3 mb-3">
 								<div class="text-right ml-auto">
 									<p class="text-xs text-[#a89e8e]/70">Created</p>
-									<p class="text-xs text-[#a89e8e]">{formatDate(proposal.createdAt)}</p>
+									<p class="text-xs text-[#a89e8e]">{formatDateTime(proposal.createdAt)}</p>
 								</div>
 							</div>
 
@@ -157,9 +157,9 @@
 										<span class="text-[#a89e8e]">{proposal.requiredMajority}% required to pass</span>
 									</div>
 									{#if proposal.votingEnded}
-										<span class="text-[#a89e8e]/70">Voting ended {formatDate(proposal.votingEndsAt)}</span>
+										<span class="text-[#a89e8e]/70">Voting ended {formatDateTime(proposal.votingEndsAt)}</span>
 									{:else}
-										<span class="text-[#b7d0e6]">Voting ends {formatDate(proposal.votingEndsAt)}</span>
+										<span class="text-[#b7d0e6]">Voting ends {formatDateTime(proposal.votingEndsAt)}</span>
 									{/if}
 								</div>
 

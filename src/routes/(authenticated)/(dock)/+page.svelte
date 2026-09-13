@@ -16,7 +16,6 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import FluentShieldLock20Filled from "~icons/fluent/shield-lock-20-filled";
@@ -408,10 +407,6 @@
 			<a href="/chat" class="btn btn-ghost justify-start">
 				<FluentPeople20Filled class="size-5" />
 				Chat
-			</a>
-			<a href="/fallen" class="btn btn-ghost justify-start">
-				<FluentBuildingBank20Filled class="size-5" />
-				Fallen States
 			</a>
 			{#if data.account.role === "admin" || data.account.role === "moderator"}
 				<a href="/moderators" class="btn btn-ghost justify-start">
