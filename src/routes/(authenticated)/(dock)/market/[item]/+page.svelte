@@ -3,7 +3,6 @@
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentChartMultiple20Regular from "~icons/fluent/chart-multiple-20-regular";
 	import FluentShoppingCart20Filled from "~icons/fluent/cart-20-filled";
-	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -15,6 +14,9 @@
 	import { buttonClass, badgeClass } from "$lib/component/ui/styles";
 
 	let { data, form } = $props();
+
+	let activeTab = $state<"buy" | "sell">(data.otherListings.length > 0 ? "buy" : "sell");
+	let showAllOffers = $state(false);
 
 	let buyQuantities = $state<Record<string, number>>({});
 
@@ -34,13 +36,7 @@
 	);
 
 	const totalAvailableForListing = $derived(data.userItemQuantity + (data.myListing?.quantity ?? 0));
-
-	// Editorial accent tokens: resources read as soft-purple, products as soft-blue.
-	const ACCENTS = {
-		resource: { text: "text-[#d5c4df]", border: "border-[#8c709b]/40" },
-		product: { text: "text-[#b7d0e6]", border: "border-[#315d8d]/40" }
-	};
-	const accent = $derived(data.itemType === "resource" ? ACCENTS.resource : ACCENTS.product);
+	const totalListingCount = $derived(data.otherListings.length + (data.myListing ? 1 : 0));
 
 	const cooldownDisplay = $derived.by(() => {
 		if (cooldownTimeRemaining <= 0) return null;
@@ -78,78 +74,111 @@
 	}
 </script>
 
+{#snippet offerRow(listing: (typeof data.otherListings)[number], isBest: boolean)}
+	{@const buyQty = buyQuantities[listing.id] || 1}
+	{@const itemCost = listing.pricePerUnit * buyQty}
+	{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
+	{@const totalCost = itemCost + taxAmount}
+
+	<div class="bg-[#102239]/70 border {isBest ? 'border-green-500/25' : 'border-[#dfceb0]/15'} rounded-sm">
+		<div class="flex flex-wrap items-center gap-3 px-4 py-3">
+			<div class="flex-1 min-w-[100px]">
+				<div class="flex items-baseline gap-2">
+					<span class="text-xl font-bold font-mono {isBest ? 'text-green-400' : 'text-[#fff7e8]'}">
+						${listing.pricePerUnit.toLocaleString()}
+					</span>
+					<span class="text-xs text-[#a89e8e]/70 font-mono">per unit</span>
+					{#if isBest}
+						<span class={badgeClass({ tone: "green", size: "xs" })}>BEST</span>
+					{/if}
+				</div>
+				<p class="text-xs text-[#a89e8e] font-mono mt-0.5">{listing.quantity} units available</p>
+			</div>
+
+			<form method="POST" action="?/buyListing" use:enhance class="flex items-center gap-2">
+				<input type="hidden" name="listingId" value={listing.id} />
+
+				<div class="text-right text-xs font-mono min-w-[80px]">
+					{#if taxAmount > 0}
+						<div class="text-[#f7c56b]">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
+					{/if}
+					<div class="text-[#fff7e8] font-bold">${totalCost.toLocaleString()}</div>
+				</div>
+
+				<div class="join">
+					<input
+						type="number"
+						name="quantity"
+						min="1"
+						max={listing.quantity}
+						value={buyQty}
+						class="input input-sm join-item w-16 bg-[#0d1d31] border-[#dfceb0]/20 text-[#fff7e8] text-center font-mono"
+						onchange={(e) => {
+							buyQuantities[listing.id] = parseInt(e.currentTarget.value);
+						}}
+					/>
+					<button
+						type="submit"
+						class="btn btn-sm join-item border-0 font-mono font-bold px-3 {isBest
+							? 'bg-green-600 hover:bg-green-500 text-white'
+							: 'bg-[#e6a527] hover:bg-[#f2b940] text-[#172a45]'}"
+					>
+						BUY
+					</button>
+				</div>
+			</form>
+			{#if data.governmentState}
+				<form method="POST" action="?/buyListingAsState" use:enhance>
+					<input type="hidden" name="listingId" value={listing.id} />
+					<input type="hidden" name="quantity" value={buyQty} />
+					<button
+						type="submit"
+						title="Buy for {data.governmentState.name} (Treasury: ${data.governmentState.treasuryBalance.toLocaleString()})"
+						class="btn btn-sm bg-amber-600/70 hover:bg-amber-600 border-0 text-white px-2 gap-1 font-mono"
+					>
+						<span>🏛️</span>
+						<span class="hidden sm:inline text-xs">STATE</span>
+					</button>
+				</form>
+			{/if}
+		</div>
+	</div>
+{/snippet}
+
 <div class="min-h-screen pb-8">
 	<!-- Header -->
 	<div class="border-b border-[#dfceb0]/15 bg-[#0c1929]/90 backdrop-blur-xl">
-		<div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3 sm:gap-5">
+		<div class="max-w-2xl mx-auto px-4 sm:px-6 py-4">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
 					<a
 						href="/market"
-						class="size-10 flex items-center justify-center bg-[#102239]/70 rounded-sm border border-[#dfceb0]/15 hover:border-[#dfceb0]/35 transition-colors"
+						class="size-9 flex-shrink-0 flex items-center justify-center bg-[#102239]/70 rounded-sm border border-[#dfceb0]/15 hover:border-[#dfceb0]/35 transition-colors"
 					>
 						<FluentArrowLeft20Filled class="size-4 text-[#c7bda9]" />
 					</a>
-					<div
-						class="size-14 sm:size-16 flex items-center justify-center bg-[#102239]/70 rounded-sm border-2 {accent.border}"
-					>
-						<ResourceIcon name={data.itemName} class="size-8 sm:size-10" />
+					<div class="size-10 flex-shrink-0 flex items-center justify-center bg-[#102239]/70 rounded-sm border border-[#dfceb0]/15">
+						<ResourceIcon name={data.itemName} class="size-6" />
 					</div>
-					<div>
-						<h1 class="text-xl sm:text-3xl font-bold tracking-wider uppercase font-mono {accent.text} capitalize">
+					<div class="min-w-0">
+						<h1 class="text-base sm:text-lg font-bold tracking-wide uppercase font-mono text-[#fff7e8] capitalize truncate">
 							{data.itemName}
 						</h1>
-						<p class="text-xs sm:text-sm text-[#a89e8e] font-mono capitalize">
-							{data.itemType} · {data.otherListings.length + (data.myListing ? 1 : 0)} listing{data.otherListings
-								.length +
-								(data.myListing ? 1 : 0) !==
-							1
-								? "s"
-								: ""}
+						<p class="text-xs text-[#a89e8e] font-mono capitalize">
+							{data.itemType} · {totalListingCount} listing{totalListingCount !== 1 ? "s" : ""}
 						</p>
 					</div>
 				</div>
 
-				<div class="flex items-center gap-3 bg-[#102239]/70 border border-green-500/20 rounded-sm px-4 py-3">
-					<FluentMoney20Filled class="size-4 text-green-400" />
-					<div>
-						<p class="text-xs text-[#a89e8e] font-mono">BALANCE</p>
-						<p class="text-base font-bold text-[#fff7e8] font-mono">${data.wallet.balance.toLocaleString()}</p>
-					</div>
+				<div class="text-right flex-shrink-0">
+					<p class="text-[10px] text-[#a89e8e] font-mono">BALANCE</p>
+					<p class="text-sm font-bold text-[#fff7e8] font-mono">${data.wallet.balance.toLocaleString()}</p>
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-6">
-		<!-- Stats Strip -->
-		{#if data.statistics}
-			<div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-				<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm p-3 sm:p-4">
-					<p class="text-xs text-[#a89e8e] font-mono mb-1">AVG PRICE</p>
-					<p class="text-lg sm:text-xl font-bold text-[#fff7e8] font-mono">
-						${data.statistics.currentAvgPrice.toLocaleString()}
-					</p>
-				</div>
-				<div class="bg-[#14283f]/85 border border-green-500/20 rounded-sm p-3 sm:p-4">
-					<p class="text-xs text-[#a89e8e] font-mono mb-1">LOWEST</p>
-					<p class="text-lg sm:text-xl font-bold text-green-400 font-mono">
-						${data.statistics.lowestPrice.toLocaleString()}
-					</p>
-				</div>
-				<div class="bg-[#14283f]/85 border border-red-500/20 rounded-sm p-3 sm:p-4">
-					<p class="text-xs text-[#a89e8e] font-mono mb-1">HIGHEST</p>
-					<p class="text-lg sm:text-xl font-bold text-red-400 font-mono">
-						${data.statistics.highestPrice.toLocaleString()}
-					</p>
-				</div>
-				<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm p-3 sm:p-4">
-					<p class="text-xs text-[#a89e8e] font-mono mb-1">LISTINGS</p>
-					<p class="text-lg sm:text-xl font-bold {accent.text} font-mono">{data.statistics.activeListings}</p>
-				</div>
-			</div>
-		{/if}
-
+	<div class="max-w-2xl mx-auto px-4 sm:px-6 py-4 sm:py-6 space-y-4">
 		<!-- Price Chart -->
 		{#if data.priceHistory.length > 1}
 			<MarketChart priceHistory={data.priceHistory} {currentPrice} />
@@ -160,12 +189,89 @@
 			</div>
 		{/if}
 
-		<!-- Your Listing -->
-		<div class="bg-[#14283f]/85 border border-[#e6a527]/30 rounded-sm overflow-hidden">
-			<div class="bg-[#e6a527]/10 border-b border-[#e6a527]/25 px-4 sm:px-6 py-3 sm:py-4">
-				<div class="flex items-center justify-between">
-					<h2 class="text-sm sm:text-base font-bold text-[#f7c56b] font-mono uppercase tracking-wide">Your Listing</h2>
-					{#if data.myListing && !isEditing}
+		<!-- Key data -->
+		{#if data.statistics}
+			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm overflow-hidden">
+				<div class="flex justify-between px-4 py-2.5 border-b border-[#dfceb0]/10">
+					<span class="text-xs text-[#a89e8e] font-mono">LOWEST</span>
+					<span class="text-sm font-bold text-green-400 font-mono">${data.statistics.lowestPrice.toLocaleString()}</span>
+				</div>
+				<div class="flex justify-between px-4 py-2.5 border-b border-[#dfceb0]/10">
+					<span class="text-xs text-[#a89e8e] font-mono">HIGHEST</span>
+					<span class="text-sm font-bold text-red-400 font-mono">${data.statistics.highestPrice.toLocaleString()}</span>
+				</div>
+				<div class="flex justify-between px-4 py-2.5 border-b border-[#dfceb0]/10">
+					<span class="text-xs text-[#a89e8e] font-mono">AVERAGE</span>
+					<span class="text-sm font-bold text-[#fff7e8] font-mono">${data.statistics.currentAvgPrice.toLocaleString()}</span>
+				</div>
+				<div class="flex justify-between px-4 py-2.5">
+					<span class="text-xs text-[#a89e8e] font-mono">ACTIVE LISTINGS</span>
+					<span class="text-sm font-bold text-[#fff7e8] font-mono">{data.statistics.activeListings}</span>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Trade -->
+		<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm overflow-hidden">
+			<div class="flex border-b border-[#dfceb0]/15">
+				<button
+					class="flex-1 py-3 text-sm font-bold font-mono uppercase tracking-wide transition-colors border-b-2 {activeTab ===
+					'buy'
+						? 'text-green-400 border-green-400'
+						: 'text-[#a89e8e] border-transparent hover:text-[#d9ccb7]'}"
+					onclick={() => (activeTab = "buy")}
+				>
+					Buy
+				</button>
+				<button
+					class="flex-1 py-3 text-sm font-bold font-mono uppercase tracking-wide transition-colors border-b-2 {activeTab ===
+					'sell'
+						? 'text-[#f7c56b] border-[#f7c56b]'
+						: 'text-[#a89e8e] border-transparent hover:text-[#d9ccb7]'}"
+					onclick={() => (activeTab = "sell")}
+				>
+					Sell
+				</button>
+			</div>
+
+			<div class="p-4 sm:p-5">
+				{#if activeTab === "buy"}
+					{#if data.otherListings.length === 0}
+						<div class="text-center py-8">
+							<FluentShoppingCart20Filled class="size-10 mx-auto opacity-15 mb-3 text-[#a89e8e]" />
+							<p class="text-[#a89e8e] font-mono font-medium">No other sellers right now</p>
+							{#if !data.myListing && data.userItemQuantity > 0}
+								<p class="text-xs text-[#a89e8e]/70 font-mono mt-1">Be the first — list yours in the Sell tab.</p>
+							{/if}
+						</div>
+					{:else}
+						{@render offerRow(data.otherListings[0], true)}
+
+						{#if data.otherListings.length > 1}
+							<button
+								class="mt-3 text-xs text-[#a89e8e] hover:text-[#d9ccb7] font-mono underline underline-offset-2"
+								onclick={() => (showAllOffers = !showAllOffers)}
+							>
+								{showAllOffers ? "Hide" : "Show"} {data.otherListings.length - 1} more offer{data.otherListings.length -
+									1 !==
+								1
+									? "s"
+									: ""}
+							</button>
+
+							{#if showAllOffers}
+								<div class="mt-2 space-y-2">
+									{#each data.otherListings.slice(1) as listing}
+										{@render offerRow(listing, false)}
+									{/each}
+								</div>
+							{/if}
+						{/if}
+					{/if}
+				{:else if data.myListing && !isEditing}
+					{@const cmp = priceVsMarket(data.myListing.pricePerUnit)}
+					<div class="flex items-center justify-between mb-4">
+						<p class="text-xs text-[#a89e8e] font-mono uppercase tracking-wide">Your listing</p>
 						<div class="flex items-center gap-2">
 							<button class={buttonClass({ variant: "secondary", size: "xs" })} onclick={startEditing}>
 								<FluentEdit20Filled class="size-3" />
@@ -179,18 +285,7 @@
 								</button>
 							</form>
 						</div>
-					{:else if isEditing}
-						<button class={buttonClass({ variant: "secondary", size: "xs" })} onclick={cancelEditing}>
-							<FluentDismiss20Filled class="size-3" />
-							CANCEL
-						</button>
-					{/if}
-				</div>
-			</div>
-
-			<div class="p-4 sm:p-6">
-				{#if data.myListing && !isEditing}
-					{@const cmp = priceVsMarket(data.myListing.pricePerUnit)}
+					</div>
 					<div class="flex items-center gap-4 sm:gap-6">
 						<ResourceIcon name={data.itemName} class="size-10 sm:size-12" />
 						<div class="flex-1 grid grid-cols-3 gap-4">
@@ -230,6 +325,13 @@
 						}}
 						class="space-y-4"
 					>
+						<div class="flex items-center justify-between mb-1">
+							<p class="text-xs text-[#a89e8e] font-mono uppercase tracking-wide">Edit listing</p>
+							<button type="button" class={buttonClass({ variant: "secondary", size: "xs" })} onclick={cancelEditing}>
+								<FluentDismiss20Filled class="size-3" />
+								CANCEL
+							</button>
+						</div>
 						<input type="hidden" name="listingId" value={data.myListing.id} />
 						<div class="grid grid-cols-2 gap-4">
 							<div>
@@ -346,7 +448,7 @@
 						</div>
 					</form>
 				{:else if cooldownTimeRemaining > 0}
-					<div class="flex items-center gap-3 text-[#f7c56b]">
+					<div class="flex items-center gap-3 text-[#f7c56b] py-2">
 						<FluentWarning20Filled class="size-5" />
 						<div>
 							<p class="text-sm font-mono font-bold">Cooldown Active</p>
@@ -356,116 +458,9 @@
 				{:else}
 					<div class="text-center py-6">
 						<p class="text-sm text-[#a89e8e]/70 font-mono">No {data.itemName} in your inventory to sell.</p>
-						<a href="/market" class="text-xs {accent.text} font-mono hover:underline mt-2 inline-block">
-							← Back to market</a
-						>
 					</div>
 				{/if}
 			</div>
-		</div>
-
-		<!-- Market Offers -->
-		<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm overflow-hidden">
-			<div class="bg-[#102239]/80 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
-				<div class="flex items-center justify-between">
-					<h2 class="text-sm sm:text-base font-bold text-[#fff7e8] font-mono uppercase tracking-wide">Market Offers</h2>
-					{#if data.otherListings.length > 0}
-						<span class="text-xs text-[#a89e8e]/70 font-mono">sorted cheapest first</span>
-					{/if}
-				</div>
-			</div>
-
-			{#if data.otherListings.length === 0}
-				<div class="p-8 sm:p-12 text-center">
-					<FluentShoppingCart20Filled class="size-10 mx-auto opacity-15 mb-3 text-[#a89e8e]" />
-					<p class="text-[#a89e8e] font-mono font-medium">No other sellers right now</p>
-					{#if !data.myListing && data.userItemQuantity > 0}
-						<p class="text-xs text-[#a89e8e]/70 font-mono mt-1">Be the first — list yours above.</p>
-					{/if}
-				</div>
-			{:else}
-				<div class="p-3 sm:p-4 space-y-2">
-					{#each data.otherListings as listing, i}
-						{@const buyQty = buyQuantities[listing.id] || 1}
-						{@const itemCost = listing.pricePerUnit * buyQty}
-						{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
-						{@const totalCost = itemCost + taxAmount}
-						{@const isCheapest = i === 0}
-
-						<div
-							class="bg-[#102239]/70 border {isCheapest ? 'border-green-500/25' : 'border-[#dfceb0]/15'} rounded-sm"
-						>
-							<div class="flex items-center gap-3 sm:gap-4 px-4 py-3">
-								<div class="w-10 flex justify-center">
-									{#if isCheapest}
-										<span class={badgeClass({ tone: "green", size: "xs" })}>BEST</span>
-									{:else}
-										<span class="text-xs text-[#a89e8e]/70 font-mono">#{i + 1}</span>
-									{/if}
-								</div>
-
-								<div class="flex-1">
-									<div class="flex items-baseline gap-2">
-										<span class="text-xl font-bold font-mono {isCheapest ? 'text-green-400' : 'text-[#fff7e8]'}"
-											>${listing.pricePerUnit.toLocaleString()}</span
-										>
-										<span class="text-xs text-[#a89e8e]/70 font-mono">per unit</span>
-									</div>
-									<p class="text-xs text-[#a89e8e] font-mono mt-0.5">{listing.quantity} units available</p>
-								</div>
-
-								<form method="POST" action="?/buyListing" use:enhance class="flex items-center gap-2">
-									<input type="hidden" name="listingId" value={listing.id} />
-
-									<div class="text-right text-xs font-mono min-w-[80px]">
-										{#if taxAmount > 0}
-											<div class="text-[#f7c56b]">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
-										{/if}
-										<div class="text-[#fff7e8] font-bold">${totalCost.toLocaleString()}</div>
-									</div>
-
-									<div class="join">
-										<input
-											type="number"
-											name="quantity"
-											min="1"
-											max={listing.quantity}
-											value={buyQty}
-											class="input input-sm join-item w-16 bg-[#0d1d31] border-[#dfceb0]/20 text-[#fff7e8] text-center font-mono"
-											onchange={(e) => {
-												buyQuantities[listing.id] = parseInt(e.currentTarget.value);
-											}}
-										/>
-										<button
-											type="submit"
-											class="btn btn-sm join-item border-0 font-mono font-bold px-3 {isCheapest
-												? 'bg-green-600 hover:bg-green-500 text-white'
-												: 'bg-[#e6a527] hover:bg-[#f2b940] text-[#172a45]'}"
-										>
-											BUY
-										</button>
-									</div>
-								</form>
-								{#if data.governmentState}
-									<form method="POST" action="?/buyListingAsState" use:enhance>
-										<input type="hidden" name="listingId" value={listing.id} />
-										<input type="hidden" name="quantity" value={buyQty} />
-										<button
-											type="submit"
-											title="Buy for {data.governmentState
-												.name} (Treasury: ${data.governmentState.treasuryBalance.toLocaleString()})"
-											class="btn btn-sm bg-amber-600/70 hover:bg-amber-600 border-0 text-white px-2 gap-1 font-mono"
-										>
-											<span>🏛️</span>
-											<span class="hidden sm:inline text-xs">STATE</span>
-										</button>
-									</form>
-								{/if}
-							</div>
-						</div>
-					{/each}
-				</div>
-			{/if}
 		</div>
 	</div>
 </div>
