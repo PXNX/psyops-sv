@@ -34,6 +34,7 @@
 	import GameIconsDynamite from "~icons/game-icons/dynamite";
 
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import { resourceColors } from "$lib/component/ResourceIcon.svelte";
 	import BackLink from "$lib/component/ui/BackLink.svelte";
 
 	let { data } = $props();
@@ -71,23 +72,23 @@
 	];
 
 	const resourceOutputs = [
-		{ value: "iron", label: "Iron", icon: GameIconsOre },
-		{ value: "copper", label: "Copper", icon: GameIconsMinerals },
-		{ value: "coal", label: "Coal", icon: GameIconsCoalPile },
-		{ value: "wood", label: "Wood", icon: GameIconsWoodPile }
+		{ value: "iron", label: "Iron", icon: GameIconsOre, color: resourceColors.iron },
+		{ value: "copper", label: "Copper", icon: GameIconsMinerals, color: resourceColors.copper },
+		{ value: "coal", label: "Coal", icon: GameIconsCoalPile, color: resourceColors.coal },
+		{ value: "wood", label: "Wood", icon: GameIconsWoodPile, color: resourceColors.wood }
 	];
 
 	const refineryOutputs = [
-		{ value: "steel", label: "Steel", icon: GameIconsMetalBar },
-		{ value: "gunpowder", label: "Gunpowder", icon: GameIconsPowderBag }
+		{ value: "steel", label: "Steel", icon: GameIconsMetalBar, color: resourceColors.steel },
+		{ value: "gunpowder", label: "Gunpowder", icon: GameIconsPowderBag, color: resourceColors.gunpowder }
 	];
 
 	const productOutputs = [
-		{ value: "rifles", label: "Rifles", icon: GameIconsRifle },
-		{ value: "ammunition", label: "Ammunition", icon: GameIconsBullets },
-		{ value: "artillery", label: "Artillery", icon: GameIconsArtilleryShell },
-		{ value: "vehicles", label: "Vehicles", icon: GameIconsTruck },
-		{ value: "explosives", label: "Explosives", icon: GameIconsDynamite }
+		{ value: "rifles", label: "Rifles", icon: GameIconsRifle, color: resourceColors.rifles },
+		{ value: "ammunition", label: "Ammunition", icon: GameIconsBullets, color: resourceColors.ammunition },
+		{ value: "artillery", label: "Artillery", icon: GameIconsArtilleryShell, color: resourceColors.artillery },
+		{ value: "vehicles", label: "Vehicles", icon: GameIconsTruck, color: resourceColors.vehicles },
+		{ value: "explosives", label: "Explosives", icon: GameIconsDynamite, color: resourceColors.explosives }
 	];
 
 	const selectedFactoryTypeData = $derived(factoryTypes.find((t) => t.value === selectedFactoryType));
@@ -232,7 +233,10 @@
 							{#each regionResources as resource}
 								<div class="flex items-center justify-between panel-muted rounded-lg p-2.5">
 									<div class="flex items-center gap-2">
-										<svelte:component this={getResourceIcon(resource.resourceType)} class="size-5" />
+										<svelte:component
+											this={getResourceIcon(resource.resourceType)}
+											class="size-5 {resourceColors[resource.resourceType] ?? ''}"
+										/>
 										<span class="text-sm font-medium text-[#fff7e8] capitalize">{resource.resourceType}</span>
 									</div>
 									<div class="flex items-center gap-2">
@@ -358,7 +362,7 @@
 								disabled={isOnCooldown || !canMine}
 								title={canMine ? `Available in this region` : `Not available in this region`}
 							>
-								<output.icon class="size-6 mx-auto" />
+								<output.icon class="size-6 mx-auto {output.color}" />
 								<div class="text-xs text-[#fff7e8] mt-1">{output.label}</div>
 								{#if canMine}
 									<div class="text-xs text-emerald-400 mt-0.5">✓</div>
@@ -375,7 +379,7 @@
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown}
 							>
-								<svelte:component this={output.icon} class="size-6 mx-auto" />
+								<svelte:component this={output.icon} class="size-6 mx-auto {output.color}" />
 								<div class="text-xs text-[#fff7e8] mt-1">{output.label}</div>
 							</button>
 						{/each}
@@ -389,7 +393,7 @@
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown}
 							>
-								<svelte:component this={output.icon} class="size-6 mx-auto" />
+								<svelte:component this={output.icon} class="size-6 mx-auto {output.color}" />
 								<div class="text-xs text-[#fff7e8] mt-1">{output.label}</div>
 							</button>
 						{/each}

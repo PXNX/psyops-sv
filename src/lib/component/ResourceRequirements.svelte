@@ -8,6 +8,7 @@
 	import GameIconsWoodPile from "~icons/game-icons/wood-pile";
 	import GameIconsCoalPile from "~icons/game-icons/coal-pile";
 	import FluentEmojiPackage from "~icons/fluent-emoji/package";
+	import { resourceColors } from "$lib/component/ResourceIcon.svelte";
 
 	type Props = {
 		costs: Record<string, number>;
@@ -34,6 +35,7 @@
 			return {
 				resource,
 				IconComponent: resourceIconComponents[resource] || FluentEmojiPackage,
+				iconColor: resourceColors[resource] ?? "",
 				needed,
 				available: availableAmount,
 				hasEnough,
@@ -57,7 +59,7 @@
 					href="/market/{req.resource}"
 					class="text-[#a89e8e] hover:text-[#fff7e8] flex items-center gap-1.5 transition-colors"
 				>
-					<req.IconComponent class="size-3.5 {req.isCurrency ? 'text-emerald-400' : ''}" />
+					<req.IconComponent class="size-3.5 {req.isCurrency ? 'text-emerald-400' : req.iconColor}" />
 					<span class="capitalize">{req.resource}</span>
 				</a>
 				<span class="font-mono text-xs" class:text-[#fff7e8]={req.hasEnough} class:text-red-400={!req.hasEnough}>
