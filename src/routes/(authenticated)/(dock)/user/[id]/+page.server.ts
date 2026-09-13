@@ -18,7 +18,10 @@ import {
 	journalists,
 	generalReports,
 	userProfiles,
-	userWallets
+	userWallets,
+	blocs,
+	blocLeaders,
+	blocDiplomats
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
@@ -77,6 +80,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		stateId: number | null;
 		stateName: string | null;
 		stateLogo: number | null;
+		stateBlocId: number | null;
 		homeRegionChangedAt: Date;
 	} | null = null;
 	const [residenceRow] = await db
@@ -91,7 +95,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				regionId: regions.id,
 				stateId: states.id,
 				stateName: states.name,
-				stateLogo: states.logo
+				stateLogo: states.logo,
+				stateBlocId: states.blocId
 			})
 			.from(regions)
 			.leftJoin(states, eq(regions.stateId, states.id))
@@ -207,7 +212,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if current user is a president (for appointment ability)
 	const currentUserPresidency = await db.query.presidents.findFirst({
-		where: eq(presidents.userId, account.id)
+		where: eq(presidents.userId, account.id),
+		with: { state: true }
 	});
 
 	// Get available ministries if current user is president and viewing someone else
@@ -223,6 +229,36 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const occupied = occupiedMinistries.map((m) => m.ministry);
 		availableMinistries = allMinistries.filter((m) => !occupied.includes(m));
 	}
+
+	// Bloc leadership: a president can appoint a citizen of a fellow member state of
+	// their own bloc as bloc leader or as one of up to two diplomats.
+	const viewerBlocId = currentUserPresidency?.state.blocId ?? null;
+	const targetBlocId = homeRegionData?.stateBlocId ?? null;
+	const canAppointBlocLeadership = !!viewerBlocId && viewerBlocId === targetBlocId && account.id !== params.id;
+
+	let availableBlocRoles: string[] = [];
+	let viewerBlocName: string | null = null;
+	if (canAppointBlocLeadership && viewerBlocId) {
+		const viewerBloc = await db.query.blocs.findFirst({ where: eq(blocs.id, viewerBlocId) });
+		viewerBlocName = viewerBloc?.name ?? null;
+
+		const [diplomatCountResult] = await db
+			.select({ count: count() })
+			.from(blocDiplomats)
+			.where(eq(blocDiplomats.blocId, viewerBlocId));
+
+		availableBlocRoles = ["leader", ...((diplomatCountResult?.count ?? 0) < 2 ? ["diplomat"] : [])];
+	}
+
+	// Bloc leadership positions this user holds (across any bloc)
+	const targetBlocLeadership = await db.query.blocLeaders.findFirst({
+		where: eq(blocLeaders.userId, params.id),
+		with: { bloc: true }
+	});
+	const targetBlocDiplomacies = await db.query.blocDiplomats.findMany({
+		where: eq(blocDiplomats.userId, params.id),
+		with: { bloc: true }
+	});
 
 	// Account birthday (creation anniversary) reward status.
 	const birthdayInfo = await getBirthdayInfo(params.id, user.createdAt);
@@ -379,6 +415,24 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					stateId: currentUserPresidency.stateId
 				}
 			: null,
+		blocLeadership: targetBlocLeadership
+			? {
+					id: targetBlocLeadership.id,
+					blocId: targetBlocLeadership.blocId,
+					blocName: targetBlocLeadership.bloc.name,
+					appointedAt: targetBlocLeadership.appointedAt
+				}
+			: null,
+		blocDiplomacies: targetBlocDiplomacies.map((d) => ({
+			id: d.id,
+			blocId: d.blocId,
+			blocName: d.bloc.name,
+			appointedAt: d.appointedAt
+		})),
+		canAppointBlocLeadership,
+		availableBlocRoles,
+		viewerBlocId,
+		viewerBlocName,
 		ownedNewspapers,
 		account,
 		birthdayInfo,
@@ -678,6 +732,120 @@ export const actions: Actions = {
 		} catch (error) {
 			console.error("Error dismissing minister:", error);
 			return fail(500, { error: "Failed to dismiss minister" });
+		}
+	},
+
+	appointBlocLeadership: async ({ request, params, locals }) => {
+		const account = locals.account!;
+
+		// Any president whose state belongs to a bloc can appoint that bloc's
+		// leadership, mirroring the loose "any member-state president" model
+		// already used for editing a bloc.
+		const presidency = await db.query.presidents.findFirst({
+			where: eq(presidents.userId, account.id),
+			with: { state: true }
+		});
+
+		if (!presidency || !presidency.state.blocId) {
+			return fail(403, { error: "Only presidents of a bloc member state can appoint bloc leadership" });
+		}
+
+		const blocId = presidency.state.blocId;
+
+		if (account.id === params.id) {
+			return fail(400, { error: "Cannot appoint yourself" });
+		}
+
+		const formData = await request.formData();
+		const role = formData.get("role") as string;
+
+		if (!["leader", "diplomat"].includes(role)) {
+			return fail(400, { error: "Invalid role" });
+		}
+
+		// Target must be a citizen of a state in the same bloc
+		const targetResidence = await db
+			.select({ homeStateBlocId: states.blocId })
+			.from(residences)
+			.leftJoin(regions, eq(residences.homeRegionId, regions.id))
+			.leftJoin(states, eq(regions.stateId, states.id))
+			.where(eq(residences.userId, params.id))
+			.limit(1);
+
+		if (!targetResidence.length || targetResidence[0].homeStateBlocId !== blocId) {
+			return fail(400, { error: "User must be a citizen of a member state of your bloc to be appointed" });
+		}
+
+		try {
+			if (role === "leader") {
+				await db
+					.insert(blocLeaders)
+					.values({ userId: params.id, blocId })
+					.onConflictDoUpdate({
+						target: blocLeaders.blocId,
+						set: { userId: params.id, appointedAt: new Date() }
+					});
+
+				return { success: true, message: "Successfully appointed as bloc leader" };
+			}
+
+			const [diplomatCountResult] = await db
+				.select({ count: count() })
+				.from(blocDiplomats)
+				.where(eq(blocDiplomats.blocId, blocId));
+
+			if ((diplomatCountResult?.count ?? 0) >= 2) {
+				return fail(400, { error: "This bloc already has two diplomats" });
+			}
+
+			await db.insert(blocDiplomats).values({ userId: params.id, blocId });
+
+			return { success: true, message: "Successfully appointed as diplomat" };
+		} catch (error) {
+			console.error("Error appointing bloc leadership:", error);
+			return fail(500, { error: "Failed to appoint bloc leadership" });
+		}
+	},
+
+	dismissBlocLeadership: async ({ request, locals }) => {
+		const account = locals.account!;
+
+		const presidency = await db.query.presidents.findFirst({
+			where: eq(presidents.userId, account.id),
+			with: { state: true }
+		});
+
+		if (!presidency || !presidency.state.blocId) {
+			return fail(403, { error: "Only presidents of a bloc member state can dismiss bloc leadership" });
+		}
+
+		const blocId = presidency.state.blocId;
+
+		const formData = await request.formData();
+		const role = formData.get("role") as string;
+		const id = parseInt(formData.get("id") as string);
+
+		try {
+			if (role === "leader") {
+				const leader = await db.query.blocLeaders.findFirst({ where: eq(blocLeaders.id, id) });
+				if (!leader || leader.blocId !== blocId) {
+					return fail(403, { error: "Invalid bloc leader" });
+				}
+				await db.delete(blocLeaders).where(eq(blocLeaders.id, id));
+			} else if (role === "diplomat") {
+				const diplomat = await db.query.blocDiplomats.findFirst({ where: eq(blocDiplomats.id, id) });
+				if (!diplomat || diplomat.blocId !== blocId) {
+					return fail(403, { error: "Invalid diplomat" });
+				}
+				await db.delete(blocDiplomats).where(eq(blocDiplomats.id, id));
+			} else {
+				return fail(400, { error: "Invalid role" });
+			}
+
+			return { success: true, message: "Bloc leadership position dismissed" };
+		} catch (error) {
+			console.error("Error dismissing bloc leadership:", error);
+			return fail(500, { error: "Failed to dismiss bloc leadership" });
 		}
 	},
 
