@@ -11,6 +11,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-regular";
 	import MarketChart from "./MarketChart.svelte";
+	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 	import { buttonClass, badgeClass } from "$lib/component/ui/styles";
 
 	let { data, form } = $props();
@@ -25,22 +26,6 @@
 	let editPrice = $state(data.myListing?.pricePerUnit ?? 1000);
 
 	let cooldownTimeRemaining = $state(data.cooldownRemaining);
-
-	const ITEM_ICONS: Record<string, string> = {
-		iron: "⛏️",
-		copper: "🔶",
-		steel: "⚙️",
-		gunpowder: "💥",
-		wood: "🪵",
-		coal: "🪨",
-		rifles: "🔫",
-		ammunition: "🔫",
-		artillery: "💣",
-		vehicles: "🚗",
-		explosives: "💥"
-	};
-
-	const itemIcon = $derived(ITEM_ICONS[data.itemName] ?? "📦");
 
 	const currentPrice = $derived(
 		data.priceHistory.length > 0
@@ -108,7 +93,7 @@
 					<div
 						class="size-14 sm:size-16 flex items-center justify-center bg-[#102239]/70 rounded-sm border-2 {accent.border}"
 					>
-						<span class="text-3xl sm:text-4xl">{itemIcon}</span>
+						<ResourceIcon name={data.itemName} class="size-8 sm:size-10" />
 					</div>
 					<div>
 						<h1 class="text-xl sm:text-3xl font-bold tracking-wider uppercase font-mono {accent.text} capitalize">
@@ -207,7 +192,7 @@
 				{#if data.myListing && !isEditing}
 					{@const cmp = priceVsMarket(data.myListing.pricePerUnit)}
 					<div class="flex items-center gap-4 sm:gap-6">
-						<span class="text-4xl sm:text-5xl">{itemIcon}</span>
+						<ResourceIcon name={data.itemName} class="size-10 sm:size-12" />
 						<div class="flex-1 grid grid-cols-3 gap-4">
 							<div>
 								<p class="text-xs text-[#a89e8e] font-mono mb-1">QUANTITY</p>
