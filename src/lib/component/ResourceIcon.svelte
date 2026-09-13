@@ -1,4 +1,22 @@
 <!-- /lib/component/ResourceIcon.svelte -->
+<script module lang="ts">
+	// Tailwind arbitrary-value color classes, one per resource/product, chosen to
+	// evoke the material itself (copper's orange patina, brass casings, rusted shells, ...).
+	export const resourceColors: Record<string, string> = {
+		iron: "text-[#b8bcc4]",
+		copper: "text-[#d98c4a]",
+		steel: "text-[#9db4c9]",
+		gunpowder: "text-[#8a8a8a]",
+		wood: "text-[#b58552]",
+		coal: "text-[#7d7d7d]",
+		rifles: "text-[#ab9a7c]",
+		ammunition: "text-[#c9a227]",
+		artillery: "text-[#b5533c]",
+		vehicles: "text-[#7a8b6f]",
+		explosives: "text-[#d9622b]"
+	};
+</script>
+
 <script lang="ts">
 	import GameIconsOre from "~icons/game-icons/ore";
 	import GameIconsMinerals from "~icons/game-icons/minerals";
@@ -39,4 +57,4 @@
 	const IconComponent = $derived(icons[name] ?? FluentEmojiPackage);
 </script>
 
-<IconComponent class={className} />
+<IconComponent class="{resourceColors[name] ?? ''} {className}" />
