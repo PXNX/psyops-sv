@@ -1378,6 +1378,45 @@ export const blocs = pgTable("blocs", {
 
 export const blocsRelations = relations(blocs, ({ many }) => ({ states: many(states) }));
 
+export const blocLeaders = pgTable("bloc_leaders", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	userId: text("user_id")
+		.notNull()
+		.references(() => accounts.id, { onDelete: "cascade" }),
+	blocId: integer("bloc_id")
+		.notNull()
+		.references(() => blocs.id, { onDelete: "cascade" })
+		.unique(),
+	appointedAt: timestamp("appointed_at").defaultNow().notNull()
+});
+
+export const blocDiplomats = pgTable(
+	"bloc_diplomats",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		blocId: integer("bloc_id")
+			.notNull()
+			.references(() => blocs.id, { onDelete: "cascade" }),
+		appointedAt: timestamp("appointed_at").defaultNow().notNull()
+	},
+	(t) => ({
+		userBlocIdx: uniqueIndex("idx_bloc_diplomat_unique").on(t.userId, t.blocId)
+	})
+);
+
+export const blocLeadersRelations = relations(blocLeaders, ({ one }) => ({
+	user: one(accounts, { fields: [blocLeaders.userId], references: [accounts.id] }),
+	bloc: one(blocs, { fields: [blocLeaders.blocId], references: [blocs.id] })
+}));
+
+export const blocDiplomatsRelations = relations(blocDiplomats, ({ one }) => ({
+	user: one(accounts, { fields: [blocDiplomats.userId], references: [accounts.id] }),
+	bloc: one(blocs, { fields: [blocDiplomats.blocId], references: [blocs.id] })
+}));
+
 // Add to your schema.ts file
 
 export const medalTypeEnum = pgEnum("medal_type", ["honor", "valor", "service", "excellence", "leadership"]);
