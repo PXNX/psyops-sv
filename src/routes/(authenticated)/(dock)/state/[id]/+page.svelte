@@ -590,7 +590,7 @@
 	<!-- Navigation Cards -->
 	<section class="grid md:grid-cols-2 gap-4">
 		<a
-			href="/state/{data.state.id}/region"
+			href="/state/{data.state.id}/construction"
 			class="group bg-[#e6a527]/12 rounded-sm border border-[#e6a527]/30 p-6 hover:border-[#e6a527]/50 transition-all"
 		>
 			<div
@@ -598,9 +598,11 @@
 			>
 				<FluentBuilding20Filled class="size-6 text-[#f7c56b]" />
 			</div>
-			<h3 class="text-xl font-bold text-[#fff7e8] mb-2 group-hover:text-[#f7c56b] transition-colors">Construction</h3>
+			<h3 class="text-xl font-bold text-[#fff7e8] mb-2 group-hover:text-[#f7c56b] transition-colors">
+				Construction Queue
+			</h3>
 			<p class="text-sm text-[#a89e8e] mb-3">Current construction efforts across the state's regions</p>
-			<div class="text-xs text-[#f7c56b] flex items-center gap-1">View regions →</div>
+			<div class="text-xs text-[#f7c56b] flex items-center gap-1">View queue →</div>
 		</a>
 
 		{#if hasGovernment}

@@ -8,6 +8,7 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentBuildingMultiple20Filled from "~icons/fluent/building-multiple-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
+	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
 	import PageContainer from "$lib/component/PageContainer.svelte";
 	import Button from "$lib/component/ui/Button.svelte";
 	import Badge from "$lib/component/ui/Badge.svelte";
@@ -65,6 +66,10 @@
 				{data.regions.length === 1 ? "state" : "states"} available
 			</p>
 		</div>
+		<a href="/fallen" class="btn btn-ghost justify-start">
+			<FluentBuildingBank20Filled class="size-5" />
+			Fallen States
+		</a>
 	</div>
 
 	<!-- Filters -->
