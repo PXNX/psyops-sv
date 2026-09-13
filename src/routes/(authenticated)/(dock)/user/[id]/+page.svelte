@@ -21,6 +21,9 @@
 	import FluentPersonDelete20Filled from "~icons/fluent/person-delete-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
+	import FluentPeopleTeam20Filled from "~icons/fluent/people-team-20-filled";
+	import FluentCrown20Filled from "~icons/fluent/crown-20-filled";
+	import FluentGlobeShield20Filled from "~icons/fluent/globe-shield-20-filled";
 
 	import Modal from "$lib/component/Modal.svelte";
 	import BottomSheet from "$lib/component/BottomSheet.svelte";
@@ -51,6 +54,10 @@
 	let selectedMinistry = $state("");
 	let isAppointingMinister = $state(false);
 	let appointmentError = $state<string | null>(null);
+	let showAppointBlocDialog = $state(false);
+	let selectedBlocRole = $state("");
+	let isAppointingBlocRole = $state(false);
+	let blocAppointmentError = $state<string | null>(null);
 
 	const ministryNames: Record<string, string> = {
 		economy: "Economy",
@@ -62,6 +69,11 @@
 		economy: "💰",
 		defense: "🛡️",
 		foreign_affairs: "🌍"
+	};
+
+	const blocRoleNames: Record<string, string> = {
+		leader: "Bloc Leader",
+		diplomat: "Diplomat"
 	};
 </script>
 
@@ -250,6 +262,19 @@
 					/>
 				{/if}
 
+				{#if data.canAppointBlocLeadership}
+					<ActionListItem
+						icon={FluentPeopleTeam20Filled}
+						tone="amber"
+						title="Appoint Bloc Leadership"
+						description="Assign as bloc leader or diplomat of {data.viewerBlocName}"
+						onclick={() => {
+							showAppointBlocDialog = true;
+							showActionsSheet = false;
+						}}
+					/>
+				{/if}
+
 				{#if data.user.id !== data.account?.id}
 					<div class="my-2 border-t border-white/5"></div>
 					<ActionListItem
@@ -268,10 +293,72 @@
 		</BottomSheet>
 
 		<!-- Government Positions Section -->
-		{#if data.presidency || data.governorship || data.ministries.length > 0}
+		{#if data.presidency || data.governorship || data.ministries.length > 0 || data.blocLeadership || data.blocDiplomacies.length > 0}
 			<section class="space-y-3">
 				<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Government Positions</h2>
 				<div class="panel-muted rounded-xl p-3 space-y-2">
+					{#if data.blocLeadership}
+						<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-lg p-2 -m-2 transition-all">
+							<div class="size-12 bg-[#e6a527]/15 rounded-lg flex items-center justify-center">
+								<FluentCrown20Filled class="size-6 text-[#f7c56b]" />
+							</div>
+							<div class="flex-1 min-w-0">
+								<p class="font-semibold text-[#fff7e8] truncate">Leader of {data.blocLeadership.blocName}</p>
+								<p class="text-xs text-[#a89e8e] truncate">Since {formatDate(data.blocLeadership.appointedAt)}</p>
+							</div>
+							{#if data.viewerBlocId === data.blocLeadership.blocId}
+								<form method="POST" action="?/dismissBlocLeadership" use:enhance>
+									<input type="hidden" name="role" value="leader" />
+									<input type="hidden" name="id" value={data.blocLeadership.id} />
+									<Button
+										type="submit"
+										variant="soft-red"
+										size="xs"
+										icon={FluentPersonDelete20Filled}
+										onclick={(e) => {
+											if (!confirm("Are you sure you want to dismiss this bloc leader?")) {
+												e.preventDefault();
+											}
+										}}
+									>
+										Dismiss
+									</Button>
+								</form>
+							{/if}
+						</div>
+					{/if}
+
+					{#each data.blocDiplomacies as diplomacy}
+						<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-lg p-2 -m-2 transition-all">
+							<div class="size-12 bg-[#315d8d]/18 rounded-lg flex items-center justify-center">
+								<FluentGlobeShield20Filled class="size-6 text-[#b7d0e6]" />
+							</div>
+							<div class="flex-1 min-w-0">
+								<p class="font-semibold text-[#fff7e8] truncate">Diplomat of {diplomacy.blocName}</p>
+								<p class="text-xs text-[#a89e8e] truncate">Since {formatDate(diplomacy.appointedAt)}</p>
+							</div>
+							{#if data.viewerBlocId === diplomacy.blocId}
+								<form method="POST" action="?/dismissBlocLeadership" use:enhance>
+									<input type="hidden" name="role" value="diplomat" />
+									<input type="hidden" name="id" value={diplomacy.id} />
+									<Button
+										type="submit"
+										variant="soft-red"
+										size="xs"
+										icon={FluentPersonDelete20Filled}
+										onclick={(e) => {
+											if (!confirm("Are you sure you want to dismiss this diplomat?")) {
+												e.preventDefault();
+											}
+										}}
+									>
+										Dismiss
+									</Button>
+								</form>
+							{/if}
+						</div>
+					{/each}
+
 					{#if data.presidency}
 						<ProfileItem
 							href="/state/{data.presidency.stateId}"
@@ -615,6 +702,88 @@
 						loadingText="Appointing..."
 					>
 						Appoint Minister
+					</Button>
+				</div>
+			</div>
+		</form>
+	</Modal>
+
+	<!-- Appoint Bloc Leadership Modal -->
+	<Modal bind:open={showAppointBlocDialog} title="Appoint {data.user.name} — {data.viewerBlocName}">
+		<form
+			method="POST"
+			action="?/appointBlocLeadership"
+			use:enhance={() => {
+				isAppointingBlocRole = true;
+				blocAppointmentError = null;
+				return async ({ result, update }) => {
+					isAppointingBlocRole = false;
+
+					if (result.type === "success") {
+						await update();
+						showAppointBlocDialog = false;
+						selectedBlocRole = "";
+					} else if (result.type === "failure") {
+						blocAppointmentError = result.data?.error || "Failed to appoint bloc leadership";
+						await update();
+					} else {
+						await update();
+					}
+				};
+			}}
+		>
+			<div class="space-y-4">
+				{#if blocAppointmentError}
+					<div class="alert alert-error bg-red-600/10 border-red-500/20 text-red-300">
+						<span>{blocAppointmentError}</span>
+					</div>
+				{/if}
+
+				<div class="form-control">
+					<label class="label">
+						<span class="label-text text-[#e5d8c1]">Select Role</span>
+					</label>
+					<select
+						name="role"
+						class="select select-bordered field-control"
+						bind:value={selectedBlocRole}
+						disabled={isAppointingBlocRole}
+						required
+					>
+						<option value="" disabled>Choose a role...</option>
+						{#each data.availableBlocRoles as role}
+							<option value={role}>{blocRoleNames[role]}</option>
+						{/each}
+					</select>
+				</div>
+
+				{#if data.availableBlocRoles.length === 0}
+					<div class="alert alert-warning bg-yellow-600/10 border-yellow-500/20 text-yellow-300">
+						<span>This bloc already has a leader and two diplomats.</span>
+					</div>
+				{/if}
+
+				<div class="flex justify-end gap-2">
+					<Button
+						type="button"
+						variant="secondary"
+						disabled={isAppointingBlocRole}
+						onclick={() => {
+							showAppointBlocDialog = false;
+							selectedBlocRole = "";
+							blocAppointmentError = null;
+						}}
+					>
+						Cancel
+					</Button>
+					<Button
+						type="submit"
+						icon={FluentPeopleTeam20Filled}
+						disabled={!selectedBlocRole}
+						loading={isAppointingBlocRole}
+						loadingText="Appointing..."
+					>
+						Appoint
 					</Button>
 				</div>
 			</div>
