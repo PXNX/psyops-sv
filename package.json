@@ -33,6 +33,7 @@
 		"@iconify-json/fluent": "1.2.57",
 		"@iconify-json/fluent-color": "^1.2.21",
 		"@iconify-json/fluent-emoji": "1.2.7",
+		"@iconify-json/game-icons": "1.2.4",
 		"@iconify-json/logos": "1.2.14",
 		"@iconify/svelte": "5.2.2",
 		"@inlang/paraglide-js": "2.25.1",

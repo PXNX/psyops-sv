@@ -6,6 +6,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
+	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
 
 	let { data, form } = $props();
 
@@ -15,15 +16,6 @@
 	let selectedResource = $state<ResourceType>("iron");
 	let tradeQuantity = $state(1);
 	let tradePrice = $state(1000);
-
-	const resourceInfo: Record<ResourceType, { icon: string; color: string }> = {
-		iron: { icon: "⛏️", color: "slate" },
-		copper: { icon: "🔶", color: "orange" },
-		steel: { icon: "⚙️", color: "blue" },
-		gunpowder: { icon: "💥", color: "red" },
-		wood: { icon: "🪵", color: "amber" },
-		coal: { icon: "🪨", color: "gray" }
-	};
 
 	const allResources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
 
@@ -144,7 +136,7 @@
 									: 'bg-[#102239]/70 border-[#dfceb0]/10 hover:bg-[#19304b] hover:border-[#dfceb0]/20'}"
 						>
 							<div class="flex items-center gap-3">
-								<span class="text-xl">{resourceInfo[resource].icon}</span>
+								<ResourceIcon name={resource} class="size-5" />
 								<span class="font-medium capitalize {isSelected ? 'text-[#d5c4df]' : 'text-[#d9ccb7]'}">{resource}</span>
 							</div>
 							<span
@@ -170,7 +162,7 @@
 					{#each allResources as resource}
 						<div class="flex items-center justify-between text-sm py-1">
 							<span class="flex items-center gap-2 text-[#c7bda9]">
-								<span class="text-base">{resourceInfo[resource].icon}</span>
+								<ResourceIcon name={resource} class="size-4" />
 								<span class="capitalize">{resource}</span>
 							</span>
 							<span class="font-medium text-[#d9ccb7] tabular-nums">{formatCurrency(data.marketPrices[resource] || 0)}</span>
@@ -224,7 +216,7 @@
 				<div class="panel-muted rounded-sm p-5">
 					<div class="flex items-center gap-4">
 						<div class="size-14 bg-[#14283f] rounded-sm flex items-center justify-center">
-							<span class="text-3xl">{resourceInfo[selectedResource].icon}</span>
+							<ResourceIcon name={selectedResource} class="size-8" />
 						</div>
 						<div class="flex-1">
 							<h3 class="text-xl font-bold text-[#fff7e8] capitalize">{selectedResource}</h3>
@@ -301,7 +293,7 @@
 						<div class="flex justify-between text-sm">
 							<span class="text-[#a89e8e]">Resource</span>
 							<span class="font-medium text-[#fff7e8] flex items-center gap-1.5">
-								<span>{resourceInfo[selectedResource].icon}</span>
+								<ResourceIcon name={selectedResource} class="size-3.5" />
 								<span class="capitalize">{selectedResource}</span>
 							</span>
 						</div>

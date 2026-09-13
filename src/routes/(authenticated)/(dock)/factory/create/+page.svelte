@@ -19,13 +19,19 @@
 	import GemStoneEmoji from "~icons/fluent-emoji/gem-stone";
 	import OrangeCircleEmoji from "~icons/fluent-emoji/orange-circle";
 	import BlackCircleEmoji from "~icons/fluent-emoji/black-circle";
-	import WoodEmoji from "~icons/fluent-emoji/wood";
-	import HammerEmoji from "~icons/fluent-emoji/hammer";
-	import FireEmoji from "~icons/fluent-emoji/fire";
 
-	import BombEmoji from "~icons/fluent-emoji/bomb";
-	import AutomobileEmoji from "~icons/fluent-emoji/automobile";
-	import FireworksEmoji from "~icons/fluent-emoji/fireworks";
+	// Resource/product icons
+	import GameIconsOre from "~icons/game-icons/ore";
+	import GameIconsMinerals from "~icons/game-icons/minerals";
+	import GameIconsMetalBar from "~icons/game-icons/metal-bar";
+	import GameIconsPowderBag from "~icons/game-icons/powder-bag";
+	import GameIconsWoodPile from "~icons/game-icons/wood-pile";
+	import GameIconsCoalPile from "~icons/game-icons/coal-pile";
+	import GameIconsRifle from "~icons/game-icons/rifle";
+	import GameIconsBullets from "~icons/game-icons/bullets";
+	import GameIconsArtilleryShell from "~icons/game-icons/artillery-shell";
+	import GameIconsTruck from "~icons/game-icons/truck";
+	import GameIconsDynamite from "~icons/game-icons/dynamite";
 
 	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
 	import BackLink from "$lib/component/ui/BackLink.svelte";
@@ -65,23 +71,23 @@
 	];
 
 	const resourceOutputs = [
-		{ value: "iron", label: "Iron", icon: GemStoneEmoji },
-		{ value: "copper", label: "Copper", icon: OrangeCircleEmoji },
-		{ value: "coal", label: "Coal", icon: BlackCircleEmoji },
-		{ value: "wood", label: "Wood", icon: WoodEmoji }
+		{ value: "iron", label: "Iron", icon: GameIconsOre },
+		{ value: "copper", label: "Copper", icon: GameIconsMinerals },
+		{ value: "coal", label: "Coal", icon: GameIconsCoalPile },
+		{ value: "wood", label: "Wood", icon: GameIconsWoodPile }
 	];
 
 	const refineryOutputs = [
-		{ value: "steel", label: "Steel", icon: HammerEmoji },
-		{ value: "gunpowder", label: "Gunpowder", icon: FireEmoji }
+		{ value: "steel", label: "Steel", icon: GameIconsMetalBar },
+		{ value: "gunpowder", label: "Gunpowder", icon: GameIconsPowderBag }
 	];
 
 	const productOutputs = [
-		{ value: "rifles", label: "Rifles", icon: FluentFactory20Filled },
-		{ value: "ammunition", label: "Ammunition", icon: FluentFactory20Filled },
-		{ value: "artillery", label: "Artillery", icon: BombEmoji },
-		{ value: "vehicles", label: "Vehicles", icon: AutomobileEmoji },
-		{ value: "explosives", label: "Explosives", icon: FireworksEmoji }
+		{ value: "rifles", label: "Rifles", icon: GameIconsRifle },
+		{ value: "ammunition", label: "Ammunition", icon: GameIconsBullets },
+		{ value: "artillery", label: "Artillery", icon: GameIconsArtilleryShell },
+		{ value: "vehicles", label: "Vehicles", icon: GameIconsTruck },
+		{ value: "explosives", label: "Explosives", icon: GameIconsDynamite }
 	];
 
 	const selectedFactoryTypeData = $derived(factoryTypes.find((t) => t.value === selectedFactoryType));
@@ -123,12 +129,12 @@
 
 	function getResourceIcon(resourceType: string) {
 		const iconMap: Record<string, any> = {
-			iron: GemStoneEmoji,
-			copper: OrangeCircleEmoji,
-			coal: BlackCircleEmoji,
-			wood: WoodEmoji,
-			steel: HammerEmoji,
-			gunpowder: FireEmoji,
+			iron: GameIconsOre,
+			copper: GameIconsMinerals,
+			coal: GameIconsCoalPile,
+			wood: GameIconsWoodPile,
+			steel: GameIconsMetalBar,
+			gunpowder: GameIconsPowderBag,
 			oil: BlackCircleEmoji,
 			aluminium: GemStoneEmoji,
 			rubber: BlackCircleEmoji,

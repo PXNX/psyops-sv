@@ -1,12 +1,12 @@
 <!-- /lib/component/ResourceRequirements.svelte -->
 <script lang="ts">
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import FluentEmojiPickaxe from "~icons/fluent-emoji/pick";
-	import FluentEmojiGem from "~icons/fluent-emoji/gem-stone";
-	import FluentEmojiGear from "~icons/fluent-emoji/gear";
-	import FluentEmojiCollision from "~icons/fluent-emoji/collision";
-	import FluentEmojiWood from "~icons/fluent-emoji/wood";
-	import FluentEmojiRock from "~icons/fluent-emoji/rock";
+	import GameIconsOre from "~icons/game-icons/ore";
+	import GameIconsMinerals from "~icons/game-icons/minerals";
+	import GameIconsMetalBar from "~icons/game-icons/metal-bar";
+	import GameIconsPowderBag from "~icons/game-icons/powder-bag";
+	import GameIconsWoodPile from "~icons/game-icons/wood-pile";
+	import GameIconsCoalPile from "~icons/game-icons/coal-pile";
 	import FluentEmojiPackage from "~icons/fluent-emoji/package";
 
 	type Props = {
@@ -17,12 +17,12 @@
 	let { costs, available }: Props = $props();
 
 	const resourceIconComponents: Record<string, any> = {
-		iron: FluentEmojiPickaxe,
-		copper: FluentEmojiGem,
-		steel: FluentEmojiGear,
-		gunpowder: FluentEmojiCollision,
-		wood: FluentEmojiWood,
-		coal: FluentEmojiRock,
+		iron: GameIconsOre,
+		copper: GameIconsMinerals,
+		steel: GameIconsMetalBar,
+		gunpowder: GameIconsPowderBag,
+		wood: GameIconsWoodPile,
+		coal: GameIconsCoalPile,
 		currency: FluentMoney20Filled
 	};
 
