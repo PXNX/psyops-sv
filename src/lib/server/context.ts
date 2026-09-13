@@ -11,7 +11,6 @@ import { MarketService } from './services/economy/market.service';
 import { WalletService } from './services/economy/wallet.service';
 import { BuildingService } from './services/economy/building.service';
 import { PartyService } from './services/politics/party.service';
-import { ProposalService } from './services/politics/proposal.service';
 import { ElectionService } from './services/politics/election.service';
 import { RegionService } from './services/geography/region.service';
 import { TravelService } from './services/geography/travel.service';
@@ -31,7 +30,6 @@ export interface AppContext {
         wallet: WalletService;
         building: BuildingService;
         party: PartyService;
-        proposal: ProposalService;
         election: ElectionService;
         region: RegionService;
         travel: TravelService;
@@ -59,7 +57,6 @@ export function createContext(): AppContext {
     const walletService = new WalletService(db);
     const buildingService = new BuildingService(db);
     const partyService = new PartyService(db);
-    const proposalService = new ProposalService(db);
     const electionService = new ElectionService(db);
     const regionService = new RegionService(db);
     const travelService = new TravelService(db);
@@ -79,7 +76,6 @@ export function createContext(): AppContext {
             wallet: walletService,
             building: buildingService,
             party: partyService,
-            proposal: proposalService,
             election: electionService,
             region: regionService,
             travel: travelService,

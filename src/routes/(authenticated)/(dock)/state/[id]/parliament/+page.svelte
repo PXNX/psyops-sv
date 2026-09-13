@@ -17,6 +17,7 @@
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
+	import FluentBuildingFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import { enhance } from "$app/forms";
 	import { formatDate } from "$lib/utils/formatting.js";
 
@@ -462,10 +463,19 @@
 					<FluentDocument20Filled class="size-6 text-[#d5c4df]" />
 					Active Proposals
 				</h2>
-				<a href="/state/{data.state.id}/proposal" class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]">
-					<FluentHistory20Filled class="size-4" />
-					View History
-				</a>
+				<div class="flex gap-2">
+					<a
+						href="/state/{data.state.id}/construction"
+						class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]"
+					>
+						<FluentBuildingFactory20Filled class="size-4" />
+						Construction Queue
+					</a>
+					<a href="/state/{data.state.id}/proposal" class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]">
+						<FluentHistory20Filled class="size-4" />
+						View History
+					</a>
+				</div>
 			</div>
 
 			{#if data.proposals.length === 0}

@@ -26,10 +26,15 @@ import type { PageServerLoad, Actions } from "./$types";
 import { getRegionName } from "$lib/utils/formatting";
 import { getContext } from "$lib/server/context";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { completePendingConstructions } from "$lib/server/services/politics/construction.service";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const regionId = parseInt(params.id);
+
+	// Finish any construction whose time has elapsed so the stats below (and
+	// the "under construction" list) reflect the current state.
+	await completePendingConstructions({ regionId });
 
 	// Get region with state
 	const region = await db.query.regions.findFirst({

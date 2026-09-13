@@ -1749,6 +1749,12 @@ export const stateBuildings = pgTable("state_buildings", {
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" }),
 
+	// A building sits here while its construction time (per BUILDING_TEMPLATES) elapses;
+	// its region stat bonus is only applied once isUnderConstruction flips to false.
+	isUnderConstruction: boolean("is_under_construction").default(false).notNull(),
+	constructionStartedAt: timestamp("construction_started_at"),
+	constructionCompletesAt: timestamp("construction_completes_at"),
+
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
