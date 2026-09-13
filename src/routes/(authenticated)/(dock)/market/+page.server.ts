@@ -1,13 +1,14 @@
 import { db } from "$lib/server/db";
 import {
 	marketListings,
+	marketPriceHistory,
 	resourceInventory,
 	productInventory,
 	userWallets,
 	residences,
 	regions
 } from "$lib/server/schema";
-import { eq, and, min, sql } from "drizzle-orm";
+import { eq, and, min, gte, sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
 const RESOURCES = ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as const;
@@ -45,10 +46,35 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 
+	// 24h price change per item, for a Trade-Republic-style "▲ 2.3%" next to each price.
+	const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+	const recentHistory = await db
+		.select({
+			itemName: marketPriceHistory.itemName,
+			pricePerUnit: marketPriceHistory.pricePerUnit,
+			recordedAt: marketPriceHistory.recordedAt
+		})
+		.from(marketPriceHistory)
+		.where(gte(marketPriceHistory.recordedAt, oneDayAgo))
+		.orderBy(marketPriceHistory.recordedAt);
+
+	const firstLastByItem = new Map<string, { first: number; last: number }>();
+	for (const row of recentHistory) {
+		const existing = firstLastByItem.get(row.itemName);
+		if (!existing) firstLastByItem.set(row.itemName, { first: row.pricePerUnit, last: row.pricePerUnit });
+		else existing.last = row.pricePerUnit;
+	}
+
+	const priceChanges: Record<string, number> = {};
+	for (const [itemName, { first, last }] of firstLastByItem) {
+		if (first > 0) priceChanges[itemName] = ((last - first) / first) * 100;
+	}
+
 	return {
 		wallet: wallet || { balance: 10000, userId: account.id },
 		resources,
 		products,
-		lowestPrices: lowestPriceMap
+		lowestPrices: lowestPriceMap,
+		priceChanges
 	};
 };
