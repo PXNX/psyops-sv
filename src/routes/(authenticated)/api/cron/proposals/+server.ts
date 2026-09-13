@@ -5,9 +5,7 @@ import type { RequestHandler } from "./$types";
 import { db } from "$lib/server/db";
 import { parliamentaryProposals, parliamentaryVotes, stateTaxes, parliamentMembers } from "$lib/server/schema";
 import { eq, and, lte } from "drizzle-orm";
-import { ProposalService } from "$lib/server/services/politics/proposal.service";
-
-const proposalService = new ProposalService(db);
+import { executeProposal } from "$lib/server/services/politics/execute-proposal";
 
 export const GET: RequestHandler = async ({ request }) => {
 	try {
@@ -95,15 +93,18 @@ async function processProposal(proposal: any) {
 		`Proposal ${proposal.id}: ${yesVotes} yes, ${noVotes} no out of ${totalMembers} members (${yesPercentage.toFixed(1)}% yes). Required: ${requiredMajority}%`
 	);
 
-		if (hasPassed) {
-			// Mark as passed
-			await db.update(parliamentaryProposals).set({ status: "passed" }).where(eq(parliamentaryProposals.id, proposal.id));
+	if (hasPassed) {
+		// Mark as passed
+		await db.update(parliamentaryProposals).set({ status: "passed" }).where(eq(parliamentaryProposals.id, proposal.id));
 
-			// Implement the proposal based on type
-			await proposalService.implementProposal(proposal);
-
+		// Implement the proposal based on type
+		try {
+			await executeProposal(proposal.stateId, proposal.proposalType, proposal.proposedBy, proposal.id);
 			console.log(`✅ Proposal ${proposal.id} PASSED and implemented`);
-		} else {
+		} catch (err) {
+			console.error(`❌ Proposal ${proposal.id} passed but failed to implement:`, err);
+		}
+	} else {
 		// Mark as rejected
 		await db
 			.update(parliamentaryProposals)
@@ -113,5 +114,3 @@ async function processProposal(proposal: any) {
 		console.log(`❌ Proposal ${proposal.id} REJECTED`);
 	}
 }
-
-

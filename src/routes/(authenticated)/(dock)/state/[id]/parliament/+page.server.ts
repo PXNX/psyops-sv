@@ -21,10 +21,8 @@ import {
 import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";
-import { ProposalService } from "$lib/server/services/politics/proposal.service";
+import { executeProposal } from "$lib/server/services/politics/execute-proposal";
 import { getRegionName } from "$lib/utils/formatting";
-
-const proposalService = new ProposalService(db);
 
 export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) => {
 	const account = locals.account!;
@@ -478,7 +476,11 @@ export const actions = {
 			.where(eq(parliamentaryProposals.id, proposalId));
 
 		// Execute the proposal
-		await proposalService.implementProposal(proposal);
+		try {
+			await executeProposal(stateId, proposal.proposalType, proposal.proposedBy, proposal.id);
+		} catch (err: any) {
+			return fail(400, { error: err.message || "Failed to execute proposal" });
+		}
 
 		return { success: true, message: "Proposal accepted and executed" };
 	},
