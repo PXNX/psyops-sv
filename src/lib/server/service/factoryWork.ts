@@ -11,6 +11,7 @@ import {
 	transactionHistory
 } from "$lib/server/schema";
 import { calculateAndCollectTax } from "$lib/server/taxes";
+import { getEmbargoReason } from "$lib/server/embargo";
 import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 import { and, eq, sql } from "drizzle-orm";
 
@@ -104,6 +105,19 @@ export async function startWorkShift(userId: string, factoryId: number): Promise
 
 	if (!factory) {
 		return { success: false, error: "Factory not found" };
+	}
+
+	// Block employment if the company's headquarters state and the worker's
+	// state have an active embargo (sanction) against each other.
+	const [company] = await db
+		.select({ stateId: regions.stateId })
+		.from(companies)
+		.leftJoin(regions, eq(companies.regionId, regions.id))
+		.where(eq(companies.id, factory.companyId));
+
+	const embargoReason = await getEmbargoReason(company?.stateId ?? null, userId);
+	if (embargoReason) {
+		return { success: false, error: embargoReason };
 	}
 
 	// Check company budget
@@ -349,19 +363,19 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			description: `Received wage for shift at ${factory.name}`,
 			relatedEntityType: "factory",
 			relatedEntityId: factoryId
-			});
+		});
 
-			return { incomeTaxResult, miningTaxResult, resourcesProduced };
-			});
+		return { incomeTaxResult, miningTaxResult, resourcesProduced };
+	});
 
-			const totalTaxPaid = incomeTaxResult.taxAmount + (miningTaxResult?.taxAmount || 0);
-			const taxBreakdown = miningTaxResult
-			? `${incomeTaxResult.taxAmount.toLocaleString()} income tax + ${miningTaxResult.taxAmount.toLocaleString()} mining tax`
-			: `${incomeTaxResult.taxAmount.toLocaleString()} income tax`;
+	const totalTaxPaid = incomeTaxResult.taxAmount + (miningTaxResult?.taxAmount || 0);
+	const taxBreakdown = miningTaxResult
+		? `${incomeTaxResult.taxAmount.toLocaleString()} income tax + ${miningTaxResult.taxAmount.toLocaleString()} mining tax`
+		: `${incomeTaxResult.taxAmount.toLocaleString()} income tax`;
 
-			await sendNotificationIfEnabled(userId, "notifyShiftComplete", {
-			title: "🏭 Shift Complete!",
-			body: `You earned ${incomeTaxResult.netAmount.toLocaleString()} from your shift at ${factory.name}.`,
+	await sendNotificationIfEnabled(userId, "notifyShiftComplete", {
+		title: "🏭 Shift Complete!",
+		body: `You earned ${incomeTaxResult.netAmount.toLocaleString()} from your shift at ${factory.name}.`,
 		icon: "/favicon.png",
 		badge: "/badge.png",
 		data: {

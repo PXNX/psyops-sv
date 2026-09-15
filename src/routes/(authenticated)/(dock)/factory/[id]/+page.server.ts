@@ -13,6 +13,7 @@ import {
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { calculateShiftStatus, collectWages, startWorkShift } from "$lib/server/service/factoryWork";
+import { getEmbargoReason } from "$lib/server/embargo";
 import { error, fail } from "@sveltejs/kit";
 import { eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -54,6 +55,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!factory) {
 		throw error(404, "Factory not found");
 	}
+
+	// Check whether an embargo between the company's headquarters state and the
+	// viewer's state blocks starting a new shift here.
+	const [companyHq] = await db
+		.select({ stateId: regions.stateId })
+		.from(companies)
+		.leftJoin(regions, eq(companies.regionId, regions.id))
+		.where(eq(companies.id, factory.companyId));
+
+	const embargoReason = await getEmbargoReason(companyHq?.stateId ?? null, account.id);
 
 	// Get company budget
 	const [companyBudget] = await db
@@ -142,7 +153,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		companyLogoUrl,
 		companyBudget: companyBudget?.balance || 0,
 		canAffordWage,
-		lockedWage: isWorkingHere && currentUserJob?.wageAtShiftStart ? currentUserJob.wageAtShiftStart : null
+		lockedWage: isWorkingHere && currentUserJob?.wageAtShiftStart ? currentUserJob.wageAtShiftStart : null,
+		embargoReason
 	};
 };
 

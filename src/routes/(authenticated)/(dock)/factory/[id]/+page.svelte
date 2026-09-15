@@ -69,10 +69,7 @@
 						<div class="flex items-center gap-2 text-sm text-[#a89e8e] font-mono mt-1">
 							<span class="capitalize">{data.factory.factoryType}</span>
 							<span class="text-[#a89e8e]/50">·</span>
-							<a
-								href="/company/{data.factory.companyId}"
-								class="text-[#d5c4df] hover:text-[#f0e7f5] transition-colors"
-							>
+							<a href="/company/{data.factory.companyId}" class="text-[#d5c4df] hover:text-[#f0e7f5] transition-colors">
 								{data.factory.companyName}
 							</a>
 						</div>
@@ -245,7 +242,12 @@
 					<span class="text-sm font-bold text-emerald-400 font-mono uppercase tracking-wide">Ready for Shift</span>
 				</div>
 
-				{#if !data.canAffordWage}
+				{#if data.embargoReason}
+					<div class="bg-red-950/30 border border-red-500/20 rounded-lg p-3 mb-3 flex items-center gap-2">
+						<FluentWarning20Filled class="size-4 text-red-400 flex-shrink-0" />
+						<p class="text-red-300 text-xs font-mono">{data.embargoReason}</p>
+					</div>
+				{:else if !data.canAffordWage}
 					<div class="bg-red-950/30 border border-red-500/20 rounded-lg p-3 mb-3">
 						<p class="text-red-300 text-xs font-mono">Cannot start — company budget insufficient</p>
 					</div>
@@ -287,7 +289,12 @@
 				</div>
 
 				<!-- Warnings -->
-				{#if !data.canAffordWage}
+				{#if data.embargoReason}
+					<div class="bg-red-950/30 border border-red-500/20 rounded-lg p-3 flex items-center gap-2">
+						<FluentWarning20Filled class="size-4 text-red-400 flex-shrink-0" />
+						<p class="text-red-300 text-xs font-mono">{data.embargoReason}</p>
+					</div>
+				{:else if !data.canAffordWage}
 					<div class="bg-red-950/30 border border-red-500/20 rounded-lg p-3 flex items-center gap-2">
 						<FluentWarning20Filled class="size-4 text-red-400 flex-shrink-0" />
 						<p class="text-red-300 text-xs font-mono">Company cannot afford wages</p>
@@ -307,7 +314,7 @@
 				<form method="POST" action="?/startShift" use:enhance>
 					<button
 						type="submit"
-						disabled={data.workers >= data.maxWorkers || !data.canAffordWage}
+						disabled={data.workers >= data.maxWorkers || !data.canAffordWage || !!data.embargoReason}
 						class="w-full py-3 rounded-lg bg-[#e6a527] hover:bg-[#f2b940] disabled:bg-[#14283f] disabled:text-[#a89e8e] disabled:cursor-not-allowed text-[#172a45] font-bold font-mono uppercase tracking-wide transition-all"
 					>
 						<span class="flex items-center justify-center gap-2">

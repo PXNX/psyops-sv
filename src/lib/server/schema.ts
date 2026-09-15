@@ -603,6 +603,8 @@ export const companies = pgTable("companies", {
 		.notNull()
 		.references(() => accounts.id, { onDelete: "cascade" }),
 	description: text("description"),
+	// Headquarters region: ties the company to that region's state (embargoes, display), currently cosmetic otherwise.
+	regionId: integer("region_id").references(() => regions.id, { onDelete: "set null" }),
 	foundedAt: timestamp("founded_at").defaultNow().notNull()
 });
 
@@ -1248,6 +1250,7 @@ export const statesRelations = relations(states, ({ one, many }) => ({
 }));
 export const companiesRelations = relations(companies, ({ one, many }) => ({
 	owner: one(accounts, { fields: [companies.ownerId], references: [accounts.id] }),
+	region: one(regions, { fields: [companies.regionId], references: [regions.id] }),
 	factories: many(factories),
 	budget: one(companyBudgets, {
 		fields: [companies.id],
