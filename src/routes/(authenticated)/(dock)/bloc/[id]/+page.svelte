@@ -53,6 +53,11 @@
 						class="p-2 bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 hover:border-red-400/50 rounded-lg text-red-300 hover:text-red-200 transition-all backdrop-blur-sm"
 						title="Leave Bloc"
 						aria-label="Leave Bloc"
+						onclick={(e) => {
+							if (!confirm(`Are you sure you want to leave ${data.bloc.name}?`)) {
+								e.preventDefault();
+							}
+						}}
 					>
 						<FluentDismiss20Filled class="size-4" />
 					</button>
