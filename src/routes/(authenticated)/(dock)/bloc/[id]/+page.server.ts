@@ -7,11 +7,14 @@ import {
 	blocActionCooldowns,
 	blocLeaders,
 	blocDiplomats,
+	blocLeaderElections,
+	blocLeaderCandidates,
+	blocLeaderVotes,
 	wars,
 	battles
 } from "$lib/server/schema";
 import { error, fail, redirect } from "@sveltejs/kit";
-import { eq, and, or, sql } from "drizzle-orm";
+import { eq, and, or, ne, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getLogoUrl } from "$lib/server/backblaze";
 
@@ -132,6 +135,49 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const isLeader = locals.account?.id === leaderRow?.userId;
 
+	// Current bloc leader election cycle (scheduled or with its voting window active)
+	const currentElection = await db.query.blocLeaderElections.findFirst({
+		where: and(eq(blocLeaderElections.blocId, blocId), ne(blocLeaderElections.status, "completed")),
+		orderBy: (t, { asc }) => asc(t.votingEndsAt)
+	});
+
+	let candidates: Array<{ userId: string; name: string; logo: string | null; nominatedAt: Date; votes: number }> = [];
+	let myBlocLeaderVote: string | null = null;
+
+	if (currentElection) {
+		const candidateRows = await db.query.blocLeaderCandidates.findMany({
+			where: eq(blocLeaderCandidates.electionId, currentElection.id),
+			with: { candidate: { with: { profile: true } } },
+			orderBy: (t, { asc }) => asc(t.nominatedAt)
+		});
+
+		const voteCountRows = await db
+			.select({ candidateUserId: blocLeaderVotes.candidateUserId, count: sql<number>`count(*)::int` })
+			.from(blocLeaderVotes)
+			.where(eq(blocLeaderVotes.electionId, currentElection.id))
+			.groupBy(blocLeaderVotes.candidateUserId);
+		const voteCounts = Object.fromEntries(voteCountRows.map((v) => [v.candidateUserId, v.count]));
+
+		candidates = await Promise.all(
+			candidateRows.map(async (c) => ({
+				userId: c.candidateUserId,
+				name: c.candidate.profile?.name || "Anonymous",
+				logo: await getLogoUrl(c.candidate.profile?.logo),
+				nominatedAt: c.nominatedAt,
+				votes: voteCounts[c.candidateUserId] || 0
+			}))
+		);
+
+		if (locals.account) {
+			const [voteRow] = await db
+				.select({ candidateUserId: blocLeaderVotes.candidateUserId })
+				.from(blocLeaderVotes)
+				.where(and(eq(blocLeaderVotes.electionId, currentElection.id), eq(blocLeaderVotes.voterId, locals.account.id)))
+				.limit(1);
+			myBlocLeaderVote = voteRow?.candidateUserId ?? null;
+		}
+	}
+
 	// Check if user is a president and get their state
 	let userState = null;
 	let isMember = false;
@@ -210,6 +256,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}))
 		),
 		isLeader,
+		election: currentElection
+			? {
+					id: currentElection.id,
+					status: currentElection.status,
+					votingStartsAt: currentElection.votingStartsAt,
+					votingEndsAt: currentElection.votingEndsAt
+				}
+			: null,
+		candidates,
+		myBlocLeaderVote,
+		canVoteForBlocLeader: isMember && currentElection?.status === "active",
 		isMemberPresident: isMember,
 		userState,
 		canJoin,
@@ -332,5 +389,60 @@ export const actions: Actions = {
 		});
 
 		redirect(303, "/state/" + presidency.stateId);
+	},
+
+	voteBlocLeader: async ({ params, request, locals }) => {
+		const account = locals.account!;
+		const blocId = parseInt(params.id);
+
+		const [presidency] = await db
+			.select({ stateId: presidents.stateId, currentBlocId: states.blocId })
+			.from(presidents)
+			.innerJoin(states, eq(presidents.stateId, states.id))
+			.where(eq(presidents.userId, account.id))
+			.limit(1);
+
+		if (!presidency || presidency.currentBlocId !== blocId) {
+			return fail(403, { error: "Only presidents of this bloc's member states can vote for its leader" });
+		}
+
+		const election = await db.query.blocLeaderElections.findFirst({
+			where: and(eq(blocLeaderElections.blocId, blocId), eq(blocLeaderElections.status, "active"))
+		});
+
+		if (!election) {
+			return fail(400, { error: "There is no active bloc leader election right now" });
+		}
+
+		const formData = await request.formData();
+		const candidateUserId = formData.get("candidateUserId") as string;
+
+		const candidate = await db.query.blocLeaderCandidates.findFirst({
+			where: and(
+				eq(blocLeaderCandidates.electionId, election.id),
+				eq(blocLeaderCandidates.candidateUserId, candidateUserId)
+			)
+		});
+
+		if (!candidate) {
+			return fail(400, { error: "Invalid candidate" });
+		}
+
+		const [existingVote] = await db
+			.select()
+			.from(blocLeaderVotes)
+			.where(and(eq(blocLeaderVotes.electionId, election.id), eq(blocLeaderVotes.voterId, account.id)))
+			.limit(1);
+
+		if (existingVote) {
+			await db
+				.update(blocLeaderVotes)
+				.set({ candidateUserId, votedAt: new Date() })
+				.where(eq(blocLeaderVotes.id, existingVote.id));
+		} else {
+			await db.insert(blocLeaderVotes).values({ electionId: election.id, voterId: account.id, candidateUserId });
+		}
+
+		return { success: true, message: "Vote recorded" };
 	}
 };

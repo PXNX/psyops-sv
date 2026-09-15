@@ -8,14 +8,14 @@
 	import FluentPersonAdd20Filled from "~icons/fluent/person-add-20-filled";
 	import FluentCrown20Filled from "~icons/fluent/crown-20-filled";
 	import FluentGlobeShield20Filled from "~icons/fluent/globe-shield-20-filled";
+	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
+	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import { enhance } from "$app/forms";
 	import PageContainer from "$lib/component/PageContainer.svelte";
-	import Modal from "$lib/component/Modal.svelte";
 	import ProfileItem from "$lib/component/ProfileItem.svelte";
+	import { formatDate, formatDateTime } from "$lib/utils/formatting";
 
 	const { data, form } = $props();
-
-	let showLeadershipModal = $state(false);
 </script>
 
 <svelte:head>
@@ -36,15 +36,6 @@
 					.color}20 35px, {data.bloc.color}20 70px);"
 			></div>
 			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-sm"></div>
-
-			<button
-				type="button"
-				class="absolute top-3 left-3 z-20 flex items-center gap-1.5 px-2.5 py-2 bg-black/30 hover:bg-black/50 border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all backdrop-blur-sm text-xs font-mono font-bold"
-				onclick={() => (showLeadershipModal = true)}
-			>
-				<FluentPeopleTeam20Filled class="size-4" />
-				Leadership
-			</button>
 
 			{#if data.isLeader}
 				<a
@@ -90,6 +81,121 @@
 			</div>
 		</div>
 	</div>
+
+	<!-- Leadership -->
+	<section class="panel-muted rounded-sm p-4 sm:p-5 space-y-4">
+		<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider flex items-center gap-2">
+			<FluentPeopleTeam20Filled class="size-4" />
+			Leadership
+		</h2>
+
+		{#if data.leader}
+			<ProfileItem
+				href="/user/{data.leader.userId}"
+				logo={data.leader.logo}
+				logoAlt={data.leader.name}
+				placeholderIcon={FluentCrown20Filled}
+				placeholderGradient="from-amber-600/20 to-amber-700/10"
+				title={data.leader.name}
+				subtitle="Bloc Leader • elected {formatDate(data.leader.appointedAt)}"
+				hoverColor="yellow"
+			/>
+		{:else}
+			<p class="text-sm text-[#a89e8e]">No bloc leader has been elected yet.</p>
+		{/if}
+
+		{#if data.diplomats.length > 0}
+			<div class="space-y-2 pt-2 border-t border-[#dfceb0]/10">
+				<h3 class="text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">Diplomats</h3>
+				{#each data.diplomats as diplomat}
+					<ProfileItem
+						href="/user/{diplomat.userId}"
+						logo={diplomat.logo}
+						logoAlt={diplomat.name}
+						placeholderIcon={FluentGlobeShield20Filled}
+						placeholderGradient="from-[#315d8d]/20 to-[#315d8d]/10"
+						title={diplomat.name}
+						subtitle="Diplomat"
+						hoverColor="blue"
+					/>
+				{/each}
+			</div>
+		{/if}
+
+		{#if data.election}
+			<div class="pt-3 border-t border-[#dfceb0]/10 space-y-3">
+				{#if data.election.status === "active"}
+					<div class="flex items-center justify-between gap-2 flex-wrap">
+						<span
+							class="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5"
+						>
+							<span class="size-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+							Leadership Election — Voting Open
+						</span>
+						<span class="text-[10px] text-[#a89e8e] font-mono">
+							Ends {formatDateTime(data.election.votingEndsAt)}
+						</span>
+					</div>
+
+					{#if data.candidates.length === 0}
+						<p class="text-sm text-[#a89e8e]">
+							No candidates nominated yet. A state president can nominate a citizen of any member state (not
+							themselves) from that citizen's profile page.
+						</p>
+					{:else}
+						<div class="space-y-2">
+							{#each data.candidates as candidate}
+								{@const isMyVote = data.myBlocLeaderVote === candidate.userId}
+								<div
+									class="border rounded-lg overflow-hidden {isMyVote
+										? 'border-[#8fae88]/50'
+										: 'border-[#dfceb0]/10'}"
+								>
+									<ProfileItem
+										href="/user/{candidate.userId}"
+										logo={candidate.logo}
+										logoAlt={candidate.name}
+										placeholderIcon={FluentPerson20Filled}
+										placeholderGradient="from-[#315d8d] to-[#315d8d]"
+										title={candidate.name}
+										subtitle="{candidate.votes} vote{candidate.votes === 1 ? '' : 's'}{isMyVote
+											? ' • your vote'
+											: ''}"
+										hoverColor="yellow"
+									/>
+									{#if data.canVoteForBlocLeader}
+										<form method="POST" action="?/voteBlocLeader" use:enhance class="border-t border-[#dfceb0]/10 p-2">
+											<input type="hidden" name="candidateUserId" value={candidate.userId} />
+											<button
+												type="submit"
+												class="w-full py-1.5 rounded-md text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 {isMyVote
+													? 'bg-emerald-600 text-white'
+													: 'bg-[#14283f] hover:bg-[#19304b] text-[#d9ccb7]'}"
+											>
+												<FluentVote20Filled class="size-3.5" />
+												{isMyVote ? "Voted" : "Vote"}
+											</button>
+										</form>
+									{/if}
+								</div>
+							{/each}
+						</div>
+					{/if}
+
+					{#if !data.canVoteForBlocLeader}
+						<p class="text-xs text-[#a89e8e]">Only presidents of this bloc's member states may vote.</p>
+					{/if}
+				{:else}
+					<div class="flex items-center justify-between gap-2 flex-wrap">
+						<span class="text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">Next Election</span>
+						<span class="text-[10px] text-[#a89e8e] font-mono">
+							Nominations open {formatDateTime(data.election.votingStartsAt)}
+						</span>
+					</div>
+				{/if}
+			</div>
+		{/if}
+	</section>
 
 	<!-- Error/Success -->
 	{#if form?.error}
@@ -188,41 +294,3 @@
 		</section>
 	{/if}
 </PageContainer>
-
-<!-- Leadership Modal -->
-<Modal bind:open={showLeadershipModal} title="{data.bloc.name} Leadership">
-	<div class="space-y-4">
-		{#if data.leader}
-			<ProfileItem
-				href="/user/{data.leader.userId}"
-				logo={data.leader.logo}
-				logoAlt={data.leader.name}
-				placeholderIcon={FluentCrown20Filled}
-				placeholderGradient="from-amber-600/20 to-amber-700/10"
-				title={data.leader.name}
-				subtitle="Bloc Leader"
-				hoverColor="yellow"
-			/>
-		{:else}
-			<p class="text-sm text-[#a89e8e]">No bloc leader has been appointed yet.</p>
-		{/if}
-
-		{#if data.diplomats.length > 0}
-			<div class="space-y-2 pt-2 border-t border-[#dfceb0]/10">
-				<h3 class="text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">Diplomats</h3>
-				{#each data.diplomats as diplomat}
-					<ProfileItem
-						href="/user/{diplomat.userId}"
-						logo={diplomat.logo}
-						logoAlt={diplomat.name}
-						placeholderIcon={FluentGlobeShield20Filled}
-						placeholderGradient="from-[#315d8d]/20 to-[#315d8d]/10"
-						title={diplomat.name}
-						subtitle="Diplomat"
-						hoverColor="blue"
-					/>
-				{/each}
-			</div>
-		{/if}
-	</div>
-</Modal>

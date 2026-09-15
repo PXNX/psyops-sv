@@ -1417,6 +1417,82 @@ export const blocDiplomatsRelations = relations(blocDiplomats, ({ one }) => ({
 	bloc: one(blocs, { fields: [blocDiplomats.blocId], references: [blocs.id] })
 }));
 
+// Bloc leader elections: every 30-day cycle, state presidents of member states can
+// nominate a citizen of the bloc (not themselves) during the final 2 days of the
+// cycle, then vote for one of the nominated candidates.
+export const blocLeaderElections = pgTable("bloc_leader_elections", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	blocId: integer("bloc_id")
+		.notNull()
+		.references(() => blocs.id, { onDelete: "cascade" }),
+	cycleStartsAt: timestamp("cycle_starts_at").notNull(),
+	votingStartsAt: timestamp("voting_starts_at").notNull(),
+	votingEndsAt: timestamp("voting_ends_at").notNull(),
+	status: electionStatusEnum("status").notNull().default("scheduled"),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const blocLeaderCandidates = pgTable(
+	"bloc_leader_candidates",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		electionId: integer("election_id")
+			.notNull()
+			.references(() => blocLeaderElections.id, { onDelete: "cascade" }),
+		candidateUserId: text("candidate_user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		nominatedBy: text("nominated_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		nominatedAt: timestamp("nominated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		electionCandidateIdx: uniqueIndex("idx_bloc_election_candidate").on(t.electionId, t.candidateUserId)
+	})
+);
+
+export const blocLeaderVotes = pgTable(
+	"bloc_leader_votes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		electionId: integer("election_id")
+			.notNull()
+			.references(() => blocLeaderElections.id, { onDelete: "cascade" }),
+		voterId: text("voter_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		candidateUserId: text("candidate_user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		votedAt: timestamp("voted_at").defaultNow().notNull()
+	},
+	(t) => ({
+		electionVoterIdx: uniqueIndex("idx_bloc_election_voter").on(t.electionId, t.voterId)
+	})
+);
+
+export const blocLeaderElectionsRelations = relations(blocLeaderElections, ({ one, many }) => ({
+	bloc: one(blocs, { fields: [blocLeaderElections.blocId], references: [blocs.id] }),
+	candidates: many(blocLeaderCandidates),
+	votes: many(blocLeaderVotes)
+}));
+
+export const blocLeaderCandidatesRelations = relations(blocLeaderCandidates, ({ one }) => ({
+	election: one(blocLeaderElections, {
+		fields: [blocLeaderCandidates.electionId],
+		references: [blocLeaderElections.id]
+	}),
+	candidate: one(accounts, { fields: [blocLeaderCandidates.candidateUserId], references: [accounts.id] }),
+	nominator: one(accounts, { fields: [blocLeaderCandidates.nominatedBy], references: [accounts.id] })
+}));
+
+export const blocLeaderVotesRelations = relations(blocLeaderVotes, ({ one }) => ({
+	election: one(blocLeaderElections, { fields: [blocLeaderVotes.electionId], references: [blocLeaderElections.id] }),
+	voter: one(accounts, { fields: [blocLeaderVotes.voterId], references: [accounts.id] }),
+	candidate: one(accounts, { fields: [blocLeaderVotes.candidateUserId], references: [accounts.id] })
+}));
+
 // Add to your schema.ts file
 
 export const medalTypeEnum = pgEnum("medal_type", ["honor", "valor", "service", "excellence", "leadership"]);
