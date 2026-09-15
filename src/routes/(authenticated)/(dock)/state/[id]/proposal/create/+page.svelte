@@ -21,12 +21,12 @@
 
 	const { form: formData, errors, enhance, delayed, submitting } = form;
 
-	// Set default quantity to 1
-	$effect(() => {
-		if (!$formData.quantity) {
-			$formData.quantity = 1;
-		}
-	});
+	// Default quantity to 1. This runs once at component init (not inside an
+	// $effect) so it doesn't fight with the user clearing the field to type a
+	// new value — an $effect here would re-fire on every transient empty state.
+	if (!$formData.quantity) {
+		$formData.quantity = 1;
+	}
 
 	type ProposalType =
 		"tax" | "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "border_control";
@@ -145,6 +145,22 @@
 		}
 
 		return true;
+	});
+
+	const maxAffordableQuantity = $derived(() => {
+		if (!$formData.proposalType || !isValidBuildingType($formData.proposalType)) return 100;
+
+		const template = data.buildingTemplates[$formData.proposalType];
+		if (!template) return 100;
+
+		let max = 100;
+		for (const [resource, amount] of Object.entries(template.costs)) {
+			if (!amount) continue;
+			const available = resource === "currency" ? data.treasury?.balance || 0 : data.stateResources?.[resource] || 0;
+			max = Math.min(max, Math.floor(available / (amount as number)));
+		}
+
+		return Math.max(0, max);
 	});
 
 	const selectedRegion = $derived(() => {
@@ -443,19 +459,30 @@
 					<div>
 						<label for="quantity" class="field-label">
 							Quantity <span class="text-red-400">*</span>
+							<span class="text-[#a89e8e] font-normal">(max affordable: {maxAffordableQuantity()})</span>
 						</label>
-						<input
-							type="number"
-							id="quantity"
-							name="quantity"
-							bind:value={$formData.quantity}
-							min="1"
-							max="100"
-							placeholder="1"
-							class="input w-full field-control"
-							class:input-error={$errors.quantity}
-							disabled={$submitting}
-						/>
+						<div class="join w-full">
+							<input
+								type="number"
+								id="quantity"
+								name="quantity"
+								bind:value={$formData.quantity}
+								min="1"
+								max="100"
+								placeholder="1"
+								class="input join-item flex-1 field-control"
+								class:input-error={$errors.quantity}
+								disabled={$submitting}
+							/>
+							<button
+								type="button"
+								class="btn join-item bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#c7bda9]"
+								onclick={() => ($formData.quantity = maxAffordableQuantity())}
+								disabled={$submitting || maxAffordableQuantity() < 1}
+							>
+								MAX
+							</button>
+						</div>
 						{#if $errors.quantity}
 							<p class="text-xs text-red-400 mt-1">{$errors.quantity}</p>
 						{/if}
