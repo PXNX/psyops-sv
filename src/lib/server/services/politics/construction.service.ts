@@ -8,7 +8,7 @@ import { stateBuildings, regions } from "$lib/server/schema";
 
 function regionStatBonusFor(
 	buildingType: string
-): Partial<Record<"hospitals" | "education" | "economy" | "fortifications", number>> | null {
+): Partial<Record<"hospitals" | "education" | "economy" | "fortifications" | "infrastructure", number>> | null {
 	switch (buildingType) {
 		case "hospital":
 			return { hospitals: 1 };
@@ -16,6 +16,10 @@ function regionStatBonusFor(
 			return { education: 10 };
 		case "power_plant":
 			return { economy: 1 };
+		case "infrastructure":
+			return { infrastructure: 10 };
+		case "fortifications":
+			return { fortifications: 1 };
 		default:
 			return null;
 	}
