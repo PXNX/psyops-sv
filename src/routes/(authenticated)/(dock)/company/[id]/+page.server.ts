@@ -12,6 +12,7 @@ import {
 	factoryWorkers,
 	regions,
 	states,
+	residences,
 	resourceInventory,
 	productInventory,
 	userWallets,
@@ -22,6 +23,8 @@ import {
 import { eq, and, desc, count, sum, sql, inArray } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import { ECONOMY_CONFIG } from "$lib/config";
+import { getRegionName } from "$lib/utils/formatting";
+import { getEmbargoReason } from "$lib/server/embargo";
 import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
 import type { PageServerLoad, Actions } from "./$types";
 
@@ -29,7 +32,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const companyId = parseInt(params.id);
 
-	// Get company details with owner info
+	// Get company details with owner info and headquarters region/state
 	const [company] = await db
 		.select({
 			id: companies.id,
@@ -38,10 +41,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			description: companies.description,
 			foundedAt: companies.foundedAt,
 			ownerId: companies.ownerId,
-			ownerEmail: accounts.email
+			ownerEmail: accounts.email,
+			regionId: companies.regionId,
+			stateId: regions.stateId,
+			stateName: states.name
 		})
 		.from(companies)
 		.innerJoin(accounts, eq(companies.ownerId, accounts.id))
+		.leftJoin(regions, eq(companies.regionId, regions.id))
+		.leftJoin(states, eq(regions.stateId, states.id))
 		.where(eq(companies.id, companyId));
 
 	if (!company) {
@@ -66,6 +74,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if current user is the owner
 	const isOwner = company.ownerId === account.id;
+
+	// Owner's current residence region, offered as the headquarters to set (mirrors
+	// how factories are always placed in the owner's residence region).
+	let residenceRegion: { id: number; name: string; stateName: string | null } | null = null;
+	if (isOwner) {
+		const residence = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id),
+			with: { region: { with: { state: true } } }
+		});
+		if (residence) {
+			residenceRegion = {
+				id: residence.region.id,
+				name: getRegionName(residence.region.id),
+				stateName: residence.region.state?.name ?? null
+			};
+		}
+	}
+
+	const embargoReason = await getEmbargoReason(company.stateId, account.id);
 
 	// Get company budget
 	let [budget] = await db.select().from(companyBudgets).where(eq(companyBudgets.companyId, companyId));
@@ -282,9 +309,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			ownerLogo: ownerProfile?.logoFile?.key ? `/api/files/${ownerProfile.logoFile.key}` : null,
 			ownerPartyAbbreviation: ownerParty?.abbreviation ?? null,
 			ownerPartyColor: ownerParty?.color ?? null,
-			foundedAt: company.foundedAt.toISOString()
+			foundedAt: company.foundedAt.toISOString(),
+			regionName: company.regionId ? getRegionName(company.regionId) : null
 		},
 		isOwner,
+		residenceRegion,
+		embargoReason,
 		factories: factoriesWithDetails,
 		totalWorkers,
 		totalWageCost,
@@ -320,6 +350,30 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	// Headquarter the company in the owner's current residence region, tying it
+	// to that region's state (embargo checks; cosmetic otherwise).
+	setHeadquarters: async ({ params, locals }) => {
+		const account = locals.account!;
+		const companyId = parseInt(params.id);
+
+		const [company] = await db
+			.select({ ownerId: companies.ownerId })
+			.from(companies)
+			.where(eq(companies.id, companyId));
+		if (!company || company.ownerId !== account.id) {
+			return fail(403, { error: "Only the company owner can set its headquarters" });
+		}
+
+		const residence = await db.query.residences.findFirst({ where: eq(residences.userId, account.id) });
+		if (!residence) {
+			return fail(400, { error: "You need a residence to headquarter your company there" });
+		}
+
+		await db.update(companies).set({ regionId: residence.regionId }).where(eq(companies.id, companyId));
+
+		return { success: true, message: "Company headquarters updated" };
+	},
+
 	// Collect produced resources from all factories
 	collectResources: async ({ params, locals }) => {
 		const account = locals.account!;
@@ -678,7 +732,10 @@ export const actions: Actions = {
 			return fail(400, { error: "Invalid starting share price" });
 		}
 
-		const [company] = await db.select({ ownerId: companies.ownerId }).from(companies).where(eq(companies.id, companyId));
+		const [company] = await db
+			.select({ ownerId: companies.ownerId })
+			.from(companies)
+			.where(eq(companies.id, companyId));
 		if (!company || company.ownerId !== account.id) {
 			return fail(403, { error: "Only the company owner can take it public" });
 		}
@@ -734,7 +791,10 @@ export const actions: Actions = {
 			return fail(400, { error: "Invalid listing data" });
 		}
 
-		const [company] = await db.select({ ownerId: companies.ownerId }).from(companies).where(eq(companies.id, companyId));
+		const [company] = await db
+			.select({ ownerId: companies.ownerId })
+			.from(companies)
+			.where(eq(companies.id, companyId));
 		if (!company) return fail(404, { error: "Company not found" });
 
 		const [shares] = await db.select().from(companyShares).where(eq(companyShares.companyId, companyId));
@@ -789,7 +849,9 @@ export const actions: Actions = {
 					.set({ quantity: holding.quantity + listing.quantity, updatedAt: new Date() })
 					.where(and(eq(shareHoldings.companyId, listing.companyId), eq(shareHoldings.userId, account.id)));
 			} else {
-				await tx.insert(shareHoldings).values({ companyId: listing.companyId, userId: account.id, quantity: listing.quantity });
+				await tx
+					.insert(shareHoldings)
+					.values({ companyId: listing.companyId, userId: account.id, quantity: listing.quantity });
 			}
 
 			await tx.delete(shareListings).where(eq(shareListings.id, listingId));
@@ -809,6 +871,17 @@ export const actions: Actions = {
 		if (!listing) return fail(404, { error: "Listing not found" });
 		if (listing.sellerId === account.id) return fail(400, { error: "Cannot buy your own listing" });
 		if (!quantity || quantity < 1 || quantity > listing.quantity) return fail(400, { error: "Invalid quantity" });
+
+		const [company] = await db
+			.select({ stateId: regions.stateId })
+			.from(companies)
+			.leftJoin(regions, eq(companies.regionId, regions.id))
+			.where(eq(companies.id, listing.companyId));
+
+		const embargoReason = await getEmbargoReason(company?.stateId ?? null, account.id);
+		if (embargoReason) {
+			return fail(403, { error: embargoReason });
+		}
 
 		const totalPrice = Number(listing.pricePerUnit) * quantity;
 
@@ -852,7 +925,10 @@ export const actions: Actions = {
 			if (quantity === listing.quantity) {
 				await tx.delete(shareListings).where(eq(shareListings.id, listingId));
 			} else {
-				await tx.update(shareListings).set({ quantity: listing.quantity - quantity }).where(eq(shareListings.id, listingId));
+				await tx
+					.update(shareListings)
+					.set({ quantity: listing.quantity - quantity })
+					.where(eq(shareListings.id, listingId));
 			}
 
 			await tx.insert(shareTransactions).values({
