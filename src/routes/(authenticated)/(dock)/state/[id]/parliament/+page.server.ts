@@ -467,20 +467,21 @@ export const actions = {
 			});
 		}
 
-		// Update proposal status to passed
+		// Execute the proposal first — only mark it "passed" once execution
+		// actually succeeds, otherwise the proposal would show as passed in
+		// history while nothing was actually built or charged.
+		try {
+			await executeProposal(stateId, proposal.proposalType, proposal.proposedBy, proposal.id);
+		} catch (err: any) {
+			return fail(400, { error: err.message || "Failed to execute proposal" });
+		}
+
 		await db
 			.update(parliamentaryProposals)
 			.set({
 				status: "passed"
 			})
 			.where(eq(parliamentaryProposals.id, proposalId));
-
-		// Execute the proposal
-		try {
-			await executeProposal(stateId, proposal.proposalType, proposal.proposedBy, proposal.id);
-		} catch (err: any) {
-			return fail(400, { error: err.message || "Failed to execute proposal" });
-		}
 
 		return { success: true, message: "Proposal accepted and executed" };
 	},
