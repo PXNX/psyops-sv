@@ -72,7 +72,7 @@
 	};
 
 	const blocRoleNames: Record<string, string> = {
-		leader: "Bloc Leader",
+		leader: "Bloc Leader (nominate as candidate)",
 		diplomat: "Diplomat"
 	};
 </script>
@@ -266,8 +266,8 @@
 					<ActionListItem
 						icon={FluentPeopleTeam20Filled}
 						tone="amber"
-						title="Appoint Bloc Leadership"
-						description="Assign as bloc leader or diplomat of {data.viewerBlocName}"
+						title="Bloc Leadership"
+						description="Nominate as bloc leader candidate or appoint as diplomat of {data.viewerBlocName}"
 						onclick={() => {
 							showAppointBlocDialog = true;
 							showActionsSheet = false;
@@ -304,27 +304,10 @@
 							</div>
 							<div class="flex-1 min-w-0">
 								<p class="font-semibold text-[#fff7e8] truncate">Leader of {data.blocLeadership.blocName}</p>
-								<p class="text-xs text-[#a89e8e] truncate">Since {formatDate(data.blocLeadership.appointedAt)}</p>
+								<p class="text-xs text-[#a89e8e] truncate">
+									Elected {formatDate(data.blocLeadership.appointedAt)}
+								</p>
 							</div>
-							{#if data.viewerBlocId === data.blocLeadership.blocId}
-								<form method="POST" action="?/dismissBlocLeadership" use:enhance>
-									<input type="hidden" name="role" value="leader" />
-									<input type="hidden" name="id" value={data.blocLeadership.id} />
-									<Button
-										type="submit"
-										variant="soft-red"
-										size="xs"
-										icon={FluentPersonDelete20Filled}
-										onclick={(e) => {
-											if (!confirm("Are you sure you want to dismiss this bloc leader?")) {
-												e.preventDefault();
-											}
-										}}
-									>
-										Dismiss
-									</Button>
-								</form>
-							{/if}
 						</div>
 					{/if}
 
@@ -757,9 +740,21 @@
 					</select>
 				</div>
 
+				{#if selectedBlocRole === "leader"}
+					<div class="alert alert-info bg-blue-600/10 border-blue-500/20 text-blue-300">
+						<span>
+							This nominates {data.user.name} as a candidate in the bloc's current leadership election. Member-state
+							presidents vote before the window closes.
+						</span>
+					</div>
+				{/if}
+
 				{#if data.availableBlocRoles.length === 0}
 					<div class="alert alert-warning bg-yellow-600/10 border-yellow-500/20 text-yellow-300">
-						<span>This bloc already has a leader and two diplomats.</span>
+						<span>
+							Nothing available right now — leader nominations only open during the 2-day voting window before an
+							election, and this bloc's diplomat slots are both filled.
+						</span>
 					</div>
 				{/if}
 
@@ -781,9 +776,9 @@
 						icon={FluentPeopleTeam20Filled}
 						disabled={!selectedBlocRole}
 						loading={isAppointingBlocRole}
-						loadingText="Appointing..."
+						loadingText={selectedBlocRole === "leader" ? "Nominating..." : "Appointing..."}
 					>
-						Appoint
+						{selectedBlocRole === "leader" ? "Nominate" : "Appoint"}
 					</Button>
 				</div>
 			</div>

@@ -21,7 +21,9 @@ import {
 	userWallets,
 	blocs,
 	blocLeaders,
-	blocDiplomats
+	blocDiplomats,
+	blocLeaderElections,
+	blocLeaderCandidates
 } from "$lib/server/schema";
 import { getSignedDownloadUrl } from "$lib/server/backblaze";
 import { fail } from "@sveltejs/kit";
@@ -247,7 +249,25 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.from(blocDiplomats)
 			.where(eq(blocDiplomats.blocId, viewerBlocId));
 
-		availableBlocRoles = ["leader", ...((diplomatCountResult?.count ?? 0) < 2 ? ["diplomat"] : [])];
+		// Bloc leader is now elected by member-state presidents; a president can only
+		// nominate a candidate while the current cycle's nomination/voting window is open.
+		const activeElection = await db.query.blocLeaderElections.findFirst({
+			where: and(eq(blocLeaderElections.blocId, viewerBlocId), eq(blocLeaderElections.status, "active"))
+		});
+
+		const alreadyNominated = activeElection
+			? await db.query.blocLeaderCandidates.findFirst({
+					where: and(
+						eq(blocLeaderCandidates.electionId, activeElection.id),
+						eq(blocLeaderCandidates.candidateUserId, params.id)
+					)
+				})
+			: null;
+
+		availableBlocRoles = [
+			...(activeElection && !alreadyNominated ? ["leader"] : []),
+			...((diplomatCountResult?.count ?? 0) < 2 ? ["diplomat"] : [])
+		];
 	}
 
 	// Bloc leadership positions this user holds (across any bloc)
@@ -778,15 +798,27 @@ export const actions: Actions = {
 
 		try {
 			if (role === "leader") {
-				await db
-					.insert(blocLeaders)
-					.values({ userId: params.id, blocId })
-					.onConflictDoUpdate({
-						target: blocLeaders.blocId,
-						set: { userId: params.id, appointedAt: new Date() }
-					});
+				const activeElection = await db.query.blocLeaderElections.findFirst({
+					where: and(eq(blocLeaderElections.blocId, blocId), eq(blocLeaderElections.status, "active"))
+				});
 
-				return { success: true, message: "Successfully appointed as bloc leader" };
+				if (!activeElection) {
+					return fail(400, {
+						error: "Nominations only open during the 2-day voting window before a bloc leader election"
+					});
+				}
+
+				const [inserted] = await db
+					.insert(blocLeaderCandidates)
+					.values({ electionId: activeElection.id, candidateUserId: params.id, nominatedBy: account.id })
+					.onConflictDoNothing()
+					.returning();
+
+				if (!inserted) {
+					return fail(400, { error: "This citizen has already been nominated" });
+				}
+
+				return { success: true, message: "Successfully nominated as a bloc leader candidate" };
 			}
 
 			const [diplomatCountResult] = await db
@@ -826,13 +858,7 @@ export const actions: Actions = {
 		const id = parseInt(formData.get("id") as string);
 
 		try {
-			if (role === "leader") {
-				const leader = await db.query.blocLeaders.findFirst({ where: eq(blocLeaders.id, id) });
-				if (!leader || leader.blocId !== blocId) {
-					return fail(403, { error: "Invalid bloc leader" });
-				}
-				await db.delete(blocLeaders).where(eq(blocLeaders.id, id));
-			} else if (role === "diplomat") {
+			if (role === "diplomat") {
 				const diplomat = await db.query.blocDiplomats.findFirst({ where: eq(blocDiplomats.id, id) });
 				if (!diplomat || diplomat.blocId !== blocId) {
 					return fail(403, { error: "Invalid diplomat" });
