@@ -1,11 +1,22 @@
 // src/routes/map/+page.server.ts
 import { db } from "$lib/server/db";
 import { regions, states, blocs, wars, residences, powerPlants } from "$lib/server/schema";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
 	try {
+		// ── Current user's region, so the map can open centred on it ────
+		let currentUserRegionId: number | null = null;
+		if (locals.account) {
+			const [residence] = await db
+				.select({ regionId: residences.regionId })
+				.from(residences)
+				.where(eq(residences.userId, locals.account.id))
+				.limit(1);
+			currentUserRegionId = residence?.regionId ?? null;
+		}
+
 		// ── Core: regions + states (unchanged) ──────────────────────────
 		const allRegions = await db
 			.select({
@@ -195,7 +206,8 @@ export const load: PageServerLoad = async () => {
 			blocColorMap,
 			blocNameMap,
 			warAttackerStateIds,
-			warDefenderStateIds
+			warDefenderStateIds,
+			currentUserRegionId
 			};
 	} catch (error) {
 		console.error("Error loading map data:", error);
@@ -206,7 +218,8 @@ export const load: PageServerLoad = async () => {
 			blocColorMap: {},
 			blocNameMap: {},
 			warAttackerStateIds: new Set<number>(),
-			warDefenderStateIds: new Set<number>()
+			warDefenderStateIds: new Set<number>(),
+			currentUserRegionId: null
 		};
 	}
 };

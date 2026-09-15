@@ -11,6 +11,7 @@
 	import type { PageData } from "./$types";
 	import { getRegionName } from "$lib/utils/formatting";
 	import Logo from "$lib/component/Logo.svelte";
+	import BottomSheet from "$lib/component/BottomSheet.svelte";
 
 	let { data }: { data: PageData } = $props();
 
@@ -110,8 +111,25 @@
 			smoothScroll: false
 		});
 
-		instance.zoomAbs(0, 0, minZoomToFit);
-		centerMap(minZoomToFit);
+		// Open centred on the user's current region, if we know it; otherwise
+		// just fit the whole map.
+		const initialRegionId = data.currentUserRegionId;
+		const initialRegionPath = initialRegionId
+			? (node.querySelector(`path[id="${initialRegionId}"]`) as SVGPathElement | null)
+			: null;
+
+		if (initialRegionPath) {
+			const bbox = initialRegionPath.getBBox();
+			const regionCenterX = bbox.x + bbox.width / 2;
+			const regionCenterY = bbox.y + bbox.height / 2;
+			const targetZoom = Math.max(minZoomToFit, 5);
+
+			instance.zoomAbs(0, 0, targetZoom);
+			instance.moveTo(viewportWidth / 2 - regionCenterX * targetZoom, viewportHeight / 2 - regionCenterY * targetZoom);
+		} else {
+			instance.zoomAbs(0, 0, minZoomToFit);
+			centerMap(minZoomToFit);
+		}
 
 		instance.on("transform", constrainToBounds);
 		instance.on("zoom", constrainToBounds);
@@ -425,9 +443,6 @@
 		}
 	}
 
-	function closeSheet() {
-		showSheet = false;
-	}
 
 	function selectSearchResult(regionId: number) {
 		const svgElement = document.getElementById("panzoom-element");
@@ -626,125 +641,116 @@
 	</div>
 </main>
 
-<!-- Region Sheet Modal -->
-{#if showSheet && selectedRegion}
-	<div class="fixed inset-0 z-[2000] bg-black/50" onclick={closeSheet}></div>
-	<div class="fixed right-0 bottom-0 left-0 z-[2001] rounded-t-3xl shadow-2xl bg-base-100 animate-slide-up">
-		<div class="container mx-auto max-w-2xl">
-			<div class="flex justify-center pt-3 pb-2">
-				<div class="h-1 w-12 rounded-full bg-base-300"></div>
-			</div>
+<!-- Region Sheet -->
+<BottomSheet bind:open={showSheet}>
+	{#if selectedRegion}
+		<a
+			href="/region/{selectedRegion.id}"
+			class="w-full flex items-center gap-4 hover:bg-[#dfceb0]/10 transition-colors rounded-lg p-2 -mx-2"
+		>
+			<Logo
+				src={`/coats/${selectedRegion.id}.svg`}
+				alt={getRegionName(selectedRegion.id)}
+				class="size-16 object-cover"
+			/>
 
-			<div class="p-6 space-y-4">
-				<a
-					href="/region/{selectedRegion.id}"
-					class="w-full flex items-center gap-4 hover:bg-base-200 transition-colors rounded-lg p-4"
-				>
-					<Logo
-						src={`/coats/${selectedRegion.id}.svg`}
-						alt={getRegionName(selectedRegion.id)}
-						class="size-16 object-cover"
-					/>
-
-					<div class="flex-1 text-left">
-						<h2 class="text-xl font-bold">{regionName()}</h2>
-						{#if selectedState}
-							<p class="text-base-content/70" style="color: {stateColor}">{selectedState.name}</p>
-						{:else}
-							<p class="text-base-content/70 italic">Independent</p>
-						{/if}
-					</div>
-
-					<IconChevronRight class="text-2xl flex-shrink-0" style="color: {stateColor || 'currentColor'}" />
-				</a>
-
-				<!-- Filter-dependent info -->
-				{#if selectedRegionData}
-					{#if mapFilter === "political"}
-						<div class="grid grid-cols-2 gap-2">
-							<div class="rounded-lg bg-base-200 p-3">
-								<p class="text-xs uppercase tracking-wide text-base-content/50">Rating</p>
-								<p class="text-lg font-bold">{formatNumber(selectedRegionData.rating)}</p>
-							</div>
-							<div class="rounded-lg bg-base-200 p-3">
-								<p class="text-xs uppercase tracking-wide text-base-content/50">Economy</p>
-								<p class="text-lg font-bold">{formatNumber(selectedRegionData.economy)}</p>
-							</div>
-							<div class="rounded-lg bg-base-200 p-3">
-								<p class="text-xs uppercase tracking-wide text-base-content/50">Infrastructure</p>
-								<p class="text-lg font-bold">{formatNumber(selectedRegionData.infrastructure)}</p>
-							</div>
-							<div class="rounded-lg bg-base-200 p-3">
-								<p class="text-xs uppercase tracking-wide text-base-content/50">Education</p>
-								<p class="text-lg font-bold">{formatNumber(selectedRegionData.education)}</p>
-							</div>
-						</div>
-					{:else if mapFilter === "blocs"}
-						<div class="rounded-lg bg-base-200 p-4">
-							<p class="text-xs uppercase tracking-wide text-base-content/50">Bloc</p>
-							{#if selectedBlocName()}
-								<div class="mt-1 flex items-center gap-2">
-									<span
-										class="inline-block size-3 rounded-full"
-										style="background-color: {stateColor || 'currentColor'}"
-									></span>
-									<p class="text-lg font-bold">{selectedBlocName()}</p>
-								</div>
-							{:else}
-								<p class="text-lg font-bold italic text-base-content/60">Non-aligned</p>
-							{/if}
-						</div>
-					{:else if mapFilter === "wars"}
-						<div class="rounded-lg bg-base-200 p-4">
-							<p class="text-xs uppercase tracking-wide text-base-content/50">War status</p>
-							{#if selectedWarRole() === "attacker"}
-								<span class="badge badge-error mt-1 gap-1 font-semibold">Attacking in an active war</span>
-							{:else if selectedWarRole() === "defender"}
-								<span class="badge badge-info mt-1 gap-1 font-semibold">Defending in an active war</span>
-							{:else}
-								<p class="text-lg font-bold text-base-content/60">At peace</p>
-							{/if}
-						</div>
-					{:else if mapFilter === "residents"}
-						<div class="rounded-lg bg-base-200 p-4">
-							<p class="text-xs uppercase tracking-wide text-base-content/50">Residents</p>
-							<p class="text-2xl font-bold">{formatNumber(selectedRegionData.residentCount)}</p>
-						</div>
-					{:else if mapFilter === "powerplants"}
-						<div class="rounded-lg bg-base-200 p-4">
-							<p class="text-xs uppercase tracking-wide text-base-content/50">Power plants (state-wide)</p>
-							<p class="text-2xl font-bold">{formatNumber(selectedRegionData.powerplantCount)}</p>
-						</div>
-					{:else}
-						<!-- Resource layers -->
-						{#if resourceLabels[mapFilter]}
-							<div class="rounded-lg bg-base-200 p-4">
-								<p class="text-xs uppercase tracking-wide text-base-content/50">{resourceLabels[mapFilter]}</p>
-								<p class="text-2xl font-bold">
-									{formatNumber((selectedRegionData.resources as Record<string, number>)[mapFilter] ?? 0)}
-								</p>
-							</div>
-						{/if}
-						<div class="grid grid-cols-3 gap-2">
-							{#each Object.entries(selectedRegionData.resources) as [key, value]}
-								<div
-									class="rounded-lg p-2 text-center {key === mapFilter
-										? 'bg-primary/20 ring-1 ring-primary/40'
-										: 'bg-base-200'}"
-								>
-									<p class="text-[10px] uppercase tracking-wide text-base-content/50">
-										{resourceLabels[key] ?? key}
-									</p>
-									<p class="text-sm font-bold">{formatNumber(value)}</p>
-								</div>
-							{/each}
-						</div>
-					{/if}
+			<div class="flex-1 text-left">
+				<h2 class="text-xl font-bold text-[#fff7e8]">{regionName()}</h2>
+				{#if selectedState}
+					<p class="text-[#d9ccb7]" style="color: {stateColor}">{selectedState.name}</p>
+				{:else}
+					<p class="text-[#d9ccb7] italic">Independent</p>
 				{/if}
 			</div>
-		</div>
-	</div>
-{/if}
+
+			<IconChevronRight class="text-2xl flex-shrink-0" style="color: {stateColor || 'currentColor'}" />
+		</a>
+
+		<!-- Filter-dependent info -->
+		{#if selectedRegionData}
+			<div class="mt-4 space-y-4">
+				{#if mapFilter === "political"}
+					<div class="grid grid-cols-2 gap-2">
+						<div class="rounded-lg bg-[#dfceb0]/10 p-3">
+							<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">Rating</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.rating)}</p>
+						</div>
+						<div class="rounded-lg bg-[#dfceb0]/10 p-3">
+							<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">Economy</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.economy)}</p>
+						</div>
+						<div class="rounded-lg bg-[#dfceb0]/10 p-3">
+							<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">Infrastructure</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.infrastructure)}</p>
+						</div>
+						<div class="rounded-lg bg-[#dfceb0]/10 p-3">
+							<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">Education</p>
+							<p class="text-lg font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.education)}</p>
+						</div>
+					</div>
+				{:else if mapFilter === "blocs"}
+					<div class="rounded-lg bg-[#dfceb0]/10 p-4">
+						<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">Bloc</p>
+						{#if selectedBlocName()}
+							<div class="mt-1 flex items-center gap-2">
+								<span class="inline-block size-3 rounded-full" style="background-color: {stateColor || 'currentColor'}"
+								></span>
+								<p class="text-lg font-bold text-[#fff7e8]">{selectedBlocName()}</p>
+							</div>
+						{:else}
+							<p class="text-lg font-bold italic text-[#d9ccb7]/70">Non-aligned</p>
+						{/if}
+					</div>
+				{:else if mapFilter === "wars"}
+					<div class="rounded-lg bg-[#dfceb0]/10 p-4">
+						<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">War status</p>
+						{#if selectedWarRole() === "attacker"}
+							<span class="badge badge-error mt-1 gap-1 font-semibold">Attacking in an active war</span>
+						{:else if selectedWarRole() === "defender"}
+							<span class="badge badge-info mt-1 gap-1 font-semibold">Defending in an active war</span>
+						{:else}
+							<p class="text-lg font-bold text-[#d9ccb7]/70">At peace</p>
+						{/if}
+					</div>
+				{:else if mapFilter === "residents"}
+					<div class="rounded-lg bg-[#dfceb0]/10 p-4">
+						<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">Residents</p>
+						<p class="text-2xl font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.residentCount)}</p>
+					</div>
+				{:else if mapFilter === "powerplants"}
+					<div class="rounded-lg bg-[#dfceb0]/10 p-4">
+						<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">Power plants (state-wide)</p>
+						<p class="text-2xl font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.powerplantCount)}</p>
+					</div>
+				{:else}
+					<!-- Resource layers -->
+					{#if resourceLabels[mapFilter]}
+						<div class="rounded-lg bg-[#dfceb0]/10 p-4">
+							<p class="text-xs uppercase tracking-wide text-[#d9ccb7]/70">{resourceLabels[mapFilter]}</p>
+							<p class="text-2xl font-bold text-[#fff7e8]">
+								{formatNumber((selectedRegionData.resources as Record<string, number>)[mapFilter] ?? 0)}
+							</p>
+						</div>
+					{/if}
+					<div class="grid grid-cols-3 gap-2">
+						{#each Object.entries(selectedRegionData.resources) as [key, value]}
+							<div
+								class="rounded-lg p-2 text-center {key === mapFilter
+									? 'bg-primary/20 ring-1 ring-primary/40'
+									: 'bg-[#dfceb0]/10'}"
+							>
+								<p class="text-[10px] uppercase tracking-wide text-[#d9ccb7]/70">
+									{resourceLabels[key] ?? key}
+								</p>
+								<p class="text-sm font-bold text-[#fff7e8]">{formatNumber(value)}</p>
+							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		{/if}
+	{/if}
+</BottomSheet>
 
 <style>
 	/* ─── SVG Styles ─── */
@@ -764,19 +770,5 @@
 	:global(#panzoom-element path:hover) {
 		filter: brightness(1.12) saturate(1.15);
 		cursor: pointer;
-	}
-
-	/* ─── Sheet animation ─── */
-	@keyframes slide-up {
-		from {
-			transform: translateY(100%);
-		}
-		to {
-			transform: translateY(0);
-		}
-	}
-
-	.animate-slide-up {
-		animation: slide-up 0.3s ease-out;
 	}
 </style>

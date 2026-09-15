@@ -84,8 +84,9 @@
 		{#if data.isOwner}
 			<a
 				href="/company/{data.company.id}/edit"
-				class="absolute top-4 right-4 sm:top-5 sm:right-5 z-20 size-9 flex items-center justify-center bg-[#8c709b]/15 hover:bg-[#8c709b]/25 rounded-full text-[#d5c4df] transition-all"
+				class="absolute top-3 right-3 z-20 p-2 bg-black/30 hover:bg-black/50 border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all backdrop-blur-sm"
 				title="Edit Company"
+				aria-label="Edit Company"
 			>
 				<FluentEdit20Filled class="size-4" />
 			</a>

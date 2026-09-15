@@ -12,6 +12,7 @@
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 	import FluentPersonAvailable20Filled from "~icons/fluent/person-available-20-filled";
 	import Logo from "$lib/component/Logo.svelte";
+	import PageContainer from "$lib/component/PageContainer.svelte";
 
 	const { data, form } = $props();
 </script>
@@ -45,79 +46,84 @@
 	{/if}
 </svelte:head>
 
-<div class="min-h-screen bg-[#0c1929]">
-	<!-- Party Header -->
-	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
-		<div class="w-full px-4 sm:px-6 py-5 sm:py-6">
-			<div class="flex items-start gap-4 sm:gap-5">
+<PageContainer maxWidth="4xl">
+	<!-- Hero Section -->
+	<div class="relative">
+		<div
+			class="w-full rounded-sm p-8 flex flex-col items-center relative overflow-hidden border border-[#dfceb0]/15 shadow-2xl"
+			style="background: linear-gradient(135deg, {data.party.color}20 0%, {data.party.color}40 100%);"
+		>
+			<div
+				class="absolute inset-0 opacity-10"
+				style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.party
+					.color}20 35px, {data.party.color}20 70px);"
+			></div>
+			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-sm"></div>
+
+			{#if data.isLeader}
+				<a
+					href="/party/{data.party.id}/edit"
+					class="absolute top-3 right-3 z-20 p-2 bg-black/30 hover:bg-black/50 border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all backdrop-blur-sm"
+					title="Edit Party"
+					aria-label="Edit Party"
+				>
+					<FluentEdit20Filled class="size-4" />
+				</a>
+			{/if}
+
+			<div class="relative z-10 flex flex-col items-center space-y-3">
 				<!-- Party Logo -->
-				<div class="relative flex-shrink-0">
-					<div class="absolute inset-0 blur-xl rounded-full" style="background-color: {data.party.color}30"></div>
-					<div
-						class="relative size-16 sm:size-20 rounded-xl flex items-center justify-center overflow-hidden"
-						style="background-color: {data.party.color}"
-					>
-						{#if data.party.logoUrl}
-							<img src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
-						{:else}
-							<FluentPeople20Filled class="size-8 sm:size-10 text-[#fff7e8]" />
-						{/if}
-					</div>
+				<div
+					class="size-24 rounded-full flex items-center justify-center overflow-hidden"
+					style="background-color: {data.party.color}"
+				>
+					{#if data.party.logoUrl}
+						<img src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
+					{:else}
+						<FluentPeople20Filled class="size-8 text-[#fff7e8]" />
+					{/if}
 				</div>
 
-				<div class="flex-1 min-w-0">
-					<div class="flex items-start justify-between gap-3">
-						<div class="min-w-0">
-							<div class="flex flex-wrap items-center gap-2 mb-1">
-								<h1 class="text-xl sm:text-2xl font-bold text-[#fff7e8] tracking-wide">{data.party.name}</h1>
-								{#if data.party.abbreviation}
-									<span
-										class="px-2 py-0.5 rounded text-xs font-mono font-bold"
-										style="background-color: {data.party.color}25; color: {data.party.color}"
-									>
-										{data.party.abbreviation}
-									</span>
-								{/if}
-							</div>
-							<div class="flex flex-wrap items-center gap-3 text-xs text-[#a89e8e] font-mono">
-								{#if data.party.ideology}
-									<span class="flex items-center gap-1">
-										<FluentFlag20Filled class="size-3" />
-										{data.party.ideology}
-									</span>
-								{/if}
-								<a
-									href="/state/{data.party.state.id}"
-									class="flex items-center gap-1 hover:text-[#d5c4df] transition-colors"
-								>
-									{#if data.party.state.logo}
-										<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded" />
-									{:else}
-										<FluentBuildingGovernment20Filled class="size-3" />
-									{/if}
-									{data.party.state.name}
-								</a>
-							</div>
-						</div>
-						{#if data.isLeader}
-							<a
-								href="/party/{data.party.id}/edit"
-								class="px-3 py-1.5 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all flex items-center gap-2 text-xs font-mono flex-shrink-0"
+				<div class="text-center space-y-1">
+					<div class="flex flex-wrap items-center justify-center gap-2">
+						<h1 class="text-3xl font-bold text-[#fff7e8] tracking-tight">{data.party.name}</h1>
+						{#if data.party.abbreviation}
+							<span
+								class="px-2 py-0.5 rounded text-xs font-mono font-bold"
+								style="background-color: {data.party.color}25; color: {data.party.color}"
 							>
-								<FluentEdit20Filled class="size-3.5" />
-								Edit
-							</a>
+								{data.party.abbreviation}
+							</span>
 						{/if}
 					</div>
+					<div class="flex flex-wrap items-center justify-center gap-3 text-xs text-[#a89e8e] font-mono">
+						{#if data.party.ideology}
+							<span class="flex items-center gap-1">
+								<FluentFlag20Filled class="size-3" />
+								{data.party.ideology}
+							</span>
+						{/if}
+						<a
+							href="/state/{data.party.state.id}"
+							class="flex items-center gap-1 hover:text-[#d5c4df] transition-colors"
+						>
+							{#if data.party.state.logo}
+								<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded" />
+							{:else}
+								<FluentBuildingGovernment20Filled class="size-3" />
+							{/if}
+							{data.party.state.name}
+						</a>
+					</div>
 					{#if data.party.description}
-						<p class="text-sm text-[#d9ccb7]/80 mt-2 leading-relaxed">{data.party.description}</p>
+						<p class="text-sm text-[#c7bda9] max-w-md mt-2">{data.party.description}</p>
 					{/if}
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
+	<div class="space-y-4 sm:space-y-5">
 		<!-- Stats Strip -->
 		<div class="grid grid-cols-3 gap-3">
 			<a
@@ -264,13 +270,6 @@
 		{#if data.isLeader}
 			<div class="flex flex-wrap gap-2">
 				<a
-					href="/party/{data.party.id}/edit"
-					class="px-3 py-2 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all flex items-center gap-2 text-xs font-mono"
-				>
-					<FluentEdit20Filled class="size-3.5" />
-					Edit
-				</a>
-				<a
 					href="/party/{data.party.id}/member"
 					class="px-3 py-2 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all flex items-center gap-2 text-xs font-mono"
 				>
@@ -302,4 +301,4 @@
 			</a>
 		{/if}
 	</div>
-</div>
+</PageContainer>
