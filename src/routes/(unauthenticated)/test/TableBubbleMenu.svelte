@@ -6,23 +6,35 @@
 	// import BubbleMenu from './BubbleMenu.svelte';
 
 	// Props
-	export let editor: Editor;
-	export let disableDebounce = false;
-	export let debounceProps = {};
-	export let labels = {};
-	export let placement = "top-start";
-	export let fallbackPlacements = ["bottom-start", "top", "bottom", "top-end", "bottom-end"];
-	export let flipPadding = {
-		top: 35,
-		left: 8,
-		right: 8,
-		bottom: -Infinity
-	};
+	interface Props {
+		editor: Editor;
+		disableDebounce?: boolean;
+		debounceProps?: Record<string, unknown>;
+		labels?: Record<string, unknown>;
+		placement?: string;
+		fallbackPlacements?: string[];
+		flipPadding?: { top: number; left: number; right: number; bottom: number };
+	}
+
+	let {
+		editor,
+		disableDebounce = false,
+		debounceProps = {},
+		labels = {},
+		placement = "top-start",
+		fallbackPlacements = ["bottom-start", "top", "bottom", "top-end", "bottom-end"],
+		flipPadding = {
+			top: 35,
+			left: 8,
+			right: 8,
+			bottom: -Infinity
+		}
+	}: Props = $props();
 
 	// State
-	let isEditorFocused = false;
+	let isEditorFocused = $state(false);
 	let debouncedFocusTimeout: NodeJS.Timeout;
-	let bubbleMenuAnchorEl: { getBoundingClientRect: () => DOMRect } | null = null;
+	let bubbleMenuAnchorEl = $state<{ getBoundingClientRect: () => DOMRect } | null>(null);
 
 	// Debounced focus handler
 	function handleEditorFocus() {
@@ -81,8 +93,8 @@
 	});
 
 	// Computed
-	$: isOpen = isEditorFocused && editor?.isActive("table");
-	$: shouldRender = editor?.isEditable;
+	const isOpen = $derived(isEditorFocused && editor?.isActive("table"));
+	const shouldRender = $derived(editor?.isEditable);
 </script>
 
 {#if shouldRender}
