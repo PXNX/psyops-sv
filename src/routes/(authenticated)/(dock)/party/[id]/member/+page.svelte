@@ -38,7 +38,7 @@
 	}
 </script>
 
-<div class="min-h-screen bg-[#0c1929]">
+<div class="w-full min-h-screen bg-[#0c1929]">
 	<!-- Header -->
 	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
 		<div class="w-full px-4 sm:px-6 py-4 sm:py-5">
