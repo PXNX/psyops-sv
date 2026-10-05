@@ -3,9 +3,9 @@ import { db } from "#lib/server/db.js";
 import { residences, regions, states, userProfiles } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
 
-import type { RequestEvent } from "./$types";
+import type { LayoutServerLoad } from "./$types";
 
-export const load = async (event: RequestEvent) => {
+export const load: LayoutServerLoad = async (event) => {
 	if (event.locals.session === null || event.locals.account === null) {
 		// untrack: the login redirect only needs the path for the `next` param;
 		// reading it tracked would rerun this load on every navigation.
