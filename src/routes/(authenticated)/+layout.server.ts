@@ -7,15 +7,17 @@ import type { RequestEvent } from "./$types";
 
 export const load = async (event: RequestEvent) => {
 	if (event.locals.session === null || event.locals.account === null) {
-		throw redirect(302, "/auth/login?next=" + event.url.pathname);
+		// untrack: the login redirect only needs the path for the `next` param;
+		// reading it tracked would rerun this load on every navigation.
+		throw redirect(302, "/auth/login?next=" + event.untrack(() => event.url.pathname));
 	}
 
 	const account = event.locals.account;
 
-	// This load reruns on every client-side navigation (it reads
-	// event.url.pathname below to gate onboarding/welcome redirects), so the
-	// two independent lookups run in parallel rather than back-to-back —
-	// halving the DB round-trip cost this layout adds to every page change.
+	// This load intentionally doesn't depend on the URL, so it only reruns when
+	// invalidated (form actions, refreshAll) — not on every page change. The
+	// pathname-based onboarding/welcome redirects live in ./+layout.ts, which
+	// runs in the browser without a server round trip.
 	const [profile, userResidence] = await Promise.all([
 		db.query.userProfiles.findFirst({
 			where: eq(userProfiles.accountId, account.id)
@@ -51,20 +53,6 @@ export const load = async (event: RequestEvent) => {
 	// null step = onboarding finished.
 	const onboardingStep: number | null = !profile ? 0 : profile.onboardingStep;
 	const needsOnboarding = onboardingStep != null;
-
-	const isWelcomePage = event.url.pathname.startsWith("/welcome");
-	const isDashboard = event.url.pathname === "/";
-
-	if (!userResidence && !needsOnboarding && !isWelcomePage) {
-		// Finished onboarding but still has no residence – fall back to the
-		// legacy region-selection page so they aren't stuck.
-		throw redirect(303, "/welcome/region");
-	}
-
-	if (!userResidence && needsOnboarding && !isWelcomePage && !isDashboard) {
-		// Mid-onboarding: keep them on the dashboard until they pick a region.
-		throw redirect(303, "/");
-	}
 
 	return {
 		account: event.locals.account,

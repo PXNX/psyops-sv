@@ -23,75 +23,114 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const stateId = parseInt(params.id);
 
-	// Get state
-	const state = await db.query.states.findFirst({
-		where: eq(states.id, stateId)
-	});
+	// Get state and the user's foreign-minister / president roles in parallel
+	const [state, ministry, presidency] = await Promise.all([
+		db.query.states.findFirst({
+			where: eq(states.id, stateId)
+		}),
+		db.query.ministers.findFirst({
+			where: and(
+				eq(ministers.userId, account.id),
+				eq(ministers.stateId, stateId),
+				eq(ministers.ministry, "foreign_affairs")
+			)
+		}),
+		db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		})
+	]);
 
 	if (!state) {
 		throw error(404, "State not found");
 	}
 
 	// Check if user is foreign minister OR president
-	const ministry = await db.query.ministers.findFirst({
-		where: and(
-			eq(ministers.userId, account.id),
-			eq(ministers.stateId, stateId),
-			eq(ministers.ministry, "foreign_affairs")
-		)
-	});
-
-	const presidency = await db.query.presidents.findFirst({
-		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
-	});
-
 	if (!ministry && !presidency) {
 		throw error(403, "You must be the Foreign Minister or President to access this page");
 	}
 
-	// Get all other states
-	const otherStates = await db.query.states.findMany({
-		where: ne(states.id, stateId)
-	});
-
-	// Get active sanctions
-	const sanctions = await db.query.stateSanctions.findMany({
-		where: and(eq(stateSanctions.sanctioningStateId, stateId), eq(stateSanctions.isActive, true)),
-		with: {
-			targetState: true,
-			sanctioner: {
-				with: {
-					profile: true
+	const [
+		otherStates,
+		sanctions,
+		stateRegions,
+		pendingApplications,
+		existingVisaSettings,
+		pendingVisaApplications,
+		activeVisas,
+		bloc
+	] = await Promise.all([
+		// Get all other states
+		db.query.states.findMany({
+			where: ne(states.id, stateId)
+		}),
+		// Get active sanctions
+		db.query.stateSanctions.findMany({
+			where: and(eq(stateSanctions.sanctioningStateId, stateId), eq(stateSanctions.isActive, true)),
+			with: {
+				targetState: true,
+				sanctioner: {
+					with: {
+						profile: true
+					}
 				}
 			}
-		}
-	});
-
-	// Get regions
-	const stateRegions = await db.query.regions.findMany({
-		where: eq(regions.stateId, stateId)
-	});
-
-	// Get pending residence applications
-	const pendingApplications = await db.query.residenceApplications.findMany({
-		where: eq(residenceApplications.status, "pending"),
-		with: {
-			user: {
-				with: {
-					profile: true
+		}),
+		// Get regions
+		db.query.regions.findMany({
+			where: eq(regions.stateId, stateId)
+		}),
+		// Get pending residence applications
+		db.query.residenceApplications.findMany({
+			where: eq(residenceApplications.status, "pending"),
+			with: {
+				user: {
+					with: {
+						profile: true
+					}
+				},
+				region: true
+			}
+		}),
+		// Get visa settings
+		db.query.stateVisaSettings.findFirst({
+			where: eq(stateVisaSettings.stateId, stateId)
+		}),
+		// Get pending visa applications
+		db.query.visaApplications.findMany({
+			where: and(eq(visaApplications.stateId, stateId), eq(visaApplications.status, "pending")),
+			with: {
+				user: {
+					with: {
+						profile: true
+					}
 				}
 			},
-			region: true
-		}
-	});
+			orderBy: (visaApplications, { desc }) => [desc(visaApplications.appliedAt)]
+		}),
+		// Get active visas for this state
+		db.query.userVisas.findMany({
+			where: and(eq(userVisas.stateId, stateId), eq(userVisas.status, "active")),
+			with: {
+				user: {
+					with: {
+						profile: true
+					}
+				}
+			},
+			orderBy: (userVisas, { asc }) => [asc(userVisas.expiresAt)]
+		}),
+		// Get the state's bloc (for the visaFreeForMembers override)
+		state.blocId
+			? db.query.blocs.findFirst({
+					where: eq(blocs.id, state.blocId)
+				})
+			: undefined
+	]);
 
 	const stateRegionIds = stateRegions.map((r) => r.id);
 	const statePendingApplications = pendingApplications.filter((app) => stateRegionIds.includes(app.regionId));
 
-	// Get visa settings
-	let visaSettings = await db.query.stateVisaSettings.findFirst({
-		where: eq(stateVisaSettings.stateId, stateId)
-	});
+	let visaSettings = existingVisaSettings;
 
 	// Create default if doesn't exist
 	if (!visaSettings) {
@@ -107,43 +146,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.returning();
 	}
 
-	// Get pending visa applications
-	const pendingVisaApplications = await db.query.visaApplications.findMany({
-		where: and(eq(visaApplications.stateId, stateId), eq(visaApplications.status, "pending")),
-		with: {
-			user: {
-				with: {
-					profile: true
-				}
-			}
-		},
-		orderBy: (visaApplications, { desc }) => [desc(visaApplications.appliedAt)]
-	});
-
-	// Get active visas for this state
-	const activeVisas = await db.query.userVisas.findMany({
-		where: and(eq(userVisas.stateId, stateId), eq(userVisas.status, "active")),
-		with: {
-			user: {
-				with: {
-					profile: true
-				}
-			}
-		},
-		orderBy: (userVisas, { asc }) => [asc(userVisas.expiresAt)]
-	});
-
 	// Check if state is in a bloc with visaFreeForMembers
 	let blocVisaOverride = false;
 	let blocInfo = null;
-	if (state.blocId) {
-		const bloc = await db.query.blocs.findFirst({
-			where: eq(blocs.id, state.blocId)
-		});
-		if (bloc) {
-			blocInfo = { id: bloc.id, name: bloc.name, visaFreeForMembers: bloc.visaFreeForMembers };
-			blocVisaOverride = bloc.visaFreeForMembers;
-		}
+	if (bloc) {
+		blocInfo = { id: bloc.id, name: bloc.name, visaFreeForMembers: bloc.visaFreeForMembers };
+		blocVisaOverride = bloc.visaFreeForMembers;
 	}
 
 	return {

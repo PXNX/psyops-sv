@@ -37,33 +37,74 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 		throw error(404, "State not found");
 	}
 
-	// Get all parliament members with their profiles and party roles
-	const members = await db
-		.select({
-			userId: parliamentMembers.userId,
-			partyAffiliation: parliamentMembers.partyAffiliation,
-			electedAt: parliamentMembers.electedAt,
-			term: parliamentMembers.term,
-			name: userProfiles.name,
-			logo: userProfiles.logo,
-			partyRole: partyMembers.role
+	const now = new Date();
+	const [members, userMembership, userMinistry, userPresidency, nextElection, activeProposals] = await Promise.all([
+		// Get all parliament members with their profiles and party roles
+		db
+			.select({
+				userId: parliamentMembers.userId,
+				partyAffiliation: parliamentMembers.partyAffiliation,
+				electedAt: parliamentMembers.electedAt,
+				term: parliamentMembers.term,
+				name: userProfiles.name,
+				logo: userProfiles.logo,
+				partyRole: partyMembers.role
+			})
+			.from(parliamentMembers)
+			.leftJoin(accounts, eq(parliamentMembers.userId, accounts.id))
+			.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
+			.leftJoin(partyMembers, eq(parliamentMembers.userId, partyMembers.userId))
+			.where(eq(parliamentMembers.stateId, stateId))
+			.orderBy(desc(parliamentMembers.electedAt)),
+		// Check if current user is a parliament member
+		db.query.parliamentMembers.findFirst({
+			where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, stateId))
+		}),
+		// Check if user is a minister
+		db.query.ministers.findFirst({
+			where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
+		}),
+		// Check if user is president
+		db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		}),
+		// Get next or active election
+		db.query.parliamentaryElections.findFirst({
+			where: and(eq(parliamentaryElections.stateId, stateId), gte(parliamentaryElections.endDate, now)),
+			orderBy: parliamentaryElections.startDate
+		}),
+		// Get active proposals with vote counts and user's votes
+		db.query.parliamentaryProposals.findMany({
+			where: and(
+				eq(parliamentaryProposals.stateId, stateId),
+				eq(parliamentaryProposals.status, "active"),
+				gte(parliamentaryProposals.votingEndsAt, now)
+			),
+			with: {
+				taxDetails: true,
+				buildingDetails: {
+					with: {
+						region: true
+					}
+				},
+				borderDetails: true
+			},
+			orderBy: desc(parliamentaryProposals.createdAt)
 		})
-		.from(parliamentMembers)
-		.leftJoin(accounts, eq(parliamentMembers.userId, accounts.id))
-		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
-		.leftJoin(partyMembers, eq(parliamentMembers.userId, partyMembers.userId))
-		.where(eq(parliamentMembers.stateId, stateId))
-		.orderBy(desc(parliamentMembers.electedAt));
+	]);
 
 	// Process logos and match party roles correctly
-	const processedMembers = await Promise.all(
+	const processedMembersPromise = Promise.all(
 		members.map(async (member) => {
-			// Get the correct party for this member
-			const memberParty = member.partyAffiliation
-				? await db.query.politicalParties.findFirst({
-						where: and(eq(politicalParties.name, member.partyAffiliation), eq(politicalParties.stateId, stateId))
-					})
-				: null;
+			const [logo, memberParty] = await Promise.all([
+				getLogoUrl(member.logo),
+				// Get the correct party for this member
+				member.partyAffiliation
+					? db.query.politicalParties.findFirst({
+							where: and(eq(politicalParties.name, member.partyAffiliation), eq(politicalParties.stateId, stateId))
+						})
+					: null
+			]);
 
 			// Get the correct party membership role
 			let partyRole = null;
@@ -76,62 +117,12 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 
 			return {
 				...member,
-				logo: await getLogoUrl(member.logo),
+				logo,
 				partyRole,
 				partyId: memberParty?.id || null
 			};
 		})
 	);
-
-	// Calculate party distribution by ID
-	const partyDistribution: Record<string, number> = {};
-	processedMembers.forEach((member) => {
-		const partyKey = member.partyId ? String(member.partyId) : "independent";
-		partyDistribution[partyKey] = (partyDistribution[partyKey] || 0) + 1;
-	});
-
-	const totalSeats = processedMembers.length;
-
-	// Check if current user is a parliament member
-	const userMembership = await db.query.parliamentMembers.findFirst({
-		where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, stateId))
-	});
-
-	// Check if user is a minister
-	const userMinistry = await db.query.ministers.findFirst({
-		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
-	});
-
-	// Check if user is president
-	const userPresidency = await db.query.presidents.findFirst({
-		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
-	});
-
-	// Get next or active election
-	const now = new Date();
-	const nextElection = await db.query.parliamentaryElections.findFirst({
-		where: and(eq(parliamentaryElections.stateId, stateId), gte(parliamentaryElections.endDate, now)),
-		orderBy: parliamentaryElections.startDate
-	});
-
-	// Get active proposals with vote counts and user's votes
-	const activeProposals = await db.query.parliamentaryProposals.findMany({
-		where: and(
-			eq(parliamentaryProposals.stateId, stateId),
-			eq(parliamentaryProposals.status, "active"),
-			gte(parliamentaryProposals.votingEndsAt, now)
-		),
-		with: {
-			taxDetails: true,
-			buildingDetails: {
-				with: {
-					region: true
-				}
-			},
-			borderDetails: true
-		},
-		orderBy: desc(parliamentaryProposals.createdAt)
-	});
 
 	// Helper function to get proposal description using joined data
 	const getProposalDescription = async (proposal: any) => {
@@ -247,9 +238,25 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 	};
 
 	// Process proposals with votes and descriptions
-	const proposalsWithVotes = await Promise.all(
+	const proposalsWithVotesPromise = Promise.all(
 		activeProposals.map(async (proposal) => {
-			const votes = await db.select().from(parliamentaryVotes).where(eq(parliamentaryVotes.proposalId, proposal.id));
+			const [votes, proposer, proposerPartyRows, { title, description, region }] = await Promise.all([
+				db.select().from(parliamentaryVotes).where(eq(parliamentaryVotes.proposalId, proposal.id)),
+				db.query.userProfiles.findFirst({
+					where: eq(userProfiles.accountId, proposal.proposedBy)
+				}),
+				db
+					.select({
+						abbreviation: politicalParties.abbreviation,
+						name: politicalParties.name,
+						color: politicalParties.color
+					})
+					.from(partyMembers)
+					.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+					.where(and(eq(partyMembers.userId, proposal.proposedBy), eq(politicalParties.stateId, stateId)))
+					.limit(1),
+				getProposalDescription(proposal)
+			]);
 
 			const voteCounts = {
 				for: votes.filter((v) => v.voteType === "for").length,
@@ -260,23 +267,6 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			const percentageFor = totalVotes > 0 ? (voteCounts.for / totalVotes) * 100 : 0;
 			const percentageAgainst = totalVotes > 0 ? (voteCounts.against / totalVotes) * 100 : 0;
 			const userVote = votes.find((v) => v.voterId === account.id);
-
-			const proposer = await db.query.userProfiles.findFirst({
-				where: eq(userProfiles.accountId, proposal.proposedBy)
-			});
-
-			const proposerPartyRows = await db
-				.select({
-					abbreviation: politicalParties.abbreviation,
-					name: politicalParties.name,
-					color: politicalParties.color
-				})
-				.from(partyMembers)
-				.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
-				.where(and(eq(partyMembers.userId, proposal.proposedBy), eq(politicalParties.stateId, stateId)))
-				.limit(1);
-
-			const { title, description, region } = await getProposalDescription(proposal);
 
 			return {
 				...proposal,
@@ -297,6 +287,21 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			};
 		})
 	);
+
+	// Member and proposal processing are independent; wait for both together
+	const [processedMembers, proposalsWithVotes] = await Promise.all([
+		processedMembersPromise,
+		proposalsWithVotesPromise
+	]);
+
+	// Calculate party distribution by ID
+	const partyDistribution: Record<string, number> = {};
+	processedMembers.forEach((member) => {
+		const partyKey = member.partyId ? String(member.partyId) : "independent";
+		partyDistribution[partyKey] = (partyDistribution[partyKey] || 0) + 1;
+	});
+
+	const totalSeats = processedMembers.length;
 
 	// Get party colors and logos from database
 	const partyIds = Object.keys(partyDistribution)

@@ -83,13 +83,13 @@ async function getUserResidence(userId: string) {
 }
 
 async function getUserInventory(userId: string) {
-	const resources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, userId));
+	const [resources, products, [wallet]] = await Promise.all([
+		db.select().from(resourceInventory).where(eq(resourceInventory.userId, userId)),
+		db.select().from(productInventory).where(eq(productInventory.userId, userId)),
+		db.select().from(userWallets).where(eq(userWallets.userId, userId)).limit(1)
+	]);
 	const resourceMap = Object.fromEntries(resources.map((r) => [r.resourceType, r.quantity]));
-
-	const products = await db.select().from(productInventory).where(eq(productInventory.userId, userId));
 	const productMap = Object.fromEntries(products.map((p) => [p.productType, p.quantity]));
-
-	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, userId)).limit(1);
 
 	return {
 		currency: wallet?.balance || 0,
@@ -101,36 +101,37 @@ async function getUserInventory(userId: string) {
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	const residence = await getUserResidence(account.id);
-	const inventory = await getUserInventory(account.id);
-
-	const activeTravel = await db.query.userTravels.findFirst({
-		where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
-	});
+	// All lookups are independent; getUserResidence still redirects if there is no residence
+	const [residence, inventory, activeTravel, units] = await Promise.all([
+		getUserResidence(account.id),
+		getUserInventory(account.id),
+		db.query.userTravels.findFirst({
+			where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
+		}),
+		db
+			.select({
+				id: militaryUnits.id,
+				name: militaryUnits.name,
+				unitType: militaryUnits.unitType,
+				organization: militaryUnits.organization,
+				health: militaryUnits.health,
+				supplyLevel: militaryUnits.supplyLevel,
+				experience: militaryUnits.experience,
+				isTraining: militaryUnits.isTraining,
+				trainingStartedAt: militaryUnits.trainingStartedAt,
+				trainingCompletesAt: militaryUnits.trainingCompletesAt,
+				isExercising: militaryUnits.isExercising,
+				exerciseStartedAt: militaryUnits.exerciseStartedAt,
+				exerciseCompletesAt: militaryUnits.exerciseCompletesAt,
+				createdAt: militaryUnits.createdAt
+			})
+			.from(militaryUnits)
+			.where(eq(militaryUnits.ownerId, account.id))
+			.orderBy(militaryUnits.createdAt)
+	]);
 
 	const isIndependentRegion = !residence.stateId;
 	const isTraveling = !!activeTravel;
-
-	const units = await db
-		.select({
-			id: militaryUnits.id,
-			name: militaryUnits.name,
-			unitType: militaryUnits.unitType,
-			organization: militaryUnits.organization,
-			health: militaryUnits.health,
-			supplyLevel: militaryUnits.supplyLevel,
-			experience: militaryUnits.experience,
-			isTraining: militaryUnits.isTraining,
-			trainingStartedAt: militaryUnits.trainingStartedAt,
-			trainingCompletesAt: militaryUnits.trainingCompletesAt,
-			isExercising: militaryUnits.isExercising,
-			exerciseStartedAt: militaryUnits.exerciseStartedAt,
-			exerciseCompletesAt: militaryUnits.exerciseCompletesAt,
-			createdAt: militaryUnits.createdAt
-		})
-		.from(militaryUnits)
-		.where(eq(militaryUnits.ownerId, account.id))
-		.orderBy(militaryUnits.createdAt);
 
 	return {
 		units,

@@ -33,74 +33,108 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "Party not found");
 	}
 
-	// Get party logo URL if exists
-	let logoUrl = null;
-	if (party.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, party.logo)
-		});
-		if (logoFile) {
+	// Logo, members and party ranking only depend on the party, so fetch them in parallel
+	const [logoUrl, members, allPartiesWithCounts] = await Promise.all([
+		// Get party logo URL if exists
+		(async () => {
+			if (!party.logo) return null;
+			const logoFile = await db.query.files.findFirst({
+				where: eq(files.id, party.logo)
+			});
+			if (!logoFile) return null;
 			try {
-				logoUrl = await getSignedDownloadUrl(logoFile.key);
+				return await getSignedDownloadUrl(logoFile.key);
 			} catch {
-				logoUrl = null;
+				return null;
 			}
-		}
-	}
+		})(),
 
-	// Get all party members with their profiles
-	const members = await db
-		.select({
-			id: partyMembers.id,
-			userId: partyMembers.userId,
-			role: partyMembers.role,
-			joinedAt: partyMembers.joinedAt
-		})
-		.from(partyMembers)
-		.where(eq(partyMembers.partyId, partyId))
-		.orderBy(sql`${partyMembers.joinedAt} DESC`);
+		// Get all party members with their profiles
+		db
+			.select({
+				id: partyMembers.id,
+				userId: partyMembers.userId,
+				role: partyMembers.role,
+				joinedAt: partyMembers.joinedAt
+			})
+			.from(partyMembers)
+			.where(eq(partyMembers.partyId, partyId))
+			.orderBy(sql`${partyMembers.joinedAt} DESC`),
+
+		// Calculate party rank - get all parties with their member counts
+		db
+			.select({
+				id: politicalParties.id,
+				memberCount: count(partyMembers.id)
+			})
+			.from(politicalParties)
+			.leftJoin(partyMembers, eq(politicalParties.id, partyMembers.partyId))
+			.where(eq(politicalParties.stateId, party.stateId))
+			.groupBy(politicalParties.id)
+			.orderBy(sql`count(${partyMembers.id}) DESC`)
+	]);
 
 	// Calculate member count
 	const memberCount = members.length;
 
-	// Get user profiles for all members
-	const membersWithProfiles = await Promise.all(
-		members.map(async (member) => {
-			const userProfile = await db.query.userProfiles.findFirst({
-				where: eq(userProfiles.accountId, member.userId)
-			});
+	const membership = account ? members.find((m) => m.userId === account.id) : undefined;
 
-			// Get logo URL if exists
-			let logoUrl = null;
-			if (userProfile?.logo) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, userProfile.logo)
+	const [membersWithProfiles, otherPartyStatus] = await Promise.all([
+		// Get user profiles for all members
+		Promise.all(
+			members.map(async (member) => {
+				const userProfile = await db.query.userProfiles.findFirst({
+					where: eq(userProfiles.accountId, member.userId)
 				});
-				if (logoFile) {
-					try {
-						logoUrl = await getSignedDownloadUrl(logoFile.key);
-					} catch {
-						logoUrl = null;
+
+				// Get logo URL if exists
+				let logoUrl = null;
+				if (userProfile?.logo) {
+					const logoFile = await db.query.files.findFirst({
+						where: eq(files.id, userProfile.logo)
+					});
+					if (logoFile) {
+						try {
+							logoUrl = await getSignedDownloadUrl(logoFile.key);
+						} catch {
+							logoUrl = null;
+						}
 					}
 				}
-			}
 
-			return {
-				id: member.id,
-				userId: member.userId,
-				role: member.role,
-				joinedAt: member.joinedAt.toISOString(),
-				user: {
-					profile: userProfile
-						? {
-								name: userProfile.name,
-								logo: logoUrl
-							}
-						: null
-				}
-			};
-		})
-	);
+				return {
+					id: member.id,
+					userId: member.userId,
+					role: member.role,
+					joinedAt: member.joinedAt.toISOString(),
+					user: {
+						profile: userProfile
+							? {
+									name: userProfile.name,
+									logo: logoUrl
+								}
+							: null
+					}
+				};
+			})
+		),
+
+		// Non-members: check existing membership elsewhere and pending application to this party
+		account && !membership
+			? Promise.all([
+					db.query.partyMembers.findFirst({
+						where: eq(partyMembers.userId, account.id)
+					}),
+					db.query.partyMembershipApplications.findFirst({
+						where: and(
+							eq(partyMembershipApplications.userId, account.id),
+							eq(partyMembershipApplications.partyId, partyId),
+							eq(partyMembershipApplications.status, "pending")
+						)
+					})
+				])
+			: null
+	]);
 
 	// Check if current user is a member
 	let isMember = false;
@@ -110,42 +144,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	let hasApplied = false;
 
 	if (account) {
-		const membership = members.find((m) => m.userId === account.id);
 		if (membership) {
 			isMember = true;
 			isLeader = membership.role === "leader";
 			memberSince = membership.joinedAt.toISOString();
-		} else {
-			// Check if user already has a party membership elsewhere
-			const existingMembership = await db.query.partyMembers.findFirst({
-				where: eq(partyMembers.userId, account.id)
-			});
-
-			// Check if user has a pending application
-			const existingApplication = await db.query.partyMembershipApplications.findFirst({
-				where: and(
-					eq(partyMembershipApplications.userId, account.id),
-					eq(partyMembershipApplications.partyId, partyId),
-					eq(partyMembershipApplications.status, "pending")
-				)
-			});
-
+		} else if (otherPartyStatus) {
+			const [existingMembership, existingApplication] = otherPartyStatus;
 			hasApplied = !!existingApplication;
 			canJoin = !existingMembership && !hasApplied;
 		}
 	}
-
-	// Calculate party rank - get all parties with their member counts
-	const allPartiesWithCounts = await db
-		.select({
-			id: politicalParties.id,
-			memberCount: count(partyMembers.id)
-		})
-		.from(politicalParties)
-		.leftJoin(partyMembers, eq(politicalParties.id, partyMembers.partyId))
-		.where(eq(politicalParties.stateId, party.stateId))
-		.groupBy(politicalParties.id)
-		.orderBy(sql`count(${partyMembers.id}) DESC`);
 
 	const partyRank = allPartiesWithCounts.findIndex((p) => p.id === partyId) + 1;
 

@@ -63,7 +63,6 @@ function createMockAuthHandle(): Handle {
 
 function createRealAuthHandle(): Handle {
 	return async ({ event, resolve }) => {
-		console.log("🔍 Session - Checking session");
 		const sessionToken = event.cookies.get("session");
 
 		if (!sessionToken) {

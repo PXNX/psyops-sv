@@ -56,85 +56,96 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "Company not found");
 	}
 
-	// Get owner profile name and logo
-	//  TODO this is bullshit. Use backblaze instead.
-	const [ownerProfile] = await db.query.userProfiles.findMany({
-		where: (profiles, { eq }) => eq(profiles.accountId, company.ownerId),
-		with: {
-			logoFile: true
-		}
-	});
-
-	// Owner's current party (abbreviation + color), for the party tag next to their name.
-	const [ownerParty] = await db
-		.select({ abbreviation: politicalParties.abbreviation, color: politicalParties.color })
-		.from(partyMembers)
-		.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
-		.where(eq(partyMembers.userId, company.ownerId));
-
 	// Check if current user is the owner
 	const isOwner = company.ownerId === account.id;
 
-	// Owner's current residence region, offered as the headquarters to set (mirrors
-	// how factories are always placed in the owner's residence region).
-	let residenceRegion: { id: number; name: string; stateName: string | null } | null = null;
-	if (isOwner) {
-		const residence = await db.query.residences.findFirst({
-			where: eq(residences.userId, account.id),
-			with: { region: { with: { state: true } } }
-		});
-		if (residence) {
-			residenceRegion = {
-				id: residence.region.id,
-				name: getRegionName(residence.region.id),
-				stateName: residence.region.state?.name ?? null
-			};
-		}
-	}
-
-	const embargoReason = await getEmbargoReason(company.stateId, account.id);
-
-	// Get company budget
-	let [budget] = await db.select().from(companyBudgets).where(eq(companyBudgets.companyId, companyId));
-
-	// Create budget if it doesn't exist
-	if (!budget) {
-		[budget] = await db
-			.insert(companyBudgets)
-			.values({
-				companyId,
-				balance: 0,
-				totalDeposited: 0,
-				totalSpent: 0
+	// Everything below only depends on the company row, so fetch it in parallel.
+	const [
+		[ownerProfile],
+		[ownerParty],
+		residence,
+		embargoReason,
+		[existingBudget],
+		companyFactories,
+		[ownerWallet],
+		[shares]
+	] = await Promise.all([
+		// Get owner profile name and logo
+		//  TODO this is bullshit. Use backblaze instead.
+		db.query.userProfiles.findMany({
+			where: (profiles, { eq }) => eq(profiles.accountId, company.ownerId),
+			with: {
+				logoFile: true
+			}
+		}),
+		// Owner's current party (abbreviation + color), for the party tag next to their name.
+		db
+			.select({ abbreviation: politicalParties.abbreviation, color: politicalParties.color })
+			.from(partyMembers)
+			.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+			.where(eq(partyMembers.userId, company.ownerId)),
+		// Owner's current residence region, offered as the headquarters to set (mirrors
+		// how factories are always placed in the owner's residence region).
+		isOwner
+			? db.query.residences.findFirst({
+					where: eq(residences.userId, account.id),
+					with: { region: { with: { state: true } } }
+				})
+			: undefined,
+		getEmbargoReason(company.stateId, account.id),
+		// Get company budget
+		db.select().from(companyBudgets).where(eq(companyBudgets.companyId, companyId)),
+		// Get company's factories with detailed info
+		db
+			.select({
+				id: factories.id,
+				name: factories.name,
+				factoryType: factories.factoryType,
+				resourceOutput: factories.resourceOutput,
+				productOutput: factories.productOutput,
+				maxWorkers: factories.maxWorkers,
+				workerWage: factories.workerWage,
+				productionRate: factories.productionRate,
+				regionId: factories.regionId,
+				stateId: regions.stateId,
+				stateName: states.name
 			})
-			.returning();
-	}
+			.from(factories)
+			.innerJoin(regions, eq(factories.regionId, regions.id))
+			.innerJoin(states, eq(regions.stateId, states.id))
+			.where(eq(factories.companyId, companyId)),
+		// Get owner's wallet balance (for depositing into budget)
+		db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, company.ownerId)),
+		// --- Stock market ---
+		db.select().from(companyShares).where(eq(companyShares.companyId, companyId))
+	]);
 
-	// Get company's factories with detailed info
-	const companyFactories = await db
-		.select({
-			id: factories.id,
-			name: factories.name,
-			factoryType: factories.factoryType,
-			resourceOutput: factories.resourceOutput,
-			productOutput: factories.productOutput,
-			maxWorkers: factories.maxWorkers,
-			workerWage: factories.workerWage,
-			productionRate: factories.productionRate,
-			regionId: factories.regionId,
-			stateId: regions.stateId,
-			stateName: states.name
-		})
-		.from(factories)
-		.innerJoin(regions, eq(factories.regionId, regions.id))
-		.innerJoin(states, eq(regions.stateId, states.id))
-		.where(eq(factories.companyId, companyId));
+	let residenceRegion: { id: number; name: string; stateName: string | null } | null = null;
+	if (residence) {
+		residenceRegion = {
+			id: residence.region.id,
+			name: getRegionName(residence.region.id),
+			stateName: residence.region.state?.name ?? null
+		};
+	}
 
 	// OPTIMIZATION: Get all workers for all factories in ONE query
 	const factoryIds = companyFactories.map((f) => f.id);
-	const allWorkers =
+	const [budget, allWorkers] = await Promise.all([
+		// Create budget if it doesn't exist
+		existingBudget ??
+			db
+				.insert(companyBudgets)
+				.values({
+					companyId,
+					balance: 0,
+					totalDeposited: 0,
+					totalSpent: 0
+				})
+				.returning()
+				.then(([created]) => created),
 		factoryIds.length > 0
-			? await db
+			? db
 					.select({
 						factoryId: factoryWorkers.factoryId,
 						userId: factoryWorkers.userId,
@@ -142,7 +153,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					})
 					.from(factoryWorkers)
 					.where(inArray(factoryWorkers.factoryId, factoryIds))
-			: [];
+			: []
+	]);
 
 	// Group workers by factory in memory (fast)
 	const workersByFactory = allWorkers.reduce(
@@ -231,16 +243,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Calculate how many shifts can be funded with current budget
 	const shiftsAffordable = totalWageCost > 0 ? Math.floor(Number(budget.balance) / totalWageCost) : 0;
 
-	// Get owner's wallet balance (for depositing into budget)
-	const [ownerWallet] = await db
-		.select({ balance: userWallets.balance })
-		.from(userWallets)
-		.where(eq(userWallets.userId, company.ownerId));
-
 	const ownerBalance = ownerWallet ? Number(ownerWallet.balance) : 0;
-
-	// --- Stock market ---
-	const [shares] = await db.select().from(companyShares).where(eq(companyShares.companyId, companyId));
 
 	let myHolding = 0;
 	let listings: Array<{
@@ -255,26 +258,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	let floatOutstanding = 0;
 
 	if (shares) {
-		const [myHoldingRow] = await db
-			.select({ quantity: shareHoldings.quantity })
-			.from(shareHoldings)
-			.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, account.id)));
+		const [[myHoldingRow], rawListings, holderRows] = await Promise.all([
+			db
+				.select({ quantity: shareHoldings.quantity })
+				.from(shareHoldings)
+				.where(and(eq(shareHoldings.companyId, companyId), eq(shareHoldings.userId, account.id))),
+			db.select().from(shareListings).where(eq(shareListings.companyId, companyId)).orderBy(shareListings.pricePerUnit),
+			db
+				.select({ userId: shareHoldings.userId, quantity: shareHoldings.quantity })
+				.from(shareHoldings)
+				.where(and(eq(shareHoldings.companyId, companyId), sql`${shareHoldings.quantity} > 0`))
+				.orderBy(desc(shareHoldings.quantity))
+				.limit(10)
+		]);
 		myHolding = myHoldingRow?.quantity ?? 0;
 
-		const rawListings = await db
-			.select()
-			.from(shareListings)
-			.where(eq(shareListings.companyId, companyId))
-			.orderBy(shareListings.pricePerUnit);
-
 		floatOutstanding = rawListings.reduce((sum, l) => sum + l.quantity, 0);
-
-		const holderRows = await db
-			.select({ userId: shareHoldings.userId, quantity: shareHoldings.quantity })
-			.from(shareHoldings)
-			.where(and(eq(shareHoldings.companyId, companyId), sql`${shareHoldings.quantity} > 0`))
-			.orderBy(desc(shareHoldings.quantity))
-			.limit(10);
 
 		const holderIds = Array.from(new Set([...holderRows.map((h) => h.userId), ...rawListings.map((l) => l.sellerId)]));
 		const profiles =

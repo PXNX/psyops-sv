@@ -309,31 +309,38 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "Battle not found");
 	}
 
-	// Get state logos
-	const attackerStateLogo = battle.attackerState.logo ? await getLogoUrl(battle.attackerState.logo) : null;
-	const defenderStateLogo = battle.defenderState.logo ? await getLogoUrl(battle.defenderState.logo) : null;
-
 	// Check if preparation phase is over
 	const preparationEndsAt = new Date(battle.startedAt);
 	preparationEndsAt.setHours(preparationEndsAt.getHours() + PREPARATION_HOURS);
 	const isPreparationOver = new Date() >= preparationEndsAt;
+	const shouldActivate = battle.phase === "preparation" && isPreparationOver;
 
-	// Auto-transition to active phase if preparation is over
-	if (battle.phase === "preparation" && isPreparationOver) {
-		await db.update(battles).set({ phase: "active" }).where(eq(battles.id, battleId));
-		battle.phase = "active";
-	}
-
-	const userResidence = await db.query.residences.findFirst({
-		where: eq(residences.userId, account.id),
-		with: {
-			region: {
-				with: {
-					state: true
+	// Independent lookups run in parallel: state logos, phase transition, residence, units already in battle
+	const [attackerStateLogo, defenderStateLogo, , userResidence, unitsInBattle] = await Promise.all([
+		battle.attackerState.logo ? getLogoUrl(battle.attackerState.logo) : null,
+		battle.defenderState.logo ? getLogoUrl(battle.defenderState.logo) : null,
+		// Auto-transition to active phase if preparation is over
+		shouldActivate ? db.update(battles).set({ phase: "active" }).where(eq(battles.id, battleId)) : null,
+		db.query.residences.findFirst({
+			where: eq(residences.userId, account.id),
+			with: {
+				region: {
+					with: {
+						state: true
+					}
 				}
 			}
-		}
-	});
+		}),
+		// Get units already in this battle
+		db
+			.select({ unitId: battleParticipants.unitId })
+			.from(battleParticipants)
+			.where(eq(battleParticipants.battleId, battleId))
+	]);
+
+	if (shouldActivate) {
+		battle.phase = "active";
+	}
 
 	// Determine user side based on region location
 	let userSide: "attacker" | "defender" | null = null;
@@ -381,12 +388,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			where: and(eq(militaryUnits.ownerId, account.id), eq(militaryUnits.regionId, relevantRegionId))
 		});
 	}
-
-	// Get units already in this battle
-	const unitsInBattle = await db
-		.select({ unitId: battleParticipants.unitId })
-		.from(battleParticipants)
-		.where(eq(battleParticipants.battleId, battleId));
 
 	const unitsInBattleIds = new Set(unitsInBattle.map((u) => u.unitId));
 
