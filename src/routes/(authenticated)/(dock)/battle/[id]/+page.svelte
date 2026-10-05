@@ -1,15 +1,15 @@
 <!-- /src/routes/(authenticated)/(dock)/battle/[id]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import { MILITARY_UNIT_TEMPLATES } from "$lib/config";
-	import { formatDate, formatDateTime, getRegionName } from "$lib/utils/formatting.js";
+	import { MILITARY_UNIT_TEMPLATES } from "#lib/config/index.js";
+	import { formatDate, formatDateTime, getRegionName } from "#lib/utils/formatting.js";
 	import { onMount, onDestroy } from "svelte";
 	import { Chart, Svg, Tooltip } from "layerchart";
 	import { scaleLinear } from "d3-scale";
 	import { Area, Axis, Highlight, RectClipPath } from "layerchart";
-	import * as m from "$lib/paraglide/messages";
-	import Logo from "$lib/component/Logo.svelte";
-	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
+	import * as m from "#lib/paraglide/messages.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 
 	const { data } = $props();
 
@@ -31,8 +31,6 @@
 			clearInterval(countdownInterval);
 		}
 	});
-
-
 
 	function getUnitIconPath(unitType: string): string {
 		return `/units/${unitType}.svg`;
@@ -191,9 +189,7 @@
 
 			<!-- Mission Timer -->
 			{#if data.battle.phase === "preparation"}
-				<div
-					class="mt-4 sm:mt-6 bg-[#315d8d]/12 border border-[#7ba0c8]/25 rounded-lg p-3 sm:p-4"
-				>
+				<div class="mt-4 sm:mt-6 bg-[#315d8d]/12 border border-[#7ba0c8]/25 rounded-lg p-3 sm:p-4">
 					<div class="flex items-center justify-between mb-2 sm:mb-3">
 						<div class="text-blue-400 font-mono text-xs sm:text-sm font-medium uppercase tracking-wide">
 							Time Until Combat
@@ -345,9 +341,7 @@
 
 		<!-- Unit Deployment Section -->
 		{#if data.userSide}
-			<div
-				class="bg-[#14283f]/85 border border-{userSideColor()}-500/30 rounded-xl p-4 sm:p-6"
-			>
+			<div class="bg-[#14283f]/85 border border-{userSideColor()}-500/30 rounded-xl p-4 sm:p-6">
 				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
 					<h2 class="text-lg sm:text-xl font-bold text-[#fff7e8] font-mono uppercase tracking-wide">Deploy Forces</h2>
 					<div
@@ -527,7 +521,7 @@
 						return async ({ update, result }) => {
 							await update();
 							isExecuting = false;
-							if (result.type === 'success') showBattleAnim = true;
+							if (result.type === "success") showBattleAnim = true;
 						};
 					}}
 				>
@@ -544,9 +538,7 @@
 
 		<!-- My Engaged Units -->
 		{#if myUnits.length > 0}
-			<div
-				class="bg-[#14283f]/85 border-2 border-{userSideColor()}-500/50 rounded-xl"
-			>
+			<div class="bg-[#14283f]/85 border-2 border-{userSideColor()}-500/50 rounded-xl">
 				<div class="bg-{userSideColor()}-950/30 border-b border-{userSideColor()}-500/30 px-4 sm:px-6 py-3 sm:py-4">
 					<div class="flex items-center justify-between">
 						<h3 class="text-base sm:text-lg font-bold text-{userSideColor()}-400 font-mono uppercase tracking-wide">
@@ -652,9 +644,7 @@
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
 				<!-- Other Attackers -->
 				{#if otherAttackerUnits.length > 0}
-					<div
-						class="bg-[#14283f]/85 border border-red-500/30 rounded-xl overflow-hidden"
-					>
+					<div class="bg-[#14283f]/85 border border-red-500/30 rounded-xl overflow-hidden">
 						<div class="bg-red-950/30 border-b border-red-500/30 px-4 sm:px-6 py-3 sm:py-4">
 							<div class="flex items-center justify-between">
 								<h3 class="text-base sm:text-lg font-bold text-red-400 font-mono uppercase tracking-wide">Attackers</h3>
@@ -738,9 +728,7 @@
 
 				<!-- Other Defenders -->
 				{#if otherDefenderUnits.length > 0}
-					<div
-						class="bg-[#14283f]/85 border border-blue-500/30 rounded-xl overflow-hidden"
-					>
+					<div class="bg-[#14283f]/85 border border-blue-500/30 rounded-xl overflow-hidden">
 						<div class="bg-blue-950/30 border-b border-blue-500/30 px-4 sm:px-6 py-3 sm:py-4">
 							<div class="flex items-center justify-between">
 								<h3 class="text-base sm:text-lg font-bold text-blue-400 font-mono uppercase tracking-wide">
@@ -828,9 +816,7 @@
 
 		<!-- Combat Log -->
 		{#if data.battle.rounds.length > 0}
-			<div
-				class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden"
-			>
+			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden">
 				<div class="bg-[#102239]/90 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
 					<h3 class="text-base sm:text-lg font-bold text-[#fff7e8] font-mono uppercase tracking-wide">Combat Log</h3>
 				</div>
@@ -868,9 +854,7 @@
 			</div>
 
 			<!-- Battle Statistics Chart -->
-			<div
-				class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden"
-			>
+			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden">
 				<div class="bg-[#102239]/90 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
 					<h3 class="text-base sm:text-lg font-bold text-[#fff7e8] font-mono uppercase tracking-wide">
 						Damage Analysis

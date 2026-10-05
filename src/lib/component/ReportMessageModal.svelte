@@ -2,8 +2,8 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import BottomSheet from "$lib/component/BottomSheet.svelte";
-	import FormActions from "$lib/component/ui/FormActions.svelte";
+	import BottomSheet from "#lib/component/BottomSheet.svelte";
+	import FormActions from "#lib/component/ui/FormActions.svelte";
 
 	interface Props {
 		open: boolean;

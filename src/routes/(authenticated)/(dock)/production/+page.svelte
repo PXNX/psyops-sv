@@ -1,7 +1,7 @@
 <!-- src/routes/production/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import Logo from "$lib/component/Logo.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 	import FluentProduction20Filled from "~icons/fluent/production-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
@@ -18,10 +18,10 @@
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 
 	let { data } = $props();
 
@@ -181,9 +181,7 @@
 	<!-- Current Job Status - Enhanced with gradient and logo -->
 	{#if data.currentJob && jobStatus}
 		{#if jobStatus.status === "complete"}
-			<div
-				class="relative overflow-hidden rounded-xl md:rounded-2xl panel p-4 md:p-6"
-			>
+			<div class="relative overflow-hidden rounded-xl md:rounded-2xl panel p-4 md:p-6">
 				<div class="absolute inset-0 bg-gradient-to-br from-[#315d8d]/5 to-transparent opacity-0"></div>
 
 				<div class="relative z-10 flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
@@ -242,9 +240,7 @@
 				</form>
 			</div>
 		{:else}
-			<div
-				class="relative overflow-hidden rounded-xl md:rounded-2xl panel p-4 md:p-6"
-			>
+			<div class="relative overflow-hidden rounded-xl md:rounded-2xl panel p-4 md:p-6">
 				<div class="absolute inset-0 bg-gradient-to-br from-blue-600/5 to-transparent"></div>
 
 				<div class="relative z-10 flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
@@ -496,9 +492,7 @@
 
 					<div class="relative space-y-4 md:space-y-6">
 						<div class="flex items-center gap-2 md:gap-3">
-							<div
-								class="size-8 md:size-10 rounded-xl bg-[#8c709b]/20 flex items-center justify-center"
-							>
+							<div class="size-8 md:size-10 rounded-xl bg-[#8c709b]/20 flex items-center justify-center">
 								<FluentProduction20Filled class="size-4 md:size-5 text-[#d5c4df]" />
 							</div>
 							<h2 class="text-lg md:text-xl font-semibold text-[#fff7e8]">Start Production</h2>
@@ -594,9 +588,7 @@
 
 							<ResourceRequirements {costs} available={availableResources} />
 
-							<div
-								class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-lg"
-							>
+							<div class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-lg">
 								<div class="flex items-center gap-2">
 									<FluentClock20Filled class="size-4 md:size-5 text-[#a89e8e]" />
 									<span class="text-xs md:text-sm text-[#a89e8e]">Production Time</span>

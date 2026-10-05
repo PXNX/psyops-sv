@@ -1,6 +1,6 @@
 // src/lib/server/taxes.ts
-import { db } from "$lib/server/db";
-import { stateTaxes, taxRevenue, stateTreasury, governmentBudgetTransactions } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { stateTaxes, taxRevenue, stateTreasury, governmentBudgetTransactions } from "#lib/server/schema.js";
 import { eq, and, sql } from "drizzle-orm";
 
 export type DbClient = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];

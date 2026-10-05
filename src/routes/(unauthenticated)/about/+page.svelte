@@ -9,7 +9,7 @@
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentOpen20Filled from "~icons/fluent/open-20-filled";
-	import BottomSheet from "$lib/component/BottomSheet.svelte";
+	import BottomSheet from "#lib/component/BottomSheet.svelte";
 
 	let { data } = $props();
 
@@ -93,9 +93,7 @@
 		<!-- Header -->
 		<div class="flex flex-col items-center space-y-6">
 			<div class="relative">
-				<div
-					class="absolute inset-0 bg-[#e6a527]/25 rounded-full blur-2xl opacity-50"
-				></div>
+				<div class="absolute inset-0 bg-[#e6a527]/25 rounded-full blur-2xl opacity-50"></div>
 				<div
 					class="relative size-32 bg-[#14283f] border border-[#dfceb0]/20 rounded-3xl flex items-center justify-center shadow-2xl"
 				>
@@ -103,11 +101,7 @@
 				</div>
 			</div>
 			<div class="text-center space-y-3">
-				<h1
-					class="text-5xl font-bold tracking-tight text-[#fff7e8]"
-				>
-					About
-				</h1>
+				<h1 class="text-5xl font-bold tracking-tight text-[#fff7e8]">About</h1>
 				<p class="text-[#a89e8e] max-w-md mx-auto">A global political simulation platform</p>
 				<button
 					class="inline-flex items-center gap-2 px-4 py-2 bg-[#102239]/70 backdrop-blur-sm border border-[#dfceb0]/15 rounded-full cursor-pointer hover:bg-[#19304b] hover:border-[#b7a0c5]/40 transition-all"
@@ -401,11 +395,7 @@
 			<label class="label" for="bug-severity">
 				<span class="label-text text-[#e5d8c1]">Severity</span>
 			</label>
-			<select
-				id="bug-severity"
-				class="select select-bordered w-full field-control"
-				bind:value={bugForm.severity}
-			>
+			<select id="bug-severity" class="select select-bordered w-full field-control" bind:value={bugForm.severity}>
 				<option>Low - Minor issue</option>
 				<option>Medium - Affects functionality</option>
 				<option>High - Major issue</option>

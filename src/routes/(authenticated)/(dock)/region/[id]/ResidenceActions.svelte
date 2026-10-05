@@ -5,9 +5,9 @@
 	import FluentLocationLive20Filled from "~icons/fluent/location-live-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import Modal from "$lib/component/Modal.svelte";
-	import Button from "$lib/component/ui/Button.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import Modal from "#lib/component/Modal.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	const {
 		regionId,
@@ -143,13 +143,7 @@
 					};
 				}}
 			>
-				<Button
-					type="submit"
-					variant="info"
-					block
-					icon={FluentHome20Filled}
-					disabled={!canAfford}
-				>
+				<Button type="submit" variant="info" block icon={FluentHome20Filled} disabled={!canAfford}>
 					Start Travel — ${travelInfo.cost.toLocaleString()}
 				</Button>
 				{#if !canAfford}

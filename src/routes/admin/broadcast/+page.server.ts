@@ -1,5 +1,5 @@
-import { db } from "$lib/server/db";
-import { broadcasts } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { broadcasts } from "#lib/server/schema.js";
 import { fail } from "@sveltejs/kit";
 import { eq, and, desc } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";

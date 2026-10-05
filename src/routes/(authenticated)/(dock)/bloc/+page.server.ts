@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/bloc/+page.server.ts
-import { db } from "$lib/server/db";
-import { blocs, states, regions, residences, presidents, blocActionCooldowns } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { blocs, states, regions, residences, presidents, blocActionCooldowns } from "#lib/server/schema.js";
 import { sql, eq, like, or } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";

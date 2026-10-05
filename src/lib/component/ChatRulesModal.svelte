@@ -3,7 +3,7 @@
 	import { enhance } from "$app/forms";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import Button from "$lib/component/ui/Button.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	interface Props {
 		show: boolean;

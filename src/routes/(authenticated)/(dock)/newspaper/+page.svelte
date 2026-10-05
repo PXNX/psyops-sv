@@ -1,8 +1,8 @@
 <script lang="ts">
 	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
-	import Logo from "$lib/component/Logo.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import Logo from "#lib/component/Logo.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 </script>

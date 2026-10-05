@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 
 	let { data } = $props();
 
@@ -35,8 +35,13 @@
 					{@const inventory = resourceMap.get(resource) || 0}
 					{@const market = data.lowestPrices[resource]}
 					{@const change = data.priceChanges[resource]}
-					<a href="/market/{resource}" class="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-[#dfceb0]/5 transition-colors">
-						<div class="size-9 flex-shrink-0 flex items-center justify-center bg-[#102239]/70 rounded-full border border-[#dfceb0]/15">
+					<a
+						href="/market/{resource}"
+						class="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-[#dfceb0]/5 transition-colors"
+					>
+						<div
+							class="size-9 flex-shrink-0 flex items-center justify-center bg-[#102239]/70 rounded-full border border-[#dfceb0]/15"
+						>
 							<ResourceIcon name={resource} class="size-5" />
 						</div>
 						<div class="flex-1 min-w-0">
@@ -48,7 +53,8 @@
 								<div class="font-bold text-[#fff7e8] text-sm font-mono">${market.lowestPrice.toLocaleString()}</div>
 								{#if change !== undefined}
 									<div class="text-xs font-mono {change >= 0 ? 'text-green-400' : 'text-red-400'}">
-										{change >= 0 ? "▲" : "▼"} {Math.abs(change).toFixed(1)}%
+										{change >= 0 ? "▲" : "▼"}
+										{Math.abs(change).toFixed(1)}%
 									</div>
 								{/if}
 							{:else}
@@ -68,8 +74,13 @@
 					{@const inventory = productMap.get(product) || 0}
 					{@const market = data.lowestPrices[product]}
 					{@const change = data.priceChanges[product]}
-					<a href="/market/{product}" class="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-[#dfceb0]/5 transition-colors">
-						<div class="size-9 flex-shrink-0 flex items-center justify-center bg-[#102239]/70 rounded-full border border-[#dfceb0]/15">
+					<a
+						href="/market/{product}"
+						class="flex items-center gap-3 px-3 sm:px-4 py-3 hover:bg-[#dfceb0]/5 transition-colors"
+					>
+						<div
+							class="size-9 flex-shrink-0 flex items-center justify-center bg-[#102239]/70 rounded-full border border-[#dfceb0]/15"
+						>
 							<ResourceIcon name={product} class="size-5" />
 						</div>
 						<div class="flex-1 min-w-0">
@@ -81,7 +92,8 @@
 								<div class="font-bold text-[#fff7e8] text-sm font-mono">${market.lowestPrice.toLocaleString()}</div>
 								{#if change !== undefined}
 									<div class="text-xs font-mono {change >= 0 ? 'text-green-400' : 'text-red-400'}">
-										{change >= 0 ? "▲" : "▼"} {Math.abs(change).toFixed(1)}%
+										{change >= 0 ? "▲" : "▼"}
+										{Math.abs(change).toFixed(1)}%
 									</div>
 								{/if}
 							{:else}

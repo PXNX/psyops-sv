@@ -1,13 +1,13 @@
 // src/routes/(authenticated)/(dock)/state/[id]/edit/+page.server.ts
-import { db } from "$lib/server/db";
-import { states, presidents, stateEditCooldowns, files } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { states, presidents, stateEditCooldowns, files } from "#lib/server/schema.js";
 import { error, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editStateSchema } from "./schema";
-import { uploadFileFromForm, getSignedDownloadUrl } from "$lib/server/backblaze";
+import { uploadFileFromForm, getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;

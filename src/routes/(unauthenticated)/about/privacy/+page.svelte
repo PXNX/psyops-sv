@@ -21,9 +21,7 @@
 		<!-- Header -->
 		<div class="flex flex-col items-center space-y-6">
 			<div class="relative">
-				<div
-					class="absolute inset-0 bg-[#e6a527]/25 rounded-full blur-2xl opacity-50"
-				></div>
+				<div class="absolute inset-0 bg-[#e6a527]/25 rounded-full blur-2xl opacity-50"></div>
 				<div
 					class="relative size-32 bg-[#14283f] border border-[#dfceb0]/20 rounded-3xl flex items-center justify-center shadow-2xl"
 				>
@@ -31,15 +29,9 @@
 				</div>
 			</div>
 			<div class="text-center space-y-3">
-				<h1
-					class="text-5xl font-bold tracking-tight text-[#fff7e8]"
-				>
-					Privacy Policy
-				</h1>
+				<h1 class="text-5xl font-bold tracking-tight text-[#fff7e8]">Privacy Policy</h1>
 				<p class="text-[#a89e8e] max-w-md mx-auto">GDPR-compliant data protection and privacy information</p>
-				<div
-					class="inline-flex items-center gap-2 px-4 py-2 panel-muted backdrop-blur-sm rounded-full"
-				>
+				<div class="inline-flex items-center gap-2 px-4 py-2 panel-muted backdrop-blur-sm rounded-full">
 					<span class="text-sm text-[#d9ccb7]">Last updated: January 2025</span>
 				</div>
 			</div>

@@ -7,8 +7,8 @@
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
-	import Button from "$lib/component/ui/Button.svelte";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	let { data } = $props();
 
@@ -87,9 +87,9 @@
 		fetch(croppedDataUrl)
 			.then((r) => r.blob())
 			.then((blob) => {
-				const croppedFile = new File([blob], 'newspaper-logo.png', { type: 'image/png' });
+				const croppedFile = new File([blob], "newspaper-logo.png", { type: "image/png" });
 				$form.logo = croppedFile;
-				if (previewUrl && !previewUrl.startsWith('http')) URL.revokeObjectURL(previewUrl);
+				if (previewUrl && !previewUrl.startsWith("http")) URL.revokeObjectURL(previewUrl);
 				previewUrl = croppedDataUrl;
 			});
 	}
@@ -100,7 +100,7 @@
 			URL.revokeObjectURL(cropImageUrl);
 			cropImageUrl = null;
 		}
-		if (fileInput) fileInput.value = '';
+		if (fileInput) fileInput.value = "";
 	}
 </script>
 
@@ -167,8 +167,7 @@
 					rows="4"
 					placeholder="Describe your newspaper's mission and values..."
 					class="textarea w-full field-control"
-					disabled={$submitting}
-				></textarea>
+					disabled={$submitting}></textarea>
 			</div>
 		</div>
 

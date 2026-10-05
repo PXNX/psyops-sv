@@ -6,8 +6,8 @@
 // collected, so if a player misses one or more birthdays the uncollected
 // rewards accumulate and are summed up on the next collection.
 
-import { db } from "$lib/server/db";
-import { birthdayRewards, userWallets } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { birthdayRewards, userWallets } from "#lib/server/schema.js";
 import { eq, sql } from "drizzle-orm";
 import {
 	BIRTHDAY_REWARD_AMOUNT,

@@ -1,12 +1,12 @@
+import { error } from "@sveltejs/kit";
+
 // src/hooks.server.ts
-import { TokenBucket } from "$lib/server/rate-limit";
-import { sequence } from "@sveltejs/kit/hooks";
-import { validateSessionToken } from "$lib/server/auth";
-import type { HandleServerError } from "@sveltejs/kit";
-import { paraglideMiddleware } from "$lib/paraglide/server";
-import { error, type Handle } from "@sveltejs/kit";
-import { themes } from "$lib/themes";
-import { isMockMode } from "$lib/server/db";
+import { TokenBucket } from "#lib/server/rate-limit.js";
+import { sequence, type HandleServerError, type Handle } from "@sveltejs/kit/hooks";
+import { validateSessionToken } from "#lib/server/auth.js";
+import { paraglideMiddleware } from "#lib/paraglide/server.js";
+import { themes } from "#lib/themes.js";
+import { isMockMode } from "#lib/server/db.js";
 import "@valibot/i18n/de/schema";
 
 const bucket = new TokenBucket<string>(100, 1);

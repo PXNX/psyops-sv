@@ -8,7 +8,7 @@
 	import GameIconsWoodPile from "~icons/game-icons/wood-pile";
 	import GameIconsCoalPile from "~icons/game-icons/coal-pile";
 	import FluentEmojiPackage from "~icons/fluent-emoji/package";
-	import { resourceColors } from "$lib/component/ResourceIcon.svelte";
+	import { resourceColors } from "#lib/component/ResourceIcon.svelte";
 
 	type Props = {
 		costs: Record<string, number>;

@@ -1,25 +1,7 @@
-<!--
-	Custom-styled "Log in with Telegram" button, driven by Telegram's widget
-	script but *not* its default inline iframe button (which can't be
-	restyled to match the site). telegram-widget.js exposes
-	`Telegram.Login.auth(options, callback)` for exactly this: our own
-	button's onclick opens the same oauth.telegram.org popup Telegram's own
-	button would, and calls back with the signed user data once the user
-	authorizes.
-
-	The raw redirect to oauth.telegram.org/tg/start (the previous approach)
-	is intentionally not used — it's an undocumented endpoint that only works
-	with an active web.telegram.org session and otherwise dumps the user on
-	Telegram's generic docs page.
-
-	On success the signed user data is POSTed to /auth/callback/telegram
-	(verified there the same way), then navigates to `next` for existing
-	users, or the server's own onboarding redirect for brand new accounts.
--->
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { browser } from "$app/environment";
-	import { env } from "$env/dynamic/public";
+	import { browser } from "$app/env";
+	import { PUBLIC_TELEGRAM_BOT_ID } from "$app/env/public";
 
 	let {
 		next = "/",
@@ -35,7 +17,7 @@
 	let scriptLoaded = $state(false);
 	let pending = $state(false);
 
-	const botId = env.PUBLIC_TELEGRAM_BOT_ID || "";
+	const botId = PUBLIC_TELEGRAM_BOT_ID || "";
 
 	function loadScript(): Promise<void> {
 		if (!browser) return Promise.resolve();
@@ -105,6 +87,25 @@
 	}
 </script>
 
+<!--
+	Custom-styled "Log in with Telegram" button, driven by Telegram's widget
+	script but *not* its default inline iframe button (which can't be
+	restyled to match the site). telegram-widget.js exposes
+	`Telegram.Login.auth(options, callback)` for exactly this: our own
+	button's onclick opens the same oauth.telegram.org popup Telegram's own
+	button would, and calls back with the signed user data once the user
+	authorizes.
+
+	The raw redirect to oauth.telegram.org/tg/start (the previous approach)
+	is intentionally not used — it's an undocumented endpoint that only works
+	with an active web.telegram.org session and otherwise dumps the user on
+	Telegram's generic docs page.
+
+	On success the signed user data is POSTed to /auth/callback/telegram
+	(verified there the same way), then navigates to `next` for existing
+	users, or the server's own onboarding redirect for brand new accounts.
+-->
+
 <button
 	type="button"
 	onclick={login}
@@ -114,7 +115,7 @@
 	<svg class="size-6" fill="currentColor" viewBox="0 0 24 24">
 		<path
 			d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
-		/>
+		></path>
 	</svg>
 	<span class="font-semibold">{pending ? "Waiting for Telegram…" : label}</span>
 </button>

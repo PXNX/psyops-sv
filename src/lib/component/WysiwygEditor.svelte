@@ -24,7 +24,7 @@
 
 	import { onMount, onDestroy } from "svelte";
 	import type { Component } from "svelte";
-	import ToolbarButton from "$lib/component/ui/ToolbarButton.svelte";
+	import ToolbarButton from "#lib/component/ui/ToolbarButton.svelte";
 	import { Editor, EditorContent, BubbleMenu } from "svelte-tiptap";
 
 	import MdiFormatBold from "~icons/mdi/format-bold";
@@ -167,7 +167,12 @@
 	].map(({ icon, label, level }) => ({
 		icon,
 		label,
-		run: () => editor?.chain().focus().toggleHeading({ level: level as 1 | 2 | 3 }).run(),
+		run: () =>
+			editor
+				?.chain()
+				.focus()
+				.toggleHeading({ level: level as 1 | 2 | 3 })
+				.run(),
 		active: () => isActive("heading", { level })
 	}));
 
@@ -213,6 +218,7 @@
 
 	const toolbarGroups: ToolbarItem[][] = [inlineMarks, headings, lists, blocks];
 </script>
+
 <div class="wysiwyg-editor">
 	<!-- Toolbar -->
 	<div class="mb-2 border-b border-[#dfceb0]/15 pb-2">

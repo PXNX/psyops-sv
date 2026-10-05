@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/report/+page.server.ts
-import { db } from "$lib/server/db";
-import { generalReports, contentFlags, accounts, politicalParties } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { generalReports, contentFlags, accounts, politicalParties } from "#lib/server/schema.js";
 import { eq, and } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";

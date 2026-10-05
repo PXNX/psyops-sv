@@ -1,9 +1,17 @@
 // src/routes/(authenticated)/(dock)/state/[id]/economy/+page.server.ts - WITH PRESIDENT ACCESS
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import { eq, and } from "drizzle-orm";
-import { states, ministers, presidents, powerPlants, stateTreasury, stateEnergy, stateResourceInventory } from "$lib/server/schema";
+import {
+	states,
+	ministers,
+	presidents,
+	powerPlants,
+	stateTreasury,
+	stateEnergy,
+	stateResourceInventory
+} from "#lib/server/schema.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;

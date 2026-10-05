@@ -3,7 +3,7 @@
 // proposal's window closes (api/cron/proposals), and the manual "accept now"
 // action on the parliament page. Keeping this in one place means all three
 // paths apply taxes/borders/construction the same way instead of drifting.
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import { eq, and, sql } from "drizzle-orm";
 import {
 	stateTaxes,
@@ -16,8 +16,8 @@ import {
 	proposalTaxDetails,
 	proposalBorderDetails,
 	proposalBuildingDetails
-} from "$lib/server/schema";
-import { BUILDING_TEMPLATES, type BuildingType } from "$lib/config";
+} from "#lib/server/schema.js";
+import { BUILDING_TEMPLATES, type BuildingType } from "#lib/config/index.js";
 
 export async function executeProposal(stateId: number, proposalType: string, accountId: string, proposalId: number) {
 	if (proposalType === "tax") {

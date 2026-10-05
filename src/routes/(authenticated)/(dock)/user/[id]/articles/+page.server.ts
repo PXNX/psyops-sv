@@ -1,10 +1,10 @@
 // src/routes/(authenticated)/(dock)/user/[id]/articles/+page.server.ts
-import { db } from "$lib/server/db";
-import { articles, newspapers, upvotes, accounts, userProfiles, files } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { articles, newspapers, upvotes, accounts, userProfiles, files } from "#lib/server/schema.js";
 import { eq, desc, asc, sql, count, and, like, inArray } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 const PAGE_SIZE = 20;
 

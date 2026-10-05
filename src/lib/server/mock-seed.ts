@@ -178,7 +178,12 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		{ accountId: "user-2", name: "Bob Moderator", bio: "Keeping things civil since day one", theme: "cyberpunk" },
 		{ accountId: "user-3", name: "Charlie Citizen", bio: "Just a regular citizen trying to make it", theme: "nord" },
 		{ accountId: "user-4", name: "Diana Diplomat", bio: "Foreign affairs specialist", theme: "dark" },
-		{ accountId: "user-5", name: "Eve Entrepreneur", bio: "Building the economy one factory at a time", theme: "business" }
+		{
+			accountId: "user-5",
+			name: "Eve Entrepreneur",
+			bio: "Building the economy one factory at a time",
+			theme: "business"
+		}
 	]);
 
 	// ============ Sessions ============
@@ -329,14 +334,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 	]);
 
 	// ============ Newspapers & Articles ============
-	const [newspaper1] = await db
-		.insert(newspapers)
-		.values({ name: "The Freedonia Times" })
-		.returning();
-	const [newspaper2] = await db
-		.insert(newspapers)
-		.values({ name: "Sylvania Daily" })
-		.returning();
+	const [newspaper1] = await db.insert(newspapers).values({ name: "The Freedonia Times" }).returning();
+	const [newspaper2] = await db.insert(newspapers).values({ name: "Sylvania Daily" }).returning();
 
 	await db.insert(journalists).values([
 		{ userId: "user-1", newspaperId: newspaper1!.id, rank: "owner" },
@@ -586,4 +585,4 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 	]);
 
 	console.log("🌱 Mock database seeded successfully");
-	}
+}

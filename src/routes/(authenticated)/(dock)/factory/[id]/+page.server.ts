@@ -1,5 +1,5 @@
 // src/routes/factory/[id]/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	companies,
 	companyBudgets,
@@ -10,10 +10,10 @@ import {
 	stateEnergy,
 	states,
 	userWallets
-} from "$lib/server/schema";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { calculateShiftStatus, collectWages, startWorkShift } from "$lib/server/service/factoryWork";
-import { getEmbargoReason } from "$lib/server/embargo";
+} from "#lib/server/schema.js";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { calculateShiftStatus, collectWages, startWorkShift } from "#lib/server/service/factoryWork.js";
+import { getEmbargoReason } from "#lib/server/embargo.js";
 import { error, fail } from "@sveltejs/kit";
 import { eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";

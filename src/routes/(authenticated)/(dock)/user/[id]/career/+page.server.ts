@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/(dock)/user/[id]/career/+page.server.ts
-import { db } from "$lib/server/db";
-import { accounts, journalists, userMedals, presidents, ministers, partyMembers, files } from "$lib/server/schema";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { db } from "#lib/server/db.js";
+import { accounts, journalists, userMedals, presidents, ministers, partyMembers, files } from "#lib/server/schema.js";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { error } from "@sveltejs/kit";
 import { desc, eq, and } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";

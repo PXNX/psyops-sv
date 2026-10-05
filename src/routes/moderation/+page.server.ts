@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/moderation/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	generalReports,
 	chatMessages,
@@ -8,12 +8,12 @@ import {
 	files,
 	userWarnings,
 	chatRestrictions
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { sendModerationNotification } from "$lib/server/service/inbox";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { sendModerationNotification } from "#lib/server/service/inbox.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;

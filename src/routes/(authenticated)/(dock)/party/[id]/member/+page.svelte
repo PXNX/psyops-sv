@@ -13,9 +13,9 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentSettings20Filled from "~icons/fluent/settings-20-filled";
 	import FluentPersonAvailable20Filled from "~icons/fluent/person-available-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import Modal from "$lib/component/Modal.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import Modal from "#lib/component/Modal.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -214,9 +214,7 @@
 		{/if}
 
 		<!-- Members List -->
-		<div
-			class="panel rounded-xl overflow-hidden"
-		>
+		<div class="panel rounded-xl overflow-hidden">
 			<div class="bg-[#0e1d2f]/95 border-b border-[#dfceb0]/15 px-4 sm:px-5 py-3">
 				<h2 class="text-sm font-bold text-[#e5d8c1] font-mono uppercase tracking-wide flex items-center gap-2">
 					<FluentPeople20Filled class="size-4" style="color: {data.party.color}" />
@@ -225,9 +223,7 @@
 			</div>
 			<div class="p-3 sm:p-4 space-y-2">
 				{#each data.members as member}
-					<div
-						class="flex items-center gap-3 panel-muted rounded-lg p-3 hover:border-[#dfceb0]/25 transition-all"
-					>
+					<div class="flex items-center gap-3 panel-muted rounded-lg p-3 hover:border-[#dfceb0]/25 transition-all">
 						<!-- Avatar -->
 						<a href="/user/{member.userId}" class="relative flex-shrink-0">
 							<Logo
@@ -353,10 +349,7 @@
 
 		<!-- Join CTA -->
 		{#if data.canJoin && !data.isMember}
-			<div
-				class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5"
-				style="border-color: {data.party.color}30"
-			>
+			<div class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5" style="border-color: {data.party.color}30">
 				<form method="POST" action="/party/{data.party.id}?/join" use:enhance>
 					<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div class="text-center sm:text-left">

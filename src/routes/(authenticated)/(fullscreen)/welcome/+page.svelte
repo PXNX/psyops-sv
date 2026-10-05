@@ -1,6 +1,6 @@
 <!-- src/routes/(authenticated)/(fullscreen)/welcome/+page.svelte -->
 <script lang="ts">
-	import PsyopsLogo from "$lib/assets/logo.svg";
+	import PsyopsLogo from "#lib/assets/logo.svg";
 	import { fade, fly } from "svelte/transition";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -9,7 +9,7 @@
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const features = [
 		{
@@ -55,9 +55,7 @@
 	<!-- Logo & Title -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>
 		<div class="flex justify-center">
-			<div
-				class="size-24 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-3xl flex items-center justify-center"
-			>
+			<div class="size-24 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-3xl flex items-center justify-center">
 				<PsyopsLogo class="size-14 text-[#f7c56b]" />
 			</div>
 		</div>
@@ -71,10 +69,7 @@
 	<!-- Features Grid -->
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4" in:fly={{ y: 20, duration: 500, delay: 200 }}>
 		{#each features as feature, i}
-			<div
-				class="panel-interactive rounded-xl p-6 space-y-3"
-				in:fly={{ y: 20, duration: 500, delay: 300 + i * 100 }}
-			>
+			<div class="panel-interactive rounded-xl p-6 space-y-3" in:fly={{ y: 20, duration: 500, delay: 300 + i * 100 }}>
 				<div class="size-12 {feature.wrapClass} rounded-xl flex items-center justify-center">
 					<svelte:component this={feature.icon} class="size-6 {feature.iconClass}" />
 				</div>

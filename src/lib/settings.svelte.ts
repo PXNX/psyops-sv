@@ -1,5 +1,5 @@
-import { browser } from "$app/environment";
-import { themes } from "$lib/themes";
+import { browser } from "$app/env";
+import { themes } from "#lib/themes.js";
 
 const ONE_YEAR = 60 * 60 * 24 * 365;
 

@@ -1,9 +1,9 @@
 // src/routes/moderators/reports/+page.server.ts
-import { db } from "$lib/server/db";
-import { accounts, userProfiles, files, generalReports, chatMessages, politicalParties } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { accounts, userProfiles, files, generalReports, chatMessages, politicalParties } from "#lib/server/schema.js";
 import { eq, desc } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { redirect } from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ locals }) => {

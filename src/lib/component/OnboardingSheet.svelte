@@ -2,7 +2,7 @@
 	import { page } from "$app/state";
 	import { invalidateAll } from "$app/navigation";
 	import { fly, fade } from "svelte/transition";
-	import { getRegionName } from "$lib/utils/formatting";
+	import { getRegionName } from "#lib/utils/formatting.js";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -10,7 +10,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	interface Props {
 		onboardingStep: number;
@@ -163,7 +163,9 @@
 	const nameInputClass = $derived(
 		[
 			"w-full px-4 py-3 bg-[#0d1d31] border rounded-xl text-[#fff7e8] placeholder:text-[#a89e8e] focus:outline-none focus:ring-2 transition-all",
-			nameError ? "border-red-500/50 focus:ring-red-500/20" : "border-[#dfceb0]/20 focus:border-[#e6a527]/70 focus:ring-[#e6a527]/15"
+			nameError
+				? "border-red-500/50 focus:ring-red-500/20"
+				: "border-[#dfceb0]/20 focus:border-[#e6a527]/70 focus:ring-[#e6a527]/15"
 		].join(" ")
 	);
 
@@ -264,7 +266,11 @@
 									through strategy and diplomacy.
 								</p>
 							</div>
-							<button onclick={() => setStep(1)} disabled={submitting} class={buttonClass({ variant: "primary", block: true })}>
+							<button
+								onclick={() => setStep(1)}
+								disabled={submitting}
+								class={buttonClass({ variant: "primary", block: true })}
+							>
 								<span class="flex items-center justify-center gap-2">
 									Let's Begin
 									<FluentArrowRight20Filled class="size-5" />
@@ -418,7 +424,11 @@
 								</div>
 							</div>
 
-							<button onclick={() => setStep(4)} disabled={submitting} class={buttonClass({ variant: "primary", block: true })}>
+							<button
+								onclick={() => setStep(4)}
+								disabled={submitting}
+								class={buttonClass({ variant: "primary", block: true })}
+							>
 								<span class="flex items-center justify-center gap-2">
 									Next
 									<FluentArrowRight20Filled class="size-5" />
@@ -461,7 +471,11 @@
 								</div>
 							</div>
 
-							<button onclick={() => setStep(5)} disabled={submitting} class={buttonClass({ variant: "primary", block: true })}>
+							<button
+								onclick={() => setStep(5)}
+								disabled={submitting}
+								class={buttonClass({ variant: "primary", block: true })}
+							>
 								<span class="flex items-center justify-center gap-2">
 									Next
 									<FluentArrowRight20Filled class="size-5" />
@@ -504,7 +518,11 @@
 								</div>
 							</div>
 
-							<button onclick={() => setStep(6)} disabled={submitting} class={buttonClass({ variant: "primary", block: true })}>
+							<button
+								onclick={() => setStep(6)}
+								disabled={submitting}
+								class={buttonClass({ variant: "primary", block: true })}
+							>
 								<span class="flex items-center justify-center gap-2">
 									Next
 									<FluentArrowRight20Filled class="size-5" />

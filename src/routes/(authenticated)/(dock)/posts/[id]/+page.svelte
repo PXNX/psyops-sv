@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { page } from "$app/stores";
+	import { page } from "$app/state";
 	import FluentHeart20Regular from "~icons/fluent/heart-20-regular";
 	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
 	import FluentClock20Regular from "~icons/fluent/clock-20-regular";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDateTime } from "$lib/utils/formatting.js";
-	import ShareButton from "$lib/component/ShareButton.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
+	import ShareButton from "#lib/component/ShareButton.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 
@@ -27,7 +27,7 @@
 		upvoteCount += hasUpvoted ? 1 : -1;
 
 		try {
-			const response = await fetch($page.url.pathname + "?/upvote", {
+			const response = await fetch(page.url.pathname + "?/upvote", {
 				method: "POST",
 				headers: { "x-sveltekit-action": "true" },
 				body: new FormData()
@@ -119,7 +119,10 @@
 				<!-- Actions -->
 				<div class="flex items-center gap-2 flex-shrink-0">
 					{#if data.isAuthor}
-						<a href="/posts/{data.article.id}/edit" class={buttonClass({ variant: "soft-amber", class: "text-xs font-mono" })}>
+						<a
+							href="/posts/{data.article.id}/edit"
+							class={buttonClass({ variant: "soft-amber", class: "text-xs font-mono" })}
+						>
 							<FluentEdit20Filled class="size-3.5" />
 							<span class="hidden sm:inline">Edit</span>
 						</a>

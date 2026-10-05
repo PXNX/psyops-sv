@@ -1,5 +1,5 @@
 // src/routes/factory/[id]/edit/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	factories,
 	companies,
@@ -8,7 +8,7 @@ import {
 	factoryWorkers,
 	userWallets,
 	factoryCreationCooldown
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and, sql, inArray, desc } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";

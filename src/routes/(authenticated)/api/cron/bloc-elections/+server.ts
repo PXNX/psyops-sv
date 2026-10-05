@@ -2,8 +2,8 @@
 
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { db } from "$lib/server/db";
-import { blocs, blocLeaders, blocLeaderElections, blocLeaderCandidates, blocLeaderVotes } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { blocs, blocLeaders, blocLeaderElections, blocLeaderCandidates, blocLeaderVotes } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
 
 // Bloc leaders are elected by the presidents of member states every 30-day cycle.
@@ -24,7 +24,9 @@ export const GET: RequestHandler = async () => {
 
 		// 0. Every bloc without an election cycle yet gets its first one scheduled.
 		const allBlocs = await db.select({ id: blocs.id }).from(blocs);
-		const blocsWithElections = await db.selectDistinct({ blocId: blocLeaderElections.blocId }).from(blocLeaderElections);
+		const blocsWithElections = await db
+			.selectDistinct({ blocId: blocLeaderElections.blocId })
+			.from(blocLeaderElections);
 		const blocIdsWithElections = new Set(blocsWithElections.map((b) => b.blocId));
 
 		for (const bloc of allBlocs) {
@@ -91,7 +93,9 @@ async function scheduleNextCycle(blocId: number, from: Date) {
 		status: "scheduled"
 	});
 
-	console.log(`📅 Scheduled next bloc leader election for bloc ${blocId} - voting opens ${votingStartsAt.toISOString()}`);
+	console.log(
+		`📅 Scheduled next bloc leader election for bloc ${blocId} - voting opens ${votingStartsAt.toISOString()}`
+	);
 }
 
 async function processBlocLeaderElection(electionId: number, blocId: number) {

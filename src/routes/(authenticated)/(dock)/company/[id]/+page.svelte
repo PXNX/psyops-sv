@@ -1,6 +1,6 @@
 <!-- src/routes/company/[id]/+page.svelte -->
 <script lang="ts">
-	import { getRegionName, formatDate } from "$lib/utils/formatting";
+	import { getRegionName, formatDate } from "#lib/utils/formatting.js";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
@@ -21,10 +21,10 @@
 	import { Chart, Svg, Tooltip } from "layerchart";
 	import { Area, Bars } from "layerchart";
 	import { scaleBand } from "d3-scale";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import Logo from "$lib/component/Logo.svelte";
-	import ProfileItem from "$lib/component/ProfileItem.svelte";
-	import { buttonClass, badgeClass } from "$lib/component/ui/styles";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import ProfileItem from "#lib/component/ProfileItem.svelte";
+	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
 
 	let { data, form } = $props();
 

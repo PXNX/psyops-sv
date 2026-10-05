@@ -4,7 +4,7 @@
 	import FluentTarget from "~icons/fluent/target-24-regular";
 	import FluentBuildingFactory from "~icons/fluent/building-factory-24-regular";
 	import FluentContactCard from "~icons/fluent/contact-card-24-regular";
-	import OnboardingSheet from "$lib/component/OnboardingSheet.svelte";
+	import OnboardingSheet from "#lib/component/OnboardingSheet.svelte";
 	import { navigating, page } from "$app/state";
 	import { resolve } from "$app/paths";
 
@@ -45,7 +45,7 @@
 </main>
 
 {#if page.url.pathname !== "/posts/new" && !page.url.pathname.startsWith("/welcome")}
-		<!-- Editorial field-ledger dock navigation -->
+	<!-- Editorial field-ledger dock navigation -->
 	<nav class="dock">
 		{#each navItems as item (item.href)}
 			<a href={item.href} class="flinch dock-item" class:active={isActive(item.href)} title={item.label}>

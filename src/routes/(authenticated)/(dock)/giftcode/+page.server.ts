@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/(dock)/giftcode/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	giftCodes,
 	giftCodeResources,
@@ -7,10 +7,10 @@ import {
 	userWallets,
 	resourceInventory,
 	productInventory
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { fail } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
-import { grantPremium } from "$lib/server/service/premium";
+import { grantPremium } from "#lib/server/service/premium.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {

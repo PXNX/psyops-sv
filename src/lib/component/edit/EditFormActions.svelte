@@ -1,6 +1,6 @@
 <script lang="ts">
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FormActions from "$lib/component/ui/FormActions.svelte";
+	import FormActions from "#lib/component/ui/FormActions.svelte";
 
 	interface Props {
 		cancelHref: string;

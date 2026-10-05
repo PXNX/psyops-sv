@@ -15,15 +15,15 @@ import {
 	userTravels,
 	battles,
 	battleParticipants
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, sql } from "drizzle-orm";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	MILITARY_UNIT_TEMPLATES,
 	type MilitaryUnitTemplate,
 	EXERCISE_CONFIG,
 	calculateExerciseExperienceGain
-} from "$lib/config";
+} from "#lib/config/index.js";
 
 type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
 type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";

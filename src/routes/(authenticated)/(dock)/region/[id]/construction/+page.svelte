@@ -6,7 +6,7 @@
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentHammer20Filled from "~icons/fluent/wrench-20-filled";
-	import * as m from "$lib/paraglide/messages";
+	import * as m from "#lib/paraglide/messages.js";
 	import { enhance } from "$app/forms";
 
 	const { data } = $props();

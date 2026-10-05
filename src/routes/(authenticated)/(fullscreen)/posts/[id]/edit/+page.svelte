@@ -5,12 +5,12 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentArrowHookUpLeft20Regular from "~icons/fluent/arrow-hook-up-left-20-regular";
 	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
-	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
-	import Modal from "$lib/component/Modal.svelte";
+	import WysiwygEditor from "#lib/component/WysiwygEditor.svelte";
+	import Modal from "#lib/component/Modal.svelte";
 	import { superForm } from "sveltekit-superforms";
 	import { valibot } from "sveltekit-superforms/adapters";
 	import { editArticleSchema } from "./schema";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 

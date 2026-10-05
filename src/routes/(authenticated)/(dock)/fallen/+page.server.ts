@@ -1,7 +1,7 @@
-import { db } from "$lib/server/db";
-import { states, blocs } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { states, blocs } from "#lib/server/schema.js";
 import { eq, desc, sql } from "drizzle-orm";
-import { getLogoUrl } from "$lib/server/backblaze";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async () => {

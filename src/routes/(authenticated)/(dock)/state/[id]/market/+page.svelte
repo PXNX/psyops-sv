@@ -6,7 +6,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
-	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 
 	let { data, form } = $props();
 
@@ -21,13 +21,9 @@
 
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
 
-	const availableQuantity = $derived(
-		tradeMode === "sell" ? resourceMap.get(selectedResource) || 0 : Infinity
-	);
+	const availableQuantity = $derived(tradeMode === "sell" ? resourceMap.get(selectedResource) || 0 : Infinity);
 
-	const currentMarketPrice = $derived(
-		data.marketPrices[selectedResource] || 1000
-	);
+	const currentMarketPrice = $derived(data.marketPrices[selectedResource] || 1000);
 
 	const totalCost = $derived(tradeQuantity * tradePrice);
 
@@ -129,19 +125,24 @@
 						{@const isSelected = selectedResource === resource}
 						<button
 							type="button"
-							onclick={() => { selectedResource = resource; }}
+							onclick={() => {
+								selectedResource = resource;
+							}}
 							class="w-full flex items-center justify-between p-3 rounded-lg border transition-all
 								{isSelected
-									? 'bg-[#8c709b]/20 border-[#b7a0c5]/30 ring-1 ring-[#b7a0c5]/20'
-									: 'bg-[#102239]/70 border-[#dfceb0]/10 hover:bg-[#19304b] hover:border-[#dfceb0]/20'}"
+								? 'bg-[#8c709b]/20 border-[#b7a0c5]/30 ring-1 ring-[#b7a0c5]/20'
+								: 'bg-[#102239]/70 border-[#dfceb0]/10 hover:bg-[#19304b] hover:border-[#dfceb0]/20'}"
 						>
 							<div class="flex items-center gap-3">
 								<ResourceIcon name={resource} class="size-5" />
-								<span class="font-medium capitalize {isSelected ? 'text-[#d5c4df]' : 'text-[#d9ccb7]'}">{resource}</span>
+								<span class="font-medium capitalize {isSelected ? 'text-[#d5c4df]' : 'text-[#d9ccb7]'}">{resource}</span
+								>
 							</div>
 							<span
 								class="text-sm font-bold tabular-nums {quantity > 0
-									? isSelected ? 'text-[#d5c4df]' : 'text-[#e5d8c1]'
+									? isSelected
+										? 'text-[#d5c4df]'
+										: 'text-[#e5d8c1]'
 									: 'text-[#a89e8e]'}"
 							>
 								{quantity}
@@ -165,7 +166,9 @@
 								<ResourceIcon name={resource} class="size-4" />
 								<span class="capitalize">{resource}</span>
 							</span>
-							<span class="font-medium text-[#d9ccb7] tabular-nums">{formatCurrency(data.marketPrices[resource] || 0)}</span>
+							<span class="font-medium text-[#d9ccb7] tabular-nums"
+								>{formatCurrency(data.marketPrices[resource] || 0)}</span
+							>
 						</div>
 					{/each}
 				</div>
@@ -192,7 +195,9 @@
 							class="btn btn-sm join-item {tradeMode === 'buy'
 								? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500'
 								: 'bg-[#102239]/70 text-[#a89e8e] border-[#dfceb0]/10 hover:text-[#d9ccb7]'}"
-							onclick={() => { tradeMode = "buy"; }}
+							onclick={() => {
+								tradeMode = "buy";
+							}}
 							disabled={!data.canTrade}
 						>
 							Buy
@@ -202,7 +207,9 @@
 							class="btn btn-sm join-item {tradeMode === 'sell'
 								? 'bg-[#315d8d] hover:bg-[#3d6ea3] text-white border-[#315d8d]'
 								: 'bg-[#102239]/70 text-[#a89e8e] border-[#dfceb0]/10 hover:text-[#d9ccb7]'}"
-							onclick={() => { tradeMode = "sell"; }}
+							onclick={() => {
+								tradeMode = "sell";
+							}}
 							disabled={!data.canTrade}
 						>
 							Sell
@@ -256,7 +263,9 @@
 								<button
 									type="button"
 									class="btn join-item bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#d9ccb7] text-xs"
-									onclick={() => { tradeQuantity = availableQuantity; }}
+									onclick={() => {
+										tradeQuantity = availableQuantity;
+									}}
 									disabled={!data.canTrade}
 								>
 									Max
@@ -266,9 +275,7 @@
 					</div>
 
 					<div class="space-y-2">
-						<label for="pricePerUnit" class="block text-sm font-medium text-[#e5d8c1]">
-							Price per unit
-						</label>
+						<label for="pricePerUnit" class="block text-sm font-medium text-[#e5d8c1]"> Price per unit </label>
 						<div class="join w-full">
 							<span class="join-item btn bg-[#0d1d31] border-[#dfceb0]/20 text-[#a89e8e] pointer-events-none">$</span>
 							<input
@@ -336,9 +343,7 @@
 					type="submit"
 					disabled={!canTrade}
 					class="btn w-full border-0 text-white gap-2 disabled:opacity-40
-						{tradeMode === 'buy'
-							? 'bg-emerald-600 hover:bg-emerald-500'
-							: 'bg-[#315d8d] hover:bg-[#3d6ea3]'}"
+						{tradeMode === 'buy' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-[#315d8d] hover:bg-[#3d6ea3]'}"
 				>
 					{#if canTrade}
 						<FluentCheckmark20Filled class="size-5" />

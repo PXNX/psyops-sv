@@ -1,13 +1,13 @@
 // src/routes/(authenticated)/(dock)/bloc/create/+page.server.ts
-import { db } from "$lib/server/db";
-import { blocs, states, presidents, blocActionCooldowns, files } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { blocs, states, presidents, blocActionCooldowns, files } from "#lib/server/schema.js";
 import { error, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createBlocSchema } from "./schema";
-import { uploadFileFromForm } from "$lib/server/backblaze";
+import { uploadFileFromForm } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;

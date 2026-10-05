@@ -11,8 +11,8 @@
 	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
 	import FluentOrganization20Filled from "~icons/fluent/organization-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 

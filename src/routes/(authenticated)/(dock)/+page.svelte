@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import TravelProgress from "$lib/component/TravelProgress.svelte";
-	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import PageHeader from "$lib/component/PageHeader.svelte";
-	import SectionCard from "$lib/component/SectionCard.svelte";
-	import Logo from "$lib/component/Logo.svelte";
-	import Badge from "$lib/component/ui/Badge.svelte";
+	import TravelProgress from "#lib/component/TravelProgress.svelte";
+	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import SectionCard from "#lib/component/SectionCard.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import Badge from "#lib/component/ui/Badge.svelte";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -19,8 +19,8 @@
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import FluentShieldLock20Filled from "~icons/fluent/shield-lock-20-filled";
-	import { formatDate, getRegionName } from "$lib/utils/formatting.js";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();
@@ -146,7 +146,10 @@
 				<div class="flex-1 min-w-0">
 					<div class="text-xs text-[#a89e8e]">{regionName}</div>
 					<div class="flex items-center gap-2 flex-wrap">
-						<a href="/state/{data.stateSnapshot.id}" class="text-lg font-bold text-[#fff7e8] hover:text-[#b7d0e6] truncate">
+						<a
+							href="/state/{data.stateSnapshot.id}"
+							class="text-lg font-bold text-[#fff7e8] hover:text-[#b7d0e6] truncate"
+						>
 							{data.stateSnapshot.name}
 						</a>
 						{#if data.stateSnapshot.capitulated}

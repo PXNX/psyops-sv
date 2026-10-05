@@ -9,9 +9,9 @@
 	import FluentBuildingMultiple20Filled from "~icons/fluent/building-multiple-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import Button from "$lib/component/ui/Button.svelte";
-	import Badge from "$lib/component/ui/Badge.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import Badge from "#lib/component/ui/Badge.svelte";
 
 	const { data } = $props();
 
@@ -184,7 +184,9 @@
 					</div>
 
 					<!-- View Details Link -->
-					<div class="flex items-center justify-end gap-1 text-xs text-[#e5d8c1]/70 group-hover:text-[#f2c463] transition-colors mt-3">
+					<div
+						class="flex items-center justify-end gap-1 text-xs text-[#e5d8c1]/70 group-hover:text-[#f2c463] transition-colors mt-3"
+					>
 						<span>View Details</span>
 						<FluentChevronRight20Filled class="size-3.5" />
 					</div>

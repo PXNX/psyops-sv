@@ -9,9 +9,9 @@
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentProhibited20Filled from "~icons/fluent/prohibited-20-filled";
-	import { formatTime } from "$lib/utils/formatting.js";
-	import { settings } from "$lib/settings.svelte";
-	import PartyTag from "$lib/component/PartyTag.svelte";
+	import { formatTime } from "#lib/utils/formatting.js";
+	import { settings } from "#lib/settings.svelte.js";
+	import PartyTag from "#lib/component/PartyTag.svelte";
 
 	const { data } = $props();
 
@@ -228,7 +228,9 @@
 										{chat.unreadCount > 99 ? "99+" : chat.unreadCount}
 									</div>
 								{/if}
-								<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#d9ccb7] transition-colors" />
+								<FluentChevronRight20Filled
+									class="size-5 text-[#a89e8e] group-hover:text-[#d9ccb7] transition-colors"
+								/>
 							</div>
 						</div>
 					</button>

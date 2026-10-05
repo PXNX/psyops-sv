@@ -10,8 +10,8 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-regular";
 	import MarketChart from "./MarketChart.svelte";
-	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
-	import { buttonClass, badgeClass } from "$lib/component/ui/styles";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
 
 	let { data, form } = $props();
 
@@ -133,7 +133,8 @@
 					<input type="hidden" name="quantity" value={buyQty} />
 					<button
 						type="submit"
-						title="Buy for {data.governmentState.name} (Treasury: ${data.governmentState.treasuryBalance.toLocaleString()})"
+						title="Buy for {data.governmentState
+							.name} (Treasury: ${data.governmentState.treasuryBalance.toLocaleString()})"
 						class="btn btn-sm bg-amber-600/70 hover:bg-amber-600 border-0 text-white px-2 gap-1 font-mono"
 					>
 						<span>🏛️</span>
@@ -157,11 +158,15 @@
 					>
 						<FluentArrowLeft20Filled class="size-4 text-[#c7bda9]" />
 					</a>
-					<div class="size-10 flex-shrink-0 flex items-center justify-center bg-[#102239]/70 rounded-sm border border-[#dfceb0]/15">
+					<div
+						class="size-10 flex-shrink-0 flex items-center justify-center bg-[#102239]/70 rounded-sm border border-[#dfceb0]/15"
+					>
 						<ResourceIcon name={data.itemName} class="size-6" />
 					</div>
 					<div class="min-w-0">
-						<h1 class="text-base sm:text-lg font-bold tracking-wide uppercase font-mono text-[#fff7e8] capitalize truncate">
+						<h1
+							class="text-base sm:text-lg font-bold tracking-wide uppercase font-mono text-[#fff7e8] capitalize truncate"
+						>
 							{data.itemName}
 						</h1>
 						<p class="text-xs text-[#a89e8e] font-mono capitalize">
@@ -194,7 +199,8 @@
 			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-sm overflow-hidden">
 				<div class="flex justify-between px-4 py-2.5 border-b border-[#dfceb0]/10">
 					<span class="text-xs text-[#a89e8e] font-mono">LOWEST</span>
-					<span class="text-sm font-bold text-green-400 font-mono">${data.statistics.lowestPrice.toLocaleString()}</span>
+					<span class="text-sm font-bold text-green-400 font-mono">${data.statistics.lowestPrice.toLocaleString()}</span
+					>
 				</div>
 				<div class="flex justify-between px-4 py-2.5 border-b border-[#dfceb0]/10">
 					<span class="text-xs text-[#a89e8e] font-mono">HIGHEST</span>
@@ -202,7 +208,9 @@
 				</div>
 				<div class="flex justify-between px-4 py-2.5 border-b border-[#dfceb0]/10">
 					<span class="text-xs text-[#a89e8e] font-mono">AVERAGE</span>
-					<span class="text-sm font-bold text-[#fff7e8] font-mono">${data.statistics.currentAvgPrice.toLocaleString()}</span>
+					<span class="text-sm font-bold text-[#fff7e8] font-mono"
+						>${data.statistics.currentAvgPrice.toLocaleString()}</span
+					>
 				</div>
 				<div class="flex justify-between px-4 py-2.5">
 					<span class="text-xs text-[#a89e8e] font-mono">ACTIVE LISTINGS</span>
@@ -252,11 +260,8 @@
 								class="mt-3 text-xs text-[#a89e8e] hover:text-[#d9ccb7] font-mono underline underline-offset-2"
 								onclick={() => (showAllOffers = !showAllOffers)}
 							>
-								{showAllOffers ? "Hide" : "Show"} {data.otherListings.length - 1} more offer{data.otherListings.length -
-									1 !==
-								1
-									? "s"
-									: ""}
+								{showAllOffers ? "Hide" : "Show"}
+								{data.otherListings.length - 1} more offer{data.otherListings.length - 1 !== 1 ? "s" : ""}
 							</button>
 
 							{#if showAllOffers}

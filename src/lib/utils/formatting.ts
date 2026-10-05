@@ -1,5 +1,5 @@
 // src/lib/utils/formatting.ts
-import * as m from "$lib/paraglide/messages";
+import * as m from "#lib/paraglide/messages.js";
 
 function pad(n: number) {
 	return String(n).padStart(2, "0");

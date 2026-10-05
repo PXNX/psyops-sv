@@ -1,6 +1,6 @@
 import { redirect } from "@sveltejs/kit";
-import { db } from "$lib/server/db";
-import { residences, regions, states, userProfiles } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { residences, regions, states, userProfiles } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
 
 import type { RequestEvent } from "./$types";

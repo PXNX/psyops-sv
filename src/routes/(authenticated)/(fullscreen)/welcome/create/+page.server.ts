@@ -1,10 +1,10 @@
 // src/routes/(authenticated)/(fullscreen)/welcome/create/+page.server.ts
-import { db } from "$lib/server/db";
-import { userProfiles, userWallets, files, residences } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { userProfiles, userWallets, files, residences } from "#lib/server/schema.js";
 import { redirect, error } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm } from "$lib/server/backblaze";
+import { uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProfileSchema } from "./schema";

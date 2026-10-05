@@ -1,5 +1,5 @@
 // src/lib/server/service/factoryWork.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	companies,
 	companyBudgets,
@@ -9,10 +9,10 @@ import {
 	resourceInventory,
 	userWallets,
 	transactionHistory
-} from "$lib/server/schema";
-import { calculateAndCollectTax } from "$lib/server/taxes";
-import { getEmbargoReason } from "$lib/server/embargo";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+} from "#lib/server/schema.js";
+import { calculateAndCollectTax } from "#lib/server/taxes.js";
+import { getEmbargoReason } from "#lib/server/embargo.js";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { and, eq, sql } from "drizzle-orm";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds

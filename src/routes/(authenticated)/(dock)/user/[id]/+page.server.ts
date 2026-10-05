@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/user/[id]/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	accounts,
 	partyMembers,
@@ -24,21 +24,21 @@ import {
 	blocDiplomats,
 	blocLeaderElections,
 	blocLeaderCandidates
-} from "$lib/server/schema";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+} from "#lib/server/schema.js";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { fail } from "@sveltejs/kit";
 import { eq, count, and } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { getRegionName } from "$lib/utils/formatting";
-import { sendMedalNotification } from "$lib/server/service/inbox";
-import { getBirthdayInfo, collectBirthdayRewards } from "$lib/server/service/birthday";
-import { isPremiumActive, PREMIUM_PLANS } from "$lib/config";
-import { giftPremium as giftPremiumService } from "$lib/server/service/premium";
+import { getRegionName } from "#lib/utils/formatting.js";
+import { sendMedalNotification } from "#lib/server/service/inbox.js";
+import { getBirthdayInfo, collectBirthdayRewards } from "#lib/server/service/birthday.js";
+import { isPremiumActive, PREMIUM_PLANS } from "#lib/config/index.js";
+import { giftPremium as giftPremiumService } from "#lib/server/service/premium.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { updateProfileSchema } from "./schema";
-import { PROFILE_EDIT_CONFIG } from "$lib/config/features/party.config";
-import { getContext } from "$lib/server/context";
+import { PROFILE_EDIT_CONFIG } from "#lib/config/features/party.config.js";
+import { getContext } from "#lib/server/context.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	// Query account with its profile

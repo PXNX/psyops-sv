@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Logo from "$lib/component/Logo.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -11,7 +11,7 @@
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import { enhance } from "$app/forms";
 	import { onMount, onDestroy } from "svelte";
-	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
+	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 
 	const { data } = $props();
 
@@ -252,7 +252,8 @@
 								<div class="flex flex-col items-center gap-2 flex-shrink-0">
 									{#if hasStarted && index < 3}
 										<div
-											class="size-6 rounded-full flex items-center justify-center font-bold text-xs font-mono {index === 0
+											class="size-6 rounded-full flex items-center justify-center font-bold text-xs font-mono {index ===
+											0
 												? 'bg-[#e6a527] text-[#172a45]'
 												: index === 1
 													? 'bg-[#a89e8e] text-[#172a45]'

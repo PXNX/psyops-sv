@@ -5,7 +5,7 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentNavigation20Filled from "~icons/fluent/navigation-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 
 	const { borderingRegions } = $props<{
 		borderingRegions: Array<{
@@ -55,9 +55,7 @@
 						<div class="flex-1 min-w-0">
 							<div class="flex items-start justify-between gap-2 mb-2">
 								<div class="flex-1 min-w-0">
-									<h3
-										class="font-semibold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate"
-									>
+									<h3 class="font-semibold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate">
 										{borderRegion.name}
 									</h3>
 									<div class="flex items-center gap-3 text-xs text-[#a89e8e] mt-1">

@@ -13,13 +13,13 @@
 	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 
-	import Logo from "$lib/component/Logo.svelte";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import SectionCard from "$lib/component/SectionCard.svelte";
-	import StatCard from "$lib/component/StatCard.svelte";
-	import Modal from "$lib/component/Modal.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import SectionCard from "#lib/component/SectionCard.svelte";
+	import StatCard from "#lib/component/StatCard.svelte";
+	import Modal from "#lib/component/Modal.svelte";
 
-	import { formatDate, getDaysRemaining } from "$lib/utils/formatting";
+	import { formatDate, getDaysRemaining } from "#lib/utils/formatting.js";
 	import BorderingRegions from "./BorderingRegions.svelte";
 	import ResidenceActions from "./ResidenceActions.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
@@ -81,9 +81,7 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Hero Header -->
-	<div
-		class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-[#14283f]/70 border-b border-[#dfceb0]/10"
-	>
+	<div class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-[#14283f]/70 border-b border-[#dfceb0]/10">
 		<div class="max-w-5xl mx-auto flex items-center gap-5">
 			<Logo
 				src="/coats/{data.region.id}.svg"
@@ -293,7 +291,9 @@
 					<div class="panel-muted rounded-lg p-4 space-y-3">
 						<div class="flex items-center justify-between">
 							<span class="text-sm text-[#a89e8e]">Visa Cost</span>
-							<span class="text-xl font-bold text-[#fff7e8]">${Number(data.visa.settings.visaCost).toLocaleString()}</span>
+							<span class="text-xl font-bold text-[#fff7e8]"
+								>${Number(data.visa.settings.visaCost).toLocaleString()}</span
+							>
 						</div>
 						<div class="flex items-center justify-between">
 							<span class="text-sm text-[#a89e8e]">Tax ({data.visa.settings.visaTaxRate}%)</span>

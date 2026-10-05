@@ -29,7 +29,7 @@
 
 	function formatCooldownDate(cooldownEnd: string): string {
 		const d = new Date(cooldownEnd);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
 </script>
@@ -40,7 +40,8 @@
 		<div class="space-y-2 flex-1">
 			<h3 class="font-semibold text-red-300 text-lg">Edit Cooldown Active</h3>
 			<p class="text-red-200/90 text-sm leading-relaxed">
-				{entityName.charAt(0).toUpperCase() + entityName.slice(1)} was recently edited. You must wait before making another change.
+				{entityName.charAt(0).toUpperCase() + entityName.slice(1)} was recently edited. You must wait before making another
+				change.
 			</p>
 			<div class="bg-red-900/30 rounded-lg p-3 space-y-2">
 				<div class="flex items-center justify-between">

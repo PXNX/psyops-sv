@@ -8,7 +8,7 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
-	import Button from "$lib/component/ui/Button.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	const { data, form } = $props();
 

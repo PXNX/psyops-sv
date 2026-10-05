@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/api/cron/+layout.server.ts
 
 import { error, json, redirect } from "@sveltejs/kit";
-import { env } from "$env/dynamic/private";
+import { CRON_SECRET, NODE_ENV } from "$app/env/private";
 
 import type { RequestEvent } from "./$types";
 
@@ -24,10 +24,10 @@ export const load = async (event: RequestEvent) => {
 
 function isValidCronRequest(request: Request): boolean {
 	const authHeader = request.headers.get("authorization");
-	const cronSecret = env.CRON_SECRET;
+	const cronSecret = CRON_SECRET;
 
 	if (!cronSecret) {
-		return env.NODE_ENV === "development";
+		return NODE_ENV === "development";
 	}
 
 	return authHeader === `Bearer ${cronSecret}`;

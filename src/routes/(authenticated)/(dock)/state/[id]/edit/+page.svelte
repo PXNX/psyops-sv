@@ -3,7 +3,7 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { editStateSchema } from "./schema";
-	import { useImageUpload } from "$lib/utils/edit/useImageUpload.svelte";
+	import { useImageUpload } from "#lib/utils/edit/useImageUpload.svelte.js";
 	import {
 		EditPageLayout,
 		EditSection,
@@ -13,12 +13,12 @@
 		EditMessage,
 		EditFormActions,
 		EditInfoBox
-	} from "$lib/component/edit";
+	} from "#lib/component/edit/index.js";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentColor20Filled from "~icons/fluent/color-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
 
 	let { data } = $props();
 

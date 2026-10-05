@@ -1,7 +1,7 @@
 <!-- src/lib/component/AddAuthorModal.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import Modal from "$lib/component/Modal.svelte";
+	import Modal from "#lib/component/Modal.svelte";
 	import MdiNewspaperPlus from "~icons/mdi/newspaper-plus";
 
 	interface Props {

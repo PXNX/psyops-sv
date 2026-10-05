@@ -1,5 +1,5 @@
 // src/routes/moderators/actions/[id]/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	accounts,
 	userProfiles,
@@ -9,11 +9,11 @@ import {
 	chatRestrictions,
 	generalReports,
 	contentFlags
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, or } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params }) => {
 	const actionId = parseInt(params.id);

@@ -1,5 +1,5 @@
 // src/routes/production/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	companies,
 	companyBudgets,
@@ -12,10 +12,10 @@ import {
 	resourceInventory,
 	states,
 	userWallets
-} from "$lib/server/schema";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { calculateShiftStatus, collectWages, startWorkShift } from "$lib/server/service/factoryWork";
-import { PRODUCTION_RECIPES, type ProductionType } from "$lib/config";
+} from "#lib/server/schema.js";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { calculateShiftStatus, collectWages, startWorkShift } from "#lib/server/service/factoryWork.js";
+import { PRODUCTION_RECIPES, type ProductionType } from "#lib/config/index.js";
 import { fail } from "@sveltejs/kit";
 import { and, eq, sql, inArray } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";

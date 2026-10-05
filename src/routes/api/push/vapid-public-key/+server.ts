@@ -1,8 +1,8 @@
 // src/routes/api/push/vapid-public-key/+server.ts
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { getVapidPublicKey } from "$lib/server/services/push-notification.service";
+import { getVapidPublicKey } from "#lib/server/services/push-notification.service.js";
 
 export const GET: RequestHandler = async () => {
-    return json({ publicKey: getVapidPublicKey() });
+	return json({ publicKey: getVapidPublicKey() });
 };

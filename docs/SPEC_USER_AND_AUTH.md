@@ -213,18 +213,18 @@ Shows:
 
 ## Routes
 
-| Route                     | Purpose                                   |
-| ------------------------- | ----------------------------------------- |
-| `/auth/login`             | Login page (Google / Telegram buttons)    |
-| `/auth/login/google`      | Google OAuth redirect                     |
-| `/auth/login/telegram`    | Telegram OAuth redirect                   |
-| `/auth/callback/telegram` | Telegram callback                         |
-| `/auth/logout`            | Logout (clear session)                    |
+| Route                     | Purpose                                                                                                     |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `/auth/login`             | Login page (Google / Telegram buttons)                                                                      |
+| `/auth/login/google`      | Google OAuth redirect                                                                                       |
+| `/auth/login/telegram`    | Telegram OAuth redirect                                                                                     |
+| `/auth/callback/telegram` | Telegram callback                                                                                           |
+| `/auth/logout`            | Logout (clear session)                                                                                      |
 | `/user/[id]`              | User profile (own profile has an edit icon on the card, opening a bottom sheet to change name, avatar, bio) |
-| `/user/[id]/career`       | Career page (articles, medals, positions) |
-| `/settings`               | Settings overview                         |
-| `/giftcode`               | Redeem gift codes                         |
-| `/welcome/*`              | Onboarding flow                           |
+| `/user/[id]/career`       | Career page (articles, medals, positions)                                                                   |
+| `/settings`               | Settings overview                                                                                           |
+| `/giftcode`               | Redeem gift codes                                                                                           |
+| `/welcome/*`              | Onboarding flow                                                                                             |
 
 ---
 

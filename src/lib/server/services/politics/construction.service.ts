@@ -2,9 +2,9 @@
 // the "under construction" queue. Buildings sit pending for BUILDING_TEMPLATES'
 // constructionTime before their bonus counts, mirroring how productionQueue /
 // militaryUnits.trainingCompletesAt gate their own completions.
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import { eq, and, lte } from "drizzle-orm";
-import { stateBuildings, regions } from "$lib/server/schema";
+import { stateBuildings, regions } from "#lib/server/schema.js";
 
 function regionStatBonusFor(
 	buildingType: string

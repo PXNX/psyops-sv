@@ -1,9 +1,9 @@
 // src/routes/(authenticated)/(dock)/newspaper/+page.server.ts
-import { db } from "$lib/server/db";
-import { files, journalists, newspapers } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { files, journalists, newspapers } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export type NewspaperEntry = {
 	id: string;

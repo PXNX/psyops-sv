@@ -1,37 +1,37 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import type { PageData } from './$types';
+	import { page } from "$app/stores";
+	import { goto } from "$app/navigation";
+	import type { PageData } from "./$types";
 
 	export let data: PageData;
 
 	// Transaction type labels
 	const transactionTypeLabels: Record<string, string> = {
-		resource_purchase: 'Resource Purchase',
-		resource_sale: 'Resource Sale',
-		construction: 'Construction Project',
-		tax_collection: 'Tax Collection',
-		infrastructure: 'Infrastructure',
-		military: 'Military Spending',
-		other: 'Other'
+		resource_purchase: "Resource Purchase",
+		resource_sale: "Resource Sale",
+		construction: "Construction Project",
+		tax_collection: "Tax Collection",
+		infrastructure: "Infrastructure",
+		military: "Military Spending",
+		other: "Other"
 	};
 
 	// Transaction type icons
 	const transactionTypeIcons: Record<string, string> = {
-		resource_purchase: '🛒',
-		resource_sale: '💰',
-		construction: '🏗️',
-		tax_collection: '🏛️',
-		infrastructure: '🛤️',
-		military: '⚔️',
-		other: '📋'
+		resource_purchase: "🛒",
+		resource_sale: "💰",
+		construction: "🏗️",
+		tax_collection: "🏛️",
+		infrastructure: "🛤️",
+		military: "⚔️",
+		other: "📋"
 	};
 
 	// Format currency
 	function formatCurrency(amount: number): string {
-		return new Intl.NumberFormat('en-US', {
-			style: 'currency',
-			currency: 'USD',
+		return new Intl.NumberFormat("en-US", {
+			style: "currency",
+			currency: "USD",
 			minimumFractionDigits: 0,
 			maximumFractionDigits: 0
 		}).format(amount);
@@ -50,21 +50,21 @@
 	// Format date
 	function formatDate(date: Date | string): string {
 		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
 
 	// Format short date
 	function formatShortDate(date: Date | string): string {
 		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
 	}
 
 	// Navigate to a specific page
 	function goToPage(pageNum: number) {
 		const url = new URL($page.url);
-		url.searchParams.set('page', pageNum.toString());
+		url.searchParams.set("page", pageNum.toString());
 		goto(url.toString());
 	}
 
@@ -77,32 +77,28 @@
 	// Get color for transaction type
 	function getTypeColor(type: string): string {
 		const colors: Record<string, string> = {
-			resource_purchase: 'bg-[#315d8d]',
-			resource_sale: 'bg-[#587252]',
-			construction: 'bg-[#e6a527]',
-			tax_collection: 'bg-[#8c709b]',
-			infrastructure: 'bg-[#315d8d]',
-			military: 'bg-red-500',
-			other: 'bg-[#a89e8e]'
+			resource_purchase: "bg-[#315d8d]",
+			resource_sale: "bg-[#587252]",
+			construction: "bg-[#e6a527]",
+			tax_collection: "bg-[#8c709b]",
+			infrastructure: "bg-[#315d8d]",
+			military: "bg-red-500",
+			other: "bg-[#a89e8e]"
 		};
-		return colors[type] || 'bg-[#a89e8e]';
+		return colors[type] || "bg-[#a89e8e]";
 	}
 
 	// Sort categories by total activity
 	$: sortedCategories = data.analytics.categoryBreakdown
-		.sort((a, b) => (b.income + b.expenses) - (a.income + a.expenses))
+		.sort((a, b) => b.income + b.expenses - (a.income + a.expenses))
 		.slice(0, 5); // Top 5 categories
 
 	// Calculate max for bar scaling
-	$: maxCategoryValue = Math.max(
-		...sortedCategories.map(cat => Math.max(cat.income, cat.expenses)),
-		1
-	);
+	$: maxCategoryValue = Math.max(...sortedCategories.map((cat) => Math.max(cat.income, cat.expenses)), 1);
 </script>
 
-<svelte:head>
-	<title>{data.state.name} - Government Budget</title>
-</svelte:head>
+<!-- @migration-task could not auto-migrate `$app/stores` to `$app/state`: legacy `export let` props; migrate manually -->
+<svelte:head><title>{data.state.name} - Government Budget</title></svelte:head>
 
 <div class="min-h-screen">
 	<div class="container mx-auto px-4 py-8 max-w-7xl">
@@ -111,9 +107,7 @@
 			<h1 class="text-4xl font-bold text-[#fff7e8] mb-3">
 				{data.state.name} - Government Budget
 			</h1>
-			<p class="text-[#c7bda9] text-lg">
-				Track government spending and revenue
-			</p>
+			<p class="text-[#c7bda9] text-lg">Track government spending and revenue</p>
 		</div>
 
 		<!-- Analytics Overview -->
@@ -152,10 +146,10 @@
 			<div class="panel rounded-2xl p-6">
 				<div class="flex items-center justify-between mb-2">
 					<div class="text-sm font-medium text-[#e5d8c1]">Net Change</div>
-					<div class="text-2xl">{data.analytics.netChange >= 0 ? '✅' : '⚠️'}</div>
+					<div class="text-2xl">{data.analytics.netChange >= 0 ? "✅" : "⚠️"}</div>
 				</div>
 				<div class="text-3xl font-bold {data.analytics.netChange >= 0 ? 'text-[#8fae88]' : 'text-red-400'}">
-					{data.analytics.netChange >= 0 ? '+' : ''}{formatCurrency(data.analytics.netChange)}
+					{data.analytics.netChange >= 0 ? "+" : ""}{formatCurrency(data.analytics.netChange)}
 				</div>
 				<div class="text-sm text-[#a89e8e] mt-1">Last 30 days</div>
 			</div>
@@ -170,7 +164,7 @@
 						<div>
 							<div class="flex items-center justify-between mb-2">
 								<div class="flex items-center gap-2">
-									<span class="text-xl">{transactionTypeIcons[category.type] || '📋'}</span>
+									<span class="text-xl">{transactionTypeIcons[category.type] || "📋"}</span>
 									<span class="font-medium text-[#e5d8c1]">
 										{transactionTypeLabels[category.type] || category.type}
 									</span>
@@ -263,8 +257,12 @@
 								<tr class="hover:bg-[#19304b] transition-colors group">
 									<td class="px-6 py-4">
 										<div class="flex items-start gap-3">
-											<div class="flex-shrink-0 w-10 h-10 rounded-xl {getTypeColor(transaction.type)} bg-opacity-10 flex items-center justify-center text-xl">
-												{transactionTypeIcons[transaction.type] || '📋'}
+											<div
+												class="flex-shrink-0 w-10 h-10 rounded-xl {getTypeColor(
+													transaction.type
+												)} bg-opacity-10 flex items-center justify-center text-xl"
+											>
+												{transactionTypeIcons[transaction.type] || "📋"}
 											</div>
 											<div class="flex-1 min-w-0">
 												<div class="font-semibold text-[#fff7e8]">
@@ -287,7 +285,11 @@
 									<td class="px-6 py-4 whitespace-nowrap">
 										<div class="text-sm text-[#e5d8c1]">{formatShortDate(transaction.createdAt)}</div>
 										<div class="text-xs text-[#a89e8e]">
-											{(() => { const d = new Date(transaction.createdAt); const pad = (n) => String(n).padStart(2,'0'); return `${pad(d.getHours())}:${pad(d.getMinutes())}`; })()}
+											{(() => {
+												const d = new Date(transaction.createdAt);
+												const pad = (n) => String(n).padStart(2, "0");
+												return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+											})()}
 										</div>
 									</td>
 									<td class="px-6 py-4">
@@ -299,9 +301,13 @@
 										</a>
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap text-right">
-										<div class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg {transaction.isIncome ? 'bg-[#587252]/18' : 'bg-red-600/10'}">
+										<div
+											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg {transaction.isIncome
+												? 'bg-[#587252]/18'
+												: 'bg-red-600/10'}"
+										>
 											<span class="text-sm font-bold {transaction.isIncome ? 'text-[#8fae88]' : 'text-red-400'}">
-												{transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
+												{transaction.amount > 0 ? "+" : ""}{formatCurrency(transaction.amount)}
 											</span>
 										</div>
 									</td>
@@ -355,7 +361,8 @@
 										{#if i === 0 || i === data.pagination.totalPages - 1 || Math.abs(i + 1 - data.pagination.currentPage) <= 2}
 											<button
 												on:click={() => goToPage(i + 1)}
-												class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {i + 1 === data.pagination.currentPage
+												class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {i + 1 ===
+												data.pagination.currentPage
 													? 'bg-[#e6a527] text-[#172a45] border-[#e6a527]'
 													: 'bg-[#14283f] text-[#e5d8c1] border-[#dfceb0]/25 hover:bg-[#19304b]'}"
 											>

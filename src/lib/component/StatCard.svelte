@@ -67,5 +67,7 @@
 		{/if}
 		<p class="text-xs sm:text-sm {colors.labelColor} font-medium">{label}</p>
 	</div>
-	<p class="text-2xl sm:text-4xl font-bold text-[#fff7e8]">{typeof value === "number" ? value.toLocaleString() : value}</p>
+	<p class="text-2xl sm:text-4xl font-bold text-[#fff7e8]">
+		{typeof value === "number" ? value.toLocaleString() : value}
+	</p>
 </svelte:element>

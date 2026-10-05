@@ -6,7 +6,7 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 
-	import { formatDateTime } from "$lib/utils/formatting.js";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data, form } = $props();
 
@@ -46,7 +46,9 @@
 					<h4 class="text-white font-bold text-lg mb-1">{data.activeBroadcast.title}</h4>
 					<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{data.activeBroadcast.content}</p>
 					<p class="text-xs text-[#a89e8e] mt-2">
-						By {data.activeBroadcast.issuer?.profile?.name || "Admin"} · {formatDateTime(data.activeBroadcast.createdAt)}
+						By {data.activeBroadcast.issuer?.profile?.name || "Admin"} · {formatDateTime(
+							data.activeBroadcast.createdAt
+						)}
 					</p>
 				</div>
 				<form method="POST" action="?/revokeBroadcast" use:enhance>
@@ -108,8 +110,7 @@
 						maxlength="2000"
 						class="textarea textarea-bordered w-full field-control font-mono text-sm"
 						required
-						disabled={isSubmitting}
-					></textarea>
+						disabled={isSubmitting}></textarea>
 				</div>
 
 				<!-- Preview -->
@@ -186,7 +187,11 @@
 			<h3 class="text-lg font-semibold text-white mb-4">Recent Broadcasts</h3>
 			<div class="space-y-3">
 				{#each data.recentBroadcasts as broadcast}
-					<div class="bg-[#102239]/70 rounded-lg p-4 border {broadcast.isActive ? 'border-[#e6a527]/35' : 'border-[#dfceb0]/10'}">
+					<div
+						class="bg-[#102239]/70 rounded-lg p-4 border {broadcast.isActive
+							? 'border-[#e6a527]/35'
+							: 'border-[#dfceb0]/10'}"
+					>
 						<div class="flex items-start justify-between gap-2">
 							<div class="flex-1">
 								<div class="flex items-center gap-2">

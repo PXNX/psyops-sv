@@ -4,7 +4,7 @@
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createPartySchema } from "./schema";
 	import { goto } from "$app/navigation";
-	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
+	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -16,10 +16,10 @@
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import { PARTY_IDEOLOGIES } from "$lib/config";
-	import { EditCooldownWarning } from "$lib/component/edit";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import { PARTY_IDEOLOGIES } from "#lib/config/index.js";
+	import { EditCooldownWarning } from "#lib/component/edit/index.js";
 
 	let { data } = $props();
 
@@ -151,7 +151,9 @@
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div class="text-center space-y-2">
-		<div class="size-20 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-2xl flex items-center justify-center mx-auto">
+		<div
+			class="size-20 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-2xl flex items-center justify-center mx-auto"
+		>
 			<FluentPeople20Filled class="size-10 text-[#b7d0e6]" />
 		</div>
 		<h1 class="text-3xl font-bold text-[#fff7e8]">Create Political Party</h1>
@@ -270,7 +272,9 @@
 					{#if $errors.abbreviation}
 						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
 					{:else}
-						<p class="text-xs text-[#a89e8e] mt-1">{$form.abbreviation?.length || 0}/4 characters • Alphanumeric only</p>
+						<p class="text-xs text-[#a89e8e] mt-1">
+							{$form.abbreviation?.length || 0}/4 characters • Alphanumeric only
+						</p>
 					{/if}
 				</div>
 			</div>

@@ -1,11 +1,11 @@
 // src/routes/(authenticated)/(dock)/state/[id]/construction/+page.server.ts
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import { eq, and, asc, inArray } from "drizzle-orm";
-import { states, stateBuildings, userProfiles } from "$lib/server/schema";
-import { getRegionName } from "$lib/utils/formatting";
-import { completePendingConstructions } from "$lib/server/services/politics/construction.service";
+import { states, stateBuildings, userProfiles } from "#lib/server/schema.js";
+import { getRegionName } from "#lib/utils/formatting.js";
+import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
 
 export const load: PageServerLoad = async ({ params }) => {
 	const stateId = parseInt(params.id);

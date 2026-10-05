@@ -9,7 +9,7 @@
 	import FluentEyeOff20Filled from "~icons/fluent/eye-off-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import { enhance } from "$app/forms";
 
 	let { data, form } = $props();
@@ -112,9 +112,7 @@
 	<!-- Header -->
 	<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 		<div class="flex items-center gap-4">
-			<div
-				class="size-12 sm:size-16 bg-[#8c709b]/20 rounded-2xl flex items-center justify-center shrink-0"
-			>
+			<div class="size-12 sm:size-16 bg-[#8c709b]/20 rounded-2xl flex items-center justify-center shrink-0">
 				<FluentGift20Filled class="size-6 sm:size-8 text-[#d5c4df]" />
 			</div>
 			<div>
@@ -419,11 +417,7 @@
 					<label class="block text-sm font-medium text-[#e5d8c1]">Resource Rewards</label>
 
 					<div class="flex gap-2">
-						<select
-							bind:value={newResource.type}
-							disabled={submitting}
-							class="select field-control flex-1"
-						>
+						<select bind:value={newResource.type} disabled={submitting} class="select field-control flex-1">
 							{#each resourceTypes as type}
 								<option value={type}>
 									{resourceIcons[type] || "📦"}

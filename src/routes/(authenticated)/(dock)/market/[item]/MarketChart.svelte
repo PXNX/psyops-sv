@@ -123,16 +123,15 @@
 	// ── Formatting ───────────────────────────────────────────────────────────────
 	function fmtAxisDate(ts: number): string {
 		const d = new Date(ts);
-		const pad = (n: number) => String(n).padStart(2, '0');
-		if (selectedRange === "1D")
-			return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		const pad = (n: number) => String(n).padStart(2, "0");
+		if (selectedRange === "1D") return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 		if (selectedRange === "1W") return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
 		if (selectedRange === "1M") return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
 		return `${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`;
 	}
 
 	function fmtTooltipDate(d: Date): string {
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		if (selectedRange === "1D")
 			return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 		if (selectedRange === "1W")

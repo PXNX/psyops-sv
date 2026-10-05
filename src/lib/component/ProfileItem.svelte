@@ -1,8 +1,8 @@
 <!-- src/lib/component/ProfileItem.svelte -->
 <script lang="ts">
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import PartyTag from "$lib/component/PartyTag.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import PartyTag from "#lib/component/PartyTag.svelte";
 
 	interface Props {
 		href?: string;

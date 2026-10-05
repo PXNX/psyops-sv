@@ -1,8 +1,8 @@
 // src/lib/server/service/inbox.ts
 // Helper functions for sending inbox messages
 
-import { db } from "$lib/server/db";
-import { inboxMessages } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { inboxMessages } from "#lib/server/schema.js";
 
 /**
  * Send a medal award notification to a user

@@ -5,9 +5,9 @@
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentChevronLeft20Filled from "~icons/fluent/chevron-left-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -29,9 +29,7 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Same hero header as region page for visual continuity -->
-	<div
-		class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-[#14283f]/70 border-b border-[#dfceb0]/10"
-	>
+	<div class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-[#14283f]/70 border-b border-[#dfceb0]/10">
 		<div class="max-w-6xl mx-auto flex items-center gap-5">
 			<a href="/region/{data.region.id}" class="shrink-0">
 				<Logo

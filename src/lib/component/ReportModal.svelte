@@ -2,8 +2,8 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import BottomSheet from "$lib/component/BottomSheet.svelte";
-	import FormActions from "$lib/component/ui/FormActions.svelte";
+	import BottomSheet from "#lib/component/BottomSheet.svelte";
+	import FormActions from "#lib/component/ui/FormActions.svelte";
 
 	interface Props {
 		show: boolean;
@@ -64,11 +64,7 @@
 					<label class="label">
 						<span class="label-text text-[#e5d8c1]">Violation Type</span>
 					</label>
-					<select
-						name="violationType"
-						bind:value={violationType}
-						class="select select-bordered field-control w-full"
-					>
+					<select name="violationType" bind:value={violationType} class="select select-bordered field-control w-full">
 						{#each violationTypes as type}
 							<option value={type.value}>{type.label}</option>
 						{/each}

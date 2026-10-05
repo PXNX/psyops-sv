@@ -4,16 +4,16 @@
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createCompanySchema } from "./schema";
 	import { goto } from "$app/navigation";
-	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
+	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	let { data } = $props();
 
@@ -357,11 +357,7 @@
 
 		<!-- Submit -->
 		<div class="flex gap-3">
-			<a
-				href="/production"
-				class={buttonClass({ variant: "secondary", grow: true })}
-				class:btn-disabled={$submitting}
-			>
+			<a href="/production" class={buttonClass({ variant: "secondary", grow: true })} class:btn-disabled={$submitting}>
 				Cancel
 			</a>
 			<button

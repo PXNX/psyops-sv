@@ -66,9 +66,7 @@
 		<div class="join">
 			<button
 				type="button"
-				class="btn join-item {data.scope === 'state'
-					? 'btn-primary'
-					: 'btn-ghost bg-[#14283f]/85 border-[#dfceb0]/15'}"
+				class="btn join-item {data.scope === 'state' ? 'btn-primary' : 'btn-ghost bg-[#14283f]/85 border-[#dfceb0]/15'}"
 				onclick={() => updateParams({ scope: null })}
 			>
 				<FluentLocation20Filled class="size-4" />

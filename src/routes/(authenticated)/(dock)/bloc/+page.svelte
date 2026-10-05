@@ -11,9 +11,9 @@
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import Button from "$lib/component/ui/Button.svelte";
-	import Badge from "$lib/component/ui/Badge.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import Badge from "#lib/component/ui/Badge.svelte";
 
 	const { data } = $props();
 

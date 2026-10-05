@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/settings/+page.server.ts
-import { db } from "$lib/server/db";
-import { userProfiles, accounts } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { userProfiles, accounts } from "#lib/server/schema.js";
 import { redirect, fail } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";

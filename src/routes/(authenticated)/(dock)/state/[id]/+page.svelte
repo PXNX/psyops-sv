@@ -17,14 +17,14 @@
 	import FluentShieldError20Filled from "~icons/fluent/shield-error-20-filled";
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import Logo from "$lib/component/Logo.svelte";
-	import ProfileItem from "$lib/component/ProfileItem.svelte";
-	import Modal from "$lib/component/Modal.svelte";
-	import Button from "$lib/component/ui/Button.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import ProfileItem from "#lib/component/ProfileItem.svelte";
+	import Modal from "#lib/component/Modal.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
 	import { enhance } from "$app/forms";
-	import { buttonClass, badgeClass } from "$lib/component/ui/styles";
+	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 
@@ -654,9 +654,7 @@
 							<th class="px-4 py-3 text-left text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
 								Applies To
 							</th>
-							<th class="px-4 py-3 text-right text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
-								Rate
-							</th>
+							<th class="px-4 py-3 text-right text-xs font-semibold text-[#a89e8e] uppercase tracking-wider"> Rate </th>
 						</tr>
 					</thead>
 					<tbody class="divide-y divide-[#dfceb0]/10">

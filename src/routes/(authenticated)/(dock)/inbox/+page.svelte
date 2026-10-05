@@ -8,7 +8,7 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 
-	import { formatDateTime } from "$lib/utils/formatting.js";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data, form } = $props();
 
@@ -180,8 +180,7 @@
 							maxlength="2000"
 							class="textarea textarea-bordered w-full field-control"
 							required
-							disabled={isSubmitting}
-						></textarea>
+							disabled={isSubmitting}></textarea>
 						<p class="text-xs text-[#a89e8e] mt-1">{broadcastContent.length}/2000 characters</p>
 					</div>
 

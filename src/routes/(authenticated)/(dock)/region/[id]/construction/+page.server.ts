@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/region/[id]/construction/+page.server.ts
-import { db } from "$lib/server/db";
-import { regions, governors, ministers, stateTreasury, states } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { regions, governors, ministers, stateTreasury, states } from "#lib/server/schema.js";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";

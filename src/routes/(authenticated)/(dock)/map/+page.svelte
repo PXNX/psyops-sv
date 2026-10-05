@@ -1,17 +1,17 @@
 <!-- src/routes/map/+page.svelte -->
 <script lang="ts">
 	import panzoom, { type PanZoom } from "panzoom";
-	import WorldMap from "$lib/assets/worldmap3.svg?raw";
-	import type { Region, State, UserTravel } from "$lib/server/schema";
-	import * as m from "$lib/paraglide/messages";
+	import WorldMap from "#lib/assets/worldmap3.svg?raw";
+	import type { Region, State, UserTravel } from "#lib/server/schema.js";
+	import * as m from "#lib/paraglide/messages.js";
 	import FluentEmojiMagnifyingGlassTiltedLeft from "~icons/fluent-emoji/magnifying-glass-tilted-left";
 	import IconMapPin from "~icons/fluent/location-24-regular";
 	import IconChevronRight from "~icons/fluent/chevron-right-24-regular";
 	import { goto } from "$app/navigation";
 	import type { PageData } from "./$types";
-	import { getRegionName } from "$lib/utils/formatting";
-	import Logo from "$lib/component/Logo.svelte";
-	import BottomSheet from "$lib/component/BottomSheet.svelte";
+	import { getRegionName } from "#lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import BottomSheet from "#lib/component/BottomSheet.svelte";
 
 	let { data }: { data: PageData } = $props();
 
@@ -442,7 +442,6 @@
 			showSheet = true;
 		}
 	}
-
 
 	function selectSearchResult(regionId: number) {
 		const svgElement = document.getElementById("panzoom-element");

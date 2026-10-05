@@ -1,28 +1,37 @@
 // src/routes/company/create/schema.ts
 import * as v from "valibot";
-import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
+import { SCHEMA_LIMITS } from "#lib/config/validation/schema-limits.js";
 
 export const createCompanySchema = v.object({
 	name: v.pipe(
 		v.string("Company name is required"),
-		v.minLength(SCHEMA_LIMITS.MIN_NAME_LENGTH, `Company name must be at least ${SCHEMA_LIMITS.MIN_NAME_LENGTH} characters`),
-		v.maxLength(SCHEMA_LIMITS.COMPANY_NAME_MAX, `Company name must be at most ${SCHEMA_LIMITS.COMPANY_NAME_MAX} characters`)
+		v.minLength(
+			SCHEMA_LIMITS.MIN_NAME_LENGTH,
+			`Company name must be at least ${SCHEMA_LIMITS.MIN_NAME_LENGTH} characters`
+		),
+		v.maxLength(
+			SCHEMA_LIMITS.COMPANY_NAME_MAX,
+			`Company name must be at most ${SCHEMA_LIMITS.COMPANY_NAME_MAX} characters`
+		)
 	),
 	description: v.optional(
 		v.pipe(
 			v.string(),
-			v.maxLength(SCHEMA_LIMITS.COMPANY_DESCRIPTION_MAX, `Description must be at most ${SCHEMA_LIMITS.COMPANY_DESCRIPTION_MAX} characters`)
+			v.maxLength(
+				SCHEMA_LIMITS.COMPANY_DESCRIPTION_MAX,
+				`Description must be at most ${SCHEMA_LIMITS.COMPANY_DESCRIPTION_MAX} characters`
+			)
 		),
 		""
 	),
 	logo: v.optional(
 		v.pipe(
 			v.file("Logo must be a file"),
-			v.mimeType(
-				["image/jpeg", "image/png", "image/webp", "image/gif"],
-				"Logo must be an image"
-			),
-			v.maxSize(SCHEMA_LIMITS.LOGO_MAX_SIZE_MB * 1024 * 1024, `Logo must be less than ${SCHEMA_LIMITS.LOGO_MAX_SIZE_MB}MB`)
+			v.mimeType(["image/jpeg", "image/png", "image/webp", "image/gif"], "Logo must be an image"),
+			v.maxSize(
+				SCHEMA_LIMITS.LOGO_MAX_SIZE_MB * 1024 * 1024,
+				`Logo must be less than ${SCHEMA_LIMITS.LOGO_MAX_SIZE_MB}MB`
+			)
 		)
 	)
 });

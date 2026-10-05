@@ -1,10 +1,10 @@
 // src/routes/(authenticated)/(dock)/newspaper/[id]/+page.server.ts
-import { db } from "$lib/server/db";
-import { journalists, newspapers, files, userProfiles, articles, newspaperSubscriptions } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { journalists, newspapers, files, userProfiles, articles, newspaperSubscriptions } from "#lib/server/schema.js";
 import { error, fail } from "@sveltejs/kit";
 import { and, eq, desc } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const newspaperId = parseInt(params.id);
@@ -125,10 +125,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 		// Check if user is subscribed
 		const subscription = await db.query.newspaperSubscriptions.findFirst({
-			where: and(
-				eq(newspaperSubscriptions.userId, account.id),
-				eq(newspaperSubscriptions.newspaperId, newspaperId)
-			)
+			where: and(eq(newspaperSubscriptions.userId, account.id), eq(newspaperSubscriptions.newspaperId, newspaperId))
 		});
 		isSubscribed = !!subscription;
 	}
@@ -172,10 +169,7 @@ export const actions: Actions = {
 
 		// Check if already subscribed
 		const existing = await db.query.newspaperSubscriptions.findFirst({
-			where: and(
-				eq(newspaperSubscriptions.userId, account.id),
-				eq(newspaperSubscriptions.newspaperId, newspaperId)
-			)
+			where: and(eq(newspaperSubscriptions.userId, account.id), eq(newspaperSubscriptions.newspaperId, newspaperId))
 		});
 
 		if (existing) {
@@ -202,12 +196,7 @@ export const actions: Actions = {
 		// Delete subscription
 		await db
 			.delete(newspaperSubscriptions)
-			.where(
-				and(
-					eq(newspaperSubscriptions.userId, account.id),
-					eq(newspaperSubscriptions.newspaperId, newspaperId)
-				)
-			);
+			.where(and(eq(newspaperSubscriptions.userId, account.id), eq(newspaperSubscriptions.newspaperId, newspaperId)));
 
 		return { success: true };
 	}

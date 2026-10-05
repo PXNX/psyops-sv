@@ -10,8 +10,8 @@
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import { formatDateTime } from "$lib/utils/formatting.js";
-	import Button from "$lib/component/ui/Button.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	const { data, form } = $props();
 
@@ -118,9 +118,7 @@
 		<div class="flex gap-2">
 			<button
 				onclick={() => (filterStatus = "all")}
-				class="btn btn-sm {filterStatus === 'all'
-					? 'bg-[#315d8d] text-[#fff7e8]'
-					: 'bg-[#102239]/70 text-[#d9ccb7]'}"
+				class="btn btn-sm {filterStatus === 'all' ? 'bg-[#315d8d] text-[#fff7e8]' : 'bg-[#102239]/70 text-[#d9ccb7]'}"
 			>
 				All Reports
 			</button>
@@ -232,7 +230,10 @@
 							{/if}
 
 							<div class="flex-1">
-								<a href="/user/{selectedReport.messageSenderId}" class="font-semibold text-[#fff7e8] hover:text-[#f7c56b]">
+								<a
+									href="/user/{selectedReport.messageSenderId}"
+									class="font-semibold text-[#fff7e8] hover:text-[#f7c56b]"
+								>
 									{selectedReport.messageSenderName}
 								</a>
 								<p class="text-xs text-[#c7bda9] capitalize">{selectedReport.messageType} chat</p>
@@ -259,10 +260,7 @@
 								<label class="label">
 									<span class="label-text text-[#e5d8c1]">Violation Reason</span>
 								</label>
-								<select
-									bind:value={deletionReason}
-									class="select select-bordered w-full field-control"
-								>
+								<select bind:value={deletionReason} class="select select-bordered w-full field-control">
 									{#each violationReasons as reason}
 										<option value={reason.value}>{reason.label}</option>
 									{/each}
@@ -277,8 +275,7 @@
 									bind:value={deletionNote}
 									placeholder="Explain why this message was deleted..."
 									rows="3"
-									class="textarea textarea-bordered w-full field-control"
-								></textarea>
+									class="textarea textarea-bordered w-full field-control"></textarea>
 							</div>
 
 							<div class="form-control">
@@ -306,14 +303,11 @@
 									bind:value={dismissNote}
 									placeholder="Optional: Add a note explaining why this report is being dismissed..."
 									rows="3"
-									class="textarea textarea-bordered w-full field-control mb-2"
-								></textarea>
+									class="textarea textarea-bordered w-full field-control mb-2"></textarea>
 								<form method="POST" action="?/dismissReport" use:enhance>
 									<input type="hidden" name="reportId" value={selectedReport.reportId} />
 									<input type="hidden" name="reviewNote" value={dismissNote} />
-									<Button type="submit" variant="secondary" block icon={FluentDismiss20Filled}>
-										Dismiss Report
-									</Button>
+									<Button type="submit" variant="secondary" block icon={FluentDismiss20Filled}>Dismiss Report</Button>
 								</form>
 							</div>
 						</div>

@@ -1,6 +1,6 @@
 <!-- src/routes/company/+page.svelte -->
 <script lang="ts">
-	import Logo from "$lib/component/Logo.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
@@ -10,9 +10,9 @@
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import PartyTag from "$lib/component/PartyTag.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PartyTag from "#lib/component/PartyTag.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
 
 	let { data } = $props();
 

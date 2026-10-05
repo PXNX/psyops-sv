@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/(dock)/state/[id]/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	states,
 	blocs,
@@ -25,13 +25,13 @@ import {
 	residenceApplications,
 	partyMembers,
 	politicalParties
-	} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, gte, sql, or, inArray } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
-import { getLogoUrl, getSignedDownloadUrl } from "$lib/server/backblaze";
-import { getRegionName } from "$lib/utils/formatting";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getRegionName } from "#lib/utils/formatting.js";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
@@ -322,10 +322,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				// Check for pending residence application in any region of this state
 				const stateRegionIds = stateRegions.map((r) => r.id);
 				const pendingApp = await db.query.residenceApplications.findFirst({
-					where: and(
-						eq(residenceApplications.userId, locals.account.id),
-						eq(residenceApplications.status, "pending")
-					)
+					where: and(eq(residenceApplications.userId, locals.account.id), eq(residenceApplications.status, "pending"))
 				});
 				if (pendingApp && stateRegionIds.includes(pendingApp.regionId)) {
 					hasPendingResidenceApp = true;
@@ -336,7 +333,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check bloc visa-free override
 	let blocVisaFree = false;
-	if (!isResident && userResidenceBloc && state.blocId && userResidenceBloc.id === state.blocId && userResidenceBloc.visaFreeForMembers) {
+	if (
+		!isResident &&
+		userResidenceBloc &&
+		state.blocId &&
+		userResidenceBloc.id === state.blocId &&
+		userResidenceBloc.visaFreeForMembers
+	) {
 		blocVisaFree = true;
 	}
 
@@ -411,21 +414,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		},
 		walletBalance,
 		visa: {
-				isResident,
-				visaRequired: visaSettings?.visaRequired ?? false,
-				visaCost: visaSettings ? Number(visaSettings.visaCost) : 5000,
-				visaTaxRate: visaSettings?.visaTaxRate ?? 20,
-				autoApprove: visaSettings?.autoApprove ?? true,
-				hasActiveVisa,
-				activeVisa: userActiveVisa
-					? {
-							expiresAt: userActiveVisa.expiresAt.toISOString(),
-							cost: Number(userActiveVisa.cost)
-						}
-					: null,
-				blocVisaFree,
-				blockedReason: visaBlockedReason
-			},
+			isResident,
+			visaRequired: visaSettings?.visaRequired ?? false,
+			visaCost: visaSettings ? Number(visaSettings.visaCost) : 5000,
+			visaTaxRate: visaSettings?.visaTaxRate ?? 20,
+			autoApprove: visaSettings?.autoApprove ?? true,
+			hasActiveVisa,
+			activeVisa: userActiveVisa
+				? {
+						expiresAt: userActiveVisa.expiresAt.toISOString(),
+						cost: Number(userActiveVisa.cost)
+					}
+				: null,
+			blocVisaFree,
+			blockedReason: visaBlockedReason
+		},
 		bloc: state.blocId
 			? {
 					id: state.blocId,
@@ -507,7 +510,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			hasPendingApp: hasPendingResidenceApp,
 			currentRegionName: userCurrentRegionName
 		}
-		};
+	};
 };
 
 export const actions: Actions = {
@@ -634,8 +637,16 @@ export const actions: Actions = {
 			})
 			.returning();
 
-		const [attackerState] = await db.select({ name: states.name }).from(states).where(eq(states.id, presidency.stateId)).limit(1);
-		const [defenderStateInfo] = await db.select({ name: states.name }).from(states).where(eq(states.id, targetStateId)).limit(1);
+		const [attackerState] = await db
+			.select({ name: states.name })
+			.from(states)
+			.where(eq(states.id, presidency.stateId))
+			.limit(1);
+		const [defenderStateInfo] = await db
+			.select({ name: states.name })
+			.from(states)
+			.where(eq(states.id, targetStateId))
+			.limit(1);
 
 		for (const sId of [presidency.stateId, targetStateId]) {
 			const citizens = await db
@@ -665,9 +676,9 @@ export const actions: Actions = {
 			message: `War declared successfully!`,
 			warId: newWar.id
 		};
-		},
+	},
 
-		purchaseVisa: async ({ params, locals }) => {
+	purchaseVisa: async ({ params, locals }) => {
 		const account = locals.account!;
 		const stateId = parseInt(params.id);
 
@@ -796,10 +807,7 @@ export const actions: Actions = {
 		});
 
 		if (!wallet) {
-			[wallet] = await db
-				.insert(userWallets)
-				.values({ userId: account.id, balance: 10000 })
-				.returning();
+			[wallet] = await db.insert(userWallets).values({ userId: account.id, balance: 10000 }).returning();
 		}
 
 		const walletBal = Number(wallet.balance);
@@ -852,9 +860,9 @@ export const actions: Actions = {
 			success: true,
 			message: `Visa purchased for $${visaCost.toLocaleString()} (tax: $${taxAmount.toLocaleString()})`
 		};
-		},
+	},
 
-		applyResidence: async ({ params, locals }) => {
+	applyResidence: async ({ params, locals }) => {
 		const account = locals.account!;
 		const stateId = parseInt(params.id);
 
@@ -888,10 +896,7 @@ export const actions: Actions = {
 		const stateRegionIds = stateRegionsList.map((r) => r.id);
 
 		const pendingApp = await db.query.residenceApplications.findFirst({
-			where: and(
-				eq(residenceApplications.userId, account.id),
-				eq(residenceApplications.status, "pending")
-			)
+			where: and(eq(residenceApplications.userId, account.id), eq(residenceApplications.status, "pending"))
 		});
 
 		if (pendingApp && stateRegionIds.includes(pendingApp.regionId)) {
@@ -909,5 +914,5 @@ export const actions: Actions = {
 			success: true,
 			message: "Residence permit application submitted. It will be reviewed by the government."
 		};
-		}
-		};
+	}
+};

@@ -9,7 +9,7 @@
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
-	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
+	import { formatDate, getDaysRemaining } from "#lib/utils/formatting.js";
 
 	let { data } = $props();
 

@@ -10,8 +10,8 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
-	import { getRegionName } from "$lib/utils/formatting";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import { getRegionName } from "#lib/utils/formatting.js";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 
 	const { data } = $props();
 

@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/(dock)/region/[id]/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	regions,
 	residences,
@@ -19,14 +19,14 @@ import {
 	stateBuildings,
 	files,
 	stateSanctions
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, sql, or, desc, gt, isNotNull } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
-import { getRegionName } from "$lib/utils/formatting";
-import { getContext } from "$lib/server/context";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { completePendingConstructions } from "$lib/server/services/politics/construction.service";
+import { getRegionName } from "#lib/utils/formatting.js";
+import { getContext } from "#lib/server/context.js";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -149,11 +149,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const userHomeState = userResidence?.homeRegion?.state;
 		if (userHomeState?.blocId && region.state?.blocId) {
 			const userBloc = userHomeState.bloc;
-			if (
-				userHomeState.blocId === region.state.blocId &&
-				userBloc &&
-				userBloc.visaFreeForMembers
-			) {
+			if (userHomeState.blocId === region.state.blocId && userBloc && userBloc.visaFreeForMembers) {
 				blocVisaFree = true;
 			}
 		}
@@ -185,11 +181,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		});
 
 		hasPendingApplication = !!pendingApp;
-		}
+	}
 
-		// Check if visa is blocked by war or sanctions (based on residence/citizenship state)
-		let visaBlockedReason: string | null = null;
-		if (region.stateId && userResidenceState?.id && userResidenceState.id !== region.stateId) {
+	// Check if visa is blocked by war or sanctions (based on residence/citizenship state)
+	let visaBlockedReason: string | null = null;
+	if (region.stateId && userResidenceState?.id && userResidenceState.id !== region.stateId) {
 		const userStateId = userResidenceState.id;
 		const userBlocId = userResidence?.homeRegion?.state?.blocId ?? null;
 		const destStateId = region.stateId;
@@ -229,9 +225,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				visaBlockedReason = "This state has sanctioned your state";
 			}
 		}
-		}
+	}
 
-		// Get factories
+	// Get factories
 	const regionFactories = await db.query.factories.findMany({
 		where: eq(factories.regionId, regionId),
 		with: { company: true },
@@ -277,8 +273,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				// Only wars where the president's own state (or bloc) is the attacker
 				attackableWars = activeWars.filter(
 					(war) =>
-						war.attackerId === presidentStateId ||
-						(presidentBlocId !== null && war.attackerBlocId === presidentBlocId)
+						war.attackerId === presidentStateId || (presidentBlocId !== null && war.attackerBlocId === presidentBlocId)
 				);
 
 				if (attackableWars.length > 0) {
@@ -409,17 +404,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		travelInfo,
 		activeTravel: activeTravel
 			? {
-				toRegionId: activeTravel.toRegionId,
-				arrivalTime: activeTravel.arrivalTime.toISOString(),
-				distanceKm: activeTravel.distanceKm
-			}
+					toRegionId: activeTravel.toRegionId,
+					arrivalTime: activeTravel.arrivalTime.toISOString(),
+					distanceKm: activeTravel.distanceKm
+				}
 			: null,
 		governor: region.governor
 			? {
-				userId: region.governor.userId,
-				name: region.governor.user.profile?.name,
-				appointedAt: region.governor.appointedAt
-			}
+					userId: region.governor.userId,
+					name: region.governor.user.profile?.name,
+					appointedAt: region.governor.appointedAt
+				}
 			: null,
 		factories: factoriesWithLogos,
 		buildings: regionBuildings,
@@ -430,10 +425,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			settings: visaSettings,
 			activeVisa: activeVisa
 				? {
-					expiresAt: activeVisa.expiresAt.toISOString(),
-					cost: Number(activeVisa.cost),
-					taxPaid: Number(activeVisa.taxPaid)
-				}
+						expiresAt: activeVisa.expiresAt.toISOString(),
+						cost: Number(activeVisa.cost),
+						taxPaid: Number(activeVisa.taxPaid)
+					}
 				: null,
 			blocVisaFree,
 			blockedReason: visaBlockedReason
@@ -444,10 +439,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		ongoingBattle,
 		recentFailedBattle: recentFailedBattle
 			? {
-				id: recentFailedBattle.id,
-				endedAt: recentFailedBattle.endedAt?.toISOString(),
-				cooldownEndsAt: new Date(recentFailedBattle.endedAt!.getTime() + 24 * 60 * 60 * 1000).toISOString()
-			}
+					id: recentFailedBattle.id,
+					endedAt: recentFailedBattle.endedAt?.toISOString(),
+					cooldownEndsAt: new Date(recentFailedBattle.endedAt!.getTime() + 24 * 60 * 60 * 1000).toISOString()
+				}
 			: null,
 		borderingRegions: validBorderingRegions,
 		walletBalance
@@ -559,9 +554,7 @@ export const actions: Actions = {
 			.where(eq(userWallets.userId, account.id));
 
 		// Delete any old completed travel record (userId has UNIQUE constraint)
-		await db.delete(userTravels).where(
-			and(eq(userTravels.userId, account.id), eq(userTravels.status, "completed"))
-		);
+		await db.delete(userTravels).where(and(eq(userTravels.userId, account.id), eq(userTravels.status, "completed")));
 
 		// Create travel record
 		const departureTime = new Date();
@@ -862,8 +855,7 @@ export const actions: Actions = {
 
 		// The caller's state (or bloc) must actually be the attacker in this war
 		const isAttackerForThisWar =
-			war.attackerId === presidentStateId ||
-			(presidentBlocId !== null && war.attackerBlocId === presidentBlocId);
+			war.attackerId === presidentStateId || (presidentBlocId !== null && war.attackerBlocId === presidentBlocId);
 
 		if (!isAttackerForThisWar) {
 			return fail(403, { error: "Your state is not the attacker in this war" });
@@ -923,8 +915,7 @@ export const actions: Actions = {
 
 		// The region's state (or bloc) must actually be the defender in this war
 		const isDefenderForThisWar =
-			war.defenderId === region.stateId ||
-			(region.state?.blocId != null && war.defenderBlocId === region.state.blocId);
+			war.defenderId === region.stateId || (region.state?.blocId != null && war.defenderBlocId === region.state.blocId);
 
 		if (!isDefenderForThisWar) {
 			return fail(400, { error: "This region's state is not the defender in this war" });

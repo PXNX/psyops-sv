@@ -1,6 +1,6 @@
 // src/routes/map/+page.server.ts
-import { db } from "$lib/server/db";
-import { regions, states, blocs, wars, residences, powerPlants } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { regions, states, blocs, wars, residences, powerPlants } from "#lib/server/schema.js";
 import { sql, eq } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
@@ -208,7 +208,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warAttackerStateIds,
 			warDefenderStateIds,
 			currentUserRegionId
-			};
+		};
 	} catch (error) {
 		console.error("Error loading map data:", error);
 		return {

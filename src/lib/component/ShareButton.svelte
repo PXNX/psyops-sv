@@ -1,8 +1,8 @@
 <!-- src/lib/component/ShareButton.svelte -->
 <script lang="ts">
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
-	import { shareLink } from "$lib/util";
-	import Button from "$lib/component/ui/Button.svelte";
+	import { shareLink } from "#lib/util.js";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	interface Props {
 		title: string;

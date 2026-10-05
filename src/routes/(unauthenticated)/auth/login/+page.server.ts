@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit";
-import { isMockMode } from "$lib/server/db";
+import { isMockMode } from "#lib/server/db.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {

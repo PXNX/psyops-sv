@@ -1,6 +1,6 @@
 // src/routes/market/[item]/+page.server.ts
 
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	marketListings,
 	marketPriceHistory,
@@ -20,12 +20,12 @@ import {
 	ministers,
 	states,
 	transactionHistory
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, gte, sql } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
-import { calculateAndCollectTax } from "$lib/server/taxes";
+import { calculateAndCollectTax } from "#lib/server/taxes.js";
 import type { Actions, PageServerLoad } from "./$types";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 const RESOURCES = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
 const PRODUCTS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"];
@@ -143,8 +143,16 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	let governmentState: { id: number; name: string; treasuryBalance: number } | null = null;
 	const govStateId = presidency?.stateId ?? economyMinistry?.stateId ?? null;
 	if (govStateId) {
-		const [state] = await db.select({ id: states.id, name: states.name }).from(states).where(eq(states.id, govStateId)).limit(1);
-		const [treasury] = await db.select({ balance: stateTreasury.balance }).from(stateTreasury).where(eq(stateTreasury.stateId, govStateId)).limit(1);
+		const [state] = await db
+			.select({ id: states.id, name: states.name })
+			.from(states)
+			.where(eq(states.id, govStateId))
+			.limit(1);
+		const [treasury] = await db
+			.select({ balance: stateTreasury.balance })
+			.from(stateTreasury)
+			.where(eq(stateTreasury.stateId, govStateId))
+			.limit(1);
 		if (state) {
 			governmentState = {
 				id: state.id,
@@ -405,7 +413,9 @@ export const actions: Actions = {
 				const [existing] = await tx
 					.select()
 					.from(productInventory)
-					.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any)));
+					.where(
+						and(eq(productInventory.userId, account.id), eq(productInventory.productType, listing.itemName as any))
+					);
 				if (existing) {
 					await tx
 						.update(productInventory)
@@ -420,15 +430,13 @@ export const actions: Actions = {
 				}
 			}
 
-			await tx
-				.insert(marketPriceHistory)
-				.values({
-					itemType: listing.itemType,
-					itemName: listing.itemName,
-					pricePerUnit: listing.pricePerUnit,
-					quantity,
-					transactionType: "sale"
-				});
+			await tx.insert(marketPriceHistory).values({
+				itemType: listing.itemType,
+				itemName: listing.itemName,
+				pricePerUnit: listing.pricePerUnit,
+				quantity,
+				transactionType: "sale"
+			});
 
 			// Record transaction history for buyer
 			await tx.insert(transactionHistory).values({
@@ -480,9 +488,9 @@ export const actions: Actions = {
 		}).catch((err) => console.error("Failed to send market sale notification:", err));
 
 		return { success: true, message: "Purchase successful", taxPaid: result.taxAmount };
-		},
+	},
 
-		buyListingAsState: async ({ request, locals }) => {
+	buyListingAsState: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
 
@@ -553,12 +561,22 @@ export const actions: Actions = {
 			const [existing] = await db
 				.select()
 				.from(stateResourceInventory)
-				.where(and(eq(stateResourceInventory.stateId, stateId), eq(stateResourceInventory.resourceType, listing.itemName as any)));
+				.where(
+					and(
+						eq(stateResourceInventory.stateId, stateId),
+						eq(stateResourceInventory.resourceType, listing.itemName as any)
+					)
+				);
 			if (existing) {
 				await db
 					.update(stateResourceInventory)
 					.set({ quantity: existing.quantity + quantity, updatedAt: new Date() })
-					.where(and(eq(stateResourceInventory.stateId, stateId), eq(stateResourceInventory.resourceType, listing.itemName as any)));
+					.where(
+						and(
+							eq(stateResourceInventory.stateId, stateId),
+							eq(stateResourceInventory.resourceType, listing.itemName as any)
+						)
+					);
 			} else {
 				await db.insert(stateResourceInventory).values({ stateId, resourceType: listing.itemName as any, quantity });
 			}
@@ -566,12 +584,22 @@ export const actions: Actions = {
 			const [existing] = await db
 				.select()
 				.from(stateProductInventory)
-				.where(and(eq(stateProductInventory.stateId, stateId), eq(stateProductInventory.productType, listing.itemName as any)));
+				.where(
+					and(
+						eq(stateProductInventory.stateId, stateId),
+						eq(stateProductInventory.productType, listing.itemName as any)
+					)
+				);
 			if (existing) {
 				await db
 					.update(stateProductInventory)
 					.set({ quantity: existing.quantity + quantity, updatedAt: new Date() })
-					.where(and(eq(stateProductInventory.stateId, stateId), eq(stateProductInventory.productType, listing.itemName as any)));
+					.where(
+						and(
+							eq(stateProductInventory.stateId, stateId),
+							eq(stateProductInventory.productType, listing.itemName as any)
+						)
+					);
 			} else {
 				await db.insert(stateProductInventory).values({ stateId, productType: listing.itemName as any, quantity });
 			}
@@ -611,7 +639,10 @@ export const actions: Actions = {
 		}
 
 		await updateMarketStatistics(listing.itemType, listing.itemName);
-		return { success: true, message: `State purchased ${quantity}x ${listing.itemName} for $${totalCost.toLocaleString()}` };
+		return {
+			success: true,
+			message: `State purchased ${quantity}x ${listing.itemName} for $${totalCost.toLocaleString()}`
+		};
 	},
 
 	removeListing: async ({ request, locals }) => {
@@ -718,16 +749,14 @@ async function updateMarketStatistics(itemType: string, itemName: string) {
 			})
 			.where(and(eq(marketStatistics.itemType, itemType), eq(marketStatistics.itemName, itemName)));
 	} else {
-		await db
-			.insert(marketStatistics)
-			.values({
-				itemType,
-				itemName,
-				currentAvgPrice: avgPrice,
-				lowestPrice,
-				highestPrice,
-				totalVolume,
-				activeListings: listings.length
-			});
+		await db.insert(marketStatistics).values({
+			itemType,
+			itemName,
+			currentAvgPrice: avgPrice,
+			lowestPrice,
+			highestPrice,
+			totalVolume,
+			activeListings: listings.length
+		});
 	}
 }
