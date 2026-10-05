@@ -58,28 +58,18 @@ async function fetchArticles(cursor: string | null, accountId: string) {
 	// Get signed URLs for logos
 	const articlesWithUrls = await Promise.all(
 		articlesToReturn.map(async (article) => {
-			let authorLogo: string | null = null;
-			let newspaperLogo: string | null = null;
-
-			// Get newspaper logo
-			if (article.newspaperId && article.newspaperLogoFileId) {
+			const resolveLogo = async (fileId: number): Promise<string | null> => {
 				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, article.newspaperLogoFileId)
+					where: eq(files.id, fileId)
 				});
-				if (logoFile) {
-					newspaperLogo = await getSignedDownloadUrl(logoFile.key);
-				}
-			}
+				return logoFile ? await getSignedDownloadUrl(logoFile.key) : null;
+			};
 
-			// Get author logo
-			if (article.authorLogoFileId) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, article.authorLogoFileId)
-				});
-				if (logoFile) {
-					authorLogo = await getSignedDownloadUrl(logoFile.key);
-				}
-			}
+			// Get newspaper and author logos in parallel
+			const [newspaperLogo, authorLogo] = await Promise.all([
+				article.newspaperId && article.newspaperLogoFileId ? resolveLogo(article.newspaperLogoFileId) : null,
+				article.authorLogoFileId ? resolveLogo(article.authorLogoFileId) : null
+			]);
 
 			return {
 				id: article.id,
@@ -114,13 +104,11 @@ async function fetchArticles(cursor: string | null, accountId: string) {
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	const result = await fetchArticles(null, account.id);
-
-	// Get user's upvoted articles
-	const upvotedArticles = await db
-		.select({ articleId: upvotes.articleId })
-		.from(upvotes)
-		.where(eq(upvotes.userId, account.id));
+	const [result, upvotedArticles] = await Promise.all([
+		fetchArticles(null, account.id),
+		// Get user's upvoted articles
+		db.select({ articleId: upvotes.articleId }).from(upvotes).where(eq(upvotes.userId, account.id))
+	]);
 	const userUpvotes = upvotedArticles.map((u) => u.articleId);
 
 	return {

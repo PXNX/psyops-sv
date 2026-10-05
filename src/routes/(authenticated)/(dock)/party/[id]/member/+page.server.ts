@@ -34,116 +34,167 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "Party not found");
 	}
 
-	// Get party logo URL if exists
-	let logoUrl = null;
-	if (party.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, party.logo)
-		});
-		if (logoFile) {
-			logoUrl = await getSignedDownloadUrl(logoFile.key);
-		}
-	}
-
-	// Get all party members
-	const members = await db.query.partyMembers.findMany({
-		where: eq(partyMembers.partyId, partyId),
-		with: {
-			user: {
-				with: {
-					profile: true
-				}
-			},
-			acceptedByUser: {
-				with: {
-					profile: true
+	const [logoUrl, members, allPartiesWithCounts] = await Promise.all([
+		// Get party logo URL if exists
+		(async () => {
+			let logoUrl = null;
+			if (party.logo) {
+				const logoFile = await db.query.files.findFirst({
+					where: eq(files.id, party.logo)
+				});
+				if (logoFile) {
+					logoUrl = await getSignedDownloadUrl(logoFile.key);
 				}
 			}
-		},
-		orderBy: (partyMembers, { desc }) => [desc(partyMembers.joinedAt)]
-	});
-
-	// Calculate member count
-	const memberCount = members.length;
-
-	// Process member logos
-	const membersWithLogos = await Promise.all(
-		members.map(async (m) => {
-			let memberLogoUrl = null;
-			if (m.user.profile?.logo) {
-				try {
-					const logoFile = await db.query.files.findFirst({
-						where: eq(files.id, m.user.profile.logo)
-					});
-					if (logoFile) {
-						memberLogoUrl = await getSignedDownloadUrl(logoFile.key);
-					}
-				} catch (err) {
-					console.error("Failed to get member logo:", err);
-				}
-			}
-
-			return {
-				id: m.id,
-				userId: m.userId,
-				role: m.role,
-				joinedAt: m.joinedAt,
-				acceptedBy: m.acceptedBy,
-				acceptedByName: m.acceptedByUser?.profile?.name || null,
-				user: {
-					name: m.user.profile?.name || null,
-					logo: memberLogoUrl
-				}
-			};
-		})
-	);
-
-	// Get pending applications if user is leader or deputy
-	let pendingApplications: any[] = [];
-	const membership = membersWithLogos.find((m) => m.userId === account.id);
-	const canManageMembers = membership && (membership.role === "leader" || membership.role === "deputy");
-
-	if (canManageMembers) {
-		const applications = await db.query.partyMembershipApplications.findMany({
-			where: and(eq(partyMembershipApplications.partyId, partyId), eq(partyMembershipApplications.status, "pending")),
+			return logoUrl;
+		})(),
+		// Get all party members
+		db.query.partyMembers.findMany({
+			where: eq(partyMembers.partyId, partyId),
 			with: {
 				user: {
 					with: {
 						profile: true
 					}
+				},
+				acceptedByUser: {
+					with: {
+						profile: true
+					}
 				}
 			},
-			orderBy: (apps, { asc }) => [asc(apps.appliedAt)]
-		});
+			orderBy: (partyMembers, { desc }) => [desc(partyMembers.joinedAt)]
+		}),
+		// Calculate party rank - get all parties with their member counts
+		db
+			.select({
+				id: politicalParties.id,
+				memberCount: count(partyMembers.id)
+			})
+			.from(politicalParties)
+			.leftJoin(partyMembers, eq(politicalParties.id, partyMembers.partyId))
+			.where(eq(politicalParties.stateId, party.stateId))
+			.groupBy(politicalParties.id)
+			.orderBy(sql`count(${partyMembers.id}) DESC`)
+	]);
 
-		pendingApplications = await Promise.all(
-			applications.map(async (app) => {
-				let logoUrl = null;
-				if (app.user.profile?.logo) {
+	// Calculate member count
+	const memberCount = members.length;
+
+	const membership = members.find((m) => m.userId === account.id);
+	const canManageMembers = membership && (membership.role === "leader" || membership.role === "deputy");
+
+	const partyRank = allPartiesWithCounts.findIndex((p) => p.id === partyId) + 1;
+
+	// Check if this is the only party in the state
+	const isOnlyPartyInState = allPartiesWithCounts.length === 1;
+
+	// Member logos, pending applications, the user's own membership status and
+	// state stats are independent of each other, so resolve them in parallel.
+	const [membersWithLogos, pendingApplications, joinStatus, stateRegionCount] = await Promise.all([
+		// Process member logos
+		Promise.all(
+			members.map(async (m) => {
+				let memberLogoUrl = null;
+				if (m.user.profile?.logo) {
 					try {
 						const logoFile = await db.query.files.findFirst({
-							where: eq(files.id, app.user.profile.logo)
+							where: eq(files.id, m.user.profile.logo)
 						});
 						if (logoFile) {
-							logoUrl = await getSignedDownloadUrl(logoFile.key);
+							memberLogoUrl = await getSignedDownloadUrl(logoFile.key);
 						}
 					} catch (err) {
-						console.error("Failed to get applicant logo:", err);
+						console.error("Failed to get member logo:", err);
 					}
 				}
 
 				return {
-					id: app.id,
-					userId: app.userId,
-					appliedAt: app.appliedAt,
+					id: m.id,
+					userId: m.userId,
+					role: m.role,
+					joinedAt: m.joinedAt,
+					acceptedBy: m.acceptedBy,
+					acceptedByName: m.acceptedByUser?.profile?.name || null,
 					user: {
-						name: app.user.profile?.name || "Anonymous",
-						logo: logoUrl
+						name: m.user.profile?.name || null,
+						logo: memberLogoUrl
 					}
 				};
 			})
-		);
-	}
+		),
+		// Get pending applications if user is leader or deputy
+		(async (): Promise<any[]> => {
+			if (!canManageMembers) return [];
+
+			const applications = await db.query.partyMembershipApplications.findMany({
+				where: and(eq(partyMembershipApplications.partyId, partyId), eq(partyMembershipApplications.status, "pending")),
+				with: {
+					user: {
+						with: {
+							profile: true
+						}
+					}
+				},
+				orderBy: (apps, { asc }) => [asc(apps.appliedAt)]
+			});
+
+			return Promise.all(
+				applications.map(async (app) => {
+					let logoUrl = null;
+					if (app.user.profile?.logo) {
+						try {
+							const logoFile = await db.query.files.findFirst({
+								where: eq(files.id, app.user.profile.logo)
+							});
+							if (logoFile) {
+								logoUrl = await getSignedDownloadUrl(logoFile.key);
+							}
+						} catch (err) {
+							console.error("Failed to get applicant logo:", err);
+						}
+					}
+
+					return {
+						id: app.id,
+						userId: app.userId,
+						appliedAt: app.appliedAt,
+						user: {
+							name: app.user.profile?.name || "Anonymous",
+							logo: logoUrl
+						}
+					};
+				})
+			);
+		})(),
+		// Non-members: check existing membership elsewhere / pending application
+		membership
+			? null
+			: Promise.all([
+					// Check if user already has a party membership elsewhere
+					db.query.partyMembers.findFirst({
+						where: eq(partyMembers.userId, account.id)
+					}),
+					// Check if user has a pending application
+					db.query.partyMembershipApplications.findFirst({
+						where: and(
+							eq(partyMembershipApplications.userId, account.id),
+							eq(partyMembershipApplications.partyId, partyId),
+							eq(partyMembershipApplications.status, "pending")
+						)
+					})
+				]),
+		// Get state statistics for disband warning
+		isOnlyPartyInState
+			? db
+					.select({
+						id: regions.id
+					})
+					.from(regions)
+					.where(eq(regions.stateId, party.stateId))
+					.then((stateRegions) => stateRegions.length)
+			: 0
+	]);
 
 	// Check if current user is a member
 	let isMember = false;
@@ -158,56 +209,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isLeader = membership.role === "leader";
 		isDeputy = membership.role === "deputy";
 		memberSince = membership.joinedAt;
-	} else {
-		// Check if user already has a party membership elsewhere
-		const existingMembership = await db.query.partyMembers.findFirst({
-			where: eq(partyMembers.userId, account.id)
-		});
-
-		// Check if user has a pending application
-		const existingApplication = await db.query.partyMembershipApplications.findFirst({
-			where: and(
-				eq(partyMembershipApplications.userId, account.id),
-				eq(partyMembershipApplications.partyId, partyId),
-				eq(partyMembershipApplications.status, "pending")
-			)
-		});
-
+	} else if (joinStatus) {
+		const [existingMembership, existingApplication] = joinStatus;
 		hasApplied = !!existingApplication;
 		canJoin = !existingMembership && !hasApplied;
 	}
 
-	// Calculate party rank - get all parties with their member counts
-	const allPartiesWithCounts = await db
-		.select({
-			id: politicalParties.id,
-			memberCount: count(partyMembers.id)
-		})
-		.from(politicalParties)
-		.leftJoin(partyMembers, eq(politicalParties.id, partyMembers.partyId))
-		.where(eq(politicalParties.stateId, party.stateId))
-		.groupBy(politicalParties.id)
-		.orderBy(sql`count(${partyMembers.id}) DESC`);
-
-	const partyRank = allPartiesWithCounts.findIndex((p) => p.id === partyId) + 1;
-
-	// Check if this is the only party in the state
-	const isOnlyPartyInState = allPartiesWithCounts.length === 1;
-
-	// Get state statistics for disband warning
-	let stateRegionCount = 0;
-	let statePopulation = 0;
-	if (isOnlyPartyInState) {
-		const stateRegions = await db
-			.select({
-				id: regions.id
-			})
-			.from(regions)
-			.where(eq(regions.stateId, party.stateId));
-
-		stateRegionCount = stateRegions.length;
-		statePopulation = party.state.population || 0;
-	}
+	const statePopulation = isOnlyPartyInState ? party.state.population || 0 : 0;
 
 	return {
 		party: {

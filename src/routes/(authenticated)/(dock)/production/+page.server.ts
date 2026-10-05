@@ -25,17 +25,69 @@ type ProductType = ProductionType;
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	const resources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
-	const products = await db.select().from(productInventory).where(eq(productInventory.userId, account.id));
-
-	const activeProduction = await db
-		.select()
-		.from(productionQueue)
-		.where(eq(productionQueue.userId, account.id))
-		.limit(1);
-
-	// Check if user owns a company
-	const [userCompany] = await db.select().from(companies).where(eq(companies.ownerId, account.id));
+	// None of these depend on each other (nor on the production-completion transaction below), so fetch them together
+	const [resources, products, activeProduction, [userCompany], [wallet], [currentJob], availableFactories, workerCounts] =
+		await Promise.all([
+			db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
+			db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
+			db.select().from(productionQueue).where(eq(productionQueue.userId, account.id)).limit(1),
+			// Check if user owns a company
+			db.select().from(companies).where(eq(companies.ownerId, account.id)),
+			db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
+			db
+				.select({
+					id: factoryWorkers.id,
+					factoryId: factoryWorkers.factoryId,
+					jobType: factoryWorkers.jobType,
+					lastWorked: factoryWorkers.lastWorked,
+					wageAtShiftStart: factoryWorkers.wageAtShiftStart,
+					factoryName: factories.name,
+					factoryType: factories.factoryType,
+					resourceOutput: factories.resourceOutput,
+					companyName: companies.name,
+					companyLogo: companies.logo,
+					companyId: factories.companyId,
+					wage: factories.workerWage,
+					regionId: factories.regionId,
+					stateId: regions.stateId,
+					ownerId: companies.ownerId,
+					productionRate: factories.productionRate
+				})
+				.from(factoryWorkers)
+				.innerJoin(factories, eq(factoryWorkers.factoryId, factories.id))
+				.innerJoin(companies, eq(factories.companyId, companies.id))
+				.innerJoin(regions, eq(factories.regionId, regions.id))
+				.where(eq(factoryWorkers.userId, account.id)),
+			// Get available factories to work at
+			db
+				.select({
+					id: factories.id,
+					name: factories.name,
+					factoryType: factories.factoryType,
+					resourceOutput: factories.resourceOutput,
+					productOutput: factories.productOutput,
+					workerWage: factories.workerWage,
+					maxWorkers: factories.maxWorkers,
+					productionRate: factories.productionRate,
+					companyName: companies.name,
+					companyId: factories.companyId,
+					stateName: states.name,
+					regionId: factories.regionId
+				})
+				.from(factories)
+				.innerJoin(companies, eq(factories.companyId, companies.id))
+				.innerJoin(regions, eq(factories.regionId, regions.id))
+				.innerJoin(states, eq(regions.stateId, states.id))
+				.limit(20),
+			// Get worker counts for each factory
+			db
+				.select({
+					factoryId: factoryWorkers.factoryId,
+					count: sql<number>`count(*)::int`
+				})
+				.from(factoryWorkers)
+				.groupBy(factoryWorkers.factoryId)
+		]);
 
 	if (activeProduction.length > 0) {
 		const prod = activeProduction[0];
@@ -65,16 +117,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 				await tx.delete(productionQueue).where(eq(productionQueue.id, prod.id));
 			});
 
-			return {
-				resources: await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
-				products: await db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
-				activeProduction: [],
-				recipes: PRODUCTION_RECIPES,
-				wallet: await db
+			const [freshResources, freshProducts, freshWallet] = await Promise.all([
+				db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
+				db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
+				db
 					.select()
 					.from(userWallets)
 					.where(eq(userWallets.userId, account.id))
-					.then((r) => r[0] || { balance: 10000 }),
+					.then((r) => r[0] || { balance: 10000 })
+			]);
+
+			return {
+				resources: freshResources,
+				products: freshProducts,
+				activeProduction: [],
+				recipes: PRODUCTION_RECIPES,
+				wallet: freshWallet,
 				currentJob: null,
 				userCompany: null,
 				availableFactories: [],
@@ -83,102 +141,45 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	}
 
-	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-	const [currentJob] = await db
-		.select({
-			id: factoryWorkers.id,
-			factoryId: factoryWorkers.factoryId,
-			jobType: factoryWorkers.jobType,
-			lastWorked: factoryWorkers.lastWorked,
-			wageAtShiftStart: factoryWorkers.wageAtShiftStart,
-			factoryName: factories.name,
-			factoryType: factories.factoryType,
-			resourceOutput: factories.resourceOutput,
-			companyName: companies.name,
-			companyLogo: companies.logo,
-			companyId: factories.companyId,
-			wage: factories.workerWage,
-			regionId: factories.regionId,
-			stateId: regions.stateId,
-			ownerId: companies.ownerId,
-			productionRate: factories.productionRate
-		})
-		.from(factoryWorkers)
-		.innerJoin(factories, eq(factoryWorkers.factoryId, factories.id))
-		.innerJoin(companies, eq(factories.companyId, companies.id))
-		.innerJoin(regions, eq(factories.regionId, regions.id))
-		.where(eq(factoryWorkers.userId, account.id));
-
 	// Calculate shift status if user has a job
 	let shiftStatus = null;
 	if (currentJob?.lastWorked) {
 		shiftStatus = calculateShiftStatus(currentJob.lastWorked);
 	}
 
-	// Get company budget if user has a job
-	let companyBudget: { balance: number } | null = null;
-	if (currentJob) {
-		const [budget] = await db.select().from(companyBudgets).where(eq(companyBudgets.companyId, currentJob.companyId));
-		companyBudget = budget || null;
-	}
-
-	// Get company logo URL if available
-	let companyLogoUrl: string | null = null;
-	if (currentJob?.companyLogo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, currentJob.companyLogo)
-		});
-		if (logoFile) {
-			companyLogoUrl = await getSignedDownloadUrl(logoFile.key);
-		}
-	}
-
-	// Get available factories to work at
-	const availableFactories = await db
-		.select({
-			id: factories.id,
-			name: factories.name,
-			factoryType: factories.factoryType,
-			resourceOutput: factories.resourceOutput,
-			productOutput: factories.productOutput,
-			workerWage: factories.workerWage,
-			maxWorkers: factories.maxWorkers,
-			productionRate: factories.productionRate,
-			companyName: companies.name,
-			companyId: factories.companyId,
-			stateName: states.name,
-			regionId: factories.regionId
-		})
-		.from(factories)
-		.innerJoin(companies, eq(factories.companyId, companies.id))
-		.innerJoin(regions, eq(factories.regionId, regions.id))
-		.innerJoin(states, eq(regions.stateId, states.id))
-		.limit(20);
-
 	// Get company budgets for all factories
 	const companyIds = [...new Set(availableFactories.map((f) => f.companyId))];
-	const budgets =
+
+	// These depend only on the first batch, not on each other
+	const [companyBudget, companyLogoUrl, budgets] = await Promise.all([
+		// Get company budget if user has a job
+		currentJob
+			? db
+					.select()
+					.from(companyBudgets)
+					.where(eq(companyBudgets.companyId, currentJob.companyId))
+					.then(([budget]): { balance: number } | null => budget || null)
+			: null,
+		// Get company logo URL if available
+		(async (): Promise<string | null> => {
+			if (!currentJob?.companyLogo) return null;
+			const logoFile = await db.query.files.findFirst({
+				where: eq(files.id, currentJob.companyLogo)
+			});
+			return logoFile ? await getSignedDownloadUrl(logoFile.key) : null;
+		})(),
 		companyIds.length > 0
-			? await db
+			? db
 					.select({
 						companyId: companyBudgets.companyId,
 						balance: companyBudgets.balance
 					})
 					.from(companyBudgets)
 					.where(inArray(companyBudgets.companyId, companyIds))
-			: [];
+			: []
+	]);
 
 	const budgetMap = new Map(budgets.map((b) => [b.companyId, b.balance]));
-
-	// Get worker counts for each factory
-	const workerCounts = await db
-		.select({
-			factoryId: factoryWorkers.factoryId,
-			count: sql<number>`count(*)::int`
-		})
-		.from(factoryWorkers)
-		.groupBy(factoryWorkers.factoryId);
 
 	const workerCountMap = new Map(workerCounts.map((w) => [w.factoryId, w.count]));
 

@@ -32,90 +32,184 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const regionId = parseInt(params.id);
 
-	// Finish any construction whose time has elapsed so the stats below (and
-	// the "under construction" list) reflect the current state.
-	await completePendingConstructions({ regionId });
+	const regionService = getContext().services.region;
+	const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-	// Get region with state
-	const region = await db.query.regions.findFirst({
-		where: eq(regions.id, regionId),
-		with: {
-			state: {
+	// Only the region row and its buildings depend on pending constructions being
+	// completed; everything else only needs the ids, so it runs concurrently.
+	const [
+		region,
+		populationResult,
+		activeTravel,
+		userResidence,
+		pendingResidenceApp,
+		factoriesWithLogos,
+		ongoingBattle,
+		recentFailedBattle,
+		borderingRegions,
+		userWallet
+	] = await Promise.all([
+		// Finish any construction whose time has elapsed so the stats below (and
+		// the "under construction" list) reflect the current state.
+		completePendingConstructions({ regionId }).then(() =>
+			// Get region with state
+			db.query.regions.findFirst({
+				where: eq(regions.id, regionId),
 				with: {
-					bloc: true,
-					president: {
+					state: {
 						with: {
-							user: true
+							bloc: true,
+							president: {
+								with: {
+									user: true
+								}
+							}
+						}
+					},
+					governor: {
+						with: {
+							user: {
+								with: {
+									profile: true
+								}
+							}
 						}
 					}
 				}
-			},
-			governor: {
-				with: {
-					user: {
-						with: {
-							profile: true
-						}
-					}
+			})
+		),
+		// Get population
+		db
+			.select({ count: sql<number>`count(*)::int` })
+			.from(residences)
+			.where(eq(residences.regionId, regionId)),
+		// Check for active travel
+		db.query.userTravels.findFirst({
+			where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
+		}),
+		// Get user's current residence
+		db.query.residences.findFirst({
+			where: eq(residences.userId, account.id),
+			with: {
+				region: {
+					with: { state: { with: { bloc: true } } }
+				},
+				homeRegion: {
+					with: { state: { with: { bloc: true } } }
 				}
 			}
-		}
-	});
+		}),
+		// Check for pending residence application
+		db.query.residenceApplications.findFirst({
+			where: and(
+				eq(residenceApplications.userId, account.id),
+				eq(residenceApplications.regionId, regionId),
+				eq(residenceApplications.status, "pending")
+			)
+		}),
+		// Get factories and resolve their company logos
+		db.query.factories
+			.findMany({
+				where: eq(factories.regionId, regionId),
+				with: { company: true },
+				limit: 10
+			})
+			.then((regionFactories) =>
+				Promise.all(
+					regionFactories.map(async (factory) => {
+						let companyLogoUrl: string | null = null;
+						if (factory.company?.logo) {
+							try {
+								const logoFile = await db.query.files.findFirst({
+									where: eq(files.id, factory.company.logo)
+								});
+								if (logoFile) {
+									companyLogoUrl = await getSignedDownloadUrl(logoFile.key);
+								}
+							} catch {
+								// ignore logo errors
+							}
+						}
+						return { ...factory, companyLogoUrl };
+					})
+				)
+			),
+		// Check for ongoing battle
+		db.query.battles.findFirst({
+			where: and(eq(battles.regionId, regionId), eq(battles.status, "ongoing")),
+			with: {
+				war: {
+					with: {
+						attacker: true,
+						defender: true
+					}
+				},
+				attackerState: true,
+				defenderState: true
+			}
+		}),
+		// Check for recent failed conquest (24-hour cooldown)
+		// A failed conquest is when the defender won
+		db.query.battles.findFirst({
+			where: and(
+				eq(battles.regionId, regionId),
+				eq(battles.status, "defender_won"),
+				isNotNull(battles.endedAt),
+				gt(battles.endedAt, twentyFourHoursAgo)
+			),
+			orderBy: [desc(battles.endedAt)]
+		}),
+		// Get bordering regions with state information
+		regionService.getBorderingRegions(regionId).then((borderingRegionsData) =>
+			Promise.all(
+				borderingRegionsData.map(async (border) => {
+					const [borderRegion, popResult] = await Promise.all([
+						db.query.regions.findFirst({
+							where: eq(regions.id, border.id),
+							with: {
+								state: true
+							}
+						}),
+						db
+							.select({ count: sql<number>`count(*)::int` })
+							.from(residences)
+							.where(eq(residences.regionId, border.id))
+					]);
+
+					if (!borderRegion) return null;
+
+					return {
+						id: borderRegion.id,
+						name: getRegionName(borderRegion.id),
+						distanceKm: Math.round(border.distanceKm * 100) / 100,
+						population: popResult[0]?.count || 0,
+						stateId: borderRegion.stateId,
+						stateName: borderRegion.state?.name || null,
+						resources: {
+							oil: borderRegion.oil || 0,
+							steel: borderRegion.steel || 0,
+							chromium: borderRegion.chromium || 0,
+							tungsten: borderRegion.tungsten || 0,
+							rubber: borderRegion.rubber || 0,
+							aluminium: borderRegion.aluminium || 0
+						}
+					};
+				})
+			)
+		),
+		// Get user wallet balance for travel cost display
+		db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		})
+	]);
 
 	if (!region) {
 		error(404, "Region not found");
 	}
 
-	// Get population
-	const populationResult = await db
-		.select({ count: sql<number>`count(*)::int` })
-		.from(residences)
-		.where(eq(residences.regionId, regionId));
-
 	const population = populationResult[0]?.count || 0;
 
-	// Check for active travel
-	const activeTravel = await db.query.userTravels.findFirst({
-		where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
-	});
-
-	// Get user's current residence
-	const userResidence = await db.query.residences.findFirst({
-		where: eq(residences.userId, account.id),
-		with: {
-			region: {
-				with: { state: { with: { bloc: true } } }
-			},
-			homeRegion: {
-				with: { state: { with: { bloc: true } } }
-			}
-		}
-	});
-
 	const hasResidence = userResidence?.regionId === regionId;
-
-	// Calculate travel distance and cost if user has residence elsewhere
-	const regionService = getContext().services.region;
-	let travelInfo = null;
-	if (userResidence && userResidence.regionId !== regionId) {
-		const distance = await regionService.getDistanceBetweenRegions(userResidence.regionId, regionId);
-		if (distance) {
-			travelInfo = {
-				distanceKm: Math.round(distance * 100) / 100,
-				cost: regionService.calculateTravelCost(distance),
-				timeHours: regionService.calculateTravelTime(distance)
-			};
-		}
-	}
-
-	// Check for pending residence application
-	const pendingResidenceApp = await db.query.residenceApplications.findFirst({
-		where: and(
-			eq(residenceApplications.userId, account.id),
-			eq(residenceApplications.regionId, regionId),
-			eq(residenceApplications.status, "pending")
-		)
-	});
 
 	// Get user's residence (citizenship) state — used for visa/immigration checks
 	// This is the permanent home state, not where the user currently is
@@ -124,257 +218,195 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		userResidenceState = userResidence.homeRegion?.state ?? userResidence.region.state;
 	}
 
-	// Check if state has had inaugural election
-	let hasInauguralElection = false;
-	if (region.stateId) {
-		const inauguration = await db.query.parliamentaryElections.findFirst({
-			where: and(eq(parliamentaryElections.stateId, region.stateId), eq(parliamentaryElections.isInaugural, true))
-		});
-		hasInauguralElection = !!inauguration;
-	}
-
-	const allowsFreeMovement = !region.stateId || !hasInauguralElection;
-
-	// Visa logic
-	let needsVisa = false;
-	let hasActiveVisa = false;
-	let hasPendingApplication = false;
-	let visaSettings = null;
-	let activeVisa = null;
-	let blocVisaFree = false;
-
-	if (region.stateId && userResidenceState?.id !== region.stateId && hasInauguralElection) {
-		// Check bloc visa-free override: if user's residence (citizenship) state and
-		// destination state are in the same bloc with visaFreeForMembers enabled, no visa needed
-		const userHomeState = userResidence?.homeRegion?.state;
-		if (userHomeState?.blocId && region.state?.blocId) {
-			const userBloc = userHomeState.bloc;
-			if (userHomeState.blocId === region.state.blocId && userBloc && userBloc.visaFreeForMembers) {
-				blocVisaFree = true;
-			}
-		}
-
-		if (!blocVisaFree) {
-			needsVisa = true;
-		}
-
-		visaSettings = await db.query.stateVisaSettings.findFirst({
-			where: eq(stateVisaSettings.stateId, region.stateId)
-		});
-
-		activeVisa = await db.query.userVisas.findFirst({
-			where: and(
-				eq(userVisas.userId, account.id),
-				eq(userVisas.stateId, region.stateId),
-				eq(userVisas.status, "active")
-			)
-		});
-
-		hasActiveVisa = !!activeVisa && new Date(activeVisa.expiresAt) > new Date();
-
-		const pendingApp = await db.query.visaApplications.findFirst({
-			where: and(
-				eq(visaApplications.userId, account.id),
-				eq(visaApplications.stateId, region.stateId),
-				eq(visaApplications.status, "pending")
-			)
-		});
-
-		hasPendingApplication = !!pendingApp;
-	}
-
-	// Check if visa is blocked by war or sanctions (based on residence/citizenship state)
-	let visaBlockedReason: string | null = null;
-	if (region.stateId && userResidenceState?.id && userResidenceState.id !== region.stateId) {
-		const userStateId = userResidenceState.id;
-		const userBlocId = userResidence?.homeRegion?.state?.blocId ?? null;
-		const destStateId = region.stateId;
-
-		// Check active wars: user's state (or bloc) vs destination state
-		const warAgainstDest = await db.query.wars.findFirst({
-			where: and(
-				eq(wars.status, "active"),
-				or(
-					and(eq(wars.attackerId, userStateId), eq(wars.defenderId, destStateId)),
-					and(eq(wars.attackerId, destStateId), eq(wars.defenderId, userStateId)),
-					...(userBlocId
-						? [
-								and(eq(wars.attackerBlocId, userBlocId), eq(wars.defenderId, destStateId)),
-								and(eq(wars.attackerId, destStateId), eq(wars.defenderBlocId, userBlocId))
-							]
-						: [])
-				)
-			)
-		});
-
-		if (warAgainstDest) {
-			visaBlockedReason = "Your state is at war with this state";
-		}
-
-		// Check sanctions: destination state has sanctioned user's state
-		if (!visaBlockedReason) {
-			const sanctionAgainstUser = await db.query.stateSanctions.findFirst({
-				where: and(
-					eq(stateSanctions.sanctioningStateId, destStateId),
-					eq(stateSanctions.targetStateId, userStateId),
-					eq(stateSanctions.isActive, true)
-				)
-			});
-
-			if (sanctionAgainstUser) {
-				visaBlockedReason = "This state has sanctioned your state";
-			}
-		}
-	}
-
-	// Get factories
-	const regionFactories = await db.query.factories.findMany({
-		where: eq(factories.regionId, regionId),
-		with: { company: true },
-		limit: 10
-	});
-
-	// Get state buildings
-	const regionBuildings = await db.query.stateBuildings.findMany({
-		where: eq(stateBuildings.regionId, regionId),
-		orderBy: [desc(stateBuildings.createdAt)]
-	});
-
-	// Check for active wars
-	let activeWars: any[] = [];
-	let attackableWars: any[] = [];
-	let borderingRegionsForAttack: any[] = [];
-
-	if (region?.stateId) {
-		activeWars = await db.query.wars.findMany({
-			where: and(
-				eq(wars.status, "active"),
-				or(
-					eq(wars.defenderId, region.stateId),
-					region.state?.blocId ? eq(wars.defenderBlocId, region.state.blocId) : sql`false`
-				)
-			),
-			with: {
-				attacker: true,
-				defender: true
-			}
-		});
-
-		// Check if user is president and can attack
-		if (userResidence?.region.stateId && activeWars.length > 0) {
-			const isPresident = await db.query.presidents.findFirst({
-				where: and(eq(presidents.userId, account.id), eq(presidents.stateId, userResidence.region.stateId))
-			});
-
-			if (isPresident) {
-				const presidentStateId = userResidence.region.stateId;
-				const presidentBlocId = userResidence.region.state?.blocId ?? null;
-
-				// Only wars where the president's own state (or bloc) is the attacker
-				attackableWars = activeWars.filter(
-					(war) =>
-						war.attackerId === presidentStateId || (presidentBlocId !== null && war.attackerBlocId === presidentBlocId)
-				);
-
-				if (attackableWars.length > 0) {
-					borderingRegionsForAttack = await regionService.getStateBorderingRegions(presidentStateId, regionId);
-				}
-			}
-		}
-	}
-
-	// Check for ongoing battle
-	const ongoingBattle = await db.query.battles.findFirst({
-		where: and(eq(battles.regionId, regionId), eq(battles.status, "ongoing")),
-		with: {
-			war: {
-				with: {
-					attacker: true,
-					defender: true
-				}
-			},
-			attackerState: true,
-			defenderState: true
-		}
-	});
-
-	// Check for recent failed conquest (24-hour cooldown)
-	// A failed conquest is when the defender won
-	const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-	const recentFailedBattle = await db.query.battles.findFirst({
-		where: and(
-			eq(battles.regionId, regionId),
-			eq(battles.status, "defender_won"),
-			isNotNull(battles.endedAt),
-			gt(battles.endedAt, twentyFourHoursAgo)
-		),
-		orderBy: [desc(battles.endedAt)]
-	});
-
-	// Get bordering regions with state information
-	const borderingRegionsData = await regionService.getBorderingRegions(regionId);
-	const borderingRegions = await Promise.all(
-		borderingRegionsData.map(async (border) => {
-			const borderRegion = await db.query.regions.findFirst({
-				where: eq(regions.id, border.id),
-				with: {
-					state: true
-				}
-			});
-
-			if (!borderRegion) return null;
-
-			const popResult = await db
-				.select({ count: sql<number>`count(*)::int` })
-				.from(residences)
-				.where(eq(residences.regionId, border.id));
-
-			return {
-				id: borderRegion.id,
-				name: getRegionName(borderRegion.id),
-				distanceKm: Math.round(border.distanceKm * 100) / 100,
-				population: popResult[0]?.count || 0,
-				stateId: borderRegion.stateId,
-				stateName: borderRegion.state?.name || null,
-				resources: {
-					oil: borderRegion.oil || 0,
-					steel: borderRegion.steel || 0,
-					chromium: borderRegion.chromium || 0,
-					tungsten: borderRegion.tungsten || 0,
-					rubber: borderRegion.rubber || 0,
-					aluminium: borderRegion.aluminium || 0
-				}
-			};
-		})
-	);
-
 	const validBorderingRegions = borderingRegions.filter((r) => r !== null);
-
-	// Get user wallet balance for travel cost display
-	const userWallet = await db.query.userWallets.findFirst({
-		where: eq(userWallets.userId, account.id)
-	});
 	const walletBalance = userWallet ? Number(userWallet.balance) : 0;
 
-	// Resolve company logos for factories
-	const factoriesWithLogos = await Promise.all(
-		regionFactories.map(async (factory) => {
-			let companyLogoUrl: string | null = null;
-			if (factory.company?.logo) {
-				try {
-					const logoFile = await db.query.files.findFirst({
-						where: eq(files.id, factory.company.logo)
-					});
-					if (logoFile) {
-						companyLogoUrl = await getSignedDownloadUrl(logoFile.key);
-					}
-				} catch {
-					// ignore logo errors
+	// Second wave: lookups that depend on the region / user residence.
+	const [regionBuildings, travelInfo, visaInfo, visaBlockedReason, warInfo] = await Promise.all([
+		// Get state buildings (after pending constructions were completed above)
+		db.query.stateBuildings.findMany({
+			where: eq(stateBuildings.regionId, regionId),
+			orderBy: [desc(stateBuildings.createdAt)]
+		}),
+		// Calculate travel distance and cost if user has residence elsewhere
+		(async () => {
+			let travelInfo = null;
+			if (userResidence && userResidence.regionId !== regionId) {
+				const distance = await regionService.getDistanceBetweenRegions(userResidence.regionId, regionId);
+				if (distance) {
+					travelInfo = {
+						distanceKm: Math.round(distance * 100) / 100,
+						cost: regionService.calculateTravelCost(distance),
+						timeHours: regionService.calculateTravelTime(distance)
+					};
 				}
 			}
-			return { ...factory, companyLogoUrl };
-		})
-	);
+			return travelInfo;
+		})(),
+		// Inaugural election check + visa logic
+		(async () => {
+			// Check if state has had inaugural election
+			let hasInauguralElection = false;
+			if (region.stateId) {
+				const inauguration = await db.query.parliamentaryElections.findFirst({
+					where: and(eq(parliamentaryElections.stateId, region.stateId), eq(parliamentaryElections.isInaugural, true))
+				});
+				hasInauguralElection = !!inauguration;
+			}
+
+			let needsVisa = false;
+			let hasActiveVisa = false;
+			let hasPendingApplication = false;
+			let visaSettings = null;
+			let activeVisa = null;
+			let blocVisaFree = false;
+
+			if (region.stateId && userResidenceState?.id !== region.stateId && hasInauguralElection) {
+				// Check bloc visa-free override: if user's residence (citizenship) state and
+				// destination state are in the same bloc with visaFreeForMembers enabled, no visa needed
+				const userHomeState = userResidence?.homeRegion?.state;
+				if (userHomeState?.blocId && region.state?.blocId) {
+					const userBloc = userHomeState.bloc;
+					if (userHomeState.blocId === region.state.blocId && userBloc && userBloc.visaFreeForMembers) {
+						blocVisaFree = true;
+					}
+				}
+
+				if (!blocVisaFree) {
+					needsVisa = true;
+				}
+
+				let pendingApp;
+				[visaSettings, activeVisa, pendingApp] = await Promise.all([
+					db.query.stateVisaSettings.findFirst({
+						where: eq(stateVisaSettings.stateId, region.stateId)
+					}),
+					db.query.userVisas.findFirst({
+						where: and(
+							eq(userVisas.userId, account.id),
+							eq(userVisas.stateId, region.stateId),
+							eq(userVisas.status, "active")
+						)
+					}),
+					db.query.visaApplications.findFirst({
+						where: and(
+							eq(visaApplications.userId, account.id),
+							eq(visaApplications.stateId, region.stateId),
+							eq(visaApplications.status, "pending")
+						)
+					})
+				]);
+
+				hasActiveVisa = !!activeVisa && new Date(activeVisa.expiresAt) > new Date();
+				hasPendingApplication = !!pendingApp;
+			}
+
+			return {
+				hasInauguralElection,
+				needsVisa,
+				hasActiveVisa,
+				hasPendingApplication,
+				visaSettings,
+				activeVisa,
+				blocVisaFree
+			};
+		})(),
+		// Check if visa is blocked by war or sanctions (based on residence/citizenship state)
+		(async () => {
+			let visaBlockedReason: string | null = null;
+			if (region.stateId && userResidenceState?.id && userResidenceState.id !== region.stateId) {
+				const userStateId = userResidenceState.id;
+				const userBlocId = userResidence?.homeRegion?.state?.blocId ?? null;
+				const destStateId = region.stateId;
+
+				const [warAgainstDest, sanctionAgainstUser] = await Promise.all([
+					// Check active wars: user's state (or bloc) vs destination state
+					db.query.wars.findFirst({
+						where: and(
+							eq(wars.status, "active"),
+							or(
+								and(eq(wars.attackerId, userStateId), eq(wars.defenderId, destStateId)),
+								and(eq(wars.attackerId, destStateId), eq(wars.defenderId, userStateId)),
+								...(userBlocId
+									? [
+											and(eq(wars.attackerBlocId, userBlocId), eq(wars.defenderId, destStateId)),
+											and(eq(wars.attackerId, destStateId), eq(wars.defenderBlocId, userBlocId))
+										]
+									: [])
+							)
+						)
+					}),
+					// Check sanctions: destination state has sanctioned user's state
+					db.query.stateSanctions.findFirst({
+						where: and(
+							eq(stateSanctions.sanctioningStateId, destStateId),
+							eq(stateSanctions.targetStateId, userStateId),
+							eq(stateSanctions.isActive, true)
+						)
+					})
+				]);
+
+				if (warAgainstDest) {
+					visaBlockedReason = "Your state is at war with this state";
+				} else if (sanctionAgainstUser) {
+					visaBlockedReason = "This state has sanctioned your state";
+				}
+			}
+			return visaBlockedReason;
+		})(),
+		// Check for active wars
+		(async () => {
+			let activeWars: any[] = [];
+			let attackableWars: any[] = [];
+			let borderingRegionsForAttack: any[] = [];
+
+			if (region?.stateId) {
+				activeWars = await db.query.wars.findMany({
+					where: and(
+						eq(wars.status, "active"),
+						or(
+							eq(wars.defenderId, region.stateId),
+							region.state?.blocId ? eq(wars.defenderBlocId, region.state.blocId) : sql`false`
+						)
+					),
+					with: {
+						attacker: true,
+						defender: true
+					}
+				});
+
+				// Check if user is president and can attack
+				if (userResidence?.region.stateId && activeWars.length > 0) {
+					const isPresident = await db.query.presidents.findFirst({
+						where: and(eq(presidents.userId, account.id), eq(presidents.stateId, userResidence.region.stateId))
+					});
+
+					if (isPresident) {
+						const presidentStateId = userResidence.region.stateId;
+						const presidentBlocId = userResidence.region.state?.blocId ?? null;
+
+						// Only wars where the president's own state (or bloc) is the attacker
+						attackableWars = activeWars.filter(
+							(war) =>
+								war.attackerId === presidentStateId ||
+								(presidentBlocId !== null && war.attackerBlocId === presidentBlocId)
+						);
+
+						if (attackableWars.length > 0) {
+							borderingRegionsForAttack = await regionService.getStateBorderingRegions(presidentStateId, regionId);
+						}
+					}
+				}
+			}
+
+			return { activeWars, attackableWars, borderingRegionsForAttack };
+		})()
+	]);
+
+	const { hasInauguralElection, needsVisa, hasActiveVisa, hasPendingApplication, visaSettings, activeVisa, blocVisaFree } =
+		visaInfo;
+	const allowsFreeMovement = !region.stateId || !hasInauguralElection;
+	const { activeWars, attackableWars, borderingRegionsForAttack } = warInfo;
 
 	const result = {
 		region: {

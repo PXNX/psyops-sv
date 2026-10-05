@@ -39,7 +39,280 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, "Bloc not found");
 	}
 
-	// Get member states with their presidents
+	// Everything below only depends on the bloc id, so fetch it in parallel.
+	const [memberStates, leaderRow, diplomatRows, currentElection, [presidency]] = await Promise.all([
+		// Get member states with their presidents
+		db
+			.select({
+				id: states.id,
+				name: states.name,
+				logo: states.logo,
+				population: states.population,
+				rating: states.rating,
+				presidentId: presidents.id,
+				presidentUserId: presidents.userId,
+				presidentName: sql<string>`up.name`,
+				presidentTerm: presidents.term,
+				presidentElectedAt: presidents.electedAt
+			})
+			.from(states)
+			.leftJoin(presidents, eq(states.id, presidents.stateId))
+			.leftJoin(sql`user_profiles up`, sql`up.account_id = ${presidents.userId}`)
+			.where(eq(states.blocId, blocId))
+			.orderBy(states.name),
+		// Bloc leader (persisted appointment, up to 2 diplomats)
+		db.query.blocLeaders.findFirst({
+			where: eq(blocLeaders.blocId, blocId),
+			with: { user: { with: { profile: true } } }
+		}),
+		db.query.blocDiplomats.findMany({
+			where: eq(blocDiplomats.blocId, blocId),
+			with: { user: { with: { profile: true } } },
+			orderBy: (t, { asc }) => asc(t.appointedAt)
+		}),
+		// Current bloc leader election cycle (scheduled or with its voting window active)
+		db.query.blocLeaderElections.findFirst({
+			where: and(eq(blocLeaderElections.blocId, blocId), ne(blocLeaderElections.status, "completed")),
+			orderBy: (t, { asc }) => asc(t.votingEndsAt)
+		}),
+		// Check if user is a president and get their state
+		locals.account
+			? db
+					.select({
+						stateId: presidents.stateId,
+						stateName: states.name,
+						stateLogo: states.logo,
+						currentBlocId: states.blocId
+					})
+					.from(presidents)
+					.innerJoin(states, eq(presidents.stateId, states.id))
+					.where(eq(presidents.userId, locals.account.id))
+					.limit(1)
+			: []
+	]);
+
+	// Get member state IDs for war queries
+	const memberStateIds = memberStates.map((s) => s.id);
+
+	const isLeader = locals.account?.id === leaderRow?.userId;
+
+	let candidates: Array<{ userId: string; name: string; logo: string | null; nominatedAt: Date; votes: number }> = [];
+	let myBlocLeaderVote: string | null = null;
+
+	// Wars (needs member state ids) and election details (needs the election) are independent
+	const [activeWars] = await Promise.all([
+		(async () => {
+			// Get active wars involving bloc member states
+			let activeWars: any[] = [];
+			if (memberStateIds.length > 0) {
+				const warResults = await db
+					.select({
+						id: wars.id,
+						attackerId: wars.attackerId,
+						defenderId: wars.defenderId,
+						declaredAt: wars.declaredAt,
+						attackerName: sql<string>`attacker.name`,
+						attackerLogo: sql<number | null>`attacker.logo`,
+						defenderName: sql<string>`defender.name`,
+						defenderLogo: sql<number | null>`defender.logo`
+					})
+					.from(wars)
+					.innerJoin(sql`states attacker`, sql`attacker.id = ${wars.attackerId}`)
+					.innerJoin(sql`states defender`, sql`defender.id = ${wars.defenderId}`)
+					.where(
+						and(
+							eq(wars.status, "active"),
+							or(sql`${wars.attackerId} IN ${memberStateIds}`, sql`${wars.defenderId} IN ${memberStateIds}`)
+						)
+					)
+					.orderBy(sql`${wars.declaredAt} DESC`);
+
+				// Count active battles for each war
+				const warIds = warResults.map((w) => w.id);
+				let battleCounts: Record<number, number> = {};
+
+				if (warIds.length > 0) {
+					const battleCountResults = await db
+						.select({
+							warId: battles.warId,
+							count: sql<number>`count(*)::int`
+						})
+						.from(battles)
+						.where(and(sql`${battles.warId} IN ${warIds}`, eq(battles.status, "ongoing")))
+						.groupBy(battles.warId);
+
+					battleCounts = Object.fromEntries(battleCountResults.map((bc) => [bc.warId, bc.count]));
+				}
+
+				activeWars = warResults.map((war) => ({
+					id: war.id,
+					attacker: {
+						id: war.attackerId,
+						name: war.attackerName,
+						logo: war.attackerLogo
+					},
+					defender: {
+						id: war.defenderId,
+						name: war.defenderName,
+						logo: war.defenderLogo
+					},
+					declaredAt: war.declaredAt,
+					activeBattles: battleCounts[war.id] || 0
+				}));
+			}
+			return activeWars;
+		})(),
+		(async () => {
+			if (!currentElection) return;
+
+			const [candidateRows, voteCountRows, [voteRow]] = await Promise.all([
+				db.query.blocLeaderCandidates.findMany({
+					where: eq(blocLeaderCandidates.electionId, currentElection.id),
+					with: { candidate: { with: { profile: true } } },
+					orderBy: (t, { asc }) => asc(t.nominatedAt)
+				}),
+				db
+					.select({ candidateUserId: blocLeaderVotes.candidateUserId, count: sql<number>`count(*)::int` })
+					.from(blocLeaderVotes)
+					.where(eq(blocLeaderVotes.electionId, currentElection.id))
+					.groupBy(blocLeaderVotes.candidateUserId),
+				locals.account
+					? db
+							.select({ candidateUserId: blocLeaderVotes.candidateUserId })
+							.from(blocLeaderVotes)
+							.where(
+								and(eq(blocLeaderVotes.electionId, currentElection.id), eq(blocLeaderVotes.voterId, locals.account.id))
+							)
+							.limit(1)
+					: []
+			]);
+			const voteCounts = Object.fromEntries(voteCountRows.map((v) => [v.candidateUserId, v.count]));
+
+			candidates = await Promise.all(
+				candidateRows.map(async (c) => ({
+					userId: c.candidateUserId,
+					name: c.candidate.profile?.name || "Anonymous",
+					logo: await getLogoUrl(c.candidate.profile?.logo),
+					nominatedAt: c.nominatedAt,
+					votes: voteCounts[c.candidateUserId] || 0
+				}))
+			);
+
+			if (locals.account) {
+				myBlocLeaderVote = voteRow?.candidateUserId ?? null;
+			}
+		})()
+	]);
+
+	let userState = null;
+	let isMember = false;
+	let canJoin = false;
+
+	if (presidency) {
+		userState = {
+			id: presidency.stateId,
+			name: presidency.stateName,
+			logo: presidency.stateLogo ? await getLogoUrl(presidency.stateLogo) : null
+		};
+
+		// User's state is a member if it's in this bloc
+		isMember = presidency.currentBlocId === blocId;
+
+		// Can join if not in any bloc
+		canJoin = !presidency.currentBlocId;
+	}
+
+	// Resolve all logo URLs in parallel
+	const [blocLogo, memberStatesWithLogos, leaderLogo, diplomats, activeWarsWithLogos] = await Promise.all([
+		getLogoUrl(bloc.logo),
+		Promise.all(
+			memberStates.map(async (state) => ({
+				id: state.id,
+				name: state.name,
+				logo: await getLogoUrl(state.logo),
+				population: state.population || 0,
+				rating: state.rating || 0,
+				president: state.presidentUserId
+					? {
+							userId: state.presidentUserId,
+							name: state.presidentName,
+							term: state.presidentTerm,
+							electedAt: state.presidentElectedAt
+						}
+					: null
+			}))
+		),
+		leaderRow ? getLogoUrl(leaderRow.user.profile?.logo) : null,
+		Promise.all(
+			diplomatRows.map(async (d) => ({
+				id: d.id,
+				userId: d.userId,
+				name: d.user.profile?.name || "Anonymous",
+				logo: await getLogoUrl(d.user.profile?.logo),
+				appointedAt: d.appointedAt
+			}))
+		),
+		Promise.all(
+			activeWars.map(async (war) => {
+				const [attackerLogo, defenderLogo] = await Promise.all([
+					getLogoUrl(war.attacker.logo),
+					getLogoUrl(war.defender.logo)
+				]);
+				return {
+					...war,
+					attacker: {
+						...war.attacker,
+						logo: attackerLogo
+					},
+					defender: {
+						...war.defender,
+						logo: defenderLogo
+					}
+				};
+			})
+		)
+	]);
+
+	return {
+		bloc: {
+			id: bloc.id,
+			name: bloc.name,
+			logo: blocLogo,
+			color: bloc.color,
+			description: bloc.description,
+			createdAt: bloc.createdAt
+		},
+		memberStates: memberStatesWithLogos,
+
+		leader: leaderRow
+			? {
+					userId: leaderRow.userId,
+					name: leaderRow.user.profile?.name || "Anonymous",
+					logo: leaderLogo,
+					appointedAt: leaderRow.appointedAt
+				}
+			: null,
+		diplomats,
+		isLeader,
+		election: currentElection
+			? {
+					id: currentElection.id,
+					status: currentElection.status,
+					votingStartsAt: currentElection.votingStartsAt,
+					votingEndsAt: currentElection.votingEndsAt
+				}
+			: null,
+		candidates,
+		myBlocLeaderVote,
+		canVoteForBlocLeader: isMember && currentElection?.status === "active",
+		isMemberPresident: isMember,
+		userState,
+		canJoin,
+		activeWars: activeWarsWithLogos
+	};
+};
+
+const __LEGACY_LOAD_START__ = async () => {
 	const memberStates = await db
 		.select({
 			id: states.id,

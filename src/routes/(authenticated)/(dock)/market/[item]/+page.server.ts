@@ -39,127 +39,121 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	else if (PRODUCTS.includes(itemName)) itemType = "product";
 	else throw error(404, "Item not found");
 
-	const [residence] = await db
-		.select({ regionId: residences.regionId, stateId: regions.stateId })
-		.from(residences)
-		.innerJoin(regions, eq(residences.regionId, regions.id))
-		.where(eq(residences.userId, account.id))
-		.limit(1);
-
-	let [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-	if (!wallet) {
-		await db.insert(userWallets).values({ userId: account.id, balance: 10000 });
-		[wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-	}
-
-	// User's inventory for this item
-	let userItemQuantity = 0;
-	if (itemType === "resource") {
-		const [inv] = await db
-			.select()
-			.from(resourceInventory)
-			.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, itemName as any)));
-		userItemQuantity = inv?.quantity ?? 0;
-	} else {
-		const [inv] = await db
-			.select()
-			.from(productInventory)
-			.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
-		userItemQuantity = inv?.quantity ?? 0;
-	}
-
-	const [statistics] = await db
-		.select()
-		.from(marketStatistics)
-		.where(and(eq(marketStatistics.itemType, itemType), eq(marketStatistics.itemName, itemName)))
-		.limit(1);
-
 	const thirtyDaysAgo = new Date();
 	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-	const priceHistory = await db
-		.select()
-		.from(marketPriceHistory)
-		.where(
-			and(
-				eq(marketPriceHistory.itemType, itemType),
-				eq(marketPriceHistory.itemName, itemName),
-				gte(marketPriceHistory.recordedAt, thirtyDaysAgo)
-			)
-		)
-		.orderBy(marketPriceHistory.recordedAt);
-
-	// All listings ordered by price, then split
-	const allListings = await db
-		.select()
-		.from(marketListings)
-		.where(and(eq(marketListings.itemType, itemType), eq(marketListings.itemName, itemName)))
-		.orderBy(marketListings.pricePerUnit);
+	// Everything below only depends on the account / item, so it all runs concurrently.
+	// Dependent lookups (tax rate, government state) are chained onto their inputs.
+	const [taxRate, wallet, userItemQuantity, [statistics], priceHistory, allListings, [cooldown], governmentState] =
+		await Promise.all([
+			db
+				.select({ regionId: residences.regionId, stateId: regions.stateId })
+				.from(residences)
+				.innerJoin(regions, eq(residences.regionId, regions.id))
+				.where(eq(residences.userId, account.id))
+				.limit(1)
+				.then(async ([residence]) => {
+					if (!residence?.stateId) return 0;
+					const [stateTax] = await db
+						.select({ taxRate: stateTaxes.taxRate })
+						.from(stateTaxes)
+						.where(
+							and(
+								eq(stateTaxes.stateId, residence.stateId),
+								eq(stateTaxes.taxType, "market_transaction"),
+								eq(stateTaxes.isActive, true)
+							)
+						)
+						.limit(1);
+					return stateTax?.taxRate || 0;
+				}),
+			(async () => {
+				let [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
+				if (!wallet) {
+					await db.insert(userWallets).values({ userId: account.id, balance: 10000 });
+					[wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
+				}
+				return wallet;
+			})(),
+			// User's inventory for this item
+			(async () => {
+				if (itemType === "resource") {
+					const [inv] = await db
+						.select()
+						.from(resourceInventory)
+						.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, itemName as any)));
+					return inv?.quantity ?? 0;
+				} else {
+					const [inv] = await db
+						.select()
+						.from(productInventory)
+						.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, itemName as any)));
+					return inv?.quantity ?? 0;
+				}
+			})(),
+			db
+				.select()
+				.from(marketStatistics)
+				.where(and(eq(marketStatistics.itemType, itemType), eq(marketStatistics.itemName, itemName)))
+				.limit(1),
+			db
+				.select()
+				.from(marketPriceHistory)
+				.where(
+					and(
+						eq(marketPriceHistory.itemType, itemType),
+						eq(marketPriceHistory.itemName, itemName),
+						gte(marketPriceHistory.recordedAt, thirtyDaysAgo)
+					)
+				)
+				.orderBy(marketPriceHistory.recordedAt),
+			// All listings ordered by price, then split
+			db
+				.select()
+				.from(marketListings)
+				.where(and(eq(marketListings.itemType, itemType), eq(marketListings.itemName, itemName)))
+				.orderBy(marketListings.pricePerUnit),
+			db.select().from(marketListingCooldowns).where(eq(marketListingCooldowns.userId, account.id)),
+			// Check if user is president or minister of economy of any state
+			Promise.all([
+				db.select({ stateId: presidents.stateId }).from(presidents).where(eq(presidents.userId, account.id)).limit(1),
+				db
+					.select({ stateId: ministers.stateId })
+					.from(ministers)
+					.where(and(eq(ministers.userId, account.id), eq(ministers.ministry, "economy")))
+					.limit(1)
+			]).then(async ([[presidency], [economyMinistry]]) => {
+				let governmentState: { id: number; name: string; treasuryBalance: number } | null = null;
+				const govStateId = presidency?.stateId ?? economyMinistry?.stateId ?? null;
+				if (govStateId) {
+					const [[state], [treasury]] = await Promise.all([
+						db.select({ id: states.id, name: states.name }).from(states).where(eq(states.id, govStateId)).limit(1),
+						db
+							.select({ balance: stateTreasury.balance })
+							.from(stateTreasury)
+							.where(eq(stateTreasury.stateId, govStateId))
+							.limit(1)
+					]);
+					if (state) {
+						governmentState = {
+							id: state.id,
+							name: state.name,
+							treasuryBalance: Number(treasury?.balance ?? 0)
+						};
+					}
+				}
+				return governmentState;
+			})
+		]);
 
 	const myListing = allListings.find((l) => l.sellerId === account.id) ?? null;
 	const otherListings = allListings.filter((l) => l.sellerId !== account.id);
-
-	let taxRate = 0;
-	if (residence?.stateId) {
-		const [stateTax] = await db
-			.select({ taxRate: stateTaxes.taxRate })
-			.from(stateTaxes)
-			.where(
-				and(
-					eq(stateTaxes.stateId, residence.stateId),
-					eq(stateTaxes.taxType, "market_transaction"),
-					eq(stateTaxes.isActive, true)
-				)
-			)
-			.limit(1);
-		taxRate = stateTax?.taxRate || 0;
-	}
-
-	const [cooldown] = await db
-		.select()
-		.from(marketListingCooldowns)
-		.where(eq(marketListingCooldowns.userId, account.id));
 
 	let cooldownRemaining = 0;
 	if (cooldown) {
 		const hourInMs = 60 * 60 * 1000;
 		const timeSinceRemoval = Date.now() - new Date(cooldown.lastRemovedAt).getTime();
 		cooldownRemaining = Math.max(0, hourInMs - timeSinceRemoval);
-	}
-
-	// Check if user is president or minister of economy of any state
-	const [presidency] = await db
-		.select({ stateId: presidents.stateId })
-		.from(presidents)
-		.where(eq(presidents.userId, account.id))
-		.limit(1);
-
-	const [economyMinistry] = await db
-		.select({ stateId: ministers.stateId })
-		.from(ministers)
-		.where(and(eq(ministers.userId, account.id), eq(ministers.ministry, "economy")))
-		.limit(1);
-
-	let governmentState: { id: number; name: string; treasuryBalance: number } | null = null;
-	const govStateId = presidency?.stateId ?? economyMinistry?.stateId ?? null;
-	if (govStateId) {
-		const [state] = await db
-			.select({ id: states.id, name: states.name })
-			.from(states)
-			.where(eq(states.id, govStateId))
-			.limit(1);
-		const [treasury] = await db
-			.select({ balance: stateTreasury.balance })
-			.from(stateTreasury)
-			.where(eq(stateTreasury.stateId, govStateId))
-			.limit(1);
-		if (state) {
-			governmentState = {
-				id: state.id,
-				name: state.name,
-				treasuryBalance: Number(treasury?.balance ?? 0)
-			};
-		}
 	}
 
 	return {

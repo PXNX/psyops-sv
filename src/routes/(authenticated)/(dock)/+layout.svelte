@@ -46,7 +46,9 @@
 
 {#if page.url.pathname !== "/posts/new" && !page.url.pathname.startsWith("/welcome")}
 	<!-- Editorial field-ledger dock navigation -->
-	<nav class="dock">
+	<!-- Dock targets are the most common destinations: fetch their JS up front
+	     so a tap only has to wait for data, never for code. -->
+	<nav class="dock" data-sveltekit-preload-code="eager">
 		{#each navItems as item (item.href)}
 			<a href={item.href} class="flinch dock-item" class:active={isActive(item.href)} title={item.label}>
 				<svelte:component this={item.icon} class="size-5 md:size-6" />

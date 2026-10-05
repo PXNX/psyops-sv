@@ -202,14 +202,32 @@ export async function getSignedDownloadUrl(
 		return `${MOCK_API_URL}/mock-files/${key}`;
 	}
 
+	// Reuse a previously signed URL while it still has at least half of its
+	// validity left. Re-signing on every render produced a brand new URL each
+	// time, which defeated the browser's image cache and re-downloaded every
+	// avatar/logo on every page change.
+	const cacheKey = `${key}:${expiresIn}`;
+	const cached = signedUrlCache.get(cacheKey);
+	if (cached && cached.reuseUntil > Date.now()) {
+		return cached.url;
+	}
+
 	const command = new GetObjectCommand({
 		Bucket: BACKBLAZE_BUCKET_NAME,
 		Key: key,
 		ResponseCacheControl: `public, max-age=${expiresIn}, immutable`
 	});
 
-	return await getSignedUrl(s3Client!, command, { expiresIn });
+	const url = await getSignedUrl(s3Client!, command, { expiresIn });
+	if (signedUrlCache.size >= MAX_CACHE_ENTRIES) signedUrlCache.clear();
+	signedUrlCache.set(cacheKey, { url, reuseUntil: Date.now() + (expiresIn * 1000) / 2 });
+	return url;
 }
+
+// Per-instance caches for download URLs (see getSignedDownloadUrl/getLogoUrl).
+const MAX_CACHE_ENTRIES = 10_000;
+const signedUrlCache = new Map<string, { url: string; reuseUntil: number }>();
+const fileKeyCache = new Map<number, string>();
 
 /**
  * Get signed download URL with short expiration (for sensitive content)
@@ -233,14 +251,21 @@ export async function getSignedDownloadUrlShort(key: string): Promise<string> {
 export async function getLogoUrl(logoId: number | null | undefined): Promise<string | null> {
 	if (!logoId) return null;
 
-	const logoFile = await db.query.files.findFirst({
-		where: eq(files.id, logoId!)
-	});
-
-	if (!logoFile) return null;
+	// File rows are immutable (uuid keys), so cache the id → key lookup instead
+	// of paying a DB round trip for every logo on every page load.
+	let key = fileKeyCache.get(logoId);
+	if (key === undefined) {
+		const logoFile = await db.query.files.findFirst({
+			where: eq(files.id, logoId)
+		});
+		if (!logoFile) return null;
+		key = logoFile.key;
+		if (fileKeyCache.size >= MAX_CACHE_ENTRIES) fileKeyCache.clear();
+		fileKeyCache.set(logoId, key);
+	}
 
 	try {
-		return await getSignedDownloadUrl(logoFile.key);
+		return await getSignedDownloadUrl(key);
 	} catch {
 		return null;
 	}

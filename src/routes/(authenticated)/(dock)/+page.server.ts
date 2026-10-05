@@ -19,68 +19,37 @@ import type { Actions, PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	const profile = await db.query.userProfiles.findFirst({
-		where: eq(userProfiles.accountId, account.id)
-	});
-
-	// Account birthday (creation anniversary) reward status.
-	const birthdayInfo = await getBirthdayInfo(account.id, account.createdAt);
-
-	const primaryResidence = await db.query.residences.findFirst({
-		where: eq(residences.userId, account.id)
-	});
-
-	const activeTravel = await db.query.userTravels.findFirst({
-		where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
-	});
-
-	// Resolve the region the user currently lives in and its controlling state.
-	let region: typeof regions.$inferSelect | undefined;
-	let homeState: typeof states.$inferSelect | undefined;
-	if (primaryResidence) {
-		region = await db.query.regions.findFirst({
-			where: eq(regions.id, primaryResidence.regionId)
+	// Every lookup below only depends on the account or on one earlier lookup,
+	// so independent chains run concurrently instead of as one long waterfall
+	// of sequential DB round trips.
+	const residenceChain = (async () => {
+		const primaryResidence = await db.query.residences.findFirst({
+			where: eq(residences.userId, account.id)
 		});
-		if (region?.stateId) {
-			homeState = await db.query.states.findFirst({
-				where: eq(states.id, region.stateId)
+
+		// Resolve the region the user currently lives in and its controlling state.
+		let region: typeof regions.$inferSelect | undefined;
+		let homeState: typeof states.$inferSelect | undefined;
+		if (primaryResidence) {
+			region = await db.query.regions.findFirst({
+				where: eq(regions.id, primaryResidence.regionId)
 			});
-		}
-	}
-
-	// --- Active broadcasts ---
-
-	// System broadcast (visible to everyone)
-	const systemBroadcast = await db.query.broadcasts.findFirst({
-		where: and(eq(broadcasts.broadcastType, "system"), eq(broadcasts.isActive, true)),
-		orderBy: [desc(broadcasts.createdAt)],
-		with: { issuer: { with: { profile: true } } }
-	});
-
-	// State broadcast (visible to residents of the user's state)
-	let stateBroadcast = null;
-	if (homeState) {
-		stateBroadcast = await db.query.broadcasts.findFirst({
-			where: and(
-				eq(broadcasts.broadcastType, "state"),
-				eq(broadcasts.stateId, homeState.id),
-				eq(broadcasts.isActive, true)
-			),
-			orderBy: [desc(broadcasts.createdAt)],
-			with: {
-				issuer: { with: { profile: true } },
-				state: true
+			if (region?.stateId) {
+				homeState = await db.query.states.findFirst({
+					where: eq(states.id, region.stateId)
+				});
 			}
-		});
-	}
+		}
+		return { primaryResidence, region, homeState };
+	})();
 
 	// Party broadcast (visible to members of the user's party)
-	let partyBroadcast = null;
-	const membership = await db.query.partyMembers.findFirst({
-		where: eq(partyMembers.userId, account.id)
-	});
-	if (membership) {
-		partyBroadcast = await db.query.broadcasts.findFirst({
+	const partyBroadcastPromise = (async () => {
+		const membership = await db.query.partyMembers.findFirst({
+			where: eq(partyMembers.userId, account.id)
+		});
+		if (!membership) return null;
+		return db.query.broadcasts.findFirst({
 			where: and(
 				eq(broadcasts.broadcastType, "party"),
 				eq(broadcasts.partyId, membership.partyId),
@@ -92,20 +61,54 @@ export const load: PageServerLoad = async ({ locals }) => {
 				party: true
 			}
 		});
-	}
+	})();
+
+	const [
+		profile,
+		birthdayInfo,
+		activeTravel,
+		systemBroadcast,
+		{ primaryResidence, region, homeState },
+		partyBroadcast
+	] = await Promise.all([
+		db.query.userProfiles.findFirst({
+			where: eq(userProfiles.accountId, account.id)
+		}),
+		// Account birthday (creation anniversary) reward status.
+		getBirthdayInfo(account.id, account.createdAt),
+		db.query.userTravels.findFirst({
+			where: and(eq(userTravels.userId, account.id), eq(userTravels.status, "in_progress"))
+		}),
+		// System broadcast (visible to everyone)
+		db.query.broadcasts.findFirst({
+			where: and(eq(broadcasts.broadcastType, "system"), eq(broadcasts.isActive, true)),
+			orderBy: [desc(broadcasts.createdAt)],
+			with: { issuer: { with: { profile: true } } }
+		}),
+		residenceChain,
+		partyBroadcastPromise
+	]);
+
+	// State broadcast (visible to residents of the user's state)
+	const stateBroadcastPromise = homeState
+		? db.query.broadcasts.findFirst({
+				where: and(
+					eq(broadcasts.broadcastType, "state"),
+					eq(broadcasts.stateId, homeState.id),
+					eq(broadcasts.isActive, true)
+				),
+				orderBy: [desc(broadcasts.createdAt)],
+				with: {
+					issuer: { with: { profile: true } },
+					state: true
+				}
+			})
+		: Promise.resolve(null);
 
 	// --- Ongoing battles in user's region ---
-	let ongoingBattles: {
-		id: number;
-		regionId: number;
-		attackerState: { id: number; name: string };
-		defenderState: { id: number; name: string };
-		phase: string;
-		terrain: string;
-		startedAt: Date;
-	}[] = [];
+	const ongoingBattlesPromise = (async () => {
+		if (!primaryResidence) return [];
 
-	if (primaryResidence) {
 		const regionBattles = await db.query.battles.findMany({
 			where: and(eq(battles.regionId, primaryResidence.regionId), eq(battles.status, "ongoing")),
 			with: {
@@ -115,7 +118,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			orderBy: [desc(battles.startedAt)]
 		});
 
-		ongoingBattles = regionBattles.map((b) => ({
+		return regionBattles.map((b) => ({
 			id: b.id,
 			regionId: b.regionId,
 			attackerState: { id: b.attackerStateId, name: b.attackerState.name },
@@ -124,22 +127,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 			terrain: b.terrain,
 			startedAt: b.startedAt
 		}));
-	}
+	})();
 
 	// --- Active wars involving the region's controlling state (or its bloc) ---
-	let activeWars: {
-		id: number;
-		declaredAt: Date;
-		side: "attacker" | "defender";
-		attacker: { id: number; name: string; logo: string | null };
-		defender: { id: number; name: string; logo: string | null };
-		attackerBloc: { id: number; name: string; color: string } | null;
-		defenderBloc: { id: number; name: string; color: string } | null;
-		totalBattles: number;
-		ongoingBattles: number;
-	}[] = [];
+	const activeWarsPromise = (async () => {
+		if (!homeState) return [];
 
-	if (homeState) {
 		const stateId = homeState.id;
 		const blocId = homeState.blocId;
 
@@ -160,9 +153,13 @@ export const load: PageServerLoad = async ({ locals }) => {
 			orderBy: [desc(wars.declaredAt)]
 		});
 
-		activeWars = await Promise.all(
+		return Promise.all(
 			warRows.map(async (w) => {
 				const isDefending = w.defenderId === stateId || (blocId != null && w.defenderBlocId === blocId);
+				const [attackerLogo, defenderLogo] = await Promise.all([
+					getLogoUrl(w.attacker.logo),
+					getLogoUrl(w.defender.logo)
+				]);
 				return {
 					id: w.id,
 					declaredAt: w.declaredAt,
@@ -170,12 +167,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 					attacker: {
 						id: w.attacker.id,
 						name: w.attacker.name,
-						logo: await getLogoUrl(w.attacker.logo)
+						logo: attackerLogo
 					},
 					defender: {
 						id: w.defender.id,
 						name: w.defender.name,
-						logo: await getLogoUrl(w.defender.logo)
+						logo: defenderLogo
 					},
 					attackerBloc: w.attackerBloc
 						? { id: w.attackerBloc.id, name: w.attackerBloc.name, color: w.attackerBloc.color }
@@ -188,20 +185,28 @@ export const load: PageServerLoad = async ({ locals }) => {
 				};
 			})
 		);
-	}
+	})();
 
 	// --- State snapshot for the current region ---
-	const stateSnapshot = homeState
-		? {
-				id: homeState.id,
-				name: homeState.name,
-				logo: await getLogoUrl(homeState.logo),
-				population: homeState.population ?? 0,
-				rating: homeState.rating ?? 0,
-				capitulated: homeState.capitulated,
-				blocId: homeState.blocId
-			}
-		: null;
+	const stateSnapshotPromise = (async () => {
+		if (!homeState) return null;
+		return {
+			id: homeState.id,
+			name: homeState.name,
+			logo: await getLogoUrl(homeState.logo),
+			population: homeState.population ?? 0,
+			rating: homeState.rating ?? 0,
+			capitulated: homeState.capitulated,
+			blocId: homeState.blocId
+		};
+	})();
+
+	const [stateBroadcast, ongoingBattles, activeWars, stateSnapshot] = await Promise.all([
+		stateBroadcastPromise,
+		ongoingBattlesPromise,
+		activeWarsPromise,
+		stateSnapshotPromise
+	]);
 
 	return {
 		account: {
