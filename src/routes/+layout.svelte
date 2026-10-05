@@ -4,6 +4,7 @@
 	import { onNavigate } from "$app/navigation";
 	import { browser } from "$app/env";
 	import { settings } from "#lib/settings.svelte.js";
+	import InstallPrompt from "#lib/components/InstallPrompt.svelte";
 
 	const { children } = $props();
 
@@ -53,3 +54,5 @@
 <div class="min-h-dvh">
 	{@render children()}
 </div>
+
+<InstallPrompt />
