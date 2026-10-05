@@ -1,7 +1,7 @@
 <!-- src/routes/factory/[id]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import { invalidateAll } from "$app/navigation";
+	import { refreshAll } from "$app/navigation";
 	import { getRegionName } from "#lib/utils/formatting.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
@@ -34,7 +34,7 @@
 		if (data.isCurrentlyWorking && data.shiftEndsAt) {
 			const interval = setInterval(() => {
 				if (new Date(data.shiftEndsAt!) <= new Date()) {
-					invalidateAll();
+					refreshAll();
 				}
 			}, 60000);
 			return () => clearInterval(interval);

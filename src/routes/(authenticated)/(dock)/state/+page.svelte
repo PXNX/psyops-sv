@@ -29,7 +29,7 @@
 		const params = new URLSearchParams();
 		if (searchInput) params.set("search", searchInput.trim());
 		if (sortBy) params.set("sort", sortBy);
-		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+		goto(`?${params.toString()}`, { reset: false });
 	}
 
 	function handleSearchInput() {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { invalidateAll } from "$app/navigation";
+	import { refreshAll } from "$app/navigation";
 	import { fly, fade } from "svelte/transition";
 	import { getRegionName } from "#lib/utils/formatting.js";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
@@ -82,7 +82,7 @@
 				optimistic = null;
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 		} finally {
 			submitting = false;
 		}
@@ -118,7 +118,7 @@
 				optimistic = null;
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 		} finally {
 			submitting = false;
 		}
@@ -150,7 +150,7 @@
 				optimistic = null;
 				return;
 			}
-			await invalidateAll();
+			await refreshAll();
 		} finally {
 			submitting = false;
 		}

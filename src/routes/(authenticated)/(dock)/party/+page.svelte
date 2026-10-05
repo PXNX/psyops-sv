@@ -28,7 +28,7 @@
 			if (!value) params.delete(key);
 			else params.set(key, value);
 		}
-		goto(`?${params.toString()}`, { keepFocus: true, noScroll: true });
+		goto(`?${params.toString()}`, { reset: false });
 	}
 </script>
 

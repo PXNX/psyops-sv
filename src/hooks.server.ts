@@ -94,11 +94,14 @@ function createRealAuthHandle(): Handle {
 
 const authHandle: Handle = isMockMode ? createMockAuthHandle() : createRealAuthHandle();
 
-export const handleError: HandleServerError = async ({ error, event }) => {
+export const handleError: HandleServerError = async ({ kind, error, event }) => {
 	const requestId = crypto.randomUUID();
-	const err = error instanceof Error ? error : undefined;
+	// Only truly unexpected (kind === "unknown") errors are JS exceptions; app/framework/validation
+	// errors carry their own safe { status, message } that must stay intact for the error page.
+	const err = kind === "unknown" && error instanceof Error ? error : undefined;
+	const safeMessage = kind === "unknown" ? String(error) : error.message;
 
-	event.locals.error = error?.toString() || undefined;
+	event.locals.error = safeMessage;
 	event.locals.errorStackTrace = err?.stack || undefined;
 	event.locals.requestId = requestId;
 
@@ -108,6 +111,7 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 	const session = event.locals.session;
 	const context = {
 		requestId,
+		kind,
 		method: event.request.method,
 		route: event.route.id ?? event.url.pathname,
 		accountId: account?.id ?? null,
@@ -118,7 +122,7 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 	};
 
 	// Log error with request ID and user/session context for debugging
-	console.error(`[ERROR ${requestId}] ${error?.toString() || "Unknown error"}`, context);
+	console.error(`[ERROR ${requestId}] ${safeMessage}`, context);
 	if (err?.stack) {
 		console.error(`[STACK ${requestId}]`, err.stack);
 	}
@@ -128,10 +132,15 @@ export const handleError: HandleServerError = async ({ error, event }) => {
 		console.error(`[CAUSE ${requestId}]`, err.cause);
 	}
 
-	return {
-		message: "An unexpected error occurred.",
-		requestId
-	};
+	// Unknown errors may leak internals (stack traces, db messages) through their
+	// message, so replace it with a generic one. app/framework/validation errors
+	// already carry a safe, intentional message (e.g. `error(404, "Not found")`) —
+	// leave status/message untouched by omitting them, so they're inherited.
+	if (kind === "unknown") {
+		return { message: "An unexpected error occurred.", requestId };
+	}
+
+	return { requestId };
 };
 
 export const themesHandle: Handle = async ({ event, resolve }) => {

@@ -53,7 +53,9 @@
 					if (result.type === "success") {
 						closeModal();
 					}
-					await update();
+					// The action posts to /report regardless of which page the modal is
+					// opened from; stay on the current page instead of navigating there.
+					await update({ navigate: false });
 				};
 			}}
 		>

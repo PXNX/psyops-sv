@@ -19,7 +19,7 @@ declare global {
 		}
 		interface Error {
 			code?: string;
-			errorId?: string;
+			requestId?: string;
 		}
 		// interface PageData {}
 		// interface PageState {}
