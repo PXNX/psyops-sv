@@ -1,4 +1,4 @@
-import { error, fail, json, redirect } from "@sveltejs/kit";
+import { error, fail, redirect } from "@sveltejs/kit";
 
 import type { RequestEvent } from "./$types";
 

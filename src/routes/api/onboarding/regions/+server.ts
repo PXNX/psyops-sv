@@ -1,4 +1,4 @@
-import { json, error } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { db } from "#lib/server/db.js";
 import { regions, residences, states } from "#lib/server/schema.js";
 import { eq, sql } from "drizzle-orm";
@@ -102,5 +102,5 @@ export const GET: RequestHandler = async ({ locals, getClientAddress }) => {
 			.map((r) => ({ ...r, distanceKm: null }));
 	}
 
-	return json({ regions: nearbyRegions, userLocation });
+	return Response.json({ regions: nearbyRegions, userLocation });
 };

@@ -1,6 +1,5 @@
 // src/routes/(authenticated)/api/cron/elections/+server.ts
 
-import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "#lib/server/db.js";
 import {
@@ -91,7 +90,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			);
 		}
 
-		return json({
+		return Response.json({
 			success: true,
 			timestamp: now.toISOString(),
 			electionsActivated: activated,
@@ -100,7 +99,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		});
 	} catch (error) {
 		console.error("Cron job error:", error);
-		return json(
+		return Response.json(
 			{
 				success: false,
 				error: error instanceof Error ? error.message : "Unknown error"

@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/api/cron/premium/+server.ts
 // Triggered by an external scheduler (cron-jobs.org). Runs production, military
 // training and factory-work automation for all active premium members.
-import { json, error } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { CRON_SECRET, NODE_ENV } from "$app/env/private";
 import type { RequestHandler } from "./$types";
 import { runPremiumAutomation } from "#lib/server/service/premium.js";
@@ -43,7 +43,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			}
 		);
 
-		return json({
+		return Response.json({
 			success: true,
 			timestamp: new Date().toISOString(),
 			membersProcessed: summaries.length,
@@ -51,6 +51,6 @@ export const GET: RequestHandler = async ({ request }) => {
 		});
 	} catch (err) {
 		console.error("Premium automation cron error:", err);
-		return json({ success: false, error: err instanceof Error ? err.message : "Unknown error" }, { status: 500 });
+		return Response.json({ success: false, error: err instanceof Error ? err.message : "Unknown error" }, { status: 500 });
 	}
 };

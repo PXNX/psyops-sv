@@ -5,7 +5,6 @@ import { DATABASE_URL } from "$app/env/private";
 import * as schema from "./schema";
 
 function createRealDb() {
-	const DATABASE_URL = DATABASE_URL;
 	if (!DATABASE_URL) {
 		throw new Error("DATABASE_URL environment variable is required");
 	}

@@ -1,5 +1,6 @@
 /// <reference types="@sveltejs/kit" />
-import { build, files, version } from "$service-worker";
+import { version } from "$app/env";
+import { immutable, assets } from "$app/manifest";
 
 // Versioned caches so a new deployment starts clean and old data is purged.
 const PRECACHE = `precache-${version}`; // immutable app build + static files
@@ -9,8 +10,8 @@ const RUNTIME = `runtime-${version}`; // runtime assets (images, fonts, etc.)
 const OFFLINE_URL = "/offline.html";
 
 const ASSETS = [
-	...build, // the app itself
-	...files // everything in `static` (includes OFFLINE_URL)
+	...immutable.map((file) => file.path), // the app itself
+	...assets.map((file) => file.path) // everything in `static` (includes OFFLINE_URL)
 ];
 const ASSET_SET = new Set(ASSETS);
 

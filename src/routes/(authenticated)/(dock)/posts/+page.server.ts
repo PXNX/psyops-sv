@@ -4,7 +4,6 @@ import { articles, accounts, newspapers, upvotes, files, userProfiles } from "#l
 import { eq, desc, sql, lt } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
-import { json } from "@sveltejs/kit";
 
 const PAGE_SIZE = 20;
 
@@ -138,6 +137,6 @@ export const actions = {
 
 		const result = await fetchArticles(cursor, account.id);
 
-		return json(result);
+		return Response.json(result);
 	}
 } satisfies Actions;

@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { page } from "$app/stores";
+	import { page } from "$app/state";
 	import { goto } from "$app/navigation";
-	import type { PageData } from "./$types";
 
-	export let data: PageData;
+	let { data } = $props();
 
 	// Transaction type labels
 	const transactionTypeLabels: Record<string, string> = {
@@ -63,7 +62,7 @@
 
 	// Navigate to a specific page
 	function goToPage(pageNum: number) {
-		const url = new URL($page.url);
+		const url = new URL(page.url);
 		url.searchParams.set("page", pageNum.toString());
 		goto(url.toString());
 	}
@@ -89,15 +88,18 @@
 	}
 
 	// Sort categories by total activity
-	$: sortedCategories = data.analytics.categoryBreakdown
-		.sort((a, b) => b.income + b.expenses - (a.income + a.expenses))
-		.slice(0, 5); // Top 5 categories
+	const sortedCategories = $derived(
+		data.analytics.categoryBreakdown
+			.toSorted((a, b) => b.income + b.expenses - (a.income + a.expenses))
+			.slice(0, 5) // Top 5 categories
+	);
 
 	// Calculate max for bar scaling
-	$: maxCategoryValue = Math.max(...sortedCategories.map((cat) => Math.max(cat.income, cat.expenses)), 1);
+	const maxCategoryValue = $derived(
+		Math.max(...sortedCategories.map((cat) => Math.max(cat.income, cat.expenses)), 1)
+	);
 </script>
 
-<!-- @migration-task could not auto-migrate `$app/stores` to `$app/state`: legacy `export let` props; migrate manually -->
 <svelte:head><title>{data.state.name} - Government Budget</title></svelte:head>
 
 <div class="min-h-screen">

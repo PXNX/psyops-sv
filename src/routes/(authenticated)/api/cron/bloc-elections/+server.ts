@@ -1,6 +1,5 @@
 // src/routes/(authenticated)/api/cron/bloc-elections/+server.ts
 
-import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "#lib/server/db.js";
 import { blocs, blocLeaders, blocLeaderElections, blocLeaderCandidates, blocLeaderVotes } from "#lib/server/schema.js";
@@ -59,7 +58,7 @@ export const GET: RequestHandler = async () => {
 			await scheduleNextCycle(election.blocId, now);
 		}
 
-		return json({
+		return Response.json({
 			success: true,
 			timestamp: now.toISOString(),
 			bootstrapped,
@@ -68,7 +67,7 @@ export const GET: RequestHandler = async () => {
 		});
 	} catch (error) {
 		console.error("Bloc election cron job error:", error);
-		return json(
+		return Response.json(
 			{
 				success: false,
 				error: error instanceof Error ? error.message : "Unknown error"

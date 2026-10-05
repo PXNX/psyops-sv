@@ -1,4 +1,4 @@
-import { json, error } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { db } from "#lib/server/db.js";
 import { regions, residences, userProfiles } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
@@ -52,5 +52,5 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			.where(eq(userProfiles.accountId, account.id));
 	});
 
-	return json({ success: true });
+	return Response.json({ success: true });
 };

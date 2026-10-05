@@ -1,6 +1,5 @@
 // src/routes/(authenticated)/api/travel/arrive/+server.ts
 
-import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "#lib/server/db.js";
 import { userTravels, residences, regions, states } from "#lib/server/schema.js";
@@ -11,7 +10,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 	try {
 		const account = locals.account;
 		if (!account) {
-			return json({ success: false, error: "Not authenticated" }, { status: 401 });
+			return Response.json({ success: false, error: "Not authenticated" }, { status: 401 });
 		}
 
 		// Find active travel for this user
@@ -20,13 +19,13 @@ export const POST: RequestHandler = async ({ locals }) => {
 		});
 
 		if (!activeTravel) {
-			return json({ success: false, error: "No active travel found" }, { status: 400 });
+			return Response.json({ success: false, error: "No active travel found" }, { status: 400 });
 		}
 
 		// Verify that the arrival time has actually passed (server-side validation)
 		const now = new Date();
 		if (now < new Date(activeTravel.arrivalTime)) {
-			return json(
+			return Response.json(
 				{
 					success: false,
 					error: "Travel has not completed yet",
@@ -86,7 +85,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 			}
 		});
 
-		return json({
+		return Response.json({
 			success: true,
 			message: "Successfully arrived at destination",
 			regionId: activeTravel.toRegionId,
@@ -94,7 +93,7 @@ export const POST: RequestHandler = async ({ locals }) => {
 		});
 	} catch (error) {
 		console.error("Travel arrival error:", error);
-		return json(
+		return Response.json(
 			{
 				success: false,
 				error: error instanceof Error ? error.message : "Unknown error"
