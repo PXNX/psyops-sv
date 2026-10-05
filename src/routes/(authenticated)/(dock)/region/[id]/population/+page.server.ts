@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/(dock)/region/[id]/population/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { regions, residences, accounts, userProfiles } from "#lib/server/schema.js";
+import { regions, residences, accounts, userProfiles, files } from "#lib/server/schema.js";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { eq, desc, asc, sql, count } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
@@ -18,46 +19,44 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		error(400, "Invalid page number");
 	}
 
-	// Get region
-	const region = await db.query.regions.findFirst({
-		where: eq(regions.id, parseInt(params.id)),
-		with: {
-			state: true
-		}
-	});
-
-	if (!region) {
-		error(404, "Region not found");
-	}
-
-	// Get total count of residents
-	const totalCountResult = await db
-		.select({ count: count() })
-		.from(residences)
-		.where(eq(residences.regionId, parseInt(params.id)));
-
-	const totalResidents = totalCountResult[0]?.count || 0;
-
 	// Calculate offset
 	const offset = (currentPage - 1) * PAGE_SIZE;
 
-	// Get paginated residents with manual join
-	const residentsQuery = db
-		.select({
-			userId: residences.userId,
-			movedInAt: residences.movedInAt,
-			userName: userProfiles.name,
-			userLogo: userProfiles.logo
-		})
-		.from(residences)
-		.leftJoin(accounts, eq(residences.userId, accounts.id))
-		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
-		.where(eq(residences.regionId, parseInt(params.id)))
-		.orderBy(sortOrder === "asc" ? asc(residences.movedInAt) : desc(residences.movedInAt))
-		.limit(PAGE_SIZE)
-		.offset(offset);
+	// Region, resident count and the residents page are independent reads
+	const [region, totalCountResult, residentsData] = await Promise.all([
+		// Get region; fail fast if it doesn't exist
+		db.query.regions
+			.findFirst({
+				where: eq(regions.id, parseInt(params.id)),
+				with: {
+					state: true
+				}
+			})
+			.then((region) => region ?? error(404, "Region not found")),
+		// Get total count of residents
+		db
+			.select({ count: count() })
+			.from(residences)
+			.where(eq(residences.regionId, parseInt(params.id))),
+		// Get paginated residents with manual join
+		db
+			.select({
+				userId: residences.userId,
+				movedInAt: residences.movedInAt,
+				userName: userProfiles.name,
+				userLogoKey: files.key
+			})
+			.from(residences)
+			.leftJoin(accounts, eq(residences.userId, accounts.id))
+			.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
+			.leftJoin(files, eq(userProfiles.logo, files.id))
+			.where(eq(residences.regionId, parseInt(params.id)))
+			.orderBy(sortOrder === "asc" ? asc(residences.movedInAt) : desc(residences.movedInAt))
+			.limit(PAGE_SIZE)
+			.offset(offset)
+	]);
 
-	const residentsData = await residentsQuery;
+	const totalResidents = totalCountResult[0]?.count || 0;
 
 	return {
 		region: {
@@ -66,14 +65,16 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			stateId: region.stateId,
 			stateName: region.state?.name
 		},
-		residents: residentsData.map((r) => ({
-			userId: r.userId,
-			movedInAt: r.movedInAt.toISOString(),
-			user: {
-				name: r.userName || null,
-				logo: r.userLogo || null
-			}
-		})),
+		residents: await Promise.all(
+			residentsData.map(async (r) => ({
+				userId: r.userId,
+				movedInAt: r.movedInAt.toISOString(),
+				user: {
+					name: r.userName || null,
+					logo: r.userLogoKey ? await getSignedDownloadUrl(r.userLogoKey) : null
+				}
+			}))
+		),
 		currentUserId: account.id,
 		sortOrder,
 		currentPage,

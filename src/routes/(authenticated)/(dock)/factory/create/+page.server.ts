@@ -23,8 +23,52 @@ const ENERGY_REQUIRED = 50;
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Get user's company (must own a company to create factories)
-	const [company] = await db.select().from(companies).where(eq(companies.ownerId, account.id));
+	// All lookups are harmless reads keyed by the account, so run them in parallel;
+	// the checks below still apply in their original order.
+	const [[company], { residence, region }, [wallet], [cooldown], userInventory] = await Promise.all([
+		// Get user's company (must own a company to create factories)
+		db.select().from(companies).where(eq(companies.ownerId, account.id)),
+		(async () => {
+			// Get user's residence (must have a residence to create factories)
+			const [residence] = await db
+				.select({
+					id: residences.id,
+					regionId: residences.regionId,
+					userId: residences.userId
+				})
+				.from(residences)
+				.where(eq(residences.userId, account.id));
+			if (!residence) return { residence, region: undefined };
+
+			// Get the user's current region
+			const [region] = await db
+				.select({
+					id: regions.id,
+					stateId: regions.stateId,
+					rating: regions.rating,
+					infrastructure: regions.infrastructure,
+					economy: regions.economy,
+					education: regions.education,
+					hospitals: regions.hospitals,
+					fortifications: regions.fortifications,
+					oil: regions.oil,
+					aluminium: regions.aluminium,
+					rubber: regions.rubber,
+					tungsten: regions.tungsten,
+					steel: regions.steel,
+					chromium: regions.chromium
+				})
+				.from(regions)
+				.where(eq(regions.id, residence.regionId));
+			return { residence, region };
+		})(),
+		// Get user's wallet
+		db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
+		// Check cooldown
+		db.select().from(factoryCreationCooldown).where(eq(factoryCreationCooldown.userId, account.id)),
+		// Get user's resource inventory for material requirements
+		db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id))
+	]);
 
 	if (!company) {
 		return {
@@ -40,16 +84,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 
-	// Get user's residence (must have a residence to create factories)
-	const [residence] = await db
-		.select({
-			id: residences.id,
-			regionId: residences.regionId,
-			userId: residences.userId
-		})
-		.from(residences)
-		.where(eq(residences.userId, account.id));
-
 	if (!residence) {
 		return {
 			error: "You must have a residence to create factories. Please establish a residence first.",
@@ -64,15 +98,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 
-	// Get user's wallet
-	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-	// Check cooldown
-	const [cooldown] = await db
-		.select()
-		.from(factoryCreationCooldown)
-		.where(eq(factoryCreationCooldown.userId, account.id));
-
 	let isOnCooldown = false;
 	let cooldownEndsAt: string | null = null;
 
@@ -84,27 +109,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			cooldownEndsAt = cooldownEnd.toISOString();
 		}
 	}
-
-	// Get the user's current region
-	const [region] = await db
-		.select({
-			id: regions.id,
-			stateId: regions.stateId,
-			rating: regions.rating,
-			infrastructure: regions.infrastructure,
-			economy: regions.economy,
-			education: regions.education,
-			hospitals: regions.hospitals,
-			fortifications: regions.fortifications,
-			oil: regions.oil,
-			aluminium: regions.aluminium,
-			rubber: regions.rubber,
-			tungsten: regions.tungsten,
-			steel: regions.steel,
-			chromium: regions.chromium
-		})
-		.from(regions)
-		.where(eq(regions.id, residence.regionId));
 
 	if (!region) {
 		return {
@@ -136,8 +140,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 
-	// Get state name for display
-	const [state] = await db.select({ name: states.name }).from(states).where(eq(states.id, region.stateId));
+	const [[state], [stateEnergyData]] = await Promise.all([
+		// Get state name for display
+		db.select({ name: states.name }).from(states).where(eq(states.id, region.stateId)),
+		// Get state energy
+		db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId))
+	]);
 
 	const regionName = getRegionName(region.id);
 
@@ -194,9 +202,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		].filter((r) => (r.amount ?? 0) > 0)
 	};
 
-	// Get state energy
-	const [stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId));
-
 	// Calculate regional taxes based on region stats
 	// These are example calculations - adjust based on your game's economy
 	const regionalTaxes = {
@@ -204,9 +209,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		salesTax: Math.min(Math.floor((region.economy || 0) / 15), 20), // 0-20% based on economy
 		propertyTax: Math.min(Math.floor((region.rating || 0) / 20), 15) // 0-15% based on rating
 	};
-
-	// Get user's resource inventory for material requirements
-	const userInventory = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
 
 	const inventoryMap: Record<string, number> = {};
 	userInventory.forEach((item) => {

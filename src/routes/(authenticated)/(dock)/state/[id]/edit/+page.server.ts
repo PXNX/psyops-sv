@@ -7,32 +7,37 @@ import type { PageServerLoad, Actions } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editStateSchema } from "./schema";
-import { uploadFileFromForm, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { uploadFileFromForm, getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const stateId = parseInt(params.id);
 
-	// Get state
-	const [state] = await db.select().from(states).where(eq(states.id, stateId)).limit(1);
-
-	if (!state) {
-		error(404, "State not found");
-	}
-
-	// Check if user is president
-	const [presidency] = await db.select().from(presidents).where(eq(presidents.stateId, stateId)).limit(1);
-
-	if (!presidency || presidency.userId !== account.id) {
-		error(403, "Only the state president can edit the state");
-	}
-
-	// Check cooldown
-	const [cooldown] = await db
+	// Get state; fail fast if it doesn't exist
+	const statePromise = db
 		.select()
-		.from(stateEditCooldowns)
-		.where(eq(stateEditCooldowns.userId, account.id))
-		.limit(1);
+		.from(states)
+		.where(eq(states.id, stateId))
+		.limit(1)
+		.then(([state]) => state ?? error(404, "State not found"));
+
+	const [state, , [cooldown]] = await Promise.all([
+		statePromise,
+		// Check if user is president (404 wins over 403)
+		db
+			.select()
+			.from(presidents)
+			.where(eq(presidents.stateId, stateId))
+			.limit(1)
+			.then(async ([presidency]) => {
+				await statePromise;
+				if (!presidency || presidency.userId !== account.id) {
+					error(403, "Only the state president can edit the state");
+				}
+			}),
+		// Check cooldown
+		db.select().from(stateEditCooldowns).where(eq(stateEditCooldowns.userId, account.id)).limit(1)
+	]);
 
 	const now = new Date();
 	const cooldownEndTime = cooldown ? new Date(cooldown.lastEditAt.getTime() + 24 * 60 * 60 * 1000) : null;
@@ -40,28 +45,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const timeRemaining = onCooldown ? Math.ceil((cooldownEndTime!.getTime() - now.getTime()) / (1000 * 60 * 60)) : 0;
 	const cooldownEndsAt = cooldownEndTime?.toISOString() || null;
 
-	// Get logo URL if exists
-	let logoUrl = null;
-	if (state.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, state.logo)
-		});
-		if (logoFile) {
-			try {
-				logoUrl = await getSignedDownloadUrl(logoFile.key);
-			} catch {
-				logoUrl = null;
-			}
-		}
-	}
-
-	const form = await superValidate(
-		{
-			name: state.name,
-			background: state.background || "#6366f1"
-		},
-		valibot(editStateSchema)
-	);
+	const [logoUrl, form] = await Promise.all([
+		// Get logo URL if exists
+		getLogoUrl(state.logo),
+		superValidate(
+			{
+				name: state.name,
+				background: state.background || "#6366f1"
+			},
+			valibot(editStateSchema)
+		)
+	]);
 
 	return {
 		form,

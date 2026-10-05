@@ -52,31 +52,33 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		// Finish any construction whose time has elapsed so the stats below (and
 		// the "under construction" list) reflect the current state.
 		completePendingConstructions({ regionId }).then(() =>
-			// Get region with state
-			db.query.regions.findFirst({
-				where: eq(regions.id, regionId),
-				with: {
-					state: {
-						with: {
-							bloc: true,
-							president: {
-								with: {
-									user: true
+			// Get region with state; fail fast if it doesn't exist
+			db.query.regions
+				.findFirst({
+					where: eq(regions.id, regionId),
+					with: {
+						state: {
+							with: {
+								bloc: true,
+								president: {
+									with: {
+										user: true
+									}
 								}
 							}
-						}
-					},
-					governor: {
-						with: {
-							user: {
-								with: {
-									profile: true
+						},
+						governor: {
+							with: {
+								user: {
+									with: {
+										profile: true
+									}
 								}
 							}
 						}
 					}
-				}
-			})
+				})
+				.then((region) => region ?? error(404, "Region not found"))
 		),
 		// Get population
 		db
@@ -202,10 +204,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			where: eq(userWallets.userId, account.id)
 		})
 	]);
-
-	if (!region) {
-		error(404, "Region not found");
-	}
 
 	const population = populationResult[0]?.count || 0;
 
@@ -403,8 +401,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		})()
 	]);
 
-	const { hasInauguralElection, needsVisa, hasActiveVisa, hasPendingApplication, visaSettings, activeVisa, blocVisaFree } =
-		visaInfo;
+	const {
+		hasInauguralElection,
+		needsVisa,
+		hasActiveVisa,
+		hasPendingApplication,
+		visaSettings,
+		activeVisa,
+		blocVisaFree
+	} = visaInfo;
 	const allowsFreeMovement = !region.stateId || !hasInauguralElection;
 	const { activeWars, attackableWars, borderingRegionsForAttack } = warInfo;
 

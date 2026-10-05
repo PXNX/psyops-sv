@@ -25,6 +25,7 @@ import { error, fail } from "@sveltejs/kit";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { getEmbargoReason } from "#lib/server/embargo.js";
+import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import type { PageServerLoad, Actions } from "./$types";
 
@@ -71,7 +72,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		[shares]
 	] = await Promise.all([
 		// Get owner profile name and logo
-		//  TODO this is bullshit. Use backblaze instead.
 		db.query.userProfiles.findMany({
 			where: (profiles, { eq }) => eq(profiles.accountId, company.ownerId),
 			with: {
@@ -305,7 +305,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		company: {
 			...company,
 			ownerName: ownerProfile?.name || null,
-			ownerLogo: ownerProfile?.logoFile?.key ? `/api/files/${ownerProfile.logoFile.key}` : null,
+			logo: await getLogoUrl(company.logo),
+			ownerLogo: ownerProfile?.logoFile?.key ? await getSignedDownloadUrl(ownerProfile.logoFile.key) : null,
 			ownerPartyAbbreviation: ownerParty?.abbreviation ?? null,
 			ownerPartyColor: ownerParty?.color ?? null,
 			foundedAt: company.foundedAt.toISOString(),

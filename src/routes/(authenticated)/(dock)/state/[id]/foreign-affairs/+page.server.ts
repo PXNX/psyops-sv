@@ -23,31 +23,36 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const stateId = parseInt(params.id);
 
-	// Get state and the user's foreign-minister / president roles in parallel
-	const [state, ministry, presidency] = await Promise.all([
-		db.query.states.findFirst({
+	// Get state; fail fast if it doesn't exist
+	const statePromise = db.query.states
+		.findFirst({
 			where: eq(states.id, stateId)
-		}),
-		db.query.ministers.findFirst({
-			where: and(
-				eq(ministers.userId, account.id),
-				eq(ministers.stateId, stateId),
-				eq(ministers.ministry, "foreign_affairs")
-			)
-		}),
-		db.query.presidents.findFirst({
-			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+		})
+		.then((state) => state ?? error(404, "State not found"));
+
+	// Get state and the user's foreign-minister / president roles in parallel
+	const [state, presidency] = await Promise.all([
+		statePromise,
+		Promise.all([
+			db.query.ministers.findFirst({
+				where: and(
+					eq(ministers.userId, account.id),
+					eq(ministers.stateId, stateId),
+					eq(ministers.ministry, "foreign_affairs")
+				)
+			}),
+			db.query.presidents.findFirst({
+				where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+			}),
+			statePromise
+		]).then(([ministry, presidency]) => {
+			// Check if user is foreign minister OR president (404 wins over 403)
+			if (!ministry && !presidency) {
+				error(403, "You must be the Foreign Minister or President to access this page");
+			}
+			return presidency;
 		})
 	]);
-
-	if (!state) {
-		throw error(404, "State not found");
-	}
-
-	// Check if user is foreign minister OR president
-	if (!ministry && !presidency) {
-		throw error(403, "You must be the Foreign Minister or President to access this page");
-	}
 
 	const [
 		otherStates,

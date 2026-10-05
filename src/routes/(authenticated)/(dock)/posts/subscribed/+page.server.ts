@@ -83,28 +83,25 @@ async function fetchSubscribedArticles(cursor: string | null, accountId: string)
 	// Get signed URLs for logos
 	const articlesWithUrls = await Promise.all(
 		articlesToReturn.map(async (article) => {
-			let authorLogo: string | null = null;
-			let newspaperLogo: string | null = null;
+			const [newspaperLogo, authorLogo] = await Promise.all([
+				// Get newspaper logo
+				(async (): Promise<string | null> => {
+					if (!article.newspaperId || !article.newspaperLogoFileId) return null;
+					const logoFile = await db.query.files.findFirst({
+						where: eq(files.id, article.newspaperLogoFileId)
+					});
+					return logoFile ? getSignedDownloadUrl(logoFile.key) : null;
+				})(),
 
-			// Get newspaper logo
-			if (article.newspaperId && article.newspaperLogoFileId) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, article.newspaperLogoFileId)
-				});
-				if (logoFile) {
-					newspaperLogo = await getSignedDownloadUrl(logoFile.key);
-				}
-			}
-
-			// Get author logo
-			if (article.authorLogoFileId) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, article.authorLogoFileId)
-				});
-				if (logoFile) {
-					authorLogo = await getSignedDownloadUrl(logoFile.key);
-				}
-			}
+				// Get author logo
+				(async (): Promise<string | null> => {
+					if (!article.authorLogoFileId) return null;
+					const logoFile = await db.query.files.findFirst({
+						where: eq(files.id, article.authorLogoFileId)
+					});
+					return logoFile ? getSignedDownloadUrl(logoFile.key) : null;
+				})()
+			]);
 
 			return {
 				id: article.id,
@@ -139,13 +136,12 @@ async function fetchSubscribedArticles(cursor: string | null, accountId: string)
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	const result = await fetchSubscribedArticles(null, account.id);
+	const [result, upvotedArticles] = await Promise.all([
+		fetchSubscribedArticles(null, account.id),
 
-	// Get user's upvoted articles
-	const upvotedArticles = await db
-		.select({ articleId: upvotes.articleId })
-		.from(upvotes)
-		.where(eq(upvotes.userId, account.id));
+		// Get user's upvoted articles
+		db.select({ articleId: upvotes.articleId }).from(upvotes).where(eq(upvotes.userId, account.id))
+	]);
 	const userUpvotes = upvotedArticles.map((u) => u.articleId);
 
 	return {

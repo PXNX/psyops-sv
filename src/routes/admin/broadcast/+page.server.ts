@@ -7,18 +7,19 @@ import type { Actions, PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	const activeBroadcast = await db.query.broadcasts.findFirst({
-		where: and(eq(broadcasts.broadcastType, "system"), eq(broadcasts.isActive, true)),
-		orderBy: [desc(broadcasts.createdAt)],
-		with: { issuer: { with: { profile: true } } }
-	});
-
-	const recentBroadcasts = await db.query.broadcasts.findMany({
-		where: eq(broadcasts.broadcastType, "system"),
-		orderBy: [desc(broadcasts.createdAt)],
-		limit: 10,
-		with: { issuer: { with: { profile: true } } }
-	});
+	const [activeBroadcast, recentBroadcasts] = await Promise.all([
+		db.query.broadcasts.findFirst({
+			where: and(eq(broadcasts.broadcastType, "system"), eq(broadcasts.isActive, true)),
+			orderBy: [desc(broadcasts.createdAt)],
+			with: { issuer: { with: { profile: true } } }
+		}),
+		db.query.broadcasts.findMany({
+			where: eq(broadcasts.broadcastType, "system"),
+			orderBy: [desc(broadcasts.createdAt)],
+			limit: 10,
+			with: { issuer: { with: { profile: true } } }
+		})
+	]);
 
 	return {
 		activeBroadcast,

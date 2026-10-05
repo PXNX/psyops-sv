@@ -14,68 +14,65 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	const page = parseInt(url.searchParams.get("page") || "1");
 	const offset = (page - 1) * PAGE_SIZE;
 
-	// Get state info
-	const [state] = await db.select().from(states).where(eq(states.id, stateId)).limit(1);
-
-	if (!state) {
-		error(404, "State not found");
-	}
-
-	// Get total count
-	const [{ count }] = await db
-		.select({ count: sql<number>`count(*)::int` })
-		.from(governmentBudgetTransactions)
-		.where(eq(governmentBudgetTransactions.stateId, stateId));
-
-	const totalPages = Math.ceil(count / PAGE_SIZE);
-
-	// Get paginated transactions with user information
-	const transactions = await db
-		.select({
-			id: governmentBudgetTransactions.id,
-			transactionType: governmentBudgetTransactions.transactionType,
-			amount: governmentBudgetTransactions.amount,
-			balanceAfter: governmentBudgetTransactions.balanceAfter,
-			description: governmentBudgetTransactions.description,
-			authorizedBy: governmentBudgetTransactions.authorizedBy,
-			itemType: governmentBudgetTransactions.itemType,
-			itemName: governmentBudgetTransactions.itemName,
-			quantity: governmentBudgetTransactions.quantity,
-			pricePerUnit: governmentBudgetTransactions.pricePerUnit,
-			metadata: governmentBudgetTransactions.metadata,
-			createdAt: governmentBudgetTransactions.createdAt,
-			// User info
-			authorizerName: userProfiles.name
-		})
-		.from(governmentBudgetTransactions)
-		.leftJoin(accounts, eq(governmentBudgetTransactions.authorizedBy, accounts.id))
-		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
-		.where(eq(governmentBudgetTransactions.stateId, stateId))
-		.orderBy(desc(governmentBudgetTransactions.createdAt))
-		.limit(PAGE_SIZE)
-		.offset(offset);
-
-	// Get current treasury balance
-	const [treasury] = await db
-		.select({ balance: stateTreasury.balance })
-		.from(stateTreasury)
-		.where(eq(stateTreasury.stateId, stateId));
-
 	// Get analytics data (last 30 days)
 	const thirtyDaysAgo = new Date();
 	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-	const recentTransactions = await db
-		.select({
-			transactionType: governmentBudgetTransactions.transactionType,
-			amount: governmentBudgetTransactions.amount,
-			createdAt: governmentBudgetTransactions.createdAt
-		})
-		.from(governmentBudgetTransactions)
-		.where(
-			sql`${governmentBudgetTransactions.stateId} = ${stateId} AND ${governmentBudgetTransactions.createdAt} >= ${thirtyDaysAgo}`
-		)
-		.orderBy(desc(governmentBudgetTransactions.createdAt));
+	// All lookups are independent reads, so fetch them in parallel
+	const [state, [{ count }], transactions, [treasury], recentTransactions] = await Promise.all([
+		// Get state info; fail fast if it doesn't exist
+		db
+			.select()
+			.from(states)
+			.where(eq(states.id, stateId))
+			.limit(1)
+			.then(([state]) => state ?? error(404, "State not found")),
+		// Get total count
+		db
+			.select({ count: sql<number>`count(*)::int` })
+			.from(governmentBudgetTransactions)
+			.where(eq(governmentBudgetTransactions.stateId, stateId)),
+		// Get paginated transactions with user information
+		db
+			.select({
+				id: governmentBudgetTransactions.id,
+				transactionType: governmentBudgetTransactions.transactionType,
+				amount: governmentBudgetTransactions.amount,
+				balanceAfter: governmentBudgetTransactions.balanceAfter,
+				description: governmentBudgetTransactions.description,
+				authorizedBy: governmentBudgetTransactions.authorizedBy,
+				itemType: governmentBudgetTransactions.itemType,
+				itemName: governmentBudgetTransactions.itemName,
+				quantity: governmentBudgetTransactions.quantity,
+				pricePerUnit: governmentBudgetTransactions.pricePerUnit,
+				metadata: governmentBudgetTransactions.metadata,
+				createdAt: governmentBudgetTransactions.createdAt,
+				// User info
+				authorizerName: userProfiles.name
+			})
+			.from(governmentBudgetTransactions)
+			.leftJoin(accounts, eq(governmentBudgetTransactions.authorizedBy, accounts.id))
+			.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
+			.where(eq(governmentBudgetTransactions.stateId, stateId))
+			.orderBy(desc(governmentBudgetTransactions.createdAt))
+			.limit(PAGE_SIZE)
+			.offset(offset),
+		// Get current treasury balance
+		db.select({ balance: stateTreasury.balance }).from(stateTreasury).where(eq(stateTreasury.stateId, stateId)),
+		db
+			.select({
+				transactionType: governmentBudgetTransactions.transactionType,
+				amount: governmentBudgetTransactions.amount,
+				createdAt: governmentBudgetTransactions.createdAt
+			})
+			.from(governmentBudgetTransactions)
+			.where(
+				sql`${governmentBudgetTransactions.stateId} = ${stateId} AND ${governmentBudgetTransactions.createdAt} >= ${thirtyDaysAgo}`
+			)
+			.orderBy(desc(governmentBudgetTransactions.createdAt))
+	]);
+
+	const totalPages = Math.ceil(count / PAGE_SIZE);
 
 	// Calculate analytics
 	let totalIncome = 0;

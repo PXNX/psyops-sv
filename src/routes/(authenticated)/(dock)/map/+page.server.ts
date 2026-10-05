@@ -6,56 +6,92 @@ import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	try {
-		// ── Current user's region, so the map can open centred on it ────
-		let currentUserRegionId: number | null = null;
-		if (locals.account) {
-			const [residence] = await db
-				.select({ regionId: residences.regionId })
-				.from(residences)
-				.where(eq(residences.userId, locals.account.id))
-				.limit(1);
-			currentUserRegionId = residence?.regionId ?? null;
-		}
+		// All map queries are independent, so run them in parallel
+		const [currentUserRegionId, allRegions, allStates, allBlocs, activeWars, residentCounts, ppByState] =
+			await Promise.all([
+				// ── Current user's region, so the map can open centred on it ────
+				(async () => {
+					if (!locals.account) return null;
+					const [residence] = await db
+						.select({ regionId: residences.regionId })
+						.from(residences)
+						.where(eq(residences.userId, locals.account.id))
+						.limit(1);
+					return residence?.regionId ?? null;
+				})(),
 
-		// ── Core: regions + states (unchanged) ──────────────────────────
-		const allRegions = await db
-			.select({
-				id: regions.id,
-				stateId: regions.stateId,
-				rating: regions.rating,
-				education: regions.education,
-				infrastructure: regions.infrastructure,
-				economy: regions.economy,
-				hospitals: regions.hospitals,
-				fortifications: regions.fortifications,
-				oil: regions.oil,
-				aluminium: regions.aluminium,
-				rubber: regions.rubber,
-				tungsten: regions.tungsten,
-				steel: regions.steel,
-				chromium: regions.chromium
-			})
-			.from(regions);
+				// ── Core: regions + states (unchanged) ──────────────────────────
+				db
+					.select({
+						id: regions.id,
+						stateId: regions.stateId,
+						rating: regions.rating,
+						education: regions.education,
+						infrastructure: regions.infrastructure,
+						economy: regions.economy,
+						hospitals: regions.hospitals,
+						fortifications: regions.fortifications,
+						oil: regions.oil,
+						aluminium: regions.aluminium,
+						rubber: regions.rubber,
+						tungsten: regions.tungsten,
+						steel: regions.steel,
+						chromium: regions.chromium
+					})
+					.from(regions),
 
-		const allStates = await db
-			.select({
-				id: states.id,
-				name: states.name,
-				description: states.description,
-				population: states.population,
-				rating: states.rating,
-				blocId: states.blocId
-			})
-			.from(states);
+				db
+					.select({
+						id: states.id,
+						name: states.name,
+						description: states.description,
+						population: states.population,
+						rating: states.rating,
+						blocId: states.blocId
+					})
+					.from(states),
 
-		// ── Blocs: fetch id + name + color for every bloc ───────────────
-		const allBlocs = await db
-			.select({
-				id: blocs.id,
-				name: blocs.name,
-				color: blocs.color
-			})
-			.from(blocs);
+				// ── Blocs: fetch id + name + color for every bloc ───────────────
+				db
+					.select({
+						id: blocs.id,
+						name: blocs.name,
+						color: blocs.color
+					})
+					.from(blocs),
+
+				// ── Wars: collect attacker & defender state IDs for active wars ─
+				db
+					.select({
+						attackerId: wars.attackerId,
+						defenderId: wars.defenderId
+					})
+					.from(wars)
+					.where(sql`${wars.status} = 'active'`),
+
+				// ── Residents: count per region ─────────────────────────────────
+				db
+					.select({
+						regionId: residences.regionId,
+						count: sql<number>`count(*)`.as("count")
+					})
+					.from(residences)
+					.groupBy(residences.regionId),
+
+				// ── Power plants: count per region (powerPlants belong to a state,
+				//    but we need them per-region. powerPlants has stateId, not regionId.
+				//    The closest semantic fit: count powerplants per *state*, then
+				//    spread that count evenly across the state's regions so the heatmap
+				//    highlights states with more plants. If your powerPlants table ever
+				//    adds a regionId column you can group directly on that instead.) ──
+				db
+					.select({
+						stateId: powerPlants.stateId,
+						count: sql<number>`count(*)`.as("count")
+					})
+					.from(powerPlants)
+					.groupBy(powerPlants.stateId)
+			]);
 
 		// blocColorMap: stateId → bloc colour string.
 		// blocNameMap: stateId → bloc name string.
@@ -73,15 +109,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}
 		}
 
-		// ── Wars: collect attacker & defender state IDs for active wars ─
-		const activeWars = await db
-			.select({
-				attackerId: wars.attackerId,
-				defenderId: wars.defenderId
-			})
-			.from(wars)
-			.where(sql`${wars.status} = 'active'`);
-
 		const warAttackerStateIds = new Set<number>();
 		const warDefenderStateIds = new Set<number>();
 		for (const w of activeWars) {
@@ -89,33 +116,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warDefenderStateIds.add(w.defenderId);
 		}
 
-		// ── Residents: count per region ─────────────────────────────────
-		const residentCounts = await db
-			.select({
-				regionId: residences.regionId,
-				count: sql<number>`count(*)`.as("count")
-			})
-			.from(residences)
-			.groupBy(residences.regionId);
-
 		const residentCountMap = new Map<number, number>();
 		for (const rc of residentCounts) {
 			residentCountMap.set(rc.regionId, rc.count);
 		}
-
-		// ── Power plants: count per region (powerPlants belong to a state,
-		//    but we need them per-region. powerPlants has stateId, not regionId.
-		//    The closest semantic fit: count powerplants per *state*, then
-		//    spread that count evenly across the state's regions so the heatmap
-		//    highlights states with more plants. If your powerPlants table ever
-		//    adds a regionId column you can group directly on that instead.) ──
-		const ppByState = await db
-			.select({
-				stateId: powerPlants.stateId,
-				count: sql<number>`count(*)`.as("count")
-			})
-			.from(powerPlants)
-			.groupBy(powerPlants.stateId);
 
 		const ppStateMap = new Map<number, number>();
 		for (const pp of ppByState) {

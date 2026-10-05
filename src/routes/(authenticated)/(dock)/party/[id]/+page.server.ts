@@ -10,7 +10,7 @@ import {
 import { and, eq, sql, count } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account;
@@ -171,7 +171,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			autoAcceptMembers: party.autoAcceptMembers,
 			state: {
 				id: party.state.id,
-				name: party.state.name
+				name: party.state.name,
+				logo: await getLogoUrl(party.state.logo)
 			}
 		},
 		members: membersWithProfiles,

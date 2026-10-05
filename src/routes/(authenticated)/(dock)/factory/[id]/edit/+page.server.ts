@@ -54,24 +54,57 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(403, "Only the company owner can edit the factory");
 	}
 
-	// Get user wallet
-	let [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
-
-	// Create wallet if it doesn't exist
-	if (!wallet) {
-		[wallet] = await db
-			.insert(userWallets)
-			.values({
-				userId: account.id,
-				balance: 10000
+	// Everything below only depends on the factory, so fetch it in parallel
+	const [wallet, cooldown, [workerCount], regionalWages, form] = await Promise.all([
+		// Get user wallet, creating it if it doesn't exist
+		(async () => {
+			const [existing] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
+			if (existing) return existing;
+			const [created] = await db
+				.insert(userWallets)
+				.values({
+					userId: account.id,
+					balance: 10000
+				})
+				.returning();
+			return created;
+		})(),
+		// Check if factory is on cooldown (per user)
+		db.query.factoryCreationCooldown.findFirst({
+			where: eq(factoryCreationCooldown.userId, account.id)
+		}),
+		// OPTIMIZATION: Get worker count for this factory
+		db
+			.select({ count: sql<number>`count(*)` })
+			.from(factoryWorkers)
+			.where(eq(factoryWorkers.factoryId, factoryId)),
+		// OPTIMIZATION: Get wage statistics for region - single query
+		// Get highest wage in the region and some additional stats
+		db
+			.select({
+				factoryId: factories.id,
+				factoryName: factories.name,
+				wage: factories.workerWage,
+				factoryType: factories.factoryType
 			})
-			.returning();
-	}
-
-	// Check if factory is on cooldown (per user)
-	const cooldown = await db.query.factoryCreationCooldown.findFirst({
-		where: eq(factoryCreationCooldown.userId, account.id)
-	});
+			.from(factories)
+			.where(
+				and(
+					eq(factories.regionId, factory.regionId),
+					sql`${factories.id} != ${factoryId}` // Exclude current factory
+				)
+			)
+			.orderBy(desc(factories.workerWage))
+			.limit(10),
+		// Populate form with existing data
+		superValidate(
+			{
+				name: factory.name,
+				workerWage: Number(factory.workerWage)
+			},
+			valibot(editFactorySchema)
+		)
+	]);
 
 	let isOnCooldown = false;
 	let cooldownEndsAt: string | null = null;
@@ -89,31 +122,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Check if user wallet can afford the edit
 	const canAfford = Number(wallet.balance) >= EDIT_COST;
 
-	// OPTIMIZATION: Get worker count for this factory
-	const [workerCount] = await db
-		.select({ count: sql<number>`count(*)` })
-		.from(factoryWorkers)
-		.where(eq(factoryWorkers.factoryId, factoryId));
-
-	// OPTIMIZATION: Get wage statistics for region - single query
-	// Get highest wage in the region and some additional stats
-	const regionalWages = await db
-		.select({
-			factoryId: factories.id,
-			factoryName: factories.name,
-			wage: factories.workerWage,
-			factoryType: factories.factoryType
-		})
-		.from(factories)
-		.where(
-			and(
-				eq(factories.regionId, factory.regionId),
-				sql`${factories.id} != ${factoryId}` // Exclude current factory
-			)
-		)
-		.orderBy(desc(factories.workerWage))
-		.limit(10);
-
 	const highestWage = regionalWages.length > 0 ? Number(regionalWages[0].wage) : null;
 	const averageWage =
 		regionalWages.length > 0
@@ -123,15 +131,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Get competitive position (how many factories pay more)
 	const factoriesPayingMore = regionalWages.filter((f) => Number(f.wage) > Number(factory.workerWage)).length;
 	const totalFactoriesInRegion = regionalWages.length + 1; // +1 for current factory
-
-	// Populate form with existing data
-	const form = await superValidate(
-		{
-			name: factory.name,
-			workerWage: Number(factory.workerWage)
-		},
-		valibot(editFactorySchema)
-	);
 
 	return {
 		form,

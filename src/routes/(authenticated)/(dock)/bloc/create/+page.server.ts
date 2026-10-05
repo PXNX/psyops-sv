@@ -12,39 +12,37 @@ import { uploadFileFromForm } from "#lib/server/backblaze.js";
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Check if user is a president
-	const [presidency] = await db
-		.select({
-			stateId: presidents.stateId,
-			stateName: states.name,
-			currentBlocId: states.blocId
-		})
-		.from(presidents)
-		.innerJoin(states, eq(presidents.stateId, states.id))
-		.where(eq(presidents.userId, account.id))
-		.limit(1);
-
-	if (!presidency) {
-		error(403, "Only state presidents can create blocs");
-	}
-
-	if (presidency.currentBlocId) {
-		error(400, "Your state is already in a bloc. Leave it first to create a new one.");
-	}
-
-	// Check cooldown (24 hours)
-	const [cooldown] = await db
-		.select()
-		.from(blocActionCooldowns)
-		.where(eq(blocActionCooldowns.userId, account.id))
-		.limit(1);
+	// Presidency and cooldown lookups run in parallel; presidency checks fail fast
+	const [presidency, [cooldown], form] = await Promise.all([
+		// Check if user is a president
+		db
+			.select({
+				stateId: presidents.stateId,
+				stateName: states.name,
+				currentBlocId: states.blocId
+			})
+			.from(presidents)
+			.innerJoin(states, eq(presidents.stateId, states.id))
+			.where(eq(presidents.userId, account.id))
+			.limit(1)
+			.then(([presidency]) => {
+				if (!presidency) {
+					error(403, "Only state presidents can create blocs");
+				}
+				if (presidency.currentBlocId) {
+					error(400, "Your state is already in a bloc. Leave it first to create a new one.");
+				}
+				return presidency;
+			}),
+		// Check cooldown (24 hours)
+		db.select().from(blocActionCooldowns).where(eq(blocActionCooldowns.userId, account.id)).limit(1),
+		superValidate(valibot(createBlocSchema))
+	]);
 
 	const now = new Date();
 	const cooldownEndTime = cooldown ? new Date(cooldown.lastActionAt.getTime() + 24 * 60 * 60 * 1000) : null;
 	const onCooldown = cooldownEndTime && now < cooldownEndTime;
 	const timeRemaining = onCooldown ? Math.ceil((cooldownEndTime!.getTime() - now.getTime()) / (1000 * 60 * 60)) : 0;
-
-	const form = await superValidate(valibot(createBlocSchema));
 
 	return {
 		form,

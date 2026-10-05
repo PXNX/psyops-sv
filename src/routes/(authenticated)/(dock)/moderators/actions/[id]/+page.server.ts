@@ -13,7 +13,7 @@ import {
 import { eq, and, or } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params }) => {
 	const actionId = parseInt(params.id);
@@ -23,34 +23,27 @@ export const load: PageServerLoad = async ({ params }) => {
 	}
 
 	// Try to find the action in different tables
-	// First, check if it's a deleted message
 	let action: any = null;
 	let actionType: string | null = null;
 
-	const deletedMessage = await db.query.chatMessages.findFirst({
-		where: and(eq(chatMessages.id, actionId), eq(chatMessages.isDeleted, true)),
-		with: {
-			sender: {
-				with: {
-					profile: true
-				}
-			},
-			deletedByUser: {
-				with: {
-					profile: true
+	// Look the id up in every action table in parallel, then pick the first match in priority order
+	const [deletedMessage, warning, restriction, report, flag] = await Promise.all([
+		db.query.chatMessages.findFirst({
+			where: and(eq(chatMessages.id, actionId), eq(chatMessages.isDeleted, true)),
+			with: {
+				sender: {
+					with: {
+						profile: true
+					}
+				},
+				deletedByUser: {
+					with: {
+						profile: true
+					}
 				}
 			}
-		}
-	});
-
-	if (deletedMessage && deletedMessage.deletedBy) {
-		action = deletedMessage;
-		actionType = "message_delete";
-	}
-
-	// Check warnings
-	if (!action) {
-		const warning = await db.query.userWarnings.findFirst({
+		}),
+		db.query.userWarnings.findFirst({
 			where: eq(userWarnings.id, actionId),
 			with: {
 				user: {
@@ -64,17 +57,8 @@ export const load: PageServerLoad = async ({ params }) => {
 					}
 				}
 			}
-		});
-
-		if (warning) {
-			action = warning;
-			actionType = "warning";
-		}
-	}
-
-	// Check restrictions
-	if (!action) {
-		const restriction = await db.query.chatRestrictions.findFirst({
+		}),
+		db.query.chatRestrictions.findFirst({
 			where: eq(chatRestrictions.id, actionId),
 			with: {
 				user: {
@@ -88,17 +72,8 @@ export const load: PageServerLoad = async ({ params }) => {
 					}
 				}
 			}
-		});
-
-		if (restriction) {
-			action = restriction;
-			actionType = "restriction";
-		}
-	}
-
-	// Check reports
-	if (!action) {
-		const report = await db.query.generalReports.findFirst({
+		}),
+		db.query.generalReports.findFirst({
 			where: eq(generalReports.id, actionId),
 			with: {
 				reporter: {
@@ -112,17 +87,8 @@ export const load: PageServerLoad = async ({ params }) => {
 					}
 				}
 			}
-		});
-
-		if (report && report.reviewedBy) {
-			action = report;
-			actionType = "report_action";
-		}
-	}
-
-	// Check content flags
-	if (!action) {
-		const flag = await db.query.contentFlags.findFirst({
+		}),
+		db.query.contentFlags.findFirst({
 			where: eq(contentFlags.id, actionId),
 			with: {
 				flagger: {
@@ -131,12 +97,24 @@ export const load: PageServerLoad = async ({ params }) => {
 					}
 				}
 			}
-		});
+		})
+	]);
 
-		if (flag) {
-			action = flag;
-			actionType = "content_flag";
-		}
+	if (deletedMessage && deletedMessage.deletedBy) {
+		action = deletedMessage;
+		actionType = "message_delete";
+	} else if (warning) {
+		action = warning;
+		actionType = "warning";
+	} else if (restriction) {
+		action = restriction;
+		actionType = "restriction";
+	} else if (report && report.reviewedBy) {
+		action = report;
+		actionType = "report_action";
+	} else if (flag) {
+		action = flag;
+		actionType = "content_flag";
 	}
 
 	if (!action || !actionType) {
@@ -145,19 +123,10 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	// Helper function to get user with logo
 	async function getUserWithLogo(user: any) {
-		let logoUrl = null;
-		if (user?.profile?.logo) {
-			try {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, user.profile.logo)
-				});
-				if (logoFile) {
-					logoUrl = await getSignedDownloadUrl(logoFile.key);
-				}
-			} catch (err) {
-				console.error("Failed to get user logo:", err);
-			}
-		}
+		const logoUrl = await getLogoUrl(user?.profile?.logo).catch((err) => {
+			console.error("Failed to get user logo:", err);
+			return null;
+		});
 
 		return {
 			id: user.id,
@@ -174,62 +143,73 @@ export const load: PageServerLoad = async ({ params }) => {
 	};
 
 	switch (actionType) {
-		case "message_delete":
+		case "message_delete": {
+			const [target, moderator] = await Promise.all([
+				getUserWithLogo(deletedMessage!.sender),
+				getUserWithLogo(deletedMessage!.deletedByUser)
+			]);
 			formattedAction = {
 				...formattedAction,
-				target: await getUserWithLogo(deletedMessage.sender),
-				moderator: await getUserWithLogo(deletedMessage.deletedByUser),
-				messageContent: deletedMessage.content,
-				messageType: deletedMessage.messageType,
-				deletionReason: deletedMessage.deletionReason,
-				deletionNote: deletedMessage.deletionNote,
-				sentAt: deletedMessage.sentAt,
-				deletedAt: deletedMessage.deletedAt
+				target,
+				moderator,
+				messageContent: deletedMessage!.content,
+				messageType: deletedMessage!.messageType,
+				deletionReason: deletedMessage!.deletionReason,
+				deletionNote: deletedMessage!.deletionNote,
+				sentAt: deletedMessage!.sentAt,
+				deletedAt: deletedMessage!.deletedAt
 			};
 			break;
+		}
 
-		case "warning":
+		case "warning": {
+			const [target, moderator] = await Promise.all([getUserWithLogo(action.user), getUserWithLogo(action.issuer)]);
 			formattedAction = {
 				...formattedAction,
-				target: await getUserWithLogo(action.user),
-				moderator: await getUserWithLogo(action.issuer),
+				target,
+				moderator,
 				reason: action.reason,
 				description: action.description,
 				issuedAt: action.issuedAt
 			};
 			break;
+		}
 
-		case "restriction":
+		case "restriction": {
+			const [target, moderator] = await Promise.all([getUserWithLogo(action.user), getUserWithLogo(action.restrictor)]);
 			formattedAction = {
 				...formattedAction,
-				target: await getUserWithLogo(action.user),
-				moderator: await getUserWithLogo(action.restrictor),
+				target,
+				moderator,
 				reason: action.reason,
 				isPermanent: action.isPermanent,
 				expiresAt: action.expiresAt,
 				restrictedAt: action.restrictedAt
 			};
 			break;
+		}
 
-		case "report_action":
-			// Get the target user/entity
-			let targetUser = null;
-			if (action.targetType === "account" || action.targetType === "message") {
-				const target = await db.query.accounts.findFirst({
-					where: eq(accounts.id, action.targetId),
-					with: {
-						profile: true
-					}
-				});
-				if (target) {
-					targetUser = await getUserWithLogo(target);
-				}
-			}
+		case "report_action": {
+			const [targetUser, reporter, moderator] = await Promise.all([
+				// Get the target user/entity
+				(async () => {
+					if (action.targetType !== "account" && action.targetType !== "message") return null;
+					const target = await db.query.accounts.findFirst({
+						where: eq(accounts.id, action.targetId),
+						with: {
+							profile: true
+						}
+					});
+					return target ? await getUserWithLogo(target) : null;
+				})(),
+				getUserWithLogo(action.reporter),
+				action.reviewer ? getUserWithLogo(action.reviewer) : null
+			]);
 
 			formattedAction = {
 				...formattedAction,
-				reporter: await getUserWithLogo(action.reporter),
-				moderator: action.reviewer ? await getUserWithLogo(action.reviewer) : null,
+				reporter,
+				moderator,
 				target: targetUser,
 				targetType: action.targetType,
 				targetId: action.targetId,
@@ -242,25 +222,27 @@ export const load: PageServerLoad = async ({ params }) => {
 				reviewedAt: action.reviewedAt
 			};
 			break;
+		}
 
-		case "content_flag":
-			// Get the target
-			let flagTarget = null;
-			if (action.targetType === "account") {
-				const target = await db.query.accounts.findFirst({
-					where: eq(accounts.id, action.targetId),
-					with: {
-						profile: true
-					}
-				});
-				if (target) {
-					flagTarget = await getUserWithLogo(target);
-				}
-			}
+		case "content_flag": {
+			const [flagTarget, moderator] = await Promise.all([
+				// Get the target
+				(async () => {
+					if (action.targetType !== "account") return null;
+					const target = await db.query.accounts.findFirst({
+						where: eq(accounts.id, action.targetId),
+						with: {
+							profile: true
+						}
+					});
+					return target ? await getUserWithLogo(target) : null;
+				})(),
+				getUserWithLogo(action.flagger)
+			]);
 
 			formattedAction = {
 				...formattedAction,
-				moderator: await getUserWithLogo(action.flagger),
+				moderator,
 				target: flagTarget,
 				targetType: action.targetType,
 				targetId: action.targetId,
@@ -271,6 +253,7 @@ export const load: PageServerLoad = async ({ params }) => {
 				resolvedAt: action.resolvedAt
 			};
 			break;
+		}
 	}
 
 	return {

@@ -53,28 +53,33 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			chromium: regions.chromium
 		}[sortBy] || regions.rating;
 
-	// Get all regions with stats
-	const allRegions = await query;
-
-	// Get population counts for all regions
-	const populationCounts = await db
-		.select({
-			regionId: residences.regionId,
-			count: sql<number>`count(*)::int`
+	// All lookups are independent reads, so fetch them in parallel
+	const [allRegions, populationCounts, factoryCounts, userResidences] = await Promise.all([
+		// Get all regions with stats
+		query,
+		// Get population counts for all regions
+		db
+			.select({
+				regionId: residences.regionId,
+				count: sql<number>`count(*)::int`
+			})
+			.from(residences)
+			.groupBy(residences.regionId),
+		// Get factory counts
+		db
+			.select({
+				regionId: factories.regionId,
+				count: sql<number>`count(*)::int`
+			})
+			.from(factories)
+			.groupBy(factories.regionId),
+		// Get user's residences
+		db.query.residences.findMany({
+			where: eq(residences.userId, account.id)
 		})
-		.from(residences)
-		.groupBy(residences.regionId);
+	]);
 
 	const populationMap = new Map(populationCounts.map((p) => [p.regionId, p.count]));
-
-	// Get factory counts
-	const factoryCounts = await db
-		.select({
-			regionId: factories.regionId,
-			count: sql<number>`count(*)::int`
-		})
-		.from(factories)
-		.groupBy(factories.regionId);
 
 	const factoryMap = new Map(factoryCounts.map((f) => [f.regionId, f.count]));
 
@@ -150,11 +155,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		}
 
 		return bVal - aVal;
-	});
-
-	// Get user's residences
-	const userResidences = await db.query.residences.findMany({
-		where: eq(residences.userId, account.id)
 	});
 
 	const userRegionIds = new Set(userResidences.map((r) => r.regionId));

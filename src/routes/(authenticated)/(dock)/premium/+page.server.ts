@@ -10,11 +10,13 @@ import type { Actions, PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	const status = await getPremiumStatus(account.id);
-	const [profile] = await db
-		.select({ telegramUsername: userProfiles.telegramUsername })
-		.from(userProfiles)
-		.where(eq(userProfiles.accountId, account.id));
+	const [status, [profile]] = await Promise.all([
+		getPremiumStatus(account.id),
+		db
+			.select({ telegramUsername: userProfiles.telegramUsername })
+			.from(userProfiles)
+			.where(eq(userProfiles.accountId, account.id))
+	]);
 
 	return {
 		status,

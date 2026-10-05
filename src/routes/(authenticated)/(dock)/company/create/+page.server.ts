@@ -15,19 +15,31 @@ const COOLDOWN_DAYS = 30;
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Get user's wallet
-	const wallet = await db.query.userWallets.findFirst({
-		where: eq(userWallets.userId, account.id)
-	});
+	// Wallet, cooldown and existing company only depend on the account, so fetch them in parallel
+	const [wallet, cooldown, , form] = await Promise.all([
+		db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		}),
+		db.query.companyCreationCooldown.findFirst({
+			where: eq(companyCreationCooldown.userId, account.id)
+		}),
+		// Check if user already has a company (redirects as soon as it resolves)
+		db.query.companies
+			.findFirst({
+				where: eq(companies.ownerId, account.id)
+			})
+			.then((existingCompany) => {
+				if (existingCompany) {
+					redirect(302, `/company/${existingCompany.id}`);
+				}
+			}),
+		superValidate(valibot(createCompanySchema))
+	]);
 
 	const userBalance = wallet?.balance ?? 0;
 	const canAfford = userBalance >= COMPANY_COST;
 
 	// Check cooldown
-	const cooldown = await db.query.companyCreationCooldown.findFirst({
-		where: eq(companyCreationCooldown.userId, account.id)
-	});
-
 	let isOnCooldown = false;
 	let cooldownEndsAt: Date | null = null;
 
@@ -40,17 +52,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			cooldownEndsAt = cooldownEnd;
 		}
 	}
-
-	// Check if user already has a company
-	const existingCompany = await db.query.companies.findFirst({
-		where: eq(companies.ownerId, account.id)
-	});
-
-	if (existingCompany) {
-		throw redirect(302, `/company/${existingCompany.id}`);
-	}
-
-	const form = await superValidate(valibot(createCompanySchema));
 
 	return {
 		form,

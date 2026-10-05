@@ -5,13 +5,12 @@ import {
 	partyMembers,
 	politicalParties,
 	userProfiles,
-	files,
 	generalReports,
 	userBlocks
 } from "#lib/server/schema.js";
 import { eq, and, desc, notInArray } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 function sanitizeInput(input: string): string {
@@ -43,74 +42,61 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 		return { party: null, messages: [], currentUserId: account.id };
 	}
 
-	// Get party logo
-	let logoUrl = null;
-	if (party.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, party.logo)
-		});
-		if (logoFile) {
-			try {
-				logoUrl = await getSignedDownloadUrl(logoFile.key);
-			} catch {}
-		}
-	}
+	// Logo and messages only depend on the party, so fetch them in parallel
+	const [logoUrl, messages] = await Promise.all([
+		// Get party logo
+		getLogoUrl(party.logo),
 
-	// Get blocked users
-	const blockedUsers =
-		(await db.query.userBlocks?.findMany({
-			where: eq(userBlocks.userId, account.id)
-		})) || [];
-	const blockedUserIds = blockedUsers.map((b) => b.blockedUserId);
+		// Blocked users → messages (excluding blocked users)
+		(async () => {
+			const blockedUsers =
+				(await db.query.userBlocks?.findMany({
+					where: eq(userBlocks.userId, account.id)
+				})) || [];
+			const blockedUserIds = blockedUsers.map((b) => b.blockedUserId);
 
-	// Get messages (excluding blocked users)
-	let messagesQuery = db
-		.select({
-			id: chatMessages.id,
-			content: chatMessages.content,
-			sentAt: chatMessages.sentAt,
-			senderId: chatMessages.senderId
-		})
-		.from(chatMessages)
-		.where(
-			and(
-				eq(chatMessages.messageType, "party"),
-				eq(chatMessages.partyId, membership.partyId),
-				eq(chatMessages.isDeleted, false)
-			)
-		)
-		.$dynamic();
+			let messagesQuery = db
+				.select({
+					id: chatMessages.id,
+					content: chatMessages.content,
+					sentAt: chatMessages.sentAt,
+					senderId: chatMessages.senderId
+				})
+				.from(chatMessages)
+				.where(
+					and(
+						eq(chatMessages.messageType, "party"),
+						eq(chatMessages.partyId, membership.partyId),
+						eq(chatMessages.isDeleted, false)
+					)
+				)
+				.$dynamic();
 
-	// Exclude blocked users if any
-	if (blockedUserIds.length > 0) {
-		messagesQuery = messagesQuery.where(notInArray(chatMessages.senderId, blockedUserIds));
-	}
+			// Exclude blocked users if any
+			if (blockedUserIds.length > 0) {
+				messagesQuery = messagesQuery.where(notInArray(chatMessages.senderId, blockedUserIds));
+			}
 
-	const messages = await messagesQuery.orderBy(desc(chatMessages.sentAt)).limit(100);
+			return messagesQuery.orderBy(desc(chatMessages.sentAt)).limit(100);
+		})()
+	]);
 
 	// Process messages
 	const processedMessages = await Promise.all(
 		messages.map(async (msg) => {
-			const senderProfile = await db.query.userProfiles.findFirst({
-				where: eq(userProfiles.accountId, msg.senderId)
-			});
+			const [{ senderProfile, senderLogoUrl }, senderMembership] = await Promise.all([
+				(async () => {
+					const senderProfile = await db.query.userProfiles.findFirst({
+						where: eq(userProfiles.accountId, msg.senderId)
+					});
+					return { senderProfile, senderLogoUrl: await getLogoUrl(senderProfile?.logo) };
+				})(),
 
-			// Check if sender is party leader
-			const senderMembership = await db.query.partyMembers.findFirst({
-				where: and(eq(partyMembers.userId, msg.senderId), eq(partyMembers.partyId, membership.partyId))
-			});
-
-			let senderLogoUrl = null;
-			if (senderProfile?.logo) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, senderProfile.logo)
-				});
-				if (logoFile) {
-					try {
-						senderLogoUrl = await getSignedDownloadUrl(logoFile.key);
-					} catch {}
-				}
-			}
+				// Check if sender is party leader
+				db.query.partyMembers.findFirst({
+					where: and(eq(partyMembers.userId, msg.senderId), eq(partyMembers.partyId, membership.partyId))
+				})
+			]);
 
 			return {
 				id: msg.id,
