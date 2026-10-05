@@ -25,20 +25,20 @@
 	import FluentCrown20Filled from "~icons/fluent/crown-20-filled";
 	import FluentGlobeShield20Filled from "~icons/fluent/globe-shield-20-filled";
 
-	import Modal from "$lib/component/Modal.svelte";
-	import BottomSheet from "$lib/component/BottomSheet.svelte";
-	import ReportModal from "$lib/component/ReportModal.svelte";
+	import Modal from "#lib/component/Modal.svelte";
+	import BottomSheet from "#lib/component/BottomSheet.svelte";
+	import ReportModal from "#lib/component/ReportModal.svelte";
 	import AddAuthorModal from "./AddAuthorModal.svelte";
 	import EditProfileSheet from "./EditProfileSheet.svelte";
-	import ProfileItem from "$lib/component/ProfileItem.svelte";
+	import ProfileItem from "#lib/component/ProfileItem.svelte";
 	import FluentMoreHorizontal20Filled from "~icons/fluent/more-horizontal-20-filled";
-	import * as m from "$lib/paraglide/messages";
-	import { shareLink } from "$lib/util";
-	import { formatDate, getDaysRemaining } from "$lib/utils/formatting.js";
-	import Logo from "$lib/component/Logo.svelte";
-	import Button from "$lib/component/ui/Button.svelte";
-	import IconButton from "$lib/component/ui/IconButton.svelte";
-	import ActionListItem from "$lib/component/ui/ActionListItem.svelte";
+	import * as m from "#lib/paraglide/messages.js";
+	import { shareLink } from "#lib/util.js";
+	import { formatDate, getDaysRemaining } from "#lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
+	import ActionListItem from "#lib/component/ui/ActionListItem.svelte";
 
 	const { data, form } = $props();
 
@@ -118,7 +118,8 @@
 			<div class="text-center space-y-2">
 				<h1 class="text-2xl font-bold text-[#fff7e8]">User Not Found</h1>
 				<p class="text-sm text-[#c7bda9]">
-					The user <code class="px-1.5 py-0.5 rounded bg-[#0d1d31] text-[#d9ccb7] font-mono text-xs">#{data.userId}</code
+					The user <code class="px-1.5 py-0.5 rounded bg-[#0d1d31] text-[#d9ccb7] font-mono text-xs"
+						>#{data.userId}</code
 					> doesn't exist or has been removed.
 				</p>
 			</div>
@@ -449,14 +450,7 @@
 				{/if}
 
 				{#if data.isOwnProfile}
-					<Button
-						href="/visas"
-						variant="soft-purple"
-						size="sm"
-						block
-						icon={FluentBookCompass24Filled}
-						class="mt-2"
-					>
+					<Button href="/visas" variant="soft-purple" size="sm" block icon={FluentBookCompass24Filled} class="mt-2">
 						Manage Visas
 					</Button>
 				{/if}
@@ -743,8 +737,8 @@
 				{#if selectedBlocRole === "leader"}
 					<div class="alert alert-info bg-blue-600/10 border-blue-500/20 text-blue-300">
 						<span>
-							This nominates {data.user.name} as a candidate in the bloc's current leadership election. Member-state
-							presidents vote before the window closes.
+							This nominates {data.user.name} as a candidate in the bloc's current leadership election. Member-state presidents
+							vote before the window closes.
 						</span>
 					</div>
 				{/if}

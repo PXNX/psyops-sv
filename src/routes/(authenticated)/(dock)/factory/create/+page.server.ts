@@ -1,5 +1,5 @@
 // src/routes/factory/create/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	companies,
 	factories,
@@ -10,8 +10,8 @@ import {
 	stateEnergy,
 	states,
 	userWallets
-} from "$lib/server/schema";
-import { getRegionName } from "$lib/utils/formatting";
+} from "#lib/server/schema.js";
+import { getRegionName } from "#lib/utils/formatting.js";
 import { fail, redirect } from "@sveltejs/kit";
 import { and, eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -269,7 +269,7 @@ export const actions: Actions = {
 			cooldownEnd.setDate(cooldownEnd.getDate() + COOLDOWN_DAYS);
 			if (new Date() < cooldownEnd) {
 				return fail(400, {
-					error: `Factory creation is on cooldown. Try again after ${String(cooldownEnd.getDate()).padStart(2,'0')}.${String(cooldownEnd.getMonth()+1).padStart(2,'0')}.${cooldownEnd.getFullYear()}, ${String(cooldownEnd.getHours()).padStart(2,'0')}:${String(cooldownEnd.getMinutes()).padStart(2,'0')}`
+					error: `Factory creation is on cooldown. Try again after ${String(cooldownEnd.getDate()).padStart(2, "0")}.${String(cooldownEnd.getMonth() + 1).padStart(2, "0")}.${cooldownEnd.getFullYear()}, ${String(cooldownEnd.getHours()).padStart(2, "0")}:${String(cooldownEnd.getMinutes()).padStart(2, "0")}`
 				});
 			}
 		}

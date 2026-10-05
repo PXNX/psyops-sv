@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/chat/party/+page.server.ts
-import { db, messageNotifier } from "$lib/server/db";
+import { db, messageNotifier } from "#lib/server/db.js";
 import {
 	chatMessages,
 	partyMembers,
@@ -8,10 +8,10 @@ import {
 	files,
 	generalReports,
 	userBlocks
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, desc, notInArray } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 function sanitizeInput(input: string): string {

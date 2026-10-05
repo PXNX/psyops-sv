@@ -3,7 +3,7 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { editFactorySchema } from "./schema";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
@@ -15,7 +15,7 @@
 	import FluentChartMultiple20Filled from "~icons/fluent/chart-multiple-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
-	import BackLink from "$lib/component/ui/BackLink.svelte";
+	import BackLink from "#lib/component/ui/BackLink.svelte";
 
 	let { data } = $props();
 
@@ -42,7 +42,7 @@
 
 	function formatCooldownDate(cooldownEnd: string): string {
 		const d = new Date(cooldownEnd);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 	}
 

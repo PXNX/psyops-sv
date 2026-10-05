@@ -2,7 +2,7 @@ import type { ParaglideLocals } from "@inlang/paraglide-sveltekit";
 import type { AvailableLanguageTag } from "../../lib/paraglide/runtime";
 // See https://kit.svelte.dev/docs/types#app
 // for information about these interfaces
-import type { Account, Session } from "$lib/server/schema";
+import type { Account, Session } from "#lib/server/schema.js";
 
 declare global {
 	namespace App {
@@ -16,7 +16,7 @@ declare global {
 			error?: string;
 			errorStackTrace?: string;
 			requestId?: string;
-			}
+		}
 		interface Error {
 			code?: string;
 			errorId?: string;

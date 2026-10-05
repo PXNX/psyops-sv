@@ -1,9 +1,9 @@
 // src/routes/(authenticated)/visas/+page.server.ts
-import { db } from "$lib/server/db";
-import { userVisas, states, files } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { userVisas, states, files } from "#lib/server/schema.js";
 import { eq, and, gt } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;

@@ -1,5 +1,5 @@
 // src/routes/company/[id]/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	accounts,
 	companies,
@@ -19,13 +19,13 @@ import {
 	transactionHistory,
 	partyMembers,
 	politicalParties
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, desc, count, sum, sql, inArray } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
-import { ECONOMY_CONFIG } from "$lib/config";
-import { getRegionName } from "$lib/utils/formatting";
-import { getEmbargoReason } from "$lib/server/embargo";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+import { ECONOMY_CONFIG } from "#lib/config/index.js";
+import { getRegionName } from "#lib/utils/formatting.js";
+import { getEmbargoReason } from "#lib/server/embargo.js";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import type { PageServerLoad, Actions } from "./$types";
 
 export const load: PageServerLoad = async ({ params, locals }) => {

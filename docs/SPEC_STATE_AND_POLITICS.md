@@ -202,21 +202,24 @@ Members of parliament can propose legislation.
 ### Proposal Detail Tables
 
 **Tax proposals** (`proposalTaxDetails`):
-| Field | Notes |
-|---|---|
+
+| Field     | Notes                                                  |
+| --------- | ------------------------------------------------------ |
 | `taxType` | `mining`, `production`, `market_transaction`, `income` |
-| `taxRate` | Percentage |
+| `taxRate` | Percentage                                             |
 
 **Building proposals** (`proposalBuildingDetails`):
-| Field | Notes |
-|---|---|
-| `regionId` | Where to build |
-| `buildingName` | Building type |
-| `quantity` | Default: 1 |
+
+| Field          | Notes          |
+| -------------- | -------------- |
+| `regionId`     | Where to build |
+| `buildingName` | Building type  |
+| `quantity`     | Default: 1     |
 
 **Border proposals** (`proposalBorderDetails`):
-| Field | Notes |
-|---|---|
+
+| Field          | Notes              |
+| -------------- | ------------------ |
 | `borderStatus` | `open` or `closed` |
 
 ### Parliamentary Votes

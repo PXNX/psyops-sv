@@ -1,6 +1,6 @@
 import { error } from "@sveltejs/kit";
 
-import { loadDoc } from "$lib/docs";
+import { loadDoc } from "#lib/docs/index.js";
 
 import type { PageLoad } from "./$types";
 

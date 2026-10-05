@@ -1,6 +1,6 @@
 // src/lib/server/embargo.ts
-import { db } from "$lib/server/db";
-import { residences, stateSanctions } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { residences, stateSanctions } from "#lib/server/schema.js";
 import { eq, and, or } from "drizzle-orm";
 
 /**

@@ -1,10 +1,10 @@
 // src/routes/company/[id]/edit/+page.server.ts
-import { db } from "$lib/server/db";
-import { companies, companyEditCooldown, files, userWallets, factories, factoryWorkers } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { companies, companyEditCooldown, files, userWallets, factories, factoryWorkers } from "#lib/server/schema.js";
 import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm, getSignedDownloadUrl } from "$lib/server/backblaze";
+import { uploadFileFromForm, getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editCompanySchema } from "./schema";

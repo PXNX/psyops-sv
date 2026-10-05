@@ -1,5 +1,5 @@
 // src/routes/party/[id]/member/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	politicalParties,
 	partyMembers,
@@ -7,11 +7,11 @@ import {
 	files,
 	states,
 	regions
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, sql, and, count } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;

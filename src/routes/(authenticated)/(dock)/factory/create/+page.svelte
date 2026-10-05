@@ -33,9 +33,9 @@
 	import GameIconsTruck from "~icons/game-icons/truck";
 	import GameIconsDynamite from "~icons/game-icons/dynamite";
 
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import { resourceColors } from "$lib/component/ResourceIcon.svelte";
-	import BackLink from "$lib/component/ui/BackLink.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import { resourceColors } from "#lib/component/ResourceIcon.svelte";
+	import BackLink from "#lib/component/ui/BackLink.svelte";
 
 	let { data } = $props();
 
@@ -192,9 +192,12 @@
 								Create Company
 							</a>
 						{/if}
-						<a href="/production" class="btn btn-sm bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1]">
-								Go Back
-							</a>
+						<a
+							href="/production"
+							class="btn btn-sm bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1]"
+						>
+							Go Back
+						</a>
 					</div>
 				</div>
 			</div>

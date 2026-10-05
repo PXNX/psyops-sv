@@ -178,9 +178,7 @@
 	<!-- Income & Expenses Summaries -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 		<!-- Income Summary -->
-		<div
-			class="panel rounded-xl overflow-hidden"
-		>
+		<div class="panel rounded-xl overflow-hidden">
 			<div class="p-4">
 				<div class="flex items-center gap-2 mb-1">
 					<div class="size-8 bg-emerald-600/20 rounded-lg flex items-center justify-center">
@@ -218,9 +216,7 @@
 		</div>
 
 		<!-- Expenses Summary -->
-		<div
-			class="panel rounded-xl overflow-hidden"
-		>
+		<div class="panel rounded-xl overflow-hidden">
 			<div class="p-4">
 				<div class="flex items-center gap-2 mb-1">
 					<div class="size-8 bg-red-600/20 rounded-lg flex items-center justify-center">
@@ -277,9 +273,7 @@
 		</div>
 
 		{#if groupedTransactions.length === 0}
-			<div
-				class="panel rounded-xl p-8 text-center"
-			>
+			<div class="panel rounded-xl p-8 text-center">
 				<FluentArrowTrendingLines20Filled class="size-10 text-[#a89e8e]/60 mx-auto mb-3" />
 				{#if activeFilter}
 					<p class="text-[#a89e8e] font-medium">No {typeLabels[activeFilter] || activeFilter} transactions</p>
@@ -299,10 +293,10 @@
 			<div class="space-y-5">
 				{#each groupedTransactions as group}
 					<div class="space-y-2">
-						<h3 class="text-xs font-semibold text-[#a89e8e]/80 font-mono uppercase tracking-wider px-1">{group.label}</h3>
-						<div
-							class="panel rounded-xl divide-y divide-[#dfceb0]/10"
-						>
+						<h3 class="text-xs font-semibold text-[#a89e8e]/80 font-mono uppercase tracking-wider px-1">
+							{group.label}
+						</h3>
+						<div class="panel rounded-xl divide-y divide-[#dfceb0]/10">
 							{#each group.transactions as tx}
 								{@const color = getTypeColor(tx.type)}
 								{@const iconType = getTransactionIconType(tx)}
@@ -330,7 +324,9 @@
 											<div class="flex-1 min-w-0">
 												<div class="flex items-center gap-2">
 													<p class="text-sm font-medium text-[#fff7e8] truncate">{typeLabels[tx.type] || tx.type}</p>
-													<span class="text-[11px] text-[#a89e8e]/80 font-mono shrink-0">{formatTime(tx.createdAt)}</span>
+													<span class="text-[11px] text-[#a89e8e]/80 font-mono shrink-0"
+														>{formatTime(tx.createdAt)}</span
+													>
 												</div>
 
 												{#if tx.entity.name}

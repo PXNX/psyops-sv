@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/chat/user/[id]/+page.server.ts
-import { db, messageNotifier } from "$lib/server/db";
+import { db, messageNotifier } from "#lib/server/db.js";
 import {
 	chatMessages,
 	accounts,
@@ -10,11 +10,11 @@ import {
 	residences,
 	partyMembers,
 	politicalParties
-} from "$lib/server/schema";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+} from "#lib/server/schema.js";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { eq, and, or, desc } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, params, depends }) => {

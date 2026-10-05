@@ -1,6 +1,6 @@
 <script lang="ts">
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
 
 	interface Props {
 		previewUrl: string | null;
@@ -172,7 +172,7 @@
 							e.stopPropagation();
 							onClearImage();
 						}}
-						disabled={disabled}
+						{disabled}
 						class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
 					>
 						✕

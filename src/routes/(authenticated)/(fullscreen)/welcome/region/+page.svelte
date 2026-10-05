@@ -7,10 +7,10 @@
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { getRegionName } from "$lib/utils/formatting";
+	import Logo from "#lib/component/Logo.svelte";
+	import { getRegionName } from "#lib/utils/formatting.js";
 	import confetti from "canvas-confetti";
-	
+
 	let { data } = $props();
 
 	let isSubmitting = $state(false);
@@ -37,9 +37,7 @@
 	<!-- Header -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>
 		<div class="flex justify-center">
-			<div
-				class="size-20 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-2xl flex items-center justify-center"
-			>
+			<div class="size-20 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-2xl flex items-center justify-center">
 				<FluentGlobe20Filled class="size-10 text-[#b7d0e6]" />
 			</div>
 		</div>
@@ -51,7 +49,10 @@
 
 	<!-- User Location Info -->
 	{#if data.userLocation}
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-xl p-5" in:fly={{ y: 20, duration: 500, delay: 200 }}>
+		<div
+			class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-xl p-5"
+			in:fly={{ y: 20, duration: 500, delay: 200 }}
+		>
 			<div class="flex items-start gap-3">
 				<div class="size-10 bg-[#315d8d]/28 rounded-lg flex items-center justify-center shrink-0">
 					<FluentLocation20Filled class="size-5 text-[#b7d0e6]" />
@@ -76,20 +77,20 @@
 				<form
 					method="POST"
 					action="?/selectRegion"
-						use:enhance={() => {
-							isSubmitting = true;
-							return async ({ result, update }) => {
-								if (result.type === "success") {
-									confetti({
-										particleCount: 150,
-										spread: 70,
-										origin: { y: 0.6 }
-									});
-								}
-								await update();
-								isSubmitting = false;
-							};
-						}}
+					use:enhance={() => {
+						isSubmitting = true;
+						return async ({ result, update }) => {
+							if (result.type === "success") {
+								confetti({
+									particleCount: 150,
+									spread: 70,
+									origin: { y: 0.6 }
+								});
+							}
+							await update();
+							isSubmitting = false;
+						};
+					}}
 					in:fly={{ y: 20, duration: 500, delay: 400 + i * 100 }}
 				>
 					<input type="hidden" name="regionId" value={region.id} />

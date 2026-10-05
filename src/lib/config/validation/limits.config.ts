@@ -4,10 +4,10 @@
  * All validation limits are now available in a client-safe module.
  *
  * For client-side validation schemas (used in Svelte components):
- * - Use SCHEMA_LIMITS from "$lib/config/validation/schema-limits"
+ * - Use SCHEMA_LIMITS from "#lib/config/validation/schema-limits.js"
  *
  * For server-side only code that needs dynamic extraction from the database schema:
- * - Use SCHEMA_LIMITS from "$lib/server/schema-limits"
+ * - Use SCHEMA_LIMITS from "#lib/server/schema-limits.js"
  *
  * This ensures the database schema is the single source of truth
  * for all field length constraints and validation rules, while preventing

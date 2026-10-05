@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(fullscreen)/posts/[id]/edit/+page.server.ts
-import { db } from "$lib/server/db";
-import { articles } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { articles } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { fail, redirect } from "@sveltejs/kit";

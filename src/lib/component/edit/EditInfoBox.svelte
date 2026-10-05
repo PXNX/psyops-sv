@@ -12,8 +12,7 @@
 
 		const parts = [];
 		if (editCost) parts.push(`Changes cost ${editCost.toLocaleString()} currency`);
-		if (cooldownHours)
-			parts.push(`have a ${cooldownHours}-hour cooldown to prevent frequent modifications`);
+		if (cooldownHours) parts.push(`have a ${cooldownHours}-hour cooldown to prevent frequent modifications`);
 
 		return parts.join(" and ") + ".";
 	});

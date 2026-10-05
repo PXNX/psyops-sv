@@ -9,9 +9,9 @@
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
-	import PsyopsLogo from "$lib/assets/logo.svg";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import PsyopsLogo from "#lib/assets/logo.svg";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	let { data } = $props();
 
@@ -124,9 +124,9 @@
 		fetch(croppedDataUrl)
 			.then((r) => r.blob())
 			.then((blob) => {
-				const croppedFile = new File([blob], 'profile-picture.png', { type: 'image/png' });
+				const croppedFile = new File([blob], "profile-picture.png", { type: "image/png" });
 				$form.logo = croppedFile;
-				if (previewUrl && !previewUrl.startsWith('http')) URL.revokeObjectURL(previewUrl);
+				if (previewUrl && !previewUrl.startsWith("http")) URL.revokeObjectURL(previewUrl);
 				previewUrl = croppedDataUrl;
 			});
 	}
@@ -137,7 +137,7 @@
 			URL.revokeObjectURL(cropImageUrl);
 			cropImageUrl = null;
 		}
-		if (fileInput) fileInput.value = '';
+		if (fileInput) fileInput.value = "";
 	}
 </script>
 
@@ -145,9 +145,7 @@
 	<!-- Header -->
 	<div class="text-center space-y-3">
 		<div class="flex justify-center">
-			<div
-				class="size-16 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-2xl flex items-center justify-center"
-			>
+			<div class="size-16 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-2xl flex items-center justify-center">
 				<PsyopsLogo class="size-10 text-[#d5c4df]" />
 			</div>
 		</div>
@@ -318,8 +316,7 @@
 					maxlength="500"
 					class="textarea w-full field-control"
 					class:input-error={$errors.bio}
-					disabled={$submitting}
-				></textarea>
+					disabled={$submitting}></textarea>
 				{#if $errors.bio}
 					<p class="field-error">{$errors.bio}</p>
 				{:else}

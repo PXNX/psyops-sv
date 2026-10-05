@@ -2,7 +2,7 @@
 <script lang="ts">
 	import MdiHeart from "~icons/mdi/heart";
 	import FluentSettings20Filled from "~icons/fluent/settings-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 	import MdiNewspaper from "~icons/mdi/newspaper";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
@@ -54,9 +54,7 @@
 
 <div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
 	<!-- Hero Header -->
-	<div
-		class="relative rounded-2xl overflow-hidden border border-[#dfceb0]/15 shadow-2xl bg-[#14283f]/85"
-	>
+	<div class="relative rounded-2xl overflow-hidden border border-[#dfceb0]/15 shadow-2xl bg-[#14283f]/85">
 		<div
 			class="absolute inset-0 opacity-10"
 			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.1) 35px, rgba(255,255,255,0.1) 70px);"
@@ -71,9 +69,7 @@
 							<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 						</div>
 					{:else}
-						<div
-							class="size-20 sm:size-24 rounded-2xl bg-[#315d8d]/25 flex items-center justify-center"
-						>
+						<div class="size-20 sm:size-24 rounded-2xl bg-[#315d8d]/25 flex items-center justify-center">
 							<MdiNewspaper class="size-10 sm:size-12 text-[#fff7e8]" />
 						</div>
 					{/if}
@@ -169,12 +165,7 @@
 			{/if}
 
 			{#if data.userRole === "owner"}
-				<Button
-					size="sm"
-					variant="secondary"
-					href="/newspaper/{data.newspaper.id}/edit"
-					icon={FluentSettings20Filled}
-				>
+				<Button size="sm" variant="secondary" href="/newspaper/{data.newspaper.id}/edit" icon={FluentSettings20Filled}>
 					Settings
 				</Button>
 			{/if}
@@ -195,10 +186,7 @@
 		{:else}
 			<div class="space-y-3">
 				{#each data.articles as article}
-					<a
-						class="block group panel-interactive rounded-xl p-4"
-						href="/posts/{article.id}"
-					>
+					<a class="block group panel-interactive rounded-xl p-4" href="/posts/{article.id}">
 						<h4 class="text-base font-semibold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors mb-2">
 							{article.title}
 						</h4>

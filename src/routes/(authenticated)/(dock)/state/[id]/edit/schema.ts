@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/state/[id]/edit/schema.ts
 import * as v from "valibot";
-import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
+import { SCHEMA_LIMITS } from "#lib/config/validation/schema-limits.js";
 
 export const editStateSchema = v.object({
 	name: v.pipe(
@@ -13,7 +13,10 @@ export const editStateSchema = v.object({
 		v.pipe(
 			v.file("Logo must be a file"),
 			v.mimeType(["image/jpeg", "image/png", "image/webp", "image/gif"], "Logo must be an image"),
-			v.maxSize(SCHEMA_LIMITS.LOGO_MAX_SIZE_MB * 1024 * 1024, `Logo must be less than ${SCHEMA_LIMITS.LOGO_MAX_SIZE_MB}MB`)
+			v.maxSize(
+				SCHEMA_LIMITS.LOGO_MAX_SIZE_MB * 1024 * 1024,
+				`Logo must be less than ${SCHEMA_LIMITS.LOGO_MAX_SIZE_MB}MB`
+			)
 		)
 	)
 });

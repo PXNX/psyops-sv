@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.server.ts - WITH PRESIDENT ACCESS
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import { eq, and, ne, or } from "drizzle-orm";
 import {
 	states,
@@ -17,7 +17,7 @@ import {
 	stateTreasury,
 	userWallets,
 	blocs
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -159,7 +159,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		blocVisaOverride,
 		blocInfo
 	};
-	};
+};
 
 export const actions: Actions = {
 	sanctionState: async ({ request, locals, params }) => {
@@ -567,4 +567,4 @@ export const actions: Actions = {
 
 		return { success: true, message: "Residence application rejected" };
 	}
-	};
+};

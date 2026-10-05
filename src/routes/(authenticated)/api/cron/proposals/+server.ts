@@ -2,10 +2,10 @@
 
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { db } from "$lib/server/db";
-import { parliamentaryProposals, parliamentaryVotes, stateTaxes, parliamentMembers } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { parliamentaryProposals, parliamentaryVotes, stateTaxes, parliamentMembers } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
-import { executeProposal } from "$lib/server/services/politics/execute-proposal";
+import { executeProposal } from "#lib/server/services/politics/execute-proposal.js";
 
 export const GET: RequestHandler = async ({ request }) => {
 	try {

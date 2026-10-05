@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/chat/stream/+server.ts
-import { messageNotifier } from "$lib/server/db";
+import { messageNotifier } from "#lib/server/db.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ locals }) => {

@@ -2,7 +2,7 @@
 	import { onMount } from "svelte";
 	import IconClose from "~icons/fluent/dismiss-20-filled";
 	import IconCheck from "~icons/fluent/checkmark-20-filled";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	interface Props {
 		imageUrl: string;
@@ -13,14 +13,7 @@
 		cropButtonText?: string;
 	}
 
-	let {
-		imageUrl,
-		aspectRatio = 1,
-		onCrop,
-		onCancel,
-		title = "Crop Image",
-		cropButtonText = "Crop"
-	}: Props = $props();
+	let { imageUrl, aspectRatio = 1, onCrop, onCancel, title = "Crop Image", cropButtonText = "Crop" }: Props = $props();
 
 	let canvas: HTMLCanvasElement;
 	let img: HTMLImageElement;
@@ -139,8 +132,8 @@
 
 	function getEventPos(event: MouseEvent | TouchEvent) {
 		const imgRect = img.getBoundingClientRect();
-		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
-		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
+		const clientX = "touches" in event ? event.touches[0].clientX : event.clientX;
+		const clientY = "touches" in event ? event.touches[0].clientY : event.clientY;
 		return {
 			x: clientX - imgRect.left,
 			y: clientY - imgRect.top,
@@ -276,24 +269,14 @@
 	}
 </script>
 
-<svelte:window 
-	onmousemove={handleMove} 
-	onmouseup={handleEnd}
-	ontouchmove={handleMove}
-	ontouchend={handleEnd}
-/>
+<svelte:window onmousemove={handleMove} onmouseup={handleEnd} ontouchmove={handleMove} ontouchend={handleEnd} />
 
 <div class="modal modal-open">
 	<div class="modal-box w-full max-w-2xl panel">
 		<h3 class="font-bold text-lg mb-4 text-[#fff7e8]">{title}</h3>
 
 		<div class="relative bg-[#102239] rounded-lg overflow-hidden mb-4" bind:this={container}>
-			<img
-				bind:this={img}
-				src={imageUrl}
-				alt="Crop preview"
-				class="w-full h-auto block pointer-events-none"
-			/>
+			<img bind:this={img} src={imageUrl} alt="Crop preview" class="w-full h-auto block pointer-events-none" />
 			<canvas
 				bind:this={canvas}
 				class="absolute top-0 left-0 cursor-move"

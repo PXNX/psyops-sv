@@ -1,10 +1,10 @@
 <!-- src/lib/components/ExternalLinkWarning.svelte -->
 <script lang="ts">
-	import Modal from "$lib/component/Modal.svelte";
+	import Modal from "#lib/component/Modal.svelte";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentOpen20Filled from "~icons/fluent/open-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import Button from "$lib/component/ui/Button.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	let {
 		open = $bindable(false),

@@ -13,7 +13,7 @@
 
 	function formatDate(date: Date | string) {
 		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, '0');
+		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
 	}
 
@@ -163,11 +163,7 @@
 						<Tooltip.Root let:data>
 							<Tooltip.Header>{formatDate(data.date)}</Tooltip.Header>
 							<Tooltip.List>
-								<Tooltip.Item
-									label="Views"
-									value={data.count.toLocaleString()}
-									valueClass="text-green-400 font-bold"
-								/>
+								<Tooltip.Item label="Views" value={data.count.toLocaleString()} valueClass="text-green-400 font-bold" />
 							</Tooltip.List>
 						</Tooltip.Root>
 					</Chart>

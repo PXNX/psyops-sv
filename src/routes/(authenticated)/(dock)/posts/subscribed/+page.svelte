@@ -7,9 +7,9 @@
 	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
 	import FluentClock20Regular from "~icons/fluent/clock-20-regular";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDateTime } from "$lib/utils/formatting.js";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 
@@ -105,7 +105,10 @@
 					/>
 				</div>
 
-				<a href="/posts/new" class={buttonClass({ variant: "primary", class: "text-xs font-mono font-bold uppercase tracking-wide" })}>
+				<a
+					href="/posts/new"
+					class={buttonClass({ variant: "primary", class: "text-xs font-mono font-bold uppercase tracking-wide" })}
+				>
 					<FluentAdd20Filled class="size-4" />
 					<span class="hidden sm:inline">New Post</span>
 				</a>
@@ -124,7 +127,10 @@
 				{#if !searchQuery}
 					<a
 						href="/newspaper"
-						class={buttonClass({ variant: "primary", class: "mt-4 text-xs font-mono font-bold uppercase tracking-wide" })}
+						class={buttonClass({
+							variant: "primary",
+							class: "mt-4 text-xs font-mono font-bold uppercase tracking-wide"
+						})}
 					>
 						<FluentSearch20Filled class="size-4" />
 						Discover Newspapers

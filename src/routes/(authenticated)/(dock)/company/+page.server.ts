@@ -1,5 +1,5 @@
 // src/routes/company/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	accounts,
 	companies,
@@ -10,9 +10,9 @@ import {
 	userProfiles,
 	partyMembers,
 	politicalParties
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, count, inArray } from "drizzle-orm";
-import { getLogoUrl } from "$lib/server/backblaze";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {

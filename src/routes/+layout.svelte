@@ -2,8 +2,8 @@
 	import "../app.css";
 
 	import { onNavigate } from "$app/navigation";
-	import { browser } from "$app/environment";
-	import { settings } from "$lib/settings.svelte";
+	import { browser } from "$app/env";
+	import { settings } from "#lib/settings.svelte.js";
 
 	const { children } = $props();
 
@@ -30,6 +30,7 @@
 	// which is what made page-to-page navigation feel slow. This transitions
 	// the DOM diff in place — no remount, no lost component state.
 	onNavigate((navigation) => {
+		if (navigation.shallow) return;
 		if (!document.startViewTransition) return;
 
 		return new Promise((resolve) => {
@@ -52,4 +53,3 @@
 <div class="min-h-dvh">
 	{@render children()}
 </div>
-

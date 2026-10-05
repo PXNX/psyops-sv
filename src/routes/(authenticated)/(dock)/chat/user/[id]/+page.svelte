@@ -8,12 +8,12 @@
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
-	import Modal from "$lib/component/Modal.svelte";
-	import ReportMessageModal from "$lib/component/ReportMessageModal.svelte";
-	import BlockUserModal from "$lib/component/BlockUserModal.svelte";
-	import PartyTag from "$lib/component/PartyTag.svelte";
-	import { settings } from "$lib/settings.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import Modal from "#lib/component/Modal.svelte";
+	import ReportMessageModal from "#lib/component/ReportMessageModal.svelte";
+	import BlockUserModal from "#lib/component/BlockUserModal.svelte";
+	import PartyTag from "#lib/component/PartyTag.svelte";
+	import { settings } from "#lib/settings.svelte.js";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data, form } = $props();
 
@@ -235,9 +235,7 @@
 			>
 				Cancel
 			</button>
-			<button onclick={proceedToExternalLink} class={buttonClass({ variant: "info" })}>
-				Continue
-			</button>
+			<button onclick={proceedToExternalLink} class={buttonClass({ variant: "info" })}> Continue </button>
 		</div>
 	</div>
 </Modal>
@@ -247,16 +245,16 @@
 		<div class="panel rounded-xl p-8 text-center">
 			<h2 class="text-2xl font-bold text-[#fff7e8] mb-2">User Not Found</h2>
 			<p class="text-[#a89e8e] mb-4">This user doesn't exist or you don't have permission to message them.</p>
-			<button onclick={() => goto("/chat")} class={buttonClass({ variant: "info" })}>
-				Back to Messages
-			</button>
+			<button onclick={() => goto("/chat")} class={buttonClass({ variant: "info" })}> Back to Messages </button>
 		</div>
 	</div>
 {:else if data.isBlocked}
 	<!-- Blocked User View - Show messages but disable input -->
 	<div class="flex flex-col h-full min-h-0">
 		<!-- Header -->
-		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
+		<div
+			class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
+		>
 			<div class="flex items-center gap-2 md:gap-3">
 				<button
 					onclick={() => goto("/chat")}
@@ -409,7 +407,9 @@
 {:else}
 	<div class="flex flex-col h-full min-h-0">
 		<!-- Header -->
-		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
+		<div
+			class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
+		>
 			<div class="flex items-center gap-2 md:gap-3">
 				<button
 					onclick={() => goto("/chat")}

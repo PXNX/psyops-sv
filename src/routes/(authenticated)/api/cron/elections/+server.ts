@@ -2,7 +2,7 @@
 
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	parliamentaryElections,
 	electionVotes,
@@ -13,9 +13,9 @@ import {
 	presidents,
 	residences,
 	regions
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 // Give the serverless function enough time to process every state's election in
 // a single run. Without this, Vercel terminates the function at the default

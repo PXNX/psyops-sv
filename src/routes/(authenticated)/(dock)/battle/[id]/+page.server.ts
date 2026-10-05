@@ -1,5 +1,5 @@
 // src/routes/(authenticated)/(dock)/battle/[id]/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	battles,
 	battleParticipants,
@@ -10,12 +10,16 @@ import {
 	states,
 	residences,
 	regionBorders
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, desc, and, sql, count, asc, or } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { error, fail } from "@sveltejs/kit";
-import { MILITARY_UNIT_TEMPLATES, getExperienceCombatModifier, calculateCombatExperienceLoss } from "$lib/config";
-import { getLogoUrl } from "$lib/server/backblaze";
+import {
+	MILITARY_UNIT_TEMPLATES,
+	getExperienceCombatModifier,
+	calculateCombatExperienceLoss
+} from "#lib/config/index.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 // Terrain combat modifiers
 const TERRAIN_DATA = {

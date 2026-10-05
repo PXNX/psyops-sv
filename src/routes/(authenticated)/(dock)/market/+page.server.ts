@@ -1,4 +1,4 @@
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	marketListings,
 	marketPriceHistory,
@@ -7,7 +7,7 @@ import {
 	userWallets,
 	residences,
 	regions
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, min, gte, sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 
@@ -34,10 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		.from(marketListings)
 		.groupBy(marketListings.itemType, marketListings.itemName);
 
-	const lowestPriceMap: Record<
-		string,
-		{ lowestPrice: number; totalListings: number; totalQuantity: number }
-	> = {};
+	const lowestPriceMap: Record<string, { lowestPrice: number; totalListings: number; totalQuantity: number }> = {};
 	for (const item of lowestPrices) {
 		lowestPriceMap[item.itemName] = {
 			lowestPrice: Number(item.lowestPrice) || 0,

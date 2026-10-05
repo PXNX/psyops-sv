@@ -8,9 +8,9 @@
 	import FluentClock20Regular from "~icons/fluent/clock-20-regular";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDateTime } from "$lib/utils/formatting.js";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 
@@ -99,15 +99,15 @@
 					/>
 				</div>
 
-				<a href="/posts/new" class={buttonClass({ variant: "primary", class: "text-xs font-mono font-bold uppercase tracking-wide" })}>
+				<a
+					href="/posts/new"
+					class={buttonClass({ variant: "primary", class: "text-xs font-mono font-bold uppercase tracking-wide" })}
+				>
 					<FluentAdd20Filled class="size-4" />
 					<span class="hidden sm:inline">New Post</span>
 				</a>
 
-				<a
-					href="/posts/subscribed"
-					class={buttonClass({ variant: "secondary", class: "text-xs font-mono" })}
-				>
+				<a href="/posts/subscribed" class={buttonClass({ variant: "secondary", class: "text-xs font-mono" })}>
 					<FluentEmojiRolledUpNewspaper class="size-4" />
 					<span class="hidden sm:inline">Subscribed</span>
 				</a>
@@ -138,7 +138,10 @@
 				{:else}
 					<a
 						href="/posts/new"
-						class={buttonClass({ variant: "primary", class: "mt-4 text-xs font-mono font-bold uppercase tracking-wide" })}
+						class={buttonClass({
+							variant: "primary",
+							class: "mt-4 text-xs font-mono font-bold uppercase tracking-wide"
+						})}
 					>
 						<FluentAdd20Filled class="size-4" />
 						Create First Post

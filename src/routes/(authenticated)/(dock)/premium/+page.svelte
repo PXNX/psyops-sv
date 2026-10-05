@@ -4,7 +4,7 @@
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentBot20Filled from "~icons/fluent/bot-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	let { data } = $props();
 
@@ -117,8 +117,8 @@
 			</p>
 		{:else}
 			<p class="text-sm text-[#a89e8e]">
-				Open the bot and send <code class="px-1.5 py-0.5 rounded bg-[#102239] text-[#d9ccb7]">/premium</code> to activate premium
-				for free.
+				Open the bot and send <code class="px-1.5 py-0.5 rounded bg-[#102239] text-[#d9ccb7]">/premium</code> to activate
+				premium for free.
 			</p>
 		{/if}
 		{#if data.botUsername}

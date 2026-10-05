@@ -1,9 +1,9 @@
 // src/routes/(authenticated)/welcome/region/+page.server.ts
-import { db } from "$lib/server/db";
-import { regions, residences, states, userProfiles, userWallets, files } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { regions, residences, states, userProfiles, userWallets, files } from "#lib/server/schema.js";
 import { eq, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { fail, redirect } from "@sveltejs/kit";
 
 // Enhanced IP geolocation with coordinates

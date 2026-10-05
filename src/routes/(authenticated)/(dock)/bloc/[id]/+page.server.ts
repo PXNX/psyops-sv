@@ -1,5 +1,5 @@
 // src/routes/bloc/[id]/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	blocs,
 	states,
@@ -12,11 +12,11 @@ import {
 	blocLeaderVotes,
 	wars,
 	battles
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, or, ne, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { getLogoUrl } from "$lib/server/backblaze";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const blocId = parseInt(params.id);

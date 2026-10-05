@@ -1,7 +1,7 @@
 <!-- src/lib/component/BottomSheet.svelte -->
 <script lang="ts">
 	import IconDismiss from "~icons/fluent/dismiss-24-regular";
-	import IconButton from "$lib/component/ui/IconButton.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
 
 	let {
 		open = $bindable(false),

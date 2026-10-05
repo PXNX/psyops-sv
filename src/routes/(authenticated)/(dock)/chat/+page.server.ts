@@ -1,8 +1,8 @@
 // src/routes/(authenticated)/chat/+page.server.ts
-import { db } from "$lib/server/db";
-import { chatMessages, partyMembers, politicalParties, userProfiles, files, userBlocks } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { chatMessages, partyMembers, politicalParties, userProfiles, files, userBlocks } from "#lib/server/schema.js";
 import { eq, and, desc, or } from "drizzle-orm";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import type { PageServerLoad } from "./$types";
 
 // Current party (abbreviation + color) for a user, for the party tag shown next to their name.

@@ -1,10 +1,10 @@
 // src/routes/(authenticated)/(dock)/premium/+page.server.ts
-import { db } from "$lib/server/db";
-import { userProfiles } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { userProfiles } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
-import { env as publicEnv } from "$env/dynamic/public";
-import { PREMIUM_PLANS } from "$lib/config";
-import { getPremiumStatus, setPremiumAutomation } from "$lib/server/service/premium";
+import { PUBLIC_TELEGRAM_BOT_USERNAME } from "$app/env/public";
+import { PREMIUM_PLANS } from "#lib/config/index.js";
+import { getPremiumStatus, setPremiumAutomation } from "#lib/server/service/premium.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -20,7 +20,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		status,
 		plans: Object.values(PREMIUM_PLANS),
 		telegramLinked: !!profile?.telegramUsername,
-		botUsername: publicEnv.PUBLIC_TELEGRAM_BOT_USERNAME || null
+		botUsername: PUBLIC_TELEGRAM_BOT_USERNAME || null
 	};
 };
 

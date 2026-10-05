@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/state/+page.server.ts
-import { db } from "$lib/server/db";
-import { states, residences, regions } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { states, residences, regions } from "#lib/server/schema.js";
 import { sql, eq } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 

@@ -8,14 +8,14 @@
 	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
 	import IconClock from "~icons/fluent/clock-24-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import * as m from "$lib/paraglide/messages";
-	import { getExperienceLevel } from "$lib/config";
+	import * as m from "#lib/paraglide/messages.js";
+	import { getExperienceLevel } from "#lib/config/index.js";
 
-	import Modal from "$lib/component/Modal.svelte";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import EmptyState from "$lib/component/EmptyState.svelte";
-	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
+	import Modal from "#lib/component/Modal.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
+	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 
 	let { data }: { data: PageData } = $props();
 
@@ -189,9 +189,7 @@
 				{/if}
 			</div>
 			{#each activeUnits as unit}
-				<div
-					class="panel-interactive rounded-xl overflow-hidden backdrop-blur-sm"
-				>
+				<div class="panel-interactive rounded-xl overflow-hidden backdrop-blur-sm">
 					<div class="p-5">
 						<div class="flex items-center gap-4 mb-4">
 							<div class="size-12 flex-shrink-0 flex items-center justify-center">
@@ -382,11 +380,7 @@
 			{/each}
 
 			{#if activeUnits.length === 0}
-				<EmptyState
-					icon={FluentTarget}
-					title="No active units"
-					subtitle="Train your first unit to begin"
-				/>
+				<EmptyState icon={FluentTarget} title="No active units" subtitle="Train your first unit to begin" />
 			{/if}
 
 			<!-- Unit Templates -->

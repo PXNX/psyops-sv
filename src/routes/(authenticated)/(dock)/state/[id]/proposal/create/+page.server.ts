@@ -1,9 +1,9 @@
 // src/routes/(authenticated)/(dock)/state/[id]/proposal/create/+page.server.ts
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import { eq, and } from "drizzle-orm";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import {
 	states,
 	parliamentMembers,
@@ -17,13 +17,13 @@ import {
 	proposalTaxDetails,
 	proposalBorderDetails,
 	proposalBuildingDetails
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProposalSchema } from "./schema";
-import { BUILDING_TEMPLATES, BORDER_MAINTENANCE } from "$lib/config";
-import { executeProposal } from "$lib/server/services/politics/execute-proposal";
-import { completePendingConstructions } from "$lib/server/services/politics/construction.service";
+import { BUILDING_TEMPLATES, BORDER_MAINTENANCE } from "#lib/config/index.js";
+import { executeProposal } from "#lib/server/services/politics/execute-proposal.js";
+import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;

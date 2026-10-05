@@ -12,9 +12,9 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
-	import { badgeClass } from "$lib/component/ui/styles";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
+	import { badgeClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 

@@ -1,4 +1,4 @@
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	residences,
 	userTravels,
@@ -9,10 +9,10 @@ import {
 	partyMembers,
 	battles,
 	wars
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { eq, and, or, desc } from "drizzle-orm";
-import { getLogoUrl } from "$lib/server/backblaze";
-import { getBirthdayInfo, collectBirthdayRewards } from "$lib/server/service/birthday";
+import { getLogoUrl } from "#lib/server/backblaze.js";
+import { getBirthdayInfo, collectBirthdayRewards } from "#lib/server/service/birthday.js";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 

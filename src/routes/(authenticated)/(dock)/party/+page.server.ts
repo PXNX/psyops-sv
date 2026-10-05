@@ -1,10 +1,10 @@
 // src/routes/party/+page.server.ts
-import { db } from "$lib/server/db";
-import { politicalParties, residences } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { politicalParties, residences } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
 import { redirect } from "@sveltejs/kit";
-import { getLogoUrl } from "$lib/server/backblaze";
-import { PARTY_IDEOLOGIES } from "$lib/config";
+import { getLogoUrl } from "#lib/server/backblaze.js";
+import { PARTY_IDEOLOGIES } from "#lib/config/index.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {

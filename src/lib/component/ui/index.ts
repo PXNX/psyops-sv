@@ -1,6 +1,6 @@
 // src/lib/component/ui/index.ts
 // Shared UI primitives. Import from here so every screen uses the same surfaces:
-//   import { Button, IconButton, Badge } from "$lib/component/ui";
+//   import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 export { default as Button } from "./Button.svelte";
 export { default as IconButton } from "./IconButton.svelte";
 export { default as Badge } from "./Badge.svelte";

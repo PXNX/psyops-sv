@@ -1,10 +1,10 @@
 // src/routes/(authenticated)/(dock)/war/[id]/+page.server.ts
-import { db } from "$lib/server/db";
-import { wars, battles, warSurrenders, states, blocs, accounts, userProfiles, regions } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { wars, battles, warSurrenders, states, blocs, accounts, userProfiles, regions } from "#lib/server/schema.js";
 import { eq, desc, and, sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
-import { getLogoUrl } from "$lib/server/backblaze";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;

@@ -2,7 +2,7 @@
 <script lang="ts">
 	import type { Component } from "svelte";
 	import FluentImage24Regular from "~icons/fluent/image-24-regular";
-	import { settings } from "$lib/settings.svelte";
+	import { settings } from "#lib/settings.svelte.js";
 
 	interface Props {
 		src: string | null | undefined;

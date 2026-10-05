@@ -11,8 +11,8 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentCart20Filled from "~icons/fluent/cart-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
-	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	let { data } = $props();
 

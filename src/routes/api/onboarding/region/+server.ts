@@ -1,6 +1,6 @@
 import { json, error } from "@sveltejs/kit";
-import { db } from "$lib/server/db";
-import { regions, residences, userProfiles } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { regions, residences, userProfiles } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
 

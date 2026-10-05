@@ -5,7 +5,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import { formatDate } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -192,7 +192,9 @@
 			<p class="text-[#d9ccb7] mb-4">
 				You don't have any active visas. Visit other states to purchase visas and explore new regions!
 			</p>
-			<a href="/state" class="btn bg-blue-600 hover:bg-blue-500 border-0 text-white shadow-lg shadow-blue-600/20"> Browse States </a>
+			<a href="/state" class="btn bg-blue-600 hover:bg-blue-500 border-0 text-white shadow-lg shadow-blue-600/20">
+				Browse States
+			</a>
 		</div>
 	{/if}
 

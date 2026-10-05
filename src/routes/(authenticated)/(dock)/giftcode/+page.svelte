@@ -5,10 +5,10 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
-	import { formatDateTime } from "$lib/utils/formatting.js";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 	import { enhance } from "$app/forms";
-	import Button from "$lib/component/ui/Button.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	let { data, form } = $props();
 
@@ -130,7 +130,15 @@
 				class="input field-control flex-1 uppercase"
 				class:input-error={form?.error}
 			/>
-			<Button type="submit" variant="soft-purple" disabled={!giftCode.trim()} loading={submitting} loadingText="Redeeming..." icon={FluentGift20Filled} class="min-w-[120px]">
+			<Button
+				type="submit"
+				variant="soft-purple"
+				disabled={!giftCode.trim()}
+				loading={submitting}
+				loadingText="Redeeming..."
+				icon={FluentGift20Filled}
+				class="min-w-[120px]"
+			>
 				Redeem
 			</Button>
 		</div>

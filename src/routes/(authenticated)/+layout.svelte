@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { settings } from "$lib/settings.svelte";
+	import { settings } from "#lib/settings.svelte.js";
 
 	const { children, data } = $props();
 

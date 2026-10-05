@@ -1,12 +1,12 @@
 // src/routes/(authenticated)/(dock)/newspaper/create/+page.server.ts
-import { db } from "$lib/server/db";
-import { journalists, newspapers, files } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { journalists, newspapers, files } from "#lib/server/schema.js";
 import { redirect } from "@sveltejs/kit";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import type { Actions, PageServerLoad } from "./$types";
 import { newspaperSchema } from "./schema";
-import { uploadFileFromForm } from "$lib/server/backblaze";
+import { uploadFileFromForm } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async () => {
 	const form = await superValidate(valibot(newspaperSchema));

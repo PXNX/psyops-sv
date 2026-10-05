@@ -11,10 +11,10 @@
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
-	import BackLink from "$lib/component/ui/BackLink.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import BackLink from "#lib/component/ui/BackLink.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	let { data } = $props();
 

@@ -2,9 +2,9 @@
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentPersonProhibited20Filled from "~icons/fluent/person-prohibited-20-filled";
-	import BottomSheet from "$lib/component/BottomSheet.svelte";
-	import IconButton from "$lib/component/ui/IconButton.svelte";
-	import ActionListItem from "$lib/component/ui/ActionListItem.svelte";
+	import BottomSheet from "#lib/component/BottomSheet.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
+	import ActionListItem from "#lib/component/ui/ActionListItem.svelte";
 
 	interface Props {
 		messageId: number;

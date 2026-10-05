@@ -1,12 +1,18 @@
 // src/routes/factory/[id]/edit/schema.ts
 import * as v from "valibot";
-import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
+import { SCHEMA_LIMITS } from "#lib/config/validation/schema-limits.js";
 
 export const editFactorySchema = v.object({
 	name: v.pipe(
 		v.string("Factory name is required"),
-		v.minLength(SCHEMA_LIMITS.MIN_NAME_LENGTH, `Factory name must be at least ${SCHEMA_LIMITS.MIN_NAME_LENGTH} characters`),
-		v.maxLength(SCHEMA_LIMITS.FACTORY_NAME_MAX, `Factory name must be at most ${SCHEMA_LIMITS.FACTORY_NAME_MAX} characters`)
+		v.minLength(
+			SCHEMA_LIMITS.MIN_NAME_LENGTH,
+			`Factory name must be at least ${SCHEMA_LIMITS.MIN_NAME_LENGTH} characters`
+		),
+		v.maxLength(
+			SCHEMA_LIMITS.FACTORY_NAME_MAX,
+			`Factory name must be at most ${SCHEMA_LIMITS.FACTORY_NAME_MAX} characters`
+		)
 	),
 	workerWage: v.pipe(
 		v.number("Wage must be a number"),

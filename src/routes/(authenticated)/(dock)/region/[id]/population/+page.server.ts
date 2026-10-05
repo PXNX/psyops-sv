@@ -1,10 +1,10 @@
 // src/routes/(authenticated)/(dock)/region/[id]/population/+page.server.ts
-import { db } from "$lib/server/db";
-import { regions, residences, accounts, userProfiles } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { regions, residences, accounts, userProfiles } from "#lib/server/schema.js";
 import { eq, desc, asc, sql, count } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getRegionName } from "$lib/utils/formatting";
+import { getRegionName } from "#lib/utils/formatting.js";
 
 const PAGE_SIZE = 20;
 

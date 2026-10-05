@@ -3,10 +3,10 @@
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
-	import * as m from "$lib/paraglide/messages";
-	import { getRegionName, formatDateTime } from "$lib/utils/formatting.js";
-	import Logo from "$lib/component/Logo.svelte";
-	import ThreeAnimation from "$lib/component/ThreeAnimation.svelte";
+	import * as m from "#lib/paraglide/messages.js";
+	import { getRegionName, formatDateTime } from "#lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import { onMount, onDestroy } from "svelte";
 
 	const { data } = $props();
@@ -235,9 +235,7 @@
 
 		<!-- Ongoing Battles -->
 		{#if ongoingBattles.length > 0}
-			<div
-				class="bg-[#14283f]/85 border-2 border-amber-500/30 rounded-xl overflow-hidden"
-			>
+			<div class="bg-[#14283f]/85 border-2 border-amber-500/30 rounded-xl overflow-hidden">
 				<div class="bg-amber-950/30 border-b border-amber-500/30 px-4 sm:px-6 py-3 sm:py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-2">
@@ -289,9 +287,7 @@
 
 		<!-- Completed Battles -->
 		{#if completedBattles.length > 0}
-			<div
-				class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden"
-			>
+			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden">
 				<div class="bg-[#102239]/90 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
 					<h3 class="text-base sm:text-lg font-bold text-[#fff7e8] font-mono uppercase tracking-wide">
 						Battle History
@@ -352,9 +348,7 @@
 
 		<!-- Surrenders -->
 		{#if data.war.surrenders && data.war.surrenders.length > 0}
-			<div
-				class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden"
-			>
+			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden">
 				<div class="bg-[#102239]/90 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
 					<div class="flex items-center gap-2">
 						<FluentFlag20Filled class="size-4 text-[#a89e8e]" />

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from "svelte";
-	import BackLink from "$lib/component/ui/BackLink.svelte";
+	import BackLink from "#lib/component/ui/BackLink.svelte";
 
 	interface Props {
 		title: string;

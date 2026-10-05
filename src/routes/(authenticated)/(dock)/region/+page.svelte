@@ -4,7 +4,7 @@
 	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import * as m from "$lib/paraglide/messages";
+	import * as m from "#lib/paraglide/messages.js";
 	import { goto } from "$app/navigation";
 
 	const { data } = $props();
@@ -76,11 +76,7 @@
 
 			<!-- Sort Dropdown -->
 			<div class="flex gap-2">
-				<select
-					bind:value={selectedSort}
-					onchange={() => applyFilters()}
-					class="px-4 py-2 field-control rounded-lg"
-				>
+				<select bind:value={selectedSort} onchange={() => applyFilters()} class="px-4 py-2 field-control rounded-lg">
 					{#each sortOptions as option}
 						<option value={option.value}>{option.label}</option>
 					{/each}
@@ -182,9 +178,7 @@
 									</span>
 								{/if}
 								{#if region.tungsten}
-									<span
-										class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded text-xs text-[#d5c4df]"
-									>
+									<span class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded text-xs text-[#d5c4df]">
 										Tungsten: {region.tungsten}
 									</span>
 								{/if}

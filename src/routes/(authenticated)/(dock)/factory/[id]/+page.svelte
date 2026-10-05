@@ -2,8 +2,8 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { invalidateAll } from "$app/navigation";
-	import { getRegionName } from "$lib/utils/formatting";
-	import Logo from "$lib/component/Logo.svelte";
+	import { getRegionName } from "#lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -16,7 +16,7 @@
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentLockClosed20Filled from "~icons/fluent/lock-closed-20-filled";
-	import ResourceIcon from "$lib/component/ResourceIcon.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 
 	let { data } = $props();
 

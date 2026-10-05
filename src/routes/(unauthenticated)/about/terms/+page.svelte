@@ -5,7 +5,7 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import Button from "$lib/component/ui/Button.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 </script>
 
 <div class="relative min-h-screen">
@@ -13,16 +13,12 @@
 		<!-- Header -->
 		<div class="flex flex-col items-center space-y-6">
 			<div class="relative">
-				<div
-					class="relative size-32 bg-[#315d8d] rounded-3xl flex items-center justify-center shadow-2xl"
-				>
+				<div class="relative size-32 bg-[#315d8d] rounded-3xl flex items-center justify-center shadow-2xl">
 					<FluentDocumentText20Filled class="size-16 text-[#fff7e8]" />
 				</div>
 			</div>
 			<div class="text-center space-y-3">
-				<h1 class="text-5xl font-bold tracking-tight text-[#fff7e8]">
-					Terms of Service
-				</h1>
+				<h1 class="text-5xl font-bold tracking-tight text-[#fff7e8]">Terms of Service</h1>
 				<p class="text-[#c7bda9] max-w-md mx-auto">Rules and guidelines for using our platform</p>
 				<div class="inline-flex items-center gap-2 px-4 py-2 panel-muted backdrop-blur-sm rounded-full">
 					<span class="text-sm text-[#d9ccb7]">Effective: January 2025</span>

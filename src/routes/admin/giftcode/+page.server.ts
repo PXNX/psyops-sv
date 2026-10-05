@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/admin/giftcode/+page.server.ts
-import { db } from "$lib/server/db";
-import { giftCodes, giftCodeResources, accounts } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { giftCodes, giftCodeResources, accounts } from "#lib/server/schema.js";
 import { fail, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";

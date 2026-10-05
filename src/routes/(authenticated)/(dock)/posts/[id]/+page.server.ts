@@ -1,10 +1,10 @@
 // src/routes/(authenticated)/(fullscreen)/posts/[id]/+page.server.ts
-import { db } from "$lib/server/db";
-import { articles, accounts, newspapers, upvotes, files, userProfiles, articleViews } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { articles, accounts, newspapers, upvotes, files, userProfiles, articleViews } from "#lib/server/schema.js";
 import { eq, sql, and } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const articleId = parseInt(params.id);

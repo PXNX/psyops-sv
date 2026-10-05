@@ -11,8 +11,8 @@
 	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 	import FluentPersonAvailable20Filled from "~icons/fluent/person-available-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import PageContainer from "$lib/component/PageContainer.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
 
 	const { data, form } = $props();
 </script>
@@ -159,10 +159,7 @@
 
 		<!-- Join/Leave Party -->
 		{#if !data.isMember && data.canJoin}
-			<div
-				class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5"
-				style="border-color: {data.party.color}30"
-			>
+			<div class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5" style="border-color: {data.party.color}30">
 				<form method="POST" action="?/join" use:enhance>
 					<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 						<div class="flex-1">
@@ -233,9 +230,7 @@
 		{/if}
 
 		<!-- Party Leadership -->
-		<div
-			class="panel rounded-xl overflow-hidden"
-		>
+		<div class="panel rounded-xl overflow-hidden">
 			<div class="bg-[#0e1d2f]/95 border-b border-[#dfceb0]/15 px-4 sm:px-5 py-3">
 				<h2 class="text-sm font-bold text-[#e5d8c1] font-mono uppercase tracking-wide flex items-center gap-2">
 					<FluentCrown20Filled class="size-4" style="color: {data.party.color}" />

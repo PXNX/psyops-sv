@@ -2,11 +2,20 @@
 
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { db } from "$lib/server/db";
-import { battles, battleParticipants, battleRounds, militaryUnits, regions, states, wars, residences } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import {
+	battles,
+	battleParticipants,
+	battleRounds,
+	militaryUnits,
+	regions,
+	states,
+	wars,
+	residences
+} from "#lib/server/schema.js";
 import { eq, and, sql, count, asc } from "drizzle-orm";
-import { MILITARY_UNIT_TEMPLATES } from "$lib/config";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+import { MILITARY_UNIT_TEMPLATES } from "#lib/config/index.js";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 // Terrain combat modifiers
 const TERRAIN_DATA = {
@@ -62,9 +71,7 @@ export const GET: RequestHandler = async ({ request }) => {
 					battlesEnded++;
 					console.log(`🏁 Battle ${battle.id} ended - Winner: ${result.winner}`);
 
-					notifyBattleResult(battle, result.winner!).catch((err) =>
-						console.error("Battle notification error:", err)
-					);
+					notifyBattleResult(battle, result.winner!).catch((err) => console.error("Battle notification error:", err));
 				} else {
 					roundsProcessed++;
 					console.log(`⚔️ Processed combat round ${result.roundNumber} for battle ${battle.id}`);
@@ -371,9 +378,9 @@ async function processCombatRound(battleId: number) {
 		battleEnded,
 		winner
 	};
-	}
+}
 
-	async function notifyBattleResult(battle: any, winner: "attacker" | "defender") {
+async function notifyBattleResult(battle: any, winner: "attacker" | "defender") {
 	const attackerStateName = await db
 		.select({ name: states.name })
 		.from(states)
@@ -404,8 +411,6 @@ async function processCombatRound(battleId: number) {
 			.innerJoin(regions, eq(residences.homeRegionId, regions.id))
 			.where(eq(regions.stateId, stateId));
 
-		await Promise.allSettled(
-			citizens.map((c) => sendNotificationIfEnabled(c.userId, "notifyBattleResults", payload))
-		);
+		await Promise.allSettled(citizens.map((c) => sendNotificationIfEnabled(c.userId, "notifyBattleResults", payload)));
 	}
-	}
+}

@@ -1,21 +1,19 @@
 <script lang="ts">
-	import * as m from "$lib/paraglide/messages.js";
+	import * as m from "#lib/paraglide/messages.js";
 	import LogosGoogleIcon from "~icons/logos/google-icon";
 	import FluentEmojiEnvelopeWithArrow from "~icons/fluent-emoji/envelope-with-arrow";
 	import FluentColorGlobeShield24 from "~icons/fluent-color/globe-shield-24";
 	import FluentShieldCheckmark20Filled from "~icons/fluent/shield-checkmark-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
-	import { env } from "$env/dynamic/public";
+	import { PUBLIC_TELEGRAM_BOT_USERNAME } from "$app/env/public";
 	import { page } from "$app/state";
-	import TelegramLoginWidget from "$lib/components/TelegramLoginWidget.svelte";
+	import TelegramLoginWidget from "#lib/components/TelegramLoginWidget.svelte";
 
-	const botUsername = env.PUBLIC_TELEGRAM_BOT_USERNAME || "RW_SupportBot";
+	const botUsername = PUBLIC_TELEGRAM_BOT_USERNAME || "RW_SupportBot";
 	const next = $derived(page.url.searchParams.get("next") || "/");
 </script>
 
-<main
-	class="relative flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20 overflow-hidden"
->
+<main class="relative flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20 overflow-hidden">
 	<!-- Animated Background Pattern -->
 	<div
 		class="absolute inset-0 opacity-10"
@@ -31,6 +29,7 @@
 		<div class="flex flex-col items-center space-y-4">
 			<div class="relative">
 				<!-- Glowing Effect -->
+
 				<div class="absolute inset-0 bg-[#e6a527]/25 rounded-full blur-2xl opacity-50 animate-pulse"></div>
 
 				<div

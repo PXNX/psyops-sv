@@ -1,9 +1,9 @@
 // src/routes/(authenticated)/chat/en/+page.server.ts
-import { db, messageNotifier } from "$lib/server/db";
-import { chatMessages, accounts, userProfiles, files, politicalParties, partyMembers } from "$lib/server/schema";
+import { db, messageNotifier } from "#lib/server/db.js";
+import { chatMessages, accounts, userProfiles, files, politicalParties, partyMembers } from "#lib/server/schema.js";
 import { eq, and, desc, inArray } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 const PAGE_SIZE = 100;

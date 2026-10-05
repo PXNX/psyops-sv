@@ -6,10 +6,10 @@
 	import FluentArrowHookUpLeft20Regular from "~icons/fluent/arrow-hook-up-left-20-regular";
 	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
-	import WysiwygEditor from "$lib/component/WysiwygEditor.svelte";
-	import Modal from "$lib/component/Modal.svelte";
-	import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import WysiwygEditor from "#lib/component/WysiwygEditor.svelte";
+	import Modal from "#lib/component/Modal.svelte";
+	import { SCHEMA_LIMITS } from "#lib/config/validation/schema-limits.js";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 
@@ -154,7 +154,11 @@
 		{#if data.newspapers.length > 0}
 			<div class="mb-4">
 				<label class="field-label uppercase tracking-wider">Publish as</label>
-				<select class="field-control w-full rounded-sm px-3 py-2.5 text-sm" name="newspaperId" bind:value={selectedNewspaperId}>
+				<select
+					class="field-control w-full rounded-sm px-3 py-2.5 text-sm"
+					name="newspaperId"
+					bind:value={selectedNewspaperId}
+				>
 					<option value="">Personal Post</option>
 					{#each data.newspapers as newspaper}
 						<option value={newspaper.id}>
@@ -197,10 +201,16 @@
 	<p class="text-sm text-[#c7bda9] mb-4">Your unsaved work will be lost.</p>
 
 	<div class="flex gap-2 justify-end">
-		<button class={buttonClass({ variant: "secondary", size: "sm", class: "font-mono" })} onclick={() => (isCancelModalOpen = false)}>
+		<button
+			class={buttonClass({ variant: "secondary", size: "sm", class: "font-mono" })}
+			onclick={() => (isCancelModalOpen = false)}
+		>
 			Keep Editing
 		</button>
-		<button class={buttonClass({ variant: "soft-red", size: "sm", class: "font-mono font-bold" })} onclick={confirmDiscard}>
+		<button
+			class={buttonClass({ variant: "soft-red", size: "sm", class: "font-mono font-bold" })}
+			onclick={confirmDiscard}
+		>
 			Discard
 		</button>
 	</div>

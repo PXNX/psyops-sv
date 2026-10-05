@@ -1,7 +1,6 @@
-<!-- src/routes/moderators/actions/+page.svelte -->
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { page } from "$app/stores";
+	import { page } from "$app/state";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
@@ -11,9 +10,9 @@
 	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
 	import FluentDismissCircle20Filled from "~icons/fluent/dismiss-circle-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
-	import { badgeClass } from "$lib/component/ui/styles";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
+	import { badgeClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 
@@ -79,9 +78,8 @@
 	const isFilteringCurrentUser = $derived(data.filterUserId === data.currentUserId);
 </script>
 
-<svelte:head>
-	<title>Moderator Actions - Game Name</title>
-</svelte:head>
+<!-- src/routes/moderators/actions/+page.svelte -->
+<svelte:head><title>Moderator Actions - Game Name</title></svelte:head>
 
 <div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
 	<!-- Header -->

@@ -1,11 +1,11 @@
 // src/routes/party/[id]/edit/+page.server.ts - UPDATED VERSION
-import { db } from "$lib/server/db";
-import { politicalParties, partyMembers, files, userWallets, partyEditHistory } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { politicalParties, partyMembers, files, userWallets, partyEditHistory } from "#lib/server/schema.js";
 import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and, ne, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { getContext } from "$lib/server/context";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getContext } from "#lib/server/context.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createPartySchema } from "./schema";

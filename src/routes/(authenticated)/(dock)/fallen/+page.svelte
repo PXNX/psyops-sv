@@ -1,13 +1,13 @@
 <script lang="ts">
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import PageHeader from "$lib/component/PageHeader.svelte";
-	import SectionCard from "$lib/component/SectionCard.svelte";
-	import Logo from "$lib/component/Logo.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import SectionCard from "#lib/component/SectionCard.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
-	import { formatDate, getDurationText } from "$lib/utils/formatting.js";
+	import { formatDate, getDurationText } from "#lib/utils/formatting.js";
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();
@@ -103,10 +103,7 @@
 		{:else}
 			<div class="grid gap-2">
 				{#each data.fallenBlocs as bloc (bloc.id)}
-					<div
-						class="panel flex items-center gap-4 rounded-xl p-4"
-						style="border-left: 3px solid {bloc.color};"
-					>
+					<div class="panel flex items-center gap-4 rounded-xl p-4" style="border-left: 3px solid {bloc.color};">
 						<Logo
 							src={bloc.logo}
 							alt={bloc.name}

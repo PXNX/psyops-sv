@@ -1,10 +1,10 @@
 // src/routes/company/create/+page.server.ts
-import { db } from "$lib/server/db";
-import { companies, companyCreationCooldown, userWallets, files } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { companies, companyCreationCooldown, userWallets, files } from "#lib/server/schema.js";
 import { redirect } from "@sveltejs/kit";
 import { eq, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm } from "$lib/server/backblaze";
+import { uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createCompanySchema } from "./schema";

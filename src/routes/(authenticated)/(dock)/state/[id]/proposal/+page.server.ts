@@ -1,11 +1,19 @@
 // src/routes/state/[id]/proposal/+page.server.ts
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import { eq, and, desc } from "drizzle-orm";
-import { states, parliamentaryProposals, parliamentaryVotes, userProfiles, stateTaxes, partyMembers, politicalParties } from "$lib/server/schema";
-import { getLogoUrl } from "$lib/server/backblaze";
-import { getRegionName } from "$lib/utils/formatting";
+import {
+	states,
+	parliamentaryProposals,
+	parliamentaryVotes,
+	userProfiles,
+	stateTaxes,
+	partyMembers,
+	politicalParties
+} from "#lib/server/schema.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
+import { getRegionName } from "#lib/utils/formatting.js";
 
 export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) => {
 	const account = locals.account!;
@@ -171,7 +179,11 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			});
 
 			const proposerPartyRows = await db
-				.select({ abbreviation: politicalParties.abbreviation, name: politicalParties.name, color: politicalParties.color })
+				.select({
+					abbreviation: politicalParties.abbreviation,
+					name: politicalParties.name,
+					color: politicalParties.color
+				})
 				.from(partyMembers)
 				.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
 				.where(and(eq(partyMembers.userId, proposal.proposedBy), eq(politicalParties.stateId, stateId)))

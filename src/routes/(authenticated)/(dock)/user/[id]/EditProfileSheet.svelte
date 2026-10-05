@@ -8,10 +8,10 @@
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import { updateProfileSchema } from "./schema.js";
-	import BottomSheet from "$lib/component/BottomSheet.svelte";
-	import ResourceRequirements from "$lib/component/ResourceRequirements.svelte";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
-	import Button from "$lib/component/ui/Button.svelte";
+	import BottomSheet from "#lib/component/BottomSheet.svelte";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	let {
 		open = $bindable(false),
@@ -312,7 +312,14 @@
 
 			<ResourceRequirements costs={{ currency: editCost }} available={{ currency: userBalance }} />
 
-			<Button type="submit" variant="primary" block disabled={$submitting || !canEdit} loading={$delayed} loadingText="Saving...">
+			<Button
+				type="submit"
+				variant="primary"
+				block
+				disabled={$submitting || !canEdit}
+				loading={$delayed}
+				loadingText="Saving..."
+			>
 				<FluentCheckmark20Filled class="size-5" />
 				Save Changes
 			</Button>

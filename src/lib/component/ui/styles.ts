@@ -30,7 +30,7 @@ const BUTTON_BASE =
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 	// Solid — one per intent. Use for the primary action of a screen or dialog.
 	primary:
-			"bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] shadow-[0_3px_0_rgba(112,65,10,0.42)] hover:shadow-[0_5px_0_rgba(112,65,10,0.34)] focus-visible:ring-[#e6a527]",
+		"bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] shadow-[0_3px_0_rgba(112,65,10,0.42)] hover:shadow-[0_5px_0_rgba(112,65,10,0.34)] focus-visible:ring-[#e6a527]",
 	danger: "bg-red-600 hover:bg-red-500 border-0 text-white shadow-lg shadow-red-600/20 focus-visible:ring-red-400",
 	success:
 		"bg-emerald-600 hover:bg-emerald-500 border-0 text-white shadow-lg shadow-emerald-600/20 focus-visible:ring-emerald-400",
@@ -47,13 +47,13 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 
 	// Soft/tinted — a coloured hint without competing with the primary action.
 	"soft-purple":
-			"bg-[#8c709b]/15 hover:bg-[#8c709b]/25 border border-[#b7a0c5]/30 text-[#d5c4df] hover:text-[#f0e7f5] focus-visible:ring-[#b7a0c5]",
+		"bg-[#8c709b]/15 hover:bg-[#8c709b]/25 border border-[#b7a0c5]/30 text-[#d5c4df] hover:text-[#f0e7f5] focus-visible:ring-[#b7a0c5]",
 	"soft-blue":
-			"bg-[#315d8d]/18 hover:bg-[#315d8d]/28 border border-[#7ba0c8]/30 text-[#b7d0e6] hover:text-[#e1effa] focus-visible:ring-[#7ba0c8]",
+		"bg-[#315d8d]/18 hover:bg-[#315d8d]/28 border border-[#7ba0c8]/30 text-[#b7d0e6] hover:text-[#e1effa] focus-visible:ring-[#7ba0c8]",
 	"soft-emerald":
-			"bg-[#587252]/18 hover:bg-[#587252]/28 border border-[#8fae88]/30 text-[#c6dfbf] hover:text-[#edfae7] focus-visible:ring-[#8fae88]",
+		"bg-[#587252]/18 hover:bg-[#587252]/28 border border-[#8fae88]/30 text-[#c6dfbf] hover:text-[#edfae7] focus-visible:ring-[#8fae88]",
 	"soft-amber":
-			"bg-[#e6a527]/12 hover:bg-[#e6a527]/20 border border-[#e6a527]/35 text-[#f7c56b] hover:text-[#ffe2a4] focus-visible:ring-[#e6a527]",
+		"bg-[#e6a527]/12 hover:bg-[#e6a527]/20 border border-[#e6a527]/35 text-[#f7c56b] hover:text-[#ffe2a4] focus-visible:ring-[#e6a527]",
 	"soft-red":
 		"bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-300 hover:text-red-200 focus-visible:ring-red-400"
 };
@@ -103,16 +103,7 @@ export function buttonClass({
 		.join(" ");
 }
 
-export type BadgeTone =
-	| "neutral"
-	| "purple"
-	| "blue"
-	| "green"
-	| "amber"
-	| "orange"
-	| "red"
-	| "cyan"
-	| "pink";
+export type BadgeTone = "neutral" | "purple" | "blue" | "green" | "amber" | "orange" | "red" | "cyan" | "pink";
 
 export type BadgeSize = "xs" | "sm" | "md";
 
@@ -139,7 +130,5 @@ export function badgeClass({
 	size = "sm",
 	class: className = ""
 }: { tone?: BadgeTone; size?: BadgeSize; class?: string } = {}): string {
-	return ["badge border font-medium", BADGE_TONES[tone], BADGE_SIZES[size], className]
-		.filter(Boolean)
-		.join(" ");
+	return ["badge border font-medium", BADGE_TONES[tone], BADGE_SIZES[size], className].filter(Boolean).join(" ");
 }

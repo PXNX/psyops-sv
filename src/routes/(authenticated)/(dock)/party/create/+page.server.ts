@@ -1,5 +1,5 @@
 // src/routes/party/create/+page.server.ts
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	politicalParties,
 	partyMembers,
@@ -10,16 +10,16 @@ import {
 	parliamentaryElections,
 	userWallets,
 	partyCreationAttempts
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import { redirect, error } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm } from "$lib/server/backblaze";
+import { uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createPartySchema } from "./schema";
-import { PARTY_CREATION_CONFIG } from "$lib/config";
-import { getRegionName } from "$lib/utils/formatting";
+import { PARTY_CREATION_CONFIG } from "#lib/config/index.js";
+import { getRegionName } from "#lib/utils/formatting.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;

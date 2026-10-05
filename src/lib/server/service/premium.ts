@@ -1,7 +1,7 @@
 // src/lib/server/service/premium.ts
 // Premium membership: granting, purchasing, gifting and the automation job that
 // performs production, military training and factory work for premium members.
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import {
 	userProfiles,
 	userWallets,
@@ -14,7 +14,7 @@ import {
 	regions,
 	userTravels,
 	militaryUnitTypeEnum
-} from "$lib/server/schema";
+} from "#lib/server/schema.js";
 import {
 	PREMIUM_PLANS,
 	isPremiumActive,
@@ -24,9 +24,9 @@ import {
 	type ProductionType,
 	MILITARY_UNIT_TEMPLATES,
 	type MilitaryUnitTemplate
-} from "$lib/config";
-import { calculateShiftStatus, collectWages, startWorkShift } from "$lib/server/service/factoryWork";
-import { sendSystemNotification } from "$lib/server/service/inbox";
+} from "#lib/config/index.js";
+import { calculateShiftStatus, collectWages, startWorkShift } from "#lib/server/service/factoryWork.js";
+import { sendSystemNotification } from "#lib/server/service/inbox.js";
 import { and, eq, sql, gt, isNotNull } from "drizzle-orm";
 
 const DAY_MS = 24 * 60 * 60 * 1000;

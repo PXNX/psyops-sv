@@ -13,8 +13,8 @@
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 

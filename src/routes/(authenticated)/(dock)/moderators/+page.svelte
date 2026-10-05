@@ -5,9 +5,9 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentEye20Filled from "~icons/fluent/eye-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDate } from "$lib/utils/formatting.js";
-	import { buttonClass, badgeClass } from "$lib/component/ui/styles";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
+	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 </script>

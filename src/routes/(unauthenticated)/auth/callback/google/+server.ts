@@ -1,7 +1,7 @@
 // src/routes/auth/callback/google/+server.ts
-import { createSession, generateAccountId, generateSessionToken, google } from "$lib/server/auth";
-import { db } from "$lib/server/db";
-import { accounts, userProfiles } from "$lib/server/schema";
+import { createSession, generateAccountId, generateSessionToken, google } from "#lib/server/auth.js";
+import { db } from "#lib/server/db.js";
+import { accounts, userProfiles } from "#lib/server/schema.js";
 import { OAuth2RequestError } from "arctic";
 import { eq } from "drizzle-orm";
 import type { RequestHandler } from "./$types";

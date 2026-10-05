@@ -11,9 +11,9 @@
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import { enhance } from "$app/forms";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import ProfileItem from "$lib/component/ProfileItem.svelte";
-	import { formatDate, formatDateTime } from "$lib/utils/formatting";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import ProfileItem from "#lib/component/ProfileItem.svelte";
+	import { formatDate, formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data, form } = $props();
 </script>
@@ -131,9 +131,7 @@
 			<div class="pt-3 border-t border-[#dfceb0]/10 space-y-3">
 				{#if data.election.status === "active"}
 					<div class="flex items-center justify-between gap-2 flex-wrap">
-						<span
-							class="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5"
-						>
+						<span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
 							<span class="size-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
 							Leadership Election — Voting Open
 						</span>
@@ -144,17 +142,15 @@
 
 					{#if data.candidates.length === 0}
 						<p class="text-sm text-[#a89e8e]">
-							No candidates nominated yet. A state president can nominate a citizen of any member state (not
-							themselves) from that citizen's profile page.
+							No candidates nominated yet. A state president can nominate a citizen of any member state (not themselves)
+							from that citizen's profile page.
 						</p>
 					{:else}
 						<div class="space-y-2">
 							{#each data.candidates as candidate}
 								{@const isMyVote = data.myBlocLeaderVote === candidate.userId}
 								<div
-									class="border rounded-lg overflow-hidden {isMyVote
-										? 'border-[#8fae88]/50'
-										: 'border-[#dfceb0]/10'}"
+									class="border rounded-lg overflow-hidden {isMyVote ? 'border-[#8fae88]/50' : 'border-[#dfceb0]/10'}"
 								>
 									<ProfileItem
 										href="/user/{candidate.userId}"
@@ -163,9 +159,7 @@
 										placeholderIcon={FluentPerson20Filled}
 										placeholderGradient="from-[#315d8d] to-[#315d8d]"
 										title={candidate.name}
-										subtitle="{candidate.votes} vote{candidate.votes === 1 ? '' : 's'}{isMyVote
-											? ' • your vote'
-											: ''}"
+										subtitle="{candidate.votes} vote{candidate.votes === 1 ? '' : 's'}{isMyVote ? ' • your vote' : ''}"
 										hoverColor="yellow"
 									/>
 									{#if data.canVoteForBlocLeader}

@@ -7,8 +7,8 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
-	import ImageCropper from "$lib/component/ImageCropper.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	let { data } = $props();
 
@@ -341,8 +341,7 @@
 				rows="6"
 				placeholder="Describe the bloc's purpose, values, and strategic objectives..."
 				class="textarea w-full field-control"
-				disabled={$submitting || data.onCooldown}
-			></textarea>
+				disabled={$submitting || data.onCooldown}></textarea>
 		</div>
 
 		<button

@@ -8,11 +8,11 @@
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
-	import Modal from "$lib/component/Modal.svelte";
-	import ReportModal from "$lib/component/ReportModal.svelte";
-	import PartyTag from "$lib/component/PartyTag.svelte";
-	import { settings } from "$lib/settings.svelte";
-	import { buttonClass } from "$lib/component/ui/styles";
+	import Modal from "#lib/component/Modal.svelte";
+	import ReportModal from "#lib/component/ReportModal.svelte";
+	import PartyTag from "#lib/component/PartyTag.svelte";
+	import { settings } from "#lib/settings.svelte.js";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data, form } = $props();
 
@@ -223,9 +223,7 @@
 			>
 				Cancel
 			</button>
-			<button onclick={proceedToExternalLink} class={buttonClass({ variant: "info" })}>
-				Continue
-			</button>
+			<button onclick={proceedToExternalLink} class={buttonClass({ variant: "info" })}> Continue </button>
 		</div>
 	</div>
 </Modal>

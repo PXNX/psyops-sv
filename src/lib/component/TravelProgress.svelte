@@ -2,9 +2,9 @@
 <script lang="ts">
 	import FluentVehicleAirplaneTakeOff20Filled from "~icons/fluent/airplane-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import { calculateTravelProgress, formatDuration, getTimeRemaining } from "$lib/utils/travel-client";
-	import * as m from "$lib/paraglide/messages";
-	import type { UserTravel } from "$lib/server/schema";
+	import { calculateTravelProgress, formatDuration, getTimeRemaining } from "#lib/utils/travel-client.js";
+	import * as m from "#lib/paraglide/messages.js";
+	import type { UserTravel } from "#lib/server/schema.js";
 
 	interface Props {
 		travel: UserTravel;

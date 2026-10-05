@@ -1,11 +1,11 @@
 // src/lib/server/db.ts
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import { env } from "$env/dynamic/private";
+import { DATABASE_URL } from "$app/env/private";
 import * as schema from "./schema";
 
 function createRealDb() {
-	const DATABASE_URL = env.DATABASE_URL;
+	const DATABASE_URL = DATABASE_URL;
 	if (!DATABASE_URL) {
 		throw new Error("DATABASE_URL environment variable is required");
 	}

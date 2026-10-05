@@ -1,9 +1,9 @@
 // src/routes/moderators/+page.server.ts
-import { db } from "$lib/server/db";
-import { accounts, userProfiles, files } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { accounts, userProfiles, files } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async () => {
 	// Get all moderators and admins

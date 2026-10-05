@@ -1,12 +1,12 @@
 // src/routes/(authenticated)/(fullscreen)/posts/new/+page.server.ts
-import { db } from "$lib/server/db";
-import { journalists, newspapers, files, articles } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { journalists, newspapers, files, articles } from "#lib/server/schema.js";
 import { and, eq } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
-import { notifyNewspaperSubscribers } from "$lib/server/services/push-notification.service";
-import { SCHEMA_LIMITS } from "$lib/config/validation/schema-limits";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { notifyNewspaperSubscribers } from "#lib/server/services/push-notification.service.js";
+import { SCHEMA_LIMITS } from "#lib/config/validation/schema-limits.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;

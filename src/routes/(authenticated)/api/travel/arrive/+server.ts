@@ -2,10 +2,10 @@
 
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { db } from "$lib/server/db";
-import { userTravels, residences, regions, states } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { userTravels, residences, regions, states } from "#lib/server/schema.js";
 import { eq, and } from "drizzle-orm";
-import { sendNotificationIfEnabled } from "$lib/server/services/push-notification.service";
+import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 export const POST: RequestHandler = async ({ locals }) => {
 	try {

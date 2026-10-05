@@ -8,8 +8,8 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
-	import Logo from "$lib/component/Logo.svelte";
-	import { formatDateTime } from "$lib/utils/formatting.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -197,7 +197,9 @@
 
 						<!-- Chevron -->
 						<div class="shrink-0">
-							<FluentChevronRight20Filled class="size-5 text-[#a89e8e]/80 group-hover:text-[#d5c4df] transition-colors" />
+							<FluentChevronRight20Filled
+								class="size-5 text-[#a89e8e]/80 group-hover:text-[#d5c4df] transition-colors"
+							/>
 						</div>
 					</a>
 				{/each}

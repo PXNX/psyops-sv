@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
-	import { browser } from "$app/environment";
+	import { browser } from "$app/env";
 
 	let notificationPermission: NotificationPermission = "default";
 	let isSubscribed = false;
@@ -145,11 +145,7 @@
 
 <div class="push-notification-manager">
 	{#if notificationPermission === "default"}
-		<button
-			class="btn btn-primary btn-sm"
-			onclick={requestNotificationPermission}
-			disabled={isLoading}
-		>
+		<button class="btn btn-primary btn-sm" onclick={requestNotificationPermission} disabled={isLoading}>
 			{#if isLoading}
 				<span class="loading loading-spinner loading-xs"></span>
 			{:else}
@@ -158,11 +154,7 @@
 		</button>
 	{:else if notificationPermission === "granted"}
 		{#if isSubscribed}
-			<button
-				class="btn btn-ghost btn-sm"
-				onclick={unsubscribeFromPushNotifications}
-				disabled={isLoading}
-			>
+			<button class="btn btn-ghost btn-sm" onclick={unsubscribeFromPushNotifications} disabled={isLoading}>
 				{#if isLoading}
 					<span class="loading loading-spinner loading-xs"></span>
 				{:else}
@@ -170,11 +162,7 @@
 				{/if}
 			</button>
 		{:else}
-			<button
-				class="btn btn-primary btn-sm"
-				onclick={subscribeToPushNotifications}
-				disabled={isLoading}
-			>
+			<button class="btn btn-primary btn-sm" onclick={subscribeToPushNotifications} disabled={isLoading}>
 				{#if isLoading}
 					<span class="loading loading-spinner loading-xs"></span>
 				{:else}
@@ -183,9 +171,7 @@
 			</button>
 		{/if}
 	{:else if notificationPermission === "denied"}
-		<div class="text-sm text-error">
-			Notifications blocked. Please enable them in your browser settings.
-		</div>
+		<div class="text-sm text-error">Notifications blocked. Please enable them in your browser settings.</div>
 	{/if}
 
 	{#if errorMessage}

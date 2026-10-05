@@ -12,9 +12,9 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
-	import { themes } from "$lib/themes";
-	import { settings } from "$lib/settings.svelte";
-	import TelegramLoginWidget from "$lib/components/TelegramLoginWidget.svelte";
+	import { themes } from "#lib/themes.js";
+	import { settings } from "#lib/settings.svelte.js";
+	import TelegramLoginWidget from "#lib/components/TelegramLoginWidget.svelte";
 
 	let { data, form } = $props();
 
@@ -72,9 +72,7 @@
 <div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
 	<!-- Header -->
 	<div class="text-center space-y-2">
-		<div
-			class="size-20 bg-[#14283f] rounded-2xl flex items-center justify-center mx-auto"
-		>
+		<div class="size-20 bg-[#14283f] rounded-2xl flex items-center justify-center mx-auto">
 			<FluentSettings20Filled class="size-10 text-[#fff7e8]" />
 		</div>
 		<h1 class="text-3xl font-bold text-[#fff7e8]">Settings</h1>
@@ -217,7 +215,9 @@
 			<div class="flex items-center gap-3">
 				<span class="text-lg">⚔️</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">War Declarations</p>
+					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">
+						War Declarations
+					</p>
 					<p class="text-xs text-[#a89e8e]">When war is declared on or by your state</p>
 				</div>
 			</div>
@@ -337,7 +337,9 @@
 					<FluentStar20Filled class="size-5 text-slate-900" />
 				</div>
 				<div>
-					<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">Premium Membership</p>
+					<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">
+						Premium Membership
+					</p>
 					<p class="text-xs text-[#a89e8e]">Automate production, training & factory work</p>
 				</div>
 			</div>

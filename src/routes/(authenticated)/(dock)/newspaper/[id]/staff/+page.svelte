@@ -1,9 +1,9 @@
 <!-- src/routes/(authenticated)/(dock)/newspaper/[id]/staff/+page.svelte -->
 <script lang="ts">
-	import Logo from "$lib/component/Logo.svelte";
-	import PageContainer from "$lib/component/PageContainer.svelte";
-	import BackLink from "$lib/component/ui/BackLink.svelte";
-	import Badge from "$lib/component/ui/Badge.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import BackLink from "#lib/component/ui/BackLink.svelte";
+	import Badge from "#lib/component/ui/Badge.svelte";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import MdiNewspaper from "~icons/mdi/newspaper";
 	import MdiCrown from "~icons/mdi/crown";
@@ -51,9 +51,7 @@
 				<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 			</div>
 		{:else}
-			<div
-				class="size-10 rounded-lg bg-[#315d8d]/25 flex items-center justify-center flex-shrink-0"
-			>
+			<div class="size-10 rounded-lg bg-[#315d8d]/25 flex items-center justify-center flex-shrink-0">
 				<MdiNewspaper class="size-5 text-[#b7d0e6]" />
 			</div>
 		{/if}
@@ -78,10 +76,7 @@
 	{:else}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 			{#each data.staff as member}
-				<a
-					href="/user/{member.id}"
-					class="group panel-interactive rounded-xl p-5"
-				>
+				<a href="/user/{member.id}" class="group panel-interactive rounded-xl p-5">
 					<div class="flex items-start gap-4">
 						<!-- Avatar -->
 						<Logo

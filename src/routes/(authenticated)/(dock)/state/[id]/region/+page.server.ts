@@ -1,10 +1,10 @@
 // src/routes/(authenticated)/(dock)/state/[id]/region/+page.server.ts
-import { db } from "$lib/server/db";
-import { regions, residences, factories, states } from "$lib/server/schema";
+import { db } from "#lib/server/db.js";
+import { regions, residences, factories, states } from "#lib/server/schema.js";
 import { sql, eq } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getRegionName } from "$lib/utils/formatting";
+import { getRegionName } from "#lib/utils/formatting.js";
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const account = locals.account!;

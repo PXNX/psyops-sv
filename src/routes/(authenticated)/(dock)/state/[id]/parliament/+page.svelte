@@ -1,8 +1,8 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/parliament/+page.svelte -->
 <script lang="ts">
-	import SquareLogo from "$lib/component/SquareLogo.svelte";
-	import Logo from "$lib/component/Logo.svelte";
-	import PartyTag from "$lib/component/PartyTag.svelte";
+	import SquareLogo from "#lib/component/SquareLogo.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import PartyTag from "#lib/component/PartyTag.svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -18,7 +18,7 @@
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import { enhance } from "$app/forms";
-	import { formatDate, formatDateTime } from "$lib/utils/formatting.js";
+	import { formatDate, formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -301,9 +301,7 @@
 
 		{#if data.nextElection.isInaugural && isScheduled}
 			<!-- Inaugural Election - Scheduled -->
-			<div
-				class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-xl p-5 space-y-3"
-			>
+			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-xl p-5 space-y-3">
 				<div class="flex items-start gap-3">
 					<div class="size-12 bg-[#e6a527]/20 rounded-lg flex items-center justify-center shrink-0">
 						<FluentVote20Filled class="size-6 text-[#f7c56b]" />
@@ -465,7 +463,10 @@
 					Active Proposals
 				</h2>
 				<div class="flex gap-2">
-					<a href="/state/{data.state.id}/proposal" class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]">
+					<a
+						href="/state/{data.state.id}/proposal"
+						class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]"
+					>
 						<FluentHistory20Filled class="size-4" />
 						View History
 					</a>
@@ -524,7 +525,10 @@
 								<span class="inline-flex items-center gap-1.5">
 									by <span class="text-[#fff7e8] font-medium">{proposal.proposedBy.name}</span>
 									{#if proposal.proposedBy.party}
-										<PartyTag abbreviation={proposal.proposedBy.party.abbreviation} color={proposal.proposedBy.party.color} />
+										<PartyTag
+											abbreviation={proposal.proposedBy.party.abbreviation}
+											color={proposal.proposedBy.party.color}
+										/>
 									{/if}
 								</span>
 							</a>
@@ -549,7 +553,9 @@
 								</div>
 							</div>
 
-							<div class="pt-2 border-t border-[#dfceb0]/10 text-xs text-[#a89e8e] flex items-center justify-between gap-2">
+							<div
+								class="pt-2 border-t border-[#dfceb0]/10 text-xs text-[#a89e8e] flex items-center justify-between gap-2"
+							>
 								<span>{proposal.totalVotes} / {data.totalSeats} votes • {proposal.requiredMajority}% required</span>
 								<span class="text-[#b7d0e6]">Voting ends {formatDateTime(proposal.votingEndsAt)}</span>
 							</div>
@@ -564,31 +570,31 @@
 									</p>
 								{/if}
 
-									<!-- Auto-Accept/Reject Buttons (Ministers/President) -->
-									{#if data.canAutoAccept}
-										<div class="grid grid-cols-2 gap-2 mb-2">
-											<form method="POST" action="?/acceptProposal" use:enhance>
-												<input type="hidden" name="proposalId" value={proposal.id} />
-												<button
-													type="submit"
-													class="btn btn-sm w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white gap-2"
-												>
-													<FluentCheckmarkCircle20Filled class="size-4" />
-													Auto-Accept
-												</button>
-											</form>
-											<form method="POST" action="?/rejectProposal" use:enhance>
-												<input type="hidden" name="proposalId" value={proposal.id} />
-												<button
-													type="submit"
-													class="btn btn-sm w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 border-0 text-white gap-2"
-												>
-													<FluentDismiss20Filled class="size-4" />
-													Auto-Reject
-												</button>
-											</form>
-										</div>
-									{/if}
+								<!-- Auto-Accept/Reject Buttons (Ministers/President) -->
+								{#if data.canAutoAccept}
+									<div class="grid grid-cols-2 gap-2 mb-2">
+										<form method="POST" action="?/acceptProposal" use:enhance>
+											<input type="hidden" name="proposalId" value={proposal.id} />
+											<button
+												type="submit"
+												class="btn btn-sm w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white gap-2"
+											>
+												<FluentCheckmarkCircle20Filled class="size-4" />
+												Auto-Accept
+											</button>
+										</form>
+										<form method="POST" action="?/rejectProposal" use:enhance>
+											<input type="hidden" name="proposalId" value={proposal.id} />
+											<button
+												type="submit"
+												class="btn btn-sm w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 border-0 text-white gap-2"
+											>
+												<FluentDismiss20Filled class="size-4" />
+												Auto-Reject
+											</button>
+										</form>
+									</div>
+								{/if}
 
 								<!-- Regular Voting -->
 								<form method="POST" action="?/vote" use:enhance class="flex gap-2">

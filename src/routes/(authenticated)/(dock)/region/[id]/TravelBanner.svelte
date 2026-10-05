@@ -2,7 +2,7 @@
 <script lang="ts">
 	import FluentNavigation20Filled from "~icons/fluent/navigation-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import { formatDate, getRegionName } from "$lib/utils/formatting";
+	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
 
 	const { activeTravel } = $props<{
 		activeTravel: {

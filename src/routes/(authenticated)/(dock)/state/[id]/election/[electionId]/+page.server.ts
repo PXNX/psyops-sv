@@ -2,7 +2,7 @@
 
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
-import { db } from "$lib/server/db";
+import { db } from "#lib/server/db.js";
 import { eq, and } from "drizzle-orm";
 import {
 	states,
@@ -15,8 +15,8 @@ import {
 	partyMembers,
 	files,
 	regions
-} from "$lib/server/schema";
-import { getSignedDownloadUrl } from "$lib/server/backblaze";
+} from "#lib/server/schema.js";
+import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
