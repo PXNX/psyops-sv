@@ -79,7 +79,7 @@
 				ListItem,
 				Blockquote,
 				CodeBlock.configure({
-					HTMLAttributes: { class: "bg-base-200 p-4 rounded-lg" }
+					HTMLAttributes: { class: "bg-[#102239] p-4 rounded-sm" }
 				}),
 				HorizontalRule,
 				Table.configure({ resizable: true }),
@@ -249,7 +249,7 @@
 
 			<!-- Bubble Menu for Text Selection (Desktop) -->
 			<BubbleMenu
-				class="hidden gap-0.5 rounded-lg border border-[#dfceb0]/15 bg-[#14283f] p-1 shadow-xl sm:flex"
+				class="hidden gap-0.5 rounded-sm border border-[#dfceb0]/15 bg-[#14283f] p-1 shadow-xl sm:flex"
 				tippyOptions={{ duration: 100 }}
 				{editor}
 			>

@@ -9,6 +9,9 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 
 	import { formatDateTime } from "#lib/utils/formatting.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	const { data, form } = $props();
 
@@ -27,40 +30,37 @@
 </script>
 
 {#if !data.canBroadcastState && !data.canBroadcastParty}
-	<div class="max-w-4xl mx-auto px-4 py-12">
-		<div class="panel-muted rounded-xl p-12 text-center">
-			<FluentMail20Filled class="size-16 text-[#a89e8e] mx-auto mb-4" />
-			<h2 class="text-2xl font-bold text-white mb-2">No Broadcast Access</h2>
+	<PageContainer maxWidth="4xl">
+		<div class="panel-muted rounded-sm p-12 text-center">
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
+				<FluentMail20Filled class="size-8 text-[#a89e8e]" />
+			</div>
+			<h2 class="text-xl font-bold text-[#fff7e8] mb-2">No Broadcast Access</h2>
 			<p class="text-[#a89e8e]">Only presidents and party leaders can send broadcast messages.</p>
 		</div>
-	</div>
+	</PageContainer>
 {:else}
-	<div class="max-w-4xl mx-auto px-4 py-6">
-		<div class="flex items-center gap-3 mb-6">
-			<div class="size-12 bg-[#8c709b]/20 rounded-xl flex items-center justify-center">
-				<FluentMegaphone20Filled class="size-6 text-[#d5c4df]" />
-			</div>
-			<div>
-				<h1 class="text-2xl font-bold text-white">Broadcast</h1>
-				<p class="text-sm text-[#a89e8e]">
-					Publish a broadcast shown on the dashboard of
-					{data.canBroadcastState ? "state residents" : ""}{data.canBroadcastState && data.canBroadcastParty
-						? " or "
-						: ""}{data.canBroadcastParty ? "party members" : ""}
-				</p>
-			</div>
-		</div>
+	<PageContainer maxWidth="3xl">
+		<PageHeader
+			title="Broadcast"
+			icon={FluentMegaphone20Filled}
+			subtitle="Publish a broadcast shown on the dashboard of {data.canBroadcastState
+				? 'state residents'
+				: ''}{data.canBroadcastState && data.canBroadcastParty ? ' or ' : ''}{data.canBroadcastParty
+				? 'party members'
+				: ''}"
+		/>
 
 		<!-- Active Broadcasts -->
 		{#if data.activeStateBroadcast}
-			<div class="bg-[#8c709b]/12 rounded-xl border border-[#b7a0c5]/25 p-5 mb-4">
+			<div class="bg-[#8c709b]/15 rounded-sm border border-[#b7a0c5]/30 p-5">
 				<div class="flex items-start justify-between gap-3">
-					<div class="flex-1">
+					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-2">
-							<FluentBuildingGovernment20Filled class="size-5 text-[#d5c4df]" />
+							<FluentBuildingGovernment20Filled class="size-5 text-[#b7a0c5]" />
 							<h3 class="font-semibold text-[#d5c4df]">Active State Broadcast</h3>
 						</div>
-						<h4 class="text-white font-bold mb-1">{data.activeStateBroadcast.title}</h4>
+						<h4 class="text-[#fff7e8] font-bold mb-1">{data.activeStateBroadcast.title}</h4>
 						<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{data.activeStateBroadcast.content}</p>
 						<p class="text-xs text-[#a89e8e] mt-2">
 							{formatDateTime(data.activeStateBroadcast.createdAt)}
@@ -68,24 +68,21 @@
 					</div>
 					<form method="POST" action="?/revokeStateBroadcast" use:enhance>
 						<input type="hidden" name="broadcastId" value={data.activeStateBroadcast.id} />
-						<button type="submit" class="btn btn-sm bg-red-600/20 hover:bg-red-600/40 border-red-500/30 text-red-400">
-							<FluentDismiss20Filled class="size-4" />
-							Revoke
-						</button>
+						<Button type="submit" variant="soft-red" size="sm" icon={FluentDismiss20Filled}>Revoke</Button>
 					</form>
 				</div>
 			</div>
 		{/if}
 
 		{#if data.activePartyBroadcast}
-			<div class="bg-emerald-600/10 rounded-xl border border-emerald-500/20 p-5 mb-4">
+			<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/30 p-5">
 				<div class="flex items-start justify-between gap-3">
-					<div class="flex-1">
+					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-2">
-							<FluentPeople20Filled class="size-5 text-emerald-400" />
-							<h3 class="font-semibold text-emerald-400">Active Party Broadcast</h3>
+							<FluentPeople20Filled class="size-5 text-[#8fae88]" />
+							<h3 class="font-semibold text-[#c6dfbf]">Active Party Broadcast</h3>
 						</div>
-						<h4 class="text-white font-bold mb-1">{data.activePartyBroadcast.title}</h4>
+						<h4 class="text-[#fff7e8] font-bold mb-1">{data.activePartyBroadcast.title}</h4>
 						<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{data.activePartyBroadcast.content}</p>
 						<p class="text-xs text-[#a89e8e] mt-2">
 							{formatDateTime(data.activePartyBroadcast.createdAt)}
@@ -93,18 +90,15 @@
 					</div>
 					<form method="POST" action="?/revokePartyBroadcast" use:enhance>
 						<input type="hidden" name="broadcastId" value={data.activePartyBroadcast.id} />
-						<button type="submit" class="btn btn-sm bg-red-600/20 hover:bg-red-600/40 border-red-500/30 text-red-400">
-							<FluentDismiss20Filled class="size-4" />
-							Revoke
-						</button>
+						<Button type="submit" variant="soft-red" size="sm" icon={FluentDismiss20Filled}>Revoke</Button>
 					</form>
 				</div>
 			</div>
 		{/if}
 
 		<!-- Broadcast Form -->
-		<div class="panel rounded-xl p-6">
-			<h2 class="text-lg font-bold text-white mb-4">New Broadcast</h2>
+		<div class="panel rounded-sm p-5">
+			<h2 class="section-title mb-4">New Broadcast</h2>
 
 			<form
 				method="POST"
@@ -124,90 +118,85 @@
 				<div class="space-y-4">
 					{#if data.canBroadcastState && data.canBroadcastParty}
 						<div>
-							<label class="label">
-								<span class="label-text text-[#d9ccb7]">Broadcast To</span>
-							</label>
+							<span class="field-label">Broadcast To</span>
 							<div class="flex gap-2">
-								<button
+								<Button
 									type="button"
+									grow
+									variant={broadcastType === "state" ? "soft-purple" : "subtle"}
+									icon={FluentBuildingGovernment20Filled}
 									onclick={() => (broadcastType = "state")}
-									class="btn flex-1 {broadcastType === 'state'
-										? 'bg-[#8c709b] text-white border-[#b7a0c5]'
-										: 'bg-[#102239]/70 text-[#d9ccb7] border-[#dfceb0]/15'}"
 								>
-									<FluentBuildingGovernment20Filled class="size-5" />
 									State Residents
-								</button>
-								<button
+								</Button>
+								<Button
 									type="button"
+									grow
+									variant={broadcastType === "party" ? "soft-emerald" : "subtle"}
+									icon={FluentPeople20Filled}
 									onclick={() => (broadcastType = "party")}
-									class="btn flex-1 {broadcastType === 'party'
-										? 'bg-emerald-600 text-white border-emerald-500'
-										: 'bg-[#102239]/70 text-[#d9ccb7] border-[#dfceb0]/15'}"
 								>
-									<FluentPeople20Filled class="size-5" />
 									Party Members
-								</button>
+								</Button>
 							</div>
 						</div>
 					{/if}
 
 					<div>
-						<label class="label">
-							<span class="label-text text-[#d9ccb7]">Subject</span>
-						</label>
+						<label class="field-label" for="broadcast-subject">Subject</label>
 						<input
+							id="broadcast-subject"
 							type="text"
 							name="subject"
 							bind:value={broadcastSubject}
 							placeholder="Enter broadcast subject..."
 							maxlength="200"
-							class="input input-bordered w-full field-control"
+							class="field-control w-full rounded-sm px-3 py-2.5"
 							required
 							disabled={isSubmitting}
 						/>
 					</div>
 
 					<div>
-						<label class="label">
-							<span class="label-text text-[#d9ccb7]">Message</span>
-						</label>
+						<label class="field-label" for="broadcast-content">Message</label>
 						<textarea
+							id="broadcast-content"
 							name="content"
 							bind:value={broadcastContent}
 							placeholder="Enter your broadcast message..."
 							rows="8"
 							maxlength="2000"
-							class="textarea textarea-bordered w-full field-control"
+							class="field-control w-full rounded-sm px-3 py-2.5"
 							required
 							disabled={isSubmitting}></textarea>
-						<p class="text-xs text-[#a89e8e] mt-1">{broadcastContent.length}/2000 characters</p>
+						<p class="field-hint">{broadcastContent.length}/2000 characters</p>
 					</div>
 
 					{#if form?.error}
-						<div class="alert alert-error">
-							<FluentWarning20Filled class="size-5" />
-							<p>{form.error}</p>
+						<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+							<FluentWarning20Filled class="size-5 shrink-0" />
+							<p class="text-sm">{form.error}</p>
 						</div>
 					{/if}
 
 					{#if form?.success}
-						<div class="alert alert-success">
-							<FluentSend20Filled class="size-5" />
-							<p>Broadcast published!</p>
+						<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+							<FluentSend20Filled class="size-5 shrink-0" />
+							<p class="text-sm">Broadcast published!</p>
 						</div>
 					{/if}
 
-					<button
+					<Button
 						type="submit"
-						class="btn w-full bg-blue-600 hover:bg-blue-500 border-0 text-white shadow-lg shadow-blue-600/20 gap-2"
+						variant="primary"
+						block
+						icon={FluentSend20Filled}
 						disabled={isSubmitting || !broadcastSubject || !broadcastContent}
 					>
-						<FluentSend20Filled class="size-5" />
 						{isSubmitting ? "Publishing..." : "Publish Broadcast"}
-					</button>
+					</Button>
 				</div>
 			</form>
 		</div>
-	</div>
+	</PageContainer>
 {/if}

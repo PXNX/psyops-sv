@@ -13,6 +13,10 @@
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
+	import { Button, Badge } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
@@ -32,9 +36,9 @@
 	function getStatusColor(status: string) {
 		switch (status) {
 			case "pending":
-				return "text-orange-400 bg-orange-600/20 border-orange-500/30";
+				return "text-[#f7c56b] bg-[#e6a527]/15 border-[#e6a527]/35";
 			case "resolved":
-				return "text-green-400 bg-green-600/20 border-green-500/30";
+				return "text-[#c6dfbf] bg-[#587252]/20 border-[#8fae88]/30";
 			case "dismissed":
 				return "text-[#d9ccb7] bg-[#14283f] border-[#dfceb0]/20";
 			default:
@@ -104,61 +108,46 @@
 	<title>My Reports - Game Name</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-		<h1 class="text-2xl font-bold text-[#fff7e8]">My Reports</h1>
-		<div class="flex items-center gap-2 flex-wrap">
-			<a href="/moderators" class="btn btn-sm btn-ghost gap-2">
-				<FluentShield20Filled class="size-4" />
-				Moderators
-			</a>
-			<a href="/moderators/actions" class="btn btn-sm btn-ghost gap-2">
-				<FluentFlag20Filled class="size-4" />
-				All Actions
-			</a>
-		</div>
-	</div>
+	<PageHeader title="My Reports">
+		{#snippet actions()}
+			<Button href="/moderators" size="sm" variant="ghost" icon={FluentShield20Filled}>Moderators</Button>
+			<Button href="/moderators/actions" size="sm" variant="ghost" icon={FluentFlag20Filled}>All Actions</Button>
+		{/snippet}
+	</PageHeader>
 
 	<!-- Stats -->
 	<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-		<div class="flex items-center gap-3 rounded-2xl panel p-4">
-			<div class="size-10 rounded-xl flex items-center justify-center bg-blue-600/20 shrink-0">
-				<FluentDocument20Filled class="size-5 text-blue-400" />
-			</div>
-			<div>
-				<div class="text-2xl font-bold text-blue-400 leading-none">{data.stats.total}</div>
-				<div class="text-xs text-[#a89e8e] mt-1">Total Reports</div>
+		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
+			<FluentDocument20Filled class="size-5 text-[#7ba0c8] shrink-0" />
+			<div class="min-w-0">
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Total Reports</p>
+				<p class="text-2xl font-bold text-[#fff7e8] leading-none mt-1">{data.stats.total}</p>
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3 rounded-2xl panel p-4">
-			<div class="size-10 rounded-xl flex items-center justify-center bg-orange-600/20 shrink-0">
-				<FluentClock20Filled class="size-5 text-orange-400" />
-			</div>
-			<div>
-				<div class="text-2xl font-bold text-orange-400 leading-none">{data.stats.pending}</div>
-				<div class="text-xs text-[#a89e8e] mt-1">Pending</div>
+		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
+			<FluentClock20Filled class="size-5 text-[#f7c56b] shrink-0" />
+			<div class="min-w-0">
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Pending</p>
+				<p class="text-2xl font-bold text-[#fff7e8] leading-none mt-1">{data.stats.pending}</p>
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3 rounded-2xl panel p-4">
-			<div class="size-10 rounded-xl flex items-center justify-center bg-green-600/20 shrink-0">
-				<FluentCheckmark20Filled class="size-5 text-green-400" />
-			</div>
-			<div>
-				<div class="text-2xl font-bold text-green-400 leading-none">{data.stats.resolved}</div>
-				<div class="text-xs text-[#a89e8e] mt-1">Resolved</div>
+		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
+			<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0" />
+			<div class="min-w-0">
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Resolved</p>
+				<p class="text-2xl font-bold text-[#fff7e8] leading-none mt-1">{data.stats.resolved}</p>
 			</div>
 		</div>
 
-		<div class="flex items-center gap-3 rounded-2xl panel p-4">
-			<div class="size-10 rounded-xl flex items-center justify-center bg-[#14283f] shrink-0">
-				<FluentDismiss20Filled class="size-5 text-[#a89e8e]" />
-			</div>
-			<div>
-				<div class="text-2xl font-bold text-[#d9ccb7] leading-none">{data.stats.dismissed}</div>
-				<div class="text-xs text-[#a89e8e] mt-1">Dismissed</div>
+		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
+			<FluentDismiss20Filled class="size-5 text-[#a89e8e] shrink-0" />
+			<div class="min-w-0">
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Dismissed</p>
+				<p class="text-2xl font-bold text-[#fff7e8] leading-none mt-1">{data.stats.dismissed}</p>
 			</div>
 		</div>
 	</div>
@@ -168,12 +157,12 @@
 		{#each data.reports as report}
 			{@const StatusIcon = getStatusIcon(report.status)}
 			{@const TargetIcon = getTargetIcon(report.targetType)}
-			<div class="panel-interactive rounded-xl p-6">
+			<div class="panel rounded-sm p-5">
 				<div class="flex items-start gap-4">
 					<!-- Report Icon -->
 					<div class="shrink-0">
-						<div class="size-12 rounded-xl flex items-center justify-center bg-[#102239]/70">
-							<TargetIcon class="size-6 text-blue-400" />
+						<div class="size-12 rounded-sm flex items-center justify-center panel-muted">
+							<TargetIcon class="size-6 text-[#7ba0c8]" />
 						</div>
 					</div>
 
@@ -182,13 +171,11 @@
 						<!-- Header -->
 						<div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
 							<div class="flex items-center gap-2">
-								<div class="badge badge-sm border {getStatusColor(report.status)}">
-									<StatusIcon class="size-3 mr-1" />
+								<div class="badge badge-sm rounded-sm border gap-1 {getStatusColor(report.status)}">
+									<StatusIcon class="size-3" />
 									{getStatusLabel(report.status)}
 								</div>
-								<div class="badge badge-sm bg-[#14283f] text-[#d9ccb7] border-[#dfceb0]/20">
-									{getViolationLabel(report.violationType)}
-								</div>
+								<Badge tone="neutral">{getViolationLabel(report.violationType)}</Badge>
 							</div>
 							<div class="flex items-center gap-1 text-xs text-[#a89e8e]">
 								<FluentCalendar20Filled class="size-3" />
@@ -197,12 +184,12 @@
 						</div>
 
 						<!-- Target -->
-						<div class="panel-muted rounded-lg p-4 mb-3">
+						<div class="panel-muted rounded-sm p-4 mb-3">
 							<div class="text-xs text-[#a89e8e] font-medium mb-2">Reported {report.targetType}:</div>
 
 							{#if report.targetType === "account" && report.target}
 								<a href="/user/{report.target.id}" class="flex items-center gap-3 group">
-									<div class="size-10 rounded-lg overflow-hidden transition-all">
+									<div class="size-10 rounded-sm overflow-hidden transition-all">
 										<Logo
 											src={report.target.logoUrl}
 											alt={report.target.name}
@@ -211,13 +198,13 @@
 											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 										/>
 									</div>
-									<span class="text-sm text-[#fff7e8] group-hover:text-blue-400 transition-colors">
+									<span class="text-sm text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
 										{report.target.name}
 									</span>
 								</a>
 							{:else if report.targetType === "party" && report.target}
 								<a href="/party/{report.target.id}" class="flex items-center gap-3 group">
-									<div class="size-10 rounded-lg overflow-hidden transition-all">
+									<div class="size-10 rounded-sm overflow-hidden transition-all">
 										<Logo
 											src={report.target.logoUrl}
 											alt={report.target.name}
@@ -227,7 +214,7 @@
 										/>
 									</div>
 									<div>
-										<span class="text-sm text-[#fff7e8] group-hover:text-blue-400 transition-colors block">
+										<span class="text-sm text-[#fff7e8] group-hover:text-[#f2c463] transition-colors block">
 											{report.target.name}
 										</span>
 										<span class="text-xs text-[#a89e8e]">Political Party</span>
@@ -238,12 +225,15 @@
 									{#if report.target.sender}
 										<div class="flex items-center gap-2">
 											<span class="text-xs text-[#a89e8e]">From:</span>
-											<a href="/user/{report.target.sender.id}" class="text-sm text-blue-400 hover:text-blue-300">
+											<a
+												href="/user/{report.target.sender.id}"
+												class="text-sm text-[#f7c56b] hover:text-[#f2c463] transition-colors"
+											>
 												{report.target.sender.name}
 											</a>
 										</div>
 									{/if}
-									<div class="bg-[#0d1d31] rounded p-3 border border-[#dfceb0]/10">
+									<div class="bg-[#0d1d31] rounded-sm p-3 border border-[#dfceb0]/10">
 										<p class="text-sm text-[#d9ccb7]" class:italic={report.target.isDeleted}>
 											{report.target.content}
 										</p>
@@ -256,7 +246,7 @@
 						</div>
 
 						<!-- Report Reason -->
-						<div class="panel-muted rounded-lg p-3 mb-3">
+						<div class="panel-muted rounded-sm p-3 mb-3">
 							<div class="text-xs text-[#a89e8e] font-medium mb-1">Your report:</div>
 							<p class="text-sm text-[#d9ccb7]">{report.reason}</p>
 						</div>
@@ -269,7 +259,7 @@
 									{#if report.reviewer}
 										<div class="flex items-center gap-3">
 											<a href="/user/{report.reviewer.id}" class="flex items-center gap-2 group">
-												<div class="size-8 rounded-lg overflow-hidden transition-all">
+												<div class="size-8 rounded-sm overflow-hidden transition-all">
 													<Logo
 														src={report.reviewer.logoUrl}
 														alt={report.reviewer.name}
@@ -281,7 +271,7 @@
 												<div class="min-w-0">
 													<span class="text-xs text-[#a89e8e] block">Reviewed by</span>
 													<span
-														class="text-sm text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors truncate block"
+														class="text-sm text-[#d5c4df] group-hover:text-[#f2c463] transition-colors truncate block"
 													>
 														{report.reviewer.name}
 													</span>
@@ -295,7 +285,7 @@
 										{#if report.actionTaken}
 											<div class="mb-2">
 												<span class="text-xs text-[#a89e8e]">Action taken:</span>
-												<span class="text-sm text-green-400 ml-2 font-medium">
+												<span class="text-sm text-[#c6dfbf] ml-2 font-medium">
 													{getActionLabel(report.actionTaken)}
 												</span>
 											</div>
@@ -323,17 +313,10 @@
 	</div>
 
 	{#if data.reports.length === 0}
-		<div class="card panel">
-			<div class="card-body items-center text-center py-12">
-				<div class="size-16 rounded-full flex items-center justify-center bg-[#14283f] mb-4">
-					<FluentDocument20Filled class="size-8 text-[#a89e8e]" />
-				</div>
-				<h3 class="text-xl font-bold text-[#fff7e8]">No Reports Filed</h3>
-				<p class="text-[#a89e8e] max-w-md">
-					You haven't filed any reports yet. If you encounter rule violations, you can report them to the moderation
-					team.
-				</p>
-			</div>
-		</div>
+		<EmptyState
+			icon={FluentDocument20Filled}
+			title="No Reports Filed"
+			subtitle="You haven't filed any reports yet. If you encounter rule violations, you can report them to the moderation team."
+		/>
 	{/if}
-</div>
+</PageContainer>

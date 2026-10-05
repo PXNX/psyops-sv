@@ -3,6 +3,7 @@
 <script lang="ts">
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
+	import { Button } from "#lib/component/ui/index.js";
 
 	// Props passed from page data
 	let { election, stateId } = $props<{
@@ -36,9 +37,9 @@
 </script>
 
 {#if election?.isInaugural && election.status === "scheduled"}
-	<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-xl p-5 space-y-3">
+	<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5 space-y-3">
 		<div class="flex items-start gap-3">
-			<div class="size-12 bg-[#e6a527]/20 rounded-lg flex items-center justify-center shrink-0">
+			<div class="size-12 bg-[#e6a527]/20 rounded-sm flex items-center justify-center shrink-0">
 				<FluentVote20Filled class="size-6 text-[#f7c56b]" />
 			</div>
 			<div class="flex-1 space-y-2">
@@ -48,7 +49,7 @@
 					<strong>{election.totalSeats} seats</strong>.
 				</p>
 
-				<div class="bg-[#0d1d31]/50 rounded-lg p-3 space-y-2">
+				<div class="panel-muted rounded-sm p-3 space-y-2">
 					<div class="flex items-center gap-2 text-sm">
 						<FluentCalendar20Filled class="size-4 text-[#f7c56b]" />
 						<span class="text-[#ffe2a4]">
@@ -65,22 +66,16 @@
 				</div>
 
 				<div class="flex gap-2 pt-2">
-					<a
-						href="/state/{stateId}/election/{election.id}"
-						class="btn btn-sm bg-[#e6a527] hover:bg-[#f2b940] border-0 text-[#172a45] gap-2"
-					>
-						<FluentVote20Filled class="size-4" />
+					<Button href="/state/{stateId}/election/{election.id}" variant="primary" size="sm" icon={FluentVote20Filled}>
 						View Election Details
-					</a>
-					<a href="/party/create" class="btn btn-sm bg-[#315d8d] hover:bg-[#3d6ea3] border-0 text-white">
-						Create a Party
-					</a>
+					</Button>
+					<Button href="/party/create" variant="secondary" size="sm">Create a Party</Button>
 				</div>
 			</div>
 		</div>
 	</div>
 {:else if election?.isInaugural && election.status === "active"}
-	<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-xl p-4">
+	<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-4">
 		<div class="flex items-center justify-between gap-4">
 			<div class="flex items-center gap-3">
 				<FluentVote20Filled class="size-6 text-[#8fae88] animate-pulse" />
@@ -89,13 +84,15 @@
 					<p class="text-sm text-[#c6dfbf]">Help establish the founding parliament - vote now!</p>
 				</div>
 			</div>
-			<a
+			<Button
 				href="/state/{stateId}/election/{election.id}"
-				class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2 animate-pulse"
+				variant="primary"
+				size="sm"
+				icon={FluentVote20Filled}
+				class="animate-pulse"
 			>
-				<FluentVote20Filled class="size-4" />
 				Vote Now
-			</a>
+			</Button>
 		</div>
 	</div>
 {/if}

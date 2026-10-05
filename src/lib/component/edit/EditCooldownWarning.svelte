@@ -34,7 +34,7 @@
 	}
 </script>
 
-<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5 space-y-3">
+<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5 space-y-3">
 	<div class="flex items-start gap-3">
 		<FluentClock20Filled class="size-6 text-red-400 shrink-0 mt-0.5" />
 		<div class="space-y-2 flex-1">
@@ -43,7 +43,7 @@
 				{entityName.charAt(0).toUpperCase() + entityName.slice(1)} was recently edited. You must wait before making another
 				change.
 			</p>
-			<div class="bg-red-900/30 rounded-lg p-3 space-y-2">
+			<div class="bg-red-950/30 border border-red-500/20 rounded-sm p-3 space-y-2">
 				<div class="flex items-center justify-between">
 					<span class="text-red-100 text-sm font-medium">Time Remaining:</span>
 					<span class="text-red-100 text-sm font-bold">{formatTimeRemaining(cooldownEndsAt)}</span>

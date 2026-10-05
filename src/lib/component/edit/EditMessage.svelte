@@ -16,13 +16,11 @@
 
 {#if message}
 	<div
-		class="rounded-xl p-4 border"
-		class:bg-green-600-20={!isError}
-		class:border-green-500-30={!isError}
-		class:bg-red-600-20={isError}
-		class:border-red-500-30={isError}
+		class="rounded-sm p-4 border {isError
+			? 'bg-red-600/10 border-red-500/30 text-red-300'
+			: 'bg-[#587252]/18 border-[#8fae88]/30 text-[#c6dfbf]'}"
 	>
-		<p class="text-sm font-medium" class:text-green-300={!isError} class:text-red-300={isError}>
+		<p class="text-sm font-medium">
 			{message}
 		</p>
 	</div>

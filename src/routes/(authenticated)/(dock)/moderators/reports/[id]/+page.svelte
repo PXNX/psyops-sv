@@ -15,19 +15,22 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Badge } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
 	function getStatusColor(status: string) {
 		switch (status) {
 			case "pending":
-				return "from-orange-600 to-orange-700";
+				return "bg-[#e6a527]/12 border-[#e6a527]/35 text-[#f7c56b]";
 			case "resolved":
-				return "from-green-600 to-green-700";
+				return "bg-[#587252]/18 border-[#8fae88]/30 text-[#c6dfbf]";
 			case "dismissed":
-				return "from-[#14283f] to-[#102239]";
+				return "bg-[#102239]/70 border-[#dfceb0]/15 text-[#d9ccb7]";
 			default:
-				return "from-[#14283f] to-[#102239]";
+				return "bg-[#102239]/70 border-[#dfceb0]/15 text-[#d9ccb7]";
 		}
 	}
 
@@ -109,263 +112,251 @@
 	<title>Report #{data.report.id} - My Reports</title>
 </svelte:head>
 
-<div class="max-w-5xl mx-auto px-4 py-8 space-y-6">
+<PageContainer maxWidth="5xl">
 	<!-- Header -->
-	<div>
-		<a href="/moderators/reports" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors"> My Reports </a>
-		<h1 class="text-2xl font-bold text-[#fff7e8] mt-1">Report #{data.report.id}</h1>
-	</div>
+	<PageHeader title="Report #{data.report.id}" backHref="/moderators/reports" backLabel="My Reports" />
 
 	<!-- Status Card -->
-	<div class="card bg-gradient-to-br {getStatusColor(data.report.status)} border-0 shadow-xl">
-		<div class="card-body">
-			<div class="flex items-center gap-4">
-				<div class="size-16 rounded-xl flex items-center justify-center bg-white/20">
-					<StatusIcon class="size-8 text-white" />
-				</div>
-				<div class="flex-1">
-					<h1 class="text-3xl font-bold text-white">{getStatusTitle(data.report.status)}</h1>
-				</div>
+	<div class="panel rounded-sm p-5">
+		<div class="flex items-center gap-4">
+			<div class="size-16 rounded-sm border flex items-center justify-center shrink-0 {getStatusColor(data.report.status)}">
+				<StatusIcon class="size-8" />
+			</div>
+			<div class="flex-1 min-w-0">
+				<h2 class="text-3xl font-bold text-[#fff7e8]">{getStatusTitle(data.report.status)}</h2>
 			</div>
 		</div>
 	</div>
 
 	<!-- Timeline -->
-	<div class="card panel">
-		<div class="card-body">
-			<h2 class="card-title text-[#fff7e8] mb-4">
-				<FluentCalendar20Filled class="size-5" />
-				Timeline
-			</h2>
-			<ul class="timeline timeline-vertical">
+	<div class="panel rounded-sm p-5">
+		<h2 class="section-title mb-4">
+			<FluentCalendar20Filled class="size-5 text-[#f7c56b]" />
+			Timeline
+		</h2>
+		<ul class="timeline timeline-vertical">
+			<li>
+				<div class="timeline-start text-sm text-[#a89e8e]">{formatDate(data.report.reportedAt)}</div>
+				<div class="timeline-middle">
+					<div class="size-4 rounded-full bg-[#7ba0c8]"></div>
+				</div>
+				<div class="timeline-end timeline-box rounded-sm bg-[#315d8d]/18 border-[#7ba0c8]/30">
+					<div class="font-semibold text-[#b7d0e6]">Report Filed</div>
+					<div class="text-sm text-[#d9ccb7]">You submitted this report</div>
+				</div>
+				<hr class="bg-[#7ba0c8]" />
+			</li>
+			{#if data.report.reviewedAt}
 				<li>
-					<div class="timeline-start text-sm text-[#a89e8e]">{formatDate(data.report.reportedAt)}</div>
+					<hr class="bg-[#8fae88]" />
+					<div class="timeline-start text-sm text-[#a89e8e]">{formatDate(data.report.reviewedAt)}</div>
 					<div class="timeline-middle">
-						<div class="size-4 rounded-full bg-blue-500"></div>
+						<div class="size-4 rounded-full bg-[#8fae88]"></div>
 					</div>
-					<div class="timeline-end timeline-box bg-blue-600/10 border-blue-500/30">
-						<div class="font-semibold text-blue-400">Report Filed</div>
-						<div class="text-sm text-[#d9ccb7]">You submitted this report</div>
+					<div class="timeline-end timeline-box rounded-sm bg-[#587252]/18 border-[#8fae88]/30">
+						<div class="font-semibold text-[#c6dfbf]">
+							{data.report.status === "resolved" ? "Resolved" : "Reviewed"}
+						</div>
+						{#if data.report.reviewer}
+							<div class="text-sm text-[#d9ccb7]">By {data.report.reviewer.name}</div>
+						{/if}
 					</div>
-					<hr class="bg-blue-500" />
 				</li>
-				{#if data.report.reviewedAt}
-					<li>
-						<hr class="bg-green-500" />
-						<div class="timeline-start text-sm text-[#a89e8e]">{formatDate(data.report.reviewedAt)}</div>
-						<div class="timeline-middle">
-							<div class="size-4 rounded-full bg-green-500"></div>
-						</div>
-						<div class="timeline-end timeline-box bg-green-600/10 border-green-500/30">
-							<div class="font-semibold text-green-400">
-								{data.report.status === "resolved" ? "Resolved" : "Reviewed"}
-							</div>
-							{#if data.report.reviewer}
-								<div class="text-sm text-[#d9ccb7]">By {data.report.reviewer.name}</div>
-							{/if}
-						</div>
-					</li>
-				{:else}
-					<li>
-						<hr class="bg-orange-500" />
-						<div class="timeline-start"></div>
-						<div class="timeline-middle">
-							<div class="size-4 rounded-full bg-orange-500 animate-pulse"></div>
-						</div>
-						<div class="timeline-end timeline-box bg-orange-600/10 border-orange-500/30">
-							<div class="font-semibold text-orange-400">Awaiting Review</div>
-							<div class="text-sm text-[#d9ccb7]">A moderator will review this soon</div>
-						</div>
-					</li>
-				{/if}
-			</ul>
-		</div>
+			{:else}
+				<li>
+					<hr class="bg-[#e6a527]" />
+					<div class="timeline-start"></div>
+					<div class="timeline-middle">
+						<div class="size-4 rounded-full bg-[#e6a527] animate-pulse"></div>
+					</div>
+					<div class="timeline-end timeline-box rounded-sm bg-[#e6a527]/12 border-[#e6a527]/35">
+						<div class="font-semibold text-[#f7c56b]">Awaiting Review</div>
+						<div class="text-sm text-[#d9ccb7]">A moderator will review this soon</div>
+					</div>
+				</li>
+			{/if}
+		</ul>
 	</div>
 
 	<!-- Reported Target -->
-	<div class="card panel">
-		<div class="card-body">
-			<h2 class="card-title text-[#fff7e8] mb-4">
-				<TargetIcon class="size-5" />
-				Reported {data.report.targetType === "account"
-					? "User"
-					: data.report.targetType === "party"
-						? "Party"
-						: "Message"}
-			</h2>
+	<div class="panel rounded-sm p-5">
+		<h2 class="section-title mb-4">
+			<TargetIcon class="size-5 text-[#7ba0c8]" />
+			Reported {data.report.targetType === "account"
+				? "User"
+				: data.report.targetType === "party"
+					? "Party"
+					: "Message"}
+		</h2>
 
-			{#if data.report.target}
-				<div class="panel-muted rounded-lg p-4">
-					{#if data.report.targetType === "account"}
-						<a href="/user/{data.report.target.id}" class="flex items-center gap-3 group">
-							<div class="size-16 rounded-xl overflow-hidden transition-all">
-								<Logo
-									src={data.report.target.logoUrl}
-									alt={data.report.target.name}
-									class="size-full"
-									placeholderIcon={FluentPeople20Filled}
-									placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
-								/>
-							</div>
-							<div class="flex-1 min-w-0">
-								<p class="font-semibold text-[#fff7e8] group-hover:text-blue-400 transition-colors truncate">
-									{data.report.target.name}
-								</p>
-								<p class="text-sm text-[#a89e8e]">Click to view profile</p>
-							</div>
-						</a>
-					{:else if data.report.targetType === "party"}
-						<a href="/party/{data.report.target.id}" class="flex items-center gap-3 group">
-							<div class="size-16 rounded-xl overflow-hidden transition-all">
-								<Logo
-									src={data.report.target.logoUrl}
-									alt={data.report.target.name}
-									class="size-full"
-									placeholderIcon={FluentShield20Filled}
-									placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
-								/>
-							</div>
-							<div class="flex-1 min-w-0">
-								<p class="font-semibold text-[#fff7e8] group-hover:text-blue-400 transition-colors truncate">
-									{data.report.target.name}
-								</p>
-								<p class="text-sm text-[#a89e8e]">Political Party</p>
-							</div>
-						</a>
-					{:else if data.report.targetType === "message"}
-						<div class="space-y-3">
-							{#if data.report.target.sender}
-								<div class="flex items-center gap-2">
-									<span class="text-sm text-[#a89e8e]">From:</span>
-									<a href="/user/{data.report.target.sender.id}" class="flex items-center gap-2 group">
-										<div class="size-8 rounded-lg overflow-hidden transition-all">
-											<Logo
-												src={data.report.target.sender.logoUrl}
-												alt={data.report.target.sender.name}
-												class="size-full"
-												placeholderIcon={FluentPeople20Filled}
-												placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
-											/>
-										</div>
-										<span class="text-sm text-blue-400 group-hover:text-blue-300">
-											{data.report.target.sender.name}
-										</span>
-									</a>
-								</div>
-							{/if}
-							{#if data.report.target.sentAt}
-								<div class="flex items-center gap-2 text-sm text-[#a89e8e]">
-									<FluentCalendar20Filled class="size-4" />
-									<span>Sent {formatDate(data.report.target.sentAt)}</span>
-								</div>
-							{/if}
-							<div class="bg-[#0d1d31] rounded-lg p-4 border border-[#dfceb0]/10">
-								<p class="text-[#d9ccb7]" class:italic={data.report.target.isDeleted}>
-									{data.report.target.content}
-								</p>
-								{#if data.report.target.isDeleted}
-									<div class="flex items-center gap-2 mt-2">
-										<FluentWarning20Filled class="size-4 text-red-400" />
-										<span class="text-sm text-red-400">This message has been deleted</span>
+		{#if data.report.target}
+			<div class="panel-muted rounded-sm p-4">
+				{#if data.report.targetType === "account"}
+					<a href="/user/{data.report.target.id}" class="flex items-center gap-3 group">
+						<div class="size-16 rounded-sm overflow-hidden transition-all">
+							<Logo
+								src={data.report.target.logoUrl}
+								alt={data.report.target.name}
+								class="size-full"
+								placeholderIcon={FluentPeople20Filled}
+								placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+							/>
+						</div>
+						<div class="flex-1 min-w-0">
+							<p class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+								{data.report.target.name}
+							</p>
+							<p class="text-sm text-[#a89e8e]">Click to view profile</p>
+						</div>
+					</a>
+				{:else if data.report.targetType === "party"}
+					<a href="/party/{data.report.target.id}" class="flex items-center gap-3 group">
+						<div class="size-16 rounded-sm overflow-hidden transition-all">
+							<Logo
+								src={data.report.target.logoUrl}
+								alt={data.report.target.name}
+								class="size-full"
+								placeholderIcon={FluentShield20Filled}
+								placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+							/>
+						</div>
+						<div class="flex-1 min-w-0">
+							<p class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+								{data.report.target.name}
+							</p>
+							<p class="text-sm text-[#a89e8e]">Political Party</p>
+						</div>
+					</a>
+				{:else if data.report.targetType === "message"}
+					<div class="space-y-3">
+						{#if data.report.target.sender}
+							<div class="flex items-center gap-2">
+								<span class="text-sm text-[#a89e8e]">From:</span>
+								<a href="/user/{data.report.target.sender.id}" class="flex items-center gap-2 group">
+									<div class="size-8 rounded-sm overflow-hidden transition-all">
+										<Logo
+											src={data.report.target.sender.logoUrl}
+											alt={data.report.target.sender.name}
+											class="size-full"
+											placeholderIcon={FluentPeople20Filled}
+											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+										/>
 									</div>
-								{/if}
+									<span class="text-sm text-[#f7c56b] group-hover:text-[#f2c463] transition-colors">
+										{data.report.target.sender.name}
+									</span>
+								</a>
 							</div>
-						</div>
-					{/if}
-				</div>
-			{:else}
-				<div class="alert alert-warning bg-orange-600/10 border-orange-500/30">
-					<FluentWarning20Filled class="size-5" />
-					<span>Target information is no longer available</span>
-				</div>
-			{/if}
-		</div>
-	</div>
-
-	<!-- Report Details -->
-	<div class="card panel">
-		<div class="card-body">
-			<h2 class="card-title text-[#fff7e8] mb-4">
-				<FluentInfo20Filled class="size-5" />
-				Report Details
-			</h2>
-
-			<div class="space-y-4">
-				<!-- Violation Type -->
-				<div>
-					<p class="text-sm text-[#a89e8e] mb-2">Violation Type:</p>
-					<div class="badge badge-lg bg-red-600/20 text-red-400 border-red-500/30">
-						{getViolationLabel(data.report.violationType)}
-					</div>
-				</div>
-
-				<!-- Your Report -->
-				<div>
-					<p class="text-sm text-[#a89e8e] mb-2">Your Report:</p>
-					<div class="panel-muted rounded-lg p-4">
-						<p class="text-[#d9ccb7]">{data.report.reason}</p>
-					</div>
-				</div>
-
-				<!-- Review Information -->
-				{#if data.report.status !== "pending"}
-					<div class="divider"></div>
-
-					<h3 class="font-semibold text-[#fff7e8] flex items-center gap-2 mt-4">
-						<FluentShield20Filled class="size-5 text-[#d5c4df]" />
-						Moderator Review
-					</h3>
-
-					{#if data.report.reviewer}
-						<div class="flex items-center gap-3 mt-3">
-							<a href="/user/{data.report.reviewer.id}" class="flex items-center gap-3 group">
-								<div class="size-12 rounded-xl overflow-hidden transition-all">
-									<Logo
-										src={data.report.reviewer.logoUrl}
-										alt={data.report.reviewer.name}
-										class="size-full"
-										placeholderIcon={FluentShield20Filled}
-										placeholderGradient="from-[#8c709b] to-[#6a5578]"
-									/>
+						{/if}
+						{#if data.report.target.sentAt}
+							<div class="flex items-center gap-2 text-sm text-[#a89e8e]">
+								<FluentCalendar20Filled class="size-4" />
+								<span>Sent {formatDate(data.report.target.sentAt)}</span>
+							</div>
+						{/if}
+						<div class="bg-[#0d1d31] rounded-sm p-4 border border-[#dfceb0]/10">
+							<p class="text-[#d9ccb7]" class:italic={data.report.target.isDeleted}>
+								{data.report.target.content}
+							</p>
+							{#if data.report.target.isDeleted}
+								<div class="flex items-center gap-2 mt-2">
+									<FluentWarning20Filled class="size-4 text-red-400" />
+									<span class="text-sm text-red-400">This message has been deleted</span>
 								</div>
-								<div class="min-w-0">
-									<p class="text-sm text-[#a89e8e]">Reviewed by</p>
-									<p class="font-semibold text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors truncate">
-										{data.report.reviewer.name}
-									</p>
-								</div>
-							</a>
-						</div>
-					{/if}
-
-					{#if data.report.actionTaken}
-						<div class="mt-4">
-							<p class="text-sm text-[#a89e8e] mb-2">Action Taken:</p>
-							<div class="badge badge-lg bg-green-600/20 text-green-400 border-green-500/30">
-								<FluentCheckmark20Filled class="size-4 mr-1" />
-								{getActionLabel(data.report.actionTaken)}
-							</div>
-						</div>
-					{/if}
-
-					{#if data.report.reviewNote}
-						<div class="mt-4">
-							<p class="text-sm text-[#a89e8e] mb-2">Moderator's Note:</p>
-							<div class="panel-muted rounded-lg p-4">
-								<p class="text-[#d9ccb7]">{data.report.reviewNote}</p>
-							</div>
-						</div>
-					{/if}
-				{:else}
-					<div class="alert bg-orange-600/10 border-orange-500/30">
-						<FluentClock20Filled class="size-5 text-orange-400" />
-						<div>
-							<h3 class="font-bold">Pending Review</h3>
-							<p class="text-sm">A moderator will review your report soon. You'll be able to see the outcome here.</p>
+							{/if}
 						</div>
 					</div>
 				{/if}
 			</div>
+		{:else}
+			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+				<FluentWarning20Filled class="size-5 shrink-0" />
+				<span>Target information is no longer available</span>
+			</div>
+		{/if}
+	</div>
+
+	<!-- Report Details -->
+	<div class="panel rounded-sm p-5">
+		<h2 class="section-title mb-4">
+			<FluentInfo20Filled class="size-5 text-[#f7c56b]" />
+			Report Details
+		</h2>
+
+		<div class="space-y-4">
+			<!-- Violation Type -->
+			<div>
+				<p class="text-sm text-[#a89e8e] mb-2">Violation Type:</p>
+				<Badge tone="red" size="md">{getViolationLabel(data.report.violationType)}</Badge>
+			</div>
+
+			<!-- Your Report -->
+			<div>
+				<p class="text-sm text-[#a89e8e] mb-2">Your Report:</p>
+				<div class="panel-muted rounded-sm p-4">
+					<p class="text-[#d9ccb7]">{data.report.reason}</p>
+				</div>
+			</div>
+
+			<!-- Review Information -->
+			{#if data.report.status !== "pending"}
+				<div class="border-t border-[#dfceb0]/15"></div>
+
+				<h3 class="font-semibold text-[#fff7e8] flex items-center gap-2 mt-4">
+					<FluentShield20Filled class="size-5 text-[#b7a0c5]" />
+					Moderator Review
+				</h3>
+
+				{#if data.report.reviewer}
+					<div class="flex items-center gap-3 mt-3">
+						<a href="/user/{data.report.reviewer.id}" class="flex items-center gap-3 group">
+							<div class="size-12 rounded-sm overflow-hidden transition-all">
+								<Logo
+									src={data.report.reviewer.logoUrl}
+									alt={data.report.reviewer.name}
+									class="size-full"
+									placeholderIcon={FluentShield20Filled}
+									placeholderGradient="from-[#8c709b] to-[#6a5578]"
+								/>
+							</div>
+							<div class="min-w-0">
+								<p class="text-sm text-[#a89e8e]">Reviewed by</p>
+								<p class="font-semibold text-[#d5c4df] group-hover:text-[#f2c463] transition-colors truncate">
+									{data.report.reviewer.name}
+								</p>
+							</div>
+						</a>
+					</div>
+				{/if}
+
+				{#if data.report.actionTaken}
+					<div class="mt-4">
+						<p class="text-sm text-[#a89e8e] mb-2">Action Taken:</p>
+						<Badge tone="green" size="md" icon={FluentCheckmark20Filled}>
+							{getActionLabel(data.report.actionTaken)}
+						</Badge>
+					</div>
+				{/if}
+
+				{#if data.report.reviewNote}
+					<div class="mt-4">
+						<p class="text-sm text-[#a89e8e] mb-2">Moderator's Note:</p>
+						<div class="panel-muted rounded-sm p-4">
+							<p class="text-[#d9ccb7]">{data.report.reviewNote}</p>
+						</div>
+					</div>
+				{/if}
+			{:else}
+				<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+					<FluentClock20Filled class="size-5 shrink-0" />
+					<div>
+						<h3 class="font-bold">Pending Review</h3>
+						<p class="text-sm text-[#d9ccb7]">
+							A moderator will review your report soon. You'll be able to see the outcome here.
+						</p>
+					</div>
+				</div>
+			{/if}
 		</div>
 	</div>
-</div>
+</PageContainer>

@@ -123,8 +123,8 @@
 					bind:value={$form.name}
 					placeholder="e.g., Acme Industrial Corp"
 					maxlength="50"
-					class="input field-control w-full"
-					class:input-error={$errors.name}
+					class="field-control rounded-sm px-3 py-2.5 w-full"
+					class:border-red-500={$errors.name}
 					disabled={$submitting || !canEdit}
 				/>
 				{#if $errors.name}
@@ -160,11 +160,11 @@
 
 		<!-- Logo Preview -->
 		{#if imageUpload.previewUrl}
-			<div class="panel-muted rounded-xl p-5">
+			<div class="panel rounded-sm p-5">
 				<h3 class="text-sm font-semibold text-[#e5d8c1] mb-3">Preview</h3>
-				<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-lg p-6">
+				<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm p-6">
 					<div class="flex items-center gap-4">
-						<div class="size-16 rounded-xl bg-[#0d1d31] border-2 border-[#dfceb0]/20 flex items-center justify-center">
+						<div class="size-16 rounded-sm bg-[#0d1d31] border border-[#dfceb0]/20 flex items-center justify-center">
 							<img src={imageUpload.previewUrl} alt="Logo preview" class="size-14 object-contain" />
 						</div>
 						<div>
@@ -184,7 +184,7 @@
 				bind:value={$form.description}
 				rows="6"
 				placeholder="Describe your company's mission, industry, and operations..."
-				class="textarea field-control w-full"
+				class="field-control rounded-sm px-3 py-2.5 w-full"
 				disabled={$submitting || !canEdit}></textarea>
 			{#if $errors.description}
 				<p class="field-error">{$errors.description}</p>
@@ -192,7 +192,7 @@
 		</EditSection>
 
 		<!-- Cost & Cooldown -->
-		<div class="panel-muted rounded-xl p-5 space-y-2">
+		<div class="panel rounded-sm p-5 space-y-2">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 			{#if data.isOnCooldown && data.cooldownEndsAt}
 				<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="company" />

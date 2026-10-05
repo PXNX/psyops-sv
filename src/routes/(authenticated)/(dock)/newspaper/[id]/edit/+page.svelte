@@ -14,7 +14,10 @@
 	import MdiNewspaper from "~icons/mdi/newspaper";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
-	import BackLink from "#lib/component/ui/BackLink.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	let { data } = $props();
 
@@ -119,31 +122,28 @@
 	}
 </script>
 
-<div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="3xl">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-4">
-			<BackLink href="/newspaper/{data.newspaper.id}" />
-			<div>
-				<h1 class="text-3xl font-bold text-[#fff7e8]">Edit Newspaper</h1>
-				<p class="text-[#a89e8e]">{data.newspaper.name}</p>
-			</div>
-		</div>
-	</div>
+	<PageHeader
+		title="Edit Newspaper"
+		subtitle={data.newspaper.name}
+		backHref="/newspaper/{data.newspaper.id}"
+		backLabel={data.newspaper.name}
+	/>
 
 	<!-- Insufficient Funds Warning -->
 	{#if !data.canAfford}
-		<div class="bg-amber-600/20 border border-amber-500/30 rounded-xl p-5 space-y-3">
+		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5 space-y-3">
 			<div class="flex items-start gap-3">
-				<FluentMoney20Filled class="size-6 text-amber-400 shrink-0 mt-0.5" />
+				<FluentMoney20Filled class="size-6 text-[#f7c56b] shrink-0 mt-0.5" />
 				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-amber-300 text-lg">Insufficient Funds</h3>
-					<p class="text-amber-200/90 text-sm leading-relaxed">
+					<h3 class="font-semibold text-[#f7c56b] text-lg">Insufficient Funds</h3>
+					<p class="text-[#e5d8c1] text-sm leading-relaxed">
 						You need <strong>{data.editCost.toLocaleString()}</strong> currency to edit the newspaper. You currently
 						have <strong>{data.userBalance.toLocaleString()}</strong>.
 					</p>
-					<div class="bg-amber-900/30 rounded-lg p-3">
-						<p class="text-amber-100 text-sm font-medium">
+					<div class="panel-muted rounded-sm p-3">
+						<p class="text-[#f7c56b] text-sm font-medium">
 							Needed: {(data.editCost - data.userBalance).toLocaleString()} more currency
 						</p>
 					</div>
@@ -154,30 +154,30 @@
 
 	<!-- Success Message -->
 	{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("Insufficient")}
-		<div class="bg-green-600/20 border border-green-500/30 rounded-xl p-4">
-			<p class="text-green-300 text-sm font-medium">{$message}</p>
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
 	<!-- Error Message -->
 	{#if $message && ($message.includes("error") || $message.includes("failed") || $message.includes("Insufficient"))}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{$message}</p>
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
 	<!-- Form -->
 	<form method="POST" action="?/update" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Basic Information -->
-		<div class="panel rounded-xl p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Basic Information</h2>
-			</div>
+		<div class="panel rounded-sm p-5 space-y-4">
+			<h2 class="section-title">
+				<FluentDocument20Filled class="size-5 text-[#7ba0c8]" />
+				Basic Information
+			</h2>
 
 			<div class="space-y-4">
 				<div>
-					<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2">
+					<label for="name" class="field-label">
 						Newspaper Name <span class="text-red-400">*</span>
 					</label>
 					<input
@@ -187,39 +187,37 @@
 						bind:value={$form.name}
 						placeholder="e.g., The Daily Chronicle"
 						maxlength="40"
-						class="input w-full field-control"
-						class:input-error={$errors.name}
+						class="field-control w-full rounded-sm px-3 py-2.5"
+						class:border-red-500={$errors.name}
 						disabled={$submitting || !canEdit}
 					/>
 					{#if $errors.name}
-						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+						<p class="field-error">{$errors.name}</p>
 					{:else}
-						<p class="text-xs text-[#a89e8e] mt-1">{$form.name?.length || 0}/40 characters</p>
+						<p class="field-hint">{$form.name?.length || 0}/40 characters</p>
 					{/if}
 				</div>
 
 				<div>
-					<label for="background" class="block text-sm font-medium text-[#e5d8c1] mb-2">
-						Background Description (Optional)
-					</label>
+					<label for="background" class="field-label">Background Description (Optional)</label>
 					<textarea
 						id="background"
 						name="background"
 						bind:value={$form.background}
 						rows="4"
 						placeholder="Describe your newspaper's mission and values..."
-						class="textarea w-full field-control"
+						class="field-control w-full rounded-sm px-3 py-2.5"
 						disabled={$submitting || !canEdit}></textarea>
 				</div>
 			</div>
 		</div>
 
 		<!-- Logo Upload -->
-		<div class="panel rounded-xl p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Newspaper Logo</h2>
-			</div>
+		<div class="panel rounded-sm p-5 space-y-4">
+			<h2 class="section-title">
+				<FluentImage20Filled class="size-5 text-[#7ba0c8]" />
+				Newspaper Logo
+			</h2>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
 				<input
@@ -237,21 +235,20 @@
 					type="button"
 					onclick={() => fileInput?.click()}
 					disabled={$submitting || !canEdit}
-					class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
-					class:border-blue-500={dragActive}
-					class:bg-blue-600-10={dragActive}
-					class:border-blue-500-30={!dragActive && !previewUrl}
-					class:border-success={previewUrl && !dragActive}
-					class:bg-success-5={previewUrl && !dragActive}
-					class:hover:border-blue-500-50={!$submitting && !previewUrl && canEdit}
-					class:hover:bg-blue-600-10={!$submitting && !previewUrl && canEdit}
+					class="group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 {dragActive
+						? 'border-[#e6a527]/70 bg-[#e6a527]/10'
+						: previewUrl
+							? 'border-[#8fae88]/40 bg-[#587252]/10'
+							: 'border-[#dfceb0]/20 bg-[#102239]/70'} {!$submitting && !previewUrl && canEdit
+						? 'hover:border-[#e6a527]/55 hover:bg-[#19304b]'
+						: ''}"
 					class:opacity-50={$submitting || !canEdit}
-					class:input-error={$errors.logo}
+					class:border-red-500={$errors.logo}
 				>
 					{#if !previewUrl}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-blue-600/20 p-3 transition-transform group-hover:scale-110">
-								<FluentImage20Filled class="size-8 text-blue-400" />
+							<div class="rounded-full bg-[#315d8d]/18 border border-[#7ba0c8]/30 p-3">
+								<FluentImage20Filled class="size-8 text-[#7ba0c8]" />
 							</div>
 							<div class="text-center">
 								<p class="text-base font-semibold text-[#fff7e8]">
@@ -271,10 +268,10 @@
 					{:else}
 						<div class="relative">
 							<div class="flex items-center justify-center p-6 bg-[#0d1d31]">
-								<img src={previewUrl} alt="Logo preview" class="size-24 object-contain rounded-lg" />
+								<img src={previewUrl} alt="Logo preview" class="size-24 object-contain rounded-sm" />
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/70 opacity-0 transition-opacity group-hover:opacity-100"
 							>
 								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
 							</div>
@@ -286,7 +283,7 @@
 										clearImage();
 									}}
 									disabled={$submitting}
-									class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b] text-[#fff7e8]"
+									class={buttonClass({ variant: "secondary", size: "sm", shape: "circle", class: "absolute top-2 right-2" })}
 								>
 									✕
 								</button>
@@ -307,55 +304,47 @@
 			</div>
 
 			{#if $errors.logo}
-				<p class="text-xs text-red-400">{$errors.logo}</p>
+				<p class="field-error">{$errors.logo}</p>
 			{:else}
-				<p class="text-xs text-[#a89e8e]">
+				<p class="field-hint">
 					Upload a new logo to replace the current one • Will be converted to 96x96 WebP • Max 5MB
 				</p>
 			{/if}
 		</div>
 
 		<!-- Resource Requirements & Submit -->
-		<div class="panel rounded-xl p-5 space-y-2">
+		<div class="panel rounded-sm p-5 space-y-2">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 			<div class="flex gap-3">
-				<a
-					href="/newspaper/{data.newspaper.id}"
-					class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8]"
-					class:btn-disabled={$submitting}
-				>
-					Cancel
-				</a>
-				<button
+				<Button href="/newspaper/{data.newspaper.id}" variant="secondary" grow disabled={$submitting}>Cancel</Button>
+				<Button
 					type="submit"
+					variant="primary"
+					grow
 					disabled={$submitting || !canEdit}
-					class="btn flex-1 bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2 disabled:opacity-50"
+					loading={$delayed}
+					loadingText="Saving..."
+					icon={FluentCheckmark20Filled}
 				>
-					{#if $delayed}
-						<span class="loading loading-spinner loading-sm"></span>
-						Saving...
-					{:else}
-						<FluentCheckmark20Filled class="size-5" />
-						Save Changes
-					{/if}
-				</button>
+					Save Changes
+				</Button>
 			</div>
 		</div>
 
 		<!-- Info Box -->
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-			<p class="text-sm text-blue-300">
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
+			<p class="text-sm text-[#b7d0e6]">
 				💡 <strong>Note:</strong> Changes cost {data.editCost.toLocaleString()} currency to prevent frequent modifications.
 			</p>
 		</div>
 	</form>
 
 	<!-- Danger Zone -->
-	<div class="bg-red-600/10 border border-red-500/20 rounded-xl p-5 space-y-3">
-		<div class="flex items-center gap-2">
+	<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5 space-y-3">
+		<h2 class="section-title">
 			<FluentWarning20Filled class="size-5 text-red-400" />
-			<h2 class="text-lg font-semibold text-red-300">Danger Zone</h2>
-		</div>
+			<span class="text-red-300">Danger Zone</span>
+		</h2>
 
 		<div class="space-y-4">
 			<div>
@@ -363,18 +352,19 @@
 				<p class="text-sm text-[#a89e8e] mb-3">
 					Permanently delete this newspaper and all associated articles. This action cannot be undone.
 				</p>
-				<button
+				<Button
 					type="button"
+					variant="soft-red"
+					size="sm"
+					icon={FluentDelete20Filled}
 					onclick={() => (showDeleteModal = true)}
-					class="btn btn-sm bg-red-600/20 hover:bg-red-600/30 border-red-500/30 text-red-300 hover:text-red-200 gap-2"
 				>
-					<FluentDelete20Filled class="size-4" />
 					Delete Newspaper
-				</button>
+				</Button>
 			</div>
 		</div>
 	</div>
-</div>
+</PageContainer>
 
 <!-- Delete Confirmation Modal -->
 <Modal bind:open={showDeleteModal} title="Delete Newspaper?" size="default">
@@ -382,16 +372,16 @@
 		<p class="text-[#d9ccb7]">
 			Are you sure you want to delete <strong>{data.newspaper.name}</strong>?
 		</p>
-		<div class="alert alert-warning bg-amber-600/20 border-amber-500/30">
-			<FluentWarning20Filled class="size-5 text-amber-400" />
-			<p class="text-amber-200 text-sm">
+		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+			<FluentWarning20Filled class="size-5 shrink-0" />
+			<p class="text-sm">
 				<strong>Warning:</strong> This will permanently delete all articles and members. This action cannot be undone.
 			</p>
 		</div>
 		<div class="flex justify-end gap-3 mt-6">
-			<button type="button" onclick={() => (showDeleteModal = false)} class="btn btn-ghost" disabled={isDeleting}>
+			<Button type="button" variant="ghost" onclick={() => (showDeleteModal = false)} disabled={isDeleting}>
 				Cancel
-			</button>
+			</Button>
 			<form
 				method="POST"
 				action="?/delete"
@@ -403,14 +393,9 @@
 					};
 				}}
 			>
-				<button type="submit" class="btn btn-error gap-2" disabled={isDeleting}>
-					{#if isDeleting}
-						<span class="loading loading-spinner loading-sm"></span>
-					{:else}
-						<FluentDelete20Filled class="size-4" />
-					{/if}
+				<Button type="submit" variant="danger" icon={FluentDelete20Filled} loading={isDeleting}>
 					Delete Newspaper
-				</button>
+				</Button>
 			</form>
 		</div>
 	</div>

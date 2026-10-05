@@ -10,6 +10,7 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import Badge from "#lib/component/ui/Badge.svelte";
 
@@ -58,19 +59,14 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div class="flex items-center justify-between flex-wrap gap-3">
-		<div>
-			<h1 class="text-3xl font-bold text-[#fff7e8]">All States</h1>
-			<p class="text-[#a89e8e] mt-1">
-				{data.regions.length}
-				{data.regions.length === 1 ? "state" : "states"} available
-			</p>
-		</div>
-		<a href="/fallen" class="btn btn-ghost justify-start">
-			<FluentBuildingBank20Filled class="size-5" />
-			Fallen States
-		</a>
-	</div>
+	<PageHeader
+		title="All States"
+		subtitle="{data.regions.length} {data.regions.length === 1 ? 'state' : 'states'} available"
+	>
+		{#snippet actions()}
+			<Button variant="secondary" href="/fallen" icon={FluentBuildingBank20Filled}>Fallen States</Button>
+		{/snippet}
+	</PageHeader>
 
 	<!-- Filters -->
 	<div class="flex flex-col sm:flex-row gap-3">

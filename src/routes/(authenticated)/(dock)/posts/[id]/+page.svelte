@@ -9,7 +9,9 @@
 	import Logo from "#lib/component/Logo.svelte";
 	import { formatDateTime } from "#lib/utils/formatting.js";
 	import ShareButton from "#lib/component/ShareButton.svelte";
-	import { buttonClass } from "#lib/component/ui/styles.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
 
 	const { data } = $props();
 
@@ -76,105 +78,89 @@
 	{/if}
 </svelte:head>
 
-<div class="min-h-screen bg-[#0c1929]">
-	<!-- Command Header -->
-	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
-		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
-			<div class="flex items-center gap-4">
-				<button
-					onclick={() => history.back()}
-					class="flex-shrink-0 p-2 rounded-lg bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8] transition-all"
-				>
-					<FluentArrowLeft20Filled class="size-5" />
-				</button>
+<PageContainer maxWidth="4xl">
+	<!-- Author Header -->
+	<div class="panel rounded-sm p-4">
+		<div class="flex items-center gap-4">
+			<IconButton
+				icon={FluentArrowLeft20Filled}
+				label="Go back"
+				variant="secondary"
+				onclick={() => history.back()}
+				class="flex-shrink-0"
+			/>
 
-				<!-- Author Info -->
-				<a href="/user/{data.article.authorId}" class="flex items-center gap-3 group flex-1 min-w-0">
-					<div class="relative flex-shrink-0">
-						<div class="absolute inset-0 bg-[#e6a527]/15 blur-xl rounded-full"></div>
-						<div class="relative size-12 sm:size-14 rounded-sm border-2 border-[#e6a527]/30 overflow-hidden">
-							<Logo src={data.article.authorLogo} alt={data.article.authorName} />
-						</div>
-					</div>
-					<div class="flex-1 min-w-0">
-						<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate">
-							{data.article.authorName}
-						</p>
-						{#if data.article.newspaperName}
-							<a
-								href="/newspaper/{data.article.newspaperId}"
-								class="flex items-center gap-1 text-xs text-[#a89e8e] hover:text-[#f7c56b] transition-colors font-mono"
-							>
-								<FluentEmojiRolledUpNewspaper class="size-3" />
-								{data.article.newspaperName}
-							</a>
-						{/if}
-						<span class="flex items-center gap-1 text-[10px] text-[#a89e8e] font-mono mt-0.5">
-							<FluentClock20Regular class="size-3" />
-							{formatDateTime(data.article.createdAt)}
-						</span>
-					</div>
-				</a>
-
-				<!-- Actions -->
-				<div class="flex items-center gap-2 flex-shrink-0">
-					{#if data.isAuthor}
+			<!-- Author Info -->
+			<a href="/user/{data.article.authorId}" class="flex items-center gap-3 group flex-1 min-w-0">
+				<div class="size-12 sm:size-14 rounded-sm border border-[#e6a527]/30 overflow-hidden flex-shrink-0">
+					<Logo src={data.article.authorLogo} alt={data.article.authorName} />
+				</div>
+				<div class="flex-1 min-w-0">
+					<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+						{data.article.authorName}
+					</p>
+					{#if data.article.newspaperName}
 						<a
-							href="/posts/{data.article.id}/edit"
-							class={buttonClass({ variant: "soft-amber", class: "text-xs font-mono" })}
+							href="/newspaper/{data.article.newspaperId}"
+							class="flex items-center gap-1 text-xs text-[#a89e8e] hover:text-[#f2c463] transition-colors"
 						>
-							<FluentEdit20Filled class="size-3.5" />
-							<span class="hidden sm:inline">Edit</span>
+							<FluentEmojiRolledUpNewspaper class="size-3" />
+							{data.article.newspaperName}
 						</a>
 					{/if}
+					<span class="flex items-center gap-1 text-xs text-[#a89e8e] mt-0.5">
+						<FluentClock20Regular class="size-3" />
+						{formatDateTime(data.article.createdAt)}
+					</span>
 				</div>
+			</a>
+
+			<!-- Actions -->
+			<div class="flex items-center gap-2 flex-shrink-0">
+				{#if data.isAuthor}
+					<Button variant="soft-amber" size="sm" href="/posts/{data.article.id}/edit" icon={FluentEdit20Filled}>
+						<span class="hidden sm:inline">Edit</span>
+					</Button>
+				{/if}
 			</div>
 		</div>
 	</div>
 
 	<!-- Article Content -->
-	<div class="w-full px-4 sm:px-6 py-6 sm:py-8">
-		<div class="max-w-4xl mx-auto space-y-8">
-			<!-- Headline -->
-			<h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#fff7e8] leading-tight tracking-wide">
-				{data.article.title}
-			</h1>
+	<article class="space-y-8 px-1 sm:px-2 py-2">
+		<!-- Headline -->
+		<h1 class="text-3xl lg:text-4xl font-bold text-[#fff7e8] leading-tight">
+			{data.article.title}
+		</h1>
 
-			<!-- Divider -->
-			<div class="border-t border-[#dfceb0]/15"></div>
+		<!-- Divider -->
+		<div class="border-t border-[#dfceb0]/15"></div>
 
-			<!-- Article Body -->
-			<div class="article-content">
-				{@html data.article.content}
-			</div>
+		<!-- Article Body -->
+		<div class="article-content text-[#d9ccb7]">
+			{@html data.article.content}
+		</div>
 
-			<!-- Bottom Divider -->
-			<div class="border-t border-[#dfceb0]/15"></div>
+		<!-- Bottom Divider -->
+		<div class="border-t border-[#dfceb0]/15"></div>
 
-			<!-- Bottom Actions -->
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<!-- Upvote -->
-					<button
-						type="button"
-						onclick={toggleUpvote}
-						class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-mono transition-all {hasUpvoted
-							? 'bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 text-red-400'
-							: 'bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#a89e8e] hover:text-[#fff7e8]'}"
-						disabled={isSubmitting}
-					>
-						{#if hasUpvoted}
-							<FluentHeart20Filled class="size-5" />
-						{:else}
-							<FluentHeart20Regular class="size-5" />
-						{/if}
-						<span class="font-bold">{upvoteCount}</span>
-					</button>
+		<!-- Bottom Actions -->
+		<div class="flex items-center justify-between">
+			<div class="flex items-center gap-3">
+				<!-- Upvote -->
+				<Button
+					type="button"
+					variant={hasUpvoted ? "soft-red" : "secondary"}
+					icon={hasUpvoted ? FluentHeart20Filled : FluentHeart20Regular}
+					onclick={toggleUpvote}
+					disabled={isSubmitting}
+				>
+					<span class="font-bold">{upvoteCount}</span>
+				</Button>
 
-					<!-- Share -->
-					<ShareButton title={data.article.title} />
-				</div>
+				<!-- Share -->
+				<ShareButton title={data.article.title} />
 			</div>
 		</div>
-	</div>
-</div>
+	</article>
+</PageContainer>

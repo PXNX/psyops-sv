@@ -46,10 +46,10 @@
 		{#each colorPresets as colorOption}
 			<button
 				type="button"
-				class="size-12 rounded-lg transition-all hover:scale-110 focus:scale-110 focus:outline-none"
+				class="size-12 rounded-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e6a527]"
 				style="background-color: {colorOption.value}"
 				class:ring-4={color === colorOption.value}
-				class:ring-white={color === colorOption.value}
+				class:ring-[#fff7e8]={color === colorOption.value}
 				class:opacity-50={disabled}
 				title={colorOption.name}
 				onclick={() => (color = colorOption.value)}
@@ -60,13 +60,13 @@
 
 	<!-- Custom Color Picker -->
 	<div class="flex items-center gap-3 pt-2">
-		<label for="color" class="text-sm font-medium text-[#e5d8c1]">Custom:</label>
+		<label for="color" class="field-label mb-0">Custom:</label>
 		<input
 			type="color"
 			id="color"
 			name="color"
 			bind:value={color}
-			class="h-10 w-20 rounded-lg border-2 border-[#dfceb0]/25 bg-[#0d1d31] cursor-pointer"
+			class="h-10 w-20 rounded-sm border border-[#dfceb0]/20 bg-[#0d1d31] cursor-pointer"
 			{disabled}
 		/>
 		<span class="text-sm text-[#a89e8e]">{color}</span>
@@ -77,9 +77,9 @@
 	{/if}
 
 	<!-- Preview -->
-	<div class="p-4 rounded-lg" style="background-color: {color}20; border: 2px solid {color}40">
+	<div class="p-4 rounded-sm" style="background-color: {color}20; border: 2px solid {color}40">
 		<div class="flex items-center gap-3">
-			<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {color}">
+			<div class="size-12 rounded-sm flex items-center justify-center" style="background-color: {color}">
 				{#if previewImageUrl}
 					<img src={previewImageUrl} alt="Logo preview" class="size-10 object-contain" />
 				{:else if PreviewIcon}

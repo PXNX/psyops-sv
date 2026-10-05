@@ -272,10 +272,10 @@
 <svelte:window onmousemove={handleMove} onmouseup={handleEnd} ontouchmove={handleMove} ontouchend={handleEnd} />
 
 <div class="modal modal-open">
-	<div class="modal-box w-full max-w-2xl panel">
+	<div class="modal-box w-full max-w-2xl panel rounded-sm">
 		<h3 class="font-bold text-lg mb-4 text-[#fff7e8]">{title}</h3>
 
-		<div class="relative bg-[#102239] rounded-lg overflow-hidden mb-4" bind:this={container}>
+		<div class="relative bg-[#102239] rounded-sm overflow-hidden mb-4" bind:this={container}>
 			<img bind:this={img} src={imageUrl} alt="Crop preview" class="w-full h-auto block pointer-events-none" />
 			<canvas
 				bind:this={canvas}

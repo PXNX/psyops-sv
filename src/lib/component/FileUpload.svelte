@@ -4,6 +4,7 @@
 	import IconCloudArrowUp from "~icons/fluent/cloud-arrow-up-24-regular";
 	import IconImage from "~icons/fluent/image-24-regular";
 	import ImageCropper from "./ImageCropper.svelte";
+	import Button from "./ui/Button.svelte";
 
 	interface Props {
 		action?: string;
@@ -219,7 +220,7 @@
 	class="space-y-4"
 >
 	<!-- File Drop Zone -->
-	<div class="form-control">
+	<div>
 		<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
 			<input
 				bind:this={fileInput}
@@ -238,23 +239,25 @@
 				type="button"
 				onclick={() => fileInput?.click()}
 				disabled={disabled || uploading}
-				class="group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]"
-				class:border-primary={dragActive}
-				class:bg-primary-5={dragActive}
-				class:border-base-300={!dragActive && !croppedDataUrl && !selectedFile}
-				class:border-success={(croppedDataUrl || selectedFile) && !dragActive}
-				class:bg-success-5={(croppedDataUrl || selectedFile) && !dragActive}
-				class:hover:border-primary={!uploading && !disabled}
-				class:hover:bg-base-200={!uploading && !disabled && !croppedDataUrl && !selectedFile}
+				class="group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 {dragActive
+					? 'border-[#e6a527] bg-[#e6a527]/10'
+					: croppedDataUrl || selectedFile
+						? 'border-[#8fae88]/50 bg-[#587252]/10'
+						: 'border-[#dfceb0]/20'} {!uploading && !disabled ? 'hover:border-[#e6a527]/50' : ''} {!uploading &&
+				!disabled &&
+				!croppedDataUrl &&
+				!selectedFile
+					? 'hover:bg-[#e6a527]/10'
+					: ''}"
 				class:opacity-50={uploading || disabled}
 			>
 				{#if !croppedDataUrl && !selectedFile}
 					<div class="flex min-h-[140px] flex-col items-center justify-center gap-2 p-4">
-						<div class="rounded-full bg-base-200 p-3 transition-transform group-hover:scale-110">
-							<IconImage class="h-8 w-8 text-base-content/40" />
+						<div class="rounded-full bg-[#e6a527]/12 border border-[#e6a527]/35 p-3">
+							<IconImage class="h-8 w-8 text-[#f7c56b]" />
 						</div>
 						<div class="text-center">
-							<p class="text-sm font-semibold text-base-content">
+							<p class="text-sm font-semibold text-[#fff7e8]">
 								{#if dragActive}
 									Drop file here
 								{:else if uploading}
@@ -266,7 +269,7 @@
 								{/if}
 							</p>
 							{#if !uploading && !disabled}
-								<p class="mt-1 text-xs text-base-content/60">
+								<p class="mt-1 text-xs text-[#a89e8e]">
 									{acceptedTypes.replace("image/*", "Images")} • {maxSizeMB}MB max
 								</p>
 							{/if}
@@ -277,33 +280,33 @@
 					<div class="flex gap-3 p-3">
 						{#if croppedDataUrl}
 							<div class="shrink-0">
-								<div class="h-24 w-24 overflow-hidden rounded-lg">
+								<div class="h-24 w-24 overflow-hidden rounded-sm">
 									<img src={croppedDataUrl} alt="Preview" class="h-full w-full object-cover" />
 								</div>
 							</div>
 						{:else if previewUrl}
 							<div class="shrink-0">
-								<div class="h-24 w-24 overflow-hidden rounded-lg">
+								<div class="h-24 w-24 overflow-hidden rounded-sm">
 									<img src={previewUrl} alt="Preview" class="h-full w-full object-cover" />
 								</div>
 							</div>
 						{:else}
-							<div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg bg-base-200">
-								<IconImage class="h-8 w-8 text-base-content/40" />
+							<div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-sm bg-[#102239]">
+								<IconImage class="h-8 w-8 text-[#a89e8e]" />
 							</div>
 						{/if}
 						<div class="flex min-w-0 flex-1 flex-col justify-center text-left">
-							<p class="truncate text-sm font-medium" title={selectedFile?.name}>
+							<p class="truncate text-sm font-medium text-[#fff7e8]" title={selectedFile?.name}>
 								{selectedFile?.name}
 							</p>
-							<p class="text-xs text-base-content/60">
+							<p class="text-xs text-[#a89e8e]">
 								{Math.round((selectedFile?.size || 0) / 1024)} KB
 							</p>
 							{#if enableCrop && croppedDataUrl}
 								<button
 									type="button"
 									onclick={() => (showCropper = true)}
-									class="text-xs text-primary hover:underline mt-1"
+									class="text-xs text-[#f7c56b] hover:text-[#f2c463] hover:underline mt-1"
 								>
 									Re-crop
 								</button>
@@ -316,7 +319,7 @@
 	</div>
 
 	<!-- Submit Button -->
-	<button type="button" class="btn btn-block btn-primary" disabled={!canUpload || disabled} onclick={handleSubmit}>
+	<Button type="button" variant="primary" block disabled={!canUpload || disabled} onclick={handleSubmit}>
 		{#if uploading}
 			<span class="loading loading-spinner"></span>
 			Uploading...
@@ -327,5 +330,5 @@
 			<IconCloudArrowUp class="h-5 w-5" />
 			Upload
 		{/if}
-	</button>
+	</Button>
 </form>

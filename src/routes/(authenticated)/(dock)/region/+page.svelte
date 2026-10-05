@@ -4,6 +4,9 @@
 	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Badge } from "#lib/component/ui/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { goto } from "$app/navigation";
 
@@ -50,39 +53,34 @@
 	}
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<h1 class="text-3xl font-bold text-[#fff7e8]">All Regions</h1>
-			<p class="text-[#a89e8e] mt-1">{data.regions.length} regions available</p>
-		</div>
-	</div>
+	<PageHeader title="All Regions" subtitle="{data.regions.length} regions available" />
 
 	<!-- Search and Filters -->
-	<div class="panel rounded-xl p-4">
-		<div class="flex flex-col md:flex-row gap-4">
-			<!-- Search -->
-			<div class="flex-1 relative">
-				<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
-				<input
-					type="text"
-					bind:value={searchInput}
-					onkeydown={(e) => e.key === "Enter" && applyFilters()}
-					placeholder="Search regions..."
-					class="w-full pl-10 pr-4 py-2 field-control rounded-lg"
-				/>
-			</div>
-
-			<!-- Sort Dropdown -->
-			<div class="flex gap-2">
-				<select bind:value={selectedSort} onchange={() => applyFilters()} class="px-4 py-2 field-control rounded-lg">
-					{#each sortOptions as option}
-						<option value={option.value}>{option.label}</option>
-					{/each}
-				</select>
-			</div>
+	<div class="flex flex-col sm:flex-row gap-3">
+		<!-- Search -->
+		<div class="flex-1 relative">
+			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+			<input
+				type="text"
+				bind:value={searchInput}
+				onkeydown={(e) => e.key === "Enter" && applyFilters()}
+				placeholder="Search regions..."
+				class="field-control w-full rounded-sm pl-11 pr-4 py-2.5"
+			/>
 		</div>
+
+		<!-- Sort Dropdown -->
+		<select
+			bind:value={selectedSort}
+			onchange={() => applyFilters()}
+			class="field-control rounded-sm px-4 py-2.5 sm:w-auto"
+		>
+			{#each sortOptions as option}
+				<option value={option.value}>{option.label}</option>
+			{/each}
+		</select>
 	</div>
 
 	<!-- Regions Grid -->
@@ -90,114 +88,88 @@
 		{#each data.regions as region}
 			<a
 				href="/region/{region.id}"
-				class="group panel rounded-xl hover:border-[#b7a0c5]/40 transition-all overflow-hidden"
+				class="group panel-interactive rounded-sm p-5 relative space-y-3"
+				style="border-top: 3px solid {getRegionColor(region)}"
 			>
-				<!-- Region Header with State Color -->
-				<div
-					class="h-24 relative"
-					style="background: linear-gradient(135deg, {getRegionColor(region)}40, {getRegionColor(region)}20)"
-				>
-					<div class="absolute inset-0 bg-gradient-to-b from-transparent to-[#14283f]" />
-
-					<!-- Region Logo -->
-					<div class="absolute bottom-0 left-4 translate-y-1/2">
-						<div class="rounded-xl">
-							<img
-								src="/coats/{region.id}.svg"
-								alt={getRegionName(region.id)}
-								class="size-16 rounded-xl object-cover"
-							/>
-						</div>
+				<!-- Residence Badge -->
+				{#if data.userRegionIds.includes(region.id)}
+					<div class="absolute top-4 right-4">
+						<Badge tone="green" icon={FluentHome20Filled}>Resident</Badge>
 					</div>
+				{/if}
 
-					<!-- Residence Badge -->
-					{#if data.userRegionIds.includes(region.id)}
-						<div class="absolute top-3 right-3">
-							<div
-								class="px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center gap-1"
-							>
-								<FluentHome20Filled class="size-3 text-emerald-400" />
-								<span class="text-xs text-emerald-400 font-medium">Resident</span>
-							</div>
-						</div>
-					{/if}
-				</div>
-
-				<!-- Region Content -->
-				<div class="px-4 pt-10 pb-4 space-y-3">
-					<!-- Name and Rating -->
-					<div>
-						<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">
+				<!-- Region Header -->
+				<div class="flex items-center gap-3">
+					<div
+						class="size-14 rounded-sm overflow-hidden shrink-0 flex items-center justify-center"
+						style="background-color: {getRegionColor(region)}30;"
+					>
+						<img src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="size-12 object-contain" />
+					</div>
+					<div class="flex-1 min-w-0">
+						<h2 class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
 							{getRegionName(region.id)}
-						</h3>
-						<div class="flex items-center gap-3 text-sm text-[#a89e8e] mt-1">
+						</h2>
+						<div class="flex items-center gap-2 text-xs text-[#a89e8e] mt-0.5">
 							<span>#{region.rating || 0}</span>
 							{#if region.stateName}
 								<span>•</span>
-								<span>{region.stateName}</span>
+								<span class="truncate">{region.stateName}</span>
 							{:else}
-								<span class="text-amber-400">• Independent</span>
+								<span class="text-[#f7c56b]">• Independent</span>
 							{/if}
 						</div>
 					</div>
+				</div>
 
-					<!-- Quick Stats -->
-					<div class="grid grid-cols-2 gap-2 text-xs">
-						<div class="flex items-center gap-1 text-[#a89e8e]">
-							<FluentPeople20Filled class="size-3" />
-							<span>{region.population.toLocaleString()}</span>
-						</div>
-						<div class="text-[#a89e8e]">
-							Infrastructure: {region.infrastructure || 0}
-						</div>
-						<div class="text-[#a89e8e]">
-							Economy: {region.economy || 0}
-						</div>
-						<div class="text-[#a89e8e]">
-							Education: {region.education || 0}
+				<!-- Quick Stats -->
+				<div class="grid grid-cols-2 gap-2 text-xs text-[#d9ccb7]">
+					<div class="flex items-center gap-1">
+						<FluentPeople20Filled class="size-3 text-[#7ba0c8]" />
+						<span>{region.population.toLocaleString()}</span>
+					</div>
+					<div>
+						<span class="text-[#a89e8e]">Infrastructure:</span> {region.infrastructure || 0}
+					</div>
+					<div>
+						<span class="text-[#a89e8e]">Economy:</span> {region.economy || 0}
+					</div>
+					<div>
+						<span class="text-[#a89e8e]">Education:</span> {region.education || 0}
+					</div>
+				</div>
+
+				<!-- Resources (if any) -->
+				{#if region.oil || region.steel || region.chromium || region.tungsten || region.rubber || region.aluminium}
+					<div class="pt-3 border-t border-[#dfceb0]/10">
+						<div class="flex flex-wrap gap-1">
+							{#if region.oil}
+								<Badge tone="amber" size="xs">Oil: {region.oil}</Badge>
+							{/if}
+							{#if region.steel}
+								<Badge tone="neutral" size="xs">Steel: {region.steel}</Badge>
+							{/if}
+							{#if region.chromium}
+								<Badge tone="blue" size="xs">Chromium: {region.chromium}</Badge>
+							{/if}
+							{#if region.tungsten}
+								<Badge tone="purple" size="xs">Tungsten: {region.tungsten}</Badge>
+							{/if}
 						</div>
 					</div>
-
-					<!-- Resources (if any) -->
-					{#if region.oil || region.steel || region.chromium || region.tungsten || region.rubber || region.aluminium}
-						<div class="pt-2 border-t border-white/5">
-							<div class="flex flex-wrap gap-1">
-								{#if region.oil}
-									<span class="px-2 py-0.5 bg-amber-600/20 border border-amber-600/30 rounded text-xs text-amber-400">
-										Oil: {region.oil}
-									</span>
-								{/if}
-								{#if region.steel}
-									<span class="px-2 py-0.5 bg-[#14283f] border border-[#dfceb0]/20 rounded text-xs text-[#a89e8e]">
-										Steel: {region.steel}
-									</span>
-								{/if}
-								{#if region.chromium}
-									<span class="px-2 py-0.5 bg-blue-600/20 border border-blue-600/30 rounded text-xs text-blue-400">
-										Chromium: {region.chromium}
-									</span>
-								{/if}
-								{#if region.tungsten}
-									<span class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded text-xs text-[#d5c4df]">
-										Tungsten: {region.tungsten}
-									</span>
-								{/if}
-							</div>
-						</div>
-					{/if}
-				</div>
+				{/if}
 			</a>
 		{/each}
 	</div>
 
 	<!-- Empty State -->
 	{#if data.regions.length === 0}
-		<div class="text-center py-12">
-			<div class="size-20 mx-auto bg-[#102239]/70 rounded-full flex items-center justify-center mb-4">
-				<FluentSearch20Filled class="size-10 text-[#a89e8e]" />
+		<div class="panel-muted rounded-sm p-12 text-center">
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
+				<FluentSearch20Filled class="size-8 text-[#a89e8e]" />
 			</div>
-			<h3 class="text-xl font-bold text-[#d9ccb7] mb-2">No regions found</h3>
+			<h2 class="text-xl font-bold text-[#fff7e8] mb-2">No regions found</h2>
 			<p class="text-[#a89e8e]">Try adjusting your search or filters</p>
 		</div>
 	{/if}
-</div>
+</PageContainer>

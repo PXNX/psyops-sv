@@ -12,6 +12,8 @@
 	import { enhance } from "$app/forms";
 	import { onMount, onDestroy } from "svelte";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import { Badge } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
@@ -74,336 +76,316 @@
 	);
 </script>
 
-<div class="min-h-screen">
-	<!-- Command Header -->
-	<div class="border-b border-[#dfceb0]/20 bg-[#0e1d2f]/90 backdrop-blur-xl">
-		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
-			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-				<div class="flex items-center gap-3 sm:gap-5 w-full sm:w-auto">
-					<a href="/state/{data.state.id}" class="relative flex-shrink-0">
-						<div class="absolute inset-0 bg-[#8c709b]/20 blur-xl rounded-full"></div>
-						<Logo
-							src={data.state.logo}
-							alt={data.state.name}
-							class="relative size-14 sm:size-18 rounded-sm border-2 border-[#b7a0c5]/40 hover:border-[#e6a527]/55 transition-colors"
-							placeholderIcon={FluentBuildingGovernment20Filled}
-							placeholderGradient="from-[#315d8d] to-[#8c709b]"
-						/>
-					</a>
-					<div class="flex-1 min-w-0">
-						<div class="flex flex-wrap items-center gap-2 mb-1">
-							<h1
-								class="text-xl sm:text-2xl font-bold tracking-wider uppercase font-mono {data.election.isInaugural
-									? 'text-transparent bg-clip-text bg-gradient-to-r from-[#f7c56b] via-[#ffe2a4] to-[#e6a527]'
-									: 'text-[#d5c4df]'}"
-							>
-								{data.election.isInaugural ? "Founding" : "Parliamentary"} Election
-							</h1>
-							{#if hasEnded}
-								<span
-									class="px-2 py-1 bg-[#14283f] border border-[#dfceb0]/25 rounded-sm text-[#d9ccb7] font-bold text-xs font-mono"
-								>
-									CONCLUDED
-								</span>
-							{/if}
-						</div>
-						<a
-							href="/state/{data.state.id}"
-							class="text-sm text-[#a89e8e] hover:text-[#e6a527] transition-colors font-mono"
-						>
-							{data.state.name}
-						</a>
-					</div>
+<PageContainer maxWidth="5xl">
+	<!-- Hero -->
+	<div class="panel rounded-sm p-5 space-y-5">
+		<div class="flex items-center gap-4">
+			<a href="/state/{data.state.id}" class="flex-shrink-0">
+				<Logo
+					src={data.state.logo}
+					alt={data.state.name}
+					class="size-14 sm:size-18 rounded-sm border border-[#dfceb0]/15 hover:border-[#e6a527]/55 transition-colors"
+					placeholderIcon={FluentBuildingGovernment20Filled}
+					placeholderGradient="from-[#315d8d] to-[#315d8d]"
+				/>
+			</a>
+			<div class="flex-1 min-w-0">
+				<div class="flex flex-wrap items-center gap-2 mb-1">
+					<h1 class="text-3xl font-bold {data.election.isInaugural ? 'text-[#f7c56b]' : 'text-[#fff7e8]'}">
+						{data.election.isInaugural ? "Founding" : "Parliamentary"} Election
+					</h1>
+					{#if hasEnded}
+						<Badge tone="neutral">CONCLUDED</Badge>
+					{/if}
 				</div>
+				<a href="/state/{data.state.id}" class="text-sm text-[#a89e8e] hover:text-[#f2c463] transition-colors">
+					{data.state.name}
+				</a>
 			</div>
-
-			<!-- Founding Election Banner -->
-			{#if data.election.isInaugural}
-				<div
-					class="mt-4 sm:mt-6 relative overflow-hidden bg-gradient-to-r from-[#e6a527]/15 via-[#f2c463]/10 to-[#e6a527]/15 border border-[#e6a527]/35 rounded-sm p-4 sm:p-5 text-center"
-				>
-					<div
-						class="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(230,165,39,0.12),_transparent_70%)]"
-					></div>
-					<div class="relative flex items-center justify-center gap-2 text-[#f7c56b] font-mono">
-						<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
-						<span class="text-sm sm:text-lg font-bold uppercase tracking-[0.2em]">A Nation Is Born</span>
-						<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
-					</div>
-					<p class="relative mt-2 text-xs sm:text-sm text-[#ffe2a4]/80 font-mono">
-						The first free election of the independent state of
-						<span class="text-[#ffe2a4] font-bold">{data.state.name}</span>
-					</p>
-				</div>
-			{/if}
-
-			<!-- Countdown Timer -->
-			{#if countdown}
-				<div
-					class="mt-4 sm:mt-6 bg-gradient-to-r from-[#8c709b]/15 to-[#0c1929]/50 border border-[#b7a0c5]/25 rounded-sm p-3 sm:p-4"
-				>
-					<div
-						class="text-[#d5c4df] font-mono text-xs sm:text-sm font-medium uppercase tracking-wide text-center mb-2 sm:mb-3"
-					>
-						{!hasStarted ? "Voting Opens In" : "Voting Closes In"}
-					</div>
-					<div class="flex items-center justify-center gap-2 sm:gap-3">
-						<div class="text-center">
-							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-[#d5c4df] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#b7a0c5]/25"
-							>
-								{String(countdown.days).padStart(2, "0")}
-							</div>
-							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">DAYS</div>
-						</div>
-						<div class="text-xl sm:text-2xl font-bold text-[#b7a0c5]/50">:</div>
-						<div class="text-center">
-							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-[#d5c4df] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#b7a0c5]/25"
-							>
-								{String(countdown.hours).padStart(2, "0")}
-							</div>
-							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">HRS</div>
-						</div>
-						<div class="text-xl sm:text-2xl font-bold text-[#b7a0c5]/50">:</div>
-						<div class="text-center">
-							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-[#d5c4df] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#b7a0c5]/25"
-							>
-								{String(countdown.minutes).padStart(2, "0")}
-							</div>
-							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">MIN</div>
-						</div>
-						<div class="text-xl sm:text-2xl font-bold text-[#b7a0c5]/50">:</div>
-						<div class="text-center">
-							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-[#d5c4df] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#b7a0c5]/25"
-							>
-								{String(countdown.seconds).padStart(2, "0")}
-							</div>
-							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">SEC</div>
-						</div>
-					</div>
-				</div>
-			{/if}
 		</div>
-	</div>
 
-	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-6">
-		<!-- Voter Status -->
-		{#if !data.userResidence}
-			<div class="bg-red-600/10 border border-red-500/20 rounded-lg p-3 text-center">
-				<p class="text-sm text-red-300 font-mono">You must be a resident of {data.state.name} to vote</p>
-			</div>
-		{:else if data.userVote && isActive}
-			<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-lg p-3 text-center">
-				<div class="flex items-center justify-center gap-2 text-[#c6dfbf] font-mono text-sm">
-					<FluentCheckmark20Filled class="size-4" />
-					<span>Vote cast. You can change your vote until the election ends.</span>
+		<!-- Founding Election Banner -->
+		{#if data.election.isInaugural}
+			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-4 sm:p-5 text-center">
+				<div class="flex items-center justify-center gap-2 text-[#f7c56b]">
+					<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
+					<span class="text-sm sm:text-lg font-bold uppercase tracking-[0.2em]">A Nation Is Born</span>
+					<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
 				</div>
-			</div>
-		{:else if canVote}
-			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-lg p-3 text-center">
-				<p class="text-sm text-[#d5c4df] font-mono">
-					{data.election.isInaugural ? "Cast your vote in the inaugural election" : "Cast your vote below"}
+				<p class="mt-2 text-xs sm:text-sm text-[#ffe2a4]/80">
+					The first free election of the independent state of
+					<span class="text-[#ffe2a4] font-bold">{data.state.name}</span>
 				</p>
 			</div>
 		{/if}
 
-		<!-- Stats Strip -->
-		<div class="grid grid-cols-3 gap-3 text-center">
-			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-lg p-3 sm:p-4">
-				<div class="text-xl sm:text-2xl font-bold text-[#d5c4df] font-mono">{data.totalVotes.toLocaleString()}</div>
-				<div class="text-[10px] sm:text-xs text-[#d5c4df]/60 font-mono uppercase tracking-wider">Votes</div>
-			</div>
-			<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-lg p-3 sm:p-4">
-				<div class="text-xl sm:text-2xl font-bold text-[#b7d0e6] font-mono">{data.parties.length}</div>
-				<div class="text-[10px] sm:text-xs text-[#b7d0e6]/60 font-mono uppercase tracking-wider">Parties</div>
-			</div>
-			<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-lg p-3 sm:p-4">
-				<div class="text-xl sm:text-2xl font-bold text-[#c6dfbf] font-mono">{data.election.totalSeats}</div>
-				<div class="text-[10px] sm:text-xs text-[#c6dfbf]/60 font-mono uppercase tracking-wider">Seats</div>
-			</div>
-		</div>
-
-		<!-- Parties -->
-		{#if data.parties.length === 0}
-			<div class="panel-muted rounded-xl p-8 sm:p-12 text-center">
-				<div class="text-4xl sm:text-6xl mb-4 opacity-20">🗳️</div>
-				<p class="text-lg text-[#a89e8e] font-mono">No political parties registered</p>
-			</div>
-		{:else}
-			<div class="space-y-3">
-				{#each sortedParties as party, index}
-					{@const votes = data.votesByParty[party.id] || 0}
-					{@const percentage = getVotePercentage(party.id)}
-					{@const isUserVote = data.userVote === party.id}
-					{@const hasEnoughMembers = party.memberCount >= 3}
-					{@const canVoteForParty = canVote && hasEnoughMembers}
-
-					<div
-						class="panel border rounded-xl overflow-hidden transition-all {isUserVote
-							? 'border-[#8fae88]/50 ring-1 ring-[#8fae88]/20'
-							: 'border-[#dfceb0]/15 hover:border-[#dfceb0]/25'}"
-					>
-						<div class="p-4 sm:p-5">
-							<div class="flex items-start gap-4">
-								<!-- Rank + Logo -->
-								<div class="flex flex-col items-center gap-2 flex-shrink-0">
-									{#if hasStarted && index < 3}
-										<div
-											class="size-6 rounded-full flex items-center justify-center font-bold text-xs font-mono {index ===
-											0
-												? 'bg-[#e6a527] text-[#172a45]'
-												: index === 1
-													? 'bg-[#a89e8e] text-[#172a45]'
-													: 'bg-orange-600 text-orange-100'}"
-										>
-											{index + 1}
-										</div>
-									{/if}
-									<a href="/party/{party.id}" class="group/logo">
-										{#if party.logo}
-											<Logo
-												src={party.logo}
-												alt={party.name}
-												class="size-14 sm:size-16 rounded-lg border-2 border-[#dfceb0]/20 group-hover/logo:border-[#e6a527]/55 transition-colors"
-												placeholderIcon={FluentFlag20Filled}
-											/>
-										{:else}
-											<div
-												class="size-14 sm:size-16 rounded-lg flex items-center justify-center text-lg font-bold text-white border-2 border-[#dfceb0]/20"
-												style="background: linear-gradient(135deg, {party.color}, {party.color}dd)"
-											>
-												{party.abbreviation || party.name.substring(0, 2)}
-											</div>
-										{/if}
-									</a>
-								</div>
-
-								<!-- Party Info -->
-								<div class="flex-1 min-w-0">
-									<div class="flex items-start justify-between gap-3 mb-2">
-										<div class="flex-1 min-w-0">
-											<a href="/party/{party.id}" class="group/link">
-												<h3
-													class="text-lg sm:text-xl font-bold text-[#fff7e8] group-hover/link:text-[#f7c56b] transition-colors flex items-center gap-2 truncate"
-												>
-													{party.name}
-													{#if isUserVote}
-														<FluentCheckmark20Filled class="size-4 text-[#8fae88] flex-shrink-0" />
-													{/if}
-												</h3>
-											</a>
-											{#if party.ideology}
-												<span
-													class="inline-block px-2 py-0.5 rounded text-xs font-mono mt-1"
-													style="background-color: {party.color}20; color: {party.color}; border: 1px solid {party.color}30"
-												>
-													{party.ideology}
-												</span>
-											{/if}
-										</div>
-
-										{#if hasStarted}
-											<div class="text-right flex-shrink-0">
-												<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{votes}</div>
-												<div class="text-xs text-[#a89e8e] font-mono">{percentage.toFixed(1)}%</div>
-											</div>
-										{/if}
-									</div>
-
-									<div class="flex items-center gap-4 text-sm flex-wrap mt-2">
-										{#if party.leader}
-											<a
-												href="/user/{party.leader.accountId}"
-												class="flex items-center gap-2 text-[#c7bda9] hover:text-[#fff7e8] transition-colors"
-											>
-												<Logo
-													src={party.leader.logo}
-													alt={party.leader.name}
-													placeholderIcon={FluentPerson20Filled}
-													class="size-6 rounded"
-												/>
-												<span class="text-xs font-mono">{party.leader.name}</span>
-											</a>
-										{/if}
-										<span
-											class="text-xs font-mono flex items-center gap-1.5 {hasEnoughMembers
-												? 'text-[#a89e8e]'
-												: 'text-red-400'}"
-										>
-											<FluentPeople20Filled class="size-3.5" />
-											{party.memberCount}
-											{#if !hasEnoughMembers}
-												<span class="text-red-400/70">(need {3 - party.memberCount} more)</span>
-											{/if}
-										</span>
-									</div>
-
-									<!-- Vote Bar -->
-									{#if hasStarted && data.totalVotes > 0}
-										<div class="mt-3">
-											<div class="w-full bg-[#0d1d31] rounded-full h-2 overflow-hidden">
-												<div
-													class="h-full rounded-full transition-all duration-700 ease-out"
-													style="width: {percentage}%; background: {party.color}"
-												></div>
-											</div>
-										</div>
-									{/if}
-								</div>
-							</div>
+		<!-- Countdown Timer -->
+		{#if countdown}
+			<div class="panel-muted rounded-sm p-3 sm:p-4">
+				<div class="text-[10px] sm:text-xs text-[#a89e8e] uppercase tracking-wide text-center mb-2 sm:mb-3">
+					{!hasStarted ? "Voting Opens In" : "Voting Closes In"}
+				</div>
+				<div class="flex items-center justify-center gap-2 sm:gap-3">
+					<div class="text-center">
+						<div
+							class="text-2xl sm:text-4xl font-mono font-bold text-[#fff7e8] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#dfceb0]/15"
+						>
+							{String(countdown.days).padStart(2, "0")}
 						</div>
-
-						<!-- Vote Action -->
-						{#if data.userResidence}
-							<div class="border-t border-[#dfceb0]/15 px-4 sm:px-5 py-3 bg-[#0d1d31]/40">
-								{#if !hasEnoughMembers}
-									<p class="text-xs text-red-400/70 text-center font-mono">Needs 3+ members to participate</p>
-								{:else}
-									<form
-										method="POST"
-										action="?/vote"
-										use:enhance={() => {
-											return async ({ update, result }) => {
-												await update();
-												if (result.type === "success") showVoteAnim = true;
-											};
-										}}
-										class="w-full"
-									>
-										<input type="hidden" name="partyId" value={party.id} />
-										<button
-											type="submit"
-											disabled={!canVoteForParty}
-											class="w-full py-2 rounded-lg font-mono text-sm font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed text-white {isUserVote &&
-											canVote
-												? 'bg-emerald-600 hover:bg-emerald-500'
-												: ''}"
-											style:background={!isUserVote && canVoteForParty ? party.color : ""}
-											style:border-color={party.color}
-										>
-											{#if !canVote && !hasStarted}
-												VOTING NOT OPEN
-											{:else if !canVote && hasEnded}
-												VOTING CLOSED
-											{:else if isUserVote}
-												✓ VOTED
-											{:else}
-												VOTE
-											{/if}
-										</button>
-									</form>
-								{/if}
-							</div>
-						{/if}
+						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1 sm:mt-1.5">DAYS</div>
 					</div>
-				{/each}
+					<div class="text-xl sm:text-2xl font-bold text-[#a89e8e]/50">:</div>
+					<div class="text-center">
+						<div
+							class="text-2xl sm:text-4xl font-mono font-bold text-[#fff7e8] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#dfceb0]/15"
+						>
+							{String(countdown.hours).padStart(2, "0")}
+						</div>
+						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1 sm:mt-1.5">HRS</div>
+					</div>
+					<div class="text-xl sm:text-2xl font-bold text-[#a89e8e]/50">:</div>
+					<div class="text-center">
+						<div
+							class="text-2xl sm:text-4xl font-mono font-bold text-[#fff7e8] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#dfceb0]/15"
+						>
+							{String(countdown.minutes).padStart(2, "0")}
+						</div>
+						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1 sm:mt-1.5">MIN</div>
+					</div>
+					<div class="text-xl sm:text-2xl font-bold text-[#a89e8e]/50">:</div>
+					<div class="text-center">
+						<div
+							class="text-2xl sm:text-4xl font-mono font-bold text-[#fff7e8] bg-[#0d1d31] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#dfceb0]/15"
+						>
+							{String(countdown.seconds).padStart(2, "0")}
+						</div>
+						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1 sm:mt-1.5">SEC</div>
+					</div>
+				</div>
 			</div>
 		{/if}
 	</div>
-</div>
+
+	<!-- Voter Status -->
+	{#if !data.userResidence}
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center justify-center gap-3">
+			<p class="text-sm">You must be a resident of {data.state.name} to vote</p>
+		</div>
+	{:else if data.userVote && isActive}
+		<div
+			class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center justify-center gap-3"
+		>
+			<FluentCheckmark20Filled class="size-4" />
+			<span class="text-sm">Vote cast. You can change your vote until the election ends.</span>
+		</div>
+	{:else if canVote}
+		<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm p-4 text-center">
+			<p class="text-sm text-[#d5c4df]">
+				{data.election.isInaugural ? "Cast your vote in the inaugural election" : "Cast your vote below"}
+			</p>
+		</div>
+	{/if}
+
+	<!-- Stats Strip -->
+	<div class="grid grid-cols-3 gap-3">
+		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
+			<FluentVote20Filled class="size-4 text-[#b7a0c5] shrink-0" />
+			<div class="min-w-0">
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Votes</p>
+				<p class="text-sm sm:text-xl font-bold text-[#fff7e8] font-mono truncate">{data.totalVotes.toLocaleString()}</p>
+			</div>
+		</div>
+		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
+			<FluentFlag20Filled class="size-4 text-[#7ba0c8] shrink-0" />
+			<div class="min-w-0">
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Parties</p>
+				<p class="text-sm sm:text-xl font-bold text-[#fff7e8] truncate">{data.parties.length}</p>
+			</div>
+		</div>
+		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
+			<FluentPeople20Filled class="size-4 text-[#8fae88] shrink-0" />
+			<div class="min-w-0">
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Seats</p>
+				<p class="text-sm sm:text-xl font-bold text-[#fff7e8] truncate">{data.election.totalSeats}</p>
+			</div>
+		</div>
+	</div>
+
+	<!-- Parties -->
+	{#if data.parties.length === 0}
+		<div class="panel-muted rounded-sm p-8 sm:p-12 text-center">
+			<div class="text-4xl sm:text-6xl mb-4 opacity-20">🗳️</div>
+			<p class="text-lg text-[#a89e8e]">No political parties registered</p>
+		</div>
+	{:else}
+		<div class="space-y-3">
+			{#each sortedParties as party, index}
+				{@const votes = data.votesByParty[party.id] || 0}
+				{@const percentage = getVotePercentage(party.id)}
+				{@const isUserVote = data.userVote === party.id}
+				{@const hasEnoughMembers = party.memberCount >= 3}
+				{@const canVoteForParty = canVote && hasEnoughMembers}
+
+				<div
+					class="panel rounded-sm overflow-hidden transition-colors {isUserVote
+						? 'border-[#8fae88]/50 ring-1 ring-[#8fae88]/20'
+						: 'hover:border-[#dfceb0]/25'}"
+				>
+					<div class="p-4 sm:p-5">
+						<div class="flex items-start gap-4">
+							<!-- Rank + Logo -->
+							<div class="flex flex-col items-center gap-2 flex-shrink-0">
+								{#if hasStarted && index < 3}
+									<div
+										class="size-6 rounded-full flex items-center justify-center font-bold text-xs {index === 0
+											? 'bg-[#e6a527] text-[#172a45]'
+											: index === 1
+												? 'bg-[#a89e8e] text-[#172a45]'
+												: 'bg-[#8c6a43] text-[#fff7e8]'}"
+									>
+										{index + 1}
+									</div>
+								{/if}
+								<a href="/party/{party.id}" class="group/logo">
+									{#if party.logo}
+										<Logo
+											src={party.logo}
+											alt={party.name}
+											class="size-14 sm:size-16 rounded-sm border border-[#dfceb0]/20 group-hover/logo:border-[#e6a527]/55 transition-colors"
+											placeholderIcon={FluentFlag20Filled}
+										/>
+									{:else}
+										<div
+											class="size-14 sm:size-16 rounded-sm flex items-center justify-center text-lg font-bold text-[#fff7e8] border border-[#dfceb0]/20"
+											style="background-color: {party.color}"
+										>
+											{party.abbreviation || party.name.substring(0, 2)}
+										</div>
+									{/if}
+								</a>
+							</div>
+
+							<!-- Party Info -->
+							<div class="flex-1 min-w-0">
+								<div class="flex items-start justify-between gap-3 mb-2">
+									<div class="flex-1 min-w-0">
+										<a href="/party/{party.id}" class="group/link">
+											<h3
+												class="text-lg sm:text-xl font-bold text-[#fff7e8] group-hover/link:text-[#f2c463] transition-colors flex items-center gap-2 truncate"
+											>
+												{party.name}
+												{#if isUserVote}
+													<FluentCheckmark20Filled class="size-4 text-[#8fae88] flex-shrink-0" />
+												{/if}
+											</h3>
+										</a>
+										{#if party.ideology}
+											<span
+												class="inline-block px-2 py-0.5 rounded-sm text-xs mt-1"
+												style="background-color: {party.color}20; color: {party.color}; border: 1px solid {party.color}30"
+											>
+												{party.ideology}
+											</span>
+										{/if}
+									</div>
+
+									{#if hasStarted}
+										<div class="text-right flex-shrink-0">
+											<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{votes}</div>
+											<div class="text-xs text-[#a89e8e] font-mono">{percentage.toFixed(1)}%</div>
+										</div>
+									{/if}
+								</div>
+
+								<div class="flex items-center gap-4 text-sm flex-wrap mt-2">
+									{#if party.leader}
+										<a
+											href="/user/{party.leader.accountId}"
+											class="flex items-center gap-2 text-[#d9ccb7] hover:text-[#fff7e8] transition-colors"
+										>
+											<Logo
+												src={party.leader.logo}
+												alt={party.leader.name}
+												placeholderIcon={FluentPerson20Filled}
+												class="size-6 rounded-sm"
+											/>
+											<span class="text-xs">{party.leader.name}</span>
+										</a>
+									{/if}
+									<span
+										class="text-xs flex items-center gap-1.5 {hasEnoughMembers ? 'text-[#a89e8e]' : 'text-red-400'}"
+									>
+										<FluentPeople20Filled class="size-3.5" />
+										{party.memberCount}
+										{#if !hasEnoughMembers}
+											<span class="text-red-400/70">(need {3 - party.memberCount} more)</span>
+										{/if}
+									</span>
+								</div>
+
+								<!-- Vote Bar -->
+								{#if hasStarted && data.totalVotes > 0}
+									<div class="mt-3">
+										<div class="w-full bg-[#0d1d31] rounded-full h-2 overflow-hidden">
+											<div
+												class="h-full rounded-full transition-all duration-700 ease-out"
+												style="width: {percentage}%; background: {party.color}"
+											></div>
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					</div>
+
+					<!-- Vote Action -->
+					{#if data.userResidence}
+						<div class="border-t border-[#dfceb0]/15 px-4 sm:px-5 py-3 bg-[#102239]/70">
+							{#if !hasEnoughMembers}
+								<p class="text-xs text-red-400/70 text-center">Needs 3+ members to participate</p>
+							{:else}
+								<form
+									method="POST"
+									action="?/vote"
+									use:enhance={() => {
+										return async ({ update, result }) => {
+											await update();
+											if (result.type === "success") showVoteAnim = true;
+										};
+									}}
+									class="w-full"
+								>
+									<input type="hidden" name="partyId" value={party.id} />
+									<button
+										type="submit"
+										disabled={!canVoteForParty}
+										class="w-full py-2 rounded-sm border text-sm font-bold tracking-wide transition-all disabled:opacity-30 disabled:cursor-not-allowed text-[#fff7e8] hover:brightness-110 {isUserVote &&
+										canVote
+											? 'bg-[#587252] border-[#8fae88]/50'
+											: 'border-[#dfceb0]/20'}"
+										style:background={!isUserVote && canVoteForParty ? party.color : ""}
+										style:border-color={party.color}
+									>
+										{#if !canVote && !hasStarted}
+											VOTING NOT OPEN
+										{:else if !canVote && hasEnded}
+											VOTING CLOSED
+										{:else if isUserVote}
+											✓ VOTED
+										{:else}
+											VOTE
+										{/if}
+									</button>
+								</form>
+							{/if}
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</div>
+	{/if}
+</PageContainer>
+
 
 {#if showVoteAnim}
 	<ThreeAnimation variant="vote" onComplete={() => (showVoteAnim = false)} />

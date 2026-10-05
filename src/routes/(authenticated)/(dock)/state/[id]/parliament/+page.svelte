@@ -18,6 +18,9 @@
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import { enhance } from "$app/forms";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button, Badge } from "#lib/component/ui/index.js";
 	import { formatDate, formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
@@ -28,9 +31,9 @@
 		budget: "bg-[#587252]/20 text-[#c6dfbf] border-[#8fae88]/30",
 		tax: "bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35",
 		infrastructure: "bg-[#315d8d]/20 text-[#b7d0e6] border-[#7ba0c8]/30",
-		hospital: "bg-pink-600/20 text-pink-300 border-pink-500/30",
+		hospital: "bg-red-600/10 text-red-300 border-red-500/30",
 		school: "bg-[#8c709b]/20 text-[#d5c4df] border-[#b7a0c5]/30",
-		power_plant: "bg-orange-600/20 text-orange-300 border-orange-500/30"
+		power_plant: "bg-[#e6a527]/12 text-[#f7c56b] border-[#e6a527]/35"
 	};
 
 	const proposalTypeIcons: Record<string, string> = {
@@ -87,35 +90,33 @@
 	}
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-	<!-- Simple Header -->
-	<div class="flex items-center justify-between">
-		<div>
-			<a href="/state/{data.state.id}" class="text-sm text-[#a89e8e] hover:text-[#fff7e8] mb-2 inline-block">
-				← {data.state.name}
-			</a>
-			<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3">
-				<FluentPeople20Filled class="size-8 text-[#b7d0e6]" />
-				Parliament
-			</h1>
-		</div>
-		<div class="text-right">
-			<p class="text-sm text-[#a89e8e]">Next Election</p>
-			{#if data.nextElection}
-				<p class="text-lg font-bold text-[#fff7e8]">{formatDateTime(data.nextElection.startDate)}</p>
-			{:else}
-				<p class="text-lg font-bold text-[#fff7e8]">—</p>
-			{/if}
-		</div>
-	</div>
+<PageContainer maxWidth="6xl">
+	<!-- Header -->
+	<PageHeader
+		title="Parliament"
+		icon={FluentPeople20Filled}
+		backHref="/state/{data.state.id}"
+		backLabel={data.state.name}
+	>
+		{#snippet actions()}
+			<div class="panel-muted rounded-sm px-4 py-2 sm:text-right">
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Next Election</p>
+				{#if data.nextElection}
+					<p class="text-lg font-bold text-[#fff7e8]">{formatDateTime(data.nextElection.startDate)}</p>
+				{:else}
+					<p class="text-lg font-bold text-[#fff7e8]">—</p>
+				{/if}
+			</div>
+		{/snippet}
+	</PageHeader>
 
 	<!-- Parliament Composition -->
 	{#if data.totalSeats > 0}
-		<div class="panel rounded-xl overflow-hidden">
+		<div class="panel rounded-sm overflow-hidden">
 			<!-- Header -->
 			<div class="p-5 border-b border-[#dfceb0]/15">
-				<div class="flex items-center justify-between mb-4">
-					<h2 class="text-lg font-semibold text-[#fff7e8]">
+				<div class="flex items-center justify-between gap-3 mb-4">
+					<h2 class="section-title">
 						{#if selectedParty}
 							{@const partyData =
 								selectedParty === "independent" ? null : data.parties?.find((p) => String(p.id) === selectedParty)}
@@ -125,15 +126,14 @@
 						{/if}
 					</h2>
 					{#if selectedParty}
-						<button type="button" onclick={clearFilter} class="btn btn-xs btn-ghost gap-1 text-[#a89e8e]">
-							<FluentFilterDismiss20Filled class="size-3" />
+						<Button type="button" variant="ghost" size="xs" icon={FluentFilterDismiss20Filled} onclick={clearFilter}>
 							Clear Filter
-						</button>
+						</Button>
 					{/if}
 				</div>
 
 				<!-- Seat Bar -->
-				<div class="flex w-full h-12 rounded-lg overflow-hidden mb-4">
+				<div class="flex w-full h-12 rounded-sm overflow-hidden mb-4">
 					{#each Object.entries(data.partyDistribution) as [partyKey, seats]}
 						{@const partyData =
 							partyKey === "independent" ? null : data.parties?.find((p) => String(p.id) === partyKey)}
@@ -142,10 +142,10 @@
 							type="button"
 							onclick={() => togglePartyFilter(partyKey)}
 							style="width: {(seats / data.totalSeats) * 100}%; background-color: {data.partyColors[partyKey] ||
-								'#6b7280'}"
-							class="flex items-center justify-center text-white font-semibold text-sm transition-all hover:brightness-110 {selectedParty ===
+								'#a89e8e'}"
+							class="flex items-center justify-center text-[#fff7e8] font-semibold text-sm transition-all hover:brightness-110 {selectedParty ===
 							partyKey
-								? 'ring-2 ring-white ring-inset'
+								? 'ring-2 ring-[#fff7e8] ring-inset'
 								: ''}"
 							title="{partyName}: {seats} seats"
 						>
@@ -164,11 +164,11 @@
 							<button
 								type="button"
 								onclick={() => togglePartyFilter(partyKey)}
-								class="flex items-center gap-2 p-3 rounded-lg transition-all hover:bg-[#19304b]"
+								class="flex items-center gap-2 p-3 rounded-sm border border-transparent transition-colors hover:bg-[#19304b] hover:border-[#dfceb0]/15"
 							>
 								<div
-									class="size-8 rounded flex-shrink-0"
-									style="background-color: {data.partyColors[partyKey] || '#6b7280'}"
+									class="size-8 rounded-sm flex-shrink-0"
+									style="background-color: {data.partyColors[partyKey] || '#a89e8e'}"
 								/>
 
 								<div class="flex-1 min-w-0 text-left">
@@ -192,22 +192,22 @@
 					{#if selectedParty !== "independent"}
 						<a
 							href="/party/{selectedParty}"
-							class="flex items-center gap-3 p-4 rounded-lg border border-[#dfceb0]/15"
+							class="group flex items-center gap-3 p-4 rounded-sm border border-[#dfceb0]/15 hover:border-[#e6a527]/55 transition-colors"
 							style="background-color: {data.partyColors[selectedParty]}20"
 						>
 							{#if partyData?.logo}
-								<Logo src={partyData.logo} alt={partyName} class="size-12 rounded flex-shrink-0" />
+								<Logo src={partyData.logo} alt={partyName} class="size-12 rounded-sm flex-shrink-0" />
 							{:else}
 								<div
-									class="size-12 rounded flex-shrink-0"
-									style="background-color: {data.partyColors[selectedParty] || '#6b7280'}"
+									class="size-12 rounded-sm flex-shrink-0"
+									style="background-color: {data.partyColors[selectedParty] || '#a89e8e'}"
 								></div>
 							{/if}
 							<div class="flex-1 min-w-0">
 								<h3 class="font-bold text-lg text-[#fff7e8] mb-1">{partyName}</h3>
 								<div class="flex items-center gap-2 flex-wrap text-sm">
 									{#if partyData?.ideology}
-										<span class="px-2 py-0.5 rounded-md bg-[#14283f] text-[#d9ccb7] font-medium">
+										<span class="px-2 py-0.5 rounded-sm border border-[#dfceb0]/20 bg-[#14283f] text-[#d9ccb7] text-xs font-medium">
 											{partyData.ideology}
 										</span>
 									{/if}
@@ -221,11 +221,11 @@
 								</div>
 							</div>
 
-							<FluentChevronRight20Filled class="size-4 text-[#a89e8e] group-hover:text-[#b7d0e6] flex-shrink-0" />
+							<FluentChevronRight20Filled class="size-4 text-[#a89e8e] group-hover:text-[#f2c463] flex-shrink-0" />
 						</a>
 					{:else}
 						<!-- Independent members banner -->
-						<div class="p-4 rounded-lg border border-[#dfceb0]/15 bg-[#102239]/70">
+						<div class="panel-muted rounded-sm p-4">
 							<h3 class="font-bold text-lg text-[#fff7e8] mb-1">Independent Members</h3>
 							<div class="flex items-center gap-2 flex-wrap text-sm">
 								<span class="text-[#a89e8e]">
@@ -246,18 +246,18 @@
 							{@const isDeputy = member.partyRole === "deputy"}
 							<a
 								href="/user/{member.userId}"
-								class="flex items-center gap-3 group rounded-lg p-3 transition-all {isLeader
-									? 'bg-[#e6a527]/10 border-2 border-[#e6a527]/50 hover:border-[#e6a527]/70 hover:bg-[#e6a527]/15'
+								class="flex items-center gap-3 group rounded-sm border p-3 transition-colors {isLeader
+									? 'bg-[#e6a527]/12 border-[#e6a527]/35 hover:border-[#e6a527]/60'
 									: isDeputy
-										? 'border border-[#7ba0c8]/30 hover:bg-[#19304b]'
-										: 'hover:bg-[#19304b]'}"
+										? 'border-[#7ba0c8]/30 hover:bg-[#19304b]'
+										: 'border-transparent hover:bg-[#19304b] hover:border-[#dfceb0]/15'}"
 							>
 								<div class="relative">
 									<Logo src={member.logo} alt={member.name} />
 								</div>
 								<div class="flex-1 min-w-0">
 									<p
-										class="font-medium text-[#fff7e8] group-hover:text-[#b7d0e6] transition-colors truncate {isLeader
+										class="font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate {isLeader
 											? 'font-bold'
 											: ''}"
 									>
@@ -269,7 +269,7 @@
 										<p class="text-xs text-[#b7d0e6]">Deputy</p>
 									{/if}
 								</div>
-								<FluentChevronRight20Filled class="size-4 text-[#a89e8e] group-hover:text-[#b7d0e6] flex-shrink-0" />
+								<FluentChevronRight20Filled class="size-4 text-[#a89e8e] group-hover:text-[#f2c463] flex-shrink-0" />
 							</a>
 						{/each}
 					</div>
@@ -278,7 +278,7 @@
 		</div>
 	{:else}
 		<!-- No Parliament -->
-		<div class="panel rounded-xl p-8 text-center">
+		<div class="panel-muted rounded-sm p-12 text-center">
 			<FluentPeople20Filled class="size-16 text-[#a89e8e] mx-auto mb-3" />
 			<h3 class="text-xl font-bold text-[#fff7e8] mb-2">Parliament Not Yet Formed</h3>
 			<p class="text-[#a89e8e]">
@@ -301,9 +301,9 @@
 
 		{#if data.nextElection.isInaugural && isScheduled}
 			<!-- Inaugural Election - Scheduled -->
-			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-xl p-5 space-y-3">
+			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5 space-y-3">
 				<div class="flex items-start gap-3">
-					<div class="size-12 bg-[#e6a527]/20 rounded-lg flex items-center justify-center shrink-0">
+					<div class="size-12 bg-[#e6a527]/20 rounded-sm flex items-center justify-center shrink-0">
 						<FluentVote20Filled class="size-6 text-[#f7c56b]" />
 					</div>
 					<div class="flex-1 space-y-2">
@@ -313,7 +313,7 @@
 							<strong>{data.nextElection.totalSeats} seats</strong>.
 						</p>
 
-						<div class="bg-[#0d1d31]/50 rounded-lg p-3 space-y-2">
+						<div class="panel-muted rounded-sm p-3 space-y-2">
 							<div class="flex items-center gap-2 text-sm">
 								<FluentCalendar20Filled class="size-4 text-[#f7c56b]" />
 								<span class="text-[#ffe2a4]">
@@ -330,23 +330,22 @@
 						</div>
 
 						<div class="flex gap-2 pt-2">
-							<a
+							<Button
 								href="/state/{data.state.id}/election/{data.nextElection.id}"
-								class="btn btn-sm bg-[#e6a527] hover:bg-[#f2b940] border-0 text-[#172a45] gap-2"
+								variant="primary"
+								size="sm"
+								icon={FluentVote20Filled}
 							>
-								<FluentVote20Filled class="size-4" />
 								View Election Details
-							</a>
-							<a href="/party/create" class="btn btn-sm bg-[#315d8d] hover:bg-[#3d6ea3] border-0 text-white">
-								Create a Party
-							</a>
+							</Button>
+							<Button href="/party/create" variant="secondary" size="sm">Create a Party</Button>
 						</div>
 					</div>
 				</div>
 			</div>
 		{:else if data.nextElection.isInaugural && isActive}
 			<!-- Inaugural Election - Active -->
-			<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-xl p-4">
+			<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-4">
 				<div class="flex items-center justify-between gap-4">
 					<div class="flex items-center gap-3">
 						<FluentVote20Filled class="size-6 text-[#8fae88] animate-pulse" />
@@ -355,21 +354,23 @@
 							<p class="text-sm text-[#c6dfbf]">Help establish the founding parliament - vote now!</p>
 						</div>
 					</div>
-					<a
+					<Button
 						href="/state/{data.state.id}/election/{data.nextElection.id}"
-						class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2 animate-pulse"
+						variant="primary"
+						size="sm"
+						icon={FluentVote20Filled}
+						class="animate-pulse"
 					>
-						<FluentVote20Filled class="size-4" />
 						Vote Now
-					</a>
+					</Button>
 				</div>
 			</div>
 		{:else if !data.nextElection.isInaugural && isScheduled}
 			<!-- Regular Election - Scheduled -->
-			<div class="panel rounded-xl p-5">
+			<div class="panel rounded-sm p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div class="flex items-center gap-4 flex-1">
-						<div class="size-12 bg-[#315d8d]/25 rounded-xl flex items-center justify-center">
+						<div class="size-12 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center shrink-0">
 							<FluentCalendar20Filled class="size-6 text-[#b7d0e6]" />
 						</div>
 						<div>
@@ -382,30 +383,23 @@
 							</p>
 						</div>
 					</div>
-					<a
-						href="/state/{data.state.id}/election/{data.nextElection.id}"
-						class="btn btn-sm bg-[#315d8d] hover:bg-[#3d6ea3] border-0 text-white"
-					>
+					<Button href="/state/{data.state.id}/election/{data.nextElection.id}" variant="soft-blue" size="sm">
 						View Election
-					</a>
+					</Button>
 				</div>
 			</div>
 		{:else if !data.nextElection.isInaugural && isActive}
 			<!-- Regular Election - Active -->
-			<div class="bg-[#587252]/18 rounded-xl border border-[#8fae88]/30 p-5">
+			<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/30 p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div class="flex items-center gap-4 flex-1">
-						<div class="size-12 bg-[#587252]/30 rounded-xl flex items-center justify-center">
+						<div class="size-12 bg-[#587252]/30 rounded-sm flex items-center justify-center shrink-0">
 							<FluentVote20Filled class="size-6 text-[#8fae88]" />
 						</div>
 						<div>
 							<div class="flex items-center gap-2 mb-1">
 								<h3 class="text-lg font-bold text-[#fff7e8]">Election Active</h3>
-								<span
-									class="px-2 py-1 rounded-lg text-xs font-semibold border bg-[#587252]/20 text-[#c6dfbf] border-[#8fae88]/30"
-								>
-									Voting Now
-								</span>
+								<Badge tone="green">Voting Now</Badge>
 							</div>
 							<p class="text-sm text-[#a89e8e]">
 								{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} •
@@ -414,13 +408,15 @@
 							</p>
 						</div>
 					</div>
-					<a
+					<Button
 						href="/state/{data.state.id}/election/{data.nextElection.id}"
-						class="btn btn-sm bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2 animate-pulse"
+						variant="primary"
+						size="sm"
+						icon={FluentVote20Filled}
+						class="animate-pulse"
 					>
-						<FluentVote20Filled class="size-4" />
 						Vote Now
-					</a>
+					</Button>
 				</div>
 			</div>
 		{/if}
@@ -428,8 +424,8 @@
 
 	<!-- User Status -->
 	{#if data.totalSeats > 0 && data.isParliamentMember}
-		<div class="bg-[#315d8d]/18 rounded-xl border border-[#7ba0c8]/30 p-4">
-			<div class="flex items-center justify-between">
+		<div class="bg-[#315d8d]/18 rounded-sm border border-[#7ba0c8]/30 p-4">
+			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<div class="flex items-center gap-3">
 					<FluentCheckmark20Filled class="size-5 text-[#b7d0e6]" />
 					<div class="text-sm">
@@ -443,13 +439,9 @@
 						{/if}
 					</div>
 				</div>
-				<a
-					href="/state/{data.state.id}/proposal/create"
-					class="btn btn-sm bg-[#315d8d] hover:bg-[#3d6ea3] border-0 text-white gap-2"
-				>
-					<FluentAdd20Filled class="size-4" />
+				<Button href="/state/{data.state.id}/proposal/create" variant="primary" size="sm" icon={FluentAdd20Filled}>
 					Create Proposal
-				</a>
+				</Button>
 			</div>
 		</div>
 	{/if}
@@ -457,39 +449,35 @@
 	<!-- Active Proposals -->
 	{#if data.totalSeats > 0}
 		<div class="space-y-4">
-			<div class="flex items-center justify-between">
-				<h2 class="text-xl font-bold text-[#fff7e8] flex items-center gap-2">
-					<FluentDocument20Filled class="size-6 text-[#d5c4df]" />
+			<div class="flex items-center justify-between gap-3">
+				<h2 class="section-title">
+					<FluentDocument20Filled class="size-5 text-[#b7a0c5]" />
 					Active Proposals
 				</h2>
 				<div class="flex gap-2">
-					<a
-						href="/state/{data.state.id}/proposal"
-						class="btn btn-sm btn-ghost gap-2 text-[#a89e8e] hover:text-[#fff7e8]"
-					>
-						<FluentHistory20Filled class="size-4" />
+					<Button href="/state/{data.state.id}/proposal" variant="ghost" size="sm" icon={FluentHistory20Filled}>
 						View History
-					</a>
+					</Button>
 				</div>
 			</div>
 
 			{#if data.proposals.length === 0}
-				<div class="panel rounded-xl p-8 text-center">
+				<div class="panel-muted rounded-sm p-8 text-center">
 					<p class="text-[#a89e8e]">No active proposals</p>
 				</div>
 			{:else}
 				{#each data.proposals as proposal}
-					<div class="panel rounded-xl overflow-hidden">
+					<div class="panel rounded-sm overflow-hidden">
 						<!-- Header -->
 						<div class="p-4 border-b border-[#dfceb0]/10">
 							<div class="flex items-center justify-between gap-3 mb-3">
 								<span
-									class="px-2 py-1 rounded-lg text-xs font-semibold border {proposalTypeColors[proposal.proposalType]}"
+									class="px-2 py-1 rounded-sm text-xs font-semibold border {proposalTypeColors[proposal.proposalType]}"
 								>
 									{proposalTypeIcons[proposal.proposalType]}
 									{proposal.proposalType.replace("_", " ").toUpperCase()}
 								</span>
-								<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+								<span class="text-xs font-mono text-[#a89e8e] flex items-center gap-1">
 									<FluentClock20Filled class="size-3" />
 									{getTimeRemaining(proposal.votingEndsAt)}
 								</span>
@@ -508,7 +496,7 @@
 										<Logo
 											src="/coats/{proposal.region.id}.svg"
 											alt={proposal.region.name}
-											class="size-6 rounded"
+											class="size-6 rounded-sm"
 											placeholderIcon={FluentShield20Filled}
 											placeholderGradient="from-[#315d8d] to-[#315d8d]"
 										/>
@@ -538,23 +526,23 @@
 						<div class="p-4 space-y-3">
 							<div>
 								<div class="flex items-center justify-between text-sm mb-1 gap-2">
-									<span class="text-emerald-400 font-medium flex items-center gap-1">
+									<span class="text-[#c6dfbf] font-medium flex items-center gap-1">
 										<FluentCheckmark20Filled class="size-4" />
 										For: {proposal.voteCounts.for} ({proposal.percentageFor.toFixed(1)}%)
 									</span>
-									<span class="text-red-400 font-medium flex items-center gap-1">
+									<span class="text-red-300 font-medium flex items-center gap-1">
 										Against: {proposal.voteCounts.against} ({proposal.percentageAgainst.toFixed(1)}%)
 										<FluentDismiss20Filled class="size-4" />
 									</span>
 								</div>
 								<div class="w-full bg-[#0d1d31] rounded-full h-3 flex overflow-hidden">
-									<div class="bg-emerald-500 h-full transition-all" style="width: {proposal.percentageFor}%"></div>
+									<div class="bg-[#8fae88] h-full transition-all" style="width: {proposal.percentageFor}%"></div>
 									<div class="bg-red-500 h-full transition-all" style="width: {proposal.percentageAgainst}%"></div>
 								</div>
 							</div>
 
 							<div
-								class="pt-2 border-t border-[#dfceb0]/10 text-xs text-[#a89e8e] flex items-center justify-between gap-2"
+								class="pt-2 border-t border-[#dfceb0]/10 text-xs text-[#a89e8e] flex items-center justify-between gap-2 flex-wrap"
 							>
 								<span>{proposal.totalVotes} / {data.totalSeats} votes • {proposal.requiredMajority}% required</span>
 								<span class="text-[#b7d0e6]">Voting ends {formatDateTime(proposal.votingEndsAt)}</span>
@@ -575,23 +563,15 @@
 									<div class="grid grid-cols-2 gap-2 mb-2">
 										<form method="POST" action="?/acceptProposal" use:enhance>
 											<input type="hidden" name="proposalId" value={proposal.id} />
-											<button
-												type="submit"
-												class="btn btn-sm w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 border-0 text-white gap-2"
-											>
-												<FluentCheckmarkCircle20Filled class="size-4" />
+											<Button type="submit" variant="soft-emerald" size="sm" block icon={FluentCheckmarkCircle20Filled}>
 												Auto-Accept
-											</button>
+											</Button>
 										</form>
 										<form method="POST" action="?/rejectProposal" use:enhance>
 											<input type="hidden" name="proposalId" value={proposal.id} />
-											<button
-												type="submit"
-												class="btn btn-sm w-full bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 border-0 text-white gap-2"
-											>
-												<FluentDismiss20Filled class="size-4" />
+											<Button type="submit" variant="soft-red" size="sm" block icon={FluentDismiss20Filled}>
 												Auto-Reject
-											</button>
+											</Button>
 										</form>
 									</div>
 								{/if}
@@ -600,31 +580,31 @@
 								<form method="POST" action="?/vote" use:enhance class="flex gap-2">
 									<input type="hidden" name="proposalId" value={proposal.id} />
 
-									<button
+									<Button
 										type="submit"
 										name="voteType"
 										value="for"
-										class="btn btn-sm flex-1 bg-green-600 hover:bg-green-500 border-0 text-white {proposal.userVote ===
-										'for'
-											? 'ring-2 ring-green-400'
-											: ''}"
+										variant="soft-emerald"
+										size="sm"
+										grow
+										icon={FluentCheckmark20Filled}
+										class={proposal.userVote === "for" ? "ring-2 ring-[#8fae88]" : ""}
 									>
-										<FluentCheckmark20Filled class="size-4" />
 										For
-									</button>
+									</Button>
 
-									<button
+									<Button
 										type="submit"
 										name="voteType"
 										value="against"
-										class="btn btn-sm flex-1 bg-red-600 hover:bg-red-500 border-0 text-white {proposal.userVote ===
-										'against'
-											? 'ring-2 ring-red-400'
-											: ''}"
+										variant="soft-red"
+										size="sm"
+										grow
+										icon={FluentDismiss20Filled}
+										class={proposal.userVote === "against" ? "ring-2 ring-red-400" : ""}
 									>
-										<FluentDismiss20Filled class="size-4" />
 										Against
-									</button>
+									</Button>
 								</form>
 							</div>
 						{/if}
@@ -633,4 +613,4 @@
 			{/if}
 		</div>
 	{/if}
-</div>
+</PageContainer>

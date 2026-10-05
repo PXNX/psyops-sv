@@ -37,7 +37,7 @@
 <BottomSheet bind:open={show} title="Report {targetType === 'account' ? 'User' : 'Party'}">
 	<div class="space-y-4">
 		<div class="flex items-center gap-3">
-			<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center shrink-0">
+			<div class="size-12 bg-red-600/10 border border-red-500/30 rounded-sm flex items-center justify-center shrink-0">
 				<FluentWarning20Filled class="size-6 text-red-400" />
 			</div>
 			<p class="text-[#d9ccb7]">
@@ -63,10 +63,13 @@
 
 			<div class="space-y-4">
 				<div>
-					<label class="label">
-						<span class="label-text text-[#e5d8c1]">Violation Type</span>
-					</label>
-					<select name="violationType" bind:value={violationType} class="select select-bordered field-control w-full">
+					<label for="report-violation-type" class="field-label">Violation Type</label>
+					<select
+						id="report-violation-type"
+						name="violationType"
+						bind:value={violationType}
+						class="field-control rounded-sm px-3 py-2.5 w-full"
+					>
 						{#each violationTypes as type}
 							<option value={type.value}>{type.label}</option>
 						{/each}
@@ -74,18 +77,17 @@
 				</div>
 
 				<div>
-					<label class="label">
-						<span class="label-text text-[#e5d8c1]">Reason for reporting</span>
-					</label>
+					<label for="report-reason" class="field-label">Reason for reporting</label>
 					<textarea
+						id="report-reason"
 						name="reason"
 						bind:value={reason}
 						placeholder="Please describe the violation..."
 						rows="4"
 						maxlength="500"
-						class="textarea textarea-bordered field-control w-full"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
 						required></textarea>
-					<p class="text-xs text-[#a89e8e] mt-1">{reason.length}/500 characters</p>
+					<p class="field-hint">{reason.length}/500 characters</p>
 				</div>
 
 				<FormActions submitLabel="Submit Report" submitVariant="danger" onCancel={closeModal} />

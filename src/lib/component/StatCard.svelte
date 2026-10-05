@@ -59,7 +59,7 @@
 <svelte:element
 	this={Tag}
 	{href}
-	class="{colors.bg} rounded-xl border {colors.border} p-4 sm:p-5 transition-all {className}"
+	class="{colors.bg} rounded-sm border {colors.border} p-4 sm:p-5 transition-all {className}"
 >
 	<div class="flex items-center gap-2 mb-1">
 		{#if icon}

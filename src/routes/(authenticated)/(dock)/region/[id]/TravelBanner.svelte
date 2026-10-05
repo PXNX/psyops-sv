@@ -18,13 +18,13 @@
 	const hoursLeft = $derived(Math.max(0, Math.ceil(timeLeftMs / (1000 * 60 * 60))));
 </script>
 
-<div class="bg-[#e6a527]/10 border border-[#e6a527]/30 rounded-xl p-6">
+<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5">
 	<div class="flex items-start gap-4">
-		<div class="size-12 bg-[#e6a527]/15 rounded-xl flex items-center justify-center flex-shrink-0">
+		<div class="size-12 bg-[#e6a527]/15 rounded-sm flex items-center justify-center flex-shrink-0">
 			<FluentNavigation20Filled class="size-6 text-[#f7c56b]" />
 		</div>
 		<div class="flex-1">
-			<h2 class="text-xl font-bold text-[#fff7e8] mb-2">Currently Traveling</h2>
+			<h2 class="text-lg font-semibold text-[#fff7e8] mb-1">Currently Traveling</h2>
 			<p class="text-[#d9ccb7] text-sm mb-2">
 				You are traveling to {getRegionName(activeTravel.toRegionId)}
 			</p>

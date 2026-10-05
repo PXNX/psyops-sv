@@ -35,7 +35,9 @@
 
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import { resourceColors } from "#lib/component/ResourceIcon.svelte";
-	import BackLink from "#lib/component/ui/BackLink.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 
 	let { data } = $props();
 
@@ -168,36 +170,28 @@
 	});
 </script>
 
-<div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
-	<!-- Header -->
-	<div class="flex items-center gap-4">
-		<BackLink href="/production" />
-		<div>
-			<h1 class="text-3xl font-bold text-[#fff7e8]">Create Factory</h1>
-			<p class="text-[#a89e8e]">Establish a production facility in your region</p>
-		</div>
-	</div>
+<PageContainer maxWidth="3xl">
+	<PageHeader
+		title="Create Factory"
+		subtitle="Establish a production facility in your region"
+		icon={FluentFactory20Filled}
+		backHref="/production"
+		backLabel="Production"
+	/>
 
 	{#if data.error}
 		<!-- Error -->
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5">
+		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
 			<div class="flex items-start gap-3">
 				<FluentError20Filled class="size-6 text-red-400 shrink-0" />
 				<div class="space-y-2 flex-1">
 					<h3 class="font-semibold text-red-300">Cannot Create Factory</h3>
-					<p class="text-red-200 text-sm">{data.error}</p>
+					<p class="text-red-300 text-sm">{data.error}</p>
 					<div class="flex gap-2 mt-3">
 						{#if data.error.includes("company")}
-							<a href="/company/create" class="btn btn-sm bg-red-600/30 border-red-500/50 text-red-100">
-								Create Company
-							</a>
+							<Button variant="soft-red" size="sm" href="/company/create">Create Company</Button>
 						{/if}
-						<a
-							href="/production"
-							class="btn btn-sm bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1]"
-						>
-							Go Back
-						</a>
+						<Button variant="secondary" size="sm" href="/production">Go Back</Button>
 					</div>
 				</div>
 			</div>
@@ -205,13 +199,13 @@
 	{:else}
 		<!-- Cooldown -->
 		{#if isOnCooldown && data.cooldownEndsAt}
-			<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
+			<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-4">
 				<div class="flex items-start gap-3">
 					<FluentError20Filled class="size-5 text-red-400 shrink-0" />
 					<div>
 						<h3 class="font-semibold text-red-300">Cooldown Active</h3>
-						<p class="text-red-200 text-sm mt-1">
-							Next factory available in: <strong>{formatTimeRemaining(data.cooldownEndsAt)}</strong>
+						<p class="text-red-300 text-sm mt-1">
+							Next factory available in: <strong class="font-mono">{formatTimeRemaining(data.cooldownEndsAt)}</strong>
 						</p>
 					</div>
 				</div>
@@ -222,9 +216,9 @@
 		{#if data.region}
 			<div class="grid md:grid-cols-2 gap-4">
 				<!-- Available Regional Resources -->
-				<div class="panel rounded-xl p-5 space-y-4">
+				<div class="panel rounded-sm p-5 space-y-4">
 					<div class="flex items-center gap-2">
-						<FluentDatabase20Filled class="size-6 text-[#d5c4df]" />
+						<FluentDatabase20Filled class="size-6 text-[#b7a0c5]" />
 						<div>
 							<h2 class="font-semibold text-[#fff7e8]">Regional Resources</h2>
 							<p class="text-xs text-[#a89e8e]">{data.region.name}</p>
@@ -234,7 +228,7 @@
 					{#if regionResources.length > 0}
 						<div class="space-y-2">
 							{#each regionResources as resource}
-								<div class="flex items-center justify-between panel-muted rounded-lg p-2.5">
+								<div class="flex items-center justify-between panel-muted rounded-sm p-2.5">
 									<div class="flex items-center gap-2">
 										<svelte:component
 											this={getResourceIcon(resource.resourceType)}
@@ -250,14 +244,14 @@
 							{/each}
 						</div>
 					{:else}
-						<div class="bg-[#e6a527]/10 border border-[#e6a527]/20 rounded-lg p-3">
+						<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-3">
 							<p class="text-xs text-[#f7c56b]">No natural resources available in this region</p>
 						</div>
 					{/if}
 				</div>
 
 				<!-- Regional Taxes -->
-				<div class="panel rounded-xl p-5 space-y-4">
+				<div class="panel rounded-sm p-5 space-y-4">
 					<div class="flex items-center gap-2">
 						<FluentReceipt20Filled class="size-6 text-[#f7c56b]" />
 						<div>
@@ -267,7 +261,7 @@
 					</div>
 
 					<div class="space-y-2.5">
-						<div class="panel-muted rounded-lg p-3">
+						<div class="panel-muted rounded-sm p-3">
 							<div class="flex items-center justify-between mb-1">
 								<p class="text-sm font-medium text-[#e5d8c1]">Income Tax</p>
 								<p class="text-lg font-bold text-[#f7c56b]">{data.regionalTaxes?.incomeTax || 0}%</p>
@@ -275,7 +269,7 @@
 							<p class="text-xs text-[#a89e8e]">On factory profits</p>
 						</div>
 
-						<div class="panel-muted rounded-lg p-3">
+						<div class="panel-muted rounded-sm p-3">
 							<div class="flex items-center justify-between mb-1">
 								<p class="text-sm font-medium text-[#e5d8c1]">Sales Tax</p>
 								<p class="text-lg font-bold text-[#f7c56b]">{data.regionalTaxes?.salesTax || 0}%</p>
@@ -283,7 +277,7 @@
 							<p class="text-xs text-[#a89e8e]">On product sales</p>
 						</div>
 
-						<div class="panel-muted rounded-lg p-3">
+						<div class="panel-muted rounded-sm p-3">
 							<div class="flex items-center justify-between mb-1">
 								<p class="text-sm font-medium text-[#e5d8c1]">Property Tax</p>
 								<p class="text-lg font-bold text-[#f7c56b]">{data.regionalTaxes?.propertyTax || 0}%</p>
@@ -298,8 +292,8 @@
 		<!-- Form -->
 		<form method="POST" use:enhance class="space-y-5">
 			<!-- Name -->
-			<div class="panel rounded-xl p-4">
-				<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2"> Factory Name </label>
+			<div class="panel rounded-sm p-4">
+				<label for="name" class="field-label"> Factory Name </label>
 				<input
 					type="text"
 					id="name"
@@ -307,15 +301,15 @@
 					bind:value={factoryName}
 					placeholder="e.g., Steel Works #1"
 					maxlength="100"
-					class="input w-full field-control"
+					class="field-control rounded-sm px-3 py-2.5 w-full"
 					disabled={isOnCooldown}
 				/>
 			</div>
 
 			<!-- Type -->
-			<div class="panel rounded-xl p-4 space-y-3">
+			<div class="panel rounded-sm p-4 space-y-3">
 				<div class="flex items-center gap-2">
-					<FluentBox20Filled class="size-5 text-[#d5c4df]" />
+					<FluentBox20Filled class="size-5 text-[#b7a0c5]" />
 					<h2 class="font-semibold text-[#fff7e8]">Factory Type</h2>
 				</div>
 
@@ -323,8 +317,8 @@
 					{#each factoryTypes as type}
 						<button
 							type="button"
-							class="p-3 rounded-lg border-2 transition-all {selectedFactoryType === type.value
-								? 'bg-[#8c709b]/20 border-[#b7a0c5]/50'
+							class="p-3 rounded-sm border transition-all {selectedFactoryType === type.value
+								? 'bg-[#e6a527]/12 border-[#e6a527]/55'
 								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/30'}"
 							onclick={() => {
 								selectedFactoryType = type.value;
@@ -342,7 +336,7 @@
 			</div>
 
 			<!-- Output -->
-			<div class="panel rounded-xl p-4 space-y-3">
+			<div class="panel rounded-sm p-4 space-y-3">
 				<h2 class="font-semibold text-[#fff7e8]">
 					{selectedFactoryType === "mine"
 						? "Resource to Extract"
@@ -357,8 +351,8 @@
 							{@const canMine = regionResources.some((r) => r.resourceType === output.value && r.amount > 0)}
 							<button
 								type="button"
-								class="p-2 rounded-lg border-2 transition-all {selectedOutput === output.value
-									? 'bg-[#8c709b]/20 border-[#b7a0c5]/50'
+								class="p-2 rounded-sm border transition-all {selectedOutput === output.value
+									? 'bg-[#e6a527]/12 border-[#e6a527]/55'
 									: 'bg-[#102239]/70 border-[#dfceb0]/15'}"
 								class:opacity-50={!canMine}
 								onclick={() => (selectedOutput = output.value)}
@@ -368,7 +362,7 @@
 								<output.icon class="size-6 mx-auto {output.color}" />
 								<div class="text-xs text-[#fff7e8] mt-1">{output.label}</div>
 								{#if canMine}
-									<div class="text-xs text-emerald-400 mt-0.5">✓</div>
+									<div class="text-xs text-[#8fae88] mt-0.5">✓</div>
 								{/if}
 							</button>
 						{/each}
@@ -376,8 +370,8 @@
 						{#each refineryOutputs as output}
 							<button
 								type="button"
-								class="p-2 rounded-lg border-2 transition-all {selectedOutput === output.value
-									? 'bg-[#8c709b]/20 border-[#b7a0c5]/50'
+								class="p-2 rounded-sm border transition-all {selectedOutput === output.value
+									? 'bg-[#e6a527]/12 border-[#e6a527]/55'
 									: 'bg-[#102239]/70 border-[#dfceb0]/15'}"
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown}
@@ -390,8 +384,8 @@
 						{#each productOutputs as output}
 							<button
 								type="button"
-								class="p-2 rounded-lg border-2 transition-all {selectedOutput === output.value
-									? 'bg-[#8c709b]/20 border-[#b7a0c5]/50'
+								class="p-2 rounded-sm border transition-all {selectedOutput === output.value
+									? 'bg-[#e6a527]/12 border-[#e6a527]/55'
 									: 'bg-[#102239]/70 border-[#dfceb0]/15'}"
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown}
@@ -406,15 +400,15 @@
 			</div>
 
 			<!-- Workers -->
-			<div class="panel rounded-xl p-4 space-y-3">
+			<div class="panel rounded-sm p-4 space-y-3">
 				<div class="flex items-center gap-2">
-					<FluentPeople20Filled class="size-5 text-[#d5c4df]" />
+					<FluentPeople20Filled class="size-5 text-[#7ba0c8]" />
 					<h2 class="font-semibold text-[#fff7e8]">Workers</h2>
 				</div>
 
 				<div class="grid grid-cols-2 gap-4">
 					<div>
-						<label class="block text-sm text-[#e5d8c1] mb-2">Max Workers: {maxWorkers}</label>
+						<label class="field-label">Max Workers: <span class="font-mono">{maxWorkers}</span></label>
 						<input
 							type="range"
 							name="maxWorkers"
@@ -431,7 +425,7 @@
 						</div>
 					</div>
 					<div>
-						<label class="block text-sm text-[#e5d8c1] mb-2">Wage: {workerWage.toLocaleString()}</label>
+						<label class="field-label">Wage: <span class="font-mono">{workerWage.toLocaleString()}</span></label>
 						<input
 							type="range"
 							name="workerWage"
@@ -449,18 +443,18 @@
 					</div>
 				</div>
 
-				<div class="panel-muted rounded-lg p-3 mt-2">
+				<div class="panel-muted rounded-sm p-3 mt-2">
 					<p class="text-xs text-[#a89e8e] mb-1">Estimated monthly payroll:</p>
-					<p class="text-lg font-bold text-[#fff7e8]">{(maxWorkers * workerWage).toLocaleString()}</p>
+					<p class="text-lg font-bold text-[#fff7e8] font-mono">{(maxWorkers * workerWage).toLocaleString()}</p>
 				</div>
 			</div>
 
 			<!-- Construction Costs Summary -->
 			{#if selectedFactoryTypeData}
-				<div class="panel rounded-xl p-5 space-y-4">
+				<div class="panel rounded-sm p-5 space-y-4">
 					<div class="flex items-center gap-2">
-						<FluentMoney20Filled class="size-6 text-[#d5c4df]" />
-						<h2 class="text-xl font-bold text-[#fff7e8]">Construction Requirements</h2>
+						<FluentMoney20Filled class="size-6 text-[#8fae88]" />
+						<h2 class="text-lg font-semibold text-[#fff7e8]">Construction Requirements</h2>
 					</div>
 
 					<ResourceRequirements costs={factoryCosts} available={availableResources} />
@@ -469,21 +463,11 @@
 
 			<!-- Submit -->
 			<div class="flex gap-3">
-				<a
-					href="/production"
-					class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1]"
-				>
-					Cancel
-				</a>
-				<button
-					type="submit"
-					disabled={!canCreate}
-					class="btn flex-1 bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2 disabled:opacity-50"
-				>
-					<FluentCheckmark20Filled class="size-5" />
+				<Button variant="secondary" grow href="/production">Cancel</Button>
+				<Button type="submit" variant="primary" grow disabled={!canCreate} icon={FluentCheckmark20Filled}>
 					Create Factory
-				</button>
+				</Button>
 			</div>
 		</form>
 	{/if}
-</div>
+</PageContainer>

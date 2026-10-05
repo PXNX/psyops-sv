@@ -5,6 +5,7 @@
 	import { calculateTravelProgress, formatDuration, getTimeRemaining } from "#lib/utils/travel-client.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import type { UserTravel } from "#lib/server/schema.js";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
 
 	interface Props {
 		travel: UserTravel;
@@ -64,10 +65,10 @@
 	}
 </script>
 
-<div class="bg-[#315d8d]/15 border border-[#7ba0c8]/30 rounded-xl p-4">
+<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
 	<div class="flex items-start gap-3">
 		<!-- Airplane Icon -->
-		<div class="size-10 bg-[#315d8d]/30 rounded-lg flex items-center justify-center shrink-0 animate-pulse">
+		<div class="size-10 bg-[#315d8d]/30 rounded-sm flex items-center justify-center shrink-0 animate-pulse">
 			<FluentVehicleAirplaneTakeOff20Filled class="size-5 text-[#b7d0e6]" />
 		</div>
 
@@ -79,9 +80,13 @@
 					<p class="text-sm text-[#a89e8e]">From {fromRegionName()}</p>
 				</div>
 				{#if showCancel}
-					<button onclick={handleCancel} class="btn btn-ghost btn-sm btn-circle" title="Cancel travel">
-						<FluentDismiss20Filled class="size-4" />
-					</button>
+					<IconButton
+						icon={FluentDismiss20Filled}
+						label="Cancel travel"
+						variant="ghost"
+						size="sm"
+						onclick={handleCancel}
+					/>
 				{/if}
 			</div>
 
@@ -92,7 +97,7 @@
 					<img
 						src={`/coats/${travel.fromRegionId}.svg`}
 						alt="From"
-						class="size-8 rounded-lg border-2 border-[#7ba0c8] bg-[#102239]"
+						class="size-8 rounded-sm border-2 border-[#7ba0c8] bg-[#102239]"
 					/>
 				</div>
 
@@ -116,7 +121,7 @@
 					<img
 						src={`/coats/${travel.toRegionId}.svg`}
 						alt="To"
-						class="size-8 rounded-lg border-2 border-[#7ba0c8] bg-[#102239]"
+						class="size-8 rounded-sm border-2 border-[#7ba0c8] bg-[#102239]"
 					/>
 				</div>
 			</div>

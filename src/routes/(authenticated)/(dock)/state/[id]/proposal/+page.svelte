@@ -10,6 +10,8 @@
 	import FluentDismissCircle20Filled from "~icons/fluent/dismiss-circle-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import { formatDateTime } from "#lib/utils/formatting.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
 
 	const { data } = $props();
 
@@ -27,27 +29,24 @@
 	});
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="4xl">
 	<!-- Header -->
-	<div>
-		<a href="/state/{data.state.id}/parliament" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
-			{data.state.name} — Parliament
-		</a>
-		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3 mt-1">
-			<FluentHistory20Filled class="size-8 text-[#d5c4df]" />
-			Proposal History
-		</h1>
-	</div>
+	<PageHeader
+		title="Proposal History"
+		icon={FluentHistory20Filled}
+		backHref="/state/{data.state.id}/parliament"
+		backLabel="{data.state.name} — Parliament"
+	/>
 
 	<!-- Tabs -->
-	<div class="panel rounded-xl overflow-hidden">
+	<div class="panel rounded-sm overflow-hidden">
 		<div class="flex border-b border-[#dfceb0]/15">
 			<button
 				type="button"
 				onclick={() => (selectedTab = "all")}
-				class="flex-1 px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
+				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
 				'all'
-					? 'text-[#fff7e8] border-[#dfceb0]/40 bg-[#14283f]'
+					? 'text-[#fff7e8] border-[#e6a527] bg-[#e6a527]/10'
 					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
 			>
 				All ({data.allProposals.length})
@@ -55,7 +54,7 @@
 			<button
 				type="button"
 				onclick={() => (selectedTab = "passed")}
-				class="flex-1 px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
+				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
 				'passed'
 					? 'text-[#fff7e8] border-[#8fae88] bg-[#587252]/15'
 					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
@@ -65,9 +64,9 @@
 			<button
 				type="button"
 				onclick={() => (selectedTab = "rejected")}
-				class="flex-1 px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
+				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
 				'rejected'
-					? 'text-[#fff7e8] border-red-500 bg-red-500/10'
+					? 'text-[#fff7e8] border-red-500 bg-red-600/10'
 					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
 			>
 				Rejected ({data.rejectedProposals.length})
@@ -83,7 +82,7 @@
 				</div>
 			{:else}
 				{#each displayedProposals as proposal}
-					<div class="panel rounded-xl overflow-hidden">
+					<div class="panel-muted rounded-sm overflow-hidden">
 						<!-- Header -->
 						<div class="p-4 border-b border-[#dfceb0]/10">
 							<div class="flex items-start justify-between gap-3 mb-3">
@@ -106,7 +105,7 @@
 										<Logo
 											src="/coats/{proposal.region.id}.svg"
 											alt={proposal.region.name}
-											class="size-6 rounded"
+											class="size-6 rounded-sm"
 											placeholderIcon={FluentShield20Filled}
 											placeholderGradient="from-[#315d8d] to-[#315d8d]"
 										/>
@@ -138,25 +137,25 @@
 							<!-- Combined Vote Bar -->
 							<div>
 								<div class="flex items-center justify-between text-sm mb-1 gap-2">
-									<span class="text-emerald-400 font-medium flex items-center gap-1">
+									<span class="text-[#c6dfbf] font-medium flex items-center gap-1">
 										<FluentCheckmark20Filled class="size-4" />
 										For: {proposal.voteCounts.for} ({proposal.percentageFor.toFixed(1)}%)
 									</span>
-									<span class="text-red-400 font-medium flex items-center gap-1">
+									<span class="text-red-300 font-medium flex items-center gap-1">
 										Against: {proposal.voteCounts.against} ({proposal.percentageAgainst.toFixed(1)}%)
 										<FluentDismiss20Filled class="size-4" />
 									</span>
 								</div>
 								<div class="w-full bg-[#0d1d31] rounded-full h-3 flex overflow-hidden">
-									<div class="bg-emerald-500 h-full transition-all" style="width: {proposal.percentageFor}%"></div>
+									<div class="bg-[#8fae88] h-full transition-all" style="width: {proposal.percentageFor}%"></div>
 									<div class="bg-red-500 h-full transition-all" style="width: {proposal.percentageAgainst}%"></div>
 								</div>
 							</div>
 
 							<!-- Summary -->
 							<div class="pt-3 border-t border-[#dfceb0]/10">
-								<div class="flex items-center justify-between text-xs">
-									<div class="flex items-center gap-4">
+								<div class="flex items-center justify-between gap-2 flex-wrap text-xs">
+									<div class="flex items-center gap-4 flex-wrap">
 										<span class="text-[#a89e8e]">
 											{proposal.totalVotes} total vote{proposal.totalVotes !== 1 ? "s" : ""}
 										</span>
@@ -173,14 +172,14 @@
 								{#if proposal.votingEnded || proposal.status !== "active"}
 									<div class="mt-2">
 										{#if proposal.status === "passed" || (proposal.votingEnded && proposal.didPass)}
-											<div class="flex items-center gap-2 text-emerald-400">
+											<div class="flex items-center gap-2 text-[#c6dfbf]">
 												<FluentCheckmarkCircle20Filled class="size-4" />
 												<span class="text-sm font-semibold">
 													Proposal passed with {proposal.percentageFor.toFixed(1)}% support
 												</span>
 											</div>
 										{:else if proposal.status === "rejected" || (proposal.votingEnded && !proposal.didPass)}
-											<div class="flex items-center gap-2 text-red-400">
+											<div class="flex items-center gap-2 text-red-300">
 												<FluentDismissCircle20Filled class="size-4" />
 												<span class="text-sm font-semibold">
 													Proposal rejected with only {proposal.percentageFor.toFixed(1)}% support
@@ -196,4 +195,4 @@
 			{/if}
 		</div>
 	</div>
-</div>
+</PageContainer>

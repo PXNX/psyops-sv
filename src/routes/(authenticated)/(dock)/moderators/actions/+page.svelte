@@ -12,7 +12,10 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
-	import { badgeClass } from "#lib/component/ui/styles.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
+	import { Button, Badge } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
@@ -38,11 +41,11 @@
 			case "message_delete":
 				return "text-red-400";
 			case "warning":
-				return "text-orange-400";
+				return "text-[#f7c56b]";
 			case "restriction":
-				return "text-red-500";
+				return "text-red-400";
 			case "report_action":
-				return "text-blue-400";
+				return "text-[#7ba0c8]";
 			case "content_flag":
 				return "text-[#f7c56b]";
 			default:
@@ -81,34 +84,31 @@
 <!-- src/routes/moderators/actions/+page.svelte -->
 <svelte:head><title>Moderator Actions - Game Name</title></svelte:head>
 
-<div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-		<h1 class="text-2xl font-bold text-[#fff7e8]">Moderator Actions</h1>
-		<div class="flex items-center gap-2 flex-wrap">
+	<PageHeader title="Moderator Actions">
+		{#snippet actions()}
 			{#if data.currentUserId}
-				<button
+				<Button
+					size="sm"
+					variant={isFilteringCurrentUser ? "primary" : "ghost"}
+					icon={FluentFilter20Filled}
 					onclick={toggleUserFilter}
-					class="btn btn-sm gap-2"
-					class:btn-primary={isFilteringCurrentUser}
-					class:btn-ghost={!isFilteringCurrentUser}
 				>
-					<FluentFilter20Filled class="size-4" />
 					{isFilteringCurrentUser ? "Show All" : "My Actions"}
-				</button>
+				</Button>
 			{/if}
-			<a href="/moderators" class="btn btn-sm btn-ghost gap-2">
-				<FluentPeople20Filled class="size-4" />
-				Moderators
-			</a>
-		</div>
-	</div>
+			<Button href="/moderators" size="sm" variant="ghost" icon={FluentPeople20Filled}>Moderators</Button>
+		{/snippet}
+	</PageHeader>
 
 	<!-- Filter Info -->
 	{#if data.filterUserId}
-		<div class="alert bg-blue-600/10 border-blue-500/30">
-			<FluentFilter20Filled class="size-5 text-blue-400" />
-			<div>
+		<div
+			class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 text-[#b7d0e6] rounded-sm p-4 flex flex-wrap items-center gap-3"
+		>
+			<FluentFilter20Filled class="size-5 text-[#7ba0c8] shrink-0" />
+			<div class="flex-1 min-w-0">
 				<p class="font-semibold">Filtered View</p>
 				<p class="text-sm">
 					{#if isFilteringCurrentUser}
@@ -118,17 +118,16 @@
 					{/if}
 				</p>
 			</div>
-			<button onclick={() => goto("/moderators/actions")} class="btn btn-sm btn-ghost">
-				<FluentDismissCircle20Filled class="size-4" />
+			<Button size="sm" variant="ghost" icon={FluentDismissCircle20Filled} onclick={() => goto("/moderators/actions")}>
 				Clear Filter
-			</button>
+			</Button>
 		</div>
 	{/if}
 
 	<!-- Stats -->
-	<div class="flex items-center gap-4 rounded-2xl panel p-5 w-full sm:w-auto sm:inline-flex">
-		<div class="size-12 rounded-xl flex items-center justify-center bg-[#8c709b]/20">
-			<FluentShield20Filled class="size-6 text-[#d5c4df]" />
+	<div class="flex items-center gap-4 rounded-sm panel p-5 w-full sm:w-auto sm:inline-flex">
+		<div class="size-12 rounded-sm flex items-center justify-center bg-[#8c709b]/15 border border-[#b7a0c5]/30">
+			<FluentShield20Filled class="size-6 text-[#b7a0c5]" />
 		</div>
 		<div>
 			<div class="text-3xl font-bold text-[#d5c4df] leading-none">{data.actions.length}</div>
@@ -140,11 +139,11 @@
 	<div class="space-y-3">
 		{#each data.actions as action}
 			{@const ActionIcon = getActionIcon(action.type)}
-			<div class="panel rounded-xl p-6 hover:border-[#dfceb0]/25 transition-all">
+			<div class="panel rounded-sm p-5 hover:border-[#dfceb0]/25 transition-all">
 				<div class="flex items-start gap-4">
 					<!-- Action Icon -->
 					<div class="shrink-0">
-						<div class="size-12 rounded-xl flex items-center justify-center bg-[#102239]/70">
+						<div class="size-12 rounded-sm flex items-center justify-center panel-muted">
 							<ActionIcon class="size-6 {getActionColor(action.type)}" />
 						</div>
 					</div>
@@ -153,7 +152,9 @@
 					<div class="flex-1 min-w-0">
 						<!-- Header -->
 						<div class="flex items-center gap-3 mb-3 flex-wrap">
-							<span class="badge badge-sm border-0 {getActionColor(action.type)} bg-[#102239]/70">
+							<span
+								class="badge badge-sm rounded-sm border border-[#dfceb0]/15 {getActionColor(action.type)} bg-[#102239]/70"
+							>
 								{getActionLabel(action.type)}
 							</span>
 							<div class="flex items-center gap-1 text-xs text-[#a89e8e]">
@@ -168,7 +169,7 @@
 							<div class="flex items-center gap-3">
 								<div class="text-xs text-[#a89e8e] font-medium min-w-[60px]">Target:</div>
 								<a href="/user/{action.target.id}" class="flex items-center gap-2 group flex-1 min-w-0">
-									<div class="size-8 rounded-lg overflow-hidden transition-all">
+									<div class="size-8 rounded-sm overflow-hidden transition-all">
 										<Logo
 											src={action.target.logoUrl}
 											alt={action.target.name}
@@ -177,7 +178,7 @@
 											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 										/>
 									</div>
-									<span class="text-sm text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors truncate">
+									<span class="text-sm text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
 										{action.target.name}
 									</span>
 								</a>
@@ -187,7 +188,7 @@
 							<div class="flex items-center gap-3">
 								<div class="text-xs text-[#a89e8e] font-medium min-w-[60px]">Moderator:</div>
 								<a href="/user/{action.moderator.id}" class="flex items-center gap-2 group flex-1 min-w-0">
-									<div class="size-8 rounded-lg overflow-hidden transition-all">
+									<div class="size-8 rounded-sm overflow-hidden transition-all">
 										<Logo
 											src={action.moderator.logoUrl}
 											alt={action.moderator.name}
@@ -196,13 +197,13 @@
 											placeholderGradient="from-[#8c709b] to-[#6a5578]"
 										/>
 									</div>
-									<span class="text-sm text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors truncate">
+									<span class="text-sm text-[#d5c4df] group-hover:text-[#f2c463] transition-colors truncate">
 										{action.moderator.name}
 									</span>
 									{#if action.moderator.role === "admin"}
-										<div class={badgeClass({ tone: "red", size: "xs" })}>Admin</div>
+										<Badge tone="red" size="xs">Admin</Badge>
 									{:else if action.moderator.role === "moderator"}
-										<div class={badgeClass({ tone: "purple", size: "xs" })}>Mod</div>
+										<Badge tone="purple" size="xs">Mod</Badge>
 									{/if}
 								</a>
 							</div>
@@ -210,7 +211,7 @@
 
 						<!-- Reason & Note -->
 						{#if action.reason || action.note}
-							<div class="bg-[#102239]/60 rounded-lg p-3 space-y-2">
+							<div class="panel-muted rounded-sm p-3 space-y-2">
 								{#if action.reason}
 									<div>
 										<span class="text-xs text-[#a89e8e] font-medium">Reason:</span>
@@ -232,20 +233,12 @@
 	</div>
 
 	{#if data.actions.length === 0}
-		<div class="card panel">
-			<div class="card-body items-center text-center py-12">
-				<div class="size-16 rounded-full flex items-center justify-center bg-[#14283f] mb-4">
-					<FluentShield20Filled class="size-8 text-[#a89e8e]" />
-				</div>
-				<h3 class="text-xl font-bold text-[#fff7e8]">No Actions Found</h3>
-				<p class="text-[#a89e8e] max-w-md">
-					{#if data.filterUserId}
-						No moderation actions have been taken against this user.
-					{:else}
-						There are no moderation actions to display yet.
-					{/if}
-				</p>
-			</div>
-		</div>
+		<EmptyState
+			icon={FluentShield20Filled}
+			title="No Actions Found"
+			subtitle={data.filterUserId
+				? "No moderation actions have been taken against this user."
+				: "There are no moderation actions to display yet."}
+		/>
 	{/if}
-</div>
+</PageContainer>

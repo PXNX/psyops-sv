@@ -195,10 +195,10 @@
 	<div class="px-4 pt-4 pb-2 select-none">
 		<!-- Price row -->
 		<div class="flex items-baseline gap-2 flex-wrap">
-			<span class="text-2xl font-bold text-[#fff7e8] tabular-nums leading-none">
+			<span class="text-2xl font-bold font-mono text-[#fff7e8] tabular-nums leading-none">
 				${fmtPrice(displayPrice)}
 			</span>
-			<span class="text-xs font-semibold tabular-nums {isUp ? 'text-green-400' : 'text-red-400'}">
+			<span class="text-xs font-semibold tabular-nums {isUp ? 'text-[#c6dfbf]' : 'text-red-400'}">
 				{isUp ? "▲" : "▼"}
 				{Math.abs(changePct).toFixed(2)}% ({isUp ? "+" : ""}{fmtPrice(change)})
 			</span>
@@ -331,7 +331,7 @@
 					y={PAD.top - 28}
 					width={PILL_W}
 					height={22}
-					rx="5"
+					rx="2"
 					fill="#102239"
 					stroke="#dfceb0"
 					stroke-opacity="0.25"
@@ -377,7 +377,7 @@
 <style>
 	.range-btn {
 		padding: 5px 12px;
-		border-radius: 7px;
+		border-radius: 2px;
 		font-size: 0.75rem;
 		font-weight: 600;
 		letter-spacing: 0.03em;

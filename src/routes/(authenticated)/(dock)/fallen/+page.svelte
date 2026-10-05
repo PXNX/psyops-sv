@@ -3,6 +3,7 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import SectionCard from "#lib/component/SectionCard.svelte";
 	import Logo from "#lib/component/Logo.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -19,10 +20,7 @@
 		subtitle="A memorial to states and blocs that were conquered and dissolved."
 	>
 		{#snippet actions()}
-			<a href="/" class="btn btn-ghost btn-sm">
-				<FluentHome20Filled class="size-4" />
-				Dashboard
-			</a>
+			<Button variant="secondary" size="sm" href="/" icon={FluentHome20Filled}>Dashboard</Button>
 		{/snippet}
 	</PageHeader>
 
@@ -31,7 +29,7 @@
 		<h2 class="text-sm font-bold text-[#a89e8e] uppercase tracking-wide flex items-center gap-2">
 			<FluentBuildingGovernment20Filled class="size-4" />
 			Fallen States
-			<span class="text-[#a89e8e]/70 font-mono">({data.fallenStates.length})</span>
+			<span class="text-[#a89e8e]/70">({data.fallenStates.length})</span>
 		</h2>
 
 		{#if data.fallenStates.length === 0}
@@ -45,21 +43,21 @@
 				{#each data.fallenStates as state (state.id)}
 					<a
 						href="/state/{state.id}"
-						class="flex items-center gap-4 border border-[#dfceb0]/15 bg-[#14283f]/85 rounded-xl p-4 transition-all duration-200 hover:border-red-500/30 group"
+						class="group panel-interactive rounded-sm p-4 flex items-center gap-4"
 					>
 						<Logo
 							src={state.logo}
 							alt={state.name}
-							class="size-12 rounded-lg border border-[#dfceb0]/15 grayscale opacity-80"
+							class="size-12 rounded-sm border border-[#dfceb0]/15 grayscale opacity-80"
 							placeholderIcon={FluentBuildingGovernment20Filled}
 							placeholderGradient="from-[#3a3a3a] to-[#3a3a3a]"
 						/>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 flex-wrap">
-								<span class="font-bold text-[#fff7e8] group-hover:text-red-300 truncate">{state.name}</span>
+								<span class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">{state.name}</span>
 								{#if state.bloc}
 									<span
-										class="text-[10px] font-mono px-1.5 py-0.5 rounded border"
+										class="text-[10px] px-1.5 py-0.5 rounded-sm border"
 										style="color: {state.bloc.color}; border-color: {state.bloc.color}40;"
 									>
 										{state.bloc.name}
@@ -77,7 +75,7 @@
 							</div>
 						</div>
 						<div class="text-right shrink-0">
-							<div class="text-xs text-[#a89e8e] uppercase tracking-wide">Existed</div>
+							<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Existed</div>
 							<div class="text-sm font-bold font-mono text-[#d9ccb7]">
 								{getDurationText(state.createdAt, state.capitulatedAt)}
 							</div>
@@ -93,7 +91,7 @@
 		<h2 class="text-sm font-bold text-[#a89e8e] uppercase tracking-wide flex items-center gap-2">
 			<FluentFlag20Filled class="size-4" />
 			Dissolved Blocs
-			<span class="text-[#a89e8e]/70 font-mono">({data.fallenBlocs.length})</span>
+			<span class="text-[#a89e8e]/70">({data.fallenBlocs.length})</span>
 		</h2>
 
 		{#if data.fallenBlocs.length === 0}
@@ -103,11 +101,11 @@
 		{:else}
 			<div class="grid gap-2">
 				{#each data.fallenBlocs as bloc (bloc.id)}
-					<div class="panel flex items-center gap-4 rounded-xl p-4" style="border-left: 3px solid {bloc.color};">
+					<div class="panel rounded-sm p-4 flex items-center gap-4" style="border-left: 3px solid {bloc.color};">
 						<Logo
 							src={bloc.logo}
 							alt={bloc.name}
-							class="size-12 rounded-lg border border-[#dfceb0]/15 grayscale opacity-80"
+							class="size-12 rounded-sm border border-[#dfceb0]/15 grayscale opacity-80"
 							placeholderIcon={FluentFlag20Filled}
 							placeholderGradient="from-[#3a3a3a] to-[#3a3a3a]"
 						/>
@@ -124,7 +122,7 @@
 							</div>
 						</div>
 						<div class="text-right shrink-0">
-							<div class="text-xs text-[#a89e8e] uppercase tracking-wide">Existed</div>
+							<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Existed</div>
 							<div class="text-sm font-bold font-mono text-[#d9ccb7]">
 								{getDurationText(bloc.createdAt, bloc.capitulatedAt)}
 							</div>

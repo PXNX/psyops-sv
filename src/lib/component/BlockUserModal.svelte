@@ -26,7 +26,9 @@
 	<BottomSheet bind:open title="Block User">
 		<div class="space-y-4">
 			<div class="flex items-center gap-3">
-				<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center shrink-0">
+				<div
+					class="size-12 bg-red-600/10 border border-red-500/30 rounded-sm flex items-center justify-center shrink-0"
+				>
 					<FluentPersonProhibited20Filled class="size-6 text-red-400" />
 				</div>
 				<p class="text-[#d9ccb7]">
@@ -34,7 +36,7 @@
 				</p>
 			</div>
 
-			<div class="panel-muted border-[#e6a527]/30 rounded-xl p-4">
+			<div class="panel-muted border-[#e6a527]/30 rounded-sm p-4">
 				<p class="text-sm text-[#d9ccb7] font-medium mb-2">Blocking will:</p>
 				<ul class="list-disc list-inside text-sm text-[#a89e8e] space-y-1">
 					<li>Hide their messages from you</li>

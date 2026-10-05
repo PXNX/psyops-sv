@@ -4,7 +4,9 @@
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentBot20Filled from "~icons/fluent/bot-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
-	import { buttonClass } from "#lib/component/ui/styles.js";
+	import { Button } from "#lib/component/ui/index.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
 
 	let { data } = $props();
 
@@ -20,40 +22,32 @@
 	<title>Premium Membership</title>
 </svelte:head>
 
-<div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="3xl">
 	<!-- Header -->
-	<div class="text-center space-y-2">
-		<div
-			class="size-20 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-2xl flex items-center justify-center mx-auto shadow-lg"
-		>
-			<FluentStar20Filled class="size-10 text-[#172a45]" />
-		</div>
-		<h1 class="text-3xl font-bold text-[#fff7e8]">Premium Membership</h1>
-		<p class="text-[#a89e8e]">Automate production, military training and factory work</p>
-	</div>
+	<PageHeader
+		title="Premium Membership"
+		subtitle="Automate production, military training and factory work"
+		icon={FluentStar20Filled}
+	/>
 
 	<!-- Status -->
-	<div
-		class="rounded-xl border p-5 space-y-4 {data.status.active
-			? 'border-amber-400/30 bg-gradient-to-br from-amber-500/10 to-yellow-500/10'
-			: 'border-[#dfceb0]/15 panel'}"
-	>
+	<div class="rounded-sm p-5 space-y-4 {data.status.active ? 'border border-[#e6a527]/35 bg-[#e6a527]/12' : 'panel'}">
 		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="text-sm text-[#a89e8e]">Membership status</p>
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Membership status</p>
 				{#if data.status.active}
-					<p class="text-lg font-bold text-amber-300">Active</p>
+					<p class="text-lg font-bold text-[#f7c56b]">Active</p>
 					<p class="text-xs text-[#a89e8e]">Expires {formatDate(data.status.premiumUntil)}</p>
 				{:else}
 					<p class="text-lg font-bold text-[#d9ccb7]">Inactive</p>
 				{/if}
 			</div>
 			<div
-				class="size-12 rounded-xl flex items-center justify-center {data.status.active
-					? 'bg-gradient-to-br from-amber-500 to-yellow-500'
-					: 'bg-[#14283f]'}"
+				class="size-12 rounded-sm flex items-center justify-center {data.status.active
+					? 'bg-[#e6a527] border border-[#f2c463]'
+					: 'bg-[#102239] border border-[#dfceb0]/15'}"
 			>
-				<FluentStar20Filled class="size-6 {data.status.active ? 'text-[#172a45]' : 'text-[#fff7e8]'}" />
+				<FluentStar20Filled class="size-6 {data.status.active ? 'text-[#172a45]' : 'text-[#a89e8e]'}" />
 			</div>
 		</div>
 
@@ -73,7 +67,7 @@
 					</div>
 					<input
 						type="checkbox"
-						class="toggle toggle-warning"
+						class="toggle border-[#dfceb0]/25 checked:border-[#e6a527]/60 checked:bg-[#e6a527] checked:text-[#172a45]"
 						bind:checked={automation}
 						onchange={(e) => e.currentTarget.form?.requestSubmit()}
 					/>
@@ -83,58 +77,64 @@
 	</div>
 
 	<!-- What you get -->
-	<div class="panel rounded-xl p-5 space-y-2">
-		<h2 class="text-lg font-semibold text-[#fff7e8] mb-2">What automation does for you</h2>
+	<div class="panel rounded-sm p-5 space-y-2">
+		<h2 class="section-title mb-2">What automation does for you</h2>
 		{#each ["Collects factory wages and starts new shifts", "Collects finished production and starts new affordable batches", "Completes finished military training and trains new affordable units"] as feature}
 			<div class="flex items-center gap-3 text-sm text-[#d9ccb7]">
-				<FluentCheckmarkCircle20Filled class="size-5 text-emerald-400 shrink-0" />
+				<FluentCheckmarkCircle20Filled class="size-5 text-[#8fae88] shrink-0" />
 				<span>{feature}</span>
 			</div>
 		{/each}
 	</div>
 
 	<!-- Get premium via Telegram -->
-	<div class="panel rounded-xl p-5 space-y-3">
-		<div class="flex items-center gap-2">
+	<div class="panel rounded-sm p-5 space-y-3">
+		<h2 class="section-title">
 			<FluentBot20Filled class="size-5 text-[#7ba0c8]" />
-			<h2 class="text-lg font-semibold text-[#fff7e8]">Get premium via Telegram</h2>
-		</div>
-		<p class="text-xs text-amber-300/80">Payments are mocked for now — premium via the bot is free.</p>
+			Get premium via Telegram
+		</h2>
+		<p class="text-xs text-[#f7c56b]/80">Payments are mocked for now — premium via the bot is free.</p>
 		<div class="grid gap-2 sm:grid-cols-2">
 			{#each data.plans as plan}
-				<div class="panel-muted rounded-lg p-3">
+				<div class="panel-muted rounded-sm p-3">
 					<p class="font-semibold text-[#fff7e8]">{plan.label}</p>
 					<p class="text-xs text-[#a89e8e]">
-						{plan.days} days — send <code class="px-1 rounded bg-[#14283f] text-[#d9ccb7]">/premium {plan.id}</code>
+						{plan.days} days — send
+						<code class="px-1 rounded-sm bg-[#14283f] text-[#d9ccb7] font-mono">/premium {plan.id}</code>
 					</p>
 				</div>
 			{/each}
 		</div>
 		{#if !data.telegramLinked}
 			<p class="text-sm text-[#a89e8e]">
-				Connect your Telegram account in <a href="/settings" class="text-[#7ba0c8] underline">Settings</a> first, then request
-				premium directly in the bot.
+				Connect your Telegram account in <a
+					href="/settings"
+					class="text-[#f7c56b] underline hover:text-[#f2c463] transition-colors">Settings</a
+				> first, then request premium directly in the bot.
 			</p>
 		{:else}
 			<p class="text-sm text-[#a89e8e]">
-				Open the bot and send <code class="px-1.5 py-0.5 rounded bg-[#102239] text-[#d9ccb7]">/premium</code> to activate
-				premium for free.
+				Open the bot and send <code class="px-1.5 py-0.5 rounded-sm bg-[#102239] text-[#d9ccb7] font-mono"
+					>/premium</code
+				> to activate premium for free.
 			</p>
 		{/if}
 		{#if data.botUsername}
-			<a
+			<Button
 				href={`https://t.me/${data.botUsername}?start=premium`}
 				target="_blank"
 				rel="noopener noreferrer"
-				class={buttonClass({ variant: "soft-blue", size: "sm", block: true })}
+				variant="primary"
+				size="sm"
+				block
+				icon={FluentBot20Filled}
 			>
-				<FluentBot20Filled class="size-4" />
 				Open Telegram Bot
-			</a>
+			</Button>
 		{/if}
 	</div>
 
 	<p class="text-center text-xs text-[#a89e8e]">
 		Want to gift premium to someone? Open their profile and use the "Gift Premium" action.
 	</p>
-</div>
+</PageContainer>

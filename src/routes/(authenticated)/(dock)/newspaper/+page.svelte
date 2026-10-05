@@ -2,53 +2,64 @@
 	import FluentEmojiNewButton from "~icons/fluent-emoji/new-button";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import Logo from "#lib/component/Logo.svelte";
-	import { buttonClass } from "#lib/component/ui/styles.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
 
 	const { data } = $props();
 </script>
 
 {#if data.newspapers.length > 0}
-	<header class="sticky top-0 z-10 bg-[#0c1929]/95 backdrop-blur-sm border-b border-[#dfceb0]/15">
-		<div class="flex items-center gap-2 p-3 max-w-3xl mx-auto">
-			<input
-				class="field-control w-full max-w-xs rounded-lg px-3 py-2 text-sm"
-				placeholder="Search Newspapers..."
-				type="text"
-			/>
+	<PageContainer maxWidth="4xl">
+		<PageHeader title="Newspapers">
+			{#snippet actions()}
+				<IconButton
+					href="/newspaper/create"
+					icon={FluentEmojiNewButton}
+					label="Create newspaper"
+					variant="secondary"
+					shape="square"
+				/>
+			{/snippet}
+		</PageHeader>
 
-			<a class={buttonClass({ variant: "secondary", shape: "square" })} href="/newspaper/create" role="button">
-				<FluentEmojiNewButton />
-			</a>
-		</div>
-	</header>
+		<input class="field-control w-full sm:max-w-xs rounded-sm px-3 py-2.5 text-sm" placeholder="Search Newspapers..." type="text" />
 
-	<ul class="max-w-3xl mx-auto p-3 space-y-2">
-		{#each data.newspapers as newspaper}
-			{#if newspaper}
-				<a href="/newspaper/{newspaper.id}" oncontextmenu={() => false}>
-					<li class="panel-interactive rounded-lg p-3 flex items-center gap-3">
-						<Logo src={newspaper.logo} alt={newspaper.name} />
-						<div>
-							<h3 class="text-lg font-bold tracking-tight text-[#fff7e8]">
-								{newspaper.name}
-							</h3>
-							<span class="text-sm text-[#f7c56b]">{newspaper.rank}</span>
-						</div>
+		<ul class="space-y-2">
+			{#each data.newspapers as newspaper}
+				{#if newspaper}
+					<li>
+						<a
+							href="/newspaper/{newspaper.id}"
+							oncontextmenu={() => false}
+							class="group panel-interactive rounded-sm p-4 flex items-center gap-3"
+						>
+							<Logo src={newspaper.logo} alt={newspaper.name} />
+							<div class="min-w-0">
+								<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+									{newspaper.name}
+								</h3>
+								<span class="text-xs text-[#f7c56b]">{newspaper.rank}</span>
+							</div>
+						</a>
 					</li>
-				</a>
-			{/if}
-		{/each}
-	</ul>
+				{/if}
+			{/each}
+		</ul>
+	</PageContainer>
 {:else}
-	<div class="h-full flex flex-col justify-center items-center">
-		<div class="max-w-md flex-col space-y-4 flex justify-center items-center text-center">
-			<FluentEmojiRolledUpNewspaper class="size-12" />
-			<h3 class="text-2xl font-bold text-[#fff7e8]">You don't work for a newspaper</h3>
-			<p class="text-[#a89e8e]">
-				Newspapers allow you to share events and your views with the community in a more uniform way. You can also ask
-				other users to become a journalist for a newspaper they own.
-			</p>
-			<a class={buttonClass({ variant: "primary" })} href="/newspaper/create" role="button">Get started</a>
+	<PageContainer maxWidth="4xl">
+		<div class="panel-muted rounded-sm p-12 text-center">
+			<div class="max-w-md mx-auto flex flex-col items-center space-y-4">
+				<FluentEmojiRolledUpNewspaper class="size-12" />
+				<h3 class="text-xl font-bold text-[#fff7e8]">You don't work for a newspaper</h3>
+				<p class="text-[#a89e8e]">
+					Newspapers allow you to share events and your views with the community in a more uniform way. You can also ask
+					other users to become a journalist for a newspaper they own.
+				</p>
+				<Button variant="primary" href="/newspaper/create">Get started</Button>
+			</div>
 		</div>
-	</div>
+	</PageContainer>
 {/if}

@@ -112,7 +112,7 @@
 		<EditSection title="Party Details" icon={FluentFlag20Filled}>
 			<div class="space-y-4">
 				<div>
-					<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2">
+					<label for="name" class="field-label">
 						Party Name <span class="text-red-400">*</span>
 					</label>
 					<input
@@ -122,21 +122,19 @@
 						bind:value={$form.name}
 						placeholder="e.g., Progressive Alliance Party"
 						maxlength="100"
-						class="input w-full field-control"
-						class:input-error={$errors.name}
+						class="field-control rounded-sm px-3 py-2.5 w-full"
+						class:border-red-500={$errors.name}
 						disabled={$submitting}
 					/>
 					{#if $errors.name}
-						<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+						<p class="field-error">{$errors.name}</p>
 					{:else}
-						<p class="text-xs text-[#a89e8e] mt-1">{$form.name?.length || 0}/100 characters</p>
+						<p class="field-hint">{$form.name?.length || 0}/100 characters</p>
 					{/if}
 				</div>
 
 				<div>
-					<label for="abbreviation" class="block text-sm font-medium text-[#e5d8c1] mb-2">
-						Abbreviation (Optional)
-					</label>
+					<label for="abbreviation" class="field-label"> Abbreviation (Optional) </label>
 					<input
 						type="text"
 						id="abbreviation"
@@ -144,14 +142,14 @@
 						bind:value={$form.abbreviation}
 						placeholder="e.g., PROG"
 						maxlength="4"
-						class="input w-full field-control"
-						class:input-error={$errors.abbreviation}
+						class="field-control rounded-sm px-3 py-2.5 w-full"
+						class:border-red-500={$errors.abbreviation}
 						disabled={$submitting}
 					/>
 					{#if $errors.abbreviation}
-						<p class="text-xs text-red-400 mt-1">{$errors.abbreviation}</p>
+						<p class="field-error">{$errors.abbreviation}</p>
 					{:else}
-						<p class="text-xs text-[#a89e8e] mt-1">
+						<p class="field-hint">
 							{$form.abbreviation?.length || 0}/4 characters • Alphanumeric only
 						</p>
 					{/if}
@@ -198,15 +196,15 @@
 		<!-- Ideology -->
 		<EditSection title="Political Alignment" icon={FluentBuildingGovernment20Filled}>
 			<div>
-				<label for="ideology" class="block text-sm font-medium text-[#e5d8c1] mb-2">
+				<label for="ideology" class="field-label">
 					Ideology <span class="text-red-400">*</span>
 				</label>
 				<select
 					id="ideology"
 					name="ideology"
 					bind:value={$form.ideology}
-					class="select w-full field-control"
-					class:input-error={$errors.ideology}
+					class="field-control rounded-sm px-3 py-2.5 w-full"
+					class:border-red-500={$errors.ideology}
 					disabled={$submitting}
 				>
 					<option value="">Select an ideology...</option>
@@ -215,7 +213,7 @@
 					{/each}
 				</select>
 				{#if $errors.ideology}
-					<p class="text-xs text-red-400 mt-1">{$errors.ideology}</p>
+					<p class="field-error">{$errors.ideology}</p>
 				{/if}
 			</div>
 		</EditSection>
@@ -228,12 +226,12 @@
 				bind:value={$form.description}
 				rows="6"
 				placeholder="Describe your party's mission, values, and political platform..."
-				class="textarea w-full field-control"
+				class="field-control rounded-sm px-3 py-2.5 w-full"
 				disabled={$submitting}></textarea>
 		</EditSection>
 
 		<!-- Cost & Cooldown -->
-		<div class="bg-[#14283f]/85 rounded-xl border border-[#dfceb0]/15 p-5 space-y-2">
+		<div class="panel rounded-sm p-5 space-y-2">
 			<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 			{#if data.isOnCooldown && data.cooldownEndsAt}
 				<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="party" />

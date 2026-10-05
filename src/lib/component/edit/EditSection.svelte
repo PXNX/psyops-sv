@@ -11,7 +11,7 @@
 	let { title, icon: Icon, children }: Props = $props();
 </script>
 
-<div class="panel rounded-xl p-5 space-y-3">
+<div class="panel rounded-sm p-5 space-y-3">
 	<div class="flex items-center gap-2">
 		{#if Icon}
 			<Icon class="size-5 text-[#e6a527]" />

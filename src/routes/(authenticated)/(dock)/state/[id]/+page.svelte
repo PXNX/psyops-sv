@@ -22,9 +22,10 @@
 	import ProfileItem from "#lib/component/ProfileItem.svelte";
 	import Modal from "#lib/component/Modal.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
+	import Badge from "#lib/component/ui/Badge.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import { enhance } from "$app/forms";
-	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 
@@ -85,74 +86,66 @@
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
-	<!-- Hero Section with Bloc Background -->
-	<div class="relative">
-		<div
-			class="w-full rounded-sm p-8 flex flex-col items-center relative overflow-hidden border border-[#dfceb0]/15 shadow-2xl"
-			style="background: linear-gradient(135deg, {data.bloc?.color || '#1e293b'}20 0%, {data.bloc?.color ||
-				'#1e293b'}40 100%);"
-		>
-			<div
-				class="absolute inset-0 opacity-10"
-				style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.bloc?.color ||
-					'#ffffff'}20 35px, {data.bloc?.color || '#ffffff'}20 70px);"
-			></div>
-			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-sm"></div>
+	<!-- Hero -->
+	<div
+		class="panel rounded-sm p-5 relative"
+		style={data.bloc ? `border-top: 3px solid ${data.bloc.color};` : undefined}
+	>
+		{#if data.isPresident}
+			<IconButton
+				href="/state/{data.state.id}/edit"
+				icon={FluentEdit20Filled}
+				label="Edit State"
+				variant="secondary"
+				size="sm"
+				class="absolute top-4 right-4"
+			/>
+		{/if}
 
-			{#if data.isPresident}
-				<a
-					href="/state/{data.state.id}/edit"
-					class="absolute top-3 right-3 z-20 p-2 bg-black/30 hover:bg-black/50 border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all backdrop-blur-sm"
-					title="Edit State"
-					aria-label="Edit State"
-				>
-					<FluentEdit20Filled class="size-4" />
-				</a>
-			{/if}
+		<div class="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+			<!-- State Logo -->
+			<div class="relative shrink-0">
+				{#if data.state.logo}
+					<div class="size-24 rounded-full overflow-hidden bg-[#102239] border border-[#dfceb0]/15">
+						<img src={data.state.logo} alt={data.state.name} class="w-full h-full object-cover" />
+					</div>
+				{:else}
+					<div
+						class="size-24 rounded-full bg-[#102239] border border-[#dfceb0]/15 flex items-center justify-center"
+					>
+						<FluentFlag20Filled class="size-8 text-[#a89e8e]/60" />
+					</div>
+				{/if}
 
-			<div class="relative z-10 flex flex-col items-center space-y-3">
-				<!-- State Logo -->
-				<div class="rounded-full relative group">
-					{#if data.state.logo}
-						<div class="size-24 rounded-full overflow-hidden bg-[#102239]">
-							<img src={data.state.logo} alt={data.state.name} class="w-full h-full object-cover" />
-						</div>
-					{:else}
-						<div class="size-24 rounded-full bg-[#102239] flex items-center justify-center">
-							<FluentFlag20Filled class="size-8 text-[#a89e8e]/60" />
-						</div>
-					{/if}
+				{#if data.bloc}
+					<div
+						class="absolute -bottom-2 -right-2 size-10 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#14283f]"
+						style="background-color: {data.bloc.color};"
+						title={data.bloc.name}
+					>
+						{#if data.bloc.logo}
+							<img src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
+						{:else}
+							<FluentFlag20Filled class="size-5 text-[#fff7e8]" />
+						{/if}
+					</div>
+				{/if}
+			</div>
 
-					{#if data.bloc}
-						<div
-							class="absolute -bottom-2 -right-2 size-10 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#0c1929]"
-							style="background-color: {data.bloc.color};"
-							title={data.bloc.name}
-						>
-							{#if data.bloc.logo}
-								<img src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
-							{:else}
-								<FluentFlag20Filled class="size-5 text-[#fff7e8]" />
-							{/if}
-						</div>
-					{/if}
-				</div>
-
-				<div class="text-center space-y-1">
-					<h1 class="text-3xl font-bold text-[#fff7e8] tracking-tight">{data.state.name}</h1>
-					{#if data.bloc}
-						<a
-							href="/bloc/{data.bloc.id}"
-							class="text-sm font-medium hover:underline inline-block"
-							style="color: {data.bloc.color};"
-						>
-							{data.bloc.name}
-						</a>
-					{/if}
-					{#if data.state.description}
-						<p class="text-sm text-[#c7bda9] max-w-md mt-2">{data.state.description}</p>
-					{/if}
-				</div>
+			<div class="min-w-0 flex-1 space-y-1 sm:pr-12">
+				<h1 class="text-3xl font-bold text-[#fff7e8] break-words">{data.state.name}</h1>
+				{#if data.bloc}
+					<a
+						href="/bloc/{data.bloc.id}"
+						class="text-sm font-medium hover:underline inline-block"
+						style="color: {data.bloc.color};"
+					>
+						{data.bloc.name}
+					</a>
+				{/if}
+				{#if data.state.description}
+					<p class="text-sm text-[#a89e8e] max-w-xl mt-2">{data.state.description}</p>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -170,30 +163,27 @@
 			{#each data.activeWars as war}
 				<a
 					href="/war/{war.id}"
-					class="flex items-center gap-3 sm:gap-4 bg-gradient-to-r from-red-950/30 to-[#0c1929]/60 border border-red-500/25 rounded-sm p-4 hover:border-red-400/40 transition-all group"
+					class="group flex items-center gap-3 sm:gap-4 bg-red-600/10 border border-red-500/30 rounded-sm p-4 hover:border-red-400/50 transition-colors"
 				>
-					<div class="relative flex-shrink-0">
-						<div class="absolute inset-0 bg-red-500/20 blur-lg rounded-full animate-pulse"></div>
-						<div
-							class="relative size-10 sm:size-12 bg-red-950/60 rounded-sm border border-red-500/30 flex items-center justify-center"
-						>
-							<span class="text-xl sm:text-2xl">⚔️</span>
-						</div>
+					<div
+						class="size-10 sm:size-12 shrink-0 bg-red-600/15 rounded-sm border border-red-500/30 flex items-center justify-center"
+					>
+						<span class="text-xl sm:text-2xl">⚔️</span>
 					</div>
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-0.5">
 							<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
-							<span class="text-[10px] text-red-400/70 font-mono uppercase tracking-widest">
+							<span class="text-[10px] text-red-300/80 uppercase tracking-wide">
 								{war.isAttacker ? "War of Aggression" : "Defensive War"}
 							</span>
 						</div>
-						<div class="text-sm text-[#c7bda9]">
-							<span class="font-bold text-red-400">{war.attacker.name}</span>
+						<div class="text-sm text-[#d9ccb7]">
+							<span class="font-bold text-red-300">{war.attacker.name}</span>
 							<span class="text-[#a89e8e] mx-1">vs</span>
 							<span class="font-bold text-[#b7d0e6]">{war.defender.name}</span>
 						</div>
 					</div>
-					<span class="text-[#a89e8e] group-hover:text-red-400 transition-colors">→</span>
+					<span class="text-[#a89e8e] group-hover:text-red-300 transition-colors">→</span>
 				</a>
 			{/each}
 		</section>
@@ -201,14 +191,14 @@
 
 	<!-- War Declaration Button (for foreign presidents) -->
 	{#if data.canDeclareWar}
-		<div class="bg-red-900/20 border border-red-500/30 rounded-sm p-6">
+		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
 			<div class="flex items-start gap-4">
 				<div class="size-12 bg-red-600/20 rounded-sm flex items-center justify-center flex-shrink-0">
 					<FluentShieldError20Filled class="size-6 text-red-400" />
 				</div>
 				<div class="flex-1">
 					<h3 class="text-lg font-bold text-[#fff7e8] mb-2">Military Actions</h3>
-					<p class="text-sm text-[#c7bda9] mb-4">
+					<p class="text-sm text-[#d9ccb7] mb-4">
 						As a President, you can declare war on this state. This action will have significant consequences.
 					</p>
 					<Button
@@ -236,7 +226,7 @@
 						</div>
 						<div>
 							<h3 class="text-lg font-semibold text-[#fff7e8]">Visa-Free</h3>
-							<p class="text-sm text-emerald-300">Bloc membership grants visa-free travel</p>
+							<p class="text-sm text-[#c6dfbf]">Bloc membership grants visa-free travel</p>
 						</div>
 					</div>
 				</div>
@@ -266,7 +256,7 @@
 					</div>
 				</div>
 			{:else if data.visa.blockedReason}
-				<div class="bg-red-900/20 border border-red-500/20 rounded-sm p-5">
+				<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
 					<div class="flex items-center gap-3">
 						<div class="size-12 bg-red-600/20 rounded-sm flex items-center justify-center flex-shrink-0">
 							<FluentWarning20Filled class="size-6 text-red-400" />
@@ -334,19 +324,16 @@
 								};
 							}}
 						>
-							<button
+							<Button
 								type="submit"
-								class={buttonClass({ variant: "soft-blue", size: "sm", class: "gap-2" })}
-								disabled={isApplyingResidence}
+								variant="soft-blue"
+								size="sm"
+								icon={FluentHome20Filled}
+								loading={isApplyingResidence}
+								loadingText="Applying..."
 							>
-								{#if isApplyingResidence}
-									<span class="loading loading-spinner loading-xs"></span>
-									Applying...
-								{:else}
-									<FluentHome20Filled class="size-4" />
-									Apply for Residence
-								{/if}
-							</button>
+								Apply for Residence
+							</Button>
 						</form>
 					</div>
 				</div>
@@ -356,51 +343,45 @@
 
 	<!-- Stats Grid -->
 	<section class="grid grid-cols-2 md:grid-cols-4 gap-3">
-		<a
-			href="/state?sort=population"
-			class="bg-[#315d8d]/15 rounded-sm border border-[#7ba0c8]/25 p-5 hover:border-[#7ba0c8]/40 transition-all"
-		>
+		<a href="/state?sort=population" class="panel-interactive rounded-sm p-4">
 			<div class="flex items-center gap-2 mb-1">
-				<FluentPeople20Filled class="size-5 text-[#b7d0e6]" />
-				<p class="text-sm text-[#b7d0e6] font-medium">Population</p>
+				<FluentPeople20Filled class="size-4 text-[#7ba0c8]" />
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Population</p>
 			</div>
-			<p class="text-4xl font-bold text-[#fff7e8]">{data.state.population.toLocaleString()}</p>
+			<p class="text-2xl font-bold text-[#fff7e8] truncate">{data.state.population.toLocaleString()}</p>
 		</a>
 
-		<a
-			href="/state/{data.state.id}/region"
-			class="bg-[#8c709b]/15 rounded-sm border border-[#b7a0c5]/25 p-5 hover:border-[#b7a0c5]/40 transition-all"
-		>
+		<a href="/state/{data.state.id}/region" class="panel-interactive rounded-sm p-4">
 			<div class="flex items-center gap-2 mb-1">
-				<FluentHome20Filled class="size-5 text-[#d5c4df]" />
-				<p class="text-sm text-[#d5c4df] font-medium">Regions</p>
+				<FluentHome20Filled class="size-4 text-[#b7a0c5]" />
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Regions</p>
 			</div>
-			<p class="text-4xl font-bold text-[#fff7e8]">{data.regions.length}</p>
+			<p class="text-2xl font-bold text-[#fff7e8]">{data.regions.length}</p>
 		</a>
 
 		{#if data.energy}
-			<div class="bg-[#e6a527]/12 rounded-sm border border-[#e6a527]/30 p-5">
+			<div class="panel rounded-sm p-4">
 				<div class="flex items-center gap-2 mb-1">
-					<FluentLightbulb20Filled class="size-5 text-[#f7c56b]" />
-					<p class="text-sm text-[#f7c56b] font-medium">Energy</p>
+					<FluentLightbulb20Filled class="size-4 text-[#f7c56b]" />
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Energy</p>
 				</div>
-				<p class="text-4xl font-bold text-[#fff7e8]">{data.energy.available}</p>
+				<p class="text-2xl font-bold text-[#fff7e8]">{data.energy.available}</p>
 			</div>
 		{/if}
 
-		<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/25 p-5">
+		<div class="panel rounded-sm p-4">
 			<div class="flex items-center gap-2 mb-1">
-				<FluentShield20Filled class="size-5 text-[#c6dfbf]" />
-				<p class="text-sm text-[#c6dfbf] font-medium">Power Rating</p>
+				<FluentShield20Filled class="size-4 text-[#8fae88]" />
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Power Rating</p>
 			</div>
-			<p class="text-4xl font-bold text-[#fff7e8]">{data.state.rating || 0}</p>
+			<p class="text-2xl font-bold text-[#fff7e8]">{data.state.rating || 0}</p>
 		</div>
 	</section>
 
 	<!-- Government Section -->
 	{#if hasGovernment}
 		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Government</h2>
+			<h2 class="section-title">Government</h2>
 			<div class="panel-muted rounded-sm p-3 space-y-2">
 				<!-- President -->
 				{#if data.president}
@@ -409,7 +390,7 @@
 						logo={data.president.logo}
 						logoAlt={data.president.name}
 						placeholderIcon={FluentShield20Filled}
-						placeholderGradient="from-amber-600/20 to-amber-700/10"
+						placeholderGradient="from-[#e6a527]/15 to-[#e6a527]/15"
 						title={data.president.name}
 						subtitle="President • Term {data.president.term} • {formatDate(data.president.electedAt)}"
 						hoverColor="yellow"
@@ -427,7 +408,7 @@
 								logo={minister.logo}
 								logoAlt={minister.name}
 								placeholderIcon={FluentShield20Filled}
-								placeholderGradient="from-[#8c709b]/20 to-[#8c709b]/10"
+								placeholderGradient="from-[#8c709b]/15 to-[#8c709b]/15"
 								title={minister.name}
 								subtitle={minister.ministry.replace("_", " ")}
 								hoverColor="purple"
@@ -444,13 +425,13 @@
 	<!-- Parliament & Elections -->
 	{#if data.parliamentMembers.length > 0 || data.nextElection}
 		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Parliament</h2>
+			<h2 class="section-title">Parliament</h2>
 			<div class="panel-muted rounded-sm p-3 space-y-3">
 				{#if data.parliamentMembers.length > 0}
 					<ProfileItem
 						href="/state/{data.state.id}/parliament"
 						placeholderIcon={FluentOrganization20Filled}
-						placeholderGradient="from-[#315d8d]/20 to-[#315d8d]/10"
+						placeholderGradient="from-[#315d8d]/15 to-[#315d8d]/15"
 						title="{data.parliamentMembers.length} Parliament Members"
 						subtitle="View legislature"
 						hoverColor="purple"
@@ -474,7 +455,7 @@
 										<strong>{data.nextElection.totalSeats} seats</strong>.
 									</p>
 
-									<div class="panel rounded-sm p-3 space-y-2">
+									<div class="panel-muted rounded-sm p-3 space-y-2">
 										<div class="flex items-center gap-2 text-sm">
 											<FluentCalendar20Filled class="size-4 text-[#d5c4df]" />
 											<span class="text-[#e5d8c1]">
@@ -491,16 +472,15 @@
 									</div>
 
 									<div class="flex gap-2 pt-2">
-										<a
+										<Button
 											href="/state/{data.state.id}/election/{data.nextElection.id}"
-											class={buttonClass({ variant: "soft-purple", size: "sm", class: "gap-2" })}
+											variant="soft-purple"
+											size="sm"
+											icon={FluentVote20Filled}
 										>
-											<FluentVote20Filled class="size-4" />
 											View Election Details
-										</a>
-										<a href="/party/create" class={buttonClass({ variant: "secondary", size: "sm" })}>
-											Create a Party
-										</a>
+										</Button>
+										<Button href="/party/create" variant="secondary" size="sm">Create a Party</Button>
 									</div>
 								</div>
 							</div>
@@ -516,13 +496,15 @@
 										<p class="text-sm text-[#f7c56b]">Help establish the founding parliament - vote now!</p>
 									</div>
 								</div>
-								<a
+								<Button
 									href="/state/{data.state.id}/election/{data.nextElection.id}"
-									class={buttonClass({ variant: "primary", size: "sm", class: "gap-2 animate-pulse" })}
+									variant="primary"
+									size="sm"
+									icon={FluentVote20Filled}
+									class="animate-pulse"
 								>
-									<FluentVote20Filled class="size-4" />
 									Vote Now
-								</a>
+								</Button>
 							</div>
 						</div>
 					{:else if !data.nextElection.isInaugural && state === "scheduled"}
@@ -544,12 +526,13 @@
 										</p>
 									</div>
 								</div>
-								<a
+								<Button
 									href="/state/{data.state.id}/election/{data.nextElection.id}"
-									class={buttonClass({ variant: "soft-blue", size: "sm" })}
+									variant="soft-blue"
+									size="sm"
 								>
 									View Election
-								</a>
+								</Button>
 							</div>
 						</div>
 					{:else if !data.nextElection.isInaugural && state === "active"}
@@ -563,7 +546,7 @@
 									<div>
 										<div class="flex items-center gap-2 mb-1">
 											<h3 class="text-lg font-bold text-[#fff7e8]">Election Active</h3>
-											<span class={badgeClass({ tone: "amber", size: "sm" })}>Voting Now</span>
+											<Badge tone="amber">Voting Now</Badge>
 										</div>
 										<p class="text-sm text-[#a89e8e]">
 											{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} •
@@ -572,13 +555,15 @@
 										</p>
 									</div>
 								</div>
-								<a
+								<Button
 									href="/state/{data.state.id}/election/{data.nextElection.id}"
-									class={buttonClass({ variant: "primary", size: "sm", class: "gap-2 animate-pulse" })}
+									variant="primary"
+									size="sm"
+									icon={FluentVote20Filled}
+									class="animate-pulse"
 								>
-									<FluentVote20Filled class="size-4" />
 									Vote Now
-								</a>
+								</Button>
 							</div>
 						</div>
 					{/if}
@@ -591,14 +576,12 @@
 	<section class="grid md:grid-cols-2 gap-4">
 		<a
 			href="/state/{data.state.id}/construction"
-			class="group bg-[#e6a527]/12 rounded-sm border border-[#e6a527]/30 p-6 hover:border-[#e6a527]/50 transition-all"
+			class="group panel-interactive rounded-sm p-5"
 		>
-			<div
-				class="size-12 bg-[#e6a527]/20 rounded-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-			>
+			<div class="size-12 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center mb-4">
 				<FluentBuilding20Filled class="size-6 text-[#f7c56b]" />
 			</div>
-			<h3 class="text-xl font-bold text-[#fff7e8] mb-2 group-hover:text-[#f7c56b] transition-colors">
+			<h3 class="text-lg font-bold text-[#fff7e8] mb-2 group-hover:text-[#f2c463] transition-colors">
 				Construction Queue
 			</h3>
 			<p class="text-sm text-[#a89e8e] mb-3">Current construction efforts across the state's regions</p>
@@ -608,14 +591,12 @@
 		{#if hasGovernment}
 			<a
 				href="/state/{data.state.id}/economy"
-				class="group bg-[#587252]/15 rounded-sm border border-[#8fae88]/25 p-6 hover:border-[#8fae88]/45 transition-all"
+				class="group panel-interactive rounded-sm p-5"
 			>
-				<div
-					class="size-12 bg-[#587252]/20 rounded-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
-				>
+				<div class="size-12 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm flex items-center justify-center mb-4">
 					<FluentMoney20Filled class="size-6 text-[#c6dfbf]" />
 				</div>
-				<h3 class="text-xl font-bold text-[#fff7e8] mb-2 group-hover:text-[#c6dfbf] transition-colors">Economy</h3>
+				<h3 class="text-lg font-bold text-[#fff7e8] mb-2 group-hover:text-[#f2c463] transition-colors">Economy</h3>
 				<p class="text-sm text-[#a89e8e] mb-3">Treasury and tax policies</p>
 				<div class="text-xs text-[#c6dfbf] flex items-center gap-1">View economy →</div>
 			</a>
@@ -623,14 +604,14 @@
 			{#if data.isPresident || data.isForeignMinister}
 				<a
 					href="/state/{data.state.id}/foreign-affairs"
-					class="group bg-[#315d8d]/15 rounded-sm border border-[#7ba0c8]/25 p-6 hover:border-[#7ba0c8]/45 transition-all"
+					class="group panel-interactive rounded-sm p-5"
 				>
 					<div
-						class="size-12 bg-[#315d8d]/20 rounded-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform"
+						class="size-12 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center mb-4"
 					>
 						<FluentGlobe20Filled class="size-6 text-[#b7d0e6]" />
 					</div>
-					<h3 class="text-xl font-bold text-[#fff7e8] mb-2 group-hover:text-[#b7d0e6] transition-colors">
+					<h3 class="text-lg font-bold text-[#fff7e8] mb-2 group-hover:text-[#f2c463] transition-colors">
 						Foreign Affairs
 					</h3>
 					<p class="text-sm text-[#a89e8e] mb-3">Diplomacy, wars, and sanctions</p>
@@ -643,7 +624,7 @@
 	<!-- Tax Overview -->
 	{#if data.taxes.length > 0}
 		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Tax Policies</h2>
+			<h2 class="section-title">Tax Policies</h2>
 			<div class="panel rounded-sm overflow-hidden">
 				<table class="w-full">
 					<thead class="bg-[#102239]/70 border-b border-[#dfceb0]/15">
@@ -674,7 +655,7 @@
 										Worker wages and salaries
 									{/if}
 								</td>
-								<td class="px-4 py-3 text-right font-bold text-emerald-400">{tax.taxRate}%</td>
+								<td class="px-4 py-3 text-right font-bold text-[#c6dfbf]">{tax.taxRate}%</td>
 							</tr>
 						{/each}
 					</tbody>
@@ -685,16 +666,16 @@
 
 	<!-- Sanction Warning (for foreign ministers) -->
 	{#if data.isForeignMinister}
-		<section class="bg-red-900/20 border border-red-500/30 rounded-sm p-6">
+		<section class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
 			<div class="flex items-start gap-4">
 				<div class="size-12 bg-red-600/20 rounded-sm flex items-center justify-center flex-shrink-0">
 					<FluentWarning20Filled class="size-6 text-red-400" />
 				</div>
 				<div class="flex-1">
 					<h3 class="text-lg font-bold text-[#fff7e8] mb-2">Diplomatic Actions</h3>
-					<p class="text-sm text-[#c7bda9] mb-4">As a Foreign Minister, you can impose sanctions on this state.</p>
+					<p class="text-sm text-[#d9ccb7] mb-4">As a Foreign Minister, you can impose sanctions on this state.</p>
 					<form method="POST" action="?/sanction" use:enhance>
-						<button type="submit" class={buttonClass({ variant: "danger", size: "sm" })}> Impose Sanction </button>
+						<Button type="submit" variant="danger" size="sm">Impose Sanction</Button>
 					</form>
 				</div>
 			</div>
@@ -705,15 +686,15 @@
 <!-- War Declaration Modal -->
 <Modal bind:open={showWarModal} title="Declare War" size="default">
 	<div class="space-y-4">
-		<div class="bg-red-900/20 border border-red-500/30 rounded-sm p-4">
+		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-4">
 			<div class="flex items-start gap-3">
 				<FluentWarning20Filled class="size-6 text-red-400 mt-0.5 flex-shrink-0" />
 				<div class="space-y-2">
 					<h4 class="font-bold text-[#fff7e8]">⚠️ Critical Warning</h4>
-					<p class="text-sm text-[#c7bda9]">
+					<p class="text-sm text-[#d9ccb7]">
 						You are about to declare war on <strong>{data.state.name}</strong>. This action:
 					</p>
-					<ul class="text-sm text-[#c7bda9] space-y-1 ml-4 list-disc">
+					<ul class="text-sm text-[#d9ccb7] space-y-1 ml-4 list-disc">
 						<li>Cannot be undone</li>
 						<li>Will initiate military conflict</li>
 						<li>May have severe diplomatic consequences</li>
@@ -750,27 +731,25 @@
 			}}
 		>
 			<div class="flex gap-3 justify-end pt-4">
-				<button
+				<Button
 					type="button"
+					variant="secondary"
+					size="sm"
 					onclick={() => (showWarModal = false)}
-					class={buttonClass({ variant: "secondary", size: "sm" })}
 					disabled={isDeclaringWar}
 				>
 					Cancel
-				</button>
-				<button
+				</Button>
+				<Button
 					type="submit"
-					class={buttonClass({ variant: "danger", size: "sm", class: "gap-2" })}
-					disabled={isDeclaringWar}
+					variant="danger"
+					size="sm"
+					icon={FluentShieldError20Filled}
+					loading={isDeclaringWar}
+					loadingText="Declaring..."
 				>
-					{#if isDeclaringWar}
-						<span class="loading loading-spinner loading-xs"></span>
-						Declaring...
-					{:else}
-						<FluentShieldError20Filled class="size-4" />
-						Confirm Declaration
-					{/if}
-				</button>
+					Confirm Declaration
+				</Button>
 			</div>
 		</form>
 	</div>
@@ -797,7 +776,7 @@
 				</div>
 				<div class="flex items-center justify-between">
 					<span class="text-sm text-[#a89e8e]">Tax ({data.visa.visaTaxRate}%)</span>
-					<span class="text-sm text-[#c7bda9]"
+					<span class="text-sm text-[#d9ccb7]"
 						>${Math.floor((data.visa.visaCost * data.visa.visaTaxRate) / 100).toLocaleString()}</span
 					>
 				</div>
@@ -826,18 +805,19 @@
 					};
 				}}
 			>
-				<button
+				<Button
 					type="submit"
-					class={buttonClass({ variant: "soft-purple", block: true, class: "gap-2" })}
+					variant="soft-purple"
+					block
+					icon={FluentBookCompass24Filled}
 					disabled={data.walletBalance < data.visa.visaCost}
 				>
-					<FluentBookCompass24Filled class="size-5" />
 					{#if data.visa.autoApprove}
 						Purchase Visa — ${data.visa.visaCost.toLocaleString()}
 					{:else}
 						Apply for Visa
 					{/if}
-				</button>
+				</Button>
 				{#if data.walletBalance < data.visa.visaCost}
 					<p class="text-xs text-red-400 text-center mt-2">
 						Insufficient funds — you have ${data.walletBalance.toLocaleString()}

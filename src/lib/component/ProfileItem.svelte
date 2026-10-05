@@ -57,13 +57,13 @@
 	this={Component}
 	{href}
 	{onclick}
-	class="flex items-center gap-3 group hover:bg-[#19304b] rounded-lg p-2 -m-2 transition-all"
+	class="flex items-center gap-3 group hover:bg-[#19304b] rounded-sm p-2 -m-2 transition-all"
 	class:cursor-pointer={onclick}
 >
 	{#if logo !== undefined}
 		<Logo src={logo} alt={logoAlt} {placeholderIcon} {placeholderGradient} />
 	{:else if icon}
-		<div class="size-12 {tileColors[hoverColor] ?? tileColors.purple} rounded-lg flex items-center justify-center">
+		<div class="size-12 {tileColors[hoverColor] ?? tileColors.purple} rounded-sm flex items-center justify-center">
 			<span class="text-2xl">{icon}</span>
 		</div>
 	{/if}

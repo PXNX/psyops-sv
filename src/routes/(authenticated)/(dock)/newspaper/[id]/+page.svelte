@@ -11,6 +11,8 @@
 	import FluentBell20Filled from "~icons/fluent/alert-20-filled";
 	import FluentBellOff20Filled from "~icons/fluent/alert-off-20-filled";
 	import { enhance } from "$app/forms";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	let { data } = $props();
 	let isSubscribing = $state(false);
@@ -52,31 +54,28 @@
 	{/if}
 </svelte:head>
 
-<div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="5xl">
 	<!-- Hero Header -->
-	<div class="relative rounded-2xl overflow-hidden border border-[#dfceb0]/15 shadow-2xl bg-[#14283f]/85">
-		<div
-			class="absolute inset-0 opacity-10"
-			style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.1) 35px, rgba(255,255,255,0.1) 70px);"
-		></div>
-		<div class="absolute inset-0 bg-gradient-to-b from-black/30 via-black/50 to-black/80"></div>
-		<div class="relative z-10 p-6 sm:p-8">
+	<div class="panel rounded-sm p-5">
+		<div>
 			<div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
 				<!-- Logo -->
-				<div class="rounded-2xl shrink-0">
+				<div class="rounded-sm shrink-0">
 					{#if data.newspaper.logoUrl}
-						<div class="size-20 sm:size-24 rounded-2xl overflow-hidden">
+						<div class="size-20 sm:size-24 rounded-sm overflow-hidden bg-[#102239]">
 							<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 						</div>
 					{:else}
-						<div class="size-20 sm:size-24 rounded-2xl bg-[#315d8d]/25 flex items-center justify-center">
-							<MdiNewspaper class="size-10 sm:size-12 text-[#fff7e8]" />
+						<div
+							class="size-20 sm:size-24 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center"
+						>
+							<MdiNewspaper class="size-10 sm:size-12 text-[#b7d0e6]" />
 						</div>
 					{/if}
 				</div>
 				<!-- Info -->
 				<div class="flex-1 min-w-0">
-					<h1 class="text-2xl sm:text-3xl font-bold text-[#fff7e8] mb-1 truncate">{data.newspaper.name}</h1>
+					<h1 class="text-3xl font-bold text-[#fff7e8] mb-1 truncate">{data.newspaper.name}</h1>
 					{#if data.newspaper.background}
 						<p class="text-[#d9ccb7] text-sm leading-relaxed mb-3 line-clamp-2">{data.newspaper.background}</p>
 					{/if}
@@ -104,19 +103,19 @@
 	<!-- Owner + Actions row -->
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Owner card -->
-		<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl p-4 flex items-center gap-3 flex-1">
+		<div class="panel rounded-sm p-4 flex items-center gap-3 flex-1">
 			<Logo
 				src={data.owner.logoUrl}
 				alt={data.owner.name}
 				class="size-10"
 				placeholderIcon={FluentPerson20Filled}
-				placeholderGradient="from-[#8c709b] to-[#b7a0c5]"
+				placeholderGradient="from-[#8c709b]/40 to-[#8c709b]/40"
 			/>
 			<div>
-				<p class="text-xs text-[#a89e8e] uppercase tracking-wide font-medium">Owner</p>
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Owner</p>
 				<a
 					href="/user/{data.owner.id}"
-					class="text-[#fff7e8] font-semibold hover:text-purple-400 transition-colors text-sm"
+					class="text-[#fff7e8] font-semibold hover:text-[#f2c463] transition-colors text-sm"
 				>
 					{data.owner.name}
 				</a>
@@ -139,7 +138,7 @@
 				<Button
 					type="submit"
 					size="sm"
-					variant={data.isSubscribed ? "secondary" : "info"}
+					variant={data.isSubscribed ? "secondary" : "primary"}
 					disabled={isSubscribing}
 					loading={isSubscribing}
 					loadingText={data.isSubscribed ? "Unsubscribing..." : "Subscribing..."}
@@ -173,12 +172,12 @@
 	</div>
 
 	<!-- Recent Articles -->
-	<div class="panel rounded-xl p-5">
-		<h3 class="text-lg font-semibold text-[#fff7e8] mb-4">Recent Articles</h3>
+	<div class="panel rounded-sm p-5">
+		<h2 class="section-title mb-4">Recent Articles</h2>
 
 		{#if data.articles.length === 0}
-			<div class="py-10 text-center">
-				<div class="inline-flex items-center justify-center size-14 rounded-full bg-[#102239]/70 mb-3">
+			<div class="panel-muted rounded-sm py-10 text-center">
+				<div class="inline-flex items-center justify-center size-14 rounded-full bg-[#102239] mb-3">
 					<MdiNewspaper class="size-7 text-[#a89e8e]" />
 				</div>
 				<p class="text-[#a89e8e] text-sm">No articles published yet</p>
@@ -186,8 +185,11 @@
 		{:else}
 			<div class="space-y-3">
 				{#each data.articles as article}
-					<a class="block group panel-interactive rounded-xl p-4" href="/posts/{article.id}">
-						<h4 class="text-base font-semibold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors mb-2">
+					<a
+						class="block group panel-muted rounded-sm p-4 transition-colors hover:border-[#e6a527]/55 hover:bg-[#19304b]"
+						href="/posts/{article.id}"
+					>
+						<h4 class="text-base font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors mb-2">
 							{article.title}
 						</h4>
 						<div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-[#a89e8e]">
@@ -211,4 +213,4 @@
 			</div>
 		{/if}
 	</div>
-</div>
+</PageContainer>

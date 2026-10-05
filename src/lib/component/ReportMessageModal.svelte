@@ -40,7 +40,9 @@
 	<BottomSheet bind:open title="Report Message">
 		<div class="space-y-4">
 			<div class="flex items-center gap-3">
-				<div class="size-12 bg-[#e6a527]/15 rounded-xl flex items-center justify-center shrink-0">
+				<div
+					class="size-12 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center shrink-0"
+				>
 					<FluentWarning20Filled class="size-6 text-[#f7c56b]" />
 				</div>
 				<p class="text-sm text-[#d9ccb7]">Help us understand what's wrong with this message.</p>
@@ -64,14 +66,13 @@
 				<input type="hidden" name="reportedUserId" value={senderId || ""} />
 
 				<div class="space-y-4">
-					<div class="form-control w-full">
-						<label class="label">
-							<span class="label-text text-[#e5d8c1]">Reason *</span>
-						</label>
+					<div class="w-full">
+						<label for="report-message-reason" class="field-label">Reason *</label>
 						<select
+							id="report-message-reason"
 							name="violationType"
 							bind:value={violationType}
-							class="select select-bordered field-control"
+							class="field-control rounded-sm px-3 py-2.5 w-full"
 							required
 						>
 							<option value="" disabled>Select a reason</option>
@@ -81,20 +82,17 @@
 						</select>
 					</div>
 
-					<div class="form-control w-full">
-						<label class="label">
-							<span class="label-text text-[#e5d8c1]">Additional details (optional)</span>
-						</label>
+					<div class="w-full">
+						<label for="report-message-description" class="field-label">Additional details (optional)</label>
 						<textarea
+							id="report-message-description"
 							name="description"
 							bind:value={description}
-							class="textarea textarea-bordered field-control"
+							class="field-control rounded-sm px-3 py-2.5 w-full"
 							placeholder="Provide any additional context..."
 							rows="3"
 							maxlength="500"></textarea>
-						<label class="label">
-							<span class="label-text-alt text-[#a89e8e]">{description.length}/500 characters</span>
-						</label>
+						<p class="field-hint">{description.length}/500 characters</p>
 					</div>
 
 					<FormActions

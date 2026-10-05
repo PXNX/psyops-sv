@@ -12,7 +12,9 @@
 	import FluentCart20Filled from "~icons/fluent/cart-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
-	import { buttonClass } from "#lib/component/ui/styles.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 
 	let { data } = $props();
 
@@ -79,20 +81,15 @@
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div>
-		<a href="/state/{data.state.id}" class="text-sm text-[#a89e8e] hover:text-[#e6a527] transition-colors">
-			{data.state.name}
-		</a>
-		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3 mt-1">
-			<FluentMoney20Filled class="size-8 text-[#e6a527]" />
-			Ministry of Economy
-		</h1>
-		{#if data.isPresident}
-			<p class="text-xs text-[#f7c56b] mt-1">👑 Accessing as President</p>
-		{/if}
-	</div>
+	<PageHeader
+		title="Ministry of Economy"
+		subtitle={data.isPresident ? "👑 Accessing as President" : undefined}
+		icon={FluentMoney20Filled}
+		backHref="/state/{data.state.id}"
+		backLabel={data.state.name}
+	/>
 
 	<!-- Stats Overview -->
 	<div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
@@ -102,8 +99,8 @@
 					<FluentMoney20Filled class="size-5 text-[#c6dfbf]" />
 				</div>
 				<div>
-					<p class="text-xs text-[#a89e8e]">State Treasury</p>
-					<p class="text-lg font-bold text-[#fff7e8]">${(data.treasury.balance / 100).toFixed(2)}</p>
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">State Treasury</p>
+					<p class="text-lg font-bold font-mono text-[#fff7e8]">${(data.treasury.balance / 100).toFixed(2)}</p>
 				</div>
 			</div>
 		</div>
@@ -114,7 +111,7 @@
 					<FluentFlash20Filled class="size-5 text-[#f7c56b]" />
 				</div>
 				<div>
-					<p class="text-xs text-[#a89e8e]">Power Output</p>
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Power Output</p>
 					<p class="text-lg font-bold text-[#fff7e8]">{totalPowerOutput} MW</p>
 				</div>
 			</div>
@@ -126,7 +123,7 @@
 					<FluentBuildingFactory20Filled class="size-5 text-[#b7d0e6]" />
 				</div>
 				<div>
-					<p class="text-xs text-[#a89e8e]">Power Plants</p>
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Power Plants</p>
 					<p class="text-lg font-bold text-[#fff7e8]">{data.powerPlants.length}</p>
 				</div>
 			</div>
@@ -138,7 +135,7 @@
 					<span class="text-lg font-bold text-[#d5c4df]">{energyUtilization}%</span>
 				</div>
 				<div>
-					<p class="text-xs text-[#a89e8e]">Energy Utilization</p>
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Energy Utilization</p>
 					<p class="text-xs text-[#a89e8e]">{data.energyInfo.usedProduction}/{data.energyInfo.totalProduction} MW</p>
 				</div>
 			</div>
@@ -154,20 +151,20 @@
 
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 			<div class="panel-muted rounded-sm p-4">
-				<p class="text-xs text-[#a89e8e] mb-1">Current Balance</p>
-				<p class="text-2xl font-bold text-[#f7c56b]">${(data.treasury.balance / 100).toLocaleString()}</p>
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Current Balance</p>
+				<p class="text-2xl font-bold font-mono text-[#f7c56b]">${(data.treasury.balance / 100).toLocaleString()}</p>
 			</div>
 			<div class="panel-muted rounded-sm p-4">
-				<p class="text-xs text-[#a89e8e] mb-1">Total Collected</p>
-				<p class="text-2xl font-bold text-[#b7d0e6]">${(data.treasury.totalCollected / 100).toLocaleString()}</p>
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Total Collected</p>
+				<p class="text-2xl font-bold font-mono text-[#b7d0e6]">${(data.treasury.totalCollected / 100).toLocaleString()}</p>
 			</div>
 			<div class="panel-muted rounded-sm p-4">
-				<p class="text-xs text-[#a89e8e] mb-1">Total Spent</p>
-				<p class="text-2xl font-bold text-red-400">${(data.treasury.totalSpent / 100).toLocaleString()}</p>
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Total Spent</p>
+				<p class="text-2xl font-bold font-mono text-red-300">${(data.treasury.totalSpent / 100).toLocaleString()}</p>
 			</div>
 		</div>
 
-		<div class="bg-[#315d8d]/10 border border-[#7ba0c8]/25 rounded-sm p-3">
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-3">
 			<p class="text-xs text-[#b7d0e6]">
 				<FluentWarning20Filled class="inline size-3" />
 				Treasury funds come from taxes, state exports, and visa fees
@@ -177,16 +174,20 @@
 
 	<!-- State Resources -->
 	<div class="panel rounded-sm p-5 space-y-4">
-		<div class="flex items-center justify-between">
+		<div class="flex items-center justify-between gap-3 flex-wrap">
 			<div class="section-title">
 				<FluentBox20Filled class="size-5 text-[#e6a527]" />
 				State Resources
 			</div>
-			<a href="/state/{data.state.id}/market" class={buttonClass({ variant: "soft-purple", size: "sm" })}>
-				<FluentCart20Filled class="size-4" />
+			<Button
+				href="/state/{data.state.id}/market"
+				variant="soft-purple"
+				size="sm"
+				icon={FluentCart20Filled}
+				iconRight={FluentArrowRight20Filled}
+			>
 				Gov. Market
-				<FluentArrowRight20Filled class="size-4" />
-			</a>
+			</Button>
 		</div>
 
 		<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
@@ -200,4 +201,4 @@
 			{/each}
 		</div>
 	</div>
-</div>
+</PageContainer>

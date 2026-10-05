@@ -15,6 +15,9 @@
 	import FluentPersonAvailable20Filled from "~icons/fluent/person-available-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import Modal from "#lib/component/Modal.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 	import { formatDate } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
@@ -38,50 +41,41 @@
 	}
 </script>
 
-<div class="w-full min-h-screen bg-[#0c1929]">
+<PageContainer maxWidth="4xl">
 	<!-- Header -->
-	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
-		<div class="w-full px-4 sm:px-6 py-4 sm:py-5">
-			<div class="flex items-center gap-3 sm:gap-4">
-				<a href="/party/{data.party.id}" class="relative flex-shrink-0">
-					<div class="absolute inset-0 blur-xl rounded-full" style="background-color: {data.party.color}30"></div>
-					<div
-						class="relative size-12 sm:size-14 rounded-xl overflow-hidden border-2 flex items-center justify-center"
-						style="background-color: {data.party.color}; border-color: {data.party.color}60"
-					>
-						{#if data.party.logoUrl}
-							<img src={data.party.logoUrl} alt={data.party.name} class="size-10 object-contain" />
-						{:else}
-							<FluentShield20Filled class="size-6 text-[#fff7e8]" />
-						{/if}
-					</div>
-				</a>
-				<div class="flex-1 min-w-0">
-					<a
-						href="/party/{data.party.id}"
-						class="text-xs text-[#a89e8e] hover:text-[#d5c4df] transition-colors font-mono"
-					>
-						{data.party.name}
-					</a>
-					<h1 class="text-lg sm:text-xl font-bold text-[#fff7e8] tracking-wide font-mono uppercase">Members</h1>
+	<PageHeader
+		title="Members"
+		subtitle="{data.members.length} {data.members.length === 1 ? 'member' : 'members'}"
+		icon={FluentPeople20Filled}
+		backHref="/party/{data.party.id}"
+		backLabel={data.party.name}
+	>
+		{#snippet actions()}
+			<a href="/party/{data.party.id}" class="shrink-0" aria-label={data.party.name}>
+				<div
+					class="size-12 rounded-sm overflow-hidden border border-[#dfceb0]/15 flex items-center justify-center"
+					style="background-color: {data.party.color}"
+				>
+					{#if data.party.logoUrl}
+						<img src={data.party.logoUrl} alt={data.party.name} class="size-10 object-contain" />
+					{:else}
+						<FluentShield20Filled class="size-6 text-[#fff7e8]" />
+					{/if}
 				</div>
-				<div class="px-2 py-1 bg-[#14283f] border border-[#dfceb0]/20 rounded text-xs font-mono text-[#a89e8e]">
-					{data.members.length}
-				</div>
-			</div>
-		</div>
-	</div>
+			</a>
+		{/snippet}
+	</PageHeader>
 
-	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-4 sm:space-y-5">
+	<div class="space-y-4 sm:space-y-5">
 		<!-- Auto-Accept Settings -->
 		{#if data.isLeader}
-			<div class="panel rounded-xl p-4">
+			<div class="panel rounded-sm p-4">
 				<div class="flex items-center justify-between gap-3">
 					<div class="flex items-center gap-3">
-						<FluentSettings20Filled class="size-4 text-blue-400 flex-shrink-0" />
+						<FluentSettings20Filled class="size-4 text-[#7ba0c8] shrink-0" />
 						<div>
 							<span class="text-sm font-bold text-[#fff7e8]">Auto-accept</span>
-							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
+							<p class="text-xs text-[#a89e8e] mt-0.5">
 								{data.party.autoAcceptMembers ? "Members join instantly" : "Requires approval"}
 							</p>
 						</div>
@@ -99,7 +93,7 @@
 					>
 						<input
 							type="checkbox"
-							class="toggle toggle-success toggle-sm"
+							class="toggle toggle-sm border-[#dfceb0]/25 checked:border-[#8fae88]/50 checked:bg-[#587252] checked:text-[#c6dfbf]"
 							checked={data.party.autoAcceptMembers}
 							disabled={togglingAutoAccept}
 							onchange={(e) => e.currentTarget.form?.requestSubmit()}
@@ -111,35 +105,27 @@
 
 		<!-- Pending Applications -->
 		{#if canManageMembers && data.pendingApplications.length > 0}
-			<div
-				class="bg-gradient-to-br from-amber-950/20 to-[#0c1929]/50 border border-amber-500/30 rounded-xl overflow-hidden"
-			>
-				<div class="bg-amber-950/30 border-b border-amber-500/20 px-4 sm:px-5 py-3">
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2">
-							<FluentPersonAvailable20Filled class="size-4 text-amber-400" />
-							<span class="text-sm font-bold text-amber-300 font-mono uppercase tracking-wide">Pending</span>
-						</div>
-						<span
-							class="px-2 py-0.5 bg-amber-950/50 border border-amber-500/30 rounded text-amber-400 font-mono text-xs"
-						>
-							{data.pendingApplications.length}
-						</span>
-					</div>
+			<div class="panel rounded-sm p-5 space-y-3 border-[#e6a527]/35">
+				<div class="flex items-center justify-between">
+					<h2 class="section-title">
+						<FluentPersonAvailable20Filled class="size-5 text-[#f7c56b]" />
+						Pending
+					</h2>
+					<Badge tone="amber">{data.pendingApplications.length}</Badge>
 				</div>
-				<div class="p-3 sm:p-4 space-y-2">
+				<div class="space-y-2">
 					{#each data.pendingApplications as application}
-						<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
+						<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 							<Logo
 								src={application.user.logo}
 								alt={application.user.name}
-								class="size-10 rounded-lg"
+								class="size-10 rounded-full"
 								placeholderIcon={FluentPeople20Filled}
 								placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 							/>
 							<div class="flex-1 min-w-0">
 								<p class="text-sm font-bold text-[#fff7e8] truncate">{application.user.name}</p>
-								<p class="text-xs text-[#a89e8e] font-mono">{formatDate(application.appliedAt)}</p>
+								<p class="text-xs text-[#a89e8e]">{formatDate(application.appliedAt)}</p>
 							</div>
 							<div class="flex items-center gap-1.5">
 								<form
@@ -154,13 +140,15 @@
 									}}
 								>
 									<input type="hidden" name="applicationId" value={application.id} />
-									<button
+									<IconButton
 										type="submit"
-										class="px-2.5 py-1.5 bg-emerald-950/40 hover:bg-emerald-950/60 border border-emerald-500/30 rounded-lg text-emerald-300 text-xs font-mono font-bold transition-all"
+										icon={FluentCheckmark20Filled}
+										label="Accept"
+										variant="soft-emerald"
+										size="sm"
+										shape="square"
 										disabled={processingApplicationId === application.id}
-									>
-										<FluentCheckmark20Filled class="size-3.5" />
-									</button>
+									/>
 								</form>
 								<form
 									method="POST"
@@ -174,13 +162,15 @@
 									}}
 								>
 									<input type="hidden" name="applicationId" value={application.id} />
-									<button
+									<IconButton
 										type="submit"
-										class="px-2.5 py-1.5 bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 rounded-lg text-red-300 text-xs font-mono font-bold transition-all"
+										icon={FluentDismiss20Filled}
+										label="Reject"
+										variant="soft-red"
+										size="sm"
+										shape="square"
 										disabled={processingApplicationId === application.id}
-									>
-										<FluentDismiss20Filled class="size-3.5" />
-									</button>
+									/>
 								</form>
 							</div>
 						</div>
@@ -191,45 +181,43 @@
 
 		<!-- Disband Warning -->
 		{#if isOnlyMember}
-			<div class="bg-red-950/20 border border-red-500/30 rounded-xl p-4">
-				<div class="flex items-start gap-3">
-					<FluentWarning20Filled class="size-5 text-red-400 flex-shrink-0 mt-0.5" />
-					<div class="flex-1">
-						<span class="text-sm font-bold text-red-300">Only member — party can be disbanded</span>
-						{#if data.isOnlyPartyInState}
-							<p class="text-xs text-red-400/70 font-mono mt-1">
-								This will abolish {data.party.state.name} and make all regions independent.
-							</p>
-						{/if}
-					</div>
-					<button
-						onclick={() => (disbandModalOpen = true)}
-						class="px-3 py-1.5 bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 rounded-lg text-red-300 text-xs font-mono font-bold transition-all flex items-center gap-1.5 flex-shrink-0"
-					>
-						<FluentDelete20Filled class="size-3.5" />
-						Disband
-					</button>
+			<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-start gap-3">
+				<FluentWarning20Filled class="size-5 text-red-400 shrink-0 mt-0.5" />
+				<div class="flex-1">
+					<span class="text-sm font-bold">Only member — party can be disbanded</span>
+					{#if data.isOnlyPartyInState}
+						<p class="text-xs text-red-300/80 mt-1">
+							This will abolish {data.party.state.name} and make all regions independent.
+						</p>
+					{/if}
 				</div>
+				<Button
+					variant="soft-red"
+					size="sm"
+					icon={FluentDelete20Filled}
+					class="shrink-0"
+					onclick={() => (disbandModalOpen = true)}
+				>
+					Disband
+				</Button>
 			</div>
 		{/if}
 
 		<!-- Members List -->
-		<div class="panel rounded-xl overflow-hidden">
-			<div class="bg-[#0e1d2f]/95 border-b border-[#dfceb0]/15 px-4 sm:px-5 py-3">
-				<h2 class="text-sm font-bold text-[#e5d8c1] font-mono uppercase tracking-wide flex items-center gap-2">
-					<FluentPeople20Filled class="size-4" style="color: {data.party.color}" />
-					All Members
-				</h2>
-			</div>
-			<div class="p-3 sm:p-4 space-y-2">
+		<div class="panel rounded-sm p-5 space-y-3">
+			<h2 class="section-title">
+				<FluentPeople20Filled class="size-5" style="color: {data.party.color}" />
+				All Members
+			</h2>
+			<div class="space-y-2">
 				{#each data.members as member}
-					<div class="flex items-center gap-3 panel-muted rounded-lg p-3 hover:border-[#dfceb0]/25 transition-all">
+					<div class="flex items-center gap-3 panel-muted rounded-sm p-3 hover:border-[#dfceb0]/25 transition-colors">
 						<!-- Avatar -->
-						<a href="/user/{member.userId}" class="relative flex-shrink-0">
+						<a href="/user/{member.userId}" class="relative shrink-0">
 							<Logo
 								src={member.user.logo}
 								alt={member.user.name || "Member"}
-								class="size-10 sm:size-12 rounded-lg"
+								class="size-10 sm:size-12 rounded-full"
 								placeholderIcon={FluentPeople20Filled}
 								placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
 							/>
@@ -238,14 +226,14 @@
 									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#0c1929]"
 									style="background-color: {data.party.color}"
 								>
-									<FluentCrown20Filled class="size-2.5 text-white" />
+									<FluentCrown20Filled class="size-2.5 text-[#fff7e8]" />
 								</div>
 							{:else if member.role === "deputy"}
 								<div
 									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#0c1929]"
 									style="background-color: {data.party.color}CC"
 								>
-									<FluentShield20Filled class="size-2.5 text-white" />
+									<FluentShield20Filled class="size-2.5 text-[#fff7e8]" />
 								</div>
 							{/if}
 						</a>
@@ -253,36 +241,36 @@
 						<!-- Info -->
 						<div class="flex-1 min-w-0">
 							<a href="/user/{member.userId}" class="group">
-								<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors truncate">
+								<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
 									{member.user.name || "Anonymous"}
 								</p>
 							</a>
 							<div class="flex items-center gap-2 mt-0.5 flex-wrap">
 								{#if member.role === "leader"}
 									<span
-										class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+										class="text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wide"
 										style="background-color: {data.party.color}25; color: {data.party.color}"
 									>
 										LEADER
 									</span>
 								{:else if member.role === "deputy"}
 									<span
-										class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded"
+										class="text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wide"
 										style="background-color: {data.party.color}18; color: {data.party.color}CC"
 									>
 										DEPUTY
 									</span>
 								{/if}
-								<span class="text-[10px] text-[#a89e8e] font-mono">{formatDate(member.joinedAt)}</span>
+								<span class="text-[10px] text-[#a89e8e]">{formatDate(member.joinedAt)}</span>
 								{#if member.acceptedByName}
-									<span class="text-[10px] text-[#a89e8e]/70 font-mono">by {member.acceptedByName}</span>
+									<span class="text-[10px] text-[#a89e8e]/70">by {member.acceptedByName}</span>
 								{/if}
 							</div>
 						</div>
 
 						<!-- Actions -->
 						{#if canManageMembers && member.userId !== data.members.find((m) => m.role === "leader")?.userId}
-							<div class="flex items-center gap-1 flex-shrink-0">
+							<div class="flex items-center gap-1 shrink-0">
 								{#if data.isLeader && member.role !== "leader"}
 									{#if member.role === "member"}
 										<form
@@ -297,14 +285,15 @@
 											}}
 										>
 											<input type="hidden" name="userId" value={member.userId} />
-											<button
+											<IconButton
 												type="submit"
-												class="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-all"
+												icon={FluentArrowUp20Filled}
+												label="Promote"
+												variant="soft-emerald"
+												size="sm"
+												shape="square"
 												disabled={promotingMemberId === member.userId}
-												title="Promote"
-											>
-												<FluentArrowUp20Filled class="size-4" />
-											</button>
+											/>
 										</form>
 									{:else if member.role === "deputy"}
 										<form
@@ -319,26 +308,28 @@
 											}}
 										>
 											<input type="hidden" name="userId" value={member.userId} />
-											<button
+											<IconButton
 												type="submit"
-												class="p-1.5 rounded-lg text-amber-400 hover:bg-amber-500/10 transition-all"
+												icon={FluentArrowDown20Filled}
+												label="Demote"
+												variant="soft-amber"
+												size="sm"
+												shape="square"
 												disabled={demotingMemberId === member.userId}
-												title="Demote"
-											>
-												<FluentArrowDown20Filled class="size-4" />
-											</button>
+											/>
 										</form>
 									{/if}
 								{/if}
 
 								{#if (data.isLeader && member.userId !== data.members.find((m) => m.role === "leader")?.userId) || (data.isDeputy && member.role === "member")}
-									<button
+									<IconButton
+										icon={FluentDismiss20Filled}
+										label="Kick"
+										variant="soft-red"
+										size="sm"
+										shape="square"
 										onclick={() => openKickModal(member.userId, member.user.name || "this member")}
-										class="p-1.5 rounded-lg text-red-400 hover:bg-red-500/10 transition-all"
-										title="Kick"
-									>
-										<FluentDismiss20Filled class="size-4" />
-									</button>
+									/>
 								{/if}
 							</div>
 						{/if}
@@ -349,7 +340,7 @@
 
 		<!-- Join CTA -->
 		{#if data.canJoin && !data.isMember}
-			<div class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5" style="border-color: {data.party.color}30">
+			<div class="panel rounded-sm p-4 sm:p-5" style="border-top: 3px solid {data.party.color}">
 				<form
 					method="POST"
 					action="/party/{data.party.id}?/join"
@@ -364,49 +355,47 @@
 					<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div class="text-center sm:text-left">
 							<span class="text-sm font-bold text-[#fff7e8]">Join {data.party.name}</span>
-							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
+							<p class="text-xs text-[#a89e8e] mt-0.5">
 								{data.party.autoAcceptMembers ? "Instant membership" : "Application reviewed by leadership"}
 							</p>
 						</div>
-						<button
-							type="submit"
-							class="w-full sm:w-auto px-5 py-2.5 rounded-lg font-mono font-bold text-sm text-white transition-all flex items-center justify-center gap-2 hover:brightness-110"
-							style="background-color: {data.party.color}"
-						>
-							<FluentPersonAdd20Filled class="size-4" />
+						<Button type="submit" variant="primary" icon={FluentPersonAdd20Filled} class="w-full sm:w-auto">
 							{data.party.autoAcceptMembers ? "Join" : "Apply"}
-						</button>
+						</Button>
 					</div>
 				</form>
 			</div>
 		{:else if data.hasApplied}
-			<div class="bg-amber-950/30 border border-amber-500/30 rounded-lg p-3 text-center">
-				<span class="text-sm text-amber-300 font-mono">Application pending review</span>
+			<div
+				class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center justify-center gap-3"
+			>
+				<span class="text-sm">Application pending review</span>
 			</div>
 		{/if}
 	</div>
-</div>
+</PageContainer>
 
 <!-- Kick Modal -->
 <Modal bind:open={kickModalOpen} title="Kick Member" size="default">
 	{#if memberToKick}
 		<div class="space-y-4">
-			<div class="bg-red-950/30 border border-red-500/30 rounded-lg p-3">
-				<p class="text-sm text-red-300">
+			<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+				<p class="text-sm">
 					Kick <strong>{memberToKick.name}</strong> from the party? This cannot be undone.
 				</p>
 			</div>
 			<div class="flex gap-3 justify-end">
-				<button
+				<Button
 					type="button"
-					class="px-3 py-1.5 bg-[#14283f] border border-[#dfceb0]/20 rounded-lg text-[#d9ccb7] text-sm"
+					variant="secondary"
+					size="sm"
 					onclick={() => {
 						kickModalOpen = false;
 						memberToKick = null;
 					}}
 				>
 					Cancel
-				</button>
+				</Button>
 				<form
 					method="POST"
 					action="?/kick"
@@ -421,14 +410,15 @@
 					}}
 				>
 					<input type="hidden" name="userId" value={memberToKick.id} />
-					<button
+					<Button
 						type="submit"
-						class="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-white text-sm font-bold flex items-center gap-1.5"
+						variant="danger"
+						size="sm"
+						icon={FluentDismiss20Filled}
 						disabled={kickingMemberId === memberToKick.id}
 					>
-						<FluentDismiss20Filled class="size-3.5" />
 						{kickingMemberId === memberToKick.id ? "Kicking..." : "Kick"}
-					</button>
+					</Button>
 				</form>
 			</div>
 		</div>
@@ -438,38 +428,32 @@
 <!-- Disband Modal -->
 <Modal bind:open={disbandModalOpen} title="Disband Party" size="default">
 	<div class="space-y-4">
-		<div class="bg-red-950/30 border border-red-500/30 rounded-lg p-3">
-			<p class="text-sm text-red-300 font-bold mb-1">This is permanent.</p>
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4">
+			<p class="text-sm font-bold mb-1">This is permanent.</p>
 			{#if data.isOnlyPartyInState}
-				<p class="text-xs text-red-400/80">
+				<p class="text-xs text-red-300/80">
 					This will abolish {data.party.state.name}, make {data.stateRegionCount} regions independent, and affect {data.statePopulation}
 					citizens.
 				</p>
 			{:else}
-				<p class="text-xs text-red-400/80">This will permanently delete {data.party.name}.</p>
+				<p class="text-xs text-red-300/80">This will permanently delete {data.party.name}.</p>
 			{/if}
 		</div>
 
 		<div>
-			<label class="text-xs text-[#a89e8e] font-mono mb-1 block" for="confirm-text">
+			<label class="field-label" for="confirm-text">
 				Type <strong class="text-red-400">{data.party.name}</strong> to confirm
 			</label>
 			<input
 				id="confirm-text"
 				type="text"
-				class="w-full field-control rounded-lg px-3 py-2 text-sm"
+				class="field-control rounded-sm px-3 py-2.5 w-full text-sm"
 				placeholder="Party name"
 			/>
 		</div>
 
 		<div class="flex gap-3 justify-end">
-			<button
-				type="button"
-				class="px-3 py-1.5 bg-[#14283f] border border-[#dfceb0]/20 rounded-lg text-[#d9ccb7] text-sm"
-				onclick={() => (disbandModalOpen = false)}
-			>
-				Cancel
-			</button>
+			<Button type="button" variant="secondary" size="sm" onclick={() => (disbandModalOpen = false)}>Cancel</Button>
 			<form
 				method="POST"
 				action="?/disband"
@@ -486,14 +470,9 @@
 					};
 				}}
 			>
-				<button
-					type="submit"
-					class="px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-white text-sm font-bold flex items-center gap-1.5"
-					disabled={disbanding}
-				>
-					<FluentDelete20Filled class="size-3.5" />
+				<Button type="submit" variant="danger" size="sm" icon={FluentDelete20Filled} disabled={disbanding}>
 					{disbanding ? "Disbanding..." : "Disband"}
-				</button>
+				</Button>
 			</form>
 		</div>
 	</div>

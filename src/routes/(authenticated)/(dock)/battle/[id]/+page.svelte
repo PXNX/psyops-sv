@@ -10,6 +10,8 @@
 	import * as m from "#lib/paraglide/messages.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import { Button, Badge } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
@@ -126,34 +128,88 @@
 	});
 </script>
 
-<div class="min-h-screen pb-8">
-	<!-- Command Header -->
-	<div class="border-b border-[#dfceb0]/15 bg-[#102239]/90 backdrop-blur-xl">
-		<div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
-			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-				<div class="flex items-center gap-3 sm:gap-6 w-full sm:w-auto">
-					<!-- Region Emblem -->
-					<div class="relative flex-shrink-0">
-						<div class="absolute inset-0 bg-[#e6a527]/10 blur-xl rounded-full"></div>
-						<a
-							href="/region/{data.battle.regionId}"
-							class="relative size-16 sm:size-20 bg-[#102239]/70 rounded-lg border-2 border-[#e6a527]/30 p-2 flex items-center justify-center hover:border-[#e6a527]/50 transition-colors"
-						>
-							<Logo
-								src={getRegionCoatPath(data.battle.regionId)}
-								alt={getRegionName(data.battle.regionId)}
-								class="w-full h-full object-contain opacity-80"
-							/>
-						</a>
-					</div>
+{#snippet unitBars(health: number, organization: number, supply: number | null, orgLabel: string)}
+	<div class="space-y-2">
+		<!-- Health -->
+		<div>
+			<div class="flex items-center justify-between text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">
+				<span>HEALTH</span>
+				<span class="text-[#b7d0e6] font-medium text-xs">{health}%</span>
+			</div>
+			<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
+				<div class="h-full rounded-full transition-all duration-500 bg-[#7ba0c8]" style="width: {health}%"></div>
+			</div>
+		</div>
 
-					<div class="flex-1 min-w-0">
-						<div class="flex flex-wrap items-center gap-2 mb-2">
+		<!-- Organization -->
+		<div>
+			<div class="flex items-center justify-between text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">
+				<span>{orgLabel}</span>
+				<span class="text-[#c6dfbf] font-medium text-xs">{organization}%</span>
+			</div>
+			<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
+				<div class="h-full rounded-full transition-all duration-500 bg-[#8fae88]" style="width: {organization}%"></div>
+			</div>
+		</div>
+
+		{#if supply !== null}
+			<!-- Supply -->
+			<div>
+				<div class="flex items-center justify-between text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">
+					<span>SUPPLY</span>
+					<span class="text-[#f7c56b] font-medium text-xs">{supply}%</span>
+				</div>
+				<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
+					<div class="h-full rounded-full transition-all duration-500 bg-[#e6a527]" style="width: {supply}%"></div>
+				</div>
+			</div>
+		{/if}
+	</div>
+{/snippet}
+
+{#snippet unitIcon(unitType: string)}
+	<div
+		class="size-10 sm:size-12 shrink-0 flex items-center justify-center bg-[#0d1d31] rounded-sm border border-[#dfceb0]/20 p-1.5 sm:p-2"
+	>
+		<img
+			src={getUnitIconPath(unitType)}
+			alt={unitType}
+			class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
+		/>
+	</div>
+{/snippet}
+
+{#snippet atkDef(attack: number, defense: number)}
+	<span class="text-xs text-red-300 font-mono">⚔️ {attack}</span>
+	<span class="text-xs text-[#b7d0e6] font-mono">🛡️ {defense}</span>
+{/snippet}
+
+<PageContainer maxWidth="5xl">
+	<!-- Command Hero -->
+	<div class="panel rounded-sm p-5">
+		<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+			<div class="flex items-center gap-3 sm:gap-5 w-full sm:w-auto">
+				<!-- Region Emblem -->
+				<a
+					href="/region/{data.battle.regionId}"
+					class="size-16 sm:size-20 shrink-0 panel-muted rounded-sm p-2 flex items-center justify-center hover:border-[#e6a527]/55 transition-colors"
+				>
+					<Logo
+						src={getRegionCoatPath(data.battle.regionId)}
+						alt={getRegionName(data.battle.regionId)}
+						class="w-full h-full object-contain opacity-80"
+					/>
+				</a>
+
+				<div class="flex-1 min-w-0">
+					<div class="flex flex-wrap items-center gap-2 mb-1">
+						<h1 class="text-2xl sm:text-3xl font-bold">
 							<a
 								href="/region/{data.battle.regionId}"
-								class="text-xl sm:text-3xl font-bold tracking-wider uppercase font-mono"
-								class:text-red-500={data.userSide === "attacker"}
-								class:text-blue-500={data.userSide === "defender"}
+								class="transition-colors hover:text-[#f2c463]"
+								class:text-[#fff7e8]={!data.userSide}
+								class:text-red-300={data.userSide === "attacker"}
+								class:text-[#b7d0e6]={data.userSide === "defender"}
 							>
 								{#if data.userSide === "attacker"}
 									Assault of
@@ -162,783 +218,563 @@
 								{/if}
 								{getRegionName(data.battle.regionId)}
 							</a>
-							{#if data.battle.phase === "ended"}
-								{#if data.battle.status === "attacker_won"}
-									<span
-										class="px-2 sm:px-3 py-1 bg-red-500/30 border border-red-400/50 rounded text-red-300 font-bold text-xs sm:text-sm whitespace-nowrap"
-									>
-										VICTORY - ATTACKER
-									</span>
-								{:else if data.battle.status === "defender_won"}
-									<span
-										class="px-2 sm:px-3 py-1 bg-blue-500/30 border border-blue-400/50 rounded text-blue-300 font-bold text-xs sm:text-sm whitespace-nowrap"
-									>
-										VICTORY - DEFENDER
-									</span>
-								{/if}
+						</h1>
+						{#if data.battle.phase === "ended"}
+							{#if data.battle.status === "attacker_won"}
+								<Badge tone="red" size="md" class="whitespace-nowrap font-bold">VICTORY - ATTACKER</Badge>
+							{:else if data.battle.status === "defender_won"}
+								<Badge tone="blue" size="md" class="whitespace-nowrap font-bold">VICTORY - DEFENDER</Badge>
 							{/if}
-						</div>
-						<div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[#a89e8e] font-mono">
-							<span class="uppercase">{data.battle.terrain}</span>
-							<span class="text-[#a89e8e]/70 hidden sm:inline">|</span>
-							<span class="hidden sm:inline">{formatDateTime(data.battle.startedAt)}</span>
-						</div>
+						{/if}
+					</div>
+					<div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[#a89e8e]">
+						<span class="uppercase">{data.battle.terrain}</span>
+						<span class="text-[#a89e8e]/50 hidden sm:inline">|</span>
+						<span class="hidden sm:inline">{formatDateTime(data.battle.startedAt)}</span>
 					</div>
 				</div>
 			</div>
+		</div>
 
-			<!-- Mission Timer -->
-			{#if data.battle.phase === "preparation"}
-				<div class="mt-4 sm:mt-6 bg-[#315d8d]/12 border border-[#7ba0c8]/25 rounded-lg p-3 sm:p-4">
-					<div class="flex items-center justify-between mb-2 sm:mb-3">
-						<div class="text-blue-400 font-mono text-xs sm:text-sm font-medium uppercase tracking-wide">
-							Time Until Combat
+		<!-- Mission Timer -->
+		{#if data.battle.phase === "preparation"}
+			<div class="mt-5 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-3 sm:p-4">
+				<div class="flex items-center justify-between mb-2 sm:mb-3">
+					<div class="text-[#b7d0e6] text-xs sm:text-sm font-medium uppercase tracking-wide">Time Until Combat</div>
+				</div>
+				<div class="flex items-center justify-center gap-2 sm:gap-3">
+					<div class="text-center">
+						<div
+							class="text-2xl sm:text-4xl font-mono font-bold text-[#b7d0e6] bg-[#0d1d31]/90 rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#7ba0c8]/20"
+						>
+							{String(timeRemaining.hours).padStart(2, "0")}
 						</div>
+						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1 sm:mt-1.5">HRS</div>
 					</div>
-					<div class="flex items-center justify-center gap-2 sm:gap-3">
-						<div class="text-center">
-							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-[#0d1d31]/90 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
-							>
-								{String(timeRemaining.hours).padStart(2, "0")}
-							</div>
-							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">HRS</div>
+					<div class="text-xl sm:text-2xl font-bold text-[#7ba0c8]/50">:</div>
+					<div class="text-center">
+						<div
+							class="text-2xl sm:text-4xl font-mono font-bold text-[#b7d0e6] bg-[#0d1d31]/90 rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#7ba0c8]/20"
+						>
+							{String(timeRemaining.minutes).padStart(2, "0")}
 						</div>
-						<div class="text-xl sm:text-2xl font-bold text-blue-500/50">:</div>
-						<div class="text-center">
-							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-[#0d1d31]/90 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
-							>
-								{String(timeRemaining.minutes).padStart(2, "0")}
-							</div>
-							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">MIN</div>
+						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1 sm:mt-1.5">MIN</div>
+					</div>
+					<div class="text-xl sm:text-2xl font-bold text-[#7ba0c8]/50">:</div>
+					<div class="text-center">
+						<div
+							class="text-2xl sm:text-4xl font-mono font-bold text-[#b7d0e6] bg-[#0d1d31]/90 rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#7ba0c8]/20"
+						>
+							{String(timeRemaining.seconds).padStart(2, "0")}
 						</div>
-						<div class="text-xl sm:text-2xl font-bold text-blue-500/50">:</div>
-						<div class="text-center">
-							<div
-								class="text-2xl sm:text-4xl font-mono font-bold text-blue-400 bg-[#0d1d31]/90 rounded px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-blue-500/20"
-							>
-								{String(timeRemaining.seconds).padStart(2, "0")}
-							</div>
-							<div class="text-xs text-[#a89e8e] mt-1 sm:mt-1.5 font-mono">SEC</div>
-						</div>
+						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1 sm:mt-1.5">SEC</div>
 					</div>
 				</div>
-			{/if}
+			</div>
+		{/if}
+	</div>
+
+	<!-- Battle Progress Bar -->
+	<div class="panel rounded-sm p-5">
+		<div class="flex items-center justify-between mb-4">
+			<div class="flex items-center gap-2 sm:gap-3">
+				<a href="/state/{data.battle.attackerState.id}" class="flex items-center gap-2 group">
+					{#if data.attackerStateLogo}
+						<img
+							src={data.attackerStateLogo}
+							alt={data.battle.attackerState.name}
+							class="size-8 sm:size-10 rounded-sm border border-red-500/30"
+						/>
+					{/if}
+					<span class="text-sm sm:text-base font-bold text-red-300 group-hover:text-red-200 transition-colors"
+						>{data.battle.attackerState.name}</span
+					>
+				</a>
+			</div>
+			<div class="text-[10px] sm:text-xs text-[#a89e8e] uppercase tracking-wide">BATTLE MOMENTUM</div>
+			<div class="flex items-center gap-2 sm:gap-3">
+				<a href="/state/{data.battle.defenderState.id}" class="flex items-center gap-2 group">
+					<span class="text-sm sm:text-base font-bold text-[#b7d0e6] group-hover:text-[#e1effa] transition-colors"
+						>{data.battle.defenderState.name}</span
+					>
+					{#if data.defenderStateLogo}
+						<img
+							src={data.defenderStateLogo}
+							alt={data.battle.defenderState.name}
+							class="size-8 sm:size-10 rounded-sm border border-[#7ba0c8]/30"
+						/>
+					{/if}
+				</a>
+			</div>
+		</div>
+
+		<!-- Horizontal Progress Bar -->
+		<div class="relative h-12 sm:h-16 bg-[#0d1d31]/90 rounded-sm border border-[#dfceb0]/15 overflow-hidden">
+			<!-- Defender territory (left side) -->
+			<div
+				class="absolute left-0 top-0 bottom-0 bg-[#7ba0c8] transition-all duration-1000"
+				style="width: {100 - battleMomentum()}%"
+			></div>
+
+			<!-- Attacker territory (right side) -->
+			<div
+				class="absolute right-0 top-0 bottom-0 bg-red-500 transition-all duration-1000"
+				style="width: {battleMomentum()}%"
+			></div>
+
+			<!-- Center line -->
+			<div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[#dfceb0]/30 transform -translate-x-1/2"></div>
+
+			<!-- Battle icon at momentum point -->
+			<div
+				class="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000 z-10"
+				style="left: {battleMomentum()}%"
+			>
+				<div class="relative transform -translate-x-1/2">
+					<div class="text-2xl sm:text-3xl">⚔️</div>
+				</div>
+			</div>
+
+			<!-- Damage stats -->
+			<div class="absolute inset-0 flex items-center justify-between px-4 sm:px-6 pointer-events-none">
+				<div class="text-[#fff7e8] font-bold text-xs sm:text-sm font-mono drop-shadow-lg">
+					{data.defenderStats.totalDamageDealt} DMG
+				</div>
+				<div class="text-[#fff7e8] font-bold text-xs sm:text-sm font-mono drop-shadow-lg">
+					{data.attackerStats.totalDamageDealt} DMG
+				</div>
+			</div>
+		</div>
+
+		<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+			<div class="text-center">
+				<div class="text-[10px] sm:text-xs text-red-300 uppercase tracking-wide mb-1">Attacker Pressure</div>
+				<div class="text-[#fff7e8] font-bold text-lg sm:text-xl">{battleMomentum()}%</div>
+			</div>
+			<div class="text-center">
+				<div class="text-[10px] sm:text-xs text-[#b7d0e6] uppercase tracking-wide mb-1">Defender Resistance</div>
+				<div class="text-[#fff7e8] font-bold text-lg sm:text-xl">{100 - battleMomentum()}%</div>
+			</div>
 		</div>
 	</div>
 
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 space-y-4 sm:space-y-8">
-		<!-- Battle Progress Bar -->
-		<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl p-4 sm:p-6">
-			<div class="flex items-center justify-between mb-4">
-				<div class="flex items-center gap-2 sm:gap-3">
-					<a
-						href="/state/{data.battle.attackerState.id}"
-						class="flex items-center gap-2 hover:opacity-80 transition-opacity"
-					>
-						{#if data.attackerStateLogo}
-							<img
-								src={data.attackerStateLogo}
-								alt={data.battle.attackerState.name}
-								class="size-8 sm:size-10 rounded border border-red-500/30"
-							/>
-						{/if}
-						<span class="text-sm sm:text-base font-bold text-red-400">{data.battle.attackerState.name}</span>
-					</a>
-				</div>
-				<div class="text-xs sm:text-sm text-[#a89e8e] font-mono">BATTLE MOMENTUM</div>
-				<div class="flex items-center gap-2 sm:gap-3">
-					<a
-						href="/state/{data.battle.defenderState.id}"
-						class="flex items-center gap-2 hover:opacity-80 transition-opacity"
-					>
-						<span class="text-sm sm:text-base font-bold text-blue-400">{data.battle.defenderState.name}</span>
-						{#if data.defenderStateLogo}
-							<img
-								src={data.defenderStateLogo}
-								alt={data.battle.defenderState.name}
-								class="size-8 sm:size-10 rounded border border-blue-500/30"
-							/>
-						{/if}
-					</a>
-				</div>
-			</div>
-
-			<!-- Horizontal Progress Bar -->
-			<div class="relative h-12 sm:h-16 bg-[#0d1d31]/90 rounded-lg border border-[#dfceb0]/15 overflow-hidden">
-				<!-- Defender territory (left side) -->
-				<div
-					class="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-blue-600 to-blue-500 transition-all duration-1000"
-					style="width: {100 - battleMomentum()}%"
-				></div>
-
-				<!-- Attacker territory (right side) -->
-				<div
-					class="absolute right-0 top-0 bottom-0 bg-gradient-to-l from-red-600 to-red-500 transition-all duration-1000"
-					style="width: {battleMomentum()}%"
-				></div>
-
-				<!-- Center line -->
-				<div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[#dfceb0]/30 transform -translate-x-1/2"></div>
-
-				<!-- Battle icon at momentum point -->
-				<div
-					class="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000 z-10"
-					style="left: {battleMomentum()}%"
-				>
-					<div class="relative transform -translate-x-1/2">
-						<div class="text-2xl sm:text-3xl">⚔️</div>
+	<!-- Fortifications Info -->
+	{#if data.fortificationBonus > 0}
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
+			<div class="flex items-center gap-3">
+				<div class="text-3xl sm:text-4xl">🏰</div>
+				<div class="flex-1">
+					<div class="flex flex-wrap items-center gap-2 mb-1">
+						<span class="text-[#b7d0e6] font-bold text-sm sm:text-base"
+							>Fortification Level {data.fortificationBonus}</span
+						>
+						<Badge tone="blue" class="font-mono">
+							-{Math.min(50, data.fortificationBonus * 2)}% DEFENDER DMG
+						</Badge>
 					</div>
-				</div>
-
-				<!-- Damage stats -->
-				<div class="absolute inset-0 flex items-center justify-between px-4 sm:px-6 pointer-events-none">
-					<div class="text-white font-bold text-xs sm:text-sm font-mono drop-shadow-lg">
-						{data.defenderStats.totalDamageDealt} DMG
+					<div class="text-xs sm:text-sm text-[#b7d0e6]/70">
+						Defensive structures reduce incoming damage by {Math.min(50, data.fortificationBonus * 2)}%
 					</div>
-					<div class="text-white font-bold text-xs sm:text-sm font-mono drop-shadow-lg">
-						{data.attackerStats.totalDamageDealt} DMG
-					</div>
-				</div>
-			</div>
-
-			<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
-				<div class="text-center">
-					<div class="text-red-400 font-mono mb-1">Attacker Pressure</div>
-					<div class="text-white font-bold text-lg sm:text-xl">{battleMomentum()}%</div>
-				</div>
-				<div class="text-center">
-					<div class="text-blue-400 font-mono mb-1">Defender Resistance</div>
-					<div class="text-white font-bold text-lg sm:text-xl">{100 - battleMomentum()}%</div>
 				</div>
 			</div>
 		</div>
+	{/if}
 
-		<!-- Fortifications Info -->
-		{#if data.fortificationBonus > 0}
-			<div class="bg-[#315d8d]/10 border border-[#7ba0c8]/30 rounded-lg p-3 sm:p-4">
-				<div class="flex items-center gap-3">
-					<div class="text-3xl sm:text-4xl">🏰</div>
-					<div class="flex-1">
-						<div class="flex items-center gap-2 mb-1">
-							<span class="text-blue-300 font-bold text-sm sm:text-base"
-								>Fortification Level {data.fortificationBonus}</span
-							>
-							<span
-								class="px-2 py-0.5 bg-blue-500/20 border border-blue-400/30 rounded text-blue-300 text-xs font-mono"
-							>
-								-{Math.min(50, data.fortificationBonus * 2)}% DEFENDER DMG
-							</span>
-						</div>
-						<div class="text-xs sm:text-sm text-blue-400/60">
-							Defensive structures reduce incoming damage by {Math.min(50, data.fortificationBonus * 2)}%
-						</div>
-					</div>
-				</div>
-			</div>
-		{/if}
-
-		<!-- Unit Deployment Section -->
-		{#if data.userSide}
-			<div class="bg-[#14283f]/85 border border-{userSideColor()}-500/30 rounded-xl p-4 sm:p-6">
-				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-					<h2 class="text-lg sm:text-xl font-bold text-[#fff7e8] font-mono uppercase tracking-wide">Deploy Forces</h2>
-					<div
-						class="px-3 py-1 bg-{userSideColor()}-500/20 border border-{userSideColor()}-500/50 rounded text-xs sm:text-sm w-fit"
-					>
-						<span class="text-[#a89e8e] font-mono">FIGHTING AS:</span>
-						<span class="ml-2 text-{userSideColor()}-300 font-bold uppercase">{data.userSide}</span>
-					</div>
-				</div>
-
-				{#if data.canJoin && data.userUnits.length > 0}
-					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-						{#each data.userUnits as unit}
-							{@const template = MILITARY_UNIT_TEMPLATES[unit.unitType]}
-							<button
-								type="button"
-								onclick={() => toggleUnitSelection(unit.id)}
-								class="relative group text-left transition-all duration-300 {selectedUnitIds.has(unit.id)
-									? 'scale-[1.02]'
-									: 'hover:scale-[1.01]'}"
-							>
-								<div
-									class="relative overflow-hidden bg-[#102239]/70 border-2 rounded-xl p-3 sm:p-4 {selectedUnitIds.has(
-										unit.id
-									)
-										? 'border-emerald-500/50 bg-emerald-950/20'
-										: 'border-[#dfceb0]/15 hover:border-[#dfceb0]/25'}"
-								>
-									{#if selectedUnitIds.has(unit.id)}
-										<div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent"></div>
-										<div class="absolute top-2 right-2">
-											<div class="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
-												<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-													<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"
-													></path>
-												</svg>
-											</div>
-										</div>
-									{/if}
-
-									<div class="relative flex items-center gap-2 sm:gap-3 mb-3">
-										<div
-											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-[#0d1d31] rounded border border-[#dfceb0]/20 p-1.5 sm:p-2"
-										>
-											<img
-												src={getUnitIconPath(unit.unitType)}
-												alt={unit.unitType}
-												class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
-											/>
-										</div>
-										<div class="flex-1 min-w-0">
-											<div class="text-xs text-[#a89e8e] font-mono mb-0.5">{m[unit.unitType]()}</div>
-											<div class="text-sm sm:text-base font-bold text-white truncate">{unit.name}</div>
-											<div class="flex items-center gap-2 mt-1">
-												<span class="text-xs text-red-400 font-mono">⚔️ {template.baseAttack}</span>
-												<span class="text-xs text-blue-400 font-mono">🛡️ {template.baseDefense}</span>
-											</div>
-										</div>
-									</div>
-
-									<div class="relative space-y-2">
-										<!-- Health (Blue) -->
-										<div>
-											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-												<span>HEALTH</span>
-												<span class="text-blue-400 font-medium">{unit.health}%</span>
-											</div>
-											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-												<div
-													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-400"
-													style="width: {unit.health}%"
-												></div>
-											</div>
-										</div>
-
-										<!-- Organization (Green) -->
-										<div>
-											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-												<span>ORGANIZATION</span>
-												<span class="text-emerald-400 font-medium">{unit.organization}%</span>
-											</div>
-											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-												<div
-													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-emerald-400"
-													style="width: {unit.organization}%"
-												></div>
-											</div>
-										</div>
-
-										<!-- Supply (Orange) -->
-										<div>
-											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-												<span>SUPPLY</span>
-												<span class="text-orange-400 font-medium">{unit.supplyLevel}%</span>
-											</div>
-											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-												<div
-													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-orange-500 to-orange-400"
-													style="width: {unit.supplyLevel}%"
-												></div>
-											</div>
-										</div>
-									</div>
-								</div>
-							</button>
-						{/each}
-					</div>
-
-					{#if selectedUnitIds.size > 0}
-						<form
-							method="POST"
-							action="?/assignUnits"
-							use:enhance={() => {
-								isJoining = true;
-								return async ({ update }) => {
-									await update();
-									isJoining = false;
-									selectedUnitIds = new Set();
-								};
-							}}
-						>
-							{#each Array.from(selectedUnitIds) as unitId}
-								<input type="hidden" name="unitIds" value={unitId} />
-							{/each}
-							<button
-								type="submit"
-								disabled={isJoining}
-								class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 disabled:from-[#1f3450] disabled:to-[#172a45] rounded-lg text-white font-bold text-base sm:text-lg shadow-lg transition-all duration-300 hover:scale-[1.01] disabled:scale-100 font-mono uppercase tracking-wide"
-							>
-								{isJoining
-									? "⚡ Deploying..."
-									: `⚡ Deploy ${selectedUnitIds.size} Unit${selectedUnitIds.size > 1 ? "s" : ""}`}
-							</button>
-						</form>
-					{:else}
-						<div class="text-center py-6 sm:py-8 text-[#a89e8e] font-mono text-sm">← Select units to deploy</div>
-					{/if}
-				{:else if data.userUnits.length === 0}
-					<div class="text-center py-8 sm:py-12 bg-[#102239]/50 rounded-lg border border-[#dfceb0]/10">
-						<div class="text-4xl sm:text-6xl mb-4 opacity-30">🚫</div>
-						<p class="text-base sm:text-lg text-[#a89e8e] font-mono mb-2">No eligible units</p>
-						<p class="text-xs sm:text-sm text-[#a89e8e]/70">
-							{#if data.userSide === "defender"}
-								Units must be in Region #{data.battle.regionId}
-							{:else}
-								Units must be in Region #{data.userResidenceRegionId}
-							{/if}
-						</p>
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<div class="bg-[#102239]/50 border border-[#dfceb0]/10 rounded-xl p-8 sm:p-12 text-center">
-				<div class="text-4xl sm:text-6xl mb-4 opacity-20">⛔</div>
-				<p class="text-lg sm:text-xl text-[#a89e8e] font-mono mb-2">Cannot Deploy</p>
-				<p class="text-xs sm:text-sm text-[#a89e8e]/70">{data.canJoinReason || "Unknown reason"}</p>
-			</div>
-		{/if}
-
-		<!-- Combat Execution -->
-		{#if data.battle.phase === "active"}
-			<div class="bg-gradient-to-r from-red-950/30 to-orange-950/30 border-2 border-red-500/40 rounded-xl p-4 sm:p-6">
-				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4">
-					<div>
-						<h2 class="text-lg sm:text-xl font-bold text-red-400 font-mono uppercase tracking-wide mb-1">
-							Execute Combat Round
-						</h2>
-						<p class="text-xs sm:text-sm text-red-400/60">Simulate next round of combat</p>
-					</div>
-					<div class="text-3xl sm:text-5xl opacity-20">⚔️</div>
-				</div>
-				<form
-					method="POST"
-					action="?/executeCombatRound"
-					use:enhance={() => {
-						isExecuting = true;
-						return async ({ update, result }) => {
-							await update();
-							isExecuting = false;
-							if (result.type === "success") showBattleAnim = true;
-						};
-					}}
+	<!-- Unit Deployment Section -->
+	{#if data.userSide}
+		<div class="panel rounded-sm p-5">
+			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+				<h2 class="section-title">Deploy Forces</h2>
+				<div
+					class="px-3 py-1 border rounded-sm text-xs sm:text-sm w-fit {data.userSide === 'attacker'
+						? 'bg-red-600/10 border-red-500/30'
+						: 'bg-[#315d8d]/18 border-[#7ba0c8]/30'}"
 				>
-					<button
-						type="submit"
-						disabled={isExecuting}
-						class="w-full px-6 sm:px-8 py-3 sm:py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-[#1f3450] disabled:to-[#172a45] rounded-lg text-white font-bold text-base sm:text-lg shadow-lg transition-all duration-300 hover:scale-[1.01] disabled:scale-100 font-mono uppercase tracking-wide"
+					<span class="text-[#a89e8e]">FIGHTING AS:</span>
+					<span class="ml-2 font-bold uppercase {data.userSide === 'attacker' ? 'text-red-300' : 'text-[#b7d0e6]'}"
+						>{data.userSide}</span
 					>
-						{isExecuting ? "⚔️ Executing..." : "⚔️ Execute Round"}
-					</button>
-				</form>
-			</div>
-		{/if}
-
-		<!-- My Engaged Units -->
-		{#if myUnits.length > 0}
-			<div class="bg-[#14283f]/85 border-2 border-{userSideColor()}-500/50 rounded-xl">
-				<div class="bg-{userSideColor()}-950/30 border-b border-{userSideColor()}-500/30 px-4 sm:px-6 py-3 sm:py-4">
-					<div class="flex items-center justify-between">
-						<h3 class="text-base sm:text-lg font-bold text-{userSideColor()}-400 font-mono uppercase tracking-wide">
-							Your Units in Battle
-						</h3>
-						<div
-							class="px-2 sm:px-3 py-1 bg-{userSideColor()}-950/50 border border-{userSideColor()}-500/40 rounded text-{userSideColor()}-400 font-mono text-xs sm:text-sm"
-						>
-							{myUnits.length} UNIT{myUnits.length > 1 ? "S" : ""}
-						</div>
-					</div>
 				</div>
-				<div class="p-3 sm:p-4 space-y-2 sm:space-y-3">
-					{#each myUnits as participant}
-						{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
-						{@const sideColor = participant.side === "attacker" ? "red" : "blue"}
-						<div
-							class="relative overflow-hidden bg-[#102239]/60 border rounded-lg p-3 sm:p-4 {participant.isEngaged
-								? `border-${sideColor}-500/50 bg-${sideColor}-950/10`
-								: 'border-[#dfceb0]/15'}"
+			</div>
+
+			{#if data.canJoin && data.userUnits.length > 0}
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+					{#each data.userUnits as unit}
+						{@const template = MILITARY_UNIT_TEMPLATES[unit.unitType]}
+						<button
+							type="button"
+							onclick={() => toggleUnitSelection(unit.id)}
+							class="relative group text-left rounded-sm border p-3 sm:p-4 transition-colors duration-200 {selectedUnitIds.has(
+								unit.id
+							)
+								? 'bg-[#587252]/18 border-[#8fae88]/55'
+								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55 hover:bg-[#19304b]'}"
 						>
-							{#if participant.isEngaged}
+							{#if selectedUnitIds.has(unit.id)}
 								<div class="absolute top-2 right-2">
-									<div
-										class="px-2 py-0.5 bg-{sideColor}-500/30 border border-{sideColor}-400/50 rounded text-xs text-{sideColor}-300 font-mono font-bold"
-									>
-										⚔️ ENGAGED
+									<div class="w-5 h-5 bg-[#8fae88] rounded-full flex items-center justify-center">
+										<svg class="w-3 h-3 text-[#0c1929]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+										</svg>
 									</div>
 								</div>
 							{/if}
 
 							<div class="flex items-center gap-2 sm:gap-3 mb-3">
-								<div
-									class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-[#0d1d31] rounded border border-[#dfceb0]/20 p-1.5 sm:p-2"
-								>
-									<img
-										src={getUnitIconPath(participant.unit.unitType)}
-										alt={participant.unit.unitType}
-										class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
-									/>
-								</div>
+								{@render unitIcon(unit.unitType)}
 								<div class="flex-1 min-w-0">
-									<div class="text-xs text-[#a89e8e] font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
-									<div class="font-bold text-white text-sm sm:text-base truncate">{participant.unit.name}</div>
+									<div class="text-xs text-[#a89e8e] mb-0.5">{m[unit.unitType]()}</div>
+									<div class="text-sm sm:text-base font-bold text-[#fff7e8] truncate">{unit.name}</div>
 									<div class="flex items-center gap-2 mt-1">
-										<span class="text-xs text-red-400 font-mono">⚔️ {template.baseAttack}</span>
-										<span class="text-xs text-blue-400 font-mono">🛡️ {template.baseDefense}</span>
+										{@render atkDef(template.baseAttack, template.baseDefense)}
 									</div>
 								</div>
 							</div>
 
-							<div class="space-y-2">
-								<!-- Health -->
-								<div>
-									<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-										<span>HEALTH</span>
-										<span class="text-blue-400 font-medium">{participant.currentStrength}%</span>
-									</div>
-									<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-										<div
-											class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-400"
-											style="width: {participant.currentStrength}%"
-										></div>
-									</div>
-								</div>
-
-								<!-- Organization -->
-								<div>
-									<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-										<span>ORGANIZATION</span>
-										<span class="text-emerald-400 font-medium">{participant.currentOrganization}%</span>
-									</div>
-									<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-										<div
-											class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-emerald-400"
-											style="width: {participant.currentOrganization}%"
-										></div>
-									</div>
-								</div>
-
-								<!-- Supply -->
-								<div>
-									<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-										<span>SUPPLY</span>
-										<span class="text-orange-400 font-medium">{participant.unit.supplyLevel}%</span>
-									</div>
-									<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-										<div
-											class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-orange-500 to-orange-400"
-											style="width: {participant.unit.supplyLevel}%"
-										></div>
-									</div>
-								</div>
-							</div>
-						</div>
+							{@render unitBars(unit.health, unit.organization, unit.supplyLevel, "ORGANIZATION")}
+						</button>
 					{/each}
 				</div>
-			</div>
-		{/if}
 
-		<!-- Other Players' Units -->
-		{#if otherAttackerUnits.length > 0 || otherDefenderUnits.length > 0}
-			<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-				<!-- Other Attackers -->
-				{#if otherAttackerUnits.length > 0}
-					<div class="bg-[#14283f]/85 border border-red-500/30 rounded-xl overflow-hidden">
-						<div class="bg-red-950/30 border-b border-red-500/30 px-4 sm:px-6 py-3 sm:py-4">
-							<div class="flex items-center justify-between">
-								<h3 class="text-base sm:text-lg font-bold text-red-400 font-mono uppercase tracking-wide">Attackers</h3>
-								<div
-									class="px-2 sm:px-3 py-1 bg-red-950/50 border border-red-500/40 rounded text-red-400 font-mono text-xs sm:text-sm"
-								>
-									{otherAttackerUnits.length} UNITS
-								</div>
-							</div>
-						</div>
-						<div class="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
-							{#each otherAttackerUnits as participant}
-								{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
-								<div
-									class="relative overflow-hidden bg-[#102239]/60 border rounded-lg p-3 sm:p-4 {participant.isEngaged
-										? 'border-red-500/50 bg-red-950/10'
-										: 'border-[#dfceb0]/15'}"
-								>
-									{#if participant.isEngaged}
-										<div class="absolute top-2 right-2">
-											<div
-												class="px-2 py-0.5 bg-red-500/30 border border-red-400/50 rounded text-xs text-red-300 font-mono font-bold"
-											>
-												⚔️ ENGAGED
-											</div>
-										</div>
-									{/if}
-
-									<div class="flex items-center gap-2 sm:gap-3 mb-3">
-										<div
-											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-[#0d1d31] rounded border border-[#dfceb0]/20 p-1.5 sm:p-2"
-										>
-											<img
-												src={getUnitIconPath(participant.unit.unitType)}
-												alt={participant.unit.unitType}
-												class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
-											/>
-										</div>
-										<div class="flex-1 min-w-0">
-											<div class="text-xs text-[#a89e8e] font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
-											<div class="font-bold text-white text-sm sm:text-base truncate">{participant.unit.name}</div>
-											<div class="text-xs text-[#a89e8e]/70">{participant.unit.owner.profile?.name || "Unknown"}</div>
-											<div class="flex items-center gap-2 mt-0.5">
-												<span class="text-xs text-red-400 font-mono">⚔️ {template.baseAttack}</span>
-												<span class="text-xs text-blue-400 font-mono">🛡️ {template.baseDefense}</span>
-											</div>
-										</div>
-									</div>
-
-									<div class="space-y-2">
-										<div>
-											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-												<span>HEALTH</span>
-												<span class="text-blue-400 font-medium">{participant.currentStrength}%</span>
-											</div>
-											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-												<div
-													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-400"
-													style="width: {participant.currentStrength}%"
-												></div>
-											</div>
-										</div>
-										<div>
-											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-												<span>ORG</span>
-												<span class="text-emerald-400 font-medium">{participant.currentOrganization}%</span>
-											</div>
-											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-												<div
-													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-emerald-400"
-													style="width: {participant.currentOrganization}%"
-												></div>
-											</div>
-										</div>
-									</div>
-								</div>
-							{/each}
-						</div>
-					</div>
+				{#if selectedUnitIds.size > 0}
+					<form
+						method="POST"
+						action="?/assignUnits"
+						use:enhance={() => {
+							isJoining = true;
+							return async ({ update }) => {
+								await update();
+								isJoining = false;
+								selectedUnitIds = new Set();
+							};
+						}}
+					>
+						{#each Array.from(selectedUnitIds) as unitId}
+							<input type="hidden" name="unitIds" value={unitId} />
+						{/each}
+						<Button type="submit" variant="primary" size="lg" block disabled={isJoining}>
+							{isJoining
+								? "⚡ Deploying..."
+								: `⚡ Deploy ${selectedUnitIds.size} Unit${selectedUnitIds.size > 1 ? "s" : ""}`}
+						</Button>
+					</form>
+				{:else}
+					<div class="text-center py-6 sm:py-8 text-[#a89e8e] text-sm">← Select units to deploy</div>
 				{/if}
+			{:else if data.userUnits.length === 0}
+				<div class="text-center py-8 sm:py-12 panel-muted rounded-sm">
+					<div class="text-4xl sm:text-6xl mb-4 opacity-30">🚫</div>
+					<p class="text-base sm:text-lg text-[#e5d8c1] font-semibold mb-2">No eligible units</p>
+					<p class="text-xs sm:text-sm text-[#a89e8e]">
+						{#if data.userSide === "defender"}
+							Units must be in Region #{data.battle.regionId}
+						{:else}
+							Units must be in Region #{data.userResidenceRegionId}
+						{/if}
+					</p>
+				</div>
+			{/if}
+		</div>
+	{:else}
+		<div class="panel-muted rounded-sm p-8 sm:p-12 text-center">
+			<div class="text-4xl sm:text-6xl mb-4 opacity-20">⛔</div>
+			<p class="text-lg sm:text-xl text-[#e5d8c1] font-semibold mb-2">Cannot Deploy</p>
+			<p class="text-xs sm:text-sm text-[#a89e8e]">{data.canJoinReason || "Unknown reason"}</p>
+		</div>
+	{/if}
 
-				<!-- Other Defenders -->
-				{#if otherDefenderUnits.length > 0}
-					<div class="bg-[#14283f]/85 border border-blue-500/30 rounded-xl overflow-hidden">
-						<div class="bg-blue-950/30 border-b border-blue-500/30 px-4 sm:px-6 py-3 sm:py-4">
-							<div class="flex items-center justify-between">
-								<h3 class="text-base sm:text-lg font-bold text-blue-400 font-mono uppercase tracking-wide">
-									Defenders
-								</h3>
-								<div
-									class="px-2 sm:px-3 py-1 bg-blue-950/50 border border-blue-500/40 rounded text-blue-400 font-mono text-xs sm:text-sm"
-								>
-									{otherDefenderUnits.length} UNITS
+	<!-- Combat Execution -->
+	{#if data.battle.phase === "active"}
+		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
+			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4">
+				<div>
+					<h2 class="text-lg font-semibold text-red-300 mb-1">Execute Combat Round</h2>
+					<p class="text-xs sm:text-sm text-red-300/70">Simulate next round of combat</p>
+				</div>
+				<div class="text-3xl sm:text-5xl opacity-20">⚔️</div>
+			</div>
+			<form
+				method="POST"
+				action="?/executeCombatRound"
+				use:enhance={() => {
+					isExecuting = true;
+					return async ({ update, result }) => {
+						await update();
+						isExecuting = false;
+						if (result.type === "success") showBattleAnim = true;
+					};
+				}}
+			>
+				<Button type="submit" variant="danger" size="lg" block disabled={isExecuting}>
+					{isExecuting ? "⚔️ Executing..." : "⚔️ Execute Round"}
+				</Button>
+			</form>
+		</div>
+	{/if}
+
+	<!-- My Engaged Units -->
+	{#if myUnits.length > 0}
+		<div class="panel rounded-sm p-5 space-y-4">
+			<div class="flex items-center justify-between">
+				<h2
+					class="flex items-center gap-2 text-lg font-semibold {data.userSide === 'attacker'
+						? 'text-red-300'
+						: data.userSide === 'defender'
+							? 'text-[#b7d0e6]'
+							: 'text-[#fff7e8]'}"
+				>
+					Your Units in Battle
+				</h2>
+				<Badge
+					tone={data.userSide === "attacker" ? "red" : data.userSide === "defender" ? "blue" : "neutral"}
+					class="font-mono"
+				>
+					{myUnits.length} UNIT{myUnits.length > 1 ? "S" : ""}
+				</Badge>
+			</div>
+			<div class="space-y-2 sm:space-y-3">
+				{#each myUnits as participant}
+					{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
+					{@const isAttacker = participant.side === "attacker"}
+					<div
+						class="relative overflow-hidden border rounded-sm p-3 sm:p-4 {participant.isEngaged
+							? isAttacker
+								? 'bg-red-600/10 border-red-500/30'
+								: 'bg-[#315d8d]/18 border-[#7ba0c8]/30'
+							: 'bg-[#102239]/70 border-[#dfceb0]/10'}"
+					>
+						{#if participant.isEngaged}
+							<div class="absolute top-2 right-2">
+								<Badge tone={isAttacker ? "red" : "blue"} class="font-bold">⚔️ ENGAGED</Badge>
+							</div>
+						{/if}
+
+						<div class="flex items-center gap-2 sm:gap-3 mb-3">
+							{@render unitIcon(participant.unit.unitType)}
+							<div class="flex-1 min-w-0">
+								<div class="text-xs text-[#a89e8e] mb-0.5">{m[participant.unit.unitType]()}</div>
+								<div class="font-bold text-[#fff7e8] text-sm sm:text-base truncate">{participant.unit.name}</div>
+								<div class="flex items-center gap-2 mt-1">
+									{@render atkDef(template.baseAttack, template.baseDefense)}
 								</div>
 							</div>
 						</div>
-						<div class="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
-							{#each otherDefenderUnits as participant}
-								{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
-								<div
-									class="relative overflow-hidden bg-[#102239]/60 border rounded-lg p-3 sm:p-4 {participant.isEngaged
-										? 'border-blue-500/50 bg-blue-950/10'
-										: 'border-[#dfceb0]/15'}"
-								>
-									{#if participant.isEngaged}
-										<div class="absolute top-2 right-2">
-											<div
-												class="px-2 py-0.5 bg-blue-500/30 border border-blue-400/50 rounded text-xs text-blue-300 font-mono font-bold"
-											>
-												⚔️ ENGAGED
-											</div>
-										</div>
-									{/if}
 
-									<div class="flex items-center gap-2 sm:gap-3 mb-3">
-										<div
-											class="size-10 sm:size-12 flex-shrink-0 flex items-center justify-center bg-[#0d1d31] rounded border border-[#dfceb0]/20 p-1.5 sm:p-2"
-										>
-											<img
-												src={getUnitIconPath(participant.unit.unitType)}
-												alt={participant.unit.unitType}
-												class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
-											/>
-										</div>
-										<div class="flex-1 min-w-0">
-											<div class="text-xs text-[#a89e8e] font-mono mb-0.5">{m[participant.unit.unitType]()}</div>
-											<div class="font-bold text-white text-sm sm:text-base truncate">{participant.unit.name}</div>
-											<div class="text-xs text-[#a89e8e]/70">{participant.unit.owner.profile?.name || "Unknown"}</div>
-											<div class="flex items-center gap-2 mt-0.5">
-												<span class="text-xs text-red-400 font-mono">⚔️ {template.baseAttack}</span>
-												<span class="text-xs text-blue-400 font-mono">🛡️ {template.baseDefense}</span>
-											</div>
-										</div>
-									</div>
-
-									<div class="space-y-2">
-										<div>
-											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-												<span>HEALTH</span>
-												<span class="text-blue-400 font-medium">{participant.currentStrength}%</span>
-											</div>
-											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-												<div
-													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-blue-400"
-													style="width: {participant.currentStrength}%"
-												></div>
-											</div>
-										</div>
-										<div>
-											<div class="flex items-center justify-between text-xs text-[#a89e8e] mb-1 font-mono">
-												<span>ORG</span>
-												<span class="text-emerald-400 font-medium">{participant.currentOrganization}%</span>
-											</div>
-											<div class="h-1.5 bg-[#0d1d31]/70 rounded-full overflow-hidden border border-[#dfceb0]/10">
-												<div
-													class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-emerald-500 to-emerald-400"
-													style="width: {participant.currentOrganization}%"
-												></div>
-											</div>
-										</div>
-									</div>
-								</div>
-							{/each}
-						</div>
+						{@render unitBars(
+							participant.currentStrength,
+							participant.currentOrganization,
+							participant.unit.supplyLevel,
+							"ORGANIZATION"
+						)}
 					</div>
-				{/if}
+				{/each}
 			</div>
-		{/if}
+		</div>
+	{/if}
 
-		<!-- Combat Log -->
-		{#if data.battle.rounds.length > 0}
-			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden">
-				<div class="bg-[#102239]/90 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
-					<h3 class="text-base sm:text-lg font-bold text-[#fff7e8] font-mono uppercase tracking-wide">Combat Log</h3>
-				</div>
-				<div class="p-3 sm:p-4 space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
-					{#each data.battle.rounds as round}
-						<div class="bg-[#102239]/60 border border-[#dfceb0]/12 rounded-lg p-3 sm:p-4">
-							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3">
-								<div class="flex items-center gap-2 sm:gap-3">
-									<div class="px-2 py-1 bg-[#102239]/70 border border-[#dfceb0]/25 rounded">
-										<span class="text-[#a89e8e] font-mono text-xs">ROUND</span>
-										<span class="text-white font-bold font-mono text-sm ml-2">{round.roundNumber}</span>
-									</div>
-								</div>
-								<span class="text-xs text-[#a89e8e]/70 font-mono">{formatDateTime(round.roundedAt)}</span>
-							</div>
-							<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
-								<div class="bg-red-950/20 border border-red-800/30 rounded p-2 sm:p-3">
-									<div class="text-red-400/70 font-mono text-xs mb-1 uppercase">Attackers</div>
-									<div class="text-[#a89e8e]">
-										<span class="text-white font-bold">{round.attackerUnitsEngaged}</span> units dealt
-										<span class="text-red-400 font-bold">{round.attackerTotalDamage}</span> damage
-									</div>
-								</div>
-								<div class="bg-blue-950/20 border border-blue-800/30 rounded p-2 sm:p-3">
-									<div class="text-blue-400/70 font-mono text-xs mb-1 uppercase">Defenders</div>
-									<div class="text-[#a89e8e]">
-										<span class="text-white font-bold">{round.defenderUnitsEngaged}</span> units dealt
-										<span class="text-blue-400 font-bold">{round.defenderTotalDamage}</span> damage
-									</div>
-								</div>
-							</div>
-						</div>
-					{/each}
-				</div>
-			</div>
-
-			<!-- Battle Statistics Chart -->
-			<div class="bg-[#14283f]/85 border border-[#dfceb0]/15 rounded-xl overflow-hidden">
-				<div class="bg-[#102239]/90 border-b border-[#dfceb0]/15 px-4 sm:px-6 py-3 sm:py-4">
-					<h3 class="text-base sm:text-lg font-bold text-[#fff7e8] font-mono uppercase tracking-wide">
-						Damage Analysis
-					</h3>
-				</div>
-				<div class="p-3 sm:p-6">
-					{#if chartData().length > 0}
-						<div class="h-64 sm:h-96 w-full">
-							<Chart
-								data={chartData()}
-								x="round"
-								xScale={scaleLinear()}
-								y={[0, Math.max(...chartData().map((d) => Math.max(d.attackerDamage, d.defenderDamage))) * 1.1]}
-								yScale={scaleLinear()}
-								padding={{ left: 40, bottom: 30, top: 20, right: 20 }}
+	<!-- Other Players' Units -->
+	{#if otherAttackerUnits.length > 0 || otherDefenderUnits.length > 0}
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+			<!-- Other Attackers -->
+			{#if otherAttackerUnits.length > 0}
+				<div class="panel rounded-sm p-5 space-y-4">
+					<div class="flex items-center justify-between">
+						<h2 class="flex items-center gap-2 text-lg font-semibold text-red-300">Attackers</h2>
+						<Badge tone="red" class="font-mono">{otherAttackerUnits.length} UNITS</Badge>
+					</div>
+					<div class="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
+						{#each otherAttackerUnits as participant}
+							{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
+							<div
+								class="relative overflow-hidden border rounded-sm p-3 sm:p-4 {participant.isEngaged
+									? 'bg-red-600/10 border-red-500/30'
+									: 'bg-[#102239]/70 border-[#dfceb0]/10'}"
 							>
-								<Svg>
-									<RectClipPath x="round" y={[0, null]} spring />
-									<Axis
-										placement="left"
-										grid={{ style: "stroke: rgb(71, 85, 105); stroke-opacity: 0.3;" }}
-										rule={{ style: "stroke: rgb(100, 116, 139);" }}
-										label={{ style: "fill: rgb(148, 163, 184); font-family: monospace; font-size: 10px;" }}
-									/>
-									<Axis
-										placement="bottom"
-										rule={{ style: "stroke: rgb(100, 116, 139);" }}
-										label={{ style: "fill: rgb(148, 163, 184); font-family: monospace; font-size: 10px;" }}
-									/>
+								{#if participant.isEngaged}
+									<div class="absolute top-2 right-2">
+										<Badge tone="red" class="font-bold">⚔️ ENGAGED</Badge>
+									</div>
+								{/if}
 
-									<Area y="attackerDamage" line={{ class: "stroke-red-500 stroke-2" }} fill="url(#attackerGradient)" />
-									<Area y="defenderDamage" line={{ class: "stroke-blue-500 stroke-2" }} fill="url(#defenderGradient)" />
+								<div class="flex items-center gap-2 sm:gap-3 mb-3">
+									{@render unitIcon(participant.unit.unitType)}
+									<div class="flex-1 min-w-0">
+										<div class="text-xs text-[#a89e8e] mb-0.5">{m[participant.unit.unitType]()}</div>
+										<div class="font-bold text-[#fff7e8] text-sm sm:text-base truncate">{participant.unit.name}</div>
+										<div class="text-xs text-[#a89e8e]">{participant.unit.owner.profile?.name || "Unknown"}</div>
+										<div class="flex items-center gap-2 mt-0.5">
+											{@render atkDef(template.baseAttack, template.baseDefense)}
+										</div>
+									</div>
+								</div>
 
-									<defs>
-										<linearGradient id="attackerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-											<stop offset="0%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.3" />
-											<stop offset="100%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.05" />
-										</linearGradient>
-										<linearGradient id="defenderGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-											<stop offset="0%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.3" />
-											<stop offset="100%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.05" />
-										</linearGradient>
-									</defs>
-
-									<Highlight points lines />
-								</Svg>
-								<Tooltip.Root let:data>
-									<Tooltip.Header>
-										Round {data.round}
-									</Tooltip.Header>
-									<Tooltip.List>
-										<Tooltip.Item
-											label="Attacker"
-											value={data.attackerDamage}
-											valueClass="text-red-400 font-bold font-mono"
-										/>
-										<Tooltip.Item
-											label="Defender"
-											value={data.defenderDamage}
-											valueClass="text-blue-400 font-bold font-mono"
-										/>
-									</Tooltip.List>
-								</Tooltip.Root>
-							</Chart>
-						</div>
-
-						<div class="flex items-center justify-center gap-4 sm:gap-8 mt-4 sm:mt-6">
-							<div class="flex items-center gap-2">
-								<div class="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full"></div>
-								<span class="text-xs sm:text-sm text-[#a89e8e] font-mono">Attacker</span>
+								{@render unitBars(participant.currentStrength, participant.currentOrganization, null, "ORG")}
 							</div>
-							<div class="flex items-center gap-2">
-								<div class="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-full"></div>
-								<span class="text-xs sm:text-sm text-[#a89e8e] font-mono">Defender</span>
-							</div>
-						</div>
-					{:else}
-						<div class="text-center py-8 sm:py-12 text-[#a89e8e]/70 font-mono text-sm">No combat data yet</div>
-					{/if}
+						{/each}
+					</div>
 				</div>
+			{/if}
+
+			<!-- Other Defenders -->
+			{#if otherDefenderUnits.length > 0}
+				<div class="panel rounded-sm p-5 space-y-4">
+					<div class="flex items-center justify-between">
+						<h2 class="flex items-center gap-2 text-lg font-semibold text-[#b7d0e6]">Defenders</h2>
+						<Badge tone="blue" class="font-mono">{otherDefenderUnits.length} UNITS</Badge>
+					</div>
+					<div class="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
+						{#each otherDefenderUnits as participant}
+							{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
+							<div
+								class="relative overflow-hidden border rounded-sm p-3 sm:p-4 {participant.isEngaged
+									? 'bg-[#315d8d]/18 border-[#7ba0c8]/30'
+									: 'bg-[#102239]/70 border-[#dfceb0]/10'}"
+							>
+								{#if participant.isEngaged}
+									<div class="absolute top-2 right-2">
+										<Badge tone="blue" class="font-bold">⚔️ ENGAGED</Badge>
+									</div>
+								{/if}
+
+								<div class="flex items-center gap-2 sm:gap-3 mb-3">
+									{@render unitIcon(participant.unit.unitType)}
+									<div class="flex-1 min-w-0">
+										<div class="text-xs text-[#a89e8e] mb-0.5">{m[participant.unit.unitType]()}</div>
+										<div class="font-bold text-[#fff7e8] text-sm sm:text-base truncate">{participant.unit.name}</div>
+										<div class="text-xs text-[#a89e8e]">{participant.unit.owner.profile?.name || "Unknown"}</div>
+										<div class="flex items-center gap-2 mt-0.5">
+											{@render atkDef(template.baseAttack, template.baseDefense)}
+										</div>
+									</div>
+								</div>
+
+								{@render unitBars(participant.currentStrength, participant.currentOrganization, null, "ORG")}
+							</div>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
+	{/if}
+
+	<!-- Combat Log -->
+	{#if data.battle.rounds.length > 0}
+		<div class="panel rounded-sm p-5 space-y-4">
+			<h2 class="section-title">Combat Log</h2>
+			<div class="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
+				{#each data.battle.rounds as round}
+					<div class="panel-muted rounded-sm p-3 sm:p-4">
+						<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3">
+							<div class="flex items-center gap-2 sm:gap-3">
+								<div class="px-2 py-1 bg-[#0d1d31] border border-[#dfceb0]/20 rounded-sm">
+									<span class="text-[#a89e8e] text-[10px] uppercase tracking-wide">ROUND</span>
+									<span class="text-[#fff7e8] font-bold font-mono text-sm ml-2">{round.roundNumber}</span>
+								</div>
+							</div>
+							<span class="text-xs text-[#a89e8e]">{formatDateTime(round.roundedAt)}</span>
+						</div>
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+							<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-2 sm:p-3">
+								<div class="text-red-300/80 text-[10px] mb-1 uppercase tracking-wide">Attackers</div>
+								<div class="text-[#a89e8e]">
+									<span class="text-[#fff7e8] font-bold">{round.attackerUnitsEngaged}</span> units dealt
+									<span class="text-red-300 font-bold">{round.attackerTotalDamage}</span> damage
+								</div>
+							</div>
+							<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-2 sm:p-3">
+								<div class="text-[#b7d0e6]/80 text-[10px] mb-1 uppercase tracking-wide">Defenders</div>
+								<div class="text-[#a89e8e]">
+									<span class="text-[#fff7e8] font-bold">{round.defenderUnitsEngaged}</span> units dealt
+									<span class="text-[#b7d0e6] font-bold">{round.defenderTotalDamage}</span> damage
+								</div>
+							</div>
+						</div>
+					</div>
+				{/each}
 			</div>
-		{/if}
-	</div>
-</div>
+		</div>
+
+		<!-- Battle Statistics Chart -->
+		<div class="panel rounded-sm p-5 space-y-4">
+			<h2 class="section-title">Damage Analysis</h2>
+			<div>
+				{#if chartData().length > 0}
+					<div class="h-64 sm:h-96 w-full">
+						<Chart
+							data={chartData()}
+							x="round"
+							xScale={scaleLinear()}
+							y={[0, Math.max(...chartData().map((d) => Math.max(d.attackerDamage, d.defenderDamage))) * 1.1]}
+							yScale={scaleLinear()}
+							padding={{ left: 40, bottom: 30, top: 20, right: 20 }}
+						>
+							<Svg>
+								<RectClipPath x="round" y={[0, null]} spring />
+								<Axis
+									placement="left"
+									grid={{ style: "stroke: rgb(223, 206, 176); stroke-opacity: 0.1;" }}
+									rule={{ style: "stroke: rgb(223, 206, 176); stroke-opacity: 0.3;" }}
+									label={{ style: "fill: rgb(168, 158, 142); font-family: monospace; font-size: 10px;" }}
+								/>
+								<Axis
+									placement="bottom"
+									rule={{ style: "stroke: rgb(223, 206, 176); stroke-opacity: 0.3;" }}
+									label={{ style: "fill: rgb(168, 158, 142); font-family: monospace; font-size: 10px;" }}
+								/>
+
+								<Area y="attackerDamage" line={{ class: "stroke-red-500 stroke-2" }} fill="url(#attackerGradient)" />
+								<Area y="defenderDamage" line={{ class: "stroke-[#7ba0c8] stroke-2" }} fill="url(#defenderGradient)" />
+
+								<defs>
+									<linearGradient id="attackerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+										<stop offset="0%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.3" />
+										<stop offset="100%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.05" />
+									</linearGradient>
+									<linearGradient id="defenderGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+										<stop offset="0%" style="stop-color:rgb(123, 160, 200);stop-opacity:0.3" />
+										<stop offset="100%" style="stop-color:rgb(123, 160, 200);stop-opacity:0.05" />
+									</linearGradient>
+								</defs>
+
+								<Highlight points lines />
+							</Svg>
+							<Tooltip.Root let:data>
+								<Tooltip.Header>
+									Round {data.round}
+								</Tooltip.Header>
+								<Tooltip.List>
+									<Tooltip.Item
+										label="Attacker"
+										value={data.attackerDamage}
+										valueClass="text-red-300 font-bold font-mono"
+									/>
+									<Tooltip.Item
+										label="Defender"
+										value={data.defenderDamage}
+										valueClass="text-[#b7d0e6] font-bold font-mono"
+									/>
+								</Tooltip.List>
+							</Tooltip.Root>
+						</Chart>
+					</div>
+
+					<div class="flex items-center justify-center gap-4 sm:gap-8 mt-4 sm:mt-6">
+						<div class="flex items-center gap-2">
+							<div class="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full"></div>
+							<span class="text-xs sm:text-sm text-[#a89e8e]">Attacker</span>
+						</div>
+						<div class="flex items-center gap-2">
+							<div class="w-3 h-3 sm:w-4 sm:h-4 bg-[#7ba0c8] rounded-full"></div>
+							<span class="text-xs sm:text-sm text-[#a89e8e]">Defender</span>
+						</div>
+					</div>
+				{:else}
+					<div class="text-center py-8 sm:py-12 text-[#a89e8e] text-sm">No combat data yet</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
+</PageContainer>
 
 {#if showBattleAnim}
 	<ThreeAnimation variant="battle" onComplete={() => (showBattleAnim = false)} />

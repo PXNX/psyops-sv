@@ -8,6 +8,8 @@
 	import { Chart, Svg, Tooltip } from "layerchart";
 	import { Area, Bars, Axis } from "layerchart";
 	import { scaleBand, scaleTime, scaleLinear } from "d3-scale";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
 
 	let { data } = $props();
 
@@ -39,66 +41,68 @@
 	}));
 </script>
 
-<div class="container mx-auto px-4 py-6 max-w-6xl">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div class="mb-6">
-		<h1 class="text-2xl font-bold text-[#fff7e8] mb-2">{data.newspaper.name} - Statistics</h1>
-		<p class="text-[#a89e8e]">Analytics and insights for your newspaper</p>
-	</div>
+	<PageHeader
+		title="{data.newspaper.name} - Statistics"
+		subtitle="Analytics and insights for your newspaper"
+		backHref="/newspaper/{data.newspaper.id}"
+		backLabel={data.newspaper.name}
+	/>
 
 	<!-- Summary Cards -->
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 		<!-- Total Subscribers -->
-		<div class="panel rounded-xl p-6">
+		<div class="panel rounded-sm p-5">
 			<div class="flex items-center justify-between">
 				<div>
-					<p class="text-sm text-[#a89e8e] mb-1">Total Subscribers</p>
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Total Subscribers</p>
 					<p class="text-3xl font-bold text-[#fff7e8]">{formatNumber(data.stats.totalSubscribers)}</p>
 				</div>
-				<div class="p-3 bg-blue-600/20 rounded-lg">
-					<MdiAccountMultiple class="size-6 text-blue-400" />
+				<div class="p-3 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm">
+					<MdiAccountMultiple class="size-6 text-[#7ba0c8]" />
 				</div>
 			</div>
 		</div>
 
 		<!-- Total Views -->
-		<div class="panel rounded-xl p-6">
+		<div class="panel rounded-sm p-5">
 			<div class="flex items-center justify-between">
 				<div>
-					<p class="text-sm text-[#a89e8e] mb-1">Total Views</p>
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Total Views</p>
 					<p class="text-3xl font-bold text-[#fff7e8]">{formatNumber(data.stats.totalViews)}</p>
 				</div>
-				<div class="p-3 bg-green-600/20 rounded-lg">
-					<MdiEye class="size-6 text-green-400" />
+				<div class="p-3 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm">
+					<MdiEye class="size-6 text-[#8fae88]" />
 				</div>
 			</div>
 		</div>
 
 		<!-- Total Likes -->
-		<div class="panel rounded-xl p-6">
+		<div class="panel rounded-sm p-5">
 			<div class="flex items-center justify-between">
 				<div>
-					<p class="text-sm text-[#a89e8e] mb-1">Total Likes</p>
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Total Likes</p>
 					<p class="text-3xl font-bold text-[#fff7e8]">{formatNumber(data.stats.totalLikes)}</p>
 				</div>
-				<div class="p-3 bg-pink-600/20 rounded-lg">
-					<MdiHeart class="size-6 text-pink-400" />
+				<div class="p-3 bg-red-600/10 border border-red-500/30 rounded-sm">
+					<MdiHeart class="size-6 text-red-400" />
 				</div>
 			</div>
 		</div>
 	</div>
 
 	<!-- Charts Section -->
-	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+	<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 		<!-- Subscriber Growth Chart -->
-		<div class="panel rounded-xl p-6">
+		<div class="panel rounded-sm p-5">
 			<div class="flex items-center gap-2 mb-4">
-				<MdiChartLine class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Subscriber Growth (30 Days)</h2>
+				<MdiChartLine class="size-5 text-[#7ba0c8]" />
+				<h2 class="section-title">Subscriber Growth (30 Days)</h2>
 			</div>
 
 			{#if subscriberChartData.length === 0}
-				<div class="text-center py-12 text-[#a89e8e]">
+				<div class="panel-muted rounded-sm text-center py-12 text-[#a89e8e]">
 					<p>No subscriber data yet</p>
 				</div>
 			{:else}
@@ -115,8 +119,8 @@
 						<Svg>
 							<Axis placement="left" grid={{ style: "stroke: rgb(255 255 255 / 0.05)" }} />
 							<Axis placement="bottom" format={(d) => formatDate(d)} rule />
-							<Area class="fill-blue-500/20" />
-							<Area line={{ class: "stroke-blue-500 stroke-2" }} />
+							<Area class="fill-[#7ba0c8]/20" />
+							<Area line={{ class: "stroke-[#7ba0c8] stroke-2" }} />
 						</Svg>
 						<Tooltip.Root let:data>
 							<Tooltip.Header>{formatDate(data.date)}</Tooltip.Header>
@@ -124,7 +128,7 @@
 								<Tooltip.Item
 									label="Subscribers"
 									value={data.count.toLocaleString()}
-									valueClass="text-blue-400 font-bold"
+									valueClass="text-[#7ba0c8] font-bold"
 								/>
 							</Tooltip.List>
 						</Tooltip.Root>
@@ -134,14 +138,14 @@
 		</div>
 
 		<!-- Post Views Chart -->
-		<div class="panel rounded-xl p-6">
+		<div class="panel rounded-sm p-5">
 			<div class="flex items-center gap-2 mb-4">
-				<MdiEye class="size-5 text-green-400" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Post Views (30 Days)</h2>
+				<MdiEye class="size-5 text-[#8fae88]" />
+				<h2 class="section-title">Post Views (30 Days)</h2>
 			</div>
 
 			{#if viewsChartData.length === 0}
-				<div class="text-center py-12 text-[#a89e8e]">
+				<div class="panel-muted rounded-sm text-center py-12 text-[#a89e8e]">
 					<p>No view data yet</p>
 				</div>
 			{:else}
@@ -158,12 +162,12 @@
 						<Svg>
 							<Axis placement="left" grid={{ style: "stroke: rgb(255 255 255 / 0.05)" }} />
 							<Axis placement="bottom" format={(d) => formatDate(d)} rule />
-							<Bars radius={4} class="fill-green-500/80 hover:fill-green-500 transition-colors" />
+							<Bars radius={4} class="fill-[#8fae88]/80 hover:fill-[#8fae88] transition-colors" />
 						</Svg>
 						<Tooltip.Root let:data>
 							<Tooltip.Header>{formatDate(data.date)}</Tooltip.Header>
 							<Tooltip.List>
-								<Tooltip.Item label="Views" value={data.count.toLocaleString()} valueClass="text-green-400 font-bold" />
+								<Tooltip.Item label="Views" value={data.count.toLocaleString()} valueClass="text-[#8fae88] font-bold" />
 							</Tooltip.List>
 						</Tooltip.Root>
 					</Chart>
@@ -173,14 +177,14 @@
 	</div>
 
 	<!-- Top Articles -->
-	<div class="panel rounded-xl p-6">
+	<div class="panel rounded-sm p-5">
 		<div class="flex items-center gap-2 mb-4">
-			<MdiNewspaper class="size-5 text-[#d5c4df]" />
-			<h2 class="text-lg font-semibold text-[#fff7e8]">Recent Articles Performance</h2>
+			<MdiNewspaper class="size-5 text-[#b7a0c5]" />
+			<h2 class="section-title">Recent Articles Performance</h2>
 		</div>
 
 		{#if data.stats.topArticles.length === 0}
-			<div class="text-center py-12 text-[#a89e8e]">
+			<div class="panel-muted rounded-sm text-center py-12 text-[#a89e8e]">
 				<p>No articles published yet</p>
 			</div>
 		{:else}
@@ -202,7 +206,7 @@
 						{#each data.stats.topArticles as article}
 							<tr class="border-b border-[#dfceb0]/15 hover:bg-[#102239]/50 transition-colors">
 								<td class="py-3 px-4">
-									<a href="/posts/{article.id}" class="text-[#fff7e8] hover:text-blue-400 font-medium">
+									<a href="/posts/{article.id}" class="text-[#fff7e8] hover:text-[#f2c463] font-medium transition-colors">
 										{article.title}
 									</a>
 								</td>
@@ -210,12 +214,12 @@
 									{formatDate(article.publishDate)}
 								</td>
 								<td class="py-3 px-4 text-center">
-									<span class="inline-flex items-center gap-1 text-green-400 font-medium">
+									<span class="inline-flex items-center gap-1 text-[#8fae88] font-medium">
 										{article.views}
 									</span>
 								</td>
 								<td class="py-3 px-4 text-center">
-									<span class="inline-flex items-center gap-1 text-pink-400 font-medium">
+									<span class="inline-flex items-center gap-1 text-red-400 font-medium">
 										{article.likes}
 									</span>
 								</td>
@@ -226,4 +230,4 @@
 			</div>
 		{/if}
 	</div>
-</div>
+</PageContainer>

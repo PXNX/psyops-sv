@@ -17,11 +17,11 @@
 </script>
 
 {#if error}
-	<FluentColorPeople20 class="rounded-lg size-14 bg-[#14283f] p-1" />
+	<FluentColorPeople20 class="rounded-sm size-14 bg-[#14283f] p-1" />
 {:else}
 	<img
 		alt="Logo"
-		class={`rounded-lg size-14 ${bgColor} bg-cover bg-center`}
+		class={`rounded-sm size-14 ${bgColor} bg-cover bg-center`}
 		loading="lazy"
 		onerror={() => replaceImg()}
 		{src}

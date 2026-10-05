@@ -52,21 +52,21 @@
 		{costs.currency ? "Cost" : "Resources Required"}
 	</h4>
 
-	<div class="panel-muted rounded-lg p-2.5 md:p-3 space-y-1.5">
+	<div class="panel-muted rounded-sm p-2.5 md:p-3 space-y-1.5">
 		{#each requirements as req}
 			<div class="flex justify-between text-xs items-center">
 				<a
 					href="/market/{req.resource}"
 					class="text-[#a89e8e] hover:text-[#fff7e8] flex items-center gap-1.5 transition-colors"
 				>
-					<req.IconComponent class="size-3.5 {req.isCurrency ? 'text-emerald-400' : req.iconColor}" />
+					<req.IconComponent class="size-3.5 {req.isCurrency ? 'text-[#8fae88]' : req.iconColor}" />
 					<span class="capitalize">{req.resource}</span>
 				</a>
 				<span class="font-mono text-xs" class:text-[#fff7e8]={req.hasEnough} class:text-red-400={!req.hasEnough}>
 					{req.needed.toLocaleString()}
 					<span class="text-[#a89e8e]/70">/ {req.available.toLocaleString()}</span>
 					{#if req.hasEnough}
-						<span class="text-emerald-400 ml-1">✓</span>
+						<span class="text-[#8fae88] ml-1">✓</span>
 					{:else}
 						<span class="text-red-400 ml-1">✗</span>
 					{/if}

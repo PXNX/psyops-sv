@@ -162,10 +162,8 @@
 
 	const nameInputClass = $derived(
 		[
-			"w-full px-4 py-3 bg-[#0d1d31] border rounded-xl text-[#fff7e8] placeholder:text-[#a89e8e] focus:outline-none focus:ring-2 transition-all",
-			nameError
-				? "border-red-500/50 focus:ring-red-500/20"
-				: "border-[#dfceb0]/20 focus:border-[#e6a527]/70 focus:ring-[#e6a527]/15"
+			"field-control w-full rounded-sm px-4 py-3",
+			nameError ? "border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20" : ""
 		].join(" ")
 	);
 
@@ -179,10 +177,10 @@
 <!-- ─── Compact floating prompt (navigate-to-page steps) ─── -->
 {#if isCompactMode}
 	<div class="fixed bottom-16 md:bottom-20 left-3 right-3 z-50" in:fly={{ y: 20, duration: 300 }}>
-		<div class="panel backdrop-blur-md rounded-xl p-4">
+		<div class="panel rounded-sm p-4">
 			<div class="flex items-center gap-3">
 				<div
-					class="size-10 rounded-lg bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
+					class="size-10 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
 				>
 					<span class="text-lg">{step === 4 ? "🔧" : "🪖"}</span>
 				</div>
@@ -215,7 +213,7 @@
 
 		<!-- Sheet -->
 		<div class="absolute inset-x-0 bottom-0 animate-slide-up">
-			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-2xl max-h-[80vh] flex flex-col">
+			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-md max-h-[80vh] flex flex-col">
 				<!-- Drag handle + skip -->
 				<div class="flex items-center justify-between px-5 pt-3 pb-1 shrink-0">
 					<div class="w-16"></div>
@@ -254,7 +252,7 @@
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
 								<div
-									class="size-16 rounded-2xl bg-[#e6a527]/12 border border-[#e6a527]/35 flex items-center justify-center"
+									class="size-16 rounded-sm bg-[#e6a527]/12 border border-[#e6a527]/35 flex items-center justify-center"
 								>
 									<span class="text-3xl">🎖️</span>
 								</div>
@@ -282,7 +280,7 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex items-center gap-3">
 								<div
-									class="size-10 rounded-lg bg-[#8c709b]/15 border border-[#b7a0c5]/30 flex items-center justify-center shrink-0"
+									class="size-10 rounded-sm bg-[#8c709b]/15 border border-[#b7a0c5]/30 flex items-center justify-center shrink-0"
 								>
 									<FluentPerson20Filled class="size-5 text-[#d5c4df]" />
 								</div>
@@ -303,9 +301,9 @@
 									class={nameInputClass}
 								/>
 								{#if nameError}
-									<p class="text-xs text-red-400 mt-1.5">{nameError}</p>
+									<p class="field-error">{nameError}</p>
 								{:else}
-									<p class="text-xs text-[#a89e8e] mt-1.5">{name.length}/50 — letters, numbers, spaces</p>
+									<p class="field-hint">{name.length}/50 — letters, numbers, spaces</p>
 								{/if}
 							</div>
 
@@ -332,7 +330,7 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex items-center gap-3">
 								<div
-									class="size-10 rounded-lg bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
+									class="size-10 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
 								>
 									<FluentGlobe20Filled class="size-5 text-[#b7d0e6]" />
 								</div>
@@ -352,11 +350,11 @@
 										<button
 											onclick={() => selectRegion(region.id)}
 											disabled={submitting}
-											class="w-full text-left panel-interactive rounded-xl p-3.5 disabled:opacity-50 group"
+											class="w-full text-left panel-interactive rounded-sm p-3.5 disabled:opacity-50 group"
 										>
 											<div class="flex items-center gap-3">
 												<div
-													class="size-10 rounded-lg bg-[#102239]/70 border border-[#dfceb0]/15 flex items-center justify-center shrink-0"
+													class="size-10 rounded-sm bg-[#102239]/70 border border-[#dfceb0]/15 flex items-center justify-center shrink-0"
 												>
 													<FluentGlobe20Filled
 														class="size-5 text-[#a89e8e] group-hover:text-[#b7d0e6] transition-colors"
@@ -406,19 +404,19 @@
 							</div>
 
 							<div class="grid grid-cols-2 gap-2">
-								<div class="panel-muted rounded-lg p-3 text-center">
+								<div class="panel-muted rounded-sm p-3 text-center">
 									<span class="text-lg">📰</span>
 									<p class="text-xs text-[#a89e8e] mt-1">Read news &amp; posts</p>
 								</div>
-								<div class="panel-muted rounded-lg p-3 text-center">
+								<div class="panel-muted rounded-sm p-3 text-center">
 									<span class="text-lg">🗺️</span>
 									<p class="text-xs text-[#a89e8e] mt-1">Explore the map</p>
 								</div>
-								<div class="panel-muted rounded-lg p-3 text-center">
+								<div class="panel-muted rounded-sm p-3 text-center">
 									<span class="text-lg">💬</span>
 									<p class="text-xs text-[#a89e8e] mt-1">Chat with players</p>
 								</div>
-								<div class="panel-muted rounded-lg p-3 text-center">
+								<div class="panel-muted rounded-sm p-3 text-center">
 									<span class="text-lg">🏛️</span>
 									<p class="text-xs text-[#a89e8e] mt-1">Join a party</p>
 								</div>
@@ -448,21 +446,21 @@
 							</div>
 
 							<div class="space-y-2">
-								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">💰</span>
 									<div>
 										<p class="text-sm font-medium text-[#fff7e8]">Work for Wages</p>
 										<p class="text-xs text-[#a89e8e]">Find a factory job and complete shifts</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">🏭</span>
 									<div>
 										<p class="text-sm font-medium text-[#fff7e8]">Produce Goods</p>
 										<p class="text-xs text-[#a89e8e]">Craft weapons from raw materials</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">🏪</span>
 									<div>
 										<p class="text-sm font-medium text-[#fff7e8]">Trade on the Market</p>
@@ -495,21 +493,21 @@
 							</div>
 
 							<div class="space-y-2">
-								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">⚔️</span>
 									<div>
 										<p class="text-sm font-medium text-[#fff7e8]">Train Units</p>
 										<p class="text-xs text-[#a89e8e]">Select a unit type and begin training</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">🛡️</span>
 									<div>
 										<p class="text-sm font-medium text-[#fff7e8]">Manage Your Army</p>
 										<p class="text-xs text-[#a89e8e]">Monitor organization, strength, and supply</p>
 									</div>
 								</div>
-								<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
+								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">🗡️</span>
 									<div>
 										<p class="text-sm font-medium text-[#fff7e8]">Join Battles</p>
@@ -534,7 +532,7 @@
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
 								<div
-									class="size-16 rounded-2xl bg-[#587252]/18 border border-[#8fae88]/30 flex items-center justify-center"
+									class="size-16 rounded-sm bg-[#587252]/18 border border-[#8fae88]/30 flex items-center justify-center"
 								>
 									<FluentCheckmark20Filled class="size-8 text-[#c6dfbf]" />
 								</div>
@@ -549,7 +547,7 @@
 							<button
 								onclick={() => setStep(null)}
 								disabled={submitting}
-								class={buttonClass({ variant: "success", block: true })}
+								class={buttonClass({ variant: "primary", block: true })}
 							>
 								{#if submitting}
 									<span class="flex items-center justify-center gap-2">

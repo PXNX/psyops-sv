@@ -10,7 +10,10 @@
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import { formatDateTime } from "#lib/utils/formatting.js";
-	import { buttonClass } from "#lib/component/ui/styles.js";
+	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	const { data } = $props();
 
@@ -83,78 +86,57 @@
 	<title>Posts</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[#0c1929]">
-	<!-- Command Header -->
-	<div class="border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
-		<div class="w-full px-4 sm:px-6 py-4 sm:py-6">
-			<!-- Search & Actions -->
-			<div class="flex items-center gap-2 sm:gap-3">
-				<div class="relative flex-1">
-					<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#a89e8e]" />
-					<input
-						class="field-control w-full rounded-sm pl-10 pr-4 py-2.5 text-sm font-mono"
-						placeholder="Search posts, authors, newspapers..."
-						type="text"
-						bind:value={searchQuery}
-					/>
-				</div>
+<PageContainer maxWidth="4xl">
+	<!-- Header -->
+	<PageHeader title="Posts">
+		{#snippet actions()}
+			<Button variant="primary" href="/posts/new" icon={FluentAdd20Filled}>
+				<span class="hidden sm:inline">New Post</span>
+			</Button>
+			<Button variant="secondary" href="/posts/subscribed" icon={FluentEmojiRolledUpNewspaper}>
+				<span class="hidden sm:inline">Subscribed</span>
+			</Button>
+			<Button variant="secondary" href="/newspaper" icon={FluentEmojiRolledUpNewspaper}>
+				<span class="hidden sm:inline">Papers</span>
+			</Button>
+			<Button variant="secondary" href="/moderators" icon={FluentShield20Filled}>
+				<span class="hidden sm:inline">Mods</span>
+			</Button>
+		{/snippet}
+	</PageHeader>
 
-				<a
-					href="/posts/new"
-					class={buttonClass({ variant: "primary", class: "text-xs font-mono font-bold uppercase tracking-wide" })}
-				>
-					<FluentAdd20Filled class="size-4" />
-					<span class="hidden sm:inline">New Post</span>
-				</a>
-
-				<a href="/posts/subscribed" class={buttonClass({ variant: "secondary", class: "text-xs font-mono" })}>
-					<FluentEmojiRolledUpNewspaper class="size-4" />
-					<span class="hidden sm:inline">Subscribed</span>
-				</a>
-
-				<a href="/newspaper" class={buttonClass({ variant: "secondary", class: "text-xs font-mono" })}>
-					<FluentEmojiRolledUpNewspaper class="size-4" />
-					<span class="hidden sm:inline">Papers</span>
-				</a>
-
-				<a href="/moderators" class={buttonClass({ variant: "secondary", class: "text-xs font-mono" })}>
-					<FluentShield20Filled class="size-3.5" />
-					<span class="hidden sm:inline">Mods</span>
-				</a>
-			</div>
-		</div>
+	<!-- Search -->
+	<div class="relative">
+		<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+		<input
+			class="field-control w-full rounded-sm pl-11 pr-4 py-2.5"
+			placeholder="Search posts, authors, newspapers..."
+			type="text"
+			bind:value={searchQuery}
+		/>
 	</div>
 
 	<!-- Content -->
-	<div class="w-full px-4 sm:px-6 py-4 sm:py-6 space-y-3">
+	<div class="space-y-3">
 		{#if filteredArticles.length === 0}
-			<div class="panel rounded-sm p-12 text-center">
+			<div class="panel-muted rounded-sm p-12 text-center">
 				<div class="text-5xl mb-4 opacity-30">📰</div>
-				<p class="text-lg text-[#c7bda9] font-mono mb-2">
+				<p class="text-xl font-bold text-[#fff7e8] mb-2">
 					{searchQuery ? "No posts found" : "No posts yet"}
 				</p>
 				{#if searchQuery}
-					<p class="text-xs text-[#a89e8e]">Try a different search term</p>
+					<p class="text-sm text-[#a89e8e]">Try a different search term</p>
 				{:else}
-					<a
-						href="/posts/new"
-						class={buttonClass({
-							variant: "primary",
-							class: "mt-4 text-xs font-mono font-bold uppercase tracking-wide"
-						})}
-					>
-						<FluentAdd20Filled class="size-4" />
-						Create First Post
-					</a>
+					<Button variant="primary" href="/posts/new" icon={FluentAdd20Filled} class="mt-4">Create First Post</Button>
 				{/if}
 			</div>
 		{:else}
 			{#each filteredArticles as article (article.id)}
 				<a
 					href="/posts/{article.id}"
-					class="flex items-center gap-3 bg-[#14283f]/85 border rounded-sm p-3 sm:p-4 hover:border-[#e6a527]/50 transition-all group {article.own
-						? 'border-[#e6a527]/40 hover:border-[#e6a527]/60'
-						: 'border-[#dfceb0]/15'}"
+					class="group panel-interactive rounded-sm p-4 flex items-center gap-3 {article.own
+						? 'border-[#e6a527]/40'
+						: ''}"
 				>
 					<div class="flex-shrink-0">
 						<div class="size-11 sm:size-12 rounded-sm overflow-hidden">
@@ -167,36 +149,36 @@
 					</div>
 
 					<div class="flex-1 min-w-0">
-						<p class="text-xs text-[#a89e8e] font-mono mb-0.5">
+						<p class="text-xs text-[#a89e8e] mb-0.5">
 							{#if article.newspaperName}
 								{article.newspaperName}
 							{:else}
 								{article.authorName}
 							{/if}
 						</p>
-						<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate">
+						<p class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
 							{article.title}
 						</p>
 						<div class="flex items-center gap-3 mt-1">
-							<span class="flex items-center gap-1 text-[10px] sm:text-xs text-[#a89e8e] font-mono">
+							<span class="flex items-center gap-1 text-xs text-[#a89e8e]">
 								<FluentClock20Regular class="size-3" />
 								{formatDateTime(article.createdAt)}
 							</span>
-							<span class="flex items-center gap-1 text-[10px] sm:text-xs text-[#a89e8e] font-mono">
+							<span class="flex items-center gap-1 text-xs text-[#a89e8e]">
 								<FluentHeart20Filled class="size-3 text-red-400/60" />
 								{article.upvoteCount}
 							</span>
 						</div>
 					</div>
 
-					<span class="text-[#a89e8e] group-hover:text-[#d9ccb7] transition-colors text-sm">→</span>
+					<FluentChevronRight20Filled class="size-4 shrink-0 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
 				</a>
 			{/each}
 
 			{#if hasMore && !searchQuery}
 				<div bind:this={loadMoreTrigger} class="py-8 text-center">
 					{#if isLoading}
-						<div class="flex items-center justify-center gap-2 text-[#a89e8e] font-mono text-xs">
+						<div class="flex items-center justify-center gap-2 text-[#a89e8e] text-xs">
 							<div class="size-4 border-2 border-[#dfceb0]/25 border-t-[#e6a527] rounded-full animate-spin"></div>
 							Loading more...
 						</div>
@@ -205,4 +187,4 @@
 			{/if}
 		{/if}
 	</div>
-</div>
+</PageContainer>
