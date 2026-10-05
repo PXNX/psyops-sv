@@ -10,6 +10,8 @@ import {
 	blocLeaderElections,
 	blocLeaderCandidates,
 	blocLeaderVotes,
+	blocApplications,
+	blocApplicationVotes,
 	wars,
 	battles
 } from "#lib/server/schema.js";
@@ -17,6 +19,11 @@ import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, or, ne, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import {
+	applyToBloc,
+	resolveBlocApplication,
+	resolveExpiredBlocApplications
+} from "#lib/server/service/blocApplication.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const blocId = parseInt(params.id);
@@ -39,57 +46,85 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, "Bloc not found");
 	}
 
+	// Close applications whose voting window ran out before listing them
+	await resolveExpiredBlocApplications(blocId);
+
 	// Everything below only depends on the bloc id, so fetch it in parallel.
-	const [memberStates, leaderRow, diplomatRows, currentElection, [presidency]] = await Promise.all([
-		// Get member states with their presidents
-		db
-			.select({
-				id: states.id,
-				name: states.name,
-				logo: states.logo,
-				population: states.population,
-				rating: states.rating,
-				presidentId: presidents.id,
-				presidentUserId: presidents.userId,
-				presidentName: sql<string>`up.name`,
-				presidentTerm: presidents.term,
-				presidentElectedAt: presidents.electedAt
-			})
-			.from(states)
-			.leftJoin(presidents, eq(states.id, presidents.stateId))
-			.leftJoin(sql`user_profiles up`, sql`up.account_id = ${presidents.userId}`)
-			.where(eq(states.blocId, blocId))
-			.orderBy(states.name),
-		// Bloc leader (persisted appointment, up to 2 diplomats)
-		db.query.blocLeaders.findFirst({
-			where: eq(blocLeaders.blocId, blocId),
-			with: { user: { with: { profile: true } } }
-		}),
-		db.query.blocDiplomats.findMany({
-			where: eq(blocDiplomats.blocId, blocId),
-			with: { user: { with: { profile: true } } },
-			orderBy: (t, { asc }) => asc(t.appointedAt)
-		}),
-		// Current bloc leader election cycle (scheduled or with its voting window active)
-		db.query.blocLeaderElections.findFirst({
-			where: and(eq(blocLeaderElections.blocId, blocId), ne(blocLeaderElections.status, "completed")),
-			orderBy: (t, { asc }) => asc(t.votingEndsAt)
-		}),
-		// Check if user is a president and get their state
-		locals.account
-			? db
-					.select({
-						stateId: presidents.stateId,
-						stateName: states.name,
-						stateLogo: states.logo,
-						currentBlocId: states.blocId
-					})
-					.from(presidents)
-					.innerJoin(states, eq(presidents.stateId, states.id))
-					.where(eq(presidents.userId, locals.account.id))
-					.limit(1)
-			: []
-	]);
+	const [memberStates, leaderRow, diplomatRows, currentElection, [presidency], applicationRows, applicationVoteRows] =
+		await Promise.all([
+			// Get member states with their presidents
+			db
+				.select({
+					id: states.id,
+					name: states.name,
+					logo: states.logo,
+					population: states.population,
+					rating: states.rating,
+					presidentId: presidents.id,
+					presidentUserId: presidents.userId,
+					presidentName: sql<string>`up.name`,
+					presidentTerm: presidents.term,
+					presidentElectedAt: presidents.electedAt
+				})
+				.from(states)
+				.leftJoin(presidents, eq(states.id, presidents.stateId))
+				.leftJoin(sql`user_profiles up`, sql`up.account_id = ${presidents.userId}`)
+				.where(eq(states.blocId, blocId))
+				.orderBy(states.name),
+			// Bloc leader (persisted appointment, up to 2 diplomats)
+			db.query.blocLeaders.findFirst({
+				where: eq(blocLeaders.blocId, blocId),
+				with: { user: { with: { profile: true } } }
+			}),
+			db.query.blocDiplomats.findMany({
+				where: eq(blocDiplomats.blocId, blocId),
+				with: { user: { with: { profile: true } } },
+				orderBy: (t, { asc }) => asc(t.appointedAt)
+			}),
+			// Current bloc leader election cycle (scheduled or with its voting window active)
+			db.query.blocLeaderElections.findFirst({
+				where: and(eq(blocLeaderElections.blocId, blocId), ne(blocLeaderElections.status, "completed")),
+				orderBy: (t, { asc }) => asc(t.votingEndsAt)
+			}),
+			// Check if user is a president and get their state
+			locals.account
+				? db
+						.select({
+							stateId: presidents.stateId,
+							stateName: states.name,
+							stateLogo: states.logo,
+							currentBlocId: states.blocId
+						})
+						.from(presidents)
+						.innerJoin(states, eq(presidents.stateId, states.id))
+						.where(eq(presidents.userId, locals.account.id))
+						.limit(1)
+				: [],
+			// Pending membership applications
+			db
+				.select({
+					id: blocApplications.id,
+					stateId: blocApplications.stateId,
+					stateName: states.name,
+					stateLogo: states.logo,
+					createdAt: blocApplications.createdAt,
+					expiresAt: blocApplications.expiresAt
+				})
+				.from(blocApplications)
+				.innerJoin(states, eq(blocApplications.stateId, states.id))
+				.where(and(eq(blocApplications.blocId, blocId), eq(blocApplications.status, "pending")))
+				.orderBy(blocApplications.createdAt),
+			// Votes on those applications (only member-state votes count, filtered below)
+			db
+				.select({
+					applicationId: blocApplicationVotes.applicationId,
+					voterStateId: blocApplicationVotes.voterStateId,
+					inFavor: blocApplicationVotes.inFavor
+				})
+				.from(blocApplicationVotes)
+				.innerJoin(blocApplications, eq(blocApplicationVotes.applicationId, blocApplications.id))
+				.where(and(eq(blocApplications.blocId, blocId), eq(blocApplications.status, "pending")))
+		]);
 
 	// Get member state IDs for war queries
 	const memberStateIds = memberStates.map((s) => s.id);
@@ -218,9 +253,40 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		// User's state is a member if it's in this bloc
 		isMember = presidency.currentBlocId === blocId;
 
-		// Can join if not in any bloc
+		// Can apply if not in any bloc
 		canJoin = !presidency.currentBlocId;
 	}
+
+	const memberStateIdSet = new Set(memberStateIds);
+	const memberVotes = applicationVoteRows.filter((v) => memberStateIdSet.has(v.voterStateId));
+	const applications = await Promise.all(
+		applicationRows.map(async (a) => {
+			const votes = memberVotes.filter((v) => v.applicationId === a.id);
+			const myVote = presidency ? votes.find((v) => v.voterStateId === presidency.stateId) : undefined;
+			return {
+				id: a.id,
+				state: { id: a.stateId, name: a.stateName, logo: await getLogoUrl(a.stateLogo) },
+				createdAt: a.createdAt,
+				expiresAt: a.expiresAt,
+				pro: votes.filter((v) => v.inFavor).length,
+				contra: votes.filter((v) => !v.inFavor).length,
+				myVote: myVote ? (myVote.inFavor ? "pro" : "contra") : null
+			};
+		})
+	);
+
+	const myApplication = presidency ? (applications.find((a) => a.state.id === presidency.stateId) ?? null) : null;
+
+	// A state may only have one open application at a time
+	if (canJoin && presidency && !myApplication) {
+		const [otherPending] = await db
+			.select({ blocId: blocApplications.blocId })
+			.from(blocApplications)
+			.where(and(eq(blocApplications.stateId, presidency.stateId), eq(blocApplications.status, "pending")))
+			.limit(1);
+		if (otherPending) canJoin = false;
+	}
+	if (myApplication) canJoin = false;
 
 	// Resolve all logo URLs in parallel
 	const [blocLogo, memberStatesWithLogos, leaderLogo, diplomats, activeWarsWithLogos] = await Promise.all([
@@ -308,6 +374,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isMemberPresident: isMember,
 		userState,
 		canJoin,
+		applications,
+		myApplication,
+		memberCount: memberStates.length,
 		activeWars: activeWarsWithLogos
 	};
 };
@@ -317,7 +386,65 @@ export const actions: Actions = {
 		const account = locals.account!;
 		const blocId = parseInt(params.id);
 
-		// Check if user is president
+		// Member states vote on the application; empty blocs admit immediately
+		const result = await applyToBloc(account.id, blocId);
+		if ("error" in result) {
+			return fail(result.status, { error: result.error });
+		}
+
+		return {
+			success: true,
+			message:
+				result.outcome === "accepted"
+					? "Your state joined the bloc"
+					: "Application submitted — the member states will now vote on it"
+		};
+	},
+
+	withdrawApplication: async ({ params, locals }) => {
+		const account = locals.account!;
+		const blocId = parseInt(params.id);
+
+		const [presidency] = await db
+			.select({ stateId: presidents.stateId })
+			.from(presidents)
+			.where(eq(presidents.userId, account.id))
+			.limit(1);
+
+		if (!presidency) {
+			return fail(403, { error: "Only state presidents can withdraw bloc applications" });
+		}
+
+		const [withdrawn] = await db
+			.update(blocApplications)
+			.set({ status: "withdrawn", resolvedAt: new Date() })
+			.where(
+				and(
+					eq(blocApplications.blocId, blocId),
+					eq(blocApplications.stateId, presidency.stateId),
+					eq(blocApplications.status, "pending")
+				)
+			)
+			.returning({ id: blocApplications.id });
+
+		if (!withdrawn) {
+			return fail(400, { error: "Your state has no pending application to this bloc" });
+		}
+
+		return { success: true, message: "Application withdrawn" };
+	},
+
+	voteApplication: async ({ params, request, locals }) => {
+		const account = locals.account!;
+		const blocId = parseInt(params.id);
+		const formData = await request.formData();
+		const applicationId = parseInt(formData.get("applicationId") as string);
+		const vote = formData.get("vote");
+
+		if (!applicationId || (vote !== "pro" && vote !== "contra")) {
+			return fail(400, { error: "Invalid vote" });
+		}
+
 		const [presidency] = await db
 			.select({ stateId: presidents.stateId, currentBlocId: states.blocId })
 			.from(presidents)
@@ -325,43 +452,46 @@ export const actions: Actions = {
 			.where(eq(presidents.userId, account.id))
 			.limit(1);
 
-		if (!presidency) {
-			return fail(403, { error: "Only state presidents can join blocs" });
+		if (!presidency || presidency.currentBlocId !== blocId) {
+			return fail(403, { error: "Only presidents of this bloc's member states can vote on applications" });
 		}
 
-		if (presidency.currentBlocId) {
-			return fail(400, { error: "Your state is already in a bloc. Leave your current bloc first." });
-		}
-
-		// Check cooldown
-		const [cooldown] = await db
+		const [application] = await db
 			.select()
-			.from(blocActionCooldowns)
-			.where(eq(blocActionCooldowns.userId, account.id))
+			.from(blocApplications)
+			.where(and(eq(blocApplications.id, applicationId), eq(blocApplications.blocId, blocId)))
 			.limit(1);
 
-		const now = new Date();
-		if (cooldown) {
-			const cooldownEnd = new Date(cooldown.lastActionAt.getTime() + 24 * 60 * 60 * 1000);
-			if (now < cooldownEnd) {
-				const hoursLeft = Math.ceil((cooldownEnd.getTime() - now.getTime()) / (1000 * 60 * 60));
-				return fail(429, { error: `Wait ${hoursLeft}h before joining/leaving a bloc` });
-			}
+		if (!application || application.status !== "pending") {
+			return fail(400, { error: "This application is no longer open for voting" });
 		}
 
-		await db.transaction(async (tx) => {
-			await tx.update(states).set({ blocId }).where(eq(states.id, presidency.stateId));
+		if (application.expiresAt <= new Date()) {
+			await resolveBlocApplication(application.id);
+			return fail(400, { error: "Voting on this application has closed" });
+		}
 
-			await tx
-				.insert(blocActionCooldowns)
-				.values({ userId: account.id, lastActionAt: now })
-				.onConflictDoUpdate({
-					target: blocActionCooldowns.userId,
-					set: { lastActionAt: now }
-				});
-		});
+		// One vote per member state; presidents may change their state's vote while it is open
+		const inFavor = vote === "pro";
+		await db
+			.insert(blocApplicationVotes)
+			.values({ applicationId, voterStateId: presidency.stateId, voterId: account.id, inFavor })
+			.onConflictDoUpdate({
+				target: [blocApplicationVotes.applicationId, blocApplicationVotes.voterStateId],
+				set: { inFavor, voterId: account.id, votedAt: new Date() }
+			});
 
-		return { success: true };
+		const outcome = await resolveBlocApplication(application.id, account.id);
+
+		return {
+			success: true,
+			message:
+				outcome === "accepted"
+					? "Vote recorded — the application passed and the state has joined"
+					: outcome === "rejected"
+						? "Vote recorded — the application was rejected"
+						: "Vote recorded"
+		};
 	},
 
 	leave: async ({ params, locals }) => {

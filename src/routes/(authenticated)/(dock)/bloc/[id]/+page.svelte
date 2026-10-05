@@ -10,6 +10,8 @@
 	import FluentGlobeShield20Filled from "~icons/fluent/globe-shield-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
+	import FluentThumbLike20Filled from "~icons/fluent/thumb-like-20-filled";
+	import FluentThumbDislike20Filled from "~icons/fluent/thumb-dislike-20-filled";
 	import { enhance } from "$app/forms";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import ProfileItem from "#lib/component/ProfileItem.svelte";
@@ -204,8 +206,77 @@
 	{/if}
 	{#if form?.success}
 		<div class="bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-3 text-sm text-emerald-300 font-mono">
-			Bloc membership updated
+			{form.message ?? "Bloc membership updated"}
 		</div>
+	{/if}
+
+	<!-- Membership Applications -->
+	{#if data.applications.length > 0}
+		<section class="space-y-3">
+			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1 flex items-center gap-2">
+				<FluentVote20Filled class="size-4" />
+				Membership Applications
+			</h2>
+			<div class="panel-muted rounded-sm p-3 space-y-2">
+				{#each data.applications as application}
+					<div class="border border-[#dfceb0]/10 rounded-lg overflow-hidden">
+						<ProfileItem
+							href="/state/{application.state.id}"
+							logo={application.state.logo}
+							logoAlt={application.state.name}
+							placeholderIcon={FluentGlobe20Filled}
+							placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+							title={application.state.name}
+							subtitle="{application.pro} pro • {application.contra} contra • of {data.memberCount} member state{data.memberCount ===
+							1
+								? ''
+								: 's'} • closes {formatDateTime(application.expiresAt)}"
+							hoverColor="blue"
+						/>
+						{#if data.isMemberPresident}
+							<form
+								method="POST"
+								action="?/voteApplication"
+								use:enhance
+								class="border-t border-[#dfceb0]/10 p-2 flex gap-2"
+							>
+								<input type="hidden" name="applicationId" value={application.id} />
+								<button
+									type="submit"
+									name="vote"
+									value="pro"
+									class="flex-1 py-1.5 rounded-md text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 {application.myVote ===
+									'pro'
+										? 'bg-emerald-600 text-white'
+										: 'bg-[#14283f] hover:bg-[#19304b] text-[#d9ccb7]'}"
+								>
+									<FluentThumbLike20Filled class="size-3.5" />
+									Pro
+								</button>
+								<button
+									type="submit"
+									name="vote"
+									value="contra"
+									class="flex-1 py-1.5 rounded-md text-xs font-mono font-bold transition-all flex items-center justify-center gap-1.5 {application.myVote ===
+									'contra'
+										? 'bg-red-600 text-white'
+										: 'bg-[#14283f] hover:bg-[#19304b] text-[#d9ccb7]'}"
+								>
+									<FluentThumbDislike20Filled class="size-3.5" />
+									Contra
+								</button>
+							</form>
+						{/if}
+					</div>
+				{/each}
+				<p class="text-xs text-[#a89e8e] px-1">
+					An application passes once more than half of the member states vote pro. When voting closes, the majority of
+					cast votes decides (ties reject).{data.isMemberPresident
+						? ""
+						: " Only presidents of this bloc's member states may vote."}
+				</p>
+			</div>
+		</section>
 	{/if}
 
 	<!-- Active Wars -->
@@ -270,14 +341,38 @@
 	</section>
 
 	<!-- Join -->
-	{#if data.canJoin}
+	{#if data.myApplication}
+		<section class="bg-[#14283f]/85 border rounded-sm p-4 sm:p-5" style="border-color: {data.bloc.color}30">
+			<form method="POST" action="?/withdrawApplication" use:enhance>
+				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+					<div class="flex-1">
+						<span class="text-sm font-bold text-[#fff7e8]">Application Pending</span>
+						<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
+							{data.myApplication.pro} pro • {data.myApplication.contra} contra • closes {formatDateTime(
+								data.myApplication.expiresAt
+							)}
+						</p>
+					</div>
+					<button
+						type="submit"
+						class="w-full sm:w-auto px-5 py-2.5 rounded-lg font-mono font-bold text-sm transition-all flex items-center justify-center gap-2 bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 text-red-300"
+					>
+						<FluentDismiss20Filled class="size-4" />
+						Withdraw
+					</button>
+				</div>
+			</form>
+		</section>
+	{:else if data.canJoin}
 		<section class="bg-[#14283f]/85 border rounded-sm p-4 sm:p-5" style="border-color: {data.bloc.color}30">
 			<form method="POST" action="?/join" use:enhance>
 				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 					<div class="flex-1">
-						<span class="text-sm font-bold text-[#fff7e8]">Join this Bloc</span>
+						<span class="text-sm font-bold text-[#fff7e8]">Apply to join this Bloc</span>
 						{#if data.userState}
-							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">Join as president of {data.userState.name}</p>
+							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
+								Apply as president of {data.userState.name} — member states vote on admission
+							</p>
 						{/if}
 					</div>
 					<button
@@ -286,7 +381,7 @@
 						style="background-color: {data.bloc.color}"
 					>
 						<FluentPersonAdd20Filled class="size-4" />
-						Join
+						Apply
 					</button>
 				</div>
 			</form>

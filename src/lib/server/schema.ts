@@ -1496,6 +1496,78 @@ export const blocLeaderVotesRelations = relations(blocLeaderVotes, ({ one }) => 
 	candidate: one(accounts, { fields: [blocLeaderVotes.candidateUserId], references: [accounts.id] })
 }));
 
+// Bloc membership applications: a state president applies, and the presidents of the
+// bloc's member states vote pro or contra (one vote per member state) until a
+// majority is reached or the voting window expires.
+export const blocApplicationStatusEnum = pgEnum("bloc_application_status", [
+	"pending",
+	"accepted",
+	"rejected",
+	"withdrawn"
+]);
+
+export const blocApplications = pgTable(
+	"bloc_applications",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		blocId: integer("bloc_id")
+			.notNull()
+			.references(() => blocs.id, { onDelete: "cascade" }),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		appliedBy: text("applied_by").references(() => accounts.id, { onDelete: "set null" }),
+		status: blocApplicationStatusEnum("status").notNull().default("pending"),
+		expiresAt: timestamp("expires_at").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		resolvedAt: timestamp("resolved_at")
+	},
+	(t) => ({
+		blocStatusIdx: index("idx_bloc_application_bloc_status").on(t.blocId, t.status),
+		// A state can only have one open application at a time
+		pendingStateIdx: uniqueIndex("idx_bloc_application_pending_state")
+			.on(t.stateId)
+			.where(sql`status = 'pending'`)
+	})
+);
+
+export const blocApplicationVotes = pgTable(
+	"bloc_application_votes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		applicationId: integer("application_id")
+			.notNull()
+			.references(() => blocApplications.id, { onDelete: "cascade" }),
+		voterStateId: integer("voter_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		voterId: text("voter_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		inFavor: boolean("in_favor").notNull(),
+		votedAt: timestamp("voted_at").defaultNow().notNull()
+	},
+	(t) => ({
+		applicationStateIdx: uniqueIndex("idx_bloc_application_vote_state").on(t.applicationId, t.voterStateId)
+	})
+);
+
+export const blocApplicationsRelations = relations(blocApplications, ({ one, many }) => ({
+	bloc: one(blocs, { fields: [blocApplications.blocId], references: [blocs.id] }),
+	state: one(states, { fields: [blocApplications.stateId], references: [states.id] }),
+	applicant: one(accounts, { fields: [blocApplications.appliedBy], references: [accounts.id] }),
+	votes: many(blocApplicationVotes)
+}));
+
+export const blocApplicationVotesRelations = relations(blocApplicationVotes, ({ one }) => ({
+	application: one(blocApplications, {
+		fields: [blocApplicationVotes.applicationId],
+		references: [blocApplications.id]
+	}),
+	voterState: one(states, { fields: [blocApplicationVotes.voterStateId], references: [states.id] }),
+	voter: one(accounts, { fields: [blocApplicationVotes.voterId], references: [accounts.id] })
+}));
+
 // Add to your schema.ts file
 
 export const medalTypeEnum = pgEnum("medal_type", ["honor", "valor", "service", "excellence", "leadership"]);

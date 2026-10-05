@@ -4,6 +4,7 @@ import type { RequestHandler } from "./$types";
 import { db } from "#lib/server/db.js";
 import { blocs, blocLeaders, blocLeaderElections, blocLeaderCandidates, blocLeaderVotes } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
+import { resolveExpiredBlocApplications } from "#lib/server/service/blocApplication.js";
 
 // Bloc leaders are elected by the presidents of member states every 30-day cycle.
 // Nominations and voting only happen during the final 2 days of each cycle.
@@ -58,12 +59,16 @@ export const GET: RequestHandler = async () => {
 			await scheduleNextCycle(election.blocId, now);
 		}
 
+		// 3. Close bloc membership applications whose voting window expired.
+		const applicationsResolved = await resolveExpiredBlocApplications();
+
 		return Response.json({
 			success: true,
 			timestamp: now.toISOString(),
 			bootstrapped,
 			activated,
-			processed
+			processed,
+			applicationsResolved
 		});
 	} catch (error) {
 		console.error("Bloc election cron job error:", error);
