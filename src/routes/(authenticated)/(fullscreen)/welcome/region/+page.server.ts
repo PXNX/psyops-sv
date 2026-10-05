@@ -3,7 +3,7 @@ import { db } from "#lib/server/db.js";
 import { regions, residences, states, userProfiles, userWallets, files } from "#lib/server/schema.js";
 import { eq, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { fail, redirect } from "@sveltejs/kit";
 
 // Enhanced IP geolocation with coordinates
@@ -80,64 +80,62 @@ export const load: PageServerLoad = async ({ locals, getClientAddress }) => {
 
 	const clientIP = getClientAddress();
 
-	// Get user location based on IP
-	const userLocation = await getLocationFromIP(clientIP);
+	// IP geolocation and the region/state lookups are independent, so run them in parallel
+	const [userLocation, { allRegions, statesWithLogos }] = await Promise.all([
+		// Get user location based on IP
+		getLocationFromIP(clientIP),
 
-	// Get all regions with their population count and coordinates
-	const allRegions = await db
-		.select({
-			id: regions.id,
-			stateId: regions.stateId,
-			latitude: regions.latitude,
-			longitude: regions.longitude,
-			populationCount: sql<number>`CAST(COUNT(DISTINCT ${residences.userId}) AS INTEGER)`.as("populationCount")
-		})
-		.from(regions)
-		.leftJoin(residences, eq(residences.regionId, regions.id))
-		.groupBy(regions.id, regions.latitude, regions.longitude);
+		(async () => {
+			// Get all regions with their population count and coordinates
+			const allRegions = await db
+				.select({
+					id: regions.id,
+					stateId: regions.stateId,
+					latitude: regions.latitude,
+					longitude: regions.longitude,
+					populationCount: sql<number>`CAST(COUNT(DISTINCT ${residences.userId}) AS INTEGER)`.as("populationCount")
+				})
+				.from(regions)
+				.leftJoin(residences, eq(residences.regionId, regions.id))
+				.groupBy(regions.id, regions.latitude, regions.longitude);
 
-	// Get state information for regions
-	const stateIds = [...new Set(allRegions.map((r) => r.stateId).filter(Boolean))] as number[];
-	const statesData =
-		stateIds.length > 0
-			? await db
-					.select({
-						id: states.id,
-						name: states.name,
-						logo: states.logo
-					})
-					.from(states)
-					.where(
-						sql`${states.id} IN (${sql.join(
-							stateIds.map((id) => sql`${id}`),
-							sql`, `
-						)})`
-					)
-			: [];
+			// Get state information for regions
+			const stateIds = [...new Set(allRegions.map((r) => r.stateId).filter(Boolean))] as number[];
+			const statesData =
+				stateIds.length > 0
+					? await db
+							.select({
+								id: states.id,
+								name: states.name,
+								logo: states.logo
+							})
+							.from(states)
+							.where(
+								sql`${states.id} IN (${sql.join(
+									stateIds.map((id) => sql`${id}`),
+									sql`, `
+								)})`
+							)
+					: [];
 
-	// Process state logos
-	const statesWithLogos = await Promise.all(
-		statesData.map(async (state) => {
-			let logoUrl: string | null = null;
-			if (state.logo) {
-				try {
-					const logoFile = await db.query.files.findFirst({
-						where: eq(files.id, state.logo)
+			// Process state logos
+			const statesWithLogos = await Promise.all(
+				statesData.map(async (state) => {
+					const logoUrl = await getLogoUrl(state.logo).catch((error) => {
+						console.error("Failed to get logo URL:", error);
+						return null;
 					});
-					if (logoFile) {
-						logoUrl = await getSignedDownloadUrl(logoFile.key);
-					}
-				} catch (error) {
-					console.error("Failed to get logo URL:", error);
-				}
-			}
-			return {
-				id: state.id,
-				name: state.name,
-				logo: logoUrl
-			};
-		})
-	);
+					return {
+						id: state.id,
+						name: state.name,
+						logo: logoUrl
+					};
+				})
+			);
+
+			return { allRegions, statesWithLogos };
+		})()
+	]);
 
 	const stateMap = new Map(statesWithLogos.map((s) => [s.id, s]));
 

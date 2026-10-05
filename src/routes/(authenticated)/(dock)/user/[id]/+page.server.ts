@@ -3,7 +3,6 @@ import { db } from "#lib/server/db.js";
 import {
 	accounts,
 	partyMembers,
-	files,
 	residences,
 	articles,
 	upvotes,
@@ -25,7 +24,7 @@ import {
 	blocLeaderElections,
 	blocLeaderCandidates
 } from "#lib/server/schema.js";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { fail } from "@sveltejs/kit";
 import { eq, count, and } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -58,40 +57,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	const account = locals.account!;
+	const isOwnProfile = account.id === params.id;
 
-	// Get user's current residence
-	const [residence] = await db
-		.select({
-			id: residences.id,
-			movedInAt: residences.movedInAt,
-			regionChangedAt: residences.regionChangedAt,
-			regionId: residences.regionId,
-			stateId: states.id,
-			stateName: states.name,
-			stateLogo: states.logo
-		})
-		.from(residences)
-		.leftJoin(regions, eq(residences.regionId, regions.id))
-		.leftJoin(states, eq(regions.stateId, states.id))
-		.where(eq(residences.userId, params.id))
-		.limit(1);
+	// Everything below only depends on the user/account or on one earlier lookup,
+	// so independent chains run concurrently instead of as one long waterfall.
 
 	// Get user's home (citizenship/residence) region
-	let homeRegionData: {
-		regionId: number;
-		stateId: number | null;
-		stateName: string | null;
-		stateLogo: number | null;
-		stateBlocId: number | null;
-		homeRegionChangedAt: Date;
-	} | null = null;
-	const [residenceRow] = await db
-		.select({ homeRegionId: residences.homeRegionId, homeRegionChangedAt: residences.homeRegionChangedAt })
-		.from(residences)
-		.where(eq(residences.userId, params.id))
-		.limit(1);
+	const homeRegionPromise = (async () => {
+		const [residenceRow] = await db
+			.select({ homeRegionId: residences.homeRegionId, homeRegionChangedAt: residences.homeRegionChangedAt })
+			.from(residences)
+			.where(eq(residences.userId, params.id))
+			.limit(1);
+		if (!residenceRow) return null;
 
-	if (residenceRow) {
 		const [homeRegionResult] = await db
 			.select({
 				regionId: regions.id,
@@ -104,123 +83,70 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.leftJoin(states, eq(regions.stateId, states.id))
 			.where(eq(regions.id, residenceRow.homeRegionId))
 			.limit(1);
-		homeRegionData = homeRegionResult
-			? { ...homeRegionResult, homeRegionChangedAt: residenceRow.homeRegionChangedAt }
-			: null;
-	}
-
-	// Get article count
-	const [articleCountResult] = await db
-		.select({ count: count() })
-		.from(articles)
-		.where(eq(articles.authorId, params.id));
-
-	// Total upvotes received across all of the user's articles.
-	const [upvoteCountResult] = await db
-		.select({ count: count() })
-		.from(upvotes)
-		.innerJoin(articles, eq(upvotes.articleId, articles.id))
-		.where(eq(articles.authorId, params.id));
-
-	// Check if user is in a party
-	const [partyMembership] = await db
-		.select({
-			partyId: partyMembers.partyId,
-			role: partyMembers.role,
-			joinedAt: partyMembers.joinedAt,
-			partyName: politicalParties.name,
-			partyAbbreviation: politicalParties.abbreviation,
-			partyColor: politicalParties.color,
-			partyLogo: politicalParties.logo,
-			partyIdeology: politicalParties.ideology,
-			stateId: politicalParties.stateId
-		})
-		.from(partyMembers)
-		.leftJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
-		.where(eq(partyMembers.userId, params.id))
-		.limit(1);
-
-	// Get party state and logo URL if party exists
-	let partyLogoUrl = null;
-	let partyStateName = null;
-	if (partyMembership) {
-		const [partyState] = await db
-			.select({ name: states.name })
-			.from(states)
-			.where(eq(states.id, partyMembership.stateId!))
-			.limit(1);
-
-		partyStateName = partyState?.name || null;
-
-		if (partyMembership.partyLogo) {
-			const logoFile = await db.query.files.findFirst({
-				where: eq(files.id, partyMembership.partyLogo)
-			});
-			if (logoFile) {
-				partyLogoUrl = await getSignedDownloadUrl(logoFile.key);
-			}
-		}
-	}
-
-	// Get user logo URL if exists
-	let logoUrl: string | null = null;
-	if (user.profile?.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, user.profile?.logo!)
-		});
-		if (logoFile) {
-			logoUrl = await getSignedDownloadUrl(logoFile.key);
-		}
-	}
-
-	// Check if user is a president
-	const presidency = await db.query.presidents.findFirst({
-		where: eq(presidents.userId, params.id),
-		with: {
-			state: true
-		}
-	});
-
-	// Get state logo URL if president
-	let presidencyLogoUrl: string | null = null;
-	if (presidency?.state?.logo) {
-		const stateLogoFile = await db.query.files.findFirst({
-			where: eq(files.id, presidency.state.logo)
-		});
-		if (stateLogoFile) {
-			presidencyLogoUrl = await getSignedDownloadUrl(stateLogoFile.key);
-		}
-	}
-
-	// Check if user is a governor
-	const governorship = await db.query.governors.findFirst({
-		where: eq(governors.userId, params.id),
-		with: {
-			region: {
-				with: {
-					state: true
-				}
-			}
-		}
-	});
-
-	// Get all ministries user holds
-	const ministries = await db.query.ministers.findMany({
-		where: eq(ministers.userId, params.id),
-		with: {
-			state: true
-		}
-	});
+		return homeRegionResult ? { ...homeRegionResult, homeRegionChangedAt: residenceRow.homeRegionChangedAt } : null;
+	})();
 
 	// Check if current user is a president (for appointment ability)
-	const currentUserPresidency = await db.query.presidents.findFirst({
+	const currentUserPresidencyPromise = db.query.presidents.findFirst({
 		where: eq(presidents.userId, account.id),
 		with: { state: true }
 	});
 
+	// Check if user is in a party, then fetch its state and logo URL
+	const partyPromise = (async () => {
+		const [partyMembership] = await db
+			.select({
+				partyId: partyMembers.partyId,
+				role: partyMembers.role,
+				joinedAt: partyMembers.joinedAt,
+				partyName: politicalParties.name,
+				partyAbbreviation: politicalParties.abbreviation,
+				partyColor: politicalParties.color,
+				partyLogo: politicalParties.logo,
+				partyIdeology: politicalParties.ideology,
+				stateId: politicalParties.stateId
+			})
+			.from(partyMembers)
+			.leftJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+			.where(eq(partyMembers.userId, params.id))
+			.limit(1);
+		if (!partyMembership) return null;
+
+		const [[partyState], partyLogoUrl] = await Promise.all([
+			db.select({ name: states.name }).from(states).where(eq(states.id, partyMembership.stateId!)).limit(1),
+			getLogoUrl(partyMembership.partyLogo)
+		]);
+
+		return {
+			id: partyMembership.partyId,
+			name: partyMembership.partyName,
+			abbreviation: partyMembership.partyAbbreviation,
+			color: partyMembership.partyColor,
+			logo: partyLogoUrl,
+			ideology: partyMembership.partyIdeology,
+			role: partyMembership.role,
+			stateName: partyState?.name || null,
+			joinedAt: partyMembership.joinedAt
+		};
+	})();
+
+	// Check if user is a president, then get the state logo URL
+	const presidencyPromise = (async () => {
+		const presidency = await db.query.presidents.findFirst({
+			where: eq(presidents.userId, params.id),
+			with: {
+				state: true
+			}
+		});
+		const presidencyLogoUrl = await getLogoUrl(presidency?.state?.logo);
+		return { presidency, presidencyLogoUrl };
+	})();
+
 	// Get available ministries if current user is president and viewing someone else
-	let availableMinistries: string[] = [];
-	if (currentUserPresidency && account.id !== params.id) {
+	const availableMinistriesPromise = (async (): Promise<string[]> => {
+		const currentUserPresidency = await currentUserPresidencyPromise;
+		if (!currentUserPresidency || isOwnProfile) return [];
+
 		// Get all occupied ministries in this state
 		const occupiedMinistries = await db.query.ministers.findMany({
 			where: eq(ministers.stateId, currentUserPresidency.stateId)
@@ -229,63 +155,57 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const allMinistries = ["economy", "defense", "foreign_affairs"];
 
 		const occupied = occupiedMinistries.map((m) => m.ministry);
-		availableMinistries = allMinistries.filter((m) => !occupied.includes(m));
-	}
+		return allMinistries.filter((m) => !occupied.includes(m));
+	})();
 
 	// Bloc leadership: a president can appoint a citizen of a fellow member state of
 	// their own bloc as bloc leader or as one of up to two diplomats.
-	const viewerBlocId = currentUserPresidency?.state.blocId ?? null;
-	const targetBlocId = homeRegionData?.stateBlocId ?? null;
-	const canAppointBlocLeadership = !!viewerBlocId && viewerBlocId === targetBlocId && account.id !== params.id;
+	const blocAppointmentPromise = (async () => {
+		const [currentUserPresidency, homeRegionData] = await Promise.all([
+			currentUserPresidencyPromise,
+			homeRegionPromise
+		]);
+		const viewerBlocId = currentUserPresidency?.state.blocId ?? null;
+		const targetBlocId = homeRegionData?.stateBlocId ?? null;
+		const canAppointBlocLeadership = !!viewerBlocId && viewerBlocId === targetBlocId && !isOwnProfile;
 
-	let availableBlocRoles: string[] = [];
-	let viewerBlocName: string | null = null;
-	if (canAppointBlocLeadership && viewerBlocId) {
-		const viewerBloc = await db.query.blocs.findFirst({ where: eq(blocs.id, viewerBlocId) });
-		viewerBlocName = viewerBloc?.name ?? null;
+		let availableBlocRoles: string[] = [];
+		let viewerBlocName: string | null = null;
+		if (canAppointBlocLeadership && viewerBlocId) {
+			const [viewerBloc, [diplomatCountResult], { activeElection, alreadyNominated }] = await Promise.all([
+				db.query.blocs.findFirst({ where: eq(blocs.id, viewerBlocId) }),
+				db.select({ count: count() }).from(blocDiplomats).where(eq(blocDiplomats.blocId, viewerBlocId)),
+				// Bloc leader is now elected by member-state presidents; a president can only
+				// nominate a candidate while the current cycle's nomination/voting window is open.
+				(async () => {
+					const activeElection = await db.query.blocLeaderElections.findFirst({
+						where: and(eq(blocLeaderElections.blocId, viewerBlocId), eq(blocLeaderElections.status, "active"))
+					});
+					const alreadyNominated = activeElection
+						? await db.query.blocLeaderCandidates.findFirst({
+								where: and(
+									eq(blocLeaderCandidates.electionId, activeElection.id),
+									eq(blocLeaderCandidates.candidateUserId, params.id)
+								)
+							})
+						: null;
+					return { activeElection, alreadyNominated };
+				})()
+			]);
+			viewerBlocName = viewerBloc?.name ?? null;
 
-		const [diplomatCountResult] = await db
-			.select({ count: count() })
-			.from(blocDiplomats)
-			.where(eq(blocDiplomats.blocId, viewerBlocId));
+			availableBlocRoles = [
+				...(activeElection && !alreadyNominated ? ["leader"] : []),
+				...((diplomatCountResult?.count ?? 0) < 2 ? ["diplomat"] : [])
+			];
+		}
 
-		// Bloc leader is now elected by member-state presidents; a president can only
-		// nominate a candidate while the current cycle's nomination/voting window is open.
-		const activeElection = await db.query.blocLeaderElections.findFirst({
-			where: and(eq(blocLeaderElections.blocId, viewerBlocId), eq(blocLeaderElections.status, "active"))
-		});
-
-		const alreadyNominated = activeElection
-			? await db.query.blocLeaderCandidates.findFirst({
-					where: and(
-						eq(blocLeaderCandidates.electionId, activeElection.id),
-						eq(blocLeaderCandidates.candidateUserId, params.id)
-					)
-				})
-			: null;
-
-		availableBlocRoles = [
-			...(activeElection && !alreadyNominated ? ["leader"] : []),
-			...((diplomatCountResult?.count ?? 0) < 2 ? ["diplomat"] : [])
-		];
-	}
-
-	// Bloc leadership positions this user holds (across any bloc)
-	const targetBlocLeadership = await db.query.blocLeaders.findFirst({
-		where: eq(blocLeaders.userId, params.id),
-		with: { bloc: true }
-	});
-	const targetBlocDiplomacies = await db.query.blocDiplomats.findMany({
-		where: eq(blocDiplomats.userId, params.id),
-		with: { bloc: true }
-	});
-
-	// Account birthday (creation anniversary) reward status.
-	const birthdayInfo = await getBirthdayInfo(params.id, user.createdAt);
+		return { viewerBlocId, canAppointBlocLeadership, availableBlocRoles, viewerBlocName };
+	})();
 
 	// Get newspapers owned by current user (for add author feature)
-	let ownedNewspapers: Array<{ id: number; name: string }> = [];
-	if (account.id !== params.id) {
+	const ownedNewspapersPromise = (async (): Promise<Array<{ id: number; name: string }>> => {
+		if (isOwnProfile) return [];
 		const journalistRecords = await db.query.journalists.findMany({
 			where: and(eq(journalists.userId, account.id), eq(journalists.rank, "owner")),
 			with: {
@@ -293,46 +213,135 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}
 		});
 
-		ownedNewspapers = journalistRecords.map((j) => ({
+		return journalistRecords.map((j) => ({
 			id: j.newspaper.id,
 			name: j.newspaper.name
 		}));
-	}
-
-	const isOwnProfile = account.id === params.id;
+	})();
 
 	// Data for the "Edit Profile" bottom sheet — only needed when viewing your own profile.
-	let editForm: Awaited<ReturnType<typeof superValidate<typeof updateProfileSchema>>> | null = null;
-	let profileEditCost = PROFILE_EDIT_CONFIG.COST;
-	let userBalance = 0;
-	let canAffordProfileEdit = false;
-	let isProfileEditOnCooldown = false;
-	let profileEditCooldownEndsAt: string | null = null;
+	const profileEditPromise = (async () => {
+		let editForm: Awaited<ReturnType<typeof superValidate<typeof updateProfileSchema>>> | null = null;
+		let userBalance = 0;
+		let canAffordProfileEdit = false;
+		let isProfileEditOnCooldown = false;
+		let profileEditCooldownEndsAt: string | null = null;
 
-	if (isOwnProfile) {
-		const wallet = await db.query.userWallets.findFirst({
-			where: eq(userWallets.userId, account.id)
-		});
-		userBalance = Number(wallet?.balance ?? 0);
-		canAffordProfileEdit = userBalance >= PROFILE_EDIT_CONFIG.COST;
+		if (isOwnProfile) {
+			const [wallet, form] = await Promise.all([
+				db.query.userWallets.findFirst({
+					where: eq(userWallets.userId, account.id)
+				}),
+				superValidate(
+					{
+						name: user.profile?.name || account.email.split("@")[0],
+						bio: user.profile?.bio || ""
+					},
+					valibot(updateProfileSchema)
+				)
+			]);
+			editForm = form;
+			userBalance = Number(wallet?.balance ?? 0);
+			canAffordProfileEdit = userBalance >= PROFILE_EDIT_CONFIG.COST;
 
-		if (user.profile?.updatedAt) {
-			const cooldownEnd = new Date(user.profile.updatedAt);
-			cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
-			if (new Date() < cooldownEnd) {
-				isProfileEditOnCooldown = true;
-				profileEditCooldownEndsAt = cooldownEnd.toISOString();
+			if (user.profile?.updatedAt) {
+				const cooldownEnd = new Date(user.profile.updatedAt);
+				cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
+				if (new Date() < cooldownEnd) {
+					isProfileEditOnCooldown = true;
+					profileEditCooldownEndsAt = cooldownEnd.toISOString();
+				}
 			}
 		}
 
-		editForm = await superValidate(
-			{
-				name: user.profile?.name || account.email.split("@")[0],
-				bio: user.profile?.bio || ""
-			},
-			valibot(updateProfileSchema)
-		);
-	}
+		return { editForm, userBalance, canAffordProfileEdit, isProfileEditOnCooldown, profileEditCooldownEndsAt };
+	})();
+
+	const [
+		[residence],
+		homeRegionData,
+		[articleCountResult],
+		[upvoteCountResult],
+		party,
+		logoUrl,
+		{ presidency, presidencyLogoUrl },
+		governorship,
+		ministries,
+		currentUserPresidency,
+		availableMinistries,
+		{ viewerBlocId, canAppointBlocLeadership, availableBlocRoles, viewerBlocName },
+		targetBlocLeadership,
+		targetBlocDiplomacies,
+		birthdayInfo,
+		ownedNewspapers,
+		{ editForm, userBalance, canAffordProfileEdit, isProfileEditOnCooldown, profileEditCooldownEndsAt }
+	] = await Promise.all([
+		// Get user's current residence
+		db
+			.select({
+				id: residences.id,
+				movedInAt: residences.movedInAt,
+				regionChangedAt: residences.regionChangedAt,
+				regionId: residences.regionId,
+				stateId: states.id,
+				stateName: states.name,
+				stateLogo: states.logo
+			})
+			.from(residences)
+			.leftJoin(regions, eq(residences.regionId, regions.id))
+			.leftJoin(states, eq(regions.stateId, states.id))
+			.where(eq(residences.userId, params.id))
+			.limit(1),
+		homeRegionPromise,
+		// Get article count
+		db.select({ count: count() }).from(articles).where(eq(articles.authorId, params.id)),
+		// Total upvotes received across all of the user's articles.
+		db
+			.select({ count: count() })
+			.from(upvotes)
+			.innerJoin(articles, eq(upvotes.articleId, articles.id))
+			.where(eq(articles.authorId, params.id)),
+		partyPromise,
+		// Get user logo URL if exists
+		getLogoUrl(user.profile?.logo),
+		presidencyPromise,
+		// Check if user is a governor
+		db.query.governors.findFirst({
+			where: eq(governors.userId, params.id),
+			with: {
+				region: {
+					with: {
+						state: true
+					}
+				}
+			}
+		}),
+		// Get all ministries user holds
+		db.query.ministers.findMany({
+			where: eq(ministers.userId, params.id),
+			with: {
+				state: true
+			}
+		}),
+		currentUserPresidencyPromise,
+		availableMinistriesPromise,
+		blocAppointmentPromise,
+		// Bloc leadership positions this user holds (across any bloc)
+		db.query.blocLeaders.findFirst({
+			where: eq(blocLeaders.userId, params.id),
+			with: { bloc: true }
+		}),
+		db.query.blocDiplomats.findMany({
+			where: eq(blocDiplomats.userId, params.id),
+			with: { bloc: true }
+		}),
+		// Account birthday (creation anniversary) reward status.
+		getBirthdayInfo(params.id, user.createdAt),
+		ownedNewspapersPromise,
+		profileEditPromise
+	]);
+
+	const profileEditCost: number = PROFILE_EDIT_CONFIG.COST;
 
 	return {
 		userNotFound: false as const,
@@ -346,19 +355,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			createdAt: user.createdAt,
 			isPremium: isPremiumActive(user.profile?.premiumUntil)
 		},
-		party: partyMembership
-			? {
-					id: partyMembership.partyId,
-					name: partyMembership.partyName,
-					abbreviation: partyMembership.partyAbbreviation,
-					color: partyMembership.partyColor,
-					logo: partyLogoUrl,
-					ideology: partyMembership.partyIdeology,
-					role: partyMembership.role,
-					stateName: partyStateName,
-					joinedAt: partyMembership.joinedAt
-				}
-			: null,
+		party,
 		residence: residence
 			? {
 					id: residence.id,

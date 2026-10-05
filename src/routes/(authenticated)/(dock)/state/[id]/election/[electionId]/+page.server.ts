@@ -13,49 +13,38 @@ import {
 	accounts,
 	userProfiles,
 	partyMembers,
-	files,
 	regions
 } from "#lib/server/schema.js";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 
-	// Get state with logo - manual query
-	const [state] = await db
+	// Get state with logo - manual query; fail fast if it doesn't exist
+	const statePromise = db
 		.select()
 		.from(states)
 		.where(eq(states.id, parseInt(params.id)))
-		.limit(1);
+		.limit(1)
+		.then(([state]) => state ?? error(404, "State not found"));
 
-	if (!state) {
-		throw error(404, "State not found");
-	}
-
-	// Fetch state logo
-	let stateLogo = null;
-	if (state.logo) {
-		const [logoFile] = await db.select().from(files).where(eq(files.id, state.logo)).limit(1);
-
-		if (logoFile) {
-			try {
-				stateLogo = await getSignedDownloadUrl(logoFile.key);
-			} catch {
-				// Keep null
-			}
-		}
-	}
-
-	// Get election - manual query
-	const [election] = await db
-		.select()
-		.from(parliamentaryElections)
-		.where(eq(parliamentaryElections.id, parseInt(params.electionId)))
-		.limit(1);
-
-	if (!election || election.stateId !== parseInt(params.id)) {
-		throw error(404, "Election not found");
-	}
+	// State and election lookups are independent reads, so fetch them together
+	const [state, election] = await Promise.all([
+		statePromise,
+		// Get election - manual query (state 404 wins over election 404)
+		db
+			.select()
+			.from(parliamentaryElections)
+			.where(eq(parliamentaryElections.id, parseInt(params.electionId)))
+			.limit(1)
+			.then(async ([election]) => {
+				await statePromise;
+				if (!election || election.stateId !== parseInt(params.id)) {
+					error(404, "Election not found");
+				}
+				return election;
+			})
+	]);
 
 	// Check if election is active
 	const now = new Date();
@@ -63,98 +52,91 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const hasEnded = now > new Date(election.endDate);
 	const hasStarted = now >= new Date(election.startDate);
 
-	// Check if user lives in this state - manual join
-	const [userResidence] = await db
-		.select({
-			userId: residences.userId,
-			regionId: residences.regionId,
-			stateId: regions.stateId
-		})
-		.from(residences)
-		.innerJoin(regions, eq(residences.regionId, regions.id))
-		.where(eq(residences.userId, account.id))
-		.limit(1);
-
-	const canVote = userResidence?.stateId === parseInt(params.id) && isActive;
-
-	// Get all parties in this state
-	const parties = await db
-		.select()
-		.from(politicalParties)
-		.where(eq(politicalParties.stateId, parseInt(params.id)));
-
 	// Process party logos and leader info
-	const processedParties = await Promise.all(
-		parties.map(async (party) => {
-			// Fetch party logo from files table
-			let logoUrl = null;
-			if (party.logo) {
-				const [logoFile] = await db.select().from(files).where(eq(files.id, party.logo)).limit(1);
+	const processedPartiesPromise = (async () => {
+		// Get all parties in this state
+		const parties = await db
+			.select()
+			.from(politicalParties)
+			.where(eq(politicalParties.stateId, parseInt(params.id)));
 
-				if (logoFile) {
-					try {
-						logoUrl = await getSignedDownloadUrl(logoFile.key);
-					} catch {
-						logoUrl = null;
-					}
-				}
-			}
+		return Promise.all(
+			parties.map(async (party) => {
+				const [logoUrl, { members, leaderProfile, leaderLogoUrl }] = await Promise.all([
+					getLogoUrl(party.logo),
+					(async () => {
+						// Get member count with leader info
+						const members = await db
+							.select({
+								userId: partyMembers.userId,
+								role: partyMembers.role
+							})
+							.from(partyMembers)
+							.where(eq(partyMembers.partyId, party.id));
 
-			// Get member count with leader info
-			const members = await db
-				.select({
-					userId: partyMembers.userId,
-					role: partyMembers.role
-				})
-				.from(partyMembers)
-				.where(eq(partyMembers.partyId, party.id));
+						const leader = members.find((m) => m.role === "leader");
+						let leaderProfile = null;
+						let leaderLogoUrl = null;
 
-			const leader = members.find((m) => m.role === "leader");
-			let leaderProfile = null;
-			let leaderLogoUrl = null;
+						if (leader) {
+							const [profile] = await db
+								.select()
+								.from(userProfiles)
+								.where(eq(userProfiles.accountId, leader.userId))
+								.limit(1);
 
-			if (leader) {
-				const [profile] = await db
-					.select()
-					.from(userProfiles)
-					.where(eq(userProfiles.accountId, leader.userId))
-					.limit(1);
-
-				if (profile) {
-					leaderProfile = profile;
-
-					// Fetch leader logo from files table
-					if (profile.logo) {
-						const [logoFile] = await db.select().from(files).where(eq(files.id, profile.logo)).limit(1);
-
-						if (logoFile) {
-							try {
-								leaderLogoUrl = await getSignedDownloadUrl(logoFile.key);
-							} catch {
-								leaderLogoUrl = null;
+							if (profile) {
+								leaderProfile = profile;
+								leaderLogoUrl = await getLogoUrl(profile.logo);
 							}
 						}
+
+						return { members, leaderProfile, leaderLogoUrl };
+					})()
+				]);
+
+				return {
+					...party,
+					logo: logoUrl,
+					memberCount: members.length,
+					leader: {
+						...leaderProfile,
+						logo: leaderLogoUrl
 					}
-				}
-			}
+				};
+			})
+		);
+	})();
 
-			return {
-				...party,
-				logo: logoUrl,
-				memberCount: members.length,
-				leader: {
-					...leaderProfile,
-					logo: leaderLogoUrl
-				}
-			};
-		})
-	);
+	const [stateLogo, [userResidence], processedParties, allVotes, [userVote]] = await Promise.all([
+		// Fetch state logo
+		getLogoUrl(state.logo),
+		// Check if user lives in this state - manual join
+		db
+			.select({
+				userId: residences.userId,
+				regionId: residences.regionId,
+				stateId: regions.stateId
+			})
+			.from(residences)
+			.innerJoin(regions, eq(residences.regionId, regions.id))
+			.where(eq(residences.userId, account.id))
+			.limit(1),
+		processedPartiesPromise,
+		// Get vote counts
+		db
+			.select()
+			.from(electionVotes)
+			.where(eq(electionVotes.electionId, parseInt(params.electionId))),
+		// Check if user has voted
+		db
+			.select()
+			.from(electionVotes)
+			.where(and(eq(electionVotes.electionId, parseInt(params.electionId)), eq(electionVotes.voterId, account.id)))
+			.limit(1)
+	]);
 
-	// Get vote counts
-	const allVotes = await db
-		.select()
-		.from(electionVotes)
-		.where(eq(electionVotes.electionId, parseInt(params.electionId)));
+	const canVote = userResidence?.stateId === parseInt(params.id) && isActive;
 
 	const votesByParty: Record<number, number> = {};
 	processedParties.forEach((party) => {
@@ -162,13 +144,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	});
 
 	const totalVotes = allVotes.length;
-
-	// Check if user has voted
-	const [userVote] = await db
-		.select()
-		.from(electionVotes)
-		.where(and(eq(electionVotes.electionId, parseInt(params.electionId)), eq(electionVotes.voterId, account.id)))
-		.limit(1);
 
 	return {
 		state: {

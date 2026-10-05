@@ -24,46 +24,48 @@ import { getRegionName } from "#lib/utils/formatting.js";
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	// Check if user already has a party membership
-	const existingMembership = await db.query.partyMembers.findFirst({
-		where: eq(partyMembers.userId, account.id)
-	});
-
-	if (existingMembership) {
-		throw redirect(302, `/party/${existingMembership.partyId}`);
-	}
-
-	// Get user's home (citizenship) region to determine which state the party belongs to
-	const userResidence = await db
-		.select({
-			regionId: residences.homeRegionId,
-			region: regions,
-			state: states
+	// Check if user already has a party membership (redirects as soon as it resolves)
+	const membershipCheck = db.query.partyMembers
+		.findFirst({
+			where: eq(partyMembers.userId, account.id)
 		})
-		.from(residences)
-		.innerJoin(regions, eq(residences.homeRegionId, regions.id))
-		.leftJoin(states, eq(regions.stateId, states.id))
-		.where(eq(residences.userId, account.id))
-		.limit(1)
-		.then((rows) => rows[0]);
+		.then((existingMembership) => {
+			if (existingMembership) {
+				redirect(302, `/party/${existingMembership.partyId}`);
+			}
+		});
 
-	if (!userResidence) {
-		throw redirect(303, "/welcome/region");
-	}
-
-	// Get user's wallet
-	const wallet = await db.query.userWallets.findFirst({
-		where: eq(userWallets.userId, account.id)
-	});
+	// All lookups only depend on the account, so run them in parallel
+	const [, userResidence, wallet, lastAttempt, form] = await Promise.all([
+		membershipCheck,
+		// Get user's home (citizenship) region to determine which state the party belongs to
+		Promise.all([
+			membershipCheck,
+			db
+				.select({
+					regionId: residences.homeRegionId,
+					region: regions,
+					state: states
+				})
+				.from(residences)
+				.innerJoin(regions, eq(residences.homeRegionId, regions.id))
+				.leftJoin(states, eq(regions.stateId, states.id))
+				.where(eq(residences.userId, account.id))
+				.limit(1)
+		]).then(([, rows]) => rows[0] ?? redirect(303, "/welcome/region")),
+		db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		}),
+		db.query.partyCreationAttempts.findFirst({
+			where: eq(partyCreationAttempts.userId, account.id)
+		}),
+		superValidate(valibot(createPartySchema))
+	]);
 
 	const userBalance = wallet?.balance ?? 0;
 	const canAfford = userBalance >= PARTY_CREATION_CONFIG.COST;
 
 	// Check cooldown
-	const lastAttempt = await db.query.partyCreationAttempts.findFirst({
-		where: eq(partyCreationAttempts.userId, account.id)
-	});
-
 	let cooldownEndsAt: Date | null = null;
 	let isOnCooldown = false;
 
@@ -78,8 +80,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	}
 
 	const isIndependentRegion = !userResidence.region.stateId;
-
-	const form = await superValidate(valibot(createPartySchema));
 
 	return {
 		form,

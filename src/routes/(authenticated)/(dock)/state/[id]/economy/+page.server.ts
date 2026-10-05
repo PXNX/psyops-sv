@@ -18,69 +18,73 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const stateId = parseInt(params.id);
 
-	// Get state
-	const state = await db.query.states.findFirst({
-		where: eq(states.id, stateId)
-	});
+	// Get state; fail fast if it doesn't exist
+	const statePromise = db.query.states
+		.findFirst({
+			where: eq(states.id, stateId)
+		})
+		.then((state) => state ?? error(404, "State not found"));
 
-	if (!state) {
-		throw error(404, "State not found");
-	}
+	const [state, presidency] = await Promise.all([
+		statePromise,
+		// Check if user is economy minister OR president (404 wins over 403)
+		Promise.all([
+			db.query.ministers.findFirst({
+				where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId), eq(ministers.ministry, "economy"))
+			}),
+			db.query.presidents.findFirst({
+				where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+			}),
+			statePromise
+		]).then(([ministry, presidency]) => {
+			if (!ministry && !presidency) {
+				error(403, "You must be the Economy Minister or President to access this page");
+			}
+			return presidency;
+		})
+	]);
 
-	// Check if user is economy minister OR president
-	const ministry = await db.query.ministers.findFirst({
-		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId), eq(ministers.ministry, "economy"))
-	});
+	const [treasury, statePowerPlants, energyInfo, stateResources] = await Promise.all([
+		// Get state treasury
+		(async () => {
+			const [treasury] = await db.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId));
+			if (treasury) return treasury;
 
-	const presidency = await db.query.presidents.findFirst({
-		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
-	});
+			// Create treasury if doesn't exist
+			const [created] = await db
+				.insert(stateTreasury)
+				.values({
+					stateId: stateId,
+					balance: 0,
+					totalCollected: 0,
+					totalSpent: 0
+				})
+				.returning();
+			return created;
+		})(),
+		// Get power plants
+		db.query.powerPlants.findMany({
+			where: eq(powerPlants.stateId, stateId)
+		}),
+		// Get state energy info
+		(async () => {
+			const [energyInfo] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, stateId));
+			if (energyInfo) return energyInfo;
 
-	if (!ministry && !presidency) {
-		throw error(403, "You must be the Economy Minister or President to access this page");
-	}
-
-	// Get state treasury
-	let [treasury] = await db.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId));
-
-	if (!treasury) {
-		// Create treasury if doesn't exist
-		[treasury] = await db
-			.insert(stateTreasury)
-			.values({
-				stateId: stateId,
-				balance: 0,
-				totalCollected: 0,
-				totalSpent: 0
-			})
-			.returning();
-	}
-
-	// Get power plants
-	const statePowerPlants = await db.query.powerPlants.findMany({
-		where: eq(powerPlants.stateId, stateId)
-	});
-
-	// Get state energy info
-	let [energyInfo] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, stateId));
-
-	if (!energyInfo) {
-		// Create energy record if doesn't exist
-		[energyInfo] = await db
-			.insert(stateEnergy)
-			.values({
-				stateId: stateId,
-				totalProduction: 1000,
-				usedProduction: 0
-			})
-			.returning();
-	}
-
-	// Get state resources and products
-	const stateResources = await db
-		.select()
-		.from(stateResourceInventory)
-		.where(eq(stateResourceInventory.stateId, stateId));
+			// Create energy record if doesn't exist
+			const [created] = await db
+				.insert(stateEnergy)
+				.values({
+					stateId: stateId,
+					totalProduction: 1000,
+					usedProduction: 0
+				})
+				.returning();
+			return created;
+		})(),
+		// Get state resources and products
+		db.select().from(stateResourceInventory).where(eq(stateResourceInventory.stateId, stateId))
+	]);
 
 	return {
 		state,

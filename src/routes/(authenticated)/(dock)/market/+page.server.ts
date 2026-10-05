@@ -17,22 +17,34 @@ const PRODUCTS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"]
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
-	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
+	// 24h price change per item, for a Trade-Republic-style "▲ 2.3%" next to each price.
+	const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
-	const resources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
-
-	const products = await db.select().from(productInventory).where(eq(productInventory.userId, account.id));
-
-	const lowestPrices = await db
-		.select({
-			itemType: marketListings.itemType,
-			itemName: marketListings.itemName,
-			lowestPrice: min(marketListings.pricePerUnit).as("lowest_price"),
-			totalListings: sql<number>`count(*)`.as("total_listings"),
-			totalQuantity: sql<number>`sum(${marketListings.quantity})`.as("total_quantity")
-		})
-		.from(marketListings)
-		.groupBy(marketListings.itemType, marketListings.itemName);
+	// All queries are independent, so run them in parallel
+	const [[wallet], resources, products, lowestPrices, recentHistory] = await Promise.all([
+		db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
+		db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
+		db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
+		db
+			.select({
+				itemType: marketListings.itemType,
+				itemName: marketListings.itemName,
+				lowestPrice: min(marketListings.pricePerUnit).as("lowest_price"),
+				totalListings: sql<number>`count(*)`.as("total_listings"),
+				totalQuantity: sql<number>`sum(${marketListings.quantity})`.as("total_quantity")
+			})
+			.from(marketListings)
+			.groupBy(marketListings.itemType, marketListings.itemName),
+		db
+			.select({
+				itemName: marketPriceHistory.itemName,
+				pricePerUnit: marketPriceHistory.pricePerUnit,
+				recordedAt: marketPriceHistory.recordedAt
+			})
+			.from(marketPriceHistory)
+			.where(gte(marketPriceHistory.recordedAt, oneDayAgo))
+			.orderBy(marketPriceHistory.recordedAt)
+	]);
 
 	const lowestPriceMap: Record<string, { lowestPrice: number; totalListings: number; totalQuantity: number }> = {};
 	for (const item of lowestPrices) {
@@ -42,18 +54,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 			totalQuantity: Number(item.totalQuantity) || 0
 		};
 	}
-
-	// 24h price change per item, for a Trade-Republic-style "▲ 2.3%" next to each price.
-	const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-	const recentHistory = await db
-		.select({
-			itemName: marketPriceHistory.itemName,
-			pricePerUnit: marketPriceHistory.pricePerUnit,
-			recordedAt: marketPriceHistory.recordedAt
-		})
-		.from(marketPriceHistory)
-		.where(gte(marketPriceHistory.recordedAt, oneDayAgo))
-		.orderBy(marketPriceHistory.recordedAt);
 
 	const firstLastByItem = new Map<string, { first: number; last: number }>();
 	for (const row of recentHistory) {

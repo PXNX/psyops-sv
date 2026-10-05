@@ -23,147 +23,156 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const page = parseInt(url.searchParams.get("page") || "1");
 	const offset = (page - 1) * PAGE_SIZE;
 
-	// Get total count
-	const [{ count }] = await db
-		.select({ count: sql<number>`count(*)::int` })
-		.from(transactionHistory)
-		.where(eq(transactionHistory.userId, account.id));
-
-	const totalPages = Math.ceil(count / PAGE_SIZE);
-
-	// Get paginated transactions with related user information
-	const transactions = await db
-		.select({
-			id: transactionHistory.id,
-			transactionType: transactionHistory.transactionType,
-			amount: transactionHistory.amount,
-			balanceAfter: transactionHistory.balanceAfter,
-			description: transactionHistory.description,
-			relatedUserId: transactionHistory.relatedUserId,
-			relatedEntityType: transactionHistory.relatedEntityType,
-			relatedEntityId: transactionHistory.relatedEntityId,
-			metadata: transactionHistory.metadata,
-			createdAt: transactionHistory.createdAt,
-			// Related user info (for transfers)
-			relatedUserName: userProfiles.name,
-			relatedUserLogo: userProfiles.logo
-		})
-		.from(transactionHistory)
-		.leftJoin(userProfiles, eq(transactionHistory.relatedUserId, userProfiles.accountId))
-		.where(eq(transactionHistory.userId, account.id))
-		.orderBy(desc(transactionHistory.createdAt))
-		.limit(PAGE_SIZE)
-		.offset(offset);
-
-	// Batch-resolve entity names and logos for related entities
-	const factoryIds = [
-		...new Set(
-			transactions.filter((t) => t.relatedEntityType === "factory" && t.relatedEntityId).map((t) => t.relatedEntityId!)
-		)
-	];
-	const stateIds = [
-		...new Set(
-			transactions.filter((t) => t.relatedEntityType === "state" && t.relatedEntityId).map((t) => t.relatedEntityId!)
-		)
-	];
-	const companyIds = [
-		...new Set(
-			transactions.filter((t) => t.relatedEntityType === "company" && t.relatedEntityId).map((t) => t.relatedEntityId!)
-		)
-	];
-
-	const [factoryMap, stateMap, companyMap] = await Promise.all([
-		factoryIds.length > 0
-			? db
-					.select({
-						id: factories.id,
-						name: factories.name,
-						companyId: factories.companyId,
-						companyName: companies.name,
-						companyLogo: companies.logo
-					})
-					.from(factories)
-					.leftJoin(companies, eq(factories.companyId, companies.id))
-					.where(inArray(factories.id, factoryIds))
-					.then((rows) => new Map(rows.map((r) => [r.id, r])))
-			: Promise.resolve(
-					new Map<
-						number,
-						{ id: number; name: string; companyId: number; companyName: string | null; companyLogo: number | null }
-					>()
-				),
-		stateIds.length > 0
-			? db
-					.select({ id: states.id, name: states.name, logo: states.logo })
-					.from(states)
-					.where(inArray(states.id, stateIds))
-					.then((rows) => new Map(rows.map((r) => [r.id, r])))
-			: Promise.resolve(new Map<number, { id: number; name: string; logo: number | null }>()),
-		companyIds.length > 0
-			? db
-					.select({ id: companies.id, name: companies.name, logo: companies.logo })
-					.from(companies)
-					.where(inArray(companies.id, companyIds))
-					.then((rows) => new Map(rows.map((r) => [r.id, r])))
-			: Promise.resolve(new Map<number, { id: number; name: string; logo: number | null }>())
-	]);
-
-	// Collect all file IDs that need signed URLs
-	const fileIds = new Set<number>();
-	for (const tx of transactions) {
-		if (tx.relatedUserLogo) fileIds.add(tx.relatedUserLogo);
-	}
-	for (const f of factoryMap.values()) {
-		if (f.companyLogo) fileIds.add(f.companyLogo);
-	}
-	for (const s of stateMap.values()) {
-		if (s.logo) fileIds.add(s.logo);
-	}
-	for (const c of companyMap.values()) {
-		if (c.logo) fileIds.add(c.logo);
-	}
-
-	// Batch-fetch file keys and resolve signed URLs
-	const fileUrlMap = new Map<number, string>();
-	if (fileIds.size > 0) {
-		const fileRows = await db
-			.select({ id: files.id, key: files.key })
-			.from(files)
-			.where(inArray(files.id, [...fileIds]));
-		const urlResults = await Promise.all(
-			fileRows.map(async (f) => {
-				try {
-					const url = await getSignedDownloadUrl(f.key);
-					return { id: f.id, url };
-				} catch {
-					return { id: f.id, url: null };
-				}
+	// Get paginated transactions with related user information, then batch-resolve
+	// related entities and their logos
+	const pagePromise = (async () => {
+		const transactions = await db
+			.select({
+				id: transactionHistory.id,
+				transactionType: transactionHistory.transactionType,
+				amount: transactionHistory.amount,
+				balanceAfter: transactionHistory.balanceAfter,
+				description: transactionHistory.description,
+				relatedUserId: transactionHistory.relatedUserId,
+				relatedEntityType: transactionHistory.relatedEntityType,
+				relatedEntityId: transactionHistory.relatedEntityId,
+				metadata: transactionHistory.metadata,
+				createdAt: transactionHistory.createdAt,
+				// Related user info (for transfers)
+				relatedUserName: userProfiles.name,
+				relatedUserLogo: userProfiles.logo
 			})
-		);
-		for (const r of urlResults) {
-			if (r.url) fileUrlMap.set(r.id, r.url);
-		}
-	}
+			.from(transactionHistory)
+			.leftJoin(userProfiles, eq(transactionHistory.relatedUserId, userProfiles.accountId))
+			.where(eq(transactionHistory.userId, account.id))
+			.orderBy(desc(transactionHistory.createdAt))
+			.limit(PAGE_SIZE)
+			.offset(offset);
 
-	// Get current balance
-	const [wallet] = await db
-		.select({ balance: userWallets.balance })
-		.from(userWallets)
-		.where(eq(userWallets.userId, account.id));
+		// Batch-resolve entity names and logos for related entities
+		const factoryIds = [
+			...new Set(
+				transactions
+					.filter((t) => t.relatedEntityType === "factory" && t.relatedEntityId)
+					.map((t) => t.relatedEntityId!)
+			)
+		];
+		const stateIds = [
+			...new Set(
+				transactions.filter((t) => t.relatedEntityType === "state" && t.relatedEntityId).map((t) => t.relatedEntityId!)
+			)
+		];
+		const companyIds = [
+			...new Set(
+				transactions
+					.filter((t) => t.relatedEntityType === "company" && t.relatedEntityId)
+					.map((t) => t.relatedEntityId!)
+			)
+		];
+
+		const [factoryMap, stateMap, companyMap] = await Promise.all([
+			factoryIds.length > 0
+				? db
+						.select({
+							id: factories.id,
+							name: factories.name,
+							companyId: factories.companyId,
+							companyName: companies.name,
+							companyLogo: companies.logo
+						})
+						.from(factories)
+						.leftJoin(companies, eq(factories.companyId, companies.id))
+						.where(inArray(factories.id, factoryIds))
+						.then((rows) => new Map(rows.map((r) => [r.id, r])))
+				: Promise.resolve(
+						new Map<
+							number,
+							{ id: number; name: string; companyId: number; companyName: string | null; companyLogo: number | null }
+						>()
+					),
+			stateIds.length > 0
+				? db
+						.select({ id: states.id, name: states.name, logo: states.logo })
+						.from(states)
+						.where(inArray(states.id, stateIds))
+						.then((rows) => new Map(rows.map((r) => [r.id, r])))
+				: Promise.resolve(new Map<number, { id: number; name: string; logo: number | null }>()),
+			companyIds.length > 0
+				? db
+						.select({ id: companies.id, name: companies.name, logo: companies.logo })
+						.from(companies)
+						.where(inArray(companies.id, companyIds))
+						.then((rows) => new Map(rows.map((r) => [r.id, r])))
+				: Promise.resolve(new Map<number, { id: number; name: string; logo: number | null }>())
+		]);
+
+		// Collect all file IDs that need signed URLs
+		const fileIds = new Set<number>();
+		for (const tx of transactions) {
+			if (tx.relatedUserLogo) fileIds.add(tx.relatedUserLogo);
+		}
+		for (const f of factoryMap.values()) {
+			if (f.companyLogo) fileIds.add(f.companyLogo);
+		}
+		for (const s of stateMap.values()) {
+			if (s.logo) fileIds.add(s.logo);
+		}
+		for (const c of companyMap.values()) {
+			if (c.logo) fileIds.add(c.logo);
+		}
+
+		// Batch-fetch file keys and resolve signed URLs
+		const fileUrlMap = new Map<number, string>();
+		if (fileIds.size > 0) {
+			const fileRows = await db
+				.select({ id: files.id, key: files.key })
+				.from(files)
+				.where(inArray(files.id, [...fileIds]));
+			const urlResults = await Promise.all(
+				fileRows.map(async (f) => {
+					try {
+						const url = await getSignedDownloadUrl(f.key);
+						return { id: f.id, url };
+					} catch {
+						return { id: f.id, url: null };
+					}
+				})
+			);
+			for (const r of urlResults) {
+				if (r.url) fileUrlMap.set(r.id, r.url);
+			}
+		}
+
+		return { transactions, factoryMap, stateMap, companyMap, fileUrlMap };
+	})();
 
 	// Get analytics data (last 30 days)
 	const thirtyDaysAgo = new Date();
 	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-	const recentTransactions = await db
-		.select({
-			transactionType: transactionHistory.transactionType,
-			amount: transactionHistory.amount,
-			createdAt: transactionHistory.createdAt
-		})
-		.from(transactionHistory)
-		.where(and(eq(transactionHistory.userId, account.id), gte(transactionHistory.createdAt, thirtyDaysAgo)))
-		.orderBy(desc(transactionHistory.createdAt));
+	// Count, page, balance and analytics are independent, so fetch them in parallel
+	const [[{ count }], { transactions, factoryMap, stateMap, companyMap, fileUrlMap }, [wallet], recentTransactions] =
+		await Promise.all([
+			// Get total count
+			db
+				.select({ count: sql<number>`count(*)::int` })
+				.from(transactionHistory)
+				.where(eq(transactionHistory.userId, account.id)),
+			pagePromise,
+			// Get current balance
+			db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)),
+			db
+				.select({
+					transactionType: transactionHistory.transactionType,
+					amount: transactionHistory.amount,
+					createdAt: transactionHistory.createdAt
+				})
+				.from(transactionHistory)
+				.where(and(eq(transactionHistory.userId, account.id), gte(transactionHistory.createdAt, thirtyDaysAgo)))
+				.orderBy(desc(transactionHistory.createdAt))
+		]);
+
+	const totalPages = Math.ceil(count / PAGE_SIZE);
 
 	// Calculate analytics
 	let totalIncome = 0;

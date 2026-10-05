@@ -20,60 +20,55 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		error(400, "Invalid page number");
 	}
 
-	// Get user info with profile
-	const userAccount = await db.query.accounts.findFirst({
-		where: eq(accounts.id, userId),
-		with: {
-			profile: {
-				with: {
-					logoFile: true
-				}
-			}
-		}
-	});
-
-	if (!userAccount) {
-		error(404, "User not found");
-	}
-
 	// Build where conditions
 	const whereConditions = [eq(articles.authorId, userId)];
 	if (searchQuery) {
 		whereConditions.push(like(articles.title, `%${searchQuery}%`));
 	}
 
-	// Get total count
-	const totalCountResult = await db
-		.select({ count: count() })
-		.from(articles)
-		.where(and(...whereConditions));
-
-	const totalArticles = totalCountResult[0]?.count || 0;
-
 	// Calculate offset
 	const offset = (currentPage - 1) * PAGE_SIZE;
 
 	// For date sorting, we can do it in the database
 	// For rating sorting, we need to fetch all matching articles and sort in memory
-	let articlesData;
+	const articlesPromise = (async () => {
+		if (sortBy === "date") {
+			// Simple date sorting in database
+			const pageArticles = await db
+				.select({
+					id: articles.id,
+					title: articles.title,
+					createdAt: articles.createdAt,
+					newspaperId: articles.newspaperId,
+					newspaperName: newspapers.name
+				})
+				.from(articles)
+				.leftJoin(newspapers, eq(articles.newspaperId, newspapers.id))
+				.where(and(...whereConditions))
+				.orderBy(sortOrder === "asc" ? asc(articles.createdAt) : desc(articles.createdAt))
+				.limit(PAGE_SIZE)
+				.offset(offset);
 
-	if (sortBy === "date") {
-		// Simple date sorting in database
-		articlesData = await db
-			.select({
-				id: articles.id,
-				title: articles.title,
-				createdAt: articles.createdAt,
-				newspaperId: articles.newspaperId,
-				newspaperName: newspapers.name
-			})
-			.from(articles)
-			.leftJoin(newspapers, eq(articles.newspaperId, newspapers.id))
-			.where(and(...whereConditions))
-			.orderBy(sortOrder === "asc" ? asc(articles.createdAt) : desc(articles.createdAt))
-			.limit(PAGE_SIZE)
-			.offset(offset);
-	} else {
+			// Get upvote counts for the final articles
+			if (pageArticles.length === 0) return [];
+			const articleIds = pageArticles.map((a) => a.id);
+
+			const upvoteCounts = await db
+				.select({
+					articleId: upvotes.articleId,
+					count: count()
+				})
+				.from(upvotes)
+				.where(inArray(upvotes.articleId, articleIds))
+				.groupBy(upvotes.articleId);
+
+			const upvoteMap = new Map(upvoteCounts.map((uc) => [uc.articleId, Number(uc.count)]));
+			return pageArticles.map((article) => ({
+				...article,
+				upvoteCount: upvoteMap.get(article.id) || 0
+			}));
+		}
+
 		// For rating sort, get all matching articles (for this page + sorting)
 		// We'll fetch more than needed and sort by upvote count
 		const allArticles = await db
@@ -89,55 +84,61 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 			.where(and(...whereConditions))
 			.orderBy(desc(articles.createdAt)); // Default ordering
 
-		if (allArticles.length === 0) {
-			articlesData = [];
-		} else {
-			// Get upvote counts for all articles
-			const allArticleIds = allArticles.map((a) => a.id);
-			const upvoteCounts = await db
-				.select({
-					articleId: upvotes.articleId,
-					count: count()
-				})
-				.from(upvotes)
-				.where(inArray(upvotes.articleId, allArticleIds))
-				.groupBy(upvotes.articleId);
+		if (allArticles.length === 0) return [];
 
-			const upvoteMap = new Map(upvoteCounts.map((uc) => [uc.articleId, Number(uc.count)]));
-
-			// Add upvote counts and sort
-			const articlesWithCounts = allArticles.map((article) => ({
-				...article,
-				upvoteCount: upvoteMap.get(article.id) || 0
-			}));
-
-			// Sort by upvote count
-			articlesWithCounts.sort((a, b) => {
-				const diff = a.upvoteCount - b.upvoteCount;
-				return sortOrder === "asc" ? diff : -diff;
-			});
-
-			// Paginate after sorting
-			articlesData = articlesWithCounts.slice(offset, offset + PAGE_SIZE);
-		}
-	}
-
-	// Get upvote counts for the final articles
-	const articleIds = articlesData.map((a) => a.id);
-	let upvoteMap = new Map<number, number>();
-
-	if (articleIds.length > 0 && sortBy === "date") {
+		// Get upvote counts for all articles
+		const allArticleIds = allArticles.map((a) => a.id);
 		const upvoteCounts = await db
 			.select({
 				articleId: upvotes.articleId,
 				count: count()
 			})
 			.from(upvotes)
-			.where(inArray(upvotes.articleId, articleIds))
+			.where(inArray(upvotes.articleId, allArticleIds))
 			.groupBy(upvotes.articleId);
 
-		upvoteMap = new Map(upvoteCounts.map((uc) => [uc.articleId, Number(uc.count)]));
-	}
+		const upvoteMap = new Map(upvoteCounts.map((uc) => [uc.articleId, Number(uc.count)]));
+
+		// Add upvote counts and sort
+		const articlesWithCounts = allArticles.map((article) => ({
+			...article,
+			upvoteCount: upvoteMap.get(article.id) || 0
+		}));
+
+		// Sort by upvote count
+		articlesWithCounts.sort((a, b) => {
+			const diff = a.upvoteCount - b.upvoteCount;
+			return sortOrder === "asc" ? diff : -diff;
+		});
+
+		// Paginate after sorting
+		return articlesWithCounts.slice(offset, offset + PAGE_SIZE);
+	})();
+
+	// User lookup, total count and the article page are independent reads, so run them in parallel
+	const [userAccount, totalCountResult, articlesData] = await Promise.all([
+		// Get user info with profile (404 as soon as the lookup misses)
+		db.query.accounts
+			.findFirst({
+				where: eq(accounts.id, userId),
+				with: {
+					profile: {
+						with: {
+							logoFile: true
+						}
+					}
+				}
+			})
+			.then((u) => u ?? error(404, "User not found")),
+		// Get total count
+		db
+			.select({ count: count() })
+			.from(articles)
+			.where(and(...whereConditions)),
+		articlesPromise
+	]);
+
+	const totalArticles = totalCountResult[0]?.count || 0;
 
 	// Get user's logo if available
 	let userLogo: string | null = null;
@@ -152,7 +153,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		createdAt: article.createdAt.toISOString(),
 		newspaperId: article.newspaperId,
 		newspaperName: article.newspaperName,
-		upvoteCount: "upvoteCount" in article ? article.upvoteCount : upvoteMap.get(article.id) || 0
+		upvoteCount: article.upvoteCount
 	}));
 
 	return {

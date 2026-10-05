@@ -4,7 +4,7 @@ import { accounts, userProfiles, files, generalReports, chatMessages, politicalP
 import { eq } from "drizzle-orm";
 import { error, redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account;
@@ -49,19 +49,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	async function getUserWithLogo(user: any) {
 		if (!user) return null;
 
-		let logoUrl = null;
-		if (user.profile?.logo) {
-			try {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, user.profile.logo)
-				});
-				if (logoFile) {
-					logoUrl = await getSignedDownloadUrl(logoFile.key);
-				}
-			} catch (err) {
-				console.error("Failed to get user logo:", err);
-			}
-		}
+		const logoUrl = await getLogoUrl(user.profile?.logo).catch((err) => {
+			console.error("Failed to get user logo:", err);
+			return null;
+		});
 
 		return {
 			id: user.id,
@@ -71,79 +62,75 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		};
 	}
 
-	// Get target details based on type
-	let target: any = null;
-
-	if (report.targetType === "account") {
-		const targetUser = await db.query.accounts.findFirst({
-			where: eq(accounts.id, report.targetId),
-			with: {
-				profile: true
-			}
-		});
-
-		if (targetUser) {
-			target = {
-				type: "account",
-				...(await getUserWithLogo(targetUser))
-			};
-		}
-	} else if (report.targetType === "party") {
-		const partyId = parseInt(report.targetId);
-		if (!isNaN(partyId)) {
-			const party = await db.query.politicalParties.findFirst({
-				where: eq(politicalParties.id, partyId)
-			});
-
-			if (party) {
-				let logoUrl = null;
-				if (party.logo) {
-					try {
-						const logoFile = await db.query.files.findFirst({
-							where: eq(files.id, party.logo)
-						});
-						if (logoFile) {
-							logoUrl = await getSignedDownloadUrl(logoFile.key);
-						}
-					} catch (err) {
-						console.error("Failed to get party logo:", err);
+	// Target, reporter and reviewer only depend on the report, so resolve them in parallel
+	const [target, reporter, reviewer] = await Promise.all([
+		// Get target details based on type
+		(async (): Promise<any> => {
+			if (report.targetType === "account") {
+				const targetUser = await db.query.accounts.findFirst({
+					where: eq(accounts.id, report.targetId),
+					with: {
+						profile: true
 					}
-				}
+				});
 
-				target = {
+				if (!targetUser) return null;
+				return {
+					type: "account",
+					...(await getUserWithLogo(targetUser))
+				};
+			} else if (report.targetType === "party") {
+				const partyId = parseInt(report.targetId);
+				if (isNaN(partyId)) return null;
+
+				const party = await db.query.politicalParties.findFirst({
+					where: eq(politicalParties.id, partyId)
+				});
+				if (!party) return null;
+
+				const logoUrl = await getLogoUrl(party.logo).catch((err) => {
+					console.error("Failed to get party logo:", err);
+					return null;
+				});
+
+				return {
 					type: "party",
 					id: party.id,
 					name: party.name,
 					color: party.color,
 					logoUrl
 				};
-			}
-		}
-	} else if (report.targetType === "message") {
-		const messageId = parseInt(report.targetId);
-		if (!isNaN(messageId)) {
-			const message = await db.query.chatMessages.findFirst({
-				where: eq(chatMessages.id, messageId),
-				with: {
-					sender: {
-						with: {
-							profile: true
+			} else if (report.targetType === "message") {
+				const messageId = parseInt(report.targetId);
+				if (isNaN(messageId)) return null;
+
+				const message = await db.query.chatMessages.findFirst({
+					where: eq(chatMessages.id, messageId),
+					with: {
+						sender: {
+							with: {
+								profile: true
+							}
 						}
 					}
-				}
-			});
+				});
 
-			target = {
-				type: "message",
-				id: messageId,
-				content: message?.content || "[Message deleted or unavailable]",
-				isDeleted: message?.isDeleted || true,
-				messageType: message?.messageType || null,
-				sentAt: message?.sentAt || null,
-				sender: message?.sender ? await getUserWithLogo(message.sender) : null
-			};
-		}
-	}
+				return {
+					type: "message",
+					id: messageId,
+					content: message?.content || "[Message deleted or unavailable]",
+					isDeleted: message?.isDeleted || true,
+					messageType: message?.messageType || null,
+					sentAt: message?.sentAt || null,
+					sender: message?.sender ? await getUserWithLogo(message.sender) : null
+				};
+			}
+
+			return null;
+		})(),
+		getUserWithLogo(report.reporter),
+		report.reviewer ? getUserWithLogo(report.reviewer) : null
+	]);
 
 	const formattedReport = {
 		id: report.id,
@@ -154,8 +141,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		status: report.status,
 		actionTaken: report.actionTaken,
 		reviewNote: report.reviewNote,
-		reporter: await getUserWithLogo(report.reporter),
-		reviewer: report.reviewer ? await getUserWithLogo(report.reviewer) : null,
+		reporter,
+		reviewer,
 		reportedAt: report.reportedAt,
 		reviewedAt: report.reviewedAt
 	};

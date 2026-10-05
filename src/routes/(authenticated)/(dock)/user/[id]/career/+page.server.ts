@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/(dock)/user/[id]/career/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { accounts, journalists, userMedals, presidents, ministers, partyMembers, files } from "#lib/server/schema.js";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { accounts, journalists, userMedals, presidents, ministers, partyMembers } from "#lib/server/schema.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { error } from "@sveltejs/kit";
 import { desc, eq, and } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
@@ -27,42 +27,89 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, "User not found");
 	}
 
-	// Get user medals
-	const medals = await db.query.userMedals.findMany({
-		where: eq(userMedals.userId, params.id),
-		with: {
-			awardedByUser: {
-				with: {
-					profile: true
+	// Everything below only depends on the user, so fetch it in parallel
+	const [
+		medals,
+		logoUrl,
+		newspaperLogoEntries,
+		currentPartyMemberships,
+		currentPresidencies,
+		currentMinistries,
+		canAwardMedal,
+		hasAwardedThisMonth
+	] = await Promise.all([
+		// Get user medals
+		db.query.userMedals.findMany({
+			where: eq(userMedals.userId, params.id),
+			with: {
+				awardedByUser: {
+					with: {
+						profile: true
+					}
+				},
+				state: true
+			},
+			orderBy: [desc(userMedals.awardedAt)]
+		}),
+		// Get user profile logo if exists
+		getLogoUrl(user.profile?.logo),
+		// Get newspaper logos
+		Promise.all(
+			user.journalists.map(
+				async (journalist) => [journalist.newspaper.id, await getLogoUrl(journalist.newspaper.logo)] as const
+			)
+		),
+		// Get current party memberships
+		db.query.partyMembers.findMany({
+			where: eq(partyMembers.userId, params.id),
+			with: {
+				party: {
+					with: { state: true }
 				}
 			},
-			state: true
-		},
-		orderBy: [desc(userMedals.awardedAt)]
-	});
-
-	// Get user profile logo if exists
-	let logoUrl: string | null = null;
-	if (user.profile?.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, user.profile.logo)
-		});
-		if (logoFile) {
-			logoUrl = await getSignedDownloadUrl(logoFile.key);
-		}
-	}
-
-	// Get newspaper logos
-	const newspaperLogos = new Map<number, string>();
-	for (const journalist of user.journalists) {
-		if (journalist.newspaper.logo) {
-			const logoFile = await db.query.files.findFirst({
-				where: eq(files.id, journalist.newspaper.logo)
+			orderBy: [desc(partyMembers.joinedAt)]
+		}),
+		// Get current state positions (president)
+		db.query.presidents.findMany({
+			where: eq(presidents.userId, params.id),
+			with: { state: true },
+			orderBy: [desc(presidents.electedAt)]
+		}),
+		// Get current state positions (minister)
+		db.query.ministers.findMany({
+			where: eq(ministers.userId, params.id),
+			with: { state: true },
+			orderBy: [desc(ministers.appointedAt)]
+		}),
+		// Check if current user can award medals
+		(async () => {
+			if (!account) return false;
+			const presidency = await db.query.presidents.findFirst({
+				where: eq(presidents.userId, account.id)
 			});
-			if (logoFile) {
-				newspaperLogos.set(journalist.newspaper.id, await getSignedDownloadUrl(logoFile.key));
-			}
-		}
+			return !!presidency;
+		})(),
+		(async () => {
+			if (!account) return false;
+			// Check if already awarded this month
+			const startOfMonth = new Date();
+			startOfMonth.setDate(1);
+			startOfMonth.setHours(0, 0, 0, 0);
+
+			const thisMonthAwards = await db.query.userMedals.findFirst({
+				where: and(
+					eq(userMedals.awardedBy, account.id)
+					// Add date comparison here if needed
+				)
+			});
+
+			return !!thisMonthAwards && new Date(thisMonthAwards.awardedAt) >= startOfMonth;
+		})()
+	]);
+
+	const newspaperLogos = new Map<number, string>();
+	for (const [newspaperId, logo] of newspaperLogoEntries) {
+		if (logo) newspaperLogos.set(newspaperId, logo);
 	}
 
 	// Calculate career statistics
@@ -99,60 +146,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			positions: Array<{ rank: string }>;
 		}>
 	);
-
-	// Get current party memberships
-	const currentPartyMemberships = await db.query.partyMembers.findMany({
-		where: eq(partyMembers.userId, params.id),
-		with: {
-			party: {
-				with: { state: true }
-			}
-		},
-		orderBy: [desc(partyMembers.joinedAt)]
-	});
-
-	// Get current state positions (president)
-	const currentPresidencies = await db.query.presidents.findMany({
-		where: eq(presidents.userId, params.id),
-		with: { state: true },
-		orderBy: [desc(presidents.electedAt)]
-	});
-
-	// Get current state positions (minister)
-	const currentMinistries = await db.query.ministers.findMany({
-		where: eq(ministers.userId, params.id),
-		with: { state: true },
-		orderBy: [desc(ministers.appointedAt)]
-	});
-
-	// Check if current user can award medals
-	let canAwardMedal = false;
-	let hasAwardedThisMonth = false;
-	if (account) {
-		const presidency = await db.query.presidents.findFirst({
-			where: eq(presidents.userId, account.id)
-		});
-
-		if (presidency) {
-			canAwardMedal = true;
-
-			// Check if already awarded this month
-			const startOfMonth = new Date();
-			startOfMonth.setDate(1);
-			startOfMonth.setHours(0, 0, 0, 0);
-
-			const thisMonthAwards = await db.query.userMedals.findFirst({
-				where: and(
-					eq(userMedals.awardedBy, account.id)
-					// Add date comparison here if needed
-				)
-			});
-
-			if (thisMonthAwards && new Date(thisMonthAwards.awardedAt) >= startOfMonth) {
-				hasAwardedThisMonth = true;
-			}
-		}
-	}
 
 	return {
 		user: {

@@ -1,10 +1,10 @@
 // src/routes/party/[id]/edit/+page.server.ts - UPDATED VERSION
 import { db } from "#lib/server/db.js";
-import { politicalParties, partyMembers, files, userWallets, partyEditHistory } from "#lib/server/schema.js";
+import { politicalParties, partyMembers, userWallets, partyEditHistory } from "#lib/server/schema.js";
 import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and, ne, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { getContext } from "#lib/server/context.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
@@ -18,53 +18,69 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const partyId = parseInt(params.id);
 
-	// Get party details
-	const party = await db.query.politicalParties.findFirst({
-		where: eq(politicalParties.id, partyId),
-		with: {
-			state: true,
-			founder: {
-				with: {
-					profile: true
+	// Party and leadership lookups run in parallel; each check fails as soon as its inputs resolve
+	const partyPromise = db.query.politicalParties
+		.findFirst({
+			where: eq(politicalParties.id, partyId),
+			with: {
+				state: true,
+				founder: {
+					with: {
+						profile: true
+					}
 				}
 			}
-		}
-	});
+		})
+		.then((p) => p ?? error(404, "Party not found"));
 
-	if (!party) {
-		throw error(404, "Party not found");
-	}
-
-	// Check if user is the leader
-	const membership = await db.query.partyMembers.findFirst({
-		where: and(eq(partyMembers.userId, account.id), eq(partyMembers.partyId, partyId))
-	});
-
-	if (!membership || membership.role !== "leader") {
-		throw error(403, "Only the party leader can edit the party");
-	}
-
-	// Get user's wallet balance
-	let userWallet = await db.query.userWallets.findFirst({
-		where: eq(userWallets.userId, account.id)
-	});
-
-	// Create wallet if it doesn't exist
-	if (!userWallet) {
-		const [newWallet] = await db
-			.insert(userWallets)
-			.values({
-				userId: account.id,
-				balance: 10000
+	const [party] = await Promise.all([
+		partyPromise,
+		// Check if user is the leader (404 takes precedence)
+		Promise.all([
+			partyPromise,
+			db.query.partyMembers.findFirst({
+				where: and(eq(partyMembers.userId, account.id), eq(partyMembers.partyId, partyId))
 			})
-			.returning();
-		userWallet = newWallet;
-	}
+		]).then(([, membership]) => {
+			if (!membership || membership.role !== "leader") {
+				error(403, "Only the party leader can edit the party");
+			}
+		})
+	]);
 
-	// Check if party is on cooldown
-	const editHistory = await db.query.partyEditHistory.findFirst({
-		where: eq(partyEditHistory.partyId, partyId)
-	});
+	const [userWallet, editHistory, logoUrl, form] = await Promise.all([
+		// Get user's wallet balance, creating it if it doesn't exist
+		(async () => {
+			const wallet = await db.query.userWallets.findFirst({
+				where: eq(userWallets.userId, account.id)
+			});
+			if (wallet) return wallet;
+			const [newWallet] = await db
+				.insert(userWallets)
+				.values({
+					userId: account.id,
+					balance: 10000
+				})
+				.returning();
+			return newWallet;
+		})(),
+		// Check if party is on cooldown
+		db.query.partyEditHistory.findFirst({
+			where: eq(partyEditHistory.partyId, partyId)
+		}),
+		getLogoUrl(party.logo),
+		// Populate form with existing data - handle null values properly
+		superValidate(
+			{
+				name: party.name,
+				abbreviation: party.abbreviation ?? "",
+				color: party.color,
+				ideology: party.ideology ?? "",
+				description: party.description ?? ""
+			},
+			valibot(createPartySchema)
+		)
+	]);
 
 	let isOnCooldown = false;
 	let cooldownEndsAt: string | null = null;
@@ -81,33 +97,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if user can afford the edit
 	const canAfford = userWallet.balance >= EDIT_COST;
-
-	// Get logo URL if exists
-	let logoUrl = null;
-	if (party.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, party.logo)
-		});
-		if (logoFile) {
-			try {
-				logoUrl = await getSignedDownloadUrl(logoFile.key);
-			} catch {
-				logoUrl = null;
-			}
-		}
-	}
-
-	// Populate form with existing data - handle null values properly
-	const form = await superValidate(
-		{
-			name: party.name,
-			abbreviation: party.abbreviation ?? "",
-			color: party.color,
-			ideology: party.ideology ?? "",
-			description: party.description ?? ""
-		},
-		valibot(createPartySchema)
-	);
 
 	return {
 		form,

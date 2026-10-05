@@ -13,39 +13,41 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	}
 
-	const presidency = await db.query.presidents.findFirst({
-		where: eq(presidents.userId, account.id)
-	});
-
-	const partyLeadership = await db.query.partyMembers.findFirst({
-		where: and(eq(partyMembers.userId, account.id), eq(partyMembers.role, "leader"))
-	});
-
-	let activeStateBroadcast = null;
-	if (presidency) {
-		activeStateBroadcast = await db.query.broadcasts.findFirst({
-			where: and(
-				eq(broadcasts.broadcastType, "state"),
-				eq(broadcasts.stateId, presidency.stateId),
-				eq(broadcasts.isActive, true)
-			),
-			orderBy: [desc(broadcasts.createdAt)],
-			with: { issuer: { with: { profile: true } } }
-		});
-	}
-
-	let activePartyBroadcast = null;
-	if (partyLeadership) {
-		activePartyBroadcast = await db.query.broadcasts.findFirst({
-			where: and(
-				eq(broadcasts.broadcastType, "party"),
-				eq(broadcasts.partyId, partyLeadership.partyId),
-				eq(broadcasts.isActive, true)
-			),
-			orderBy: [desc(broadcasts.createdAt)],
-			with: { issuer: { with: { profile: true } } }
-		});
-	}
+	// State (presidency → broadcast) and party (leadership → broadcast) chains are independent
+	const [[presidency, activeStateBroadcast], [partyLeadership, activePartyBroadcast]] = await Promise.all([
+		(async () => {
+			const presidency = await db.query.presidents.findFirst({
+				where: eq(presidents.userId, account.id)
+			});
+			if (!presidency) return [presidency, null] as const;
+			const broadcast = await db.query.broadcasts.findFirst({
+				where: and(
+					eq(broadcasts.broadcastType, "state"),
+					eq(broadcasts.stateId, presidency.stateId),
+					eq(broadcasts.isActive, true)
+				),
+				orderBy: [desc(broadcasts.createdAt)],
+				with: { issuer: { with: { profile: true } } }
+			});
+			return [presidency, broadcast] as const;
+		})(),
+		(async () => {
+			const partyLeadership = await db.query.partyMembers.findFirst({
+				where: and(eq(partyMembers.userId, account.id), eq(partyMembers.role, "leader"))
+			});
+			if (!partyLeadership) return [partyLeadership, null] as const;
+			const broadcast = await db.query.broadcasts.findFirst({
+				where: and(
+					eq(broadcasts.broadcastType, "party"),
+					eq(broadcasts.partyId, partyLeadership.partyId),
+					eq(broadcasts.isActive, true)
+				),
+				orderBy: [desc(broadcasts.createdAt)],
+				with: { issuer: { with: { profile: true } } }
+			});
+			return [partyLeadership, broadcast] as const;
+		})()
+	]);
 
 	return {
 		canBroadcastState: !!presidency,

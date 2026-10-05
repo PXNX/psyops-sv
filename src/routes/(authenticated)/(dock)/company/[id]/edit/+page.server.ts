@@ -4,7 +4,7 @@ import { companies, companyEditCooldown, files, userWallets, factories, factoryW
 import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and, sql, inArray } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { uploadFileFromForm, getLogoUrl } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editCompanySchema } from "./schema";
@@ -38,26 +38,54 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(403, "Only the company owner can edit the company");
 	}
 
-	// Get user's wallet balance
-	const [userWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id)).limit(1);
+	// Everything below only depends on the company, so fetch it in parallel
+	const [wallet, cooldown, logoUrl, { companyFactories, workerCount }, form] = await Promise.all([
+		// Get user's wallet balance, creating it if it doesn't exist
+		(async () => {
+			const [userWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id)).limit(1);
+			if (userWallet) return userWallet;
+			const [newWallet] = await db
+				.insert(userWallets)
+				.values({
+					userId: account.id,
+					balance: 10000
+				})
+				.returning();
+			return newWallet;
+		})(),
+		// Check if company is on cooldown
+		db.query.companyEditCooldown.findFirst({
+			where: eq(companyEditCooldown.userId, account.id)
+		}),
+		getLogoUrl(company.logo),
+		// Get company statistics (optimized single query for factories and workers)
+		(async () => {
+			const companyFactories = await db
+				.select({
+					id: factories.id
+				})
+				.from(factories)
+				.where(eq(factories.companyId, companyId));
 
-	// Create wallet if it doesn't exist
-	let wallet = userWallet;
-	if (!wallet) {
-		const [newWallet] = await db
-			.insert(userWallets)
-			.values({
-				userId: account.id,
-				balance: 10000
-			})
-			.returning();
-		wallet = newWallet;
-	}
-
-	// Check if company is on cooldown
-	const cooldown = await db.query.companyEditCooldown.findFirst({
-		where: eq(companyEditCooldown.userId, account.id)
-	});
+			const factoryIds = companyFactories.map((f) => f.id);
+			const workerCount =
+				factoryIds.length > 0
+					? await db
+							.select({ count: sql<number>`count(*)` })
+							.from(factoryWorkers)
+							.where(inArray(factoryWorkers.factoryId, factoryIds))
+					: [{ count: 0 }];
+			return { companyFactories, workerCount };
+		})(),
+		// Populate form with existing data
+		superValidate(
+			{
+				name: company.name,
+				description: company.description ?? ""
+			},
+			valibot(editCompanySchema)
+		)
+	]);
 
 	let isOnCooldown = false;
 	let cooldownEndsAt: string | null = null;
@@ -74,47 +102,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Check if user can afford the edit
 	const canAfford = Number(wallet.balance) >= EDIT_COST;
-
-	// Get logo URL if exists
-	let logoUrl = null;
-	if (company.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, company.logo)
-		});
-		if (logoFile) {
-			try {
-				logoUrl = await getSignedDownloadUrl(logoFile.key);
-			} catch {
-				logoUrl = null;
-			}
-		}
-	}
-
-	// Get company statistics (optimized single query for factories and workers)
-	const companyFactories = await db
-		.select({
-			id: factories.id
-		})
-		.from(factories)
-		.where(eq(factories.companyId, companyId));
-
-	const factoryIds = companyFactories.map((f) => f.id);
-	const workerCount =
-		factoryIds.length > 0
-			? await db
-					.select({ count: sql<number>`count(*)` })
-					.from(factoryWorkers)
-					.where(inArray(factoryWorkers.factoryId, factoryIds))
-			: [{ count: 0 }];
-
-	// Populate form with existing data
-	const form = await superValidate(
-		{
-			name: company.name,
-			description: company.description ?? ""
-		},
-		valibot(editCompanySchema)
-	);
 
 	return {
 		form,

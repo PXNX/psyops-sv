@@ -4,7 +4,6 @@ import {
 	chatMessages,
 	accounts,
 	userProfiles,
-	files,
 	generalReports,
 	userBlocks,
 	residences,
@@ -14,7 +13,7 @@ import {
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { eq, and, or, desc } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, params, depends }) => {
@@ -37,83 +36,72 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 		};
 	}
 
-	// Get other user's profile
-	const otherUserProfile = await db.query.userProfiles.findFirst({
-		where: eq(userProfiles.accountId, otherUserId)
-	});
+	// Profiles, party, block status and messages are independent, so fetch them in parallel
+	const [
+		{ profile: otherUserProfile, logo: otherUserLogo },
+		otherUserParty,
+		blockCheck,
+		messages,
+		{ profile: currentUserProfile, logo: currentUserLogo }
+	] = await Promise.all([
+		// Get other user's profile and logo
+		(async () => {
+			const profile = await db.query.userProfiles.findFirst({
+				where: eq(userProfiles.accountId, otherUserId)
+			});
+			return { profile, logo: await getLogoUrl(profile?.logo) };
+		})(),
 
-	// Current party (abbreviation + color) for the other user, for the party tag next to their name.
-	const otherUserMembership = await db.query.partyMembers.findFirst({
-		where: eq(partyMembers.userId, otherUserId)
-	});
-	let otherUserParty = null;
-	if (otherUserMembership) {
-		otherUserParty = await db.query.politicalParties.findFirst({
-			where: eq(politicalParties.id, otherUserMembership.partyId)
-		});
-	}
+		// Current party (abbreviation + color) for the other user, for the party tag next to their name.
+		(async () => {
+			const otherUserMembership = await db.query.partyMembers.findFirst({
+				where: eq(partyMembers.userId, otherUserId)
+			});
+			if (!otherUserMembership) return null;
+			return db.query.politicalParties.findFirst({
+				where: eq(politicalParties.id, otherUserMembership.partyId)
+			});
+		})(),
 
-	// Get other user's logo file separately if it exists
-	let otherUserLogo = null;
-	if (otherUserProfile?.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, otherUserProfile.logo)
-		});
-		if (logoFile) {
-			try {
-				otherUserLogo = await getSignedDownloadUrl(logoFile.key);
-			} catch {}
-		}
-	}
+		// Check if user has blocked the other user or vice versa
+		db.query.userBlocks?.findFirst({
+			where: or(
+				and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, otherUserId)),
+				and(eq(userBlocks.userId, otherUserId), eq(userBlocks.blockedUserId, account.id))
+			)
+		}),
 
-	// Check if user has blocked the other user or vice versa
-	const blockCheck = await db.query.userBlocks?.findFirst({
-		where: or(
-			and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, otherUserId)),
-			and(eq(userBlocks.userId, otherUserId), eq(userBlocks.blockedUserId, account.id))
-		)
-	});
-
-	// Get messages between the two users (even if blocked, so users can see history)
-	const messages = await db
-		.select({
-			id: chatMessages.id,
-			content: chatMessages.content,
-			sentAt: chatMessages.sentAt,
-			senderId: chatMessages.senderId,
-			recipientId: chatMessages.recipientId
-		})
-		.from(chatMessages)
-		.where(
-			and(
-				eq(chatMessages.messageType, "direct"),
-				eq(chatMessages.isDeleted, false),
-				or(
-					and(eq(chatMessages.senderId, account.id), eq(chatMessages.recipientId, otherUserId)),
-					and(eq(chatMessages.senderId, otherUserId), eq(chatMessages.recipientId, account.id))
+		// Get messages between the two users (even if blocked, so users can see history)
+		db
+			.select({
+				id: chatMessages.id,
+				content: chatMessages.content,
+				sentAt: chatMessages.sentAt,
+				senderId: chatMessages.senderId,
+				recipientId: chatMessages.recipientId
+			})
+			.from(chatMessages)
+			.where(
+				and(
+					eq(chatMessages.messageType, "direct"),
+					eq(chatMessages.isDeleted, false),
+					or(
+						and(eq(chatMessages.senderId, account.id), eq(chatMessages.recipientId, otherUserId)),
+						and(eq(chatMessages.senderId, otherUserId), eq(chatMessages.recipientId, account.id))
+					)
 				)
 			)
-		)
-		.orderBy(desc(chatMessages.sentAt))
-		.limit(100);
+			.orderBy(desc(chatMessages.sentAt))
+			.limit(100),
 
-	// Get current user profile
-	const currentUserProfile = await db.query.userProfiles.findFirst({
-		where: eq(userProfiles.accountId, account.id)
-	});
-
-	// Get current user's logo file separately if it exists
-	let currentUserLogo = null;
-	if (currentUserProfile?.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, currentUserProfile.logo)
-		});
-		if (logoFile) {
-			try {
-				currentUserLogo = await getSignedDownloadUrl(logoFile.key);
-			} catch {}
-		}
-	}
+		// Get current user profile and logo
+		(async () => {
+			const profile = await db.query.userProfiles.findFirst({
+				where: eq(userProfiles.accountId, account.id)
+			});
+			return { profile, logo: await getLogoUrl(profile?.logo) };
+		})()
+	]);
 
 	// Process messages
 	const processedMessages = messages

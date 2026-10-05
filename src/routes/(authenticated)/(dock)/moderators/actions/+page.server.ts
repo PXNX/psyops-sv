@@ -12,7 +12,7 @@ import {
 } from "#lib/server/schema.js";
 import { eq, desc, and, or, sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const account = locals.account;
@@ -186,19 +186,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		// Process logos
 		const usersWithLogos = await Promise.all(
 			userProfilesData.map(async (user) => {
-				let logoUrl = null;
-				if (user.profile?.logo) {
-					try {
-						const logoFile = await db.query.files.findFirst({
-							where: eq(files.id, user.profile.logo)
-						});
-						if (logoFile) {
-							logoUrl = await getSignedDownloadUrl(logoFile.key);
-						}
-					} catch (err) {
-						console.error("Failed to get user logo:", err);
-					}
-				}
+				const logoUrl = await getLogoUrl(user.profile?.logo).catch((err) => {
+					console.error("Failed to get user logo:", err);
+					return null;
+				});
 
 				return {
 					id: user.id,

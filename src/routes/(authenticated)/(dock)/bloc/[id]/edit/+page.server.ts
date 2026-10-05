@@ -7,61 +7,55 @@ import type { PageServerLoad, Actions } from "./$types";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editBlocSchema } from "./schema";
-import { uploadFileFromForm, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { uploadFileFromForm, getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const blocId = parseInt(params.id);
 
-	// Get bloc details
-	const [bloc] = await db.select().from(blocs).where(eq(blocs.id, blocId)).limit(1);
+	// Get bloc details; fail fast if it doesn't exist
+	const blocPromise = db
+		.select()
+		.from(blocs)
+		.where(eq(blocs.id, blocId))
+		.limit(1)
+		.then(([bloc]) => bloc ?? error(404, "Bloc not found"));
 
-	if (!bloc) {
-		error(404, "Bloc not found");
-	}
+	// Bloc and member state lookups run in parallel; 404 still wins over 403
+	const [bloc] = await Promise.all([
+		blocPromise,
+		// Get member states to find bloc leader
+		db
+			.select({
+				stateId: states.id,
+				presidentUserId: presidents.userId
+			})
+			.from(states)
+			.leftJoin(presidents, eq(states.id, presidents.stateId))
+			.where(eq(states.blocId, blocId))
+			.then(async (memberStates) => {
+				await blocPromise;
+				// Check if user is president of any member state (eligible to be leader)
+				if (!memberStates.some((s) => s.presidentUserId === account.id)) {
+					error(403, "Only presidents of member states can edit the bloc");
+				}
+			})
+	]);
 
-	// Get member states to find bloc leader
-	const memberStates = await db
-		.select({
-			stateId: states.id,
-			presidentUserId: presidents.userId
-		})
-		.from(states)
-		.leftJoin(presidents, eq(states.id, presidents.stateId))
-		.where(eq(states.blocId, blocId));
-
-	// Check if user is president of any member state (eligible to be leader)
-	const isPresidentOfMemberState = memberStates.some((s) => s.presidentUserId === account.id);
-
-	if (!isPresidentOfMemberState) {
-		error(403, "Only presidents of member states can edit the bloc");
-	}
-
-	// Get logo URL if exists
-	let logoUrl = null;
-	if (bloc.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, bloc.logo)
-		});
-		if (logoFile) {
-			try {
-				logoUrl = await getSignedDownloadUrl(logoFile.key);
-			} catch {
-				logoUrl = null;
-			}
-		}
-	}
-
-	// Initialize form with current values
-	const form = await superValidate(
-		{
-			name: bloc.name,
-			color: bloc.color,
-			description: bloc.description || "",
-			visaFreeForMembers: bloc.visaFreeForMembers
-		},
-		valibot(editBlocSchema)
-	);
+	const [logoUrl, form] = await Promise.all([
+		// Get logo URL if exists
+		getLogoUrl(bloc.logo),
+		// Initialize form with current values
+		superValidate(
+			{
+				name: bloc.name,
+				color: bloc.color,
+				description: bloc.description || "",
+				visaFreeForMembers: bloc.visaFreeForMembers
+			},
+			valibot(editBlocSchema)
+		)
+	]);
 
 	return {
 		form,

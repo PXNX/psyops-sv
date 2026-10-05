@@ -1,9 +1,9 @@
 // src/routes/(authenticated)/visas/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { userVisas, states, files } from "#lib/server/schema.js";
+import { userVisas, states } from "#lib/server/schema.js";
 import { eq, and, gt } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -34,17 +34,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	// Process visas and get logo URLs
 	const processedVisas = await Promise.all(
 		visas.map(async (visa) => {
-			let logoUrl = null;
-			if (visa.stateLogo) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, visa.stateLogo)
-				});
-				if (logoFile) {
-					try {
-						logoUrl = await getSignedDownloadUrl(logoFile.key);
-					} catch {}
-				}
-			}
+			const logoUrl = await getLogoUrl(visa.stateLogo);
 
 			// Calculate days until expiry
 			const daysUntilExpiry = Math.ceil((new Date(visa.expiresAt).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));

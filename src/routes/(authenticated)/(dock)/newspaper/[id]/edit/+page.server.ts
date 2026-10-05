@@ -4,7 +4,7 @@ import { newspapers, journalists, files, userWallets } from "#lib/server/schema.
 import { redirect, error, fail } from "@sveltejs/kit";
 import { eq, and, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { uploadFileFromForm, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { uploadFileFromForm, getLogoUrl } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { newspaperSchema } from "../../create/schema";
@@ -17,71 +17,62 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const newspaperId = parseInt(params.id);
 
-	// Get newspaper details
-	const newspaper = await db.query.newspapers.findFirst({
-		where: eq(newspapers.id, newspaperId)
-	});
+	// Newspaper and ownership lookups run in parallel; each check fails as soon as its inputs resolve
+	const newspaperPromise = db.query.newspapers
+		.findFirst({
+			where: eq(newspapers.id, newspaperId)
+		})
+		.then((n) => n ?? error(404, "Newspaper not found"));
 
-	if (!newspaper) {
-		throw error(404, "Newspaper not found");
-	}
-
-	// Check if user is the owner
-	const ownership = await db.query.journalists.findFirst({
-		where: and(
-			eq(journalists.userId, account.id),
-			eq(journalists.newspaperId, newspaperId),
-			eq(journalists.rank, "owner")
-		)
-	});
-
-	if (!ownership) {
-		throw error(403, "Only the newspaper owner can edit it");
-	}
-
-	// Get user's wallet balance
-	let userWallet = await db.query.userWallets.findFirst({
-		where: eq(userWallets.userId, account.id)
-	});
-
-	// Create wallet if it doesn't exist
-	if (!userWallet) {
-		const [newWallet] = await db
-			.insert(userWallets)
-			.values({
-				userId: account.id,
-				balance: 10000
+	const [newspaper] = await Promise.all([
+		newspaperPromise,
+		// Check if user is the owner (404 takes precedence)
+		Promise.all([
+			newspaperPromise,
+			db.query.journalists.findFirst({
+				where: and(
+					eq(journalists.userId, account.id),
+					eq(journalists.newspaperId, newspaperId),
+					eq(journalists.rank, "owner")
+				)
 			})
-			.returning();
-		userWallet = newWallet;
-	}
+		]).then(([, ownership]) => {
+			if (!ownership) {
+				error(403, "Only the newspaper owner can edit it");
+			}
+		})
+	]);
+
+	const [userWallet, logoUrl, form] = await Promise.all([
+		// Get user's wallet balance, creating it if it doesn't exist
+		(async () => {
+			const wallet = await db.query.userWallets.findFirst({
+				where: eq(userWallets.userId, account.id)
+			});
+			if (wallet) return wallet;
+			const [newWallet] = await db
+				.insert(userWallets)
+				.values({
+					userId: account.id,
+					balance: 10000
+				})
+				.returning();
+			return newWallet;
+		})(),
+		// Get logo URL if exists
+		getLogoUrl(newspaper.logo),
+		// Populate form with existing data
+		superValidate(
+			{
+				name: newspaper.name,
+				background: newspaper.background ?? ""
+			},
+			valibot(newspaperSchema)
+		)
+	]);
 
 	// Check if newspaper is on cooldown (simplified - you may want a separate edit history table)
 	const canAfford = userWallet.balance >= EDIT_COST;
-
-	// Get logo URL if exists
-	let logoUrl = null;
-	if (newspaper.logo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, newspaper.logo)
-		});
-		if (logoFile) {
-			try {
-				logoUrl = await getSignedDownloadUrl(logoFile.key);
-			} catch {
-				logoUrl = null;
-			}
-		}
-	}
-
-	// Populate form with existing data
-	const form = await superValidate(
-		{
-			name: newspaper.name,
-			background: newspaper.background ?? ""
-		},
-		valibot(newspaperSchema)
-	);
 
 	return {
 		form,

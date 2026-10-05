@@ -3,7 +3,7 @@ import { db } from "#lib/server/db.js";
 import { accounts, userProfiles, files } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 
 export const load: PageServerLoad = async () => {
 	// Get all moderators and admins
@@ -18,19 +18,10 @@ export const load: PageServerLoad = async () => {
 	// Process moderator logos
 	const moderatorsWithLogos = await Promise.all(
 		moderators.map(async (mod) => {
-			let logoUrl = null;
-			if (mod.profile?.logo) {
-				try {
-					const logoFile = await db.query.files.findFirst({
-						where: eq(files.id, mod.profile.logo)
-					});
-					if (logoFile) {
-						logoUrl = await getSignedDownloadUrl(logoFile.key);
-					}
-				} catch (err) {
-					console.error("Failed to get moderator logo:", err);
-				}
-			}
+			const logoUrl = await getLogoUrl(mod.profile?.logo).catch((err) => {
+				console.error("Failed to get moderator logo:", err);
+				return null;
+			});
 
 			return {
 				id: mod.id,

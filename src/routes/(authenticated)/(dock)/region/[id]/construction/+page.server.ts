@@ -9,47 +9,51 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const regionId = parseInt(params.id);
 
-	// Get region with state
-	const region = await db.query.regions.findFirst({
-		where: eq(regions.id, regionId),
-		with: { state: true }
-	});
+	// Get region with state; fail fast if it doesn't exist
+	const regionPromise = db.query.regions
+		.findFirst({
+			where: eq(regions.id, regionId),
+			with: { state: true }
+		})
+		.then((region) => region ?? error(404, "Region not found"));
 
-	if (!region) {
-		error(404, "Region not found");
-	}
-
-	// Check if user is governor of this region
-	const isGovernor = await db.query.governors.findFirst({
-		where: and(eq(governors.regionId, regionId), eq(governors.userId, account.id))
-	});
-
-	// Check if user is infrastructure minister of this state
-	let isInfrastructureMinister = false;
-	if (region.stateId) {
-		const minister = await db.query.ministers.findFirst({
-			where: and(
-				eq(ministers.userId, account.id),
-				eq(ministers.stateId, region.stateId),
-				eq(ministers.ministry, "infrastructure")
+	const [region, treasury, { isGovernor, isInfrastructureMinister }] = await Promise.all([
+		regionPromise,
+		// Get state treasury balance
+		regionPromise.then((region) =>
+			region.stateId
+				? db.query.stateTreasury.findFirst({
+						where: eq(stateTreasury.stateId, region.stateId)
+					})
+				: undefined
+		),
+		Promise.all([
+			// Check if user is governor of this region
+			db.query.governors.findFirst({
+				where: and(eq(governors.regionId, regionId), eq(governors.userId, account.id))
+			}),
+			// Check if user is infrastructure minister of this state (404 wins over 403)
+			regionPromise.then((region) =>
+				region.stateId
+					? db.query.ministers.findFirst({
+							where: and(
+								eq(ministers.userId, account.id),
+								eq(ministers.stateId, region.stateId),
+								eq(ministers.ministry, "infrastructure")
+							)
+						})
+					: undefined
 			)
-		});
-		isInfrastructureMinister = !!minister;
-	}
+		]).then(([governor, minister]) => {
+			// Must be governor or infrastructure minister
+			if (!governor && !minister) {
+				error(403, "You must be the governor or infrastructure minister to build in this region");
+			}
+			return { isGovernor: !!governor, isInfrastructureMinister: !!minister };
+		})
+	]);
 
-	// Must be governor or infrastructure minister
-	if (!isGovernor && !isInfrastructureMinister) {
-		error(403, "You must be the governor or infrastructure minister to build in this region");
-	}
-
-	// Get state treasury balance
-	let treasuryBalance = 0;
-	if (region.stateId) {
-		const treasury = await db.query.stateTreasury.findFirst({
-			where: eq(stateTreasury.stateId, region.stateId)
-		});
-		treasuryBalance = Number(treasury?.balance || 0);
-	}
+	const treasuryBalance = region.stateId ? Number(treasury?.balance || 0) : 0;
 
 	return {
 		region: {

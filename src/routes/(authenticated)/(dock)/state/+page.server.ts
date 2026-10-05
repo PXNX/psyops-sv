@@ -2,6 +2,7 @@
 import { db } from "#lib/server/db.js";
 import { states, residences, regions } from "#lib/server/schema.js";
 import { sql, eq } from "drizzle-orm";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import type { PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ url, locals }) => {
@@ -11,40 +12,55 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const search = url.searchParams.get("search") || "";
 	const sortBy = url.searchParams.get("sort") || "rating";
 
-	// Get all states
-	const allStates = await db
-		.select({
-			id: states.id,
-			name: states.name,
-			logo: states.logo,
-			background: states.background,
-			description: states.description,
-			population: states.population,
-			rating: states.rating,
-			blocId: states.blocId,
-			createdAt: states.createdAt
-		})
-		.from(states);
-
-	// Get population counts for all states (count residences in regions belonging to each state)
-	const populationCounts = await db
-		.select({
-			stateId: regions.stateId,
-			count: sql<number>`count(*)::int`
-		})
-		.from(residences)
-		.innerJoin(regions, eq(residences.regionId, regions.id))
-		.where(sql`${regions.stateId} IS NOT NULL`)
-		.groupBy(regions.stateId);
+	// States, population counts and the user's residence are independent, so fetch them in parallel
+	const [allStates, populationCounts, userResidence] = await Promise.all([
+		// Get all states
+		db
+			.select({
+				id: states.id,
+				name: states.name,
+				logo: states.logo,
+				background: states.background,
+				description: states.description,
+				population: states.population,
+				rating: states.rating,
+				blocId: states.blocId,
+				createdAt: states.createdAt
+			})
+			.from(states),
+		// Get population counts for all states (count residences in regions belonging to each state)
+		db
+			.select({
+				stateId: regions.stateId,
+				count: sql<number>`count(*)::int`
+			})
+			.from(residences)
+			.innerJoin(regions, eq(residences.regionId, regions.id))
+			.where(sql`${regions.stateId} IS NOT NULL`)
+			.groupBy(regions.stateId),
+		// Get user's residence to determine which state they're in
+		db
+			.select({
+				regionId: residences.regionId,
+				stateId: regions.stateId
+			})
+			.from(residences)
+			.innerJoin(regions, eq(residences.regionId, regions.id))
+			.where(eq(residences.userId, account.id))
+			.limit(1)
+	]);
 
 	const populationMap = new Map(populationCounts.map((p) => [p.stateId, p.count]));
 
 	// Combine data and apply search filter
-	let statesWithStats = allStates.map((s) => ({
-		...s,
-		population: populationMap.get(s.id) || 0,
-		stateColor: s.background // Map background to stateColor for the frontend
-	}));
+	let statesWithStats = await Promise.all(
+		allStates.map(async (s) => ({
+			...s,
+			logo: await getLogoUrl(s.logo),
+			population: populationMap.get(s.id) || 0,
+			stateColor: s.background // Map background to stateColor for the frontend
+		}))
+	);
 
 	// Apply search filter if provided
 	if (search) {
@@ -69,17 +85,6 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 		return bVal - aVal;
 	});
-
-	// Get user's residence to determine which state they're in
-	const userResidence = await db
-		.select({
-			regionId: residences.regionId,
-			stateId: regions.stateId
-		})
-		.from(residences)
-		.innerJoin(regions, eq(residences.regionId, regions.id))
-		.where(eq(residences.userId, account.id))
-		.limit(1);
 
 	const userStateId = userResidence[0]?.stateId;
 

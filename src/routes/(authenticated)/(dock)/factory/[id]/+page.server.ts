@@ -56,61 +56,61 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "Factory not found");
 	}
 
-	// Check whether an embargo between the company's headquarters state and the
-	// viewer's state blocks starting a new shift here.
-	const [companyHq] = await db
-		.select({ stateId: regions.stateId })
-		.from(companies)
-		.leftJoin(regions, eq(companies.regionId, regions.id))
-		.where(eq(companies.id, factory.companyId));
-
-	const embargoReason = await getEmbargoReason(companyHq?.stateId ?? null, account.id);
-
-	// Get company budget
-	const [companyBudget] = await db
-		.select({
-			balance: companyBudgets.balance
-		})
-		.from(companyBudgets)
-		.where(eq(companyBudgets.companyId, factory.companyId));
+	// Everything below only depends on the factory, so fetch it in parallel
+	const [embargoReason, [companyBudget], companyLogoUrl, [workerCount], [currentUserJob], stateEnergyData, [wallet]] =
+		await Promise.all([
+			// Check whether an embargo between the company's headquarters state and the
+			// viewer's state blocks starting a new shift here.
+			(async () => {
+				const [companyHq] = await db
+					.select({ stateId: regions.stateId })
+					.from(companies)
+					.leftJoin(regions, eq(companies.regionId, regions.id))
+					.where(eq(companies.id, factory.companyId));
+				return getEmbargoReason(companyHq?.stateId ?? null, account.id);
+			})(),
+			// Get company budget
+			db
+				.select({
+					balance: companyBudgets.balance
+				})
+				.from(companyBudgets)
+				.where(eq(companyBudgets.companyId, factory.companyId)),
+			// Get company logo URL if available
+			(async (): Promise<string | null> => {
+				if (!factory.companyLogo) return null;
+				const logoFile = await db.query.files.findFirst({
+					where: eq(files.id, factory.companyLogo)
+				});
+				return logoFile ? getSignedDownloadUrl(logoFile.key) : null;
+			})(),
+			// Get current workers count
+			db
+				.select({
+					count: sql<number>`count(*)::int`
+				})
+				.from(factoryWorkers)
+				.where(eq(factoryWorkers.factoryId, factoryId)),
+			// Check if current user is working here
+			db
+				.select({
+					id: factoryWorkers.id,
+					factoryId: factoryWorkers.factoryId,
+					lastWorked: factoryWorkers.lastWorked,
+					wageAtShiftStart: factoryWorkers.wageAtShiftStart
+				})
+				.from(factoryWorkers)
+				.where(eq(factoryWorkers.userId, account.id)),
+			// Get state energy
+			(async () => {
+				if (!factory.stateId) return null;
+				const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, factory.stateId));
+				return energy;
+			})(),
+			db.select().from(userWallets).where(eq(userWallets.userId, account.id))
+		]);
 
 	const canAffordWage = companyBudget ? companyBudget.balance >= factory.workerWage : false;
-
-	// Get company logo URL if available
-	let companyLogoUrl: string | null = null;
-	if (factory.companyLogo) {
-		const logoFile = await db.query.files.findFirst({
-			where: eq(files.id, factory.companyLogo)
-		});
-		if (logoFile) {
-			companyLogoUrl = await getSignedDownloadUrl(logoFile.key);
-		}
-	}
-
-	// Get current workers count
-	const [workerCount] = await db
-		.select({
-			count: sql<number>`count(*)::int`
-		})
-		.from(factoryWorkers)
-		.where(eq(factoryWorkers.factoryId, factoryId));
-
-	// Check if current user is working here
-	const [currentUserJob] = await db
-		.select({
-			id: factoryWorkers.id,
-			factoryId: factoryWorkers.factoryId,
-			lastWorked: factoryWorkers.lastWorked,
-			wageAtShiftStart: factoryWorkers.wageAtShiftStart
-		})
-		.from(factoryWorkers)
-		.where(eq(factoryWorkers.userId, account.id));
-
-	// Get state energy
-	let stateEnergyData = null;
-	if (factory.stateId) {
-		[stateEnergyData] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, factory.stateId));
-	}
 
 	// Calculate shift status
 	const shiftStatus = currentUserJob?.lastWorked
@@ -118,8 +118,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		: { canWork: true, isCurrentlyWorking: false, shiftProgress: 0, shiftEndsAt: null, hoursRemaining: 0 };
 
 	const isWorkingHere = currentUserJob?.factoryId === factoryId;
-
-	const [wallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id));
 
 	// Format output display
 	const output = factory.resourceOutput

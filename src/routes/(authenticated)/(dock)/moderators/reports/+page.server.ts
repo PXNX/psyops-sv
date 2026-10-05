@@ -3,7 +3,7 @@ import { db } from "#lib/server/db.js";
 import { accounts, userProfiles, files, generalReports, chatMessages, politicalParties } from "#lib/server/schema.js";
 import { eq, desc } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { redirect } from "@sveltejs/kit";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -38,85 +38,66 @@ export const load: PageServerLoad = async ({ locals }) => {
 		}
 	});
 
-	// Fetch user profiles
-	const users = await db.query.accounts.findMany({
-		where: (accounts, { inArray }) => inArray(accounts.id, Array.from(userIds)),
-		with: {
-			profile: true
-		}
-	});
-
-	// Fetch party details
-	const parties =
-		partyIds.size > 0
-			? await db.query.politicalParties.findMany({
-					where: (politicalParties, { inArray }) => inArray(politicalParties.id, Array.from(partyIds))
-				})
-			: [];
-
-	// Process user logos
-	const usersWithLogos = await Promise.all(
-		users.map(async (user) => {
-			let logoUrl = null;
-			if (user.profile?.logo) {
-				try {
-					const logoFile = await db.query.files.findFirst({
-						where: eq(files.id, user.profile.logo)
-					});
-					if (logoFile) {
-						logoUrl = await getSignedDownloadUrl(logoFile.key);
-					}
-				} catch (err) {
-					console.error("Failed to get user logo:", err);
-				}
-			}
-
-			return {
-				id: user.id,
-				name: user.profile?.name || "Unknown",
-				role: user.role,
-				logoUrl
-			};
-		})
-	);
-
-	// Process party logos
-	const partiesWithLogos = await Promise.all(
-		parties.map(async (party) => {
-			let logoUrl = null;
-			if (party.logo) {
-				try {
-					const logoFile = await db.query.files.findFirst({
-						where: eq(files.id, party.logo)
-					});
-					if (logoFile) {
-						logoUrl = await getSignedDownloadUrl(logoFile.key);
-					}
-				} catch (err) {
-					console.error("Failed to get party logo:", err);
-				}
-			}
-
-			return {
-				id: party.id,
-				name: party.name,
-				color: party.color,
-				logoUrl
-			};
-		})
-	);
-
-	// Create maps
-	const userMap = new Map(usersWithLogos.map((u) => [u.id, u]));
-	const partyMap = new Map(partiesWithLogos.map((p) => [p.id, p]));
-
 	// For message reports, fetch the message content (if not deleted)
 	const messageReports = reports.filter((r) => r.targetType === "message");
 	const messageIds = messageReports.map((r) => parseInt(r.targetId)).filter((id) => !isNaN(id));
 
-	const messages =
+	// Users, parties and messages only depend on the reports, so fetch them in parallel
+	const [usersWithLogos, partiesWithLogos, messages] = await Promise.all([
+		// Fetch user profiles, then their logos
+		(async () => {
+			const users = await db.query.accounts.findMany({
+				where: (accounts, { inArray }) => inArray(accounts.id, Array.from(userIds)),
+				with: {
+					profile: true
+				}
+			});
+
+			return Promise.all(
+				users.map(async (user) => {
+					const logoUrl = await getLogoUrl(user.profile?.logo).catch((err) => {
+						console.error("Failed to get user logo:", err);
+						return null;
+					});
+
+					return {
+						id: user.id,
+						name: user.profile?.name || "Unknown",
+						role: user.role,
+						logoUrl
+					};
+				})
+			);
+		})(),
+
+		// Fetch party details, then their logos
+		(async () => {
+			const parties =
+				partyIds.size > 0
+					? await db.query.politicalParties.findMany({
+							where: (politicalParties, { inArray }) => inArray(politicalParties.id, Array.from(partyIds))
+						})
+					: [];
+
+			return Promise.all(
+				parties.map(async (party) => {
+					const logoUrl = await getLogoUrl(party.logo).catch((err) => {
+						console.error("Failed to get party logo:", err);
+						return null;
+					});
+
+					return {
+						id: party.id,
+						name: party.name,
+						color: party.color,
+						logoUrl
+					};
+				})
+			);
+		})(),
+
 		messageIds.length > 0
-			? await db.query.chatMessages.findMany({
+			? db.query.chatMessages.findMany({
 					where: (chatMessages, { inArray }) => inArray(chatMessages.id, messageIds),
 					with: {
 						sender: {
@@ -126,8 +107,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 						}
 					}
 				})
-			: [];
+			: []
+	]);
 
+	// Create maps
+	const userMap = new Map(usersWithLogos.map((u) => [u.id, u]));
+	const partyMap = new Map(partiesWithLogos.map((p) => [p.id, p]));
 	const messageMap = new Map(messages.map((m) => [m.id, m]));
 
 	// Format reports

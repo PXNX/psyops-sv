@@ -32,49 +32,52 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// stats below, so infrastructure/cost checks use up-to-date numbers.
 	await completePendingConstructions({ stateId: parseInt(params.id) });
 
-	// Get state with relations
-	const state = await db.query.states.findFirst({
-		where: eq(states.id, parseInt(params.id)),
-		with: {
-			regions: true,
-			treasury: true,
-			border: true
-		}
-	});
+	// Get state with relations; fail fast if it doesn't exist
+	const statePromise = db.query.states
+		.findFirst({
+			where: eq(states.id, parseInt(params.id)),
+			with: {
+				regions: true,
+				treasury: true,
+				border: true
+			}
+		})
+		.then((state) => state ?? error(404, "State not found"));
 
-	if (!state) {
-		throw error(404, "State not found");
-	}
-
-	// Check if user is a parliament member, minister, or president
-	const userMembership = await db.query.parliamentMembers.findFirst({
-		where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, parseInt(params.id)))
-	});
-
-	const userMinistry = await db.query.ministers.findFirst({
-		where: and(eq(ministers.userId, account.id), eq(ministers.stateId, parseInt(params.id)))
-	});
-
-	const userPresidency = await db.query.presidents.findFirst({
-		where: and(eq(presidents.userId, account.id), eq(presidents.stateId, parseInt(params.id)))
-	});
-
-	// User must be either parliament member, minister, or president
-	if (!userMembership && !userMinistry && !userPresidency) {
-		throw error(403, "You must be a parliament member, minister, or president to create proposals");
-	}
-
-	// Get state resources. These live in stateResourceInventory (keyed by
-	// stateId) — not resourceInventory, which holds per-player resources
-	// keyed by userId and would never match a state here.
-	const stateResources = await db.query.stateResourceInventory.findMany({
-		where: eq(stateResourceInventory.stateId, state.id)
-	});
-
-	// Get existing buildings
-	const existingBuildings = await db.query.stateBuildings.findMany({
-		where: eq(stateBuildings.stateId, parseInt(params.id))
-	});
+	// All of these are independent reads keyed by the state id, so fetch them in parallel
+	const [state, { userMembership, userMinistry, userPresidency }, stateResources, existingBuildings] =
+		await Promise.all([
+			statePromise,
+			// Check if user is a parliament member, minister, or president (404 wins over 403)
+			Promise.all([
+				db.query.parliamentMembers.findFirst({
+					where: and(eq(parliamentMembers.userId, account.id), eq(parliamentMembers.stateId, parseInt(params.id)))
+				}),
+				db.query.ministers.findFirst({
+					where: and(eq(ministers.userId, account.id), eq(ministers.stateId, parseInt(params.id)))
+				}),
+				db.query.presidents.findFirst({
+					where: and(eq(presidents.userId, account.id), eq(presidents.stateId, parseInt(params.id)))
+				}),
+				statePromise
+			]).then(([userMembership, userMinistry, userPresidency]) => {
+				// User must be either parliament member, minister, or president
+				if (!userMembership && !userMinistry && !userPresidency) {
+					error(403, "You must be a parliament member, minister, or president to create proposals");
+				}
+				return { userMembership, userMinistry, userPresidency };
+			}),
+			// Get state resources. These live in stateResourceInventory (keyed by
+			// stateId) — not resourceInventory, which holds per-player resources
+			// keyed by userId and would never match a state here.
+			db.query.stateResourceInventory.findMany({
+				where: eq(stateResourceInventory.stateId, parseInt(params.id))
+			}),
+			// Get existing buildings
+			db.query.stateBuildings.findMany({
+				where: eq(stateBuildings.stateId, parseInt(params.id))
+			})
+		]);
 
 	const buildingsByRegion = existingBuildings.reduce(
 		(acc, building) => {

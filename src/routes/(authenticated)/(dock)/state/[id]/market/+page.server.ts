@@ -21,26 +21,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, "State not found");
 	}
 
-	const [presidency] = await db
-		.select()
-		.from(presidents)
-		.where(and(eq(presidents.stateId, stateId), eq(presidents.userId, account.id)))
-		.limit(1);
-
-	const [economyMinistry] = await db
-		.select()
-		.from(ministers)
-		.where(and(eq(ministers.stateId, stateId), eq(ministers.ministry, "economy"), eq(ministers.userId, account.id)))
-		.limit(1);
+	const [[presidency], [economyMinistry], [treasury], stateResources] = await Promise.all([
+		db
+			.select()
+			.from(presidents)
+			.where(and(eq(presidents.stateId, stateId), eq(presidents.userId, account.id)))
+			.limit(1),
+		db
+			.select()
+			.from(ministers)
+			.where(and(eq(ministers.stateId, stateId), eq(ministers.ministry, "economy"), eq(ministers.userId, account.id)))
+			.limit(1),
+		db.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId)).limit(1),
+		db.select().from(stateResourceInventory).where(eq(stateResourceInventory.stateId, stateId))
+	]);
 
 	const canTrade = !!presidency || !!economyMinistry;
-
-	const [treasury] = await db.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId)).limit(1);
-
-	const stateResources = await db
-		.select()
-		.from(stateResourceInventory)
-		.where(eq(stateResourceInventory.stateId, stateId));
 
 	const marketPrices: Record<string, number> = {
 		iron: 1000,

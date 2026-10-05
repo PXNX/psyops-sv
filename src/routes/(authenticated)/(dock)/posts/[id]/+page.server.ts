@@ -36,30 +36,37 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		throw error(404, "Article not found");
 	}
 
-	// Check if user has upvoted
-	let hasUpvoted = false;
-	if (locals.account) {
-		const [upvote] = await db
-			.select()
-			.from(upvotes)
-			.where(and(eq(upvotes.userId, locals.account.id), eq(upvotes.articleId, articleId)))
-			.limit(1);
-		hasUpvoted = !!upvote;
-	}
+	// Upvote check, view tracking and author logo are independent, so run them in parallel
+	const [hasUpvoted, , authorLogo] = await Promise.all([
+		// Check if user has upvoted
+		(async () => {
+			if (!locals.account) return false;
+			const [upvote] = await db
+				.select()
+				.from(upvotes)
+				.where(and(eq(upvotes.userId, locals.account.id), eq(upvotes.articleId, articleId)))
+				.limit(1);
+			return !!upvote;
+		})(),
 
-	// Track article view
-	// Only track if user is not the author
-	if (!locals.account || locals.account.id !== articleData.authorId) {
-		await db.insert(articleViews).values({
-			articleId,
-			userId: locals.account?.id || null
-		});
-	}
+		// Track article view
+		// Only track if user is not the author
+		(async () => {
+			if (!locals.account || locals.account.id !== articleData.authorId) {
+				await db.insert(articleViews).values({
+					articleId,
+					userId: locals.account?.id || null
+				});
+			}
+		})(),
+
+		articleData.authorLogoKey ? getSignedDownloadUrl(articleData.authorLogoKey) : null
+	]);
 
 	return {
 		article: {
 			...articleData,
-			authorLogo: articleData.authorLogoKey ? await getSignedDownloadUrl(articleData.authorLogoKey) : null
+			authorLogo
 		},
 		hasUpvoted,
 		isAuthor: locals.account?.id === articleData.authorId

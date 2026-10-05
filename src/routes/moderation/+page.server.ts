@@ -12,7 +12,7 @@ import {
 import { eq, and, desc, sql } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { sendModerationNotification } from "#lib/server/service/inbox.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -67,17 +67,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				}
 			});
 
-			let logoUrl = null;
-			if (sender?.profile?.logo) {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, sender.profile.logo)
-				});
-				if (logoFile) {
-					try {
-						logoUrl = await getSignedDownloadUrl(logoFile.key);
-					} catch {}
-				}
-			}
+			const logoUrl = await getLogoUrl(sender?.profile?.logo);
 
 			return {
 				...report,

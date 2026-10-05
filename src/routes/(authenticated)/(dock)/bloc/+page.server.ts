@@ -12,56 +12,53 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	const search = url.searchParams.get("search") || "";
 	const sortBy = url.searchParams.get("sort") || "members";
 
-	// Get all blocs
-	let blocsQuery = db
-		.select({
-			id: blocs.id,
-			name: blocs.name,
-			color: blocs.color,
-			description: blocs.description,
-			createdAt: blocs.createdAt
-		})
-		.from(blocs);
-
-	const allBlocs = await blocsQuery;
-
-	// Get member counts for each bloc
-	const memberCounts = await db
-		.select({
-			blocId: states.blocId,
-			count: sql<number>`count(*)::int`
-		})
-		.from(states)
-		.where(sql`${states.blocId} IS NOT NULL`)
-		.groupBy(states.blocId);
+	// All queries are independent, so run them in parallel
+	const [allBlocs, memberCounts, blocPopulations, [userPresidency]] = await Promise.all([
+		// Get all blocs
+		db
+			.select({
+				id: blocs.id,
+				name: blocs.name,
+				color: blocs.color,
+				description: blocs.description,
+				createdAt: blocs.createdAt
+			})
+			.from(blocs),
+		// Get member counts for each bloc
+		db
+			.select({
+				blocId: states.blocId,
+				count: sql<number>`count(*)::int`
+			})
+			.from(states)
+			.where(sql`${states.blocId} IS NOT NULL`)
+			.groupBy(states.blocId),
+		// Get total population for each bloc
+		db
+			.select({
+				blocId: states.blocId,
+				totalPopulation: sql<number>`count(${residences.id})::int`
+			})
+			.from(states)
+			.innerJoin(regions, eq(regions.stateId, states.id))
+			.innerJoin(residences, eq(residences.regionId, regions.id))
+			.where(sql`${states.blocId} IS NOT NULL`)
+			.groupBy(states.blocId),
+		// Check if user is a president
+		db
+			.select({
+				stateId: presidents.stateId,
+				stateName: states.name,
+				blocId: states.blocId
+			})
+			.from(presidents)
+			.innerJoin(states, eq(presidents.stateId, states.id))
+			.where(eq(presidents.userId, account.id))
+			.limit(1)
+	]);
 
 	const memberCountMap = new Map(memberCounts.map((m) => [m.blocId, m.count]));
-
-	// Get total population for each bloc
-	const blocPopulations = await db
-		.select({
-			blocId: states.blocId,
-			totalPopulation: sql<number>`count(${residences.id})::int`
-		})
-		.from(states)
-		.innerJoin(regions, eq(regions.stateId, states.id))
-		.innerJoin(residences, eq(residences.regionId, regions.id))
-		.where(sql`${states.blocId} IS NOT NULL`)
-		.groupBy(states.blocId);
-
 	const populationMap = new Map(blocPopulations.map((p) => [p.blocId, p.totalPopulation]));
-
-	// Check if user is a president
-	const [userPresidency] = await db
-		.select({
-			stateId: presidents.stateId,
-			stateName: states.name,
-			blocId: states.blocId
-		})
-		.from(presidents)
-		.innerJoin(states, eq(presidents.stateId, states.id))
-		.where(eq(presidents.userId, account.id))
-		.limit(1);
 
 	// Combine data
 	let blocsWithStats = allBlocs.map((b) => ({

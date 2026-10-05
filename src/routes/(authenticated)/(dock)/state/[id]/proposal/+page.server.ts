@@ -19,25 +19,24 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 	const account = locals.account!;
 	const stateId = parseInt(params.id);
 
-	// Get state
-	const state = await db.query.states.findFirst({
-		where: eq(states.id, stateId)
-	});
-
-	if (!state) {
-		throw error(404, "State not found");
-	}
-
-	// Get all proposals (both active and historical) with their type-specific details
-	const allProposals = await db.query.parliamentaryProposals.findMany({
-		where: eq(parliamentaryProposals.stateId, stateId),
-		with: {
-			taxDetails: true,
-			buildingDetails: true,
-			borderDetails: true
-		},
-		orderBy: desc(parliamentaryProposals.createdAt)
-	});
+	const [state, allProposals] = await Promise.all([
+		// Get state; fail fast if it doesn't exist
+		db.query.states
+			.findFirst({
+				where: eq(states.id, stateId)
+			})
+			.then((state) => state ?? error(404, "State not found")),
+		// Get all proposals (both active and historical) with their type-specific details
+		db.query.parliamentaryProposals.findMany({
+			where: eq(parliamentaryProposals.stateId, stateId),
+			with: {
+				taxDetails: true,
+				buildingDetails: true,
+				borderDetails: true
+			},
+			orderBy: desc(parliamentaryProposals.createdAt)
+		})
+	]);
 
 	// Helper function to get proposal change description and affected region
 	const getProposalDescription = async (proposal: (typeof allProposals)[number]) => {
@@ -157,7 +156,27 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 	// Get vote counts and user votes for each proposal
 	const proposalsWithVotes = await Promise.all(
 		allProposals.map(async (proposal) => {
-			const votes = await db.select().from(parliamentaryVotes).where(eq(parliamentaryVotes.proposalId, proposal.id));
+			// Votes, proposer info and description are independent per proposal
+			const [votes, { proposer, proposerLogo }, proposerPartyRows, { title, description, region }] = await Promise.all([
+				db.select().from(parliamentaryVotes).where(eq(parliamentaryVotes.proposalId, proposal.id)),
+				(async () => {
+					const proposer = await db.query.userProfiles.findFirst({
+						where: eq(userProfiles.accountId, proposal.proposedBy)
+					});
+					return { proposer, proposerLogo: await getLogoUrl(proposer?.logo) };
+				})(),
+				db
+					.select({
+						abbreviation: politicalParties.abbreviation,
+						name: politicalParties.name,
+						color: politicalParties.color
+					})
+					.from(partyMembers)
+					.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+					.where(and(eq(partyMembers.userId, proposal.proposedBy), eq(politicalParties.stateId, stateId)))
+					.limit(1),
+				getProposalDescription(proposal)
+			]);
 
 			const voteCounts = {
 				for: votes.filter((v) => v.voteType === "for").length,
@@ -173,23 +192,6 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 
 			// Find user's vote
 			const userVote = votes.find((v) => v.voterId === account.id);
-
-			const proposer = await db.query.userProfiles.findFirst({
-				where: eq(userProfiles.accountId, proposal.proposedBy)
-			});
-
-			const proposerPartyRows = await db
-				.select({
-					abbreviation: politicalParties.abbreviation,
-					name: politicalParties.name,
-					color: politicalParties.color
-				})
-				.from(partyMembers)
-				.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
-				.where(and(eq(partyMembers.userId, proposal.proposedBy), eq(politicalParties.stateId, stateId)))
-				.limit(1);
-
-			const { title, description, region } = await getProposalDescription(proposal);
 
 			// Determine if voting is still active
 			const now = new Date();
@@ -209,7 +211,7 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 				proposedBy: {
 					id: proposal.proposedBy,
 					name: proposer?.name,
-					logo: await getLogoUrl(proposer?.logo),
+					logo: proposerLogo,
 					party: proposerPartyRows[0] || null
 				},
 				changeTitle: title,
