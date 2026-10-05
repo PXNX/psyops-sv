@@ -2,10 +2,10 @@
 	import { onMount } from "svelte";
 	import { browser } from "$app/env";
 
-	let notificationPermission: NotificationPermission = "default";
-	let isSubscribed = false;
-	let isLoading = false;
-	let errorMessage = "";
+	let notificationPermission = $state<NotificationPermission>("default");
+	let isSubscribed = $state(false);
+	let isLoading = $state(false);
+	let errorMessage = $state("");
 
 	// Check notification support and permission on mount
 	onMount(async () => {
@@ -143,46 +143,44 @@
 	}
 </script>
 
-<div class="push-notification-manager">
-	{#if notificationPermission === "default"}
-		<button class="btn btn-primary btn-sm" onclick={requestNotificationPermission} disabled={isLoading}>
-			{#if isLoading}
-				<span class="loading loading-spinner loading-xs"></span>
-			{:else}
-				🔔 Enable Notifications
-			{/if}
-		</button>
-	{:else if notificationPermission === "granted"}
-		{#if isSubscribed}
-			<button class="btn btn-ghost btn-sm" onclick={unsubscribeFromPushNotifications} disabled={isLoading}>
-				{#if isLoading}
-					<span class="loading loading-spinner loading-xs"></span>
+<div class="flex items-center justify-between gap-3 py-2.5">
+	<div class="flex items-center gap-3">
+		<span class="text-lg">📲</span>
+		<div>
+			<p class="text-sm font-medium text-[#d9ccb7]">Push Notifications</p>
+			<p class="text-xs text-[#a89e8e]">
+				{#if notificationPermission === "denied"}
+					Blocked — enable them in your browser's site settings
+				{:else if notificationPermission === "granted" && isSubscribed}
+					Enabled on this device
 				{:else}
-					🔕 Disable Notifications
+					Required for any of the notifications below to reach you
 				{/if}
-			</button>
-		{:else}
-			<button class="btn btn-primary btn-sm" onclick={subscribeToPushNotifications} disabled={isLoading}>
-				{#if isLoading}
-					<span class="loading loading-spinner loading-xs"></span>
-				{:else}
-					🔔 Enable Notifications
-				{/if}
-			</button>
-		{/if}
-	{:else if notificationPermission === "denied"}
-		<div class="text-sm text-error">Notifications blocked. Please enable them in your browser settings.</div>
-	{/if}
+			</p>
+		</div>
+	</div>
 
-	{#if errorMessage}
-		<div class="text-sm text-error mt-2">{errorMessage}</div>
+	{#if notificationPermission === "denied"}
+		<span class="text-xs text-red-400 font-medium">Blocked</span>
+	{:else if notificationPermission === "granted" && isSubscribed}
+		<button
+			class="text-xs font-medium text-[#a89e8e] hover:text-[#fff7e8] transition-colors disabled:opacity-50"
+			onclick={unsubscribeFromPushNotifications}
+			disabled={isLoading}
+		>
+			{isLoading ? "…" : "Disable"}
+		</button>
+	{:else}
+		<input
+			type="checkbox"
+			checked={false}
+			disabled={isLoading}
+			onchange={requestNotificationPermission}
+			class="toggle toggle-info"
+		/>
 	{/if}
 </div>
 
-<style>
-	.push-notification-manager {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-</style>
+{#if errorMessage}
+	<p class="text-xs text-red-400 mt-1">{errorMessage}</p>
+{/if}

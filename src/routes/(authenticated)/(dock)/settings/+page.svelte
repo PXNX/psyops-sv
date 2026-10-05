@@ -15,6 +15,7 @@
 	import { themes } from "#lib/themes.js";
 	import { settings } from "#lib/settings.svelte.js";
 	import TelegramLoginWidget from "#lib/components/TelegramLoginWidget.svelte";
+	import PushNotificationManager from "#lib/components/PushNotificationManager.svelte";
 
 	let { data, form } = $props();
 
@@ -178,6 +179,10 @@
 			<h2 class="text-lg font-semibold text-[#fff7e8]">Notifications</h2>
 		</div>
 		<p class="text-xs text-[#a89e8e] mb-3">Choose which events send you push notifications</p>
+
+		<div class="border-b border-[#dfceb0]/10">
+			<PushNotificationManager />
+		</div>
 
 		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
 			<div class="flex items-center gap-3">
