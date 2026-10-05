@@ -8,38 +8,74 @@
 	let errorMessage = $state("");
 
 	// Check notification support and permission on mount
-	onMount(async () => {
-		if (!browser || !("serviceWorker" in navigator) || !("PushManager" in window)) {
-			console.log("Push notifications not supported");
+	onMount(() => {
+		if (!browser) return;
+
+		// Browsers silently auto-deny permission prompts on insecure origins
+		// (e.g. the dev server opened via a LAN IP over plain http).
+		if (!window.isSecureContext) {
+			errorMessage = "Notifications require HTTPS (or localhost)";
+			return;
+		}
+
+		if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+			errorMessage = "Push notifications are not supported by this browser";
 			return;
 		}
 
 		notificationPermission = Notification.permission;
 
+		// Keep the permission in sync when the user changes it in the browser's
+		// site settings, so unblocking doesn't require a reload.
+		const syncPermission = () => {
+			notificationPermission = Notification.permission;
+			if (notificationPermission !== "denied") errorMessage = "";
+		};
+		document.addEventListener("visibilitychange", syncPermission);
+		let permissionStatus: PermissionStatus | undefined;
+		navigator.permissions
+			?.query({ name: "notifications" })
+			.then((status) => {
+				permissionStatus = status;
+				status.onchange = syncPermission;
+			})
+			.catch(() => {});
+
 		// Check if already subscribed
-		try {
-			const registration = await navigator.serviceWorker.ready;
-			const subscription = await registration.pushManager.getSubscription();
-			isSubscribed = subscription !== null;
-		} catch (error) {
-			console.error("Error checking subscription:", error);
-		}
+		navigator.serviceWorker.ready
+			.then((registration) => registration.pushManager.getSubscription())
+			.then((subscription) => {
+				isSubscribed = subscription !== null;
+			})
+			.catch((error) => console.error("Error checking subscription:", error));
+
+		return () => {
+			document.removeEventListener("visibilitychange", syncPermission);
+			if (permissionStatus) permissionStatus.onchange = null;
+		};
 	});
 
-	async function requestNotificationPermission() {
+	async function requestNotificationPermission(event: Event) {
+		// The toggle only starts the flow; its visual state follows the result.
+		(event.currentTarget as HTMLInputElement).checked = false;
+		errorMessage = "";
+
 		if (!("Notification" in window)) {
 			errorMessage = "Notifications are not supported by your browser";
 			return;
 		}
 
 		try {
+			// Must run before any other await so it stays inside the user
+			// gesture; otherwise browsers treat it as unsolicited and auto-block.
 			const permission = await Notification.requestPermission();
 			notificationPermission = permission;
 
 			if (permission === "granted") {
 				await subscribeToPushNotifications();
-			} else {
-				errorMessage = "Notification permission denied";
+			} else if (permission === "default") {
+				// Dismissing the prompt is not a denial — let the user retry.
+				errorMessage = "Permission prompt was dismissed — try again and choose Allow";
 			}
 		} catch (error) {
 			console.error("Error requesting permission:", error);
@@ -59,6 +95,9 @@
 			// Get VAPID public key from server
 			const keyResponse = await fetch("/api/push/vapid-public-key");
 			const { publicKey } = await keyResponse.json();
+			if (!keyResponse.ok || !publicKey) {
+				throw new Error("push is not configured on the server");
+			}
 
 			// Wait for service worker to be ready
 			const registration = await navigator.serviceWorker.ready;
@@ -86,7 +125,9 @@
 			console.log("Successfully subscribed to push notifications");
 		} catch (error) {
 			console.error("Error subscribing to push notifications:", error);
-			errorMessage = "Failed to subscribe to notifications";
+			// Surface the real reason, e.g. Brave's disabled push service
+			// ("Registration failed - push service error").
+			errorMessage = `Failed to subscribe: ${error instanceof Error ? error.message : String(error)}`;
 		} finally {
 			isLoading = false;
 		}
@@ -129,7 +170,7 @@
 	}
 
 	// Helper function to convert base64 to Uint8Array
-	function urlBase64ToUint8Array(base64String: string): Uint8Array {
+	function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
 		const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
 		const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
 
