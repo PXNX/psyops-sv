@@ -350,7 +350,17 @@
 		<!-- Join CTA -->
 		{#if data.canJoin && !data.isMember}
 			<div class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5" style="border-color: {data.party.color}30">
-				<form method="POST" action="/party/{data.party.id}?/join" use:enhance>
+				<form
+					method="POST"
+					action="/party/{data.party.id}?/join"
+					use:enhance={() => {
+						return async ({ update }) => {
+							// The action lives on the parent /party/[id] route; stay on this
+							// member list page instead of navigating there after joining.
+							await update({ navigate: false });
+						};
+					}}
+				>
 					<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div class="text-center sm:text-left">
 							<span class="text-sm font-bold text-[#fff7e8]">Join {data.party.name}</span>

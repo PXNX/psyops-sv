@@ -1,6 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/construction/+page.svelte -->
 <script lang="ts">
-	import { invalidateAll } from "$app/navigation";
+	import { refreshAll } from "$app/navigation";
 	import FluentBuildingFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 
@@ -43,7 +43,7 @@
 		if (data.pendingConstructions.length === 0) return;
 		const interval = setInterval(() => {
 			if (data.pendingConstructions.some((c) => c.completesAt && new Date(c.completesAt) <= new Date())) {
-				invalidateAll();
+				refreshAll();
 			}
 		}, 5000);
 		return () => clearInterval(interval);
