@@ -17,7 +17,7 @@ export function formatDate(date: Date | string) {
 	return ddmmyyyy(new Date(date));
 }
 
-export function formatDateTime(dateString: string) {
+export function formatDateTime(dateString: Date | string) {
 	return ddmmyyyyhhmm(new Date(dateString));
 }
 

@@ -1,7 +1,8 @@
 // src/routes/(authenticated)/(dock)/bloc/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { blocs, states, regions, residences, presidents, blocActionCooldowns } from "#lib/server/schema.js";
-import { sql, eq, like, or } from "drizzle-orm";
+import { blocs, states, regions, residences, presidents, blocApplications } from "#lib/server/schema.js";
+import { sql, eq, and } from "drizzle-orm";
+import { applyToBloc } from "#lib/server/service/blocApplication.js";
 import { fail, redirect } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 
@@ -57,6 +58,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 			.limit(1)
 	]);
 
+	// Open application of the user's state, if any
+	const [pendingApplication] =
+		userPresidency && !userPresidency.blocId
+			? await db
+					.select({ blocId: blocApplications.blocId })
+					.from(blocApplications)
+					.where(and(eq(blocApplications.stateId, userPresidency.stateId), eq(blocApplications.status, "pending")))
+					.limit(1)
+			: [];
+
 	const memberCountMap = new Map(memberCounts.map((m) => [m.blocId, m.count]));
 	const populationMap = new Map(blocPopulations.map((p) => [p.blocId, p.totalPopulation]));
 
@@ -65,7 +76,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		...b,
 		memberCount: memberCountMap.get(b.id) || 0,
 		totalPopulation: populationMap.get(b.id) || 0,
-		isUserMember: userPresidency?.blocId === b.id
+		isUserMember: userPresidency?.blocId === b.id,
+		isPendingApplication: pendingApplication?.blocId === b.id
 	}));
 
 	// Apply search filter
@@ -96,6 +108,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		blocs: blocsWithStats,
 		userPresidency: userPresidency || null,
 		canCreateBloc,
+		pendingApplicationBlocId: pendingApplication?.blocId ?? null,
 		search,
 		sortBy
 	};
@@ -111,57 +124,11 @@ export const actions: Actions = {
 			return fail(400, { error: "Invalid bloc ID" });
 		}
 
-		// Verify bloc exists
-		const [bloc] = await db.select().from(blocs).where(eq(blocs.id, blocId)).limit(1);
-
-		if (!bloc) {
-			return fail(404, { error: "Bloc not found" });
+		// Member states vote on the application; empty blocs admit immediately
+		const result = await applyToBloc(account.id, blocId);
+		if ("error" in result) {
+			return fail(result.status, { error: result.error });
 		}
-
-		// Check if user is president
-		const [presidency] = await db
-			.select({ stateId: presidents.stateId, currentBlocId: states.blocId })
-			.from(presidents)
-			.innerJoin(states, eq(presidents.stateId, states.id))
-			.where(eq(presidents.userId, account.id))
-			.limit(1);
-
-		if (!presidency) {
-			return fail(403, { error: "Only state presidents can join blocs" });
-		}
-
-		if (presidency.currentBlocId) {
-			return fail(400, { error: "Your state is already in a bloc" });
-		}
-
-		// Check cooldown
-		const [cooldown] = await db
-			.select()
-			.from(blocActionCooldowns)
-			.where(eq(blocActionCooldowns.userId, account.id))
-			.limit(1);
-
-		const now = new Date();
-		if (cooldown) {
-			const cooldownEnd = new Date(cooldown.lastActionAt.getTime() + 24 * 60 * 60 * 1000);
-			if (now < cooldownEnd) {
-				const hoursLeft = Math.ceil((cooldownEnd.getTime() - now.getTime()) / (1000 * 60 * 60));
-				return fail(429, { error: `Wait ${hoursLeft} hours before joining/leaving a bloc` });
-			}
-		}
-
-		// Join the bloc
-		await db.transaction(async (tx) => {
-			await tx.update(states).set({ blocId }).where(eq(states.id, presidency.stateId));
-
-			await tx
-				.insert(blocActionCooldowns)
-				.values({ userId: account.id, lastActionAt: now })
-				.onConflictDoUpdate({
-					target: blocActionCooldowns.userId,
-					set: { lastActionAt: now }
-				});
-		});
 
 		// Redirect to the bloc page
 		redirect(303, `/bloc/${blocId}`);

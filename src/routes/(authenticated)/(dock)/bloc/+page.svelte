@@ -140,7 +140,9 @@
 				</div>
 				<div class="flex-1">
 					<h3 class="text-lg font-semibold text-[#fff7e8]">You're the President of {data.userPresidency.stateName}</h3>
-					<p class="text-sm text-[#a89e8e]">Select a bloc below to apply for membership</p>
+					<p class="text-sm text-[#a89e8e]">
+						Select a bloc below to apply for membership — its member states vote on your admission
+					</p>
 				</div>
 			</div>
 		</div>
@@ -214,7 +216,9 @@
 							<FluentChevronRight20Filled class="size-3.5 group-hover:translate-x-0.5 transition-transform" />
 						</a>
 
-						{#if data.userPresidency && !data.userPresidency.blocId && !bloc.isUserMember}
+						{#if bloc.isPendingApplication}
+							<Badge tone="amber" icon={FluentFlag20Filled}>Application Pending</Badge>
+						{:else if data.userPresidency && !data.userPresidency.blocId && !data.pendingApplicationBlocId}
 							<form method="POST" action="?/apply" use:enhance>
 								<input type="hidden" name="blocId" value={bloc.id} />
 								<button
@@ -262,7 +266,8 @@
 			<h3 class="text-sm font-semibold text-[#fff7e8]">About Political Blocs</h3>
 			<p class="text-sm text-[#a89e8e] mt-0.5">
 				Political-military alliances that coordinate member states' policies, military strategies, and economic
-				cooperation. Only state presidents can apply to join blocs on behalf of their states.
+				cooperation. Only state presidents can apply to join blocs on behalf of their states; the presidents of the
+				member states then vote pro or contra on each application.
 			</p>
 		</div>
 	</div>
