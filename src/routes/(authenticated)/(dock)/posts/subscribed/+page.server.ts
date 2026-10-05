@@ -12,7 +12,6 @@ import {
 import { eq, desc, sql, lt, inArray } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
-import { json } from "@sveltejs/kit";
 
 const PAGE_SIZE = 20;
 
@@ -163,6 +162,6 @@ export const actions = {
 
 		const result = await fetchSubscribedArticles(cursor, account.id);
 
-		return json(result);
+		return Response.json(result);
 	}
 } satisfies Actions;

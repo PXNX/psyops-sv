@@ -1,6 +1,5 @@
 // src/routes/(authenticated)/api/cron/proposals/+server.ts
 
-import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "#lib/server/db.js";
 import { parliamentaryProposals, parliamentaryVotes, stateTaxes, parliamentMembers } from "#lib/server/schema.js";
@@ -38,7 +37,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			}
 		}
 
-		return json({
+		return Response.json({
 			success: true,
 			timestamp: now.toISOString(),
 			proposalsProcessed: processed,
@@ -47,7 +46,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		});
 	} catch (error) {
 		console.error("Proposal cron job error:", error);
-		return json(
+		return Response.json(
 			{
 				success: false,
 				error: error instanceof Error ? error.message : "Unknown error"

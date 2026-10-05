@@ -7,12 +7,12 @@ import { files } from "./schema";
 import { db, isMockMode } from "./db";
 
 import {
-	MOCK_API_URL,
-	BACKBLAZE_KEY_ID,
-	BACKBLAZE_APPLICATION_KEY,
-	BACKBLAZE_REGION,
-	BACKBLAZE_ENDPOINT,
-	BACKBLAZE_BUCKET_NAME
+	MOCK_API_URL as RAW_MOCK_API_URL,
+	BACKBLAZE_KEY_ID as RAW_BACKBLAZE_KEY_ID,
+	BACKBLAZE_APPLICATION_KEY as RAW_BACKBLAZE_APPLICATION_KEY,
+	BACKBLAZE_REGION as RAW_BACKBLAZE_REGION,
+	BACKBLAZE_ENDPOINT as RAW_BACKBLAZE_ENDPOINT,
+	BACKBLAZE_BUCKET_NAME as RAW_BACKBLAZE_BUCKET_NAME
 } from "$app/env/private";
 
 import { eq } from "drizzle-orm/sql/expressions";
@@ -21,7 +21,7 @@ import { join, dirname } from "path";
 
 // Mock mode: local file storage
 const MOCK_STORAGE_DIR = join(process.cwd(), ".mock-files");
-const MOCK_API_URL = MOCK_API_URL || "http://localhost:3456";
+const MOCK_API_URL = RAW_MOCK_API_URL || "http://localhost:3456";
 
 function getS3Client(): S3Client | null {
 	if (isMockMode) {
@@ -32,10 +32,10 @@ function getS3Client(): S3Client | null {
 		return null;
 	}
 
-	const BACKBLAZE_KEY_ID = BACKBLAZE_KEY_ID;
-	const BACKBLAZE_APPLICATION_KEY = BACKBLAZE_APPLICATION_KEY;
-	const BACKBLAZE_REGION = BACKBLAZE_REGION;
-	const BACKBLAZE_ENDPOINT = BACKBLAZE_ENDPOINT;
+	const BACKBLAZE_KEY_ID = RAW_BACKBLAZE_KEY_ID;
+	const BACKBLAZE_APPLICATION_KEY = RAW_BACKBLAZE_APPLICATION_KEY;
+	const BACKBLAZE_REGION = RAW_BACKBLAZE_REGION;
+	const BACKBLAZE_ENDPOINT = RAW_BACKBLAZE_ENDPOINT;
 
 	if (!BACKBLAZE_KEY_ID || !BACKBLAZE_APPLICATION_KEY || !BACKBLAZE_ENDPOINT || !BACKBLAZE_REGION) {
 		throw new Error("Backblaze environment variables are required (set USE_MOCK=true for mock mode)");
@@ -53,7 +53,7 @@ function getS3Client(): S3Client | null {
 }
 
 const s3Client = getS3Client();
-const BACKBLAZE_BUCKET_NAME = BACKBLAZE_BUCKET_NAME || "mock-bucket";
+const BACKBLAZE_BUCKET_NAME = RAW_BACKBLAZE_BUCKET_NAME || "mock-bucket";
 
 export interface UploadResult {
 	success: boolean;

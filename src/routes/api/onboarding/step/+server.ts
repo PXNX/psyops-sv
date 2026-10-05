@@ -1,4 +1,4 @@
-import { json, error } from "@sveltejs/kit";
+import { error } from "@sveltejs/kit";
 import { db } from "#lib/server/db.js";
 import { residences, userProfiles, userWallets } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
@@ -68,5 +68,5 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 		});
 	}
 
-	return json({ success: true });
+	return Response.json({ success: true });
 };

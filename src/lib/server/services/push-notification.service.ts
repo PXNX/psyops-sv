@@ -1,7 +1,11 @@
 // src/lib/server/services/push-notification.service.ts
 import webpush from "web-push";
 import { db } from "#lib/server/db.js";
-import { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } from "$app/env/private";
+import {
+	VAPID_PUBLIC_KEY as RAW_VAPID_PUBLIC_KEY,
+	VAPID_PRIVATE_KEY as RAW_VAPID_PRIVATE_KEY,
+	VAPID_SUBJECT as RAW_VAPID_SUBJECT
+} from "$app/env/private";
 import { pushSubscriptions, newspaperSubscriptions, accounts } from "#lib/server/schema.js";
 import { eq, and } from "drizzle-orm";
 
@@ -42,10 +46,10 @@ export async function sendNotificationIfEnabled(
 // Set VAPID details (these should be in environment variables in production)
 // You'll need to generate these keys using: npx web-push generate-vapid-keys
 const VAPID_PUBLIC_KEY =
-	VAPID_PUBLIC_KEY || "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBrXhqhbdq5sM1ZG5Eyk";
+	RAW_VAPID_PUBLIC_KEY || "BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBrXhqhbdq5sM1ZG5Eyk";
 
-const VAPID_PRIVATE_KEY = VAPID_PRIVATE_KEY || "UUxI4O8-FbRouAevSmBQ6O7eDr5PO4p3vxO6bFPzSKk";
-const VAPID_SUBJECT = VAPID_SUBJECT || "mailto:admin@psyops.com";
+const VAPID_PRIVATE_KEY = RAW_VAPID_PRIVATE_KEY || "UUxI4O8-FbRouAevSmBQ6O7eDr5PO4p3vxO6bFPzSKk";
+const VAPID_SUBJECT = RAW_VAPID_SUBJECT || "mailto:admin@psyops.com";
 
 webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY);
 

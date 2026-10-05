@@ -1,17 +1,22 @@
 // src/lib/server/auth.ts
 import { Google } from "arctic";
 
-import { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI, TELEGRAM_BOT_TOKEN } from "$app/env/private";
+import {
+	GOOGLE_CLIENT_ID as RAW_GOOGLE_CLIENT_ID,
+	GOOGLE_CLIENT_SECRET as RAW_GOOGLE_CLIENT_SECRET,
+	GOOGLE_REDIRECT_URI as RAW_GOOGLE_REDIRECT_URI,
+	TELEGRAM_BOT_TOKEN as RAW_TELEGRAM_BOT_TOKEN
+} from "$app/env/private";
 
 import { getContext } from "./context";
 import { isMockMode } from "./db";
 
 // In mock mode, use dummy credentials
-const GOOGLE_CLIENT_ID = GOOGLE_CLIENT_ID || "mock-client-id";
+const GOOGLE_CLIENT_ID = RAW_GOOGLE_CLIENT_ID || "mock-client-id";
 
-const GOOGLE_CLIENT_SECRET = GOOGLE_CLIENT_SECRET || "mock-client-secret";
-const GOOGLE_REDIRECT_URI = GOOGLE_REDIRECT_URI || "http://localhost:5173/auth/callback/google";
-const TELEGRAM_BOT_TOKEN_VAL = TELEGRAM_BOT_TOKEN || "mock-bot-token";
+const GOOGLE_CLIENT_SECRET = RAW_GOOGLE_CLIENT_SECRET || "mock-client-secret";
+const GOOGLE_REDIRECT_URI = RAW_GOOGLE_REDIRECT_URI || "http://localhost:5173/auth/callback/google";
+const TELEGRAM_BOT_TOKEN_VAL = RAW_TELEGRAM_BOT_TOKEN || "mock-bot-token";
 
 export const google = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URI);
 

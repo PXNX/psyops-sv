@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/api/cron/+layout.server.ts
 
-import { error, json, redirect } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
 import { CRON_SECRET, NODE_ENV } from "$app/env/private";
 
 import type { RequestEvent } from "./$types";
@@ -13,12 +13,8 @@ export const load = async (event: RequestEvent) => {
 
 	//protecting just here feels wrong tbh
 
-	const dataUser = json(event.locals.account);
-
-	console.log("dataUser", dataUser);
-
 	return {
-		account: dataUser
+		account: event.locals.account
 	};
 };
 

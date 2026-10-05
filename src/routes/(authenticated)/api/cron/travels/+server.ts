@@ -1,6 +1,5 @@
 // src/routes/(authenticated)/api/cron/travels/+server.ts
 
-import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { db } from "#lib/server/db.js";
 import { userTravels, residences, regions, states } from "#lib/server/schema.js";
@@ -32,7 +31,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			}
 		}
 
-		return json({
+		return Response.json({
 			success: true,
 			timestamp: now.toISOString(),
 			travelsCompleted: completed,
@@ -41,7 +40,7 @@ export const GET: RequestHandler = async ({ request }) => {
 		});
 	} catch (error) {
 		console.error("Travel completion cron job error:", error);
-		return json(
+		return Response.json(
 			{
 				success: false,
 				error: error instanceof Error ? error.message : "Unknown error"
