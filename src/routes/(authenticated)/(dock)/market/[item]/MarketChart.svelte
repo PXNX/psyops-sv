@@ -13,21 +13,25 @@
 
 	type Range = "1D" | "1W" | "1M" | "All";
 
-	export let priceHistory: PricePoint[] = [];
-	export let currentPrice: number = 0;
+	interface Props {
+		priceHistory?: PricePoint[];
+		currentPrice?: number;
+	}
 
-	let mounted = false;
+	let { priceHistory = [], currentPrice = 0 }: Props = $props();
+
+	let mounted = $state(false);
 	onMount(() => {
 		mounted = true;
 	});
 
 	// ── Normalise ────────────────────────────────────────────────────────────────
-	$: allData = priceHistory
-		.map((p) => ({ x: new Date(p.recordedAt).getTime(), y: p.pricePerUnit }))
-		.sort((a, b) => a.x - b.x);
+	const allData = $derived(
+		priceHistory.map((p) => ({ x: new Date(p.recordedAt).getTime(), y: p.pricePerUnit })).sort((a, b) => a.x - b.x)
+	);
 
 	// ── Range ────────────────────────────────────────────────────────────────────
-	let selectedRange: Range = "1M";
+	let selectedRange = $state<Range>("1M");
 	const RANGES: Range[] = ["1D", "1W", "1M", "All"];
 	const RANGE_MS: Record<Range, number> = {
 		"1D": 86_400_000,
@@ -36,39 +40,42 @@
 		All: Infinity
 	};
 
-	$: data = (() => {
+	const data = $derived.by(() => {
 		if (selectedRange === "All" || !allData.length) return allData;
 		const cutoff = allData[allData.length - 1].x - RANGE_MS[selectedRange];
 		const filtered = allData.filter((d) => d.x >= cutoff);
 		return filtered.length > 1 ? filtered : allData;
-	})();
+	});
 
 	// ── Interaction ──────────────────────────────────────────────────────────────
-	let hoveredIndex: number | null = null;
+	let hoveredIndex = $state<number | null>(null);
 	let svgEl: SVGSVGElement;
-	$: if (selectedRange) hoveredIndex = null;
+	$effect(() => {
+		selectedRange;
+		hoveredIndex = null;
+	});
 
 	// ── Dimensions ───────────────────────────────────────────────────────────────
-	let containerWidth = 390;
+	let containerWidth = $state(390);
 	// Taller chart on narrow screens for a more immersive feel
-	$: chartHeight = containerWidth < 480 ? 220 : 260;
-	$: isMobile = containerWidth < 480;
+	const chartHeight = $derived(containerWidth < 480 ? 220 : 260);
+	const isMobile = $derived(containerWidth < 480);
 	// On mobile remove side padding so line spans full width edge-to-edge
-	$: PAD = {
+	const PAD = $derived({
 		top: 36,
 		right: isMobile ? 0 : 4,
 		bottom: 32,
 		left: isMobile ? 0 : 4
-	};
-	$: innerW = containerWidth - PAD.left - PAD.right;
-	$: innerH = chartHeight - PAD.top - PAD.bottom;
+	});
+	const innerW = $derived(containerWidth - PAD.left - PAD.right);
+	const innerH = $derived(chartHeight - PAD.top - PAD.bottom);
 
 	// ── Scales ───────────────────────────────────────────────────────────────────
-	$: xMin = data[0]?.x ?? 0;
-	$: xMax = data[data.length - 1]?.x ?? 1;
-	$: yVals = data.map((d) => d.y);
-	$: yMin = data.length ? Math.min(...yVals) * 0.993 : 0;
-	$: yMax = data.length ? Math.max(...yVals) * 1.007 : 1;
+	const xMin = $derived(data[0]?.x ?? 0);
+	const xMax = $derived(data[data.length - 1]?.x ?? 1);
+	const yVals = $derived(data.map((d) => d.y));
+	const yMin = $derived(data.length ? Math.min(...yVals) * 0.993 : 0);
+	const yMax = $derived(data.length ? Math.max(...yVals) * 1.007 : 1);
 
 	function sx(x: number): number {
 		return PAD.left + ((x - xMin) / (xMax - xMin || 1)) * innerW;
@@ -78,47 +85,54 @@
 	}
 
 	// ── Active point ─────────────────────────────────────────────────────────────
-	$: activeIndex = hoveredIndex ?? data.length - 1;
-	$: activePoint = data[activeIndex] ?? null;
-	$: displayPrice = activePoint?.y ?? currentPrice;
-	$: displayDate = activePoint ? new Date(activePoint.x) : null;
-	$: firstPrice = data[0]?.y ?? displayPrice;
-	$: change = displayPrice - firstPrice;
-	$: changePct = firstPrice ? (change / firstPrice) * 100 : 0;
-	$: isUp = change >= 0;
-	$: scrubX = data.length ? sx(data[activeIndex].x) : PAD.left + innerW;
+	const activeIndex = $derived(hoveredIndex ?? data.length - 1);
+	const activePoint = $derived(data[activeIndex] ?? null);
+	const displayPrice = $derived(activePoint?.y ?? currentPrice);
+	const displayDate = $derived(activePoint ? new Date(activePoint.x) : null);
+	const firstPrice = $derived(data[0]?.y ?? displayPrice);
+	const change = $derived(displayPrice - firstPrice);
+	const changePct = $derived(firstPrice ? (change / firstPrice) * 100 : 0);
+	const isUp = $derived(change >= 0);
+	const scrubX = $derived(data.length ? sx(data[activeIndex].x) : PAD.left + innerW);
 
 	// ── Split paths ──────────────────────────────────────────────────────────────
-	$: leftData = data.slice(0, activeIndex + 1);
-	$: leftLine = leftData.map((d, i) => `${i === 0 ? "M" : "L"} ${sx(d.x).toFixed(1)} ${sy(d.y).toFixed(1)}`).join(" ");
-	$: leftArea =
+	const leftData = $derived(data.slice(0, activeIndex + 1));
+	const leftLine = $derived(
+		leftData.map((d, i) => `${i === 0 ? "M" : "L"} ${sx(d.x).toFixed(1)} ${sy(d.y).toFixed(1)}`).join(" ")
+	);
+	const leftArea = $derived(
 		leftData.length > 1
 			? `${leftLine} L ${sx(leftData[leftData.length - 1].x).toFixed(1)} ${(PAD.top + innerH).toFixed(1)} L ${sx(leftData[0].x).toFixed(1)} ${(PAD.top + innerH).toFixed(1)} Z`
-			: "";
+			: ""
+	);
 
-	$: rightData = data.slice(activeIndex);
-	$: rightLine = rightData
-		.map((d, i) => `${i === 0 ? "M" : "L"} ${sx(d.x).toFixed(1)} ${sy(d.y).toFixed(1)}`)
-		.join(" ");
-	$: rightArea =
+	const rightData = $derived(data.slice(activeIndex));
+	const rightLine = $derived(
+		rightData.map((d, i) => `${i === 0 ? "M" : "L"} ${sx(d.x).toFixed(1)} ${sy(d.y).toFixed(1)}`).join(" ")
+	);
+	const rightArea = $derived(
 		rightData.length > 1
 			? `${rightLine} L ${sx(rightData[rightData.length - 1].x).toFixed(1)} ${(PAD.top + innerH).toFixed(1)} L ${sx(rightData[0].x).toFixed(1)} ${(PAD.top + innerH).toFixed(1)} Z`
-			: "";
+			: ""
+	);
 
-	$: baselineY = data.length ? sy(firstPrice) : PAD.top + innerH / 2;
+	const baselineY = $derived(data.length ? sy(firstPrice) : PAD.top + innerH / 2);
 
 	// ── Y ticks (for grid lines only, no labels) ──────────────────────────────────
-	$: yTicks = Array.from({ length: 4 }, (_, i) => {
-		const val = yMin + (i / 3) * (yMax - yMin);
-		return sy(val);
-	});
+	const yTicks = $derived(
+		Array.from({ length: 4 }, (_, i) => {
+			const val = yMin + (i / 3) * (yMax - yMin);
+			return sy(val);
+		})
+	);
 
 	// ── X ticks: fewer on mobile ─────────────────────────────────────────────────
 	// Desktop: 6 labels (0/20/40/60/80/100%)
 	// Mobile:  4 labels (0/33/66/100%) — avoids crowding
-	$: tickCount = isMobile ? 4 : 6;
-	$: xTicks =
-		data.length < 2 ? [] : Array.from({ length: tickCount }, (_, i) => xMin + (i / (tickCount - 1)) * (xMax - xMin));
+	const tickCount = $derived(isMobile ? 4 : 6);
+	const xTicks = $derived(
+		data.length < 2 ? [] : Array.from({ length: tickCount }, (_, i) => xMin + (i / (tickCount - 1)) * (xMax - xMin))
+	);
 
 	// ── Formatting ───────────────────────────────────────────────────────────────
 	function fmtAxisDate(ts: number): string {
@@ -168,8 +182,8 @@
 	const clipId = `cp-${uid}`;
 
 	// Pill: slightly wider on mobile for touch comfort
-	$: PILL_W = isMobile ? 150 : 140;
-	$: pillX = Math.max(PAD.left + PILL_W / 2, Math.min(PAD.left + innerW - PILL_W / 2, scrubX));
+	const PILL_W = $derived(isMobile ? 150 : 140);
+	const pillX = $derived(Math.max(PAD.left + PILL_W / 2, Math.min(PAD.left + innerW - PILL_W / 2, scrubX)));
 </script>
 
 <!--

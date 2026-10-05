@@ -2,8 +2,8 @@
 	import { Editor } from "@tiptap/core";
 	import { mergeTableCells, splitTableCell } from "@tiptap/pm/commands";
 
-	/** @type {Editor} */
-	export let editor;
+	/** @type {{ editor: Editor }} */
+	let { editor } = $props();
 
 	function canMergeCells() {
 		const { state } = editor;
