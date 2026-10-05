@@ -5,6 +5,9 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Badge } from "#lib/component/ui/index.js";
 	import { goto } from "$app/navigation";
 
 	const { data } = $props();
@@ -30,18 +33,17 @@
 	}
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div>
-		<a href="/state/{data.state.id}" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
-			{data.state.name}
-		</a>
-		<h1 class="text-3xl font-bold text-[#fff7e8] mt-1">Regions</h1>
-		<p class="text-[#a89e8e] mt-1">{data.regions.length} regions</p>
-	</div>
+	<PageHeader
+		title="Regions"
+		subtitle="{data.regions.length} regions"
+		backHref="/state/{data.state.id}"
+		backLabel={data.state.name}
+	/>
 
 	<!-- Search and Filters -->
-	<div class="panel rounded-xl p-4">
+	<div class="panel rounded-sm p-4">
 		<div class="flex flex-col md:flex-row gap-4">
 			<!-- Search -->
 			<div class="flex-1 relative">
@@ -51,13 +53,13 @@
 					bind:value={searchInput}
 					onkeydown={(e) => e.key === "Enter" && applyFilters()}
 					placeholder="Search regions..."
-					class="w-full pl-10 pr-4 py-2 field-control rounded-lg"
+					class="w-full pl-10 pr-4 py-2.5 field-control rounded-sm"
 				/>
 			</div>
 
 			<!-- Sort Dropdown -->
 			<div class="flex gap-2">
-				<select bind:value={selectedSort} onchange={() => applyFilters()} class="px-4 py-2 field-control rounded-lg">
+				<select bind:value={selectedSort} onchange={() => applyFilters()} class="px-4 py-2.5 field-control rounded-sm">
 					{#each sortOptions as option}
 						<option value={option.value}>{option.label}</option>
 					{/each}
@@ -71,21 +73,20 @@
 		{#each data.regions as region}
 			<a
 				href="/region/{region.id}"
-				class="group panel rounded-xl hover:border-[#b7a0c5]/40 transition-all overflow-hidden"
+				class="group panel-interactive rounded-sm overflow-hidden"
 			>
 				<!-- Region Header -->
-				<div class="h-24 relative bg-gradient-to-br from-[#8c709b]/20 to-[#315d8d]/20">
-					<div class="absolute inset-0 bg-gradient-to-b from-transparent to-[#14283f]" />
+				<div class="h-24 relative bg-[#102239]/70 border-b border-[#dfceb0]/10">
 
 					<!-- Region Logo -->
 					<div class="absolute bottom-0 left-4 translate-y-1/2">
-						<div class="rounded-xl">
+						<div class="rounded-sm">
 							<Logo
 								src="/coats/{region.id}.svg"
 								alt={region.name}
-								class="size-16 rounded-xl"
+								class="size-16 rounded-sm"
 								placeholderIcon={FluentShield20Filled}
-								placeholderGradient="from-[#8c709b] to-[#315d8d]"
+								placeholderGradient="from-[#315d8d] to-[#315d8d]"
 							/>
 						</div>
 					</div>
@@ -93,12 +94,7 @@
 					<!-- Residence Badge -->
 					{#if data.userRegionIds.includes(region.id)}
 						<div class="absolute top-3 right-3">
-							<div
-								class="px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center gap-1"
-							>
-								<FluentHome20Filled class="size-3 text-emerald-400" />
-								<span class="text-xs text-emerald-400 font-medium">Resident</span>
-							</div>
+							<Badge tone="green" icon={FluentHome20Filled}>Resident</Badge>
 						</div>
 					{/if}
 				</div>
@@ -107,7 +103,7 @@
 				<div class="px-4 pt-10 pb-4 space-y-3">
 					<!-- Name and Rating -->
 					<div>
-						<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">
+						<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
 							{region.name}
 						</h3>
 						<div class="flex items-center gap-3 text-sm text-[#a89e8e] mt-1">
@@ -131,22 +127,22 @@
 						<div class="pt-2 border-t border-[#dfceb0]/10">
 							<div class="flex flex-wrap gap-1">
 								{#if region.oil}
-									<span class="px-2 py-0.5 bg-[#e6a527]/15 border border-[#e6a527]/30 rounded text-xs text-[#f7c56b]">
+									<span class="px-2 py-0.5 bg-[#e6a527]/15 border border-[#e6a527]/30 rounded-sm text-xs text-[#f7c56b]">
 										Oil
 									</span>
 								{/if}
 								{#if region.steel}
-									<span class="px-2 py-0.5 bg-[#14283f] border border-[#dfceb0]/20 rounded text-xs text-[#d9ccb7]">
+									<span class="px-2 py-0.5 bg-[#14283f] border border-[#dfceb0]/20 rounded-sm text-xs text-[#d9ccb7]">
 										Steel
 									</span>
 								{/if}
 								{#if region.chromium}
-									<span class="px-2 py-0.5 bg-[#315d8d]/20 border border-[#7ba0c8]/30 rounded text-xs text-[#b7d0e6]">
+									<span class="px-2 py-0.5 bg-[#315d8d]/20 border border-[#7ba0c8]/30 rounded-sm text-xs text-[#b7d0e6]">
 										Chromium
 									</span>
 								{/if}
 								{#if region.tungsten}
-									<span class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded text-xs text-[#d5c4df]">
+									<span class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded-sm text-xs text-[#d5c4df]">
 										Tungsten
 									</span>
 								{/if}
@@ -160,12 +156,12 @@
 
 	<!-- Empty State -->
 	{#if data.regions.length === 0}
-		<div class="text-center py-12">
+		<div class="panel-muted rounded-sm p-12 text-center">
 			<div class="size-20 mx-auto bg-[#102239]/70 rounded-full flex items-center justify-center mb-4">
 				<FluentSearch20Filled class="size-10 text-[#a89e8e]" />
 			</div>
-			<h3 class="text-xl font-bold text-[#a89e8e] mb-2">No regions found</h3>
+			<h3 class="text-xl font-bold text-[#fff7e8] mb-2">No regions found</h3>
 			<p class="text-[#a89e8e]/70">Try adjusting your search or filters</p>
 		</div>
 	{/if}
-</div>
+</PageContainer>

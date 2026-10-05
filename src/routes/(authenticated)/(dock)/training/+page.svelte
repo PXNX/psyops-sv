@@ -16,6 +16,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
+	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 
 	let { data }: { data: PageData } = $props();
 
@@ -167,10 +168,10 @@
 	}
 </script>
 
-<PageContainer maxWidth="7xl">
+<PageContainer maxWidth="6xl">
 	{#if trainingDisabled}
-		<div class="mb-6 p-4 rounded-xl border border-amber-500/40 bg-amber-500/10 backdrop-blur-sm">
-			<p class="text-sm text-amber-300 font-medium">{trainingDisabledReason}</p>
+		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+			<p class="text-sm font-medium">{trainingDisabledReason}</p>
 		</div>
 	{/if}
 
@@ -178,21 +179,17 @@
 		<!-- Active Units - Main Focus -->
 		<div class="lg:col-span-2 space-y-4">
 			<div class="flex items-center gap-3">
-				<span class="h-6 w-1 rounded-full bg-gradient-to-b from-emerald-400 to-emerald-600"></span>
-				<h2 class="text-lg font-semibold tracking-tight text-[#fff7e8]">Active Units</h2>
+				<span class="h-6 w-1 rounded-full bg-[#8fae88]"></span>
+				<h2 class="section-title">Active Units</h2>
 				{#if activeUnits.length > 0}
-					<span
-						class="ml-auto text-xs font-medium text-emerald-300/80 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-2.5 py-0.5"
-					>
-						{activeUnits.length}
-					</span>
+					<Badge tone="green" class="ml-auto">{activeUnits.length}</Badge>
 				{/if}
 			</div>
 			{#each activeUnits as unit}
-				<div class="panel-interactive rounded-xl overflow-hidden backdrop-blur-sm">
+				<div class="panel rounded-sm overflow-hidden">
 					<div class="p-5">
 						<div class="flex items-center gap-4 mb-4">
-							<div class="size-12 flex-shrink-0 flex items-center justify-center">
+							<div class="size-12 shrink-0 flex items-center justify-center">
 								<img
 									src={getUnitIconPath(unit.unitType)}
 									alt={unit.unitType}
@@ -200,30 +197,31 @@
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="font-semibold text-[#fff7e8] text-base mb-0.5 tracking-tight">{unit.name}</h3>
+								<h3 class="font-bold text-[#fff7e8] text-base mb-0.5">{unit.name}</h3>
 								<div class="flex items-center gap-3 mt-2">
-									<div class="bg-red-900/40 border border-red-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-red-500 font-medium">ATK</span>
+									<div class="bg-red-600/10 border border-red-500/30 rounded-sm px-2.5 py-1">
+										<span class="text-xs text-red-300 font-medium">ATK</span>
 										<span class="text-base font-semibold text-[#fff7e8] ml-1.5"
 											>{data.templates[unit.unitType].baseAttack}</span
 										>
 									</div>
-									<div class="bg-blue-900/40 border border-blue-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-blue-500 font-medium">DEF</span>
+									<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm px-2.5 py-1">
+										<span class="text-xs text-[#b7d0e6] font-medium">DEF</span>
 										<span class="text-base font-semibold text-[#fff7e8] ml-1.5"
 											>{data.templates[unit.unitType].baseDefense}</span
 										>
 									</div>
 								</div>
 							</div>
-							<button
-								type="button"
+							<IconButton
+								icon={IconDelete}
+								label="Disband Unit"
+								variant="ghost"
+								size="sm"
+								shape="square"
 								onclick={() => confirmDisband(unit)}
-								class="btn btn-ghost btn-sm text-[#a89e8e] hover:text-red-400 hover:bg-red-500/10 flex-shrink-0"
-								title="Disband Unit"
-							>
-								<IconDelete class="size-4" />
-							</button>
+								class="text-[#a89e8e] hover:text-red-400 hover:bg-red-500/10 shrink-0"
+							/>
 						</div>
 
 						<!-- Experience -->
@@ -292,7 +290,7 @@
 							<div class="mt-4 pt-4 border-t border-[#dfceb0]/10">
 								<div class="flex items-center justify-between text-xs mb-1.5">
 									<span class="text-[#d5c4df] font-medium">On exercise</span>
-									<span class="text-[#a89e8e]">{exRemaining}</span>
+									<span class="text-[#a89e8e] font-mono">{exRemaining}</span>
 								</div>
 								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10 mb-3">
 									<div
@@ -313,10 +311,16 @@
 										}}
 									>
 										<input type="hidden" name="unitId" value={unit.id} />
-										<button type="submit" disabled={isSubmitting} class="btn btn-success btn-sm w-full gap-1.5">
-											<IconCheckmark class="size-4" />
+										<Button
+											type="submit"
+											variant="soft-emerald"
+											size="sm"
+											block
+											disabled={isSubmitting}
+											icon={IconCheckmark}
+										>
 											Complete exercise
-										</button>
+										</Button>
 									</form>
 								{:else}
 									<form
@@ -331,13 +335,16 @@
 										}}
 									>
 										<input type="hidden" name="unitId" value={unit.id} />
-										<button
+										<Button
 											type="submit"
+											variant="ghost"
+											size="sm"
+											block
 											disabled={isSubmitting}
-											class="btn btn-ghost btn-sm w-full text-[#a89e8e] hover:text-red-400"
+											class="hover:text-red-400"
 										>
 											Cancel exercise
-										</button>
+										</Button>
 									</form>
 								{/if}
 							</div>
@@ -355,19 +362,21 @@
 									}}
 								>
 									<input type="hidden" name="unitId" value={unit.id} />
-									<button
+									<Button
 										type="submit"
+										variant="secondary"
+										size="sm"
+										block
+										icon={IconClock}
 										disabled={isSubmitting ||
 											trainingDisabled ||
 											unit.organization < data.exerciseConfig.MIN_ORG_TO_START}
-										class="btn btn-outline btn-sm w-full gap-1.5"
 										title={unit.organization < data.exerciseConfig.MIN_ORG_TO_START
 											? `Needs ${data.exerciseConfig.MIN_ORG_TO_START}% organization to exercise`
 											: "Gain experience in exchange for organization, supply and equipment"}
 									>
-										<IconClock class="size-4" />
 										Send to exercise ({data.exerciseConfig.DURATION_HOURS}h)
-									</button>
+									</Button>
 								</form>
 								<p class="mt-2 text-[11px] leading-snug text-[#a89e8e]">
 									+{data.exerciseConfig.EXPERIENCE_GAIN} XP · −{data.exerciseConfig.ORG_COST} org · −{data
@@ -386,8 +395,8 @@
 			<!-- Unit Templates -->
 			<div class="mt-8">
 				<div class="flex items-center gap-3 mb-4">
-					<span class="h-6 w-1 rounded-full bg-gradient-to-b from-blue-400 to-blue-600"></span>
-					<h2 class="text-lg font-semibold tracking-tight text-[#fff7e8]">Train New Units</h2>
+					<span class="h-6 w-1 rounded-full bg-[#7ba0c8]"></span>
+					<h2 class="section-title">Train New Units</h2>
 				</div>
 
 				<!-- Selectable Unit Type Cards -->
@@ -396,46 +405,30 @@
 						{@const isSelected = selectedTemplate?.id === template.id}
 						<button
 							type="button"
-							class="relative p-3 rounded-lg border-2 transition-all duration-200 overflow-hidden group {isSelected
-								? 'bg-blue-600/20 text-blue-400 border-blue-500/30'
-								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/25'} {trainingDisabled
+							class="relative p-3 rounded-sm border transition-colors duration-200 overflow-hidden group {isSelected
+								? 'bg-[#e6a527]/12 border-[#e6a527]/55'
+								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55 hover:bg-[#19304b]'} {trainingDisabled
 								? 'opacity-50 cursor-not-allowed'
 								: ''}"
 							onclick={() => (selectedTemplate = template)}
 							disabled={isSubmitting || trainingDisabled}
 						>
-							<!-- Gradient Background -->
-							<div
-								class="absolute inset-0 opacity-0 transition-opacity duration-200"
-								class:opacity-100={isSelected}
-								style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%)"
-							></div>
-
-							<!-- Hover Gradient -->
-							<div
-								class="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-								class:group-hover:opacity-0={isSelected}
-								style="background: linear-gradient(135deg, rgba(71, 85, 105, 0.1) 0%, rgba(51, 65, 85, 0.05) 100%)"
-							></div>
-
 							<div class="relative flex flex-col gap-2 items-center">
 								<!-- Unit Icon -->
-								<div
-									class="size-16 flex items-center justify-center transition-transform group-hover:scale-110 duration-200"
-								>
+								<div class="size-16 flex items-center justify-center">
 									<img
 										src={getUnitIconPath(template.unitType)}
 										alt={template.unitType}
 										class="w-full h-full object-contain transition-all duration-200"
 										class:[filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]={!isSelected}
-										class:[filter:brightness(0)_saturate(100%)_invert(60%)_sepia(80%)_saturate(1500%)_hue-rotate(200deg)_brightness(100%)_contrast(100%)]={isSelected}
+										class:[filter:brightness(0)_saturate(100%)_invert(76%)_sepia(58%)_saturate(640%)_hue-rotate(352deg)_brightness(96%)_contrast(92%)]={isSelected}
 									/>
 								</div>
 
 								<!-- Unit Name -->
 								<h3
 									class="font-medium text-md transition-colors text-center leading-tight"
-									class:text-blue-300={isSelected}
+									class:text-[#f7c56b]={isSelected}
 									class:text-[#d9ccb7]={!isSelected}
 								>
 									{m[template.unitType]()}
@@ -447,10 +440,10 @@
 
 				<!-- Central Training Panel -->
 				{#if selectedTemplate}
-					<div class="panel backdrop-blur-sm rounded-xl p-5 space-y-5">
+					<div class="panel rounded-sm p-5 space-y-5">
 						<!-- Selected Unit Header -->
 						<div class="flex items-center gap-4 mb-5">
-							<div class="size-14 flex items-center justify-center flex-shrink-0">
+							<div class="size-14 flex items-center justify-center shrink-0">
 								<img
 									src={getUnitIconPath(selectedTemplate.unitType)}
 									alt={selectedTemplate.displayName}
@@ -458,14 +451,14 @@
 								/>
 							</div>
 							<div class="flex-1">
-								<h3 class="text-xl font-semibold text-[#fff7e8] mb-3 tracking-tight">{selectedTemplate.displayName}</h3>
+								<h3 class="text-xl font-semibold text-[#fff7e8] mb-3">{selectedTemplate.displayName}</h3>
 								<div class="flex items-center gap-3 text-sm">
-									<div class="bg-red-900/40 border border-red-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-red-500">ATK</span>
+									<div class="bg-red-600/10 border border-red-500/30 rounded-sm px-2.5 py-1">
+										<span class="text-xs text-red-300">ATK</span>
 										<span class="text-base font-semibold text-[#fff7e8] ml-1.5">{selectedTemplate.baseAttack}</span>
 									</div>
-									<div class="bg-blue-900/40 border border-blue-700/50 rounded px-2.5 py-1">
-										<span class="text-xs text-blue-500">DEF</span>
+									<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm px-2.5 py-1">
+										<span class="text-xs text-[#b7d0e6]">DEF</span>
 										<span class="text-base font-semibold text-[#fff7e8] ml-1.5">{selectedTemplate.baseDefense}</span>
 									</div>
 								</div>
@@ -477,14 +470,12 @@
 							<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
 						</div>
 
-						<div
-							class="flex items-center justify-between p-3 md:p-4 bg-[#102239]/70 rounded-lg border border-[#dfceb0]/20"
-						>
+						<div class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-sm">
 							<div class="flex items-center gap-2">
 								<FluentClock20Filled class="size-4 md:size-5 text-[#a89e8e]" />
 								<span class="text-xs md:text-sm text-[#a89e8e]">Training Time</span>
 							</div>
-							<span class="font-bold text-[#fff7e8] text-base md:text-lg">
+							<span class="font-bold text-[#fff7e8] text-base md:text-lg font-mono">
 								{selectedTemplate.trainingDuration}h
 							</span>
 						</div>
@@ -504,21 +495,17 @@
 							}}
 						>
 							<input type="hidden" name="unitType" value={selectedTemplate.unitType} />
-							<button
+							<Button
 								type="submit"
-								disabled={isSubmitting || !canAfford(selectedTemplate) || trainingDisabled}
-								class="btn w-full gap-2 transition-transform hover:scale-105"
-								class:btn-primary={canAfford(selectedTemplate) && !trainingDisabled}
-								class:btn-disabled={!canAfford(selectedTemplate) || trainingDisabled}
+								variant="primary"
+								block
+								icon={IconAdd}
+								disabled={!canAfford(selectedTemplate) || trainingDisabled}
+								loading={isSubmitting}
+								loadingText="Training..."
 							>
-								{#if isSubmitting}
-									<span class="loading loading-spinner loading-sm"></span>
-									Training...
-								{:else}
-									<IconAdd class="size-5" />
-									Begin Training
-								{/if}
-							</button>
+								Begin Training
+							</Button>
 						</form>
 					</div>
 				{:else}
@@ -536,14 +523,10 @@
 			<!-- Training Queue -->
 			<div>
 				<div class="flex items-center gap-3 mb-4">
-					<span class="h-6 w-1 rounded-full bg-gradient-to-b from-amber-400 to-amber-600"></span>
-					<h2 class="text-lg font-semibold tracking-tight text-[#fff7e8]">Training Queue</h2>
+					<span class="h-6 w-1 rounded-full bg-[#e6a527]"></span>
+					<h2 class="section-title">Training Queue</h2>
 					{#if trainingUnits.length > 0}
-						<span
-							class="ml-auto text-xs font-medium text-amber-300/80 bg-amber-500/10 border border-amber-500/30 rounded-full px-2.5 py-0.5"
-						>
-							{trainingUnits.length}
-						</span>
+						<Badge tone="amber" class="ml-auto">{trainingUnits.length}</Badge>
 					{/if}
 				</div>
 
@@ -554,10 +537,10 @@
 						activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt) <= new Date()}
 
 					<!-- Active Training Unit -->
-					<div class="bg-[#14283f]/85 border border-amber-500/40 rounded-xl overflow-hidden mb-3 backdrop-blur-sm">
+					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm overflow-hidden mb-3">
 						<div class="p-3">
 							<div class="flex items-center gap-2 mb-2">
-								<div class="size-10 flex-shrink-0 flex items-center justify-center">
+								<div class="size-10 shrink-0 flex items-center justify-center">
 									<img
 										src={getUnitIconPath(activeTrainingUnit.unitType)}
 										alt={activeTrainingUnit.unitType}
@@ -566,7 +549,7 @@
 								</div>
 								<div class="flex-1 min-w-0">
 									<h3 class="font-semibold text-[#fff7e8] text-xs truncate">{activeTrainingUnit.name}</h3>
-									<p class="text-xs text-[#a89e8e]">{timeRemaining}</p>
+									<p class="text-xs text-[#f7c56b] font-mono">{timeRemaining}</p>
 								</div>
 							</div>
 
@@ -580,13 +563,12 @@
 						</div>
 
 						{#if isComplete}
-							<div class="border-t border-amber-500/20 p-2.5 bg-[#0d1d31]/60">
+							<div class="border-t border-[#e6a527]/20 p-2.5 bg-[#0d1d31]/60">
 								<form method="POST" action="?/completeTraining" use:enhance>
 									<input type="hidden" name="unitId" value={activeTrainingUnit.id} />
-									<button type="submit" class="btn btn-success btn-xs w-full gap-1.5">
-										<IconCheckmark class="size-3.5" />
+									<Button type="submit" variant="soft-emerald" size="xs" block icon={IconCheckmark}>
 										Finish training
-									</button>
+									</Button>
 								</form>
 							</div>
 						{/if}
@@ -595,9 +577,9 @@
 
 				<!-- Queued Units -->
 				{#each queuedUnits as unit, index}
-					<div class="bg-[#102239]/70 border border-[#dfceb0]/10 rounded-lg p-2 mb-2 backdrop-blur-sm">
+					<div class="panel-muted rounded-sm p-2 mb-2">
 						<div class="flex items-center gap-2">
-							<div class="size-8 flex-shrink-0 flex items-center justify-center">
+							<div class="size-8 shrink-0 flex items-center justify-center">
 								<img
 									src={getUnitIconPath(unit.unitType)}
 									alt={unit.unitType}
@@ -624,9 +606,9 @@
 <Modal bind:open={disbandModalOpen} title="Disband Unit" size="small">
 	{#if unitToDisband}
 		<div class="space-y-4">
-			<div class="flex items-center gap-3 p-3 panel-muted rounded-lg">
+			<div class="flex items-center gap-3 p-3 panel-muted rounded-sm">
 				<div
-					class="w-10 h-10 flex-shrink-0 bg-[#0d1d31]/70 rounded border border-[#dfceb0]/15 flex items-center justify-center p-2"
+					class="w-10 h-10 shrink-0 bg-[#0d1d31]/70 rounded-sm border border-[#dfceb0]/15 flex items-center justify-center p-2"
 				>
 					<img
 						src={getUnitIconPath(unitToDisband.unitType)}
@@ -645,7 +627,7 @@
 			</p>
 
 			<div class="flex gap-2 pt-2">
-				<button type="button" onclick={() => (disbandModalOpen = false)} class="btn btn-ghost flex-1"> Cancel </button>
+				<Button type="button" variant="ghost" grow onclick={() => (disbandModalOpen = false)}>Cancel</Button>
 				<form
 					method="POST"
 					action="?/disbandUnit"
@@ -659,10 +641,7 @@
 					class="flex-1"
 				>
 					<input type="hidden" name="unitId" value={unitToDisband.id} />
-					<button type="submit" class="btn btn-error w-full gap-2">
-						<IconDelete class="size-4" />
-						Disband
-					</button>
+					<Button type="submit" variant="danger" block icon={IconDelete}>Disband</Button>
 				</form>
 			</div>
 		</div>

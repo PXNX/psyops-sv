@@ -207,7 +207,7 @@
 		<p class="text-[#d9ccb7]">
 			You are about to visit an external website. Please be careful and make sure you trust this link.
 		</p>
-		<div class="bg-[#102239]/70 rounded p-3 break-all text-sm text-[#a89e8e]">
+		<div class="panel-muted rounded-sm p-3 break-all text-sm text-[#a89e8e]">
 			{pendingExternalLink}
 		</div>
 		<div class="flex gap-2 justify-end">
@@ -288,13 +288,13 @@
 				{#each messagesByDay as day}
 					<!-- Day Divider -->
 					<div class="flex items-center gap-3 my-6">
-						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-[#dfceb0]/15 to-transparent"></div>
+						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
 						<span
-							class="text-xs text-[#a89e8e] font-semibold px-4 py-1.5 bg-[#14283f]/80 rounded-full border border-[#dfceb0]/10 shadow-lg"
+							class="text-[10px] uppercase tracking-wide text-[#a89e8e] font-semibold px-3 py-1 panel-muted rounded-sm"
 						>
 							{formatDayDivider(day.date)}
 						</span>
-						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-[#dfceb0]/15 to-transparent"></div>
+						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
 					</div>
 
 					{#each day.groups as group}
@@ -312,7 +312,7 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-full rounded-lg" />
+															<img src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
 														</div>
 													{:else}
 														<a
@@ -332,7 +332,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer opacity-60 text-xs mt-0.5 px-1">
+								<div class="chat-footer text-[#a89e8e] text-xs mt-0.5 px-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -344,14 +344,14 @@
 										{#if group.senderLogo && settings.loadImages}
 											<img src={group.senderLogo} alt={group.senderName || "User"} class="" />
 										{:else}
-											<div class="w-full h-full bg-[#14283f]/80 flex items-center justify-center rounded-full">
+											<div class="w-full h-full bg-[#102239] flex items-center justify-center rounded-full">
 												<FluentImageOff20Filled class="size-5 text-[#a89e8e]" />
 											</div>
 										{/if}
 									</a>
 								</div>
 								<div class="chat-header text-xs md:text-sm mb-1 flex items-center gap-2 px-1">
-									<a href="/user/{group.senderId}" class="hover:text-blue-400 transition-colors font-semibold">
+									<a href="/user/{group.senderId}" class="text-[#e5d8c1] hover:text-[#f2c463] transition-colors font-semibold">
 										{group.senderName || "Anonymous"}
 									</a>
 									{#if group.isLeader}
@@ -365,19 +365,19 @@
 									{#each group.messages as msg}
 										<div class="relative group/msg">
 											<div
-												class="chat-bubble bg-[#14283f]/80 text-[#e5d8c1] shadow-lg text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-bl-md break-words"
+												class="chat-bubble before:hidden bg-[#102239]/70 border border-[#dfceb0]/10 text-[#e5d8c1] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 											>
 												{#each renderMessageContent(msg.content) as part}
 													{#if part.type === "url"}
 														{#if isImageUrl(part.content)}
 															<div class="my-2">
-																<img src={part.content} alt="Shared image" class="max-w-full rounded-lg" />
+																<img src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
 															</div>
 														{:else}
 															<a
 																href={part.content}
 																onclick={(e) => handleLinkClick(e, part.content)}
-																class="underline hover:text-blue-400 break-all"
+																class="underline hover:text-[#f2c463] break-all"
 																target="_blank"
 																rel="noopener noreferrer"
 															>
@@ -393,12 +393,12 @@
 												class="absolute -right-8 top-0 opacity-0 group-hover/msg:opacity-100 transition-opacity hidden md:block"
 											>
 												<div class="dropdown dropdown-end">
-													<label tabindex="0" class="btn btn-ghost btn-xs btn-circle">
+													<label tabindex="0" class={buttonClass({ variant: "ghost", size: "xs", shape: "circle" })}>
 														<FluentMoreVertical20Filled class="size-4" />
 													</label>
 													<ul
 														tabindex="0"
-														class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#14283f] border border-[#dfceb0]/15 rounded-box w-48"
+														class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#14283f] border border-[#dfceb0]/15 rounded-sm w-48"
 													>
 														<li>
 															<button
@@ -414,7 +414,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer opacity-60 text-xs mt-0.5 px-1">
+								<div class="chat-footer text-[#a89e8e] text-xs mt-0.5 px-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>

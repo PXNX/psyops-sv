@@ -14,6 +14,9 @@
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import { buttonClass } from "#lib/component/ui/styles.js";
+	import Button from "#lib/component/ui/Button.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
 
 	let { data } = $props();
 
@@ -128,15 +131,15 @@
 
 	const dropzoneClass = $derived(
 		[
-			"group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
+			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200",
 			dragActive
-				? "border-[#e6a527] bg-[#e6a527]/10"
+				? "border-[#e6a527] bg-[#e6a527]/12"
 				: $form.logo
-					? "border-emerald-500/50 bg-emerald-500/5"
-					: "border-[#e6a527]/30",
-			!$submitting && !$form.logo && canCreate ? "hover:border-[#e6a527]/50 hover:bg-[#e6a527]/10" : "",
+					? "border-[#8fae88]/50 bg-[#587252]/10"
+					: "border-[#dfceb0]/20",
+			!$submitting && !$form.logo && canCreate ? "hover:border-[#e6a527]/55 hover:bg-[#e6a527]/10" : "",
 			$submitting || !canCreate ? "opacity-50" : "",
-			$errors.logo ? "input-error" : ""
+			$errors.logo ? "border-red-500" : ""
 		]
 			.filter(Boolean)
 			.join(" ")
@@ -168,34 +171,34 @@
 	}
 </script>
 
-<div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="3xl">
 	<!-- Header -->
-	<div class="text-center space-y-2">
-		<div class="size-20 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto">
-			<FluentBriefcase20Filled class="size-10 text-white" />
-		</div>
-		<h1 class="text-3xl font-bold text-[#fff7e8]">Create Company</h1>
-		<p class="text-[#d9ccb7]">Establish your business empire</p>
-	</div>
+	<PageHeader
+		title="Create Company"
+		subtitle="Establish your business empire"
+		icon={FluentBriefcase20Filled}
+		backHref="/company"
+		backLabel="Companies"
+	/>
 
 	<!-- Cooldown Warning -->
 	{#if data.isOnCooldown && data.cooldownEndsAt}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-5 space-y-3">
+		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5 space-y-3">
 			<div class="flex items-start gap-3">
 				<FluentClock20Filled class="size-6 text-red-400 shrink-0 mt-0.5" />
 				<div class="space-y-2 flex-1">
 					<h3 class="font-semibold text-red-300 text-lg">Company Creation Cooldown Active</h3>
-					<p class="text-red-200/90 text-sm leading-relaxed">
+					<p class="text-[#d9ccb7] text-sm leading-relaxed">
 						You must wait before creating another company. This cooldown period helps maintain economic stability.
 					</p>
-					<div class="bg-red-900/30 rounded-lg p-3 space-y-2">
+					<div class="panel-muted rounded-sm p-3 space-y-2">
 						<div class="flex items-center justify-between">
-							<span class="text-red-100 text-sm font-medium">Time Remaining:</span>
-							<span class="text-red-100 text-sm font-bold">{formatTimeRemaining(data.cooldownEndsAt)}</span>
+							<span class="text-[#e5d8c1] text-sm font-medium">Time Remaining:</span>
+							<span class="text-red-300 text-sm font-bold font-mono">{formatTimeRemaining(data.cooldownEndsAt)}</span>
 						</div>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-red-200/70">Available on:</span>
-							<span class="text-red-200/90">{formatCooldownDate(data.cooldownEndsAt)}</span>
+							<span class="text-[#a89e8e]">Available on:</span>
+							<span class="text-[#d9ccb7]">{formatCooldownDate(data.cooldownEndsAt)}</span>
 						</div>
 					</div>
 				</div>
@@ -205,22 +208,22 @@
 
 	<!-- Error Message -->
 	{#if $message}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{$message}</p>
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
 	<!-- Form -->
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Company Name -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentBriefcase20Filled class="size-5 text-blue-400" />
+				<FluentBriefcase20Filled class="size-5 text-[#e6a527]" />
 				<h2 class="text-lg font-semibold text-[#fff7e8]">Company Details</h2>
 			</div>
 
 			<div>
-				<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2">
+				<label for="name" class="field-label">
 					Company Name <span class="text-red-400">*</span>
 				</label>
 				<input
@@ -230,22 +233,22 @@
 					bind:value={$form.name}
 					placeholder="e.g., Acme Corporation"
 					maxlength="50"
-					class="input w-full field-control"
-					class:input-error={$errors.name}
+					class="field-control rounded-sm px-3 py-2.5 w-full"
+					class:border-red-500={$errors.name}
 					disabled={$submitting || !canCreate}
 				/>
 				{#if $errors.name}
-					<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+					<p class="field-error">{$errors.name}</p>
 				{:else}
-					<p class="text-xs text-[#a89e8e] mt-1">{$form.name?.length || 0}/50 characters</p>
+					<p class="field-hint">{$form.name?.length || 0}/50 characters</p>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Company Logo -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-blue-400" />
+				<FluentImage20Filled class="size-5 text-[#e6a527]" />
 				<h2 class="text-lg font-semibold text-[#fff7e8]">Company Logo (Optional)</h2>
 			</div>
 
@@ -269,7 +272,7 @@
 				>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#e6a527]/15 p-3 transition-transform group-hover:scale-110">
+							<div class="rounded-full bg-[#e6a527]/15 p-3">
 								<FluentImage20Filled class="size-8 text-[#f7c56b]" />
 							</div>
 							<div class="text-center">
@@ -290,7 +293,7 @@
 					{:else}
 						<div class="relative">
 							<div class="flex items-center justify-center p-6 bg-[#102239]/70">
-								<img src={previewUrl} alt="Company logo preview" class="size-24 object-contain rounded-lg" />
+								<img src={previewUrl} alt="Company logo preview" class="size-24 object-contain rounded-sm" />
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/60 opacity-0 transition-opacity group-hover:opacity-100"
@@ -304,7 +307,12 @@
 									clearImage();
 								}}
 								disabled={$submitting || !canCreate}
-								class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
+								class={buttonClass({
+									variant: "secondary",
+									size: "sm",
+									shape: "circle",
+									class: "absolute top-2 right-2"
+								})}
 							>
 								✕
 							</button>
@@ -322,16 +330,16 @@
 			</div>
 
 			{#if $errors.logo}
-				<p class="text-xs text-red-400">{$errors.logo}</p>
+				<p class="field-error">{$errors.logo}</p>
 			{:else}
-				<p class="text-xs text-[#a89e8e]">Will be converted to 96x96 WebP • Max 5MB</p>
+				<p class="field-hint">Will be converted to 96x96 WebP • Max 5MB</p>
 			{/if}
 		</div>
 
 		<!-- Description -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-blue-400" />
+				<FluentDocument20Filled class="size-5 text-[#e6a527]" />
 				<h2 class="text-lg font-semibold text-[#fff7e8]">Company Description (Optional)</h2>
 			</div>
 
@@ -342,13 +350,13 @@
 				rows="5"
 				maxlength="500"
 				placeholder="Describe your company's mission, vision, and business focus..."
-				class="textarea w-full field-control"
-				class:input-error={$errors.description}
+				class="field-control rounded-sm px-3 py-2.5 w-full"
+				class:border-red-500={$errors.description}
 				disabled={$submitting || !canCreate}></textarea>
 			{#if $errors.description}
-				<p class="text-xs text-red-400">{$errors.description}</p>
+				<p class="field-error">{$errors.description}</p>
 			{:else}
-				<p class="text-xs text-[#a89e8e]">{$form.description?.length || 0}/500 characters</p>
+				<p class="field-hint">{$form.description?.length || 0}/500 characters</p>
 			{/if}
 		</div>
 
@@ -357,14 +365,8 @@
 
 		<!-- Submit -->
 		<div class="flex gap-3">
-			<a href="/production" class={buttonClass({ variant: "secondary", grow: true })} class:btn-disabled={$submitting}>
-				Cancel
-			</a>
-			<button
-				type="submit"
-				disabled={$submitting || !canCreate}
-				class={buttonClass({ variant: "primary", grow: true })}
-			>
+			<Button href="/production" variant="secondary" grow disabled={$submitting}>Cancel</Button>
+			<Button type="submit" variant="primary" grow disabled={$submitting || !canCreate}>
 				{#if $delayed}
 					<span class="loading loading-spinner loading-sm"></span>
 					Creating...
@@ -372,22 +374,22 @@
 					<FluentCheckmark20Filled class="size-5" />
 					Create Company ({data.companyCost.toLocaleString()})
 				{/if}
-			</button>
+			</Button>
 		</div>
 
 		<!-- Info Box -->
-		<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4 space-y-2">
-			<p class="text-sm text-blue-300">
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4 space-y-2">
+			<p class="text-sm text-[#b7d0e6]">
 				💡 <strong>Note:</strong>
 				Once created, you will own this company and can build factories to produce goods and resources.
 			</p>
-			<p class="text-xs text-blue-300/70">
+			<p class="text-xs text-[#b7d0e6]/70">
 				<strong>Cooldown:</strong> After creating a company, you must wait {data.cooldownDays} days before creating another
 				one.
 			</p>
 		</div>
 	</form>
-</div>
+</PageContainer>
 
 {#if showCompanyAnim}
 	<ThreeAnimation

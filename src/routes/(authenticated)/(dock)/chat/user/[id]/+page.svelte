@@ -222,7 +222,7 @@
 		<p class="text-[#d9ccb7]">
 			You are about to visit an external website. Please be careful and make sure you trust this link.
 		</p>
-		<div class="bg-[#102239]/70 rounded p-3 break-all text-sm text-[#a89e8e]">
+		<div class="panel-muted rounded-sm p-3 break-all text-sm text-[#a89e8e]">
 			{pendingExternalLink}
 		</div>
 		<div class="flex gap-2 justify-end">
@@ -484,13 +484,13 @@
 				{#each messagesByDay as day}
 					<!-- Day Divider -->
 					<div class="flex items-center gap-3 my-6">
-						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-[#dfceb0]/15 to-transparent"></div>
+						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
 						<span
-							class="text-xs text-[#a89e8e] font-semibold px-4 py-1.5 bg-[#14283f]/80 rounded-full border border-[#dfceb0]/10 shadow-lg"
+							class="text-[10px] uppercase tracking-wide text-[#a89e8e] font-semibold px-3 py-1 panel-muted rounded-sm"
 						>
 							{formatDayDivider(day.date)}
 						</span>
-						<div class="flex-1 h-px bg-gradient-to-r from-transparent via-[#dfceb0]/15 to-transparent"></div>
+						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
 					</div>
 
 					{#each day.groups as group}
@@ -508,7 +508,7 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-full rounded-lg" />
+															<img src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
 														</div>
 													{:else}
 														<a
@@ -528,7 +528,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer opacity-60 text-xs mt-0.5 px-1">
+								<div class="chat-footer text-[#a89e8e] text-xs mt-0.5 px-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -545,7 +545,7 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-full rounded-lg" />
+															<img src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
 														</div>
 													{:else}
 														<a
@@ -554,7 +554,7 @@
 																e.stopPropagation();
 																handleLinkClick(e, part.content);
 															}}
-															class="underline hover:text-blue-400 break-all"
+															class="underline hover:text-[#f2c463] break-all"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -568,7 +568,7 @@
 										</button>
 									{/each}
 								</div>
-								<div class="chat-footer opacity-60 text-xs mt-0.5 px-1">
+								<div class="chat-footer text-[#a89e8e] text-xs mt-0.5 px-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -638,7 +638,7 @@
 					placeholder="Type a message..."
 					maxlength="500"
 					rows="1"
-					class="textarea textarea-bordered flex-1 bg-[#0d1d31] border-[#dfceb0]/20 focus:border-[#e6a527]/70 text-[#fff7e8] placeholder-[#b3a68e]/60 resize-none min-h-[2.75rem] md:min-h-[2.5rem] max-h-32 rounded-xl text-base"
+					class="field-control rounded-sm px-3 py-2.5 flex-1 resize-none min-h-[2.75rem] md:min-h-[2.5rem] max-h-32 text-base"
 					disabled={isSubmitting}
 					onkeydown={(e) => {
 						if (e.key === "Enter" && !e.shiftKey) {

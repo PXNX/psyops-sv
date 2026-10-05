@@ -35,7 +35,7 @@
 
 {#if open}
 	<div class="modal-open modal z-5003">
-		<div class="modal-box {sizeClasses[size]} rounded-xl panel">
+		<div class="modal-box {sizeClasses[size]} rounded-sm panel">
 			<!-- Header with back button (optional) and close button -->
 			<div class="mb-6 flex items-center justify-between">
 				<div class="flex items-center gap-2">

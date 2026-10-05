@@ -16,6 +16,10 @@
 	import { settings } from "#lib/settings.svelte.js";
 	import TelegramLoginWidget from "#lib/components/TelegramLoginWidget.svelte";
 	import PushNotificationManager from "#lib/components/PushNotificationManager.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import Badge from "#lib/component/ui/Badge.svelte";
 
 	let { data, form } = $props();
 
@@ -70,57 +74,49 @@
 	}
 </script>
 
-<div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="3xl">
 	<!-- Header -->
-	<div class="text-center space-y-2">
-		<div class="size-20 bg-[#14283f] rounded-2xl flex items-center justify-center mx-auto">
-			<FluentSettings20Filled class="size-10 text-[#fff7e8]" />
-		</div>
-		<h1 class="text-3xl font-bold text-[#fff7e8]">Settings</h1>
-		<p class="text-[#a89e8e]">Manage your account preferences</p>
-	</div>
+	<PageHeader title="Settings" subtitle="Manage your account preferences" icon={FluentSettings20Filled} />
 
 	<!-- Edit Profile Link -->
-	<div class="panel rounded-xl p-5">
-		<a
-			href="/user/{data.accountId}"
-			class="flex items-center justify-between group hover:bg-[#19304b] -m-5 p-5 rounded-xl transition-colors"
-		>
-			<div class="flex items-center gap-3">
-				<div class="bg-[#8c709b]/20 p-2 rounded-lg">
-					<FluentPerson20Filled class="size-5 text-[#d5c4df]" />
-				</div>
-				<div>
-					<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">Edit Profile</p>
-					<p class="text-xs text-[#a89e8e]">Change your name, bio and profile picture</p>
-				</div>
+	<a
+		href="/user/{data.accountId}"
+		class="group panel-interactive rounded-sm p-5 flex items-center justify-between"
+	>
+		<div class="flex items-center gap-3">
+			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 p-2 rounded-sm">
+				<FluentPerson20Filled class="size-5 text-[#b7a0c5]" />
 			</div>
-			<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#d5c4df] transition-colors" />
-		</a>
-	</div>
+			<div>
+				<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">Edit Profile</p>
+				<p class="text-xs text-[#a89e8e]">Change your name, bio and profile picture</p>
+			</div>
+		</div>
+		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+	</a>
 
 	<!-- Telegram Connection -->
-	<div class="panel rounded-xl p-5 space-y-4">
+	<div class="panel rounded-sm p-5 space-y-4">
 		<div class="flex items-center gap-2">
-			<svg class="size-5 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+			<svg class="size-5 text-[#7ba0c8]" fill="currentColor" viewBox="0 0 24 24">
 				<path
 					d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
 				/>
 			</svg>
-			<h2 class="text-lg font-semibold text-[#fff7e8]">Telegram Account</h2>
+			<h2 class="section-title">Telegram Account</h2>
 		</div>
 
 		{#if data.profile.telegramUsername}
-			<div class="bg-[#0d1d31]/70 rounded-lg p-4 space-y-3">
+			<div class="panel-muted rounded-sm p-4 space-y-3">
 				<div class="flex items-center justify-between">
 					<div>
 						<p class="text-sm text-[#a89e8e]">Connected Telegram Account</p>
 						<p class="text-base font-semibold text-[#fff7e8] mt-1">@{data.profile.telegramUsername}</p>
 					</div>
-					<div class="badge badge-success">Connected</div>
+					<Badge tone="green">Connected</Badge>
 				</div>
 				<form method="POST" action="?/disconnectTelegram" use:enhance>
-					<button type="submit" class="btn btn-sm btn-outline btn-error w-full"> Disconnect Telegram </button>
+					<Button type="submit" variant="soft-red" size="sm" block>Disconnect Telegram</Button>
 				</form>
 			</div>
 		{:else}
@@ -132,19 +128,19 @@
 	</div>
 
 	<!-- Application Settings -->
-	<div class="panel rounded-xl p-5 space-y-4">
+	<div class="panel rounded-sm p-5 space-y-4">
 		<div class="flex items-center gap-2">
-			<FluentPaint20Filled class="size-5 text-[#d5c4df]" />
-			<h2 class="text-lg font-semibold text-[#fff7e8]">Appearance</h2>
+			<FluentPaint20Filled class="size-5 text-[#b7a0c5]" />
+			<h2 class="section-title">Appearance</h2>
 		</div>
 
 		<div>
-			<label for="theme" class="block text-sm font-medium text-[#d9ccb7] mb-2"> Theme </label>
+			<label for="theme" class="field-label">Theme</label>
 			<select
 				id="theme"
 				value={settings.theme}
 				data-choose-theme
-				class="select field-control w-full capitalize"
+				class="field-control rounded-sm px-3 py-2.5 w-full capitalize"
 				onchange={set_theme}
 			>
 				{#each themes as theme}
@@ -156,7 +152,7 @@
 		<div class="pt-2">
 			<label class="flex items-center justify-between cursor-pointer group">
 				<div class="flex items-center gap-3">
-					<FluentDataUsage20Filled class="size-5 text-[#d5c4df]" />
+					<FluentDataUsage20Filled class="size-5 text-[#b7a0c5]" />
 					<div>
 						<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Load Images</p>
 						<p class="text-xs text-[#a89e8e]">Disable to save data and improve performance</p>
@@ -166,17 +162,17 @@
 					type="checkbox"
 					checked={settings.loadImages}
 					onchange={toggleLoadImages}
-					class="toggle toggle-primary"
+					class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 				/>
 			</label>
 		</div>
 	</div>
 
 	<!-- Notification Settings -->
-	<div class="panel rounded-xl p-5 space-y-1">
+	<div class="panel rounded-sm p-5 space-y-1">
 		<div class="flex items-center gap-2 mb-3">
-			<FluentAlert20Filled class="size-5 text-blue-400" />
-			<h2 class="text-lg font-semibold text-[#fff7e8]">Notifications</h2>
+			<FluentAlert20Filled class="size-5 text-[#7ba0c8]" />
+			<h2 class="section-title">Notifications</h2>
 		</div>
 		<p class="text-xs text-[#a89e8e] mb-3">Choose which events send you push notifications</p>
 
@@ -196,7 +192,7 @@
 				type="checkbox"
 				bind:checked={notifyDirectMessages}
 				onchange={() => toggleNotification("notifyDirectMessages", notifyDirectMessages)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 
@@ -212,7 +208,7 @@
 				type="checkbox"
 				bind:checked={notifyNewspaperPosts}
 				onchange={() => toggleNotification("notifyNewspaperPosts", notifyNewspaperPosts)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 
@@ -230,7 +226,7 @@
 				type="checkbox"
 				bind:checked={notifyWarDeclarations}
 				onchange={() => toggleNotification("notifyWarDeclarations", notifyWarDeclarations)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 
@@ -246,7 +242,7 @@
 				type="checkbox"
 				bind:checked={notifyBattleResults}
 				onchange={() => toggleNotification("notifyBattleResults", notifyBattleResults)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 
@@ -262,7 +258,7 @@
 				type="checkbox"
 				bind:checked={notifyElections}
 				onchange={() => toggleNotification("notifyElections", notifyElections)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 
@@ -278,7 +274,7 @@
 				type="checkbox"
 				bind:checked={notifyNewProposals}
 				onchange={() => toggleNotification("notifyNewProposals", notifyNewProposals)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 
@@ -294,7 +290,7 @@
 				type="checkbox"
 				bind:checked={notifyTravelComplete}
 				onchange={() => toggleNotification("notifyTravelComplete", notifyTravelComplete)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 
@@ -310,7 +306,7 @@
 				type="checkbox"
 				bind:checked={notifyShiftComplete}
 				onchange={() => toggleNotification("notifyShiftComplete", notifyShiftComplete)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 
@@ -326,115 +322,105 @@
 				type="checkbox"
 				bind:checked={notifyMarketSales}
 				onchange={() => toggleNotification("notifyMarketSales", notifyMarketSales)}
-				class="toggle toggle-info"
+				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
 			/>
 		</label>
 	</div>
 
 	<!-- Premium Membership Link -->
-	<div class="panel rounded-xl p-5">
-		<a
-			href="/premium"
-			class="flex items-center justify-between group hover:bg-[#19304b] -m-5 p-5 rounded-xl transition-colors"
-		>
-			<div class="flex items-center gap-3">
-				<div class="bg-gradient-to-r from-amber-500 to-yellow-500 p-2 rounded-lg">
-					<FluentStar20Filled class="size-5 text-slate-900" />
-				</div>
-				<div>
-					<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">
-						Premium Membership
-					</p>
-					<p class="text-xs text-[#a89e8e]">Automate production, training & factory work</p>
-				</div>
+	<a
+		href="/premium"
+		class="group panel-interactive rounded-sm p-5 flex items-center justify-between"
+	>
+		<div class="flex items-center gap-3">
+			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 p-2 rounded-sm">
+				<FluentStar20Filled class="size-5 text-[#f7c56b]" />
 			</div>
-			<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#d5c4df] transition-colors" />
-		</a>
-	</div>
+			<div>
+				<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
+					Premium Membership
+				</p>
+				<p class="text-xs text-[#a89e8e]">Automate production, training & factory work</p>
+			</div>
+		</div>
+		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+	</a>
 
 	<!-- Gift Code Link -->
-	<div class="panel rounded-xl p-5">
-		<a
-			href="/giftcode"
-			class="flex items-center justify-between group hover:bg-[#19304b] -m-5 p-5 rounded-xl transition-colors"
-		>
-			<div class="flex items-center gap-3">
-				<div class="bg-[#8c709b]/25 p-2 rounded-lg">
-					<FluentGift20Filled class="size-5 text-[#fff7e8]" />
-				</div>
-				<div>
-					<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">Gift Codes</p>
-					<p class="text-xs text-[#a89e8e]">Redeem codes for exclusive rewards and bonuses</p>
-				</div>
+	<a
+		href="/giftcode"
+		class="group panel-interactive rounded-sm p-5 flex items-center justify-between"
+	>
+		<div class="flex items-center gap-3">
+			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 p-2 rounded-sm">
+				<FluentGift20Filled class="size-5 text-[#b7a0c5]" />
 			</div>
-			<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#d5c4df] transition-colors" />
-		</a>
-	</div>
+			<div>
+				<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">Gift Codes</p>
+				<p class="text-xs text-[#a89e8e]">Redeem codes for exclusive rewards and bonuses</p>
+			</div>
+		</div>
+		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+	</a>
 
 	<!-- About Link -->
-	<div class="panel rounded-xl p-5">
-		<a
-			href="/about"
-			class="flex items-center justify-between group hover:bg-[#19304b] -m-5 p-5 rounded-xl transition-colors"
-		>
-			<div class="flex items-center gap-3">
-				<div class="bg-blue-600/20 p-2 rounded-lg">
-					<FluentInfo20Filled class="size-5 text-blue-400" />
-				</div>
-				<div>
-					<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">
-						About This Application
-					</p>
-					<p class="text-xs text-[#a89e8e]">Learn more about features, version, and terms</p>
-				</div>
+	<a
+		href="/about"
+		class="group panel-interactive rounded-sm p-5 flex items-center justify-between"
+	>
+		<div class="flex items-center gap-3">
+			<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 p-2 rounded-sm">
+				<FluentInfo20Filled class="size-5 text-[#7ba0c8]" />
 			</div>
-			<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#d5c4df] transition-colors" />
-		</a>
-	</div>
+			<div>
+				<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
+					About This Application
+				</p>
+				<p class="text-xs text-[#a89e8e]">Learn more about features, version, and terms</p>
+			</div>
+		</div>
+		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+	</a>
 
 	<!-- Account Actions -->
-	<div class="panel rounded-xl p-5 space-y-3">
-		<h2 class="text-lg font-semibold text-[#fff7e8]">Account</h2>
+	<div class="panel rounded-sm p-5 space-y-3">
+		<h2 class="section-title">Account</h2>
 
-		<div class="bg-[#102239]/70 rounded-xl border border-[#dfceb0]/10 p-4 text-code">
+		<div class="panel-muted rounded-sm p-4 text-sm text-[#d9ccb7] break-all">
 			{data.profile.email}
 		</div>
 
 		<form method="POST" action="?/logout" use:enhance>
-			<button
-				type="submit"
-				class="btn w-full justify-start bg-red-600/10 hover:bg-red-600/20 border-red-500/20 text-red-300 hover:text-red-200 gap-2"
-			>
-				<FluentArrowExit20Filled class="size-5" />
-				Sign Out
-			</button>
+			<Button type="submit" variant="soft-red" block icon={FluentArrowExit20Filled} class="justify-start">Sign Out</Button>
 		</form>
 	</div>
 
 	<!-- Danger Zone -->
-	<div class="bg-red-950/30 rounded-xl border border-red-500/20 p-5 space-y-3">
-		<div class="flex items-center gap-2">
+	<div class="bg-red-600/10 rounded-sm border border-red-500/30 p-5 space-y-3">
+		<h2 class="section-title">
 			<FluentDelete20Filled class="size-5 text-red-400" />
-			<h2 class="text-lg font-semibold text-red-300">Danger Zone</h2>
-		</div>
+			<span class="text-red-300">Danger Zone</span>
+		</h2>
 
 		<p class="text-sm text-[#a89e8e]">
 			Permanently delete your account and all associated data. This action cannot be undone.
 		</p>
 
-		<button
+		<Button
 			type="button"
+			variant="soft-red"
+			block
+			icon={FluentDelete20Filled}
+			class="justify-start"
 			onclick={() => {
 				showDeleteModal = true;
 				deleteConfirmation = "";
 			}}
-			class="btn w-full justify-start bg-red-600/10 hover:bg-red-600/20 border-red-500/30 text-red-300 hover:text-red-200 gap-2"
 		>
-			<FluentDelete20Filled class="size-5" />
 			Delete Account
-		</button>
+		</Button>
 	</div>
-</div>
+</PageContainer>
 
 <!-- Delete Account Confirmation Modal -->
 {#if showDeleteModal}
@@ -442,7 +428,7 @@
 		<!-- Backdrop -->
 		<button
 			type="button"
-			class="absolute inset-0 bg-black/70 backdrop-blur-sm"
+			class="absolute inset-0 bg-[#0c1929]/80 backdrop-blur-sm"
 			onclick={() => {
 				showDeleteModal = false;
 			}}
@@ -451,9 +437,9 @@
 		></button>
 
 		<!-- Modal -->
-		<div class="relative bg-[#14283f] rounded-2xl border border-red-500/30 p-6 max-w-md w-full space-y-4 shadow-2xl">
+		<div class="relative bg-[#14283f] rounded-sm border border-red-500/30 p-6 max-w-md w-full space-y-4 shadow-2xl">
 			<div class="flex items-center gap-3">
-				<div class="bg-red-600/20 p-2.5 rounded-xl">
+				<div class="bg-red-600/10 border border-red-500/30 p-2.5 rounded-sm">
 					<FluentDelete20Filled class="size-6 text-red-400" />
 				</div>
 				<div>
@@ -462,7 +448,7 @@
 				</div>
 			</div>
 
-			<div class="bg-red-950/40 border border-red-500/20 rounded-lg p-3 space-y-2">
+			<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 space-y-2">
 				<p class="text-sm text-red-300 font-medium">The following will be permanently deleted:</p>
 				<ul class="text-sm text-[#a89e8e] space-y-1 list-disc list-inside">
 					<li>Your profile, wallet, and inventory</li>
@@ -486,7 +472,7 @@
 				class="space-y-4"
 			>
 				<div>
-					<label for="delete-confirmation" class="block text-sm font-medium text-[#d9ccb7] mb-2">
+					<label for="delete-confirmation" class="field-label">
 						Type <span class="text-red-400 font-bold">DELETE</span> to confirm
 					</label>
 					<input
@@ -495,37 +481,36 @@
 						type="text"
 						autocomplete="off"
 						bind:value={deleteConfirmation}
-						class="input w-full bg-[#0d1d31] border-[#dfceb0]/20 text-[#fff7e8] focus:border-red-500/50 focus:ring-2 focus:ring-red-500/20"
+						class="field-control w-full rounded-sm px-3 py-2.5 focus:border-red-500/50 focus:ring-red-500/20"
 						placeholder="DELETE"
 					/>
 				</div>
 
 				{#if form?.deleteError}
-					<p class="text-sm text-red-400">{form.deleteError}</p>
+					<p class="field-error">{form.deleteError}</p>
 				{/if}
 
 				<div class="flex gap-3">
-					<button
+					<Button
 						type="button"
+						variant="secondary"
+						grow
 						onclick={() => {
 							showDeleteModal = false;
 						}}
-						class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#d9ccb7]"
 					>
 						Cancel
-					</button>
-					<button
+					</Button>
+					<Button
 						type="submit"
+						variant="danger"
+						grow
 						disabled={deleteConfirmation !== "DELETE" || isDeleting}
-						class="btn flex-1 bg-red-600 hover:bg-red-700 border-red-500/30 text-[#fff7e8] disabled:opacity-40 disabled:cursor-not-allowed"
+						loading={isDeleting}
+						loadingText="Deleting..."
 					>
-						{#if isDeleting}
-							<span class="loading loading-spinner loading-sm"></span>
-							Deleting...
-						{:else}
-							Delete My Account
-						{/if}
-					</button>
+						Delete My Account
+					</Button>
 				</div>
 			</form>
 		</div>

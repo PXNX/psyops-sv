@@ -19,9 +19,9 @@
 	};
 </script>
 
-<div class="panel rounded-xl p-4">
+<div class="panel rounded-sm p-4">
 	<div class="flex items-center gap-3">
-		<div class="size-10 rounded-lg flex items-center justify-center {colorClasses[color]}">
+		<div class="size-10 rounded-sm flex items-center justify-center {colorClasses[color]}">
 			<Icon class="size-5" />
 		</div>
 		<div>

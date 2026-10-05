@@ -12,6 +12,9 @@
 	import { createProposalSchema } from "./schema";
 	import { getRegionName } from "#lib/utils/formatting.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
@@ -40,11 +43,11 @@
 
 	const proposalTypeColors: Record<string, string> = {
 		tax: "bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35",
-		hospital: "bg-pink-600/20 text-pink-300 border-pink-500/30",
+		hospital: "bg-red-600/10 text-red-300 border-red-500/30",
 		school: "bg-[#8c709b]/20 text-[#d5c4df] border-[#b7a0c5]/30",
-		power_plant: "bg-orange-600/20 text-orange-300 border-orange-500/30",
+		power_plant: "bg-[#e6a527]/12 text-[#f7c56b] border-[#e6a527]/35",
 		infrastructure: "bg-[#315d8d]/20 text-[#b7d0e6] border-[#7ba0c8]/30",
-		fortifications: "bg-red-600/20 text-red-400 border-red-500/30",
+		fortifications: "bg-red-600/10 text-red-300 border-red-500/30",
 		border_control: "bg-[#587252]/20 text-[#c6dfbf] border-[#8fae88]/30"
 	};
 
@@ -171,35 +174,23 @@
 	const currentBuildingCount = $derived(getBuildingCount($formData.regionId, $formData.proposalType));
 </script>
 
-<div class="max-w-4xl mx-auto px-4 py-6">
+<PageContainer maxWidth="3xl">
 	<!-- Header -->
-	<div class="mb-6">
-		<a href="/state/{data.state.id}/parliament" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
-			{data.state.name} — Parliament
-		</a>
-		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3">
-			{#if canAutoExecute()}
-				<FluentShieldTask20Filled class="size-8 text-[#d5c4df]" />
-				Execute Action
-			{:else}
-				<FluentDocument20Filled class="size-8 text-[#b7d0e6]" />
-				Create Proposal
-			{/if}
-		</h1>
-		<p class="text-[#a89e8e] mt-2">
-			{#if canAutoExecute()}
-				Use your {data.isPresident ? "presidential" : "ministerial"} authority to execute actions immediately
-			{:else}
-				Submit a proposal for parliamentary vote (1 day voting, 60% majority required)
-			{/if}
-		</p>
-	</div>
+	<PageHeader
+		title={canAutoExecute() ? "Execute Action" : "Create Proposal"}
+		subtitle={canAutoExecute()
+			? `Use your ${data.isPresident ? "presidential" : "ministerial"} authority to execute actions immediately`
+			: "Submit a proposal for parliamentary vote (1 day voting, 60% majority required)"}
+		icon={canAutoExecute() ? FluentShieldTask20Filled : FluentDocument20Filled}
+		backHref="/state/{data.state.id}/parliament"
+		backLabel="{data.state.name} — Parliament"
+	/>
 
 	<!-- Authority Notice -->
 	{#if data.isPresident || data.userMinistry}
-		<div class="panel rounded-xl p-4 mb-6">
+		<div class="panel-muted rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<FluentShieldTask20Filled class="size-6 text-[#d5c4df]" />
+				<FluentShieldTask20Filled class="size-6 text-[#b7a0c5]" />
 				<div>
 					<p class="text-sm font-medium text-[#fff7e8]">
 						{data.isPresident ? "Presidential Authority" : `Minister of ${data.userMinistry}`}
@@ -212,16 +203,16 @@
 
 	<!-- Info Banner -->
 	{#if canAutoExecute()}
-		<div class="alert bg-[#8c709b]/15 border border-[#b7a0c5]/30 mb-6">
-			<FluentShieldTask20Filled class="size-5 text-[#d5c4df]" />
+		<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm p-4 flex items-center gap-3">
+			<FluentShieldTask20Filled class="size-5 text-[#b7a0c5] shrink-0" />
 			<div class="text-sm">
 				<p class="font-semibold text-[#fff7e8]">Immediate Execution</p>
 				<p class="text-[#d9ccb7]">This action will be executed immediately upon submission.</p>
 			</div>
 		</div>
 	{:else}
-		<div class="alert bg-[#315d8d]/18 border border-[#7ba0c8]/30 mb-6">
-			<FluentDocument20Filled class="size-5 text-[#b7d0e6]" />
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4 flex items-center gap-3">
+			<FluentDocument20Filled class="size-5 text-[#7ba0c8] shrink-0" />
 			<div class="text-sm">
 				<p class="font-semibold text-[#fff7e8]">Parliamentary Proposal</p>
 				<p class="text-[#d9ccb7]">
@@ -232,7 +223,7 @@
 	{/if}
 
 	<!-- Form -->
-	<div class="panel rounded-xl p-6">
+	<div class="panel rounded-sm p-5">
 		<form method="POST" action="?/createProposal" use:enhance class="space-y-6">
 			<!-- Proposal Type -->
 			<div>
@@ -243,9 +234,9 @@
 					{#each ["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control"] as type}
 						<button
 							type="button"
-							class="p-4 rounded-lg border-2 text-left transition-all {$formData.proposalType === type
+							class="p-4 rounded-sm border text-left transition-colors {$formData.proposalType === type
 								? proposalTypeColors[type]
-								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/30'}"
+								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
 							onclick={() => ($formData.proposalType = type as ProposalType)}
 							disabled={$submitting}
 						>
@@ -253,7 +244,7 @@
 								<span class="text-2xl">{proposalTypeIcons[type]}</span>
 								<h4 class="font-bold text-[#fff7e8] capitalize text-sm">{type.replace("_", " ")}</h4>
 								{#if canAutoExecute() && ((data.isPresident && ["tax", "border_control", "fortifications"].includes(type)) || (data.userMinistry === "economy" && type === "tax") || (data.userMinistry === "foreign_affairs" && type === "border_control") || (data.userMinistry === "defense" && type === "fortifications") || (data.userMinistry === "infrastructure" && type === "infrastructure") || (data.userMinistry === "education" && type === "school") || (data.userMinistry === "health" && type === "hospital"))}
-									<span class="text-xs text-emerald-400">✓ Immediate</span>
+									<span class="text-xs text-[#c6dfbf]">✓ Immediate</span>
 								{/if}
 							</div>
 						</button>
@@ -261,17 +252,17 @@
 				</div>
 				<input type="hidden" name="proposalType" value={$formData.proposalType} />
 				{#if $errors.proposalType}
-					<p class="text-xs text-red-400 mt-1">{$errors.proposalType}</p>
+					<p class="field-error">{$errors.proposalType}</p>
 				{/if}
 			</div>
 
 			<!-- Tax-Specific Fields -->
 			{#if isTaxProposal}
 				<div class="border-t border-[#dfceb0]/10 pt-6 space-y-6">
-					<div class="bg-[#e6a527]/10 border border-[#e6a527]/25 rounded-xl p-4">
+					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-4">
 						<div class="flex items-center gap-2 mb-2">
 							<FluentMoney20Filled class="size-5 text-[#f7c56b]" />
-							<h3 class="text-lg font-semibold text-[#fff7e8]">Tax Configuration</h3>
+							<h3 class="text-base font-semibold text-[#fff7e8]">Tax Configuration</h3>
 						</div>
 						<p class="text-sm text-[#d9ccb7]">Revenue will be deposited into the state treasury.</p>
 					</div>
@@ -284,9 +275,9 @@
 							{#each ["mining", "production", "market_transaction", "income"] as type}
 								<button
 									type="button"
-									class="p-4 rounded-lg border-2 text-left transition-all {$formData.taxType === type
-										? 'bg-[#e6a527]/20 border-[#e6a527]/50'
-										: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/30'}"
+									class="p-4 rounded-sm border text-left transition-colors {$formData.taxType === type
+										? 'bg-[#e6a527]/12 border-[#e6a527]/60'
+										: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
 									onclick={() => ($formData.taxType = type as any)}
 									disabled={$submitting}
 								>
@@ -300,7 +291,7 @@
 						</div>
 						<input type="hidden" name="taxType" value={$formData.taxType} />
 						{#if $errors.taxType}
-							<p class="text-xs text-red-400 mt-1">{$errors.taxType}</p>
+							<p class="field-error">{$errors.taxType}</p>
 						{/if}
 					</div>
 
@@ -315,7 +306,7 @@
 							min="1"
 							max="50"
 							bind:value={$formData.taxRate}
-							class="range range-warning w-full"
+							class="range range-sm w-full text-[#e6a527]"
 							disabled={$submitting}
 						/>
 						<div class="flex justify-between text-xs text-[#a89e8e] px-2 mt-1">
@@ -325,7 +316,7 @@
 							<span>50%</span>
 						</div>
 						{#if $errors.taxRate}
-							<p class="text-xs text-red-400 mt-1">{$errors.taxRate}</p>
+							<p class="field-error">{$errors.taxRate}</p>
 						{/if}
 					</div>
 				</div>
@@ -334,10 +325,10 @@
 			<!-- Border Control Fields -->
 			{#if isBorderControlProposal}
 				<div class="border-t border-[#dfceb0]/10 pt-6 space-y-6">
-					<div class="bg-[#587252]/10 border border-[#8fae88]/20 rounded-xl p-4">
+					<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-4">
 						<div class="flex items-center gap-2 mb-2">
 							<FluentGlobe20Filled class="size-5 text-[#8fae88]" />
-							<h3 class="text-lg font-semibold text-[#fff7e8]">Border Control</h3>
+							<h3 class="text-base font-semibold text-[#fff7e8]">Border Control</h3>
 						</div>
 						<p class="text-sm text-[#d9ccb7]">
 							Manage state border access. Closed borders cost ${data.borderMaintenanceCost.toLocaleString()}/day to
@@ -352,9 +343,9 @@
 						<div class="grid grid-cols-2 gap-3">
 							<button
 								type="button"
-								class="p-4 rounded-lg border-2 text-left transition-all {$formData.borderStatus === 'open'
-									? 'bg-[#587252]/20 border-[#8fae88]/50'
-									: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/30'}"
+								class="p-4 rounded-sm border text-left transition-colors {$formData.borderStatus === 'open'
+									? 'bg-[#587252]/18 border-[#8fae88]/60'
+									: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
 								onclick={() => ($formData.borderStatus = "open")}
 								disabled={$submitting}
 							>
@@ -364,15 +355,15 @@
 								</div>
 								<p class="text-xs text-[#a89e8e]">Allow free travel and trade</p>
 								{#if data.border?.status === "open"}
-									<span class="text-xs text-emerald-400 mt-2 block">✓ Current status</span>
+									<span class="text-xs text-[#c6dfbf] mt-2 block">✓ Current status</span>
 								{/if}
 							</button>
 
 							<button
 								type="button"
-								class="p-4 rounded-lg border-2 text-left transition-all {$formData.borderStatus === 'closed'
-									? 'bg-red-600/20 border-red-500/50'
-									: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/30'}"
+								class="p-4 rounded-sm border text-left transition-colors {$formData.borderStatus === 'closed'
+									? 'bg-red-600/10 border-red-500/60'
+									: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
 								onclick={() => ($formData.borderStatus = "closed")}
 								disabled={$submitting}
 							>
@@ -391,7 +382,7 @@
 						</div>
 						<input type="hidden" name="borderStatus" value={$formData.borderStatus} />
 						{#if $errors.borderStatus}
-							<p class="text-xs text-red-400 mt-1">{$errors.borderStatus}</p>
+							<p class="field-error">{$errors.borderStatus}</p>
 						{/if}
 					</div>
 				</div>
@@ -400,19 +391,19 @@
 			<!-- Building Construction Fields -->
 			{#if isBuildingProposal}
 				<div class="border-t border-[#dfceb0]/10 pt-6 space-y-6">
-					<div class="bg-[#315d8d]/10 border border-[#7ba0c8]/20 rounded-xl p-4">
+					<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
 						<div class="flex items-center gap-2 mb-2">
 							<FluentBuildingBank20Filled class="size-5 text-[#7ba0c8]" />
-							<h3 class="text-lg font-semibold text-[#fff7e8]">Construction Project</h3>
+							<h3 class="text-base font-semibold text-[#fff7e8]">Construction Project</h3>
 						</div>
 						<p class="text-sm text-[#d9ccb7]">Resources will be taken from the state treasury and inventory.</p>
 					</div>
 
 					{#if selectedRegion() && currentBuildingCount > 0}
-						<div class="panel-muted rounded-lg p-4">
+						<div class="panel-muted rounded-sm p-4">
 							<div class="flex items-center justify-between">
 								<p class="text-sm font-medium text-[#d9ccb7]">Existing in Region:</p>
-								<div class="bg-[#315d8d]/20 border border-[#7ba0c8]/30 rounded px-3 py-1">
+								<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm px-3 py-1">
 									<p class="text-lg font-bold text-[#fff7e8]">{currentBuildingCount}</p>
 								</div>
 							</div>
@@ -430,14 +421,14 @@
 									: 0}
 								<button
 									type="button"
-									class="p-4 rounded-lg border-2 text-left transition-all flex items-center gap-3 {$formData.regionId ===
+									class="p-4 rounded-sm border text-left transition-colors flex items-center gap-3 {$formData.regionId ===
 									region.id.toString()
-										? 'bg-[#e6a527]/20 border-[#e6a527]/50'
-										: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/30'}"
+										? 'bg-[#e6a527]/12 border-[#e6a527]/60'
+										: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
 									onclick={() => ($formData.regionId = region.id.toString())}
 									disabled={$submitting}
 								>
-									<img src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="w-12 h-12 rounded" />
+									<img src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="w-12 h-12 rounded-sm" />
 									<div class="flex-1">
 										<h4 class="font-bold text-[#fff7e8]">{getRegionName(region.id)}</h4>
 										<p class="text-xs text-[#a89e8e]">
@@ -452,7 +443,7 @@
 						</div>
 						<input type="hidden" name="regionId" value={$formData.regionId} />
 						{#if $errors.regionId}
-							<p class="text-xs text-red-400 mt-1">{$errors.regionId}</p>
+							<p class="field-error">{$errors.regionId}</p>
 						{/if}
 					</div>
 
@@ -470,21 +461,22 @@
 								min="1"
 								max="100"
 								placeholder="1"
-								class="input join-item flex-1 field-control"
+								class="join-item flex-1 min-w-0 field-control rounded-sm px-3 py-2.5 font-mono"
 								class:input-error={$errors.quantity}
 								disabled={$submitting}
 							/>
-							<button
+							<Button
 								type="button"
-								class="btn join-item bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#c7bda9]"
+								variant="secondary"
+								class="join-item"
 								onclick={() => ($formData.quantity = maxAffordableQuantity())}
 								disabled={$submitting || maxAffordableQuantity() < 1}
 							>
 								MAX
-							</button>
+							</Button>
 						</div>
 						{#if $errors.quantity}
-							<p class="text-xs text-red-400 mt-1">{$errors.quantity}</p>
+							<p class="field-error">{$errors.quantity}</p>
 						{/if}
 						{#if $formData.quantity && currentBuildingCount > 0}
 							<p class="text-xs text-[#a89e8e] mt-1">
@@ -502,7 +494,7 @@
 					{/if}
 
 					{#if $formData.quantity && $formData.quantity > 1}
-						<div class="bg-[#315d8d]/10 border border-[#7ba0c8]/20 rounded-lg p-3">
+						<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-3">
 							<p class="text-xs text-[#d9ccb7]">
 								Buildings will be numbered automatically (e.g., Building 1, Building 2, Building 3...)
 							</p>
@@ -512,7 +504,7 @@
 					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
 						{@const template = data.buildingTemplates[$formData.proposalType]}
 						{#if template}
-							<div class="grid grid-cols-3 gap-2 text-xs text-[#a89e8e] panel-muted rounded-lg p-4">
+							<div class="grid grid-cols-3 gap-2 text-xs text-[#a89e8e] panel-muted rounded-sm p-4">
 								<div>
 									<span class="text-[#a89e8e]/70">Construction:</span>
 									<div class="text-[#fff7e8]">{template.constructionTime} days</div>
@@ -533,32 +525,22 @@
 
 			<!-- Actions -->
 			<div class="flex gap-3 pt-4">
-				<a
-					href="/state/{data.state.id}/parliament"
-					class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border-0 text-[#e5d8c1]"
-				>
-					Cancel
-				</a>
-				<button
+				<Button href="/state/{data.state.id}/parliament" variant="secondary" grow>Cancel</Button>
+				<Button
 					type="submit"
+					variant="primary"
+					grow
+					icon={canAutoExecute() ? FluentShieldTask20Filled : FluentDocument20Filled}
+					loading={$delayed}
+					loadingText={canAutoExecute() ? "Executing..." : "Creating..."}
 					disabled={$submitting ||
 						(isTaxProposal && (!$formData.taxType || !$formData.taxRate)) ||
 						(isBorderControlProposal && !$formData.borderStatus) ||
 						(isBuildingProposal && (!$formData.regionId || !$formData.quantity || !canAfford()))}
-					class="btn flex-1 bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2"
 				>
-					{#if $delayed}
-						<span class="loading loading-spinner loading-sm"></span>
-						{canAutoExecute() ? "Executing..." : "Creating..."}
-					{:else if canAutoExecute()}
-						<FluentShieldTask20Filled class="size-5" />
-						Execute Immediately
-					{:else}
-						<FluentDocument20Filled class="size-5" />
-						Submit Proposal
-					{/if}
-				</button>
+					{canAutoExecute() ? "Execute Immediately" : "Submit Proposal"}
+				</Button>
 			</div>
 		</form>
 	</div>
-</div>
+</PageContainer>

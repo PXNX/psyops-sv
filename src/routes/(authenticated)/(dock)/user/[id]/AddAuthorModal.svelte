@@ -3,6 +3,7 @@
 	import { enhance } from "$app/forms";
 	import Modal from "#lib/component/Modal.svelte";
 	import MdiNewspaperPlus from "~icons/mdi/newspaper-plus";
+	import Button from "#lib/component/ui/Button.svelte";
 
 	interface Props {
 		show: boolean;
@@ -52,23 +53,21 @@
 
 		<div class="space-y-4">
 			{#if error}
-				<div class="alert alert-error bg-red-600/10 border-red-500/20 text-red-300">
+				<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
 					<span>{error}</span>
 				</div>
 			{/if}
 
 			{#if newspapers.length === 0}
-				<div class="alert alert-warning bg-[#e6a527]/10 border-[#e6a527]/25 text-[#f7c56b]">
+				<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3 text-sm">
 					<span>You don't own any newspapers. Create one first to add authors.</span>
 				</div>
 			{:else}
-				<div class="form-control">
-					<label class="label">
-						<span class="label-text text-[#d9ccb7]">Select Newspaper</span>
-					</label>
+				<div>
+					<label class="field-label">Select Newspaper</label>
 					<select
 						name="newspaperId"
-						class="select select-bordered field-control"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
 						bind:value={selectedNewspaper}
 						disabled={isSubmitting}
 						required
@@ -82,13 +81,11 @@
 					</select>
 				</div>
 
-				<div class="form-control">
-					<label class="label">
-						<span class="label-text text-[#d9ccb7]">Rank</span>
-					</label>
+				<div>
+					<label class="field-label">Rank</label>
 					<select
 						name="rank"
-						class="select select-bordered field-control"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
 						bind:value={selectedRank}
 						disabled={isSubmitting}
 						required
@@ -100,20 +97,17 @@
 			{/if}
 
 			<div class="flex gap-2 justify-end">
-				<button type="button" class="btn btn-ghost" disabled={isSubmitting} onclick={closeModal}> Cancel </button>
-				<button
+				<Button type="button" variant="ghost" disabled={isSubmitting} onclick={closeModal}>Cancel</Button>
+				<Button
 					type="submit"
-					class="btn bg-emerald-600 hover:bg-emerald-700 text-white border-none gap-2"
-					disabled={!selectedNewspaper || isSubmitting || newspapers.length === 0}
+					variant="primary"
+					icon={MdiNewspaperPlus}
+					disabled={!selectedNewspaper || newspapers.length === 0}
+					loading={isSubmitting}
+					loadingText="Adding..."
 				>
-					{#if isSubmitting}
-						<span class="loading loading-spinner loading-sm"></span>
-						Adding...
-					{:else}
-						<MdiNewspaperPlus class="size-4" />
-						Add Author
-					{/if}
-				</button>
+					Add Author
+				</Button>
 			</div>
 		</div>
 	</form>

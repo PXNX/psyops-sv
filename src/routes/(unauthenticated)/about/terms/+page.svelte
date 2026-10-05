@@ -6,21 +6,22 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import Button from "#lib/component/ui/Button.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
 </script>
 
-<div class="relative min-h-screen">
-	<div class="relative z-10 max-w-4xl mx-auto px-4 py-12 space-y-8">
+<PageContainer maxWidth="4xl" class="py-12">
+	<div class="space-y-8">
 		<!-- Header -->
-		<div class="flex flex-col items-center space-y-6">
+		<div class="flex flex-col items-center space-y-5">
 			<div class="relative">
-				<div class="relative size-32 bg-[#315d8d] rounded-3xl flex items-center justify-center shadow-2xl">
-					<FluentDocumentText20Filled class="size-16 text-[#fff7e8]" />
+				<div class="panel size-32 rounded-sm flex items-center justify-center">
+					<FluentDocumentText20Filled class="size-16 text-[#e6a527]" />
 				</div>
 			</div>
 			<div class="text-center space-y-3">
-				<h1 class="text-5xl font-bold tracking-tight text-[#fff7e8]">Terms of Service</h1>
-				<p class="text-[#c7bda9] max-w-md mx-auto">Rules and guidelines for using our platform</p>
-				<div class="inline-flex items-center gap-2 px-4 py-2 panel-muted backdrop-blur-sm rounded-full">
+				<h1 class="text-4xl font-bold text-[#fff7e8]">Terms of Service</h1>
+				<p class="text-[#a89e8e] max-w-md mx-auto">Rules and guidelines for using our platform</p>
+				<div class="inline-flex items-center gap-2 px-4 py-2 panel-muted rounded-sm">
 					<span class="text-sm text-[#d9ccb7]">Effective: January 2025</span>
 				</div>
 			</div>
@@ -29,11 +30,13 @@
 		<!-- Content Cards -->
 		<div class="space-y-6">
 			<!-- Acceptance of Terms -->
-			<div class="card panel backdrop-blur-xl">
-				<div class="card-body">
-					<h2 class="card-title text-2xl text-[#fff7e8] flex items-center gap-3">
-						<div class="size-10 bg-blue-600/20 rounded-xl flex items-center justify-center">
-							<FluentCheckmark20Filled class="size-5 text-blue-400" />
+			<div class="panel rounded-sm">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-2xl gap-3">
+						<div
+							class="size-10 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center shrink-0"
+						>
+							<FluentCheckmark20Filled class="size-5 text-[#7ba0c8]" />
 						</div>
 						Acceptance of Terms
 					</h2>
@@ -45,33 +48,35 @@
 			</div>
 
 			<!-- User Accounts -->
-			<div class="card panel backdrop-blur-xl">
-				<div class="card-body">
-					<h2 class="card-title text-2xl text-[#fff7e8] flex items-center gap-3">
-						<div class="size-10 bg-[#8c709b]/20 rounded-xl flex items-center justify-center">
+			<div class="panel rounded-sm">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-2xl gap-3">
+						<div
+							class="size-10 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm flex items-center justify-center shrink-0"
+						>
 							<FluentShield20Filled class="size-5 text-[#d5c4df]" />
 						</div>
 						User Accounts & Responsibilities
 					</h2>
 					<div class="space-y-3 text-[#d9ccb7]">
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-green-400 shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0 mt-0.5" />
 							<p class="text-sm">You must be at least 13 years old to create an account</p>
 						</div>
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-green-400 shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0 mt-0.5" />
 							<p class="text-sm">You are responsible for maintaining the security of your account credentials</p>
 						</div>
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-green-400 shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0 mt-0.5" />
 							<p class="text-sm">You must provide accurate and truthful information during registration</p>
 						</div>
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-green-400 shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0 mt-0.5" />
 							<p class="text-sm">One person may only maintain one account at a time</p>
 						</div>
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-green-400 shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0 mt-0.5" />
 							<p class="text-sm">
 								You are responsible for all activities that occur under your account, including actions taken by others
 								with access to your credentials
@@ -82,10 +87,12 @@
 			</div>
 
 			<!-- Prohibited Conduct -->
-			<div class="card panel backdrop-blur-xl">
-				<div class="card-body">
-					<h2 class="card-title text-2xl text-[#fff7e8] flex items-center gap-3">
-						<div class="size-10 bg-red-600/20 rounded-xl flex items-center justify-center">
+			<div class="panel rounded-sm">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-2xl gap-3">
+						<div
+							class="size-10 bg-red-600/10 border border-red-500/30 rounded-sm flex items-center justify-center shrink-0"
+						>
 							<FluentDismiss20Filled class="size-5 text-red-400" />
 						</div>
 						Prohibited Conduct
@@ -121,9 +128,9 @@
 			</div>
 
 			<!-- Content & Intellectual Property -->
-			<div class="card panel backdrop-blur-xl">
-				<div class="card-body">
-					<h2 class="card-title text-2xl text-[#fff7e8]">Content & Intellectual Property</h2>
+			<div class="panel rounded-sm">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-2xl">Content & Intellectual Property</h2>
 					<div class="space-y-4 text-[#d9ccb7]">
 						<div class="space-y-2">
 							<h3 class="font-semibold text-[#fff7e8]">User-Generated Content</h3>
@@ -144,16 +151,18 @@
 			</div>
 
 			<!-- Virtual Currency & Items -->
-			<div class="card panel backdrop-blur-xl">
-				<div class="card-body">
-					<h2 class="card-title text-2xl text-[#fff7e8]">Virtual Currency & Items</h2>
+			<div class="panel rounded-sm">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-2xl">Virtual Currency & Items</h2>
 					<div class="space-y-3 text-[#d9ccb7]">
 						<p class="text-sm">
 							All in-game currency, resources, and items are virtual and have no real-world monetary value. They cannot
 							be exchanged for real money or transferred outside the platform.
 						</p>
-						<div class="alert bg-yellow-600/10 border-yellow-500/30">
-							<FluentWarning20Filled class="size-5 text-yellow-400" />
+						<div
+							class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-start gap-3"
+						>
+							<FluentWarning20Filled class="size-5 text-[#f7c56b] shrink-0 mt-0.5" />
 							<span class="text-sm">
 								We reserve the right to modify, suspend, or terminate virtual items or currency at any time for any
 								reason.
@@ -164,9 +173,9 @@
 			</div>
 
 			<!-- Termination -->
-			<div class="card panel backdrop-blur-xl">
-				<div class="card-body">
-					<h2 class="card-title text-2xl text-[#fff7e8]">Account Termination</h2>
+			<div class="panel rounded-sm">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-2xl">Account Termination</h2>
 					<p class="text-sm text-[#d9ccb7]">
 						We reserve the right to suspend or terminate your account at any time for violations of these Terms, illegal
 						activity, or behavior that harms the platform or other users. You may also delete your account at any time
@@ -176,9 +185,9 @@
 			</div>
 
 			<!-- Disclaimers -->
-			<div class="card panel backdrop-blur-xl">
-				<div class="card-body">
-					<h2 class="card-title text-2xl text-[#fff7e8]">Disclaimers & Limitation of Liability</h2>
+			<div class="panel rounded-sm">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-2xl">Disclaimers & Limitation of Liability</h2>
 					<div class="space-y-3 text-[#d9ccb7]">
 						<p class="text-sm">
 							The platform is provided "as is" without warranties of any kind. We do not guarantee uninterrupted
@@ -193,9 +202,9 @@
 			</div>
 
 			<!-- Changes to Terms -->
-			<div class="card panel backdrop-blur-xl">
-				<div class="card-body">
-					<h2 class="card-title text-2xl text-[#fff7e8]">Changes to These Terms</h2>
+			<div class="panel rounded-sm">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-2xl">Changes to These Terms</h2>
 					<p class="text-sm text-[#d9ccb7]">
 						We may update these Terms of Service from time to time. We will notify you of significant changes through
 						the platform or via email. Continued use of the platform after changes constitutes acceptance of the updated
@@ -205,17 +214,17 @@
 			</div>
 
 			<!-- Contact -->
-			<div class="card bg-[#8c709b]/15 border border-[#b7a0c5]/30 shadow-2xl">
-				<div class="card-body">
-					<h2 class="card-title text-xl text-[#fff7e8]">Questions About These Terms?</h2>
+			<div class="rounded-sm bg-[#8c709b]/15 border border-[#b7a0c5]/30">
+				<div class="p-5 md:p-6 flex flex-col gap-3">
+					<h2 class="section-title text-xl">Questions About These Terms?</h2>
 					<p class="text-sm text-[#d9ccb7]">
 						If you have any questions about these Terms of Service, please contact our support team.
 					</p>
-					<div class="card-actions justify-end">
+					<div class="flex justify-end pt-2">
 						<Button href="/about" variant="primary" size="sm">Contact Support</Button>
 					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-</div>
+</PageContainer>

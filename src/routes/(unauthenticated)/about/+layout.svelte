@@ -12,6 +12,6 @@
 	/>
 </svelte:head>
 
-<main class="relative min-h-screen overflow-hidden">
+<main class="w-full">
 	{@render children()}
 </main>

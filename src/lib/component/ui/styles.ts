@@ -33,8 +33,8 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 		"bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] shadow-[0_3px_0_rgba(112,65,10,0.42)] hover:shadow-[0_5px_0_rgba(112,65,10,0.34)] focus-visible:ring-[#e6a527]",
 	danger: "bg-red-600 hover:bg-red-500 border-0 text-white shadow-lg shadow-red-600/20 focus-visible:ring-red-400",
 	success:
-		"bg-emerald-600 hover:bg-emerald-500 border-0 text-white shadow-lg shadow-emerald-600/20 focus-visible:ring-emerald-400",
-	info: "bg-blue-600 hover:bg-blue-500 border-0 text-white shadow-lg shadow-blue-600/20 focus-visible:ring-blue-400",
+		"bg-[#587252] hover:bg-[#66845f] border border-[#8fae88]/50 text-[#f3f9ee] shadow-[0_3px_0_rgba(30,45,28,0.45)] focus-visible:ring-[#8fae88]",
+	info: "bg-[#315d8d] hover:bg-[#3a6c9f] border border-[#7ba0c8]/50 text-[#eef5fb] shadow-[0_3px_0_rgba(14,30,50,0.45)] focus-visible:ring-[#7ba0c8]",
 	premium:
 		"bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 border-0 text-slate-900 font-semibold shadow-lg shadow-amber-500/25 focus-visible:ring-amber-300",
 
@@ -66,7 +66,7 @@ const BUTTON_SIZES: Record<ButtonSize, string> = {
 };
 
 const BUTTON_SHAPES: Record<ButtonShape, string> = {
-	default: "rounded-lg",
+	default: "",
 	circle: "btn-circle",
 	square: "btn-square"
 };

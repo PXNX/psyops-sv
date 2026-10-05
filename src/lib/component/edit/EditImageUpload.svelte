@@ -1,6 +1,7 @@
 <script lang="ts">
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import { buttonClass } from "#lib/component/ui/styles";
 
 	interface Props {
 		previewUrl: string | null;
@@ -43,15 +44,15 @@
 
 	const dropzoneClass = $derived(
 		[
-			"group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
+			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200",
 			dragActive
 				? "border-[#e6a527] bg-[#e6a527]/10"
 				: previewUrl
-					? "border-emerald-500/50 bg-emerald-500/5"
+					? "border-[#8fae88]/50 bg-[#587252]/10"
 					: "border-[#e6a527]/30",
 			!disabled && !previewUrl ? "hover:border-[#e6a527]/50 hover:bg-[#e6a527]/10" : "",
 			disabled ? "opacity-50" : "",
-			error ? "input-error" : ""
+			error ? "border-red-500/50" : ""
 		]
 			.filter(Boolean)
 			.join(" ")
@@ -137,7 +138,7 @@
 	<button type="button" onclick={onClickUpload} {disabled} class={dropzoneClass}>
 		{#if !previewUrl}
 			<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-				<div class="rounded-full bg-[#e6a527]/15 p-3 transition-transform group-hover:scale-110">
+				<div class="rounded-full bg-[#e6a527]/15 p-3">
 					<FluentImage20Filled class="size-8 text-[#f7c56b]" />
 				</div>
 				<div class="text-center">
@@ -158,7 +159,7 @@
 		{:else}
 			<div class="relative">
 				<div class="flex items-center justify-center p-6 bg-[#102239]/70">
-					<img src={previewUrl} alt="{entityName} preview" class="size-24 object-contain rounded-lg" />
+					<img src={previewUrl} alt="{entityName} preview" class="size-24 object-contain rounded-sm" />
 				</div>
 				<div
 					class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/60 opacity-0 transition-opacity group-hover:opacity-100"
@@ -173,7 +174,7 @@
 							onClearImage();
 						}}
 						{disabled}
-						class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
+						class="{buttonClass({ variant: 'secondary', size: 'sm', shape: 'circle' })} absolute top-2 right-2"
 					>
 						✕
 					</button>

@@ -32,7 +32,7 @@
 		<div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick={handleBackdropClick} role="presentation"></div>
 
 		<div class="absolute inset-x-0 bottom-0 animate-slide-up">
-			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-2xl max-h-[85vh] flex flex-col">
+			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-md max-h-[85vh] flex flex-col">
 				<div class="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
 					<div class="mx-auto w-10 h-1 rounded-full bg-[#dfceb0]/25 absolute top-2 left-1/2 -translate-x-1/2"></div>
 					{#if title}

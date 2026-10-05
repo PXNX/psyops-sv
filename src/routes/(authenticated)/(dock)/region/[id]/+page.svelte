@@ -19,6 +19,7 @@
 	import StatCard from "#lib/component/StatCard.svelte";
 	import Modal from "#lib/component/Modal.svelte";
 
+	import { Button, Badge } from "#lib/component/ui/index.js";
 	import { formatDate, getDaysRemaining } from "#lib/utils/formatting.js";
 	import BorderingRegions from "./BorderingRegions.svelte";
 	import ResidenceActions from "./ResidenceActions.svelte";
@@ -81,25 +82,25 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Hero Header -->
-	<div class="relative -mx-4 -mt-6 px-4 pt-8 pb-6 mb-2 bg-[#14283f]/70 border-b border-[#dfceb0]/10">
-		<div class="max-w-5xl mx-auto flex items-center gap-5">
+	<div class="panel rounded-sm p-5">
+		<div class="flex items-center gap-5">
 			<Logo
 				src="/coats/{data.region.id}.svg"
 				alt={data.region.name}
-				class="size-24 rounded-2xl shadow-2xl"
+				class="size-20 rounded-sm shrink-0"
 				placeholderIcon={FluentShield20Filled}
-				placeholderGradient="from-[#8c709b] to-[#315d8d]"
+				placeholderGradient="from-[#8c709b]/40 to-[#8c709b]/40"
 			/>
-			<div class="flex-1">
-				<h1 class="text-3xl sm:text-4xl font-bold text-[#fff7e8]">{data.region.name}</h1>
+			<div class="flex-1 min-w-0">
+				<h1 class="text-3xl font-bold text-[#fff7e8] break-words">{data.region.name}</h1>
 				{#if data.region.stateName}
-					<p class="text-[#a89e8e] mt-1.5 text-lg">
-						<a href="/state/{data.region.stateId}" class="hover:text-[#d5c4df] transition-colors">
+					<p class="text-[#a89e8e] mt-1">
+						<a href="/state/{data.region.stateId}" class="hover:text-[#f2c463] transition-colors">
 							{data.region.stateName}
 						</a>
 					</p>
 				{:else}
-					<p class="text-amber-400 mt-1.5 text-lg flex items-center gap-2">
+					<p class="text-[#f7c56b] mt-1 flex items-center gap-2">
 						<FluentFlag20Filled class="size-5" />
 						Independent Region
 					</p>
@@ -110,17 +111,17 @@
 
 	<!-- Independent Region Info -->
 	{#if isIndependent}
-		<div class="bg-gradient-to-br from-amber-900/20 to-orange-900/20 border border-amber-500/20 rounded-xl p-5">
+		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5">
 			<div class="flex items-start gap-4">
-				<div class="size-12 bg-amber-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
-					<FluentFlag20Filled class="size-6 text-amber-400" />
+				<div class="size-12 bg-[#e6a527]/15 rounded-sm flex items-center justify-center flex-shrink-0">
+					<FluentFlag20Filled class="size-6 text-[#f7c56b]" />
 				</div>
 				<div class="flex-1">
 					<h2 class="text-lg font-semibold text-[#fff7e8] mb-1">No State Established</h2>
 					<p class="text-sm text-[#d9ccb7]">
 						This region is not part of any state. To establish a state here, <a
 							href="/party/create"
-							class="text-amber-400 hover:text-amber-300 underline underline-offset-2">create a political party</a
+							class="text-[#f7c56b] hover:text-[#f2c463] underline underline-offset-2">create a political party</a
 						> — founding a party will create a new state in this region.
 					</p>
 				</div>
@@ -130,13 +131,13 @@
 
 	<!-- Current Region Banner -->
 	{#if data.hasResidence}
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-xl p-6">
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-5">
 			<div class="flex items-start gap-4">
-				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
-					<FluentHome20Filled class="size-6 text-blue-400" />
+				<div class="size-12 bg-[#315d8d]/25 rounded-sm flex items-center justify-center flex-shrink-0">
+					<FluentHome20Filled class="size-6 text-[#b7d0e6]" />
 				</div>
 				<div class="flex-1">
-					<h2 class="text-xl font-bold text-[#fff7e8] mb-2">Your Current Region</h2>
+					<h2 class="text-lg font-semibold text-[#fff7e8] mb-1">Your Current Region</h2>
 					<p class="text-[#d9ccb7] text-sm">You are currently located in this region.</p>
 				</div>
 			</div>
@@ -150,16 +151,16 @@
 
 	<!-- Alerts -->
 	{#if form?.error}
-		<div class="bg-red-900/20 border border-red-500/30 rounded-lg p-4 flex items-start gap-3">
-			<FluentWarning20Filled class="size-5 text-red-400 flex-shrink-0 mt-0.5" />
-			<div class="flex-1 text-sm text-red-300">{form.error}</div>
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+			<FluentWarning20Filled class="size-5 text-red-400 flex-shrink-0" />
+			<div class="flex-1 text-sm">{form.error}</div>
 		</div>
 	{/if}
 
 	{#if form?.success}
-		<div class="bg-emerald-900/20 border border-emerald-500/30 rounded-lg p-4 flex items-start gap-3">
-			<FluentCheckmark20Filled class="size-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-			<div class="flex-1 text-sm text-emerald-300">{form.message}</div>
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+			<FluentCheckmark20Filled class="size-5 text-[#8fae88] flex-shrink-0" />
+			<div class="flex-1 text-sm">{form.message}</div>
 		</div>
 	{/if}
 
@@ -180,22 +181,22 @@
 	<!-- Visa Status / Requirements -->
 	{#if data.visa.blocVisaFree}
 		<!-- Bloc visa-free: no visa needed -->
-		<div class="bg-gradient-to-br from-emerald-900/30 to-teal-900/30 border border-emerald-500/20 rounded-xl p-5">
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-5">
 			<div class="flex items-center gap-3">
-				<div class="size-12 bg-emerald-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
-					<FluentCheckmark20Filled class="size-5 text-emerald-400" />
+				<div class="size-12 bg-[#587252]/25 rounded-sm flex items-center justify-center flex-shrink-0">
+					<FluentCheckmark20Filled class="size-5 text-[#8fae88]" />
 				</div>
 				<div>
 					<h2 class="text-lg font-semibold text-[#fff7e8]">Visa-Free</h2>
-					<p class="text-sm text-emerald-300">Bloc membership grants visa-free travel to this state</p>
+					<p class="text-sm text-[#c6dfbf]">Bloc membership grants visa-free travel to this state</p>
 				</div>
 			</div>
 		</div>
 	{:else if data.visa.blockedReason}
 		<!-- Visa blocked by war or sanctions -->
-		<div class="bg-red-600/10 border border-red-500/20 rounded-xl p-5">
+		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
 			<div class="flex items-center gap-3">
-				<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center flex-shrink-0">
+				<div class="size-12 bg-red-600/15 rounded-sm flex items-center justify-center flex-shrink-0">
 					<FluentWarning20Filled class="size-5 text-red-400" />
 				</div>
 				<div>
@@ -205,34 +206,35 @@
 			</div>
 		</div>
 	{:else if data.visa.needsVisa}
-		<div class="panel rounded-xl p-5 space-y-4">
-			<div class="flex items-center gap-3">
-				<div class="size-12 bg-blue-600/20 rounded-xl flex items-center justify-center">
-					<FluentBookCompass24Filled class="size-6 text-blue-400" />
+		<div class="panel rounded-sm p-5 space-y-4">
+			<div class="flex flex-wrap items-center gap-3">
+				<div class="size-12 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center">
+					<FluentBookCompass24Filled class="size-6 text-[#7ba0c8]" />
 				</div>
-				<div class="flex-1">
+				<div class="flex-1 min-w-0">
 					<h2 class="text-lg font-semibold text-[#fff7e8]">Visa Required</h2>
 					<p class="text-sm text-[#a89e8e]">A visa is required for non-citizens</p>
 				</div>
 				{#if !data.visa.hasActiveVisa && !data.visa.hasPendingApplication && data.visa.settings}
-					<button
+					<Button
 						type="button"
+						size="sm"
+						variant="soft-blue"
+						icon={FluentBookCompass24Filled}
 						onclick={() => (showVisaSheet = true)}
-						class="btn btn-sm bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2"
 					>
-						<FluentBookCompass24Filled class="size-4" />
 						Request Visa
-					</button>
+					</Button>
 				{/if}
 			</div>
 
 			{#if data.visa.hasActiveVisa && data.visa.activeVisa}
 				{@const daysLeft = getDaysRemaining(data.visa.activeVisa.expiresAt)}
-				<div class="bg-emerald-600/10 border border-emerald-500/20 rounded-lg p-4">
+				<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-4">
 					<div class="flex items-start justify-between gap-4">
 						<div class="flex-1">
 							<div class="flex items-center gap-2 mb-2">
-								<FluentCheckmark20Filled class="size-5 text-emerald-400" />
+								<FluentCheckmark20Filled class="size-5 text-[#8fae88]" />
 								<p class="font-semibold text-[#fff7e8]">Active Visa</p>
 							</div>
 							<p class="text-sm text-[#d9ccb7]">Expires {formatDate(data.visa.activeVisa.expiresAt)}</p>
@@ -245,24 +247,16 @@
 							{/if}
 						</div>
 						<div class="flex flex-col items-end gap-2">
-							<span
-								class="px-3 py-1 rounded-full text-xs font-medium border"
-								class:bg-emerald-500-20={daysLeft > 3}
-								class:border-emerald-500-30={daysLeft > 3}
-								class:text-emerald-400={daysLeft > 3}
-								class:bg-amber-500-20={daysLeft <= 3}
-								class:border-amber-500-30={daysLeft <= 3}
-								class:text-amber-400={daysLeft <= 3}
-							>
+							<Badge tone={daysLeft > 3 ? "green" : "amber"}>
 								{daysLeft} day{daysLeft === 1 ? "" : "s"} left
-							</span>
+							</Badge>
 						</div>
 					</div>
 				</div>
 			{:else if data.visa.hasPendingApplication}
-				<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-4">
+				<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-4">
 					<div class="flex items-center gap-3">
-						<FluentClock20Filled class="size-5 text-amber-400" />
+						<FluentClock20Filled class="size-5 text-[#f7c56b]" />
 						<div>
 							<p class="font-semibold text-[#fff7e8]">Application Pending</p>
 							<p class="text-sm text-[#a89e8e] mt-1">Awaiting approval from Foreign Minister</p>
@@ -278,8 +272,8 @@
 		<Modal bind:open={showVisaSheet} title="Request Visa" size="default">
 			<div class="space-y-5">
 				<div class="flex items-center gap-4">
-					<div class="size-14 bg-blue-600/20 rounded-xl flex items-center justify-center">
-						<FluentBookCompass24Filled class="size-7 text-blue-400" />
+					<div class="size-14 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center">
+						<FluentBookCompass24Filled class="size-7 text-[#7ba0c8]" />
 					</div>
 					<div>
 						<h3 class="text-xl font-bold text-[#fff7e8]">{data.region.stateName}</h3>
@@ -288,30 +282,30 @@
 				</div>
 
 				{#if data.visa.settings.visaRequired}
-					<div class="panel-muted rounded-lg p-4 space-y-3">
+					<div class="panel-muted rounded-sm p-4 space-y-3">
 						<div class="flex items-center justify-between">
 							<span class="text-sm text-[#a89e8e]">Visa Cost</span>
-							<span class="text-xl font-bold text-[#fff7e8]"
+							<span class="text-xl font-bold font-mono text-[#fff7e8]"
 								>${Number(data.visa.settings.visaCost).toLocaleString()}</span
 							>
 						</div>
 						<div class="flex items-center justify-between">
 							<span class="text-sm text-[#a89e8e]">Tax ({data.visa.settings.visaTaxRate}%)</span>
-							<span class="text-sm text-[#d9ccb7]"
+							<span class="text-sm font-mono text-[#d9ccb7]"
 								>${Math.floor(
 									(Number(data.visa.settings.visaCost) * data.visa.settings.visaTaxRate) / 100
 								).toLocaleString()}</span
 							>
 						</div>
-						<div class="border-t border-white/10 pt-2 flex items-center justify-between">
+						<div class="border-t border-[#dfceb0]/10 pt-2 flex items-center justify-between">
 							<span class="text-sm text-[#a89e8e]">Valid for</span>
 							<span class="text-sm font-medium text-[#fff7e8]">14 days</span>
 						</div>
 					</div>
 
 					{#if !data.visa.settings.autoApprove}
-						<div class="bg-amber-600/10 border border-amber-500/20 rounded-lg p-3">
-							<p class="text-xs text-amber-300 flex items-center gap-2">
+						<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-3">
+							<p class="text-xs text-[#f7c56b] flex items-center gap-2">
 								<FluentClock20Filled class="size-4" />
 								Manual approval required — Foreign Minister will review your application
 							</p>
@@ -328,18 +322,18 @@
 							};
 						}}
 					>
-						<button
+						<Button
 							type="submit"
-							class="btn w-full bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2"
+							block
+							icon={FluentBookCompass24Filled}
 							disabled={data.walletBalance < Number(data.visa.settings.visaCost)}
 						>
-							<FluentBookCompass24Filled class="size-5" />
 							{#if data.visa.settings.autoApprove}
 								Purchase Visa — ${Number(data.visa.settings.visaCost).toLocaleString()}
 							{:else}
 								Apply for Visa
 							{/if}
-						</button>
+						</Button>
 						{#if data.walletBalance < Number(data.visa.settings.visaCost)}
 							<p class="text-xs text-red-400 text-center mt-2">
 								Insufficient funds — you have ${data.walletBalance.toLocaleString()}
@@ -347,9 +341,9 @@
 						{/if}
 					</form>
 				{:else}
-					<div class="bg-emerald-600/10 border border-emerald-500/20 rounded-lg p-4">
+					<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-4">
 						<div class="flex items-center gap-3 mb-1">
-							<FluentCheckmark20Filled class="size-5 text-emerald-400" />
+							<FluentCheckmark20Filled class="size-5 text-[#8fae88]" />
 							<p class="font-semibold text-[#fff7e8]">Open Borders</p>
 						</div>
 						<p class="text-sm text-[#a89e8e]">Free entry for all visitors — valid for 14 days</p>
@@ -365,10 +359,7 @@
 							};
 						}}
 					>
-						<button type="submit" class="btn w-full bg-emerald-600 hover:bg-emerald-500 border-0 text-white gap-2">
-							<FluentCheckmark20Filled class="size-5" />
-							Get Free Visa
-						</button>
+						<Button type="submit" block icon={FluentCheckmark20Filled}>Get Free Visa</Button>
 					</form>
 				{/if}
 			</div>
@@ -393,19 +384,19 @@
 	{#if !isIndependent}
 		{#if data.governor}
 			<SectionCard>
-				<div class="flex items-center gap-2 mb-4">
+				<h2 class="section-title mb-4">
 					<span class="text-xl">👑</span>
-					<h2 class="text-lg font-semibold text-[#fff7e8]">Governor</h2>
-				</div>
+					Governor
+				</h2>
 				<a
 					href="/user/{data.governor.userId}"
-					class="flex items-center gap-3 group panel-muted rounded-lg p-3 hover:bg-[#14283f] transition-all"
+					class="flex items-center gap-3 group panel-muted rounded-sm p-3 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-all"
 				>
-					<div class="size-10 bg-amber-600/20 rounded-lg flex items-center justify-center">
+					<div class="size-10 bg-[#e6a527]/12 rounded-sm flex items-center justify-center">
 						<span class="text-xl">👑</span>
 					</div>
 					<div class="flex-1">
-						<p class="font-semibold text-[#fff7e8] group-hover:text-amber-400 transition-colors">
+						<p class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
 							{data.governor.name}
 						</p>
 						<p class="text-xs text-[#a89e8e]">Appointed {formatDate(data.governor.appointedAt)}</p>
@@ -414,10 +405,10 @@
 			</SectionCard>
 		{:else}
 			<SectionCard>
-				<div class="flex items-center gap-2 mb-2">
+				<h2 class="section-title mb-2">
 					<span class="text-xl">👑</span>
-					<h2 class="text-lg font-semibold text-[#fff7e8]">Governor</h2>
-				</div>
+					Governor
+				</h2>
 				<p class="text-sm text-[#a89e8e]">No governor appointed</p>
 			</SectionCard>
 		{/if}
@@ -426,15 +417,15 @@
 	<!-- State Buildings -->
 	{#if data.buildings.length > 0}
 		<SectionCard>
-			<div class="flex items-center gap-2 mb-4">
-				<FluentBuilding20Filled class="size-5 text-blue-400" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">State Buildings</h2>
-			</div>
+			<h2 class="section-title mb-4">
+				<FluentBuilding20Filled class="size-5 text-[#7ba0c8]" />
+				State Buildings
+			</h2>
 			<div class="grid gap-3">
 				{#each data.buildings as building}
-					<div class="flex items-center gap-3 panel-muted rounded-lg p-3">
-						<div class="size-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-							<FluentBuilding20Filled class="size-5 text-blue-400" />
+					<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
+						<div class="size-10 bg-[#315d8d]/18 rounded-sm flex items-center justify-center">
+							<FluentBuilding20Filled class="size-5 text-[#7ba0c8]" />
 						</div>
 						<div class="flex-1">
 							<p class="font-semibold text-[#fff7e8]">
@@ -451,31 +442,31 @@
 	<!-- Factories -->
 	{#if data.factories.length > 0}
 		<SectionCard>
-			<div class="flex items-center gap-2 mb-4">
-				<FluentBriefcase20Filled class="size-5 text-[#d5c4df]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Factories</h2>
-			</div>
+			<h2 class="section-title mb-4">
+				<FluentBriefcase20Filled class="size-5 text-[#b7a0c5]" />
+				Factories
+			</h2>
 			<div class="grid gap-3">
 				{#each data.factories as factory}
 					<a
 						href="/factory/{factory.id}"
-						class="flex items-center gap-3 group panel-muted rounded-lg p-3 hover:bg-[#14283f] transition-all"
+						class="flex items-center gap-3 group panel-muted rounded-sm p-3 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-all"
 					>
-						<div class="size-10 rounded-lg overflow-hidden flex items-center justify-center bg-[#8c709b]/20">
+						<div class="size-10 rounded-sm overflow-hidden flex items-center justify-center bg-[#8c709b]/15">
 							{#if factory.companyLogoUrl}
 								<Logo
 									src={factory.companyLogoUrl}
 									alt={factory.company?.name || "Company"}
 									class="size-10"
 									placeholderIcon={FluentBriefcase20Filled}
-									placeholderGradient="from-[#8c709b] to-[#315d8d]"
+									placeholderGradient="from-[#8c709b]/40 to-[#8c709b]/40"
 								/>
 							{:else}
 								<FluentBriefcase20Filled class="size-5 text-[#d5c4df]" />
 							{/if}
 						</div>
 						<div class="flex-1">
-							<p class="font-semibold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors">
+							<p class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
 								{factory.name}
 							</p>
 							<p class="text-xs text-[#a89e8e] capitalize">{factory.factoryType} • {factory.company?.name}</p>
@@ -489,61 +480,61 @@
 	<!-- Resources -->
 	{#if data.region.oil || data.region.steel || data.region.chromium || data.region.tungsten || data.region.rubber || data.region.aluminium}
 		<SectionCard>
-			<div class="flex items-center gap-2 mb-4">
+			<h2 class="section-title mb-4">
 				<span class="text-lg">⛏️</span>
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Natural Resources</h2>
-			</div>
+				Natural Resources
+			</h2>
 			<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
 				{#if data.region.oil}
-					<div class="bg-amber-600/10 border border-amber-600/20 rounded-lg p-3 flex items-center gap-3">
+					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-3 flex items-center gap-3">
 						<span class="text-2xl">⛽</span>
 						<div>
-							<p class="text-xs text-amber-400 font-medium">Oil</p>
+							<p class="text-[10px] text-[#f7c56b] uppercase tracking-wide">Oil</p>
 							<p class="text-lg font-bold text-[#fff7e8]">{data.region.oil}</p>
 						</div>
 					</div>
 				{/if}
 				{#if data.region.steel}
-					<div class="bg-[#14283f] border border-[#dfceb0]/15 rounded-lg p-3 flex items-center gap-3">
+					<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
 						<span class="text-2xl">🔩</span>
 						<div>
-							<p class="text-xs text-[#a89e8e] font-medium">Steel</p>
+							<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Steel</p>
 							<p class="text-lg font-bold text-[#fff7e8]">{data.region.steel}</p>
 						</div>
 					</div>
 				{/if}
 				{#if data.region.chromium}
-					<div class="bg-blue-600/10 border border-blue-600/20 rounded-lg p-3 flex items-center gap-3">
+					<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-3 flex items-center gap-3">
 						<span class="text-2xl">💎</span>
 						<div>
-							<p class="text-xs text-blue-400 font-medium">Chromium</p>
+							<p class="text-[10px] text-[#b7d0e6] uppercase tracking-wide">Chromium</p>
 							<p class="text-lg font-bold text-[#fff7e8]">{data.region.chromium}</p>
 						</div>
 					</div>
 				{/if}
 				{#if data.region.tungsten}
-					<div class="bg-[#8c709b]/12 border border-[#8c709b]/25 rounded-lg p-3 flex items-center gap-3">
+					<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm p-3 flex items-center gap-3">
 						<span class="text-2xl">⚡</span>
 						<div>
-							<p class="text-xs text-[#d5c4df] font-medium">Tungsten</p>
+							<p class="text-[10px] text-[#d5c4df] uppercase tracking-wide">Tungsten</p>
 							<p class="text-lg font-bold text-[#fff7e8]">{data.region.tungsten}</p>
 						</div>
 					</div>
 				{/if}
 				{#if data.region.rubber}
-					<div class="bg-green-600/10 border border-green-600/20 rounded-lg p-3 flex items-center gap-3">
+					<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-3 flex items-center gap-3">
 						<span class="text-2xl">🌿</span>
 						<div>
-							<p class="text-xs text-green-400 font-medium">Rubber</p>
+							<p class="text-[10px] text-[#c6dfbf] uppercase tracking-wide">Rubber</p>
 							<p class="text-lg font-bold text-[#fff7e8]">{data.region.rubber}</p>
 						</div>
 					</div>
 				{/if}
 				{#if data.region.aluminium}
-					<div class="bg-[#14283f] border border-[#dfceb0]/15 rounded-lg p-3 flex items-center gap-3">
+					<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
 						<span class="text-2xl">🔘</span>
 						<div>
-							<p class="text-xs text-[#a89e8e] font-medium">Aluminium</p>
+							<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Aluminium</p>
 							<p class="text-lg font-bold text-[#fff7e8]">{data.region.aluminium}</p>
 						</div>
 					</div>
@@ -556,48 +547,45 @@
 	{#if data.ongoingBattle}
 		<a
 			href="/battle/{data.ongoingBattle.id}"
-			class="block bg-gradient-to-r from-red-950/40 to-[#0c1929]/30 border-2 border-red-500/40 rounded-xl p-4 sm:p-5 hover:border-red-400/60 transition-all group"
+			class="block bg-red-600/10 border border-red-500/30 rounded-sm p-4 sm:p-5 hover:border-red-400/50 transition-all group"
 		>
 			<div class="flex items-center gap-4">
-				<div class="relative flex-shrink-0">
-					<div class="absolute inset-0 bg-red-500/30 blur-lg rounded-full animate-pulse"></div>
-					<div
-						class="relative size-12 bg-red-950/60 rounded-lg border border-red-500/40 flex items-center justify-center"
-					>
-						<span class="text-2xl">⚔️</span>
-					</div>
+				<div
+					class="size-12 flex-shrink-0 bg-red-600/15 rounded-sm border border-red-500/30 flex items-center justify-center"
+				>
+					<span class="text-2xl">⚔️</span>
 				</div>
 				<div class="flex-1 min-w-0">
 					<div class="flex items-center gap-2 mb-1">
 						<div class="size-2 bg-red-500 rounded-full animate-pulse"></div>
-						<span class="text-xs text-red-400 font-mono uppercase tracking-widest font-bold">Battle in Progress</span>
+						<span class="text-xs text-red-300 uppercase tracking-widest font-bold">Battle in Progress</span>
 					</div>
-					<div class="text-sm text-[#d9ccb7] font-mono">
-						<span class="text-red-400 font-bold">{data.ongoingBattle.attackerState.name}</span>
+					<div class="text-sm text-[#d9ccb7]">
+						<span class="text-red-300 font-bold">{data.ongoingBattle.attackerState.name}</span>
 						<span class="text-[#a89e8e]"> → </span>
-						<span class="text-blue-400 font-bold"
+						<span class="text-[#b7d0e6] font-bold"
 							>{data.ongoingBattle.defenderState?.name || data.region.stateName}</span
 						>
 					</div>
 				</div>
-				<span class="text-[#a89e8e] group-hover:text-red-400 transition-colors">→</span>
+				<span class="text-[#a89e8e] group-hover:text-red-300 transition-colors">→</span>
 			</div>
 		</a>
 	{:else if data.recentFailedBattle}
 		{@const cooldown = getCooldownRemaining(data.recentFailedBattle.cooldownEndsAt)}
 		{#if cooldown}
-			<div class="bg-gradient-to-r from-amber-950/30 to-[#0c1929]/30 border border-amber-500/30 rounded-xl p-4 sm:p-5">
+			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-4 sm:p-5">
 				<div class="flex items-center gap-3">
 					<div
-						class="size-10 bg-amber-950/60 rounded-lg border border-amber-500/30 flex items-center justify-center flex-shrink-0"
+						class="size-10 bg-[#e6a527]/15 rounded-sm border border-[#e6a527]/35 flex items-center justify-center flex-shrink-0"
 					>
 						<span class="text-xl">🛡️</span>
 					</div>
 					<div class="flex-1">
-						<div class="text-sm font-bold text-amber-400">Region Under Protection</div>
-						<div class="flex items-center gap-2 text-xs text-amber-300/70 font-mono mt-1">
+						<div class="text-sm font-bold text-[#f7c56b]">Region Under Protection</div>
+						<div class="flex items-center gap-2 text-xs text-[#a89e8e] mt-1">
 							<FluentClock20Filled class="size-3.5" />
-							<span>Attackable in {cooldown.hours}h {cooldown.minutes}m</span>
+							<span>Attackable in <span class="font-mono">{cooldown.hours}h {cooldown.minutes}m</span></span>
 						</div>
 					</div>
 				</div>
@@ -608,25 +596,25 @@
 			{#each data.activeWars as war}
 				<a
 					href="/war/{war.id}"
-					class="flex items-center gap-3 bg-gradient-to-r from-red-950/20 to-[#0e1d2f]/50 border border-red-500/20 rounded-xl p-4 hover:border-red-400/40 transition-all group"
+					class="flex items-center gap-3 bg-red-600/10 border border-red-500/30 rounded-sm p-4 hover:border-red-400/50 transition-all group"
 				>
 					<div
-						class="size-10 bg-red-950/40 rounded-lg border border-red-500/20 flex items-center justify-center flex-shrink-0"
+						class="size-10 bg-red-600/15 rounded-sm border border-red-500/30 flex items-center justify-center flex-shrink-0"
 					>
-						<FluentFire20Filled class="size-5 text-red-500" />
+						<FluentFire20Filled class="size-5 text-red-400" />
 					</div>
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-0.5">
 							<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
-							<span class="text-[10px] text-red-400/70 font-mono uppercase tracking-widest">Active War</span>
+							<span class="text-[10px] text-red-300 uppercase tracking-widest">Active War</span>
 						</div>
 						<div class="text-sm text-[#d9ccb7]">
-							<span class="font-bold text-red-400">{war.attacker.name}</span>
+							<span class="font-bold text-red-300">{war.attacker.name}</span>
 							<span class="text-[#a89e8e] mx-1">vs</span>
-							<span class="font-bold text-blue-400">{war.defender.name}</span>
+							<span class="font-bold text-[#b7d0e6]">{war.defender.name}</span>
 						</div>
 					</div>
-					<span class="text-[#a89e8e] group-hover:text-red-400 transition-colors text-sm">→</span>
+					<span class="text-[#a89e8e] group-hover:text-red-300 transition-colors text-sm">→</span>
 				</a>
 			{/each}
 		</div>
@@ -635,10 +623,10 @@
 	<!-- Launch Attack -->
 	{#if canAttack}
 		<SectionCard>
-			<div class="flex items-center gap-2 mb-4">
-				<FluentFire20Filled class="size-5 text-red-500" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Launch Attack</h2>
-			</div>
+			<h2 class="section-title mb-4">
+				<FluentFire20Filled class="size-5 text-red-400" />
+				Launch Attack
+			</h2>
 			<form
 				method="POST"
 				action="?/startBattle"
@@ -653,8 +641,8 @@
 			>
 				{#if data.attackableWars.length > 1}
 					<div>
-						<label class="text-sm text-[#a89e8e] block mb-1" for="warId">War</label>
-						<select id="warId" name="warId" class="select select-bordered w-full">
+						<label class="field-label" for="warId">War</label>
+						<select id="warId" name="warId" class="field-control rounded-sm px-3 py-2.5 w-full">
 							{#each data.attackableWars as war}
 								<option value={war.id}>{war.attacker.name} vs {war.defender.name}</option>
 							{/each}
@@ -665,22 +653,21 @@
 				{/if}
 
 				<div>
-					<label class="text-sm text-[#a89e8e] block mb-1" for="attackFromRegionId">Attack From</label>
-					<select id="attackFromRegionId" name="attackFromRegionId" class="select select-bordered w-full">
+					<label class="field-label" for="attackFromRegionId">Attack From</label>
+					<select
+						id="attackFromRegionId"
+						name="attackFromRegionId"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
+					>
 						{#each data.borderingRegionsForAttack as border}
 							<option value={border.id}>{border.name} ({Math.round(border.distanceKm)} km)</option>
 						{/each}
 					</select>
 				</div>
 
-				<button
-					type="submit"
-					class="btn w-full bg-red-600 hover:bg-red-500 border-0 text-white gap-2"
-					disabled={isAttacking}
-				>
-					<FluentFire20Filled class="size-5" />
+				<Button type="submit" variant="danger" block icon={FluentFire20Filled} disabled={isAttacking}>
 					{isAttacking ? "Launching Attack..." : "Launch Attack"}
-				</button>
+				</Button>
 			</form>
 		</SectionCard>
 	{/if}

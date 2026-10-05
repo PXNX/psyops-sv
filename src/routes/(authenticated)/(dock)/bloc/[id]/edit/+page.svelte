@@ -13,8 +13,9 @@
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
-	import BackLink from "#lib/component/ui/BackLink.svelte";
-	import { buttonClass } from "#lib/component/ui/styles.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button, buttonClass } from "#lib/component/ui/index.js";
 
 	let { data } = $props();
 
@@ -125,11 +126,11 @@
 
 	const dropzoneClass = $derived(
 		[
-			"group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
+			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
 			dragActive
 				? "border-[#e6a527] bg-[#e6a527]/10"
 				: previewUrl
-					? "border-emerald-500/50 bg-emerald-500/5"
+					? "border-[#8fae88]/50 bg-[#587252]/10"
 					: "border-[#e6a527]/30",
 			!$submitting && !previewUrl ? "hover:border-[#e6a527]/50 hover:bg-[#e6a527]/10" : "",
 			$submitting ? "opacity-50" : "",
@@ -140,43 +141,35 @@
 	);
 </script>
 
-<div class="max-w-3xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="3xl">
 	<!-- Header -->
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-4">
-			<BackLink href="/bloc/{data.bloc.id}" />
-			<div>
-				<h1 class="text-3xl font-bold text-[#fff7e8]">Edit Bloc</h1>
-				<p class="text-[#a89e8e]">{data.bloc.name}</p>
-			</div>
-		</div>
-	</div>
+	<PageHeader title="Edit Bloc" subtitle={data.bloc.name} backHref="/bloc/{data.bloc.id}" backLabel={data.bloc.name} />
 
 	<!-- Success Message -->
 	{#if $message && !$message.includes("error") && !$message.includes("failed")}
-		<div class="bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4">
-			<p class="text-emerald-300 text-sm font-medium">{$message}</p>
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
 	<!-- Error Message -->
 	{#if $message && ($message.includes("error") || $message.includes("failed"))}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{$message}</p>
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
 	<!-- Basic Info Form -->
 	<form method="POST" action="?/update" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Bloc Name -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentFlag20Filled class="size-5 text-[#f7c56b]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Bloc Details</h2>
+				<h2 class="section-title">Bloc Details</h2>
 			</div>
 
 			<div>
-				<label for="name" class="block text-sm font-medium text-[#e5d8c1] mb-2">
+				<label for="name" class="field-label">
 					Bloc Name <span class="text-red-400">*</span>
 				</label>
 				<input
@@ -186,23 +179,23 @@
 					bind:value={$form.name}
 					placeholder="e.g., Eastern Defense Alliance"
 					maxlength="100"
-					class="input w-full field-control"
+					class="field-control rounded-sm px-3 py-2.5 w-full"
 					class:input-error={$errors.name}
 					disabled={$submitting}
 				/>
 				{#if $errors.name}
-					<p class="text-xs text-red-400 mt-1">{$errors.name}</p>
+					<p class="field-error">{$errors.name}</p>
 				{:else}
-					<p class="text-xs text-[#a89e8e] mt-1">{$form.name?.length || 0}/100 characters</p>
+					<p class="field-hint">{$form.name?.length || 0}/100 characters</p>
 				{/if}
 			</div>
 		</div>
 
 		<!-- Bloc Logo -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentImage20Filled class="size-5 text-[#f7c56b]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Bloc Logo</h2>
+				<h2 class="section-title">Bloc Logo</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -220,7 +213,7 @@
 				<button type="button" onclick={() => fileInput?.click()} disabled={$submitting} class={dropzoneClass}>
 					{#if !previewUrl}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#e6a527]/15 p-3 transition-transform group-hover:scale-110">
+							<div class="rounded-full bg-[#e6a527]/15 p-3 transition-colors group-hover:bg-[#e6a527]/20">
 								<FluentImage20Filled class="size-8 text-[#f7c56b]" />
 							</div>
 							<div class="text-center">
@@ -241,7 +234,7 @@
 					{:else}
 						<div class="relative">
 							<div class="flex items-center justify-center p-6 bg-[#102239]/70">
-								<img src={previewUrl} alt="Bloc logo preview" class="size-24 object-contain rounded-lg" />
+								<img src={previewUrl} alt="Bloc logo preview" class="size-24 object-contain rounded-sm" />
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/60 opacity-0 transition-opacity group-hover:opacity-100"
@@ -256,7 +249,7 @@
 										clearImage();
 									}}
 									disabled={$submitting}
-									class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
+									class={buttonClass({ variant: "secondary", size: "sm", shape: "circle", class: "absolute top-2 right-2" })}
 								>
 									✕
 								</button>
@@ -277,29 +270,29 @@
 			</div>
 
 			{#if $errors.logo}
-				<p class="text-xs text-red-400">{$errors.logo}</p>
+				<p class="field-error">{$errors.logo}</p>
 			{:else}
-				<p class="text-xs text-[#a89e8e]">
+				<p class="field-hint">
 					Upload a new logo to replace the current one • Will be converted to 96x96 WebP • Max 5MB
 				</p>
 			{/if}
 		</div>
 
 		<!-- Bloc Color -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentColor20Filled class="size-5 text-[#f7c56b]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Bloc Color</h2>
+				<h2 class="section-title">Bloc Color</h2>
 			</div>
 
 			<div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
 				{#each colorPresets as color}
 					<button
 						type="button"
-						class="size-12 rounded-lg transition-all hover:scale-110 focus:scale-110 focus:outline-none"
+						class="size-12 rounded-sm transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e6a527]"
 						style="background-color: {color.value}"
 						class:ring-4={$form.color === color.value}
-						class:ring-white={$form.color === color.value}
+						class:ring-[#fff7e8]={$form.color === color.value}
 						title={color.name}
 						onclick={() => ($form.color = color.value)}
 						disabled={$submitting}
@@ -314,24 +307,24 @@
 					id="color"
 					name="color"
 					bind:value={$form.color}
-					class="h-10 w-20 rounded-lg border-2 border-[#dfceb0]/25 bg-[#14283f] cursor-pointer"
+					class="field-control h-10 w-20 rounded-sm cursor-pointer"
 					disabled={$submitting}
 				/>
 				<span class="text-sm text-[#a89e8e]">{$form.color}</span>
 			</div>
 
 			{#if $errors.color}
-				<p class="text-xs text-red-400">{$errors.color}</p>
+				<p class="field-error">{$errors.color}</p>
 			{/if}
 
 			<!-- Preview -->
-			<div class="p-4 rounded-lg" style="background-color: {$form.color}20; border: 2px solid {$form.color}40">
+			<div class="p-4 rounded-sm" style="background-color: {$form.color}20; border: 2px solid {$form.color}40">
 				<div class="flex items-center gap-3">
-					<div class="size-12 rounded-lg flex items-center justify-center" style="background-color: {$form.color}">
+					<div class="size-12 rounded-sm flex items-center justify-center" style="background-color: {$form.color}">
 						{#if previewUrl}
 							<img src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
 						{:else}
-							<FluentFlag20Filled class="size-6 text-white" />
+							<FluentFlag20Filled class="size-6 text-[#fff7e8]" />
 						{/if}
 					</div>
 					<div>
@@ -343,10 +336,10 @@
 		</div>
 
 		<!-- Visa-Free for Members -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentBookCompass24Filled class="size-5 text-emerald-400" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Visa Policy</h2>
+				<FluentBookCompass24Filled class="size-5 text-[#8fae88]" />
+				<h2 class="section-title">Visa Policy</h2>
 			</div>
 
 			<label class="flex items-start gap-4 cursor-pointer">
@@ -368,10 +361,10 @@
 		</div>
 
 		<!-- Description -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentDocument20Filled class="size-5 text-[#f7c56b]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Bloc Description</h2>
+				<h2 class="section-title">Bloc Description</h2>
 			</div>
 
 			<textarea
@@ -380,64 +373,54 @@
 				bind:value={$form.description}
 				rows="6"
 				placeholder="Describe the bloc's purpose, values, and strategic objectives..."
-				class="textarea w-full field-control"
+				class="field-control rounded-sm px-3 py-2.5 w-full"
 				disabled={$submitting}></textarea>
 		</div>
 
 		<!-- Resource Requirements & Submit -->
 		{#if data.editCost !== undefined && data.userBalance !== undefined}
-			<div class="panel rounded-xl p-5 space-y-2">
+			<div class="panel rounded-sm p-5 space-y-2">
 				<ResourceRequirements costs={{ currency: data.editCost }} available={{ currency: data.userBalance }} />
 				<div class="flex gap-3">
-					<a
-						href="/bloc/{data.bloc.id}"
-						class={buttonClass({ variant: "secondary", grow: true })}
-						class:btn-disabled={$submitting}
+					<Button href="/bloc/{data.bloc.id}" variant="secondary" grow disabled={$submitting}>Cancel</Button>
+					<Button
+						type="submit"
+						grow
+						disabled={$submitting}
+						loading={$delayed}
+						loadingText="Saving..."
+						icon={FluentCheckmark20Filled}
 					>
-						Cancel
-					</a>
-					<button type="submit" disabled={$submitting} class={buttonClass({ variant: "primary", grow: true })}>
-						{#if $delayed}
-							<span class="loading loading-spinner loading-sm"></span>
-							Saving...
-						{:else}
-							<FluentCheckmark20Filled class="size-5" />
-							Save Changes
-						{/if}
-					</button>
+						Save Changes
+					</Button>
 				</div>
 			</div>
 		{:else}
 			<!-- Submit -->
 			<div class="flex gap-3">
-				<a
-					href="/bloc/{data.bloc.id}"
-					class={buttonClass({ variant: "secondary", grow: true })}
-					class:btn-disabled={$submitting}
+				<Button href="/bloc/{data.bloc.id}" variant="secondary" grow disabled={$submitting}>Cancel</Button>
+				<Button
+					type="submit"
+					grow
+					disabled={$submitting}
+					loading={$delayed}
+					loadingText="Saving..."
+					icon={FluentCheckmark20Filled}
 				>
-					Cancel
-				</a>
-				<button type="submit" disabled={$submitting} class={buttonClass({ variant: "primary", grow: true })}>
-					{#if $delayed}
-						<span class="loading loading-spinner loading-sm"></span>
-						Saving...
-					{:else}
-						<FluentCheckmark20Filled class="size-5" />
-						Save Changes
-					{/if}
-				</button>
+					Save Changes
+				</Button>
 			</div>
 		{/if}
 	</form>
 
 	<!-- Info Box -->
-	<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-		<p class="text-sm text-blue-300">
+	<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
+		<p class="text-sm text-[#b7d0e6]">
 			💡 <strong>Note:</strong> As a president of a member state, you can manage the bloc's name, color, description, logo,
 			and recommended military units. These recommendations will be highlighted to all member states during unit training.
 		</p>
 	</div>
-</div>
+</PageContainer>
 
 {#if showCropper && cropImageUrl}
 	<ImageCropper

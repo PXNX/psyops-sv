@@ -8,6 +8,9 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
@@ -32,63 +35,59 @@
 	}
 </script>
 
-<div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div class="flex items-center justify-between flex-wrap gap-3">
-		<div>
-			<h1 class="text-3xl font-bold text-[#fff7e8]">Political Parties</h1>
-			<p class="text-[#a89e8e] mt-1">
-				{data.parties.length}
-				{data.parties.length === 1 ? "party" : "parties"}
-				{data.scope === "state" ? `in ${data.stateName}` : "across all states"}
-			</p>
-		</div>
-		<a href="/party/create" class="btn btn-primary gap-2">
-			<FluentAdd20Filled class="size-5" />
-			Create your own party
-		</a>
-	</div>
+	<PageHeader
+		title="Political Parties"
+		subtitle={`${data.parties.length} ${data.parties.length === 1 ? "party" : "parties"} ${
+			data.scope === "state" ? `in ${data.stateName}` : "across all states"
+		}`}
+	>
+		{#snippet actions()}
+			<Button variant="primary" href="/party/create" icon={FluentAdd20Filled}>Create your own party</Button>
+		{/snippet}
+	</PageHeader>
 
 	<!-- Filters -->
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Search -->
 		<div class="relative flex-1">
-			<FluentSearch20Filled class="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
 			<input
 				type="text"
 				bind:value={searchQuery}
 				placeholder="Search parties by name, abbreviation, or ideology..."
-				class="input input-bordered w-full pl-12 field-control"
+				class="field-control w-full rounded-sm pl-11 pr-4 py-2.5"
 			/>
 		</div>
 
 		<!-- Scope: my state vs global -->
 		<div class="join">
-			<button
+			<Button
 				type="button"
-				class="btn join-item {data.scope === 'state' ? 'btn-primary' : 'btn-ghost bg-[#14283f]/85 border-[#dfceb0]/15'}"
+				variant={data.scope === "state" ? "primary" : "secondary"}
+				class="join-item"
+				icon={FluentLocation20Filled}
 				onclick={() => updateParams({ scope: null })}
 			>
-				<FluentLocation20Filled class="size-4" />
 				{data.stateName}
-			</button>
-			<button
+			</Button>
+			<Button
 				type="button"
-				class="btn join-item {data.scope === 'global'
-					? 'btn-primary'
-					: 'btn-ghost bg-[#14283f]/85 border-[#dfceb0]/15'}"
+				variant={data.scope === "global" ? "primary" : "secondary"}
+				class="join-item"
+				icon={FluentGlobe20Filled}
 				onclick={() => updateParams({ scope: "global" })}
 			>
-				<FluentGlobe20Filled class="size-4" />
 				Global
-			</button>
+			</Button>
 		</div>
 
 		<!-- Sort -->
 		<select
 			value={data.sort}
 			onchange={(e) => updateParams({ sort: e.currentTarget.value })}
-			class="select select-bordered field-control"
+			class="field-control rounded-sm px-4 py-2.5 sm:w-auto"
 		>
 			<option value="size">Sort: Size</option>
 			<option value="age">Sort: Age</option>
@@ -98,7 +97,7 @@
 		<select
 			value={data.ideology ?? ""}
 			onchange={(e) => updateParams({ ideology: e.currentTarget.value || null })}
-			class="select select-bordered field-control"
+			class="field-control rounded-sm px-4 py-2.5 sm:w-auto"
 		>
 			<option value="">All ideologies</option>
 			{#each data.ideologies as ideologyOption}
@@ -111,75 +110,70 @@
 	{#if filteredParties.length > 0}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 			{#each filteredParties as party}
-				<a href="/party/{party.id}" class="card panel-interactive transition-all group">
-					<div class="card-body p-5">
-						<!-- Party Header -->
-						<div class="flex items-start gap-3 mb-3">
-							<div
-								class="size-12 rounded-lg flex items-center justify-center flex-shrink-0"
-								style="background-color: {party.color}"
-							>
-								{#if party.logoUrl}
-									<img src={party.logoUrl} alt={party.name} class="size-10 object-contain" />
-								{:else}
-									<FluentPeople20Filled class="size-6 text-white" />
-								{/if}
-							</div>
-
-							<div class="flex-1 min-w-0">
-								<h3 class="font-bold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate">
-									{party.name}
-								</h3>
-								{#if party.abbreviation}
-									<span
-										class="inline-block px-2 py-0.5 rounded text-xs font-semibold mt-1"
-										style="background-color: {party.color}20; color: {party.color}"
-									>
-										{party.abbreviation}
-									</span>
-								{/if}
-							</div>
-						</div>
-
-						<!-- Description -->
-						{#if party.description}
-							<p class="text-sm text-[#c7bda9] line-clamp-2 mb-3">{party.description}</p>
-						{/if}
-
-						<!-- Stats -->
-						<div class="flex items-center justify-between text-sm flex-wrap gap-2">
-							<div class="flex items-center gap-1 text-[#c7bda9]">
-								<FluentPeople20Filled class="size-4" />
-								<span>{party.memberCount} members</span>
-							</div>
-							{#if party.ideology}
-								<div class="flex items-center gap-1 text-[#c7bda9]">
-									<FluentFlag20Filled class="size-4" />
-									<span>{party.ideology}</span>
-								</div>
+				<a href="/party/{party.id}" class="group panel-interactive rounded-sm p-5">
+					<!-- Party Header -->
+					<div class="flex items-start gap-3 mb-3">
+						<div
+							class="size-12 rounded-sm flex items-center justify-center shrink-0"
+							style="background-color: {party.color}"
+						>
+							{#if party.logoUrl}
+								<img src={party.logoUrl} alt={party.name} class="size-10 object-contain" />
+							{:else}
+								<FluentPeople20Filled class="size-6 text-[#fff7e8]" />
 							{/if}
 						</div>
-						{#if data.scope === "global" && party.stateName}
-							<div class="flex items-center gap-1 text-xs text-[#a89e8e] mt-2">
-								<FluentLocation20Filled class="size-3" />
-								<span>{party.stateName}</span>
+
+						<div class="flex-1 min-w-0">
+							<h3 class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+								{party.name}
+							</h3>
+							{#if party.abbreviation}
+								<span
+									class="inline-block px-2 py-0.5 rounded-sm text-xs font-semibold mt-1"
+									style="background-color: {party.color}20; color: {party.color}"
+								>
+									{party.abbreviation}
+								</span>
+							{/if}
+						</div>
+					</div>
+
+					<!-- Description -->
+					{#if party.description}
+						<p class="text-sm text-[#a89e8e] line-clamp-2 mb-3">{party.description}</p>
+					{/if}
+
+					<!-- Stats -->
+					<div class="flex items-center justify-between text-sm flex-wrap gap-2">
+						<div class="flex items-center gap-1 text-[#d9ccb7]">
+							<FluentPeople20Filled class="size-4 text-[#b7a0c5]" />
+							<span>{party.memberCount} members</span>
+						</div>
+						{#if party.ideology}
+							<div class="flex items-center gap-1 text-[#d9ccb7]">
+								<FluentFlag20Filled class="size-4 text-[#b7a0c5]" />
+								<span>{party.ideology}</span>
 							</div>
 						{/if}
 					</div>
+					{#if data.scope === "global" && party.stateName}
+						<div class="flex items-center gap-1 text-xs text-[#a89e8e] mt-2">
+							<FluentLocation20Filled class="size-3" />
+							<span>{party.stateName}</span>
+						</div>
+					{/if}
 				</a>
 			{/each}
 		</div>
 	{:else}
-		<div class="card panel">
-			<div class="card-body text-center py-12">
-				<FluentPeople20Filled class="size-16 text-[#a89e8e] mx-auto mb-4" />
-				<p class="text-[#c7bda9] text-lg">No parties found</p>
-				<p class="text-[#a89e8e] text-sm mt-1">Try adjusting your search or create your own party</p>
-				<a href="/party/create" class="btn btn-primary gap-2 mt-4 mx-auto">
-					<FluentAdd20Filled class="size-5" />
-					Create your own party
-				</a>
+		<div class="panel-muted rounded-sm p-12 text-center">
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
+				<FluentPeople20Filled class="size-8 text-[#a89e8e]" />
 			</div>
+			<p class="text-xl font-bold text-[#fff7e8] mb-2">No parties found</p>
+			<p class="text-[#a89e8e] mb-4">Try adjusting your search or create your own party</p>
+			<Button variant="primary" href="/party/create" icon={FluentAdd20Filled}>Create your own party</Button>
 		</div>
 	{/if}
-</div>
+</PageContainer>

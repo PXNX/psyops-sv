@@ -12,7 +12,7 @@
 	let { icon, title, subtitle, actions, class: className = "" }: Props = $props();
 </script>
 
-<div class="panel-muted backdrop-blur-sm rounded-xl p-12 sm:p-16 text-center {className}">
+<div class="panel-muted rounded-sm p-12 sm:p-16 text-center {className}">
 	{#if icon}
 		<svelte:component this={icon} class="size-14 sm:size-16 mx-auto mb-4 opacity-20" />
 	{/if}

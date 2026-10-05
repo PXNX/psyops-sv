@@ -38,31 +38,31 @@
 	<div class="space-y-4">
 		<!-- Warning Icon -->
 		<div class="flex justify-center">
-			<div class="rounded-full bg-warning/20 p-4">
-				<FluentWarning20Filled class="size-8 text-warning" />
+			<div class="rounded-full bg-[#e6a527]/12 border border-[#e6a527]/35 p-4">
+				<FluentWarning20Filled class="size-8 text-[#f7c56b]" />
 			</div>
 		</div>
 
 		<!-- Warning Message -->
 		<div class="space-y-2 text-center">
 			<p class="text-[#d9ccb7]">You are about to leave this site and visit an external link:</p>
-			<div class="rounded-lg panel-muted p-3">
+			<div class="panel-muted rounded-sm p-3">
 				<p class="break-all text-sm font-mono text-[#b7d0e6]">{getDomain(url)}</p>
 			</div>
 		</div>
 
 		<!-- Safety Notice -->
-		<div class="rounded-lg panel-muted border-warning/30 p-4">
+		<div class="panel-muted rounded-sm border-[#e6a527]/30 p-4">
 			<p class="text-sm text-[#a89e8e]">
-				<strong class="text-warning">Safety Notice:</strong> This link leads to an external website. We cannot guarantee the
-				safety or content of external sites. Please exercise caution when sharing personal information.
+				<strong class="text-[#f7c56b]">Safety Notice:</strong> This link leads to an external website. We cannot guarantee
+				the safety or content of external sites. Please exercise caution when sharing personal information.
 			</p>
 		</div>
 
 		<!-- Action Buttons -->
 		<div class="flex gap-3">
 			<Button variant="secondary" grow icon={FluentDismiss20Filled} onclick={handleCancel}>Cancel</Button>
-			<Button variant="info" grow icon={FluentOpen20Filled} onclick={handleContinue}>Continue</Button>
+			<Button variant="primary" grow icon={FluentOpen20Filled} onclick={handleContinue}>Continue</Button>
 		</div>
 	</div>
 </Modal>

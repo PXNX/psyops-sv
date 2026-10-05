@@ -8,7 +8,10 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import FluentShieldKeyhole20Filled from "~icons/fluent/shield-keyhole-20-filled";
 	import Button from "#lib/component/ui/Button.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
 
 	const { data, form } = $props();
 
@@ -24,26 +27,22 @@
 	}
 </script>
 
-<div class="max-w-4xl mx-auto px-4 py-6">
+<PageContainer maxWidth="4xl">
 	<!-- Header -->
-	<div class="flex items-center gap-3 mb-6">
-		<div class="size-12 bg-red-600/20 rounded-xl flex items-center justify-center">
-			<FluentMegaphone20Filled class="size-6 text-red-400" />
-		</div>
-		<div>
-			<h1 class="text-2xl font-bold text-[#fff7e8]">Admin Panel</h1>
-		</div>
+	<PageHeader title="Admin Panel" icon={FluentShieldKeyhole20Filled} />
+
+	<div class="flex flex-wrap gap-2">
+		<Button href="/admin/broadcast" variant="secondary" icon={FluentMegaphone20Filled}>Broadcast</Button>
+		<Button href="/admin/giftcode" variant="secondary" icon={FluentGift20Filled}>Gift Codes</Button>
 	</div>
 
-	<Button href="/admin/broadcast" variant="secondary" icon={FluentMegaphone20Filled}>Broadcast</Button>
-	<Button href="/admin/giftcode" variant="secondary" icon={FluentGift20Filled}>Gift Codes</Button>
+	<div class="border-t border-[#dfceb0]/15"></div>
 
-	<div class="divider my-4"></div>
-	<!-- Broadcast -->
-
-	<Button href="/api/cron/battles" variant="secondary" icon={FluentBuildingGovernment20Filled}>Battles</Button>
-	<Button href="/api/cron/travels" variant="secondary" icon={FluentSend20Filled}>Travels</Button>
-	<Button href="/api/cron/proposals" variant="secondary" icon={FluentPeople20Filled}>Proposals</Button>
-
-	<Button href="/api/cron/elections" variant="secondary" icon={FluentWarning20Filled}>Elections</Button>
-</div>
+	<!-- Cron jobs -->
+	<div class="flex flex-wrap gap-2">
+		<Button href="/api/cron/battles" variant="secondary" icon={FluentBuildingGovernment20Filled}>Battles</Button>
+		<Button href="/api/cron/travels" variant="secondary" icon={FluentSend20Filled}>Travels</Button>
+		<Button href="/api/cron/proposals" variant="secondary" icon={FluentPeople20Filled}>Proposals</Button>
+		<Button href="/api/cron/elections" variant="secondary" icon={FluentWarning20Filled}>Elections</Button>
+	</div>
+</PageContainer>

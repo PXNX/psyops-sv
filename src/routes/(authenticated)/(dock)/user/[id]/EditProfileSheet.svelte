@@ -12,6 +12,7 @@
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	let {
 		open = $bindable(false),
@@ -148,10 +149,10 @@
 
 	const dropzoneClass = $derived(
 		[
-			"group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
+			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 hover:border-[#e6a527]/55",
 			dragActive ? "border-[#e6a527] bg-[#e6a527]/10" : previewUrl ? "border-[#8fae88]/60" : "border-[#dfceb0]/25",
 			$submitting || !canEdit ? "opacity-50" : "",
-			$errors.logo ? "input-error" : ""
+			$errors.logo ? "border-red-500" : ""
 		]
 			.filter(Boolean)
 			.join(" ")
@@ -162,18 +163,18 @@
 	<div class="space-y-5">
 		<!-- Cooldown Warning -->
 		{#if isOnCooldown && cooldownEndsAt}
-			<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4 space-y-2">
+			<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-4 space-y-2">
 				<div class="flex items-start gap-3">
 					<FluentClock20Filled class="size-5 text-red-400 shrink-0 mt-0.5" />
 					<div class="space-y-1.5 flex-1">
 						<h3 class="font-semibold text-red-300 text-sm">Profile Edit Cooldown Active</h3>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-red-100/90 font-medium">Time Remaining:</span>
-							<span class="text-red-100 font-bold">{formatTimeRemaining(cooldownEndsAt)}</span>
+							<span class="text-[#d9ccb7] font-medium">Time Remaining:</span>
+							<span class="text-red-300 font-bold font-mono">{formatTimeRemaining(cooldownEndsAt)}</span>
 						</div>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-red-200/70">Available on:</span>
-							<span class="text-red-200/90">{formatCooldownDate(cooldownEndsAt)}</span>
+							<span class="text-[#a89e8e]">Available on:</span>
+							<span class="text-[#d9ccb7]">{formatCooldownDate(cooldownEndsAt)}</span>
 						</div>
 					</div>
 				</div>
@@ -184,8 +185,8 @@
 			<!-- Profile Picture -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentImage20Filled class="size-4 text-[#d5c4df]" />
-					<h2 class="text-sm font-semibold text-[#fff7e8]">Profile Picture</h2>
+					<FluentImage20Filled class="size-4 text-[#b7a0c5]" />
+					<h2 class="text-sm font-semibold text-[#fff7e8] font-sans">Profile Picture</h2>
 				</div>
 
 				<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -208,8 +209,8 @@
 					>
 						{#if !previewUrl}
 							<div class="flex min-h-[140px] flex-col items-center justify-center gap-2 p-6">
-								<div class="rounded-full bg-[#8c709b]/20 p-3 transition-transform group-hover:scale-110">
-									<FluentImageOff20Filled class="size-8 text-[#d5c4df]" />
+								<div class="rounded-full bg-[#8c709b]/15 border border-[#b7a0c5]/30 p-3">
+									<FluentImageOff20Filled class="size-8 text-[#b7a0c5]" />
 								</div>
 								<div class="text-center">
 									<p class="text-sm font-semibold text-[#fff7e8]">
@@ -232,7 +233,7 @@
 									<img src={previewUrl} alt="Profile picture preview" class="size-28 object-cover rounded-full" />
 								</div>
 								<div
-									class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+									class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/70 opacity-0 transition-opacity group-hover:opacity-100"
 								>
 									<p class="text-sm font-semibold text-[#fff7e8]">Tap to change</p>
 								</div>
@@ -244,7 +245,7 @@
 											clearImage();
 										}}
 										disabled={$submitting}
-										class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
+										class={buttonClass({ variant: "secondary", size: "sm", shape: "circle", class: "absolute top-2 right-2" })}
 									>
 										✕
 									</button>
@@ -255,17 +256,17 @@
 				</div>
 
 				{#if $errors.logo}
-					<p class="text-xs text-red-400">{$errors.logo}</p>
+					<p class="field-error">{$errors.logo}</p>
 				{:else}
-					<p class="text-xs text-[#a89e8e]">Will be converted to 96x96 WebP • Max 5MB</p>
+					<p class="field-hint">Will be converted to 96x96 WebP • Max 5MB</p>
 				{/if}
 			</div>
 
 			<!-- Name & Bio -->
 			<div class="space-y-4">
 				<div class="flex items-center gap-2">
-					<FluentPerson20Filled class="size-4 text-[#d5c4df]" />
-					<h2 class="text-sm font-semibold text-[#fff7e8]">Profile Information</h2>
+					<FluentPerson20Filled class="size-4 text-[#b7a0c5]" />
+					<h2 class="text-sm font-semibold text-[#fff7e8] font-sans">Profile Information</h2>
 				</div>
 
 				<div>
@@ -279,8 +280,8 @@
 						bind:value={$form.name}
 						placeholder="Your display name"
 						maxlength="50"
-						class="input w-full field-control"
-						class:input-error={$errors.name}
+						class="field-control w-full rounded-sm px-3 py-2.5"
+						class:border-red-500={$errors.name}
 						disabled={$submitting || !canEdit}
 					/>
 					{#if $errors.name}
@@ -299,8 +300,8 @@
 						rows="3"
 						placeholder="Tell others about yourself..."
 						maxlength="500"
-						class="textarea w-full field-control"
-						class:input-error={$errors.bio}
+						class="field-control w-full rounded-sm px-3 py-2.5"
+						class:border-red-500={$errors.bio}
 						disabled={$submitting || !canEdit}></textarea>
 					{#if $errors.bio}
 						<p class="field-error">{$errors.bio}</p>
@@ -327,15 +328,15 @@
 
 		<!-- Success Message -->
 		{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("wait") && !$message.includes("Insufficient")}
-			<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-xl p-4">
-				<p class="text-[#c6dfbf] text-sm font-medium">{$message}</p>
+			<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+				<p class="text-sm font-medium">{$message}</p>
 			</div>
 		{/if}
 
 		<!-- Error Message -->
 		{#if $message && ($message.includes("error") || $message.includes("failed") || $message.includes("wait") || $message.includes("Insufficient"))}
-			<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-				<p class="text-red-300 text-sm font-medium">{$message}</p>
+			<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+				<p class="text-sm font-medium">{$message}</p>
 			</div>
 		{/if}
 	</div>

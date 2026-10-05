@@ -25,6 +25,7 @@
 	import Logo from "#lib/component/Logo.svelte";
 	import ProfileItem from "#lib/component/ProfileItem.svelte";
 	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
 
 	let { data, form } = $props();
 
@@ -80,44 +81,37 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Company Header -->
-	<div class="relative">
-		<div
-			class="panel w-full rounded-sm p-8 flex flex-col items-center relative overflow-hidden border border-[#dfceb0]/15 shadow-2xl"
-		>
-			<div
-				class="absolute inset-0 opacity-5"
-				style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,0.2) 35px, rgba(255,255,255,0.2) 70px);"
-			></div>
-
-			{#if data.isOwner}
-				<a
+	<div class="panel rounded-sm p-5 relative">
+		{#if data.isOwner}
+			<div class="absolute top-4 right-4">
+				<IconButton
 					href="/company/{data.company.id}/edit"
-					class="absolute top-3 right-3 z-20 p-2 bg-black/30 hover:bg-black/50 border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all backdrop-blur-sm"
-					title="Edit Company"
-					aria-label="Edit Company"
-				>
-					<FluentEdit20Filled class="size-4" />
-				</a>
-			{/if}
-
-			<div class="relative z-10 flex flex-col items-center space-y-3">
-				<Logo
-					src={data.company.logo}
-					alt={data.company.name}
-					placeholderIcon={FluentBuilding20Filled}
-					class="size-24 rounded-2xl"
+					icon={FluentEdit20Filled}
+					label="Edit Company"
+					variant="secondary"
+					size="sm"
+					shape="square"
 				/>
+			</div>
+		{/if}
 
-				<div class="text-center space-y-1">
-					<h1 class="text-3xl font-bold text-[#fff7e8] tracking-tight">{data.company.name}</h1>
-					<p class="text-xs text-[#a89e8e] flex items-center justify-center gap-1.5">
-						<FluentCalendar20Filled class="size-3.5" />
-						Founded {formatDate(data.company.foundedAt)}
-					</p>
-					{#if data.company.description}
-						<p class="text-sm text-[#c7bda9] max-w-md mt-2">{data.company.description}</p>
-					{/if}
-				</div>
+		<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 pr-12">
+			<Logo
+				src={data.company.logo}
+				alt={data.company.name}
+				placeholderIcon={FluentBuilding20Filled}
+				class="size-20 rounded-sm shrink-0"
+			/>
+
+			<div class="min-w-0 space-y-1">
+				<h1 class="text-3xl font-bold text-[#fff7e8]">{data.company.name}</h1>
+				<p class="text-xs text-[#a89e8e] flex items-center gap-1.5">
+					<FluentCalendar20Filled class="size-3.5" />
+					Founded {formatDate(data.company.foundedAt)}
+				</p>
+				{#if data.company.description}
+					<p class="text-sm text-[#d9ccb7] max-w-xl pt-1">{data.company.description}</p>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -186,7 +180,7 @@
 
 	<!-- Embargo Warning -->
 	{#if data.embargoReason}
-		<div class="bg-red-900/20 border border-red-500/30 rounded-sm p-4 flex items-center gap-3">
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
 			<FluentWarning20Filled class="size-6 text-red-400 shrink-0" />
 			<p class="text-sm text-red-300">{data.embargoReason}</p>
 		</div>
@@ -201,7 +195,7 @@
 	{/if}
 
 	{#if form?.error}
-		<div class="bg-red-900/20 border border-red-500/30 rounded-sm p-4 flex items-center gap-3">
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
 			<FluentWarning20Filled class="size-5 text-red-400 shrink-0" />
 			<p class="text-sm text-red-300">{form.error}</p>
 		</div>
@@ -277,7 +271,7 @@
 							name="startingPrice"
 							bind:value={ipoPrice}
 							min={data.ipoConfig.minPrice}
-							class="field-control rounded-lg px-3 py-2 w-full"
+							class="field-control rounded-sm px-3 py-2.5 w-full"
 							required
 						/>
 					</div>
@@ -313,7 +307,7 @@
 					<h3 class="text-sm font-semibold text-[#e5d8c1] mb-2">Top Holders</h3>
 					<div class="space-y-1.5">
 						{#each data.topHolders as holder}
-							<div class="flex items-center justify-between text-sm panel-muted rounded-lg px-3 py-2">
+							<div class="flex items-center justify-between text-sm panel-muted rounded-sm px-3 py-2">
 								<span class="text-[#d9ccb7]">{holder.name || "Unknown"}</span>
 								<span class="flex items-center gap-2">
 									<span class="text-[#a89e8e]">{holder.quantity.toLocaleString()}</span>
@@ -338,7 +332,7 @@
 				{#if data.listings.length > 0}
 					<div class="space-y-1.5">
 						{#each data.listings as listing (listing.id)}
-							<div class="flex items-center justify-between gap-3 panel-muted rounded-lg px-3 py-2 text-sm">
+							<div class="flex items-center justify-between gap-3 panel-muted rounded-sm px-3 py-2 text-sm">
 								<div class="min-w-0">
 									<div class="text-[#fff7e8] font-semibold">${listing.pricePerUnit.toLocaleString()} / share</div>
 									<div class="text-xs text-[#a89e8e] truncate">
@@ -374,7 +368,7 @@
 											min="1"
 											max={listing.quantity}
 											placeholder="Qty"
-											class="field-control rounded-lg px-2 py-1 w-20 text-sm"
+											class="field-control rounded-sm px-2 py-1 w-20 text-sm"
 											required
 											disabled={!!data.embargoReason}
 										/>
@@ -419,7 +413,7 @@
 								bind:value={listQuantity}
 								min="1"
 								max={data.myHolding}
-								class="field-control rounded-lg px-3 py-2 w-28"
+								class="field-control rounded-sm px-3 py-2.5 w-28"
 								required
 							/>
 						</div>
@@ -431,7 +425,7 @@
 								name="pricePerUnit"
 								bind:value={listPrice}
 								min={data.ipoConfig.minPrice}
-								class="field-control rounded-lg px-3 py-2 w-28"
+								class="field-control rounded-sm px-3 py-2.5 w-28"
 								required
 							/>
 						</div>
@@ -480,7 +474,7 @@
 									<Tooltip.Item
 										label="Pending"
 										value={data.pending.toLocaleString()}
-										valueClass="text-success font-bold"
+										valueClass="text-[#c6dfbf] font-bold"
 									/>
 									<Tooltip.Item label="Rate/Shift" value={data.rate.toLocaleString()} />
 									<Tooltip.Item label="Workers" value={data.workers} />
@@ -510,8 +504,8 @@
 						padding={{ left: 16, bottom: 24, top: 8 }}
 					>
 						<Svg>
-							<Area class="fill-gradient-to-t from-emerald-500/20 to-emerald-500/5" />
-							<Area line={{ class: "stroke-emerald-500 stroke-2" }} />
+							<Area class="fill-[#587252]/25" />
+							<Area line={{ class: "stroke-[#8fae88] stroke-2" }} />
 						</Svg>
 						<Tooltip.Root let:data>
 							<Tooltip.Header>{data.date}</Tooltip.Header>
@@ -519,7 +513,7 @@
 								<Tooltip.Item
 									label="Balance"
 									value={data.balance.toLocaleString()}
-									valueClass="text-emerald-500 font-bold"
+									valueClass="text-[#c6dfbf] font-bold"
 								/>
 							</Tooltip.List>
 						</Tooltip.Root>
@@ -584,7 +578,7 @@
 							bind:value={depositAmount}
 							min="1"
 							max={data.ownerBalance}
-							class="field-control rounded-lg px-3 py-2 w-full"
+							class="field-control rounded-sm px-3 py-2.5 w-full"
 							required
 						/>
 					</div>
@@ -592,7 +586,7 @@
 					<button
 						type="submit"
 						disabled={isDepositing || depositAmount > data.ownerBalance || depositAmount < 1}
-						class={buttonClass({ variant: "success", block: true, class: "gap-2" })}
+						class={buttonClass({ variant: "soft-emerald", block: true, class: "gap-2" })}
 					>
 						{#if isDepositing}
 							<span class="loading loading-spinner loading-xs"></span>
@@ -608,13 +602,13 @@
 			<!-- Resource Collection -->
 			<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
 				<h3 class="section-title text-base sm:text-lg">
-					<FluentBoxCheckmark20Filled class="size-5 text-emerald-400" />
+					<FluentBoxCheckmark20Filled class="size-5 text-[#8fae88]" />
 					Collect Resources
 				</h3>
 
 				<div class="panel-muted rounded-sm p-4 text-center">
 					<div class="text-xs text-[#a89e8e]">Pending</div>
-					<div class="text-2xl font-bold text-emerald-400">
+					<div class="text-2xl font-bold text-[#c6dfbf]">
 						{data.totalPendingResources.toLocaleString()}
 					</div>
 					<div class="text-xs text-[#a89e8e]">units ready</div>
@@ -635,7 +629,7 @@
 						<button
 							type="submit"
 							disabled={isCollecting}
-							class={buttonClass({ variant: "success", block: true, class: "gap-2" })}
+							class={buttonClass({ variant: "soft-emerald", block: true, class: "gap-2" })}
 						>
 							{#if isCollecting}
 								<span class="loading loading-spinner loading-sm"></span>
@@ -737,7 +731,7 @@
 							<div>
 								<div class="text-xs text-[#a89e8e]">Location</div>
 								<div class="flex items-center gap-2 mt-1">
-									<div class="size-5 sm:size-6 rounded overflow-hidden shrink-0">
+									<div class="size-5 sm:size-6 rounded-sm overflow-hidden shrink-0">
 										<img src="/coats/{factory.regionId}.svg" alt="{getRegionName(factory.regionId)} coat of arms" />
 									</div>
 									<div>
@@ -755,7 +749,7 @@
 						<div class="grid grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-[#dfceb0]/10">
 							<div>
 								<div class="text-xs text-[#a89e8e]">Wage/Shift</div>
-								<div class="font-bold text-emerald-400 flex items-center gap-1 text-sm">
+								<div class="font-bold text-[#c6dfbf] flex items-center gap-1 text-sm">
 									<FluentMoney20Filled class="size-3" />
 									{factory.workerWage.toLocaleString()}
 								</div>
@@ -778,7 +772,7 @@
 								{#if factory.pendingResources > 0}
 									<div class="flex items-center justify-between">
 										<span class="text-xs text-[#a89e8e]">Ready to collect</span>
-										<span class="font-bold text-emerald-400 text-sm">{factory.pendingResources.toLocaleString()}</span>
+										<span class="font-bold text-[#c6dfbf] text-sm">{factory.pendingResources.toLocaleString()}</span>
 									</div>
 								{/if}
 							</div>

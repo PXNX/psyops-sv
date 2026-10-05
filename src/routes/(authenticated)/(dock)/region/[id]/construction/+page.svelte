@@ -6,6 +6,9 @@
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentHammer20Filled from "~icons/fluent/wrench-20-filled";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import { enhance } from "$app/forms";
 
@@ -75,66 +78,61 @@
 	function getColorClasses(color: string) {
 		const colors = {
 			emerald: {
-				bg: "bg-emerald-600/20",
-				border: "border-emerald-500/30",
-				text: "text-emerald-400",
-				hover: "hover:bg-emerald-600/30",
-				button: "bg-emerald-600 hover:bg-emerald-500"
+				bg: "bg-[#587252]/18",
+				border: "border-[#8fae88]/30",
+				text: "text-[#c6dfbf]",
+				hover: "hover:bg-[#587252]/28",
+				button: "bg-[#8fae88]",
+				variant: "soft-emerald" as const
 			},
 			blue: {
-				bg: "bg-blue-600/20",
-				border: "border-blue-500/30",
-				text: "text-blue-400",
-				hover: "hover:bg-blue-600/30",
-				button: "bg-blue-600 hover:bg-blue-500"
+				bg: "bg-[#315d8d]/18",
+				border: "border-[#7ba0c8]/30",
+				text: "text-[#b7d0e6]",
+				hover: "hover:bg-[#315d8d]/28",
+				button: "bg-[#7ba0c8]",
+				variant: "soft-blue" as const
 			},
 			red: {
-				bg: "bg-red-600/20",
+				bg: "bg-red-600/10",
 				border: "border-red-500/30",
-				text: "text-red-400",
-				hover: "hover:bg-red-600/30",
-				button: "bg-red-600 hover:bg-red-500"
+				text: "text-red-300",
+				hover: "hover:bg-red-600/20",
+				button: "bg-red-400",
+				variant: "soft-red" as const
 			},
 			purple: {
-				bg: "bg-[#8c709b]/20",
+				bg: "bg-[#8c709b]/15",
 				border: "border-[#b7a0c5]/30",
 				text: "text-[#d5c4df]",
-				hover: "hover:bg-[#8c709b]/30",
-				button: "bg-[#8c709b] hover:bg-[#7a5e89]"
+				hover: "hover:bg-[#8c709b]/25",
+				button: "bg-[#b7a0c5]",
+				variant: "soft-purple" as const
 			}
 		};
 		return colors[color as keyof typeof colors];
 	}
 </script>
 
-<div class="max-w-4xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="4xl">
 	<!-- Header -->
-	<div>
-		<a href="/region/{data.region.id}" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
-			{regionName()}
-		</a>
-		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-2 mt-1">
-			<FluentHammer20Filled class="size-8" />
-			Construction
-		</h1>
-		<p class="text-[#a89e8e] mt-1">
-			{#if data.isGovernor}
-				As Governor
-			{:else if data.isInfrastructureMinister}
-				As Infrastructure Minister
-			{/if}
-		</p>
-	</div>
+	<PageHeader
+		title="Construction"
+		icon={FluentHammer20Filled}
+		subtitle={data.isGovernor ? "As Governor" : data.isInfrastructureMinister ? "As Infrastructure Minister" : undefined}
+		backHref="/region/{data.region.id}"
+		backLabel={regionName()}
+	/>
 
 	<!-- Treasury Balance -->
-	<div class="panel rounded-xl p-4">
-		<div class="flex items-center justify-between">
+	<div class="panel rounded-sm p-4">
+		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="text-sm text-[#a89e8e]">State Treasury Balance</p>
-				<p class="text-2xl font-bold text-[#fff7e8]">${data.treasuryBalance.toLocaleString()}</p>
+				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">State Treasury Balance</p>
+				<p class="text-2xl font-bold font-mono text-[#fff7e8]">${data.treasuryBalance.toLocaleString()}</p>
 			</div>
 			{#if data.state}
-				<a href="/state/{data.state.id}" class="text-sm text-[#d5c4df] hover:text-[#f0e7f5] underline">
+				<a href="/state/{data.state.id}" class="text-sm text-[#f7c56b] hover:text-[#f2c463] underline underline-offset-2">
 					View {data.state.name}
 				</a>
 			{/if}
@@ -143,9 +141,9 @@
 
 	<!-- Success Message -->
 	{#if showSuccess}
-		<div class="bg-emerald-600/20 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-3">
-			<FluentCheckmark20Filled class="size-5 text-emerald-400 shrink-0" />
-			<p class="text-sm text-emerald-400">{successMessage}</p>
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+			<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0" />
+			<p class="text-sm">{successMessage}</p>
 		</div>
 	{/if}
 
@@ -156,15 +154,15 @@
 			{@const canAfford = canBuild(building)}
 			{@const isMaxed = building.current >= building.max}
 
-			<div class="panel rounded-xl overflow-hidden">
+			<div class="panel rounded-sm overflow-hidden">
 				<!-- Header -->
 				<div class="{colors.bg} {colors.border} border-b p-4">
 					<div class="flex items-start gap-3">
-						<div class="size-12 {colors.bg} rounded-lg flex items-center justify-center shrink-0">
+						<div class="size-12 {colors.bg} border {colors.border} rounded-sm flex items-center justify-center shrink-0">
 							<svelte:component this={building.icon} class="size-6 {colors.text}" />
 						</div>
 						<div class="flex-1">
-							<h3 class="text-lg font-bold text-[#fff7e8]">{building.name}</h3>
+							<h2 class="text-lg font-bold text-[#fff7e8]">{building.name}</h2>
 							<p class="text-sm text-[#a89e8e]">{building.description}</p>
 						</div>
 					</div>
@@ -190,7 +188,7 @@
 
 					<!-- Benefits -->
 					<div>
-						<p class="text-xs font-semibold text-[#a89e8e] uppercase tracking-wider mb-2">Benefits</p>
+						<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-2">Benefits</p>
 						<ul class="space-y-1">
 							{#each building.benefits as benefit}
 								<li class="text-sm text-[#d9ccb7] flex items-start gap-2">
@@ -202,23 +200,19 @@
 					</div>
 
 					<!-- Cost -->
-					<div class="pt-3 border-t border-white/5">
+					<div class="pt-3 border-t border-[#dfceb0]/10">
 						<div class="flex items-center justify-between mb-3">
 							<span class="text-sm text-[#a89e8e]">Construction Cost</span>
-							<span class="text-lg font-bold text-[#fff7e8]">
+							<span class="text-lg font-bold font-mono text-[#fff7e8]">
 								${building.cost.toLocaleString()}
 							</span>
 						</div>
 
 						<!-- Build Button -->
 						{#if isMaxed}
-							<button disabled class="btn w-full bg-[#102239] border-0 text-[#a89e8e] cursor-not-allowed">
-								Maximum Level Reached
-							</button>
+							<Button variant="subtle" block disabled>Maximum Level Reached</Button>
 						{:else if !canAfford}
-							<button disabled class="btn w-full bg-[#102239] border-0 text-[#a89e8e] cursor-not-allowed">
-								Insufficient Funds
-							</button>
+							<Button variant="subtle" block disabled>Insufficient Funds</Button>
 						{:else}
 							<form
 								method="POST"
@@ -239,19 +233,16 @@
 								}}
 							>
 								<input type="hidden" name="buildingType" value={building.type} />
-								<button
+								<Button
 									type="submit"
-									disabled={isSubmitting && selectedBuilding === building.type}
-									class="btn w-full {colors.button} border-0 text-white gap-2"
+									variant={colors.variant}
+									block
+									icon={FluentHammer20Filled}
+									loading={isSubmitting && selectedBuilding === building.type}
+									loadingText="Building..."
 								>
-									{#if isSubmitting && selectedBuilding === building.type}
-										<span class="loading loading-spinner loading-sm"></span>
-										Building...
-									{:else}
-										<FluentHammer20Filled class="size-5" />
-										Build Level {building.current + 1}
-									{/if}
-								</button>
+									Build Level {building.current + 1}
+								</Button>
 							</form>
 						{/if}
 					</div>
@@ -261,14 +252,14 @@
 	</div>
 
 	<!-- Info Section -->
-	<div class="bg-blue-600/20 border border-blue-500/30 rounded-xl p-4">
+	<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
 		<div class="flex items-start gap-3">
-			<div class="size-10 bg-blue-600/30 rounded-lg flex items-center justify-center shrink-0">
-				<FluentBuildingGovernment20Filled class="size-5 text-blue-400" />
+			<div class="size-10 bg-[#315d8d]/25 rounded-sm flex items-center justify-center shrink-0">
+				<FluentBuildingGovernment20Filled class="size-5 text-[#7ba0c8]" />
 			</div>
 			<div class="flex-1">
-				<p class="font-semibold text-blue-300 mb-1">Building Information</p>
-				<ul class="text-sm text-blue-200/90 space-y-1">
+				<p class="font-semibold text-[#b7d0e6] mb-1">Building Information</p>
+				<ul class="text-sm text-[#d9ccb7] space-y-1">
 					<li>• All construction is funded from the state treasury</li>
 					<li>• Buildings are permanent and cannot be demolished</li>
 					<li>• Higher levels provide diminishing returns</li>
@@ -277,4 +268,4 @@
 			</div>
 		</div>
 	</div>
-</div>
+</PageContainer>

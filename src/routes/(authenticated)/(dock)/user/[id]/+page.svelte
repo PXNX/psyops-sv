@@ -39,6 +39,7 @@
 	import Button from "#lib/component/ui/Button.svelte";
 	import IconButton from "#lib/component/ui/IconButton.svelte";
 	import ActionListItem from "#lib/component/ui/ActionListItem.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
 
 	const { data, form } = $props();
 
@@ -110,105 +111,100 @@
 </svelte:head>
 
 {#if data.userNotFound}
-	<div class="w-full mx-auto px-3 sm:px-4 py-6 sm:max-w-2xl">
-		<div class="flex flex-col items-center justify-center gap-4 py-20">
-			<div class="size-20 bg-[#102239]/70 rounded-full flex items-center justify-center border border-[#dfceb0]/10">
-				<FluentImageOff20Filled class="size-10 text-[#a89e8e]" />
+	<PageContainer maxWidth="5xl">
+		<div class="panel-muted rounded-sm p-12 flex flex-col items-center justify-center gap-4">
+			<div class="size-16 bg-[#102239] rounded-full flex items-center justify-center">
+				<FluentImageOff20Filled class="size-8 text-[#a89e8e]" />
 			</div>
 			<div class="text-center space-y-2">
-				<h1 class="text-2xl font-bold text-[#fff7e8]">User Not Found</h1>
-				<p class="text-sm text-[#c7bda9]">
-					The user <code class="px-1.5 py-0.5 rounded bg-[#0d1d31] text-[#d9ccb7] font-mono text-xs"
+				<h1 class="text-xl font-bold text-[#fff7e8]">User Not Found</h1>
+				<p class="text-sm text-[#a89e8e]">
+					The user <code class="px-1.5 py-0.5 rounded-sm bg-[#0d1d31] text-[#d9ccb7] font-mono text-xs"
 						>#{data.userId}</code
 					> doesn't exist or has been removed.
 				</p>
 			</div>
 			<Button variant="secondary" size="sm" class="mt-2" onclick={() => history.back()}>Go Back</Button>
 		</div>
-	</div>
+	</PageContainer>
 {:else}
-	<div class="w-full mx-auto px-3 sm:px-4 py-6 space-y-6 sm:max-w-2xl">
-		<!-- Hero Section with Party Background -->
-		<div class="relative">
-			{#if data.user.isPremium}
-				<!-- Colorful animated glow shown for premium members -->
-				<div class="premium-glow" aria-hidden="true"></div>
+	<PageContainer maxWidth="5xl">
+		<!-- Hero -->
+		<div
+			class="panel rounded-sm p-5 relative overflow-hidden {data.user.isPremium ? 'border-[#e6a527]/55' : ''}"
+		>
+			{#if data.party?.color}
+				<!-- Party colour rule -->
+				<div class="absolute inset-x-0 top-0 h-1" style="background-color: {data.party.color};" aria-hidden="true"></div>
 			{/if}
-			<div
-				class="w-full rounded-2xl p-8 flex flex-col items-center relative overflow-hidden border border-white/5 shadow-2xl"
-				style="background: linear-gradient(135deg, {data.party?.color || '#1e293b'}20 0%, {data.party?.color ||
-					'#1e293b'}40 100%);"
-			>
-				<div
-					class="absolute inset-0 opacity-10"
-					style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.party?.color ||
-						'#ffffff'}20 35px, {data.party?.color || '#ffffff'}20 70px);"
-				></div>
-				<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-2xl"></div>
-
-				{#if data.isOwnProfile}
-					<IconButton
-						icon={FluentEdit20Filled}
-						label="Edit Profile"
-						variant="soft-purple"
-						size="sm"
-						class="absolute top-4 right-4 z-20"
-						onclick={() => (showEditProfileSheet = true)}
-					/>
-				{/if}
-
-				<div class="relative z-10 flex flex-col items-center space-y-3">
-					<Logo src={data.user.logo} alt={data.user.name} placeholderIcon={FluentImageOff20Filled} class="size-20" />
-
-					<div class="text-center space-y-1">
-						<h1 class="text-3xl font-bold text-[#fff7e8] tracking-tight">{data.user.name || "Anonymous User"}</h1>
-						<p class="text-sm text-[#a89e8e] font-mono">#{data.user.id}</p>
-						{#if data.user.bio}
-							<p class="text-sm text-[#d9ccb7] max-w-md mt-2">{data.user.bio}</p>
-						{/if}
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Action Buttons -->
-		<section class="flex flex-wrap justify-center gap-2">
-			{#if data.user.id !== data.account?.id}
-				<Button variant="soft-purple" size="sm" href="/chat/user/{data.user.id}" icon={FluentChat20Filled}>
-					<span class="hidden sm:inline">Message</span>
-				</Button>
-			{/if}
-
-			<Button
-				variant="secondary"
-				size="sm"
-				icon={FluentShareAndroid20Filled}
-				onclick={() => shareLink(data.user.name || "User", window.location.href)}
-			>
-				<span class="hidden sm:inline">Share</span>
-			</Button>
 
 			{#if data.isOwnProfile}
-				<Button variant="soft-blue" size="sm" href="/inbox" icon={FluentMail20Filled}>
-					<span class="hidden sm:inline">Inbox</span>
-				</Button>
-
-				<Button variant="secondary" size="sm" href="/settings" icon={FluentSettingsCogMultiple20Filled}>
-					<span class="hidden sm:inline">Settings</span>
-				</Button>
+				<IconButton
+					icon={FluentEdit20Filled}
+					label="Edit Profile"
+					variant="soft-purple"
+					size="sm"
+					class="absolute top-4 right-4 z-20"
+					onclick={() => (showEditProfileSheet = true)}
+				/>
 			{/if}
 
-			{#if data.user.id !== data.account?.id || data.canAppointMinister || (data.ownedNewspapers && data.ownedNewspapers.length > 0)}
+			<div class="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+				<Logo
+					src={data.user.logo}
+					alt={data.user.name}
+					placeholderIcon={FluentImageOff20Filled}
+					class="size-20 shrink-0"
+				/>
+
+				<div class="text-center sm:text-left space-y-1 min-w-0 sm:pr-12">
+					<h1 class="text-3xl font-bold text-[#fff7e8] break-words">{data.user.name || "Anonymous User"}</h1>
+					<p class="text-sm text-[#a89e8e] font-mono">#{data.user.id}</p>
+					{#if data.user.bio}
+						<p class="text-sm text-[#d9ccb7] max-w-xl mt-2">{data.user.bio}</p>
+					{/if}
+				</div>
+			</div>
+
+			<!-- Action Buttons -->
+			<div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-5 pt-4 border-t border-[#dfceb0]/10">
+				{#if data.user.id !== data.account?.id}
+					<Button variant="soft-purple" size="sm" href="/chat/user/{data.user.id}" icon={FluentChat20Filled}>
+						<span class="hidden sm:inline">Message</span>
+					</Button>
+				{/if}
+
 				<Button
 					variant="secondary"
 					size="sm"
-					icon={FluentMoreHorizontal20Filled}
-					onclick={() => (showActionsSheet = true)}
+					icon={FluentShareAndroid20Filled}
+					onclick={() => shareLink(data.user.name || "User", window.location.href)}
 				>
-					<span class="hidden sm:inline">More</span>
+					<span class="hidden sm:inline">Share</span>
 				</Button>
-			{/if}
-		</section>
+
+				{#if data.isOwnProfile}
+					<Button variant="soft-blue" size="sm" href="/inbox" icon={FluentMail20Filled}>
+						<span class="hidden sm:inline">Inbox</span>
+					</Button>
+
+					<Button variant="secondary" size="sm" href="/settings" icon={FluentSettingsCogMultiple20Filled}>
+						<span class="hidden sm:inline">Settings</span>
+					</Button>
+				{/if}
+
+				{#if data.user.id !== data.account?.id || data.canAppointMinister || (data.ownedNewspapers && data.ownedNewspapers.length > 0)}
+					<Button
+						variant="secondary"
+						size="sm"
+						icon={FluentMoreHorizontal20Filled}
+						onclick={() => (showActionsSheet = true)}
+					>
+						<span class="hidden sm:inline">More</span>
+					</Button>
+				{/if}
+			</div>
+		</div>
 
 		<!-- More Actions Bottom Sheet -->
 		<BottomSheet bind:open={showActionsSheet} title="Actions">
@@ -227,7 +223,7 @@
 
 					<ActionListItem
 						icon={FluentStar20Filled}
-						iconTileClass="bg-gradient-to-br from-amber-500 to-yellow-500 text-slate-900"
+						tone="amber"
 						title="Gift Premium"
 						description="Give this user a premium membership"
 						onclick={() => {
@@ -277,7 +273,7 @@
 				{/if}
 
 				{#if data.user.id !== data.account?.id}
-					<div class="my-2 border-t border-white/5"></div>
+					<div class="my-2 border-t border-[#dfceb0]/10"></div>
 					<ActionListItem
 						icon={FluentAccessibilityError20Filled}
 						tone="red"
@@ -293,312 +289,323 @@
 			</div>
 		</BottomSheet>
 
-		<!-- Government Positions Section -->
-		{#if data.presidency || data.governorship || data.ministries.length > 0 || data.blocLeadership || data.blocDiplomacies.length > 0}
-			<section class="space-y-3">
-				<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Government Positions</h2>
-				<div class="panel-muted rounded-xl p-3 space-y-2">
-					{#if data.blocLeadership}
-						<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-lg p-2 -m-2 transition-all">
-							<div class="size-12 bg-[#e6a527]/15 rounded-lg flex items-center justify-center">
-								<FluentCrown20Filled class="size-6 text-[#f7c56b]" />
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+			<!-- Government Positions Section -->
+			{#if data.presidency || data.governorship || data.ministries.length > 0 || data.blocLeadership || data.blocDiplomacies.length > 0}
+				<section class="panel rounded-sm p-5 space-y-4">
+					<h2 class="section-title">Government Positions</h2>
+					<div class="space-y-4">
+						{#if data.blocLeadership}
+							<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-sm p-2 -m-2 transition-all">
+								<div
+									class="size-12 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center shrink-0"
+								>
+									<FluentCrown20Filled class="size-6 text-[#f7c56b]" />
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="font-semibold text-[#fff7e8] truncate">Leader of {data.blocLeadership.blocName}</p>
+									<p class="text-xs text-[#a89e8e] truncate">
+										Elected {formatDate(data.blocLeadership.appointedAt)}
+									</p>
+								</div>
 							</div>
-							<div class="flex-1 min-w-0">
-								<p class="font-semibold text-[#fff7e8] truncate">Leader of {data.blocLeadership.blocName}</p>
-								<p class="text-xs text-[#a89e8e] truncate">
-									Elected {formatDate(data.blocLeadership.appointedAt)}
-								</p>
-							</div>
-						</div>
-					{/if}
+						{/if}
 
-					{#each data.blocDiplomacies as diplomacy}
-						<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-lg p-2 -m-2 transition-all">
-							<div class="size-12 bg-[#315d8d]/18 rounded-lg flex items-center justify-center">
-								<FluentGlobeShield20Filled class="size-6 text-[#b7d0e6]" />
+						{#each data.blocDiplomacies as diplomacy}
+							<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-sm p-2 -m-2 transition-all">
+								<div
+									class="size-12 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center shrink-0"
+								>
+									<FluentGlobeShield20Filled class="size-6 text-[#b7d0e6]" />
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="font-semibold text-[#fff7e8] truncate">Diplomat of {diplomacy.blocName}</p>
+									<p class="text-xs text-[#a89e8e] truncate">Since {formatDate(diplomacy.appointedAt)}</p>
+								</div>
+								{#if data.viewerBlocId === diplomacy.blocId}
+									<form method="POST" action="?/dismissBlocLeadership" use:enhance>
+										<input type="hidden" name="role" value="diplomat" />
+										<input type="hidden" name="id" value={diplomacy.id} />
+										<Button
+											type="submit"
+											variant="soft-red"
+											size="xs"
+											icon={FluentPersonDelete20Filled}
+											onclick={(e) => {
+												if (!confirm("Are you sure you want to dismiss this diplomat?")) {
+													e.preventDefault();
+												}
+											}}
+										>
+											Dismiss
+										</Button>
+									</form>
+								{/if}
 							</div>
-							<div class="flex-1 min-w-0">
-								<p class="font-semibold text-[#fff7e8] truncate">Diplomat of {diplomacy.blocName}</p>
-								<p class="text-xs text-[#a89e8e] truncate">Since {formatDate(diplomacy.appointedAt)}</p>
-							</div>
-							{#if data.viewerBlocId === diplomacy.blocId}
-								<form method="POST" action="?/dismissBlocLeadership" use:enhance>
-									<input type="hidden" name="role" value="diplomat" />
-									<input type="hidden" name="id" value={diplomacy.id} />
-									<Button
-										type="submit"
-										variant="soft-red"
-										size="xs"
-										icon={FluentPersonDelete20Filled}
-										onclick={(e) => {
-											if (!confirm("Are you sure you want to dismiss this diplomat?")) {
-												e.preventDefault();
-											}
-										}}
-									>
-										Dismiss
-									</Button>
-								</form>
-							{/if}
-						</div>
-					{/each}
+						{/each}
 
-					{#if data.presidency}
+						{#if data.presidency}
+							<ProfileItem
+								href="/state/{data.presidency.stateId}"
+								logo={data.presidency.stateLogo}
+								logoAlt={data.presidency.stateName}
+								placeholderIcon={FluentFlag20Filled}
+								placeholderGradient="from-[#e6a527]/40 to-[#e6a527]/25"
+								title="President of {data.presidency.stateName}"
+								subtitle="Term {data.presidency.term} • Since {formatDate(data.presidency.electedAt)}"
+								hoverColor="yellow"
+							/>
+						{/if}
+
+						{#if data.governorship}
+							<ProfileItem
+								href="/region/{data.governorship.regionId}"
+								icon="🏛️"
+								title="Governor of {data.governorship.regionName}"
+								subtitle="{data.governorship.stateName} • Since {formatDate(data.governorship.appointedAt)}"
+								hoverColor="blue"
+							/>
+						{/if}
+
+						{#each data.ministries as ministry}
+							<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-sm p-2 -m-2 transition-all">
+								<div
+									class="size-12 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm flex items-center justify-center shrink-0"
+								>
+									<span class="text-2xl">{ministryIcons[ministry.ministry]}</span>
+								</div>
+								<div class="flex-1 min-w-0">
+									<p class="font-semibold text-[#fff7e8] truncate">{ministryNames[ministry.ministry]} Minister</p>
+									<p class="text-xs text-[#a89e8e] truncate">
+										{ministry.stateName} • Since {formatDate(ministry.appointedAt)}
+									</p>
+								</div>
+								{#if data.currentUserPresidency?.stateId === ministry.stateId}
+									<form method="POST" action="?/dismissMinister" use:enhance>
+										<input type="hidden" name="ministerId" value={ministry.id} />
+										<Button
+											type="submit"
+											variant="soft-red"
+											size="xs"
+											icon={FluentPersonDelete20Filled}
+											onclick={(e) => {
+												if (!confirm("Are you sure you want to dismiss this minister?")) {
+													e.preventDefault();
+												}
+											}}
+										>
+											Dismiss
+										</Button>
+									</form>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				</section>
+			{/if}
+
+			<!-- Location Section -->
+			<section class="panel rounded-sm p-5 space-y-4">
+				<h2 class="section-title">Location</h2>
+				<div class="space-y-4">
+					<!-- Residence (permanent home / citizenship) -->
+					{#if data.homeRegion}
 						<ProfileItem
-							href="/state/{data.presidency.stateId}"
-							logo={data.presidency.stateLogo}
-							logoAlt={data.presidency.stateName}
-							placeholderIcon={FluentFlag20Filled}
-							placeholderGradient="from-yellow-600 to-amber-600"
-							title="President of {data.presidency.stateName}"
-							subtitle="Term {data.presidency.term} • Since {formatDate(data.presidency.electedAt)}"
-							hoverColor="yellow"
-						/>
-					{/if}
-
-					{#if data.governorship}
-						<ProfileItem
-							href="/region/{data.governorship.regionId}"
-							icon="🏛️"
-							title="Governor of {data.governorship.regionName}"
-							subtitle="{data.governorship.stateName} • Since {formatDate(data.governorship.appointedAt)}"
+							href="/region/{data.homeRegion.id}"
+							logo={data.homeRegion.logo}
+							logoAlt={data.homeRegion.name}
+							placeholderGradient="from-[#315d8d] to-[#1e3a5f]"
+							title={data.homeRegion.name}
+							subtitle="Residence{data.homeRegion.state?.name
+								? ` • ${data.homeRegion.state.name}`
+								: ' • Independent'} • Since {formatDate(data.homeRegion.changedAt)}"
 							hoverColor="blue"
 						/>
+					{:else}
+						<div class="flex items-center gap-3 text-[#a89e8e]">
+							<div class="size-12 panel-muted rounded-sm flex items-center justify-center shrink-0">
+								<FluentFlag20Filled class="size-6" />
+							</div>
+							<p class="text-sm">No residence set</p>
+						</div>
 					{/if}
 
-					{#each data.ministries as ministry}
-						<div class="flex items-center gap-3 hover:bg-[#19304b] rounded-lg p-2 -m-2 transition-all">
-							<div class="size-12 bg-[#8c709b]/15 rounded-lg flex items-center justify-center">
-								<span class="text-2xl">{ministryIcons[ministry.ministry]}</span>
+					<!-- Current Region -->
+					{#if data.residence}
+						<ProfileItem
+							href="/region/{data.residence.region.id}"
+							logo={data.residence.region.logo}
+							logoAlt={data.residence.region.name}
+							placeholderGradient="from-[#587252] to-[#3f5a3b]"
+							title={data.residence.region.name}
+							subtitle="Current Region{data.residence.region.state?.name
+								? ` • ${data.residence.region.state.name}`
+								: ' • Independent'} • Since {formatDate(data.residence.regionChangedAt)}"
+							hoverColor="emerald"
+						/>
+					{:else}
+						<div class="flex items-center gap-3 text-[#a89e8e]">
+							<div class="size-12 panel-muted rounded-sm flex items-center justify-center shrink-0">
+								<FluentFlag20Filled class="size-6" />
 							</div>
-							<div class="flex-1 min-w-0">
-								<p class="font-semibold text-[#fff7e8] truncate">{ministryNames[ministry.ministry]} Minister</p>
-								<p class="text-xs text-[#a89e8e] truncate">
-									{ministry.stateName} • Since {formatDate(ministry.appointedAt)}
+							<p class="text-sm">No current region</p>
+						</div>
+					{/if}
+
+					{#if data.isOwnProfile}
+						<Button href="/visas" variant="soft-purple" size="sm" block icon={FluentBookCompass24Filled}>
+							Manage Visas
+						</Button>
+					{/if}
+				</div>
+			</section>
+
+			<!-- Birthday Reward Section -->
+			{#if data.isOwnProfile && data.birthdayInfo.totalYears >= 1}
+				<section class="panel rounded-sm p-5 space-y-4">
+					<h2 class="section-title">🎂 Account Birthday</h2>
+					<div class="space-y-3">
+						{#if data.birthdayInfo.isBirthday}
+							<div class="text-center py-2">
+								<p class="text-2xl font-bold text-[#f7c56b]">🎉 Happy Birthday! 🎉</p>
+								<p class="text-sm text-[#d9ccb7] mt-1">Your account turns {data.birthdayInfo.totalYears} today!</p>
+							</div>
+						{:else}
+							<div class="flex items-center gap-3">
+								<div
+									class="size-12 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center text-2xl shrink-0"
+								>
+									🎂
+								</div>
+								<div>
+									<p class="font-semibold text-[#fff7e8]">Account Anniversary</p>
+									<p class="text-xs text-[#a89e8e]">
+										{data.birthdayInfo.totalYears} year{data.birthdayInfo.totalYears !== 1 ? "s" : ""} since account creation
+									</p>
+								</div>
+							</div>
+						{/if}
+						{#if data.birthdayInfo.uncollectedYears.length > 0}
+							<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-3">
+								<p class="text-sm text-[#f7c56b] font-medium">
+									{#if data.birthdayInfo.uncollectedYears.length === 1}
+										Year {data.birthdayInfo.uncollectedYears[0]} reward available!
+									{:else}
+										{data.birthdayInfo.uncollectedYears.length} uncollected birthday rewards!
+									{/if}
 								</p>
-							</div>
-							{#if data.currentUserPresidency?.stateId === ministry.stateId}
-								<form method="POST" action="?/dismissMinister" use:enhance>
-									<input type="hidden" name="ministerId" value={ministry.id} />
-									<Button
-										type="submit"
-										variant="soft-red"
-										size="xs"
-										icon={FluentPersonDelete20Filled}
-										onclick={(e) => {
-											if (!confirm("Are you sure you want to dismiss this minister?")) {
-												e.preventDefault();
+								<p class="text-xs text-[#a89e8e] mt-1">
+									Collect {data.birthdayInfo.rewardTotal.toLocaleString()} currency ({data.birthdayInfo.rewardPerYear.toLocaleString()}
+									× {data.birthdayInfo.uncollectedYears.length} year{data.birthdayInfo.uncollectedYears.length !== 1
+										? "s"
+										: ""})
+								</p>
+								<form
+									method="POST"
+									action="?/collectBirthday"
+									use:enhance={() => {
+										return async ({ result, update }) => {
+											await update();
+											if (result.type === "success") {
+												confetti({
+													particleCount: 150,
+													spread: 80,
+													origin: { y: 0.6 },
+													colors: ["#f59e0b", "#fbbf24", "#fcd34d", "#a78bfa", "#ec4899"]
+												});
 											}
-										}}
-									>
-										Dismiss
+										};
+									}}
+									class="mt-2"
+								>
+									<Button type="submit" variant="soft-amber" size="sm" block icon={FluentGiftCardArrowRight20Filled}>
+										Collect {data.birthdayInfo.rewardTotal.toLocaleString()} Currency
 									</Button>
 								</form>
-							{/if}
-						</div>
-					{/each}
-				</div>
-			</section>
-		{/if}
-
-		<!-- Location Section -->
-		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Location</h2>
-			<div class="panel-muted rounded-xl p-3 space-y-2">
-				<!-- Residence (permanent home / citizenship) -->
-				{#if data.homeRegion}
-					<ProfileItem
-						href="/region/{data.homeRegion.id}"
-						logo={data.homeRegion.logo}
-						logoAlt={data.homeRegion.name}
-						placeholderGradient="from-[#315d8d] to-[#1e3a5f]"
-						title={data.homeRegion.name}
-						subtitle="Residence{data.homeRegion.state?.name
-							? ` • ${data.homeRegion.state.name}`
-							: ' • Independent'} • Since {formatDate(data.homeRegion.changedAt)}"
-						hoverColor="blue"
-					/>
-				{:else}
-					<div class="flex items-center gap-3 p-2 text-[#a89e8e]">
-						<div class="size-12 bg-[#102239]/70 rounded-lg flex items-center justify-center">
-							<FluentFlag20Filled class="size-6" />
-						</div>
-						<p class="text-sm">No residence set</p>
-					</div>
-				{/if}
-
-				<!-- Current Region -->
-				{#if data.residence}
-					<ProfileItem
-						href="/region/{data.residence.region.id}"
-						logo={data.residence.region.logo}
-						logoAlt={data.residence.region.name}
-						placeholderGradient="from-[#587252] to-[#3f5a3b]"
-						title={data.residence.region.name}
-						subtitle="Current Region{data.residence.region.state?.name
-							? ` • ${data.residence.region.state.name}`
-							: ' • Independent'} • Since {formatDate(data.residence.regionChangedAt)}"
-						hoverColor="emerald"
-					/>
-				{:else}
-					<div class="flex items-center gap-3 p-2 text-[#a89e8e]">
-						<div class="size-12 bg-[#102239]/70 rounded-lg flex items-center justify-center">
-							<FluentFlag20Filled class="size-6" />
-						</div>
-						<p class="text-sm">No current region</p>
-					</div>
-				{/if}
-
-				{#if data.isOwnProfile}
-					<Button href="/visas" variant="soft-purple" size="sm" block icon={FluentBookCompass24Filled} class="mt-2">
-						Manage Visas
-					</Button>
-				{/if}
-			</div>
-		</section>
-
-		<!-- Birthday Reward Section -->
-		{#if data.isOwnProfile && data.birthdayInfo.totalYears >= 1}
-			<section class="space-y-3">
-				<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">🎂 Account Birthday</h2>
-				<div class="panel-muted rounded-xl p-4 space-y-3">
-					{#if data.birthdayInfo.isBirthday}
-						<div class="text-center py-2">
-							<p class="text-2xl font-bold text-yellow-300">🎉 Happy Birthday! 🎉</p>
-							<p class="text-sm text-[#d9ccb7] mt-1">Your account turns {data.birthdayInfo.totalYears} today!</p>
-						</div>
-					{:else}
-						<div class="flex items-center gap-3">
-							<div class="size-12 bg-yellow-600/20 rounded-lg flex items-center justify-center text-2xl">🎂</div>
-							<div>
-								<p class="font-semibold text-[#fff7e8]">Account Anniversary</p>
-								<p class="text-xs text-[#a89e8e]">
-									{data.birthdayInfo.totalYears} year{data.birthdayInfo.totalYears !== 1 ? "s" : ""} since account creation
-								</p>
 							</div>
-						</div>
-					{/if}
-					{#if data.birthdayInfo.uncollectedYears.length > 0}
-						<div class="bg-yellow-600/10 border border-yellow-500/20 rounded-lg p-3">
-							<p class="text-sm text-yellow-300 font-medium">
-								{#if data.birthdayInfo.uncollectedYears.length === 1}
-									Year {data.birthdayInfo.uncollectedYears[0]} reward available!
-								{:else}
-									{data.birthdayInfo.uncollectedYears.length} uncollected birthday rewards!
-								{/if}
-							</p>
-							<p class="text-xs text-[#a89e8e] mt-1">
-								Collect {data.birthdayInfo.rewardTotal.toLocaleString()} currency ({data.birthdayInfo.rewardPerYear.toLocaleString()}
-								× {data.birthdayInfo.uncollectedYears.length} year{data.birthdayInfo.uncollectedYears.length !== 1
-									? "s"
-									: ""})
-							</p>
-							<form
-								method="POST"
-								action="?/collectBirthday"
-								use:enhance={() => {
-									return async ({ result, update }) => {
-										await update();
-										if (result.type === "success") {
-											confetti({
-												particleCount: 150,
-												spread: 80,
-												origin: { y: 0.6 },
-												colors: ["#f59e0b", "#fbbf24", "#fcd34d", "#a78bfa", "#ec4899"]
-											});
-										}
-									};
-								}}
-								class="mt-2"
+						{:else}
+							<p class="text-xs text-[#a89e8e] text-center">All birthday rewards collected ✓</p>
+						{/if}
+					</div>
+				</section>
+			{/if}
+
+			<!-- Career & Politics Section -->
+			<section class="panel rounded-sm p-5 space-y-4">
+				<h2 class="section-title">Career & Politics</h2>
+				<div class="space-y-4">
+					<ProfileItem
+						href="/user/{data.user.id}/articles"
+						icon={FluentDocument20Filled}
+						title="{data.articleCount} {data.articleCount === 1 ? 'Article' : 'Articles'} Published"
+						subtitle="{data.upvoteCount} total upvote{data.upvoteCount === 1 ? '' : 's'} received • View all publications"
+						hoverColor="purple"
+					/>
+
+					{#if data.party}
+						<ProfileItem
+							href="/party/{data.party.id}"
+							logo={data.party.logo}
+							logoAlt={data.party.name}
+							placeholderIcon={FluentPeople20Filled}
+							placeholderGradient="from-[#8c709b] to-[#315d8d]"
+							title={data.party.name}
+							subtitle={data.party.role === "leader"
+								? " Leader"
+								: data.party.role === "deputy"
+									? "Deputy "
+									: "Member" + "Joined " + formatDate(data.party.foundedAt)}
+							hoverColor={data.party.color}
+						/>
+					{:else if data.isOwnProfile && !data.isIndependentRegion}
+						<a
+							href="/party"
+							class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-[#b7a0c5]/30 rounded-sm hover:border-[#b7a0c5]/50 hover:bg-[#8c709b]/10 transition-colors group"
+						>
+							<div
+								class="size-10 bg-[#8c709b]/15 rounded-sm flex items-center justify-center group-hover:bg-[#8c709b]/25 transition-colors"
 							>
-								<Button type="submit" variant="soft-amber" size="sm" block icon={FluentGiftCardArrowRight20Filled}>
-									Collect {data.birthdayInfo.rewardTotal.toLocaleString()} Currency
-								</Button>
-							</form>
-						</div>
-					{:else}
-						<p class="text-xs text-[#a89e8e] text-center">All birthday rewards collected ✓</p>
+								<FluentSearch20Filled class="size-5 text-[#b7a0c5]" />
+							</div>
+							<div class="text-center">
+								<p class="font-semibold text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors">
+									Find a Political Party
+								</p>
+								<p class="text-xs text-[#a89e8e]">Browse and join a party in your state</p>
+							</div>
+						</a>
+					{:else if data.isOwnProfile}
+						<a
+							href="/party/create"
+							class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-[#b7a0c5]/30 rounded-sm hover:border-[#b7a0c5]/50 hover:bg-[#8c709b]/10 transition-colors group"
+						>
+							<div
+								class="size-10 bg-[#8c709b]/15 rounded-sm flex items-center justify-center group-hover:bg-[#8c709b]/25 transition-colors"
+							>
+								<FluentAdd20Filled class="size-5 text-[#b7a0c5]" />
+							</div>
+							<div class="text-center">
+								<p class="font-semibold text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors">
+									Create Political Party
+								</p>
+								<p class="text-xs text-[#a89e8e]">Start your own political movement</p>
+							</div>
+						</a>
 					{/if}
+
+					<Button
+						href="/user/{data.user.id}/career"
+						variant="soft-purple"
+						size="sm"
+						block
+						icon={FluentChevronRight20Filled}
+					>
+						View Full Career Timeline
+					</Button>
 				</div>
 			</section>
-		{/if}
-
-		<!-- Career & Politics Section -->
-		<section class="space-y-3">
-			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Career & Politics</h2>
-			<div class="panel-muted rounded-xl p-3 space-y-2">
-				<ProfileItem
-					href="/user/{data.user.id}/articles"
-					icon={FluentDocument20Filled}
-					title="{data.articleCount} {data.articleCount === 1 ? 'Article' : 'Articles'} Published"
-					subtitle="{data.upvoteCount} total upvote{data.upvoteCount === 1 ? '' : 's'} received • View all publications"
-					hoverColor="purple"
-				/>
-
-				{#if data.party}
-					<ProfileItem
-						href="/party/{data.party.id}"
-						logo={data.party.logo}
-						logoAlt={data.party.name}
-						placeholderIcon={FluentPeople20Filled}
-						placeholderGradient="from-[#8c709b] to-[#315d8d]"
-						title={data.party.name}
-						subtitle={data.party.role === "leader"
-							? " Leader"
-							: data.party.role === "deputy"
-								? "Deputy "
-								: "Member" + "Joined " + formatDate(data.party.foundedAt)}
-						hoverColor={data.party.color}
-					/>
-				{:else if data.isOwnProfile && !data.isIndependentRegion}
-					<a
-						href="/party"
-						class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-[#b7a0c5]/30 rounded-lg hover:border-[#b7a0c5]/50 hover:bg-[#8c709b]/10 transition-all group"
-					>
-						<div
-							class="size-10 bg-[#8c709b]/15 rounded-lg flex items-center justify-center group-hover:bg-[#8c709b]/25 transition-colors"
-						>
-							<FluentSearch20Filled class="size-5 text-[#d5c4df]" />
-						</div>
-						<div class="text-center">
-							<p class="font-semibold text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors">
-								Find a Political Party
-							</p>
-							<p class="text-xs text-[#a89e8e]">Browse and join a party in your state</p>
-						</div>
-					</a>
-				{:else if data.isOwnProfile}
-					<a
-						href="/party/create"
-						class="flex items-center justify-center gap-2 p-4 border-2 border-dashed border-[#b7a0c5]/30 rounded-lg hover:border-[#b7a0c5]/50 hover:bg-[#8c709b]/10 transition-all group"
-					>
-						<div
-							class="size-10 bg-[#8c709b]/15 rounded-lg flex items-center justify-center group-hover:bg-[#8c709b]/25 transition-colors"
-						>
-							<FluentAdd20Filled class="size-5 text-[#d5c4df]" />
-						</div>
-						<div class="text-center">
-							<p class="font-semibold text-[#d5c4df] group-hover:text-[#f0e7f5] transition-colors">
-								Create Political Party
-							</p>
-							<p class="text-xs text-[#a89e8e]">Start your own political movement</p>
-						</div>
-					</a>
-				{/if}
-
-				<Button
-					href="/user/{data.user.id}/career"
-					variant="soft-purple"
-					size="sm"
-					block
-					icon={FluentChevronRight20Filled}
-					class="mt-2"
-				>
-					View Full Career Timeline
-				</Button>
-			</div>
-		</section>
-	</div>
+		</div>
+	</PageContainer>
 
 	<!-- Appoint Minister Modal -->
 	<Modal bind:open={showAppointDialog} title="Appoint {data.user.name} as Minister">
@@ -626,18 +633,16 @@
 		>
 			<div class="space-y-4">
 				{#if appointmentError}
-					<div class="alert alert-error bg-red-600/10 border-red-500/20 text-red-300">
+					<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
 						<span>{appointmentError}</span>
 					</div>
 				{/if}
 
-				<div class="form-control">
-					<label class="label">
-						<span class="label-text text-[#e5d8c1]">Select Ministry</span>
-					</label>
+				<div>
+					<label class="field-label">Select Ministry</label>
 					<select
 						name="ministry"
-						class="select select-bordered field-control"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
 						bind:value={selectedMinistry}
 						disabled={isAppointingMinister}
 						required
@@ -653,7 +658,7 @@
 				</div>
 
 				{#if data.availableMinistries.length === 0}
-					<div class="alert alert-warning bg-yellow-600/10 border-yellow-500/20 text-yellow-300">
+					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3 text-sm">
 						<span>All ministries are currently occupied.</span>
 					</div>
 				{/if}
@@ -711,18 +716,16 @@
 		>
 			<div class="space-y-4">
 				{#if blocAppointmentError}
-					<div class="alert alert-error bg-red-600/10 border-red-500/20 text-red-300">
+					<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
 						<span>{blocAppointmentError}</span>
 					</div>
 				{/if}
 
-				<div class="form-control">
-					<label class="label">
-						<span class="label-text text-[#e5d8c1]">Select Role</span>
-					</label>
+				<div>
+					<label class="field-label">Select Role</label>
 					<select
 						name="role"
-						class="select select-bordered field-control"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
 						bind:value={selectedBlocRole}
 						disabled={isAppointingBlocRole}
 						required
@@ -735,7 +738,7 @@
 				</div>
 
 				{#if selectedBlocRole === "leader"}
-					<div class="alert alert-info bg-blue-600/10 border-blue-500/20 text-blue-300">
+					<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 text-[#b7d0e6] rounded-sm p-4 flex items-center gap-3 text-sm">
 						<span>
 							This nominates {data.user.name} as a candidate in the bloc's current leadership election. Member-state presidents
 							vote before the window closes.
@@ -744,7 +747,7 @@
 				{/if}
 
 				{#if data.availableBlocRoles.length === 0}
-					<div class="alert alert-warning bg-yellow-600/10 border-yellow-500/20 text-yellow-300">
+					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3 text-sm">
 						<span>
 							Nothing available right now — leader nominations only open during the 2-day voting window before an
 							election, and this bloc's diplomat slots are both filled.
@@ -816,18 +819,16 @@
 				</p>
 
 				{#if giftPremiumError}
-					<div class="alert alert-error bg-red-600/10 border-red-500/20 text-red-300">
+					<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
 						<span>{giftPremiumError}</span>
 					</div>
 				{/if}
 
-				<div class="form-control">
-					<label class="label">
-						<span class="label-text text-[#e5d8c1]">Duration</span>
-					</label>
+				<div>
+					<label class="field-label">Duration</label>
 					<select
 						name="planId"
-						class="select select-bordered field-control"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
 						bind:value={giftPremiumPlanId}
 						disabled={isGiftingPremium}
 					>
@@ -851,7 +852,7 @@
 					</Button>
 					<Button
 						type="submit"
-						variant="premium"
+						variant="primary"
 						icon={FluentStar20Filled}
 						loading={isGiftingPremium}
 						loadingText="Gifting..."
@@ -887,36 +888,3 @@
 		/>
 	{/if}
 {/if}
-
-<style>
-	.premium-glow {
-		position: absolute;
-		inset: -6px;
-		z-index: 0;
-		border-radius: 1.25rem;
-		filter: blur(18px);
-		opacity: 0.85;
-		background: linear-gradient(115deg, #f59e0b, #ec4899, #8b5cf6, #3b82f6, #f59e0b);
-		background-size: 300% 300%;
-		animation: premium-glow-shift 6s ease infinite;
-		pointer-events: none;
-	}
-
-	@keyframes premium-glow-shift {
-		0% {
-			background-position: 0% 50%;
-		}
-		50% {
-			background-position: 100% 50%;
-		}
-		100% {
-			background-position: 0% 50%;
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.premium-glow {
-			animation: none;
-		}
-	}
-</style>

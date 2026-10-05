@@ -10,6 +10,9 @@
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button, IconButton, Badge, badgeClass } from "#lib/component/ui/index.js";
 	import { enhance } from "$app/forms";
 
 	let { data, form } = $props();
@@ -108,95 +111,72 @@
 	});
 </script>
 
-<div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-		<div class="flex items-center gap-4">
-			<div class="size-12 sm:size-16 bg-[#8c709b]/20 rounded-2xl flex items-center justify-center shrink-0">
-				<FluentGift20Filled class="size-6 sm:size-8 text-[#d5c4df]" />
-			</div>
-			<div>
-				<h1 class="text-2xl sm:text-3xl font-bold text-[#fff7e8]">Gift Code Management</h1>
-				<p class="text-sm sm:text-base text-[#a89e8e]">Create and manage promotional gift codes</p>
-			</div>
-		</div>
-
-		<button
-			type="button"
-			onclick={() => (showCreateModal = true)}
-			class="btn btn-sm sm:btn-md bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2 w-full sm:w-auto"
-		>
-			<FluentAdd20Filled class="size-5" />
-			Create Code
-		</button>
-	</div>
+	<PageHeader
+		title="Gift Code Management"
+		subtitle="Create and manage promotional gift codes"
+		icon={FluentGift20Filled}
+		backHref="/admin"
+		backLabel="Admin Panel"
+	>
+		{#snippet actions()}
+			<Button type="button" variant="primary" icon={FluentAdd20Filled} onclick={() => (showCreateModal = true)}>
+				Create Code
+			</Button>
+		{/snippet}
+	</PageHeader>
 
 	<!-- Success/Error Messages -->
 	{#if form?.success}
-		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<FluentCheckmark20Filled class="size-5 text-[#c6dfbf] shrink-0" />
-				<p class="text-[#c6dfbf] font-medium">{form.message || "Operation successful"}</p>
-			</div>
+		<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+			<FluentCheckmark20Filled class="size-5 shrink-0" />
+			<p class="font-medium">{form.message || "Operation successful"}</p>
 		</div>
 	{/if}
 
 	{#if form?.error}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<div class="flex items-center gap-3">
-				<FluentDismiss20Filled class="size-5 text-red-300 shrink-0" />
-				<p class="text-red-300 font-medium">{form.error}</p>
-			</div>
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+			<FluentDismiss20Filled class="size-5 shrink-0" />
+			<p class="font-medium">{form.error}</p>
 		</div>
 	{/if}
 
 	<!-- Stats -->
 	{#if data.giftCodes && data.giftCodes.length > 0}
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-			<div class="panel rounded-xl p-5">
-				<div class="flex items-center gap-3">
-					<div class="bg-[#315d8d]/20 p-3 rounded-lg shrink-0">
-						<FluentGift20Filled class="size-6 text-[#7ba0c8]" />
-					</div>
-					<div>
-						<p class="text-sm text-[#a89e8e]">Total Codes</p>
-						<p class="text-2xl font-bold text-[#fff7e8]">{data.giftCodes.length}</p>
-					</div>
+			<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
+				<FluentGift20Filled class="size-5 text-[#7ba0c8] shrink-0" />
+				<div class="min-w-0">
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Total Codes</p>
+					<p class="text-2xl font-bold text-[#fff7e8]">{data.giftCodes.length}</p>
 				</div>
 			</div>
 
-			<div class="panel rounded-xl p-5">
-				<div class="flex items-center gap-3">
-					<div class="bg-[#587252]/20 p-3 rounded-lg shrink-0">
-						<FluentCheckmark20Filled class="size-6 text-[#c6dfbf]" />
-					</div>
-					<div>
-						<p class="text-sm text-[#a89e8e]">Active Codes</p>
-						<p class="text-2xl font-bold text-[#fff7e8]">
-							{data.giftCodes.filter((c) => c.isActive).length}
-						</p>
-					</div>
+			<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
+				<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0" />
+				<div class="min-w-0">
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Active Codes</p>
+					<p class="text-2xl font-bold text-[#fff7e8]">
+						{data.giftCodes.filter((c) => c.isActive).length}
+					</p>
 				</div>
 			</div>
 
-			<div class="panel rounded-xl p-5">
-				<div class="flex items-center gap-3">
-					<div class="bg-[#8c709b]/20 p-3 rounded-lg shrink-0">
-						<FluentPeople20Filled class="size-6 text-[#d5c4df]" />
-					</div>
-					<div>
-						<p class="text-sm text-[#a89e8e]">Total Redemptions</p>
-						<p class="text-2xl font-bold text-[#fff7e8]">
-							{data.giftCodes.reduce((sum, c) => sum + c.currentRedemptions, 0)}
-						</p>
-					</div>
+			<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
+				<FluentPeople20Filled class="size-5 text-[#b7a0c5] shrink-0" />
+				<div class="min-w-0">
+					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Total Redemptions</p>
+					<p class="text-2xl font-bold text-[#fff7e8]">
+						{data.giftCodes.reduce((sum, c) => sum + c.currentRedemptions, 0)}
+					</p>
 				</div>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Gift Codes Table -->
-	<div class="panel rounded-xl overflow-hidden">
+	<div class="panel rounded-sm overflow-hidden">
 		<div class="overflow-x-auto">
 			<table class="table w-full">
 				<thead class="bg-[#102239]/70">
@@ -224,20 +204,16 @@
 							<td>
 								<div class="flex flex-wrap gap-1.5">
 									{#if code.currencyAmount > 0}
-										<span class="badge badge-sm bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35">
-											💰 {formatNumber(code.currencyAmount)}
-										</span>
+										<Badge tone="amber">💰 {formatNumber(code.currencyAmount)}</Badge>
 									{/if}
 									{#if code.premiumDays > 0}
-										<span class="badge badge-sm bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35">
-											⭐ {formatNumber(code.premiumDays)}d premium
-										</span>
+										<Badge tone="amber">⭐ {formatNumber(code.premiumDays)}d premium</Badge>
 									{/if}
 									{#each code.resources as resource}
-										<span class="badge badge-sm bg-[#315d8d]/20 text-[#b7d0e6] border-[#7ba0c8]/30 gap-1">
+										<Badge tone="blue">
 											<ResourceIcon name={resource.resourceType} class="size-3.5" />
 											{formatNumber(resource.quantity)}
-										</span>
+										</Badge>
 									{/each}
 									{#if code.currencyAmount === 0 && code.premiumDays === 0 && code.resources.length === 0}
 										<span class="text-[#a89e8e] text-xs">No rewards</span>
@@ -262,9 +238,9 @@
 									<input type="hidden" name="codeId" value={code.id} />
 									<button
 										type="submit"
-										class="badge badge-sm gap-1.5 transition-colors cursor-pointer hover:opacity-80 {code.isActive
-											? 'bg-[#587252]/20 text-[#c6dfbf] border-[#8fae88]/30'
-											: 'bg-[#14283f] text-[#d9ccb7] border-[#dfceb0]/20'}"
+										class="{badgeClass({
+											tone: code.isActive ? 'green' : 'neutral'
+										})} gap-1.5 transition-colors cursor-pointer hover:opacity-80"
 									>
 										{#if code.isActive}
 											<FluentEye20Filled class="size-3" />
@@ -279,17 +255,19 @@
 							<td>
 								<form method="POST" action="?/delete" use:enhance>
 									<input type="hidden" name="codeId" value={code.id} />
-									<button
+									<IconButton
 										type="submit"
-										class="btn btn-ghost btn-sm text-red-400 hover:text-red-300 hover:bg-red-600/10"
+										icon={FluentDelete20Filled}
+										label="Delete gift code"
+										variant="soft-red"
+										size="sm"
+										shape="square"
 										onclick={(e) => {
 											if (!confirm(`Delete gift code "${code.code}"?`)) {
 												e.preventDefault();
 											}
 										}}
-									>
-										<FluentDelete20Filled class="size-4" />
-									</button>
+									/>
 								</form>
 							</td>
 						</tr>
@@ -304,7 +282,7 @@
 			</table>
 		</div>
 	</div>
-</div>
+</PageContainer>
 
 <!-- Create Modal -->
 {#if showCreateModal}
@@ -314,7 +292,7 @@
 			if (e.target === e.currentTarget && !submitting) resetForm();
 		}}
 	>
-		<div class="panel rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+		<div class="panel bg-[#14283f] rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
 			<form
 				method="POST"
 				action="?/create"
@@ -330,19 +308,24 @@
 				<!-- Header -->
 				<div class="flex items-center justify-between border-b border-[#dfceb0]/10 pb-4">
 					<div class="flex items-center gap-3">
-						<div class="bg-[#8c709b]/20 p-2 rounded-lg shrink-0">
-							<FluentGift20Filled class="size-6 text-[#fff7e8]" />
+						<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 p-2 rounded-sm shrink-0">
+							<FluentGift20Filled class="size-6 text-[#b7a0c5]" />
 						</div>
 						<h2 class="text-xl sm:text-2xl font-bold text-[#fff7e8]">Create Gift Code</h2>
 					</div>
-					<button type="button" onclick={resetForm} class="btn btn-ghost btn-sm btn-circle" disabled={submitting}>
-						<FluentDismiss20Filled class="size-5" />
-					</button>
+					<IconButton
+						type="button"
+						icon={FluentDismiss20Filled}
+						label="Close"
+						size="sm"
+						onclick={resetForm}
+						disabled={submitting}
+					/>
 				</div>
 
 				<!-- Code -->
 				<div class="space-y-2">
-					<label for="code" class="block text-sm font-medium text-[#e5d8c1]">
+					<label for="code" class="field-label">
 						Code <span class="text-red-400">*</span>
 					</label>
 					<div class="flex gap-2">
@@ -354,23 +337,18 @@
 							placeholder="e.g., WELCOME2025"
 							required
 							disabled={submitting}
-							class="input flex-1 field-control font-mono uppercase"
+							class="field-control rounded-sm px-3 py-2.5 flex-1 min-w-0 font-mono uppercase"
 						/>
-						<button
-							type="button"
-							onclick={generateRandomCode}
-							disabled={submitting}
-							class="btn bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8]"
-						>
+						<Button type="button" variant="secondary" onclick={generateRandomCode} disabled={submitting}>
 							Generate
-						</button>
+						</Button>
 					</div>
-					<p class="text-xs text-[#a89e8e]">Codes are case-insensitive and must be unique</p>
+					<p class="field-hint">Codes are case-insensitive and must be unique</p>
 				</div>
 
 				<!-- Description -->
 				<div class="space-y-2">
-					<label for="description" class="block text-sm font-medium text-[#e5d8c1]"> Description </label>
+					<label for="description" class="field-label"> Description </label>
 					<textarea
 						id="description"
 						name="description"
@@ -378,12 +356,12 @@
 						placeholder="What is this code for?"
 						rows="2"
 						disabled={submitting}
-						class="textarea w-full field-control"></textarea>
+						class="field-control rounded-sm px-3 py-2.5 w-full"></textarea>
 				</div>
 
 				<!-- Currency Amount -->
 				<div class="space-y-2">
-					<label for="currencyAmount" class="block text-sm font-medium text-[#e5d8c1]"> Currency Reward </label>
+					<label for="currencyAmount" class="field-label"> Currency Reward </label>
 					<input
 						type="number"
 						id="currencyAmount"
@@ -392,13 +370,13 @@
 						min="0"
 						step="100"
 						disabled={submitting}
-						class="input w-full field-control"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
 					/>
 				</div>
 
 				<!-- Premium Days -->
 				<div class="space-y-2">
-					<label for="premiumDays" class="block text-sm font-medium text-[#e5d8c1]"> ⭐ Premium Reward (days) </label>
+					<label for="premiumDays" class="field-label"> ⭐ Premium Reward (days) </label>
 					<input
 						type="number"
 						id="premiumDays"
@@ -407,17 +385,21 @@
 						min="0"
 						step="1"
 						disabled={submitting}
-						class="input w-full field-control"
+						class="field-control rounded-sm px-3 py-2.5 w-full"
 					/>
-					<p class="text-xs text-[#a89e8e]">Number of premium days granted on redemption (0 = none)</p>
+					<p class="field-hint">Number of premium days granted on redemption (0 = none)</p>
 				</div>
 
 				<!-- Resources -->
 				<div class="space-y-3">
-					<label class="block text-sm font-medium text-[#e5d8c1]">Resource Rewards</label>
+					<label class="field-label">Resource Rewards</label>
 
 					<div class="flex gap-2">
-						<select bind:value={newResource.type} disabled={submitting} class="select field-control flex-1">
+						<select
+							bind:value={newResource.type}
+							disabled={submitting}
+							class="field-control rounded-sm px-3 py-2.5 flex-1 min-w-0"
+						>
 							{#each resourceTypes as type}
 								<option value={type}>
 									{resourceIcons[type] || "📦"}
@@ -431,35 +413,36 @@
 							min="1"
 							placeholder="Qty"
 							disabled={submitting}
-							class="input field-control w-24"
+							class="field-control rounded-sm px-3 py-2.5 w-24"
 						/>
-						<button
+						<IconButton
 							type="button"
+							icon={FluentAdd20Filled}
+							label="Add resource"
+							variant="soft-purple"
+							shape="square"
 							onclick={addResource}
 							disabled={submitting || newResource.quantity <= 0}
-							class="btn bg-[#8c709b]/25 hover:bg-[#8c709b]/40 border border-[#b7a0c5]/30 text-[#d5c4df]"
-						>
-							<FluentAdd20Filled class="size-5" />
-						</button>
+						/>
 					</div>
 
 					{#if newCode.resources.length > 0}
 						<div class="flex flex-wrap gap-2 mt-2">
 							{#each newCode.resources as resource, index}
-								<div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#315d8d]/18 border border-[#7ba0c8]/30">
+								<div class="flex items-center gap-2 px-3 py-1.5 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30">
 									<span class="flex items-center gap-1 text-sm text-[#b7d0e6] font-medium">
 										<ResourceIcon name={resource.type} class="size-3.5" />
 										{formatNumber(resource.quantity)}
 										{resource.type}
 									</span>
-									<button
+									<IconButton
 										type="button"
+										icon={FluentDismiss20Filled}
+										label="Remove resource"
+										size="xs"
 										onclick={() => removeResource(index)}
 										disabled={submitting}
-										class="btn btn-ghost btn-xs btn-circle text-[#7ba0c8] hover:text-[#b7d0e6]"
-									>
-										<FluentDismiss20Filled class="size-3" />
-									</button>
+									/>
 								</div>
 							{/each}
 						</div>
@@ -471,7 +454,7 @@
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 					<!-- Max Redemptions -->
 					<div class="space-y-2">
-						<label for="maxRedemptions" class="block text-sm font-medium text-[#e5d8c1]"> Max Redemptions </label>
+						<label for="maxRedemptions" class="field-label"> Max Redemptions </label>
 						<input
 							type="number"
 							id="maxRedemptions"
@@ -480,49 +463,40 @@
 							min="1"
 							placeholder="Unlimited"
 							disabled={submitting}
-							class="input w-full field-control"
+							class="field-control rounded-sm px-3 py-2.5 w-full"
 						/>
-						<p class="text-xs text-[#a89e8e]">Leave empty for unlimited</p>
+						<p class="field-hint">Leave empty for unlimited</p>
 					</div>
 
 					<!-- Expires At -->
 					<div class="space-y-2">
-						<label for="expiresAt" class="block text-sm font-medium text-[#e5d8c1]"> Expires At </label>
+						<label for="expiresAt" class="field-label"> Expires At </label>
 						<input
 							type="datetime-local"
 							id="expiresAt"
 							name="expiresAt"
 							bind:value={newCode.expiresAt}
 							disabled={submitting}
-							class="input w-full field-control"
+							class="field-control rounded-sm px-3 py-2.5 w-full"
 						/>
-						<p class="text-xs text-[#a89e8e]">Leave empty for no expiration</p>
+						<p class="field-hint">Leave empty for no expiration</p>
 					</div>
 				</div>
 
 				<!-- Actions -->
 				<div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#dfceb0]/10">
-					<button
-						type="button"
-						onclick={resetForm}
-						disabled={submitting}
-						class="btn flex-1 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8]"
-					>
-						Cancel
-					</button>
-					<button
+					<Button type="button" variant="secondary" grow onclick={resetForm} disabled={submitting}>Cancel</Button>
+					<Button
 						type="submit"
+						variant="primary"
+						grow
+						icon={FluentCheckmark20Filled}
+						loading={submitting}
+						loadingText="Creating..."
 						disabled={submitting || !newCode.code}
-						class="btn flex-1 bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] gap-2"
 					>
-						{#if submitting}
-							<span class="loading loading-spinner loading-sm"></span>
-							Creating...
-						{:else}
-							<FluentCheckmark20Filled class="size-5" />
-							Create Gift Code
-						{/if}
-					</button>
+						Create Gift Code
+					</Button>
 				</div>
 			</form>
 		</div>

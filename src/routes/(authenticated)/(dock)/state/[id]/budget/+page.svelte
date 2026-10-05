@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { goto } from "$app/navigation";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 
 	let { data } = $props();
 
@@ -102,55 +105,54 @@
 
 <svelte:head><title>{data.state.name} - Government Budget</title></svelte:head>
 
-<div class="min-h-screen">
-	<div class="container mx-auto px-4 py-8 max-w-7xl">
+<PageContainer maxWidth="6xl">
 		<!-- Header -->
-		<div class="mb-8">
-			<h1 class="text-4xl font-bold text-[#fff7e8] mb-3">
-				{data.state.name} - Government Budget
-			</h1>
-			<p class="text-[#c7bda9] text-lg">Track government spending and revenue</p>
-		</div>
+		<PageHeader
+			title="{data.state.name} - Government Budget"
+			subtitle="Track government spending and revenue"
+			backHref="/state/{data.state.id}"
+			backLabel={data.state.name}
+		/>
 
 		<!-- Analytics Overview -->
-		<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 			<!-- Current Balance -->
-			<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-2xl p-6">
+			<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-5">
 				<div class="flex items-center justify-between mb-2">
-					<div class="text-sm font-medium text-[#b7d0e6]">Treasury Balance</div>
+					<div class="text-[10px] text-[#b7d0e6] uppercase tracking-wide">Treasury Balance</div>
 					<div class="text-2xl">💰</div>
 				</div>
-				<div class="text-3xl font-bold text-[#fff7e8]">{formatCurrency(data.analytics.currentBalance)}</div>
+				<div class="text-2xl font-bold font-mono text-[#fff7e8]">{formatCurrency(data.analytics.currentBalance)}</div>
 				<div class="text-sm text-[#b7d0e6]/70 mt-1">Available funds</div>
 			</div>
 
 			<!-- Total Income -->
-			<div class="panel rounded-2xl p-6">
+			<div class="panel rounded-sm p-5">
 				<div class="flex items-center justify-between mb-2">
-					<div class="text-sm font-medium text-[#e5d8c1]">Income (30d)</div>
+					<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Income (30d)</div>
 					<div class="text-2xl">📈</div>
 				</div>
-				<div class="text-3xl font-bold text-[#8fae88]">{formatCurrency(data.analytics.totalIncome)}</div>
+				<div class="text-2xl font-bold font-mono text-[#c6dfbf]">{formatCurrency(data.analytics.totalIncome)}</div>
 				<div class="text-sm text-[#a89e8e] mt-1">Revenue collected</div>
 			</div>
 
 			<!-- Total Expenses -->
-			<div class="panel rounded-2xl p-6">
+			<div class="panel rounded-sm p-5">
 				<div class="flex items-center justify-between mb-2">
-					<div class="text-sm font-medium text-[#e5d8c1]">Expenses (30d)</div>
+					<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Expenses (30d)</div>
 					<div class="text-2xl">📉</div>
 				</div>
-				<div class="text-3xl font-bold text-red-400">{formatCurrency(data.analytics.totalExpenses)}</div>
+				<div class="text-2xl font-bold font-mono text-red-300">{formatCurrency(data.analytics.totalExpenses)}</div>
 				<div class="text-sm text-[#a89e8e] mt-1">Money spent</div>
 			</div>
 
 			<!-- Net Change -->
-			<div class="panel rounded-2xl p-6">
+			<div class="panel rounded-sm p-5">
 				<div class="flex items-center justify-between mb-2">
-					<div class="text-sm font-medium text-[#e5d8c1]">Net Change</div>
+					<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Net Change</div>
 					<div class="text-2xl">{data.analytics.netChange >= 0 ? "✅" : "⚠️"}</div>
 				</div>
-				<div class="text-3xl font-bold {data.analytics.netChange >= 0 ? 'text-[#8fae88]' : 'text-red-400'}">
+				<div class="text-2xl font-bold font-mono {data.analytics.netChange >= 0 ? 'text-[#c6dfbf]' : 'text-red-300'}">
 					{data.analytics.netChange >= 0 ? "+" : ""}{formatCurrency(data.analytics.netChange)}
 				</div>
 				<div class="text-sm text-[#a89e8e] mt-1">Last 30 days</div>
@@ -159,8 +161,8 @@
 
 		<!-- Category Breakdown Chart -->
 		{#if sortedCategories.length > 0}
-			<div class="panel rounded-2xl p-6 mb-8">
-				<h2 class="text-xl font-bold text-[#fff7e8] mb-6">Top Categories (Last 30 Days)</h2>
+			<div class="panel rounded-sm p-5">
+				<h2 class="section-title mb-5">Top Categories (Last 30 Days)</h2>
 				<div class="space-y-5">
 					{#each sortedCategories as category}
 						<div>
@@ -179,13 +181,13 @@
 							<div class="flex gap-2">
 								<!-- Income bar -->
 								<div class="flex-1">
-									<div class="h-8 bg-[#0d1d31] rounded-lg overflow-hidden relative">
+									<div class="h-8 bg-[#0d1d31] rounded-sm overflow-hidden relative">
 										<div
-											class="h-full bg-[#587252] rounded-lg transition-all duration-500 flex items-center justify-end pr-2"
+											class="h-full bg-[#587252] rounded-sm transition-all duration-500 flex items-center justify-end pr-2"
 											style="width: {getPercentage(category.income, maxCategoryValue)}%"
 										>
 											{#if category.income > 0}
-												<span class="text-xs font-semibold text-white">
+												<span class="text-xs font-semibold text-[#fff7e8]">
 													+{formatCompactCurrency(category.income)}
 												</span>
 											{/if}
@@ -196,13 +198,13 @@
 
 								<!-- Expenses bar -->
 								<div class="flex-1">
-									<div class="h-8 bg-[#0d1d31] rounded-lg overflow-hidden relative">
+									<div class="h-8 bg-[#0d1d31] rounded-sm overflow-hidden relative">
 										<div
-											class="h-full bg-red-500 rounded-lg transition-all duration-500 flex items-center justify-end pr-2"
+											class="h-full bg-red-500 rounded-sm transition-all duration-500 flex items-center justify-end pr-2"
 											style="width: {getPercentage(category.expenses, maxCategoryValue)}%"
 										>
 											{#if category.expenses > 0}
-												<span class="text-xs font-semibold text-white">
+												<span class="text-xs font-semibold text-[#fff7e8]">
 													-{formatCompactCurrency(category.expenses)}
 												</span>
 											{/if}
@@ -218,10 +220,10 @@
 		{/if}
 
 		<!-- Transactions List -->
-		<div class="panel rounded-2xl overflow-hidden">
-			<div class="px-6 py-4 border-b border-[#dfceb0]/15 bg-[#102239]/70">
-				<h2 class="text-xl font-bold text-[#fff7e8]">Transaction History</h2>
-				<p class="text-sm text-[#c7bda9] mt-1">
+		<div class="panel rounded-sm overflow-hidden">
+			<div class="px-5 py-4 border-b border-[#dfceb0]/15 bg-[#102239]/70">
+				<h2 class="section-title">Transaction History</h2>
+				<p class="text-sm text-[#a89e8e] mt-1">
 					{data.pagination.totalCount} total transactions
 				</p>
 			</div>
@@ -260,7 +262,7 @@
 									<td class="px-6 py-4">
 										<div class="flex items-start gap-3">
 											<div
-												class="flex-shrink-0 w-10 h-10 rounded-xl {getTypeColor(
+												class="flex-shrink-0 w-10 h-10 rounded-sm {getTypeColor(
 													transaction.type
 												)} bg-opacity-10 flex items-center justify-center text-xl"
 											>
@@ -304,17 +306,17 @@
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap text-right">
 										<div
-											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg {transaction.isIncome
-												? 'bg-[#587252]/18'
-												: 'bg-red-600/10'}"
+											class="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm border {transaction.isIncome
+												? 'bg-[#587252]/18 border-[#8fae88]/30'
+												: 'bg-red-600/10 border-red-500/30'}"
 										>
-											<span class="text-sm font-bold {transaction.isIncome ? 'text-[#8fae88]' : 'text-red-400'}">
+											<span class="text-sm font-bold font-mono {transaction.isIncome ? 'text-[#c6dfbf]' : 'text-red-300'}">
 												{transaction.amount > 0 ? "+" : ""}{formatCurrency(transaction.amount)}
 											</span>
 										</div>
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap text-right">
-										<div class="text-sm font-medium text-[#d9ccb7]">
+										<div class="text-sm font-medium font-mono text-[#d9ccb7]">
 											{formatCurrency(transaction.balanceAfter)}
 										</div>
 									</td>
@@ -326,9 +328,9 @@
 
 				<!-- Pagination -->
 				{#if data.pagination.totalPages > 1}
-					<div class="px-6 py-4 border-t border-[#dfceb0]/15 bg-[#102239]/70">
-						<div class="flex items-center justify-between">
-							<div class="text-sm text-[#c7bda9]">
+					<div class="px-5 py-4 border-t border-[#dfceb0]/15 bg-[#102239]/70">
+						<div class="flex items-center justify-between gap-3 flex-wrap">
+							<div class="text-sm text-[#a89e8e]">
 								Showing
 								<span class="font-semibold text-[#fff7e8]">
 									{(data.pagination.currentPage - 1) * data.pagination.pageSize + 1}
@@ -342,59 +344,60 @@
 							</div>
 
 							<div class="flex gap-2">
-								<button
-									on:click={() => goToPage(1)}
+								<Button
+									variant="secondary"
+									size="sm"
+									onclick={() => goToPage(1)}
 									disabled={!data.pagination.hasPreviousPage}
-									class="px-4 py-2 text-sm font-medium rounded-lg border border-[#dfceb0]/25 bg-[#14283f] text-[#e5d8c1] hover:bg-[#19304b] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 								>
 									First
-								</button>
-								<button
-									on:click={() => goToPage(data.pagination.currentPage - 1)}
+								</Button>
+								<Button
+									variant="secondary"
+									size="sm"
+									onclick={() => goToPage(data.pagination.currentPage - 1)}
 									disabled={!data.pagination.hasPreviousPage}
-									class="px-4 py-2 text-sm font-medium rounded-lg border border-[#dfceb0]/25 bg-[#14283f] text-[#e5d8c1] hover:bg-[#19304b] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 								>
 									Previous
-								</button>
+								</Button>
 
 								<!-- Page numbers -->
 								<div class="hidden sm:flex gap-1">
 									{#each Array(data.pagination.totalPages) as _, i}
 										{#if i === 0 || i === data.pagination.totalPages - 1 || Math.abs(i + 1 - data.pagination.currentPage) <= 2}
-											<button
-												on:click={() => goToPage(i + 1)}
-												class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {i + 1 ===
-												data.pagination.currentPage
-													? 'bg-[#e6a527] text-[#172a45] border-[#e6a527]'
-													: 'bg-[#14283f] text-[#e5d8c1] border-[#dfceb0]/25 hover:bg-[#19304b]'}"
+											<Button
+												variant={i + 1 === data.pagination.currentPage ? "primary" : "secondary"}
+												size="sm"
+												onclick={() => goToPage(i + 1)}
 											>
 												{i + 1}
-											</button>
+											</Button>
 										{:else if Math.abs(i + 1 - data.pagination.currentPage) === 3}
 											<span class="px-2 py-2 text-sm text-[#a89e8e]">...</span>
 										{/if}
 									{/each}
 								</div>
 
-								<button
-									on:click={() => goToPage(data.pagination.currentPage + 1)}
+								<Button
+									variant="secondary"
+									size="sm"
+									onclick={() => goToPage(data.pagination.currentPage + 1)}
 									disabled={!data.pagination.hasNextPage}
-									class="px-4 py-2 text-sm font-medium rounded-lg border border-[#dfceb0]/25 bg-[#14283f] text-[#e5d8c1] hover:bg-[#19304b] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 								>
 									Next
-								</button>
-								<button
-									on:click={() => goToPage(data.pagination.totalPages)}
+								</Button>
+								<Button
+									variant="secondary"
+									size="sm"
+									onclick={() => goToPage(data.pagination.totalPages)}
 									disabled={!data.pagination.hasNextPage}
-									class="px-4 py-2 text-sm font-medium rounded-lg border border-[#dfceb0]/25 bg-[#14283f] text-[#e5d8c1] hover:bg-[#19304b] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
 								>
 									Last
-								</button>
+								</Button>
 							</div>
 						</div>
 					</div>
 				{/if}
 			{/if}
 		</div>
-	</div>
-</div>
+</PageContainer>

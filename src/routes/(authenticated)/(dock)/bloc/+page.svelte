@@ -12,6 +12,7 @@
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import Badge from "#lib/component/ui/Badge.svelte";
 
@@ -67,18 +68,16 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div class="flex items-center justify-between flex-wrap gap-3">
-		<div>
-			<h1 class="text-3xl font-bold text-[#fff7e8]">Political Blocs</h1>
-			<p class="text-[#a89e8e] mt-1">
-				{data.blocs.length}
-				{data.blocs.length === 1 ? "bloc" : "blocs"} • Political-military alliances
-			</p>
-		</div>
-		{#if data.canCreateBloc}
-			<Button href="/bloc/create" icon={FluentAdd20Filled}>Create Bloc</Button>
-		{/if}
-	</div>
+	<PageHeader
+		title="Political Blocs"
+		subtitle="{data.blocs.length} {data.blocs.length === 1 ? 'bloc' : 'blocs'} • Political-military alliances"
+	>
+		{#snippet actions()}
+			{#if data.canCreateBloc}
+				<Button href="/bloc/create" icon={FluentAdd20Filled}>Create Bloc</Button>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
 	<!-- Filters -->
 	<div class="flex flex-col sm:flex-row gap-3">
@@ -223,7 +222,7 @@
 								<input type="hidden" name="blocId" value={bloc.id} />
 								<button
 									type="submit"
-									class="px-3 py-1.5 rounded-sm text-xs font-mono font-bold text-white transition-all hover:brightness-110 flex items-center gap-1.5"
+									class="px-3 py-1.5 rounded-sm text-xs font-bold text-[#fff7e8] transition-all hover:brightness-110 flex items-center gap-1.5"
 									style="background-color: {bloc.color}"
 								>
 									<FluentFlag20Filled class="size-3.5" />

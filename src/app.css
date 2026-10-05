@@ -188,7 +188,7 @@
 	.wysiwyg-editor .ProseMirror p.is-editor-empty:first-child::before {
 		content: attr(data-placeholder);
 		float: left;
-		color: #adb5bd;
+		color: #a89e8e;
 		pointer-events: none;
 		height: 0;
 	}
@@ -205,29 +205,29 @@
 		@apply mb-3;
 	}
 	.wysiwyg-editor blockquote {
-		@apply border-l-4 border-primary pl-4 italic my-4 text-[#a89e8e];
+		@apply border-l-4 border-[#e6a527] pl-4 italic my-4 text-[#a89e8e];
 	}
 	.wysiwyg-editor code {
-		@apply bg-base-200 px-1 py-0.5 rounded text-sm;
+		@apply bg-[#102239] px-1 py-0.5 rounded-sm text-sm;
 	}
 	.wysiwyg-editor pre {
-		@apply bg-base-200 p-4 rounded-lg overflow-x-auto my-4;
+		@apply bg-[#102239] p-4 rounded-sm overflow-x-auto my-4;
 	}
 	.wysiwyg-editor pre code {
 		@apply bg-transparent p-0;
 	}
 	.wysiwyg-editor hr {
-		@apply my-6 border-t-2 border-base-300;
+		@apply my-6 border-t-2 border-[#dfceb0]/15;
 	}
 	.wysiwyg-editor table {
 		@apply border-collapse w-full my-4;
 	}
 	.wysiwyg-editor th,
 	.wysiwyg-editor td {
-		@apply border border-base-300 px-3 py-2;
+		@apply border border-[#dfceb0]/15 px-3 py-2;
 	}
 	.wysiwyg-editor th {
-		@apply bg-base-200 font-semibold;
+		@apply bg-[#102239] font-semibold;
 	}
 
 	@media (max-width: 640px) {
@@ -269,22 +269,22 @@
 		margin-bottom: 1rem;
 	}
 	.article-content blockquote {
-		border-left: 4px solid theme("colors.primary");
+		border-left: 4px solid #e6a527;
 		padding-left: 1rem;
 		margin: 1.5rem 0;
 		font-style: italic;
-		color: theme("colors.gray.600");
+		color: #a89e8e;
 	}
 	.article-content code {
-		background: theme("colors.base-200");
+		background: #102239;
 		padding: 0.125rem 0.25rem;
 		border-radius: 0.25rem;
 		font-size: 0.9em;
 	}
 	.article-content pre {
-		background: theme("colors.base-200");
+		background: #102239;
 		padding: 1rem;
-		border-radius: 0.5rem;
+		border-radius: 0.25rem;
 		overflow-x: auto;
 		margin: 1rem 0;
 	}
@@ -295,7 +295,7 @@
 	.article-content img {
 		max-width: 100%;
 		height: auto;
-		border-radius: 0.5rem;
+		border-radius: 0.25rem;
 		margin: 1.5rem 0;
 	}
 	.article-content table {
@@ -305,12 +305,12 @@
 	}
 	.article-content th,
 	.article-content td {
-		border: 1px solid theme("colors.base-300");
+		border: 1px solid rgb(223 206 176 / 15%);
 		padding: 0.5rem 1rem;
 		text-align: left;
 	}
 	.article-content th {
-		background: theme("colors.base-200");
+		background: #102239;
 		font-weight: 600;
 	}
 }

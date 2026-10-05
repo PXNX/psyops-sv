@@ -13,6 +13,7 @@
 	import FluentPersonAvailable20Filled from "~icons/fluent/person-available-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import { Button, IconButton } from "#lib/component/ui/index.js";
 
 	const { data, form } = $props();
 </script>
@@ -46,79 +47,66 @@
 	{/if}
 </svelte:head>
 
-<PageContainer maxWidth="4xl">
+<PageContainer maxWidth="5xl">
 	<!-- Hero Section -->
-	<div class="relative">
-		<div
-			class="w-full rounded-sm p-8 flex flex-col items-center relative overflow-hidden border border-[#dfceb0]/15 shadow-2xl"
-			style="background: linear-gradient(135deg, {data.party.color}20 0%, {data.party.color}40 100%);"
-		>
-			<div
-				class="absolute inset-0 opacity-10"
-				style="background-image: repeating-linear-gradient(45deg, transparent, transparent 35px, {data.party
-					.color}20 35px, {data.party.color}20 70px);"
-			></div>
-			<div class="absolute inset-0 bg-gradient-to-b from-black/40 via-black/60 to-black/80 rounded-sm"></div>
-
-			{#if data.isLeader}
-				<a
+	<div class="panel rounded-sm p-5 relative" style="border-top: 3px solid {data.party.color}">
+		{#if data.isLeader}
+			<div class="absolute top-4 right-4">
+				<IconButton
 					href="/party/{data.party.id}/edit"
-					class="absolute top-3 right-3 z-20 p-2 bg-black/30 hover:bg-black/50 border border-[#dfceb0]/25 hover:border-[#dfceb0]/40 rounded-lg text-[#d9ccb7] hover:text-[#fff7e8] transition-all backdrop-blur-sm"
-					title="Edit Party"
-					aria-label="Edit Party"
-				>
-					<FluentEdit20Filled class="size-4" />
-				</a>
-			{/if}
+					icon={FluentEdit20Filled}
+					label="Edit Party"
+					variant="secondary"
+					size="sm"
+					shape="square"
+				/>
+			</div>
+		{/if}
 
-			<div class="relative z-10 flex flex-col items-center space-y-3">
-				<!-- Party Logo -->
-				<div
-					class="size-24 rounded-full flex items-center justify-center overflow-hidden"
-					style="background-color: {data.party.color}"
-				>
-					{#if data.party.logoUrl}
-						<img src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
-					{:else}
-						<FluentPeople20Filled class="size-8 text-[#fff7e8]" />
-					{/if}
-				</div>
+		<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 pr-12">
+			<!-- Party Logo -->
+			<div
+				class="size-20 rounded-full flex items-center justify-center overflow-hidden shrink-0"
+				style="background-color: {data.party.color}"
+			>
+				{#if data.party.logoUrl}
+					<img src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
+				{:else}
+					<FluentPeople20Filled class="size-8 text-[#fff7e8]" />
+				{/if}
+			</div>
 
-				<div class="text-center space-y-1">
-					<div class="flex flex-wrap items-center justify-center gap-2">
-						<h1 class="text-3xl font-bold text-[#fff7e8] tracking-tight">{data.party.name}</h1>
-						{#if data.party.abbreviation}
-							<span
-								class="px-2 py-0.5 rounded text-xs font-mono font-bold"
-								style="background-color: {data.party.color}25; color: {data.party.color}"
-							>
-								{data.party.abbreviation}
-							</span>
-						{/if}
-					</div>
-					<div class="flex flex-wrap items-center justify-center gap-3 text-xs text-[#a89e8e] font-mono">
-						{#if data.party.ideology}
-							<span class="flex items-center gap-1">
-								<FluentFlag20Filled class="size-3" />
-								{data.party.ideology}
-							</span>
-						{/if}
-						<a
-							href="/state/{data.party.state.id}"
-							class="flex items-center gap-1 hover:text-[#d5c4df] transition-colors"
+			<div class="min-w-0 space-y-1">
+				<div class="flex flex-wrap items-center gap-2">
+					<h1 class="text-3xl font-bold text-[#fff7e8]">{data.party.name}</h1>
+					{#if data.party.abbreviation}
+						<span
+							class="px-2 py-0.5 rounded-sm text-xs font-bold"
+							style="background-color: {data.party.color}25; color: {data.party.color}"
 						>
-							{#if data.party.state.logo}
-								<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded" />
-							{:else}
-								<FluentBuildingGovernment20Filled class="size-3" />
-							{/if}
-							{data.party.state.name}
-						</a>
-					</div>
-					{#if data.party.description}
-						<p class="text-sm text-[#c7bda9] max-w-md mt-2">{data.party.description}</p>
+							{data.party.abbreviation}
+						</span>
 					{/if}
 				</div>
+				<div class="flex flex-wrap items-center gap-3 text-xs text-[#a89e8e]">
+					{#if data.party.ideology}
+						<span class="flex items-center gap-1">
+							<FluentFlag20Filled class="size-3.5 text-[#b7a0c5]" />
+							{data.party.ideology}
+						</span>
+					{/if}
+					<a href="/state/{data.party.state.id}" class="flex items-center gap-1 hover:text-[#f2c463] transition-colors">
+						{#if data.party.state.logo}
+							<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded-sm" />
+						{:else}
+							<FluentBuildingGovernment20Filled class="size-3.5" />
+						{/if}
+						{data.party.state.name}
+					</a>
+				</div>
+				{#if data.party.description}
+					<p class="text-sm text-[#d9ccb7] max-w-xl pt-1">{data.party.description}</p>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -126,78 +114,65 @@
 	<div class="space-y-4 sm:space-y-5">
 		<!-- Stats Strip -->
 		<div class="grid grid-cols-3 gap-3">
-			<a
-				href="/party/{data.party.id}/member"
-				class="panel rounded-xl p-3 sm:p-4 hover:border-[#dfceb0]/30 transition-all group"
-			>
+			<a href="/party/{data.party.id}/member" class="panel-interactive rounded-sm p-3 sm:p-4 group">
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentPeople20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] sm:text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Members</span>
+					<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Members</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{data.party.memberCount}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8]">{data.party.memberCount}</div>
 			</a>
 
-			<a
-				href="/state/{data.party.state.id}/parliament"
-				class="panel rounded-xl p-3 sm:p-4 hover:border-[#dfceb0]/30 transition-all"
-			>
+			<a href="/state/{data.party.state.id}/parliament" class="panel-interactive rounded-sm p-3 sm:p-4">
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentBuildingGovernment20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] sm:text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Seats</span>
+					<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Seats</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{data.parliamentSeats || 0}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8]">{data.parliamentSeats || 0}</div>
 			</a>
 
-			<div class="panel rounded-xl p-3 sm:p-4">
+			<div class="panel rounded-sm p-3 sm:p-4">
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentCrown20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] sm:text-xs text-[#a89e8e] font-mono uppercase tracking-wider">Rank</span>
+					<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Rank</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">#{data.partyRank || "—"}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8]">#{data.partyRank || "—"}</div>
 			</div>
 		</div>
 
 		<!-- Join/Leave Party -->
 		{#if !data.isMember && data.canJoin}
-			<div class="bg-[#14283f]/85 border rounded-xl p-4 sm:p-5" style="border-color: {data.party.color}30">
+			<div class="panel rounded-sm p-4 sm:p-5">
 				<form method="POST" action="?/join" use:enhance>
 					<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 						<div class="flex-1">
 							<h3 class="text-sm sm:text-base font-bold text-[#fff7e8]">
 								{data.party.autoAcceptMembers ? "Join This Party" : "Apply to Join"}
 							</h3>
-							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
+							<p class="text-xs text-[#a89e8e] mt-0.5">
 								{data.party.autoAcceptMembers ? "Become a member instantly" : "Application reviewed by leadership"}
 							</p>
 						</div>
-						<button
-							type="submit"
-							class="w-full sm:w-auto px-5 py-2.5 rounded-lg font-mono font-bold text-sm text-white transition-all flex items-center justify-center gap-2 hover:brightness-110"
-							style="background-color: {data.party.color}"
-						>
-							<FluentPersonAdd20Filled class="size-4" />
+						<Button type="submit" variant="primary" icon={FluentPersonAdd20Filled} class="w-full sm:w-auto">
 							{data.party.autoAcceptMembers ? "Join" : "Apply"}
-						</button>
+						</Button>
 					</div>
 				</form>
 			</div>
 		{:else if data.hasApplied}
-			<div class="bg-amber-950/30 border border-amber-500/30 rounded-xl p-4">
-				<div class="flex items-center gap-3">
-					<FluentPersonAvailable20Filled class="size-5 text-amber-400 flex-shrink-0" />
-					<div>
-						<span class="text-sm font-bold text-amber-300">Application Pending</span>
-						<p class="text-xs text-[#a89e8e] font-mono mt-0.5">Awaiting review from party leadership</p>
-					</div>
+			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+				<FluentPersonAvailable20Filled class="size-5 shrink-0" />
+				<div>
+					<span class="text-sm font-bold">Application Pending</span>
+					<p class="text-xs text-[#a89e8e] mt-0.5">Awaiting review from party leadership</p>
 				</div>
 			</div>
 		{:else if data.isMember && !data.isLeader}
-			<div class="panel rounded-xl p-4">
+			<div class="panel rounded-sm p-4">
 				<form method="POST" action="?/leave" use:enhance>
 					<div class="flex items-center justify-between gap-3">
 						<div>
 							<span class="text-sm font-bold text-[#fff7e8]">Member</span>
-							<p class="text-xs text-[#a89e8e] font-mono mt-0.5">
+							<p class="text-xs text-[#a89e8e] mt-0.5">
 								Since {(() => {
 									const d = new Date(data.memberSince!);
 									const p = (n: number) => String(n).padStart(2, "0");
@@ -205,13 +180,7 @@
 								})()}
 							</p>
 						</div>
-						<button
-							type="submit"
-							class="px-3 py-1.5 bg-red-950/40 hover:bg-red-950/60 border border-red-500/30 rounded-lg text-red-300 text-xs font-mono font-bold transition-all flex items-center gap-1.5"
-						>
-							<FluentDismiss20Filled class="size-3.5" />
-							Leave
-						</button>
+						<Button type="submit" variant="soft-red" size="sm" icon={FluentDismiss20Filled}>Leave</Button>
 					</div>
 				</form>
 			</div>
@@ -219,43 +188,43 @@
 
 		<!-- Error/Success -->
 		{#if form?.error}
-			<div class="bg-red-950/30 border border-red-500/30 rounded-lg p-3 text-sm text-red-300 font-mono">
+			<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
 				{form.error}
 			</div>
 		{/if}
 		{#if form?.success}
-			<div class="bg-emerald-950/30 border border-emerald-500/30 rounded-lg p-3 text-sm text-emerald-300 font-mono">
+			<div
+				class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3 text-sm"
+			>
 				{form.success}
 			</div>
 		{/if}
 
 		<!-- Party Leadership -->
-		<div class="panel rounded-xl overflow-hidden">
-			<div class="bg-[#0e1d2f]/95 border-b border-[#dfceb0]/15 px-4 sm:px-5 py-3">
-				<h2 class="text-sm font-bold text-[#e5d8c1] font-mono uppercase tracking-wide flex items-center gap-2">
-					<FluentCrown20Filled class="size-4" style="color: {data.party.color}" />
-					Leadership
-				</h2>
-			</div>
-			<div class="p-3 sm:p-4 space-y-2">
+		<div class="panel rounded-sm p-5 space-y-3">
+			<h2 class="section-title">
+				<FluentCrown20Filled class="size-5" style="color: {data.party.color}" />
+				Leadership
+			</h2>
+			<div class="space-y-2">
 				{#each data.members.filter((m) => m.role === "leader") as member}
 					<a
 						href="/user/{member.userId}"
-						class="flex items-center gap-3 p-3 panel-muted rounded-lg hover:border-[#dfceb0]/25 transition-all group"
+						class="flex items-center gap-3 p-3 panel-muted rounded-sm hover:border-[#e6a527]/40 transition-colors group"
 					>
 						<Logo
 							src={member.user.profile.logo}
 							alt={member.user.profile.name}
 							placeholderIcon={FluentPeople20Filled}
-							class="size-10 rounded-lg"
+							class="size-10 rounded-full"
 						/>
 						<div class="flex-1 min-w-0">
-							<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#d5c4df] transition-colors truncate">
+							<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
 								{member.user.profile?.name}
 							</p>
-							<p class="text-xs font-mono mt-0.5" style="color: {data.party.color}">Party Leader</p>
+							<p class="text-xs mt-0.5" style="color: {data.party.color}">Party Leader</p>
 						</div>
-						<span class="text-[#a89e8e]/60 group-hover:text-[#a89e8e] transition-colors text-sm">→</span>
+						<span class="text-[#a89e8e]/60 group-hover:text-[#f2c463] transition-colors text-sm">→</span>
 					</a>
 				{/each}
 			</div>
@@ -264,36 +233,14 @@
 		<!-- Action Buttons -->
 		{#if data.isLeader}
 			<div class="flex flex-wrap gap-2">
-				<a
-					href="/party/{data.party.id}/member"
-					class="px-3 py-2 bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 rounded-lg text-[#e5d8c1] hover:text-[#fff7e8] transition-all flex items-center gap-2 text-xs font-mono"
-				>
-					<FluentPeople20Filled class="size-3.5" />
+				<Button href="/party/{data.party.id}/member" variant="secondary" size="sm" icon={FluentPeople20Filled}>
 					Members
-				</a>
-				<a
-					href="/chat?type=party"
-					class="px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 border border-emerald-500/20 rounded-lg text-emerald-300 hover:text-emerald-200 transition-all flex items-center gap-2 text-xs font-mono"
-				>
-					<FluentChat20Filled class="size-3.5" />
-					Chat
-				</a>
-				<a
-					href="/inbox"
-					class="px-3 py-2 bg-blue-950/40 hover:bg-blue-950/60 border border-blue-500/20 rounded-lg text-blue-300 hover:text-blue-200 transition-all flex items-center gap-2 text-xs font-mono"
-				>
-					<FluentMail20Filled class="size-3.5" />
-					Broadcast
-				</a>
+				</Button>
+				<Button href="/chat?type=party" variant="soft-emerald" size="sm" icon={FluentChat20Filled}>Chat</Button>
+				<Button href="/inbox" variant="soft-blue" size="sm" icon={FluentMail20Filled}>Broadcast</Button>
 			</div>
 		{:else if data.isMember}
-			<a
-				href="/chat?type=party"
-				class="inline-flex px-3 py-2 bg-emerald-950/40 hover:bg-emerald-950/60 border border-emerald-500/20 rounded-lg text-emerald-300 hover:text-emerald-200 transition-all items-center gap-2 text-xs font-mono"
-			>
-				<FluentChat20Filled class="size-3.5" />
-				Party Chat
-			</a>
+			<Button href="/chat?type=party" variant="soft-emerald" size="sm" icon={FluentChat20Filled}>Party Chat</Button>
 		{/if}
 	</div>
 </PageContainer>

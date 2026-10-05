@@ -7,6 +7,9 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 
 	let { data, form } = $props();
 
@@ -51,18 +54,15 @@
 	<title>{data.state.name} - Government Market</title>
 </svelte:head>
 
-<div class="max-w-6xl mx-auto px-4 py-6 space-y-6">
+<PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<div>
-		<a href="/state/{data.state.id}/economy" class="text-sm text-[#c7bda9] hover:text-[#f7c56b] transition-colors">
-			{data.state.name} — Economy
-		</a>
-		<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3 mt-1">
-			<FluentCart20Filled class="size-8 text-[#e6a527]" />
-			Government Market
-		</h1>
-		<p class="text-sm text-[#c7bda9] mt-1">Buy and sell resources on behalf of the state</p>
-	</div>
+	<PageHeader
+		title="Government Market"
+		subtitle="Buy and sell resources on behalf of the state"
+		icon={FluentCart20Filled}
+		backHref="/state/{data.state.id}/economy"
+		backLabel="{data.state.name} — Economy"
+	/>
 
 	{#if !data.canTrade}
 		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5">
@@ -87,7 +87,7 @@
 			</div>
 		</div>
 	{:else if form?.message}
-		<div class="bg-red-600/10 border border-red-500/20 rounded-sm p-4">
+		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-4">
 			<div class="flex items-start gap-3">
 				<FluentWarning20Filled class="size-5 text-red-400 flex-shrink-0 mt-0.5" />
 				<p class="text-red-300 font-medium">{form.message}</p>
@@ -103,8 +103,8 @@
 					<FluentMoney20Filled class="size-6 text-[#c6dfbf]" />
 				</div>
 				<div>
-					<p class="text-sm text-[#c6dfbf] font-medium">State Treasury</p>
-					<p class="text-3xl font-bold text-[#fff7e8]">{formatCurrency(data.treasury.balance)}</p>
+					<p class="text-[10px] text-[#c6dfbf] uppercase tracking-wide">State Treasury</p>
+					<p class="text-2xl font-bold font-mono text-[#fff7e8]">{formatCurrency(data.treasury.balance)}</p>
 				</div>
 			</div>
 		</div>
@@ -116,7 +116,7 @@
 			<div class="panel rounded-sm p-5 space-y-3">
 				<div class="flex items-center gap-2">
 					<FluentBox20Filled class="size-5 text-[#d5c4df]" />
-					<h2 class="text-lg font-semibold text-[#fff7e8]">State Stockpile</h2>
+					<h2 class="section-title">State Stockpile</h2>
 				</div>
 
 				<div class="space-y-2">
@@ -128,7 +128,7 @@
 							onclick={() => {
 								selectedResource = resource;
 							}}
-							class="w-full flex items-center justify-between p-3 rounded-lg border transition-all
+							class="w-full flex items-center justify-between p-3 rounded-sm border transition-all
 								{isSelected
 								? 'bg-[#8c709b]/20 border-[#b7a0c5]/30 ring-1 ring-[#b7a0c5]/20'
 								: 'bg-[#102239]/70 border-[#dfceb0]/10 hover:bg-[#19304b] hover:border-[#dfceb0]/20'}"
@@ -156,17 +156,17 @@
 			<div class="panel rounded-sm p-5 space-y-3">
 				<div class="flex items-center gap-2">
 					<FluentInfo20Filled class="size-5 text-[#b7d0e6]" />
-					<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider">Market Prices</h2>
+					<h2 class="section-title">Market Prices</h2>
 				</div>
 
 				<div class="space-y-1.5">
 					{#each allResources as resource}
 						<div class="flex items-center justify-between text-sm py-1">
-							<span class="flex items-center gap-2 text-[#c7bda9]">
+							<span class="flex items-center gap-2 text-[#d9ccb7]">
 								<ResourceIcon name={resource} class="size-4" />
 								<span class="capitalize">{resource}</span>
 							</span>
-							<span class="font-medium text-[#d9ccb7] tabular-nums"
+							<span class="font-medium font-mono text-[#d9ccb7] tabular-nums"
 								>{formatCurrency(data.marketPrices[resource] || 0)}</span
 							>
 						</div>
@@ -181,39 +181,39 @@
 				method="POST"
 				action="?/{tradeMode === 'buy' ? 'buyResource' : 'sellResource'}"
 				use:enhance
-				class="panel rounded-sm p-6 space-y-6"
+				class="panel rounded-sm p-5 space-y-6"
 			>
 				<!-- Trade Mode -->
-				<div class="flex items-center justify-between">
-					<div class="flex items-center gap-2">
-						<FluentCart20Filled class="size-5 text-[#d5c4df]" />
-						<h2 class="text-lg font-semibold text-[#fff7e8]">Trade Resources</h2>
-					</div>
+				<div class="flex items-center justify-between gap-3 flex-wrap">
+					<h2 class="section-title">
+						<FluentCart20Filled class="size-5 text-[#e6a527]" />
+						Trade Resources
+					</h2>
 					<div class="join">
-						<button
+						<Button
 							type="button"
-							class="btn btn-sm join-item {tradeMode === 'buy'
-								? 'bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-500'
-								: 'bg-[#102239]/70 text-[#a89e8e] border-[#dfceb0]/10 hover:text-[#d9ccb7]'}"
+							variant={tradeMode === "buy" ? "soft-emerald" : "subtle"}
+							size="sm"
+							class="join-item"
 							onclick={() => {
 								tradeMode = "buy";
 							}}
 							disabled={!data.canTrade}
 						>
 							Buy
-						</button>
-						<button
+						</Button>
+						<Button
 							type="button"
-							class="btn btn-sm join-item {tradeMode === 'sell'
-								? 'bg-[#315d8d] hover:bg-[#3d6ea3] text-white border-[#315d8d]'
-								: 'bg-[#102239]/70 text-[#a89e8e] border-[#dfceb0]/10 hover:text-[#d9ccb7]'}"
+							variant={tradeMode === "sell" ? "soft-blue" : "subtle"}
+							size="sm"
+							class="join-item"
 							onclick={() => {
 								tradeMode = "sell";
 							}}
 							disabled={!data.canTrade}
 						>
 							Sell
-						</button>
+						</Button>
 					</div>
 				</div>
 
@@ -227,12 +227,12 @@
 						</div>
 						<div class="flex-1">
 							<h3 class="text-xl font-bold text-[#fff7e8] capitalize">{selectedResource}</h3>
-							<div class="flex items-center gap-4 mt-1">
+							<div class="flex items-center gap-x-4 gap-y-1 flex-wrap mt-1">
 								<span class="text-sm text-[#a89e8e]">
 									In stock: <span class="font-semibold text-[#e5d8c1]">{resourceMap.get(selectedResource) || 0}</span>
 								</span>
 								<span class="text-sm text-[#a89e8e]">
-									Market price: <span class="font-semibold text-[#e5d8c1]">{formatCurrency(currentMarketPrice)}</span>
+									Market price: <span class="font-semibold font-mono text-[#e5d8c1]">{formatCurrency(currentMarketPrice)}</span>
 								</span>
 							</div>
 						</div>
@@ -242,7 +242,7 @@
 				<!-- Quantity & Price -->
 				<div class="grid sm:grid-cols-2 gap-4">
 					<div class="space-y-2">
-						<label for="quantity" class="block text-sm font-medium text-[#e5d8c1]">
+						<label for="quantity" class="field-label">
 							Quantity
 							{#if tradeMode === "sell"}
 								<span class="text-[#a89e8e] text-xs ml-1">(max {availableQuantity})</span>
@@ -256,28 +256,32 @@
 								min="1"
 								max={tradeMode === "sell" ? availableQuantity : undefined}
 								bind:value={tradeQuantity}
-								class="input join-item flex-1 field-control"
+								class="join-item flex-1 min-w-0 field-control rounded-sm px-3 py-2.5 font-mono"
 								disabled={!data.canTrade}
 							/>
 							{#if tradeMode === "sell" && availableQuantity > 0}
-								<button
+								<Button
 									type="button"
-									class="btn join-item bg-[#14283f] hover:bg-[#19304b] border-[#dfceb0]/25 text-[#d9ccb7] text-xs"
+									variant="secondary"
+									class="join-item text-xs"
 									onclick={() => {
 										tradeQuantity = availableQuantity;
 									}}
 									disabled={!data.canTrade}
 								>
 									Max
-								</button>
+								</Button>
 							{/if}
 						</div>
 					</div>
 
 					<div class="space-y-2">
-						<label for="pricePerUnit" class="block text-sm font-medium text-[#e5d8c1]"> Price per unit </label>
+						<label for="pricePerUnit" class="field-label">Price per unit</label>
 						<div class="join w-full">
-							<span class="join-item btn bg-[#0d1d31] border-[#dfceb0]/20 text-[#a89e8e] pointer-events-none">$</span>
+							<span
+									class="join-item flex items-center px-3 rounded-sm bg-[#0d1d31] border border-[#dfceb0]/20 text-[#a89e8e] pointer-events-none"
+									>$</span
+								>
 							<input
 								type="number"
 								id="pricePerUnit"
@@ -285,7 +289,7 @@
 								min="1"
 								step="1"
 								bind:value={tradePrice}
-								class="input join-item flex-1 field-control"
+								class="join-item flex-1 min-w-0 field-control rounded-sm px-3 py-2.5 font-mono"
 								disabled={!data.canTrade}
 							/>
 						</div>
@@ -294,7 +298,7 @@
 
 				<!-- Order Summary -->
 				<div class="panel-muted rounded-sm p-5 space-y-3">
-					<h4 class="text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">Order Summary</h4>
+					<h4 class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Order Summary</h4>
 
 					<div class="space-y-2">
 						<div class="flex justify-between text-sm">
@@ -306,21 +310,21 @@
 						</div>
 						<div class="flex justify-between text-sm">
 							<span class="text-[#a89e8e]">{tradeQuantity} × {formatCurrency(tradePrice)}</span>
-							<span class="font-medium text-[#fff7e8]">{formatCurrency(totalCost)}</span>
+							<span class="font-medium font-mono text-[#fff7e8]">{formatCurrency(totalCost)}</span>
 						</div>
 					</div>
 
 					<div class="border-t border-[#dfceb0]/15 pt-3">
 						<div class="flex justify-between items-center">
 							<span class="font-semibold text-[#d9ccb7]">Total {tradeMode === "buy" ? "Cost" : "Revenue"}</span>
-							<span class="text-2xl font-bold {tradeMode === 'buy' ? 'text-red-400' : 'text-[#8fae88]'}">
+							<span class="text-2xl font-bold font-mono {tradeMode === 'buy' ? 'text-red-300' : 'text-[#c6dfbf]'}">
 								{tradeMode === "buy" ? "-" : "+"}{formatCurrency(totalCost)}
 							</span>
 						</div>
 					</div>
 
 					{#if tradeMode === "buy" && data.treasury.balance < totalCost}
-						<div class="bg-red-600/10 border border-red-500/20 rounded-sm p-3 flex items-center gap-2">
+						<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 flex items-center gap-2">
 							<FluentWarning20Filled class="size-4 text-red-400 flex-shrink-0" />
 							<p class="text-xs text-red-300">
 								Insufficient funds — need {formatCurrency(totalCost - data.treasury.balance)} more
@@ -329,7 +333,7 @@
 					{/if}
 
 					{#if tradeMode === "sell" && availableQuantity < tradeQuantity}
-						<div class="bg-red-600/10 border border-red-500/20 rounded-sm p-3 flex items-center gap-2">
+						<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 flex items-center gap-2">
 							<FluentWarning20Filled class="size-4 text-red-400 flex-shrink-0" />
 							<p class="text-xs text-red-300">
 								Only {availableQuantity} units available to sell
@@ -339,12 +343,7 @@
 				</div>
 
 				<!-- Submit -->
-				<button
-					type="submit"
-					disabled={!canTrade}
-					class="btn w-full border-0 text-white gap-2 disabled:opacity-40
-						{tradeMode === 'buy' ? 'bg-emerald-600 hover:bg-emerald-500' : 'bg-[#315d8d] hover:bg-[#3d6ea3]'}"
-				>
+				<Button type="submit" variant="primary" block disabled={!canTrade}>
 					{#if canTrade}
 						<FluentCheckmark20Filled class="size-5" />
 						{tradeMode === "buy" ? "Buy" : "Sell"}
@@ -358,7 +357,7 @@
 						<FluentWarning20Filled class="size-5" />
 						{tradeMode === "buy" ? "Insufficient Funds" : "Insufficient Stock"}
 					{/if}
-				</button>
+				</Button>
 			</form>
 		</div>
 	</div>
@@ -378,4 +377,4 @@
 			</div>
 		</div>
 	</div>
-</div>
+</PageContainer>

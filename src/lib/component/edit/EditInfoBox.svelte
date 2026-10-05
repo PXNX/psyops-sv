@@ -21,8 +21,8 @@
 </script>
 
 {#if displayMessage}
-	<div class="bg-blue-600/10 border border-blue-500/20 rounded-xl p-4">
-		<p class="text-sm text-blue-300">
+	<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
+		<p class="text-sm text-[#b7d0e6]">
 			💡 <strong>Note:</strong>
 			{displayMessage}
 		</p>

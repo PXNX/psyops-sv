@@ -12,6 +12,10 @@
 	import { formatTime } from "#lib/utils/formatting.js";
 	import { settings } from "#lib/settings.svelte.js";
 	import PartyTag from "#lib/component/PartyTag.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
+	import { Badge } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
@@ -43,33 +47,28 @@
 	});
 </script>
 
-<div class="max-w-4xl mx-auto px-4 md:px-6 py-6">
-	<div class="flex items-center gap-3 mb-6">
-		<div class="p-2 rounded-xl bg-[#315d8d]/15 border border-[#7ba0c8]/25">
-			<FluentChat20Filled class="size-6 text-[#7ba0c8]" />
-		</div>
-		<h1 class="text-2xl md:text-3xl font-bold text-[#fff7e8]">Messages</h1>
-	</div>
+
+<PageContainer maxWidth="4xl">
+	<PageHeader title="Messages" icon={FluentChat20Filled} />
 
 	<div class="space-y-4">
 		<!-- Global Chat -->
-		<button
-			onclick={() => goto("/chat/en")}
-			class="w-full bg-[#14283f]/60 hover:bg-[#19304b] border border-[#dfceb0]/15 rounded-xl p-4 transition-all duration-200 text-left group shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 hover:scale-[1.01] active:scale-[0.99]"
-		>
+		<button onclick={() => goto("/chat/en")} class="w-full panel-interactive rounded-sm p-4 text-left group">
 			<div class="flex items-center gap-3 md:gap-4">
 				<div
-					class="size-14 md:size-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-blue-500/20"
+					class="size-14 md:size-12 rounded-full bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center flex-shrink-0"
 				>
-					<FluentEarth20Filled class="size-6 md:size-5 text-white" />
+					<FluentEarth20Filled class="size-6 md:size-5 text-[#7ba0c8]" />
 				</div>
 
 				<div class="flex-1 min-w-0">
 					<div class="flex items-center gap-2 mb-1.5">
-						<h3 class="font-semibold text-white text-base md:text-sm">Global Chat (English)</h3>
-						<span class="hidden sm:inline badge badge-xs bg-blue-500/20 text-blue-300 border-blue-500/30 font-medium"
-							>Global</span
+						<h3
+							class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-sm"
 						>
+							Global Chat (English)
+						</h3>
+						<Badge tone="blue" size="xs" class="hidden sm:inline-flex">Global</Badge>
 					</div>
 					{#if data.globalChat?.lastMessage}
 						<p class="text-sm md:text-xs text-[#a89e8e] truncate leading-relaxed">
@@ -90,22 +89,19 @@
 				<div class="flex items-center gap-2 flex-shrink-0">
 					{#if data.globalChat?.unreadCount > 0}
 						<div
-							class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-blue-600 text-white text-xs font-bold shadow-lg shadow-blue-600/30"
+							class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#e6a527] text-[#172a45] text-xs font-bold"
 						>
 							{data.globalChat.unreadCount > 99 ? "99+" : data.globalChat.unreadCount}
 						</div>
 					{/if}
-					<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#d9ccb7] transition-colors" />
+					<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
 				</div>
 			</div>
 		</button>
 
 		<!-- Party Chat -->
 		{#if data.partyChat}
-			<button
-				onclick={() => goto("/chat/party")}
-				class="w-full bg-[#14283f]/60 hover:bg-[#19304b] border border-[#dfceb0]/15 rounded-xl p-4 transition-all duration-200 text-left group shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 hover:scale-[1.01] active:scale-[0.99]"
-			>
+			<button onclick={() => goto("/chat/party")} class="w-full panel-interactive rounded-sm p-4 text-left group">
 				<div class="flex items-center gap-3 md:gap-4">
 					{#if data.partyChat.logo}
 						<img
@@ -115,19 +111,20 @@
 						/>
 					{:else}
 						<div
-							class="size-14 md:size-12 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/20"
+							class="size-14 md:size-12 rounded-full bg-[#587252]/18 border border-[#8fae88]/30 flex items-center justify-center flex-shrink-0"
 						>
-							<FluentPeople20Filled class="size-6 md:size-5 text-white" />
+							<FluentPeople20Filled class="size-6 md:size-5 text-[#8fae88]" />
 						</div>
 					{/if}
 
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-1.5">
-							<h3 class="font-semibold text-white text-base md:text-sm truncate">{data.partyChat.name}</h3>
-							<span
-								class="hidden sm:inline badge badge-xs bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-medium flex-shrink-0"
-								>Party</span
+							<h3
+								class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-sm truncate"
 							>
+								{data.partyChat.name}
+							</h3>
+							<Badge tone="green" size="xs" class="hidden sm:inline-flex flex-shrink-0">Party</Badge>
 						</div>
 						{#if data.partyChat.lastMessage}
 							<p class="text-sm md:text-xs text-[#a89e8e] truncate leading-relaxed">
@@ -143,12 +140,12 @@
 					<div class="flex items-center gap-2 flex-shrink-0">
 						{#if data.partyChat.unreadCount > 0}
 							<div
-								class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-blue-600 text-white text-xs font-bold shadow-lg shadow-blue-600/30"
+								class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#e6a527] text-[#172a45] text-xs font-bold"
 							>
 								{data.partyChat.unreadCount > 99 ? "99+" : data.partyChat.unreadCount}
 							</div>
 						{/if}
-						<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#d9ccb7] transition-colors" />
+						<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
 					</div>
 				</div>
 			</button>
@@ -156,24 +153,22 @@
 
 		<!-- Direct Messages -->
 		<div class="space-y-3">
-			<h2 class="text-base md:text-lg font-semibold text-white flex items-center gap-2 mt-6 px-1">
-				<FluentPerson20Filled class="size-5" />
+			<h2 class="section-title mt-6 px-1">
+				<FluentPerson20Filled class="size-5 text-[#f7c56b]" />
 				Direct Messages
 			</h2>
 
 			{#if data.directChats.length === 0}
-				<div class="panel-muted border border-[#dfceb0]/15 rounded-xl p-8 text-center">
-					<FluentPerson20Filled class="size-12 text-[#a89e8e]/70 mx-auto mb-3" />
-					<p class="text-[#a89e8e]">No direct messages yet</p>
-					<p class="text-sm text-[#a89e8e] mt-1">Start a conversation with someone!</p>
-				</div>
+				<EmptyState
+					icon={FluentPerson20Filled}
+					title="No direct messages yet"
+					subtitle="Start a conversation with someone!"
+				/>
 			{:else}
 				{#each data.directChats as chat}
 					<button
 						onclick={() => goto(`/chat/user/${chat.otherUserId}`)}
-						class="w-full bg-[#14283f]/60 hover:bg-[#19304b] border border-[#dfceb0]/15 rounded-xl p-4 transition-all duration-200 text-left group shadow-lg shadow-black/5 hover:shadow-xl hover:shadow-black/10 hover:scale-[1.01] active:scale-[0.99] {chat.isBlocked
-							? 'opacity-60'
-							: ''}"
+						class="w-full panel-interactive rounded-sm p-4 text-left group {chat.isBlocked ? 'opacity-60' : ''}"
 					>
 						<div class="flex items-center gap-3 md:gap-4">
 							{#if chat.otherUserLogo && settings.loadImages}
@@ -184,7 +179,7 @@
 								/>
 							{:else}
 								<div
-									class="size-14 md:size-12 rounded-full bg-[#14283f]/80 flex items-center justify-center flex-shrink-0 {chat.isBlocked
+									class="size-14 md:size-12 rounded-full bg-[#102239] flex items-center justify-center flex-shrink-0 {chat.isBlocked
 										? 'opacity-50'
 										: ''}"
 								>
@@ -194,19 +189,16 @@
 
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2 mb-1.5">
-									<h3 class="font-semibold text-white text-base md:text-sm truncate">
+									<h3
+										class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-sm truncate"
+									>
 										{#if chat.otherUserPartyAbbreviation}
 											<PartyTag abbreviation={chat.otherUserPartyAbbreviation} color={chat.otherUserPartyColor} />
 										{/if}
 										{chat.otherUserName || "Anonymous"}
 									</h3>
 									{#if chat.isBlocked}
-										<span
-											class="badge badge-xs bg-red-600/20 text-red-400 border-red-600/30 flex items-center gap-1 flex-shrink-0"
-										>
-											<FluentProhibited20Filled class="size-3" />
-											Blocked
-										</span>
+										<Badge tone="red" size="xs" icon={FluentProhibited20Filled} class="flex-shrink-0">Blocked</Badge>
 									{/if}
 								</div>
 								{#if chat.lastMessage}
@@ -223,13 +215,13 @@
 							<div class="flex items-center gap-2 flex-shrink-0">
 								{#if chat.unreadCount > 0 && !chat.isBlocked}
 									<div
-										class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-blue-600 text-white text-xs font-bold shadow-lg shadow-blue-600/30"
+										class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#e6a527] text-[#172a45] text-xs font-bold"
 									>
 										{chat.unreadCount > 99 ? "99+" : chat.unreadCount}
 									</div>
 								{/if}
 								<FluentChevronRight20Filled
-									class="size-5 text-[#a89e8e] group-hover:text-[#d9ccb7] transition-colors"
+									class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors"
 								/>
 							</div>
 						</div>
@@ -238,4 +230,4 @@
 			{/if}
 		</div>
 	</div>
-</div>
+</PageContainer>

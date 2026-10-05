@@ -47,11 +47,11 @@
 		<BackLink href="/newspaper/{data.newspaper.id}" />
 
 		{#if data.newspaper.logoUrl}
-			<div class="size-10 rounded-lg overflow-hidden flex-shrink-0">
+			<div class="size-10 rounded-sm overflow-hidden bg-[#102239] flex-shrink-0">
 				<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 			</div>
 		{:else}
-			<div class="size-10 rounded-lg bg-[#315d8d]/25 flex items-center justify-center flex-shrink-0">
+			<div class="size-10 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center flex-shrink-0">
 				<MdiNewspaper class="size-5 text-[#b7d0e6]" />
 			</div>
 		{/if}
@@ -66,17 +66,17 @@
 	</div>
 
 	{#if data.staff.length === 0}
-		<div class="panel rounded-xl p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239]/70 mb-4">
+		<div class="panel-muted rounded-sm p-12 text-center">
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
 				<FluentPerson20Filled class="size-8 text-[#a89e8e]" />
 			</div>
-			<h4 class="text-lg font-semibold text-[#d9ccb7] mb-2">No staff members</h4>
+			<h4 class="text-xl font-bold text-[#fff7e8] mb-2">No staff members</h4>
 			<p class="text-[#a89e8e] text-sm">This newspaper doesn't have any staff members yet</p>
 		</div>
 	{:else}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 			{#each data.staff as member}
-				<a href="/user/{member.id}" class="group panel-interactive rounded-xl p-5">
+				<a href="/user/{member.id}" class="group panel-interactive rounded-sm p-5">
 					<div class="flex items-start gap-4">
 						<!-- Avatar -->
 						<Logo
@@ -84,12 +84,12 @@
 							alt={member.name}
 							class="size-14"
 							placeholderIcon={FluentPerson20Filled}
-							placeholderGradient="from-blue-500 to-purple-500"
+							placeholderGradient="from-[#315d8d]/40 to-[#315d8d]/40"
 						/>
 
 						<!-- Info -->
 						<div class="flex-1 min-w-0">
-							<h3 class="font-bold text-[#fff7e8] group-hover:text-blue-400 transition-colors truncate mb-2">
+							<h3 class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate mb-2">
 								{member.name}
 							</h3>
 

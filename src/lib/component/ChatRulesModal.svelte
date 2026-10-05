@@ -14,9 +14,9 @@
 
 {#if show}
 	<div class="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-		<div class="panel max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-2xl p-6">
+		<div class="panel max-w-2xl w-full max-h-[90vh] overflow-y-auto rounded-sm p-6">
 			<div class="flex items-center gap-3 mb-6">
-				<div class="size-12 bg-[#315d8d]/18 rounded-xl flex items-center justify-center">
+				<div class="size-12 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center">
 					<FluentShield20Filled class="size-6 text-[#b7d0e6]" />
 				</div>
 				<div>
@@ -25,7 +25,7 @@
 				</div>
 			</div>
 
-			<div class="panel-muted rounded-xl p-6 mb-6 space-y-4">
+			<div class="panel-muted rounded-sm p-6 mb-6 space-y-4">
 				<div class="flex gap-3">
 					<span class="text-2xl">1️⃣</span>
 					<div class="flex-1">
@@ -77,7 +77,7 @@
 				</div>
 			</div>
 
-			<div class="bg-[#e6a527]/10 rounded-xl border border-[#e6a527]/25 p-4 mb-6">
+			<div class="bg-[#e6a527]/12 rounded-sm border border-[#e6a527]/35 p-4 mb-6">
 				<p class="text-sm text-[#f7c56b] font-semibold mb-2">⚠️ Warning System</p>
 				<p class="text-sm text-[#d9ccb7]">
 					If an admin identifies a rule violation, it will be penalized with a warning depending on severity. After
@@ -97,7 +97,7 @@
 					};
 				}}
 			>
-				<Button type="submit" variant="info" block icon={FluentCheckmark20Filled}>I Accept the Chat Rules</Button>
+				<Button type="submit" variant="primary" block icon={FluentCheckmark20Filled}>I Accept the Chat Rules</Button>
 			</form>
 
 			<p class="text-xs text-[#a89e8e] text-center mt-4">
