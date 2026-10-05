@@ -1,3 +1,6 @@
+import adapter from "@sveltejs/adapter-vercel";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { mdsvex } from "mdsvex";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import svg from "@poppanator/sveltekit-svg";
 import { sveltekit } from "@sveltejs/kit/vite";
@@ -12,7 +15,23 @@ export default defineConfig({
 			outdir: "./src/lib/paraglide",
 			strategy: ["url", "cookie", "baseLocale"]
 		}),
-		sveltekit(),
+
+		sveltekit({
+			extensions: [".svelte", ".md", ".svx"],
+			// Consult https://kit.svelte.dev/docs/integrations#preprocessors
+			// for more information about preprocessors
+			preprocess: [
+				//https://svelte.dev/docs/svelte/typescript
+				vitePreprocess({ script: true }),
+				mdsvex({ extensions: [".md", ".svx"] })
+			],
+			runes: true,
+			// adapter-auto only supports some environments, see https://kit.svelte.dev/docs/adapter-auto for a list.
+			// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
+			// See https://kit.svelte.dev/docs/adapters for more information about adapters.
+			adapter: adapter({ runtime: "experimental_bun1.x" })
+		}),
+
 		Icons({
 			compiler: "svelte",
 			autoInstall: true,
@@ -28,12 +47,10 @@ export default defineConfig({
 			svgoOptions: {
 				multipass: true,
 				plugins: [
-					{
-						name: "preset-default"
-						// by default svgo removes the viewBox which prevents svg icons from scaling
-						// not a good idea! https://github.com/svg/svgo/pull/1461
-						//	params: { removeViewBox: false }
-					},
+					{ name: "preset-default" },
+					// by default svgo removes the viewBox which prevents svg icons from scaling
+					// not a good idea! https://github.com/svg/svgo/pull/1461
+					//	params: { removeViewBox: false }
 					{ name: "removeAttrs", params: { attrs: "(fill|stroke)" } }
 				]
 			}
@@ -71,8 +88,5 @@ export default defineConfig({
 	/*server: {
 		host: true
 	}*/
-	server: {
-		allowedHosts: true
-		//port: 3021
-	}
+	server: { allowedHosts: true }
 });
