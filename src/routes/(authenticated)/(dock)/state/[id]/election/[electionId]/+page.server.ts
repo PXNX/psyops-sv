@@ -250,22 +250,15 @@ export const actions: Actions = {
 			.limit(1);
 
 		if (existingVote) {
-			// Update existing vote
-			await db
-				.update(electionVotes)
-				.set({
-					partyId,
-					votedAt: new Date()
-				})
-				.where(eq(electionVotes.id, existingVote.id));
-		} else {
-			// Create new vote
-			await db.insert(electionVotes).values({
-				electionId: parseInt(params.electionId),
-				voterId: account.id,
-				partyId
-			});
+			// Votes are final once cast — no re-voting, no changing your mind.
+			return fail(400, { error: "You have already voted in this election. Votes cannot be changed." });
 		}
+
+		await db.insert(electionVotes).values({
+			electionId: parseInt(params.electionId),
+			voterId: account.id,
+			partyId
+		});
 
 		return { success: true, message: "Vote recorded successfully" };
 	}

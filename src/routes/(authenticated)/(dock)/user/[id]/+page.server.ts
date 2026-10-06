@@ -223,7 +223,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					newspaperId: j.newspaper.id,
 					name: j.newspaper.name,
 					logo: await getLogoUrl(j.newspaper.logo),
-					rank: j.rank
+					rank: j.rank,
+					joinedAt: j.joinedAt
 				}))
 			),
 			Promise.all(ownedCompanies.map(async (c) => [c.id, await getLogoUrl(c.logo)] as const))
@@ -236,7 +237,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			companies: ownedCompanies.map((c) => ({
 				id: c.id,
 				name: c.name,
-				logo: companyLogoMap.get(c.id) ?? null
+				logo: companyLogoMap.get(c.id) ?? null,
+				foundedAt: c.foundedAt
 			}))
 		};
 	})();

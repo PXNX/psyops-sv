@@ -457,9 +457,11 @@
 					{/if}
 
 					{#if data.isOwnProfile}
-						<Button href="/visas" variant="soft-purple" size="sm" block icon={FluentBookCompass24Filled}>
-							Manage Visas
-						</Button>
+						<div class="border-t border-[#c8b47a]/10 pt-4">
+							<Button href="/visas" variant="soft-purple" size="sm" block icon={FluentBookCompass24Filled}>
+								Manage Visas
+							</Button>
+						</div>
 					{/if}
 				</div>
 			</section>
@@ -534,32 +536,6 @@
 				</section>
 			{/if}
 
-			<!-- Career & Politics Section -->
-			<section class="panel rounded-sm p-5 space-y-4">
-				<h2 class="section-title">Career & Politics</h2>
-				<div class="space-y-4">
-					<ProfileItem
-						href="/user/{data.user.id}/articles"
-						icon={FluentDocument20Filled}
-						title="{data.articleCount} {data.articleCount === 1 ? 'Article' : 'Articles'} Published"
-						subtitle="{data.upvoteCount} total upvote{data.upvoteCount === 1
-							? ''
-							: 's'} received • View all publications"
-						hoverColor="purple"
-					/>
-
-					<Button
-						href="/user/{data.user.id}/career"
-						variant="soft-purple"
-						size="sm"
-						block
-						icon={FluentChevronRight20Filled}
-					>
-						View Full Career Timeline
-					</Button>
-				</div>
-			</section>
-
 			<!-- Organizations Section: newspaper, company and party memberships -->
 			<section class="panel rounded-sm p-5 space-y-4">
 				<h2 class="section-title">Organizations</h2>
@@ -572,7 +548,7 @@
 							placeholderIcon={FluentBuilding20Filled}
 							placeholderGradient="from-[#3f8a2a] to-[#1f4a14]"
 							title={company.name}
-							subtitle="Owner"
+							subtitle="Company • Owner since {formatDate(company.foundedAt)}"
 							hoverColor="emerald"
 						/>
 					{/each}
@@ -585,7 +561,9 @@
 							placeholderIcon={FluentBriefcase20Filled}
 							placeholderGradient="from-[#2369b5] to-[#123a6b]"
 							title={newspaper.name}
-							subtitle={newspaper.rank.charAt(0).toUpperCase() + newspaper.rank.slice(1)}
+							subtitle="Newspaper • {newspaper.rank.charAt(0).toUpperCase() + newspaper.rank.slice(1)} since {formatDate(
+								newspaper.joinedAt
+							)}"
 							hoverColor="blue"
 						/>
 					{/each}
@@ -598,11 +576,11 @@
 							placeholderIcon={FluentPeople20Filled}
 							placeholderGradient="from-[#8a4fc0] to-[#2369b5]"
 							title={data.party.name}
-							subtitle={data.party.role === "leader"
-								? " Leader"
-								: data.party.role === "deputy"
-									? "Deputy "
-									: "Member" + "Joined " + formatDate(data.party.foundedAt)}
+							subtitle="Party • {data.party.role === 'leader'
+								? 'Leader'
+								: data.party.role === 'deputy'
+									? 'Deputy'
+									: 'Member'} since {formatDate(data.party.joinedAt)}"
 							hoverColor={data.party.color}
 						/>
 					{:else if data.isOwnProfile && !data.isIndependentRegion}
@@ -644,6 +622,28 @@
 					{#if data.organizations.companies.length === 0 && data.organizations.newspapers.length === 0 && !data.party && !data.isOwnProfile}
 						<p class="text-sm text-[#a8a083] text-center py-2">No organization memberships</p>
 					{/if}
+
+					<div class="border-t border-[#c8b47a]/10 pt-4 space-y-2">
+						<Button
+							href="/user/{data.user.id}/articles"
+							variant="soft-purple"
+							size="sm"
+							block
+							icon={FluentDocument20Filled}
+						>
+							{data.articleCount} {data.articleCount === 1 ? "Article" : "Articles"} Published
+						</Button>
+
+						<Button
+							href="/user/{data.user.id}/career"
+							variant="soft-purple"
+							size="sm"
+							block
+							icon={FluentChevronRight20Filled}
+						>
+							View Full Career Timeline
+						</Button>
+					</div>
 				</div>
 			</section>
 		</div>
