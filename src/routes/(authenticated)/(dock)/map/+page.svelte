@@ -106,7 +106,7 @@
 
 		instance = panzoom(node, {
 			bounds: true,
-			maxZoom: 15,
+			maxZoom: 60,
 			minZoom: minZoomToFit,
 			boundsPadding: 0.1,
 			smoothScroll: false
@@ -568,7 +568,7 @@
 
 <!-- Dark Mode Toolbar -->
 <header
-	class="fixed top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 w-[calc(100%-24px)] max-w-[520px] bg-[#242a1d]/90 backdrop-blur-xl border border-[#c8b47a]/15 rounded-sm shadow-lg shadow-black/20 touch-action-pan-x touch-action-pan-y"
+	class="panel fixed top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 w-[calc(100%-24px)] max-w-[520px] rounded-sm backdrop-blur-xl touch-action-pan-x touch-action-pan-y"
 >
 	<form class="flex-1 relative min-w-0" onsubmit={handleSearchSubmit}>
 		<div class="flex items-center gap-2">
@@ -586,7 +586,7 @@
 
 		{#if showSearchResults && searchResults().length > 0}
 			<div
-				class="absolute top-[calc(100%+10px)] -left-3.5 -right-3.5 bg-[#242a1d]/95 backdrop-blur-xl border border-[#c8b47a]/15 rounded-sm shadow-2xl shadow-black/20 overflow-hidden max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-200"
+				class="panel absolute top-[calc(100%+10px)] -left-3.5 -right-3.5 rounded-sm overflow-hidden max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-200"
 			>
 				{#each searchResults() as result, i}
 					<button
@@ -618,7 +618,7 @@
 	<div class="flex-shrink-0">
 		<select
 			bind:value={mapFilter}
-			class="appearance-none bg-[#0f120c] border border-[#c8b47a]/20 rounded-sm px-3 pr-7 py-1.5 text-xs font-semibold tracking-wide text-[#f5efd8] cursor-pointer outline-none transition-colors hover:border-[#f2b01e]/55 focus:border-[#f2b01e]/70 bg-[length:10px_6px] bg-no-repeat bg-[right_9px_center]"
+			class="field-control appearance-none rounded-sm px-3 pr-7 py-1.5 text-xs font-semibold tracking-wide cursor-pointer bg-[length:10px_6px] bg-no-repeat bg-[right_9px_center]"
 			style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white' opacity='.4'/%3E%3C/svg%3E&quot;)"
 		>
 			{#each filterOptions as option}
@@ -722,31 +722,36 @@
 						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Power plants (state-wide)</p>
 						<p class="text-2xl font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.powerplantCount)}</p>
 					</div>
-				{:else}
-					<!-- Resource layers -->
-					{#if resourceLabels[mapFilter]}
-						<div class="panel-muted rounded-sm p-4">
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">{resourceLabels[mapFilter]}</p>
-							<p class="text-2xl font-bold text-[#f5efd8]">
-								{formatNumber((selectedRegionData.resources as Record<string, number>)[mapFilter] ?? 0)}
-							</p>
-						</div>
-					{/if}
-					<div class="grid grid-cols-3 gap-2">
-						{#each Object.entries(selectedRegionData.resources) as [key, value]}
-							<div
-								class="rounded-sm border p-2 text-center {key === mapFilter
-									? 'bg-[#f2b01e]/12 border-[#f2b01e]/35'
-									: 'bg-[#1a1f15]/70 border-[#c8b47a]/10'}"
-							>
-								<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">
-									{resourceLabels[key] ?? key}
-								</p>
-								<p class="text-sm font-bold text-[#f5efd8]">{formatNumber(value)}</p>
-							</div>
-						{/each}
+				{:else if resourceLabels[mapFilter]}
+					<!-- Resource layer: highlight the active resource -->
+					<div class="panel-muted rounded-sm p-4">
+						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">{resourceLabels[mapFilter]}</p>
+						<p class="text-2xl font-bold text-[#f5efd8]">
+							{formatNumber((selectedRegionData.resources as Record<string, number>)[mapFilter] ?? 0)}
+						</p>
 					</div>
 				{/if}
+			</div>
+		{/if}
+
+		<!-- Resources: always shown regardless of the active map layer -->
+		{#if selectedRegionData}
+			<div class="mt-4">
+				<h3 class="section-title mb-2 text-xs">Resources</h3>
+				<div class="grid grid-cols-3 gap-2">
+					{#each Object.entries(selectedRegionData.resources) as [key, value]}
+						<div
+							class="rounded-sm border p-2 text-center {key === mapFilter
+								? 'bg-[#f2b01e]/12 border-[#f2b01e]/35'
+								: 'bg-[#1a1f15]/70 border-[#c8b47a]/10'}"
+						>
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">
+								{resourceLabels[key] ?? key}
+							</p>
+							<p class="text-sm font-bold text-[#f5efd8]">{formatNumber(value)}</p>
+						</div>
+					{/each}
+				</div>
 			</div>
 		{/if}
 	{/if}
