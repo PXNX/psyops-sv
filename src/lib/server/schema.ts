@@ -510,7 +510,8 @@ export const journalists = pgTable(
 		newspaperId: integer("newspaper_id")
 			.notNull()
 			.references(() => newspapers.id, { onDelete: "cascade" }),
-		rank: journalistRankEnum("rank").notNull()
+		rank: journalistRankEnum("rank").notNull(),
+		joinedAt: timestamp("joined_at").defaultNow().notNull()
 	},
 	(t) => ({ userNewspaperIdx: uniqueIndex("user_newspaper_index").on(t.userId, t.newspaperId) })
 );

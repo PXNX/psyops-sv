@@ -83,12 +83,20 @@
 <PageContainer maxWidth="5xl">
 	<!-- Hero Header -->
 	<div
-		class="panel rounded-sm p-5 overflow-hidden"
+		class="panel rounded-sm p-5 overflow-hidden relative"
 		style={data.rulingPartyColor
 			? `background-image: linear-gradient(to bottom, ${data.rulingPartyColor}26, transparent 60%);`
 			: undefined}
 	>
-		<div class="flex items-center gap-5">
+		{#if data.region.stateLogo}
+			<img
+				src={data.region.stateLogo}
+				alt=""
+				aria-hidden="true"
+				class="pointer-events-none absolute -right-6 -top-6 size-40 object-cover opacity-[0.08] rounded-full"
+			/>
+		{/if}
+		<div class="flex items-center gap-5 relative">
 			<Logo
 				src="/coats/{data.region.id}.svg"
 				alt={data.region.name}

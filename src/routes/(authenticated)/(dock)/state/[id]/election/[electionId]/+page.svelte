@@ -13,13 +13,17 @@
 	import { onMount, onDestroy } from "svelte";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Badge } from "#lib/component/ui/index.js";
+	import { Badge, Button } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
 	let currentTime = $state(new Date());
 	let interval: ReturnType<typeof setInterval>;
 	let showVoteAnim = $state(false);
+	let isSubmittingVote = $state(false);
+	// Pending selection before the voter confirms — once `data.userVote` is set
+	// server-side, the vote is final and this no longer changes.
+	let selectedPartyId = $state<number | null>(null);
 
 	onMount(() => {
 		interval = setInterval(() => {
@@ -173,17 +177,18 @@
 		>
 			<p class="text-sm">You must be a resident of {data.state.name} to vote</p>
 		</div>
-	{:else if data.userVote && isActive}
+	{:else if data.userVote}
 		<div
 			class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center justify-center gap-3"
 		>
 			<FluentCheckmark20Filled class="size-4" />
-			<span class="text-sm">Vote cast. You can change your vote until the election ends.</span>
+			<span class="text-sm">Vote cast. Your vote is final and cannot be changed.</span>
 		</div>
 	{:else if canVote}
 		<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm p-4 text-center">
 			<p class="text-sm text-[#e3cbfb]">
-				{data.election.isInaugural ? "Cast your vote in the inaugural election" : "Cast your vote below"}
+				{data.election.isInaugural ? "Cast your vote in the inaugural election" : "Select a party, then confirm your vote below"}
+				— your choice is final once confirmed.
 			</p>
 		</div>
 	{/if}

@@ -27,7 +27,7 @@ import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { getContext } from "#lib/server/context.js";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getSignedDownloadUrl, getLogoUrl } from "#lib/server/backblaze.js";
 import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
@@ -222,7 +222,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const walletBalance = userWallet ? Number(userWallet.balance) : 0;
 
 	// Second wave: lookups that depend on the region / user residence.
-	const [regionBuildings, travelInfo, visaInfo, visaBlockedReason, warInfo, rulingPartyColor] = await Promise.all([
+	const [regionBuildings, travelInfo, visaInfo, visaBlockedReason, warInfo, rulingPartyColor, stateLogoUrl] = await Promise.all([
 		// Get state buildings (after pending constructions were completed above)
 		db.query.stateBuildings.findMany({
 			where: eq(stateBuildings.regionId, regionId),
@@ -415,7 +415,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				.limit(1);
 
 			return membership?.color ?? null;
-		})()
+		})(),
+		getLogoUrl(region.state?.logo)
 	]);
 
 	const {
@@ -448,7 +449,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			chromium: region.chromium,
 			stateId: region.stateId,
 			stateName: region.state?.name,
-			stateLogo: region.state?.logo
+			stateLogo: stateLogoUrl
 		},
 		rulingPartyColor,
 		population,

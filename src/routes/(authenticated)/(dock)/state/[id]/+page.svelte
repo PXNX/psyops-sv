@@ -168,19 +168,21 @@
 				{@const opponent = war.isAttacker ? war.defender : war.attacker}
 				<a
 					href="/war/{war.id}"
-					class="group flex items-center gap-3 sm:gap-4 bg-red-600/10 border border-red-500/30 rounded-sm p-4 hover:border-red-400/50 transition-colors"
+					class="group flex items-center gap-3 sm:gap-4 rounded-sm p-4 transition-colors {war.isAttacker
+						? 'bg-red-600/10 border border-red-500/30 hover:border-red-400/50'
+						: 'bg-[#2369b5]/18 border border-[#5eaef5]/30 hover:border-[#5eaef5]/50'}"
 				>
 					<Logo
 						src={opponent.logo}
 						alt={opponent.name}
 						class="size-10 sm:size-12 shrink-0"
 						placeholderIcon={FluentShield20Filled}
-						placeholderGradient="from-red-600/40 to-red-600/40"
+						placeholderGradient={war.isAttacker ? "from-red-600/40 to-red-600/40" : "from-[#2369b5]/40 to-[#2369b5]/40"}
 					/>
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-0.5">
-							<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
-							<span class="text-[10px] text-red-300/80 uppercase tracking-wide">
+							<div class="size-1.5 rounded-full animate-pulse {war.isAttacker ? 'bg-red-500' : 'bg-[#5eaef5]'}"></div>
+							<span class="text-[10px] uppercase tracking-wide {war.isAttacker ? 'text-red-300/80' : 'text-[#b3dcff]/80'}">
 								{war.isAttacker ? "Attacking" : "Defending against"}
 							</span>
 						</div>
@@ -188,7 +190,11 @@
 							{opponent.name}
 						</div>
 					</div>
-					<span class="text-[#a8a083] group-hover:text-red-300 transition-colors">→</span>
+					<span
+						class="text-[#a8a083] transition-colors {war.isAttacker
+							? 'group-hover:text-red-300'
+							: 'group-hover:text-[#b3dcff]'}">→</span
+					>
 				</a>
 			{/each}
 		</section>
@@ -441,6 +447,10 @@
 
 				{#if data.nextElection && electionState()}
 					{@const state = electionState()}
+
+					{#if data.parliamentMembers.length > 0}
+						<div class="border-t border-[#c8b47a]/10 pt-2"></div>
+					{/if}
 
 					{#if data.nextElection.isInaugural && state === "scheduled"}
 						<!-- Inaugural Election - Scheduled -->
