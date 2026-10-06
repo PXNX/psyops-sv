@@ -230,7 +230,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		warInfo,
 		rulingPartyColor,
 		stateLogoUrl,
-		borderingRegionIdsUnderAttackByUs
+		borderingRegionIdsUnderAttackByUs,
+		isInParty
 	] = await Promise.all([
 		// Get state buildings (after pending constructions were completed above)
 		db.query.stateBuildings.findMany({
@@ -444,7 +445,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			});
 
 			return new Set(attacks.map((b) => b.regionId));
-		})()
+		})(),
+		db.query.partyMembers.findFirst({ where: eq(partyMembers.userId, account.id) }).then((m) => !!m)
 	]);
 
 	const {
@@ -483,6 +485,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		population,
 		hasResidence,
 		hasPendingResidenceApp: !!pendingResidenceApp,
+		isInParty,
 		allowsFreeMovement,
 		hasInauguralElection,
 		travelInfo,

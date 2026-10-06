@@ -2853,7 +2853,7 @@ export const birthdayRewardsRelations = relations(birthdayRewards, ({ one }) => 
 export type BirthdayReward = typeof birthdayRewards.$inferSelect;
 
 // --- BROADCASTS (single record shown on dashboard) ---
-export const broadcastTypeEnum = pgEnum("broadcast_type", ["system", "state", "party"]);
+export const broadcastTypeEnum = pgEnum("broadcast_type", ["system", "state", "party", "bloc"]);
 
 export const broadcasts = pgTable(
 	"broadcasts",
@@ -2867,6 +2867,7 @@ export const broadcasts = pgTable(
 			.references(() => accounts.id, { onDelete: "cascade" }),
 		stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
 		partyId: integer("party_id").references(() => politicalParties.id, { onDelete: "cascade" }),
+		blocId: integer("bloc_id").references(() => blocs.id, { onDelete: "cascade" }),
 		isActive: boolean("is_active").default(true).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull()
 	},
@@ -2874,6 +2875,7 @@ export const broadcasts = pgTable(
 		activeIdx: index("idx_broadcast_active").on(t.isActive),
 		stateIdx: index("idx_broadcast_state").on(t.stateId, t.isActive),
 		partyIdx: index("idx_broadcast_party").on(t.partyId, t.isActive),
+		blocIdx: index("idx_broadcast_bloc").on(t.blocId, t.isActive),
 		typeIdx: index("idx_broadcast_type").on(t.broadcastType, t.isActive)
 	})
 );
@@ -2890,6 +2892,10 @@ export const broadcastsRelations = relations(broadcasts, ({ one }) => ({
 	party: one(politicalParties, {
 		fields: [broadcasts.partyId],
 		references: [politicalParties.id]
+	}),
+	bloc: one(blocs, {
+		fields: [broadcasts.blocId],
+		references: [blocs.id]
 	})
 }));
 

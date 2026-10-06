@@ -16,6 +16,8 @@
 		allowsFreeMovement,
 		hasInauguralElection,
 		hasPendingResidenceApp,
+		hasResidence = false,
+		isInParty = false,
 		travelInfo,
 		walletBalance = 0
 	} = $props<{
@@ -25,6 +27,8 @@
 		allowsFreeMovement: boolean;
 		hasInauguralElection: boolean;
 		hasPendingResidenceApp: boolean;
+		hasResidence?: boolean;
+		isInParty?: boolean;
 		travelInfo: { distanceKm: number; cost: number; timeHours: number } | null;
 		walletBalance?: number;
 	}>();
@@ -34,28 +38,8 @@
 	const canAfford = $derived(!travelInfo || walletBalance >= travelInfo.cost);
 </script>
 
-{#if allowsFreeMovement}
-	<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-5">
-		<div class="flex items-start gap-4">
-			<div class="size-12 bg-[#3f8a2a]/25 rounded-sm flex items-center justify-center flex-shrink-0">
-				<FluentLocationLive20Filled class="size-6 text-[#6fd14a]" />
-			</div>
-			<div class="flex-1">
-				<h2 class="text-lg font-semibold text-[#f5efd8] mb-1">Free Movement Zone</h2>
-				<p class="text-[#d3caa9] text-sm mb-4">
-					{#if isIndependent}
-						This independent region has open borders.
-					{:else if !hasInauguralElection}
-						Free movement available until inaugural election.
-					{/if}
-				</p>
-				<Button variant="soft-emerald" size="sm" icon={FluentHome20Filled} onclick={() => (showTravelSheet = true)}>
-					Travel to this Region
-				</Button>
-			</div>
-		</div>
-	</div>
-{:else if isIndependent}
+{#if isIndependent}
+	<!-- Unclaimed territory: one block, one button that adapts to where the viewer stands -->
 	<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5">
 		<div class="flex items-start gap-4">
 			<div class="size-12 bg-[#f2b01e]/15 rounded-sm flex items-center justify-center flex-shrink-0">
@@ -64,10 +48,44 @@
 			<div class="flex-1">
 				<h2 class="text-lg font-semibold text-[#f5efd8] mb-1">Unclaimed Territory</h2>
 				<p class="text-[#d3caa9] text-sm mb-4">
-					This region can be claimed by founding a new state. Create a political party to establish your government.
+					This region has no state and open borders.
+					{#if hasResidence}
+						Found a political party here to establish a government.
+					{:else}
+						Move here, then found a political party to establish a government.
+					{/if}
 				</p>
-				<Button variant="primary" size="sm" icon={FluentFlag20Filled} href="/party/create?regionId={regionId}">
-					Found a State
+				{#if !hasResidence}
+					<Button variant="soft-emerald" size="sm" icon={FluentHome20Filled} onclick={() => (showTravelSheet = true)}>
+						Travel to this Region
+					</Button>
+				{:else if !isInParty}
+					<Button variant="primary" size="sm" icon={FluentFlag20Filled} href="/party/create?regionId={regionId}">
+						Found a State
+					</Button>
+				{:else}
+					<p class="text-xs text-[#a8a083]">
+						You're already a member of a party, so you can't found a new one here.
+					</p>
+				{/if}
+			</div>
+		</div>
+	</div>
+{:else if allowsFreeMovement}
+	<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-5">
+		<div class="flex items-start gap-4">
+			<div class="size-12 bg-[#3f8a2a]/25 rounded-sm flex items-center justify-center flex-shrink-0">
+				<FluentLocationLive20Filled class="size-6 text-[#6fd14a]" />
+			</div>
+			<div class="flex-1">
+				<h2 class="text-lg font-semibold text-[#f5efd8] mb-1">Free Movement Zone</h2>
+				<p class="text-[#d3caa9] text-sm mb-4">
+					{#if !hasInauguralElection}
+						Free movement available until inaugural election.
+					{/if}
+				</p>
+				<Button variant="soft-emerald" size="sm" icon={FluentHome20Filled} onclick={() => (showTravelSheet = true)}>
+					Travel to this Region
 				</Button>
 			</div>
 		</div>

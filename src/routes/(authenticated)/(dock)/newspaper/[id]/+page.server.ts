@@ -9,7 +9,7 @@ import {
 	files,
 	userWallets
 } from "#lib/server/schema.js";
-import { error, fail, redirect } from "@sveltejs/kit";
+import { error, fail } from "@sveltejs/kit";
 import { and, eq, desc, sql } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getLogoUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
@@ -310,46 +310,5 @@ export const actions: Actions = {
 			console.error("Update newspaper error:", err);
 			return message(form, "Failed to update newspaper", { status: 500 });
 		}
-	},
-
-	// Powers the "Delete Newspaper" confirmation inside EditNewspaperSheet.svelte.
-	deleteNewspaper: async ({ params, locals }) => {
-		const account = locals.account!;
-		const newspaperId = parseInt(params.id);
-
-		try {
-			// Get newspaper details
-			const newspaper = await db.query.newspapers.findFirst({
-				where: eq(newspapers.id, newspaperId)
-			});
-
-			if (!newspaper) {
-				return fail(404, { error: "Newspaper not found" });
-			}
-
-			// Check if user is the owner
-			const ownership = await db.query.journalists.findFirst({
-				where: and(
-					eq(journalists.userId, account.id),
-					eq(journalists.newspaperId, newspaperId),
-					eq(journalists.rank, "owner")
-				)
-			});
-
-			if (!ownership) {
-				return fail(403, { error: "Only the newspaper owner can delete it" });
-			}
-
-			// Delete newspaper (cascade will handle journalists and articles)
-			await db.delete(newspapers).where(eq(newspapers.id, newspaperId));
-		} catch (err) {
-			if (err instanceof Response && err.status === 303) {
-				throw err;
-			}
-			console.error("Delete newspaper error:", err);
-			return fail(500, { error: "Failed to delete newspaper" });
-		}
-
-		redirect(303, "/newspaper");
 	}
 };

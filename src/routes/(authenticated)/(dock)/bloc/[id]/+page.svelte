@@ -12,6 +12,7 @@
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentThumbLike20Filled from "~icons/fluent/thumb-like-20-filled";
 	import FluentThumbDislike20Filled from "~icons/fluent/thumb-dislike-20-filled";
+	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 	import { enhance } from "$app/forms";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
@@ -90,6 +91,13 @@
 			{/if}
 		</div>
 	</div>
+
+	<!-- Leader Action Buttons -->
+	{#if data.isLeader}
+		<div class="flex gap-2 flex-wrap">
+			<Button href="/inbox" variant="soft-amber" size="sm" icon={FluentMegaphone20Filled}>Broadcast</Button>
+		</div>
+	{/if}
 
 	<!-- Leadership -->
 	<section class="panel rounded-sm p-5 space-y-4">
