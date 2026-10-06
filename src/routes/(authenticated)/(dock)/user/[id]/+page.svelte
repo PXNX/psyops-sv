@@ -24,6 +24,8 @@
 	import FluentPeopleTeam20Filled from "~icons/fluent/people-team-20-filled";
 	import FluentCrown20Filled from "~icons/fluent/crown-20-filled";
 	import FluentGlobeShield20Filled from "~icons/fluent/globe-shield-20-filled";
+	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
+	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 
 	import Modal from "#lib/component/Modal.svelte";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
@@ -546,6 +548,48 @@
 						hoverColor="purple"
 					/>
 
+					<Button
+						href="/user/{data.user.id}/career"
+						variant="soft-purple"
+						size="sm"
+						block
+						icon={FluentChevronRight20Filled}
+					>
+						View Full Career Timeline
+					</Button>
+				</div>
+			</section>
+
+			<!-- Organizations Section: newspaper, company and party memberships -->
+			<section class="panel rounded-sm p-5 space-y-4">
+				<h2 class="section-title">Organizations</h2>
+				<div class="space-y-4">
+					{#each data.organizations.companies as company (company.id)}
+						<ProfileItem
+							href="/company/{company.id}"
+							logo={company.logo}
+							logoAlt={company.name}
+							placeholderIcon={FluentBuilding20Filled}
+							placeholderGradient="from-[#3f8a2a] to-[#1f4a14]"
+							title={company.name}
+							subtitle="Owner"
+							hoverColor="emerald"
+						/>
+					{/each}
+
+					{#each data.organizations.newspapers as newspaper (newspaper.newspaperId)}
+						<ProfileItem
+							href="/newspaper/{newspaper.newspaperId}"
+							logo={newspaper.logo}
+							logoAlt={newspaper.name}
+							placeholderIcon={FluentBriefcase20Filled}
+							placeholderGradient="from-[#2369b5] to-[#123a6b]"
+							title={newspaper.name}
+							subtitle={newspaper.rank.charAt(0).toUpperCase() + newspaper.rank.slice(1)}
+							hoverColor="blue"
+						/>
+					{/each}
+
 					{#if data.party}
 						<ProfileItem
 							href="/party/{data.party.id}"
@@ -597,15 +641,9 @@
 						</a>
 					{/if}
 
-					<Button
-						href="/user/{data.user.id}/career"
-						variant="soft-purple"
-						size="sm"
-						block
-						icon={FluentChevronRight20Filled}
-					>
-						View Full Career Timeline
-					</Button>
+					{#if data.organizations.companies.length === 0 && data.organizations.newspapers.length === 0 && !data.party && !data.isOwnProfile}
+						<p class="text-sm text-[#a8a083] text-center py-2">No organization memberships</p>
+					{/if}
 				</div>
 			</section>
 		</div>
