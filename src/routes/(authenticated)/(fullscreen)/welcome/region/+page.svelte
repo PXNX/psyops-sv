@@ -25,10 +25,10 @@
 	}
 
 	function getPopulationColor(count: number): string {
-		if (count === 0) return "text-green-400";
-		if (count < 10) return "text-emerald-400";
-		if (count < 50) return "text-yellow-400";
-		if (count < 100) return "text-orange-400";
+		if (count === 0) return "text-[#c6dfbf]";
+		if (count < 10) return "text-[#8fae88]";
+		if (count < 50) return "text-[#f7c56b]";
+		if (count < 100) return "text-[#e6a527]";
 		return "text-red-400";
 	}
 </script>
@@ -37,8 +37,8 @@
 	<!-- Header -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>
 		<div class="flex justify-center">
-			<div class="size-20 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-2xl flex items-center justify-center">
-				<FluentGlobe20Filled class="size-10 text-[#b7d0e6]" />
+			<div class="size-20 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center">
+				<FluentGlobe20Filled class="size-10 text-[#7ba0c8]" />
 			</div>
 		</div>
 		<h1 class="text-4xl font-bold text-[#fff7e8]">Choose Your Starting Region</h1>
@@ -50,12 +50,12 @@
 	<!-- User Location Info -->
 	{#if data.userLocation}
 		<div
-			class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-xl p-5"
+			class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-5"
 			in:fly={{ y: 20, duration: 500, delay: 200 }}
 		>
 			<div class="flex items-start gap-3">
-				<div class="size-10 bg-[#315d8d]/28 rounded-lg flex items-center justify-center shrink-0">
-					<FluentLocation20Filled class="size-5 text-[#b7d0e6]" />
+				<div class="size-10 bg-[#315d8d]/28 rounded-sm flex items-center justify-center shrink-0">
+					<FluentLocation20Filled class="size-5 text-[#7ba0c8]" />
 				</div>
 				<div class="space-y-1">
 					<p class="text-sm font-medium text-[#b7d0e6]">
@@ -97,11 +97,11 @@
 					<button
 						type="submit"
 						disabled={isSubmitting}
-						class="group w-full panel-interactive rounded-xl p-5 disabled:opacity-50 disabled:cursor-not-allowed text-left"
+						class="group w-full panel-interactive rounded-sm p-5 disabled:opacity-50 disabled:cursor-not-allowed text-left"
 					>
 						<div class="flex items-center gap-4">
 							<!-- Region Logo -->
-							<div class="size-16 shrink-0 rounded-lg overflow-hidden">
+							<div class="size-16 shrink-0 rounded-sm overflow-hidden">
 								<Logo
 									src="/coats/{region.id}.svg"
 									alt={getRegionName(region.id)}
@@ -113,7 +113,7 @@
 
 							<!-- Region Info -->
 							<div class="flex-1 min-w-0">
-								<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#f7c56b] transition-colors truncate">
+								<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
 									{getRegionName(region.id)}
 								</h3>
 
@@ -144,7 +144,7 @@
 
 							<!-- Chevron -->
 							<FluentChevronRight20Filled
-								class="size-5 text-[#d9ccb7] group-hover:text-[#f7c56b] transition-colors shrink-0"
+								class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors shrink-0"
 							/>
 						</div>
 					</button>

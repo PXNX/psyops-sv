@@ -2,6 +2,9 @@
 <script lang="ts">
 	import IconDismiss from "~icons/fluent/dismiss-24-regular";
 	import IconButton from "#lib/component/ui/IconButton.svelte";
+	import { fade, fly } from "svelte/transition";
+	import { backOut, cubicIn } from "svelte/easing";
+	import { prefersReducedMotion } from "svelte/motion";
 
 	let {
 		open = $bindable(false),
@@ -12,6 +15,9 @@
 		title?: string;
 		children: any;
 	} = $props();
+
+	// Spring up with a slight overshoot, drop away quickly on close.
+	const motion = $derived(prefersReducedMotion.current ? 0 : 1);
 
 	function handleClose() {
 		open = false;
@@ -29,10 +35,19 @@
 {#if open}
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div class="fixed inset-0 z-50" role="dialog" aria-modal="true" onkeydown={handleKeydown}>
-		<div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick={handleBackdropClick} role="presentation"></div>
+		<div
+			class="absolute inset-0 bg-black/60 backdrop-blur-sm"
+			onclick={handleBackdropClick}
+			role="presentation"
+			transition:fade={{ duration: 200 * motion }}
+		></div>
 
-		<div class="absolute inset-x-0 bottom-0 animate-slide-up">
-			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-md max-h-[85vh] flex flex-col">
+		<div
+			class="absolute inset-x-0 -bottom-12"
+			in:fly={{ y: 420, duration: 520 * motion, easing: backOut, opacity: 1 }}
+			out:fly={{ y: 420, duration: 200 * motion, easing: cubicIn, opacity: 1 }}
+		>
+			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-md max-h-[calc(85vh+3rem)] pb-12 flex flex-col">
 				<div class="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
 					<div class="mx-auto w-10 h-1 rounded-full bg-[#dfceb0]/25 absolute top-2 left-1/2 -translate-x-1/2"></div>
 					{#if title}

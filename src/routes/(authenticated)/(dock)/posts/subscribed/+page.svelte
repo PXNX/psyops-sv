@@ -114,7 +114,9 @@
 					{searchQuery ? "No posts found" : "No posts from subscribed newspapers yet"}
 				</p>
 				{#if !searchQuery}
-					<Button variant="primary" href="/newspaper" icon={FluentSearch20Filled} class="mt-4">Discover Newspapers</Button>
+					<Button variant="primary" href="/newspaper" icon={FluentSearch20Filled} class="mt-4"
+						>Discover Newspapers</Button
+					>
 				{/if}
 			</div>
 		{:else}
@@ -158,7 +160,9 @@
 						</div>
 					</div>
 
-					<FluentChevronRight20Filled class="size-4 shrink-0 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+					<FluentChevronRight20Filled
+						class="size-4 shrink-0 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors"
+					/>
 				</a>
 			{/each}
 

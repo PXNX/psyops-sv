@@ -348,7 +348,10 @@
 									</a>
 								</div>
 								<div class="chat-header text-xs md:text-sm mb-1 flex items-center gap-2 px-1">
-									<a href="/user/{group.senderId}" class="text-[#e5d8c1] hover:text-[#f2c463] transition-colors font-semibold">
+									<a
+										href="/user/{group.senderId}"
+										class="text-[#e5d8c1] hover:text-[#f2c463] transition-colors font-semibold"
+									>
 										{group.senderName || "Anonymous"}
 									</a>
 									{#if group.isLeader}

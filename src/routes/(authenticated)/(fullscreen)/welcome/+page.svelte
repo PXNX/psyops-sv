@@ -18,21 +18,21 @@
 			description:
 				"Choose your region, participate in governance, and help shape laws and policies through democratic processes.",
 			wrapClass: "bg-[#315d8d]/18 border border-[#7ba0c8]/30",
-			iconClass: "text-[#b7d0e6]"
+			iconClass: "text-[#7ba0c8]"
 		},
 		{
 			icon: FluentPeople20Filled,
 			title: "Political Parties & Elections",
 			description: "Found your own party, recruit members, and compete in elections to gain seats in parliament.",
 			wrapClass: "bg-[#8c709b]/15 border border-[#b7a0c5]/30",
-			iconClass: "text-[#d5c4df]"
+			iconClass: "text-[#b7a0c5]"
 		},
 		{
 			icon: FluentFactory20Filled,
 			title: "Economic System",
 			description: "Build companies, manage factories, trade resources, and develop a thriving economy.",
 			wrapClass: "bg-[#587252]/18 border border-[#8fae88]/30",
-			iconClass: "text-[#c6dfbf]"
+			iconClass: "text-[#8fae88]"
 		},
 		{
 			icon: FluentNewspaper20Filled,
@@ -55,7 +55,7 @@
 	<!-- Logo & Title -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>
 		<div class="flex justify-center">
-			<div class="size-24 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-3xl flex items-center justify-center">
+			<div class="size-24 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center">
 				<PsyopsLogo class="size-14 text-[#f7c56b]" />
 			</div>
 		</div>
@@ -69,11 +69,11 @@
 	<!-- Features Grid -->
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4" in:fly={{ y: 20, duration: 500, delay: 200 }}>
 		{#each features as feature, i}
-			<div class="panel-interactive rounded-xl p-6 space-y-3" in:fly={{ y: 20, duration: 500, delay: 300 + i * 100 }}>
-				<div class="size-12 {feature.wrapClass} rounded-xl flex items-center justify-center">
+			<div class="panel rounded-sm p-5 space-y-3" in:fly={{ y: 20, duration: 500, delay: 300 + i * 100 }}>
+				<div class="size-12 {feature.wrapClass} rounded-sm flex items-center justify-center">
 					<svelte:component this={feature.icon} class="size-6 {feature.iconClass}" />
 				</div>
-				<h3 class="text-lg font-semibold text-[#fff7e8]">{feature.title}</h3>
+				<h3 class="section-title">{feature.title}</h3>
 				<p class="text-sm text-[#d9ccb7] leading-relaxed">{feature.description}</p>
 			</div>
 		{/each}

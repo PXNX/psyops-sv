@@ -30,7 +30,7 @@
 		...rest
 	}: Props = $props();
 
-	const classes = $derived(buttonClass({ variant, size, shape, class: className }));
+	const classes = $derived(buttonClass({ variant, size, shape, class: `group ${className}` }));
 	const iconSize = $derived(size === "xs" ? "size-4" : size === "lg" ? "size-6" : "size-5");
 	const spinnerSize = $derived(size === "xs" || size === "sm" ? "loading-xs" : "loading-sm");
 </script>
@@ -49,7 +49,7 @@
 		{#if loading}
 			<span class="loading loading-spinner {spinnerSize}"></span>
 		{:else}
-			<Icon class={iconSize} />
+			<Icon class="{iconSize} press-tilt" />
 		{/if}
 	</a>
 {:else}
@@ -57,7 +57,7 @@
 		{#if loading}
 			<span class="loading loading-spinner {spinnerSize}"></span>
 		{:else}
-			<Icon class={iconSize} />
+			<Icon class="{iconSize} press-tilt" />
 		{/if}
 	</button>
 {/if}

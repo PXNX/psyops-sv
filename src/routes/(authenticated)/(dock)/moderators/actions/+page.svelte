@@ -153,7 +153,9 @@
 						<!-- Header -->
 						<div class="flex items-center gap-3 mb-3 flex-wrap">
 							<span
-								class="badge badge-sm rounded-sm border border-[#dfceb0]/15 {getActionColor(action.type)} bg-[#102239]/70"
+								class="badge badge-sm rounded-sm border border-[#dfceb0]/15 {getActionColor(
+									action.type
+								)} bg-[#102239]/70"
 							>
 								{getActionLabel(action.type)}
 							</span>

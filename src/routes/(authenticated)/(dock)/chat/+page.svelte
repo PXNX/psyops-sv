@@ -47,7 +47,6 @@
 	});
 </script>
 
-
 <PageContainer maxWidth="4xl">
 	<PageHeader title="Messages" icon={FluentChat20Filled} />
 
@@ -63,9 +62,7 @@
 
 				<div class="flex-1 min-w-0">
 					<div class="flex items-center gap-2 mb-1.5">
-						<h3
-							class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-sm"
-						>
+						<h3 class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-sm">
 							Global Chat (English)
 						</h3>
 						<Badge tone="blue" size="xs" class="hidden sm:inline-flex">Global</Badge>

@@ -206,7 +206,10 @@
 						{#each data.stats.topArticles as article}
 							<tr class="border-b border-[#dfceb0]/15 hover:bg-[#102239]/50 transition-colors">
 								<td class="py-3 px-4">
-									<a href="/posts/{article.id}" class="text-[#fff7e8] hover:text-[#f2c463] font-medium transition-colors">
+									<a
+										href="/posts/{article.id}"
+										class="text-[#fff7e8] hover:text-[#f2c463] font-medium transition-colors"
+									>
 										{article.title}
 									</a>
 								</td>

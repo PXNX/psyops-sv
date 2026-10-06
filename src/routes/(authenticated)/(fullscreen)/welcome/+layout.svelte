@@ -17,8 +17,6 @@
 	<title>PsyOps | Welcome</title>
 </svelte:head>
 
-<div
-	class="flex flex-col justify-center items-center space-y-4 bg-gradient-to-br from-[#0c1929] via-[#0e1d2f] to-[#0c1929] py-8 px-4 min-h-dvh"
->
+<div class="flex flex-col justify-center items-center space-y-4 py-8 px-4 min-h-dvh">
 	{@render children()}
 </div>

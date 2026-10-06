@@ -283,7 +283,12 @@
 										clearImage();
 									}}
 									disabled={$submitting}
-									class={buttonClass({ variant: "secondary", size: "sm", shape: "circle", class: "absolute top-2 right-2" })}
+									class={buttonClass({
+										variant: "secondary",
+										size: "sm",
+										shape: "circle",
+										class: "absolute top-2 right-2"
+									})}
 								>
 									✕
 								</button>

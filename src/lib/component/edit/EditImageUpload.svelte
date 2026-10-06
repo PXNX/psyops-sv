@@ -1,7 +1,7 @@
 <script lang="ts">
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
-	import { buttonClass } from "#lib/component/ui/styles";
+	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	interface Props {
 		previewUrl: string | null;

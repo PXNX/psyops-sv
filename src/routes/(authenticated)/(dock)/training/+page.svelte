@@ -14,6 +14,7 @@
 	import Modal from "#lib/component/Modal.svelte";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
@@ -169,6 +170,8 @@
 </script>
 
 <PageContainer maxWidth="6xl">
+	<PageHeader title="Training" subtitle="Train, exercise and manage your military units" icon={FluentTarget} />
+
 	{#if trainingDisabled}
 		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
 			<p class="text-sm font-medium">{trainingDisabledReason}</p>
