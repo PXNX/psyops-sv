@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/newspaper/[id]/+page.svelte -->
 <script lang="ts">
 	import MdiHeart from "~icons/mdi/heart";
-	import FluentSettings20Filled from "~icons/fluent/settings-20-filled";
+	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import MdiNewspaper from "~icons/mdi/newspaper";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -13,6 +13,7 @@
 	import { enhance } from "$app/forms";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
 	import EditNewspaperSheet from "./EditNewspaperSheet.svelte";
 
 	let { data } = $props();
@@ -58,7 +59,17 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Hero Header -->
-	<div class="panel rounded-sm p-5">
+	<div class="panel rounded-sm p-5 relative">
+		{#if data.userRole === "owner"}
+			<IconButton
+				icon={FluentEdit20Filled}
+				label="Edit Newspaper"
+				variant="secondary"
+				size="sm"
+				class="absolute top-4 right-4"
+				onclick={() => (showEditNewspaperSheet = true)}
+			/>
+		{/if}
 		<div>
 			<div class="flex flex-col sm:flex-row items-start sm:items-center gap-5">
 				<!-- Logo -->
@@ -162,17 +173,6 @@
 					icon={FluentChartMultiple20Regular}
 				>
 					Statistics
-				</Button>
-			{/if}
-
-			{#if data.userRole === "owner"}
-				<Button
-					size="sm"
-					variant="secondary"
-					icon={FluentSettings20Filled}
-					onclick={() => (showEditNewspaperSheet = true)}
-				>
-					Settings
 				</Button>
 			{/if}
 		</div>
