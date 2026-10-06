@@ -147,7 +147,9 @@
 							{#each data.candidates as candidate}
 								{@const isMyVote = data.myBlocLeaderVote === candidate.userId}
 								<div
-									class="panel-muted rounded-sm overflow-hidden {isMyVote ? 'border-[#8fae88]/50' : 'border-[#dfceb0]/10'}"
+									class="panel-muted rounded-sm overflow-hidden {isMyVote
+										? 'border-[#8fae88]/50'
+										: 'border-[#dfceb0]/10'}"
 								>
 									<ProfileItem
 										href="/user/{candidate.userId}"
@@ -200,7 +202,9 @@
 		</div>
 	{/if}
 	{#if form?.success}
-		<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3 text-sm">
+		<div
+			class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3 text-sm"
+		>
 			{form.message ?? "Bloc membership updated"}
 		</div>
 	{/if}

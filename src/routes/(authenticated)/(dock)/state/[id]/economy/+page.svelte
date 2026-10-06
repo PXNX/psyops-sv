@@ -156,7 +156,9 @@
 			</div>
 			<div class="panel-muted rounded-sm p-4">
 				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Total Collected</p>
-				<p class="text-2xl font-bold font-mono text-[#b7d0e6]">${(data.treasury.totalCollected / 100).toLocaleString()}</p>
+				<p class="text-2xl font-bold font-mono text-[#b7d0e6]">
+					${(data.treasury.totalCollected / 100).toLocaleString()}
+				</p>
 			</div>
 			<div class="panel-muted rounded-sm p-4">
 				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Total Spent</p>

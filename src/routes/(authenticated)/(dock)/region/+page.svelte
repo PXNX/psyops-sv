@@ -129,13 +129,16 @@
 						<span>{region.population.toLocaleString()}</span>
 					</div>
 					<div>
-						<span class="text-[#a89e8e]">Infrastructure:</span> {region.infrastructure || 0}
+						<span class="text-[#a89e8e]">Infrastructure:</span>
+						{region.infrastructure || 0}
 					</div>
 					<div>
-						<span class="text-[#a89e8e]">Economy:</span> {region.economy || 0}
+						<span class="text-[#a89e8e]">Economy:</span>
+						{region.economy || 0}
 					</div>
 					<div>
-						<span class="text-[#a89e8e]">Education:</span> {region.education || 0}
+						<span class="text-[#a89e8e]">Education:</span>
+						{region.education || 0}
 					</div>
 				</div>
 

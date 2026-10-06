@@ -119,7 +119,11 @@
 	<PageHeader
 		title="Construction"
 		icon={FluentHammer20Filled}
-		subtitle={data.isGovernor ? "As Governor" : data.isInfrastructureMinister ? "As Infrastructure Minister" : undefined}
+		subtitle={data.isGovernor
+			? "As Governor"
+			: data.isInfrastructureMinister
+				? "As Infrastructure Minister"
+				: undefined}
 		backHref="/region/{data.region.id}"
 		backLabel={regionName()}
 	/>
@@ -132,7 +136,10 @@
 				<p class="text-2xl font-bold font-mono text-[#fff7e8]">${data.treasuryBalance.toLocaleString()}</p>
 			</div>
 			{#if data.state}
-				<a href="/state/{data.state.id}" class="text-sm text-[#f7c56b] hover:text-[#f2c463] underline underline-offset-2">
+				<a
+					href="/state/{data.state.id}"
+					class="text-sm text-[#f7c56b] hover:text-[#f2c463] underline underline-offset-2"
+				>
 					View {data.state.name}
 				</a>
 			{/if}
@@ -158,7 +165,9 @@
 				<!-- Header -->
 				<div class="{colors.bg} {colors.border} border-b p-4">
 					<div class="flex items-start gap-3">
-						<div class="size-12 {colors.bg} border {colors.border} rounded-sm flex items-center justify-center shrink-0">
+						<div
+							class="size-12 {colors.bg} border {colors.border} rounded-sm flex items-center justify-center shrink-0"
+						>
 							<svelte:component this={building.icon} class="size-6 {colors.text}" />
 						</div>
 						<div class="flex-1">
