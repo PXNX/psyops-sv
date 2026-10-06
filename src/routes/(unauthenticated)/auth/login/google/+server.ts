@@ -38,5 +38,5 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	console.log("🔍 Login - Redirect URL:", next);
 	console.log("🔍 Login - State with redirect:", stateWithRedirect);
 
-	redirect(302, authUrl.toString());
+	redirect(302, authUrl.toString(), { external: true });
 };
