@@ -3,6 +3,7 @@
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -15,28 +16,36 @@
 
 	const { data, form } = $props();
 
-	let broadcastType = $state<"state" | "party">("state");
+	let broadcastType = $state<"state" | "party" | "bloc">("state");
 	let broadcastSubject = $state("");
 	let broadcastContent = $state("");
 	let isSubmitting = $state(false);
 
+	const availableTypes = $derived(
+		[
+			data.canBroadcastState && ("state" as const),
+			data.canBroadcastParty && ("party" as const),
+			data.canBroadcastBloc && ("bloc" as const)
+		].filter((t) => t !== false)
+	);
+
 	$effect(() => {
-		if (data.canBroadcastState && !data.canBroadcastParty) {
-			broadcastType = "state";
-		} else if (!data.canBroadcastState && data.canBroadcastParty) {
-			broadcastType = "party";
+		if (!availableTypes.includes(broadcastType) && availableTypes.length > 0) {
+			broadcastType = availableTypes[0];
 		}
 	});
+
+	const actionByType = { state: "broadcastState", party: "broadcastParty", bloc: "broadcastBloc" } as const;
 </script>
 
-{#if !data.canBroadcastState && !data.canBroadcastParty}
+{#if !data.canBroadcastState && !data.canBroadcastParty && !data.canBroadcastBloc}
 	<PageContainer maxWidth="4xl">
 		<div class="panel-muted rounded-sm p-12 text-center">
 			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
 				<FluentMail20Filled class="size-8 text-[#a8a083]" />
 			</div>
 			<h2 class="text-xl font-bold text-[#f5efd8] mb-2">No Broadcast Access</h2>
-			<p class="text-[#a8a083]">Only presidents and party leaders can send broadcast messages.</p>
+			<p class="text-[#a8a083]">Only presidents, party leaders and bloc leaders can send broadcast messages.</p>
 		</div>
 	</PageContainer>
 {:else}
@@ -44,11 +53,13 @@
 		<PageHeader
 			title="Broadcast"
 			icon={FluentMegaphone20Filled}
-			subtitle="Publish a broadcast shown on the dashboard of {data.canBroadcastState
-				? 'state residents'
-				: ''}{data.canBroadcastState && data.canBroadcastParty ? ' or ' : ''}{data.canBroadcastParty
-				? 'party members'
-				: ''}"
+			subtitle="Publish a broadcast shown on the dashboard of {[
+				data.canBroadcastState && 'state residents',
+				data.canBroadcastParty && 'party members',
+				data.canBroadcastBloc && 'bloc members'
+			]
+				.filter(Boolean)
+				.join(' or ')}"
 		/>
 
 		<!-- Active Broadcasts -->
@@ -96,13 +107,35 @@
 			</div>
 		{/if}
 
+		{#if data.activeBlocBroadcast}
+			<div class="bg-[#2369b5]/18 rounded-sm border border-[#5eaef5]/30 p-5">
+				<div class="flex items-start justify-between gap-3">
+					<div class="flex-1 min-w-0">
+						<div class="flex items-center gap-2 mb-2">
+							<FluentFlag20Filled class="size-5 text-[#5eaef5]" />
+							<h3 class="font-semibold text-[#b3dcff]">Active Bloc Broadcast</h3>
+						</div>
+						<h4 class="text-[#f5efd8] font-bold mb-1">{data.activeBlocBroadcast.title}</h4>
+						<p class="text-[#d3caa9] whitespace-pre-wrap text-sm">{data.activeBlocBroadcast.content}</p>
+						<p class="text-xs text-[#a8a083] mt-2">
+							{formatDateTime(data.activeBlocBroadcast.createdAt)}
+						</p>
+					</div>
+					<form method="POST" action="?/revokeBlocBroadcast" use:enhance>
+						<input type="hidden" name="broadcastId" value={data.activeBlocBroadcast.id} />
+						<Button type="submit" variant="soft-red" size="sm" icon={FluentDismiss20Filled}>Revoke</Button>
+					</form>
+				</div>
+			</div>
+		{/if}
+
 		<!-- Broadcast Form -->
 		<div class="panel rounded-sm p-5">
 			<h2 class="section-title mb-4">New Broadcast</h2>
 
 			<form
 				method="POST"
-				action="?/broadcast{broadcastType === 'state' ? 'State' : 'Party'}"
+				action="?/{actionByType[broadcastType]}"
 				use:enhance={() => {
 					isSubmitting = true;
 					return async ({ result, update }) => {
@@ -116,28 +149,43 @@
 				}}
 			>
 				<div class="space-y-4">
-					{#if data.canBroadcastState && data.canBroadcastParty}
+					{#if availableTypes.length > 1}
 						<div>
 							<span class="field-label">Broadcast To</span>
 							<div class="flex gap-2">
-								<Button
-									type="button"
-									grow
-									variant={broadcastType === "state" ? "soft-purple" : "subtle"}
-									icon={FluentBuildingGovernment20Filled}
-									onclick={() => (broadcastType = "state")}
-								>
-									State Residents
-								</Button>
-								<Button
-									type="button"
-									grow
-									variant={broadcastType === "party" ? "soft-emerald" : "subtle"}
-									icon={FluentPeople20Filled}
-									onclick={() => (broadcastType = "party")}
-								>
-									Party Members
-								</Button>
+								{#if data.canBroadcastState}
+									<Button
+										type="button"
+										grow
+										variant={broadcastType === "state" ? "soft-purple" : "subtle"}
+										icon={FluentBuildingGovernment20Filled}
+										onclick={() => (broadcastType = "state")}
+									>
+										State Residents
+									</Button>
+								{/if}
+								{#if data.canBroadcastParty}
+									<Button
+										type="button"
+										grow
+										variant={broadcastType === "party" ? "soft-emerald" : "subtle"}
+										icon={FluentPeople20Filled}
+										onclick={() => (broadcastType = "party")}
+									>
+										Party Members
+									</Button>
+								{/if}
+								{#if data.canBroadcastBloc}
+									<Button
+										type="button"
+										grow
+										variant={broadcastType === "bloc" ? "soft-blue" : "subtle"}
+										icon={FluentFlag20Filled}
+										onclick={() => (broadcastType = "bloc")}
+									>
+										Bloc Members
+									</Button>
+								{/if}
 							</div>
 						</div>
 					{/if}

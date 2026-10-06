@@ -15,7 +15,6 @@
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
-	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import FluentPersonDelete20Filled from "~icons/fluent/person-delete-20-filled";
@@ -132,16 +131,12 @@
 {:else}
 	<PageContainer maxWidth="5xl">
 		<!-- Hero -->
-		<div class="panel rounded-sm p-5 relative overflow-hidden {data.user.isPremium ? 'border-[#f2b01e]/55' : ''}">
-			{#if data.party?.color}
-				<!-- Party colour rule -->
-				<div
-					class="absolute inset-x-0 top-0 h-1"
-					style="background-color: {data.party.color};"
-					aria-hidden="true"
-				></div>
-			{/if}
-
+		<div
+			class="panel rounded-sm p-5 relative overflow-hidden {data.user.isPremium ? 'border-[#f2b01e]/55' : ''}"
+			style={data.party?.color
+				? `background-color: ${data.party.color}0d; background-image: radial-gradient(circle at top, ${data.party.color}40, transparent 70%);`
+				: undefined}
+		>
 			{#if data.isOwnProfile}
 				<IconButton
 					icon={FluentEdit20Filled}
@@ -188,10 +183,6 @@
 				</Button>
 
 				{#if data.isOwnProfile}
-					<Button variant="soft-blue" size="sm" href="/inbox" icon={FluentMail20Filled}>
-						<span class="hidden sm:inline">Inbox</span>
-					</Button>
-
 					<Button variant="secondary" size="sm" href="/settings" icon={FluentSettingsCogMultiple20Filled}>
 						<span class="hidden sm:inline">Settings</span>
 					</Button>

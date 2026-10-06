@@ -2,16 +2,12 @@
 <script lang="ts">
 	import { superForm, type SuperValidated } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
-	import { enhance as svelteEnhance } from "$app/forms";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
-	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import { newspaperSchema } from "./schema";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
-	import Modal from "#lib/component/Modal.svelte";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
@@ -52,8 +48,6 @@
 	let fileInput: HTMLInputElement;
 	let showCropper = $state(false);
 	let cropImageUrl = $state<string | null>(null);
-	let showDeleteModal = $state(false);
-	let isDeleting = $state(false);
 
 	const canEdit = $derived(canAfford);
 
@@ -315,64 +309,8 @@
 			</div>
 		{/if}
 
-		<!-- Danger Zone -->
-		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-4 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentWarning20Filled class="size-4 text-red-400" />
-				<h2 class="text-sm font-semibold text-red-300">Danger Zone</h2>
-			</div>
-			<div>
-				<p class="text-xs text-[#a8a083] mb-3">
-					Permanently delete this newspaper and all associated articles. This action cannot be undone.
-				</p>
-				<Button
-					type="button"
-					variant="soft-red"
-					size="sm"
-					icon={FluentDelete20Filled}
-					onclick={() => (showDeleteModal = true)}
-				>
-					Delete Newspaper
-				</Button>
-			</div>
-		</div>
 	</div>
 </BottomSheet>
-
-<!-- Delete Confirmation Modal -->
-<Modal bind:open={showDeleteModal} title="Delete Newspaper?" size="default">
-	<div class="space-y-4">
-		<p class="text-[#d3caa9]">
-			Are you sure you want to delete <strong>{newspaperName}</strong>?
-		</p>
-		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3">
-			<FluentWarning20Filled class="size-5 shrink-0" />
-			<p class="text-sm">
-				<strong>Warning:</strong> This will permanently delete all articles and members. This action cannot be undone.
-			</p>
-		</div>
-		<div class="flex justify-end gap-3 mt-6">
-			<Button type="button" variant="ghost" onclick={() => (showDeleteModal = false)} disabled={isDeleting}>
-				Cancel
-			</Button>
-			<form
-				method="POST"
-				action="?/deleteNewspaper"
-				use:svelteEnhance={() => {
-					isDeleting = true;
-					return async ({ update }) => {
-						await update();
-						isDeleting = false;
-					};
-				}}
-			>
-				<Button type="submit" variant="danger" icon={FluentDelete20Filled} loading={isDeleting}>
-					Delete Newspaper
-				</Button>
-			</form>
-		</div>
-	</div>
-</Modal>
 
 {#if showCropper && cropImageUrl}
 	<ImageCropper

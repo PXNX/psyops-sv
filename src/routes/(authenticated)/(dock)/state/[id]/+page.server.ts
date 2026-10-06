@@ -135,7 +135,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			id: regions.id,
 			stateId: regions.stateId,
 			rating: regions.rating,
-			population: sql<number>`count(${residences.id})::int`
+			population: sql<number>`count(${residences.id})::int`,
+			oil: regions.oil,
+			steel: regions.steel,
+			chromium: regions.chromium,
+			tungsten: regions.tungsten,
+			rubber: regions.rubber,
+			aluminium: regions.aluminium
 		})
 		.from(regions)
 		.leftJoin(residences, eq(residences.regionId, regions.id))

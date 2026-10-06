@@ -14,6 +14,7 @@
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 
 	import Logo from "#lib/component/Logo.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import SectionCard from "#lib/component/SectionCard.svelte";
 	import StatCard from "#lib/component/StatCard.svelte";
@@ -122,26 +123,6 @@
 		</div>
 	</div>
 
-	<!-- Independent Region Info -->
-	{#if isIndependent}
-		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5">
-			<div class="flex items-start gap-4">
-				<div class="size-12 bg-[#f2b01e]/15 rounded-sm flex items-center justify-center flex-shrink-0">
-					<FluentFlag20Filled class="size-6 text-[#ffd35c]" />
-				</div>
-				<div class="flex-1">
-					<h2 class="text-lg font-semibold text-[#f5efd8] mb-1">No State Established</h2>
-					<p class="text-sm text-[#d3caa9]">
-						This region is not part of any state. To establish a state here, <a
-							href="/party/create"
-							class="text-[#ffd35c] hover:text-[#ffcf47] underline underline-offset-2">create a political party</a
-						> — founding a party will create a new state in this region.
-					</p>
-				</div>
-			</div>
-		</div>
-	{/if}
-
 	<!-- Current Region Banner -->
 	{#if data.hasResidence}
 		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-5">
@@ -178,7 +159,7 @@
 	{/if}
 
 	<!-- Residence/Travel Actions -->
-	{#if !data.hasResidence && !data.activeTravel}
+	{#if (isIndependent || !data.hasResidence) && !data.activeTravel}
 		<ResidenceActions
 			regionId={data.region.id}
 			regionName={data.region.name}
@@ -186,6 +167,8 @@
 			allowsFreeMovement={data.allowsFreeMovement}
 			hasInauguralElection={data.hasInauguralElection}
 			hasPendingResidenceApp={data.hasPendingResidenceApp}
+			hasResidence={data.hasResidence}
+			isInParty={data.isInParty}
 			travelInfo={data.travelInfo}
 			walletBalance={data.walletBalance}
 		/>
@@ -492,66 +475,33 @@
 
 	<!-- Resources -->
 	{#if data.region.oil || data.region.steel || data.region.chromium || data.region.tungsten || data.region.rubber || data.region.aluminium}
+		{@const resourceEntries = [
+			{ name: "oil", value: data.region.oil },
+			{ name: "steel", value: data.region.steel },
+			{ name: "chromium", value: data.region.chromium },
+			{ name: "tungsten", value: data.region.tungsten },
+			{ name: "rubber", value: data.region.rubber },
+			{ name: "aluminium", value: data.region.aluminium }
+		].filter((r) => r.value)}
 		<SectionCard>
 			<h2 class="section-title mb-4">
-				<span class="text-lg">⛏️</span>
+				<FluentBuilding20Filled class="size-5 text-[#c8b47a]" />
 				Natural Resources
 			</h2>
 			<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-				{#if data.region.oil}
-					<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3 flex items-center gap-3">
-						<span class="text-2xl">⛽</span>
-						<div>
-							<p class="text-[10px] text-[#ffd35c] uppercase tracking-wide">Oil</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{data.region.oil}</p>
-						</div>
-					</div>
-				{/if}
-				{#if data.region.steel}
+				{#each resourceEntries as resource}
 					<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
-						<span class="text-2xl">🔩</span>
+						<div
+							class="size-9 shrink-0 flex items-center justify-center bg-[#1a1f15] rounded-full border border-[#c8b47a]/15"
+						>
+							<ResourceIcon name={resource.name} class="size-5" />
+						</div>
 						<div>
-							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Steel</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{data.region.steel}</p>
+							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide capitalize">{resource.name}</p>
+							<p class="text-lg font-bold text-[#f5efd8]">{resource.value}</p>
 						</div>
 					</div>
-				{/if}
-				{#if data.region.chromium}
-					<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-3 flex items-center gap-3">
-						<span class="text-2xl">💎</span>
-						<div>
-							<p class="text-[10px] text-[#b3dcff] uppercase tracking-wide">Chromium</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{data.region.chromium}</p>
-						</div>
-					</div>
-				{/if}
-				{#if data.region.tungsten}
-					<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm p-3 flex items-center gap-3">
-						<span class="text-2xl">⚡</span>
-						<div>
-							<p class="text-[10px] text-[#e3cbfb] uppercase tracking-wide">Tungsten</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{data.region.tungsten}</p>
-						</div>
-					</div>
-				{/if}
-				{#if data.region.rubber}
-					<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-3 flex items-center gap-3">
-						<span class="text-2xl">🌿</span>
-						<div>
-							<p class="text-[10px] text-[#b9f29a] uppercase tracking-wide">Rubber</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{data.region.rubber}</p>
-						</div>
-					</div>
-				{/if}
-				{#if data.region.aluminium}
-					<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
-						<span class="text-2xl">🔘</span>
-						<div>
-							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Aluminium</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{data.region.aluminium}</p>
-						</div>
-					</div>
-				{/if}
+				{/each}
 			</div>
 		</SectionCard>
 	{/if}

@@ -105,6 +105,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 			})
 		: Promise.resolve(null);
 
+	// Bloc broadcast (visible to residents of a state belonging to a bloc)
+	const blocBroadcastPromise = homeState?.blocId
+		? db.query.broadcasts.findFirst({
+				where: and(
+					eq(broadcasts.broadcastType, "bloc"),
+					eq(broadcasts.blocId, homeState.blocId),
+					eq(broadcasts.isActive, true)
+				),
+				orderBy: [desc(broadcasts.createdAt)],
+				with: {
+					issuer: { with: { profile: true } },
+					bloc: true
+				}
+			})
+		: Promise.resolve(null);
+
 	// --- Ongoing battles in user's region ---
 	const ongoingBattlesPromise = (async () => {
 		if (!primaryResidence) return [];
@@ -201,8 +217,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	})();
 
-	const [stateBroadcast, ongoingBattles, activeWars, stateSnapshot] = await Promise.all([
+	const [stateBroadcast, blocBroadcast, ongoingBattles, activeWars, stateSnapshot] = await Promise.all([
 		stateBroadcastPromise,
+		blocBroadcastPromise,
 		ongoingBattlesPromise,
 		activeWarsPromise,
 		stateSnapshotPromise
@@ -221,6 +238,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		systemBroadcast,
 		stateBroadcast,
 		partyBroadcast,
+		blocBroadcast,
 		ongoingBattles,
 		activeWars,
 		birthdayInfo

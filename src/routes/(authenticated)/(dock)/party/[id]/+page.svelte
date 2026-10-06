@@ -14,6 +14,7 @@
 	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
+	import { formatDate } from "#lib/utils/formatting.js";
 	import EditPartySheet from "./EditPartySheet.svelte";
 
 	const { data, form } = $props();
@@ -113,6 +114,7 @@
 				{#if data.party.description}
 					<p class="text-sm text-[#d3caa9] max-w-xl pt-1">{data.party.description}</p>
 				{/if}
+				<p class="text-xs text-[#a8a083]">Founded {formatDate(data.party.foundedAt)}</p>
 			</div>
 		</div>
 	</div>

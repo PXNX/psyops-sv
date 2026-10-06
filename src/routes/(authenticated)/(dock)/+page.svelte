@@ -20,6 +20,7 @@
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import FluentShieldLock20Filled from "~icons/fluent/shield-lock-20-filled";
+	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
 	import type { PageData } from "./$types";
 
@@ -182,82 +183,114 @@
 		{/if}
 	</SectionCard>
 
-	<!-- Active Broadcasts -->
-	{#if data.systemBroadcast || data.stateBroadcast || data.partyBroadcast}
-		<div class="space-y-3">
-			{#if data.systemBroadcast}
-				<div class="bg-red-600/10 rounded-sm border border-red-500/30 p-5">
-					<div class="flex items-start gap-3">
-						<div
-							class="size-10 bg-red-600/10 border border-red-500/30 rounded-sm flex items-center justify-center shrink-0"
-						>
-							<FluentMegaphone20Filled class="size-5 text-red-400" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 mb-1">
-								<span class="text-[10px] font-medium text-red-300 uppercase tracking-wide">System Broadcast</span>
-							</div>
-							<h3 class="text-[#f5efd8] font-bold">{data.systemBroadcast.title}</h3>
-							<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.systemBroadcast.content}</p>
-							<p class="text-xs text-[#a8a083] mt-2">
-								{data.systemBroadcast.issuer?.profile?.name || "Admin"} · {formatDate(data.systemBroadcast.createdAt)}
-							</p>
-						</div>
-					</div>
+	<!-- System Broadcast: shown separately, outranks everything below -->
+	{#if data.systemBroadcast}
+		<div class="relative overflow-hidden rounded-sm border-l-4 border-red-500 bg-[#141810] p-5">
+			<div class="flex items-center justify-between gap-3 mb-2">
+				<div class="flex items-center gap-2">
+					<FluentMegaphone20Filled class="size-4 text-red-400" />
+					<span class="text-[10px] font-bold text-red-300 uppercase tracking-[0.2em]">System Broadcast</span>
 				</div>
-			{/if}
-
-			{#if data.stateBroadcast}
-				<div class="bg-[#8a4fc0]/15 rounded-sm border border-[#c08cf0]/30 p-5">
-					<div class="flex items-start gap-3">
-						<div
-							class="size-10 bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm flex items-center justify-center shrink-0"
-						>
-							<FluentBuildingGovernment20Filled class="size-5 text-[#c08cf0]" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 mb-1">
-								<span class="text-[10px] font-medium text-[#e3cbfb] uppercase tracking-wide">
-									{data.stateBroadcast.state?.name || "State"} Broadcast
-								</span>
-							</div>
-							<h3 class="text-[#f5efd8] font-bold">{data.stateBroadcast.title}</h3>
-							<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.stateBroadcast.content}</p>
-							<p class="text-xs text-[#a8a083] mt-2">
-								{data.stateBroadcast.issuer?.profile?.name || "President"} · {formatDate(data.stateBroadcast.createdAt)}
-							</p>
-						</div>
-					</div>
-				</div>
-			{/if}
-
-			{#if data.partyBroadcast}
-				<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/30 p-5">
-					<div class="flex items-start gap-3">
-						<div
-							class="size-10 bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm flex items-center justify-center shrink-0"
-						>
-							<FluentPeople20Filled class="size-5 text-[#6fd14a]" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 mb-1">
-								<span class="text-[10px] font-medium text-[#b9f29a] uppercase tracking-wide">
-									{data.partyBroadcast.party?.name || "Party"} Broadcast
-								</span>
-							</div>
-							<h3 class="text-[#f5efd8] font-bold">{data.partyBroadcast.title}</h3>
-							<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.partyBroadcast.content}</p>
-							<p class="text-xs text-[#a8a083] mt-2">
-								{data.partyBroadcast.issuer?.profile?.name || "Party Leader"} · {formatDate(
-									data.partyBroadcast.createdAt
-								)}
-							</p>
-						</div>
-					</div>
-				</div>
-			{/if}
+				<span class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-red-600/20 text-red-300"
+					>Order</span
+				>
+			</div>
+			<h3 class="text-[#f5efd8] font-bold uppercase tracking-wide">{data.systemBroadcast.title}</h3>
+			<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.systemBroadcast.content}</p>
+			<p class="text-xs font-mono text-[#a8a083] mt-2">
+				FROM: {data.systemBroadcast.issuer?.profile?.name || "Admin"} · {formatDate(data.systemBroadcast.createdAt)}
+			</p>
 		</div>
 	{/if}
+
+	<!-- Broadcasts: the latest standing order from each chain of command you're under -->
+	<section class="space-y-3">
+		<div class="flex items-center justify-between gap-3">
+			<h2 class="section-title">
+				<FluentMegaphone20Filled class="size-4" />
+				Broadcasts
+			</h2>
+			<Button href="/broadcasts" variant="ghost" size="sm" icon={FluentHistory20Filled}>History</Button>
+		</div>
+
+		{#if data.stateBroadcast}
+			<div class="relative overflow-hidden rounded-sm border-l-4 border-[#c08cf0] bg-[#141810] p-5">
+				<div class="flex items-center justify-between gap-3 mb-2">
+					<div class="flex items-center gap-2">
+						<FluentBuildingGovernment20Filled class="size-4 text-[#c08cf0]" />
+						<span class="text-[10px] font-bold text-[#e3cbfb] uppercase tracking-[0.2em]">
+							State Broadcast — {data.stateBroadcast.state?.name || "State"}
+						</span>
+					</div>
+					<span
+						class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-[#8a4fc0]/25 text-[#e3cbfb]"
+						>Order</span
+					>
+				</div>
+				<h3 class="text-[#f5efd8] font-bold uppercase tracking-wide">{data.stateBroadcast.title}</h3>
+				<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.stateBroadcast.content}</p>
+				<p class="text-xs font-mono text-[#a8a083] mt-2">
+					FROM: {data.stateBroadcast.issuer?.profile?.name || "President"} · {formatDate(
+						data.stateBroadcast.createdAt
+					)}
+				</p>
+			</div>
+		{/if}
+
+		{#if data.partyBroadcast}
+			<div class="relative overflow-hidden rounded-sm border-l-4 border-[#6fd14a] bg-[#141810] p-5">
+				<div class="flex items-center justify-between gap-3 mb-2">
+					<div class="flex items-center gap-2">
+						<FluentPeople20Filled class="size-4 text-[#6fd14a]" />
+						<span class="text-[10px] font-bold text-[#b9f29a] uppercase tracking-[0.2em]">
+							Party Broadcast — {data.partyBroadcast.party?.name || "Party"}
+						</span>
+					</div>
+					<span
+						class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-[#3f8a2a]/25 text-[#b9f29a]"
+						>Order</span
+					>
+				</div>
+				<h3 class="text-[#f5efd8] font-bold uppercase tracking-wide">{data.partyBroadcast.title}</h3>
+				<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.partyBroadcast.content}</p>
+				<p class="text-xs font-mono text-[#a8a083] mt-2">
+					FROM: {data.partyBroadcast.issuer?.profile?.name || "Party Leader"} · {formatDate(
+						data.partyBroadcast.createdAt
+					)}
+				</p>
+			</div>
+		{/if}
+
+		{#if data.blocBroadcast}
+			<div class="relative overflow-hidden rounded-sm border-l-4 border-[#5eaef5] bg-[#141810] p-5">
+				<div class="flex items-center justify-between gap-3 mb-2">
+					<div class="flex items-center gap-2">
+						<FluentFlag20Filled class="size-4 text-[#5eaef5]" />
+						<span class="text-[10px] font-bold text-[#b3dcff] uppercase tracking-[0.2em]">
+							Bloc Broadcast — {data.blocBroadcast.bloc?.name || "Bloc"}
+						</span>
+					</div>
+					<span
+						class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-[#2369b5]/25 text-[#b3dcff]"
+						>Order</span
+					>
+				</div>
+				<h3 class="text-[#f5efd8] font-bold uppercase tracking-wide">{data.blocBroadcast.title}</h3>
+				<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.blocBroadcast.content}</p>
+				<p class="text-xs font-mono text-[#a8a083] mt-2">
+					FROM: {data.blocBroadcast.issuer?.profile?.name || "Bloc Leader"} · {formatDate(
+						data.blocBroadcast.createdAt
+					)}
+				</p>
+			</div>
+		{/if}
+
+		{#if !data.stateBroadcast && !data.partyBroadcast && !data.blocBroadcast}
+			<p class="panel-muted rounded-sm p-5 text-sm text-[#a8a083] text-center">
+				No standing orders from your state, party or bloc right now.
+			</p>
+		{/if}
+	</section>
 
 	<!-- Current Wars in the region -->
 	{#if data.activeWars.length > 0}

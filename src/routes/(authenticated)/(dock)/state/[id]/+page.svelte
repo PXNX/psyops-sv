@@ -12,6 +12,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
+	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
 	import FluentShieldError20Filled from "~icons/fluent/shield-error-20-filled";
@@ -154,9 +155,12 @@
 	</div>
 
 	<!-- President Action Buttons -->
-	{#if data.isPresident && !data.bloc}
+	{#if data.isPresident}
 		<div class="flex gap-2 flex-wrap">
-			<Button href="/bloc" variant="soft-purple" size="sm" icon={FluentFlag20Filled}>Join Bloc</Button>
+			{#if !data.bloc}
+				<Button href="/bloc" variant="soft-purple" size="sm" icon={FluentFlag20Filled}>Join Bloc</Button>
+			{/if}
+			<Button href="/inbox" variant="soft-amber" size="sm" icon={FluentMegaphone20Filled}>Broadcast</Button>
 		</div>
 	{/if}
 

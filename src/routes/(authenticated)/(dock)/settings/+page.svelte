@@ -2,7 +2,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import FluentArrowExit20Filled from "~icons/fluent/arrow-exit-20-filled";
-	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentSettings20Filled from "~icons/fluent/settings-20-filled";
 	import FluentPaint20Filled from "~icons/fluent/paint-brush-20-filled";
 	import FluentDataUsage20Filled from "~icons/fluent/data-usage-20-filled";
@@ -77,20 +76,6 @@
 <PageContainer maxWidth="3xl">
 	<!-- Header -->
 	<PageHeader title="Settings" subtitle="Manage your account preferences" icon={FluentSettings20Filled} />
-
-	<!-- Edit Profile Link -->
-	<a href="/user/{data.accountId}" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
-		<div class="flex items-center gap-3">
-			<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 p-2 rounded-sm">
-				<FluentPerson20Filled class="size-5 text-[#c08cf0]" />
-			</div>
-			<div>
-				<p class="text-sm font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Edit Profile</p>
-				<p class="text-xs text-[#a8a083]">Change your name, bio and profile picture</p>
-			</div>
-		</div>
-		<FluentChevronRight20Filled class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors" />
-	</a>
 
 	<!-- Telegram Connection -->
 	<div class="panel rounded-sm p-5 space-y-4">

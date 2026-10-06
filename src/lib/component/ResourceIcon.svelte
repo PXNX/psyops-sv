@@ -13,7 +13,13 @@
 		ammunition: "text-[#c9a227]",
 		artillery: "text-[#b5533c]",
 		vehicles: "text-[#7a8b6f]",
-		explosives: "text-[#d9622b]"
+		explosives: "text-[#d9622b]",
+		// Raw regional resources (region/state pages)
+		oil: "text-[#caa23c]",
+		chromium: "text-[#8ec6e0]",
+		tungsten: "text-[#c08cf0]",
+		rubber: "text-[#7fc25c]",
+		aluminium: "text-[#b0b4ba]"
 	};
 </script>
 
@@ -29,6 +35,11 @@
 	import GameIconsArtilleryShell from "~icons/game-icons/artillery-shell";
 	import GameIconsTruck from "~icons/game-icons/truck";
 	import GameIconsDynamite from "~icons/game-icons/dynamite";
+	import GameIconsOilDrum from "~icons/game-icons/oil-drum";
+	import GameIconsCrystalCluster from "~icons/game-icons/crystal-cluster";
+	import GameIconsMetalPlate from "~icons/game-icons/metal-plate";
+	import GameIconsRubberBoot from "~icons/game-icons/rubber-boot";
+	import GameIconsPlaneWing from "~icons/game-icons/plane-wing";
 	import FluentEmojiPackage from "~icons/fluent-emoji/package";
 
 	type Props = {
@@ -51,7 +62,13 @@
 		ammunition: GameIconsBullets,
 		artillery: GameIconsArtilleryShell,
 		vehicles: GameIconsTruck,
-		explosives: GameIconsDynamite
+		explosives: GameIconsDynamite,
+		// Raw regional resources (region/state pages)
+		oil: GameIconsOilDrum,
+		chromium: GameIconsCrystalCluster,
+		tungsten: GameIconsMetalPlate,
+		rubber: GameIconsRubberBoot,
+		aluminium: GameIconsPlaneWing
 	};
 
 	const IconComponent = $derived(icons[name] ?? FluentEmojiPackage);

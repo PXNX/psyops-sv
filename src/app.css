@@ -173,6 +173,22 @@
 	}
 }
 
+/* Page navigation crossfade (see onNavigate in the root layout) — quick and
+   plain so it reads as a snappy cut rather than a slow dissolve. The dock
+   nav opts out via its own view-transition-name so it never takes part. */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 120ms;
+	animation-timing-function: ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-old(root),
+	::view-transition-new(root) {
+		animation-duration: 1ms;
+	}
+}
+
 /* Form controls: one consistent look for text inputs, selects and textareas. */
 @utility field-control {
 	@apply border border-[#c8b47a]/30 bg-[#0f120c] shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)] text-[#f5efd8] transition-colors duration-200 placeholder:text-[#ab9f7c]/55 focus:border-[#f2b01e]/70 focus:ring-2 focus:ring-[#f2b01e]/15 focus:outline-none;
@@ -280,6 +296,9 @@
 			0 -10px 28px rgba(0, 0, 0, 0.5),
 			inset 0 1px 0 rgba(255, 244, 200, 0.12);
 		z-index: 40;
+		/* Its own view-transition group so page navigation never fades/flashes
+		   the persistent nav bar — only the content area crossfades. */
+		view-transition-name: dock-nav;
 	}
 
 	.dock a {
