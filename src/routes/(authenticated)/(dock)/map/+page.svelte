@@ -88,14 +88,23 @@
 			.slice(0, 8);
 	});
 
+	// The panzoom container is sized by flexbox to fill whatever space its
+	// parent <main> has left (which already accounts for the dock nav and the
+	// mobile-safe dvh viewport). Reading window.innerWidth/innerHeight instead
+	// drifts from that on mobile browsers where the address bar shows/hides
+	// (vh vs dvh), which threw the "centre on my region" math off-screen.
+	function getViewportSize(node: Element) {
+		const rect = (node.parentElement ?? node).getBoundingClientRect();
+		return { width: rect.width, height: rect.height };
+	}
+
 	function initPanzoom(node: HTMLElement | SVGElement) {
 		colorRegions(node);
 
 		const svgWidth = 1400;
 		const svgHeight = 600;
 
-		const viewportWidth = window.innerWidth;
-		const viewportHeight = window.innerHeight - 56;
+		const { width: viewportWidth, height: viewportHeight } = getViewportSize(node);
 
 		const scaleX = viewportWidth / svgWidth;
 		const scaleY = viewportHeight / svgHeight;
@@ -140,8 +149,7 @@
 
 			const transform = instance.getTransform();
 			const currentScale = scale || transform.scale;
-			const viewportWidth = window.innerWidth;
-			const viewportHeight = window.innerHeight - 56;
+			const { width: viewportWidth, height: viewportHeight } = getViewportSize(node);
 
 			const scaledWidth = svgWidth * currentScale;
 			const scaledHeight = svgHeight * currentScale;
@@ -156,8 +164,7 @@
 			if (!instance) return;
 
 			const transform = instance.getTransform();
-			const viewportWidth = window.innerWidth;
-			const viewportHeight = window.innerHeight - 56;
+			const { width: viewportWidth, height: viewportHeight } = getViewportSize(node);
 
 			const scaledWidth = svgWidth * transform.scale;
 			const scaledHeight = svgHeight * transform.scale;
@@ -189,8 +196,7 @@
 		constrainToBounds();
 
 		function handleResize() {
-			const newViewportWidth = window.innerWidth;
-			const newViewportHeight = window.innerHeight - 56;
+			const { width: newViewportWidth, height: newViewportHeight } = getViewportSize(node);
 
 			const newScaleX = newViewportWidth / svgWidth;
 			const newScaleY = newViewportHeight / svgHeight;
@@ -210,10 +216,14 @@
 		}
 
 		window.addEventListener("resize", handleResize);
+		// Mobile browsers resize the visual viewport (address bar show/hide)
+		// without always firing window "resize", so listen for that too.
+		window.visualViewport?.addEventListener("resize", handleResize);
 
 		return {
 			destroy() {
 				window.removeEventListener("resize", handleResize);
+				window.visualViewport?.removeEventListener("resize", handleResize);
 			}
 		};
 	}
@@ -635,7 +645,7 @@
 		onpointerup={onPointerUp}
 		role="button"
 		tabindex="0"
-		class="w-full h-screen overflow-hidden cursor-grab active:cursor-grabbing touch-action-none"
+		class="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing touch-action-none"
 	>
 		{@html WorldMap}
 	</div>
