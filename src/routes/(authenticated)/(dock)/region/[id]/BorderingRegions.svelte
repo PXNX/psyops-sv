@@ -5,6 +5,7 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentNavigation20Filled from "~icons/fluent/navigation-20-filled";
+	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 
 	const { borderingRegions } = $props<{
@@ -15,6 +16,7 @@
 			population: number;
 			stateId: number | null;
 			stateName: string | null;
+			underAttackByUs: boolean;
 			resources: {
 				oil: number;
 				steel: number;
@@ -58,8 +60,18 @@
 						<div class="flex-1 min-w-0">
 							<div class="flex items-start justify-between gap-2 mb-2">
 								<div class="flex-1 min-w-0">
-									<h3 class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
+									<h3
+										class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate flex items-center gap-2"
+									>
 										{borderRegion.name}
+										{#if borderRegion.underAttackByUs}
+											<span
+												class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-red-600/15 border border-red-500/35 rounded-sm text-[10px] font-bold uppercase tracking-wide text-red-300 shrink-0"
+											>
+												<FluentFire20Filled class="size-3" />
+												Attack Underway
+											</span>
+										{/if}
 									</h3>
 									<div class="flex items-center gap-3 text-xs text-[#a8a083] mt-1">
 										{#if borderRegion.stateName}

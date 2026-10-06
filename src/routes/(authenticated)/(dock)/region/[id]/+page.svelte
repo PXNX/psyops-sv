@@ -83,7 +83,7 @@
 <PageContainer maxWidth="5xl">
 	<!-- Hero Header -->
 	<div
-		class="panel rounded-sm p-5 overflow-hidden relative"
+		class="panel rounded-sm p-5 overflow-hidden relative {data.ongoingBattle ? 'alarm-outline' : ''}"
 		style={data.rulingPartyColor
 			? `background-color: ${data.rulingPartyColor}0d; background-image: radial-gradient(circle at top, ${data.rulingPartyColor}40, transparent 70%);`
 			: undefined}
