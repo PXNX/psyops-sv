@@ -114,10 +114,16 @@
 		const minZoomToFit = Math.max(scaleX, scaleY);
 
 		instance = panzoom(node, {
-			bounds: true,
+			// panzoom's own built-in bounds clamping measures the pannable
+			// element's clientWidth/clientHeight, which for us is just the
+			// viewport size (the div is w-full h-full), not the 1400x600 scene.
+			// Multiplied by the live zoom scale that math is wrong and silently
+			// overrides our moveTo() calls (visible as the map snapping back to
+			// zoomed-out and pinned to one edge). We do our own correct bounds
+			// clamping in constrainToBounds() below, so disable panzoom's.
+			bounds: false,
 			maxZoom: 60,
 			minZoom: minZoomToFit,
-			boundsPadding: 0.1,
 			smoothScroll: false
 		});
 
