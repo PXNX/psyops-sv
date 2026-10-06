@@ -31,7 +31,10 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Hero Section -->
-	<div class="panel rounded-sm p-5" style="border-top: 3px solid {data.bloc.color}">
+	<div
+		class="panel rounded-sm p-5 overflow-hidden relative"
+		style="background-color: {data.bloc.color}0d; background-image: radial-gradient(circle at top, {data.bloc.color}40, transparent 70%);"
+	>
 		<div class="flex flex-col sm:flex-row sm:items-start gap-4">
 			<div class="flex items-center gap-4 flex-1 min-w-0">
 				<!-- Bloc Logo -->

@@ -92,7 +92,7 @@
 	<div
 		class="panel rounded-sm p-5 relative overflow-hidden"
 		style={data.president?.partyColor
-			? `background-image: linear-gradient(to bottom, ${data.president.partyColor}26, transparent 60%);`
+			? `background-color: ${data.president.partyColor}0d; background-image: radial-gradient(circle at top, ${data.president.partyColor}40, transparent 70%);`
 			: undefined}
 	>
 		{#if data.isPresident}

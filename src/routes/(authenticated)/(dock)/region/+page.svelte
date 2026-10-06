@@ -88,8 +88,10 @@
 		{#each data.regions as region}
 			<a
 				href="/region/{region.id}"
-				class="group panel-interactive rounded-sm p-5 relative space-y-3"
-				style="border-top: 3px solid {getRegionColor(region)}"
+				class="group panel-interactive rounded-sm p-5 relative space-y-3 overflow-hidden"
+				style="background-color: {getRegionColor(region)}0d; background-image: radial-gradient(circle at top, {getRegionColor(
+					region
+				)}40, transparent 70%);"
 			>
 				<!-- Residence Badge -->
 				{#if data.userRegionIds.includes(region.id)}

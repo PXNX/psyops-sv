@@ -340,7 +340,10 @@
 
 		<!-- Join CTA -->
 		{#if data.canJoin && !data.isMember}
-			<div class="panel rounded-sm p-4 sm:p-5" style="border-top: 3px solid {data.party.color}">
+			<div
+				class="panel rounded-sm p-4 sm:p-5 overflow-hidden relative"
+				style="background-color: {data.party.color}0d; background-image: radial-gradient(circle at top, {data.party.color}40, transparent 70%);"
+			>
 				<form
 					method="POST"
 					action="/party/{data.party.id}?/join"

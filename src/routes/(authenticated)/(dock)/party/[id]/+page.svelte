@@ -52,7 +52,10 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Hero Section -->
-	<div class="panel rounded-sm p-5 relative" style="border-top: 3px solid {data.party.color}">
+	<div
+		class="panel rounded-sm p-5 relative overflow-hidden"
+		style="background-color: {data.party.color}0d; background-image: radial-gradient(circle at top, {data.party.color}40, transparent 70%);"
+	>
 		{#if data.isLeader}
 			<div class="absolute top-4 right-4">
 				<IconButton
