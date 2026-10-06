@@ -95,6 +95,13 @@
 	// (vh vs dvh), which threw the "centre on my region" math off-screen.
 	function getViewportSize(node: Element) {
 		const rect = (node.parentElement ?? node).getBoundingClientRect();
+		// A 0×0 read can happen on the very first layout pass (mobile dvh units
+		// can take an extra reflow to settle). Falling through that zero would
+		// make minZoomToFit 0, which zooms the whole map down to an invisible
+		// point — fall back to the window size instead of trusting it blindly.
+		if (rect.width < 1 || rect.height < 1) {
+			return { width: window.innerWidth, height: window.innerHeight };
+		}
 		return { width: rect.width, height: rect.height };
 	}
 
@@ -111,7 +118,10 @@
 		// Math.max: fill whichever dimension is larger so the map never
 		// shrinks smaller than the screen on tall/narrow mobile viewports.
 		// The overflow on the other axis is handled by constrainToBounds.
-		const minZoomToFit = Math.max(scaleX, scaleY);
+		// Floor it well above 0: a 0 (or near-0) zoom would render the whole
+		// map as an invisible point, which is unrecoverable since every re-fit
+		// (e.g. on resize) keeps computing off the same degenerate viewport.
+		const minZoomToFit = Math.max(scaleX, scaleY, 0.1);
 
 		instance = panzoom(node, {
 			// panzoom's own built-in bounds clamping measures the pannable
@@ -206,8 +216,8 @@
 
 			const newScaleX = newViewportWidth / svgWidth;
 			const newScaleY = newViewportHeight / svgHeight;
-			// Same Math.max here so resize recalculates consistently
-			const newMinZoom = Math.max(newScaleX, newScaleY);
+			// Same Math.max/floor as the initial computation above
+			const newMinZoom = Math.max(newScaleX, newScaleY, 0.1);
 
 			if (instance) {
 				const currentTransform = instance.getTransform();
