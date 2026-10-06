@@ -55,21 +55,21 @@
 		<button onclick={() => goto("/chat/en")} class="w-full panel-interactive rounded-sm p-4 text-left group">
 			<div class="flex items-center gap-3 md:gap-4">
 				<div
-					class="size-14 md:size-12 rounded-full bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center flex-shrink-0"
+					class="size-14 md:size-12 rounded-full bg-[#2369b5]/18 border border-[#5eaef5]/30 flex items-center justify-center flex-shrink-0"
 				>
-					<FluentEarth20Filled class="size-6 md:size-5 text-[#7ba0c8]" />
+					<FluentEarth20Filled class="size-6 md:size-5 text-[#5eaef5]" />
 				</div>
 
 				<div class="flex-1 min-w-0">
 					<div class="flex items-center gap-2 mb-1.5">
-						<h3 class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-sm">
+						<h3 class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors text-base md:text-sm">
 							Global Chat (English)
 						</h3>
 						<Badge tone="blue" size="xs" class="hidden sm:inline-flex">Global</Badge>
 					</div>
 					{#if data.globalChat?.lastMessage}
-						<p class="text-sm md:text-xs text-[#a89e8e] truncate leading-relaxed">
-							<span class="font-medium text-[#d9ccb7]"
+						<p class="text-sm md:text-xs text-[#a8a083] truncate leading-relaxed">
+							<span class="font-medium text-[#d3caa9]"
 								>{#if data.globalChat.lastMessage.senderPartyAbbreviation}<PartyTag
 										abbreviation={data.globalChat.lastMessage.senderPartyAbbreviation}
 										color={data.globalChat.lastMessage.senderPartyColor}
@@ -77,21 +77,21 @@
 							>
 							{data.globalChat.lastMessage.content}
 						</p>
-						<p class="text-xs text-[#a89e8e] mt-1">{formatTime(data.globalChat.lastMessage.sentAt)}</p>
+						<p class="text-xs text-[#a8a083] mt-1">{formatTime(data.globalChat.lastMessage.sentAt)}</p>
 					{:else}
-						<p class="text-sm md:text-xs text-[#a89e8e]">No messages yet</p>
+						<p class="text-sm md:text-xs text-[#a8a083]">No messages yet</p>
 					{/if}
 				</div>
 
 				<div class="flex items-center gap-2 flex-shrink-0">
 					{#if data.globalChat?.unreadCount > 0}
 						<div
-							class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#e6a527] text-[#172a45] text-xs font-bold"
+							class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#f2b01e] text-[#1b1708] text-xs font-bold"
 						>
 							{data.globalChat.unreadCount > 99 ? "99+" : data.globalChat.unreadCount}
 						</div>
 					{/if}
-					<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+					<FluentChevronRight20Filled class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors" />
 				</div>
 			</div>
 		</button>
@@ -108,41 +108,41 @@
 						/>
 					{:else}
 						<div
-							class="size-14 md:size-12 rounded-full bg-[#587252]/18 border border-[#8fae88]/30 flex items-center justify-center flex-shrink-0"
+							class="size-14 md:size-12 rounded-full bg-[#3f8a2a]/18 border border-[#6fd14a]/30 flex items-center justify-center flex-shrink-0"
 						>
-							<FluentPeople20Filled class="size-6 md:size-5 text-[#8fae88]" />
+							<FluentPeople20Filled class="size-6 md:size-5 text-[#6fd14a]" />
 						</div>
 					{/if}
 
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-1.5">
 							<h3
-								class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-sm truncate"
+								class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors text-base md:text-sm truncate"
 							>
 								{data.partyChat.name}
 							</h3>
 							<Badge tone="green" size="xs" class="hidden sm:inline-flex flex-shrink-0">Party</Badge>
 						</div>
 						{#if data.partyChat.lastMessage}
-							<p class="text-sm md:text-xs text-[#a89e8e] truncate leading-relaxed">
-								<span class="font-medium text-[#d9ccb7]">{data.partyChat.lastMessage.senderName}:</span>
+							<p class="text-sm md:text-xs text-[#a8a083] truncate leading-relaxed">
+								<span class="font-medium text-[#d3caa9]">{data.partyChat.lastMessage.senderName}:</span>
 								{data.partyChat.lastMessage.content}
 							</p>
-							<p class="text-xs text-[#a89e8e] mt-1">{formatTime(data.partyChat.lastMessage.sentAt)}</p>
+							<p class="text-xs text-[#a8a083] mt-1">{formatTime(data.partyChat.lastMessage.sentAt)}</p>
 						{:else}
-							<p class="text-sm md:text-xs text-[#a89e8e]">No messages yet</p>
+							<p class="text-sm md:text-xs text-[#a8a083]">No messages yet</p>
 						{/if}
 					</div>
 
 					<div class="flex items-center gap-2 flex-shrink-0">
 						{#if data.partyChat.unreadCount > 0}
 							<div
-								class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#e6a527] text-[#172a45] text-xs font-bold"
+								class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#f2b01e] text-[#1b1708] text-xs font-bold"
 							>
 								{data.partyChat.unreadCount > 99 ? "99+" : data.partyChat.unreadCount}
 							</div>
 						{/if}
-						<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+						<FluentChevronRight20Filled class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors" />
 					</div>
 				</div>
 			</button>
@@ -151,7 +151,7 @@
 		<!-- Direct Messages -->
 		<div class="space-y-3">
 			<h2 class="section-title mt-6 px-1">
-				<FluentPerson20Filled class="size-5 text-[#f7c56b]" />
+				<FluentPerson20Filled class="size-5 text-[#ffd35c]" />
 				Direct Messages
 			</h2>
 
@@ -176,18 +176,18 @@
 								/>
 							{:else}
 								<div
-									class="size-14 md:size-12 rounded-full bg-[#102239] flex items-center justify-center flex-shrink-0 {chat.isBlocked
+									class="size-14 md:size-12 rounded-full bg-[#1a1f15] flex items-center justify-center flex-shrink-0 {chat.isBlocked
 										? 'opacity-50'
 										: ''}"
 								>
-									<FluentImageOff20Filled class="size-6 md:size-5 text-[#a89e8e]" />
+									<FluentImageOff20Filled class="size-6 md:size-5 text-[#a8a083]" />
 								</div>
 							{/if}
 
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2 mb-1.5">
 									<h3
-										class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-sm truncate"
+										class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors text-base md:text-sm truncate"
 									>
 										{#if chat.otherUserPartyAbbreviation}
 											<PartyTag abbreviation={chat.otherUserPartyAbbreviation} color={chat.otherUserPartyColor} />
@@ -199,26 +199,26 @@
 									{/if}
 								</div>
 								{#if chat.lastMessage}
-									<p class="text-sm md:text-xs text-[#a89e8e] truncate leading-relaxed">
-										{#if chat.lastMessage.isFromCurrentUser}<span class="font-medium text-[#d9ccb7]">You:</span>
+									<p class="text-sm md:text-xs text-[#a8a083] truncate leading-relaxed">
+										{#if chat.lastMessage.isFromCurrentUser}<span class="font-medium text-[#d3caa9]">You:</span>
 										{/if}{chat.lastMessage.content}
 									</p>
-									<p class="text-xs text-[#a89e8e] mt-1">{formatTime(chat.lastMessage.sentAt)}</p>
+									<p class="text-xs text-[#a8a083] mt-1">{formatTime(chat.lastMessage.sentAt)}</p>
 								{:else}
-									<p class="text-sm md:text-xs text-[#a89e8e]">No messages yet</p>
+									<p class="text-sm md:text-xs text-[#a8a083]">No messages yet</p>
 								{/if}
 							</div>
 
 							<div class="flex items-center gap-2 flex-shrink-0">
 								{#if chat.unreadCount > 0 && !chat.isBlocked}
 									<div
-										class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#e6a527] text-[#172a45] text-xs font-bold"
+										class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#f2b01e] text-[#1b1708] text-xs font-bold"
 									>
 										{chat.unreadCount > 99 ? "99+" : chat.unreadCount}
 									</div>
 								{/if}
 								<FluentChevronRight20Filled
-									class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors"
+									class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors"
 								/>
 							</div>
 						</div>

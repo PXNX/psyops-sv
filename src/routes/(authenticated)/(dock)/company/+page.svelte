@@ -61,40 +61,40 @@
 					src={data.userCompany.logo}
 					alt={data.userCompany.name}
 					placeholderIcon={FluentBuilding20Filled}
-					placeholderGradient="from-[#8c709b] to-[#315d8d]"
+					placeholderGradient="from-[#8a4fc0] to-[#2369b5]"
 					class="size-16 md:size-20 rounded-sm shrink-0"
 				/>
 
 				<div class="flex-1 min-w-0">
 					<div class="flex items-center gap-2 mb-1">
-						<div class="size-2.5 rounded-full bg-[#8fae88]"></div>
-						<span class="text-[10px] font-medium text-[#a89e8e] uppercase tracking-wide">Your Company</span>
+						<div class="size-2.5 rounded-full bg-[#6fd14a]"></div>
+						<span class="text-[10px] font-medium text-[#a8a083] uppercase tracking-wide">Your Company</span>
 					</div>
 					<h2
-						class="text-xl md:text-2xl font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate mb-2"
+						class="text-xl md:text-2xl font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate mb-2"
 					>
 						{data.userCompany.name}
 					</h2>
-					<div class="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-[#a89e8e]">
+					<div class="flex flex-wrap items-center gap-3 md:gap-4 text-sm text-[#a8a083]">
 						<span class="flex items-center gap-1.5">
-							<FluentFactory20Filled class="size-4 text-[#b7a0c5]" />
+							<FluentFactory20Filled class="size-4 text-[#c08cf0]" />
 							{data.userCompany.factoryCount}
 							{data.userCompany.factoryCount === 1 ? "factory" : "factories"}
 						</span>
 						<span class="flex items-center gap-1.5">
-							<FluentPeople20Filled class="size-4 text-[#7ba0c8]" />
+							<FluentPeople20Filled class="size-4 text-[#5eaef5]" />
 							{data.userCompany.workerCount}
 							{data.userCompany.workerCount === 1 ? "worker" : "workers"}
 						</span>
 						<span class="flex items-center gap-1.5">
-							<FluentCalendar20Filled class="size-4 text-[#a89e8e]" />
+							<FluentCalendar20Filled class="size-4 text-[#a8a083]" />
 							Founded {formatDate(data.userCompany.foundedAt)}
 						</span>
 					</div>
 				</div>
 
 				<FluentArrowRight20Filled
-					class="size-5 md:size-6 text-[#a89e8e] group-hover:text-[#f2c463] group-hover:translate-x-1 transition-all shrink-0 hidden sm:block"
+					class="size-5 md:size-6 text-[#a8a083] group-hover:text-[#ffcf47] group-hover:translate-x-1 transition-all shrink-0 hidden sm:block"
 				/>
 			</div>
 		</a>
@@ -105,7 +105,7 @@
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
 			<div>
 				<label for="search" class="field-label flex items-center gap-1.5">
-					<FluentSearch20Filled class="size-3.5 text-[#a89e8e]" /> Search
+					<FluentSearch20Filled class="size-3.5 text-[#a8a083]" /> Search
 				</label>
 				<input
 					type="text"
@@ -118,7 +118,7 @@
 
 			<div>
 				<label for="state" class="field-label flex items-center gap-1.5">
-					<FluentLocation20Filled class="size-3.5 text-[#a89e8e]" /> State
+					<FluentLocation20Filled class="size-3.5 text-[#a8a083]" /> State
 				</label>
 				<select id="state" bind:value={selectedState} class="field-control rounded-sm px-3 py-2.5 w-full">
 					<option value="all">All States</option>
@@ -129,7 +129,7 @@
 			</div>
 		</div>
 
-		<p class="mt-3 text-xs text-[#a89e8e]">
+		<p class="mt-3 text-xs text-[#a8a083]">
 			Showing {filteredCompanies.length} of {data.companies.length} companies
 		</p>
 	</div>
@@ -144,17 +144,17 @@
 							src={company.logo}
 							alt={company.name}
 							placeholderIcon={FluentBuilding20Filled}
-							placeholderGradient="from-[#8c709b] to-[#315d8d]"
+							placeholderGradient="from-[#8a4fc0] to-[#2369b5]"
 							class="size-12 md:size-14 rounded-sm shrink-0"
 						/>
 
 						<div class="flex-1 min-w-0">
 							<h3
-								class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors text-base md:text-lg truncate"
+								class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors text-base md:text-lg truncate"
 							>
 								{company.name}
 							</h3>
-							<p class="text-xs md:text-sm text-[#a89e8e] truncate">
+							<p class="text-xs md:text-sm text-[#a8a083] truncate">
 								{#if company.ownerPartyAbbreviation}
 									<PartyTag abbreviation={company.ownerPartyAbbreviation} color={company.ownerPartyColor} />
 								{/if}
@@ -164,17 +164,17 @@
 
 						<div class="hidden sm:flex items-center gap-4 md:gap-6 shrink-0">
 							<div class="text-center">
-								<p class="text-lg md:text-xl font-bold text-[#fff7e8]">{company.factoryCount}</p>
-								<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Factories</p>
+								<p class="text-lg md:text-xl font-bold text-[#f5efd8]">{company.factoryCount}</p>
+								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Factories</p>
 							</div>
 							<div class="text-center">
-								<p class="text-lg md:text-xl font-bold text-[#fff7e8]">{company.workerCount}</p>
-								<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Workers</p>
+								<p class="text-lg md:text-xl font-bold text-[#f5efd8]">{company.workerCount}</p>
+								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Workers</p>
 							</div>
 							{#if company.states.length > 0}
 								<div class="text-center">
-									<p class="text-lg md:text-xl font-bold text-[#fff7e8]">{company.states.length}</p>
-									<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">
+									<p class="text-lg md:text-xl font-bold text-[#f5efd8]">{company.states.length}</p>
+									<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">
 										{company.states.length === 1 ? "State" : "States"}
 									</p>
 								</div>
@@ -182,28 +182,28 @@
 						</div>
 
 						<FluentArrowRight20Filled
-							class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] group-hover:translate-x-0.5 transition-all shrink-0 hidden md:block"
+							class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] group-hover:translate-x-0.5 transition-all shrink-0 hidden md:block"
 						/>
 					</div>
 
 					<!-- Mobile stats row -->
-					<div class="flex sm:hidden items-center gap-3 mt-3 pt-3 border-t border-[#dfceb0]/15">
-						<span class="flex items-center gap-1 text-xs text-[#a89e8e]">
-							<FluentFactory20Filled class="size-3.5 text-[#b7a0c5]" />
+					<div class="flex sm:hidden items-center gap-3 mt-3 pt-3 border-t border-[#c8b47a]/15">
+						<span class="flex items-center gap-1 text-xs text-[#a8a083]">
+							<FluentFactory20Filled class="size-3.5 text-[#c08cf0]" />
 							{company.factoryCount}
 						</span>
-						<span class="flex items-center gap-1 text-xs text-[#a89e8e]">
-							<FluentPeople20Filled class="size-3.5 text-[#7ba0c8]" />
+						<span class="flex items-center gap-1 text-xs text-[#a8a083]">
+							<FluentPeople20Filled class="size-3.5 text-[#5eaef5]" />
 							{company.workerCount}
 						</span>
 						{#if company.states.length > 0}
-							<span class="flex items-center gap-1 text-xs text-[#a89e8e]">
-								<FluentLocation20Filled class="size-3.5 text-[#8fae88]" />
+							<span class="flex items-center gap-1 text-xs text-[#a8a083]">
+								<FluentLocation20Filled class="size-3.5 text-[#6fd14a]" />
 								{company.states.length}
 								{company.states.length === 1 ? "state" : "states"}
 							</span>
 						{/if}
-						<span class="ml-auto text-xs text-[#a89e8e]">
+						<span class="ml-auto text-xs text-[#a8a083]">
 							{formatDate(company.foundedAt)}
 						</span>
 					</div>
@@ -212,11 +212,11 @@
 		</div>
 	{:else}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
-				<FluentBuilding20Filled class="size-8 text-[#a89e8e]" />
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
+				<FluentBuilding20Filled class="size-8 text-[#a8a083]" />
 			</div>
-			<h3 class="text-xl font-bold text-[#fff7e8] mb-2">No Companies Found</h3>
-			<p class="text-[#a89e8e] mb-4">
+			<h3 class="text-xl font-bold text-[#f5efd8] mb-2">No Companies Found</h3>
+			<p class="text-[#a8a083] mb-4">
 				{searchQuery || selectedState !== "all"
 					? "Try adjusting your filters"
 					: "No companies have been registered yet"}

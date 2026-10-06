@@ -568,11 +568,11 @@
 
 <!-- Dark Mode Toolbar -->
 <header
-	class="fixed top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 w-[calc(100%-24px)] max-w-[520px] bg-[#14283f]/90 backdrop-blur-xl border border-[#dfceb0]/15 rounded-sm shadow-lg shadow-black/20 touch-action-pan-x touch-action-pan-y"
+	class="fixed top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 w-[calc(100%-24px)] max-w-[520px] bg-[#242a1d]/90 backdrop-blur-xl border border-[#c8b47a]/15 rounded-sm shadow-lg shadow-black/20 touch-action-pan-x touch-action-pan-y"
 >
 	<form class="flex-1 relative min-w-0" onsubmit={handleSearchSubmit}>
 		<div class="flex items-center gap-2">
-			<FluentEmojiMagnifyingGlassTiltedLeft class="w-4 h-4 flex-shrink-0 text-[#a89e8e]" />
+			<FluentEmojiMagnifyingGlassTiltedLeft class="w-4 h-4 flex-shrink-0 text-[#a8a083]" />
 			<input
 				type="search"
 				bind:value={searchQuery}
@@ -580,31 +580,31 @@
 				oninput={handleSearchInput}
 				onfocus={handleSearchFocus}
 				placeholder="Search regions…"
-				class="flex-1 w-full min-w-0 bg-transparent border-none outline-none text-sm font-medium text-[#fff7e8] placeholder:text-[#b3a68e]/55 px-0 py-1.5 tracking-tight leading-none"
+				class="flex-1 w-full min-w-0 bg-transparent border-none outline-none text-sm font-medium text-[#f5efd8] placeholder:text-[#ab9f7c]/55 px-0 py-1.5 tracking-tight leading-none"
 			/>
 		</div>
 
 		{#if showSearchResults && searchResults().length > 0}
 			<div
-				class="absolute top-[calc(100%+10px)] -left-3.5 -right-3.5 bg-[#14283f]/95 backdrop-blur-xl border border-[#dfceb0]/15 rounded-sm shadow-2xl shadow-black/20 overflow-hidden max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-200"
+				class="absolute top-[calc(100%+10px)] -left-3.5 -right-3.5 bg-[#242a1d]/95 backdrop-blur-xl border border-[#c8b47a]/15 rounded-sm shadow-2xl shadow-black/20 overflow-hidden max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-200"
 			>
 				{#each searchResults() as result, i}
 					<button
-						class="flex items-center gap-2.5 w-full px-3.5 py-2.5 bg-transparent border-b border-[#dfceb0]/10 last:border-b-0 cursor-pointer text-left text-[#fff7e8] transition-colors hover:bg-[#19304b] hover:text-[#f2c463] animate-in fade-in slide-in-from-top-1"
+						class="flex items-center gap-2.5 w-full px-3.5 py-2.5 bg-transparent border-b border-[#c8b47a]/10 last:border-b-0 cursor-pointer text-left text-[#f5efd8] transition-colors hover:bg-[#2e3524] hover:text-[#ffcf47] animate-in fade-in slide-in-from-top-1"
 						style="animation-delay: {i * 0.03}s"
 						onclick={() => selectSearchResult(result.id)}
 					>
-						<IconMapPin class="w-4 h-4 flex-shrink-0 text-[#a89e8e]" />
+						<IconMapPin class="w-4 h-4 flex-shrink-0 text-[#a8a083]" />
 						<div class="flex flex-col gap-px min-w-0">
 							<span class="text-[13.5px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
 								>{result.name}</span
 							>
 							{#if result.stateName}
-								<span class="text-[11.5px] text-[#a89e8e] whitespace-nowrap overflow-hidden text-ellipsis"
+								<span class="text-[11.5px] text-[#a8a083] whitespace-nowrap overflow-hidden text-ellipsis"
 									>{result.stateName}</span
 								>
 							{:else}
-								<span class="text-[11.5px] text-[#a89e8e] italic whitespace-nowrap overflow-hidden text-ellipsis"
+								<span class="text-[11.5px] text-[#a8a083] italic whitespace-nowrap overflow-hidden text-ellipsis"
 									>Independent</span
 								>
 							{/if}
@@ -618,11 +618,11 @@
 	<div class="flex-shrink-0">
 		<select
 			bind:value={mapFilter}
-			class="appearance-none bg-[#0d1d31] border border-[#dfceb0]/20 rounded-sm px-3 pr-7 py-1.5 text-xs font-semibold tracking-wide text-[#fff7e8] cursor-pointer outline-none transition-colors hover:border-[#e6a527]/55 focus:border-[#e6a527]/70 bg-[length:10px_6px] bg-no-repeat bg-[right_9px_center]"
+			class="appearance-none bg-[#0f120c] border border-[#c8b47a]/20 rounded-sm px-3 pr-7 py-1.5 text-xs font-semibold tracking-wide text-[#f5efd8] cursor-pointer outline-none transition-colors hover:border-[#f2b01e]/55 focus:border-[#f2b01e]/70 bg-[length:10px_6px] bg-no-repeat bg-[right_9px_center]"
 			style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white' opacity='.4'/%3E%3C/svg%3E&quot;)"
 		>
 			{#each filterOptions as option}
-				<option value={option.value} class="bg-[#0d1d31] text-[#fff7e8]">{option.label}</option>
+				<option value={option.value} class="bg-[#0f120c] text-[#f5efd8]">{option.label}</option>
 			{/each}
 		</select>
 	</div>
@@ -646,7 +646,7 @@
 	{#if selectedRegion}
 		<a
 			href="/region/{selectedRegion.id}"
-			class="group w-full flex items-center gap-4 hover:bg-[#19304b] transition-colors rounded-sm p-2 -mx-2"
+			class="group w-full flex items-center gap-4 hover:bg-[#2e3524] transition-colors rounded-sm p-2 -mx-2"
 		>
 			<Logo
 				src={`/coats/${selectedRegion.id}.svg`}
@@ -655,11 +655,11 @@
 			/>
 
 			<div class="flex-1 text-left">
-				<h2 class="text-xl font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">{regionName()}</h2>
+				<h2 class="text-xl font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">{regionName()}</h2>
 				{#if selectedState}
-					<p class="text-[#d9ccb7]" style="color: {stateColor}">{selectedState.name}</p>
+					<p class="text-[#d3caa9]" style="color: {stateColor}">{selectedState.name}</p>
 				{:else}
-					<p class="text-[#f7c56b] italic">Independent</p>
+					<p class="text-[#ffd35c] italic">Independent</p>
 				{/if}
 			</div>
 
@@ -672,62 +672,62 @@
 				{#if mapFilter === "political"}
 					<div class="grid grid-cols-2 gap-2">
 						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">Rating</p>
-							<p class="text-lg font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.rating)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Rating</p>
+							<p class="text-lg font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.rating)}</p>
 						</div>
 						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">Economy</p>
-							<p class="text-lg font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.economy)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Economy</p>
+							<p class="text-lg font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.economy)}</p>
 						</div>
 						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">Infrastructure</p>
-							<p class="text-lg font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.infrastructure)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Infrastructure</p>
+							<p class="text-lg font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.infrastructure)}</p>
 						</div>
 						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">Education</p>
-							<p class="text-lg font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.education)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Education</p>
+							<p class="text-lg font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.education)}</p>
 						</div>
 					</div>
 				{:else if mapFilter === "blocs"}
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">Bloc</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Bloc</p>
 						{#if selectedBlocName()}
 							<div class="mt-1 flex items-center gap-2">
 								<span class="inline-block size-3 rounded-full" style="background-color: {stateColor || 'currentColor'}"
 								></span>
-								<p class="text-lg font-bold text-[#fff7e8]">{selectedBlocName()}</p>
+								<p class="text-lg font-bold text-[#f5efd8]">{selectedBlocName()}</p>
 							</div>
 						{:else}
-							<p class="text-lg font-bold italic text-[#a89e8e]">Non-aligned</p>
+							<p class="text-lg font-bold italic text-[#a8a083]">Non-aligned</p>
 						{/if}
 					</div>
 				{:else if mapFilter === "wars"}
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">War status</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">War status</p>
 						{#if selectedWarRole() === "attacker"}
 							<Badge tone="red" class="mt-1">Attacking in an active war</Badge>
 						{:else if selectedWarRole() === "defender"}
 							<Badge tone="blue" class="mt-1">Defending in an active war</Badge>
 						{:else}
-							<p class="text-lg font-bold text-[#a89e8e]">At peace</p>
+							<p class="text-lg font-bold text-[#a8a083]">At peace</p>
 						{/if}
 					</div>
 				{:else if mapFilter === "residents"}
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">Residents</p>
-						<p class="text-2xl font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.residentCount)}</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Residents</p>
+						<p class="text-2xl font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.residentCount)}</p>
 					</div>
 				{:else if mapFilter === "powerplants"}
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">Power plants (state-wide)</p>
-						<p class="text-2xl font-bold text-[#fff7e8]">{formatNumber(selectedRegionData.powerplantCount)}</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Power plants (state-wide)</p>
+						<p class="text-2xl font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.powerplantCount)}</p>
 					</div>
 				{:else}
 					<!-- Resource layers -->
 					{#if resourceLabels[mapFilter]}
 						<div class="panel-muted rounded-sm p-4">
-							<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">{resourceLabels[mapFilter]}</p>
-							<p class="text-2xl font-bold text-[#fff7e8]">
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">{resourceLabels[mapFilter]}</p>
+							<p class="text-2xl font-bold text-[#f5efd8]">
 								{formatNumber((selectedRegionData.resources as Record<string, number>)[mapFilter] ?? 0)}
 							</p>
 						</div>
@@ -736,13 +736,13 @@
 						{#each Object.entries(selectedRegionData.resources) as [key, value]}
 							<div
 								class="rounded-sm border p-2 text-center {key === mapFilter
-									? 'bg-[#e6a527]/12 border-[#e6a527]/35'
-									: 'bg-[#102239]/70 border-[#dfceb0]/10'}"
+									? 'bg-[#f2b01e]/12 border-[#f2b01e]/35'
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/10'}"
 							>
-								<p class="text-[10px] uppercase tracking-wide text-[#a89e8e]">
+								<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">
 									{resourceLabels[key] ?? key}
 								</p>
-								<p class="text-sm font-bold text-[#fff7e8]">{formatNumber(value)}</p>
+								<p class="text-sm font-bold text-[#f5efd8]">{formatNumber(value)}</p>
 							</div>
 						{/each}
 					</div>

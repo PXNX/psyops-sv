@@ -46,10 +46,10 @@
 		{#each colorPresets as colorOption}
 			<button
 				type="button"
-				class="size-12 rounded-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e6a527]"
+				class="size-12 rounded-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b01e]"
 				style="background-color: {colorOption.value}"
 				class:ring-4={color === colorOption.value}
-				class:ring-[#fff7e8]={color === colorOption.value}
+				class:ring-[#f5efd8]={color === colorOption.value}
 				class:opacity-50={disabled}
 				title={colorOption.name}
 				onclick={() => (color = colorOption.value)}
@@ -66,10 +66,10 @@
 			id="color"
 			name="color"
 			bind:value={color}
-			class="h-10 w-20 rounded-sm border border-[#dfceb0]/20 bg-[#0d1d31] cursor-pointer"
+			class="h-10 w-20 rounded-sm border border-[#c8b47a]/20 bg-[#0f120c] cursor-pointer"
 			{disabled}
 		/>
-		<span class="text-sm text-[#a89e8e]">{color}</span>
+		<span class="text-sm text-[#a8a083]">{color}</span>
 	</div>
 
 	{#if error}
@@ -83,11 +83,11 @@
 				{#if previewImageUrl}
 					<img src={previewImageUrl} alt="Logo preview" class="size-10 object-contain" />
 				{:else if PreviewIcon}
-					<PreviewIcon class="size-6 text-[#fff7e8]" />
+					<PreviewIcon class="size-6 text-[#f5efd8]" />
 				{/if}
 			</div>
 			<div>
-				<p class="font-semibold text-[#fff7e8]">{previewTitle}</p>
+				<p class="font-semibold text-[#f5efd8]">{previewTitle}</p>
 				<p class="text-sm" style="color: {color}">{previewSubtitle}</p>
 			</div>
 		</div>

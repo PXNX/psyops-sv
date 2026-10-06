@@ -77,32 +77,32 @@
 
 	<!-- Statistics -->
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-		<div class="bg-[#e6a527]/12 rounded-sm border border-[#e6a527]/35 p-4">
+		<div class="bg-[#f2b01e]/12 rounded-sm border border-[#f2b01e]/35 p-4">
 			<div class="flex items-center gap-3">
-				<FluentWarning20Filled class="size-6 text-[#f7c56b] shrink-0" />
+				<FluentWarning20Filled class="size-6 text-[#ffd35c] shrink-0" />
 				<div>
-					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Pending Reports</p>
-					<p class="text-2xl font-bold text-[#fff7e8]">{data.stats.pending}</p>
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Pending Reports</p>
+					<p class="text-2xl font-bold text-[#f5efd8]">{data.stats.pending}</p>
 				</div>
 			</div>
 		</div>
 
-		<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/30 p-4">
+		<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/30 p-4">
 			<div class="flex items-center gap-3">
-				<FluentCheckmark20Filled class="size-6 text-[#8fae88] shrink-0" />
+				<FluentCheckmark20Filled class="size-6 text-[#6fd14a] shrink-0" />
 				<div>
-					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Resolved</p>
-					<p class="text-2xl font-bold text-[#fff7e8]">{data.stats.resolved}</p>
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Resolved</p>
+					<p class="text-2xl font-bold text-[#f5efd8]">{data.stats.resolved}</p>
 				</div>
 			</div>
 		</div>
 
 		<div class="panel-muted rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<FluentDismiss20Filled class="size-6 text-[#a89e8e] shrink-0" />
+				<FluentDismiss20Filled class="size-6 text-[#a8a083] shrink-0" />
 				<div>
-					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Dismissed</p>
-					<p class="text-2xl font-bold text-[#fff7e8]">{data.stats.dismissed}</p>
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Dismissed</p>
+					<p class="text-2xl font-bold text-[#f5efd8]">{data.stats.dismissed}</p>
 				</div>
 			</div>
 		</div>
@@ -157,22 +157,22 @@
 					<button
 						onclick={() => (selectedReport = report)}
 						class="w-full panel-interactive rounded-sm p-4 text-left {selectedReport?.reportId === report.reportId
-							? 'border-[#e6a527]/55 ring-1 ring-[#e6a527]/40'
+							? 'border-[#f2b01e]/55 ring-1 ring-[#f2b01e]/40'
 							: ''}"
 					>
 						<div class="flex items-start gap-3">
 							{#if report.messageSenderLogo}
 								<img src={report.messageSenderLogo} alt={report.messageSenderName} class="size-10 rounded-full" />
 							{:else}
-								<div class="size-10 rounded-full bg-[#102239] flex items-center justify-center">
-									<FluentImageOff20Filled class="size-5 text-[#a89e8e]" />
+								<div class="size-10 rounded-full bg-[#1a1f15] flex items-center justify-center">
+									<FluentImageOff20Filled class="size-5 text-[#a8a083]" />
 								</div>
 							{/if}
 
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2 mb-1">
-									<MessageIcon class="size-4 text-[#a89e8e]" />
-									<p class="font-semibold text-[#fff7e8] text-sm">{report.messageSenderName}</p>
+									<MessageIcon class="size-4 text-[#a8a083]" />
+									<p class="font-semibold text-[#f5efd8] text-sm">{report.messageSenderName}</p>
 									<Badge
 										tone={report.status === "pending"
 											? "amber"
@@ -186,8 +186,8 @@
 										{report.status}
 									</Badge>
 								</div>
-								<p class="text-sm text-[#d9ccb7] line-clamp-2 mb-2">{report.messageContent}</p>
-								<p class="text-xs text-[#a89e8e]">
+								<p class="text-sm text-[#d3caa9] line-clamp-2 mb-2">{report.messageContent}</p>
+								<p class="text-xs text-[#a8a083]">
 									Reported by {report.reporterName} • {formatDateTime(report.reportedAt)}
 								</p>
 							</div>
@@ -213,30 +213,30 @@
 									class="size-12 rounded-full"
 								/>
 							{:else}
-								<div class="size-12 rounded-full bg-[#102239] flex items-center justify-center">
-									<FluentImageOff20Filled class="size-6 text-[#a89e8e]" />
+								<div class="size-12 rounded-full bg-[#1a1f15] flex items-center justify-center">
+									<FluentImageOff20Filled class="size-6 text-[#a8a083]" />
 								</div>
 							{/if}
 
 							<div class="flex-1">
 								<a
 									href="/user/{selectedReport.messageSenderId}"
-									class="font-semibold text-[#fff7e8] hover:text-[#f2c463] transition-colors"
+									class="font-semibold text-[#f5efd8] hover:text-[#ffcf47] transition-colors"
 								>
 									{selectedReport.messageSenderName}
 								</a>
-								<p class="text-xs text-[#a89e8e] capitalize">{selectedReport.messageType} chat</p>
+								<p class="text-xs text-[#a8a083] capitalize">{selectedReport.messageType} chat</p>
 							</div>
 						</div>
-						<p class="text-[#d9ccb7]">{selectedReport.messageContent}</p>
+						<p class="text-[#d3caa9]">{selectedReport.messageContent}</p>
 					</div>
 
 					<!-- Report Info -->
 					<div class="mb-6">
-						<h3 class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-2">Report Reason</h3>
-						<p class="text-[#d9ccb7] panel-muted rounded-sm p-3">{selectedReport.reason}</p>
-						<p class="text-xs text-[#a89e8e] mt-2">
-							Reported by <a href="/user/{selectedReport.reporterId}" class="text-[#f7c56b] hover:underline"
+						<h3 class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-2">Report Reason</h3>
+						<p class="text-[#d3caa9] panel-muted rounded-sm p-3">{selectedReport.reason}</p>
+						<p class="text-xs text-[#a8a083] mt-2">
+							Reported by <a href="/user/{selectedReport.reporterId}" class="text-[#ffd35c] hover:underline"
 								>{selectedReport.reporterName}</a
 							>
 						</p>
@@ -265,7 +265,7 @@
 
 							<label class="flex cursor-pointer items-center justify-start gap-3">
 								<input type="checkbox" bind:checked={issueWarning} class="checkbox checkbox-warning" />
-								<span class="text-sm text-[#e5d8c1]">Issue warning to user (3 warnings = auto-restriction)</span>
+								<span class="text-sm text-[#e6ddbf]">Issue warning to user (3 warnings = auto-restriction)</span>
 							</label>
 
 							<form method="POST" action="?/deleteMessage" use:enhance>
@@ -279,10 +279,10 @@
 								</Button>
 							</form>
 
-							<div class="flex items-center gap-3 text-xs text-[#a89e8e] uppercase tracking-wide">
-								<span class="flex-1 border-t border-[#dfceb0]/15"></span>
+							<div class="flex items-center gap-3 text-xs text-[#a8a083] uppercase tracking-wide">
+								<span class="flex-1 border-t border-[#c8b47a]/15"></span>
 								OR
-								<span class="flex-1 border-t border-[#dfceb0]/15"></span>
+								<span class="flex-1 border-t border-[#c8b47a]/15"></span>
 							</div>
 
 							<div>
@@ -300,7 +300,7 @@
 						</div>
 					{:else}
 						<div class="panel-muted rounded-sm p-4 text-center">
-							<p class="text-[#a89e8e] capitalize">This report has been {selectedReport.status}</p>
+							<p class="text-[#a8a083] capitalize">This report has been {selectedReport.status}</p>
 						</div>
 					{/if}
 				</div>

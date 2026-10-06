@@ -35,14 +35,14 @@
 </script>
 
 {#if allowsFreeMovement}
-	<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-5">
+	<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-5">
 		<div class="flex items-start gap-4">
-			<div class="size-12 bg-[#587252]/25 rounded-sm flex items-center justify-center flex-shrink-0">
-				<FluentLocationLive20Filled class="size-6 text-[#8fae88]" />
+			<div class="size-12 bg-[#3f8a2a]/25 rounded-sm flex items-center justify-center flex-shrink-0">
+				<FluentLocationLive20Filled class="size-6 text-[#6fd14a]" />
 			</div>
 			<div class="flex-1">
-				<h2 class="text-lg font-semibold text-[#fff7e8] mb-1">Free Movement Zone</h2>
-				<p class="text-[#d9ccb7] text-sm mb-4">
+				<h2 class="text-lg font-semibold text-[#f5efd8] mb-1">Free Movement Zone</h2>
+				<p class="text-[#d3caa9] text-sm mb-4">
 					{#if isIndependent}
 						This independent region has open borders.
 					{:else if !hasInauguralElection}
@@ -56,14 +56,14 @@
 		</div>
 	</div>
 {:else if isIndependent}
-	<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5">
+	<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5">
 		<div class="flex items-start gap-4">
-			<div class="size-12 bg-[#e6a527]/15 rounded-sm flex items-center justify-center flex-shrink-0">
-				<FluentFlag20Filled class="size-6 text-[#f7c56b]" />
+			<div class="size-12 bg-[#f2b01e]/15 rounded-sm flex items-center justify-center flex-shrink-0">
+				<FluentFlag20Filled class="size-6 text-[#ffd35c]" />
 			</div>
 			<div class="flex-1">
-				<h2 class="text-lg font-semibold text-[#fff7e8] mb-1">Unclaimed Territory</h2>
-				<p class="text-[#d9ccb7] text-sm mb-4">
+				<h2 class="text-lg font-semibold text-[#f5efd8] mb-1">Unclaimed Territory</h2>
+				<p class="text-[#d3caa9] text-sm mb-4">
 					This region can be claimed by founding a new state. Create a political party to establish your government.
 				</p>
 				<Button variant="primary" size="sm" icon={FluentFlag20Filled} href="/party/create?regionId={regionId}">
@@ -75,20 +75,20 @@
 {:else}
 	<div class="panel rounded-sm p-5">
 		<div class="flex items-start gap-4">
-			<div class="size-12 bg-[#315d8d]/18 rounded-sm flex items-center justify-center flex-shrink-0">
-				<FluentHome20Filled class="size-6 text-[#7ba0c8]" />
+			<div class="size-12 bg-[#2369b5]/18 rounded-sm flex items-center justify-center flex-shrink-0">
+				<FluentHome20Filled class="size-6 text-[#5eaef5]" />
 			</div>
 			<div class="flex-1">
-				<h3 class="text-lg font-semibold text-[#fff7e8] mb-2">Travel to this Region</h3>
+				<h3 class="text-lg font-semibold text-[#f5efd8] mb-2">Travel to this Region</h3>
 				{#if hasPendingResidenceApp}
-					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-3 mb-3">
-						<p class="text-sm text-[#f7c56b] flex items-center gap-2">
+					<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3 mb-3">
+						<p class="text-sm text-[#ffd35c] flex items-center gap-2">
 							<FluentClock20Filled class="size-4" />
 							Residence application pending - will be reviewed upon arrival
 						</p>
 					</div>
 				{:else}
-					<p class="text-sm text-[#d9ccb7] mb-3">
+					<p class="text-sm text-[#d3caa9] mb-3">
 						Entry requires a visa approved by the Foreign Minister or President, or existing residency.
 					</p>
 				{/if}
@@ -104,31 +104,31 @@
 <Modal bind:open={showTravelSheet} title="Travel to {regionName}" size="default">
 	<div class="space-y-5">
 		<div class="flex items-center gap-4">
-			<div class="size-14 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center">
-				<FluentLocationLive20Filled class="size-7 text-[#7ba0c8]" />
+			<div class="size-14 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex items-center justify-center">
+				<FluentLocationLive20Filled class="size-7 text-[#5eaef5]" />
 			</div>
 			<div>
-				<h3 class="text-xl font-bold text-[#fff7e8]">{regionName}</h3>
-				<p class="text-sm text-[#a89e8e]">Review your journey before departing</p>
+				<h3 class="text-xl font-bold text-[#f5efd8]">{regionName}</h3>
+				<p class="text-sm text-[#a8a083]">Review your journey before departing</p>
 			</div>
 		</div>
 
 		{#if travelInfo}
 			<div class="panel-muted rounded-sm p-4 space-y-3">
 				<div class="flex items-center justify-between">
-					<span class="text-sm text-[#a89e8e] flex items-center gap-2">
+					<span class="text-sm text-[#a8a083] flex items-center gap-2">
 						<FluentClock20Filled class="size-4" />
 						Travel Time
 					</span>
-					<span class="text-sm font-medium text-[#fff7e8]">
+					<span class="text-sm font-medium text-[#f5efd8]">
 						{travelInfo.timeHours} hour{travelInfo.timeHours === 1 ? "" : "s"}
 					</span>
 				</div>
 				<div class="flex items-center justify-between">
-					<span class="text-sm text-[#a89e8e]">Distance</span>
-					<span class="text-sm font-medium text-[#fff7e8]">{travelInfo.distanceKm} km</span>
+					<span class="text-sm text-[#a8a083]">Distance</span>
+					<span class="text-sm font-medium text-[#f5efd8]">{travelInfo.distanceKm} km</span>
 				</div>
-				<div class="border-t border-[#dfceb0]/15 pt-3">
+				<div class="border-t border-[#c8b47a]/15 pt-3">
 					<ResourceRequirements costs={{ currency: travelInfo.cost }} available={{ currency: walletBalance }} />
 				</div>
 			</div>
@@ -153,8 +153,8 @@
 				{/if}
 			</form>
 		{:else}
-			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-4">
-				<p class="text-sm text-[#f7c56b] flex items-center gap-2">
+			<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-4">
+				<p class="text-sm text-[#ffd35c] flex items-center gap-2">
 					<FluentClock20Filled class="size-4" />
 					You need an existing residence to travel between regions.
 				</p>

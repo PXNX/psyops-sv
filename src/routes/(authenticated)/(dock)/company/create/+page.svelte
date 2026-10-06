@@ -133,11 +133,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200",
 			dragActive
-				? "border-[#e6a527] bg-[#e6a527]/12"
+				? "border-[#f2b01e] bg-[#f2b01e]/12"
 				: $form.logo
-					? "border-[#8fae88]/50 bg-[#587252]/10"
-					: "border-[#dfceb0]/20",
-			!$submitting && !$form.logo && canCreate ? "hover:border-[#e6a527]/55 hover:bg-[#e6a527]/10" : "",
+					? "border-[#6fd14a]/50 bg-[#3f8a2a]/10"
+					: "border-[#c8b47a]/20",
+			!$submitting && !$form.logo && canCreate ? "hover:border-[#f2b01e]/55 hover:bg-[#f2b01e]/10" : "",
 			$submitting || !canCreate ? "opacity-50" : "",
 			$errors.logo ? "border-red-500" : ""
 		]
@@ -188,17 +188,17 @@
 				<FluentClock20Filled class="size-6 text-red-400 shrink-0 mt-0.5" />
 				<div class="space-y-2 flex-1">
 					<h3 class="font-semibold text-red-300 text-lg">Company Creation Cooldown Active</h3>
-					<p class="text-[#d9ccb7] text-sm leading-relaxed">
+					<p class="text-[#d3caa9] text-sm leading-relaxed">
 						You must wait before creating another company. This cooldown period helps maintain economic stability.
 					</p>
 					<div class="panel-muted rounded-sm p-3 space-y-2">
 						<div class="flex items-center justify-between">
-							<span class="text-[#e5d8c1] text-sm font-medium">Time Remaining:</span>
+							<span class="text-[#e6ddbf] text-sm font-medium">Time Remaining:</span>
 							<span class="text-red-300 text-sm font-bold font-mono">{formatTimeRemaining(data.cooldownEndsAt)}</span>
 						</div>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-[#a89e8e]">Available on:</span>
-							<span class="text-[#d9ccb7]">{formatCooldownDate(data.cooldownEndsAt)}</span>
+							<span class="text-[#a8a083]">Available on:</span>
+							<span class="text-[#d3caa9]">{formatCooldownDate(data.cooldownEndsAt)}</span>
 						</div>
 					</div>
 				</div>
@@ -218,8 +218,8 @@
 		<!-- Company Name -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentBriefcase20Filled class="size-5 text-[#e6a527]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Company Details</h2>
+				<FluentBriefcase20Filled class="size-5 text-[#f2b01e]" />
+				<h2 class="text-lg font-semibold text-[#f5efd8]">Company Details</h2>
 			</div>
 
 			<div>
@@ -248,8 +248,8 @@
 		<!-- Company Logo -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-[#e6a527]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Company Logo (Optional)</h2>
+				<FluentImage20Filled class="size-5 text-[#f2b01e]" />
+				<h2 class="text-lg font-semibold text-[#f5efd8]">Company Logo (Optional)</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -272,11 +272,11 @@
 				>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#e6a527]/15 p-3">
-								<FluentImage20Filled class="size-8 text-[#f7c56b]" />
+							<div class="rounded-full bg-[#f2b01e]/15 p-3">
+								<FluentImage20Filled class="size-8 text-[#ffd35c]" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-[#fff7e8]">
+								<p class="text-base font-semibold text-[#f5efd8]">
 									{#if dragActive}
 										Drop logo here
 									{:else if $submitting}
@@ -286,19 +286,19 @@
 									{/if}
 								</p>
 								{#if !$submitting && canCreate}
-									<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#a8a083]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-[#102239]/70">
+							<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
 								<img src={previewUrl} alt="Company logo preview" class="size-24 object-contain rounded-sm" />
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/60 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-[#12150f]/60 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
+								<p class="text-base font-semibold text-[#f5efd8]">Tap to change</p>
 							</div>
 							<button
 								type="button"
@@ -317,11 +317,11 @@
 								✕
 							</button>
 						</div>
-						<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
-							<p class="truncate text-sm font-medium text-[#fff7e8]" title={$form.logo.name}>
+						<div class="border-t border-[#c8b47a]/15 p-3 bg-[#1a1f15]/70">
+							<p class="truncate text-sm font-medium text-[#f5efd8]" title={$form.logo.name}>
 								{$form.logo.name}
 							</p>
-							<p class="text-xs text-[#a89e8e]">
+							<p class="text-xs text-[#a8a083]">
 								{Math.round($form.logo.size / 1024)} KB
 							</p>
 						</div>
@@ -339,8 +339,8 @@
 		<!-- Description -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-[#e6a527]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Company Description (Optional)</h2>
+				<FluentDocument20Filled class="size-5 text-[#f2b01e]" />
+				<h2 class="text-lg font-semibold text-[#f5efd8]">Company Description (Optional)</h2>
 			</div>
 
 			<textarea
@@ -378,12 +378,12 @@
 		</div>
 
 		<!-- Info Box -->
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4 space-y-2">
-			<p class="text-sm text-[#b7d0e6]">
+		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4 space-y-2">
+			<p class="text-sm text-[#b3dcff]">
 				💡 <strong>Note:</strong>
 				Once created, you will own this company and can build factories to produce goods and resources.
 			</p>
-			<p class="text-xs text-[#b7d0e6]/70">
+			<p class="text-xs text-[#b3dcff]/70">
 				<strong>Cooldown:</strong> After creating a company, you must wait {data.cooldownDays} days before creating another
 				one.
 			</p>

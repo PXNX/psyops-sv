@@ -79,15 +79,15 @@
 	// Get color for transaction type
 	function getTypeColor(type: string): string {
 		const colors: Record<string, string> = {
-			resource_purchase: "bg-[#315d8d]",
-			resource_sale: "bg-[#587252]",
-			construction: "bg-[#e6a527]",
-			tax_collection: "bg-[#8c709b]",
-			infrastructure: "bg-[#315d8d]",
+			resource_purchase: "bg-[#2369b5]",
+			resource_sale: "bg-[#3f8a2a]",
+			construction: "bg-[#f2b01e]",
+			tax_collection: "bg-[#8a4fc0]",
+			infrastructure: "bg-[#2369b5]",
 			military: "bg-red-500",
-			other: "bg-[#a89e8e]"
+			other: "bg-[#a8a083]"
 		};
-		return colors[type] || "bg-[#a89e8e]";
+		return colors[type] || "bg-[#a8a083]";
 	}
 
 	// Sort categories by total activity
@@ -113,45 +113,45 @@
 	<!-- Analytics Overview -->
 	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 		<!-- Current Balance -->
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-5">
+		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-5">
 			<div class="flex items-center justify-between mb-2">
-				<div class="text-[10px] text-[#b7d0e6] uppercase tracking-wide">Treasury Balance</div>
+				<div class="text-[10px] text-[#b3dcff] uppercase tracking-wide">Treasury Balance</div>
 				<div class="text-2xl">💰</div>
 			</div>
-			<div class="text-2xl font-bold font-mono text-[#fff7e8]">{formatCurrency(data.analytics.currentBalance)}</div>
-			<div class="text-sm text-[#b7d0e6]/70 mt-1">Available funds</div>
+			<div class="text-2xl font-bold font-mono text-[#f5efd8]">{formatCurrency(data.analytics.currentBalance)}</div>
+			<div class="text-sm text-[#b3dcff]/70 mt-1">Available funds</div>
 		</div>
 
 		<!-- Total Income -->
 		<div class="panel rounded-sm p-5">
 			<div class="flex items-center justify-between mb-2">
-				<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Income (30d)</div>
+				<div class="text-[10px] text-[#a8a083] uppercase tracking-wide">Income (30d)</div>
 				<div class="text-2xl">📈</div>
 			</div>
-			<div class="text-2xl font-bold font-mono text-[#c6dfbf]">{formatCurrency(data.analytics.totalIncome)}</div>
-			<div class="text-sm text-[#a89e8e] mt-1">Revenue collected</div>
+			<div class="text-2xl font-bold font-mono text-[#b9f29a]">{formatCurrency(data.analytics.totalIncome)}</div>
+			<div class="text-sm text-[#a8a083] mt-1">Revenue collected</div>
 		</div>
 
 		<!-- Total Expenses -->
 		<div class="panel rounded-sm p-5">
 			<div class="flex items-center justify-between mb-2">
-				<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Expenses (30d)</div>
+				<div class="text-[10px] text-[#a8a083] uppercase tracking-wide">Expenses (30d)</div>
 				<div class="text-2xl">📉</div>
 			</div>
 			<div class="text-2xl font-bold font-mono text-red-300">{formatCurrency(data.analytics.totalExpenses)}</div>
-			<div class="text-sm text-[#a89e8e] mt-1">Money spent</div>
+			<div class="text-sm text-[#a8a083] mt-1">Money spent</div>
 		</div>
 
 		<!-- Net Change -->
 		<div class="panel rounded-sm p-5">
 			<div class="flex items-center justify-between mb-2">
-				<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Net Change</div>
+				<div class="text-[10px] text-[#a8a083] uppercase tracking-wide">Net Change</div>
 				<div class="text-2xl">{data.analytics.netChange >= 0 ? "✅" : "⚠️"}</div>
 			</div>
-			<div class="text-2xl font-bold font-mono {data.analytics.netChange >= 0 ? 'text-[#c6dfbf]' : 'text-red-300'}">
+			<div class="text-2xl font-bold font-mono {data.analytics.netChange >= 0 ? 'text-[#b9f29a]' : 'text-red-300'}">
 				{data.analytics.netChange >= 0 ? "+" : ""}{formatCurrency(data.analytics.netChange)}
 			</div>
-			<div class="text-sm text-[#a89e8e] mt-1">Last 30 days</div>
+			<div class="text-sm text-[#a8a083] mt-1">Last 30 days</div>
 		</div>
 	</div>
 
@@ -165,11 +165,11 @@
 						<div class="flex items-center justify-between mb-2">
 							<div class="flex items-center gap-2">
 								<span class="text-xl">{transactionTypeIcons[category.type] || "📋"}</span>
-								<span class="font-medium text-[#e5d8c1]">
+								<span class="font-medium text-[#e6ddbf]">
 									{transactionTypeLabels[category.type] || category.type}
 								</span>
 							</div>
-							<div class="text-sm text-[#a89e8e]">
+							<div class="text-sm text-[#a8a083]">
 								{formatCompactCurrency(category.income + category.expenses)} total
 							</div>
 						</div>
@@ -177,36 +177,36 @@
 						<div class="flex gap-2">
 							<!-- Income bar -->
 							<div class="flex-1">
-								<div class="h-8 bg-[#0d1d31] rounded-sm overflow-hidden relative">
+								<div class="h-8 bg-[#0f120c] rounded-sm overflow-hidden relative">
 									<div
-										class="h-full bg-[#587252] rounded-sm transition-all duration-500 flex items-center justify-end pr-2"
+										class="h-full bg-[#3f8a2a] rounded-sm transition-all duration-500 flex items-center justify-end pr-2"
 										style="width: {getPercentage(category.income, maxCategoryValue)}%"
 									>
 										{#if category.income > 0}
-											<span class="text-xs font-semibold text-[#fff7e8]">
+											<span class="text-xs font-semibold text-[#f5efd8]">
 												+{formatCompactCurrency(category.income)}
 											</span>
 										{/if}
 									</div>
 								</div>
-								<div class="text-xs text-[#a89e8e] mt-1">Income</div>
+								<div class="text-xs text-[#a8a083] mt-1">Income</div>
 							</div>
 
 							<!-- Expenses bar -->
 							<div class="flex-1">
-								<div class="h-8 bg-[#0d1d31] rounded-sm overflow-hidden relative">
+								<div class="h-8 bg-[#0f120c] rounded-sm overflow-hidden relative">
 									<div
 										class="h-full bg-red-500 rounded-sm transition-all duration-500 flex items-center justify-end pr-2"
 										style="width: {getPercentage(category.expenses, maxCategoryValue)}%"
 									>
 										{#if category.expenses > 0}
-											<span class="text-xs font-semibold text-[#fff7e8]">
+											<span class="text-xs font-semibold text-[#f5efd8]">
 												-{formatCompactCurrency(category.expenses)}
 											</span>
 										{/if}
 									</div>
 								</div>
-								<div class="text-xs text-[#a89e8e] mt-1">Expenses</div>
+								<div class="text-xs text-[#a8a083] mt-1">Expenses</div>
 							</div>
 						</div>
 					</div>
@@ -217,9 +217,9 @@
 
 	<!-- Transactions List -->
 	<div class="panel rounded-sm overflow-hidden">
-		<div class="px-5 py-4 border-b border-[#dfceb0]/15 bg-[#102239]/70">
+		<div class="px-5 py-4 border-b border-[#c8b47a]/15 bg-[#1a1f15]/70">
 			<h2 class="section-title">Transaction History</h2>
-			<p class="text-sm text-[#a89e8e] mt-1">
+			<p class="text-sm text-[#a8a083] mt-1">
 				{data.pagination.totalCount} total transactions
 			</p>
 		</div>
@@ -227,32 +227,32 @@
 		{#if data.transactions.length === 0}
 			<div class="p-16 text-center">
 				<div class="text-6xl mb-4">📊</div>
-				<p class="text-xl font-semibold text-[#e5d8c1] mb-2">No transactions yet</p>
-				<p class="text-[#a89e8e]">Government financial activity will appear here</p>
+				<p class="text-xl font-semibold text-[#e6ddbf] mb-2">No transactions yet</p>
+				<p class="text-[#a8a083]">Government financial activity will appear here</p>
 			</div>
 		{:else}
 			<div class="overflow-x-auto">
 				<table class="w-full">
-					<thead class="bg-[#102239]/70 border-b border-[#dfceb0]/15">
+					<thead class="bg-[#1a1f15]/70 border-b border-[#c8b47a]/15">
 						<tr>
-							<th class="px-6 py-4 text-left text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
+							<th class="px-6 py-4 text-left text-xs font-semibold text-[#a8a083] uppercase tracking-wider">
 								Transaction
 							</th>
-							<th class="px-6 py-4 text-left text-xs font-semibold text-[#a89e8e] uppercase tracking-wider"> Date </th>
-							<th class="px-6 py-4 text-left text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
+							<th class="px-6 py-4 text-left text-xs font-semibold text-[#a8a083] uppercase tracking-wider"> Date </th>
+							<th class="px-6 py-4 text-left text-xs font-semibold text-[#a8a083] uppercase tracking-wider">
 								Authorized By
 							</th>
-							<th class="px-6 py-4 text-right text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
+							<th class="px-6 py-4 text-right text-xs font-semibold text-[#a8a083] uppercase tracking-wider">
 								Amount
 							</th>
-							<th class="px-6 py-4 text-right text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">
+							<th class="px-6 py-4 text-right text-xs font-semibold text-[#a8a083] uppercase tracking-wider">
 								Balance After
 							</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-[#dfceb0]/10">
+					<tbody class="divide-y divide-[#c8b47a]/10">
 						{#each data.transactions as transaction}
-							<tr class="hover:bg-[#19304b] transition-colors group">
+							<tr class="hover:bg-[#2e3524] transition-colors group">
 								<td class="px-6 py-4">
 									<div class="flex items-start gap-3">
 										<div
@@ -263,14 +263,14 @@
 											{transactionTypeIcons[transaction.type] || "📋"}
 										</div>
 										<div class="flex-1 min-w-0">
-											<div class="font-semibold text-[#fff7e8]">
+											<div class="font-semibold text-[#f5efd8]">
 												{transactionTypeLabels[transaction.type] || transaction.type}
 											</div>
-											<div class="text-sm text-[#d9ccb7] truncate">
+											<div class="text-sm text-[#d3caa9] truncate">
 												{transaction.description}
 											</div>
 											{#if transaction.itemName && transaction.quantity}
-												<div class="text-xs text-[#a89e8e] mt-1">
+												<div class="text-xs text-[#a8a083] mt-1">
 													{transaction.quantity}x {transaction.itemName}
 													{#if transaction.pricePerUnit}
 														@ {formatCurrency(transaction.pricePerUnit)}
@@ -281,8 +281,8 @@
 									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap">
-									<div class="text-sm text-[#e5d8c1]">{formatShortDate(transaction.createdAt)}</div>
-									<div class="text-xs text-[#a89e8e]">
+									<div class="text-sm text-[#e6ddbf]">{formatShortDate(transaction.createdAt)}</div>
+									<div class="text-xs text-[#a8a083]">
 										{(() => {
 											const d = new Date(transaction.createdAt);
 											const pad = (n) => String(n).padStart(2, "0");
@@ -293,7 +293,7 @@
 								<td class="px-6 py-4">
 									<a
 										href="/user/{transaction.authorizedBy.id}"
-										class="text-sm text-[#b7d0e6] hover:text-[#e1effa] hover:underline font-medium"
+										class="text-sm text-[#b3dcff] hover:text-[#e3f2ff] hover:underline font-medium"
 									>
 										{transaction.authorizedBy.name}
 									</a>
@@ -301,18 +301,18 @@
 								<td class="px-6 py-4 whitespace-nowrap text-right">
 									<div
 										class="inline-flex items-center gap-1 px-3 py-1.5 rounded-sm border {transaction.isIncome
-											? 'bg-[#587252]/18 border-[#8fae88]/30'
+											? 'bg-[#3f8a2a]/18 border-[#6fd14a]/30'
 											: 'bg-red-600/10 border-red-500/30'}"
 									>
 										<span
-											class="text-sm font-bold font-mono {transaction.isIncome ? 'text-[#c6dfbf]' : 'text-red-300'}"
+											class="text-sm font-bold font-mono {transaction.isIncome ? 'text-[#b9f29a]' : 'text-red-300'}"
 										>
 											{transaction.amount > 0 ? "+" : ""}{formatCurrency(transaction.amount)}
 										</span>
 									</div>
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-right">
-									<div class="text-sm font-medium font-mono text-[#d9ccb7]">
+									<div class="text-sm font-medium font-mono text-[#d3caa9]">
 										{formatCurrency(transaction.balanceAfter)}
 									</div>
 								</td>
@@ -324,19 +324,19 @@
 
 			<!-- Pagination -->
 			{#if data.pagination.totalPages > 1}
-				<div class="px-5 py-4 border-t border-[#dfceb0]/15 bg-[#102239]/70">
+				<div class="px-5 py-4 border-t border-[#c8b47a]/15 bg-[#1a1f15]/70">
 					<div class="flex items-center justify-between gap-3 flex-wrap">
-						<div class="text-sm text-[#a89e8e]">
+						<div class="text-sm text-[#a8a083]">
 							Showing
-							<span class="font-semibold text-[#fff7e8]">
+							<span class="font-semibold text-[#f5efd8]">
 								{(data.pagination.currentPage - 1) * data.pagination.pageSize + 1}
 							</span>
 							to
-							<span class="font-semibold text-[#fff7e8]">
+							<span class="font-semibold text-[#f5efd8]">
 								{Math.min(data.pagination.currentPage * data.pagination.pageSize, data.pagination.totalCount)}
 							</span>
 							of
-							<span class="font-semibold text-[#fff7e8]">{data.pagination.totalCount}</span>
+							<span class="font-semibold text-[#f5efd8]">{data.pagination.totalCount}</span>
 						</div>
 
 						<div class="flex gap-2">
@@ -369,7 +369,7 @@
 											{i + 1}
 										</Button>
 									{:else if Math.abs(i + 1 - data.pagination.currentPage) === 3}
-										<span class="px-2 py-2 text-sm text-[#a89e8e]">...</span>
+										<span class="px-2 py-2 text-sm text-[#a8a083]">...</span>
 									{/if}
 								{/each}
 							</div>

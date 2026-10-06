@@ -30,12 +30,12 @@
 {#if borderingRegions && borderingRegions.length > 0}
 	<div class="panel rounded-sm p-5">
 		<div class="flex items-center gap-3 mb-4">
-			<div class="size-10 bg-[#315d8d]/18 rounded-sm flex items-center justify-center">
-				<FluentMapDrive20Filled class="size-5 text-[#7ba0c8]" />
+			<div class="size-10 bg-[#2369b5]/18 rounded-sm flex items-center justify-center">
+				<FluentMapDrive20Filled class="size-5 text-[#5eaef5]" />
 			</div>
 			<div>
 				<h2 class="section-title">Bordering Regions</h2>
-				<p class="text-xs text-[#a89e8e]">
+				<p class="text-xs text-[#a8a083]">
 					{borderingRegions.length} adjacent {borderingRegions.length === 1 ? "region" : "regions"}
 				</p>
 			</div>
@@ -44,7 +44,7 @@
 			{#each borderingRegions as borderRegion}
 				<a
 					href="/region/{borderRegion.id}"
-					class="group panel-muted rounded-sm p-4 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-all"
+					class="group panel-muted rounded-sm p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-all"
 				>
 					<div class="flex items-start gap-4">
 						<Logo
@@ -52,23 +52,23 @@
 							alt={borderRegion.name}
 							class="size-12 rounded-sm flex-shrink-0"
 							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-[#315d8d]/40 to-[#315d8d]/40"
+							placeholderGradient="from-[#2369b5]/40 to-[#2369b5]/40"
 						/>
 
 						<div class="flex-1 min-w-0">
 							<div class="flex items-start justify-between gap-2 mb-2">
 								<div class="flex-1 min-w-0">
-									<h3 class="font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+									<h3 class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 										{borderRegion.name}
 									</h3>
-									<div class="flex items-center gap-3 text-xs text-[#a89e8e] mt-1">
+									<div class="flex items-center gap-3 text-xs text-[#a8a083] mt-1">
 										{#if borderRegion.stateName}
 											<span class="flex items-center gap-1">
 												<FluentFlag20Filled class="size-3" />
 												{borderRegion.stateName}
 											</span>
 										{:else}
-											<span class="flex items-center gap-1 text-[#f7c56b]">
+											<span class="flex items-center gap-1 text-[#ffd35c]">
 												<FluentFlag20Filled class="size-3" />
 												Independent
 											</span>
@@ -80,10 +80,10 @@
 									</div>
 								</div>
 								<div
-									class="flex items-center gap-1.5 px-2.5 py-1 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex-shrink-0"
+									class="flex items-center gap-1.5 px-2.5 py-1 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex-shrink-0"
 								>
-									<FluentNavigation20Filled class="size-3.5 text-[#7ba0c8]" />
-									<span class="text-xs font-semibold text-[#b7d0e6]">{borderRegion.distanceKm} km</span>
+									<FluentNavigation20Filled class="size-3.5 text-[#5eaef5]" />
+									<span class="text-xs font-semibold text-[#b3dcff]">{borderRegion.distanceKm} km</span>
 								</div>
 							</div>
 
@@ -91,55 +91,55 @@
 								<div class="flex flex-wrap gap-1.5 mt-3">
 									{#if borderRegion.resources.oil}
 										<div
-											class="px-2 py-1 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm text-xs flex items-center gap-1"
+											class="px-2 py-1 bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm text-xs flex items-center gap-1"
 										>
-											<span class="text-[#e6a527]">⛽</span>
-											<span class="text-[#f7c56b] font-medium">{borderRegion.resources.oil}</span>
+											<span class="text-[#f2b01e]">⛽</span>
+											<span class="text-[#ffd35c] font-medium">{borderRegion.resources.oil}</span>
 										</div>
 									{/if}
 									{#if borderRegion.resources.steel}
 										<div
-											class="px-2 py-1 bg-[#102239]/70 border border-[#dfceb0]/15 rounded-sm text-xs flex items-center gap-1"
+											class="px-2 py-1 bg-[#1a1f15]/70 border border-[#c8b47a]/15 rounded-sm text-xs flex items-center gap-1"
 										>
-											<span class="text-[#a89e8e]">🔩</span>
-											<span class="text-[#e5d8c1] font-medium">{borderRegion.resources.steel}</span>
+											<span class="text-[#a8a083]">🔩</span>
+											<span class="text-[#e6ddbf] font-medium">{borderRegion.resources.steel}</span>
 										</div>
 									{/if}
 									{#if borderRegion.resources.chromium}
 										<div
-											class="px-2 py-1 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm text-xs flex items-center gap-1"
+											class="px-2 py-1 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm text-xs flex items-center gap-1"
 										>
-											<span class="text-[#7ba0c8]">💎</span>
-											<span class="text-[#b7d0e6] font-medium">{borderRegion.resources.chromium}</span>
+											<span class="text-[#5eaef5]">💎</span>
+											<span class="text-[#b3dcff] font-medium">{borderRegion.resources.chromium}</span>
 										</div>
 									{/if}
 									{#if borderRegion.resources.tungsten}
 										<div
-											class="px-2 py-1 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm text-xs flex items-center gap-1"
+											class="px-2 py-1 bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm text-xs flex items-center gap-1"
 										>
-											<span class="text-[#b7a0c5]">⚡</span>
-											<span class="text-[#d5c4df] font-medium">{borderRegion.resources.tungsten}</span>
+											<span class="text-[#c08cf0]">⚡</span>
+											<span class="text-[#e3cbfb] font-medium">{borderRegion.resources.tungsten}</span>
 										</div>
 									{/if}
 									{#if borderRegion.resources.rubber}
 										<div
-											class="px-2 py-1 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm text-xs flex items-center gap-1"
+											class="px-2 py-1 bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm text-xs flex items-center gap-1"
 										>
-											<span class="text-[#8fae88]">🌿</span>
-											<span class="text-[#c6dfbf] font-medium">{borderRegion.resources.rubber}</span>
+											<span class="text-[#6fd14a]">🌿</span>
+											<span class="text-[#b9f29a] font-medium">{borderRegion.resources.rubber}</span>
 										</div>
 									{/if}
 									{#if borderRegion.resources.aluminium}
 										<div
-											class="px-2 py-1 bg-[#102239]/70 border border-[#dfceb0]/15 rounded-sm text-xs flex items-center gap-1"
+											class="px-2 py-1 bg-[#1a1f15]/70 border border-[#c8b47a]/15 rounded-sm text-xs flex items-center gap-1"
 										>
-											<span class="text-[#a89e8e]">🔘</span>
-											<span class="text-[#e5d8c1] font-medium">{borderRegion.resources.aluminium}</span>
+											<span class="text-[#a8a083]">🔘</span>
+											<span class="text-[#e6ddbf] font-medium">{borderRegion.resources.aluminium}</span>
 										</div>
 									{/if}
 								</div>
 							{:else}
-								<p class="text-xs text-[#a89e8e] italic mt-3">No natural resources</p>
+								<p class="text-xs text-[#a8a083] italic mt-3">No natural resources</p>
 							{/if}
 						</div>
 					</div>

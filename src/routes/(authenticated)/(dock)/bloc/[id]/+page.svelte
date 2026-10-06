@@ -33,7 +33,7 @@
 			<div class="flex items-center gap-4 flex-1 min-w-0">
 				<!-- Bloc Logo -->
 				{#if data.bloc.logo}
-					<div class="size-20 rounded-full overflow-hidden bg-[#102239] shrink-0">
+					<div class="size-20 rounded-full overflow-hidden bg-[#1a1f15] shrink-0">
 						<img src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
 					</div>
 				{:else}
@@ -46,10 +46,10 @@
 				{/if}
 
 				<div class="min-w-0 space-y-1">
-					<h1 class="text-3xl font-bold text-[#fff7e8] break-words">{data.bloc.name}</h1>
-					<span class="text-xs text-[#a89e8e] uppercase tracking-wider">Alliance</span>
+					<h1 class="text-3xl font-bold text-[#f5efd8] break-words">{data.bloc.name}</h1>
+					<span class="text-xs text-[#a8a083] uppercase tracking-wider">Alliance</span>
 					{#if data.bloc.description}
-						<p class="text-sm text-[#d9ccb7] max-w-xl">{data.bloc.description}</p>
+						<p class="text-sm text-[#d3caa9] max-w-xl">{data.bloc.description}</p>
 					{/if}
 				</div>
 			</div>
@@ -87,7 +87,7 @@
 	<!-- Leadership -->
 	<section class="panel rounded-sm p-5 space-y-4">
 		<h2 class="section-title">
-			<FluentPeopleTeam20Filled class="size-5 text-[#f7c56b]" />
+			<FluentPeopleTeam20Filled class="size-5 text-[#ffd35c]" />
 			Leadership
 		</h2>
 
@@ -97,25 +97,25 @@
 				logo={data.leader.logo}
 				logoAlt={data.leader.name}
 				placeholderIcon={FluentCrown20Filled}
-				placeholderGradient="from-[#e6a527]/15 to-[#e6a527]/10"
+				placeholderGradient="from-[#f2b01e]/15 to-[#f2b01e]/10"
 				title={data.leader.name}
 				subtitle="Bloc Leader • elected {formatDate(data.leader.appointedAt)}"
 				hoverColor="yellow"
 			/>
 		{:else}
-			<p class="text-sm text-[#a89e8e]">No bloc leader has been elected yet.</p>
+			<p class="text-sm text-[#a8a083]">No bloc leader has been elected yet.</p>
 		{/if}
 
 		{#if data.diplomats.length > 0}
-			<div class="space-y-2 pt-2 border-t border-[#dfceb0]/10">
-				<h3 class="text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">Diplomats</h3>
+			<div class="space-y-2 pt-2 border-t border-[#c8b47a]/10">
+				<h3 class="text-xs font-semibold text-[#a8a083] uppercase tracking-wider">Diplomats</h3>
 				{#each data.diplomats as diplomat}
 					<ProfileItem
 						href="/user/{diplomat.userId}"
 						logo={diplomat.logo}
 						logoAlt={diplomat.name}
 						placeholderIcon={FluentGlobeShield20Filled}
-						placeholderGradient="from-[#315d8d]/20 to-[#315d8d]/10"
+						placeholderGradient="from-[#2369b5]/20 to-[#2369b5]/10"
 						title={diplomat.name}
 						subtitle="Diplomat"
 						hoverColor="blue"
@@ -125,20 +125,20 @@
 		{/if}
 
 		{#if data.election}
-			<div class="pt-3 border-t border-[#dfceb0]/10 space-y-3">
+			<div class="pt-3 border-t border-[#c8b47a]/10 space-y-3">
 				{#if data.election.status === "active"}
 					<div class="flex items-center justify-between gap-2 flex-wrap">
-						<span class="text-xs font-semibold text-[#c6dfbf] uppercase tracking-wider flex items-center gap-1.5">
-							<span class="size-1.5 bg-[#8fae88] rounded-full animate-pulse"></span>
+						<span class="text-xs font-semibold text-[#b9f29a] uppercase tracking-wider flex items-center gap-1.5">
+							<span class="size-1.5 bg-[#6fd14a] rounded-full animate-pulse"></span>
 							Leadership Election — Voting Open
 						</span>
-						<span class="text-[10px] text-[#a89e8e] font-mono">
+						<span class="text-[10px] text-[#a8a083] font-mono">
 							Ends {formatDateTime(data.election.votingEndsAt)}
 						</span>
 					</div>
 
 					{#if data.candidates.length === 0}
-						<p class="text-sm text-[#a89e8e]">
+						<p class="text-sm text-[#a8a083]">
 							No candidates nominated yet. A state president can nominate a citizen of any member state (not themselves)
 							from that citizen's profile page.
 						</p>
@@ -148,21 +148,21 @@
 								{@const isMyVote = data.myBlocLeaderVote === candidate.userId}
 								<div
 									class="panel-muted rounded-sm overflow-hidden {isMyVote
-										? 'border-[#8fae88]/50'
-										: 'border-[#dfceb0]/10'}"
+										? 'border-[#6fd14a]/50'
+										: 'border-[#c8b47a]/10'}"
 								>
 									<ProfileItem
 										href="/user/{candidate.userId}"
 										logo={candidate.logo}
 										logoAlt={candidate.name}
 										placeholderIcon={FluentPerson20Filled}
-										placeholderGradient="from-[#315d8d] to-[#315d8d]"
+										placeholderGradient="from-[#2369b5] to-[#2369b5]"
 										title={candidate.name}
 										subtitle="{candidate.votes} vote{candidate.votes === 1 ? '' : 's'}{isMyVote ? ' • your vote' : ''}"
 										hoverColor="yellow"
 									/>
 									{#if data.canVoteForBlocLeader}
-										<form method="POST" action="?/voteBlocLeader" use:enhance class="border-t border-[#dfceb0]/10 p-2">
+										<form method="POST" action="?/voteBlocLeader" use:enhance class="border-t border-[#c8b47a]/10 p-2">
 											<input type="hidden" name="candidateUserId" value={candidate.userId} />
 											<Button
 												type="submit"
@@ -181,12 +181,12 @@
 					{/if}
 
 					{#if !data.canVoteForBlocLeader}
-						<p class="text-xs text-[#a89e8e]">Only presidents of this bloc's member states may vote.</p>
+						<p class="text-xs text-[#a8a083]">Only presidents of this bloc's member states may vote.</p>
 					{/if}
 				{:else}
 					<div class="flex items-center justify-between gap-2 flex-wrap">
-						<span class="text-xs font-semibold text-[#a89e8e] uppercase tracking-wider">Next Election</span>
-						<span class="text-[10px] text-[#a89e8e] font-mono">
+						<span class="text-xs font-semibold text-[#a8a083] uppercase tracking-wider">Next Election</span>
+						<span class="text-[10px] text-[#a8a083] font-mono">
 							Nominations open {formatDateTime(data.election.votingStartsAt)}
 						</span>
 					</div>
@@ -203,7 +203,7 @@
 	{/if}
 	{#if form?.success}
 		<div
-			class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3 text-sm"
+			class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3 text-sm"
 		>
 			{form.message ?? "Bloc membership updated"}
 		</div>
@@ -213,7 +213,7 @@
 	{#if data.applications.length > 0}
 		<section class="space-y-3">
 			<h2 class="section-title">
-				<FluentVote20Filled class="size-5 text-[#b7a0c5]" />
+				<FluentVote20Filled class="size-5 text-[#c08cf0]" />
 				Membership Applications
 			</h2>
 			<div class="panel rounded-sm p-3 space-y-2">
@@ -224,7 +224,7 @@
 							logo={application.state.logo}
 							logoAlt={application.state.name}
 							placeholderIcon={FluentGlobe20Filled}
-							placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+							placeholderGradient="from-[#4a5238] to-[#252b1e]"
 							title={application.state.name}
 							subtitle="{application.pro} pro • {application.contra} contra • of {data.memberCount} member state{data.memberCount ===
 							1
@@ -237,7 +237,7 @@
 								method="POST"
 								action="?/voteApplication"
 								use:enhance
-								class="border-t border-[#dfceb0]/10 p-2 flex gap-2"
+								class="border-t border-[#c8b47a]/10 p-2 flex gap-2"
 							>
 								<input type="hidden" name="applicationId" value={application.id} />
 								<Button
@@ -266,7 +266,7 @@
 						{/if}
 					</div>
 				{/each}
-				<p class="text-xs text-[#a89e8e] px-1">
+				<p class="text-xs text-[#a8a083] px-1">
 					An application passes once more than half of the member states vote pro. When voting closes, the majority of
 					cast votes decides (ties reject).{data.isMemberPresident
 						? ""
@@ -296,18 +296,18 @@
 							<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
 							<span class="text-[10px] text-red-300 uppercase tracking-widest">Active War</span>
 						</div>
-						<div class="text-sm text-[#d9ccb7]">
+						<div class="text-sm text-[#d3caa9]">
 							<span class="font-bold text-red-400">{war.attacker.name}</span>
-							<span class="text-[#a89e8e] mx-1">vs</span>
-							<span class="font-bold text-[#b7d0e6]">{war.defender.name}</span>
+							<span class="text-[#a8a083] mx-1">vs</span>
+							<span class="font-bold text-[#b3dcff]">{war.defender.name}</span>
 						</div>
 						{#if war.activeBattles > 0}
-							<span class="text-[10px] text-[#f7c56b] mt-0.5 inline-block">
+							<span class="text-[10px] text-[#ffd35c] mt-0.5 inline-block">
 								{war.activeBattles} active {war.activeBattles === 1 ? "battle" : "battles"}
 							</span>
 						{/if}
 					</div>
-					<span class="text-[#a89e8e] group-hover:text-red-400 transition-colors">→</span>
+					<span class="text-[#a8a083] group-hover:text-red-400 transition-colors">→</span>
 				</a>
 			{/each}
 		</section>
@@ -316,7 +316,7 @@
 	<!-- Member States -->
 	<section class="space-y-3">
 		<h2 class="section-title">
-			<FluentGlobe20Filled class="size-5 text-[#7ba0c8]" />
+			<FluentGlobe20Filled class="size-5 text-[#5eaef5]" />
 			Member States
 		</h2>
 		<div class="panel rounded-sm p-3 space-y-2">
@@ -326,7 +326,7 @@
 					logo={state.logo}
 					logoAlt={state.name}
 					placeholderIcon={FluentGlobe20Filled}
-					placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+					placeholderGradient="from-[#4a5238] to-[#252b1e]"
 					title={state.name}
 					subtitle="{state.population.toLocaleString()} population{state.president
 						? ` • ${state.president.name}`
@@ -334,7 +334,7 @@
 					hoverColor="blue"
 				/>
 			{:else}
-				<p class="text-sm text-[#a89e8e] text-center py-4">No member states yet</p>
+				<p class="text-sm text-[#a8a083] text-center py-4">No member states yet</p>
 			{/each}
 		</div>
 	</section>
@@ -345,8 +345,8 @@
 			<form method="POST" action="?/withdrawApplication" use:enhance>
 				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 					<div class="flex-1">
-						<span class="text-sm font-bold text-[#fff7e8]">Application Pending</span>
-						<p class="text-xs text-[#a89e8e] mt-0.5">
+						<span class="text-sm font-bold text-[#f5efd8]">Application Pending</span>
+						<p class="text-xs text-[#a8a083] mt-0.5">
 							{data.myApplication.pro} pro • {data.myApplication.contra} contra • closes {formatDateTime(
 								data.myApplication.expiresAt
 							)}
@@ -363,16 +363,16 @@
 			<form method="POST" action="?/join" use:enhance>
 				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 					<div class="flex-1">
-						<span class="text-sm font-bold text-[#fff7e8]">Apply to join this Bloc</span>
+						<span class="text-sm font-bold text-[#f5efd8]">Apply to join this Bloc</span>
 						{#if data.userState}
-							<p class="text-xs text-[#a89e8e] mt-0.5">
+							<p class="text-xs text-[#a8a083] mt-0.5">
 								Apply as president of {data.userState.name} — member states vote on admission
 							</p>
 						{/if}
 					</div>
 					<button
 						type="submit"
-						class="w-full sm:w-auto px-5 py-2.5 rounded-sm font-bold text-sm text-[#fff7e8] transition-all flex items-center justify-center gap-2 hover:brightness-110"
+						class="w-full sm:w-auto px-5 py-2.5 rounded-sm font-bold text-sm text-[#f5efd8] transition-all flex items-center justify-center gap-2 hover:brightness-110"
 						style="background-color: {data.bloc.color}"
 					>
 						<FluentPersonAdd20Filled class="size-4" />

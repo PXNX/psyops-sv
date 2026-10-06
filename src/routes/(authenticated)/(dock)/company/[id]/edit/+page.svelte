@@ -161,15 +161,15 @@
 		<!-- Logo Preview -->
 		{#if imageUpload.previewUrl}
 			<div class="panel rounded-sm p-5">
-				<h3 class="text-sm font-semibold text-[#e5d8c1] mb-3">Preview</h3>
-				<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm p-6">
+				<h3 class="text-sm font-semibold text-[#e6ddbf] mb-3">Preview</h3>
+				<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm p-6">
 					<div class="flex items-center gap-4">
-						<div class="size-16 rounded-sm bg-[#0d1d31] border border-[#dfceb0]/20 flex items-center justify-center">
+						<div class="size-16 rounded-sm bg-[#0f120c] border border-[#c8b47a]/20 flex items-center justify-center">
 							<img src={imageUpload.previewUrl} alt="Logo preview" class="size-14 object-contain" />
 						</div>
 						<div>
-							<p class="font-bold text-[#fff7e8] text-xl">{$form.name || "Your Company Name"}</p>
-							<p class="text-sm text-[#d9ccb7]">Founded {formatDate(data.company.foundedAt)}</p>
+							<p class="font-bold text-[#f5efd8] text-xl">{$form.name || "Your Company Name"}</p>
+							<p class="text-sm text-[#d3caa9]">Founded {formatDate(data.company.foundedAt)}</p>
 						</div>
 					</div>
 				</div>

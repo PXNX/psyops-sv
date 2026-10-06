@@ -41,10 +41,10 @@
 						>
 							<Logo src={newspaper.logo} alt={newspaper.name} />
 							<div class="min-w-0">
-								<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+								<h3 class="text-lg font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 									{newspaper.name}
 								</h3>
-								<span class="text-xs text-[#f7c56b]">{newspaper.rank}</span>
+								<span class="text-xs text-[#ffd35c]">{newspaper.rank}</span>
 							</div>
 						</a>
 					</li>
@@ -57,8 +57,8 @@
 		<div class="panel-muted rounded-sm p-12 text-center">
 			<div class="max-w-md mx-auto flex flex-col items-center space-y-4">
 				<FluentEmojiRolledUpNewspaper class="size-12" />
-				<h3 class="text-xl font-bold text-[#fff7e8]">You don't work for a newspaper</h3>
-				<p class="text-[#a89e8e]">
+				<h3 class="text-xl font-bold text-[#f5efd8]">You don't work for a newspaper</h3>
+				<p class="text-[#a8a083]">
 					Newspapers allow you to share events and your views with the community in a more uniform way. You can also ask
 					other users to become a journalist for a newspaper they own.
 				</p>

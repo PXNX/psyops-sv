@@ -46,11 +46,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200",
 			dragActive
-				? "border-[#e6a527] bg-[#e6a527]/10"
+				? "border-[#f2b01e] bg-[#f2b01e]/10"
 				: previewUrl
-					? "border-[#8fae88]/50 bg-[#587252]/10"
-					: "border-[#e6a527]/30",
-			!disabled && !previewUrl ? "hover:border-[#e6a527]/50 hover:bg-[#e6a527]/10" : "",
+					? "border-[#6fd14a]/50 bg-[#3f8a2a]/10"
+					: "border-[#f2b01e]/30",
+			!disabled && !previewUrl ? "hover:border-[#f2b01e]/50 hover:bg-[#f2b01e]/10" : "",
 			disabled ? "opacity-50" : "",
 			error ? "border-red-500/50" : ""
 		]
@@ -138,11 +138,11 @@
 	<button type="button" onclick={onClickUpload} {disabled} class={dropzoneClass}>
 		{#if !previewUrl}
 			<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-				<div class="rounded-full bg-[#e6a527]/15 p-3">
-					<FluentImage20Filled class="size-8 text-[#f7c56b]" />
+				<div class="rounded-full bg-[#f2b01e]/15 p-3">
+					<FluentImage20Filled class="size-8 text-[#ffd35c]" />
 				</div>
 				<div class="text-center">
-					<p class="text-base font-semibold text-[#fff7e8]">
+					<p class="text-base font-semibold text-[#f5efd8]">
 						{#if dragActive}
 							Drop {entityName} here
 						{:else if disabled}
@@ -152,19 +152,19 @@
 						{/if}
 					</p>
 					{#if !disabled}
-						<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
+						<p class="mt-1 text-sm text-[#a8a083]">Images only • 5MB max</p>
 					{/if}
 				</div>
 			</div>
 		{:else}
 			<div class="relative">
-				<div class="flex items-center justify-center p-6 bg-[#102239]/70">
+				<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
 					<img src={previewUrl} alt="{entityName} preview" class="size-24 object-contain rounded-sm" />
 				</div>
 				<div
-					class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/60 opacity-0 transition-opacity group-hover:opacity-100"
+					class="absolute inset-0 flex items-center justify-center bg-[#12150f]/60 opacity-0 transition-opacity group-hover:opacity-100"
 				>
-					<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
+					<p class="text-base font-semibold text-[#f5efd8]">Tap to change</p>
 				</div>
 				{#if file && !disabled}
 					<button
@@ -181,11 +181,11 @@
 				{/if}
 			</div>
 			{#if file}
-				<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
-					<p class="truncate text-sm font-medium text-[#fff7e8]" title={file.name}>
+				<div class="border-t border-[#c8b47a]/15 p-3 bg-[#1a1f15]/70">
+					<p class="truncate text-sm font-medium text-[#f5efd8]" title={file.name}>
 						{file.name}
 					</p>
-					<p class="text-xs text-[#a89e8e]">
+					<p class="text-xs text-[#a8a083]">
 						{Math.round(file.size / 1024)} KB
 					</p>
 				</div>
@@ -197,7 +197,7 @@
 {#if error}
 	<p class="text-xs text-red-400 mt-2">{error}</p>
 {:else}
-	<p class="text-xs text-[#a89e8e] mt-2">
+	<p class="text-xs text-[#a8a083] mt-2">
 		Upload a new {entityName} to replace the current one • Will be converted to 96x96 WebP • Max 5MB
 	</p>
 {/if}

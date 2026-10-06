@@ -32,11 +32,11 @@
 {#if !data.canBroadcastState && !data.canBroadcastParty}
 	<PageContainer maxWidth="4xl">
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
-				<FluentMail20Filled class="size-8 text-[#a89e8e]" />
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
+				<FluentMail20Filled class="size-8 text-[#a8a083]" />
 			</div>
-			<h2 class="text-xl font-bold text-[#fff7e8] mb-2">No Broadcast Access</h2>
-			<p class="text-[#a89e8e]">Only presidents and party leaders can send broadcast messages.</p>
+			<h2 class="text-xl font-bold text-[#f5efd8] mb-2">No Broadcast Access</h2>
+			<p class="text-[#a8a083]">Only presidents and party leaders can send broadcast messages.</p>
 		</div>
 	</PageContainer>
 {:else}
@@ -53,16 +53,16 @@
 
 		<!-- Active Broadcasts -->
 		{#if data.activeStateBroadcast}
-			<div class="bg-[#8c709b]/15 rounded-sm border border-[#b7a0c5]/30 p-5">
+			<div class="bg-[#8a4fc0]/15 rounded-sm border border-[#c08cf0]/30 p-5">
 				<div class="flex items-start justify-between gap-3">
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-2">
-							<FluentBuildingGovernment20Filled class="size-5 text-[#b7a0c5]" />
-							<h3 class="font-semibold text-[#d5c4df]">Active State Broadcast</h3>
+							<FluentBuildingGovernment20Filled class="size-5 text-[#c08cf0]" />
+							<h3 class="font-semibold text-[#e3cbfb]">Active State Broadcast</h3>
 						</div>
-						<h4 class="text-[#fff7e8] font-bold mb-1">{data.activeStateBroadcast.title}</h4>
-						<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{data.activeStateBroadcast.content}</p>
-						<p class="text-xs text-[#a89e8e] mt-2">
+						<h4 class="text-[#f5efd8] font-bold mb-1">{data.activeStateBroadcast.title}</h4>
+						<p class="text-[#d3caa9] whitespace-pre-wrap text-sm">{data.activeStateBroadcast.content}</p>
+						<p class="text-xs text-[#a8a083] mt-2">
 							{formatDateTime(data.activeStateBroadcast.createdAt)}
 						</p>
 					</div>
@@ -75,16 +75,16 @@
 		{/if}
 
 		{#if data.activePartyBroadcast}
-			<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/30 p-5">
+			<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/30 p-5">
 				<div class="flex items-start justify-between gap-3">
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-2">
-							<FluentPeople20Filled class="size-5 text-[#8fae88]" />
-							<h3 class="font-semibold text-[#c6dfbf]">Active Party Broadcast</h3>
+							<FluentPeople20Filled class="size-5 text-[#6fd14a]" />
+							<h3 class="font-semibold text-[#b9f29a]">Active Party Broadcast</h3>
 						</div>
-						<h4 class="text-[#fff7e8] font-bold mb-1">{data.activePartyBroadcast.title}</h4>
-						<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{data.activePartyBroadcast.content}</p>
-						<p class="text-xs text-[#a89e8e] mt-2">
+						<h4 class="text-[#f5efd8] font-bold mb-1">{data.activePartyBroadcast.title}</h4>
+						<p class="text-[#d3caa9] whitespace-pre-wrap text-sm">{data.activePartyBroadcast.content}</p>
+						<p class="text-xs text-[#a8a083] mt-2">
 							{formatDateTime(data.activePartyBroadcast.createdAt)}
 						</p>
 					</div>
@@ -181,7 +181,7 @@
 
 					{#if form?.success}
 						<div
-							class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3"
+							class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3"
 						>
 							<FluentSend20Filled class="size-5 shrink-0" />
 							<p class="text-sm">Broadcast published!</p>

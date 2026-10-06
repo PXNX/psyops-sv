@@ -10,8 +10,8 @@
 
 	const buildingTypeColors: Record<string, string> = {
 		hospital: "bg-red-600/10 text-red-300 border-red-500/30",
-		school: "bg-[#8c709b]/20 text-[#d5c4df] border-[#b7a0c5]/30",
-		power_plant: "bg-[#e6a527]/12 text-[#f7c56b] border-[#e6a527]/35"
+		school: "bg-[#8a4fc0]/20 text-[#e3cbfb] border-[#c08cf0]/30",
+		power_plant: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35"
 	};
 
 	const buildingTypeIcons: Record<string, string> = {
@@ -65,8 +65,8 @@
 		<div class="p-4 space-y-4">
 			{#if data.pendingConstructions.length === 0}
 				<div class="text-center py-12">
-					<FluentBuildingFactory20Filled class="size-16 text-[#a89e8e]/60 mx-auto mb-3" />
-					<p class="text-[#a89e8e]">Nothing is currently under construction</p>
+					<FluentBuildingFactory20Filled class="size-16 text-[#a8a083]/60 mx-auto mb-3" />
+					<p class="text-[#a8a083]">Nothing is currently under construction</p>
 				</div>
 			{:else}
 				{#each data.pendingConstructions as construction}
@@ -76,33 +76,33 @@
 								<div
 									class="size-12 md:size-14 rounded-sm border flex items-center justify-center text-2xl shrink-0 {buildingTypeColors[
 										construction.buildingType
-									] ?? 'bg-[#0d1d31] text-[#a89e8e] border-[#dfceb0]/15'}"
+									] ?? 'bg-[#0f120c] text-[#a8a083] border-[#c8b47a]/15'}"
 								>
 									{buildingTypeIcons[construction.buildingType] ?? "🏗️"}
 								</div>
 								<div class="flex-1">
-									<h3 class="text-lg md:text-xl font-bold text-[#fff7e8] mb-1">{construction.name}</h3>
+									<h3 class="text-lg md:text-xl font-bold text-[#f5efd8] mb-1">{construction.name}</h3>
 									<a
 										href="/region/{construction.regionId}"
-										class="text-sm text-[#b7d0e6] hover:text-[#fff7e8] transition-colors"
+										class="text-sm text-[#b3dcff] hover:text-[#f5efd8] transition-colors"
 									>
 										in {construction.regionName}
 									</a>
-									<p class="text-xs text-[#a89e8e] mt-1">Commissioned by {construction.builtByName}</p>
+									<p class="text-xs text-[#a8a083] mt-1">Commissioned by {construction.builtByName}</p>
 								</div>
 								<div class="text-left sm:text-right w-full sm:w-auto flex items-center sm:block gap-2">
-									<FluentClock20Filled class="size-4 text-[#f7c56b] sm:hidden" />
-									<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Time Left</p>
-									<p class="text-xl md:text-2xl font-bold font-mono text-[#f7c56b]">
+									<FluentClock20Filled class="size-4 text-[#ffd35c] sm:hidden" />
+									<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Time Left</p>
+									<p class="text-xl md:text-2xl font-bold font-mono text-[#ffd35c]">
 										{timeRemainingFor(construction.completesAt)}
 									</p>
 								</div>
 							</div>
 
 							<div>
-								<div class="h-3 bg-[#102239] rounded-full overflow-hidden">
+								<div class="h-3 bg-[#1a1f15] rounded-full overflow-hidden">
 									<div
-										class="h-full bg-[#e6a527] rounded-full transition-all duration-1000"
+										class="h-full bg-[#f2b01e] rounded-full transition-all duration-1000"
 										style="width: {progressFor(construction.startedAt, construction.completesAt)}%"
 									></div>
 								</div>

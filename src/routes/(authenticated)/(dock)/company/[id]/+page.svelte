@@ -104,13 +104,13 @@
 			/>
 
 			<div class="min-w-0 space-y-1">
-				<h1 class="text-3xl font-bold text-[#fff7e8]">{data.company.name}</h1>
-				<p class="text-xs text-[#a89e8e] flex items-center gap-1.5">
+				<h1 class="text-3xl font-bold text-[#f5efd8]">{data.company.name}</h1>
+				<p class="text-xs text-[#a8a083] flex items-center gap-1.5">
 					<FluentCalendar20Filled class="size-3.5" />
 					Founded {formatDate(data.company.foundedAt)}
 				</p>
 				{#if data.company.description}
-					<p class="text-sm text-[#d9ccb7] max-w-xl pt-1">{data.company.description}</p>
+					<p class="text-sm text-[#d3caa9] max-w-xl pt-1">{data.company.description}</p>
 				{/if}
 			</div>
 		</div>
@@ -119,13 +119,13 @@
 	<!-- Owner & Headquarters -->
 	<section class="grid sm:grid-cols-2 gap-3">
 		<div class="panel-muted rounded-sm p-3">
-			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1 mb-2">Owner</h2>
+			<h2 class="text-sm font-semibold text-[#a8a083] uppercase tracking-wider px-1 mb-2">Owner</h2>
 			<ProfileItem
 				href="/user/{data.company.ownerId}"
 				logo={data.company.ownerLogo}
 				logoAlt={data.company.ownerName ?? "Owner"}
 				placeholderIcon={FluentPeople20Filled}
-				placeholderGradient="from-[#e6a527]/20 to-[#e6a527]/10"
+				placeholderGradient="from-[#f2b01e]/20 to-[#f2b01e]/10"
 				title={data.company.ownerName || data.company.ownerEmail}
 				subtitle="Company Owner"
 				hoverColor="yellow"
@@ -135,18 +135,18 @@
 		</div>
 
 		<div class="panel-muted rounded-sm p-3 space-y-2">
-			<h2 class="text-sm font-semibold text-[#a89e8e] uppercase tracking-wider px-1">Headquarters</h2>
+			<h2 class="text-sm font-semibold text-[#a8a083] uppercase tracking-wider px-1">Headquarters</h2>
 			{#if data.company.stateName}
 				<ProfileItem
 					href="/state/{data.company.stateId}"
 					placeholderIcon={FluentHome20Filled}
-					placeholderGradient="from-[#315d8d]/20 to-[#315d8d]/10"
+					placeholderGradient="from-[#2369b5]/20 to-[#2369b5]/10"
 					title={data.company.stateName}
 					subtitle={data.company.regionName ?? "Region"}
 					hoverColor="blue"
 				/>
 			{:else}
-				<p class="text-sm text-[#a89e8e] px-2 py-1">Not headquartered anywhere yet.</p>
+				<p class="text-sm text-[#a8a083] px-2 py-1">Not headquartered anywhere yet.</p>
 			{/if}
 
 			{#if data.isOwner}
@@ -172,7 +172,7 @@
 						</button>
 					</form>
 				{:else if !data.residenceRegion}
-					<p class="text-xs text-[#a89e8e] px-2">Establish a residence to headquarter your company there.</p>
+					<p class="text-xs text-[#a8a083] px-2">Establish a residence to headquarter your company there.</p>
 				{/if}
 			{/if}
 		</div>
@@ -188,9 +188,9 @@
 
 	<!-- Success/Error Messages -->
 	{#if form?.success}
-		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-4 flex items-center gap-3">
-			<FluentBoxCheckmark20Filled class="size-5 text-[#c6dfbf] shrink-0" />
-			<p class="text-sm text-[#c6dfbf]">{form.message || "Operation successful!"}</p>
+		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4 flex items-center gap-3">
+			<FluentBoxCheckmark20Filled class="size-5 text-[#b9f29a] shrink-0" />
+			<p class="text-sm text-[#b9f29a]">{form.message || "Operation successful!"}</p>
 		</div>
 	{/if}
 
@@ -203,37 +203,37 @@
 
 	<!-- Statistics Grid -->
 	<section class="grid grid-cols-2 md:grid-cols-4 gap-3">
-		<div class="bg-[#8c709b]/15 rounded-sm border border-[#b7a0c5]/25 p-5">
+		<div class="bg-[#8a4fc0]/15 rounded-sm border border-[#c08cf0]/25 p-5">
 			<div class="flex items-center gap-2 mb-1">
-				<FluentFactory20Filled class="size-5 text-[#d5c4df]" />
-				<p class="text-sm text-[#d5c4df] font-medium">Factories</p>
+				<FluentFactory20Filled class="size-5 text-[#e3cbfb]" />
+				<p class="text-sm text-[#e3cbfb] font-medium">Factories</p>
 			</div>
-			<p class="text-4xl font-bold text-[#fff7e8]">{data.factories.length}</p>
+			<p class="text-4xl font-bold text-[#f5efd8]">{data.factories.length}</p>
 		</div>
 
-		<div class="bg-[#315d8d]/15 rounded-sm border border-[#7ba0c8]/25 p-5">
+		<div class="bg-[#2369b5]/15 rounded-sm border border-[#5eaef5]/25 p-5">
 			<div class="flex items-center gap-2 mb-1">
-				<FluentPeople20Filled class="size-5 text-[#b7d0e6]" />
-				<p class="text-sm text-[#b7d0e6] font-medium">Workers</p>
+				<FluentPeople20Filled class="size-5 text-[#b3dcff]" />
+				<p class="text-sm text-[#b3dcff] font-medium">Workers</p>
 			</div>
-			<p class="text-4xl font-bold text-[#fff7e8]">{data.totalWorkers}</p>
+			<p class="text-4xl font-bold text-[#f5efd8]">{data.totalWorkers}</p>
 		</div>
 
-		<div class="bg-[#e6a527]/12 rounded-sm border border-[#e6a527]/30 p-5">
+		<div class="bg-[#f2b01e]/12 rounded-sm border border-[#f2b01e]/30 p-5">
 			<div class="flex items-center gap-2 mb-1">
-				<FluentMoney20Filled class="size-5 text-[#f7c56b]" />
-				<p class="text-sm text-[#f7c56b] font-medium">Wage / Shift</p>
+				<FluentMoney20Filled class="size-5 text-[#ffd35c]" />
+				<p class="text-sm text-[#ffd35c] font-medium">Wage / Shift</p>
 			</div>
-			<p class="text-3xl font-bold text-[#fff7e8]">{data.totalWageCost.toLocaleString()}</p>
+			<p class="text-3xl font-bold text-[#f5efd8]">{data.totalWageCost.toLocaleString()}</p>
 		</div>
 
 		{#if data.isOwner}
-			<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/25 p-5">
+			<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/25 p-5">
 				<div class="flex items-center gap-2 mb-1">
-					<FluentWallet20Filled class="size-5 text-[#c6dfbf]" />
-					<p class="text-sm text-[#c6dfbf] font-medium">Budget</p>
+					<FluentWallet20Filled class="size-5 text-[#b9f29a]" />
+					<p class="text-sm text-[#b9f29a] font-medium">Budget</p>
 				</div>
-				<p class="text-3xl font-bold text-[#fff7e8]">{data.budget.balance.toLocaleString()}</p>
+				<p class="text-3xl font-bold text-[#f5efd8]">{data.budget.balance.toLocaleString()}</p>
 			</div>
 		{/if}
 	</section>
@@ -241,13 +241,13 @@
 	<!-- Stock Market -->
 	<section class="panel rounded-sm p-5 sm:p-6 space-y-4">
 		<h2 class="section-title">
-			<FluentChartMultiple20Filled class="size-5 text-[#e6a527]" />
+			<FluentChartMultiple20Filled class="size-5 text-[#f2b01e]" />
 			Stock Market
 		</h2>
 
 		{#if !data.shares}
 			{#if data.isOwner}
-				<p class="text-sm text-[#a89e8e]">
+				<p class="text-sm text-[#a8a083]">
 					Take {data.company.name} public to issue {data.ipoConfig.totalShares.toLocaleString()} shares. You'll keep a locked
 					{data.ipoConfig.founderLockedPercent}% controlling block; the rest lists immediately at your starting price.
 				</p>
@@ -280,37 +280,37 @@
 					</button>
 				</form>
 			{:else}
-				<p class="text-sm text-[#a89e8e]">This company hasn't gone public yet.</p>
+				<p class="text-sm text-[#a8a083]">This company hasn't gone public yet.</p>
 			{/if}
 		{:else}
 			<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
 				<div class="panel-muted rounded-sm p-3">
 					<div class="field-hint">Total shares</div>
-					<div class="text-lg font-bold text-[#fff7e8]">{data.shares.totalShares.toLocaleString()}</div>
+					<div class="text-lg font-bold text-[#f5efd8]">{data.shares.totalShares.toLocaleString()}</div>
 				</div>
 				<div class="panel-muted rounded-sm p-3">
 					<div class="field-hint">Founder locked</div>
-					<div class="text-lg font-bold text-[#fff7e8]">{data.shares.founderLockedShares.toLocaleString()}</div>
+					<div class="text-lg font-bold text-[#f5efd8]">{data.shares.founderLockedShares.toLocaleString()}</div>
 				</div>
 				<div class="panel-muted rounded-sm p-3">
 					<div class="field-hint">IPO price</div>
-					<div class="text-lg font-bold text-[#f7c56b]">${data.shares.ipoPrice.toLocaleString()}</div>
+					<div class="text-lg font-bold text-[#ffd35c]">${data.shares.ipoPrice.toLocaleString()}</div>
 				</div>
 				<div class="panel-muted rounded-sm p-3">
 					<div class="field-hint">Your holding</div>
-					<div class="text-lg font-bold text-[#c6dfbf]">{data.myHolding.toLocaleString()}</div>
+					<div class="text-lg font-bold text-[#b9f29a]">{data.myHolding.toLocaleString()}</div>
 				</div>
 			</div>
 
 			{#if data.topHolders.length > 0}
 				<div>
-					<h3 class="text-sm font-semibold text-[#e5d8c1] mb-2">Top Holders</h3>
+					<h3 class="text-sm font-semibold text-[#e6ddbf] mb-2">Top Holders</h3>
 					<div class="space-y-1.5">
 						{#each data.topHolders as holder}
 							<div class="flex items-center justify-between text-sm panel-muted rounded-sm px-3 py-2">
-								<span class="text-[#d9ccb7]">{holder.name || "Unknown"}</span>
+								<span class="text-[#d3caa9]">{holder.name || "Unknown"}</span>
 								<span class="flex items-center gap-2">
-									<span class="text-[#a89e8e]">{holder.quantity.toLocaleString()}</span>
+									<span class="text-[#a8a083]">{holder.quantity.toLocaleString()}</span>
 									<span class={badgeClass({ tone: "amber", size: "xs" })}>{holder.percent}%</span>
 								</span>
 							</div>
@@ -321,7 +321,7 @@
 
 			<div>
 				<div class="flex items-center justify-between mb-2">
-					<h3 class="text-sm font-semibold text-[#e5d8c1]">Order Book</h3>
+					<h3 class="text-sm font-semibold text-[#e6ddbf]">Order Book</h3>
 					<span class="field-hint">{data.floatOutstanding.toLocaleString()} shares listed</span>
 				</div>
 
@@ -334,8 +334,8 @@
 						{#each data.listings as listing (listing.id)}
 							<div class="flex items-center justify-between gap-3 panel-muted rounded-sm px-3 py-2 text-sm">
 								<div class="min-w-0">
-									<div class="text-[#fff7e8] font-semibold">${listing.pricePerUnit.toLocaleString()} / share</div>
-									<div class="text-xs text-[#a89e8e] truncate">
+									<div class="text-[#f5efd8] font-semibold">${listing.pricePerUnit.toLocaleString()} / share</div>
+									<div class="text-xs text-[#a8a083] truncate">
 										{listing.quantity.toLocaleString()} available · {listing.isMine
 											? "You"
 											: listing.sellerName || "Unknown"}
@@ -385,13 +385,13 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="text-sm text-[#a89e8e]">No shares currently listed for sale.</p>
+					<p class="text-sm text-[#a8a083]">No shares currently listed for sale.</p>
 				{/if}
 			</div>
 
 			{#if data.myHolding > 0}
 				<div class="panel-muted rounded-sm p-4">
-					<h3 class="text-sm font-semibold text-[#e5d8c1] mb-3">List Shares For Sale</h3>
+					<h3 class="text-sm font-semibold text-[#e6ddbf] mb-3">List Shares For Sale</h3>
 					<form
 						method="POST"
 						action="?/createShareListing"
@@ -444,7 +444,7 @@
 			<!-- Production by Resource Type -->
 			<div class="panel rounded-sm p-4 sm:p-6 space-y-3">
 				<h3 class="section-title text-base sm:text-lg">
-					<FluentChartMultiple20Filled class="size-5 text-[#e6a527]" />
+					<FluentChartMultiple20Filled class="size-5 text-[#f2b01e]" />
 					Production by Type
 				</h3>
 
@@ -463,7 +463,7 @@
 								<Bars
 									radius={8}
 									strokeWidth={2}
-									class="fill-[#e6a527]/80 stroke-[#e6a527] hover:fill-[#e6a527] transition-all"
+									class="fill-[#f2b01e]/80 stroke-[#f2b01e] hover:fill-[#f2b01e] transition-all"
 								/>
 							</Svg>
 							<Tooltip.Root let:data>
@@ -474,7 +474,7 @@
 									<Tooltip.Item
 										label="Pending"
 										value={data.pending.toLocaleString()}
-										valueClass="text-[#c6dfbf] font-bold"
+										valueClass="text-[#b9f29a] font-bold"
 									/>
 									<Tooltip.Item label="Rate/Shift" value={data.rate.toLocaleString()} />
 									<Tooltip.Item label="Workers" value={data.workers} />
@@ -489,7 +489,7 @@
 			<!-- Budget Trend -->
 			<div class="panel rounded-sm p-4 sm:p-6 space-y-3">
 				<h3 class="section-title text-base sm:text-lg">
-					<FluentWallet20Filled class="size-5 text-[#c6dfbf]" />
+					<FluentWallet20Filled class="size-5 text-[#b9f29a]" />
 					Budget Overview
 				</h3>
 
@@ -504,8 +504,8 @@
 						padding={{ left: 16, bottom: 24, top: 8 }}
 					>
 						<Svg>
-							<Area class="fill-[#587252]/25" />
-							<Area line={{ class: "stroke-[#8fae88] stroke-2" }} />
+							<Area class="fill-[#3f8a2a]/25" />
+							<Area line={{ class: "stroke-[#6fd14a] stroke-2" }} />
 						</Svg>
 						<Tooltip.Root let:data>
 							<Tooltip.Header>{data.date}</Tooltip.Header>
@@ -513,7 +513,7 @@
 								<Tooltip.Item
 									label="Balance"
 									value={data.balance.toLocaleString()}
-									valueClass="text-[#c6dfbf] font-bold"
+									valueClass="text-[#b9f29a] font-bold"
 								/>
 							</Tooltip.List>
 						</Tooltip.Root>
@@ -530,28 +530,28 @@
 			<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
 				<div class="flex items-center justify-between">
 					<h3 class="section-title text-base sm:text-lg">
-						<FluentWallet20Filled class="size-5 text-[#c6dfbf]" />
+						<FluentWallet20Filled class="size-5 text-[#b9f29a]" />
 						Company Budget
 					</h3>
-					<span class="text-[#c6dfbf] font-bold text-base sm:text-lg">{data.budget.balance.toLocaleString()}</span>
+					<span class="text-[#b9f29a] font-bold text-base sm:text-lg">{data.budget.balance.toLocaleString()}</span>
 				</div>
 
 				<div class="grid grid-cols-2 gap-3">
 					<div class="text-center p-2 sm:p-3 panel-muted rounded-sm">
-						<div class="text-xs text-[#a89e8e]">Deposited</div>
-						<div class="font-bold text-sm sm:text-base text-[#fff7e8]">
+						<div class="text-xs text-[#a8a083]">Deposited</div>
+						<div class="font-bold text-sm sm:text-base text-[#f5efd8]">
 							{data.budget.totalDeposited.toLocaleString()}
 						</div>
 					</div>
 					<div class="text-center p-2 sm:p-3 panel-muted rounded-sm">
-						<div class="text-xs text-[#a89e8e]">Spent</div>
-						<div class="font-bold text-sm sm:text-base text-[#fff7e8]">{data.budget.totalSpent.toLocaleString()}</div>
+						<div class="text-xs text-[#a8a083]">Spent</div>
+						<div class="font-bold text-sm sm:text-base text-[#f5efd8]">{data.budget.totalSpent.toLocaleString()}</div>
 					</div>
 				</div>
 
 				<div class="flex flex-col">
-					<div class="text-xs text-[#a89e8e]">Your Wallet</div>
-					<div class="font-bold text-[#c6dfbf] flex items-center gap-1.5 sm:text-lg">
+					<div class="text-xs text-[#a8a083]">Your Wallet</div>
+					<div class="font-bold text-[#b9f29a] flex items-center gap-1.5 sm:text-lg">
 						<FluentMoney20Filled class="size-4 sm:size-5" />
 						{data.ownerBalance.toLocaleString()}
 					</div>
@@ -602,16 +602,16 @@
 			<!-- Resource Collection -->
 			<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
 				<h3 class="section-title text-base sm:text-lg">
-					<FluentBoxCheckmark20Filled class="size-5 text-[#8fae88]" />
+					<FluentBoxCheckmark20Filled class="size-5 text-[#6fd14a]" />
 					Collect Resources
 				</h3>
 
 				<div class="panel-muted rounded-sm p-4 text-center">
-					<div class="text-xs text-[#a89e8e]">Pending</div>
-					<div class="text-2xl font-bold text-[#c6dfbf]">
+					<div class="text-xs text-[#a8a083]">Pending</div>
+					<div class="text-2xl font-bold text-[#b9f29a]">
 						{data.totalPendingResources.toLocaleString()}
 					</div>
-					<div class="text-xs text-[#a89e8e]">units ready</div>
+					<div class="text-xs text-[#a8a083]">units ready</div>
 				</div>
 
 				{#if data.totalPendingResources > 0}
@@ -642,12 +642,12 @@
 					</form>
 				{:else}
 					<div class="panel-muted rounded-sm p-3">
-						<span class="text-sm text-[#a89e8e]">No resources ready to collect</span>
+						<span class="text-sm text-[#a8a083]">No resources ready to collect</span>
 					</div>
 				{/if}
 
 				{#if data.resourceProduction.some((r) => r.pendingTotal > 0)}
-					<p class="text-xs text-[#a89e8e] text-center">See the breakdown per resource below.</p>
+					<p class="text-xs text-[#a8a083] text-center">See the breakdown per resource below.</p>
 				{/if}
 			</div>
 		</div>
@@ -657,7 +657,7 @@
 	{#if data.isOwner && data.resourceProduction.length > 0}
 		<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
 			<h2 class="section-title text-base sm:text-lg">
-				<FluentChartMultiple20Filled class="size-5 text-[#e6a527]" />
+				<FluentChartMultiple20Filled class="size-5 text-[#f2b01e]" />
 				Detailed Production Stats
 			</h2>
 
@@ -665,7 +665,7 @@
 				{#each data.resourceProduction as resource}
 					<div class="panel-muted rounded-sm p-3 sm:p-4" style="border-color: {getColor(resource.type)}33">
 						<div class="flex items-center justify-between text-xs mb-1">
-							<span class="capitalize text-[#a89e8e]">{resource.type}</span>
+							<span class="capitalize text-[#a8a083]">{resource.type}</span>
 							<span
 								class={badgeClass({ size: "xs", class: "capitalize" })}
 								style="background-color: {getColor(resource.type)}22; color: {getColor(
@@ -681,12 +681,12 @@
 						</div>
 						<div class="mt-2 space-y-1">
 							<div class="flex justify-between text-xs">
-								<span class="text-[#a89e8e]">Workers:</span>
-								<span class="font-semibold text-[#e5d8c1]">{resource.totalWorkers}</span>
+								<span class="text-[#a8a083]">Workers:</span>
+								<span class="font-semibold text-[#e6ddbf]">{resource.totalWorkers}</span>
 							</div>
 							<div class="flex justify-between text-xs">
-								<span class="text-[#a89e8e]">Rate/Shift:</span>
-								<span class="font-semibold text-[#e5d8c1]">{resource.productionRate.toLocaleString()}</span>
+								<span class="text-[#a8a083]">Rate/Shift:</span>
+								<span class="font-semibold text-[#e6ddbf]">{resource.productionRate.toLocaleString()}</span>
 							</div>
 						</div>
 					</div>
@@ -699,7 +699,7 @@
 	<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
 		<div class="flex items-center justify-between">
 			<h2 class="section-title text-base sm:text-lg">
-				<FluentFactory20Filled class="size-5 text-[#d5c4df]" />
+				<FluentFactory20Filled class="size-5 text-[#e3cbfb]" />
 				Factories
 			</h2>
 			{#if data.isOwner}
@@ -716,9 +716,9 @@
 					<a href="/factory/{factory.id}" class="panel-interactive rounded-sm p-3 sm:p-4 block">
 						<div class="flex items-start justify-between">
 							<div>
-								<h3 class="font-bold text-base sm:text-lg text-[#fff7e8]">{factory.name}</h3>
-								<p class="text-xs sm:text-sm text-[#a89e8e] capitalize flex items-center gap-1.5 mt-1">
-									<span class="w-2 h-2 rounded-full bg-[#e6a527]"></span>
+								<h3 class="font-bold text-base sm:text-lg text-[#f5efd8]">{factory.name}</h3>
+								<p class="text-xs sm:text-sm text-[#a8a083] capitalize flex items-center gap-1.5 mt-1">
+									<span class="w-2 h-2 rounded-full bg-[#f2b01e]"></span>
 									{factory.factoryType}
 								</p>
 							</div>
@@ -727,52 +727,52 @@
 							</span>
 						</div>
 
-						<div class="grid grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-[#dfceb0]/10">
+						<div class="grid grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-[#c8b47a]/10">
 							<div>
-								<div class="text-xs text-[#a89e8e]">Location</div>
+								<div class="text-xs text-[#a8a083]">Location</div>
 								<div class="flex items-center gap-2 mt-1">
 									<div class="size-5 sm:size-6 rounded-sm overflow-hidden shrink-0">
 										<img src="/coats/{factory.regionId}.svg" alt="{getRegionName(factory.regionId)} coat of arms" />
 									</div>
 									<div>
-										<div class="font-medium text-xs sm:text-sm text-[#e5d8c1]">{getRegionName(factory.regionId)}</div>
-										<div class="text-xs text-[#a89e8e] hidden sm:block">{factory.stateName}</div>
+										<div class="font-medium text-xs sm:text-sm text-[#e6ddbf]">{getRegionName(factory.regionId)}</div>
+										<div class="text-xs text-[#a8a083] hidden sm:block">{factory.stateName}</div>
 									</div>
 								</div>
 							</div>
 							<div>
-								<div class="text-xs text-[#a89e8e]">Workers</div>
-								<div class="font-medium text-sm mt-1 text-[#e5d8c1]">{factory.workerCount} / {factory.maxWorkers}</div>
+								<div class="text-xs text-[#a8a083]">Workers</div>
+								<div class="font-medium text-sm mt-1 text-[#e6ddbf]">{factory.workerCount} / {factory.maxWorkers}</div>
 							</div>
 						</div>
 
-						<div class="grid grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-[#dfceb0]/10">
+						<div class="grid grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-[#c8b47a]/10">
 							<div>
-								<div class="text-xs text-[#a89e8e]">Wage/Shift</div>
-								<div class="font-bold text-[#c6dfbf] flex items-center gap-1 text-sm">
+								<div class="text-xs text-[#a8a083]">Wage/Shift</div>
+								<div class="font-bold text-[#b9f29a] flex items-center gap-1 text-sm">
 									<FluentMoney20Filled class="size-3" />
 									{factory.workerWage.toLocaleString()}
 								</div>
 							</div>
 							<div>
-								<div class="text-xs text-[#a89e8e]">Production</div>
-								<div class="font-bold text-[#b7d0e6] text-sm">{factory.productionRate}/shift</div>
+								<div class="text-xs text-[#a8a083]">Production</div>
+								<div class="font-bold text-[#b3dcff] text-sm">{factory.productionRate}/shift</div>
 							</div>
 						</div>
 
 						{#if data.isOwner && factory.lastWorked}
-							<div class="mt-3 pt-3 border-t border-[#dfceb0]/10 space-y-1">
+							<div class="mt-3 pt-3 border-t border-[#c8b47a]/10 space-y-1">
 								<div class="flex items-center justify-between text-xs">
-									<span class="flex items-center gap-1.5 text-[#a89e8e]">
+									<span class="flex items-center gap-1.5 text-[#a8a083]">
 										<FluentClock20Filled class="size-3" />
 										Last Work
 									</span>
-									<span class="text-[#e5d8c1]">{formatDate(factory.lastWorked)}</span>
+									<span class="text-[#e6ddbf]">{formatDate(factory.lastWorked)}</span>
 								</div>
 								{#if factory.pendingResources > 0}
 									<div class="flex items-center justify-between">
-										<span class="text-xs text-[#a89e8e]">Ready to collect</span>
-										<span class="font-bold text-[#c6dfbf] text-sm">{factory.pendingResources.toLocaleString()}</span>
+										<span class="text-xs text-[#a8a083]">Ready to collect</span>
+										<span class="font-bold text-[#b9f29a] text-sm">{factory.pendingResources.toLocaleString()}</span>
 									</div>
 								{/if}
 							</div>
@@ -782,9 +782,9 @@
 			</div>
 		{:else}
 			<div class="text-center py-8 sm:py-12">
-				<FluentFactory20Filled class="size-12 sm:size-16 mx-auto text-[#a89e8e]/40 mb-4" />
-				<h3 class="text-base sm:text-lg font-semibold text-[#fff7e8] mb-2">No Factories</h3>
-				<p class="text-[#a89e8e] text-sm">This company hasn't built any factories yet</p>
+				<FluentFactory20Filled class="size-12 sm:size-16 mx-auto text-[#a8a083]/40 mb-4" />
+				<h3 class="text-base sm:text-lg font-semibold text-[#f5efd8] mb-2">No Factories</h3>
+				<p class="text-[#a8a083] text-sm">This company hasn't built any factories yet</p>
 			</div>
 		{/if}
 	</div>
@@ -793,7 +793,7 @@
 	{#if data.uniqueStates.length > 0}
 		<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
 			<h2 class="section-title text-base sm:text-lg">
-				<FluentLocation20Filled class="size-5 text-[#b7d0e6]" />
+				<FluentLocation20Filled class="size-5 text-[#b3dcff]" />
 				Operating Regions
 			</h2>
 
@@ -806,7 +806,7 @@
 
 					<div class="panel-muted rounded-sm p-3 sm:p-4">
 						<div class="flex items-center justify-between mb-3">
-							<h3 class="font-semibold text-sm sm:text-base text-[#fff7e8]">{state.name}</h3>
+							<h3 class="font-semibold text-sm sm:text-base text-[#f5efd8]">{state.name}</h3>
 							<span class={badgeClass({ tone: "purple", size: "xs" })}>
 								{stateFactories.length}
 								{stateFactories.length === 1 ? "factory" : "factories"}

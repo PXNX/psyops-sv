@@ -104,17 +104,17 @@
 	};
 
 	const typeColors: Record<string, { bg: string; border: string; text: string }> = {
-		market_purchase: { bg: "bg-[#315d8d]/15", border: "border-[#7ba0c8]/25", text: "text-[#b7d0e6]" },
-		market_sale: { bg: "bg-[#587252]/18", border: "border-[#8fae88]/30", text: "text-[#c6dfbf]" },
-		gift_code_redemption: { bg: "bg-[#e6a527]/15", border: "border-[#e6a527]/30", text: "text-[#f7c56b]" },
-		factory_wage: { bg: "bg-[#8c709b]/15", border: "border-[#b7a0c5]/25", text: "text-[#d5c4df]" },
-		company_deposit: { bg: "bg-[#587252]/18", border: "border-[#8fae88]/30", text: "text-[#c6dfbf]" },
-		company_withdrawal: { bg: "bg-[#e6a527]/12", border: "border-[#e6a527]/35", text: "text-[#f7c56b]" },
-		visa_purchase: { bg: "bg-[#315d8d]/15", border: "border-[#7ba0c8]/25", text: "text-[#b7d0e6]" },
+		market_purchase: { bg: "bg-[#2369b5]/15", border: "border-[#5eaef5]/25", text: "text-[#b3dcff]" },
+		market_sale: { bg: "bg-[#3f8a2a]/18", border: "border-[#6fd14a]/30", text: "text-[#b9f29a]" },
+		gift_code_redemption: { bg: "bg-[#f2b01e]/15", border: "border-[#f2b01e]/30", text: "text-[#ffd35c]" },
+		factory_wage: { bg: "bg-[#8a4fc0]/15", border: "border-[#c08cf0]/25", text: "text-[#e3cbfb]" },
+		company_deposit: { bg: "bg-[#3f8a2a]/18", border: "border-[#6fd14a]/30", text: "text-[#b9f29a]" },
+		company_withdrawal: { bg: "bg-[#f2b01e]/12", border: "border-[#f2b01e]/35", text: "text-[#ffd35c]" },
+		visa_purchase: { bg: "bg-[#2369b5]/15", border: "border-[#5eaef5]/25", text: "text-[#b3dcff]" },
 		tax_payment: { bg: "bg-red-600/10", border: "border-red-500/30", text: "text-red-300" }
 	};
 
-	const defaultColor = { bg: "bg-[#14283f]", border: "border-[#dfceb0]/20", text: "text-[#d9ccb7]" };
+	const defaultColor = { bg: "bg-[#242a1d]", border: "border-[#c8b47a]/20", text: "text-[#d3caa9]" };
 
 	function getTypeColor(type: string) {
 		return typeColors[type] || defaultColor;
@@ -170,13 +170,13 @@
 	<div class="panel rounded-sm p-5">
 		<div class="flex items-center gap-3">
 			<div
-				class="size-11 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm flex items-center justify-center shrink-0"
+				class="size-11 bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm flex items-center justify-center shrink-0"
 			>
-				<FluentWallet20Filled class="size-6 text-[#8fae88]" />
+				<FluentWallet20Filled class="size-6 text-[#6fd14a]" />
 			</div>
 			<div class="flex-1 min-w-0">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Current Balance</p>
-				<p class="text-2xl font-bold text-[#fff7e8] font-mono">{formatCurrency(data.analytics.currentBalance)}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Current Balance</p>
+				<p class="text-2xl font-bold text-[#f5efd8] font-mono">{formatCurrency(data.analytics.currentBalance)}</p>
 			</div>
 		</div>
 	</div>
@@ -187,31 +187,31 @@
 		<div class="panel rounded-sm overflow-hidden">
 			<div class="p-4">
 				<div class="flex items-center gap-2 mb-1">
-					<div class="size-8 bg-[#587252]/18 rounded-sm flex items-center justify-center">
-						<FluentArrowDownload20Filled class="size-4 text-[#8fae88]" />
+					<div class="size-8 bg-[#3f8a2a]/18 rounded-sm flex items-center justify-center">
+						<FluentArrowDownload20Filled class="size-4 text-[#6fd14a]" />
 					</div>
-					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Income</p>
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Income</p>
 				</div>
-				<p class="text-xl font-bold text-[#c6dfbf] font-mono">+{formatCurrency(data.analytics.totalIncome)}</p>
+				<p class="text-xl font-bold text-[#b9f29a] font-mono">+{formatCurrency(data.analytics.totalIncome)}</p>
 			</div>
 			{#if incomeCategories.length > 0}
-				<div class="border-t border-[#dfceb0]/10 px-4 py-2 space-y-0.5">
+				<div class="border-t border-[#c8b47a]/10 px-4 py-2 space-y-0.5">
 					{#each incomeCategories as cat}
 						<button
 							type="button"
 							onclick={() => toggleFilter(cat.type)}
 							class="flex items-center justify-between w-full py-1.5 px-1 rounded-sm transition-all cursor-pointer {activeFilter ===
 							cat.type
-								? 'bg-[#587252]/18'
-								: 'hover:bg-[#19304b]'}"
+								? 'bg-[#3f8a2a]/18'
+								: 'hover:bg-[#2e3524]'}"
 						>
-							<span class="text-xs {activeFilter === cat.type ? 'text-[#c6dfbf] font-semibold' : 'text-[#a89e8e]'}">
+							<span class="text-xs {activeFilter === cat.type ? 'text-[#b9f29a] font-semibold' : 'text-[#a8a083]'}">
 								{typeLabels[cat.type] || cat.type}
 							</span>
 							<span
 								class="text-xs font-mono {activeFilter === cat.type
-									? 'text-[#c6dfbf] font-semibold'
-									: 'text-[#c6dfbf]/70'}"
+									? 'text-[#b9f29a] font-semibold'
+									: 'text-[#b9f29a]/70'}"
 							>
 								+{formatCurrency(cat.income)}
 							</span>
@@ -228,12 +228,12 @@
 					<div class="size-8 bg-red-600/10 rounded-sm flex items-center justify-center">
 						<FluentArrowUpload20Filled class="size-4 text-red-400" />
 					</div>
-					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Expenses</p>
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Expenses</p>
 				</div>
 				<p class="text-xl font-bold text-red-400 font-mono">-{formatCurrency(data.analytics.totalExpenses)}</p>
 			</div>
 			{#if expenseCategories.length > 0}
-				<div class="border-t border-[#dfceb0]/10 px-4 py-2 space-y-0.5">
+				<div class="border-t border-[#c8b47a]/10 px-4 py-2 space-y-0.5">
 					{#each expenseCategories as cat}
 						<button
 							type="button"
@@ -241,9 +241,9 @@
 							class="flex items-center justify-between w-full py-1.5 px-1 rounded-sm transition-all cursor-pointer {activeFilter ===
 							cat.type
 								? 'bg-red-500/10'
-								: 'hover:bg-[#19304b]'}"
+								: 'hover:bg-[#2e3524]'}"
 						>
-							<span class="text-xs {activeFilter === cat.type ? 'text-red-300 font-semibold' : 'text-[#a89e8e]'}">
+							<span class="text-xs {activeFilter === cat.type ? 'text-red-300 font-semibold' : 'text-[#a8a083]'}">
 								{typeLabels[cat.type] || cat.type}
 							</span>
 							<span
@@ -266,38 +266,38 @@
 				{#if activeFilter}
 					<Button type="button" variant="ghost" size="xs" onclick={() => (activeFilter = null)}>Clear filter</Button>
 				{/if}
-				<span class="text-xs text-[#a89e8e]">{filteredTransactions.length} of {data.pagination.totalCount}</span>
+				<span class="text-xs text-[#a8a083]">{filteredTransactions.length} of {data.pagination.totalCount}</span>
 			</div>
 		</div>
 
 		{#if groupedTransactions.length === 0}
 			<div class="panel-muted rounded-sm p-12 text-center">
-				<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
-					<FluentArrowTrendingLines20Filled class="size-8 text-[#a89e8e]" />
+				<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
+					<FluentArrowTrendingLines20Filled class="size-8 text-[#a8a083]" />
 				</div>
 				{#if activeFilter}
-					<p class="text-[#a89e8e] font-medium mb-3">No {typeLabels[activeFilter] || activeFilter} transactions</p>
+					<p class="text-[#a8a083] font-medium mb-3">No {typeLabels[activeFilter] || activeFilter} transactions</p>
 					<Button type="button" variant="secondary" size="sm" onclick={() => (activeFilter = null)}>
 						Clear filter
 					</Button>
 				{:else}
-					<p class="text-[#a89e8e] font-medium">No transactions yet</p>
-					<p class="text-[#a89e8e]/70 text-sm mt-1">Your financial activity will appear here</p>
+					<p class="text-[#a8a083] font-medium">No transactions yet</p>
+					<p class="text-[#a8a083]/70 text-sm mt-1">Your financial activity will appear here</p>
 				{/if}
 			</div>
 		{:else}
 			<div class="space-y-5">
 				{#each groupedTransactions as group}
 					<div class="space-y-2">
-						<h3 class="text-[10px] font-semibold text-[#a89e8e] uppercase tracking-wide px-1">
+						<h3 class="text-[10px] font-semibold text-[#a8a083] uppercase tracking-wide px-1">
 							{group.label}
 						</h3>
-						<div class="panel rounded-sm divide-y divide-[#dfceb0]/10">
+						<div class="panel rounded-sm divide-y divide-[#c8b47a]/10">
 							{#each group.transactions as tx}
 								{@const color = getTypeColor(tx.type)}
 								{@const iconType = getTransactionIconType(tx)}
 								{@const FallbackIcon = getFallbackIcon(iconType)}
-								<div class="p-4 hover:bg-[#19304b] transition-colors">
+								<div class="p-4 hover:bg-[#2e3524] transition-colors">
 									<div class="flex items-center justify-between gap-3">
 										<!-- Left: Avatar + Details -->
 										<div class="flex items-center gap-3 flex-1 min-w-0">
@@ -310,17 +310,17 @@
 											{:else}
 												<div
 													class="size-10 rounded-full flex items-center justify-center shrink-0 {tx.isIncome
-														? 'bg-[#587252]/18'
+														? 'bg-[#3f8a2a]/18'
 														: 'bg-red-600/10'}"
 												>
-													<FallbackIcon class="size-5 {tx.isIncome ? 'text-[#c6dfbf]' : 'text-red-400'}" />
+													<FallbackIcon class="size-5 {tx.isIncome ? 'text-[#b9f29a]' : 'text-red-400'}" />
 												</div>
 											{/if}
 
 											<div class="flex-1 min-w-0">
 												<div class="flex items-center gap-2">
-													<p class="text-sm font-medium text-[#fff7e8] truncate">{typeLabels[tx.type] || tx.type}</p>
-													<span class="text-[11px] text-[#a89e8e]/80 font-mono shrink-0"
+													<p class="text-sm font-medium text-[#f5efd8] truncate">{typeLabels[tx.type] || tx.type}</p>
+													<span class="text-[11px] text-[#a8a083]/80 font-mono shrink-0"
 														>{formatTime(tx.createdAt)}</span
 													>
 												</div>
@@ -339,10 +339,10 @@
 
 										<!-- Right: Amount + Balance -->
 										<div class="text-right shrink-0">
-											<p class="text-sm font-bold {tx.isIncome ? 'text-[#c6dfbf]' : 'text-red-400'}">
+											<p class="text-sm font-bold {tx.isIncome ? 'text-[#b9f29a]' : 'text-red-400'}">
 												{tx.isIncome ? "+" : ""}{formatCurrency(tx.amount)}
 											</p>
-											<p class="text-[11px] text-[#a89e8e]/80 font-mono mt-0.5">
+											<p class="text-[11px] text-[#a8a083]/80 font-mono mt-0.5">
 												Bal: {formatCurrency(tx.balanceAfter)}
 											</p>
 										</div>
@@ -383,7 +383,7 @@
 							{pageNum}
 						</Button>
 					{:else if Math.abs(pageNum - data.pagination.currentPage) === 3}
-						<span class="text-[#a89e8e]/60 px-1">…</span>
+						<span class="text-[#a8a083]/60 px-1">…</span>
 					{/if}
 				{/each}
 			</div>

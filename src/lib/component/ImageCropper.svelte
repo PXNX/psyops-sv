@@ -98,7 +98,7 @@
 		ctx.clearRect(cropX, cropY, cropWidth, cropHeight);
 
 		// Draw crop border
-		ctx.strokeStyle = "#e6a527";
+		ctx.strokeStyle = "#f2b01e";
 		ctx.lineWidth = 2;
 		ctx.strokeRect(cropX, cropY, cropWidth, cropHeight);
 
@@ -121,7 +121,7 @@
 		// Draw resize handle
 		const handleX = cropX + cropWidth;
 		const handleY = cropY + cropHeight;
-		ctx.fillStyle = "#e6a527";
+		ctx.fillStyle = "#f2b01e";
 		ctx.beginPath();
 		ctx.arc(handleX, handleY, HANDLE_SIZE / 2, 0, Math.PI * 2);
 		ctx.fill();
@@ -273,9 +273,9 @@
 
 <div class="modal modal-open">
 	<div class="modal-box w-full max-w-2xl panel rounded-sm">
-		<h3 class="font-bold text-lg mb-4 text-[#fff7e8]">{title}</h3>
+		<h3 class="font-bold text-lg mb-4 text-[#f5efd8]">{title}</h3>
 
-		<div class="relative bg-[#102239] rounded-sm overflow-hidden mb-4" bind:this={container}>
+		<div class="relative bg-[#1a1f15] rounded-sm overflow-hidden mb-4" bind:this={container}>
 			<img bind:this={img} src={imageUrl} alt="Crop preview" class="w-full h-auto block pointer-events-none" />
 			<canvas
 				bind:this={canvas}

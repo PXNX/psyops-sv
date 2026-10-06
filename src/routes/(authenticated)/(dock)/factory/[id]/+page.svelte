@@ -58,15 +58,15 @@
 				<Logo
 					src={data.companyLogoUrl}
 					alt={data.factory.companyName}
-					class="size-14 sm:size-18 rounded-sm border border-[#dfceb0]/15 shrink-0"
+					class="size-14 sm:size-18 rounded-sm border border-[#c8b47a]/15 shrink-0"
 					placeholderIcon={FluentImageOff20Filled}
 				/>
 				<div class="flex-1 min-w-0">
-					<h1 class="text-3xl font-bold text-[#fff7e8] break-words">{data.factory.name}</h1>
-					<div class="flex items-center gap-2 text-sm text-[#a89e8e] mt-1">
+					<h1 class="text-3xl font-bold text-[#f5efd8] break-words">{data.factory.name}</h1>
+					<div class="flex items-center gap-2 text-sm text-[#a8a083] mt-1">
 						<span class="capitalize">{data.factory.factoryType}</span>
-						<span class="text-[#a89e8e]/50">·</span>
-						<a href="/company/{data.factory.companyId}" class="text-[#d5c4df] hover:text-[#f2c463] transition-colors">
+						<span class="text-[#a8a083]/50">·</span>
+						<a href="/company/{data.factory.companyId}" class="text-[#e3cbfb] hover:text-[#ffcf47] transition-colors">
 							{data.factory.companyName}
 						</a>
 					</div>
@@ -89,12 +89,12 @@
 			class="size-10 sm:size-12 object-contain"
 		/>
 		<div class="flex-1 min-w-0">
-			<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Location</div>
-			<div class="text-sm sm:text-base font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
-				{regionName}, <span class="text-[#a89e8e]">{data.factory.stateName}</span>
+			<div class="text-[10px] text-[#a8a083] uppercase tracking-wide">Location</div>
+			<div class="text-sm sm:text-base font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
+				{regionName}, <span class="text-[#a8a083]">{data.factory.stateName}</span>
 			</div>
 		</div>
-		<FluentLocation20Filled class="size-4 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+		<FluentLocation20Filled class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors" />
 	</a>
 
 	<!-- Budget Warning -->
@@ -114,31 +114,31 @@
 	<div class="grid grid-cols-3 gap-3">
 		<div class="panel-muted rounded-sm p-3 sm:p-4">
 			<div class="flex items-center gap-2 mb-2">
-				<FluentBox20Filled class="size-4 text-[#b7a0c5]" />
-				<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Output</span>
+				<FluentBox20Filled class="size-4 text-[#c08cf0]" />
+				<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">Output</span>
 			</div>
 			<div class="flex items-center gap-1.5">
 				{#if data.output}
 					<ResourceIcon name={data.output.name} class="size-5" />
 				{/if}
-				<span class="text-sm font-bold text-[#fff7e8] capitalize">{data.output?.name || "—"}</span>
+				<span class="text-sm font-bold text-[#f5efd8] capitalize">{data.output?.name || "—"}</span>
 			</div>
-			<div class="text-xs text-[#a89e8e] mt-0.5">{data.output?.amount || 0}/shift</div>
+			<div class="text-xs text-[#a8a083] mt-0.5">{data.output?.amount || 0}/shift</div>
 		</div>
 
 		<div class="panel-muted rounded-sm p-3 sm:p-4">
 			<div class="flex items-center gap-2 mb-2">
-				<FluentMoney20Filled class="size-4 text-[#8fae88]" />
-				<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Wage</span>
+				<FluentMoney20Filled class="size-4 text-[#6fd14a]" />
+				<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">Wage</span>
 			</div>
 			<div class="flex items-center gap-1.5">
-				<span class="text-lg sm:text-xl font-bold text-[#fff7e8] font-mono">{displayWage.toLocaleString()}</span>
+				<span class="text-lg sm:text-xl font-bold text-[#f5efd8] font-mono">{displayWage.toLocaleString()}</span>
 				{#if hasLockedWage}
-					<FluentLockClosed20Filled class="size-3.5 text-[#b7a0c5]" />
+					<FluentLockClosed20Filled class="size-3.5 text-[#c08cf0]" />
 				{/if}
 			</div>
 			{#if hasLockedWage && data.factory.workerWage !== displayWage}
-				<div class="text-xs text-[#a89e8e] mt-0.5">
+				<div class="text-xs text-[#a8a083] mt-0.5">
 					Current: <span class="font-mono">{data.factory.workerWage.toLocaleString()}</span>
 				</div>
 			{/if}
@@ -146,11 +146,11 @@
 
 		<div class="panel-muted rounded-sm p-3 sm:p-4">
 			<div class="flex items-center gap-2 mb-2">
-				<FluentPeople20Filled class="size-4 text-[#7ba0c8]" />
-				<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Workers</span>
+				<FluentPeople20Filled class="size-4 text-[#5eaef5]" />
+				<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">Workers</span>
 			</div>
-			<div class="text-lg sm:text-xl font-bold text-[#fff7e8]">
-				{data.workers}<span class="text-[#a89e8e]">/{data.maxWorkers}</span>
+			<div class="text-lg sm:text-xl font-bold text-[#f5efd8]">
+				{data.workers}<span class="text-[#a8a083]">/{data.maxWorkers}</span>
 			</div>
 		</div>
 	</div>
@@ -160,16 +160,16 @@
 		<div class="panel rounded-sm p-5">
 			<div class="flex items-center justify-between mb-2">
 				<div class="flex items-center gap-2">
-					<FluentFlash20Filled class="size-4 text-[#f7c56b]" />
-					<span class="text-sm font-bold text-[#fff7e8]">State Energy</span>
+					<FluentFlash20Filled class="size-4 text-[#ffd35c]" />
+					<span class="text-sm font-bold text-[#f5efd8]">State Energy</span>
 				</div>
-				<span class="text-xs text-[#a89e8e]">
+				<span class="text-xs text-[#a8a083]">
 					{data.stateEnergy.totalProduction - data.stateEnergy.usedProduction}/{data.stateEnergy.totalProduction} MW
 				</span>
 			</div>
-			<div class="h-2 bg-[#102239] rounded-full overflow-hidden border border-[#dfceb0]/10">
+			<div class="h-2 bg-[#1a1f15] rounded-full overflow-hidden border border-[#c8b47a]/10">
 				<div
-					class="h-full bg-[#e6a527] transition-all rounded-full"
+					class="h-full bg-[#f2b01e] transition-all rounded-full"
 					style="width: {((data.stateEnergy.totalProduction - data.stateEnergy.usedProduction) /
 						data.stateEnergy.totalProduction) *
 						100}%"
@@ -180,25 +180,25 @@
 
 	<!-- Shift Status -->
 	{#if data.isCurrentlyWorking}
-		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5">
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5">
 			<div class="flex items-center justify-between mb-3">
 				<div class="flex items-center gap-2">
-					<div class="size-2 bg-[#e6a527] rounded-full animate-pulse"></div>
-					<span class="text-sm font-bold text-[#f7c56b] uppercase tracking-wide">Shift In Progress</span>
+					<div class="size-2 bg-[#f2b01e] rounded-full animate-pulse"></div>
+					<span class="text-sm font-bold text-[#ffd35c] uppercase tracking-wide">Shift In Progress</span>
 				</div>
-				<span class="text-xl sm:text-2xl font-bold text-[#f7c56b] font-mono">{timeRemaining}</span>
+				<span class="text-xl sm:text-2xl font-bold text-[#ffd35c] font-mono">{timeRemaining}</span>
 			</div>
 
 			{#if hasLockedWage}
-				<div class="text-xs text-[#c6dfbf] mb-3 flex items-center gap-1.5">
-					<FluentMoney20Filled class="size-3.5 text-[#8fae88]" />
+				<div class="text-xs text-[#b9f29a] mb-3 flex items-center gap-1.5">
+					<FluentMoney20Filled class="size-3.5 text-[#6fd14a]" />
 					Earning <span class="font-mono">{displayWage.toLocaleString()}</span>
 				</div>
 			{/if}
 
-			<div class="h-3 bg-[#102239] rounded-full overflow-hidden border border-[#e6a527]/20">
+			<div class="h-3 bg-[#1a1f15] rounded-full overflow-hidden border border-[#f2b01e]/20">
 				<div
-					class="h-full bg-[#e6a527] transition-all duration-1000 rounded-full"
+					class="h-full bg-[#f2b01e] transition-all duration-1000 rounded-full"
 					style="width: {data.shiftProgress}%"
 				></div>
 			</div>
@@ -212,10 +212,10 @@
 			{/if}
 		</div>
 	{:else if data.isWorkingHere}
-		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-5">
+		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-5">
 			<div class="flex items-center gap-2 mb-3">
-				<FluentCheckmark20Filled class="size-5 text-[#8fae88]" />
-				<span class="text-sm font-bold text-[#c6dfbf] uppercase tracking-wide">Ready for Shift</span>
+				<FluentCheckmark20Filled class="size-5 text-[#6fd14a]" />
+				<span class="text-sm font-bold text-[#b9f29a] uppercase tracking-wide">Ready for Shift</span>
 			</div>
 
 			{#if data.embargoReason}
@@ -238,17 +238,17 @@
 			<!-- Shift Details -->
 			<div class="grid grid-cols-3 gap-3 text-center">
 				<div>
-					<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Duration</div>
-					<div class="text-base font-bold text-[#fff7e8]">8h</div>
+					<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Duration</div>
+					<div class="text-base font-bold text-[#f5efd8]">8h</div>
 				</div>
 				<div>
-					<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Payment</div>
-					<div class="text-base font-bold text-[#c6dfbf] font-mono">{data.factory.workerWage.toLocaleString()}</div>
+					<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Payment</div>
+					<div class="text-base font-bold text-[#b9f29a] font-mono">{data.factory.workerWage.toLocaleString()}</div>
 				</div>
 				{#if data.output}
 					<div>
-						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Output</div>
-						<div class="flex items-center justify-center gap-1.5 text-base font-bold text-[#fff7e8]">
+						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Output</div>
+						<div class="flex items-center justify-center gap-1.5 text-base font-bold text-[#f5efd8]">
 							<ResourceIcon name={data.output.name} class="size-4" />
 							{data.output.amount}
 						</div>
@@ -273,8 +273,8 @@
 					<p class="text-xs">Factory at maximum capacity</p>
 				</div>
 			{:else if data.currentUserJob}
-				<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-3 flex items-center gap-2">
-					<FluentWarning20Filled class="size-4 text-[#f7c56b] shrink-0" />
+				<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-3 flex items-center gap-2">
+					<FluentWarning20Filled class="size-4 text-[#ffd35c] shrink-0" />
 					<p class="text-xs">You'll be transferred from your current factory</p>
 				</div>
 			{/if}

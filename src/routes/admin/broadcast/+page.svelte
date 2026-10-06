@@ -37,16 +37,16 @@
 
 	<!-- Current Active Broadcast -->
 	{#if data.activeBroadcast}
-		<div class="bg-[#e6a527]/12 rounded-sm border border-[#e6a527]/35 p-5">
+		<div class="bg-[#f2b01e]/12 rounded-sm border border-[#f2b01e]/35 p-5">
 			<div class="flex items-start justify-between gap-3">
 				<div class="flex-1">
 					<div class="flex items-center gap-2 mb-2">
-						<FluentMegaphone20Filled class="size-5 text-[#f7c56b]" />
-						<h3 class="font-semibold text-[#f7c56b]">Active Broadcast</h3>
+						<FluentMegaphone20Filled class="size-5 text-[#ffd35c]" />
+						<h3 class="font-semibold text-[#ffd35c]">Active Broadcast</h3>
 					</div>
-					<h4 class="text-[#fff7e8] font-bold text-lg mb-1">{data.activeBroadcast.title}</h4>
-					<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{data.activeBroadcast.content}</p>
-					<p class="text-xs text-[#a89e8e] mt-2">
+					<h4 class="text-[#f5efd8] font-bold text-lg mb-1">{data.activeBroadcast.title}</h4>
+					<p class="text-[#d3caa9] whitespace-pre-wrap text-sm">{data.activeBroadcast.content}</p>
+					<p class="text-xs text-[#a8a083] mt-2">
 						By {data.activeBroadcast.issuer?.profile?.name || "Admin"} · {formatDateTime(
 							data.activeBroadcast.createdAt
 						)}
@@ -81,7 +81,7 @@
 				<div>
 					<label class="field-label flex items-center justify-between">
 						<span>Subject</span>
-						<span class="text-xs font-normal text-[#a89e8e] font-mono">{subject.length}/200</span>
+						<span class="text-xs font-normal text-[#a8a083] font-mono">{subject.length}/200</span>
 					</label>
 					<input
 						type="text"
@@ -98,7 +98,7 @@
 				<div>
 					<label class="field-label flex items-center justify-between">
 						<span>Message</span>
-						<span class="text-xs font-normal text-[#a89e8e] font-mono">{content.length}/2000</span>
+						<span class="text-xs font-normal text-[#a8a083] font-mono">{content.length}/2000</span>
 					</label>
 					<textarea
 						name="content"
@@ -115,15 +115,15 @@
 				{#if subject || content}
 					<div class="panel-muted rounded-sm p-4">
 						<div class="flex items-center gap-2 mb-3">
-							<FluentInfo20Filled class="size-4 text-[#7ba0c8]" />
-							<h3 class="text-sm font-semibold text-[#d9ccb7]">Preview</h3>
+							<FluentInfo20Filled class="size-4 text-[#5eaef5]" />
+							<h3 class="text-sm font-semibold text-[#d3caa9]">Preview</h3>
 						</div>
 						<div class="space-y-2">
 							{#if subject}
-								<p class="text-[#fff7e8] font-semibold">{subject}</p>
+								<p class="text-[#f5efd8] font-semibold">{subject}</p>
 							{/if}
 							{#if content}
-								<p class="text-[#d9ccb7] whitespace-pre-wrap text-sm">{content}</p>
+								<p class="text-[#d3caa9] whitespace-pre-wrap text-sm">{content}</p>
 							{/if}
 						</div>
 					</div>
@@ -137,7 +137,7 @@
 				{/if}
 
 				{#if form?.success}
-					<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+					<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3">
 						<FluentSend20Filled class="size-5 shrink-0" />
 						<p>{form.message}</p>
 					</div>
@@ -146,7 +146,7 @@
 				<!-- Confirmation -->
 				<label class="flex cursor-pointer items-center justify-start gap-3 panel-muted rounded-sm p-4">
 					<input type="checkbox" bind:checked={showConfirmation} class="checkbox checkbox-error" />
-					<span class="text-sm text-[#d9ccb7]">
+					<span class="text-sm text-[#d3caa9]">
 						I confirm this broadcast should be shown to all users
 						{#if data.activeBroadcast}
 							(replaces the current active broadcast)
@@ -177,19 +177,19 @@
 			<h3 class="section-title mb-4">Recent Broadcasts</h3>
 			<div class="space-y-3">
 				{#each data.recentBroadcasts as broadcast}
-					<div class="panel-muted rounded-sm p-4 {broadcast.isActive ? 'border-[#e6a527]/35' : ''}">
+					<div class="panel-muted rounded-sm p-4 {broadcast.isActive ? 'border-[#f2b01e]/35' : ''}">
 						<div class="flex items-start justify-between gap-2">
 							<div class="flex-1">
 								<div class="flex items-center gap-2">
-									<h4 class="text-[#fff7e8] font-semibold">{broadcast.title}</h4>
+									<h4 class="text-[#f5efd8] font-semibold">{broadcast.title}</h4>
 									{#if broadcast.isActive}
 										<Badge tone="amber">Active</Badge>
 									{:else}
 										<Badge tone="neutral">Inactive</Badge>
 									{/if}
 								</div>
-								<p class="text-[#a89e8e] text-sm mt-1 line-clamp-2">{broadcast.content}</p>
-								<p class="text-xs text-[#a89e8e] mt-1">
+								<p class="text-[#a8a083] text-sm mt-1 line-clamp-2">{broadcast.content}</p>
+								<p class="text-xs text-[#a8a083] mt-1">
 									By {broadcast.issuer?.profile?.name || "Admin"} · {formatDateTime(broadcast.createdAt)}
 								</p>
 							</div>

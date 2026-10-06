@@ -121,11 +121,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
 			dragActive
-				? "border-[#e6a527] bg-[#e6a527]/10"
+				? "border-[#f2b01e] bg-[#f2b01e]/10"
 				: previewUrl
-					? "border-[#8fae88]/50 bg-[#587252]/10"
-					: "border-[#e6a527]/30",
-			!$submitting && !previewUrl ? "hover:border-[#e6a527]/50 hover:bg-[#e6a527]/10" : "",
+					? "border-[#6fd14a]/50 bg-[#3f8a2a]/10"
+					: "border-[#f2b01e]/30",
+			!$submitting && !previewUrl ? "hover:border-[#f2b01e]/50 hover:bg-[#f2b01e]/10" : "",
 			$submitting || data.onCooldown ? "opacity-50" : "",
 			$errors.logo ? "input-error" : ""
 		]
@@ -144,8 +144,8 @@
 	/>
 
 	{#if data.onCooldown}
-		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-4 flex items-center gap-3">
-			<p class="text-[#f7c56b] text-sm font-medium">
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-4 flex items-center gap-3">
+			<p class="text-[#ffd35c] text-sm font-medium">
 				⏰ You must wait {data.timeRemaining} hours before creating, joining, or leaving a bloc.
 			</p>
 		</div>
@@ -154,7 +154,7 @@
 	{#if $message}
 		<div
 			class="rounded-sm p-4 flex items-center gap-3 border {$message.includes('success')
-				? 'bg-[#587252]/18 border-[#8fae88]/30 text-[#c6dfbf]'
+				? 'bg-[#3f8a2a]/18 border-[#6fd14a]/30 text-[#b9f29a]'
 				: 'bg-red-600/10 border-red-500/30 text-red-300'}"
 		>
 			<p class="text-sm font-medium">{$message}</p>
@@ -164,7 +164,7 @@
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentFlag20Filled class="size-5 text-[#f7c56b]" />
+				<FluentFlag20Filled class="size-5 text-[#ffd35c]" />
 				<h2 class="section-title">Bloc Details</h2>
 			</div>
 
@@ -193,7 +193,7 @@
 
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-[#f7c56b]" />
+				<FluentImage20Filled class="size-5 text-[#ffd35c]" />
 				<h2 class="section-title">Bloc Logo</h2>
 			</div>
 
@@ -217,11 +217,11 @@
 				>
 					{#if !previewUrl}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#e6a527]/15 p-3 transition-colors group-hover:bg-[#e6a527]/20">
-								<FluentImage20Filled class="size-8 text-[#f7c56b]" />
+							<div class="rounded-full bg-[#f2b01e]/15 p-3 transition-colors group-hover:bg-[#f2b01e]/20">
+								<FluentImage20Filled class="size-8 text-[#ffd35c]" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-[#fff7e8]">
+								<p class="text-base font-semibold text-[#f5efd8]">
 									{#if dragActive}
 										Drop logo here
 									{:else if $submitting}
@@ -231,19 +231,19 @@
 									{/if}
 								</p>
 								{#if !$submitting}
-									<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#a8a083]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-[#102239]/70">
+							<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
 								<img src={previewUrl} alt="Bloc logo preview" class="size-24 object-contain rounded-sm" />
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/60 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-[#12150f]/60 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
+								<p class="text-base font-semibold text-[#f5efd8]">Tap to change</p>
 							</div>
 							{#if $form.logo}
 								<button
@@ -265,11 +265,11 @@
 							{/if}
 						</div>
 						{#if $form.logo}
-							<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
-								<p class="truncate text-sm font-medium text-[#fff7e8]" title={$form.logo.name}>
+							<div class="border-t border-[#c8b47a]/15 p-3 bg-[#1a1f15]/70">
+								<p class="truncate text-sm font-medium text-[#f5efd8]" title={$form.logo.name}>
 									{$form.logo.name}
 								</p>
-								<p class="text-xs text-[#a89e8e]">
+								<p class="text-xs text-[#a8a083]">
 									{Math.round($form.logo.size / 1024)} KB
 								</p>
 							</div>
@@ -287,7 +287,7 @@
 
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentColor20Filled class="size-5 text-[#f7c56b]" />
+				<FluentColor20Filled class="size-5 text-[#ffd35c]" />
 				<h2 class="section-title">Bloc Color</h2>
 			</div>
 
@@ -298,7 +298,7 @@
 						class="size-12 rounded-sm transition-all hover:brightness-110"
 						style="background-color: {color.value}"
 						class:ring-4={$form.color === color.value}
-						class:ring-[#fff7e8]={$form.color === color.value}
+						class:ring-[#f5efd8]={$form.color === color.value}
 						onclick={() => ($form.color = color.value)}
 						disabled={$submitting || data.onCooldown}
 					/>
@@ -306,7 +306,7 @@
 			</div>
 
 			<div class="flex items-center gap-3 pt-2">
-				<label for="color" class="text-sm font-medium text-[#d9ccb7]">Custom:</label>
+				<label for="color" class="text-sm font-medium text-[#d3caa9]">Custom:</label>
 				<input
 					type="color"
 					id="color"
@@ -315,7 +315,7 @@
 					class="field-control h-10 w-20 rounded-sm cursor-pointer"
 					disabled={$submitting || data.onCooldown}
 				/>
-				<span class="text-sm text-[#a89e8e]">{$form.color}</span>
+				<span class="text-sm text-[#a8a083]">{$form.color}</span>
 			</div>
 
 			<!-- Preview -->
@@ -325,11 +325,11 @@
 						{#if previewUrl}
 							<img src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
 						{:else}
-							<FluentFlag20Filled class="size-6 text-[#fff7e8]" />
+							<FluentFlag20Filled class="size-6 text-[#f5efd8]" />
 						{/if}
 					</div>
 					<div>
-						<p class="font-semibold text-[#fff7e8]">{$form.name || "Your Bloc Name"}</p>
+						<p class="font-semibold text-[#f5efd8]">{$form.name || "Your Bloc Name"}</p>
 						<p class="text-sm" style="color: {$form.color}">Political-Military Alliance</p>
 					</div>
 				</div>
@@ -338,7 +338,7 @@
 
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-[#f7c56b]" />
+				<FluentDocument20Filled class="size-5 text-[#ffd35c]" />
 				<h2 class="section-title">Description</h2>
 			</div>
 

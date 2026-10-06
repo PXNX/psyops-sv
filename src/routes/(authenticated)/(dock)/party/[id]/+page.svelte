@@ -72,13 +72,13 @@
 				{#if data.party.logoUrl}
 					<img src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
 				{:else}
-					<FluentPeople20Filled class="size-8 text-[#fff7e8]" />
+					<FluentPeople20Filled class="size-8 text-[#f5efd8]" />
 				{/if}
 			</div>
 
 			<div class="min-w-0 space-y-1">
 				<div class="flex flex-wrap items-center gap-2">
-					<h1 class="text-3xl font-bold text-[#fff7e8]">{data.party.name}</h1>
+					<h1 class="text-3xl font-bold text-[#f5efd8]">{data.party.name}</h1>
 					{#if data.party.abbreviation}
 						<span
 							class="px-2 py-0.5 rounded-sm text-xs font-bold"
@@ -88,14 +88,14 @@
 						</span>
 					{/if}
 				</div>
-				<div class="flex flex-wrap items-center gap-3 text-xs text-[#a89e8e]">
+				<div class="flex flex-wrap items-center gap-3 text-xs text-[#a8a083]">
 					{#if data.party.ideology}
 						<span class="flex items-center gap-1">
-							<FluentFlag20Filled class="size-3.5 text-[#b7a0c5]" />
+							<FluentFlag20Filled class="size-3.5 text-[#c08cf0]" />
 							{data.party.ideology}
 						</span>
 					{/if}
-					<a href="/state/{data.party.state.id}" class="flex items-center gap-1 hover:text-[#f2c463] transition-colors">
+					<a href="/state/{data.party.state.id}" class="flex items-center gap-1 hover:text-[#ffcf47] transition-colors">
 						{#if data.party.state.logo}
 							<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded-sm" />
 						{:else}
@@ -105,7 +105,7 @@
 					</a>
 				</div>
 				{#if data.party.description}
-					<p class="text-sm text-[#d9ccb7] max-w-xl pt-1">{data.party.description}</p>
+					<p class="text-sm text-[#d3caa9] max-w-xl pt-1">{data.party.description}</p>
 				{/if}
 			</div>
 		</div>
@@ -117,25 +117,25 @@
 			<a href="/party/{data.party.id}/member" class="panel-interactive rounded-sm p-3 sm:p-4 group">
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentPeople20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Members</span>
+					<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">Members</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8]">{data.party.memberCount}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#f5efd8]">{data.party.memberCount}</div>
 			</a>
 
 			<a href="/state/{data.party.state.id}/parliament" class="panel-interactive rounded-sm p-3 sm:p-4">
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentBuildingGovernment20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Seats</span>
+					<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">Seats</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8]">{data.parliamentSeats || 0}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#f5efd8]">{data.parliamentSeats || 0}</div>
 			</a>
 
 			<div class="panel rounded-sm p-3 sm:p-4">
 				<div class="flex items-center gap-2 mb-1.5">
 					<FluentCrown20Filled class="size-4" style="color: {data.party.color}" />
-					<span class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Rank</span>
+					<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">Rank</span>
 				</div>
-				<div class="text-xl sm:text-2xl font-bold text-[#fff7e8]">#{data.partyRank || "—"}</div>
+				<div class="text-xl sm:text-2xl font-bold text-[#f5efd8]">#{data.partyRank || "—"}</div>
 			</div>
 		</div>
 
@@ -145,10 +145,10 @@
 				<form method="POST" action="?/join" use:enhance>
 					<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
 						<div class="flex-1">
-							<h3 class="text-sm sm:text-base font-bold text-[#fff7e8]">
+							<h3 class="text-sm sm:text-base font-bold text-[#f5efd8]">
 								{data.party.autoAcceptMembers ? "Join This Party" : "Apply to Join"}
 							</h3>
-							<p class="text-xs text-[#a89e8e] mt-0.5">
+							<p class="text-xs text-[#a8a083] mt-0.5">
 								{data.party.autoAcceptMembers ? "Become a member instantly" : "Application reviewed by leadership"}
 							</p>
 						</div>
@@ -159,11 +159,11 @@
 				</form>
 			</div>
 		{:else if data.hasApplied}
-			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+			<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3">
 				<FluentPersonAvailable20Filled class="size-5 shrink-0" />
 				<div>
 					<span class="text-sm font-bold">Application Pending</span>
-					<p class="text-xs text-[#a89e8e] mt-0.5">Awaiting review from party leadership</p>
+					<p class="text-xs text-[#a8a083] mt-0.5">Awaiting review from party leadership</p>
 				</div>
 			</div>
 		{:else if data.isMember && !data.isLeader}
@@ -171,8 +171,8 @@
 				<form method="POST" action="?/leave" use:enhance>
 					<div class="flex items-center justify-between gap-3">
 						<div>
-							<span class="text-sm font-bold text-[#fff7e8]">Member</span>
-							<p class="text-xs text-[#a89e8e] mt-0.5">
+							<span class="text-sm font-bold text-[#f5efd8]">Member</span>
+							<p class="text-xs text-[#a8a083] mt-0.5">
 								Since {(() => {
 									const d = new Date(data.memberSince!);
 									const p = (n: number) => String(n).padStart(2, "0");
@@ -194,7 +194,7 @@
 		{/if}
 		{#if form?.success}
 			<div
-				class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3 text-sm"
+				class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3 text-sm"
 			>
 				{form.success}
 			</div>
@@ -210,7 +210,7 @@
 				{#each data.members.filter((m) => m.role === "leader") as member}
 					<a
 						href="/user/{member.userId}"
-						class="flex items-center gap-3 p-3 panel-muted rounded-sm hover:border-[#e6a527]/40 transition-colors group"
+						class="flex items-center gap-3 p-3 panel-muted rounded-sm hover:border-[#f2b01e]/40 transition-colors group"
 					>
 						<Logo
 							src={member.user.profile.logo}
@@ -219,12 +219,12 @@
 							class="size-10 rounded-full"
 						/>
 						<div class="flex-1 min-w-0">
-							<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+							<p class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 								{member.user.profile?.name}
 							</p>
 							<p class="text-xs mt-0.5" style="color: {data.party.color}">Party Leader</p>
 						</div>
-						<span class="text-[#a89e8e]/60 group-hover:text-[#f2c463] transition-colors text-sm">→</span>
+						<span class="text-[#a8a083]/60 group-hover:text-[#ffcf47] transition-colors text-sm">→</span>
 					</a>
 				{/each}
 			</div>

@@ -79,7 +79,7 @@
 				ListItem,
 				Blockquote,
 				CodeBlock.configure({
-					HTMLAttributes: { class: "bg-[#102239] p-4 rounded-sm" }
+					HTMLAttributes: { class: "bg-[#1a1f15] p-4 rounded-sm" }
 				}),
 				HorizontalRule,
 				Table.configure({ resizable: true }),
@@ -221,11 +221,11 @@
 
 <div class="wysiwyg-editor">
 	<!-- Toolbar -->
-	<div class="mb-2 border-b border-[#dfceb0]/15 pb-2">
+	<div class="mb-2 border-b border-[#c8b47a]/15 pb-2">
 		<div class="flex flex-wrap items-center gap-1">
 			{#each toolbarGroups as group, i (i)}
 				{#if i > 0}
-					<div class="mx-1 h-6 w-px bg-[#dfceb0]/15"></div>
+					<div class="mx-1 h-6 w-px bg-[#c8b47a]/15"></div>
 				{/if}
 				<div class="flex items-center gap-0.5">
 					{#each group as item (item.label)}
@@ -249,7 +249,7 @@
 
 			<!-- Bubble Menu for Text Selection (Desktop) -->
 			<BubbleMenu
-				class="hidden gap-0.5 rounded-sm border border-[#dfceb0]/15 bg-[#14283f] p-1 shadow-xl sm:flex"
+				class="hidden gap-0.5 rounded-sm border border-[#c8b47a]/15 bg-[#242a1d] p-1 shadow-xl sm:flex"
 				tippyOptions={{ duration: 100 }}
 				{editor}
 			>
@@ -266,7 +266,7 @@
 		{/if}
 
 		{#if isEditorEmpty && placeholder}
-			<div class="pointer-events-none absolute top-3 left-0 text-[#a89e8e] sm:top-4">
+			<div class="pointer-events-none absolute top-3 left-0 text-[#a8a083] sm:top-4">
 				{placeholder}
 			</div>
 		{/if}

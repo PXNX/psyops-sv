@@ -195,10 +195,10 @@
 	<div class="px-4 pt-4 pb-2 select-none">
 		<!-- Price row -->
 		<div class="flex items-baseline gap-2 flex-wrap">
-			<span class="text-2xl font-bold font-mono text-[#fff7e8] tabular-nums leading-none">
+			<span class="text-2xl font-bold font-mono text-[#f5efd8] tabular-nums leading-none">
 				${fmtPrice(displayPrice)}
 			</span>
-			<span class="text-xs font-semibold tabular-nums {isUp ? 'text-[#c6dfbf]' : 'text-red-400'}">
+			<span class="text-xs font-semibold tabular-nums {isUp ? 'text-[#b9f29a]' : 'text-red-400'}">
 				{isUp ? "▲" : "▼"}
 				{Math.abs(changePct).toFixed(2)}% ({isUp ? "+" : ""}{fmtPrice(change)})
 			</span>
@@ -220,7 +220,7 @@
 
 	<!-- ── Chart ───────────────────────────────────────────────────────────── -->
 	{#if !mounted}
-		<div style="height:{chartHeight}px" class="flex items-center justify-center text-[#a89e8e] text-sm">Loading…</div>
+		<div style="height:{chartHeight}px" class="flex items-center justify-center text-[#a8a083] text-sm">Loading…</div>
 	{:else if data.length > 1}
 		<!--
       touch-action:none prevents the page scrolling while finger is on the
@@ -245,8 +245,8 @@
 					<stop offset="100%" stop-color={isUp ? "#4ade80" : "#f87171"} stop-opacity="0.02" />
 				</linearGradient>
 				<linearGradient id={gradGrayId} x1="0" y1="0" x2="0" y2="1">
-					<stop offset="0%" stop-color="#a89e8e" stop-opacity="0.10" />
-					<stop offset="100%" stop-color="#a89e8e" stop-opacity="0.01" />
+					<stop offset="0%" stop-color="#a8a083" stop-opacity="0.10" />
+					<stop offset="100%" stop-color="#a8a083" stop-opacity="0.01" />
 				</linearGradient>
 				<clipPath id={clipId}>
 					<rect x={PAD.left} y={PAD.top} width={innerW} height={innerH} />
@@ -260,7 +260,7 @@
 					x2={PAD.left + innerW}
 					y1={y}
 					y2={y}
-					stroke="#dfceb0"
+					stroke="#c8b47a"
 					stroke-opacity="0.06"
 					stroke-width="1"
 				/>
@@ -272,7 +272,7 @@
 				x2={PAD.left + innerW}
 				y1={baselineY}
 				y2={baselineY}
-				stroke="#a89e8e"
+				stroke="#a8a083"
 				stroke-width="1"
 				stroke-dasharray="4 4"
 				stroke-opacity="0.5"
@@ -286,7 +286,7 @@
 				<path
 					d={rightLine}
 					fill="none"
-					stroke="#a89e8e"
+					stroke="#a8a083"
 					stroke-width="1.5"
 					stroke-linecap="round"
 					stroke-linejoin="round"
@@ -317,7 +317,7 @@
 					x2={scrubX}
 					y1={PAD.top}
 					y2={PAD.top + innerH}
-					stroke="#dfceb0"
+					stroke="#c8b47a"
 					stroke-width="1"
 					stroke-dasharray="3 3"
 					stroke-opacity="0.4"
@@ -332,8 +332,8 @@
 					width={PILL_W}
 					height={22}
 					rx="2"
-					fill="#102239"
-					stroke="#dfceb0"
+					fill="#1a1f15"
+					stroke="#c8b47a"
 					stroke-opacity="0.25"
 					stroke-width="1"
 				/>
@@ -349,7 +349,7 @@
 					cy={sy(activePoint.y)}
 					r={isMobile ? 5 : 4}
 					fill={isUp ? "#4ade80" : "#f87171"}
-					stroke="#14283f"
+					stroke="#242a1d"
 					stroke-width="2"
 				/>
 			{/if}
@@ -368,7 +368,7 @@
 			{/each}
 		</svg>
 	{:else}
-		<div style="height:{chartHeight}px" class="flex items-center justify-center text-[#a89e8e] text-sm px-4">
+		<div style="height:{chartHeight}px" class="flex items-center justify-center text-[#a8a083] text-sm px-4">
 			Not enough data
 		</div>
 	{/if}
@@ -383,7 +383,7 @@
 		letter-spacing: 0.03em;
 		background: transparent;
 		border: 1px solid transparent;
-		color: #a89e8e;
+		color: #a8a083;
 		cursor: pointer;
 		transition:
 			color 0.1s,
@@ -396,11 +396,11 @@
 		justify-content: center;
 	}
 	.range-btn:hover {
-		color: #d9ccb7;
-		border-color: rgba(223, 206, 176, 0.2);
+		color: #d3caa9;
+		border-color: rgba(200, 180, 122, 0.2);
 	}
 	.range-btn.active {
-		color: #f7c56b;
+		color: #ffd35c;
 		background: rgba(230, 165, 39, 0.1);
 		border-color: rgba(230, 165, 39, 0.3);
 	}
@@ -408,11 +408,11 @@
 	.axis-label {
 		font-family: ui-monospace, "Cascadia Code", monospace;
 		font-size: 10px;
-		fill: #a89e8e;
+		fill: #a8a083;
 	}
 	.date-label {
 		font-family: ui-monospace, "Cascadia Code", monospace;
 		font-size: 11px;
-		fill: #e5d8c1;
+		fill: #e6ddbf;
 	}
 </style>

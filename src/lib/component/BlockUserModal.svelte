@@ -31,14 +31,14 @@
 				>
 					<FluentPersonProhibited20Filled class="size-6 text-red-400" />
 				</div>
-				<p class="text-[#d9ccb7]">
-					Are you sure you want to block <strong class="text-[#fff7e8]">{userName || "this user"}</strong>?
+				<p class="text-[#d3caa9]">
+					Are you sure you want to block <strong class="text-[#f5efd8]">{userName || "this user"}</strong>?
 				</p>
 			</div>
 
-			<div class="panel-muted border-[#e6a527]/30 rounded-sm p-4">
-				<p class="text-sm text-[#d9ccb7] font-medium mb-2">Blocking will:</p>
-				<ul class="list-disc list-inside text-sm text-[#a89e8e] space-y-1">
+			<div class="panel-muted border-[#f2b01e]/30 rounded-sm p-4">
+				<p class="text-sm text-[#d3caa9] font-medium mb-2">Blocking will:</p>
+				<ul class="list-disc list-inside text-sm text-[#a8a083] space-y-1">
 					<li>Hide their messages from you</li>
 					<li>Prevent them from sending you direct messages</li>
 					<li>You can unblock them later from your settings</li>

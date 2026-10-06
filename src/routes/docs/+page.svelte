@@ -14,7 +14,7 @@
 		<a href={`/docs/${doc.slug}`} class="panel-interactive block rounded-sm p-4 no-underline">
 			<h2 class="section-title text-base">{doc.title}</h2>
 			{#if doc.description}
-				<p class="mt-1 text-sm text-[#a89e8e]">{doc.description}</p>
+				<p class="mt-1 text-sm text-[#a8a083]">{doc.description}</p>
 			{/if}
 		</a>
 	{/each}

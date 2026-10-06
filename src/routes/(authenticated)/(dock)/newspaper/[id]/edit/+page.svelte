@@ -133,17 +133,17 @@
 
 	<!-- Insufficient Funds Warning -->
 	{#if !data.canAfford}
-		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5 space-y-3">
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5 space-y-3">
 			<div class="flex items-start gap-3">
-				<FluentMoney20Filled class="size-6 text-[#f7c56b] shrink-0 mt-0.5" />
+				<FluentMoney20Filled class="size-6 text-[#ffd35c] shrink-0 mt-0.5" />
 				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-[#f7c56b] text-lg">Insufficient Funds</h3>
-					<p class="text-[#e5d8c1] text-sm leading-relaxed">
+					<h3 class="font-semibold text-[#ffd35c] text-lg">Insufficient Funds</h3>
+					<p class="text-[#e6ddbf] text-sm leading-relaxed">
 						You need <strong>{data.editCost.toLocaleString()}</strong> currency to edit the newspaper. You currently
 						have <strong>{data.userBalance.toLocaleString()}</strong>.
 					</p>
 					<div class="panel-muted rounded-sm p-3">
-						<p class="text-[#f7c56b] text-sm font-medium">
+						<p class="text-[#ffd35c] text-sm font-medium">
 							Needed: {(data.editCost - data.userBalance).toLocaleString()} more currency
 						</p>
 					</div>
@@ -154,7 +154,7 @@
 
 	<!-- Success Message -->
 	{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("Insufficient")}
-		<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
+		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3">
 			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
@@ -171,7 +171,7 @@
 		<!-- Basic Information -->
 		<div class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentDocument20Filled class="size-5 text-[#7ba0c8]" />
+				<FluentDocument20Filled class="size-5 text-[#5eaef5]" />
 				Basic Information
 			</h2>
 
@@ -215,7 +215,7 @@
 		<!-- Logo Upload -->
 		<div class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentImage20Filled class="size-5 text-[#7ba0c8]" />
+				<FluentImage20Filled class="size-5 text-[#5eaef5]" />
 				Newspaper Logo
 			</h2>
 
@@ -236,22 +236,22 @@
 					onclick={() => fileInput?.click()}
 					disabled={$submitting || !canEdit}
 					class="group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 {dragActive
-						? 'border-[#e6a527]/70 bg-[#e6a527]/10'
+						? 'border-[#f2b01e]/70 bg-[#f2b01e]/10'
 						: previewUrl
-							? 'border-[#8fae88]/40 bg-[#587252]/10'
-							: 'border-[#dfceb0]/20 bg-[#102239]/70'} {!$submitting && !previewUrl && canEdit
-						? 'hover:border-[#e6a527]/55 hover:bg-[#19304b]'
+							? 'border-[#6fd14a]/40 bg-[#3f8a2a]/10'
+							: 'border-[#c8b47a]/20 bg-[#1a1f15]/70'} {!$submitting && !previewUrl && canEdit
+						? 'hover:border-[#f2b01e]/55 hover:bg-[#2e3524]'
 						: ''}"
 					class:opacity-50={$submitting || !canEdit}
 					class:border-red-500={$errors.logo}
 				>
 					{#if !previewUrl}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#315d8d]/18 border border-[#7ba0c8]/30 p-3">
-								<FluentImage20Filled class="size-8 text-[#7ba0c8]" />
+							<div class="rounded-full bg-[#2369b5]/18 border border-[#5eaef5]/30 p-3">
+								<FluentImage20Filled class="size-8 text-[#5eaef5]" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-[#fff7e8]">
+								<p class="text-base font-semibold text-[#f5efd8]">
 									{#if dragActive}
 										Drop logo here
 									{:else if $submitting}
@@ -261,19 +261,19 @@
 									{/if}
 								</p>
 								{#if !$submitting && canEdit}
-									<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#a8a083]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-[#0d1d31]">
+							<div class="flex items-center justify-center p-6 bg-[#0f120c]">
 								<img src={previewUrl} alt="Logo preview" class="size-24 object-contain rounded-sm" />
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/70 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-[#12150f]/70 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
+								<p class="text-base font-semibold text-[#f5efd8]">Tap to change</p>
 							</div>
 							{#if $form.logo && canEdit}
 								<button
@@ -295,11 +295,11 @@
 							{/if}
 						</div>
 						{#if $form.logo}
-							<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
-								<p class="truncate text-sm font-medium text-[#fff7e8]" title={$form.logo.name}>
+							<div class="border-t border-[#c8b47a]/15 p-3 bg-[#1a1f15]/70">
+								<p class="truncate text-sm font-medium text-[#f5efd8]" title={$form.logo.name}>
 									{$form.logo.name}
 								</p>
-								<p class="text-xs text-[#a89e8e]">
+								<p class="text-xs text-[#a8a083]">
 									{Math.round($form.logo.size / 1024)} KB
 								</p>
 							</div>
@@ -337,8 +337,8 @@
 		</div>
 
 		<!-- Info Box -->
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
-			<p class="text-sm text-[#b7d0e6]">
+		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
+			<p class="text-sm text-[#b3dcff]">
 				💡 <strong>Note:</strong> Changes cost {data.editCost.toLocaleString()} currency to prevent frequent modifications.
 			</p>
 		</div>
@@ -353,8 +353,8 @@
 
 		<div class="space-y-4">
 			<div>
-				<h3 class="text-base font-semibold text-[#fff7e8] mb-1">Delete Newspaper</h3>
-				<p class="text-sm text-[#a89e8e] mb-3">
+				<h3 class="text-base font-semibold text-[#f5efd8] mb-1">Delete Newspaper</h3>
+				<p class="text-sm text-[#a8a083] mb-3">
 					Permanently delete this newspaper and all associated articles. This action cannot be undone.
 				</p>
 				<Button
@@ -374,10 +374,10 @@
 <!-- Delete Confirmation Modal -->
 <Modal bind:open={showDeleteModal} title="Delete Newspaper?" size="default">
 	<div class="space-y-4">
-		<p class="text-[#d9ccb7]">
+		<p class="text-[#d3caa9]">
 			Are you sure you want to delete <strong>{data.newspaper.name}</strong>?
 		</p>
-		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3">
 			<FluentWarning20Filled class="size-5 shrink-0" />
 			<p class="text-sm">
 				<strong>Warning:</strong> This will permanently delete all articles and members. This action cannot be undone.

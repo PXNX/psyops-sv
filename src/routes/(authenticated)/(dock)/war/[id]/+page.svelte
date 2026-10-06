@@ -38,13 +38,13 @@
 	function getBattleStatusColor(status: string) {
 		switch (status) {
 			case "ongoing":
-				return "bg-[#e6a527]/12 border-[#e6a527]/35 text-[#f7c56b]";
+				return "bg-[#f2b01e]/12 border-[#f2b01e]/35 text-[#ffd35c]";
 			case "attacker_won":
 				return "bg-red-600/10 border-red-500/30 text-red-300";
 			case "defender_won":
-				return "bg-[#315d8d]/18 border-[#7ba0c8]/30 text-[#b7d0e6]";
+				return "bg-[#2369b5]/18 border-[#5eaef5]/30 text-[#b3dcff]";
 			default:
-				return "bg-[#102239]/70 border-[#dfceb0]/15 text-[#a89e8e]";
+				return "bg-[#1a1f15]/70 border-[#c8b47a]/15 text-[#a8a083]";
 		}
 	}
 
@@ -78,11 +78,11 @@
 					<div class="size-2.5 bg-red-500 rounded-full animate-pulse"></div>
 					<span class="text-red-300 text-xs uppercase tracking-widest font-bold">Active Conflict</span>
 				{:else}
-					<div class="size-2.5 bg-[#a89e8e] rounded-full"></div>
-					<span class="text-[#a89e8e] text-xs uppercase tracking-widest">War Ended</span>
+					<div class="size-2.5 bg-[#a8a083] rounded-full"></div>
+					<span class="text-[#a8a083] text-xs uppercase tracking-widest">War Ended</span>
 				{/if}
 			</div>
-			<span class="text-[#a89e8e] font-mono text-xs">WAR #{data.war.id}</span>
+			<span class="text-[#a8a083] font-mono text-xs">WAR #{data.war.id}</span>
 		</div>
 
 		<!-- Combatants Face-off -->
@@ -96,11 +96,11 @@
 				/>
 				<div>
 					<div class="text-[10px] text-red-300/80 uppercase tracking-wide mb-1">Attacker</div>
-					<div class="text-base sm:text-lg font-bold text-[#fff7e8] group-hover:text-red-300 transition-colors">
+					<div class="text-base sm:text-lg font-bold text-[#f5efd8] group-hover:text-red-300 transition-colors">
 						{data.war.attacker.name}
 					</div>
 					{#if data.war.attackerBloc}
-						<div class="text-xs text-[#a89e8e]">{data.war.attackerBloc.name}</div>
+						<div class="text-xs text-[#a8a083]">{data.war.attackerBloc.name}</div>
 					{/if}
 				</div>
 			</a>
@@ -110,18 +110,18 @@
 				<div class="text-4xl sm:text-5xl opacity-40">⚔️</div>
 				{#if data.war.status === "active"}
 					<div class="text-center">
-						<div class="text-2xl sm:text-3xl font-bold text-[#fff7e8] font-mono">
-							{warDuration.days}<span class="text-[#a89e8e] text-lg">d</span>
-							{String(warDuration.hours).padStart(2, "0")}<span class="text-[#a89e8e] text-lg">h</span>
+						<div class="text-2xl sm:text-3xl font-bold text-[#f5efd8] font-mono">
+							{warDuration.days}<span class="text-[#a8a083] text-lg">d</span>
+							{String(warDuration.hours).padStart(2, "0")}<span class="text-[#a8a083] text-lg">h</span>
 						</div>
-						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1">Duration</div>
+						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1">Duration</div>
 					</div>
 				{:else}
 					<div class="text-center">
-						<div class="text-lg font-bold text-[#a89e8e] font-mono">
+						<div class="text-lg font-bold text-[#a8a083] font-mono">
 							{warDuration.days}d {warDuration.hours}h
 						</div>
-						<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide mt-1">Total Duration</div>
+						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1">Total Duration</div>
 					</div>
 				{/if}
 			</div>
@@ -132,23 +132,23 @@
 					<Logo
 						src={data.war.defender.logo}
 						alt={data.war.defender.name}
-						class="size-16 sm:size-20 rounded-sm border border-[#7ba0c8]/40 group-hover:border-[#7ba0c8]/70 transition-colors"
+						class="size-16 sm:size-20 rounded-sm border border-[#5eaef5]/40 group-hover:border-[#5eaef5]/70 transition-colors"
 					/>
 					{#if data.war.defender.capitulated}
 						<div
-							class="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-red-600 rounded-sm text-[10px] font-bold text-[#fff7e8]"
+							class="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-red-600 rounded-sm text-[10px] font-bold text-[#f5efd8]"
 						>
 							🏳️
 						</div>
 					{/if}
 				</div>
 				<div>
-					<div class="text-[10px] text-[#b7d0e6]/80 uppercase tracking-wide mb-1">Defender</div>
-					<div class="text-base sm:text-lg font-bold text-[#fff7e8] group-hover:text-[#b7d0e6] transition-colors">
+					<div class="text-[10px] text-[#b3dcff]/80 uppercase tracking-wide mb-1">Defender</div>
+					<div class="text-base sm:text-lg font-bold text-[#f5efd8] group-hover:text-[#b3dcff] transition-colors">
 						{data.war.defender.name}
 					</div>
 					{#if data.war.defenderBloc}
-						<div class="text-xs text-[#a89e8e]">{data.war.defenderBloc.name}</div>
+						<div class="text-xs text-[#a8a083]">{data.war.defenderBloc.name}</div>
 					{/if}
 				</div>
 			</a>
@@ -162,27 +162,27 @@
 				<span class="text-sm font-bold text-red-300">{data.war.attacker.name}</span>
 				<span class="text-xs text-red-300/70 font-mono">{data.attackerControl.toFixed(1)}%</span>
 			</div>
-			<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Territory Control</div>
+			<div class="text-[10px] text-[#a8a083] uppercase tracking-wide">Territory Control</div>
 			<div class="flex items-center gap-2">
-				<span class="text-xs text-[#b7d0e6]/70 font-mono">{data.defenderControl.toFixed(1)}%</span>
-				<span class="text-sm font-bold text-[#b7d0e6]">{data.war.defender.name}</span>
+				<span class="text-xs text-[#b3dcff]/70 font-mono">{data.defenderControl.toFixed(1)}%</span>
+				<span class="text-sm font-bold text-[#b3dcff]">{data.war.defender.name}</span>
 			</div>
 		</div>
 
-		<div class="relative h-8 sm:h-10 bg-[#0d1d31]/90 rounded-sm border border-[#dfceb0]/15 overflow-hidden">
+		<div class="relative h-8 sm:h-10 bg-[#0f120c]/90 rounded-sm border border-[#c8b47a]/15 overflow-hidden">
 			<div
 				class="absolute left-0 top-0 bottom-0 bg-red-500 transition-all duration-1000"
 				style="width: {data.attackerControl}%"
 			></div>
 			<div
-				class="absolute right-0 top-0 bottom-0 bg-[#7ba0c8] transition-all duration-1000"
+				class="absolute right-0 top-0 bottom-0 bg-[#5eaef5] transition-all duration-1000"
 				style="width: {data.defenderControl}%"
 			></div>
 			<div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-				<span class="text-[#fff7e8] font-bold text-xs drop-shadow-lg"
+				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg"
 					>{data.totalRegions > 0 ? Math.round((data.attackerControl * data.totalRegions) / 100) : 0} regions</span
 				>
-				<span class="text-[#fff7e8] font-bold text-xs drop-shadow-lg"
+				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg"
 					>{data.totalRegions > 0 ? Math.round((data.defenderControl * data.totalRegions) / 100) : 0} regions</span
 				>
 			</div>
@@ -194,13 +194,13 @@
 				<div class="text-xl sm:text-2xl font-bold text-red-300">{data.battleStats.attacker_won}</div>
 				<div class="text-[10px] text-red-300/70 uppercase tracking-wide">Victories</div>
 			</div>
-			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-2 sm:p-3">
-				<div class="text-xl sm:text-2xl font-bold text-[#f7c56b]">{data.battleStats.ongoing}</div>
-				<div class="text-[10px] text-[#f7c56b]/70 uppercase tracking-wide">Active</div>
+			<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-2 sm:p-3">
+				<div class="text-xl sm:text-2xl font-bold text-[#ffd35c]">{data.battleStats.ongoing}</div>
+				<div class="text-[10px] text-[#ffd35c]/70 uppercase tracking-wide">Active</div>
 			</div>
-			<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-2 sm:p-3">
-				<div class="text-xl sm:text-2xl font-bold text-[#b7d0e6]">{data.battleStats.defender_won}</div>
-				<div class="text-[10px] text-[#b7d0e6]/70 uppercase tracking-wide">Victories</div>
+			<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-2 sm:p-3">
+				<div class="text-xl sm:text-2xl font-bold text-[#b3dcff]">{data.battleStats.defender_won}</div>
+				<div class="text-[10px] text-[#b3dcff]/70 uppercase tracking-wide">Victories</div>
 			</div>
 		</div>
 	</div>
@@ -217,9 +217,9 @@
 					<div class="flex items-center gap-2 panel-muted rounded-sm px-3 py-2">
 						<Logo src={state.logo} alt={state.name} class="size-8 rounded-sm" />
 						<div>
-							<div class="text-sm font-medium text-[#fff7e8]">{state.name}</div>
+							<div class="text-sm font-medium text-[#f5efd8]">{state.name}</div>
 							{#if state.capitulatedAt}
-								<div class="text-[10px] text-[#a89e8e]">{formatDate(state.capitulatedAt)}</div>
+								<div class="text-[10px] text-[#a8a083]">{formatDate(state.capitulatedAt)}</div>
 							{/if}
 						</div>
 					</div>
@@ -233,7 +233,7 @@
 		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center justify-between">
 				<h2 class="section-title">
-					<span class="size-2 bg-[#e6a527] rounded-full animate-pulse"></span>
+					<span class="size-2 bg-[#f2b01e] rounded-full animate-pulse"></span>
 					Active Battles
 				</h2>
 				<Badge tone="amber">{ongoingBattles.length} ONGOING</Badge>
@@ -242,24 +242,24 @@
 				{#each ongoingBattles as battle}
 					<a
 						href="/battle/{battle.id}"
-						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-colors group"
+						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-colors group"
 					>
 						<Logo
 							src="/coats/{battle.region.id}.svg"
 							alt={getRegionName(battle.region.id)}
-							class="size-10 sm:size-12 rounded-sm border border-[#dfceb0]/15"
+							class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/15"
 							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-[#1f3450] to-[#14283f]"
+							placeholderGradient="from-[#283020] to-[#242a1d]"
 						/>
 						<div class="flex-1 min-w-0">
 							<div
-								class="text-sm sm:text-base font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate"
+								class="text-sm sm:text-base font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate"
 							>
 								{getRegionName(battle.region.id)}
 							</div>
-							<div class="text-xs text-[#a89e8e]">
+							<div class="text-xs text-[#a8a083]">
 								<span class="text-red-300">{battle.attackerState.name}</span> →
-								<span class="text-[#b7d0e6]">{battle.defenderState.name}</span>
+								<span class="text-[#b3dcff]">{battle.defenderState.name}</span>
 							</div>
 						</div>
 						<div class="flex items-center gap-2 shrink-0">
@@ -280,25 +280,25 @@
 					{@const isAttackerWin = battle.status === "attacker_won"}
 					<a
 						href="/battle/{battle.id}"
-						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-colors group"
+						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-colors group"
 					>
 						<Logo
 							src="/coats/{battle.region.id}.svg"
 							alt={getRegionName(battle.region.id)}
-							class="size-10 sm:size-12 rounded-sm border border-[#dfceb0]/15"
+							class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/15"
 							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-[#1f3450] to-[#14283f]"
+							placeholderGradient="from-[#283020] to-[#242a1d]"
 						/>
 						<div class="flex-1 min-w-0">
 							<div
-								class="text-sm sm:text-base font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate"
+								class="text-sm sm:text-base font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate"
 							>
 								{getRegionName(battle.region.id)}
 							</div>
-							<div class="text-xs text-[#a89e8e]">
+							<div class="text-xs text-[#a8a083]">
 								{battle.attackerState.name} → {battle.defenderState.name}
 								{#if battle.endedAt}
-									<span class="text-[#a89e8e]/70">· {formatDate(battle.endedAt)}</span>
+									<span class="text-[#a8a083]/70">· {formatDate(battle.endedAt)}</span>
 								{/if}
 							</div>
 						</div>
@@ -316,7 +316,7 @@
 	{:else if totalBattles === 0}
 		<div class="panel-muted rounded-sm p-8 sm:p-12 text-center">
 			<div class="text-4xl sm:text-6xl mb-4 opacity-20">⚔️</div>
-			<p class="text-lg text-[#a89e8e]">No battles fought yet</p>
+			<p class="text-lg text-[#a8a083]">No battles fought yet</p>
 		</div>
 	{/if}
 
@@ -324,16 +324,16 @@
 	{#if data.war.surrenders && data.war.surrenders.length > 0}
 		<div class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentFlag20Filled class="size-4 text-[#a89e8e]" />
+				<FluentFlag20Filled class="size-4 text-[#a8a083]" />
 				Surrenders
 			</h2>
 			<div class="space-y-2">
 				{#each data.war.surrenders as surrender}
 					<div class="flex items-center gap-3 panel-muted rounded-sm p-3 sm:p-4">
-						<FluentFlag20Filled class="size-5 text-[#a89e8e] shrink-0" />
+						<FluentFlag20Filled class="size-5 text-[#a8a083] shrink-0" />
 						<div class="flex-1 min-w-0">
-							<div class="font-bold text-[#fff7e8] text-sm">{surrender.state.name}</div>
-							<div class="text-xs text-[#a89e8e]">
+							<div class="font-bold text-[#f5efd8] text-sm">{surrender.state.name}</div>
+							<div class="text-xs text-[#a8a083]">
 								{surrender.surrenderer.profile?.name || "Unknown"} · {formatDate(surrender.surrenderedAt)}
 							</div>
 						</div>

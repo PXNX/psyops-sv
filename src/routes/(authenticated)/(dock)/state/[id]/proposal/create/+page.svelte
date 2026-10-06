@@ -42,13 +42,13 @@
 	}
 
 	const proposalTypeColors: Record<string, string> = {
-		tax: "bg-[#e6a527]/15 text-[#f7c56b] border-[#e6a527]/35",
+		tax: "bg-[#f2b01e]/15 text-[#ffd35c] border-[#f2b01e]/35",
 		hospital: "bg-red-600/10 text-red-300 border-red-500/30",
-		school: "bg-[#8c709b]/20 text-[#d5c4df] border-[#b7a0c5]/30",
-		power_plant: "bg-[#e6a527]/12 text-[#f7c56b] border-[#e6a527]/35",
-		infrastructure: "bg-[#315d8d]/20 text-[#b7d0e6] border-[#7ba0c8]/30",
+		school: "bg-[#8a4fc0]/20 text-[#e3cbfb] border-[#c08cf0]/30",
+		power_plant: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35",
+		infrastructure: "bg-[#2369b5]/20 text-[#b3dcff] border-[#5eaef5]/30",
 		fortifications: "bg-red-600/10 text-red-300 border-red-500/30",
-		border_control: "bg-[#587252]/20 text-[#c6dfbf] border-[#8fae88]/30"
+		border_control: "bg-[#3f8a2a]/20 text-[#b9f29a] border-[#6fd14a]/30"
 	};
 
 	const proposalTypeIcons: Record<string, string> = {
@@ -190,12 +190,12 @@
 	{#if data.isPresident || data.userMinistry}
 		<div class="panel-muted rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<FluentShieldTask20Filled class="size-6 text-[#b7a0c5]" />
+				<FluentShieldTask20Filled class="size-6 text-[#c08cf0]" />
 				<div>
-					<p class="text-sm font-medium text-[#fff7e8]">
+					<p class="text-sm font-medium text-[#f5efd8]">
 						{data.isPresident ? "Presidential Authority" : `Minister of ${data.userMinistry}`}
 					</p>
-					<p class="text-xs text-[#a89e8e]">Certain actions can be executed immediately without parliamentary vote</p>
+					<p class="text-xs text-[#a8a083]">Certain actions can be executed immediately without parliamentary vote</p>
 				</div>
 			</div>
 		</div>
@@ -203,19 +203,19 @@
 
 	<!-- Info Banner -->
 	{#if canAutoExecute()}
-		<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm p-4 flex items-center gap-3">
-			<FluentShieldTask20Filled class="size-5 text-[#b7a0c5] shrink-0" />
+		<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm p-4 flex items-center gap-3">
+			<FluentShieldTask20Filled class="size-5 text-[#c08cf0] shrink-0" />
 			<div class="text-sm">
-				<p class="font-semibold text-[#fff7e8]">Immediate Execution</p>
-				<p class="text-[#d9ccb7]">This action will be executed immediately upon submission.</p>
+				<p class="font-semibold text-[#f5efd8]">Immediate Execution</p>
+				<p class="text-[#d3caa9]">This action will be executed immediately upon submission.</p>
 			</div>
 		</div>
 	{:else}
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4 flex items-center gap-3">
-			<FluentDocument20Filled class="size-5 text-[#7ba0c8] shrink-0" />
+		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4 flex items-center gap-3">
+			<FluentDocument20Filled class="size-5 text-[#5eaef5] shrink-0" />
 			<div class="text-sm">
-				<p class="font-semibold text-[#fff7e8]">Parliamentary Proposal</p>
-				<p class="text-[#d9ccb7]">
+				<p class="font-semibold text-[#f5efd8]">Parliamentary Proposal</p>
+				<p class="text-[#d3caa9]">
 					This proposal will be voted on for <strong>1 day</strong> and requires <strong>60% majority</strong> to pass.
 				</p>
 			</div>
@@ -236,15 +236,15 @@
 							type="button"
 							class="p-4 rounded-sm border text-left transition-colors {$formData.proposalType === type
 								? proposalTypeColors[type]
-								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
+								: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
 							onclick={() => ($formData.proposalType = type as ProposalType)}
 							disabled={$submitting}
 						>
 							<div class="flex flex-col gap-2">
 								<span class="text-2xl">{proposalTypeIcons[type]}</span>
-								<h4 class="font-bold text-[#fff7e8] capitalize text-sm">{type.replace("_", " ")}</h4>
+								<h4 class="font-bold text-[#f5efd8] capitalize text-sm">{type.replace("_", " ")}</h4>
 								{#if canAutoExecute() && ((data.isPresident && ["tax", "border_control", "fortifications"].includes(type)) || (data.userMinistry === "economy" && type === "tax") || (data.userMinistry === "foreign_affairs" && type === "border_control") || (data.userMinistry === "defense" && type === "fortifications") || (data.userMinistry === "infrastructure" && type === "infrastructure") || (data.userMinistry === "education" && type === "school") || (data.userMinistry === "health" && type === "hospital"))}
-									<span class="text-xs text-[#c6dfbf]">✓ Immediate</span>
+									<span class="text-xs text-[#b9f29a]">✓ Immediate</span>
 								{/if}
 							</div>
 						</button>
@@ -258,13 +258,13 @@
 
 			<!-- Tax-Specific Fields -->
 			{#if isTaxProposal}
-				<div class="border-t border-[#dfceb0]/10 pt-6 space-y-6">
-					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-4">
+				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
+					<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-4">
 						<div class="flex items-center gap-2 mb-2">
-							<FluentMoney20Filled class="size-5 text-[#f7c56b]" />
-							<h3 class="text-base font-semibold text-[#fff7e8]">Tax Configuration</h3>
+							<FluentMoney20Filled class="size-5 text-[#ffd35c]" />
+							<h3 class="text-base font-semibold text-[#f5efd8]">Tax Configuration</h3>
 						</div>
-						<p class="text-sm text-[#d9ccb7]">Revenue will be deposited into the state treasury.</p>
+						<p class="text-sm text-[#d3caa9]">Revenue will be deposited into the state treasury.</p>
 					</div>
 
 					<div>
@@ -276,16 +276,16 @@
 								<button
 									type="button"
 									class="p-4 rounded-sm border text-left transition-colors {$formData.taxType === type
-										? 'bg-[#e6a527]/12 border-[#e6a527]/60'
-										: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
+										? 'bg-[#f2b01e]/12 border-[#f2b01e]/60'
+										: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
 									onclick={() => ($formData.taxType = type as any)}
 									disabled={$submitting}
 								>
 									<div class="flex items-center gap-3 mb-2">
 										<span class="text-2xl">{taxTypeIcons[type]}</span>
-										<h4 class="font-bold text-[#fff7e8] capitalize">{type.replace("_", " ")}</h4>
+										<h4 class="font-bold text-[#f5efd8] capitalize">{type.replace("_", " ")}</h4>
 									</div>
-									<p class="text-xs text-[#a89e8e]">{taxTypeDescriptions[type]}</p>
+									<p class="text-xs text-[#a8a083]">{taxTypeDescriptions[type]}</p>
 								</button>
 							{/each}
 						</div>
@@ -297,7 +297,7 @@
 
 					<div>
 						<label for="taxRate" class="field-label">
-							Tax Rate: <span class="text-[#fff7e8] font-bold">{$formData.taxRate || 0}%</span>
+							Tax Rate: <span class="text-[#f5efd8] font-bold">{$formData.taxRate || 0}%</span>
 						</label>
 						<input
 							type="range"
@@ -306,10 +306,10 @@
 							min="1"
 							max="50"
 							bind:value={$formData.taxRate}
-							class="range range-sm w-full text-[#e6a527]"
+							class="range range-sm w-full text-[#f2b01e]"
 							disabled={$submitting}
 						/>
-						<div class="flex justify-between text-xs text-[#a89e8e] px-2 mt-1">
+						<div class="flex justify-between text-xs text-[#a8a083] px-2 mt-1">
 							<span>1%</span>
 							<span>10%</span>
 							<span>25%</span>
@@ -324,13 +324,13 @@
 
 			<!-- Border Control Fields -->
 			{#if isBorderControlProposal}
-				<div class="border-t border-[#dfceb0]/10 pt-6 space-y-6">
-					<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-4">
+				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
+					<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4">
 						<div class="flex items-center gap-2 mb-2">
-							<FluentGlobe20Filled class="size-5 text-[#8fae88]" />
-							<h3 class="text-base font-semibold text-[#fff7e8]">Border Control</h3>
+							<FluentGlobe20Filled class="size-5 text-[#6fd14a]" />
+							<h3 class="text-base font-semibold text-[#f5efd8]">Border Control</h3>
 						</div>
-						<p class="text-sm text-[#d9ccb7]">
+						<p class="text-sm text-[#d3caa9]">
 							Manage state border access. Closed borders cost ${data.borderMaintenanceCost.toLocaleString()}/day to
 							maintain.
 						</p>
@@ -344,18 +344,18 @@
 							<button
 								type="button"
 								class="p-4 rounded-sm border text-left transition-colors {$formData.borderStatus === 'open'
-									? 'bg-[#587252]/18 border-[#8fae88]/60'
-									: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
+									? 'bg-[#3f8a2a]/18 border-[#6fd14a]/60'
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
 								onclick={() => ($formData.borderStatus = "open")}
 								disabled={$submitting}
 							>
 								<div class="flex items-center gap-3 mb-2">
 									<span class="text-2xl">🌍</span>
-									<h4 class="font-bold text-[#fff7e8]">Open Borders</h4>
+									<h4 class="font-bold text-[#f5efd8]">Open Borders</h4>
 								</div>
-								<p class="text-xs text-[#a89e8e]">Allow free travel and trade</p>
+								<p class="text-xs text-[#a8a083]">Allow free travel and trade</p>
 								{#if data.border?.status === "open"}
-									<span class="text-xs text-[#c6dfbf] mt-2 block">✓ Current status</span>
+									<span class="text-xs text-[#b9f29a] mt-2 block">✓ Current status</span>
 								{/if}
 							</button>
 
@@ -363,16 +363,16 @@
 								type="button"
 								class="p-4 rounded-sm border text-left transition-colors {$formData.borderStatus === 'closed'
 									? 'bg-red-600/10 border-red-500/60'
-									: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
 								onclick={() => ($formData.borderStatus = "closed")}
 								disabled={$submitting}
 							>
 								<div class="flex items-center gap-3 mb-2">
 									<span class="text-2xl">🚫</span>
-									<h4 class="font-bold text-[#fff7e8]">Closed Borders</h4>
+									<h4 class="font-bold text-[#f5efd8]">Closed Borders</h4>
 								</div>
-								<p class="text-xs text-[#a89e8e]">Restrict travel and trade</p>
-								<p class="text-xs text-[#f7c56b] mt-1">
+								<p class="text-xs text-[#a8a083]">Restrict travel and trade</p>
+								<p class="text-xs text-[#ffd35c] mt-1">
 									Costs ${data.borderMaintenanceCost.toLocaleString()}/day
 								</p>
 								{#if data.border?.status === "closed"}
@@ -390,21 +390,21 @@
 
 			<!-- Building Construction Fields -->
 			{#if isBuildingProposal}
-				<div class="border-t border-[#dfceb0]/10 pt-6 space-y-6">
-					<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
+				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
+					<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
 						<div class="flex items-center gap-2 mb-2">
-							<FluentBuildingBank20Filled class="size-5 text-[#7ba0c8]" />
-							<h3 class="text-base font-semibold text-[#fff7e8]">Construction Project</h3>
+							<FluentBuildingBank20Filled class="size-5 text-[#5eaef5]" />
+							<h3 class="text-base font-semibold text-[#f5efd8]">Construction Project</h3>
 						</div>
-						<p class="text-sm text-[#d9ccb7]">Resources will be taken from the state treasury and inventory.</p>
+						<p class="text-sm text-[#d3caa9]">Resources will be taken from the state treasury and inventory.</p>
 					</div>
 
 					{#if selectedRegion() && currentBuildingCount > 0}
 						<div class="panel-muted rounded-sm p-4">
 							<div class="flex items-center justify-between">
-								<p class="text-sm font-medium text-[#d9ccb7]">Existing in Region:</p>
-								<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm px-3 py-1">
-									<p class="text-lg font-bold text-[#fff7e8]">{currentBuildingCount}</p>
+								<p class="text-sm font-medium text-[#d3caa9]">Existing in Region:</p>
+								<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm px-3 py-1">
+									<p class="text-lg font-bold text-[#f5efd8]">{currentBuildingCount}</p>
 								</div>
 							</div>
 						</div>
@@ -423,15 +423,15 @@
 									type="button"
 									class="p-4 rounded-sm border text-left transition-colors flex items-center gap-3 {$formData.regionId ===
 									region.id.toString()
-										? 'bg-[#e6a527]/12 border-[#e6a527]/60'
-										: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55'}"
+										? 'bg-[#f2b01e]/12 border-[#f2b01e]/60'
+										: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
 									onclick={() => ($formData.regionId = region.id.toString())}
 									disabled={$submitting}
 								>
 									<img src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="w-12 h-12 rounded-sm" />
 									<div class="flex-1">
-										<h4 class="font-bold text-[#fff7e8]">{getRegionName(region.id)}</h4>
-										<p class="text-xs text-[#a89e8e]">
+										<h4 class="font-bold text-[#f5efd8]">{getRegionName(region.id)}</h4>
+										<p class="text-xs text-[#a8a083]">
 											Infrastructure: {region.infrastructure ?? 0}
 											{#if buildingCount > 0}
 												• {proposalTypeIcons[$formData.proposalType || ""]} {buildingCount}
@@ -450,7 +450,7 @@
 					<div>
 						<label for="quantity" class="field-label">
 							Quantity <span class="text-red-400">*</span>
-							<span class="text-[#a89e8e] font-normal">(max affordable: {maxAffordableQuantity()})</span>
+							<span class="text-[#a8a083] font-normal">(max affordable: {maxAffordableQuantity()})</span>
 						</label>
 						<div class="join w-full">
 							<input
@@ -479,7 +479,7 @@
 							<p class="field-error">{$errors.quantity}</p>
 						{/if}
 						{#if $formData.quantity && currentBuildingCount > 0}
-							<p class="text-xs text-[#a89e8e] mt-1">
+							<p class="text-xs text-[#a8a083] mt-1">
 								<FluentInfo20Filled class="inline size-3" />
 								After construction: {currentBuildingCount + ($formData.quantity || 0)} total in region
 							</p>
@@ -494,8 +494,8 @@
 					{/if}
 
 					{#if $formData.quantity && $formData.quantity > 1}
-						<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-3">
-							<p class="text-xs text-[#d9ccb7]">
+						<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-3">
+							<p class="text-xs text-[#d3caa9]">
 								Buildings will be numbered automatically (e.g., Building 1, Building 2, Building 3...)
 							</p>
 						</div>
@@ -504,18 +504,18 @@
 					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
 						{@const template = data.buildingTemplates[$formData.proposalType]}
 						{#if template}
-							<div class="grid grid-cols-3 gap-2 text-xs text-[#a89e8e] panel-muted rounded-sm p-4">
+							<div class="grid grid-cols-3 gap-2 text-xs text-[#a8a083] panel-muted rounded-sm p-4">
 								<div>
-									<span class="text-[#a89e8e]/70">Construction:</span>
-									<div class="text-[#fff7e8]">{template.constructionTime} days</div>
+									<span class="text-[#a8a083]/70">Construction:</span>
+									<div class="text-[#f5efd8]">{template.constructionTime} days</div>
 								</div>
 								<div>
-									<span class="text-[#a89e8e]/70">Infrastructure:</span>
-									<div class="text-[#fff7e8]">{template.infrastructureRequired}</div>
+									<span class="text-[#a8a083]/70">Infrastructure:</span>
+									<div class="text-[#f5efd8]">{template.infrastructureRequired}</div>
 								</div>
 								<div>
-									<span class="text-[#a89e8e]/70">Power:</span>
-									<div class="text-[#fff7e8]">{template.powerConsumption} MW</div>
+									<span class="text-[#a8a083]/70">Power:</span>
+									<div class="text-[#f5efd8]">{template.powerConsumption} MW</div>
 								</div>
 							</div>
 						{/if}

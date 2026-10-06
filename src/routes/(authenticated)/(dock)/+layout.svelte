@@ -70,7 +70,7 @@
 	}
 
 	.nav-progress {
-		@apply fixed top-0 left-0 right-0 z-50 h-0.5 overflow-hidden bg-[#e6a527]/10;
+		@apply fixed top-0 left-0 right-0 z-50 h-0.5 overflow-hidden bg-[#f2b01e]/10;
 	}
 
 	.nav-progress::after {
@@ -78,7 +78,7 @@
 		display: block;
 		height: 100%;
 		width: 40%;
-		background: #e6a527;
+		background: #f2b01e;
 		animation: nav-progress-slide 0.9s ease-in-out infinite;
 	}
 

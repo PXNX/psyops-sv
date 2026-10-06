@@ -16,9 +16,9 @@
 	{#if icon}
 		<svelte:component this={icon} class="size-14 sm:size-16 mx-auto mb-4 opacity-20" />
 	{/if}
-	<p class="text-[#d9ccb7] text-base sm:text-lg">{title}</p>
+	<p class="text-[#d3caa9] text-base sm:text-lg">{title}</p>
 	{#if subtitle}
-		<p class="text-sm text-[#a89e8e] mt-2">{subtitle}</p>
+		<p class="text-sm text-[#a8a083] mt-2">{subtitle}</p>
 	{/if}
 	{#if actions}
 		<div class="mt-4 flex flex-wrap justify-center gap-2">

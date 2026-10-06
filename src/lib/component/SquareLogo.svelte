@@ -17,7 +17,7 @@
 </script>
 
 {#if error}
-	<FluentColorPeople20 class="rounded-sm size-14 bg-[#14283f] p-1" />
+	<FluentColorPeople20 class="rounded-sm size-14 bg-[#242a1d] p-1" />
 {:else}
 	<img
 		alt="Logo"

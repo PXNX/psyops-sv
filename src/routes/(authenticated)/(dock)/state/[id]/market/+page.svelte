@@ -65,12 +65,12 @@
 	/>
 
 	{#if !data.canTrade}
-		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5">
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5">
 			<div class="flex items-start gap-3">
-				<FluentWarning20Filled class="size-5 text-[#f7c56b] flex-shrink-0 mt-0.5" />
+				<FluentWarning20Filled class="size-5 text-[#ffd35c] flex-shrink-0 mt-0.5" />
 				<div>
-					<h3 class="font-semibold text-[#f7c56b] mb-1">Access Restricted</h3>
-					<p class="text-sm text-[#ffe2a4]/80">
+					<h3 class="font-semibold text-[#ffd35c] mb-1">Access Restricted</h3>
+					<p class="text-sm text-[#ffe58f]/80">
 						Only the president or minister of economics can trade on behalf of the state.
 					</p>
 				</div>
@@ -80,10 +80,10 @@
 
 	<!-- Success/Error Messages -->
 	{#if form?.success}
-		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-4">
+		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4">
 			<div class="flex items-start gap-3">
-				<FluentCheckmark20Filled class="size-5 text-[#8fae88] flex-shrink-0 mt-0.5" />
-				<p class="text-[#c6dfbf] font-medium">{form.message}</p>
+				<FluentCheckmark20Filled class="size-5 text-[#6fd14a] flex-shrink-0 mt-0.5" />
+				<p class="text-[#b9f29a] font-medium">{form.message}</p>
 			</div>
 		</div>
 	{:else if form?.message}
@@ -96,15 +96,15 @@
 	{/if}
 
 	<!-- Treasury Banner -->
-	<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/30 p-5">
+	<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/30 p-5">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center gap-4">
-				<div class="size-12 bg-[#587252]/25 rounded-sm flex items-center justify-center">
-					<FluentMoney20Filled class="size-6 text-[#c6dfbf]" />
+				<div class="size-12 bg-[#3f8a2a]/25 rounded-sm flex items-center justify-center">
+					<FluentMoney20Filled class="size-6 text-[#b9f29a]" />
 				</div>
 				<div>
-					<p class="text-[10px] text-[#c6dfbf] uppercase tracking-wide">State Treasury</p>
-					<p class="text-2xl font-bold font-mono text-[#fff7e8]">{formatCurrency(data.treasury.balance)}</p>
+					<p class="text-[10px] text-[#b9f29a] uppercase tracking-wide">State Treasury</p>
+					<p class="text-2xl font-bold font-mono text-[#f5efd8]">{formatCurrency(data.treasury.balance)}</p>
 				</div>
 			</div>
 		</div>
@@ -115,7 +115,7 @@
 		<div class="space-y-4">
 			<div class="panel rounded-sm p-5 space-y-3">
 				<div class="flex items-center gap-2">
-					<FluentBox20Filled class="size-5 text-[#d5c4df]" />
+					<FluentBox20Filled class="size-5 text-[#e3cbfb]" />
 					<h2 class="section-title">State Stockpile</h2>
 				</div>
 
@@ -130,20 +130,20 @@
 							}}
 							class="w-full flex items-center justify-between p-3 rounded-sm border transition-all
 								{isSelected
-								? 'bg-[#8c709b]/20 border-[#b7a0c5]/30 ring-1 ring-[#b7a0c5]/20'
-								: 'bg-[#102239]/70 border-[#dfceb0]/10 hover:bg-[#19304b] hover:border-[#dfceb0]/20'}"
+								? 'bg-[#8a4fc0]/20 border-[#c08cf0]/30 ring-1 ring-[#c08cf0]/20'
+								: 'bg-[#1a1f15]/70 border-[#c8b47a]/10 hover:bg-[#2e3524] hover:border-[#c8b47a]/20'}"
 						>
 							<div class="flex items-center gap-3">
 								<ResourceIcon name={resource} class="size-5" />
-								<span class="font-medium capitalize {isSelected ? 'text-[#d5c4df]' : 'text-[#d9ccb7]'}">{resource}</span
+								<span class="font-medium capitalize {isSelected ? 'text-[#e3cbfb]' : 'text-[#d3caa9]'}">{resource}</span
 								>
 							</div>
 							<span
 								class="text-sm font-bold tabular-nums {quantity > 0
 									? isSelected
-										? 'text-[#d5c4df]'
-										: 'text-[#e5d8c1]'
-									: 'text-[#a89e8e]'}"
+										? 'text-[#e3cbfb]'
+										: 'text-[#e6ddbf]'
+									: 'text-[#a8a083]'}"
 							>
 								{quantity}
 							</span>
@@ -155,18 +155,18 @@
 			<!-- Market Prices -->
 			<div class="panel rounded-sm p-5 space-y-3">
 				<div class="flex items-center gap-2">
-					<FluentInfo20Filled class="size-5 text-[#b7d0e6]" />
+					<FluentInfo20Filled class="size-5 text-[#b3dcff]" />
 					<h2 class="section-title">Market Prices</h2>
 				</div>
 
 				<div class="space-y-1.5">
 					{#each allResources as resource}
 						<div class="flex items-center justify-between text-sm py-1">
-							<span class="flex items-center gap-2 text-[#d9ccb7]">
+							<span class="flex items-center gap-2 text-[#d3caa9]">
 								<ResourceIcon name={resource} class="size-4" />
 								<span class="capitalize">{resource}</span>
 							</span>
-							<span class="font-medium font-mono text-[#d9ccb7] tabular-nums"
+							<span class="font-medium font-mono text-[#d3caa9] tabular-nums"
 								>{formatCurrency(data.marketPrices[resource] || 0)}</span
 							>
 						</div>
@@ -186,7 +186,7 @@
 				<!-- Trade Mode -->
 				<div class="flex items-center justify-between gap-3 flex-wrap">
 					<h2 class="section-title">
-						<FluentCart20Filled class="size-5 text-[#e6a527]" />
+						<FluentCart20Filled class="size-5 text-[#f2b01e]" />
 						Trade Resources
 					</h2>
 					<div class="join">
@@ -222,17 +222,17 @@
 				<!-- Selected Resource Display -->
 				<div class="panel-muted rounded-sm p-5">
 					<div class="flex items-center gap-4">
-						<div class="size-14 bg-[#14283f] rounded-sm flex items-center justify-center">
+						<div class="size-14 bg-[#242a1d] rounded-sm flex items-center justify-center">
 							<ResourceIcon name={selectedResource} class="size-8" />
 						</div>
 						<div class="flex-1">
-							<h3 class="text-xl font-bold text-[#fff7e8] capitalize">{selectedResource}</h3>
+							<h3 class="text-xl font-bold text-[#f5efd8] capitalize">{selectedResource}</h3>
 							<div class="flex items-center gap-x-4 gap-y-1 flex-wrap mt-1">
-								<span class="text-sm text-[#a89e8e]">
-									In stock: <span class="font-semibold text-[#e5d8c1]">{resourceMap.get(selectedResource) || 0}</span>
+								<span class="text-sm text-[#a8a083]">
+									In stock: <span class="font-semibold text-[#e6ddbf]">{resourceMap.get(selectedResource) || 0}</span>
 								</span>
-								<span class="text-sm text-[#a89e8e]">
-									Market price: <span class="font-semibold font-mono text-[#e5d8c1]"
+								<span class="text-sm text-[#a8a083]">
+									Market price: <span class="font-semibold font-mono text-[#e6ddbf]"
 										>{formatCurrency(currentMarketPrice)}</span
 									>
 								</span>
@@ -247,7 +247,7 @@
 						<label for="quantity" class="field-label">
 							Quantity
 							{#if tradeMode === "sell"}
-								<span class="text-[#a89e8e] text-xs ml-1">(max {availableQuantity})</span>
+								<span class="text-[#a8a083] text-xs ml-1">(max {availableQuantity})</span>
 							{/if}
 						</label>
 						<div class="join w-full">
@@ -281,7 +281,7 @@
 						<label for="pricePerUnit" class="field-label">Price per unit</label>
 						<div class="join w-full">
 							<span
-								class="join-item flex items-center px-3 rounded-sm bg-[#0d1d31] border border-[#dfceb0]/20 text-[#a89e8e] pointer-events-none"
+								class="join-item flex items-center px-3 rounded-sm bg-[#0f120c] border border-[#c8b47a]/20 text-[#a8a083] pointer-events-none"
 								>$</span
 							>
 							<input
@@ -300,26 +300,26 @@
 
 				<!-- Order Summary -->
 				<div class="panel-muted rounded-sm p-5 space-y-3">
-					<h4 class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Order Summary</h4>
+					<h4 class="text-[10px] text-[#a8a083] uppercase tracking-wide">Order Summary</h4>
 
 					<div class="space-y-2">
 						<div class="flex justify-between text-sm">
-							<span class="text-[#a89e8e]">Resource</span>
-							<span class="font-medium text-[#fff7e8] flex items-center gap-1.5">
+							<span class="text-[#a8a083]">Resource</span>
+							<span class="font-medium text-[#f5efd8] flex items-center gap-1.5">
 								<ResourceIcon name={selectedResource} class="size-3.5" />
 								<span class="capitalize">{selectedResource}</span>
 							</span>
 						</div>
 						<div class="flex justify-between text-sm">
-							<span class="text-[#a89e8e]">{tradeQuantity} × {formatCurrency(tradePrice)}</span>
-							<span class="font-medium font-mono text-[#fff7e8]">{formatCurrency(totalCost)}</span>
+							<span class="text-[#a8a083]">{tradeQuantity} × {formatCurrency(tradePrice)}</span>
+							<span class="font-medium font-mono text-[#f5efd8]">{formatCurrency(totalCost)}</span>
 						</div>
 					</div>
 
-					<div class="border-t border-[#dfceb0]/15 pt-3">
+					<div class="border-t border-[#c8b47a]/15 pt-3">
 						<div class="flex justify-between items-center">
-							<span class="font-semibold text-[#d9ccb7]">Total {tradeMode === "buy" ? "Cost" : "Revenue"}</span>
-							<span class="text-2xl font-bold font-mono {tradeMode === 'buy' ? 'text-red-300' : 'text-[#c6dfbf]'}">
+							<span class="font-semibold text-[#d3caa9]">Total {tradeMode === "buy" ? "Cost" : "Revenue"}</span>
+							<span class="text-2xl font-bold font-mono {tradeMode === 'buy' ? 'text-red-300' : 'text-[#b9f29a]'}">
 								{tradeMode === "buy" ? "-" : "+"}{formatCurrency(totalCost)}
 							</span>
 						</div>
@@ -365,12 +365,12 @@
 	</div>
 
 	<!-- Info Box -->
-	<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-5">
+	<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-5">
 		<div class="flex items-start gap-3">
-			<FluentInfo20Filled class="size-5 text-[#b7d0e6] flex-shrink-0 mt-0.5" />
+			<FluentInfo20Filled class="size-5 text-[#b3dcff] flex-shrink-0 mt-0.5" />
 			<div>
-				<h3 class="font-semibold text-[#b7d0e6] mb-2">About the Government Market</h3>
-				<ul class="text-sm text-[#b7d0e6]/80 space-y-1">
+				<h3 class="font-semibold text-[#b3dcff] mb-2">About the Government Market</h3>
+				<ul class="text-sm text-[#b3dcff]/80 space-y-1">
 					<li>• Buy resources from the market to build state stockpiles</li>
 					<li>• Sell surplus resources to generate treasury revenue</li>
 					<li>• All transactions are recorded in the government budget</li>

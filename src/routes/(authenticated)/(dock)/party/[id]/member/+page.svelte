@@ -53,13 +53,13 @@
 		{#snippet actions()}
 			<a href="/party/{data.party.id}" class="shrink-0" aria-label={data.party.name}>
 				<div
-					class="size-12 rounded-sm overflow-hidden border border-[#dfceb0]/15 flex items-center justify-center"
+					class="size-12 rounded-sm overflow-hidden border border-[#c8b47a]/15 flex items-center justify-center"
 					style="background-color: {data.party.color}"
 				>
 					{#if data.party.logoUrl}
 						<img src={data.party.logoUrl} alt={data.party.name} class="size-10 object-contain" />
 					{:else}
-						<FluentShield20Filled class="size-6 text-[#fff7e8]" />
+						<FluentShield20Filled class="size-6 text-[#f5efd8]" />
 					{/if}
 				</div>
 			</a>
@@ -72,10 +72,10 @@
 			<div class="panel rounded-sm p-4">
 				<div class="flex items-center justify-between gap-3">
 					<div class="flex items-center gap-3">
-						<FluentSettings20Filled class="size-4 text-[#7ba0c8] shrink-0" />
+						<FluentSettings20Filled class="size-4 text-[#5eaef5] shrink-0" />
 						<div>
-							<span class="text-sm font-bold text-[#fff7e8]">Auto-accept</span>
-							<p class="text-xs text-[#a89e8e] mt-0.5">
+							<span class="text-sm font-bold text-[#f5efd8]">Auto-accept</span>
+							<p class="text-xs text-[#a8a083] mt-0.5">
 								{data.party.autoAcceptMembers ? "Members join instantly" : "Requires approval"}
 							</p>
 						</div>
@@ -93,7 +93,7 @@
 					>
 						<input
 							type="checkbox"
-							class="toggle toggle-sm border-[#dfceb0]/25 checked:border-[#8fae88]/50 checked:bg-[#587252] checked:text-[#c6dfbf]"
+							class="toggle toggle-sm border-[#c8b47a]/25 checked:border-[#6fd14a]/50 checked:bg-[#3f8a2a] checked:text-[#b9f29a]"
 							checked={data.party.autoAcceptMembers}
 							disabled={togglingAutoAccept}
 							onchange={(e) => e.currentTarget.form?.requestSubmit()}
@@ -105,10 +105,10 @@
 
 		<!-- Pending Applications -->
 		{#if canManageMembers && data.pendingApplications.length > 0}
-			<div class="panel rounded-sm p-5 space-y-3 border-[#e6a527]/35">
+			<div class="panel rounded-sm p-5 space-y-3 border-[#f2b01e]/35">
 				<div class="flex items-center justify-between">
 					<h2 class="section-title">
-						<FluentPersonAvailable20Filled class="size-5 text-[#f7c56b]" />
+						<FluentPersonAvailable20Filled class="size-5 text-[#ffd35c]" />
 						Pending
 					</h2>
 					<Badge tone="amber">{data.pendingApplications.length}</Badge>
@@ -121,11 +121,11 @@
 								alt={application.user.name}
 								class="size-10 rounded-full"
 								placeholderIcon={FluentPeople20Filled}
-								placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+								placeholderGradient="from-[#4a5238] to-[#252b1e]"
 							/>
 							<div class="flex-1 min-w-0">
-								<p class="text-sm font-bold text-[#fff7e8] truncate">{application.user.name}</p>
-								<p class="text-xs text-[#a89e8e]">{formatDate(application.appliedAt)}</p>
+								<p class="text-sm font-bold text-[#f5efd8] truncate">{application.user.name}</p>
+								<p class="text-xs text-[#a8a083]">{formatDate(application.appliedAt)}</p>
 							</div>
 							<div class="flex items-center gap-1.5">
 								<form
@@ -211,7 +211,7 @@
 			</h2>
 			<div class="space-y-2">
 				{#each data.members as member}
-					<div class="flex items-center gap-3 panel-muted rounded-sm p-3 hover:border-[#dfceb0]/25 transition-colors">
+					<div class="flex items-center gap-3 panel-muted rounded-sm p-3 hover:border-[#c8b47a]/25 transition-colors">
 						<!-- Avatar -->
 						<a href="/user/{member.userId}" class="relative shrink-0">
 							<Logo
@@ -219,21 +219,21 @@
 								alt={member.user.name || "Member"}
 								class="size-10 sm:size-12 rounded-full"
 								placeholderIcon={FluentPeople20Filled}
-								placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+								placeholderGradient="from-[#4a5238] to-[#252b1e]"
 							/>
 							{#if member.role === "leader"}
 								<div
-									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#0c1929]"
+									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#12150f]"
 									style="background-color: {data.party.color}"
 								>
-									<FluentCrown20Filled class="size-2.5 text-[#fff7e8]" />
+									<FluentCrown20Filled class="size-2.5 text-[#f5efd8]" />
 								</div>
 							{:else if member.role === "deputy"}
 								<div
-									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#0c1929]"
+									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#12150f]"
 									style="background-color: {data.party.color}CC"
 								>
-									<FluentShield20Filled class="size-2.5 text-[#fff7e8]" />
+									<FluentShield20Filled class="size-2.5 text-[#f5efd8]" />
 								</div>
 							{/if}
 						</a>
@@ -241,7 +241,7 @@
 						<!-- Info -->
 						<div class="flex-1 min-w-0">
 							<a href="/user/{member.userId}" class="group">
-								<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+								<p class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 									{member.user.name || "Anonymous"}
 								</p>
 							</a>
@@ -261,9 +261,9 @@
 										DEPUTY
 									</span>
 								{/if}
-								<span class="text-[10px] text-[#a89e8e]">{formatDate(member.joinedAt)}</span>
+								<span class="text-[10px] text-[#a8a083]">{formatDate(member.joinedAt)}</span>
 								{#if member.acceptedByName}
-									<span class="text-[10px] text-[#a89e8e]/70">by {member.acceptedByName}</span>
+									<span class="text-[10px] text-[#a8a083]/70">by {member.acceptedByName}</span>
 								{/if}
 							</div>
 						</div>
@@ -354,8 +354,8 @@
 				>
 					<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div class="text-center sm:text-left">
-							<span class="text-sm font-bold text-[#fff7e8]">Join {data.party.name}</span>
-							<p class="text-xs text-[#a89e8e] mt-0.5">
+							<span class="text-sm font-bold text-[#f5efd8]">Join {data.party.name}</span>
+							<p class="text-xs text-[#a8a083] mt-0.5">
 								{data.party.autoAcceptMembers ? "Instant membership" : "Application reviewed by leadership"}
 							</p>
 						</div>
@@ -367,7 +367,7 @@
 			</div>
 		{:else if data.hasApplied}
 			<div
-				class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center justify-center gap-3"
+				class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center justify-center gap-3"
 			>
 				<span class="text-sm">Application pending review</span>
 			</div>
