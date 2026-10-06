@@ -13,17 +13,21 @@ import {
 	blocApplications,
 	blocApplicationVotes,
 	wars,
-	battles
+	battles,
+	files
 } from "#lib/server/schema.js";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { eq, and, or, ne, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { getLogoUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import {
 	applyToBloc,
 	resolveBlocApplication,
 	resolveExpiredBlocApplications
 } from "#lib/server/service/blocApplication.js";
+import { superValidate, message } from "sveltekit-superforms";
+import { valibot } from "sveltekit-superforms/adapters";
+import { editBlocSchema } from "./schema.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const blocId = parseInt(params.id);
@@ -36,6 +40,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			logo: blocs.logo,
 			color: blocs.color,
 			description: blocs.description,
+			visaFreeForMembers: blocs.visaFreeForMembers,
 			createdAt: blocs.createdAt
 		})
 		.from(blocs)
@@ -134,8 +139,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	let candidates: Array<{ userId: string; name: string; logo: string | null; nominatedAt: Date; votes: number }> = [];
 	let myBlocLeaderVote: string | null = null;
 
+	// Data for the "Edit Bloc" bottom sheet — only needed when the edit trigger is shown (bloc leader).
+	const editFormPromise = isLeader
+		? superValidate(
+				{
+					name: bloc.name,
+					color: bloc.color,
+					description: bloc.description || "",
+					visaFreeForMembers: bloc.visaFreeForMembers
+				},
+				valibot(editBlocSchema)
+			)
+		: Promise.resolve(null);
+
 	// Wars (needs member state ids) and election details (needs the election) are independent
-	const [activeWars] = await Promise.all([
+	const [activeWars, , editForm] = await Promise.all([
 		(async () => {
 			// Get active wars involving bloc member states
 			let activeWars: any[] = [];
@@ -236,7 +254,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			if (locals.account) {
 				myBlocLeaderVote = voteRow?.candidateUserId ?? null;
 			}
-		})()
+		})(),
+		editFormPromise
 	]);
 
 	let userState = null;
@@ -360,6 +379,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		diplomats,
 		isLeader,
+		editForm,
 		election: currentElection
 			? {
 					id: currentElection.id,
@@ -382,6 +402,91 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	updateBloc: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const blocId = parseInt(params.id);
+		const form = await superValidate(request, valibot(editBlocSchema));
+
+		if (!form.valid) {
+			return message(form, "Please fix the validation errors", { status: 400 });
+		}
+
+		// Get current bloc
+		const [bloc] = await db.select().from(blocs).where(eq(blocs.id, blocId)).limit(1);
+
+		if (!bloc) {
+			return message(form, "Bloc not found", { status: 404 });
+		}
+
+		// Verify user is president of a member state
+		const memberStates = await db
+			.select({
+				stateId: states.id,
+				presidentUserId: presidents.userId
+			})
+			.from(states)
+			.leftJoin(presidents, eq(states.id, presidents.stateId))
+			.where(eq(states.blocId, blocId));
+
+		const isPresidentOfMemberState = memberStates.some((s) => s.presidentUserId === account.id);
+
+		if (!isPresidentOfMemberState) {
+			return message(form, "Only presidents of member states can edit the bloc", { status: 403 });
+		}
+
+		const { name, color, description, logo, visaFreeForMembers } = form.data;
+
+		// Check if name is already taken by another bloc
+		const existingBloc = await db.select().from(blocs).where(eq(blocs.name, name)).limit(1);
+
+		if (existingBloc.length > 0 && existingBloc[0].id !== blocId) {
+			return message(form, "A bloc with this name already exists", { status: 400 });
+		}
+
+		try {
+			let logoFileId: number | null = bloc.logo;
+
+			// Upload new logo if provided
+			if (logo) {
+				const logoUploadResult = await uploadFileFromForm(logo);
+
+				if (!logoUploadResult.success) {
+					return message(form, "Failed to upload logo", { status: 500 });
+				}
+
+				// Create file record in database
+				const [fileRecord] = await db
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+				logoFileId = fileRecord.id;
+			}
+
+			// Update bloc
+			await db
+				.update(blocs)
+				.set({
+					name,
+					color,
+					description: description || null,
+					logo: logoFileId,
+					visaFreeForMembers: visaFreeForMembers ?? false
+				})
+				.where(eq(blocs.id, blocId));
+
+			return message(form, "Bloc updated successfully");
+		} catch (e) {
+			console.error("Error updating bloc:", e);
+			return message(form, "Failed to update bloc", { status: 500 });
+		}
+	},
+
 	join: async ({ params, locals }) => {
 		const account = locals.account!;
 		const blocId = parseInt(params.id);

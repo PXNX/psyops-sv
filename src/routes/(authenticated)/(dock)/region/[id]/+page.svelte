@@ -82,7 +82,12 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Hero Header -->
-	<div class="panel rounded-sm p-5">
+	<div
+		class="panel rounded-sm p-5 overflow-hidden"
+		style={data.rulingPartyColor
+			? `background-image: linear-gradient(to bottom, ${data.rulingPartyColor}26, transparent 60%);`
+			: undefined}
+	>
 		<div class="flex items-center gap-5">
 			<Logo
 				src="/coats/{data.region.id}.svg"

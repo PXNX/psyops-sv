@@ -4,13 +4,23 @@ import {
 	politicalParties,
 	partyMembers,
 	partyMembershipApplications,
+	partyEditHistory,
+	userWallets,
 	files,
 	userProfiles
 } from "#lib/server/schema.js";
-import { and, eq, sql, count } from "drizzle-orm";
+import { and, eq, ne, sql, count } from "drizzle-orm";
 import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getContext } from "#lib/server/context.js";
+import { superValidate, message } from "sveltekit-superforms";
+import { valibot } from "sveltekit-superforms/adapters";
+import { createPartySchema } from "../create/schema";
+
+// Configuration constants for the party edit flow (ported from the old /edit route).
+const EDIT_COST = 5000;
+const EDIT_COOLDOWN_HOURS = 24;
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account;
@@ -157,7 +167,70 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const partyRank = allPartiesWithCounts.findIndex((p) => p.id === partyId) + 1;
 
+	// Data for the "Edit Party" bottom sheet — only needed for the party leader.
+	let editForm: Awaited<ReturnType<typeof superValidate<typeof createPartySchema>>> | null = null;
+	let partyEditCost = EDIT_COST;
+	let partyEditUserBalance = 0;
+	let canAffordPartyEdit = false;
+	let isPartyEditOnCooldown = false;
+	let partyEditCooldownEndsAt: string | null = null;
+
+	if (isLeader && account) {
+		const [userWallet, editHistory, form] = await Promise.all([
+			// Get user's wallet balance, creating it if it doesn't exist
+			(async () => {
+				const wallet = await db.query.userWallets.findFirst({
+					where: eq(userWallets.userId, account.id)
+				});
+				if (wallet) return wallet;
+				const [newWallet] = await db
+					.insert(userWallets)
+					.values({
+						userId: account.id,
+						balance: 10000
+					})
+					.returning();
+				return newWallet;
+			})(),
+			// Check if party is on cooldown
+			db.query.partyEditHistory.findFirst({
+				where: eq(partyEditHistory.partyId, partyId)
+			}),
+			// Populate form with existing data - handle null values properly
+			superValidate(
+				{
+					name: party.name,
+					abbreviation: party.abbreviation ?? "",
+					color: party.color,
+					ideology: party.ideology ?? "",
+					description: party.description ?? ""
+				},
+				valibot(createPartySchema)
+			)
+		]);
+
+		editForm = form;
+		partyEditUserBalance = userWallet.balance;
+		canAffordPartyEdit = partyEditUserBalance >= EDIT_COST;
+
+		if (editHistory) {
+			const cooldownEnd = new Date(editHistory.lastEditAt);
+			cooldownEnd.setHours(cooldownEnd.getHours() + EDIT_COOLDOWN_HOURS);
+			if (cooldownEnd > new Date()) {
+				isPartyEditOnCooldown = true;
+				partyEditCooldownEndsAt = cooldownEnd.toISOString();
+			}
+		}
+	}
+
 	return {
+		editForm,
+		partyEditCost,
+		partyEditUserBalance,
+		canAffordPartyEdit,
+		isPartyEditOnCooldown,
+		partyEditCooldownEndsAt,
+		partyEditCooldownHours: EDIT_COOLDOWN_HOURS,
 		party: {
 			id: party.id,
 			name: party.name,
@@ -336,5 +409,138 @@ export const actions: Actions = {
 		}
 
 		redirect(303, "/party");
+	},
+
+	update: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const partyId = parseInt(params.id);
+		const form = await superValidate(request, valibot(createPartySchema));
+
+		if (!form.valid) {
+			return message(form, "Please fix the validation errors", { status: 400 });
+		}
+
+		const { name, abbreviation, color, ideology, description, logo } = form.data;
+
+		// Get party and verify leadership
+		const party = await db.query.politicalParties.findFirst({
+			where: eq(politicalParties.id, partyId),
+			with: {
+				members: true
+			}
+		});
+
+		if (!party) {
+			return message(form, "Party not found", { status: 404 });
+		}
+
+		const membership = party.members.find((m) => m.userId === account.id);
+		if (!membership || membership.role !== "leader") {
+			return message(form, "Only the party leader can edit the party", { status: 403 });
+		}
+
+		// Check cooldown
+		const editHistory = await db.query.partyEditHistory.findFirst({
+			where: eq(partyEditHistory.partyId, partyId)
+		});
+
+		if (editHistory) {
+			const cooldownEnd = new Date(editHistory.lastEditAt);
+			cooldownEnd.setHours(cooldownEnd.getHours() + EDIT_COOLDOWN_HOURS);
+
+			if (cooldownEnd > new Date()) {
+				const minutesLeft = Math.ceil((cooldownEnd.getTime() - Date.now()) / (1000 * 60));
+				return message(form, `Please wait ${minutesLeft} minutes before editing again`, { status: 400 });
+			}
+		}
+
+		// Check user has sufficient funds
+		const userWallet = await db.query.userWallets.findFirst({
+			where: eq(userWallets.userId, account.id)
+		});
+
+		if (!userWallet || userWallet.balance < EDIT_COST) {
+			return message(form, "Insufficient funds to edit party", { status: 400 });
+		}
+
+		// Check if new name conflicts with another party
+		if (name !== party.name) {
+			const existingParty = await db.query.politicalParties.findFirst({
+				where: eq(politicalParties.name, name)
+			});
+
+			if (existingParty) {
+				return message(form, "A party with this name already exists", { status: 400 });
+			}
+		}
+
+		// Abbreviations only need to be unique within the party's own state.
+		if (abbreviation && party.stateId) {
+			const existingAbbreviation = await db.query.politicalParties.findFirst({
+				where: and(
+					eq(politicalParties.stateId, party.stateId),
+					ne(politicalParties.id, partyId),
+					sql`lower(${politicalParties.abbreviation}) = lower(${abbreviation})`
+				)
+			});
+
+			if (existingAbbreviation) {
+				return message(form, `The abbreviation "${abbreviation}" is already used by another party in this state`, {
+					status: 400
+				});
+			}
+		}
+
+		try {
+			await db.transaction(async (tx) => {
+				// Upload new logo and delete old one if it exists
+				const fileService = getContext().services.file;
+				const logoFileId = await fileService.replaceLogoInTransaction(tx, logo, account.id, party.logo);
+
+				// Deduct cost from user's wallet
+				await tx
+					.update(userWallets)
+					.set({
+						balance: sql`${userWallets.balance} - ${EDIT_COST}`,
+						updatedAt: new Date()
+					})
+					.where(eq(userWallets.userId, account.id));
+
+				// Update party
+				await tx
+					.update(politicalParties)
+					.set({
+						name,
+						abbreviation: abbreviation || null,
+						color,
+						...(logoFileId ? { logo: logoFileId } : {}),
+						ideology: ideology || null,
+						description: description || null
+					})
+					.where(eq(politicalParties.id, partyId));
+
+				// Update or create edit history
+				if (editHistory) {
+					await tx
+						.update(partyEditHistory)
+						.set({
+							lastEditAt: new Date(),
+							lastEditBy: account.id
+						})
+						.where(eq(partyEditHistory.partyId, partyId));
+				} else {
+					await tx.insert(partyEditHistory).values({
+						partyId,
+						lastEditAt: new Date(),
+						lastEditBy: account.id
+					});
+				}
+			});
+
+			return message(form, "Party updated successfully!");
+		} catch (err) {
+			console.error("Update party error:", err);
+			return message(form, "Failed to update party", { status: 500 });
+		}
 	}
 };

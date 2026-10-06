@@ -26,8 +26,11 @@
 	import ProfileItem from "#lib/component/ProfileItem.svelte";
 	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
 	import IconButton from "#lib/component/ui/IconButton.svelte";
+	import EditCompanySheet from "./EditCompanySheet.svelte";
 
 	let { data, form } = $props();
+
+	let showEditCompanySheet = $state(false);
 
 	let depositAmount = $state(10000);
 	let isCollecting = $state(false);
@@ -85,12 +88,12 @@
 		{#if data.isOwner}
 			<div class="absolute top-4 right-4">
 				<IconButton
-					href="/company/{data.company.id}/edit"
 					icon={FluentEdit20Filled}
 					label="Edit Company"
 					variant="secondary"
 					size="sm"
 					shape="square"
+					onclick={() => (showEditCompanySheet = true)}
 				/>
 			</div>
 		{/if}
@@ -823,3 +826,21 @@
 		</div>
 	{/if}
 </PageContainer>
+
+<!-- Edit Company Bottom Sheet -->
+{#if data.isOwner && data.editForm}
+	<EditCompanySheet
+		bind:open={showEditCompanySheet}
+		editForm={data.editForm}
+		currentLogo={data.company.logo}
+		foundedAt={data.company.foundedAt}
+		factoryCount={data.factories.length}
+		workerCount={data.totalWorkers}
+		editCost={data.companyEditCost}
+		userBalance={data.ownerBalance}
+		canAfford={data.ownerBalance >= data.companyEditCost}
+		isOnCooldown={data.isCompanyEditOnCooldown}
+		cooldownEndsAt={data.companyEditCooldownEndsAt}
+		cooldownHours={data.companyEditCooldownHours}
+	/>
+{/if}

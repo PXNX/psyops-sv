@@ -81,18 +81,13 @@
 						? 'bg-[#2369b5]/18 border-[#5eaef5]/30 hover:border-[#5eaef5]/45 hover:bg-[#2369b5]/25'
 						: 'bg-[#242a1d]/85 border-[#c8b47a]/15 hover:border-[#f2b01e]/55 hover:bg-[#2e3524]'}"
 				>
-					<div
-						class="size-10 sm:size-12 rounded-full overflow-hidden ring-2 shrink-0 transition-all
-						{isYou ? 'ring-[#5eaef5]/30 group-hover:ring-[#5eaef5]/50' : 'ring-[#c8b47a]/10 group-hover:ring-[#c8b47a]/15'}"
-					>
-						<Logo
-							src={resident.user.logo}
-							alt={resident.user.name || "Resident"}
-							class="size-full"
-							placeholderIcon={FluentPeople20Filled}
-							placeholderGradient="from-[#2369b5]/40 to-[#2369b5]/40"
-						/>
-					</div>
+					<Logo
+						src={resident.user.logo}
+						alt={resident.user.name || "Resident"}
+						class="size-10 sm:size-12 shrink-0"
+						placeholderIcon={FluentPeople20Filled}
+						placeholderGradient="from-[#2369b5]/40 to-[#2369b5]/40"
+					/>
 
 					<div class="flex-1 min-w-0">
 						<p

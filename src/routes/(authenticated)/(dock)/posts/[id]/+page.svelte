@@ -92,9 +92,7 @@
 
 			<!-- Author Info -->
 			<a href="/user/{data.article.authorId}" class="flex items-center gap-3 group flex-1 min-w-0">
-				<div class="size-12 sm:size-14 rounded-sm border border-[#f2b01e]/30 overflow-hidden flex-shrink-0">
-					<Logo src={data.article.authorLogo} alt={data.article.authorName} />
-				</div>
+				<Logo src={data.article.authorLogo} alt={data.article.authorName} class="size-12 sm:size-14 shrink-0" />
 				<div class="flex-1 min-w-0">
 					<p class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 						{data.article.authorName}

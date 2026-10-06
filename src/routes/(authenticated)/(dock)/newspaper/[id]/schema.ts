@@ -1,21 +1,21 @@
-// src/routes/company/[id]/edit/schema.ts
+// src/routes/(authenticated)/(dock)/newspaper/[id]/schema.ts
 import * as v from "valibot";
 import { SCHEMA_LIMITS } from "#lib/config/validation/schema-limits.js";
 
-export const editCompanySchema = v.pipe(
+export const newspaperSchema = v.pipe(
 	v.object({
 		name: v.pipe(
-			v.string("Company name is required"),
+			v.string("Newspaper name is required"),
 			v.minLength(
 				SCHEMA_LIMITS.MIN_NAME_LENGTH,
-				`Company name must be at least ${SCHEMA_LIMITS.MIN_NAME_LENGTH} characters`
+				`Newspaper name must be at least ${SCHEMA_LIMITS.MIN_NAME_LENGTH} characters`
 			),
 			v.maxLength(
-				SCHEMA_LIMITS.COMPANY_NAME_MAX,
-				`Company name must be at most ${SCHEMA_LIMITS.COMPANY_NAME_MAX} characters`
+				SCHEMA_LIMITS.NEWSPAPER_NAME_MAX,
+				`Newspaper name must be at most ${SCHEMA_LIMITS.NEWSPAPER_NAME_MAX} characters`
 			)
 		),
-		description: v.optional(v.string(), ""),
+		background: v.optional(v.string(), ""),
 		logo: v.optional(
 			v.pipe(
 				v.file("Logo must be a file"),
@@ -29,4 +29,4 @@ export const editCompanySchema = v.pipe(
 	})
 );
 
-export type EditCompanySchema = typeof editCompanySchema;
+export type NewspaperSchema = typeof newspaperSchema;

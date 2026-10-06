@@ -3,7 +3,7 @@
 	import IconDismiss from "~icons/fluent/dismiss-24-regular";
 	import IconButton from "#lib/component/ui/IconButton.svelte";
 	import { fade, fly } from "svelte/transition";
-	import { backOut, cubicIn } from "svelte/easing";
+	import { cubicIn } from "svelte/easing";
 	import { prefersReducedMotion } from "svelte/motion";
 
 	let {
@@ -16,7 +16,15 @@
 		children: any;
 	} = $props();
 
-	// Spring up with a slight overshoot, drop away quickly on close.
+	// A punchier "back" overshoot than svelte/easing's backOut (s ~1.7) — bigger
+	// s means the sheet overshoots further past rest before settling, reading as
+	// a livelier, jumpier pop instead of a gentle slide.
+	function bounceOut(t: number) {
+		const s = 2.8;
+		return --t * t * ((s + 1) * t + s) + 1;
+	}
+
+	// Spring up with a pronounced overshoot, drop away quickly on close.
 	const motion = $derived(prefersReducedMotion.current ? 0 : 1);
 
 	function handleClose() {
@@ -44,8 +52,8 @@
 
 		<div
 			class="absolute inset-x-0 -bottom-12"
-			in:fly={{ y: 420, duration: 520 * motion, easing: backOut, opacity: 1 }}
-			out:fly={{ y: 420, duration: 200 * motion, easing: cubicIn, opacity: 1 }}
+			in:fly={{ y: 420, duration: 420 * motion, easing: bounceOut, opacity: 1 }}
+			out:fly={{ y: 420, duration: 180 * motion, easing: cubicIn, opacity: 1 }}
 		>
 			<div
 				class="bg-gradient-to-b from-[#2a3121] to-[#171b12] border-t-2 border-[#c8b47a]/50 shadow-[0_-12px_32px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,244,200,0.12)] rounded-t-md max-h-[calc(85vh+3rem)] pb-12 flex flex-col"
