@@ -571,6 +571,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			rating: region.rating,
 			population: region.population || 0
 		})),
+		resources: {
+			oil: stateRegions.reduce((sum, r) => sum + (r.oil || 0), 0),
+			steel: stateRegions.reduce((sum, r) => sum + (r.steel || 0), 0),
+			chromium: stateRegions.reduce((sum, r) => sum + (r.chromium || 0), 0),
+			tungsten: stateRegions.reduce((sum, r) => sum + (r.tungsten || 0), 0),
+			rubber: stateRegions.reduce((sum, r) => sum + (r.rubber || 0), 0),
+			aluminium: stateRegions.reduce((sum, r) => sum + (r.aluminium || 0), 0)
+		},
 		nextElection: nextElection
 			? {
 					id: nextElection.id,

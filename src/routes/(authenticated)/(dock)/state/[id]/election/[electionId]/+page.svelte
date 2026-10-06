@@ -88,7 +88,7 @@
 				<Logo
 					src={data.state.logo}
 					alt={data.state.name}
-					class="size-14 sm:size-18 rounded-sm border border-[#c8b47a]/15 hover:border-[#f2b01e]/55 transition-colors"
+					class="size-14 sm:size-18 rounded-sm"
 					placeholderIcon={FluentBuildingGovernment20Filled}
 					placeholderGradient="from-[#2369b5] to-[#2369b5]"
 				/>
@@ -248,7 +248,7 @@
 					{@const selectable = canVoteForParty && !data.userVote}
 
 					<div
-						class="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 transition-colors {index <
+						class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 px-4 sm:px-6 py-5 sm:py-6 transition-colors {index <
 						sortedParties.length - 1
 							? 'border-b border-dashed border-[#c8b47a]/15'
 							: ''} {isUserVote
@@ -271,79 +271,104 @@
 								}
 							: undefined}
 					>
-						<!-- Ballot bubble: mark your choice with an X -->
-						<div
-							class="shrink-0 size-7 sm:size-8 rounded-full border-2 flex items-center justify-center {isUserVote
-								? 'border-[#6fd14a] bg-[#3f8a2a]/25 text-[#6fd14a]'
-								: isSelected
-									? 'border-[#f2b01e] bg-[#f2b01e]/15 text-[#f2b01e]'
-									: 'border-dashed border-[#c8b47a]/30 text-transparent'}"
-							title={isUserVote ? "Your vote" : isSelected ? "Selected — not yet confirmed" : undefined}
-						>
-							<span class="text-sm sm:text-base font-black leading-none">✕</span>
+						<div class="flex items-center gap-4 sm:gap-5">
+							<!-- Ballot bubble: mark your choice with an X -->
+							<div
+								class="shrink-0 size-8 sm:size-9 rounded-full border-2 flex items-center justify-center {isUserVote
+									? 'border-[#6fd14a] bg-[#3f8a2a]/25 text-[#6fd14a]'
+									: isSelected
+										? 'border-[#f2b01e] bg-[#f2b01e]/15 text-[#f2b01e]'
+										: 'border-dashed border-[#c8b47a]/30 text-transparent'}"
+								title={isUserVote ? "Your vote" : isSelected ? "Selected — not yet confirmed" : undefined}
+							>
+								<span class="text-base sm:text-lg font-black leading-none">✕</span>
+							</div>
+
+							<!-- Logo -->
+							<a href="/party/{party.id}" class="group/logo shrink-0" onclick={(e) => e.stopPropagation()}>
+								{#if party.logo}
+									<Logo
+										src={party.logo}
+										alt={party.name}
+										class="size-16 sm:size-20 rounded-sm"
+										placeholderIcon={FluentFlag20Filled}
+									/>
+								{:else}
+									<div
+										class="size-16 sm:size-20 rounded-sm flex items-center justify-center text-xl font-bold text-[#f5efd8]"
+										style="background-color: {party.color}"
+									>
+										{party.abbreviation || party.name.substring(0, 2)}
+									</div>
+								{/if}
+							</a>
+
+							<!-- Name + rank (mobile: inline with logo; desktop: folded into the info column below) -->
+							<div class="flex-1 min-w-0 sm:hidden">
+								<a href="/party/{party.id}" class="group/link" onclick={(e) => e.stopPropagation()}>
+									<h3
+										class="text-base font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2"
+									>
+										{#if hasStarted && index < 3}
+											<span
+												class="shrink-0 size-4 rounded-full flex items-center justify-center font-bold text-[10px] {index ===
+												0
+													? 'bg-[#f2b01e] text-[#1b1708]'
+													: index === 1
+														? 'bg-[#a8a083] text-[#1b1708]'
+														: 'bg-[#8c6a43] text-[#f5efd8]'}"
+											>
+												{index + 1}
+											</span>
+										{/if}
+										{party.name}
+									</h3>
+								</a>
+								{#if hasStarted}
+									<div class="text-sm font-mono text-[#a8a083] mt-0.5">{votes} votes · {percentage.toFixed(1)}%</div>
+								{/if}
+							</div>
 						</div>
 
-						<!-- Logo -->
-						<a href="/party/{party.id}" class="group/logo shrink-0" onclick={(e) => e.stopPropagation()}>
-							{#if party.logo}
-								<Logo
-									src={party.logo}
-									alt={party.name}
-									class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/20 group-hover/logo:border-[#f2b01e]/55 transition-colors"
-									placeholderIcon={FluentFlag20Filled}
-								/>
-							{:else}
-								<div
-									class="size-10 sm:size-12 rounded-sm flex items-center justify-center text-sm font-bold text-[#f5efd8] border border-[#c8b47a]/20"
-									style="background-color: {party.color}"
-								>
-									{party.abbreviation || party.name.substring(0, 2)}
-								</div>
-							{/if}
-						</a>
-
 						<!-- Party Info -->
-						<div class="flex-1 min-w-0">
-							<div class="flex items-start justify-between gap-3">
-								<div class="flex-1 min-w-0">
-									<a href="/party/{party.id}" class="group/link" onclick={(e) => e.stopPropagation()}>
-										<h3
-											class="text-sm sm:text-lg font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2 truncate"
-										>
-											{#if hasStarted && index < 3}
-												<span
-													class="shrink-0 size-4 sm:size-5 rounded-full flex items-center justify-center font-bold text-[10px] {index ===
-													0
-														? 'bg-[#f2b01e] text-[#1b1708]'
-														: index === 1
-															? 'bg-[#a8a083] text-[#1b1708]'
-															: 'bg-[#8c6a43] text-[#f5efd8]'}"
-												>
-													{index + 1}
-												</span>
-											{/if}
-											{party.name}
-										</h3>
-									</a>
-									{#if party.ideology}
-										<span
-											class="inline-block px-2 py-0.5 rounded-sm text-[10px] sm:text-xs mt-1"
-											style="background-color: {party.color}20; color: {party.color}; border: 1px solid {party.color}30"
-										>
-											{party.ideology}
-										</span>
-									{/if}
-								</div>
-
+						<div class="flex-1 min-w-0 space-y-2.5">
+							<div class="hidden sm:flex items-start justify-between gap-4">
+								<a href="/party/{party.id}" class="group/link min-w-0" onclick={(e) => e.stopPropagation()}>
+									<h3
+										class="text-xl font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2 truncate"
+									>
+										{#if hasStarted && index < 3}
+											<span
+												class="shrink-0 size-5 rounded-full flex items-center justify-center font-bold text-[10px] {index ===
+												0
+													? 'bg-[#f2b01e] text-[#1b1708]'
+													: index === 1
+														? 'bg-[#a8a083] text-[#1b1708]'
+														: 'bg-[#8c6a43] text-[#f5efd8]'}"
+											>
+												{index + 1}
+											</span>
+										{/if}
+										{party.name}
+									</h3>
+								</a>
 								{#if hasStarted}
-									<div class="text-right flex-shrink-0">
-										<div class="text-base sm:text-2xl font-bold text-[#f5efd8] font-mono">{votes}</div>
-										<div class="text-[10px] sm:text-xs text-[#a8a083] font-mono">{percentage.toFixed(1)}%</div>
+									<div class="text-right shrink-0">
+										<div class="text-2xl font-bold text-[#f5efd8] font-mono">{votes}</div>
+										<div class="text-xs text-[#a8a083] font-mono">{percentage.toFixed(1)}%</div>
 									</div>
 								{/if}
 							</div>
 
-							<div class="flex items-center gap-4 text-sm flex-wrap mt-1.5">
+							<div class="flex items-center gap-3 flex-wrap">
+								{#if party.ideology}
+									<span
+										class="inline-block px-2 py-0.5 rounded-sm text-[10px] sm:text-xs"
+										style="background-color: {party.color}20; color: {party.color}; border: 1px solid {party.color}30"
+									>
+										{party.ideology}
+									</span>
+								{/if}
 								{#if party.leader}
 									<a
 										href="/user/{party.leader.accountId}"
@@ -356,10 +381,10 @@
 											placeholderIcon={FluentPerson20Filled}
 											class="size-5 sm:size-6 rounded-sm"
 										/>
-										<span class="text-xs">{party.leader.name}</span>
+										<span class="text-xs sm:text-sm">{party.leader.name}</span>
 									</a>
 								{/if}
-								<span class="text-xs flex items-center gap-1.5 {hasEnoughMembers ? 'text-[#a8a083]' : 'text-red-400'}">
+								<span class="text-xs sm:text-sm flex items-center gap-1.5 {hasEnoughMembers ? 'text-[#a8a083]' : 'text-red-400'}">
 									<FluentPeople20Filled class="size-3.5" />
 									{party.memberCount}
 									{#if !hasEnoughMembers}
@@ -370,18 +395,16 @@
 
 							<!-- Vote Bar -->
 							{#if hasStarted && data.totalVotes > 0}
-								<div class="mt-2">
-									<div class="w-full bg-[#0f120c] rounded-full h-1.5 overflow-hidden">
-										<div
-											class="h-full rounded-full transition-all duration-700 ease-out"
-											style="width: {percentage}%; background: {party.color}"
-										></div>
-									</div>
+								<div class="w-full bg-[#0f120c] rounded-full h-2 overflow-hidden">
+									<div
+										class="h-full rounded-full transition-all duration-700 ease-out"
+										style="width: {percentage}%; background: {party.color}"
+									></div>
 								</div>
 							{/if}
 
 							{#if data.userResidence && !hasEnoughMembers}
-								<p class="text-[10px] sm:text-xs text-red-400/70 mt-1.5">Needs 3+ members to participate</p>
+								<p class="text-[10px] sm:text-xs text-red-400/70">Needs 3+ members to participate</p>
 							{/if}
 						</div>
 					</div>
