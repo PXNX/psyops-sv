@@ -14,8 +14,11 @@
 	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
+	import EditPartySheet from "./EditPartySheet.svelte";
 
 	const { data, form } = $props();
+
+	let showEditPartySheet = $state(false);
 </script>
 
 <svelte:head>
@@ -53,12 +56,12 @@
 		{#if data.isLeader}
 			<div class="absolute top-4 right-4">
 				<IconButton
-					href="/party/{data.party.id}/edit"
 					icon={FluentEdit20Filled}
 					label="Edit Party"
 					variant="secondary"
 					size="sm"
 					shape="square"
+					onclick={() => (showEditPartySheet = true)}
 				/>
 			</div>
 		{/if}
@@ -244,3 +247,18 @@
 		{/if}
 	</div>
 </PageContainer>
+
+<!-- Edit Party Bottom Sheet -->
+{#if data.isLeader && data.editForm}
+	<EditPartySheet
+		bind:open={showEditPartySheet}
+		editForm={data.editForm}
+		currentLogo={data.party.logoUrl}
+		editCost={data.partyEditCost}
+		userBalance={data.partyEditUserBalance}
+		canAfford={data.canAffordPartyEdit}
+		isOnCooldown={data.isPartyEditOnCooldown}
+		cooldownEndsAt={data.partyEditCooldownEndsAt}
+		cooldownHours={data.partyEditCooldownHours}
+	/>
+{/if}

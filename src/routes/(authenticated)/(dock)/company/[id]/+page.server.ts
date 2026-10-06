@@ -5,11 +5,13 @@ import {
 	companies,
 	companyBudgets,
 	companyShares,
+	companyEditCooldown,
 	shareHoldings,
 	shareListings,
 	shareTransactions,
 	factories,
 	factoryWorkers,
+	files,
 	regions,
 	states,
 	residences,
@@ -25,9 +27,18 @@ import { error, fail } from "@sveltejs/kit";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { getEmbargoReason } from "#lib/server/embargo.js";
-import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
+import { superValidate, message } from "sveltekit-superforms";
+import { valibot } from "sveltekit-superforms/adapters";
+import { editCompanySchema } from "./schema";
 import type { PageServerLoad, Actions } from "./$types";
+
+// Edit cost/cooldown for the "Edit Company" bottom sheet — ported as-is from the
+// former company/[id]/edit route (not sourced from COOLDOWNS_CONFIG, which has a
+// different, unrelated COMPANY_EDIT_HOURS value).
+const COMPANY_EDIT_COST = 10000;
+const COMPANY_EDIT_COOLDOWN_HOURS = 48;
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -60,6 +71,40 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Check if current user is the owner
 	const isOwner = company.ownerId === account.id;
 
+	// Data for the "Edit Company" bottom sheet — only needed for the owner.
+	const companyEditPromise = (async () => {
+		let editForm: Awaited<ReturnType<typeof superValidate<typeof editCompanySchema>>> | null = null;
+		let isCompanyEditOnCooldown = false;
+		let companyEditCooldownEndsAt: string | null = null;
+
+		if (isOwner) {
+			const [cooldown, form] = await Promise.all([
+				db.query.companyEditCooldown.findFirst({
+					where: eq(companyEditCooldown.userId, account.id)
+				}),
+				superValidate(
+					{
+						name: company.name,
+						description: company.description ?? ""
+					},
+					valibot(editCompanySchema)
+				)
+			]);
+			editForm = form;
+
+			if (cooldown) {
+				const cooldownEnd = new Date(cooldown.lastEditAt);
+				cooldownEnd.setHours(cooldownEnd.getHours() + COMPANY_EDIT_COOLDOWN_HOURS);
+				if (new Date() < cooldownEnd) {
+					isCompanyEditOnCooldown = true;
+					companyEditCooldownEndsAt = cooldownEnd.toISOString();
+				}
+			}
+		}
+
+		return { editForm, isCompanyEditOnCooldown, companyEditCooldownEndsAt };
+	})();
+
 	// Everything below only depends on the company row, so fetch it in parallel.
 	const [
 		[ownerProfile],
@@ -69,7 +114,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		[existingBudget],
 		companyFactories,
 		[ownerWallet],
-		[shares]
+		[shares],
+		{ editForm, isCompanyEditOnCooldown, companyEditCooldownEndsAt }
 	] = await Promise.all([
 		// Get owner profile name and logo
 		db.query.userProfiles.findMany({
@@ -117,7 +163,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		// Get owner's wallet balance (for depositing into budget)
 		db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, company.ownerId)),
 		// --- Stock market ---
-		db.select().from(companyShares).where(eq(companyShares.companyId, companyId))
+		db.select().from(companyShares).where(eq(companyShares.companyId, companyId)),
+		companyEditPromise
 	]);
 
 	let residenceRegion: { id: number; name: string; stateName: string | null } | null = null;
@@ -345,7 +392,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			totalShares: ECONOMY_CONFIG.IPO_TOTAL_SHARES,
 			founderLockedPercent: ECONOMY_CONFIG.IPO_FOUNDER_LOCKED_PERCENT,
 			minPrice: ECONOMY_CONFIG.MIN_SHARE_PRICE
-		}
+		},
+		// Data for the "Edit Company" bottom sheet
+		editForm,
+		companyEditCost: COMPANY_EDIT_COST,
+		companyEditCooldownHours: COMPANY_EDIT_COOLDOWN_HOURS,
+		isCompanyEditOnCooldown,
+		companyEditCooldownEndsAt
 	};
 };
 
@@ -975,5 +1028,141 @@ export const actions: Actions = {
 		}).catch((err) => console.error("Failed to send share sale notification:", err));
 
 		return { success: true, message: "Purchase successful" };
+	},
+
+	// Update company details from the "Edit Company" bottom sheet (ported from the
+	// former company/[id]/edit route, same cost/cooldown gating and validation).
+	update: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const companyId = parseInt(params.id);
+		const form = await superValidate(request, valibot(editCompanySchema));
+
+		if (!form.valid) {
+			return message(form, "Please fix the validation errors", { status: 400 });
+		}
+
+		const { name, description, logo } = form.data;
+
+		// Get company and verify ownership
+		const company = await db.query.companies.findFirst({
+			where: eq(companies.id, companyId)
+		});
+
+		if (!company) {
+			return message(form, "Company not found", { status: 404 });
+		}
+
+		if (company.ownerId !== account.id) {
+			return message(form, "Only the company owner can edit the company", { status: 403 });
+		}
+
+		// Check cooldown
+		const cooldown = await db.query.companyEditCooldown.findFirst({
+			where: eq(companyEditCooldown.userId, account.id)
+		});
+
+		if (cooldown) {
+			const cooldownEnd = new Date(cooldown.lastEditAt);
+			cooldownEnd.setHours(cooldownEnd.getHours() + COMPANY_EDIT_COOLDOWN_HOURS);
+
+			if (cooldownEnd > new Date()) {
+				const minutesLeft = Math.ceil((cooldownEnd.getTime() - Date.now()) / (1000 * 60));
+				const hoursLeft = Math.floor(minutesLeft / 60);
+				const remainingMinutes = minutesLeft % 60;
+
+				const timeMessage =
+					hoursLeft > 0
+						? `${hoursLeft} hour${hoursLeft > 1 ? "s" : ""} and ${remainingMinutes} minute${remainingMinutes !== 1 ? "s" : ""}`
+						: `${minutesLeft} minute${minutesLeft !== 1 ? "s" : ""}`;
+
+				return message(form, `Please wait ${timeMessage} before editing again`, { status: 400 });
+			}
+		}
+
+		// Check user has sufficient funds
+		const [userWallet] = await db.select().from(userWallets).where(eq(userWallets.userId, account.id)).limit(1);
+
+		if (!userWallet || Number(userWallet.balance) < COMPANY_EDIT_COST) {
+			return message(form, "Insufficient funds to edit company", { status: 400 });
+		}
+
+		// Check if new name conflicts with another company
+		if (name !== company.name) {
+			const existingCompany = await db.query.companies.findFirst({
+				where: and(eq(companies.name, name), sql`${companies.id} != ${companyId}`)
+			});
+
+			if (existingCompany) {
+				return message(form, "A company with this name already exists", { status: 400 });
+			}
+		}
+
+		try {
+			let logoFileId: number | null = company.logo;
+
+			// Upload new logo if provided
+			if (logo) {
+				const logoUploadResult = await uploadFileFromForm(logo);
+
+				if (!logoUploadResult.success) {
+					return message(form, "Failed to upload logo", { status: 500 });
+				}
+
+				// Create file record in database
+				const [fileRecord] = await db
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+				logoFileId = fileRecord.id;
+			}
+
+			// Use a transaction for atomicity
+			await db.transaction(async (tx) => {
+				// Deduct cost from user's wallet
+				await tx
+					.update(userWallets)
+					.set({
+						balance: sql`${userWallets.balance} - ${COMPANY_EDIT_COST}`,
+						updatedAt: new Date()
+					})
+					.where(eq(userWallets.userId, account.id));
+
+				// Update company
+				await tx
+					.update(companies)
+					.set({
+						name,
+						logo: logoFileId,
+						description: description || null
+					})
+					.where(eq(companies.id, companyId));
+
+				// Update or create cooldown
+				if (cooldown) {
+					await tx
+						.update(companyEditCooldown)
+						.set({
+							lastEditAt: new Date()
+						})
+						.where(eq(companyEditCooldown.userId, account.id));
+				} else {
+					await tx.insert(companyEditCooldown).values({
+						userId: account.id,
+						lastEditAt: new Date()
+					});
+				}
+			});
+
+			return message(form, "Company updated successfully!");
+		} catch (err) {
+			console.error("Update company error:", err);
+			return message(form, "Failed to update company", { status: 500 });
+		}
 	}
 };

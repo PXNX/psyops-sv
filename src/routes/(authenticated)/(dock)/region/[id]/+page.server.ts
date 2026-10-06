@@ -18,7 +18,9 @@ import {
 	userTravels,
 	stateBuildings,
 	files,
-	stateSanctions
+	stateSanctions,
+	partyMembers,
+	politicalParties
 } from "#lib/server/schema.js";
 import { eq, and, sql, or, desc, gt, isNotNull } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
@@ -220,7 +222,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const walletBalance = userWallet ? Number(userWallet.balance) : 0;
 
 	// Second wave: lookups that depend on the region / user residence.
-	const [regionBuildings, travelInfo, visaInfo, visaBlockedReason, warInfo] = await Promise.all([
+	const [regionBuildings, travelInfo, visaInfo, visaBlockedReason, warInfo, rulingPartyColor] = await Promise.all([
 		// Get state buildings (after pending constructions were completed above)
 		db.query.stateBuildings.findMany({
 			where: eq(stateBuildings.regionId, regionId),
@@ -398,6 +400,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}
 
 			return { activeWars, attackableWars, borderingRegionsForAttack };
+		})(),
+		// Ruling party color of the region's state (the president's party), used to
+		// tint the hero background — mirrors the same mechanism on the state page.
+		(async () => {
+			const presidentUserId = region.state?.president?.userId;
+			if (!presidentUserId) return null;
+
+			const [membership] = await db
+				.select({ color: politicalParties.color })
+				.from(partyMembers)
+				.innerJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+				.where(eq(partyMembers.userId, presidentUserId))
+				.limit(1);
+
+			return membership?.color ?? null;
 		})()
 	]);
 
@@ -433,6 +450,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			stateName: region.state?.name,
 			stateLogo: region.state?.logo
 		},
+		rulingPartyColor,
 		population,
 		hasResidence,
 		hasPendingResidenceApp: !!pendingResidenceApp,
@@ -484,8 +502,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		borderingRegions: validBorderingRegions,
 		walletBalance
 	};
-
-	console.log(JSON.stringify(result, null, 2));
 
 	return result;
 };

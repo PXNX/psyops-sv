@@ -13,9 +13,11 @@
 	import { enhance } from "$app/forms";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
+	import EditNewspaperSheet from "./EditNewspaperSheet.svelte";
 
 	let { data } = $props();
 	let isSubscribing = $state(false);
+	let showEditNewspaperSheet = $state(false);
 
 	function formatDate(date: Date) {
 		const d = new Date(date);
@@ -164,7 +166,12 @@
 			{/if}
 
 			{#if data.userRole === "owner"}
-				<Button size="sm" variant="secondary" href="/newspaper/{data.newspaper.id}/edit" icon={FluentSettings20Filled}>
+				<Button
+					size="sm"
+					variant="secondary"
+					icon={FluentSettings20Filled}
+					onclick={() => (showEditNewspaperSheet = true)}
+				>
 					Settings
 				</Button>
 			{/if}
@@ -214,3 +221,16 @@
 		{/if}
 	</div>
 </PageContainer>
+
+<!-- Edit Newspaper Bottom Sheet -->
+{#if data.userRole === "owner" && data.editForm}
+	<EditNewspaperSheet
+		bind:open={showEditNewspaperSheet}
+		editForm={data.editForm}
+		newspaperName={data.newspaper.name}
+		currentLogo={data.newspaper.logoUrl}
+		editCost={data.editCost}
+		userBalance={data.userBalance}
+		canAfford={data.canAffordEdit}
+	/>
+{/if}

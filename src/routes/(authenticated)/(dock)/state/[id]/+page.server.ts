@@ -24,14 +24,18 @@ import {
 	visaApplications,
 	residenceApplications,
 	partyMembers,
-	politicalParties
+	politicalParties,
+	stateEditCooldowns
 } from "#lib/server/schema.js";
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, gte, sql, or, inArray } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
-import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
+import { superValidate, message } from "sveltekit-superforms";
+import { valibot } from "sveltekit-superforms/adapters";
+import { editStateSchema } from "./schema";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
@@ -50,7 +54,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			blocName: blocs.name,
 			blocLogo: blocs.logo,
 			blocColor: blocs.color,
-			blocDescription: blocs.description
+			blocDescription: blocs.description,
+			blocCreatedAt: blocs.createdAt
 		})
 		.from(states)
 		.leftJoin(blocs, eq(states.blocId, blocs.id))
@@ -158,7 +163,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		residenceInfo,
 		walletBalance,
 		stateLogo,
-		blocLogo
+		blocLogo,
+		editFormData
 	] = await Promise.all([
 		presidentPromise,
 		ministersPromise,
@@ -434,7 +440,32 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					.then((wallet) => (wallet ? Number(wallet.balance) : 0))
 			: 0,
 		getLogoUrl(state.logo),
-		state.blocId ? getLogoUrl(state.blocLogo) : null
+		state.blocId ? getLogoUrl(state.blocLogo) : null,
+		// Edit form + cooldown status for the "Edit State" sheet — only the sitting
+		// president needs this, so skip the cooldown lookup/superValidate otherwise.
+		presidentPromise.then(async (presidentData) => {
+			if (!accountId || presidentData?.userId !== accountId) {
+				return { editForm: null, onCooldown: false, cooldownEndsAt: null };
+			}
+
+			const [cooldown] = await db
+				.select()
+				.from(stateEditCooldowns)
+				.where(eq(stateEditCooldowns.userId, accountId))
+				.limit(1);
+
+			const editNow = new Date();
+			const cooldownEndTime = cooldown ? new Date(cooldown.lastEditAt.getTime() + 24 * 60 * 60 * 1000) : null;
+			const onCooldown = !!cooldownEndTime && editNow < cooldownEndTime;
+			const cooldownEndsAt = cooldownEndTime?.toISOString() || null;
+
+			const editForm = await superValidate(
+				{ name: state.name, background: state.background || "#6366f1" },
+				valibot(editStateSchema)
+			);
+
+			return { editForm, onCooldown, cooldownEndsAt };
+		})
 	]);
 
 	const actualPopulation = populationResult[0]?.total || 0;
@@ -476,6 +507,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			rating: state.rating,
 			createdAt: state.createdAt
 		},
+		editForm: editFormData.editForm,
+		editOnCooldown: editFormData.onCooldown,
+		editCooldownEndsAt: editFormData.cooldownEndsAt,
 		walletBalance,
 		visa: {
 			isResident,
@@ -499,7 +533,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					name: state.blocName,
 					logo: blocLogo,
 					color: state.blocColor,
-					description: state.blocDescription
+					description: state.blocDescription,
+					createdAt: state.blocCreatedAt
 				}
 			: null,
 		president: presidentData
@@ -567,6 +602,98 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	updateState: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const stateId = parseInt(params.id);
+		const form = await superValidate(request, valibot(editStateSchema));
+
+		if (!form.valid) {
+			return message(form, "Please fix the validation errors", { status: 400 });
+		}
+
+		const [state] = await db.select().from(states).where(eq(states.id, stateId)).limit(1);
+
+		if (!state) {
+			return message(form, "State not found", { status: 404 });
+		}
+
+		const [presidency] = await db.select().from(presidents).where(eq(presidents.stateId, stateId)).limit(1);
+
+		if (!presidency || presidency.userId !== account.id) {
+			return message(form, "Only the state president can edit the state", { status: 403 });
+		}
+
+		const [cooldown] = await db
+			.select()
+			.from(stateEditCooldowns)
+			.where(eq(stateEditCooldowns.userId, account.id))
+			.limit(1);
+
+		const now = new Date();
+		if (cooldown) {
+			const cooldownEnd = new Date(cooldown.lastEditAt.getTime() + 24 * 60 * 60 * 1000);
+			if (now < cooldownEnd) {
+				const hoursLeft = Math.ceil((cooldownEnd.getTime() - now.getTime()) / (1000 * 60 * 60));
+				return message(form, `Please wait ${hoursLeft} hours before editing the state again`, {
+					status: 429
+				});
+			}
+		}
+
+		const { name, background, logo } = form.data;
+
+		try {
+			let logoFileId: number | null = state.logo;
+
+			if (logo) {
+				const logoUploadResult = await uploadFileFromForm(logo);
+
+				if (!logoUploadResult.success) {
+					return message(form, "Failed to upload logo", { status: 500 });
+				}
+
+				const [fileRecord] = await db
+					.insert(files)
+					.values({
+						key: logoUploadResult.key,
+						fileName: logo.name,
+						contentType: "image/webp",
+						sizeBytes: logo.size,
+						uploadedBy: account.id
+					})
+					.returning();
+				logoFileId = fileRecord.id;
+			}
+
+			await db.transaction(async (tx) => {
+				await tx
+					.update(states)
+					.set({
+						name,
+						background,
+						logo: logoFileId
+					})
+					.where(eq(states.id, stateId));
+
+				await tx
+					.insert(stateEditCooldowns)
+					.values({
+						userId: account.id,
+						lastEditAt: now
+					})
+					.onConflictDoUpdate({
+						target: stateEditCooldowns.userId,
+						set: { lastEditAt: now }
+					});
+			});
+
+			return message(form, "State updated successfully");
+		} catch (e) {
+			console.error("Error updating state:", e);
+			return message(form, "Failed to update state", { status: 500 });
+		}
+	},
+
 	sanction: async ({ params, locals }) => {
 		const account = locals.account!;
 		const stateId = parseInt(params.id);

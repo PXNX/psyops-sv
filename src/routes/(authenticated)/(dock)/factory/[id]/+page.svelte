@@ -18,8 +18,11 @@
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentLockClosed20Filled from "~icons/fluent/lock-closed-20-filled";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import EditFactorySheet from "./EditFactorySheet.svelte";
 
 	let { data } = $props();
+
+	let showEditFactorySheet = $state(false);
 
 	const timeRemaining = $derived.by(() => {
 		if (!data.isCurrentlyWorking || !data.shiftEndsAt) return "";
@@ -74,7 +77,12 @@
 			</div>
 
 			{#if data.isOwner}
-				<Button variant="secondary" size="sm" href="/factory/{data.factory.id}/edit" icon={FluentEdit20Filled}>
+				<Button
+					variant="secondary"
+					size="sm"
+					onclick={() => (showEditFactorySheet = true)}
+					icon={FluentEdit20Filled}
+				>
 					Edit
 				</Button>
 			{/if}
@@ -293,3 +301,23 @@
 		</div>
 	{/if}
 </PageContainer>
+
+<!-- Edit Factory Bottom Sheet -->
+{#if data.isOwner && data.editForm}
+	<EditFactorySheet
+		bind:open={showEditFactorySheet}
+		editForm={data.editForm}
+		factory={{
+			id: data.factory.id,
+			name: data.factory.name,
+			workerWage: data.factory.workerWage,
+			currentWorkers: data.workers
+		}}
+		editCost={data.factoryEditCost}
+		userBalance={data.userBalance}
+		canAfford={data.canAffordFactoryEdit}
+		isOnCooldown={data.isFactoryEditOnCooldown}
+		cooldownEndsAt={data.factoryEditCooldownEndsAt}
+		wageStats={data.wageStats}
+	/>
+{/if}

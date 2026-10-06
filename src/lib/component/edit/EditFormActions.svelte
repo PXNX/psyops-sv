@@ -3,7 +3,8 @@
 	import FormActions from "#lib/component/ui/FormActions.svelte";
 
 	interface Props {
-		cancelHref: string;
+		cancelHref?: string;
+		onCancel?: () => void;
 		submitting: boolean;
 		delayed: boolean;
 		disabled: boolean;
@@ -11,13 +12,14 @@
 		submitLabel?: string;
 	}
 
-	let { cancelHref, submitting, delayed, disabled, editCost, submitLabel = "Save Changes" }: Props = $props();
+	let { cancelHref, onCancel, submitting, delayed, disabled, editCost, submitLabel = "Save Changes" }: Props = $props();
 
 	const submitText = $derived(editCost ? `${submitLabel} (${editCost.toLocaleString()})` : submitLabel);
 </script>
 
 <FormActions
 	{cancelHref}
+	{onCancel}
 	submitLabel={submitText}
 	submittingLabel="Saving..."
 	submitIcon={FluentCheckmark20Filled}

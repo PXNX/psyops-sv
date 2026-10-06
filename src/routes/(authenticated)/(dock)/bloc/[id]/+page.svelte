@@ -16,9 +16,12 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
 	import ProfileItem from "#lib/component/ProfileItem.svelte";
+	import EditBlocSheet from "./EditBlocSheet.svelte";
 	import { formatDate, formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data, form } = $props();
+
+	let showEditBlocSheet = $state(false);
 </script>
 
 <svelte:head>
@@ -51,18 +54,19 @@
 					{#if data.bloc.description}
 						<p class="text-sm text-[#d3caa9] max-w-xl">{data.bloc.description}</p>
 					{/if}
+					<p class="text-sm text-[#a8a083]">Founded {formatDate(data.bloc.createdAt)}</p>
 				</div>
 			</div>
 
 			{#if data.isLeader}
 				<IconButton
-					href="/bloc/{data.bloc.id}/edit"
 					icon={FluentEdit20Filled}
 					label="Edit Bloc"
 					variant="secondary"
 					size="sm"
 					shape="square"
 					class="self-end sm:self-start"
+					onclick={() => (showEditBlocSheet = true)}
 				/>
 			{:else if data.isMemberPresident}
 				<form method="POST" action="?/leave" use:enhance class="self-end sm:self-start">
@@ -383,3 +387,8 @@
 		</section>
 	{/if}
 </PageContainer>
+
+<!-- Edit Bloc Bottom Sheet -->
+{#if data.isLeader && data.editForm}
+	<EditBlocSheet bind:open={showEditBlocSheet} editForm={data.editForm} currentLogo={data.bloc.logo} />
+{/if}

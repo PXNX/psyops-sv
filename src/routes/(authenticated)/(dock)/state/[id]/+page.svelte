@@ -26,6 +26,7 @@
 	import Badge from "#lib/component/ui/Badge.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import { enhance } from "$app/forms";
+	import EditStateSheet from "./EditStateSheet.svelte";
 
 	const { data } = $props();
 
@@ -33,6 +34,7 @@
 	let isDeclaringWar = $state(false);
 	let showVisaSheet = $state(false);
 	let isApplyingResidence = $state(false);
+	let showEditStateSheet = $state(false);
 
 	const hasGovernment = $derived(!!data.president || data.ministers.length > 0 || data.parliamentMembers.length > 0);
 
@@ -88,17 +90,19 @@
 <PageContainer maxWidth="5xl">
 	<!-- Hero -->
 	<div
-		class="panel rounded-sm p-5 relative"
-		style={data.bloc ? `border-top: 3px solid ${data.bloc.color};` : undefined}
+		class="panel rounded-sm p-5 relative overflow-hidden"
+		style={data.president?.partyColor
+			? `background-image: linear-gradient(to bottom, ${data.president.partyColor}26, transparent 60%);`
+			: undefined}
 	>
 		{#if data.isPresident}
 			<IconButton
-				href="/state/{data.state.id}/edit"
 				icon={FluentEdit20Filled}
 				label="Edit State"
 				variant="secondary"
 				size="sm"
 				class="absolute top-4 right-4"
+				onclick={() => (showEditStateSheet = true)}
 			/>
 		{/if}
 
@@ -144,6 +148,7 @@
 				{#if data.state.description}
 					<p class="text-sm text-[#a8a083] max-w-xl mt-2">{data.state.description}</p>
 				{/if}
+				<p class="text-xs text-[#a8a083]">Founded {formatDate(data.state.createdAt)}</p>
 			</div>
 		</div>
 	</div>
@@ -155,30 +160,32 @@
 		</div>
 	{/if}
 
-	<!-- Active Wars -->
+	<!-- At War -->
 	{#if data.activeWars && data.activeWars.length > 0}
 		<section class="space-y-2">
+			<h2 class="section-title">At War</h2>
 			{#each data.activeWars as war}
+				{@const opponent = war.isAttacker ? war.defender : war.attacker}
 				<a
 					href="/war/{war.id}"
 					class="group flex items-center gap-3 sm:gap-4 bg-red-600/10 border border-red-500/30 rounded-sm p-4 hover:border-red-400/50 transition-colors"
 				>
-					<div
-						class="size-10 sm:size-12 shrink-0 bg-red-600/15 rounded-sm border border-red-500/30 flex items-center justify-center"
-					>
-						<span class="text-xl sm:text-2xl">⚔️</span>
-					</div>
+					<Logo
+						src={opponent.logo}
+						alt={opponent.name}
+						class="size-10 sm:size-12 shrink-0"
+						placeholderIcon={FluentShield20Filled}
+						placeholderGradient="from-red-600/40 to-red-600/40"
+					/>
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-0.5">
 							<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
 							<span class="text-[10px] text-red-300/80 uppercase tracking-wide">
-								{war.isAttacker ? "War of Aggression" : "Defensive War"}
+								{war.isAttacker ? "Attacking" : "Defending against"}
 							</span>
 						</div>
-						<div class="text-sm text-[#d3caa9]">
-							<span class="font-bold text-red-300">{war.attacker.name}</span>
-							<span class="text-[#a8a083] mx-1">vs</span>
-							<span class="font-bold text-[#b3dcff]">{war.defender.name}</span>
+						<div class="text-sm font-bold text-[#f5efd8]">
+							{opponent.name}
 						</div>
 					</div>
 					<span class="text-[#a8a083] group-hover:text-red-300 transition-colors">→</span>
@@ -376,10 +383,10 @@
 		</div>
 	</section>
 
-	<!-- Government Section -->
-	{#if hasGovernment}
+	<!-- Government & Parliament -->
+	{#if hasGovernment || data.parliamentMembers.length > 0 || data.nextElection}
 		<section class="space-y-3">
-			<h2 class="section-title">Government</h2>
+			<h2 class="section-title">Government & Parliament</h2>
 			<div class="panel-muted rounded-sm p-3 space-y-2">
 				<!-- President -->
 				{#if data.president}
@@ -416,15 +423,11 @@
 						{/each}
 					</div>
 				{/if}
-			</div>
-		</section>
-	{/if}
 
-	<!-- Parliament & Elections -->
-	{#if data.parliamentMembers.length > 0 || data.nextElection}
-		<section class="space-y-3">
-			<h2 class="section-title">Parliament</h2>
-			<div class="panel-muted rounded-sm p-3 space-y-3">
+				{#if (data.president || data.ministers.length > 0) && (data.parliamentMembers.length > 0 || data.nextElection)}
+					<div class="border-t border-[#c8b47a]/10 pt-2"></div>
+				{/if}
+
 				{#if data.parliamentMembers.length > 0}
 					<ProfileItem
 						href="/state/{data.state.id}/parliament"
@@ -506,29 +509,17 @@
 							</div>
 						</div>
 					{:else if !data.nextElection.isInaugural && state === "scheduled"}
-						<!-- Regular Election - Scheduled -->
-						<div class="panel rounded-sm p-5">
-							<div class="flex items-center justify-between gap-4">
-								<div class="flex items-center gap-4 flex-1">
-									<div class="size-12 bg-[#2369b5]/25 rounded-sm flex items-center justify-center">
-										<FluentCalendar20Filled class="size-6 text-[#b3dcff]" />
-									</div>
-									<div>
-										<div class="flex items-center gap-2 mb-1">
-											<h3 class="text-lg font-bold text-[#f5efd8]">Upcoming Election</h3>
-										</div>
-										<p class="text-sm text-[#a8a083]">
-											{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} • starts in {getTimeRemaining(
-												data.nextElection.startDate
-											)}
-										</p>
-									</div>
-								</div>
-								<Button href="/state/{data.state.id}/election/{data.nextElection.id}" variant="soft-blue" size="sm">
-									View Election
-								</Button>
-							</div>
-						</div>
+						<!-- Regular Election - Scheduled: kept intentionally low-key, it's routine -->
+						<ProfileItem
+							href="/state/{data.state.id}/election/{data.nextElection.id}"
+							placeholderIcon={FluentCalendar20Filled}
+							placeholderGradient="from-[#2369b5]/15 to-[#2369b5]/15"
+							title="Upcoming Election"
+							subtitle="{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} • starts in {getTimeRemaining(
+								data.nextElection.startDate
+							)}"
+							hoverColor="blue"
+						/>
 					{:else if !data.nextElection.isInaugural && state === "active"}
 						<!-- Regular Election - Active -->
 						<div class="bg-[#f2b01e]/12 rounded-sm border border-[#f2b01e]/35 p-5">
@@ -669,6 +660,17 @@
 		</section>
 	{/if}
 </PageContainer>
+
+{#if data.isPresident && data.editForm}
+	<EditStateSheet
+		bind:open={showEditStateSheet}
+		editForm={data.editForm}
+		stateName={data.state.name}
+		logoUrl={data.state.logo}
+		onCooldown={data.editOnCooldown}
+		cooldownEndsAt={data.editCooldownEndsAt}
+	/>
+{/if}
 
 <!-- War Declaration Modal -->
 <Modal bind:open={showWarModal} title="Declare War" size="default">
