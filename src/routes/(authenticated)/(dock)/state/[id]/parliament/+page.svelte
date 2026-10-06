@@ -207,7 +207,9 @@
 								<h3 class="font-bold text-lg text-[#fff7e8] mb-1">{partyName}</h3>
 								<div class="flex items-center gap-2 flex-wrap text-sm">
 									{#if partyData?.ideology}
-										<span class="px-2 py-0.5 rounded-sm border border-[#dfceb0]/20 bg-[#14283f] text-[#d9ccb7] text-xs font-medium">
+										<span
+											class="px-2 py-0.5 rounded-sm border border-[#dfceb0]/20 bg-[#14283f] text-[#d9ccb7] text-xs font-medium"
+										>
 											{partyData.ideology}
 										</span>
 									{/if}
@@ -370,7 +372,9 @@
 			<div class="panel rounded-sm p-5">
 				<div class="flex items-center justify-between gap-4">
 					<div class="flex items-center gap-4 flex-1">
-						<div class="size-12 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center shrink-0">
+						<div
+							class="size-12 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center shrink-0"
+						>
 							<FluentCalendar20Filled class="size-6 text-[#b7d0e6]" />
 						</div>
 						<div>

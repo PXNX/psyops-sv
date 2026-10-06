@@ -12,7 +12,8 @@
 	import Modal from "#lib/component/Modal.svelte";
 	import ReportModal from "#lib/component/ReportModal.svelte";
 	import { settings } from "#lib/settings.svelte.js";
-	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import { Button, IconButton, Badge, buttonClass } from "#lib/component/ui/index.js";
 
 	const { data, form } = $props();
 
@@ -211,29 +212,29 @@
 			{pendingExternalLink}
 		</div>
 		<div class="flex gap-2 justify-end">
-			<button
+			<Button
+				variant="ghost"
 				onclick={() => {
 					showExternalLinkWarning = false;
 					pendingExternalLink = null;
 				}}
-				class="btn btn-ghost"
 			>
 				Cancel
-			</button>
-			<button onclick={proceedToExternalLink} class={buttonClass({ variant: "info" })}> Continue </button>
+			</Button>
+			<Button variant="primary" onclick={proceedToExternalLink}>Continue</Button>
 		</div>
 	</div>
 </Modal>
 
 {#if !data.party}
-	<div class="max-w-5xl mx-auto px-4 py-6">
-		<div class="panel rounded-xl p-8 text-center">
+	<PageContainer maxWidth="5xl">
+		<div class="panel rounded-sm p-8 text-center">
 			<FluentPeople20Filled class="size-16 text-[#a89e8e] mx-auto mb-4" />
 			<h2 class="text-2xl font-bold text-[#fff7e8] mb-2">No Party Membership</h2>
 			<p class="text-[#a89e8e] mb-4">You need to be a member of a political party to access party chat.</p>
-			<button onclick={() => goto("/parties")} class={buttonClass({ variant: "info" })}> Browse Parties </button>
+			<Button variant="primary" onclick={() => goto("/parties")}>Browse Parties</Button>
 		</div>
-	</div>
+	</PageContainer>
 {:else}
 	<div class="flex flex-col h-full min-h-0">
 		<!-- Header -->
@@ -241,29 +242,25 @@
 			class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
 		>
 			<div class="flex items-center gap-2 md:gap-3">
-				<button
-					onclick={() => goto("/chat")}
-					class="btn btn-sm btn-ghost text-[#a89e8e] hover:text-[#fff7e8] min-h-0 h-10 w-10 p-0"
-				>
-					<FluentArrowLeft20Filled class="size-5" />
-				</button>
+				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
 
-				<a
-					href="/parties/{data.party.id}"
-					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
-				>
+				<a href="/parties/{data.party.id}" class="group flex items-center gap-2 md:gap-3 flex-1 min-w-0">
 					{#if data.party.logo}
-						<img src={data.party.logo} alt={data.party.name} class="size-11 md:size-10 rounded-full" />
+						<img src={data.party.logo} alt={data.party.name} class="size-11 md:size-10 rounded-full shrink-0" />
 					{:else}
 						<div
-							class="size-11 md:size-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/20"
+							class="size-11 md:size-10 rounded-full bg-[#587252]/18 border border-[#8fae88]/30 flex items-center justify-center shrink-0"
 						>
-							<FluentPeople20Filled class="size-6 md:size-5 text-white" />
+							<FluentPeople20Filled class="size-6 md:size-5 text-[#8fae88]" />
 						</div>
 					{/if}
 
 					<div class="min-w-0">
-						<h1 class="text-lg md:text-xl font-bold text-[#fff7e8] truncate">{data.party.name}</h1>
+						<h1
+							class="text-lg md:text-xl font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate"
+						>
+							{data.party.name}
+						</h1>
 						<p class="text-xs md:text-sm text-[#a89e8e] truncate">{data.party.memberCount} members • Party Chat</p>
 					</div>
 				</a>
@@ -304,9 +301,9 @@
 								<div class="flex flex-col gap-1 items-end w-full max-w-[85%] md:max-w-md ml-auto">
 									{#each group.messages as msg}
 										<div
-											class="chat-bubble bg-gradient-to-br from-emerald-600 to-emerald-700 text-white shadow-lg {msg.isOptimistic
+											class="chat-bubble before:hidden bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#fff7e8] {msg.isOptimistic
 												? 'opacity-70'
-												: ''} text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-br-md break-words"
+												: ''} text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
@@ -318,7 +315,7 @@
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-emerald-200 break-all"
+															class="underline hover:text-[#f2c463] break-all"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -355,10 +352,9 @@
 										{group.senderName || "Anonymous"}
 									</a>
 									{#if group.isLeader}
-										<span class="{badgeClass({ tone: 'amber', size: 'xs' })} gap-1">
-											<FluentShield20Filled class="size-3" />
+										<Badge tone="amber" size="xs" icon={FluentShield20Filled}>
 											<span class="hidden sm:inline">Leader</span>
-										</span>
+										</Badge>
 									{/if}
 								</div>
 								<div class="flex flex-col gap-1 items-start w-full max-w-[85%] md:max-w-md">
@@ -427,13 +423,17 @@
 		<!-- Message input -->
 		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-t border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0">
 			{#if form?.error}
-				<div class="alert alert-error mb-3 text-sm">
+				<div
+					class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
+				>
 					<p>{form.error}</p>
 				</div>
 			{/if}
 
 			{#if form?.success && form?.message}
-				<div class="alert alert-success mb-3 text-sm">
+				<div
+					class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
+				>
 					<p>{form.message}</p>
 				</div>
 			{/if}
@@ -481,7 +481,7 @@
 					placeholder="Type a message..."
 					maxlength="500"
 					rows="1"
-					class="textarea textarea-bordered flex-1 field-control resize-none min-h-[2.75rem] md:min-h-[2.5rem] max-h-32 rounded-xl text-base"
+					class="field-control rounded-sm px-3 py-2.5 flex-1 resize-none min-h-[2.75rem] md:min-h-[2.5rem] max-h-32 text-base"
 					disabled={isSubmitting}
 					onkeydown={(e) => {
 						if (e.key === "Enter" && !e.shiftKey) {
@@ -489,22 +489,19 @@
 							e.currentTarget.form?.requestSubmit();
 						}
 					}}></textarea>
-				<button
+				<Button
 					type="submit"
-					class="btn bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 border-0 text-white gap-2 min-w-[80px] md:min-w-[100px] self-end shadow-lg shadow-emerald-600/20 rounded-xl"
-					disabled={isSubmitting || !message.trim()}
+					variant="primary"
+					icon={FluentSend20Filled}
+					loading={isSubmitting}
+					disabled={!message.trim()}
+					class="min-w-[80px] md:min-w-[100px] self-end"
 				>
-					{#if isSubmitting}
-						<span class="loading loading-spinner loading-sm"></span>
-						<span class="hidden md:inline">Sending</span>
-					{:else}
-						<FluentSend20Filled class="size-5" />
-						<span class="hidden md:inline">Send</span>
-					{/if}
-				</button>
+					<span class="hidden md:inline">{isSubmitting ? "Sending" : "Send"}</span>
+				</Button>
 			</form>
 			<p class="text-xs text-[#a89e8e] mt-2 px-1">
-				<span class={message.length > 450 ? "text-orange-400 font-semibold" : ""}>{message.length}/500</span>
+				<span class="font-mono {message.length > 450 ? 'text-[#f7c56b] font-semibold' : ''}">{message.length}/500</span>
 				<span class="hidden md:inline"> • Press Enter to send, Shift+Enter for new line</span>
 			</p>
 		</div>

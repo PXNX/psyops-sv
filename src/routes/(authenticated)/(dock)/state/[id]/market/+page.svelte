@@ -232,7 +232,9 @@
 									In stock: <span class="font-semibold text-[#e5d8c1]">{resourceMap.get(selectedResource) || 0}</span>
 								</span>
 								<span class="text-sm text-[#a89e8e]">
-									Market price: <span class="font-semibold font-mono text-[#e5d8c1]">{formatCurrency(currentMarketPrice)}</span>
+									Market price: <span class="font-semibold font-mono text-[#e5d8c1]"
+										>{formatCurrency(currentMarketPrice)}</span
+									>
 								</span>
 							</div>
 						</div>
@@ -279,9 +281,9 @@
 						<label for="pricePerUnit" class="field-label">Price per unit</label>
 						<div class="join w-full">
 							<span
-									class="join-item flex items-center px-3 rounded-sm bg-[#0d1d31] border border-[#dfceb0]/20 text-[#a89e8e] pointer-events-none"
-									>$</span
-								>
+								class="join-item flex items-center px-3 rounded-sm bg-[#0d1d31] border border-[#dfceb0]/20 text-[#a89e8e] pointer-events-none"
+								>$</span
+							>
 							<input
 								type="number"
 								id="pricePerUnit"

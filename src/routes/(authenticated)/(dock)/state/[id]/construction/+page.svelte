@@ -70,9 +70,7 @@
 				</div>
 			{:else}
 				{#each data.pendingConstructions as construction}
-					<div
-						class="relative overflow-hidden rounded-sm panel-muted p-4 md:p-5"
-					>
+					<div class="relative overflow-hidden rounded-sm panel-muted p-4 md:p-5">
 						<div class="relative space-y-4">
 							<div class="flex flex-col sm:flex-row items-start gap-3 md:gap-4">
 								<div

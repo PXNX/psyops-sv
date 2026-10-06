@@ -71,13 +71,9 @@
 	<!-- Regions Grid -->
 	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 		{#each data.regions as region}
-			<a
-				href="/region/{region.id}"
-				class="group panel-interactive rounded-sm overflow-hidden"
-			>
+			<a href="/region/{region.id}" class="group panel-interactive rounded-sm overflow-hidden">
 				<!-- Region Header -->
 				<div class="h-24 relative bg-[#102239]/70 border-b border-[#dfceb0]/10">
-
 					<!-- Region Logo -->
 					<div class="absolute bottom-0 left-4 translate-y-1/2">
 						<div class="rounded-sm">
@@ -127,7 +123,9 @@
 						<div class="pt-2 border-t border-[#dfceb0]/10">
 							<div class="flex flex-wrap gap-1">
 								{#if region.oil}
-									<span class="px-2 py-0.5 bg-[#e6a527]/15 border border-[#e6a527]/30 rounded-sm text-xs text-[#f7c56b]">
+									<span
+										class="px-2 py-0.5 bg-[#e6a527]/15 border border-[#e6a527]/30 rounded-sm text-xs text-[#f7c56b]"
+									>
 										Oil
 									</span>
 								{/if}
@@ -137,12 +135,16 @@
 									</span>
 								{/if}
 								{#if region.chromium}
-									<span class="px-2 py-0.5 bg-[#315d8d]/20 border border-[#7ba0c8]/30 rounded-sm text-xs text-[#b7d0e6]">
+									<span
+										class="px-2 py-0.5 bg-[#315d8d]/20 border border-[#7ba0c8]/30 rounded-sm text-xs text-[#b7d0e6]"
+									>
 										Chromium
 									</span>
 								{/if}
 								{#if region.tungsten}
-									<span class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded-sm text-xs text-[#d5c4df]">
+									<span
+										class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded-sm text-xs text-[#d5c4df]"
+									>
 										Tungsten
 									</span>
 								{/if}

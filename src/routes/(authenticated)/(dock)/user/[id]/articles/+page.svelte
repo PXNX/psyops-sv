@@ -10,6 +10,10 @@
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import Logo from "#lib/component/Logo.svelte";
 	import { formatDateTime } from "#lib/utils/formatting.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
+	import BackLink from "#lib/component/ui/BackLink.svelte";
 
 	const { data } = $props();
 
@@ -58,28 +62,28 @@
 	<title>{data.user.name || "User"}'s Articles</title>
 </svelte:head>
 
-<div class="max-w-7xl mx-auto px-4 py-8 space-y-6">
+<PageContainer maxWidth="4xl">
 	<!-- Header -->
 	<div class="flex flex-col gap-4">
-		<div class="flex items-center gap-4">
-			<div class="size-14 rounded-xl overflow-hidden">
-				<Logo
-					src={data.user.logo}
-					alt={data.user.name || "User"}
-					class="size-full"
-					placeholderIcon={FluentDocument20Filled}
-					placeholderGradient="from-[#8c709b] to-[#315d8d]"
-				/>
-			</div>
-			<div>
-				<a href="/user/{data.user.id}" class="text-sm text-[#a89e8e] hover:text-[#d5c4df] transition-colors">
-					{data.user.name || "Anonymous"}
-				</a>
-				<h1 class="text-2xl font-bold text-[#fff7e8]">Articles</h1>
-				<p class="text-sm text-[#a89e8e]">
-					{data.totalArticles}
-					{data.totalArticles === 1 ? "Article" : "Articles"}
-				</p>
+		<div class="space-y-2">
+			<BackLink href="/user/{data.user.id}" label={data.user.name || "Anonymous"} class="-ml-3" />
+			<div class="flex items-center gap-4">
+				<div class="size-14 rounded-sm overflow-hidden shrink-0">
+					<Logo
+						src={data.user.logo}
+						alt={data.user.name || "User"}
+						class="size-full"
+						placeholderIcon={FluentDocument20Filled}
+						placeholderGradient="from-[#8c709b] to-[#315d8d]"
+					/>
+				</div>
+				<div class="min-w-0">
+					<h1 class="text-3xl font-bold text-[#fff7e8]">Articles</h1>
+					<p class="text-[#a89e8e] mt-1">
+						{data.totalArticles}
+						{data.totalArticles === 1 ? "Article" : "Articles"}
+					</p>
+				</div>
 			</div>
 		</div>
 
@@ -88,9 +92,9 @@
 			<div class="flex flex-col sm:flex-row gap-3">
 				<!-- Search -->
 				<div class="relative flex-1">
-					<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+					<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
 					<input
-						class="w-full pl-10 pr-4 py-2.5 field-control rounded-xl"
+						class="field-control w-full rounded-sm pl-11 pr-4 py-2.5"
 						placeholder="Search by title..."
 						type="text"
 						bind:value={searchQuery}
@@ -99,136 +103,128 @@
 				</div>
 
 				<!-- Sort Controls -->
-				<div class="flex gap-2">
-					<div class="btn-group">
-						<button class="btn btn-sm {data.sortBy === 'date' ? 'btn-active' : ''}" onclick={() => updateSort("date")}>
-							<FluentCalendar20Filled class="size-4" />
-							Date
-						</button>
-						<button
-							class="btn btn-sm {data.sortBy === 'rating' ? 'btn-active' : ''}"
-							onclick={() => updateSort("rating")}
-						>
-							<FluentHeart20Filled class="size-4" />
-							Rating
-						</button>
-					</div>
-
-					<button
-						onclick={toggleSortOrder}
-						class="btn btn-sm bg-[#14283f] hover:bg-[#19304b] border-0 text-[#e5d8c1] gap-2"
+				<div class="flex flex-wrap gap-2">
+					<Button
+						size="sm"
+						variant={data.sortBy === "date" ? "soft-amber" : "secondary"}
+						icon={FluentCalendar20Filled}
+						onclick={() => updateSort("date")}
 					>
-						<FluentArrowSort20Filled class="size-4" />
+						Date
+					</Button>
+					<Button
+						size="sm"
+						variant={data.sortBy === "rating" ? "soft-amber" : "secondary"}
+						icon={FluentHeart20Filled}
+						onclick={() => updateSort("rating")}
+					>
+						Rating
+					</Button>
+
+					<Button size="sm" variant="secondary" icon={FluentArrowSort20Filled} onclick={toggleSortOrder}>
 						{data.sortOrder === "asc" ? "Ascending" : "Descending"}
-					</button>
+					</Button>
 				</div>
 			</div>
 		{/if}
 	</div>
 
 	<!-- Articles List -->
-	<div class="panel rounded-xl p-6">
-		{#if data.articles.length === 0}
-			<div class="text-center py-12">
-				<div class="size-16 bg-[#102239]/70 rounded-full flex items-center justify-center mx-auto mb-4">
-					<FluentDocument20Filled class="size-8 text-[#a89e8e]" />
-				</div>
-				<p class="text-[#a89e8e]">
-					{#if data.searchQuery}
-						No articles found matching your search
-					{:else if data.isOwnProfile}
-						You haven't written any articles yet
-					{:else}
-						This user hasn't written any articles yet
-					{/if}
-				</p>
-				{#if data.isOwnProfile && !data.searchQuery}
-					<a
-						href="/posts/new"
-						class="btn btn-sm gap-2 bg-[#8c709b]/20 hover:bg-[#8c709b]/30 border-[#b7a0c5]/30 text-[#d5c4df] hover:text-[#f0e7f5] mt-4"
-					>
-						<FluentDocument20Filled class="size-4" />
-						Write Your First Article
-					</a>
+	{#if data.articles.length === 0}
+		<div class="panel-muted rounded-sm p-12 text-center">
+			<div class="size-16 bg-[#102239] rounded-full flex items-center justify-center mx-auto mb-4">
+				<FluentDocument20Filled class="size-8 text-[#a89e8e]" />
+			</div>
+			<p class="text-[#a89e8e]">
+				{#if data.searchQuery}
+					No articles found matching your search
+				{:else if data.isOwnProfile}
+					You haven't written any articles yet
+				{:else}
+					This user hasn't written any articles yet
 				{/if}
-			</div>
-		{:else}
-			<div class="space-y-2">
-				{#each data.articles as article}
-					<a
-						href="/posts/{article.id}"
-						class="flex items-center gap-4 bg-[#102239]/70 rounded-lg p-4 border border-[#dfceb0]/10 hover:border-[#dfceb0]/20 hover:bg-[#19304b] transition-all group"
-					>
-						<!-- Icon or Newspaper Logo -->
-						<div class="shrink-0">
-							{#if article.newspaperName}
-								<div class="size-12 rounded-lg bg-[#102239] flex items-center justify-center transition-all">
-									<FluentEmojiRolledUpNewspaper class="text-2xl" />
-								</div>
-							{:else}
-								<div class="size-12 rounded-lg bg-[#8c709b]/20 flex items-center justify-center transition-all">
-									<FluentDocument20Filled class="size-6 text-[#d5c4df]" />
-								</div>
-							{/if}
-						</div>
-
-						<!-- Article Info -->
-						<div class="flex-1 min-w-0">
-							<h3 class="text-base font-semibold text-[#fff7e8] truncate group-hover:text-[#d5c4df] transition-colors">
-								{article.title}
-							</h3>
-							<div class="flex items-center gap-3 mt-1">
-								{#if article.newspaperName}
-									<span class="text-xs text-[#a89e8e] flex items-center gap-1">
-										<FluentEmojiRolledUpNewspaper class="text-sm" />
-										{article.newspaperName}
-									</span>
-								{/if}
-								<span class="text-xs text-[#a89e8e]/80 flex items-center gap-1">
-									<FluentCalendar20Filled class="size-3" />
-									{formatDateTime(article.createdAt)}
-								</span>
-								<span class="text-xs text-[#a89e8e]/80 flex items-center gap-1">
-									<FluentHeart20Filled class="size-3" />
-									{article.upvoteCount}
-								</span>
-							</div>
-						</div>
-
-						<!-- Chevron -->
-						<div class="shrink-0">
-							<FluentChevronRight20Filled
-								class="size-5 text-[#a89e8e]/80 group-hover:text-[#d5c4df] transition-colors"
-							/>
-						</div>
-					</a>
-				{/each}
-			</div>
-
-			<!-- Pagination -->
-			{#if totalPages > 1}
-				<div class="flex items-center justify-center gap-2 mt-6 pt-6 border-t border-[#dfceb0]/10">
-					<button
-						class="btn btn-sm btn-ghost"
-						disabled={data.currentPage === 1}
-						onclick={() => goToPage(data.currentPage - 1)}
-					>
-						<FluentChevronLeft20Filled class="size-4" />
-					</button>
-
-					<span class="text-sm text-[#a89e8e]">
-						Page {data.currentPage} of {totalPages}
-					</span>
-
-					<button
-						class="btn btn-sm btn-ghost"
-						disabled={data.currentPage === totalPages}
-						onclick={() => goToPage(data.currentPage + 1)}
-					>
-						<FluentChevronRight20Filled class="size-4" />
-					</button>
-				</div>
+			</p>
+			{#if data.isOwnProfile && !data.searchQuery}
+				<Button href="/posts/new" variant="soft-purple" size="sm" icon={FluentDocument20Filled} class="mt-4">
+					Write Your First Article
+				</Button>
 			{/if}
+		</div>
+	{:else}
+		<div class="space-y-2">
+			{#each data.articles as article}
+				<a href="/posts/{article.id}" class="group panel-interactive rounded-sm p-4 flex items-center gap-4">
+					<!-- Icon or Newspaper Logo -->
+					<div class="shrink-0">
+						{#if article.newspaperName}
+							<div class="size-12 rounded-sm panel-muted flex items-center justify-center">
+								<FluentEmojiRolledUpNewspaper class="text-2xl" />
+							</div>
+						{:else}
+							<div
+								class="size-12 rounded-sm bg-[#8c709b]/15 border border-[#b7a0c5]/30 flex items-center justify-center"
+							>
+								<FluentDocument20Filled class="size-6 text-[#b7a0c5]" />
+							</div>
+						{/if}
+					</div>
+
+					<!-- Article Info -->
+					<div class="flex-1 min-w-0">
+						<h3 class="font-bold text-[#fff7e8] truncate group-hover:text-[#f2c463] transition-colors">
+							{article.title}
+						</h3>
+						<div class="flex flex-wrap items-center gap-3 mt-1">
+							{#if article.newspaperName}
+								<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+									<FluentEmojiRolledUpNewspaper class="text-sm" />
+									{article.newspaperName}
+								</span>
+							{/if}
+							<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+								<FluentCalendar20Filled class="size-3" />
+								{formatDateTime(article.createdAt)}
+							</span>
+							<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+								<FluentHeart20Filled class="size-3" />
+								{article.upvoteCount}
+							</span>
+						</div>
+					</div>
+
+					<!-- Chevron -->
+					<FluentChevronRight20Filled
+						class="size-5 shrink-0 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors"
+					/>
+				</a>
+			{/each}
+		</div>
+
+		<!-- Pagination -->
+		{#if totalPages > 1}
+			<div class="flex items-center justify-center gap-2 pt-2">
+				<IconButton
+					icon={FluentChevronLeft20Filled}
+					label="Previous page"
+					variant="secondary"
+					size="sm"
+					disabled={data.currentPage === 1}
+					onclick={() => goToPage(data.currentPage - 1)}
+				/>
+
+				<span class="text-sm text-[#a89e8e]">
+					Page {data.currentPage} of {totalPages}
+				</span>
+
+				<IconButton
+					icon={FluentChevronRight20Filled}
+					label="Next page"
+					variant="secondary"
+					size="sm"
+					disabled={data.currentPage === totalPages}
+					onclick={() => goToPage(data.currentPage + 1)}
+				/>
+			</div>
 		{/if}
-	</div>
-</div>
+	{/if}
+</PageContainer>

@@ -186,7 +186,7 @@
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
 					<FluentImage20Filled class="size-4 text-[#b7a0c5]" />
-					<h2 class="text-sm font-semibold text-[#fff7e8] font-sans">Profile Picture</h2>
+					<h2 class="text-sm font-semibold text-[#fff7e8]">Profile Picture</h2>
 				</div>
 
 				<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -266,7 +266,7 @@
 			<div class="space-y-4">
 				<div class="flex items-center gap-2">
 					<FluentPerson20Filled class="size-4 text-[#b7a0c5]" />
-					<h2 class="text-sm font-semibold text-[#fff7e8] font-sans">Profile Information</h2>
+					<h2 class="text-sm font-semibold text-[#fff7e8]">Profile Information</h2>
 				</div>
 
 				<div>
@@ -320,8 +320,8 @@
 				disabled={$submitting || !canEdit}
 				loading={$delayed}
 				loadingText="Saving..."
+				icon={FluentCheckmark20Filled}
 			>
-				<FluentCheckmark20Filled class="size-5" />
 				Save Changes
 			</Button>
 		</form>

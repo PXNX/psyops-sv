@@ -13,7 +13,8 @@
 	import BlockUserModal from "#lib/component/BlockUserModal.svelte";
 	import PartyTag from "#lib/component/PartyTag.svelte";
 	import { settings } from "#lib/settings.svelte.js";
-	import { buttonClass } from "#lib/component/ui/styles.js";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import { Button, IconButton, buttonClass } from "#lib/component/ui/index.js";
 
 	const { data, form } = $props();
 
@@ -226,28 +227,28 @@
 			{pendingExternalLink}
 		</div>
 		<div class="flex gap-2 justify-end">
-			<button
+			<Button
+				variant="ghost"
 				onclick={() => {
 					showExternalLinkWarning = false;
 					pendingExternalLink = null;
 				}}
-				class="btn btn-ghost"
 			>
 				Cancel
-			</button>
-			<button onclick={proceedToExternalLink} class={buttonClass({ variant: "info" })}> Continue </button>
+			</Button>
+			<Button variant="primary" onclick={proceedToExternalLink}>Continue</Button>
 		</div>
 	</div>
 </Modal>
 
 {#if !data.otherUser}
-	<div class="w-full mx-auto px-3 sm:px-4 py-6 sm:max-w-5xl">
-		<div class="panel rounded-xl p-8 text-center">
+	<PageContainer maxWidth="5xl">
+		<div class="panel rounded-sm p-8 text-center">
 			<h2 class="text-2xl font-bold text-[#fff7e8] mb-2">User Not Found</h2>
 			<p class="text-[#a89e8e] mb-4">This user doesn't exist or you don't have permission to message them.</p>
-			<button onclick={() => goto("/chat")} class={buttonClass({ variant: "info" })}> Back to Messages </button>
+			<Button variant="primary" onclick={() => goto("/chat")}>Back to Messages</Button>
 		</div>
-	</div>
+	</PageContainer>
 {:else if data.isBlocked}
 	<!-- Blocked User View - Show messages but disable input -->
 	<div class="flex flex-col h-full min-h-0">
@@ -256,12 +257,7 @@
 			class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
 		>
 			<div class="flex items-center gap-2 md:gap-3">
-				<button
-					onclick={() => goto("/chat")}
-					class="btn btn-sm btn-ghost text-[#a89e8e] hover:text-[#fff7e8] min-h-0 h-10 w-10 p-0"
-				>
-					<FluentArrowLeft20Filled class="size-5" />
-				</button>
+				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
 
 				<a
 					href="/user/{data.otherUser.id}"
@@ -270,7 +266,7 @@
 					{#if data.otherUser.logo && settings.loadImages}
 						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
-						<div class="size-11 md:size-10 rounded-full bg-[#14283f]/80 flex items-center justify-center">
+						<div class="size-11 md:size-10 rounded-full bg-[#102239] flex items-center justify-center shrink-0">
 							<FluentImageOff20Filled class="size-6 md:size-5 text-[#a89e8e]" />
 						</div>
 					{/if}
@@ -292,7 +288,7 @@
 		<div
 			bind:this={chatContainer}
 			onscroll={handleScroll}
-			class="flex-1 min-h-0 bg-[#102239]/60 border-x border-[#dfceb0]/10 p-4 overflow-y-auto"
+			class="flex-1 min-h-0 bg-[#0c1929]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#dfceb0]/20 scrollbar-track-transparent"
 		>
 			{#if allMessages.length === 0}
 				<div class="flex items-center justify-center h-full">
@@ -303,7 +299,7 @@
 					<!-- Day Divider -->
 					<div class="flex items-center gap-4 my-6">
 						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
-						<span class="text-xs text-[#a89e8e] font-medium px-3 py-1 bg-[#14283f]/70 rounded-full">
+						<span class="text-[10px] uppercase tracking-wide text-[#a89e8e] font-semibold px-3 py-1 panel-muted rounded-sm">
 							{formatDayDivider(day.date)}
 						</span>
 						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
@@ -315,18 +311,18 @@
 							<div class="chat chat-end mb-4">
 								<div class="flex flex-col gap-1 items-end w-full">
 									{#each group.messages as msg}
-										<div class="chat-bubble bg-blue-600 text-white">
+										<div class="chat-bubble before:hidden bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#fff7e8] text-sm md:text-base px-4 py-2.5 rounded-md break-words">
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-sm rounded" />
+															<img src={part.content} alt="Shared image" class="max-w-sm rounded-sm" />
 														</div>
 													{:else}
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-blue-200"
+															class="underline hover:text-[#f2c463]"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -340,7 +336,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer opacity-50 text-xs mt-1">
+								<div class="chat-footer text-[#a89e8e] text-xs mt-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -349,18 +345,18 @@
 							<div class="chat chat-start mb-4">
 								<div class="flex flex-col gap-1 items-start w-full">
 									{#each group.messages as msg}
-										<div class="chat-bubble bg-[#14283f] text-[#e5d8c1]">
+										<div class="chat-bubble before:hidden bg-[#102239]/70 border border-[#dfceb0]/10 text-[#e5d8c1] text-sm md:text-base px-4 py-2.5 rounded-md break-words">
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-sm rounded" />
+															<img src={part.content} alt="Shared image" class="max-w-sm rounded-sm" />
 														</div>
 													{:else}
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-blue-400"
+															class="underline hover:text-[#f2c463]"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -374,7 +370,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer opacity-50 text-xs mt-1">
+								<div class="chat-footer text-[#a89e8e] text-xs mt-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -386,7 +382,7 @@
 
 		<!-- Blocked notice instead of input -->
 		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-t border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0">
-			<div class="bg-[#14283f]/80 rounded-xl p-4 border border-[#dfceb0]/15 text-center shadow-lg">
+			<div class="panel-muted rounded-sm p-4 text-center">
 				<p class="text-[#d9ccb7] mb-3">
 					{#if data.blockedByCurrentUser}
 						You have blocked this user. Unblock them to send messages.
@@ -398,7 +394,7 @@
 				{#if data.blockedByCurrentUser}
 					<form method="POST" action="?/unblockUser" use:enhance>
 						<input type="hidden" name="blockedUserId" value={data.otherUser.id} />
-						<button type="submit" class={buttonClass({ variant: "info" })}> Unblock User </button>
+						<Button type="submit" variant="secondary">Unblock User</Button>
 					</form>
 				{/if}
 			</div>
@@ -411,12 +407,7 @@
 			class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
 		>
 			<div class="flex items-center gap-2 md:gap-3">
-				<button
-					onclick={() => goto("/chat")}
-					class="btn btn-sm btn-ghost text-[#a89e8e] hover:text-[#fff7e8] min-h-0 h-10 w-10 p-0"
-				>
-					<FluentArrowLeft20Filled class="size-5" />
-				</button>
+				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
 
 				<a
 					href="/user/{data.otherUser.id}"
@@ -425,7 +416,7 @@
 					{#if data.otherUser.logo && settings.loadImages}
 						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
-						<div class="size-11 md:size-10 rounded-full bg-[#14283f]/80 flex items-center justify-center">
+						<div class="size-11 md:size-10 rounded-full bg-[#102239] flex items-center justify-center shrink-0">
 							<FluentImageOff20Filled class="size-6 md:size-5 text-[#a89e8e]" />
 						</div>
 					{/if}
@@ -443,15 +434,12 @@
 
 				<!-- Header Menu Dropdown -->
 				<div class="dropdown dropdown-end">
-					<label
-						tabindex="0"
-						class="btn btn-ghost btn-sm btn-circle text-[#a89e8e] hover:text-[#fff7e8] min-h-0 h-10 w-10 p-0"
-					>
+					<label tabindex="0" class={buttonClass({ variant: "ghost", shape: "circle" })}>
 						<FluentMoreVertical20Filled class="size-5" />
 					</label>
 					<ul
 						tabindex="0"
-						class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#14283f] border border-[#dfceb0]/15 rounded-box w-52 mt-2"
+						class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#14283f] border border-[#dfceb0]/15 rounded-sm w-52 mt-2"
 					>
 						<li>
 							<button
@@ -500,9 +488,9 @@
 								<div class="flex flex-col gap-1 items-end w-full max-w-[85%] md:max-w-md ml-auto">
 									{#each group.messages as msg}
 										<div
-											class="chat-bubble bg-blue-600 text-white shadow-lg {msg.isOptimistic
+											class="chat-bubble before:hidden bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#fff7e8] {msg.isOptimistic
 												? 'opacity-70'
-												: ''} text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-br-md break-words"
+												: ''} text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
@@ -514,7 +502,7 @@
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-blue-200 break-all"
+															class="underline hover:text-[#f2c463] break-all"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -539,7 +527,7 @@
 									{#each group.messages as msg}
 										<button
 											onclick={() => handleReportMessage(msg.id, msg.senderId)}
-											class="chat-bubble bg-[#14283f]/80 text-[#e5d8c1] hover:bg-[#19304b]/80 transition-colors text-left cursor-pointer shadow-lg text-sm md:text-base px-4 py-2.5 rounded-2xl rounded-bl-md break-words"
+											class="chat-bubble before:hidden bg-[#102239]/70 border border-[#dfceb0]/10 text-[#e5d8c1] hover:bg-[#19304b] hover:border-[#e6a527]/35 transition-colors text-left cursor-pointer text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
@@ -581,13 +569,17 @@
 		<!-- Message input - Fixed to bottom -->
 		<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-t border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0">
 			{#if form?.error}
-				<div class="alert alert-error mb-3 text-sm">
+				<div
+					class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
+				>
 					<p>{form.error}</p>
 				</div>
 			{/if}
 
 			{#if form?.success && form?.message}
-				<div class="alert alert-success mb-3 text-sm">
+				<div
+					class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
+				>
 					<p>{form.message}</p>
 				</div>
 			{/if}
@@ -646,22 +638,19 @@
 							e.currentTarget.form?.requestSubmit();
 						}
 					}}></textarea>
-				<button
+				<Button
 					type="submit"
-					class="btn bg-blue-600 hover:bg-blue-500 border-0 text-white gap-2 min-w-[80px] md:min-w-[100px] self-end shadow-lg shadow-blue-600/20 rounded-xl"
-					disabled={isSubmitting || !message.trim()}
+					variant="primary"
+					icon={FluentSend20Filled}
+					loading={isSubmitting}
+					disabled={!message.trim()}
+					class="min-w-[80px] md:min-w-[100px] self-end"
 				>
-					{#if isSubmitting}
-						<span class="loading loading-spinner loading-sm"></span>
-						<span class="hidden md:inline">Sending</span>
-					{:else}
-						<FluentSend20Filled class="size-5" />
-						<span class="hidden md:inline">Send</span>
-					{/if}
-				</button>
+					<span class="hidden md:inline">{isSubmitting ? "Sending" : "Send"}</span>
+				</Button>
 			</form>
 			<p class="text-xs text-[#a89e8e] mt-2 px-1">
-				<span class={message.length > 450 ? "text-orange-400 font-semibold" : ""}>{message.length}/500</span>
+				<span class="font-mono {message.length > 450 ? 'text-[#f7c56b] font-semibold' : ''}">{message.length}/500</span>
 				<span class="hidden md:inline"> • Press Enter to send, Shift+Enter for new line</span>
 			</p>
 		</div>

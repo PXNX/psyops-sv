@@ -70,8 +70,7 @@
 							rows="3"
 							placeholder="Provide a reason for the sanction..."
 							class="field-control rounded-sm px-3 py-2.5 w-full"
-							required
-						></textarea>
+							required></textarea>
 					</div>
 
 					<Button

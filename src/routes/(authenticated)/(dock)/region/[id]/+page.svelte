@@ -654,11 +654,7 @@
 
 				<div>
 					<label class="field-label" for="attackFromRegionId">Attack From</label>
-					<select
-						id="attackFromRegionId"
-						name="attackFromRegionId"
-						class="field-control rounded-sm px-3 py-2.5 w-full"
-					>
+					<select id="attackFromRegionId" name="attackFromRegionId" class="field-control rounded-sm px-3 py-2.5 w-full">
 						{#each data.borderingRegionsForAttack as border}
 							<option value={border.id}>{border.name} ({Math.round(border.distanceKm)} km)</option>
 						{/each}

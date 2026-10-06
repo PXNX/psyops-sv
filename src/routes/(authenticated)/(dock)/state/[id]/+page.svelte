@@ -110,9 +110,7 @@
 						<img src={data.state.logo} alt={data.state.name} class="w-full h-full object-cover" />
 					</div>
 				{:else}
-					<div
-						class="size-24 rounded-full bg-[#102239] border border-[#dfceb0]/15 flex items-center justify-center"
-					>
+					<div class="size-24 rounded-full bg-[#102239] border border-[#dfceb0]/15 flex items-center justify-center">
 						<FluentFlag20Filled class="size-8 text-[#a89e8e]/60" />
 					</div>
 				{/if}
@@ -526,11 +524,7 @@
 										</p>
 									</div>
 								</div>
-								<Button
-									href="/state/{data.state.id}/election/{data.nextElection.id}"
-									variant="soft-blue"
-									size="sm"
-								>
+								<Button href="/state/{data.state.id}/election/{data.nextElection.id}" variant="soft-blue" size="sm">
 									View Election
 								</Button>
 							</div>
@@ -574,10 +568,7 @@
 
 	<!-- Navigation Cards -->
 	<section class="grid md:grid-cols-2 gap-4">
-		<a
-			href="/state/{data.state.id}/construction"
-			class="group panel-interactive rounded-sm p-5"
-		>
+		<a href="/state/{data.state.id}/construction" class="group panel-interactive rounded-sm p-5">
 			<div class="size-12 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center mb-4">
 				<FluentBuilding20Filled class="size-6 text-[#f7c56b]" />
 			</div>
@@ -589,11 +580,10 @@
 		</a>
 
 		{#if hasGovernment}
-			<a
-				href="/state/{data.state.id}/economy"
-				class="group panel-interactive rounded-sm p-5"
-			>
-				<div class="size-12 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm flex items-center justify-center mb-4">
+			<a href="/state/{data.state.id}/economy" class="group panel-interactive rounded-sm p-5">
+				<div
+					class="size-12 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm flex items-center justify-center mb-4"
+				>
 					<FluentMoney20Filled class="size-6 text-[#c6dfbf]" />
 				</div>
 				<h3 class="text-lg font-bold text-[#fff7e8] mb-2 group-hover:text-[#f2c463] transition-colors">Economy</h3>
@@ -602,10 +592,7 @@
 			</a>
 
 			{#if data.isPresident || data.isForeignMinister}
-				<a
-					href="/state/{data.state.id}/foreign-affairs"
-					class="group panel-interactive rounded-sm p-5"
-				>
+				<a href="/state/{data.state.id}/foreign-affairs" class="group panel-interactive rounded-sm p-5">
 					<div
 						class="size-12 bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm flex items-center justify-center mb-4"
 					>

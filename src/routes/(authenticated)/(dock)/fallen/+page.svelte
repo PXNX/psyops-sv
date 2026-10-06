@@ -41,10 +41,7 @@
 		{:else}
 			<div class="grid gap-2">
 				{#each data.fallenStates as state (state.id)}
-					<a
-						href="/state/{state.id}"
-						class="group panel-interactive rounded-sm p-4 flex items-center gap-4"
-					>
+					<a href="/state/{state.id}" class="group panel-interactive rounded-sm p-4 flex items-center gap-4">
 						<Logo
 							src={state.logo}
 							alt={state.name}
@@ -54,7 +51,9 @@
 						/>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 flex-wrap">
-								<span class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">{state.name}</span>
+								<span class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate"
+									>{state.name}</span
+								>
 								{#if state.bloc}
 									<span
 										class="text-[10px] px-1.5 py-0.5 rounded-sm border"
@@ -76,7 +75,7 @@
 						</div>
 						<div class="text-right shrink-0">
 							<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Existed</div>
-							<div class="text-sm font-bold font-mono text-[#d9ccb7]">
+							<div class="text-sm font-bold text-[#d9ccb7]">
 								{getDurationText(state.createdAt, state.capitulatedAt)}
 							</div>
 						</div>
@@ -123,7 +122,7 @@
 						</div>
 						<div class="text-right shrink-0">
 							<div class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Existed</div>
-							<div class="text-sm font-bold font-mono text-[#d9ccb7]">
+							<div class="text-sm font-bold text-[#d9ccb7]">
 								{getDurationText(bloc.createdAt, bloc.capitulatedAt)}
 							</div>
 						</div>

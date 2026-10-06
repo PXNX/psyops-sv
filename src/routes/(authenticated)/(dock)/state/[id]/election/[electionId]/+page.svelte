@@ -168,7 +168,9 @@
 
 	<!-- Voter Status -->
 	{#if !data.userResidence}
-		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center justify-center gap-3">
+		<div
+			class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center justify-center gap-3"
+		>
 			<p class="text-sm">You must be a resident of {data.state.name} to vote</p>
 		</div>
 	{:else if data.userVote && isActive}
@@ -385,7 +387,6 @@
 		</div>
 	{/if}
 </PageContainer>
-
 
 {#if showVoteAnim}
 	<ThreeAnimation variant="vote" onComplete={() => (showVoteAnim = false)} />

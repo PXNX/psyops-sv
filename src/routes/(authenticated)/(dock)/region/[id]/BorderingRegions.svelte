@@ -42,7 +42,10 @@
 		</div>
 		<div class="grid gap-3">
 			{#each borderingRegions as borderRegion}
-				<a href="/region/{borderRegion.id}" class="group panel-muted rounded-sm p-4 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-all">
+				<a
+					href="/region/{borderRegion.id}"
+					class="group panel-muted rounded-sm p-4 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-all"
+				>
 					<div class="flex items-start gap-4">
 						<Logo
 							src="/coats/{borderRegion.id}.svg"
