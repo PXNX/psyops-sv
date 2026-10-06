@@ -85,7 +85,7 @@
 	<div
 		class="panel rounded-sm p-5 overflow-hidden relative"
 		style={data.rulingPartyColor
-			? `background-image: linear-gradient(to bottom, ${data.rulingPartyColor}26, transparent 60%);`
+			? `background-color: ${data.rulingPartyColor}0d; background-image: radial-gradient(circle at top, ${data.rulingPartyColor}40, transparent 70%);`
 			: undefined}
 	>
 		{#if data.region.stateLogo}

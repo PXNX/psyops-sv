@@ -225,171 +225,212 @@
 			<p class="text-lg text-[#a8a083]">No political parties registered</p>
 		</div>
 	{:else}
-		<div class="space-y-3">
-			{#each sortedParties as party, index}
-				{@const votes = data.votesByParty[party.id] || 0}
-				{@const percentage = getVotePercentage(party.id)}
-				{@const isUserVote = data.userVote === party.id}
-				{@const hasEnoughMembers = party.memberCount >= 3}
-				{@const canVoteForParty = canVote && hasEnoughMembers}
+		<!-- Ballot sheet -->
+		<div class="panel rounded-sm overflow-hidden">
+			<div class="bg-[#1a1f15] border-b border-[#c8b47a]/20 px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
+				<div class="flex items-center gap-2 text-[#d3caa9]">
+					<FluentVote20Filled class="size-4 shrink-0" />
+					<span class="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-bold">Official Ballot</span>
+				</div>
+				{#if data.userResidence && !data.userVote}
+					<span class="text-[10px] sm:text-xs text-[#a8a083] uppercase tracking-wide">Mark one choice</span>
+				{/if}
+			</div>
 
-				<div
-					class="panel rounded-sm overflow-hidden transition-colors {isUserVote
-						? 'border-[#6fd14a]/50 ring-1 ring-[#6fd14a]/20'
-						: 'hover:border-[#c8b47a]/25'}"
-				>
-					<div class="p-4 sm:p-5">
-						<div class="flex items-start gap-4">
-							<!-- Rank + Logo -->
-							<div class="flex flex-col items-center gap-2 flex-shrink-0">
-								{#if hasStarted && index < 3}
-									<div
-										class="size-6 rounded-full flex items-center justify-center font-bold text-xs {index === 0
-											? 'bg-[#f2b01e] text-[#1b1708]'
-											: index === 1
-												? 'bg-[#a8a083] text-[#1b1708]'
-												: 'bg-[#8c6a43] text-[#f5efd8]'}"
-									>
-										{index + 1}
-									</div>
-								{/if}
-								<a href="/party/{party.id}" class="group/logo">
-									{#if party.logo}
-										<Logo
-											src={party.logo}
-											alt={party.name}
-											class="size-14 sm:size-16 rounded-sm border border-[#c8b47a]/20 group-hover/logo:border-[#f2b01e]/55 transition-colors"
-											placeholderIcon={FluentFlag20Filled}
-										/>
-									{:else}
-										<div
-											class="size-14 sm:size-16 rounded-sm flex items-center justify-center text-lg font-bold text-[#f5efd8] border border-[#c8b47a]/20"
-											style="background-color: {party.color}"
-										>
-											{party.abbreviation || party.name.substring(0, 2)}
-										</div>
-									{/if}
-								</a>
-							</div>
+			<div role={canVote && !data.userVote ? "radiogroup" : undefined} aria-label="Party ballot">
+				{#each sortedParties as party, index}
+					{@const votes = data.votesByParty[party.id] || 0}
+					{@const percentage = getVotePercentage(party.id)}
+					{@const isUserVote = data.userVote === party.id}
+					{@const isSelected = selectedPartyId === party.id}
+					{@const hasEnoughMembers = party.memberCount >= 3}
+					{@const canVoteForParty = canVote && hasEnoughMembers}
+					{@const selectable = canVoteForParty && !data.userVote}
 
-							<!-- Party Info -->
-							<div class="flex-1 min-w-0">
-								<div class="flex items-start justify-between gap-3 mb-2">
-									<div class="flex-1 min-w-0">
-										<a href="/party/{party.id}" class="group/link">
-											<h3
-												class="text-lg sm:text-xl font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2 truncate"
-											>
-												{party.name}
-												{#if isUserVote}
-													<FluentCheckmark20Filled class="size-4 text-[#6fd14a] flex-shrink-0" />
-												{/if}
-											</h3>
-										</a>
-										{#if party.ideology}
-											<span
-												class="inline-block px-2 py-0.5 rounded-sm text-xs mt-1"
-												style="background-color: {party.color}20; color: {party.color}; border: 1px solid {party.color}30"
-											>
-												{party.ideology}
-											</span>
-										{/if}
-									</div>
-
-									{#if hasStarted}
-										<div class="text-right flex-shrink-0">
-											<div class="text-xl sm:text-2xl font-bold text-[#f5efd8] font-mono">{votes}</div>
-											<div class="text-xs text-[#a8a083] font-mono">{percentage.toFixed(1)}%</div>
-										</div>
-									{/if}
-								</div>
-
-								<div class="flex items-center gap-4 text-sm flex-wrap mt-2">
-									{#if party.leader}
-										<a
-											href="/user/{party.leader.accountId}"
-											class="flex items-center gap-2 text-[#d3caa9] hover:text-[#f5efd8] transition-colors"
-										>
-											<Logo
-												src={party.leader.logo}
-												alt={party.leader.name}
-												placeholderIcon={FluentPerson20Filled}
-												class="size-6 rounded-sm"
-											/>
-											<span class="text-xs">{party.leader.name}</span>
-										</a>
-									{/if}
-									<span
-										class="text-xs flex items-center gap-1.5 {hasEnoughMembers ? 'text-[#a8a083]' : 'text-red-400'}"
-									>
-										<FluentPeople20Filled class="size-3.5" />
-										{party.memberCount}
-										{#if !hasEnoughMembers}
-											<span class="text-red-400/70">(need {3 - party.memberCount} more)</span>
-										{/if}
-									</span>
-								</div>
-
-								<!-- Vote Bar -->
-								{#if hasStarted && data.totalVotes > 0}
-									<div class="mt-3">
-										<div class="w-full bg-[#0f120c] rounded-full h-2 overflow-hidden">
-											<div
-												class="h-full rounded-full transition-all duration-700 ease-out"
-												style="width: {percentage}%; background: {party.color}"
-											></div>
-										</div>
-									</div>
-								{/if}
-							</div>
+					<div
+						class="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 transition-colors {index <
+						sortedParties.length - 1
+							? 'border-b border-dashed border-[#c8b47a]/15'
+							: ''} {isUserVote
+							? 'bg-[#3f8a2a]/10'
+							: isSelected
+								? 'bg-[#f2b01e]/10'
+								: selectable
+									? 'hover:bg-[#2e3524]'
+									: ''} {selectable ? 'cursor-pointer' : ''}"
+						role={selectable ? "radio" : undefined}
+						aria-checked={selectable ? isSelected : undefined}
+						tabindex={selectable ? 0 : undefined}
+						onclick={selectable ? () => (selectedPartyId = party.id) : undefined}
+						onkeydown={selectable
+							? (e: KeyboardEvent) => {
+									if (e.key === "Enter" || e.key === " ") {
+										e.preventDefault();
+										selectedPartyId = party.id;
+									}
+								}
+							: undefined}
+					>
+						<!-- Ballot bubble: mark your choice with an X -->
+						<div
+							class="shrink-0 size-7 sm:size-8 rounded-full border-2 flex items-center justify-center {isUserVote
+								? 'border-[#6fd14a] bg-[#3f8a2a]/25 text-[#6fd14a]'
+								: isSelected
+									? 'border-[#f2b01e] bg-[#f2b01e]/15 text-[#f2b01e]'
+									: 'border-dashed border-[#c8b47a]/30 text-transparent'}"
+							title={isUserVote ? "Your vote" : isSelected ? "Selected — not yet confirmed" : undefined}
+						>
+							<span class="text-sm sm:text-base font-black leading-none">✕</span>
 						</div>
-					</div>
 
-					<!-- Vote Action -->
-					{#if data.userResidence}
-						<div class="border-t border-[#c8b47a]/15 px-4 sm:px-5 py-3 bg-[#1a1f15]/70">
-							{#if !hasEnoughMembers}
-								<p class="text-xs text-red-400/70 text-center">Needs 3+ members to participate</p>
+						<!-- Logo -->
+						<a href="/party/{party.id}" class="group/logo shrink-0" onclick={(e) => e.stopPropagation()}>
+							{#if party.logo}
+								<Logo
+									src={party.logo}
+									alt={party.name}
+									class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/20 group-hover/logo:border-[#f2b01e]/55 transition-colors"
+									placeholderIcon={FluentFlag20Filled}
+								/>
 							{:else}
-								<form
-									method="POST"
-									action="?/vote"
-									use:enhance={() => {
-										return async ({ update, result }) => {
-											await update();
-											if (result.type === "success") showVoteAnim = true;
-										};
-									}}
-									class="w-full"
+								<div
+									class="size-10 sm:size-12 rounded-sm flex items-center justify-center text-sm font-bold text-[#f5efd8] border border-[#c8b47a]/20"
+									style="background-color: {party.color}"
 								>
-									<input type="hidden" name="partyId" value={party.id} />
-									<button
-										type="submit"
-										disabled={!canVoteForParty}
-										class="w-full py-2 rounded-sm border text-sm font-bold tracking-wide transition-all disabled:opacity-30 disabled:cursor-not-allowed text-[#f5efd8] hover:brightness-110 {isUserVote &&
-										canVote
-											? 'bg-[#3f8a2a] border-[#6fd14a]/50'
-											: 'border-[#c8b47a]/20'}"
-										style:background={!isUserVote && canVoteForParty ? party.color : ""}
-										style:border-color={party.color}
+									{party.abbreviation || party.name.substring(0, 2)}
+								</div>
+							{/if}
+						</a>
+
+						<!-- Party Info -->
+						<div class="flex-1 min-w-0">
+							<div class="flex items-start justify-between gap-3">
+								<div class="flex-1 min-w-0">
+									<a href="/party/{party.id}" class="group/link" onclick={(e) => e.stopPropagation()}>
+										<h3
+											class="text-sm sm:text-lg font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2 truncate"
+										>
+											{#if hasStarted && index < 3}
+												<span
+													class="shrink-0 size-4 sm:size-5 rounded-full flex items-center justify-center font-bold text-[10px] {index ===
+													0
+														? 'bg-[#f2b01e] text-[#1b1708]'
+														: index === 1
+															? 'bg-[#a8a083] text-[#1b1708]'
+															: 'bg-[#8c6a43] text-[#f5efd8]'}"
+												>
+													{index + 1}
+												</span>
+											{/if}
+											{party.name}
+										</h3>
+									</a>
+									{#if party.ideology}
+										<span
+											class="inline-block px-2 py-0.5 rounded-sm text-[10px] sm:text-xs mt-1"
+											style="background-color: {party.color}20; color: {party.color}; border: 1px solid {party.color}30"
+										>
+											{party.ideology}
+										</span>
+									{/if}
+								</div>
+
+								{#if hasStarted}
+									<div class="text-right flex-shrink-0">
+										<div class="text-base sm:text-2xl font-bold text-[#f5efd8] font-mono">{votes}</div>
+										<div class="text-[10px] sm:text-xs text-[#a8a083] font-mono">{percentage.toFixed(1)}%</div>
+									</div>
+								{/if}
+							</div>
+
+							<div class="flex items-center gap-4 text-sm flex-wrap mt-1.5">
+								{#if party.leader}
+									<a
+										href="/user/{party.leader.accountId}"
+										class="flex items-center gap-2 text-[#d3caa9] hover:text-[#f5efd8] transition-colors"
+										onclick={(e) => e.stopPropagation()}
 									>
-										{#if !canVote && !hasStarted}
-											VOTING NOT OPEN
-										{:else if !canVote && hasEnded}
-											VOTING CLOSED
-										{:else if isUserVote}
-											✓ VOTED
-										{:else}
-											VOTE
-										{/if}
-									</button>
-								</form>
+										<Logo
+											src={party.leader.logo}
+											alt={party.leader.name}
+											placeholderIcon={FluentPerson20Filled}
+											class="size-5 sm:size-6 rounded-sm"
+										/>
+										<span class="text-xs">{party.leader.name}</span>
+									</a>
+								{/if}
+								<span class="text-xs flex items-center gap-1.5 {hasEnoughMembers ? 'text-[#a8a083]' : 'text-red-400'}">
+									<FluentPeople20Filled class="size-3.5" />
+									{party.memberCount}
+									{#if !hasEnoughMembers}
+										<span class="text-red-400/70">(need {3 - party.memberCount} more)</span>
+									{/if}
+								</span>
+							</div>
+
+							<!-- Vote Bar -->
+							{#if hasStarted && data.totalVotes > 0}
+								<div class="mt-2">
+									<div class="w-full bg-[#0f120c] rounded-full h-1.5 overflow-hidden">
+										<div
+											class="h-full rounded-full transition-all duration-700 ease-out"
+											style="width: {percentage}%; background: {party.color}"
+										></div>
+									</div>
+								</div>
+							{/if}
+
+							{#if data.userResidence && !hasEnoughMembers}
+								<p class="text-[10px] sm:text-xs text-red-400/70 mt-1.5">Needs 3+ members to participate</p>
 							{/if}
 						</div>
-					{/if}
-				</div>
-			{/each}
+					</div>
+				{/each}
+			</div>
 		</div>
+
+		<!-- Confirm Vote -->
+		{#if data.userResidence}
+			{@const selectedParty = data.parties.find((p) => p.id === selectedPartyId)}
+			{#if data.userVote}
+				<p class="text-center text-sm text-[#a8a083]">Your vote has been cast and cannot be changed.</p>
+			{:else}
+				<form
+					method="POST"
+					action="?/vote"
+					use:enhance={() => {
+						isSubmittingVote = true;
+						return async ({ update, result }) => {
+							isSubmittingVote = false;
+							await update();
+							if (result.type === "success") showVoteAnim = true;
+						};
+					}}
+					class="sticky bottom-4 z-10"
+				>
+					<input type="hidden" name="partyId" value={selectedPartyId ?? ""} />
+					<Button
+						type="submit"
+						variant="primary"
+						size="lg"
+						block
+						disabled={!canVote || !selectedPartyId || isSubmittingVote}
+						loading={isSubmittingVote}
+						loadingText="Casting Vote..."
+					>
+						{#if !canVote && !hasStarted}
+							Voting Not Open
+						{:else if !canVote && hasEnded}
+							Voting Closed
+						{:else if selectedParty}
+							Confirm Vote for {selectedParty.name}
+						{:else}
+							Select a Party to Vote
+						{/if}
+					</Button>
+				</form>
+			{/if}
+		{/if}
 	{/if}
 </PageContainer>
 
