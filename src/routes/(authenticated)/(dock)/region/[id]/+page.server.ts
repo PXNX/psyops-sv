@@ -22,7 +22,7 @@ import {
 	partyMembers,
 	politicalParties
 } from "#lib/server/schema.js";
-import { eq, and, sql, or, desc, gt, isNotNull } from "drizzle-orm";
+import { eq, and, sql, or, desc, gt, isNotNull, inArray } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getRegionName } from "#lib/utils/formatting.js";
@@ -222,7 +222,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const walletBalance = userWallet ? Number(userWallet.balance) : 0;
 
 	// Second wave: lookups that depend on the region / user residence.
-	const [regionBuildings, travelInfo, visaInfo, visaBlockedReason, warInfo, rulingPartyColor, stateLogoUrl] = await Promise.all([
+	const [
+		regionBuildings,
+		travelInfo,
+		visaInfo,
+		visaBlockedReason,
+		warInfo,
+		rulingPartyColor,
+		stateLogoUrl,
+		borderingRegionIdsUnderAttackByUs
+	] = await Promise.all([
 		// Get state buildings (after pending constructions were completed above)
 		db.query.stateBuildings.findMany({
 			where: eq(stateBuildings.regionId, regionId),
@@ -416,7 +425,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 			return membership?.color ?? null;
 		})(),
-		getLogoUrl(region.state?.logo)
+		getLogoUrl(region.state?.logo),
+		// Bordering regions this region's state is currently attacking, so the
+		// bordering-regions list can flag "attack underway" without putting the
+		// alarm outline on this region itself (it isn't the one under attack).
+		(async () => {
+			if (!region.stateId || validBorderingRegions.length === 0) return new Set<number>();
+
+			const attacks = await db.query.battles.findMany({
+				where: and(
+					inArray(
+						battles.regionId,
+						validBorderingRegions.map((r) => r.id)
+					),
+					eq(battles.status, "ongoing"),
+					eq(battles.attackerStateId, region.stateId)
+				)
+			});
+
+			return new Set(attacks.map((b) => b.regionId));
+		})()
 	]);
 
 	const {
@@ -500,7 +528,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					cooldownEndsAt: new Date(recentFailedBattle.endedAt!.getTime() + 24 * 60 * 60 * 1000).toISOString()
 				}
 			: null,
-		borderingRegions: validBorderingRegions,
+		borderingRegions: validBorderingRegions.map((r) => ({
+			...r,
+			underAttackByUs: borderingRegionIdsUnderAttackByUs.has(r.id)
+		})),
 		walletBalance
 	};
 

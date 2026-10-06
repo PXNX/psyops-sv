@@ -32,7 +32,21 @@
 		if (countdownInterval) {
 			clearInterval(countdownInterval);
 		}
+		if (shakeTimeout) clearTimeout(shakeTimeout);
+		document.documentElement.classList.remove("screen-shake");
 	});
+
+	let shakeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	function triggerScreenShake() {
+		const root = document.documentElement;
+		// Restart the animation even if a shake is already mid-flight.
+		root.classList.remove("screen-shake");
+		void root.offsetWidth;
+		root.classList.add("screen-shake");
+		if (shakeTimeout) clearTimeout(shakeTimeout);
+		shakeTimeout = setTimeout(() => root.classList.remove("screen-shake"), 500);
+	}
 
 	function getUnitIconPath(unitType: string): string {
 		return `/units/${unitType}.svg`;
@@ -134,10 +148,20 @@
 		<div>
 			<div class="flex items-center justify-between text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">
 				<span>HEALTH</span>
-				<span class="text-[#b3dcff] font-medium text-xs">{health}%</span>
+				<span
+					class="font-medium text-xs {health < 30 ? 'text-red-400' : health < 60 ? 'text-[#ffd35c]' : 'text-[#b3dcff]'}"
+					>{health}%</span
+				>
 			</div>
 			<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
-				<div class="h-full rounded-full transition-all duration-500 bg-[#5eaef5]" style="width: {health}%"></div>
+				<div
+					class="h-full rounded-full transition-all duration-500 {health < 30
+						? 'bg-red-500 animate-pulse'
+						: health < 60
+							? 'bg-[#f2b01e]'
+							: 'bg-[#5eaef5]'}"
+					style="width: {health}%"
+				></div>
 			</div>
 		</div>
 
@@ -145,10 +169,23 @@
 		<div>
 			<div class="flex items-center justify-between text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">
 				<span>{orgLabel}</span>
-				<span class="text-[#b9f29a] font-medium text-xs">{organization}%</span>
+				<span
+					class="font-medium text-xs {organization < 30
+						? 'text-red-400'
+						: organization < 60
+							? 'text-[#ffd35c]'
+							: 'text-[#b9f29a]'}">{organization}%</span
+				>
 			</div>
 			<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
-				<div class="h-full rounded-full transition-all duration-500 bg-[#6fd14a]" style="width: {organization}%"></div>
+				<div
+					class="h-full rounded-full transition-all duration-500 {organization < 30
+						? 'bg-red-500 animate-pulse'
+						: organization < 60
+							? 'bg-[#f2b01e]'
+							: 'bg-[#6fd14a]'}"
+					style="width: {organization}%"
+				></div>
 			</div>
 		</div>
 
@@ -280,10 +317,10 @@
 			<div class="flex items-center gap-2 sm:gap-3">
 				<a href="/state/{data.battle.attackerState.id}" class="flex items-center gap-2 group">
 					{#if data.attackerStateLogo}
-						<img
+						<Logo
 							src={data.attackerStateLogo}
 							alt={data.battle.attackerState.name}
-							class="size-8 sm:size-10 rounded-sm border border-red-500/30"
+							class="size-8 sm:size-10 rounded-sm"
 						/>
 					{/if}
 					<span class="text-sm sm:text-base font-bold text-red-300 group-hover:text-red-200 transition-colors"
@@ -298,10 +335,10 @@
 						>{data.battle.defenderState.name}</span
 					>
 					{#if data.defenderStateLogo}
-						<img
+						<Logo
 							src={data.defenderStateLogo}
 							alt={data.battle.defenderState.name}
-							class="size-8 sm:size-10 rounded-sm border border-[#5eaef5]/30"
+							class="size-8 sm:size-10 rounded-sm"
 						/>
 					{/if}
 				</a>
@@ -501,7 +538,10 @@
 					return async ({ update, result }) => {
 						await update();
 						isExecuting = false;
-						if (result.type === "success") showBattleAnim = true;
+						if (result.type === "success") {
+							showBattleAnim = true;
+							triggerScreenShake();
+						}
 					};
 				}}
 			>
@@ -662,14 +702,21 @@
 		<div class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">Combat Log</h2>
 			<div class="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
-				{#each data.battle.rounds as round}
-					<div class="panel-muted rounded-sm p-3 sm:p-4">
+				{#each data.battle.rounds as round, i}
+					<div
+						class="panel-muted rounded-sm p-3 sm:p-4 {i === 0 && data.battle.phase === 'active'
+							? 'border-[#f2b01e]/50 shadow-[0_0_14px_rgba(242,176,30,0.15)]'
+							: ''}"
+					>
 						<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3">
 							<div class="flex items-center gap-2 sm:gap-3">
 								<div class="px-2 py-1 bg-[#0f120c] border border-[#c8b47a]/20 rounded-sm">
 									<span class="text-[#a8a083] text-[10px] uppercase tracking-wide">ROUND</span>
 									<span class="text-[#f5efd8] font-bold font-mono text-sm ml-2">{round.roundNumber}</span>
 								</div>
+								{#if i === 0 && data.battle.phase === "active"}
+									<Badge tone="amber">LATEST</Badge>
+								{/if}
 							</div>
 							<span class="text-xs text-[#a8a083]">{formatDateTime(round.roundedAt)}</span>
 						</div>

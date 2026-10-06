@@ -65,12 +65,22 @@
 
 	const ongoingBattles = $derived(data.war.battles?.filter((b) => b.status === "ongoing") || []);
 
+	// A close fight for territory is the tensest moment of a war — call it out.
+	const isContested = $derived(
+		data.war.status === "active" && Math.abs(data.attackerControl - data.defenderControl) < 15
+	);
+
 	const completedBattles = $derived(data.war.battles?.filter((b) => b.status !== "ongoing") || []);
 </script>
 
 <PageContainer maxWidth="5xl">
 	<!-- War Room Hero -->
-	<div class="panel rounded-sm p-5">
+	<div
+		class="panel rounded-sm p-5 relative overflow-hidden"
+		style={data.war.status === "active"
+			? "background-color: rgba(220,38,38,0.04); background-image: radial-gradient(circle at center, rgba(220,38,38,0.18), transparent 70%);"
+			: undefined}
+	>
 		<!-- Status Bar -->
 		<div class="flex items-center justify-between mb-4">
 			<div class="flex items-center gap-2">
@@ -89,11 +99,7 @@
 		<div class="grid grid-cols-3 gap-4 items-center">
 			<!-- Attacker -->
 			<a href="/state/{data.war.attacker.id}" class="group flex flex-col items-center gap-3 text-center">
-				<Logo
-					src={data.war.attacker.logo}
-					alt={data.war.attacker.name}
-					class="size-16 sm:size-20 rounded-sm border border-red-500/40 group-hover:border-red-400/70 transition-colors"
-				/>
+				<Logo src={data.war.attacker.logo} alt={data.war.attacker.name} class="size-16 sm:size-20 rounded-sm" />
 				<div>
 					<div class="text-[10px] text-red-300/80 uppercase tracking-wide mb-1">Attacker</div>
 					<div class="text-base sm:text-lg font-bold text-[#f5efd8] group-hover:text-red-300 transition-colors">
@@ -129,11 +135,7 @@
 			<!-- Defender -->
 			<a href="/state/{data.war.defender.id}" class="group flex flex-col items-center gap-3 text-center">
 				<div class="relative">
-					<Logo
-						src={data.war.defender.logo}
-						alt={data.war.defender.name}
-						class="size-16 sm:size-20 rounded-sm border border-[#5eaef5]/40 group-hover:border-[#5eaef5]/70 transition-colors"
-					/>
+					<Logo src={data.war.defender.logo} alt={data.war.defender.name} class="size-16 sm:size-20 rounded-sm" />
 					{#if data.war.defender.capitulated}
 						<div
 							class="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-red-600 rounded-sm text-[10px] font-bold text-[#f5efd8]"
@@ -162,14 +164,20 @@
 				<span class="text-sm font-bold text-red-300">{data.war.attacker.name}</span>
 				<span class="text-xs text-red-300/70 font-mono">{data.attackerControl.toFixed(1)}%</span>
 			</div>
-			<div class="text-[10px] text-[#a8a083] uppercase tracking-wide">Territory Control</div>
+			<div class="text-[10px] uppercase tracking-wide {isContested ? 'text-[#ffd35c] font-bold' : 'text-[#a8a083]'}">
+				{isContested ? "⚡ Contested" : "Territory Control"}
+			</div>
 			<div class="flex items-center gap-2">
 				<span class="text-xs text-[#b3dcff]/70 font-mono">{data.defenderControl.toFixed(1)}%</span>
 				<span class="text-sm font-bold text-[#b3dcff]">{data.war.defender.name}</span>
 			</div>
 		</div>
 
-		<div class="relative h-8 sm:h-10 bg-[#0f120c]/90 rounded-sm border border-[#c8b47a]/15 overflow-hidden">
+		<div
+			class="relative h-8 sm:h-10 bg-[#0f120c]/90 rounded-sm border overflow-hidden transition-colors {isContested
+				? 'border-[#f2b01e]/60 animate-pulse'
+				: 'border-[#c8b47a]/15'}"
+		>
 			<div
 				class="absolute left-0 top-0 bottom-0 bg-red-500 transition-all duration-1000"
 				style="width: {data.attackerControl}%"
@@ -263,7 +271,7 @@
 							</div>
 						</div>
 						<div class="flex items-center gap-2 shrink-0">
-							<Badge tone="amber">⚔️ LIVE</Badge>
+							<Badge tone="amber" class="animate-pulse">⚔️ LIVE</Badge>
 						</div>
 					</a>
 				{/each}
