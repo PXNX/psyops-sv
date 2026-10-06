@@ -20,6 +20,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Logo from "#lib/component/Logo.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import ProfileItem from "#lib/component/ProfileItem.svelte";
 	import Modal from "#lib/component/Modal.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
@@ -392,6 +393,36 @@
 			<p class="text-2xl font-bold text-[#f5efd8]">{data.state.rating || 0}</p>
 		</div>
 	</section>
+
+	<!-- Natural Resources -->
+	{#if data.resources.oil || data.resources.steel || data.resources.chromium || data.resources.tungsten || data.resources.rubber || data.resources.aluminium}
+		{@const resourceEntries = [
+			{ name: "oil", value: data.resources.oil },
+			{ name: "steel", value: data.resources.steel },
+			{ name: "chromium", value: data.resources.chromium },
+			{ name: "tungsten", value: data.resources.tungsten },
+			{ name: "rubber", value: data.resources.rubber },
+			{ name: "aluminium", value: data.resources.aluminium }
+		].filter((r) => r.value)}
+		<section class="space-y-3">
+			<h2 class="section-title">Natural Resources</h2>
+			<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+				{#each resourceEntries as resource}
+					<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
+						<div
+							class="size-9 shrink-0 flex items-center justify-center bg-[#1a1f15] rounded-full border border-[#c8b47a]/15"
+						>
+							<ResourceIcon name={resource.name} class="size-5" />
+						</div>
+						<div>
+							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide capitalize">{resource.name}</p>
+							<p class="text-lg font-bold text-[#f5efd8]">{resource.value.toLocaleString()}</p>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
 
 	<!-- Government & Parliament -->
 	{#if hasGovernment || data.parliamentMembers.length > 0 || data.nextElection}
