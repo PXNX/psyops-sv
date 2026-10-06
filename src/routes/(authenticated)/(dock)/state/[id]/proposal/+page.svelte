@@ -40,14 +40,14 @@
 
 	<!-- Tabs -->
 	<div class="panel rounded-sm overflow-hidden">
-		<div class="flex border-b border-[#dfceb0]/15">
+		<div class="flex border-b border-[#c8b47a]/15">
 			<button
 				type="button"
 				onclick={() => (selectedTab = "all")}
 				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
 				'all'
-					? 'text-[#fff7e8] border-[#e6a527] bg-[#e6a527]/10'
-					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
+					? 'text-[#f5efd8] border-[#f2b01e] bg-[#f2b01e]/10'
+					: 'text-[#a8a083] border-transparent hover:text-[#f5efd8] hover:bg-[#2e3524]'}"
 			>
 				All ({data.allProposals.length})
 			</button>
@@ -56,8 +56,8 @@
 				onclick={() => (selectedTab = "passed")}
 				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
 				'passed'
-					? 'text-[#fff7e8] border-[#8fae88] bg-[#587252]/15'
-					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
+					? 'text-[#f5efd8] border-[#6fd14a] bg-[#3f8a2a]/15'
+					: 'text-[#a8a083] border-transparent hover:text-[#f5efd8] hover:bg-[#2e3524]'}"
 			>
 				Passed ({data.passedProposals.length})
 			</button>
@@ -66,8 +66,8 @@
 				onclick={() => (selectedTab = "rejected")}
 				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
 				'rejected'
-					? 'text-[#fff7e8] border-red-500 bg-red-600/10'
-					: 'text-[#a89e8e] border-transparent hover:text-[#fff7e8] hover:bg-[#19304b]'}"
+					? 'text-[#f5efd8] border-red-500 bg-red-600/10'
+					: 'text-[#a8a083] border-transparent hover:text-[#f5efd8] hover:bg-[#2e3524]'}"
 			>
 				Rejected ({data.rejectedProposals.length})
 			</button>
@@ -77,37 +77,37 @@
 		<div class="p-4 space-y-4">
 			{#if displayedProposals.length === 0}
 				<div class="text-center py-12">
-					<FluentDocument20Filled class="size-16 text-[#a89e8e]/60 mx-auto mb-3" />
-					<p class="text-[#a89e8e]">No proposals in this category</p>
+					<FluentDocument20Filled class="size-16 text-[#a8a083]/60 mx-auto mb-3" />
+					<p class="text-[#a8a083]">No proposals in this category</p>
 				</div>
 			{:else}
 				{#each displayedProposals as proposal}
 					<div class="panel-muted rounded-sm overflow-hidden">
 						<!-- Header -->
-						<div class="p-4 border-b border-[#dfceb0]/10">
+						<div class="p-4 border-b border-[#c8b47a]/10">
 							<div class="flex items-start justify-between gap-3 mb-3">
 								<div class="text-right ml-auto">
-									<p class="text-xs text-[#a89e8e]/70">Created</p>
-									<p class="text-xs text-[#a89e8e]">{formatDateTime(proposal.createdAt)}</p>
+									<p class="text-xs text-[#a8a083]/70">Created</p>
+									<p class="text-xs text-[#a8a083]">{formatDateTime(proposal.createdAt)}</p>
 								</div>
 							</div>
 
 							<!-- Proposal Details -->
 							<div class="mb-3">
-								<h3 class="text-lg font-bold text-[#fff7e8] mb-1">{proposal.changeTitle}</h3>
-								<p class="text-sm text-[#a89e8e]">{proposal.changeDescription}</p>
+								<h3 class="text-lg font-bold text-[#f5efd8] mb-1">{proposal.changeTitle}</h3>
+								<p class="text-sm text-[#a8a083]">{proposal.changeDescription}</p>
 
 								{#if proposal.region}
 									<a
 										href="/region/{proposal.region.id}"
-										class="inline-flex items-center gap-2 mt-2 text-sm text-[#b7d0e6] hover:text-[#fff7e8] transition-colors w-fit"
+										class="inline-flex items-center gap-2 mt-2 text-sm text-[#b3dcff] hover:text-[#f5efd8] transition-colors w-fit"
 									>
 										<Logo
 											src="/coats/{proposal.region.id}.svg"
 											alt={proposal.region.name}
 											class="size-6 rounded-sm"
 											placeholderIcon={FluentShield20Filled}
-											placeholderGradient="from-[#315d8d] to-[#315d8d]"
+											placeholderGradient="from-[#2369b5] to-[#2369b5]"
 										/>
 										<span>in {proposal.region.name}</span>
 									</a>
@@ -117,11 +117,11 @@
 							<!-- Proposer -->
 							<a
 								href="/user/{proposal.proposedBy.id}"
-								class="flex items-center gap-2 text-sm text-[#a89e8e] hover:text-[#fff7e8] transition-colors w-fit"
+								class="flex items-center gap-2 text-sm text-[#a8a083] hover:text-[#f5efd8] transition-colors w-fit"
 							>
 								<Logo src={proposal.proposedBy.logo} alt={proposal.proposedBy.name} />
 								<span class="inline-flex items-center gap-1.5">
-									by <span class="text-[#fff7e8] font-medium">{proposal.proposedBy.name}</span>
+									by <span class="text-[#f5efd8] font-medium">{proposal.proposedBy.name}</span>
 									{#if proposal.proposedBy.party}
 										<PartyTag
 											abbreviation={proposal.proposedBy.party.abbreviation}
@@ -137,7 +137,7 @@
 							<!-- Combined Vote Bar -->
 							<div>
 								<div class="flex items-center justify-between text-sm mb-1 gap-2">
-									<span class="text-[#c6dfbf] font-medium flex items-center gap-1">
+									<span class="text-[#b9f29a] font-medium flex items-center gap-1">
 										<FluentCheckmark20Filled class="size-4" />
 										For: {proposal.voteCounts.for} ({proposal.percentageFor.toFixed(1)}%)
 									</span>
@@ -146,25 +146,25 @@
 										<FluentDismiss20Filled class="size-4" />
 									</span>
 								</div>
-								<div class="w-full bg-[#0d1d31] rounded-full h-3 flex overflow-hidden">
-									<div class="bg-[#8fae88] h-full transition-all" style="width: {proposal.percentageFor}%"></div>
+								<div class="w-full bg-[#0f120c] rounded-full h-3 flex overflow-hidden">
+									<div class="bg-[#6fd14a] h-full transition-all" style="width: {proposal.percentageFor}%"></div>
 									<div class="bg-red-500 h-full transition-all" style="width: {proposal.percentageAgainst}%"></div>
 								</div>
 							</div>
 
 							<!-- Summary -->
-							<div class="pt-3 border-t border-[#dfceb0]/10">
+							<div class="pt-3 border-t border-[#c8b47a]/10">
 								<div class="flex items-center justify-between gap-2 flex-wrap text-xs">
 									<div class="flex items-center gap-4 flex-wrap">
-										<span class="text-[#a89e8e]">
+										<span class="text-[#a8a083]">
 											{proposal.totalVotes} total vote{proposal.totalVotes !== 1 ? "s" : ""}
 										</span>
-										<span class="text-[#a89e8e]">{proposal.requiredMajority}% required to pass</span>
+										<span class="text-[#a8a083]">{proposal.requiredMajority}% required to pass</span>
 									</div>
 									{#if proposal.votingEnded}
-										<span class="text-[#a89e8e]/70">Voting ended {formatDateTime(proposal.votingEndsAt)}</span>
+										<span class="text-[#a8a083]/70">Voting ended {formatDateTime(proposal.votingEndsAt)}</span>
 									{:else}
-										<span class="text-[#b7d0e6]">Voting ends {formatDateTime(proposal.votingEndsAt)}</span>
+										<span class="text-[#b3dcff]">Voting ends {formatDateTime(proposal.votingEndsAt)}</span>
 									{/if}
 								</div>
 
@@ -172,7 +172,7 @@
 								{#if proposal.votingEnded || proposal.status !== "active"}
 									<div class="mt-2">
 										{#if proposal.status === "passed" || (proposal.votingEnded && proposal.didPass)}
-											<div class="flex items-center gap-2 text-[#c6dfbf]">
+											<div class="flex items-center gap-2 text-[#b9f29a]">
 												<FluentCheckmarkCircle20Filled class="size-4" />
 												<span class="text-sm font-semibold">
 													Proposal passed with {proposal.percentageFor.toFixed(1)}% support

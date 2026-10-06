@@ -62,24 +62,24 @@
 				<!-- Logo -->
 				<div class="rounded-sm shrink-0">
 					{#if data.newspaper.logoUrl}
-						<div class="size-20 sm:size-24 rounded-sm overflow-hidden bg-[#102239]">
+						<div class="size-20 sm:size-24 rounded-sm overflow-hidden bg-[#1a1f15]">
 							<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 						</div>
 					{:else}
 						<div
-							class="size-20 sm:size-24 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center"
+							class="size-20 sm:size-24 rounded-sm bg-[#2369b5]/18 border border-[#5eaef5]/30 flex items-center justify-center"
 						>
-							<MdiNewspaper class="size-10 sm:size-12 text-[#b7d0e6]" />
+							<MdiNewspaper class="size-10 sm:size-12 text-[#b3dcff]" />
 						</div>
 					{/if}
 				</div>
 				<!-- Info -->
 				<div class="flex-1 min-w-0">
-					<h1 class="text-3xl font-bold text-[#fff7e8] mb-1 truncate">{data.newspaper.name}</h1>
+					<h1 class="text-3xl font-bold text-[#f5efd8] mb-1 truncate">{data.newspaper.name}</h1>
 					{#if data.newspaper.background}
-						<p class="text-[#d9ccb7] text-sm leading-relaxed mb-3 line-clamp-2">{data.newspaper.background}</p>
+						<p class="text-[#d3caa9] text-sm leading-relaxed mb-3 line-clamp-2">{data.newspaper.background}</p>
 					{/if}
-					<div class="flex flex-wrap gap-3 text-xs text-[#a89e8e]">
+					<div class="flex flex-wrap gap-3 text-xs text-[#a8a083]">
 						<span class="flex items-center gap-1">
 							<FluentCalendar20Filled class="size-3.5" />
 							Founded {formatDate(data.newspaper.createdAt)}
@@ -109,13 +109,13 @@
 				alt={data.owner.name}
 				class="size-10"
 				placeholderIcon={FluentPerson20Filled}
-				placeholderGradient="from-[#8c709b]/40 to-[#8c709b]/40"
+				placeholderGradient="from-[#8a4fc0]/40 to-[#8a4fc0]/40"
 			/>
 			<div>
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Owner</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Owner</p>
 				<a
 					href="/user/{data.owner.id}"
-					class="text-[#fff7e8] font-semibold hover:text-[#f2c463] transition-colors text-sm"
+					class="text-[#f5efd8] font-semibold hover:text-[#ffcf47] transition-colors text-sm"
 				>
 					{data.owner.name}
 				</a>
@@ -177,22 +177,22 @@
 
 		{#if data.articles.length === 0}
 			<div class="panel-muted rounded-sm py-10 text-center">
-				<div class="inline-flex items-center justify-center size-14 rounded-full bg-[#102239] mb-3">
-					<MdiNewspaper class="size-7 text-[#a89e8e]" />
+				<div class="inline-flex items-center justify-center size-14 rounded-full bg-[#1a1f15] mb-3">
+					<MdiNewspaper class="size-7 text-[#a8a083]" />
 				</div>
-				<p class="text-[#a89e8e] text-sm">No articles published yet</p>
+				<p class="text-[#a8a083] text-sm">No articles published yet</p>
 			</div>
 		{:else}
 			<div class="space-y-3">
 				{#each data.articles as article}
 					<a
-						class="block group panel-muted rounded-sm p-4 transition-colors hover:border-[#e6a527]/55 hover:bg-[#19304b]"
+						class="block group panel-muted rounded-sm p-4 transition-colors hover:border-[#f2b01e]/55 hover:bg-[#2e3524]"
 						href="/posts/{article.id}"
 					>
-						<h4 class="text-base font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors mb-2">
+						<h4 class="text-base font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors mb-2">
 							{article.title}
 						</h4>
-						<div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-[#a89e8e]">
+						<div class="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-[#a8a083]">
 							<div class="flex items-center gap-1.5">
 								<Logo
 									src={article.authorLogo}
@@ -200,7 +200,7 @@
 									class="size-5"
 									placeholderIcon={FluentPerson20Filled}
 								/>
-								<span class="text-[#d9ccb7]">{article.authorName}</span>
+								<span class="text-[#d3caa9]">{article.authorName}</span>
 							</div>
 							<span>{formatDate(article.publishDate)}</span>
 							<span class="flex items-center gap-1">

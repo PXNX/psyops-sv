@@ -218,10 +218,10 @@
 				<!-- Available Regional Resources -->
 				<div class="panel rounded-sm p-5 space-y-4">
 					<div class="flex items-center gap-2">
-						<FluentDatabase20Filled class="size-6 text-[#b7a0c5]" />
+						<FluentDatabase20Filled class="size-6 text-[#c08cf0]" />
 						<div>
-							<h2 class="font-semibold text-[#fff7e8]">Regional Resources</h2>
-							<p class="text-xs text-[#a89e8e]">{data.region.name}</p>
+							<h2 class="font-semibold text-[#f5efd8]">Regional Resources</h2>
+							<p class="text-xs text-[#a8a083]">{data.region.name}</p>
 						</div>
 					</div>
 
@@ -234,18 +234,18 @@
 											this={getResourceIcon(resource.resourceType)}
 											class="size-5 {resourceColors[resource.resourceType] ?? ''}"
 										/>
-										<span class="text-sm font-medium text-[#fff7e8] capitalize">{resource.resourceType}</span>
+										<span class="text-sm font-medium text-[#f5efd8] capitalize">{resource.resourceType}</span>
 									</div>
 									<div class="flex items-center gap-2">
-										<span class="text-sm font-bold text-[#d5c4df]">{resource.amount}%</span>
-										<span class="text-xs text-[#a89e8e]">yield</span>
+										<span class="text-sm font-bold text-[#e3cbfb]">{resource.amount}%</span>
+										<span class="text-xs text-[#a8a083]">yield</span>
 									</div>
 								</div>
 							{/each}
 						</div>
 					{:else}
-						<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-3">
-							<p class="text-xs text-[#f7c56b]">No natural resources available in this region</p>
+						<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3">
+							<p class="text-xs text-[#ffd35c]">No natural resources available in this region</p>
 						</div>
 					{/if}
 				</div>
@@ -253,36 +253,36 @@
 				<!-- Regional Taxes -->
 				<div class="panel rounded-sm p-5 space-y-4">
 					<div class="flex items-center gap-2">
-						<FluentReceipt20Filled class="size-6 text-[#f7c56b]" />
+						<FluentReceipt20Filled class="size-6 text-[#ffd35c]" />
 						<div>
-							<h2 class="font-semibold text-[#fff7e8]">Regional Taxes</h2>
-							<p class="text-xs text-[#a89e8e]">Applied to operations</p>
+							<h2 class="font-semibold text-[#f5efd8]">Regional Taxes</h2>
+							<p class="text-xs text-[#a8a083]">Applied to operations</p>
 						</div>
 					</div>
 
 					<div class="space-y-2.5">
 						<div class="panel-muted rounded-sm p-3">
 							<div class="flex items-center justify-between mb-1">
-								<p class="text-sm font-medium text-[#e5d8c1]">Income Tax</p>
-								<p class="text-lg font-bold text-[#f7c56b]">{data.regionalTaxes?.incomeTax || 0}%</p>
+								<p class="text-sm font-medium text-[#e6ddbf]">Income Tax</p>
+								<p class="text-lg font-bold text-[#ffd35c]">{data.regionalTaxes?.incomeTax || 0}%</p>
 							</div>
-							<p class="text-xs text-[#a89e8e]">On factory profits</p>
+							<p class="text-xs text-[#a8a083]">On factory profits</p>
 						</div>
 
 						<div class="panel-muted rounded-sm p-3">
 							<div class="flex items-center justify-between mb-1">
-								<p class="text-sm font-medium text-[#e5d8c1]">Sales Tax</p>
-								<p class="text-lg font-bold text-[#f7c56b]">{data.regionalTaxes?.salesTax || 0}%</p>
+								<p class="text-sm font-medium text-[#e6ddbf]">Sales Tax</p>
+								<p class="text-lg font-bold text-[#ffd35c]">{data.regionalTaxes?.salesTax || 0}%</p>
 							</div>
-							<p class="text-xs text-[#a89e8e]">On product sales</p>
+							<p class="text-xs text-[#a8a083]">On product sales</p>
 						</div>
 
 						<div class="panel-muted rounded-sm p-3">
 							<div class="flex items-center justify-between mb-1">
-								<p class="text-sm font-medium text-[#e5d8c1]">Property Tax</p>
-								<p class="text-lg font-bold text-[#f7c56b]">{data.regionalTaxes?.propertyTax || 0}%</p>
+								<p class="text-sm font-medium text-[#e6ddbf]">Property Tax</p>
+								<p class="text-lg font-bold text-[#ffd35c]">{data.regionalTaxes?.propertyTax || 0}%</p>
 							</div>
-							<p class="text-xs text-[#a89e8e]">Annual maintenance</p>
+							<p class="text-xs text-[#a8a083]">Annual maintenance</p>
 						</div>
 					</div>
 				</div>
@@ -309,8 +309,8 @@
 			<!-- Type -->
 			<div class="panel rounded-sm p-4 space-y-3">
 				<div class="flex items-center gap-2">
-					<FluentBox20Filled class="size-5 text-[#b7a0c5]" />
-					<h2 class="font-semibold text-[#fff7e8]">Factory Type</h2>
+					<FluentBox20Filled class="size-5 text-[#c08cf0]" />
+					<h2 class="font-semibold text-[#f5efd8]">Factory Type</h2>
 				</div>
 
 				<div class="grid grid-cols-3 gap-3">
@@ -318,8 +318,8 @@
 						<button
 							type="button"
 							class="p-3 rounded-sm border transition-all {selectedFactoryType === type.value
-								? 'bg-[#e6a527]/12 border-[#e6a527]/55'
-								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#dfceb0]/30'}"
+								? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
+								: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#c8b47a]/30'}"
 							onclick={() => {
 								selectedFactoryType = type.value;
 								selectedOutput = "";
@@ -327,8 +327,8 @@
 							disabled={isOnCooldown}
 						>
 							<type.icon class="size-8 mb-1 mx-auto" />
-							<h3 class="font-bold text-[#fff7e8] text-sm">{type.label}</h3>
-							<p class="text-xs text-[#a89e8e]">{type.desc}</p>
+							<h3 class="font-bold text-[#f5efd8] text-sm">{type.label}</h3>
+							<p class="text-xs text-[#a8a083]">{type.desc}</p>
 						</button>
 					{/each}
 				</div>
@@ -337,7 +337,7 @@
 
 			<!-- Output -->
 			<div class="panel rounded-sm p-4 space-y-3">
-				<h2 class="font-semibold text-[#fff7e8]">
+				<h2 class="font-semibold text-[#f5efd8]">
 					{selectedFactoryType === "mine"
 						? "Resource to Extract"
 						: selectedFactoryType === "refinery"
@@ -352,17 +352,17 @@
 							<button
 								type="button"
 								class="p-2 rounded-sm border transition-all {selectedOutput === output.value
-									? 'bg-[#e6a527]/12 border-[#e6a527]/55'
-									: 'bg-[#102239]/70 border-[#dfceb0]/15'}"
+									? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15'}"
 								class:opacity-50={!canMine}
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown || !canMine}
 								title={canMine ? `Available in this region` : `Not available in this region`}
 							>
 								<output.icon class="size-6 mx-auto {output.color}" />
-								<div class="text-xs text-[#fff7e8] mt-1">{output.label}</div>
+								<div class="text-xs text-[#f5efd8] mt-1">{output.label}</div>
 								{#if canMine}
-									<div class="text-xs text-[#8fae88] mt-0.5">✓</div>
+									<div class="text-xs text-[#6fd14a] mt-0.5">✓</div>
 								{/if}
 							</button>
 						{/each}
@@ -371,13 +371,13 @@
 							<button
 								type="button"
 								class="p-2 rounded-sm border transition-all {selectedOutput === output.value
-									? 'bg-[#e6a527]/12 border-[#e6a527]/55'
-									: 'bg-[#102239]/70 border-[#dfceb0]/15'}"
+									? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15'}"
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown}
 							>
 								<svelte:component this={output.icon} class="size-6 mx-auto {output.color}" />
-								<div class="text-xs text-[#fff7e8] mt-1">{output.label}</div>
+								<div class="text-xs text-[#f5efd8] mt-1">{output.label}</div>
 							</button>
 						{/each}
 					{:else}
@@ -385,13 +385,13 @@
 							<button
 								type="button"
 								class="p-2 rounded-sm border transition-all {selectedOutput === output.value
-									? 'bg-[#e6a527]/12 border-[#e6a527]/55'
-									: 'bg-[#102239]/70 border-[#dfceb0]/15'}"
+									? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15'}"
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown}
 							>
 								<svelte:component this={output.icon} class="size-6 mx-auto {output.color}" />
-								<div class="text-xs text-[#fff7e8] mt-1">{output.label}</div>
+								<div class="text-xs text-[#f5efd8] mt-1">{output.label}</div>
 							</button>
 						{/each}
 					{/if}
@@ -402,8 +402,8 @@
 			<!-- Workers -->
 			<div class="panel rounded-sm p-4 space-y-3">
 				<div class="flex items-center gap-2">
-					<FluentPeople20Filled class="size-5 text-[#7ba0c8]" />
-					<h2 class="font-semibold text-[#fff7e8]">Workers</h2>
+					<FluentPeople20Filled class="size-5 text-[#5eaef5]" />
+					<h2 class="font-semibold text-[#f5efd8]">Workers</h2>
 				</div>
 
 				<div class="grid grid-cols-2 gap-4">
@@ -419,7 +419,7 @@
 							class="range range-primary"
 							disabled={isOnCooldown}
 						/>
-						<div class="flex justify-between text-xs text-[#a89e8e] mt-1">
+						<div class="flex justify-between text-xs text-[#a8a083] mt-1">
 							<span>5</span>
 							<span>50</span>
 						</div>
@@ -436,7 +436,7 @@
 							class="range range-primary"
 							disabled={isOnCooldown}
 						/>
-						<div class="flex justify-between text-xs text-[#a89e8e] mt-1">
+						<div class="flex justify-between text-xs text-[#a8a083] mt-1">
 							<span>1k</span>
 							<span>5k</span>
 						</div>
@@ -444,8 +444,8 @@
 				</div>
 
 				<div class="panel-muted rounded-sm p-3 mt-2">
-					<p class="text-xs text-[#a89e8e] mb-1">Estimated monthly payroll:</p>
-					<p class="text-lg font-bold text-[#fff7e8] font-mono">{(maxWorkers * workerWage).toLocaleString()}</p>
+					<p class="text-xs text-[#a8a083] mb-1">Estimated monthly payroll:</p>
+					<p class="text-lg font-bold text-[#f5efd8] font-mono">{(maxWorkers * workerWage).toLocaleString()}</p>
 				</div>
 			</div>
 
@@ -453,8 +453,8 @@
 			{#if selectedFactoryTypeData}
 				<div class="panel rounded-sm p-5 space-y-4">
 					<div class="flex items-center gap-2">
-						<FluentMoney20Filled class="size-6 text-[#8fae88]" />
-						<h2 class="text-lg font-semibold text-[#fff7e8]">Construction Requirements</h2>
+						<FluentMoney20Filled class="size-6 text-[#6fd14a]" />
+						<h2 class="text-lg font-semibold text-[#f5efd8]">Construction Requirements</h2>
 					</div>
 
 					<ResourceRequirements costs={factoryCosts} available={availableResources} />

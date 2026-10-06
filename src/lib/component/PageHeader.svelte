@@ -22,14 +22,14 @@
 	{/if}
 	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 		<div class="min-w-0">
-			<h1 class="text-3xl font-bold text-[#fff7e8] flex items-center gap-3 flex-wrap">
+			<h1 class="text-3xl font-bold text-[#fff4d6] flex items-center gap-3 flex-wrap">
 				{#if Icon}
-					<Icon class="size-7 shrink-0 text-[#e6a527]" />
+					<Icon class="size-7 shrink-0 text-[#f2b01e]" />
 				{/if}
 				<span class="break-words">{title}</span>
 			</h1>
 			{#if subtitle}
-				<p class="text-[#a89e8e] mt-1">{subtitle}</p>
+				<p class="text-[#a8a083] mt-1">{subtitle}</p>
 			{/if}
 		</div>
 		{#if actions}
@@ -38,4 +38,6 @@
 			</div>
 		{/if}
 	</div>
+	<!-- Brass trim under the title bar. -->
+	<div class="h-0.5 bg-gradient-to-r from-[#f2b01e]/80 via-[#c8b47a]/30 to-transparent"></div>
 </div>

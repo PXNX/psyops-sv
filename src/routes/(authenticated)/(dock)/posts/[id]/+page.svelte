@@ -92,23 +92,23 @@
 
 			<!-- Author Info -->
 			<a href="/user/{data.article.authorId}" class="flex items-center gap-3 group flex-1 min-w-0">
-				<div class="size-12 sm:size-14 rounded-sm border border-[#e6a527]/30 overflow-hidden flex-shrink-0">
+				<div class="size-12 sm:size-14 rounded-sm border border-[#f2b01e]/30 overflow-hidden flex-shrink-0">
 					<Logo src={data.article.authorLogo} alt={data.article.authorName} />
 				</div>
 				<div class="flex-1 min-w-0">
-					<p class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+					<p class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 						{data.article.authorName}
 					</p>
 					{#if data.article.newspaperName}
 						<a
 							href="/newspaper/{data.article.newspaperId}"
-							class="flex items-center gap-1 text-xs text-[#a89e8e] hover:text-[#f2c463] transition-colors"
+							class="flex items-center gap-1 text-xs text-[#a8a083] hover:text-[#ffcf47] transition-colors"
 						>
 							<FluentEmojiRolledUpNewspaper class="size-3" />
 							{data.article.newspaperName}
 						</a>
 					{/if}
-					<span class="flex items-center gap-1 text-xs text-[#a89e8e] mt-0.5">
+					<span class="flex items-center gap-1 text-xs text-[#a8a083] mt-0.5">
 						<FluentClock20Regular class="size-3" />
 						{formatDateTime(data.article.createdAt)}
 					</span>
@@ -129,20 +129,20 @@
 	<!-- Article Content -->
 	<article class="space-y-8 px-1 sm:px-2 py-2">
 		<!-- Headline -->
-		<h1 class="text-3xl lg:text-4xl font-bold text-[#fff7e8] leading-tight">
+		<h1 class="text-3xl lg:text-4xl font-bold text-[#f5efd8] leading-tight">
 			{data.article.title}
 		</h1>
 
 		<!-- Divider -->
-		<div class="border-t border-[#dfceb0]/15"></div>
+		<div class="border-t border-[#c8b47a]/15"></div>
 
 		<!-- Article Body -->
-		<div class="article-content text-[#d9ccb7]">
+		<div class="article-content text-[#d3caa9]">
 			{@html data.article.content}
 		</div>
 
 		<!-- Bottom Divider -->
-		<div class="border-t border-[#dfceb0]/15"></div>
+		<div class="border-t border-[#c8b47a]/15"></div>
 
 		<!-- Bottom Actions -->
 		<div class="flex items-center justify-between">

@@ -240,24 +240,24 @@
 				onclick={() => fileInput?.click()}
 				disabled={disabled || uploading}
 				class="group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 {dragActive
-					? 'border-[#e6a527] bg-[#e6a527]/10'
+					? 'border-[#f2b01e] bg-[#f2b01e]/10'
 					: croppedDataUrl || selectedFile
-						? 'border-[#8fae88]/50 bg-[#587252]/10'
-						: 'border-[#dfceb0]/20'} {!uploading && !disabled ? 'hover:border-[#e6a527]/50' : ''} {!uploading &&
+						? 'border-[#6fd14a]/50 bg-[#3f8a2a]/10'
+						: 'border-[#c8b47a]/20'} {!uploading && !disabled ? 'hover:border-[#f2b01e]/50' : ''} {!uploading &&
 				!disabled &&
 				!croppedDataUrl &&
 				!selectedFile
-					? 'hover:bg-[#e6a527]/10'
+					? 'hover:bg-[#f2b01e]/10'
 					: ''}"
 				class:opacity-50={uploading || disabled}
 			>
 				{#if !croppedDataUrl && !selectedFile}
 					<div class="flex min-h-[140px] flex-col items-center justify-center gap-2 p-4">
-						<div class="rounded-full bg-[#e6a527]/12 border border-[#e6a527]/35 p-3">
-							<IconImage class="h-8 w-8 text-[#f7c56b]" />
+						<div class="rounded-full bg-[#f2b01e]/12 border border-[#f2b01e]/35 p-3">
+							<IconImage class="h-8 w-8 text-[#ffd35c]" />
 						</div>
 						<div class="text-center">
-							<p class="text-sm font-semibold text-[#fff7e8]">
+							<p class="text-sm font-semibold text-[#f5efd8]">
 								{#if dragActive}
 									Drop file here
 								{:else if uploading}
@@ -269,7 +269,7 @@
 								{/if}
 							</p>
 							{#if !uploading && !disabled}
-								<p class="mt-1 text-xs text-[#a89e8e]">
+								<p class="mt-1 text-xs text-[#a8a083]">
 									{acceptedTypes.replace("image/*", "Images")} • {maxSizeMB}MB max
 								</p>
 							{/if}
@@ -291,22 +291,22 @@
 								</div>
 							</div>
 						{:else}
-							<div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-sm bg-[#102239]">
-								<IconImage class="h-8 w-8 text-[#a89e8e]" />
+							<div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-sm bg-[#1a1f15]">
+								<IconImage class="h-8 w-8 text-[#a8a083]" />
 							</div>
 						{/if}
 						<div class="flex min-w-0 flex-1 flex-col justify-center text-left">
-							<p class="truncate text-sm font-medium text-[#fff7e8]" title={selectedFile?.name}>
+							<p class="truncate text-sm font-medium text-[#f5efd8]" title={selectedFile?.name}>
 								{selectedFile?.name}
 							</p>
-							<p class="text-xs text-[#a89e8e]">
+							<p class="text-xs text-[#a8a083]">
 								{Math.round((selectedFile?.size || 0) / 1024)} KB
 							</p>
 							{#if enableCrop && croppedDataUrl}
 								<button
 									type="button"
 									onclick={() => (showCropper = true)}
-									class="text-xs text-[#f7c56b] hover:text-[#f2c463] hover:underline mt-1"
+									class="text-xs text-[#ffd35c] hover:text-[#ffcf47] hover:underline mt-1"
 								>
 									Re-crop
 								</button>

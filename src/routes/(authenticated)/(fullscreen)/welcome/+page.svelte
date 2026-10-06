@@ -17,29 +17,29 @@
 			title: "Join or Create a State",
 			description:
 				"Choose your region, participate in governance, and help shape laws and policies through democratic processes.",
-			wrapClass: "bg-[#315d8d]/18 border border-[#7ba0c8]/30",
-			iconClass: "text-[#7ba0c8]"
+			wrapClass: "bg-[#2369b5]/18 border border-[#5eaef5]/30",
+			iconClass: "text-[#5eaef5]"
 		},
 		{
 			icon: FluentPeople20Filled,
 			title: "Political Parties & Elections",
 			description: "Found your own party, recruit members, and compete in elections to gain seats in parliament.",
-			wrapClass: "bg-[#8c709b]/15 border border-[#b7a0c5]/30",
-			iconClass: "text-[#b7a0c5]"
+			wrapClass: "bg-[#8a4fc0]/15 border border-[#c08cf0]/30",
+			iconClass: "text-[#c08cf0]"
 		},
 		{
 			icon: FluentFactory20Filled,
 			title: "Economic System",
 			description: "Build companies, manage factories, trade resources, and develop a thriving economy.",
-			wrapClass: "bg-[#587252]/18 border border-[#8fae88]/30",
-			iconClass: "text-[#8fae88]"
+			wrapClass: "bg-[#3f8a2a]/18 border border-[#6fd14a]/30",
+			iconClass: "text-[#6fd14a]"
 		},
 		{
 			icon: FluentNewspaper20Filled,
 			title: "Media & Journalism",
 			description: "Create newspapers, publish articles, and influence public opinion through investigative reporting.",
-			wrapClass: "bg-[#e6a527]/12 border border-[#e6a527]/35",
-			iconClass: "text-[#f7c56b]"
+			wrapClass: "bg-[#f2b01e]/12 border border-[#f2b01e]/35",
+			iconClass: "text-[#ffd35c]"
 		}
 	];
 
@@ -55,12 +55,12 @@
 	<!-- Logo & Title -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>
 		<div class="flex justify-center">
-			<div class="size-24 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center">
-				<PsyopsLogo class="size-14 text-[#f7c56b]" />
+			<div class="size-24 bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm flex items-center justify-center">
+				<PsyopsLogo class="size-14 text-[#ffd35c]" />
 			</div>
 		</div>
-		<h1 class="text-5xl font-bold text-[#fff7e8]">Welcome to PsyOps!</h1>
-		<p class="text-xl text-[#d9ccb7] max-w-2xl mx-auto">
+		<h1 class="text-5xl font-bold text-[#f5efd8]">Welcome to PsyOps!</h1>
+		<p class="text-xl text-[#d3caa9] max-w-2xl mx-auto">
 			A political simulation game where you shape nations, build empires, and influence the world through strategy and
 			diplomacy.
 		</p>
@@ -74,7 +74,7 @@
 					<svelte:component this={feature.icon} class="size-6 {feature.iconClass}" />
 				</div>
 				<h3 class="section-title">{feature.title}</h3>
-				<p class="text-sm text-[#d9ccb7] leading-relaxed">{feature.description}</p>
+				<p class="text-sm text-[#d3caa9] leading-relaxed">{feature.description}</p>
 			</div>
 		{/each}
 	</div>
@@ -85,6 +85,6 @@
 			<span class="text-lg">Create Your Profile</span>
 			<FluentArrowRight20Filled class="size-5" />
 		</a>
-		<p class="text-sm text-[#a89e8e]">Takes less than a minute • Complete your profile to unlock all features</p>
+		<p class="text-sm text-[#a8a083]">Takes less than a minute • Complete your profile to unlock all features</p>
 	</div>
 </div>

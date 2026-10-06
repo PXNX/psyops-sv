@@ -128,13 +128,13 @@
 		<!-- Balance -->
 		<div class="panel-muted rounded-sm p-4 flex items-center gap-3 md:gap-4">
 			<div
-				class="size-10 md:size-12 rounded-sm bg-[#587252]/18 border border-[#8fae88]/30 flex items-center justify-center shrink-0"
+				class="size-10 md:size-12 rounded-sm bg-[#3f8a2a]/18 border border-[#6fd14a]/30 flex items-center justify-center shrink-0"
 			>
-				<FluentMoney20Filled class="size-5 md:size-6 text-[#8fae88]" />
+				<FluentMoney20Filled class="size-5 md:size-6 text-[#6fd14a]" />
 			</div>
 			<div class="min-w-0">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Balance</p>
-				<p class="text-xl md:text-2xl font-bold text-[#fff7e8] font-mono">{data.wallet.balance.toLocaleString()}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Balance</p>
+				<p class="text-xl md:text-2xl font-bold text-[#f5efd8] font-mono">{data.wallet.balance.toLocaleString()}</p>
 			</div>
 		</div>
 	</div>
@@ -154,17 +154,17 @@
 
 						<div>
 							<h2
-								class="text-lg md:text-xl font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors mb-1"
+								class="text-lg md:text-xl font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors mb-1"
 							>
 								{data.currentJob.factoryName}
 							</h2>
-							<p class="text-sm text-[#a89e8e]">{data.currentJob.companyName}</p>
+							<p class="text-sm text-[#a8a083]">{data.currentJob.companyName}</p>
 						</div>
 					</a>
 					<div class="text-left sm:text-right">
-						<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Wage</p>
-						<p class="text-md font-bold text-[#c6dfbf] flex items-center gap-1 font-mono">
-							<FluentMoney20Filled class="size-5 text-[#8fae88]" />
+						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Wage</p>
+						<p class="text-md font-bold text-[#b9f29a] flex items-center gap-1 font-mono">
+							<FluentMoney20Filled class="size-5 text-[#6fd14a]" />
 							{data.currentJob.wage.toLocaleString()}
 						</p>
 					</div>
@@ -207,17 +207,17 @@
 
 						<div>
 							<h2
-								class="text-lg md:text-xl font-semibold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors mb-1"
+								class="text-lg md:text-xl font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors mb-1"
 							>
 								{data.currentJob.factoryName}
 							</h2>
-							<p class="text-sm text-[#a89e8e]">{data.currentJob.companyName}</p>
+							<p class="text-sm text-[#a8a083]">{data.currentJob.companyName}</p>
 						</div>
 					</a>
 					<div class="text-left sm:text-right">
-						<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Wage</p>
-						<p class="text-md font-bold text-[#c6dfbf] flex items-center gap-1 font-mono">
-							<FluentMoney20Filled class="size-5 text-[#8fae88]" />
+						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Wage</p>
+						<p class="text-md font-bold text-[#b9f29a] flex items-center gap-1 font-mono">
+							<FluentMoney20Filled class="size-5 text-[#6fd14a]" />
 							{data.currentJob.wage.toLocaleString()}
 						</p>
 					</div>
@@ -226,12 +226,12 @@
 				{#if jobStatus.status === "working"}
 					<div>
 						<div class="flex justify-between items-center mb-2">
-							<span class="text-sm font-medium text-[#e5d8c1]">Shift Progress</span>
-							<span class="text-sm font-bold text-[#f7c56b] font-mono">{jobStatus.text}</span>
+							<span class="text-sm font-medium text-[#e6ddbf]">Shift Progress</span>
+							<span class="text-sm font-bold text-[#ffd35c] font-mono">{jobStatus.text}</span>
 						</div>
-						<div class="h-3 bg-[#102239] rounded-full overflow-hidden border border-[#dfceb0]/10">
+						<div class="h-3 bg-[#1a1f15] rounded-full overflow-hidden border border-[#c8b47a]/10">
 							<div
-								class="h-full bg-[#e6a527] rounded-full transition-all duration-500"
+								class="h-full bg-[#f2b01e] rounded-full transition-all duration-500"
 								style="width: {jobStatus.progress}%"
 							></div>
 						</div>
@@ -254,7 +254,7 @@
 				<!-- Resources Section -->
 				<div>
 					<h2 class="section-title mb-3 md:mb-4">
-						<FluentBox20Filled class="size-4 text-[#b7a0c5]" />
+						<FluentBox20Filled class="size-4 text-[#c08cf0]" />
 						Resources
 					</h2>
 
@@ -263,17 +263,17 @@
 							{@const quantity = resourceMap.get(resource) || 0}
 							<a
 								href="/market/{resource}"
-								class="flex items-center justify-between p-2.5 md:p-3 panel-muted rounded-sm hover:border-[#e6a527]/55 transition-colors"
+								class="flex items-center justify-between p-2.5 md:p-3 panel-muted rounded-sm hover:border-[#f2b01e]/55 transition-colors"
 							>
 								<div class="flex items-center gap-2">
 									<ResourceIcon name={resource} class="size-5 md:size-6" />
-									<span class="font-medium capitalize text-[#d9ccb7] text-sm md:text-base">{resource}</span>
+									<span class="font-medium capitalize text-[#d3caa9] text-sm md:text-base">{resource}</span>
 								</div>
 								<span
 									class="px-2 md:px-2.5 py-0.5 md:py-1 rounded-sm border text-xs md:text-sm font-bold font-mono {quantity >
 									0
-										? 'bg-[#8c709b]/15 border-[#b7a0c5]/30 text-[#d5c4df]'
-										: 'bg-[#102239] border-[#dfceb0]/10 text-[#a89e8e]'}"
+										? 'bg-[#8a4fc0]/15 border-[#c08cf0]/30 text-[#e3cbfb]'
+										: 'bg-[#1a1f15] border-[#c8b47a]/10 text-[#a8a083]'}"
 								>
 									{quantity}
 								</span>
@@ -285,7 +285,7 @@
 				<!-- Products Section -->
 				<div>
 					<h2 class="section-title mb-3 md:mb-4">
-						<FluentCube20Filled class="size-4 text-[#8fae88]" />
+						<FluentCube20Filled class="size-4 text-[#6fd14a]" />
 						Products
 					</h2>
 
@@ -294,17 +294,17 @@
 							{@const quantity = productMap.get(product) || 0}
 							<a
 								href="/market/{product}"
-								class="flex items-center justify-between p-2.5 md:p-3 panel-muted rounded-sm hover:border-[#e6a527]/55 transition-colors"
+								class="flex items-center justify-between p-2.5 md:p-3 panel-muted rounded-sm hover:border-[#f2b01e]/55 transition-colors"
 							>
 								<div class="flex items-center gap-2">
 									<ResourceIcon name={product} class="size-5 md:size-6" />
-									<span class="font-medium capitalize text-[#d9ccb7] text-sm md:text-base">{product}</span>
+									<span class="font-medium capitalize text-[#d3caa9] text-sm md:text-base">{product}</span>
 								</div>
 								<span
 									class="px-2 md:px-2.5 py-0.5 md:py-1 rounded-sm border text-xs md:text-sm font-bold font-mono {quantity >
 									0
-										? 'bg-[#587252]/18 border-[#8fae88]/30 text-[#c6dfbf]'
-										: 'bg-[#102239] border-[#dfceb0]/10 text-[#a89e8e]'}"
+										? 'bg-[#3f8a2a]/18 border-[#6fd14a]/30 text-[#b9f29a]'
+										: 'bg-[#1a1f15] border-[#c8b47a]/10 text-[#a8a083]'}"
 								>
 									{quantity}
 								</span>
@@ -321,23 +321,23 @@
 			{#if betterWageFactory && data.currentJob}
 				<a
 					href="/region/{data.currentJob.regionId}/factories"
-					class="block rounded-sm bg-[#587252]/18 border border-[#8fae88]/30 p-5 hover:border-[#8fae88]/55 hover:bg-[#587252]/28 transition-colors group"
+					class="block rounded-sm bg-[#3f8a2a]/18 border border-[#6fd14a]/30 p-5 hover:border-[#6fd14a]/55 hover:bg-[#3f8a2a]/28 transition-colors group"
 				>
 					<div class="flex items-start justify-between gap-3">
 						<div class="flex items-center gap-3 md:gap-4 flex-1">
 							<div
-								class="size-10 md:size-12 rounded-sm bg-[#587252]/25 border border-[#8fae88]/30 flex items-center justify-center shrink-0"
+								class="size-10 md:size-12 rounded-sm bg-[#3f8a2a]/25 border border-[#6fd14a]/30 flex items-center justify-center shrink-0"
 							>
-								<FluentFactory20Filled class="size-5 md:size-6 text-[#8fae88]" />
+								<FluentFactory20Filled class="size-5 md:size-6 text-[#6fd14a]" />
 							</div>
 							<div>
-								<h3 class="text-base md:text-lg font-semibold text-[#fff7e8] mb-1 flex items-center gap-2">
+								<h3 class="text-base md:text-lg font-semibold text-[#f5efd8] mb-1 flex items-center gap-2">
 									Better Wage Available!
-									<span class="text-[#c6dfbf]">✨</span>
+									<span class="text-[#b9f29a]">✨</span>
 								</h3>
-								<p class="text-xs md:text-sm text-[#d9ccb7]">
+								<p class="text-xs md:text-sm text-[#d3caa9]">
 									Factories in your region are offering up to
-									<span class="font-bold text-[#c6dfbf] font-mono"
+									<span class="font-bold text-[#b9f29a] font-mono"
 										>💰{betterWageFactory.workerWage.toLocaleString()}</span
 									>
 									per day
@@ -345,7 +345,7 @@
 							</div>
 						</div>
 						<FluentArrowRight20Filled
-							class="size-5 md:size-6 text-[#8fae88] group-hover:translate-x-1 transition-transform shrink-0"
+							class="size-5 md:size-6 text-[#6fd14a] group-hover:translate-x-1 transition-transform shrink-0"
 						/>
 					</div>
 				</a>
@@ -353,9 +353,9 @@
 
 			<!-- Production Section -->
 			{#if activeProduction}
-				<div class="rounded-sm bg-[#e6a527]/12 border border-[#e6a527]/35 p-5 space-y-4 md:space-y-5">
+				<div class="rounded-sm bg-[#f2b01e]/12 border border-[#f2b01e]/35 p-5 space-y-4 md:space-y-5">
 					<h2 class="section-title">
-						<FluentFactory20Filled class="size-5 text-[#f7c56b]" />
+						<FluentFactory20Filled class="size-5 text-[#ffd35c]" />
 						Production In Progress
 					</h2>
 
@@ -363,14 +363,14 @@
 						<div class="flex flex-col sm:flex-row items-start gap-3 md:gap-4">
 							<ResourceIcon name={activeProduction.productType} class="size-12 md:size-14" />
 							<div class="flex-1">
-								<h3 class="text-xl md:text-2xl font-bold text-[#fff7e8] capitalize mb-1">
+								<h3 class="text-xl md:text-2xl font-bold text-[#f5efd8] capitalize mb-1">
 									{activeProduction.productType}
 								</h3>
-								<p class="text-sm md:text-base text-[#a89e8e]">Manufacturing {activeProduction.quantity} units</p>
+								<p class="text-sm md:text-base text-[#a8a083]">Manufacturing {activeProduction.quantity} units</p>
 							</div>
 							<div class="text-left sm:text-right w-full sm:w-auto">
-								<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Time Left</p>
-								<p class="text-2xl md:text-3xl font-bold text-[#f7c56b] font-mono">
+								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Time Left</p>
+								<p class="text-2xl md:text-3xl font-bold text-[#ffd35c] font-mono">
 									{timeRemaining}
 								</p>
 							</div>
@@ -378,14 +378,14 @@
 
 						<div>
 							<div class="flex justify-between items-center mb-2">
-								<span class="text-xs md:text-sm font-medium text-[#d9ccb7]">Production Progress</span>
-								<span class="text-xs md:text-sm font-bold text-[#f7c56b] font-mono"
+								<span class="text-xs md:text-sm font-medium text-[#d3caa9]">Production Progress</span>
+								<span class="text-xs md:text-sm font-bold text-[#ffd35c] font-mono"
 									>{Math.floor(productionProgress)}%</span
 								>
 							</div>
-							<div class="h-3 md:h-4 bg-[#102239] rounded-full overflow-hidden border border-[#dfceb0]/10">
+							<div class="h-3 md:h-4 bg-[#1a1f15] rounded-full overflow-hidden border border-[#c8b47a]/10">
 								<div
-									class="h-full bg-[#e6a527] rounded-full transition-all duration-1000"
+									class="h-full bg-[#f2b01e] rounded-full transition-all duration-1000"
 									style="width: {productionProgress}%"
 								></div>
 							</div>
@@ -405,7 +405,7 @@
 					class="panel rounded-sm p-5 space-y-4 md:space-y-6"
 				>
 					<h2 class="section-title">
-						<FluentProduction20Filled class="size-5 text-[#f7c56b]" />
+						<FluentProduction20Filled class="size-5 text-[#ffd35c]" />
 						Start Production
 					</h2>
 
@@ -416,8 +416,8 @@
 								onclick={() => (selectedProduct = product as keyof typeof data.recipes)}
 								class="relative p-2.5 md:p-3 rounded-sm border transition-colors duration-200 text-center group
 									{selectedProduct === product
-									? 'bg-[#e6a527]/12 border-[#e6a527]/55'
-									: 'bg-[#102239]/70 border-[#dfceb0]/10 hover:border-[#dfceb0]/25 hover:bg-[#19304b]'}"
+									? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/10 hover:border-[#c8b47a]/25 hover:bg-[#2e3524]'}"
 							>
 								<input
 									type="radio"
@@ -429,8 +429,8 @@
 								<ResourceIcon name={product} class="size-8 md:size-9 mx-auto mb-1" />
 								<div
 									class="text-xs font-medium capitalize {selectedProduct === product
-										? 'text-[#f7c56b]'
-										: 'text-[#a89e8e] group-hover:text-[#d9ccb7]'}"
+										? 'text-[#ffd35c]'
+										: 'text-[#a8a083] group-hover:text-[#d3caa9]'}"
 								>
 									{product}
 								</div>
@@ -446,19 +446,19 @@
 								<div class="flex items-center gap-2">
 									<ResourceIcon name={selectedProduct} class="size-6 md:size-7" />
 									<div>
-										<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Current Stock</p>
-										<p class="text-base md:text-lg font-semibold text-[#fff7e8] capitalize">{selectedProduct}</p>
+										<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Current Stock</p>
+										<p class="text-base md:text-lg font-semibold text-[#f5efd8] capitalize">{selectedProduct}</p>
 									</div>
 								</div>
 								<div class="text-right">
 									<span
 										class="text-2xl md:text-3xl font-bold font-mono {currentStock > 0
-											? 'text-[#c6dfbf]'
-											: 'text-[#a89e8e]'}"
+											? 'text-[#b9f29a]'
+											: 'text-[#a8a083]'}"
 									>
 										{currentStock}
 									</span>
-									<p class="text-xs text-[#a89e8e] mt-1">units available</p>
+									<p class="text-xs text-[#a8a083] mt-1">units available</p>
 								</div>
 							</div>
 						</div>
@@ -466,7 +466,7 @@
 
 					<div>
 						<label for="quantity" class="field-label">
-							Batch Size: <span class="text-[#fff7e8] font-bold font-mono">×{productionQuantity}</span>
+							Batch Size: <span class="text-[#f5efd8] font-bold font-mono">×{productionQuantity}</span>
 						</label>
 						<div class="relative">
 							<input
@@ -476,14 +476,14 @@
 								min="1"
 								max="10"
 								bind:value={productionQuantity}
-								class="w-full h-2 bg-[#102239] rounded-full appearance-none cursor-pointer"
+								class="w-full h-2 bg-[#1a1f15] rounded-full appearance-none cursor-pointer"
 								style="background: linear-gradient(to right, rgb(230 165 39) 0%, rgb(230 165 39) {((productionQuantity -
 									1) /
 									9) *
 									100}%, rgb(16 34 57) {((productionQuantity - 1) / 9) * 100}%, rgb(16 34 57) 100%)"
 							/>
 						</div>
-						<div class="flex justify-between text-xs text-[#a89e8e] mt-1 px-1">
+						<div class="flex justify-between text-xs text-[#a8a083] mt-1 px-1">
 							<span>1</span>
 							<span>5</span>
 							<span>10</span>
@@ -501,10 +501,10 @@
 
 						<div class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-sm">
 							<div class="flex items-center gap-2">
-								<FluentClock20Filled class="size-4 md:size-5 text-[#a89e8e]" />
-								<span class="text-xs md:text-sm text-[#a89e8e]">Production Time</span>
+								<FluentClock20Filled class="size-4 md:size-5 text-[#a8a083]" />
+								<span class="text-xs md:text-sm text-[#a8a083]">Production Time</span>
 							</div>
-							<span class="font-bold text-[#fff7e8] text-base md:text-lg font-mono">
+							<span class="font-bold text-[#f5efd8] text-base md:text-lg font-mono">
 								{Math.floor((recipe.duration * productionQuantity) / 60)} min
 							</span>
 						</div>

@@ -47,11 +47,13 @@
 			in:fly={{ y: 420, duration: 520 * motion, easing: backOut, opacity: 1 }}
 			out:fly={{ y: 420, duration: 200 * motion, easing: cubicIn, opacity: 1 }}
 		>
-			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-md max-h-[calc(85vh+3rem)] pb-12 flex flex-col">
+			<div
+				class="bg-gradient-to-b from-[#2a3121] to-[#171b12] border-t-2 border-[#c8b47a]/50 shadow-[0_-12px_32px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,244,200,0.12)] rounded-t-md max-h-[calc(85vh+3rem)] pb-12 flex flex-col"
+			>
 				<div class="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
-					<div class="mx-auto w-10 h-1 rounded-full bg-[#dfceb0]/25 absolute top-2 left-1/2 -translate-x-1/2"></div>
+					<div class="mx-auto w-10 h-1 rounded-full bg-[#c8b47a]/25 absolute top-2 left-1/2 -translate-x-1/2"></div>
 					{#if title}
-						<h3 class="text-lg font-bold text-[#fff7e8]">{title}</h3>
+						<h3 class="text-lg font-bold text-[#f5efd8]">{title}</h3>
 					{:else}
 						<div></div>
 					{/if}

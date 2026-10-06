@@ -38,21 +38,21 @@
 					alt={data.region.name}
 					class="size-20 rounded-sm transition-all"
 					placeholderIcon={FluentShield20Filled}
-					placeholderGradient="from-[#8c709b]/40 to-[#8c709b]/40"
+					placeholderGradient="from-[#8a4fc0]/40 to-[#8a4fc0]/40"
 				/>
 			</a>
 			<div class="flex-1 min-w-0">
-				<a href="/region/{data.region.id}" class="text-sm text-[#a89e8e] hover:text-[#f2c463] transition-colors">
+				<a href="/region/{data.region.id}" class="text-sm text-[#a8a083] hover:text-[#ffcf47] transition-colors">
 					{data.region.name}
 				</a>
-				<h1 class="text-3xl font-bold text-[#fff7e8]">Population</h1>
+				<h1 class="text-3xl font-bold text-[#f5efd8]">Population</h1>
 			</div>
 		</div>
 	</div>
 
 	<!-- Toolbar: count + sort -->
 	<div class="flex items-center justify-between gap-3">
-		<p class="text-sm text-[#a89e8e]">
+		<p class="text-sm text-[#a8a083]">
 			{data.totalResidents}
 			{data.totalResidents === 1 ? "resident" : "residents"}
 		</p>
@@ -65,10 +65,10 @@
 
 	{#if data.residents.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="size-16 bg-[#102239] rounded-full flex items-center justify-center mx-auto mb-4">
-				<FluentPeople20Filled class="size-8 text-[#a89e8e]" />
+			<div class="size-16 bg-[#1a1f15] rounded-full flex items-center justify-center mx-auto mb-4">
+				<FluentPeople20Filled class="size-8 text-[#a8a083]" />
 			</div>
-			<p class="text-[#a89e8e]">No residents in this region yet</p>
+			<p class="text-[#a8a083]">No residents in this region yet</p>
 		</div>
 	{:else}
 		<div class="space-y-1.5">
@@ -78,43 +78,43 @@
 					href="/user/{resident.userId}"
 					class="flex items-center gap-3 rounded-sm px-3 py-2.5 border transition-all group
 						{isYou
-						? 'bg-[#315d8d]/18 border-[#7ba0c8]/30 hover:border-[#7ba0c8]/45 hover:bg-[#315d8d]/25'
-						: 'bg-[#14283f]/85 border-[#dfceb0]/15 hover:border-[#e6a527]/55 hover:bg-[#19304b]'}"
+						? 'bg-[#2369b5]/18 border-[#5eaef5]/30 hover:border-[#5eaef5]/45 hover:bg-[#2369b5]/25'
+						: 'bg-[#242a1d]/85 border-[#c8b47a]/15 hover:border-[#f2b01e]/55 hover:bg-[#2e3524]'}"
 				>
 					<div
 						class="size-10 sm:size-12 rounded-full overflow-hidden ring-2 shrink-0 transition-all
-						{isYou ? 'ring-[#7ba0c8]/30 group-hover:ring-[#7ba0c8]/50' : 'ring-[#dfceb0]/10 group-hover:ring-[#dfceb0]/15'}"
+						{isYou ? 'ring-[#5eaef5]/30 group-hover:ring-[#5eaef5]/50' : 'ring-[#c8b47a]/10 group-hover:ring-[#c8b47a]/15'}"
 					>
 						<Logo
 							src={resident.user.logo}
 							alt={resident.user.name || "Resident"}
 							class="size-full"
 							placeholderIcon={FluentPeople20Filled}
-							placeholderGradient="from-[#315d8d]/40 to-[#315d8d]/40"
+							placeholderGradient="from-[#2369b5]/40 to-[#2369b5]/40"
 						/>
 					</div>
 
 					<div class="flex-1 min-w-0">
 						<p
 							class="text-sm sm:text-base font-semibold truncate transition-colors
-							{isYou ? 'text-[#b7d0e6] group-hover:text-[#e1effa]' : 'text-[#fff7e8] group-hover:text-[#f2c463]'}"
+							{isYou ? 'text-[#b3dcff] group-hover:text-[#e3f2ff]' : 'text-[#f5efd8] group-hover:text-[#ffcf47]'}"
 						>
 							{resident.user.name || "Anonymous"}
 						</p>
-						<p class="text-xs text-[#a89e8e]/80 mt-0.5">
+						<p class="text-xs text-[#a8a083]/80 mt-0.5">
 							{formatDate(resident.movedInAt)}
 						</p>
 					</div>
 
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a89e8e]/70 group-hover:text-[#f2c463] transition-colors shrink-0"
+						class="size-4 text-[#a8a083]/70 group-hover:text-[#ffcf47] transition-colors shrink-0"
 					/>
 				</a>
 			{/each}
 		</div>
 
 		{#if totalPages > 1}
-			<div class="flex items-center justify-center gap-2 pt-4 border-t border-[#dfceb0]/10">
+			<div class="flex items-center justify-center gap-2 pt-4 border-t border-[#c8b47a]/10">
 				<IconButton
 					icon={FluentChevronLeft20Filled}
 					label="Previous page"
@@ -123,7 +123,7 @@
 					onclick={() => goToPage(data.currentPage - 1)}
 				/>
 
-				<span class="text-sm font-mono text-[#a89e8e]">
+				<span class="text-sm font-mono text-[#a8a083]">
 					{data.currentPage} / {totalPages}
 				</span>
 

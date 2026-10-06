@@ -81,21 +81,21 @@
 	<!-- Edit Profile Link -->
 	<a href="/user/{data.accountId}" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
-			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 p-2 rounded-sm">
-				<FluentPerson20Filled class="size-5 text-[#b7a0c5]" />
+			<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 p-2 rounded-sm">
+				<FluentPerson20Filled class="size-5 text-[#c08cf0]" />
 			</div>
 			<div>
-				<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">Edit Profile</p>
-				<p class="text-xs text-[#a89e8e]">Change your name, bio and profile picture</p>
+				<p class="text-sm font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Edit Profile</p>
+				<p class="text-xs text-[#a8a083]">Change your name, bio and profile picture</p>
 			</div>
 		</div>
-		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors" />
 	</a>
 
 	<!-- Telegram Connection -->
 	<div class="panel rounded-sm p-5 space-y-4">
 		<div class="flex items-center gap-2">
-			<svg class="size-5 text-[#7ba0c8]" fill="currentColor" viewBox="0 0 24 24">
+			<svg class="size-5 text-[#5eaef5]" fill="currentColor" viewBox="0 0 24 24">
 				<path
 					d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
 				/>
@@ -107,8 +107,8 @@
 			<div class="panel-muted rounded-sm p-4 space-y-3">
 				<div class="flex items-center justify-between">
 					<div>
-						<p class="text-sm text-[#a89e8e]">Connected Telegram Account</p>
-						<p class="text-base font-semibold text-[#fff7e8] mt-1">@{data.profile.telegramUsername}</p>
+						<p class="text-sm text-[#a8a083]">Connected Telegram Account</p>
+						<p class="text-base font-semibold text-[#f5efd8] mt-1">@{data.profile.telegramUsername}</p>
 					</div>
 					<Badge tone="green">Connected</Badge>
 				</div>
@@ -117,7 +117,7 @@
 				</form>
 			</div>
 		{:else}
-			<p class="text-sm text-[#a89e8e]">
+			<p class="text-sm text-[#a8a083]">
 				Connect your Telegram account to receive notifications and use Telegram-based features.
 			</p>
 			<TelegramLoginWidget next="/settings" label="Connect Telegram Account" />
@@ -127,7 +127,7 @@
 	<!-- Application Settings -->
 	<div class="panel rounded-sm p-5 space-y-4">
 		<div class="flex items-center gap-2">
-			<FluentPaint20Filled class="size-5 text-[#b7a0c5]" />
+			<FluentPaint20Filled class="size-5 text-[#c08cf0]" />
 			<h2 class="section-title">Appearance</h2>
 		</div>
 
@@ -149,17 +149,17 @@
 		<div class="pt-2">
 			<label class="flex items-center justify-between cursor-pointer group">
 				<div class="flex items-center gap-3">
-					<FluentDataUsage20Filled class="size-5 text-[#b7a0c5]" />
+					<FluentDataUsage20Filled class="size-5 text-[#c08cf0]" />
 					<div>
-						<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Load Images</p>
-						<p class="text-xs text-[#a89e8e]">Disable to save data and improve performance</p>
+						<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">Load Images</p>
+						<p class="text-xs text-[#a8a083]">Disable to save data and improve performance</p>
 					</div>
 				</div>
 				<input
 					type="checkbox"
 					checked={settings.loadImages}
 					onchange={toggleLoadImages}
-					class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+					class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 				/>
 			</label>
 		</div>
@@ -168,142 +168,142 @@
 	<!-- Notification Settings -->
 	<div class="panel rounded-sm p-5 space-y-1">
 		<div class="flex items-center gap-2 mb-3">
-			<FluentAlert20Filled class="size-5 text-[#7ba0c8]" />
+			<FluentAlert20Filled class="size-5 text-[#5eaef5]" />
 			<h2 class="section-title">Notifications</h2>
 		</div>
-		<p class="text-xs text-[#a89e8e] mb-3">Choose which events send you push notifications</p>
+		<p class="text-xs text-[#a8a083] mb-3">Choose which events send you push notifications</p>
 
-		<div class="border-b border-[#dfceb0]/10">
+		<div class="border-b border-[#c8b47a]/10">
 			<PushNotificationManager />
 		</div>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#c8b47a]/10">
 			<div class="flex items-center gap-3">
 				<span class="text-lg">💬</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Direct Messages</p>
-					<p class="text-xs text-[#a89e8e]">When someone sends you a private message</p>
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">Direct Messages</p>
+					<p class="text-xs text-[#a8a083]">When someone sends you a private message</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyDirectMessages}
 				onchange={() => toggleNotification("notifyDirectMessages", notifyDirectMessages)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#c8b47a]/10">
 			<div class="flex items-center gap-3">
 				<span class="text-lg">📰</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Newspaper Posts</p>
-					<p class="text-xs text-[#a89e8e]">When a subscribed newspaper publishes an article</p>
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">Newspaper Posts</p>
+					<p class="text-xs text-[#a8a083]">When a subscribed newspaper publishes an article</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyNewspaperPosts}
 				onchange={() => toggleNotification("notifyNewspaperPosts", notifyNewspaperPosts)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#c8b47a]/10">
 			<div class="flex items-center gap-3">
 				<span class="text-lg">⚔️</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">
 						War Declarations
 					</p>
-					<p class="text-xs text-[#a89e8e]">When war is declared on or by your state</p>
+					<p class="text-xs text-[#a8a083]">When war is declared on or by your state</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyWarDeclarations}
 				onchange={() => toggleNotification("notifyWarDeclarations", notifyWarDeclarations)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#c8b47a]/10">
 			<div class="flex items-center gap-3">
 				<span class="text-lg">🏁</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Battle Results</p>
-					<p class="text-xs text-[#a89e8e]">When a battle involving your state ends</p>
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">Battle Results</p>
+					<p class="text-xs text-[#a8a083]">When a battle involving your state ends</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyBattleResults}
 				onchange={() => toggleNotification("notifyBattleResults", notifyBattleResults)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#c8b47a]/10">
 			<div class="flex items-center gap-3">
 				<span class="text-lg">🗳️</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Elections</p>
-					<p class="text-xs text-[#a89e8e]">When an election starts or results are announced</p>
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">Elections</p>
+					<p class="text-xs text-[#a8a083]">When an election starts or results are announced</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyElections}
 				onchange={() => toggleNotification("notifyElections", notifyElections)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#c8b47a]/10">
 			<div class="flex items-center gap-3">
 				<span class="text-lg">📜</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">New Proposals</p>
-					<p class="text-xs text-[#a89e8e]">When a new parliamentary proposal needs your vote</p>
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">New Proposals</p>
+					<p class="text-xs text-[#a8a083]">When a new parliamentary proposal needs your vote</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyNewProposals}
 				onchange={() => toggleNotification("notifyNewProposals", notifyNewProposals)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#c8b47a]/10">
 			<div class="flex items-center gap-3">
 				<span class="text-lg">✈️</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Travel Arrived</p>
-					<p class="text-xs text-[#a89e8e]">When you arrive at your travel destination</p>
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">Travel Arrived</p>
+					<p class="text-xs text-[#a8a083]">When you arrive at your travel destination</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyTravelComplete}
 				onchange={() => toggleNotification("notifyTravelComplete", notifyTravelComplete)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#dfceb0]/10">
+		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-[#c8b47a]/10">
 			<div class="flex items-center gap-3">
 				<span class="text-lg">🏭</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Shift Complete</p>
-					<p class="text-xs text-[#a89e8e]">When your factory shift is done and wages are ready</p>
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">Shift Complete</p>
+					<p class="text-xs text-[#a8a083]">When your factory shift is done and wages are ready</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyShiftComplete}
 				onchange={() => toggleNotification("notifyShiftComplete", notifyShiftComplete)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 
@@ -311,15 +311,15 @@
 			<div class="flex items-center gap-3">
 				<span class="text-lg">💰</span>
 				<div>
-					<p class="text-sm font-medium text-[#d9ccb7] group-hover:text-[#fff7e8] transition-colors">Market Sales</p>
-					<p class="text-xs text-[#a89e8e]">When someone buys from your market listing</p>
+					<p class="text-sm font-medium text-[#d3caa9] group-hover:text-[#f5efd8] transition-colors">Market Sales</p>
+					<p class="text-xs text-[#a8a083]">When someone buys from your market listing</p>
 				</div>
 			</div>
 			<input
 				type="checkbox"
 				bind:checked={notifyMarketSales}
 				onchange={() => toggleNotification("notifyMarketSales", notifyMarketSales)}
-				class="toggle border-[#dfceb0]/25 bg-[#0d1d31] text-[#a89e8e] checked:border-[#e6a527]/60 checked:bg-[#e6a527]/20 checked:text-[#f7c56b]"
+				class="toggle border-[#c8b47a]/25 bg-[#0f120c] text-[#a8a083] checked:border-[#f2b01e]/60 checked:bg-[#f2b01e]/20 checked:text-[#ffd35c]"
 			/>
 		</label>
 	</div>
@@ -327,54 +327,54 @@
 	<!-- Premium Membership Link -->
 	<a href="/premium" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
-			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 p-2 rounded-sm">
-				<FluentStar20Filled class="size-5 text-[#f7c56b]" />
+			<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 p-2 rounded-sm">
+				<FluentStar20Filled class="size-5 text-[#ffd35c]" />
 			</div>
 			<div>
-				<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
+				<p class="text-sm font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
 					Premium Membership
 				</p>
-				<p class="text-xs text-[#a89e8e]">Automate production, training & factory work</p>
+				<p class="text-xs text-[#a8a083]">Automate production, training & factory work</p>
 			</div>
 		</div>
-		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors" />
 	</a>
 
 	<!-- Gift Code Link -->
 	<a href="/giftcode" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
-			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 p-2 rounded-sm">
-				<FluentGift20Filled class="size-5 text-[#b7a0c5]" />
+			<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 p-2 rounded-sm">
+				<FluentGift20Filled class="size-5 text-[#c08cf0]" />
 			</div>
 			<div>
-				<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">Gift Codes</p>
-				<p class="text-xs text-[#a89e8e]">Redeem codes for exclusive rewards and bonuses</p>
+				<p class="text-sm font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Gift Codes</p>
+				<p class="text-xs text-[#a8a083]">Redeem codes for exclusive rewards and bonuses</p>
 			</div>
 		</div>
-		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors" />
 	</a>
 
 	<!-- About Link -->
 	<a href="/about" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
-			<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 p-2 rounded-sm">
-				<FluentInfo20Filled class="size-5 text-[#7ba0c8]" />
+			<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 p-2 rounded-sm">
+				<FluentInfo20Filled class="size-5 text-[#5eaef5]" />
 			</div>
 			<div>
-				<p class="text-sm font-medium text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
+				<p class="text-sm font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
 					About This Application
 				</p>
-				<p class="text-xs text-[#a89e8e]">Learn more about features, version, and terms</p>
+				<p class="text-xs text-[#a8a083]">Learn more about features, version, and terms</p>
 			</div>
 		</div>
-		<FluentChevronRight20Filled class="size-5 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors" />
 	</a>
 
 	<!-- Account Actions -->
 	<div class="panel rounded-sm p-5 space-y-3">
 		<h2 class="section-title">Account</h2>
 
-		<div class="panel-muted rounded-sm p-4 text-sm text-[#d9ccb7] break-all">
+		<div class="panel-muted rounded-sm p-4 text-sm text-[#d3caa9] break-all">
 			{data.profile.email}
 		</div>
 
@@ -392,7 +392,7 @@
 			<span class="text-red-300">Danger Zone</span>
 		</h2>
 
-		<p class="text-sm text-[#a89e8e]">
+		<p class="text-sm text-[#a8a083]">
 			Permanently delete your account and all associated data. This action cannot be undone.
 		</p>
 
@@ -418,7 +418,7 @@
 		<!-- Backdrop -->
 		<button
 			type="button"
-			class="absolute inset-0 bg-[#0c1929]/80 backdrop-blur-sm"
+			class="absolute inset-0 bg-[#12150f]/80 backdrop-blur-sm"
 			onclick={() => {
 				showDeleteModal = false;
 			}}
@@ -427,20 +427,20 @@
 		></button>
 
 		<!-- Modal -->
-		<div class="relative bg-[#14283f] rounded-sm border border-red-500/30 p-6 max-w-md w-full space-y-4 shadow-2xl">
+		<div class="relative bg-[#242a1d] rounded-sm border border-red-500/30 p-6 max-w-md w-full space-y-4 shadow-2xl">
 			<div class="flex items-center gap-3">
 				<div class="bg-red-600/10 border border-red-500/30 p-2.5 rounded-sm">
 					<FluentDelete20Filled class="size-6 text-red-400" />
 				</div>
 				<div>
-					<h3 class="text-lg font-bold text-[#fff7e8]">Delete Account</h3>
-					<p class="text-sm text-[#a89e8e]">This action is irreversible</p>
+					<h3 class="text-lg font-bold text-[#f5efd8]">Delete Account</h3>
+					<p class="text-sm text-[#a8a083]">This action is irreversible</p>
 				</div>
 			</div>
 
 			<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 space-y-2">
 				<p class="text-sm text-red-300 font-medium">The following will be permanently deleted:</p>
-				<ul class="text-sm text-[#a89e8e] space-y-1 list-disc list-inside">
+				<ul class="text-sm text-[#a8a083] space-y-1 list-disc list-inside">
 					<li>Your profile, wallet, and inventory</li>
 					<li>Companies, factories, and market listings</li>
 					<li>Party memberships and political positions</li>

@@ -173,7 +173,7 @@
 	<PageHeader title="Training" subtitle="Train, exercise and manage your military units" icon={FluentTarget} />
 
 	{#if trainingDisabled}
-		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3">
 			<p class="text-sm font-medium">{trainingDisabledReason}</p>
 		</div>
 	{/if}
@@ -182,7 +182,7 @@
 		<!-- Active Units - Main Focus -->
 		<div class="lg:col-span-2 space-y-4">
 			<div class="flex items-center gap-3">
-				<span class="h-6 w-1 rounded-full bg-[#8fae88]"></span>
+				<span class="h-6 w-1 rounded-full bg-[#6fd14a]"></span>
 				<h2 class="section-title">Active Units</h2>
 				{#if activeUnits.length > 0}
 					<Badge tone="green" class="ml-auto">{activeUnits.length}</Badge>
@@ -200,17 +200,17 @@
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="font-bold text-[#fff7e8] text-base mb-0.5">{unit.name}</h3>
+								<h3 class="font-bold text-[#f5efd8] text-base mb-0.5">{unit.name}</h3>
 								<div class="flex items-center gap-3 mt-2">
 									<div class="bg-red-600/10 border border-red-500/30 rounded-sm px-2.5 py-1">
 										<span class="text-xs text-red-300 font-medium">ATK</span>
-										<span class="text-base font-semibold text-[#fff7e8] ml-1.5"
+										<span class="text-base font-semibold text-[#f5efd8] ml-1.5"
 											>{data.templates[unit.unitType].baseAttack}</span
 										>
 									</div>
-									<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm px-2.5 py-1">
-										<span class="text-xs text-[#b7d0e6] font-medium">DEF</span>
-										<span class="text-base font-semibold text-[#fff7e8] ml-1.5"
+									<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm px-2.5 py-1">
+										<span class="text-xs text-[#b3dcff] font-medium">DEF</span>
+										<span class="text-base font-semibold text-[#f5efd8] ml-1.5"
 											>{data.templates[unit.unitType].baseDefense}</span
 										>
 									</div>
@@ -223,22 +223,22 @@
 								size="sm"
 								shape="square"
 								onclick={() => confirmDisband(unit)}
-								class="text-[#a89e8e] hover:text-red-400 hover:bg-red-500/10 shrink-0"
+								class="text-[#a8a083] hover:text-red-400 hover:bg-red-500/10 shrink-0"
 							/>
 						</div>
 
 						<!-- Experience -->
 						<div class="mb-3">
 							<div class="flex items-center justify-between text-xs mb-1.5">
-								<span class="text-[#a89e8e] font-medium"
-									>EXP · <span class="text-[#d5c4df]">{getExperienceLevel(unit.experience ?? 0).label}</span></span
+								<span class="text-[#a8a083] font-medium"
+									>EXP · <span class="text-[#e3cbfb]">{getExperienceLevel(unit.experience ?? 0).label}</span></span
 								>
-								<span class="font-semibold text-[#d9ccb7]">{unit.experience ?? 0}%</span>
+								<span class="font-semibold text-[#d3caa9]">{unit.experience ?? 0}%</span>
 							</div>
-							<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
+							<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
 								<div
 									class="h-1.5 rounded-full transition-all duration-500"
-									style="width: {unit.experience ?? 0}%; background: #b7a0c5"
+									style="width: {unit.experience ?? 0}%; background: #c08cf0"
 								></div>
 							</div>
 						</div>
@@ -247,39 +247,39 @@
 						<div class="grid grid-cols-3 gap-3">
 							<div>
 								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-[#a89e8e] font-medium">ORG</span>
-									<span class="font-semibold text-[#d9ccb7]">{unit.organization}%</span>
+									<span class="text-[#a8a083] font-medium">ORG</span>
+									<span class="font-semibold text-[#d3caa9]">{unit.organization}%</span>
 								</div>
-								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
+								<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
 									<div
 										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.organization}%; background: #7ba0c8"
+										style="width: {unit.organization}%; background: #5eaef5"
 									></div>
 								</div>
 							</div>
 
 							<div>
 								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-[#a89e8e] font-medium">STR</span>
-									<span class="font-semibold text-[#d9ccb7]">{unit.health}%</span>
+									<span class="text-[#a8a083] font-medium">STR</span>
+									<span class="font-semibold text-[#d3caa9]">{unit.health}%</span>
 								</div>
-								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
+								<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
 									<div
 										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.health}%; background: #8fae88"
+										style="width: {unit.health}%; background: #6fd14a"
 									></div>
 								</div>
 							</div>
 
 							<div>
 								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-[#a89e8e] font-medium">SUP</span>
-									<span class="font-semibold text-[#d9ccb7]">{unit.supplyLevel}%</span>
+									<span class="text-[#a8a083] font-medium">SUP</span>
+									<span class="font-semibold text-[#d3caa9]">{unit.supplyLevel}%</span>
 								</div>
-								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
+								<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
 									<div
 										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.supplyLevel}%; background: #e6a527"
+										style="width: {unit.supplyLevel}%; background: #f2b01e"
 									></div>
 								</div>
 							</div>
@@ -290,15 +290,15 @@
 							{@const exProgress = getExerciseProgress(unit)}
 							{@const exRemaining = getExerciseTimeRemaining(unit)}
 							{@const exComplete = unit.exerciseCompletesAt && new Date(unit.exerciseCompletesAt) <= new Date()}
-							<div class="mt-4 pt-4 border-t border-[#dfceb0]/10">
+							<div class="mt-4 pt-4 border-t border-[#c8b47a]/10">
 								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-[#d5c4df] font-medium">On exercise</span>
-									<span class="text-[#a89e8e] font-mono">{exRemaining}</span>
+									<span class="text-[#e3cbfb] font-medium">On exercise</span>
+									<span class="text-[#a8a083] font-mono">{exRemaining}</span>
 								</div>
-								<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10 mb-3">
+								<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10 mb-3">
 									<div
 										class="h-1.5 rounded-full transition-all duration-700"
-										style="width: {exProgress}%; background: #b7a0c5"
+										style="width: {exProgress}%; background: #c08cf0"
 									></div>
 								</div>
 								{#if exComplete}
@@ -352,7 +352,7 @@
 								{/if}
 							</div>
 						{:else}
-							<div class="mt-4 pt-4 border-t border-[#dfceb0]/10">
+							<div class="mt-4 pt-4 border-t border-[#c8b47a]/10">
 								<form
 									method="POST"
 									action="?/startExercise"
@@ -381,7 +381,7 @@
 										Send to exercise ({data.exerciseConfig.DURATION_HOURS}h)
 									</Button>
 								</form>
-								<p class="mt-2 text-[11px] leading-snug text-[#a89e8e]">
+								<p class="mt-2 text-[11px] leading-snug text-[#a8a083]">
 									+{data.exerciseConfig.EXPERIENCE_GAIN} XP · −{data.exerciseConfig.ORG_COST} org · −{data
 										.exerciseConfig.SUPPLY_COST} supply · equipment replaced
 								</p>
@@ -398,7 +398,7 @@
 			<!-- Unit Templates -->
 			<div class="mt-8">
 				<div class="flex items-center gap-3 mb-4">
-					<span class="h-6 w-1 rounded-full bg-[#7ba0c8]"></span>
+					<span class="h-6 w-1 rounded-full bg-[#5eaef5]"></span>
 					<h2 class="section-title">Train New Units</h2>
 				</div>
 
@@ -409,8 +409,8 @@
 						<button
 							type="button"
 							class="relative p-3 rounded-sm border transition-colors duration-200 overflow-hidden group {isSelected
-								? 'bg-[#e6a527]/12 border-[#e6a527]/55'
-								: 'bg-[#102239]/70 border-[#dfceb0]/15 hover:border-[#e6a527]/55 hover:bg-[#19304b]'} {trainingDisabled
+								? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
+								: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55 hover:bg-[#2e3524]'} {trainingDisabled
 								? 'opacity-50 cursor-not-allowed'
 								: ''}"
 							onclick={() => (selectedTemplate = template)}
@@ -431,8 +431,8 @@
 								<!-- Unit Name -->
 								<h3
 									class="font-medium text-md transition-colors text-center leading-tight"
-									class:text-[#f7c56b]={isSelected}
-									class:text-[#d9ccb7]={!isSelected}
+									class:text-[#ffd35c]={isSelected}
+									class:text-[#d3caa9]={!isSelected}
 								>
 									{m[template.unitType]()}
 								</h3>
@@ -454,31 +454,31 @@
 								/>
 							</div>
 							<div class="flex-1">
-								<h3 class="text-xl font-semibold text-[#fff7e8] mb-3">{selectedTemplate.displayName}</h3>
+								<h3 class="text-xl font-semibold text-[#f5efd8] mb-3">{selectedTemplate.displayName}</h3>
 								<div class="flex items-center gap-3 text-sm">
 									<div class="bg-red-600/10 border border-red-500/30 rounded-sm px-2.5 py-1">
 										<span class="text-xs text-red-300">ATK</span>
-										<span class="text-base font-semibold text-[#fff7e8] ml-1.5">{selectedTemplate.baseAttack}</span>
+										<span class="text-base font-semibold text-[#f5efd8] ml-1.5">{selectedTemplate.baseAttack}</span>
 									</div>
-									<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm px-2.5 py-1">
-										<span class="text-xs text-[#b7d0e6]">DEF</span>
-										<span class="text-base font-semibold text-[#fff7e8] ml-1.5">{selectedTemplate.baseDefense}</span>
+									<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm px-2.5 py-1">
+										<span class="text-xs text-[#b3dcff]">DEF</span>
+										<span class="text-base font-semibold text-[#f5efd8] ml-1.5">{selectedTemplate.baseDefense}</span>
 									</div>
 								</div>
 							</div>
 						</div>
 
 						<!-- Resource Requirements using ResourceRequirements component -->
-						<div class="border-t border-[#dfceb0]/10 pt-4">
+						<div class="border-t border-[#c8b47a]/10 pt-4">
 							<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
 						</div>
 
 						<div class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-sm">
 							<div class="flex items-center gap-2">
-								<FluentClock20Filled class="size-4 md:size-5 text-[#a89e8e]" />
-								<span class="text-xs md:text-sm text-[#a89e8e]">Training Time</span>
+								<FluentClock20Filled class="size-4 md:size-5 text-[#a8a083]" />
+								<span class="text-xs md:text-sm text-[#a8a083]">Training Time</span>
 							</div>
-							<span class="font-bold text-[#fff7e8] text-base md:text-lg font-mono">
+							<span class="font-bold text-[#f5efd8] text-base md:text-lg font-mono">
 								{selectedTemplate.trainingDuration}h
 							</span>
 						</div>
@@ -526,7 +526,7 @@
 			<!-- Training Queue -->
 			<div>
 				<div class="flex items-center gap-3 mb-4">
-					<span class="h-6 w-1 rounded-full bg-[#e6a527]"></span>
+					<span class="h-6 w-1 rounded-full bg-[#f2b01e]"></span>
 					<h2 class="section-title">Training Queue</h2>
 					{#if trainingUnits.length > 0}
 						<Badge tone="amber" class="ml-auto">{trainingUnits.length}</Badge>
@@ -540,7 +540,7 @@
 						activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt) <= new Date()}
 
 					<!-- Active Training Unit -->
-					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm overflow-hidden mb-3">
+					<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm overflow-hidden mb-3">
 						<div class="p-3">
 							<div class="flex items-center gap-2 mb-2">
 								<div class="size-10 shrink-0 flex items-center justify-center">
@@ -551,22 +551,22 @@
 									/>
 								</div>
 								<div class="flex-1 min-w-0">
-									<h3 class="font-semibold text-[#fff7e8] text-xs truncate">{activeTrainingUnit.name}</h3>
-									<p class="text-xs text-[#f7c56b] font-mono">{timeRemaining}</p>
+									<h3 class="font-semibold text-[#f5efd8] text-xs truncate">{activeTrainingUnit.name}</h3>
+									<p class="text-xs text-[#ffd35c] font-mono">{timeRemaining}</p>
 								</div>
 							</div>
 
 							<!-- Progress Bar -->
-							<div class="w-full bg-[#0d1d31]/70 rounded-full h-1.5 overflow-hidden border border-[#dfceb0]/10">
+							<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
 								<div
 									class="h-1.5 rounded-full transition-all duration-700"
-									style="width: {progress}%; background: #e6a527"
+									style="width: {progress}%; background: #f2b01e"
 								></div>
 							</div>
 						</div>
 
 						{#if isComplete}
-							<div class="border-t border-[#e6a527]/20 p-2.5 bg-[#0d1d31]/60">
+							<div class="border-t border-[#f2b01e]/20 p-2.5 bg-[#0f120c]/60">
 								<form method="POST" action="?/completeTraining" use:enhance>
 									<input type="hidden" name="unitId" value={activeTrainingUnit.id} />
 									<Button type="submit" variant="soft-emerald" size="xs" block icon={IconCheckmark}>
@@ -590,8 +590,8 @@
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="font-medium text-[#fff7e8] text-xs truncate">{unit.name}</h3>
-								<p class="text-xs text-[#a89e8e]">Queued</p>
+								<h3 class="font-medium text-[#f5efd8] text-xs truncate">{unit.name}</h3>
+								<p class="text-xs text-[#a8a083]">Queued</p>
 							</div>
 						</div>
 					</div>
@@ -611,7 +611,7 @@
 		<div class="space-y-4">
 			<div class="flex items-center gap-3 p-3 panel-muted rounded-sm">
 				<div
-					class="w-10 h-10 shrink-0 bg-[#0d1d31]/70 rounded-sm border border-[#dfceb0]/15 flex items-center justify-center p-2"
+					class="w-10 h-10 shrink-0 bg-[#0f120c]/70 rounded-sm border border-[#c8b47a]/15 flex items-center justify-center p-2"
 				>
 					<img
 						src={getUnitIconPath(unitToDisband.unitType)}
@@ -620,12 +620,12 @@
 					/>
 				</div>
 				<div>
-					<h4 class="font-semibold text-[#fff7e8] text-sm">{unitToDisband.name}</h4>
-					<p class="text-xs text-[#a89e8e]">ATK {unitToDisband.attack} • DEF {unitToDisband.defense}</p>
+					<h4 class="font-semibold text-[#f5efd8] text-sm">{unitToDisband.name}</h4>
+					<p class="text-xs text-[#a8a083]">ATK {unitToDisband.attack} • DEF {unitToDisband.defense}</p>
 				</div>
 			</div>
 
-			<p class="text-sm text-[#d9ccb7]">
+			<p class="text-sm text-[#d3caa9]">
 				Are you sure you want to disband this unit? This action cannot be undone and you will not receive any refunds.
 			</p>
 

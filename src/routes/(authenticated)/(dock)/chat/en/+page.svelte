@@ -207,10 +207,10 @@
 
 <Modal bind:open={showExternalLinkWarning} title="External Link Warning" size="small">
 	<div class="space-y-4">
-		<p class="text-[#d9ccb7]">
+		<p class="text-[#d3caa9]">
 			You are about to visit an external website. Please be careful and make sure you trust this link.
 		</p>
-		<div class="panel-muted rounded-sm p-3 break-all text-sm text-[#a89e8e]">
+		<div class="panel-muted rounded-sm p-3 break-all text-sm text-[#a8a083]">
 			{pendingExternalLink}
 		</div>
 		<div class="flex gap-2 justify-end">
@@ -230,19 +230,19 @@
 
 <div class="flex flex-col h-full min-h-0">
 	<!-- Header -->
-	<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-b border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
+	<div class="bg-[#171b12]/90 backdrop-blur-sm border-b border-[#c8b47a]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10">
 		<div class="flex items-center gap-2 md:gap-3">
 			<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
 
 			<div
-				class="size-11 md:size-10 rounded-full bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
+				class="size-11 md:size-10 rounded-full bg-[#2369b5]/18 border border-[#5eaef5]/30 flex items-center justify-center shrink-0"
 			>
-				<FluentEarth20Filled class="size-6 md:size-5 text-[#7ba0c8]" />
+				<FluentEarth20Filled class="size-6 md:size-5 text-[#5eaef5]" />
 			</div>
 
 			<div class="flex-1 min-w-0">
-				<h1 class="text-lg md:text-xl font-bold text-[#fff7e8] truncate">Global Chat</h1>
-				<p class="text-xs md:text-sm text-[#a89e8e] truncate">Talk with players worldwide</p>
+				<h1 class="text-lg md:text-xl font-bold text-[#f5efd8] truncate">Global Chat</h1>
+				<p class="text-xs md:text-sm text-[#a8a083] truncate">Talk with players worldwide</p>
 			</div>
 		</div>
 	</div>
@@ -251,27 +251,27 @@
 	<div
 		bind:this={chatContainer}
 		onscroll={handleScroll}
-		class="flex-1 min-h-0 bg-[#0c1929]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#dfceb0]/20 scrollbar-track-transparent"
+		class="flex-1 min-h-0 bg-[#12150f]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#c8b47a]/20 scrollbar-track-transparent"
 	>
 		{#if allMessages.length === 0}
 			<div class="flex items-center justify-center h-full">
 				<div class="text-center">
-					<FluentEarth20Filled class="size-16 text-[#a89e8e]/70 mx-auto mb-4" />
-					<p class="text-[#a89e8e] text-base">No messages yet</p>
-					<p class="text-[#a89e8e] text-sm mt-1">Be the first to say something!</p>
+					<FluentEarth20Filled class="size-16 text-[#a8a083]/70 mx-auto mb-4" />
+					<p class="text-[#a8a083] text-base">No messages yet</p>
+					<p class="text-[#a8a083] text-sm mt-1">Be the first to say something!</p>
 				</div>
 			</div>
 		{:else}
 			{#each messagesByDay as day}
 				<!-- Day Divider -->
 				<div class="flex items-center gap-3 my-6">
-					<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
+					<div class="flex-1 h-px bg-[#c8b47a]/15"></div>
 					<span
-						class="text-[10px] uppercase tracking-wide text-[#a89e8e] font-semibold px-3 py-1 panel-muted rounded-sm"
+						class="text-[10px] uppercase tracking-wide text-[#a8a083] font-semibold px-3 py-1 panel-muted rounded-sm"
 					>
 						{formatDayDivider(day.date)}
 					</span>
-					<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
+					<div class="flex-1 h-px bg-[#c8b47a]/15"></div>
 				</div>
 
 				{#each day.groups as group}
@@ -281,7 +281,7 @@
 							<div class="flex flex-col gap-1 items-end w-full max-w-[85%] md:max-w-md ml-auto">
 								{#each group.messages as msg}
 									<div
-										class="chat-bubble before:hidden bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#fff7e8] {msg.isOptimistic
+										class="chat-bubble before:hidden bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#f5efd8] {msg.isOptimistic
 											? 'opacity-70'
 											: ''} text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 									>
@@ -295,7 +295,7 @@
 													<a
 														href={part.content}
 														onclick={(e) => handleLinkClick(e, part.content)}
-														class="underline hover:text-[#f2c463] break-all"
+														class="underline hover:text-[#ffcf47] break-all"
 														target="_blank"
 														rel="noopener noreferrer"
 													>
@@ -309,7 +309,7 @@
 									</div>
 								{/each}
 							</div>
-							<div class="chat-footer text-[#a89e8e] text-xs mt-0.5 px-1">
+							<div class="chat-footer text-[#a8a083] text-xs mt-0.5 px-1">
 								{formatGroupTime(group.lastMessageTime)}
 							</div>
 						</div>
@@ -321,8 +321,8 @@
 									{#if group.senderLogo && settings.loadImages}
 										<img src={group.senderLogo} alt={group.senderName || "User"} class="" />
 									{:else}
-										<div class="w-full h-full bg-[#102239] flex items-center justify-center rounded-full">
-											<FluentImageOff20Filled class="size-5 text-[#a89e8e]" />
+										<div class="w-full h-full bg-[#1a1f15] flex items-center justify-center rounded-full">
+											<FluentImageOff20Filled class="size-5 text-[#a8a083]" />
 										</div>
 									{/if}
 								</a>
@@ -333,7 +333,7 @@
 								{/if}
 								<a
 									href="/user/{group.senderId}"
-									class="text-[#e5d8c1] hover:text-[#f2c463] transition-colors font-semibold"
+									class="text-[#e6ddbf] hover:text-[#ffcf47] transition-colors font-semibold"
 								>
 									{group.senderName || "Anonymous"}
 								</a>
@@ -342,7 +342,7 @@
 								{#each group.messages as msg}
 									<div class="relative group/msg">
 										<div
-											class="chat-bubble before:hidden bg-[#102239]/70 border border-[#dfceb0]/10 text-[#e5d8c1] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
+											class="chat-bubble before:hidden bg-[#1a1f15]/70 border border-[#c8b47a]/10 text-[#e6ddbf] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
@@ -354,7 +354,7 @@
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-[#f2c463] break-all"
+															class="underline hover:text-[#ffcf47] break-all"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -375,7 +375,7 @@
 												</label>
 												<ul
 													tabindex="0"
-													class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#14283f] border border-[#dfceb0]/15 rounded-sm w-48"
+													class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#242a1d] border border-[#c8b47a]/15 rounded-sm w-48"
 												>
 													<li>
 														<button
@@ -391,7 +391,7 @@
 									</div>
 								{/each}
 							</div>
-							<div class="chat-footer text-[#a89e8e] text-xs mt-0.5 px-1">
+							<div class="chat-footer text-[#a8a083] text-xs mt-0.5 px-1">
 								{formatGroupTime(group.lastMessageTime)}
 							</div>
 						</div>
@@ -402,7 +402,7 @@
 	</div>
 
 	<!-- Message input -->
-	<div class="bg-[#0e1d2f]/90 backdrop-blur-sm border-t border-[#dfceb0]/15 p-3 md:p-4 flex-shrink-0">
+	<div class="bg-[#171b12]/90 backdrop-blur-sm border-t border-[#c8b47a]/15 p-3 md:p-4 flex-shrink-0">
 		{#if form?.error}
 			<div
 				class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
@@ -413,7 +413,7 @@
 
 		{#if form?.success && form?.message}
 			<div
-				class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
+				class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
 			>
 				<p>{form.message}</p>
 			</div>
@@ -480,8 +480,8 @@
 				<span class="hidden md:inline">{isSubmitting ? "Sending" : "Send"}</span>
 			</Button>
 		</form>
-		<p class="text-xs text-[#a89e8e] mt-2 px-1">
-			<span class="font-mono {message.length > 450 ? 'text-[#f7c56b] font-semibold' : ''}">{message.length}/500</span>
+		<p class="text-xs text-[#a8a083] mt-2 px-1">
+			<span class="font-mono {message.length > 450 ? 'text-[#ffd35c] font-semibold' : ''}">{message.length}/500</span>
 			<span class="hidden md:inline"> • Press Enter to send, Shift+Enter for new line</span>
 		</p>
 	</div>

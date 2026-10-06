@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/* PsyOps style reminder: editorial field ledger — midnight ink, parchment rules, restrained amber signals, serif hierarchy. */
+/* PsyOps style reminder: grand-strategy war room — olive field-grey metal, brass trim, saturated gold/green/blue signals, serif hierarchy. */
 @import "layerchart/daisyui-5.css";
 
 @plugin "@tailwindcss/typography";
@@ -27,21 +27,36 @@
    <Button>/<Badge> components still lands on the same surfaces.
    -------------------------------------------------------------------------- */
 
-/* Field-ledger surfaces: deep ink with printed-paper rules. */
+/* War-room surfaces: brushed field-grey metal plate with a brass frame and bevel. */
 @utility panel {
-	@apply border border-[#dfceb0]/15 bg-[#14283f]/85;
+	@apply border border-[#c8b47a]/30;
+	background: linear-gradient(180deg, rgba(46, 53, 36, 0.96) 0%, rgba(30, 35, 24, 0.96) 100%);
 	box-shadow:
-		0 14px 32px rgba(2, 10, 21, 0.2),
-		inset 0 1px 0 rgba(255, 253, 247, 0.04);
+		0 10px 28px rgba(0, 0, 0, 0.45),
+		0 0 0 1px rgba(0, 0, 0, 0.55),
+		inset 0 1px 0 rgba(255, 244, 200, 0.1),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.45);
 }
 
 /* Interactive panel (list rows, clickable cards). */
 @utility panel-interactive {
-	@apply press-spring border border-[#dfceb0]/15 bg-[#14283f]/85 hover:border-[#e6a527]/55 hover:bg-[#19304b];
+	@apply press-spring border border-[#c8b47a]/30 hover:border-[#f2b01e]/80;
 	--press-scale: 0.985;
+	background: linear-gradient(180deg, rgba(46, 53, 36, 0.96) 0%, rgba(30, 35, 24, 0.96) 100%);
 	box-shadow:
-		0 14px 32px rgba(2, 10, 21, 0.2),
-		inset 0 1px 0 rgba(255, 253, 247, 0.04);
+		0 10px 28px rgba(0, 0, 0, 0.45),
+		0 0 0 1px rgba(0, 0, 0, 0.55),
+		inset 0 1px 0 rgba(255, 244, 200, 0.1),
+		inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+	&:hover {
+		background: linear-gradient(180deg, rgba(56, 64, 42, 0.98) 0%, rgba(38, 44, 30, 0.98) 100%);
+		box-shadow:
+			0 10px 28px rgba(0, 0, 0, 0.45),
+			0 0 0 1px rgba(0, 0, 0, 0.55),
+			0 0 14px rgba(242, 176, 30, 0.18),
+			inset 0 1px 0 rgba(255, 244, 200, 0.14),
+			inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+	}
 }
 
 /* Tactile press: squish fast on press, spring back with a small overshoot on release. */
@@ -80,40 +95,48 @@
 
 /* Muted panel for secondary/inset content. */
 @utility panel-muted {
-	@apply border border-[#dfceb0]/10 bg-[#102239]/70;
+	@apply border border-[#c8b47a]/15 bg-[#14180f]/80;
+	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 
 /* Form controls: one consistent look for text inputs, selects and textareas. */
 @utility field-control {
-	@apply border border-[#dfceb0]/20 bg-[#0d1d31] text-[#fff7e8] transition-colors duration-200 placeholder:text-[#b3a68e]/55 focus:border-[#e6a527]/70 focus:ring-2 focus:ring-[#e6a527]/15 focus:outline-none;
+	@apply border border-[#c8b47a]/30 bg-[#0f120c] shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)] text-[#f5efd8] transition-colors duration-200 placeholder:text-[#ab9f7c]/55 focus:border-[#f2b01e]/70 focus:ring-2 focus:ring-[#f2b01e]/15 focus:outline-none;
 }
 
 @utility field-label {
-	@apply mb-1.5 block text-sm font-medium text-[#e5d8c1];
+	@apply mb-1.5 block text-sm font-medium text-[#e6ddbf];
 }
 
 @utility field-hint {
-	@apply mt-1.5 text-xs text-[#a89e8e];
+	@apply mt-1.5 text-xs text-[#a8a083];
 }
 
 @utility field-error {
 	@apply mt-1.5 text-xs text-red-400;
 }
 
-/* Section heading used above grouped content. */
+/* Section heading used above grouped content: gold stencilled small caps. */
 @utility section-title {
-	@apply flex items-center gap-2 text-lg font-semibold text-[#fff7e8];
-	font-family: var(--font-editorial);
+	@apply flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-[#ffd35c];
+	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
 }
 
 @layer base {
 	body {
-		color: #fff7e8;
-		background-color: #0c1929;
+		color: #f5efd8;
+		background-color: #12150f;
 		background-image:
-			linear-gradient(90deg, rgba(223, 206, 176, 0.035) 1px, transparent 1px),
-			linear-gradient(0deg, rgba(223, 206, 176, 0.025) 1px, transparent 1px);
-		background-size: 44px 44px;
+			radial-gradient(ellipse at 50% 0%, rgba(120, 140, 70, 0.16) 0%, transparent 60%),
+			radial-gradient(ellipse at 50% 120%, rgba(0, 0, 0, 0.6) 0%, transparent 60%),
+			linear-gradient(90deg, rgba(200, 180, 122, 0.05) 1px, transparent 1px),
+			linear-gradient(0deg, rgba(200, 180, 122, 0.04) 1px, transparent 1px);
+		background-size:
+			100% 100%,
+			100% 100%,
+			44px 44px,
+			44px 44px;
+		background-attachment: fixed;
 	}
 
 	h1,
@@ -121,7 +144,8 @@
 	h3,
 	.editorial-title {
 		font-family: var(--font-editorial);
-		letter-spacing: -0.02em;
+		letter-spacing: -0.01em;
+		text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
 	}
 	@keyframes slide-up {
 		from {
@@ -176,19 +200,23 @@
 	/* Editorial dock navigation — shares the panel system's border/shadow recipe
 	   so it reads as the same surface language as the rest of the UI. */
 	.dock {
-		@apply fixed bottom-0 left-0 right-0 h-16 bg-[#0e1d2f]/95 backdrop-blur-md border-t border-[#dfceb0]/15 flex items-center justify-around px-2;
+		@apply fixed bottom-0 left-0 right-0 h-16 backdrop-blur-md border-t-2 border-[#c8b47a]/45 flex items-center justify-around px-2;
+		background: linear-gradient(180deg, rgba(48, 55, 38, 0.97) 0%, rgba(22, 26, 17, 0.98) 100%);
 		box-shadow:
-			0 -14px 32px rgba(2, 10, 21, 0.2),
-			inset 0 1px 0 rgba(255, 253, 247, 0.04);
+			0 -10px 28px rgba(0, 0, 0, 0.5),
+			inset 0 1px 0 rgba(255, 244, 200, 0.12);
 		z-index: 40;
 	}
 
 	.dock a {
-		@apply flex items-center justify-center w-12 h-12 rounded-sm transition-colors duration-200 text-[#d9ccb7];
+		@apply flex items-center justify-center w-12 h-12 rounded-sm transition-colors duration-200 text-[#d3caa9];
 	}
 
 	.dock a.active {
-		@apply text-[#f7c56b] bg-[#e6a527]/15 border border-[#e6a527]/35;
+		@apply text-[#ffd35c] bg-[#f2b01e]/20 border border-[#f2b01e]/60;
+		box-shadow:
+			0 0 12px rgba(242, 176, 30, 0.35),
+			inset 0 1px 0 rgba(255, 244, 200, 0.2);
 	}
 
 	.dock a:active {
@@ -223,7 +251,7 @@
 	.wysiwyg-editor .ProseMirror p.is-editor-empty:first-child::before {
 		content: attr(data-placeholder);
 		float: left;
-		color: #a89e8e;
+		color: #a8a083;
 		pointer-events: none;
 		height: 0;
 	}
@@ -240,29 +268,29 @@
 		@apply mb-3;
 	}
 	.wysiwyg-editor blockquote {
-		@apply border-l-4 border-[#e6a527] pl-4 italic my-4 text-[#a89e8e];
+		@apply border-l-4 border-[#f2b01e] pl-4 italic my-4 text-[#a8a083];
 	}
 	.wysiwyg-editor code {
-		@apply bg-[#102239] px-1 py-0.5 rounded-sm text-sm;
+		@apply bg-[#1a1f15] px-1 py-0.5 rounded-sm text-sm;
 	}
 	.wysiwyg-editor pre {
-		@apply bg-[#102239] p-4 rounded-sm overflow-x-auto my-4;
+		@apply bg-[#1a1f15] p-4 rounded-sm overflow-x-auto my-4;
 	}
 	.wysiwyg-editor pre code {
 		@apply bg-transparent p-0;
 	}
 	.wysiwyg-editor hr {
-		@apply my-6 border-t-2 border-[#dfceb0]/15;
+		@apply my-6 border-t-2 border-[#c8b47a]/15;
 	}
 	.wysiwyg-editor table {
 		@apply border-collapse w-full my-4;
 	}
 	.wysiwyg-editor th,
 	.wysiwyg-editor td {
-		@apply border border-[#dfceb0]/15 px-3 py-2;
+		@apply border border-[#c8b47a]/15 px-3 py-2;
 	}
 	.wysiwyg-editor th {
-		@apply bg-[#102239] font-semibold;
+		@apply bg-[#1a1f15] font-semibold;
 	}
 
 	@media (max-width: 640px) {
@@ -304,20 +332,20 @@
 		margin-bottom: 1rem;
 	}
 	.article-content blockquote {
-		border-left: 4px solid #e6a527;
+		border-left: 4px solid #f2b01e;
 		padding-left: 1rem;
 		margin: 1.5rem 0;
 		font-style: italic;
-		color: #a89e8e;
+		color: #a8a083;
 	}
 	.article-content code {
-		background: #102239;
+		background: #1a1f15;
 		padding: 0.125rem 0.25rem;
 		border-radius: 0.25rem;
 		font-size: 0.9em;
 	}
 	.article-content pre {
-		background: #102239;
+		background: #1a1f15;
 		padding: 1rem;
 		border-radius: 0.25rem;
 		overflow-x: auto;
@@ -340,12 +368,12 @@
 	}
 	.article-content th,
 	.article-content td {
-		border: 1px solid rgb(223 206 176 / 15%);
+		border: 1px solid rgb(200 180 122 / 15%);
 		padding: 0.5rem 1rem;
 		text-align: left;
 	}
 	.article-content th {
-		background: #102239;
+		background: #1a1f15;
 		font-weight: 600;
 	}
 }

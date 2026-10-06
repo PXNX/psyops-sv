@@ -52,7 +52,7 @@
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Search -->
 		<div class="relative flex-1">
-			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a8a083]" />
 			<input
 				type="text"
 				bind:value={searchQuery}
@@ -120,12 +120,12 @@
 							{#if party.logoUrl}
 								<img src={party.logoUrl} alt={party.name} class="size-10 object-contain" />
 							{:else}
-								<FluentPeople20Filled class="size-6 text-[#fff7e8]" />
+								<FluentPeople20Filled class="size-6 text-[#f5efd8]" />
 							{/if}
 						</div>
 
 						<div class="flex-1 min-w-0">
-							<h3 class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+							<h3 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 								{party.name}
 							</h3>
 							{#if party.abbreviation}
@@ -141,24 +141,24 @@
 
 					<!-- Description -->
 					{#if party.description}
-						<p class="text-sm text-[#a89e8e] line-clamp-2 mb-3">{party.description}</p>
+						<p class="text-sm text-[#a8a083] line-clamp-2 mb-3">{party.description}</p>
 					{/if}
 
 					<!-- Stats -->
 					<div class="flex items-center justify-between text-sm flex-wrap gap-2">
-						<div class="flex items-center gap-1 text-[#d9ccb7]">
-							<FluentPeople20Filled class="size-4 text-[#b7a0c5]" />
+						<div class="flex items-center gap-1 text-[#d3caa9]">
+							<FluentPeople20Filled class="size-4 text-[#c08cf0]" />
 							<span>{party.memberCount} members</span>
 						</div>
 						{#if party.ideology}
-							<div class="flex items-center gap-1 text-[#d9ccb7]">
-								<FluentFlag20Filled class="size-4 text-[#b7a0c5]" />
+							<div class="flex items-center gap-1 text-[#d3caa9]">
+								<FluentFlag20Filled class="size-4 text-[#c08cf0]" />
 								<span>{party.ideology}</span>
 							</div>
 						{/if}
 					</div>
 					{#if data.scope === "global" && party.stateName}
-						<div class="flex items-center gap-1 text-xs text-[#a89e8e] mt-2">
+						<div class="flex items-center gap-1 text-xs text-[#a8a083] mt-2">
 							<FluentLocation20Filled class="size-3" />
 							<span>{party.stateName}</span>
 						</div>
@@ -168,11 +168,11 @@
 		</div>
 	{:else}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
-				<FluentPeople20Filled class="size-8 text-[#a89e8e]" />
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
+				<FluentPeople20Filled class="size-8 text-[#a8a083]" />
 			</div>
-			<p class="text-xl font-bold text-[#fff7e8] mb-2">No parties found</p>
-			<p class="text-[#a89e8e] mb-4">Try adjusting your search or create your own party</p>
+			<p class="text-xl font-bold text-[#f5efd8] mb-2">No parties found</p>
+			<p class="text-[#a8a083] mb-4">Try adjusting your search or create your own party</p>
 			<Button variant="primary" href="/party/create" icon={FluentAdd20Filled}>Create your own party</Button>
 		</div>
 	{/if}

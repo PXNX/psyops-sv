@@ -184,11 +184,11 @@
 		</section>
 	{:else}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
-				<FluentBookCompass24Filled class="size-8 text-[#a89e8e]" />
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
+				<FluentBookCompass24Filled class="size-8 text-[#a8a083]" />
 			</div>
-			<h2 class="text-xl font-bold text-[#fff7e8] mb-2">No Active Visas</h2>
-			<p class="text-[#a89e8e] mb-4">
+			<h2 class="text-xl font-bold text-[#f5efd8] mb-2">No Active Visas</h2>
+			<p class="text-[#a8a083] mb-4">
 				You don't have any active visas. Visit other states to purchase visas and explore new regions!
 			</p>
 			<Button href="/state" variant="secondary">Browse States</Button>
@@ -207,15 +207,15 @@
 							{#if visa.stateLogo}
 								<img src={visa.stateLogo} alt={visa.stateName} class="size-12 rounded-sm opacity-60" />
 							{:else}
-								<div class="size-12 rounded-sm bg-[#102239] flex items-center justify-center opacity-60">
-									<FluentBuildingGovernment20Filled class="size-6 text-[#a89e8e]" />
+								<div class="size-12 rounded-sm bg-[#1a1f15] flex items-center justify-center opacity-60">
+									<FluentBuildingGovernment20Filled class="size-6 text-[#a8a083]" />
 								</div>
 							{/if}
 
 							<div class="flex-1">
 								<div class="flex items-start justify-between mb-2">
 									<div>
-										<h3 class="font-semibold text-[#e5d8c1]">{visa.stateName}</h3>
+										<h3 class="font-semibold text-[#e6ddbf]">{visa.stateName}</h3>
 										<Badge
 											size="xs"
 											class="mt-1"
@@ -232,8 +232,8 @@
 										</Badge>
 									</div>
 									<div class="text-right text-sm">
-										<p class="text-[#a89e8e]">Expired</p>
-										<p class="text-[#a89e8e]">{formatDate(visa.expiresAt)}</p>
+										<p class="text-[#a8a083]">Expired</p>
+										<p class="text-[#a8a083]">{formatDate(visa.expiresAt)}</p>
 									</div>
 								</div>
 
@@ -246,7 +246,7 @@
 									</div>
 								{/if}
 
-								<div class="flex gap-6 text-xs text-[#a89e8e] mt-2">
+								<div class="flex gap-6 text-xs text-[#a8a083] mt-2">
 									<span>Issued: {formatDate(visa.issuedAt)}</span>
 									<span>Cost: ${visa.cost.toLocaleString()}</span>
 								</div>

@@ -78,19 +78,19 @@
 	function getColorClasses(color: string) {
 		const colors = {
 			emerald: {
-				bg: "bg-[#587252]/18",
-				border: "border-[#8fae88]/30",
-				text: "text-[#c6dfbf]",
-				hover: "hover:bg-[#587252]/28",
-				button: "bg-[#8fae88]",
+				bg: "bg-[#3f8a2a]/18",
+				border: "border-[#6fd14a]/30",
+				text: "text-[#b9f29a]",
+				hover: "hover:bg-[#3f8a2a]/28",
+				button: "bg-[#6fd14a]",
 				variant: "soft-emerald" as const
 			},
 			blue: {
-				bg: "bg-[#315d8d]/18",
-				border: "border-[#7ba0c8]/30",
-				text: "text-[#b7d0e6]",
-				hover: "hover:bg-[#315d8d]/28",
-				button: "bg-[#7ba0c8]",
+				bg: "bg-[#2369b5]/18",
+				border: "border-[#5eaef5]/30",
+				text: "text-[#b3dcff]",
+				hover: "hover:bg-[#2369b5]/28",
+				button: "bg-[#5eaef5]",
 				variant: "soft-blue" as const
 			},
 			red: {
@@ -102,11 +102,11 @@
 				variant: "soft-red" as const
 			},
 			purple: {
-				bg: "bg-[#8c709b]/15",
-				border: "border-[#b7a0c5]/30",
-				text: "text-[#d5c4df]",
-				hover: "hover:bg-[#8c709b]/25",
-				button: "bg-[#b7a0c5]",
+				bg: "bg-[#8a4fc0]/15",
+				border: "border-[#c08cf0]/30",
+				text: "text-[#e3cbfb]",
+				hover: "hover:bg-[#8a4fc0]/25",
+				button: "bg-[#c08cf0]",
 				variant: "soft-purple" as const
 			}
 		};
@@ -132,13 +132,13 @@
 	<div class="panel rounded-sm p-4">
 		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">State Treasury Balance</p>
-				<p class="text-2xl font-bold font-mono text-[#fff7e8]">${data.treasuryBalance.toLocaleString()}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">State Treasury Balance</p>
+				<p class="text-2xl font-bold font-mono text-[#f5efd8]">${data.treasuryBalance.toLocaleString()}</p>
 			</div>
 			{#if data.state}
 				<a
 					href="/state/{data.state.id}"
-					class="text-sm text-[#f7c56b] hover:text-[#f2c463] underline underline-offset-2"
+					class="text-sm text-[#ffd35c] hover:text-[#ffcf47] underline underline-offset-2"
 				>
 					View {data.state.name}
 				</a>
@@ -148,8 +148,8 @@
 
 	<!-- Success Message -->
 	{#if showSuccess}
-		<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
-			<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0" />
+		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3">
+			<FluentCheckmark20Filled class="size-5 text-[#6fd14a] shrink-0" />
 			<p class="text-sm">{successMessage}</p>
 		</div>
 	{/if}
@@ -171,8 +171,8 @@
 							<svelte:component this={building.icon} class="size-6 {colors.text}" />
 						</div>
 						<div class="flex-1">
-							<h2 class="text-lg font-bold text-[#fff7e8]">{building.name}</h2>
-							<p class="text-sm text-[#a89e8e]">{building.description}</p>
+							<h2 class="text-lg font-bold text-[#f5efd8]">{building.name}</h2>
+							<p class="text-sm text-[#a8a083]">{building.description}</p>
 						</div>
 					</div>
 				</div>
@@ -182,12 +182,12 @@
 					<!-- Progress -->
 					<div>
 						<div class="flex items-center justify-between mb-2">
-							<span class="text-sm text-[#a89e8e]">Level</span>
+							<span class="text-sm text-[#a8a083]">Level</span>
 							<span class="text-sm font-semibold {colors.text}">
 								{building.current} / {building.max}
 							</span>
 						</div>
-						<div class="h-2 bg-[#102239] rounded-full overflow-hidden">
+						<div class="h-2 bg-[#1a1f15] rounded-full overflow-hidden">
 							<div
 								class="h-full {colors.button} rounded-full transition-all"
 								style="width: {(building.current / building.max) * 100}%"
@@ -197,10 +197,10 @@
 
 					<!-- Benefits -->
 					<div>
-						<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-2">Benefits</p>
+						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-2">Benefits</p>
 						<ul class="space-y-1">
 							{#each building.benefits as benefit}
-								<li class="text-sm text-[#d9ccb7] flex items-start gap-2">
+								<li class="text-sm text-[#d3caa9] flex items-start gap-2">
 									<span class="{colors.text} mt-0.5">•</span>
 									<span>{benefit}</span>
 								</li>
@@ -209,10 +209,10 @@
 					</div>
 
 					<!-- Cost -->
-					<div class="pt-3 border-t border-[#dfceb0]/10">
+					<div class="pt-3 border-t border-[#c8b47a]/10">
 						<div class="flex items-center justify-between mb-3">
-							<span class="text-sm text-[#a89e8e]">Construction Cost</span>
-							<span class="text-lg font-bold font-mono text-[#fff7e8]">
+							<span class="text-sm text-[#a8a083]">Construction Cost</span>
+							<span class="text-lg font-bold font-mono text-[#f5efd8]">
 								${building.cost.toLocaleString()}
 							</span>
 						</div>
@@ -261,14 +261,14 @@
 	</div>
 
 	<!-- Info Section -->
-	<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
+	<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
 		<div class="flex items-start gap-3">
-			<div class="size-10 bg-[#315d8d]/25 rounded-sm flex items-center justify-center shrink-0">
-				<FluentBuildingGovernment20Filled class="size-5 text-[#7ba0c8]" />
+			<div class="size-10 bg-[#2369b5]/25 rounded-sm flex items-center justify-center shrink-0">
+				<FluentBuildingGovernment20Filled class="size-5 text-[#5eaef5]" />
 			</div>
 			<div class="flex-1">
-				<p class="font-semibold text-[#b7d0e6] mb-1">Building Information</p>
-				<ul class="text-sm text-[#d9ccb7] space-y-1">
+				<p class="font-semibold text-[#b3dcff] mb-1">Building Information</p>
+				<ul class="text-sm text-[#d3caa9] space-y-1">
 					<li>• All construction is funded from the state treasury</li>
 					<li>• Buildings are permanent and cannot be demolished</li>
 					<li>• Higher levels provide diminishing returns</li>

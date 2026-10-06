@@ -180,23 +180,23 @@
 		<div class="panel rounded-sm p-4">
 			<div class="flex items-center gap-3">
 				<div
-					class="size-10 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
+					class="size-10 rounded-sm bg-[#2369b5]/18 border border-[#5eaef5]/30 flex items-center justify-center shrink-0"
 				>
 					<span class="text-lg">{step === 4 ? "🔧" : "🪖"}</span>
 				</div>
 				<div class="flex-1 min-w-0">
-					<p class="text-sm font-semibold text-[#fff7e8]">
+					<p class="text-sm font-semibold text-[#f5efd8]">
 						{step === 4 ? "Navigate to Production" : "Navigate to Training"}
 					</p>
-					<p class="text-xs text-[#d9ccb7] mt-0.5">
-						Tap <strong class="text-[#f7c56b]">{step === 4 ? "Production" : "Training"}</strong> in the bar below
+					<p class="text-xs text-[#d3caa9] mt-0.5">
+						Tap <strong class="text-[#ffd35c]">{step === 4 ? "Production" : "Training"}</strong> in the bar below
 					</p>
 				</div>
 				{#if canSkip}
 					<button
 						onclick={() => setStep(null)}
 						disabled={submitting}
-						class="text-xs text-[#a89e8e] hover:text-[#d9ccb7] transition-colors shrink-0"
+						class="text-xs text-[#a8a083] hover:text-[#d3caa9] transition-colors shrink-0"
 					>
 						Skip
 					</button>
@@ -213,16 +213,16 @@
 
 		<!-- Sheet -->
 		<div class="absolute inset-x-0 bottom-0 animate-slide-up">
-			<div class="bg-[#0e1d2f]/95 border-t border-[#dfceb0]/20 rounded-t-md max-h-[80vh] flex flex-col">
+			<div class="bg-[#171b12]/95 border-t border-[#c8b47a]/20 rounded-t-md max-h-[80vh] flex flex-col">
 				<!-- Drag handle + skip -->
 				<div class="flex items-center justify-between px-5 pt-3 pb-1 shrink-0">
 					<div class="w-16"></div>
-					<div class="w-10 h-1 rounded-full bg-[#dfceb0]/25"></div>
+					<div class="w-10 h-1 rounded-full bg-[#c8b47a]/25"></div>
 					{#if canSkip}
 						<button
 							onclick={() => setStep(null)}
 							disabled={submitting}
-							class="w-16 flex items-center justify-end gap-1 text-xs text-[#a89e8e] hover:text-[#d9ccb7] transition-colors"
+							class="w-16 flex items-center justify-end gap-1 text-xs text-[#a8a083] hover:text-[#d3caa9] transition-colors"
 						>
 							Skip
 							<FluentDismiss20Filled class="size-3.5" />
@@ -237,10 +237,10 @@
 					{#each Array(TOTAL_STEPS) as _, i}
 						<div
 							class="h-1 rounded-full transition-all duration-300 {i === step
-								? 'w-6 bg-[#e6a527]'
+								? 'w-6 bg-[#f2b01e]'
 								: i < step
-									? 'w-2 bg-[#e6a527]/30'
-									: 'w-2 bg-[#dfceb0]/15'}"
+									? 'w-2 bg-[#f2b01e]/30'
+									: 'w-2 bg-[#c8b47a]/15'}"
 						></div>
 					{/each}
 				</div>
@@ -252,14 +252,14 @@
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
 								<div
-									class="size-16 rounded-sm bg-[#e6a527]/12 border border-[#e6a527]/35 flex items-center justify-center"
+									class="size-16 rounded-sm bg-[#f2b01e]/12 border border-[#f2b01e]/35 flex items-center justify-center"
 								>
 									<span class="text-3xl">🎖️</span>
 								</div>
 							</div>
 							<div>
-								<h2 class="text-2xl font-bold text-[#fff7e8] tracking-wide">Greeting Commander</h2>
-								<p class="text-[#d9ccb7] text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+								<h2 class="text-2xl font-bold text-[#f5efd8] tracking-wide">Greeting Commander</h2>
+								<p class="text-[#d3caa9] text-sm mt-2 max-w-sm mx-auto leading-relaxed">
 									Welcome to PsyOps — a political simulation where you shape nations, build empires, and wage wars
 									through strategy and diplomacy.
 								</p>
@@ -280,13 +280,13 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex items-center gap-3">
 								<div
-									class="size-10 rounded-sm bg-[#8c709b]/15 border border-[#b7a0c5]/30 flex items-center justify-center shrink-0"
+									class="size-10 rounded-sm bg-[#8a4fc0]/15 border border-[#c08cf0]/30 flex items-center justify-center shrink-0"
 								>
-									<FluentPerson20Filled class="size-5 text-[#d5c4df]" />
+									<FluentPerson20Filled class="size-5 text-[#e3cbfb]" />
 								</div>
 								<div>
-									<h2 class="text-lg font-bold text-[#fff7e8]">Choose Your Name</h2>
-									<p class="text-xs text-[#a89e8e]">This is how other players will know you</p>
+									<h2 class="text-lg font-bold text-[#f5efd8]">Choose Your Name</h2>
+									<p class="text-xs text-[#a8a083]">This is how other players will know you</p>
 								</div>
 							</div>
 
@@ -330,19 +330,19 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex items-center gap-3">
 								<div
-									class="size-10 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center shrink-0"
+									class="size-10 rounded-sm bg-[#2369b5]/18 border border-[#5eaef5]/30 flex items-center justify-center shrink-0"
 								>
-									<FluentGlobe20Filled class="size-5 text-[#b7d0e6]" />
+									<FluentGlobe20Filled class="size-5 text-[#b3dcff]" />
 								</div>
 								<div>
-									<h2 class="text-lg font-bold text-[#fff7e8]">Choose Your Region</h2>
-									<p class="text-xs text-[#a89e8e]">Pick a region to call home</p>
+									<h2 class="text-lg font-bold text-[#f5efd8]">Choose Your Region</h2>
+									<p class="text-xs text-[#a8a083]">Pick a region to call home</p>
 								</div>
 							</div>
 
 							{#if loadingRegions}
 								<div class="flex items-center justify-center py-8">
-									<span class="loading loading-ring loading-md text-[#e6a527]"></span>
+									<span class="loading loading-ring loading-md text-[#f2b01e]"></span>
 								</div>
 							{:else}
 								<div class="space-y-2 max-h-[40vh] overflow-y-auto">
@@ -354,36 +354,36 @@
 										>
 											<div class="flex items-center gap-3">
 												<div
-													class="size-10 rounded-sm bg-[#102239]/70 border border-[#dfceb0]/15 flex items-center justify-center shrink-0"
+													class="size-10 rounded-sm bg-[#1a1f15]/70 border border-[#c8b47a]/15 flex items-center justify-center shrink-0"
 												>
 													<FluentGlobe20Filled
-														class="size-5 text-[#a89e8e] group-hover:text-[#b7d0e6] transition-colors"
+														class="size-5 text-[#a8a083] group-hover:text-[#b3dcff] transition-colors"
 													/>
 												</div>
 												<div class="flex-1 min-w-0">
 													<p
-														class="text-sm font-semibold text-[#fff7e8] group-hover:text-[#b7d0e6] transition-colors truncate"
+														class="text-sm font-semibold text-[#f5efd8] group-hover:text-[#b3dcff] transition-colors truncate"
 													>
 														{getRegionName(region.id)}
 													</p>
 													<div class="flex items-center gap-2 mt-0.5">
 														{#if region.state}
-															<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+															<span class="text-xs text-[#a8a083] flex items-center gap-1">
 																<FluentBuildingGovernment20Filled class="size-3" />
 																{region.state.name}
 															</span>
 														{:else}
-															<span class="text-xs text-[#d5c4df]">Independent</span>
+															<span class="text-xs text-[#e3cbfb]">Independent</span>
 														{/if}
-														<span class="text-xs text-[#a89e8e]">·</span>
-														<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+														<span class="text-xs text-[#a8a083]">·</span>
+														<span class="text-xs text-[#a8a083] flex items-center gap-1">
 															<FluentPeople20Filled class="size-3" />
 															{region.populationCount === 0 ? "No residents" : formatPopulation(region.populationCount)}
 														</span>
 													</div>
 												</div>
 												<FluentArrowRight20Filled
-													class="size-4 text-[#a89e8e] group-hover:text-[#b7d0e6] transition-colors shrink-0"
+													class="size-4 text-[#a8a083] group-hover:text-[#b3dcff] transition-colors shrink-0"
 												/>
 											</div>
 										</button>
@@ -396,8 +396,8 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="text-center space-y-3">
 								<span class="text-3xl">🏠</span>
-								<h2 class="text-lg font-bold text-[#fff7e8]">Your Command Center</h2>
-								<p class="text-sm text-[#d9ccb7] leading-relaxed">
+								<h2 class="text-lg font-bold text-[#f5efd8]">Your Command Center</h2>
+								<p class="text-sm text-[#d3caa9] leading-relaxed">
 									This is your dashboard — broadcasts from your state, quick actions, and an overview of your journey
 									all live here.
 								</p>
@@ -406,19 +406,19 @@
 							<div class="grid grid-cols-2 gap-2">
 								<div class="panel-muted rounded-sm p-3 text-center">
 									<span class="text-lg">📰</span>
-									<p class="text-xs text-[#a89e8e] mt-1">Read news &amp; posts</p>
+									<p class="text-xs text-[#a8a083] mt-1">Read news &amp; posts</p>
 								</div>
 								<div class="panel-muted rounded-sm p-3 text-center">
 									<span class="text-lg">🗺️</span>
-									<p class="text-xs text-[#a89e8e] mt-1">Explore the map</p>
+									<p class="text-xs text-[#a8a083] mt-1">Explore the map</p>
 								</div>
 								<div class="panel-muted rounded-sm p-3 text-center">
 									<span class="text-lg">💬</span>
-									<p class="text-xs text-[#a89e8e] mt-1">Chat with players</p>
+									<p class="text-xs text-[#a8a083] mt-1">Chat with players</p>
 								</div>
 								<div class="panel-muted rounded-sm p-3 text-center">
 									<span class="text-lg">🏛️</span>
-									<p class="text-xs text-[#a89e8e] mt-1">Join a party</p>
+									<p class="text-xs text-[#a8a083] mt-1">Join a party</p>
 								</div>
 							</div>
 
@@ -438,8 +438,8 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="text-center space-y-3">
 								<span class="text-3xl">🔧</span>
-								<h2 class="text-lg font-bold text-[#fff7e8]">Production</h2>
-								<p class="text-sm text-[#d9ccb7] leading-relaxed">
+								<h2 class="text-lg font-bold text-[#f5efd8]">Production</h2>
+								<p class="text-sm text-[#d3caa9] leading-relaxed">
 									This is where you earn money and produce goods. Work at a factory to collect wages, buy resources on
 									the market, and manufacture weapons &amp; equipment.
 								</p>
@@ -449,22 +449,22 @@
 								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">💰</span>
 									<div>
-										<p class="text-sm font-medium text-[#fff7e8]">Work for Wages</p>
-										<p class="text-xs text-[#a89e8e]">Find a factory job and complete shifts</p>
+										<p class="text-sm font-medium text-[#f5efd8]">Work for Wages</p>
+										<p class="text-xs text-[#a8a083]">Find a factory job and complete shifts</p>
 									</div>
 								</div>
 								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">🏭</span>
 									<div>
-										<p class="text-sm font-medium text-[#fff7e8]">Produce Goods</p>
-										<p class="text-xs text-[#a89e8e]">Craft weapons from raw materials</p>
+										<p class="text-sm font-medium text-[#f5efd8]">Produce Goods</p>
+										<p class="text-xs text-[#a8a083]">Craft weapons from raw materials</p>
 									</div>
 								</div>
 								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">🏪</span>
 									<div>
-										<p class="text-sm font-medium text-[#fff7e8]">Trade on the Market</p>
-										<p class="text-xs text-[#a89e8e]">Buy and sell resources &amp; products</p>
+										<p class="text-sm font-medium text-[#f5efd8]">Trade on the Market</p>
+										<p class="text-xs text-[#a8a083]">Buy and sell resources &amp; products</p>
 									</div>
 								</div>
 							</div>
@@ -485,8 +485,8 @@
 						<div class="space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="text-center space-y-3">
 								<span class="text-3xl">🪖</span>
-								<h2 class="text-lg font-bold text-[#fff7e8]">Military Training</h2>
-								<p class="text-sm text-[#d9ccb7] leading-relaxed">
+								<h2 class="text-lg font-bold text-[#f5efd8]">Military Training</h2>
+								<p class="text-sm text-[#d3caa9] leading-relaxed">
 									Build your army here. Train infantry, armor, artillery, and more. Your units are essential for
 									defending your nation and conquering new territory.
 								</p>
@@ -496,22 +496,22 @@
 								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">⚔️</span>
 									<div>
-										<p class="text-sm font-medium text-[#fff7e8]">Train Units</p>
-										<p class="text-xs text-[#a89e8e]">Select a unit type and begin training</p>
+										<p class="text-sm font-medium text-[#f5efd8]">Train Units</p>
+										<p class="text-xs text-[#a8a083]">Select a unit type and begin training</p>
 									</div>
 								</div>
 								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">🛡️</span>
 									<div>
-										<p class="text-sm font-medium text-[#fff7e8]">Manage Your Army</p>
-										<p class="text-xs text-[#a89e8e]">Monitor organization, strength, and supply</p>
+										<p class="text-sm font-medium text-[#f5efd8]">Manage Your Army</p>
+										<p class="text-xs text-[#a8a083]">Monitor organization, strength, and supply</p>
 									</div>
 								</div>
 								<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
 									<span class="text-lg">🗡️</span>
 									<div>
-										<p class="text-sm font-medium text-[#fff7e8]">Join Battles</p>
-										<p class="text-xs text-[#a89e8e]">Deploy units in wars to fight for your state</p>
+										<p class="text-sm font-medium text-[#f5efd8]">Join Battles</p>
+										<p class="text-xs text-[#a8a083]">Deploy units in wars to fight for your state</p>
 									</div>
 								</div>
 							</div>
@@ -532,14 +532,14 @@
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
 								<div
-									class="size-16 rounded-sm bg-[#587252]/18 border border-[#8fae88]/30 flex items-center justify-center"
+									class="size-16 rounded-sm bg-[#3f8a2a]/18 border border-[#6fd14a]/30 flex items-center justify-center"
 								>
-									<FluentCheckmark20Filled class="size-8 text-[#c6dfbf]" />
+									<FluentCheckmark20Filled class="size-8 text-[#b9f29a]" />
 								</div>
 							</div>
 							<div>
-								<h2 class="text-2xl font-bold text-[#fff7e8]">You're Ready, Commander</h2>
-								<p class="text-[#d9ccb7] text-sm mt-2 max-w-sm mx-auto leading-relaxed">
+								<h2 class="text-2xl font-bold text-[#f5efd8]">You're Ready, Commander</h2>
+								<p class="text-[#d3caa9] text-sm mt-2 max-w-sm mx-auto leading-relaxed">
 									You've got the basics. Go explore, build your economy, raise an army, and make your mark on the world.
 								</p>
 							</div>

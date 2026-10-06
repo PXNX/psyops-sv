@@ -168,30 +168,30 @@
 
 	<!-- Independent Region Warning -->
 	{#if data.isIndependentRegion}
-		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5 space-y-3">
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5 space-y-3">
 			<div class="flex items-start gap-3">
-				<FluentWarning20Filled class="size-6 text-[#f7c56b] shrink-0 mt-0.5" />
+				<FluentWarning20Filled class="size-6 text-[#ffd35c] shrink-0 mt-0.5" />
 				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-[#f7c56b] text-lg">Independent Region - State Formation</h3>
-					<p class="text-[#d9ccb7] text-sm leading-relaxed">
+					<h3 class="font-semibold text-[#ffd35c] text-lg">Independent Region - State Formation</h3>
+					<p class="text-[#d3caa9] text-sm leading-relaxed">
 						{data.userRegion.name} is not part of any state. Creating a party here will automatically establish
-						<strong class="text-[#fff7e8]">the State of {data.userRegion.name}</strong> with democratic governance.
+						<strong class="text-[#f5efd8]">the State of {data.userRegion.name}</strong> with democratic governance.
 					</p>
 					<div class="panel-muted rounded-sm p-3 space-y-3">
 						<div>
-							<p class="text-[#e5d8c1] text-sm font-medium mb-2">What happens when you create this party:</p>
-							<ul class="text-[#d9ccb7] text-sm space-y-1 list-disc list-inside">
+							<p class="text-[#e6ddbf] text-sm font-medium mb-2">What happens when you create this party:</p>
+							<ul class="text-[#d3caa9] text-sm space-y-1 list-disc list-inside">
 								<li>A new state is formed: "State of {data.userRegion.name}"</li>
 								<li>Your party becomes the founding political party</li>
 								<li>Other citizens can join or create competing parties</li>
 							</ul>
 						</div>
-						<div class="border-t border-[#dfceb0]/15 pt-3">
-							<p class="text-[#e5d8c1] text-sm font-semibold mb-2 flex items-center gap-2">
+						<div class="border-t border-[#c8b47a]/15 pt-3">
+							<p class="text-[#e6ddbf] text-sm font-semibold mb-2 flex items-center gap-2">
 								<FluentEmojiBallotBoxWithBallot class="size-4" />
 								Inaugural Election Schedule:
 							</p>
-							<ul class="text-[#d9ccb7] text-sm space-y-1 list-disc list-inside">
+							<ul class="text-[#d3caa9] text-sm space-y-1 list-disc list-inside">
 								<li><strong>Start:</strong> 3 days after state formation</li>
 								<li><strong>Duration:</strong> 2 days of voting</li>
 								<li><strong>Seats:</strong> 50 parliament seats available</li>
@@ -204,13 +204,13 @@
 		</div>
 	{:else if data.userState}
 		<!-- Home (Citizenship) State Info -->
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4">
+		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<FluentLocation20Filled class="size-5 text-[#7ba0c8]" />
+				<FluentLocation20Filled class="size-5 text-[#5eaef5]" />
 				<div>
-					<p class="text-sm text-[#b7d0e6]">Your party will be created in:</p>
-					<p class="font-semibold text-[#fff7e8]">{data.userState.name}</p>
-					<p class="text-xs text-[#a89e8e]">Based on your residence in {data.userRegion.name}</p>
+					<p class="text-sm text-[#b3dcff]">Your party will be created in:</p>
+					<p class="font-semibold text-[#f5efd8]">{data.userState.name}</p>
+					<p class="text-xs text-[#a8a083]">Based on your residence in {data.userRegion.name}</p>
 				</div>
 			</div>
 		</div>
@@ -228,8 +228,8 @@
 		<!-- Party Name -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentFlag20Filled class="size-5 text-[#e6a527]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Party Details</h2>
+				<FluentFlag20Filled class="size-5 text-[#f2b01e]" />
+				<h2 class="text-lg font-semibold text-[#f5efd8]">Party Details</h2>
 			</div>
 
 			<div class="space-y-4">
@@ -282,8 +282,8 @@
 		<!-- Party Logo -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-[#e6a527]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Party Logo (Optional)</h2>
+				<FluentImage20Filled class="size-5 text-[#f2b01e]" />
+				<h2 class="text-lg font-semibold text-[#f5efd8]">Party Logo (Optional)</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -305,22 +305,22 @@
 					class={[
 						"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200",
 						dragActive
-							? "border-[#e6a527] bg-[#e6a527]/12"
+							? "border-[#f2b01e] bg-[#f2b01e]/12"
 							: $form.logo
-								? "border-[#8fae88]/50 bg-[#587252]/10"
-								: "border-[#dfceb0]/20",
-						!$submitting && !$form.logo && canCreate && "hover:border-[#e6a527]/55 hover:bg-[#e6a527]/10"
+								? "border-[#6fd14a]/50 bg-[#3f8a2a]/10"
+								: "border-[#c8b47a]/20",
+						!$submitting && !$form.logo && canCreate && "hover:border-[#f2b01e]/55 hover:bg-[#f2b01e]/10"
 					]}
 					class:opacity-50={$submitting || !canCreate}
 					class:border-red-500={$errors.logo}
 				>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#e6a527]/12 p-3">
-								<FluentImage20Filled class="size-8 text-[#f7c56b]" />
+							<div class="rounded-full bg-[#f2b01e]/12 p-3">
+								<FluentImage20Filled class="size-8 text-[#ffd35c]" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-[#fff7e8]">
+								<p class="text-base font-semibold text-[#f5efd8]">
 									{#if dragActive}
 										Drop logo here
 									{:else if $submitting}
@@ -330,19 +330,19 @@
 									{/if}
 								</p>
 								{#if !$submitting && canCreate}
-									<p class="mt-1 text-sm text-[#a89e8e]">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#a8a083]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-[#102239]/70">
+							<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
 								<img src={previewUrl} alt="Party logo preview" class="size-24 object-contain rounded-sm" />
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/70 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-[#12150f]/70 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
+								<p class="text-base font-semibold text-[#f5efd8]">Tap to change</p>
 							</div>
 							<button
 								type="button"
@@ -361,11 +361,11 @@
 								✕
 							</button>
 						</div>
-						<div class="border-t border-[#dfceb0]/15 p-3 bg-[#102239]/70">
-							<p class="truncate text-sm font-medium text-[#fff7e8]" title={$form.logo.name}>
+						<div class="border-t border-[#c8b47a]/15 p-3 bg-[#1a1f15]/70">
+							<p class="truncate text-sm font-medium text-[#f5efd8]" title={$form.logo.name}>
 								{$form.logo.name}
 							</p>
-							<p class="text-xs text-[#a89e8e]">
+							<p class="text-xs text-[#a8a083]">
 								{Math.round($form.logo.size / 1024)} KB
 							</p>
 						</div>
@@ -383,8 +383,8 @@
 		<!-- Party Color -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentColor20Filled class="size-5 text-[#e6a527]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Party Color</h2>
+				<FluentColor20Filled class="size-5 text-[#f2b01e]" />
+				<h2 class="text-lg font-semibold text-[#f5efd8]">Party Color</h2>
 			</div>
 
 			<div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
@@ -392,8 +392,8 @@
 					<button
 						type="button"
 						class={[
-							"size-12 rounded-sm border border-[#dfceb0]/15 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#e6a527]",
-							$form.color === color.value && "ring-2 ring-[#fff7e8] ring-offset-2 ring-offset-[#14283f]"
+							"size-12 rounded-sm border border-[#c8b47a]/15 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f2b01e]",
+							$form.color === color.value && "ring-2 ring-[#f5efd8] ring-offset-2 ring-offset-[#242a1d]"
 						]}
 						style="background-color: {color.value}"
 						class:opacity-50={!canCreate}
@@ -405,16 +405,16 @@
 			</div>
 
 			<div class="flex items-center gap-3 pt-2">
-				<label for="color" class="text-sm font-medium text-[#e5d8c1]">Custom:</label>
+				<label for="color" class="text-sm font-medium text-[#e6ddbf]">Custom:</label>
 				<input
 					type="color"
 					id="color"
 					name="color"
 					bind:value={$form.color}
-					class="h-10 w-20 rounded-sm border border-[#dfceb0]/20 bg-[#0d1d31] cursor-pointer"
+					class="h-10 w-20 rounded-sm border border-[#c8b47a]/20 bg-[#0f120c] cursor-pointer"
 					disabled={$submitting || !canCreate}
 				/>
-				<span class="text-sm text-[#a89e8e]">{$form.color}</span>
+				<span class="text-sm text-[#a8a083]">{$form.color}</span>
 			</div>
 
 			{#if $errors.color}
@@ -428,11 +428,11 @@
 						{#if previewUrl}
 							<img src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
 						{:else}
-							<FluentPeople20Filled class="size-6 text-[#fff7e8]" />
+							<FluentPeople20Filled class="size-6 text-[#f5efd8]" />
 						{/if}
 					</div>
 					<div>
-						<p class="font-semibold text-[#fff7e8]">{$form.name || "Your Party Name"}</p>
+						<p class="font-semibold text-[#f5efd8]">{$form.name || "Your Party Name"}</p>
 						<p class="text-sm" style="color: {$form.color}">{$form.abbreviation || "Abbreviation"}</p>
 					</div>
 				</div>
@@ -442,8 +442,8 @@
 		<!-- Ideology -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentBuildingGovernment20Filled class="size-5 text-[#e6a527]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Political Alignment</h2>
+				<FluentBuildingGovernment20Filled class="size-5 text-[#f2b01e]" />
+				<h2 class="text-lg font-semibold text-[#f5efd8]">Political Alignment</h2>
 			</div>
 
 			<div>
@@ -472,8 +472,8 @@
 		<!-- Description -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-[#e6a527]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Party Description</h2>
+				<FluentDocument20Filled class="size-5 text-[#f2b01e]" />
+				<h2 class="text-lg font-semibold text-[#f5efd8]">Party Description</h2>
 			</div>
 
 			<textarea
@@ -491,10 +491,10 @@
 
 		<div class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-sm">
 			<div class="flex items-center gap-2">
-				<FluentClock20Filled class="size-4 md:size-5 text-[#a89e8e]" />
-				<span class="text-xs md:text-sm text-[#a89e8e]">Creation Cooldown</span>
+				<FluentClock20Filled class="size-4 md:size-5 text-[#a8a083]" />
+				<span class="text-xs md:text-sm text-[#a8a083]">Creation Cooldown</span>
 			</div>
-			<span class="font-bold text-[#fff7e8] text-base md:text-lg">
+			<span class="font-bold text-[#f5efd8] text-base md:text-lg">
 				{data.cooldownDays} days
 			</span>
 		</div>

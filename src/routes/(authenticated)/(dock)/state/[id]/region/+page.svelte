@@ -47,7 +47,7 @@
 		<div class="flex flex-col md:flex-row gap-4">
 			<!-- Search -->
 			<div class="flex-1 relative">
-				<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+				<FluentSearch20Filled class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-[#a8a083]" />
 				<input
 					type="text"
 					bind:value={searchInput}
@@ -73,7 +73,7 @@
 		{#each data.regions as region}
 			<a href="/region/{region.id}" class="group panel-interactive rounded-sm overflow-hidden">
 				<!-- Region Header -->
-				<div class="h-24 relative bg-[#102239]/70 border-b border-[#dfceb0]/10">
+				<div class="h-24 relative bg-[#1a1f15]/70 border-b border-[#c8b47a]/10">
 					<!-- Region Logo -->
 					<div class="absolute bottom-0 left-4 translate-y-1/2">
 						<div class="rounded-sm">
@@ -82,7 +82,7 @@
 								alt={region.name}
 								class="size-16 rounded-sm"
 								placeholderIcon={FluentShield20Filled}
-								placeholderGradient="from-[#315d8d] to-[#315d8d]"
+								placeholderGradient="from-[#2369b5] to-[#2369b5]"
 							/>
 						</div>
 					</div>
@@ -99,51 +99,51 @@
 				<div class="px-4 pt-10 pb-4 space-y-3">
 					<!-- Name and Rating -->
 					<div>
-						<h3 class="text-lg font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
+						<h3 class="text-lg font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
 							{region.name}
 						</h3>
-						<div class="flex items-center gap-3 text-sm text-[#a89e8e] mt-1">
+						<div class="flex items-center gap-3 text-sm text-[#a8a083] mt-1">
 							<span>Rating: {region.rating || 0}</span>
 						</div>
 					</div>
 
 					<!-- Quick Stats -->
 					<div class="grid grid-cols-2 gap-2 text-xs">
-						<div class="flex items-center gap-1 text-[#a89e8e]">
+						<div class="flex items-center gap-1 text-[#a8a083]">
 							<FluentPeople20Filled class="size-3" />
 							<span>{region.population.toLocaleString()}</span>
 						</div>
-						<div class="text-[#a89e8e]">Infrastructure: {region.infrastructure || 0}</div>
-						<div class="text-[#a89e8e]">Economy: {region.economy || 0}</div>
-						<div class="text-[#a89e8e]">Education: {region.education || 0}</div>
+						<div class="text-[#a8a083]">Infrastructure: {region.infrastructure || 0}</div>
+						<div class="text-[#a8a083]">Economy: {region.economy || 0}</div>
+						<div class="text-[#a8a083]">Education: {region.education || 0}</div>
 					</div>
 
 					<!-- Resources (if any) -->
 					{#if region.oil || region.steel || region.chromium || region.tungsten || region.rubber || region.aluminium}
-						<div class="pt-2 border-t border-[#dfceb0]/10">
+						<div class="pt-2 border-t border-[#c8b47a]/10">
 							<div class="flex flex-wrap gap-1">
 								{#if region.oil}
 									<span
-										class="px-2 py-0.5 bg-[#e6a527]/15 border border-[#e6a527]/30 rounded-sm text-xs text-[#f7c56b]"
+										class="px-2 py-0.5 bg-[#f2b01e]/15 border border-[#f2b01e]/30 rounded-sm text-xs text-[#ffd35c]"
 									>
 										Oil
 									</span>
 								{/if}
 								{#if region.steel}
-									<span class="px-2 py-0.5 bg-[#14283f] border border-[#dfceb0]/20 rounded-sm text-xs text-[#d9ccb7]">
+									<span class="px-2 py-0.5 bg-[#242a1d] border border-[#c8b47a]/20 rounded-sm text-xs text-[#d3caa9]">
 										Steel
 									</span>
 								{/if}
 								{#if region.chromium}
 									<span
-										class="px-2 py-0.5 bg-[#315d8d]/20 border border-[#7ba0c8]/30 rounded-sm text-xs text-[#b7d0e6]"
+										class="px-2 py-0.5 bg-[#2369b5]/20 border border-[#5eaef5]/30 rounded-sm text-xs text-[#b3dcff]"
 									>
 										Chromium
 									</span>
 								{/if}
 								{#if region.tungsten}
 									<span
-										class="px-2 py-0.5 bg-[#8c709b]/20 border border-[#b7a0c5]/30 rounded-sm text-xs text-[#d5c4df]"
+										class="px-2 py-0.5 bg-[#8a4fc0]/20 border border-[#c08cf0]/30 rounded-sm text-xs text-[#e3cbfb]"
 									>
 										Tungsten
 									</span>
@@ -159,11 +159,11 @@
 	<!-- Empty State -->
 	{#if data.regions.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="size-20 mx-auto bg-[#102239]/70 rounded-full flex items-center justify-center mb-4">
-				<FluentSearch20Filled class="size-10 text-[#a89e8e]" />
+			<div class="size-20 mx-auto bg-[#1a1f15]/70 rounded-full flex items-center justify-center mb-4">
+				<FluentSearch20Filled class="size-10 text-[#a8a083]" />
 			</div>
-			<h3 class="text-xl font-bold text-[#fff7e8] mb-2">No regions found</h3>
-			<p class="text-[#a89e8e]/70">Try adjusting your search or filters</p>
+			<h3 class="text-xl font-bold text-[#f5efd8] mb-2">No regions found</h3>
+			<p class="text-[#a8a083]/70">Try adjusting your search or filters</p>
 		</div>
 	{/if}
 </PageContainer>

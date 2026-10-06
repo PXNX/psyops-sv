@@ -36,7 +36,7 @@
 		<Button href="/admin/giftcode" variant="secondary" icon={FluentGift20Filled}>Gift Codes</Button>
 	</div>
 
-	<div class="border-t border-[#dfceb0]/15"></div>
+	<div class="border-t border-[#c8b47a]/15"></div>
 
 	<!-- Cron jobs -->
 	<div class="flex flex-wrap gap-2">

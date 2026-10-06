@@ -41,15 +41,15 @@
 			case "message_delete":
 				return "text-red-400";
 			case "warning":
-				return "text-[#f7c56b]";
+				return "text-[#ffd35c]";
 			case "restriction":
 				return "text-red-400";
 			case "report_action":
-				return "text-[#7ba0c8]";
+				return "text-[#5eaef5]";
 			case "content_flag":
-				return "text-[#f7c56b]";
+				return "text-[#ffd35c]";
 			default:
-				return "text-[#a89e8e]";
+				return "text-[#a8a083]";
 		}
 	}
 
@@ -105,9 +105,9 @@
 	<!-- Filter Info -->
 	{#if data.filterUserId}
 		<div
-			class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 text-[#b7d0e6] rounded-sm p-4 flex flex-wrap items-center gap-3"
+			class="bg-[#2369b5]/18 border border-[#5eaef5]/30 text-[#b3dcff] rounded-sm p-4 flex flex-wrap items-center gap-3"
 		>
-			<FluentFilter20Filled class="size-5 text-[#7ba0c8] shrink-0" />
+			<FluentFilter20Filled class="size-5 text-[#5eaef5] shrink-0" />
 			<div class="flex-1 min-w-0">
 				<p class="font-semibold">Filtered View</p>
 				<p class="text-sm">
@@ -126,12 +126,12 @@
 
 	<!-- Stats -->
 	<div class="flex items-center gap-4 rounded-sm panel p-5 w-full sm:w-auto sm:inline-flex">
-		<div class="size-12 rounded-sm flex items-center justify-center bg-[#8c709b]/15 border border-[#b7a0c5]/30">
-			<FluentShield20Filled class="size-6 text-[#b7a0c5]" />
+		<div class="size-12 rounded-sm flex items-center justify-center bg-[#8a4fc0]/15 border border-[#c08cf0]/30">
+			<FluentShield20Filled class="size-6 text-[#c08cf0]" />
 		</div>
 		<div>
-			<div class="text-3xl font-bold text-[#d5c4df] leading-none">{data.actions.length}</div>
-			<div class="text-sm text-[#a89e8e] mt-1">Total Actions</div>
+			<div class="text-3xl font-bold text-[#e3cbfb] leading-none">{data.actions.length}</div>
+			<div class="text-sm text-[#a8a083] mt-1">Total Actions</div>
 		</div>
 	</div>
 
@@ -139,7 +139,7 @@
 	<div class="space-y-3">
 		{#each data.actions as action}
 			{@const ActionIcon = getActionIcon(action.type)}
-			<div class="panel rounded-sm p-5 hover:border-[#dfceb0]/25 transition-all">
+			<div class="panel rounded-sm p-5 hover:border-[#c8b47a]/25 transition-all">
 				<div class="flex items-start gap-4">
 					<!-- Action Icon -->
 					<div class="shrink-0">
@@ -153,13 +153,13 @@
 						<!-- Header -->
 						<div class="flex items-center gap-3 mb-3 flex-wrap">
 							<span
-								class="badge badge-sm rounded-sm border border-[#dfceb0]/15 {getActionColor(
+								class="badge badge-sm rounded-sm border border-[#c8b47a]/15 {getActionColor(
 									action.type
-								)} bg-[#102239]/70"
+								)} bg-[#1a1f15]/70"
 							>
 								{getActionLabel(action.type)}
 							</span>
-							<div class="flex items-center gap-1 text-xs text-[#a89e8e]">
+							<div class="flex items-center gap-1 text-xs text-[#a8a083]">
 								<FluentCalendar20Filled class="size-3" />
 								<span>{formatDate(action.timestamp)}</span>
 							</div>
@@ -169,7 +169,7 @@
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
 							<!-- Target User -->
 							<div class="flex items-center gap-3">
-								<div class="text-xs text-[#a89e8e] font-medium min-w-[60px]">Target:</div>
+								<div class="text-xs text-[#a8a083] font-medium min-w-[60px]">Target:</div>
 								<a href="/user/{action.target.id}" class="flex items-center gap-2 group flex-1 min-w-0">
 									<div class="size-8 rounded-sm overflow-hidden transition-all">
 										<Logo
@@ -177,10 +177,10 @@
 											alt={action.target.name}
 											class="size-full"
 											placeholderIcon={FluentPeople20Filled}
-											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+											placeholderGradient="from-[#4a5238] to-[#252b1e]"
 										/>
 									</div>
-									<span class="text-sm text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+									<span class="text-sm text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 										{action.target.name}
 									</span>
 								</a>
@@ -188,7 +188,7 @@
 
 							<!-- Moderator -->
 							<div class="flex items-center gap-3">
-								<div class="text-xs text-[#a89e8e] font-medium min-w-[60px]">Moderator:</div>
+								<div class="text-xs text-[#a8a083] font-medium min-w-[60px]">Moderator:</div>
 								<a href="/user/{action.moderator.id}" class="flex items-center gap-2 group flex-1 min-w-0">
 									<div class="size-8 rounded-sm overflow-hidden transition-all">
 										<Logo
@@ -196,10 +196,10 @@
 											alt={action.moderator.name}
 											class="size-full"
 											placeholderIcon={FluentShield20Filled}
-											placeholderGradient="from-[#8c709b] to-[#6a5578]"
+											placeholderGradient="from-[#8a4fc0] to-[#6b3d96]"
 										/>
 									</div>
-									<span class="text-sm text-[#d5c4df] group-hover:text-[#f2c463] transition-colors truncate">
+									<span class="text-sm text-[#e3cbfb] group-hover:text-[#ffcf47] transition-colors truncate">
 										{action.moderator.name}
 									</span>
 									{#if action.moderator.role === "admin"}
@@ -216,14 +216,14 @@
 							<div class="panel-muted rounded-sm p-3 space-y-2">
 								{#if action.reason}
 									<div>
-										<span class="text-xs text-[#a89e8e] font-medium">Reason:</span>
-										<span class="text-sm text-[#d9ccb7] ml-2">{action.reason}</span>
+										<span class="text-xs text-[#a8a083] font-medium">Reason:</span>
+										<span class="text-sm text-[#d3caa9] ml-2">{action.reason}</span>
 									</div>
 								{/if}
 								{#if action.note}
 									<div>
-										<span class="text-xs text-[#a89e8e] font-medium">Note:</span>
-										<p class="text-sm text-[#d9ccb7] mt-1">{action.note}</p>
+										<span class="text-xs text-[#a8a083] font-medium">Note:</span>
+										<p class="text-sm text-[#d3caa9] mt-1">{action.note}</p>
 									</div>
 								{/if}
 							</div>

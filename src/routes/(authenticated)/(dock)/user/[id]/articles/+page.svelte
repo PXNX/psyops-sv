@@ -74,12 +74,12 @@
 						alt={data.user.name || "User"}
 						class="size-full"
 						placeholderIcon={FluentDocument20Filled}
-						placeholderGradient="from-[#8c709b] to-[#315d8d]"
+						placeholderGradient="from-[#8a4fc0] to-[#2369b5]"
 					/>
 				</div>
 				<div class="min-w-0">
-					<h1 class="text-3xl font-bold text-[#fff7e8]">Articles</h1>
-					<p class="text-[#a89e8e] mt-1">
+					<h1 class="text-3xl font-bold text-[#f5efd8]">Articles</h1>
+					<p class="text-[#a8a083] mt-1">
 						{data.totalArticles}
 						{data.totalArticles === 1 ? "Article" : "Articles"}
 					</p>
@@ -92,7 +92,7 @@
 			<div class="flex flex-col sm:flex-row gap-3">
 				<!-- Search -->
 				<div class="relative flex-1">
-					<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+					<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a8a083]" />
 					<input
 						class="field-control w-full rounded-sm pl-11 pr-4 py-2.5"
 						placeholder="Search by title..."
@@ -132,10 +132,10 @@
 	<!-- Articles List -->
 	{#if data.articles.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="size-16 bg-[#102239] rounded-full flex items-center justify-center mx-auto mb-4">
-				<FluentDocument20Filled class="size-8 text-[#a89e8e]" />
+			<div class="size-16 bg-[#1a1f15] rounded-full flex items-center justify-center mx-auto mb-4">
+				<FluentDocument20Filled class="size-8 text-[#a8a083]" />
 			</div>
-			<p class="text-[#a89e8e]">
+			<p class="text-[#a8a083]">
 				{#if data.searchQuery}
 					No articles found matching your search
 				{:else if data.isOwnProfile}
@@ -162,30 +162,30 @@
 							</div>
 						{:else}
 							<div
-								class="size-12 rounded-sm bg-[#8c709b]/15 border border-[#b7a0c5]/30 flex items-center justify-center"
+								class="size-12 rounded-sm bg-[#8a4fc0]/15 border border-[#c08cf0]/30 flex items-center justify-center"
 							>
-								<FluentDocument20Filled class="size-6 text-[#b7a0c5]" />
+								<FluentDocument20Filled class="size-6 text-[#c08cf0]" />
 							</div>
 						{/if}
 					</div>
 
 					<!-- Article Info -->
 					<div class="flex-1 min-w-0">
-						<h3 class="font-bold text-[#fff7e8] truncate group-hover:text-[#f2c463] transition-colors">
+						<h3 class="font-bold text-[#f5efd8] truncate group-hover:text-[#ffcf47] transition-colors">
 							{article.title}
 						</h3>
 						<div class="flex flex-wrap items-center gap-3 mt-1">
 							{#if article.newspaperName}
-								<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+								<span class="text-xs text-[#a8a083] flex items-center gap-1">
 									<FluentEmojiRolledUpNewspaper class="text-sm" />
 									{article.newspaperName}
 								</span>
 							{/if}
-							<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+							<span class="text-xs text-[#a8a083] flex items-center gap-1">
 								<FluentCalendar20Filled class="size-3" />
 								{formatDateTime(article.createdAt)}
 							</span>
-							<span class="text-xs text-[#a89e8e] flex items-center gap-1">
+							<span class="text-xs text-[#a8a083] flex items-center gap-1">
 								<FluentHeart20Filled class="size-3" />
 								{article.upvoteCount}
 							</span>
@@ -194,7 +194,7 @@
 
 					<!-- Chevron -->
 					<FluentChevronRight20Filled
-						class="size-5 shrink-0 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors"
+						class="size-5 shrink-0 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors"
 					/>
 				</a>
 			{/each}
@@ -212,7 +212,7 @@
 					onclick={() => goToPage(data.currentPage - 1)}
 				/>
 
-				<span class="text-sm text-[#a89e8e]">
+				<span class="text-sm text-[#a8a083]">
 					Page {data.currentPage} of {totalPages}
 				</span>
 

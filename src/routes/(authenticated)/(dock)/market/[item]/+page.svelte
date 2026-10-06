@@ -68,9 +68,9 @@
 		const low = data.statistics?.lowestPrice;
 		if (!low) return null;
 		const diff = price - low;
-		if (diff < 0) return { label: `$${Math.abs(diff).toLocaleString()} below market low`, cls: "text-[#c6dfbf]" };
-		if (diff > 0) return { label: `$${diff.toLocaleString()} above market low`, cls: "text-[#f7c56b]" };
-		return { label: "Matches market low", cls: "text-[#b7d0e6]" };
+		if (diff < 0) return { label: `$${Math.abs(diff).toLocaleString()} below market low`, cls: "text-[#b9f29a]" };
+		if (diff > 0) return { label: `$${diff.toLocaleString()} above market low`, cls: "text-[#ffd35c]" };
+		return { label: "Matches market low", cls: "text-[#b3dcff]" };
 	}
 </script>
 
@@ -80,19 +80,19 @@
 	{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
 	{@const totalCost = itemCost + taxAmount}
 
-	<div class="panel-muted rounded-sm {isBest ? 'border-[#8fae88]/30' : ''}">
+	<div class="panel-muted rounded-sm {isBest ? 'border-[#6fd14a]/30' : ''}">
 		<div class="flex flex-wrap items-center gap-3 px-4 py-3">
 			<div class="flex-1 min-w-[100px]">
 				<div class="flex items-baseline gap-2">
-					<span class="text-xl font-bold font-mono {isBest ? 'text-[#c6dfbf]' : 'text-[#fff7e8]'}">
+					<span class="text-xl font-bold font-mono {isBest ? 'text-[#b9f29a]' : 'text-[#f5efd8]'}">
 						${listing.pricePerUnit.toLocaleString()}
 					</span>
-					<span class="text-xs text-[#a89e8e]">per unit</span>
+					<span class="text-xs text-[#a8a083]">per unit</span>
 					{#if isBest}
 						<Badge tone="green" size="xs">BEST</Badge>
 					{/if}
 				</div>
-				<p class="text-xs text-[#a89e8e] mt-0.5"><span class="font-mono">{listing.quantity}</span> units available</p>
+				<p class="text-xs text-[#a8a083] mt-0.5"><span class="font-mono">{listing.quantity}</span> units available</p>
 			</div>
 
 			<form method="POST" action="?/buyListing" use:enhance class="flex items-center gap-2">
@@ -100,9 +100,9 @@
 
 				<div class="text-right text-xs font-mono min-w-[80px]">
 					{#if taxAmount > 0}
-						<div class="text-[#f7c56b]">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
+						<div class="text-[#ffd35c]">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
 					{/if}
-					<div class="text-[#fff7e8] font-bold">${totalCost.toLocaleString()}</div>
+					<div class="text-[#f5efd8] font-bold">${totalCost.toLocaleString()}</div>
 				</div>
 
 				<div class="join">
@@ -151,18 +151,18 @@
 					<ResourceIcon name={data.itemName} class="size-7" />
 				</div>
 				<div class="min-w-0">
-					<h1 class="text-3xl font-bold text-[#fff7e8] capitalize truncate">
+					<h1 class="text-3xl font-bold text-[#f5efd8] capitalize truncate">
 						{data.itemName}
 					</h1>
-					<p class="text-[#a89e8e] capitalize">
+					<p class="text-[#a8a083] capitalize">
 						{data.itemType} · {totalListingCount} listing{totalListingCount !== 1 ? "s" : ""}
 					</p>
 				</div>
 			</div>
 
 			<div class="panel-muted rounded-sm px-3 py-2 text-right flex-shrink-0">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Balance</p>
-				<p class="text-sm font-bold text-[#fff7e8] font-mono">${data.wallet.balance.toLocaleString()}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Balance</p>
+				<p class="text-sm font-bold text-[#f5efd8] font-mono">${data.wallet.balance.toLocaleString()}</p>
 			</div>
 		</div>
 	</div>
@@ -172,8 +172,8 @@
 		<MarketChart priceHistory={data.priceHistory} {currentPrice} />
 	{:else if data.priceHistory.length === 0}
 		<div class="panel-muted rounded-sm p-6 text-center py-10">
-			<FluentChartMultiple20Regular class="size-10 mx-auto opacity-30 mb-2 text-[#a89e8e]" />
-			<p class="text-sm text-[#a89e8e]">No price history yet</p>
+			<FluentChartMultiple20Regular class="size-10 mx-auto opacity-30 mb-2 text-[#a8a083]" />
+			<p class="text-sm text-[#a8a083]">No price history yet</p>
 		</div>
 	{/if}
 
@@ -181,32 +181,32 @@
 	{#if data.statistics}
 		<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
 			<div class="panel-muted rounded-sm p-3">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Lowest</p>
-				<p class="text-sm font-bold text-[#c6dfbf] font-mono">${data.statistics.lowestPrice.toLocaleString()}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Lowest</p>
+				<p class="text-sm font-bold text-[#b9f29a] font-mono">${data.statistics.lowestPrice.toLocaleString()}</p>
 			</div>
 			<div class="panel-muted rounded-sm p-3">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Highest</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Highest</p>
 				<p class="text-sm font-bold text-red-300 font-mono">${data.statistics.highestPrice.toLocaleString()}</p>
 			</div>
 			<div class="panel-muted rounded-sm p-3">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Average</p>
-				<p class="text-sm font-bold text-[#fff7e8] font-mono">${data.statistics.currentAvgPrice.toLocaleString()}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Average</p>
+				<p class="text-sm font-bold text-[#f5efd8] font-mono">${data.statistics.currentAvgPrice.toLocaleString()}</p>
 			</div>
 			<div class="panel-muted rounded-sm p-3">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Active Listings</p>
-				<p class="text-sm font-bold text-[#fff7e8] font-mono">{data.statistics.activeListings}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Active Listings</p>
+				<p class="text-sm font-bold text-[#f5efd8] font-mono">{data.statistics.activeListings}</p>
 			</div>
 		</div>
 	{/if}
 
 	<!-- Trade -->
 	<div class="panel rounded-sm overflow-hidden">
-		<div class="flex border-b border-[#dfceb0]/15">
+		<div class="flex border-b border-[#c8b47a]/15">
 			<button
 				class="flex-1 py-3 text-sm font-semibold uppercase tracking-wide transition-colors border-b-2 {activeTab ===
 				'buy'
-					? 'text-[#c6dfbf] border-[#8fae88]'
-					: 'text-[#a89e8e] border-transparent hover:text-[#d9ccb7]'}"
+					? 'text-[#b9f29a] border-[#6fd14a]'
+					: 'text-[#a8a083] border-transparent hover:text-[#d3caa9]'}"
 				onclick={() => (activeTab = "buy")}
 			>
 				Buy
@@ -214,8 +214,8 @@
 			<button
 				class="flex-1 py-3 text-sm font-semibold uppercase tracking-wide transition-colors border-b-2 {activeTab ===
 				'sell'
-					? 'text-[#f7c56b] border-[#e6a527]'
-					: 'text-[#a89e8e] border-transparent hover:text-[#d9ccb7]'}"
+					? 'text-[#ffd35c] border-[#f2b01e]'
+					: 'text-[#a8a083] border-transparent hover:text-[#d3caa9]'}"
 				onclick={() => (activeTab = "sell")}
 			>
 				Sell
@@ -226,10 +226,10 @@
 			{#if activeTab === "buy"}
 				{#if data.otherListings.length === 0}
 					<div class="text-center py-8">
-						<FluentShoppingCart20Filled class="size-10 mx-auto opacity-30 mb-3 text-[#a89e8e]" />
-						<p class="text-[#d9ccb7] font-medium">No other sellers right now</p>
+						<FluentShoppingCart20Filled class="size-10 mx-auto opacity-30 mb-3 text-[#a8a083]" />
+						<p class="text-[#d3caa9] font-medium">No other sellers right now</p>
 						{#if !data.myListing && data.userItemQuantity > 0}
-							<p class="text-xs text-[#a89e8e] mt-1">Be the first — list yours in the Sell tab.</p>
+							<p class="text-xs text-[#a8a083] mt-1">Be the first — list yours in the Sell tab.</p>
 						{/if}
 					</div>
 				{:else}
@@ -237,7 +237,7 @@
 
 					{#if data.otherListings.length > 1}
 						<button
-							class="mt-3 text-xs text-[#a89e8e] hover:text-[#f2c463] underline underline-offset-2 transition-colors"
+							class="mt-3 text-xs text-[#a8a083] hover:text-[#ffcf47] underline underline-offset-2 transition-colors"
 							onclick={() => (showAllOffers = !showAllOffers)}
 						>
 							{showAllOffers ? "Hide" : "Show"}
@@ -256,7 +256,7 @@
 			{:else if data.myListing && !isEditing}
 				{@const cmp = priceVsMarket(data.myListing.pricePerUnit)}
 				<div class="flex items-center justify-between mb-4">
-					<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Your listing</p>
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Your listing</p>
 					<div class="flex items-center gap-2">
 						<Button variant="secondary" size="xs" icon={FluentEdit20Filled} onclick={startEditing}>EDIT</Button>
 						<form method="POST" action="?/removeListing" use:enhance>
@@ -269,15 +269,15 @@
 					<ResourceIcon name={data.itemName} class="size-10 sm:size-12" />
 					<div class="flex-1 grid grid-cols-3 gap-4">
 						<div>
-							<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Quantity</p>
-							<p class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">{data.myListing.quantity}</p>
+							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Quantity</p>
+							<p class="text-xl sm:text-2xl font-bold text-[#f5efd8] font-mono">{data.myListing.quantity}</p>
 							{#if data.userItemQuantity > 0}
-								<p class="text-xs text-[#a89e8e] mt-0.5">+{data.userItemQuantity} in inventory</p>
+								<p class="text-xs text-[#a8a083] mt-0.5">+{data.userItemQuantity} in inventory</p>
 							{/if}
 						</div>
 						<div>
-							<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Unit Price</p>
-							<p class="text-xl sm:text-2xl font-bold text-[#f7c56b] font-mono">
+							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Unit Price</p>
+							<p class="text-xl sm:text-2xl font-bold text-[#ffd35c] font-mono">
 								${data.myListing.pricePerUnit.toLocaleString()}
 							</p>
 							{#if cmp}
@@ -285,8 +285,8 @@
 							{/if}
 						</div>
 						<div>
-							<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide mb-1">Total Value</p>
-							<p class="text-xl sm:text-2xl font-bold text-[#fff7e8] font-mono">
+							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Total Value</p>
+							<p class="text-xl sm:text-2xl font-bold text-[#f5efd8] font-mono">
 								${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
 							</p>
 						</div>
@@ -305,7 +305,7 @@
 					class="space-y-4"
 				>
 					<div class="flex items-center justify-between mb-1">
-						<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Edit listing</p>
+						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Edit listing</p>
 						<Button type="button" variant="secondary" size="xs" icon={FluentDismiss20Filled} onclick={cancelEditing}>
 							CANCEL
 						</Button>
@@ -314,7 +314,7 @@
 					<div class="grid grid-cols-2 gap-4">
 						<div>
 							<label for="edit-qty" class="field-label">
-								Quantity <span class="text-xs font-normal text-[#a89e8e]">max {totalAvailableForListing}</span>
+								Quantity <span class="text-xs font-normal text-[#a8a083]">max {totalAvailableForListing}</span>
 							</label>
 							<div class="join w-full">
 								<input
@@ -339,7 +339,7 @@
 							<label for="edit-price" class="field-label">Price per unit</label>
 							<div class="join w-full">
 								<span
-									class="join-item h-8 px-3 flex items-center border border-[#dfceb0]/20 bg-[#14283f] text-[#a89e8e] text-sm font-mono rounded-sm"
+									class="join-item h-8 px-3 flex items-center border border-[#c8b47a]/20 bg-[#242a1d] text-[#a8a083] text-sm font-mono rounded-sm"
 									>$</span
 								>
 								<input
@@ -357,8 +357,8 @@
 						</div>
 					</div>
 					<div class="flex items-center justify-between pt-1">
-						<p class="text-sm text-[#a89e8e]">
-							New total: <span class="text-[#fff7e8] font-bold font-mono"
+						<p class="text-sm text-[#a8a083]">
+							New total: <span class="text-[#f5efd8] font-bold font-mono"
 								>${(editQty * editPrice).toLocaleString()}</span
 							>
 						</p>
@@ -368,17 +368,17 @@
 			{:else if data.userItemQuantity > 0 && cooldownTimeRemaining <= 0}
 				{@const cmp = priceVsMarket(createPrice)}
 				<form method="POST" action="?/createListing" use:enhance class="space-y-4">
-					<div class="flex items-center gap-2 text-[#d9ccb7] mb-2">
-						<FluentAdd20Filled class="size-4 text-[#f7c56b]" />
+					<div class="flex items-center gap-2 text-[#d3caa9] mb-2">
+						<FluentAdd20Filled class="size-4 text-[#ffd35c]" />
 						<span class="text-sm">
 							List your {data.itemName} for sale —
-							<span class="text-[#e5d8c1] font-bold font-mono">{data.userItemQuantity}</span> in inventory
+							<span class="text-[#e6ddbf] font-bold font-mono">{data.userItemQuantity}</span> in inventory
 						</span>
 					</div>
 					<div class="grid grid-cols-2 gap-3">
 						<div>
 							<label for="create-qty" class="field-label">
-								Quantity <span class="text-xs font-normal text-[#a89e8e]">max {data.userItemQuantity}</span>
+								Quantity <span class="text-xs font-normal text-[#a8a083]">max {data.userItemQuantity}</span>
 							</label>
 							<div class="join w-full">
 								<input
@@ -403,7 +403,7 @@
 							<label for="create-price" class="field-label">Price per unit</label>
 							<div class="join w-full">
 								<span
-									class="join-item h-8 px-3 flex items-center border border-[#dfceb0]/20 bg-[#14283f] text-[#a89e8e] text-sm font-mono rounded-sm"
+									class="join-item h-8 px-3 flex items-center border border-[#c8b47a]/20 bg-[#242a1d] text-[#a8a083] text-sm font-mono rounded-sm"
 									>$</span
 								>
 								<input
@@ -421,8 +421,8 @@
 						</div>
 					</div>
 					<div class="flex items-center justify-between pt-1">
-						<p class="text-sm text-[#a89e8e]">
-							Total value: <span class="text-[#fff7e8] font-bold font-mono"
+						<p class="text-sm text-[#a8a083]">
+							Total value: <span class="text-[#f5efd8] font-bold font-mono"
 								>${(createQty * createPrice).toLocaleString()}</span
 							>
 						</p>
@@ -437,18 +437,18 @@
 					</div>
 				</form>
 			{:else if cooldownTimeRemaining > 0}
-				<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3">
+				<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3">
 					<FluentWarning20Filled class="size-5 shrink-0" />
 					<div>
 						<p class="text-sm font-bold">Cooldown Active</p>
-						<p class="text-xs text-[#f7c56b]/70">
+						<p class="text-xs text-[#ffd35c]/70">
 							<span class="font-mono">{cooldownDisplay}</span> before you can list again
 						</p>
 					</div>
 				</div>
 			{:else}
 				<div class="text-center py-6">
-					<p class="text-sm text-[#a89e8e]">No {data.itemName} in your inventory to sell.</p>
+					<p class="text-sm text-[#a8a083]">No {data.itemName} in your inventory to sell.</p>
 				</div>
 			{/if}
 		</div>

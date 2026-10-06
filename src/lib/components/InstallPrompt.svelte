@@ -71,31 +71,31 @@
 	>
 		<img src="/icon-192.png" alt="" class="size-10 rounded-lg shrink-0" />
 		<div class="flex-1 min-w-0">
-			<p class="text-sm font-semibold text-[#fff7e8]">Install PsyOps</p>
+			<p class="text-sm font-semibold text-[#f5efd8]">Install PsyOps</p>
 			{#if deferredPrompt}
-				<p class="text-xs text-[#a89e8e] mt-0.5">Add it to your home screen for a faster, full-screen experience.</p>
+				<p class="text-xs text-[#a8a083] mt-0.5">Add it to your home screen for a faster, full-screen experience.</p>
 				<div class="flex gap-2 mt-3">
 					<button
 						onclick={install}
-						class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#e6a527] text-[#172a45] hover:brightness-110 transition"
+						class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#f2b01e] text-[#1b1708] hover:brightness-110 transition"
 					>
 						Install
 					</button>
 					<button
 						onclick={dismiss}
-						class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#a89e8e] hover:text-[#fff7e8] transition-colors"
+						class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#a8a083] hover:text-[#f5efd8] transition-colors"
 					>
 						Not now
 					</button>
 				</div>
 			{:else}
-				<p class="text-xs text-[#a89e8e] mt-0.5">
-					Tap <span class="font-semibold text-[#d9ccb7]">Share</span>, then
-					<span class="font-semibold text-[#d9ccb7]">Add to Home Screen</span>.
+				<p class="text-xs text-[#a8a083] mt-0.5">
+					Tap <span class="font-semibold text-[#d3caa9]">Share</span>, then
+					<span class="font-semibold text-[#d3caa9]">Add to Home Screen</span>.
 				</p>
 				<button
 					onclick={dismiss}
-					class="mt-3 px-3 py-1.5 rounded-lg text-xs font-medium text-[#a89e8e] hover:text-[#fff7e8] transition-colors"
+					class="mt-3 px-3 py-1.5 rounded-lg text-xs font-medium text-[#a8a083] hover:text-[#f5efd8] transition-colors"
 				>
 					Got it
 				</button>
@@ -104,7 +104,7 @@
 		<button
 			onclick={dismiss}
 			aria-label="Dismiss"
-			class="text-[#a89e8e] hover:text-[#fff7e8] transition-colors shrink-0"
+			class="text-[#a8a083] hover:text-[#f5efd8] transition-colors shrink-0"
 		>
 			✕
 		</button>

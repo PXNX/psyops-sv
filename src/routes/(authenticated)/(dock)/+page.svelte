@@ -68,24 +68,24 @@
 
 	<!-- Birthday Reward Banner -->
 	{#if data.birthdayInfo.uncollectedYears.length > 0}
-		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5">
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5">
 			<div class="flex items-start gap-4">
 				<div
-					class="size-12 shrink-0 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center text-2xl"
+					class="size-12 shrink-0 bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm flex items-center justify-center text-2xl"
 				>
 					🎂
 				</div>
 				<div class="flex-1 min-w-0">
 					{#if data.birthdayInfo.isBirthday}
-						<h3 class="text-lg font-bold text-[#f7c56b]">
+						<h3 class="text-lg font-bold text-[#ffd35c]">
 							🎉 Happy Birthday, {data.account.profile?.name || "friend"}! 🎉
 						</h3>
-						<p class="text-sm text-[#d9ccb7] mt-1">
+						<p class="text-sm text-[#d3caa9] mt-1">
 							Your account turns {data.birthdayInfo.totalYears} today. Here's a gift to celebrate!
 						</p>
 					{:else}
-						<h3 class="text-lg font-bold text-[#f7c56b]">🎁 A birthday gift is waiting!</h3>
-						<p class="text-sm text-[#d9ccb7] mt-1">
+						<h3 class="text-lg font-bold text-[#ffd35c]">🎁 A birthday gift is waiting!</h3>
+						<p class="text-sm text-[#d3caa9] mt-1">
 							{#if data.birthdayInfo.uncollectedYears.length === 1}
 								Your year {data.birthdayInfo.uncollectedYears[0]} anniversary reward is ready to collect.
 							{:else}
@@ -93,7 +93,7 @@
 							{/if}
 						</p>
 					{/if}
-					<p class="text-xs text-[#a89e8e] mt-2">
+					<p class="text-xs text-[#a8a083] mt-2">
 						{data.birthdayInfo.rewardPerYear.toLocaleString()} currency × {data.birthdayInfo.uncollectedYears.length} year{data
 							.birthdayInfo.uncollectedYears.length !== 1
 							? "s"
@@ -124,13 +124,13 @@
 	<!-- Location & State snapshot -->
 	<SectionCard>
 		<div class="flex items-center justify-between mb-4">
-			<h2 class="text-[10px] font-bold text-[#a89e8e] uppercase tracking-wide flex items-center gap-2">
-				<FluentGlobe20Filled class="size-4 text-[#7ba0c8]" /> Your Location
+			<h2 class="text-[10px] font-bold text-[#a8a083] uppercase tracking-wide flex items-center gap-2">
+				<FluentGlobe20Filled class="size-4 text-[#5eaef5]" /> Your Location
 			</h2>
 			{#if data.userLocation}
 				<a
 					href="/region/{data.userLocation.regionId}"
-					class="text-xs text-[#e5d8c1]/70 hover:text-[#f2c463] transition-colors flex items-center gap-1"
+					class="text-xs text-[#e6ddbf]/70 hover:text-[#ffcf47] transition-colors flex items-center gap-1"
 				>
 					Region details <FluentArrowRight20Filled class="size-3" />
 				</a>
@@ -142,16 +142,16 @@
 				<Logo
 					src={data.stateSnapshot.logo}
 					alt={data.stateSnapshot.name}
-					class="size-14 rounded-sm border border-[#dfceb0]/15"
+					class="size-14 rounded-sm border border-[#c8b47a]/15"
 					placeholderIcon={FluentBuildingGovernment20Filled}
-					placeholderGradient="from-[#315d8d] to-[#1e3a5f]"
+					placeholderGradient="from-[#2369b5] to-[#2b3322]"
 				/>
 				<div class="flex-1 min-w-0">
-					<div class="text-xs text-[#a89e8e]">{regionName}</div>
+					<div class="text-xs text-[#a8a083]">{regionName}</div>
 					<div class="flex items-center gap-2 flex-wrap">
 						<a
 							href="/state/{data.stateSnapshot.id}"
-							class="text-lg font-bold text-[#fff7e8] hover:text-[#f2c463] transition-colors truncate"
+							class="text-lg font-bold text-[#f5efd8] hover:text-[#ffcf47] transition-colors truncate"
 						>
 							{data.stateSnapshot.name}
 						</a>
@@ -159,24 +159,24 @@
 							<Badge tone="red" size="xs">Capitulated</Badge>
 						{/if}
 					</div>
-					<div class="flex items-center gap-4 mt-1 text-xs text-[#a89e8e]">
+					<div class="flex items-center gap-4 mt-1 text-xs text-[#a8a083]">
 						<span class="flex items-center gap-1">
-							<FluentPeople20Filled class="size-3.5 text-[#7ba0c8]" />
+							<FluentPeople20Filled class="size-3.5 text-[#5eaef5]" />
 							{data.stateSnapshot.population.toLocaleString()}
 						</span>
 						<span class="flex items-center gap-1">
-							<FluentStar20Filled class="size-3.5 text-[#f7c56b]" />
+							<FluentStar20Filled class="size-3.5 text-[#ffd35c]" />
 							{data.stateSnapshot.rating.toLocaleString()}
 						</span>
 					</div>
 				</div>
 			</div>
 		{:else}
-			<div class="flex items-center gap-3 text-[#a89e8e] text-sm">
+			<div class="flex items-center gap-3 text-[#a8a083] text-sm">
 				<FluentGlobe20Filled class="size-5 shrink-0" />
 				<span>
 					{regionName ? `${regionName} is not controlled by any state.` : "You have not settled in a region yet."}
-					<a href="/map" class="text-[#f7c56b] hover:text-[#f2c463] transition-colors">Explore the map</a>.
+					<a href="/map" class="text-[#ffd35c] hover:text-[#ffcf47] transition-colors">Explore the map</a>.
 				</span>
 			</div>
 		{/if}
@@ -197,9 +197,9 @@
 							<div class="flex items-center gap-2 mb-1">
 								<span class="text-[10px] font-medium text-red-300 uppercase tracking-wide">System Broadcast</span>
 							</div>
-							<h3 class="text-[#fff7e8] font-bold">{data.systemBroadcast.title}</h3>
-							<p class="text-[#d9ccb7] text-sm whitespace-pre-wrap mt-1">{data.systemBroadcast.content}</p>
-							<p class="text-xs text-[#a89e8e] mt-2">
+							<h3 class="text-[#f5efd8] font-bold">{data.systemBroadcast.title}</h3>
+							<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.systemBroadcast.content}</p>
+							<p class="text-xs text-[#a8a083] mt-2">
 								{data.systemBroadcast.issuer?.profile?.name || "Admin"} · {formatDate(data.systemBroadcast.createdAt)}
 							</p>
 						</div>
@@ -208,22 +208,22 @@
 			{/if}
 
 			{#if data.stateBroadcast}
-				<div class="bg-[#8c709b]/15 rounded-sm border border-[#b7a0c5]/30 p-5">
+				<div class="bg-[#8a4fc0]/15 rounded-sm border border-[#c08cf0]/30 p-5">
 					<div class="flex items-start gap-3">
 						<div
-							class="size-10 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm flex items-center justify-center shrink-0"
+							class="size-10 bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm flex items-center justify-center shrink-0"
 						>
-							<FluentBuildingGovernment20Filled class="size-5 text-[#b7a0c5]" />
+							<FluentBuildingGovernment20Filled class="size-5 text-[#c08cf0]" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 mb-1">
-								<span class="text-[10px] font-medium text-[#d5c4df] uppercase tracking-wide">
+								<span class="text-[10px] font-medium text-[#e3cbfb] uppercase tracking-wide">
 									{data.stateBroadcast.state?.name || "State"} Broadcast
 								</span>
 							</div>
-							<h3 class="text-[#fff7e8] font-bold">{data.stateBroadcast.title}</h3>
-							<p class="text-[#d9ccb7] text-sm whitespace-pre-wrap mt-1">{data.stateBroadcast.content}</p>
-							<p class="text-xs text-[#a89e8e] mt-2">
+							<h3 class="text-[#f5efd8] font-bold">{data.stateBroadcast.title}</h3>
+							<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.stateBroadcast.content}</p>
+							<p class="text-xs text-[#a8a083] mt-2">
 								{data.stateBroadcast.issuer?.profile?.name || "President"} · {formatDate(data.stateBroadcast.createdAt)}
 							</p>
 						</div>
@@ -232,22 +232,22 @@
 			{/if}
 
 			{#if data.partyBroadcast}
-				<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/30 p-5">
+				<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/30 p-5">
 					<div class="flex items-start gap-3">
 						<div
-							class="size-10 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm flex items-center justify-center shrink-0"
+							class="size-10 bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm flex items-center justify-center shrink-0"
 						>
-							<FluentPeople20Filled class="size-5 text-[#8fae88]" />
+							<FluentPeople20Filled class="size-5 text-[#6fd14a]" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 mb-1">
-								<span class="text-[10px] font-medium text-[#c6dfbf] uppercase tracking-wide">
+								<span class="text-[10px] font-medium text-[#b9f29a] uppercase tracking-wide">
 									{data.partyBroadcast.party?.name || "Party"} Broadcast
 								</span>
 							</div>
-							<h3 class="text-[#fff7e8] font-bold">{data.partyBroadcast.title}</h3>
-							<p class="text-[#d9ccb7] text-sm whitespace-pre-wrap mt-1">{data.partyBroadcast.content}</p>
-							<p class="text-xs text-[#a89e8e] mt-2">
+							<h3 class="text-[#f5efd8] font-bold">{data.partyBroadcast.title}</h3>
+							<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.partyBroadcast.content}</p>
+							<p class="text-xs text-[#a8a083] mt-2">
 								{data.partyBroadcast.issuer?.profile?.name || "Party Leader"} · {formatDate(
 									data.partyBroadcast.createdAt
 								)}
@@ -266,7 +266,7 @@
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
 						<div class="size-2 bg-red-500 rounded-full animate-pulse"></div>
-						<h2 class="text-lg font-semibold text-[#fff7e8]">Wars in Your Region</h2>
+						<h2 class="text-lg font-semibold text-[#f5efd8]">Wars in Your Region</h2>
 					</div>
 					<Badge tone="red"><span class="font-mono">{data.activeWars.length}</span> ACTIVE</Badge>
 				</div>
@@ -275,13 +275,13 @@
 				{#each data.activeWars as war (war.id)}
 					<a
 						href="/war/{war.id}"
-						class="block panel-muted rounded-sm p-3 sm:p-4 hover:border-red-500/40 hover:bg-[#19304b] transition-all group"
+						class="block panel-muted rounded-sm p-3 sm:p-4 hover:border-red-500/40 hover:bg-[#2e3524] transition-all group"
 					>
 						<div class="flex items-center gap-3">
 							<!-- Attacker -->
 							<div class="flex items-center gap-2 flex-1 min-w-0 justify-end text-right">
 								<div class="min-w-0">
-									<div class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+									<div class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 										{war.attacker.name}
 									</div>
 									{#if war.attackerBloc}
@@ -293,7 +293,7 @@
 								<Logo
 									src={war.attacker.logo}
 									alt={war.attacker.name}
-									class="size-9 rounded-sm border border-[#dfceb0]/15"
+									class="size-9 rounded-sm border border-[#c8b47a]/15"
 									placeholderIcon={FluentFlag20Filled}
 									placeholderGradient="from-red-600 to-red-800"
 								/>
@@ -306,12 +306,12 @@
 								<Logo
 									src={war.defender.logo}
 									alt={war.defender.name}
-									class="size-9 rounded-sm border border-[#dfceb0]/15"
+									class="size-9 rounded-sm border border-[#c8b47a]/15"
 									placeholderIcon={FluentShield20Filled}
-									placeholderGradient="from-[#7ba0c8] to-[#315d8d]"
+									placeholderGradient="from-[#5eaef5] to-[#2369b5]"
 								/>
 								<div class="min-w-0">
-									<div class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+									<div class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 										{war.defender.name}
 									</div>
 									{#if war.defenderBloc}
@@ -323,7 +323,7 @@
 							</div>
 						</div>
 
-						<div class="flex items-center justify-between mt-3 pt-3 border-t border-[#dfceb0]/15">
+						<div class="flex items-center justify-between mt-3 pt-3 border-t border-[#c8b47a]/15">
 							<div class="flex items-center gap-2">
 								<Badge tone={war.side === "defender" ? "blue" : "red"} size="xs" class="uppercase">
 									{war.side === "defender" ? "Defending" : "Attacking"}
@@ -332,7 +332,7 @@
 									<Badge tone="amber" size="xs">⚔️ <span class="font-mono">{war.ongoingBattles}</span> LIVE</Badge>
 								{/if}
 							</div>
-							<span class="text-[10px] text-[#a89e8e]">
+							<span class="text-[10px] text-[#a8a083]">
 								Declared {formatDate(war.declaredAt)}
 							</span>
 						</div>
@@ -344,12 +344,12 @@
 
 	<!-- Ongoing Battles in Region -->
 	{#if data.ongoingBattles.length > 0}
-		<div class="panel rounded-sm overflow-hidden border-[#e6a527]/35">
-			<div class="bg-[#e6a527]/12 border-b border-[#e6a527]/35 px-4 sm:px-5 py-3">
+		<div class="panel rounded-sm overflow-hidden border-[#f2b01e]/35">
+			<div class="bg-[#f2b01e]/12 border-b border-[#f2b01e]/35 px-4 sm:px-5 py-3">
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
-						<div class="size-2 bg-[#e6a527] rounded-full animate-pulse"></div>
-						<h2 class="text-lg font-semibold text-[#fff7e8]">Active Battles</h2>
+						<div class="size-2 bg-[#f2b01e] rounded-full animate-pulse"></div>
+						<h2 class="text-lg font-semibold text-[#f5efd8]">Active Battles</h2>
 					</div>
 					<Badge tone="amber"><span class="font-mono">{data.ongoingBattles.length}</span> ONGOING</Badge>
 				</div>
@@ -358,22 +358,22 @@
 				{#each data.ongoingBattles as battle (battle.id)}
 					<a
 						href="/battle/{battle.id}"
-						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-all group"
+						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-all group"
 					>
 						<Logo
 							src="/coats/{battle.regionId}.svg"
 							alt={getRegionName(battle.regionId)}
-							class="size-10 sm:size-12 rounded-sm border border-[#dfceb0]/15"
+							class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/15"
 							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-[#e6a527] to-red-600"
+							placeholderGradient="from-[#f2b01e] to-red-600"
 						/>
 						<div class="flex-1 min-w-0">
 							<div
-								class="text-sm sm:text-base font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate"
+								class="text-sm sm:text-base font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate"
 							>
 								{getRegionName(battle.regionId)}
 							</div>
-							<div class="text-xs text-[#a89e8e]">
+							<div class="text-xs text-[#a8a083]">
 								{battle.attackerState.name} → {battle.defenderState.name}
 							</div>
 						</div>

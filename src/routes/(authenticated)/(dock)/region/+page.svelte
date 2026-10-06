@@ -49,7 +49,7 @@
 	}
 
 	function getRegionColor(region: any) {
-		return region.stateColor || "#e6a527";
+		return region.stateColor || "#f2b01e";
 	}
 </script>
 
@@ -61,7 +61,7 @@
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Search -->
 		<div class="flex-1 relative">
-			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a8a083]" />
 			<input
 				type="text"
 				bind:value={searchInput}
@@ -107,44 +107,44 @@
 						<img src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="size-12 object-contain" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<h2 class="font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+						<h2 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
 							{getRegionName(region.id)}
 						</h2>
-						<div class="flex items-center gap-2 text-xs text-[#a89e8e] mt-0.5">
+						<div class="flex items-center gap-2 text-xs text-[#a8a083] mt-0.5">
 							<span>#{region.rating || 0}</span>
 							{#if region.stateName}
 								<span>•</span>
 								<span class="truncate">{region.stateName}</span>
 							{:else}
-								<span class="text-[#f7c56b]">• Independent</span>
+								<span class="text-[#ffd35c]">• Independent</span>
 							{/if}
 						</div>
 					</div>
 				</div>
 
 				<!-- Quick Stats -->
-				<div class="grid grid-cols-2 gap-2 text-xs text-[#d9ccb7]">
+				<div class="grid grid-cols-2 gap-2 text-xs text-[#d3caa9]">
 					<div class="flex items-center gap-1">
-						<FluentPeople20Filled class="size-3 text-[#7ba0c8]" />
+						<FluentPeople20Filled class="size-3 text-[#5eaef5]" />
 						<span>{region.population.toLocaleString()}</span>
 					</div>
 					<div>
-						<span class="text-[#a89e8e]">Infrastructure:</span>
+						<span class="text-[#a8a083]">Infrastructure:</span>
 						{region.infrastructure || 0}
 					</div>
 					<div>
-						<span class="text-[#a89e8e]">Economy:</span>
+						<span class="text-[#a8a083]">Economy:</span>
 						{region.economy || 0}
 					</div>
 					<div>
-						<span class="text-[#a89e8e]">Education:</span>
+						<span class="text-[#a8a083]">Education:</span>
 						{region.education || 0}
 					</div>
 				</div>
 
 				<!-- Resources (if any) -->
 				{#if region.oil || region.steel || region.chromium || region.tungsten || region.rubber || region.aluminium}
-					<div class="pt-3 border-t border-[#dfceb0]/10">
+					<div class="pt-3 border-t border-[#c8b47a]/10">
 						<div class="flex flex-wrap gap-1">
 							{#if region.oil}
 								<Badge tone="amber" size="xs">Oil: {region.oil}</Badge>
@@ -168,11 +168,11 @@
 	<!-- Empty State -->
 	{#if data.regions.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
-				<FluentSearch20Filled class="size-8 text-[#a89e8e]" />
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
+				<FluentSearch20Filled class="size-8 text-[#a8a083]" />
 			</div>
-			<h2 class="text-xl font-bold text-[#fff7e8] mb-2">No regions found</h2>
-			<p class="text-[#a89e8e]">Try adjusting your search or filters</p>
+			<h2 class="text-xl font-bold text-[#f5efd8] mb-2">No regions found</h2>
+			<p class="text-[#a8a083]">Try adjusting your search or filters</p>
 		</div>
 	{/if}
 </PageContainer>

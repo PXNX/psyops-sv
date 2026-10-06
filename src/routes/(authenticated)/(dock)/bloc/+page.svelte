@@ -83,7 +83,7 @@
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Search -->
 		<div class="relative flex-1">
-			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a89e8e]" />
+			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a8a083]" />
 			<input
 				type="text"
 				bind:value={searchInput}
@@ -98,7 +98,7 @@
 					type="button"
 					onclick={clearSearch}
 					aria-label="Clear search"
-					class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-[#a89e8e] hover:text-[#fff7e8] hover:bg-[#e6a527]/10 transition-colors"
+					class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-[#a8a083] hover:text-[#f5efd8] hover:bg-[#f2b01e]/10 transition-colors"
 				>
 					<FluentDismiss20Filled class="size-4" />
 				</button>
@@ -120,11 +120,11 @@
 
 	<!-- Active search indicator -->
 	{#if data.search}
-		<div class="flex items-center gap-2 text-sm text-[#a89e8e]">
+		<div class="flex items-center gap-2 text-sm text-[#a8a083]">
 			<span>
 				{data.blocs.length}
 				{data.blocs.length === 1 ? "result" : "results"} for
-				<span class="font-semibold text-[#fff7e8]">"{data.search}"</span>
+				<span class="font-semibold text-[#f5efd8]">"{data.search}"</span>
 			</span>
 			<Button variant="ghost" size="xs" icon={FluentDismiss20Filled} onclick={clearSearch}>Clear</Button>
 		</div>
@@ -132,28 +132,28 @@
 
 	<!-- User State Info Banner -->
 	{#if data.userPresidency && !data.userPresidency.blocId}
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-5">
+		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-5">
 			<div class="flex items-center gap-3">
-				<div class="size-12 bg-[#315d8d]/25 rounded-sm flex items-center justify-center flex-shrink-0">
-					<FluentFlag20Filled class="size-6 text-[#b7d0e6]" />
+				<div class="size-12 bg-[#2369b5]/25 rounded-sm flex items-center justify-center flex-shrink-0">
+					<FluentFlag20Filled class="size-6 text-[#b3dcff]" />
 				</div>
 				<div class="flex-1">
-					<h3 class="text-lg font-semibold text-[#fff7e8]">You're the President of {data.userPresidency.stateName}</h3>
-					<p class="text-sm text-[#a89e8e]">
+					<h3 class="text-lg font-semibold text-[#f5efd8]">You're the President of {data.userPresidency.stateName}</h3>
+					<p class="text-sm text-[#a8a083]">
 						Select a bloc below to apply for membership — its member states vote on your admission
 					</p>
 				</div>
 			</div>
 		</div>
 	{:else if data.userPresidency?.blocId}
-		<div class="bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm p-5">
+		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-5">
 			<div class="flex items-center gap-3">
-				<div class="size-12 bg-[#587252]/25 rounded-sm flex items-center justify-center flex-shrink-0">
-					<FluentCheckmarkCircle20Filled class="size-6 text-[#c6dfbf]" />
+				<div class="size-12 bg-[#3f8a2a]/25 rounded-sm flex items-center justify-center flex-shrink-0">
+					<FluentCheckmarkCircle20Filled class="size-6 text-[#b9f29a]" />
 				</div>
 				<div class="flex-1">
-					<h3 class="text-lg font-semibold text-[#fff7e8]">Your state is already in a bloc</h3>
-					<a href="/bloc/{data.userPresidency.blocId}" class="text-sm text-[#c6dfbf] hover:underline">
+					<h3 class="text-lg font-semibold text-[#f5efd8]">Your state is already in a bloc</h3>
+					<a href="/bloc/{data.userPresidency.blocId}" class="text-sm text-[#b9f29a] hover:underline">
 						View your bloc
 					</a>
 				</div>
@@ -175,7 +175,7 @@
 							<FluentFlag20Filled class="size-6" style="color: {bloc.color}" />
 						</div>
 						<div class="flex-1 min-w-0">
-							<h2 class="font-bold text-[#fff7e8] truncate">{bloc.name}</h2>
+							<h2 class="font-bold text-[#f5efd8] truncate">{bloc.name}</h2>
 							{#if bloc.isUserMember}
 								<Badge tone="green" icon={FluentCheckmarkCircle20Filled}>Your Bloc</Badge>
 							{/if}
@@ -184,32 +184,32 @@
 
 					<!-- Description -->
 					{#if bloc.description}
-						<p class="text-sm text-[#a89e8e] mb-4 line-clamp-2">{bloc.description}</p>
+						<p class="text-sm text-[#a8a083] mb-4 line-clamp-2">{bloc.description}</p>
 					{/if}
 
 					<!-- Stats -->
 					<div class="grid grid-cols-2 gap-2 mb-3">
 						<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-							<FluentBuildingGovernment20Filled class="size-4 text-[#b7d0e6] shrink-0" />
+							<FluentBuildingGovernment20Filled class="size-4 text-[#b3dcff] shrink-0" />
 							<div class="min-w-0">
-								<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">States</p>
-								<p class="text-sm font-bold text-[#fff7e8] truncate">{bloc.memberCount}</p>
+								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">States</p>
+								<p class="text-sm font-bold text-[#f5efd8] truncate">{bloc.memberCount}</p>
 							</div>
 						</div>
 						<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-							<FluentPeople20Filled class="size-4 text-[#f7c56b] shrink-0" />
+							<FluentPeople20Filled class="size-4 text-[#ffd35c] shrink-0" />
 							<div class="min-w-0">
-								<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Population</p>
-								<p class="text-sm font-bold text-[#fff7e8] truncate">{formatPopulation(bloc.totalPopulation)}</p>
+								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Population</p>
+								<p class="text-sm font-bold text-[#f5efd8] truncate">{formatPopulation(bloc.totalPopulation)}</p>
 							</div>
 						</div>
 					</div>
 
 					<!-- Actions -->
-					<div class="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-[#dfceb0]/10">
+					<div class="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-[#c8b47a]/10">
 						<a
 							href="/bloc/{bloc.id}"
-							class="group flex items-center gap-1 text-xs text-[#e5d8c1]/70 hover:text-[#f2c463] transition-colors"
+							class="group flex items-center gap-1 text-xs text-[#e6ddbf]/70 hover:text-[#ffcf47] transition-colors"
 						>
 							<span>View Details</span>
 							<FluentChevronRight20Filled class="size-3.5 group-hover:translate-x-0.5 transition-transform" />
@@ -222,7 +222,7 @@
 								<input type="hidden" name="blocId" value={bloc.id} />
 								<button
 									type="submit"
-									class="px-3 py-1.5 rounded-sm text-xs font-bold text-[#fff7e8] transition-all hover:brightness-110 flex items-center gap-1.5"
+									class="px-3 py-1.5 rounded-sm text-xs font-bold text-[#f5efd8] transition-all hover:brightness-110 flex items-center gap-1.5"
 									style="background-color: {bloc.color}"
 								>
 									<FluentFlag20Filled class="size-3.5" />
@@ -237,11 +237,11 @@
 	{:else}
 		<!-- Empty State -->
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#102239] mb-4">
-				<FluentGlobe20Filled class="size-8 text-[#a89e8e]" />
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
+				<FluentGlobe20Filled class="size-8 text-[#a8a083]" />
 			</div>
-			<h2 class="text-xl font-bold text-[#fff7e8] mb-2">No blocs found</h2>
-			<p class="text-[#a89e8e] mb-4">
+			<h2 class="text-xl font-bold text-[#f5efd8] mb-2">No blocs found</h2>
+			<p class="text-[#a8a083] mb-4">
 				{#if data.search}
 					No blocs match "{data.search}". Try a different search.
 				{:else if data.canCreateBloc}
@@ -260,10 +260,10 @@
 
 	<!-- Info Box -->
 	<div class="panel-muted rounded-sm p-4 flex items-start gap-3">
-		<FluentFlag20Filled class="size-5 text-[#a89e8e] shrink-0 mt-0.5" />
+		<FluentFlag20Filled class="size-5 text-[#a8a083] shrink-0 mt-0.5" />
 		<div>
-			<h3 class="text-sm font-semibold text-[#fff7e8]">About Political Blocs</h3>
-			<p class="text-sm text-[#a89e8e] mt-0.5">
+			<h3 class="text-sm font-semibold text-[#f5efd8]">About Political Blocs</h3>
+			<p class="text-sm text-[#a8a083] mt-0.5">
 				Political-military alliances that coordinate member states' policies, military strategies, and economic
 				cooperation. Only state presidents can apply to join blocs on behalf of their states; the presidents of the
 				member states then vote pro or contra on each application.

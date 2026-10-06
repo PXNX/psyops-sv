@@ -36,13 +36,13 @@
 	function getStatusColor(status: string) {
 		switch (status) {
 			case "pending":
-				return "text-[#f7c56b] bg-[#e6a527]/15 border-[#e6a527]/35";
+				return "text-[#ffd35c] bg-[#f2b01e]/15 border-[#f2b01e]/35";
 			case "resolved":
-				return "text-[#c6dfbf] bg-[#587252]/20 border-[#8fae88]/30";
+				return "text-[#b9f29a] bg-[#3f8a2a]/20 border-[#6fd14a]/30";
 			case "dismissed":
-				return "text-[#d9ccb7] bg-[#14283f] border-[#dfceb0]/20";
+				return "text-[#d3caa9] bg-[#242a1d] border-[#c8b47a]/20";
 			default:
-				return "text-[#d9ccb7] bg-[#14283f] border-[#dfceb0]/20";
+				return "text-[#d3caa9] bg-[#242a1d] border-[#c8b47a]/20";
 		}
 	}
 
@@ -120,34 +120,34 @@
 	<!-- Stats -->
 	<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
 		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
-			<FluentDocument20Filled class="size-5 text-[#7ba0c8] shrink-0" />
+			<FluentDocument20Filled class="size-5 text-[#5eaef5] shrink-0" />
 			<div class="min-w-0">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Total Reports</p>
-				<p class="text-2xl font-bold text-[#fff7e8] leading-none mt-1">{data.stats.total}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Total Reports</p>
+				<p class="text-2xl font-bold text-[#f5efd8] leading-none mt-1">{data.stats.total}</p>
 			</div>
 		</div>
 
 		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
-			<FluentClock20Filled class="size-5 text-[#f7c56b] shrink-0" />
+			<FluentClock20Filled class="size-5 text-[#ffd35c] shrink-0" />
 			<div class="min-w-0">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Pending</p>
-				<p class="text-2xl font-bold text-[#fff7e8] leading-none mt-1">{data.stats.pending}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Pending</p>
+				<p class="text-2xl font-bold text-[#f5efd8] leading-none mt-1">{data.stats.pending}</p>
 			</div>
 		</div>
 
 		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
-			<FluentCheckmark20Filled class="size-5 text-[#8fae88] shrink-0" />
+			<FluentCheckmark20Filled class="size-5 text-[#6fd14a] shrink-0" />
 			<div class="min-w-0">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Resolved</p>
-				<p class="text-2xl font-bold text-[#fff7e8] leading-none mt-1">{data.stats.resolved}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Resolved</p>
+				<p class="text-2xl font-bold text-[#f5efd8] leading-none mt-1">{data.stats.resolved}</p>
 			</div>
 		</div>
 
 		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
-			<FluentDismiss20Filled class="size-5 text-[#a89e8e] shrink-0" />
+			<FluentDismiss20Filled class="size-5 text-[#a8a083] shrink-0" />
 			<div class="min-w-0">
-				<p class="text-[10px] text-[#a89e8e] uppercase tracking-wide">Dismissed</p>
-				<p class="text-2xl font-bold text-[#fff7e8] leading-none mt-1">{data.stats.dismissed}</p>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Dismissed</p>
+				<p class="text-2xl font-bold text-[#f5efd8] leading-none mt-1">{data.stats.dismissed}</p>
 			</div>
 		</div>
 	</div>
@@ -162,7 +162,7 @@
 					<!-- Report Icon -->
 					<div class="shrink-0">
 						<div class="size-12 rounded-sm flex items-center justify-center panel-muted">
-							<TargetIcon class="size-6 text-[#7ba0c8]" />
+							<TargetIcon class="size-6 text-[#5eaef5]" />
 						</div>
 					</div>
 
@@ -177,7 +177,7 @@
 								</div>
 								<Badge tone="neutral">{getViolationLabel(report.violationType)}</Badge>
 							</div>
-							<div class="flex items-center gap-1 text-xs text-[#a89e8e]">
+							<div class="flex items-center gap-1 text-xs text-[#a8a083]">
 								<FluentCalendar20Filled class="size-3" />
 								<span>Reported {formatDate(report.reportedAt)}</span>
 							</div>
@@ -185,7 +185,7 @@
 
 						<!-- Target -->
 						<div class="panel-muted rounded-sm p-4 mb-3">
-							<div class="text-xs text-[#a89e8e] font-medium mb-2">Reported {report.targetType}:</div>
+							<div class="text-xs text-[#a8a083] font-medium mb-2">Reported {report.targetType}:</div>
 
 							{#if report.targetType === "account" && report.target}
 								<a href="/user/{report.target.id}" class="flex items-center gap-3 group">
@@ -195,10 +195,10 @@
 											alt={report.target.name}
 											class="size-full"
 											placeholderIcon={FluentPeople20Filled}
-											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+											placeholderGradient="from-[#4a5238] to-[#252b1e]"
 										/>
 									</div>
-									<span class="text-sm text-[#fff7e8] group-hover:text-[#f2c463] transition-colors">
+									<span class="text-sm text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
 										{report.target.name}
 									</span>
 								</a>
@@ -210,31 +210,31 @@
 											alt={report.target.name}
 											class="size-full"
 											placeholderIcon={FluentShield20Filled}
-											placeholderGradient="from-[#3a4d63] to-[#1e2f42]"
+											placeholderGradient="from-[#4a5238] to-[#252b1e]"
 										/>
 									</div>
 									<div>
-										<span class="text-sm text-[#fff7e8] group-hover:text-[#f2c463] transition-colors block">
+										<span class="text-sm text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors block">
 											{report.target.name}
 										</span>
-										<span class="text-xs text-[#a89e8e]">Political Party</span>
+										<span class="text-xs text-[#a8a083]">Political Party</span>
 									</div>
 								</a>
 							{:else if report.targetType === "message" && report.target}
 								<div class="space-y-2">
 									{#if report.target.sender}
 										<div class="flex items-center gap-2">
-											<span class="text-xs text-[#a89e8e]">From:</span>
+											<span class="text-xs text-[#a8a083]">From:</span>
 											<a
 												href="/user/{report.target.sender.id}"
-												class="text-sm text-[#f7c56b] hover:text-[#f2c463] transition-colors"
+												class="text-sm text-[#ffd35c] hover:text-[#ffcf47] transition-colors"
 											>
 												{report.target.sender.name}
 											</a>
 										</div>
 									{/if}
-									<div class="bg-[#0d1d31] rounded-sm p-3 border border-[#dfceb0]/10">
-										<p class="text-sm text-[#d9ccb7]" class:italic={report.target.isDeleted}>
+									<div class="bg-[#0f120c] rounded-sm p-3 border border-[#c8b47a]/10">
+										<p class="text-sm text-[#d3caa9]" class:italic={report.target.isDeleted}>
 											{report.target.content}
 										</p>
 										{#if report.target.isDeleted}
@@ -247,13 +247,13 @@
 
 						<!-- Report Reason -->
 						<div class="panel-muted rounded-sm p-3 mb-3">
-							<div class="text-xs text-[#a89e8e] font-medium mb-1">Your report:</div>
-							<p class="text-sm text-[#d9ccb7]">{report.reason}</p>
+							<div class="text-xs text-[#a8a083] font-medium mb-1">Your report:</div>
+							<p class="text-sm text-[#d3caa9]">{report.reason}</p>
 						</div>
 
 						<!-- Review Info -->
 						{#if report.status !== "pending"}
-							<div class="border-t border-[#dfceb0]/15 pt-3 mt-3">
+							<div class="border-t border-[#c8b47a]/15 pt-3 mt-3">
 								<div class="flex items-start gap-4">
 									<!-- Reviewer -->
 									{#if report.reviewer}
@@ -265,13 +265,13 @@
 														alt={report.reviewer.name}
 														class="size-full"
 														placeholderIcon={FluentShield20Filled}
-														placeholderGradient="from-[#8c709b] to-[#6a5578]"
+														placeholderGradient="from-[#8a4fc0] to-[#6b3d96]"
 													/>
 												</div>
 												<div class="min-w-0">
-													<span class="text-xs text-[#a89e8e] block">Reviewed by</span>
+													<span class="text-xs text-[#a8a083] block">Reviewed by</span>
 													<span
-														class="text-sm text-[#d5c4df] group-hover:text-[#f2c463] transition-colors truncate block"
+														class="text-sm text-[#e3cbfb] group-hover:text-[#ffcf47] transition-colors truncate block"
 													>
 														{report.reviewer.name}
 													</span>
@@ -284,20 +284,20 @@
 									<div class="flex-1 min-w-0">
 										{#if report.actionTaken}
 											<div class="mb-2">
-												<span class="text-xs text-[#a89e8e]">Action taken:</span>
-												<span class="text-sm text-[#c6dfbf] ml-2 font-medium">
+												<span class="text-xs text-[#a8a083]">Action taken:</span>
+												<span class="text-sm text-[#b9f29a] ml-2 font-medium">
 													{getActionLabel(report.actionTaken)}
 												</span>
 											</div>
 										{/if}
 										{#if report.reviewNote}
 											<div>
-												<span class="text-xs text-[#a89e8e]">Moderator note:</span>
-												<p class="text-sm text-[#d9ccb7] mt-1">{report.reviewNote}</p>
+												<span class="text-xs text-[#a8a083]">Moderator note:</span>
+												<p class="text-sm text-[#d3caa9] mt-1">{report.reviewNote}</p>
 											</div>
 										{/if}
 										{#if report.reviewedAt}
-											<div class="flex items-center gap-1 text-xs text-[#a89e8e] mt-2">
+											<div class="flex items-center gap-1 text-xs text-[#a8a083] mt-2">
 												<FluentCalendar20Filled class="size-3" />
 												<span>Reviewed {formatDate(report.reviewedAt)}</span>
 											</div>
