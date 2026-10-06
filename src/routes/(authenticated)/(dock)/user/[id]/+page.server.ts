@@ -15,6 +15,7 @@ import {
 	governors,
 	newspapers,
 	journalists,
+	companies,
 	generalReports,
 	userProfiles,
 	userWallets,
@@ -203,6 +204,43 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return { viewerBlocId, canAppointBlocLeadership, availableBlocRoles, viewerBlocName };
 	})();
 
+	// Organizations the viewed user belongs to: newspaper staff positions and owned companies.
+	// Shown together with `party` (above) as "Organizations" on the profile.
+	const organizationsPromise = (async () => {
+		const [journalistRecords, ownedCompanies] = await Promise.all([
+			db.query.journalists.findMany({
+				where: eq(journalists.userId, params.id),
+				with: { newspaper: true }
+			}),
+			db.query.companies.findMany({
+				where: eq(companies.ownerId, params.id)
+			})
+		]);
+
+		const [newspaperMemberships, companyLogos] = await Promise.all([
+			Promise.all(
+				journalistRecords.map(async (j) => ({
+					newspaperId: j.newspaper.id,
+					name: j.newspaper.name,
+					logo: await getLogoUrl(j.newspaper.logo),
+					rank: j.rank
+				}))
+			),
+			Promise.all(ownedCompanies.map(async (c) => [c.id, await getLogoUrl(c.logo)] as const))
+		]);
+
+		const companyLogoMap = new Map(companyLogos);
+
+		return {
+			newspapers: newspaperMemberships,
+			companies: ownedCompanies.map((c) => ({
+				id: c.id,
+				name: c.name,
+				logo: companyLogoMap.get(c.id) ?? null
+			}))
+		};
+	})();
+
 	// Get newspapers owned by current user (for add author feature)
 	const ownedNewspapersPromise = (async (): Promise<Array<{ id: number; name: string }>> => {
 		if (isOwnProfile) return [];
@@ -274,6 +312,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		targetBlocDiplomacies,
 		birthdayInfo,
 		ownedNewspapers,
+		organizations,
 		{ editForm, userBalance, canAffordProfileEdit, isProfileEditOnCooldown, profileEditCooldownEndsAt }
 	] = await Promise.all([
 		// Get user's current residence
@@ -338,6 +377,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		// Account birthday (creation anniversary) reward status.
 		getBirthdayInfo(params.id, user.createdAt),
 		ownedNewspapersPromise,
+		organizationsPromise,
 		profileEditPromise
 	]);
 
@@ -451,6 +491,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		viewerBlocId,
 		viewerBlocName,
 		ownedNewspapers,
+		organizations,
 		account,
 		birthdayInfo,
 		premiumPlans: Object.values(PREMIUM_PLANS)
