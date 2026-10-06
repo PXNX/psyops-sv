@@ -171,7 +171,9 @@
 						</div>
 					</div>
 
-					<FluentChevronRight20Filled class="size-4 shrink-0 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors" />
+					<FluentChevronRight20Filled
+						class="size-4 shrink-0 text-[#a89e8e] group-hover:text-[#f2c463] transition-colors"
+					/>
 				</a>
 			{/each}
 

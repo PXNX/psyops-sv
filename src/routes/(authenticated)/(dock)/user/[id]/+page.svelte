@@ -130,12 +130,14 @@
 {:else}
 	<PageContainer maxWidth="5xl">
 		<!-- Hero -->
-		<div
-			class="panel rounded-sm p-5 relative overflow-hidden {data.user.isPremium ? 'border-[#e6a527]/55' : ''}"
-		>
+		<div class="panel rounded-sm p-5 relative overflow-hidden {data.user.isPremium ? 'border-[#e6a527]/55' : ''}">
 			{#if data.party?.color}
 				<!-- Party colour rule -->
-				<div class="absolute inset-x-0 top-0 h-1" style="background-color: {data.party.color};" aria-hidden="true"></div>
+				<div
+					class="absolute inset-x-0 top-0 h-1"
+					style="background-color: {data.party.color};"
+					aria-hidden="true"
+				></div>
 			{/if}
 
 			{#if data.isOwnProfile}
@@ -538,7 +540,9 @@
 						href="/user/{data.user.id}/articles"
 						icon={FluentDocument20Filled}
 						title="{data.articleCount} {data.articleCount === 1 ? 'Article' : 'Articles'} Published"
-						subtitle="{data.upvoteCount} total upvote{data.upvoteCount === 1 ? '' : 's'} received • View all publications"
+						subtitle="{data.upvoteCount} total upvote{data.upvoteCount === 1
+							? ''
+							: 's'} received • View all publications"
 						hoverColor="purple"
 					/>
 
@@ -633,7 +637,9 @@
 		>
 			<div class="space-y-4">
 				{#if appointmentError}
-					<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
+					<div
+						class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm"
+					>
 						<span>{appointmentError}</span>
 					</div>
 				{/if}
@@ -658,7 +664,9 @@
 				</div>
 
 				{#if data.availableMinistries.length === 0}
-					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3 text-sm">
+					<div
+						class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3 text-sm"
+					>
 						<span>All ministries are currently occupied.</span>
 					</div>
 				{/if}
@@ -716,7 +724,9 @@
 		>
 			<div class="space-y-4">
 				{#if blocAppointmentError}
-					<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
+					<div
+						class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm"
+					>
 						<span>{blocAppointmentError}</span>
 					</div>
 				{/if}
@@ -738,7 +748,9 @@
 				</div>
 
 				{#if selectedBlocRole === "leader"}
-					<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 text-[#b7d0e6] rounded-sm p-4 flex items-center gap-3 text-sm">
+					<div
+						class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 text-[#b7d0e6] rounded-sm p-4 flex items-center gap-3 text-sm"
+					>
 						<span>
 							This nominates {data.user.name} as a candidate in the bloc's current leadership election. Member-state presidents
 							vote before the window closes.
@@ -747,7 +759,9 @@
 				{/if}
 
 				{#if data.availableBlocRoles.length === 0}
-					<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3 text-sm">
+					<div
+						class="bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#f7c56b] rounded-sm p-4 flex items-center gap-3 text-sm"
+					>
 						<span>
 							Nothing available right now — leader nominations only open during the 2-day voting window before an
 							election, and this bloc's diplomat slots are both filled.
@@ -819,7 +833,9 @@
 				</p>
 
 				{#if giftPremiumError}
-					<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
+					<div
+						class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm"
+					>
 						<span>{giftPremiumError}</span>
 					</div>
 				{/if}

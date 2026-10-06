@@ -51,7 +51,9 @@
 				<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 			</div>
 		{:else}
-			<div class="size-10 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center flex-shrink-0">
+			<div
+				class="size-10 rounded-sm bg-[#315d8d]/18 border border-[#7ba0c8]/30 flex items-center justify-center flex-shrink-0"
+			>
 				<MdiNewspaper class="size-5 text-[#b7d0e6]" />
 			</div>
 		{/if}

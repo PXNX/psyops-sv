@@ -24,7 +24,11 @@
 			{/snippet}
 		</PageHeader>
 
-		<input class="field-control w-full sm:max-w-xs rounded-sm px-3 py-2.5 text-sm" placeholder="Search Newspapers..." type="text" />
+		<input
+			class="field-control w-full sm:max-w-xs rounded-sm px-3 py-2.5 text-sm"
+			placeholder="Search Newspapers..."
+			type="text"
+		/>
 
 		<ul class="space-y-2">
 			{#each data.newspapers as newspaper}

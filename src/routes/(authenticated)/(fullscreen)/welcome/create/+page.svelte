@@ -71,7 +71,7 @@
 
 	const uploadBoxClass = $derived(
 		[
-			"group relative w-full overflow-hidden rounded-lg border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
+			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200",
 			$errors.logo
 				? "border-red-500/50"
 				: dragActive
@@ -141,12 +141,12 @@
 	}
 </script>
 
-<div class="max-w-2xl mx-auto space-y-6">
+<div class="w-full max-w-2xl mx-auto space-y-6">
 	<!-- Header -->
 	<div class="text-center space-y-3">
 		<div class="flex justify-center">
-			<div class="size-16 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-2xl flex items-center justify-center">
-				<PsyopsLogo class="size-10 text-[#d5c4df]" />
+			<div class="size-16 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm flex items-center justify-center">
+				<PsyopsLogo class="size-10 text-[#b7a0c5]" />
 			</div>
 		</div>
 		<h1 class="text-3xl font-bold text-[#fff7e8]">Complete Your Profile</h1>
@@ -155,18 +155,18 @@
 
 	<!-- Error Message -->
 	{#if $message}
-		<div class="bg-red-600/20 border border-red-500/30 rounded-xl p-4">
-			<p class="text-red-300 text-sm font-medium">{$message}</p>
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
 	<!-- Form -->
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Profile Picture -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-[#d5c4df]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Profile Picture (Optional)</h2>
+				<FluentImage20Filled class="size-5 text-[#b7a0c5]" />
+				<h2 class="section-title">Profile Picture (Optional)</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -184,7 +184,7 @@
 				<button type="button" onclick={() => fileInput?.click()} disabled={$submitting} class={uploadBoxClass}>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#e6a527]/12 p-3 transition-transform group-hover:scale-110">
+							<div class="rounded-full bg-[#e6a527]/12 border border-[#e6a527]/35 p-3">
 								<FluentPerson20Filled class="size-8 text-[#f7c56b]" />
 							</div>
 							<div class="text-center">
@@ -208,7 +208,7 @@
 								<img src={previewUrl} alt="Logo preview" class="size-32 object-cover rounded-full" />
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-[#0c1929]/70 opacity-0 transition-opacity group-hover:opacity-100"
 							>
 								<p class="text-base font-semibold text-[#fff7e8]">Tap to change</p>
 							</div>
@@ -219,7 +219,12 @@
 									clearImage();
 								}}
 								disabled={$submitting}
-								class="btn absolute top-2 right-2 btn-circle btn-sm bg-[#14283f] hover:bg-[#19304b]"
+								class={buttonClass({
+									variant: "secondary",
+									size: "sm",
+									shape: "circle",
+									class: "absolute top-2 right-2"
+								})}
 							>
 								✕
 							</button>
@@ -237,17 +242,17 @@
 			</div>
 
 			{#if $errors.logo}
-				<p class="text-xs text-red-400">{$errors.logo}</p>
+				<p class="field-error">{$errors.logo}</p>
 			{:else}
-				<p class="text-xs text-[#a89e8e]">Will be converted to 128x128 WebP</p>
+				<p class="field-hint">Will be converted to 128x128 WebP</p>
 			{/if}
 		</div>
 
 		<!-- Username -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentPerson20Filled class="size-5 text-[#d5c4df]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Your Identity</h2>
+				<FluentPerson20Filled class="size-5 text-[#b7a0c5]" />
+				<h2 class="section-title">Your Identity</h2>
 			</div>
 
 			<div>
@@ -261,8 +266,8 @@
 					bind:value={$form.name}
 					placeholder="Enter your username"
 					maxlength="50"
-					class="input w-full field-control"
-					class:input-error={$errors.name}
+					class="field-control w-full rounded-sm px-3 py-2.5"
+					class:border-red-500={$errors.name}
 					disabled={$submitting}
 				/>
 				{#if $errors.name}
@@ -274,10 +279,10 @@
 		</div>
 
 		<!-- Political Views -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentBuildingGovernment20Filled class="size-5 text-[#d5c4df]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">Political Alignment (Optional)</h2>
+				<FluentBuildingGovernment20Filled class="size-5 text-[#b7a0c5]" />
+				<h2 class="section-title">Political Alignment (Optional)</h2>
 			</div>
 
 			<div>
@@ -286,7 +291,7 @@
 					id="politicalViews"
 					name="politicalViews"
 					bind:value={$form.politicalViews}
-					class="select w-full field-control"
+					class="field-control w-full rounded-sm px-3 py-2.5"
 					disabled={$submitting}
 				>
 					<option value="">Select your political alignment...</option>
@@ -299,10 +304,10 @@
 		</div>
 
 		<!-- Bio -->
-		<div class="panel rounded-xl p-5 space-y-3">
+		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-[#d5c4df]" />
-				<h2 class="text-lg font-semibold text-[#fff7e8]">About You (Optional)</h2>
+				<FluentDocument20Filled class="size-5 text-[#b7a0c5]" />
+				<h2 class="section-title">About You (Optional)</h2>
 			</div>
 
 			<div>
@@ -314,8 +319,8 @@
 					rows="4"
 					placeholder="Tell others about yourself, your goals, and what you hope to achieve in PsyOps..."
 					maxlength="500"
-					class="textarea w-full field-control"
-					class:input-error={$errors.bio}
+					class="field-control w-full rounded-sm px-3 py-2.5"
+					class:border-red-500={$errors.bio}
 					disabled={$submitting}></textarea>
 				{#if $errors.bio}
 					<p class="field-error">{$errors.bio}</p>
@@ -339,7 +344,7 @@
 		</div>
 
 		<!-- Info Box -->
-		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-xl p-4 space-y-2">
+		<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 rounded-sm p-4 space-y-2">
 			<p class="text-sm text-[#b7d0e6]">
 				💡 <strong>Note:</strong> You can update your profile information later from your account settings.
 			</p>

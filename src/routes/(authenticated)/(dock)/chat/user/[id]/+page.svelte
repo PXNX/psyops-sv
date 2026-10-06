@@ -299,7 +299,9 @@
 					<!-- Day Divider -->
 					<div class="flex items-center gap-4 my-6">
 						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
-						<span class="text-[10px] uppercase tracking-wide text-[#a89e8e] font-semibold px-3 py-1 panel-muted rounded-sm">
+						<span
+							class="text-[10px] uppercase tracking-wide text-[#a89e8e] font-semibold px-3 py-1 panel-muted rounded-sm"
+						>
 							{formatDayDivider(day.date)}
 						</span>
 						<div class="flex-1 h-px bg-[#dfceb0]/15"></div>
@@ -311,7 +313,9 @@
 							<div class="chat chat-end mb-4">
 								<div class="flex flex-col gap-1 items-end w-full">
 									{#each group.messages as msg}
-										<div class="chat-bubble before:hidden bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#fff7e8] text-sm md:text-base px-4 py-2.5 rounded-md break-words">
+										<div
+											class="chat-bubble before:hidden bg-[#e6a527]/12 border border-[#e6a527]/35 text-[#fff7e8] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
+										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
@@ -345,7 +349,9 @@
 							<div class="chat chat-start mb-4">
 								<div class="flex flex-col gap-1 items-start w-full">
 									{#each group.messages as msg}
-										<div class="chat-bubble before:hidden bg-[#102239]/70 border border-[#dfceb0]/10 text-[#e5d8c1] text-sm md:text-base px-4 py-2.5 rounded-md break-words">
+										<div
+											class="chat-bubble before:hidden bg-[#102239]/70 border border-[#dfceb0]/10 text-[#e5d8c1] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
+										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}

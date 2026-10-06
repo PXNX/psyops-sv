@@ -119,7 +119,9 @@
 	<!-- Status Card -->
 	<div class="panel rounded-sm p-5">
 		<div class="flex items-center gap-4">
-			<div class="size-16 rounded-sm border flex items-center justify-center shrink-0 {getStatusColor(data.report.status)}">
+			<div
+				class="size-16 rounded-sm border flex items-center justify-center shrink-0 {getStatusColor(data.report.status)}"
+			>
 				<StatusIcon class="size-8" />
 			</div>
 			<div class="flex-1 min-w-0">

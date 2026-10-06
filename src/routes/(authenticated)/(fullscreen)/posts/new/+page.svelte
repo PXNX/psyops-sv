@@ -58,29 +58,25 @@
 	<title>Create Post</title>
 </svelte:head>
 
-<div class="min-h-screen bg-[#0c1929] flex flex-col">
+<div class="min-h-dvh flex flex-col">
 	<!-- Editor Header -->
-	<header class="sticky top-0 z-10 border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-xl">
+	<header class="sticky top-0 z-10 border-b border-[#dfceb0]/15 bg-[#0e1d2f]/95 backdrop-blur-md">
 		<div class="w-full px-3 sm:px-6 py-3 sm:py-4">
 			<div class="flex items-center gap-2 sm:gap-3">
-				<button
-					onclick={handlePublish}
-					class="p-2 sm:p-2.5 rounded-lg bg-[#e6a527] hover:bg-[#f2b940] border border-[#f2c463] text-[#172a45] transition-all"
-					title="Publish"
-				>
+				<button onclick={handlePublish} class={buttonClass({ variant: "primary", shape: "square" })} title="Publish">
 					<FluentSave20Filled class="size-5" />
 				</button>
 
 				{#if editorComponent}
 					<button
-						class="p-2 sm:p-2.5 rounded-lg bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8] transition-all"
+						class={buttonClass({ variant: "secondary", shape: "square" })}
 						onclick={() => editorComponent?.undo()}
 						title="Undo"
 					>
 						<FluentArrowHookUpLeft20Regular class="size-5" />
 					</button>
 					<button
-						class="p-2 sm:p-2.5 rounded-lg bg-[#14283f] hover:bg-[#19304b] border border-[#dfceb0]/25 text-[#e5d8c1] hover:text-[#fff7e8] transition-all"
+						class={buttonClass({ variant: "secondary", shape: "square" })}
 						onclick={() => editorComponent?.redo()}
 						title="Redo"
 					>
@@ -96,7 +92,11 @@
 
 				<button
 					onclick={handleCancel}
-					class="p-2 sm:p-2.5 rounded-lg bg-[#14283f] hover:bg-red-950/40 border border-[#dfceb0]/25 hover:border-red-500/30 text-[#e5d8c1] hover:text-red-400 transition-all"
+					class={buttonClass({
+						variant: "secondary",
+						shape: "square",
+						class: "hover:border-red-500/30 hover:text-red-300"
+					})}
 					title="Cancel"
 				>
 					<FluentDismiss20Filled class="size-5" />
@@ -109,7 +109,7 @@
 	<main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 		<!-- Title Input -->
 		<input
-			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#fff7e8] placeholder-[#a89e8e] border-none outline-none mb-2 tracking-wide"
+			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#fff7e8] placeholder:text-[#b3a68e]/55 border-none outline-none mb-2"
 			placeholder="Enter your title..."
 			type="text"
 			bind:value={title}
@@ -153,7 +153,7 @@
 
 		{#if data.newspapers.length > 0}
 			<div class="mb-4">
-				<label class="field-label uppercase tracking-wider">Publish as</label>
+				<label class="field-label">Publish as</label>
 				<select
 					class="field-control w-full rounded-sm px-3 py-2.5 text-sm"
 					name="newspaperId"
@@ -186,11 +186,7 @@
 			{/if}
 		{/if}
 
-		<button
-			class={buttonClass({ variant: "primary", block: true, class: "font-mono uppercase tracking-wide" })}
-			type="submit"
-			disabled={isSubmitting}
-		>
+		<button class={buttonClass({ variant: "primary", block: true })} type="submit" disabled={isSubmitting}>
 			{isSubmitting ? "Publishing..." : "Publish Article"}
 		</button>
 	</form>
@@ -198,20 +194,12 @@
 
 <!-- Cancel Modal -->
 <Modal bind:open={isCancelModalOpen} title="Discard changes?">
-	<p class="text-sm text-[#c7bda9] mb-4">Your unsaved work will be lost.</p>
+	<p class="text-sm text-[#a89e8e] mb-4">Your unsaved work will be lost.</p>
 
 	<div class="flex gap-2 justify-end">
-		<button
-			class={buttonClass({ variant: "secondary", size: "sm", class: "font-mono" })}
-			onclick={() => (isCancelModalOpen = false)}
-		>
+		<button class={buttonClass({ variant: "secondary", size: "sm" })} onclick={() => (isCancelModalOpen = false)}>
 			Keep Editing
 		</button>
-		<button
-			class={buttonClass({ variant: "soft-red", size: "sm", class: "font-mono font-bold" })}
-			onclick={confirmDiscard}
-		>
-			Discard
-		</button>
+		<button class={buttonClass({ variant: "soft-red", size: "sm" })} onclick={confirmDiscard}> Discard </button>
 	</div>
 </Modal>

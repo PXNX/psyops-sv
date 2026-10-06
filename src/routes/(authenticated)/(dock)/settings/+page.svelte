@@ -79,10 +79,7 @@
 	<PageHeader title="Settings" subtitle="Manage your account preferences" icon={FluentSettings20Filled} />
 
 	<!-- Edit Profile Link -->
-	<a
-		href="/user/{data.accountId}"
-		class="group panel-interactive rounded-sm p-5 flex items-center justify-between"
-	>
+	<a href="/user/{data.accountId}" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
 			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 p-2 rounded-sm">
 				<FluentPerson20Filled class="size-5 text-[#b7a0c5]" />
@@ -328,10 +325,7 @@
 	</div>
 
 	<!-- Premium Membership Link -->
-	<a
-		href="/premium"
-		class="group panel-interactive rounded-sm p-5 flex items-center justify-between"
-	>
+	<a href="/premium" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
 			<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 p-2 rounded-sm">
 				<FluentStar20Filled class="size-5 text-[#f7c56b]" />
@@ -347,10 +341,7 @@
 	</a>
 
 	<!-- Gift Code Link -->
-	<a
-		href="/giftcode"
-		class="group panel-interactive rounded-sm p-5 flex items-center justify-between"
-	>
+	<a href="/giftcode" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
 			<div class="bg-[#8c709b]/15 border border-[#b7a0c5]/30 p-2 rounded-sm">
 				<FluentGift20Filled class="size-5 text-[#b7a0c5]" />
@@ -364,10 +355,7 @@
 	</a>
 
 	<!-- About Link -->
-	<a
-		href="/about"
-		class="group panel-interactive rounded-sm p-5 flex items-center justify-between"
-	>
+	<a href="/about" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
 			<div class="bg-[#315d8d]/18 border border-[#7ba0c8]/30 p-2 rounded-sm">
 				<FluentInfo20Filled class="size-5 text-[#7ba0c8]" />
@@ -391,7 +379,9 @@
 		</div>
 
 		<form method="POST" action="?/logout" use:enhance>
-			<Button type="submit" variant="soft-red" block icon={FluentArrowExit20Filled} class="justify-start">Sign Out</Button>
+			<Button type="submit" variant="soft-red" block icon={FluentArrowExit20Filled} class="justify-start"
+				>Sign Out</Button
+			>
 		</form>
 	</div>
 

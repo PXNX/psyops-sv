@@ -25,7 +25,7 @@ export type ButtonShape = "default" | "circle" | "square";
 
 /** Shared by every button: consistent motion, focus ring and disabled treatment. */
 const BUTTON_BASE =
-	"btn gap-2 font-medium rounded-sm transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c1929] disabled:opacity-50 disabled:cursor-not-allowed";
+	"btn press-spring gap-2 font-medium rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c1929] disabled:opacity-50 disabled:cursor-not-allowed";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 	// Solid — one per intent. Use for the primary action of a screen or dialog.

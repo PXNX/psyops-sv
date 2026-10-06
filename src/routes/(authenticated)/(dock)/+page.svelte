@@ -7,6 +7,7 @@
 	import SectionCard from "#lib/component/SectionCard.svelte";
 	import Logo from "#lib/component/Logo.svelte";
 	import Badge from "#lib/component/ui/Badge.svelte";
+	import Button from "#lib/component/ui/Button.svelte";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -20,7 +21,6 @@
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import FluentShieldLock20Filled from "~icons/fluent/shield-lock-20-filled";
 	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
-	import { buttonClass } from "#lib/component/ui/styles.js";
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();
@@ -68,9 +68,13 @@
 
 	<!-- Birthday Reward Banner -->
 	{#if data.birthdayInfo.uncollectedYears.length > 0}
-		<div class="bg-[#e6a527]/10 border border-[#e6a527]/30 rounded-xl p-5">
+		<div class="bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm p-5">
 			<div class="flex items-start gap-4">
-				<div class="size-12 shrink-0 bg-[#e6a527]/20 rounded-lg flex items-center justify-center text-2xl">🎂</div>
+				<div
+					class="size-12 shrink-0 bg-[#e6a527]/12 border border-[#e6a527]/35 rounded-sm flex items-center justify-center text-2xl"
+				>
+					🎂
+				</div>
 				<div class="flex-1 min-w-0">
 					{#if data.birthdayInfo.isBirthday}
 						<h3 class="text-lg font-bold text-[#f7c56b]">
@@ -108,10 +112,9 @@
 						}}
 						class="mt-3"
 					>
-						<button type="submit" class={buttonClass({ variant: "soft-amber", size: "sm" })}>
-							<FluentGiftCardArrowRight20Filled class="size-4" />
+						<Button type="submit" variant="soft-amber" size="sm" icon={FluentGiftCardArrowRight20Filled}>
 							Collect {data.birthdayInfo.rewardTotal.toLocaleString()} Currency
-						</button>
+						</Button>
 					</form>
 				</div>
 			</div>
@@ -121,13 +124,13 @@
 	<!-- Location & State snapshot -->
 	<SectionCard>
 		<div class="flex items-center justify-between mb-4">
-			<h2 class="text-sm font-bold text-[#a89e8e] uppercase tracking-wide flex items-center gap-2">
-				<FluentGlobe20Filled class="size-4" /> Your Location
+			<h2 class="text-[10px] font-bold text-[#a89e8e] uppercase tracking-wide flex items-center gap-2">
+				<FluentGlobe20Filled class="size-4 text-[#7ba0c8]" /> Your Location
 			</h2>
 			{#if data.userLocation}
 				<a
 					href="/region/{data.userLocation.regionId}"
-					class="text-xs text-[#7ba0c8] hover:text-[#b7d0e6] flex items-center gap-1"
+					class="text-xs text-[#e5d8c1]/70 hover:text-[#f2c463] transition-colors flex items-center gap-1"
 				>
 					Region details <FluentArrowRight20Filled class="size-3" />
 				</a>
@@ -139,7 +142,7 @@
 				<Logo
 					src={data.stateSnapshot.logo}
 					alt={data.stateSnapshot.name}
-					class="size-14 rounded-lg border border-[#dfceb0]/15"
+					class="size-14 rounded-sm border border-[#dfceb0]/15"
 					placeholderIcon={FluentBuildingGovernment20Filled}
 					placeholderGradient="from-[#315d8d] to-[#1e3a5f]"
 				/>
@@ -148,7 +151,7 @@
 					<div class="flex items-center gap-2 flex-wrap">
 						<a
 							href="/state/{data.stateSnapshot.id}"
-							class="text-lg font-bold text-[#fff7e8] hover:text-[#b7d0e6] truncate"
+							class="text-lg font-bold text-[#fff7e8] hover:text-[#f2c463] transition-colors truncate"
 						>
 							{data.stateSnapshot.name}
 						</a>
@@ -158,11 +161,11 @@
 					</div>
 					<div class="flex items-center gap-4 mt-1 text-xs text-[#a89e8e]">
 						<span class="flex items-center gap-1">
-							<FluentPeople20Filled class="size-3.5" />
+							<FluentPeople20Filled class="size-3.5 text-[#7ba0c8]" />
 							{data.stateSnapshot.population.toLocaleString()}
 						</span>
 						<span class="flex items-center gap-1">
-							<FluentStar20Filled class="size-3.5 text-amber-400" />
+							<FluentStar20Filled class="size-3.5 text-[#f7c56b]" />
 							{data.stateSnapshot.rating.toLocaleString()}
 						</span>
 					</div>
@@ -173,7 +176,7 @@
 				<FluentGlobe20Filled class="size-5 shrink-0" />
 				<span>
 					{regionName ? `${regionName} is not controlled by any state.` : "You have not settled in a region yet."}
-					<a href="/map" class="text-[#7ba0c8] hover:text-[#b7d0e6]">Explore the map</a>.
+					<a href="/map" class="text-[#f7c56b] hover:text-[#f2c463] transition-colors">Explore the map</a>.
 				</span>
 			</div>
 		{/if}
@@ -183,14 +186,16 @@
 	{#if data.systemBroadcast || data.stateBroadcast || data.partyBroadcast}
 		<div class="space-y-3">
 			{#if data.systemBroadcast}
-				<div class="bg-red-600/10 rounded-xl border border-red-500/20 p-5">
+				<div class="bg-red-600/10 rounded-sm border border-red-500/30 p-5">
 					<div class="flex items-start gap-3">
-						<div class="size-10 bg-red-600/20 rounded-lg flex items-center justify-center shrink-0">
+						<div
+							class="size-10 bg-red-600/10 border border-red-500/30 rounded-sm flex items-center justify-center shrink-0"
+						>
 							<FluentMegaphone20Filled class="size-5 text-red-400" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 mb-1">
-								<span class="text-xs font-medium text-red-400 uppercase tracking-wide">System Broadcast</span>
+								<span class="text-[10px] font-medium text-red-300 uppercase tracking-wide">System Broadcast</span>
 							</div>
 							<h3 class="text-[#fff7e8] font-bold">{data.systemBroadcast.title}</h3>
 							<p class="text-[#d9ccb7] text-sm whitespace-pre-wrap mt-1">{data.systemBroadcast.content}</p>
@@ -203,14 +208,16 @@
 			{/if}
 
 			{#if data.stateBroadcast}
-				<div class="bg-[#8c709b]/10 rounded-xl border border-[#8c709b]/25 p-5">
+				<div class="bg-[#8c709b]/15 rounded-sm border border-[#b7a0c5]/30 p-5">
 					<div class="flex items-start gap-3">
-						<div class="size-10 bg-[#8c709b]/20 rounded-lg flex items-center justify-center shrink-0">
-							<FluentBuildingGovernment20Filled class="size-5 text-[#d5c4df]" />
+						<div
+							class="size-10 bg-[#8c709b]/15 border border-[#b7a0c5]/30 rounded-sm flex items-center justify-center shrink-0"
+						>
+							<FluentBuildingGovernment20Filled class="size-5 text-[#b7a0c5]" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 mb-1">
-								<span class="text-xs font-medium text-[#d5c4df] uppercase tracking-wide">
+								<span class="text-[10px] font-medium text-[#d5c4df] uppercase tracking-wide">
 									{data.stateBroadcast.state?.name || "State"} Broadcast
 								</span>
 							</div>
@@ -225,14 +232,16 @@
 			{/if}
 
 			{#if data.partyBroadcast}
-				<div class="bg-[#587252]/10 rounded-xl border border-[#587252]/25 p-5">
+				<div class="bg-[#587252]/18 rounded-sm border border-[#8fae88]/30 p-5">
 					<div class="flex items-start gap-3">
-						<div class="size-10 bg-[#587252]/20 rounded-lg flex items-center justify-center shrink-0">
-							<FluentPeople20Filled class="size-5 text-[#c6dfbf]" />
+						<div
+							class="size-10 bg-[#587252]/18 border border-[#8fae88]/30 rounded-sm flex items-center justify-center shrink-0"
+						>
+							<FluentPeople20Filled class="size-5 text-[#8fae88]" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 mb-1">
-								<span class="text-xs font-medium text-[#c6dfbf] uppercase tracking-wide">
+								<span class="text-[10px] font-medium text-[#c6dfbf] uppercase tracking-wide">
 									{data.partyBroadcast.party?.name || "Party"} Broadcast
 								</span>
 							</div>
@@ -252,31 +261,31 @@
 
 	<!-- Current Wars in the region -->
 	{#if data.activeWars.length > 0}
-		<div class="bg-[#14283f]/85 border-2 border-red-500/30 rounded-xl overflow-hidden">
-			<div class="bg-red-950/30 border-b border-red-500/30 px-4 sm:px-5 py-3">
+		<div class="panel rounded-sm overflow-hidden border-red-500/30">
+			<div class="bg-red-600/10 border-b border-red-500/30 px-4 sm:px-5 py-3">
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
 						<div class="size-2 bg-red-500 rounded-full animate-pulse"></div>
-						<h2 class="text-base font-bold text-red-400 font-mono uppercase tracking-wide">Wars in Your Region</h2>
+						<h2 class="text-lg font-semibold text-[#fff7e8]">Wars in Your Region</h2>
 					</div>
-					<div class="px-2 py-1 bg-red-950/50 border border-red-500/40 rounded text-red-400 font-mono text-xs">
-						{data.activeWars.length} ACTIVE
-					</div>
+					<Badge tone="red"><span class="font-mono">{data.activeWars.length}</span> ACTIVE</Badge>
 				</div>
 			</div>
 			<div class="p-3 sm:p-4 space-y-2">
 				{#each data.activeWars as war (war.id)}
 					<a
 						href="/war/{war.id}"
-						class="block bg-[#102239]/70 border border-red-500/20 rounded-lg p-3 sm:p-4 hover:border-red-400/40 transition-all group"
+						class="block panel-muted rounded-sm p-3 sm:p-4 hover:border-red-500/40 hover:bg-[#19304b] transition-all group"
 					>
 						<div class="flex items-center gap-3">
 							<!-- Attacker -->
 							<div class="flex items-center gap-2 flex-1 min-w-0 justify-end text-right">
 								<div class="min-w-0">
-									<div class="text-sm font-bold text-[#fff7e8] truncate">{war.attacker.name}</div>
+									<div class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+										{war.attacker.name}
+									</div>
 									{#if war.attackerBloc}
-										<div class="text-[10px] font-mono truncate" style="color: {war.attackerBloc.color}">
+										<div class="text-[10px] truncate" style="color: {war.attackerBloc.color}">
 											{war.attackerBloc.name}
 										</div>
 									{/if}
@@ -284,27 +293,29 @@
 								<Logo
 									src={war.attacker.logo}
 									alt={war.attacker.name}
-									class="size-9 rounded border border-[#dfceb0]/15"
+									class="size-9 rounded-sm border border-[#dfceb0]/15"
 									placeholderIcon={FluentFlag20Filled}
-									placeholderGradient="from-red-500 to-orange-500"
+									placeholderGradient="from-red-600 to-red-800"
 								/>
 							</div>
 
-							<span class="text-red-400 font-mono text-xs font-bold shrink-0">VS</span>
+							<span class="text-red-400 text-xs font-bold shrink-0">VS</span>
 
 							<!-- Defender -->
 							<div class="flex items-center gap-2 flex-1 min-w-0">
 								<Logo
 									src={war.defender.logo}
 									alt={war.defender.name}
-									class="size-9 rounded border border-[#dfceb0]/15"
+									class="size-9 rounded-sm border border-[#dfceb0]/15"
 									placeholderIcon={FluentShield20Filled}
 									placeholderGradient="from-[#7ba0c8] to-[#315d8d]"
 								/>
 								<div class="min-w-0">
-									<div class="text-sm font-bold text-[#fff7e8] truncate">{war.defender.name}</div>
+									<div class="text-sm font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate">
+										{war.defender.name}
+									</div>
 									{#if war.defenderBloc}
-										<div class="text-[10px] font-mono truncate" style="color: {war.defenderBloc.color}">
+										<div class="text-[10px] truncate" style="color: {war.defenderBloc.color}">
 											{war.defenderBloc.name}
 										</div>
 									{/if}
@@ -314,22 +325,14 @@
 
 						<div class="flex items-center justify-between mt-3 pt-3 border-t border-[#dfceb0]/15">
 							<div class="flex items-center gap-2">
-								<span
-									class="px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono {war.side === 'defender'
-										? 'bg-[#315d8d]/15 border border-[#7ba0c8]/30 text-[#b7d0e6]'
-										: 'bg-orange-500/15 border border-orange-500/30 text-orange-400'}"
-								>
+								<Badge tone={war.side === "defender" ? "blue" : "red"} size="xs" class="uppercase">
 									{war.side === "defender" ? "Defending" : "Attacking"}
-								</span>
+								</Badge>
 								{#if war.ongoingBattles > 0}
-									<span
-										class="px-2 py-0.5 bg-amber-500/15 border border-amber-500/30 rounded text-[10px] font-bold text-amber-400 font-mono"
-									>
-										⚔️ {war.ongoingBattles} LIVE
-									</span>
+									<Badge tone="amber" size="xs">⚔️ <span class="font-mono">{war.ongoingBattles}</span> LIVE</Badge>
 								{/if}
 							</div>
-							<span class="text-[10px] text-[#a89e8e] font-mono">
+							<span class="text-[10px] text-[#a89e8e]">
 								Declared {formatDate(war.declaredAt)}
 							</span>
 						</div>
@@ -341,47 +344,41 @@
 
 	<!-- Ongoing Battles in Region -->
 	{#if data.ongoingBattles.length > 0}
-		<div class="bg-[#14283f]/85 border-2 border-amber-500/30 rounded-xl overflow-hidden">
-			<div class="bg-amber-950/30 border-b border-amber-500/30 px-4 sm:px-5 py-3">
+		<div class="panel rounded-sm overflow-hidden border-[#e6a527]/35">
+			<div class="bg-[#e6a527]/12 border-b border-[#e6a527]/35 px-4 sm:px-5 py-3">
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
-						<div class="size-2 bg-amber-500 rounded-full animate-pulse"></div>
-						<h2 class="text-base font-bold text-amber-400 font-mono uppercase tracking-wide">Active Battles</h2>
+						<div class="size-2 bg-[#e6a527] rounded-full animate-pulse"></div>
+						<h2 class="text-lg font-semibold text-[#fff7e8]">Active Battles</h2>
 					</div>
-					<div class="px-2 py-1 bg-amber-950/50 border border-amber-500/40 rounded text-amber-400 font-mono text-xs">
-						{data.ongoingBattles.length} ONGOING
-					</div>
+					<Badge tone="amber"><span class="font-mono">{data.ongoingBattles.length}</span> ONGOING</Badge>
 				</div>
 			</div>
 			<div class="p-3 sm:p-4 space-y-2">
 				{#each data.ongoingBattles as battle (battle.id)}
 					<a
 						href="/battle/{battle.id}"
-						class="flex items-center gap-3 sm:gap-4 bg-[#102239]/70 border border-amber-500/20 rounded-lg p-3 sm:p-4 hover:border-amber-400/40 transition-all group"
+						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#e6a527]/55 hover:bg-[#19304b] transition-all group"
 					>
 						<Logo
 							src="/coats/{battle.regionId}.svg"
 							alt={getRegionName(battle.regionId)}
-							class="size-10 sm:size-12 rounded border border-[#dfceb0]/15"
+							class="size-10 sm:size-12 rounded-sm border border-[#dfceb0]/15"
 							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-amber-500 to-red-500"
+							placeholderGradient="from-[#e6a527] to-red-600"
 						/>
 						<div class="flex-1 min-w-0">
 							<div
-								class="text-sm sm:text-base font-bold text-[#fff7e8] group-hover:text-amber-400 transition-colors truncate"
+								class="text-sm sm:text-base font-bold text-[#fff7e8] group-hover:text-[#f2c463] transition-colors truncate"
 							>
 								{getRegionName(battle.regionId)}
 							</div>
-							<div class="text-xs text-[#a89e8e] font-mono">
+							<div class="text-xs text-[#a89e8e]">
 								{battle.attackerState.name} → {battle.defenderState.name}
 							</div>
 						</div>
 						<div class="flex items-center gap-2 flex-shrink-0">
-							<span
-								class="px-2 py-1 bg-amber-500/20 border border-amber-500/30 rounded text-xs text-amber-400 font-mono font-bold"
-							>
-								⚔️ LIVE
-							</span>
+							<Badge tone="amber">⚔️ LIVE</Badge>
 						</div>
 					</a>
 				{/each}
@@ -391,37 +388,30 @@
 
 	<!-- Quick Actions -->
 	<SectionCard>
-		<h2 class="text-xl font-bold text-[#fff7e8] mb-4">Quick Actions</h2>
+		<h2 class="section-title mb-4">Quick Actions</h2>
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-			<a href="/map" class="btn btn-ghost justify-start">
-				<FluentHome20Filled class="size-5" />
-				Explore Map
-			</a>
+			<Button href="/map" variant="subtle" icon={FluentHome20Filled} class="justify-start">Explore Map</Button>
 			{#if data.stateSnapshot}
-				<a href="/state/{data.stateSnapshot.id}" class="btn btn-ghost justify-start">
-					<FluentBuildingGovernment20Filled class="size-5" />
+				<Button
+					href="/state/{data.stateSnapshot.id}"
+					variant="subtle"
+					icon={FluentBuildingGovernment20Filled}
+					class="justify-start"
+				>
 					My State
-				</a>
+				</Button>
 			{/if}
-			<a href="/market" class="btn btn-ghost justify-start">
-				<FluentMoney20Filled class="size-5" />
-				Market
-			</a>
-			<a href="/chat" class="btn btn-ghost justify-start">
-				<FluentPeople20Filled class="size-5" />
-				Chat
-			</a>
+			<Button href="/market" variant="subtle" icon={FluentMoney20Filled} class="justify-start">Market</Button>
+			<Button href="/chat" variant="subtle" icon={FluentPeople20Filled} class="justify-start">Chat</Button>
 			{#if data.account.role === "admin" || data.account.role === "moderator"}
-				<a href="/moderators" class="btn btn-ghost justify-start">
-					<FluentShield20Filled class="size-5" />
+				<Button href="/moderators" variant="subtle" icon={FluentShield20Filled} class="justify-start">
 					Moderator Panel
-				</a>
+				</Button>
 			{/if}
 			{#if data.account.role === "admin"}
-				<a href="/admin" class="btn btn-ghost justify-start">
-					<FluentShieldLock20Filled class="size-5" />
+				<Button href="/admin" variant="subtle" icon={FluentShieldLock20Filled} class="justify-start">
 					Admin Panel
-				</a>
+				</Button>
 			{/if}
 		</div>
 	</SectionCard>

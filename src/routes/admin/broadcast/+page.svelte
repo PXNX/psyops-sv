@@ -137,9 +137,7 @@
 				{/if}
 
 				{#if form?.success}
-					<div
-						class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3"
-					>
+					<div class="bg-[#587252]/18 border border-[#8fae88]/30 text-[#c6dfbf] rounded-sm p-4 flex items-center gap-3">
 						<FluentSend20Filled class="size-5 shrink-0" />
 						<p>{form.message}</p>
 					</div>
