@@ -97,18 +97,134 @@
 		icon={FluentPeople20Filled}
 		backHref="/state/{data.state.id}"
 		backLabel={data.state.name}
-	>
-		{#snippet actions()}
-			<div class="panel-muted rounded-sm px-4 py-2 sm:text-right">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Next Election</p>
-				{#if data.nextElection}
-					<p class="text-lg font-bold text-[#f5efd8]">{formatDateTime(data.nextElection.startDate)}</p>
-				{:else}
-					<p class="text-lg font-bold text-[#f5efd8]">—</p>
-				{/if}
+	/>
+
+	<!-- Election Banner -->
+	{#if data.nextElection}
+		{@const now = new Date()}
+		{@const start = new Date(data.nextElection.startDate)}
+		{@const end = new Date(data.nextElection.endDate)}
+		{@const isScheduled = now < start}
+		{@const isActive = now >= start && now <= end}
+
+		{#if data.nextElection.isInaugural && isScheduled}
+			<!-- Inaugural Election - Scheduled -->
+			<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5 space-y-3">
+				<div class="flex items-start gap-3">
+					<div class="size-12 bg-[#f2b01e]/20 rounded-sm flex items-center justify-center shrink-0">
+						<FluentVote20Filled class="size-6 text-[#ffd35c]" />
+					</div>
+					<div class="flex-1 space-y-2">
+						<h3 class="font-bold text-[#f5efd8] text-lg">Inaugural Election Scheduled! 🎉</h3>
+						<p class="text-[#ffe58f]/90 text-sm">
+							This state is brand new! The first democratic election will establish the founding parliament of
+							<strong>{data.nextElection.totalSeats} seats</strong>.
+						</p>
+
+						<div class="panel-muted rounded-sm p-3 space-y-2">
+							<div class="flex items-center gap-2 text-sm">
+								<FluentCalendar20Filled class="size-4 text-[#ffd35c]" />
+								<span class="text-[#ffe58f]">
+									<strong>Voting starts in:</strong>
+									{getTimeRemaining(data.nextElection.startDate) || "Starting soon!"}
+								</span>
+							</div>
+							<div class="text-xs text-[#ffe58f]/70">
+								<strong>Start:</strong>
+								{formatDate(data.nextElection.startDate)}<br />
+								<strong>End:</strong>
+								{formatDate(data.nextElection.endDate)}
+							</div>
+						</div>
+
+						<div class="flex gap-2 pt-2">
+							<Button
+								href="/state/{data.state.id}/election/{data.nextElection.id}"
+								variant="primary"
+								size="sm"
+								icon={FluentVote20Filled}
+							>
+								View Election Details
+							</Button>
+							<Button href="/party/create" variant="secondary" size="sm">Create a Party</Button>
+						</div>
+					</div>
+				</div>
 			</div>
-		{/snippet}
-	</PageHeader>
+		{:else if data.nextElection.isInaugural && isActive}
+			<!-- Inaugural Election - Active -->
+			<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4">
+				<div class="flex items-center justify-between gap-4">
+					<div class="flex items-center gap-3">
+						<FluentVote20Filled class="size-6 text-[#6fd14a] animate-pulse" />
+						<div>
+							<p class="font-semibold text-[#f5efd8]">Inaugural Election Now Active!</p>
+							<p class="text-sm text-[#b9f29a]">Help establish the founding parliament - vote now!</p>
+						</div>
+					</div>
+					<Button
+						href="/state/{data.state.id}/election/{data.nextElection.id}"
+						variant="primary"
+						size="sm"
+						icon={FluentVote20Filled}
+						class="animate-pulse"
+					>
+						Vote Now
+					</Button>
+				</div>
+			</div>
+		{:else if !data.nextElection.isInaugural && isScheduled}
+			<!-- Regular Election - Scheduled -->
+			<div class="panel rounded-sm p-4">
+				<div class="flex items-center justify-between gap-4">
+					<div class="flex items-center gap-3 flex-1">
+						<FluentCalendar20Filled class="size-5 text-[#b3dcff] shrink-0" />
+						<div>
+							<h3 class="text-sm font-bold text-[#f5efd8]">Upcoming Election</h3>
+							<p class="text-xs text-[#a8a083]">
+								{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} •
+								{data.nextElection.totalSeats} seats • starts in {getTimeRemaining(data.nextElection.startDate)}
+							</p>
+						</div>
+					</div>
+					<Button href="/state/{data.state.id}/election/{data.nextElection.id}" variant="soft-blue" size="sm">
+						View Election
+					</Button>
+				</div>
+			</div>
+		{:else if !data.nextElection.isInaugural && isActive}
+			<!-- Regular Election - Active -->
+			<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/30 p-5">
+				<div class="flex items-center justify-between gap-4">
+					<div class="flex items-center gap-4 flex-1">
+						<div class="size-12 bg-[#3f8a2a]/30 rounded-sm flex items-center justify-center shrink-0">
+							<FluentVote20Filled class="size-6 text-[#6fd14a]" />
+						</div>
+						<div>
+							<div class="flex items-center gap-2 mb-1">
+								<h3 class="text-lg font-bold text-[#f5efd8]">Election Active</h3>
+								<Badge tone="green">Voting Now</Badge>
+							</div>
+							<p class="text-sm text-[#a8a083]">
+								{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} •
+								{data.nextElection.totalSeats} seats •
+								{getTimeRemaining(data.nextElection.endDate)} remaining
+							</p>
+						</div>
+					</div>
+					<Button
+						href="/state/{data.state.id}/election/{data.nextElection.id}"
+						variant="primary"
+						size="sm"
+						icon={FluentVote20Filled}
+						class="animate-pulse"
+					>
+						Vote Now
+					</Button>
+				</div>
+			</div>
+		{/if}
+	{/if}
 
 	<!-- Parliament Composition -->
 	{#if data.totalSeats > 0}

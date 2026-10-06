@@ -222,7 +222,7 @@
 							src={member.user.profile.logo}
 							alt={member.user.profile.name}
 							placeholderIcon={FluentPeople20Filled}
-							class="size-10 rounded-full"
+							class="size-10"
 						/>
 						<div class="flex-1 min-w-0">
 							<p class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">

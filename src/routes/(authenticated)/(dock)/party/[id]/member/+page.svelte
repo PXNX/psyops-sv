@@ -119,7 +119,7 @@
 							<Logo
 								src={application.user.logo}
 								alt={application.user.name}
-								class="size-10 rounded-full"
+								class="size-10"
 								placeholderIcon={FluentPeople20Filled}
 								placeholderGradient="from-[#4a5238] to-[#252b1e]"
 							/>
@@ -217,7 +217,7 @@
 							<Logo
 								src={member.user.logo}
 								alt={member.user.name || "Member"}
-								class="size-10 sm:size-12 rounded-full"
+								class="size-10 sm:size-12"
 								placeholderIcon={FluentPeople20Filled}
 								placeholderGradient="from-[#4a5238] to-[#252b1e]"
 							/>
