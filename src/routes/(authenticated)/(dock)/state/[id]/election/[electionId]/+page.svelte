@@ -10,6 +10,7 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import { enhance } from "$app/forms";
+	import { feedback } from "#lib/utils/feedback.js";
 	import { onMount, onDestroy } from "svelte";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
@@ -426,7 +427,10 @@
 						return async ({ update, result }) => {
 							isSubmittingVote = false;
 							await update();
-							if (result.type === "success") showVoteAnim = true;
+							if (result.type === "success") {
+								showVoteAnim = true;
+								feedback("win");
+							}
 						};
 					}}
 					class="sticky bottom-4 z-10"

@@ -2,6 +2,7 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { burst } from "#lib/utils/confetti.js";
+	import { feedback } from "#lib/utils/feedback.js";
 	import FluentSettingsCogMultiple20Filled from "~icons/fluent/settings-cog-multiple-20-filled";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 	import FluentAccessibilityError20Filled from "~icons/fluent/accessibility-error-20-filled";
@@ -505,6 +506,7 @@
 											await update();
 											if (result.type === "success") {
 												burst();
+												feedback("win");
 											}
 										};
 									}}
@@ -842,6 +844,7 @@
 						await update();
 						showGiftPremiumModal = false;
 						burst({ particleCount: 120 });
+						feedback("win");
 					} else if (result.type === "failure") {
 						giftPremiumError = result.data?.error || "Failed to gift premium";
 						await update();

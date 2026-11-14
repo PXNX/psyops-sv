@@ -1,6 +1,7 @@
 <!-- src/routes/production/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { feedback } from "#lib/utils/feedback.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import FluentProduction20Filled from "~icons/fluent/production-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -178,7 +179,10 @@
 						return async ({ update, result }) => {
 							await update();
 							isCollectingWage = false;
-							if (result.type === "success") showCollectAnim = true;
+							if (result.type === "success") {
+								showCollectAnim = true;
+								feedback("success");
+							}
 						};
 					}}
 				>
@@ -399,7 +403,10 @@
 					use:enhance={() => {
 						return async ({ update, result }) => {
 							await update();
-							if (result.type === "success") showProductionAnim = true;
+							if (result.type === "success") {
+								showProductionAnim = true;
+								feedback("success");
+							}
 						};
 					}}
 					class="panel rounded-sm p-5 space-y-4 md:space-y-6"

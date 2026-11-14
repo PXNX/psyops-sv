@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { feedback } from "#lib/utils/feedback.js";
 	import TravelProgress from "#lib/component/TravelProgress.svelte";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
@@ -108,6 +109,7 @@
 								await update();
 								if (result.type === "success") {
 									showBirthdayAnim = true;
+									feedback("win");
 								}
 							};
 						}}
