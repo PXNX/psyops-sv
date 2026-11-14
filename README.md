@@ -5,6 +5,7 @@ A SvelteKit application with Google OAuth, PostgreSQL and Bun, presented through
 ## Features
 
 - **Google OAuth**: Secure authentication via Google.
+- **Telegram bot**: [@BotFather-style auth linking and premium purchases](bot/README.md) — `/login` and `/premium` via a long-polling bot in `bot/` that talks to the same Postgres database.
 - **PostgreSQL**: Robust and scalable database management using Drizzle ORM.
 - **Bun**: Fast JavaScript runtime and package manager.
 - **Editorial field-ledger UI**: A restrained midnight-ink interface with parchment rules, serif headings and amber interaction cues.

@@ -1,0 +1,11 @@
+services:
+  bot:
+    build: .
+    container_name: ptb-psyops
+    restart: unless-stopped
+    env_file:
+      - .env # .env is only read with "compose up"
+    volumes:
+      - ./bot:/app/bot
+    environment:
+      CONTAINER: "true"

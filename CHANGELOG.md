@@ -5,6 +5,14 @@ All notable changes to PsyOps will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Telegram bot in `bot/` (from [PXNX/ptb-psyops](https://github.com/PXNX/ptb-psyops)): `/login`
+  links the Telegram account to a psyops-sv account, `/premium` grants or extends a premium
+  membership (mocked for free, or real payment via Telegram Stars / TON)
+
 ## [0.0.1] - 2026-07-06
 
 ### Added

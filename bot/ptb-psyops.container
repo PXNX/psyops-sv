@@ -1,0 +1,27 @@
+[Unit]
+Description="ptb-psyops (Auth & Premium Purchases)"
+After=local-fs.target
+
+[Container]
+# No custom image: the bot is plain python-telegram-bot, installed from
+# bot/bot/requirements.txt at start (same pattern as the other in-repo bots).
+Image=docker.io/library/python:3.13-slim
+AutoUpdate=registry
+ContainerName=ptb-psyops
+LogDriver=journald
+WorkingDir=/app
+Volume=%h/projects/psyops-sv/bot/bot:/app:Z
+
+# TELEGRAM, GAME_DATABASE_URL, APP_URL (see bot/.env.example)
+EnvironmentFile=%h/projects/psyops-sv/bot/.env
+Environment=CONTAINER=true
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=PYTHONUNBUFFERED=1
+
+Exec=sh -c "pip install --no-cache-dir -r requirements.txt && python -u main.py"
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=default.target
