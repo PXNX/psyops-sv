@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Telegram bot in `bot/` (from [PXNX/ptb-psyops](https://github.com/PXNX/ptb-psyops)): `/login`
   links the Telegram account to a psyops-sv account, `/premium` grants or extends a premium
   membership (mocked for free, or real payment via Telegram Stars / TON)
+- Agent rules in `agents.md` (concurrent sessions, committing, git workflow)
 
 ## [0.0.1] - 2026-07-06
 
