@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Bump all dependencies to their latest versions; pin TypeScript to 6.0.3 (7.x breaks
+  svelte-kit sync with `ts.sys` errors)
+
 ### Added
 
 - Telegram bot in `bot/` (from [PXNX/ptb-psyops](https://github.com/PXNX/ptb-psyops)): `/login`

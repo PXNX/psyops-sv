@@ -22,12 +22,12 @@ not own its own schema.
 
 ## Layout
 
-| Path | What |
-| --- | --- |
-| `bot/` | python-telegram-bot app (long polling). Owns every update, including `pre_checkout_query` and `successful_payment`. |
-| `test/` | pytest unit tests (payload format, premium logic). |
-| `Dockerfile`, `compose.yaml` | Optional container builds for local development. |
-| `ptb-psyops.container` | Quadlet unit for the deployment host (uses the plain `python:3.13-slim` image, like the other in-repo bots). |
+| Path                         | What                                                                                                                |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `bot/`                       | python-telegram-bot app (long polling). Owns every update, including `pre_checkout_query` and `successful_payment`. |
+| `test/`                      | pytest unit tests (payload format, premium logic).                                                                  |
+| `Dockerfile`, `compose.yaml` | Optional container builds for local development.                                                                    |
+| `ptb-psyops.container`       | Quadlet unit for the deployment host (uses the plain `python:3.13-slim` image, like the other in-repo bots).        |
 
 The paths in the table below are relative to `bot/` (the folder you are in when running the bot).
 
@@ -69,19 +69,19 @@ Domain gegen `APP_URL`.
 
 ## Konfiguration
 
-| Variable            | Beschreibung                                                          |
-|----------------------|------------------------------------------------------------------------|
-| `TELEGRAM`           | Telegram Bot Token (identical with psyops-sv's `TELEGRAM_BOT_TOKEN`)     |
-| `GAME_DATABASE_URL`  | Postgres-Verbindungs-URL (dieselbe DB wie psyops-sv)                    |
-| `GAME_DB_SSL`        | `true`, falls die DB-Verbindung SSL benötigt und die URL es nicht schon enthält |
-| `APP_URL`            | Öffentliche Basis-URL von psyops-sv, für den `/login`-Button            |
-| `MOCK_STARS_PAYMENTS`| `true` (Default) = Premium kostenlos gewähren, `false` = echt via Stars/TON abrechnen |
-| `TON_WALLET_ADDRESS` | Optional: Wallet für TON-Zahlungen; leer = nur Telegram Stars           |
-| `TONCENTER_API_URL`  | Optional: toncenter-kompatible API zum Verifizieren von TON-Zahlungen   |
-| `TON_API_KEY`        | Optional: API-Key für toncenter                                        |
-| `LOG_GROUP_ID`       | Optional: Telegram-Gruppe für Fehler-Reports                           |
-| `THREAD_ID`          | Optional: Thema/Topic in der Fehler-Report-Gruppe                       |
-| `CONTAINER`          | `true` wenn im Container ausgeführt                                     |
+| Variable              | Beschreibung                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------- |
+| `TELEGRAM`            | Telegram Bot Token (identical with psyops-sv's `TELEGRAM_BOT_TOKEN`)                  |
+| `GAME_DATABASE_URL`   | Postgres-Verbindungs-URL (dieselbe DB wie psyops-sv)                                  |
+| `GAME_DB_SSL`         | `true`, falls die DB-Verbindung SSL benötigt und die URL es nicht schon enthält       |
+| `APP_URL`             | Öffentliche Basis-URL von psyops-sv, für den `/login`-Button                          |
+| `MOCK_STARS_PAYMENTS` | `true` (Default) = Premium kostenlos gewähren, `false` = echt via Stars/TON abrechnen |
+| `TON_WALLET_ADDRESS`  | Optional: Wallet für TON-Zahlungen; leer = nur Telegram Stars                         |
+| `TONCENTER_API_URL`   | Optional: toncenter-kompatible API zum Verifizieren von TON-Zahlungen                 |
+| `TON_API_KEY`         | Optional: API-Key für toncenter                                                       |
+| `LOG_GROUP_ID`        | Optional: Telegram-Gruppe für Fehler-Reports                                          |
+| `THREAD_ID`           | Optional: Thema/Topic in der Fehler-Report-Gruppe                                     |
+| `CONTAINER`           | `true` wenn im Container ausgeführt                                                   |
 
 The premium plans in `private/premium.py` mirror `PREMIUM_PLANS` in
 `src/lib/config/features/premium.config.ts`, and the granting logic in `data/game_db.py` mirrors
