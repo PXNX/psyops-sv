@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Physics-tuned confetti bursts: shared `burst()` util with gravity, drag, tumbling shapes
+  and reduced-motion support, wired into the birthday-reward and premium-gift celebrations
 - Telegram bot in `bot/` (from [PXNX/ptb-psyops](https://github.com/PXNX/ptb-psyops)): `/login`
   links the Telegram account to a psyops-sv account, `/premium` grants or extends a premium
   membership (mocked for free, or real payment via Telegram Stars / TON)

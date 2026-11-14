@@ -1,7 +1,7 @@
 <!-- src/routes/(authenticated)/user/[id]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import confetti from "canvas-confetti";
+	import { burst } from "#lib/utils/confetti.js";
 	import FluentSettingsCogMultiple20Filled from "~icons/fluent/settings-cog-multiple-20-filled";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
 	import FluentAccessibilityError20Filled from "~icons/fluent/accessibility-error-20-filled";
@@ -504,12 +504,7 @@
 										return async ({ result, update }) => {
 											await update();
 											if (result.type === "success") {
-												confetti({
-													particleCount: 150,
-													spread: 80,
-													origin: { y: 0.6 },
-													colors: ["#f59e0b", "#fbbf24", "#fcd34d", "#a78bfa", "#ec4899"]
-												});
+												burst();
 											}
 										};
 									}}
@@ -846,7 +841,7 @@
 					if (result.type === "success") {
 						await update();
 						showGiftPremiumModal = false;
-						confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+						burst({ particleCount: 120 });
 					} else if (result.type === "failure") {
 						giftPremiumError = result.data?.error || "Failed to gift premium";
 						await update();

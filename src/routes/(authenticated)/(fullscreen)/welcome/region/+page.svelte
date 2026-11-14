@@ -9,7 +9,7 @@
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import { getRegionName } from "#lib/utils/formatting.js";
-	import confetti from "canvas-confetti";
+	import { burst } from "#lib/utils/confetti.js";
 
 	let { data } = $props();
 
@@ -81,11 +81,7 @@
 						isSubmitting = true;
 						return async ({ result, update }) => {
 							if (result.type === "success") {
-								confetti({
-									particleCount: 150,
-									spread: 70,
-									origin: { y: 0.6 }
-								});
+								burst({ spread: 70 });
 							}
 							await update();
 							isSubmitting = false;
