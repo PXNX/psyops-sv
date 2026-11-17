@@ -94,7 +94,7 @@ async function processTravel(travel: any) {
 		icon: "/favicon.png",
 		badge: "/badge.png",
 		data: {
-			url: "/travel",
+			url: `/region/${travel.toRegionId}`,
 			tag: "travel-arrival"
 		}
 	});
