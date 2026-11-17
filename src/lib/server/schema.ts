@@ -2193,6 +2193,7 @@ export const stateEditCooldowns = pgTable("state_edit_cooldowns", {
 // Add these enums and tables to your schema.ts file
 
 export const warStatusEnum = pgEnum("war_status", ["active", "ended"]);
+export const warEndReasonEnum = pgEnum("war_end_reason", ["exhaustion", "stalemate", "capitulation", "surrender"]);
 export const battleStatusEnum = pgEnum("battle_status", ["ongoing", "attacker_won", "defender_won"]);
 export const surrenderTypeEnum = pgEnum("surrender_type", ["full", "conditional"]);
 
@@ -2218,6 +2219,11 @@ export const wars = pgTable("wars", {
 	surrenderedBy: integer("surrendered_by").references(() => states.id, {
 		onDelete: "set null"
 	}),
+	// Accumulated war weariness (0-100); at WAR_CONFIG.EXHAUSTION_LIMIT the
+	// war-resolution cron ends the war in a white peace.
+	exhaustion: integer("exhaustion").default(0).notNull(),
+	// How an ended war ended ("exhaustion", "stalemate", "capitulation", "surrender")
+	endedReason: warEndReasonEnum("ended_reason"),
 	declaredAt: timestamp("declared_at").defaultNow().notNull(),
 	endedAt: timestamp("ended_at")
 });

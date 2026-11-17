@@ -20,6 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   automation, proposals and travels run on the cadences declared in `vercel.json` instead
   of an external scheduler
 
+- War-resolution cron (`/api/cron/wars`, hourly) that ends active wars no other
+  system would close: recorded surrenders, capitulation (a side left with no regions),
+  stalemate (no battle activity for 7 days) and war exhaustion (white peace at 100%).
+  Wars track `exhaustion` and `endedReason`; the war page shows the exhaustion bar
+  and how the war ended
+
 - Physics-tuned confetti bursts: shared `burst()` util with gravity, drag, tumbling shapes
   and reduced-motion support, wired into the birthday-reward and premium-gift celebrations
 - Telegram bot in `bot/` (from [PXNX/ptb-psyops](https://github.com/PXNX/ptb-psyops)): `/login`

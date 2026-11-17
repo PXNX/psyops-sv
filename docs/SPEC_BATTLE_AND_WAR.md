@@ -26,6 +26,8 @@ A war is a conflict between two states (and optionally their blocs).
 | `declaredBy`     | FK → accounts | The president who declared it       |
 | `status`         | enum          | `active`, `ended`                   |
 | `surrenderedBy`  | FK → states   | Which state surrendered (if any)    |
+| `exhaustion`     | int           | 0–100 war weariness, accrued hourly |
+| `endedReason`    | enum          | `exhaustion`, `stalemate`, `capitulation`, `surrender` |
 | `declaredAt`     | timestamp     |                                     |
 | `endedAt`        | timestamp     | Null while active                   |
 
@@ -35,7 +37,30 @@ A war is a conflict between two states (and optionally their blocs).
 - Cannot declare war on your own state.
 - Cannot declare war on a state in the **same bloc**.
 - Only one active war between any two states at a time.
-- Wars end via **surrender** (full or conditional) or all battles resolved.
+- Wars end via **surrender** (full or conditional), when all battles are resolved,
+  or via the **war-resolution cron** (see below).
+
+### War Resolution (cron)
+
+Wars do not drag on forever. The hourly `/api/cron/wars` schedule runs
+`resolveWars()` (`src/lib/server/services/military/war-resolution.service.ts`),
+which looks for a way to end every active war, in this order:
+
+1. **Surrender** — any `war_surrenders` row recorded for the war.
+2. **Capitulation** — a side (or, in a bloc war, every state of its bloc) holds
+   no regions left.
+3. **Stalemate** — no battle activity for `WAR_CONFIG.STALEMATE_DAYS` (7) days.
+4. **Exhaustion** — `wars.exhaustion` reached `WAR_CONFIG.EXHAUSTION_LIMIT`
+   (100); the war ends in a white peace, borders unchanged.
+
+Exhaustion accrues at `WAR_CONFIG.EXHAUSTION_PER_HOUR` (0.5) per hour of active
+war and is shown as a bar on the war page. Ended wars record `endedReason` and
+notify the citizens of both states.
+
+| Field         | Type   | Notes                                     |
+| ------------- | ------ | ----------------------------------------- |
+| `exhaustion`  | int    | 0–100, accrued hourly                     |
+| `endedReason` | enum   | `exhaustion`, `stalemate`, `capitulation`, `surrender` |
 
 ### Battle
 

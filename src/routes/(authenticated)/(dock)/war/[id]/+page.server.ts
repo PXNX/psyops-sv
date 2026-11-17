@@ -26,6 +26,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			declaredAt: wars.declaredAt,
 			endedAt: wars.endedAt,
 			status: wars.status,
+			exhaustion: wars.exhaustion,
+			endedReason: wars.endedReason,
 			declarerName: userProfiles.name,
 			declarerLogo: userProfiles.logo
 		})
@@ -271,6 +273,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			declaredAt: warData.declaredAt,
 			endedAt: warData.endedAt,
 			status: warData.status,
+			exhaustion: warData.exhaustion,
+			endedReason: warData.endedReason,
 			attacker: {
 				id: warData.attackerId,
 				name: attackerState?.name || "Unknown",

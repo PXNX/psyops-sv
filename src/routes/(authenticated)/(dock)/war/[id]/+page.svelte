@@ -31,7 +31,7 @@
 		if (countdownInterval) clearInterval(countdownInterval);
 	});
 
-	function formatDate(date: string) {
+	function formatDate(date: string | Date) {
 		return formatDateTime(date);
 	}
 
@@ -45,6 +45,21 @@
 				return "bg-[#2369b5]/18 border-[#5eaef5]/30 text-[#b3dcff]";
 			default:
 				return "bg-[#1a1f15]/70 border-[#c8b47a]/15 text-[#a8a083]";
+		}
+	}
+
+	function getEndedReasonLabel(reason: string | null): string {
+		switch (reason) {
+			case "exhaustion":
+				return "War exhaustion";
+			case "stalemate":
+				return "Stalemate";
+			case "capitulation":
+				return "Capitulation";
+			case "surrender":
+				return "Surrender";
+			default:
+				return "War Ended";
 		}
 	}
 
@@ -89,11 +104,27 @@
 					<span class="text-red-300 text-xs uppercase tracking-widest font-bold">Active Conflict</span>
 				{:else}
 					<div class="size-2.5 bg-[#a8a083] rounded-full"></div>
-					<span class="text-[#a8a083] text-xs uppercase tracking-widest">War Ended</span>
+					<span class="text-[#a8a083] text-xs uppercase tracking-widest">{getEndedReasonLabel(data.war.endedReason)}</span>
 				{/if}
 			</div>
 			<span class="text-[#a8a083] font-mono text-xs">WAR #{data.war.id}</span>
 		</div>
+
+		<!-- War exhaustion: at 100% the war-resolution cron forces a white peace -->
+		{#if data.war.status === "active"}
+			<div class="mb-4">
+				<div class="flex justify-between text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">
+					<span>War exhaustion</span>
+					<span class="font-mono">{Math.round(data.war.exhaustion ?? 0)}%</span>
+				</div>
+				<div class="h-1 bg-[#1a1f15] rounded-full overflow-hidden">
+					<div
+						class="h-full bg-[#f2b01e] transition-all duration-500"
+						style="width: {Math.min(100, data.war.exhaustion ?? 0)}%"
+					></div>
+				</div>
+			</div>
+		{/if}
 
 		<!-- Combatants Face-off -->
 		<div class="grid grid-cols-3 gap-4 items-center">
@@ -226,8 +257,8 @@
 						<Logo src={state.logo} alt={state.name} class="size-8 rounded-sm" />
 						<div>
 							<div class="text-sm font-medium text-[#f5efd8]">{state.name}</div>
-							{#if state.capitulatedAt}
-								<div class="text-[10px] text-[#a8a083]">{formatDate(state.capitulatedAt)}</div>
+							{#if state.capitulated_at}
+								<div class="text-[10px] text-[#a8a083]">{formatDate(state.capitulated_at)}</div>
 							{/if}
 						</div>
 					</div>

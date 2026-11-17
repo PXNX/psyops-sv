@@ -32,6 +32,11 @@
 			"schedule": "*/15 * * * *",
 			"path": "/api/cron/travels",
 			"requestMethod": "GET"
+		},
+		"wars": {
+			"schedule": "0 * * * *",
+			"path": "/api/cron/wars",
+			"requestMethod": "GET"
 		}
 	}
 }

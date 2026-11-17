@@ -82,6 +82,7 @@ The game's background ticks run on [Vercel Schedules](https://vercel.com/docs/sc
 | `premium`        | `/api/cron/premium`        | every 15 min  | Runs the premium automation (production, training, factory shifts)           |
 | `proposals`      | `/api/cron/proposals`      | every 15 min  | Closes finished parliament proposals and applies passed ones                 |
 | `travels`        | `/api/cron/travels`        | every 15 min  | Completes travels whose arrival time has passed                              |
+| `wars`           | `/api/cron/wars`           | hourly        | Ends wars by exhaustion, stalemate, capitulation or recorded surrender       |
 
 Set `CRON_SECRET` in the project's environment variables on Vercel — without it every schedule gets a 403. Schedules apply when a deployment becomes current; each one can be run manually from the dashboard's **Schedules** tab or with `vercel schedules invoke <name>`. The cadences respect the Hobby plan's 15-minute minimum interval; on Pro/Enterprise runs land within the jitter window (default 1 minute) of the scheduled time.
 

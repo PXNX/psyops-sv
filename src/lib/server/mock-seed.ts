@@ -408,6 +408,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			defenderBlocId: bloc1!.id,
 			declaredBy: "user-3",
 			status: "active",
+			exhaustion: 73,
 			declaredAt: new Date(Date.now() - 86400000 * 3)
 		})
 		.returning();
@@ -421,6 +422,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			attackerBlocId: bloc1!.id,
 			declaredBy: "user-1",
 			status: "active",
+			exhaustion: 12,
 			declaredAt: new Date(Date.now() - 86400000)
 		})
 		.returning();
