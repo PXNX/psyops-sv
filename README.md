@@ -77,6 +77,12 @@ bun run test
 
 Unit tests plus integration tests (`*.integration.test.ts`) that run the real services against a fresh seeded in-memory Postgres per suite, so they need no database, network or Docker.
 
+```bash
+bun run smoke
+```
+
+Starts the app in mock mode, requests every page route and fails if any of them returns a server error. Point it at a server you already run with `SMOKE_URL=http://localhost:5173 bun run smoke`.
+
 ## UI Styling and Mobile Optimization
 
 The application uses a dark editorial interface inspired by operational field notes: midnight-ink surfaces, parchment-toned rules, serif hierarchy and carefully reserved amber feedback. It remains optimized for mobile screens with responsive navigation and content layouts.

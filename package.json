@@ -22,6 +22,7 @@
 		"i18n": "typesafe-i18n",
 		"test": "bun x rstest",
 		"test:watch": "bun x rstest --watch",
+		"smoke": "bun scripts/smoke-routes.ts",
 		"mock:server": "cd packages/rest-mock && bun run dev",
 		"mock:build": "cd packages/rest-mock && bun run build"
 	},
