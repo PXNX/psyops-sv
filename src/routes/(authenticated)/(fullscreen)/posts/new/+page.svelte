@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(fullscreen)/posts/new/+page.svelte -->
 <script lang="ts">
+	import { toast } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
 	import FluentSave20Filled from "~icons/fluent/save-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -24,17 +25,17 @@
 		const content = editorComponent?.getContent();
 
 		if (!title.trim()) {
-			alert("Please enter a title");
+			toast.error("Please enter a title");
 			return;
 		}
 
 		if (!content || content.trim().length < 50) {
-			alert("Please write at least 50 characters of content");
+			toast.error("Please write at least 50 characters of content");
 			return;
 		}
 
 		if (title.length > SCHEMA_LIMITS.ARTICLE_TITLE_MAX) {
-			alert(`Title must be ${SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters or less`);
+			toast.error(`Title must be ${SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters or less`);
 			return;
 		}
 

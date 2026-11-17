@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/admin/giftcode/+page.svelte -->
 <script lang="ts">
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import FluentGift20Filled from "~icons/fluent/gift-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
@@ -253,7 +254,16 @@
 								</form>
 							</td>
 							<td>
-								<form method="POST" action="?/delete" use:enhance>
+								<form
+									method="POST"
+									action="?/delete"
+									use:confirmSubmit={{
+										title: `Delete gift code "${code.code}"?`,
+										confirmLabel: "Delete",
+										danger: true
+									}}
+									use:enhance
+								>
 									<input type="hidden" name="codeId" value={code.id} />
 									<IconButton
 										type="submit"
@@ -262,11 +272,6 @@
 										variant="soft-red"
 										size="sm"
 										shape="square"
-										onclick={(e) => {
-											if (!confirm(`Delete gift code "${code.code}"?`)) {
-												e.preventDefault();
-											}
-										}}
 									/>
 								</form>
 							</td>

@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { toast } from "#lib/ui/toast.svelte.js";
+	import { invalidateAll } from "$app/navigation";
 	import { enhance } from "$app/forms";
 	import { feedback } from "#lib/utils/feedback.js";
 	import TravelProgress from "#lib/component/TravelProgress.svelte";
@@ -33,24 +35,24 @@
 
 	async function handleTravelComplete() {
 		try {
-			const response = await fetch("/api/travel/arrive", {
-				method: "POST"
-			});
+			const response = await fetch("/api/travel/arrive", { method: "POST" });
 			const result = await response.json();
-			if (result.success) {
-				window.location.reload();
-			} else if (result.timeRemaining && result.timeRemaining > 0) {
+			if (!result.success && result.timeRemaining > 0) {
+				// The client clock ran ahead of the server: check again when it's due.
 				setTimeout(handleTravelComplete, result.timeRemaining * 1000 + 500);
-			} else {
-				window.location.reload();
+				return;
+			}
+			if (result.success) {
+				toast.success("You have arrived.");
 			}
 		} catch {
-			window.location.reload();
+			toast.error("Couldn't confirm your arrival. Try again in a moment.");
 		}
+		await invalidateAll();
 	}
 
-	function handleTravelCancel() {
-		window.location.reload();
+	async function handleTravelCancel() {
+		await invalidateAll();
 	}
 </script>
 
@@ -232,9 +234,7 @@
 				<h3 class="text-[#f5efd8] font-bold uppercase tracking-wide">{data.stateBroadcast.title}</h3>
 				<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.stateBroadcast.content}</p>
 				<p class="text-xs font-mono text-[#a8a083] mt-2">
-					FROM: {data.stateBroadcast.issuer?.profile?.name || "President"} · {formatDate(
-						data.stateBroadcast.createdAt
-					)}
+					FROM: {data.stateBroadcast.issuer?.profile?.name || "President"} · {formatDate(data.stateBroadcast.createdAt)}
 				</p>
 			</div>
 		{/if}
@@ -280,9 +280,7 @@
 				<h3 class="text-[#f5efd8] font-bold uppercase tracking-wide">{data.blocBroadcast.title}</h3>
 				<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{data.blocBroadcast.content}</p>
 				<p class="text-xs font-mono text-[#a8a083] mt-2">
-					FROM: {data.blocBroadcast.issuer?.profile?.name || "Bloc Leader"} · {formatDate(
-						data.blocBroadcast.createdAt
-					)}
+					FROM: {data.blocBroadcast.issuer?.profile?.name || "Bloc Leader"} · {formatDate(data.blocBroadcast.createdAt)}
 				</p>
 			</div>
 		{/if}

@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/region/[id]/+page.svelte -->
 <script lang="ts">
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -29,6 +30,7 @@
 	const { data, form } = $props();
 
 	let showVisaSheet = $state(false);
+	let visaSubmitting = $state(false);
 	let isAttacking = $state(false);
 
 	const isIndependent = $derived(!data.region.stateId);
@@ -312,9 +314,12 @@
 						method="POST"
 						action="?/purchaseVisa"
 						use:enhance={() => {
-							return async ({ result }) => {
-								showVisaSheet = false;
-								window.location.reload();
+							visaSubmitting = true;
+							return async ({ result, update }) => {
+								await update();
+								visaSubmitting = false;
+								toastResult(result);
+								if (result.type === "success") showVisaSheet = false;
 							};
 						}}
 					>
@@ -322,6 +327,7 @@
 							type="submit"
 							block
 							icon={FluentBookCompass24Filled}
+							loading={visaSubmitting}
 							disabled={data.walletBalance < Number(data.visa.settings.visaCost)}
 						>
 							{#if data.visa.settings.autoApprove}
@@ -349,13 +355,16 @@
 						method="POST"
 						action="?/purchaseVisa"
 						use:enhance={() => {
-							return async ({ result }) => {
-								showVisaSheet = false;
-								window.location.reload();
+							visaSubmitting = true;
+							return async ({ result, update }) => {
+								await update();
+								visaSubmitting = false;
+								toastResult(result);
+								if (result.type === "success") showVisaSheet = false;
 							};
 						}}
 					>
-						<Button type="submit" block icon={FluentCheckmark20Filled}>Get Free Visa</Button>
+						<Button type="submit" block icon={FluentCheckmark20Filled} loading={visaSubmitting}>Get Free Visa</Button>
 					</form>
 				{/if}
 			</div>

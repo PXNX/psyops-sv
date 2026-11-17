@@ -1,5 +1,6 @@
 <!-- src/routes/production/+page.svelte -->
 <script lang="ts">
+	import { invalidateAll } from "$app/navigation";
 	import { enhance } from "$app/forms";
 	import { feedback } from "#lib/utils/feedback.js";
 	import Logo from "#lib/component/Logo.svelte";
@@ -99,15 +100,14 @@
 		return data.availableFactories.find((f) => f.regionId === currentRegion && f.workerWage > currentWage);
 	});
 
+	// Refresh the page data once the running production finishes, instead of
+	// polling every second and reloading the whole app.
 	$effect(() => {
-		if (activeProduction) {
-			const interval = setInterval(() => {
-				if (new Date(activeProduction.completesAt) <= new Date()) {
-					window.location.reload();
-				}
-			}, 1000);
-			return () => clearInterval(interval);
-		}
+		if (!activeProduction) return;
+		const msLeft = new Date(activeProduction.completesAt).getTime() - Date.now();
+		// A little slack so the server agrees it's done (and no tight loop if not).
+		const timer = setTimeout(() => invalidateAll(), Math.max(msLeft, 0) + 1500);
+		return () => clearTimeout(timer);
 	});
 </script>
 

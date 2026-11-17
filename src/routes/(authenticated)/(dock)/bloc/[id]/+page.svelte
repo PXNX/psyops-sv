@@ -1,5 +1,6 @@
 <!-- src/routes/bloc/[id]/+page.svelte -->
 <script lang="ts">
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentPeopleTeam20Filled from "~icons/fluent/people-team-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
@@ -34,7 +35,8 @@
 	<!-- Hero Section -->
 	<div
 		class="panel rounded-sm p-5 overflow-hidden relative"
-		style="background-color: {data.bloc.color}0d; background-image: radial-gradient(circle at top, {data.bloc.color}40, transparent 70%);"
+		style="background-color: {data.bloc.color}0d; background-image: radial-gradient(circle at top, {data.bloc
+			.color}40, transparent 70%);"
 	>
 		<div class="flex flex-col sm:flex-row sm:items-start gap-4">
 			<div class="flex items-center gap-4 flex-1 min-w-0">
@@ -73,7 +75,18 @@
 					onclick={() => (showEditBlocSheet = true)}
 				/>
 			{:else if data.isMemberPresident}
-				<form method="POST" action="?/leave" use:enhance class="self-end sm:self-start">
+				<form
+					method="POST"
+					action="?/leave"
+					use:confirmSubmit={{
+						title: `Leave ${data.bloc.name}?`,
+						body: "Your state will no longer be part of this bloc.",
+						confirmLabel: "Leave bloc",
+						danger: true
+					}}
+					use:enhance
+					class="self-end sm:self-start"
+				>
 					<IconButton
 						type="submit"
 						icon={FluentDismiss20Filled}
@@ -81,11 +94,6 @@
 						variant="soft-red"
 						size="sm"
 						shape="square"
-						onclick={(e) => {
-							if (!confirm(`Are you sure you want to leave ${data.bloc.name}?`)) {
-								e.preventDefault();
-							}
-						}}
 					/>
 				</form>
 			{/if}

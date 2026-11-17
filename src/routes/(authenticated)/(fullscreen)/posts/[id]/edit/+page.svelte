@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(fullscreen)/posts/[id]/edit/+page.svelte -->
 <script lang="ts">
+	import { toast } from "#lib/ui/toast.svelte.js";
 	import { goto } from "$app/navigation";
 	import FluentSave20Filled from "~icons/fluent/save-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
@@ -21,7 +22,7 @@
 			if (!form.valid) {
 				const firstError = Object.values(form.errors)[0];
 				if (firstError) {
-					alert(firstError[0]);
+					toast.error(firstError[0]);
 				}
 			}
 		}
@@ -42,17 +43,17 @@
 		}
 
 		if (!$formData.title.trim()) {
-			alert("Please enter a title");
+			toast.error("Please enter a title");
 			return;
 		}
 
 		if (!content || content.trim().length < 50) {
-			alert("Please write at least 50 characters of content");
+			toast.error("Please write at least 50 characters of content");
 			return;
 		}
 
 		if ($formData.title.length > 200) {
-			alert("Title must be 200 characters or less");
+			toast.error("Title must be 200 characters or less");
 			return;
 		}
 

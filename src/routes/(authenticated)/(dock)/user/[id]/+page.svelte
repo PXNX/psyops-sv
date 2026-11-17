@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/user/[id]/+page.svelte -->
 <script lang="ts">
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import { enhance } from "$app/forms";
 	import { burst } from "#lib/utils/confetti.js";
 	import { feedback } from "#lib/utils/feedback.js";
@@ -319,20 +320,15 @@
 									<p class="text-xs text-[#a8a083] truncate">Since {formatDate(diplomacy.appointedAt)}</p>
 								</div>
 								{#if data.viewerBlocId === diplomacy.blocId}
-									<form method="POST" action="?/dismissBlocLeadership" use:enhance>
+									<form
+										method="POST"
+										action="?/dismissBlocLeadership"
+										use:confirmSubmit={{ title: "Dismiss this diplomat?", confirmLabel: "Dismiss", danger: true }}
+										use:enhance
+									>
 										<input type="hidden" name="role" value="diplomat" />
 										<input type="hidden" name="id" value={diplomacy.id} />
-										<Button
-											type="submit"
-											variant="soft-red"
-											size="xs"
-											icon={FluentPersonDelete20Filled}
-											onclick={(e) => {
-												if (!confirm("Are you sure you want to dismiss this diplomat?")) {
-													e.preventDefault();
-												}
-											}}
-										>
+										<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>
 											Dismiss
 										</Button>
 									</form>
@@ -377,19 +373,18 @@
 									</p>
 								</div>
 								{#if data.currentUserPresidency?.stateId === ministry.stateId}
-									<form method="POST" action="?/dismissMinister" use:enhance>
+									<form
+										method="POST"
+										action="?/dismissMinister"
+										use:confirmSubmit={{
+											title: `Dismiss the ${ministryNames[ministry.ministry]} Minister?`,
+											confirmLabel: "Dismiss",
+											danger: true
+										}}
+										use:enhance
+									>
 										<input type="hidden" name="ministerId" value={ministry.id} />
-										<Button
-											type="submit"
-											variant="soft-red"
-											size="xs"
-											icon={FluentPersonDelete20Filled}
-											onclick={(e) => {
-												if (!confirm("Are you sure you want to dismiss this minister?")) {
-													e.preventDefault();
-												}
-											}}
-										>
+										<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>
 											Dismiss
 										</Button>
 									</form>
@@ -549,9 +544,8 @@
 							placeholderIcon={FluentBriefcase20Filled}
 							placeholderGradient="from-[#2369b5] to-[#123a6b]"
 							title={newspaper.name}
-							subtitle="Newspaper • {newspaper.rank.charAt(0).toUpperCase() + newspaper.rank.slice(1)} since {formatDate(
-								newspaper.joinedAt
-							)}"
+							subtitle="Newspaper • {newspaper.rank.charAt(0).toUpperCase() +
+								newspaper.rank.slice(1)} since {formatDate(newspaper.joinedAt)}"
 							hoverColor="blue"
 						/>
 					{/each}
@@ -619,7 +613,8 @@
 							block
 							icon={FluentDocument20Filled}
 						>
-							{data.articleCount} {data.articleCount === 1 ? "Article" : "Articles"} Published
+							{data.articleCount}
+							{data.articleCount === 1 ? "Article" : "Articles"} Published
 						</Button>
 
 						<Button

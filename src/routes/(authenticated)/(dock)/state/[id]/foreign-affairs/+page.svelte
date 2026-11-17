@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.svelte -->
 <script lang="ts">
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import { enhance } from "$app/forms";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
@@ -304,20 +305,20 @@
 										Expires {formatDate(visa.expiresAt)} ({daysLeft}d left)
 									</p>
 								</div>
-								<form method="POST" action="?/revokeVisa" use:enhance>
+								<form
+									method="POST"
+									action="?/revokeVisa"
+									use:confirmSubmit={{
+										title: "Revoke this visa?",
+										body: "The holder loses this visa immediately. The fee they paid is not refunded.",
+										confirmLabel: "Revoke",
+										danger: true
+									}}
+									use:enhance
+								>
 									<input type="hidden" name="visaId" value={visa.id} />
 									<input type="hidden" name="reason" value="Revoked by foreign minister" />
-									<Button
-										type="submit"
-										variant="soft-red"
-										size="sm"
-										icon={FluentDismiss20Filled}
-										onclick={(e) => {
-											if (!confirm("Revoke this visa?")) e.preventDefault();
-										}}
-									>
-										Revoke
-									</Button>
+									<Button type="submit" variant="soft-red" size="sm" icon={FluentDismiss20Filled}>Revoke</Button>
 								</form>
 							</div>
 						{/each}

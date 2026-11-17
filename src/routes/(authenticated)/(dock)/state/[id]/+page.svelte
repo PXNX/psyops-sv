@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/+page.svelte -->
 <script lang="ts">
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
@@ -187,7 +188,9 @@
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2 mb-0.5">
 							<div class="size-1.5 rounded-full animate-pulse {war.isAttacker ? 'bg-red-500' : 'bg-[#5eaef5]'}"></div>
-							<span class="text-[10px] uppercase tracking-wide {war.isAttacker ? 'text-red-300/80' : 'text-[#b3dcff]/80'}">
+							<span
+								class="text-[10px] uppercase tracking-wide {war.isAttacker ? 'text-red-300/80' : 'text-[#b3dcff]/80'}"
+							>
 								{war.isAttacker ? "Attacking" : "Defending against"}
 							</span>
 						</div>
@@ -560,9 +563,9 @@
 							placeholderIcon={FluentCalendar20Filled}
 							placeholderGradient="from-[#2369b5]/15 to-[#2369b5]/15"
 							title="Upcoming Election"
-							subtitle="{formatDate(data.nextElection.startDate)} - {formatDate(data.nextElection.endDate)} • starts in {getTimeRemaining(
-								data.nextElection.startDate
-							)}"
+							subtitle="{formatDate(data.nextElection.startDate)} - {formatDate(
+								data.nextElection.endDate
+							)} • starts in {getTimeRemaining(data.nextElection.startDate)}"
 							hoverColor="blue"
 						/>
 					{:else if !data.nextElection.isInaugural && state === "active"}
@@ -833,9 +836,10 @@
 				method="POST"
 				action="?/purchaseVisa"
 				use:enhance={() => {
-					return async ({ result }) => {
-						showVisaSheet = false;
-						window.location.reload();
+					return async ({ result, update }) => {
+						await update();
+						toastResult(result);
+						if (result.type === "success") showVisaSheet = false;
 					};
 				}}
 			>
