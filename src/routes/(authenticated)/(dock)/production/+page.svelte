@@ -3,6 +3,7 @@
 	import { invalidateAll } from "$app/navigation";
 	import { enhance } from "$app/forms";
 	import { feedback } from "#lib/utils/feedback.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import FluentProduction20Filled from "~icons/fluent/production-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -179,6 +180,7 @@
 						return async ({ update, result }) => {
 							await update();
 							isCollectingWage = false;
+							toastResult(result);
 							if (result.type === "success") {
 								showCollectAnim = true;
 								feedback("success");
@@ -241,7 +243,15 @@
 						</div>
 					</div>
 				{:else}
-					<form method="POST" action="?/startWork" use:enhance>
+					<form
+						method="POST"
+						action="?/startWork"
+						use:enhance={() =>
+							async ({ update, result }) => {
+								await update();
+								toastResult(result);
+							}}
+					>
 						<Button type="submit" variant="soft-blue" block icon={FluentClock20Filled} class="h-auto min-h-12 py-3">
 							{jobStatus.text} - Click to start shift
 						</Button>
@@ -324,7 +334,7 @@
 			<!-- Better Wage Opportunity -->
 			{#if betterWageFactory && data.currentJob}
 				<a
-					href="/region/{data.currentJob.regionId}/factories"
+					href="/region/{data.currentJob.regionId}"
 					class="block rounded-sm bg-[#3f8a2a]/18 border border-[#6fd14a]/30 p-5 hover:border-[#6fd14a]/55 hover:bg-[#3f8a2a]/28 transition-colors group"
 				>
 					<div class="flex items-start justify-between gap-3">
@@ -403,6 +413,7 @@
 					use:enhance={() => {
 						return async ({ update, result }) => {
 							await update();
+							toastResult(result);
 							if (result.type === "success") {
 								showProductionAnim = true;
 								feedback("success");

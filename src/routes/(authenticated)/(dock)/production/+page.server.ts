@@ -17,8 +17,11 @@ import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { calculateShiftStatus, collectWages, startWorkShift } from "#lib/server/service/factoryWork.js";
 import { PRODUCTION_RECIPES, type ProductionType } from "#lib/config/index.js";
 import { fail } from "@sveltejs/kit";
-import { and, eq, sql, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
+
+const MAX_BATCHES = 100;
+class ProductionRefused extends Error {}
 
 type ProductType = ProductionType;
 
@@ -26,120 +29,100 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
 
 	// None of these depend on each other (nor on the production-completion transaction below), so fetch them together
-	const [resources, products, activeProduction, [userCompany], [wallet], [currentJob], availableFactories, workerCounts] =
-		await Promise.all([
-			db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
-			db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
-			db.select().from(productionQueue).where(eq(productionQueue.userId, account.id)).limit(1),
-			// Check if user owns a company
-			db.select().from(companies).where(eq(companies.ownerId, account.id)),
-			db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
-			db
-				.select({
-					id: factoryWorkers.id,
-					factoryId: factoryWorkers.factoryId,
-					jobType: factoryWorkers.jobType,
-					lastWorked: factoryWorkers.lastWorked,
-					wageAtShiftStart: factoryWorkers.wageAtShiftStart,
-					factoryName: factories.name,
-					factoryType: factories.factoryType,
-					resourceOutput: factories.resourceOutput,
-					companyName: companies.name,
-					companyLogo: companies.logo,
-					companyId: factories.companyId,
-					wage: factories.workerWage,
-					regionId: factories.regionId,
-					stateId: regions.stateId,
-					ownerId: companies.ownerId,
-					productionRate: factories.productionRate
-				})
-				.from(factoryWorkers)
-				.innerJoin(factories, eq(factoryWorkers.factoryId, factories.id))
-				.innerJoin(companies, eq(factories.companyId, companies.id))
-				.innerJoin(regions, eq(factories.regionId, regions.id))
-				.where(eq(factoryWorkers.userId, account.id)),
-			// Get available factories to work at
-			db
-				.select({
-					id: factories.id,
-					name: factories.name,
-					factoryType: factories.factoryType,
-					resourceOutput: factories.resourceOutput,
-					productOutput: factories.productOutput,
-					workerWage: factories.workerWage,
-					maxWorkers: factories.maxWorkers,
-					productionRate: factories.productionRate,
-					companyName: companies.name,
-					companyId: factories.companyId,
-					stateName: states.name,
-					regionId: factories.regionId
-				})
-				.from(factories)
-				.innerJoin(companies, eq(factories.companyId, companies.id))
-				.innerJoin(regions, eq(factories.regionId, regions.id))
-				.innerJoin(states, eq(regions.stateId, states.id))
-				.limit(20),
-			// Get worker counts for each factory
-			db
-				.select({
-					factoryId: factoryWorkers.factoryId,
-					count: sql<number>`count(*)::int`
-				})
-				.from(factoryWorkers)
-				.groupBy(factoryWorkers.factoryId)
-		]);
-
-	if (activeProduction.length > 0) {
-		const prod = activeProduction[0];
-		if (new Date(prod.completesAt) <= new Date()) {
-			await db.transaction(async (tx) => {
-				const existing = await tx
-					.select()
-					.from(productInventory)
-					.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, prod.productType)));
-
-				if (existing.length > 0) {
-					await tx
-						.update(productInventory)
-						.set({
-							quantity: sql`${productInventory.quantity} + ${prod.quantity}`,
-							updatedAt: new Date()
-						})
-						.where(eq(productInventory.id, existing[0].id));
-				} else {
-					await tx.insert(productInventory).values({
-						userId: account.id,
-						productType: prod.productType,
-						quantity: prod.quantity
-					});
-				}
-
-				await tx.delete(productionQueue).where(eq(productionQueue.id, prod.id));
-			});
-
-			const [freshResources, freshProducts, freshWallet] = await Promise.all([
-				db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
-				db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
-				db
-					.select()
-					.from(userWallets)
-					.where(eq(userWallets.userId, account.id))
-					.then((r) => r[0] || { balance: 10000 })
-			]);
-
-			return {
-				resources: freshResources,
-				products: freshProducts,
-				activeProduction: [],
-				recipes: PRODUCTION_RECIPES,
-				wallet: freshWallet,
-				currentJob: null,
-				userCompany: null,
-				availableFactories: [],
-				companyLogoUrl: null
-			};
+	// Collect finished production first. Deleting the queue row is the claim,
+	// so a second tab or the premium job can't credit it again.
+	await db.transaction(async (tx) => {
+		const [done] = await tx
+			.delete(productionQueue)
+			.where(and(eq(productionQueue.userId, account.id), lte(productionQueue.completesAt, new Date())))
+			.returning();
+		if (!done) return;
+		const [existing] = await tx
+			.select({ id: productInventory.id })
+			.from(productInventory)
+			.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, done.productType)));
+		if (existing) {
+			await tx
+				.update(productInventory)
+				.set({ quantity: sql`${productInventory.quantity} + ${done.quantity}`, updatedAt: new Date() })
+				.where(eq(productInventory.id, existing.id));
+		} else {
+			await tx
+				.insert(productInventory)
+				.values({ userId: account.id, productType: done.productType, quantity: done.quantity });
 		}
-	}
+	});
+
+	const [
+		resources,
+		products,
+		activeProduction,
+		[userCompany],
+		[wallet],
+		[currentJob],
+		availableFactories,
+		workerCounts
+	] = await Promise.all([
+		db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
+		db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
+		db.select().from(productionQueue).where(eq(productionQueue.userId, account.id)).limit(1),
+		// Check if user owns a company
+		db.select().from(companies).where(eq(companies.ownerId, account.id)),
+		db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
+		db
+			.select({
+				id: factoryWorkers.id,
+				factoryId: factoryWorkers.factoryId,
+				jobType: factoryWorkers.jobType,
+				lastWorked: factoryWorkers.lastWorked,
+				wageAtShiftStart: factoryWorkers.wageAtShiftStart,
+				factoryName: factories.name,
+				factoryType: factories.factoryType,
+				resourceOutput: factories.resourceOutput,
+				companyName: companies.name,
+				companyLogo: companies.logo,
+				companyId: factories.companyId,
+				wage: factories.workerWage,
+				regionId: factories.regionId,
+				stateId: regions.stateId,
+				ownerId: companies.ownerId,
+				productionRate: factories.productionRate
+			})
+			.from(factoryWorkers)
+			.innerJoin(factories, eq(factoryWorkers.factoryId, factories.id))
+			.innerJoin(companies, eq(factories.companyId, companies.id))
+			.innerJoin(regions, eq(factories.regionId, regions.id))
+			.where(eq(factoryWorkers.userId, account.id)),
+		// Get available factories to work at
+		db
+			.select({
+				id: factories.id,
+				name: factories.name,
+				factoryType: factories.factoryType,
+				resourceOutput: factories.resourceOutput,
+				productOutput: factories.productOutput,
+				workerWage: factories.workerWage,
+				maxWorkers: factories.maxWorkers,
+				productionRate: factories.productionRate,
+				companyName: companies.name,
+				companyId: factories.companyId,
+				stateName: states.name,
+				regionId: factories.regionId
+			})
+			.from(factories)
+			.innerJoin(companies, eq(factories.companyId, companies.id))
+			.innerJoin(regions, eq(factories.regionId, regions.id))
+			.innerJoin(states, eq(regions.stateId, states.id))
+			.limit(20),
+		// Get worker counts for each factory
+		db
+			.select({
+				factoryId: factoryWorkers.factoryId,
+				count: sql<number>`count(*)::int`
+			})
+			.from(factoryWorkers)
+			.groupBy(factoryWorkers.factoryId)
+	]);
 
 	// Calculate shift status if user has a job
 	let shiftStatus = null;
@@ -235,61 +218,59 @@ export const actions: Actions = {
 		const account = locals.account!;
 
 		const data = await request.formData();
-		const productType = data.get("productType") as string;
-		const quantityMultiplier = parseInt(data.get("quantity") as string) || 1;
+		const productType = String(data.get("productType") ?? "");
+		const quantityMultiplier = Number(data.get("quantity") ?? 1);
 
-		if (!productType || !(productType in PRODUCTION_RECIPES)) {
+		if (!(productType in PRODUCTION_RECIPES)) {
 			return fail(400, { error: "Invalid product type" });
+		}
+		if (!Number.isInteger(quantityMultiplier) || quantityMultiplier < 1 || quantityMultiplier > MAX_BATCHES) {
+			return fail(400, { error: `Produce between 1 and ${MAX_BATCHES} batches.` });
 		}
 
 		const recipe = PRODUCTION_RECIPES[productType as ProductType];
 
-		const existing = await db.select().from(productionQueue).where(eq(productionQueue.userId, account.id));
+		// Inputs are only taken if they're all still there; one queue slot per
+		// player (unique user_id), so a second start fails instead of stacking.
+		const problem = await db
+			.transaction(async (tx) => {
+				const [busy] = await tx
+					.select({ id: productionQueue.id })
+					.from(productionQueue)
+					.where(eq(productionQueue.userId, account.id));
+				if (busy) throw new ProductionRefused("Already producing something");
 
-		if (existing.length > 0) {
-			return fail(400, { error: "Already producing something" });
-		}
-
-		const userResources = await db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id));
-		const resourceMap = new Map(userResources.map((r) => [r.resourceType, r.quantity]));
-
-		for (const [resource, required] of Object.entries(recipe.inputs)) {
-			const available = resourceMap.get(resource as any) || 0;
-			if (available < required * quantityMultiplier) {
-				return fail(400, {
-					error: `Insufficient ${resource}: need ${required * quantityMultiplier}, have ${available}`
-				});
-			}
-		}
-
-		await db.transaction(async (tx) => {
-			for (const [resource, required] of Object.entries(recipe.inputs)) {
-				const [inv] = await tx
-					.select()
-					.from(resourceInventory)
-					.where(and(eq(resourceInventory.userId, account.id), eq(resourceInventory.resourceType, resource as any)));
-
-				if (inv) {
-					await tx
+				for (const [resource, required] of Object.entries(recipe.inputs)) {
+					const needed = required * quantityMultiplier;
+					const [taken] = await tx
 						.update(resourceInventory)
-						.set({
-							quantity: sql`${resourceInventory.quantity} - ${required * quantityMultiplier}`,
-							updatedAt: new Date()
-						})
-						.where(eq(resourceInventory.id, inv.id));
+						.set({ quantity: sql`${resourceInventory.quantity} - ${needed}`, updatedAt: new Date() })
+						.where(
+							and(
+								eq(resourceInventory.userId, account.id),
+								eq(resourceInventory.resourceType, resource as never),
+								gte(resourceInventory.quantity, needed)
+							)
+						)
+						.returning({ id: resourceInventory.id });
+					if (!taken) throw new ProductionRefused(`Not enough ${resource}: need ${needed}.`);
 				}
-			}
 
-			const completesAt = new Date(Date.now() + recipe.duration * 1000 * quantityMultiplier);
-			await tx.insert(productionQueue).values({
-				userId: account.id,
-				productType: productType as any,
-				quantity: recipe.output * quantityMultiplier,
-				completesAt
+				await tx.insert(productionQueue).values({
+					userId: account.id,
+					productType: productType as never,
+					quantity: recipe.output * quantityMultiplier,
+					completesAt: new Date(Date.now() + recipe.duration * 1000 * quantityMultiplier)
+				});
+				return null;
+			})
+			.catch((err) => {
+				if (err instanceof ProductionRefused) return err.message;
+				throw err;
 			});
-		});
+		if (problem) return fail(400, { error: problem });
 
-		return { success: true };
+		return { success: true, message: `Production started: ${recipe.output * quantityMultiplier} ${productType}.` };
 	},
 
 	collectWage: async ({ locals }) => {
