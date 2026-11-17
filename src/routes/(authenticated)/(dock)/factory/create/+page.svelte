@@ -228,12 +228,10 @@
 					{#if regionResources.length > 0}
 						<div class="space-y-2">
 							{#each regionResources as resource}
+								{@const ResourceIconCmp = getResourceIcon(resource.resourceType)}
 								<div class="flex items-center justify-between panel-muted rounded-sm p-2.5">
 									<div class="flex items-center gap-2">
-										<svelte:component
-											this={getResourceIcon(resource.resourceType)}
-											class="size-5 {resourceColors[resource.resourceType] ?? ''}"
-										/>
+										<ResourceIconCmp class="size-5 {resourceColors[resource.resourceType] ?? ''}" />
 										<span class="text-sm font-medium text-[#f5efd8] capitalize">{resource.resourceType}</span>
 									</div>
 									<div class="flex items-center gap-2">
@@ -376,7 +374,7 @@
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown}
 							>
-								<svelte:component this={output.icon} class="size-6 mx-auto {output.color}" />
+								<output.icon class="size-6 mx-auto {output.color}" />
 								<div class="text-xs text-[#f5efd8] mt-1">{output.label}</div>
 							</button>
 						{/each}
@@ -390,7 +388,7 @@
 								onclick={() => (selectedOutput = output.value)}
 								disabled={isOnCooldown}
 							>
-								<svelte:component this={output.icon} class="size-6 mx-auto {output.color}" />
+								<output.icon class="size-6 mx-auto {output.color}" />
 								<div class="text-xs text-[#f5efd8] mt-1">{output.label}</div>
 							</button>
 						{/each}

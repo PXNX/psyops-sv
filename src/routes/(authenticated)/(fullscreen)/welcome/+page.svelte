@@ -71,7 +71,7 @@
 		{#each features as feature, i}
 			<div class="panel rounded-sm p-5 space-y-3" in:fly={{ y: 20, duration: 500, delay: 300 + i * 100 }}>
 				<div class="size-12 {feature.wrapClass} rounded-sm flex items-center justify-center">
-					<svelte:component this={feature.icon} class="size-6 {feature.iconClass}" />
+					<feature.icon class="size-6 {feature.iconClass}" />
 				</div>
 				<h3 class="section-title">{feature.title}</h3>
 				<p class="text-sm text-[#d3caa9] leading-relaxed">{feature.description}</p>

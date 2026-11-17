@@ -168,7 +168,7 @@
 						<div
 							class="size-12 {colors.bg} border {colors.border} rounded-sm flex items-center justify-center shrink-0"
 						>
-							<svelte:component this={building.icon} class="size-6 {colors.text}" />
+							<building.icon class="size-6 {colors.text}" />
 						</div>
 						<div class="flex-1">
 							<h2 class="text-lg font-bold text-[#f5efd8]">{building.name}</h2>
