@@ -1,6 +1,8 @@
 // src/routes/(authenticated)/api/cron/battles/+server.ts
 
 import type { RequestHandler } from "./$types";
+import { cronCrash, cronResponse } from "#lib/server/cron.js";
+import { selectEngagedUnits } from "#lib/server/services/military/combat.js";
 import { db } from "#lib/server/db.js";
 import {
 	battles,
@@ -81,45 +83,15 @@ export const GET: RequestHandler = async ({ request }) => {
 			}
 		}
 
-		return Response.json({
-			success: true,
-			timestamp: now.toISOString(),
-			phasesTransitioned,
-			roundsProcessed,
-			battlesEnded,
-			failed,
-			totalProcessed: phasesTransitioned + roundsProcessed
-		});
-	} catch (error) {
-		console.error("Battle cron job error:", error);
-		return Response.json(
-			{
-				success: false,
-				error: error instanceof Error ? error.message : "Unknown error"
-			},
-			{ status: 500 }
+		return cronResponse(
+			"battles",
+			{ phasesTransitioned, roundsProcessed, battlesEnded, totalProcessed: phasesTransitioned + roundsProcessed },
+			failed
 		);
+	} catch (error) {
+		return cronCrash("battles", error);
 	}
 };
-
-// Select units that fit in combat width, prioritizing earliest joined
-function selectEngagedUnits(participants: any[], maxWidth: number): any[] {
-	const available = participants.filter((p) => p.currentStrength > 0);
-	available.sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime());
-
-	const engaged: any[] = [];
-	let usedWidth = 0;
-
-	for (const unit of available) {
-		const unitWidth = MILITARY_UNIT_TEMPLATES[unit.unitType].combatWidth!;
-		if (usedWidth + unitWidth <= maxWidth) {
-			engaged.push(unit);
-			usedWidth += unitWidth;
-		}
-	}
-
-	return engaged;
-}
 
 async function processCombatRound(battleId: number) {
 	const battle = await db.query.battles.findFirst({
