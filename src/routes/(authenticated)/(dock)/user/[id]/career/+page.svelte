@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/user/[id]/career/+page.svelte -->
 <script lang="ts">
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
@@ -392,11 +393,12 @@
 <Modal bind:open={showMedalModal} title="Award Medal to {data.user.name}">
 	<form
 		method="POST"
-		action="?/awardMedal"
+		action="/user/{data.user.id}?/awardMedal"
 		class="space-y-4"
 		use:enhance={() => {
 			return async ({ result, update }) => {
 				await update();
+				toastResult(result);
 				if (result.type === "success") {
 					showMedalModal = false;
 				}

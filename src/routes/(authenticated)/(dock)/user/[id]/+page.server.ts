@@ -27,7 +27,7 @@ import {
 } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { fail } from "@sveltejs/kit";
-import { eq, count, and } from "drizzle-orm";
+import { eq, count, and, gte } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 import { sendMedalNotification } from "#lib/server/service/inbox.js";
@@ -641,10 +641,10 @@ export const actions: Actions = {
 		startOfMonth.setHours(0, 0, 0, 0);
 
 		const existingAward = await db.query.userMedals.findFirst({
-			where: and(eq(userMedals.awardedBy, account.id))
+			where: and(eq(userMedals.awardedBy, account.id), gte(userMedals.awardedAt, startOfMonth))
 		});
 
-		if (existingAward && new Date(existingAward.awardedAt) >= startOfMonth) {
+		if (existingAward) {
 			return fail(400, { error: "You can only award one medal per month" });
 		}
 
@@ -686,7 +686,7 @@ export const actions: Actions = {
 				stateId: presidency.stateId
 			});
 
-			return { success: true };
+			return { success: true, message: "Medal awarded." };
 		} catch (error) {
 			console.error("Error awarding medal:", error);
 			return fail(500, { error: "Failed to award medal" });
