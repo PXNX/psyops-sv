@@ -325,11 +325,70 @@
 	animation: idle-float 3.2s ease-in-out infinite;
 }
 
+/* A success moment: the element lifts a touch and a warm brass glow passes
+   through it. Added and removed by celebrate() in lib/utils/celebrate.ts. */
+@keyframes celebrate {
+	0% {
+		transform: none;
+		box-shadow: 0 0 0 0 rgb(242 176 30 / 0);
+	}
+	35% {
+		transform: translateY(-2px) scale(1.012);
+		box-shadow:
+			0 0 0 3px rgb(242 176 30 / 0.45),
+			0 0 22px rgb(242 176 30 / 0.35);
+	}
+	100% {
+		transform: none;
+		box-shadow: 0 0 0 0 rgb(242 176 30 / 0);
+	}
+}
+
+.animate-celebrate {
+	animation: celebrate 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* A rubber stamp landing on paper (approved visas, cast ballots, passed laws). */
+@keyframes stamp {
+	0% {
+		opacity: 0;
+		transform: scale(1.8) rotate(var(--stamp-tilt, -8deg));
+	}
+	60% {
+		opacity: 1;
+		transform: scale(0.94) rotate(var(--stamp-tilt, -8deg));
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1) rotate(var(--stamp-tilt, -8deg));
+	}
+}
+
+.animate-stamp {
+	animation: stamp 420ms cubic-bezier(0.34, 1.5, 0.5, 1) backwards;
+	animation-delay: var(--rise-delay, 120ms);
+}
+
+/* Numbers that just changed glow briefly. */
+@keyframes tick-glow {
+	from {
+		color: #ffd35c;
+		text-shadow: 0 0 10px rgb(242 176 30 / 0.6);
+	}
+}
+
+.animate-tick {
+	animation: tick-glow 900ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
 	.animate-rise-in,
 	.animate-pop-in,
 	.animate-trim-draw,
 	.animate-idle-float,
+	.animate-celebrate,
+	.animate-stamp,
+	.animate-tick,
 	.rise-stagger > * {
 		animation: none;
 	}

@@ -11,7 +11,7 @@
 	import { Badge, Button } from "#lib/component/ui/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
-	import { burst } from "#lib/utils/confetti.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
 	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
@@ -74,6 +74,7 @@
 			{#each data.buildings as b (b.type)}
 				{@const full = b.level >= b.maxLevel}
 				<div
+					id="building-{b.type}"
 					class="panel rounded-sm p-4 flex flex-col gap-3 transition-colors {b.underway ? 'border-[#f2b01e]/45' : ''}"
 				>
 					<div class="flex items-start gap-3">
@@ -173,7 +174,7 @@
 										await update();
 										busy = null;
 										toastResult(result);
-										if (result.type === "success") burst();
+										if (result.type === "success") celebrate(document.getElementById(`building-${b.type}`));
 									};
 								}}
 							>

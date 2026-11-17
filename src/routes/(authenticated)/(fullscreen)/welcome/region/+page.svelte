@@ -9,7 +9,7 @@
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
-	import { burst } from "#lib/utils/confetti.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
 
 	let { data } = $props();
 
@@ -84,9 +84,7 @@
 					use:enhance={() => {
 						isSubmitting = true;
 						return async ({ result, update }) => {
-							if (result.type === "success") {
-								burst({ spread: 70 });
-							}
+							if (result.type === "success") celebrate();
 							await update();
 							isSubmitting = false;
 						};

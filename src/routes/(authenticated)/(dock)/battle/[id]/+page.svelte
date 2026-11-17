@@ -10,7 +10,7 @@
 	import * as m from "#lib/paraglide/messages.js";
 	import { formatDateTime, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
-	import { burst } from "#lib/utils/confetti.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
 	import { feedback } from "#lib/utils/feedback.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Logo from "#lib/component/Logo.svelte";
@@ -104,7 +104,7 @@
 		} catch {
 			if (!fought) return;
 		}
-		burst();
+		celebrate(document.getElementById("battle-hero"));
 		feedback("win");
 	});
 
@@ -263,7 +263,7 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Header -->
-	<div class="panel rounded-sm p-5">
+	<div id="battle-hero" class="panel rounded-sm p-5">
 		<div class="flex items-start gap-4">
 			<a href="/region/{data.battle.regionId}" class="shrink-0">
 				<img src={regionCoatUrl(data.battle.regionId)} alt={regionName} class="size-16 object-contain sm:size-20" />

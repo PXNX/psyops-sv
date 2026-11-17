@@ -157,6 +157,28 @@ Quick, springy, and always off under `prefers-reduced-motion`.
 | Pressable surface       | `press-spring` (already on buttons and `panel-interactive`)       |
 | Quiet idle artwork      | `animate-idle-float`                                              |
 | Dialogs / sheets        | `Modal` and `BottomSheet` animate themselves                      |
-| Celebration             | `burst()` from `#lib/utils/confetti.js` + `feedback("win")`       |
+| A success moment        | `celebrate(element)` from `#lib/utils/celebrate.js` (glow + lift) |
+| Something approved      | `animate-stamp` on a stamp/seal element (rubber stamp landing)    |
+| A number that changed   | `animate-tick` (brief gold glow)                                  |
 
 Entrance animations are skipped while a page-swap view transition is running (`#lib/utils/motion.ts`), so they never get frozen into its snapshot. Use `fill-mode: backwards` for new entrance keyframes so the final frame can't override hover/press transforms.
+
+---
+
+## Players
+
+Every time a player is named, use `UserLink` from `#lib/component/UserLink.svelte` (avatar + name + optional party tag and subtitle, linking to the profile). `size="xs"` inside running text, `sm` in lists, `md` on cards; `plain` drops the avatar. Don't hand-roll `<a href="/user/...">`.
+
+## Make it look like the real thing
+
+Screens model real objects where one exists, so they read at a glance without explanations:
+
+- a newspaper is a front page (masthead, lead story, columns),
+- a visa or residence permit is a passport page with a stamp,
+- a ballot is a ballot paper with boxes to mark,
+- a proposal or law is a bill (number, title, clauses, vote tally, PASSED / REJECTED stamp),
+- money movements are a bank statement, a war is a front report, etc.
+
+Don't add explainer boxes ("How it works", "About…", tips, notes) that restate what the screen already shows. Say a rule in a few words exactly where it bites (next to a disabled button, in a validation message).
+
+No confetti. Celebrate with `celebrate()`, `animate-stamp` and `feedback()`.

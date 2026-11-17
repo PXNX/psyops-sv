@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { toast } from "#lib/ui/toast.svelte.js";
 	import { invalidateAll } from "$app/navigation";
 	import { enhance } from "$app/forms";
 	import { feedback } from "#lib/utils/feedback.js";
 	import TravelProgress from "#lib/component/TravelProgress.svelte";
-	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import SectionCard from "#lib/component/SectionCard.svelte";
@@ -28,8 +28,6 @@
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();
-
-	let showBirthdayAnim = $state(false);
 
 	const regionName = $derived(data.userLocation ? getRegionName(data.userLocation.regionId) : null);
 
@@ -109,10 +107,8 @@
 						use:enhance={() => {
 							return async ({ result, update }) => {
 								await update();
-								if (result.type === "success") {
-									showBirthdayAnim = true;
-									feedback("win");
-								}
+								toastResult(result);
+								if (result.type === "success") feedback("win");
 							};
 						}}
 						class="mt-3"
@@ -449,7 +445,3 @@
 		</div>
 	</SectionCard>
 </PageContainer>
-
-{#if showBirthdayAnim}
-	<ThreeAnimation variant="party" onComplete={() => (showBirthdayAnim = false)} />
-{/if}

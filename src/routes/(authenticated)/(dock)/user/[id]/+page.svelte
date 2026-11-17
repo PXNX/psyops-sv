@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import { enhance } from "$app/forms";
-	import { burst } from "#lib/utils/confetti.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
 	import { feedback } from "#lib/utils/feedback.js";
 	import FluentSettingsCogMultiple20Filled from "~icons/fluent/settings-cog-multiple-20-filled";
 	import FluentShareAndroid20Filled from "~icons/fluent/share-android-20-filled";
@@ -479,7 +479,7 @@
 							</div>
 						{/if}
 						{#if data.birthdayInfo.uncollectedYears.length > 0}
-							<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3">
+							<div id="birthday-card" class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3">
 								<p class="text-sm text-[#ffd35c] font-medium">
 									{#if data.birthdayInfo.uncollectedYears.length === 1}
 										Year {data.birthdayInfo.uncollectedYears[0]} reward available!
@@ -500,7 +500,7 @@
 										return async ({ result, update }) => {
 											await update();
 											if (result.type === "success") {
-												burst();
+												celebrate(document.getElementById("birthday-card"));
 												feedback("win");
 											}
 										};
@@ -838,7 +838,6 @@
 					if (result.type === "success") {
 						await update();
 						showGiftPremiumModal = false;
-						burst({ particleCount: 120 });
 						feedback("win");
 					} else if (result.type === "failure") {
 						giftPremiumError = result.data?.error || "Failed to gift premium";
