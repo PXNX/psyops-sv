@@ -18,8 +18,8 @@ import { sendNotificationIfEnabled } from "#lib/server/services/push-notificatio
 
 // Give the serverless function enough time to process every state's election in
 // a single run. Without this, Vercel terminates the function at the default
-// timeout before it can return the success response, and the external scheduler
-// (cron-job.org) reports a timeout instead of receiving `{ success: true }`.
+// timeout before it can return the success response, and the schedule reports
+// a timeout instead of receiving `{ success: true }`.
 export const config = {
 	maxDuration: 60
 };

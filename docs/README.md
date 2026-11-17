@@ -121,6 +121,7 @@ psyops-sv/
 │       │   ├── auth/              # Login, logout, OAuth callbacks
 │       │   └── test/              # TipTap editor test page
 │       ├── api/                   # Public API routes
+│       │   ├── cron/              # Scheduled job endpoints (Vercel Schedules)
 │       │   └── push/              # Push notification endpoints
 │       ├── admin/                 # Admin panel (giftcode, broadcast)
 │       ├── moderation/            # Moderation dashboard

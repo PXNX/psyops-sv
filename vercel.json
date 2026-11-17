@@ -1,4 +1,37 @@
 {
+	"$schema": "https://openapi.vercel.sh/vercel.json",
 	"installCommand": "bun install",
-	"buildCommand": "bun run build"
+	"buildCommand": "bun run build",
+	"schedules": {
+		"battles": {
+			"schedule": "0 * * * *",
+			"path": "/api/cron/battles",
+			"requestMethod": "GET"
+		},
+		"bloc-elections": {
+			"schedule": "0 0 * * *",
+			"path": "/api/cron/bloc-elections",
+			"requestMethod": "GET"
+		},
+		"elections": {
+			"schedule": "0 * * * *",
+			"path": "/api/cron/elections",
+			"requestMethod": "GET"
+		},
+		"premium": {
+			"schedule": "*/15 * * * *",
+			"path": "/api/cron/premium",
+			"requestMethod": "GET"
+		},
+		"proposals": {
+			"schedule": "*/15 * * * *",
+			"path": "/api/cron/proposals",
+			"requestMethod": "GET"
+		},
+		"travels": {
+			"schedule": "*/15 * * * *",
+			"path": "/api/cron/travels",
+			"requestMethod": "GET"
+		}
+	}
 }

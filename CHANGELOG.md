@@ -11,8 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Bump all dependencies to their latest versions; pin TypeScript to 6.0.3 (7.x breaks
   svelte-kit sync with `ts.sys` errors)
+- `/api/cron/*` routes moved out of the `(authenticated)` route group (URLs unchanged) so
+  the scheduler reaches them without a session; they are gated by `CRON_SECRET` only
 
 ### Added
+
+- Vercel Schedules for the game ticks: battles, bloc elections, elections, premium
+  automation, proposals and travels run on the cadences declared in `vercel.json` instead
+  of an external scheduler
 
 - Physics-tuned confetti bursts: shared `burst()` util with gravity, drag, tumbling shapes
   and reduced-motion support, wired into the birthday-reward and premium-gift celebrations

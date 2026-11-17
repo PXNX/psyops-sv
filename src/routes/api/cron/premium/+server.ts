@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/api/cron/premium/+server.ts
-// Triggered by an external scheduler (cron-jobs.org). Runs production, military
-// training and factory-work automation for all active premium members.
+// Triggered by Vercel Schedules (see the "premium" entry in vercel.json). Runs
+// production, military training and factory-work automation for all active
+// premium members.
 import { error } from "@sveltejs/kit";
 import { CRON_SECRET, NODE_ENV } from "$app/env/private";
 import type { RequestHandler } from "./$types";
@@ -51,6 +52,9 @@ export const GET: RequestHandler = async ({ request }) => {
 		});
 	} catch (err) {
 		console.error("Premium automation cron error:", err);
-		return Response.json({ success: false, error: err instanceof Error ? err.message : "Unknown error" }, { status: 500 });
+		return Response.json(
+			{ success: false, error: err instanceof Error ? err.message : "Unknown error" },
+			{ status: 500 }
+		);
 	}
 };
