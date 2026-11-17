@@ -553,14 +553,18 @@
 	{/if}
 
 	<!-- User Status -->
-	{#if data.totalSeats > 0 && data.isParliamentMember}
+	{#if data.totalSeats > 0 && (data.isParliamentMember || data.canAutoAccept)}
 		<div class="bg-[#2369b5]/18 rounded-sm border border-[#5eaef5]/30 p-4">
 			<div class="flex items-center justify-between gap-3 flex-wrap">
 				<div class="flex items-center gap-3">
 					<FluentCheckmark20Filled class="size-5 text-[#b3dcff]" />
 					<div class="text-sm">
-						<span class="text-[#f5efd8] font-semibold">Parliament Member</span>
-						<span class="text-[#a8a083]"> • {data.userParty || "Independent"}</span>
+						{#if data.isParliamentMember}
+							<span class="text-[#f5efd8] font-semibold">Parliament Member</span>
+							<span class="text-[#a8a083]"> • {data.userParty || "Independent"}</span>
+						{:else}
+							<span class="text-[#f5efd8] font-semibold">Government</span>
+						{/if}
 						{#if data.userMinistry}
 							<span class="text-[#a8a083]"> • Minister of {data.userMinistry}</span>
 						{/if}

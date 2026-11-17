@@ -17,7 +17,7 @@ import {
 	startConstruction,
 	stateStockpile
 } from "#lib/server/services/politics/construction.service.js";
-import { canOrderConstruction, type ConstructionRole } from "#lib/server/services/politics/construction-access.js";
+import { canOrderConstruction, canProposeIn, type ConstructionRole } from "#lib/server/services/politics/construction-access.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -29,10 +29,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	if (!region) error(404, "Region not found");
 
 	const stateId = region.stateId;
-	const [access, treasury, stockpile, pending, queue, finished] = await Promise.all([
+	const [access, canPropose, treasury, stockpile, pending, queue, finished] = await Promise.all([
 		stateId
 			? canOrderConstruction(db, account.id, stateId, regionId)
 			: { roles: [] as ConstructionRole[], types: [] as BuildingType[] },
+		stateId ? canProposeIn(db, account.id, stateId) : false,
 		stateId ? db.query.stateTreasury.findFirst({ where: eq(stateTreasury.stateId, stateId) }) : undefined,
 		stateId ? stateStockpile(db, stateId) : ({} as Record<string, number>),
 		pendingByType(db, regionId),
@@ -52,6 +53,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		region: { id: region.id, infrastructure: regionLevel(region, "infrastructure") },
 		state: region.state ? { id: region.state.id, name: region.state.name } : null,
 		roles: access.roles,
+		canPropose,
 		treasury: balance,
 		stockpile,
 		buildings: VALID_BUILDING_TYPES.map((type) => {

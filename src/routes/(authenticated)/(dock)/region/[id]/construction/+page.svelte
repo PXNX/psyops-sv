@@ -60,10 +60,12 @@
 					{/each}
 				</div>
 			</div>
-			{#if !canOrderAny}
+			{#if !canOrderAny && data.canPropose}
 				<p class="text-xs text-[#a8a083] mt-3">
-					The president, governor and responsible ministers order buildings here. Parliament can vote for them via
-					<a href="/state/{data.state.id}/proposal/create" class="text-[#ffd35c] hover:text-[#ffcf47]">a proposal</a>.
+					Only the president, governor and responsible ministers build directly. You can
+					<a href="/state/{data.state.id}/proposal/create" class="text-[#ffd35c] hover:text-[#ffcf47]"
+						>propose a building to parliament</a
+					>.
 				</p>
 			{/if}
 		</div>
@@ -153,7 +155,7 @@
 						{:else if b.underway}
 							<p class="text-xs text-[#a8a083]">The next level can be ordered once this one is finished.</p>
 						{:else if !b.canOrder}
-							<p class="text-xs text-[#a8a083]">{b.problems[0] ?? "Ask your government to build this."}</p>
+							<p class="text-xs text-[#a8a083]">{b.problems[0] ?? "Built by the state's government."}</p>
 						{:else if b.problems.length}
 							<p class="text-xs text-red-300">{b.problems.join(" ")}</p>
 						{:else}

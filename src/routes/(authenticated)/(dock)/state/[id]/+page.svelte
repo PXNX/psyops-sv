@@ -631,7 +631,7 @@
 			<div class="text-xs text-[#ffd35c] flex items-center gap-1">View queue →</div>
 		</a>
 
-		{#if hasGovernment}
+		{#if hasGovernment && (data.isPresident || data.isOwnEconomyMinister)}
 			<a href="/state/{data.state.id}/economy" class="group panel-interactive rounded-sm p-5">
 				<div
 					class="size-12 bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm flex items-center justify-center mb-4"
@@ -642,7 +642,9 @@
 				<p class="text-sm text-[#a8a083] mb-3">Treasury and tax policies</p>
 				<div class="text-xs text-[#b9f29a] flex items-center gap-1">View economy →</div>
 			</a>
+		{/if}
 
+		{#if hasGovernment}
 			{#if data.isPresident || data.isOwnForeignMinister}
 				<a href="/state/{data.state.id}/foreign-affairs" class="group panel-interactive rounded-sm p-5">
 					<div

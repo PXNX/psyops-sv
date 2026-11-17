@@ -23,7 +23,9 @@
 		backLabel={data.state.name}
 	>
 		{#snippet actions()}
-			<Button href="/state/{data.state.id}/proposal/create" variant="secondary">Propose a building</Button>
+			{#if data.canPropose}
+				<Button href="/state/{data.state.id}/proposal/create" variant="secondary">Propose a building</Button>
+			{/if}
 		{/snippet}
 	</PageHeader>
 
@@ -35,7 +37,7 @@
 			<EmptyState
 				icon={FluentBuildingFactory20Filled}
 				title="Nothing is being built"
-				subtitle="Parliament, ministers and governors can start buildings in a region."
+				subtitle="The government and parliament start buildings in a region."
 			/>
 		{/if}
 	</SectionCard>

@@ -4,7 +4,14 @@
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { editStateSchema } from "./schema";
 	import { useImageUpload } from "#lib/utils/edit/useImageUpload.svelte.js";
-	import { EditSection, EditImageUpload, EditColorPicker, EditCooldownWarning, EditMessage, EditFormActions } from "#lib/component/edit/index.js";
+	import {
+		EditSection,
+		EditImageUpload,
+		EditColorPicker,
+		EditCooldownWarning,
+		EditMessage,
+		EditFormActions
+	} from "#lib/component/edit/index.js";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentColor20Filled from "~icons/fluent/color-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";

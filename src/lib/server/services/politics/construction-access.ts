@@ -3,7 +3,7 @@
 // defense minister fortifications, and a region's governor anything in it.
 import { and, eq } from "drizzle-orm";
 import type { Database } from "#lib/server/db.js";
-import { governors, ministers, presidents } from "#lib/server/schema.js";
+import { governors, ministers, parliamentMembers, presidents } from "#lib/server/schema.js";
 import { VALID_BUILDING_TYPES, type BuildingType } from "#lib/config/index.js";
 
 export type ConstructionRole = "president" | "governor" | "economy" | "defense";
@@ -32,4 +32,16 @@ export async function canOrderConstruction(
 	if (roles.includes("economy")) CIVILIAN.forEach((t) => types.add(t));
 	if (roles.includes("defense")) types.add("fortifications");
 	return { roles, types: [...types] };
+}
+
+/** Whether the user may put proposals before this state's parliament. */
+export async function canProposeIn(db: Database, userId: string, stateId: number): Promise<boolean> {
+	const [member, minister, president] = await Promise.all([
+		db.query.parliamentMembers.findFirst({
+			where: and(eq(parliamentMembers.userId, userId), eq(parliamentMembers.stateId, stateId))
+		}),
+		db.query.ministers.findFirst({ where: and(eq(ministers.userId, userId), eq(ministers.stateId, stateId)) }),
+		db.query.presidents.findFirst({ where: and(eq(presidents.userId, userId), eq(presidents.stateId, stateId)) })
+	]);
+	return !!(member || minister || president);
 }

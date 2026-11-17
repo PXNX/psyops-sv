@@ -5,10 +5,11 @@ import { db } from "#lib/server/db.js";
 import { eq, and, asc, inArray } from "drizzle-orm";
 import { regions, states, stateBuildings, userProfiles } from "#lib/server/schema.js";
 import { getRegionName } from "#lib/utils/formatting.js";
+import { canProposeIn } from "#lib/server/services/politics/construction-access.js";
 import { BUILDING_TEMPLATES, isBuildingType } from "#lib/config/index.js";
 import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
 
 	const state = await db.query.states.findFirst({
@@ -66,6 +67,7 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	return {
 		state: { id: state.id, name: state.name },
+		canPropose: await canProposeIn(db, locals.account!.id, stateId),
 		pendingConstructions,
 		regions: regionRows.map((r) => ({ ...r, name: getRegionName(r.id) }))
 	};

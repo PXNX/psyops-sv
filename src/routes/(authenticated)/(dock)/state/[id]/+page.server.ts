@@ -616,6 +616,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isPresident,
 		isForeignMinister,
 		// This state's own foreign minister (isForeignMinister is another state's).
+		isOwnEconomyMinister:
+			!!accountId && stateMinistersRaw.some((m) => m.userId === accountId && m.ministry === "economy"),
 		isOwnForeignMinister:
 			!!accountId && stateMinistersRaw.some((m) => m.userId === accountId && m.ministry === "foreign_affairs"),
 		canDeclareWar,
