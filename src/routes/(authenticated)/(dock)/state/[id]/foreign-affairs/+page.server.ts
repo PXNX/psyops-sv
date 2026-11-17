@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.server.ts - WITH PRESIDENT ACCESS
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
+import { creditTreasury, debitWallet, InsufficientFundsError } from "#lib/server/money.js";
 import { db } from "#lib/server/db.js";
 import { eq, and, ne, or } from "drizzle-orm";
 import {
@@ -342,87 +343,47 @@ export const actions: Actions = {
 			return fail(404, { error: "Application not found" });
 		}
 
-		// Update application
-		await db
-			.update(visaApplications)
-			.set({
-				status: decision,
-				reviewedAt: new Date(),
-				reviewedBy: account.id
-			})
-			.where(eq(visaApplications.id, applicationId));
+		// Review, payment and visa commit together: an approval whose payment
+		// fails must not leave the application marked approved.
+		try {
+			await db.transaction(async (tx) => {
+				await tx
+					.update(visaApplications)
+					.set({ status: decision, reviewedAt: new Date(), reviewedBy: account.id })
+					.where(eq(visaApplications.id, applicationId));
 
-		// If approved, process payment and create visa
-		if (decision === "approved") {
-			const visaSettings = await db.query.stateVisaSettings.findFirst({
-				where: eq(stateVisaSettings.stateId, stateId)
+				if (decision !== "approved") return;
+
+				const visaSettings = await tx.query.stateVisaSettings.findFirst({
+					where: eq(stateVisaSettings.stateId, stateId)
+				});
+				if (!visaSettings) throw new Error("Visa settings not found");
+
+				const visaCost = Number(visaSettings.visaCost);
+				const taxAmount = Math.floor(visaCost * (visaSettings.visaTaxRate / 100));
+
+				await debitWallet(tx, application.userId, visaCost);
+				await creditTreasury(tx, stateId, taxAmount);
+
+				const expiresAt = new Date();
+				expiresAt.setDate(expiresAt.getDate() + 14);
+
+				await tx.insert(userVisas).values({
+					userId: application.userId,
+					stateId,
+					status: "active",
+					expiresAt,
+					cost: visaCost,
+					taxPaid: taxAmount,
+					approvedBy: account.id,
+					approvedAt: new Date()
+				});
 			});
-
-			if (!visaSettings) {
-				return fail(500, { error: "Visa settings not found" });
-			}
-
-			const visaCost = Number(visaSettings.visaCost);
-			const taxAmount = Math.floor(visaCost * (visaSettings.visaTaxRate / 100));
-
-			// Get user wallet
-			const wallet = await db.query.userWallets.findFirst({
-				where: eq(userWallets.userId, application.userId)
-			});
-
-			if (!wallet || wallet.balance < visaCost) {
+		} catch (err) {
+			if (err instanceof InsufficientFundsError) {
 				return fail(400, { error: "User has insufficient funds" });
 			}
-
-			// Deduct from user
-			await db
-				.update(userWallets)
-				.set({
-					balance: Number(wallet.balance) - visaCost,
-					updatedAt: new Date()
-				})
-				.where(eq(userWallets.userId, application.userId));
-
-			// Add to treasury
-			let treasury = await db.query.stateTreasury.findFirst({
-				where: eq(stateTreasury.stateId, stateId)
-			});
-
-			if (!treasury) {
-				[treasury] = await db
-					.insert(stateTreasury)
-					.values({
-						stateId: stateId,
-						balance: 0,
-						totalCollected: 0,
-						totalSpent: 0
-					})
-					.returning();
-			}
-
-			await db
-				.update(stateTreasury)
-				.set({
-					balance: Number(treasury.balance) + taxAmount,
-					totalCollected: Number(treasury.totalCollected) + taxAmount,
-					updatedAt: new Date()
-				})
-				.where(eq(stateTreasury.stateId, stateId));
-
-			// Create visa
-			const expiresAt = new Date();
-			expiresAt.setDate(expiresAt.getDate() + 14);
-
-			await db.insert(userVisas).values({
-				userId: application.userId,
-				stateId,
-				status: "active",
-				expiresAt,
-				cost: visaCost,
-				taxPaid: taxAmount,
-				approvedBy: account.id,
-				approvedAt: new Date()
-			});
+			throw err;
 		}
 
 		return { success: true, message: `Visa application ${decision}` };

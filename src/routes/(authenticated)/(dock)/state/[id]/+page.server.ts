@@ -1,4 +1,5 @@
 // src/routes/(authenticated)/(dock)/state/[id]/+page.server.ts
+import { creditTreasury, debitWallet, InsufficientFundsError } from "#lib/server/money.js";
 import { db } from "#lib/server/db.js";
 import {
 	states,
@@ -996,59 +997,36 @@ export const actions: Actions = {
 		const taxRate = visaSettingsData.visaTaxRate;
 		const taxAmount = Math.floor(visaCost * (taxRate / 100));
 
-		let wallet = await db.query.userWallets.findFirst({
-			where: eq(userWallets.userId, account.id)
-		});
+		// Starter wallet for accounts that never had one.
+		await db
+			.insert(userWallets)
+			.values({ userId: account.id, balance: 10000 })
+			.onConflictDoNothing({ target: userWallets.userId });
 
-		if (!wallet) {
-			[wallet] = await db.insert(userWallets).values({ userId: account.id, balance: 10000 }).returning();
-		}
+		try {
+			await db.transaction(async (tx) => {
+				await debitWallet(tx, account.id, visaCost);
+				await creditTreasury(tx, stateId, taxAmount);
 
-		const walletBal = Number(wallet.balance);
+				const expiresAt = new Date();
+				expiresAt.setDate(expiresAt.getDate() + 14);
 
-		if (walletBal < visaCost) {
-			return fail(400, {
-				error: `Insufficient funds. Need $${visaCost.toLocaleString()}, have $${walletBal.toLocaleString()}`
+				await tx.insert(userVisas).values({
+					userId: account.id,
+					stateId,
+					status: "active",
+					expiresAt,
+					cost: visaCost,
+					taxPaid: taxAmount,
+					approvedAt: new Date()
+				});
 			});
+		} catch (err) {
+			if (err instanceof InsufficientFundsError) {
+				return fail(400, { error: `Insufficient funds. You need $${visaCost.toLocaleString()}.` });
+			}
+			throw err;
 		}
-
-		await db
-			.update(userWallets)
-			.set({ balance: walletBal - visaCost, updatedAt: new Date() })
-			.where(eq(userWallets.userId, account.id));
-
-		let treasury = await db.query.stateTreasury.findFirst({
-			where: eq(stateTreasury.stateId, stateId)
-		});
-
-		if (!treasury) {
-			[treasury] = await db
-				.insert(stateTreasury)
-				.values({ stateId, balance: 0, totalCollected: 0, totalSpent: 0 })
-				.returning();
-		}
-
-		await db
-			.update(stateTreasury)
-			.set({
-				balance: Number(treasury.balance) + taxAmount,
-				totalCollected: Number(treasury.totalCollected) + taxAmount,
-				updatedAt: new Date()
-			})
-			.where(eq(stateTreasury.stateId, stateId));
-
-		const expiresAt = new Date();
-		expiresAt.setDate(expiresAt.getDate() + 14);
-
-		await db.insert(userVisas).values({
-			userId: account.id,
-			stateId,
-			status: "active",
-			expiresAt,
-			cost: visaCost,
-			taxPaid: taxAmount,
-			approvedAt: new Date()
-		});
 
 		return {
 			success: true,

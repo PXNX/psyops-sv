@@ -4,7 +4,8 @@
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
 import { eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
-import { marketListings, marketTransactions, userWallets } from "../schema";
+import { marketListings, marketTransactions, stateTreasury, userWallets } from "../schema";
+import { creditTreasury, debitWallet, InsufficientFundsError } from "../money";
 import { WalletService } from "../services/economy/wallet.service";
 import { MarketService } from "../services/economy/market.service";
 
@@ -124,5 +125,33 @@ describe("MarketService.buyListing", () => {
 	it("keeps every sale recorded, including the one that sold it out", async () => {
 		const sales = await handle.db.select().from(marketTransactions);
 		expect(sales).toHaveLength(2);
+	});
+});
+
+describe("money helpers", () => {
+	it("debitWallet throws a typed error and changes nothing when short", async () => {
+		const start = (await balanceOf("user-3"))!;
+		await expect(debitWallet(handle.db, "user-3", start + 1)).rejects.toBeInstanceOf(InsufficientFundsError);
+		expect(await balanceOf("user-3")).toBe(start);
+	});
+
+	it("debitWallet inside a failed transaction is rolled back", async () => {
+		const start = (await balanceOf("user-5"))!;
+		await expect(
+			handle.db.transaction(async (tx) => {
+				await debitWallet(tx, "user-5", 100);
+				throw new Error("later step failed");
+			})
+		).rejects.toThrow("later step failed");
+		expect(await balanceOf("user-5")).toBe(start);
+	});
+
+	it("creditTreasury creates a missing treasury and adds to an existing one", async () => {
+		const state = (await handle.db.query.states.findFirst())!;
+		await handle.db.delete(stateTreasury).where(eq(stateTreasury.stateId, state.id));
+		expect(await creditTreasury(handle.db, state.id, 250)).toBe(250);
+		expect(await creditTreasury(handle.db, state.id, 50)).toBe(300);
+		const [row] = await handle.db.select().from(stateTreasury).where(eq(stateTreasury.stateId, state.id));
+		expect(row!.totalCollected).toBe(300);
 	});
 });

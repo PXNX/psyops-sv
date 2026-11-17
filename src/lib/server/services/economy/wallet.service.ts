@@ -1,11 +1,9 @@
 // Wallet service - handles user wallet operations
 import type { Database } from "../../db";
 import { userWallets } from "../../schema";
-import { and, eq, gte, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
-
-/** The database itself or an open transaction on it. */
-type Executor = Pick<Database, "insert" | "update" | "select">;
+import { creditWallet, debitWallet, type Executor } from "../../money";
 
 function assertPositiveAmount(amount: number) {
 	if (!Number.isSafeInteger(amount) || amount <= 0) {
@@ -82,35 +80,18 @@ export class WalletService {
 		return wallet;
 	}
 
-	/**
-	 * Credit a wallet. The increment happens inside the UPDATE itself, so two
-	 * concurrent credits can never overwrite each other's result.
-	 */
+	/** Credit a wallet (creating it on first use) and return the new balance. */
 	async addFunds(userId: string, amount: number, db: Executor = this.db) {
 		assertPositiveAmount(amount);
 		await this.ensureWallet(userId, db);
-		const [row] = await db
-			.update(userWallets)
-			.set({ balance: sql`${userWallets.balance} + ${amount}`, updatedAt: new Date() })
-			.where(eq(userWallets.userId, userId))
-			.returning({ balance: userWallets.balance });
-		return Number(row!.balance);
+		return creditWallet(db, userId, amount);
 	}
 
-	/**
-	 * Debit a wallet. The balance check is part of the UPDATE's WHERE clause, so
-	 * the balance can never go negative even when two debits race each other.
-	 */
+	/** Debit a wallet; throws "Insufficient funds" rather than going negative. */
 	async deductFunds(userId: string, amount: number, db: Executor = this.db) {
 		assertPositiveAmount(amount);
 		await this.ensureWallet(userId, db);
-		const [row] = await db
-			.update(userWallets)
-			.set({ balance: sql`${userWallets.balance} - ${amount}`, updatedAt: new Date() })
-			.where(and(eq(userWallets.userId, userId), gte(userWallets.balance, amount)))
-			.returning({ balance: userWallets.balance });
-		if (!row) throw new Error("Insufficient funds");
-		return Number(row.balance);
+		return debitWallet(db, userId, amount);
 	}
 
 	/** Move money between two wallets: both legs commit together or not at all. */

@@ -1,4 +1,5 @@
 // src/routes/(authenticated)/(dock)/region/[id]/+page.server.ts
+import { debitWallet, InsufficientFundsError } from "#lib/server/money.js";
 import { db } from "#lib/server/db.js";
 import {
 	regions,
@@ -611,6 +612,7 @@ export const actions: Actions = {
 		}
 
 		// For established states, check if residence application exists
+		let needsResidenceApplication = false;
 		if (targetRegion.stateId && hasInauguralElection) {
 			const pendingApp = await db.query.residenceApplications.findFirst({
 				where: and(
@@ -624,40 +626,45 @@ export const actions: Actions = {
 				return fail(400, { error: "You already have a pending residence application for this region" });
 			}
 
-			// Create residence application
-			await db.insert(residenceApplications).values({
-				userId: account.id,
-				regionId: regionId,
-				status: "pending"
-			});
+			needsResidenceApplication = true;
 		}
 
-		// Deduct cost from wallet
-		await db
-			.update(userWallets)
-			.set({
-				balance: Number(wallet.balance) - cost,
-				updatedAt: new Date()
-			})
-			.where(eq(userWallets.userId, account.id));
-
-		// Delete any old completed travel record (userId has UNIQUE constraint)
-		await db.delete(userTravels).where(and(eq(userTravels.userId, account.id), eq(userTravels.status, "completed")));
-
-		// Create travel record
+		// Payment, application and travel commit together: a failed step must
+		// never leave the fare paid without the journey (or the reverse).
 		const departureTime = new Date();
 		const arrivalTime = new Date(departureTime.getTime() + travelTimeHours * 60 * 60 * 1000);
+		try {
+			await db.transaction(async (tx) => {
+				await debitWallet(tx, account.id, cost);
 
-		await db.insert(userTravels).values({
-			userId: account.id,
-			fromRegionId: currentResidence.regionId,
-			toRegionId: regionId,
-			departureTime,
-			arrivalTime,
-			travelDuration: travelTimeHours,
-			status: "in_progress",
-			distanceKm: Math.round(distance)
-		});
+				if (needsResidenceApplication) {
+					await tx.insert(residenceApplications).values({ userId: account.id, regionId, status: "pending" });
+				}
+
+				// Delete any old completed travel record (userId has UNIQUE constraint)
+				await tx
+					.delete(userTravels)
+					.where(and(eq(userTravels.userId, account.id), eq(userTravels.status, "completed")));
+
+				await tx.insert(userTravels).values({
+					userId: account.id,
+					fromRegionId: currentResidence.regionId,
+					toRegionId: regionId,
+					departureTime,
+					arrivalTime,
+					travelDuration: travelTimeHours,
+					status: "in_progress",
+					distanceKm: Math.round(distance)
+				});
+			});
+		} catch (err) {
+			if (err instanceof InsufficientFundsError) {
+				return fail(400, {
+					error: `Insufficient funds. Travel costs $${cost.toLocaleString()} (${Math.round(distance)} km)`
+				});
+			}
+			throw err;
+		}
 
 		return {
 			success: true,
