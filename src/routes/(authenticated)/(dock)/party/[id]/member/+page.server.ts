@@ -13,6 +13,8 @@ import { error, fail, redirect } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 
+class AlreadyMemberError extends Error {}
+
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const partyId = parseInt(params.id);
@@ -306,23 +308,49 @@ export const actions: Actions = {
 			return fail(404, { error: "Application not found" });
 		}
 
-		// Add user as member
-		await db.insert(partyMembers).values({
-			userId: application.userId,
-			partyId,
-			role: "member",
-			acceptedBy: account.id
-		});
+		// A player belongs to one party: claim the application, make sure the
+		// applicant hasn't joined somewhere else meanwhile, and close their
+		// other pending applications.
+		const problem = await db
+			.transaction(async (tx) => {
+				const [claimed] = await tx
+					.update(partyMembershipApplications)
+					.set({ status: "accepted", reviewedBy: account.id, reviewedAt: new Date() })
+					.where(
+						and(eq(partyMembershipApplications.id, applicationId), eq(partyMembershipApplications.status, "pending"))
+					)
+					.returning({ id: partyMembershipApplications.id });
+				if (!claimed) return "This application has already been decided.";
 
-		// Update application status
-		await db
-			.update(partyMembershipApplications)
-			.set({
-				status: "accepted",
-				reviewedBy: account.id,
-				reviewedAt: new Date()
+				const [existing] = await tx
+					.select({ id: partyMembers.id })
+					.from(partyMembers)
+					.where(eq(partyMembers.userId, application.userId))
+					.for("update");
+				if (existing) throw new AlreadyMemberError();
+
+				await tx.insert(partyMembers).values({
+					userId: application.userId,
+					partyId,
+					role: "member",
+					acceptedBy: account.id
+				});
+				await tx
+					.update(partyMembershipApplications)
+					.set({ status: "rejected", reviewedAt: new Date() })
+					.where(
+						and(
+							eq(partyMembershipApplications.userId, application.userId),
+							eq(partyMembershipApplications.status, "pending")
+						)
+					);
+				return null;
 			})
-			.where(eq(partyMembershipApplications.id, applicationId));
+			.catch((err) => {
+				if (err instanceof AlreadyMemberError) return "They have already joined another party.";
+				throw err;
+			});
+		if (problem) return fail(409, { error: problem });
 
 		return { success: true, message: "Application accepted" };
 	},
@@ -547,15 +575,13 @@ export const actions: Actions = {
 
 			// Delete party (cascade will handle party members)
 			await db.delete(politicalParties).where(eq(politicalParties.id, partyId));
-
-			throw redirect(303, "/party");
 		} catch (err) {
-			// Re-throw redirect errors
-			if (err instanceof Response && err.status === 303) {
-				throw err;
-			}
 			console.error("Disband party error:", err);
 			return fail(500, { error: "Failed to disband party" });
 		}
+
+		// Outside the try: SvelteKit's redirect is thrown, and the catch above
+		// would turn it into "Failed to disband party".
+		redirect(303, "/party");
 	}
 };
