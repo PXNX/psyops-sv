@@ -114,7 +114,13 @@
 			<div class="relative shrink-0">
 				{#if data.state.logo}
 					<div class="size-24 rounded-full overflow-hidden bg-[#1a1f15] border border-[#c8b47a]/15">
-						<img loading="lazy" decoding="async" src={data.state.logo} alt={data.state.name} class="w-full h-full object-cover" />
+						<img
+							loading="lazy"
+							decoding="async"
+							src={data.state.logo}
+							alt={data.state.name}
+							class="w-full h-full object-cover"
+						/>
 					</div>
 				{:else}
 					<div class="size-24 rounded-full bg-[#1a1f15] border border-[#c8b47a]/15 flex items-center justify-center">
@@ -129,7 +135,13 @@
 						title={data.bloc.name}
 					>
 						{#if data.bloc.logo}
-							<img loading="lazy" decoding="async" src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
+							<img
+								loading="lazy"
+								decoding="async"
+								src={data.bloc.logo}
+								alt={data.bloc.name}
+								class="w-full h-full object-cover"
+							/>
 						{:else}
 							<FluentFlag20Filled class="size-5 text-[#f5efd8]" />
 						{/if}
@@ -337,9 +349,10 @@
 							action="?/applyResidence"
 							use:enhance={() => {
 								isApplyingResidence = true;
-								return async ({ update }) => {
+								return async ({ update, result }) => {
 									isApplyingResidence = false;
 									await update();
+									toastResult(result);
 								};
 							}}
 						>
@@ -630,7 +643,7 @@
 				<div class="text-xs text-[#b9f29a] flex items-center gap-1">View economy →</div>
 			</a>
 
-			{#if data.isPresident || data.isForeignMinister}
+			{#if data.isPresident || data.isOwnForeignMinister}
 				<a href="/state/{data.state.id}/foreign-affairs" class="group panel-interactive rounded-sm p-5">
 					<div
 						class="size-12 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex items-center justify-center mb-4"

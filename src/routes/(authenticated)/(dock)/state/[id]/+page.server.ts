@@ -38,6 +38,23 @@ import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editStateSchema } from "./schema";
 
+/** The user's pending residence application for any region of this state. */
+async function pendingApplicationIn(userId: string, stateId: number) {
+	const [row] = await db
+		.select({ id: residenceApplications.id })
+		.from(residenceApplications)
+		.innerJoin(regions, eq(residenceApplications.regionId, regions.id))
+		.where(
+			and(
+				eq(residenceApplications.userId, userId),
+				eq(residenceApplications.status, "pending"),
+				eq(regions.stateId, stateId)
+			)
+		)
+		.limit(1);
+	return row ?? null;
+}
+
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
 
@@ -372,15 +389,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 						userCurrentRegionName = getRegionName(userRes.regionId);
 
 						// Check for pending residence application in any region of this state
-						pendingResidenceAppPromise = Promise.all([
-							stateRegionsPromise,
-							db.query.residenceApplications.findFirst({
-								where: and(eq(residenceApplications.userId, accountId), eq(residenceApplications.status, "pending"))
-							})
-						]).then(([stateRegions, pendingApp]) => {
-							const stateRegionIds = stateRegions.map((r) => r.id);
-							return !!pendingApp && stateRegionIds.includes(pendingApp.regionId);
-						});
+						pendingResidenceAppPromise = pendingApplicationIn(accountId, stateId).then(Boolean);
 					}
 				}
 
@@ -606,6 +615,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		powerPlants: plants.length,
 		isPresident,
 		isForeignMinister,
+		// This state's own foreign minister (isForeignMinister is another state's).
+		isOwnForeignMinister:
+			!!accountId && stateMinistersRaw.some((m) => m.userId === accountId && m.ministry === "foreign_affairs"),
 		canDeclareWar,
 		activeWars,
 		residencePermit: {
@@ -1061,21 +1073,30 @@ export const actions: Actions = {
 			return fail(400, { error: "You are already a citizen of this state" });
 		}
 
-		// Check for existing pending application in any region of this state
-		const stateRegionsList = await db.query.regions.findMany({
-			where: eq(regions.stateId, stateId)
+		// A president needs no permit from themselves.
+		const presidency = await db.query.presidents.findFirst({
+			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
 		});
-		const stateRegionIds = stateRegionsList.map((r) => r.id);
+		if (presidency) {
+			await db.transaction(async (tx) => {
+				await tx
+					.update(residences)
+					.set({ homeRegionId: userRes.regionId, homeRegionChangedAt: new Date() })
+					.where(eq(residences.userId, account.id));
+				await tx
+					.update(residenceApplications)
+					.set({ status: "approved", reviewedAt: new Date(), reviewedBy: account.id })
+					.where(and(eq(residenceApplications.userId, account.id), eq(residenceApplications.status, "pending")));
+			});
+			return { success: true, message: "As president, you are now a citizen of this state." };
+		}
 
-		const pendingApp = await db.query.residenceApplications.findFirst({
-			where: and(eq(residenceApplications.userId, account.id), eq(residenceApplications.status, "pending"))
-		});
-
-		if (pendingApp && stateRegionIds.includes(pendingApp.regionId)) {
+		// One pending application per state (checked against this state's
+		// regions, not whichever pending application happens to come first).
+		if (await pendingApplicationIn(account.id, stateId)) {
 			return fail(400, { error: "You already have a pending residence application for this state" });
 		}
 
-		// Create residence application for the user's current region
 		await db.insert(residenceApplications).values({
 			userId: account.id,
 			regionId: userRes.regionId,
