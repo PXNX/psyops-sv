@@ -7,31 +7,33 @@
 	import OnboardingSheet from "#lib/component/OnboardingSheet.svelte";
 	import { navigating, page } from "$app/state";
 	import { resolve } from "$app/paths";
+	import { afterNavigate } from "$app/navigation";
+
+	// The main column is our scroll container, so SvelteKit's built-in scroll
+	// restoration cannot see it. Reset it on every navigation or the next page
+	// renders mid-scroll, which reads as a janky, half-loaded page.
+	afterNavigate(() => {
+		mainEl?.scrollTo({ top: 0 });
+	});
 
 	const { children, data } = $props();
 
-	const navItems = [
+	const navItems = $derived([
 		{ href: "/", icon: FluentChartMultiple, label: "Dashboard" },
 		{ href: "/posts", icon: FluentNews, label: "Posts" },
 		{ href: "/training", icon: FluentTarget, label: "Training" },
 		{ href: "/production", icon: FluentBuildingFactory, label: "Production" },
 		{ href: "/user/" + data.account.id, icon: FluentContactCard, label: "Profile" }
-	];
+	]);
 
 	const isActive = (href: string) => {
 		if (href === "/" && page.url.pathname === "/") return true;
 		if (href !== "/" && page.url.pathname.startsWith(href)) return true;
 		return false;
 	};
-</script>
 
-<svelte:head>
-	<title>PsyOps SV</title>
-	<meta
-		content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no"
-		name="viewport"
-	/>
-</svelte:head>
+	let mainEl: HTMLElement | undefined;
+</script>
 
 {#if navigating.to}
 	<!-- Non-blocking progress hint: the outgoing page stays visible and
@@ -40,7 +42,10 @@
 	<div class="nav-progress" aria-hidden="true"></div>
 {/if}
 
-<main class="flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden">
+<main
+	bind:this={mainEl}
+	class="flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden"
+>
 	{@render children()}
 </main>
 
@@ -51,7 +56,7 @@
 	<nav class="dock" data-sveltekit-preload-code="eager">
 		{#each navItems as item (item.href)}
 			<a href={item.href} class="flinch dock-item" class:active={isActive(item.href)} title={item.label}>
-				<svelte:component this={item.icon} class="size-5 md:size-6" />
+				<item.icon class="size-5 md:size-6" />
 				<span class="hidden sm:inline text-xs font-semibold">{item.label}</span>
 			</a>
 		{/each}
@@ -66,7 +71,8 @@
 	@reference "../../../app.css";
 
 	.dock-item {
-		@apply flex flex-col sm:flex-row items-center justify-center gap-1 transition-all duration-300;
+		@apply press-spring flex flex-col sm:flex-row items-center justify-center gap-1;
+		--press-scale: 0.92;
 	}
 
 	.nav-progress {

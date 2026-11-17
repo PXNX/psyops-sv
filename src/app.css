@@ -173,19 +173,144 @@
 	}
 }
 
-/* Page navigation crossfade (see onNavigate in the root layout) — quick and
-   plain so it reads as a snappy cut rather than a slow dissolve. The dock
-   nav opts out via its own view-transition-name so it never takes part. */
-::view-transition-old(root),
+/* Page navigation swap (see onNavigate in the root layout): the outgoing page
+   tips away quickly while the incoming one rises in with a springy settle.
+   The dock nav opts out via its own view-transition-name so it never takes
+   part. The whole swap stays under ~250ms so it reads as snappy, not slow.
+   Page-level entrance animations defer to this (see lib/utils/motion.ts). */
+::view-transition-old(root) {
+	animation: vt-page-out 150ms ease-in both;
+}
+
 ::view-transition-new(root) {
-	animation-duration: 120ms;
-	animation-timing-function: ease-out;
+	animation: vt-page-in 240ms cubic-bezier(0.22, 1.3, 0.36, 1) both;
+}
+
+@keyframes vt-page-out {
+	to {
+		opacity: 0;
+		transform: scale(0.985);
+	}
+}
+
+@keyframes vt-page-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px) scale(0.995);
+	}
 }
 
 @media (prefers-reduced-motion: reduce) {
 	::view-transition-old(root),
 	::view-transition-new(root) {
 		animation-duration: 1ms;
+	}
+}
+
+/* --------------------------------------------------------------------------
+   Motion system — quick, springy, joyful. Every entrance uses fill-mode
+   `backwards` (never `both`) so the final keyframe cannot freeze out the
+   press/hover transforms of the component it belongs to. All of it is
+   disabled under prefers-reduced-motion and while a view transition is
+   in flight (components check lib/utils/motion.ts for that).
+   -------------------------------------------------------------------------- */
+
+/* Content rises into place: fade + short lift with a springy settle. */
+@keyframes rise-in {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+}
+
+.animate-rise-in {
+	animation: rise-in 380ms cubic-bezier(0.22, 1.3, 0.36, 1) backwards;
+	animation-delay: var(--rise-delay, 0ms);
+}
+
+/* Small elements pop in with a scale overshoot (icons, stats, chips). */
+@keyframes pop-in {
+	from {
+		opacity: 0;
+		transform: scale(0.86);
+	}
+}
+
+.animate-pop-in {
+	animation: pop-in 320ms cubic-bezier(0.34, 1.8, 0.5, 1) backwards;
+	animation-delay: var(--rise-delay, 0ms);
+}
+
+/* The brass trim under a page title draws itself in left-to-right. */
+@keyframes trim-draw {
+	from {
+		transform: scaleX(0);
+	}
+}
+
+.animate-trim-draw {
+	animation: trim-draw 420ms cubic-bezier(0.22, 1, 0.36, 1) 90ms backwards;
+	transform-origin: left;
+}
+
+/* Direct children cascade in one after another instead of landing at once:
+   gives a panel grid a single coherent "boot-up" per page. Delay steps of
+   45ms, capped, so deep lists never wait forever. */
+.rise-stagger > * {
+	animation: rise-in 380ms cubic-bezier(0.22, 1.3, 0.36, 1) backwards;
+	animation-delay: var(--rise-delay, 0ms);
+}
+
+.rise-stagger > *:nth-child(1) {
+	--rise-delay: 0ms;
+}
+.rise-stagger > *:nth-child(2) {
+	--rise-delay: 45ms;
+}
+.rise-stagger > *:nth-child(3) {
+	--rise-delay: 90ms;
+}
+.rise-stagger > *:nth-child(4) {
+	--rise-delay: 135ms;
+}
+.rise-stagger > *:nth-child(5) {
+	--rise-delay: 180ms;
+}
+.rise-stagger > *:nth-child(6) {
+	--rise-delay: 225ms;
+}
+.rise-stagger > *:nth-child(7) {
+	--rise-delay: 270ms;
+}
+.rise-stagger > *:nth-child(8) {
+	--rise-delay: 315ms;
+}
+.rise-stagger > *:nth-child(n + 9) {
+	--rise-delay: 360ms;
+}
+
+/* Gentle idle float for quiet artwork (empty states). */
+@keyframes idle-float {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-6px);
+	}
+}
+
+.animate-idle-float {
+	animation: idle-float 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.animate-rise-in,
+	.animate-pop-in,
+	.animate-trim-draw,
+	.animate-idle-float,
+	.rise-stagger > * {
+		animation: none;
 	}
 }
 
@@ -302,7 +427,7 @@
 	}
 
 	.dock a {
-		@apply flex items-center justify-center w-12 h-12 rounded-sm transition-colors duration-200 text-[#d3caa9];
+		@apply relative flex items-center justify-center w-12 h-12 rounded-sm transition-colors duration-200 text-[#d3caa9];
 	}
 
 	.dock a.active {
@@ -310,6 +435,35 @@
 		box-shadow:
 			0 0 12px rgba(242, 176, 30, 0.35),
 			inset 0 1px 0 rgba(255, 244, 200, 0.2);
+	}
+
+	/* Brass pip under the active dock target — springs in when it activates.
+	   The dock keeps its own view-transition group, so this plays live and
+	   never gets frozen into a page-swap snapshot. */
+	.dock a.active::after {
+		content: "";
+		position: absolute;
+		bottom: 2px;
+		left: 50%;
+		translate: -50% 0;
+		width: 4px;
+		height: 4px;
+		border-radius: 9999px;
+		background: #ffd35c;
+		box-shadow: 0 0 8px rgba(242, 176, 30, 0.9);
+		animation: dock-dot-pop 320ms cubic-bezier(0.34, 1.8, 0.5, 1) backwards;
+	}
+
+	@keyframes dock-dot-pop {
+		from {
+			transform: scale(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.dock a.active::after {
+			animation: none;
+		}
 	}
 
 	.dock a:active {

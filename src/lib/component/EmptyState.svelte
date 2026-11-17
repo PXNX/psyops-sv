@@ -9,12 +9,12 @@
 		class?: string;
 	}
 
-	let { icon, title, subtitle, actions, class: className = "" }: Props = $props();
+	let { icon: Icon, title, subtitle, actions, class: className = "" }: Props = $props();
 </script>
 
 <div class="panel-muted rounded-sm p-12 sm:p-16 text-center {className}">
-	{#if icon}
-		<svelte:component this={icon} class="size-14 sm:size-16 mx-auto mb-4 opacity-20" />
+	{#if Icon}
+		<Icon class="size-14 sm:size-16 mx-auto mb-4 opacity-20 animate-idle-float" />
 	{/if}
 	<p class="text-[#d3caa9] text-base sm:text-lg">{title}</p>
 	{#if subtitle}

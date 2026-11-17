@@ -4,7 +4,10 @@
 	import { onNavigate } from "$app/navigation";
 	import { browser } from "$app/env";
 	import { settings } from "#lib/settings.svelte.js";
+	import { viewTransitionActive } from "#lib/utils/motion.js";
 	import InstallPrompt from "#lib/components/InstallPrompt.svelte";
+	import Toaster from "#lib/ui/Toaster.svelte";
+	import ConfirmHost from "#lib/ui/ConfirmHost.svelte";
 
 	const { children } = $props();
 
@@ -35,10 +38,16 @@
 		if (!document.startViewTransition) return;
 
 		return new Promise((resolve) => {
-			document.startViewTransition(async () => {
-				resolve();
-				await navigation.complete;
-			});
+			document
+				.startViewTransition(async () => {
+					// Block page-level entrance animations until the swap is done
+					// (see lib/utils/motion.ts for why).
+					viewTransitionActive.set(true);
+					resolve();
+					await navigation.complete;
+				})
+				.finished.finally(() => viewTransitionActive.set(false))
+				.catch(() => {}); // a skipped transition rejects `finished`
 		});
 	});
 </script>
@@ -56,3 +65,5 @@
 </div>
 
 <InstallPrompt />
+<Toaster />
+<ConfirmHost />
