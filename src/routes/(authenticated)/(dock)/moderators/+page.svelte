@@ -21,7 +21,7 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader title="Moderators">
+	<PageHeader documentTitle={false} title="Moderators">
 		{#snippet actions()}
 			<Button href="/moderators/actions" variant="secondary" size="sm" icon={FluentEye20Filled}>Actions</Button>
 			<Button href="/moderators/reports" variant="secondary" size="sm" icon={FluentDocument20Filled}>Reports</Button>

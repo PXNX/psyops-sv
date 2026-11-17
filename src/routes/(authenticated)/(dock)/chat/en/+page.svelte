@@ -198,6 +198,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{"Global Chat · PsyOps"}</title>
+</svelte:head>
+
+
 <ReportModal
 	bind:show={showReportModal}
 	targetType="account"

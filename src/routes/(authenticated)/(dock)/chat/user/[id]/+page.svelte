@@ -201,6 +201,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{`${data.otherUser?.name || "Direct message"} · PsyOps`}</title>
+</svelte:head>
+
+
 <ReportMessageModal
 	bind:open={showReportModal}
 	messageId={selectedMessageId}

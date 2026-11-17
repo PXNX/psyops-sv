@@ -53,6 +53,11 @@
 	const hasLockedWage = $derived(data.lockedWage !== null);
 </script>
 
+<svelte:head>
+	<title>{`${data.factory.name} · PsyOps`}</title>
+</svelte:head>
+
+
 <PageContainer maxWidth="5xl">
 	<!-- Factory Hero -->
 	<div class="panel rounded-sm p-5">

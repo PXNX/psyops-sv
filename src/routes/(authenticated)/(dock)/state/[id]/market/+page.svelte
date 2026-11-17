@@ -56,7 +56,7 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader
+	<PageHeader documentTitle={false}
 		title="Government Market"
 		subtitle="Buy and sell resources on behalf of the state"
 		icon={FluentCart20Filled}

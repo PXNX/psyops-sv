@@ -16,6 +16,8 @@
 		class?: string;
 		/** Skip the entrance animations (already inside a view transition, or testing). */
 		animate?: boolean;
+		/** Browser tab title. Defaults to `title`; pass false when the page sets its own <title>. */
+		documentTitle?: string | false;
 	}
 
 	let {
@@ -26,13 +28,22 @@
 		backLabel = "Back",
 		actions,
 		class: className = "",
-		animate = true
+		animate = true,
+		documentTitle
 	}: Props = $props();
+
+	const tabTitle = $derived(documentTitle === false ? null : `${documentTitle ?? title} · PsyOps`);
 
 	// Read once at mount: entrance animations must not run inside a view
 	// transition snapshot (see lib/utils/motion.ts).
 	const entrance = untrack(() => animate) && !get(viewTransitionActive);
 </script>
+
+<svelte:head>
+	{#if tabTitle}
+		<title>{tabTitle}</title>
+	{/if}
+</svelte:head>
 
 <div class="space-y-2 {className}">
 	{#if backHref}

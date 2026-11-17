@@ -68,7 +68,7 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader
+	<PageHeader documentTitle={false}
 		title="Political Blocs"
 		subtitle="{data.blocs.length} {data.blocs.length === 1 ? 'bloc' : 'blocs'} • Political-military alliances"
 	>

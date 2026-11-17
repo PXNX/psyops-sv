@@ -74,6 +74,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{`${data.itemName.charAt(0).toUpperCase()}${data.itemName.slice(1)} market · PsyOps`}</title>
+</svelte:head>
+
+
 {#snippet offerRow(listing: (typeof data.otherListings)[number], isBest: boolean)}
 	{@const buyQty = buyQuantities[listing.id] || 1}
 	{@const itemCost = listing.pricePerUnit * buyQty}

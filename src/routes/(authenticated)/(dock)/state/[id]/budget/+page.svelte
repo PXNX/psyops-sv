@@ -103,7 +103,7 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader
+	<PageHeader documentTitle={false}
 		title="{data.state.name} - Government Budget"
 		subtitle="Track government spending and revenue"
 		backHref="/state/{data.state.id}"

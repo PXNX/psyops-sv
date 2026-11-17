@@ -28,6 +28,11 @@
 	const totalPages = $derived(Math.ceil(data.totalResidents / data.pageSize));
 </script>
 
+<svelte:head>
+	<title>{`Population · ${data.region.name} · PsyOps`}</title>
+</svelte:head>
+
+
 <PageContainer maxWidth="6xl">
 	<!-- Same hero header as region page for visual continuity -->
 	<div class="panel rounded-sm p-5">

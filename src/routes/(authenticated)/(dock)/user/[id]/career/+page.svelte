@@ -150,6 +150,11 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{`${data.user.name || "Player"} career · PsyOps`}</title>
+</svelte:head>
+
+
 <PageContainer maxWidth="5xl">
 	<!-- Hero Section -->
 	<div class="panel rounded-sm p-5">

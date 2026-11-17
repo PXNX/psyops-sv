@@ -82,6 +82,11 @@
 	const getColor = (resourceType: string) => resourceColors[resourceType as keyof typeof resourceColors] || "#6366f1";
 </script>
 
+<svelte:head>
+	<title>{`${data.company.name} · PsyOps`}</title>
+</svelte:head>
+
+
 <PageContainer maxWidth="5xl">
 	<!-- Company Header -->
 	<div class="panel rounded-sm p-5 relative">

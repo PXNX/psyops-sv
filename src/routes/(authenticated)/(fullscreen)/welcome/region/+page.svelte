@@ -33,6 +33,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{"Choose your region · PsyOps"}</title>
+</svelte:head>
+
+
 <div class="max-w-5xl w-full space-y-8" in:fade={{ duration: 300 }}>
 	<!-- Header -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>

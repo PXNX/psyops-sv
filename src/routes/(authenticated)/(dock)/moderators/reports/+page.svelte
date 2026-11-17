@@ -110,7 +110,7 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader title="My Reports">
+	<PageHeader documentTitle={false} title="My Reports">
 		{#snippet actions()}
 			<Button href="/moderators" size="sm" variant="ghost" icon={FluentShield20Filled}>Moderators</Button>
 			<Button href="/moderators/actions" size="sm" variant="ghost" icon={FluentFlag20Filled}>All Actions</Button>

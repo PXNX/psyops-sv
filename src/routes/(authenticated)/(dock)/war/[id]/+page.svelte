@@ -88,6 +88,11 @@
 	const completedBattles = $derived(data.war.battles?.filter((b) => b.status !== "ongoing") || []);
 </script>
 
+<svelte:head>
+	<title>{`${data.war.attacker.name} vs ${data.war.defender.name} · PsyOps`}</title>
+</svelte:head>
+
+
 <PageContainer maxWidth="5xl">
 	<!-- War Room Hero -->
 	<div

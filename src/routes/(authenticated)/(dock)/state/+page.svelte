@@ -59,7 +59,7 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader
+	<PageHeader documentTitle={false}
 		title="All States"
 		subtitle="{data.regions.length} {data.regions.length === 1 ? 'state' : 'states'} available"
 	>

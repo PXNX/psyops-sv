@@ -80,7 +80,7 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Header -->
-	<PageHeader title="Action #{data.action.id}" backHref="/moderators/actions" backLabel="Moderator Actions" />
+	<PageHeader documentTitle={false} title="Action #{data.action.id}" backHref="/moderators/actions" backLabel="Moderator Actions" />
 
 	<!-- Action Card -->
 	<div class="panel rounded-sm p-5">

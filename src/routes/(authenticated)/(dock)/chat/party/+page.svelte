@@ -196,6 +196,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{`${data.party?.name ?? "Party"} chat · PsyOps`}</title>
+</svelte:head>
+
+
 <ReportModal
 	bind:show={showReportModal}
 	targetType="account"
@@ -232,7 +237,7 @@
 			<FluentPeople20Filled class="size-16 text-[#a8a083] mx-auto mb-4" />
 			<h2 class="text-2xl font-bold text-[#f5efd8] mb-2">No Party Membership</h2>
 			<p class="text-[#a8a083] mb-4">You need to be a member of a political party to access party chat.</p>
-			<Button variant="primary" onclick={() => goto("/parties")}>Browse Parties</Button>
+			<Button variant="primary" onclick={() => goto("/party")}>Browse Parties</Button>
 		</div>
 	</PageContainer>
 {:else}
@@ -244,7 +249,7 @@
 			<div class="flex items-center gap-2 md:gap-3">
 				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
 
-				<a href="/parties/{data.party.id}" class="group flex items-center gap-2 md:gap-3 flex-1 min-w-0">
+				<a href="/party/{data.party.id}" class="group flex items-center gap-2 md:gap-3 flex-1 min-w-0">
 					{#if data.party.logo}
 						<img loading="lazy" decoding="async" src={data.party.logo} alt={data.party.name} class="size-11 md:size-10 rounded-full shrink-0" />
 					{:else}

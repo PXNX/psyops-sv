@@ -148,6 +148,11 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{`Battle of ${getRegionName(data.battle.regionId)} · PsyOps`}</title>
+</svelte:head>
+
+
 {#snippet unitBars(health: number, organization: number, supply: number | null, orgLabel: string)}
 	<div class="space-y-2">
 		<!-- Health -->

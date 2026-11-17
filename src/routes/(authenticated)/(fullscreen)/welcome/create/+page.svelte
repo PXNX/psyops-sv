@@ -141,6 +141,11 @@
 	}
 </script>
 
+<svelte:head>
+	<title>{"Complete your profile · PsyOps"}</title>
+</svelte:head>
+
+
 <div class="w-full max-w-2xl mx-auto space-y-6">
 	<!-- Header -->
 	<div class="text-center space-y-3">

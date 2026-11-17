@@ -88,7 +88,7 @@
 
 <PageContainer maxWidth="4xl">
 	<!-- Header -->
-	<PageHeader title="Posts">
+	<PageHeader documentTitle={false} title="Posts">
 		{#snippet actions()}
 			<Button variant="primary" href="/posts/new" icon={FluentAdd20Filled}>
 				<span class="hidden sm:inline">New Post</span>

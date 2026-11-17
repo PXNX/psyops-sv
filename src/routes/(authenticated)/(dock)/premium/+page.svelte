@@ -24,7 +24,7 @@
 
 <PageContainer maxWidth="3xl">
 	<!-- Header -->
-	<PageHeader
+	<PageHeader documentTitle={false}
 		title="Premium Membership"
 		subtitle="Automate production, military training and factory work"
 		icon={FluentStar20Filled}

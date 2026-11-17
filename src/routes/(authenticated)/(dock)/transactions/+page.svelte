@@ -160,7 +160,7 @@
 
 <PageContainer maxWidth="4xl">
 	<!-- Header -->
-	<PageHeader
+	<PageHeader documentTitle={false}
 		title="Transactions"
 		subtitle="Your financial activity over the last 30 days"
 		icon={FluentArrowTrendingLines20Filled}

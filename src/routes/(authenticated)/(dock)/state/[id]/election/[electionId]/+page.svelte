@@ -81,6 +81,11 @@
 	);
 </script>
 
+<svelte:head>
+	<title>{`Election · ${data.state.name} · PsyOps`}</title>
+</svelte:head>
+
+
 <PageContainer maxWidth="5xl">
 	<!-- Hero -->
 	<div class="panel rounded-sm p-5 space-y-5">

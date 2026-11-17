@@ -86,7 +86,7 @@
 
 <PageContainer maxWidth="4xl">
 	<!-- Header -->
-	<PageHeader title="Subscribed Posts" backHref="/posts" backLabel="Posts">
+	<PageHeader documentTitle={false} title="Subscribed Posts" backHref="/posts" backLabel="Posts">
 		{#snippet actions()}
 			<Button variant="primary" href="/posts/new" icon={FluentAdd20Filled}>
 				<span class="hidden sm:inline">New Post</span>

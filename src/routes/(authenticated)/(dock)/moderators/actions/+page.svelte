@@ -86,7 +86,7 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader title="Moderator Actions">
+	<PageHeader documentTitle={false} title="Moderator Actions">
 		{#snippet actions()}
 			{#if data.currentUserId}
 				<Button

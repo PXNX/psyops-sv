@@ -13,7 +13,10 @@ const ROUTES_DIR = "src/routes";
 
 /** Sample values for dynamic segments, matching the mock seed. */
 const PARAMS: Record<string, string> = { item: "iron", slug: "intro" };
-const PARAMS_BY_ROUTE: Record<string, Record<string, string>> = { "/user/[id]": { id: "user-1" } };
+const PARAMS_BY_ROUTE: Record<string, Record<string, string>> = {
+	"/user/[id]": { id: "user-1" },
+	"/chat/user/[id]": { id: "user-2" }
+};
 
 /** Pages that are expected to fail (playgrounds etc.). */
 const SKIP = new Set<string>(["/test"]);
