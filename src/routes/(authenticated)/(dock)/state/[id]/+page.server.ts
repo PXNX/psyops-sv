@@ -1086,7 +1086,16 @@ export const actions: Actions = {
 				await tx
 					.update(residenceApplications)
 					.set({ status: "approved", reviewedAt: new Date(), reviewedBy: account.id })
-					.where(and(eq(residenceApplications.userId, account.id), eq(residenceApplications.status, "pending")));
+					.where(
+						and(
+							eq(residenceApplications.userId, account.id),
+							eq(residenceApplications.status, "pending"),
+							inArray(
+								residenceApplications.regionId,
+								tx.select({ id: regions.id }).from(regions).where(eq(regions.stateId, stateId))
+							)
+						)
+					);
 			});
 			return { success: true, message: "As president, you are now a citizen of this state." };
 		}
