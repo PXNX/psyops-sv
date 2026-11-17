@@ -135,3 +135,28 @@ Don't nest `panel` in `panel` — use `panel-muted` for the inner level.
 - Make whole cards/rows links instead of adding "View" buttons.
 - Mobile-first; test at 375px. Tap targets ≥ 40px.
 - `BottomSheet` for action menus and short confirmations, `Modal` for longer content.
+
+---
+
+## Feedback, confirmation and titles
+
+- **Toasts, never `alert()`**: `toast.success / error / info / warning` from `#lib/ui/toast.svelte.js`. In a `use:enhance` callback, `toastResult(result)` shows the action's `message` / `error`.
+- **Confirm sheets, never `confirm()`**: `use:confirmSubmit={{ title, body?, confirmLabel?, danger? }}` on a `<form>` (before `use:enhance`), or `await confirmAction({...})` in code.
+- **Refresh data, never reload**: after a change, `invalidateAll()` (or `update()` inside `use:enhance`), not `location.reload()`.
+- **Tab titles**: `PageHeader` sets `"<title> · PsyOps"`. Pages without a `PageHeader` add `<svelte:head><title>… · PsyOps</title></svelte:head>`; pages with their own title pass `documentTitle={false}`.
+- **Tap targets**: shared buttons carry `tap-target`, which gives anything smaller a 40px hit area on touch screens. Hand-made clickable elements can add the class too.
+
+## Motion
+
+Quick, springy, and always off under `prefers-reduced-motion`.
+
+| Need                    | Use                                                               |
+| ----------------------- | ----------------------------------------------------------------- |
+| Page sections arriving  | automatic: `PageContainer` cascades its children (`rise-stagger`) |
+| A single block arriving | `animate-rise-in` (lift) or `animate-pop-in` (scale overshoot)    |
+| Pressable surface       | `press-spring` (already on buttons and `panel-interactive`)       |
+| Quiet idle artwork      | `animate-idle-float`                                              |
+| Dialogs / sheets        | `Modal` and `BottomSheet` animate themselves                      |
+| Celebration             | `burst()` from `#lib/utils/confetti.js` + `feedback("win")`       |
+
+Entrance animations are skipped while a page-swap view transition is running (`#lib/utils/motion.ts`), so they never get frozen into its snapshot. Use `fill-mode: backwards` for new entrance keyframes so the final frame can't override hover/press transforms.
