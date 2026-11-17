@@ -1,868 +1,531 @@
-<!-- /src/routes/(authenticated)/(dock)/battle/[id]/+page.svelte -->
+<!-- src/routes/(authenticated)/(dock)/battle/[id]/+page.svelte -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
-	import { MILITARY_UNIT_TEMPLATES } from "#lib/config/index.js";
-	import { formatDate, formatDateTime, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { invalidateAll } from "$app/navigation";
 	import { onMount } from "svelte";
-	import { Chart, Svg, Tooltip } from "layerchart";
-	import { scaleLinear } from "d3-scale";
-	import { Area, Axis, Highlight, RectClipPath } from "layerchart";
+	import { fly } from "svelte/transition";
+	import { flip } from "svelte/animate";
 	import * as m from "#lib/paraglide/messages.js";
-	import Logo from "#lib/component/Logo.svelte";
-	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
+	import { formatDateTime, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { burst } from "#lib/utils/confetti.js";
+	import { feedback } from "#lib/utils/feedback.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Button, Badge } from "#lib/component/ui/index.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import { Badge, Button } from "#lib/component/ui/index.js";
+	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
+	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
+	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
+	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
+	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 
 	const { data } = $props();
 
-	let isJoining = $state(false);
-	let isExecuting = $state(false);
-	let showBattleAnim = $state(false);
-	let selectedUnitIds = $state<Set<number>>(new Set());
-	let currentTime = $state(new Date());
-	let countdownInterval: ReturnType<typeof setInterval> | null = null;
+	type Side = "attacker" | "defender";
+	const SIDE = {
+		attacker: { label: "Attackers", text: "text-red-300", bar: "bg-red-500", soft: "bg-red-600/10 border-red-500/30" },
+		defender: {
+			label: "Defenders",
+			text: "text-[#b3dcff]",
+			bar: "bg-[#5eaef5]",
+			soft: "bg-[#2369b5]/18 border-[#5eaef5]/30"
+		}
+	} as const;
 
-	// Browser-only setup and teardown. (onDestroy also runs during server
-	// rendering, where `document` doesn't exist, so the cleanup lives here.)
+	const regionName = $derived(getRegionName(data.battle.regionId));
+	const unitName = (type: string) => (m as unknown as Record<string, (() => string) | undefined>)[type]?.() ?? type;
+
+	// ── Clock ──────────────────────────────────────────────────────────────
+	let now = $state(Date.now());
 	onMount(() => {
-		countdownInterval = setInterval(() => {
-			currentTime = new Date();
-		}, 1000);
-		return () => {
-			if (countdownInterval) clearInterval(countdownInterval);
-			if (shakeTimeout) clearTimeout(shakeTimeout);
-			document.documentElement.classList.remove("screen-shake");
-		};
+		const t = setInterval(() => (now = Date.now()), 1000);
+		return () => clearInterval(t);
+	});
+	const countdownTarget = $derived(
+		data.battle.phase === "ended" ? null : data.battle.phase === "active" ? data.nextRoundAt : data.preparationEndsAt
+	);
+	const remaining = $derived(countdownTarget ? Math.max(0, new Date(countdownTarget).getTime() - now) : 0);
+	const clock = $derived.by(() => {
+		const s = Math.floor(remaining / 1000);
+		const h = Math.floor(s / 3600);
+		const pad = (n: number) => String(n).padStart(2, "0");
+		return `${h > 0 ? `${h}:` : ""}${pad(Math.floor((s % 3600) / 60))}:${pad(s % 60)}`;
+	});
+	// When a round or the preparation is due, pick up the new state.
+	let refreshedFor = 0;
+	$effect(() => {
+		const target = countdownTarget ? new Date(countdownTarget).getTime() : 0;
+		if (target && remaining === 0 && refreshedFor !== target) {
+			refreshedFor = target;
+			setTimeout(() => invalidateAll(), 15_000); // the hourly job takes a moment
+		}
 	});
 
-	let shakeTimeout: ReturnType<typeof setTimeout> | null = null;
+	// ── Status ─────────────────────────────────────────────────────────────
+	const winner = $derived<Side | null>(
+		data.battle.status === "attacker_won" ? "attacker" : data.battle.status === "defender_won" ? "defender" : null
+	);
+	const status = $derived(
+		winner
+			? {
+					label: `${winner === "attacker" ? data.attacker.name : data.defender.name} won`,
+					tone: winner === "attacker" ? ("red" as const) : ("blue" as const)
+				}
+			: data.battle.phase === "active"
+				? { label: "Fighting", tone: "red" as const }
+				: { label: "Preparing", tone: "amber" as const }
+	);
 
-	function triggerScreenShake() {
+	// Share of the remaining strength on the field: 50 is an even fight.
+	const momentum = $derived.by(() => {
+		const total = data.attacker.strength + data.defender.strength;
+		return total === 0 ? 50 : Math.round((data.attacker.strength / total) * 100);
+	});
+
+	// Celebrate once if one of your units fought on the winning side.
+	onMount(() => {
+		if (!winner) return;
+		const fought = (winner === "attacker" ? data.attacker : data.defender).units.some((u) => u.isMine);
+		const key = `psyops:battle-cheered:${data.battle.id}`;
+		try {
+			if (!fought || sessionStorage.getItem(key)) return;
+			sessionStorage.setItem(key, "1");
+		} catch {
+			if (!fought) return;
+		}
+		burst();
+		feedback("win");
+	});
+
+	// ── Deploying ──────────────────────────────────────────────────────────
+	let selected = $state<Set<number>>(new Set());
+	let deploying = $state(false);
+	const toggle = (id: number) => {
+		const next = new Set(selected);
+		if (next.has(id)) next.delete(id);
+		else next.add(id);
+		selected = next;
+	};
+	const allSelected = $derived(data.me.deployable.length > 0 && selected.size === data.me.deployable.length);
+
+	// ── Rounds chart ─────────────────────────────────────────────────────────
+	const chartRounds = $derived([...data.rounds].reverse().slice(-24));
+	const chartMax = $derived(Math.max(1, ...chartRounds.flatMap((r) => [r.attackerDamage, r.defenderDamage])));
+	let showAllRounds = $state(false);
+
+	let fighting = $state(false);
+	function shake() {
 		const root = document.documentElement;
-		// Restart the animation even if a shake is already mid-flight.
 		root.classList.remove("screen-shake");
 		void root.offsetWidth;
 		root.classList.add("screen-shake");
-		if (shakeTimeout) clearTimeout(shakeTimeout);
-		shakeTimeout = setTimeout(() => root.classList.remove("screen-shake"), 500);
+		setTimeout(() => root.classList.remove("screen-shake"), 500);
 	}
-
-	function getUnitIconPath(unitType: string): string {
-		return `/units/${unitType}.svg`;
-	}
-
-	function getRegionCoatPath(regionId: number): string {
-		return regionCoatUrl(regionId);
-	}
-
-	function toggleUnitSelection(unitId: number) {
-		const newSet = new Set(selectedUnitIds);
-		if (newSet.has(unitId)) {
-			newSet.delete(unitId);
-		} else {
-			newSet.add(unitId);
-		}
-		selectedUnitIds = newSet;
-	}
-
-	interface TimeRemaining {
-		hours: number;
-		minutes: number;
-		seconds: number;
-		total: number;
-		isOver: boolean;
-	}
-
-	function getTimeRemaining(endsAt: string | Date): TimeRemaining {
-		const now = currentTime.getTime();
-		const end = new Date(endsAt).getTime();
-		const diff = end - now;
-
-		if (diff <= 0) {
-			return { hours: 0, minutes: 0, seconds: 0, total: 0, isOver: true };
-		}
-
-		const hours = Math.floor(diff / (1000 * 60 * 60));
-		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-		const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-		return { hours, minutes, seconds, total: diff, isOver: false };
-	}
-
-	const timeRemaining = $derived(getTimeRemaining(data.preparationEndsAt));
-
-	const chartData = $derived(() => {
-		if (data.battle.rounds.length === 0) return [];
-		const rounds = [...data.battle.rounds].reverse();
-		return rounds.map((round) => ({
-			round: round.roundNumber,
-			attackerDamage: round.attackerTotalDamage,
-			defenderDamage: round.defenderTotalDamage,
-			time: new Date(round.roundedAt)
-		}));
-	});
-
-	// A zero-damage battle must still render: an empty [0, 0] y-domain
-	// collapses the scale and leaves the chart blank.
-	const chartYMax = $derived.by(() => {
-		const peak = chartData().reduce((max, d) => Math.max(max, d.attackerDamage, d.defenderDamage), 0);
-		return Math.max(1, peak * 1.1);
-	});
-
-	// Calculate battle momentum (0-100, 50 is neutral)
-	const battleMomentum = $derived(() => {
-		const totalAttackerDamage = data.attackerStats.totalDamageDealt;
-		const totalDefenderDamage = data.defenderStats.totalDamageDealt;
-		const totalDamage = totalAttackerDamage + totalDefenderDamage;
-
-		if (totalDamage === 0) return 50; // Neutral
-
-		// Calculate percentage (0-100 scale where 50 is neutral)
-		// Higher values = attacker winning, lower = defender winning
-		const ratio = totalAttackerDamage / totalDamage;
-		return Math.round(ratio * 100);
-	});
-
-	const attackerUnits = $derived(
-		data.battle.participants
-			.filter((p) => p.side === "attacker" && p.currentStrength > 0)
-			.sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime())
-	);
-
-	const defenderUnits = $derived(
-		data.battle.participants
-			.filter((p) => p.side === "defender" && p.currentStrength > 0)
-			.sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime())
-	);
-
-	const myUnits = $derived(data.userParticipants.filter((p) => p.currentStrength > 0));
-
-	const otherAttackerUnits = $derived(attackerUnits.filter((p) => !data.userParticipants.some((up) => up.id === p.id)));
-
-	const otherDefenderUnits = $derived(defenderUnits.filter((p) => !data.userParticipants.some((up) => up.id === p.id)));
-
-	// Get user side indicator color
-	const userSideColor = $derived(() => {
-		if (!data.userSide) return "slate";
-		return data.userSide === "attacker" ? "red" : "blue";
-	});
 </script>
 
 <svelte:head>
-	<title>{`Battle of ${getRegionName(data.battle.regionId)} · PsyOps`}</title>
+	<title>{`Battle of ${regionName} · PsyOps`}</title>
 </svelte:head>
 
-{#snippet unitBars(health: number, organization: number, supply: number | null, orgLabel: string)}
-	<div class="space-y-2">
-		<!-- Health -->
-		<div>
-			<div class="flex items-center justify-between text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">
-				<span>HEALTH</span>
-				<span
-					class="font-medium text-xs {health < 30 ? 'text-red-400' : health < 60 ? 'text-[#ffd35c]' : 'text-[#b3dcff]'}"
-					>{health}%</span
-				>
-			</div>
-			<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
-				<div
-					class="h-full rounded-full transition-all duration-500 {health < 30
-						? 'bg-red-500 animate-pulse'
-						: health < 60
-							? 'bg-[#f2b01e]'
-							: 'bg-[#5eaef5]'}"
-					style="width: {health}%"
-				></div>
-			</div>
-		</div>
-
-		<!-- Organization -->
-		<div>
-			<div class="flex items-center justify-between text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">
-				<span>{orgLabel}</span>
-				<span
-					class="font-medium text-xs {organization < 30
-						? 'text-red-400'
-						: organization < 60
-							? 'text-[#ffd35c]'
-							: 'text-[#b9f29a]'}">{organization}%</span
-				>
-			</div>
-			<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
-				<div
-					class="h-full rounded-full transition-all duration-500 {organization < 30
-						? 'bg-red-500 animate-pulse'
-						: organization < 60
-							? 'bg-[#f2b01e]'
-							: 'bg-[#6fd14a]'}"
-					style="width: {organization}%"
-				></div>
-			</div>
-		</div>
-
-		{#if supply !== null}
-			<!-- Supply -->
-			<div>
-				<div class="flex items-center justify-between text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">
-					<span>SUPPLY</span>
-					<span class="text-[#ffd35c] font-medium text-xs">{supply}%</span>
-				</div>
-				<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
-					<div class="h-full rounded-full transition-all duration-500 bg-[#f2b01e]" style="width: {supply}%"></div>
-				</div>
-			</div>
-		{/if}
+{#snippet bar(value: number, max: number, tone: string)}
+	{@const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0}
+	<div class="h-1.5 w-full overflow-hidden rounded-full bg-[#0f120c]">
+		<div class="h-full rounded-full transition-[width] duration-700 ease-out {tone}" style:width="{pct}%"></div>
 	</div>
 {/snippet}
 
-{#snippet unitIcon(unitType: string)}
-	<div
-		class="size-10 sm:size-12 shrink-0 flex items-center justify-center bg-[#0f120c] rounded-sm border border-[#c8b47a]/20 p-1.5 sm:p-2"
+{#snippet unitIcon(type: string, size = "size-9")}
+	<div class="{size} shrink-0 rounded-sm border border-[#c8b47a]/20 bg-[#0f120c] p-1.5">
+		<img src="/units/{type}.svg" alt="" class="h-full w-full object-contain opacity-80 invert" />
+	</div>
+{/snippet}
+
+{#snippet sideHeader(side: Side, s: typeof data.attacker)}
+	<a
+		href="/state/{s.id}"
+		class="group flex min-w-0 items-center gap-3 {side === 'defender' ? 'flex-row-reverse text-right' : ''}"
 	>
-		<img
-			loading="lazy"
-			decoding="async"
-			src={getUnitIconPath(unitType)}
-			alt={unitType}
-			class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
+		<Logo
+			src={s.logo}
+			alt={s.name}
+			class="size-11 shrink-0 rounded-sm"
+			placeholderIcon={FluentBuildingGovernment20Filled}
+			placeholderGradient={side === "attacker" ? "from-red-700 to-red-900" : "from-[#2369b5] to-[#1d4f88]"}
 		/>
+		<div class="min-w-0">
+			<p class="text-[10px] font-semibold uppercase tracking-wide {SIDE[side].text}">{SIDE[side].label}</p>
+			<p class="line-clamp-2 leading-tight font-bold text-[#f5efd8] transition-colors group-hover:text-[#ffcf47]">
+				{s.name}
+			</p>
+		</div>
+	</a>
+{/snippet}
+
+{#snippet sideStats(side: Side, s: typeof data.attacker)}
+	<div class="space-y-3">
+		<p class="text-[10px] font-semibold uppercase tracking-wide sm:hidden {SIDE[side].text}">{SIDE[side].label}</p>
+		<div>
+			<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-[#a8a083]">
+				<span>Strength</span><span class="font-mono text-[#e6ddbf]">{s.strength} / {s.maxStrength}</span>
+			</div>
+			{@render bar(s.strength, s.maxStrength, SIDE[side].bar)}
+		</div>
+		<div>
+			<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-[#a8a083]">
+				<span>Frontage used</span><span class="font-mono text-[#e6ddbf]">{s.usedWidth} / {s.maxWidth}</span>
+			</div>
+			{@render bar(s.usedWidth, s.maxWidth, "bg-[#f2b01e]")}
+		</div>
+		<div class="grid grid-cols-3 gap-2 text-center">
+			<div class="panel-muted rounded-sm p-2">
+				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Standing</p>
+				<p class="font-bold text-[#f5efd8]">{s.standing}</p>
+			</div>
+			<div class="panel-muted rounded-sm p-2">
+				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Lost</p>
+				<p class="font-bold {s.destroyed ? 'text-red-300' : 'text-[#f5efd8]'}">{s.destroyed}</p>
+			</div>
+			<div class="panel-muted rounded-sm p-2">
+				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Dealt</p>
+				<p class="font-mono font-bold text-[#f5efd8]">{s.damageDealt}</p>
+			</div>
+		</div>
 	</div>
 {/snippet}
 
-{#snippet atkDef(attack: number, defense: number)}
-	<span class="text-xs text-red-300 font-mono">⚔️ {attack}</span>
-	<span class="text-xs text-[#b3dcff] font-mono">🛡️ {defense}</span>
+{#snippet forceList(side: Side, s: typeof data.attacker)}
+	<section class="panel rounded-sm p-4 space-y-3">
+		<h2 class="section-title {SIDE[side].text}">
+			{SIDE[side].label}
+			<span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#a8a083]"
+				>{s.units.length} unit{s.units.length === 1 ? "" : "s"}</span
+			>
+		</h2>
+		{#if s.units.length === 0}
+			<p class="py-6 text-center text-sm text-[#a8a083]">No units deployed yet.</p>
+		{:else}
+			<ul class="space-y-2">
+				{#each s.units as u (u.id)}
+					<li
+						animate:flip={{ duration: 250 }}
+						class="flex items-center gap-3 rounded-sm border p-2.5 {u.isMine
+							? 'border-[#f2b01e]/45 bg-[#f2b01e]/8'
+							: 'border-[#c8b47a]/10 bg-[#14180f]/80'} {u.destroyed ? 'opacity-45' : ''}"
+					>
+						{@render unitIcon(u.unitType)}
+						<div class="min-w-0 flex-1 space-y-1.5">
+							<div class="flex items-center gap-2">
+								<p class="truncate text-sm font-semibold text-[#f5efd8]">{u.name}</p>
+								{#if u.destroyed}
+									<Badge tone="red" size="xs">Destroyed</Badge>
+								{:else if u.isEngaged}
+									<Badge tone="amber" size="xs">Front line</Badge>
+								{:else}
+									<Badge size="xs">Reserve</Badge>
+								{/if}
+							</div>
+							<p class="truncate text-[11px] text-[#a8a083]">
+								{unitName(u.unitType)} ·
+								{#if u.isMine}<span class="text-[#ffd35c]">yours</span>{:else}<a
+										href="/user/{u.ownerId}"
+										class="hover:text-[#ffcf47]">{u.ownerName}</a
+									>{/if}
+								· ⚔ {u.attack} 🛡 {u.defense}
+							</p>
+							{#if !u.destroyed}
+								<div class="grid grid-cols-2 gap-2">
+									{@render bar(u.strength, u.maxStrength, SIDE[side].bar)}
+									{@render bar(u.organization, 100, "bg-[#6fd14a]")}
+								</div>
+							{/if}
+						</div>
+						<div class="shrink-0 text-right font-mono text-[11px] text-[#a8a083]">
+							<p class="text-[#f5efd8]">{u.strength}</p>
+							<p>↯ {u.damageDealt}</p>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
 {/snippet}
 
 <PageContainer maxWidth="5xl">
-	<!-- Command Hero -->
+	<!-- Header -->
 	<div class="panel rounded-sm p-5">
-		<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-			<div class="flex items-center gap-3 sm:gap-5 w-full sm:w-auto">
-				<!-- Region Emblem -->
-				<a
-					href="/region/{data.battle.regionId}"
-					class="size-16 sm:size-20 shrink-0 panel-muted rounded-sm p-2 flex items-center justify-center hover:border-[#f2b01e]/55 transition-colors"
-				>
-					<Logo
-						src={getRegionCoatPath(data.battle.regionId)}
-						alt={getRegionName(data.battle.regionId)}
-						class="w-full h-full object-contain opacity-80"
-					/>
-				</a>
-
-				<div class="flex-1 min-w-0">
-					<div class="flex flex-wrap items-center gap-2 mb-1">
-						<h1 class="text-2xl sm:text-3xl font-bold">
-							<a
-								href="/region/{data.battle.regionId}"
-								class="transition-colors hover:text-[#ffcf47]"
-								class:text-[#f5efd8]={!data.userSide}
-								class:text-red-300={data.userSide === "attacker"}
-								class:text-[#b3dcff]={data.userSide === "defender"}
-							>
-								{#if data.userSide === "attacker"}
-									Assault of
-								{:else if data.userSide === "defender"}
-									Defense of
-								{/if}
-								{getRegionName(data.battle.regionId)}
-							</a>
-						</h1>
-						{#if data.battle.phase === "ended"}
-							{#if data.battle.status === "attacker_won"}
-								<Badge tone="red" size="md" class="whitespace-nowrap font-bold">VICTORY - ATTACKER</Badge>
-							{:else if data.battle.status === "defender_won"}
-								<Badge tone="blue" size="md" class="whitespace-nowrap font-bold">VICTORY - DEFENDER</Badge>
-							{/if}
-						{/if}
-					</div>
-					<div class="flex flex-wrap items-center gap-2 sm:gap-4 text-xs sm:text-sm text-[#a8a083]">
-						<span class="uppercase">{data.battle.terrain}</span>
-						<span class="text-[#a8a083]/50 hidden sm:inline">|</span>
-						<span class="hidden sm:inline">{formatDateTime(data.battle.startedAt)}</span>
-					</div>
+		<div class="flex items-start gap-4">
+			<a href="/region/{data.battle.regionId}" class="shrink-0">
+				<img src={regionCoatUrl(data.battle.regionId)} alt={regionName} class="size-16 object-contain sm:size-20" />
+			</a>
+			<div class="min-w-0 flex-1 space-y-1.5">
+				<div class="flex flex-wrap items-center gap-2">
+					<h1 class="text-2xl font-bold text-[#f5efd8] sm:text-3xl">Battle of {regionName}</h1>
+					<Badge tone={status.tone} size="md">{status.label}</Badge>
 				</div>
+				<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#a8a083]">
+					<span class="flex items-center gap-1"
+						><FluentLocation20Filled class="size-3.5" /> <span class="capitalize">{data.battle.terrain}</span></span
+					>
+					<span>Started {formatDateTime(data.battle.startedAt)}</span>
+					{#if data.battle.endedAt}<span>Ended {formatDateTime(data.battle.endedAt)}</span>{/if}
+					<a href="/war/{data.battle.warId}" class="flex items-center gap-1 text-[#e6ddbf] hover:text-[#ffcf47]">
+						Part of war <FluentArrowRight20Filled class="size-3" />
+					</a>
+				</p>
 			</div>
 		</div>
 
-		<!-- Mission Timer -->
-		{#if data.battle.phase === "preparation"}
-			<div class="mt-5 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-3 sm:p-4">
-				<div class="flex items-center justify-between mb-2 sm:mb-3">
-					<div class="text-[#b3dcff] text-xs sm:text-sm font-medium uppercase tracking-wide">Time Until Combat</div>
-				</div>
-				<div class="flex items-center justify-center gap-2 sm:gap-3">
-					<div class="text-center">
-						<div
-							class="text-2xl sm:text-4xl font-mono font-bold text-[#b3dcff] bg-[#0f120c]/90 rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#5eaef5]/20"
-						>
-							{String(timeRemaining.hours).padStart(2, "0")}
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1 sm:mt-1.5">HRS</div>
-					</div>
-					<div class="text-xl sm:text-2xl font-bold text-[#5eaef5]/50">:</div>
-					<div class="text-center">
-						<div
-							class="text-2xl sm:text-4xl font-mono font-bold text-[#b3dcff] bg-[#0f120c]/90 rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#5eaef5]/20"
-						>
-							{String(timeRemaining.minutes).padStart(2, "0")}
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1 sm:mt-1.5">MIN</div>
-					</div>
-					<div class="text-xl sm:text-2xl font-bold text-[#5eaef5]/50">:</div>
-					<div class="text-center">
-						<div
-							class="text-2xl sm:text-4xl font-mono font-bold text-[#b3dcff] bg-[#0f120c]/90 rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#5eaef5]/20"
-						>
-							{String(timeRemaining.seconds).padStart(2, "0")}
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1 sm:mt-1.5">SEC</div>
-					</div>
-				</div>
+		{#if countdownTarget}
+			<div
+				class="mt-4 flex items-center justify-between gap-3 rounded-sm border px-4 py-3 {data.battle.phase === 'active'
+					? SIDE.attacker.soft
+					: 'border-[#f2b01e]/35 bg-[#f2b01e]/12'}"
+			>
+				<span class="flex items-center gap-2 text-sm text-[#e6ddbf]">
+					<FluentClock20Filled class="size-4 {data.battle.phase === 'active' ? 'text-red-400' : 'text-[#ffd35c]'}" />
+					{data.battle.phase === "active" ? "Next round" : "Fighting starts"}
+					<span class="hidden text-[#a8a083] sm:inline">· rounds are fought every hour</span>
+				</span>
+				<span class="font-mono text-xl font-bold text-[#f5efd8] tabular-nums">{remaining > 0 ? clock : "now"}</span>
 			</div>
 		{/if}
 	</div>
 
-	<!-- Battle Progress Bar -->
-	<div class="panel rounded-sm p-5">
-		<div class="flex items-center justify-between mb-4">
-			<div class="flex items-center gap-2 sm:gap-3">
-				<a href="/state/{data.battle.attackerState.id}" class="flex items-center gap-2 group">
-					{#if data.attackerStateLogo}
-						<Logo
-							src={data.attackerStateLogo}
-							alt={data.battle.attackerState.name}
-							class="size-8 sm:size-10 rounded-sm"
-						/>
-					{/if}
-					<span class="text-sm sm:text-base font-bold text-red-300 group-hover:text-red-200 transition-colors"
-						>{data.battle.attackerState.name}</span
-					>
-				</a>
-			</div>
-			<div class="text-[10px] sm:text-xs text-[#a8a083] uppercase tracking-wide">BATTLE MOMENTUM</div>
-			<div class="flex items-center gap-2 sm:gap-3">
-				<a href="/state/{data.battle.defenderState.id}" class="flex items-center gap-2 group">
-					<span class="text-sm sm:text-base font-bold text-[#b3dcff] group-hover:text-[#e3f2ff] transition-colors"
-						>{data.battle.defenderState.name}</span
-					>
-					{#if data.defenderStateLogo}
-						<Logo
-							src={data.defenderStateLogo}
-							alt={data.battle.defenderState.name}
-							class="size-8 sm:size-10 rounded-sm"
-						/>
-					{/if}
-				</a>
-			</div>
+	<!-- Battle line -->
+	<section class="panel rounded-sm p-5 space-y-5">
+		<div class="flex items-center justify-between gap-4">
+			{@render sideHeader("attacker", data.attacker)}
+			<span class="shrink-0 text-xs font-bold text-[#a8a083]">VS</span>
+			{@render sideHeader("defender", data.defender)}
 		</div>
 
-		<!-- Horizontal Progress Bar -->
-		<div class="relative h-12 sm:h-16 bg-[#0f120c]/90 rounded-sm border border-[#c8b47a]/15 overflow-hidden">
-			<!-- Defender territory (left side) -->
-			<div
-				class="absolute left-0 top-0 bottom-0 bg-[#5eaef5] transition-all duration-1000"
-				style="width: {100 - battleMomentum()}%"
-			></div>
-
-			<!-- Attacker territory (right side) -->
-			<div
-				class="absolute right-0 top-0 bottom-0 bg-red-500 transition-all duration-1000"
-				style="width: {battleMomentum()}%"
-			></div>
-
-			<!-- Center line -->
-			<div class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-[#c8b47a]/30 transform -translate-x-1/2"></div>
-
-			<!-- Battle icon at momentum point -->
-			<div
-				class="absolute top-1/2 transform -translate-y-1/2 transition-all duration-1000 z-10"
-				style="left: {battleMomentum()}%"
-			>
-				<div class="relative transform -translate-x-1/2">
-					<div class="text-2xl sm:text-3xl">⚔️</div>
-				</div>
-			</div>
-
-			<!-- Damage stats -->
-			<div class="absolute inset-0 flex items-center justify-between px-4 sm:px-6 pointer-events-none">
-				<div class="text-[#f5efd8] font-bold text-xs sm:text-sm font-mono drop-shadow-lg">
-					{data.defenderStats.totalDamageDealt} DMG
-				</div>
-				<div class="text-[#f5efd8] font-bold text-xs sm:text-sm font-mono drop-shadow-lg">
-					{data.attackerStats.totalDamageDealt} DMG
-				</div>
-			</div>
-		</div>
-
-		<div class="mt-3 sm:mt-4 grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
-			<div class="text-center">
-				<div class="text-[10px] sm:text-xs text-red-300 uppercase tracking-wide mb-1">Attacker Pressure</div>
-				<div class="text-[#f5efd8] font-bold text-lg sm:text-xl">{battleMomentum()}%</div>
-			</div>
-			<div class="text-center">
-				<div class="text-[10px] sm:text-xs text-[#b3dcff] uppercase tracking-wide mb-1">Defender Resistance</div>
-				<div class="text-[#f5efd8] font-bold text-lg sm:text-xl">{100 - battleMomentum()}%</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Fortifications Info -->
-	{#if data.fortificationBonus > 0}
-		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
-			<div class="flex items-center gap-3">
-				<div class="text-3xl sm:text-4xl">🏰</div>
-				<div class="flex-1">
-					<div class="flex flex-wrap items-center gap-2 mb-1">
-						<span class="text-[#b3dcff] font-bold text-sm sm:text-base"
-							>Fortification Level {data.fortificationBonus}</span
-						>
-						<Badge tone="blue" class="font-mono">
-							-{Math.min(50, data.fortificationBonus * 2)}% DEFENDER DMG
-						</Badge>
-					</div>
-					<div class="text-xs sm:text-sm text-[#b3dcff]/70">
-						Defensive structures reduce incoming damage by {Math.min(50, data.fortificationBonus * 2)}%
-					</div>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Unit Deployment Section -->
-	{#if data.userSide}
-		<div class="panel rounded-sm p-5">
-			<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-				<h2 class="section-title">Deploy Forces</h2>
+		<!-- Momentum: share of the strength still on the field -->
+		<div>
+			<div class="relative h-4 overflow-hidden rounded-full bg-[#0f120c]">
 				<div
-					class="px-3 py-1 border rounded-sm text-xs sm:text-sm w-fit {data.userSide === 'attacker'
-						? 'bg-red-600/10 border-red-500/30'
-						: 'bg-[#2369b5]/18 border-[#5eaef5]/30'}"
-				>
-					<span class="text-[#a8a083]">FIGHTING AS:</span>
-					<span class="ml-2 font-bold uppercase {data.userSide === 'attacker' ? 'text-red-300' : 'text-[#b3dcff]'}"
-						>{data.userSide}</span
+					class="absolute inset-y-0 left-0 bg-red-500 transition-[width] duration-1000 ease-out"
+					style:width="{momentum}%"
+				></div>
+				<div
+					class="absolute inset-y-0 right-0 bg-[#5eaef5] transition-[width] duration-1000 ease-out"
+					style:width="{100 - momentum}%"
+				></div>
+				<div class="absolute inset-y-0 left-1/2 w-px bg-[#f5efd8]/40"></div>
+			</div>
+			<div class="mt-1.5 flex justify-between text-xs">
+				<span class="font-mono text-red-300">{momentum}%</span>
+				<span class="text-[10px] uppercase tracking-wide text-[#a8a083]">Strength on the field</span>
+				<span class="font-mono text-[#b3dcff]">{100 - momentum}%</span>
+			</div>
+		</div>
+
+		<div class="grid gap-5 sm:grid-cols-2">
+			{@render sideStats("attacker", data.attacker)}
+			<div class="space-y-3">
+				{@render sideStats("defender", data.defender)}
+				{#if data.battle.fortification > 0}
+					<p
+						class="flex items-center gap-2 rounded-sm border border-[#5eaef5]/30 bg-[#2369b5]/18 px-3 py-2 text-xs text-[#b3dcff]"
 					>
-				</div>
+						<FluentShield20Filled class="size-4 shrink-0" />
+						Fortified (level {data.battle.fortification}): defenders take {data.battle.fortificationReduction}% less
+						damage
+					</p>
+				{/if}
+			</div>
+		</div>
+	</section>
+
+	<!-- Your forces -->
+	{#if data.battle.phase !== "ended"}
+		<section class="panel rounded-sm p-5 space-y-4">
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<h2 class="section-title">Your Forces</h2>
+				{#if data.me.side}
+					<span class="rounded-sm border px-2.5 py-1 text-xs {SIDE[data.me.side].soft}">
+						Fighting as <strong class={SIDE[data.me.side].text}>{data.me.side}</strong>
+					</span>
+				{/if}
 			</div>
 
-			{#if data.canJoin && data.userUnits.length > 0}
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
-					{#each data.userUnits as unit}
-						{@const template = MILITARY_UNIT_TEMPLATES[unit.unitType]}
+			{#if !data.me.side}
+				<p class="text-sm text-[#d3caa9]">{data.me.reason}</p>
+				<Button href="/region/{data.battle.regionId}" variant="secondary" size="sm" icon={FluentLocation20Filled}
+					>Go to {regionName}</Button
+				>
+			{:else if data.me.deployable.length === 0}
+				<p class="text-sm text-[#d3caa9]">
+					You have no units ready to send in. They must be
+					{data.me.side === "defender" ? `in ${regionName}` : "in your current region"}, finished training and not on
+					exercise.
+				</p>
+				<Button href="/training" variant="secondary" size="sm">Train units</Button>
+			{:else}
+				<div class="flex items-center justify-between text-xs text-[#a8a083]">
+					<span>Choose units to send into the battle.</span>
+					<button
+						type="button"
+						class="text-[#e6ddbf] hover:text-[#ffcf47]"
+						onclick={() => (selected = allSelected ? new Set() : new Set(data.me.deployable.map((u) => u.id)))}
+					>
+						{allSelected ? "Clear" : "Select all"}
+					</button>
+				</div>
+				<div class="grid gap-2 sm:grid-cols-2">
+					{#each data.me.deployable as u (u.id)}
+						{@const on = selected.has(u.id)}
 						<button
 							type="button"
-							onclick={() => toggleUnitSelection(unit.id)}
-							class="relative group text-left rounded-sm border p-3 sm:p-4 transition-colors duration-200 {selectedUnitIds.has(
-								unit.id
-							)
-								? 'bg-[#3f8a2a]/18 border-[#6fd14a]/55'
-								: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55 hover:bg-[#2e3524]'}"
+							class="press-spring flex items-center gap-3 rounded-sm border p-3 text-left {on
+								? 'border-[#6fd14a]/60 bg-[#3f8a2a]/18'
+								: 'border-[#c8b47a]/15 bg-[#1a1f15]/70 hover:border-[#f2b01e]/55'}"
+							aria-pressed={on}
+							onclick={() => toggle(u.id)}
 						>
-							{#if selectedUnitIds.has(unit.id)}
-								<div class="absolute top-2 right-2">
-									<div class="w-5 h-5 bg-[#6fd14a] rounded-full flex items-center justify-center">
-										<svg class="w-3 h-3 text-[#12150f]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-										</svg>
-									</div>
-								</div>
-							{/if}
-
-							<div class="flex items-center gap-2 sm:gap-3 mb-3">
-								{@render unitIcon(unit.unitType)}
-								<div class="flex-1 min-w-0">
-									<div class="text-xs text-[#a8a083] mb-0.5">{m[unit.unitType]()}</div>
-									<div class="text-sm sm:text-base font-bold text-[#f5efd8] truncate">{unit.name}</div>
-									<div class="flex items-center gap-2 mt-1">
-										{@render atkDef(template.baseAttack, template.baseDefense)}
-									</div>
+							{@render unitIcon(u.unitType, "size-10")}
+							<div class="min-w-0 flex-1 space-y-1">
+								<p class="truncate text-sm font-semibold text-[#f5efd8]">{u.name}</p>
+								<p class="text-[11px] text-[#a8a083]">
+									{unitName(u.unitType)} · ⚔ {u.attack} 🛡 {u.defense} · {u.experience} XP
+								</p>
+								<div class="grid grid-cols-2 gap-2">
+									{@render bar(u.health, 100, "bg-[#5eaef5]")}
+									{@render bar(u.organization, 100, "bg-[#6fd14a]")}
 								</div>
 							</div>
-
-							{@render unitBars(unit.health, unit.organization, unit.supplyLevel, "ORGANIZATION")}
+							<span
+								class="grid size-5 shrink-0 place-items-center rounded-full border {on
+									? 'border-[#6fd14a] bg-[#6fd14a] text-[#12150f]'
+									: 'border-[#c8b47a]/40'}"
+							>
+								{#if on}✓{/if}
+							</span>
 						</button>
 					{/each}
 				</div>
-
-				{#if selectedUnitIds.size > 0}
-					<form
-						method="POST"
-						action="?/assignUnits"
-						use:enhance={() => {
-							isJoining = true;
-							return async ({ update }) => {
-								await update();
-								isJoining = false;
-								selectedUnitIds = new Set();
-							};
-						}}
-					>
-						{#each Array.from(selectedUnitIds) as unitId}
-							<input type="hidden" name="unitIds" value={unitId} />
-						{/each}
-						<Button type="submit" variant="primary" size="lg" block disabled={isJoining}>
-							{isJoining
-								? "⚡ Deploying..."
-								: `⚡ Deploy ${selectedUnitIds.size} Unit${selectedUnitIds.size > 1 ? "s" : ""}`}
-						</Button>
-					</form>
-				{:else}
-					<div class="text-center py-6 sm:py-8 text-[#a8a083] text-sm">← Select units to deploy</div>
-				{/if}
-			{:else if data.userUnits.length === 0}
-				<div class="text-center py-8 sm:py-12 panel-muted rounded-sm">
-					<div class="text-4xl sm:text-6xl mb-4 opacity-30">🚫</div>
-					<p class="text-base sm:text-lg text-[#e6ddbf] font-semibold mb-2">No eligible units</p>
-					<p class="text-xs sm:text-sm text-[#a8a083]">
-						{#if data.userSide === "defender"}
-							Units must be in Region #{data.battle.regionId}
-						{:else}
-							Units must be in Region #{data.userResidenceRegionId}
-						{/if}
-					</p>
-				</div>
-			{/if}
-		</div>
-	{:else}
-		<div class="panel-muted rounded-sm p-8 sm:p-12 text-center">
-			<div class="text-4xl sm:text-6xl mb-4 opacity-20">⛔</div>
-			<p class="text-lg sm:text-xl text-[#e6ddbf] font-semibold mb-2">Cannot Deploy</p>
-			<p class="text-xs sm:text-sm text-[#a8a083]">{data.canJoinReason || "Unknown reason"}</p>
-		</div>
-	{/if}
-
-	<!-- Combat Execution -->
-	{#if data.battle.phase === "active"}
-		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
-			<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4">
-				<div>
-					<h2 class="text-lg font-semibold text-red-300 mb-1">Execute Combat Round</h2>
-					<p class="text-xs sm:text-sm text-red-300/70">Simulate next round of combat</p>
-				</div>
-				<div class="text-3xl sm:text-5xl opacity-20">⚔️</div>
-			</div>
-			<form
-				method="POST"
-				action="?/executeCombatRound"
-				use:enhance={() => {
-					isExecuting = true;
-					return async ({ update, result }) => {
-						await update();
-						isExecuting = false;
-						if (result.type === "success") {
-							showBattleAnim = true;
-							triggerScreenShake();
-						}
-					};
-				}}
-			>
-				<Button type="submit" variant="danger" size="lg" block disabled={isExecuting}>
-					{isExecuting ? "⚔️ Executing..." : "⚔️ Execute Round"}
-				</Button>
-			</form>
-		</div>
-	{/if}
-
-	<!-- My Engaged Units -->
-	{#if myUnits.length > 0}
-		<div class="panel rounded-sm p-5 space-y-4">
-			<div class="flex items-center justify-between">
-				<h2
-					class="flex items-center gap-2 text-lg font-semibold {data.userSide === 'attacker'
-						? 'text-red-300'
-						: data.userSide === 'defender'
-							? 'text-[#b3dcff]'
-							: 'text-[#f5efd8]'}"
+				<form
+					method="POST"
+					action="?/deploy"
+					use:enhance={() => {
+						deploying = true;
+						return async ({ result, update }) => {
+							await update();
+							deploying = false;
+							toastResult(result);
+							if (result.type === "success") selected = new Set();
+						};
+					}}
 				>
-					Your Units in Battle
-				</h2>
-				<Badge
-					tone={data.userSide === "attacker" ? "red" : data.userSide === "defender" ? "blue" : "neutral"}
-					class="font-mono"
+					{#each [...selected] as id (id)}<input type="hidden" name="unitIds" value={id} />{/each}
+					<Button
+						type="submit"
+						block
+						icon={FluentFlash20Filled}
+						disabled={selected.size === 0}
+						loading={deploying}
+						loadingText="Deploying..."
+					>
+						{selected.size
+							? `Send ${selected.size} unit${selected.size === 1 ? "" : "s"} into battle`
+							: "Select units to deploy"}
+					</Button>
+				</form>
+			{/if}
+
+			{#if data.me.isAdmin && data.battle.phase === "active"}
+				<form
+					method="POST"
+					action="?/fightRound"
+					class="border-t border-[#c8b47a]/10 pt-3"
+					use:enhance={() => {
+						fighting = true;
+						return async ({ result, update }) => {
+							await update();
+							fighting = false;
+							toastResult(result);
+							if (result.type === "success") shake();
+						};
+					}}
 				>
-					{myUnits.length} UNIT{myUnits.length > 1 ? "S" : ""}
-				</Badge>
-			</div>
-			<div class="space-y-2 sm:space-y-3">
-				{#each myUnits as participant}
-					{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
-					{@const isAttacker = participant.side === "attacker"}
-					<div
-						class="relative overflow-hidden border rounded-sm p-3 sm:p-4 {participant.isEngaged
-							? isAttacker
-								? 'bg-red-600/10 border-red-500/30'
-								: 'bg-[#2369b5]/18 border-[#5eaef5]/30'
-							: 'bg-[#1a1f15]/70 border-[#c8b47a]/10'}"
-					>
-						{#if participant.isEngaged}
-							<div class="absolute top-2 right-2">
-								<Badge tone={isAttacker ? "red" : "blue"} class="font-bold">⚔️ ENGAGED</Badge>
-							</div>
-						{/if}
-
-						<div class="flex items-center gap-2 sm:gap-3 mb-3">
-							{@render unitIcon(participant.unit.unitType)}
-							<div class="flex-1 min-w-0">
-								<div class="text-xs text-[#a8a083] mb-0.5">{m[participant.unit.unitType]()}</div>
-								<div class="font-bold text-[#f5efd8] text-sm sm:text-base truncate">{participant.unit.name}</div>
-								<div class="flex items-center gap-2 mt-1">
-									{@render atkDef(template.baseAttack, template.baseDefense)}
-								</div>
-							</div>
-						</div>
-
-						{@render unitBars(
-							participant.currentStrength,
-							participant.currentOrganization,
-							participant.unit.supplyLevel,
-							"ORGANIZATION"
-						)}
-					</div>
-				{/each}
-			</div>
-		</div>
+					<Button type="submit" variant="soft-red" size="sm" loading={fighting}>Fight a round now (admin)</Button>
+				</form>
+			{/if}
+		</section>
 	{/if}
 
-	<!-- Other Players' Units -->
-	{#if otherAttackerUnits.length > 0 || otherDefenderUnits.length > 0}
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-			<!-- Other Attackers -->
-			{#if otherAttackerUnits.length > 0}
-				<div class="panel rounded-sm p-5 space-y-4">
-					<div class="flex items-center justify-between">
-						<h2 class="flex items-center gap-2 text-lg font-semibold text-red-300">Attackers</h2>
-						<Badge tone="red" class="font-mono">{otherAttackerUnits.length} UNITS</Badge>
-					</div>
-					<div class="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
-						{#each otherAttackerUnits as participant}
-							{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
+	<!-- Both armies -->
+	<div class="grid gap-4 lg:grid-cols-2">
+		{@render forceList("attacker", data.attacker)}
+		{@render forceList("defender", data.defender)}
+	</div>
+
+	<!-- Course of the battle -->
+	<section class="panel rounded-sm p-5 space-y-4">
+		<h2 class="section-title">Course of the Battle</h2>
+		{#if data.rounds.length === 0}
+			<p class="py-6 text-center text-sm text-[#a8a083]">
+				{data.battle.phase === "ended" ? "The battle ended without a fight." : "No rounds fought yet."}
+			</p>
+		{:else}
+			<!-- Damage per round: attackers above, defenders below the line -->
+			<div class="flex h-36 items-stretch gap-1" role="img" aria-label="Damage dealt per round">
+				{#each chartRounds as r (r.number)}
+					<div class="group relative flex flex-1 flex-col justify-center" in:fly={{ y: 8, duration: 300 }}>
+						<div class="flex flex-1 items-end">
 							<div
-								class="relative overflow-hidden border rounded-sm p-3 sm:p-4 {participant.isEngaged
-									? 'bg-red-600/10 border-red-500/30'
-									: 'bg-[#1a1f15]/70 border-[#c8b47a]/10'}"
-							>
-								{#if participant.isEngaged}
-									<div class="absolute top-2 right-2">
-										<Badge tone="red" class="font-bold">⚔️ ENGAGED</Badge>
-									</div>
-								{/if}
-
-								<div class="flex items-center gap-2 sm:gap-3 mb-3">
-									{@render unitIcon(participant.unit.unitType)}
-									<div class="flex-1 min-w-0">
-										<div class="text-xs text-[#a8a083] mb-0.5">{m[participant.unit.unitType]()}</div>
-										<div class="font-bold text-[#f5efd8] text-sm sm:text-base truncate">{participant.unit.name}</div>
-										<div class="text-xs text-[#a8a083]">{participant.unit.owner.profile?.name || "Unknown"}</div>
-										<div class="flex items-center gap-2 mt-0.5">
-											{@render atkDef(template.baseAttack, template.baseDefense)}
-										</div>
-									</div>
-								</div>
-
-								{@render unitBars(participant.currentStrength, participant.currentOrganization, null, "ORG")}
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			<!-- Other Defenders -->
-			{#if otherDefenderUnits.length > 0}
-				<div class="panel rounded-sm p-5 space-y-4">
-					<div class="flex items-center justify-between">
-						<h2 class="flex items-center gap-2 text-lg font-semibold text-[#b3dcff]">Defenders</h2>
-						<Badge tone="blue" class="font-mono">{otherDefenderUnits.length} UNITS</Badge>
-					</div>
-					<div class="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
-						{#each otherDefenderUnits as participant}
-							{@const template = MILITARY_UNIT_TEMPLATES[participant.unit.unitType]}
+								class="w-full rounded-t-sm bg-red-500/80"
+								style:height="{(r.attackerDamage / chartMax) * 100}%"
+							></div>
+						</div>
+						<div class="h-px bg-[#c8b47a]/30"></div>
+						<div class="flex flex-1 items-start">
 							<div
-								class="relative overflow-hidden border rounded-sm p-3 sm:p-4 {participant.isEngaged
-									? 'bg-[#2369b5]/18 border-[#5eaef5]/30'
-									: 'bg-[#1a1f15]/70 border-[#c8b47a]/10'}"
-							>
-								{#if participant.isEngaged}
-									<div class="absolute top-2 right-2">
-										<Badge tone="blue" class="font-bold">⚔️ ENGAGED</Badge>
-									</div>
-								{/if}
-
-								<div class="flex items-center gap-2 sm:gap-3 mb-3">
-									{@render unitIcon(participant.unit.unitType)}
-									<div class="flex-1 min-w-0">
-										<div class="text-xs text-[#a8a083] mb-0.5">{m[participant.unit.unitType]()}</div>
-										<div class="font-bold text-[#f5efd8] text-sm sm:text-base truncate">{participant.unit.name}</div>
-										<div class="text-xs text-[#a8a083]">{participant.unit.owner.profile?.name || "Unknown"}</div>
-										<div class="flex items-center gap-2 mt-0.5">
-											{@render atkDef(template.baseAttack, template.baseDefense)}
-										</div>
-									</div>
-								</div>
-
-								{@render unitBars(participant.currentStrength, participant.currentOrganization, null, "ORG")}
-							</div>
-						{/each}
-					</div>
-				</div>
-			{/if}
-		</div>
-	{/if}
-
-	<!-- Combat Log -->
-	{#if data.battle.rounds.length > 0}
-		<div class="panel rounded-sm p-5 space-y-4">
-			<h2 class="section-title">Combat Log</h2>
-			<div class="space-y-2 sm:space-y-3 max-h-96 overflow-y-auto">
-				{#each data.battle.rounds as round, i}
-					<div
-						class="panel-muted rounded-sm p-3 sm:p-4 {i === 0 && data.battle.phase === 'active'
-							? 'border-[#f2b01e]/50 shadow-[0_0_14px_rgba(242,176,30,0.15)]'
-							: ''}"
-					>
-						<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-0 mb-3">
-							<div class="flex items-center gap-2 sm:gap-3">
-								<div class="px-2 py-1 bg-[#0f120c] border border-[#c8b47a]/20 rounded-sm">
-									<span class="text-[#a8a083] text-[10px] uppercase tracking-wide">ROUND</span>
-									<span class="text-[#f5efd8] font-bold font-mono text-sm ml-2">{round.roundNumber}</span>
-								</div>
-								{#if i === 0 && data.battle.phase === "active"}
-									<Badge tone="amber">LATEST</Badge>
-								{/if}
-							</div>
-							<span class="text-xs text-[#a8a083]">{formatDateTime(round.roundedAt)}</span>
+								class="w-full rounded-b-sm bg-[#5eaef5]/80"
+								style:height="{(r.defenderDamage / chartMax) * 100}%"
+							></div>
 						</div>
-						<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
-							<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-2 sm:p-3">
-								<div class="text-red-300/80 text-[10px] mb-1 uppercase tracking-wide">Attackers</div>
-								<div class="text-[#a8a083]">
-									<span class="text-[#f5efd8] font-bold">{round.attackerUnitsEngaged}</span> units dealt
-									<span class="text-red-300 font-bold">{round.attackerTotalDamage}</span> damage
-								</div>
-							</div>
-							<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-2 sm:p-3">
-								<div class="text-[#b3dcff]/80 text-[10px] mb-1 uppercase tracking-wide">Defenders</div>
-								<div class="text-[#a8a083]">
-									<span class="text-[#f5efd8] font-bold">{round.defenderUnitsEngaged}</span> units dealt
-									<span class="text-[#b3dcff] font-bold">{round.defenderTotalDamage}</span> damage
-								</div>
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
-
-		<!-- Battle Statistics Chart -->
-		<div class="panel rounded-sm p-5 space-y-4">
-			<h2 class="section-title">Damage Analysis</h2>
-			<div>
-				{#if chartData().length > 0}
-					<div class="h-64 sm:h-96 w-full">
-						<Chart
-							data={chartData()}
-							x="round"
-							xScale={scaleLinear()}
-							y={[0, chartYMax]}
-							yScale={scaleLinear()}
-							padding={{ left: 40, bottom: 30, top: 20, right: 20 }}
+						<div
+							class="pointer-events-none absolute -top-1 left-1/2 z-10 hidden -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-sm border border-[#c8b47a]/30 bg-[#12150f] px-2 py-1 text-[10px] text-[#e6ddbf] group-hover:block"
 						>
-							<Svg>
-								<RectClipPath x="round" y={[0, null]} spring />
-								<Axis
-									placement="left"
-									grid={{ style: "stroke: rgb(223, 206, 176); stroke-opacity: 0.1;" }}
-									rule={{ style: "stroke: rgb(223, 206, 176); stroke-opacity: 0.3;" }}
-									label={{ style: "fill: rgb(168, 158, 142); font-family: monospace; font-size: 10px;" }}
-								/>
-								<Axis
-									placement="bottom"
-									rule={{ style: "stroke: rgb(223, 206, 176); stroke-opacity: 0.3;" }}
-									label={{ style: "fill: rgb(168, 158, 142); font-family: monospace; font-size: 10px;" }}
-								/>
-
-								<Area y="attackerDamage" line={{ class: "stroke-red-500 stroke-2" }} fill="url(#attackerGradient)" />
-								<Area y="defenderDamage" line={{ class: "stroke-[#5eaef5] stroke-2" }} fill="url(#defenderGradient)" />
-
-								<defs>
-									<linearGradient id="attackerGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-										<stop offset="0%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.3" />
-										<stop offset="100%" style="stop-color:rgb(239, 68, 68);stop-opacity:0.05" />
-									</linearGradient>
-									<linearGradient id="defenderGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-										<stop offset="0%" style="stop-color:rgb(123, 160, 200);stop-opacity:0.3" />
-										<stop offset="100%" style="stop-color:rgb(123, 160, 200);stop-opacity:0.05" />
-									</linearGradient>
-								</defs>
-
-								<Highlight points lines />
-							</Svg>
-							<Tooltip.Root let:data>
-								<Tooltip.Header>
-									Round {data.round}
-								</Tooltip.Header>
-								<Tooltip.List>
-									<Tooltip.Item
-										label="Attacker"
-										value={data.attackerDamage}
-										valueClass="text-red-300 font-bold font-mono"
-									/>
-									<Tooltip.Item
-										label="Defender"
-										value={data.defenderDamage}
-										valueClass="text-[#b3dcff] font-bold font-mono"
-									/>
-								</Tooltip.List>
-							</Tooltip.Root>
-						</Chart>
-					</div>
-
-					<div class="flex items-center justify-center gap-4 sm:gap-8 mt-4 sm:mt-6">
-						<div class="flex items-center gap-2">
-							<div class="w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full"></div>
-							<span class="text-xs sm:text-sm text-[#a8a083]">Attacker</span>
-						</div>
-						<div class="flex items-center gap-2">
-							<div class="w-3 h-3 sm:w-4 sm:h-4 bg-[#5eaef5] rounded-full"></div>
-							<span class="text-xs sm:text-sm text-[#a8a083]">Defender</span>
+							Round {r.number}: <span class="text-red-300">{r.attackerDamage}</span> /
+							<span class="text-[#b3dcff]">{r.defenderDamage}</span>
 						</div>
 					</div>
-				{:else}
-					<div class="text-center py-8 sm:py-12 text-[#a8a083] text-sm">No combat data yet</div>
-				{/if}
+				{/each}
 			</div>
-		</div>
-	{/if}
+			<div class="flex justify-between text-[10px] text-[#a8a083]">
+				<span><span class="text-red-300">■</span> Attackers' damage</span>
+				<span><span class="text-[#b3dcff]">■</span> Defenders' damage</span>
+			</div>
+
+			<ul class="divide-y divide-[#c8b47a]/10">
+				{#each showAllRounds ? data.rounds : data.rounds.slice(0, 6) as r (r.number)}
+					<li class="flex items-center justify-between gap-3 py-2 text-sm">
+						<span class="font-mono text-[#a8a083]">#{r.number}</span>
+						<span class="flex-1 text-[#d3caa9]">
+							<span class="text-red-300">{r.attackerDamage}</span> dealt by {r.attackersEngaged} attacker{r.attackersEngaged ===
+							1
+								? ""
+								: "s"},
+							<span class="text-[#b3dcff]">{r.defenderDamage}</span> by {r.defendersEngaged} defender{r.defendersEngaged ===
+							1
+								? ""
+								: "s"}
+						</span>
+						<span class="hidden text-xs text-[#a8a083] sm:inline">{formatDateTime(r.at)}</span>
+					</li>
+				{/each}
+			</ul>
+			{#if data.rounds.length > 6}
+				<button
+					type="button"
+					class="text-xs text-[#e6ddbf] hover:text-[#ffcf47]"
+					onclick={() => (showAllRounds = !showAllRounds)}
+				>
+					{showAllRounds ? "Show fewer rounds" : `Show all ${data.rounds.length} rounds`}
+				</button>
+			{/if}
+		{/if}
+	</section>
 </PageContainer>
-
-{#if showBattleAnim}
-	<ThreeAnimation variant="battle" onComplete={() => (showBattleAnim = false)} />
-{/if}
-
-<style>
-	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.5;
-		}
-	}
-
-	.animate-pulse {
-		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
-
-	@keyframes ping {
-		75%,
-		100% {
-			transform: scale(2);
-			opacity: 0;
-		}
-	}
-
-	.animate-ping {
-		animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
-	}
-</style>

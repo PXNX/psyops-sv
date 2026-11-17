@@ -1,620 +1,262 @@
 // src/routes/(authenticated)/(dock)/battle/[id]/+page.server.ts
-import { db } from "#lib/server/db.js";
-import {
-	battles,
-	battleParticipants,
-	battleRounds,
-	militaryUnits,
-	wars,
-	regions,
-	states,
-	residences,
-	regionBorders
-} from "#lib/server/schema.js";
-import { eq, desc, and, sql, count, asc, or } from "drizzle-orm";
-import type { PageServerLoad, Actions } from "./$types";
+// Battle overview: both sides' forces, the course of the fight and, for
+// players who can fight here, deploying units. Combat itself runs hourly in
+// the battle job (services/military/battle-engine.ts).
 import { error, fail } from "@sveltejs/kit";
-import {
-	MILITARY_UNIT_TEMPLATES,
-	getExperienceCombatModifier,
-	calculateCombatExperienceLoss
-} from "#lib/config/index.js";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import type { Actions, PageServerLoad } from "./$types";
+import { db } from "#lib/server/db.js";
+import { battleParticipants, battleRounds, battles, militaryUnits } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import { MILITARY_UNIT_TEMPLATES } from "#lib/config/index.js";
+import {
+	PREPARATION_HOURS,
+	TERRAIN_DATA,
+	battleSide,
+	fortificationReduction,
+	processCombatRound,
+	type Terrain
+} from "#lib/server/services/military/battle-engine.js";
 
-// Terrain combat modifiers
-const TERRAIN_DATA = {
-	plains: { combatWidth: 90 },
-	forest: { combatWidth: 84 },
-	hills: { combatWidth: 80 },
-	mountain: { combatWidth: 75 },
-	urban: { combatWidth: 96 },
-	desert: { combatWidth: 90 },
-	jungle: { combatWidth: 84 }
-};
+/** A unit can be sent into battle if it is trained, rested and still has men. */
+const isDeployable = (u: typeof militaryUnits.$inferSelect) =>
+	!u.isTraining && !u.isExercising && u.health > 0 && u.organization > 5;
 
-const PREPARATION_HOURS = 24;
+const HOUR = 60 * 60 * 1000;
 
-// Select units that fit in combat width, prioritizing earliest joined
-function selectEngagedUnits(participants: any[], maxWidth: number): any[] {
-	// Filter to units with health > 0
-	const available = participants.filter((p) => p.currentStrength > 0);
+export const load: PageServerLoad = async ({ params, locals }) => {
+	const account = locals.account!;
+	const battleId = Number(params.id);
+	if (!Number.isInteger(battleId)) error(400, "Invalid battle ID");
 
-	// Sort by join time (earliest first)
-	available.sort((a, b) => new Date(a.joinedAt).getTime() - new Date(b.joinedAt).getTime());
-
-	const engaged: any[] = [];
-	let usedWidth = 0;
-
-	for (const unit of available) {
-		console.log("unit: ", unit);
-		const unitWidth = MILITARY_UNIT_TEMPLATES[unit.unit.unitType].combatWidth!;
-		if (usedWidth + unitWidth <= maxWidth) {
-			engaged.push(unit);
-			usedWidth += unitWidth;
-		}
-	}
-
-	return engaged;
-}
-
-// Process a combat round - simplified damage dealing
-async function processCombatRound(battleId: number) {
 	const battle = await db.query.battles.findFirst({
 		where: eq(battles.id, battleId),
 		with: {
 			region: true,
-			participants: {
-				with: { unit: true },
-				orderBy: asc(battleParticipants.joinedAt) // Earliest first
-			}
-		}
-	});
-
-	if (!battle) return null;
-
-	const terrainData = TERRAIN_DATA[battle.terrain as keyof typeof TERRAIN_DATA];
-
-	// Separate sides
-	const attackerUnits = battle.participants.filter((p) => p.side === "attacker");
-	const defenderUnits = battle.participants.filter((p) => p.side === "defender");
-
-	// Select engaged units (prioritizes earliest joined)
-	const engagedAttackers = selectEngagedUnits(attackerUnits, terrainData.combatWidth);
-	const engagedDefenders = selectEngagedUnits(defenderUnits, terrainData.combatWidth);
-
-	// Update engagement status
-	await db.update(battleParticipants).set({ isEngaged: false }).where(eq(battleParticipants.battleId, battleId));
-
-	for (const unit of [...engagedAttackers, ...engagedDefenders]) {
-		await db.update(battleParticipants).set({ isEngaged: true }).where(eq(battleParticipants.id, unit.id));
-	}
-
-	// Get round number
-	const existingRounds = await db
-		.select({ count: count() })
-		.from(battleRounds)
-		.where(eq(battleRounds.battleId, battleId));
-	const roundNumber = (existingRounds[0]?.count || 0) + 1;
-
-	// Calculate total damage for each side
-	let attackerTotalDamage = 0;
-	let defenderTotalDamage = 0;
-
-	// Attackers deal damage based on their attack stat, scaled by unit experience
-	for (const attacker of engagedAttackers) {
-		const unitTemplate = MILITARY_UNIT_TEMPLATES[attacker.unit.unitType];
-		const experienceModifier = getExperienceCombatModifier(attacker.unit.experience ?? 0);
-		const damage = Math.floor((unitTemplate.baseAttack || 0) * experienceModifier);
-		attackerTotalDamage += damage;
-	}
-
-	// Defenders deal damage based on their defense stat, scaled by unit experience
-	for (const defender of engagedDefenders) {
-		const unitTemplate = MILITARY_UNIT_TEMPLATES[defender.unit.unitType];
-		const experienceModifier = getExperienceCombatModifier(defender.unit.experience ?? 0);
-		const damage = Math.floor((unitTemplate.baseDefense || 0) * experienceModifier);
-		defenderTotalDamage += damage;
-	}
-
-	// Apply fortification reduction to defender damage taken
-	const fortificationLevel = battle.region.fortifications || 0;
-	const fortificationReduction = Math.min(50, fortificationLevel * 2); // Max 50% reduction
-	const defenderDamageReduction = 1 - fortificationReduction / 100;
-
-	const adjustedAttackerDamage = Math.floor(attackerTotalDamage * defenderDamageReduction);
-
-	// Create round record
-	const [round] = await db
-		.insert(battleRounds)
-		.values({
-			battleId,
-			roundNumber,
-			battlePhase: battle.phase,
-			attackerUnitsEngaged: engagedAttackers.length,
-			defenderUnitsEngaged: engagedDefenders.length,
-			attackerTotalDamage: adjustedAttackerDamage,
-			defenderTotalDamage: defenderTotalDamage,
-			attackerOrgLoss: 0,
-			defenderOrgLoss: 0,
-			attackerPlanningBonus: 0,
-			defenderPlanningBonus: fortificationLevel
-		})
-		.returning();
-
-	// Distribute damage to engaged units sequentially (hit earliest first)
-
-	// Damage to attackers
-	let remainingDefenderDamage = defenderTotalDamage;
-	for (const attacker of engagedAttackers) {
-		if (remainingDefenderDamage <= 0) break;
-
-		const damageTaken = Math.min(remainingDefenderDamage, attacker.currentStrength);
-		remainingDefenderDamage -= damageTaken;
-
-		const newStrength = Math.max(0, attacker.currentStrength - damageTaken);
-		const newOrg = Math.max(0, attacker.currentOrganization - Math.floor(damageTaken / 2)); // Org loss is half damage
-
-		// Casualties dilute the unit's experience (veterans lost, green replacements)
-		const attackerExp = attacker.unit.experience ?? 0;
-		const newExperience = Math.max(0, attackerExp - calculateCombatExperienceLoss(attackerExp, damageTaken));
-
-		await db
-			.update(battleParticipants)
-			.set({
-				currentStrength: newStrength,
-				currentOrganization: newOrg,
-				damageTaken: sql`${battleParticipants.damageTaken} + ${damageTaken}`,
-				destroyedAt: newStrength === 0 ? new Date() : undefined
-			})
-			.where(eq(battleParticipants.id, attacker.id));
-
-		// Update military unit health, organization and experience
-		await db
-			.update(militaryUnits)
-			.set({
-				health: newStrength,
-				organization: newOrg,
-				experience: newExperience
-			})
-			.where(eq(militaryUnits.id, attacker.unitId));
-	}
-
-	// Damage to defenders (reduced by fortifications)
-	let remainingAttackerDamage = adjustedAttackerDamage;
-	for (const defender of engagedDefenders) {
-		if (remainingAttackerDamage <= 0) break;
-
-		const damageTaken = Math.min(remainingAttackerDamage, defender.currentStrength);
-		remainingAttackerDamage -= damageTaken;
-
-		const newStrength = Math.max(0, defender.currentStrength - damageTaken);
-		const newOrg = Math.max(0, defender.currentOrganization - Math.floor(damageTaken / 2));
-
-		// Casualties dilute the unit's experience (veterans lost, green replacements)
-		const defenderExp = defender.unit.experience ?? 0;
-		const newExperience = Math.max(0, defenderExp - calculateCombatExperienceLoss(defenderExp, damageTaken));
-
-		await db
-			.update(battleParticipants)
-			.set({
-				currentStrength: newStrength,
-				currentOrganization: newOrg,
-				damageTaken: sql`${battleParticipants.damageTaken} + ${damageTaken}`,
-				destroyedAt: newStrength === 0 ? new Date() : undefined
-			})
-			.where(eq(battleParticipants.id, defender.id));
-
-		// Update military unit health, organization and experience
-		await db
-			.update(militaryUnits)
-			.set({
-				health: newStrength,
-				organization: newOrg,
-				experience: newExperience
-			})
-			.where(eq(militaryUnits.id, defender.unitId));
-	}
-
-	// Check victory conditions
-	const remainingAttackers = await db
-		.select({ count: count() })
-		.from(battleParticipants)
-		.where(
-			and(
-				eq(battleParticipants.battleId, battleId),
-				eq(battleParticipants.side, "attacker"),
-				sql`${battleParticipants.currentStrength} > 0`
-			)
-		);
-
-	const remainingDefenders = await db
-		.select({ count: count() })
-		.from(battleParticipants)
-		.where(
-			and(
-				eq(battleParticipants.battleId, battleId),
-				eq(battleParticipants.side, "defender"),
-				sql`${battleParticipants.currentStrength} > 0`
-			)
-		);
-
-	if (remainingAttackers[0].count === 0) {
-		await db
-			.update(battles)
-			.set({ status: "defender_won", phase: "ended", endedAt: new Date() })
-			.where(eq(battles.id, battleId));
-	} else if (remainingDefenders[0].count === 0) {
-		// Attacker wins - transfer region
-		await db.update(regions).set({ stateId: battle.attackerStateId }).where(eq(regions.id, battle.regionId));
-		await db
-			.update(battles)
-			.set({ status: "attacker_won", phase: "ended", endedAt: new Date() })
-			.where(eq(battles.id, battleId));
-	}
-
-	return round;
-}
-
-export const load: PageServerLoad = async ({ params, locals }) => {
-	const account = locals.account!;
-	const battleId = parseInt(params.id);
-
-	if (isNaN(battleId)) {
-		throw error(400, "Invalid battle ID");
-	}
-
-	const battle = await db.query.battles.findFirst({
-		where: eq(battles.id, battleId),
-		with: {
-			war: {
-				with: {
-					attacker: true,
-					defender: true
-				}
-			},
-			region: {
-				with: {
-					state: true
-				}
-			},
 			attackerState: true,
 			defenderState: true,
-			starter: {
-				with: {
-					profile: true
-				}
-			},
 			participants: {
-				with: {
-					unit: {
-						with: {
-							owner: {
-								with: {
-									profile: true
-								}
-							}
-						}
-					}
-				},
-				orderBy: asc(battleParticipants.joinedAt) // Show earliest first
+				with: { unit: { with: { owner: { with: { profile: true } } } } },
+				orderBy: asc(battleParticipants.joinedAt)
 			},
-			rounds: {
-				orderBy: desc(battleRounds.roundNumber),
-				limit: 20
-			}
+			rounds: { orderBy: desc(battleRounds.roundNumber), limit: 48 }
 		}
 	});
+	if (!battle) error(404, "Battle not found");
 
-	if (!battle) {
-		throw error(404, "Battle not found");
-	}
+	const preparationEndsAt = new Date(battle.startedAt.getTime() + PREPARATION_HOURS * HOUR);
+	// Rounds are fought on the hour by the battle job.
+	const now = Date.now();
+	const nextRoundAt =
+		battle.phase === "ended"
+			? null
+			: new Date(
+					Math.max(
+						Math.ceil(now / HOUR) * HOUR,
+						battle.phase === "active" ? 0 : Math.ceil(preparationEndsAt.getTime() / HOUR) * HOUR
+					)
+				);
 
-	// Check if preparation phase is over
-	const preparationEndsAt = new Date(battle.startedAt);
-	preparationEndsAt.setHours(preparationEndsAt.getHours() + PREPARATION_HOURS);
-	const isPreparationOver = new Date() >= preparationEndsAt;
-	const shouldActivate = battle.phase === "preparation" && isPreparationOver;
-
-	// Independent lookups run in parallel: state logos, phase transition, residence, units already in battle
-	const [attackerStateLogo, defenderStateLogo, , userResidence, unitsInBattle] = await Promise.all([
-		battle.attackerState.logo ? getLogoUrl(battle.attackerState.logo) : null,
-		battle.defenderState.logo ? getLogoUrl(battle.defenderState.logo) : null,
-		// Auto-transition to active phase if preparation is over
-		shouldActivate ? db.update(battles).set({ phase: "active" }).where(eq(battles.id, battleId)) : null,
-		db.query.residences.findFirst({
-			where: eq(residences.userId, account.id),
-			with: {
-				region: {
-					with: {
-						state: true
-					}
-				}
-			}
-		}),
-		// Get units already in this battle
-		db
-			.select({ unitId: battleParticipants.unitId })
-			.from(battleParticipants)
-			.where(eq(battleParticipants.battleId, battleId))
+	const [attackerLogo, defenderLogo, eligibility] = await Promise.all([
+		getLogoUrl(battle.attackerState.logo),
+		getLogoUrl(battle.defenderState.logo),
+		battle.phase === "ended"
+			? Promise.resolve({ side: null, reason: "This battle is over.", deployFromRegionId: null })
+			: battleSide(db, account.id, battle)
 	]);
 
-	if (shouldActivate) {
-		battle.phase = "active";
-	}
+	const width = TERRAIN_DATA[battle.terrain as Terrain]?.combatWidth ?? TERRAIN_DATA.plains.combatWidth;
 
-	// Determine user side based on region location
-	let userSide: "attacker" | "defender" | null = null;
-	let canJoinReason: string | null = null;
-
-	if (!userResidence) {
-		canJoinReason = "No residence found";
-	} else {
-		// Check if user can defend (residence is in battle region)
-		if (userResidence.regionId === battle.regionId) {
-			// User is in the battle region
-			if (userResidence.region.stateId === battle.defenderStateId) {
-				userSide = "defender";
-			} else {
-				canJoinReason = "You are in the battle region but not a citizen of the defending state";
-			}
-		} else {
-			// Check if user can attack (residence borders battle region)
-			const borderingRegion = await db.query.regionBorders.findFirst({
-				where: or(
-					and(eq(regionBorders.regionId, userResidence.regionId), eq(regionBorders.neighborId, battle.regionId)),
-					and(eq(regionBorders.regionId, battle.regionId), eq(regionBorders.neighborId, userResidence.regionId))
-				)
+	const forces = (side: "attacker" | "defender") => {
+		const units = battle.participants
+			.filter((p) => p.side === side)
+			.map((p) => {
+				const template = MILITARY_UNIT_TEMPLATES[p.unit.unitType];
+				return {
+					id: p.id,
+					name: p.unit.name,
+					unitType: p.unit.unitType,
+					ownerId: p.unit.ownerId,
+					ownerName: p.unit.owner?.profile?.name ?? "Unknown",
+					isMine: p.unit.ownerId === account.id,
+					strength: p.currentStrength,
+					maxStrength: p.maxStrength,
+					organization: p.currentOrganization,
+					damageDealt: p.damageDealt,
+					damageTaken: p.damageTaken,
+					isEngaged: p.isEngaged && p.currentStrength > 0,
+					destroyed: p.currentStrength <= 0,
+					attack: template?.baseAttack ?? 0,
+					defense: template?.baseDefense ?? 0,
+					combatWidth: template?.combatWidth ?? 1
+				};
 			});
+		const standing = units.filter((u) => !u.destroyed);
+		return {
+			units,
+			strength: standing.reduce((s, u) => s + u.strength, 0),
+			maxStrength: units.reduce((s, u) => s + u.maxStrength, 0),
+			usedWidth: units.filter((u) => u.isEngaged).reduce((s, u) => s + u.combatWidth, 0),
+			maxWidth: width,
+			damageDealt: units.reduce((s, u) => s + u.damageDealt, 0),
+			standing: standing.length,
+			destroyed: units.length - standing.length
+		};
+	};
 
-			if (borderingRegion) {
-				// User's region borders the battle region
-				if (userResidence.region.stateId === battle.attackerStateId) {
-					userSide = "attacker";
-				} else {
-					canJoinReason = "Your region borders the battle but you are not a citizen of the attacking state";
-				}
-			} else {
-				canJoinReason = "Your region does not border the battle region";
-			}
-		}
-	}
-
-	// Get all user units in the correct region
-	const relevantRegionId = userSide === "defender" ? battle.regionId : userResidence?.regionId;
-
-	let allUserUnitsInRegion: any[] = [];
-	if (relevantRegionId) {
-		allUserUnitsInRegion = await db.query.militaryUnits.findMany({
-			where: and(eq(militaryUnits.ownerId, account.id), eq(militaryUnits.regionId, relevantRegionId))
+	// Units the player could still send in, from the region they'd fight from.
+	let deployable: {
+		id: number;
+		name: string;
+		unitType: string;
+		health: number;
+		organization: number;
+		experience: number;
+		attack: number;
+		defense: number;
+	}[] = [];
+	if (eligibility.side && eligibility.deployFromRegionId) {
+		const inBattle = new Set(battle.participants.map((p) => p.unitId));
+		const units = await db.query.militaryUnits.findMany({
+			where: and(eq(militaryUnits.ownerId, account.id), eq(militaryUnits.regionId, eligibility.deployFromRegionId))
 		});
-	}
-
-	const unitsInBattleIds = new Set(unitsInBattle.map((u) => u.unitId));
-
-	// Filter to available units
-	const userUnits = allUserUnitsInRegion.filter(
-		(unit) =>
-			!unitsInBattleIds.has(unit.id) &&
-			!unit.isTraining &&
-			!unit.isExercising &&
-			unit.health &&
-			unit.health > 0 &&
-			unit.organization &&
-			unit.organization > 5
-	);
-
-	const terrainData = TERRAIN_DATA[battle.terrain as keyof typeof TERRAIN_DATA];
-
-	const attackerParticipants = battle.participants.filter((p) => p.side === "attacker");
-	const defenderParticipants = battle.participants.filter((p) => p.side === "defender");
-
-	const engagedAttackers = attackerParticipants.filter((p) => p.isEngaged);
-	const engagedDefenders = defenderParticipants.filter((p) => p.isEngaged);
-
-	const attackerStats = {
-		totalUnits: attackerParticipants.length,
-		activeUnits: attackerParticipants.filter((p) => p.currentStrength > 0).length,
-		engagedUnits: engagedAttackers.length,
-		combatWidth: engagedAttackers.reduce((sum, p) => sum + MILITARY_UNIT_TEMPLATES[p.unit.unitType].combatWidth, 0),
-		maxCombatWidth: terrainData.combatWidth,
-		totalDamageDealt: attackerParticipants.reduce((sum, p) => sum + p.damageDealt, 0),
-		totalDamageTaken: attackerParticipants.reduce((sum, p) => sum + p.damageTaken, 0),
-		destroyedUnits: attackerParticipants.filter((p) => p.currentStrength === 0).length
-	};
-
-	const defenderStats = {
-		totalUnits: defenderParticipants.length,
-		activeUnits: defenderParticipants.filter((p) => p.currentStrength > 0).length,
-		engagedUnits: engagedDefenders.length,
-		combatWidth: engagedDefenders.reduce((sum, p) => sum + MILITARY_UNIT_TEMPLATES[p.unit.unitType].combatWidth, 0),
-		maxCombatWidth: terrainData.combatWidth,
-		totalDamageDealt: defenderParticipants.reduce((sum, p) => sum + p.damageDealt, 0),
-		totalDamageTaken: defenderParticipants.reduce((sum, p) => sum + p.damageTaken, 0),
-		destroyedUnits: defenderParticipants.filter((p) => p.currentStrength === 0).length
-	};
-
-	const userParticipants = battle.participants.filter((p) => p.unit.ownerId === account.id);
-
-	// Determine final canJoin status and reason
-	let canJoin = false;
-	let finalCanJoinReason = canJoinReason;
-
-	if (battle.phase === "ended") {
-		finalCanJoinReason = "Battle has ended";
-	} else if (userSide === null) {
-		// canJoinReason already set above
-	} else if (userUnits.length === 0) {
-		finalCanJoinReason = `No eligible units in region #${relevantRegionId}`;
-	} else {
-		canJoin = true;
-		finalCanJoinReason = null;
+		deployable = units
+			.filter((u) => !inBattle.has(u.id) && isDeployable(u))
+			.map((u) => ({
+				id: u.id,
+				name: u.name,
+				unitType: u.unitType,
+				health: u.health,
+				organization: u.organization,
+				experience: u.experience,
+				attack: MILITARY_UNIT_TEMPLATES[u.unitType]?.baseAttack ?? 0,
+				defense: MILITARY_UNIT_TEMPLATES[u.unitType]?.baseDefense ?? 0
+			}));
 	}
 
 	return {
-		battle,
-		attackerStats,
-		defenderStats,
-		userUnits,
-		userSide,
-		userParticipants,
-		canJoin,
-		canJoinReason: finalCanJoinReason,
-		terrainData,
+		battle: {
+			id: battle.id,
+			warId: battle.warId,
+			regionId: battle.regionId,
+			terrain: battle.terrain,
+			phase: battle.phase,
+			status: battle.status,
+			startedAt: battle.startedAt,
+			endedAt: battle.endedAt,
+			fortification: battle.region.fortifications ?? 0,
+			fortificationReduction: fortificationReduction(battle.region.fortifications ?? 0)
+		},
+		attacker: {
+			id: battle.attackerState.id,
+			name: battle.attackerState.name,
+			logo: attackerLogo,
+			...forces("attacker")
+		},
+		defender: {
+			id: battle.defenderState.id,
+			name: battle.defenderState.name,
+			logo: defenderLogo,
+			...forces("defender")
+		},
+		rounds: battle.rounds.map((r) => ({
+			number: r.roundNumber,
+			attackerDamage: r.attackerTotalDamage,
+			defenderDamage: r.defenderTotalDamage,
+			attackersEngaged: r.attackerUnitsEngaged,
+			defendersEngaged: r.defenderUnitsEngaged,
+			at: r.roundedAt
+		})),
 		preparationEndsAt,
-		isPreparationOver,
-		fortificationBonus: battle.region.fortifications || 0,
-		userResidenceRegionId: userResidence?.regionId,
-		attackerStateLogo,
-		defenderStateLogo
+		nextRoundAt,
+		me: {
+			side: eligibility.side,
+			reason: eligibility.reason,
+			deployable,
+			isAdmin: locals.account?.role === "admin"
+		}
 	};
 };
 
 export const actions: Actions = {
-	assignUnits: async ({ request, params, locals }) => {
+	deploy: async ({ request, params, locals }) => {
 		const account = locals.account!;
-		const battleId = parseInt(params.id);
+		const battleId = Number(params.id);
+		const unitIds = (await request.formData()).getAll("unitIds").map(Number).filter(Number.isInteger);
+		if (unitIds.length === 0) return fail(400, { error: "Select at least one unit." });
 
-		const formData = await request.formData();
-		const unitIds = formData.getAll("unitIds").map((id) => parseInt(id as string));
+		const battle = await db.query.battles.findFirst({ where: eq(battles.id, battleId) });
+		if (!battle || battle.phase === "ended") return fail(400, { error: "This battle is over." });
 
-		if (unitIds.length === 0) {
-			return fail(400, { error: "No units selected" });
-		}
+		const { side, reason, deployFromRegionId } = await battleSide(db, account.id, battle);
+		if (!side || !deployFromRegionId) return fail(403, { error: reason ?? "You can't fight in this battle." });
 
-		const battle = await db.query.battles.findFirst({
-			where: eq(battles.id, battleId)
+		const units = await db.query.militaryUnits.findMany({
+			where: and(inArray(militaryUnits.id, unitIds), eq(militaryUnits.ownerId, account.id))
+		});
+		const problems: string[] = [];
+		const ready = units.filter((u) => {
+			const why =
+				u.regionId !== deployFromRegionId
+					? "isn't in the region you fight from"
+					: u.isTraining
+						? "is still training"
+						: u.isExercising
+							? "is on exercise"
+							: u.health <= 0
+								? "has no strength left"
+								: u.organization <= 5
+									? "is too disorganised"
+									: null;
+			if (why) problems.push(`${u.name} ${why}`);
+			return !why;
+		});
+		if (units.length < unitIds.length) problems.push("Some units weren't found");
+
+		// All-or-nothing, and units already in the battle are skipped by the
+		// unique (battle, unit) check rather than added twice.
+		const deployed = await db.transaction(async (tx) => {
+			const existing = new Set(
+				(
+					await tx
+						.select({ unitId: battleParticipants.unitId })
+						.from(battleParticipants)
+						.where(eq(battleParticipants.battleId, battleId))
+				).map((r) => r.unitId)
+			);
+			const fresh = ready.filter((u) => !existing.has(u.id));
+			if (fresh.length) {
+				await tx.insert(battleParticipants).values(
+					fresh.map((u) => ({
+						battleId,
+						unitId: u.id,
+						side,
+						currentStrength: u.health,
+						currentOrganization: u.organization,
+						maxStrength: 100
+					}))
+				);
+			}
+			return fresh.length;
 		});
 
-		if (!battle || battle.phase === "ended") {
-			return fail(400, { error: "Cannot join this battle" });
-		}
-
-		const userResidence = await db.query.residences.findFirst({
-			where: eq(residences.userId, account.id),
-			with: { region: true }
-		});
-
-		if (!userResidence) {
-			return fail(400, { error: "No residence found" });
-		}
-
-		let side: "attacker" | "defender";
-
-		// Determine side based on region location
-		if (userResidence.regionId === battle.regionId) {
-			// User is in battle region - must defend
-			if (userResidence.region.stateId === battle.defenderStateId) {
-				side = "defender";
-			} else {
-				return fail(400, { error: "You are in the battle region but not a citizen of the defending state" });
-			}
-		} else {
-			// User is not in battle region - check if can attack
-			const borderingRegion = await db.query.regionBorders.findFirst({
-				where: or(
-					and(eq(regionBorders.regionId, userResidence.regionId), eq(regionBorders.neighborId, battle.regionId)),
-					and(eq(regionBorders.regionId, battle.regionId), eq(regionBorders.neighborId, userResidence.regionId))
-				)
-			});
-
-			if (!borderingRegion) {
-				return fail(400, { error: "Your region does not border the battle region" });
-			}
-
-			if (userResidence.region.stateId === battle.attackerStateId) {
-				side = "attacker";
-			} else {
-				return fail(400, { error: "You are not a citizen of the attacking state" });
-			}
-		}
-
-		// Validate and deploy each unit
-		let deployed = 0;
-		const errors: string[] = [];
-
-		for (const unitId of unitIds) {
-			const unit = await db.query.militaryUnits.findFirst({
-				where: and(eq(militaryUnits.id, unitId), eq(militaryUnits.ownerId, account.id))
-			});
-
-			if (!unit) {
-				errors.push(`Unit ${unitId} not found or you don't own it`);
-				continue;
-			}
-
-			if (unit.isTraining) {
-				errors.push(`${unit.name} is still training`);
-				continue;
-			}
-
-			if (unit.isExercising) {
-				errors.push(`${unit.name} is on exercise`);
-				continue;
-			}
-
-			if (!unit.health || unit.health <= 0) {
-				errors.push(`${unit.name} has no strength remaining`);
-				continue;
-			}
-
-			if (!unit.organization || unit.organization <= 5) {
-				errors.push(`${unit.name} organization is too low`);
-				continue;
-			}
-
-			const existing = await db.query.battleParticipants.findFirst({
-				where: and(eq(battleParticipants.battleId, battleId), eq(battleParticipants.unitId, unitId))
-			});
-
-			if (existing) {
-				errors.push(`${unit.name} already in battle`);
-				continue;
-			}
-
-			// Verify unit is in correct region
-			const requiredRegion = side === "defender" ? battle.regionId : userResidence.regionId;
-			if (unit.regionId !== requiredRegion) {
-				errors.push(`${unit.name} is not in the required region`);
-				continue;
-			}
-
-			// Deploy the unit
-			await db.insert(battleParticipants).values({
-				battleId,
-				unitId,
-				side,
-				currentStrength: unit.health || 100,
-				currentOrganization: unit.organization || 100,
-				maxStrength: 100
-			});
-
-			deployed++;
-		}
-
-		if (deployed === 0) {
-			return fail(400, { error: errors.join("; ") || "Failed to deploy any units" });
-		}
-
-		return { success: true, deployed, errors: errors.length > 0 ? errors : undefined };
+		if (deployed === 0) return fail(400, { error: problems.join(" · ") || "Those units are already fighting here." });
+		return {
+			success: true,
+			message: `${deployed} unit${deployed === 1 ? "" : "s"} sent into battle${problems.length ? ` (${problems.join(" · ")})` : ""}.`
+		};
 	},
 
-	executeCombatRound: async ({ params, locals }) => {
-		const battleId = parseInt(params.id);
-
-		const battle = await db.query.battles.findFirst({
-			where: eq(battles.id, battleId)
-		});
-
-		if (!battle || battle.phase === "ended") {
-			return fail(400, { error: "Battle is not active" });
-		}
-
-		if (battle.phase === "preparation") {
-			return fail(400, { error: "Battle is still in preparation phase (24h)" });
-		}
-
-		await processCombatRound(battleId);
-
-		return { success: true };
+	// Rounds run hourly; admins can trigger one to test the battle system.
+	fightRound: async ({ params, locals }) => {
+		if (locals.account?.role !== "admin") return fail(403, { error: "Rounds are fought automatically every hour." });
+		const result = await processCombatRound(db, Number(params.id));
+		if (!result) return fail(400, { error: "This battle isn't in its fighting phase." });
+		return {
+			success: true,
+			message: result.battleEnded
+				? `Round ${result.roundNumber}: the battle is over, the ${result.winner}s won.`
+				: `Round ${result.roundNumber} fought.`
+		};
 	}
-} as Actions;
+};
