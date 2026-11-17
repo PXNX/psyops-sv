@@ -3,7 +3,7 @@ import ts from "typescript";
 import { compileModule } from "svelte/compiler";
 
 export default defineConfig({
-	include: ["src/**/*.test.ts", "packages/**/*.test.ts"],
+	include: ["src/**/*.test.ts", "packages/**/*.test.ts", "tools/**/*.test.ts"],
 	exclude: ["node_modules", ".svelte-kit"],
 	plugins: [
 		{

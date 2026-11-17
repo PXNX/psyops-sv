@@ -1,0 +1,5204 @@
+{
+	"regions": [
+		{
+			"id": 1,
+			"shape": "1",
+			"name": "Corsica"
+		},
+		{
+			"id": 2,
+			"shape": "Lazio",
+			"name": "Latium"
+		},
+		{
+			"id": 3,
+			"shape": "Swiss_Plateau",
+			"name": "Switzerland"
+		},
+		{
+			"id": 4,
+			"shape": "Niederösterreich",
+			"name": "Lower Austria"
+		},
+		{
+			"id": 5,
+			"shape": "Ermland_Masuren",
+			"name": "Ostpreussen"
+		},
+		{
+			"id": 6,
+			"shape": "Vlaanderen",
+			"name": "Vlaanderen"
+		},
+		{
+			"id": 7,
+			"shape": "Holland",
+			"name": "Holland"
+		},
+		{
+			"id": 8,
+			"shape": "Luxembourg",
+			"name": "Luxemburg"
+		},
+		{
+			"id": 9,
+			"shape": "Bohemia",
+			"name": "Bohemia"
+		},
+		{
+			"id": 10,
+			"shape": "Warszawa",
+			"name": "Warszawa"
+		},
+		{
+			"id": 11,
+			"shape": "Sūduva",
+			"name": "Kaunas"
+		},
+		{
+			"id": 12,
+			"shape": "Vidzeme",
+			"name": "Vidzeme"
+		},
+		{
+			"id": 13,
+			"shape": "Harju",
+			"name": "Harju"
+		},
+		{
+			"id": 14,
+			"shape": "Brittany",
+			"name": "Brittany"
+		},
+		{
+			"id": 15,
+			"shape": "Normandy",
+			"name": "Normandy"
+		},
+		{
+			"id": 16,
+			"shape": "Ile_de_France",
+			"name": "Ile de France"
+		},
+		{
+			"id": 17,
+			"shape": "Ardennes",
+			"name": "Lorraine"
+		},
+		{
+			"id": 18,
+			"shape": "Champagne",
+			"name": "Champagne"
+		},
+		{
+			"id": 19,
+			"shape": "Aquitaine",
+			"name": "Aquitaine"
+		},
+		{
+			"id": 20,
+			"shape": "Rhone",
+			"name": "Rhone"
+		},
+		{
+			"id": 21,
+			"shape": "Bouches_du_Rhone",
+			"name": "Provence"
+		},
+		{
+			"id": 22,
+			"shape": "Languedoc",
+			"name": "Languedoc"
+		},
+		{
+			"id": 23,
+			"shape": "Poitou",
+			"name": "Poitou"
+		},
+		{
+			"id": 24,
+			"shape": "Centre",
+			"name": "Centre"
+		},
+		{
+			"id": 25,
+			"shape": "Limousin",
+			"name": "Limousin"
+		},
+		{
+			"id": 26,
+			"shape": "Auvergne",
+			"name": "Auvergne"
+		},
+		{
+			"id": 27,
+			"shape": "Bourgogne",
+			"name": "Bourgogne"
+		},
+		{
+			"id": 28,
+			"shape": "Alsace_Lorraine",
+			"name": "Alsace"
+		},
+		{
+			"id": 29,
+			"shape": "Nord_Pas_de_Calais",
+			"name": "Pas de Calais"
+		},
+		{
+			"id": 30,
+			"shape": "Loire",
+			"name": "Loire"
+		},
+		{
+			"id": 31,
+			"shape": "Midi_Pyrenees",
+			"name": "Midi Pyrenees"
+		},
+		{
+			"id": 32,
+			"shape": "Alpes",
+			"name": "Alpes"
+		},
+		{
+			"id": 33,
+			"shape": "Centre_Sud",
+			"name": "Centre-Sud"
+		},
+		{
+			"id": 34,
+			"shape": "Wallonie",
+			"name": "Wallonie"
+		},
+		{
+			"id": 35,
+			"shape": "Brabant",
+			"name": "Brabant"
+		},
+		{
+			"id": 36,
+			"shape": "Friesland",
+			"name": "Friesland"
+		},
+		{
+			"id": 37,
+			"shape": "Sjaelland",
+			"name": "Sjaelland"
+		},
+		{
+			"id": 38,
+			"shape": "Norrbotten",
+			"name": "Norrland"
+		},
+		{
+			"id": 39,
+			"shape": "Alto_Adige",
+			"name": "South Tyrol"
+		},
+		{
+			"id": 40,
+			"shape": "Altai_Krai",
+			"name": "Barnaul"
+		},
+		{
+			"id": 41,
+			"shape": "Madrid",
+			"name": "Madrid"
+		},
+		{
+			"id": 42,
+			"shape": "Moselland",
+			"name": "Moselland"
+		},
+		{
+			"id": 43,
+			"shape": "Northern_Hungary",
+			"name": "Northern Hungary"
+		},
+		{
+			"id": 44,
+			"shape": "Albania",
+			"name": "Albania"
+		},
+		{
+			"id": 45,
+			"shape": "Backa",
+			"name": "Vojvodina"
+		},
+		{
+			"id": 46,
+			"shape": "Muntenia",
+			"name": "Muntenia"
+		},
+		{
+			"id": 47,
+			"shape": "Attica",
+			"name": "Thessaly"
+		},
+		{
+			"id": 48,
+			"shape": "Sofia",
+			"name": "Sofia"
+		},
+		{
+			"id": 49,
+			"shape": "Ankara",
+			"name": "Ankara"
+		},
+		{
+			"id": 50,
+			"shape": "Württemberg",
+			"name": "Württemberg"
+		},
+		{
+			"id": 51,
+			"shape": "Rhineland",
+			"name": "Rhineland"
+		},
+		{
+			"id": 52,
+			"shape": "Oberbayern",
+			"name": "Oberbayern"
+		},
+		{
+			"id": 53,
+			"shape": "Niederbayern",
+			"name": "Niederbayern"
+		},
+		{
+			"id": 54,
+			"shape": "Franken",
+			"name": "Franken"
+		},
+		{
+			"id": 55,
+			"shape": "Hessen",
+			"name": "Hessen"
+		},
+		{
+			"id": 56,
+			"shape": "Weser_Ems",
+			"name": "Weser-Ems"
+		},
+		{
+			"id": 57,
+			"shape": "Westfalen",
+			"name": "Westfalen"
+		},
+		{
+			"id": 58,
+			"shape": "Holstein",
+			"name": "Schleswig-Holstein"
+		},
+		{
+			"id": 59,
+			"shape": "Hannover",
+			"name": "Hannover"
+		},
+		{
+			"id": 60,
+			"shape": "Thüringen",
+			"name": "Thüringen"
+		},
+		{
+			"id": 61,
+			"shape": "Mecklenburg",
+			"name": "Mecklenburg"
+		},
+		{
+			"id": 62,
+			"shape": "Vorpommern",
+			"name": "Pommern"
+		},
+		{
+			"id": 63,
+			"shape": "Hinterpommern",
+			"name": "Hinterpommern"
+		},
+		{
+			"id": 64,
+			"shape": "Brandenburg",
+			"name": "Brandenburg"
+		},
+		{
+			"id": 65,
+			"shape": "Sachsen",
+			"name": "Sachsen"
+		},
+		{
+			"id": 66,
+			"shape": "Niederschlesien",
+			"name": "Niederschlesien"
+		},
+		{
+			"id": 67,
+			"shape": "Oberschlesien",
+			"name": "Oberschlesien"
+		},
+		{
+			"id": 68,
+			"shape": "Ostmark",
+			"name": "Ostmark"
+		},
+		{
+			"id": 69,
+			"shape": "North_Sudetenland",
+			"name": "Sudetenland"
+		},
+		{
+			"id": 70,
+			"shape": "Western_Slovakia",
+			"name": "Western Slovakia"
+		},
+		{
+			"id": 71,
+			"shape": "Eastern_Slovakia",
+			"name": "Eastern Slovakia"
+		},
+		{
+			"id": 72,
+			"shape": "Tešínsko",
+			"name": "Zaolzie"
+		},
+		{
+			"id": 73,
+			"shape": "Podkarpatská_Rus",
+			"name": "Carpathian Ruthenia"
+		},
+		{
+			"id": 74,
+			"shape": "South_Sudetenland",
+			"name": "Eastern Sudetenland"
+		},
+		{
+			"id": 75,
+			"shape": "Moravia",
+			"name": "Moravia"
+		},
+		{
+			"id": 76,
+			"shape": "North_Transylvania",
+			"name": "North Transylvania"
+		},
+		{
+			"id": 77,
+			"shape": "Dobrudja",
+			"name": "Dobrudja"
+		},
+		{
+			"id": 78,
+			"shape": "Bessarabia",
+			"name": "Bessarabia"
+		},
+		{
+			"id": 79,
+			"shape": "Moldova",
+			"name": "Moldova"
+		},
+		{
+			"id": 80,
+			"shape": "Bucovina",
+			"name": "Bucovina"
+		},
+		{
+			"id": 81,
+			"shape": "Oltenia",
+			"name": "Oltenia"
+		},
+		{
+			"id": 82,
+			"shape": "Banat",
+			"name": "Banat"
+		},
+		{
+			"id": 83,
+			"shape": "Crisana",
+			"name": "Crisana"
+		},
+		{
+			"id": 84,
+			"shape": "Transylvania",
+			"name": "Transylvania"
+		},
+		{
+			"id": 85,
+			"shape": "Danzig",
+			"name": "Danzig"
+		},
+		{
+			"id": 86,
+			"shape": "Poznan",
+			"name": "Poznan"
+		},
+		{
+			"id": 87,
+			"shape": "Lodz",
+			"name": "Lodz"
+		},
+		{
+			"id": 88,
+			"shape": "Kraków",
+			"name": "Krakow"
+		},
+		{
+			"id": 89,
+			"shape": "Stanisławów",
+			"name": "Stanislawow"
+		},
+		{
+			"id": 90,
+			"shape": "Kielce",
+			"name": "Kielce"
+		},
+		{
+			"id": 91,
+			"shape": "Lwów",
+			"name": "Lwow"
+		},
+		{
+			"id": 92,
+			"shape": "Lublin",
+			"name": "Lublin"
+		},
+		{
+			"id": 93,
+			"shape": "Wołyn",
+			"name": "Wolyn"
+		},
+		{
+			"id": 94,
+			"shape": "Polesie",
+			"name": "Polesie"
+		},
+		{
+			"id": 95,
+			"shape": "Nowogródek",
+			"name": "Nowogrodek"
+		},
+		{
+			"id": 96,
+			"shape": "Wilno",
+			"name": "Wilno"
+		},
+		{
+			"id": 97,
+			"shape": "Białystok",
+			"name": "Bialystok"
+		},
+		{
+			"id": 98,
+			"shape": "Płock",
+			"name": "Plock"
+		},
+		{
+			"id": 99,
+			"shape": "Jylland",
+			"name": "Jutland"
+		},
+		{
+			"id": 100,
+			"shape": "Iceland",
+			"name": "Iceland"
+		},
+		{
+			"id": 101,
+			"shape": "Greenland",
+			"name": "Greenland"
+		},
+		{
+			"id": 102,
+			"shape": "Ljubljana",
+			"name": "Slovenia"
+		},
+		{
+			"id": 103,
+			"shape": "Dalmatia",
+			"name": "Dalmatia"
+		},
+		{
+			"id": 104,
+			"shape": "Bosnia",
+			"name": "Bosnia"
+		},
+		{
+			"id": 105,
+			"shape": "Montenegro",
+			"name": "Montenegro"
+		},
+		{
+			"id": 106,
+			"shape": "Macedonia",
+			"name": "Macedonia"
+		},
+		{
+			"id": 107,
+			"shape": "Serbia",
+			"name": "Serbia"
+		},
+		{
+			"id": 108,
+			"shape": "Morava",
+			"name": "Morava"
+		},
+		{
+			"id": 109,
+			"shape": "Croatia",
+			"name": "Croatia"
+		},
+		{
+			"id": 110,
+			"shape": "Oslofjord",
+			"name": "Ostlandet"
+		},
+		{
+			"id": 111,
+			"shape": "Uusimaa",
+			"name": "Uusimaa"
+		},
+		{
+			"id": 112,
+			"shape": "Lisbon",
+			"name": "Lisbon"
+		},
+		{
+			"id": 113,
+			"shape": "Leinster",
+			"name": "Leinster"
+		},
+		{
+			"id": 114,
+			"shape": "Sardegna",
+			"name": "Sardinia"
+		},
+		{
+			"id": 115,
+			"shape": "Sicilia",
+			"name": "Sicily"
+		},
+		{
+			"id": 116,
+			"shape": "Malta",
+			"name": "Malta"
+		},
+		{
+			"id": 117,
+			"shape": "Campania",
+			"name": "Campania"
+		},
+		{
+			"id": 118,
+			"shape": "Gibraltar",
+			"name": "Gibraltar"
+		},
+		{
+			"id": 119,
+			"shape": "Northern_Ireland",
+			"name": "Northern Ireland"
+		},
+		{
+			"id": 120,
+			"shape": "Scottish_Highlands",
+			"name": "Scottish Highlands"
+		},
+		{
+			"id": 121,
+			"shape": "Lothian",
+			"name": "Lothian"
+		},
+		{
+			"id": 122,
+			"shape": "Wales",
+			"name": "Wales"
+		},
+		{
+			"id": 123,
+			"shape": "South_West_England",
+			"name": "Cornwall"
+		},
+		{
+			"id": 124,
+			"shape": "Gotland",
+			"name": "Gotland"
+		},
+		{
+			"id": 125,
+			"shape": "East_Anglia",
+			"name": "East Anglia"
+		},
+		{
+			"id": 126,
+			"shape": "Greater_London_Area",
+			"name": "Greater London Area"
+		},
+		{
+			"id": 127,
+			"shape": "Sussex",
+			"name": "Sussex"
+		},
+		{
+			"id": 128,
+			"shape": "West_Midlands",
+			"name": "West Midlands"
+		},
+		{
+			"id": 129,
+			"shape": "East_Midlands",
+			"name": "East Midlands"
+		},
+		{
+			"id": 130,
+			"shape": "Yorkshire",
+			"name": "Yorkshire"
+		},
+		{
+			"id": 131,
+			"shape": "Northumberland",
+			"name": "Northern England"
+		},
+		{
+			"id": 132,
+			"shape": "Lancashire",
+			"name": "Lancashire"
+		},
+		{
+			"id": 133,
+			"shape": "Lanark",
+			"name": "Lanark"
+		},
+		{
+			"id": 134,
+			"shape": "Connaught",
+			"name": "Connaught"
+		},
+		{
+			"id": 135,
+			"shape": "Munster",
+			"name": "Munster"
+		},
+		{
+			"id": 136,
+			"shape": "Aberdeenshire",
+			"name": "Aberdeenshire"
+		},
+		{
+			"id": 137,
+			"shape": "Crimea",
+			"name": "Crimea"
+		},
+		{
+			"id": 138,
+			"shape": "Skåne",
+			"name": "Scania"
+		},
+		{
+			"id": 139,
+			"shape": "Småland",
+			"name": "Småland"
+		},
+		{
+			"id": 140,
+			"shape": "Västergötland",
+			"name": "Västergötland"
+		},
+		{
+			"id": 141,
+			"shape": "Södermanland",
+			"name": "Svealand"
+		},
+		{
+			"id": 142,
+			"shape": "Vestlandet",
+			"name": "Vestlandet"
+		},
+		{
+			"id": 143,
+			"shape": "Trøndelag",
+			"name": "Trondelag"
+		},
+		{
+			"id": 144,
+			"shape": "Nordland",
+			"name": "Nord-Norge"
+		},
+		{
+			"id": 145,
+			"shape": "Aland_Islands",
+			"name": "Aland"
+		},
+		{
+			"id": 146,
+			"shape": "Karjala",
+			"name": "Karjala"
+		},
+		{
+			"id": 147,
+			"shape": "Salla",
+			"name": "Salla"
+		},
+		{
+			"id": 148,
+			"shape": "Lappi",
+			"name": "Lappi"
+		},
+		{
+			"id": 149,
+			"shape": "Vaasa",
+			"name": "Pohjanmaa"
+		},
+		{
+			"id": 150,
+			"shape": "Kuopio",
+			"name": "Savo"
+		},
+		{
+			"id": 151,
+			"shape": "Eastern_Swiss_Alps",
+			"name": "Eastern Switzerland"
+		},
+		{
+			"id": 152,
+			"shape": "Oberösterreich",
+			"name": "Upper Austria"
+		},
+		{
+			"id": 153,
+			"shape": "Tyrol",
+			"name": "Tyrol"
+		},
+		{
+			"id": 154,
+			"shape": "Tiszántúl",
+			"name": "Alföld"
+		},
+		{
+			"id": 155,
+			"shape": "North_Transdanubia",
+			"name": "Transdanubia"
+		},
+		{
+			"id": 156,
+			"shape": "Calabria",
+			"name": "Calabria"
+		},
+		{
+			"id": 157,
+			"shape": "Abruzzo",
+			"name": "Abruzzo"
+		},
+		{
+			"id": 158,
+			"shape": "Piemonte",
+			"name": "Piedmont"
+		},
+		{
+			"id": 159,
+			"shape": "Lombardia",
+			"name": "Lombardy"
+		},
+		{
+			"id": 160,
+			"shape": "Veneto",
+			"name": "Veneto"
+		},
+		{
+			"id": 161,
+			"shape": "Emilia_Romagna",
+			"name": "Emilia Romagna"
+		},
+		{
+			"id": 162,
+			"shape": "Toscana",
+			"name": "Tuscany"
+		},
+		{
+			"id": 163,
+			"shape": "Zara",
+			"name": "Zara"
+		},
+		{
+			"id": 164,
+			"shape": "Dodecanese",
+			"name": "Dodecanese"
+		},
+		{
+			"id": 165,
+			"shape": "Cataluña",
+			"name": "Catalonia"
+		},
+		{
+			"id": 166,
+			"shape": "Eastern_Aragón",
+			"name": "Aragon"
+		},
+		{
+			"id": 167,
+			"shape": "Valencia",
+			"name": "Valencia"
+		},
+		{
+			"id": 168,
+			"shape": "Murcia",
+			"name": "Murcia"
+		},
+		{
+			"id": 169,
+			"shape": "Sevilla",
+			"name": "Andalusia"
+		},
+		{
+			"id": 170,
+			"shape": "Extremadura",
+			"name": "Extremadura"
+		},
+		{
+			"id": 171,
+			"shape": "Galicia",
+			"name": "Galicia"
+		},
+		{
+			"id": 172,
+			"shape": "Navarra",
+			"name": "Navarre"
+		},
+		{
+			"id": 173,
+			"shape": "Granada",
+			"name": "Granada"
+		},
+		{
+			"id": 174,
+			"shape": "León",
+			"name": "Leon"
+		},
+		{
+			"id": 175,
+			"shape": "Ciudad_Real",
+			"name": "La Mancha"
+		},
+		{
+			"id": 176,
+			"shape": "Valladolid",
+			"name": "Castille"
+		},
+		{
+			"id": 177,
+			"shape": "Islas_Baleares",
+			"name": "Balearic Islands"
+		},
+		{
+			"id": 178,
+			"shape": "Islas_Canarias",
+			"name": "Canary islands"
+		},
+		{
+			"id": 179,
+			"shape": "Beja",
+			"name": "Beja"
+		},
+		{
+			"id": 180,
+			"shape": "Porto",
+			"name": "Porto"
+		},
+		{
+			"id": 181,
+			"shape": "Guarda",
+			"name": "Guarda"
+		},
+		{
+			"id": 182,
+			"shape": "Crete",
+			"name": "Crete"
+		},
+		{
+			"id": 183,
+			"shape": "Cyprus",
+			"name": "Cyprus"
+		},
+		{
+			"id": 184,
+			"shape": "Thrace",
+			"name": "Thrace"
+		},
+		{
+			"id": 185,
+			"shape": "Epirus",
+			"name": "Epirus"
+		},
+		{
+			"id": 186,
+			"shape": "Peloponnese",
+			"name": "Peloponnese"
+		},
+		{
+			"id": 187,
+			"shape": "Aegean_Islands",
+			"name": "Aegean Islands"
+		},
+		{
+			"id": 188,
+			"shape": "Klaipeda",
+			"name": "Memel"
+		},
+		{
+			"id": 189,
+			"shape": "Kaunas",
+			"name": "Siauliai"
+		},
+		{
+			"id": 190,
+			"shape": "Kurzeme",
+			"name": "Kurzeme"
+		},
+		{
+			"id": 191,
+			"shape": "Tartu",
+			"name": "Tartu"
+		},
+		{
+			"id": 192,
+			"shape": "Odessa",
+			"name": "Odessa"
+		},
+		{
+			"id": 193,
+			"shape": "Chernigov",
+			"name": "Chernihiv"
+		},
+		{
+			"id": 194,
+			"shape": "Mozyr",
+			"name": "Mozyr"
+		},
+		{
+			"id": 195,
+			"shape": "Leningrad",
+			"name": "Leningrad"
+		},
+		{
+			"id": 196,
+			"shape": "Kherson",
+			"name": "Kherson"
+		},
+		{
+			"id": 197,
+			"shape": "Mykolaiv",
+			"name": "Mykolaiv"
+		},
+		{
+			"id": 198,
+			"shape": "Vinnytsia",
+			"name": "Vinnytsia"
+		},
+		{
+			"id": 199,
+			"shape": "Proskuriv",
+			"name": "Khmelnytskyi"
+		},
+		{
+			"id": 200,
+			"shape": "Zaporozhe",
+			"name": "Zaporozhe"
+		},
+		{
+			"id": 201,
+			"shape": "Zhytomyr",
+			"name": "Zhytomyr"
+		},
+		{
+			"id": 202,
+			"shape": "Kyiv",
+			"name": "Kiev"
+		},
+		{
+			"id": 203,
+			"shape": "Cherkasy",
+			"name": "Cherkasy"
+		},
+		{
+			"id": 204,
+			"shape": "Bobruysk",
+			"name": "Bobruysk"
+		},
+		{
+			"id": 205,
+			"shape": "Kaluga",
+			"name": "Kaluga"
+		},
+		{
+			"id": 206,
+			"shape": "Minsk",
+			"name": "Minsk"
+		},
+		{
+			"id": 207,
+			"shape": "Vitebsk",
+			"name": "Vitebsk"
+		},
+		{
+			"id": 208,
+			"shape": "Luga",
+			"name": "Luga"
+		},
+		{
+			"id": 209,
+			"shape": "Pskov",
+			"name": "Pskov"
+		},
+		{
+			"id": 210,
+			"shape": "Nevel",
+			"name": "Nevel"
+		},
+		{
+			"id": 211,
+			"shape": "Burgas",
+			"name": "Burgas"
+		},
+		{
+			"id": 212,
+			"shape": "Plovdiv",
+			"name": "Plovdiv"
+		},
+		{
+			"id": 213,
+			"shape": "Murmansk",
+			"name": "Murmansk"
+		},
+		{
+			"id": 214,
+			"shape": "Arkhangelsk",
+			"name": "Arkhangelsk"
+		},
+		{
+			"id": 215,
+			"shape": "Onega",
+			"name": "Onega"
+		},
+		{
+			"id": 216,
+			"shape": "Olonets",
+			"name": "Olonets"
+		},
+		{
+			"id": 217,
+			"shape": "Stalingrad",
+			"name": "Stalingrad"
+		},
+		{
+			"id": 218,
+			"shape": "Rostov",
+			"name": "Rostov"
+		},
+		{
+			"id": 219,
+			"shape": "Moscow",
+			"name": "Moscow"
+		},
+		{
+			"id": 220,
+			"shape": "Kursk",
+			"name": "Kursk"
+		},
+		{
+			"id": 221,
+			"shape": "Kharkov",
+			"name": "Kharkov"
+		},
+		{
+			"id": 222,
+			"shape": "Orel",
+			"name": "Orel"
+		},
+		{
+			"id": 223,
+			"shape": "Tula",
+			"name": "Tula"
+		},
+		{
+			"id": 224,
+			"shape": "Bryansk",
+			"name": "Bryansk"
+		},
+		{
+			"id": 225,
+			"shape": "Sumy",
+			"name": "Sumy"
+		},
+		{
+			"id": 226,
+			"shape": "Dnipropetrovsk",
+			"name": "Dnipropetrovsk"
+		},
+		{
+			"id": 227,
+			"shape": "Stalino",
+			"name": "Stalino"
+		},
+		{
+			"id": 228,
+			"shape": "Voroshilovgrad",
+			"name": "Voroshilovgrad"
+		},
+		{
+			"id": 229,
+			"shape": "Azerbaijan",
+			"name": "Azerbaijan"
+		},
+		{
+			"id": 230,
+			"shape": "Armenia",
+			"name": "Armenia"
+		},
+		{
+			"id": 231,
+			"shape": "Georgia_US",
+			"name": "Georgia"
+		},
+		{
+			"id": 232,
+			"shape": "Chechnya_Ingushetia",
+			"name": "Grozny"
+		},
+		{
+			"id": 233,
+			"shape": "North_Ossetia",
+			"name": "Caucasus Mountains"
+		},
+		{
+			"id": 234,
+			"shape": "Krasnodar",
+			"name": "Krasnodar"
+		},
+		{
+			"id": 235,
+			"shape": "Stavropol",
+			"name": "Stravropol"
+		},
+		{
+			"id": 236,
+			"shape": "Astrakhan",
+			"name": "Astrakhan"
+		},
+		{
+			"id": 237,
+			"shape": "Kalmykia",
+			"name": "Elista"
+		},
+		{
+			"id": 238,
+			"shape": "Volgodonsk",
+			"name": "Volgodonsk"
+		},
+		{
+			"id": 239,
+			"shape": "Saratov",
+			"name": "Saratov"
+		},
+		{
+			"id": 240,
+			"shape": "Belgorod",
+			"name": "Belgorod"
+		},
+		{
+			"id": 241,
+			"shape": "Gomel",
+			"name": "Gomel"
+		},
+		{
+			"id": 242,
+			"shape": "Smolensk",
+			"name": "Smolensk"
+		},
+		{
+			"id": 243,
+			"shape": "Roslavl",
+			"name": "Roslavl"
+		},
+		{
+			"id": 244,
+			"shape": "Volkhov",
+			"name": "Volkhov"
+		},
+		{
+			"id": 245,
+			"shape": "Millerovo",
+			"name": "Millerovo"
+		},
+		{
+			"id": 246,
+			"shape": "Rzhev",
+			"name": "Rzhev"
+		},
+		{
+			"id": 247,
+			"shape": "Kalinin",
+			"name": "Kalinin"
+		},
+		{
+			"id": 248,
+			"shape": "Yaroslavl",
+			"name": "Yaroslavl"
+		},
+		{
+			"id": 249,
+			"shape": "Kazan",
+			"name": "Kazan"
+		},
+		{
+			"id": 250,
+			"shape": "Ulyanovsky",
+			"name": "Ulyanovsky"
+		},
+		{
+			"id": 251,
+			"shape": "Kuybyshev",
+			"name": "Kuibyshev"
+		},
+		{
+			"id": 252,
+			"shape": "Gorky",
+			"name": "Gorki"
+		},
+		{
+			"id": 253,
+			"shape": "Ivanovo",
+			"name": "Ivanovo"
+		},
+		{
+			"id": 254,
+			"shape": "Ryazan",
+			"name": "Ryazan"
+		},
+		{
+			"id": 255,
+			"shape": "Penza",
+			"name": "Penza"
+		},
+		{
+			"id": 256,
+			"shape": "Chuvashia",
+			"name": "Cheboksary"
+		},
+		{
+			"id": 257,
+			"shape": "Tambov",
+			"name": "Tambov"
+		},
+		{
+			"id": 258,
+			"shape": "Lipetsk",
+			"name": "Lipetsk"
+		},
+		{
+			"id": 259,
+			"shape": "Poltava",
+			"name": "Poltava"
+		},
+		{
+			"id": 260,
+			"shape": "Voronezh",
+			"name": "Voronezh"
+		},
+		{
+			"id": 261,
+			"shape": "Ohio",
+			"name": "Ohio"
+		},
+		{
+			"id": 262,
+			"shape": "Pechora",
+			"name": "Pechora"
+		},
+		{
+			"id": 263,
+			"shape": "Novgorod",
+			"name": "Novgorod"
+		},
+		{
+			"id": 264,
+			"shape": "Tikhvin",
+			"name": "Tikhvin"
+		},
+		{
+			"id": 265,
+			"shape": "Mikhaylovka",
+			"name": "Mikhaylovka"
+		},
+		{
+			"id": 266,
+			"shape": "Tehran",
+			"name": "Tehran"
+		},
+		{
+			"id": 267,
+			"shape": "Kabul",
+			"name": "Kabul"
+		},
+		{
+			"id": 268,
+			"shape": "French_Somaliland",
+			"name": "French Somaliland"
+		},
+		{
+			"id": 269,
+			"shape": "British_Somaliland",
+			"name": "British Somaliland"
+		},
+		{
+			"id": 270,
+			"shape": "Pitcairn_Island",
+			"name": "Pitcairn Island"
+		},
+		{
+			"id": 271,
+			"shape": "Shewa",
+			"name": "Ethiopia"
+		},
+		{
+			"id": 272,
+			"shape": "Senegal",
+			"name": "Senegal"
+		},
+		{
+			"id": 273,
+			"shape": "Libyan_Desert",
+			"name": "Libyan Desert"
+		},
+		{
+			"id": 274,
+			"shape": "Ghana",
+			"name": "Ghana"
+		},
+		{
+			"id": 275,
+			"shape": "Transvaal",
+			"name": "Transvaal"
+		},
+		{
+			"id": 276,
+			"shape": "Southern_Ontario",
+			"name": "Southern Ontario"
+		},
+		{
+			"id": 277,
+			"shape": "Mexico_City",
+			"name": "Mexico City"
+		},
+		{
+			"id": 278,
+			"shape": "Buenos_Aires",
+			"name": "Pampas"
+		},
+		{
+			"id": 279,
+			"shape": "Santiago",
+			"name": "Santiago"
+		},
+		{
+			"id": 280,
+			"shape": "Mato_Grosso",
+			"name": "Mato Grosso"
+		},
+		{
+			"id": 281,
+			"shape": "Maldives",
+			"name": "Maldives"
+		},
+		{
+			"id": 282,
+			"shape": "Kanto",
+			"name": "Kanto"
+		},
+		{
+			"id": 283,
+			"shape": "Gansu",
+			"name": "Gansu"
+		},
+		{
+			"id": 284,
+			"shape": "North_Island",
+			"name": "North Island"
+		},
+		{
+			"id": 285,
+			"shape": "New_South_Wales",
+			"name": "New South Wales"
+		},
+		{
+			"id": 286,
+			"shape": "Southern_Indochina",
+			"name": "Southern Indochina"
+		},
+		{
+			"id": 287,
+			"shape": "Taklamakan",
+			"name": "Taklamakan"
+		},
+		{
+			"id": 288,
+			"shape": "Irrawaddy",
+			"name": "Burma"
+		},
+		{
+			"id": 289,
+			"shape": "Siam",
+			"name": "Siam"
+		},
+		{
+			"id": 290,
+			"shape": "Spanish_Africa",
+			"name": "Spanish Africa"
+		},
+		{
+			"id": 291,
+			"shape": "Baghdad",
+			"name": "Baghdad"
+		},
+		{
+			"id": 292,
+			"shape": "Nejd",
+			"name": "Nejd"
+		},
+		{
+			"id": 293,
+			"shape": "North_Yemen",
+			"name": "Yemen"
+		},
+		{
+			"id": 294,
+			"shape": "Oman",
+			"name": "Oman"
+		},
+		{
+			"id": 295,
+			"shape": "Leopoldville",
+			"name": "Leopoldville"
+		},
+		{
+			"id": 296,
+			"shape": "Portuguese_Guinea",
+			"name": "Portuguese Guinea"
+		},
+		{
+			"id": 297,
+			"shape": "Equatorial_Guinea",
+			"name": "Equatorial Guinea"
+		},
+		{
+			"id": 298,
+			"shape": "Liberia",
+			"name": "Liberia"
+		},
+		{
+			"id": 299,
+			"shape": "Falkland_Islands",
+			"name": "Falkland Islands"
+		},
+		{
+			"id": 300,
+			"shape": "Montevideo",
+			"name": "Uruguay"
+		},
+		{
+			"id": 301,
+			"shape": "Paraguay",
+			"name": "Paraguay"
+		},
+		{
+			"id": 302,
+			"shape": "La_Paz",
+			"name": "La Paz"
+		},
+		{
+			"id": 303,
+			"shape": "Lima",
+			"name": "Lima"
+		},
+		{
+			"id": 304,
+			"shape": "Panamá",
+			"name": "Panama"
+		},
+		{
+			"id": 305,
+			"shape": "Ecuador",
+			"name": "Ecuador"
+		},
+		{
+			"id": 306,
+			"shape": "Cundinamarca",
+			"name": "Cundinamarca"
+		},
+		{
+			"id": 307,
+			"shape": "Miranda",
+			"name": "Miranda"
+		},
+		{
+			"id": 308,
+			"shape": "Leeward_Islands",
+			"name": "Leeward Islands"
+		},
+		{
+			"id": 309,
+			"shape": "Suriname",
+			"name": "Suriname"
+		},
+		{
+			"id": 310,
+			"shape": "French_Guiana",
+			"name": "French Guiana"
+		},
+		{
+			"id": 311,
+			"shape": "British_Honduras",
+			"name": "British Mexico"
+		},
+		{
+			"id": 312,
+			"shape": "Honduras",
+			"name": "Honduras"
+		},
+		{
+			"id": 313,
+			"shape": "Guatemala",
+			"name": "Guatemala"
+		},
+		{
+			"id": 314,
+			"shape": "El_Salvador",
+			"name": "El Salvador"
+		},
+		{
+			"id": 315,
+			"shape": "Cuba",
+			"name": "Cuba"
+		},
+		{
+			"id": 316,
+			"shape": "Costa_Rica",
+			"name": "Costa Rica"
+		},
+		{
+			"id": 317,
+			"shape": "Nicaragua",
+			"name": "Nicaragua"
+		},
+		{
+			"id": 318,
+			"shape": "Haiti",
+			"name": "Haiti"
+		},
+		{
+			"id": 319,
+			"shape": "Dominican_Republic",
+			"name": "Dominican Republic"
+		},
+		{
+			"id": 320,
+			"shape": "French_India",
+			"name": "French India"
+		},
+		{
+			"id": 321,
+			"shape": "Goa",
+			"name": "Goa"
+		},
+		{
+			"id": 322,
+			"shape": "Nagqu",
+			"name": "Tibet"
+		},
+		{
+			"id": 323,
+			"shape": "Nepal",
+			"name": "Nepal"
+		},
+		{
+			"id": 324,
+			"shape": "Bhutan",
+			"name": "Bhutan"
+		},
+		{
+			"id": 325,
+			"shape": "Yunnan",
+			"name": "Yunnan"
+		},
+		{
+			"id": 326,
+			"shape": "Hong_Kong",
+			"name": "Hong Kong"
+		},
+		{
+			"id": 327,
+			"shape": "Manila",
+			"name": "Manila"
+		},
+		{
+			"id": 328,
+			"shape": "Kirin",
+			"name": "Kirin"
+		},
+		{
+			"id": 329,
+			"shape": "Tannu_Tuva",
+			"name": "Tannu Tuva"
+		},
+		{
+			"id": 330,
+			"shape": "Ulaanbaatar",
+			"name": "Mongolia"
+		},
+		{
+			"id": 331,
+			"shape": "Newfoundland",
+			"name": "Newfoundland"
+		},
+		{
+			"id": 332,
+			"shape": "Cote_Nord",
+			"name": "Labrador"
+		},
+		{
+			"id": 333,
+			"shape": "Sabah",
+			"name": "North Borneo"
+		},
+		{
+			"id": 334,
+			"shape": "Kalimantan",
+			"name": "Kalimantan"
+		},
+		{
+			"id": 335,
+			"shape": "Java",
+			"name": "Java"
+		},
+		{
+			"id": 336,
+			"shape": "Singapore",
+			"name": "Singapore"
+		},
+		{
+			"id": 337,
+			"shape": "Faroe_Islands",
+			"name": "Faroe Islands"
+		},
+		{
+			"id": 338,
+			"shape": "Gloucestershire",
+			"name": "Gloucestershire"
+		},
+		{
+			"id": 339,
+			"shape": "Izmir",
+			"name": "Izmir"
+		},
+		{
+			"id": 340,
+			"shape": "Bursa",
+			"name": "Bursa"
+		},
+		{
+			"id": 341,
+			"shape": "Istanbul",
+			"name": "Istanbul"
+		},
+		{
+			"id": 342,
+			"shape": "Antalya",
+			"name": "Antalya"
+		},
+		{
+			"id": 343,
+			"shape": "Afyon",
+			"name": "Afyon"
+		},
+		{
+			"id": 344,
+			"shape": "Hatay",
+			"name": "Adana"
+		},
+		{
+			"id": 345,
+			"shape": "Mersin",
+			"name": "Mersin"
+		},
+		{
+			"id": 346,
+			"shape": "Konya",
+			"name": "Konya"
+		},
+		{
+			"id": 347,
+			"shape": "Izmit",
+			"name": "Izmit"
+		},
+		{
+			"id": 348,
+			"shape": "Kayseri",
+			"name": "Kayseri"
+		},
+		{
+			"id": 349,
+			"shape": "Sivas",
+			"name": "Sivas"
+		},
+		{
+			"id": 350,
+			"shape": "Malatya",
+			"name": "Malatya"
+		},
+		{
+			"id": 351,
+			"shape": "Vologda",
+			"name": "Vologda"
+		},
+		{
+			"id": 352,
+			"shape": "Van",
+			"name": "Van"
+		},
+		{
+			"id": 353,
+			"shape": "Tunceli",
+			"name": "Erzurum"
+		},
+		{
+			"id": 354,
+			"shape": "Trabzon",
+			"name": "Trabzon"
+		},
+		{
+			"id": 355,
+			"shape": "Samsun",
+			"name": "Samsun"
+		},
+		{
+			"id": 356,
+			"shape": "Kastamonu",
+			"name": "Kastamonu"
+		},
+		{
+			"id": 357,
+			"shape": "New_England",
+			"name": "New England"
+		},
+		{
+			"id": 358,
+			"shape": "New_York",
+			"name": "New York"
+		},
+		{
+			"id": 359,
+			"shape": "New_Jersey",
+			"name": "New Jersey"
+		},
+		{
+			"id": 360,
+			"shape": "Pennsylvania",
+			"name": "Pennsylvania"
+		},
+		{
+			"id": 361,
+			"shape": "Maryland",
+			"name": "Maryland"
+		},
+		{
+			"id": 362,
+			"shape": "Virginia",
+			"name": "Virginia"
+		},
+		{
+			"id": 363,
+			"shape": "North_Carolina",
+			"name": "North Carolina"
+		},
+		{
+			"id": 364,
+			"shape": "South_Carolina",
+			"name": "South Carolina"
+		},
+		{
+			"id": 365,
+			"shape": "Georgia",
+			"name": "Georgia"
+		},
+		{
+			"id": 366,
+			"shape": "Florida",
+			"name": "Florida"
+		},
+		{
+			"id": 367,
+			"shape": "Alabama",
+			"name": "Alabama"
+		},
+		{
+			"id": 368,
+			"shape": "Tennessee",
+			"name": "Tennessee"
+		},
+		{
+			"id": 369,
+			"shape": "Kentucky",
+			"name": "Kentucky"
+		},
+		{
+			"id": 370,
+			"shape": "Mississippi",
+			"name": "Mississippi"
+		},
+		{
+			"id": 371,
+			"shape": "Louisiana",
+			"name": "Louisiana"
+		},
+		{
+			"id": 372,
+			"shape": "Arkansas",
+			"name": "Arkansas"
+		},
+		{
+			"id": 373,
+			"shape": "Missouri",
+			"name": "Missouri"
+		},
+		{
+			"id": 374,
+			"shape": "Oklahoma",
+			"name": "Oklahoma"
+		},
+		{
+			"id": 375,
+			"shape": "Texas",
+			"name": "Texas"
+		},
+		{
+			"id": 376,
+			"shape": "New_Mexico",
+			"name": "New Mexico"
+		},
+		{
+			"id": 377,
+			"shape": "Arizona",
+			"name": "Arizona"
+		},
+		{
+			"id": 378,
+			"shape": "California",
+			"name": "California"
+		},
+		{
+			"id": 379,
+			"shape": "Nevada",
+			"name": "Nevada"
+		},
+		{
+			"id": 380,
+			"shape": "Utah",
+			"name": "Utah"
+		},
+		{
+			"id": 381,
+			"shape": "Wyoming",
+			"name": "Wyoming"
+		},
+		{
+			"id": 382,
+			"shape": "Colorado",
+			"name": "Colorado"
+		},
+		{
+			"id": 383,
+			"shape": "Kansas",
+			"name": "Kansas"
+		},
+		{
+			"id": 384,
+			"shape": "Nebraska",
+			"name": "Nebraska"
+		},
+		{
+			"id": 385,
+			"shape": "Oregon",
+			"name": "Oregon"
+		},
+		{
+			"id": 386,
+			"shape": "Washington",
+			"name": "Washington"
+		},
+		{
+			"id": 387,
+			"shape": "Idaho",
+			"name": "Idaho"
+		},
+		{
+			"id": 388,
+			"shape": "Montana",
+			"name": "Montana"
+		},
+		{
+			"id": 389,
+			"shape": "North_Dakota",
+			"name": "North Dakota"
+		},
+		{
+			"id": 390,
+			"shape": "South_Dakota",
+			"name": "South Dakota"
+		},
+		{
+			"id": 391,
+			"shape": "Minnesota",
+			"name": "Minnesota"
+		},
+		{
+			"id": 392,
+			"shape": "Iowa",
+			"name": "Iowa"
+		},
+		{
+			"id": 393,
+			"shape": "Michigan",
+			"name": "Michigan"
+		},
+		{
+			"id": 394,
+			"shape": "Wisconsin",
+			"name": "Wisconsin"
+		},
+		{
+			"id": 395,
+			"shape": "Illinois",
+			"name": "Illinois"
+		},
+		{
+			"id": 396,
+			"shape": "Indiana",
+			"name": "Indiana"
+		},
+		{
+			"id": 397,
+			"shape": "Syktyvkar",
+			"name": "Syktyvkar"
+		},
+		{
+			"id": 398,
+			"shape": "Perm",
+			"name": "Perm"
+		},
+		{
+			"id": 399,
+			"shape": "Udmurtia",
+			"name": "Izhevsk"
+		},
+		{
+			"id": 400,
+			"shape": "Kirov",
+			"name": "Kirov"
+		},
+		{
+			"id": 401,
+			"shape": "Engels_Marxstadt",
+			"name": "Engels"
+		},
+		{
+			"id": 402,
+			"shape": "Akhtubinsk",
+			"name": "Akhtubinsk"
+		},
+		{
+			"id": 403,
+			"shape": "Tyumen",
+			"name": "Tyumen"
+		},
+		{
+			"id": 404,
+			"shape": "Kyzyl_Orda",
+			"name": "Kyzyl Orda"
+		},
+		{
+			"id": 405,
+			"shape": "Tashkent",
+			"name": "Tashkent"
+		},
+		{
+			"id": 406,
+			"shape": "Guryev",
+			"name": "Gurev"
+		},
+		{
+			"id": 407,
+			"shape": "Ural’sk",
+			"name": "Uralsk"
+		},
+		{
+			"id": 408,
+			"shape": "Vladivostok",
+			"name": "Vladivostok"
+		},
+		{
+			"id": 409,
+			"shape": "Khabarovsk",
+			"name": "Khabarovsk"
+		},
+		{
+			"id": 410,
+			"shape": "Sistan",
+			"name": "Sistan"
+		},
+		{
+			"id": 411,
+			"shape": "Isfahan",
+			"name": "Isfahan"
+		},
+		{
+			"id": 412,
+			"shape": "Fars",
+			"name": "Fars"
+		},
+		{
+			"id": 413,
+			"shape": "Khuzestan",
+			"name": "Khuzestan"
+		},
+		{
+			"id": 414,
+			"shape": "Kerman",
+			"name": "Kerman"
+		},
+		{
+			"id": 415,
+			"shape": "Herat",
+			"name": "Herat"
+		},
+		{
+			"id": 416,
+			"shape": "Khorasan",
+			"name": "Khorasan"
+		},
+		{
+			"id": 417,
+			"shape": "Hamadan",
+			"name": "Hamadan"
+		},
+		{
+			"id": 418,
+			"shape": "Semnan",
+			"name": "Semnan"
+		},
+		{
+			"id": 419,
+			"shape": "East_Azerbaijan",
+			"name": "Tibriz"
+		},
+		{
+			"id": 420,
+			"shape": "Gilan",
+			"name": "Gilan"
+		},
+		{
+			"id": 421,
+			"shape": "Kurdistan",
+			"name": "Kurdistan"
+		},
+		{
+			"id": 422,
+			"shape": "Ceylon",
+			"name": "Ceylon"
+		},
+		{
+			"id": 423,
+			"shape": "Southern_Madras",
+			"name": "Madurai"
+		},
+		{
+			"id": 424,
+			"shape": "Madras_States",
+			"name": "Madras"
+		},
+		{
+			"id": 425,
+			"shape": "Mysore",
+			"name": "Mysore"
+		},
+		{
+			"id": 426,
+			"shape": "Orissa",
+			"name": "Orissa"
+		},
+		{
+			"id": 427,
+			"shape": "Hyderabad",
+			"name": "Hyderabad"
+		},
+		{
+			"id": 428,
+			"shape": "Gujarat",
+			"name": "Gujarat"
+		},
+		{
+			"id": 429,
+			"shape": "Bombay",
+			"name": "Bombay"
+		},
+		{
+			"id": 430,
+			"shape": "East_Bengal",
+			"name": "East Bengal"
+		},
+		{
+			"id": 431,
+			"shape": "West_Bengal",
+			"name": "West Bengal"
+		},
+		{
+			"id": 432,
+			"shape": "Assam",
+			"name": "Assam"
+		},
+		{
+			"id": 433,
+			"shape": "Rajahsthan",
+			"name": "Rajahsthan"
+		},
+		{
+			"id": 434,
+			"shape": "Arunachal_Pradesh",
+			"name": "Arunachal Pradesh"
+		},
+		{
+			"id": 435,
+			"shape": "Bihar",
+			"name": "Bihar"
+		},
+		{
+			"id": 436,
+			"shape": "Central_Provinces",
+			"name": "Jabalpur"
+		},
+		{
+			"id": 437,
+			"shape": "Central_India",
+			"name": "Indore"
+		},
+		{
+			"id": 438,
+			"shape": "United_Provinces",
+			"name": "Lucknow"
+		},
+		{
+			"id": 439,
+			"shape": "Delhi",
+			"name": "Delhi"
+		},
+		{
+			"id": 440,
+			"shape": "East_Punjab",
+			"name": "Punjab"
+		},
+		{
+			"id": 441,
+			"shape": "Kashmir",
+			"name": "Kashmir"
+		},
+		{
+			"id": 442,
+			"shape": "Peshawar",
+			"name": "Peshawar"
+		},
+		{
+			"id": 443,
+			"shape": "Sind",
+			"name": "Sind"
+		},
+		{
+			"id": 444,
+			"shape": "North_Baluchistan",
+			"name": "Baluchistan"
+		},
+		{
+			"id": 445,
+			"shape": "Kalat",
+			"name": "Quetta"
+		},
+		{
+			"id": 446,
+			"shape": "Cairo",
+			"name": "Cairo"
+		},
+		{
+			"id": 447,
+			"shape": "Alexandria",
+			"name": "Alexandria"
+		},
+		{
+			"id": 448,
+			"shape": "Tripoli",
+			"name": "Tripoli"
+		},
+		{
+			"id": 449,
+			"shape": "El_Agheila",
+			"name": "El Agheila"
+		},
+		{
+			"id": 450,
+			"shape": "Benghasi",
+			"name": "Benghasi"
+		},
+		{
+			"id": 451,
+			"shape": "Derna",
+			"name": "Derna"
+		},
+		{
+			"id": 452,
+			"shape": "Matrouh",
+			"name": "Marsa Matruh"
+		},
+		{
+			"id": 453,
+			"shape": "Sinai",
+			"name": "Sinai"
+		},
+		{
+			"id": 454,
+			"shape": "Palestine",
+			"name": "Palestine"
+		},
+		{
+			"id": 455,
+			"shape": "Jordan",
+			"name": "Jordan"
+		},
+		{
+			"id": 456,
+			"shape": "Aswan",
+			"name": "Aswan"
+		},
+		{
+			"id": 457,
+			"shape": "Eastern_Desert",
+			"name": "Eastern Desert"
+		},
+		{
+			"id": 458,
+			"shape": "Tunisia",
+			"name": "Tunisia"
+		},
+		{
+			"id": 459,
+			"shape": "Algiers",
+			"name": "Algiers"
+		},
+		{
+			"id": 460,
+			"shape": "Constantine",
+			"name": "Constantine"
+		},
+		{
+			"id": 461,
+			"shape": "Casablanca",
+			"name": "Casablanca"
+		},
+		{
+			"id": 462,
+			"shape": "Marrakech",
+			"name": "Marrakech"
+		},
+		{
+			"id": 463,
+			"shape": "Alaska",
+			"name": "Alaska"
+		},
+		{
+			"id": 464,
+			"shape": "Nova_Scotia",
+			"name": "Nova Scotia"
+		},
+		{
+			"id": 465,
+			"shape": "New_Brunswick",
+			"name": "New Brunswick"
+		},
+		{
+			"id": 466,
+			"shape": "Ouest_du_Quebec",
+			"name": "Quebec"
+		},
+		{
+			"id": 467,
+			"shape": "Manitoba",
+			"name": "Manitoba"
+		},
+		{
+			"id": 468,
+			"shape": "Saint_Lawrence",
+			"name": "Saint Lawrence"
+		},
+		{
+			"id": 469,
+			"shape": "Saskatchewan",
+			"name": "Saskatchewan"
+		},
+		{
+			"id": 470,
+			"shape": "Alberta",
+			"name": "Alberta"
+		},
+		{
+			"id": 471,
+			"shape": "Northwest_Territories",
+			"name": "Northwestern Canada"
+		},
+		{
+			"id": 472,
+			"shape": "Nunavut",
+			"name": "Northern Canada"
+		},
+		{
+			"id": 473,
+			"shape": "British_Columbia",
+			"name": "British Columbia"
+		},
+		{
+			"id": 474,
+			"shape": "Yucatan",
+			"name": "Yucatan"
+		},
+		{
+			"id": 475,
+			"shape": "Chiapas",
+			"name": "Chiapas"
+		},
+		{
+			"id": 476,
+			"shape": "Oaxaca",
+			"name": "Oaxaca"
+		},
+		{
+			"id": 477,
+			"shape": "Veracruz",
+			"name": "Veracruz"
+		},
+		{
+			"id": 478,
+			"shape": "Jalisco",
+			"name": "Jalisco"
+		},
+		{
+			"id": 479,
+			"shape": "Tamaulipas",
+			"name": "Tamaulipas"
+		},
+		{
+			"id": 480,
+			"shape": "Coahuila",
+			"name": "Coahuila"
+		},
+		{
+			"id": 481,
+			"shape": "Durango",
+			"name": "Durango"
+		},
+		{
+			"id": 482,
+			"shape": "Chihuahua",
+			"name": "Chihuahua"
+		},
+		{
+			"id": 483,
+			"shape": "Sonora",
+			"name": "Sonora"
+		},
+		{
+			"id": 484,
+			"shape": "Baja_California",
+			"name": "Baja California"
+		},
+		{
+			"id": 485,
+			"shape": "Guerrero",
+			"name": "Guerrero"
+		},
+		{
+			"id": 486,
+			"shape": "Meta",
+			"name": "Meta"
+		},
+		{
+			"id": 487,
+			"shape": "Santa_Cruz",
+			"name": "Santa Cruz"
+		},
+		{
+			"id": 488,
+			"shape": "Bolivar",
+			"name": "Bolivar"
+		},
+		{
+			"id": 489,
+			"shape": "Zulia",
+			"name": "Zulia"
+		},
+		{
+			"id": 490,
+			"shape": "Pastaza",
+			"name": "Pastaza"
+		},
+		{
+			"id": 491,
+			"shape": "Loreto",
+			"name": "Loreto"
+		},
+		{
+			"id": 492,
+			"shape": "Arequipa",
+			"name": "Arequipa"
+		},
+		{
+			"id": 493,
+			"shape": "La_Libertad",
+			"name": "La Libertad"
+		},
+		{
+			"id": 494,
+			"shape": "Ucayali",
+			"name": "Ucayali"
+		},
+		{
+			"id": 495,
+			"shape": "Amazonas",
+			"name": "Amazonas"
+		},
+		{
+			"id": 496,
+			"shape": "Pará",
+			"name": "Para"
+		},
+		{
+			"id": 497,
+			"shape": "Maranhão",
+			"name": "Maranhao"
+		},
+		{
+			"id": 498,
+			"shape": "Rio_Grande_do_Norte",
+			"name": "Rio Grande"
+		},
+		{
+			"id": 499,
+			"shape": "Bahia",
+			"name": "Bahia"
+		},
+		{
+			"id": 500,
+			"shape": "Rio_de_Janeiro",
+			"name": "Rio de Janeiro"
+		},
+		{
+			"id": 501,
+			"shape": "São_Paulo",
+			"name": "Sao Paulo"
+		},
+		{
+			"id": 502,
+			"shape": "Rio_Grande_do_Sul",
+			"name": "Rio Grande Sul"
+		},
+		{
+			"id": 503,
+			"shape": "Santa_Catarina",
+			"name": "Santa Catarina"
+		},
+		{
+			"id": 504,
+			"shape": "Punta_Porá",
+			"name": "Iguacu"
+		},
+		{
+			"id": 505,
+			"shape": "Goiás",
+			"name": "Goias"
+		},
+		{
+			"id": 506,
+			"shape": "Antofagasta",
+			"name": "Antofagasta"
+		},
+		{
+			"id": 507,
+			"shape": "Magallanes",
+			"name": "Magallanes"
+		},
+		{
+			"id": 508,
+			"shape": "Tucumán",
+			"name": "Tucuman"
+		},
+		{
+			"id": 509,
+			"shape": "Chaco_Austral",
+			"name": "Chaco Austral"
+		},
+		{
+			"id": 510,
+			"shape": "Región_Mesopotámica",
+			"name": "Mesopotamia"
+		},
+		{
+			"id": 511,
+			"shape": "Mendoza",
+			"name": "Mendoza"
+		},
+		{
+			"id": 512,
+			"shape": "Santa_Cruz_AR",
+			"name": "Patagonia"
+		},
+		{
+			"id": 513,
+			"shape": "Tlemcen",
+			"name": "Tlemcen"
+		},
+		{
+			"id": 514,
+			"shape": "Algerian_Desert",
+			"name": "Algerian Desert"
+		},
+		{
+			"id": 515,
+			"shape": "Southern_Sahara",
+			"name": "Southern Sahara"
+		},
+		{
+			"id": 516,
+			"shape": "Yamalia",
+			"name": "Northwest Siberia"
+		},
+		{
+			"id": 517,
+			"shape": "Victoria",
+			"name": "Victoria"
+		},
+		{
+			"id": 518,
+			"shape": "Tasmania",
+			"name": "Tasmania"
+		},
+		{
+			"id": 519,
+			"shape": "South_Australia",
+			"name": "South Australia"
+		},
+		{
+			"id": 520,
+			"shape": "Northern_Territory",
+			"name": "Northern Territory"
+		},
+		{
+			"id": 521,
+			"shape": "Queensland",
+			"name": "Queensland"
+		},
+		{
+			"id": 522,
+			"shape": "Western_Australia",
+			"name": "Western Australia"
+		},
+		{
+			"id": 523,
+			"shape": "Papua",
+			"name": "Papua"
+		},
+		{
+			"id": 524,
+			"shape": "Taiwan",
+			"name": "Taiwan"
+		},
+		{
+			"id": 525,
+			"shape": "Chungcheong-Jeolla",
+			"name": "South Korea"
+		},
+		{
+			"id": 526,
+			"shape": "Okinawa",
+			"name": "Okinawa"
+		},
+		{
+			"id": 527,
+			"shape": "Pyongan-Hwanghae",
+			"name": "North Korea"
+		},
+		{
+			"id": 528,
+			"shape": "Minami_Kyūshū",
+			"name": "Kyushu"
+		},
+		{
+			"id": 529,
+			"shape": "San’yo",
+			"name": "Chugoku"
+		},
+		{
+			"id": 530,
+			"shape": "Shikoku",
+			"name": "Shikoku"
+		},
+		{
+			"id": 531,
+			"shape": "Kansai",
+			"name": "Kansai"
+		},
+		{
+			"id": 532,
+			"shape": "Tokai",
+			"name": "Tokai"
+		},
+		{
+			"id": 533,
+			"shape": "Minami_Tohoku",
+			"name": "Tohoku"
+		},
+		{
+			"id": 534,
+			"shape": "Hokuriku",
+			"name": "Hokuriku"
+		},
+		{
+			"id": 535,
+			"shape": "Koshinetsu",
+			"name": "Koshinetsu"
+		},
+		{
+			"id": 536,
+			"shape": "Hokkaido",
+			"name": "Hokkaido"
+		},
+		{
+			"id": 537,
+			"shape": "South_Sakhalin",
+			"name": "South Sakhalin"
+		},
+		{
+			"id": 538,
+			"shape": "Coquilhatville",
+			"name": "Central Congo"
+		},
+		{
+			"id": 539,
+			"shape": "Gabon",
+			"name": "Gabon"
+		},
+		{
+			"id": 540,
+			"shape": "Luanda",
+			"name": "Angola"
+		},
+		{
+			"id": 541,
+			"shape": "Karas",
+			"name": "South West Africa"
+		},
+		{
+			"id": 542,
+			"shape": "Bechuanaland",
+			"name": "Bechuanaland"
+		},
+		{
+			"id": 543,
+			"shape": "Madagascar",
+			"name": "Madagascar"
+		},
+		{
+			"id": 544,
+			"shape": "Lourenço_Marques",
+			"name": "Mozambique"
+		},
+		{
+			"id": 545,
+			"shape": "Rhodesia",
+			"name": "Rhodesia"
+		},
+		{
+			"id": 546,
+			"shape": "Tanganyika",
+			"name": "Tanganyika"
+		},
+		{
+			"id": 547,
+			"shape": "Nairobi",
+			"name": "Kenya"
+		},
+		{
+			"id": 548,
+			"shape": "Uganda",
+			"name": "Uganda"
+		},
+		{
+			"id": 549,
+			"shape": "Blue_Nile",
+			"name": "Sudan"
+		},
+		{
+			"id": 550,
+			"shape": "Eritrea",
+			"name": "Eritrea"
+		},
+		{
+			"id": 551,
+			"shape": "Khartoum",
+			"name": "Khartoum"
+		},
+		{
+			"id": 552,
+			"shape": "Western_Desert",
+			"name": "Western Desert"
+		},
+		{
+			"id": 553,
+			"shape": "Lebanon",
+			"name": "Lebanon"
+		},
+		{
+			"id": 554,
+			"shape": "Damascus",
+			"name": "Damascus"
+		},
+		{
+			"id": 555,
+			"shape": "Kuril_Islands",
+			"name": "Kuril Islands"
+		},
+		{
+			"id": 556,
+			"shape": "Mauritanian_Desert",
+			"name": "French West Africa"
+		},
+		{
+			"id": 557,
+			"shape": "Mauritania",
+			"name": "Mauritania"
+		},
+		{
+			"id": 558,
+			"shape": "Lagos",
+			"name": "Nigeria"
+		},
+		{
+			"id": 559,
+			"shape": "Somaliland",
+			"name": "Somaliland"
+		},
+		{
+			"id": 560,
+			"shape": "Nikolayevsk",
+			"name": "Nikolayevsk"
+		},
+		{
+			"id": 561,
+			"shape": "Amur",
+			"name": "Amur"
+		},
+		{
+			"id": 562,
+			"shape": "Okhotsk",
+			"name": "Okhotsk"
+		},
+		{
+			"id": 563,
+			"shape": "Chita",
+			"name": "Chita"
+		},
+		{
+			"id": 564,
+			"shape": "Buryatia",
+			"name": "Ulan Ude"
+		},
+		{
+			"id": 565,
+			"shape": "Bodaybo",
+			"name": "Bodaybo"
+		},
+		{
+			"id": 566,
+			"shape": "Irkutsk",
+			"name": "Irkutsk"
+		},
+		{
+			"id": 567,
+			"shape": "Bratsk",
+			"name": "Bratsk"
+		},
+		{
+			"id": 568,
+			"shape": "Krasnoyarsk",
+			"name": "Krasnoyarsk"
+		},
+		{
+			"id": 569,
+			"shape": "Khakassia",
+			"name": "Kemerovo"
+		},
+		{
+			"id": 570,
+			"shape": "Novosibirsk",
+			"name": "Novosibirsk"
+		},
+		{
+			"id": 571,
+			"shape": "Omsk",
+			"name": "Omsk"
+		},
+		{
+			"id": 572,
+			"shape": "Chelyabinsk",
+			"name": "Chelyabinsk"
+		},
+		{
+			"id": 573,
+			"shape": "Zlatoust",
+			"name": "Zlatoust"
+		},
+		{
+			"id": 574,
+			"shape": "Yakutsk",
+			"name": "Yakutsk"
+		},
+		{
+			"id": 575,
+			"shape": "Kirensk",
+			"name": "Kirensk"
+		},
+		{
+			"id": 576,
+			"shape": "Yeniseisk",
+			"name": "Yeniseisk"
+		},
+		{
+			"id": 577,
+			"shape": "Surgut",
+			"name": "Surgut"
+		},
+		{
+			"id": 578,
+			"shape": "Tomsk",
+			"name": "Tomsk"
+		},
+		{
+			"id": 579,
+			"shape": "Salekhard",
+			"name": "Salekhard"
+		},
+		{
+			"id": 580,
+			"shape": "Tobolsk",
+			"name": "Tobolsk"
+		},
+		{
+			"id": 581,
+			"shape": "Northern_Urals",
+			"name": "Northern Urals"
+		},
+		{
+			"id": 582,
+			"shape": "Magnitogorsk",
+			"name": "Magnitogorsk"
+		},
+		{
+			"id": 583,
+			"shape": "Kostanay",
+			"name": "Kustanay"
+		},
+		{
+			"id": 584,
+			"shape": "Ashkhabad",
+			"name": "Ashkhabad"
+		},
+		{
+			"id": 585,
+			"shape": "Khiva",
+			"name": "Urgench"
+		},
+		{
+			"id": 586,
+			"shape": "Alma_Ata",
+			"name": "Alma-Ata"
+		},
+		{
+			"id": 587,
+			"shape": "Ust_Urt",
+			"name": "Ust Urt"
+		},
+		{
+			"id": 588,
+			"shape": "Semipalatinsk",
+			"name": "Semipalatinsk"
+		},
+		{
+			"id": 589,
+			"shape": "Ayaguz",
+			"name": "Ayaguz"
+		},
+		{
+			"id": 590,
+			"shape": "Akmolinsk",
+			"name": "Akmolinsk"
+		},
+		{
+			"id": 591,
+			"shape": "Hainan",
+			"name": "Hainan"
+		},
+		{
+			"id": 592,
+			"shape": "Guangzhou",
+			"name": "Guangzhou"
+		},
+		{
+			"id": 593,
+			"shape": "Guangdong",
+			"name": "Guangdong"
+		},
+		{
+			"id": 594,
+			"shape": "Nanning",
+			"name": "Nanning"
+		},
+		{
+			"id": 595,
+			"shape": "Fujian",
+			"name": "Fujian"
+		},
+		{
+			"id": 596,
+			"shape": "Zhejiang",
+			"name": "Zhejiang"
+		},
+		{
+			"id": 597,
+			"shape": "Shandong",
+			"name": "Shandong"
+		},
+		{
+			"id": 598,
+			"shape": "Jiangsu",
+			"name": "Jiangsu"
+		},
+		{
+			"id": 599,
+			"shape": "Guangxi",
+			"name": "Guangxi"
+		},
+		{
+			"id": 600,
+			"shape": "Jiangxi",
+			"name": "Jiangxi"
+		},
+		{
+			"id": 601,
+			"shape": "Ganzi",
+			"name": "Xikang"
+		},
+		{
+			"id": 602,
+			"shape": "Hunan",
+			"name": "Hunan"
+		},
+		{
+			"id": 603,
+			"shape": "Guizhou",
+			"name": "Guizhou"
+		},
+		{
+			"id": 604,
+			"shape": "Qinghai",
+			"name": "Qinghai"
+		},
+		{
+			"id": 605,
+			"shape": "Sichuan",
+			"name": "Sichuan"
+		},
+		{
+			"id": 606,
+			"shape": "Anhui",
+			"name": "Anhui"
+		},
+		{
+			"id": 607,
+			"shape": "Henan",
+			"name": "Henan"
+		},
+		{
+			"id": 608,
+			"shape": "Beiping",
+			"name": "Beijing"
+		},
+		{
+			"id": 609,
+			"shape": "East_Hebei",
+			"name": "East Hebei"
+		},
+		{
+			"id": 610,
+			"shape": "Jehol",
+			"name": "Jehol"
+		},
+		{
+			"id": 611,
+			"shape": "Hebei-Chahar",
+			"name": "South Chahar"
+		},
+		{
+			"id": 612,
+			"shape": "Chahar",
+			"name": "Chahar"
+		},
+		{
+			"id": 613,
+			"shape": "Shanghai",
+			"name": "Shanghai"
+		},
+		{
+			"id": 614,
+			"shape": "Hebei",
+			"name": "Hebei"
+		},
+		{
+			"id": 615,
+			"shape": "Shanxi",
+			"name": "Shanxi"
+		},
+		{
+			"id": 616,
+			"shape": "Ningxia",
+			"name": "Ningxia"
+		},
+		{
+			"id": 617,
+			"shape": "Urumqi",
+			"name": "Urumqi"
+		},
+		{
+			"id": 618,
+			"shape": "Dzungaria",
+			"name": "Dzungaria"
+		},
+		{
+			"id": 619,
+			"shape": "Yarkand",
+			"name": "Yarkand"
+		},
+		{
+			"id": 620,
+			"shape": "Hubei",
+			"name": "Hubei"
+		},
+		{
+			"id": 621,
+			"shape": "Suiyuan",
+			"name": "Suiyuan"
+		},
+		{
+			"id": 622,
+			"shape": "Yan’an",
+			"name": "Shaanxi"
+		},
+		{
+			"id": 623,
+			"shape": "Luzon",
+			"name": "Luzon"
+		},
+		{
+			"id": 624,
+			"shape": "Western_Visayas",
+			"name": "Central islands"
+		},
+		{
+			"id": 625,
+			"shape": "Eastern_Visayas",
+			"name": "Samar"
+		},
+		{
+			"id": 626,
+			"shape": "Palawan",
+			"name": "Palawan"
+		},
+		{
+			"id": 627,
+			"shape": "Davao",
+			"name": "Mindanao"
+		},
+		{
+			"id": 628,
+			"shape": "Central_Islands",
+			"name": "Cebu"
+		},
+		{
+			"id": 629,
+			"shape": "Hawaii",
+			"name": "Hawaii"
+		},
+		{
+			"id": 630,
+			"shape": "Johnston_Atoll",
+			"name": "Johnston Atoll"
+		},
+		{
+			"id": 631,
+			"shape": "Midway_Island",
+			"name": "Midway Island"
+		},
+		{
+			"id": 632,
+			"shape": "Wake_Island",
+			"name": "Wake Island"
+		},
+		{
+			"id": 633,
+			"shape": "Marshall_Islands",
+			"name": "Marshall Islands"
+		},
+		{
+			"id": 634,
+			"shape": "Solomon_Islands",
+			"name": "Solomon Islands"
+		},
+		{
+			"id": 635,
+			"shape": "New_Caledonia",
+			"name": "New Caledonia"
+		},
+		{
+			"id": 636,
+			"shape": "Fiji",
+			"name": "Fiji"
+		},
+		{
+			"id": 637,
+			"shape": "Kamchatka",
+			"name": "Kamchatka"
+		},
+		{
+			"id": 638,
+			"shape": "Guam",
+			"name": "Guam"
+		},
+		{
+			"id": 639,
+			"shape": "Gilbert_Islands",
+			"name": "Gilbert Islands"
+		},
+		{
+			"id": 640,
+			"shape": "Mandalay",
+			"name": "Mandalay"
+		},
+		{
+			"id": 641,
+			"shape": "Tahiti",
+			"name": "Tahiti"
+		},
+		{
+			"id": 642,
+			"shape": "Phoenix_Island",
+			"name": "Phoenix Island"
+		},
+		{
+			"id": 643,
+			"shape": "Ellice_Islands",
+			"name": "Ellice Islands"
+		},
+		{
+			"id": 644,
+			"shape": "Chukotka",
+			"name": "Northeast Siberia"
+		},
+		{
+			"id": 645,
+			"shape": "Iwo_Jima",
+			"name": "Iwo Jima"
+		},
+		{
+			"id": 646,
+			"shape": "Saipan",
+			"name": "Saipan"
+		},
+		{
+			"id": 647,
+			"shape": "Palau",
+			"name": "Palau"
+		},
+		{
+			"id": 648,
+			"shape": "Marcus_Island",
+			"name": "Marcus Island"
+		},
+		{
+			"id": 649,
+			"shape": "Galapagos_Islands",
+			"name": "Galapagos Islands"
+		},
+		{
+			"id": 650,
+			"shape": "Attu_Island",
+			"name": "Attu Island"
+		},
+		{
+			"id": 651,
+			"shape": "Ufa",
+			"name": "Ufa"
+		},
+		{
+			"id": 652,
+			"shape": "Orenburg",
+			"name": "Orenburg"
+		},
+		{
+			"id": 653,
+			"shape": "Sverdlovsk",
+			"name": "Sverdlovsk"
+		},
+		{
+			"id": 654,
+			"shape": "Oyrot_Region",
+			"name": "Gorno-Altaysk"
+		},
+		{
+			"id": 655,
+			"shape": "North_Sakhalin",
+			"name": "North Sakhalin"
+		},
+		{
+			"id": 656,
+			"shape": "Kuwait",
+			"name": "Kuwait"
+		},
+		{
+			"id": 657,
+			"shape": "Birobidzhan",
+			"name": "Birobidzhan"
+		},
+		{
+			"id": 658,
+			"shape": "Abu_Dhabi",
+			"name": "Abu Dhabi"
+		},
+		{
+			"id": 659,
+			"shape": "Province_of_Aden",
+			"name": "Aden"
+		},
+		{
+			"id": 660,
+			"shape": "Equatorial_Africa",
+			"name": "Equatorial Africa"
+		},
+		{
+			"id": 661,
+			"shape": "Tripolitania",
+			"name": "Tripolitania"
+		},
+		{
+			"id": 662,
+			"shape": "Sirte",
+			"name": "Sirte"
+		},
+		{
+			"id": 663,
+			"shape": "Cyrenaica",
+			"name": "Cyrenaica"
+		},
+		{
+			"id": 664,
+			"shape": "Southern_Slovakia",
+			"name": "Southern Slovakia"
+		},
+		{
+			"id": 665,
+			"shape": "Gabès",
+			"name": "Gabes"
+		},
+		{
+			"id": 666,
+			"shape": "Oulu",
+			"name": "Lappland"
+		},
+		{
+			"id": 667,
+			"shape": "Lesser_Sunda_Islands",
+			"name": "Lesser Sunda Islands"
+		},
+		{
+			"id": 668,
+			"shape": "The_Moluccas",
+			"name": "The Moluccas"
+		},
+		{
+			"id": 669,
+			"shape": "West_Papua",
+			"name": "West Papua"
+		},
+		{
+			"id": 670,
+			"shape": "Laos",
+			"name": "Laos"
+		},
+		{
+			"id": 671,
+			"shape": "Tonkin",
+			"name": "Tonkin"
+		},
+		{
+			"id": 672,
+			"shape": "Sumatra",
+			"name": "Sumatra"
+		},
+		{
+			"id": 673,
+			"shape": "Sulawesi",
+			"name": "Sulawesi"
+		},
+		{
+			"id": 674,
+			"shape": "Central_Australia",
+			"name": "Central Australia"
+		},
+		{
+			"id": 675,
+			"shape": "Al_Hajara",
+			"name": "Al Hajara"
+		},
+		{
+			"id": 676,
+			"shape": "Mosul",
+			"name": "Mosul"
+		},
+		{
+			"id": 677,
+			"shape": "Aleppo",
+			"name": "Aleppo"
+		},
+		{
+			"id": 678,
+			"shape": "Rub_al_Khali",
+			"name": "Rub al Khali"
+		},
+		{
+			"id": 679,
+			"shape": "Madinah",
+			"name": "Hejaz"
+		},
+		{
+			"id": 680,
+			"shape": "Deir_az_Zur",
+			"name": "Deir-az-Zur"
+		},
+		{
+			"id": 681,
+			"shape": "Cape",
+			"name": "Cape"
+		},
+		{
+			"id": 682,
+			"shape": "Northern_Ontario",
+			"name": "Northern Ontario"
+		},
+		{
+			"id": 683,
+			"shape": "Labrador",
+			"name": "Northeastern Canada"
+		},
+		{
+			"id": 684,
+			"shape": "Caroline_Islands",
+			"name": "Caroline Islands"
+		},
+		{
+			"id": 685,
+			"shape": "Panamá_Canal",
+			"name": "Panama Canal"
+		},
+		{
+			"id": 686,
+			"shape": "Puerto_Rico",
+			"name": "Puerto Rico"
+		},
+		{
+			"id": 687,
+			"shape": "British_Guyana",
+			"name": "British Guyana"
+		},
+		{
+			"id": 688,
+			"shape": "Chaco_Boreal",
+			"name": "Chaco Boreal"
+		},
+		{
+			"id": 689,
+			"shape": "Jamaica",
+			"name": "Jamaica"
+		},
+		{
+			"id": 690,
+			"shape": "Northern_Bahamas",
+			"name": "Northern Bahamas"
+		},
+		{
+			"id": 691,
+			"shape": "Trinidad",
+			"name": "Trinidad"
+		},
+		{
+			"id": 692,
+			"shape": "Windward_Islands",
+			"name": "Windward Islands"
+		},
+		{
+			"id": 693,
+			"shape": "Southern_Bahamas",
+			"name": "Southern Bahamas"
+		},
+		{
+			"id": 694,
+			"shape": "French_Caribbean",
+			"name": "French Caribbean"
+		},
+		{
+			"id": 695,
+			"shape": "Curaçao",
+			"name": "Curacao"
+		},
+		{
+			"id": 696,
+			"shape": "Bermuda",
+			"name": "Bermuda"
+		},
+		{
+			"id": 697,
+			"shape": "Madeira",
+			"name": "Madeira"
+		},
+		{
+			"id": 698,
+			"shape": "Azores",
+			"name": "Azores"
+		},
+		{
+			"id": 699,
+			"shape": "Rio_de_Oro",
+			"name": "Rio de Oro"
+		},
+		{
+			"id": 700,
+			"shape": "Sierra_Leone",
+			"name": "Sierra Leone"
+		},
+		{
+			"id": 701,
+			"shape": "Gambia",
+			"name": "Gambia"
+		},
+		{
+			"id": 702,
+			"shape": "Cabo_Verde",
+			"name": "Cape Verde"
+		},
+		{
+			"id": 703,
+			"shape": "Ascension",
+			"name": "Ascension"
+		},
+		{
+			"id": 704,
+			"shape": "Saint_Helena",
+			"name": "Saint Helena"
+		},
+		{
+			"id": 705,
+			"shape": "Sao_Tome",
+			"name": "Sao Tome"
+		},
+		{
+			"id": 706,
+			"shape": "Reunion",
+			"name": "Reunion"
+		},
+		{
+			"id": 707,
+			"shape": "Mauritius",
+			"name": "Mauritius"
+		},
+		{
+			"id": 708,
+			"shape": "Comoro_Islands",
+			"name": "Comoro Islands"
+		},
+		{
+			"id": 709,
+			"shape": "Seychelles",
+			"name": "Seychelles"
+		},
+		{
+			"id": 710,
+			"shape": "Diego_Garcia",
+			"name": "Diego Garcia"
+		},
+		{
+			"id": 711,
+			"shape": "Christmas_Island",
+			"name": "Christmas Island"
+		},
+		{
+			"id": 712,
+			"shape": "Cocos_Islands",
+			"name": "Cocos Islands"
+		},
+		{
+			"id": 713,
+			"shape": "Kerguelen",
+			"name": "Kerguelen"
+		},
+		{
+			"id": 714,
+			"shape": "Heilungkiang",
+			"name": "Heilungkiang"
+		},
+		{
+			"id": 715,
+			"shape": "Liaoning",
+			"name": "Liaoning"
+		},
+		{
+			"id": 716,
+			"shape": "Liaobei",
+			"name": "Liaotung"
+		},
+		{
+			"id": 717,
+			"shape": "Sungkiang",
+			"name": "Sungkiang"
+		},
+		{
+			"id": 718,
+			"shape": "Stanleyville",
+			"name": "Stanleyville"
+		},
+		{
+			"id": 719,
+			"shape": "Natal",
+			"name": "Natal"
+		},
+		{
+			"id": 720,
+			"shape": "South_Georgia",
+			"name": "South Georgia"
+		},
+		{
+			"id": 721,
+			"shape": "Portuguese_Timor",
+			"name": "Portuguese Timor"
+		},
+		{
+			"id": 722,
+			"shape": "Petsamo",
+			"name": "Petsamo"
+		},
+		{
+			"id": 723,
+			"shape": "South_Island",
+			"name": "South Island"
+		},
+		{
+			"id": 724,
+			"shape": "Northern_Malay",
+			"name": "Northern Malay"
+		},
+		{
+			"id": 725,
+			"shape": "Nauru",
+			"name": "Nauru"
+		},
+		{
+			"id": 726,
+			"shape": "Samoa",
+			"name": "Samoa"
+		},
+		{
+			"id": 727,
+			"shape": "Line_Islands",
+			"name": "Line Islands"
+		},
+		{
+			"id": 728,
+			"shape": "Guangzhouwan",
+			"name": "Guangzhouwan"
+		},
+		{
+			"id": 729,
+			"shape": "Macau",
+			"name": "Macau"
+		},
+		{
+			"id": 730,
+			"shape": "Saint_Pierre_and_Miquelon",
+			"name": "St Pierre and Miquelon"
+		},
+		{
+			"id": 731,
+			"shape": "Central_Macedonia",
+			"name": "Central Macedonia"
+		},
+		{
+			"id": 732,
+			"shape": "Pamir",
+			"name": "Pamir"
+		},
+		{
+			"id": 733,
+			"shape": "Andaman",
+			"name": "Andaman"
+		},
+		{
+			"id": 734,
+			"shape": "Nendo",
+			"name": "Nendo"
+		},
+		{
+			"id": 735,
+			"shape": "Savoy",
+			"name": "Savoy"
+		},
+		{
+			"id": 736,
+			"shape": "Istria",
+			"name": "Istria"
+		},
+		{
+			"id": 737,
+			"shape": "Bismarck",
+			"name": "Bismarck"
+		},
+		{
+			"id": 738,
+			"shape": "Aru_Islands",
+			"name": "Aru Islands"
+		},
+		{
+			"id": 739,
+			"shape": "Haida_Gwaii",
+			"name": "Haida Gwaii"
+		},
+		{
+			"id": 740,
+			"shape": "Vancouver_Island",
+			"name": "Vancouver Island"
+		},
+		{
+			"id": 741,
+			"shape": "Cambodia",
+			"name": "Cambodia"
+		},
+		{
+			"id": 742,
+			"shape": "Stalinabad",
+			"name": "Stalinabad"
+		},
+		{
+			"id": 743,
+			"shape": "Qingdao",
+			"name": "Qingdao"
+		},
+		{
+			"id": 744,
+			"shape": "Xian",
+			"name": "Xian"
+		},
+		{
+			"id": 745,
+			"shape": "Dalian",
+			"name": "Dalian"
+		},
+		{
+			"id": 746,
+			"shape": "Ordos",
+			"name": "Ordos"
+		},
+		{
+			"id": 747,
+			"shape": "Dali",
+			"name": "Dali Bai"
+		},
+		{
+			"id": 748,
+			"shape": "Zunyi",
+			"name": "Zunyi"
+		},
+		{
+			"id": 749,
+			"shape": "Huangshan",
+			"name": "Huangshan"
+		},
+		{
+			"id": 750,
+			"shape": "Changde",
+			"name": "Changde"
+		},
+		{
+			"id": 751,
+			"shape": "Liangshan",
+			"name": "Liangshan"
+		},
+		{
+			"id": 752,
+			"shape": "Chamdo",
+			"name": "Chamdo"
+		},
+		{
+			"id": 753,
+			"shape": "Gannan",
+			"name": "Gannan"
+		},
+		{
+			"id": 754,
+			"shape": "Golog",
+			"name": "Golog"
+		},
+		{
+			"id": 755,
+			"shape": "Haixi",
+			"name": "Haixi"
+		},
+		{
+			"id": 756,
+			"shape": "Jiuquan",
+			"name": "Jiuquan"
+		},
+		{
+			"id": 757,
+			"shape": "Shigatse",
+			"name": "Shigatse"
+		},
+		{
+			"id": 758,
+			"shape": "Ngari",
+			"name": "Ngari"
+		},
+		{
+			"id": 759,
+			"shape": "Kunlun_Shan",
+			"name": "Kunlun"
+		},
+		{
+			"id": 760,
+			"shape": "Dabancheng",
+			"name": "Dabancheng"
+		},
+		{
+			"id": 761,
+			"shape": "Hulunbuir",
+			"name": "Hulunbuir"
+		},
+		{
+			"id": 762,
+			"shape": "Katowice",
+			"name": "Silesian Voivodeship"
+		},
+		{
+			"id": 763,
+			"shape": "Wuwei",
+			"name": "Wuwei"
+		},
+		{
+			"id": 764,
+			"shape": "Malaya",
+			"name": "Malaya"
+		},
+		{
+			"id": 765,
+			"shape": "Suzhou",
+			"name": "Suzhou"
+		},
+		{
+			"id": 766,
+			"shape": "Sarawak",
+			"name": "Sarawak"
+		},
+		{
+			"id": 767,
+			"shape": "Nanjing",
+			"name": "Nanjing"
+		},
+		{
+			"id": 768,
+			"shape": "Chengdu",
+			"name": "Chengdu"
+		},
+		{
+			"id": 769,
+			"shape": "Khotan",
+			"name": "Khotan"
+		},
+		{
+			"id": 770,
+			"shape": "Bataan",
+			"name": "Bataan"
+		},
+		{
+			"id": 771,
+			"shape": "Hamgyong",
+			"name": "Hamgyong"
+		},
+		{
+			"id": 772,
+			"shape": "Nanlu",
+			"name": "Nanlu"
+		},
+		{
+			"id": 773,
+			"shape": "Chongqing",
+			"name": "Chongqing"
+		},
+		{
+			"id": 774,
+			"shape": "Kita-Tohoku",
+			"name": "Kita-Tohoku"
+		},
+		{
+			"id": 775,
+			"shape": "San’in",
+			"name": "San’in"
+		},
+		{
+			"id": 776,
+			"shape": "Jinan",
+			"name": "Jinan"
+		},
+		{
+			"id": 777,
+			"shape": "Brunei",
+			"name": "Brunei"
+		},
+		{
+			"id": 778,
+			"shape": "Guyuan",
+			"name": "Guyuan"
+		},
+		{
+			"id": 779,
+			"shape": "Shaanbei",
+			"name": "Shaanbei"
+		},
+		{
+			"id": 780,
+			"shape": "Zamboanga",
+			"name": "Zamboanga"
+		},
+		{
+			"id": 781,
+			"shape": "Xilingol",
+			"name": "Xilingol"
+		},
+		{
+			"id": 782,
+			"shape": "Gangwon",
+			"name": "Gangwon"
+		},
+		{
+			"id": 783,
+			"shape": "Pailingmiao",
+			"name": "Pailingmiao"
+		},
+		{
+			"id": 784,
+			"shape": "Gyeonggi",
+			"name": "Gyeonggi"
+		},
+		{
+			"id": 785,
+			"shape": "Alxa",
+			"name": "Alxa"
+		},
+		{
+			"id": 786,
+			"shape": "Yulin",
+			"name": "Yulin"
+		},
+		{
+			"id": 787,
+			"shape": "Gyeongsang",
+			"name": "Gyeongsang"
+		},
+		{
+			"id": 788,
+			"shape": "Interior_Borneo",
+			"name": "Interior Borneo"
+		},
+		{
+			"id": 789,
+			"shape": "Kitakyūshū",
+			"name": "Kitakyūshū"
+		},
+		{
+			"id": 790,
+			"shape": "Northern_Mindanao",
+			"name": "Northern Mindanao"
+		},
+		{
+			"id": 791,
+			"shape": "Wuhan",
+			"name": "Wuhan"
+		},
+		{
+			"id": 792,
+			"shape": "Northern_Kashmir",
+			"name": "Northern Kashmir"
+		},
+		{
+			"id": 793,
+			"shape": "West_Punjab",
+			"name": "West Punjab"
+		},
+		{
+			"id": 794,
+			"shape": "Kolhapur_and_Deccan",
+			"name": "Kolhapur and Deccan"
+		},
+		{
+			"id": 795,
+			"shape": "West_Azerbaijan",
+			"name": "West Azerbaijan"
+		},
+		{
+			"id": 796,
+			"shape": "North_Khorasan",
+			"name": "North Khorasan"
+		},
+		{
+			"id": 797,
+			"shape": "Qataghan",
+			"name": "Qataghan"
+		},
+		{
+			"id": 798,
+			"shape": "Maymanah",
+			"name": "Maymanah"
+		},
+		{
+			"id": 799,
+			"shape": "Khyber_Pass",
+			"name": "Khyber Pass"
+		},
+		{
+			"id": 800,
+			"shape": "Al_Anbar",
+			"name": "Al Anbar"
+		},
+		{
+			"id": 801,
+			"shape": "South_Khorasan",
+			"name": "South Khorasan"
+		},
+		{
+			"id": 802,
+			"shape": "Ilam",
+			"name": "Ilam"
+		},
+		{
+			"id": 803,
+			"shape": "Qandahar",
+			"name": "Qandahar"
+		},
+		{
+			"id": 804,
+			"shape": "Waziristan",
+			"name": "Waziristan"
+		},
+		{
+			"id": 805,
+			"shape": "Yazd",
+			"name": "Yazd"
+		},
+		{
+			"id": 806,
+			"shape": "Farah",
+			"name": "Farah"
+		},
+		{
+			"id": 807,
+			"shape": "Al_Basrah",
+			"name": "Al Basrah"
+		},
+		{
+			"id": 808,
+			"shape": "Sibi",
+			"name": "Sibi"
+		},
+		{
+			"id": 809,
+			"shape": "Bahawalpur",
+			"name": "Bahawalpur"
+		},
+		{
+			"id": 810,
+			"shape": "South_Baluchistan",
+			"name": "South Baluchistan"
+		},
+		{
+			"id": 811,
+			"shape": "Bahrain",
+			"name": "Bahrain"
+		},
+		{
+			"id": 812,
+			"shape": "Musandam",
+			"name": "Musandam"
+		},
+		{
+			"id": 813,
+			"shape": "Muscat",
+			"name": "Muscat"
+		},
+		{
+			"id": 814,
+			"shape": "Dhofar",
+			"name": "Dhofar"
+		},
+		{
+			"id": 815,
+			"shape": "South_Yemen",
+			"name": "South Yemen"
+		},
+		{
+			"id": 816,
+			"shape": "Sagaing",
+			"name": "Sagaing"
+		},
+		{
+			"id": 817,
+			"shape": "Sikkim",
+			"name": "Sikkim"
+		},
+		{
+			"id": 818,
+			"shape": "Manipur",
+			"name": "Manipur"
+		},
+		{
+			"id": 819,
+			"shape": "Gwalior",
+			"name": "Gwalior"
+		},
+		{
+			"id": 820,
+			"shape": "Federated_Shan_States",
+			"name": "Federated Shan States"
+		},
+		{
+			"id": 821,
+			"shape": "Magwe",
+			"name": "Magwe"
+		},
+		{
+			"id": 822,
+			"shape": "Kentung_and_Yawnghwe",
+			"name": "Kentung and Yawnghwe"
+		},
+		{
+			"id": 823,
+			"shape": "Arakan",
+			"name": "Arakan"
+		},
+		{
+			"id": 824,
+			"shape": "Bastar",
+			"name": "Bastar"
+		},
+		{
+			"id": 825,
+			"shape": "Pegu",
+			"name": "Pegu"
+		},
+		{
+			"id": 826,
+			"shape": "Tenasserim",
+			"name": "Tenasserim"
+		},
+		{
+			"id": 827,
+			"shape": "Northern_Madras",
+			"name": "Northern Madras"
+		},
+		{
+			"id": 828,
+			"shape": "Steiermark_Kärnten",
+			"name": "Steiermark Kärnten"
+		},
+		{
+			"id": 829,
+			"shape": "Burgenland",
+			"name": "Burgenland"
+		},
+		{
+			"id": 830,
+			"shape": "Pavlodar",
+			"name": "Pavlodar"
+		},
+		{
+			"id": 831,
+			"shape": "Nenets",
+			"name": "Nenets"
+		},
+		{
+			"id": 832,
+			"shape": "Jan_Mayen",
+			"name": "Jan Mayen"
+		},
+		{
+			"id": 833,
+			"shape": "Finnmark",
+			"name": "Finnmark"
+		},
+		{
+			"id": 834,
+			"shape": "Troms",
+			"name": "Troms"
+		},
+		{
+			"id": 835,
+			"shape": "Helgeland",
+			"name": "Helgeland"
+		},
+		{
+			"id": 836,
+			"shape": "Västerbotten",
+			"name": "Västerbotten"
+		},
+		{
+			"id": 837,
+			"shape": "Jämtland",
+			"name": "Jämtland"
+		},
+		{
+			"id": 838,
+			"shape": "Gävleborg",
+			"name": "Gävleborg"
+		},
+		{
+			"id": 839,
+			"shape": "Kotlas",
+			"name": "Kotlas"
+		},
+		{
+			"id": 840,
+			"shape": "Kargopol",
+			"name": "Kargopol"
+		},
+		{
+			"id": 841,
+			"shape": "Dalarna",
+			"name": "Dalarna"
+		},
+		{
+			"id": 842,
+			"shape": "Opplandene",
+			"name": "Opplandene"
+		},
+		{
+			"id": 843,
+			"shape": "Mikkeli",
+			"name": "Mikkeli"
+		},
+		{
+			"id": 844,
+			"shape": "Häme",
+			"name": "Häme"
+		},
+		{
+			"id": 845,
+			"shape": "Turku",
+			"name": "Turku"
+		},
+		{
+			"id": 846,
+			"shape": "Kymi",
+			"name": "Kymi"
+		},
+		{
+			"id": 847,
+			"shape": "Shetland_Islands",
+			"name": "Shetland Islands"
+		},
+		{
+			"id": 848,
+			"shape": "Värmland",
+			"name": "Värmland"
+		},
+		{
+			"id": 849,
+			"shape": "Telemark",
+			"name": "Telemark"
+		},
+		{
+			"id": 850,
+			"shape": "Agder",
+			"name": "Agder"
+		},
+		{
+			"id": 851,
+			"shape": "Virumaa",
+			"name": "Virumaa"
+		},
+		{
+			"id": 852,
+			"shape": "Bohuslän",
+			"name": "Bohuslän"
+		},
+		{
+			"id": 853,
+			"shape": "Saaremaa",
+			"name": "Saaremaa"
+		},
+		{
+			"id": 854,
+			"shape": "Pärnu",
+			"name": "Pärnu"
+		},
+		{
+			"id": 855,
+			"shape": "Östergötland",
+			"name": "Östergötland"
+		},
+		{
+			"id": 856,
+			"shape": "Latgale",
+			"name": "Latgale"
+		},
+		{
+			"id": 857,
+			"shape": "Mari_El",
+			"name": "Mari El"
+		},
+		{
+			"id": 858,
+			"shape": "Zemgale",
+			"name": "Zemgale"
+		},
+		{
+			"id": 859,
+			"shape": "Rīga",
+			"name": "Rīga"
+		},
+		{
+			"id": 860,
+			"shape": "Aukštaitija",
+			"name": "Aukštaitija"
+		},
+		{
+			"id": 861,
+			"shape": "Žemaitija",
+			"name": "Žemaitija"
+		},
+		{
+			"id": 862,
+			"shape": "Cumbria",
+			"name": "Cumbria"
+		},
+		{
+			"id": 863,
+			"shape": "Wilejka",
+			"name": "Wilejka"
+		},
+		{
+			"id": 864,
+			"shape": "Fyn",
+			"name": "Fyn"
+		},
+		{
+			"id": 865,
+			"shape": "Sønderjylland",
+			"name": "Sønderjylland"
+		},
+		{
+			"id": 866,
+			"shape": "Königsberg",
+			"name": "Königsberg"
+		},
+		{
+			"id": 867,
+			"shape": "Bornholm",
+			"name": "Bornholm"
+		},
+		{
+			"id": 868,
+			"shape": "Schleswig",
+			"name": "Schleswig"
+		},
+		{
+			"id": 869,
+			"shape": "Isle_of_Man",
+			"name": "Isle of Man"
+		},
+		{
+			"id": 870,
+			"shape": "Gdynia",
+			"name": "Gdynia"
+		},
+		{
+			"id": 871,
+			"shape": "Balakovo",
+			"name": "Balakovo"
+		},
+		{
+			"id": 872,
+			"shape": "Antwerpen",
+			"name": "Antwerpen"
+		},
+		{
+			"id": 873,
+			"shape": "Karagandy",
+			"name": "Karagandy"
+		},
+		{
+			"id": 874,
+			"shape": "Czeské_Slezsko",
+			"name": "Czeské Slezsko"
+		},
+		{
+			"id": 875,
+			"shape": "Picardy",
+			"name": "Picardy"
+		},
+		{
+			"id": 876,
+			"shape": "Baden",
+			"name": "Baden"
+		},
+		{
+			"id": 877,
+			"shape": "Franche_Comte",
+			"name": "Franche Comte"
+		},
+		{
+			"id": 878,
+			"shape": "Bács_Kiskun",
+			"name": "Bács Kiskun"
+		},
+		{
+			"id": 879,
+			"shape": "Balta_Tiraspol",
+			"name": "Balta Tiraspol"
+		},
+		{
+			"id": 880,
+			"shape": "South_Transdanubia",
+			"name": "South Transdanubia"
+		},
+		{
+			"id": 881,
+			"shape": "Vorarlberg",
+			"name": "Vorarlberg"
+		},
+		{
+			"id": 882,
+			"shape": "Jura_Mountains",
+			"name": "Jura Mountains"
+		},
+		{
+			"id": 883,
+			"shape": "Western_Swiss_Alps",
+			"name": "Western Swiss Alps"
+		},
+		{
+			"id": 884,
+			"shape": "North_Slovenia",
+			"name": "North Slovenia"
+		},
+		{
+			"id": 885,
+			"shape": "Ticino",
+			"name": "Ticino"
+		},
+		{
+			"id": 886,
+			"shape": "Southern_Bessarabia",
+			"name": "Southern Bessarabia"
+		},
+		{
+			"id": 887,
+			"shape": "Litorale",
+			"name": "Litorale"
+		},
+		{
+			"id": 888,
+			"shape": "Trentino",
+			"name": "Trentino"
+		},
+		{
+			"id": 889,
+			"shape": "West_Banat",
+			"name": "West Banat"
+		},
+		{
+			"id": 890,
+			"shape": "Karakalpakstan",
+			"name": "Karakalpakstan"
+		},
+		{
+			"id": 891,
+			"shape": "Northern_Dobruja",
+			"name": "Northern Dobruja"
+		},
+		{
+			"id": 892,
+			"shape": "Dagestan",
+			"name": "Dagestan"
+		},
+		{
+			"id": 893,
+			"shape": "Sochi",
+			"name": "Sochi"
+		},
+		{
+			"id": 894,
+			"shape": "Var",
+			"name": "Var"
+		},
+		{
+			"id": 895,
+			"shape": "Pyrénées_Atlantiques",
+			"name": "Pyrénées Atlantiques"
+		},
+		{
+			"id": 896,
+			"shape": "Moesia",
+			"name": "Moesia"
+		},
+		{
+			"id": 897,
+			"shape": "Herzegovina",
+			"name": "Herzegovina"
+		},
+		{
+			"id": 898,
+			"shape": "Kabardino_Balkaria",
+			"name": "Kabardino Balkaria"
+		},
+		{
+			"id": 899,
+			"shape": "Asturias",
+			"name": "Asturias"
+		},
+		{
+			"id": 900,
+			"shape": "Abkhazia",
+			"name": "Abkhazia"
+		},
+		{
+			"id": 901,
+			"shape": "Southern_Serbia",
+			"name": "Southern Serbia"
+		},
+		{
+			"id": 902,
+			"shape": "País_Vasco",
+			"name": "País Vasco"
+		},
+		{
+			"id": 903,
+			"shape": "Navoi",
+			"name": "Navoi"
+		},
+		{
+			"id": 904,
+			"shape": "Burgos",
+			"name": "Burgos"
+		},
+		{
+			"id": 905,
+			"shape": "Kosovo",
+			"name": "Kosovo"
+		},
+		{
+			"id": 906,
+			"shape": "Western_Aragón",
+			"name": "Western Aragón"
+		},
+		{
+			"id": 907,
+			"shape": "Shkodër",
+			"name": "Shkodër"
+		},
+		{
+			"id": 908,
+			"shape": "Tashauz",
+			"name": "Tashauz"
+		},
+		{
+			"id": 909,
+			"shape": "Debar",
+			"name": "Debar"
+		},
+		{
+			"id": 910,
+			"shape": "Edirne",
+			"name": "Edirne"
+		},
+		{
+			"id": 911,
+			"shape": "Puglia",
+			"name": "Puglia"
+		},
+		{
+			"id": 912,
+			"shape": "Salamanca",
+			"name": "Salamanca"
+		},
+		{
+			"id": 913,
+			"shape": "Guadalajara",
+			"name": "Guadalajara"
+		},
+		{
+			"id": 914,
+			"shape": "Bukhara",
+			"name": "Bukhara"
+		},
+		{
+			"id": 915,
+			"shape": "Northern_Epirus",
+			"name": "Northern Epirus"
+		},
+		{
+			"id": 916,
+			"shape": "Amasya",
+			"name": "Amasya"
+		},
+		{
+			"id": 917,
+			"shape": "Santarém",
+			"name": "Santarém"
+		},
+		{
+			"id": 918,
+			"shape": "Córdoba",
+			"name": "Córdoba"
+		},
+		{
+			"id": 919,
+			"shape": "Hakkari",
+			"name": "Hakkari"
+		},
+		{
+			"id": 920,
+			"shape": "Diyarbakır",
+			"name": "Diyarbakır"
+		},
+		{
+			"id": 921,
+			"shape": "Jawf",
+			"name": "Jawf"
+		},
+		{
+			"id": 922,
+			"shape": "Suez",
+			"name": "Suez"
+		},
+		{
+			"id": 923,
+			"shape": "Al_Qassim",
+			"name": "Al Qassim"
+		},
+		{
+			"id": 924,
+			"shape": "Sidi_Ifni",
+			"name": "Sidi Ifni"
+		},
+		{
+			"id": 925,
+			"shape": "Tabuk",
+			"name": "Tabuk"
+		},
+		{
+			"id": 926,
+			"shape": "Dammam",
+			"name": "Dammam"
+		},
+		{
+			"id": 927,
+			"shape": "Qatar",
+			"name": "Qatar"
+		},
+		{
+			"id": 928,
+			"shape": "Tombouctou",
+			"name": "Tombouctou"
+		},
+		{
+			"id": 929,
+			"shape": "Kassala",
+			"name": "Kassala"
+		},
+		{
+			"id": 930,
+			"shape": "Asir_Makkah",
+			"name": "Asir Makkah"
+		},
+		{
+			"id": 931,
+			"shape": "Borkou_Ennedi_Tibesti",
+			"name": "Borkou Ennedi Tibesti"
+		},
+		{
+			"id": 932,
+			"shape": "North_Darfur",
+			"name": "North Darfur"
+		},
+		{
+			"id": 933,
+			"shape": "Najiran",
+			"name": "Najiran"
+		},
+		{
+			"id": 934,
+			"shape": "Gao",
+			"name": "Gao"
+		},
+		{
+			"id": 935,
+			"shape": "Kayes_Koulikoro",
+			"name": "Kayes Koulikoro"
+		},
+		{
+			"id": 936,
+			"shape": "South_Darfur",
+			"name": "South Darfur"
+		},
+		{
+			"id": 937,
+			"shape": "Niger",
+			"name": "Niger"
+		},
+		{
+			"id": 938,
+			"shape": "Chad",
+			"name": "Chad"
+		},
+		{
+			"id": 939,
+			"shape": "Kurdufan",
+			"name": "Kurdufan"
+		},
+		{
+			"id": 940,
+			"shape": "Upper_Volta",
+			"name": "Upper Volta"
+		},
+		{
+			"id": 941,
+			"shape": "Tigray",
+			"name": "Tigray"
+		},
+		{
+			"id": 942,
+			"shape": "Bamako",
+			"name": "Bamako"
+		},
+		{
+			"id": 943,
+			"shape": "Begemder",
+			"name": "Begemder"
+		},
+		{
+			"id": 944,
+			"shape": "Afar",
+			"name": "Afar"
+		},
+		{
+			"id": 945,
+			"shape": "Sokoto",
+			"name": "Sokoto"
+		},
+		{
+			"id": 946,
+			"shape": "Borno",
+			"name": "Borno"
+		},
+		{
+			"id": 947,
+			"shape": "Wello",
+			"name": "Wello"
+		},
+		{
+			"id": 948,
+			"shape": "Cameroon",
+			"name": "Cameroon"
+		},
+		{
+			"id": 949,
+			"shape": "Socotra",
+			"name": "Socotra"
+		},
+		{
+			"id": 950,
+			"shape": "Guinea",
+			"name": "Guinea"
+		},
+		{
+			"id": 951,
+			"shape": "Dahomey",
+			"name": "Dahomey"
+		},
+		{
+			"id": 952,
+			"shape": "Gojjam",
+			"name": "Gojjam"
+		},
+		{
+			"id": 953,
+			"shape": "Welega",
+			"name": "Welega"
+		},
+		{
+			"id": 954,
+			"shape": "Hararghe",
+			"name": "Hararghe"
+		},
+		{
+			"id": 955,
+			"shape": "Togo",
+			"name": "Togo"
+		},
+		{
+			"id": 956,
+			"shape": "Upper_Nile",
+			"name": "Upper Nile"
+		},
+		{
+			"id": 957,
+			"shape": "Ivory_Coast",
+			"name": "Ivory Coast"
+		},
+		{
+			"id": 958,
+			"shape": "Benue",
+			"name": "Benue"
+		},
+		{
+			"id": 959,
+			"shape": "Bahr_al_Ghazal",
+			"name": "Bahr al Ghazal"
+		},
+		{
+			"id": 960,
+			"shape": "Illubabor_Kaffa",
+			"name": "Illubabor Kaffa"
+		},
+		{
+			"id": 961,
+			"shape": "Bale",
+			"name": "Bale"
+		},
+		{
+			"id": 962,
+			"shape": "Sidamo",
+			"name": "Sidamo"
+		},
+		{
+			"id": 963,
+			"shape": "Nyanza_Rift_Valley",
+			"name": "Nyanza Rift Valley"
+		},
+		{
+			"id": 964,
+			"shape": "Garissa",
+			"name": "Garissa"
+		},
+		{
+			"id": 965,
+			"shape": "Jubaland",
+			"name": "Jubaland"
+		},
+		{
+			"id": 966,
+			"shape": "Middle_Congo",
+			"name": "Middle Congo"
+		},
+		{
+			"id": 967,
+			"shape": "Costermansville",
+			"name": "Costermansville"
+		},
+		{
+			"id": 968,
+			"shape": "Mombasa",
+			"name": "Mombasa"
+		},
+		{
+			"id": 969,
+			"shape": "Rwanda",
+			"name": "Rwanda"
+		},
+		{
+			"id": 970,
+			"shape": "Lusambo",
+			"name": "Lusambo"
+		},
+		{
+			"id": 971,
+			"shape": "Burundi",
+			"name": "Burundi"
+		},
+		{
+			"id": 972,
+			"shape": "Cabinda",
+			"name": "Cabinda"
+		},
+		{
+			"id": 973,
+			"shape": "Elisabethville",
+			"name": "Elisabethville"
+		},
+		{
+			"id": 974,
+			"shape": "Barotziland",
+			"name": "Barotziland"
+		},
+		{
+			"id": 975,
+			"shape": "Northeast_Rhodesia",
+			"name": "Northeast Rhodesia"
+		},
+		{
+			"id": 976,
+			"shape": "Malawi",
+			"name": "Malawi"
+		},
+		{
+			"id": 977,
+			"shape": "Zambesi",
+			"name": "Zambesi"
+		},
+		{
+			"id": 978,
+			"shape": "South_West_Angola",
+			"name": "South West Angola"
+		},
+		{
+			"id": 979,
+			"shape": "Zambezia_Moçambique",
+			"name": "Zambezia Moçambique"
+		},
+		{
+			"id": 980,
+			"shape": "Manica_e_Sofala",
+			"name": "Manica e Sofala"
+		},
+		{
+			"id": 981,
+			"shape": "Kunene",
+			"name": "Kunene"
+		},
+		{
+			"id": 982,
+			"shape": "Otjozondjupa",
+			"name": "Otjozondjupa"
+		},
+		{
+			"id": 983,
+			"shape": "Khomas",
+			"name": "Khomas"
+		},
+		{
+			"id": 984,
+			"shape": "Chukchi_Peninsula",
+			"name": "Chukchi Peninsula"
+		},
+		{
+			"id": 985,
+			"shape": "Yukon_Territory",
+			"name": "Yukon Territory"
+		},
+		{
+			"id": 986,
+			"shape": "Nord_du_Quebec",
+			"name": "Nord du Quebec"
+		},
+		{
+			"id": 987,
+			"shape": "Northern_Saskatchewan",
+			"name": "Northern Saskatchewan"
+		},
+		{
+			"id": 988,
+			"shape": "Upper_British_Columbia",
+			"name": "Upper British Columbia"
+		},
+		{
+			"id": 989,
+			"shape": "Northern_Manitoba",
+			"name": "Northern Manitoba"
+		},
+		{
+			"id": 990,
+			"shape": "Districts_of_Ontario",
+			"name": "Districts of Ontario"
+		},
+		{
+			"id": 991,
+			"shape": "Saguenay",
+			"name": "Saguenay"
+		},
+		{
+			"id": 992,
+			"shape": "Maurice",
+			"name": "Maurice"
+		},
+		{
+			"id": 993,
+			"shape": "West_Virginia",
+			"name": "West Virginia"
+		},
+		{
+			"id": 994,
+			"shape": "Guaporé",
+			"name": "Guaporé"
+		},
+		{
+			"id": 995,
+			"shape": "Acre",
+			"name": "Acre"
+		},
+		{
+			"id": 996,
+			"shape": "Amapá",
+			"name": "Amapá"
+		},
+		{
+			"id": 997,
+			"shape": "Rio_Branco",
+			"name": "Rio Branco"
+		},
+		{
+			"id": 998,
+			"shape": "Piauí",
+			"name": "Piauí"
+		},
+		{
+			"id": 999,
+			"shape": "Pernambuco",
+			"name": "Pernambuco"
+		},
+		{
+			"id": 1000,
+			"shape": "Ceará",
+			"name": "Ceará"
+		},
+		{
+			"id": 1001,
+			"shape": "Tocantins",
+			"name": "Tocantins"
+		},
+		{
+			"id": 1002,
+			"shape": "Tacna_Moquegua",
+			"name": "Tacna Moquegua"
+		},
+		{
+			"id": 1003,
+			"shape": "Espírito_Santo",
+			"name": "Espírito Santo"
+		},
+		{
+			"id": 1004,
+			"shape": "Minas_Gerais",
+			"name": "Minas Gerais"
+		},
+		{
+			"id": 1005,
+			"shape": "Atacama",
+			"name": "Atacama"
+		},
+		{
+			"id": 1006,
+			"shape": "Arica_y_Tarapacá",
+			"name": "Arica y Tarapacá"
+		},
+		{
+			"id": 1007,
+			"shape": "San_Juan_y_La_Rioja",
+			"name": "San Juan y La Rioja"
+		},
+		{
+			"id": 1008,
+			"shape": "Los_Andes",
+			"name": "Los Andes"
+		},
+		{
+			"id": 1009,
+			"shape": "Formosa",
+			"name": "Formosa"
+		},
+		{
+			"id": 1010,
+			"shape": "Paraná",
+			"name": "Paraná"
+		},
+		{
+			"id": 1011,
+			"shape": "Santa_Fe",
+			"name": "Santa Fe"
+		},
+		{
+			"id": 1012,
+			"shape": "San_Luis_y_La_Pampa",
+			"name": "San Luis y La Pampa"
+		},
+		{
+			"id": 1013,
+			"shape": "Araucanía",
+			"name": "Araucanía"
+		},
+		{
+			"id": 1014,
+			"shape": "Cerro_Largo",
+			"name": "Cerro Largo"
+		},
+		{
+			"id": 1015,
+			"shape": "Paysandú",
+			"name": "Paysandú"
+		},
+		{
+			"id": 1016,
+			"shape": "Tierra_del_Fuego",
+			"name": "Tierra del Fuego"
+		},
+		{
+			"id": 1017,
+			"shape": "Chubut",
+			"name": "Chubut"
+		},
+		{
+			"id": 1018,
+			"shape": "Río_Negro",
+			"name": "Río Negro"
+		},
+		{
+			"id": 1019,
+			"shape": "Aysén",
+			"name": "Aysén"
+		},
+		{
+			"id": 1020,
+			"shape": "Dudinka",
+			"name": "Dudinka"
+		},
+		{
+			"id": 1021,
+			"shape": "Khatangsky",
+			"name": "Khatangsky"
+		},
+		{
+			"id": 1022,
+			"shape": "Udachny",
+			"name": "Udachny"
+		},
+		{
+			"id": 1023,
+			"shape": "Verkhoyansk",
+			"name": "Verkhoyansk"
+		},
+		{
+			"id": 1024,
+			"shape": "Kolyma",
+			"name": "Kolyma"
+		},
+		{
+			"id": 1025,
+			"shape": "Magadan",
+			"name": "Magadan"
+		},
+		{
+			"id": 1026,
+			"shape": "Khövsgöl",
+			"name": "Khövsgöl"
+		},
+		{
+			"id": 1027,
+			"shape": "Khovd",
+			"name": "Khovd"
+		},
+		{
+			"id": 1028,
+			"shape": "Dornod",
+			"name": "Dornod"
+		},
+		{
+			"id": 1029,
+			"shape": "Gobi",
+			"name": "Gobi"
+		},
+		{
+			"id": 1030,
+			"shape": "Trong_Bo",
+			"name": "Trong Bo"
+		},
+		{
+			"id": 1031,
+			"shape": "Lanna",
+			"name": "Lanna"
+		},
+		{
+			"id": 1032,
+			"shape": "Isan",
+			"name": "Isan"
+		},
+		{
+			"id": 1033,
+			"shape": "Kaiser_Wilhelmsland",
+			"name": "Kaiser Wilhelmsland"
+		},
+		{
+			"id": 1034,
+			"shape": "North_Queensland",
+			"name": "North Queensland"
+		},
+		{
+			"id": 1035,
+			"shape": "North_West_Australia",
+			"name": "North West Australia"
+		},
+		{
+			"id": 1036,
+			"shape": "Southwest_Queensland",
+			"name": "Southwest Queensland"
+		},
+		{
+			"id": 1037,
+			"shape": "South_West_Australia",
+			"name": "South West Australia"
+		},
+		{
+			"id": 1038,
+			"shape": "Easter_Island",
+			"name": "Easter Island"
+		}
+	],
+	"impassable": [
+		"Amazon_impassable_1",
+		"Amazon_impassable_7",
+		"Amazon_impassable_4",
+		"Amazon_impassable_3",
+		"Amazon_impassable_5",
+		"Amazon_impassable_6",
+		"Amazon_impassable_8",
+		"Amazon_impassable_2"
+	]
+}
