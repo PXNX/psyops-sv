@@ -55,6 +55,7 @@ async function pendingApplicationIn(userId: string, stateId: number) {
 	return row ?? null;
 }
 
+import { declareWar, WarDeclarationError } from "#lib/server/services/military/declare-war.js";
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
 
@@ -795,100 +796,17 @@ export const actions: Actions = {
 			return fail(403, { message: "Only presidents can declare war" });
 		}
 
-		// Can't declare war on own state
-		if (presidency.stateId === targetStateId) {
-			return fail(400, { message: "Cannot declare war on your own state" });
+		try {
+			const { warId } = await declareWar(db, {
+				attackerStateId: presidency.stateId,
+				targetStateId,
+				declaredBy: account.id
+			});
+			return { success: true, message: "War declared!", warId };
+		} catch (err) {
+			if (err instanceof WarDeclarationError) return fail(400, { message: err.message, error: err.message });
+			throw err;
 		}
-
-		// Get target state bloc info
-		const [targetState] = await db
-			.select({
-				blocId: states.blocId
-			})
-			.from(states)
-			.where(eq(states.id, targetStateId))
-			.limit(1);
-
-		if (!targetState) {
-			return fail(404, { message: "Target state not found" });
-		}
-
-		// Can't declare war on bloc members
-		if (presidency.stateBlocId && targetState.blocId === presidency.stateBlocId) {
-			return fail(400, { message: "Cannot declare war on a state in your own bloc" });
-		}
-
-		// Check if war already exists between these states
-		const [existingWar] = await db
-			.select()
-			.from(wars)
-			.where(
-				and(
-					eq(wars.status, "active"),
-					sql`(
-						(${wars.attackerId} = ${presidency.stateId} AND ${wars.defenderId} = ${targetStateId}) OR
-						(${wars.attackerId} = ${targetStateId} AND ${wars.defenderId} = ${presidency.stateId})
-					)`
-				)
-			)
-			.limit(1);
-
-		if (existingWar) {
-			return fail(400, { message: "A war already exists between these states" });
-		}
-
-		// Create the war
-		const [newWar] = await db
-			.insert(wars)
-			.values({
-				attackerId: presidency.stateId,
-				defenderId: targetStateId,
-				attackerBlocId: presidency.stateBlocId,
-				defenderBlocId: targetState.blocId,
-				declaredBy: account.id,
-				status: "active"
-			})
-			.returning();
-
-		const [attackerState] = await db
-			.select({ name: states.name })
-			.from(states)
-			.where(eq(states.id, presidency.stateId))
-			.limit(1);
-		const [defenderStateInfo] = await db
-			.select({ name: states.name })
-			.from(states)
-			.where(eq(states.id, targetStateId))
-			.limit(1);
-
-		for (const sId of [presidency.stateId, targetStateId]) {
-			const citizens = await db
-				.select({ userId: residences.userId })
-				.from(residences)
-				.innerJoin(regions, eq(residences.regionId, regions.id))
-				.where(eq(regions.stateId, sId));
-
-			const isAttacker = sId === presidency.stateId;
-			const payload = {
-				title: "⚔️ War Declared!",
-				body: isAttacker
-					? `Your state declared war on ${defenderStateInfo?.name ?? "an enemy"}!`
-					: `${attackerState?.name ?? "An enemy"} has declared war on your state!`,
-				icon: "/favicon.png",
-				badge: "/badge.png",
-				data: { url: `/war/${newWar.id}`, tag: `war-${newWar.id}` }
-			};
-
-			Promise.allSettled(
-				citizens.map((c) => sendNotificationIfEnabled(c.userId, "notifyWarDeclarations", payload))
-			).catch((err) => console.error("War declaration notification error:", err));
-		}
-
-		return {
-			success: true,
-			message: `War declared successfully!`,
-			warId: newWar.id
-		};
 	},
 
 	purchaseVisa: async ({ params, locals }) => {

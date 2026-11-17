@@ -13,13 +13,27 @@ import {
 	proposalBorderDetails,
 	proposalBuildingDetails,
 	proposalExploitationDetails,
+	proposalWarDetails,
 	states
 } from "#lib/server/schema.js";
 import { isBuildingType } from "#lib/config/index.js";
 import { ConstructionError, startConstruction } from "./construction.service.js";
+import { declareWar, WarDeclarationError } from "../military/declare-war.js";
 
 export async function executeProposal(stateId: number, proposalType: string, accountId: string, proposalId: number) {
-	if (proposalType === "exploitation") {
+	if (proposalType === "declare_war") {
+		const details = await db.query.proposalWarDetails.findFirst({
+			where: eq(proposalWarDetails.proposalId, proposalId)
+		});
+		if (!details) throw new ConstructionError("This proposal doesn't say whom to declare war on.");
+		try {
+			await declareWar(db, { attackerStateId: stateId, targetStateId: details.targetStateId, declaredBy: accountId });
+		} catch (err) {
+			// A game outcome (e.g. already at war), reported like a failed build.
+			if (err instanceof WarDeclarationError) throw new ConstructionError(err.message);
+			throw err;
+		}
+	} else if (proposalType === "exploitation") {
 		const details = await db.query.proposalExploitationDetails.findFirst({
 			where: eq(proposalExploitationDetails.proposalId, proposalId)
 		});

@@ -3,7 +3,17 @@ import * as v from "valibot";
 
 export const createProposalSchema = v.object({
 	proposalType: v.picklist(
-		["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control", "exploitation"],
+		[
+			"tax",
+			"hospital",
+			"school",
+			"power_plant",
+			"infrastructure",
+			"fortifications",
+			"border_control",
+			"exploitation",
+			"declare_war"
+		],
 		"Please select a valid proposal type"
 	),
 
@@ -20,6 +30,9 @@ export const createProposalSchema = v.object({
 	quantity: v.optional(
 		v.pipe(v.number(), v.minValue(1, "Quantity must be at least 1"), v.maxValue(100, "Maximum 100 buildings at once"))
 	),
+
+	// War declaration: the target state
+	targetStateId: v.optional(v.string()),
 
 	// Border control fields
 	borderStatus: v.optional(v.picklist(["open", "closed"], "Please select a valid border status")),

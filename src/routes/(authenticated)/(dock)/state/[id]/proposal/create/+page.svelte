@@ -40,7 +40,8 @@
 		| "infrastructure"
 		| "fortifications"
 		| "border_control"
-		| "exploitation";
+		| "exploitation"
+		| "declare_war";
 	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications";
 
 	/** Current level and buildings still under construction for a region. */
@@ -65,7 +66,8 @@
 		infrastructure: "bg-[#2369b5]/20 text-[#b3dcff] border-[#5eaef5]/30",
 		fortifications: "bg-red-600/10 text-red-300 border-red-500/30",
 		border_control: "bg-[#3f8a2a]/20 text-[#b9f29a] border-[#6fd14a]/30",
-		exploitation: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35"
+		exploitation: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35",
+		declare_war: "bg-red-600/15 text-red-300 border-red-500/45"
 	};
 
 	const proposalTypeIcons: Record<string, string> = {
@@ -76,7 +78,8 @@
 		infrastructure: "🛣️",
 		fortifications: "🏰",
 		border_control: "🛂",
-		exploitation: "⛏️"
+		exploitation: "⛏️",
+		declare_war: "⚔️"
 	};
 
 	const taxTypeIcons: Record<string, string> = {
@@ -105,6 +108,7 @@
 
 	const isTaxProposal = $derived($formData.proposalType === "tax");
 	const isBorderControlProposal = $derived($formData.proposalType === "border_control");
+	const isWarProposal = $derived($formData.proposalType === "declare_war");
 	const isExploitationProposal = $derived($formData.proposalType === "exploitation");
 	const isBuildingProposal = $derived(
 		["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes($formData.proposalType || "")
@@ -187,7 +191,7 @@
 					Proposal Type <span class="text-red-400">*</span>
 				</label>
 				<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-					{#each ["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control", "exploitation"] as type}
+					{#each ["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control", "exploitation", "declare_war"] as type}
 						<button
 							type="button"
 							class="p-4 rounded-sm border text-left transition-colors {$formData.proposalType === type
@@ -198,7 +202,9 @@
 						>
 							<div class="flex flex-col gap-2">
 								<span class="text-2xl">{proposalTypeIcons[type]}</span>
-								<h4 class="font-bold text-[#f5efd8] capitalize text-sm">{type.replace("_", " ")}</h4>
+								<h4 class="font-bold text-[#f5efd8] capitalize text-sm">
+									{type === "declare_war" ? "Declare war" : type.replace("_", " ")}
+								</h4>
 								{#if autoFor(type)}
 									<span class="text-xs text-[#b9f29a]">✓ Immediate</span>
 								{/if}
@@ -267,6 +273,31 @@
 							<p class="field-error">{$errors.taxRate}</p>
 						{/if}
 					</div>
+				</div>
+			{/if}
+
+			<!-- War declaration -->
+			{#if isWarProposal}
+				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-3">
+					<label for="targetStateId" class="field-label">
+						Declare war on <span class="text-red-400">*</span>
+					</label>
+					{#if data.warTargets.length}
+						<select
+							id="targetStateId"
+							name="targetStateId"
+							bind:value={$formData.targetStateId}
+							class="field-control rounded-sm px-3 py-2.5 w-full"
+							disabled={$submitting}
+						>
+							<option value="" disabled selected>Choose a state…</option>
+							{#each data.warTargets as target (target.id)}
+								<option value={String(target.id)}>{target.name}</option>
+							{/each}
+						</select>
+					{:else}
+						<p class="text-sm text-[#a8a083]">There's no state you could declare war on.</p>
+					{/if}
 				</div>
 			{/if}
 
@@ -491,6 +522,7 @@
 					disabled={$submitting ||
 						(isTaxProposal && (!$formData.taxType || !$formData.taxRate)) ||
 						(isBorderControlProposal && !$formData.borderStatus) ||
+						(isWarProposal && !$formData.targetStateId) ||
 						(isExploitationProposal &&
 							(!$formData.exploitationPolicy || $formData.exploitationPolicy === data.exploitationPolicy)) ||
 						(isBuildingProposal && (!$formData.regionId || blocked || (canAutoExecute() && !canAfford())))}

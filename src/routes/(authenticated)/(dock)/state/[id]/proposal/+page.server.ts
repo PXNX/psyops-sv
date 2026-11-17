@@ -34,7 +34,8 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 				taxDetails: true,
 				buildingDetails: true,
 				borderDetails: true,
-				exploitationDetails: true
+				exploitationDetails: true,
+				warDetails: { with: { target: true } }
 			},
 			orderBy: desc(parliamentaryProposals.createdAt)
 		})
@@ -67,6 +68,13 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 					title = "Tax Policy Change";
 					description = "Modify state taxation";
 				}
+				break;
+			}
+
+			case "declare_war": {
+				const target = proposal.warDetails?.target;
+				title = target ? `Declare War on ${target.name}` : "Declaration of War";
+				description = "The state goes to war as soon as this passes";
 				break;
 			}
 

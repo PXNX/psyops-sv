@@ -17,8 +17,10 @@ import {
 	proposalTaxDetails,
 	proposalBorderDetails,
 	proposalBuildingDetails,
+	proposalWarDetails,
 	regions
 } from "#lib/server/schema.js";
+import { warBlockedReason } from "#lib/server/services/military/declare-war.js";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProposalSchema } from "./schema";
@@ -109,6 +111,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			{} as Record<string, number>
 		),
 		pendingByRegion,
+		// States this one could declare war on (not itself, not its bloc)
+		warTargets: (
+			await db.select({ id: states.id, name: states.name, blocId: states.blocId }).from(states).orderBy(states.name)
+		)
+			.filter((s) => s.id !== state.id && !(state.blocId && s.blocId === state.blocId))
+			.map((s) => ({ id: s.id, name: s.name })),
 		userParty: userMembership?.partyAffiliation || null,
 		userMinistry: userMinistry?.ministry || null,
 		isPresident: !!userPresidency,
@@ -167,6 +175,10 @@ export const actions: Actions = {
 		const stateId = parseInt(params.id);
 
 		// Catch impossible proposals before parliament spends a day on them.
+		if (proposalType === "declare_war") {
+			const blocked = await warBlockedReason(db, stateId, Number(form.data.targetStateId));
+			if (blocked) return fail(400, { form, error: blocked });
+		}
 		if (proposalType === "exploitation" && !form.data.exploitationPolicy) {
 			return fail(400, { form, error: "Choose an exploitation policy." });
 		}
@@ -217,6 +229,11 @@ export const actions: Actions = {
 				proposalId: proposal.id,
 				taxType: form.data.taxType as any,
 				taxRate: form.data.taxRate!
+			});
+		} else if (proposalType === "declare_war") {
+			await db.insert(proposalWarDetails).values({
+				proposalId: proposal.id,
+				targetStateId: Number(form.data.targetStateId)
 			});
 		} else if (proposalType === "exploitation") {
 			await db.insert(proposalExploitationDetails).values({

@@ -37,7 +37,8 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"power_plant",
 	"fortifications",
 	"border_control",
-	"exploitation"
+	"exploitation",
+	"declare_war"
 ]);
 // How hard a state lets its natural resources be mined (see resources.config.ts).
 export const exploitationPolicyEnum = pgEnum("exploitation_policy", [
@@ -2834,6 +2835,27 @@ export const proposalBorderDetails = pgTable("proposal_border_details", {
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// Declaring war by parliamentary vote: the state the war would be declared on.
+export const proposalWarDetails = pgTable("proposal_war_details", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	proposalId: integer("proposal_id")
+		.notNull()
+		.references(() => parliamentaryProposals.id, { onDelete: "cascade" })
+		.unique(),
+	targetStateId: integer("target_state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" }),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+export const proposalWarDetailsRelations = relations(proposalWarDetails, ({ one }) => ({
+	proposal: one(parliamentaryProposals, {
+		fields: [proposalWarDetails.proposalId],
+		references: [parliamentaryProposals.id]
+	}),
+	target: one(states, { fields: [proposalWarDetails.targetStateId], references: [states.id] })
+}));
+
 export const proposalExploitationDetails = pgTable("proposal_exploitation_details", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	proposalId: integer("proposal_id")
@@ -2884,6 +2906,10 @@ export const parliamentaryProposalsRelations = relations(parliamentaryProposals,
 	borderDetails: one(proposalBorderDetails, {
 		fields: [parliamentaryProposals.id],
 		references: [proposalBorderDetails.proposalId]
+	}),
+	warDetails: one(proposalWarDetails, {
+		fields: [parliamentaryProposals.id],
+		references: [proposalWarDetails.proposalId]
 	}),
 	exploitationDetails: one(proposalExploitationDetails, {
 		fields: [parliamentaryProposals.id],
