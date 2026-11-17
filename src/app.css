@@ -93,6 +93,27 @@
 	}
 }
 
+/* Small controls keep their look but get a 40px hit area on touch screens
+   (style guide: tap targets >= 40px). The invisible box is centred on the
+   control, so it only grows where the control is smaller than 40px. */
+@utility tap-target {
+	/* Anchor the hit area, unless the control is already positioned. */
+	&:not(.absolute, .fixed, .sticky) {
+		position: relative;
+	}
+	@media (pointer: coarse) {
+		&::after {
+			content: "";
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			width: max(100%, 40px);
+			height: max(100%, 40px);
+			transform: translate(-50%, -50%);
+		}
+	}
+}
+
 /* Muted panel for secondary/inset content. */
 @utility panel-muted {
 	@apply border border-[#c8b47a]/15 bg-[#14180f]/80;
