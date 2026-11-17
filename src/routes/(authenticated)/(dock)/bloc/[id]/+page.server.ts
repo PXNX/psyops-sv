@@ -12,6 +12,8 @@ import {
 	blocLeaderVotes,
 	blocApplications,
 	blocApplicationVotes,
+	blocExpulsions,
+	blocExpulsionVotes,
 	wars,
 	battles,
 	files
@@ -25,6 +27,13 @@ import {
 	resolveBlocApplication,
 	resolveExpiredBlocApplications
 } from "#lib/server/service/blocApplication.js";
+import {
+	ExpulsionError,
+	expulsionTally,
+	proposeExpulsion,
+	resolveExpiredExpulsions,
+	voteOnExpulsion
+} from "#lib/server/service/blocExpulsion.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editBlocSchema } from "./schema.js";
@@ -51,8 +60,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		error(404, "Bloc not found");
 	}
 
-	// Close applications whose voting window ran out before listing them
-	await resolveExpiredBlocApplications(blocId);
+	// Close applications and expulsion votes whose window ran out before listing them
+	await Promise.all([resolveExpiredBlocApplications(blocId), resolveExpiredExpulsions(db, blocId)]);
 
 	// Everything below only depends on the bloc id, so fetch it in parallel.
 	const [memberStates, leaderRow, diplomatRows, currentElection, [presidency], applicationRows, applicationVoteRows] =
@@ -299,6 +308,47 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const myApplication = presidency ? (applications.find((a) => a.state.id === presidency.stateId) ?? null) : null;
 
+	// Open expulsion votes. The targeted state can't vote on its own.
+	const expulsionRows = await db
+		.select({
+			id: blocExpulsions.id,
+			stateId: blocExpulsions.stateId,
+			reason: blocExpulsions.reason,
+			expiresAt: blocExpulsions.expiresAt
+		})
+		.from(blocExpulsions)
+		.where(and(eq(blocExpulsions.blocId, blocId), eq(blocExpulsions.status, "pending")));
+	const myStateInBloc = presidency && presidency.currentBlocId === blocId ? presidency.stateId : null;
+	const expulsions = await Promise.all(
+		expulsionRows.map(async (e) => {
+			const [tally, [mine]] = await Promise.all([
+				expulsionTally(db, e.id, blocId, e.stateId),
+				myStateInBloc
+					? db
+							.select({ inFavor: blocExpulsionVotes.inFavor })
+							.from(blocExpulsionVotes)
+							.where(and(eq(blocExpulsionVotes.expulsionId, e.id), eq(blocExpulsionVotes.voterStateId, myStateInBloc)))
+					: Promise.resolve([])
+			]);
+			const target = memberStates.find((m) => m.id === e.stateId);
+			return {
+				id: e.id,
+				state: {
+					id: e.stateId,
+					name: target?.name ?? "Unknown",
+					logo: target?.logo ? await getLogoUrl(target.logo) : null
+				},
+				reason: e.reason,
+				expiresAt: e.expiresAt,
+				...tally,
+				myVote: mine ? (mine.inFavor ? "pro" : "contra") : null,
+				isTarget: myStateInBloc === e.stateId,
+				canVote: !!myStateInBloc && myStateInBloc !== e.stateId
+			};
+		})
+	);
+	const pendingExpulsionStateIds = new Set(expulsionRows.map((e) => e.stateId));
+
 	// A state may only have one open application at a time
 	if (canJoin && presidency && !myApplication) {
 		const [otherPending] = await db
@@ -400,12 +450,63 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		canJoin,
 		applications,
 		myApplication,
+		expulsions,
+		// States a member president or the leader may put up for expulsion
+		expellableStateIds:
+			myStateInBloc || isLeader
+				? memberStates.map((m) => m.id).filter((id) => id !== myStateInBloc && !pendingExpulsionStateIds.has(id))
+				: [],
 		memberCount: memberStates.length,
 		activeWars: activeWarsWithLogos
 	};
 };
 
 export const actions: Actions = {
+	proposeExpulsion: async ({ params, request, locals }) => {
+		const form = await request.formData();
+		try {
+			const outcome = await proposeExpulsion(db, {
+				blocId: Number(params.id),
+				targetStateId: Number(form.get("stateId")),
+				userId: locals.account!.id,
+				reason: String(form.get("reason") ?? "")
+			});
+			return {
+				success: true,
+				message: outcome === "expelled" ? "The state was expelled." : "Expulsion vote opened."
+			};
+		} catch (err) {
+			if (err instanceof ExpulsionError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	voteExpulsion: async ({ params, request, locals }) => {
+		const form = await request.formData();
+		const vote = form.get("vote");
+		if (vote !== "pro" && vote !== "contra") return fail(400, { error: "Invalid vote" });
+		try {
+			const outcome = await voteOnExpulsion(db, {
+				blocId: Number(params.id),
+				expulsionId: Number(form.get("expulsionId")),
+				userId: locals.account!.id,
+				inFavor: vote === "pro"
+			});
+			return {
+				success: true,
+				message:
+					outcome === "expelled"
+						? "Vote recorded — the state was expelled."
+						: outcome === "rejected"
+							? "Vote recorded — the expulsion failed."
+							: "Vote recorded."
+			};
+		} catch (err) {
+			if (err instanceof ExpulsionError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
 	updateBloc: async ({ request, params, locals }) => {
 		const account = locals.account!;
 		const blocId = parseInt(params.id);

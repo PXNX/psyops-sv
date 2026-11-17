@@ -1582,6 +1582,62 @@ export const blocApplicationVotesRelations = relations(blocApplicationVotes, ({ 
 	voter: one(accounts, { fields: [blocApplicationVotes.voterId], references: [accounts.id] })
 }));
 
+// Expelling a member state from a bloc: a member president (or the bloc
+// leader) proposes it and the other member states vote, one vote per state.
+// The targeted state has no vote.
+export const blocExpulsionStatusEnum = pgEnum("bloc_expulsion_status", [
+	"pending",
+	"expelled",
+	"rejected",
+	"cancelled"
+]);
+
+export const blocExpulsions = pgTable(
+	"bloc_expulsions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		blocId: integer("bloc_id")
+			.notNull()
+			.references(() => blocs.id, { onDelete: "cascade" }),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		proposedBy: text("proposed_by").references(() => accounts.id, { onDelete: "set null" }),
+		reason: text("reason"),
+		status: blocExpulsionStatusEnum("status").notNull().default("pending"),
+		expiresAt: timestamp("expires_at").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		resolvedAt: timestamp("resolved_at")
+	},
+	(t) => ({
+		// One open expulsion vote per state at a time
+		pendingStateIdx: uniqueIndex("idx_bloc_expulsion_pending_state")
+			.on(t.blocId, t.stateId)
+			.where(sql`status = 'pending'`)
+	})
+);
+
+export const blocExpulsionVotes = pgTable(
+	"bloc_expulsion_votes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		expulsionId: integer("expulsion_id")
+			.notNull()
+			.references(() => blocExpulsions.id, { onDelete: "cascade" }),
+		voterStateId: integer("voter_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		voterId: text("voter_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		inFavor: boolean("in_favor").notNull(),
+		votedAt: timestamp("voted_at").defaultNow().notNull()
+	},
+	(t) => ({
+		expulsionStateIdx: uniqueIndex("idx_bloc_expulsion_vote_state").on(t.expulsionId, t.voterStateId)
+	})
+);
+
 // Add to your schema.ts file
 
 export const medalTypeEnum = pgEnum("medal_type", ["honor", "valor", "service", "excellence", "leadership"]);

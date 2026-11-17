@@ -14,6 +14,16 @@
 	import FluentThumbLike20Filled from "~icons/fluent/thumb-like-20-filled";
 	import FluentThumbDislike20Filled from "~icons/fluent/thumb-dislike-20-filled";
 	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
+	import FluentPersonDelete20Filled from "~icons/fluent/person-delete-20-filled";
+	import type { SubmitFunction } from "$app/forms";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+
+	const withToast: SubmitFunction =
+		() =>
+		async ({ result, update }) => {
+			await update();
+			toastResult(result);
+		};
 	import { enhance } from "$app/forms";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
@@ -308,6 +318,83 @@
 		</section>
 	{/if}
 
+	<!-- Expulsion votes -->
+	{#if data.expulsions.length > 0}
+		<section class="space-y-3">
+			<h2 class="section-title">
+				<FluentPersonDelete20Filled class="size-5 text-red-400" />
+				Expulsion Votes
+			</h2>
+			<div class="panel rounded-sm p-3 space-y-2">
+				{#each data.expulsions as expulsion (expulsion.id)}
+					{@const needed = Math.floor(expulsion.voters / 2) + 1}
+					<div class="panel-muted rounded-sm overflow-hidden border-red-500/25">
+						<ProfileItem
+							href="/state/{expulsion.state.id}"
+							logo={expulsion.state.logo}
+							logoAlt={expulsion.state.name}
+							placeholderIcon={FluentGlobe20Filled}
+							placeholderGradient="from-[#4a5238] to-[#252b1e]"
+							title="Expel {expulsion.state.name}?"
+							subtitle="{expulsion.pro} pro • {expulsion.contra} contra • {needed} of {expulsion.voters} needed • closes {formatDateTime(
+								expulsion.expiresAt
+							)}"
+							hoverColor="blue"
+						/>
+						<div class="px-3 pb-2">
+							<div class="h-1.5 bg-[#1a1f15] rounded-full overflow-hidden flex">
+								<div class="bg-red-400" style="width: {(expulsion.pro / Math.max(1, expulsion.voters)) * 100}%"></div>
+								<div
+									class="bg-[#5eaef5]/70 ml-auto"
+									style="width: {(expulsion.contra / Math.max(1, expulsion.voters)) * 100}%"
+								></div>
+							</div>
+							{#if expulsion.reason}
+								<p class="mt-2 text-xs text-[#d3caa9] italic">“{expulsion.reason}”</p>
+							{/if}
+						</div>
+						{#if expulsion.canVote}
+							<form
+								method="POST"
+								action="?/voteExpulsion"
+								use:enhance={withToast}
+								class="border-t border-[#c8b47a]/10 p-2 flex gap-2"
+							>
+								<input type="hidden" name="expulsionId" value={expulsion.id} />
+								<Button
+									type="submit"
+									name="vote"
+									value="pro"
+									size="xs"
+									grow
+									variant={expulsion.myVote === "pro" ? "soft-red" : "subtle"}
+									icon={FluentThumbLike20Filled}
+								>
+									Expel
+								</Button>
+								<Button
+									type="submit"
+									name="vote"
+									value="contra"
+									size="xs"
+									grow
+									variant={expulsion.myVote === "contra" ? "soft-blue" : "subtle"}
+									icon={FluentThumbDislike20Filled}
+								>
+									Keep
+								</Button>
+							</form>
+						{:else if expulsion.isTarget}
+							<p class="border-t border-[#c8b47a]/10 px-3 py-2 text-xs text-[#ffd35c]">
+								Your state can't vote on its own expulsion.
+							</p>
+						{/if}
+					</div>
+				{/each}
+			</div>
+		</section>
+	{/if}
+
 	<!-- Active Wars -->
 	{#if data.activeWars.length > 0}
 		<section class="space-y-2">
@@ -353,18 +440,44 @@
 		</h2>
 		<div class="panel rounded-sm p-3 space-y-2">
 			{#each data.memberStates as state}
-				<ProfileItem
-					href="/state/{state.id}"
-					logo={state.logo}
-					logoAlt={state.name}
-					placeholderIcon={FluentGlobe20Filled}
-					placeholderGradient="from-[#4a5238] to-[#252b1e]"
-					title={state.name}
-					subtitle="{state.population.toLocaleString()} population{state.president
-						? ` • ${state.president.name}`
-						: ''} • #{state.rating || '—'}"
-					hoverColor="blue"
-				/>
+				<div class="flex items-center gap-2">
+					<div class="min-w-0 flex-1">
+						<ProfileItem
+							href="/state/{state.id}"
+							logo={state.logo}
+							logoAlt={state.name}
+							placeholderIcon={FluentGlobe20Filled}
+							placeholderGradient="from-[#4a5238] to-[#252b1e]"
+							title={state.name}
+							subtitle="{state.population.toLocaleString()} population{state.president
+								? ` • ${state.president.name}`
+								: ''} • #{state.rating || '—'}"
+							hoverColor="blue"
+						/>
+					</div>
+					{#if data.expellableStateIds.includes(state.id)}
+						<form
+							method="POST"
+							action="?/proposeExpulsion"
+							use:confirmSubmit={{
+								title: `Vote on expelling ${state.name}?`,
+								body: "The other member states vote for 3 days. Your state's vote counts as in favour.",
+								confirmLabel: "Open vote",
+								danger: true
+							}}
+							use:enhance={withToast}
+						>
+							<input type="hidden" name="stateId" value={state.id} />
+							<IconButton
+								type="submit"
+								icon={FluentPersonDelete20Filled}
+								label="Propose expelling {state.name}"
+								variant="soft-red"
+								size="sm"
+							/>
+						</form>
+					{/if}
+				</div>
 			{:else}
 				<p class="text-sm text-[#a8a083] text-center py-4">No member states yet</p>
 			{/each}
