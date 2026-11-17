@@ -32,22 +32,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			db.query.governors.findFirst({
 				where: and(eq(governors.regionId, regionId), eq(governors.userId, account.id))
 			}),
-			// Check if user is infrastructure minister of this state (404 wins over 403)
+			// Check if user is Economy Minister of this state, who manages the treasury that pays for construction (404 wins over 403)
 			regionPromise.then((region) =>
 				region.stateId
 					? db.query.ministers.findFirst({
 							where: and(
 								eq(ministers.userId, account.id),
 								eq(ministers.stateId, region.stateId),
-								eq(ministers.ministry, "infrastructure")
+								eq(ministers.ministry, "economy")
 							)
 						})
 					: undefined
 			)
 		]).then(([governor, minister]) => {
-			// Must be governor or infrastructure minister
+			// Must be governor or Economy Minister
 			if (!governor && !minister) {
-				error(403, "You must be the governor or infrastructure minister to build in this region");
+				error(403, "You must be the governor or the Economy Minister to build in this region");
 			}
 			return { isGovernor: !!governor, isInfrastructureMinister: !!minister };
 		})
@@ -124,7 +124,7 @@ export const actions: Actions = {
 				where: and(
 					eq(ministers.userId, account.id),
 					eq(ministers.stateId, region.stateId),
-					eq(ministers.ministry, "infrastructure")
+					eq(ministers.ministry, "economy")
 				)
 			});
 			isInfrastructureMinister = !!minister;

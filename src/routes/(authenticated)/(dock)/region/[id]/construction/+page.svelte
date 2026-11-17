@@ -122,7 +122,7 @@
 		subtitle={data.isGovernor
 			? "As Governor"
 			: data.isInfrastructureMinister
-				? "As Infrastructure Minister"
+				? "As Economy Minister"
 				: undefined}
 		backHref="/region/{data.region.id}"
 		backLabel={regionName()}
