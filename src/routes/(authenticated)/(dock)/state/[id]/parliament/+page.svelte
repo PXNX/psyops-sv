@@ -18,6 +18,16 @@
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import { enhance } from "$app/forms";
+	import type { SubmitFunction } from "$app/forms";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
+
+	const withToast: SubmitFunction =
+		() =>
+		async ({ result, update }) => {
+			await update();
+			toastResult(result);
+		};
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button, Badge } from "#lib/component/ui/index.js";
@@ -670,7 +680,7 @@
 						</div>
 
 						<!-- Voting / Auto-Accept -->
-						{#if data.isParliamentMember}
+						{#if data.isParliamentMember || data.canAutoAccept}
 							<div class="p-4 border-t border-[#c8b47a]/10 space-y-3">
 								{#if proposal.userVote}
 									<p class="text-xs text-center text-[#a8a083] mb-3">
@@ -681,13 +691,32 @@
 								<!-- Auto-Accept/Reject Buttons (Ministers/President) -->
 								{#if data.canAutoAccept}
 									<div class="grid grid-cols-2 gap-2 mb-2">
-										<form method="POST" action="?/acceptProposal" use:enhance>
+										<form
+											method="POST"
+											action="?/acceptProposal"
+											use:confirmSubmit={{
+												title: "Enact this proposal now?",
+												body: "It passes immediately, without waiting for the vote.",
+												confirmLabel: "Enact"
+											}}
+											use:enhance={withToast}
+										>
 											<input type="hidden" name="proposalId" value={proposal.id} />
 											<Button type="submit" variant="soft-emerald" size="sm" block icon={FluentCheckmarkCircle20Filled}>
 												Auto-Accept
 											</Button>
 										</form>
-										<form method="POST" action="?/rejectProposal" use:enhance>
+										<form
+											method="POST"
+											action="?/rejectProposal"
+											use:confirmSubmit={{
+												title: "Reject this proposal?",
+												body: "Voting ends and the proposal is rejected.",
+												confirmLabel: "Reject",
+												danger: true
+											}}
+											use:enhance={withToast}
+										>
 											<input type="hidden" name="proposalId" value={proposal.id} />
 											<Button type="submit" variant="soft-red" size="sm" block icon={FluentDismiss20Filled}>
 												Auto-Reject
@@ -697,35 +726,37 @@
 								{/if}
 
 								<!-- Regular Voting -->
-								<form method="POST" action="?/vote" use:enhance class="flex gap-2">
-									<input type="hidden" name="proposalId" value={proposal.id} />
+								{#if data.isParliamentMember}
+									<form method="POST" action="?/vote" use:enhance={withToast} class="flex gap-2">
+										<input type="hidden" name="proposalId" value={proposal.id} />
 
-									<Button
-										type="submit"
-										name="voteType"
-										value="for"
-										variant="soft-emerald"
-										size="sm"
-										grow
-										icon={FluentCheckmark20Filled}
-										class={proposal.userVote === "for" ? "ring-2 ring-[#6fd14a]" : ""}
-									>
-										For
-									</Button>
+										<Button
+											type="submit"
+											name="voteType"
+											value="for"
+											variant="soft-emerald"
+											size="sm"
+											grow
+											icon={FluentCheckmark20Filled}
+											class={proposal.userVote === "for" ? "ring-2 ring-[#6fd14a]" : ""}
+										>
+											For
+										</Button>
 
-									<Button
-										type="submit"
-										name="voteType"
-										value="against"
-										variant="soft-red"
-										size="sm"
-										grow
-										icon={FluentDismiss20Filled}
-										class={proposal.userVote === "against" ? "ring-2 ring-red-400" : ""}
-									>
-										Against
-									</Button>
-								</form>
+										<Button
+											type="submit"
+											name="voteType"
+											value="against"
+											variant="soft-red"
+											size="sm"
+											grow
+											icon={FluentDismiss20Filled}
+											class={proposal.userVote === "against" ? "ring-2 ring-red-400" : ""}
+										>
+											Against
+										</Button>
+									</form>
+								{/if}
 							</div>
 						{/if}
 					</div>

@@ -23,6 +23,7 @@ import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { fail } from "@sveltejs/kit";
 import type { Actions } from "./$types";
 import { executeProposal } from "#lib/server/services/politics/execute-proposal.js";
+import { ConstructionError } from "#lib/server/services/politics/construction.service.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 
 export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) => {
@@ -362,7 +363,7 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 		isParliamentMember: !!userMembership,
 		userParty: userMembership?.partyAffiliation || null,
 		userMinistry: userMinistry?.ministry || null,
-		isFinanceMinister: userMinistry?.ministry === "finance",
+		isFinanceMinister: userMinistry?.ministry === "economy",
 		isPresident: !!userPresidency,
 		canAutoAccept: !!(userMinistry || userPresidency), // Ministers or President can auto-accept
 		nextElection: nextElection
@@ -388,7 +389,7 @@ export const actions = {
 		const proposalId = parseInt(formData.get("proposalId") as string);
 		const voteType = formData.get("voteType") as "for" | "against" | "abstain";
 
-		if (!proposalId || !voteType) {
+		if (!proposalId || !["for", "against", "abstain"].includes(voteType)) {
 			return fail(400, { error: "Invalid vote data" });
 		}
 
@@ -401,7 +402,7 @@ export const actions = {
 		}
 
 		const proposal = await db.query.parliamentaryProposals.findFirst({
-			where: eq(parliamentaryProposals.id, proposalId)
+			where: and(eq(parliamentaryProposals.id, proposalId), eq(parliamentaryProposals.stateId, stateId))
 		});
 
 		if (!proposal || proposal.status !== "active") {
@@ -459,7 +460,7 @@ export const actions = {
 		}
 
 		const proposal = await db.query.parliamentaryProposals.findFirst({
-			where: eq(parliamentaryProposals.id, proposalId)
+			where: and(eq(parliamentaryProposals.id, proposalId), eq(parliamentaryProposals.stateId, stateId))
 		});
 
 		if (!proposal || proposal.status !== "active") {
@@ -487,21 +488,27 @@ export const actions = {
 			});
 		}
 
-		// Execute the proposal first — only mark it "passed" once execution
-		// actually succeeds, otherwise the proposal would show as passed in
-		// history while nothing was actually built or charged.
+		// Claim it first so a double click (or the voting job) can't carry it
+		// out twice; if it can't be carried out, it goes back to the vote.
+		const [claimed] = await db
+			.update(parliamentaryProposals)
+			.set({ status: "passed" })
+			.where(and(eq(parliamentaryProposals.id, proposalId), eq(parliamentaryProposals.status, "active")))
+			.returning({ id: parliamentaryProposals.id });
+		if (!claimed) return fail(409, { error: "This proposal has already been decided." });
+
 		try {
 			await executeProposal(stateId, proposal.proposalType, proposal.proposedBy, proposal.id);
-		} catch (err: any) {
-			return fail(400, { error: err.message || "Failed to execute proposal" });
+		} catch (err) {
+			await db
+				.update(parliamentaryProposals)
+				.set({ status: "active" })
+				.where(eq(parliamentaryProposals.id, proposalId));
+			if (!(err instanceof ConstructionError)) console.error(`Proposal ${proposalId} failed to execute:`, err);
+			return fail(400, {
+				error: err instanceof ConstructionError ? err.message : "This proposal could not be carried out."
+			});
 		}
-
-		await db
-			.update(parliamentaryProposals)
-			.set({
-				status: "passed"
-			})
-			.where(eq(parliamentaryProposals.id, proposalId));
 
 		return { success: true, message: "Proposal accepted and executed" };
 	},
@@ -530,7 +537,7 @@ export const actions = {
 		}
 
 		const proposal = await db.query.parliamentaryProposals.findFirst({
-			where: eq(parliamentaryProposals.id, proposalId)
+			where: and(eq(parliamentaryProposals.id, proposalId), eq(parliamentaryProposals.stateId, stateId))
 		});
 
 		if (!proposal || proposal.status !== "active") {
@@ -558,13 +565,12 @@ export const actions = {
 			});
 		}
 
-		// Update proposal status to rejected
-		await db
+		const [rejected] = await db
 			.update(parliamentaryProposals)
-			.set({
-				status: "rejected"
-			})
-			.where(eq(parliamentaryProposals.id, proposalId));
+			.set({ status: "rejected" })
+			.where(and(eq(parliamentaryProposals.id, proposalId), eq(parliamentaryProposals.status, "active")))
+			.returning({ id: parliamentaryProposals.id });
+		if (!rejected) return fail(409, { error: "This proposal has already been decided." });
 
 		return { success: true, message: "Proposal rejected" };
 	}
