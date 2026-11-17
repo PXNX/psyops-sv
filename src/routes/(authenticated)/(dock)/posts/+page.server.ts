@@ -1,130 +1,16 @@
-// src/routes/(authenticated)/(fullscreen)/posts/+page.server.ts
+// src/routes/(authenticated)/(dock)/posts/+page.server.ts
+// The first page of the feed; later pages come from /posts/feed.
+import { eq } from "drizzle-orm";
+import type { PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
-import { articles, accounts, newspapers, upvotes, files, userProfiles } from "#lib/server/schema.js";
-import { eq, desc, sql, lt } from "drizzle-orm";
-import type { PageServerLoad, Actions } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
-
-const PAGE_SIZE = 20;
-
-async function fetchArticles(cursor: string | null, accountId: string) {
-	// Build the query
-	let query = db
-		.select({
-			id: articles.id,
-			title: articles.title,
-			content: articles.content,
-			createdAt: articles.createdAt,
-			authorId: articles.authorId,
-			authorName: userProfiles.name,
-			authorLogoFileId: userProfiles.logo,
-			newspaperId: articles.newspaperId,
-			newspaperName: newspapers.name,
-			newspaperLogoFileId: newspapers.logo,
-			upvoteCount: sql<number>`cast(count(${upvotes.id}) as int)`
-		})
-		.from(articles)
-		.leftJoin(accounts, eq(articles.authorId, accounts.id))
-		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
-		.leftJoin(newspapers, eq(articles.newspaperId, newspapers.id))
-		.leftJoin(upvotes, eq(articles.id, upvotes.articleId))
-		.groupBy(
-			articles.id,
-			articles.title,
-			articles.content,
-			articles.createdAt,
-			articles.authorId,
-			articles.newspaperId,
-			userProfiles.name,
-			userProfiles.logo,
-			newspapers.name,
-			newspapers.logo
-		)
-		.orderBy(desc(articles.createdAt))
-		.limit(PAGE_SIZE + 1); // Fetch one extra to check if there are more
-
-	// If cursor is provided, only fetch articles older than the cursor
-	if (cursor) {
-		const cursorDate = new Date(cursor);
-		query = query.where(lt(articles.createdAt, cursorDate)) as any;
-	}
-
-	const articlesData = await query;
-
-	// Check if there are more articles
-	const hasMore = articlesData.length > PAGE_SIZE;
-	const articlesToReturn = hasMore ? articlesData.slice(0, PAGE_SIZE) : articlesData;
-
-	// Get signed URLs for logos
-	const articlesWithUrls = await Promise.all(
-		articlesToReturn.map(async (article) => {
-			const resolveLogo = async (fileId: number): Promise<string | null> => {
-				const logoFile = await db.query.files.findFirst({
-					where: eq(files.id, fileId)
-				});
-				return logoFile ? await getSignedDownloadUrl(logoFile.key) : null;
-			};
-
-			// Get newspaper and author logos in parallel
-			const [newspaperLogo, authorLogo] = await Promise.all([
-				article.newspaperId && article.newspaperLogoFileId ? resolveLogo(article.newspaperLogoFileId) : null,
-				article.authorLogoFileId ? resolveLogo(article.authorLogoFileId) : null
-			]);
-
-			return {
-				id: article.id,
-				title: article.title,
-				content: article.content,
-				createdAt: article.createdAt,
-				authorId: article.authorId,
-				authorName: article.authorName,
-				authorLogo,
-				newspaperId: article.newspaperId,
-				newspaperName: article.newspaperName,
-				newspaperLogo,
-				upvoteCount: article.upvoteCount,
-				own: accountId === article.authorId
-			};
-		})
-	);
-
-	// Calculate next cursor
-	const nextCursor =
-		hasMore && articlesToReturn.length > 0
-			? articlesToReturn[articlesToReturn.length - 1].createdAt.toISOString()
-			: null;
-
-	return {
-		articles: articlesWithUrls,
-		hasMore,
-		nextCursor
-	};
-}
+import { upvotes } from "#lib/server/schema.js";
+import { fetchFeed } from "#lib/server/services/content/feed.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
-
-	const [result, upvotedArticles] = await Promise.all([
-		fetchArticles(null, account.id),
-		// Get user's upvoted articles
+	const [result, upvoted] = await Promise.all([
+		fetchFeed(account.id, { subscribed: false }),
 		db.select({ articleId: upvotes.articleId }).from(upvotes).where(eq(upvotes.userId, account.id))
 	]);
-	const userUpvotes = upvotedArticles.map((u) => u.articleId);
-
-	return {
-		...result,
-		userUpvotes
-	};
+	return { ...result, userUpvotes: upvoted.map((u) => u.articleId) };
 };
-
-export const actions = {
-	loadMore: async ({ request, locals }) => {
-		const account = locals.account!;
-		const formData = await request.formData();
-		const cursor = formData.get("cursor") as string | null;
-
-		const result = await fetchArticles(cursor, account.id);
-
-		return Response.json(result);
-	}
-} satisfies Actions;

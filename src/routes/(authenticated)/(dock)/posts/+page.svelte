@@ -40,14 +40,8 @@
 
 		isLoading = true;
 		try {
-			const formData = new FormData();
-			formData.append("cursor", nextCursor);
-
-			const response = await fetch("?/loadMore", {
-				method: "POST",
-				body: formData
-			});
-
+			const response = await fetch(`/posts/feed?cursor=${encodeURIComponent(nextCursor)}`);
+			if (!response.ok) throw new Error(`Feed request failed: ${response.status}`);
 			const result = await response.json();
 
 			allArticles = [...allArticles, ...result.articles];
@@ -141,9 +135,9 @@
 					<div class="flex-shrink-0">
 						<div class="size-11 sm:size-12 rounded-sm overflow-hidden">
 							{#if article.newspaperId}
-								<Logo src={article.newspaperLogo} alt={article.newspaperName} />
+								<Logo src={article.newspaperLogo} alt={article.newspaperName ?? ""} />
 							{:else}
-								<Logo src={article.authorLogo} alt={article.authorName} />
+								<Logo src={article.authorLogo} alt={article.authorName ?? ""} />
 							{/if}
 						</div>
 					</div>
