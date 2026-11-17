@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { browser } from "$app/env";
+	import { fly } from "svelte/transition";
+	import { backOut } from "svelte/easing";
+	import { prefersReducedMotion } from "svelte/motion";
+	import FluentDismiss16Filled from "~icons/fluent/dismiss-16-filled";
+	import Button from "#lib/component/ui/Button.svelte";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
 
 	const DISMISSED_KEY = "psyops:install-prompt-dismissed";
 
@@ -66,47 +72,31 @@
 </script>
 
 {#if visible}
+	<!-- Floats above the dock (bottom-20) so it never covers the navigation. -->
 	<div
-		class="fixed bottom-4 inset-x-4 sm:left-auto sm:right-4 sm:w-96 z-50 panel rounded-xl p-4 shadow-lg flex items-start gap-3"
+		class="fixed bottom-20 inset-x-4 sm:left-auto sm:right-4 sm:w-96 z-50 panel rounded-sm p-4 flex items-start gap-3"
+		role="dialog"
+		aria-label="Install PsyOps"
+		in:fly={{ y: 32, duration: prefersReducedMotion.current ? 0 : 380, easing: backOut }}
+		out:fly={{ y: 32, duration: prefersReducedMotion.current ? 0 : 160 }}
 	>
-		<img loading="lazy" decoding="async" src="/icon-192.png" alt="" class="size-10 rounded-lg shrink-0" />
+		<img src="/icon-192.png" alt="" class="size-10 rounded-sm shrink-0" />
 		<div class="flex-1 min-w-0">
 			<p class="text-sm font-semibold text-[#f5efd8]">Install PsyOps</p>
 			{#if deferredPrompt}
 				<p class="text-xs text-[#a8a083] mt-0.5">Add it to your home screen for a faster, full-screen experience.</p>
 				<div class="flex gap-2 mt-3">
-					<button
-						onclick={install}
-						class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#f2b01e] text-[#1b1708] hover:brightness-110 transition"
-					>
-						Install
-					</button>
-					<button
-						onclick={dismiss}
-						class="px-3 py-1.5 rounded-lg text-xs font-medium text-[#a8a083] hover:text-[#f5efd8] transition-colors"
-					>
-						Not now
-					</button>
+					<Button size="sm" onclick={install}>Install</Button>
+					<Button size="sm" variant="ghost" onclick={dismiss}>Not now</Button>
 				</div>
 			{:else}
 				<p class="text-xs text-[#a8a083] mt-0.5">
 					Tap <span class="font-semibold text-[#d3caa9]">Share</span>, then
 					<span class="font-semibold text-[#d3caa9]">Add to Home Screen</span>.
 				</p>
-				<button
-					onclick={dismiss}
-					class="mt-3 px-3 py-1.5 rounded-lg text-xs font-medium text-[#a8a083] hover:text-[#f5efd8] transition-colors"
-				>
-					Got it
-				</button>
+				<Button size="sm" variant="ghost" class="mt-3" onclick={dismiss}>Got it</Button>
 			{/if}
 		</div>
-		<button
-			onclick={dismiss}
-			aria-label="Dismiss"
-			class="text-[#a8a083] hover:text-[#f5efd8] transition-colors shrink-0"
-		>
-			✕
-		</button>
+		<IconButton icon={FluentDismiss16Filled} label="Dismiss" size="xs" onclick={dismiss} class="-mt-1 -mr-1 shrink-0" />
 	</div>
 {/if}
