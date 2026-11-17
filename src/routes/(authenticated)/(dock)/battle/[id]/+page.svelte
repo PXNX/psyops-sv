@@ -73,7 +73,7 @@
 		isOver: boolean;
 	}
 
-	function getTimeRemaining(endsAt: string): TimeRemaining {
+	function getTimeRemaining(endsAt: string | Date): TimeRemaining {
 		const now = currentTime.getTime();
 		const end = new Date(endsAt).getTime();
 		const diff = end - now;
@@ -100,6 +100,13 @@
 			defenderDamage: round.defenderTotalDamage,
 			time: new Date(round.roundedAt)
 		}));
+	});
+
+	// A zero-damage battle must still render: an empty [0, 0] y-domain
+	// collapses the scale and leaves the chart blank.
+	const chartYMax = $derived.by(() => {
+		const peak = chartData().reduce((max, d) => Math.max(max, d.attackerDamage, d.defenderDamage), 0);
+		return Math.max(1, peak * 1.1);
 	});
 
 	// Calculate battle momentum (0-100, 50 is neutral)
@@ -750,7 +757,7 @@
 							data={chartData()}
 							x="round"
 							xScale={scaleLinear()}
-							y={[0, Math.max(...chartData().map((d) => Math.max(d.attackerDamage, d.defenderDamage))) * 1.1]}
+							y={[0, chartYMax]}
 							yScale={scaleLinear()}
 							padding={{ left: 40, bottom: 30, top: 20, right: 20 }}
 						>

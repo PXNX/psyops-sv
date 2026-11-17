@@ -342,6 +342,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		capitulatedStates,
 		attackerControl,
 		defenderControl,
+		attackerRegionCount: attackerRegions[0]?.count || 0,
+		defenderRegionCount: defenderRegions[0]?.count || 0,
 		totalRegions
 	};
 };

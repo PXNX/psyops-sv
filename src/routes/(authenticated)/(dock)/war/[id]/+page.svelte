@@ -219,10 +219,10 @@
 			></div>
 			<div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
 				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg"
-					>{data.totalRegions > 0 ? Math.round((data.attackerControl * data.totalRegions) / 100) : 0} regions</span
+					>{data.attackerRegionCount} regions</span
 				>
 				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg"
-					>{data.totalRegions > 0 ? Math.round((data.defenderControl * data.totalRegions) / 100) : 0} regions</span
+					>{data.defenderRegionCount} regions</span
 				>
 			</div>
 		</div>
@@ -231,7 +231,7 @@
 		<div class="mt-4 grid grid-cols-3 gap-3 text-center">
 			<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-2 sm:p-3">
 				<div class="text-xl sm:text-2xl font-bold text-red-300">{data.battleStats.attacker_won}</div>
-				<div class="text-[10px] text-red-300/70 uppercase tracking-wide">Victories</div>
+				<div class="text-[10px] text-red-300/70 uppercase tracking-wide">Attacker Wins</div>
 			</div>
 			<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-2 sm:p-3">
 				<div class="text-xl sm:text-2xl font-bold text-[#ffd35c]">{data.battleStats.ongoing}</div>
@@ -239,7 +239,7 @@
 			</div>
 			<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-2 sm:p-3">
 				<div class="text-xl sm:text-2xl font-bold text-[#b3dcff]">{data.battleStats.defender_won}</div>
-				<div class="text-[10px] text-[#b3dcff]/70 uppercase tracking-wide">Victories</div>
+				<div class="text-[10px] text-[#b3dcff]/70 uppercase tracking-wide">Defender Wins</div>
 			</div>
 		</div>
 	</div>
