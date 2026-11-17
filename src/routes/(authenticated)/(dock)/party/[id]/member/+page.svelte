@@ -1,5 +1,6 @@
 <!-- src/routes/party/[id]/member/+page.svelte -->
 <script lang="ts">
+	import { toast, toastResult } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentPersonAdd20Filled from "~icons/fluent/person-add-20-filled";
@@ -29,6 +30,8 @@
 	let promotingMemberId = $state<string | null>(null);
 	let demotingMemberId = $state<string | null>(null);
 	let disbanding = $state(false);
+	let disbandConfirmText = $state("");
+	const disbandConfirmed = $derived(disbandConfirmText.trim() === data.party.name);
 	let togglingAutoAccept = $state(false);
 	let processingApplicationId = $state<number | null>(null);
 
@@ -342,7 +345,8 @@
 		{#if data.canJoin && !data.isMember}
 			<div
 				class="panel rounded-sm p-4 sm:p-5 overflow-hidden relative"
-				style="background-color: {data.party.color}0d; background-image: radial-gradient(circle at top, {data.party.color}40, transparent 70%);"
+				style="background-color: {data.party.color}0d; background-image: radial-gradient(circle at top, {data.party
+					.color}40, transparent 70%);"
 			>
 				<form
 					method="POST"
@@ -449,7 +453,11 @@
 			</label>
 			<input
 				id="confirm-text"
+				name="confirmName"
+				form="disband-form"
 				type="text"
+				autocomplete="off"
+				bind:value={disbandConfirmText}
 				class="field-control rounded-sm px-3 py-2.5 w-full text-sm"
 				placeholder="Party name"
 			/>
@@ -458,23 +466,35 @@
 		<div class="flex gap-3 justify-end">
 			<Button type="button" variant="secondary" size="sm" onclick={() => (disbandModalOpen = false)}>Cancel</Button>
 			<form
+				id="disband-form"
 				method="POST"
 				action="?/disband"
-				use:enhance={() => {
-					const input = document.getElementById("confirm-text") as HTMLInputElement;
-					if (input.value !== data.party.name) {
-						alert("Please type the party name correctly to confirm.");
-						return () => {};
+				use:enhance={({ cancel }) => {
+					// The button is disabled until the name matches; this is the backstop
+					// (returning early without cancel() would still submit the form).
+					if (!disbandConfirmed) {
+						toast.error("Type the party name exactly to confirm.");
+						cancel();
+						return;
 					}
 					disbanding = true;
-					return async ({ update }) => {
+					return async ({ result, update }) => {
 						await update();
+						toastResult(result);
 						disbanding = false;
 					};
 				}}
 			>
-				<Button type="submit" variant="danger" size="sm" icon={FluentDelete20Filled} disabled={disbanding}>
-					{disbanding ? "Disbanding..." : "Disband"}
+				<Button
+					type="submit"
+					variant="danger"
+					size="sm"
+					icon={FluentDelete20Filled}
+					disabled={!disbandConfirmed}
+					loading={disbanding}
+					loadingText="Disbanding..."
+				>
+					Disband
 				</Button>
 			</form>
 		</div>

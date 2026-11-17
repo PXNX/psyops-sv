@@ -493,9 +493,10 @@ export const actions: Actions = {
 		return { success: true, message: "Deputy leader demoted to member" };
 	},
 
-	disband: async ({ params, locals }) => {
+	disband: async ({ params, locals, request }) => {
 		const account = locals.account!;
 		const partyId = parseInt(params.id);
+		const confirmName = String((await request.formData()).get("confirmName") ?? "").trim();
 
 		try {
 			// Get party details with state info
@@ -515,6 +516,12 @@ export const actions: Actions = {
 			const membership = party.members.find((m) => m.userId === account.id);
 			if (!membership || membership.role !== "leader") {
 				return fail(403, { error: "Only the party leader can disband the party" });
+			}
+
+			// Disbanding can abolish a whole state, so the leader must have typed
+			// the party name; the UI checks this too, but the server decides.
+			if (confirmName !== party.name) {
+				return fail(400, { error: "Type the party name exactly to confirm." });
 			}
 
 			// Check if leader is the only member
