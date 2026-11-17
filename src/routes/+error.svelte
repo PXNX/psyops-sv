@@ -5,16 +5,21 @@
 	import FluentEmojiKnockedOutFace from "~icons/fluent-emoji/knocked-out-face";
 	import FluentEmojiLeftArrow from "~icons/fluent-emoji/left-arrow";
 	import FluentEmojiEnvelopeWithArrow from "~icons/fluent-emoji/envelope-with-arrow";
-	import { error } from "@sveltejs/kit";
+	import { onMount } from "svelte";
 	import { PUBLIC_TELEGRAM_BOT_USERNAME } from "$app/env/public";
 	import Button from "#lib/component/ui/Button.svelte";
 
 	const botUsername = PUBLIC_TELEGRAM_BOT_USERNAME || "RW_SupportBot";
+
+	let canGoBack = $state(false);
+	onMount(() => {
+		canGoBack = history.length > 1;
+	});
 </script>
 
 <main class="flex flex-col items-center justify-center min-h-dvh p-4 text-center">
 	<div
-		class="panel rounded-sm flex flex-col items-center justify-center gap-1 p-6 w-full max-w-md text-center place-self-center"
+		class="panel animate-pop-in rounded-sm flex flex-col items-center justify-center gap-1 p-6 w-full max-w-md text-center place-self-center"
 	>
 		{#if page.status === 404}
 			<FluentEmojiEyes class="w-12 h-12" />
@@ -64,9 +69,14 @@
 		>
 	</div>
 
-	<Button variant="ghost" icon={FluentEmojiLeftArrow} onclick={() => history.back()} class="mt-4 btn-wide"
-		>Go back</Button
-	>
+	<!-- Opened directly (shared link, push notification) there is nothing to go
+	     back to, so offer the dashboard instead. -->
+	{#if canGoBack}
+		<Button variant="ghost" icon={FluentEmojiLeftArrow} onclick={() => history.back()} class="mt-4 btn-wide">
+			Go back
+		</Button>
+	{:else}
+		<Button variant="ghost" icon={FluentEmojiLeftArrow} href="/" class="mt-4 btn-wide">Go to dashboard</Button>
+	{/if}
 </main>
 
-{JSON.stringify(page.error)}
