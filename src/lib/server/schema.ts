@@ -6,6 +6,7 @@ import {
 	decimal,
 	index,
 	integer,
+	jsonb,
 	pgEnum,
 	pgTable,
 	text,
@@ -2282,7 +2283,11 @@ export const battles = pgTable("battles", {
 	planningStartedAt: timestamp("planning_started_at"),
 
 	startedAt: timestamp("started_at").defaultNow().notNull(),
-	endedAt: timestamp("ended_at")
+	endedAt: timestamp("ended_at"),
+
+	// Region levels destroyed when the attacker took the region, e.g.
+	// { fortifications: 3, infrastructure: 1 }. Null if nothing was lost.
+	buildingsDestroyed: jsonb("buildings_destroyed").$type<Partial<Record<string, number>>>()
 });
 
 // Battle participants - links military units to battles

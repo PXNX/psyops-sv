@@ -47,11 +47,14 @@ export const GET: RequestHandler = async ({ request }) => {
 		for (const battle of activeBattles) {
 			try {
 				const result = await processCombatRound(db, battle.id);
+				if (!result) continue; // ended or moved on since we listed it
 				if (result.battleEnded) {
 					battlesEnded++;
 					console.log(`🏁 Battle ${battle.id} ended - Winner: ${result.winner}`);
 
-					notifyBattleResult(battle, result.winner!).catch((err) => console.error("Battle notification error:", err));
+					notifyBattleResult({ ...battle, buildingsDestroyed: result.buildingsDestroyed }, result.winner!).catch(
+						(err) => console.error("Battle notification error:", err)
+					);
 				} else {
 					roundsProcessed++;
 					console.log(`⚔️ Processed combat round ${result.roundNumber} for battle ${battle.id}`);
@@ -90,7 +93,9 @@ async function notifyBattleResult(battle: any, winner: "attacker" | "defender") 
 
 	const payload = {
 		title: "🏁 Battle Ended",
-		body: `${winnerName} defeated ${loserName} in battle!`,
+		body:
+			`${winnerName} defeated ${loserName} in battle!` +
+			(battle.buildingsDestroyed ? " The fighting destroyed buildings in the region." : ""),
 		icon: "/favicon.png",
 		badge: "/badge.png",
 		data: { url: `/battle/${battle.id}`, tag: `battle-${battle.id}` }

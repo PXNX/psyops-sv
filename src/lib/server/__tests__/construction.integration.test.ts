@@ -6,6 +6,7 @@ import { accounts, regions, stateBuildings, stateResourceInventory, stateTreasur
 import {
 	ConstructionError,
 	checkConstruction,
+	conquestLosses,
 	completePendingConstructions,
 	startConstruction
 } from "../services/politics/construction.service";
@@ -91,6 +92,20 @@ describe("checkConstruction", () => {
 		expect(check.ok).toBe(false);
 		expect(check.problems.some((p) => p.includes("treasury"))).toBe(true);
 		expect(check.problems.some((p) => p.includes("steel"))).toBe(true);
+	});
+});
+
+describe("conquestLosses", () => {
+	it("hits forts hardest and destroys at least one level of anything built", () => {
+		expect(conquestLosses({ infrastructure: 8, fortifications: 10, education: 1, hospitals: 0, economy: 2 })).toEqual({
+			infrastructure: 2,
+			fortifications: 5,
+			education: 1,
+			economy: 1
+		});
+		expect(conquestLosses({ infrastructure: 0, fortifications: 0, education: 0, hospitals: 0, economy: 0 })).toEqual(
+			{}
+		);
 	});
 });
 

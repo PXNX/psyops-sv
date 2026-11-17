@@ -226,3 +226,54 @@ export async function completePendingConstructions(
 		return claimed.length;
 	});
 }
+
+/**
+ * Share of each region level destroyed when an attacker takes the region.
+ * The defences were breached, so forts suffer most.
+ */
+export const CONQUEST_DAMAGE: Record<RegionStat, number> = {
+	fortifications: 0.5,
+	infrastructure: 0.25,
+	economy: 0.25,
+	hospitals: 0.2,
+	education: 0.2
+};
+
+/** Levels lost per stat when a region is conquered (at least one of anything built). */
+export function conquestLosses(region: Pick<Region, RegionStat>): Partial<Record<RegionStat, number>> {
+	const losses: Partial<Record<RegionStat, number>> = {};
+	for (const [stat, share] of Object.entries(CONQUEST_DAMAGE) as [RegionStat, number][]) {
+		const level = regionLevel(region, stat);
+		if (level > 0) losses[stat] = Math.max(1, Math.round(level * share));
+	}
+	return losses;
+}
+
+/**
+ * Wrecks a conquered region: knocks levels off its buildings and scraps
+ * anything still under construction there (it was the old owner's project).
+ * Run inside the transaction that hands the region over.
+ */
+export async function applyConquestDamage(tx: Tx, regionId: number) {
+	const [region] = await tx.select().from(regions).where(eq(regions.id, regionId)).for("update");
+	if (!region) return { losses: {}, scrapped: 0 };
+	const losses = conquestLosses(region);
+	if (Object.keys(losses).length) {
+		await tx
+			.update(regions)
+			.set(
+				Object.fromEntries(
+					Object.entries(losses).map(([stat, lost]) => [
+						stat,
+						Math.max(0, regionLevel(region, stat as RegionStat) - lost!)
+					])
+				)
+			)
+			.where(eq(regions.id, regionId));
+	}
+	const scrapped = await tx
+		.delete(stateBuildings)
+		.where(and(eq(stateBuildings.regionId, regionId), eq(stateBuildings.isUnderConstruction, true)))
+		.returning({ id: stateBuildings.id });
+	return { losses, scrapped: scrapped.length };
+}

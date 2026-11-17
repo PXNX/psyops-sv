@@ -145,6 +145,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			startedAt: battle.startedAt,
 			endedAt: battle.endedAt,
 			fortification: battle.region.fortifications ?? 0,
+			buildingsDestroyed: battle.buildingsDestroyed ?? null,
 			fortificationReduction: fortificationReduction(battle.region.fortifications ?? 0)
 		},
 		attacker: {

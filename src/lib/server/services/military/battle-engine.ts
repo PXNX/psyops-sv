@@ -18,6 +18,7 @@ import {
 	getExperienceCombatModifier
 } from "#lib/config/index.js";
 import { selectEngagedUnits } from "./combat";
+import { applyConquestDamage } from "../politics/construction.service";
 
 /** Frontage per terrain: how much combat width each side may put in the line. */
 export const TERRAIN_DATA = {
@@ -43,6 +44,8 @@ export interface RoundResult {
 	defenderDamage: number;
 	battleEnded: boolean;
 	winner: "attacker" | "defender" | null;
+	/** Region levels destroyed when the attacker took the region. */
+	buildingsDestroyed: Partial<Record<string, number>> | null;
 }
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -156,16 +159,26 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 		else if (defendersLeft === 0) winner = "attacker";
 
 		if (winner) {
+			let buildingsDestroyed: Partial<Record<string, number>> | null = null;
 			if (winner === "attacker") {
+				// The fighting wrecks part of what was built there.
+				const { losses } = await applyConquestDamage(tx, battle.regionId);
+				if (Object.keys(losses).length) buildingsDestroyed = losses;
 				await tx.update(regions).set({ stateId: battle.attackerStateId }).where(eq(regions.id, battle.regionId));
 			}
 			await tx
 				.update(battles)
-				.set({ status: winner === "attacker" ? "attacker_won" : "defender_won", phase: "ended", endedAt: new Date() })
+				.set({
+					status: winner === "attacker" ? "attacker_won" : "defender_won",
+					phase: "ended",
+					endedAt: new Date(),
+					buildingsDestroyed
+				})
 				.where(eq(battles.id, battleId));
+			return { roundNumber, attackerDamage, defenderDamage, battleEnded: true, winner, buildingsDestroyed };
 		}
 
-		return { roundNumber, attackerDamage, defenderDamage, battleEnded: !!winner, winner };
+		return { roundNumber, attackerDamage, defenderDamage, battleEnded: false, winner, buildingsDestroyed: null };
 	});
 }
 

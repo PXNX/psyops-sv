@@ -1,5 +1,7 @@
 <!-- src/routes/(authenticated)/(dock)/battle/[id]/+page.svelte -->
 <script lang="ts">
+	import { BUILDING_TEMPLATES } from "#lib/config/index.js";
+	import SectionCard from "#lib/component/SectionCard.svelte";
 	import { enhance } from "$app/forms";
 	import { invalidateAll } from "$app/navigation";
 	import { onMount } from "svelte";
@@ -63,6 +65,14 @@
 	});
 
 	// ── Status ─────────────────────────────────────────────────────────────
+	// Region levels lost when the attacker took the region.
+	const destroyed = $derived(
+		Object.entries(data.battle.buildingsDestroyed ?? {}).map(([stat, lost]) => {
+			const t = Object.values(BUILDING_TEMPLATES).find((b) => b.stat === stat);
+			return { stat, lost: lost ?? 0, label: t?.statLabel ?? stat, icon: t?.icon ?? "🏚️" };
+		})
+	);
+
 	const winner = $derived<Side | null>(
 		data.battle.status === "attacker_won" ? "attacker" : data.battle.status === "defender_won" ? "defender" : null
 	);
@@ -336,6 +346,27 @@
 			</div>
 		</div>
 	</section>
+
+	<!-- What the conquest wrecked -->
+	{#if destroyed.length}
+		<SectionCard>
+			<h2 class="section-title mb-1">Buildings destroyed</h2>
+			<p class="text-sm text-[#a8a083] mb-3">
+				{data.attacker.name} took the region. The fighting wrecked part of what was built there.
+			</p>
+			<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+				{#each destroyed as d (d.stat)}
+					<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 flex items-center gap-2 animate-pop-in">
+						<span class="text-2xl" aria-hidden="true">{d.icon}</span>
+						<div class="min-w-0">
+							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide truncate">{d.label}</p>
+							<p class="text-sm font-bold text-red-300 font-mono">−{d.lost} level{d.lost === 1 ? "" : "s"}</p>
+						</div>
+					</div>
+				{/each}
+			</div>
+		</SectionCard>
+	{/if}
 
 	<!-- Your forces -->
 	{#if data.battle.phase !== "ended"}

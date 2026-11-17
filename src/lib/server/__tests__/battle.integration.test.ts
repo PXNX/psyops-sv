@@ -1,6 +1,6 @@
 // The combat engine against a real (in-memory) Postgres with the demo world.
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
 import { battleParticipants, battleRounds, battles, regions } from "../schema";
 import { processCombatRound, fortificationReduction } from "../services/military/battle-engine";
@@ -47,6 +47,16 @@ describe("processCombatRound", () => {
 	});
 
 	it("fights until one side is destroyed, then hands the region to a winning attacker", async () => {
+		// Weaken the defence so the attackers take the region, and give it
+		// something to wreck.
+		await handle.db
+			.update(battleParticipants)
+			.set({ currentStrength: 1 })
+			.where(and(eq(battleParticipants.battleId, activeBattle.id), eq(battleParticipants.side, "defender")));
+		await handle.db
+			.update(regions)
+			.set({ infrastructure: 4, fortifications: 6, education: 0, hospitals: 0, economy: 0 })
+			.where(eq(regions.id, activeBattle.regionId));
 		let result = null;
 		for (let i = 0; i < 200; i++) {
 			result = await processCombatRound(handle.db, activeBattle.id);
@@ -60,6 +70,12 @@ describe("processCombatRound", () => {
 		expect(region!.stateId).toBe(
 			result!.winner === "attacker" ? activeBattle.attackerStateId : activeBattle.defenderStateId
 		);
+
+		// Conquest wrecks part of the region's buildings and records it.
+		expect(result!.winner).toBe("attacker");
+		expect(region!.fortifications).toBe(3);
+		expect(region!.infrastructure).toBe(3);
+		expect(battle!.buildingsDestroyed).toEqual({ fortifications: 3, infrastructure: 1 });
 
 		const participants = await handle.db
 			.select()
