@@ -1,349 +1,194 @@
 // src/routes/(authenticated)/(dock)/war/[id]/+page.server.ts
+// A war at a glance: both coalitions, the front line, every battle, and for
+// the presidents of the warring states, surrendering.
+import { error, fail } from "@sveltejs/kit";
+import { and, desc, eq, inArray, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
+import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
-import { wars, battles, warSurrenders, states, blocs, accounts, userProfiles, regions } from "#lib/server/schema.js";
-import { eq, desc, and, sql } from "drizzle-orm";
-import type { PageServerLoad } from "./$types";
-import { error } from "@sveltejs/kit";
+import {
+	battles,
+	blocs,
+	presidents,
+	regionBorders,
+	regions,
+	states,
+	userProfiles,
+	warSurrenders,
+	wars
+} from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import {
+	surrenderWar,
+	WAR_END_REASON_LABELS,
+	type WarEndReason
+} from "#lib/server/services/military/war-resolution.service.js";
+import { WAR_CONFIG, exhaustionAt } from "#lib/config/index.js";
+
+type Side = "attacker" | "defender";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
-	const warId = parseInt(params.id);
+	const warId = Number(params.id);
+	if (!Number.isInteger(warId)) error(400, "Invalid war ID");
 
-	if (isNaN(warId)) {
-		throw error(400, "Invalid war ID");
-	}
+	const war = await db.query.wars.findFirst({ where: eq(wars.id, warId) });
+	if (!war) error(404, "War not found");
 
-	// Get war details
-	const [warData] = await db
-		.select({
-			id: wars.id,
-			attackerId: wars.attackerId,
-			defenderId: wars.defenderId,
-			attackerBlocId: wars.attackerBlocId,
-			defenderBlocId: wars.defenderBlocId,
-			declaredBy: wars.declaredBy,
-			declaredAt: wars.declaredAt,
-			endedAt: wars.endedAt,
-			status: wars.status,
-			exhaustion: wars.exhaustion,
-			endedReason: wars.endedReason,
-			declarerName: userProfiles.name,
-			declarerLogo: userProfiles.logo
-		})
-		.from(wars)
-		.leftJoin(accounts, eq(wars.declaredBy, accounts.id))
-		.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
-		.where(eq(wars.id, warId))
-		.limit(1);
-
-	if (!warData) {
-		throw error(404, "War not found");
-	}
-
-	// Everything below only depends on warData, so it all runs in parallel
-	const [
-		{ state: attackerState, logo: attackerLogo },
-		{ state: defenderState, logo: defenderLogo },
-		attackerBloc,
-		defenderBloc,
-		battlesWithDetails,
-		surrenders,
-		battleStats,
-		attackerRegions,
-		defenderRegions,
-		attackerStates,
-		defenderStates,
-		capitulatedStates,
-		declarerLogo
-	] = await Promise.all([
-		// Get attacker state
+	// Each side is a single state, or every member state of its bloc.
+	const sideStates = async (stateId: number, blocId: number | null) =>
 		db
 			.select()
 			.from(states)
-			.where(eq(states.id, warData.attackerId))
-			.limit(1)
-			.then(async ([state]) => ({ state, logo: await getLogoUrl(state?.logo) })),
+			.where(blocId ? eq(states.blocId, blocId) : eq(states.id, stateId));
 
-		// Get defender state
-		db
-			.select()
-			.from(states)
-			.where(eq(states.id, warData.defenderId))
-			.limit(1)
-			.then(async ([state]) => ({ state, logo: await getLogoUrl(state?.logo) })),
+	const [attackerStates, defenderStates, attackerBloc, defenderBloc, warBattles, surrenders, declarer, myPresidency] =
+		await Promise.all([
+			sideStates(war.attackerId, war.attackerBlocId),
+			sideStates(war.defenderId, war.defenderBlocId),
+			war.attackerBlocId ? db.query.blocs.findFirst({ where: eq(blocs.id, war.attackerBlocId) }) : null,
+			war.defenderBlocId ? db.query.blocs.findFirst({ where: eq(blocs.id, war.defenderBlocId) }) : null,
+			db.select().from(battles).where(eq(battles.warId, warId)).orderBy(desc(battles.startedAt)),
+			db
+				.select({
+					stateId: warSurrenders.stateId,
+					stateName: states.name,
+					at: warSurrenders.surrenderedAt,
+					reason: warSurrenders.reason
+				})
+				.from(warSurrenders)
+				.innerJoin(states, eq(warSurrenders.stateId, states.id))
+				.where(eq(warSurrenders.warId, warId))
+				.orderBy(desc(warSurrenders.surrenderedAt)),
+			war.declaredBy ? db.query.userProfiles.findFirst({ where: eq(userProfiles.accountId, war.declaredBy) }) : null,
+			db.query.presidents.findFirst({ where: eq(presidents.userId, account.id) })
+		]);
 
-		// Get attacker bloc if exists
-		warData.attackerBlocId
-			? db
-					.select()
-					.from(blocs)
-					.where(eq(blocs.id, warData.attackerBlocId))
-					.limit(1)
-					.then(([bloc]) => bloc)
-			: null,
+	// Main belligerents first, then other coalition members.
+	const order = (list: typeof attackerStates, mainId: number) =>
+		[...list].sort((a, b) => (a.id === mainId ? -1 : b.id === mainId ? 1 : a.name.localeCompare(b.name)));
+	const attackerIds = attackerStates.map((s) => s.id);
+	const defenderIds = defenderStates.map((s) => s.id);
+	const allIds = [...attackerIds, ...defenderIds];
 
-		// Get defender bloc if exists
-		warData.defenderBlocId
-			? db
-					.select()
-					.from(blocs)
-					.where(eq(blocs.id, warData.defenderBlocId))
-					.limit(1)
-					.then(([bloc]) => bloc)
-			: null,
+	const regionCounts = allIds.length
+		? await db
+				.select({ stateId: regions.stateId, n: sql<number>`count(*)::int` })
+				.from(regions)
+				.where(inArray(regions.stateId, allIds))
+				.groupBy(regions.stateId)
+		: [];
+	const regionsOf = (ids: number[]) =>
+		regionCounts.filter((r) => ids.includes(r.stateId!)).reduce((s, r) => s + r.n, 0);
 
-		// Get battles with state names
-		db
-			.select({
-				id: battles.id,
-				warId: battles.warId,
-				regionId: battles.regionId,
-				attackerStateId: battles.attackerStateId,
-				defenderStateId: battles.defenderStateId,
-				starterId: battles.startedBy,
-				startedAt: battles.startedAt,
-				endedAt: battles.endedAt,
-				status: battles.status
-			})
-			.from(battles)
-			.where(eq(battles.warId, warId))
-			.orderBy(desc(battles.startedAt))
-			.then((battlesRaw) =>
-				Promise.all(
-					battlesRaw.map(async (battle) => {
-						const [[attackerState], [defenderState], [starter]] = await Promise.all([
-							db.select({ name: states.name }).from(states).where(eq(states.id, battle.attackerStateId)).limit(1),
-							db.select({ name: states.name }).from(states).where(eq(states.id, battle.defenderStateId)).limit(1),
-							db
-								.select({ name: userProfiles.name })
-								.from(userProfiles)
-								.where(eq(userProfiles.accountId, battle.starterId))
-								.limit(1)
-						]);
-
-						return {
-							...battle,
-							attackerStateName: attackerState?.name || "Unknown",
-							defenderStateName: defenderState?.name || "Unknown",
-							starterName: starter?.name || "Unknown"
-						};
-					})
-				)
-			),
-
-		// Get surrenders
-		db
-			.select({
-				id: warSurrenders.id,
-				warId: warSurrenders.warId,
-				stateId: warSurrenders.stateId,
-				surrendererId: warSurrenders.surrenderedBy,
-				surrenderedAt: warSurrenders.surrenderedAt,
-				reason: warSurrenders.reason,
-				stateName: states.name,
-				stateLogo: states.logo,
-				surrendererName: userProfiles.name
-			})
-			.from(warSurrenders)
-			.innerJoin(states, eq(warSurrenders.stateId, states.id))
-			.leftJoin(accounts, eq(warSurrenders.surrenderedBy, accounts.id))
-			.leftJoin(userProfiles, eq(accounts.id, userProfiles.accountId))
-			.where(eq(warSurrenders.warId, warId))
-			.orderBy(desc(warSurrenders.surrenderedAt))
-			.then((surrendersRaw) =>
-				Promise.all(
-					surrendersRaw.map(async (surrender) => ({
-						id: surrender.id,
-						warId: surrender.warId,
-						state: {
-							id: surrender.stateId,
-							name: surrender.stateName,
-							logo: await getLogoUrl(surrender.stateLogo)
-						},
-						surrenderedAt: surrender.surrenderedAt,
-						reason: surrender.reason,
-						surrenderer: {
-							profile: {
-								name: surrender.surrendererName
-							}
-						}
-					}))
-				)
-			),
-
-		// Get battle statistics
-		db
-			.select({
-				status: battles.status,
-				count: sql<number>`count(*)::int`
-			})
-			.from(battles)
-			.where(eq(battles.warId, warId))
-			.groupBy(battles.status),
-
-		// Get region control
-		db
-			.select({
-				count: sql<number>`count(*)::int`
-			})
-			.from(regions)
-			.where(
-				warData.attackerBlocId
-					? sql`${regions.stateId} IN (SELECT id FROM ${states} WHERE ${states.blocId} = ${warData.attackerBlocId})`
-					: eq(regions.stateId, warData.attackerId)
-			),
-
-		db
-			.select({
-				count: sql<number>`count(*)::int`
-			})
-			.from(regions)
-			.where(
-				warData.defenderBlocId
-					? sql`${regions.stateId} IN (SELECT id FROM ${states} WHERE ${states.blocId} = ${warData.defenderBlocId})`
-					: eq(regions.stateId, warData.defenderId)
-			),
-
-		// Get involved states if blocs are involved
-		(warData.attackerBlocId
-			? db
-					.select()
-					.from(states)
-					.where(eq(states.blocId, warData.attackerBlocId))
-					.then((attackerStatesRaw) =>
-						Promise.all(
-							attackerStatesRaw.map(async (state) => ({
-								...state,
-								logo: await getLogoUrl(state.logo)
-							}))
-						)
+	// Front line: defender regions that border an attacker region. That's
+	// where battles can be started (from the attacker's side of the border).
+	const target = alias(regions, "target");
+	const origin = alias(regions, "origin");
+	const frontLine =
+		war.status === "active" && attackerIds.length && defenderIds.length
+			? await db
+					.selectDistinct({ regionId: target.id, stateId: target.stateId })
+					.from(target)
+					.innerJoin(regionBorders, or(eq(regionBorders.regionId, target.id), eq(regionBorders.neighborId, target.id)))
+					.innerJoin(
+						origin,
+						sql`${origin.id} = CASE WHEN ${regionBorders.regionId} = ${target.id} THEN ${regionBorders.neighborId} ELSE ${regionBorders.regionId} END`
 					)
-			: Promise.resolve([])) as Promise<any[]>,
+					.where(and(inArray(target.stateId, defenderIds), inArray(origin.stateId, attackerIds)))
+					.orderBy(target.id)
+					.limit(40)
+			: [];
+	const ongoingByRegion = new Map(warBattles.filter((b) => b.status === "ongoing").map((b) => [b.regionId, b.id]));
 
-		(warData.defenderBlocId
-			? db
-					.select()
-					.from(states)
-					.where(eq(states.blocId, warData.defenderBlocId))
-					.then((defenderStatesRaw) =>
-						Promise.all(
-							defenderStatesRaw.map(async (state) => ({
-								...state,
-								logo: await getLogoUrl(state.logo)
-							}))
-						)
-					)
-			: Promise.resolve([])) as Promise<any[]>,
-
-		// Get capitulated states
-		db
-			.select()
-			.from(states)
-			.where(
-				warData.defenderBlocId
-					? and(eq(states.blocId, warData.defenderBlocId), eq(states.capitulated, true))
-					: and(eq(states.id, warData.defenderId), eq(states.capitulated, true))
-			)
-			.then((capitulatedStatesRaw) =>
-				Promise.all(
-					capitulatedStatesRaw.map(async (state) => ({
-						...state,
-						logo: await getLogoUrl(state.logo)
-					}))
-				)
+	const describeSide = async (side: Side, list: typeof attackerStates, mainId: number, bloc: typeof attackerBloc) => {
+		const ids = list.map((s) => s.id);
+		return {
+			bloc: bloc ? { id: bloc.id, name: bloc.name, color: bloc.color } : null,
+			states: await Promise.all(
+				order(list, mainId).map(async (s) => ({
+					id: s.id,
+					name: s.name,
+					logo: await getLogoUrl(s.logo),
+					capitulated: s.capitulated,
+					isMain: s.id === mainId
+				}))
 			),
-
-		getLogoUrl(warData.declarerLogo)
+			regionsHeld: regionsOf(ids),
+			battlesWon: warBattles.filter((b) => b.status === (side === "attacker" ? "attacker_won" : "defender_won")).length
+		};
+	};
+	const [attacker, defender] = await Promise.all([
+		describeSide("attacker", attackerStates, war.attackerId, attackerBloc ?? null),
+		describeSide("defender", defenderStates, war.defenderId, defenderBloc ?? null)
 	]);
+	const nameOf = new Map([...attackerStates, ...defenderStates].map((s) => [s.id, s.name]));
 
-	// Calculate war progress
-	const totalRegions = (attackerRegions[0]?.count || 0) + (defenderRegions[0]?.count || 0);
-	const attackerControl = totalRegions > 0 ? ((attackerRegions[0]?.count || 0) / totalRegions) * 100 : 0;
-	const defenderControl = totalRegions > 0 ? ((defenderRegions[0]?.count || 0) / totalRegions) * 100 : 0;
+	// Which side the viewer's state is on, and whether they may surrender for it.
+	const myStateId = myPresidency?.stateId ?? null;
+	const mySide: Side | null =
+		myStateId === war.attackerId ? "attacker" : myStateId === war.defenderId ? "defender" : null;
 
 	return {
 		war: {
-			id: warData.id,
-			attackerId: warData.attackerId,
-			defenderId: warData.defenderId,
-			attackerBlocId: warData.attackerBlocId,
-			defenderBlocId: warData.defenderBlocId,
-			declaredBy: warData.declaredBy,
-			declaredAt: warData.declaredAt,
-			endedAt: warData.endedAt,
-			status: warData.status,
-			exhaustion: warData.exhaustion,
-			endedReason: warData.endedReason,
-			attacker: {
-				id: warData.attackerId,
-				name: attackerState?.name || "Unknown",
-				logo: attackerLogo,
-				capitulated: attackerState?.capitulated || false
-			},
-			defender: {
-				id: warData.defenderId,
-				name: defenderState?.name || "Unknown",
-				logo: defenderLogo,
-				capitulated: defenderState?.capitulated || false
-			},
-			attackerBloc: attackerBloc
-				? {
-						id: attackerBloc.id,
-						name: attackerBloc.name,
-						color: attackerBloc.color
-					}
-				: null,
-			defenderBloc: defenderBloc
-				? {
-						id: defenderBloc.id,
-						name: defenderBloc.name,
-						color: defenderBloc.color
-					}
-				: null,
-			declarer: {
-				name: warData.declarerName,
-				logo: declarerLogo
-			},
-			battles: battlesWithDetails.map((battle) => ({
-				id: battle.id,
-				warId: battle.warId,
-				region: {
-					id: battle.regionId
-				},
-				attackerState: {
-					id: battle.attackerStateId,
-					name: battle.attackerStateName
-				},
-				defenderState: {
-					id: battle.defenderStateId,
-					name: battle.defenderStateName
-				},
-				startedAt: battle.startedAt,
-				endedAt: battle.endedAt,
-				status: battle.status,
-				starter: {
-					profile: {
-						name: battle.starterName
-					}
-				}
-			})),
-			surrenders
+			id: war.id,
+			status: war.status,
+			declaredAt: war.declaredAt,
+			endedAt: war.endedAt,
+			endedReason: war.endedReason ? WAR_END_REASON_LABELS[war.endedReason as WarEndReason] : null,
+			surrenderedByName: war.surrenderedBy ? (nameOf.get(war.surrenderedBy) ?? null) : null,
+			// Shown live from the declaration date, like the hourly job computes it.
+			exhaustion: war.status === "active" ? exhaustionAt(war.declaredAt, new Date()) : war.exhaustion,
+			exhaustionLimit: WAR_CONFIG.EXHAUSTION_LIMIT,
+			stalemateDays: WAR_CONFIG.STALEMATE_DAYS,
+			declaredBy: war.declaredBy ? { id: war.declaredBy, name: declarer?.name ?? "Unknown" } : null
 		},
-		battleStats: battleStats.reduce(
-			(acc, stat) => {
-				acc[stat.status] = stat.count;
-				return acc;
-			},
-			{ ongoing: 0, attacker_won: 0, defender_won: 0 } as Record<string, number>
-		),
-		attackerStates,
-		defenderStates,
-		capitulatedStates,
-		attackerControl,
-		defenderControl,
-		attackerRegionCount: attackerRegions[0]?.count || 0,
-		defenderRegionCount: defenderRegions[0]?.count || 0,
-		totalRegions
+		attacker,
+		defender,
+		battles: warBattles.map((b) => ({
+			id: b.id,
+			regionId: b.regionId,
+			status: b.status,
+			phase: b.phase,
+			startedAt: b.startedAt,
+			endedAt: b.endedAt,
+			attackerName: nameOf.get(b.attackerStateId) ?? "Unknown",
+			defenderName: nameOf.get(b.defenderStateId) ?? "Unknown"
+		})),
+		frontLine: frontLine.map((r) => ({
+			regionId: r.regionId,
+			stateName: nameOf.get(r.stateId!) ?? "Unknown",
+			battleId: ongoingByRegion.get(r.regionId) ?? null
+		})),
+		surrenders,
+		me: {
+			side: mySide,
+			canSurrender: war.status === "active" && mySide !== null,
+			canAttack: war.status === "active" && mySide === "attacker"
+		}
 	};
+};
+
+export const actions: Actions = {
+	surrender: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const warId = Number(params.id);
+		const reason =
+			String((await request.formData()).get("reason") ?? "")
+				.trim()
+				.slice(0, 300) || null;
+
+		const war = await db.query.wars.findFirst({ where: eq(wars.id, warId) });
+		if (!war || war.status !== "active") return fail(400, { error: "This war is already over." });
+
+		const presidency = await db.query.presidents.findFirst({ where: eq(presidents.userId, account.id) });
+		const stateId = presidency?.stateId;
+		if (!stateId || (stateId !== war.attackerId && stateId !== war.defenderId)) {
+			return fail(403, { error: "Only the president of a warring state can surrender." });
+		}
+
+		const ended = await surrenderWar(warId, stateId, account.id, reason);
+		if (!ended) return fail(400, { error: "This war is already over." });
+		return { success: true, message: "Your state has surrendered. The war is over." };
+	}
 };

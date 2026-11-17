@@ -1,390 +1,296 @@
 <!-- src/routes/(authenticated)/(dock)/war/[id]/+page.svelte -->
 <script lang="ts">
-	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
-	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
-	import * as m from "#lib/paraglide/messages.js";
-	import { getRegionName, formatDateTime, regionCoatUrl } from "#lib/utils/formatting.js";
-	import Logo from "#lib/component/Logo.svelte";
-	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
+	import { enhance } from "$app/forms";
+	import { onMount } from "svelte";
+	import { formatDateTime, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Badge } from "#lib/component/ui/index.js";
-	import { onMount, onDestroy } from "svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import { Badge, Button } from "#lib/component/ui/index.js";
+	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
+	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 
 	const { data } = $props();
 
-	let currentTime = $state(new Date());
-	let countdownInterval: ReturnType<typeof setInterval> | null = null;
-	let showWarAnim = $state(false);
+	type Side = "attacker" | "defender";
+	const SIDE = {
+		attacker: { label: "Attackers", text: "text-red-300", bar: "bg-red-500", ring: "border-red-500/40" },
+		defender: { label: "Defenders", text: "text-[#b3dcff]", bar: "bg-[#5eaef5]", ring: "border-[#5eaef5]/40" }
+	} as const;
 
+	let now = $state(Date.now());
 	onMount(() => {
-		countdownInterval = setInterval(() => {
-			currentTime = new Date();
-		}, 1000);
-
-		if (data.war.status === "active") {
-			showWarAnim = true;
-		}
+		const t = setInterval(() => (now = Date.now()), 60_000);
+		return () => clearInterval(t);
+	});
+	const duration = $derived.by(() => {
+		const end = data.war.endedAt ? new Date(data.war.endedAt).getTime() : now;
+		const mins = Math.max(0, Math.floor((end - new Date(data.war.declaredAt).getTime()) / 60_000));
+		const d = Math.floor(mins / 1440);
+		const h = Math.floor((mins % 1440) / 60);
+		return d > 0 ? `${d}d ${h}h` : `${h}h ${mins % 60}m`;
 	});
 
-	onDestroy(() => {
-		if (countdownInterval) clearInterval(countdownInterval);
-	});
+	const ongoing = $derived(data.battles.filter((b) => b.status === "ongoing"));
+	const finished = $derived(data.battles.filter((b) => b.status !== "ongoing"));
+	const exhaustionPct = $derived(Math.min(100, (data.war.exhaustion / data.war.exhaustionLimit) * 100));
+	const main = (side: Side) => data[side].states.find((s) => s.isMain) ?? data[side].states[0];
 
-	function formatDate(date: string | Date) {
-		return formatDateTime(date);
-	}
-
-	function getBattleStatusColor(status: string) {
-		switch (status) {
-			case "ongoing":
-				return "bg-[#f2b01e]/12 border-[#f2b01e]/35 text-[#ffd35c]";
-			case "attacker_won":
-				return "bg-red-600/10 border-red-500/30 text-red-300";
-			case "defender_won":
-				return "bg-[#2369b5]/18 border-[#5eaef5]/30 text-[#b3dcff]";
-			default:
-				return "bg-[#1a1f15]/70 border-[#c8b47a]/15 text-[#a8a083]";
-		}
-	}
-
-	function getEndedReasonLabel(reason: string | null): string {
-		switch (reason) {
-			case "exhaustion":
-				return "War exhaustion";
-			case "stalemate":
-				return "Stalemate";
-			case "capitulation":
-				return "Capitulation";
-			case "surrender":
-				return "Surrender";
-			default:
-				return "War Ended";
-		}
-	}
-
-	const warDuration = $derived.by(() => {
-		const start = new Date(data.war.declaredAt).getTime();
-		const end = data.war.endedAt ? new Date(data.war.endedAt).getTime() : currentTime.getTime();
-		const diff = end - start;
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-		const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-		return { days, hours, minutes, seconds };
-	});
-
-	const totalBattles = $derived(
-		data.battleStats.ongoing + data.battleStats.attacker_won + data.battleStats.defender_won
-	);
-
-	const ongoingBattles = $derived(data.war.battles?.filter((b) => b.status === "ongoing") || []);
-
-	// A close fight for territory is the tensest moment of a war — call it out.
-	const isContested = $derived(
-		data.war.status === "active" && Math.abs(data.attackerControl - data.defenderControl) < 15
-	);
-
-	const completedBattles = $derived(data.war.battles?.filter((b) => b.status !== "ongoing") || []);
+	let surrendering = $state(false);
 </script>
 
 <svelte:head>
-	<title>{`${data.war.attacker.name} vs ${data.war.defender.name} · PsyOps`}</title>
+	<title>{`${main("attacker")?.name ?? "War"} vs ${main("defender")?.name ?? ""} · PsyOps`}</title>
 </svelte:head>
 
+{#snippet sideBadge(side: Side)}
+	{@const s = main(side)}
+	<a href="/state/{s?.id}" class="group flex min-w-0 flex-1 flex-col items-center gap-2 text-center">
+		<Logo
+			src={s?.logo}
+			alt={s?.name ?? ""}
+			class="size-16 rounded-sm border-2 sm:size-20 {SIDE[side].ring}"
+			placeholderIcon={FluentBuildingGovernment20Filled}
+			placeholderGradient={side === "attacker" ? "from-red-700 to-red-900" : "from-[#2369b5] to-[#1d4f88]"}
+		/>
+		<div class="min-w-0">
+			<p class="text-[10px] font-semibold uppercase tracking-wide {SIDE[side].text}">{SIDE[side].label}</p>
+			<p class="line-clamp-2 font-bold leading-tight text-[#f5efd8] group-hover:text-[#ffcf47]">{s?.name}</p>
+			{#if data[side].bloc}
+				<p class="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#a8a083]">
+					<span class="size-2 rounded-full" style:background={data[side].bloc!.color}></span>
+					{data[side].bloc!.name}
+				</p>
+			{/if}
+		</div>
+	</a>
+{/snippet}
+
+{#snippet battleRow(b: (typeof data.battles)[number])}
+	{@const won = b.status === "attacker_won" ? "attacker" : b.status === "defender_won" ? "defender" : null}
+	<a href="/battle/{b.id}" class="panel-interactive flex items-center gap-3 rounded-sm p-3">
+		<img src={regionCoatUrl(b.regionId)} alt="" class="size-10 shrink-0 object-contain" />
+		<div class="min-w-0 flex-1">
+			<p class="truncate font-semibold text-[#f5efd8]">Battle of {getRegionName(b.regionId)}</p>
+			<p class="truncate text-xs text-[#a8a083]">
+				<span class="text-red-300">{b.attackerName}</span> → <span class="text-[#b3dcff]">{b.defenderName}</span> ·
+				{formatDateTime(b.startedAt)}
+			</p>
+		</div>
+		{#if won}
+			<Badge tone={won === "attacker" ? "red" : "blue"} size="xs">{won === "attacker" ? "Taken" : "Held"}</Badge>
+		{:else if b.phase === "active"}
+			<Badge tone="red" size="xs">Fighting</Badge>
+		{:else}
+			<Badge tone="amber" size="xs">Preparing</Badge>
+		{/if}
+	</a>
+{/snippet}
+
 <PageContainer maxWidth="5xl">
-	<!-- War Room Hero -->
-	<div
-		class="panel rounded-sm p-5 relative overflow-hidden"
-		style={data.war.status === "active"
-			? "background-color: rgba(220,38,38,0.04); background-image: radial-gradient(circle at center, rgba(220,38,38,0.18), transparent 70%);"
-			: undefined}
-	>
-		<!-- Status Bar -->
-		<div class="flex items-center justify-between mb-4">
-			<div class="flex items-center gap-2">
+	<!-- Header -->
+	<div class="panel rounded-sm p-5 space-y-5">
+		<div class="flex items-start gap-3">
+			{@render sideBadge("attacker")}
+			<div class="flex shrink-0 flex-col items-center gap-2 pt-5">
+				<span class="text-2xl">⚔️</span>
 				{#if data.war.status === "active"}
-					<div class="size-2.5 bg-red-500 rounded-full animate-pulse"></div>
-					<span class="text-red-300 text-xs uppercase tracking-widest font-bold">Active Conflict</span>
+					<Badge tone="red" size="sm">At war</Badge>
 				{:else}
-					<div class="size-2.5 bg-[#a8a083] rounded-full"></div>
-					<span class="text-[#a8a083] text-xs uppercase tracking-widest"
-						>{getEndedReasonLabel(data.war.endedReason)}</span
-					>
+					<Badge size="sm">Ended</Badge>
 				{/if}
 			</div>
-			<span class="text-[#a8a083] font-mono text-xs">WAR #{data.war.id}</span>
+			{@render sideBadge("defender")}
 		</div>
 
-		<!-- War exhaustion: at 100% the war-resolution cron forces a white peace -->
-		{#if data.war.status === "active"}
-			<div class="mb-4">
-				<div class="flex justify-between text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">
+		<div class="flex flex-wrap justify-center gap-x-4 gap-y-1 text-xs text-[#a8a083]">
+			<span>Declared {formatDateTime(data.war.declaredAt)}</span>
+			{#if data.war.declaredBy}
+				<span
+					>by <a href="/user/{data.war.declaredBy.id}" class="text-[#e6ddbf] hover:text-[#ffcf47]"
+						>{data.war.declaredBy.name}</a
+					></span
+				>
+			{/if}
+			<span>{data.war.status === "active" ? "Lasting" : "Lasted"} {duration}</span>
+		</div>
+
+		{#if data.war.status !== "active"}
+			<p class="rounded-sm border border-[#c8b47a]/20 bg-[#1a1f15] px-4 py-3 text-center text-sm text-[#e6ddbf]">
+				Ended {data.war.endedAt ? formatDateTime(data.war.endedAt) : ""}
+				{#if data.war.endedReason}by <strong>{data.war.endedReason}</strong>{/if}
+				{#if data.war.surrenderedByName}: {data.war.surrenderedByName} gave up{/if}.
+			</p>
+		{:else}
+			<div>
+				<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-[#a8a083]">
 					<span>War exhaustion</span>
-					<span class="font-mono">{Math.round(data.war.exhaustion ?? 0)}%</span>
+					<span class="font-mono text-[#e6ddbf]">{data.war.exhaustion} / {data.war.exhaustionLimit}</span>
 				</div>
-				<div class="h-1 bg-[#1a1f15] rounded-full overflow-hidden">
+				<div class="h-2 overflow-hidden rounded-full bg-[#0f120c]">
 					<div
-						class="h-full bg-[#f2b01e] transition-all duration-500"
-						style="width: {Math.min(100, data.war.exhaustion ?? 0)}%"
+						class="h-full rounded-full transition-[width] duration-700 {exhaustionPct > 80
+							? 'bg-red-500'
+							: 'bg-[#f2b01e]'}"
+						style:width="{exhaustionPct}%"
 					></div>
 				</div>
+				<p class="mt-1.5 text-[11px] text-[#a8a083]">
+					At {data.war.exhaustionLimit} the war ends in a white peace. It also ends after {data.war.stalemateDays} days without
+					a battle, or when a side has no regions left.
+				</p>
 			</div>
 		{/if}
 
-		<!-- Combatants Face-off -->
-		<div class="grid grid-cols-3 gap-4 items-center">
-			<!-- Attacker -->
-			<a href="/state/{data.war.attacker.id}" class="group flex flex-col items-center gap-3 text-center">
-				<Logo src={data.war.attacker.logo} alt={data.war.attacker.name} class="size-16 sm:size-20 rounded-sm" />
-				<div>
-					<div class="text-[10px] text-red-300/80 uppercase tracking-wide mb-1">Attacker</div>
-					<div class="text-base sm:text-lg font-bold text-[#f5efd8] group-hover:text-red-300 transition-colors">
-						{data.war.attacker.name}
-					</div>
-					{#if data.war.attackerBloc}
-						<div class="text-xs text-[#a8a083]">{data.war.attackerBloc.name}</div>
-					{/if}
+		<!-- Scoreboard -->
+		<div class="grid grid-cols-3 gap-2 text-center">
+			{#each [["Battles won", data.attacker.battlesWon, data.defender.battlesWon], ["Regions held", data.attacker.regionsHeld, data.defender.regionsHeld]] as [label, a, d] (label)}
+				<div class="panel-muted rounded-sm p-2.5">
+					<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">{label}</p>
+					<p class="font-mono font-bold">
+						<span class="text-red-300">{a}</span> <span class="text-[#a8a083]">:</span>
+						<span class="text-[#b3dcff]">{d}</span>
+					</p>
 				</div>
-			</a>
-
-			<!-- VS Center -->
-			<div class="flex flex-col items-center gap-2">
-				<div class="text-4xl sm:text-5xl opacity-40">⚔️</div>
-				{#if data.war.status === "active"}
-					<div class="text-center">
-						<div class="text-2xl sm:text-3xl font-bold text-[#f5efd8] font-mono">
-							{warDuration.days}<span class="text-[#a8a083] text-lg">d</span>
-							{String(warDuration.hours).padStart(2, "0")}<span class="text-[#a8a083] text-lg">h</span>
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1">Duration</div>
-					</div>
-				{:else}
-					<div class="text-center">
-						<div class="text-lg font-bold text-[#a8a083] font-mono">
-							{warDuration.days}d {warDuration.hours}h
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1">Total Duration</div>
-					</div>
-				{/if}
+			{/each}
+			<div class="panel-muted rounded-sm p-2.5">
+				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Battles on</p>
+				<p class="font-mono font-bold {ongoing.length ? 'text-[#ffd35c]' : 'text-[#f5efd8]'}">{ongoing.length}</p>
 			</div>
+		</div>
+	</div>
 
-			<!-- Defender -->
-			<a href="/state/{data.war.defender.id}" class="group flex flex-col items-center gap-3 text-center">
-				<div class="relative">
-					<Logo src={data.war.defender.logo} alt={data.war.defender.name} class="size-16 sm:size-20 rounded-sm" />
-					{#if data.war.defender.capitulated}
-						<div
-							class="absolute -bottom-1 -right-1 px-1.5 py-0.5 bg-red-600 rounded-sm text-[10px] font-bold text-[#f5efd8]"
+	<!-- Front line -->
+	{#if data.war.status === "active"}
+		<section class="panel rounded-sm p-5 space-y-3">
+			<h2 class="section-title">Front Line</h2>
+			{#if data.frontLine.length === 0}
+				<p class="text-sm text-[#a8a083]">
+					The two sides don't share a border, so no region can be attacked right now.
+				</p>
+			{:else}
+				<p class="text-xs text-[#a8a083]">
+					Defender regions on the border with the attackers.
+					{#if data.me.canAttack}As president you can start a battle from a bordering region of yours.{/if}
+				</p>
+				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+					{#each data.frontLine as r (r.regionId)}
+						<a
+							href={r.battleId ? `/battle/${r.battleId}` : `/region/${r.regionId}`}
+							class="panel-interactive flex items-center gap-2.5 rounded-sm p-2.5"
 						>
-							🏳️
-						</div>
-					{/if}
-				</div>
-				<div>
-					<div class="text-[10px] text-[#b3dcff]/80 uppercase tracking-wide mb-1">Defender</div>
-					<div class="text-base sm:text-lg font-bold text-[#f5efd8] group-hover:text-[#b3dcff] transition-colors">
-						{data.war.defender.name}
-					</div>
-					{#if data.war.defenderBloc}
-						<div class="text-xs text-[#a8a083]">{data.war.defenderBloc.name}</div>
-					{/if}
-				</div>
-			</a>
-		</div>
-	</div>
-
-	<!-- Territory Control Bar -->
-	<div class="panel rounded-sm p-5">
-		<div class="flex items-center justify-between mb-3">
-			<div class="flex items-center gap-2">
-				<span class="text-sm font-bold text-red-300">{data.war.attacker.name}</span>
-				<span class="text-xs text-red-300/70 font-mono">{data.attackerControl.toFixed(1)}%</span>
-			</div>
-			<div class="text-[10px] uppercase tracking-wide {isContested ? 'text-[#ffd35c] font-bold' : 'text-[#a8a083]'}">
-				{isContested ? "⚡ Contested" : "Territory Control"}
-			</div>
-			<div class="flex items-center gap-2">
-				<span class="text-xs text-[#b3dcff]/70 font-mono">{data.defenderControl.toFixed(1)}%</span>
-				<span class="text-sm font-bold text-[#b3dcff]">{data.war.defender.name}</span>
-			</div>
-		</div>
-
-		<div
-			class="relative h-8 sm:h-10 bg-[#0f120c]/90 rounded-sm border overflow-hidden transition-colors {isContested
-				? 'border-[#f2b01e]/60 animate-pulse'
-				: 'border-[#c8b47a]/15'}"
-		>
-			<div
-				class="absolute left-0 top-0 bottom-0 bg-red-500 transition-all duration-1000"
-				style="width: {data.attackerControl}%"
-			></div>
-			<div
-				class="absolute right-0 top-0 bottom-0 bg-[#5eaef5] transition-all duration-1000"
-				style="width: {data.defenderControl}%"
-			></div>
-			<div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg">{data.attackerRegionCount} regions</span>
-				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg">{data.defenderRegionCount} regions</span>
-			</div>
-		</div>
-
-		<!-- Battle Score Strip -->
-		<div class="mt-4 grid grid-cols-3 gap-3 text-center">
-			<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-2 sm:p-3">
-				<div class="text-xl sm:text-2xl font-bold text-red-300">{data.battleStats.attacker_won}</div>
-				<div class="text-[10px] text-red-300/70 uppercase tracking-wide">Attacker Wins</div>
-			</div>
-			<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-2 sm:p-3">
-				<div class="text-xl sm:text-2xl font-bold text-[#ffd35c]">{data.battleStats.ongoing}</div>
-				<div class="text-[10px] text-[#ffd35c]/70 uppercase tracking-wide">Active</div>
-			</div>
-			<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-2 sm:p-3">
-				<div class="text-xl sm:text-2xl font-bold text-[#b3dcff]">{data.battleStats.defender_won}</div>
-				<div class="text-[10px] text-[#b3dcff]/70 uppercase tracking-wide">Defender Wins</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Capitulated States -->
-	{#if data.capitulatedStates && data.capitulatedStates.length > 0}
-		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
-			<div class="flex items-center gap-2 mb-3">
-				<span class="text-lg">🏳️</span>
-				<span class="text-sm font-bold text-red-300 uppercase tracking-wide">Capitulated States</span>
-			</div>
-			<div class="flex flex-wrap gap-3">
-				{#each data.capitulatedStates as state}
-					<div class="flex items-center gap-2 panel-muted rounded-sm px-3 py-2">
-						<Logo src={state.logo} alt={state.name} class="size-8 rounded-sm" />
-						<div>
-							<div class="text-sm font-medium text-[#f5efd8]">{state.name}</div>
-							{#if state.capitulated_at}
-								<div class="text-[10px] text-[#a8a083]">{formatDate(state.capitulated_at)}</div>
-							{/if}
-						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
-	<!-- Ongoing Battles -->
-	{#if ongoingBattles.length > 0}
-		<div class="panel rounded-sm p-5 space-y-4">
-			<div class="flex items-center justify-between">
-				<h2 class="section-title">
-					<span class="size-2 bg-[#f2b01e] rounded-full animate-pulse"></span>
-					Active Battles
-				</h2>
-				<Badge tone="amber">{ongoingBattles.length} ONGOING</Badge>
-			</div>
-			<div class="space-y-2">
-				{#each ongoingBattles as battle}
-					<a
-						href="/battle/{battle.id}"
-						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-colors group"
-					>
-						<Logo
-							src={regionCoatUrl(battle.region.id)}
-							alt={getRegionName(battle.region.id)}
-							class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/15"
-							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-[#283020] to-[#242a1d]"
-						/>
-						<div class="flex-1 min-w-0">
-							<div
-								class="text-sm sm:text-base font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate"
-							>
-								{getRegionName(battle.region.id)}
-							</div>
-							<div class="text-xs text-[#a8a083]">
-								<span class="text-red-300">{battle.attackerState.name}</span> →
-								<span class="text-[#b3dcff]">{battle.defenderState.name}</span>
-							</div>
-						</div>
-						<div class="flex items-center gap-2 shrink-0">
-							<Badge tone="amber" class="animate-pulse">⚔️ LIVE</Badge>
-						</div>
-					</a>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
-	<!-- Completed Battles -->
-	{#if completedBattles.length > 0}
-		<div class="panel rounded-sm p-5 space-y-4">
-			<h2 class="section-title">Battle History</h2>
-			<div class="space-y-2 max-h-[32rem] overflow-y-auto">
-				{#each completedBattles as battle}
-					{@const isAttackerWin = battle.status === "attacker_won"}
-					<a
-						href="/battle/{battle.id}"
-						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-colors group"
-					>
-						<Logo
-							src={regionCoatUrl(battle.region.id)}
-							alt={getRegionName(battle.region.id)}
-							class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/15"
-							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-[#283020] to-[#242a1d]"
-						/>
-						<div class="flex-1 min-w-0">
-							<div
-								class="text-sm sm:text-base font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate"
-							>
-								{getRegionName(battle.region.id)}
-							</div>
-							<div class="text-xs text-[#a8a083]">
-								{battle.attackerState.name} → {battle.defenderState.name}
-								{#if battle.endedAt}
-									<span class="text-[#a8a083]/70">· {formatDate(battle.endedAt)}</span>
+							<img src={regionCoatUrl(r.regionId)} alt="" class="size-9 shrink-0 object-contain" />
+							<div class="min-w-0">
+								<p class="truncate text-sm font-semibold text-[#f5efd8]">{getRegionName(r.regionId)}</p>
+								{#if r.battleId}
+									<p class="text-[11px] text-red-300">Battle under way</p>
+								{:else}
+									<p class="truncate text-[11px] text-[#a8a083]">{r.stateName}</p>
 								{/if}
 							</div>
-						</div>
-						<div class="shrink-0">
-							{#if isAttackerWin}
-								<Badge tone="red">🔴 CAPTURED</Badge>
-							{:else}
-								<Badge tone="blue">🔵 DEFENDED</Badge>
-							{/if}
-						</div>
+						</a>
+					{/each}
+				</div>
+			{/if}
+		</section>
+	{/if}
+
+	<!-- Battles -->
+	<section class="panel rounded-sm p-5 space-y-3">
+		<h2 class="section-title">
+			Battles <span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#a8a083]"
+				>{data.battles.length}</span
+			>
+		</h2>
+		{#if data.battles.length === 0}
+			<p class="py-4 text-center text-sm text-[#a8a083]">No battles have been fought in this war yet.</p>
+		{:else}
+			<div class="space-y-2">
+				{#each ongoing as b (b.id)}{@render battleRow(b)}{/each}
+				{#if ongoing.length && finished.length}<div class="h-px bg-[#c8b47a]/10"></div>{/if}
+				{#each finished as b (b.id)}{@render battleRow(b)}{/each}
+			</div>
+		{/if}
+	</section>
+
+	<!-- Coalitions -->
+	<div class="grid gap-4 sm:grid-cols-2">
+		{#each ["attacker", "defender"] as const as side (side)}
+			<section class="panel rounded-sm p-4 space-y-2">
+				<h2 class="section-title {SIDE[side].text}">{SIDE[side].label}</h2>
+				{#each data[side].states as s (s.id)}
+					<a href="/state/{s.id}" class="flex items-center gap-2.5 rounded-sm p-1.5 hover:bg-[#2e3524]">
+						<Logo
+							src={s.logo}
+							alt={s.name}
+							class="size-8 rounded-sm"
+							placeholderIcon={FluentBuildingGovernment20Filled}
+						/>
+						<span class="min-w-0 flex-1 truncate text-sm text-[#f5efd8]">{s.name}</span>
+						{#if s.isMain}<Badge size="xs">Main</Badge>{/if}
+						{#if s.capitulated}<Badge tone="red" size="xs">Capitulated</Badge>{/if}
 					</a>
 				{/each}
-			</div>
-		</div>
-	{:else if totalBattles === 0}
-		<div class="panel-muted rounded-sm p-8 sm:p-12 text-center">
-			<div class="text-4xl sm:text-6xl mb-4 opacity-20">⚔️</div>
-			<p class="text-lg text-[#a8a083]">No battles fought yet</p>
-		</div>
+			</section>
+		{/each}
+	</div>
+
+	{#if data.surrenders.length}
+		<section class="panel rounded-sm p-5 space-y-2">
+			<h2 class="section-title">Surrenders</h2>
+			{#each data.surrenders as s, i (i)}
+				<div class="panel-muted rounded-sm p-3 text-sm">
+					<p class="text-[#f5efd8]">
+						<FluentFlag20Filled class="mr-1 inline size-4 text-[#e6ddbf]" />{s.stateName} surrendered · {formatDateTime(
+							s.at
+						)}
+					</p>
+					{#if s.reason}<p class="mt-1 text-xs italic text-[#a8a083]">"{s.reason}"</p>{/if}
+				</div>
+			{/each}
+		</section>
 	{/if}
 
-	<!-- Surrenders -->
-	{#if data.war.surrenders && data.war.surrenders.length > 0}
-		<div class="panel rounded-sm p-5 space-y-4">
-			<h2 class="section-title">
-				<FluentFlag20Filled class="size-4 text-[#a8a083]" />
-				Surrenders
-			</h2>
-			<div class="space-y-2">
-				{#each data.war.surrenders as surrender}
-					<div class="flex items-center gap-3 panel-muted rounded-sm p-3 sm:p-4">
-						<FluentFlag20Filled class="size-5 text-[#a8a083] shrink-0" />
-						<div class="flex-1 min-w-0">
-							<div class="font-bold text-[#f5efd8] text-sm">{surrender.state.name}</div>
-							<div class="text-xs text-[#a8a083]">
-								{surrender.surrenderer.profile?.name || "Unknown"} · {formatDate(surrender.surrenderedAt)}
-							</div>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
+	<!-- Surrender -->
+	{#if data.me.canSurrender}
+		<section class="rounded-sm border border-red-500/30 bg-red-600/10 p-5 space-y-3">
+			<h2 class="section-title text-red-300">Surrender</h2>
+			<p class="text-sm text-[#d3caa9]">
+				As president you can end the war by giving up. Borders stay as they are; regions already lost stay lost.
+			</p>
+			<form
+				method="POST"
+				action="?/surrender"
+				class="space-y-3"
+				use:confirmSubmit={{
+					title: "Surrender and end the war?",
+					body: "This can't be undone. Your state gives up and the war ends immediately.",
+					confirmLabel: "Surrender",
+					danger: true
+				}}
+				use:enhance={() => {
+					surrendering = true;
+					return async ({ result, update }) => {
+						await update();
+						surrendering = false;
+						toastResult(result);
+					};
+				}}
+			>
+				<input
+					name="reason"
+					maxlength="300"
+					placeholder="Statement to the world (optional)"
+					class="field-control w-full rounded-sm px-3 py-2.5 text-sm"
+				/>
+				<Button type="submit" variant="danger" icon={FluentFlag20Filled} loading={surrendering}>Surrender</Button>
+			</form>
+		</section>
 	{/if}
+
+	<a href="/map" class="flex items-center justify-center gap-1 text-xs text-[#a8a083] hover:text-[#ffcf47]">
+		See the front on the map <FluentArrowRight20Filled class="size-3" />
+	</a>
 </PageContainer>
-
-{#if showWarAnim}
-	<ThreeAnimation variant="battle" onComplete={() => (showWarAnim = false)} />
-{/if}

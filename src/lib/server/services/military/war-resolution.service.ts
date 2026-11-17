@@ -164,6 +164,35 @@ async function endWar(warId: number, reason: WarEndReason, surrenderedBy: number
 	await notifyWarEnd(warId, reason, now);
 }
 
+/**
+ * A belligerent's president gives up: the surrender is recorded and the war
+ * ends at once (borders stay as they are). Returns false if the war already
+ * ended.
+ */
+export async function surrenderWar(
+	warId: number,
+	stateId: number,
+	userId: string,
+	reason: string | null
+): Promise<boolean> {
+	const now = new Date();
+	const ended = await db.transaction(async (tx) => {
+		const [war] = await tx
+			.update(wars)
+			.set({ status: "ended", endedAt: now, endedReason: "surrender", surrenderedBy: stateId })
+			.where(and(eq(wars.id, warId), eq(wars.status, "active")))
+			.returning({ id: wars.id });
+		if (!war) return false;
+		await tx.insert(warSurrenders).values({ warId, stateId, surrenderType: "full", surrenderedBy: userId, reason });
+		return true;
+	});
+	if (ended) {
+		console.log(`🏳️ War ${warId} ended - state ${stateId} surrendered`);
+		await notifyWarEnd(warId, "surrender", now);
+	}
+	return ended;
+}
+
 async function notifyWarEnd(warId: number, reason: WarEndReason, now: Date): Promise<void> {
 	const war = await db.query.wars.findFirst({
 		where: eq(wars.id, warId),
