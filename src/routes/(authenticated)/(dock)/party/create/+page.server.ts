@@ -93,7 +93,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		userRegion: {
 			id: userResidence.region.id,
 			name: getRegionName(userResidence.region.id),
-			englishName: getRegionName(userResidence.region.id, "en")
+			newStateName: `Independent State of ${getRegionName(userResidence.region.id, "en")}`
 		},
 		isIndependentRegion,
 		userBalance,
@@ -277,7 +277,7 @@ export const actions: Actions = {
 				const [newState] = await tx
 					.insert(states)
 					.values({
-						name: getRegionName(regionId, "en")
+						name: `Independent State of ${getRegionName(regionId, "en")}`
 					})
 					.returning();
 

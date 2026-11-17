@@ -175,13 +175,13 @@
 					<h3 class="font-semibold text-[#ffd35c] text-lg">Independent Region - State Formation</h3>
 					<p class="text-[#d3caa9] text-sm leading-relaxed">
 						{data.userRegion.name} is not part of any state. Creating a party here will automatically establish
-						<strong class="text-[#f5efd8]">{data.userRegion.englishName}</strong> as a new state with democratic governance.
+						<strong class="text-[#f5efd8]">the {data.userRegion.newStateName}</strong> with democratic governance.
 					</p>
 					<div class="panel-muted rounded-sm p-3 space-y-3">
 						<div>
 							<p class="text-[#e6ddbf] text-sm font-medium mb-2">What happens when you create this party:</p>
 							<ul class="text-[#d3caa9] text-sm space-y-1 list-disc list-inside">
-								<li>A new state is formed: "{data.userRegion.englishName}"</li>
+								<li>A new state is formed: "{data.userRegion.newStateName}"</li>
 								<li>Your party becomes the founding political party</li>
 								<li>Other citizens can join or create competing parties</li>
 							</ul>
