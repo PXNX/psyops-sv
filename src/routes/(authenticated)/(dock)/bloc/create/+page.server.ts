@@ -1,6 +1,6 @@
 // src/routes/(authenticated)/(dock)/bloc/create/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { blocs, states, presidents, blocActionCooldowns, files } from "#lib/server/schema.js";
+import { blocs, states, presidents, blocActionCooldowns, files, blocLeaders } from "#lib/server/schema.js";
 import { error, redirect } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
@@ -102,8 +102,9 @@ export const actions: Actions = {
 			return message(form, "A bloc with this name already exists", { status: 400 });
 		}
 
+		let result: { id: number };
 		try {
-			const result = await db.transaction(async (tx) => {
+			result = await db.transaction(async (tx) => {
 				let logoFileId: number | null = null;
 
 				// Upload logo if provided
@@ -142,6 +143,10 @@ export const actions: Actions = {
 				// Add state to bloc
 				await tx.update(states).set({ blocId: newBloc.id }).where(eq(states.id, presidency.stateId));
 
+				// The founding state leads the bloc: its president is the first bloc
+				// leader until the member states elect someone (30-day cycles).
+				await tx.insert(blocLeaders).values({ userId: account.id, blocId: newBloc.id });
+
 				// Update cooldown
 				await tx
 					.insert(blocActionCooldowns)
@@ -156,8 +161,6 @@ export const actions: Actions = {
 
 				return newBloc;
 			});
-
-			throw redirect(303, `/bloc/${result.id}`);
 		} catch (e) {
 			console.error("Error creating bloc:", e);
 			if (e instanceof Error && e.message === "Failed to upload logo") {
@@ -165,5 +168,9 @@ export const actions: Actions = {
 			}
 			return message(form, "Failed to create bloc", { status: 500 });
 		}
+
+		// Outside the try: a redirect is thrown, and catching it reported a
+		// successful creation as "Failed to create bloc".
+		throw redirect(303, `/bloc/${result.id}`);
 	}
 };
