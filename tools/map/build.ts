@@ -10,6 +10,7 @@
 //   src/lib/assets/worldmap3.svg  map the app renders, shapes renamed to region ids
 //   tools/map/data/regions.json   id, name, latitude, longitude per region
 //   tools/map/data/borders.json   neighbouring regions with distance in km
+//   tools/map/data/deposits.json  initial natural resource deposits per region
 //   messages/en.json              region_<id> names (new ones added, existing kept)
 //
 //   bun tools/map/build.ts
@@ -17,6 +18,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
 import { densify, parsePath, readShapes, shapeCentroid, type Point } from "./geometry";
 import { haversineKm, project, type Projection } from "./projection";
+import { generateDeposits } from "./deposits";
 
 const dir = import.meta.dir;
 const root = `${dir}/../..`;
@@ -201,6 +203,8 @@ writeFileSync(
 	) + "\n"
 );
 writeFileSync(`${dir}/data/borders.json`, JSON.stringify(borderList, null, "\t") + "\n");
+const deposits = generateDeposits(geo.map(({ id, lat, lon }) => ({ id, latitude: lat, longitude: lon })));
+writeFileSync(`${dir}/data/deposits.json`, JSON.stringify(deposits, null, "\t") + "\n");
 
 // The app map: same artwork, shapes renamed to their region id.
 const idOf = new Map(registry.regions.map((r) => [r.shape, String(r.id)]));
@@ -236,5 +240,5 @@ const longest = borderList.reduce((m, b) => Math.max(m, b.distanceKm), 0);
 console.log(
 	`${geo.length} regions, ${borderList.length} borders (${land} land, ${borderList.length - land} sea), ` +
 		`${groupsJoined} island groups joined to the mainland, longest link ${Math.round(longest)} km, ` +
-		`${namesAdded} names added`
+		`${namesAdded} names added, ${deposits.length} resource deposits`
 );

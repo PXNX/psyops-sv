@@ -27,7 +27,8 @@ import {
 	battles,
 	battleParticipants,
 	battleRounds,
-	userVisas
+	userVisas,
+	regionDeposits
 } from "./schema";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 
@@ -291,6 +292,17 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 	await db.insert(factoryWorkers).values([
 		{ userId: "user-3", factoryId: factory1!.id, jobType: "miner", wageAtShiftStart: 1500 },
 		{ userId: "user-5", factoryId: factory2!.id, jobType: "refiner", wageAtShiftStart: 2000 }
+	]);
+
+	// ============ Resource Deposits ============
+	// The iron mine in region 1 draws on a rich deposit; region 3 has a
+	// nearly exhausted one to show falling yields.
+	await db.insert(regionDeposits).values([
+		{ regionId: region1!.id, resourceType: "iron", capacity: 12000, remaining: 12000 },
+		{ regionId: region1!.id, resourceType: "wood", capacity: 6000, remaining: 6000 },
+		{ regionId: region2!.id, resourceType: "coal", capacity: 9000, remaining: 9000 },
+		{ regionId: region3!.id, resourceType: "copper", capacity: 8000, remaining: 600 },
+		{ regionId: region4!.id, resourceType: "iron", capacity: 5000, remaining: 5000 }
 	]);
 
 	// ============ Market Listings ============

@@ -8,7 +8,9 @@
 // - inserts regions that don't exist yet (id, latitude, longitude);
 // - sets latitude/longitude of existing regions to their position on the map
 //   (ownership, buildings, resources etc. are left alone);
-// - replaces region_borders with tools/map/data/borders.json.
+// - replaces region_borders with tools/map/data/borders.json;
+// - adds resource deposits a region doesn't have yet (existing deposits keep
+//   what has been mined from them).
 import { readFileSync } from "fs";
 import postgres from "postgres";
 import { haversineKm } from "./projection";
@@ -31,6 +33,11 @@ interface BorderRow {
 }
 const regions = JSON.parse(readFileSync(`${dir}/data/regions.json`, "utf8")) as RegionRow[];
 const borders = JSON.parse(readFileSync(`${dir}/data/borders.json`, "utf8")) as BorderRow[];
+const deposits = JSON.parse(readFileSync(`${dir}/data/deposits.json`, "utf8")) as {
+	regionId: number;
+	resourceType: string;
+	capacity: number;
+}[];
 
 const sql = postgres(process.env.DATABASE_URL!, { max: 1 });
 try {
@@ -59,6 +66,11 @@ try {
 	);
 	if (orphans.length) console.log(`  ⚠ in the database but not on the map (left untouched): ${orphans.join(", ")}`);
 	console.log(`Borders: replace ${borderCount} with ${borders.length}`);
+	const existingDeposits = new Set(
+		((await sql`select region_id, resource_type from region_deposits`) as any[]).map((d) => `${d.region_id}:${d.resource_type}`)
+	);
+	const newDeposits = deposits.filter((d) => !existingDeposits.has(`${d.regionId}:${d.resourceType}`));
+	console.log(`Deposits: add ${newDeposits.length} (${existingDeposits.size} already exist and are left as they are)`);
 
 	if (!apply && !check) {
 		console.log("\nDry run. Re-run with --check (write + roll back) or --apply.");

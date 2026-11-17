@@ -1,0 +1,7792 @@
+[
+	{
+		"regionId": 2,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 2,
+		"resourceType": "coal",
+		"capacity": 19300
+	},
+	{
+		"regionId": 2,
+		"resourceType": "wood",
+		"capacity": 12600
+	},
+	{
+		"regionId": 3,
+		"resourceType": "iron",
+		"capacity": 2600
+	},
+	{
+		"regionId": 4,
+		"resourceType": "iron",
+		"capacity": 4900
+	},
+	{
+		"regionId": 4,
+		"resourceType": "copper",
+		"capacity": 1800
+	},
+	{
+		"regionId": 5,
+		"resourceType": "coal",
+		"capacity": 2600
+	},
+	{
+		"regionId": 5,
+		"resourceType": "wood",
+		"capacity": 4200
+	},
+	{
+		"regionId": 6,
+		"resourceType": "coal",
+		"capacity": 9000
+	},
+	{
+		"regionId": 6,
+		"resourceType": "wood",
+		"capacity": 11800
+	},
+	{
+		"regionId": 7,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 8,
+		"resourceType": "iron",
+		"capacity": 14800
+	},
+	{
+		"regionId": 8,
+		"resourceType": "coal",
+		"capacity": 5200
+	},
+	{
+		"regionId": 9,
+		"resourceType": "coal",
+		"capacity": 6900
+	},
+	{
+		"regionId": 9,
+		"resourceType": "wood",
+		"capacity": 7500
+	},
+	{
+		"regionId": 10,
+		"resourceType": "coal",
+		"capacity": 10300
+	},
+	{
+		"regionId": 10,
+		"resourceType": "wood",
+		"capacity": 15600
+	},
+	{
+		"regionId": 11,
+		"resourceType": "copper",
+		"capacity": 10000
+	},
+	{
+		"regionId": 11,
+		"resourceType": "coal",
+		"capacity": 2300
+	},
+	{
+		"regionId": 11,
+		"resourceType": "wood",
+		"capacity": 15100
+	},
+	{
+		"regionId": 12,
+		"resourceType": "wood",
+		"capacity": 16100
+	},
+	{
+		"regionId": 13,
+		"resourceType": "copper",
+		"capacity": 5400
+	},
+	{
+		"regionId": 14,
+		"resourceType": "iron",
+		"capacity": 7900
+	},
+	{
+		"regionId": 14,
+		"resourceType": "wood",
+		"capacity": 8800
+	},
+	{
+		"regionId": 15,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 17,
+		"resourceType": "iron",
+		"capacity": 32900
+	},
+	{
+		"regionId": 17,
+		"resourceType": "copper",
+		"capacity": 3400
+	},
+	{
+		"regionId": 17,
+		"resourceType": "coal",
+		"capacity": 17200
+	},
+	{
+		"regionId": 17,
+		"resourceType": "wood",
+		"capacity": 10600
+	},
+	{
+		"regionId": 18,
+		"resourceType": "wood",
+		"capacity": 13700
+	},
+	{
+		"regionId": 19,
+		"resourceType": "wood",
+		"capacity": 4400
+	},
+	{
+		"regionId": 20,
+		"resourceType": "wood",
+		"capacity": 13100
+	},
+	{
+		"regionId": 21,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 21,
+		"resourceType": "wood",
+		"capacity": 4700
+	},
+	{
+		"regionId": 22,
+		"resourceType": "iron",
+		"capacity": 11500
+	},
+	{
+		"regionId": 22,
+		"resourceType": "coal",
+		"capacity": 4200
+	},
+	{
+		"regionId": 23,
+		"resourceType": "coal",
+		"capacity": 6200
+	},
+	{
+		"regionId": 24,
+		"resourceType": "wood",
+		"capacity": 14300
+	},
+	{
+		"regionId": 25,
+		"resourceType": "copper",
+		"capacity": 5700
+	},
+	{
+		"regionId": 25,
+		"resourceType": "wood",
+		"capacity": 7000
+	},
+	{
+		"regionId": 27,
+		"resourceType": "iron",
+		"capacity": 5100
+	},
+	{
+		"regionId": 27,
+		"resourceType": "wood",
+		"capacity": 17000
+	},
+	{
+		"regionId": 28,
+		"resourceType": "wood",
+		"capacity": 5600
+	},
+	{
+		"regionId": 30,
+		"resourceType": "iron",
+		"capacity": 10200
+	},
+	{
+		"regionId": 31,
+		"resourceType": "iron",
+		"capacity": 3300
+	},
+	{
+		"regionId": 31,
+		"resourceType": "copper",
+		"capacity": 3200
+	},
+	{
+		"regionId": 31,
+		"resourceType": "coal",
+		"capacity": 8000
+	},
+	{
+		"regionId": 31,
+		"resourceType": "wood",
+		"capacity": 6300
+	},
+	{
+		"regionId": 32,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 32,
+		"resourceType": "copper",
+		"capacity": 9900
+	},
+	{
+		"regionId": 32,
+		"resourceType": "coal",
+		"capacity": 2700
+	},
+	{
+		"regionId": 32,
+		"resourceType": "wood",
+		"capacity": 16000
+	},
+	{
+		"regionId": 33,
+		"resourceType": "coal",
+		"capacity": 4500
+	},
+	{
+		"regionId": 34,
+		"resourceType": "iron",
+		"capacity": 3700
+	},
+	{
+		"regionId": 35,
+		"resourceType": "iron",
+		"capacity": 4400
+	},
+	{
+		"regionId": 35,
+		"resourceType": "coal",
+		"capacity": 10700
+	},
+	{
+		"regionId": 35,
+		"resourceType": "wood",
+		"capacity": 8000
+	},
+	{
+		"regionId": 36,
+		"resourceType": "iron",
+		"capacity": 2300
+	},
+	{
+		"regionId": 36,
+		"resourceType": "coal",
+		"capacity": 34900
+	},
+	{
+		"regionId": 36,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 37,
+		"resourceType": "coal",
+		"capacity": 12700
+	},
+	{
+		"regionId": 37,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 38,
+		"resourceType": "iron",
+		"capacity": 13700
+	},
+	{
+		"regionId": 38,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 39,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 40,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 42,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 42,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 42,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 43,
+		"resourceType": "wood",
+		"capacity": 14400
+	},
+	{
+		"regionId": 44,
+		"resourceType": "iron",
+		"capacity": 4000
+	},
+	{
+		"regionId": 45,
+		"resourceType": "iron",
+		"capacity": 2800
+	},
+	{
+		"regionId": 45,
+		"resourceType": "copper",
+		"capacity": 13400
+	},
+	{
+		"regionId": 45,
+		"resourceType": "coal",
+		"capacity": 14900
+	},
+	{
+		"regionId": 45,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 46,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 47,
+		"resourceType": "coal",
+		"capacity": 12200
+	},
+	{
+		"regionId": 47,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 48,
+		"resourceType": "wood",
+		"capacity": 11700
+	},
+	{
+		"regionId": 50,
+		"resourceType": "wood",
+		"capacity": 15400
+	},
+	{
+		"regionId": 51,
+		"resourceType": "coal",
+		"capacity": 6200
+	},
+	{
+		"regionId": 51,
+		"resourceType": "wood",
+		"capacity": 10600
+	},
+	{
+		"regionId": 52,
+		"resourceType": "iron",
+		"capacity": 12700
+	},
+	{
+		"regionId": 53,
+		"resourceType": "wood",
+		"capacity": 11400
+	},
+	{
+		"regionId": 54,
+		"resourceType": "coal",
+		"capacity": 6200
+	},
+	{
+		"regionId": 54,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 55,
+		"resourceType": "coal",
+		"capacity": 20600
+	},
+	{
+		"regionId": 55,
+		"resourceType": "wood",
+		"capacity": 5000
+	},
+	{
+		"regionId": 56,
+		"resourceType": "coal",
+		"capacity": 10300
+	},
+	{
+		"regionId": 56,
+		"resourceType": "wood",
+		"capacity": 4800
+	},
+	{
+		"regionId": 57,
+		"resourceType": "iron",
+		"capacity": 5600
+	},
+	{
+		"regionId": 57,
+		"resourceType": "coal",
+		"capacity": 16900
+	},
+	{
+		"regionId": 57,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 58,
+		"resourceType": "wood",
+		"capacity": 17100
+	},
+	{
+		"regionId": 59,
+		"resourceType": "wood",
+		"capacity": 7600
+	},
+	{
+		"regionId": 60,
+		"resourceType": "coal",
+		"capacity": 4600
+	},
+	{
+		"regionId": 60,
+		"resourceType": "wood",
+		"capacity": 6600
+	},
+	{
+		"regionId": 61,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 61,
+		"resourceType": "wood",
+		"capacity": 19900
+	},
+	{
+		"regionId": 62,
+		"resourceType": "coal",
+		"capacity": 2400
+	},
+	{
+		"regionId": 62,
+		"resourceType": "wood",
+		"capacity": 6800
+	},
+	{
+		"regionId": 63,
+		"resourceType": "copper",
+		"capacity": 4600
+	},
+	{
+		"regionId": 63,
+		"resourceType": "wood",
+		"capacity": 11500
+	},
+	{
+		"regionId": 64,
+		"resourceType": "coal",
+		"capacity": 32000
+	},
+	{
+		"regionId": 64,
+		"resourceType": "wood",
+		"capacity": 3700
+	},
+	{
+		"regionId": 65,
+		"resourceType": "copper",
+		"capacity": 9500
+	},
+	{
+		"regionId": 65,
+		"resourceType": "wood",
+		"capacity": 7300
+	},
+	{
+		"regionId": 66,
+		"resourceType": "iron",
+		"capacity": 15100
+	},
+	{
+		"regionId": 66,
+		"resourceType": "coal",
+		"capacity": 4600
+	},
+	{
+		"regionId": 66,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 67,
+		"resourceType": "coal",
+		"capacity": 5100
+	},
+	{
+		"regionId": 67,
+		"resourceType": "wood",
+		"capacity": 13500
+	},
+	{
+		"regionId": 68,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 68,
+		"resourceType": "wood",
+		"capacity": 20000
+	},
+	{
+		"regionId": 69,
+		"resourceType": "coal",
+		"capacity": 17000
+	},
+	{
+		"regionId": 69,
+		"resourceType": "wood",
+		"capacity": 12000
+	},
+	{
+		"regionId": 70,
+		"resourceType": "iron",
+		"capacity": 9200
+	},
+	{
+		"regionId": 70,
+		"resourceType": "wood",
+		"capacity": 21600
+	},
+	{
+		"regionId": 71,
+		"resourceType": "coal",
+		"capacity": 9500
+	},
+	{
+		"regionId": 71,
+		"resourceType": "wood",
+		"capacity": 12100
+	},
+	{
+		"regionId": 72,
+		"resourceType": "wood",
+		"capacity": 4800
+	},
+	{
+		"regionId": 73,
+		"resourceType": "wood",
+		"capacity": 15200
+	},
+	{
+		"regionId": 74,
+		"resourceType": "iron",
+		"capacity": 13000
+	},
+	{
+		"regionId": 74,
+		"resourceType": "wood",
+		"capacity": 12700
+	},
+	{
+		"regionId": 75,
+		"resourceType": "copper",
+		"capacity": 1900
+	},
+	{
+		"regionId": 75,
+		"resourceType": "wood",
+		"capacity": 4300
+	},
+	{
+		"regionId": 76,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 76,
+		"resourceType": "wood",
+		"capacity": 4800
+	},
+	{
+		"regionId": 77,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 77,
+		"resourceType": "coal",
+		"capacity": 10100
+	},
+	{
+		"regionId": 77,
+		"resourceType": "wood",
+		"capacity": 6200
+	},
+	{
+		"regionId": 78,
+		"resourceType": "iron",
+		"capacity": 8100
+	},
+	{
+		"regionId": 79,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 79,
+		"resourceType": "wood",
+		"capacity": 6700
+	},
+	{
+		"regionId": 81,
+		"resourceType": "wood",
+		"capacity": 14500
+	},
+	{
+		"regionId": 82,
+		"resourceType": "iron",
+		"capacity": 4300
+	},
+	{
+		"regionId": 82,
+		"resourceType": "coal",
+		"capacity": 7500
+	},
+	{
+		"regionId": 83,
+		"resourceType": "copper",
+		"capacity": 1800
+	},
+	{
+		"regionId": 83,
+		"resourceType": "coal",
+		"capacity": 4700
+	},
+	{
+		"regionId": 83,
+		"resourceType": "wood",
+		"capacity": 16900
+	},
+	{
+		"regionId": 84,
+		"resourceType": "coal",
+		"capacity": 9900
+	},
+	{
+		"regionId": 85,
+		"resourceType": "wood",
+		"capacity": 20800
+	},
+	{
+		"regionId": 86,
+		"resourceType": "iron",
+		"capacity": 9800
+	},
+	{
+		"regionId": 86,
+		"resourceType": "copper",
+		"capacity": 10700
+	},
+	{
+		"regionId": 86,
+		"resourceType": "wood",
+		"capacity": 7900
+	},
+	{
+		"regionId": 87,
+		"resourceType": "iron",
+		"capacity": 17500
+	},
+	{
+		"regionId": 87,
+		"resourceType": "coal",
+		"capacity": 21200
+	},
+	{
+		"regionId": 87,
+		"resourceType": "wood",
+		"capacity": 5200
+	},
+	{
+		"regionId": 88,
+		"resourceType": "iron",
+		"capacity": 12700
+	},
+	{
+		"regionId": 88,
+		"resourceType": "coal",
+		"capacity": 12600
+	},
+	{
+		"regionId": 88,
+		"resourceType": "wood",
+		"capacity": 7900
+	},
+	{
+		"regionId": 89,
+		"resourceType": "coal",
+		"capacity": 19800
+	},
+	{
+		"regionId": 89,
+		"resourceType": "wood",
+		"capacity": 20600
+	},
+	{
+		"regionId": 90,
+		"resourceType": "wood",
+		"capacity": 21600
+	},
+	{
+		"regionId": 91,
+		"resourceType": "wood",
+		"capacity": 14300
+	},
+	{
+		"regionId": 92,
+		"resourceType": "copper",
+		"capacity": 1800
+	},
+	{
+		"regionId": 92,
+		"resourceType": "wood",
+		"capacity": 20300
+	},
+	{
+		"regionId": 93,
+		"resourceType": "coal",
+		"capacity": 4300
+	},
+	{
+		"regionId": 93,
+		"resourceType": "wood",
+		"capacity": 15000
+	},
+	{
+		"regionId": 94,
+		"resourceType": "iron",
+		"capacity": 7200
+	},
+	{
+		"regionId": 94,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 95,
+		"resourceType": "coal",
+		"capacity": 13100
+	},
+	{
+		"regionId": 95,
+		"resourceType": "wood",
+		"capacity": 8000
+	},
+	{
+		"regionId": 96,
+		"resourceType": "coal",
+		"capacity": 2700
+	},
+	{
+		"regionId": 96,
+		"resourceType": "wood",
+		"capacity": 9400
+	},
+	{
+		"regionId": 97,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 97,
+		"resourceType": "coal",
+		"capacity": 12900
+	},
+	{
+		"regionId": 97,
+		"resourceType": "wood",
+		"capacity": 9100
+	},
+	{
+		"regionId": 98,
+		"resourceType": "copper",
+		"capacity": 7100
+	},
+	{
+		"regionId": 98,
+		"resourceType": "wood",
+		"capacity": 16100
+	},
+	{
+		"regionId": 99,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 99,
+		"resourceType": "coal",
+		"capacity": 17600
+	},
+	{
+		"regionId": 99,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 100,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 102,
+		"resourceType": "wood",
+		"capacity": 8200
+	},
+	{
+		"regionId": 103,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 103,
+		"resourceType": "wood",
+		"capacity": 11600
+	},
+	{
+		"regionId": 104,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 104,
+		"resourceType": "coal",
+		"capacity": 18100
+	},
+	{
+		"regionId": 104,
+		"resourceType": "wood",
+		"capacity": 4700
+	},
+	{
+		"regionId": 106,
+		"resourceType": "coal",
+		"capacity": 5800
+	},
+	{
+		"regionId": 107,
+		"resourceType": "copper",
+		"capacity": 11200
+	},
+	{
+		"regionId": 107,
+		"resourceType": "wood",
+		"capacity": 22800
+	},
+	{
+		"regionId": 108,
+		"resourceType": "coal",
+		"capacity": 17100
+	},
+	{
+		"regionId": 109,
+		"resourceType": "coal",
+		"capacity": 2300
+	},
+	{
+		"regionId": 110,
+		"resourceType": "wood",
+		"capacity": 9000
+	},
+	{
+		"regionId": 111,
+		"resourceType": "iron",
+		"capacity": 17000
+	},
+	{
+		"regionId": 111,
+		"resourceType": "coal",
+		"capacity": 2500
+	},
+	{
+		"regionId": 111,
+		"resourceType": "wood",
+		"capacity": 24700
+	},
+	{
+		"regionId": 112,
+		"resourceType": "coal",
+		"capacity": 15500
+	},
+	{
+		"regionId": 112,
+		"resourceType": "wood",
+		"capacity": 4900
+	},
+	{
+		"regionId": 113,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 113,
+		"resourceType": "copper",
+		"capacity": 4200
+	},
+	{
+		"regionId": 113,
+		"resourceType": "wood",
+		"capacity": 5700
+	},
+	{
+		"regionId": 114,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 114,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 116,
+		"resourceType": "wood",
+		"capacity": 16200
+	},
+	{
+		"regionId": 117,
+		"resourceType": "iron",
+		"capacity": 6300
+	},
+	{
+		"regionId": 117,
+		"resourceType": "copper",
+		"capacity": 3100
+	},
+	{
+		"regionId": 117,
+		"resourceType": "wood",
+		"capacity": 8200
+	},
+	{
+		"regionId": 118,
+		"resourceType": "wood",
+		"capacity": 18900
+	},
+	{
+		"regionId": 119,
+		"resourceType": "wood",
+		"capacity": 8400
+	},
+	{
+		"regionId": 120,
+		"resourceType": "copper",
+		"capacity": 10700
+	},
+	{
+		"regionId": 120,
+		"resourceType": "wood",
+		"capacity": 4600
+	},
+	{
+		"regionId": 121,
+		"resourceType": "wood",
+		"capacity": 13600
+	},
+	{
+		"regionId": 122,
+		"resourceType": "coal",
+		"capacity": 8300
+	},
+	{
+		"regionId": 122,
+		"resourceType": "wood",
+		"capacity": 6700
+	},
+	{
+		"regionId": 123,
+		"resourceType": "coal",
+		"capacity": 19200
+	},
+	{
+		"regionId": 123,
+		"resourceType": "wood",
+		"capacity": 11200
+	},
+	{
+		"regionId": 124,
+		"resourceType": "copper",
+		"capacity": 1700
+	},
+	{
+		"regionId": 124,
+		"resourceType": "coal",
+		"capacity": 18600
+	},
+	{
+		"regionId": 124,
+		"resourceType": "wood",
+		"capacity": 3200
+	},
+	{
+		"regionId": 125,
+		"resourceType": "iron",
+		"capacity": 5000
+	},
+	{
+		"regionId": 125,
+		"resourceType": "coal",
+		"capacity": 16500
+	},
+	{
+		"regionId": 125,
+		"resourceType": "wood",
+		"capacity": 23900
+	},
+	{
+		"regionId": 126,
+		"resourceType": "wood",
+		"capacity": 14600
+	},
+	{
+		"regionId": 127,
+		"resourceType": "iron",
+		"capacity": 5700
+	},
+	{
+		"regionId": 127,
+		"resourceType": "wood",
+		"capacity": 13300
+	},
+	{
+		"regionId": 128,
+		"resourceType": "coal",
+		"capacity": 19200
+	},
+	{
+		"regionId": 128,
+		"resourceType": "wood",
+		"capacity": 3600
+	},
+	{
+		"regionId": 129,
+		"resourceType": "copper",
+		"capacity": 1900
+	},
+	{
+		"regionId": 129,
+		"resourceType": "coal",
+		"capacity": 24700
+	},
+	{
+		"regionId": 129,
+		"resourceType": "wood",
+		"capacity": 7900
+	},
+	{
+		"regionId": 130,
+		"resourceType": "coal",
+		"capacity": 41200
+	},
+	{
+		"regionId": 130,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 131,
+		"resourceType": "coal",
+		"capacity": 14400
+	},
+	{
+		"regionId": 131,
+		"resourceType": "wood",
+		"capacity": 11400
+	},
+	{
+		"regionId": 132,
+		"resourceType": "iron",
+		"capacity": 14500
+	},
+	{
+		"regionId": 132,
+		"resourceType": "coal",
+		"capacity": 19800
+	},
+	{
+		"regionId": 132,
+		"resourceType": "wood",
+		"capacity": 6800
+	},
+	{
+		"regionId": 133,
+		"resourceType": "iron",
+		"capacity": 17800
+	},
+	{
+		"regionId": 133,
+		"resourceType": "coal",
+		"capacity": 6000
+	},
+	{
+		"regionId": 133,
+		"resourceType": "wood",
+		"capacity": 8900
+	},
+	{
+		"regionId": 134,
+		"resourceType": "coal",
+		"capacity": 2400
+	},
+	{
+		"regionId": 134,
+		"resourceType": "wood",
+		"capacity": 9000
+	},
+	{
+		"regionId": 135,
+		"resourceType": "wood",
+		"capacity": 5000
+	},
+	{
+		"regionId": 136,
+		"resourceType": "wood",
+		"capacity": 3800
+	},
+	{
+		"regionId": 137,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 138,
+		"resourceType": "wood",
+		"capacity": 15300
+	},
+	{
+		"regionId": 139,
+		"resourceType": "wood",
+		"capacity": 21200
+	},
+	{
+		"regionId": 140,
+		"resourceType": "copper",
+		"capacity": 3100
+	},
+	{
+		"regionId": 140,
+		"resourceType": "coal",
+		"capacity": 2400
+	},
+	{
+		"regionId": 140,
+		"resourceType": "wood",
+		"capacity": 14500
+	},
+	{
+		"regionId": 141,
+		"resourceType": "wood",
+		"capacity": 6900
+	},
+	{
+		"regionId": 142,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 144,
+		"resourceType": "coal",
+		"capacity": 3800
+	},
+	{
+		"regionId": 144,
+		"resourceType": "wood",
+		"capacity": 21400
+	},
+	{
+		"regionId": 145,
+		"resourceType": "copper",
+		"capacity": 13000
+	},
+	{
+		"regionId": 145,
+		"resourceType": "wood",
+		"capacity": 12400
+	},
+	{
+		"regionId": 146,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 146,
+		"resourceType": "coal",
+		"capacity": 7800
+	},
+	{
+		"regionId": 146,
+		"resourceType": "wood",
+		"capacity": 11900
+	},
+	{
+		"regionId": 147,
+		"resourceType": "coal",
+		"capacity": 3000
+	},
+	{
+		"regionId": 147,
+		"resourceType": "wood",
+		"capacity": 18800
+	},
+	{
+		"regionId": 148,
+		"resourceType": "copper",
+		"capacity": 10700
+	},
+	{
+		"regionId": 148,
+		"resourceType": "wood",
+		"capacity": 21700
+	},
+	{
+		"regionId": 149,
+		"resourceType": "wood",
+		"capacity": 10300
+	},
+	{
+		"regionId": 150,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 150,
+		"resourceType": "wood",
+		"capacity": 17100
+	},
+	{
+		"regionId": 151,
+		"resourceType": "coal",
+		"capacity": 10600
+	},
+	{
+		"regionId": 151,
+		"resourceType": "wood",
+		"capacity": 10000
+	},
+	{
+		"regionId": 152,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 152,
+		"resourceType": "copper",
+		"capacity": 5300
+	},
+	{
+		"regionId": 153,
+		"resourceType": "copper",
+		"capacity": 2500
+	},
+	{
+		"regionId": 153,
+		"resourceType": "wood",
+		"capacity": 13600
+	},
+	{
+		"regionId": 154,
+		"resourceType": "coal",
+		"capacity": 7200
+	},
+	{
+		"regionId": 155,
+		"resourceType": "coal",
+		"capacity": 4100
+	},
+	{
+		"regionId": 155,
+		"resourceType": "wood",
+		"capacity": 10500
+	},
+	{
+		"regionId": 158,
+		"resourceType": "wood",
+		"capacity": 5300
+	},
+	{
+		"regionId": 159,
+		"resourceType": "iron",
+		"capacity": 15400
+	},
+	{
+		"regionId": 159,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 160,
+		"resourceType": "iron",
+		"capacity": 5900
+	},
+	{
+		"regionId": 160,
+		"resourceType": "wood",
+		"capacity": 11300
+	},
+	{
+		"regionId": 161,
+		"resourceType": "iron",
+		"capacity": 3200
+	},
+	{
+		"regionId": 161,
+		"resourceType": "wood",
+		"capacity": 9300
+	},
+	{
+		"regionId": 162,
+		"resourceType": "iron",
+		"capacity": 4300
+	},
+	{
+		"regionId": 162,
+		"resourceType": "wood",
+		"capacity": 5600
+	},
+	{
+		"regionId": 164,
+		"resourceType": "copper",
+		"capacity": 2000
+	},
+	{
+		"regionId": 164,
+		"resourceType": "wood",
+		"capacity": 5400
+	},
+	{
+		"regionId": 165,
+		"resourceType": "iron",
+		"capacity": 12700
+	},
+	{
+		"regionId": 165,
+		"resourceType": "wood",
+		"capacity": 11100
+	},
+	{
+		"regionId": 166,
+		"resourceType": "wood",
+		"capacity": 24100
+	},
+	{
+		"regionId": 167,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 168,
+		"resourceType": "copper",
+		"capacity": 1900
+	},
+	{
+		"regionId": 168,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 169,
+		"resourceType": "copper",
+		"capacity": 10400
+	},
+	{
+		"regionId": 171,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 172,
+		"resourceType": "coal",
+		"capacity": 2300
+	},
+	{
+		"regionId": 172,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 173,
+		"resourceType": "wood",
+		"capacity": 4200
+	},
+	{
+		"regionId": 174,
+		"resourceType": "wood",
+		"capacity": 8200
+	},
+	{
+		"regionId": 175,
+		"resourceType": "wood",
+		"capacity": 13800
+	},
+	{
+		"regionId": 176,
+		"resourceType": "wood",
+		"capacity": 10600
+	},
+	{
+		"regionId": 178,
+		"resourceType": "copper",
+		"capacity": 3800
+	},
+	{
+		"regionId": 179,
+		"resourceType": "iron",
+		"capacity": 14000
+	},
+	{
+		"regionId": 179,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 180,
+		"resourceType": "iron",
+		"capacity": 12600
+	},
+	{
+		"regionId": 180,
+		"resourceType": "copper",
+		"capacity": 9300
+	},
+	{
+		"regionId": 181,
+		"resourceType": "iron",
+		"capacity": 12500
+	},
+	{
+		"regionId": 181,
+		"resourceType": "wood",
+		"capacity": 6300
+	},
+	{
+		"regionId": 182,
+		"resourceType": "coal",
+		"capacity": 19400
+	},
+	{
+		"regionId": 183,
+		"resourceType": "wood",
+		"capacity": 6900
+	},
+	{
+		"regionId": 184,
+		"resourceType": "iron",
+		"capacity": 5900
+	},
+	{
+		"regionId": 184,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 186,
+		"resourceType": "wood",
+		"capacity": 4700
+	},
+	{
+		"regionId": 187,
+		"resourceType": "wood",
+		"capacity": 12500
+	},
+	{
+		"regionId": 188,
+		"resourceType": "iron",
+		"capacity": 17900
+	},
+	{
+		"regionId": 188,
+		"resourceType": "wood",
+		"capacity": 7200
+	},
+	{
+		"regionId": 189,
+		"resourceType": "wood",
+		"capacity": 3200
+	},
+	{
+		"regionId": 190,
+		"resourceType": "iron",
+		"capacity": 2500
+	},
+	{
+		"regionId": 190,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 191,
+		"resourceType": "wood",
+		"capacity": 18400
+	},
+	{
+		"regionId": 192,
+		"resourceType": "iron",
+		"capacity": 2800
+	},
+	{
+		"regionId": 193,
+		"resourceType": "copper",
+		"capacity": 4400
+	},
+	{
+		"regionId": 193,
+		"resourceType": "wood",
+		"capacity": 23200
+	},
+	{
+		"regionId": 194,
+		"resourceType": "wood",
+		"capacity": 22300
+	},
+	{
+		"regionId": 195,
+		"resourceType": "iron",
+		"capacity": 5200
+	},
+	{
+		"regionId": 195,
+		"resourceType": "copper",
+		"capacity": 1900
+	},
+	{
+		"regionId": 195,
+		"resourceType": "wood",
+		"capacity": 15300
+	},
+	{
+		"regionId": 196,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 197,
+		"resourceType": "iron",
+		"capacity": 34300
+	},
+	{
+		"regionId": 197,
+		"resourceType": "coal",
+		"capacity": 9200
+	},
+	{
+		"regionId": 198,
+		"resourceType": "wood",
+		"capacity": 7200
+	},
+	{
+		"regionId": 199,
+		"resourceType": "coal",
+		"capacity": 3700
+	},
+	{
+		"regionId": 200,
+		"resourceType": "wood",
+		"capacity": 22100
+	},
+	{
+		"regionId": 201,
+		"resourceType": "copper",
+		"capacity": 3300
+	},
+	{
+		"regionId": 201,
+		"resourceType": "coal",
+		"capacity": 17900
+	},
+	{
+		"regionId": 201,
+		"resourceType": "wood",
+		"capacity": 8000
+	},
+	{
+		"regionId": 202,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 203,
+		"resourceType": "iron",
+		"capacity": 3000
+	},
+	{
+		"regionId": 203,
+		"resourceType": "wood",
+		"capacity": 21600
+	},
+	{
+		"regionId": 204,
+		"resourceType": "wood",
+		"capacity": 16100
+	},
+	{
+		"regionId": 205,
+		"resourceType": "wood",
+		"capacity": 4100
+	},
+	{
+		"regionId": 206,
+		"resourceType": "iron",
+		"capacity": 6000
+	},
+	{
+		"regionId": 206,
+		"resourceType": "wood",
+		"capacity": 9800
+	},
+	{
+		"regionId": 207,
+		"resourceType": "wood",
+		"capacity": 18000
+	},
+	{
+		"regionId": 208,
+		"resourceType": "iron",
+		"capacity": 8000
+	},
+	{
+		"regionId": 208,
+		"resourceType": "wood",
+		"capacity": 6800
+	},
+	{
+		"regionId": 209,
+		"resourceType": "wood",
+		"capacity": 10700
+	},
+	{
+		"regionId": 210,
+		"resourceType": "copper",
+		"capacity": 2400
+	},
+	{
+		"regionId": 210,
+		"resourceType": "wood",
+		"capacity": 7200
+	},
+	{
+		"regionId": 211,
+		"resourceType": "wood",
+		"capacity": 5900
+	},
+	{
+		"regionId": 212,
+		"resourceType": "iron",
+		"capacity": 9600
+	},
+	{
+		"regionId": 212,
+		"resourceType": "wood",
+		"capacity": 3900
+	},
+	{
+		"regionId": 213,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 214,
+		"resourceType": "copper",
+		"capacity": 2500
+	},
+	{
+		"regionId": 214,
+		"resourceType": "wood",
+		"capacity": 19200
+	},
+	{
+		"regionId": 215,
+		"resourceType": "coal",
+		"capacity": 3200
+	},
+	{
+		"regionId": 215,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 216,
+		"resourceType": "copper",
+		"capacity": 10100
+	},
+	{
+		"regionId": 216,
+		"resourceType": "coal",
+		"capacity": 2800
+	},
+	{
+		"regionId": 216,
+		"resourceType": "wood",
+		"capacity": 17700
+	},
+	{
+		"regionId": 217,
+		"resourceType": "iron",
+		"capacity": 3300
+	},
+	{
+		"regionId": 217,
+		"resourceType": "copper",
+		"capacity": 4400
+	},
+	{
+		"regionId": 218,
+		"resourceType": "iron",
+		"capacity": 2900
+	},
+	{
+		"regionId": 218,
+		"resourceType": "coal",
+		"capacity": 28300
+	},
+	{
+		"regionId": 219,
+		"resourceType": "iron",
+		"capacity": 5800
+	},
+	{
+		"regionId": 219,
+		"resourceType": "wood",
+		"capacity": 22400
+	},
+	{
+		"regionId": 220,
+		"resourceType": "iron",
+		"capacity": 5200
+	},
+	{
+		"regionId": 220,
+		"resourceType": "wood",
+		"capacity": 20500
+	},
+	{
+		"regionId": 221,
+		"resourceType": "copper",
+		"capacity": 5400
+	},
+	{
+		"regionId": 221,
+		"resourceType": "wood",
+		"capacity": 18400
+	},
+	{
+		"regionId": 222,
+		"resourceType": "copper",
+		"capacity": 4300
+	},
+	{
+		"regionId": 222,
+		"resourceType": "coal",
+		"capacity": 14500
+	},
+	{
+		"regionId": 222,
+		"resourceType": "wood",
+		"capacity": 6300
+	},
+	{
+		"regionId": 223,
+		"resourceType": "copper",
+		"capacity": 9600
+	},
+	{
+		"regionId": 223,
+		"resourceType": "coal",
+		"capacity": 6000
+	},
+	{
+		"regionId": 224,
+		"resourceType": "iron",
+		"capacity": 6500
+	},
+	{
+		"regionId": 224,
+		"resourceType": "coal",
+		"capacity": 15200
+	},
+	{
+		"regionId": 224,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 225,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 226,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 226,
+		"resourceType": "wood",
+		"capacity": 5000
+	},
+	{
+		"regionId": 227,
+		"resourceType": "iron",
+		"capacity": 2300
+	},
+	{
+		"regionId": 227,
+		"resourceType": "coal",
+		"capacity": 25000
+	},
+	{
+		"regionId": 228,
+		"resourceType": "wood",
+		"capacity": 16600
+	},
+	{
+		"regionId": 229,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 229,
+		"resourceType": "coal",
+		"capacity": 17000
+	},
+	{
+		"regionId": 229,
+		"resourceType": "wood",
+		"capacity": 14200
+	},
+	{
+		"regionId": 231,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 231,
+		"resourceType": "wood",
+		"capacity": 3200
+	},
+	{
+		"regionId": 232,
+		"resourceType": "iron",
+		"capacity": 9800
+	},
+	{
+		"regionId": 233,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 234,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 234,
+		"resourceType": "wood",
+		"capacity": 12100
+	},
+	{
+		"regionId": 235,
+		"resourceType": "wood",
+		"capacity": 8800
+	},
+	{
+		"regionId": 237,
+		"resourceType": "coal",
+		"capacity": 6200
+	},
+	{
+		"regionId": 237,
+		"resourceType": "wood",
+		"capacity": 10600
+	},
+	{
+		"regionId": 238,
+		"resourceType": "coal",
+		"capacity": 7200
+	},
+	{
+		"regionId": 238,
+		"resourceType": "wood",
+		"capacity": 6200
+	},
+	{
+		"regionId": 239,
+		"resourceType": "coal",
+		"capacity": 5200
+	},
+	{
+		"regionId": 239,
+		"resourceType": "wood",
+		"capacity": 14200
+	},
+	{
+		"regionId": 240,
+		"resourceType": "iron",
+		"capacity": 17900
+	},
+	{
+		"regionId": 240,
+		"resourceType": "wood",
+		"capacity": 12800
+	},
+	{
+		"regionId": 241,
+		"resourceType": "wood",
+		"capacity": 6800
+	},
+	{
+		"regionId": 242,
+		"resourceType": "copper",
+		"capacity": 6800
+	},
+	{
+		"regionId": 242,
+		"resourceType": "coal",
+		"capacity": 16000
+	},
+	{
+		"regionId": 242,
+		"resourceType": "wood",
+		"capacity": 5200
+	},
+	{
+		"regionId": 243,
+		"resourceType": "wood",
+		"capacity": 3700
+	},
+	{
+		"regionId": 244,
+		"resourceType": "iron",
+		"capacity": 15700
+	},
+	{
+		"regionId": 244,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 244,
+		"resourceType": "wood",
+		"capacity": 5500
+	},
+	{
+		"regionId": 245,
+		"resourceType": "wood",
+		"capacity": 10300
+	},
+	{
+		"regionId": 246,
+		"resourceType": "iron",
+		"capacity": 16000
+	},
+	{
+		"regionId": 246,
+		"resourceType": "wood",
+		"capacity": 3600
+	},
+	{
+		"regionId": 247,
+		"resourceType": "wood",
+		"capacity": 4700
+	},
+	{
+		"regionId": 248,
+		"resourceType": "wood",
+		"capacity": 14200
+	},
+	{
+		"regionId": 249,
+		"resourceType": "copper",
+		"capacity": 4900
+	},
+	{
+		"regionId": 249,
+		"resourceType": "wood",
+		"capacity": 15300
+	},
+	{
+		"regionId": 250,
+		"resourceType": "coal",
+		"capacity": 11100
+	},
+	{
+		"regionId": 250,
+		"resourceType": "wood",
+		"capacity": 6600
+	},
+	{
+		"regionId": 251,
+		"resourceType": "wood",
+		"capacity": 13000
+	},
+	{
+		"regionId": 252,
+		"resourceType": "iron",
+		"capacity": 14100
+	},
+	{
+		"regionId": 252,
+		"resourceType": "copper",
+		"capacity": 6500
+	},
+	{
+		"regionId": 252,
+		"resourceType": "coal",
+		"capacity": 13500
+	},
+	{
+		"regionId": 252,
+		"resourceType": "wood",
+		"capacity": 7400
+	},
+	{
+		"regionId": 253,
+		"resourceType": "iron",
+		"capacity": 10600
+	},
+	{
+		"regionId": 253,
+		"resourceType": "coal",
+		"capacity": 4000
+	},
+	{
+		"regionId": 253,
+		"resourceType": "wood",
+		"capacity": 18800
+	},
+	{
+		"regionId": 254,
+		"resourceType": "iron",
+		"capacity": 4100
+	},
+	{
+		"regionId": 254,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 255,
+		"resourceType": "iron",
+		"capacity": 17900
+	},
+	{
+		"regionId": 255,
+		"resourceType": "wood",
+		"capacity": 8000
+	},
+	{
+		"regionId": 256,
+		"resourceType": "coal",
+		"capacity": 5300
+	},
+	{
+		"regionId": 256,
+		"resourceType": "wood",
+		"capacity": 7200
+	},
+	{
+		"regionId": 257,
+		"resourceType": "wood",
+		"capacity": 16200
+	},
+	{
+		"regionId": 258,
+		"resourceType": "coal",
+		"capacity": 4800
+	},
+	{
+		"regionId": 258,
+		"resourceType": "wood",
+		"capacity": 4300
+	},
+	{
+		"regionId": 259,
+		"resourceType": "coal",
+		"capacity": 13500
+	},
+	{
+		"regionId": 260,
+		"resourceType": "coal",
+		"capacity": 7100
+	},
+	{
+		"regionId": 260,
+		"resourceType": "wood",
+		"capacity": 11300
+	},
+	{
+		"regionId": 261,
+		"resourceType": "iron",
+		"capacity": 2600
+	},
+	{
+		"regionId": 262,
+		"resourceType": "iron",
+		"capacity": 9100
+	},
+	{
+		"regionId": 262,
+		"resourceType": "copper",
+		"capacity": 8800
+	},
+	{
+		"regionId": 262,
+		"resourceType": "wood",
+		"capacity": 20900
+	},
+	{
+		"regionId": 263,
+		"resourceType": "wood",
+		"capacity": 10700
+	},
+	{
+		"regionId": 264,
+		"resourceType": "iron",
+		"capacity": 5300
+	},
+	{
+		"regionId": 264,
+		"resourceType": "wood",
+		"capacity": 7600
+	},
+	{
+		"regionId": 265,
+		"resourceType": "iron",
+		"capacity": 2300
+	},
+	{
+		"regionId": 265,
+		"resourceType": "wood",
+		"capacity": 21100
+	},
+	{
+		"regionId": 267,
+		"resourceType": "wood",
+		"capacity": 6000
+	},
+	{
+		"regionId": 268,
+		"resourceType": "iron",
+		"capacity": 10500
+	},
+	{
+		"regionId": 268,
+		"resourceType": "wood",
+		"capacity": 17500
+	},
+	{
+		"regionId": 269,
+		"resourceType": "iron",
+		"capacity": 4400
+	},
+	{
+		"regionId": 269,
+		"resourceType": "coal",
+		"capacity": 7100
+	},
+	{
+		"regionId": 269,
+		"resourceType": "wood",
+		"capacity": 17900
+	},
+	{
+		"regionId": 270,
+		"resourceType": "coal",
+		"capacity": 10200
+	},
+	{
+		"regionId": 270,
+		"resourceType": "wood",
+		"capacity": 4700
+	},
+	{
+		"regionId": 271,
+		"resourceType": "iron",
+		"capacity": 4800
+	},
+	{
+		"regionId": 271,
+		"resourceType": "coal",
+		"capacity": 10700
+	},
+	{
+		"regionId": 271,
+		"resourceType": "wood",
+		"capacity": 5400
+	},
+	{
+		"regionId": 272,
+		"resourceType": "iron",
+		"capacity": 7900
+	},
+	{
+		"regionId": 272,
+		"resourceType": "wood",
+		"capacity": 13500
+	},
+	{
+		"regionId": 273,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 273,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 274,
+		"resourceType": "copper",
+		"capacity": 7100
+	},
+	{
+		"regionId": 274,
+		"resourceType": "wood",
+		"capacity": 15000
+	},
+	{
+		"regionId": 275,
+		"resourceType": "iron",
+		"capacity": 15400
+	},
+	{
+		"regionId": 275,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 277,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 277,
+		"resourceType": "wood",
+		"capacity": 24300
+	},
+	{
+		"regionId": 278,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 278,
+		"resourceType": "wood",
+		"capacity": 4200
+	},
+	{
+		"regionId": 279,
+		"resourceType": "iron",
+		"capacity": 8100
+	},
+	{
+		"regionId": 280,
+		"resourceType": "coal",
+		"capacity": 6100
+	},
+	{
+		"regionId": 281,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 281,
+		"resourceType": "wood",
+		"capacity": 23600
+	},
+	{
+		"regionId": 282,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 283,
+		"resourceType": "coal",
+		"capacity": 10600
+	},
+	{
+		"regionId": 283,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 284,
+		"resourceType": "copper",
+		"capacity": 9400
+	},
+	{
+		"regionId": 285,
+		"resourceType": "coal",
+		"capacity": 19900
+	},
+	{
+		"regionId": 285,
+		"resourceType": "wood",
+		"capacity": 16100
+	},
+	{
+		"regionId": 286,
+		"resourceType": "wood",
+		"capacity": 12400
+	},
+	{
+		"regionId": 288,
+		"resourceType": "copper",
+		"capacity": 2100
+	},
+	{
+		"regionId": 288,
+		"resourceType": "coal",
+		"capacity": 7200
+	},
+	{
+		"regionId": 289,
+		"resourceType": "copper",
+		"capacity": 4500
+	},
+	{
+		"regionId": 289,
+		"resourceType": "coal",
+		"capacity": 5100
+	},
+	{
+		"regionId": 289,
+		"resourceType": "wood",
+		"capacity": 5000
+	},
+	{
+		"regionId": 290,
+		"resourceType": "coal",
+		"capacity": 8500
+	},
+	{
+		"regionId": 293,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 294,
+		"resourceType": "coal",
+		"capacity": 7700
+	},
+	{
+		"regionId": 295,
+		"resourceType": "coal",
+		"capacity": 5100
+	},
+	{
+		"regionId": 295,
+		"resourceType": "wood",
+		"capacity": 6400
+	},
+	{
+		"regionId": 296,
+		"resourceType": "wood",
+		"capacity": 13400
+	},
+	{
+		"regionId": 297,
+		"resourceType": "wood",
+		"capacity": 4300
+	},
+	{
+		"regionId": 298,
+		"resourceType": "coal",
+		"capacity": 16900
+	},
+	{
+		"regionId": 298,
+		"resourceType": "wood",
+		"capacity": 16500
+	},
+	{
+		"regionId": 299,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 299,
+		"resourceType": "wood",
+		"capacity": 11200
+	},
+	{
+		"regionId": 300,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 300,
+		"resourceType": "wood",
+		"capacity": 15800
+	},
+	{
+		"regionId": 301,
+		"resourceType": "iron",
+		"capacity": 4600
+	},
+	{
+		"regionId": 302,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 303,
+		"resourceType": "copper",
+		"capacity": 12700
+	},
+	{
+		"regionId": 303,
+		"resourceType": "wood",
+		"capacity": 10400
+	},
+	{
+		"regionId": 304,
+		"resourceType": "wood",
+		"capacity": 18200
+	},
+	{
+		"regionId": 305,
+		"resourceType": "wood",
+		"capacity": 16800
+	},
+	{
+		"regionId": 306,
+		"resourceType": "wood",
+		"capacity": 5800
+	},
+	{
+		"regionId": 307,
+		"resourceType": "coal",
+		"capacity": 18800
+	},
+	{
+		"regionId": 308,
+		"resourceType": "coal",
+		"capacity": 11200
+	},
+	{
+		"regionId": 308,
+		"resourceType": "wood",
+		"capacity": 9100
+	},
+	{
+		"regionId": 309,
+		"resourceType": "iron",
+		"capacity": 7300
+	},
+	{
+		"regionId": 309,
+		"resourceType": "wood",
+		"capacity": 14500
+	},
+	{
+		"regionId": 311,
+		"resourceType": "wood",
+		"capacity": 9500
+	},
+	{
+		"regionId": 312,
+		"resourceType": "iron",
+		"capacity": 8200
+	},
+	{
+		"regionId": 312,
+		"resourceType": "copper",
+		"capacity": 7700
+	},
+	{
+		"regionId": 312,
+		"resourceType": "wood",
+		"capacity": 9000
+	},
+	{
+		"regionId": 314,
+		"resourceType": "wood",
+		"capacity": 10200
+	},
+	{
+		"regionId": 315,
+		"resourceType": "iron",
+		"capacity": 11300
+	},
+	{
+		"regionId": 315,
+		"resourceType": "copper",
+		"capacity": 2800
+	},
+	{
+		"regionId": 317,
+		"resourceType": "coal",
+		"capacity": 5300
+	},
+	{
+		"regionId": 317,
+		"resourceType": "wood",
+		"capacity": 5400
+	},
+	{
+		"regionId": 319,
+		"resourceType": "coal",
+		"capacity": 2800
+	},
+	{
+		"regionId": 320,
+		"resourceType": "coal",
+		"capacity": 6000
+	},
+	{
+		"regionId": 320,
+		"resourceType": "wood",
+		"capacity": 7900
+	},
+	{
+		"regionId": 321,
+		"resourceType": "iron",
+		"capacity": 2800
+	},
+	{
+		"regionId": 322,
+		"resourceType": "copper",
+		"capacity": 2200
+	},
+	{
+		"regionId": 322,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 323,
+		"resourceType": "coal",
+		"capacity": 17700
+	},
+	{
+		"regionId": 323,
+		"resourceType": "wood",
+		"capacity": 3900
+	},
+	{
+		"regionId": 324,
+		"resourceType": "coal",
+		"capacity": 18100
+	},
+	{
+		"regionId": 326,
+		"resourceType": "wood",
+		"capacity": 17200
+	},
+	{
+		"regionId": 328,
+		"resourceType": "coal",
+		"capacity": 12900
+	},
+	{
+		"regionId": 329,
+		"resourceType": "wood",
+		"capacity": 4100
+	},
+	{
+		"regionId": 331,
+		"resourceType": "wood",
+		"capacity": 15200
+	},
+	{
+		"regionId": 332,
+		"resourceType": "wood",
+		"capacity": 7600
+	},
+	{
+		"regionId": 333,
+		"resourceType": "coal",
+		"capacity": 3500
+	},
+	{
+		"regionId": 333,
+		"resourceType": "wood",
+		"capacity": 6400
+	},
+	{
+		"regionId": 334,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 334,
+		"resourceType": "wood",
+		"capacity": 17500
+	},
+	{
+		"regionId": 335,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 335,
+		"resourceType": "wood",
+		"capacity": 14100
+	},
+	{
+		"regionId": 336,
+		"resourceType": "iron",
+		"capacity": 2900
+	},
+	{
+		"regionId": 336,
+		"resourceType": "copper",
+		"capacity": 1800
+	},
+	{
+		"regionId": 336,
+		"resourceType": "wood",
+		"capacity": 10400
+	},
+	{
+		"regionId": 337,
+		"resourceType": "iron",
+		"capacity": 2800
+	},
+	{
+		"regionId": 337,
+		"resourceType": "wood",
+		"capacity": 7700
+	},
+	{
+		"regionId": 338,
+		"resourceType": "coal",
+		"capacity": 17200
+	},
+	{
+		"regionId": 338,
+		"resourceType": "wood",
+		"capacity": 7400
+	},
+	{
+		"regionId": 339,
+		"resourceType": "wood",
+		"capacity": 8500
+	},
+	{
+		"regionId": 341,
+		"resourceType": "copper",
+		"capacity": 12100
+	},
+	{
+		"regionId": 341,
+		"resourceType": "coal",
+		"capacity": 2500
+	},
+	{
+		"regionId": 341,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 342,
+		"resourceType": "coal",
+		"capacity": 18500
+	},
+	{
+		"regionId": 343,
+		"resourceType": "copper",
+		"capacity": 6800
+	},
+	{
+		"regionId": 344,
+		"resourceType": "iron",
+		"capacity": 2300
+	},
+	{
+		"regionId": 344,
+		"resourceType": "wood",
+		"capacity": 16700
+	},
+	{
+		"regionId": 345,
+		"resourceType": "coal",
+		"capacity": 2400
+	},
+	{
+		"regionId": 345,
+		"resourceType": "wood",
+		"capacity": 4800
+	},
+	{
+		"regionId": 346,
+		"resourceType": "coal",
+		"capacity": 4200
+	},
+	{
+		"regionId": 346,
+		"resourceType": "wood",
+		"capacity": 4400
+	},
+	{
+		"regionId": 347,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 348,
+		"resourceType": "coal",
+		"capacity": 18500
+	},
+	{
+		"regionId": 348,
+		"resourceType": "wood",
+		"capacity": 4500
+	},
+	{
+		"regionId": 349,
+		"resourceType": "copper",
+		"capacity": 12700
+	},
+	{
+		"regionId": 349,
+		"resourceType": "wood",
+		"capacity": 14200
+	},
+	{
+		"regionId": 350,
+		"resourceType": "wood",
+		"capacity": 4800
+	},
+	{
+		"regionId": 351,
+		"resourceType": "iron",
+		"capacity": 9600
+	},
+	{
+		"regionId": 351,
+		"resourceType": "wood",
+		"capacity": 5600
+	},
+	{
+		"regionId": 352,
+		"resourceType": "wood",
+		"capacity": 4900
+	},
+	{
+		"regionId": 353,
+		"resourceType": "coal",
+		"capacity": 6600
+	},
+	{
+		"regionId": 354,
+		"resourceType": "coal",
+		"capacity": 4600
+	},
+	{
+		"regionId": 354,
+		"resourceType": "wood",
+		"capacity": 20300
+	},
+	{
+		"regionId": 355,
+		"resourceType": "coal",
+		"capacity": 9500
+	},
+	{
+		"regionId": 355,
+		"resourceType": "wood",
+		"capacity": 4400
+	},
+	{
+		"regionId": 356,
+		"resourceType": "coal",
+		"capacity": 15100
+	},
+	{
+		"regionId": 357,
+		"resourceType": "wood",
+		"capacity": 20500
+	},
+	{
+		"regionId": 358,
+		"resourceType": "iron",
+		"capacity": 12100
+	},
+	{
+		"regionId": 358,
+		"resourceType": "wood",
+		"capacity": 8200
+	},
+	{
+		"regionId": 359,
+		"resourceType": "coal",
+		"capacity": 3000
+	},
+	{
+		"regionId": 359,
+		"resourceType": "wood",
+		"capacity": 3700
+	},
+	{
+		"regionId": 360,
+		"resourceType": "iron",
+		"capacity": 3400
+	},
+	{
+		"regionId": 360,
+		"resourceType": "copper",
+		"capacity": 1900
+	},
+	{
+		"regionId": 360,
+		"resourceType": "wood",
+		"capacity": 5900
+	},
+	{
+		"regionId": 361,
+		"resourceType": "wood",
+		"capacity": 4000
+	},
+	{
+		"regionId": 362,
+		"resourceType": "coal",
+		"capacity": 18600
+	},
+	{
+		"regionId": 363,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 363,
+		"resourceType": "coal",
+		"capacity": 29500
+	},
+	{
+		"regionId": 363,
+		"resourceType": "wood",
+		"capacity": 19100
+	},
+	{
+		"regionId": 364,
+		"resourceType": "iron",
+		"capacity": 5600
+	},
+	{
+		"regionId": 364,
+		"resourceType": "coal",
+		"capacity": 34900
+	},
+	{
+		"regionId": 364,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 365,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 365,
+		"resourceType": "wood",
+		"capacity": 17100
+	},
+	{
+		"regionId": 366,
+		"resourceType": "iron",
+		"capacity": 15000
+	},
+	{
+		"regionId": 366,
+		"resourceType": "coal",
+		"capacity": 17500
+	},
+	{
+		"regionId": 367,
+		"resourceType": "iron",
+		"capacity": 9400
+	},
+	{
+		"regionId": 368,
+		"resourceType": "iron",
+		"capacity": 9000
+	},
+	{
+		"regionId": 368,
+		"resourceType": "wood",
+		"capacity": 8400
+	},
+	{
+		"regionId": 369,
+		"resourceType": "iron",
+		"capacity": 3700
+	},
+	{
+		"regionId": 369,
+		"resourceType": "copper",
+		"capacity": 4400
+	},
+	{
+		"regionId": 369,
+		"resourceType": "wood",
+		"capacity": 12300
+	},
+	{
+		"regionId": 372,
+		"resourceType": "copper",
+		"capacity": 5500
+	},
+	{
+		"regionId": 373,
+		"resourceType": "wood",
+		"capacity": 3200
+	},
+	{
+		"regionId": 374,
+		"resourceType": "wood",
+		"capacity": 21600
+	},
+	{
+		"regionId": 375,
+		"resourceType": "wood",
+		"capacity": 22600
+	},
+	{
+		"regionId": 377,
+		"resourceType": "copper",
+		"capacity": 4900
+	},
+	{
+		"regionId": 377,
+		"resourceType": "coal",
+		"capacity": 3200
+	},
+	{
+		"regionId": 378,
+		"resourceType": "coal",
+		"capacity": 10700
+	},
+	{
+		"regionId": 379,
+		"resourceType": "iron",
+		"capacity": 3300
+	},
+	{
+		"regionId": 380,
+		"resourceType": "iron",
+		"capacity": 8400
+	},
+	{
+		"regionId": 380,
+		"resourceType": "copper",
+		"capacity": 3900
+	},
+	{
+		"regionId": 380,
+		"resourceType": "wood",
+		"capacity": 8600
+	},
+	{
+		"regionId": 381,
+		"resourceType": "coal",
+		"capacity": 18500
+	},
+	{
+		"regionId": 382,
+		"resourceType": "iron",
+		"capacity": 4000
+	},
+	{
+		"regionId": 382,
+		"resourceType": "coal",
+		"capacity": 6000
+	},
+	{
+		"regionId": 382,
+		"resourceType": "wood",
+		"capacity": 7200
+	},
+	{
+		"regionId": 383,
+		"resourceType": "wood",
+		"capacity": 16500
+	},
+	{
+		"regionId": 384,
+		"resourceType": "copper",
+		"capacity": 2400
+	},
+	{
+		"regionId": 384,
+		"resourceType": "coal",
+		"capacity": 11000
+	},
+	{
+		"regionId": 384,
+		"resourceType": "wood",
+		"capacity": 14400
+	},
+	{
+		"regionId": 385,
+		"resourceType": "iron",
+		"capacity": 7400
+	},
+	{
+		"regionId": 386,
+		"resourceType": "coal",
+		"capacity": 4500
+	},
+	{
+		"regionId": 386,
+		"resourceType": "wood",
+		"capacity": 20100
+	},
+	{
+		"regionId": 387,
+		"resourceType": "iron",
+		"capacity": 3100
+	},
+	{
+		"regionId": 387,
+		"resourceType": "wood",
+		"capacity": 3800
+	},
+	{
+		"regionId": 388,
+		"resourceType": "copper",
+		"capacity": 8300
+	},
+	{
+		"regionId": 388,
+		"resourceType": "wood",
+		"capacity": 5800
+	},
+	{
+		"regionId": 389,
+		"resourceType": "wood",
+		"capacity": 22600
+	},
+	{
+		"regionId": 390,
+		"resourceType": "iron",
+		"capacity": 2500
+	},
+	{
+		"regionId": 390,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 391,
+		"resourceType": "wood",
+		"capacity": 16800
+	},
+	{
+		"regionId": 392,
+		"resourceType": "wood",
+		"capacity": 20300
+	},
+	{
+		"regionId": 393,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 394,
+		"resourceType": "iron",
+		"capacity": 5800
+	},
+	{
+		"regionId": 394,
+		"resourceType": "copper",
+		"capacity": 8600
+	},
+	{
+		"regionId": 394,
+		"resourceType": "wood",
+		"capacity": 8200
+	},
+	{
+		"regionId": 395,
+		"resourceType": "coal",
+		"capacity": 10900
+	},
+	{
+		"regionId": 396,
+		"resourceType": "iron",
+		"capacity": 14200
+	},
+	{
+		"regionId": 397,
+		"resourceType": "wood",
+		"capacity": 6800
+	},
+	{
+		"regionId": 398,
+		"resourceType": "wood",
+		"capacity": 3800
+	},
+	{
+		"regionId": 399,
+		"resourceType": "iron",
+		"capacity": 4900
+	},
+	{
+		"regionId": 399,
+		"resourceType": "wood",
+		"capacity": 12600
+	},
+	{
+		"regionId": 400,
+		"resourceType": "copper",
+		"capacity": 10300
+	},
+	{
+		"regionId": 400,
+		"resourceType": "wood",
+		"capacity": 9700
+	},
+	{
+		"regionId": 401,
+		"resourceType": "coal",
+		"capacity": 6300
+	},
+	{
+		"regionId": 401,
+		"resourceType": "wood",
+		"capacity": 8700
+	},
+	{
+		"regionId": 402,
+		"resourceType": "copper",
+		"capacity": 2500
+	},
+	{
+		"regionId": 402,
+		"resourceType": "wood",
+		"capacity": 14600
+	},
+	{
+		"regionId": 403,
+		"resourceType": "coal",
+		"capacity": 7200
+	},
+	{
+		"regionId": 403,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 405,
+		"resourceType": "coal",
+		"capacity": 11500
+	},
+	{
+		"regionId": 406,
+		"resourceType": "copper",
+		"capacity": 11200
+	},
+	{
+		"regionId": 406,
+		"resourceType": "coal",
+		"capacity": 12500
+	},
+	{
+		"regionId": 406,
+		"resourceType": "wood",
+		"capacity": 18000
+	},
+	{
+		"regionId": 407,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 407,
+		"resourceType": "wood",
+		"capacity": 14100
+	},
+	{
+		"regionId": 408,
+		"resourceType": "iron",
+		"capacity": 10900
+	},
+	{
+		"regionId": 408,
+		"resourceType": "wood",
+		"capacity": 6200
+	},
+	{
+		"regionId": 409,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 409,
+		"resourceType": "coal",
+		"capacity": 14500
+	},
+	{
+		"regionId": 409,
+		"resourceType": "wood",
+		"capacity": 14500
+	},
+	{
+		"regionId": 410,
+		"resourceType": "coal",
+		"capacity": 2600
+	},
+	{
+		"regionId": 411,
+		"resourceType": "coal",
+		"capacity": 9600
+	},
+	{
+		"regionId": 411,
+		"resourceType": "wood",
+		"capacity": 4500
+	},
+	{
+		"regionId": 414,
+		"resourceType": "iron",
+		"capacity": 3000
+	},
+	{
+		"regionId": 414,
+		"resourceType": "copper",
+		"capacity": 4800
+	},
+	{
+		"regionId": 415,
+		"resourceType": "coal",
+		"capacity": 6400
+	},
+	{
+		"regionId": 416,
+		"resourceType": "iron",
+		"capacity": 7000
+	},
+	{
+		"regionId": 417,
+		"resourceType": "iron",
+		"capacity": 2300
+	},
+	{
+		"regionId": 417,
+		"resourceType": "wood",
+		"capacity": 5800
+	},
+	{
+		"regionId": 418,
+		"resourceType": "coal",
+		"capacity": 2400
+	},
+	{
+		"regionId": 418,
+		"resourceType": "wood",
+		"capacity": 16400
+	},
+	{
+		"regionId": 420,
+		"resourceType": "coal",
+		"capacity": 5400
+	},
+	{
+		"regionId": 420,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 421,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 421,
+		"resourceType": "wood",
+		"capacity": 8300
+	},
+	{
+		"regionId": 422,
+		"resourceType": "wood",
+		"capacity": 7700
+	},
+	{
+		"regionId": 423,
+		"resourceType": "coal",
+		"capacity": 13500
+	},
+	{
+		"regionId": 423,
+		"resourceType": "wood",
+		"capacity": 9200
+	},
+	{
+		"regionId": 424,
+		"resourceType": "iron",
+		"capacity": 3900
+	},
+	{
+		"regionId": 424,
+		"resourceType": "wood",
+		"capacity": 23200
+	},
+	{
+		"regionId": 425,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 426,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 426,
+		"resourceType": "coal",
+		"capacity": 14900
+	},
+	{
+		"regionId": 426,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 428,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 428,
+		"resourceType": "copper",
+		"capacity": 3800
+	},
+	{
+		"regionId": 428,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 429,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 429,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 430,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 430,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 431,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 432,
+		"resourceType": "coal",
+		"capacity": 9500
+	},
+	{
+		"regionId": 433,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 434,
+		"resourceType": "coal",
+		"capacity": 9200
+	},
+	{
+		"regionId": 436,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 436,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 437,
+		"resourceType": "iron",
+		"capacity": 7900
+	},
+	{
+		"regionId": 439,
+		"resourceType": "wood",
+		"capacity": 3600
+	},
+	{
+		"regionId": 440,
+		"resourceType": "coal",
+		"capacity": 11300
+	},
+	{
+		"regionId": 440,
+		"resourceType": "wood",
+		"capacity": 4600
+	},
+	{
+		"regionId": 441,
+		"resourceType": "iron",
+		"capacity": 2600
+	},
+	{
+		"regionId": 441,
+		"resourceType": "wood",
+		"capacity": 17800
+	},
+	{
+		"regionId": 442,
+		"resourceType": "iron",
+		"capacity": 14000
+	},
+	{
+		"regionId": 442,
+		"resourceType": "copper",
+		"capacity": 3700
+	},
+	{
+		"regionId": 442,
+		"resourceType": "wood",
+		"capacity": 17500
+	},
+	{
+		"regionId": 443,
+		"resourceType": "coal",
+		"capacity": 6000
+	},
+	{
+		"regionId": 444,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 445,
+		"resourceType": "wood",
+		"capacity": 6300
+	},
+	{
+		"regionId": 446,
+		"resourceType": "copper",
+		"capacity": 11000
+	},
+	{
+		"regionId": 446,
+		"resourceType": "coal",
+		"capacity": 7800
+	},
+	{
+		"regionId": 447,
+		"resourceType": "iron",
+		"capacity": 11600
+	},
+	{
+		"regionId": 448,
+		"resourceType": "copper",
+		"capacity": 2800
+	},
+	{
+		"regionId": 448,
+		"resourceType": "coal",
+		"capacity": 15600
+	},
+	{
+		"regionId": 450,
+		"resourceType": "copper",
+		"capacity": 3500
+	},
+	{
+		"regionId": 451,
+		"resourceType": "copper",
+		"capacity": 4300
+	},
+	{
+		"regionId": 451,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 453,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 454,
+		"resourceType": "coal",
+		"capacity": 4200
+	},
+	{
+		"regionId": 456,
+		"resourceType": "copper",
+		"capacity": 4000
+	},
+	{
+		"regionId": 457,
+		"resourceType": "coal",
+		"capacity": 11900
+	},
+	{
+		"regionId": 459,
+		"resourceType": "iron",
+		"capacity": 2800
+	},
+	{
+		"regionId": 461,
+		"resourceType": "iron",
+		"capacity": 6500
+	},
+	{
+		"regionId": 462,
+		"resourceType": "iron",
+		"capacity": 15400
+	},
+	{
+		"regionId": 463,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 463,
+		"resourceType": "copper",
+		"capacity": 5900
+	},
+	{
+		"regionId": 463,
+		"resourceType": "wood",
+		"capacity": 7100
+	},
+	{
+		"regionId": 464,
+		"resourceType": "wood",
+		"capacity": 4900
+	},
+	{
+		"regionId": 465,
+		"resourceType": "iron",
+		"capacity": 15500
+	},
+	{
+		"regionId": 465,
+		"resourceType": "wood",
+		"capacity": 14300
+	},
+	{
+		"regionId": 466,
+		"resourceType": "copper",
+		"capacity": 11900
+	},
+	{
+		"regionId": 466,
+		"resourceType": "wood",
+		"capacity": 7500
+	},
+	{
+		"regionId": 467,
+		"resourceType": "wood",
+		"capacity": 14400
+	},
+	{
+		"regionId": 468,
+		"resourceType": "iron",
+		"capacity": 3300
+	},
+	{
+		"regionId": 468,
+		"resourceType": "copper",
+		"capacity": 5900
+	},
+	{
+		"regionId": 468,
+		"resourceType": "coal",
+		"capacity": 4500
+	},
+	{
+		"regionId": 468,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 469,
+		"resourceType": "iron",
+		"capacity": 9300
+	},
+	{
+		"regionId": 469,
+		"resourceType": "coal",
+		"capacity": 2400
+	},
+	{
+		"regionId": 469,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 470,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 470,
+		"resourceType": "copper",
+		"capacity": 5200
+	},
+	{
+		"regionId": 470,
+		"resourceType": "wood",
+		"capacity": 5600
+	},
+	{
+		"regionId": 471,
+		"resourceType": "coal",
+		"capacity": 7100
+	},
+	{
+		"regionId": 471,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 472,
+		"resourceType": "iron",
+		"capacity": 3500
+	},
+	{
+		"regionId": 472,
+		"resourceType": "wood",
+		"capacity": 8100
+	},
+	{
+		"regionId": 473,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 473,
+		"resourceType": "wood",
+		"capacity": 6700
+	},
+	{
+		"regionId": 474,
+		"resourceType": "copper",
+		"capacity": 7200
+	},
+	{
+		"regionId": 475,
+		"resourceType": "coal",
+		"capacity": 10200
+	},
+	{
+		"regionId": 475,
+		"resourceType": "wood",
+		"capacity": 10400
+	},
+	{
+		"regionId": 477,
+		"resourceType": "iron",
+		"capacity": 5200
+	},
+	{
+		"regionId": 477,
+		"resourceType": "copper",
+		"capacity": 6600
+	},
+	{
+		"regionId": 480,
+		"resourceType": "iron",
+		"capacity": 5300
+	},
+	{
+		"regionId": 480,
+		"resourceType": "coal",
+		"capacity": 3100
+	},
+	{
+		"regionId": 480,
+		"resourceType": "wood",
+		"capacity": 6100
+	},
+	{
+		"regionId": 481,
+		"resourceType": "iron",
+		"capacity": 14000
+	},
+	{
+		"regionId": 482,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 483,
+		"resourceType": "iron",
+		"capacity": 12100
+	},
+	{
+		"regionId": 483,
+		"resourceType": "copper",
+		"capacity": 11800
+	},
+	{
+		"regionId": 484,
+		"resourceType": "iron",
+		"capacity": 5700
+	},
+	{
+		"regionId": 484,
+		"resourceType": "wood",
+		"capacity": 3900
+	},
+	{
+		"regionId": 485,
+		"resourceType": "iron",
+		"capacity": 4100
+	},
+	{
+		"regionId": 485,
+		"resourceType": "copper",
+		"capacity": 9800
+	},
+	{
+		"regionId": 485,
+		"resourceType": "wood",
+		"capacity": 6400
+	},
+	{
+		"regionId": 486,
+		"resourceType": "wood",
+		"capacity": 13000
+	},
+	{
+		"regionId": 487,
+		"resourceType": "iron",
+		"capacity": 3100
+	},
+	{
+		"regionId": 487,
+		"resourceType": "wood",
+		"capacity": 14900
+	},
+	{
+		"regionId": 488,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 488,
+		"resourceType": "coal",
+		"capacity": 5500
+	},
+	{
+		"regionId": 488,
+		"resourceType": "wood",
+		"capacity": 13600
+	},
+	{
+		"regionId": 490,
+		"resourceType": "coal",
+		"capacity": 14200
+	},
+	{
+		"regionId": 490,
+		"resourceType": "wood",
+		"capacity": 9500
+	},
+	{
+		"regionId": 491,
+		"resourceType": "coal",
+		"capacity": 10800
+	},
+	{
+		"regionId": 491,
+		"resourceType": "wood",
+		"capacity": 12900
+	},
+	{
+		"regionId": 492,
+		"resourceType": "copper",
+		"capacity": 12300
+	},
+	{
+		"regionId": 492,
+		"resourceType": "coal",
+		"capacity": 2700
+	},
+	{
+		"regionId": 493,
+		"resourceType": "copper",
+		"capacity": 6600
+	},
+	{
+		"regionId": 493,
+		"resourceType": "coal",
+		"capacity": 18100
+	},
+	{
+		"regionId": 493,
+		"resourceType": "wood",
+		"capacity": 7100
+	},
+	{
+		"regionId": 494,
+		"resourceType": "iron",
+		"capacity": 15400
+	},
+	{
+		"regionId": 494,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 494,
+		"resourceType": "coal",
+		"capacity": 9500
+	},
+	{
+		"regionId": 494,
+		"resourceType": "wood",
+		"capacity": 14500
+	},
+	{
+		"regionId": 495,
+		"resourceType": "iron",
+		"capacity": 5300
+	},
+	{
+		"regionId": 495,
+		"resourceType": "coal",
+		"capacity": 10400
+	},
+	{
+		"regionId": 495,
+		"resourceType": "wood",
+		"capacity": 12800
+	},
+	{
+		"regionId": 496,
+		"resourceType": "copper",
+		"capacity": 5300
+	},
+	{
+		"regionId": 496,
+		"resourceType": "wood",
+		"capacity": 3200
+	},
+	{
+		"regionId": 497,
+		"resourceType": "iron",
+		"capacity": 13600
+	},
+	{
+		"regionId": 497,
+		"resourceType": "copper",
+		"capacity": 1700
+	},
+	{
+		"regionId": 497,
+		"resourceType": "wood",
+		"capacity": 3700
+	},
+	{
+		"regionId": 498,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 498,
+		"resourceType": "coal",
+		"capacity": 12400
+	},
+	{
+		"regionId": 498,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 499,
+		"resourceType": "iron",
+		"capacity": 3900
+	},
+	{
+		"regionId": 499,
+		"resourceType": "wood",
+		"capacity": 12800
+	},
+	{
+		"regionId": 500,
+		"resourceType": "iron",
+		"capacity": 21800
+	},
+	{
+		"regionId": 500,
+		"resourceType": "wood",
+		"capacity": 13300
+	},
+	{
+		"regionId": 501,
+		"resourceType": "wood",
+		"capacity": 8100
+	},
+	{
+		"regionId": 502,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 502,
+		"resourceType": "coal",
+		"capacity": 11900
+	},
+	{
+		"regionId": 503,
+		"resourceType": "iron",
+		"capacity": 10500
+	},
+	{
+		"regionId": 503,
+		"resourceType": "copper",
+		"capacity": 7800
+	},
+	{
+		"regionId": 503,
+		"resourceType": "coal",
+		"capacity": 15300
+	},
+	{
+		"regionId": 503,
+		"resourceType": "wood",
+		"capacity": 3200
+	},
+	{
+		"regionId": 504,
+		"resourceType": "iron",
+		"capacity": 7300
+	},
+	{
+		"regionId": 506,
+		"resourceType": "copper",
+		"capacity": 9700
+	},
+	{
+		"regionId": 507,
+		"resourceType": "coal",
+		"capacity": 2300
+	},
+	{
+		"regionId": 507,
+		"resourceType": "wood",
+		"capacity": 16700
+	},
+	{
+		"regionId": 508,
+		"resourceType": "wood",
+		"capacity": 3800
+	},
+	{
+		"regionId": 509,
+		"resourceType": "coal",
+		"capacity": 13000
+	},
+	{
+		"regionId": 510,
+		"resourceType": "copper",
+		"capacity": 2400
+	},
+	{
+		"regionId": 511,
+		"resourceType": "copper",
+		"capacity": 19000
+	},
+	{
+		"regionId": 511,
+		"resourceType": "coal",
+		"capacity": 7000
+	},
+	{
+		"regionId": 512,
+		"resourceType": "coal",
+		"capacity": 9700
+	},
+	{
+		"regionId": 513,
+		"resourceType": "wood",
+		"capacity": 16300
+	},
+	{
+		"regionId": 514,
+		"resourceType": "iron",
+		"capacity": 5300
+	},
+	{
+		"regionId": 514,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 516,
+		"resourceType": "copper",
+		"capacity": 3700
+	},
+	{
+		"regionId": 516,
+		"resourceType": "coal",
+		"capacity": 17800
+	},
+	{
+		"regionId": 516,
+		"resourceType": "wood",
+		"capacity": 6200
+	},
+	{
+		"regionId": 518,
+		"resourceType": "wood",
+		"capacity": 3800
+	},
+	{
+		"regionId": 519,
+		"resourceType": "iron",
+		"capacity": 16000
+	},
+	{
+		"regionId": 521,
+		"resourceType": "copper",
+		"capacity": 2300
+	},
+	{
+		"regionId": 521,
+		"resourceType": "coal",
+		"capacity": 22200
+	},
+	{
+		"regionId": 523,
+		"resourceType": "coal",
+		"capacity": 10800
+	},
+	{
+		"regionId": 523,
+		"resourceType": "wood",
+		"capacity": 10800
+	},
+	{
+		"regionId": 524,
+		"resourceType": "coal",
+		"capacity": 10900
+	},
+	{
+		"regionId": 524,
+		"resourceType": "wood",
+		"capacity": 4800
+	},
+	{
+		"regionId": 525,
+		"resourceType": "copper",
+		"capacity": 2900
+	},
+	{
+		"regionId": 525,
+		"resourceType": "coal",
+		"capacity": 19300
+	},
+	{
+		"regionId": 525,
+		"resourceType": "wood",
+		"capacity": 17900
+	},
+	{
+		"regionId": 527,
+		"resourceType": "iron",
+		"capacity": 5000
+	},
+	{
+		"regionId": 527,
+		"resourceType": "copper",
+		"capacity": 12900
+	},
+	{
+		"regionId": 527,
+		"resourceType": "wood",
+		"capacity": 6100
+	},
+	{
+		"regionId": 528,
+		"resourceType": "iron",
+		"capacity": 2300
+	},
+	{
+		"regionId": 528,
+		"resourceType": "wood",
+		"capacity": 9000
+	},
+	{
+		"regionId": 529,
+		"resourceType": "iron",
+		"capacity": 12000
+	},
+	{
+		"regionId": 530,
+		"resourceType": "iron",
+		"capacity": 2600
+	},
+	{
+		"regionId": 531,
+		"resourceType": "iron",
+		"capacity": 5600
+	},
+	{
+		"regionId": 531,
+		"resourceType": "wood",
+		"capacity": 4400
+	},
+	{
+		"regionId": 532,
+		"resourceType": "coal",
+		"capacity": 18000
+	},
+	{
+		"regionId": 533,
+		"resourceType": "wood",
+		"capacity": 5700
+	},
+	{
+		"regionId": 534,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 536,
+		"resourceType": "iron",
+		"capacity": 3000
+	},
+	{
+		"regionId": 536,
+		"resourceType": "copper",
+		"capacity": 9500
+	},
+	{
+		"regionId": 536,
+		"resourceType": "coal",
+		"capacity": 17800
+	},
+	{
+		"regionId": 536,
+		"resourceType": "wood",
+		"capacity": 12400
+	},
+	{
+		"regionId": 538,
+		"resourceType": "coal",
+		"capacity": 8200
+	},
+	{
+		"regionId": 538,
+		"resourceType": "wood",
+		"capacity": 19400
+	},
+	{
+		"regionId": 539,
+		"resourceType": "coal",
+		"capacity": 3900
+	},
+	{
+		"regionId": 539,
+		"resourceType": "wood",
+		"capacity": 18900
+	},
+	{
+		"regionId": 540,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 540,
+		"resourceType": "wood",
+		"capacity": 23000
+	},
+	{
+		"regionId": 541,
+		"resourceType": "iron",
+		"capacity": 4000
+	},
+	{
+		"regionId": 542,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 543,
+		"resourceType": "copper",
+		"capacity": 2700
+	},
+	{
+		"regionId": 543,
+		"resourceType": "coal",
+		"capacity": 7500
+	},
+	{
+		"regionId": 543,
+		"resourceType": "wood",
+		"capacity": 21800
+	},
+	{
+		"regionId": 545,
+		"resourceType": "copper",
+		"capacity": 8400
+	},
+	{
+		"regionId": 545,
+		"resourceType": "wood",
+		"capacity": 20500
+	},
+	{
+		"regionId": 546,
+		"resourceType": "copper",
+		"capacity": 2100
+	},
+	{
+		"regionId": 546,
+		"resourceType": "wood",
+		"capacity": 13800
+	},
+	{
+		"regionId": 547,
+		"resourceType": "coal",
+		"capacity": 7800
+	},
+	{
+		"regionId": 547,
+		"resourceType": "wood",
+		"capacity": 14100
+	},
+	{
+		"regionId": 548,
+		"resourceType": "iron",
+		"capacity": 13000
+	},
+	{
+		"regionId": 548,
+		"resourceType": "wood",
+		"capacity": 6700
+	},
+	{
+		"regionId": 549,
+		"resourceType": "copper",
+		"capacity": 7800
+	},
+	{
+		"regionId": 549,
+		"resourceType": "wood",
+		"capacity": 7300
+	},
+	{
+		"regionId": 551,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 552,
+		"resourceType": "iron",
+		"capacity": 15800
+	},
+	{
+		"regionId": 553,
+		"resourceType": "wood",
+		"capacity": 6600
+	},
+	{
+		"regionId": 554,
+		"resourceType": "coal",
+		"capacity": 15200
+	},
+	{
+		"regionId": 556,
+		"resourceType": "copper",
+		"capacity": 2000
+	},
+	{
+		"regionId": 557,
+		"resourceType": "coal",
+		"capacity": 10800
+	},
+	{
+		"regionId": 558,
+		"resourceType": "iron",
+		"capacity": 10700
+	},
+	{
+		"regionId": 558,
+		"resourceType": "wood",
+		"capacity": 8400
+	},
+	{
+		"regionId": 559,
+		"resourceType": "wood",
+		"capacity": 10000
+	},
+	{
+		"regionId": 560,
+		"resourceType": "iron",
+		"capacity": 10300
+	},
+	{
+		"regionId": 560,
+		"resourceType": "wood",
+		"capacity": 23900
+	},
+	{
+		"regionId": 561,
+		"resourceType": "iron",
+		"capacity": 8800
+	},
+	{
+		"regionId": 561,
+		"resourceType": "copper",
+		"capacity": 2600
+	},
+	{
+		"regionId": 561,
+		"resourceType": "wood",
+		"capacity": 6200
+	},
+	{
+		"regionId": 562,
+		"resourceType": "wood",
+		"capacity": 14600
+	},
+	{
+		"regionId": 563,
+		"resourceType": "copper",
+		"capacity": 7800
+	},
+	{
+		"regionId": 563,
+		"resourceType": "wood",
+		"capacity": 6100
+	},
+	{
+		"regionId": 564,
+		"resourceType": "wood",
+		"capacity": 11700
+	},
+	{
+		"regionId": 565,
+		"resourceType": "iron",
+		"capacity": 4200
+	},
+	{
+		"regionId": 565,
+		"resourceType": "copper",
+		"capacity": 4800
+	},
+	{
+		"regionId": 565,
+		"resourceType": "wood",
+		"capacity": 8700
+	},
+	{
+		"regionId": 566,
+		"resourceType": "iron",
+		"capacity": 6400
+	},
+	{
+		"regionId": 566,
+		"resourceType": "wood",
+		"capacity": 16300
+	},
+	{
+		"regionId": 567,
+		"resourceType": "iron",
+		"capacity": 16100
+	},
+	{
+		"regionId": 567,
+		"resourceType": "coal",
+		"capacity": 5200
+	},
+	{
+		"regionId": 567,
+		"resourceType": "wood",
+		"capacity": 5700
+	},
+	{
+		"regionId": 568,
+		"resourceType": "copper",
+		"capacity": 13000
+	},
+	{
+		"regionId": 568,
+		"resourceType": "coal",
+		"capacity": 3400
+	},
+	{
+		"regionId": 568,
+		"resourceType": "wood",
+		"capacity": 11100
+	},
+	{
+		"regionId": 569,
+		"resourceType": "iron",
+		"capacity": 6400
+	},
+	{
+		"regionId": 569,
+		"resourceType": "coal",
+		"capacity": 11600
+	},
+	{
+		"regionId": 569,
+		"resourceType": "wood",
+		"capacity": 4700
+	},
+	{
+		"regionId": 570,
+		"resourceType": "wood",
+		"capacity": 13500
+	},
+	{
+		"regionId": 571,
+		"resourceType": "wood",
+		"capacity": 5200
+	},
+	{
+		"regionId": 572,
+		"resourceType": "copper",
+		"capacity": 3300
+	},
+	{
+		"regionId": 572,
+		"resourceType": "wood",
+		"capacity": 4100
+	},
+	{
+		"regionId": 573,
+		"resourceType": "iron",
+		"capacity": 4900
+	},
+	{
+		"regionId": 573,
+		"resourceType": "copper",
+		"capacity": 5500
+	},
+	{
+		"regionId": 573,
+		"resourceType": "wood",
+		"capacity": 11400
+	},
+	{
+		"regionId": 574,
+		"resourceType": "iron",
+		"capacity": 16800
+	},
+	{
+		"regionId": 574,
+		"resourceType": "wood",
+		"capacity": 5500
+	},
+	{
+		"regionId": 575,
+		"resourceType": "copper",
+		"capacity": 6000
+	},
+	{
+		"regionId": 575,
+		"resourceType": "wood",
+		"capacity": 4000
+	},
+	{
+		"regionId": 576,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 576,
+		"resourceType": "wood",
+		"capacity": 4600
+	},
+	{
+		"regionId": 577,
+		"resourceType": "iron",
+		"capacity": 2500
+	},
+	{
+		"regionId": 577,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 578,
+		"resourceType": "coal",
+		"capacity": 7100
+	},
+	{
+		"regionId": 578,
+		"resourceType": "wood",
+		"capacity": 21800
+	},
+	{
+		"regionId": 579,
+		"resourceType": "iron",
+		"capacity": 4600
+	},
+	{
+		"regionId": 579,
+		"resourceType": "coal",
+		"capacity": 11400
+	},
+	{
+		"regionId": 579,
+		"resourceType": "wood",
+		"capacity": 20900
+	},
+	{
+		"regionId": 580,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 580,
+		"resourceType": "wood",
+		"capacity": 16800
+	},
+	{
+		"regionId": 581,
+		"resourceType": "wood",
+		"capacity": 4200
+	},
+	{
+		"regionId": 582,
+		"resourceType": "copper",
+		"capacity": 20800
+	},
+	{
+		"regionId": 582,
+		"resourceType": "coal",
+		"capacity": 14100
+	},
+	{
+		"regionId": 582,
+		"resourceType": "wood",
+		"capacity": 13300
+	},
+	{
+		"regionId": 583,
+		"resourceType": "coal",
+		"capacity": 8800
+	},
+	{
+		"regionId": 583,
+		"resourceType": "wood",
+		"capacity": 8000
+	},
+	{
+		"regionId": 584,
+		"resourceType": "iron",
+		"capacity": 11100
+	},
+	{
+		"regionId": 585,
+		"resourceType": "coal",
+		"capacity": 8500
+	},
+	{
+		"regionId": 586,
+		"resourceType": "iron",
+		"capacity": 4900
+	},
+	{
+		"regionId": 588,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 590,
+		"resourceType": "wood",
+		"capacity": 12000
+	},
+	{
+		"regionId": 592,
+		"resourceType": "wood",
+		"capacity": 17000
+	},
+	{
+		"regionId": 593,
+		"resourceType": "iron",
+		"capacity": 2900
+	},
+	{
+		"regionId": 593,
+		"resourceType": "copper",
+		"capacity": 1900
+	},
+	{
+		"regionId": 595,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 595,
+		"resourceType": "coal",
+		"capacity": 2300
+	},
+	{
+		"regionId": 596,
+		"resourceType": "coal",
+		"capacity": 2600
+	},
+	{
+		"regionId": 597,
+		"resourceType": "coal",
+		"capacity": 13700
+	},
+	{
+		"regionId": 597,
+		"resourceType": "wood",
+		"capacity": 7100
+	},
+	{
+		"regionId": 598,
+		"resourceType": "iron",
+		"capacity": 10100
+	},
+	{
+		"regionId": 598,
+		"resourceType": "coal",
+		"capacity": 3200
+	},
+	{
+		"regionId": 598,
+		"resourceType": "wood",
+		"capacity": 3700
+	},
+	{
+		"regionId": 599,
+		"resourceType": "wood",
+		"capacity": 24300
+	},
+	{
+		"regionId": 601,
+		"resourceType": "copper",
+		"capacity": 2800
+	},
+	{
+		"regionId": 601,
+		"resourceType": "coal",
+		"capacity": 11800
+	},
+	{
+		"regionId": 601,
+		"resourceType": "wood",
+		"capacity": 8900
+	},
+	{
+		"regionId": 602,
+		"resourceType": "coal",
+		"capacity": 15300
+	},
+	{
+		"regionId": 603,
+		"resourceType": "wood",
+		"capacity": 17700
+	},
+	{
+		"regionId": 605,
+		"resourceType": "iron",
+		"capacity": 11900
+	},
+	{
+		"regionId": 606,
+		"resourceType": "iron",
+		"capacity": 15600
+	},
+	{
+		"regionId": 606,
+		"resourceType": "copper",
+		"capacity": 2000
+	},
+	{
+		"regionId": 606,
+		"resourceType": "wood",
+		"capacity": 3200
+	},
+	{
+		"regionId": 607,
+		"resourceType": "copper",
+		"capacity": 12200
+	},
+	{
+		"regionId": 607,
+		"resourceType": "coal",
+		"capacity": 10400
+	},
+	{
+		"regionId": 607,
+		"resourceType": "wood",
+		"capacity": 11800
+	},
+	{
+		"regionId": 608,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 608,
+		"resourceType": "coal",
+		"capacity": 4800
+	},
+	{
+		"regionId": 609,
+		"resourceType": "coal",
+		"capacity": 4500
+	},
+	{
+		"regionId": 609,
+		"resourceType": "wood",
+		"capacity": 11200
+	},
+	{
+		"regionId": 610,
+		"resourceType": "coal",
+		"capacity": 17900
+	},
+	{
+		"regionId": 610,
+		"resourceType": "wood",
+		"capacity": 7700
+	},
+	{
+		"regionId": 611,
+		"resourceType": "coal",
+		"capacity": 36400
+	},
+	{
+		"regionId": 612,
+		"resourceType": "copper",
+		"capacity": 7000
+	},
+	{
+		"regionId": 612,
+		"resourceType": "coal",
+		"capacity": 11800
+	},
+	{
+		"regionId": 613,
+		"resourceType": "copper",
+		"capacity": 1800
+	},
+	{
+		"regionId": 613,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 614,
+		"resourceType": "iron",
+		"capacity": 13800
+	},
+	{
+		"regionId": 614,
+		"resourceType": "coal",
+		"capacity": 12700
+	},
+	{
+		"regionId": 615,
+		"resourceType": "coal",
+		"capacity": 22100
+	},
+	{
+		"regionId": 617,
+		"resourceType": "iron",
+		"capacity": 17300
+	},
+	{
+		"regionId": 617,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 618,
+		"resourceType": "iron",
+		"capacity": 9400
+	},
+	{
+		"regionId": 619,
+		"resourceType": "copper",
+		"capacity": 3700
+	},
+	{
+		"regionId": 621,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 621,
+		"resourceType": "coal",
+		"capacity": 11000
+	},
+	{
+		"regionId": 622,
+		"resourceType": "iron",
+		"capacity": 9000
+	},
+	{
+		"regionId": 622,
+		"resourceType": "coal",
+		"capacity": 9900
+	},
+	{
+		"regionId": 623,
+		"resourceType": "iron",
+		"capacity": 8700
+	},
+	{
+		"regionId": 624,
+		"resourceType": "wood",
+		"capacity": 19600
+	},
+	{
+		"regionId": 625,
+		"resourceType": "wood",
+		"capacity": 4200
+	},
+	{
+		"regionId": 626,
+		"resourceType": "wood",
+		"capacity": 3600
+	},
+	{
+		"regionId": 627,
+		"resourceType": "iron",
+		"capacity": 3600
+	},
+	{
+		"regionId": 628,
+		"resourceType": "iron",
+		"capacity": 15400
+	},
+	{
+		"regionId": 628,
+		"resourceType": "copper",
+		"capacity": 2200
+	},
+	{
+		"regionId": 629,
+		"resourceType": "iron",
+		"capacity": 18000
+	},
+	{
+		"regionId": 629,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 631,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 631,
+		"resourceType": "wood",
+		"capacity": 24900
+	},
+	{
+		"regionId": 633,
+		"resourceType": "coal",
+		"capacity": 11600
+	},
+	{
+		"regionId": 633,
+		"resourceType": "wood",
+		"capacity": 4700
+	},
+	{
+		"regionId": 634,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 634,
+		"resourceType": "copper",
+		"capacity": 4100
+	},
+	{
+		"regionId": 634,
+		"resourceType": "coal",
+		"capacity": 2700
+	},
+	{
+		"regionId": 634,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 635,
+		"resourceType": "wood",
+		"capacity": 4400
+	},
+	{
+		"regionId": 636,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 637,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 637,
+		"resourceType": "wood",
+		"capacity": 3700
+	},
+	{
+		"regionId": 639,
+		"resourceType": "wood",
+		"capacity": 4700
+	},
+	{
+		"regionId": 641,
+		"resourceType": "wood",
+		"capacity": 3600
+	},
+	{
+		"regionId": 642,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 642,
+		"resourceType": "wood",
+		"capacity": 20300
+	},
+	{
+		"regionId": 643,
+		"resourceType": "wood",
+		"capacity": 8900
+	},
+	{
+		"regionId": 644,
+		"resourceType": "iron",
+		"capacity": 6400
+	},
+	{
+		"regionId": 644,
+		"resourceType": "wood",
+		"capacity": 18600
+	},
+	{
+		"regionId": 645,
+		"resourceType": "iron",
+		"capacity": 12200
+	},
+	{
+		"regionId": 645,
+		"resourceType": "copper",
+		"capacity": 9600
+	},
+	{
+		"regionId": 645,
+		"resourceType": "coal",
+		"capacity": 9400
+	},
+	{
+		"regionId": 646,
+		"resourceType": "coal",
+		"capacity": 4200
+	},
+	{
+		"regionId": 646,
+		"resourceType": "wood",
+		"capacity": 12900
+	},
+	{
+		"regionId": 647,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 647,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 648,
+		"resourceType": "iron",
+		"capacity": 4600
+	},
+	{
+		"regionId": 649,
+		"resourceType": "coal",
+		"capacity": 2400
+	},
+	{
+		"regionId": 649,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 650,
+		"resourceType": "coal",
+		"capacity": 10200
+	},
+	{
+		"regionId": 650,
+		"resourceType": "wood",
+		"capacity": 9000
+	},
+	{
+		"regionId": 651,
+		"resourceType": "wood",
+		"capacity": 14600
+	},
+	{
+		"regionId": 652,
+		"resourceType": "copper",
+		"capacity": 5400
+	},
+	{
+		"regionId": 652,
+		"resourceType": "coal",
+		"capacity": 15400
+	},
+	{
+		"regionId": 652,
+		"resourceType": "wood",
+		"capacity": 17000
+	},
+	{
+		"regionId": 653,
+		"resourceType": "iron",
+		"capacity": 14500
+	},
+	{
+		"regionId": 653,
+		"resourceType": "copper",
+		"capacity": 21000
+	},
+	{
+		"regionId": 653,
+		"resourceType": "wood",
+		"capacity": 11500
+	},
+	{
+		"regionId": 654,
+		"resourceType": "wood",
+		"capacity": 19500
+	},
+	{
+		"regionId": 657,
+		"resourceType": "copper",
+		"capacity": 4200
+	},
+	{
+		"regionId": 658,
+		"resourceType": "coal",
+		"capacity": 3100
+	},
+	{
+		"regionId": 660,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 661,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 663,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 663,
+		"resourceType": "coal",
+		"capacity": 12500
+	},
+	{
+		"regionId": 664,
+		"resourceType": "wood",
+		"capacity": 8600
+	},
+	{
+		"regionId": 666,
+		"resourceType": "wood",
+		"capacity": 12300
+	},
+	{
+		"regionId": 667,
+		"resourceType": "coal",
+		"capacity": 12800
+	},
+	{
+		"regionId": 667,
+		"resourceType": "wood",
+		"capacity": 5500
+	},
+	{
+		"regionId": 668,
+		"resourceType": "iron",
+		"capacity": 6700
+	},
+	{
+		"regionId": 668,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 669,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 670,
+		"resourceType": "copper",
+		"capacity": 1700
+	},
+	{
+		"regionId": 671,
+		"resourceType": "copper",
+		"capacity": 2300
+	},
+	{
+		"regionId": 672,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 673,
+		"resourceType": "copper",
+		"capacity": 7700
+	},
+	{
+		"regionId": 673,
+		"resourceType": "wood",
+		"capacity": 4800
+	},
+	{
+		"regionId": 676,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 677,
+		"resourceType": "iron",
+		"capacity": 4200
+	},
+	{
+		"regionId": 677,
+		"resourceType": "wood",
+		"capacity": 9400
+	},
+	{
+		"regionId": 679,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 680,
+		"resourceType": "iron",
+		"capacity": 4200
+	},
+	{
+		"regionId": 680,
+		"resourceType": "wood",
+		"capacity": 15600
+	},
+	{
+		"regionId": 681,
+		"resourceType": "iron",
+		"capacity": 4900
+	},
+	{
+		"regionId": 683,
+		"resourceType": "coal",
+		"capacity": 4600
+	},
+	{
+		"regionId": 683,
+		"resourceType": "wood",
+		"capacity": 14300
+	},
+	{
+		"regionId": 684,
+		"resourceType": "coal",
+		"capacity": 10200
+	},
+	{
+		"regionId": 684,
+		"resourceType": "wood",
+		"capacity": 5200
+	},
+	{
+		"regionId": 685,
+		"resourceType": "copper",
+		"capacity": 6100
+	},
+	{
+		"regionId": 685,
+		"resourceType": "wood",
+		"capacity": 9800
+	},
+	{
+		"regionId": 686,
+		"resourceType": "copper",
+		"capacity": 13000
+	},
+	{
+		"regionId": 687,
+		"resourceType": "coal",
+		"capacity": 13900
+	},
+	{
+		"regionId": 687,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 688,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 688,
+		"resourceType": "wood",
+		"capacity": 24000
+	},
+	{
+		"regionId": 689,
+		"resourceType": "coal",
+		"capacity": 2800
+	},
+	{
+		"regionId": 690,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 691,
+		"resourceType": "coal",
+		"capacity": 15400
+	},
+	{
+		"regionId": 691,
+		"resourceType": "wood",
+		"capacity": 4600
+	},
+	{
+		"regionId": 693,
+		"resourceType": "wood",
+		"capacity": 5900
+	},
+	{
+		"regionId": 694,
+		"resourceType": "iron",
+		"capacity": 12500
+	},
+	{
+		"regionId": 694,
+		"resourceType": "coal",
+		"capacity": 8000
+	},
+	{
+		"regionId": 694,
+		"resourceType": "wood",
+		"capacity": 16300
+	},
+	{
+		"regionId": 696,
+		"resourceType": "copper",
+		"capacity": 9000
+	},
+	{
+		"regionId": 696,
+		"resourceType": "wood",
+		"capacity": 10500
+	},
+	{
+		"regionId": 697,
+		"resourceType": "copper",
+		"capacity": 5700
+	},
+	{
+		"regionId": 699,
+		"resourceType": "copper",
+		"capacity": 10600
+	},
+	{
+		"regionId": 699,
+		"resourceType": "coal",
+		"capacity": 3900
+	},
+	{
+		"regionId": 700,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 700,
+		"resourceType": "wood",
+		"capacity": 6800
+	},
+	{
+		"regionId": 701,
+		"resourceType": "coal",
+		"capacity": 4300
+	},
+	{
+		"regionId": 701,
+		"resourceType": "wood",
+		"capacity": 16600
+	},
+	{
+		"regionId": 702,
+		"resourceType": "wood",
+		"capacity": 11600
+	},
+	{
+		"regionId": 704,
+		"resourceType": "iron",
+		"capacity": 5700
+	},
+	{
+		"regionId": 704,
+		"resourceType": "wood",
+		"capacity": 5000
+	},
+	{
+		"regionId": 705,
+		"resourceType": "wood",
+		"capacity": 12400
+	},
+	{
+		"regionId": 706,
+		"resourceType": "coal",
+		"capacity": 15000
+	},
+	{
+		"regionId": 706,
+		"resourceType": "wood",
+		"capacity": 23100
+	},
+	{
+		"regionId": 709,
+		"resourceType": "iron",
+		"capacity": 5300
+	},
+	{
+		"regionId": 709,
+		"resourceType": "coal",
+		"capacity": 3800
+	},
+	{
+		"regionId": 709,
+		"resourceType": "wood",
+		"capacity": 15600
+	},
+	{
+		"regionId": 710,
+		"resourceType": "wood",
+		"capacity": 8500
+	},
+	{
+		"regionId": 711,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 714,
+		"resourceType": "coal",
+		"capacity": 2300
+	},
+	{
+		"regionId": 714,
+		"resourceType": "wood",
+		"capacity": 22800
+	},
+	{
+		"regionId": 715,
+		"resourceType": "iron",
+		"capacity": 36900
+	},
+	{
+		"regionId": 715,
+		"resourceType": "copper",
+		"capacity": 5800
+	},
+	{
+		"regionId": 715,
+		"resourceType": "coal",
+		"capacity": 2800
+	},
+	{
+		"regionId": 715,
+		"resourceType": "wood",
+		"capacity": 4100
+	},
+	{
+		"regionId": 716,
+		"resourceType": "iron",
+		"capacity": 4100
+	},
+	{
+		"regionId": 716,
+		"resourceType": "copper",
+		"capacity": 4000
+	},
+	{
+		"regionId": 716,
+		"resourceType": "wood",
+		"capacity": 14400
+	},
+	{
+		"regionId": 717,
+		"resourceType": "wood",
+		"capacity": 22000
+	},
+	{
+		"regionId": 718,
+		"resourceType": "iron",
+		"capacity": 2500
+	},
+	{
+		"regionId": 718,
+		"resourceType": "coal",
+		"capacity": 4300
+	},
+	{
+		"regionId": 718,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 720,
+		"resourceType": "copper",
+		"capacity": 7700
+	},
+	{
+		"regionId": 721,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 721,
+		"resourceType": "wood",
+		"capacity": 15200
+	},
+	{
+		"regionId": 722,
+		"resourceType": "wood",
+		"capacity": 3700
+	},
+	{
+		"regionId": 723,
+		"resourceType": "wood",
+		"capacity": 22800
+	},
+	{
+		"regionId": 724,
+		"resourceType": "coal",
+		"capacity": 11300
+	},
+	{
+		"regionId": 724,
+		"resourceType": "wood",
+		"capacity": 16300
+	},
+	{
+		"regionId": 725,
+		"resourceType": "iron",
+		"capacity": 17800
+	},
+	{
+		"regionId": 725,
+		"resourceType": "coal",
+		"capacity": 12900
+	},
+	{
+		"regionId": 725,
+		"resourceType": "wood",
+		"capacity": 8500
+	},
+	{
+		"regionId": 726,
+		"resourceType": "wood",
+		"capacity": 7300
+	},
+	{
+		"regionId": 729,
+		"resourceType": "coal",
+		"capacity": 3500
+	},
+	{
+		"regionId": 730,
+		"resourceType": "wood",
+		"capacity": 6700
+	},
+	{
+		"regionId": 731,
+		"resourceType": "iron",
+		"capacity": 13300
+	},
+	{
+		"regionId": 731,
+		"resourceType": "wood",
+		"capacity": 18100
+	},
+	{
+		"regionId": 733,
+		"resourceType": "coal",
+		"capacity": 16400
+	},
+	{
+		"regionId": 733,
+		"resourceType": "wood",
+		"capacity": 10900
+	},
+	{
+		"regionId": 734,
+		"resourceType": "wood",
+		"capacity": 10300
+	},
+	{
+		"regionId": 735,
+		"resourceType": "coal",
+		"capacity": 15900
+	},
+	{
+		"regionId": 735,
+		"resourceType": "wood",
+		"capacity": 5700
+	},
+	{
+		"regionId": 736,
+		"resourceType": "iron",
+		"capacity": 6000
+	},
+	{
+		"regionId": 737,
+		"resourceType": "coal",
+		"capacity": 2400
+	},
+	{
+		"regionId": 738,
+		"resourceType": "wood",
+		"capacity": 8200
+	},
+	{
+		"regionId": 739,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 739,
+		"resourceType": "wood",
+		"capacity": 14100
+	},
+	{
+		"regionId": 740,
+		"resourceType": "wood",
+		"capacity": 6700
+	},
+	{
+		"regionId": 741,
+		"resourceType": "wood",
+		"capacity": 5700
+	},
+	{
+		"regionId": 742,
+		"resourceType": "wood",
+		"capacity": 8500
+	},
+	{
+		"regionId": 743,
+		"resourceType": "coal",
+		"capacity": 16900
+	},
+	{
+		"regionId": 743,
+		"resourceType": "wood",
+		"capacity": 5600
+	},
+	{
+		"regionId": 744,
+		"resourceType": "iron",
+		"capacity": 2300
+	},
+	{
+		"regionId": 744,
+		"resourceType": "copper",
+		"capacity": 6800
+	},
+	{
+		"regionId": 745,
+		"resourceType": "iron",
+		"capacity": 4500
+	},
+	{
+		"regionId": 745,
+		"resourceType": "wood",
+		"capacity": 22400
+	},
+	{
+		"regionId": 746,
+		"resourceType": "coal",
+		"capacity": 33000
+	},
+	{
+		"regionId": 748,
+		"resourceType": "copper",
+		"capacity": 5800
+	},
+	{
+		"regionId": 748,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 749,
+		"resourceType": "iron",
+		"capacity": 3700
+	},
+	{
+		"regionId": 749,
+		"resourceType": "wood",
+		"capacity": 5200
+	},
+	{
+		"regionId": 750,
+		"resourceType": "coal",
+		"capacity": 3600
+	},
+	{
+		"regionId": 750,
+		"resourceType": "wood",
+		"capacity": 7100
+	},
+	{
+		"regionId": 751,
+		"resourceType": "copper",
+		"capacity": 2400
+	},
+	{
+		"regionId": 752,
+		"resourceType": "iron",
+		"capacity": 5100
+	},
+	{
+		"regionId": 752,
+		"resourceType": "wood",
+		"capacity": 13600
+	},
+	{
+		"regionId": 753,
+		"resourceType": "copper",
+		"capacity": 2100
+	},
+	{
+		"regionId": 754,
+		"resourceType": "iron",
+		"capacity": 4300
+	},
+	{
+		"regionId": 754,
+		"resourceType": "wood",
+		"capacity": 8000
+	},
+	{
+		"regionId": 756,
+		"resourceType": "coal",
+		"capacity": 5000
+	},
+	{
+		"regionId": 757,
+		"resourceType": "coal",
+		"capacity": 6600
+	},
+	{
+		"regionId": 757,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 758,
+		"resourceType": "coal",
+		"capacity": 3900
+	},
+	{
+		"regionId": 759,
+		"resourceType": "coal",
+		"capacity": 5100
+	},
+	{
+		"regionId": 760,
+		"resourceType": "iron",
+		"capacity": 14400
+	},
+	{
+		"regionId": 761,
+		"resourceType": "coal",
+		"capacity": 10900
+	},
+	{
+		"regionId": 761,
+		"resourceType": "wood",
+		"capacity": 16000
+	},
+	{
+		"regionId": 762,
+		"resourceType": "coal",
+		"capacity": 43400
+	},
+	{
+		"regionId": 762,
+		"resourceType": "wood",
+		"capacity": 10100
+	},
+	{
+		"regionId": 764,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 765,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 766,
+		"resourceType": "wood",
+		"capacity": 24600
+	},
+	{
+		"regionId": 767,
+		"resourceType": "iron",
+		"capacity": 12900
+	},
+	{
+		"regionId": 768,
+		"resourceType": "coal",
+		"capacity": 6100
+	},
+	{
+		"regionId": 769,
+		"resourceType": "copper",
+		"capacity": 6200
+	},
+	{
+		"regionId": 770,
+		"resourceType": "iron",
+		"capacity": 9600
+	},
+	{
+		"regionId": 770,
+		"resourceType": "coal",
+		"capacity": 4600
+	},
+	{
+		"regionId": 770,
+		"resourceType": "wood",
+		"capacity": 6800
+	},
+	{
+		"regionId": 771,
+		"resourceType": "iron",
+		"capacity": 15800
+	},
+	{
+		"regionId": 772,
+		"resourceType": "iron",
+		"capacity": 12300
+	},
+	{
+		"regionId": 772,
+		"resourceType": "wood",
+		"capacity": 9100
+	},
+	{
+		"regionId": 773,
+		"resourceType": "copper",
+		"capacity": 2000
+	},
+	{
+		"regionId": 774,
+		"resourceType": "copper",
+		"capacity": 10800
+	},
+	{
+		"regionId": 775,
+		"resourceType": "coal",
+		"capacity": 4100
+	},
+	{
+		"regionId": 776,
+		"resourceType": "coal",
+		"capacity": 33300
+	},
+	{
+		"regionId": 776,
+		"resourceType": "wood",
+		"capacity": 11100
+	},
+	{
+		"regionId": 777,
+		"resourceType": "copper",
+		"capacity": 3600
+	},
+	{
+		"regionId": 777,
+		"resourceType": "coal",
+		"capacity": 15300
+	},
+	{
+		"regionId": 779,
+		"resourceType": "iron",
+		"capacity": 11500
+	},
+	{
+		"regionId": 779,
+		"resourceType": "coal",
+		"capacity": 23100
+	},
+	{
+		"regionId": 780,
+		"resourceType": "wood",
+		"capacity": 12000
+	},
+	{
+		"regionId": 781,
+		"resourceType": "copper",
+		"capacity": 1700
+	},
+	{
+		"regionId": 781,
+		"resourceType": "wood",
+		"capacity": 13900
+	},
+	{
+		"regionId": 782,
+		"resourceType": "iron",
+		"capacity": 7800
+	},
+	{
+		"regionId": 782,
+		"resourceType": "wood",
+		"capacity": 13300
+	},
+	{
+		"regionId": 783,
+		"resourceType": "copper",
+		"capacity": 3300
+	},
+	{
+		"regionId": 783,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 784,
+		"resourceType": "coal",
+		"capacity": 17500
+	},
+	{
+		"regionId": 784,
+		"resourceType": "wood",
+		"capacity": 8100
+	},
+	{
+		"regionId": 786,
+		"resourceType": "coal",
+		"capacity": 10200
+	},
+	{
+		"regionId": 787,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 787,
+		"resourceType": "coal",
+		"capacity": 6200
+	},
+	{
+		"regionId": 787,
+		"resourceType": "wood",
+		"capacity": 11400
+	},
+	{
+		"regionId": 788,
+		"resourceType": "wood",
+		"capacity": 21900
+	},
+	{
+		"regionId": 790,
+		"resourceType": "wood",
+		"capacity": 5200
+	},
+	{
+		"regionId": 791,
+		"resourceType": "iron",
+		"capacity": 14300
+	},
+	{
+		"regionId": 792,
+		"resourceType": "wood",
+		"capacity": 11600
+	},
+	{
+		"regionId": 793,
+		"resourceType": "iron",
+		"capacity": 12100
+	},
+	{
+		"regionId": 793,
+		"resourceType": "copper",
+		"capacity": 3000
+	},
+	{
+		"regionId": 796,
+		"resourceType": "iron",
+		"capacity": 7400
+	},
+	{
+		"regionId": 797,
+		"resourceType": "iron",
+		"capacity": 12900
+	},
+	{
+		"regionId": 797,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 799,
+		"resourceType": "copper",
+		"capacity": 3000
+	},
+	{
+		"regionId": 799,
+		"resourceType": "wood",
+		"capacity": 3800
+	},
+	{
+		"regionId": 801,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 802,
+		"resourceType": "copper",
+		"capacity": 5200
+	},
+	{
+		"regionId": 802,
+		"resourceType": "wood",
+		"capacity": 11100
+	},
+	{
+		"regionId": 803,
+		"resourceType": "coal",
+		"capacity": 17500
+	},
+	{
+		"regionId": 803,
+		"resourceType": "wood",
+		"capacity": 3900
+	},
+	{
+		"regionId": 804,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 805,
+		"resourceType": "wood",
+		"capacity": 17800
+	},
+	{
+		"regionId": 806,
+		"resourceType": "copper",
+		"capacity": 5000
+	},
+	{
+		"regionId": 808,
+		"resourceType": "copper",
+		"capacity": 2700
+	},
+	{
+		"regionId": 808,
+		"resourceType": "wood",
+		"capacity": 23700
+	},
+	{
+		"regionId": 809,
+		"resourceType": "wood",
+		"capacity": 8900
+	},
+	{
+		"regionId": 810,
+		"resourceType": "coal",
+		"capacity": 9100
+	},
+	{
+		"regionId": 810,
+		"resourceType": "wood",
+		"capacity": 17400
+	},
+	{
+		"regionId": 811,
+		"resourceType": "coal",
+		"capacity": 3000
+	},
+	{
+		"regionId": 813,
+		"resourceType": "copper",
+		"capacity": 12400
+	},
+	{
+		"regionId": 815,
+		"resourceType": "coal",
+		"capacity": 16500
+	},
+	{
+		"regionId": 816,
+		"resourceType": "copper",
+		"capacity": 5000
+	},
+	{
+		"regionId": 817,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 818,
+		"resourceType": "copper",
+		"capacity": 11000
+	},
+	{
+		"regionId": 818,
+		"resourceType": "coal",
+		"capacity": 3600
+	},
+	{
+		"regionId": 819,
+		"resourceType": "wood",
+		"capacity": 5000
+	},
+	{
+		"regionId": 820,
+		"resourceType": "iron",
+		"capacity": 13100
+	},
+	{
+		"regionId": 820,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 821,
+		"resourceType": "copper",
+		"capacity": 7600
+	},
+	{
+		"regionId": 822,
+		"resourceType": "coal",
+		"capacity": 10900
+	},
+	{
+		"regionId": 822,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 823,
+		"resourceType": "iron",
+		"capacity": 6900
+	},
+	{
+		"regionId": 823,
+		"resourceType": "wood",
+		"capacity": 4000
+	},
+	{
+		"regionId": 825,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 825,
+		"resourceType": "copper",
+		"capacity": 3200
+	},
+	{
+		"regionId": 827,
+		"resourceType": "wood",
+		"capacity": 4100
+	},
+	{
+		"regionId": 828,
+		"resourceType": "wood",
+		"capacity": 19800
+	},
+	{
+		"regionId": 829,
+		"resourceType": "iron",
+		"capacity": 12200
+	},
+	{
+		"regionId": 829,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 830,
+		"resourceType": "copper",
+		"capacity": 14000
+	},
+	{
+		"regionId": 830,
+		"resourceType": "wood",
+		"capacity": 11100
+	},
+	{
+		"regionId": 831,
+		"resourceType": "copper",
+		"capacity": 4200
+	},
+	{
+		"regionId": 831,
+		"resourceType": "wood",
+		"capacity": 12000
+	},
+	{
+		"regionId": 832,
+		"resourceType": "iron",
+		"capacity": 4700
+	},
+	{
+		"regionId": 832,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 834,
+		"resourceType": "iron",
+		"capacity": 4400
+	},
+	{
+		"regionId": 835,
+		"resourceType": "wood",
+		"capacity": 7100
+	},
+	{
+		"regionId": 836,
+		"resourceType": "copper",
+		"capacity": 13700
+	},
+	{
+		"regionId": 836,
+		"resourceType": "wood",
+		"capacity": 11100
+	},
+	{
+		"regionId": 837,
+		"resourceType": "coal",
+		"capacity": 6600
+	},
+	{
+		"regionId": 837,
+		"resourceType": "wood",
+		"capacity": 24100
+	},
+	{
+		"regionId": 838,
+		"resourceType": "wood",
+		"capacity": 4200
+	},
+	{
+		"regionId": 839,
+		"resourceType": "iron",
+		"capacity": 16700
+	},
+	{
+		"regionId": 839,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 839,
+		"resourceType": "coal",
+		"capacity": 6100
+	},
+	{
+		"regionId": 839,
+		"resourceType": "wood",
+		"capacity": 5000
+	},
+	{
+		"regionId": 840,
+		"resourceType": "coal",
+		"capacity": 9900
+	},
+	{
+		"regionId": 840,
+		"resourceType": "wood",
+		"capacity": 17700
+	},
+	{
+		"regionId": 841,
+		"resourceType": "coal",
+		"capacity": 2600
+	},
+	{
+		"regionId": 841,
+		"resourceType": "wood",
+		"capacity": 13100
+	},
+	{
+		"regionId": 842,
+		"resourceType": "wood",
+		"capacity": 11100
+	},
+	{
+		"regionId": 843,
+		"resourceType": "coal",
+		"capacity": 18400
+	},
+	{
+		"regionId": 843,
+		"resourceType": "wood",
+		"capacity": 3700
+	},
+	{
+		"regionId": 844,
+		"resourceType": "iron",
+		"capacity": 4600
+	},
+	{
+		"regionId": 845,
+		"resourceType": "wood",
+		"capacity": 7600
+	},
+	{
+		"regionId": 846,
+		"resourceType": "copper",
+		"capacity": 4300
+	},
+	{
+		"regionId": 846,
+		"resourceType": "wood",
+		"capacity": 4200
+	},
+	{
+		"regionId": 847,
+		"resourceType": "copper",
+		"capacity": 4500
+	},
+	{
+		"regionId": 847,
+		"resourceType": "wood",
+		"capacity": 5300
+	},
+	{
+		"regionId": 848,
+		"resourceType": "iron",
+		"capacity": 13000
+	},
+	{
+		"regionId": 848,
+		"resourceType": "wood",
+		"capacity": 24700
+	},
+	{
+		"regionId": 849,
+		"resourceType": "coal",
+		"capacity": 3300
+	},
+	{
+		"regionId": 849,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 851,
+		"resourceType": "copper",
+		"capacity": 2000
+	},
+	{
+		"regionId": 851,
+		"resourceType": "coal",
+		"capacity": 5400
+	},
+	{
+		"regionId": 851,
+		"resourceType": "wood",
+		"capacity": 4200
+	},
+	{
+		"regionId": 852,
+		"resourceType": "coal",
+		"capacity": 12300
+	},
+	{
+		"regionId": 852,
+		"resourceType": "wood",
+		"capacity": 17600
+	},
+	{
+		"regionId": 853,
+		"resourceType": "iron",
+		"capacity": 11800
+	},
+	{
+		"regionId": 853,
+		"resourceType": "wood",
+		"capacity": 18900
+	},
+	{
+		"regionId": 854,
+		"resourceType": "wood",
+		"capacity": 16000
+	},
+	{
+		"regionId": 855,
+		"resourceType": "iron",
+		"capacity": 5300
+	},
+	{
+		"regionId": 855,
+		"resourceType": "coal",
+		"capacity": 17600
+	},
+	{
+		"regionId": 856,
+		"resourceType": "copper",
+		"capacity": 11000
+	},
+	{
+		"regionId": 856,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 857,
+		"resourceType": "copper",
+		"capacity": 7400
+	},
+	{
+		"regionId": 857,
+		"resourceType": "wood",
+		"capacity": 5100
+	},
+	{
+		"regionId": 858,
+		"resourceType": "wood",
+		"capacity": 7400
+	},
+	{
+		"regionId": 860,
+		"resourceType": "iron",
+		"capacity": 2200
+	},
+	{
+		"regionId": 860,
+		"resourceType": "wood",
+		"capacity": 12600
+	},
+	{
+		"regionId": 861,
+		"resourceType": "copper",
+		"capacity": 3300
+	},
+	{
+		"regionId": 861,
+		"resourceType": "coal",
+		"capacity": 3200
+	},
+	{
+		"regionId": 861,
+		"resourceType": "wood",
+		"capacity": 6200
+	},
+	{
+		"regionId": 862,
+		"resourceType": "coal",
+		"capacity": 11700
+	},
+	{
+		"regionId": 862,
+		"resourceType": "wood",
+		"capacity": 5400
+	},
+	{
+		"regionId": 863,
+		"resourceType": "wood",
+		"capacity": 18800
+	},
+	{
+		"regionId": 864,
+		"resourceType": "wood",
+		"capacity": 7100
+	},
+	{
+		"regionId": 865,
+		"resourceType": "copper",
+		"capacity": 7000
+	},
+	{
+		"regionId": 865,
+		"resourceType": "wood",
+		"capacity": 20200
+	},
+	{
+		"regionId": 866,
+		"resourceType": "iron",
+		"capacity": 6500
+	},
+	{
+		"regionId": 866,
+		"resourceType": "coal",
+		"capacity": 18100
+	},
+	{
+		"regionId": 866,
+		"resourceType": "wood",
+		"capacity": 14300
+	},
+	{
+		"regionId": 867,
+		"resourceType": "wood",
+		"capacity": 17200
+	},
+	{
+		"regionId": 868,
+		"resourceType": "coal",
+		"capacity": 2300
+	},
+	{
+		"regionId": 868,
+		"resourceType": "wood",
+		"capacity": 10200
+	},
+	{
+		"regionId": 869,
+		"resourceType": "wood",
+		"capacity": 24700
+	},
+	{
+		"regionId": 870,
+		"resourceType": "wood",
+		"capacity": 17100
+	},
+	{
+		"regionId": 871,
+		"resourceType": "iron",
+		"capacity": 15400
+	},
+	{
+		"regionId": 871,
+		"resourceType": "wood",
+		"capacity": 3200
+	},
+	{
+		"regionId": 872,
+		"resourceType": "wood",
+		"capacity": 13700
+	},
+	{
+		"regionId": 873,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 874,
+		"resourceType": "coal",
+		"capacity": 14300
+	},
+	{
+		"regionId": 874,
+		"resourceType": "wood",
+		"capacity": 16600
+	},
+	{
+		"regionId": 875,
+		"resourceType": "copper",
+		"capacity": 3100
+	},
+	{
+		"regionId": 875,
+		"resourceType": "wood",
+		"capacity": 6600
+	},
+	{
+		"regionId": 876,
+		"resourceType": "iron",
+		"capacity": 14000
+	},
+	{
+		"regionId": 876,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 878,
+		"resourceType": "wood",
+		"capacity": 4100
+	},
+	{
+		"regionId": 879,
+		"resourceType": "coal",
+		"capacity": 17400
+	},
+	{
+		"regionId": 879,
+		"resourceType": "wood",
+		"capacity": 5000
+	},
+	{
+		"regionId": 880,
+		"resourceType": "wood",
+		"capacity": 4300
+	},
+	{
+		"regionId": 881,
+		"resourceType": "coal",
+		"capacity": 7300
+	},
+	{
+		"regionId": 881,
+		"resourceType": "wood",
+		"capacity": 10200
+	},
+	{
+		"regionId": 882,
+		"resourceType": "wood",
+		"capacity": 7300
+	},
+	{
+		"regionId": 883,
+		"resourceType": "coal",
+		"capacity": 9200
+	},
+	{
+		"regionId": 883,
+		"resourceType": "wood",
+		"capacity": 10100
+	},
+	{
+		"regionId": 884,
+		"resourceType": "wood",
+		"capacity": 6400
+	},
+	{
+		"regionId": 885,
+		"resourceType": "wood",
+		"capacity": 8000
+	},
+	{
+		"regionId": 886,
+		"resourceType": "coal",
+		"capacity": 11000
+	},
+	{
+		"regionId": 887,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 887,
+		"resourceType": "wood",
+		"capacity": 7100
+	},
+	{
+		"regionId": 889,
+		"resourceType": "copper",
+		"capacity": 1800
+	},
+	{
+		"regionId": 889,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 890,
+		"resourceType": "iron",
+		"capacity": 8200
+	},
+	{
+		"regionId": 892,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 894,
+		"resourceType": "copper",
+		"capacity": 3000
+	},
+	{
+		"regionId": 895,
+		"resourceType": "iron",
+		"capacity": 4600
+	},
+	{
+		"regionId": 895,
+		"resourceType": "wood",
+		"capacity": 18600
+	},
+	{
+		"regionId": 896,
+		"resourceType": "iron",
+		"capacity": 4700
+	},
+	{
+		"regionId": 896,
+		"resourceType": "coal",
+		"capacity": 2500
+	},
+	{
+		"regionId": 897,
+		"resourceType": "copper",
+		"capacity": 9200
+	},
+	{
+		"regionId": 898,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 898,
+		"resourceType": "wood",
+		"capacity": 9000
+	},
+	{
+		"regionId": 899,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 899,
+		"resourceType": "wood",
+		"capacity": 18900
+	},
+	{
+		"regionId": 902,
+		"resourceType": "iron",
+		"capacity": 2600
+	},
+	{
+		"regionId": 904,
+		"resourceType": "coal",
+		"capacity": 13600
+	},
+	{
+		"regionId": 904,
+		"resourceType": "wood",
+		"capacity": 17300
+	},
+	{
+		"regionId": 905,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 905,
+		"resourceType": "coal",
+		"capacity": 3900
+	},
+	{
+		"regionId": 905,
+		"resourceType": "wood",
+		"capacity": 7700
+	},
+	{
+		"regionId": 907,
+		"resourceType": "wood",
+		"capacity": 9200
+	},
+	{
+		"regionId": 908,
+		"resourceType": "copper",
+		"capacity": 2100
+	},
+	{
+		"regionId": 908,
+		"resourceType": "coal",
+		"capacity": 9900
+	},
+	{
+		"regionId": 910,
+		"resourceType": "coal",
+		"capacity": 5500
+	},
+	{
+		"regionId": 910,
+		"resourceType": "wood",
+		"capacity": 20500
+	},
+	{
+		"regionId": 911,
+		"resourceType": "wood",
+		"capacity": 7500
+	},
+	{
+		"regionId": 912,
+		"resourceType": "copper",
+		"capacity": 4800
+	},
+	{
+		"regionId": 912,
+		"resourceType": "wood",
+		"capacity": 21600
+	},
+	{
+		"regionId": 913,
+		"resourceType": "iron",
+		"capacity": 12300
+	},
+	{
+		"regionId": 913,
+		"resourceType": "wood",
+		"capacity": 10000
+	},
+	{
+		"regionId": 915,
+		"resourceType": "copper",
+		"capacity": 6300
+	},
+	{
+		"regionId": 915,
+		"resourceType": "coal",
+		"capacity": 16900
+	},
+	{
+		"regionId": 915,
+		"resourceType": "wood",
+		"capacity": 15100
+	},
+	{
+		"regionId": 916,
+		"resourceType": "wood",
+		"capacity": 16300
+	},
+	{
+		"regionId": 917,
+		"resourceType": "iron",
+		"capacity": 2600
+	},
+	{
+		"regionId": 917,
+		"resourceType": "copper",
+		"capacity": 1700
+	},
+	{
+		"regionId": 917,
+		"resourceType": "coal",
+		"capacity": 7400
+	},
+	{
+		"regionId": 918,
+		"resourceType": "wood",
+		"capacity": 5300
+	},
+	{
+		"regionId": 919,
+		"resourceType": "iron",
+		"capacity": 4500
+	},
+	{
+		"regionId": 919,
+		"resourceType": "wood",
+		"capacity": 6700
+	},
+	{
+		"regionId": 920,
+		"resourceType": "wood",
+		"capacity": 19700
+	},
+	{
+		"regionId": 921,
+		"resourceType": "copper",
+		"capacity": 8100
+	},
+	{
+		"regionId": 921,
+		"resourceType": "coal",
+		"capacity": 8400
+	},
+	{
+		"regionId": 923,
+		"resourceType": "wood",
+		"capacity": 3600
+	},
+	{
+		"regionId": 925,
+		"resourceType": "wood",
+		"capacity": 13600
+	},
+	{
+		"regionId": 926,
+		"resourceType": "coal",
+		"capacity": 13400
+	},
+	{
+		"regionId": 927,
+		"resourceType": "copper",
+		"capacity": 3900
+	},
+	{
+		"regionId": 927,
+		"resourceType": "coal",
+		"capacity": 16500
+	},
+	{
+		"regionId": 928,
+		"resourceType": "copper",
+		"capacity": 2800
+	},
+	{
+		"regionId": 930,
+		"resourceType": "coal",
+		"capacity": 5700
+	},
+	{
+		"regionId": 931,
+		"resourceType": "coal",
+		"capacity": 18700
+	},
+	{
+		"regionId": 932,
+		"resourceType": "iron",
+		"capacity": 10500
+	},
+	{
+		"regionId": 932,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 932,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 933,
+		"resourceType": "copper",
+		"capacity": 7900
+	},
+	{
+		"regionId": 934,
+		"resourceType": "copper",
+		"capacity": 2000
+	},
+	{
+		"regionId": 934,
+		"resourceType": "coal",
+		"capacity": 2000
+	},
+	{
+		"regionId": 934,
+		"resourceType": "wood",
+		"capacity": 5800
+	},
+	{
+		"regionId": 935,
+		"resourceType": "coal",
+		"capacity": 7300
+	},
+	{
+		"regionId": 935,
+		"resourceType": "wood",
+		"capacity": 6500
+	},
+	{
+		"regionId": 936,
+		"resourceType": "copper",
+		"capacity": 2300
+	},
+	{
+		"regionId": 936,
+		"resourceType": "coal",
+		"capacity": 3600
+	},
+	{
+		"regionId": 936,
+		"resourceType": "wood",
+		"capacity": 13400
+	},
+	{
+		"regionId": 937,
+		"resourceType": "iron",
+		"capacity": 5100
+	},
+	{
+		"regionId": 937,
+		"resourceType": "copper",
+		"capacity": 1800
+	},
+	{
+		"regionId": 937,
+		"resourceType": "wood",
+		"capacity": 7800
+	},
+	{
+		"regionId": 938,
+		"resourceType": "coal",
+		"capacity": 5500
+	},
+	{
+		"regionId": 938,
+		"resourceType": "wood",
+		"capacity": 9300
+	},
+	{
+		"regionId": 939,
+		"resourceType": "coal",
+		"capacity": 2200
+	},
+	{
+		"regionId": 939,
+		"resourceType": "wood",
+		"capacity": 3800
+	},
+	{
+		"regionId": 940,
+		"resourceType": "copper",
+		"capacity": 8800
+	},
+	{
+		"regionId": 940,
+		"resourceType": "wood",
+		"capacity": 14700
+	},
+	{
+		"regionId": 941,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 941,
+		"resourceType": "wood",
+		"capacity": 14700
+	},
+	{
+		"regionId": 942,
+		"resourceType": "coal",
+		"capacity": 2300
+	},
+	{
+		"regionId": 942,
+		"resourceType": "wood",
+		"capacity": 17000
+	},
+	{
+		"regionId": 943,
+		"resourceType": "iron",
+		"capacity": 7200
+	},
+	{
+		"regionId": 944,
+		"resourceType": "copper",
+		"capacity": 7000
+	},
+	{
+		"regionId": 944,
+		"resourceType": "wood",
+		"capacity": 15800
+	},
+	{
+		"regionId": 945,
+		"resourceType": "coal",
+		"capacity": 19700
+	},
+	{
+		"regionId": 946,
+		"resourceType": "iron",
+		"capacity": 12300
+	},
+	{
+		"regionId": 946,
+		"resourceType": "coal",
+		"capacity": 2700
+	},
+	{
+		"regionId": 947,
+		"resourceType": "wood",
+		"capacity": 10400
+	},
+	{
+		"regionId": 948,
+		"resourceType": "iron",
+		"capacity": 9400
+	},
+	{
+		"regionId": 948,
+		"resourceType": "wood",
+		"capacity": 17600
+	},
+	{
+		"regionId": 949,
+		"resourceType": "iron",
+		"capacity": 4100
+	},
+	{
+		"regionId": 950,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 951,
+		"resourceType": "coal",
+		"capacity": 2700
+	},
+	{
+		"regionId": 951,
+		"resourceType": "wood",
+		"capacity": 19900
+	},
+	{
+		"regionId": 952,
+		"resourceType": "wood",
+		"capacity": 16800
+	},
+	{
+		"regionId": 953,
+		"resourceType": "wood",
+		"capacity": 19700
+	},
+	{
+		"regionId": 954,
+		"resourceType": "iron",
+		"capacity": 6400
+	},
+	{
+		"regionId": 954,
+		"resourceType": "coal",
+		"capacity": 5700
+	},
+	{
+		"regionId": 954,
+		"resourceType": "wood",
+		"capacity": 9000
+	},
+	{
+		"regionId": 955,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 955,
+		"resourceType": "wood",
+		"capacity": 3500
+	},
+	{
+		"regionId": 956,
+		"resourceType": "iron",
+		"capacity": 15300
+	},
+	{
+		"regionId": 956,
+		"resourceType": "wood",
+		"capacity": 5400
+	},
+	{
+		"regionId": 957,
+		"resourceType": "iron",
+		"capacity": 2600
+	},
+	{
+		"regionId": 957,
+		"resourceType": "coal",
+		"capacity": 4000
+	},
+	{
+		"regionId": 957,
+		"resourceType": "wood",
+		"capacity": 6300
+	},
+	{
+		"regionId": 958,
+		"resourceType": "iron",
+		"capacity": 7500
+	},
+	{
+		"regionId": 958,
+		"resourceType": "copper",
+		"capacity": 6900
+	},
+	{
+		"regionId": 959,
+		"resourceType": "coal",
+		"capacity": 8700
+	},
+	{
+		"regionId": 959,
+		"resourceType": "wood",
+		"capacity": 10200
+	},
+	{
+		"regionId": 960,
+		"resourceType": "coal",
+		"capacity": 12300
+	},
+	{
+		"regionId": 960,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 961,
+		"resourceType": "iron",
+		"capacity": 5800
+	},
+	{
+		"regionId": 961,
+		"resourceType": "copper",
+		"capacity": 14000
+	},
+	{
+		"regionId": 961,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 961,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 962,
+		"resourceType": "wood",
+		"capacity": 13600
+	},
+	{
+		"regionId": 963,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 964,
+		"resourceType": "iron",
+		"capacity": 7400
+	},
+	{
+		"regionId": 964,
+		"resourceType": "wood",
+		"capacity": 7400
+	},
+	{
+		"regionId": 965,
+		"resourceType": "wood",
+		"capacity": 15500
+	},
+	{
+		"regionId": 966,
+		"resourceType": "wood",
+		"capacity": 8300
+	},
+	{
+		"regionId": 967,
+		"resourceType": "wood",
+		"capacity": 19900
+	},
+	{
+		"regionId": 968,
+		"resourceType": "iron",
+		"capacity": 8500
+	},
+	{
+		"regionId": 968,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 968,
+		"resourceType": "wood",
+		"capacity": 17500
+	},
+	{
+		"regionId": 969,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 969,
+		"resourceType": "wood",
+		"capacity": 13700
+	},
+	{
+		"regionId": 970,
+		"resourceType": "copper",
+		"capacity": 2200
+	},
+	{
+		"regionId": 970,
+		"resourceType": "wood",
+		"capacity": 23600
+	},
+	{
+		"regionId": 971,
+		"resourceType": "iron",
+		"capacity": 4300
+	},
+	{
+		"regionId": 971,
+		"resourceType": "copper",
+		"capacity": 1500
+	},
+	{
+		"regionId": 972,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 973,
+		"resourceType": "coal",
+		"capacity": 8900
+	},
+	{
+		"regionId": 973,
+		"resourceType": "wood",
+		"capacity": 19200
+	},
+	{
+		"regionId": 975,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 975,
+		"resourceType": "copper",
+		"capacity": 3500
+	},
+	{
+		"regionId": 976,
+		"resourceType": "iron",
+		"capacity": 16300
+	},
+	{
+		"regionId": 976,
+		"resourceType": "copper",
+		"capacity": 4600
+	},
+	{
+		"regionId": 977,
+		"resourceType": "copper",
+		"capacity": 12900
+	},
+	{
+		"regionId": 978,
+		"resourceType": "iron",
+		"capacity": 5200
+	},
+	{
+		"regionId": 978,
+		"resourceType": "copper",
+		"capacity": 1600
+	},
+	{
+		"regionId": 978,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 978,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 979,
+		"resourceType": "iron",
+		"capacity": 15500
+	},
+	{
+		"regionId": 979,
+		"resourceType": "wood",
+		"capacity": 12800
+	},
+	{
+		"regionId": 980,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 982,
+		"resourceType": "iron",
+		"capacity": 4100
+	},
+	{
+		"regionId": 982,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 983,
+		"resourceType": "coal",
+		"capacity": 10600
+	},
+	{
+		"regionId": 984,
+		"resourceType": "iron",
+		"capacity": 3100
+	},
+	{
+		"regionId": 984,
+		"resourceType": "copper",
+		"capacity": 2400
+	},
+	{
+		"regionId": 984,
+		"resourceType": "coal",
+		"capacity": 8600
+	},
+	{
+		"regionId": 984,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 985,
+		"resourceType": "copper",
+		"capacity": 6800
+	},
+	{
+		"regionId": 985,
+		"resourceType": "wood",
+		"capacity": 3000
+	},
+	{
+		"regionId": 986,
+		"resourceType": "coal",
+		"capacity": 6500
+	},
+	{
+		"regionId": 987,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 988,
+		"resourceType": "coal",
+		"capacity": 9500
+	},
+	{
+		"regionId": 988,
+		"resourceType": "wood",
+		"capacity": 23900
+	},
+	{
+		"regionId": 989,
+		"resourceType": "copper",
+		"capacity": 3500
+	},
+	{
+		"regionId": 989,
+		"resourceType": "wood",
+		"capacity": 6400
+	},
+	{
+		"regionId": 990,
+		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 991,
+		"resourceType": "copper",
+		"capacity": 7000
+	},
+	{
+		"regionId": 991,
+		"resourceType": "coal",
+		"capacity": 2700
+	},
+	{
+		"regionId": 991,
+		"resourceType": "wood",
+		"capacity": 16600
+	},
+	{
+		"regionId": 992,
+		"resourceType": "wood",
+		"capacity": 8900
+	},
+	{
+		"regionId": 993,
+		"resourceType": "iron",
+		"capacity": 3100
+	},
+	{
+		"regionId": 994,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 994,
+		"resourceType": "coal",
+		"capacity": 2800
+	},
+	{
+		"regionId": 994,
+		"resourceType": "wood",
+		"capacity": 9600
+	},
+	{
+		"regionId": 995,
+		"resourceType": "iron",
+		"capacity": 2400
+	},
+	{
+		"regionId": 995,
+		"resourceType": "wood",
+		"capacity": 16200
+	},
+	{
+		"regionId": 996,
+		"resourceType": "coal",
+		"capacity": 7300
+	},
+	{
+		"regionId": 996,
+		"resourceType": "wood",
+		"capacity": 24400
+	},
+	{
+		"regionId": 997,
+		"resourceType": "iron",
+		"capacity": 2000
+	},
+	{
+		"regionId": 997,
+		"resourceType": "copper",
+		"capacity": 1700
+	},
+	{
+		"regionId": 997,
+		"resourceType": "coal",
+		"capacity": 4400
+	},
+	{
+		"regionId": 997,
+		"resourceType": "wood",
+		"capacity": 7000
+	},
+	{
+		"regionId": 998,
+		"resourceType": "wood",
+		"capacity": 24900
+	},
+	{
+		"regionId": 999,
+		"resourceType": "wood",
+		"capacity": 16900
+	},
+	{
+		"regionId": 1000,
+		"resourceType": "wood",
+		"capacity": 7000
+	},
+	{
+		"regionId": 1001,
+		"resourceType": "iron",
+		"capacity": 2100
+	},
+	{
+		"regionId": 1001,
+		"resourceType": "copper",
+		"capacity": 10000
+	},
+	{
+		"regionId": 1001,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 1002,
+		"resourceType": "copper",
+		"capacity": 12500
+	},
+	{
+		"regionId": 1002,
+		"resourceType": "coal",
+		"capacity": 3100
+	},
+	{
+		"regionId": 1002,
+		"resourceType": "wood",
+		"capacity": 15900
+	},
+	{
+		"regionId": 1004,
+		"resourceType": "coal",
+		"capacity": 2100
+	},
+	{
+		"regionId": 1005,
+		"resourceType": "copper",
+		"capacity": 4900
+	},
+	{
+		"regionId": 1005,
+		"resourceType": "wood",
+		"capacity": 4500
+	},
+	{
+		"regionId": 1006,
+		"resourceType": "copper",
+		"capacity": 3300
+	},
+	{
+		"regionId": 1006,
+		"resourceType": "coal",
+		"capacity": 18100
+	},
+	{
+		"regionId": 1007,
+		"resourceType": "copper",
+		"capacity": 6100
+	},
+	{
+		"regionId": 1007,
+		"resourceType": "coal",
+		"capacity": 3200
+	},
+	{
+		"regionId": 1007,
+		"resourceType": "wood",
+		"capacity": 8700
+	},
+	{
+		"regionId": 1008,
+		"resourceType": "wood",
+		"capacity": 24500
+	},
+	{
+		"regionId": 1010,
+		"resourceType": "copper",
+		"capacity": 8200
+	},
+	{
+		"regionId": 1010,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 1012,
+		"resourceType": "coal",
+		"capacity": 6600
+	},
+	{
+		"regionId": 1013,
+		"resourceType": "coal",
+		"capacity": 2600
+	},
+	{
+		"regionId": 1014,
+		"resourceType": "coal",
+		"capacity": 11800
+	},
+	{
+		"regionId": 1015,
+		"resourceType": "wood",
+		"capacity": 3300
+	},
+	{
+		"regionId": 1016,
+		"resourceType": "wood",
+		"capacity": 5100
+	},
+	{
+		"regionId": 1017,
+		"resourceType": "copper",
+		"capacity": 6800
+	},
+	{
+		"regionId": 1017,
+		"resourceType": "coal",
+		"capacity": 7400
+	},
+	{
+		"regionId": 1018,
+		"resourceType": "wood",
+		"capacity": 18600
+	},
+	{
+		"regionId": 1019,
+		"resourceType": "coal",
+		"capacity": 2700
+	},
+	{
+		"regionId": 1019,
+		"resourceType": "wood",
+		"capacity": 9000
+	},
+	{
+		"regionId": 1020,
+		"resourceType": "wood",
+		"capacity": 3100
+	},
+	{
+		"regionId": 1021,
+		"resourceType": "iron",
+		"capacity": 7400
+	},
+	{
+		"regionId": 1021,
+		"resourceType": "wood",
+		"capacity": 4400
+	},
+	{
+		"regionId": 1022,
+		"resourceType": "copper",
+		"capacity": 1700
+	},
+	{
+		"regionId": 1022,
+		"resourceType": "wood",
+		"capacity": 7900
+	},
+	{
+		"regionId": 1023,
+		"resourceType": "wood",
+		"capacity": 17500
+	},
+	{
+		"regionId": 1024,
+		"resourceType": "coal",
+		"capacity": 3000
+	},
+	{
+		"regionId": 1024,
+		"resourceType": "wood",
+		"capacity": 21900
+	},
+	{
+		"regionId": 1025,
+		"resourceType": "copper",
+		"capacity": 2700
+	},
+	{
+		"regionId": 1025,
+		"resourceType": "wood",
+		"capacity": 10300
+	},
+	{
+		"regionId": 1026,
+		"resourceType": "wood",
+		"capacity": 13800
+	},
+	{
+		"regionId": 1027,
+		"resourceType": "wood",
+		"capacity": 9400
+	},
+	{
+		"regionId": 1028,
+		"resourceType": "coal",
+		"capacity": 5000
+	},
+	{
+		"regionId": 1028,
+		"resourceType": "wood",
+		"capacity": 11600
+	},
+	{
+		"regionId": 1029,
+		"resourceType": "copper",
+		"capacity": 10100
+	},
+	{
+		"regionId": 1030,
+		"resourceType": "copper",
+		"capacity": 2300
+	},
+	{
+		"regionId": 1030,
+		"resourceType": "wood",
+		"capacity": 15600
+	},
+	{
+		"regionId": 1031,
+		"resourceType": "coal",
+		"capacity": 7100
+	},
+	{
+		"regionId": 1032,
+		"resourceType": "copper",
+		"capacity": 6200
+	},
+	{
+		"regionId": 1033,
+		"resourceType": "wood",
+		"capacity": 8400
+	},
+	{
+		"regionId": 1034,
+		"resourceType": "wood",
+		"capacity": 8900
+	},
+	{
+		"regionId": 1035,
+		"resourceType": "wood",
+		"capacity": 4300
+	},
+	{
+		"regionId": 1036,
+		"resourceType": "iron",
+		"capacity": 7700
+	},
+	{
+		"regionId": 1036,
+		"resourceType": "copper",
+		"capacity": 9700
+	},
+	{
+		"regionId": 1036,
+		"resourceType": "coal",
+		"capacity": 8400
+	},
+	{
+		"regionId": 1038,
+		"resourceType": "coal",
+		"capacity": 14300
+	}
+]

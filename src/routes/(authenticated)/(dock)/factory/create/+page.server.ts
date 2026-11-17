@@ -9,14 +9,21 @@ import {
 	resourceInventory,
 	stateEnergy,
 	states,
+	regionDeposits,
 	userWallets
 } from "#lib/server/schema.js";
+import { ECONOMY_CONFIG, MINEABLE_RESOURCES } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { fail, redirect } from "@sveltejs/kit";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 
-const FACTORY_COST = 50000;
+const FACTORY_COST = ECONOMY_CONFIG.FACTORY_CREATION_COST;
+const OUTPUTS: Record<string, readonly string[]> = {
+	mine: MINEABLE_RESOURCES,
+	refinery: ["steel", "gunpowder"],
+	armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"]
+};
 const COOLDOWN_DAYS = 7;
 const ENERGY_REQUIRED = 50;
 
@@ -80,7 +87,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			companyId: null,
 			stateEnergy: null,
 			regionalTaxes: null,
-			userInventory: {}
+			userInventory: {},
+			factoryCost: FACTORY_COST
 		};
 	}
 
@@ -94,7 +102,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			companyId: company.id,
 			stateEnergy: null,
 			regionalTaxes: null,
-			userInventory: {}
+			userInventory: {},
+			factoryCost: FACTORY_COST
 		};
 	}
 
@@ -120,7 +129,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			companyId: company.id,
 			stateEnergy: null,
 			regionalTaxes: null,
-			userInventory: {}
+			userInventory: {},
+			factoryCost: FACTORY_COST
 		};
 	}
 
@@ -136,15 +146,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 			companyId: company.id,
 			stateEnergy: null,
 			regionalTaxes: null,
-			userInventory: {}
+			userInventory: {},
+			factoryCost: FACTORY_COST
 		};
 	}
 
-	const [[state], [stateEnergyData]] = await Promise.all([
+	const [[state], [stateEnergyData], deposits] = await Promise.all([
 		// Get state name for display
 		db.select({ name: states.name }).from(states).where(eq(states.id, region.stateId)),
 		// Get state energy
-		db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId))
+		db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId)),
+		db.select().from(regionDeposits).where(eq(regionDeposits.regionId, region.id))
 	]);
 
 	const regionName = getRegionName(region.id);
@@ -156,50 +168,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 		stateName: state?.name || regionName,
 		population: 0,
 		development: 0,
-		resources: [
-			{
-				type: "oil",
-				amount: region.oil,
-				resourceType: "oil",
-				remainingReserves: region.oil || 0,
-				totalReserves: region.oil || 0
-			},
-			{
-				type: "aluminium",
-				amount: region.aluminium,
-				resourceType: "aluminium",
-				remainingReserves: region.aluminium || 0,
-				totalReserves: region.aluminium || 0
-			},
-			{
-				type: "rubber",
-				amount: region.rubber,
-				resourceType: "rubber",
-				remainingReserves: region.rubber || 0,
-				totalReserves: region.rubber || 0
-			},
-			{
-				type: "tungsten",
-				amount: region.tungsten,
-				resourceType: "tungsten",
-				remainingReserves: region.tungsten || 0,
-				totalReserves: region.tungsten || 0
-			},
-			{
-				type: "steel",
-				amount: region.steel,
-				resourceType: "steel",
-				remainingReserves: region.steel || 0,
-				totalReserves: region.steel || 0
-			},
-			{
-				type: "chromium",
-				amount: region.chromium,
-				resourceType: "chromium",
-				remainingReserves: region.chromium || 0,
-				totalReserves: region.chromium || 0
-			}
-		].filter((r) => (r.amount ?? 0) > 0)
+		// Mines dig into the region's deposits; `amount` is how full a deposit
+		// still is, which sets how much each shift yields.
+		resources: deposits
+			.filter((d) => d.remaining > 0)
+			.map((d) => ({
+				resourceType: d.resourceType,
+				amount: Math.round((d.remaining / d.capacity) * 100),
+				remaining: d.remaining,
+				capacity: d.capacity
+			}))
 	};
 
 	// Calculate regional taxes based on region stats
@@ -223,7 +201,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		companyId: company.id,
 		stateEnergy: stateEnergyData || { totalProduction: 0, usedProduction: 0 },
 		regionalTaxes,
-		userInventory: inventoryMap
+		userInventory: inventoryMap,
+		factoryCost: FACTORY_COST
 	};
 };
 
@@ -231,15 +210,20 @@ export const actions: Actions = {
 	default: async ({ request, locals }) => {
 		const account = locals.account!;
 		const data = await request.formData();
-		const name = data.get("name") as string;
-		const factoryType = data.get("factoryType") as string;
-		const output = data.get("output") as string;
-		const maxWorkers = parseInt(data.get("maxWorkers") as string);
-		const workerWage = parseInt(data.get("workerWage") as string);
+		const name = String(data.get("name") ?? "").trim();
+		const factoryType = String(data.get("factoryType") ?? "");
+		const output = String(data.get("output") ?? "");
+		const maxWorkers = Number(data.get("maxWorkers"));
+		const workerWage = Number(data.get("workerWage"));
 
 		// Validation
-		if (!name || !factoryType || !output || !maxWorkers || !workerWage) {
-			return fail(400, { error: "All fields are required" });
+		if (!name || name.length > 50) return fail(400, { error: "Give the factory a name (up to 50 characters)." });
+		if (!OUTPUTS[factoryType]?.includes(output)) return fail(400, { error: "Choose what the factory makes." });
+		if (!Number.isInteger(maxWorkers) || maxWorkers < 1 || maxWorkers > 100) {
+			return fail(400, { error: "A factory employs 1 to 100 workers." });
+		}
+		if (!Number.isInteger(workerWage) || workerWage < 1 || workerWage > 1_000_000) {
+			return fail(400, { error: "Set a wage of at least $1." });
 		}
 
 		// Check if user owns a company
@@ -327,6 +311,17 @@ export const actions: Actions = {
 			});
 		}
 
+		// A mine needs something to dig: a deposit of that resource here.
+		if (factoryType === "mine") {
+			const [deposit] = await db
+				.select({ remaining: regionDeposits.remaining })
+				.from(regionDeposits)
+				.where(and(eq(regionDeposits.regionId, region.id), eq(regionDeposits.resourceType, output as never)));
+			if (!deposit || deposit.remaining <= 0) {
+				return fail(400, { error: `There is no ${output} to mine in this region.` });
+			}
+		}
+
 		// Check state energy
 		const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId));
 
@@ -335,15 +330,17 @@ export const actions: Actions = {
 		}
 
 		// Create factory
-		await db.transaction(async (tx) => {
-			// Deduct cost
-			await tx
+		const created = await db.transaction(async (tx) => {
+			// Deduct cost, only if the money is still there.
+			const [paid] = await tx
 				.update(userWallets)
 				.set({
 					balance: sql`${userWallets.balance} - ${FACTORY_COST}`,
 					updatedAt: new Date()
 				})
-				.where(eq(userWallets.userId, account.id));
+				.where(and(eq(userWallets.userId, account.id), gte(userWallets.balance, FACTORY_COST)))
+				.returning({ id: userWallets.id });
+			if (!paid) return false;
 
 			// Deduct resources for armaments factory
 			if (factoryType === "armaments") {
@@ -408,7 +405,9 @@ export const actions: Actions = {
 					lastCreationAt: new Date()
 				});
 			}
+			return true;
 		});
+		if (!created) return fail(400, { error: "Insufficient funds" });
 
 		throw redirect(303, "/production");
 	}

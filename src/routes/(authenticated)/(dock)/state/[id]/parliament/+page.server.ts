@@ -1,6 +1,7 @@
 // @ts-nocheck
 // src/routes/state/[id]/parliament/+page.server.ts
 import { error } from "@sveltejs/kit";
+import { EXPLOITATION_POLICIES } from "#lib/config/index.js";
 import type { PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { eq, and, gte, desc, inArray } from "drizzle-orm";
@@ -87,7 +88,8 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 						region: true
 					}
 				},
-				borderDetails: true
+				borderDetails: true,
+				exploitationDetails: true
 			},
 			orderBy: desc(parliamentaryProposals.createdAt)
 		})
@@ -154,6 +156,15 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 					title = "Tax Policy Change";
 					description = "Modify state taxation";
 				}
+				break;
+			}
+
+			case "exploitation": {
+				const policy = proposal.exploitationDetails ? EXPLOITATION_POLICIES[proposal.exploitationDetails.policy] : null;
+				title = policy ? `Resource Exploitation: ${policy.label}` : "Resource Exploitation Law";
+				description = policy
+					? `Mine output ×${policy.outputMultiplier}, deposits drain ×${policy.depletionMultiplier}`
+					: "Change how hard mines may work the state's deposits";
 				break;
 			}
 

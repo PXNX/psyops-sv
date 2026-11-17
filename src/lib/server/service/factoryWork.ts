@@ -14,6 +14,7 @@ import { calculateAndCollectTax } from "#lib/server/taxes.js";
 import { getEmbargoReason } from "#lib/server/embargo.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { and, eq, sql } from "drizzle-orm";
+import { extractFromDeposit, isMineable } from "#lib/server/services/economy/mining.js";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 
@@ -39,6 +40,9 @@ export interface CollectWageResult {
 	grossWage?: number;
 	taxPaid?: number;
 	resourcesProduced?: number;
+	/** Mines only: what's left of the region's deposit, and its size. */
+	depositRemaining?: number;
+	depositCapacity?: number;
 	companyBankrupt?: boolean;
 	owedAmount?: number;
 	companyBalance?: number;
@@ -214,6 +218,7 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			resourceOutput: factories.resourceOutput,
 			workerWage: factories.workerWage,
 			productionRate: factories.productionRate,
+			regionId: factories.regionId,
 			stateId: regions.stateId
 		})
 		.from(factories)
@@ -275,98 +280,117 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 		};
 	}
 
-	const { incomeTaxResult, miningTaxResult, resourcesProduced } = await db.transaction(async (tx) => {
-		// Calculate income tax (inside transaction for atomicity)
-		const incomeTaxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId, tx);
+	class AlreadyCollected extends Error {}
+	let result;
+	try {
+		result = await db.transaction(async (tx) => {
+			// Claim the finished shift first: if two requests race, only one of them
+			// matches the original lastWorked and gets paid (and mines the deposit).
+			const [claimed] = await tx
+				.update(factoryWorkers)
+				.set({ lastWorked: null, wageAtShiftStart: null })
+				.where(and(eq(factoryWorkers.id, job.id), eq(factoryWorkers.lastWorked, job.lastWorked!)))
+				.returning({ id: factoryWorkers.id });
+			if (!claimed) throw new AlreadyCollected();
 
-		// Calculate mining tax if applicable
-		let miningTaxResult: Awaited<ReturnType<typeof calculateAndCollectTax>> | null = null;
-		let resourcesProduced = 0;
-		let netResourceQuantity = 0;
-		if (factory.factoryType === "mine" && factory.resourceOutput) {
-			const estimatedResourceValue = factory.productionRate * 100;
-			miningTaxResult = await calculateAndCollectTax(
-				factory.stateId,
-				"mining",
-				estimatedResourceValue,
-				factory.ownerId,
-				tx
-			);
-			const taxPercentage = miningTaxResult.taxAmount / estimatedResourceValue;
-			netResourceQuantity = Math.floor(factory.productionRate * (1 - taxPercentage));
-		}
+			// Calculate income tax (inside transaction for atomicity)
+			const incomeTaxResult = await calculateAndCollectTax(factory.stateId, "income", wageToCollect, userId, tx);
 
-		// Pay worker (net amount after tax)
-		await tx
-			.insert(userWallets)
-			.values({
-				userId,
-				balance: incomeTaxResult.netAmount
-			})
-			.onConflictDoUpdate({
-				target: userWallets.userId,
-				set: {
-					balance: sql`${userWallets.balance} + ${incomeTaxResult.netAmount}`,
-					updatedAt: new Date()
+			// Calculate mining tax if applicable
+			let miningTaxResult: Awaited<ReturnType<typeof calculateAndCollectTax>> | null = null;
+			let resourcesProduced = 0;
+			let netResourceQuantity = 0;
+			let deposit: { remaining: number; capacity: number } | null = null;
+			if (factory.factoryType === "mine" && isMineable(factory.resourceOutput)) {
+				// Output depends on the region's deposit and the state's exploitation law.
+				const extraction = await extractFromDeposit(
+					tx,
+					factory.regionId,
+					factory.resourceOutput,
+					factory.productionRate
+				);
+				deposit = { remaining: extraction.remaining, capacity: extraction.capacity };
+				if (extraction.produced > 0) {
+					const estimatedResourceValue = extraction.produced * 10;
+					miningTaxResult = await calculateAndCollectTax(
+						factory.stateId,
+						"mining",
+						estimatedResourceValue,
+						factory.ownerId,
+						tx
+					);
+					const taxPercentage = miningTaxResult.taxAmount / estimatedResourceValue;
+					netResourceQuantity = Math.floor(extraction.produced * (1 - taxPercentage));
 				}
-			});
+			}
 
-		// Deduct wage from company budget
-		await tx
-			.update(companyBudgets)
-			.set({
-				balance: sql`${companyBudgets.balance} - ${wageToCollect}`,
-				totalSpent: sql`${companyBudgets.totalSpent} + ${wageToCollect}`,
-				updatedAt: new Date()
-			})
-			.where(eq(companyBudgets.companyId, factory.companyId));
-
-		// Add resources to company owner (if mine/refinery)
-		if (factory.factoryType === "mine" && factory.resourceOutput) {
-			resourcesProduced = netResourceQuantity;
-
+			// Pay worker (net amount after tax)
 			await tx
-				.insert(resourceInventory)
+				.insert(userWallets)
 				.values({
-					userId: factory.ownerId,
-					resourceType: factory.resourceOutput,
-					quantity: netResourceQuantity
+					userId,
+					balance: incomeTaxResult.netAmount
 				})
 				.onConflictDoUpdate({
-					target: [resourceInventory.userId, resourceInventory.resourceType],
+					target: userWallets.userId,
 					set: {
-						quantity: sql`${resourceInventory.quantity} + ${netResourceQuantity}`,
+						balance: sql`${userWallets.balance} + ${incomeTaxResult.netAmount}`,
 						updatedAt: new Date()
 					}
 				});
-		}
 
-		// Reset shift data to allow immediate next shift
-		await tx
-			.update(factoryWorkers)
-			.set({
-				lastWorked: null,
-				wageAtShiftStart: null
-			})
-			.where(eq(factoryWorkers.id, job.id));
+			// Deduct wage from company budget
+			await tx
+				.update(companyBudgets)
+				.set({
+					balance: sql`${companyBudgets.balance} - ${wageToCollect}`,
+					totalSpent: sql`${companyBudgets.totalSpent} + ${wageToCollect}`,
+					updatedAt: new Date()
+				})
+				.where(eq(companyBudgets.companyId, factory.companyId));
 
-		// Record transaction for worker
-		const [currentWallet] = await tx
-			.select({ balance: userWallets.balance })
-			.from(userWallets)
-			.where(eq(userWallets.userId, userId));
-		await tx.insert(transactionHistory).values({
-			userId,
-			transactionType: "factory_wage",
-			amount: incomeTaxResult.netAmount,
-			balanceAfter: currentWallet?.balance || 0,
-			description: `Received wage for shift at ${factory.name}`,
-			relatedEntityType: "factory",
-			relatedEntityId: factoryId
+			// Add resources to company owner (if mine/refinery)
+			if (factory.factoryType === "mine" && factory.resourceOutput && netResourceQuantity > 0) {
+				resourcesProduced = netResourceQuantity;
+
+				await tx
+					.insert(resourceInventory)
+					.values({
+						userId: factory.ownerId,
+						resourceType: factory.resourceOutput,
+						quantity: netResourceQuantity
+					})
+					.onConflictDoUpdate({
+						target: [resourceInventory.userId, resourceInventory.resourceType],
+						set: {
+							quantity: sql`${resourceInventory.quantity} + ${netResourceQuantity}`,
+							updatedAt: new Date()
+						}
+					});
+			}
+
+			// Record transaction for worker
+			const [currentWallet] = await tx
+				.select({ balance: userWallets.balance })
+				.from(userWallets)
+				.where(eq(userWallets.userId, userId));
+			await tx.insert(transactionHistory).values({
+				userId,
+				transactionType: "factory_wage",
+				amount: incomeTaxResult.netAmount,
+				balanceAfter: currentWallet?.balance || 0,
+				description: `Received wage for shift at ${factory.name}`,
+				relatedEntityType: "factory",
+				relatedEntityId: factoryId
+			});
+
+			return { incomeTaxResult, miningTaxResult, resourcesProduced, deposit };
 		});
-
-		return { incomeTaxResult, miningTaxResult, resourcesProduced };
-	});
+	} catch (err) {
+		if (err instanceof AlreadyCollected) return { success: false, error: "This shift has already been collected." };
+		throw err;
+	}
+	const { incomeTaxResult, miningTaxResult, resourcesProduced, deposit } = result;
 
 	const totalTaxPaid = incomeTaxResult.taxAmount + (miningTaxResult?.taxAmount || 0);
 	const taxBreakdown = miningTaxResult
@@ -390,6 +414,14 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 		grossWage: wageToCollect,
 		taxPaid: totalTaxPaid,
 		resourcesProduced,
-		message: `Shift complete! Earned ${incomeTaxResult!.netAmount.toLocaleString()} (${taxBreakdown})`
+		depositRemaining: deposit?.remaining,
+		depositCapacity: deposit?.capacity,
+		message:
+			`Shift complete! Earned ${incomeTaxResult!.netAmount.toLocaleString()} (${taxBreakdown})` +
+			(deposit && deposit.capacity === 0
+				? ". This region has no deposit of that resource, so the mine produced nothing."
+				: deposit && deposit.remaining === 0
+					? ". The deposit is exhausted."
+					: "")
 	};
 }

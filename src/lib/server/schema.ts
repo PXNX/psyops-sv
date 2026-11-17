@@ -33,7 +33,15 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"school",
 	"power_plant",
 	"fortifications",
-	"border_control"
+	"border_control",
+	"exploitation"
+]);
+// How hard a state lets its natural resources be mined (see resources.config.ts).
+export const exploitationPolicyEnum = pgEnum("exploitation_policy", [
+	"conservation",
+	"standard",
+	"industrial",
+	"unrestricted"
 ]);
 export const borderStatusEnum = pgEnum("border_status", ["open", "closed"]);
 export const taxTypeEnum = pgEnum("tax_type", ["mining", "production", "market_transaction", "income"]);
@@ -203,6 +211,7 @@ export const states = pgTable("states", {
 	capitulated: boolean("capitulated").default(false).notNull(),
 	capitulated_at: timestamp("capitulated_at"),
 	blocId: integer("bloc_id").references(() => blocs.id, { onDelete: "set null" }),
+	exploitationPolicy: exploitationPolicyEnum("exploitation_policy").default("standard").notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -306,6 +315,7 @@ export const regionsRelations = relations(regions, ({ one, many }) => ({
 		fields: [regions.stateId],
 		references: [states.id]
 	}),
+	deposits: many(regionDeposits),
 	governor: one(governors, {
 		fields: [regions.id],
 		references: [governors.regionId]
@@ -2753,6 +2763,40 @@ export const proposalBorderDetails = pgTable("proposal_border_details", {
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+export const proposalExploitationDetails = pgTable("proposal_exploitation_details", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	proposalId: integer("proposal_id")
+		.notNull()
+		.references(() => parliamentaryProposals.id, { onDelete: "cascade" })
+		.unique(),
+	policy: exploitationPolicyEnum("policy").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// Natural resource deposits per region. Mines draw them down; output falls
+// as `remaining` approaches 0 (see mineYield in resources.config.ts).
+export const regionDeposits = pgTable(
+	"region_deposits",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		resourceType: resourceTypeEnum("resource_type").notNull(),
+		capacity: integer("capacity").notNull(),
+		remaining: integer("remaining").notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		regionResourceIdx: uniqueIndex("idx_region_deposit").on(t.regionId, t.resourceType),
+		remainingCheck: check("check_deposit_remaining", sql`${t.remaining} >= 0 AND ${t.remaining} <= ${t.capacity}`)
+	})
+);
+
+export const regionDepositsRelations = relations(regionDeposits, ({ one }) => ({
+	region: one(regions, { fields: [regionDeposits.regionId], references: [regions.id] })
+}));
+
 // Relations
 export const parliamentaryProposalsRelations = relations(parliamentaryProposals, ({ one, many }) => ({
 	state: one(states, { fields: [parliamentaryProposals.stateId], references: [states.id] }),
@@ -2769,6 +2813,17 @@ export const parliamentaryProposalsRelations = relations(parliamentaryProposals,
 	borderDetails: one(proposalBorderDetails, {
 		fields: [parliamentaryProposals.id],
 		references: [proposalBorderDetails.proposalId]
+	}),
+	exploitationDetails: one(proposalExploitationDetails, {
+		fields: [parliamentaryProposals.id],
+		references: [proposalExploitationDetails.proposalId]
+	})
+}));
+
+export const proposalExploitationDetailsRelations = relations(proposalExploitationDetails, ({ one }) => ({
+	proposal: one(parliamentaryProposals, {
+		fields: [proposalExploitationDetails.proposalId],
+		references: [parliamentaryProposals.id]
 	})
 }));
 

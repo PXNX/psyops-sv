@@ -55,21 +55,21 @@
 			label: "Mine",
 			icon: PickaxeEmoji,
 			desc: "Extract raw resources",
-			costs: { currency: 50000, energy: 50 }
+			costs: { currency: data.factoryCost, energy: 50 }
 		},
 		{
 			value: "refinery",
 			label: "Refinery",
 			icon: HammerWrenchEmoji,
 			desc: "Process raw materials",
-			costs: { currency: 50000, energy: 50 }
+			costs: { currency: data.factoryCost, energy: 50 }
 		},
 		{
 			value: "armaments",
 			label: "Armaments",
 			icon: FluentFactory20Filled,
 			desc: "Manufacture weapons",
-			costs: { currency: 50000, energy: 50, iron: 100, steel: 50, gunpowder: 25 }
+			costs: { currency: data.factoryCost, energy: 50, iron: 100, steel: 50, gunpowder: 25 }
 		}
 	];
 
@@ -235,15 +235,16 @@
 										<span class="text-sm font-medium text-[#f5efd8] capitalize">{resource.resourceType}</span>
 									</div>
 									<div class="flex items-center gap-2">
-										<span class="text-sm font-bold text-[#e3cbfb]">{resource.amount}%</span>
-										<span class="text-xs text-[#a8a083]">yield</span>
+										<span class="text-sm font-bold text-[#e3cbfb] font-mono">{resource.remaining.toLocaleString()}</span
+										>
+										<span class="text-xs text-[#a8a083]">left · {resource.amount}% full</span>
 									</div>
 								</div>
 							{/each}
 						</div>
 					{:else}
 						<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3">
-							<p class="text-xs text-[#ffd35c]">No natural resources available in this region</p>
+							<p class="text-xs text-[#ffd35c]">No deposits to mine in this region</p>
 						</div>
 					{/if}
 				</div>
