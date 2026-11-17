@@ -165,13 +165,6 @@
 				<p class="text-2xl font-bold font-mono text-red-300">${(data.treasury.totalSpent / 100).toLocaleString()}</p>
 			</div>
 		</div>
-
-		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-3">
-			<p class="text-xs text-[#b3dcff]">
-				<FluentWarning20Filled class="inline size-3" />
-				Treasury funds come from taxes, state exports, and visa fees
-			</p>
-		</div>
 	</div>
 
 	<!-- State Resources -->

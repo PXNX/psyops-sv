@@ -137,8 +137,6 @@
 				Redeem
 			</Button>
 		</div>
-
-		<p class="text-xs text-[#a8a083]">💡 Gift codes are case-insensitive and can only be claimed once per account</p>
 	</form>
 
 	<!-- Redemption History -->
@@ -223,79 +221,6 @@
 			</div>
 		</div>
 	{/if}
-
-	<!-- Active Gift Codes (Optional - for admins or public codes) -->
-	{#if data.publicCodes && data.publicCodes.length > 0}
-		<div class="panel rounded-sm p-5 space-y-4">
-			<div class="flex items-center gap-2">
-				<FluentGift20Filled class="size-5 text-[#c08cf0]" />
-				<h2 class="section-title">Available Codes</h2>
-			</div>
-
-			<div class="grid gap-3 sm:grid-cols-2">
-				{#each data.publicCodes as code}
-					<div class="panel-muted rounded-sm p-4">
-						<div class="flex items-start justify-between mb-2">
-							<div class="flex-1">
-								<code class="text-[#e3cbfb] font-mono font-semibold">
-									{code.code}
-								</code>
-								{#if code.description}
-									<p class="text-xs text-[#a8a083] mt-1">{code.description}</p>
-								{/if}
-							</div>
-						</div>
-
-						<div class="flex flex-wrap gap-2 mb-3">
-							{#if code.currencyAmount > 0}
-								<Badge tone="green">
-									💰 {formatNumber(code.currencyAmount)}
-								</Badge>
-							{/if}
-
-							{#if code.premiumDays > 0}
-								<Badge tone="amber">
-									⭐ {formatNumber(code.premiumDays)}d premium
-								</Badge>
-							{/if}
-
-							{#each code.resources as resource}
-								<Badge tone="blue">
-									<ResourceIcon name={resource.type} class="size-3.5" />
-									{formatNumber(resource.quantity)}
-									{resource.type}
-								</Badge>
-							{/each}
-						</div>
-
-						<div class="flex items-center justify-between text-xs">
-							{#if code.expiresAt}
-								<span class="text-[#a8a083]">
-									Expires: {formatDate(code.expiresAt)}
-								</span>
-							{:else}
-								<span class="text-[#a8a083]">No expiration</span>
-							{/if}
-
-							{#if code.maxRedemptions}
-								<span class="text-[#a8a083]">
-									{code.currentRedemptions}/{code.maxRedemptions} used
-								</span>
-							{/if}
-						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
-	{/if}
-
-	<!-- Info Box -->
-	<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
-		<p class="text-sm text-[#b3dcff]">
-			💡 <strong>Tip:</strong> Gift codes are distributed through special events, promotions, and community activities. Follow
-			our social channels to stay updated on new codes!
-		</p>
-	</div>
 
 	<!-- Telegram Channel Button -->
 	<Button

@@ -338,20 +338,4 @@
 			</form>
 		</div>
 	</div>
-
-	<!-- Info Box -->
-	<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-5">
-		<div class="flex items-start gap-3">
-			<FluentInfo20Filled class="size-5 text-[#b3dcff] flex-shrink-0 mt-0.5" />
-			<div>
-				<h3 class="font-semibold text-[#b3dcff] mb-2">About the Government Market</h3>
-				<ul class="text-sm text-[#b3dcff]/80 space-y-1">
-					<li>• Buy resources from the market to build state stockpiles</li>
-					<li>• Sell surplus resources back for 70% of the market price</li>
-					<li>• All transactions are recorded in the government budget</li>
-					<li>• Only the president or minister of economics can authorize trades</li>
-				</ul>
-			</div>
-		</div>
-	</div>
 </PageContainer>

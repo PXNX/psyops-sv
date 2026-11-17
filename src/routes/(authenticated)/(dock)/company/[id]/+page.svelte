@@ -568,14 +568,7 @@
 					<FluentBoxCheckmark20Filled class="size-5 text-[#6fd14a]" />
 					Output
 				</h3>
-				<p class="text-sm text-[#d3caa9]">
-					Each time a worker finishes a shift, its output lands in your inventory: mines dig from the region's deposit,
-					refineries and armaments factories turn your materials into goods.
-				</p>
-				<ul class="text-xs text-[#a8a083] space-y-1">
-					<li>• Keep materials in stock, or a shift produces nothing (the worker is still paid).</li>
-					<li>• Keep the budget funded so workers can collect their wages.</li>
-				</ul>
+				<p class="text-sm text-[#d3caa9]">Finished shifts deliver output straight to your inventory.</p>
 				<Button href="/production" variant="secondary" size="sm">View your inventory</Button>
 			</div>
 		</div>

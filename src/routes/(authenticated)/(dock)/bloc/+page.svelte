@@ -68,7 +68,8 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader documentTitle={false}
+	<PageHeader
+		documentTitle={false}
 		title="Political Blocs"
 		subtitle="{data.blocs.length} {data.blocs.length === 1 ? 'bloc' : 'blocs'} • Political-military alliances"
 	>
@@ -257,17 +258,4 @@
 			{/if}
 		</div>
 	{/if}
-
-	<!-- Info Box -->
-	<div class="panel-muted rounded-sm p-4 flex items-start gap-3">
-		<FluentFlag20Filled class="size-5 text-[#a8a083] shrink-0 mt-0.5" />
-		<div>
-			<h3 class="text-sm font-semibold text-[#f5efd8]">About Political Blocs</h3>
-			<p class="text-sm text-[#a8a083] mt-0.5">
-				Political-military alliances that coordinate member states' policies, military strategies, and economic
-				cooperation. Only state presidents can apply to join blocs on behalf of their states; the presidents of the
-				member states then vote pro or contra on each application.
-			</p>
-		</div>
-	</div>
 </PageContainer>

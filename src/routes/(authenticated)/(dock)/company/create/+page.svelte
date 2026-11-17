@@ -293,7 +293,13 @@
 					{:else}
 						<div class="relative">
 							<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
-								<img loading="lazy" decoding="async" src={previewUrl} alt="Company logo preview" class="size-24 object-contain rounded-sm" />
+								<img
+									loading="lazy"
+									decoding="async"
+									src={previewUrl}
+									alt="Company logo preview"
+									class="size-24 object-contain rounded-sm"
+								/>
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-[#12150f]/60 opacity-0 transition-opacity group-hover:opacity-100"
@@ -375,18 +381,6 @@
 					Create Company ({data.companyCost.toLocaleString()})
 				{/if}
 			</Button>
-		</div>
-
-		<!-- Info Box -->
-		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4 space-y-2">
-			<p class="text-sm text-[#b3dcff]">
-				💡 <strong>Note:</strong>
-				Once created, you will own this company and can build factories to produce goods and resources.
-			</p>
-			<p class="text-xs text-[#b3dcff]/70">
-				<strong>Cooldown:</strong> After creating a company, you must wait {data.cooldownDays} days before creating another
-				one.
-			</p>
 		</div>
 	</form>
 </PageContainer>

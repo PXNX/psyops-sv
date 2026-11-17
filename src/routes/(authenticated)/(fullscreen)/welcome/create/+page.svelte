@@ -145,7 +145,6 @@
 	<title>{"Complete your profile · PsyOps"}</title>
 </svelte:head>
 
-
 <div class="w-full max-w-2xl mx-auto space-y-6">
 	<!-- Header -->
 	<div class="text-center space-y-3">
@@ -210,7 +209,13 @@
 					{:else}
 						<div class="relative">
 							<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
-								<img loading="lazy" decoding="async" src={previewUrl} alt="Logo preview" class="size-32 object-cover rounded-full" />
+								<img
+									loading="lazy"
+									decoding="async"
+									src={previewUrl}
+									alt="Logo preview"
+									class="size-32 object-cover rounded-full"
+								/>
 							</div>
 							<div
 								class="absolute inset-0 flex items-center justify-center bg-[#12150f]/70 opacity-0 transition-opacity group-hover:opacity-100"
@@ -346,17 +351,6 @@
 					Create Profile
 				{/if}
 			</button>
-		</div>
-
-		<!-- Info Box -->
-		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4 space-y-2">
-			<p class="text-sm text-[#b3dcff]">
-				💡 <strong>Note:</strong> You can update your profile information later from your account settings.
-			</p>
-			<p class="text-xs text-[#b3dcff]/70">
-				<strong>Privacy:</strong> Your email address is never displayed publicly. Only your username and chosen information
-				is visible to others.
-			</p>
 		</div>
 	</form>
 </div>

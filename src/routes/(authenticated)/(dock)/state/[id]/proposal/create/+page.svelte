@@ -2,10 +2,6 @@
 <script lang="ts">
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
-	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
-	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
@@ -175,50 +171,12 @@
 <PageContainer maxWidth="3xl">
 	<!-- Header -->
 	<PageHeader
-		title={canAutoExecute() ? "Execute Action" : "Create Proposal"}
-		subtitle={canAutoExecute()
-			? `Use your ${data.isPresident ? "presidential" : "ministerial"} authority to execute actions immediately`
-			: "Submit a proposal for parliamentary vote (1 day voting, 60% majority required)"}
+		title={canAutoExecute() ? "Enact" : "New Proposal"}
+		subtitle={canAutoExecute() ? "Takes effect immediately" : "Parliament votes for 1 day · 60% to pass"}
 		icon={canAutoExecute() ? FluentShieldTask20Filled : FluentDocument20Filled}
 		backHref="/state/{data.state.id}/parliament"
 		backLabel="{data.state.name} — Parliament"
 	/>
-
-	<!-- Authority Notice -->
-	{#if data.isPresident || data.userMinistry}
-		<div class="panel-muted rounded-sm p-4">
-			<div class="flex items-center gap-3">
-				<FluentShieldTask20Filled class="size-6 text-[#c08cf0]" />
-				<div>
-					<p class="text-sm font-medium text-[#f5efd8]">
-						{data.isPresident ? "Presidential Authority" : `Minister of ${data.userMinistry}`}
-					</p>
-					<p class="text-xs text-[#a8a083]">Certain actions can be executed immediately without parliamentary vote</p>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Info Banner -->
-	{#if canAutoExecute()}
-		<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm p-4 flex items-center gap-3">
-			<FluentShieldTask20Filled class="size-5 text-[#c08cf0] shrink-0" />
-			<div class="text-sm">
-				<p class="font-semibold text-[#f5efd8]">Immediate Execution</p>
-				<p class="text-[#d3caa9]">This action will be executed immediately upon submission.</p>
-			</div>
-		</div>
-	{:else}
-		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4 flex items-center gap-3">
-			<FluentDocument20Filled class="size-5 text-[#5eaef5] shrink-0" />
-			<div class="text-sm">
-				<p class="font-semibold text-[#f5efd8]">Parliamentary Proposal</p>
-				<p class="text-[#d3caa9]">
-					This proposal will be voted on for <strong>1 day</strong> and requires <strong>60% majority</strong> to pass.
-				</p>
-			</div>
-		</div>
-	{/if}
 
 	<!-- Form -->
 	<div class="panel rounded-sm p-5">
@@ -257,14 +215,6 @@
 			<!-- Tax-Specific Fields -->
 			{#if isTaxProposal}
 				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
-					<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-4">
-						<div class="flex items-center gap-2 mb-2">
-							<FluentMoney20Filled class="size-5 text-[#ffd35c]" />
-							<h3 class="text-base font-semibold text-[#f5efd8]">Tax Configuration</h3>
-						</div>
-						<p class="text-sm text-[#d3caa9]">Revenue will be deposited into the state treasury.</p>
-					</div>
-
 					<div>
 						<label for="taxType" class="field-label">
 							Tax Type <span class="text-red-400">*</span>
@@ -323,17 +273,6 @@
 			<!-- Border Control Fields -->
 			{#if isBorderControlProposal}
 				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
-					<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4">
-						<div class="flex items-center gap-2 mb-2">
-							<FluentGlobe20Filled class="size-5 text-[#6fd14a]" />
-							<h3 class="text-base font-semibold text-[#f5efd8]">Border Control</h3>
-						</div>
-						<p class="text-sm text-[#d3caa9]">
-							Manage state border access. Closed borders cost ${data.borderMaintenanceCost.toLocaleString()}/day to
-							maintain.
-						</p>
-					</div>
-
 					<div>
 						<label class="field-label">
 							Border Status <span class="text-red-400">*</span>
@@ -426,14 +365,6 @@
 			<!-- Building Construction Fields -->
 			{#if isBuildingProposal}
 				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
-					<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
-						<div class="flex items-center gap-2 mb-2">
-							<FluentBuildingBank20Filled class="size-5 text-[#5eaef5]" />
-							<h3 class="text-base font-semibold text-[#f5efd8]">Construction Project</h3>
-						</div>
-						<p class="text-sm text-[#d3caa9]">Resources will be taken from the state treasury and inventory.</p>
-					</div>
-
 					{#if progress}
 						{@const statLabel = data.buildingTemplates[$formData.proposalType as BuildingType].statLabel}
 						<div class="panel-muted rounded-sm p-4 space-y-3">
