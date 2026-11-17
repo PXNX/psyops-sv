@@ -2,7 +2,7 @@
 <script lang="ts">
 	import panzoom, { type PanZoom } from "panzoom";
 	import WorldMap from "#lib/assets/worldmap3.svg?raw";
-	import type { Region, State, UserTravel } from "#lib/server/schema.js";
+	import type { Region, State } from "#lib/server/schema.js";
 	import * as m from "#lib/paraglide/messages.js";
 	import IconSearch from "~icons/fluent/search-20-regular";
 	import IconZoomIn from "~icons/fluent/zoom-in-20-regular";
