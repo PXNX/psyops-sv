@@ -92,7 +92,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			: null,
 		userRegion: {
 			id: userResidence.region.id,
-			name: getRegionName(userResidence.region.id)
+			name: getRegionName(userResidence.region.id),
+			englishName: getRegionName(userResidence.region.id, "en")
 		},
 		isIndependentRegion,
 		userBalance,
@@ -271,11 +272,12 @@ export const actions: Actions = {
 					return null;
 				}
 
-				// Create new state
+				// Create new state, named after its founding region (in English, so
+				// the name doesn't depend on the founder's language).
 				const [newState] = await tx
 					.insert(states)
 					.values({
-						name: `State of ${regionId}`
+						name: getRegionName(regionId, "en")
 					})
 					.returning();
 
