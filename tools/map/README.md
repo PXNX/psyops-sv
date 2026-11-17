@@ -15,6 +15,7 @@ from three committed inputs:
 bun tools/map/build.ts                                   # regenerate everything below
 bun tools/map/fetch-coats.ts                             # coats for regions without one
 bun tools/map/optimize-coats.ts                          # slim all coat SVGs (visually checked)
+bun tools/map/square-coats.ts                            # same 512x512 square canvas for every coat
 DATABASE_URL=... bun tools/map/apply-db.ts               # dry run against a database
 DATABASE_URL=... bun tools/map/apply-db.ts --check       # write, then roll back
 DATABASE_URL=... bun tools/map/apply-db.ts --apply       # write in one transaction
@@ -41,6 +42,12 @@ of every file are kept in `coat-sources.json`.
 `optimize-coats.ts` slims the SVGs with svgo and keeps a file's original when
 the optimised version renders even slightly differently (run automatically
 after fetching; `bun tools/map/optimize-coats.ts` redoes all of them).
+
+`square-coats.ts` puts every coat on the same 512×512 square canvas, the
+drawing centred and untouched, so they all render at the same size. Results
+that render noticeably differently from the original are listed rather than
+written; review them and pass their ids with `--force` (some originals crop
+their own drawing, which squaring fixes).
 
 ## Adding or changing a region
 

@@ -64,6 +64,19 @@ describe("map data stays consistent", () => {
 		).toEqual([]);
 	});
 
+	it("draws every coat of arms on the same 512x512 square canvas", () => {
+		const off = registry.regions.filter((r) => {
+			const svg = readFileSync(`${process.cwd()}/static/coats/${r.id}.svg`, "utf8");
+			const root = svg.match(/<svg\b[^>]*>/)?.[0] ?? "";
+			const vb = root
+				.match(/\sviewBox="([^"]+)"/)?.[1]
+				?.split(" ")
+				.map(Number);
+			return !(/\swidth="512"/.test(root) && /\sheight="512"/.test(root) && vb && Math.abs(vb[2]! - vb[3]!) < 1e-6);
+		});
+		expect(off.map((r) => r.id)).toEqual([]);
+	});
+
 	it("connects every region (no region unreachable by border)", () => {
 		const borders = JSON.parse(readFileSync(`${dir}/data/borders.json`, "utf8")) as {
 			regionId: number;

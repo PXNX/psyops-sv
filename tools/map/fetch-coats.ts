@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 // tools/map/fetch-coats.ts: downloads a coat of arms for every region that
 // has none yet (static/coats/<id>.svg), from Wikimedia Commons via Wikidata.
-// New files are then slimmed down by optimize-coats.ts (run automatically).
+// New files are then slimmed down (optimize-coats.ts) and put on the shared
+// square canvas (square-coats.ts), both run automatically.
 //
 // For each region it searches Wikidata by name and only accepts places whose
 // coordinates are near the region's position on the map, so "Georgia" or
@@ -244,6 +245,7 @@ for (const [n, r] of todo.entries()) {
 if (todo.length) {
 	const fetched = todo.filter((r) => sources[r.id]).map((r) => String(r.id));
 	await Bun.spawn(["bun", `${dir}/optimize-coats.ts`, ...fetched], { stdout: "inherit", stderr: "inherit" }).exited;
+	await Bun.spawn(["bun", `${dir}/square-coats.ts`, ...fetched], { stdout: "inherit", stderr: "inherit" }).exited;
 }
 
 const sorted = Object.fromEntries(Object.entries(sources).sort(([a], [b]) => Number(a) - Number(b)));
