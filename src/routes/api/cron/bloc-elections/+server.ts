@@ -6,11 +6,7 @@ import { db } from "#lib/server/db.js";
 import { blocs, blocLeaders, blocLeaderElections, blocLeaderCandidates, blocLeaderVotes } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
 import { resolveExpiredBlocApplications } from "#lib/server/service/blocApplication.js";
-
-// Bloc leaders are elected by the presidents of member states every 30-day cycle.
-// Nominations and voting only happen during the final 2 days of each cycle.
-const CYCLE_DAYS = 30;
-const VOTING_WINDOW_DAYS = 2;
+import { nextCycleWindow } from "#lib/server/service/blocElectionCycle.js";
 
 export const config = {
 	maxDuration: 60
@@ -70,22 +66,21 @@ export const GET: RequestHandler = async () => {
 };
 
 async function scheduleNextCycle(blocId: number, from: Date) {
-	const votingStartsAt = new Date(from);
-	votingStartsAt.setDate(votingStartsAt.getDate() + (CYCLE_DAYS - VOTING_WINDOW_DAYS));
+	// A bloc without a leader opens nominations/voting right away instead of
+	// waiting 28 days for the end of a fresh cycle.
+	const [leader] = await db
+		.select({ userId: blocLeaders.userId })
+		.from(blocLeaders)
+		.where(eq(blocLeaders.blocId, blocId))
+		.limit(1);
+	const window = nextCycleWindow(from, !!leader);
 
-	const votingEndsAt = new Date(from);
-	votingEndsAt.setDate(votingEndsAt.getDate() + CYCLE_DAYS);
-
-	await db.insert(blocLeaderElections).values({
-		blocId,
-		cycleStartsAt: from,
-		votingStartsAt,
-		votingEndsAt,
-		status: "scheduled"
-	});
+	await db.insert(blocLeaderElections).values({ blocId, ...window });
 
 	console.log(
-		`📅 Scheduled next bloc leader election for bloc ${blocId} - voting opens ${votingStartsAt.toISOString()}`
+		window.status === "active"
+			? `🗳️ Bloc ${blocId} has no leader - nominations and voting open until ${window.votingEndsAt.toISOString()}`
+			: `📅 Scheduled next bloc leader election for bloc ${blocId} - voting opens ${window.votingStartsAt.toISOString()}`
 	);
 }
 
