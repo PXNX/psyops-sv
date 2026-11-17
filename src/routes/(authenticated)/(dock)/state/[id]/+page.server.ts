@@ -622,7 +622,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		activeWars,
 		residencePermit: {
 			canApply: canApplyForResidence,
-			hasPendingApp: hasPendingResidenceApp,
+			// Officials are approved on the spot, so they always get the button.
+			hasPendingApp:
+				hasPendingResidenceApp &&
+				!isPresident &&
+				!(!!accountId && stateMinistersRaw.some((m) => m.userId === accountId)),
 			currentRegionName: userCurrentRegionName
 		}
 	};
@@ -1073,11 +1077,17 @@ export const actions: Actions = {
 			return fail(400, { error: "You are already a citizen of this state" });
 		}
 
-		// A president needs no permit from themselves.
-		const presidency = await db.query.presidents.findFirst({
-			where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
-		});
-		if (presidency) {
+		// The state's own government needs no permit from itself: the president
+		// and its ministers are approved right away.
+		const [presidency, ministry] = await Promise.all([
+			db.query.presidents.findFirst({
+				where: and(eq(presidents.userId, account.id), eq(presidents.stateId, stateId))
+			}),
+			db.query.ministers.findFirst({
+				where: and(eq(ministers.userId, account.id), eq(ministers.stateId, stateId))
+			})
+		]);
+		if (presidency || ministry) {
 			await db.transaction(async (tx) => {
 				await tx
 					.update(residences)
@@ -1097,7 +1107,10 @@ export const actions: Actions = {
 						)
 					);
 			});
-			return { success: true, message: "As president, you are now a citizen of this state." };
+			return {
+				success: true,
+				message: `As ${presidency ? "president" : "a minister"}, you are now a citizen of this state.`
+			};
 		}
 
 		// One pending application per state (checked against this state's
