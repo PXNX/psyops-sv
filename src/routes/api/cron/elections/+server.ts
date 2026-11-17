@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/api/cron/elections/+server.ts
 
 import type { RequestHandler } from "./$types";
+import { cronCrash, cronResponse } from "#lib/server/cron.js";
 import { db } from "#lib/server/db.js";
 import {
 	parliamentaryElections,
@@ -90,22 +91,13 @@ export const GET: RequestHandler = async ({ request }) => {
 			);
 		}
 
-		return Response.json({
-			success: true,
-			timestamp: now.toISOString(),
-			electionsActivated: activated,
-			electionsProcessed: processed,
-			electionsScheduled: scheduled
-		});
-	} catch (error) {
-		console.error("Cron job error:", error);
-		return Response.json(
-			{
-				success: false,
-				error: error instanceof Error ? error.message : "Unknown error"
-			},
-			{ status: 500 }
+		return cronResponse(
+			"elections",
+			{ electionsActivated: activated, electionsProcessed: processed, electionsScheduled: scheduled },
+			0
 		);
+	} catch (error) {
+		return cronCrash("elections", error);
 	}
 };
 

@@ -136,6 +136,8 @@ export interface AutomationSummary {
 	productionStarted: ProductionType | null;
 	trainingCompleted: number;
 	unitTrained: string | null;
+	/** Automation steps that threw for this member (factory, production, training). */
+	errors: number;
 }
 
 /** Manage the user's factory shift: collect finished wages and start a new shift. */
@@ -388,22 +390,26 @@ export async function runPremiumAutomationForUser(accountId: string): Promise<Au
 		productionCollected: false,
 		productionStarted: null,
 		trainingCompleted: 0,
-		unitTrained: null
+		unitTrained: null,
+		errors: 0
 	};
 
 	try {
 		await automateFactoryWork(accountId, summary);
 	} catch (err) {
+		summary.errors++;
 		console.error(`Premium factory automation failed for ${accountId}:`, err);
 	}
 	try {
 		await automateProduction(accountId, summary);
 	} catch (err) {
+		summary.errors++;
 		console.error(`Premium production automation failed for ${accountId}:`, err);
 	}
 	try {
 		await automateTraining(accountId, summary);
 	} catch (err) {
+		summary.errors++;
 		console.error(`Premium training automation failed for ${accountId}:`, err);
 	}
 

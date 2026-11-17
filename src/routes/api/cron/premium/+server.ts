@@ -1,26 +1,13 @@
-// src/routes/(authenticated)/api/cron/premium/+server.ts
+// src/routes/api/cron/premium/+server.ts
 // Triggered by Vercel Schedules (see the "premium" entry in vercel.json). Runs
 // production, military training and factory-work automation for all active
 // premium members.
-import { error } from "@sveltejs/kit";
-import { CRON_SECRET, NODE_ENV } from "$app/env/private";
 import type { RequestHandler } from "./$types";
+import { cronCrash, cronResponse } from "#lib/server/cron.js";
 import { runPremiumAutomation } from "#lib/server/service/premium.js";
 
-function isValidCronRequest(request: Request): boolean {
-	const authHeader = request.headers.get("authorization");
-	const cronSecret = CRON_SECRET;
-	if (!cronSecret) {
-		return NODE_ENV === "development";
-	}
-	return authHeader === `Bearer ${cronSecret}`;
-}
-
-export const GET: RequestHandler = async ({ request }) => {
-	if (!isValidCronRequest(request)) {
-		throw error(403, "Invalid request");
-	}
-
+// Access is checked for all /api/cron/* routes in hooks.server.ts.
+export const GET: RequestHandler = async () => {
 	try {
 		const summaries = await runPremiumAutomation();
 
@@ -32,6 +19,7 @@ export const GET: RequestHandler = async ({ request }) => {
 				if (s.productionStarted) acc.productionStarted++;
 				acc.trainingsCompleted += s.trainingCompleted;
 				if (s.unitTrained) acc.unitsTrained++;
+				acc.errors += s.errors;
 				return acc;
 			},
 			{
@@ -40,21 +28,14 @@ export const GET: RequestHandler = async ({ request }) => {
 				productionCollected: 0,
 				productionStarted: 0,
 				trainingsCompleted: 0,
-				unitsTrained: 0
+				unitsTrained: 0,
+				errors: 0
 			}
 		);
 
-		return Response.json({
-			success: true,
-			timestamp: new Date().toISOString(),
-			membersProcessed: summaries.length,
-			...stats
-		});
+		const { errors, ...counts } = stats;
+		return cronResponse("premium", { membersProcessed: summaries.length, ...counts }, errors);
 	} catch (err) {
-		console.error("Premium automation cron error:", err);
-		return Response.json(
-			{ success: false, error: err instanceof Error ? err.message : "Unknown error" },
-			{ status: 500 }
-		);
+		return cronCrash("premium", err);
 	}
 };

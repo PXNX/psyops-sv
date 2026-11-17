@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/api/cron/bloc-elections/+server.ts
 
 import type { RequestHandler } from "./$types";
+import { cronCrash, cronResponse } from "#lib/server/cron.js";
 import { db } from "#lib/server/db.js";
 import { blocs, blocLeaders, blocLeaderElections, blocLeaderCandidates, blocLeaderVotes } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
@@ -62,23 +63,9 @@ export const GET: RequestHandler = async () => {
 		// 3. Close bloc membership applications whose voting window expired.
 		const applicationsResolved = await resolveExpiredBlocApplications();
 
-		return Response.json({
-			success: true,
-			timestamp: now.toISOString(),
-			bootstrapped,
-			activated,
-			processed,
-			applicationsResolved
-		});
+		return cronResponse("bloc-elections", { bootstrapped, activated, processed, applicationsResolved }, 0);
 	} catch (error) {
-		console.error("Bloc election cron job error:", error);
-		return Response.json(
-			{
-				success: false,
-				error: error instanceof Error ? error.message : "Unknown error"
-			},
-			{ status: 500 }
-		);
+		return cronCrash("bloc-elections", error);
 	}
 };
 

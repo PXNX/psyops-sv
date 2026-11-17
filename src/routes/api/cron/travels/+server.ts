@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/api/cron/travels/+server.ts
 
 import type { RequestHandler } from "./$types";
+import { cronCrash, cronResponse } from "#lib/server/cron.js";
 import { db } from "#lib/server/db.js";
 import { userTravels, residences, regions, states } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
@@ -31,22 +32,13 @@ export const GET: RequestHandler = async ({ request }) => {
 			}
 		}
 
-		return Response.json({
-			success: true,
-			timestamp: now.toISOString(),
-			travelsCompleted: completed,
-			travelsFailed: failed,
-			totalProcessed: arrivedTravels.length
-		});
-	} catch (error) {
-		console.error("Travel completion cron job error:", error);
-		return Response.json(
-			{
-				success: false,
-				error: error instanceof Error ? error.message : "Unknown error"
-			},
-			{ status: 500 }
+		return cronResponse(
+			"travels",
+			{ travelsCompleted: completed, travelsFailed: failed, totalProcessed: arrivedTravels.length },
+			failed
 		);
+	} catch (error) {
+		return cronCrash("travels", error);
 	}
 };
 

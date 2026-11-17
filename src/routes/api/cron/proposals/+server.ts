@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/api/cron/proposals/+server.ts
 
 import type { RequestHandler } from "./$types";
+import { cronCrash, cronResponse } from "#lib/server/cron.js";
 import { db } from "#lib/server/db.js";
 import { parliamentaryProposals, parliamentaryVotes, stateTaxes, parliamentMembers } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
@@ -11,7 +12,8 @@ export const GET: RequestHandler = async ({ request }) => {
 		const now = new Date();
 		let processed = 0;
 		let passed = 0;
-		let failed = 0;
+		let failed = 0; // rejected by parliament (a normal outcome, not an error)
+		let errors = 0; // proposals that could not be processed or implemented
 
 		// Find all active proposals that have reached their end time
 		const finishedProposals = await db
@@ -20,7 +22,15 @@ export const GET: RequestHandler = async ({ request }) => {
 			.where(and(eq(parliamentaryProposals.status, "active"), lte(parliamentaryProposals.votingEndsAt, now)));
 
 		for (const proposal of finishedProposals) {
-			await processProposal(proposal);
+			try {
+				const outcome = await processProposal(proposal);
+				if (outcome === "implementation_failed") errors++;
+			} catch (error) {
+				// One broken proposal must not block the rest of the queue.
+				errors++;
+				console.error(`❌ Failed to process proposal ${proposal.id}:`, error);
+				continue;
+			}
 			processed++;
 
 			// Check final status
@@ -37,26 +47,17 @@ export const GET: RequestHandler = async ({ request }) => {
 			}
 		}
 
-		return Response.json({
-			success: true,
-			timestamp: now.toISOString(),
-			proposalsProcessed: processed,
-			proposalsPassed: passed,
-			proposalsFailed: failed
-		});
-	} catch (error) {
-		console.error("Proposal cron job error:", error);
-		return Response.json(
-			{
-				success: false,
-				error: error instanceof Error ? error.message : "Unknown error"
-			},
-			{ status: 500 }
+		return cronResponse(
+			"proposals",
+			{ proposalsProcessed: processed, proposalsPassed: passed, proposalsRejected: failed },
+			errors
 		);
+	} catch (error) {
+		return cronCrash("proposals", error);
 	}
 };
 
-async function processProposal(proposal: any) {
+async function processProposal(proposal: any): Promise<"passed" | "rejected" | "implementation_failed"> {
 	console.log(`Processing proposal ${proposal.id} for state ${proposal.stateId}`);
 
 	// Get total number of parliament members
@@ -70,7 +71,7 @@ async function processProposal(proposal: any) {
 			.update(parliamentaryProposals)
 			.set({ status: "rejected" })
 			.where(eq(parliamentaryProposals.id, proposal.id));
-		return;
+		return "rejected";
 	}
 
 	// Get all votes for this proposal
@@ -102,7 +103,9 @@ async function processProposal(proposal: any) {
 			console.log(`✅ Proposal ${proposal.id} PASSED and implemented`);
 		} catch (err) {
 			console.error(`❌ Proposal ${proposal.id} passed but failed to implement:`, err);
+			return "implementation_failed";
 		}
+		return "passed";
 	} else {
 		// Mark as rejected
 		await db
@@ -111,5 +114,6 @@ async function processProposal(proposal: any) {
 			.where(eq(parliamentaryProposals.id, proposal.id));
 
 		console.log(`❌ Proposal ${proposal.id} REJECTED`);
+		return "rejected";
 	}
 }
