@@ -20,6 +20,21 @@ import { newspaperSchema } from "./schema";
 // Cost to edit a newspaper's details (name/background/logo). Charged on each successful edit.
 const EDIT_COST = 2500;
 
+/** First words of an article's HTML body as plain text, for the front page. */
+function excerpt(html: string | null, max = 220): string {
+	const text = (html ?? "")
+		.replace(/<[^>]+>/g, " ")
+		.replace(/&nbsp;/g, " ")
+		.replace(/&amp;/g, "&")
+		.replace(/&lt;/g, "<")
+		.replace(/&gt;/g, ">")
+		.replace(/&quot;/g, '"')
+		.replace(/&#39;/g, "'")
+		.replace(/\s+/g, " ")
+		.trim();
+	return text.length > max ? `${text.slice(0, max).replace(/\s+\S*$/, "")}…` : text;
+}
+
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const newspaperId = parseInt(params.id);
 	const account = locals.account;
@@ -151,6 +166,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			title: article.title,
 			publishDate: article.createdAt,
 			upvoteCount: article.upvotes.length,
+			excerpt: excerpt(article.content),
 			authorName: article.author.profile?.name ?? "Unknown",
 			authorLogo: article.authorLogoUrl
 		})),
