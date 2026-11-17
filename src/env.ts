@@ -8,6 +8,7 @@ export const variables = defineEnvVars({
 	GOOGLE_CLIENT_SECRET: { schema: (input) => input ?? "" },
 	GOOGLE_REDIRECT_URI: { schema: (input) => input ?? "" },
 	TELEGRAM_BOT_TOKEN: { schema: (input) => input ?? "" },
+	USE_MOCK: { schema: (input) => input ?? "" },
 	MOCK_API_URL: { schema: (input) => input ?? "" },
 	BACKBLAZE_KEY_ID: { schema: (input) => input ?? "" },
 	BACKBLAZE_APPLICATION_KEY: { schema: (input) => input ?? "" },

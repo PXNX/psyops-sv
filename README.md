@@ -61,6 +61,22 @@ bun dev
 
 The application will be available at `http://localhost:5173` (or another port if 5173 is in use).
 
+### Mock mode (no database or accounts needed)
+
+```bash
+bun run dev:mock
+```
+
+Boots an in-memory Postgres (PGlite), creates every table from `src/lib/server/schema.ts`, seeds a small demo world (`src/lib/server/mock-seed.ts`) and signs you in as the seeded admin. Nothing is persisted; restart the dev server for a fresh world. Mock mode only exists in the dev server: production builds ignore `USE_MOCK`.
+
+## Tests
+
+```bash
+bun run test
+```
+
+Unit tests plus integration tests (`*.integration.test.ts`) that run the real services against a fresh seeded in-memory Postgres per suite, so they need no database, network or Docker.
+
 ## UI Styling and Mobile Optimization
 
 The application uses a dark editorial interface inspired by operational field notes: midnight-ink surfaces, parchment-toned rules, serif hierarchy and carefully reserved amber feedback. It remains optimized for mobile screens with responsive navigation and content layouts.
