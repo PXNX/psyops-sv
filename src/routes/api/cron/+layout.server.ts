@@ -6,12 +6,12 @@ import { CRON_SECRET, NODE_ENV } from "$app/env/private";
 import type { RequestEvent } from "./$types";
 
 export const load = async (event: RequestEvent) => {
-	//await parent();
+	// Vercel Schedules sends `Authorization: Bearer <CRON_SECRET>` with every
+	// run and no session cookie, so the secret is the only key that opens
+	// these routes.
 	if (!isValidCronRequest(event.request)) {
 		return error(403, "Invalid request");
 	}
-
-	//protecting just here feels wrong tbh
 
 	return {
 		account: event.locals.account
