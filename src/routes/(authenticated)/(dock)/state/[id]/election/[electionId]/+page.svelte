@@ -42,7 +42,7 @@
 	);
 	const hasEnded = $derived(currentTime > new Date(data.election.endDate));
 	const hasStarted = $derived(currentTime >= new Date(data.election.startDate));
-	const canVote = $derived(data.userResidence && isActive);
+	const canVote = $derived(data.voterEligible && isActive);
 
 	function getCountdown() {
 		const now = currentTime;
@@ -188,11 +188,11 @@
 	</div>
 
 	<!-- Voter Status -->
-	{#if !data.userResidence}
+	{#if data.voterIssue && !data.userVote}
 		<div
 			class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center justify-center gap-3"
 		>
-			<p class="text-sm">You must be a resident of {data.state.name} to vote</p>
+			<p class="text-sm text-center">{data.voterIssue}</p>
 		</div>
 	{:else if data.userVote}
 		<div

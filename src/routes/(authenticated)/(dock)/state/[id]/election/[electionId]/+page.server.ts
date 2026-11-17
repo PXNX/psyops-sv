@@ -1,6 +1,8 @@
 // src/routes/state/[id]/election/[electionId]/+page.server.ts
 
 import { error, fail } from "@sveltejs/kit";
+import { voterEligibility } from "#lib/server/service/voterEligibility.js";
+import { getResidency } from "#lib/server/service/residency.js";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "#lib/server/db.js";
 import { eq, and } from "drizzle-orm";
@@ -9,11 +11,9 @@ import {
 	parliamentaryElections,
 	politicalParties,
 	electionVotes,
-	residences,
 	accounts,
 	userProfiles,
-	partyMembers,
-	regions
+	partyMembers
 } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 
@@ -108,20 +108,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		);
 	})();
 
-	const [stateLogo, [userResidence], processedParties, allVotes, [userVote]] = await Promise.all([
+	const [stateLogo, residency, processedParties, allVotes, [userVote]] = await Promise.all([
 		// Fetch state logo
 		getLogoUrl(state.logo),
-		// Check if user lives in this state - manual join
-		db
-			.select({
-				userId: residences.userId,
-				regionId: residences.regionId,
-				stateId: regions.stateId
-			})
-			.from(residences)
-			.innerJoin(regions, eq(residences.regionId, regions.id))
-			.where(eq(residences.userId, account.id))
-			.limit(1),
+		// Where the user is a resident (home region), and since when
+		getResidency(account.id),
 		processedPartiesPromise,
 		// Get vote counts
 		db
@@ -136,7 +127,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			.limit(1)
 	]);
 
-	const canVote = userResidence?.stateId === parseInt(params.id) && isActive;
+	const eligibility = voterEligibility(residency, parseInt(params.id), state.name, new Date(election.endDate));
+	const canVote = eligibility.eligible && isActive;
 
 	// Per-party results stay secret until the election is over: they are not
 	// even sent to the browser before then (hiding them only in the UI would
@@ -162,7 +154,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isActive,
 		hasEnded,
 		hasStarted,
-		userResidence: userResidence?.stateId === parseInt(params.id),
+		userResidence: residency?.stateId === parseInt(params.id),
+		voterEligible: eligibility.eligible,
+		voterIssue: eligibility.reason,
 		userVote: userVote?.partyId || null,
 		votesByParty,
 		totalVotes,
@@ -213,20 +207,20 @@ export const actions: Actions = {
 			return fail(400, { error: "Election is not currently active" });
 		}
 
-		// Check if user lives in this state - manual join
-		const [userResidence] = await db
-			.select({
-				userId: residences.userId,
-				regionId: residences.regionId,
-				stateId: regions.stateId
-			})
-			.from(residences)
-			.innerJoin(regions, eq(residences.regionId, regions.id))
-			.where(eq(residences.userId, account.id))
+		// Residents only, and only those resident since a day before voting closes.
+		const [votingState] = await db
+			.select({ name: states.name })
+			.from(states)
+			.where(eq(states.id, parseInt(params.id)))
 			.limit(1);
-
-		if (userResidence?.stateId !== parseInt(params.id)) {
-			return fail(403, { error: "You must live in this state to vote" });
+		const eligibility = voterEligibility(
+			await getResidency(account.id),
+			parseInt(params.id),
+			votingState?.name ?? "this state",
+			endDate
+		);
+		if (!eligibility.eligible) {
+			return fail(403, { error: eligibility.reason });
 		}
 
 		// Check if party exists in this state and has at least 3 members
