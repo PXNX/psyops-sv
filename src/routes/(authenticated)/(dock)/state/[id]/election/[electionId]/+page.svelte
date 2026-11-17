@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { invalidateAll } from "$app/navigation";
 	import Logo from "#lib/component/Logo.svelte";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -72,19 +73,29 @@
 	const countdown = $derived(getCountdown());
 
 	function getVotePercentage(partyId: string) {
-		if (data.totalVotes === 0) return 0;
+		if (!data.totalVotes) return 0;
 		return ((data.votesByParty[partyId] || 0) / data.totalVotes) * 100;
 	}
 
+	// Ranked by votes once results are out; alphabetical before, so the order
+	// itself doesn't give the standings away.
 	const sortedParties = $derived(
-		[...data.parties].sort((a, b) => (data.votesByParty[b.id] || 0) - (data.votesByParty[a.id] || 0))
+		[...data.parties].sort((a, b) =>
+			data.resultsVisible
+				? (data.votesByParty[b.id] || 0) - (data.votesByParty[a.id] || 0)
+				: a.name.localeCompare(b.name)
+		)
 	);
+
+	// When the countdown runs out, fetch the results without a manual reload.
+	$effect(() => {
+		if (hasEnded && !data.resultsVisible) invalidateAll();
+	});
 </script>
 
 <svelte:head>
 	<title>{`Election · ${data.state.name} · PsyOps`}</title>
 </svelte:head>
-
 
 <PageContainer maxWidth="5xl">
 	<!-- Hero -->
@@ -193,7 +204,9 @@
 	{:else if canVote}
 		<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm p-4 text-center">
 			<p class="text-sm text-[#e3cbfb]">
-				{data.election.isInaugural ? "Cast your vote in the inaugural election" : "Select a party, then confirm your vote below"}
+				{data.election.isInaugural
+					? "Cast your vote in the inaugural election"
+					: "Select a party, then confirm your vote below"}
 				— your choice is final once confirmed.
 			</p>
 		</div>
@@ -205,7 +218,9 @@
 			<FluentVote20Filled class="size-4 text-[#c08cf0] shrink-0" />
 			<div class="min-w-0">
 				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Votes</p>
-				<p class="text-sm sm:text-xl font-bold text-[#f5efd8] font-mono truncate">{data.totalVotes.toLocaleString()}</p>
+				<p class="text-sm sm:text-xl font-bold text-[#f5efd8] font-mono truncate">
+					{data.resultsVisible ? (data.totalVotes ?? 0).toLocaleString() : "Secret"}
+				</p>
 			</div>
 		</div>
 		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
@@ -315,7 +330,7 @@
 									<h3
 										class="text-base font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2"
 									>
-										{#if hasStarted && index < 3}
+										{#if data.resultsVisible && index < 3}
 											<span
 												class="shrink-0 size-4 rounded-full flex items-center justify-center font-bold text-[10px] {index ===
 												0
@@ -330,7 +345,7 @@
 										{party.name}
 									</h3>
 								</a>
-								{#if hasStarted}
+								{#if data.resultsVisible}
 									<div class="text-sm font-mono text-[#a8a083] mt-0.5">{votes} votes · {percentage.toFixed(1)}%</div>
 								{/if}
 							</div>
@@ -343,7 +358,7 @@
 									<h3
 										class="text-xl font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2 truncate"
 									>
-										{#if hasStarted && index < 3}
+										{#if data.resultsVisible && index < 3}
 											<span
 												class="shrink-0 size-5 rounded-full flex items-center justify-center font-bold text-[10px] {index ===
 												0
@@ -358,7 +373,7 @@
 										{party.name}
 									</h3>
 								</a>
-								{#if hasStarted}
+								{#if data.resultsVisible}
 									<div class="text-right shrink-0">
 										<div class="text-2xl font-bold text-[#f5efd8] font-mono">{votes}</div>
 										<div class="text-xs text-[#a8a083] font-mono">{percentage.toFixed(1)}%</div>
@@ -390,7 +405,11 @@
 										<span class="text-xs sm:text-sm">{party.leader.name}</span>
 									</a>
 								{/if}
-								<span class="text-xs sm:text-sm flex items-center gap-1.5 {hasEnoughMembers ? 'text-[#a8a083]' : 'text-red-400'}">
+								<span
+									class="text-xs sm:text-sm flex items-center gap-1.5 {hasEnoughMembers
+										? 'text-[#a8a083]'
+										: 'text-red-400'}"
+								>
 									<FluentPeople20Filled class="size-3.5" />
 									{party.memberCount}
 									{#if !hasEnoughMembers}
@@ -400,7 +419,7 @@
 							</div>
 
 							<!-- Vote Bar -->
-							{#if hasStarted && data.totalVotes > 0}
+							{#if data.resultsVisible && data.totalVotes}
 								<div class="w-full bg-[#0f120c] rounded-full h-2 overflow-hidden">
 									<div
 										class="h-full rounded-full transition-all duration-700 ease-out"

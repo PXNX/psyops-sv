@@ -43,7 +43,13 @@
 				<!-- Bloc Logo -->
 				{#if data.bloc.logo}
 					<div class="size-20 rounded-full overflow-hidden bg-[#1a1f15] shrink-0">
-						<img loading="lazy" decoding="async" src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
+						<img
+							loading="lazy"
+							decoding="async"
+							src={data.bloc.logo}
+							alt={data.bloc.name}
+							class="w-full h-full object-cover"
+						/>
 					</div>
 				{:else}
 					<div
@@ -181,7 +187,9 @@
 										placeholderIcon={FluentPerson20Filled}
 										placeholderGradient="from-[#2369b5] to-[#2369b5]"
 										title={candidate.name}
-										subtitle="{candidate.votes} vote{candidate.votes === 1 ? '' : 's'}{isMyVote ? ' • your vote' : ''}"
+										subtitle={isMyVote
+											? "Your vote · results when voting closes"
+											: "Votes are secret until voting closes"}
 										hoverColor="yellow"
 									/>
 									{#if data.canVoteForBlocLeader}

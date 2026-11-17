@@ -138,12 +138,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const canVote = userResidence?.stateId === parseInt(params.id) && isActive;
 
+	// Results stay secret until the election is over: counts are not even sent
+	// to the browser before then (hiding them only in the UI would still leak).
+	const resultsVisible = hasEnded;
 	const votesByParty: Record<number, number> = {};
-	processedParties.forEach((party) => {
-		votesByParty[party.id] = allVotes.filter((v) => v.partyId === party.id).length;
-	});
-
-	const totalVotes = allVotes.length;
+	if (resultsVisible) {
+		processedParties.forEach((party) => {
+			votesByParty[party.id] = allVotes.filter((v) => v.partyId === party.id).length;
+		});
+	}
+	const totalVotes = resultsVisible ? allVotes.length : null;
 
 	return {
 		state: {
@@ -159,7 +163,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		userResidence: userResidence?.stateId === parseInt(params.id),
 		userVote: userVote?.partyId || null,
 		votesByParty,
-		totalVotes
+		totalVotes,
+		resultsVisible
 	};
 };
 

@@ -136,7 +136,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	const isLeader = locals.account?.id === leaderRow?.userId;
 
-	let candidates: Array<{ userId: string; name: string; logo: string | null; nominatedAt: Date; votes: number }> = [];
+	// No vote counts here: this page only shows an election that is still
+	// running, and results stay secret until it is over.
+	let candidates: Array<{ userId: string; name: string; logo: string | null; nominatedAt: Date }> = [];
 	let myBlocLeaderVote: string | null = null;
 
 	// Data for the "Edit Bloc" bottom sheet — only needed when the edit trigger is shown (bloc leader).
@@ -218,17 +220,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		(async () => {
 			if (!currentElection) return;
 
-			const [candidateRows, voteCountRows, [voteRow]] = await Promise.all([
+			const [candidateRows, [voteRow]] = await Promise.all([
 				db.query.blocLeaderCandidates.findMany({
 					where: eq(blocLeaderCandidates.electionId, currentElection.id),
 					with: { candidate: { with: { profile: true } } },
 					orderBy: (t, { asc }) => asc(t.nominatedAt)
 				}),
-				db
-					.select({ candidateUserId: blocLeaderVotes.candidateUserId, count: sql<number>`count(*)::int` })
-					.from(blocLeaderVotes)
-					.where(eq(blocLeaderVotes.electionId, currentElection.id))
-					.groupBy(blocLeaderVotes.candidateUserId),
 				locals.account
 					? db
 							.select({ candidateUserId: blocLeaderVotes.candidateUserId })
@@ -239,15 +236,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 							.limit(1)
 					: []
 			]);
-			const voteCounts = Object.fromEntries(voteCountRows.map((v) => [v.candidateUserId, v.count]));
 
 			candidates = await Promise.all(
 				candidateRows.map(async (c) => ({
 					userId: c.candidateUserId,
 					name: c.candidate.profile?.name || "Anonymous",
 					logo: await getLogoUrl(c.candidate.profile?.logo),
-					nominatedAt: c.nominatedAt,
-					votes: voteCounts[c.candidateUserId] || 0
+					nominatedAt: c.nominatedAt
 				}))
 			);
 
