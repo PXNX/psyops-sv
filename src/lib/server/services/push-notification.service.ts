@@ -1,5 +1,6 @@
 // src/lib/server/services/push-notification.service.ts
-import webpush from "web-push";
+// web-push 4 is ESM-only with named exports (no default export).
+import * as webpush from "web-push";
 import { db } from "#lib/server/db.js";
 import {
 	VAPID_PUBLIC_KEY as RAW_VAPID_PUBLIC_KEY,
