@@ -162,7 +162,8 @@
 							Leadership Election — Voting Open
 						</span>
 						<span class="text-[10px] text-[#a8a083] font-mono">
-							Ends {formatDateTime(data.election.votingEndsAt)}
+							{data.blocLeaderVotesCast.toLocaleString()} vote{data.blocLeaderVotesCast === 1 ? "" : "s"} cast · Ends
+							{formatDateTime(data.election.votingEndsAt)}
 						</span>
 					</div>
 

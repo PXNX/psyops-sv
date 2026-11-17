@@ -73,7 +73,7 @@
 	const countdown = $derived(getCountdown());
 
 	function getVotePercentage(partyId: string) {
-		if (!data.totalVotes) return 0;
+		if (!data.resultsVisible || !data.totalVotes) return 0;
 		return ((data.votesByParty[partyId] || 0) / data.totalVotes) * 100;
 	}
 
@@ -219,7 +219,7 @@
 			<div class="min-w-0">
 				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Votes</p>
 				<p class="text-sm sm:text-xl font-bold text-[#f5efd8] font-mono truncate">
-					{data.resultsVisible ? (data.totalVotes ?? 0).toLocaleString() : "Secret"}
+					{data.totalVotes.toLocaleString()}
 				</p>
 			</div>
 		</div>

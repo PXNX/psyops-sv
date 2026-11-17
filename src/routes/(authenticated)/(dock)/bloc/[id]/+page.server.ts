@@ -140,6 +140,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// running, and results stay secret until it is over.
 	let candidates: Array<{ userId: string; name: string; logo: string | null; nominatedAt: Date }> = [];
 	let myBlocLeaderVote: string | null = null;
+	let blocLeaderVotesCast = 0;
 
 	// Data for the "Edit Bloc" bottom sheet — only needed when the edit trigger is shown (bloc leader).
 	const editFormPromise = isLeader
@@ -220,12 +221,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		(async () => {
 			if (!currentElection) return;
 
-			const [candidateRows, [voteRow]] = await Promise.all([
+			const [candidateRows, [{ total }], [voteRow]] = await Promise.all([
 				db.query.blocLeaderCandidates.findMany({
 					where: eq(blocLeaderCandidates.electionId, currentElection.id),
 					with: { candidate: { with: { profile: true } } },
 					orderBy: (t, { asc }) => asc(t.nominatedAt)
 				}),
+				// Turnout only; who got how many stays secret until voting closes.
+				db
+					.select({ total: sql<number>`count(*)::int` })
+					.from(blocLeaderVotes)
+					.where(eq(blocLeaderVotes.electionId, currentElection.id)),
 				locals.account
 					? db
 							.select({ candidateUserId: blocLeaderVotes.candidateUserId })
@@ -245,6 +251,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					nominatedAt: c.nominatedAt
 				}))
 			);
+
+			blocLeaderVotesCast = total;
 
 			if (locals.account) {
 				myBlocLeaderVote = voteRow?.candidateUserId ?? null;
@@ -385,6 +393,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: null,
 		candidates,
 		myBlocLeaderVote,
+		blocLeaderVotesCast,
 		canVoteForBlocLeader: isMember && currentElection?.status === "active",
 		isMemberPresident: isMember,
 		userState,
