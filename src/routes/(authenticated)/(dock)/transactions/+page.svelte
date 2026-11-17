@@ -160,7 +160,8 @@
 
 <PageContainer maxWidth="4xl">
 	<!-- Header -->
-	<PageHeader documentTitle={false}
+	<PageHeader
+		documentTitle={false}
 		title="Transactions"
 		subtitle="Your financial activity over the last 30 days"
 		icon={FluentArrowTrendingLines20Filled}
@@ -302,7 +303,9 @@
 										<!-- Left: Avatar + Details -->
 										<div class="flex items-center gap-3 flex-1 min-w-0">
 											{#if tx.entity.avatarUrl}
-												<img loading="lazy" decoding="async"
+												<img
+													loading="lazy"
+													decoding="async"
 													src={tx.entity.avatarUrl}
 													alt={tx.entity.name || ""}
 													class="size-10 rounded-full object-cover shrink-0"

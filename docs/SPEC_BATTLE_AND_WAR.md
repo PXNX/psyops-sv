@@ -16,20 +16,20 @@ Wars are declared between **states** (or their **blocs**). Within a war, individ
 
 A war is a conflict between two states (and optionally their blocs).
 
-| Field            | Type          | Notes                               |
-| ---------------- | ------------- | ----------------------------------- |
-| `id`             | int PK        |                                     |
-| `attackerId`     | FK → states   | The state that declared war         |
-| `defenderId`     | FK → states   | The target state                    |
-| `attackerBlocId` | FK → blocs    | Optional — if attacker is in a bloc |
-| `defenderBlocId` | FK → blocs    | Optional — if defender is in a bloc |
-| `declaredBy`     | FK → accounts | The president who declared it       |
-| `status`         | enum          | `active`, `ended`                   |
-| `surrenderedBy`  | FK → states   | Which state surrendered (if any)    |
-| `exhaustion`     | int           | 0–100 war weariness, accrued hourly |
+| Field            | Type          | Notes                                                  |
+| ---------------- | ------------- | ------------------------------------------------------ |
+| `id`             | int PK        |                                                        |
+| `attackerId`     | FK → states   | The state that declared war                            |
+| `defenderId`     | FK → states   | The target state                                       |
+| `attackerBlocId` | FK → blocs    | Optional — if attacker is in a bloc                    |
+| `defenderBlocId` | FK → blocs    | Optional — if defender is in a bloc                    |
+| `declaredBy`     | FK → accounts | The president who declared it                          |
+| `status`         | enum          | `active`, `ended`                                      |
+| `surrenderedBy`  | FK → states   | Which state surrendered (if any)                       |
+| `exhaustion`     | int           | 0–100 war weariness, accrued hourly                    |
 | `endedReason`    | enum          | `exhaustion`, `stalemate`, `capitulation`, `surrender` |
-| `declaredAt`     | timestamp     |                                     |
-| `endedAt`        | timestamp     | Null while active                   |
+| `declaredAt`     | timestamp     |                                                        |
+| `endedAt`        | timestamp     | Null while active                                      |
 
 **Rules:**
 
@@ -57,10 +57,10 @@ Exhaustion accrues at `WAR_CONFIG.EXHAUSTION_PER_HOUR` (0.5) per hour of active
 war and is shown as a bar on the war page. Ended wars record `endedReason` and
 notify the citizens of both states.
 
-| Field         | Type   | Notes                                     |
-| ------------- | ------ | ----------------------------------------- |
-| `exhaustion`  | int    | 0–100, accrued hourly                     |
-| `endedReason` | enum   | `exhaustion`, `stalemate`, `capitulation`, `surrender` |
+| Field         | Type | Notes                                                  |
+| ------------- | ---- | ------------------------------------------------------ |
+| `exhaustion`  | int  | 0–100, accrued hourly                                  |
+| `endedReason` | enum | `exhaustion`, `stalemate`, `capitulation`, `surrender` |
 
 ### Battle
 

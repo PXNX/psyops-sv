@@ -12,7 +12,12 @@
 	const { data } = $props();
 
 	const typeMeta = {
-		system: { label: "System Broadcast", icon: FluentMegaphone20Filled, accent: "border-red-500", text: "text-red-300" },
+		system: {
+			label: "System Broadcast",
+			icon: FluentMegaphone20Filled,
+			accent: "border-red-500",
+			text: "text-red-300"
+		},
 		state: {
 			label: "State Broadcast",
 			icon: FluentBuildingGovernment20Filled,
@@ -25,7 +30,11 @@
 </script>
 
 <PageContainer maxWidth="3xl">
-	<PageHeader title="Broadcast History" icon={FluentMegaphone20Filled} subtitle="Past orders from your chain of command" />
+	<PageHeader
+		title="Broadcast History"
+		icon={FluentMegaphone20Filled}
+		subtitle="Past orders from your chain of command"
+	/>
 
 	{#if data.broadcasts.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
@@ -36,7 +45,11 @@
 		<div class="space-y-3">
 			{#each data.broadcasts as broadcast (broadcast.id)}
 				{@const meta = typeMeta[broadcast.broadcastType]}
-				<div class="relative overflow-hidden rounded-sm border-l-4 {meta.accent} bg-[#141810] p-5 {broadcast.isActive ? '' : 'opacity-70'}">
+				<div
+					class="relative overflow-hidden rounded-sm border-l-4 {meta.accent} bg-[#141810] p-5 {broadcast.isActive
+						? ''
+						: 'opacity-70'}"
+				>
 					<div class="flex items-center justify-between gap-3 mb-2">
 						<div class="flex items-center gap-2">
 							<meta.icon class="size-4 {meta.text}" />

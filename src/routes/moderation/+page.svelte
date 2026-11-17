@@ -162,7 +162,13 @@
 					>
 						<div class="flex items-start gap-3">
 							{#if report.messageSenderLogo}
-								<img loading="lazy" decoding="async" src={report.messageSenderLogo} alt={report.messageSenderName} class="size-10 rounded-full" />
+								<img
+									loading="lazy"
+									decoding="async"
+									src={report.messageSenderLogo}
+									alt={report.messageSenderName}
+									class="size-10 rounded-full"
+								/>
 							{:else}
 								<div class="size-10 rounded-full bg-[#1a1f15] flex items-center justify-center">
 									<FluentImageOff20Filled class="size-5 text-[#a8a083]" />
@@ -207,7 +213,9 @@
 					<div class="mb-6 p-4 panel-muted rounded-sm">
 						<div class="flex items-start gap-3 mb-3">
 							{#if selectedReport.messageSenderLogo}
-								<img loading="lazy" decoding="async"
+								<img
+									loading="lazy"
+									decoding="async"
 									src={selectedReport.messageSenderLogo}
 									alt={selectedReport.messageSenderName}
 									class="size-12 rounded-full"

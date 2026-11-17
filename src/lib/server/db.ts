@@ -34,8 +34,7 @@ function createRealDb(): Database {
 
 // The condition is spelled out (not `isMockMode`) so the bundler can fold it
 // to `false` in production builds and drop the mock branch entirely.
-export const db: Database =
-	import.meta.env.DEV && USE_MOCK === "true" ? await createMockDb() : createRealDb();
+export const db: Database = import.meta.env.DEV && USE_MOCK === "true" ? await createMockDb() : createRealDb();
 
 // In-memory event emitter for real-time notifications
 class MessageNotifier {

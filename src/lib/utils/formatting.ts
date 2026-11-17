@@ -54,7 +54,10 @@ export function getDurationText(start: Date | string, end?: Date | string | null
 
 /** A region's name, in the current language unless `locale` is given. */
 export const getRegionName = (regionId: number, locale?: "en" | "de"): string => {
-	const messages = m as unknown as Record<string, ((inputs?: object, options?: { locale?: string }) => string) | undefined>;
+	const messages = m as unknown as Record<
+		string,
+		((inputs?: object, options?: { locale?: string }) => string) | undefined
+	>;
 	return messages[`region_${regionId}`]?.({}, locale ? { locale } : undefined) ?? `Region ${regionId}`;
 };
 

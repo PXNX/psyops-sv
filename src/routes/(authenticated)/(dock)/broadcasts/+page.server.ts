@@ -29,7 +29,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const conditions = [eq(broadcasts.broadcastType, "system")];
 	if (stateId) conditions.push(and(eq(broadcasts.broadcastType, "state"), eq(broadcasts.stateId, stateId))!);
-	if (membership) conditions.push(and(eq(broadcasts.broadcastType, "party"), eq(broadcasts.partyId, membership.partyId))!);
+	if (membership)
+		conditions.push(and(eq(broadcasts.broadcastType, "party"), eq(broadcasts.partyId, membership.partyId))!);
 	if (blocId) conditions.push(and(eq(broadcasts.broadcastType, "bloc"), eq(broadcasts.blocId, blocId))!);
 
 	const history = await db.query.broadcasts.findMany({

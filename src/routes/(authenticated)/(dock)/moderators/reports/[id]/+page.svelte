@@ -114,7 +114,12 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Header -->
-	<PageHeader documentTitle={false} title="Report #{data.report.id}" backHref="/moderators/reports" backLabel="My Reports" />
+	<PageHeader
+		documentTitle={false}
+		title="Report #{data.report.id}"
+		backHref="/moderators/reports"
+		backLabel="My Reports"
+	/>
 
 	<!-- Status Card -->
 	<div class="panel rounded-sm p-5">

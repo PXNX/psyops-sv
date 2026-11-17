@@ -89,7 +89,6 @@
 	<title>{"About · PsyOps"}</title>
 </svelte:head>
 
-
 <PageContainer maxWidth="4xl" class="py-12 space-y-10">
 	<!-- Header -->
 	<div class="flex flex-col items-center space-y-5">

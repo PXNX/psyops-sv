@@ -33,7 +33,10 @@ function toUrl(file: string): string {
 	const segments = relative(ROUTES_DIR, file).split(sep).slice(0, -1);
 	const routeId = "/" + segments.filter((s) => !/^\(.*\)$/.test(s)).join("/");
 	const routeParams = Object.entries(PARAMS_BY_ROUTE).find(([prefix]) => routeId.startsWith(prefix))?.[1] ?? {};
-	return routeId.replace(/\[(?:\.\.\.)?(\w+)(?:=\w+)?\]/g, (_, name: string) => routeParams[name] ?? PARAMS[name] ?? "1");
+	return routeId.replace(
+		/\[(?:\.\.\.)?(\w+)(?:=\w+)?\]/g,
+		(_, name: string) => routeParams[name] ?? PARAMS[name] ?? "1"
+	);
 }
 
 async function waitFor(url: string, timeoutMs: number) {

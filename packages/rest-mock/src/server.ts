@@ -290,13 +290,11 @@ app.get("/api/battles/:id", (c) => {
 app.get("/api/newspapers", (c) => c.json(store.getAll("newspapers")));
 app.get("/api/articles", (c) =>
 	c.json(
-		store
-			.getAll("articles")
-			.map((a) => ({
-				...a,
-				author: store.findById("accounts", a.authorId as string),
-				newspaper: store.findById("newspapers", a.newspaperId as number)
-			}))
+		store.getAll("articles").map((a) => ({
+			...a,
+			author: store.findById("accounts", a.authorId as string),
+			newspaper: store.findById("newspapers", a.newspaperId as number)
+		}))
 	)
 );
 

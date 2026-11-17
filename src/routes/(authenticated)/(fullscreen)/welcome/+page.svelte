@@ -55,7 +55,6 @@
 	<title>{"Welcome · PsyOps"}</title>
 </svelte:head>
 
-
 <div class="max-w-4xl w-full space-y-8" in:fade={{ duration: 300 }}>
 	<!-- Logo & Title -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>

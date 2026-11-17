@@ -18,7 +18,6 @@
 	<title>{"Sign in · PsyOps"}</title>
 </svelte:head>
 
-
 <main class="relative flex flex-col min-h-dvh justify-center items-center w-full p-4 pb-20">
 	<!-- Main Content -->
 	<div class="relative z-10 flex flex-col items-center max-w-md w-full space-y-8">

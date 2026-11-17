@@ -281,13 +281,25 @@
 						{#if croppedDataUrl}
 							<div class="shrink-0">
 								<div class="h-24 w-24 overflow-hidden rounded-sm">
-									<img loading="lazy" decoding="async" src={croppedDataUrl} alt="Preview" class="h-full w-full object-cover" />
+									<img
+										loading="lazy"
+										decoding="async"
+										src={croppedDataUrl}
+										alt="Preview"
+										class="h-full w-full object-cover"
+									/>
 								</div>
 							</div>
 						{:else if previewUrl}
 							<div class="shrink-0">
 								<div class="h-24 w-24 overflow-hidden rounded-sm">
-									<img loading="lazy" decoding="async" src={previewUrl} alt="Preview" class="h-full w-full object-cover" />
+									<img
+										loading="lazy"
+										decoding="async"
+										src={previewUrl}
+										alt="Preview"
+										class="h-full w-full object-cover"
+									/>
 								</div>
 							</div>
 						{:else}

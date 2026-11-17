@@ -16,57 +16,60 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// State (presidency → broadcast), party (leadership → broadcast) and bloc
 	// (leadership → broadcast) chains are independent
-	const [[presidency, activeStateBroadcast], [partyLeadership, activePartyBroadcast], [blocLeadership, activeBlocBroadcast]] =
-		await Promise.all([
-			(async () => {
-				const presidency = await db.query.presidents.findFirst({
-					where: eq(presidents.userId, account.id)
-				});
-				if (!presidency) return [presidency, null] as const;
-				const broadcast = await db.query.broadcasts.findFirst({
-					where: and(
-						eq(broadcasts.broadcastType, "state"),
-						eq(broadcasts.stateId, presidency.stateId),
-						eq(broadcasts.isActive, true)
-					),
-					orderBy: [desc(broadcasts.createdAt)],
-					with: { issuer: { with: { profile: true } } }
-				});
-				return [presidency, broadcast] as const;
-			})(),
-			(async () => {
-				const partyLeadership = await db.query.partyMembers.findFirst({
-					where: and(eq(partyMembers.userId, account.id), eq(partyMembers.role, "leader"))
-				});
-				if (!partyLeadership) return [partyLeadership, null] as const;
-				const broadcast = await db.query.broadcasts.findFirst({
-					where: and(
-						eq(broadcasts.broadcastType, "party"),
-						eq(broadcasts.partyId, partyLeadership.partyId),
-						eq(broadcasts.isActive, true)
-					),
-					orderBy: [desc(broadcasts.createdAt)],
-					with: { issuer: { with: { profile: true } } }
-				});
-				return [partyLeadership, broadcast] as const;
-			})(),
-			(async () => {
-				const blocLeadership = await db.query.blocLeaders.findFirst({
-					where: eq(blocLeaders.userId, account.id)
-				});
-				if (!blocLeadership) return [blocLeadership, null] as const;
-				const broadcast = await db.query.broadcasts.findFirst({
-					where: and(
-						eq(broadcasts.broadcastType, "bloc"),
-						eq(broadcasts.blocId, blocLeadership.blocId),
-						eq(broadcasts.isActive, true)
-					),
-					orderBy: [desc(broadcasts.createdAt)],
-					with: { issuer: { with: { profile: true } } }
-				});
-				return [blocLeadership, broadcast] as const;
-			})()
-		]);
+	const [
+		[presidency, activeStateBroadcast],
+		[partyLeadership, activePartyBroadcast],
+		[blocLeadership, activeBlocBroadcast]
+	] = await Promise.all([
+		(async () => {
+			const presidency = await db.query.presidents.findFirst({
+				where: eq(presidents.userId, account.id)
+			});
+			if (!presidency) return [presidency, null] as const;
+			const broadcast = await db.query.broadcasts.findFirst({
+				where: and(
+					eq(broadcasts.broadcastType, "state"),
+					eq(broadcasts.stateId, presidency.stateId),
+					eq(broadcasts.isActive, true)
+				),
+				orderBy: [desc(broadcasts.createdAt)],
+				with: { issuer: { with: { profile: true } } }
+			});
+			return [presidency, broadcast] as const;
+		})(),
+		(async () => {
+			const partyLeadership = await db.query.partyMembers.findFirst({
+				where: and(eq(partyMembers.userId, account.id), eq(partyMembers.role, "leader"))
+			});
+			if (!partyLeadership) return [partyLeadership, null] as const;
+			const broadcast = await db.query.broadcasts.findFirst({
+				where: and(
+					eq(broadcasts.broadcastType, "party"),
+					eq(broadcasts.partyId, partyLeadership.partyId),
+					eq(broadcasts.isActive, true)
+				),
+				orderBy: [desc(broadcasts.createdAt)],
+				with: { issuer: { with: { profile: true } } }
+			});
+			return [partyLeadership, broadcast] as const;
+		})(),
+		(async () => {
+			const blocLeadership = await db.query.blocLeaders.findFirst({
+				where: eq(blocLeaders.userId, account.id)
+			});
+			if (!blocLeadership) return [blocLeadership, null] as const;
+			const broadcast = await db.query.broadcasts.findFirst({
+				where: and(
+					eq(broadcasts.broadcastType, "bloc"),
+					eq(broadcasts.blocId, blocLeadership.blocId),
+					eq(broadcasts.isActive, true)
+				),
+				orderBy: [desc(broadcasts.createdAt)],
+				with: { issuer: { with: { profile: true } } }
+			});
+			return [blocLeadership, broadcast] as const;
+		})()
+	]);
 
 	return {
 		canBroadcastState: !!presidency,

@@ -79,4 +79,3 @@
 		<Button variant="ghost" icon={FluentEmojiLeftArrow} href="/" class="mt-4 btn-wide">Go to dashboard</Button>
 	{/if}
 </main>
-

@@ -55,6 +55,8 @@ describe("mineYield", () => {
 
 describe("estimatedShiftsLeft", () => {
 	it("is shorter under harsher laws", () => {
-		expect(estimatedShiftsLeft(10, "conservation", 5000, 5000)).toBeGreaterThan(estimatedShiftsLeft(10, "unrestricted", 5000, 5000));
+		expect(estimatedShiftsLeft(10, "conservation", 5000, 5000)).toBeGreaterThan(
+			estimatedShiftsLeft(10, "unrestricted", 5000, 5000)
+		);
 	});
 });

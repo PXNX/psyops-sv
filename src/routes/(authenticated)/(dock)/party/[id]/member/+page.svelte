@@ -60,7 +60,13 @@
 					style="background-color: {data.party.color}"
 				>
 					{#if data.party.logoUrl}
-						<img loading="lazy" decoding="async" src={data.party.logoUrl} alt={data.party.name} class="size-10 object-contain" />
+						<img
+							loading="lazy"
+							decoding="async"
+							src={data.party.logoUrl}
+							alt={data.party.name}
+							class="size-10 object-contain"
+						/>
 					{:else}
 						<FluentShield20Filled class="size-6 text-[#f5efd8]" />
 					{/if}

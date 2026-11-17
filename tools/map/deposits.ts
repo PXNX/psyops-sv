@@ -96,7 +96,8 @@ export function generateDeposits(regions: { id: number; latitude: number; longit
 			const rand = rng(r.id, resource);
 			const { min, max } = BASE[resource];
 			const inBasin = resource !== "wood" && BASINS[resource].some((b) => inBox(r.latitude, r.longitude, b));
-			const chance = resource === "wood" ? forestChance(r.latitude, r.longitude) : inBasin ? BASIN_CHANCE : BASE[resource].chance;
+			const chance =
+				resource === "wood" ? forestChance(r.latitude, r.longitude) : inBasin ? BASIN_CHANCE : BASE[resource].chance;
 			if (rand() >= chance) continue;
 			// Skewed towards small deposits; a few large ones.
 			let capacity = min + (max - min) * rand() ** 2;

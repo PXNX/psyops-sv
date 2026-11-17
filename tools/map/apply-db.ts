@@ -67,7 +67,9 @@ try {
 	if (orphans.length) console.log(`  ⚠ in the database but not on the map (left untouched): ${orphans.join(", ")}`);
 	console.log(`Borders: replace ${borderCount} with ${borders.length}`);
 	const existingDeposits = new Set(
-		((await sql`select region_id, resource_type from region_deposits`) as any[]).map((d) => `${d.region_id}:${d.resource_type}`)
+		((await sql`select region_id, resource_type from region_deposits`) as any[]).map(
+			(d) => `${d.region_id}:${d.resource_type}`
+		)
 	);
 	const newDeposits = deposits.filter((d) => !existingDeposits.has(`${d.regionId}:${d.resourceType}`));
 	console.log(`Deposits: add ${newDeposits.length} (${existingDeposits.size} already exist and are left as they are)`);

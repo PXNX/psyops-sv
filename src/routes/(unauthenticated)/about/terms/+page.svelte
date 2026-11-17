@@ -13,7 +13,6 @@
 	<title>{"Terms of Service · PsyOps"}</title>
 </svelte:head>
 
-
 <PageContainer maxWidth="4xl" class="py-12">
 	<div class="space-y-8">
 		<!-- Header -->

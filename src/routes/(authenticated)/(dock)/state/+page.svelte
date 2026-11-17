@@ -59,7 +59,8 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader documentTitle={false}
+	<PageHeader
+		documentTitle={false}
 		title="All States"
 		subtitle="{data.regions.length} {data.regions.length === 1 ? 'state' : 'states'} available"
 	>
@@ -134,7 +135,13 @@
 					<div class="flex items-center gap-3 mb-3">
 						{#if state.logo}
 							<div class="size-12 rounded-sm overflow-hidden bg-[#1a1f15] shrink-0">
-								<img loading="lazy" decoding="async" src={state.logo} alt={state.name} class="w-full h-full object-cover" />
+								<img
+									loading="lazy"
+									decoding="async"
+									src={state.logo}
+									alt={state.name}
+									class="w-full h-full object-cover"
+								/>
 							</div>
 						{:else}
 							<div

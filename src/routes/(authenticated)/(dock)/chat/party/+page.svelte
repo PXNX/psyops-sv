@@ -200,7 +200,6 @@
 	<title>{`${data.party?.name ?? "Party"} chat · PsyOps`}</title>
 </svelte:head>
 
-
 <ReportModal
 	bind:show={showReportModal}
 	targetType="account"
@@ -251,7 +250,13 @@
 
 				<a href="/party/{data.party.id}" class="group flex items-center gap-2 md:gap-3 flex-1 min-w-0">
 					{#if data.party.logo}
-						<img loading="lazy" decoding="async" src={data.party.logo} alt={data.party.name} class="size-11 md:size-10 rounded-full shrink-0" />
+						<img
+							loading="lazy"
+							decoding="async"
+							src={data.party.logo}
+							alt={data.party.name}
+							class="size-11 md:size-10 rounded-full shrink-0"
+						/>
 					{:else}
 						<div
 							class="size-11 md:size-10 rounded-full bg-[#3f8a2a]/18 border border-[#6fd14a]/30 flex items-center justify-center shrink-0"
@@ -314,7 +319,13 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img loading="lazy" decoding="async" src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
+															<img
+																loading="lazy"
+																decoding="async"
+																src={part.content}
+																alt="Shared image"
+																class="max-w-full rounded-sm"
+															/>
 														</div>
 													{:else}
 														<a
@@ -344,7 +355,13 @@
 								<div class="chat-image avatar hidden md:block">
 									<a href="/user/{group.senderId}" class="w-10 rounded-full">
 										{#if group.senderLogo && settings.loadImages}
-											<img loading="lazy" decoding="async" src={group.senderLogo} alt={group.senderName || "User"} class="" />
+											<img
+												loading="lazy"
+												decoding="async"
+												src={group.senderLogo}
+												alt={group.senderName || "User"}
+												class=""
+											/>
 										{:else}
 											<div class="w-full h-full bg-[#1a1f15] flex items-center justify-center rounded-full">
 												<FluentImageOff20Filled class="size-5 text-[#a8a083]" />
@@ -375,7 +392,13 @@
 													{#if part.type === "url"}
 														{#if isImageUrl(part.content)}
 															<div class="my-2">
-																<img loading="lazy" decoding="async" src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
+																<img
+																	loading="lazy"
+																	decoding="async"
+																	src={part.content}
+																	alt="Shared image"
+																	class="max-w-full rounded-sm"
+																/>
 															</div>
 														{:else}
 															<a

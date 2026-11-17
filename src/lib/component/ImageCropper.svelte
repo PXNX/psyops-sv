@@ -276,7 +276,14 @@
 		<h3 class="font-bold text-lg mb-4 text-[#f5efd8]">{title}</h3>
 
 		<div class="relative bg-[#1a1f15] rounded-sm overflow-hidden mb-4" bind:this={container}>
-			<img loading="lazy" decoding="async" bind:this={img} src={imageUrl} alt="Crop preview" class="w-full h-auto block pointer-events-none" />
+			<img
+				loading="lazy"
+				decoding="async"
+				bind:this={img}
+				src={imageUrl}
+				alt="Crop preview"
+				class="w-full h-auto block pointer-events-none"
+			/>
 			<canvas
 				bind:this={canvas}
 				class="absolute top-0 left-0 cursor-move"

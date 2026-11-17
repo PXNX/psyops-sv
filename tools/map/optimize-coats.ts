@@ -77,7 +77,8 @@ async function main() {
 		} else {
 			if (original !== raw.toString("utf8")) writeFileSync(path, original); // still fix the encoding
 			after += Buffer.byteLength(original);
-			if (diff > MAX_PIXEL_DIFF) kept.push(`${file} (looked different: ${diff === Infinity ? "unrenderable" : diff.toFixed(1)})`);
+			if (diff > MAX_PIXEL_DIFF)
+				kept.push(`${file} (looked different: ${diff === Infinity ? "unrenderable" : diff.toFixed(1)})`);
 		}
 	}
 	const mb = (n: number) => (n / 1e6).toFixed(1);

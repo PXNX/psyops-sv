@@ -188,8 +188,7 @@
 						rows="3"
 						placeholder="Describe your newspaper's mission and values..."
 						class="field-control w-full rounded-sm px-3 py-2.5"
-						disabled={$submitting || !canEdit}
-					></textarea>
+						disabled={$submitting || !canEdit}></textarea>
 				</div>
 			</div>
 
@@ -241,7 +240,13 @@
 						{:else}
 							<div class="relative">
 								<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
-									<img loading="lazy" decoding="async" src={previewUrl} alt="Logo preview" class="size-28 object-contain rounded-sm" />
+									<img
+										loading="lazy"
+										decoding="async"
+										src={previewUrl}
+										alt="Logo preview"
+										class="size-28 object-contain rounded-sm"
+									/>
 								</div>
 								<div
 									class="absolute inset-0 flex items-center justify-center bg-[#12150f]/70 opacity-0 transition-opacity group-hover:opacity-100"
@@ -308,7 +313,6 @@
 				<p class="text-sm font-medium">{$message}</p>
 			</div>
 		{/if}
-
 	</div>
 </BottomSheet>
 

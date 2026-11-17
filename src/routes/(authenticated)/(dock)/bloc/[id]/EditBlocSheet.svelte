@@ -212,7 +212,13 @@
 						{:else}
 							<div class="relative">
 								<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
-									<img loading="lazy" decoding="async" src={previewUrl} alt="Bloc logo preview" class="size-24 object-contain rounded-sm" />
+									<img
+										loading="lazy"
+										decoding="async"
+										src={previewUrl}
+										alt="Bloc logo preview"
+										class="size-24 object-contain rounded-sm"
+									/>
 								</div>
 								<div
 									class="absolute inset-0 flex items-center justify-center bg-[#12150f]/60 opacity-0 transition-opacity group-hover:opacity-100"
@@ -295,7 +301,13 @@
 					<div class="flex items-center gap-3">
 						<div class="size-10 rounded-sm flex items-center justify-center" style="background-color: {$form.color}">
 							{#if previewUrl}
-								<img loading="lazy" decoding="async" src={previewUrl} alt="Logo preview" class="size-8 object-contain" />
+								<img
+									loading="lazy"
+									decoding="async"
+									src={previewUrl}
+									alt="Logo preview"
+									class="size-8 object-contain"
+								/>
 							{:else}
 								<FluentFlag20Filled class="size-5 text-[#f5efd8]" />
 							{/if}
@@ -347,8 +359,7 @@
 					rows="4"
 					placeholder="Describe the bloc's purpose, values, and strategic objectives..."
 					class="field-control w-full rounded-sm px-3 py-2.5"
-					disabled={$submitting}
-				></textarea>
+					disabled={$submitting}></textarea>
 			</div>
 
 			<Button

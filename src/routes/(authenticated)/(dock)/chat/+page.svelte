@@ -101,7 +101,9 @@
 			<button onclick={() => goto("/chat/party")} class="w-full panel-interactive rounded-sm p-4 text-left group">
 				<div class="flex items-center gap-3 md:gap-4">
 					{#if data.partyChat.logo}
-						<img loading="lazy" decoding="async"
+						<img
+							loading="lazy"
+							decoding="async"
 							src={data.partyChat.logo}
 							alt={data.partyChat.name}
 							class="size-14 md:size-12 rounded-full flex-shrink-0"
@@ -169,7 +171,9 @@
 					>
 						<div class="flex items-center gap-3 md:gap-4">
 							{#if chat.otherUserLogo && settings.loadImages}
-								<img loading="lazy" decoding="async"
+								<img
+									loading="lazy"
+									decoding="async"
 									src={chat.otherUserLogo}
 									alt={chat.otherUserName}
 									class="size-14 md:size-12 rounded-full flex-shrink-0 {chat.isBlocked ? 'opacity-50' : ''}"

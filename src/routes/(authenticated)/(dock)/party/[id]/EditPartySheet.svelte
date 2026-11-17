@@ -250,8 +250,7 @@
 					rows="6"
 					placeholder="Describe your party's mission, values, and political platform..."
 					class="field-control rounded-sm px-3 py-2.5 w-full"
-					disabled={$submitting || !canEdit}
-				></textarea>
+					disabled={$submitting || !canEdit}></textarea>
 			</EditSection>
 
 			<!-- Cost & Cooldown -->

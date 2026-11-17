@@ -155,7 +155,6 @@
 	<title>{`${data.user.name || "Player"} career · PsyOps`}</title>
 </svelte:head>
 
-
 <PageContainer maxWidth="5xl">
 	<!-- Hero Section -->
 	<div class="panel rounded-sm p-5">
@@ -163,7 +162,13 @@
 			<div class="relative shrink-0">
 				{#if data.user.logo}
 					<div class="size-24 rounded-full overflow-hidden bg-[#1a1f15]">
-						<img loading="lazy" decoding="async" src={data.user.logo} alt={data.user.name || "User logo"} class="w-full h-full object-cover" />
+						<img
+							loading="lazy"
+							decoding="async"
+							src={data.user.logo}
+							alt={data.user.name || "User logo"}
+							class="w-full h-full object-cover"
+						/>
 					</div>
 				{:else}
 					<div class="size-24 rounded-full bg-[#1a1f15] flex items-center justify-center">
@@ -294,7 +299,9 @@
 										class="size-10 rounded-full bg-[#8a4fc0]/15 border border-[#c08cf0]/30 flex items-center justify-center overflow-hidden"
 									>
 										{#if entry.newspaper.newspaperLogo}
-											<img loading="lazy" decoding="async"
+											<img
+												loading="lazy"
+												decoding="async"
 												src={entry.newspaper.newspaperLogo}
 												alt={entry.newspaper.newspaperName}
 												class="w-full h-full object-cover"

@@ -64,8 +64,8 @@ type TelegramHaptics = {
 function haptic(kind: FeedbackKind): void {
 	if (!prefs.haptics || typeof window === "undefined") return;
 	// Telegram Mini App haptics first, then the Vibration API.
-	const telegram = (window as { Telegram?: { WebApp?: { HapticFeedback?: TelegramHaptics } } })
-		.Telegram?.WebApp?.HapticFeedback;
+	const telegram = (window as { Telegram?: { WebApp?: { HapticFeedback?: TelegramHaptics } } }).Telegram?.WebApp
+		?.HapticFeedback;
 	if (telegram) {
 		if (kind === "error") telegram.notificationOccurred("error");
 		else if (kind === "success" || kind === "win") telegram.notificationOccurred("success");

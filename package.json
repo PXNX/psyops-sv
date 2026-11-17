@@ -19,6 +19,7 @@
 		"check:watch": "bun x svelte-kit sync && bun x svelte-check --tsconfig ./tsconfig.json --watch",
 		"lint": "bun x prettier --check .",
 		"format": "bun x prettier --write .",
+		"fmt": "bun x prettier --write .",
 		"i18n": "typesafe-i18n",
 		"test": "bun x rstest",
 		"test:watch": "bun x rstest --watch",
