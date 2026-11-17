@@ -7,6 +7,8 @@ import { validateSessionToken } from "#lib/server/auth.js";
 import { paraglideMiddleware } from "#lib/paraglide/server.js";
 import { themes } from "#lib/themes.js";
 import { isMockMode } from "#lib/server/db.js";
+import { CRON_SECRET, NODE_ENV } from "$app/env/private";
+import { isAllowedCronRequest } from "#lib/server/cron-auth.js";
 import "@valibot/i18n/de/schema";
 
 const bucket = new TokenBucket<string>(100, 1);
@@ -93,6 +95,21 @@ function createRealAuthHandle(): Handle {
 
 const authHandle: Handle = isMockMode ? createMockAuthHandle() : createRealAuthHandle();
 
+// Scheduled jobs change game state: only Vercel's scheduler or an admin may
+// trigger them. Lives in a hook because layout loads never run for endpoints.
+const cronGuardHandle: Handle = async ({ event, resolve }) => {
+	if (event.url.pathname.startsWith("/api/cron/")) {
+		const allowed = isAllowedCronRequest(
+			event.request.headers.get("authorization"),
+			event.locals.account?.role,
+			CRON_SECRET,
+			NODE_ENV
+		);
+		if (!allowed) return new Response("Forbidden", { status: 403 });
+	}
+	return resolve(event);
+};
+
 export const handleError: HandleServerError = async ({ kind, error, event }) => {
 	const requestId = crypto.randomUUID();
 	// Only truly unexpected (kind === "unknown") errors are JS exceptions; app/framework/validation
@@ -167,4 +184,4 @@ const paraglideHandle: Handle = ({ event, resolve }) =>
 		});
 	});
 
-export const handle = sequence(rateLimitHandle, authHandle, paraglideHandle, themesHandle);
+export const handle = sequence(rateLimitHandle, authHandle, cronGuardHandle, paraglideHandle, themesHandle);
