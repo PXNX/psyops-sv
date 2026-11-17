@@ -33,6 +33,7 @@ export const actions: Actions = {
 			return message(form, "You already own a newspaper", { status: 400 });
 		}
 
+		let newspaperId: number;
 		try {
 			let logoFileId: number | null = null;
 
@@ -57,27 +58,20 @@ export const actions: Actions = {
 				logoFileId = fileRecord.id;
 			}
 
-			// Create newspaper
-			const [newspaper] = await db
-				.insert(newspapers)
-				.values({
-					name,
-					logo: logoFileId,
-					background: background || null
-				})
-				.returning();
-
-			// Create journalist relationship (owner)
-			await db.insert(journalists).values({
-				userId: account.id,
-				newspaperId: newspaper.id,
-				rank: "owner"
+			// Newspaper and its owner are created together.
+			newspaperId = await db.transaction(async (tx) => {
+				const [newspaper] = await tx
+					.insert(newspapers)
+					.values({ name, logo: logoFileId, background: background || null })
+					.returning({ id: newspapers.id });
+				await tx.insert(journalists).values({ userId: account.id, newspaperId: newspaper.id, rank: "owner" });
+				return newspaper.id;
 			});
 		} catch (err) {
 			console.error("Create newspaper error:", err);
 			return message(form, "Failed to create newspaper", { status: 500 });
 		}
 
-		redirect(303, `/newspaper/${newspaper.id}`);
+		redirect(303, `/newspaper/${newspaperId}`);
 	}
 };
