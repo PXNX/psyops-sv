@@ -14,6 +14,7 @@ from three committed inputs:
 ```bash
 bun tools/map/build.ts                                   # regenerate everything below
 bun tools/map/fetch-coats.ts                             # coats for regions without one
+bun tools/map/optimize-coats.ts                          # slim all coat SVGs (visually checked)
 DATABASE_URL=... bun tools/map/apply-db.ts               # dry run against a database
 DATABASE_URL=... bun tools/map/apply-db.ts --check       # write, then roll back
 DATABASE_URL=... bun tools/map/apply-db.ts --apply       # write in one transaction
@@ -33,8 +34,13 @@ DATABASE_URL=... bun tools/map/fit-projection.ts         # recalibrate (only if 
 
 `fetch-coats.ts` saves `static/coats/<id>.svg` from Wikimedia Commons via
 Wikidata, only accepting places near the region on the map. It uses the
-place's coat of arms or seal, else that of the province or country it lies in.
-Source, author and licence of every file are kept in `coat-sources.json`.
+place's coat of arms or seal, else that of the province or country it lies in;
+wrong picks can be pinned in `coat-overrides.json`. Source, author and licence
+of every file are kept in `coat-sources.json`.
+
+`optimize-coats.ts` slims the SVGs with svgo and keeps a file's original when
+the optimised version renders even slightly differently (run automatically
+after fetching; `bun tools/map/optimize-coats.ts` redoes all of them).
 
 ## Adding or changing a region
 

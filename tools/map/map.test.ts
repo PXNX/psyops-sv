@@ -60,7 +60,7 @@ describe("map data stays consistent", () => {
 		const en = JSON.parse(readFileSync(`${process.cwd()}/messages/en.json`, "utf8"));
 		expect(registry.regions.filter((r) => !en[`region_${r.id}`]).map((r) => r.id)).toEqual([]);
 		expect(
-			registry.regions.filter((r) => !existsSync(`${process.cwd()}/static/coats/${r.id}.webp`)).map((r) => r.id)
+			registry.regions.filter((r) => !existsSync(`${process.cwd()}/static/coats/${r.id}.svg`)).map((r) => r.id)
 		).toEqual([]);
 	});
 

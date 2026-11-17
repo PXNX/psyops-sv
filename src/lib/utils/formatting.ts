@@ -58,5 +58,5 @@ export const getRegionName = (regionId: number, locale?: "en" | "de"): string =>
 	return messages[`region_${regionId}`]?.({}, locale ? { locale } : undefined) ?? `Region ${regionId}`;
 };
 
-/** URL of a region's coat of arms (a 256px WebP rendered by tools/map/render-coats.ts). */
-export const regionCoatUrl = (regionId: number | string): string => `/coats/${regionId}.webp`;
+/** URL of a region's coat of arms (SVG, from tools/map/fetch-coats.ts). */
+export const regionCoatUrl = (regionId: number | string): string => `/coats/${regionId}.svg`;

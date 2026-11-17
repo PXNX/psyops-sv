@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 // tools/map/fetch-coats.ts: downloads a coat of arms for every region that
-// has none yet, from Wikimedia Commons via Wikidata. Originals go to the
-// git-ignored tools/map/.coat-cache/<id>.svg; render-coats.ts then makes the
-// small static/coats/<id>.webp the app serves (run automatically at the end).
+// has none yet (static/coats/<id>.svg), from Wikimedia Commons via Wikidata.
+// New files are then slimmed down by optimize-coats.ts (run automatically).
 //
 // For each region it searches Wikidata by name and only accepts places whose
 // coordinates are near the region's position on the map, so "Georgia" or
@@ -17,12 +16,12 @@
 //
 //   bun tools/map/fetch-coats.ts            # all regions without a coat
 //   bun tools/map/fetch-coats.ts 812 990    # just these ids (re-fetch)
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync, writeFileSync } from "fs";
+import { toUtf8 } from "./optimize-coats";
 import { haversineKm } from "./projection";
 
 const dir = import.meta.dir;
 const coatsDir = `${dir}/../../static/coats`;
-const cacheDir = `${dir}/.coat-cache`;
 const sourcesPath = `${dir}/coat-sources.json`;
 const UA = "psyops-sv-map-tools/1.0 (https://github.com/PXNX/psyops-sv)";
 const MAX_KM = 600; // a search hit further than this from the region is a different place
@@ -46,13 +45,12 @@ export interface CoatSource {
 }
 
 const regions = JSON.parse(readFileSync(`${dir}/data/regions.json`, "utf8")) as Region[];
-mkdirSync(`${dir}/.coat-cache`, { recursive: true });
 const sources: Record<string, CoatSource> = existsSync(sourcesPath)
 	? JSON.parse(readFileSync(sourcesPath, "utf8"))
 	: {};
 const overrides = JSON.parse(readFileSync(`${dir}/coat-overrides.json`, "utf8")) as Record<string, string>;
 const only = process.argv.slice(2).map(Number).filter(Boolean);
-const todo = regions.filter((r) => (only.length ? only.includes(r.id) : !existsSync(`${coatsDir}/${r.id}.webp`)));
+const todo = regions.filter((r) => (only.length ? only.includes(r.id) : !existsSync(`${coatsDir}/${r.id}.svg`)));
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 async function api(host: string, params: Record<string, string>): Promise<any> {
@@ -182,14 +180,14 @@ async function download(r: Region, file: string): Promise<boolean> {
 	const bytes = Buffer.from(await res.arrayBuffer());
 	let svg: string;
 	if (type.includes("svg") || file.toLowerCase().endsWith(".svg")) {
-		svg = bytes.toString("utf8");
+		svg = toUtf8(bytes);
 		if (!svg.includes("<svg")) return false;
 	} else {
 		// Raster coat: wrap it so every coat is served as /coats/<id>.svg.
 		const mime = type.split(";")[0] || "image/png";
 		svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><image href="data:${mime};base64,${bytes.toString("base64")}" width="512" height="512" preserveAspectRatio="xMidYMid meet"/></svg>`;
 	}
-	writeFileSync(`${cacheDir}/${r.id}.svg`, svg);
+	writeFileSync(`${coatsDir}/${r.id}.svg`, svg);
 	return true;
 }
 
@@ -244,8 +242,8 @@ for (const [n, r] of todo.entries()) {
 }
 
 if (todo.length) {
-	const fetched = todo.filter((r) => existsSync(`${cacheDir}/${r.id}.svg`)).map((r) => String(r.id));
-	await Bun.spawn(["bun", `${dir}/render-coats.ts`, ...fetched], { stdout: "inherit", stderr: "inherit" }).exited;
+	const fetched = todo.filter((r) => sources[r.id]).map((r) => String(r.id));
+	await Bun.spawn(["bun", `${dir}/optimize-coats.ts`, ...fetched], { stdout: "inherit", stderr: "inherit" }).exited;
 }
 
 const sorted = Object.fromEntries(Object.entries(sources).sort(([a], [b]) => Number(a) - Number(b)));
