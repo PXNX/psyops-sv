@@ -33,6 +33,15 @@ export function accumulateExhaustion(
 	return Math.min(max, current + hoursElapsed * perHour);
 }
 
+/**
+ * A war's exhaustion at `now`, derived from how long it has run. Recomputed
+ * from the declaration date on every cron run, so running hourly (or missing
+ * runs) never compounds or loses weariness.
+ */
+export function exhaustionAt(declaredAt: Date, now: Date): number {
+	return Math.floor(accumulateExhaustion(0, hoursBetween(declaredAt, now)));
+}
+
 /** Whether the war's exhaustion has reached the forced-white-peace limit. */
 export function isWarExhausted(exhaustion: number, limit: number = WAR_CONFIG.EXHAUSTION_LIMIT): boolean {
 	return exhaustion >= limit;

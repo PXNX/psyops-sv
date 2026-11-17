@@ -13,7 +13,7 @@
 import { db } from "#lib/server/db.js";
 import { wars, battles, warSurrenders, states, regions, residences } from "#lib/server/schema.js";
 import { and, count, desc, eq, max, sql } from "drizzle-orm";
-import { accumulateExhaustion, hoursBetween, isWarExhausted, isWarStale } from "#lib/config/index.js";
+import { exhaustionAt, isWarExhausted, isWarStale } from "#lib/config/index.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 export type WarEndReason = "exhaustion" | "stalemate" | "capitulation" | "surrender";
@@ -52,8 +52,9 @@ export async function resolveWars(now: Date = new Date()): Promise<WarResolution
 		result.processed++;
 		try {
 			// Recompute from the declaration date every run, so the integer
-			// column never loses (or overshoots) accrued weariness.
-			const next = Math.floor(accumulateExhaustion(war.exhaustion, hoursBetween(war.declaredAt, now)));
+			// column never loses (or overshoots) accrued weariness. (Adding the
+			// elapsed time to the stored value instead compounded it hourly.)
+			const next = exhaustionAt(war.declaredAt, now);
 			const outcome = await findWarEnd(war, now, next);
 
 			if (outcome) {
