@@ -1,6 +1,12 @@
 /// <reference types="@sveltejs/kit" />
+/// <reference no-default-lib="true"/>
+/// <reference lib="esnext" />
+/// <reference lib="webworker" />
 import { version } from "$app/env";
 import { immutable, assets } from "$app/manifest";
+
+// Typed handle on the worker's global scope (plain `self` is typed as Window).
+const sw = /** @type {ServiceWorkerGlobalScope} */ (/** @type {unknown} */ (self));
 
 // Versioned caches so a new deployment starts clean and old data is purged.
 const PRECACHE = `precache-${version}`; // immutable app build + static files
@@ -15,7 +21,7 @@ const ASSETS = [
 ];
 const ASSET_SET = new Set(ASSETS);
 
-self.addEventListener("install", (event) => {
+sw.addEventListener("install", (event) => {
 	// Create a new cache and add all files to it
 	async function addFilesToCache() {
 		const cache = await caches.open(PRECACHE);
@@ -25,7 +31,7 @@ self.addEventListener("install", (event) => {
 	event.waitUntil(addFilesToCache());
 });
 
-self.addEventListener("activate", (event) => {
+sw.addEventListener("activate", (event) => {
 	async function activate() {
 		// Remove caches from previous deployments
 		for (const key of await caches.keys()) {
@@ -36,11 +42,11 @@ self.addEventListener("activate", (event) => {
 
 		// Speed up network-first navigations by letting the browser start the
 		// request while the service worker boots up.
-		if (self.registration.navigationPreload) {
-			await self.registration.navigationPreload.enable();
+		if (sw.registration.navigationPreload) {
+			await sw.registration.navigationPreload.enable();
 		}
 
-		await self.clients.claim();
+		await sw.clients.claim();
 	}
 
 	event.waitUntil(activate());
@@ -50,6 +56,7 @@ self.addEventListener("activate", (event) => {
 // large, rarely change, and instant loading makes the app feel snappier.
 const CACHEABLE_DESTINATIONS = new Set(["image", "font", "audio", "video"]);
 
+/** @param {unknown} response */
 function isCacheableResponse(response) {
 	// Only cache complete, successful responses. Opaque (status 0) responses are
 	// still worth caching for cross-origin assets like fonts/images.
@@ -62,6 +69,10 @@ function isCacheableResponse(response) {
 // runtime cache by origin+pathname (dropping the query) lets repeat views of
 // the same avatar/logo hit the cache instantly instead of being treated as a
 // brand new, never-before-seen URL on every single request.
+/**
+ * @param {Request} request
+ * @param {boolean} [isSameOrigin]
+ */
 function runtimeCacheKey(request, isSameOrigin) {
 	if (isSameOrigin) return request;
 	const url = new URL(request.url);
@@ -69,6 +80,10 @@ function runtimeCacheKey(request, isSameOrigin) {
 }
 
 // Serve from cache immediately, then refresh the cache in the background.
+/**
+ * @param {FetchEvent} event
+ * @param {{ isSameOrigin?: boolean }} [options]
+ */
 async function staleWhileRevalidate(event, { isSameOrigin } = {}) {
 	const cache = await caches.open(RUNTIME);
 	const cacheKey = runtimeCacheKey(event.request, isSameOrigin);
@@ -97,6 +112,10 @@ async function staleWhileRevalidate(event, { isSameOrigin } = {}) {
 }
 
 // Try the network first, fall back to the cache when offline.
+/**
+ * @param {FetchEvent} event
+ * @param {{ preloadResponse?: Promise<Response | undefined> }} [options]
+ */
 async function networkFirst(event, { preloadResponse } = {}) {
 	const cache = await caches.open(RUNTIME);
 
@@ -123,14 +142,14 @@ async function networkFirst(event, { preloadResponse } = {}) {
 	}
 }
 
-self.addEventListener("fetch", (event) => {
+sw.addEventListener("fetch", (event) => {
 	// ignore POST requests etc
 	if (event.request.method !== "GET") {
 		return;
 	}
 
 	const url = new URL(event.request.url);
-	const isSameOrigin = url.origin === self.location.origin;
+	const isSameOrigin = url.origin === sw.location.origin;
 
 	// `build`/`files` are content-hashed and immutable: always cache-first.
 	if (isSameOrigin && ASSET_SET.has(url.pathname)) {
@@ -173,7 +192,8 @@ self.addEventListener("fetch", (event) => {
 });
 
 // Handle push notifications
-self.addEventListener("push", (event) => {
+sw.addEventListener("push", (event) => {
+	/** @type {{ title: string, body: string, icon?: string, badge?: string, data: { tag?: string, articleId?: number | string, url?: string } }} */
 	let notificationData = {
 		title: "New Notification",
 		body: "You have a new notification",
@@ -190,30 +210,30 @@ self.addEventListener("push", (event) => {
 		}
 	}
 
-	event.waitUntil(
-		self.registration.showNotification(notificationData.title, {
-			body: notificationData.body,
-			icon: notificationData.icon || "/favicon.png",
-			badge: notificationData.badge || "/badge.png",
-			data: notificationData.data,
-			tag:
-				notificationData.data?.tag ??
-				(notificationData.data?.articleId ? `article-${notificationData.data.articleId}` : undefined),
-			renotify: true,
-			requireInteraction: false
-		})
-	);
+	/** @type {NotificationOptions & { renotify?: boolean }} */
+	const options = {
+		body: notificationData.body,
+		icon: notificationData.icon || "/favicon.png",
+		badge: notificationData.badge || "/badge.png",
+		data: notificationData.data,
+		tag:
+			notificationData.data?.tag ??
+			(notificationData.data?.articleId ? `article-${notificationData.data.articleId}` : undefined),
+		renotify: true,
+		requireInteraction: false
+	};
+	event.waitUntil(sw.registration.showNotification(notificationData.title, options));
 });
 
 // Handle notification clicks
-self.addEventListener("notificationclick", (event) => {
+sw.addEventListener("notificationclick", (event) => {
 	event.notification.close();
 
 	// Get the URL to open (default to home page)
 	const urlToOpen = event.notification.data?.url || "/";
 
 	event.waitUntil(
-		clients
+		sw.clients
 			.matchAll({
 				type: "window",
 				includeUncontrolled: true
@@ -226,8 +246,8 @@ self.addEventListener("notificationclick", (event) => {
 					}
 				}
 				// If no window is open, open a new one
-				if (clients.openWindow) {
-					return clients.openWindow(urlToOpen);
+				if (sw.clients.openWindow) {
+					return sw.clients.openWindow(urlToOpen);
 				}
 			})
 	);
