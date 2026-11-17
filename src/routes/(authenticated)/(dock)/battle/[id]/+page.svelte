@@ -3,7 +3,7 @@
 	import { enhance } from "$app/forms";
 	import { MILITARY_UNIT_TEMPLATES } from "#lib/config/index.js";
 	import { formatDate, formatDateTime, getRegionName } from "#lib/utils/formatting.js";
-	import { onMount, onDestroy } from "svelte";
+	import { onMount } from "svelte";
 	import { Chart, Svg, Tooltip } from "layerchart";
 	import { scaleLinear } from "d3-scale";
 	import { Area, Axis, Highlight, RectClipPath } from "layerchart";
@@ -22,18 +22,17 @@
 	let currentTime = $state(new Date());
 	let countdownInterval: ReturnType<typeof setInterval> | null = null;
 
+	// Browser-only setup and teardown. (onDestroy also runs during server
+	// rendering, where `document` doesn't exist, so the cleanup lives here.)
 	onMount(() => {
 		countdownInterval = setInterval(() => {
 			currentTime = new Date();
 		}, 1000);
-	});
-
-	onDestroy(() => {
-		if (countdownInterval) {
-			clearInterval(countdownInterval);
-		}
-		if (shakeTimeout) clearTimeout(shakeTimeout);
-		document.documentElement.classList.remove("screen-shake");
+		return () => {
+			if (countdownInterval) clearInterval(countdownInterval);
+			if (shakeTimeout) clearTimeout(shakeTimeout);
+			document.documentElement.classList.remove("screen-shake");
+		};
 	});
 
 	let shakeTimeout: ReturnType<typeof setTimeout> | null = null;
