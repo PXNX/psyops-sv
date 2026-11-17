@@ -69,7 +69,7 @@
 	<div
 		class="fixed bottom-4 inset-x-4 sm:left-auto sm:right-4 sm:w-96 z-50 panel rounded-xl p-4 shadow-lg flex items-start gap-3"
 	>
-		<img src="/icon-192.png" alt="" class="size-10 rounded-lg shrink-0" />
+		<img loading="lazy" decoding="async" src="/icon-192.png" alt="" class="size-10 rounded-lg shrink-0" />
 		<div class="flex-1 min-w-0">
 			<p class="text-sm font-semibold text-[#f5efd8]">Install PsyOps</p>
 			{#if deferredPrompt}

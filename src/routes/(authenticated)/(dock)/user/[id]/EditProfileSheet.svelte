@@ -230,7 +230,7 @@
 						{:else}
 							<div class="relative">
 								<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
-									<img src={previewUrl} alt="Profile picture preview" class="size-28 object-cover rounded-full" />
+									<img loading="lazy" decoding="async" src={previewUrl} alt="Profile picture preview" class="size-28 object-cover rounded-full" />
 								</div>
 								<div
 									class="absolute inset-0 flex items-center justify-center bg-[#12150f]/70 opacity-0 transition-opacity group-hover:opacity-100"

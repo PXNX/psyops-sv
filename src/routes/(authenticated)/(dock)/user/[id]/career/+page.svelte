@@ -157,7 +157,7 @@
 			<div class="relative shrink-0">
 				{#if data.user.logo}
 					<div class="size-24 rounded-full overflow-hidden bg-[#1a1f15]">
-						<img src={data.user.logo} alt={data.user.name || "User logo"} class="w-full h-full object-cover" />
+						<img loading="lazy" decoding="async" src={data.user.logo} alt={data.user.name || "User logo"} class="w-full h-full object-cover" />
 					</div>
 				{:else}
 					<div class="size-24 rounded-full bg-[#1a1f15] flex items-center justify-center">
@@ -288,7 +288,7 @@
 										class="size-10 rounded-full bg-[#8a4fc0]/15 border border-[#c08cf0]/30 flex items-center justify-center overflow-hidden"
 									>
 										{#if entry.newspaper.newspaperLogo}
-											<img
+											<img loading="lazy" decoding="async"
 												src={entry.newspaper.newspaperLogo}
 												alt={entry.newspaper.newspaperName}
 												class="w-full h-full object-cover"

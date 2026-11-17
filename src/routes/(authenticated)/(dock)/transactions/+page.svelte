@@ -302,7 +302,7 @@
 										<!-- Left: Avatar + Details -->
 										<div class="flex items-center gap-3 flex-1 min-w-0">
 											{#if tx.entity.avatarUrl}
-												<img
+												<img loading="lazy" decoding="async"
 													src={tx.entity.avatarUrl}
 													alt={tx.entity.name || ""}
 													class="size-10 rounded-full object-cover shrink-0"

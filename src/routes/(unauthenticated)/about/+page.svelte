@@ -89,7 +89,7 @@
 	<!-- Header -->
 	<div class="flex flex-col items-center space-y-5">
 		<div class="panel size-32 rounded-sm flex items-center justify-center">
-			<img alt="app logo" class="w-24 h-24" src="/logo.svg" />
+			<img loading="lazy" decoding="async" alt="app logo" class="w-24 h-24" src="/logo.svg" />
 		</div>
 		<div class="text-center space-y-3">
 			<h1 class="text-4xl font-bold text-[#f5efd8]">About</h1>

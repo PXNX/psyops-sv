@@ -289,7 +289,7 @@
 											{#if part.type === "url"}
 												{#if isImageUrl(part.content)}
 													<div class="my-2">
-														<img src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
+														<img loading="lazy" decoding="async" src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
 													</div>
 												{:else}
 													<a
@@ -319,7 +319,7 @@
 							<div class="chat-image avatar hidden md:block">
 								<a href="/user/{group.senderId}" class="w-10 rounded-full">
 									{#if group.senderLogo && settings.loadImages}
-										<img src={group.senderLogo} alt={group.senderName || "User"} class="" />
+										<img loading="lazy" decoding="async" src={group.senderLogo} alt={group.senderName || "User"} class="" />
 									{:else}
 										<div class="w-full h-full bg-[#1a1f15] flex items-center justify-center rounded-full">
 											<FluentImageOff20Filled class="size-5 text-[#a8a083]" />
@@ -348,7 +348,7 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
+															<img loading="lazy" decoding="async" src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
 														</div>
 													{:else}
 														<a

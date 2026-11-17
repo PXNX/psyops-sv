@@ -193,7 +193,7 @@
 					<div class="p-5">
 						<div class="flex items-center gap-4 mb-4">
 							<div class="size-12 shrink-0 flex items-center justify-center">
-								<img
+								<img loading="lazy" decoding="async"
 									src={getUnitIconPath(unit.unitType)}
 									alt={unit.unitType}
 									class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
@@ -419,7 +419,7 @@
 							<div class="relative flex flex-col gap-2 items-center">
 								<!-- Unit Icon -->
 								<div class="size-16 flex items-center justify-center">
-									<img
+									<img loading="lazy" decoding="async"
 										src={getUnitIconPath(template.unitType)}
 										alt={template.unitType}
 										class="w-full h-full object-contain transition-all duration-200"
@@ -447,7 +447,7 @@
 						<!-- Selected Unit Header -->
 						<div class="flex items-center gap-4 mb-5">
 							<div class="size-14 flex items-center justify-center shrink-0">
-								<img
+								<img loading="lazy" decoding="async"
 									src={getUnitIconPath(selectedTemplate.unitType)}
 									alt={selectedTemplate.displayName}
 									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(75%)_sepia(15%)_saturate(400%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
@@ -544,7 +544,7 @@
 						<div class="p-3">
 							<div class="flex items-center gap-2 mb-2">
 								<div class="size-10 shrink-0 flex items-center justify-center">
-									<img
+									<img loading="lazy" decoding="async"
 										src={getUnitIconPath(activeTrainingUnit.unitType)}
 										alt={activeTrainingUnit.unitType}
 										class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(75%)_sepia(15%)_saturate(400%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
@@ -583,7 +583,7 @@
 					<div class="panel-muted rounded-sm p-2 mb-2">
 						<div class="flex items-center gap-2">
 							<div class="size-8 shrink-0 flex items-center justify-center">
-								<img
+								<img loading="lazy" decoding="async"
 									src={getUnitIconPath(unit.unitType)}
 									alt={unit.unitType}
 									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]"
@@ -613,7 +613,7 @@
 				<div
 					class="w-10 h-10 shrink-0 bg-[#0f120c]/70 rounded-sm border border-[#c8b47a]/15 flex items-center justify-center p-2"
 				>
-					<img
+					<img loading="lazy" decoding="async"
 						src={getUnitIconPath(unitToDisband.unitType)}
 						alt={unitToDisband.unitType}
 						class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"

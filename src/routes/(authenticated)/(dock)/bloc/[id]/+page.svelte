@@ -43,7 +43,7 @@
 				<!-- Bloc Logo -->
 				{#if data.bloc.logo}
 					<div class="size-20 rounded-full overflow-hidden bg-[#1a1f15] shrink-0">
-						<img src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
+						<img loading="lazy" decoding="async" src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
 					</div>
 				{:else}
 					<div

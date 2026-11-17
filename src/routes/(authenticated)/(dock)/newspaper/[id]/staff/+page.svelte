@@ -48,7 +48,7 @@
 
 		{#if data.newspaper.logoUrl}
 			<div class="size-10 rounded-sm overflow-hidden bg-[#1a1f15] flex-shrink-0">
-				<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
+				<img loading="lazy" decoding="async" src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 			</div>
 		{:else}
 			<div

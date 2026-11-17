@@ -428,7 +428,7 @@
 									onclick={() => ($formData.regionId = region.id.toString())}
 									disabled={$submitting}
 								>
-									<img src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="w-12 h-12 rounded-sm" />
+									<img loading="lazy" decoding="async" src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="w-12 h-12 rounded-sm" />
 									<div class="flex-1">
 										<h4 class="font-bold text-[#f5efd8]">{getRegionName(region.id)}</h4>
 										<p class="text-xs text-[#a8a083]">

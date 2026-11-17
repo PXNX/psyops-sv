@@ -106,7 +106,7 @@
 						class="size-14 rounded-sm overflow-hidden shrink-0 flex items-center justify-center"
 						style="background-color: {getRegionColor(region)}30;"
 					>
-						<img src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="size-12 object-contain" />
+						<img loading="lazy" decoding="async" src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="size-12 object-contain" />
 					</div>
 					<div class="flex-1 min-w-0">
 						<h2 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">

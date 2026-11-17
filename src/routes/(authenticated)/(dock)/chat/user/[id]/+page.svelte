@@ -264,7 +264,7 @@
 					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
 				>
 					{#if data.otherUser.logo && settings.loadImages}
-						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
+						<img loading="lazy" decoding="async" src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
 						<div class="size-11 md:size-10 rounded-full bg-[#1a1f15] flex items-center justify-center shrink-0">
 							<FluentImageOff20Filled class="size-6 md:size-5 text-[#a8a083]" />
@@ -320,7 +320,7 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-sm rounded-sm" />
+															<img loading="lazy" decoding="async" src={part.content} alt="Shared image" class="max-w-sm rounded-sm" />
 														</div>
 													{:else}
 														<a
@@ -356,7 +356,7 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-sm rounded-sm" />
+															<img loading="lazy" decoding="async" src={part.content} alt="Shared image" class="max-w-sm rounded-sm" />
 														</div>
 													{:else}
 														<a
@@ -420,7 +420,7 @@
 					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
 				>
 					{#if data.otherUser.logo && settings.loadImages}
-						<img src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
+						<img loading="lazy" decoding="async" src={data.otherUser.logo} alt={data.otherUser.name} class="size-11 md:size-10 rounded-full" />
 					{:else}
 						<div class="size-11 md:size-10 rounded-full bg-[#1a1f15] flex items-center justify-center shrink-0">
 							<FluentImageOff20Filled class="size-6 md:size-5 text-[#a8a083]" />
@@ -502,7 +502,7 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
+															<img loading="lazy" decoding="async" src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
 														</div>
 													{:else}
 														<a
@@ -539,7 +539,7 @@
 												{#if part.type === "url"}
 													{#if isImageUrl(part.content)}
 														<div class="my-2">
-															<img src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
+															<img loading="lazy" decoding="async" src={part.content} alt="Shared image" class="max-w-full rounded-sm" />
 														</div>
 													{:else}
 														<a

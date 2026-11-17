@@ -91,7 +91,7 @@
 
 	<!-- Location -->
 	<a href="/region/{data.factory.regionId}" class="flex items-center gap-3 panel-interactive rounded-sm p-4 group">
-		<img
+		<img loading="lazy" decoding="async"
 			src="/coats/{data.factory.regionId}.svg"
 			alt="{regionName} coat of arms"
 			class="size-10 sm:size-12 object-contain"

@@ -76,7 +76,7 @@
 				<div class="rounded-sm shrink-0">
 					{#if data.newspaper.logoUrl}
 						<div class="size-20 sm:size-24 rounded-sm overflow-hidden bg-[#1a1f15]">
-							<img src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
+							<img loading="lazy" decoding="async" src={data.newspaper.logoUrl} alt={data.newspaper.name} class="w-full h-full object-cover" />
 						</div>
 					{:else}
 						<div

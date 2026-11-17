@@ -77,7 +77,7 @@
 				style="background-color: {data.party.color}"
 			>
 				{#if data.party.logoUrl}
-					<img src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
+					<img loading="lazy" decoding="async" src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
 				{:else}
 					<FluentPeople20Filled class="size-8 text-[#f5efd8]" />
 				{/if}
@@ -104,7 +104,7 @@
 					{/if}
 					<a href="/state/{data.party.state.id}" class="flex items-center gap-1 hover:text-[#ffcf47] transition-colors">
 						{#if data.party.state.logo}
-							<img src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded-sm" />
+							<img loading="lazy" decoding="async" src={data.party.state.logo} alt={data.party.state.name} class="size-4 rounded-sm" />
 						{:else}
 							<FluentBuildingGovernment20Filled class="size-3.5" />
 						{/if}

@@ -21,7 +21,7 @@
 		<div class="flex flex-col items-center space-y-4">
 			<div class="relative">
 				<div class="panel size-32 rounded-sm flex items-center justify-center">
-					<img alt="app logo" class="size-24" src="/logo.svg" />
+					<img loading="lazy" decoding="async" alt="app logo" class="size-24" src="/logo.svg" />
 				</div>
 			</div>
 

@@ -94,7 +94,7 @@
 			<div class="relative">
 				<!-- From Region Logo -->
 				<div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10">
-					<img
+					<img loading="lazy" decoding="async"
 						src={`/coats/${travel.fromRegionId}.svg`}
 						alt="From"
 						class="size-8 rounded-sm border-2 border-[#5eaef5] bg-[#1a1f15]"
@@ -118,7 +118,7 @@
 
 				<!-- To Region Logo -->
 				<div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10">
-					<img
+					<img loading="lazy" decoding="async"
 						src={`/coats/${travel.toRegionId}.svg`}
 						alt="To"
 						class="size-8 rounded-sm border-2 border-[#5eaef5] bg-[#1a1f15]"

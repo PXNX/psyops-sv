@@ -81,7 +81,7 @@
 		<div class="flex items-center gap-3">
 			<div class="size-12 rounded-sm flex items-center justify-center" style="background-color: {color}">
 				{#if previewImageUrl}
-					<img src={previewImageUrl} alt="Logo preview" class="size-10 object-contain" />
+					<img loading="lazy" decoding="async" src={previewImageUrl} alt="Logo preview" class="size-10 object-contain" />
 				{:else if PreviewIcon}
 					<PreviewIcon class="size-6 text-[#f5efd8]" />
 				{/if}

@@ -118,7 +118,7 @@
 							style="background-color: {party.color}"
 						>
 							{#if party.logoUrl}
-								<img src={party.logoUrl} alt={party.name} class="size-10 object-contain" />
+								<img loading="lazy" decoding="async" src={party.logoUrl} alt={party.name} class="size-10 object-contain" />
 							{:else}
 								<FluentPeople20Filled class="size-6 text-[#f5efd8]" />
 							{/if}

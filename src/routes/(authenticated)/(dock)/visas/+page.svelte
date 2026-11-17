@@ -81,7 +81,7 @@
 							<!-- State info row -->
 							<div class="flex items-center gap-3 mb-4">
 								{#if visa.stateLogo}
-									<img
+									<img loading="lazy" decoding="async"
 										src={visa.stateLogo}
 										alt={visa.stateName}
 										class="size-12 rounded-sm border border-amber-900/20 shadow-sm"
@@ -205,7 +205,7 @@
 					<div class="panel-muted rounded-sm p-4">
 						<div class="flex items-start gap-4">
 							{#if visa.stateLogo}
-								<img src={visa.stateLogo} alt={visa.stateName} class="size-12 rounded-sm opacity-60" />
+								<img loading="lazy" decoding="async" src={visa.stateLogo} alt={visa.stateName} class="size-12 rounded-sm opacity-60" />
 							{:else}
 								<div class="size-12 rounded-sm bg-[#1a1f15] flex items-center justify-center opacity-60">
 									<FluentBuildingGovernment20Filled class="size-6 text-[#a8a083]" />

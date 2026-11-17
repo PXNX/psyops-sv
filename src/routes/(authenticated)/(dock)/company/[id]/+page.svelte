@@ -735,7 +735,7 @@
 								<div class="text-xs text-[#a8a083]">Location</div>
 								<div class="flex items-center gap-2 mt-1">
 									<div class="size-5 sm:size-6 rounded-sm overflow-hidden shrink-0">
-										<img src="/coats/{factory.regionId}.svg" alt="{getRegionName(factory.regionId)} coat of arms" />
+										<img loading="lazy" decoding="async" src="/coats/{factory.regionId}.svg" alt="{getRegionName(factory.regionId)} coat of arms" />
 									</div>
 									<div>
 										<div class="font-medium text-xs sm:text-sm text-[#e6ddbf]">{getRegionName(factory.regionId)}</div>

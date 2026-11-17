@@ -196,7 +196,7 @@
 					<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm p-6">
 						<div class="flex items-center gap-4">
 							<div class="size-16 rounded-sm bg-[#0f120c] border border-[#c8b47a]/20 flex items-center justify-center">
-								<img src={imageUpload.previewUrl} alt="Logo preview" class="size-14 object-contain" />
+								<img loading="lazy" decoding="async" src={imageUpload.previewUrl} alt="Logo preview" class="size-14 object-contain" />
 							</div>
 							<div>
 								<p class="font-bold text-[#f5efd8] text-xl">{$form.name || "Your Company Name"}</p>

@@ -114,7 +114,7 @@
 			<div class="relative shrink-0">
 				{#if data.state.logo}
 					<div class="size-24 rounded-full overflow-hidden bg-[#1a1f15] border border-[#c8b47a]/15">
-						<img src={data.state.logo} alt={data.state.name} class="w-full h-full object-cover" />
+						<img loading="lazy" decoding="async" src={data.state.logo} alt={data.state.name} class="w-full h-full object-cover" />
 					</div>
 				{:else}
 					<div class="size-24 rounded-full bg-[#1a1f15] border border-[#c8b47a]/15 flex items-center justify-center">
@@ -129,7 +129,7 @@
 						title={data.bloc.name}
 					>
 						{#if data.bloc.logo}
-							<img src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
+							<img loading="lazy" decoding="async" src={data.bloc.logo} alt={data.bloc.name} class="w-full h-full object-cover" />
 						{:else}
 							<FluentFlag20Filled class="size-5 text-[#f5efd8]" />
 						{/if}

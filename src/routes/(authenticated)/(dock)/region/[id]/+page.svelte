@@ -92,7 +92,7 @@
 			: undefined}
 	>
 		{#if data.region.stateLogo}
-			<img
+			<img loading="lazy" decoding="async"
 				src={data.region.stateLogo}
 				alt=""
 				aria-hidden="true"
