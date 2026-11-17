@@ -1,0 +1,21 @@
+{
+	"_comment": "Region id -> Commons file, for regions where the automatic search picks the wrong place. Used by fetch-coats.ts.",
+	"818": "Emblem of Manipur.svg",
+	"823": "Flag of Rakhine.svg",
+	"874": "Moravian-Silesian Region CoA CZ.svg",
+	"883": "Wappen Wallis matt.svg",
+	"884": "Coat of arms of Slovenia.svg",
+	"889": "Coat of arms of Vojvodina.svg",
+	"946": "Seal of Borno State.png",
+	"973": "Coat of arms of Katanga.svg",
+	"984": "Coat of Arms of Chukotka.svg",
+	"986": "Coat of arms of Quebec.svg",
+	"990": "Coat of arms of Ontario.svg",
+	"997": "Brasão de Roraima.svg",
+	"999": "Brasão de Pernambuco.svg",
+	"1000": "Brasão do Ceará.svg",
+	"1003": "Brasão do Espírito Santo.svg",
+	"1007": "Escudo de la Provincia de San Juan.svg",
+	"1012": "Escudo de la Provincia de San Luis.svg",
+	"1038": "Flag of Rapa Nui, Chile.svg"
+}

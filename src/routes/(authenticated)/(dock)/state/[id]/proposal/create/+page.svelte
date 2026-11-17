@@ -10,7 +10,7 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
-	import { getRegionName } from "#lib/utils/formatting.js";
+	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
@@ -428,7 +428,13 @@
 									onclick={() => ($formData.regionId = region.id.toString())}
 									disabled={$submitting}
 								>
-									<img loading="lazy" decoding="async" src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="w-12 h-12 rounded-sm" />
+									<img
+										loading="lazy"
+										decoding="async"
+										src={regionCoatUrl(region.id)}
+										alt={getRegionName(region.id)}
+										class="w-12 h-12 rounded-sm"
+									/>
 									<div class="flex-1">
 										<h4 class="font-bold text-[#f5efd8]">{getRegionName(region.id)}</h4>
 										<p class="text-xs text-[#a8a083]">

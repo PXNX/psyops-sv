@@ -29,7 +29,7 @@ import { getLogoUrl } from "#lib/server/backblaze.js";
 import { fail } from "@sveltejs/kit";
 import { eq, count, and } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
-import { getRegionName } from "#lib/utils/formatting.js";
+import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 import { sendMedalNotification } from "#lib/server/service/inbox.js";
 import { getBirthdayInfo, collectBirthdayRewards } from "#lib/server/service/birthday.js";
 import { isPremiumActive, PREMIUM_PLANS } from "#lib/config/index.js";
@@ -406,7 +406,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					region: {
 						id: residence.regionId,
 						name: getRegionName(residence.regionId),
-						logo: "/coats/" + residence.regionId + ".svg",
+						logo: regionCoatUrl(residence.regionId),
 						state: {
 							id: residence.stateId,
 							name: residence.stateName,
@@ -419,7 +419,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			? {
 					id: homeRegionData.regionId,
 					name: getRegionName(homeRegionData.regionId),
-					logo: "/coats/" + homeRegionData.regionId + ".svg",
+					logo: regionCoatUrl(homeRegionData.regionId),
 					changedAt: homeRegionData.homeRegionChangedAt,
 					state: {
 						id: homeRegionData.stateId,

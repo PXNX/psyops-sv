@@ -56,3 +56,6 @@ export const getRegionName = (regionId: number): string => {
 	const messages = m as unknown as Record<string, (() => string) | undefined>;
 	return messages[`region_${regionId}`]?.() ?? `Region ${regionId}`;
 };
+
+/** URL of a region's coat of arms (a 256px WebP rendered by tools/map/render-coats.ts). */
+export const regionCoatUrl = (regionId: number | string): string => `/coats/${regionId}.webp`;

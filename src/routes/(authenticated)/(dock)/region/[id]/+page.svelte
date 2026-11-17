@@ -22,7 +22,7 @@
 	import Modal from "#lib/component/Modal.svelte";
 
 	import { Button, Badge } from "#lib/component/ui/index.js";
-	import { formatDate, getDaysRemaining } from "#lib/utils/formatting.js";
+	import { formatDate, getDaysRemaining, regionCoatUrl } from "#lib/utils/formatting.js";
 	import BorderingRegions from "./BorderingRegions.svelte";
 	import ResidenceActions from "./ResidenceActions.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
@@ -71,7 +71,7 @@
 		property="og:description"
 		content={`Region ${data.region.name} ${data.region.stateName ? "in " + data.region.stateName : ""} on PsyOps.`}
 	/>
-	<meta property="og:image" content={`/coats/${data.region.id}.svg`} />
+	<meta property="og:image" content={regionCoatUrl(data.region.id)} />
 
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary" />
@@ -80,7 +80,7 @@
 		name="twitter:description"
 		content={`Region ${data.region.name} ${data.region.stateName ? "in " + data.region.stateName : ""} on PsyOps.`}
 	/>
-	<meta name="twitter:image" content={`/coats/${data.region.id}.svg`} />
+	<meta name="twitter:image" content={regionCoatUrl(data.region.id)} />
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
@@ -92,7 +92,9 @@
 			: undefined}
 	>
 		{#if data.region.stateLogo}
-			<img loading="lazy" decoding="async"
+			<img
+				loading="lazy"
+				decoding="async"
 				src={data.region.stateLogo}
 				alt=""
 				aria-hidden="true"
@@ -101,7 +103,7 @@
 		{/if}
 		<div class="flex items-center gap-5 relative">
 			<Logo
-				src="/coats/{data.region.id}.svg"
+				src={regionCoatUrl(data.region.id)}
 				alt={data.region.name}
 				class="size-20 rounded-sm shrink-0"
 				placeholderIcon={FluentShield20Filled}

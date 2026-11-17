@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { MILITARY_UNIT_TEMPLATES } from "#lib/config/index.js";
-	import { formatDate, formatDateTime, getRegionName } from "#lib/utils/formatting.js";
+	import { formatDate, formatDateTime, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import { onMount } from "svelte";
 	import { Chart, Svg, Tooltip } from "layerchart";
 	import { scaleLinear } from "d3-scale";
@@ -52,7 +52,7 @@
 	}
 
 	function getRegionCoatPath(regionId: number): string {
-		return `/coats/${regionId}.svg`;
+		return regionCoatUrl(regionId);
 	}
 
 	function toggleUnitSelection(unitId: number) {
@@ -152,7 +152,6 @@
 	<title>{`Battle of ${getRegionName(data.battle.regionId)} · PsyOps`}</title>
 </svelte:head>
 
-
 {#snippet unitBars(health: number, organization: number, supply: number | null, orgLabel: string)}
 	<div class="space-y-2">
 		<!-- Health -->
@@ -219,7 +218,9 @@
 	<div
 		class="size-10 sm:size-12 shrink-0 flex items-center justify-center bg-[#0f120c] rounded-sm border border-[#c8b47a]/20 p-1.5 sm:p-2"
 	>
-		<img loading="lazy" decoding="async"
+		<img
+			loading="lazy"
+			decoding="async"
 			src={getUnitIconPath(unitType)}
 			alt={unitType}
 			class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"

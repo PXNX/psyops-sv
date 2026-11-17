@@ -24,7 +24,7 @@
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import FluentShieldLock20Filled from "~icons/fluent/shield-lock-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
-	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
+	import { formatDate, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import type { PageData } from "./$types";
 
 	let { data }: { data: PageData } = $props();
@@ -394,7 +394,7 @@
 						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-all group"
 					>
 						<Logo
-							src="/coats/{battle.regionId}.svg"
+							src={regionCoatUrl(battle.regionId)}
 							alt={getRegionName(battle.regionId)}
 							class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/15"
 							placeholderIcon={FluentShield20Filled}

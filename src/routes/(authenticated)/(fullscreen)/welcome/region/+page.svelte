@@ -8,7 +8,7 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
-	import { getRegionName } from "#lib/utils/formatting.js";
+	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import { burst } from "#lib/utils/confetti.js";
 
 	let { data } = $props();
@@ -36,7 +36,6 @@
 <svelte:head>
 	<title>{"Choose your region · PsyOps"}</title>
 </svelte:head>
-
 
 <div class="max-w-5xl w-full space-y-8" in:fade={{ duration: 300 }}>
 	<!-- Header -->
@@ -104,7 +103,7 @@
 							<!-- Region Logo -->
 							<div class="size-16 shrink-0 rounded-sm overflow-hidden">
 								<Logo
-									src="/coats/{region.id}.svg"
+									src={regionCoatUrl(region.id)}
 									alt={getRegionName(region.id)}
 									class="size-full"
 									placeholderIcon={FluentGlobe20Filled}

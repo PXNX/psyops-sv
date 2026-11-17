@@ -8,7 +8,7 @@
 	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
-	import { formatDate } from "#lib/utils/formatting.js";
+	import { formatDate, regionCoatUrl } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -32,14 +32,13 @@
 	<title>{`Population · ${data.region.name} · PsyOps`}</title>
 </svelte:head>
 
-
 <PageContainer maxWidth="6xl">
 	<!-- Same hero header as region page for visual continuity -->
 	<div class="panel rounded-sm p-5">
 		<div class="flex items-center gap-5">
 			<a href="/region/{data.region.id}" class="shrink-0">
 				<Logo
-					src="/coats/{data.region.id}.svg"
+					src={regionCoatUrl(data.region.id)}
 					alt={data.region.name}
 					class="size-20 rounded-sm transition-all"
 					placeholderIcon={FluentShield20Filled}

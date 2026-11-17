@@ -4,7 +4,7 @@
 	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import * as m from "#lib/paraglide/messages.js";
-	import { getRegionName, formatDateTime } from "#lib/utils/formatting.js";
+	import { getRegionName, formatDateTime, regionCoatUrl } from "#lib/utils/formatting.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
@@ -92,7 +92,6 @@
 	<title>{`${data.war.attacker.name} vs ${data.war.defender.name} · PsyOps`}</title>
 </svelte:head>
 
-
 <PageContainer maxWidth="5xl">
 	<!-- War Room Hero -->
 	<div
@@ -109,7 +108,9 @@
 					<span class="text-red-300 text-xs uppercase tracking-widest font-bold">Active Conflict</span>
 				{:else}
 					<div class="size-2.5 bg-[#a8a083] rounded-full"></div>
-					<span class="text-[#a8a083] text-xs uppercase tracking-widest">{getEndedReasonLabel(data.war.endedReason)}</span>
+					<span class="text-[#a8a083] text-xs uppercase tracking-widest"
+						>{getEndedReasonLabel(data.war.endedReason)}</span
+					>
 				{/if}
 			</div>
 			<span class="text-[#a8a083] font-mono text-xs">WAR #{data.war.id}</span>
@@ -223,12 +224,8 @@
 				style="width: {data.defenderControl}%"
 			></div>
 			<div class="absolute inset-0 flex items-center justify-between px-4 pointer-events-none">
-				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg"
-					>{data.attackerRegionCount} regions</span
-				>
-				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg"
-					>{data.defenderRegionCount} regions</span
-				>
+				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg">{data.attackerRegionCount} regions</span>
+				<span class="text-[#f5efd8] font-bold text-xs drop-shadow-lg">{data.defenderRegionCount} regions</span>
 			</div>
 		</div>
 
@@ -289,7 +286,7 @@
 						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-colors group"
 					>
 						<Logo
-							src="/coats/{battle.region.id}.svg"
+							src={regionCoatUrl(battle.region.id)}
 							alt={getRegionName(battle.region.id)}
 							class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/15"
 							placeholderIcon={FluentShield20Filled}
@@ -327,7 +324,7 @@
 						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-colors group"
 					>
 						<Logo
-							src="/coats/{battle.region.id}.svg"
+							src={regionCoatUrl(battle.region.id)}
 							alt={getRegionName(battle.region.id)}
 							class="size-10 sm:size-12 rounded-sm border border-[#c8b47a]/15"
 							placeholderIcon={FluentShield20Filled}

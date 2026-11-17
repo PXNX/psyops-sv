@@ -13,7 +13,7 @@
 	import IconChevronRight from "~icons/fluent/chevron-right-24-regular";
 	import { goto } from "$app/navigation";
 	import type { PageData } from "./$types";
-	import { getRegionName } from "#lib/utils/formatting.js";
+	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
 	import { Badge } from "#lib/component/ui/index.js";
@@ -752,7 +752,7 @@
 			class="group w-full flex items-center gap-4 hover:bg-[#2e3524] transition-colors rounded-sm p-2 -mx-2"
 		>
 			<Logo
-				src={`/coats/${selectedRegion.id}.svg`}
+				src={regionCoatUrl(selectedRegion.id)}
 				alt={getRegionName(selectedRegion.id)}
 				class="size-16 object-cover rounded-sm"
 			/>

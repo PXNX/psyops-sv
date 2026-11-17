@@ -21,7 +21,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button, Badge } from "#lib/component/ui/index.js";
-	import { formatDate, formatDateTime } from "#lib/utils/formatting.js";
+	import { formatDate, formatDateTime, regionCoatUrl } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
@@ -614,7 +614,7 @@
 										class="inline-flex items-center gap-2 mt-2 text-sm text-[#b3dcff] hover:text-[#f5efd8] transition-colors w-fit"
 									>
 										<Logo
-											src="/coats/{proposal.region.id}.svg"
+											src={regionCoatUrl(proposal.region.id)}
 											alt={proposal.region.name}
 											class="size-6 rounded-sm"
 											placeholderIcon={FluentShield20Filled}

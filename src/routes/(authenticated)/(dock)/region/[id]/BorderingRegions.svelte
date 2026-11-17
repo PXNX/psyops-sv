@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/region/[id]/BorderingRegions.svelte -->
 <script lang="ts">
+	import { regionCoatUrl } from "#lib/utils/formatting.js";
 	import FluentMapDrive20Filled from "~icons/fluent/map-drive-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
@@ -50,7 +51,7 @@
 				>
 					<div class="flex items-start gap-4">
 						<Logo
-							src="/coats/{borderRegion.id}.svg"
+							src={regionCoatUrl(borderRegion.id)}
 							alt={borderRegion.name}
 							class="size-12 rounded-sm flex-shrink-0"
 							placeholderIcon={FluentShield20Filled}

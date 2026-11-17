@@ -28,3 +28,4 @@ sqlite.db
 .mock-files/
 packages/rest-mock/.mock-files/
 packages/rest-mock/dist/.vscode/
+tools/map/.coat-cache/

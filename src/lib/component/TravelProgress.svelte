@@ -1,5 +1,6 @@
 <!-- src/lib/component/TravelProgress.svelte -->
 <script lang="ts">
+	import { regionCoatUrl } from "#lib/utils/formatting.js";
 	import FluentVehicleAirplaneTakeOff20Filled from "~icons/fluent/airplane-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import { calculateTravelProgress, formatDuration, getTimeRemaining } from "#lib/utils/travel-client.js";
@@ -94,8 +95,10 @@
 			<div class="relative">
 				<!-- From Region Logo -->
 				<div class="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-2 z-10">
-					<img loading="lazy" decoding="async"
-						src={`/coats/${travel.fromRegionId}.svg`}
+					<img
+						loading="lazy"
+						decoding="async"
+						src={regionCoatUrl(travel.fromRegionId)}
 						alt="From"
 						class="size-8 rounded-sm border-2 border-[#5eaef5] bg-[#1a1f15]"
 					/>
@@ -118,8 +121,10 @@
 
 				<!-- To Region Logo -->
 				<div class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-2 z-10">
-					<img loading="lazy" decoding="async"
-						src={`/coats/${travel.toRegionId}.svg`}
+					<img
+						loading="lazy"
+						decoding="async"
+						src={regionCoatUrl(travel.toRegionId)}
 						alt="To"
 						class="size-8 rounded-sm border-2 border-[#5eaef5] bg-[#1a1f15]"
 					/>

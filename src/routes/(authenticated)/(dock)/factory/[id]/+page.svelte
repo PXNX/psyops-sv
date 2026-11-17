@@ -2,7 +2,7 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { refreshAll } from "$app/navigation";
-	import { getRegionName } from "#lib/utils/formatting.js";
+	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button } from "#lib/component/ui/index.js";
@@ -57,7 +57,6 @@
 	<title>{`${data.factory.name} · PsyOps`}</title>
 </svelte:head>
 
-
 <PageContainer maxWidth="5xl">
 	<!-- Factory Hero -->
 	<div class="panel rounded-sm p-5">
@@ -82,12 +81,7 @@
 			</div>
 
 			{#if data.isOwner}
-				<Button
-					variant="secondary"
-					size="sm"
-					onclick={() => (showEditFactorySheet = true)}
-					icon={FluentEdit20Filled}
-				>
+				<Button variant="secondary" size="sm" onclick={() => (showEditFactorySheet = true)} icon={FluentEdit20Filled}>
 					Edit
 				</Button>
 			{/if}
@@ -96,8 +90,10 @@
 
 	<!-- Location -->
 	<a href="/region/{data.factory.regionId}" class="flex items-center gap-3 panel-interactive rounded-sm p-4 group">
-		<img loading="lazy" decoding="async"
-			src="/coats/{data.factory.regionId}.svg"
+		<img
+			loading="lazy"
+			decoding="async"
+			src={regionCoatUrl(data.factory.regionId)}
 			alt="{regionName} coat of arms"
 			class="size-10 sm:size-12 object-contain"
 		/>

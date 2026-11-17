@@ -32,7 +32,7 @@ import { error, fail } from "@sveltejs/kit";
 import { eq, and, gte, sql, or, inArray } from "drizzle-orm";
 import type { PageServerLoad, Actions } from "./$types";
 import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
-import { getRegionName } from "#lib/utils/formatting.js";
+import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
@@ -568,7 +568,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		regions: stateRegions.map((region) => ({
 			id: region.id,
 			name: getRegionName(region.id),
-			logo: "/coats/" + region.id + ".svg",
+			logo: regionCoatUrl(region.id),
 			rating: region.rating,
 			population: region.population || 0
 		})),

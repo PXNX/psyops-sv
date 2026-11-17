@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/region/+page.svelte -->
 <script lang="ts">
+	import { regionCoatUrl } from "#lib/utils/formatting.js";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
@@ -78,7 +79,7 @@
 					<div class="absolute bottom-0 left-4 translate-y-1/2">
 						<div class="rounded-sm">
 							<Logo
-								src="/coats/{region.id}.svg"
+								src={regionCoatUrl(region.id)}
 								alt={region.name}
 								class="size-16 rounded-sm"
 								placeholderIcon={FluentShield20Filled}

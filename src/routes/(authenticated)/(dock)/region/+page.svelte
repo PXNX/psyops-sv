@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/region/+page.svelte -->
 <script lang="ts">
+	import { regionCoatUrl } from "#lib/utils/formatting.js";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
@@ -89,9 +90,9 @@
 			<a
 				href="/region/{region.id}"
 				class="group panel-interactive rounded-sm p-5 relative space-y-3 overflow-hidden"
-				style="background-color: {getRegionColor(region)}0d; background-image: radial-gradient(circle at top, {getRegionColor(
+				style="background-color: {getRegionColor(
 					region
-				)}40, transparent 70%);"
+				)}0d; background-image: radial-gradient(circle at top, {getRegionColor(region)}40, transparent 70%);"
 			>
 				<!-- Residence Badge -->
 				{#if data.userRegionIds.includes(region.id)}
@@ -106,7 +107,13 @@
 						class="size-14 rounded-sm overflow-hidden shrink-0 flex items-center justify-center"
 						style="background-color: {getRegionColor(region)}30;"
 					>
-						<img loading="lazy" decoding="async" src="/coats/{region.id}.svg" alt={getRegionName(region.id)} class="size-12 object-contain" />
+						<img
+							loading="lazy"
+							decoding="async"
+							src={regionCoatUrl(region.id)}
+							alt={getRegionName(region.id)}
+							class="size-12 object-contain"
+						/>
 					</div>
 					<div class="flex-1 min-w-0">
 						<h2 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
