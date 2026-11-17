@@ -88,7 +88,7 @@
 							<!-- Header line -->
 							<div class="flex items-center justify-between mb-3">
 								<span class="text-[10px] font-bold tracking-[0.3em] uppercase text-[#5b3d1a]/50">Travel Visa</span>
-								<span class="text-[10px] font-mono text-[#7a5427]/40">No. {visa.id.slice(0, 8).toUpperCase()}</span>
+								<span class="text-[10px] font-mono text-[#7a5427]/40">No. {String(visa.id).padStart(8, "0")}</span>
 							</div>
 
 							<!-- State info row -->

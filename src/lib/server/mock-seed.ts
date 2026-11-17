@@ -26,7 +26,8 @@ import {
 	wars,
 	battles,
 	battleParticipants,
-	battleRounds
+	battleRounds,
+	userVisas
 } from "./schema";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 
@@ -583,6 +584,29 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			attackerPlanningBonus: 5,
 			defenderPlanningBonus: 3,
 			roundedAt: new Date(Date.now() - 1800000)
+		}
+	]);
+
+	// ============ Visas ============
+	// One active and one expired visa for the signed-in admin, so the visa
+	// pages render their real cards in mock mode and in the smoke test.
+	const day = 24 * 60 * 60 * 1000;
+	await db.insert(userVisas).values([
+		{
+			userId: "user-1",
+			stateId: state2!.id,
+			status: "active",
+			expiresAt: new Date(Date.now() + 9 * day),
+			cost: 2000,
+			taxPaid: 200
+		},
+		{
+			userId: "user-1",
+			stateId: state3!.id,
+			status: "expired",
+			expiresAt: new Date(Date.now() - 3 * day),
+			cost: 1500,
+			taxPaid: 150
 		}
 	]);
 
