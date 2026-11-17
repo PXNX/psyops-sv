@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentCart20Filled from "~icons/fluent/cart-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
@@ -11,14 +12,13 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button } from "#lib/component/ui/index.js";
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
 
 	let tradeMode = $state<"buy" | "sell">("buy");
 	let selectedResource = $state<ResourceType>("iron");
 	let tradeQuantity = $state(1);
-	let tradePrice = $state(1000);
 
 	const allResources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
 
@@ -27,6 +27,10 @@
 	const availableQuantity = $derived(tradeMode === "sell" ? resourceMap.get(selectedResource) || 0 : Infinity);
 
 	const currentMarketPrice = $derived(data.marketPrices[selectedResource] || 1000);
+	// The market sells at its price and buys back for less.
+	const tradePrice = $derived(
+		tradeMode === "buy" ? currentMarketPrice : (data.sellPrices[selectedResource] ?? currentMarketPrice)
+	);
 
 	const totalCost = $derived(tradeQuantity * tradePrice);
 
@@ -34,10 +38,6 @@
 		if (!data.canTrade || tradeQuantity < 1) return false;
 		if (tradeMode === "buy") return data.treasury.balance >= totalCost;
 		return availableQuantity >= tradeQuantity;
-	});
-
-	$effect(() => {
-		tradePrice = currentMarketPrice;
 	});
 
 	function formatCurrency(amount: number): string {
@@ -56,7 +56,8 @@
 
 <PageContainer maxWidth="6xl">
 	<!-- Header -->
-	<PageHeader documentTitle={false}
+	<PageHeader
+		documentTitle={false}
 		title="Government Market"
 		subtitle="Buy and sell resources on behalf of the state"
 		icon={FluentCart20Filled}
@@ -74,23 +75,6 @@
 						Only the president or minister of economics can trade on behalf of the state.
 					</p>
 				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Success/Error Messages -->
-	{#if form?.success}
-		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4">
-			<div class="flex items-start gap-3">
-				<FluentCheckmark20Filled class="size-5 text-[#6fd14a] flex-shrink-0 mt-0.5" />
-				<p class="text-[#b9f29a] font-medium">{form.message}</p>
-			</div>
-		</div>
-	{:else if form?.message}
-		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-4">
-			<div class="flex items-start gap-3">
-				<FluentWarning20Filled class="size-5 text-red-400 flex-shrink-0 mt-0.5" />
-				<p class="text-red-300 font-medium">{form.message}</p>
 			</div>
 		</div>
 	{/if}
@@ -180,7 +164,11 @@
 			<form
 				method="POST"
 				action="?/{tradeMode === 'buy' ? 'buyResource' : 'sellResource'}"
-				use:enhance
+				use:enhance={() =>
+					async ({ result, update }) => {
+						await update({ reset: false });
+						toastResult(result);
+					}}
 				class="panel rounded-sm p-5 space-y-6"
 			>
 				<!-- Trade Mode -->
@@ -278,23 +266,10 @@
 					</div>
 
 					<div class="space-y-2">
-						<label for="pricePerUnit" class="field-label">Price per unit</label>
-						<div class="join w-full">
-							<span
-								class="join-item flex items-center px-3 rounded-sm bg-[#0f120c] border border-[#c8b47a]/20 text-[#a8a083] pointer-events-none"
-								>$</span
-							>
-							<input
-								type="number"
-								id="pricePerUnit"
-								name="pricePerUnit"
-								min="1"
-								step="1"
-								bind:value={tradePrice}
-								class="join-item flex-1 min-w-0 field-control rounded-sm px-3 py-2.5 font-mono"
-								disabled={!data.canTrade}
-							/>
-						</div>
+						<p class="field-label">{tradeMode === "buy" ? "Market sells at" : "Market buys at"}</p>
+						<p class="field-control rounded-sm px-3 py-2.5 font-mono text-[#f5efd8]">
+							{formatCurrency(tradePrice)} <span class="text-xs text-[#a8a083]">per unit</span>
+						</p>
 					</div>
 				</div>
 
@@ -372,7 +347,7 @@
 				<h3 class="font-semibold text-[#b3dcff] mb-2">About the Government Market</h3>
 				<ul class="text-sm text-[#b3dcff]/80 space-y-1">
 					<li>• Buy resources from the market to build state stockpiles</li>
-					<li>• Sell surplus resources to generate treasury revenue</li>
+					<li>• Sell surplus resources back for 70% of the market price</li>
 					<li>• All transactions are recorded in the government budget</li>
 					<li>• Only the president or minister of economics can authorize trades</li>
 				</ul>
