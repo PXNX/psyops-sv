@@ -1,5 +1,6 @@
 <!-- src/routes/company/[id]/+page.svelte -->
 <script lang="ts">
+	import { Button } from "#lib/component/ui/index.js";
 	import { getRegionName, formatDate, regionCoatUrl } from "#lib/utils/formatting.js";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
@@ -19,7 +20,7 @@
 
 	import { enhance } from "$app/forms";
 	import { Chart, Svg, Tooltip } from "layerchart";
-	import { Area, Bars } from "layerchart";
+	import { Bars } from "layerchart";
 	import { scaleBand } from "d3-scale";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Logo from "#lib/component/Logo.svelte";
@@ -33,7 +34,6 @@
 	let showEditCompanySheet = $state(false);
 
 	let depositAmount = $state(10000);
-	let isCollecting = $state(false);
 	let isDepositing = $state(false);
 	let isSettingHq = $state(false);
 
@@ -50,19 +50,10 @@
 	// Prepare chart data
 	const productionChartData = data.resourceProduction.map((resource) => ({
 		name: resource.type,
-		pending: resource.pendingTotal,
 		rate: resource.productionRate,
 		workers: resource.totalWorkers,
 		factories: resource.factoryCount
 	}));
-
-	// Budget history data (simulated for demonstration)
-	const budgetTrendData = [
-		{ date: "Week 1", balance: Math.max(0, data.budget.balance - 50000) },
-		{ date: "Week 2", balance: Math.max(0, data.budget.balance - 30000) },
-		{ date: "Week 3", balance: Math.max(0, data.budget.balance - 10000) },
-		{ date: "Week 4", balance: data.budget.balance }
-	];
 
 	// Color palette for charts
 	const resourceColors = {
@@ -447,7 +438,7 @@
 
 	<!-- Production Analytics -->
 	{#if data.isOwner && data.resourceProduction.length > 0}
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+		<div class="grid grid-cols-1 gap-4 sm:gap-6">
 			<!-- Production by Resource Type -->
 			<div class="panel rounded-sm p-4 sm:p-6 space-y-3">
 				<h3 class="section-title text-base sm:text-lg">
@@ -461,7 +452,7 @@
 							data={productionChartData}
 							x="name"
 							xScale={scaleBand().padding(0.3)}
-							y="pending"
+							y="rate"
 							yDomain={[0, null]}
 							yNice
 							padding={{ left: 16, bottom: 24, top: 8 }}
@@ -491,41 +482,6 @@
 						</Chart>
 					</div>
 				{/if}
-			</div>
-
-			<!-- Budget Trend -->
-			<div class="panel rounded-sm p-4 sm:p-6 space-y-3">
-				<h3 class="section-title text-base sm:text-lg">
-					<FluentWallet20Filled class="size-5 text-[#b9f29a]" />
-					Budget Overview
-				</h3>
-
-				<div class="h-48 sm:h-64">
-					<Chart
-						data={budgetTrendData}
-						x="date"
-						xScale={scaleBand().padding(0.1)}
-						y="balance"
-						yDomain={[0, null]}
-						yNice
-						padding={{ left: 16, bottom: 24, top: 8 }}
-					>
-						<Svg>
-							<Area class="fill-[#3f8a2a]/25" />
-							<Area line={{ class: "stroke-[#6fd14a] stroke-2" }} />
-						</Svg>
-						<Tooltip.Root let:data>
-							<Tooltip.Header>{data.date}</Tooltip.Header>
-							<Tooltip.List>
-								<Tooltip.Item
-									label="Balance"
-									value={data.balance.toLocaleString()}
-									valueClass="text-[#b9f29a] font-bold"
-								/>
-							</Tooltip.List>
-						</Tooltip.Root>
-					</Chart>
-				</div>
 			</div>
 		</div>
 	{/if}
@@ -606,56 +562,21 @@
 				</form>
 			</div>
 
-			<!-- Resource Collection -->
-			<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
+			<!-- Where the output goes -->
+			<div class="panel rounded-sm p-4 sm:p-6 space-y-3">
 				<h3 class="section-title text-base sm:text-lg">
 					<FluentBoxCheckmark20Filled class="size-5 text-[#6fd14a]" />
-					Collect Resources
+					Output
 				</h3>
-
-				<div class="panel-muted rounded-sm p-4 text-center">
-					<div class="text-xs text-[#a8a083]">Pending</div>
-					<div class="text-2xl font-bold text-[#b9f29a]">
-						{data.totalPendingResources.toLocaleString()}
-					</div>
-					<div class="text-xs text-[#a8a083]">units ready</div>
-				</div>
-
-				{#if data.totalPendingResources > 0}
-					<form
-						method="POST"
-						action="?/collectResources"
-						use:enhance={() => {
-							isCollecting = true;
-							return async ({ update }) => {
-								await update();
-								isCollecting = false;
-							};
-						}}
-					>
-						<button
-							type="submit"
-							disabled={isCollecting}
-							class={buttonClass({ variant: "soft-emerald", block: true, class: "gap-2" })}
-						>
-							{#if isCollecting}
-								<span class="loading loading-spinner loading-sm"></span>
-								Collecting...
-							{:else}
-								<FluentBoxCheckmark20Filled class="size-4" />
-								Collect All Resources
-							{/if}
-						</button>
-					</form>
-				{:else}
-					<div class="panel-muted rounded-sm p-3">
-						<span class="text-sm text-[#a8a083]">No resources ready to collect</span>
-					</div>
-				{/if}
-
-				{#if data.resourceProduction.some((r) => r.pendingTotal > 0)}
-					<p class="text-xs text-[#a8a083] text-center">See the breakdown per resource below.</p>
-				{/if}
+				<p class="text-sm text-[#d3caa9]">
+					Each time a worker finishes a shift, its output lands in your inventory: mines dig from the region's deposit,
+					refineries and armaments factories turn your materials into goods.
+				</p>
+				<ul class="text-xs text-[#a8a083] space-y-1">
+					<li>• Keep materials in stock, or a shift produces nothing (the worker is still paid).</li>
+					<li>• Keep the budget funded so workers can collect their wages.</li>
+				</ul>
+				<Button href="/production" variant="secondary" size="sm">View your inventory</Button>
 			</div>
 		</div>
 	{/if}
@@ -684,7 +605,8 @@
 							</span>
 						</div>
 						<div class="text-xl sm:text-2xl font-bold" style="color: {getColor(resource.type)}">
-							{resource.pendingTotal.toLocaleString()}
+							{resource.productionRate.toLocaleString()}
+							<span class="text-xs font-normal text-[#a8a083]">per round of shifts</span>
 						</div>
 						<div class="mt-2 space-y-1">
 							<div class="flex justify-between text-xs">
@@ -781,12 +703,6 @@
 									</span>
 									<span class="text-[#e6ddbf]">{formatDate(factory.lastWorked)}</span>
 								</div>
-								{#if factory.pendingResources > 0}
-									<div class="flex items-center justify-between">
-										<span class="text-xs text-[#a8a083]">Ready to collect</span>
-										<span class="font-bold text-[#b9f29a] text-sm">{factory.pendingResources.toLocaleString()}</span>
-									</div>
-								{/if}
 							</div>
 						{/if}
 					</a>

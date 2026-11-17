@@ -230,29 +230,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			null as Date | null
 		);
 
-		// Calculate pending resources based on time since last work
-		let pendingResources = 0;
-		let shiftsCompleted = 0;
-		if (lastWorked && workerCount > 0) {
-			const hoursSinceWork = Math.floor((Date.now() - lastWorked.getTime()) / (1000 * 60 * 60));
-			// Assuming production happens every 8 hours (one shift)
-			shiftsCompleted = Math.floor(hoursSinceWork / 8);
-			pendingResources = shiftsCompleted * factory.productionRate * workerCount;
-		}
-
 		return {
 			...factory,
 			workerCount,
-			lastWorked: lastWorked?.toISOString() || null,
-			pendingResources,
-			shiftsCompleted
+			lastWorked: lastWorked?.toISOString() || null
 		};
 	});
 
 	// Calculate aggregate statistics (all in memory)
 	const totalWorkers = factoriesWithDetails.reduce((sum, f) => sum + f.workerCount, 0);
 	const totalWageCost = factoriesWithDetails.reduce((sum, f) => sum + Number(f.workerWage) * f.workerCount, 0);
-	const totalPendingResources = factoriesWithDetails.reduce((sum, f) => sum + f.pendingResources, 0);
 
 	// Calculate resource production breakdown by type
 	const resourceProduction = factoriesWithDetails.reduce(
@@ -264,14 +251,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 						type: output,
 						factoryCount: 0,
 						totalWorkers: 0,
-						productionRate: 0,
-						pendingTotal: 0
+						productionRate: 0
 					};
 				}
 				acc[output].factoryCount += 1;
 				acc[output].totalWorkers += factory.workerCount;
 				acc[output].productionRate += factory.productionRate * factory.workerCount;
-				acc[output].pendingTotal += factory.pendingResources;
 			}
 			return acc;
 		},
@@ -365,7 +350,6 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		factories: factoriesWithDetails,
 		totalWorkers,
 		totalWageCost,
-		totalPendingResources,
 		resourceProduction: Object.values(resourceProduction),
 		uniqueStates,
 		uniqueRegions,
@@ -428,149 +412,6 @@ export const actions: Actions = {
 	},
 
 	// Collect produced resources from all factories
-	collectResources: async ({ params, locals }) => {
-		const account = locals.account!;
-		const companyId = parseInt(params.id);
-
-		// Verify ownership
-		const [company] = await db
-			.select({ ownerId: companies.ownerId })
-			.from(companies)
-			.where(eq(companies.id, companyId));
-
-		if (!company || company.ownerId !== account.id) {
-			return fail(403, { error: "Not authorized to collect resources for this company" });
-		}
-
-		// Get all factories
-		const companyFactories = await db
-			.select({
-				id: factories.id,
-				resourceOutput: factories.resourceOutput,
-				productOutput: factories.productOutput,
-				productionRate: factories.productionRate
-			})
-			.from(factories)
-			.where(eq(factories.companyId, companyId));
-
-		if (companyFactories.length === 0) {
-			return fail(400, { error: "No factories found" });
-		}
-
-		// OPTIMIZATION: Get all workers in one query
-		const factoryIds = companyFactories.map((f) => f.id);
-		const allWorkers = await db
-			.select({
-				factoryId: factoryWorkers.factoryId,
-				userId: factoryWorkers.userId,
-				lastWorked: factoryWorkers.lastWorked
-			})
-			.from(factoryWorkers)
-			.where(inArray(factoryWorkers.factoryId, factoryIds));
-
-		// Group by factory
-		const workersByFactory = allWorkers.reduce(
-			(acc, worker) => {
-				if (!acc[worker.factoryId]) {
-					acc[worker.factoryId] = [];
-				}
-				acc[worker.factoryId].push(worker);
-				return acc;
-			},
-			{} as Record<number, typeof allWorkers>
-		);
-
-		let totalCollected = 0;
-		const collectionResults: Record<string, number> = {};
-		const factoriesToUpdate: number[] = [];
-
-		// Calculate production for each factory
-		for (const factory of companyFactories) {
-			const workers = workersByFactory[factory.id] || [];
-			const workerCount = workers.length;
-
-			if (workerCount === 0) continue;
-
-			const lastWorked = workers.reduce(
-				(latest, w) => {
-					if (!w.lastWorked) return latest;
-					if (!latest) return w.lastWorked;
-					return w.lastWorked > latest ? w.lastWorked : latest;
-				},
-				null as Date | null
-			);
-
-			if (!lastWorked) continue;
-
-			// Calculate completed shifts
-			const hoursSinceWork = Math.floor((Date.now() - lastWorked.getTime()) / (1000 * 60 * 60));
-			const shiftsCompleted = Math.floor(hoursSinceWork / 8);
-
-			if (shiftsCompleted === 0) continue;
-
-			const production = shiftsCompleted * factory.productionRate * workerCount;
-			const outputType = factory.resourceOutput || factory.productOutput;
-
-			if (!outputType) continue;
-
-			collectionResults[outputType] = (collectionResults[outputType] || 0) + production;
-			totalCollected += production;
-			factoriesToUpdate.push(factory.id);
-
-			// Add to owner's inventory (batch these)
-			if (factory.resourceOutput) {
-				await db
-					.insert(resourceInventory)
-					.values({
-						userId: account.id,
-						resourceType: factory.resourceOutput,
-						quantity: production
-					})
-					.onConflictDoUpdate({
-						target: [resourceInventory.userId, resourceInventory.resourceType],
-						set: {
-							quantity: sql`${resourceInventory.quantity} + ${production}`,
-							updatedAt: new Date()
-						}
-					});
-			} else if (factory.productOutput) {
-				await db
-					.insert(productInventory)
-					.values({
-						userId: account.id,
-						productType: factory.productOutput,
-						quantity: production
-					})
-					.onConflictDoUpdate({
-						target: [productInventory.userId, productInventory.productType],
-						set: {
-							quantity: sql`${productInventory.quantity} + ${production}`,
-							updatedAt: new Date()
-						}
-					});
-			}
-		}
-
-		if (totalCollected === 0) {
-			return fail(400, { error: "No resources ready to collect" });
-		}
-
-		// OPTIMIZATION: Update all factory workers in one query
-		if (factoriesToUpdate.length > 0) {
-			await db
-				.update(factoryWorkers)
-				.set({ lastWorked: new Date() })
-				.where(inArray(factoryWorkers.factoryId, factoriesToUpdate));
-		}
-
-		return {
-			success: true,
-			totalCollected,
-			results: collectionResults,
-			message: `Collected ${totalCollected.toLocaleString()} units of resources`
-		};
-	},
-
 	// Deposit money from owner's wallet into company budget
 	depositBudget: async ({ params, locals, request }) => {
 		const account = locals.account!;

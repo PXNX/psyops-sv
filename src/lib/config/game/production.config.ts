@@ -30,3 +30,18 @@ export const PRODUCTION_RECIPES = {
 } as const;
 
 export type ProductionType = keyof typeof PRODUCTION_RECIPES;
+
+/**
+ * What one finished worker shift turns out at a factory, and the inputs it
+ * takes from the company owner's stock. Mines dig from regional deposits
+ * instead (resources.config.ts).
+ */
+export const SHIFT_RECIPES: Record<string, { inputs: Partial<Record<string, number>>; output: number }> = {
+	// Refineries
+	steel: { inputs: { iron: 10, coal: 5 }, output: 5 },
+	gunpowder: { inputs: { coal: 5, wood: 5 }, output: 5 },
+	// Armaments: one production batch per shift
+	...Object.fromEntries(
+		Object.entries(PRODUCTION_RECIPES).map(([product, r]) => [product, { inputs: r.inputs, output: r.output }])
+	)
+};

@@ -15,6 +15,8 @@ import { getEmbargoReason } from "#lib/server/embargo.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { and, eq, sql } from "drizzle-orm";
 import { extractFromDeposit, isMineable } from "#lib/server/services/economy/mining.js";
+import { addUserItem, takeUserItem } from "#lib/server/services/economy/inventory.js";
+import { SHIFT_RECIPES } from "#lib/config/index.js";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 
@@ -216,6 +218,7 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			ownerId: companies.ownerId,
 			factoryType: factories.factoryType,
 			resourceOutput: factories.resourceOutput,
+			productOutput: factories.productOutput,
 			workerWage: factories.workerWage,
 			productionRate: factories.productionRate,
 			regionId: factories.regionId,
@@ -369,6 +372,36 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 					});
 			}
 
+			// Refineries and armaments factories turn the owner's materials into
+			// output, one recipe per shift; without the materials the shift is
+			// paid but produces nothing.
+			let output: { item: string; quantity: number; missing?: string } | null = null;
+			if (factory.factoryType !== "mine") {
+				const item = factory.productOutput ?? factory.resourceOutput;
+				const recipe = item ? SHIFT_RECIPES[item] : undefined;
+				if (item && recipe) {
+					let missing: string | undefined;
+					for (const [resource, needed] of Object.entries(recipe.inputs)) {
+						if (!(await takeUserItem(tx, factory.ownerId, "resource", resource, needed!))) {
+							missing = resource;
+							break;
+						}
+					}
+					if (missing) {
+						// Put back anything already taken: all or nothing.
+						for (const [resource, needed] of Object.entries(recipe.inputs)) {
+							if (resource === missing) break;
+							await addUserItem(tx, factory.ownerId, "resource", resource, needed!);
+						}
+						output = { item, quantity: 0, missing };
+					} else {
+						const type = factory.productOutput ? "product" : "resource";
+						await addUserItem(tx, factory.ownerId, type, item, recipe.output);
+						output = { item, quantity: recipe.output };
+					}
+				}
+			}
+
 			// Record transaction for worker
 			const [currentWallet] = await tx
 				.select({ balance: userWallets.balance })
@@ -384,13 +417,13 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				relatedEntityId: factoryId
 			});
 
-			return { incomeTaxResult, miningTaxResult, resourcesProduced, deposit };
+			return { incomeTaxResult, miningTaxResult, resourcesProduced, deposit, output };
 		});
 	} catch (err) {
 		if (err instanceof AlreadyCollected) return { success: false, error: "This shift has already been collected." };
 		throw err;
 	}
-	const { incomeTaxResult, miningTaxResult, resourcesProduced, deposit } = result;
+	const { incomeTaxResult, miningTaxResult, resourcesProduced, deposit, output } = result;
 
 	const totalTaxPaid = incomeTaxResult.taxAmount + (miningTaxResult?.taxAmount || 0);
 	const taxBreakdown = miningTaxResult
@@ -422,6 +455,11 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				? ". This region has no deposit of that resource, so the mine produced nothing."
 				: deposit && deposit.remaining === 0
 					? ". The deposit is exhausted."
+					: "") +
+			(output?.missing
+				? `. No ${output.item} was made: the owner is out of ${output.missing}.`
+				: output
+					? `. The factory made ${output.quantity} ${output.item}.`
 					: "")
 	};
 }
