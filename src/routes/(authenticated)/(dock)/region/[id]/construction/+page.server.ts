@@ -17,7 +17,11 @@ import {
 	startConstruction,
 	stateStockpile
 } from "#lib/server/services/politics/construction.service.js";
-import { canOrderConstruction, canProposeIn, type ConstructionRole } from "#lib/server/services/politics/construction-access.js";
+import {
+	canOrderConstruction,
+	canProposeIn,
+	type ConstructionRole
+} from "#lib/server/services/politics/construction-access.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;

@@ -31,6 +31,8 @@ import { getContext } from "#lib/server/context.js";
 import { getSignedDownloadUrl, getLogoUrl } from "#lib/server/backblaze.js";
 import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
 
+import { checkEntry } from "#lib/server/services/politics/entry.js";
+
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const regionId = parseInt(params.id);
@@ -521,6 +523,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			blocVisaFree,
 			blockedReason: visaBlockedReason
 		},
+		// Whether the viewer could travel here right now, and why not.
+		entry: await checkEntry(db, account.id, region.stateId),
 		activeWars,
 		attackableWars,
 		borderingRegionsForAttack,
@@ -564,6 +568,10 @@ export const actions: Actions = {
 		if (!targetRegion) {
 			return fail(404, { error: "Region not found" });
 		}
+
+		// Borders, visas, wars and sanctions decide who gets in.
+		const entry = await checkEntry(db, account.id, targetRegion.stateId);
+		if (!entry.allowed) return fail(403, { error: entry.reason });
 
 		const currentResidence = await db.query.residences.findFirst({
 			where: eq(residences.userId, account.id)

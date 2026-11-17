@@ -9,18 +9,7 @@
 	import Modal from "#lib/component/Modal.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 
-	const {
-		regionId,
-		regionName,
-		isIndependent,
-		allowsFreeMovement,
-		hasInauguralElection,
-		hasPendingResidenceApp,
-		hasResidence = false,
-		isInParty = false,
-		travelInfo,
-		walletBalance = 0
-	} = $props<{
+	interface Props {
 		regionId: number;
 		regionName: string;
 		isIndependent: boolean;
@@ -31,7 +20,23 @@
 		isInParty?: boolean;
 		travelInfo: { distanceKm: number; cost: number; timeHours: number } | null;
 		walletBalance?: number;
-	}>();
+		/** Set when borders, visas, war or sanctions keep the viewer out. */
+		entryBlockedReason?: string | null;
+	}
+
+	const {
+		regionId,
+		regionName,
+		isIndependent,
+		allowsFreeMovement,
+		hasInauguralElection,
+		hasPendingResidenceApp,
+		hasResidence = false,
+		isInParty = false,
+		travelInfo,
+		walletBalance = 0,
+		entryBlockedReason = null
+	}: Props = $props();
 
 	let showTravelSheet = $state(false);
 
@@ -64,9 +69,7 @@
 						Found a State
 					</Button>
 				{:else}
-					<p class="text-xs text-[#a8a083]">
-						You're already a member of a party, so you can't found a new one here.
-					</p>
+					<p class="text-xs text-[#a8a083]">You're already a member of a party, so you can't found a new one here.</p>
 				{/if}
 			</div>
 		</div>
@@ -110,7 +113,16 @@
 						Entry requires a visa approved by the Foreign Minister or President, or existing residency.
 					</p>
 				{/if}
-				<Button variant="soft-blue" size="sm" icon={FluentHome20Filled} onclick={() => (showTravelSheet = true)}>
+				{#if entryBlockedReason}
+					<p class="text-sm text-red-300 mb-3">{entryBlockedReason}</p>
+				{/if}
+				<Button
+					variant="soft-blue"
+					size="sm"
+					icon={FluentHome20Filled}
+					disabled={!!entryBlockedReason}
+					onclick={() => (showTravelSheet = true)}
+				>
 					Travel to this Region
 				</Button>
 			</div>

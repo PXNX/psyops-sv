@@ -176,6 +176,7 @@
 			isInParty={data.isInParty}
 			travelInfo={data.travelInfo}
 			walletBalance={data.walletBalance}
+			entryBlockedReason={data.entry.allowed ? null : data.entry.reason}
 		/>
 	{/if}
 
