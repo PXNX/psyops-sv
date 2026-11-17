@@ -1,11 +1,20 @@
 // Wallet service - handles user wallet operations
 import type { Database } from "../../db";
 import { userWallets } from "../../schema";
-import { eq } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
 
+/** The database itself or an open transaction on it. */
+type Executor = Pick<Database, "insert" | "update" | "select">;
+
+function assertPositiveAmount(amount: number) {
+	if (!Number.isSafeInteger(amount) || amount <= 0) {
+		throw new Error(`Invalid amount: ${amount}`);
+	}
+}
+
 export class WalletService {
-	constructor(private db: typeof import("../../db").db) {}
+	constructor(private db: Database) {}
 
 	// ============ Economy Calculations ============
 
@@ -73,47 +82,51 @@ export class WalletService {
 		return wallet;
 	}
 
-	async addFunds(userId: string, amount: number) {
-		const wallet = await this.getOrCreateWallet(userId);
-		const newBalance = BigInt(wallet.balance) + BigInt(amount);
-
-		await this.db
+	/**
+	 * Credit a wallet. The increment happens inside the UPDATE itself, so two
+	 * concurrent credits can never overwrite each other's result.
+	 */
+	async addFunds(userId: string, amount: number, db: Executor = this.db) {
+		assertPositiveAmount(amount);
+		await this.ensureWallet(userId, db);
+		const [row] = await db
 			.update(userWallets)
-			.set({
-				balance: Number(newBalance),
-				updatedAt: new Date()
-			})
-			.where(eq(userWallets.userId, userId));
-
-		return Number(newBalance);
+			.set({ balance: sql`${userWallets.balance} + ${amount}`, updatedAt: new Date() })
+			.where(eq(userWallets.userId, userId))
+			.returning({ balance: userWallets.balance });
+		return Number(row!.balance);
 	}
 
-	async deductFunds(userId: string, amount: number) {
-		const wallet = await this.getOrCreateWallet(userId);
-
-		if (BigInt(wallet.balance) < BigInt(amount)) {
-			throw new Error("Insufficient funds");
-		}
-
-		const newBalance = BigInt(wallet.balance) - BigInt(amount);
-
-		await this.db
+	/**
+	 * Debit a wallet. The balance check is part of the UPDATE's WHERE clause, so
+	 * the balance can never go negative even when two debits race each other.
+	 */
+	async deductFunds(userId: string, amount: number, db: Executor = this.db) {
+		assertPositiveAmount(amount);
+		await this.ensureWallet(userId, db);
+		const [row] = await db
 			.update(userWallets)
-			.set({
-				balance: Number(newBalance),
-				updatedAt: new Date()
-			})
-			.where(eq(userWallets.userId, userId));
-
-		return Number(newBalance);
+			.set({ balance: sql`${userWallets.balance} - ${amount}`, updatedAt: new Date() })
+			.where(and(eq(userWallets.userId, userId), gte(userWallets.balance, amount)))
+			.returning({ balance: userWallets.balance });
+		if (!row) throw new Error("Insufficient funds");
+		return Number(row.balance);
 	}
 
+	/** Move money between two wallets: both legs commit together or not at all. */
 	async transfer(fromUserId: string, toUserId: string, amount: number) {
-		// Start transaction
+		if (fromUserId === toUserId) throw new Error("Cannot transfer to the same wallet");
 		await this.db.transaction(async (tx) => {
-			await this.deductFunds(fromUserId, amount);
-			await this.addFunds(toUserId, amount);
+			await this.deductFunds(fromUserId, amount, tx);
+			await this.addFunds(toUserId, amount, tx);
 		});
+	}
+
+	private async ensureWallet(userId: string, db: Executor) {
+		await db
+			.insert(userWallets)
+			.values({ userId, balance: ECONOMY_CONFIG.INITIAL_USER_WALLET })
+			.onConflictDoNothing({ target: userWallets.userId });
 	}
 
 	async getBalance(userId: string): Promise<number> {
