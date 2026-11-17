@@ -1,4 +1,13 @@
 <script lang="ts">
+	import type { SubmitFunction } from "$app/forms";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+
+	const withToast: SubmitFunction =
+		() =>
+		async ({ result, update }) => {
+			await update();
+			toastResult(result);
+		};
 	import { enhance } from "$app/forms";
 	import FluentChartMultiple20Regular from "~icons/fluent/chart-multiple-20-regular";
 	import FluentShoppingCart20Filled from "~icons/fluent/cart-20-filled";
@@ -78,7 +87,6 @@
 	<title>{`${data.itemName.charAt(0).toUpperCase()}${data.itemName.slice(1)} market · PsyOps`}</title>
 </svelte:head>
 
-
 {#snippet offerRow(listing: (typeof data.otherListings)[number], isBest: boolean)}
 	{@const buyQty = buyQuantities[listing.id] || 1}
 	{@const itemCost = listing.pricePerUnit * buyQty}
@@ -100,7 +108,7 @@
 				<p class="text-xs text-[#a8a083] mt-0.5"><span class="font-mono">{listing.quantity}</span> units available</p>
 			</div>
 
-			<form method="POST" action="?/buyListing" use:enhance class="flex items-center gap-2">
+			<form method="POST" action="?/buyListing" use:enhance={withToast} class="flex items-center gap-2">
 				<input type="hidden" name="listingId" value={listing.id} />
 
 				<div class="text-right text-xs font-mono min-w-[80px]">
@@ -126,7 +134,7 @@
 				</div>
 			</form>
 			{#if data.governmentState}
-				<form method="POST" action="?/buyListingAsState" use:enhance>
+				<form method="POST" action="?/buyListingAsState" use:enhance={withToast}>
 					<input type="hidden" name="listingId" value={listing.id} />
 					<input type="hidden" name="quantity" value={buyQty} />
 					<Button
@@ -264,7 +272,7 @@
 					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Your listing</p>
 					<div class="flex items-center gap-2">
 						<Button variant="secondary" size="xs" icon={FluentEdit20Filled} onclick={startEditing}>EDIT</Button>
-						<form method="POST" action="?/removeListing" use:enhance>
+						<form method="POST" action="?/removeListing" use:enhance={withToast}>
 							<input type="hidden" name="listingId" value={data.myListing.id} />
 							<Button type="submit" variant="soft-red" size="xs" icon={FluentDelete20Filled}>REMOVE</Button>
 						</form>
@@ -272,7 +280,7 @@
 				</div>
 				<div class="flex items-center gap-4 sm:gap-6">
 					<ResourceIcon name={data.itemName} class="size-10 sm:size-12" />
-					<div class="flex-1 grid grid-cols-3 gap-4">
+					<div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
 						<div>
 							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Quantity</p>
 							<p class="text-xl sm:text-2xl font-bold text-[#f5efd8] font-mono">{data.myListing.quantity}</p>
@@ -302,11 +310,12 @@
 				<form
 					method="POST"
 					action="?/updateListing"
-					use:enhance={{
-						onResult: () => {
-							isEditing = false;
-						}
-					}}
+					use:enhance={() =>
+						async ({ result, update }) => {
+							await update();
+							toastResult(result);
+							if (result.type === "success") isEditing = false;
+						}}
 					class="space-y-4"
 				>
 					<div class="flex items-center justify-between mb-1">
@@ -372,7 +381,7 @@
 				</form>
 			{:else if data.userItemQuantity > 0 && cooldownTimeRemaining <= 0}
 				{@const cmp = priceVsMarket(createPrice)}
-				<form method="POST" action="?/createListing" use:enhance class="space-y-4">
+				<form method="POST" action="?/createListing" use:enhance={withToast} class="space-y-4">
 					<div class="flex items-center gap-2 text-[#d3caa9] mb-2">
 						<FluentAdd20Filled class="size-4 text-[#ffd35c]" />
 						<span class="text-sm">
