@@ -20,6 +20,8 @@ import {
 	blocs
 } from "#lib/server/schema.js";
 
+class AlreadyReviewedError extends Error {}
+
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 	const stateId = parseInt(params.id);
@@ -292,7 +294,7 @@ export const actions: Actions = {
 		const autoApprove = formData.get("autoApprove") === "true";
 
 		// Validate
-		if (visaCost < 0 || visaCost > 1000000) {
+		if (!Number.isInteger(visaCost) || visaCost < 0 || visaCost > 1000000) {
 			return fail(400, { error: "Visa cost must be between $0 and $1,000,000" });
 		}
 
@@ -334,6 +336,7 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const applicationId = parseInt(formData.get("applicationId") as string);
 		const decision = formData.get("decision") as "approved" | "rejected";
+		if (decision !== "approved" && decision !== "rejected") return fail(400, { error: "Approve or reject." });
 
 		const application = await db.query.visaApplications.findFirst({
 			where: eq(visaApplications.id, applicationId)
@@ -347,10 +350,13 @@ export const actions: Actions = {
 		// fails must not leave the application marked approved.
 		try {
 			await db.transaction(async (tx) => {
-				await tx
+				// Only a pending application can be decided, and only once.
+				const [reviewed] = await tx
 					.update(visaApplications)
 					.set({ status: decision, reviewedAt: new Date(), reviewedBy: account.id })
-					.where(eq(visaApplications.id, applicationId));
+					.where(and(eq(visaApplications.id, applicationId), eq(visaApplications.status, "pending")))
+					.returning({ id: visaApplications.id });
+				if (!reviewed) throw new AlreadyReviewedError();
 
 				if (decision !== "approved") return;
 
@@ -382,6 +388,9 @@ export const actions: Actions = {
 		} catch (err) {
 			if (err instanceof InsufficientFundsError) {
 				return fail(400, { error: "User has insufficient funds" });
+			}
+			if (err instanceof AlreadyReviewedError) {
+				return fail(409, { error: "This application has already been decided." });
 			}
 			throw err;
 		}

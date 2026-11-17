@@ -1,7 +1,15 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.svelte -->
 <script lang="ts">
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
-	import { enhance } from "$app/forms";
+	import { enhance, type SubmitFunction } from "$app/forms";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+
+	const withToast: SubmitFunction =
+		() =>
+		async ({ result, update }) => {
+			await update();
+			toastResult(result);
+		};
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -45,7 +53,7 @@
 				</h2>
 
 				<!-- Sanction Form -->
-				<form method="POST" action="?/sanctionState" use:enhance class="space-y-4 mt-4">
+				<form method="POST" action="?/sanctionState" use:enhance={withToast} class="space-y-4 mt-4">
 					<div>
 						<label class="field-label" for="targetState">Select State to Sanction</label>
 						<select
@@ -99,7 +107,7 @@
 									</p>
 									<p class="text-sm text-[#d3caa9] mt-2">{sanction.reason}</p>
 								</div>
-								<form method="POST" action="?/liftSanction" use:enhance>
+								<form method="POST" action="?/liftSanction" use:enhance={withToast}>
 									<input type="hidden" name="sanctionId" value={sanction.id} />
 									<Button type="submit" variant="ghost" size="sm" icon={FluentCheckmark20Filled}>Lift</Button>
 								</form>
@@ -134,14 +142,14 @@
 								</div>
 
 								<div class="flex gap-2">
-									<form method="POST" action="?/approveResidence" use:enhance class="flex-1">
+									<form method="POST" action="?/approveResidence" use:enhance={withToast} class="flex-1">
 										<input type="hidden" name="applicationId" value={application.id} />
 										<Button type="submit" variant="soft-emerald" size="sm" block icon={FluentCheckmark20Filled}>
 											Approve
 										</Button>
 									</form>
 
-									<form method="POST" action="?/rejectResidence" use:enhance class="flex-1">
+									<form method="POST" action="?/rejectResidence" use:enhance={withToast} class="flex-1">
 										<input type="hidden" name="applicationId" value={application.id} />
 										<Button type="submit" variant="soft-red" size="sm" block icon={FluentDismiss20Filled}>
 											Reject
@@ -184,7 +192,7 @@
 					</div>
 				{/if}
 
-				<form method="POST" action="?/updateVisaSettings" use:enhance class="space-y-4 mt-4">
+				<form method="POST" action="?/updateVisaSettings" use:enhance={withToast} class="space-y-4 mt-4">
 					<!-- Visa Required Toggle -->
 					<label class="flex items-center gap-4 cursor-pointer">
 						<input
@@ -263,7 +271,7 @@
 									</div>
 
 									<div class="flex gap-2">
-										<form method="POST" action="?/reviewVisaApplication" use:enhance class="flex-1">
+										<form method="POST" action="?/reviewVisaApplication" use:enhance={withToast} class="flex-1">
 											<input type="hidden" name="applicationId" value={application.id} />
 											<input type="hidden" name="decision" value="approved" />
 											<Button type="submit" variant="soft-emerald" size="sm" block icon={FluentCheckmark20Filled}>
@@ -271,7 +279,7 @@
 											</Button>
 										</form>
 
-										<form method="POST" action="?/reviewVisaApplication" use:enhance class="flex-1">
+										<form method="POST" action="?/reviewVisaApplication" use:enhance={withToast} class="flex-1">
 											<input type="hidden" name="applicationId" value={application.id} />
 											<input type="hidden" name="decision" value="rejected" />
 											<Button type="submit" variant="soft-red" size="sm" block icon={FluentDismiss20Filled}>
@@ -314,7 +322,7 @@
 										confirmLabel: "Revoke",
 										danger: true
 									}}
-									use:enhance
+									use:enhance={withToast}
 								>
 									<input type="hidden" name="visaId" value={visa.id} />
 									<input type="hidden" name="reason" value="Revoked by foreign minister" />
