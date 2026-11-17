@@ -4,7 +4,11 @@
 	import WorldMap from "#lib/assets/worldmap3.svg?raw";
 	import type { Region, State, UserTravel } from "#lib/server/schema.js";
 	import * as m from "#lib/paraglide/messages.js";
-	import FluentEmojiMagnifyingGlassTiltedLeft from "~icons/fluent-emoji/magnifying-glass-tilted-left";
+	import IconSearch from "~icons/fluent/search-20-regular";
+	import IconZoomIn from "~icons/fluent/zoom-in-20-regular";
+	import IconZoomOut from "~icons/fluent/zoom-out-20-regular";
+	import IconMyLocation from "~icons/fluent/my-location-20-regular";
+	import IconButton from "#lib/component/ui/IconButton.svelte";
 	import IconMapPin from "~icons/fluent/location-24-regular";
 	import IconChevronRight from "~icons/fluent/chevron-right-24-regular";
 	import { goto } from "$app/navigation";
@@ -28,6 +32,34 @@
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 	let stateColor = $state<string | null>(null);
 	let selectedRegionData = $state<(typeof data.regionMap)[number] | null>(null);
+
+	// War-room map palette (see docs/UI_STYLE_GUIDE.md): olive land, dark
+	// borders, gold highlights; layers use the guide's signal colours.
+	const LAND = "#2b3322";
+	const BORDER = "#0f120c";
+	const HIGHLIGHT = "#ffd35c";
+	const ATTACKER = "#dc2626";
+	const DEFENDER = "#2f7fd6";
+
+	/** Mix two hex colours: t=0 → a, t=1 → b. */
+	function mix(a: string, b: string, t: number) {
+		const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+		const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+		const [r, g, bl] = pa.map((v, i) => Math.round(v + (pb[i]! - v) * t));
+		return `rgb(${r},${g},${bl})`;
+	}
+
+	// Heatmap ramps, low → high.
+	const RAMPS = {
+		resource: ["#3a3f22", "#ffd35c"],
+		residents: ["#24361c", "#8ae35f"],
+		powerplants: ["#3d3015", "#ffb02e"]
+	} as const;
+
+	// Size of the world map's viewBox; the panned scene is laid out at exactly
+	// this size (see the markup), so map units and CSS pixels agree at zoom 1.
+	const SVG_WIDTH = 1400;
+	const SVG_HEIGHT = 600;
 
 	// Pointer tracking so we can tell a tap/click apart from a drag/pan.
 	// The sheet should only open on a genuine click, never after panning.
@@ -108,8 +140,8 @@
 	function initPanzoom(node: HTMLElement | SVGElement) {
 		colorRegions(node);
 
-		const svgWidth = 1400;
-		const svgHeight = 600;
+		const svgWidth = SVG_WIDTH;
+		const svgHeight = SVG_HEIGHT;
 
 		const { width: viewportWidth, height: viewportHeight } = getViewportSize(node);
 
@@ -277,24 +309,37 @@
 		}
 
 		paths.forEach((path) => {
+			const el = path as SVGElement;
 			const regionId = parseInt(path.id, 10);
-			if (isNaN(regionId)) return;
+			if (isNaN(regionId)) {
+				// Named shapes (e.g. "Malaya") aren't game regions: plain land
+				// that doesn't react to hover or taps.
+				if (!path.closest("defs")) {
+					el.style.fill = LAND;
+					el.classList.add("region-inert");
+				}
+				return;
+			}
 
 			const regionData = data.regionMap[regionId];
-			if (!regionData) return;
+			if (!regionData) {
+				// Land the game doesn't track (yet): plain olive.
+				el.style.fill = LAND;
+				return;
+			}
 
-			let color = "#1e293b"; // default dark neutral for empty regions
+			let color = LAND;
 
 			switch (mapFilter) {
 				// ── Political: state colours ──
 				case "political":
-					color = regionData.stateId ? data.stateColorMap[regionData.stateId] || "#1e293b" : "#1e293b";
+					color = regionData.stateId ? data.stateColorMap[regionData.stateId] || LAND : LAND;
 					break;
 
 				// ── Blocs: bloc colours, states without a bloc are neutral ──
 				case "blocs":
 					if (regionData.stateId) {
-						color = data.blocColorMap?.[regionData.stateId] || "#1e293b";
+						color = data.blocColorMap?.[regionData.stateId] || LAND;
 					}
 					break;
 
@@ -302,59 +347,42 @@
 				case "wars":
 					if (regionData.stateId) {
 						if (data.warAttackerStateIds?.has(regionData.stateId)) {
-							color = "#dc2626"; // red-600
+							color = ATTACKER;
 						} else if (data.warDefenderStateIds?.has(regionData.stateId)) {
-							color = "#2563eb"; // blue-600
+							color = DEFENDER;
 						}
 					}
 					break;
 
-				// ── Residents: green heatmap ──
+				// ── Residents / power plants: green and amber heatmaps ──
 				case "residents": {
 					const count = regionData.residentCount ?? 0;
-					if (count === 0 || maxResidents === 0) {
-						color = "#1e293b";
-					} else {
-						const n = Math.min(count / maxResidents, 1);
-						// dark teal → bright green
-						const r = Math.round(30 + (74 - 30) * n);
-						const g = Math.round(58 + (222 - 58) * n);
-						const b = Math.round(92 + (68 - 92) * n);
-						color = `rgb(${r},${g},${b})`;
-					}
+					color = count && maxResidents ? mix(...RAMPS.residents, Math.min(count / maxResidents, 1)) : LAND;
 					break;
 				}
 
-				// ── Power plants: amber heatmap ──
 				case "powerplants": {
 					const count = regionData.powerplantCount ?? 0;
-					if (count === 0 || maxPowerplants === 0) {
-						color = "#1e293b";
-					} else {
-						const n = Math.min(count / maxPowerplants, 1);
-						// dark amber → bright yellow
-						const r = Math.round(78 + (250 - 78) * n);
-						const g = Math.round(55 + (204 - 55) * n);
-						const b = Math.round(15 + (20 - 15) * n);
-						color = `rgb(${r},${g},${b})`;
-					}
+					color = count && maxPowerplants ? mix(...RAMPS.powerplants, Math.min(count / maxPowerplants, 1)) : LAND;
 					break;
 				}
 
-				// ── Resource heatmaps (existing green gradient) ──
+				// ── Resource heatmaps: olive → gold ──
 				default:
 					color = getResourceColor(regionData, mapFilter, maxResourceValue);
 					break;
 			}
 
-			(path as SVGElement).style.fill = color;
+			el.style.fill = color;
 
 			if (regionId === highlightedRegionId) {
-				(path as SVGElement).style.stroke = "#fbbf24";
-				(path as SVGElement).style.strokeWidth = "3";
+				el.style.stroke = HIGHLIGHT;
+				el.style.strokeWidth = "1.2";
+				el.classList.add("region-highlight");
 			} else {
-				(path as SVGElement).style.stroke = "#1d232a";
-				(path as SVGElement).style.strokeWidth = "0.3";
+				el.style.stroke = BORDER;
+				el.style.strokeWidth = "0.3";
+				el.classList.remove("region-highlight");
 			}
 		});
 	}
@@ -370,23 +398,9 @@
 	}
 
 	function getResourceColor(regionData: any, resource: string, maxValue: number): string {
-		const resourceAmount = getResourceValue(regionData, resource);
-
-		if (resourceAmount === 0) {
-			return "#6b7280";
-		}
-
-		if (maxValue === 0) {
-			return "#6b7280";
-		}
-
-		const normalized = Math.min(resourceAmount / maxValue, 1);
-
-		const red = Math.round(134 - (134 - 22) * normalized);
-		const green = Math.round(239 - (239 - 163) * normalized);
-		const blue = Math.round(172 - (172 - 74) * normalized);
-
-		return `rgb(${red}, ${green}, ${blue})`;
+		const amount = getResourceValue(regionData, resource);
+		if (!amount || !maxValue) return LAND;
+		return mix(...RAMPS.resource, Math.min(amount / maxValue, 1));
 	}
 
 	$effect(() => {
@@ -470,6 +484,30 @@
 		}
 	}
 
+	let viewportEl = $state<HTMLElement | null>(null);
+
+	/** Zoom around the centre of the visible map (buttons, keyboard). */
+	function zoomBy(factor: number) {
+		if (!instance || !viewportEl) return;
+		const rect = viewportEl.getBoundingClientRect();
+		instance.smoothZoom(rect.left + rect.width / 2, rect.top + rect.height / 2, factor);
+	}
+
+	function focusMyRegion() {
+		if (data.currentUserRegionId) selectSearchResult(data.currentUserRegionId);
+	}
+
+	// Legend for the active layer (political/bloc colours speak for themselves).
+	const legend = $derived.by(() => {
+		if (mapFilter === "wars") return { kind: "sides" as const };
+		if (mapFilter === "residents") return { kind: "ramp" as const, label: "Residents", ramp: RAMPS.residents };
+		if (mapFilter === "powerplants") return { kind: "ramp" as const, label: "Power plants", ramp: RAMPS.powerplants };
+		if (!specialLayers.has(mapFilter)) {
+			return { kind: "ramp" as const, label: resourceLabels[mapFilter] ?? mapFilter, ramp: RAMPS.resource };
+		}
+		return null;
+	});
+
 	function selectSearchResult(regionId: number) {
 		const svgElement = document.getElementById("panzoom-element");
 		if (!svgElement || !instance) return;
@@ -484,8 +522,7 @@
 		const regionCenterX = bbox.x + bbox.width / 2;
 		const regionCenterY = bbox.y + bbox.height / 2;
 
-		const viewportWidth = window.innerWidth;
-		const viewportHeight = window.innerHeight - 56;
+		const { width: viewportWidth, height: viewportHeight } = getViewportSize(svgElement.parentElement ?? svgElement);
 
 		const targetZoom = 5;
 
@@ -582,6 +619,7 @@
 </script>
 
 <svelte:head>
+	<title>World Map · PsyOps</title>
 	<style>
 		body {
 			overflow: hidden;
@@ -598,7 +636,7 @@
 >
 	<form class="flex-1 relative min-w-0" onsubmit={handleSearchSubmit}>
 		<div class="flex items-center gap-2">
-			<FluentEmojiMagnifyingGlassTiltedLeft class="w-4 h-4 flex-shrink-0 text-[#a8a083]" />
+			<IconSearch class="size-4 flex-shrink-0 text-[#a8a083]" />
 			<input
 				type="search"
 				bind:value={searchQuery}
@@ -654,18 +692,57 @@
 	</div>
 </header>
 
-<main class="flex-1 w-full overflow-hidden">
+<!-- The viewport: fills the space above the dock and clips the scene. -->
+<div bind:this={viewportEl} class="map-viewport relative flex-1 w-full overflow-hidden touch-none">
+	<!-- The scene panzoom moves. It is exactly SVG_WIDTH x SVG_HEIGHT so one
+	     unit of the map's viewBox is one CSS pixel at zoom 1; every centring
+	     and bounds calculation below relies on that. -->
 	<div
 		use:initPanzoom
 		onpointerdown={onPointerDown}
 		onpointerup={onPointerUp}
-		role="button"
-		tabindex="0"
-		class="w-full h-full overflow-hidden cursor-grab active:cursor-grabbing touch-action-none"
+		role="application"
+		aria-label="World map. Drag to pan, pinch or scroll to zoom, tap a region for details."
+		class="map-scene absolute top-0 left-0 cursor-grab active:cursor-grabbing"
+		style:width="{SVG_WIDTH}px"
+		style:height="{SVG_HEIGHT}px"
 	>
 		{@html WorldMap}
 	</div>
-</main>
+
+	<!-- Zoom / locate controls -->
+	<div class="panel absolute right-3 bottom-3 z-10 flex flex-col rounded-sm p-1 gap-1">
+		<IconButton icon={IconZoomIn} label="Zoom in" shape="square" size="sm" onclick={() => zoomBy(1.6)} />
+		<IconButton icon={IconZoomOut} label="Zoom out" shape="square" size="sm" onclick={() => zoomBy(1 / 1.6)} />
+		{#if data.currentUserRegionId}
+			<div class="mx-1 h-px bg-[#c8b47a]/20"></div>
+			<IconButton icon={IconMyLocation} label="Go to my region" shape="square" size="sm" onclick={focusMyRegion} />
+		{/if}
+	</div>
+
+	<!-- Layer legend -->
+	{#if legend}
+		<div class="panel animate-pop-in absolute left-3 bottom-3 z-10 rounded-sm px-3 py-2 text-[11px] text-[#d3caa9]">
+			{#if legend.kind === "sides"}
+				<div class="flex items-center gap-3">
+					<span class="flex items-center gap-1.5"
+						><span class="size-2.5 rounded-full" style:background={ATTACKER}></span>Attacker</span
+					>
+					<span class="flex items-center gap-1.5"
+						><span class="size-2.5 rounded-full" style:background={DEFENDER}></span>Defender</span
+					>
+				</div>
+			{:else}
+				<p class="mb-1 font-semibold uppercase tracking-wide text-[10px] text-[#a8a083]">{legend.label}</p>
+				<div
+					class="h-1.5 w-28 rounded-full"
+					style:background="linear-gradient(90deg, {legend.ramp[0]}, {legend.ramp[1]})"
+				></div>
+				<div class="mt-0.5 flex justify-between text-[10px] text-[#a8a083]"><span>Low</span><span>High</span></div>
+			{/if}
+		</div>
+	{/if}
+</div>
 
 <!-- Region Sheet -->
 <BottomSheet bind:open={showSheet}>
@@ -786,20 +863,47 @@
 <style>
 	/* ─── SVG Styles ─── */
 	:global(#panzoom-element) {
+		display: block;
 		width: 100%;
 		height: 100%;
 	}
 
+	/* Sea: a deep, slightly cool green-black under the olive land. */
+	.map-viewport {
+		background: radial-gradient(ellipse at 50% 40%, rgba(70, 90, 70, 0.18), transparent 70%), #0b100d;
+	}
+
 	:global(#panzoom-element path) {
-		stroke: #1d232a;
+		stroke: #0f120c;
 		stroke-width: 0.3;
 		transition:
 			filter 0.15s ease,
 			opacity 0.15s ease;
 	}
 
+	:global(#panzoom-element path.region-inert) {
+		pointer-events: none;
+	}
+
 	:global(#panzoom-element path:hover) {
-		filter: brightness(1.12) saturate(1.15);
+		filter: brightness(1.25) saturate(1.1);
 		cursor: pointer;
+	}
+
+	/* The region you searched for / jumped to pulses gold for a moment. */
+	:global(#panzoom-element path.region-highlight) {
+		animation: region-pulse 900ms ease-in-out 3;
+	}
+
+	@keyframes region-pulse {
+		50% {
+			filter: brightness(1.6) drop-shadow(0 0 2px #ffd35c);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		:global(#panzoom-element path.region-highlight) {
+			animation: none;
+		}
 	}
 </style>
