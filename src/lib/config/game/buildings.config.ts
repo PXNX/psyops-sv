@@ -1,5 +1,11 @@
-// Buildings and infrastructure configuration
+// Public buildings a state can construct in its regions. Each completed
+// building raises one of the region's levels by one (see
+// services/politics/construction.service.ts); a region needs some
+// infrastructure before it can host the bigger projects.
 export type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications";
+
+/** The `regions` column a building type raises. */
+export type RegionStat = "infrastructure" | "education" | "hospitals" | "economy" | "fortifications";
 
 export interface BuildingCosts {
 	currency: number;
@@ -13,103 +19,93 @@ export interface BuildingCosts {
 
 export interface BuildingTemplate {
 	type: BuildingType;
+	name: string;
+	icon: string;
+	/** Region level this building raises by one when it's finished. */
+	stat: RegionStat;
+	statLabel: string;
+	maxLevel: number;
+	/** Currency from the state treasury, the rest from the state stockpile. */
 	costs: BuildingCosts;
-	constructionTime: number; // in days
+	/** In days. */
+	constructionTime: number;
+	/** Infrastructure level the region needs first. */
 	infrastructureRequired: number;
-	powerConsumption: number; // MW
 	description: string;
 	benefits: string[];
 }
 
 export const BUILDING_TEMPLATES: Record<BuildingType, BuildingTemplate> = {
-	hospital: {
-		type: "hospital",
-		costs: {
-			currency: 50000,
-			steel: 100,
-			copper: 50,
-			wood: 200
-		},
-		constructionTime: 7,
-		infrastructureRequired: 10,
-		powerConsumption: 20,
-		description: "Improves public health and increases population growth",
-		benefits: ["+1 Hospital capacity", "+5% Population growth", "Reduces casualties in war"]
+	infrastructure: {
+		type: "infrastructure",
+		name: "Infrastructure",
+		icon: "🛣️",
+		stat: "infrastructure",
+		statLabel: "Infrastructure",
+		maxLevel: 20,
+		costs: { currency: 30000, steel: 50, wood: 100, coal: 200 },
+		constructionTime: 3,
+		infrastructureRequired: 0,
+		description: "Roads, bridges and railways. Everything else is built on it.",
+		benefits: ["+1 infrastructure level", "Unlocks schools, hospitals, power plants and forts"]
 	},
 	school: {
 		type: "school",
-		costs: {
-			currency: 40000,
-			steel: 80,
-			wood: 300
-		},
+		name: "School",
+		icon: "🏫",
+		stat: "education",
+		statLabel: "Education",
+		maxLevel: 10,
+		costs: { currency: 40000, steel: 80, wood: 300 },
 		constructionTime: 5,
-		infrastructureRequired: 5,
-		powerConsumption: 15,
-		description: "Increases education level and worker productivity",
-		benefits: ["+10 Education stat", "+3% Worker productivity", "Unlocks advanced technologies"]
+		infrastructureRequired: 1,
+		description: "Schools and universities for a skilled workforce.",
+		benefits: ["+1 education level"]
+	},
+	hospital: {
+		type: "hospital",
+		name: "Hospital",
+		icon: "🏥",
+		stat: "hospitals",
+		statLabel: "Hospitals",
+		maxLevel: 10,
+		costs: { currency: 50000, steel: 100, copper: 50, wood: 200 },
+		constructionTime: 7,
+		infrastructureRequired: 2,
+		description: "Medical care for the region's people.",
+		benefits: ["+1 hospital level"]
 	},
 	power_plant: {
 		type: "power_plant",
-		costs: {
-			currency: 100000,
-			steel: 300,
-			copper: 200,
-			coal: 500
-		},
+		name: "Power plant",
+		icon: "⚡",
+		stat: "economy",
+		statLabel: "Power",
+		maxLevel: 10,
+		costs: { currency: 100000, steel: 300, copper: 200, coal: 500 },
 		constructionTime: 14,
-		infrastructureRequired: 15,
-		powerConsumption: 0,
-		description: "Generates electricity for industrial development",
-		benefits: ["+1 Power plant capacity", "Generates electricity", "Required for industrial buildings"]
-	},
-	infrastructure: {
-		type: "infrastructure",
-		costs: {
-			currency: 30000,
-			steel: 50,
-			wood: 100,
-			coal: 200
-		},
-		constructionTime: 3,
-		infrastructureRequired: 0,
-		powerConsumption: 0,
-		description: "Roads, bridges, and railways that boost economic activity",
-		benefits: [
-			"+10 Infrastructure stat",
-			"Faster troop movement",
-			"Increased trade efficiency",
-			"Reduced construction time"
-		]
+		infrastructureRequired: 3,
+		description: "Electricity for the region's industry.",
+		benefits: ["+1 power level"]
 	},
 	fortifications: {
 		type: "fortifications",
-		costs: {
-			currency: 150000,
-			steel: 500,
-			iron: 300,
-			coal: 200
-		},
+		name: "Fortifications",
+		icon: "🛡️",
+		stat: "fortifications",
+		statLabel: "Fortifications",
+		maxLevel: 20,
+		costs: { currency: 150000, steel: 500, iron: 300, coal: 200 },
 		constructionTime: 7,
-		infrastructureRequired: 15,
-		powerConsumption: 5,
-		description: "Military defenses that strengthen regional security",
-		benefits: [
-			"+1 Fortification level",
-			"Increases defensive strength",
-			"Reduces attacker advantage",
-			"Protects regional assets"
-		]
+		infrastructureRequired: 3,
+		description: "Bunkers and defensive lines.",
+		benefits: ["+1 fortification level", "Attackers deal 2% less damage per level in battles here"]
 	}
 };
 
-export const VALID_BUILDING_TYPES: BuildingType[] = [
-	"hospital",
-	"school",
-	"power_plant",
-	"infrastructure",
-	"fortifications"
-];
+export const VALID_BUILDING_TYPES = Object.keys(BUILDING_TEMPLATES) as BuildingType[];
+
+export const isBuildingType = (value: string): value is BuildingType => value in BUILDING_TEMPLATES;
 
 // Border maintenance costs (for closed borders)
 export const BORDER_MAINTENANCE = {

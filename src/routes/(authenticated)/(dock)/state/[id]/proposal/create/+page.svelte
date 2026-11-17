@@ -4,7 +4,6 @@
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
-	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import { superForm } from "sveltekit-superforms";
@@ -15,11 +14,17 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button } from "#lib/component/ui/index.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { EXPLOITATION_POLICIES, EXPLOITATION_POLICY_KEYS } from "#lib/config/index.js";
 
 	const { data } = $props();
 
 	const form = superForm(data.form, {
-		validators: valibotClient(createProposalSchema)
+		validators: valibotClient(createProposalSchema),
+		// Show why the server refused (e.g. the treasury can't pay for it).
+		onResult: ({ result }) => {
+			if (result.type === "failure" && typeof result.data?.error === "string") toastResult(result);
+		}
 	});
 
 	const { form: formData, errors, enhance, delayed, submitting } = form;
@@ -32,13 +37,28 @@
 	}
 
 	type ProposalType =
-		"tax" | "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "border_control";
+		| "tax"
+		| "hospital"
+		| "school"
+		| "power_plant"
+		| "infrastructure"
+		| "fortifications"
+		| "border_control"
+		| "exploitation";
 	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications";
 
-	function getBuildingCount(regionId: string | undefined, buildingType: string | undefined): number {
-		if (!regionId || !buildingType) return 0;
-		const regionIdNum = parseInt(regionId);
-		return data.buildingsByRegion[regionIdNum]?.[buildingType] || 0;
+	/** Current level and buildings still under construction for a region. */
+	function regionProgress(regionId: string | undefined, buildingType: string | undefined) {
+		const region = data.regions.find((r) => r.id === Number(regionId));
+		if (!region || !buildingType || !isValidBuildingType(buildingType)) return null;
+		const template = data.buildingTemplates[buildingType];
+		return {
+			level: region[template.stat] ?? 0,
+			pending: data.pendingByRegion[region.id]?.[buildingType] ?? 0,
+			max: template.maxLevel,
+			infrastructure: region.infrastructure ?? 0,
+			infrastructureRequired: template.infrastructureRequired
+		};
 	}
 
 	const proposalTypeColors: Record<string, string> = {
@@ -48,7 +68,8 @@
 		power_plant: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35",
 		infrastructure: "bg-[#2369b5]/20 text-[#b3dcff] border-[#5eaef5]/30",
 		fortifications: "bg-red-600/10 text-red-300 border-red-500/30",
-		border_control: "bg-[#3f8a2a]/20 text-[#b9f29a] border-[#6fd14a]/30"
+		border_control: "bg-[#3f8a2a]/20 text-[#b9f29a] border-[#6fd14a]/30",
+		exploitation: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35"
 	};
 
 	const proposalTypeIcons: Record<string, string> = {
@@ -58,7 +79,8 @@
 		power_plant: "⚡",
 		infrastructure: "🛣️",
 		fortifications: "🏰",
-		border_control: "🛂"
+		border_control: "🛂",
+		exploitation: "⛏️"
 	};
 
 	const taxTypeIcons: Record<string, string> = {
@@ -75,30 +97,19 @@
 		income: "Tax applied on wages and earnings from work"
 	};
 
-	// Check if user can auto-execute this proposal type
-	const canAutoExecute = $derived(() => {
-		if (!$formData.proposalType) return false;
-
-		if (data.isPresident) {
-			return true;
-		}
-
-		if (!data.userMinistry) return false;
-
-		const ministryPermissions: Record<string, string[]> = {
-			economy: ["tax"],
-			foreign_affairs: ["border_control"],
-			defense: ["fortifications"],
-			infrastructure: ["infrastructure"],
-			education: ["school"],
-			health: ["hospital"]
-		};
-
-		return ministryPermissions[data.userMinistry]?.includes($formData.proposalType) || false;
-	});
+	// Presidents enact anything directly, ministers their own portfolio.
+	const MINISTRY_POWERS: Record<string, string[]> = {
+		economy: ["tax", "exploitation", "infrastructure", "school", "hospital", "power_plant"],
+		foreign_affairs: ["border_control"],
+		defense: ["fortifications"]
+	};
+	const autoFor = (type: string) =>
+		data.isPresident || (!!data.userMinistry && (MINISTRY_POWERS[data.userMinistry]?.includes(type) ?? false));
+	const canAutoExecute = $derived(() => !!$formData.proposalType && autoFor($formData.proposalType));
 
 	const isTaxProposal = $derived($formData.proposalType === "tax");
 	const isBorderControlProposal = $derived($formData.proposalType === "border_control");
+	const isExploitationProposal = $derived($formData.proposalType === "exploitation");
 	const isBuildingProposal = $derived(
 		["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes($formData.proposalType || "")
 	);
@@ -166,12 +177,8 @@
 		return Math.max(0, max);
 	});
 
-	const selectedRegion = $derived(() => {
-		if (!$formData.regionId) return null;
-		return data.regions.find((r) => r.id === parseInt($formData.regionId || ""));
-	});
-
-	const currentBuildingCount = $derived(getBuildingCount($formData.regionId, $formData.proposalType));
+	const progress = $derived(regionProgress($formData.regionId, $formData.proposalType));
+	const roomLeft = $derived(progress ? Math.max(0, progress.max - progress.level - progress.pending) : 100);
 </script>
 
 <PageContainer maxWidth="3xl">
@@ -231,7 +238,7 @@
 					Proposal Type <span class="text-red-400">*</span>
 				</label>
 				<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-					{#each ["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control"] as type}
+					{#each ["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control", "exploitation"] as type}
 						<button
 							type="button"
 							class="p-4 rounded-sm border text-left transition-colors {$formData.proposalType === type
@@ -243,7 +250,7 @@
 							<div class="flex flex-col gap-2">
 								<span class="text-2xl">{proposalTypeIcons[type]}</span>
 								<h4 class="font-bold text-[#f5efd8] capitalize text-sm">{type.replace("_", " ")}</h4>
-								{#if canAutoExecute() && ((data.isPresident && ["tax", "border_control", "fortifications"].includes(type)) || (data.userMinistry === "economy" && type === "tax") || (data.userMinistry === "foreign_affairs" && type === "border_control") || (data.userMinistry === "defense" && type === "fortifications") || (data.userMinistry === "infrastructure" && type === "infrastructure") || (data.userMinistry === "education" && type === "school") || (data.userMinistry === "health" && type === "hospital"))}
+								{#if autoFor(type)}
 									<span class="text-xs text-[#b9f29a]">✓ Immediate</span>
 								{/if}
 							</div>
@@ -388,6 +395,43 @@
 				</div>
 			{/if}
 
+			<!-- Resource exploitation law -->
+			{#if isExploitationProposal}
+				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-4">
+					<p class="text-sm text-[#d3caa9]">
+						How hard mines in this state may work its deposits. Harsher laws give more per shift now, but use up the
+						deposits disproportionately fast; output also falls as a deposit runs low.
+					</p>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+						{#each EXPLOITATION_POLICY_KEYS as key (key)}
+							{@const policy = EXPLOITATION_POLICIES[key]}
+							<button
+								type="button"
+								class="p-4 rounded-sm border text-left transition-colors {$formData.exploitationPolicy === key
+									? 'bg-[#f2b01e]/12 border-[#f2b01e]/60'
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
+								onclick={() => ($formData.exploitationPolicy = key)}
+								disabled={$submitting}
+							>
+								<h4 class="font-bold text-[#f5efd8]">{policy.label}</h4>
+								<p class="text-xs text-[#a8a083] mt-1">{policy.description}</p>
+								<div class="mt-3 flex gap-4 text-xs">
+									<span class="text-[#b9f29a]">Output ×{policy.outputMultiplier}</span>
+									<span class="text-[#ffd35c]">Deposit drain ×{policy.depletionMultiplier}</span>
+								</div>
+								{#if data.exploitationPolicy === key}
+									<span class="text-xs text-[#b9f29a] mt-2 block">✓ Current law</span>
+								{/if}
+							</button>
+						{/each}
+					</div>
+					<input type="hidden" name="exploitationPolicy" value={$formData.exploitationPolicy ?? ""} />
+					{#if $errors.exploitationPolicy}
+						<p class="field-error">{$errors.exploitationPolicy}</p>
+					{/if}
+				</div>
+			{/if}
+
 			<!-- Building Construction Fields -->
 			{#if isBuildingProposal}
 				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
@@ -399,14 +443,24 @@
 						<p class="text-sm text-[#d3caa9]">Resources will be taken from the state treasury and inventory.</p>
 					</div>
 
-					{#if selectedRegion() && currentBuildingCount > 0}
-						<div class="panel-muted rounded-sm p-4">
-							<div class="flex items-center justify-between">
-								<p class="text-sm font-medium text-[#d3caa9]">Existing in Region:</p>
-								<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm px-3 py-1">
-									<p class="text-lg font-bold text-[#f5efd8]">{currentBuildingCount}</p>
-								</div>
+					{#if progress}
+						<div class="panel-muted rounded-sm p-4 space-y-2">
+							<div class="flex items-center justify-between text-sm">
+								<span class="text-[#d3caa9]"
+									>{data.buildingTemplates[$formData.proposalType as BuildingType].statLabel} level</span
+								>
+								<span class="font-mono font-bold text-[#f5efd8]">
+									{progress.level}{#if progress.pending}
+										<span class="text-[#ffd35c]"> +{progress.pending} building</span>{/if} / {progress.max}
+								</span>
 							</div>
+							{#if progress.infrastructure < progress.infrastructureRequired}
+								<p class="text-xs text-red-300">
+									Needs infrastructure level {progress.infrastructureRequired} here first (it has {progress.infrastructure}).
+								</p>
+							{:else if roomLeft === 0}
+								<p class="text-xs text-red-300">This region is already at its maximum level.</p>
+							{/if}
 						</div>
 					{/if}
 
@@ -416,9 +470,7 @@
 						</label>
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
 							{#each data.regions as region}
-								{@const buildingCount = $formData.proposalType
-									? getBuildingCount(region.id.toString(), $formData.proposalType)
-									: 0}
+								{@const p = regionProgress(region.id.toString(), $formData.proposalType)}
 								<button
 									type="button"
 									class="p-4 rounded-sm border text-left transition-colors flex items-center gap-3 {$formData.regionId ===
@@ -438,9 +490,12 @@
 									<div class="flex-1">
 										<h4 class="font-bold text-[#f5efd8]">{getRegionName(region.id)}</h4>
 										<p class="text-xs text-[#a8a083]">
-											Infrastructure: {region.infrastructure ?? 0}
-											{#if buildingCount > 0}
-												• {proposalTypeIcons[$formData.proposalType || ""]} {buildingCount}
+											Infrastructure {region.infrastructure ?? 0}
+											{#if p && $formData.proposalType !== "infrastructure"}
+												· {proposalTypeIcons[$formData.proposalType || ""]} level {p.level}/{p.max}
+											{/if}
+											{#if p && p.infrastructure < p.infrastructureRequired}
+												<span class="text-red-300">· needs {p.infrastructureRequired}</span>
 											{/if}
 										</p>
 									</div>
@@ -456,7 +511,9 @@
 					<div>
 						<label for="quantity" class="field-label">
 							Quantity <span class="text-red-400">*</span>
-							<span class="text-[#a8a083] font-normal">(max affordable: {maxAffordableQuantity()})</span>
+							<span class="text-[#a8a083] font-normal"
+								>(affordable: {maxAffordableQuantity()}, room left: {roomLeft})</span
+							>
 						</label>
 						<div class="join w-full">
 							<input
@@ -475,20 +532,14 @@
 								type="button"
 								variant="secondary"
 								class="join-item"
-								onclick={() => ($formData.quantity = maxAffordableQuantity())}
-								disabled={$submitting || maxAffordableQuantity() < 1}
+								onclick={() => ($formData.quantity = Math.min(maxAffordableQuantity(), roomLeft))}
+								disabled={$submitting || Math.min(maxAffordableQuantity(), roomLeft) < 1}
 							>
 								MAX
 							</Button>
 						</div>
 						{#if $errors.quantity}
 							<p class="field-error">{$errors.quantity}</p>
-						{/if}
-						{#if $formData.quantity && currentBuildingCount > 0}
-							<p class="text-xs text-[#a8a083] mt-1">
-								<FluentInfo20Filled class="inline size-3" />
-								After construction: {currentBuildingCount + ($formData.quantity || 0)} total in region
-							</p>
 						{/if}
 					</div>
 
@@ -499,29 +550,21 @@
 						{/if}
 					{/if}
 
-					{#if $formData.quantity && $formData.quantity > 1}
-						<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-3">
-							<p class="text-xs text-[#d3caa9]">
-								Buildings will be numbered automatically (e.g., Building 1, Building 2, Building 3...)
-							</p>
-						</div>
-					{/if}
-
 					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
 						{@const template = data.buildingTemplates[$formData.proposalType]}
 						{#if template}
 							<div class="grid grid-cols-3 gap-2 text-xs text-[#a8a083] panel-muted rounded-sm p-4">
 								<div>
-									<span class="text-[#a8a083]/70">Construction:</span>
+									<span class="text-[#a8a083]/70">Takes:</span>
 									<div class="text-[#f5efd8]">{template.constructionTime} days</div>
 								</div>
 								<div>
-									<span class="text-[#a8a083]/70">Infrastructure:</span>
+									<span class="text-[#a8a083]/70">Needs infrastructure:</span>
 									<div class="text-[#f5efd8]">{template.infrastructureRequired}</div>
 								</div>
 								<div>
-									<span class="text-[#a8a083]/70">Power:</span>
-									<div class="text-[#f5efd8]">{template.powerConsumption} MW</div>
+									<span class="text-[#a8a083]/70">Each adds:</span>
+									<div class="text-[#f5efd8]">+1 {template.statLabel.toLowerCase()}</div>
 								</div>
 							</div>
 						{/if}
@@ -542,7 +585,14 @@
 					disabled={$submitting ||
 						(isTaxProposal && (!$formData.taxType || !$formData.taxRate)) ||
 						(isBorderControlProposal && !$formData.borderStatus) ||
-						(isBuildingProposal && (!$formData.regionId || !$formData.quantity || !canAfford()))}
+						(isExploitationProposal &&
+							(!$formData.exploitationPolicy || $formData.exploitationPolicy === data.exploitationPolicy)) ||
+						(isBuildingProposal &&
+							(!$formData.regionId ||
+								!$formData.quantity ||
+								$formData.quantity > roomLeft ||
+								(progress !== null && progress.infrastructure < progress.infrastructureRequired) ||
+								(canAutoExecute() && !canAfford())))}
 				>
 					{canAutoExecute() ? "Execute Immediately" : "Submit Proposal"}
 				</Button>

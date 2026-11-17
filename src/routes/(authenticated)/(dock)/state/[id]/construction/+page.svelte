@@ -1,116 +1,81 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/construction/+page.svelte -->
 <script lang="ts">
-	import { refreshAll } from "$app/navigation";
 	import FluentBuildingFactory20Filled from "~icons/fluent/building-factory-20-filled";
-	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
+	import SectionCard from "#lib/component/SectionCard.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
+	import ConstructionQueue from "#lib/component/ConstructionQueue.svelte";
+	import { Button } from "#lib/component/ui/index.js";
+	import { BUILDING_TEMPLATES, VALID_BUILDING_TYPES } from "#lib/config/index.js";
+	import { regionCoatUrl } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
-
-	const buildingTypeColors: Record<string, string> = {
-		hospital: "bg-red-600/10 text-red-300 border-red-500/30",
-		school: "bg-[#8a4fc0]/20 text-[#e3cbfb] border-[#c08cf0]/30",
-		power_plant: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35"
-	};
-
-	const buildingTypeIcons: Record<string, string> = {
-		hospital: "🏥",
-		school: "🏫",
-		power_plant: "⚡"
-	};
-
-	function progressFor(startedAt: string | Date | null, completesAt: string | Date | null) {
-		if (!startedAt || !completesAt) return 100;
-		const total = new Date(completesAt).getTime() - new Date(startedAt).getTime();
-		if (total <= 0) return 100;
-		const elapsed = Date.now() - new Date(startedAt).getTime();
-		return Math.min(100, Math.max(0, (elapsed / total) * 100));
-	}
-
-	function timeRemainingFor(completesAt: string | Date | null) {
-		if (!completesAt) return "";
-		const remaining = new Date(completesAt).getTime() - Date.now();
-		if (remaining <= 0) return "Finishing…";
-		const days = Math.floor(remaining / 86400000);
-		const hours = Math.floor((remaining % 86400000) / 3600000);
-		const minutes = Math.floor((remaining % 3600000) / 60000);
-
-		if (days > 0) return `${days}d ${hours}h`;
-		if (hours > 0) return `${hours}h ${minutes}m`;
-		return `${minutes}m`;
-	}
-
-	$effect(() => {
-		if (data.pendingConstructions.length === 0) return;
-		const interval = setInterval(() => {
-			if (data.pendingConstructions.some((c) => c.completesAt && new Date(c.completesAt) <= new Date())) {
-				refreshAll();
-			}
-		}, 5000);
-		return () => clearInterval(interval);
-	});
+	const columns = VALID_BUILDING_TYPES.map((t) => BUILDING_TEMPLATES[t]);
 </script>
 
 <PageContainer maxWidth="6xl">
-	<!-- Header -->
 	<PageHeader
-		title="Construction Queue"
+		title="Construction"
+		subtitle="Public buildings across {data.state.name}"
 		icon={FluentBuildingFactory20Filled}
 		backHref="/state/{data.state.id}"
 		backLabel={data.state.name}
-	/>
+	>
+		{#snippet actions()}
+			<Button href="/state/{data.state.id}/proposal/create" variant="secondary">Propose a building</Button>
+		{/snippet}
+	</PageHeader>
 
-	<div class="panel rounded-sm overflow-hidden">
-		<div class="p-4 space-y-4">
-			{#if data.pendingConstructions.length === 0}
-				<div class="text-center py-12">
-					<FluentBuildingFactory20Filled class="size-16 text-[#a8a083]/60 mx-auto mb-3" />
-					<p class="text-[#a8a083]">Nothing is currently under construction</p>
-				</div>
-			{:else}
-				{#each data.pendingConstructions as construction}
-					<div class="relative overflow-hidden rounded-sm panel-muted p-4 md:p-5">
-						<div class="relative space-y-4">
-							<div class="flex flex-col sm:flex-row items-start gap-3 md:gap-4">
-								<div
-									class="size-12 md:size-14 rounded-sm border flex items-center justify-center text-2xl shrink-0 {buildingTypeColors[
-										construction.buildingType
-									] ?? 'bg-[#0f120c] text-[#a8a083] border-[#c8b47a]/15'}"
-								>
-									{buildingTypeIcons[construction.buildingType] ?? "🏗️"}
-								</div>
-								<div class="flex-1">
-									<h3 class="text-lg md:text-xl font-bold text-[#f5efd8] mb-1">{construction.name}</h3>
-									<a
-										href="/region/{construction.regionId}"
-										class="text-sm text-[#b3dcff] hover:text-[#f5efd8] transition-colors"
-									>
-										in {construction.regionName}
+	<SectionCard>
+		<h2 class="section-title mb-3">Under construction</h2>
+		{#if data.pendingConstructions.length}
+			<ConstructionQueue items={data.pendingConstructions} />
+		{:else}
+			<EmptyState
+				icon={FluentBuildingFactory20Filled}
+				title="Nothing is being built"
+				subtitle="Parliament, ministers and governors can start buildings in a region."
+			/>
+		{/if}
+	</SectionCard>
+
+	<SectionCard>
+		<h2 class="section-title mb-3">Regions</h2>
+		{#if data.regions.length === 0}
+			<p class="text-sm text-[#a8a083]">This state has no regions.</p>
+		{:else}
+			<div class="overflow-x-auto -mx-1">
+				<table class="w-full text-sm">
+					<thead>
+						<tr class="text-[10px] text-[#a8a083] uppercase tracking-wide text-left">
+							<th class="px-1 py-2 font-normal">Region</th>
+							{#each columns as c (c.type)}
+								<th class="px-1 py-2 font-normal text-center" title={c.statLabel}>
+									<span aria-hidden="true">{c.icon}</span><span class="sr-only">{c.statLabel}</span>
+								</th>
+							{/each}
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-[#c8b47a]/10">
+						{#each data.regions as r (r.id)}
+							<tr class="hover:bg-[#2e3524]/60">
+								<td class="px-1 py-1.5">
+									<a href="/region/{r.id}/construction" class="flex items-center gap-2 min-w-0 group">
+										<img src={regionCoatUrl(r.id)} alt="" class="size-6 shrink-0" loading="lazy" />
+										<span class="truncate text-[#e6ddbf] group-hover:text-[#ffcf47]">{r.name}</span>
 									</a>
-									<p class="text-xs text-[#a8a083] mt-1">Commissioned by {construction.builtByName}</p>
-								</div>
-								<div class="text-left sm:text-right w-full sm:w-auto flex items-center sm:block gap-2">
-									<FluentClock20Filled class="size-4 text-[#ffd35c] sm:hidden" />
-									<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Time Left</p>
-									<p class="text-xl md:text-2xl font-bold font-mono text-[#ffd35c]">
-										{timeRemainingFor(construction.completesAt)}
-									</p>
-								</div>
-							</div>
-
-							<div>
-								<div class="h-3 bg-[#1a1f15] rounded-full overflow-hidden">
-									<div
-										class="h-full bg-[#f2b01e] rounded-full transition-all duration-1000"
-										style="width: {progressFor(construction.startedAt, construction.completesAt)}%"
-									></div>
-								</div>
-							</div>
-						</div>
-					</div>
-				{/each}
-			{/if}
-		</div>
-	</div>
+								</td>
+								{#each columns as c (c.type)}
+									<td class="px-1 py-1.5 text-center font-mono {r[c.stat] ? 'text-[#f5efd8]' : 'text-[#a8a083]/60'}">
+										{r[c.stat] ?? 0}
+									</td>
+								{/each}
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	</SectionCard>
 </PageContainer>

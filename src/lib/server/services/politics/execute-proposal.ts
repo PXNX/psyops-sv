@@ -4,23 +4,28 @@
 // action on the parliament page. Keeping this in one place means all three
 // paths apply taxes/borders/construction the same way instead of drifting.
 import { db } from "#lib/server/db.js";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import {
 	stateTaxes,
 	stateBorders,
 	stateVisaSettings,
-	stateBuildings,
-	stateTreasury,
-	stateResourceInventory,
-	regions,
 	proposalTaxDetails,
 	proposalBorderDetails,
-	proposalBuildingDetails
+	proposalBuildingDetails,
+	proposalExploitationDetails,
+	states
 } from "#lib/server/schema.js";
-import { BUILDING_TEMPLATES, type BuildingType } from "#lib/config/index.js";
+import { isBuildingType } from "#lib/config/index.js";
+import { ConstructionError, startConstruction } from "./construction.service.js";
 
 export async function executeProposal(stateId: number, proposalType: string, accountId: string, proposalId: number) {
-	if (proposalType === "tax") {
+	if (proposalType === "exploitation") {
+		const details = await db.query.proposalExploitationDetails.findFirst({
+			where: eq(proposalExploitationDetails.proposalId, proposalId)
+		});
+		if (!details) throw new Error("Exploitation proposal details not found");
+		await db.update(states).set({ exploitationPolicy: details.policy }).where(eq(states.id, stateId));
+	} else if (proposalType === "tax") {
 		const taxDetails = await db.query.proposalTaxDetails.findFirst({
 			where: eq(proposalTaxDetails.proposalId, proposalId)
 		});
@@ -97,109 +102,21 @@ export async function executeProposal(stateId: number, proposalType: string, acc
 			});
 		}
 	} else {
-		// Building construction
+		// Building construction: paid for and queued by the construction
+		// service, which throws a ConstructionError if it can't go ahead.
+		if (!isBuildingType(proposalType)) throw new Error(`Unknown proposal type: ${proposalType}`);
 		const buildingDetails = await db.query.proposalBuildingDetails.findFirst({
 			where: eq(proposalBuildingDetails.proposalId, proposalId)
 		});
+		if (!buildingDetails) throw new ConstructionError("This proposal doesn't say where to build.");
 
-		if (!buildingDetails) {
-			throw new Error("Building proposal details not found");
-		}
-
-		const region = await db.query.regions.findFirst({
-			where: and(eq(regions.id, buildingDetails.regionId), eq(regions.stateId, stateId))
+		await startConstruction(db, {
+			stateId,
+			regionId: buildingDetails.regionId,
+			type: proposalType,
+			quantity: buildingDetails.quantity,
+			builtBy: accountId,
+			proposalId
 		});
-
-		if (!region) {
-			throw new Error("Invalid region");
-		}
-
-		const template = BUILDING_TEMPLATES[proposalType as BuildingType];
-		const buildQuantity = buildingDetails.quantity;
-
-		if ((region.infrastructure ?? 0) < template.infrastructureRequired) {
-			throw new Error(
-				`This region needs at least ${template.infrastructureRequired} infrastructure to build ${template.type.replace("_", " ")}`
-			);
-		}
-
-		// Total cost for the requested quantity: currency comes out of the
-		// state treasury, and any listed resources (steel, wood, ...) come
-		// out of the state's resource stockpile.
-		const currencyCost = template.costs.currency * buildQuantity;
-		const resourceCosts = Object.entries(template.costs).filter(([key]) => key !== "currency") as Array<
-			[string, number]
-		>;
-
-		const treasury = await db.query.stateTreasury.findFirst({
-			where: eq(stateTreasury.stateId, stateId)
-		});
-
-		if (!treasury || treasury.balance < currencyCost) {
-			throw new Error("Insufficient state treasury funds for this construction");
-		}
-
-		const stateResourceRows = await db.query.stateResourceInventory.findMany({
-			where: eq(stateResourceInventory.stateId, stateId)
-		});
-		const stateResourceQuantities = new Map<string, number>(stateResourceRows.map((r) => [r.resourceType, r.quantity]));
-
-		for (const [resourceType, perUnit] of resourceCosts) {
-			const needed = perUnit * buildQuantity;
-			if ((stateResourceQuantities.get(resourceType) ?? 0) < needed) {
-				throw new Error(`Insufficient ${resourceType} in the state stockpile for this construction`);
-			}
-		}
-
-		// Deduct currency from the state treasury.
-		await db
-			.update(stateTreasury)
-			.set({
-				balance: sql`${stateTreasury.balance} - ${currencyCost}`,
-				totalSpent: sql`${stateTreasury.totalSpent} + ${currencyCost}`,
-				updatedAt: new Date()
-			})
-			.where(eq(stateTreasury.stateId, stateId));
-
-		// Deduct resources from the state stockpile.
-		for (const [resourceType, perUnit] of resourceCosts) {
-			const needed = perUnit * buildQuantity;
-			await db
-				.update(stateResourceInventory)
-				.set({
-					quantity: sql`${stateResourceInventory.quantity} - ${needed}`,
-					updatedAt: new Date()
-				})
-				.where(
-					and(eq(stateResourceInventory.stateId, stateId), eq(stateResourceInventory.resourceType, resourceType as any))
-				);
-		}
-
-		// Create buildings. Construction is purely about raising the region's
-		// building-type level, so the name is just a display label derived
-		// from the type — nothing the user needs to choose. Each row starts
-		// under construction and only bumps the region's stats once
-		// completePendingConstructions() sees constructionCompletesAt has passed.
-		const displayName = template.type
-			.split("_")
-			.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-			.join(" ");
-		const constructionStartedAt = new Date();
-		const constructionCompletesAt = new Date(
-			constructionStartedAt.getTime() + template.constructionTime * 24 * 60 * 60 * 1000
-		);
-		for (let i = 0; i < buildQuantity; i++) {
-			await db.insert(stateBuildings).values({
-				name: buildQuantity > 1 ? `${displayName} ${i + 1}` : displayName,
-				buildingType: proposalType as any,
-				regionId: buildingDetails.regionId,
-				stateId,
-				proposalId,
-				builtBy: accountId,
-				isUnderConstruction: true,
-				constructionStartedAt,
-				constructionCompletesAt
-			});
-		}
 	}
 }

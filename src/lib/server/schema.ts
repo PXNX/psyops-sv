@@ -23,7 +23,9 @@ export const productTypeEnum = pgEnum("product_type", ["rifles", "ammunition", "
 export const factoryTypeEnum = pgEnum("factory_type", ["mine", "refinery", "armaments", "general"]);
 export const jobTypeEnum = pgEnum("job_type", ["miner", "refiner", "assembler", "general_worker"]);
 export const visaStatusEnum = pgEnum("visa_status", ["active", "expired", "revoked"]);
-export const proposalStatusEnum = pgEnum("proposal_status", ["active", "passed", "rejected", "expired"]);
+// "failed": voted through, but it couldn't be carried out (e.g. the treasury
+// couldn't pay for a building any more).
+export const proposalStatusEnum = pgEnum("proposal_status", ["active", "passed", "rejected", "expired", "failed"]);
 export const voteTypeEnum = pgEnum("vote_type", ["for", "against", "abstain"]);
 export const proposalTypeEnum = pgEnum("proposal_type", [
 	"budget",
@@ -1931,7 +1933,15 @@ export const userProfilesRelations = relations(userProfiles, ({ one }) => ({
 	})
 }));
 
-export const buildingTypeEnum = pgEnum("building_type", ["hospital", "school", "power_plant", "road", "bridge"]);
+export const buildingTypeEnum = pgEnum("building_type", [
+	"hospital",
+	"school",
+	"power_plant",
+	"road",
+	"bridge",
+	"infrastructure",
+	"fortifications"
+]);
 
 export const stateBuildings = pgTable("state_buildings", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
@@ -1951,7 +1961,7 @@ export const stateBuildings = pgTable("state_buildings", {
 		.references(() => accounts.id, { onDelete: "cascade" }),
 
 	// A building sits here while its construction time (per BUILDING_TEMPLATES) elapses;
-	// its region stat bonus is only applied once isUnderConstruction flips to false.
+	// it raises its region's level only once isUnderConstruction flips to false.
 	isUnderConstruction: boolean("is_under_construction").default(false).notNull(),
 	constructionStartedAt: timestamp("construction_started_at"),
 	constructionCompletesAt: timestamp("construction_completes_at"),

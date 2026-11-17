@@ -23,6 +23,7 @@
 
 	import { Button, Badge } from "#lib/component/ui/index.js";
 	import { formatDate, getDaysRemaining, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { BUILDING_TEMPLATES, VALID_BUILDING_TYPES as BUILDING_ORDER } from "#lib/config/index.js";
 	import BorderingRegions from "./BorderingRegions.svelte";
 	import ResidenceActions from "./ResidenceActions.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
@@ -382,9 +383,24 @@
 			color="blue"
 			href="/region/{data.region.id}/population"
 		/>
-		<StatCard label="Infrastructure" value={data.region.infrastructure || 0} color="purple" />
-		<StatCard label="Economy" value={data.region.economy || 0} color="green" />
-		<StatCard label="Education" value={data.region.education || 0} color="amber" />
+		<StatCard
+			label="Infrastructure"
+			value={data.region.infrastructure || 0}
+			color="purple"
+			href="/region/{data.region.id}/construction"
+		/>
+		<StatCard
+			label="Power"
+			value={data.region.economy || 0}
+			color="green"
+			href="/region/{data.region.id}/construction"
+		/>
+		<StatCard
+			label="Fortifications"
+			value={data.region.fortifications || 0}
+			color="red"
+			href="/region/{data.region.id}/construction"
+		/>
 	</div>
 
 	<!-- Governor -->
@@ -421,29 +437,29 @@
 		{/if}
 	{/if}
 
-	<!-- State Buildings -->
-	{#if data.buildings.length > 0}
-		<SectionCard>
-			<h2 class="section-title mb-4">
+	<!-- Public buildings -->
+	{#if !isIndependent}
+		{@const underConstruction = data.buildings.filter((b) => b.isUnderConstruction)}
+		<a
+			href="/region/{data.region.id}/construction"
+			class="panel-interactive rounded-sm p-4 flex items-center gap-3 group"
+		>
+			<div
+				class="size-10 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex items-center justify-center shrink-0"
+			>
 				<FluentBuilding20Filled class="size-5 text-[#5eaef5]" />
-				State Buildings
-			</h2>
-			<div class="grid gap-3">
-				{#each data.buildings as building}
-					<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
-						<div class="size-10 bg-[#2369b5]/18 rounded-sm flex items-center justify-center">
-							<FluentBuilding20Filled class="size-5 text-[#5eaef5]" />
-						</div>
-						<div class="flex-1">
-							<p class="font-semibold text-[#f5efd8]">
-								{building.name}
-							</p>
-							<p class="text-xs text-[#a8a083] capitalize">{building.buildingType.replace("_", " ")}</p>
-						</div>
-					</div>
-				{/each}
 			</div>
-		</SectionCard>
+			<div class="min-w-0 flex-1">
+				<p class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47]">Construction</p>
+				<p class="text-xs text-[#a8a083] truncate">
+					{#each BUILDING_ORDER as t, i}{i ? " · " : ""}{BUILDING_TEMPLATES[t].icon}
+						{data.region[BUILDING_TEMPLATES[t].stat] ?? 0}{/each}
+				</p>
+			</div>
+			{#if underConstruction.length}
+				<Badge tone="amber">{underConstruction.length} building</Badge>
+			{/if}
+		</a>
 	{/if}
 
 	<!-- Factories -->

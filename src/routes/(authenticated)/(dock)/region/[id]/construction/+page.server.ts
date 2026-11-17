@@ -1,182 +1,130 @@
 // src/routes/(authenticated)/(dock)/region/[id]/construction/+page.server.ts
+// Building in one region: its levels, what's under construction and, for the
+// people allowed to order it, starting new buildings. Paid from the state
+// treasury and stockpile via the shared construction service.
+import { error, fail } from "@sveltejs/kit";
+import { and, asc, desc, eq } from "drizzle-orm";
+import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
-import { regions, governors, ministers, stateTreasury, states } from "#lib/server/schema.js";
-import { error, fail, redirect } from "@sveltejs/kit";
-import { eq, and, sql } from "drizzle-orm";
-import type { PageServerLoad, Actions } from "./$types";
+import { regions, stateBuildings, stateTreasury } from "#lib/server/schema.js";
+import { BUILDING_TEMPLATES, VALID_BUILDING_TYPES, isBuildingType, type BuildingType } from "#lib/config/index.js";
+import {
+	ConstructionError,
+	checkConstruction,
+	completePendingConstructions,
+	pendingByType,
+	regionLevel,
+	startConstruction,
+	stateStockpile
+} from "#lib/server/services/politics/construction.service.js";
+import { canOrderConstruction, type ConstructionRole } from "#lib/server/services/politics/construction-access.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
-	const regionId = parseInt(params.id);
+	const regionId = Number(params.id);
+	if (!Number.isInteger(regionId)) error(400, "Invalid region");
 
-	// Get region with state; fail fast if it doesn't exist
-	const regionPromise = db.query.regions
-		.findFirst({
-			where: eq(regions.id, regionId),
-			with: { state: true }
-		})
-		.then((region) => region ?? error(404, "Region not found"));
+	await completePendingConstructions(db, { regionId });
+	const region = await db.query.regions.findFirst({ where: eq(regions.id, regionId), with: { state: true } });
+	if (!region) error(404, "Region not found");
 
-	const [region, treasury, { isGovernor, isInfrastructureMinister }] = await Promise.all([
-		regionPromise,
-		// Get state treasury balance
-		regionPromise.then((region) =>
-			region.stateId
-				? db.query.stateTreasury.findFirst({
-						where: eq(stateTreasury.stateId, region.stateId)
-					})
-				: undefined
-		),
-		Promise.all([
-			// Check if user is governor of this region
-			db.query.governors.findFirst({
-				where: and(eq(governors.regionId, regionId), eq(governors.userId, account.id))
-			}),
-			// Check if user is Economy Minister of this state, who manages the treasury that pays for construction (404 wins over 403)
-			regionPromise.then((region) =>
-				region.stateId
-					? db.query.ministers.findFirst({
-							where: and(
-								eq(ministers.userId, account.id),
-								eq(ministers.stateId, region.stateId),
-								eq(ministers.ministry, "economy")
-							)
-						})
-					: undefined
-			)
-		]).then(([governor, minister]) => {
-			// Must be governor or Economy Minister
-			if (!governor && !minister) {
-				error(403, "You must be the governor or the Economy Minister to build in this region");
-			}
-			return { isGovernor: !!governor, isInfrastructureMinister: !!minister };
+	const stateId = region.stateId;
+	const [access, treasury, stockpile, pending, queue, finished] = await Promise.all([
+		stateId
+			? canOrderConstruction(db, account.id, stateId, regionId)
+			: { roles: [] as ConstructionRole[], types: [] as BuildingType[] },
+		stateId ? db.query.stateTreasury.findFirst({ where: eq(stateTreasury.stateId, stateId) }) : undefined,
+		stateId ? stateStockpile(db, stateId) : ({} as Record<string, number>),
+		pendingByType(db, regionId),
+		db.query.stateBuildings.findMany({
+			where: and(eq(stateBuildings.regionId, regionId), eq(stateBuildings.isUnderConstruction, true)),
+			orderBy: asc(stateBuildings.constructionCompletesAt)
+		}),
+		db.query.stateBuildings.findMany({
+			where: and(eq(stateBuildings.regionId, regionId), eq(stateBuildings.isUnderConstruction, false)),
+			orderBy: desc(stateBuildings.constructionCompletesAt),
+			limit: 10
 		})
 	]);
-
-	const treasuryBalance = region.stateId ? Number(treasury?.balance || 0) : 0;
+	const balance = treasury?.balance ?? 0;
 
 	return {
-		region: {
-			id: region.id,
-			infrastructure: region.infrastructure || 0,
-			education: region.education || 0,
-			hospitals: region.hospitals || 0,
-			fortifications: region.fortifications || 0,
-			economy: region.economy || 0
-		},
-		state: region.state
-			? {
-					id: region.state.id,
-					name: region.state.name
-				}
-			: null,
-		isGovernor: !!isGovernor,
-		isInfrastructureMinister,
-		treasuryBalance
+		region: { id: region.id, infrastructure: regionLevel(region, "infrastructure") },
+		state: region.state ? { id: region.state.id, name: region.state.name } : null,
+		roles: access.roles,
+		treasury: balance,
+		stockpile,
+		buildings: VALID_BUILDING_TYPES.map((type) => {
+			const template = BUILDING_TEMPLATES[type];
+			const check = checkConstruction({
+				type,
+				quantity: 1,
+				region,
+				pending: pending[type] ?? 0,
+				treasury: balance,
+				stockpile
+			});
+			return {
+				type,
+				name: template.name,
+				icon: template.icon,
+				statLabel: template.statLabel,
+				description: template.description,
+				benefits: template.benefits,
+				days: template.constructionTime,
+				infrastructureRequired: template.infrastructureRequired,
+				level: check.level,
+				pending: check.pending,
+				maxLevel: check.maxLevel,
+				costs: check.costs,
+				problems: check.problems,
+				canOrder: access.types.includes(type)
+			};
+		}),
+		queue: queue.map((b) => ({
+			id: b.id,
+			name: b.name,
+			type: b.buildingType,
+			startedAt: b.constructionStartedAt,
+			completesAt: b.constructionCompletesAt
+		})),
+		finished: finished.map((b) => ({ id: b.id, name: b.name, type: b.buildingType, at: b.constructionCompletesAt }))
 	};
-};
-
-// Building costs and limits
-const BUILDING_COSTS = {
-	infrastructure: 50000,
-	education: 75000,
-	hospitals: 100000,
-	fortifications: 150000
-};
-
-const BUILDING_LIMITS = {
-	infrastructure: 18,
-	education: 10,
-	hospitals: 8,
-	fortifications: 12
 };
 
 export const actions: Actions = {
 	build: async ({ params, locals, request }) => {
 		const account = locals.account!;
-		const regionId = parseInt(params.id);
-		const formData = await request.formData();
-		const buildingType = formData.get("buildingType") as string;
+		const regionId = Number(params.id);
+		const form = await request.formData();
+		const type = String(form.get("buildingType") ?? "");
+		const quantity = Number(form.get("quantity") ?? 1);
+		if (!isBuildingType(type)) return fail(400, { error: "Unknown building type." });
 
-		// Validate building type
-		if (!["infrastructure", "education", "hospitals", "fortifications"].includes(buildingType)) {
-			return fail(400, { error: "Invalid building type" });
+		const region = await db.query.regions.findFirst({ where: eq(regions.id, regionId) });
+		if (!region?.stateId) return fail(400, { error: "Only regions that belong to a state can be built up." });
+
+		const access = await canOrderConstruction(db, account.id, region.stateId, regionId);
+		if (!access.types.includes(type)) {
+			return fail(403, { error: "Only the governor, the responsible minister or the president can order this." });
 		}
 
-		// Get region with state
-		const region = await db.query.regions.findFirst({
-			where: eq(regions.id, regionId),
-			with: { state: true }
-		});
-
-		if (!region) {
-			return fail(404, { error: "Region not found" });
-		}
-
-		// Check authorization
-		const isGovernor = await db.query.governors.findFirst({
-			where: and(eq(governors.regionId, regionId), eq(governors.userId, account.id))
-		});
-
-		let isInfrastructureMinister = false;
-		if (region.stateId) {
-			const minister = await db.query.ministers.findFirst({
-				where: and(
-					eq(ministers.userId, account.id),
-					eq(ministers.stateId, region.stateId),
-					eq(ministers.ministry, "economy")
-				)
+		try {
+			const { completesAt } = await startConstruction(db, {
+				stateId: region.stateId,
+				regionId,
+				type,
+				quantity,
+				builtBy: account.id
 			});
-			isInfrastructureMinister = !!minister;
+			const template = BUILDING_TEMPLATES[type];
+			return {
+				success: true,
+				message: `${quantity > 1 ? `${quantity} × ` : ""}${template.name} under construction, done ${completesAt.toLocaleDateString("en-GB")}.`
+			};
+		} catch (err) {
+			if (err instanceof ConstructionError) return fail(400, { error: err.message });
+			throw err;
 		}
-
-		if (!isGovernor && !isInfrastructureMinister) {
-			return fail(403, { error: "Unauthorized" });
-		}
-
-		// Check if state exists (required for funding)
-		if (!region.stateId) {
-			return fail(400, { error: "Independent regions cannot construct buildings yet" });
-		}
-
-		// Check current level vs limit
-		const currentLevel = (region[buildingType as keyof typeof region] as number) || 0;
-		const limit = BUILDING_LIMITS[buildingType as keyof typeof BUILDING_LIMITS];
-
-		if (currentLevel >= limit) {
-			return fail(400, { error: `Maximum level of ${limit} already reached` });
-		}
-
-		// Get cost
-		const cost = BUILDING_COSTS[buildingType as keyof typeof BUILDING_COSTS];
-
-		// Check treasury balance
-		const treasury = await db.query.stateTreasury.findFirst({
-			where: eq(stateTreasury.stateId, region.stateId)
-		});
-
-		if (!treasury || treasury.balance < cost) {
-			return fail(400, { error: "Insufficient state treasury funds" });
-		}
-
-		// Deduct from treasury
-		await db
-			.update(stateTreasury)
-			.set({
-				balance: sql`${stateTreasury.balance} - ${cost}`,
-				totalSpent: sql`${stateTreasury.totalSpent} + ${cost}`,
-				updatedAt: new Date()
-			})
-			.where(eq(stateTreasury.stateId, region.stateId));
-
-		// Increment building level
-		await db
-			.update(regions)
-			.set({
-				[buildingType]: sql`${regions[buildingType as keyof typeof regions]} + 1`
-			})
-			.where(eq(regions.id, regionId));
-
-		return { success: true, message: `${buildingType} level increased to ${currentLevel + 1}` };
 	}
 };

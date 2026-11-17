@@ -238,7 +238,7 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 	// hasn't flipped the status yet).
 	const passedProposals = proposalsWithVotes.filter((p) => p.status === "passed");
 	const rejectedProposals = proposalsWithVotes.filter(
-		(p) => p.status === "rejected" || (p.status === "active" && p.votingEnded)
+		(p) => p.status === "rejected" || p.status === "failed" || (p.status === "active" && p.votingEnded)
 	);
 
 	// Only include non-active proposals in the history

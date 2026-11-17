@@ -28,7 +28,10 @@ import {
 	battleParticipants,
 	battleRounds,
 	userVisas,
-	regionDeposits
+	regionDeposits,
+	governors,
+	presidents,
+	stateResourceInventory
 } from "./schema";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 
@@ -225,6 +228,20 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		{ stateId: state1!.id, balance: 500000, totalCollected: 750000, totalSpent: 250000 },
 		{ stateId: state2!.id, balance: 1200000, totalCollected: 2000000, totalSpent: 800000 },
 		{ stateId: state3!.id, balance: 100000, totalCollected: 150000, totalSpent: 50000 }
+	]);
+
+	// ============ Leaders + state stockpile ============
+	// Alice leads Freedonia, so the admin account can try out government
+	// actions (construction, proposals) in mock mode.
+	await db.insert(presidents).values([
+		{ userId: "user-1", stateId: state1!.id },
+		{ userId: "user-3", stateId: state2!.id }
+	]);
+	await db.insert(governors).values({ userId: "user-2", regionId: region1!.id });
+	await db.insert(stateResourceInventory).values([
+		{ stateId: state1!.id, resourceType: "steel", quantity: 400 },
+		{ stateId: state1!.id, resourceType: "wood", quantity: 600 },
+		{ stateId: state1!.id, resourceType: "coal", quantity: 500 }
 	]);
 
 	// ============ Companies + Budgets ============

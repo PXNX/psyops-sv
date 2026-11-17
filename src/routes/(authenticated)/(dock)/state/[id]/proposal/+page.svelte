@@ -171,7 +171,14 @@
 								<!-- Pass/Fail Indicator (for ended proposals) -->
 								{#if proposal.votingEnded || proposal.status !== "active"}
 									<div class="mt-2">
-										{#if proposal.status === "passed" || (proposal.votingEnded && proposal.didPass)}
+										{#if proposal.status === "failed"}
+											<div class="flex items-center gap-2 text-[#ffd35c]">
+												<FluentDismissCircle20Filled class="size-4" />
+												<span class="text-sm font-semibold">
+													Passed with {proposal.percentageFor.toFixed(1)}% support, but it couldn't be carried out
+												</span>
+											</div>
+										{:else if proposal.status === "passed" || (proposal.votingEnded && proposal.didPass)}
 											<div class="flex items-center gap-2 text-[#b9f29a]">
 												<FluentCheckmarkCircle20Filled class="size-4" />
 												<span class="text-sm font-semibold">

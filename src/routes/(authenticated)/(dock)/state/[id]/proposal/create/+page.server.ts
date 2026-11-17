@@ -16,21 +16,27 @@ import {
 	userWallets,
 	proposalTaxDetails,
 	proposalBorderDetails,
-	proposalBuildingDetails
+	proposalBuildingDetails,
+	regions
 } from "#lib/server/schema.js";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProposalSchema } from "./schema";
-import { BUILDING_TEMPLATES, BORDER_MAINTENANCE } from "#lib/config/index.js";
+import { BUILDING_TEMPLATES, BORDER_MAINTENANCE, isBuildingType } from "#lib/config/index.js";
+import { proposalExploitationDetails } from "#lib/server/schema.js";
 import { executeProposal } from "#lib/server/services/politics/execute-proposal.js";
-import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
+import {
+	checkConstruction,
+	completePendingConstructions,
+	pendingByType
+} from "#lib/server/services/politics/construction.service.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
 
 	// Finish any construction whose time has elapsed before reading region
 	// stats below, so infrastructure/cost checks use up-to-date numbers.
-	await completePendingConstructions({ stateId: parseInt(params.id) });
+	await completePendingConstructions(db, { stateId: parseInt(params.id) });
 
 	// Get state with relations; fail fast if it doesn't exist
 	const statePromise = db.query.states
@@ -79,41 +85,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			})
 		]);
 
-	const buildingsByRegion = existingBuildings.reduce(
-		(acc, building) => {
-			if (!acc[building.regionId]) {
-				acc[building.regionId] = {};
-			}
-			if (!acc[building.regionId][building.buildingType]) {
-				acc[building.regionId][building.buildingType] = 0;
-			}
-			acc[building.regionId][building.buildingType]++;
-			return acc;
-		},
-		{} as Record<number, Record<string, number>>
-	);
+	// Buildings still going up, per region and type: they count towards the
+	// region's maximum level.
+	const pendingByRegion: Record<number, Record<string, number>> = {};
+	for (const b of existingBuildings) {
+		if (!b.isUnderConstruction) continue;
+		(pendingByRegion[b.regionId] ??= {})[b.buildingType] = (pendingByRegion[b.regionId]?.[b.buildingType] ?? 0) + 1;
+	}
 
 	const form = await superValidate(valibot(createProposalSchema));
-
-	const buildingTemplates = Object.entries(BUILDING_TEMPLATES).reduce(
-		(acc, [key, template]) => {
-			acc[key] = {
-				type: template.type,
-				costs: template.costs,
-				constructionTime: template.constructionTime,
-				infrastructureRequired: template.infrastructureRequired,
-				powerConsumption: template.powerConsumption
-			};
-			return acc;
-		},
-		{} as Record<string, any>
-	);
 
 	return {
 		state,
 		regions: state.regions || [],
 		treasury: state.treasury,
 		border: state.border,
+		exploitationPolicy: state.exploitationPolicy,
 		stateResources: stateResources.reduce(
 			(acc, r) => {
 				acc[r.resourceType] = r.quantity;
@@ -121,11 +108,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			},
 			{} as Record<string, number>
 		),
-		buildingsByRegion,
+		pendingByRegion,
 		userParty: userMembership?.partyAffiliation || null,
 		userMinistry: userMinistry?.ministry || null,
 		isPresident: !!userPresidency,
-		buildingTemplates,
+		buildingTemplates: BUILDING_TEMPLATES,
 		borderMaintenanceCost: BORDER_MAINTENANCE.dailyCost,
 		form
 	};
@@ -140,13 +127,11 @@ function canAutoExecute(proposalType: string, userMinistry: string | null, isPre
 
 	if (!userMinistry) return false;
 
+	// Ministers enact their own portfolio directly.
 	const ministryPermissions: Record<string, string[]> = {
-		economy: ["tax"],
+		economy: ["tax", "exploitation", "infrastructure", "school", "hospital", "power_plant"],
 		foreign_affairs: ["border_control"],
-		defense: ["fortifications"],
-		infrastructure: ["infrastructure"],
-		education: ["school"],
-		health: ["hospital"]
+		defense: ["fortifications"]
 	};
 
 	return ministryPermissions[userMinistry]?.includes(proposalType) || false;
@@ -179,6 +164,30 @@ export const actions: Actions = {
 		}
 
 		const { proposalType } = form.data;
+		const stateId = parseInt(params.id);
+
+		// Catch impossible proposals before parliament spends a day on them.
+		if (proposalType === "exploitation" && !form.data.exploitationPolicy) {
+			return fail(400, { form, error: "Choose an exploitation policy." });
+		}
+		if (isBuildingType(proposalType)) {
+			const regionId = Number(form.data.regionId);
+			const region = Number.isInteger(regionId)
+				? await db.query.regions.findFirst({ where: and(eq(regions.id, regionId), eq(regions.stateId, stateId)) })
+				: undefined;
+			if (!region) return fail(400, { form, error: "Choose one of your state's regions to build in." });
+			const check = checkConstruction({
+				type: proposalType,
+				quantity: form.data.quantity ?? 1,
+				region,
+				pending: (await pendingByType(db, region.id))[proposalType] ?? 0,
+				// Money and resources are only checked when it's built.
+				treasury: Number.MAX_SAFE_INTEGER,
+				stockpile: new Proxy({}, { get: () => Number.MAX_SAFE_INTEGER })
+			});
+			if (!check.ok) return fail(400, { form, error: check.problems.join(" ") });
+		}
+
 		const shouldAutoExecute = canAutoExecute(proposalType, ministry?.ministry || null, !!presidency);
 
 		// Create proposal
@@ -209,14 +218,17 @@ export const actions: Actions = {
 				taxType: form.data.taxType as any,
 				taxRate: form.data.taxRate!
 			});
+		} else if (proposalType === "exploitation") {
+			await db.insert(proposalExploitationDetails).values({
+				proposalId: proposal.id,
+				policy: form.data.exploitationPolicy!
+			});
 		} else if (proposalType === "border_control") {
 			await db.insert(proposalBorderDetails).values({
 				proposalId: proposal.id,
 				borderStatus: form.data.borderStatus as any
 			});
-		} else if (["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes(proposalType)) {
-			// Construction is just about raising the region's building-type
-			// level by `quantity` — there's no per-building name to collect.
+		} else if (isBuildingType(proposalType)) {
 			await db.insert(proposalBuildingDetails).values({
 				proposalId: proposal.id,
 				regionId: parseInt(form.data.regionId!),

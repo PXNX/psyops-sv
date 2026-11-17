@@ -54,7 +54,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	] = await Promise.all([
 		// Finish any construction whose time has elapsed so the stats below (and
 		// the "under construction" list) reflect the current state.
-		completePendingConstructions({ regionId }).then(() =>
+		completePendingConstructions(db, { regionId }).then(() =>
 			// Get region with state; fail fast if it doesn't exist
 			db.query.regions
 				.findFirst({

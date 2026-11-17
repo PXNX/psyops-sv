@@ -3,7 +3,7 @@ import * as v from "valibot";
 
 export const createProposalSchema = v.object({
 	proposalType: v.picklist(
-		["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control"],
+		["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control", "exploitation"],
 		"Please select a valid proposal type"
 	),
 
@@ -22,7 +22,12 @@ export const createProposalSchema = v.object({
 	),
 
 	// Border control fields
-	borderStatus: v.optional(v.picklist(["open", "closed"], "Please select a valid border status"))
+	borderStatus: v.optional(v.picklist(["open", "closed"], "Please select a valid border status")),
+
+	// Resource exploitation law
+	exploitationPolicy: v.optional(
+		v.picklist(["conservation", "standard", "industrial", "unrestricted"], "Please select an exploitation policy")
+	)
 });
 
 export type CreateProposalSchema = v.InferOutput<typeof createProposalSchema>;

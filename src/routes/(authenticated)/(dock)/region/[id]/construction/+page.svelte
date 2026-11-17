@@ -1,280 +1,191 @@
 <!-- src/routes/(authenticated)/(dock)/region/[id]/construction/+page.svelte -->
 <script lang="ts">
-	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
-	import FluentBook20Filled from "~icons/fluent/book-20-filled";
-	import FluentHeartPulse20Filled from "~icons/fluent/heart-pulse-20-filled";
-	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentHammer20Filled from "~icons/fluent/wrench-20-filled";
+	import { enhance } from "$app/forms";
+	import FluentWrench20Filled from "~icons/fluent/wrench-20-filled";
+	import FluentBuildingFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
-	import { Button } from "#lib/component/ui/index.js";
-	import * as m from "#lib/paraglide/messages.js";
-	import { enhance } from "$app/forms";
+	import SectionCard from "#lib/component/SectionCard.svelte";
+	import ConstructionQueue from "#lib/component/ConstructionQueue.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import { Badge, Button } from "#lib/component/ui/index.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
+	import { burst } from "#lib/utils/confetti.js";
+	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
-	let isSubmitting = $state(false);
-	let selectedBuilding = $state<string | null>(null);
-	let showSuccess = $state(false);
-	let successMessage = $state("");
+	const regionName = $derived(getRegionName(data.region.id));
+	const canOrderAny = $derived(data.buildings.some((b) => b.canOrder));
+	const ROLE_LABELS: Record<string, string> = {
+		president: "President",
+		governor: "Governor",
+		economy: "Economy Minister",
+		defense: "Defense Minister"
+	};
 
-	const regionName = $derived(() => {
-		const key = `region_${data.region.id}`;
-		return m[key]();
-	});
-
-	const buildings = [
-		{
-			type: "infrastructure",
-			name: "Infrastructure",
-			icon: FluentBuildingGovernment20Filled,
-			description: "Roads, bridges, and basic utilities. Enables economic growth.",
-			current: data.region.infrastructure,
-			max: 18,
-			cost: 50000,
-			color: "emerald",
-			benefits: ["Enables factory construction", "Increases regional development", "Improves logistics"]
-		},
-		{
-			type: "education",
-			name: "Education",
-			icon: FluentBook20Filled,
-			description: "Schools and universities. Improves workforce quality.",
-			current: data.region.education,
-			max: 10,
-			cost: 75000,
-			color: "blue",
-			benefits: ["Increases worker productivity", "Enables research", "Attracts skilled workers"]
-		},
-		{
-			type: "hospitals",
-			name: "Hospitals",
-			icon: FluentHeartPulse20Filled,
-			description: "Medical facilities. Improves public health and morale.",
-			current: data.region.hospitals,
-			max: 8,
-			cost: 100000,
-			color: "red",
-			benefits: ["Increases population growth", "Reduces military casualties", "Improves quality of life"]
-		},
-		{
-			type: "fortifications",
-			name: "Fortifications",
-			icon: FluentShield20Filled,
-			description: "Military defenses. Protects the region from attacks.",
-			current: data.region.fortifications,
-			max: 12,
-			cost: 150000,
-			color: "purple",
-			benefits: ["Increases defensive strength", "Deters invasions", "Protects infrastructure"]
-		}
-	];
-
-	function canBuild(building: (typeof buildings)[0]) {
-		return building.current < building.max && data.treasuryBalance >= building.cost;
-	}
-
-	function getColorClasses(color: string) {
-		const colors = {
-			emerald: {
-				bg: "bg-[#3f8a2a]/18",
-				border: "border-[#6fd14a]/30",
-				text: "text-[#b9f29a]",
-				hover: "hover:bg-[#3f8a2a]/28",
-				button: "bg-[#6fd14a]",
-				variant: "soft-emerald" as const
-			},
-			blue: {
-				bg: "bg-[#2369b5]/18",
-				border: "border-[#5eaef5]/30",
-				text: "text-[#b3dcff]",
-				hover: "hover:bg-[#2369b5]/28",
-				button: "bg-[#5eaef5]",
-				variant: "soft-blue" as const
-			},
-			red: {
-				bg: "bg-red-600/10",
-				border: "border-red-500/30",
-				text: "text-red-300",
-				hover: "hover:bg-red-600/20",
-				button: "bg-red-400",
-				variant: "soft-red" as const
-			},
-			purple: {
-				bg: "bg-[#8a4fc0]/15",
-				border: "border-[#c08cf0]/30",
-				text: "text-[#e3cbfb]",
-				hover: "hover:bg-[#8a4fc0]/25",
-				button: "bg-[#c08cf0]",
-				variant: "soft-purple" as const
-			}
-		};
-		return colors[color as keyof typeof colors];
-	}
+	let busy = $state<string | null>(null);
 </script>
 
-<PageContainer maxWidth="4xl">
-	<!-- Header -->
+<PageContainer maxWidth="5xl">
 	<PageHeader
 		title="Construction"
-		icon={FluentHammer20Filled}
-		subtitle={data.isGovernor
-			? "As Governor"
-			: data.isInfrastructureMinister
-				? "As Economy Minister"
-				: undefined}
+		subtitle={data.roles.length ? `${regionName} · as ${data.roles.map((r) => ROLE_LABELS[r]).join(", ")}` : regionName}
+		icon={FluentWrench20Filled}
 		backHref="/region/{data.region.id}"
-		backLabel={regionName()}
+		backLabel={regionName}
 	/>
 
-	<!-- Treasury Balance -->
-	<div class="panel rounded-sm p-4">
-		<div class="flex items-center justify-between gap-3">
-			<div>
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">State Treasury Balance</p>
-				<p class="text-2xl font-bold font-mono text-[#f5efd8]">${data.treasuryBalance.toLocaleString()}</p>
+	{#if !data.state}
+		<div class="panel-muted rounded-sm p-4 text-sm text-[#d3caa9]">
+			Independent regions can't build. Once a state governs {regionName}, its leaders can build here.
+		</div>
+	{:else}
+		<!-- What the state has to spend -->
+		<div class="panel rounded-sm p-4">
+			<div class="flex flex-wrap items-center justify-between gap-3">
+				<div>
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Treasury of {data.state.name}</p>
+					<p class="text-2xl font-bold font-mono text-[#b9f29a]">${data.treasury.toLocaleString()}</p>
+				</div>
+				<div class="flex flex-wrap gap-2">
+					{#each Object.entries(data.stockpile).filter(([, q]) => q > 0) as [resource, quantity]}
+						<span class="panel-muted rounded-sm px-2 py-1 text-xs text-[#e6ddbf] flex items-center gap-1">
+							<ResourceIcon name={resource} class="size-4" />
+							<span class="font-mono">{quantity.toLocaleString()}</span>
+						</span>
+					{:else}
+						<span class="text-xs text-[#a8a083]">The state stockpile is empty. Buy materials on the state market.</span>
+					{/each}
+				</div>
 			</div>
-			{#if data.state}
-				<a
-					href="/state/{data.state.id}"
-					class="text-sm text-[#ffd35c] hover:text-[#ffcf47] underline underline-offset-2"
-				>
-					View {data.state.name}
-				</a>
+			{#if !canOrderAny}
+				<p class="text-xs text-[#a8a083] mt-3">
+					The president, governor and responsible ministers order buildings here. Parliament can vote for them via
+					<a href="/state/{data.state.id}/proposal/create" class="text-[#ffd35c] hover:text-[#ffcf47]">a proposal</a>.
+				</p>
 			{/if}
 		</div>
-	</div>
 
-	<!-- Success Message -->
-	{#if showSuccess}
-		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3">
-			<FluentCheckmark20Filled class="size-5 text-[#6fd14a] shrink-0" />
-			<p class="text-sm">{successMessage}</p>
-		</div>
-	{/if}
+		{#if data.queue.length}
+			<SectionCard>
+				<h2 class="section-title mb-3">
+					<FluentBuildingFactory20Filled class="size-5" />
+					Under construction
+				</h2>
+				<ConstructionQueue items={data.queue} />
+			</SectionCard>
+		{/if}
 
-	<!-- Buildings Grid -->
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-		{#each buildings as building}
-			{@const colors = getColorClasses(building.color)}
-			{@const canAfford = canBuild(building)}
-			{@const isMaxed = building.current >= building.max}
-
-			<div class="panel rounded-sm overflow-hidden">
-				<!-- Header -->
-				<div class="{colors.bg} {colors.border} border-b p-4">
+		<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+			{#each data.buildings as b (b.type)}
+				{@const full = b.level + b.pending >= b.maxLevel}
+				<div class="panel rounded-sm p-4 flex flex-col gap-3">
 					<div class="flex items-start gap-3">
-						<div
-							class="size-12 {colors.bg} border {colors.border} rounded-sm flex items-center justify-center shrink-0"
-						>
-							<building.icon class="size-6 {colors.text}" />
-						</div>
-						<div class="flex-1">
-							<h2 class="text-lg font-bold text-[#f5efd8]">{building.name}</h2>
-							<p class="text-sm text-[#a8a083]">{building.description}</p>
+						<span class="text-3xl shrink-0" aria-hidden="true">{b.icon}</span>
+						<div class="min-w-0 flex-1">
+							<h2 class="font-bold text-[#f5efd8]">{b.name}</h2>
+							<p class="text-sm text-[#a8a083]">{b.description}</p>
 						</div>
 					</div>
-				</div>
 
-				<!-- Content -->
-				<div class="p-4 space-y-4">
-					<!-- Progress -->
 					<div>
-						<div class="flex items-center justify-between mb-2">
-							<span class="text-sm text-[#a8a083]">Level</span>
-							<span class="text-sm font-semibold {colors.text}">
-								{building.current} / {building.max}
+						<div class="flex items-center justify-between text-xs mb-1">
+							<span class="text-[#a8a083] uppercase tracking-wide">{b.statLabel}</span>
+							<span class="font-mono text-[#f5efd8]">
+								{b.level}{#if b.pending}<span class="text-[#ffd35c]">+{b.pending}</span>{/if} / {b.maxLevel}
 							</span>
 						</div>
-						<div class="h-2 bg-[#1a1f15] rounded-full overflow-hidden">
-							<div
-								class="h-full {colors.button} rounded-full transition-all"
-								style="width: {(building.current / building.max) * 100}%"
-							/>
+						<div class="h-2 bg-[#1a1f15] rounded-full overflow-hidden flex">
+							<div class="h-full bg-[#6fd14a]" style="width: {(b.level / b.maxLevel) * 100}%"></div>
+							<div class="h-full bg-[#f2b01e]/70 animate-pulse" style="width: {(b.pending / b.maxLevel) * 100}%"></div>
 						</div>
 					</div>
 
-					<!-- Benefits -->
-					<div>
-						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-2">Benefits</p>
-						<ul class="space-y-1">
-							{#each building.benefits as benefit}
-								<li class="text-sm text-[#d3caa9] flex items-start gap-2">
-									<span class="{colors.text} mt-0.5">•</span>
-									<span>{benefit}</span>
-								</li>
-							{/each}
-						</ul>
-					</div>
+					<ul class="text-sm text-[#d3caa9] space-y-0.5">
+						{#each b.benefits as benefit}
+							<li>• {benefit}</li>
+						{/each}
+					</ul>
 
-					<!-- Cost -->
-					<div class="pt-3 border-t border-[#c8b47a]/10">
-						<div class="flex items-center justify-between mb-3">
-							<span class="text-sm text-[#a8a083]">Construction Cost</span>
-							<span class="text-lg font-bold font-mono text-[#f5efd8]">
-								${building.cost.toLocaleString()}
+					<div class="flex flex-wrap gap-1.5">
+						{#each b.costs as c}
+							{@const short = c.available < c.needed}
+							<span
+								class="rounded-sm border px-2 py-0.5 text-xs flex items-center gap-1 {short
+									? 'bg-red-600/10 border-red-500/30 text-red-300'
+									: 'panel-muted text-[#e6ddbf]'}"
+								title="{c.available.toLocaleString()} available"
+							>
+								{#if c.resource === "currency"}💰{:else}<ResourceIcon name={c.resource} class="size-3.5" />{/if}
+								<span class="font-mono">{c.needed.toLocaleString()}</span>
 							</span>
-						</div>
+						{/each}
+						<Badge tone="neutral">{b.days} days</Badge>
+						{#if b.infrastructureRequired}
+							<Badge tone={data.region.infrastructure >= b.infrastructureRequired ? "neutral" : "red"}>
+								needs infrastructure {b.infrastructureRequired}
+							</Badge>
+						{/if}
+					</div>
 
-						<!-- Build Button -->
-						{#if isMaxed}
-							<Button variant="subtle" block disabled>Maximum Level Reached</Button>
-						{:else if !canAfford}
-							<Button variant="subtle" block disabled>Insufficient Funds</Button>
+					<div class="mt-auto pt-1">
+						{#if full}
+							<Button variant="subtle" block disabled>Maximum level</Button>
+						{:else if !b.canOrder}
+							<p class="text-xs text-[#a8a083]">{b.problems[0] ?? "Ask your government to build this."}</p>
+						{:else if b.problems.length}
+							<p class="text-xs text-red-300">{b.problems.join(" ")}</p>
 						{:else}
 							<form
 								method="POST"
 								action="?/build"
+								use:confirmSubmit={{
+									title: `Build ${b.name.toLowerCase()} in ${regionName}?`,
+									body: `It costs the state ${b.costs.map((c) => `${c.needed.toLocaleString()} ${c.resource === "currency" ? "money" : c.resource}`).join(", ")} and takes ${b.days} days.`,
+									confirmLabel: "Build"
+								}}
 								use:enhance={() => {
-									isSubmitting = true;
-									selectedBuilding = building.type;
+									busy = b.type;
 									return async ({ result, update }) => {
 										await update();
-										isSubmitting = false;
-										selectedBuilding = null;
-										if (result.type === "success" && result.data?.message) {
-											successMessage = result.data.message;
-											showSuccess = true;
-											setTimeout(() => (showSuccess = false), 5000);
-										}
+										busy = null;
+										toastResult(result);
+										if (result.type === "success") burst();
 									};
 								}}
 							>
-								<input type="hidden" name="buildingType" value={building.type} />
+								<input type="hidden" name="buildingType" value={b.type} />
+								<input type="hidden" name="quantity" value="1" />
 								<Button
 									type="submit"
-									variant={colors.variant}
+									variant="soft-emerald"
 									block
-									icon={FluentHammer20Filled}
-									loading={isSubmitting && selectedBuilding === building.type}
-									loadingText="Building..."
+									icon={FluentWrench20Filled}
+									loading={busy === b.type}
 								>
-									Build Level {building.current + 1}
+									Build level {b.level + b.pending + 1}
 								</Button>
 							</form>
 						{/if}
 					</div>
 				</div>
-			</div>
-		{/each}
-	</div>
-
-	<!-- Info Section -->
-	<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
-		<div class="flex items-start gap-3">
-			<div class="size-10 bg-[#2369b5]/25 rounded-sm flex items-center justify-center shrink-0">
-				<FluentBuildingGovernment20Filled class="size-5 text-[#5eaef5]" />
-			</div>
-			<div class="flex-1">
-				<p class="font-semibold text-[#b3dcff] mb-1">Building Information</p>
-				<ul class="text-sm text-[#d3caa9] space-y-1">
-					<li>• All construction is funded from the state treasury</li>
-					<li>• Buildings are permanent and cannot be demolished</li>
-					<li>• Higher levels provide diminishing returns</li>
-					<li>• Infrastructure is required for most economic activities</li>
-				</ul>
-			</div>
+			{/each}
 		</div>
-	</div>
+
+		{#if data.finished.length}
+			<SectionCard>
+				<h2 class="section-title mb-3">Recently finished</h2>
+				<ul class="divide-y divide-[#c8b47a]/10">
+					{#each data.finished as f (f.id)}
+						<li class="py-2 flex items-center justify-between gap-3 text-sm">
+							<span class="text-[#e6ddbf] truncate">{f.name}</span>
+							<span class="text-xs text-[#a8a083] shrink-0">{f.at ? formatDate(f.at) : ""}</span>
+						</li>
+					{/each}
+				</ul>
+			</SectionCard>
+		{/if}
+	{/if}
 </PageContainer>
