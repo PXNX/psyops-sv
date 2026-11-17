@@ -114,7 +114,7 @@ export async function executeProposal(stateId: number, proposalType: string, acc
 			stateId,
 			regionId: buildingDetails.regionId,
 			type: proposalType,
-			quantity: buildingDetails.quantity,
+			quantity: 1, // levels are built one at a time
 			builtBy: accountId,
 			proposalId
 		});

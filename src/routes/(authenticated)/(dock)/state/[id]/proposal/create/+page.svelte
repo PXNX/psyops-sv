@@ -121,13 +121,13 @@
 	};
 
 	const totalCosts = $derived(() => {
-		if (!$formData.proposalType || !isBuildingProposal || !$formData.quantity) return null;
+		if (!$formData.proposalType || !isBuildingProposal) return null;
 		if (!isValidBuildingType($formData.proposalType)) return null;
 
 		const template = data.buildingTemplates[$formData.proposalType];
 		if (!template) return null;
 
-		const quantity = $formData.quantity || 1;
+		const quantity = 1;
 		const costs: Record<string, number> = {};
 
 		for (const [resource, amount] of Object.entries(template.costs)) {
@@ -161,24 +161,15 @@
 		return true;
 	});
 
-	const maxAffordableQuantity = $derived(() => {
-		if (!$formData.proposalType || !isValidBuildingType($formData.proposalType)) return 100;
-
-		const template = data.buildingTemplates[$formData.proposalType];
-		if (!template) return 100;
-
-		let max = 100;
-		for (const [resource, amount] of Object.entries(template.costs)) {
-			if (!amount) continue;
-			const available = resource === "currency" ? data.treasury?.balance || 0 : data.stateResources?.[resource] || 0;
-			max = Math.min(max, Math.floor(available / (amount as number)));
-		}
-
-		return Math.max(0, max);
-	});
-
 	const progress = $derived(regionProgress($formData.regionId, $formData.proposalType));
-	const roomLeft = $derived(progress ? Math.max(0, progress.max - progress.level - progress.pending) : 100);
+	// Levels are built one at a time, so a region can take an order only when
+	// nothing is going up there and it's below the maximum.
+	const blocked = $derived(
+		!!progress &&
+			(progress.pending > 0 ||
+				progress.level >= progress.max ||
+				progress.infrastructure < progress.infrastructureRequired)
+	);
 </script>
 
 <PageContainer maxWidth="3xl">
@@ -444,22 +435,39 @@
 					</div>
 
 					{#if progress}
-						<div class="panel-muted rounded-sm p-4 space-y-2">
-							<div class="flex items-center justify-between text-sm">
-								<span class="text-[#d3caa9]"
-									>{data.buildingTemplates[$formData.proposalType as BuildingType].statLabel} level</span
-								>
-								<span class="font-mono font-bold text-[#f5efd8]">
-									{progress.level}{#if progress.pending}
-										<span class="text-[#ffd35c]"> +{progress.pending} building</span>{/if} / {progress.max}
+						{@const statLabel = data.buildingTemplates[$formData.proposalType as BuildingType].statLabel}
+						<div class="panel-muted rounded-sm p-4 space-y-3">
+							<div class="flex items-center justify-between gap-3">
+								<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">{statLabel}</span>
+								<span class="font-mono text-sm text-[#f5efd8]">
+									Level {progress.level}
+									{#if !blocked}<span class="text-[#6fd14a]"> → {progress.level + 1}</span>{/if}
+									<span class="text-[#a8a083]">/ {progress.max}</span>
 								</span>
 							</div>
-							{#if progress.infrastructure < progress.infrastructureRequired}
+							<div class="flex gap-0.5" aria-hidden="true">
+								{#each Array(progress.max) as _, i}
+									<div
+										class="h-2 flex-1 rounded-full {i < progress.level
+											? 'bg-[#6fd14a]'
+											: i === progress.level && !blocked
+												? 'bg-[#f2b01e] animate-pulse'
+												: 'bg-[#1a1f15]'}"
+									></div>
+								{/each}
+							</div>
+							{#if progress.pending}
+								<p class="text-xs text-[#ffd35c]">
+									Level {progress.level + 1} is still under construction. The next level can be ordered once it's finished.
+								</p>
+							{:else if progress.infrastructure < progress.infrastructureRequired}
 								<p class="text-xs text-red-300">
 									Needs infrastructure level {progress.infrastructureRequired} here first (it has {progress.infrastructure}).
 								</p>
-							{:else if roomLeft === 0}
-								<p class="text-xs text-red-300">This region is already at its maximum level.</p>
+							{:else if progress.level >= progress.max}
+								<p class="text-xs text-red-300">Already at the maximum level.</p>
+							{:else}
+								<p class="text-xs text-[#a8a083]">Buildings go up one level at a time.</p>
 							{/if}
 						</div>
 					{/if}
@@ -508,40 +516,7 @@
 						{/if}
 					</div>
 
-					<div>
-						<label for="quantity" class="field-label">
-							Quantity <span class="text-red-400">*</span>
-							<span class="text-[#a8a083] font-normal"
-								>(affordable: {maxAffordableQuantity()}, room left: {roomLeft})</span
-							>
-						</label>
-						<div class="join w-full">
-							<input
-								type="number"
-								id="quantity"
-								name="quantity"
-								bind:value={$formData.quantity}
-								min="1"
-								max="100"
-								placeholder="1"
-								class="join-item flex-1 min-w-0 field-control rounded-sm px-3 py-2.5 font-mono"
-								class:input-error={$errors.quantity}
-								disabled={$submitting}
-							/>
-							<Button
-								type="button"
-								variant="secondary"
-								class="join-item"
-								onclick={() => ($formData.quantity = Math.min(maxAffordableQuantity(), roomLeft))}
-								disabled={$submitting || Math.min(maxAffordableQuantity(), roomLeft) < 1}
-							>
-								MAX
-							</Button>
-						</div>
-						{#if $errors.quantity}
-							<p class="field-error">{$errors.quantity}</p>
-						{/if}
-					</div>
+					<input type="hidden" name="quantity" value="1" />
 
 					{#if totalCosts()}
 						{@const costs = totalCosts()}
@@ -587,12 +562,7 @@
 						(isBorderControlProposal && !$formData.borderStatus) ||
 						(isExploitationProposal &&
 							(!$formData.exploitationPolicy || $formData.exploitationPolicy === data.exploitationPolicy)) ||
-						(isBuildingProposal &&
-							(!$formData.regionId ||
-								!$formData.quantity ||
-								$formData.quantity > roomLeft ||
-								(progress !== null && progress.infrastructure < progress.infrastructureRequired) ||
-								(canAutoExecute() && !canAfford())))}
+						(isBuildingProposal && (!$formData.regionId || blocked || (canAutoExecute() && !canAfford())))}
 				>
 					{canAutoExecute() ? "Execute Immediately" : "Submit Proposal"}
 				</Button>

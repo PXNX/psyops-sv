@@ -69,11 +69,14 @@ describe("checkConstruction", () => {
 		expect(hospital.problems.join()).toContain("infrastructure level 2");
 	});
 
-	it("counts buildings under construction towards the maximum level", () => {
+	it("builds one level at a time, up to the maximum", () => {
 		const max = BUILDING_TEMPLATES.school.maxLevel;
-		const almost = { ...region, infrastructure: 5, education: max - 2 };
-		expect(checkConstruction({ type: "school", quantity: 2, region: almost, pending: 0, ...rich }).ok).toBe(true);
-		expect(checkConstruction({ type: "school", quantity: 1, region: almost, pending: 2, ...rich }).ok).toBe(false);
+		const almost = { ...region, infrastructure: 5, education: max - 1 };
+		expect(checkConstruction({ type: "school", quantity: 1, region: almost, pending: 0, ...rich }).ok).toBe(true);
+		expect(checkConstruction({ type: "school", quantity: 2, region: almost, pending: 0, ...rich }).ok).toBe(false);
+		expect(checkConstruction({ type: "school", quantity: 1, region: almost, pending: 1, ...rich }).ok).toBe(false);
+		const full = { ...almost, education: max };
+		expect(checkConstruction({ type: "school", quantity: 1, region: full, pending: 0, ...rich }).ok).toBe(false);
 	});
 
 	it("names what the state is short of", () => {
@@ -102,19 +105,26 @@ describe("startConstruction / completePendingConstructions", () => {
 
 	it("charges treasury and stockpile and queues the buildings", async () => {
 		const { costs } = BUILDING_TEMPLATES.infrastructure;
-		await fund(costs.currency * 2 + 5, { steel: 1000, wood: 1000, coal: 1000 });
-		await startConstruction(handle.db, { stateId, regionId, type: "infrastructure", quantity: 2, builtBy: userId });
+		await fund(costs.currency + 5, { steel: 1000, wood: 1000, coal: 1000 });
+		await startConstruction(handle.db, { stateId, regionId, type: "infrastructure", builtBy: userId });
 
 		expect(await treasury()).toBe(5);
-		expect(await stock("steel")).toBe(1000 - costs.steel! * 2);
+		expect(await stock("steel")).toBe(1000 - costs.steel!);
 		const queued = await handle.db
 			.select()
 			.from(stateBuildings)
 			.where(and(eq(stateBuildings.regionId, regionId), eq(stateBuildings.isUnderConstruction, true)));
-		expect(queued).toHaveLength(2);
+		expect(queued).toHaveLength(1);
 	});
 
-	it("raises the region's level once each building is finished, and only once", async () => {
+	it("won't start the next level while one is going up", async () => {
+		await fund(1e7, { steel: 1000, wood: 1000, coal: 1000 });
+		await expect(
+			startConstruction(handle.db, { stateId, regionId, type: "infrastructure", builtBy: userId })
+		).rejects.toThrow("still under construction");
+	});
+
+	it("raises the region's level once the building is finished, and only once", async () => {
 		await handle.db
 			.update(stateBuildings)
 			.set({ constructionCompletesAt: new Date(Date.now() - 1000) })
@@ -123,15 +133,15 @@ describe("startConstruction / completePendingConstructions", () => {
 			completePendingConstructions(handle.db, { regionId }),
 			completePendingConstructions(handle.db, { regionId })
 		]);
-		expect(a + b).toBe(2);
+		expect(a + b).toBe(1);
 		const [region] = await handle.db.select().from(regions).where(eq(regions.id, regionId));
-		expect(region!.infrastructure).toBe(2);
+		expect(region!.infrastructure).toBe(1);
 	});
 
 	it("now allows a school, which needs infrastructure 1", async () => {
 		await fund(1e7, { steel: 1000, wood: 1000 });
 		await expect(
-			startConstruction(handle.db, { stateId, regionId, type: "school", quantity: 1, builtBy: userId })
+			startConstruction(handle.db, { stateId, regionId, type: "school", builtBy: userId })
 		).resolves.toBeTruthy();
 	});
 

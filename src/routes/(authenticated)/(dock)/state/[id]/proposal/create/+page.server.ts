@@ -178,7 +178,7 @@ export const actions: Actions = {
 			if (!region) return fail(400, { form, error: "Choose one of your state's regions to build in." });
 			const check = checkConstruction({
 				type: proposalType,
-				quantity: form.data.quantity ?? 1,
+				quantity: 1,
 				region,
 				pending: (await pendingByType(db, region.id))[proposalType] ?? 0,
 				// Money and resources are only checked when it's built.
@@ -232,7 +232,7 @@ export const actions: Actions = {
 			await db.insert(proposalBuildingDetails).values({
 				proposalId: proposal.id,
 				regionId: parseInt(form.data.regionId!),
-				quantity: form.data.quantity!
+				quantity: 1
 			});
 		}
 

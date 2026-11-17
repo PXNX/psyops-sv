@@ -5,6 +5,7 @@ import { db } from "#lib/server/db.js";
 import { eq, and, asc, inArray } from "drizzle-orm";
 import { regions, states, stateBuildings, userProfiles } from "#lib/server/schema.js";
 import { getRegionName } from "#lib/utils/formatting.js";
+import { BUILDING_TEMPLATES, isBuildingType } from "#lib/config/index.js";
 import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -48,7 +49,11 @@ export const load: PageServerLoad = async ({ params }) => {
 		: [];
 	const builderNameByAccountId = new Map(builders.map((b) => [b.accountId, b.name]));
 
+	const levelOf = new Map(regionRows.map((r) => [r.id, r]));
 	const pendingConstructions = pending.map((building) => ({
+		toLevel: isBuildingType(building.buildingType)
+			? (levelOf.get(building.regionId)?.[BUILDING_TEMPLATES[building.buildingType].stat] ?? 0) + 1
+			: undefined,
 		id: building.id,
 		name: building.name,
 		type: building.buildingType,

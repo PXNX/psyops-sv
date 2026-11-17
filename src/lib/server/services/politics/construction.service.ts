@@ -29,7 +29,7 @@ export interface ConstructionCheck {
 }
 
 /**
- * Whether `quantity` buildings of `type` can be started in a region right
+ * Whether the next level of `type` can be started in a region right
  * now, and what they'd cost against what the state has. Pure; the caller
  * supplies the numbers.
  */
@@ -45,14 +45,13 @@ export function checkConstruction(input: {
 	const level = regionLevel(input.region, template.stat);
 	const problems: string[] = [];
 
-	if (!Number.isInteger(input.quantity) || input.quantity < 1) problems.push("Build at least one.");
-	if (level + input.pending + input.quantity > template.maxLevel) {
-		const room = Math.max(0, template.maxLevel - level - input.pending);
-		problems.push(
-			room === 0
-				? `${template.statLabel} is already at (or being built up to) its maximum of ${template.maxLevel}.`
-				: `Only ${room} more can be built here (maximum ${template.maxLevel}).`
-		);
+	// Levels go up one at a time: one order, one level, and the next only
+	// once the current one is finished.
+	if (input.quantity !== 1) problems.push("Buildings go up one level at a time.");
+	if (input.pending > 0) {
+		problems.push(`${template.name} level ${level + 1} is still under construction here.`);
+	} else if (level >= template.maxLevel) {
+		problems.push(`${template.statLabel} is already at its maximum of ${template.maxLevel}.`);
 	}
 	const infrastructure = regionLevel(input.region, "infrastructure");
 	if (infrastructure < template.infrastructureRequired) {
@@ -63,7 +62,7 @@ export function checkConstruction(input: {
 
 	const costs = Object.entries(template.costs).map(([resource, perUnit]) => ({
 		resource,
-		needed: perUnit * Math.max(1, input.quantity),
+		needed: perUnit,
 		available: resource === "currency" ? input.treasury : (input.stockpile[resource] ?? 0)
 	}));
 	for (const c of costs) {
@@ -95,7 +94,7 @@ export async function stateStockpile(db: Database | Tx, stateId: number): Promis
 }
 
 /**
- * Pays for and starts `quantity` buildings. All or nothing: the region is
+ * Pays for and starts the next level of a building. All or nothing: the region is
  * locked so two orders can't both take the last free level, and each payment
  * only goes through if the money/resources are still there.
  * Throws ConstructionError with a player-readable message otherwise.
@@ -106,7 +105,8 @@ export async function startConstruction(
 		stateId: number;
 		regionId: number;
 		type: BuildingType;
-		quantity: number;
+		/** Always 1: levels are built one at a time. */
+		quantity?: number;
 		builtBy: string;
 		proposalId?: number | null;
 	}
@@ -126,7 +126,7 @@ export async function startConstruction(
 			.where(eq(stateTreasury.stateId, input.stateId));
 		const check = checkConstruction({
 			type: input.type,
-			quantity: input.quantity,
+			quantity: input.quantity ?? 1,
 			region,
 			pending: (await pendingByType(tx, input.regionId))[input.type] ?? 0,
 			treasury: treasury?.balance ?? 0,
@@ -162,19 +162,17 @@ export async function startConstruction(
 
 		const startedAt = new Date();
 		const completesAt = new Date(startedAt.getTime() + template.constructionTime * DAY);
-		await tx.insert(stateBuildings).values(
-			Array.from({ length: input.quantity }, (_, i) => ({
-				name: `${template.name} ${check.level + check.pending + i + 1}`,
-				buildingType: input.type,
-				regionId: input.regionId,
-				stateId: input.stateId,
-				proposalId: input.proposalId ?? null,
-				builtBy: input.builtBy,
-				isUnderConstruction: true,
-				constructionStartedAt: startedAt,
-				constructionCompletesAt: completesAt
-			}))
-		);
+		await tx.insert(stateBuildings).values({
+			name: `${template.name} ${check.level + 1}`,
+			buildingType: input.type,
+			regionId: input.regionId,
+			stateId: input.stateId,
+			proposalId: input.proposalId ?? null,
+			builtBy: input.builtBy,
+			isUnderConstruction: true,
+			constructionStartedAt: startedAt,
+			constructionCompletesAt: completesAt
+		});
 		return { completesAt };
 	});
 }

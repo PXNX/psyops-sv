@@ -78,7 +78,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				maxLevel: check.maxLevel,
 				costs: check.costs,
 				problems: check.problems,
-				canOrder: access.types.includes(type)
+				canOrder: access.types.includes(type),
+				// The level going up right now, if any (one at a time).
+				underway: (() => {
+					const b = queue.find((q) => q.buildingType === type);
+					return b ? { startedAt: b.constructionStartedAt, completesAt: b.constructionCompletesAt } : null;
+				})()
 			};
 		}),
 		queue: queue.map((b) => ({
