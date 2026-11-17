@@ -43,7 +43,7 @@ export async function createMockDb({ seed = true }: MockDbOptions = {}): Promise
 	const db = pglite as unknown as MockDatabase;
 
 	if (seed) {
-		await seedMockDatabase(db);
+		await seedMockDatabase(db as unknown as Parameters<typeof seedMockDatabase>[0]);
 	}
 
 	return { db, close: () => client.close() };
