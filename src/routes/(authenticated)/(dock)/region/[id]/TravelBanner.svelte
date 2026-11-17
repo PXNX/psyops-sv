@@ -2,7 +2,7 @@
 <script lang="ts">
 	import FluentNavigation20Filled from "~icons/fluent/navigation-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
+	import { formatDateTime, getRegionName } from "#lib/utils/formatting.js";
 
 	const { activeTravel } = $props<{
 		activeTravel: {
@@ -45,7 +45,7 @@
 				</div>
 			</div>
 			<p class="text-xs text-[#a8a083] mt-2">
-				Expected arrival: {formatDate(activeTravel.arrivalTime)}
+				Expected arrival: {formatDateTime(activeTravel.arrivalTime)}
 			</p>
 		</div>
 	</div>
