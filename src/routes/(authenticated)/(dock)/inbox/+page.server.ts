@@ -266,8 +266,14 @@ export const actions: Actions = {
 		const broadcastId = Number(formData.get("broadcastId"));
 		if (!broadcastId) return fail(400, { error: "Broadcast ID required" });
 
-		await db.update(broadcasts).set({ isActive: false }).where(eq(broadcasts.id, broadcastId));
-		return { success: true };
+		// Only broadcasts of the caller's own state/party/bloc.
+		const revoked = await db
+			.update(broadcasts)
+			.set({ isActive: false })
+			.where(and(eq(broadcasts.id, broadcastId), eq(broadcasts.stateId, presidency.stateId)))
+			.returning({ id: broadcasts.id });
+		if (revoked.length === 0) return fail(404, { error: "Broadcast not found" });
+		return { success: true, message: "Broadcast revoked." };
 	},
 
 	revokePartyBroadcast: async ({ request, locals }) => {
@@ -283,8 +289,14 @@ export const actions: Actions = {
 		const broadcastId = Number(formData.get("broadcastId"));
 		if (!broadcastId) return fail(400, { error: "Broadcast ID required" });
 
-		await db.update(broadcasts).set({ isActive: false }).where(eq(broadcasts.id, broadcastId));
-		return { success: true };
+		// Only broadcasts of the caller's own state/party/bloc.
+		const revoked = await db
+			.update(broadcasts)
+			.set({ isActive: false })
+			.where(and(eq(broadcasts.id, broadcastId), eq(broadcasts.partyId, membership.partyId)))
+			.returning({ id: broadcasts.id });
+		if (revoked.length === 0) return fail(404, { error: "Broadcast not found" });
+		return { success: true, message: "Broadcast revoked." };
 	},
 
 	revokeBlocBroadcast: async ({ request, locals }) => {
@@ -300,7 +312,13 @@ export const actions: Actions = {
 		const broadcastId = Number(formData.get("broadcastId"));
 		if (!broadcastId) return fail(400, { error: "Broadcast ID required" });
 
-		await db.update(broadcasts).set({ isActive: false }).where(eq(broadcasts.id, broadcastId));
-		return { success: true };
+		// Only broadcasts of the caller's own state/party/bloc.
+		const revoked = await db
+			.update(broadcasts)
+			.set({ isActive: false })
+			.where(and(eq(broadcasts.id, broadcastId), eq(broadcasts.blocId, blocLeadership.blocId)))
+			.returning({ id: broadcasts.id });
+		if (revoked.length === 0) return fail(404, { error: "Broadcast not found" });
+		return { success: true, message: "Broadcast revoked." };
 	}
 };
