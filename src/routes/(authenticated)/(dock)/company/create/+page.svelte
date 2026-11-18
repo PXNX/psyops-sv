@@ -8,11 +8,9 @@
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
-	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import { buttonClass } from "#lib/component/ui/styles.js";
 	import Button from "#lib/component/ui/Button.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
@@ -172,214 +170,167 @@
 </script>
 
 <PageContainer maxWidth="3xl">
-	<!-- Header -->
-	<PageHeader
-		title="Create Company"
-		subtitle="Establish your business empire"
-		icon={FluentBriefcase20Filled}
-		backHref="/company"
-		backLabel="Companies"
-	/>
+	<PageHeader title="Register a Company" icon={FluentBriefcase20Filled} backHref="/company" backLabel="Register" />
 
-	<!-- Cooldown Warning -->
 	{#if data.isOnCooldown && data.cooldownEndsAt}
-		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5 space-y-3">
-			<div class="flex items-start gap-3">
-				<FluentClock20Filled class="size-6 text-red-400 shrink-0 mt-0.5" />
-				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-red-300 text-lg">Company Creation Cooldown Active</h3>
-					<p class="text-[#d3caa9] text-sm leading-relaxed">
-						You must wait before creating another company. This cooldown period helps maintain economic stability.
-					</p>
-					<div class="panel-muted rounded-sm p-3 space-y-2">
-						<div class="flex items-center justify-between">
-							<span class="text-[#e6ddbf] text-sm font-medium">Time Remaining:</span>
-							<span class="text-red-300 text-sm font-bold font-mono">{formatTimeRemaining(data.cooldownEndsAt)}</span>
-						</div>
-						<div class="flex items-center justify-between text-xs">
-							<span class="text-[#a8a083]">Available on:</span>
-							<span class="text-[#d3caa9]">{formatCooldownDate(data.cooldownEndsAt)}</span>
-						</div>
-					</div>
-				</div>
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-start gap-3">
+			<FluentClock20Filled class="size-5 text-red-400 shrink-0 mt-0.5" />
+			<div class="min-w-0 text-sm">
+				<p class="font-semibold">You can register again in {formatTimeRemaining(data.cooldownEndsAt)}</p>
+				<p class="text-xs text-[#d3caa9] mt-0.5">
+					From <span class="font-mono">{formatCooldownDate(data.cooldownEndsAt)}</span>
+				</p>
 			</div>
 		</div>
 	{/if}
 
-	<!-- Error Message -->
 	{#if $message}
 		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
+			<FluentWarning20Filled class="size-5 text-red-400 shrink-0" />
 			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
 
-	<!-- Form -->
-	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
-		<!-- Company Name -->
-		<div class="panel rounded-sm p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentBriefcase20Filled class="size-5 text-[#f2b01e]" />
-				<h2 class="text-lg font-semibold text-[#f5efd8]">Company Details</h2>
-			</div>
+	<!-- The application form, laid out like a registry filing -->
+	<form method="POST" enctype="multipart/form-data" use:enhance class="panel rounded-sm p-5 sm:p-7">
+		<div class="text-center border-b-2 border-double border-[#c8b47a]/40 pb-3">
+			<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083]">Commercial Register · Form HR-1</p>
+			<h2 class="mt-1 font-serif text-xl sm:text-2xl font-bold text-[#f5efd8]">Application for Registration</h2>
+		</div>
 
-			<div>
-				<label for="name" class="field-label">
-					Company Name <span class="text-red-400">*</span>
-				</label>
+		<div class="mt-5 grid grid-cols-[1fr_auto] gap-4 items-start">
+			<!-- 1. Name -->
+			<div class="min-w-0">
+				<label for="name" class="field-label"><span class="font-mono text-[#a8a083]">1.</span> Company name</label>
 				<input
 					type="text"
 					id="name"
 					name="name"
 					bind:value={$form.name}
-					placeholder="e.g., Acme Corporation"
+					placeholder="e.g. Acme Corporation"
 					maxlength="50"
-					class="field-control rounded-sm px-3 py-2.5 w-full"
+					class="field-control rounded-sm px-3 py-2.5 w-full font-serif text-lg"
 					class:border-red-500={$errors.name}
 					disabled={$submitting || !canCreate}
 				/>
 				{#if $errors.name}
 					<p class="field-error">{$errors.name}</p>
 				{:else}
-					<p class="field-hint">{$form.name?.length || 0}/50 characters</p>
+					<p class="field-hint text-right font-mono">{$form.name?.length || 0}/50</p>
 				{/if}
 			</div>
-		</div>
 
-		<!-- Company Logo -->
-		<div class="panel rounded-sm p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-[#f2b01e]" />
-				<h2 class="text-lg font-semibold text-[#f5efd8]">Company Logo (Optional)</h2>
-			</div>
-
-			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
-				<input
-					bind:this={fileInput}
-					type="file"
-					id="logo"
-					name="logo"
-					accept="image/*"
-					class="hidden"
-					onchange={handleFileSelect}
-					disabled={$submitting || !canCreate}
-				/>
-
-				<button
-					type="button"
-					onclick={() => fileInput?.click()}
-					disabled={$submitting || !canCreate}
-					class={dropzoneClass}
-				>
-					{#if !$form.logo}
-						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#f2b01e]/15 p-3">
-								<FluentImage20Filled class="size-8 text-[#ffd35c]" />
+			<!-- 2. Seal / logo -->
+			<div class="w-24 sm:w-28">
+				<span class="field-label"><span class="font-mono text-[#a8a083]">2.</span> Seal</span>
+				<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
+					<input
+						bind:this={fileInput}
+						type="file"
+						id="logo"
+						name="logo"
+						accept="image/*"
+						class="hidden"
+						onchange={handleFileSelect}
+						disabled={$submitting || !canCreate}
+					/>
+					<button
+						type="button"
+						onclick={() => fileInput?.click()}
+						disabled={$submitting || !canCreate}
+						class="{dropzoneClass} aspect-square tap-target"
+						aria-label={$form.logo ? "Change logo" : "Upload logo"}
+					>
+						{#if !$form.logo}
+							<div class="size-full flex flex-col items-center justify-center gap-1 p-2 text-center">
+								<FluentImage20Filled class="size-7 text-[#ffd35c]" />
+								<span class="text-[10px] text-[#a8a083] leading-tight">
+									{dragActive ? "Drop here" : "Optional"}
+								</span>
 							</div>
-							<div class="text-center">
-								<p class="text-base font-semibold text-[#f5efd8]">
-									{#if dragActive}
-										Drop logo here
-									{:else if $submitting}
-										Uploading...
-									{:else}
-										Tap to upload company logo
-									{/if}
-								</p>
-								{#if !$submitting && canCreate}
-									<p class="mt-1 text-sm text-[#a8a083]">Images only • 5MB max</p>
-								{/if}
-							</div>
-						</div>
-					{:else}
-						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
-								<img
-									loading="lazy"
-									decoding="async"
-									src={previewUrl}
-									alt="Company logo preview"
-									class="size-24 object-contain rounded-sm"
-								/>
-							</div>
-							<div
-								class="absolute inset-0 flex items-center justify-center bg-[#12150f]/60 opacity-0 transition-opacity group-hover:opacity-100"
-							>
-								<p class="text-base font-semibold text-[#f5efd8]">Tap to change</p>
-							</div>
-							<button
-								type="button"
-								onclick={(e) => {
-									e.stopPropagation();
-									clearImage();
-								}}
-								disabled={$submitting || !canCreate}
-								class={buttonClass({
-									variant: "secondary",
-									size: "sm",
-									shape: "circle",
-									class: "absolute top-2 right-2"
-								})}
-							>
-								✕
-							</button>
-						</div>
-						<div class="border-t border-[#c8b47a]/15 p-3 bg-[#1a1f15]/70">
-							<p class="truncate text-sm font-medium text-[#f5efd8]" title={$form.logo.name}>
-								{$form.logo.name}
-							</p>
-							<p class="text-xs text-[#a8a083]">
-								{Math.round($form.logo.size / 1024)} KB
-							</p>
-						</div>
+						{:else}
+							<img
+								decoding="async"
+								src={previewUrl}
+								alt="Logo preview"
+								class="size-full object-contain p-1.5 animate-pop-in"
+							/>
+						{/if}
+					</button>
+					{#if $form.logo}
+						<button
+							type="button"
+							onclick={clearImage}
+							disabled={$submitting || !canCreate}
+							aria-label="Remove logo"
+							class={buttonClass({
+								variant: "secondary",
+								size: "xs",
+								shape: "circle",
+								class: "absolute -top-2 -right-2"
+							})}
+						>
+							✕
+						</button>
 					{/if}
-				</button>
+				</div>
 			</div>
-
-			{#if $errors.logo}
-				<p class="field-error">{$errors.logo}</p>
-			{:else}
-				<p class="field-hint">Will be converted to 96x96 WebP • Max 5MB</p>
-			{/if}
 		</div>
+		{#if $errors.logo}
+			<p class="field-error">{$errors.logo}</p>
+		{/if}
 
-		<!-- Description -->
-		<div class="panel rounded-sm p-5 space-y-3">
-			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-[#f2b01e]" />
-				<h2 class="text-lg font-semibold text-[#f5efd8]">Company Description (Optional)</h2>
-			</div>
-
+		<!-- 3. Objects -->
+		<div class="mt-4">
+			<label for="description" class="field-label">
+				<span class="font-mono text-[#a8a083]">3.</span> Objects of the company
+			</label>
 			<textarea
 				id="description"
 				name="description"
 				bind:value={$form.description}
-				rows="5"
+				rows="4"
 				maxlength="500"
-				placeholder="Describe your company's mission, vision, and business focus..."
+				placeholder="What the company does (optional)"
 				class="field-control rounded-sm px-3 py-2.5 w-full"
 				class:border-red-500={$errors.description}
 				disabled={$submitting || !canCreate}></textarea>
 			{#if $errors.description}
 				<p class="field-error">{$errors.description}</p>
 			{:else}
-				<p class="field-hint">{$form.description?.length || 0}/500 characters</p>
+				<p class="field-hint text-right font-mono">{$form.description?.length || 0}/500</p>
 			{/if}
 		</div>
 
-		<!-- Cost -->
-		<ResourceRequirements costs={{ currency: data.companyCost }} available={{ currency: data.userBalance }} />
+		<!-- Fee -->
+		<div class="mt-5 pt-3 border-t border-dashed border-[#c8b47a]/25 space-y-1 text-sm">
+			<div class="flex justify-between gap-3">
+				<span class="text-[#d3caa9]">Registration fee</span>
+				<span class="font-mono font-bold text-[#f5efd8]">{data.companyCost.toLocaleString()}</span>
+			</div>
+			<div class="flex justify-between gap-3 text-xs">
+				<span class="text-[#a8a083]">Your wallet</span>
+				<span class="font-mono {data.canAfford ? 'text-[#b9f29a]' : 'text-red-300'}">
+					{data.userBalance.toLocaleString()}
+				</span>
+			</div>
+			{#if !data.canAfford}
+				<p class="field-error">Not enough money for the fee.</p>
+			{/if}
+		</div>
 
-		<!-- Submit -->
-		<div class="flex gap-3">
-			<Button href="/production" variant="secondary" grow disabled={$submitting}>Cancel</Button>
-			<Button type="submit" variant="primary" grow disabled={$submitting || !canCreate}>
-				{#if $delayed}
-					<span class="loading loading-spinner loading-sm"></span>
-					Creating...
-				{:else}
-					<FluentCheckmark20Filled class="size-5" />
-					Create Company ({data.companyCost.toLocaleString()})
-				{/if}
+		<div class="mt-5 flex gap-3">
+			<Button href="/company" variant="secondary" grow disabled={$submitting}>Cancel</Button>
+			<Button
+				type="submit"
+				variant="primary"
+				grow
+				icon={FluentCheckmark20Filled}
+				loading={$delayed}
+				loadingText="Filing…"
+				disabled={$submitting || !canCreate}
+			>
+				File &amp; pay
 			</Button>
 		</div>
 	</form>

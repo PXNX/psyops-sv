@@ -282,11 +282,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		id: number;
 		sellerId: string;
 		sellerName: string | null;
+		sellerAvatar: string | null;
 		quantity: number;
 		pricePerUnit: number;
 		isMine: boolean;
 	}> = [];
-	let topHolders: Array<{ userId: string; name: string | null; quantity: number; percent: number }> = [];
+	let topHolders: Array<{
+		userId: string;
+		name: string | null;
+		avatar: string | null;
+		quantity: number;
+		percent: number;
+	}> = [];
 	let floatOutstanding = 0;
 
 	if (shares) {
@@ -315,11 +322,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					})
 				: [];
 		const nameByUserId = new Map(profiles.map((p) => [p.accountId, p.name]));
+		const avatarByUserId = new Map(
+			await Promise.all(profiles.map(async (p) => [p.accountId, await getLogoUrl(p.logo)] as const))
+		);
 
 		listings = rawListings.map((l) => ({
 			id: l.id,
 			sellerId: l.sellerId,
 			sellerName: nameByUserId.get(l.sellerId) ?? null,
+			sellerAvatar: avatarByUserId.get(l.sellerId) ?? null,
 			quantity: l.quantity,
 			pricePerUnit: Number(l.pricePerUnit),
 			isMine: l.sellerId === account.id
@@ -328,6 +339,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		topHolders = holderRows.map((h) => ({
 			userId: h.userId,
 			name: nameByUserId.get(h.userId) ?? null,
+			avatar: avatarByUserId.get(h.userId) ?? null,
 			quantity: h.quantity,
 			percent: Math.round((h.quantity / shares.totalShares) * 1000) / 10
 		}));

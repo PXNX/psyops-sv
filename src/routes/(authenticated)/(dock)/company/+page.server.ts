@@ -63,7 +63,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 				logo: companies.logo,
 				foundedAt: companies.foundedAt,
 				ownerId: companies.ownerId,
-				ownerName: userProfiles.name
+				ownerName: userProfiles.name,
+				ownerLogoId: userProfiles.logo
 			})
 			.from(companies)
 			.leftJoin(accounts, eq(companies.ownerId, accounts.id))
@@ -94,7 +95,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		// Get factory counts and states for each company
 		const statsPromise = Promise.all(
 			allCompanies.map(async (company) => {
-				const [companyFactories, logoUrl] = await Promise.all([
+				const [companyFactories, logoUrl, ownerAvatar] = await Promise.all([
 					db
 						.select({
 							id: factories.id,
@@ -106,7 +107,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 						.innerJoin(regions, eq(factories.regionId, regions.id))
 						.innerJoin(states, eq(regions.stateId, states.id))
 						.where(eq(factories.companyId, company.id)),
-					getLogoUrl(company.logo)
+					getLogoUrl(company.logo),
+					getLogoUrl(company.ownerLogoId)
 				]);
 
 				// Get worker count
@@ -119,19 +121,20 @@ export const load: PageServerLoad = async ({ locals }) => {
 					).values()
 				);
 
-				return { company, logoUrl, factoryCount: companyFactories.length, totalWorkers, uniqueStates };
+				return { company, logoUrl, ownerAvatar, factoryCount: companyFactories.length, totalWorkers, uniqueStates };
 			})
 		);
 
 		const [partyByOwnerId, stats] = await Promise.all([partyByOwnerIdPromise, statsPromise]);
 
-		return stats.map(({ company, logoUrl, factoryCount, totalWorkers, uniqueStates }) => ({
+		return stats.map(({ company, logoUrl, ownerAvatar, factoryCount, totalWorkers, uniqueStates }) => ({
 			id: company.id,
 			name: company.name,
 			logo: logoUrl,
 			foundedAt: company.foundedAt.toISOString(),
 			ownerId: company.ownerId,
 			ownerName: company.ownerName || null,
+			ownerAvatar,
 			ownerPartyAbbreviation: partyByOwnerId.get(company.ownerId)?.abbreviation ?? null,
 			ownerPartyColor: partyByOwnerId.get(company.ownerId)?.color ?? null,
 			factoryCount,

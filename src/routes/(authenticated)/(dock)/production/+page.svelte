@@ -1,49 +1,58 @@
 <!-- src/routes/production/+page.svelte -->
+<!-- The player's workshop: a time card for the factory shift, the production
+     line (running batch or the workbench to start one) and the storeroom. -->
 <script lang="ts">
 	import { invalidateAll } from "$app/navigation";
 	import { enhance } from "$app/forms";
-	import { feedback } from "#lib/utils/feedback.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import FluentProduction20Filled from "~icons/fluent/production-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentBox20Filled from "~icons/fluent/box-20-filled";
-	import FluentCube20Filled from "~icons/fluent/cube-20-filled";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentEmojiShoppingCart from "~icons/fluent-emoji/shopping-cart";
-	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
-	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
+	import FluentPlay20Filled from "~icons/fluent/play-20-filled";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
-	import { Button } from "#lib/component/ui/index.js";
-	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
+	import { Badge, Button } from "#lib/component/ui/index.js";
 
 	let { data } = $props();
+
+	const RAW = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
+	const GOODS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"];
+	const SHIFT_DURATION = 8 * 60 * 60 * 1000;
 
 	let selectedProduct = $state<keyof typeof data.recipes>("rifles");
 	let productionQuantity = $state(1);
 	let isCollectingWage = $state(false);
-	let showCollectAnim = $state(false);
-	let showProductionAnim = $state(false);
+	let isStarting = $state(false);
+	let justPaid = $state(false);
+	let now = $state(Date.now());
+	let timeCard = $state<HTMLElement>();
+	let line = $state<HTMLElement>();
 
-	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
-	const productMap = $derived(new Map(data.products.map((p) => [p.productType, p.quantity])));
+	$effect(() => {
+		const t = setInterval(() => (now = Date.now()), 1000);
+		return () => clearInterval(t);
+	});
+
+	const resourceMap = $derived(new Map<string, number>(data.resources.map((r) => [r.resourceType, r.quantity])));
+	const productMap = $derived(new Map<string, number>(data.products.map((p) => [p.productType, p.quantity])));
 	const activeProduction = $derived(data.activeProduction[0]);
 
 	const canProduce = $derived.by(() => {
 		const recipe = data.recipes[selectedProduct];
 		if (!recipe) return false;
-
 		for (const [resource, required] of Object.entries(recipe.inputs)) {
 			const available = resourceMap.get(resource) || 0;
 			if (available < required * productionQuantity) return false;
@@ -54,18 +63,17 @@
 	const productionProgress = $derived.by(() => {
 		if (!activeProduction) return 0;
 		const total = new Date(activeProduction.completesAt).getTime() - new Date(activeProduction.startedAt).getTime();
-		const elapsed = Date.now() - new Date(activeProduction.startedAt).getTime();
-		return Math.min(100, (elapsed / total) * 100);
+		const elapsed = now - new Date(activeProduction.startedAt).getTime();
+		return Math.min(100, Math.max(0, (elapsed / total) * 100));
 	});
 
 	const timeRemaining = $derived.by(() => {
 		if (!activeProduction) return "";
-		const remaining = new Date(activeProduction.completesAt).getTime() - Date.now();
-		if (remaining <= 0) return "Complete!";
+		const remaining = new Date(activeProduction.completesAt).getTime() - now;
+		if (remaining <= 0) return "0s";
 		const hours = Math.floor(remaining / 3600000);
 		const minutes = Math.floor((remaining % 3600000) / 60000);
 		const seconds = Math.floor((remaining % 60000) / 1000);
-
 		if (hours > 0) return `${hours}h ${minutes}m`;
 		if (minutes > 0) return `${minutes}m ${seconds}s`;
 		return `${seconds}s`;
@@ -73,33 +81,33 @@
 
 	const jobStatus = $derived.by(() => {
 		if (!data.currentJob) return null;
-		if (!data.currentJob.lastWorked) return { status: "ready", text: "Ready for shift" };
-
-		const SHIFT_DURATION = 8 * 60 * 60 * 1000;
-		const timeSinceWork = Date.now() - new Date(data.currentJob.lastWorked).getTime();
-
-		if (timeSinceWork < SHIFT_DURATION) {
-			const remaining = SHIFT_DURATION - timeSinceWork;
+		if (!data.currentJob.lastWorked) return { status: "ready" as const, progress: 0, left: "" };
+		const started = new Date(data.currentJob.lastWorked).getTime();
+		const since = now - started;
+		if (since < SHIFT_DURATION) {
+			const remaining = SHIFT_DURATION - since;
 			const hours = Math.floor(remaining / 3600000);
 			const minutes = Math.floor((remaining % 3600000) / 60000);
-			return {
-				status: "working",
-				text: `${hours}h ${minutes}m remaining`,
-				progress: (timeSinceWork / SHIFT_DURATION) * 100
-			};
+			return { status: "working" as const, progress: (since / SHIFT_DURATION) * 100, left: `${hours}h ${minutes}m` };
 		}
-
-		return { status: "complete", text: "Shift complete!" };
+		return { status: "complete" as const, progress: 100, left: "" };
 	});
+
+	const clockIn = $derived(
+		data.currentJob?.lastWorked && jobStatus?.status !== "ready" ? new Date(data.currentJob.lastWorked) : null
+	);
+	const clockOut = $derived(clockIn ? new Date(clockIn.getTime() + SHIFT_DURATION) : null);
 
 	const betterWageFactory = $derived.by(() => {
 		if (!data.currentJob) return null;
 		const currentWage = data.currentJob.wage;
 		const currentRegion = data.currentJob.regionId;
-
-		// Find factory with higher wage in the same region
 		return data.availableFactories.find((f) => f.regionId === currentRegion && f.workerWage > currentWage);
 	});
+
+	function hhmm(d: Date | null) {
+		return d ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--";
+	}
 
 	// Refresh the page data once the running production finishes, instead of
 	// polling every second and reloading the whole app.
@@ -113,7 +121,7 @@
 </script>
 
 <PageContainer maxWidth="6xl">
-	<PageHeader title="Production" icon={FluentProduction20Filled}>
+	<PageHeader title="Workshop" documentTitle="Production" icon={FluentProduction20Filled}>
 		{#snippet actions()}
 			{#if data.userCompany}
 				<Button variant="secondary" size="sm" href="/company" icon={FluentBuilding20Filled}>My Company</Button>
@@ -125,387 +133,240 @@
 		{/snippet}
 	</PageHeader>
 
-	<!-- Stats Overview -->
-	<div class="w-full">
-		<!-- Balance -->
-		<div class="panel-muted rounded-sm p-4 flex items-center gap-3 md:gap-4">
-			<div
-				class="size-10 md:size-12 rounded-sm bg-[#3f8a2a]/18 border border-[#6fd14a]/30 flex items-center justify-center shrink-0"
-			>
-				<FluentMoney20Filled class="size-5 md:size-6 text-[#6fd14a]" />
-			</div>
-			<div class="min-w-0">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Balance</p>
-				<p class="text-xl md:text-2xl font-bold text-[#f5efd8] font-mono">{data.wallet.balance.toLocaleString()}</p>
-			</div>
-		</div>
-	</div>
-
-	<!-- Current Job Status -->
-	{#if data.currentJob && jobStatus}
-		{#if jobStatus.status === "complete"}
-			<div class="panel rounded-sm p-5">
-				<div class="flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
-					<a href="/factory/{data.currentJob.factoryId}" class="flex items-center gap-3 group">
-						<Logo
-							src={data.companyLogoUrl}
-							alt={data.currentJob.companyName || "Company logo"}
-							class="size-12 md:size-14 rounded-sm object-cover"
-							placeholderIcon={FluentImageOff20Filled}
-						/>
-
-						<div>
-							<h2
-								class="text-lg md:text-xl font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors mb-1"
-							>
-								{data.currentJob.factoryName}
-							</h2>
-							<p class="text-sm text-[#a8a083]">{data.currentJob.companyName}</p>
-						</div>
-					</a>
-					<div class="text-left sm:text-right">
-						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Wage</p>
-						<p class="text-md font-bold text-[#b9f29a] flex items-center gap-1 font-mono">
-							<FluentMoney20Filled class="size-5 text-[#6fd14a]" />
-							{data.currentJob.wage.toLocaleString()}
-						</p>
-					</div>
-				</div>
-
-				<form
-					method="POST"
-					action="?/collectWage"
-					use:enhance={() => {
-						isCollectingWage = true;
-						return async ({ update, result }) => {
-							await update();
-							isCollectingWage = false;
-							toastResult(result);
-							if (result.type === "success") {
-								showCollectAnim = true;
-								feedback("success");
-							}
-						};
-					}}
-				>
-					<Button
-						type="submit"
-						variant="soft-emerald"
-						block
-						disabled={isCollectingWage}
-						icon={FluentCheckmark20Filled}
-						class="h-auto min-h-12 py-3"
-					>
-						{isCollectingWage ? "Collecting payment..." : `${jobStatus.text} Click to collect payment.`}
-					</Button>
-				</form>
-			</div>
-		{:else}
-			<div class="panel rounded-sm p-5">
-				<div class="flex flex-col sm:flex-row items-start justify-between gap-3 md:gap-0 mb-4">
-					<a href="/factory/{data.currentJob.factoryId}" class="flex items-center gap-3 group">
-						<Logo
-							src={data.companyLogoUrl}
-							alt={data.currentJob.companyName || "Company logo"}
-							class="size-12 md:size-14 rounded-sm object-cover"
-							placeholderIcon={FluentImageOff20Filled}
-						/>
-
-						<div>
-							<h2
-								class="text-lg md:text-xl font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors mb-1"
-							>
-								{data.currentJob.factoryName}
-							</h2>
-							<p class="text-sm text-[#a8a083]">{data.currentJob.companyName}</p>
-						</div>
-					</a>
-					<div class="text-left sm:text-right">
-						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Wage</p>
-						<p class="text-md font-bold text-[#b9f29a] flex items-center gap-1 font-mono">
-							<FluentMoney20Filled class="size-5 text-[#6fd14a]" />
-							{data.currentJob.wage.toLocaleString()}
-						</p>
-					</div>
-				</div>
-
-				{#if jobStatus.status === "working"}
-					<div>
-						<div class="flex justify-between items-center mb-2">
-							<span class="text-sm font-medium text-[#e6ddbf]">Shift Progress</span>
-							<span class="text-sm font-bold text-[#ffd35c] font-mono">{jobStatus.text}</span>
-						</div>
-						<div class="h-3 bg-[#1a1f15] rounded-full overflow-hidden border border-[#c8b47a]/10">
-							<div
-								class="h-full bg-[#f2b01e] rounded-full transition-all duration-500"
-								style="width: {jobStatus.progress}%"
-							></div>
-						</div>
-					</div>
-				{:else}
-					<form
-						method="POST"
-						action="?/startWork"
-						use:enhance={() =>
-							async ({ update, result }) => {
-								await update();
-								toastResult(result);
-							}}
-					>
-						<Button type="submit" variant="soft-blue" block icon={FluentClock20Filled} class="h-auto min-h-12 py-3">
-							{jobStatus.text} - Click to start shift
-						</Button>
-					</form>
-				{/if}
-			</div>
-		{/if}
-	{/if}
-
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-		<!-- Inventory Sidebar - Consolidated Resources & Products -->
-		<div class="space-y-4 md:space-y-6 order-2 lg:order-1">
-			<div class="panel rounded-sm p-5 space-y-4 md:space-y-6">
-				<!-- Resources Section -->
-				<div>
-					<h2 class="section-title mb-3 md:mb-4">
-						<FluentBox20Filled class="size-4 text-[#c08cf0]" />
-						Resources
-					</h2>
-
-					<div class="space-y-1.5 md:space-y-2">
-						{#each ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as resource}
-							{@const quantity = resourceMap.get(resource) || 0}
-							<a
-								href="/market/{resource}"
-								class="flex items-center justify-between p-2.5 md:p-3 panel-muted rounded-sm hover:border-[#f2b01e]/55 transition-colors"
-							>
-								<div class="flex items-center gap-2">
-									<ResourceIcon name={resource} class="size-5 md:size-6" />
-									<span class="font-medium capitalize text-[#d3caa9] text-sm md:text-base">{resource}</span>
-								</div>
-								<span
-									class="px-2 md:px-2.5 py-0.5 md:py-1 rounded-sm border text-xs md:text-sm font-bold font-mono {quantity >
-									0
-										? 'bg-[#8a4fc0]/15 border-[#c08cf0]/30 text-[#e3cbfb]'
-										: 'bg-[#1a1f15] border-[#c8b47a]/10 text-[#a8a083]'}"
-								>
-									{quantity}
-								</span>
-							</a>
-						{/each}
-					</div>
-				</div>
-
-				<!-- Products Section -->
-				<div>
-					<h2 class="section-title mb-3 md:mb-4">
-						<FluentCube20Filled class="size-4 text-[#6fd14a]" />
-						Products
-					</h2>
-
-					<div class="space-y-1.5 md:space-y-2">
-						{#each ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as product}
-							{@const quantity = productMap.get(product) || 0}
-							<a
-								href="/market/{product}"
-								class="flex items-center justify-between p-2.5 md:p-3 panel-muted rounded-sm hover:border-[#f2b01e]/55 transition-colors"
-							>
-								<div class="flex items-center gap-2">
-									<ResourceIcon name={product} class="size-5 md:size-6" />
-									<span class="font-medium capitalize text-[#d3caa9] text-sm md:text-base">{product}</span>
-								</div>
-								<span
-									class="px-2 md:px-2.5 py-0.5 md:py-1 rounded-sm border text-xs md:text-sm font-bold font-mono {quantity >
-									0
-										? 'bg-[#3f8a2a]/18 border-[#6fd14a]/30 text-[#b9f29a]'
-										: 'bg-[#1a1f15] border-[#c8b47a]/10 text-[#a8a083]'}"
-								>
-									{quantity}
-								</span>
-							</a>
-						{/each}
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Main Content Area -->
-		<div class="lg:col-span-2 space-y-4 md:space-y-6 order-1 lg:order-2">
-			<!-- Better Wage Opportunity -->
-			{#if betterWageFactory && data.currentJob}
-				<a
-					href="/region/{data.currentJob.regionId}"
-					class="block rounded-sm bg-[#3f8a2a]/18 border border-[#6fd14a]/30 p-5 hover:border-[#6fd14a]/55 hover:bg-[#3f8a2a]/28 transition-colors group"
-				>
+		<div class="lg:col-span-2 space-y-4 md:space-y-6">
+			<!-- Time card -->
+			{#if data.currentJob && jobStatus}
+				<section bind:this={timeCard} class="panel rounded-sm p-5 relative overflow-hidden">
 					<div class="flex items-start justify-between gap-3">
-						<div class="flex items-center gap-3 md:gap-4 flex-1">
-							<div
-								class="size-10 md:size-12 rounded-sm bg-[#3f8a2a]/25 border border-[#6fd14a]/30 flex items-center justify-center shrink-0"
-							>
-								<FluentFactory20Filled class="size-5 md:size-6 text-[#6fd14a]" />
+						<a href="/factory/{data.currentJob.factoryId}" class="flex items-center gap-3 group min-w-0">
+							<Logo
+								src={data.companyLogoUrl}
+								alt={data.currentJob.companyName || "Company logo"}
+								class="size-11 rounded-sm object-cover shrink-0"
+								placeholderIcon={FluentImageOff20Filled}
+							/>
+							<div class="min-w-0">
+								<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083]">Time card</p>
+								<h2 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
+									{data.currentJob.factoryName}
+								</h2>
+								<p class="text-xs text-[#a8a083] truncate">{data.currentJob.companyName}</p>
 							</div>
-							<div>
-								<h3 class="text-base md:text-lg font-semibold text-[#f5efd8] mb-1 flex items-center gap-2">
-									Better Wage Available!
-									<span class="text-[#b9f29a]">✨</span>
-								</h3>
-								<p class="text-xs md:text-sm text-[#d3caa9]">
-									Factories in your region are offering up to
-									<span class="font-bold text-[#b9f29a] font-mono"
-										>💰{betterWageFactory.workerWage.toLocaleString()}</span
-									>
-									per day
-								</p>
-							</div>
-						</div>
-						<FluentArrowRight20Filled
-							class="size-5 md:size-6 text-[#6fd14a] group-hover:translate-x-1 transition-transform shrink-0"
-						/>
+						</a>
+						{#if jobStatus.status === "working"}
+							<Badge tone="amber">
+								<span class="size-1.5 rounded-full bg-[#f2b01e] animate-pulse"></span>
+								On shift
+							</Badge>
+						{:else if jobStatus.status === "complete"}
+							<Badge tone="green">Shift done</Badge>
+						{:else}
+							<Badge tone="blue">Off shift</Badge>
+						{/if}
 					</div>
-				</a>
-			{/if}
 
-			<!-- Production Section -->
-			{#if activeProduction}
-				<div class="rounded-sm bg-[#f2b01e]/12 border border-[#f2b01e]/35 p-5 space-y-4 md:space-y-5">
-					<h2 class="section-title">
-						<FluentFactory20Filled class="size-5 text-[#ffd35c]" />
-						Production In Progress
-					</h2>
-
-					<div class="panel-muted rounded-sm p-4 md:p-5 space-y-4 md:space-y-5">
-						<div class="flex flex-col sm:flex-row items-start gap-3 md:gap-4">
-							<ResourceIcon name={activeProduction.productType} class="size-12 md:size-14" />
-							<div class="flex-1">
-								<h3 class="text-xl md:text-2xl font-bold text-[#f5efd8] capitalize mb-1">
-									{activeProduction.productType}
-								</h3>
-								<p class="text-sm md:text-base text-[#a8a083]">Manufacturing {activeProduction.quantity} units</p>
-							</div>
-							<div class="text-left sm:text-right w-full sm:w-auto">
-								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Time Left</p>
-								<p class="text-2xl md:text-3xl font-bold text-[#ffd35c] font-mono">
-									{timeRemaining}
-								</p>
-							</div>
+					<div
+						class="mt-4 grid grid-cols-3 panel-muted rounded-sm font-mono text-center divide-x divide-dashed divide-[#c8b47a]/20"
+					>
+						<div class="py-2.5">
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">In</p>
+							<p class="text-sm sm:text-base text-[#f5efd8]">{hhmm(clockIn)}</p>
 						</div>
+						<div class="py-2.5">
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">Out</p>
+							<p class="text-sm sm:text-base text-[#f5efd8]">{hhmm(clockOut)}</p>
+						</div>
+						<div class="py-2.5">
+							<p class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">Rate</p>
+							<p class="text-sm sm:text-base text-[#b9f29a]">{data.currentJob.wage.toLocaleString()}</p>
+						</div>
+					</div>
 
-						<div>
-							<div class="flex justify-between items-center mb-2">
-								<span class="text-xs md:text-sm font-medium text-[#d3caa9]">Production Progress</span>
-								<span class="text-xs md:text-sm font-bold text-[#ffd35c] font-mono"
-									>{Math.floor(productionProgress)}%</span
-								>
+					{#if jobStatus.status === "working"}
+						<div class="mt-4">
+							<div class="flex justify-between items-center text-xs mb-1.5">
+								<span class="text-[#a8a083]">8h shift</span>
+								<span class="font-bold text-[#ffd35c] font-mono">{jobStatus.left} left</span>
 							</div>
-							<div class="h-3 md:h-4 bg-[#1a1f15] rounded-full overflow-hidden border border-[#c8b47a]/10">
+							<div class="h-2.5 bg-[#1a1f15] rounded-full overflow-hidden border border-[#c8b47a]/10">
 								<div
-									class="h-full bg-[#f2b01e] rounded-full transition-all duration-1000"
-									style="width: {productionProgress}%"
+									class="h-full bg-[#f2b01e] rounded-full transition-all duration-500"
+									style="width: {jobStatus.progress}%"
 								></div>
 							</div>
 						</div>
+					{:else if jobStatus.status === "complete"}
+						<form
+							method="POST"
+							action="?/collectWage"
+							class="mt-4"
+							use:enhance={() => {
+								isCollectingWage = true;
+								return async ({ update, result }) => {
+									await update();
+									isCollectingWage = false;
+									if (result.type === "success") {
+										justPaid = true;
+										celebrate(timeCard);
+									} else toastResult(result);
+								};
+							}}
+						>
+							<Button
+								type="submit"
+								variant="primary"
+								block
+								loading={isCollectingWage}
+								loadingText="Collecting…"
+								icon={FluentMoney20Filled}
+							>
+								Collect {data.currentJob.wage.toLocaleString()}
+							</Button>
+						</form>
+					{:else}
+						<form
+							method="POST"
+							action="?/startWork"
+							class="mt-4"
+							use:enhance={() =>
+								async ({ update, result }) => {
+									await update();
+									if (result.type === "success") {
+										justPaid = false;
+										celebrate(timeCard);
+									} else toastResult(result);
+								}}
+						>
+							<Button type="submit" variant="soft-blue" block icon={FluentClock20Filled}>Clock in</Button>
+						</form>
+					{/if}
+
+					{#if justPaid && jobStatus.status === "ready"}
+						<span
+							class="animate-stamp pointer-events-none absolute top-4 right-24 border-2 border-[#6fd14a]/70 text-[#b9f29a] rounded-sm px-2 py-0.5 font-serif text-sm font-black uppercase tracking-widest"
+							style="--stamp-tilt: -12deg; transform: rotate(-12deg)"
+						>
+							Paid
+						</span>
+					{/if}
+				</section>
+
+				{#if betterWageFactory}
+					<a
+						href="/region/{data.currentJob.regionId}"
+						class="panel-interactive rounded-sm px-4 py-3 flex items-center gap-3 group"
+					>
+						<FluentFactory20Filled class="size-5 text-[#6fd14a] shrink-0" />
+						<p class="flex-1 text-sm text-[#d3caa9]">
+							Hiring nearby at up to
+							<span class="font-bold text-[#b9f29a] font-mono">{betterWageFactory.workerWage.toLocaleString()}</span>
+						</p>
+						<FluentArrowRight20Filled
+							class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] group-hover:translate-x-0.5 transition-all"
+						/>
+					</a>
+				{/if}
+			{/if}
+
+			<!-- Production line -->
+			{#if activeProduction}
+				<section bind:this={line} class="panel rounded-sm p-5">
+					<div class="flex items-center justify-between">
+						<h2 class="section-title">Production line</h2>
+						<Badge tone="amber">Running</Badge>
 					</div>
-				</div>
+
+					<div class="mt-4 flex items-center gap-4">
+						<div class="panel-muted rounded-sm p-2 shrink-0">
+							<ResourceIcon name={activeProduction.productType} class="size-10 sm:size-12" />
+						</div>
+						<div class="min-w-0 flex-1">
+							<p class="text-lg sm:text-xl font-bold text-[#f5efd8] capitalize truncate">
+								{activeProduction.productType}
+							</p>
+							<p class="text-xs text-[#a8a083]">Batch of {activeProduction.quantity}</p>
+						</div>
+						<div class="text-right shrink-0">
+							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Ready in</p>
+							<p class="text-xl sm:text-2xl font-bold text-[#ffd35c] font-mono">{timeRemaining}</p>
+						</div>
+					</div>
+
+					<!-- Conveyor -->
+					<div class="mt-4">
+						<div class="conveyor h-4 rounded-full overflow-hidden border border-[#c8b47a]/15 bg-[#1a1f15] relative">
+							<div
+								class="h-full bg-[#f2b01e]/80 rounded-full transition-all duration-1000"
+								style="width: {productionProgress}%"
+							></div>
+						</div>
+						<div class="mt-1 flex justify-between text-xs text-[#a8a083] font-mono">
+							<span>{Math.floor(productionProgress)}%</span>
+							<span>{activeProduction.quantity} units</span>
+						</div>
+					</div>
+				</section>
 			{:else}
 				<form
+					bind:this={line}
 					method="POST"
 					action="?/startProduction"
 					use:enhance={() => {
+						isStarting = true;
 						return async ({ update, result }) => {
 							await update();
-							toastResult(result);
-							if (result.type === "success") {
-								showProductionAnim = true;
-								feedback("success");
-							}
+							isStarting = false;
+							if (result.type === "success") celebrate(line);
+							else toastResult(result);
 						};
 					}}
-					class="panel rounded-sm p-5 space-y-4 md:space-y-6"
+					class="panel rounded-sm p-5 space-y-5"
 				>
-					<h2 class="section-title">
-						<FluentProduction20Filled class="size-5 text-[#ffd35c]" />
-						Start Production
-					</h2>
+					<h2 class="section-title">Workbench</h2>
 
-					<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+					<fieldset class="grid grid-cols-3 sm:grid-cols-5 gap-2">
+						<legend class="sr-only">Product</legend>
 						{#each Object.keys(data.recipes) as product}
-							<button
-								type="button"
-								onclick={() => (selectedProduct = product as keyof typeof data.recipes)}
-								class="relative p-2.5 md:p-3 rounded-sm border transition-colors duration-200 text-center group
-									{selectedProduct === product
+							{@const selected = selectedProduct === product}
+							<label
+								class="press-spring cursor-pointer p-2.5 rounded-sm border text-center transition-colors {selected
 									? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
-									: 'bg-[#1a1f15]/70 border-[#c8b47a]/10 hover:border-[#c8b47a]/25 hover:bg-[#2e3524]'}"
+									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#c8b47a]/35'}"
 							>
 								<input
 									type="radio"
 									name="productType"
 									value={product}
-									checked={selectedProduct === product}
+									checked={selected}
+									onchange={() => (selectedProduct = product as keyof typeof data.recipes)}
 									class="sr-only"
 								/>
-								<ResourceIcon name={product} class="size-8 md:size-9 mx-auto mb-1" />
-								<div
-									class="text-xs font-medium capitalize {selectedProduct === product
-										? 'text-[#ffd35c]'
-										: 'text-[#a8a083] group-hover:text-[#d3caa9]'}"
+								<ResourceIcon name={product} class="size-8 mx-auto mb-1" />
+								<span
+									class="block text-xs font-medium capitalize truncate {selected ? 'text-[#ffd35c]' : 'text-[#a8a083]'}"
 								>
 									{product}
-								</div>
-							</button>
+								</span>
+								<span class="block text-[10px] font-mono text-[#a8a083]">{productMap.get(product) || 0} in stock</span>
+							</label>
 						{/each}
-					</div>
-
-					<!-- Current Stock Display -->
-					{#if selectedProduct}
-						{@const currentStock = productMap.get(selectedProduct) || 0}
-						<div class="panel-muted rounded-sm p-3 md:p-4">
-							<div class="flex items-center justify-between">
-								<div class="flex items-center gap-2">
-									<ResourceIcon name={selectedProduct} class="size-6 md:size-7" />
-									<div>
-										<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Current Stock</p>
-										<p class="text-base md:text-lg font-semibold text-[#f5efd8] capitalize">{selectedProduct}</p>
-									</div>
-								</div>
-								<div class="text-right">
-									<span
-										class="text-2xl md:text-3xl font-bold font-mono {currentStock > 0
-											? 'text-[#b9f29a]'
-											: 'text-[#a8a083]'}"
-									>
-										{currentStock}
-									</span>
-									<p class="text-xs text-[#a8a083] mt-1">units available</p>
-								</div>
-							</div>
-						</div>
-					{/if}
+					</fieldset>
 
 					<div>
-						<label for="quantity" class="field-label">
-							Batch Size: <span class="text-[#f5efd8] font-bold font-mono">×{productionQuantity}</span>
-						</label>
-						<div class="relative">
-							<input
-								type="range"
-								id="quantity"
-								name="quantity"
-								min="1"
-								max="10"
-								bind:value={productionQuantity}
-								class="w-full h-2 bg-[#1a1f15] rounded-full appearance-none cursor-pointer"
-								style="background: linear-gradient(to right, rgb(230 165 39) 0%, rgb(230 165 39) {((productionQuantity -
-									1) /
-									9) *
-									100}%, rgb(16 34 57) {((productionQuantity - 1) / 9) * 100}%, rgb(16 34 57) 100%)"
-							/>
+						<div class="flex items-center justify-between">
+							<label for="quantity" class="field-label">Batches</label>
+							<span class="text-sm font-bold text-[#f5efd8] font-mono">×{productionQuantity}</span>
 						</div>
-						<div class="flex justify-between text-xs text-[#a8a083] mt-1 px-1">
-							<span>1</span>
-							<span>5</span>
-							<span>10</span>
-						</div>
+						<input
+							type="range"
+							id="quantity"
+							name="quantity"
+							min="1"
+							max="10"
+							bind:value={productionQuantity}
+							class="w-full accent-[#f2b01e] cursor-pointer"
+						/>
 					</div>
 
 					{#if data.recipes[selectedProduct]}
@@ -517,15 +378,14 @@
 
 						<ResourceRequirements {costs} available={availableResources} />
 
-						<div class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-sm">
-							<div class="flex items-center gap-2">
-								<FluentClock20Filled class="size-4 md:size-5 text-[#a8a083]" />
-								<span class="text-xs md:text-sm text-[#a8a083]">Production Time</span>
-							</div>
-							<span class="font-bold text-[#f5efd8] text-base md:text-lg font-mono">
+						<p class="flex items-center justify-between text-sm">
+							<span class="flex items-center gap-1.5 text-[#a8a083]">
+								<FluentClock20Filled class="size-4" /> Takes
+							</span>
+							<span class="font-bold text-[#f5efd8] font-mono">
 								{Math.floor((recipe.duration * productionQuantity) / 60)} min
 							</span>
-						</div>
+						</p>
 					{/if}
 
 					<Button
@@ -533,21 +393,69 @@
 						variant="primary"
 						size="lg"
 						block
+						loading={isStarting}
 						disabled={!canProduce}
-						icon={canProduce ? FluentCheckmark20Filled : FluentWarning20Filled}
+						icon={canProduce ? FluentPlay20Filled : FluentWarning20Filled}
 					>
-						{canProduce ? "Start Production" : "Insufficient Resources"}
+						{canProduce ? "Start the line" : "Not enough materials"}
 					</Button>
 				</form>
 			{/if}
 		</div>
+
+		<!-- Storeroom -->
+		<aside class="panel rounded-sm p-5 space-y-5">
+			<div class="flex items-center justify-between gap-2">
+				<h2 class="section-title">Storeroom</h2>
+				<span class="text-xs text-[#a8a083] flex items-center gap-1">
+					<FluentMoney20Filled class="size-3.5 text-[#6fd14a]" />
+					<span class="font-mono text-[#b9f29a] font-bold">{data.wallet.balance.toLocaleString()}</span>
+				</span>
+			</div>
+
+			{#each [{ label: "Raw materials", items: RAW, map: resourceMap }, { label: "Goods", items: GOODS, map: productMap }] as shelf}
+				<div>
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1.5">{shelf.label}</p>
+					<div class="grid grid-cols-3 gap-1.5 pb-1.5 border-b-4 border-[#5a4a2a] shadow-[0_3px_0_rgba(0,0,0,0.45)]">
+						{#each shelf.items as item}
+							{@const quantity = shelf.map.get(item) || 0}
+							<a
+								href="/market/{item}"
+								title="{item} — market"
+								class="panel-muted rounded-sm p-2 flex flex-col items-center gap-0.5 hover:border-[#f2b01e]/55 transition-colors {quantity ===
+								0
+									? 'opacity-50'
+									: ''}"
+							>
+								<ResourceIcon name={item} class="size-6" />
+								<span class="text-[10px] capitalize text-[#d3caa9] truncate max-w-full">{item}</span>
+								<span class="text-sm font-bold font-mono {quantity > 0 ? 'text-[#f5efd8]' : 'text-[#a8a083]'}"
+									>{quantity}</span
+								>
+							</a>
+						{/each}
+					</div>
+				</div>
+			{/each}
+		</aside>
 	</div>
 </PageContainer>
 
-{#if showCollectAnim}
-	<ThreeAnimation variant="collect" onComplete={() => (showCollectAnim = false)} />
-{/if}
-
-{#if showProductionAnim}
-	<ThreeAnimation variant="production" onComplete={() => (showProductionAnim = false)} />
-{/if}
+<style>
+	/* Moving belt stripes under the fill, so a running line looks alive. */
+	.conveyor {
+		background-image: repeating-linear-gradient(-45deg, rgb(200 180 122 / 0.08) 0 6px, transparent 6px 12px);
+		background-size: 17px 17px;
+		animation: belt 1.6s linear infinite;
+	}
+	@keyframes belt {
+		to {
+			background-position: 17px 0;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.conveyor {
+			animation: none;
+		}
+	}
+</style>

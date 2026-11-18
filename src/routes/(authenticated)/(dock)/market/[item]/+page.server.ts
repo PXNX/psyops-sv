@@ -19,9 +19,11 @@ import {
 	presidents,
 	ministers,
 	states,
-	transactionHistory
+	transactionHistory,
+	userProfiles
 } from "#lib/server/schema.js";
-import { eq, and, gte, sql } from "drizzle-orm";
+import { eq, and, gte, inArray, sql } from "drizzle-orm";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { error, fail } from "@sveltejs/kit";
 import { calculateAndCollectTax } from "#lib/server/taxes.js";
 import type { Actions, PageServerLoad } from "./$types";
@@ -153,7 +155,27 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		]);
 
 	const myListing = allListings.find((l) => l.sellerId === account.id) ?? null;
-	const otherListings = allListings.filter((l) => l.sellerId !== account.id);
+
+	// Seller name + avatar for the order book.
+	const sellerIds = [...new Set(allListings.filter((l) => l.sellerId !== account.id).map((l) => l.sellerId))];
+	const sellerProfiles = sellerIds.length
+		? await db
+				.select({ userId: userProfiles.accountId, name: userProfiles.name, logo: userProfiles.logo })
+				.from(userProfiles)
+				.where(inArray(userProfiles.accountId, sellerIds))
+		: [];
+	const sellers = new Map(
+		await Promise.all(
+			sellerProfiles.map(async (p) => [p.userId, { name: p.name, avatar: await getLogoUrl(p.logo) }] as const)
+		)
+	);
+	const otherListings = allListings
+		.filter((l) => l.sellerId !== account.id)
+		.map((l) => ({
+			...l,
+			sellerName: sellers.get(l.sellerId)?.name ?? null,
+			sellerAvatar: sellers.get(l.sellerId)?.avatar ?? null
+		}));
 
 	let cooldownRemaining = 0;
 	if (cooldown) {

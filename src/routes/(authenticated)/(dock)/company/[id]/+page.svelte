@@ -1,40 +1,39 @@
 <!-- src/routes/company/[id]/+page.svelte -->
+<!-- A company as its commercial register extract: the registry entry, the
+     balance sheet, the share capital (certificates, register, order book)
+     and the works it operates. -->
 <script lang="ts">
-	import { Button } from "#lib/component/ui/index.js";
+	import { tick } from "svelte";
+	import { enhance } from "$app/forms";
+	import { vanish } from "#lib/utils/motion.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { getRegionName, formatDate, regionCoatUrl } from "#lib/utils/formatting.js";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
-	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
-	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
-	import FluentBoxCheckmark20Filled from "~icons/fluent/box-checkmark-20-filled";
-	import FluentWallet20Filled from "~icons/fluent/wallet-20-filled";
-	import FluentChartMultiple20Filled from "~icons/fluent/chart-multiple-20-filled";
-	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentArrowDownload20Filled from "~icons/fluent/arrow-download-20-filled";
+	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
+	import FluentLockClosed20Filled from "~icons/fluent/lock-closed-20-filled";
 
-	import { enhance } from "$app/forms";
-	import { Chart, Svg, Tooltip } from "layerchart";
-	import { Bars } from "layerchart";
-	import { scaleBand } from "d3-scale";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Logo from "#lib/component/Logo.svelte";
-	import ProfileItem from "#lib/component/ProfileItem.svelte";
-	import { buttonClass, badgeClass } from "#lib/component/ui/styles.js";
-	import IconButton from "#lib/component/ui/IconButton.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 	import EditCompanySheet from "./EditCompanySheet.svelte";
 
-	let { data, form } = $props();
+	let { data } = $props();
 
 	let showEditCompanySheet = $state(false);
 
 	let depositAmount = $state(10000);
 	let isDepositing = $state(false);
+	let fundShifts = $state(1);
+	let isFunding = $state(false);
 	let isSettingHq = $state(false);
 
 	let ipoPrice = $state(1000);
@@ -47,30 +46,29 @@
 	let buyQuantities = $state<Record<number, number>>({});
 	let isBuying = $state<Record<number, boolean>>({});
 
-	// Prepare chart data
-	const productionChartData = data.resourceProduction.map((resource) => ({
-		name: resource.type,
-		rate: resource.productionRate,
-		workers: resource.totalWorkers,
-		factories: resource.factoryCount
-	}));
+	let balanceEl = $state<HTMLElement | null>(null);
+	let capitalEl = $state<HTMLElement | null>(null);
+	let certificateEl = $state<HTMLElement | null>(null);
 
-	// Color palette for charts
-	const resourceColors = {
-		iron: "#94a3b8",
-		copper: "#fb923c",
-		steel: "#64748b",
-		gunpowder: "#ef4444",
-		wood: "#78716c",
-		coal: "#0f172a",
-		rifles: "#3b82f6",
-		ammunition: "#eab308",
-		artillery: "#dc2626",
-		vehicles: "#8b5cf6",
-		explosives: "#f97316"
-	};
+	const entryNo = $derived(`HRB ${String(data.company.id).padStart(4, "0")}`);
+	const maxRate = $derived(Math.max(1, ...data.resourceProduction.map((r) => r.productionRate)));
+	const myPercent = $derived(data.shares ? Math.round((data.myHolding / data.shares.totalShares) * 1000) / 10 : 0);
+	const today = formatDate(new Date());
 
-	const getColor = (resourceType: string) => resourceColors[resourceType as keyof typeof resourceColors] || "#6366f1";
+	/** Successes celebrate the part of the page that changed; failures toast. */
+	function settle(target: () => HTMLElement | null) {
+		return async ({ result, update }: { result: { type: string; data?: unknown }; update: () => Promise<void> }) => {
+			await update();
+			if (result.type === "success") {
+				await tick();
+				celebrate(target());
+			} else {
+				toastResult(result);
+			}
+		};
+	}
+
+	const money = (n: number) => n.toLocaleString();
 </script>
 
 <svelte:head>
@@ -78,285 +76,472 @@
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
-	<!-- Company Header -->
-	<div class="panel rounded-sm p-5 relative">
+	<!-- Register extract -->
+	<header class="panel rounded-sm p-5 sm:p-6 relative">
 		{#if data.isOwner}
-			<div class="absolute top-4 right-4">
-				<IconButton
-					icon={FluentEdit20Filled}
-					label="Edit Company"
-					variant="secondary"
-					size="sm"
-					shape="square"
-					onclick={() => (showEditCompanySheet = true)}
-				/>
-			</div>
+			<IconButton
+				icon={FluentEdit20Filled}
+				label="Edit Company"
+				variant="secondary"
+				size="sm"
+				shape="square"
+				class="absolute top-3 right-3"
+				onclick={() => (showEditCompanySheet = true)}
+			/>
 		{/if}
 
-		<div class="flex flex-col sm:flex-row items-start sm:items-center gap-4 pr-12">
+		<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083] pr-12">
+			Commercial Register · Extract <span class="font-mono text-[#d3caa9]">{entryNo}</span>
+		</p>
+
+		<div class="mt-3 flex items-start gap-4">
 			<Logo
 				src={data.company.logo}
-				alt={data.company.name}
+				alt=""
 				placeholderIcon={FluentBuilding20Filled}
-				class="size-20 rounded-sm shrink-0"
+				placeholderGradient="from-[#4a5238] to-[#252b1e]"
+				class="size-16 sm:size-20 rounded-sm shrink-0"
 			/>
-
-			<div class="min-w-0 space-y-1">
-				<h1 class="text-3xl font-bold text-[#f5efd8]">{data.company.name}</h1>
-				<p class="text-xs text-[#a8a083] flex items-center gap-1.5">
-					<FluentCalendar20Filled class="size-3.5" />
-					Founded {formatDate(data.company.foundedAt)}
-				</p>
+			<div class="min-w-0 flex-1">
+				<h1 class="font-serif text-2xl sm:text-4xl font-black text-[#f5efd8] leading-tight break-words">
+					{data.company.name}
+				</h1>
+				<Badge tone={data.shares ? "green" : "amber"} size="xs" class="sm:hidden mt-1 uppercase tracking-widest">
+					{data.shares ? "Listed" : "Private"}
+				</Badge>
 				{#if data.company.description}
-					<p class="text-sm text-[#d3caa9] max-w-xl pt-1">{data.company.description}</p>
+					<p class="mt-1.5 font-serif italic text-sm sm:text-base text-[#d3caa9] max-w-2xl">
+						{data.company.description}
+					</p>
 				{/if}
 			</div>
-		</div>
-	</div>
-
-	<!-- Owner & Headquarters -->
-	<section class="grid sm:grid-cols-2 gap-3">
-		<div class="panel-muted rounded-sm p-3">
-			<h2 class="text-sm font-semibold text-[#a8a083] uppercase tracking-wider px-1 mb-2">Owner</h2>
-			<ProfileItem
-				href="/user/{data.company.ownerId}"
-				logo={data.company.ownerLogo}
-				logoAlt={data.company.ownerName ?? "Owner"}
-				placeholderIcon={FluentPeople20Filled}
-				placeholderGradient="from-[#f2b01e]/20 to-[#f2b01e]/10"
-				title={data.company.ownerName || data.company.ownerEmail}
-				subtitle="Company Owner"
-				hoverColor="yellow"
-				partyAbbreviation={data.company.ownerPartyAbbreviation}
-				partyColor={data.company.ownerPartyColor}
-			/>
+			<span
+				class="hidden sm:inline-block shrink-0 self-center animate-stamp border-2 rounded-sm px-3 py-1 font-serif text-sm font-black uppercase tracking-widest {data.shares
+					? 'border-[#6fd14a]/70 text-[#b9f29a]'
+					: 'border-[#f2b01e]/60 text-[#ffd35c]'}"
+				style="transform: rotate(-8deg)"
+			>
+				{data.shares ? "Listed" : "Private"}
+			</span>
 		</div>
 
-		<div class="panel-muted rounded-sm p-3 space-y-2">
-			<h2 class="text-sm font-semibold text-[#a8a083] uppercase tracking-wider px-1">Headquarters</h2>
-			{#if data.company.stateName}
-				<ProfileItem
-					href="/state/{data.company.stateId}"
-					placeholderIcon={FluentHome20Filled}
-					placeholderGradient="from-[#2369b5]/20 to-[#2369b5]/10"
-					title={data.company.stateName}
-					subtitle={data.company.regionName ?? "Region"}
-					hoverColor="blue"
-				/>
-			{:else}
-				<p class="text-sm text-[#a8a083] px-2 py-1">Not headquartered anywhere yet.</p>
-			{/if}
+		<dl class="mt-5 grid grid-cols-1 sm:grid-cols-2 border-t border-[#c8b47a]/20">
+			<div class="py-3 sm:pr-4 border-b border-[#c8b47a]/10">
+				<dt class="text-[10px] uppercase tracking-wide text-[#a8a083] mb-1.5">Proprietor</dt>
+				<dd>
+					<UserLink
+						id={data.company.ownerId}
+						name={data.company.ownerName}
+						avatar={data.company.ownerLogo}
+						party={{ abbreviation: data.company.ownerPartyAbbreviation, color: data.company.ownerPartyColor }}
+						size="md"
+					/>
+				</dd>
+			</div>
 
-			{#if data.isOwner}
-				{#if data.residenceRegion && data.residenceRegion.id !== data.company.regionId}
-					<form
-						method="POST"
-						action="?/setHeadquarters"
-						use:enhance={() => {
-							isSettingHq = true;
-							return async ({ update }) => {
-								await update();
-								isSettingHq = false;
-							};
-						}}
-					>
-						<button
-							type="submit"
-							disabled={isSettingHq}
-							class={buttonClass({ variant: "soft-blue", size: "sm", block: true, class: "gap-2" })}
+			<div class="py-3 sm:pl-4 border-b border-[#c8b47a]/10 sm:border-l">
+				<dt class="text-[10px] uppercase tracking-wide text-[#a8a083] mb-1.5">Registered office</dt>
+				<dd class="space-y-2">
+					{#if data.company.stateName}
+						<a
+							href="/state/{data.company.stateId}"
+							class="flex items-center gap-2 text-sm text-[#e6ddbf] hover:text-[#ffcf47] transition-colors"
 						>
-							<FluentHome20Filled class="size-4" />
-							{isSettingHq ? "Updating…" : `Headquarter in ${data.residenceRegion.name}`}
-						</button>
-					</form>
-				{:else if !data.residenceRegion}
-					<p class="text-xs text-[#a8a083] px-2">Establish a residence to headquarter your company there.</p>
-				{/if}
-			{/if}
-		</div>
-	</section>
+							{#if data.company.regionId}
+								<img
+									src={regionCoatUrl(data.company.regionId)}
+									alt=""
+									class="size-6 object-contain shrink-0"
+									loading="lazy"
+									decoding="async"
+								/>
+							{:else}
+								<FluentHome20Filled class="size-5 text-[#5eaef5] shrink-0" />
+							{/if}
+							<span class="truncate">
+								<span class="font-semibold">{data.company.regionName ?? data.company.stateName}</span>
+								{#if data.company.regionName}<span class="text-[#a8a083]">, {data.company.stateName}</span>{/if}
+							</span>
+						</a>
+					{:else}
+						<p class="text-sm text-[#a8a083]">None on file</p>
+					{/if}
 
-	<!-- Embargo Warning -->
+					{#if data.isOwner}
+						{#if data.residenceRegion && data.residenceRegion.id !== data.company.regionId}
+							<form
+								method="POST"
+								action="?/setHeadquarters"
+								use:enhance={() => {
+									isSettingHq = true;
+									return async ({ update, result }) => {
+										await update();
+										isSettingHq = false;
+										toastResult(result);
+									};
+								}}
+							>
+								<Button type="submit" variant="soft-blue" size="xs" icon={FluentHome20Filled} loading={isSettingHq}>
+									Move to {data.residenceRegion.name}
+								</Button>
+							</form>
+						{:else if !data.residenceRegion}
+							<p class="text-xs text-[#a8a083]">Needs a residence to register an office.</p>
+						{/if}
+					{/if}
+				</dd>
+			</div>
+
+			<div class="py-3 sm:pr-4 border-b sm:border-b-0 border-[#c8b47a]/10 grid grid-cols-2 gap-3">
+				<div>
+					<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">Established</dt>
+					<dd class="text-sm font-semibold text-[#f5efd8]">{formatDate(data.company.foundedAt)}</dd>
+				</div>
+				<div>
+					<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">Workforce</dt>
+					<dd class="text-sm font-semibold text-[#f5efd8]">
+						{data.totalWorkers} in {data.factories.length}
+						{data.factories.length === 1 ? "factory" : "factories"}
+					</dd>
+				</div>
+			</div>
+
+			<div class="py-3 sm:pl-4 sm:border-l border-[#c8b47a]/10">
+				<dt class="text-[10px] uppercase tracking-wide text-[#a8a083] mb-1">Operating in</dt>
+				<dd class="flex flex-wrap gap-1.5">
+					{#each data.uniqueStates as state (state.id)}
+						<a href="/state/{state.id}">
+							<Badge tone="neutral" size="xs" class="hover:text-[#ffcf47]">{state.name}</Badge>
+						</a>
+					{:else}
+						<span class="text-sm text-[#a8a083]">—</span>
+					{/each}
+				</dd>
+			</div>
+		</dl>
+	</header>
+
 	{#if data.embargoReason}
 		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
-			<FluentWarning20Filled class="size-6 text-red-400 shrink-0" />
-			<p class="text-sm text-red-300">{data.embargoReason}</p>
-		</div>
-	{/if}
-
-	<!-- Success/Error Messages -->
-	{#if form?.success}
-		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4 flex items-center gap-3">
-			<FluentBoxCheckmark20Filled class="size-5 text-[#b9f29a] shrink-0" />
-			<p class="text-sm text-[#b9f29a]">{form.message || "Operation successful!"}</p>
-		</div>
-	{/if}
-
-	{#if form?.error}
-		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
 			<FluentWarning20Filled class="size-5 text-red-400 shrink-0" />
-			<p class="text-sm text-red-300">{form.error}</p>
+			<p class="text-sm">{data.embargoReason}</p>
 		</div>
 	{/if}
 
-	<!-- Statistics Grid -->
-	<section class="grid grid-cols-2 md:grid-cols-4 gap-3">
-		<div class="bg-[#8a4fc0]/15 rounded-sm border border-[#c08cf0]/25 p-5">
-			<div class="flex items-center gap-2 mb-1">
-				<FluentFactory20Filled class="size-5 text-[#e3cbfb]" />
-				<p class="text-sm text-[#e3cbfb] font-medium">Factories</p>
+	<!-- Balance sheet (owner only) -->
+	{#if data.isOwner}
+		<section class="panel rounded-sm p-5 sm:p-6" bind:this={balanceEl}>
+			<div class="flex items-baseline justify-between gap-3 border-b-2 border-double border-[#c8b47a]/40 pb-2">
+				<h2 class="font-serif text-xl font-bold text-[#f5efd8]">Balance Sheet</h2>
+				<span class="text-xs text-[#a8a083]">as of {today}</span>
 			</div>
-			<p class="text-4xl font-bold text-[#f5efd8]">{data.factories.length}</p>
-		</div>
 
-		<div class="bg-[#2369b5]/15 rounded-sm border border-[#5eaef5]/25 p-5">
-			<div class="flex items-center gap-2 mb-1">
-				<FluentPeople20Filled class="size-5 text-[#b3dcff]" />
-				<p class="text-sm text-[#b3dcff] font-medium">Workers</p>
-			</div>
-			<p class="text-4xl font-bold text-[#f5efd8]">{data.totalWorkers}</p>
-		</div>
-
-		<div class="bg-[#f2b01e]/12 rounded-sm border border-[#f2b01e]/30 p-5">
-			<div class="flex items-center gap-2 mb-1">
-				<FluentMoney20Filled class="size-5 text-[#ffd35c]" />
-				<p class="text-sm text-[#ffd35c] font-medium">Wage / Shift</p>
-			</div>
-			<p class="text-3xl font-bold text-[#f5efd8]">{data.totalWageCost.toLocaleString()}</p>
-		</div>
-
-		{#if data.isOwner}
-			<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/25 p-5">
-				<div class="flex items-center gap-2 mb-1">
-					<FluentWallet20Filled class="size-5 text-[#b9f29a]" />
-					<p class="text-sm text-[#b9f29a] font-medium">Budget</p>
+			<div class="grid sm:grid-cols-2 sm:gap-8 font-mono text-sm">
+				<div>
+					<h3 class="mt-3 mb-1 font-sans text-[10px] uppercase tracking-wide text-[#a8a083]">Paid in</h3>
+					<div class="flex justify-between py-1.5 border-b border-dashed border-[#c8b47a]/15">
+						<span class="font-sans text-[#d3caa9]">Capital deposited</span>
+						<span class="text-[#b9f29a]">{money(data.budget.totalDeposited)}</span>
+					</div>
+					<div class="flex justify-between py-1.5 border-b border-dashed border-[#c8b47a]/15">
+						<span class="font-sans text-[#d3caa9]">Wages &amp; costs paid</span>
+						<span class="text-red-300">−{money(data.budget.totalSpent)}</span>
+					</div>
 				</div>
-				<p class="text-3xl font-bold text-[#f5efd8]">{data.budget.balance.toLocaleString()}</p>
+				<div>
+					<h3 class="mt-3 mb-1 font-sans text-[10px] uppercase tracking-wide text-[#a8a083]">Running costs</h3>
+					<div class="flex justify-between py-1.5 border-b border-dashed border-[#c8b47a]/15">
+						<span class="font-sans text-[#d3caa9]">Wage bill per shift</span>
+						<span class="text-[#e6ddbf]">{money(data.totalWageCost)}</span>
+					</div>
+					<div class="flex justify-between py-1.5 border-b border-dashed border-[#c8b47a]/15">
+						<span class="font-sans text-[#d3caa9]">Shifts covered</span>
+						<span class="text-[#e6ddbf]">{data.totalWageCost > 0 ? data.shiftsAffordable : "—"}</span>
+					</div>
+				</div>
 			</div>
-		{/if}
-	</section>
 
-	<!-- Stock Market -->
-	<section class="panel rounded-sm p-5 sm:p-6 space-y-4">
-		<h2 class="section-title">
-			<FluentChartMultiple20Filled class="size-5 text-[#f2b01e]" />
-			Stock Market
-		</h2>
+			<div class="mt-3 pt-2 border-t-2 border-double border-[#c8b47a]/40 flex items-baseline justify-between gap-3">
+				<span class="text-xs uppercase tracking-wide text-[#a8a083]">Cash at bank</span>
+				{#key data.budget.balance}
+					<span class="font-mono text-2xl font-bold text-[#f5efd8] animate-tick">{money(data.budget.balance)}</span>
+				{/key}
+			</div>
+
+			<div class="mt-5 grid sm:grid-cols-2 gap-3">
+				<form
+					method="POST"
+					action="?/depositBudget"
+					class="panel-muted rounded-sm p-3 space-y-2"
+					use:enhance={() => {
+						isDepositing = true;
+						const handle = settle(() => balanceEl);
+						return async (args) => {
+							await handle(args);
+							isDepositing = false;
+						};
+					}}
+				>
+					<label class="field-label flex justify-between" for="amount">
+						<span>Pay in from wallet</span>
+						<span class="text-[#b9f29a] flex items-center gap-1"
+							><FluentMoney20Filled class="size-3.5" />{money(data.ownerBalance)}</span
+						>
+					</label>
+					<div class="flex gap-2">
+						<input
+							id="amount"
+							type="number"
+							name="amount"
+							bind:value={depositAmount}
+							min="1"
+							max={data.ownerBalance}
+							class="field-control rounded-sm px-3 py-2 w-full min-w-0 font-mono"
+							required
+						/>
+						<Button
+							type="submit"
+							variant="soft-emerald"
+							icon={FluentArrowDownload20Filled}
+							loading={isDepositing}
+							disabled={depositAmount > data.ownerBalance || depositAmount < 1}
+						>
+							Deposit
+						</Button>
+					</div>
+				</form>
+
+				<form
+					method="POST"
+					action="?/fundWages"
+					class="panel-muted rounded-sm p-3 space-y-2"
+					use:enhance={() => {
+						isFunding = true;
+						const handle = settle(() => balanceEl);
+						return async (args) => {
+							await handle(args);
+							isFunding = false;
+						};
+					}}
+				>
+					<label class="field-label flex justify-between" for="shifts">
+						<span>Pay wages in advance</span>
+						<span class="font-mono text-[#a8a083]">{money(data.totalWageCost * (fundShifts || 0))}</span>
+					</label>
+					<div class="flex gap-2">
+						<input
+							id="shifts"
+							type="number"
+							name="shifts"
+							bind:value={fundShifts}
+							min="1"
+							max={Math.max(1, data.shiftsAffordable)}
+							class="field-control rounded-sm px-3 py-2 w-full min-w-0 font-mono"
+							required
+							disabled={data.totalWageCost === 0}
+						/>
+						<Button
+							type="submit"
+							variant="secondary"
+							loading={isFunding}
+							disabled={data.totalWageCost === 0 || fundShifts < 1 || fundShifts > data.shiftsAffordable}
+						>
+							Fund shifts
+						</Button>
+					</div>
+					{#if data.totalWageCost === 0}
+						<p class="field-hint">No workers on the payroll.</p>
+					{/if}
+				</form>
+			</div>
+		</section>
+	{/if}
+
+	<!-- Share capital -->
+	<section class="panel rounded-sm p-5 sm:p-6 space-y-5" bind:this={capitalEl}>
+		<h2 class="section-title">Share Capital</h2>
 
 		{#if !data.shares}
 			{#if data.isOwner}
-				<p class="text-sm text-[#a8a083]">
-					Take {data.company.name} public to issue {data.ipoConfig.totalShares.toLocaleString()} shares. You'll keep a locked
-					{data.ipoConfig.founderLockedPercent}% controlling block; the rest lists immediately at your starting price.
-				</p>
-				<form
-					method="POST"
-					action="?/goPublic"
-					use:enhance={() => {
-						isGoingPublic = true;
-						return async ({ update }) => {
-							await update();
-							isGoingPublic = false;
-						};
-					}}
-					class="flex flex-col sm:flex-row gap-3 sm:items-end"
-				>
-					<div class="flex-1">
-						<label class="field-label" for="startingPrice">Starting share price</label>
-						<input
-							id="startingPrice"
-							type="number"
-							name="startingPrice"
-							bind:value={ipoPrice}
-							min={data.ipoConfig.minPrice}
-							class="field-control rounded-sm px-3 py-2.5 w-full"
-							required
-						/>
-					</div>
-					<button type="submit" disabled={isGoingPublic} class={buttonClass({ variant: "primary" })}>
-						{isGoingPublic ? "Going public…" : "Take Company Public"}
-					</button>
-				</form>
+				<div class="border-2 border-dashed border-[#c8b47a]/30 rounded-sm p-4 sm:p-5 text-center">
+					<p class="font-serif text-lg text-[#e6ddbf]">
+						{data.ipoConfig.totalShares.toLocaleString()} shares, unissued
+					</p>
+					<p class="mt-1 text-xs text-[#a8a083]">
+						You keep a locked {data.ipoConfig.founderLockedPercent}% block; the rest lists at your price.
+					</p>
+					<form
+						method="POST"
+						action="?/goPublic"
+						class="mt-4 flex flex-col sm:flex-row gap-2 sm:items-end justify-center"
+						use:enhance={() => {
+							isGoingPublic = true;
+							const handle = settle(() => capitalEl);
+							return async (args) => {
+								await handle(args);
+								isGoingPublic = false;
+							};
+						}}
+					>
+						<div class="text-left">
+							<label class="field-label" for="startingPrice">Price per share</label>
+							<input
+								id="startingPrice"
+								type="number"
+								name="startingPrice"
+								bind:value={ipoPrice}
+								min={data.ipoConfig.minPrice}
+								class="field-control rounded-sm px-3 py-2.5 w-full sm:w-40 font-mono"
+								required
+							/>
+						</div>
+						<Button type="submit" variant="primary" loading={isGoingPublic} loadingText="Issuing…">Go public</Button>
+					</form>
+				</div>
 			{:else}
-				<p class="text-sm text-[#a8a083]">This company hasn't gone public yet.</p>
+				<p class="text-sm text-[#a8a083]">Privately held. No shares issued.</p>
 			{/if}
 		{:else}
-			<div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-				<div class="panel-muted rounded-sm p-3">
-					<div class="field-hint">Total shares</div>
-					<div class="text-lg font-bold text-[#f5efd8]">{data.shares.totalShares.toLocaleString()}</div>
-				</div>
-				<div class="panel-muted rounded-sm p-3">
-					<div class="field-hint">Founder locked</div>
-					<div class="text-lg font-bold text-[#f5efd8]">{data.shares.founderLockedShares.toLocaleString()}</div>
-				</div>
-				<div class="panel-muted rounded-sm p-3">
-					<div class="field-hint">IPO price</div>
-					<div class="text-lg font-bold text-[#ffd35c]">${data.shares.ipoPrice.toLocaleString()}</div>
-				</div>
-				<div class="panel-muted rounded-sm p-3">
-					<div class="field-hint">Your holding</div>
-					<div class="text-lg font-bold text-[#b9f29a]">{data.myHolding.toLocaleString()}</div>
-				</div>
-			</div>
-
-			{#if data.topHolders.length > 0}
-				<div>
-					<h3 class="text-sm font-semibold text-[#e6ddbf] mb-2">Top Holders</h3>
-					<div class="space-y-1.5">
-						{#each data.topHolders as holder}
-							<div class="flex items-center justify-between text-sm panel-muted rounded-sm px-3 py-2">
-								<span class="text-[#d3caa9]">{holder.name || "Unknown"}</span>
-								<span class="flex items-center gap-2">
-									<span class="text-[#a8a083]">{holder.quantity.toLocaleString()}</span>
-									<span class={badgeClass({ tone: "amber", size: "xs" })}>{holder.percent}%</span>
-								</span>
-							</div>
-						{/each}
+			<!-- Your certificate -->
+			{#if data.myHolding > 0}
+				<div
+					bind:this={certificateEl}
+					class="relative rounded-sm border-4 border-double border-[#c8b47a]/50 bg-[#f2b01e]/5 p-4 sm:p-6 text-center animate-rise-in"
+				>
+					<div class="absolute inset-1.5 rounded-sm border border-[#c8b47a]/15 pointer-events-none"></div>
+					<p class="text-[10px] uppercase tracking-[0.3em] text-[#a8a083]">
+						No. <span class="font-mono">{entryNo}-{data.myHolding}</span>
+					</p>
+					<p class="mt-1 font-serif text-xl sm:text-2xl font-black uppercase tracking-widest text-[#ffd35c]">
+						Share Certificate
+					</p>
+					<p class="mt-3 font-serif italic text-sm sm:text-base text-[#d3caa9]">
+						This certifies that you are the holder of
+					</p>
+					{#key data.myHolding}
+						<p class="mt-1 font-mono text-3xl font-bold text-[#f5efd8] animate-tick">
+							{data.myHolding.toLocaleString()}
+						</p>
+					{/key}
+					<p class="font-serif italic text-sm sm:text-base text-[#d3caa9]">
+						shares of <span class="not-italic font-semibold text-[#f5efd8]">{data.company.name}</span>
+						· {myPercent}% of the issued capital
+					</p>
+					<div
+						class="mx-auto mt-4 size-12 rounded-full border-2 border-[#c8b47a]/50 overflow-hidden animate-stamp"
+						style="transform: rotate(-8deg)"
+					>
+						<Logo
+							src={data.company.logo}
+							alt=""
+							placeholderIcon={FluentBuilding20Filled}
+							placeholderGradient="from-[#4a5238] to-[#252b1e]"
+							class="size-full"
+						/>
 					</div>
 				</div>
 			{/if}
 
+			<dl class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+				<div class="panel-muted rounded-sm p-3">
+					<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide">Issued</dt>
+					<dd class="font-mono text-base font-bold text-[#f5efd8]">{data.shares.totalShares.toLocaleString()}</dd>
+				</div>
+				<div class="panel-muted rounded-sm p-3">
+					<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide flex items-center gap-1">
+						<FluentLockClosed20Filled class="size-3" /> Founder
+					</dt>
+					<dd class="font-mono text-base font-bold text-[#f5efd8]">
+						{data.shares.founderLockedShares.toLocaleString()}
+					</dd>
+				</div>
+				<div class="panel-muted rounded-sm p-3">
+					<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide">Issue price</dt>
+					<dd class="font-mono text-base font-bold text-[#ffd35c]">${data.shares.ipoPrice.toLocaleString()}</dd>
+				</div>
+				<div class="panel-muted rounded-sm p-3">
+					<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide">On offer</dt>
+					<dd class="font-mono text-base font-bold text-[#f5efd8]">{data.floatOutstanding.toLocaleString()}</dd>
+				</div>
+			</dl>
+
+			<!-- Shareholder register -->
+			{#if data.topHolders.length > 0}
+				<div>
+					<h3 class="text-[10px] uppercase tracking-wide text-[#a8a083] mb-2">Register of shareholders</h3>
+					<ol class="divide-y divide-[#c8b47a]/10 border-y border-[#c8b47a]/15">
+						{#each data.topHolders as holder, i (holder.userId)}
+							<li class="py-2 flex items-center gap-3">
+								<span class="w-5 text-right font-mono text-xs text-[#a8a083] shrink-0">{i + 1}</span>
+								<div class="min-w-0 flex-1">
+									<UserLink id={holder.userId} name={holder.name} avatar={holder.avatar} size="sm" />
+									<div class="mt-1 h-1 rounded-full bg-[#1a1f15] overflow-hidden">
+										<div class="h-full rounded-full bg-[#f2b01e]/70" style="width: {holder.percent}%"></div>
+									</div>
+								</div>
+								<div class="text-right shrink-0">
+									<p class="font-mono text-sm text-[#e6ddbf]">{holder.quantity.toLocaleString()}</p>
+									<p class="font-mono text-xs text-[#ffd35c]">{holder.percent}%</p>
+								</div>
+							</li>
+						{/each}
+					</ol>
+				</div>
+			{/if}
+
+			<!-- Order book -->
 			<div>
-				<div class="flex items-center justify-between mb-2">
-					<h3 class="text-sm font-semibold text-[#e6ddbf]">Order Book</h3>
-					<span class="field-hint">{data.floatOutstanding.toLocaleString()} shares listed</span>
+				<div class="flex items-baseline justify-between mb-2">
+					<h3 class="text-[10px] uppercase tracking-wide text-[#a8a083]">Offers to sell</h3>
+					{#if data.embargoReason}
+						<span class="text-xs text-red-300">Buying blocked by embargo</span>
+					{/if}
 				</div>
 
-				{#if data.embargoReason}
-					<p class="text-xs text-red-300 mb-2">Buying is blocked by the embargo above.</p>
-				{/if}
-
 				{#if data.listings.length > 0}
-					<div class="space-y-1.5">
+					<ul class="space-y-1.5">
 						{#each data.listings as listing (listing.id)}
-							<div class="flex items-center justify-between gap-3 panel-muted rounded-sm px-3 py-2 text-sm">
-								<div class="min-w-0">
-									<div class="text-[#f5efd8] font-semibold">${listing.pricePerUnit.toLocaleString()} / share</div>
-									<div class="text-xs text-[#a8a083] truncate">
-										{listing.quantity.toLocaleString()} available · {listing.isMine
-											? "You"
-											: listing.sellerName || "Unknown"}
-									</div>
+							<li out:vanish class="panel-muted rounded-sm px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+								<div class="min-w-0 flex-1">
+									<p class="font-mono text-base font-bold text-[#ffd35c]">
+										${listing.pricePerUnit.toLocaleString()}
+										<span class="font-sans text-xs font-normal text-[#a8a083]"
+											>× {listing.quantity.toLocaleString()}</span
+										>
+									</p>
+									{#if listing.isMine}
+										<Badge tone="amber" size="xs">Your offer</Badge>
+									{:else}
+										<UserLink id={listing.sellerId} name={listing.sellerName} avatar={listing.sellerAvatar} size="xs" />
+									{/if}
 								</div>
 
 								{#if listing.isMine}
-									<form method="POST" action="?/removeShareListing" use:enhance>
+									<form
+										method="POST"
+										action="?/removeShareListing"
+										use:enhance={() =>
+											async ({ update, result }) => {
+												await update();
+												toastResult(result);
+											}}
+									>
 										<input type="hidden" name="listingId" value={listing.id} />
-										<button type="submit" class={buttonClass({ variant: "subtle", size: "sm" })}>Cancel</button>
+										<Button type="submit" variant="subtle" size="sm">Withdraw</Button>
 									</form>
 								{:else}
 									<form
 										method="POST"
 										action="?/buyShareListing"
+										class="flex items-center gap-2 shrink-0"
 										use:enhance={() => {
 											isBuying[listing.id] = true;
-											return async ({ update }) => {
-												await update();
+											const handle = settle(() => certificateEl ?? capitalEl);
+											return async (args) => {
+												await handle(args);
 												isBuying[listing.id] = false;
 											};
 										}}
-										class="flex items-center gap-2 shrink-0"
 									>
 										<input type="hidden" name="listingId" value={listing.id} />
 										<input
@@ -366,386 +551,176 @@
 											min="1"
 											max={listing.quantity}
 											placeholder="Qty"
-											class="field-control rounded-sm px-2 py-1 w-20 text-sm"
+											aria-label="Quantity"
+											class="field-control rounded-sm px-2 py-1.5 w-20 text-sm font-mono"
 											required
 											disabled={!!data.embargoReason}
 										/>
-										<button
+										<Button
 											type="submit"
-											disabled={isBuying[listing.id] || !!data.embargoReason}
-											class={buttonClass({ variant: "primary", size: "sm" })}
+											variant="primary"
+											size="sm"
+											loading={isBuying[listing.id]}
+											disabled={!!data.embargoReason}
 										>
 											Buy
-										</button>
+										</Button>
 									</form>
 								{/if}
-							</div>
+							</li>
 						{/each}
-					</div>
+					</ul>
 				{:else}
-					<p class="text-sm text-[#a8a083]">No shares currently listed for sale.</p>
+					<p class="text-sm text-[#a8a083]">No shares on offer.</p>
 				{/if}
 			</div>
 
 			{#if data.myHolding > 0}
-				<div class="panel-muted rounded-sm p-4">
-					<h3 class="text-sm font-semibold text-[#e6ddbf] mb-3">List Shares For Sale</h3>
-					<form
-						method="POST"
-						action="?/createShareListing"
-						use:enhance={() => {
-							isListing = true;
-							return async ({ update }) => {
-								await update();
-								isListing = false;
-							};
-						}}
-						class="flex flex-col sm:flex-row gap-3 sm:items-end"
-					>
-						<div>
-							<label class="field-label" for="listQuantity">Quantity</label>
-							<input
-								id="listQuantity"
-								type="number"
-								name="quantity"
-								bind:value={listQuantity}
-								min="1"
-								max={data.myHolding}
-								class="field-control rounded-sm px-3 py-2.5 w-28"
-								required
-							/>
-						</div>
-						<div>
-							<label class="field-label" for="listPrice">Price / share</label>
-							<input
-								id="listPrice"
-								type="number"
-								name="pricePerUnit"
-								bind:value={listPrice}
-								min={data.ipoConfig.minPrice}
-								class="field-control rounded-sm px-3 py-2.5 w-28"
-								required
-							/>
-						</div>
-						<button type="submit" disabled={isListing} class={buttonClass({ variant: "secondary" })}>
-							{isListing ? "Listing…" : "List Shares"}
-						</button>
-					</form>
-				</div>
+				<form
+					method="POST"
+					action="?/createShareListing"
+					class="panel-muted rounded-sm p-3 grid grid-cols-2 sm:grid-cols-[8rem_8rem_auto] gap-2 items-end"
+					use:enhance={() => {
+						isListing = true;
+						return async ({ update, result }) => {
+							await update();
+							isListing = false;
+							toastResult(result);
+						};
+					}}
+				>
+					<div>
+						<label class="field-label" for="listQuantity">Shares</label>
+						<input
+							id="listQuantity"
+							type="number"
+							name="quantity"
+							bind:value={listQuantity}
+							min="1"
+							max={data.myHolding}
+							class="field-control rounded-sm px-3 py-2 w-full font-mono"
+							required
+						/>
+					</div>
+					<div>
+						<label class="field-label" for="listPrice">Price each</label>
+						<input
+							id="listPrice"
+							type="number"
+							name="pricePerUnit"
+							bind:value={listPrice}
+							min={data.ipoConfig.minPrice}
+							class="field-control rounded-sm px-3 py-2 w-full font-mono"
+							required
+						/>
+					</div>
+					<Button type="submit" variant="secondary" loading={isListing} class="col-span-2 sm:col-span-1">
+						Offer for sale
+					</Button>
+				</form>
 			{/if}
 		{/if}
 	</section>
 
-	<!-- Production Analytics -->
+	<!-- Output schedule (owner) -->
 	{#if data.isOwner && data.resourceProduction.length > 0}
-		<div class="grid grid-cols-1 gap-4 sm:gap-6">
-			<!-- Production by Resource Type -->
-			<div class="panel rounded-sm p-4 sm:p-6 space-y-3">
-				<h3 class="section-title text-base sm:text-lg">
-					<FluentChartMultiple20Filled class="size-5 text-[#f2b01e]" />
-					Production by Type
-				</h3>
-
-				{#if productionChartData.length > 0}
-					<div class="h-48 sm:h-64">
-						<Chart
-							data={productionChartData}
-							x="name"
-							xScale={scaleBand().padding(0.3)}
-							y="rate"
-							yDomain={[0, null]}
-							yNice
-							padding={{ left: 16, bottom: 24, top: 8 }}
-						>
-							<Svg>
-								<Bars
-									radius={8}
-									strokeWidth={2}
-									class="fill-[#f2b01e]/80 stroke-[#f2b01e] hover:fill-[#f2b01e] transition-all"
-								/>
-							</Svg>
-							<Tooltip.Root let:data>
-								<Tooltip.Header>
-									<span class="capitalize">{data.name}</span>
-								</Tooltip.Header>
-								<Tooltip.List>
-									<Tooltip.Item
-										label="Pending"
-										value={data.pending.toLocaleString()}
-										valueClass="text-[#b9f29a] font-bold"
-									/>
-									<Tooltip.Item label="Rate/Shift" value={data.rate.toLocaleString()} />
-									<Tooltip.Item label="Workers" value={data.workers} />
-									<Tooltip.Item label="Factories" value={data.factories} />
-								</Tooltip.List>
-							</Tooltip.Root>
-						</Chart>
-					</div>
-				{/if}
+		<section class="panel rounded-sm p-5 sm:p-6">
+			<div class="flex items-center justify-between gap-3 mb-3">
+				<h2 class="section-title">Output per Shift</h2>
+				<Button href="/production" variant="ghost" size="sm">Inventory</Button>
 			</div>
-		</div>
-	{/if}
-
-	<!-- Management Section -->
-	{#if data.isOwner}
-		<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-			<!-- Budget Management -->
-			<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
-				<div class="flex items-center justify-between">
-					<h3 class="section-title text-base sm:text-lg">
-						<FluentWallet20Filled class="size-5 text-[#b9f29a]" />
-						Company Budget
-					</h3>
-					<span class="text-[#b9f29a] font-bold text-base sm:text-lg">{data.budget.balance.toLocaleString()}</span>
-				</div>
-
-				<div class="grid grid-cols-2 gap-3">
-					<div class="text-center p-2 sm:p-3 panel-muted rounded-sm">
-						<div class="text-xs text-[#a8a083]">Deposited</div>
-						<div class="font-bold text-sm sm:text-base text-[#f5efd8]">
-							{data.budget.totalDeposited.toLocaleString()}
+			<ul class="space-y-3">
+				{#each data.resourceProduction as resource (resource.type)}
+					<li>
+						<div class="flex items-baseline justify-between gap-3 text-sm">
+							<span class="capitalize font-semibold text-[#e6ddbf]">{resource.type}</span>
+							<span class="font-mono text-[#f5efd8]">{resource.productionRate.toLocaleString()}</span>
 						</div>
-					</div>
-					<div class="text-center p-2 sm:p-3 panel-muted rounded-sm">
-						<div class="text-xs text-[#a8a083]">Spent</div>
-						<div class="font-bold text-sm sm:text-base text-[#f5efd8]">{data.budget.totalSpent.toLocaleString()}</div>
-					</div>
-				</div>
-
-				<div class="flex flex-col">
-					<div class="text-xs text-[#a8a083]">Your Wallet</div>
-					<div class="font-bold text-[#b9f29a] flex items-center gap-1.5 sm:text-lg">
-						<FluentMoney20Filled class="size-4 sm:size-5" />
-						{data.ownerBalance.toLocaleString()}
-					</div>
-				</div>
-
-				<form
-					method="POST"
-					action="?/depositBudget"
-					use:enhance={() => {
-						isDepositing = true;
-						return async ({ update }) => {
-							await update();
-							isDepositing = false;
-						};
-					}}
-					class="space-y-3"
-				>
-					<div>
-						<label class="field-label" for="amount">Deposit Amount</label>
-						<input
-							id="amount"
-							type="number"
-							name="amount"
-							bind:value={depositAmount}
-							min="1"
-							max={data.ownerBalance}
-							class="field-control rounded-sm px-3 py-2.5 w-full"
-							required
-						/>
-					</div>
-
-					<button
-						type="submit"
-						disabled={isDepositing || depositAmount > data.ownerBalance || depositAmount < 1}
-						class={buttonClass({ variant: "soft-emerald", block: true, class: "gap-2" })}
-					>
-						{#if isDepositing}
-							<span class="loading loading-spinner loading-xs"></span>
-							Depositing...
-						{:else}
-							<FluentArrowDownload20Filled class="size-4" />
-							Deposit to Budget
-						{/if}
-					</button>
-				</form>
-			</div>
-
-			<!-- Where the output goes -->
-			<div class="panel rounded-sm p-4 sm:p-6 space-y-3">
-				<h3 class="section-title text-base sm:text-lg">
-					<FluentBoxCheckmark20Filled class="size-5 text-[#6fd14a]" />
-					Output
-				</h3>
-				<p class="text-sm text-[#d3caa9]">Finished shifts deliver output straight to your inventory.</p>
-				<Button href="/production" variant="secondary" size="sm">View your inventory</Button>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Detailed Production Statistics -->
-	{#if data.isOwner && data.resourceProduction.length > 0}
-		<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
-			<h2 class="section-title text-base sm:text-lg">
-				<FluentChartMultiple20Filled class="size-5 text-[#f2b01e]" />
-				Detailed Production Stats
-			</h2>
-
-			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-				{#each data.resourceProduction as resource}
-					<div class="panel-muted rounded-sm p-3 sm:p-4" style="border-color: {getColor(resource.type)}33">
-						<div class="flex items-center justify-between text-xs mb-1">
-							<span class="capitalize text-[#a8a083]">{resource.type}</span>
-							<span
-								class={badgeClass({ size: "xs", class: "capitalize" })}
-								style="background-color: {getColor(resource.type)}22; color: {getColor(
-									resource.type
-								)}; border-color: {getColor(resource.type)}33"
-							>
-								{resource.factoryCount}
-								{resource.factoryCount === 1 ? "factory" : "factories"}
-							</span>
+						<div class="mt-1 h-2 rounded-full bg-[#1a1f15] overflow-hidden">
+							<div
+								class="h-full rounded-full bg-[#f2b01e]/75"
+								style="width: {(resource.productionRate / maxRate) * 100}%"
+							></div>
 						</div>
-						<div class="text-xl sm:text-2xl font-bold" style="color: {getColor(resource.type)}">
-							{resource.productionRate.toLocaleString()}
-							<span class="text-xs font-normal text-[#a8a083]">per round of shifts</span>
-						</div>
-						<div class="mt-2 space-y-1">
-							<div class="flex justify-between text-xs">
-								<span class="text-[#a8a083]">Workers:</span>
-								<span class="font-semibold text-[#e6ddbf]">{resource.totalWorkers}</span>
-							</div>
-							<div class="flex justify-between text-xs">
-								<span class="text-[#a8a083]">Rate/Shift:</span>
-								<span class="font-semibold text-[#e6ddbf]">{resource.productionRate.toLocaleString()}</span>
-							</div>
-						</div>
-					</div>
+						<p class="mt-0.5 text-xs text-[#a8a083]">
+							{resource.factoryCount}
+							{resource.factoryCount === 1 ? "factory" : "factories"} · {resource.totalWorkers}
+							{resource.totalWorkers === 1 ? "worker" : "workers"}
+						</p>
+					</li>
 				{/each}
-			</div>
-		</div>
+			</ul>
+		</section>
 	{/if}
 
-	<!-- Factories -->
-	<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
-		<div class="flex items-center justify-between">
-			<h2 class="section-title text-base sm:text-lg">
-				<FluentFactory20Filled class="size-5 text-[#e3cbfb]" />
-				Factories
-			</h2>
+	<!-- Works -->
+	<section class="space-y-3">
+		<div class="flex items-center justify-between gap-3">
+			<h2 class="section-title">Works</h2>
 			{#if data.isOwner}
-				<a href="/factory/create" class={buttonClass({ variant: "primary", size: "sm", class: "gap-2" })}>
-					<FluentAdd20Filled class="size-4" />
-					<span class="hidden sm:inline">New Factory</span>
-				</a>
+				<Button href="/factory/create" variant="secondary" size="sm" icon={FluentAdd20Filled}>New factory</Button>
 			{/if}
 		</div>
 
 		{#if data.factories.length > 0}
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-				{#each data.factories as factory}
-					<a href="/factory/{factory.id}" class="panel-interactive rounded-sm p-3 sm:p-4 block">
-						<div class="flex items-start justify-between">
-							<div>
-								<h3 class="font-bold text-base sm:text-lg text-[#f5efd8]">{factory.name}</h3>
-								<p class="text-xs sm:text-sm text-[#a8a083] capitalize flex items-center gap-1.5 mt-1">
-									<span class="w-2 h-2 rounded-full bg-[#f2b01e]"></span>
-									{factory.factoryType}
+			<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+				{#each data.factories as factory (factory.id)}
+					{@const fill = factory.maxWorkers ? Math.min(100, (factory.workerCount / factory.maxWorkers) * 100) : 0}
+					<a href="/factory/{factory.id}" class="panel-interactive rounded-sm p-4 block group">
+						<div class="flex items-start gap-3">
+							<img
+								loading="lazy"
+								decoding="async"
+								src={regionCoatUrl(factory.regionId)}
+								alt=""
+								class="size-9 object-contain shrink-0"
+							/>
+							<div class="min-w-0 flex-1">
+								<h3 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
+									{factory.name}
+								</h3>
+								<p class="text-xs text-[#a8a083] truncate">
+									{getRegionName(factory.regionId)}, {factory.stateName}
 								</p>
 							</div>
-							<span class={badgeClass({ tone: "purple", size: "xs", class: "capitalize" })}>
+							<Badge tone="purple" size="xs" class="capitalize shrink-0">
 								{factory.resourceOutput || factory.productOutput}
-							</span>
+							</Badge>
 						</div>
 
-						<div class="grid grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-[#c8b47a]/10">
-							<div>
-								<div class="text-xs text-[#a8a083]">Location</div>
-								<div class="flex items-center gap-2 mt-1">
-									<div class="size-5 sm:size-6 rounded-sm overflow-hidden shrink-0">
-										<img
-											loading="lazy"
-											decoding="async"
-											src={regionCoatUrl(factory.regionId)}
-											alt="{getRegionName(factory.regionId)} coat of arms"
-										/>
-									</div>
-									<div>
-										<div class="font-medium text-xs sm:text-sm text-[#e6ddbf]">{getRegionName(factory.regionId)}</div>
-										<div class="text-xs text-[#a8a083] hidden sm:block">{factory.stateName}</div>
-									</div>
-								</div>
+						<div class="mt-3">
+							<div class="flex justify-between text-xs text-[#a8a083]">
+								<span class="flex items-center gap-1"><FluentPeople20Filled class="size-3.5" /> Workers</span>
+								<span class="font-mono text-[#e6ddbf]">{factory.workerCount}/{factory.maxWorkers}</span>
 							</div>
-							<div>
-								<div class="text-xs text-[#a8a083]">Workers</div>
-								<div class="font-medium text-sm mt-1 text-[#e6ddbf]">{factory.workerCount} / {factory.maxWorkers}</div>
+							<div class="mt-1 h-1.5 rounded-full bg-[#1a1f15] overflow-hidden">
+								<div class="h-full rounded-full bg-[#5eaef5]/70" style="width: {fill}%"></div>
 							</div>
 						</div>
 
-						<div class="grid grid-cols-2 gap-3 sm:gap-4 mt-3 pt-3 border-t border-[#c8b47a]/10">
-							<div>
-								<div class="text-xs text-[#a8a083]">Wage/Shift</div>
-								<div class="font-bold text-[#b9f29a] flex items-center gap-1 text-sm">
-									<FluentMoney20Filled class="size-3" />
-									{factory.workerWage.toLocaleString()}
-								</div>
-							</div>
-							<div>
-								<div class="text-xs text-[#a8a083]">Production</div>
-								<div class="font-bold text-[#b3dcff] text-sm">{factory.productionRate}/shift</div>
-							</div>
+						<div class="mt-3 pt-3 border-t border-[#c8b47a]/10 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+							<span class="text-[#a8a083]"
+								>Wage <span class="font-mono text-[#b9f29a]">{factory.workerWage.toLocaleString()}</span></span
+							>
+							<span class="text-[#a8a083]"
+								>Output <span class="font-mono text-[#b3dcff]">{factory.productionRate}/shift</span></span
+							>
+							{#if data.isOwner && factory.lastWorked}
+								<span class="text-[#a8a083] sm:ml-auto">Last shift {formatDate(factory.lastWorked)}</span>
+							{/if}
 						</div>
-
-						{#if data.isOwner && factory.lastWorked}
-							<div class="mt-3 pt-3 border-t border-[#c8b47a]/10 space-y-1">
-								<div class="flex items-center justify-between text-xs">
-									<span class="flex items-center gap-1.5 text-[#a8a083]">
-										<FluentClock20Filled class="size-3" />
-										Last Work
-									</span>
-									<span class="text-[#e6ddbf]">{formatDate(factory.lastWorked)}</span>
-								</div>
-							</div>
-						{/if}
 					</a>
 				{/each}
 			</div>
 		{:else}
-			<div class="text-center py-8 sm:py-12">
-				<FluentFactory20Filled class="size-12 sm:size-16 mx-auto text-[#a8a083]/40 mb-4" />
-				<h3 class="text-base sm:text-lg font-semibold text-[#f5efd8] mb-2">No Factories</h3>
-				<p class="text-[#a8a083] text-sm">This company hasn't built any factories yet</p>
+			<div class="panel-muted rounded-sm p-8 text-center">
+				<FluentFactory20Filled class="size-10 mx-auto text-[#a8a083]/40 mb-2 animate-idle-float" />
+				<p class="text-sm text-[#a8a083]">No works yet.</p>
 			</div>
 		{/if}
-	</div>
-
-	<!-- Operating Regions -->
-	{#if data.uniqueStates.length > 0}
-		<div class="panel rounded-sm p-4 sm:p-6 space-y-4">
-			<h2 class="section-title text-base sm:text-lg">
-				<FluentLocation20Filled class="size-5 text-[#b3dcff]" />
-				Operating Regions
-			</h2>
-
-			<div class="space-y-3">
-				{#each data.uniqueStates as state}
-					{@const stateFactories = data.factories.filter((f) => f.stateId === state.id)}
-					{@const stateRegions = [
-						...new Set(stateFactories.map((f) => ({ id: f.regionId, name: getRegionName(f.regionId) })))
-					]}
-
-					<div class="panel-muted rounded-sm p-3 sm:p-4">
-						<div class="flex items-center justify-between mb-3">
-							<h3 class="font-semibold text-sm sm:text-base text-[#f5efd8]">{state.name}</h3>
-							<span class={badgeClass({ tone: "purple", size: "xs" })}>
-								{stateFactories.length}
-								{stateFactories.length === 1 ? "factory" : "factories"}
-							</span>
-						</div>
-						<div class="flex flex-wrap gap-2">
-							{#each stateRegions as region}
-								<span class={badgeClass({ tone: "neutral", size: "xs" })}>{region.name}</span>
-							{/each}
-						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
-	{/if}
+	</section>
 </PageContainer>
 
-<!-- Edit Company Bottom Sheet -->
 {#if data.isOwner && data.editForm}
 	<EditCompanySheet
 		bind:open={showEditCompanySheet}

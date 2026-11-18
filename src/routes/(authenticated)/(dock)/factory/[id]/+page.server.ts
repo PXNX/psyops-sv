@@ -10,6 +10,7 @@ import {
 	regions,
 	stateEnergy,
 	states,
+	userProfiles,
 	userWallets
 } from "#lib/server/schema.js";
 import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
@@ -141,7 +142,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		[currentUserJob],
 		stateEnergyData,
 		[wallet],
-		factoryEditData
+		factoryEditData,
+		owner
 	] = await Promise.all([
 		// Check whether an embargo between the company's headquarters state and the
 		// viewer's state blocks starting a new shift here.
@@ -192,7 +194,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			return energy;
 		})(),
 		db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
-		factoryEditPromise
+		factoryEditPromise,
+		// The company owner, shown on the works card.
+		(async () => {
+			const [profile] = await db
+				.select({ name: userProfiles.name, logoKey: files.key })
+				.from(userProfiles)
+				.leftJoin(files, eq(userProfiles.logo, files.id))
+				.where(eq(userProfiles.accountId, factory.ownerId));
+			return {
+				id: factory.ownerId,
+				name: profile?.name ?? null,
+				avatar: profile?.logoKey ? await getSignedDownloadUrl(profile.logoKey) : null
+			};
+		})()
 	]);
 
 	const canAffordWage = companyBudget ? companyBudget.balance >= factory.workerWage : false;
@@ -221,6 +236,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		factory,
+		owner,
 		output,
 		workers: workerCount.count,
 		maxWorkers: factory.maxWorkers,

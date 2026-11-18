@@ -1,32 +1,49 @@
+<!-- src/routes/(authenticated)/(dock)/market/[item]/+page.svelte -->
+<!-- One commodity on the exchange: the quote board, the order book of asks
+     and your own sell order ticket. -->
 <script lang="ts">
 	import type { SubmitFunction } from "$app/forms";
+	import { enhance } from "$app/forms";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
+	import { vanish } from "#lib/utils/motion.js";
+	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
+	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
+	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
+	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
+	import FluentDelete20Filled from "~icons/fluent/delete-20-regular";
+	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import MarketChart from "./MarketChart.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
+	import PageContainer from "#lib/component/PageContainer.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import { Button, Badge, BackLink } from "#lib/component/ui/index.js";
 
+	let { data } = $props();
+
+	/** Toast the result; on success let `target` glow once. */
+	function submitWith(target: () => Element | null | undefined, onSuccess?: () => void): SubmitFunction {
+		return () =>
+			async ({ result, update }) => {
+				await update();
+				toastResult(result);
+				if (result.type === "success") {
+					onSuccess?.();
+					celebrate(target());
+				}
+			};
+	}
 	const withToast: SubmitFunction =
 		() =>
 		async ({ result, update }) => {
 			await update();
 			toastResult(result);
 		};
-	import { enhance } from "$app/forms";
-	import FluentChartMultiple20Regular from "~icons/fluent/chart-multiple-20-regular";
-	import FluentShoppingCart20Filled from "~icons/fluent/cart-20-filled";
-	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
-	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
-	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import FluentDelete20Filled from "~icons/fluent/delete-20-regular";
-	import MarketChart from "./MarketChart.svelte";
-	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
-	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Button, Badge, BackLink } from "#lib/component/ui/index.js";
 
-	let { data, form } = $props();
-
-	let activeTab = $state<"buy" | "sell">(data.otherListings.length > 0 ? "buy" : "sell");
+	const OFFERS_SHOWN = 5;
 	let showAllOffers = $state(false);
-
 	let buyQuantities = $state<Record<string, number>>({});
 
 	let createQty = $state(1);
@@ -38,20 +55,25 @@
 
 	let cooldownTimeRemaining = $state(data.cooldownRemaining);
 
+	let ticketEl = $state<HTMLElement>();
+	const rowEls: Record<number, HTMLElement> = {};
+
 	const currentPrice = $derived(
 		data.priceHistory.length > 0
 			? data.priceHistory[data.priceHistory.length - 1].pricePerUnit
 			: (data.statistics?.currentAvgPrice ?? 0)
 	);
-
+	const bestAsk = $derived(data.otherListings[0]?.pricePerUnit ?? null);
+	const unitsOnOffer = $derived(data.otherListings.reduce((sum, l) => sum + l.quantity, 0));
 	const totalAvailableForListing = $derived(data.userItemQuantity + (data.myListing?.quantity ?? 0));
-	const totalListingCount = $derived(data.otherListings.length + (data.myListing ? 1 : 0));
+	const visibleOffers = $derived(showAllOffers ? data.otherListings : data.otherListings.slice(0, OFFERS_SHOWN));
+	const symbol = $derived(data.itemName.slice(0, 3).toUpperCase());
 
 	const cooldownDisplay = $derived.by(() => {
 		if (cooldownTimeRemaining <= 0) return null;
 		const minutes = Math.floor(cooldownTimeRemaining / 60000);
 		const seconds = Math.floor((cooldownTimeRemaining % 60000) / 1000);
-		return `${minutes}m ${seconds}s`;
+		return `${minutes}m ${String(seconds).padStart(2, "0")}s`;
 	});
 
 	$effect(() => {
@@ -69,17 +91,13 @@
 		isEditing = true;
 	}
 
-	function cancelEditing() {
-		isEditing = false;
-	}
-
 	function priceVsMarket(price: number): { label: string; cls: string } | null {
 		const low = data.statistics?.lowestPrice;
 		if (!low) return null;
 		const diff = price - low;
-		if (diff < 0) return { label: `$${Math.abs(diff).toLocaleString()} below market low`, cls: "text-[#b9f29a]" };
-		if (diff > 0) return { label: `$${diff.toLocaleString()} above market low`, cls: "text-[#ffd35c]" };
-		return { label: "Matches market low", cls: "text-[#b3dcff]" };
+		if (diff < 0) return { label: `$${Math.abs(diff).toLocaleString()} under the low`, cls: "text-[#b9f29a]" };
+		if (diff > 0) return { label: `$${diff.toLocaleString()} over the low`, cls: "text-[#ffd35c]" };
+		return { label: "At the market low", cls: "text-[#b3dcff]" };
 	}
 </script>
 
@@ -87,384 +105,343 @@
 	<title>{`${data.itemName.charAt(0).toUpperCase()}${data.itemName.slice(1)} market · PsyOps`}</title>
 </svelte:head>
 
-{#snippet offerRow(listing: (typeof data.otherListings)[number], isBest: boolean)}
-	{@const buyQty = buyQuantities[listing.id] || 1}
-	{@const itemCost = listing.pricePerUnit * buyQty}
-	{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
-	{@const totalCost = itemCost + taxAmount}
-
-	<div class="panel-muted rounded-sm {isBest ? 'border-[#6fd14a]/30' : ''}">
-		<div class="flex flex-wrap items-center gap-3 px-4 py-3">
-			<div class="flex-1 min-w-[100px]">
-				<div class="flex items-baseline gap-2">
-					<span class="text-xl font-bold font-mono {isBest ? 'text-[#b9f29a]' : 'text-[#f5efd8]'}">
-						${listing.pricePerUnit.toLocaleString()}
-					</span>
-					<span class="text-xs text-[#a8a083]">per unit</span>
-					{#if isBest}
-						<Badge tone="green" size="xs">BEST</Badge>
-					{/if}
-				</div>
-				<p class="text-xs text-[#a8a083] mt-0.5"><span class="font-mono">{listing.quantity}</span> units available</p>
+{#snippet qtyPrice(
+	qtyId: string,
+	priceId: string,
+	max: number,
+	qty: number,
+	setQty: (n: number) => void,
+	price: number,
+	setPrice: (n: number) => void
+)}
+	<div class="grid grid-cols-2 gap-3">
+		<div class="min-w-0">
+			<label for={qtyId} class="field-label">Units <span class="font-normal text-[#a8a083]">max {max}</span></label>
+			<div class="join w-full">
+				<input
+					type="number"
+					id={qtyId}
+					name="quantity"
+					min="1"
+					{max}
+					value={qty}
+					oninput={(e) => setQty(parseInt(e.currentTarget.value) || 0)}
+					class="field-control join-item rounded-sm h-9 flex-1 min-w-0 px-2 text-sm font-mono"
+				/>
+				<Button type="button" variant="secondary" size="sm" class="join-item h-9" onclick={() => setQty(max)}>
+					MAX
+				</Button>
 			</div>
-
-			<form method="POST" action="?/buyListing" use:enhance={withToast} class="flex items-center gap-2">
-				<input type="hidden" name="listingId" value={listing.id} />
-
-				<div class="text-right text-xs font-mono min-w-[80px]">
-					{#if taxAmount > 0}
-						<div class="text-[#ffd35c]">{data.taxRate}% tax: +${taxAmount.toLocaleString()}</div>
-					{/if}
-					<div class="text-[#f5efd8] font-bold">${totalCost.toLocaleString()}</div>
-				</div>
-
-				<div class="join">
-					<input
-						type="number"
-						name="quantity"
-						min="1"
-						max={listing.quantity}
-						value={buyQty}
-						class="field-control join-item rounded-sm h-8 w-16 px-2 text-sm text-center font-mono"
-						onchange={(e) => {
-							buyQuantities[listing.id] = parseInt(e.currentTarget.value);
-						}}
-					/>
-					<Button type="submit" size="sm" variant={isBest ? "primary" : "secondary"} class="join-item px-3">BUY</Button>
-				</div>
-			</form>
-			{#if data.governmentState}
-				<form method="POST" action="?/buyListingAsState" use:enhance={withToast}>
-					<input type="hidden" name="listingId" value={listing.id} />
-					<input type="hidden" name="quantity" value={buyQty} />
-					<Button
-						type="submit"
-						size="sm"
-						variant="soft-amber"
-						class="px-2 gap-1"
-						title="Buy for {data.governmentState
-							.name} (Treasury: ${data.governmentState.treasuryBalance.toLocaleString()})"
-					>
-						<span>🏛️</span>
-						<span class="hidden sm:inline text-xs">STATE</span>
-					</Button>
-				</form>
-			{/if}
+		</div>
+		<div class="min-w-0">
+			<label for={priceId} class="field-label">Price / unit</label>
+			<div class="join w-full">
+				<span
+					class="join-item h-9 px-2.5 flex items-center border border-[#c8b47a]/20 bg-[#1a1f15] text-[#a8a083] text-sm font-mono rounded-sm"
+					>$</span
+				>
+				<input
+					type="number"
+					id={priceId}
+					name="pricePerUnit"
+					min="1"
+					value={price}
+					oninput={(e) => setPrice(parseInt(e.currentTarget.value) || 0)}
+					class="field-control join-item rounded-sm h-9 flex-1 min-w-0 px-2 text-sm font-mono"
+				/>
+			</div>
 		</div>
 	</div>
 {/snippet}
 
-<PageContainer maxWidth="4xl">
-	<!-- Header -->
-	<div class="space-y-2">
-		<BackLink href="/market" label="Market" class="-ml-3" />
-		<div class="flex items-center justify-between gap-3">
-			<div class="flex items-center gap-3 min-w-0">
-				<div class="size-12 flex-shrink-0 flex items-center justify-center panel-muted rounded-sm">
-					<ResourceIcon name={data.itemName} class="size-7" />
-				</div>
-				<div class="min-w-0">
-					<h1 class="text-3xl font-bold text-[#f5efd8] capitalize truncate">
-						{data.itemName}
-					</h1>
-					<p class="text-[#a8a083] capitalize">
-						{data.itemType} · {totalListingCount} listing{totalListingCount !== 1 ? "s" : ""}
-					</p>
-				</div>
-			</div>
+<PageContainer maxWidth="5xl">
+	<BackLink href="/market" label="Exchange" class="-ml-3 -mb-2 self-start" />
 
-			<div class="panel-muted rounded-sm px-3 py-2 text-right flex-shrink-0">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Balance</p>
-				<p class="text-sm font-bold text-[#f5efd8] font-mono">${data.wallet.balance.toLocaleString()}</p>
+	<!-- Quote board -->
+	<header class="panel rounded-sm overflow-hidden">
+		<div
+			class="flex items-center justify-between gap-3 px-4 py-2 border-b border-[#c8b47a]/15 bg-[#1a1f15]/70 text-[10px] uppercase tracking-[0.2em] text-[#a8a083]"
+		>
+			<span>Commodity Exchange · {data.itemType === "resource" ? "Raw materials" : "Goods"}</span>
+			<span class="font-mono tracking-normal text-[#d3caa9]">${data.wallet.balance.toLocaleString()}</span>
+		</div>
+		<div class="p-4 sm:p-5 flex items-center gap-4">
+			<div class="size-14 shrink-0 flex items-center justify-center panel-muted rounded-sm animate-pop-in">
+				<ResourceIcon name={data.itemName} class="size-8" />
+			</div>
+			<div class="min-w-0 flex-1">
+				<div class="flex items-center gap-2">
+					<span
+						class="font-mono text-xs font-bold px-1.5 py-0.5 rounded-sm border border-[#f2b01e]/35 bg-[#f2b01e]/12 text-[#ffd35c]"
+						>{symbol}</span
+					>
+					<h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#f5efd8] capitalize truncate">{data.itemName}</h1>
+				</div>
+				<p class="mt-1 text-xs text-[#a8a083]">
+					<span class="font-mono text-[#d3caa9]">{unitsOnOffer.toLocaleString()}</span> units on offer ·
+					<span class="font-mono text-[#d3caa9]">{data.userItemQuantity.toLocaleString()}</span> in your stock
+				</p>
+			</div>
+			<div class="text-right shrink-0">
+				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Last</p>
+				{#key currentPrice}
+					<p class="animate-tick font-mono text-xl sm:text-2xl font-bold text-[#f5efd8] tabular-nums">
+						${currentPrice.toLocaleString()}
+					</p>
+				{/key}
 			</div>
 		</div>
-	</div>
+		{#if data.statistics}
+			<dl class="grid grid-cols-2 sm:grid-cols-4 border-t border-[#c8b47a]/15 text-center">
+				{#each [{ label: "Low", value: `$${data.statistics.lowestPrice.toLocaleString()}`, cls: "text-[#b9f29a]" }, { label: "High", value: `$${data.statistics.highestPrice.toLocaleString()}`, cls: "text-red-300" }, { label: "Average", value: `$${data.statistics.currentAvgPrice.toLocaleString()}`, cls: "text-[#f5efd8]" }, { label: "Orders", value: String(data.statistics.activeListings), cls: "text-[#f5efd8]" }] as cell, i}
+					<div
+						class="px-2 py-2.5 border-[#c8b47a]/10 {i % 2 === 1 ? 'border-l' : ''} {i >= 2
+							? 'border-t sm:border-t-0'
+							: ''} {i === 2 ? 'sm:border-l' : ''}"
+					>
+						<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">{cell.label}</dt>
+						<dd class="font-mono text-sm font-bold tabular-nums truncate {cell.cls}">{cell.value}</dd>
+					</div>
+				{/each}
+			</dl>
+		{/if}
+	</header>
 
-	<!-- Price Chart -->
 	{#if data.priceHistory.length > 1}
 		<MarketChart priceHistory={data.priceHistory} {currentPrice} />
-	{:else if data.priceHistory.length === 0}
-		<div class="panel-muted rounded-sm p-6 text-center py-10">
-			<FluentChartMultiple20Regular class="size-10 mx-auto opacity-30 mb-2 text-[#a8a083]" />
-			<p class="text-sm text-[#a8a083]">No price history yet</p>
-		</div>
 	{/if}
 
-	<!-- Key data -->
-	{#if data.statistics}
-		<div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-			<div class="panel-muted rounded-sm p-3">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Lowest</p>
-				<p class="text-sm font-bold text-[#b9f29a] font-mono">${data.statistics.lowestPrice.toLocaleString()}</p>
-			</div>
-			<div class="panel-muted rounded-sm p-3">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Highest</p>
-				<p class="text-sm font-bold text-red-300 font-mono">${data.statistics.highestPrice.toLocaleString()}</p>
-			</div>
-			<div class="panel-muted rounded-sm p-3">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Average</p>
-				<p class="text-sm font-bold text-[#f5efd8] font-mono">${data.statistics.currentAvgPrice.toLocaleString()}</p>
-			</div>
-			<div class="panel-muted rounded-sm p-3">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Active Listings</p>
-				<p class="text-sm font-bold text-[#f5efd8] font-mono">{data.statistics.activeListings}</p>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Trade -->
-	<div class="panel rounded-sm overflow-hidden">
-		<div class="flex border-b border-[#c8b47a]/15">
-			<button
-				class="flex-1 py-3 text-sm font-semibold uppercase tracking-wide transition-colors border-b-2 {activeTab ===
-				'buy'
-					? 'text-[#b9f29a] border-[#6fd14a]'
-					: 'text-[#a8a083] border-transparent hover:text-[#d3caa9]'}"
-				onclick={() => (activeTab = "buy")}
-			>
-				Buy
-			</button>
-			<button
-				class="flex-1 py-3 text-sm font-semibold uppercase tracking-wide transition-colors border-b-2 {activeTab ===
-				'sell'
-					? 'text-[#ffd35c] border-[#f2b01e]'
-					: 'text-[#a8a083] border-transparent hover:text-[#d3caa9]'}"
-				onclick={() => (activeTab = "sell")}
-			>
-				Sell
-			</button>
-		</div>
-
-		<div class="p-4 sm:p-5">
-			{#if activeTab === "buy"}
-				{#if data.otherListings.length === 0}
-					<div class="text-center py-8">
-						<FluentShoppingCart20Filled class="size-10 mx-auto opacity-30 mb-3 text-[#a8a083]" />
-						<p class="text-[#d3caa9] font-medium">No other sellers right now</p>
-						{#if !data.myListing && data.userItemQuantity > 0}
-							<p class="text-xs text-[#a8a083] mt-1">Be the first — list yours in the Sell tab.</p>
-						{/if}
-					</div>
-				{:else}
-					{@render offerRow(data.otherListings[0], true)}
-
-					{#if data.otherListings.length > 1}
-						<button
-							class="mt-3 text-xs text-[#a8a083] hover:text-[#ffcf47] underline underline-offset-2 transition-colors"
-							onclick={() => (showAllOffers = !showAllOffers)}
-						>
-							{showAllOffers ? "Hide" : "Show"}
-							{data.otherListings.length - 1} more offer{data.otherListings.length - 1 !== 1 ? "s" : ""}
-						</button>
-
-						{#if showAllOffers}
-							<div class="mt-2 space-y-2">
-								{#each data.otherListings.slice(1) as listing}
-									{@render offerRow(listing, false)}
-								{/each}
-							</div>
-						{/if}
-					{/if}
+	<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] items-start">
+		<!-- Order book -->
+		<section class="panel rounded-sm overflow-hidden">
+			<div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#c8b47a]/15">
+				<h2 class="section-title">Order book · Asks</h2>
+				{#if data.taxRate}
+					<span class="text-xs text-[#ffd35c]">+{data.taxRate}% tax</span>
 				{/if}
-			{:else if data.myListing && !isEditing}
-				{@const cmp = priceVsMarket(data.myListing.pricePerUnit)}
-				<div class="flex items-center justify-between mb-4">
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Your listing</p>
-					<div class="flex items-center gap-2">
-						<Button variant="secondary" size="xs" icon={FluentEdit20Filled} onclick={startEditing}>EDIT</Button>
-						<form method="POST" action="?/removeListing" use:enhance={withToast}>
+			</div>
+
+			{#if data.otherListings.length === 0}
+				<p class="px-4 py-8 text-center text-sm text-[#a8a083]">No asks on the board.</p>
+			{:else}
+				<ol class="divide-y divide-[#c8b47a]/10">
+					{#each visibleOffers as listing, i (listing.id)}
+						{@const isBest = i === 0}
+						{@const buyQty = buyQuantities[listing.id] || 1}
+						{@const itemCost = listing.pricePerUnit * buyQty}
+						{@const taxAmount = data.taxRate ? Math.floor((itemCost * data.taxRate) / 100) : 0}
+						<li
+							out:vanish
+							bind:this={rowEls[listing.id]}
+							class="animate-rise-in px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 {isBest
+								? 'bg-[#3f8a2a]/10'
+								: ''}"
+							style="--rise-delay: {Math.min(i, 8) * 40}ms"
+						>
+							<div class="flex items-center gap-3 min-w-0 flex-1">
+								<div class="w-24 shrink-0">
+									<p
+										class="font-mono text-lg font-bold tabular-nums leading-tight {isBest
+											? 'text-[#b9f29a]'
+											: 'text-[#f5efd8]'}"
+									>
+										${listing.pricePerUnit.toLocaleString()}
+									</p>
+									<p class="text-xs text-[#a8a083]">
+										<span class="font-mono">{listing.quantity.toLocaleString()}</span> units
+									</p>
+								</div>
+								<UserLink id={listing.sellerId} name={listing.sellerName} avatar={listing.sellerAvatar} size="sm" />
+								{#if isBest}
+									<Badge tone="green" size="xs" class="ml-auto sm:ml-0 shrink-0">Best</Badge>
+								{/if}
+							</div>
+
+							<div class="flex items-center gap-2">
+								<form
+									method="POST"
+									action="?/buyListing"
+									use:enhance={submitWith(() => rowEls[listing.id] ?? ticketEl)}
+									class="flex items-center gap-2 flex-1 sm:flex-none"
+								>
+									<input type="hidden" name="listingId" value={listing.id} />
+									<input
+										type="number"
+										name="quantity"
+										min="1"
+										max={listing.quantity}
+										value={buyQty}
+										aria-label="Units to buy"
+										class="field-control rounded-sm h-9 w-16 px-2 text-sm text-center font-mono"
+										oninput={(e) => {
+											buyQuantities[listing.id] = parseInt(e.currentTarget.value) || 1;
+										}}
+									/>
+									<span
+										class="flex-1 sm:w-24 text-right font-mono text-sm tabular-nums text-[#f5efd8]"
+										title={taxAmount ? `incl. $${taxAmount.toLocaleString()} tax` : undefined}
+									>
+										${(itemCost + taxAmount).toLocaleString()}
+									</span>
+									<Button type="submit" size="sm" variant={isBest ? "primary" : "secondary"}>Buy</Button>
+								</form>
+								{#if data.governmentState}
+									<form method="POST" action="?/buyListingAsState" use:enhance={submitWith(() => rowEls[listing.id])}>
+										<input type="hidden" name="listingId" value={listing.id} />
+										<input type="hidden" name="quantity" value={buyQty} />
+										<Button
+											type="submit"
+											size="sm"
+											variant="soft-amber"
+											icon={FluentBuildingGovernment20Filled}
+											title="Buy for {data.governmentState
+												.name} (treasury ${data.governmentState.treasuryBalance.toLocaleString()})"
+										>
+											<span class="sr-only sm:not-sr-only">State</span>
+										</Button>
+									</form>
+								{/if}
+							</div>
+						</li>
+					{/each}
+				</ol>
+				{#if data.otherListings.length > OFFERS_SHOWN}
+					<button
+						type="button"
+						class="tap-target w-full px-4 py-2.5 border-t border-[#c8b47a]/10 text-xs text-[#a8a083] hover:text-[#ffcf47] transition-colors"
+						onclick={() => (showAllOffers = !showAllOffers)}
+					>
+						{showAllOffers ? "Show fewer" : `Show ${data.otherListings.length - OFFERS_SHOWN} more asks`}
+					</button>
+				{/if}
+			{/if}
+		</section>
+
+		<!-- Your sell order ticket -->
+		<section bind:this={ticketEl} class="panel rounded-sm overflow-hidden">
+			<div
+				class="flex items-center justify-between gap-2 px-4 py-3 border-b border-dashed border-[#c8b47a]/30 bg-[#1a1f15]/60"
+			>
+				<h2 class="section-title">Sell order</h2>
+				{#if data.myListing}
+					<span class="font-mono text-xs text-[#a8a083]">No. {String(data.myListing.id).padStart(5, "0")}</span>
+				{/if}
+			</div>
+
+			<div class="p-4">
+				{#if data.myListing && !isEditing}
+					{@const cmp = priceVsMarket(data.myListing.pricePerUnit)}
+					<dl class="space-y-2 text-sm">
+						<div class="flex justify-between gap-3">
+							<dt class="text-[#a8a083]">Units</dt>
+							<dd class="font-mono text-[#f5efd8]">{data.myListing.quantity.toLocaleString()}</dd>
+						</div>
+						<div class="flex justify-between gap-3">
+							<dt class="text-[#a8a083]">Ask</dt>
+							<dd class="text-right">
+								<span class="font-mono font-bold text-[#ffd35c]">${data.myListing.pricePerUnit.toLocaleString()}</span>
+								{#if cmp}<span class="block text-xs {cmp.cls}">{cmp.label}</span>{/if}
+							</dd>
+						</div>
+						<div class="flex justify-between gap-3 pt-2 border-t border-[#c8b47a]/15">
+							<dt class="text-[#a8a083]">Value</dt>
+							<dd class="font-mono font-bold text-[#f5efd8]">
+								${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
+							</dd>
+						</div>
+					</dl>
+					<div class="mt-4 flex gap-2">
+						<Button variant="secondary" size="sm" grow icon={FluentEdit20Filled} onclick={startEditing}>Amend</Button>
+						<form
+							method="POST"
+							action="?/removeListing"
+							use:confirmSubmit={{
+								title: "Withdraw this order?",
+								body: "Units go back to your stock. You can't list again for an hour.",
+								confirmLabel: "Withdraw",
+								danger: true
+							}}
+							use:enhance={withToast}
+							class="flex-1 flex"
+						>
 							<input type="hidden" name="listingId" value={data.myListing.id} />
-							<Button type="submit" variant="soft-red" size="xs" icon={FluentDelete20Filled}>REMOVE</Button>
+							<Button type="submit" variant="soft-red" size="sm" grow icon={FluentDelete20Filled}>Withdraw</Button>
 						</form>
 					</div>
-				</div>
-				<div class="flex items-center gap-4 sm:gap-6">
-					<ResourceIcon name={data.itemName} class="size-10 sm:size-12" />
-					<div class="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-						<div>
-							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Quantity</p>
-							<p class="text-xl sm:text-2xl font-bold text-[#f5efd8] font-mono">{data.myListing.quantity}</p>
-							{#if data.userItemQuantity > 0}
-								<p class="text-xs text-[#a8a083] mt-0.5">+{data.userItemQuantity} in inventory</p>
-							{/if}
-						</div>
-						<div>
-							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Unit Price</p>
-							<p class="text-xl sm:text-2xl font-bold text-[#ffd35c] font-mono">
-								${data.myListing.pricePerUnit.toLocaleString()}
-							</p>
-							{#if cmp}
-								<p class="text-xs {cmp.cls} mt-0.5">{cmp.label}</p>
-							{/if}
-						</div>
-						<div>
-							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Total Value</p>
-							<p class="text-xl sm:text-2xl font-bold text-[#f5efd8] font-mono">
-								${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
-							</p>
-						</div>
-					</div>
-				</div>
-			{:else if data.myListing && isEditing}
-				{@const cmp = priceVsMarket(editPrice)}
-				<form
-					method="POST"
-					action="?/updateListing"
-					use:enhance={() =>
-						async ({ result, update }) => {
-							await update();
-							toastResult(result);
-							if (result.type === "success") isEditing = false;
-						}}
-					class="space-y-4"
-				>
-					<div class="flex items-center justify-between mb-1">
-						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Edit listing</p>
-						<Button type="button" variant="secondary" size="xs" icon={FluentDismiss20Filled} onclick={cancelEditing}>
-							CANCEL
-						</Button>
-					</div>
-					<input type="hidden" name="listingId" value={data.myListing.id} />
-					<div class="grid grid-cols-2 gap-4">
-						<div>
-							<label for="edit-qty" class="field-label">
-								Quantity <span class="text-xs font-normal text-[#a8a083]">max {totalAvailableForListing}</span>
-							</label>
-							<div class="join w-full">
-								<input
-									type="number"
-									id="edit-qty"
-									name="quantity"
-									min="1"
-									max={totalAvailableForListing}
-									bind:value={editQty}
-									class="field-control join-item rounded-sm h-8 flex-1 min-w-0 px-3 text-sm font-mono"
-								/>
-								<Button
-									type="button"
-									variant="secondary"
-									size="sm"
-									class="join-item"
-									onclick={() => (editQty = totalAvailableForListing)}>MAX</Button
-								>
-							</div>
-						</div>
-						<div>
-							<label for="edit-price" class="field-label">Price per unit</label>
-							<div class="join w-full">
-								<span
-									class="join-item h-8 px-3 flex items-center border border-[#c8b47a]/20 bg-[#242a1d] text-[#a8a083] text-sm font-mono rounded-sm"
-									>$</span
-								>
-								<input
-									type="number"
-									id="edit-price"
-									name="pricePerUnit"
-									min="1"
-									bind:value={editPrice}
-									class="field-control join-item rounded-sm h-8 flex-1 min-w-0 px-3 text-sm font-mono"
-								/>
-							</div>
-							{#if cmp}
-								<p class="text-xs {cmp.cls} mt-1.5">{cmp.label}</p>
-							{/if}
-						</div>
-					</div>
-					<div class="flex items-center justify-between pt-1">
-						<p class="text-sm text-[#a8a083]">
-							New total: <span class="text-[#f5efd8] font-bold font-mono"
-								>${(editQty * editPrice).toLocaleString()}</span
-							>
+				{:else if data.myListing && isEditing}
+					{@const cmp = priceVsMarket(editPrice)}
+					<form
+						method="POST"
+						action="?/updateListing"
+						use:enhance={submitWith(
+							() => ticketEl,
+							() => (isEditing = false)
+						)}
+						class="space-y-3"
+					>
+						<input type="hidden" name="listingId" value={data.myListing.id} />
+						{@render qtyPrice(
+							"edit-qty",
+							"edit-price",
+							totalAvailableForListing,
+							editQty,
+							(n) => (editQty = n),
+							editPrice,
+							(n) => (editPrice = n)
+						)}
+						{#if cmp}<p class="text-xs {cmp.cls}">{cmp.label}</p>{/if}
+						<p class="flex justify-between text-sm pt-2 border-t border-[#c8b47a]/15">
+							<span class="text-[#a8a083]">Value</span>
+							<span class="font-mono font-bold text-[#f5efd8]">${(editQty * editPrice).toLocaleString()}</span>
 						</p>
-						<Button type="submit" size="sm" icon={FluentCheckmark20Filled}>Save Changes</Button>
-					</div>
-				</form>
-			{:else if data.userItemQuantity > 0 && cooldownTimeRemaining <= 0}
-				{@const cmp = priceVsMarket(createPrice)}
-				<form method="POST" action="?/createListing" use:enhance={withToast} class="space-y-4">
-					<div class="flex items-center gap-2 text-[#d3caa9] mb-2">
-						<FluentAdd20Filled class="size-4 text-[#ffd35c]" />
-						<span class="text-sm">
-							List your {data.itemName} for sale —
-							<span class="text-[#e6ddbf] font-bold font-mono">{data.userItemQuantity}</span> in inventory
-						</span>
-					</div>
-					<div class="grid grid-cols-2 gap-3">
-						<div>
-							<label for="create-qty" class="field-label">
-								Quantity <span class="text-xs font-normal text-[#a8a083]">max {data.userItemQuantity}</span>
-							</label>
-							<div class="join w-full">
-								<input
-									type="number"
-									id="create-qty"
-									name="quantity"
-									min="1"
-									max={data.userItemQuantity}
-									bind:value={createQty}
-									class="field-control join-item rounded-sm h-8 flex-1 min-w-0 px-3 text-sm font-mono"
-								/>
-								<Button
-									type="button"
-									variant="secondary"
-									size="sm"
-									class="join-item"
-									onclick={() => (createQty = data.userItemQuantity)}>MAX</Button
-								>
-							</div>
-						</div>
-						<div>
-							<label for="create-price" class="field-label">Price per unit</label>
-							<div class="join w-full">
-								<span
-									class="join-item h-8 px-3 flex items-center border border-[#c8b47a]/20 bg-[#242a1d] text-[#a8a083] text-sm font-mono rounded-sm"
-									>$</span
-								>
-								<input
-									type="number"
-									id="create-price"
-									name="pricePerUnit"
-									min="1"
-									bind:value={createPrice}
-									class="field-control join-item rounded-sm h-8 flex-1 min-w-0 px-3 text-sm font-mono"
-								/>
-							</div>
-							{#if cmp}
-								<p class="text-xs {cmp.cls} mt-1.5">{cmp.label}</p>
-							{/if}
-						</div>
-					</div>
-					<div class="flex items-center justify-between pt-1">
-						<p class="text-sm text-[#a8a083]">
-							Total value: <span class="text-[#f5efd8] font-bold font-mono"
-								>${(createQty * createPrice).toLocaleString()}</span
+						<div class="flex gap-2">
+							<Button
+								type="button"
+								variant="secondary"
+								size="sm"
+								grow
+								icon={FluentDismiss20Filled}
+								onclick={() => (isEditing = false)}>Cancel</Button
 							>
+							<Button type="submit" size="sm" grow icon={FluentCheckmark20Filled}>Save</Button>
+						</div>
+					</form>
+				{:else if data.userItemQuantity > 0 && cooldownTimeRemaining <= 0}
+					{@const cmp = priceVsMarket(createPrice)}
+					<form method="POST" action="?/createListing" use:enhance={submitWith(() => ticketEl)} class="space-y-3">
+						{@render qtyPrice(
+							"create-qty",
+							"create-price",
+							data.userItemQuantity,
+							createQty,
+							(n) => (createQty = n),
+							createPrice,
+							(n) => (createPrice = n)
+						)}
+						{#if cmp}<p class="text-xs {cmp.cls}">{cmp.label}</p>{/if}
+						<p class="flex justify-between text-sm pt-2 border-t border-[#c8b47a]/15">
+							<span class="text-[#a8a083]">Value</span>
+							<span class="font-mono font-bold text-[#f5efd8]">${(createQty * createPrice).toLocaleString()}</span>
 						</p>
 						<Button
 							type="submit"
 							size="sm"
+							block
 							icon={FluentAdd20Filled}
 							disabled={createQty < 1 || createQty > data.userItemQuantity || createPrice < 1}
 						>
-							Create Listing
+							Post ask
 						</Button>
-					</div>
-				</form>
-			{:else if cooldownTimeRemaining > 0}
-				<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3">
-					<FluentWarning20Filled class="size-5 shrink-0" />
-					<div>
-						<p class="text-sm font-bold">Cooldown Active</p>
-						<p class="text-xs text-[#ffd35c]/70">
-							<span class="font-mono">{cooldownDisplay}</span> before you can list again
-						</p>
-					</div>
-				</div>
-			{:else}
-				<div class="text-center py-6">
-					<p class="text-sm text-[#a8a083]">No {data.itemName} in your inventory to sell.</p>
-				</div>
-			{/if}
-		</div>
+					</form>
+				{:else if cooldownTimeRemaining > 0}
+					<p class="flex items-center gap-2 text-sm text-[#ffd35c]">
+						<FluentClock20Filled class="size-4 shrink-0" />
+						Next order in <span class="font-mono">{cooldownDisplay}</span>
+					</p>
+				{:else}
+					<p class="text-sm text-[#a8a083]">No {data.itemName} in stock to sell.</p>
+				{/if}
+			</div>
+		</section>
 	</div>
 </PageContainer>

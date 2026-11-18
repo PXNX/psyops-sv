@@ -1,12 +1,13 @@
+<!-- src/routes/(authenticated)/(dock)/state/[id]/market/+page.svelte -->
+<!-- The government's procurement desk: a stockpile ledger and a purchase /
+     disposal order the president or economy minister signs. -->
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
-	import FluentCart20Filled from "~icons/fluent/cart-20-filled";
-	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import FluentBox20Filled from "~icons/fluent/box-20-filled";
-	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
-	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
+	import { celebrate } from "#lib/utils/celebrate.js";
+	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import FluentSignature20Filled from "~icons/fluent/signature-20-filled";
+	import FluentLockClosed20Filled from "~icons/fluent/lock-closed-20-filled";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
@@ -19,26 +20,27 @@
 	let tradeMode = $state<"buy" | "sell">("buy");
 	let selectedResource = $state<ResourceType>("iron");
 	let tradeQuantity = $state(1);
+	let orderEl = $state<HTMLElement>();
 
 	const allResources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
 
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
-
 	const availableQuantity = $derived(tradeMode === "sell" ? resourceMap.get(selectedResource) || 0 : Infinity);
-
 	const currentMarketPrice = $derived(data.marketPrices[selectedResource] || 1000);
 	// The market sells at its price and buys back for less.
 	const tradePrice = $derived(
 		tradeMode === "buy" ? currentMarketPrice : (data.sellPrices[selectedResource] ?? currentMarketPrice)
 	);
-
 	const totalCost = $derived(tradeQuantity * tradePrice);
 
-	const canTrade = $derived.by(() => {
-		if (!data.canTrade || tradeQuantity < 1) return false;
-		if (tradeMode === "buy") return data.treasury.balance >= totalCost;
-		return availableQuantity >= tradeQuantity;
+	const shortfall = $derived.by(() => {
+		if (tradeQuantity < 1) return "Enter a quantity";
+		if (tradeMode === "buy" && data.treasury.balance < totalCost)
+			return `Treasury short by ${formatCurrency(totalCost - data.treasury.balance)}`;
+		if (tradeMode === "sell" && availableQuantity < tradeQuantity) return `Only ${availableQuantity} in stock`;
+		return null;
 	});
+	const canTrade = $derived(data.canTrade && !shortfall);
 
 	function formatCurrency(amount: number): string {
 		return new Intl.NumberFormat("en-US", {
@@ -51,192 +53,133 @@
 </script>
 
 <svelte:head>
-	<title>{data.state.name} - Government Market</title>
+	<title>{data.state.name} - Procurement · PsyOps</title>
 </svelte:head>
 
-<PageContainer maxWidth="6xl">
-	<!-- Header -->
+<PageContainer maxWidth="5xl">
 	<PageHeader
 		documentTitle={false}
-		title="Government Market"
-		subtitle="Buy and sell resources on behalf of the state"
-		icon={FluentCart20Filled}
+		title="Procurement Office"
+		subtitle={data.state.name}
+		icon={FluentBuildingGovernment20Filled}
 		backHref="/state/{data.state.id}/economy"
-		backLabel="{data.state.name} — Economy"
+		backLabel="Economy"
 	/>
 
-	{#if !data.canTrade}
-		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5">
-			<div class="flex items-start gap-3">
-				<FluentWarning20Filled class="size-5 text-[#ffd35c] flex-shrink-0 mt-0.5" />
-				<div>
-					<h3 class="font-semibold text-[#ffd35c] mb-1">Access Restricted</h3>
-					<p class="text-sm text-[#ffe58f]/80">
-						Only the president or minister of economics can trade on behalf of the state.
-					</p>
+	<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] items-start">
+		<!-- Stockpile ledger -->
+		<section class="panel rounded-sm overflow-hidden">
+			<div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#c8b47a]/15">
+				<h2 class="section-title">State stockpile</h2>
+				<div class="text-right">
+					<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Treasury</p>
+					{#key data.treasury.balance}
+						<p class="animate-tick font-mono text-sm font-bold text-[#b9f29a] tabular-nums">
+							{formatCurrency(data.treasury.balance)}
+						</p>
+					{/key}
 				</div>
 			</div>
-		</div>
-	{/if}
-
-	<!-- Treasury Banner -->
-	<div class="bg-[#3f8a2a]/18 rounded-sm border border-[#6fd14a]/30 p-5">
-		<div class="flex items-center justify-between">
-			<div class="flex items-center gap-4">
-				<div class="size-12 bg-[#3f8a2a]/25 rounded-sm flex items-center justify-center">
-					<FluentMoney20Filled class="size-6 text-[#b9f29a]" />
-				</div>
-				<div>
-					<p class="text-[10px] text-[#b9f29a] uppercase tracking-wide">State Treasury</p>
-					<p class="text-2xl font-bold font-mono text-[#f5efd8]">{formatCurrency(data.treasury.balance)}</p>
-				</div>
+			<div
+				class="grid grid-cols-[minmax(0,1fr)_3.5rem_4.5rem_4.5rem] gap-2 px-4 py-1.5 text-[10px] uppercase tracking-wide text-[#a8a083] bg-[#1a1f15]/70"
+			>
+				<span>Item</span>
+				<span class="text-right">Held</span>
+				<span class="text-right">Buy</span>
+				<span class="text-right">Sell</span>
 			</div>
-		</div>
-	</div>
-
-	<div class="grid lg:grid-cols-3 gap-6">
-		<!-- Inventory Sidebar -->
-		<div class="space-y-4">
-			<div class="panel rounded-sm p-5 space-y-3">
-				<div class="flex items-center gap-2">
-					<FluentBox20Filled class="size-5 text-[#e3cbfb]" />
-					<h2 class="section-title">State Stockpile</h2>
-				</div>
-
-				<div class="space-y-2">
-					{#each allResources as resource}
-						{@const quantity = resourceMap.get(resource) || 0}
-						{@const isSelected = selectedResource === resource}
+			<ul class="divide-y divide-[#c8b47a]/10">
+				{#each allResources as resource}
+					{@const quantity = resourceMap.get(resource) || 0}
+					{@const isSelected = selectedResource === resource}
+					<li>
 						<button
 							type="button"
-							onclick={() => {
-								selectedResource = resource;
-							}}
-							class="w-full flex items-center justify-between p-3 rounded-sm border transition-all
-								{isSelected
-								? 'bg-[#8a4fc0]/20 border-[#c08cf0]/30 ring-1 ring-[#c08cf0]/20'
-								: 'bg-[#1a1f15]/70 border-[#c8b47a]/10 hover:bg-[#2e3524] hover:border-[#c8b47a]/20'}"
+							onclick={() => (selectedResource = resource)}
+							aria-pressed={isSelected}
+							class="tap-target w-full grid grid-cols-[minmax(0,1fr)_3.5rem_4.5rem_4.5rem] items-center gap-2 px-4 py-2.5 text-left transition-colors border-l-2 {isSelected
+								? 'bg-[#f2b01e]/12 border-[#f2b01e]'
+								: 'border-transparent hover:bg-[#2e3524]'}"
 						>
-							<div class="flex items-center gap-3">
-								<ResourceIcon name={resource} class="size-5" />
-								<span class="font-medium capitalize {isSelected ? 'text-[#e3cbfb]' : 'text-[#d3caa9]'}">{resource}</span
+							<span class="flex items-center gap-2 min-w-0">
+								<ResourceIcon name={resource} class="size-5 shrink-0" />
+								<span
+									class="capitalize truncate text-sm {isSelected ? 'text-[#ffd35c] font-semibold' : 'text-[#d3caa9]'}"
+									>{resource}</span
 								>
-							</div>
+							</span>
 							<span
-								class="text-sm font-bold tabular-nums {quantity > 0
-									? isSelected
-										? 'text-[#e3cbfb]'
-										: 'text-[#e6ddbf]'
-									: 'text-[#a8a083]'}"
+								class="text-right font-mono text-sm tabular-nums {quantity > 0
+									? 'text-[#f5efd8]'
+									: 'text-[#a8a083]/60'}">{quantity.toLocaleString()}</span
 							>
-								{quantity}
-							</span>
-						</button>
-					{/each}
-				</div>
-			</div>
-
-			<!-- Market Prices -->
-			<div class="panel rounded-sm p-5 space-y-3">
-				<div class="flex items-center gap-2">
-					<FluentInfo20Filled class="size-5 text-[#b3dcff]" />
-					<h2 class="section-title">Market Prices</h2>
-				</div>
-
-				<div class="space-y-1.5">
-					{#each allResources as resource}
-						<div class="flex items-center justify-between text-sm py-1">
-							<span class="flex items-center gap-2 text-[#d3caa9]">
-								<ResourceIcon name={resource} class="size-4" />
-								<span class="capitalize">{resource}</span>
-							</span>
-							<span class="font-medium font-mono text-[#d3caa9] tabular-nums"
+							<span class="text-right font-mono text-xs tabular-nums text-[#d3caa9]"
 								>{formatCurrency(data.marketPrices[resource] || 0)}</span
 							>
-						</div>
-					{/each}
-				</div>
+							<span class="text-right font-mono text-xs tabular-nums text-[#a8a083]"
+								>{formatCurrency(data.sellPrices[resource] ?? 0)}</span
+							>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		</section>
+
+		<!-- Order form -->
+		<form
+			bind:this={orderEl}
+			method="POST"
+			action="?/{tradeMode === 'buy' ? 'buyResource' : 'sellResource'}"
+			use:enhance={() =>
+				async ({ result, update }) => {
+					await update({ reset: false });
+					toastResult(result);
+					if (result.type === "success") celebrate(orderEl);
+				}}
+			class="panel rounded-sm overflow-hidden"
+		>
+			<input type="hidden" name="resourceName" value={selectedResource} />
+
+			<div class="grid grid-cols-2 border-b border-[#c8b47a]/15" role="tablist">
+				{#each [{ mode: "buy", label: "Purchase order" }, { mode: "sell", label: "Disposal order" }] as tab}
+					{@const active = tradeMode === tab.mode}
+					<button
+						type="button"
+						role="tab"
+						aria-selected={active}
+						disabled={!data.canTrade}
+						onclick={() => (tradeMode = tab.mode as "buy" | "sell")}
+						class="tap-target py-3 text-xs font-semibold uppercase tracking-wide border-b-2 transition-colors disabled:opacity-50 {active
+							? tab.mode === 'buy'
+								? 'text-[#b9f29a] border-[#6fd14a]'
+								: 'text-[#b3dcff] border-[#5eaef5]'
+							: 'text-[#a8a083] border-transparent hover:text-[#d3caa9]'}"
+					>
+						{tab.label}
+					</button>
+				{/each}
 			</div>
-		</div>
 
-		<!-- Trading Area -->
-		<div class="lg:col-span-2">
-			<form
-				method="POST"
-				action="?/{tradeMode === 'buy' ? 'buyResource' : 'sellResource'}"
-				use:enhance={() =>
-					async ({ result, update }) => {
-						await update({ reset: false });
-						toastResult(result);
-					}}
-				class="panel rounded-sm p-5 space-y-6"
-			>
-				<!-- Trade Mode -->
-				<div class="flex items-center justify-between gap-3 flex-wrap">
-					<h2 class="section-title">
-						<FluentCart20Filled class="size-5 text-[#f2b01e]" />
-						Trade Resources
-					</h2>
-					<div class="join">
-						<Button
-							type="button"
-							variant={tradeMode === "buy" ? "soft-emerald" : "subtle"}
-							size="sm"
-							class="join-item"
-							onclick={() => {
-								tradeMode = "buy";
-							}}
-							disabled={!data.canTrade}
-						>
-							Buy
-						</Button>
-						<Button
-							type="button"
-							variant={tradeMode === "sell" ? "soft-blue" : "subtle"}
-							size="sm"
-							class="join-item"
-							onclick={() => {
-								tradeMode = "sell";
-							}}
-							disabled={!data.canTrade}
-						>
-							Sell
-						</Button>
+			<div class="p-4 sm:p-5 space-y-4">
+				<div class="flex items-center gap-3">
+					{#key selectedResource}
+						<div class="size-12 shrink-0 panel-muted rounded-sm flex items-center justify-center animate-pop-in">
+							<ResourceIcon name={selectedResource} class="size-7" />
+						</div>
+					{/key}
+					<div class="min-w-0">
+						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">
+							{tradeMode === "buy" ? "Requisition of" : "Release of"}
+						</p>
+						<p class="font-serif text-xl font-bold capitalize text-[#f5efd8]">{selectedResource}</p>
 					</div>
 				</div>
 
-				<input type="hidden" name="resourceName" value={selectedResource} />
-
-				<!-- Selected Resource Display -->
-				<div class="panel-muted rounded-sm p-5">
-					<div class="flex items-center gap-4">
-						<div class="size-14 bg-[#242a1d] rounded-sm flex items-center justify-center">
-							<ResourceIcon name={selectedResource} class="size-8" />
-						</div>
-						<div class="flex-1">
-							<h3 class="text-xl font-bold text-[#f5efd8] capitalize">{selectedResource}</h3>
-							<div class="flex items-center gap-x-4 gap-y-1 flex-wrap mt-1">
-								<span class="text-sm text-[#a8a083]">
-									In stock: <span class="font-semibold text-[#e6ddbf]">{resourceMap.get(selectedResource) || 0}</span>
-								</span>
-								<span class="text-sm text-[#a8a083]">
-									Market price: <span class="font-semibold font-mono text-[#e6ddbf]"
-										>{formatCurrency(currentMarketPrice)}</span
-									>
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-
-				<!-- Quantity & Price -->
-				<div class="grid sm:grid-cols-2 gap-4">
-					<div class="space-y-2">
+				<div class="grid grid-cols-2 gap-3">
+					<div class="min-w-0">
 						<label for="quantity" class="field-label">
-							Quantity
-							{#if tradeMode === "sell"}
-								<span class="text-[#a8a083] text-xs ml-1">(max {availableQuantity})</span>
-							{/if}
+							Units
+							{#if tradeMode === "sell"}<span class="font-normal text-[#a8a083]">max {availableQuantity}</span>{/if}
 						</label>
 						<div class="join w-full">
 							<input
@@ -254,9 +197,7 @@
 									type="button"
 									variant="secondary"
 									class="join-item text-xs"
-									onclick={() => {
-										tradeQuantity = availableQuantity;
-									}}
+									onclick={() => (tradeQuantity = availableQuantity)}
 									disabled={!data.canTrade}
 								>
 									Max
@@ -264,78 +205,47 @@
 							{/if}
 						</div>
 					</div>
-
-					<div class="space-y-2">
-						<p class="field-label">{tradeMode === "buy" ? "Market sells at" : "Market buys at"}</p>
-						<p class="field-control rounded-sm px-3 py-2.5 font-mono text-[#f5efd8]">
-							{formatCurrency(tradePrice)} <span class="text-xs text-[#a8a083]">per unit</span>
+					<div class="min-w-0">
+						<p class="field-label">Unit price</p>
+						<p class="field-control rounded-sm px-3 py-2.5 font-mono text-[#f5efd8] truncate">
+							{formatCurrency(tradePrice)}
 						</p>
+						{#if tradeMode === "sell"}<p class="field-hint">70% of market</p>{/if}
 					</div>
 				</div>
 
-				<!-- Order Summary -->
-				<div class="panel-muted rounded-sm p-5 space-y-3">
-					<h4 class="text-[10px] text-[#a8a083] uppercase tracking-wide">Order Summary</h4>
-
-					<div class="space-y-2">
-						<div class="flex justify-between text-sm">
-							<span class="text-[#a8a083]">Resource</span>
-							<span class="font-medium text-[#f5efd8] flex items-center gap-1.5">
-								<ResourceIcon name={selectedResource} class="size-3.5" />
-								<span class="capitalize">{selectedResource}</span>
-							</span>
-						</div>
-						<div class="flex justify-between text-sm">
-							<span class="text-[#a8a083]">{tradeQuantity} × {formatCurrency(tradePrice)}</span>
-							<span class="font-medium font-mono text-[#f5efd8]">{formatCurrency(totalCost)}</span>
-						</div>
+				<dl class="panel-muted rounded-sm p-3 text-sm space-y-1.5">
+					<div class="flex justify-between gap-3">
+						<dt class="text-[#a8a083]">{tradeQuantity || 0} × {formatCurrency(tradePrice)}</dt>
+						<dd class="font-mono text-[#d3caa9]">{formatCurrency(totalCost)}</dd>
 					</div>
-
-					<div class="border-t border-[#c8b47a]/15 pt-3">
-						<div class="flex justify-between items-center">
-							<span class="font-semibold text-[#d3caa9]">Total {tradeMode === "buy" ? "Cost" : "Revenue"}</span>
-							<span class="text-2xl font-bold font-mono {tradeMode === 'buy' ? 'text-red-300' : 'text-[#b9f29a]'}">
-								{tradeMode === "buy" ? "-" : "+"}{formatCurrency(totalCost)}
-							</span>
-						</div>
+					<div class="flex justify-between items-baseline gap-3 pt-1.5 border-t border-[#c8b47a]/15">
+						<dt class="font-semibold text-[#d3caa9]">
+							{tradeMode === "buy" ? "Charged to treasury" : "Paid to treasury"}
+						</dt>
+						<dd class="font-mono text-xl font-bold {tradeMode === 'buy' ? 'text-red-300' : 'text-[#b9f29a]'}">
+							{tradeMode === "buy" ? "−" : "+"}{formatCurrency(totalCost)}
+						</dd>
 					</div>
+				</dl>
 
-					{#if tradeMode === "buy" && data.treasury.balance < totalCost}
-						<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 flex items-center gap-2">
-							<FluentWarning20Filled class="size-4 text-red-400 flex-shrink-0" />
-							<p class="text-xs text-red-300">
-								Insufficient funds — need {formatCurrency(totalCost - data.treasury.balance)} more
-							</p>
-						</div>
-					{/if}
-
-					{#if tradeMode === "sell" && availableQuantity < tradeQuantity}
-						<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 flex items-center gap-2">
-							<FluentWarning20Filled class="size-4 text-red-400 flex-shrink-0" />
-							<p class="text-xs text-red-300">
-								Only {availableQuantity} units available to sell
-							</p>
-						</div>
+				<div class="pt-1">
+					<Button
+						type="submit"
+						variant="primary"
+						block
+						disabled={!canTrade}
+						icon={data.canTrade ? FluentSignature20Filled : FluentLockClosed20Filled}
+					>
+						{data.canTrade ? "Sign order" : "Signature required"}
+					</Button>
+					{#if !data.canTrade}
+						<p class="field-hint mt-1.5 text-center">Only the president or economy minister can sign.</p>
+					{:else if shortfall}
+						<p class="field-error mt-1.5 text-center">{shortfall}</p>
 					{/if}
 				</div>
-
-				<!-- Submit -->
-				<Button type="submit" variant="primary" block disabled={!canTrade}>
-					{#if canTrade}
-						<FluentCheckmark20Filled class="size-5" />
-						{tradeMode === "buy" ? "Buy" : "Sell"}
-						{tradeQuantity}
-						{selectedResource}
-						for {formatCurrency(totalCost)}
-					{:else if !data.canTrade}
-						<FluentWarning20Filled class="size-5" />
-						Access Denied
-					{:else}
-						<FluentWarning20Filled class="size-5" />
-						{tradeMode === "buy" ? "Insufficient Funds" : "Insufficient Stock"}
-					{/if}
-				</Button>
-			</form>
-		</div>
+			</div>
+		</form>
 	</div>
 </PageContainer>

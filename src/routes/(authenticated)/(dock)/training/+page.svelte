@@ -1,45 +1,59 @@
 <!-- /src/routes/(authenticated)/(dock)/training/+page.svelte -->
+<!-- The barracks: the roster of serving units (service records), the
+     recruitment office to enlist new ones, and the drill yard queue. -->
 <script lang="ts">
+	import { vanish } from "#lib/utils/motion.js";
 	import { enhance } from "$app/forms";
+	import type { SubmitFunction } from "$app/forms";
 	import type { PageData } from "./$types";
 	import FluentTarget from "~icons/fluent/target-24-regular";
 	import IconAdd from "~icons/fluent/add-24-filled";
 	import IconDelete from "~icons/fluent/delete-24-filled";
 	import IconCheckmark from "~icons/fluent/checkmark-24-filled";
 	import IconClock from "~icons/fluent/clock-24-filled";
-	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import * as m from "#lib/paraglide/messages.js";
 	import { getExperienceLevel } from "#lib/config/index.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
 
-	import Modal from "#lib/component/Modal.svelte";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
-	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
 	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 
 	let { data }: { data: PageData } = $props();
 
+	// Unit type names are paraglide messages keyed by the unit type.
+	const unitLabel = (unitType: string) => (m as unknown as Record<string, () => string>)[unitType]?.() ?? unitType;
+
 	let isSubmitting = $state(false);
-	let showTrainingAnim = $state(false);
 	let selectedTemplate = $state<any>(null);
-	let disbandModalOpen = $state(false);
-	let unitToDisband = $state<any>(null);
+	let now = $state(Date.now());
+	let yard = $state<HTMLElement>();
+	let roster = $state<HTMLElement>();
+
+	$effect(() => {
+		const t = setInterval(() => (now = Date.now()), 30000);
+		return () => clearInterval(t);
+	});
 
 	const trainingDisabled = $derived(data.isIndependentRegion || data.isTraveling);
 	const trainingDisabledReason = $derived(
 		data.isIndependentRegion
-			? "You live in an independent region. Join or create a state through a political party before training military units."
+			? "Independent region — join a state to recruit."
 			: data.isTraveling
-				? "You cannot train units while traveling."
+				? "No recruiting while travelling."
 				: ""
 	);
 
-	function confirmDisband(unit: any) {
-		unitToDisband = unit;
-		disbandModalOpen = true;
-	}
+	// Olive-ink tint for the unit silhouettes; gold when picked.
+	const INK =
+		"[filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]";
+	const INK_GOLD =
+		"[filter:brightness(0)_saturate(100%)_invert(76%)_sepia(58%)_saturate(640%)_hue-rotate(352deg)_brightness(96%)_contrast(92%)]";
 
 	function getUnitIconPath(unitType: string): string {
 		return `/units/${unitType}.svg`;
@@ -47,7 +61,6 @@
 
 	function canAfford(template: any): boolean {
 		if (!template || !data.inventory) return false;
-
 		return (
 			data.inventory.currency >= template.currencyCost &&
 			(data.inventory.resources.iron || 0) >= template.ironCost &&
@@ -61,10 +74,8 @@
 		);
 	}
 
-	// Build costs and available objects for ResourceRequirements component
 	function getTemplateCosts(template: any): Record<string, number> {
 		const costs: Record<string, number> = {};
-
 		if (template.currencyCost > 0) costs.currency = template.currencyCost;
 		if (template.ironCost > 0) costs.iron = template.ironCost;
 		if (template.steelCost > 0) costs.steel = template.steelCost;
@@ -74,7 +85,6 @@
 		if (template.artilleryCost > 0) costs.artillery = template.artilleryCost;
 		if (template.vehiclesCost > 0) costs.vehicles = template.vehiclesCost;
 		if (template.explosivesCost > 0) costs.explosives = template.explosivesCost;
-
 		return costs;
 	}
 
@@ -92,229 +102,180 @@
 		};
 	}
 
-	function calculateOrgaRecoveryTime(organization: number): string {
-		if (organization >= 100) return "Full";
-		const hoursToFull = Math.ceil((100 - organization) / 5);
-		return `${hoursToFull}h`;
+	function progressBetween(start: Date | string | null, end: Date | string | null): number {
+		if (!start || !end) return 0;
+		const s = new Date(start).getTime();
+		const e = new Date(end).getTime();
+		return Math.min(100, Math.max(0, ((now - s) / (e - s)) * 100));
 	}
 
-	function getExerciseProgress(unit: any): number {
-		if (!unit.isExercising || !unit.exerciseStartedAt || !unit.exerciseCompletesAt) return 0;
-		const now = new Date().getTime();
-		const start = new Date(unit.exerciseStartedAt).getTime();
-		const end = new Date(unit.exerciseCompletesAt).getTime();
-		const total = end - start;
-		const elapsed = now - start;
-		return Math.min(100, Math.max(0, (elapsed / total) * 100));
-	}
-
-	function getExerciseTimeRemaining(unit: any): string {
-		if (!unit.isExercising || !unit.exerciseCompletesAt) return "";
-		const now = new Date().getTime();
-		const end = new Date(unit.exerciseCompletesAt).getTime();
-		const diff = end - now;
-
-		if (diff <= 0) return "Ready!";
-
-		const hours = Math.floor(diff / (1000 * 60 * 60));
-		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-		if (hours > 0) {
-			return `${hours}h ${minutes}m`;
-		}
-		return `${minutes}m`;
+	function timeLeft(end: Date | string | null): string {
+		if (!end) return "";
+		const diff = new Date(end).getTime() - now;
+		if (diff <= 0) return "Ready";
+		const hours = Math.floor(diff / 3600000);
+		const minutes = Math.floor((diff % 3600000) / 60000);
+		return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 	}
 
 	const activeUnits = $derived(data.units.filter((u) => !u.isTraining));
-
-	// Sort training units by creation date to establish queue order
 	const trainingUnits = $derived(
 		data.units
 			.filter((u) => u.isTraining)
 			.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 	);
-
-	// Only the first unit in queue is actively training
+	// Only the first unit in the queue is actually drilling.
 	const activeTrainingUnit = $derived(trainingUnits[0]);
 	const queuedUnits = $derived(trainingUnits.slice(1));
 
-	function getTrainingProgress(unit: any): number {
-		if (!unit.isTraining || !unit.trainingStartedAt || !unit.trainingCompletesAt) return 100;
-		// Only show progress for the active training unit
-		if (unit.id !== activeTrainingUnit?.id) return 0;
-
-		const now = new Date().getTime();
-		const start = new Date(unit.trainingStartedAt).getTime();
-		const end = new Date(unit.trainingCompletesAt).getTime();
-		const total = end - start;
-		const elapsed = now - start;
-		return Math.min(100, Math.max(0, (elapsed / total) * 100));
+	// Shared enhance: busy flag, toast on failure, a quiet glow on success.
+	function submit(target: () => HTMLElement | undefined, after?: () => void): SubmitFunction {
+		return () => {
+			isSubmitting = true;
+			return async ({ update, result }) => {
+				await update();
+				isSubmitting = false;
+				after?.();
+				if (result.type === "success") celebrate(target());
+				else toastResult(result);
+			};
+		};
 	}
 
-	function getTrainingTimeRemaining(unit: any): string {
-		if (!unit.isTraining || !unit.trainingCompletesAt) return "";
-		const now = new Date().getTime();
-		const end = new Date(unit.trainingCompletesAt).getTime();
-		const diff = end - now;
-
-		if (diff <= 0) return "Ready!";
-
-		const hours = Math.floor(diff / (1000 * 60 * 60));
-		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-		if (hours > 0) {
-			return `${hours}h ${minutes}m`;
-		}
-		return `${minutes}m`;
-	}
+	const bars = [
+		{ key: "organization", label: "ORG", color: "#5eaef5" },
+		{ key: "health", label: "STR", color: "#6fd14a" },
+		{ key: "supplyLevel", label: "SUP", color: "#f2b01e" }
+	] as const;
 </script>
 
 <PageContainer maxWidth="6xl">
-	<PageHeader title="Training" subtitle="Train, exercise and manage your military units" icon={FluentTarget} />
+	<PageHeader title="Barracks" documentTitle="Training" icon={FluentTarget} />
 
 	{#if trainingDisabled}
-		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3">
-			<p class="text-sm font-medium">{trainingDisabledReason}</p>
-		</div>
+		<p
+			class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm px-4 py-3 text-sm flex items-center gap-2"
+		>
+			<FluentWarning20Filled class="size-4 shrink-0" />
+			{trainingDisabledReason}
+		</p>
 	{/if}
 
 	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-		<!-- Active Units - Main Focus -->
-		<div class="lg:col-span-2 space-y-4">
-			<div class="flex items-center gap-3">
-				<span class="h-6 w-1 rounded-full bg-[#6fd14a]"></span>
-				<h2 class="section-title">Active Units</h2>
-				{#if activeUnits.length > 0}
-					<Badge tone="green" class="ml-auto">{activeUnits.length}</Badge>
-				{/if}
-			</div>
-			{#each activeUnits as unit}
-				<div class="panel rounded-sm overflow-hidden">
-					<div class="p-5">
-						<div class="flex items-center gap-4 mb-4">
-							<div class="size-12 shrink-0 flex items-center justify-center">
+		<div class="lg:col-span-2 space-y-6">
+			<!-- Roster -->
+			<section bind:this={roster} class="space-y-3">
+				<div class="flex items-center justify-between">
+					<h2 class="section-title">Roster</h2>
+					{#if activeUnits.length > 0}
+						<Badge tone="green">{activeUnits.length} in service</Badge>
+					{/if}
+				</div>
+
+				{#each activeUnits as unit, i (unit.id)}
+					{@const tpl = data.templates[unit.unitType]}
+					{@const level = getExperienceLevel(unit.experience ?? 0)}
+					<article
+						out:vanish
+						class="panel rounded-sm p-4 sm:p-5 animate-rise-in"
+						style="--rise-delay: {Math.min(i, 6) * 40}ms"
+					>
+						<!-- Service record header -->
+						<div class="flex items-start gap-3">
+							<div class="size-12 shrink-0 panel-muted rounded-sm p-1.5">
 								<img
 									loading="lazy"
 									decoding="async"
 									src={getUnitIconPath(unit.unitType)}
-									alt={unit.unitType}
-									class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
+									alt=""
+									class="size-full object-contain opacity-90 {INK}"
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="font-bold text-[#f5efd8] text-base mb-0.5">{unit.name}</h3>
-								<div class="flex items-center gap-3 mt-2">
-									<div class="bg-red-600/10 border border-red-500/30 rounded-sm px-2.5 py-1">
-										<span class="text-xs text-red-300 font-medium">ATK</span>
-										<span class="text-base font-semibold text-[#f5efd8] ml-1.5"
-											>{data.templates[unit.unitType].baseAttack}</span
-										>
-									</div>
-									<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm px-2.5 py-1">
-										<span class="text-xs text-[#b3dcff] font-medium">DEF</span>
-										<span class="text-base font-semibold text-[#f5efd8] ml-1.5"
-											>{data.templates[unit.unitType].baseDefense}</span
-										>
-									</div>
+								<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083] font-mono">
+									No. {String(unit.id).padStart(4, "0")} · {unitLabel(unit.unitType)}
+								</p>
+								<h3 class="font-bold text-[#f5efd8] truncate">{unit.name}</h3>
+								<div class="mt-1 flex flex-wrap items-center gap-1.5">
+									<Badge tone="red" size="xs">ATK {tpl.baseAttack}</Badge>
+									<Badge tone="blue" size="xs">DEF {tpl.baseDefense}</Badge>
+									<Badge tone="purple" size="xs">{level.label}</Badge>
 								</div>
 							</div>
-							<IconButton
-								icon={IconDelete}
-								label="Disband Unit"
-								variant="ghost"
-								size="sm"
-								shape="square"
-								onclick={() => confirmDisband(unit)}
-								class="text-[#a8a083] hover:text-red-400 hover:bg-red-500/10 shrink-0"
-							/>
+							<form
+								method="POST"
+								action="?/disbandUnit"
+								use:confirmSubmit={{
+									title: `Disband ${unit.name}?`,
+									body: "No refund.",
+									confirmLabel: "Disband",
+									danger: true
+								}}
+								use:enhance={() =>
+									async ({ update, result }) => {
+										await update();
+										toastResult(result);
+									}}
+							>
+								<input type="hidden" name="unitId" value={unit.id} />
+								<IconButton
+									type="submit"
+									icon={IconDelete}
+									label="Disband unit"
+									variant="ghost"
+									size="sm"
+									shape="square"
+									class="text-[#a8a083] hover:text-red-400 hover:bg-red-500/10"
+								/>
+							</form>
 						</div>
 
-						<!-- Experience -->
-						<div class="mb-3">
-							<div class="flex items-center justify-between text-xs mb-1.5">
-								<span class="text-[#a8a083] font-medium"
-									>EXP · <span class="text-[#e3cbfb]">{getExperienceLevel(unit.experience ?? 0).label}</span></span
-								>
-								<span class="font-semibold text-[#d3caa9]">{unit.experience ?? 0}%</span>
+						<!-- Condition -->
+						<div class="mt-4">
+							<div class="flex items-center justify-between text-xs mb-1">
+								<span class="text-[#a8a083]">EXP</span>
+								<span class="font-mono text-[#d3caa9]">{unit.experience ?? 0}%</span>
 							</div>
-							<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
+							<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
 								<div
-									class="h-1.5 rounded-full transition-all duration-500"
-									style="width: {unit.experience ?? 0}%; background: #c08cf0"
+									class="h-full rounded-full bg-[#c08cf0] transition-all duration-500"
+									style="width: {unit.experience ?? 0}%"
 								></div>
 							</div>
 						</div>
-
-						<!-- Compact Status Bars -->
-						<div class="grid grid-cols-3 gap-3">
-							<div>
-								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-[#a8a083] font-medium">ORG</span>
-									<span class="font-semibold text-[#d3caa9]">{unit.organization}%</span>
+						<div class="mt-2 grid grid-cols-3 gap-3">
+							{#each bars as bar}
+								<div>
+									<div class="flex items-center justify-between text-xs mb-1">
+										<span class="text-[#a8a083]">{bar.label}</span>
+										<span class="font-mono text-[#d3caa9]">{unit[bar.key]}%</span>
+									</div>
+									<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
+										<div
+											class="h-full rounded-full transition-all duration-500"
+											style="width: {unit[bar.key]}%; background: {bar.color}"
+										></div>
+									</div>
 								</div>
-								<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
-									<div
-										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.organization}%; background: #5eaef5"
-									></div>
-								</div>
-							</div>
-
-							<div>
-								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-[#a8a083] font-medium">STR</span>
-									<span class="font-semibold text-[#d3caa9]">{unit.health}%</span>
-								</div>
-								<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
-									<div
-										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.health}%; background: #6fd14a"
-									></div>
-								</div>
-							</div>
-
-							<div>
-								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-[#a8a083] font-medium">SUP</span>
-									<span class="font-semibold text-[#d3caa9]">{unit.supplyLevel}%</span>
-								</div>
-								<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
-									<div
-										class="h-1.5 rounded-full transition-all duration-500"
-										style="width: {unit.supplyLevel}%; background: #f2b01e"
-									></div>
-								</div>
-							</div>
+							{/each}
 						</div>
 
 						<!-- Exercise -->
-						{#if unit.isExercising}
-							{@const exProgress = getExerciseProgress(unit)}
-							{@const exRemaining = getExerciseTimeRemaining(unit)}
-							{@const exComplete = unit.exerciseCompletesAt && new Date(unit.exerciseCompletesAt) <= new Date()}
-							<div class="mt-4 pt-4 border-t border-[#c8b47a]/10">
-								<div class="flex items-center justify-between text-xs mb-1.5">
-									<span class="text-[#e3cbfb] font-medium">On exercise</span>
-									<span class="text-[#a8a083] font-mono">{exRemaining}</span>
+						<div class="mt-4 pt-3 border-t border-dashed border-[#c8b47a]/20">
+							{#if unit.isExercising}
+								{@const exComplete = unit.exerciseCompletesAt && new Date(unit.exerciseCompletesAt).getTime() <= now}
+								<div class="flex items-center justify-between text-xs mb-1">
+									<span class="text-[#e3cbfb]">On exercise</span>
+									<span class="text-[#a8a083] font-mono">{timeLeft(unit.exerciseCompletesAt)}</span>
 								</div>
-								<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10 mb-3">
+								<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10 mb-3">
 									<div
-										class="h-1.5 rounded-full transition-all duration-700"
-										style="width: {exProgress}%; background: #c08cf0"
+										class="h-full rounded-full bg-[#c08cf0] transition-all duration-700"
+										style="width: {progressBetween(unit.exerciseStartedAt, unit.exerciseCompletesAt)}%"
 									></div>
 								</div>
 								{#if exComplete}
-									<form
-										method="POST"
-										action="?/completeExercise"
-										use:enhance={() => {
-											isSubmitting = true;
-											return async ({ update }) => {
-												await update();
-												isSubmitting = false;
-											};
-										}}
-									>
+									<form method="POST" action="?/completeExercise" use:enhance={submit(() => roster)}>
 										<input type="hidden" name="unitId" value={unit.id} />
 										<Button
 											type="submit"
@@ -328,17 +289,7 @@
 										</Button>
 									</form>
 								{:else}
-									<form
-										method="POST"
-										action="?/cancelExercise"
-										use:enhance={() => {
-											isSubmitting = true;
-											return async ({ update }) => {
-												await update();
-												isSubmitting = false;
-											};
-										}}
-									>
+									<form method="POST" action="?/cancelExercise" use:enhance={submit(() => undefined)}>
 										<input type="hidden" name="unitId" value={unit.id} />
 										<Button
 											type="submit"
@@ -352,20 +303,9 @@
 										</Button>
 									</form>
 								{/if}
-							</div>
-						{:else}
-							<div class="mt-4 pt-4 border-t border-[#c8b47a]/10">
-								<form
-									method="POST"
-									action="?/startExercise"
-									use:enhance={() => {
-										isSubmitting = true;
-										return async ({ update }) => {
-											await update();
-											isSubmitting = false;
-										};
-									}}
-								>
+							{:else}
+								{@const lowOrg = unit.organization < data.exerciseConfig.MIN_ORG_TO_START}
+								<form method="POST" action="?/startExercise" use:enhance={submit(() => undefined)}>
 									<input type="hidden" name="unitId" value={unit.id} />
 									<Button
 										type="submit"
@@ -373,310 +313,183 @@
 										size="sm"
 										block
 										icon={IconClock}
-										disabled={isSubmitting ||
-											trainingDisabled ||
-											unit.organization < data.exerciseConfig.MIN_ORG_TO_START}
-										title={unit.organization < data.exerciseConfig.MIN_ORG_TO_START
-											? `Needs ${data.exerciseConfig.MIN_ORG_TO_START}% organization to exercise`
-											: "Gain experience in exchange for organization, supply and equipment"}
+										disabled={isSubmitting || trainingDisabled || lowOrg}
 									>
-										Send to exercise ({data.exerciseConfig.DURATION_HOURS}h)
+										Exercise ({data.exerciseConfig.DURATION_HOURS}h)
 									</Button>
 								</form>
-								<p class="mt-2 text-[11px] leading-snug text-[#a8a083]">
-									+{data.exerciseConfig.EXPERIENCE_GAIN} XP · −{data.exerciseConfig.ORG_COST} org · −{data
-										.exerciseConfig.SUPPLY_COST} supply · equipment replaced
+								<p class="mt-1.5 text-[11px] leading-snug text-[#a8a083]">
+									{#if lowOrg}
+										Needs {data.exerciseConfig.MIN_ORG_TO_START}% ORG
+									{:else}
+										+{data.exerciseConfig.EXPERIENCE_GAIN} XP · −{data.exerciseConfig.ORG_COST} ORG · −{data
+											.exerciseConfig.SUPPLY_COST} SUP · equipment worn
+									{/if}
 								</p>
-							</div>
-						{/if}
-					</div>
-				</div>
-			{/each}
+							{/if}
+						</div>
+					</article>
+				{/each}
 
-			{#if activeUnits.length === 0}
-				<EmptyState icon={FluentTarget} title="No active units" subtitle="Train your first unit to begin" />
-			{/if}
+				{#if activeUnits.length === 0}
+					<EmptyState icon={FluentTarget} title="No units in service" />
+				{/if}
+			</section>
 
-			<!-- Unit Templates -->
-			<div class="mt-8">
-				<div class="flex items-center gap-3 mb-4">
-					<span class="h-6 w-1 rounded-full bg-[#5eaef5]"></span>
-					<h2 class="section-title">Train New Units</h2>
-				</div>
+			<!-- Recruitment office -->
+			<section class="panel rounded-sm p-5 space-y-4">
+				<h2 class="section-title">Recruitment office</h2>
 
-				<!-- Selectable Unit Type Cards -->
-				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 mb-6">
-					{#each Object.values(data.templates) as template}
+				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+					{#each Object.values(data.templates) as template (template.id)}
 						{@const isSelected = selectedTemplate?.id === template.id}
 						<button
 							type="button"
-							class="relative p-3 rounded-sm border transition-colors duration-200 overflow-hidden group {isSelected
+							class="press-spring tap-target p-3 rounded-sm border transition-colors text-center {isSelected
 								? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
-								: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55 hover:bg-[#2e3524]'} {trainingDisabled
-								? 'opacity-50 cursor-not-allowed'
-								: ''}"
+								: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/45'} disabled:opacity-50 disabled:cursor-not-allowed"
+							aria-pressed={isSelected}
 							onclick={() => (selectedTemplate = template)}
 							disabled={isSubmitting || trainingDisabled}
 						>
-							<div class="relative flex flex-col gap-2 items-center">
-								<!-- Unit Icon -->
-								<div class="size-16 flex items-center justify-center">
-									<img
-										loading="lazy"
-										decoding="async"
-										src={getUnitIconPath(template.unitType)}
-										alt={template.unitType}
-										class="w-full h-full object-contain transition-all duration-200"
-										class:[filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]={!isSelected}
-										class:[filter:brightness(0)_saturate(100%)_invert(76%)_sepia(58%)_saturate(640%)_hue-rotate(352deg)_brightness(96%)_contrast(92%)]={isSelected}
-									/>
-								</div>
-
-								<!-- Unit Name -->
-								<h3
-									class="font-medium text-md transition-colors text-center leading-tight"
-									class:text-[#ffd35c]={isSelected}
-									class:text-[#d3caa9]={!isSelected}
-								>
-									{m[template.unitType]()}
-								</h3>
-							</div>
+							<img
+								loading="lazy"
+								decoding="async"
+								src={getUnitIconPath(template.unitType)}
+								alt=""
+								class="size-12 mx-auto object-contain transition-[filter] {isSelected ? INK_GOLD : INK}"
+							/>
+							<span
+								class="mt-1.5 block text-sm font-medium leading-tight {isSelected
+									? 'text-[#ffd35c]'
+									: 'text-[#d3caa9]'}">{unitLabel(template.unitType)}</span
+							>
+							<span class="mt-0.5 block text-[10px] font-mono text-[#a8a083]">
+								{template.baseAttack}/{template.baseDefense} · {template.trainingDuration}h
+							</span>
 						</button>
 					{/each}
 				</div>
 
-				<!-- Central Training Panel -->
 				{#if selectedTemplate}
-					<div class="panel rounded-sm p-5 space-y-5">
-						<!-- Selected Unit Header -->
-						<div class="flex items-center gap-4 mb-5">
-							<div class="size-14 flex items-center justify-center shrink-0">
+					{#key selectedTemplate.id}
+						<!-- Enlistment form -->
+						<div class="panel-muted rounded-sm p-4 space-y-4 animate-rise-in">
+							<div class="flex items-center gap-3 pb-3 border-b border-dashed border-[#c8b47a]/20">
 								<img
 									loading="lazy"
 									decoding="async"
 									src={getUnitIconPath(selectedTemplate.unitType)}
-									alt={selectedTemplate.displayName}
-									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(75%)_sepia(15%)_saturate(400%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
+									alt=""
+									class="size-12 object-contain shrink-0 {INK}"
 								/>
-							</div>
-							<div class="flex-1">
-								<h3 class="text-xl font-semibold text-[#f5efd8] mb-3">{selectedTemplate.displayName}</h3>
-								<div class="flex items-center gap-3 text-sm">
-									<div class="bg-red-600/10 border border-red-500/30 rounded-sm px-2.5 py-1">
-										<span class="text-xs text-red-300">ATK</span>
-										<span class="text-base font-semibold text-[#f5efd8] ml-1.5">{selectedTemplate.baseAttack}</span>
-									</div>
-									<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm px-2.5 py-1">
-										<span class="text-xs text-[#b3dcff]">DEF</span>
-										<span class="text-base font-semibold text-[#f5efd8] ml-1.5">{selectedTemplate.baseDefense}</span>
-									</div>
+								<div class="min-w-0 flex-1">
+									<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083]">Enlistment order</p>
+									<h3 class="font-serif text-lg font-bold text-[#f5efd8] truncate">{selectedTemplate.displayName}</h3>
+								</div>
+								<div class="text-right shrink-0">
+									<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Drill</p>
+									<p class="font-mono font-bold text-[#f5efd8]">{selectedTemplate.trainingDuration}h</p>
 								</div>
 							</div>
-						</div>
 
-						<!-- Resource Requirements using ResourceRequirements component -->
-						<div class="border-t border-[#c8b47a]/10 pt-4">
 							<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
-						</div>
 
-						<div class="flex items-center justify-between p-3 md:p-4 panel-muted rounded-sm">
-							<div class="flex items-center gap-2">
-								<FluentClock20Filled class="size-4 md:size-5 text-[#a8a083]" />
-								<span class="text-xs md:text-sm text-[#a8a083]">Training Time</span>
-							</div>
-							<span class="font-bold text-[#f5efd8] text-base md:text-lg font-mono">
-								{selectedTemplate.trainingDuration}h
-							</span>
-						</div>
-
-						<!-- Training Button -->
-						<form
-							method="POST"
-							action="?/train"
-							use:enhance={() => {
-								isSubmitting = true;
-								return async ({ update, result }) => {
-									await update();
-									isSubmitting = false;
-									selectedTemplate = null;
-									if (result.type === "success") showTrainingAnim = true;
-								};
-							}}
-						>
-							<input type="hidden" name="unitType" value={selectedTemplate.unitType} />
-							<Button
-								type="submit"
-								variant="primary"
-								block
-								icon={IconAdd}
-								disabled={!canAfford(selectedTemplate) || trainingDisabled}
-								loading={isSubmitting}
-								loadingText="Training..."
+							<form
+								method="POST"
+								action="?/train"
+								use:enhance={submit(
+									() => yard,
+									() => (selectedTemplate = null)
+								)}
 							>
-								Begin Training
+								<input type="hidden" name="unitType" value={selectedTemplate.unitType} />
+								<Button
+									type="submit"
+									variant="primary"
+									block
+									icon={IconAdd}
+									disabled={!canAfford(selectedTemplate) || trainingDisabled}
+									loading={isSubmitting}
+									loadingText="Enlisting…"
+								>
+									Enlist
+								</Button>
+							</form>
+						</div>
+					{/key}
+				{/if}
+			</section>
+		</div>
+
+		<!-- Drill yard -->
+		<aside bind:this={yard} class="panel rounded-sm p-5 self-start space-y-3">
+			<div class="flex items-center justify-between">
+				<h2 class="section-title">Drill yard</h2>
+				{#if trainingUnits.length > 0}
+					<Badge tone="amber">{trainingUnits.length}</Badge>
+				{/if}
+			</div>
+
+			{#if activeTrainingUnit}
+				{@const isComplete =
+					activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt).getTime() <= now}
+				<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3">
+					<div class="flex items-center gap-2 mb-2">
+						<img
+							loading="lazy"
+							decoding="async"
+							src={getUnitIconPath(activeTrainingUnit.unitType)}
+							alt=""
+							class="size-10 object-contain shrink-0 {INK}"
+						/>
+						<div class="flex-1 min-w-0">
+							<h3 class="font-semibold text-[#f5efd8] text-sm truncate">{activeTrainingUnit.name}</h3>
+							<p class="text-xs text-[#ffd35c] font-mono">{timeLeft(activeTrainingUnit.trainingCompletesAt)}</p>
+						</div>
+					</div>
+					<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
+						<div
+							class="h-full rounded-full bg-[#f2b01e] transition-all duration-700"
+							style="width: {progressBetween(
+								activeTrainingUnit.trainingStartedAt,
+								activeTrainingUnit.trainingCompletesAt
+							)}%"
+						></div>
+					</div>
+					{#if isComplete}
+						<form method="POST" action="?/completeTraining" use:enhance={submit(() => roster)} class="mt-3">
+							<input type="hidden" name="unitId" value={activeTrainingUnit.id} />
+							<Button type="submit" variant="soft-emerald" size="sm" block icon={IconCheckmark} disabled={isSubmitting}>
+								Pass out
 							</Button>
 						</form>
-					</div>
-				{:else}
-					<EmptyState
-						icon={FluentTarget}
-						title="Select a unit type to begin training"
-						subtitle="Choose from the available templates above"
-					/>
-				{/if}
-			</div>
-		</div>
-
-		<!-- Right Column -->
-		<div class="space-y-6">
-			<!-- Training Queue -->
-			<div>
-				<div class="flex items-center gap-3 mb-4">
-					<span class="h-6 w-1 rounded-full bg-[#f2b01e]"></span>
-					<h2 class="section-title">Training Queue</h2>
-					{#if trainingUnits.length > 0}
-						<Badge tone="amber" class="ml-auto">{trainingUnits.length}</Badge>
 					{/if}
 				</div>
+			{/if}
 
-				{#if activeTrainingUnit}
-					{@const progress = getTrainingProgress(activeTrainingUnit)}
-					{@const timeRemaining = getTrainingTimeRemaining(activeTrainingUnit)}
-					{@const isComplete =
-						activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt) <= new Date()}
+			{#if queuedUnits.length > 0}
+				<ol class="space-y-1.5">
+					{#each queuedUnits as unit, index (unit.id)}
+						<li out:vanish class="panel-muted rounded-sm px-2.5 py-2 flex items-center gap-2">
+							<span class="text-xs font-mono text-[#a8a083] w-5 shrink-0">{index + 2}.</span>
+							<img
+								loading="lazy"
+								decoding="async"
+								src={getUnitIconPath(unit.unitType)}
+								alt=""
+								class="size-6 object-contain shrink-0 {INK}"
+							/>
+							<span class="text-sm text-[#e6ddbf] truncate flex-1">{unit.name}</span>
+							<span class="text-[10px] uppercase tracking-wide text-[#a8a083]">Waiting</span>
+						</li>
+					{/each}
+				</ol>
+			{/if}
 
-					<!-- Active Training Unit -->
-					<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm overflow-hidden mb-3">
-						<div class="p-3">
-							<div class="flex items-center gap-2 mb-2">
-								<div class="size-10 shrink-0 flex items-center justify-center">
-									<img
-										loading="lazy"
-										decoding="async"
-										src={getUnitIconPath(activeTrainingUnit.unitType)}
-										alt={activeTrainingUnit.unitType}
-										class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(75%)_sepia(15%)_saturate(400%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
-									/>
-								</div>
-								<div class="flex-1 min-w-0">
-									<h3 class="font-semibold text-[#f5efd8] text-xs truncate">{activeTrainingUnit.name}</h3>
-									<p class="text-xs text-[#ffd35c] font-mono">{timeRemaining}</p>
-								</div>
-							</div>
-
-							<!-- Progress Bar -->
-							<div class="w-full bg-[#0f120c]/70 rounded-full h-1.5 overflow-hidden border border-[#c8b47a]/10">
-								<div
-									class="h-1.5 rounded-full transition-all duration-700"
-									style="width: {progress}%; background: #f2b01e"
-								></div>
-							</div>
-						</div>
-
-						{#if isComplete}
-							<div class="border-t border-[#f2b01e]/20 p-2.5 bg-[#0f120c]/60">
-								<form method="POST" action="?/completeTraining" use:enhance>
-									<input type="hidden" name="unitId" value={activeTrainingUnit.id} />
-									<Button type="submit" variant="soft-emerald" size="xs" block icon={IconCheckmark}>
-										Finish training
-									</Button>
-								</form>
-							</div>
-						{/if}
-					</div>
-				{/if}
-
-				<!-- Queued Units -->
-				{#each queuedUnits as unit, index}
-					<div class="panel-muted rounded-sm p-2 mb-2">
-						<div class="flex items-center gap-2">
-							<div class="size-8 shrink-0 flex items-center justify-center">
-								<img
-									loading="lazy"
-									decoding="async"
-									src={getUnitIconPath(unit.unitType)}
-									alt={unit.unitType}
-									class="w-full h-full object-contain [filter:brightness(0)_saturate(100%)_invert(70%)_sepia(10%)_saturate(300%)_hue-rotate(180deg)_brightness(90%)_contrast(90%)]"
-								/>
-							</div>
-							<div class="flex-1 min-w-0">
-								<h3 class="font-medium text-[#f5efd8] text-xs truncate">{unit.name}</h3>
-								<p class="text-xs text-[#a8a083]">Queued</p>
-							</div>
-						</div>
-					</div>
-				{/each}
-
-				{#if trainingUnits.length === 0}
-					<EmptyState icon={IconClock} title="No units training" class="py-8 p-6 sm:p-8" />
-				{/if}
-			</div>
-		</div>
+			{#if trainingUnits.length === 0}
+				<p class="py-6 text-center text-sm text-[#a8a083]">The yard is empty.</p>
+			{/if}
+		</aside>
 	</div>
 </PageContainer>
-
-<!-- Disband Confirmation Modal -->
-<Modal bind:open={disbandModalOpen} title="Disband Unit" size="small">
-	{#if unitToDisband}
-		<div class="space-y-4">
-			<div class="flex items-center gap-3 p-3 panel-muted rounded-sm">
-				<div
-					class="w-10 h-10 shrink-0 bg-[#0f120c]/70 rounded-sm border border-[#c8b47a]/15 flex items-center justify-center p-2"
-				>
-					<img
-						loading="lazy"
-						decoding="async"
-						src={getUnitIconPath(unitToDisband.unitType)}
-						alt={unitToDisband.unitType}
-						class="w-full h-full object-contain opacity-90 [filter:brightness(0)_saturate(100%)_invert(80%)_sepia(10%)_saturate(500%)_hue-rotate(180deg)_brightness(95%)_contrast(90%)]"
-					/>
-				</div>
-				<div>
-					<h4 class="font-semibold text-[#f5efd8] text-sm">{unitToDisband.name}</h4>
-					<p class="text-xs text-[#a8a083]">ATK {unitToDisband.attack} • DEF {unitToDisband.defense}</p>
-				</div>
-			</div>
-
-			<p class="text-sm text-[#d3caa9]">
-				Are you sure you want to disband this unit? This action cannot be undone and you will not receive any refunds.
-			</p>
-
-			<div class="flex gap-2 pt-2">
-				<Button type="button" variant="ghost" grow onclick={() => (disbandModalOpen = false)}>Cancel</Button>
-				<form
-					method="POST"
-					action="?/disbandUnit"
-					use:enhance={() => {
-						return async ({ update }) => {
-							await update();
-							disbandModalOpen = false;
-							unitToDisband = null;
-						};
-					}}
-					class="flex-1"
-				>
-					<input type="hidden" name="unitId" value={unitToDisband.id} />
-					<Button type="submit" variant="danger" block icon={IconDelete}>Disband</Button>
-				</form>
-			</div>
-		</div>
-	{/if}
-</Modal>
-
-{#if showTrainingAnim}
-	<ThreeAnimation variant="training" onComplete={() => (showTrainingAnim = false)} />
-{/if}
-
-<style>
-	@keyframes shimmer {
-		0% {
-			transform: translateX(-100%);
-		}
-		100% {
-			transform: translateX(100%);
-		}
-	}
-	.animate-shimmer {
-		animation: shimmer 2s infinite;
-	}
-</style>
