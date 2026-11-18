@@ -100,7 +100,7 @@
 				<div class="px-4 pt-10 pb-4 space-y-3">
 					<!-- Name and Rating -->
 					<div>
-						<h3 class="text-lg font-bold text-fg group-hover:text-accent-hover transition-colors">
+						<h3 class="text-lg font-bold text-fg group-hover:text-primary-hover transition-colors">
 							{region.name}
 						</h3>
 						<div class="flex items-center gap-3 text-sm text-fg-muted mt-1">
@@ -125,7 +125,7 @@
 							<div class="flex flex-wrap gap-1">
 								{#if region.oil}
 									<span
-										class="px-2 py-0.5 bg-accent/15 border border-accent/30 rounded-sm text-xs text-accent-fg"
+										class="px-2 py-0.5 bg-primary/15 border border-primary/30 rounded-sm text-xs text-primary-fg"
 									>
 										Oil
 									</span>

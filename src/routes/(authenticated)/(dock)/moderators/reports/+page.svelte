@@ -37,7 +37,7 @@
 	function getStatusColor(status: string) {
 		switch (status) {
 			case "pending":
-				return "text-accent-fg bg-accent/15 border-accent/35";
+				return "text-primary-fg bg-primary/15 border-primary/35";
 			case "resolved":
 				return "text-positive-fg bg-positive-bg/20 border-positive/30";
 			case "dismissed":
@@ -129,7 +129,7 @@
 		</div>
 
 		<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
-			<FluentClock20Filled class="size-5 text-accent-fg shrink-0" />
+			<FluentClock20Filled class="size-5 text-primary-fg shrink-0" />
 			<div class="min-w-0">
 				<p class="text-[10px] text-fg-muted uppercase tracking-wide">Pending</p>
 				<p class="text-2xl font-bold text-fg leading-none mt-1">{data.stats.pending}</p>
@@ -202,7 +202,7 @@
 										/>
 									</div>
 									<div>
-										<span class="text-sm text-fg group-hover:text-accent-hover transition-colors block">
+										<span class="text-sm text-fg group-hover:text-primary-hover transition-colors block">
 											{report.target.name}
 										</span>
 										<span class="text-xs text-fg-muted">Political Party</span>

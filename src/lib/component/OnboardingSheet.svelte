@@ -189,7 +189,7 @@
 						{step === 4 ? "Navigate to Production" : "Navigate to Training"}
 					</p>
 					<p class="text-xs text-fg-soft mt-0.5">
-						Tap <strong class="text-accent-fg">{step === 4 ? "Production" : "Training"}</strong> in the bar below
+						Tap <strong class="text-primary-fg">{step === 4 ? "Production" : "Training"}</strong> in the bar below
 					</p>
 				</div>
 				{#if canSkip}
@@ -237,9 +237,9 @@
 					{#each Array(TOTAL_STEPS) as _, i}
 						<div
 							class="h-1 rounded-full transition-all duration-300 {i === step
-								? 'w-6 bg-accent'
+								? 'w-6 bg-primary'
 								: i < step
-									? 'w-2 bg-accent/30'
+									? 'w-2 bg-primary/30'
 									: 'w-2 bg-line/15'}"
 						></div>
 					{/each}
@@ -252,7 +252,7 @@
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
 								<div
-									class="size-16 rounded-sm bg-accent/12 border border-accent/35 flex items-center justify-center"
+									class="size-16 rounded-sm bg-primary/12 border border-primary/35 flex items-center justify-center"
 								>
 									<span class="text-3xl">🎖️</span>
 								</div>
@@ -342,7 +342,7 @@
 
 							{#if loadingRegions}
 								<div class="flex items-center justify-center py-8">
-									<span class="loading loading-ring loading-md text-accent"></span>
+									<span class="loading loading-ring loading-md text-primary"></span>
 								</div>
 							{:else}
 								<div class="space-y-2 max-h-[40vh] overflow-y-auto">

@@ -149,8 +149,8 @@
 
 	const dropzoneClass = $derived(
 		[
-			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 hover:border-[#f5a524]/55",
-			dragActive ? "border-[#f5a524] bg-[#f5a524]/10" : previewUrl ? "border-[#4fd88a]/60" : "border-[#8ea6e0]/25",
+			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 hover:border-[#2f81f7]/55",
+			dragActive ? "border-[#2f81f7] bg-[#2f81f7]/10" : previewUrl ? "border-[#4fd88a]/60" : "border-[#9aa7b8]/25",
 			$submitting || !canEdit ? "opacity-50" : "",
 			$errors.logo ? "border-red-500" : ""
 		]
@@ -169,12 +169,12 @@
 					<div class="space-y-1.5 flex-1">
 						<h3 class="font-semibold text-red-300 text-sm">Profile Edit Cooldown Active</h3>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-[#c2cbe3] font-medium">Time Remaining:</span>
+							<span class="text-[#b6bfca] font-medium">Time Remaining:</span>
 							<span class="text-red-300 font-bold font-mono">{formatTimeRemaining(cooldownEndsAt)}</span>
 						</div>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-[#8e9abb]">Available on:</span>
-							<span class="text-[#c2cbe3]">{formatCooldownDate(cooldownEndsAt)}</span>
+							<span class="text-[#8b949e]">Available on:</span>
+							<span class="text-[#b6bfca]">{formatCooldownDate(cooldownEndsAt)}</span>
 						</div>
 					</div>
 				</div>
@@ -186,7 +186,7 @@
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
 					<FluentImage20Filled class="size-4 text-[#b9a1ff]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Profile Picture</h2>
+					<h2 class="text-sm font-semibold text-[#e6edf3]">Profile Picture</h2>
 				</div>
 
 				<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -213,7 +213,7 @@
 									<FluentImageOff20Filled class="size-8 text-[#b9a1ff]" />
 								</div>
 								<div class="text-center">
-									<p class="text-sm font-semibold text-[#eef2ff]">
+									<p class="text-sm font-semibold text-[#e6edf3]">
 										{#if dragActive}
 											Drop image here
 										{:else if $submitting}
@@ -223,13 +223,13 @@
 										{/if}
 									</p>
 									{#if !$submitting && canEdit}
-										<p class="mt-1 text-xs text-[#8e9abb]">Images only • 5MB max</p>
+										<p class="mt-1 text-xs text-[#8b949e]">Images only • 5MB max</p>
 									{/if}
 								</div>
 							</div>
 						{:else}
 							<div class="relative">
-								<div class="flex items-center justify-center p-6 bg-[#131c33]/70">
+								<div class="flex items-center justify-center p-6 bg-[#151a22]/70">
 									<img
 										loading="lazy"
 										decoding="async"
@@ -241,7 +241,7 @@
 								<div
 									class="absolute inset-0 flex items-center justify-center bg-[#0c1222]/70 opacity-0 transition-opacity group-hover:opacity-100"
 								>
-									<p class="text-sm font-semibold text-[#eef2ff]">Tap to change</p>
+									<p class="text-sm font-semibold text-[#e6edf3]">Tap to change</p>
 								</div>
 								{#if previewUrl !== currentLogo && canEdit}
 									<button
@@ -277,7 +277,7 @@
 			<div class="space-y-4">
 				<div class="flex items-center gap-2">
 					<FluentPerson20Filled class="size-4 text-[#b9a1ff]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Profile Information</h2>
+					<h2 class="text-sm font-semibold text-[#e6edf3]">Profile Information</h2>
 				</div>
 
 				<div>

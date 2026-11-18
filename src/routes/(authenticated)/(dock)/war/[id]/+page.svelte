@@ -61,7 +61,7 @@
 		/>
 		<div class="min-w-0">
 			<p class="text-[10px] font-semibold uppercase tracking-[0.2em] {SIDE[side].text}">{SIDE[side].label}</p>
-			<p class="line-clamp-2 font-serif text-lg font-bold leading-tight text-fg group-hover:text-accent-hover">
+			<p class="line-clamp-2 font-serif text-lg font-bold leading-tight text-fg group-hover:text-primary-hover">
 				{s?.name}
 			</p>
 			{#if data[side].bloc}
@@ -170,7 +170,7 @@
 						<div
 							class="h-full rounded-full transition-[width] duration-700 {exhaustionPct > 80
 								? 'bg-red-500'
-								: 'bg-accent'}"
+								: 'bg-primary'}"
 							style:width="{exhaustionPct}%"
 						></div>
 						{#each [25, 50, 75] as tick (tick)}
@@ -197,7 +197,7 @@
 				{/each}
 				<div class="panel-muted rounded-sm p-2.5">
 					<p class="text-[10px] uppercase tracking-wide text-fg-muted">Battles on</p>
-					<p class="font-mono text-lg font-bold {ongoing.length ? 'text-accent-fg' : 'text-fg'}">
+					<p class="font-mono text-lg font-bold {ongoing.length ? 'text-primary-fg' : 'text-fg'}">
 						{ongoing.length}
 					</p>
 				</div>
@@ -287,7 +287,7 @@
 									placeholderIcon={FluentBuildingGovernment20Filled}
 								/>
 								<span
-									class="min-w-0 flex-1 truncate text-sm text-fg group-hover:text-accent-hover {s.capitulated
+									class="min-w-0 flex-1 truncate text-sm text-fg group-hover:text-primary-hover {s.capitulated
 										? 'line-through'
 										: ''}">{s.name}</span
 								>
@@ -353,7 +353,7 @@
 		</section>
 	{/if}
 
-	<a href="/map" class="flex items-center justify-center gap-1 text-xs text-fg-muted hover:text-accent-hover">
+	<a href="/map" class="flex items-center justify-center gap-1 text-xs text-fg-muted hover:text-primary-hover">
 		See the front on the map <FluentArrowRight20Filled class="size-3" />
 	</a>
 </PageContainer>

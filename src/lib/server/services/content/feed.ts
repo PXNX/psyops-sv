@@ -12,6 +12,7 @@ import {
 	userProfiles
 } from "#lib/server/schema.js";
 import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { coverImage, excerpt, readingMinutes } from "#lib/server/services/content/article-text.js";
 
 export const FEED_PAGE_SIZE = 20;
 
@@ -78,7 +79,9 @@ export async function fetchFeed(accountId: string, opts: { cursor?: string | nul
 			return {
 				id: a.id,
 				title: a.title,
-				content: a.content,
+				excerpt: excerpt(a.content, 180),
+				cover: coverImage(a.content),
+				minutes: readingMinutes(a.content),
 				createdAt: a.createdAt,
 				authorId: a.authorId,
 				authorName: a.authorName,

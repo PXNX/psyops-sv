@@ -1,17 +1,14 @@
 <!-- src/routes/(authenticated)/(fullscreen)/posts/[id]/edit/+page.svelte -->
 <script lang="ts">
-	import { toast } from "#lib/ui/toast.svelte.js";
 	import { goto } from "$app/navigation";
-	import FluentSave20Filled from "~icons/fluent/save-20-filled";
-	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import FluentArrowHookUpLeft20Regular from "~icons/fluent/arrow-hook-up-left-20-regular";
-	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
-	import WysiwygEditor from "#lib/component/WysiwygEditor.svelte";
-	import Modal from "#lib/component/Modal.svelte";
 	import { superForm } from "sveltekit-superforms";
 	import { valibot } from "sveltekit-superforms/adapters";
+	import WysiwygEditor from "#lib/component/WysiwygEditor.svelte";
+	import Modal from "#lib/component/Modal.svelte";
+	import PostEditor from "#lib/component/press/PostEditor.svelte";
+	import { Button } from "#lib/component/ui/index.js";
+	import { toast } from "#lib/ui/toast.svelte.js";
 	import { editArticleSchema } from "./schema";
-	import { buttonClass } from "#lib/component/ui/styles.js";
 
 	const { data } = $props();
 
@@ -20,202 +17,60 @@
 		dataType: "json",
 		onUpdated: ({ form }) => {
 			if (!form.valid) {
-				const firstError = Object.values(form.errors)[0];
-				if (firstError) {
-					toast.error(firstError[0]);
-				}
+				const firstError = Object.values(form.errors).flat()[0];
+				toast.error(typeof firstError === "string" ? firstError : "Please check the headline and text.");
 			}
+		},
+		onError: () => {
+			toast.error("Couldn't save your changes. Please try again.");
 		}
 	});
 
-	const { form: formData, enhance, errors, delayed, submitting } = form;
+	const { form: formData, enhance, errors, submitting } = form;
 
+	const original = { title: data.form.data.title, content: data.form.data.content || "" };
 	let editorComponent = $state<WysiwygEditor | null>(null);
-	let isPublishModalOpen = $state(false);
+	let content = $state(original.content);
 	let isCancelModalOpen = $state(false);
-	let initialContent = $state(data.form.data.content || "");
 
-	const handlePublish = () => {
-		const content = editorComponent?.getContent();
+	const hasChanges = $derived($formData.title !== original.title || content !== original.content);
 
-		if (content) {
-			$formData.content = content;
-		}
-
-		if (!$formData.title.trim()) {
-			toast.error("Please enter a title");
-			return;
-		}
-
-		if (!content || content.trim().length < 50) {
-			toast.error("Please write at least 50 characters of content");
-			return;
-		}
-
-		if ($formData.title.length > 200) {
-			toast.error("Title must be 200 characters or less");
-			return;
-		}
-
-		isPublishModalOpen = true;
+	const handleSave = () => {
+		$formData.content = editorComponent?.getContent() ?? content;
+		form.submit();
 	};
 
 	const handleCancel = () => {
-		const currentContent = editorComponent?.getContent() || "";
-		if ($formData.title !== data.form.data.title || currentContent !== initialContent) {
-			isCancelModalOpen = true;
-		} else {
-			goto("/posts/" + data.articleId);
-		}
+		if (hasChanges) isCancelModalOpen = true;
+		else goto(`/posts/${data.articleId}`);
 	};
-
-	const confirmDiscard = () => {
-		goto("/posts/" + data.articleId);
-	};
-
-	let hasChanges = $derived(() => {
-		const currentContent = editorComponent?.getContent() || "";
-		return $formData.title !== data.form.data.title || currentContent !== initialContent;
-	});
-
-	let canSave = $derived(() => {
-		const currentContent = editorComponent?.getContent() || "";
-		return (
-			$formData.title && currentContent && $formData.title.length > 0 && currentContent.length >= 50 && hasChanges()
-		);
-	});
 </script>
 
 <svelte:head>
-	<title>Edit Post</title>
+	<title>Edit post · PsyOps</title>
 </svelte:head>
 
-<div class="min-h-dvh flex flex-col">
-	<!-- Editor Header -->
-	<header class="sticky top-0 z-10 border-b border-[#8ea6e0]/15 bg-[#111a2e]/95 backdrop-blur-md">
-		<div class="w-full px-3 sm:px-6 py-3 sm:py-4">
-			<div class="flex items-center gap-2 sm:gap-3">
-				<button
-					onclick={handlePublish}
-					class={buttonClass({ variant: "primary", shape: "square" })}
-					title="Save Changes"
-					disabled={!canSave() || $submitting === true}
-				>
-					<FluentSave20Filled class="size-5" />
-				</button>
+<!-- Superforms posts $formData (JSON) through this form. -->
+<form method="POST" action="?/publish" use:enhance hidden></form>
 
-				{#if editorComponent}
-					<button
-						class={buttonClass({ variant: "secondary", shape: "square" })}
-						onclick={() => editorComponent?.undo()}
-						title="Undo"
-						disabled={$submitting === true}
-					>
-						<FluentArrowHookUpLeft20Regular class="size-5" />
-					</button>
-					<button
-						class={buttonClass({ variant: "secondary", shape: "square" })}
-						onclick={() => editorComponent?.redo()}
-						title="Redo"
-						disabled={$submitting === true}
-					>
-						<FluentArrowHookUpRight20Regular class="size-5" />
-					</button>
-				{/if}
+<PostEditor
+	bind:title={$formData.title}
+	bind:content
+	bind:editor={editorComponent}
+	initialContent={original.content}
+	actionLabel="Save"
+	onAction={handleSave}
+	onCancel={handleCancel}
+	actionDisabled={!hasChanges || !$formData.title.trim()}
+	disabled={$submitting}
+	titleError={$errors.title?.[0] ?? null}
+	contentError={$errors.content?.[0] ?? null}
+/>
 
-				<div class="flex-1"></div>
-
-				<span class="text-xs text-[#8e9abb] font-mono hidden sm:inline">
-					{$formData.title.length}/200
-				</span>
-
-				<button
-					onclick={handleCancel}
-					class={buttonClass({
-						variant: "secondary",
-						shape: "square",
-						class: "hover:border-red-500/30 hover:text-red-300"
-					})}
-					title="Cancel"
-					disabled={$submitting === true}
-				>
-					<FluentDismiss20Filled class="size-5" />
-				</button>
-			</div>
-		</div>
-	</header>
-
-	<!-- Editor Content -->
-	<main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-		<!-- Title Input -->
-		<input
-			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#eef2ff] placeholder:text-[#8794b5]/55 border-none outline-none mb-2"
-			class:text-red-400={$errors.title}
-			placeholder="Enter your title..."
-			type="text"
-			bind:value={$formData.title}
-			maxlength="200"
-			disabled={$submitting === true}
-		/>
-
-		{#if $errors.title}
-			<div class="field-error mb-3">{$errors.title[0]}</div>
-		{/if}
-
-		<div class="text-xs text-[#8e9abb] font-mono mb-6">
-			{$formData.title.length}/200 characters
-		</div>
-
-		<!-- Divider -->
-		<div class="border-t border-[#8ea6e0]/15 mb-6"></div>
-
-		<!-- Editor -->
-		<div class="min-h-[50vh]">
-			<WysiwygEditor
-				bind:this={editorComponent}
-				initialContent={data.form.data.content || ""}
-				placeholder="Start writing your article..."
-			/>
-		</div>
-
-		{#if $errors.content}
-			<div class="field-error mt-3">{$errors.content[0]}</div>
-		{/if}
-	</main>
-</div>
-
-<!-- Save Modal -->
-<Modal bind:open={isPublishModalOpen} title="Save your changes?">
-	<form method="POST" action="?/publish" use:enhance>
-		<input type="hidden" name="title" value={$formData.title} />
-		<input type="hidden" name="content" value={editorComponent?.getContent() || ""} />
-
-		<div class="panel-muted rounded-sm p-3 mb-4">
-			<p class="text-sm font-bold text-[#eef2ff] line-clamp-2">{$formData.title}</p>
-		</div>
-
-		<button
-			class={buttonClass({ variant: "primary", block: true, class: "py-3" })}
-			type="submit"
-			disabled={$submitting === true || $delayed === true}
-		>
-			{#if $submitting === true || $delayed === true}
-				Saving...
-			{:else}
-				Save Changes
-			{/if}
-		</button>
-	</form>
-</Modal>
-
-<!-- Cancel Modal -->
-<Modal bind:open={isCancelModalOpen} title="Discard changes?">
-	<p class="text-sm text-[#8e9abb] mb-4">Your unsaved work will be lost.</p>
-
+<!-- Discard -->
+<Modal bind:open={isCancelModalOpen} title="Discard your changes?" size="small">
 	<div class="flex gap-2 justify-end">
-		<button class={buttonClass({ variant: "secondary", size: "sm" })} onclick={() => (isCancelModalOpen = false)}>
-			Keep Editing
-		</button>
-		<button class={buttonClass({ variant: "soft-red", size: "sm" })} onclick={confirmDiscard}> Discard </button>
+		<Button variant="secondary" size="sm" onclick={() => (isCancelModalOpen = false)}>Keep editing</Button>
+		<Button variant="soft-red" size="sm" onclick={() => goto(`/posts/${data.articleId}`)}>Discard</Button>
 	</div>
 </Modal>

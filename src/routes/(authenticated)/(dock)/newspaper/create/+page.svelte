@@ -3,9 +3,7 @@
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { newspaperSchema } from "./schema";
-	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
-	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
@@ -109,35 +107,18 @@
 
 <PageContainer maxWidth="3xl">
 	<!-- Header -->
-	<PageHeader
-		title="Create Newspaper"
-		subtitle="Start your own news publication"
-		icon={FluentEmojiRolledUpNewspaper}
-		backHref="/newspaper"
-		backLabel="Newspapers"
-	/>
+	<PageHeader title="Found a newspaper" backHref="/newspaper" backLabel="Newspapers" />
 
-	<!-- Success/Error Messages -->
-	{#if $message && !$message.includes("error") && !$message.includes("failed")}
-		<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">
-			<p class="text-sm font-medium">{$message}</p>
-		</div>
-	{/if}
-
-	{#if $message && ($message.includes("error") || $message.includes("failed"))}
-		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
-			<p class="text-sm font-medium">{$message}</p>
-		</div>
+	<!-- Success redirects to the new paper, so any message here is an error. -->
+	{#if $message}
+		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm px-4 py-3 text-sm">{$message}</div>
 	{/if}
 
 	<!-- Form -->
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<!-- Newspaper Name -->
-		<div class="panel rounded-sm p-5 space-y-4">
-			<h2 class="section-title">
-				<FluentDocument20Filled class="size-5 text-[#6aa8ff]" />
-				Basic Information
-			</h2>
+		<div class="panel rounded-sm p-4 sm:p-5 space-y-4">
+			<h2 class="section-title">Masthead</h2>
 
 			<div>
 				<label for="name" class="field-label">
@@ -157,29 +138,26 @@
 				{#if $errors.name}
 					<p class="field-error">{$errors.name}</p>
 				{:else}
-					<p class="field-hint">{$form.name?.length || 0}/40 characters</p>
+					<p class="field-hint font-mono">{$form.name?.length || 0}/40</p>
 				{/if}
 			</div>
 
 			<div>
-				<label for="background" class="field-label">Background Description (Optional)</label>
+				<label for="background" class="field-label">Tagline <span class="text-fg-muted font-normal">(optional)</span></label>
 				<textarea
 					id="background"
 					name="background"
 					bind:value={$form.background}
-					rows="4"
-					placeholder="Describe your newspaper's mission and values..."
+					rows="3"
+					placeholder="What your paper stands for"
 					class="field-control w-full rounded-sm px-3 py-2.5"
 					disabled={$submitting}></textarea>
 			</div>
 		</div>
 
 		<!-- Logo Upload -->
-		<div class="panel rounded-sm p-5 space-y-4">
-			<h2 class="section-title">
-				<FluentImage20Filled class="size-5 text-[#6aa8ff]" />
-				Newspaper Logo
-			</h2>
+		<div class="panel rounded-sm p-4 sm:p-5 space-y-4">
+			<h2 class="section-title">Logo</h2>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
 				<input
@@ -197,39 +175,35 @@
 					type="button"
 					onclick={() => fileInput?.click()}
 					disabled={$submitting}
-					class="group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 {dragActive
-						? 'border-[#f5a524]/70 bg-[#f5a524]/10'
+					class="group relative w-full overflow-hidden rounded-sm border border-dashed transition-colors duration-200 {dragActive
+						? 'border-friendly/70 bg-friendly-bg/10'
 						: previewUrl
-							? 'border-[#4fd88a]/40 bg-[#1f9d62]/10'
-							: 'border-[#8ea6e0]/20 bg-[#131c33]/70'} {!$submitting && !previewUrl
-						? 'hover:border-[#f5a524]/55 hover:bg-[#233154]'
-						: ''}"
+							? 'border-positive/40'
+							: 'border-white/15'} {!$submitting && !previewUrl ? 'hover:border-friendly/55' : ''}"
 					class:opacity-50={$submitting}
 					class:border-red-500={$errors.logo}
 				>
 					{#if !previewUrl}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#2f6be0]/18 border border-[#6aa8ff]/30 p-3">
-								<FluentImage20Filled class="size-8 text-[#6aa8ff]" />
-							</div>
+							<FluentImage20Filled class="size-8 text-friendly" />
 							<div class="text-center">
-								<p class="text-base font-semibold text-[#eef2ff]">
+								<p class="text-sm font-semibold text-fg">
 									{#if dragActive}
 										Drop logo here
 									{:else if $submitting}
 										Uploading...
 									{:else}
-										Tap to upload newspaper logo
+										Upload logo
 									{/if}
 								</p>
 								{#if !$submitting}
-									<p class="mt-1 text-sm text-[#8e9abb]">Images only • 5MB max</p>
+									<p class="mt-1 font-mono text-xs text-fg-muted">PNG / JPG / WEBP · 5 MB</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-[#131c33]/70">
+							<div class="flex items-center justify-center p-6">
 								<img
 									loading="lazy"
 									decoding="async"
@@ -239,9 +213,9 @@
 								/>
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-[#0c1222]/70 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-surface-1/70 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-[#eef2ff]">Tap to change</p>
+								<p class="text-base font-semibold text-fg">Tap to change</p>
 							</div>
 							{#if $form.logo}
 								<button
@@ -263,11 +237,11 @@
 							{/if}
 						</div>
 						{#if $form.logo}
-							<div class="border-t border-[#8ea6e0]/15 p-3 bg-[#131c33]/70">
-								<p class="truncate text-sm font-medium text-[#eef2ff]" title={$form.logo.name}>
+							<div class="border-t border-white/10 p-3">
+								<p class="truncate text-sm font-medium text-fg" title={$form.logo.name}>
 									{$form.logo.name}
 								</p>
-								<p class="text-xs text-[#8e9abb]">
+								<p class="font-mono text-xs text-fg-muted">
 									{Math.round($form.logo.size / 1024)} KB
 								</p>
 							</div>
@@ -278,8 +252,6 @@
 
 			{#if $errors.logo}
 				<p class="field-error">{$errors.logo}</p>
-			{:else}
-				<p class="field-hint">Logo will be converted to 96x96 WebP format • Max 5MB</p>
 			{/if}
 		</div>
 
@@ -295,7 +267,7 @@
 				loadingText="Creating..."
 				icon={FluentCheckmark20Filled}
 			>
-				Create Newspaper
+				Found newspaper
 			</Button>
 		</div>
 	</form>

@@ -29,6 +29,7 @@ import { calculateAndCollectTax } from "#lib/server/taxes.js";
 import type { Actions, PageServerLoad } from "./$types";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { addStateItem, addUserItem, takeUserItem } from "#lib/server/services/economy/inventory.js";
+import { loadCandles, loadLastPricesBefore } from "../price-history.server";
 
 /** A purchase that can't go through for a reason the buyer should see. */
 class PurchaseError extends Error {}
@@ -47,12 +48,22 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	else if (PRODUCTS.includes(itemName)) itemType = "product";
 	else throw error(404, "Item not found");
 
-	const thirtyDaysAgo = new Date();
-	thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+	const now = Date.now();
+	const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000);
 
 	// Everything below only depends on the account / item, so it all runs concurrently.
 	// Dependent lookups (tax rate, government state) are chained onto their inputs.
-	const [taxRate, wallet, userItemQuantity, [statistics], priceHistory, allListings, [cooldown], governmentState] =
+	const [
+		taxRate,
+		wallet,
+		userItemQuantity,
+		[statistics],
+		candles,
+		openingPrice,
+		allListings,
+		[cooldown],
+		governmentState
+	] =
 		await Promise.all([
 			db
 				.select({ regionId: residences.regionId, stateId: regions.stateId })
@@ -104,17 +115,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				.from(marketStatistics)
 				.where(and(eq(marketStatistics.itemType, itemType), eq(marketStatistics.itemName, itemName)))
 				.limit(1),
-			db
-				.select()
-				.from(marketPriceHistory)
-				.where(
-					and(
-						eq(marketPriceHistory.itemType, itemType),
-						eq(marketPriceHistory.itemName, itemName),
-						gte(marketPriceHistory.recordedAt, thirtyDaysAgo)
-					)
-				)
-				.orderBy(marketPriceHistory.recordedAt),
+			loadCandles(thirtyDaysAgo, 3600, itemName).then((m) => m.get(itemName) ?? []),
+			loadLastPricesBefore(thirtyDaysAgo, itemName).then((m) => m.get(itemName) ?? null),
 			// All listings ordered by price, then split
 			db
 				.select()
@@ -189,7 +191,9 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		itemName,
 		itemType,
 		statistics,
-		priceHistory,
+		now,
+		candles,
+		openingPrice,
 		myListing,
 		otherListings,
 		taxRate,

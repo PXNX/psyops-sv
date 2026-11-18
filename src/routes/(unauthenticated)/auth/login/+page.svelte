@@ -50,11 +50,11 @@
 			<div>
 				<p class="text-xs text-center text-fg-muted leading-relaxed">
 					By signing up you agree to our
-					<a class="font-semibold text-accent-fg hover:text-accent-hover hover:underline" href="/about/terms">
+					<a class="font-semibold text-primary-fg hover:text-primary-hover hover:underline" href="/about/terms">
 						{m.termsOfService()}
 					</a>
 					and
-					<a class="font-semibold text-accent-fg hover:text-accent-hover hover:underline" href="/about/privacy">
+					<a class="font-semibold text-primary-fg hover:text-primary-hover hover:underline" href="/about/privacy">
 						{m.privacyPolicy()}
 					</a>.
 				</p>

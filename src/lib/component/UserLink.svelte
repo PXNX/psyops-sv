@@ -46,7 +46,7 @@
 		<Logo
 			src={avatar}
 			alt=""
-			class="{avatarSize} shrink-0 rounded-full ring-1 ring-line/20 transition-transform duration-200 group-hover:scale-105 group-hover:ring-accent/55"
+			class="{avatarSize} shrink-0 rounded-full ring-1 ring-line/20 transition-transform duration-200 group-hover:scale-105 group-hover:ring-primary/55"
 			placeholderIcon={FluentPerson20Filled}
 			placeholderGradient="from-surface-13 to-surface-6"
 		/>
@@ -55,7 +55,7 @@
 		<span class="inline-flex items-center gap-1.5 min-w-0">
 			<span
 				class="{nameSize} font-semibold text-fg truncate transition-colors {id
-					? 'group-hover:text-accent-hover'
+					? 'group-hover:text-primary-hover'
 					: ''}">{label}</span
 			>
 			{#if party?.abbreviation}

@@ -33,6 +33,11 @@ export const actions: Actions = {
 			return message(form, "You already own a newspaper", { status: 400 });
 		}
 
+		const nameTaken = await db.query.newspapers.findFirst({ where: (n, { eq }) => eq(n.name, name) });
+		if (nameTaken) {
+			return message(form, "A newspaper with this name already exists", { status: 400 });
+		}
+
 		let newspaperId: number;
 		try {
 			let logoFileId: number | null = null;

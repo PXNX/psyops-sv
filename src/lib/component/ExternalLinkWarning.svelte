@@ -38,8 +38,8 @@
 	<div class="space-y-4">
 		<!-- Warning Icon -->
 		<div class="flex justify-center">
-			<div class="rounded-full bg-accent/12 border border-accent/35 p-4">
-				<FluentWarning20Filled class="size-8 text-accent-fg" />
+			<div class="rounded-full bg-primary/12 border border-primary/35 p-4">
+				<FluentWarning20Filled class="size-8 text-primary-fg" />
 			</div>
 		</div>
 
@@ -52,9 +52,9 @@
 		</div>
 
 		<!-- Safety Notice -->
-		<div class="panel-muted rounded-sm border-accent/30 p-4">
+		<div class="panel-muted rounded-sm border-primary/30 p-4">
 			<p class="text-sm text-fg-muted">
-				<strong class="text-accent-fg">Safety Notice:</strong> This link leads to an external website. We cannot guarantee
+				<strong class="text-primary-fg">Safety Notice:</strong> This link leads to an external website. We cannot guarantee
 				the safety or content of external sites. Please exercise caution when sharing personal information.
 			</p>
 		</div>

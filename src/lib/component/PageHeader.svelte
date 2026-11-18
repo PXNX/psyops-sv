@@ -53,7 +53,7 @@
 		<div class="min-w-0">
 			<h1 class="text-3xl font-bold text-[#fff4d6] flex items-center gap-3 flex-wrap">
 				{#if Icon}
-					<Icon class="size-7 shrink-0 text-accent {entrance ? 'animate-pop-in' : ''}" />
+					<Icon class="size-7 shrink-0 text-primary {entrance ? 'animate-pop-in' : ''}" />
 				{/if}
 				<span class="break-words">{title}</span>
 			</h1>
@@ -69,7 +69,7 @@
 	</div>
 	<!-- Brass trim under the title bar; draws itself in on arrival. -->
 	<div
-		class="h-0.5 bg-gradient-to-r from-accent/80 via-line/30 to-transparent {entrance
+		class="h-0.5 bg-gradient-to-r from-primary/80 via-line/30 to-transparent {entrance
 			? 'animate-trim-draw'
 			: ''}"
 	></div>

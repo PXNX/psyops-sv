@@ -129,7 +129,7 @@
 								</div>
 								<div class="flex-1 min-w-0">
 									<h3
-										class="font-serif text-lg font-black uppercase leading-tight text-fg group-hover:text-accent-hover transition-colors line-clamp-2"
+										class="font-serif text-lg font-black uppercase leading-tight text-fg group-hover:text-primary-hover transition-colors line-clamp-2"
 									>
 										{party.name}
 									</h3>

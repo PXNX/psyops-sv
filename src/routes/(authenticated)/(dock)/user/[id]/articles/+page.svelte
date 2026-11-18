@@ -1,194 +1,155 @@
 <!-- src/routes/(authenticated)/(dock)/user/[id]/articles/+page.svelte -->
-<!-- A writer's bylines, laid out like a folder of press clippings. -->
+<!-- Everything a player has written, newest or most liked first. -->
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
-	import FluentArrowSort20Filled from "~icons/fluent/arrow-sort-20-filled";
+	import FluentArrowSortDown20Filled from "~icons/fluent/arrow-sort-down-20-filled";
+	import FluentArrowSortUp20Filled from "~icons/fluent/arrow-sort-up-20-filled";
 	import FluentChevronLeft20Filled from "~icons/fluent/chevron-left-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import UserLink from "#lib/component/UserLink.svelte";
-	import { formatDateTime } from "#lib/utils/formatting.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import Button from "#lib/component/ui/Button.svelte";
-	import IconButton from "#lib/component/ui/IconButton.svelte";
-	import BackLink from "#lib/component/ui/BackLink.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
+	import ArticleCard from "#lib/component/press/ArticleCard.svelte";
+	import { Button, IconButton, BackLink } from "#lib/component/ui/index.js";
 
 	const { data } = $props();
 
-	let searchQuery = $state(data.searchQuery);
+	let searchQuery = $state(page.url.searchParams.get("q") ?? "");
 	let debounceTimer: ReturnType<typeof setTimeout>;
 
-	function updateSort(newSortBy: "date" | "rating") {
-		const url = new URL(window.location.href);
-		url.searchParams.set("sort", newSortBy);
-		if (newSortBy !== data.sortBy) {
-			url.searchParams.set("page", "1");
+	/** Update the query string with a client-side navigation instead of a full reload. */
+	function navigate(changes: Record<string, string | null>) {
+		const url = new URL(page.url.href);
+		for (const [key, value] of Object.entries(changes)) {
+			if (value === null) url.searchParams.delete(key);
+			else url.searchParams.set(key, value);
 		}
-		window.location.href = url.toString();
+		goto(url, { replace: true });
 	}
 
-	function toggleSortOrder() {
-		const url = new URL(window.location.href);
-		url.searchParams.set("order", data.sortOrder === "asc" ? "desc" : "asc");
-		window.location.href = url.toString();
-	}
-
-	function goToPage(pageNum: number) {
-		const url = new URL(window.location.href);
-		url.searchParams.set("page", pageNum.toString());
-		window.location.href = url.toString();
+	function updateSort(sort: "date" | "rating") {
+		if (sort !== data.sortBy) navigate({ sort, page: null });
 	}
 
 	function handleSearch() {
 		clearTimeout(debounceTimer);
-		debounceTimer = setTimeout(() => {
-			const url = new URL(window.location.href);
-			if (searchQuery) {
-				url.searchParams.set("q", searchQuery);
-			} else {
-				url.searchParams.delete("q");
-			}
-			url.searchParams.set("page", "1");
-			window.location.href = url.toString();
-		}, 500);
+		debounceTimer = setTimeout(() => navigate({ q: searchQuery.trim() || null, page: null }), 350);
 	}
 
-	const totalPages = $derived(Math.ceil(data.totalArticles / data.pageSize));
+	const totalPages = $derived(Math.max(1, Math.ceil(data.totalArticles / data.pageSize)));
+	// Keep the controls while a search is active, even if it narrows things to one or none.
+	const showControls = $derived(data.totalArticles > 1 || !!data.searchQuery);
 </script>
 
 <svelte:head>
-	<title>{data.user.name || "User"}'s Articles</title>
+	<title>{data.user.name || "User"} · Articles · PsyOps</title>
 </svelte:head>
 
-<PageContainer maxWidth="4xl">
-	<!-- Header -->
+<PageContainer maxWidth="3xl">
 	<header class="space-y-3">
-		<BackLink href="/user/{data.user.id}" label={data.user.name || "Anonymous"} class="-ml-3" />
-		<div class="flex flex-wrap items-end justify-between gap-3 border-b-2 border-double border-[#8ea6e0]/35 pb-3">
-			<div class="min-w-0">
-				<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">Bylines</p>
-				<UserLink id={data.user.id} name={data.user.name || "Anonymous"} avatar={data.user.logo} size="md" />
-			</div>
-			<p class="font-serif text-sm text-[#8e9abb]">
-				{data.totalArticles}
+		<BackLink href="/user/{data.user.id}" label={data.user.name || "Profile"} class="-ml-3" />
+		<div class="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+			<UserLink id={data.user.id} name={data.user.name} avatar={data.user.logo} size="md" />
+			<p class="shrink-0 text-xs text-fg-muted">
+				<span class="font-mono text-fg">{data.totalArticles}</span>
 				{data.totalArticles === 1 ? "article" : "articles"}
 			</p>
 		</div>
 
-		<!-- Search and Sort Controls -->
-		{#if data.totalArticles > 1}
-			<div class="flex flex-col sm:flex-row gap-3">
+		{#if showControls}
+			<div class="flex flex-col sm:flex-row gap-2">
 				<div class="relative flex-1">
-					<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#8e9abb]" />
+					<FluentSearch20Filled
+						class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-fg-muted pointer-events-none"
+					/>
 					<input
-						class="field-control w-full rounded-sm pl-11 pr-4 py-2.5"
-						placeholder="Search headlines…"
-						type="text"
+						class="field-control w-full rounded-sm pl-10 pr-4 py-2 text-sm"
+						placeholder="Search headlines"
+						type="search"
+						aria-label="Search headlines"
 						bind:value={searchQuery}
 						oninput={handleSearch}
 					/>
 				</div>
-
-				<div class="flex flex-wrap gap-2">
+				<div class="flex gap-2">
 					<Button
 						size="sm"
-						variant={data.sortBy === "date" ? "soft-amber" : "secondary"}
+						variant={data.sortBy === "date" ? "soft-blue" : "secondary"}
 						icon={FluentCalendar20Filled}
 						onclick={() => updateSort("date")}
+						aria-pressed={data.sortBy === "date"}
 					>
 						Date
 					</Button>
 					<Button
 						size="sm"
-						variant={data.sortBy === "rating" ? "soft-amber" : "secondary"}
+						variant={data.sortBy === "rating" ? "soft-blue" : "secondary"}
 						icon={FluentHeart20Filled}
 						onclick={() => updateSort("rating")}
+						aria-pressed={data.sortBy === "rating"}
 					>
-						Rating
+						Likes
 					</Button>
 					<IconButton
-						icon={FluentArrowSort20Filled}
+						icon={data.sortOrder === "asc" ? FluentArrowSortUp20Filled : FluentArrowSortDown20Filled}
 						label={data.sortOrder === "asc" ? "Ascending" : "Descending"}
 						variant="secondary"
 						size="sm"
-						onclick={toggleSortOrder}
+						onclick={() => navigate({ order: data.sortOrder === "asc" ? "desc" : "asc" })}
 					/>
 				</div>
 			</div>
 		{/if}
 	</header>
 
-	<!-- Clippings -->
 	{#if data.articles.length === 0}
-		<div class="panel-muted rounded-sm p-12 text-center">
-			<FluentDocument20Filled class="size-10 text-[#8e9abb] mx-auto mb-3 animate-idle-float" />
-			<p class="text-[#8e9abb]">
-				{#if data.searchQuery}
-					No headline matches “{data.searchQuery}”
-				{:else}
-					No bylines yet
+		<EmptyState
+			icon={data.searchQuery ? FluentSearch20Filled : FluentDocument20Filled}
+			title={data.searchQuery ? `Nothing matches “${data.searchQuery}”` : "No articles yet"}
+		>
+			{#snippet actions()}
+				{#if data.isOwnProfile && !data.searchQuery}
+					<Button href="/posts/new" variant="primary" icon={FluentDocument20Filled}>Write an article</Button>
 				{/if}
-			</p>
-			{#if data.isOwnProfile && !data.searchQuery}
-				<Button href="/posts/new" variant="soft-purple" size="sm" icon={FluentDocument20Filled} class="mt-4">
-					Write an Article
-				</Button>
-			{/if}
-		</div>
+			{/snippet}
+		</EmptyState>
 	{:else}
-		<div class="grid gap-3 sm:grid-cols-2">
-			{#each data.articles as article, i (article.id)}
-				<a
-					href="/posts/{article.id}"
-					class="group panel-interactive rounded-sm p-4 flex flex-col {i === 0 && data.currentPage === 1
-						? 'sm:col-span-2'
-						: ''}"
-				>
-					<p class="text-[10px] uppercase tracking-[0.2em] text-[#ffcb6b]/80 truncate">
-						{article.newspaperName ?? "Independent"}
-					</p>
-					<h3
-						class="mt-1 font-serif font-bold leading-snug text-[#eef2ff] group-hover:text-[#ffc857] transition-colors break-words {i ===
-							0 && data.currentPage === 1
-							? 'text-2xl'
-							: 'text-lg'}"
-					>
-						{article.title}
-					</h3>
-					<div class="mt-auto pt-3 flex items-center gap-3 text-xs text-[#8e9abb]">
-						<span class="font-mono">{formatDateTime(article.createdAt)}</span>
-						<span class="ml-auto flex items-center gap-1">
-							<FluentHeart20Filled class="size-3.5 text-red-400" />
-							{article.upvoteCount}
-						</span>
-					</div>
-				</a>
+		<div class="flex flex-col gap-2">
+			{#each data.articles as article (article.id)}
+				<ArticleCard
+					article={{
+						...article,
+						authorId: data.user.id,
+						authorName: data.user.name,
+						authorLogo: data.user.logo
+					}}
+				/>
 			{/each}
 		</div>
 
-		<!-- Pagination -->
 		{#if totalPages > 1}
-			<div class="flex items-center justify-center gap-2 pt-2">
+			<div class="flex items-center justify-center gap-3 pt-2">
 				<IconButton
 					icon={FluentChevronLeft20Filled}
 					label="Previous page"
 					variant="secondary"
 					size="sm"
-					disabled={data.currentPage === 1}
-					onclick={() => goToPage(data.currentPage - 1)}
+					disabled={data.currentPage <= 1}
+					onclick={() => navigate({ page: String(data.currentPage - 1) })}
 				/>
-
-				<span class="text-sm font-mono text-[#8e9abb]">{data.currentPage} / {totalPages}</span>
-
+				<span class="text-sm font-mono text-fg-muted">{data.currentPage} / {totalPages}</span>
 				<IconButton
 					icon={FluentChevronRight20Filled}
 					label="Next page"
 					variant="secondary"
 					size="sm"
-					disabled={data.currentPage === totalPages}
-					onclick={() => goToPage(data.currentPage + 1)}
+					disabled={data.currentPage >= totalPages}
+					onclick={() => navigate({ page: String(data.currentPage + 1) })}
 				/>
 			</div>
 		{/if}

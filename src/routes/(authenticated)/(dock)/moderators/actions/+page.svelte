@@ -41,13 +41,13 @@
 			case "message_delete":
 				return "text-red-400";
 			case "warning":
-				return "text-accent-fg";
+				return "text-primary-fg";
 			case "restriction":
 				return "text-red-400";
 			case "report_action":
 				return "text-friendly";
 			case "content_flag":
-				return "text-accent-fg";
+				return "text-primary-fg";
 			default:
 				return "text-fg-muted";
 		}

@@ -22,7 +22,7 @@
 >
 	{#snippet header()}
 		<div
-			class="flex size-9 shrink-0 items-center justify-center rounded-sm border border-[var(--color-accent-hi)]/35 bg-[var(--color-accent-hi)]/12 text-accent-fg"
+			class="flex size-9 shrink-0 items-center justify-center rounded-sm border border-[var(--color-primary-hi)]/35 bg-[var(--color-primary-hi)]/12 text-primary-fg"
 		>
 			<FluentEarth20Filled class="size-5" />
 		</div>

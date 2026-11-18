@@ -21,7 +21,7 @@
 		<div class="flex flex-col items-center space-y-5">
 			<div class="relative">
 				<div class="panel size-32 rounded-sm flex items-center justify-center">
-					<FluentPersonShield24Regular class="size-16 text-accent" />
+					<FluentPersonShield24Regular class="size-16 text-primary" />
 				</div>
 			</div>
 			<div class="text-center space-y-3">
@@ -443,7 +443,7 @@
 						<p class="text-sm">
 							Find your local authority: <a
 								href="https://edpb.europa.eu/about-edpb/board/members_en"
-								class="text-accent-fg hover:text-accent-hover hover:underline"
+								class="text-primary-fg hover:text-primary-hover hover:underline"
 								target="_blank"
 								rel="noopener noreferrer">EDPB Member List</a
 							>

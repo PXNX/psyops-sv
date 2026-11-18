@@ -168,10 +168,10 @@
 		<a
 			href="/state/{data.state.id}/election/{data.nextElection.id}"
 			class="group flex items-center gap-3 rounded-sm p-3 sm:p-4 border transition-colors {isActive
-				? 'bg-accent/12 border-accent/35 hover:border-accent/60'
+				? 'bg-primary/12 border-primary/35 hover:border-primary/60'
 				: 'panel-interactive'}"
 		>
-			<FluentVote20Filled class="size-5 shrink-0 {isActive ? 'text-accent-fg' : 'text-friendly'}" />
+			<FluentVote20Filled class="size-5 shrink-0 {isActive ? 'text-primary-fg' : 'text-friendly'}" />
 			<div class="flex-1 min-w-0">
 				<p class="text-sm font-bold text-fg flex items-center gap-2 flex-wrap">
 					{data.nextElection.isInaugural ? "Founding election" : "General election"}
@@ -184,7 +184,7 @@
 						: `opens in ${getTimeRemaining(data.nextElection.startDate)}`}
 				</p>
 			</div>
-			<span class="shrink-0 text-xs font-semibold text-accent-fg group-hover:text-accent-soft">
+			<span class="shrink-0 text-xs font-semibold text-primary-fg group-hover:text-primary-soft">
 				{isActive ? "Vote →" : "Ballot →"}
 			</span>
 		</a>
@@ -233,8 +233,8 @@
 						onclick={() => (selectedParty = active ? null : key)}
 						aria-pressed={active}
 						class="press-spring tap-target inline-flex items-center gap-2 rounded-sm border px-2.5 py-1.5 text-xs transition-colors {active
-							? 'border-accent/60 bg-accent/12 text-fg'
-							: 'border-line/20 bg-surface-4/60 text-fg-soft hover:border-accent/40'}"
+							? 'border-primary/60 bg-primary/12 text-fg'
+							: 'border-line/20 bg-surface-4/60 text-fg-soft hover:border-primary/40'}"
 					>
 						<span class="size-2.5 rounded-full shrink-0" style="background-color: {colorOf(key)}"></span>
 						<span class="font-semibold truncate max-w-32">{party?.abbreviation || party?.name || "Independent"}</span>
@@ -258,7 +258,7 @@
 							placeholderGradient="from-surface-13 to-surface-6"
 						/>
 						<div class="flex-1 min-w-0">
-							<p class="font-bold text-fg truncate group-hover:text-accent-hover transition-colors">
+							<p class="font-bold text-fg truncate group-hover:text-primary-hover transition-colors">
 								{party.name}
 							</p>
 							<p class="text-xs text-fg-muted truncate">
@@ -266,7 +266,7 @@
 								{/if}{Math.round(((data.partyDistribution[selectedParty] ?? 0) / data.totalSeats) * 100)}% of seats
 							</p>
 						</div>
-						<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-accent-hover" />
+						<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />
 					</a>
 				{/if}
 			{/if}

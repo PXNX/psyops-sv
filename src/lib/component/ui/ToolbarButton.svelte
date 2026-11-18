@@ -34,9 +34,9 @@
 	title={label}
 	aria-label={label}
 	aria-pressed={active}
-	class="flex {sizeClass} shrink-0 items-center justify-center rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 {active
-		? 'bg-accent/20 text-accent-fg'
-		: 'text-fg-muted hover:bg-accent/10 hover:text-fg'} {className}"
+	class="flex {sizeClass} shrink-0 items-center justify-center rounded-sm transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-40 {active
+		? 'bg-primary/20 text-primary-fg'
+		: 'text-fg-muted hover:bg-primary/10 hover:text-fg'} {className}"
 >
 	<Icon class="size-4" />
 </button>

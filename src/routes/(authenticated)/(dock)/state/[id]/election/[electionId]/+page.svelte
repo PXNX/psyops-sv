@@ -90,13 +90,13 @@
 			<p class="mt-2 text-[10px] uppercase tracking-[0.3em] text-fg-muted">Official Ballot</p>
 			<h1
 				class="mt-1 font-serif text-2xl sm:text-3xl font-black leading-tight {data.election.isInaugural
-					? 'text-accent-fg'
+					? 'text-primary-fg'
 					: 'text-fg'}"
 			>
 				{data.election.isInaugural ? "Founding" : "General"} Election
 			</h1>
 			<p class="mt-1 text-sm text-fg-soft">
-				Parliament of <a href="/state/{data.state.id}" class="hover:text-accent-hover">{data.state.name}</a>
+				Parliament of <a href="/state/{data.state.id}" class="hover:text-primary-hover">{data.state.name}</a>
 				· {data.election.totalSeats} seats
 			</p>
 			<p class="mt-3 flex items-center justify-center gap-2 flex-wrap text-xs text-fg-muted">
@@ -154,7 +154,7 @@
 						class="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 border-b border-dashed border-line/20 last:border-0 transition-colors {isUserVote
 							? 'bg-positive-bg/10'
 							: isSelected
-								? 'bg-accent/8'
+								? 'bg-primary/8'
 								: selectable
 									? 'hover:bg-surface-9/60 cursor-pointer'
 									: ''} {!hasEnoughMembers ? 'opacity-60' : ''}"
@@ -194,7 +194,7 @@
 						<div class="flex-1 min-w-0 space-y-1">
 							<a
 								href="/party/{party.id}"
-								class="block font-serif text-base sm:text-lg font-black text-fg hover:text-accent-hover transition-colors truncate"
+								class="block font-serif text-base sm:text-lg font-black text-fg hover:text-primary-hover transition-colors truncate"
 								onclick={(e) => e.stopPropagation()}
 							>
 								{party.name}
@@ -239,7 +239,7 @@
 								class="shrink-0 size-9 rounded-[2px] border-2 flex items-center justify-center {isUserVote
 									? 'border-positive text-positive-fg'
 									: isSelected
-										? 'border-accent text-accent-fg'
+										? 'border-primary text-primary-fg'
 										: 'border-line/45 text-transparent'}"
 								aria-hidden="true"
 							>

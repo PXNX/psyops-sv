@@ -46,7 +46,7 @@
 
 <div class="space-y-1.5" role="group" aria-label="Construction progress">
 	<div class="flex items-baseline justify-between gap-2 text-xs">
-		<span class="text-accent-fg font-semibold flex items-center gap-1.5">
+		<span class="text-primary-fg font-semibold flex items-center gap-1.5">
 			<span class="inline-block animate-bounce" aria-hidden="true">🏗️</span>
 			{#if toLevel}Building level {toLevel}{:else}Under construction{/if}
 		</span>
@@ -62,7 +62,7 @@
 		<div class="stripes h-full rounded-full transition-[width] duration-1000 ease-linear" style="width: {pct}%"></div>
 	</div>
 	<div class="flex items-baseline justify-between gap-2 text-xs">
-		<span class="font-mono font-bold text-accent-fg tabular-nums">{countdown}</span>
+		<span class="font-mono font-bold text-primary-fg tabular-nums">{countdown}</span>
 		{#if !compact && completesAt}
 			<span class="text-fg-muted truncate">done {formatDateTime(completesAt)}</span>
 		{/if}
@@ -71,7 +71,7 @@
 
 <style>
 	.stripes {
-		background-color: var(--color-accent);
+		background-color: var(--color-primary);
 		background-image: repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.22) 0 8px, transparent 8px 16px);
 		background-size: 22.6px 22.6px;
 		box-shadow: 0 0 10px rgb(47 129 247 / 0.45);

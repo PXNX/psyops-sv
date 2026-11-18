@@ -140,12 +140,12 @@
 			/>
 			<dl class="flex gap-5 text-center">
 				<div>
-					<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Newspapers</dt>
-					<dd class="text-xl font-bold text-[#eef2ff]">{data.career.stats.newspaperCount}</dd>
+					<dt class="text-[10px] text-[#8b949e] uppercase tracking-wide">Newspapers</dt>
+					<dd class="font-mono text-xl font-semibold text-[#e6edf3]">{data.career.stats.newspaperCount}</dd>
 				</div>
 				<div>
-					<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Medals</dt>
-					<dd class="text-xl font-bold text-[#ffcb6b]">{data.career.stats.medalCount}</dd>
+					<dt class="text-[10px] text-[#8b949e] uppercase tracking-wide">Medals</dt>
+					<dd class="font-mono text-xl font-semibold text-[#79b8ff]">{data.career.stats.medalCount}</dd>
 				</div>
 			</dl>
 		</div>
@@ -156,7 +156,7 @@
 		<section id="decorations" class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center justify-between gap-3">
 				<h2 class="section-title">
-					<FluentRibbon20Filled class="size-5 text-[#ffcb6b]" />
+					<FluentRibbon20Filled class="size-5 text-[#79b8ff]" />
 					Decorations
 				</h2>
 				{#if data.canAwardMedal}
@@ -169,10 +169,10 @@
 			{#if data.career.medals.length > 0}
 				<!-- Ribbon rack, three to a row like on a uniform -->
 				<div class="flex justify-center">
-					<div class="grid grid-cols-3 gap-1 p-2 rounded-sm bg-[#0b1120] border border-[#8ea6e0]/15">
+					<div class="grid grid-cols-3 gap-1 p-2 rounded-sm bg-[#151a22] border border-[#9aa7b8]/15">
 						{#each data.career.medals as medal, i (medal.id)}
 							<span
-								class="animate-pop-in block h-4 w-11 rounded-[1px] ring-1 ring-black/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_1px_2px_rgba(0,0,0,0.5)]"
+								class="animate-pop-in block h-4 w-11 rounded-[1px] border border-black/40"
 								style="background: {medalInfo(medal.medalType).ribbon}; --rise-delay: {100 + i * 50}ms"
 								title={medalInfo(medal.medalType).label}
 							></span>
@@ -186,14 +186,14 @@
 						{@const info = medalInfo(medal.medalType)}
 						<li class="panel-muted rounded-sm p-3 flex gap-3">
 							<div class="flex flex-col items-center shrink-0 w-11">
-								<span class="block h-3 w-full rounded-[1px] ring-1 ring-black/50" style="background: {info.ribbon}"
+								<span class="block h-3 w-full rounded-[1px] border border-black/40" style="background: {info.ribbon}"
 								></span>
 								<span class="text-2xl leading-none -mt-0.5" aria-hidden="true">{info.emoji}</span>
 							</div>
 							<div class="min-w-0 flex-1">
-								<p class="font-serif font-bold text-[#eef2ff] leading-tight">{info.label}</p>
-								<p class="text-sm text-[#c2cbe3] mt-1 italic break-words">“{medal.reason}”</p>
-								<p class="text-xs text-[#8e9abb] mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+								<p class="font-semibold text-[#e6edf3] leading-tight">{info.label}</p>
+								<p class="text-sm text-[#b6bfca] mt-1 italic break-words">“{medal.reason}”</p>
+								<p class="text-xs text-[#8b949e] mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
 									<UserLink
 										id={medal.awardedBy.id}
 										name={medal.awardedBy.name}
@@ -207,7 +207,7 @@
 					{/each}
 				</ul>
 			{:else}
-				<p class="text-sm text-[#8e9abb]">No decorations yet.</p>
+				<p class="text-sm text-[#8b949e]">No decorations yet.</p>
 			{/if}
 		</section>
 	{/if}
@@ -243,14 +243,14 @@
 			{/if}
 		</div>
 
-		<div class="panel rounded-sm divide-y divide-[#8ea6e0]/10">
+		<div class="panel rounded-sm divide-y divide-[#9aa7b8]/10">
 			{#if timelineEntries.length === 0}
-				<p class="text-sm text-[#8e9abb] text-center p-6">Nothing on record yet.</p>
+				<p class="text-sm text-[#8b949e] text-center p-6">Nothing on record yet.</p>
 			{:else}
 				{#each timelineEntries as entry, i (entry.kind + "-" + i)}
 					<div class="flex gap-3 sm:gap-4 p-3 sm:p-4">
 						<!-- Date column -->
-						<div class="w-[4.5rem] shrink-0 pt-0.5 font-mono text-[11px] text-[#8e9abb]">
+						<div class="w-[4.5rem] shrink-0 pt-0.5 font-mono text-[11px] text-[#8b949e]">
 							{#if entry.kind === "newspaper"}
 								—
 							{:else}
@@ -262,11 +262,11 @@
 						<div class="shrink-0 pt-0.5">
 							{#if entry.kind === "medal"}
 								<span
-									class="block h-3 w-7 mt-0.5 rounded-[1px] ring-1 ring-black/50"
+									class="block h-3 w-7 mt-0.5 rounded-[1px] border border-black/40"
 									style="background: {medalInfo(entry.medal.medalType).ribbon}"
 								></span>
 							{:else if entry.kind === "state"}
-								<FluentBuildingGovernment20Filled class="size-5 text-[#ffcb6b]" />
+								<FluentBuildingGovernment20Filled class="size-5 text-[#79b8ff]" />
 							{:else if entry.kind === "party"}
 								<FluentFlag20Filled class="size-5" style="color: {entry.membership.partyColor}" />
 							{:else if entry.kind === "newspaper"}
@@ -279,21 +279,21 @@
 						<!-- Entry -->
 						<div class="flex-1 min-w-0 text-sm">
 							{#if entry.kind === "medal"}
-								<p class="font-semibold text-[#eef2ff]">{medalInfo(entry.medal.medalType).label}</p>
-								<p class="text-xs text-[#8e9abb]">{entry.medal.stateName}</p>
+								<p class="font-semibold text-[#e6edf3]">{medalInfo(entry.medal.medalType).label}</p>
+								<p class="text-xs text-[#8b949e]">{entry.medal.stateName}</p>
 							{:else if entry.kind === "state"}
-								<p class="font-semibold text-[#eef2ff]">
+								<p class="font-semibold text-[#e6edf3]">
 									{entry.position.title} of
 									<a
 										href="/state/{entry.position.stateId}"
-										class="text-[#ffcb6b] hover:text-[#ffc857] transition-colors">{entry.position.stateName}</a
+										class="text-[#79b8ff] hover:text-[#8cc4ff] transition-colors">{entry.position.stateName}</a
 									>
 								</p>
 								{#if entry.position.term}
-									<p class="text-xs text-[#8e9abb]">Term {entry.position.term}</p>
+									<p class="text-xs text-[#8b949e]">Term {entry.position.term}</p>
 								{/if}
 							{:else if entry.kind === "party"}
-								<p class="font-semibold text-[#eef2ff]">
+								<p class="font-semibold text-[#e6edf3]">
 									<span class="capitalize">{entry.membership.role}</span> of
 									<a
 										href="/party/{entry.membership.partyId}"
@@ -307,14 +307,14 @@
 								</p>
 								<a
 									href="/state/{entry.membership.stateId}"
-									class="text-xs text-[#8e9abb] hover:text-[#c2cbe3] transition-colors"
+									class="text-xs text-[#8b949e] hover:text-[#b6bfca] transition-colors"
 								>
 									{entry.membership.stateName}
 								</a>
 							{:else if entry.kind === "newspaper"}
 								<a
 									href="/newspaper/{entry.newspaper.newspaperId}"
-									class="font-semibold text-[#eef2ff] hover:text-[#ffc857] transition-colors"
+									class="font-semibold text-[#e6edf3] hover:text-[#8cc4ff] transition-colors"
 								>
 									{entry.newspaper.newspaperName}
 								</a>
@@ -327,7 +327,7 @@
 									{/each}
 								</div>
 							{:else}
-								<p class="font-semibold text-[#eef2ff]">Enlisted</p>
+								<p class="font-semibold text-[#e6edf3]">Enlisted</p>
 							{/if}
 						</div>
 					</div>
@@ -369,7 +369,7 @@
 				<option value="leadership">👑 Leadership — exceptional leadership</option>
 			</select>
 			<span
-				class="mt-2 block h-3 w-14 rounded-[1px] ring-1 ring-black/50"
+				class="mt-2 block h-3 w-14 rounded-[1px] border border-black/40"
 				style="background: {medalInfo(medalForm.medalType).ribbon}"
 			></span>
 		</div>

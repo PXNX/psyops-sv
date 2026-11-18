@@ -41,7 +41,7 @@
 	const stamps: Record<Outcome, { label: string; cls: string; tilt: string }> = {
 		passed: { label: "Passed", cls: "border-positive/75 text-positive-fg", tilt: "-9deg" },
 		rejected: { label: "Rejected", cls: "border-red-500/75 text-red-300", tilt: "7deg" },
-		failed: { label: "Failed", cls: "border-accent/75 text-accent-fg", tilt: "-5deg" }
+		failed: { label: "Failed", cls: "border-primary/75 text-primary-fg", tilt: "-5deg" }
 	};
 </script>
 
@@ -64,7 +64,7 @@
 				onclick={() => (selectedTab = tab.key)}
 				class="tap-target flex-1 sm:flex-none px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap {selectedTab ===
 				tab.key
-					? 'text-fg border-accent'
+					? 'text-fg border-primary'
 					: 'text-fg-muted border-transparent hover:text-fg'}"
 			>
 				{tab.label}
@@ -141,7 +141,7 @@
 							<span class="text-red-300">Noes {proposal.voteCounts.against}</span>
 						</p>
 						{#if outcome === "failed"}
-							<p class="text-xs text-accent-fg">Passed the vote, but couldn't be carried out.</p>
+							<p class="text-xs text-primary-fg">Passed the vote, but couldn't be carried out.</p>
 						{/if}
 					</div>
 				</li>

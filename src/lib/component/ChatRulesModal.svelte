@@ -77,8 +77,8 @@
 				</div>
 			</div>
 
-			<div class="bg-accent/12 rounded-sm border border-accent/35 p-4 mb-6">
-				<p class="text-sm text-accent-fg font-semibold mb-2">⚠️ Warning System</p>
+			<div class="bg-primary/12 rounded-sm border border-primary/35 p-4 mb-6">
+				<p class="text-sm text-primary-fg font-semibold mb-2">⚠️ Warning System</p>
 				<p class="text-sm text-fg-soft">
 					If an admin identifies a rule violation, it will be penalized with a warning depending on severity. After
 					three warnings, the next violation will result in a restriction or ban from the chat.

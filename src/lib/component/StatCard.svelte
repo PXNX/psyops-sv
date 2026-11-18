@@ -41,10 +41,10 @@
 			labelColor: "text-positive-fg"
 		},
 		amber: {
-			bg: "bg-accent/12",
-			border: "border-accent/35 hover:border-accent/50",
-			iconColor: "text-accent-fg",
-			labelColor: "text-accent-fg"
+			bg: "bg-primary/12",
+			border: "border-primary/35 hover:border-primary/50",
+			iconColor: "text-primary-fg",
+			labelColor: "text-primary-fg"
 		},
 		red: {
 			bg: "bg-red-600/15",

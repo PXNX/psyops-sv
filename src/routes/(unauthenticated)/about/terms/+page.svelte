@@ -19,7 +19,7 @@
 		<div class="flex flex-col items-center space-y-5">
 			<div class="relative">
 				<div class="panel size-32 rounded-sm flex items-center justify-center">
-					<FluentDocumentText20Filled class="size-16 text-accent" />
+					<FluentDocumentText20Filled class="size-16 text-primary" />
 				</div>
 			</div>
 			<div class="text-center space-y-3">
@@ -164,9 +164,9 @@
 							be exchanged for real money or transferred outside the platform.
 						</p>
 						<div
-							class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-start gap-3"
+							class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-start gap-3"
 						>
-							<FluentWarning20Filled class="size-5 text-accent-fg shrink-0 mt-0.5" />
+							<FluentWarning20Filled class="size-5 text-primary-fg shrink-0 mt-0.5" />
 							<span class="text-sm">
 								We reserve the right to modify, suspend, or terminate virtual items or currency at any time for any
 								reason.

@@ -427,7 +427,7 @@
 					{#if timeline.rows.length === 0}
 						<div class="flex flex-1 flex-col items-center justify-center gap-3 py-16 text-center">
 							<div
-								class="flex size-12 items-center justify-center rounded-sm border border-[var(--color-accent-hi)]/30 bg-[var(--color-accent-hi)]/10 text-accent-fg"
+								class="flex size-12 items-center justify-center rounded-sm border border-[var(--color-primary-hi)]/30 bg-[var(--color-primary-hi)]/10 text-primary-fg"
 							>
 								<EmptyIcon class="size-6" />
 							</div>
@@ -657,17 +657,17 @@
 		-webkit-tap-highlight-color: transparent;
 	}
 	.bubble:focus-visible {
-		@apply ring-1 ring-[var(--color-accent-hi)];
+		@apply ring-1 ring-[var(--color-primary-hi)];
 	}
 	.bubble.sending {
 		@apply cursor-default opacity-60;
 	}
 
 	.bubble.mine {
-		@apply border-[var(--color-accent-hi)]/40 bg-accent-lo/35 text-fg;
+		@apply border-[var(--color-primary-hi)]/40 bg-primary-lo/35 text-fg;
 	}
 	.bubble.mine:hover {
-		@apply border-[var(--color-accent-hi)]/70;
+		@apply border-[var(--color-primary-hi)]/70;
 	}
 	.bubble.theirs {
 		@apply border-white/10 bg-surface-5 text-fg-body;
@@ -699,7 +699,7 @@
 		line-height: 1.7;
 	}
 	.mine .stamp {
-		@apply text-accent-fg;
+		@apply text-primary-fg;
 	}
 	.theirs .stamp,
 	.emoji .stamp {
@@ -710,25 +710,25 @@
 		@apply underline underline-offset-2 [overflow-wrap:anywhere];
 	}
 	.mine .link-in-bubble {
-		@apply text-accent-soft;
+		@apply text-primary-soft;
 	}
 	.theirs .link-in-bubble {
-		@apply text-accent-fg;
+		@apply text-primary-fg;
 	}
 
 	.jump {
-		@apply absolute right-4 bottom-3 flex size-10 items-center justify-center rounded-sm border border-white/15 bg-surface-5 text-fg-body hover:border-[var(--color-accent-hi)]/60;
+		@apply absolute right-4 bottom-3 flex size-10 items-center justify-center rounded-sm border border-white/15 bg-surface-5 text-fg-body hover:border-[var(--color-primary-hi)]/60;
 		animation: pop-in 220ms ease-out backwards;
 	}
 	.jump-count {
-		@apply absolute -top-2 -right-2 min-w-5 rounded-[4px] bg-[var(--color-accent-hi)] px-1 text-center font-mono text-[11px] leading-5 font-bold text-white;
+		@apply absolute -top-2 -right-2 min-w-5 rounded-[4px] bg-[var(--color-primary-hi)] px-1 text-center font-mono text-[11px] leading-5 font-bold text-white;
 	}
 
 	.composer {
 		@apply flex items-end gap-2 rounded-sm border border-white/10 bg-surface-3 py-1 pr-1 pl-3 transition-colors duration-150;
 	}
 	.composer:focus-within {
-		@apply border-[var(--color-accent-hi)]/70;
+		@apply border-[var(--color-primary-hi)]/70;
 	}
 	.composer-input {
 		@apply max-h-40 min-h-10 flex-1 resize-none border-0 bg-transparent px-0 py-2 text-base leading-6 text-fg shadow-none placeholder:text-fg-muted/70 focus:ring-0 focus:outline-none;

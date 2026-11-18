@@ -97,7 +97,7 @@
 			<div class="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-fg-muted">
 				<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
 				{#if data.party.ideology}<Badge tone="purple" size="xs">{data.party.ideology}</Badge>{/if}
-				<a href="/state/{data.party.state.id}" class="flex items-center gap-1 hover:text-accent-hover">
+				<a href="/state/{data.party.state.id}" class="flex items-center gap-1 hover:text-primary-hover">
 					{#if data.party.state.logo}
 						<img decoding="async" src={data.party.state.logo} alt="" class="size-4 rounded-sm" />
 					{:else}
@@ -152,11 +152,11 @@
 
 		<!-- Stats strip -->
 		<div class="grid grid-cols-3 divide-x divide-line/15 border-t border-line/15 text-center">
-			<a href="/party/{data.party.id}/member" class="p-3 hover:bg-accent/5">
+			<a href="/party/{data.party.id}/member" class="p-3 hover:bg-primary/5">
 				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Members</p>
 				<p class="text-xl font-bold text-fg">{data.party.memberCount}</p>
 			</a>
-			<a href="/state/{data.party.state.id}/parliament" class="p-3 hover:bg-accent/5">
+			<a href="/state/{data.party.state.id}/parliament" class="p-3 hover:bg-primary/5">
 				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Seats</p>
 				<p class="text-xl font-bold text-fg">{data.parliamentSeats || 0}</p>
 			</a>
@@ -223,7 +223,7 @@
 				{/each}
 			</ul>
 			{#if roster.length > ROSTER_LIMIT}
-				<a href="/party/{data.party.id}/member" class="block text-center text-xs text-fg-muted hover:text-accent-hover">
+				<a href="/party/{data.party.id}/member" class="block text-center text-xs text-fg-muted hover:text-primary-hover">
 					+{roster.length - ROSTER_LIMIT} more
 				</a>
 			{/if}

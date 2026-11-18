@@ -1,4 +1,4 @@
-// src/routes/(authenticated)/user/[id]/+page.server.ts
+// src/routes/(authenticated)/(dock)/user/[id]/+page.server.ts
 import { db } from "#lib/server/db.js";
 import {
 	accounts,
@@ -23,11 +23,15 @@ import {
 	blocLeaders,
 	blocDiplomats,
 	blocLeaderElections,
-	blocLeaderCandidates
+	blocLeaderCandidates,
+	companyShares,
+	shareTransactions,
+	factories,
+	newspaperSubscriptions
 } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { fail } from "@sveltejs/kit";
-import { eq, count, and, gte } from "drizzle-orm";
+import { eq, count, and, gte, inArray, desc } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 import { sendMedalNotification } from "#lib/server/service/inbox.js";
@@ -131,7 +135,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		};
 	})();
 
-	// Check if user is a president, then get the state logo URL
+	// Check if user is a president, then get the state logo URL and, when the
+	// state belongs to a bloc, that bloc (linked next to the state on the profile).
 	const presidencyPromise = (async () => {
 		const presidency = await db.query.presidents.findFirst({
 			where: eq(presidents.userId, params.id),
@@ -139,8 +144,20 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				state: true
 			}
 		});
-		const presidencyLogoUrl = await getLogoUrl(presidency?.state?.logo);
-		return { presidency, presidencyLogoUrl };
+		const blocId = presidency?.state.blocId ?? null;
+		const [presidencyLogoUrl, presidencyBlocRow] = await Promise.all([
+			getLogoUrl(presidency?.state?.logo),
+			blocId ? db.query.blocs.findFirst({ where: eq(blocs.id, blocId) }) : undefined
+		]);
+		const presidencyBloc = presidencyBlocRow
+			? {
+					id: presidencyBlocRow.id,
+					name: presidencyBlocRow.name,
+					color: presidencyBlocRow.color,
+					logo: await getLogoUrl(presidencyBlocRow.logo)
+				}
+			: null;
+		return { presidency, presidencyLogoUrl, presidencyBloc };
 	})();
 
 	// Get available ministries if current user is president and viewing someone else
@@ -204,8 +221,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return { viewerBlocId, canAppointBlocLeadership, availableBlocRoles, viewerBlocName };
 	})();
 
-	// Organizations the viewed user belongs to: newspaper staff positions and owned companies.
-	// Shown together with `party` (above) as "Organizations" on the profile.
+	// Every company the viewed user owns (companies.ownerId, any number of rows) and
+	// every newspaper they own or write for (one journalists row per newspaper,
+	// rank owner/editor/author), each with logo and one key figure.
 	const organizationsPromise = (async () => {
 		const [journalistRecords, ownedCompanies] = await Promise.all([
 			db.query.journalists.findMany({
@@ -213,33 +231,91 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				with: { newspaper: true }
 			}),
 			db.query.companies.findMany({
-				where: eq(companies.ownerId, params.id)
+				where: eq(companies.ownerId, params.id),
+				orderBy: (c, { asc }) => [asc(c.foundedAt), asc(c.id)]
 			})
 		]);
 
-		const [newspaperMemberships, companyLogos] = await Promise.all([
-			Promise.all(
-				journalistRecords.map(async (j) => ({
-					newspaperId: j.newspaper.id,
-					name: j.newspaper.name,
-					logo: await getLogoUrl(j.newspaper.logo),
-					rank: j.rank,
-					joinedAt: j.joinedAt
-				}))
-			),
-			Promise.all(ownedCompanies.map(async (c) => [c.id, await getLogoUrl(c.logo)] as const))
+		const companyIds = ownedCompanies.map((c) => c.id);
+		const newspaperIds = journalistRecords.map((j) => j.newspaperId);
+
+		const [shareRows, lastTrades, factoryCounts, subscriberCounts, companyLogos, newspaperLogos] = await Promise.all([
+			companyIds.length > 0
+				? db
+						.select({
+							companyId: companyShares.companyId,
+							totalShares: companyShares.totalShares,
+							ipoPrice: companyShares.ipoPrice
+						})
+						.from(companyShares)
+						.where(inArray(companyShares.companyId, companyIds))
+				: [],
+			// Latest trade per listed company: its per-share price is the current quote.
+			companyIds.length > 0
+				? db
+						.selectDistinctOn([shareTransactions.companyId], {
+							companyId: shareTransactions.companyId,
+							quantity: shareTransactions.quantity,
+							totalPrice: shareTransactions.totalPrice
+						})
+						.from(shareTransactions)
+						.where(inArray(shareTransactions.companyId, companyIds))
+						.orderBy(shareTransactions.companyId, desc(shareTransactions.completedAt), desc(shareTransactions.id))
+				: [],
+			companyIds.length > 0
+				? db
+						.select({ companyId: factories.companyId, count: count() })
+						.from(factories)
+						.where(inArray(factories.companyId, companyIds))
+						.groupBy(factories.companyId)
+				: [],
+			newspaperIds.length > 0
+				? db
+						.select({ newspaperId: newspaperSubscriptions.newspaperId, count: count() })
+						.from(newspaperSubscriptions)
+						.where(inArray(newspaperSubscriptions.newspaperId, newspaperIds))
+						.groupBy(newspaperSubscriptions.newspaperId)
+				: [],
+			Promise.all(ownedCompanies.map((c) => getLogoUrl(c.logo))),
+			Promise.all(journalistRecords.map((j) => getLogoUrl(j.newspaper.logo)))
 		]);
 
-		const companyLogoMap = new Map(companyLogos);
+		const sharesByCompany = new Map(shareRows.map((r) => [r.companyId, r]));
+		const lastTradeByCompany = new Map(lastTrades.map((t) => [t.companyId, t]));
+		const factoriesByCompany = new Map(factoryCounts.map((f) => [f.companyId, f.count]));
+		const subscribersByNewspaper = new Map(subscriberCounts.map((s) => [s.newspaperId, s.count]));
+
+		const rankOrder = { owner: 0, editor: 1, author: 2 } as const;
 
 		return {
-			newspapers: newspaperMemberships,
-			companies: ownedCompanies.map((c) => ({
-				id: c.id,
-				name: c.name,
-				logo: companyLogoMap.get(c.id) ?? null,
-				foundedAt: c.foundedAt
-			}))
+			companies: ownedCompanies.map((c, i) => {
+				const shares = sharesByCompany.get(c.id);
+				const trade = lastTradeByCompany.get(c.id);
+				const sharePrice = shares
+					? trade && trade.quantity > 0
+						? Math.round(Number(trade.totalPrice) / trade.quantity)
+						: Number(shares.ipoPrice)
+					: null;
+				return {
+					id: c.id,
+					name: c.name,
+					logo: companyLogos[i] ?? null,
+					foundedAt: c.foundedAt,
+					factoryCount: factoriesByCompany.get(c.id) ?? 0,
+					sharePrice,
+					marketValue: shares && sharePrice !== null ? sharePrice * shares.totalShares : null
+				};
+			}),
+			newspapers: journalistRecords
+				.map((j, i) => ({
+					newspaperId: j.newspaper.id,
+					name: j.newspaper.name,
+					logo: newspaperLogos[i] ?? null,
+					rank: j.rank,
+					joinedAt: j.joinedAt,
+					subscribers: subscribersByNewspaper.get(j.newspaperId) ?? 0
+				}))
+				.sort((a, b) => rankOrder[a.rank] - rankOrder[b.rank] || a.joinedAt.getTime() - b.joinedAt.getTime())
 		};
 	})();
 
@@ -261,43 +337,47 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	// Data for the "Edit Profile" bottom sheet — only needed when viewing your own profile.
 	const profileEditPromise = (async () => {
-		let editForm: Awaited<ReturnType<typeof superValidate<typeof updateProfileSchema>>> | null = null;
-		let userBalance = 0;
-		let canAffordProfileEdit = false;
-		let isProfileEditOnCooldown = false;
-		let profileEditCooldownEndsAt: string | null = null;
-
-		if (isOwnProfile) {
-			const [wallet, form] = await Promise.all([
-				db.query.userWallets.findFirst({
-					where: eq(userWallets.userId, account.id)
-				}),
-				superValidate(
-					{
-						name: user.profile?.name || account.email.split("@")[0],
-						bio: user.profile?.bio || ""
-					},
-					valibot(updateProfileSchema)
-				)
-			]);
-			editForm = form;
-			userBalance = Number(wallet?.balance ?? 0);
-			canAffordProfileEdit = userBalance >= PROFILE_EDIT_CONFIG.COST;
-
-			if (user.profile?.updatedAt) {
-				const cooldownEnd = new Date(user.profile.updatedAt);
-				cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
-				if (new Date() < cooldownEnd) {
-					isProfileEditOnCooldown = true;
-					profileEditCooldownEndsAt = cooldownEnd.toISOString();
-				}
-			}
+		if (!isOwnProfile) {
+			return {
+				editForm: null,
+				userBalance: 0,
+				canAffordProfileEdit: false,
+				isProfileEditOnCooldown: false,
+				profileEditCooldownEndsAt: null
+			};
 		}
 
-		return { editForm, userBalance, canAffordProfileEdit, isProfileEditOnCooldown, profileEditCooldownEndsAt };
+		const [wallet, editForm] = await Promise.all([
+			db.query.userWallets.findFirst({
+				where: eq(userWallets.userId, account.id)
+			}),
+			superValidate(
+				{
+					name: user.profile?.name || account.email.split("@")[0],
+					bio: user.profile?.bio || ""
+				},
+				valibot(updateProfileSchema)
+			)
+		]);
+		const userBalance = Number(wallet?.balance ?? 0);
+
+		let profileEditCooldownEndsAt: string | null = null;
+		if (user.profile?.updatedAt) {
+			const cooldownEnd = new Date(user.profile.updatedAt);
+			cooldownEnd.setHours(cooldownEnd.getHours() + PROFILE_EDIT_CONFIG.COOLDOWN_HOURS);
+			if (new Date() < cooldownEnd) profileEditCooldownEndsAt = cooldownEnd.toISOString();
+		}
+
+		return {
+			editForm,
+			userBalance,
+			canAffordProfileEdit: userBalance >= PROFILE_EDIT_CONFIG.COST,
+			isProfileEditOnCooldown: profileEditCooldownEndsAt !== null,
+			profileEditCooldownEndsAt
+		};
 	})();
 
-	// Medals for the ribbon bar on the identity card (display only).
+	// Medals for the ribbon bar on the profile (display only).
 	const medalsPromise = db.query.userMedals.findMany({
 		where: eq(userMedals.userId, params.id),
 		with: { state: true },
@@ -311,7 +391,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		[upvoteCountResult],
 		party,
 		logoUrl,
-		{ presidency, presidencyLogoUrl },
+		{ presidency, presidencyLogoUrl, presidencyBloc },
 		governorship,
 		ministries,
 		currentUserPresidency,
@@ -454,7 +534,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					stateName: presidency.state.name,
 					stateLogo: presidencyLogoUrl,
 					electedAt: presidency.electedAt,
-					term: presidency.term
+					term: presidency.term,
+					bloc: presidencyBloc
 				}
 			: null,
 		governorship: governorship
@@ -760,7 +841,7 @@ export const actions: Actions = {
 			.where(eq(residences.userId, params.id))
 			.limit(1);
 
-		if (!userResidence.length || userResidence[0].homeStateId !== presidency.stateId) {
+		if (userResidence[0]?.homeStateId !== presidency.stateId) {
 			return fail(400, { error: "User must be a citizen of your state to be appointed" });
 		}
 
@@ -849,7 +930,7 @@ export const actions: Actions = {
 			.where(eq(residences.userId, params.id))
 			.limit(1);
 
-		if (!targetResidence.length || targetResidence[0].homeStateBlocId !== blocId) {
+		if (targetResidence[0]?.homeStateBlocId !== blocId) {
 			return fail(400, { error: "User must be a citizen of a member state of your bloc to be appointed" });
 		}
 

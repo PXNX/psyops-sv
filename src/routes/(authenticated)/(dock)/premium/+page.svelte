@@ -32,12 +32,12 @@
 	/>
 
 	<!-- Status -->
-	<div class="rounded-sm p-5 space-y-4 {data.status.active ? 'border border-accent/35 bg-accent/12' : 'panel'}">
+	<div class="rounded-sm p-5 space-y-4 {data.status.active ? 'border border-primary/35 bg-primary/12' : 'panel'}">
 		<div class="flex items-center justify-between gap-3">
 			<div>
 				<p class="text-[10px] text-fg-muted uppercase tracking-wide">Membership status</p>
 				{#if data.status.active}
-					<p class="text-lg font-bold text-accent-fg">Active</p>
+					<p class="text-lg font-bold text-primary-fg">Active</p>
 					<p class="text-xs text-fg-muted">Expires {formatDate(data.status.premiumUntil)}</p>
 				{:else}
 					<p class="text-lg font-bold text-fg-soft">Inactive</p>
@@ -45,7 +45,7 @@
 			</div>
 			<div
 				class="size-12 rounded-sm flex items-center justify-center {data.status.active
-					? 'bg-accent border border-accent-hover'
+					? 'bg-primary border border-primary-hover'
 					: 'bg-surface-4 border border-line/15'}"
 			>
 				<FluentStar20Filled class="size-6 {data.status.active ? 'text-[#ffffff]' : 'text-fg-muted'}" />
@@ -68,7 +68,7 @@
 					</div>
 					<input
 						type="checkbox"
-						class="toggle border-line/25 checked:border-accent/60 checked:bg-accent checked:text-[#ffffff]"
+						class="toggle border-line/25 checked:border-primary/60 checked:bg-primary checked:text-[#ffffff]"
 						bind:checked={automation}
 						onchange={(e) => e.currentTarget.form?.requestSubmit()}
 					/>
@@ -94,7 +94,7 @@
 			<FluentBot20Filled class="size-5 text-friendly" />
 			Get premium via Telegram
 		</h2>
-		<p class="text-xs text-accent-fg/80">Payments are mocked for now — premium via the bot is free.</p>
+		<p class="text-xs text-primary-fg/80">Payments are mocked for now — premium via the bot is free.</p>
 		<div class="grid gap-2 sm:grid-cols-2">
 			{#each data.plans as plan}
 				<div class="panel-muted rounded-sm p-3">
@@ -110,7 +110,7 @@
 			<p class="text-sm text-fg-muted">
 				Connect your Telegram account in <a
 					href="/settings"
-					class="text-accent-fg underline hover:text-accent-hover transition-colors">Settings</a
+					class="text-primary-fg underline hover:text-primary-hover transition-colors">Settings</a
 				> first, then request premium directly in the bot.
 			</p>
 		{:else}

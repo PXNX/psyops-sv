@@ -90,6 +90,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		.insert(regions)
 		.values({
 			latitude: "48.8566",
+			terrain: "urban",
 			longitude: "2.3522",
 			stateId: state1!.id,
 			rating: 5,
@@ -103,6 +104,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		.insert(regions)
 		.values({
 			latitude: "52.5200",
+			terrain: "plains",
 			longitude: "13.4050",
 			stateId: state1!.id,
 			rating: 3,
@@ -116,6 +118,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		.insert(regions)
 		.values({
 			latitude: "55.7558",
+			terrain: "forest",
 			longitude: "37.6173",
 			stateId: state2!.id,
 			rating: 7,
@@ -130,6 +133,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		.insert(regions)
 		.values({
 			latitude: "50.0755",
+			terrain: "hills",
 			longitude: "14.4378",
 			stateId: state2!.id,
 			rating: 4,
@@ -144,6 +148,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		.insert(regions)
 		.values({
 			latitude: "47.4979",
+			terrain: "plains",
 			longitude: "19.0402",
 			stateId: state3!.id,
 			rating: 2,

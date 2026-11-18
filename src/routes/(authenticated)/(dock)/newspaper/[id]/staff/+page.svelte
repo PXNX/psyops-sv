@@ -1,117 +1,36 @@
 <!-- src/routes/(authenticated)/(dock)/newspaper/[id]/staff/+page.svelte -->
 <script lang="ts">
-	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import BackLink from "#lib/component/ui/BackLink.svelte";
-	import Badge from "#lib/component/ui/Badge.svelte";
-	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
-	import MdiNewspaper from "~icons/mdi/newspaper";
-	import MdiCrown from "~icons/mdi/crown";
-	import MdiPencil from "~icons/mdi/pencil";
-	import MdiAccount from "~icons/mdi/account";
+	import PageHeader from "#lib/component/PageHeader.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import { Badge } from "#lib/component/ui/index.js";
+	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 
 	let { data } = $props();
 
-	function getRoleIcon(role: string) {
-		switch (role) {
-			case "owner":
-				return MdiCrown;
-			case "editor":
-				return MdiPencil;
-			default:
-				return MdiAccount;
-		}
-	}
-
-	function getRoleTone(role: string) {
-		switch (role) {
-			case "owner":
-				return "amber";
-			case "editor":
-				return "purple";
-			case "author":
-				return "blue";
-			default:
-				return "neutral";
-		}
-	}
-
-	function formatRole(role: string) {
-		return role.charAt(0).toUpperCase() + role.slice(1);
-	}
+	const roleTone = { owner: "blue", editor: "purple", author: "neutral" } as const;
+	const roleLabel = { owner: "Publisher", editor: "Editor", author: "Writer" } as const;
 </script>
 
-<svelte:head>
-	<title>{`Staff · ${data.newspaper.name} · PsyOps`}</title>
-</svelte:head>
-
-<PageContainer maxWidth="5xl">
-	<!-- Header -->
-	<div class="flex items-center gap-3">
-		<BackLink href="/newspaper/{data.newspaper.id}" />
-
-		{#if data.newspaper.logoUrl}
-			<div class="size-10 rounded-sm overflow-hidden bg-[#131c33] flex-shrink-0">
-				<img
-					loading="lazy"
-					decoding="async"
-					src={data.newspaper.logoUrl}
-					alt={data.newspaper.name}
-					class="w-full h-full object-cover"
-				/>
-			</div>
-		{:else}
-			<div
-				class="size-10 rounded-sm bg-[#2f6be0]/18 border border-[#6aa8ff]/30 flex items-center justify-center flex-shrink-0"
-			>
-				<MdiNewspaper class="size-5 text-[#c3dbff]" />
-			</div>
-		{/if}
-
-		<div class="min-w-0">
-			<h1 class="text-xl font-bold text-[#eef2ff] truncate">Staff Members</h1>
-			<p class="text-sm text-[#8e9abb] truncate">
-				{data.newspaper.name} · {data.staff.length}
-				{data.staff.length === 1 ? "member" : "members"}
-			</p>
-		</div>
-	</div>
+<PageContainer maxWidth="3xl">
+	<PageHeader
+		title="Staff"
+		documentTitle="Staff · {data.newspaper.name}"
+		backHref="/newspaper/{data.newspaper.id}"
+		backLabel={data.newspaper.name}
+	/>
 
 	{#if data.staff.length === 0}
-		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#131c33] mb-4">
-				<FluentPerson20Filled class="size-8 text-[#8e9abb]" />
-			</div>
-			<h4 class="text-xl font-bold text-[#eef2ff] mb-2">No staff members</h4>
-			<p class="text-[#8e9abb] text-sm">This newspaper doesn't have any staff members yet</p>
-		</div>
+		<EmptyState icon={FluentPeople20Filled} title="No staff yet" />
 	{:else}
-		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-			{#each data.staff as member}
-				<a href="/user/{member.id}" class="group panel-interactive rounded-sm p-5">
-					<div class="flex items-start gap-4">
-						<!-- Avatar -->
-						<Logo
-							src={member.logoUrl}
-							alt={member.name}
-							class="size-14"
-							placeholderIcon={FluentPerson20Filled}
-							placeholderGradient="from-[#2f6be0]/40 to-[#2f6be0]/40"
-						/>
-
-						<!-- Info -->
-						<div class="flex-1 min-w-0">
-							<h3 class="font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate mb-2">
-								{member.name}
-							</h3>
-
-							<Badge tone={getRoleTone(member.role)} icon={getRoleIcon(member.role)}>
-								{formatRole(member.role)}
-							</Badge>
-						</div>
-					</div>
-				</a>
+		<ul class="panel rounded-sm divide-y divide-white/[0.06] overflow-hidden">
+			{#each data.staff as member (member.id)}
+				<li class="flex items-center gap-3 px-3 sm:px-4 py-2.5 min-w-0">
+					<UserLink id={member.id} name={member.name} avatar={member.logoUrl} class="flex-1" />
+					<Badge tone={roleTone[member.role]} size="xs" class="shrink-0">{roleLabel[member.role]}</Badge>
+				</li>
 			{/each}
-		</div>
+		</ul>
 	{/if}
 </PageContainer>

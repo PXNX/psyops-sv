@@ -75,10 +75,10 @@
 			$errors.logo
 				? "border-red-500/50"
 				: dragActive
-					? "border-accent bg-accent/10"
+					? "border-primary bg-primary/10"
 					: $form.logo
 						? "border-positive-bg/60 bg-positive-bg/5"
-						: `border-accent/30${$submitting ? "" : " hover:border-accent/50 hover:bg-accent/10"}`,
+						: `border-primary/30${$submitting ? "" : " hover:border-primary/50 hover:bg-primary/10"}`,
 			$submitting ? "opacity-50" : ""
 		]
 			.filter(Boolean)
@@ -188,8 +188,8 @@
 				<button type="button" onclick={() => fileInput?.click()} disabled={$submitting} class={uploadBoxClass}>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-accent/12 border border-accent/35 p-3">
-								<FluentPerson20Filled class="size-8 text-accent-fg" />
+							<div class="rounded-full bg-primary/12 border border-primary/35 p-3">
+								<FluentPerson20Filled class="size-8 text-primary-fg" />
 							</div>
 							<div class="text-center">
 								<p class="text-base font-semibold text-fg">

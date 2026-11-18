@@ -83,7 +83,7 @@
 		const position = getWagePosition();
 		if (position === "Highest") return "text-positive-fg";
 		if (position === "Above Average") return "text-friendly-fg";
-		if (position === "Average") return "text-accent-fg";
+		if (position === "Average") return "text-primary-fg";
 		return "text-red-300";
 	}
 

@@ -15,7 +15,7 @@
 		purple: "bg-politics-bg/20 text-politics-fg",
 		blue: "bg-friendly-bg/20 text-friendly-fg",
 		red: "bg-red-600/20 text-red-300",
-		amber: "bg-accent/15 text-accent-fg"
+		amber: "bg-primary/15 text-primary-fg"
 	};
 </script>
 

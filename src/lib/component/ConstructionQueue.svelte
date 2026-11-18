@@ -26,7 +26,7 @@
 		<li class="panel-muted rounded-sm p-3 space-y-3 animate-rise-in">
 			<div class="flex items-center gap-3">
 				<div
-					class="size-11 shrink-0 rounded-sm bg-accent/12 border border-accent/35 flex items-center justify-center text-2xl"
+					class="size-11 shrink-0 rounded-sm bg-primary/12 border border-primary/35 flex items-center justify-center text-2xl"
 					aria-hidden="true"
 				>
 					{template?.icon ?? "🏗️"}

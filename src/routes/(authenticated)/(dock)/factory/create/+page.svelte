@@ -174,12 +174,12 @@
 							{/each}
 						</div>
 					{:else}
-						<p class="text-xs text-accent-fg">No deposits to mine here.</p>
+						<p class="text-xs text-primary-fg">No deposits to mine here.</p>
 					{/if}
 					<p class="text-xs text-fg-muted">
-						Taxes: income <span class="text-accent-fg font-mono">{data.regionalTaxes?.incomeTax || 0}%</span> · sales
-						<span class="text-accent-fg font-mono">{data.regionalTaxes?.salesTax || 0}%</span> · property
-						<span class="text-accent-fg font-mono">{data.regionalTaxes?.propertyTax || 0}%</span>
+						Taxes: income <span class="text-primary-fg font-mono">{data.regionalTaxes?.incomeTax || 0}%</span> · sales
+						<span class="text-primary-fg font-mono">{data.regionalTaxes?.salesTax || 0}%</span> · property
+						<span class="text-primary-fg font-mono">{data.regionalTaxes?.propertyTax || 0}%</span>
 					</p>
 				</fieldset>
 			{/if}
@@ -206,7 +206,7 @@
 							type="button"
 							aria-pressed={selected}
 							class="press-spring p-3 rounded-sm border text-center transition-colors {selected
-								? 'bg-accent/12 border-accent/55'
+								? 'bg-primary/12 border-primary/55'
 								: 'bg-surface-4/70 border-line/15 hover:border-line/35'}"
 							onclick={() => {
 								selectedFactoryType = type.value;
@@ -215,7 +215,7 @@
 							disabled={isOnCooldown}
 						>
 							<type.icon class="size-7 mb-1 mx-auto" />
-							<span class="block font-bold text-sm {selected ? 'text-accent-fg' : 'text-fg'}">{type.label}</span>
+							<span class="block font-bold text-sm {selected ? 'text-primary-fg' : 'text-fg'}">{type.label}</span>
 							<span class="block text-[11px] text-fg-muted leading-tight">{type.desc}</span>
 						</button>
 					{/each}
@@ -230,14 +230,14 @@
 							type="button"
 							aria-pressed={selected}
 							class="press-spring p-2 rounded-sm border text-center transition-colors disabled:opacity-40 {selected
-								? 'bg-accent/12 border-accent/55'
+								? 'bg-primary/12 border-primary/55'
 								: 'bg-surface-4/70 border-line/15 hover:border-line/35'}"
 							onclick={() => (selectedOutput = output)}
 							disabled={isOnCooldown || !minable}
 							title={minable ? undefined : "No deposit in this region"}
 						>
 							<ResourceIcon name={output} class="size-6 mx-auto" />
-							<span class="block text-[11px] capitalize mt-1 truncate {selected ? 'text-accent-fg' : 'text-fg-soft'}"
+							<span class="block text-[11px] capitalize mt-1 truncate {selected ? 'text-primary-fg' : 'text-fg-soft'}"
 								>{output}</span
 							>
 						</button>
@@ -263,7 +263,7 @@
 							max="50"
 							step="5"
 							bind:value={maxWorkers}
-							class="w-full accent-accent cursor-pointer"
+							class="w-full accent-primary cursor-pointer"
 							disabled={isOnCooldown}
 						/>
 					</div>
@@ -280,7 +280,7 @@
 							max="5000"
 							step="100"
 							bind:value={workerWage}
-							class="w-full accent-accent cursor-pointer"
+							class="w-full accent-primary cursor-pointer"
 							disabled={isOnCooldown}
 						/>
 					</div>

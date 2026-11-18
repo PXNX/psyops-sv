@@ -70,7 +70,7 @@
 
 {#snippet box(marked: boolean)}
 	<span
-		class="grid size-6 shrink-0 place-items-center rounded-sm border-2 border-line/50 bg-surface-0 font-serif text-base font-black leading-none text-accent-fg"
+		class="grid size-6 shrink-0 place-items-center rounded-sm border-2 border-line/50 bg-surface-0 font-serif text-base font-black leading-none text-primary-fg"
 	>
 		{#if marked}<span class="animate-stamp" style="--stamp-tilt: -10deg; --rise-delay: 0ms">✗</span>{/if}
 	</span>
@@ -279,7 +279,7 @@
 											<input type="hidden" name="candidateUserId" value={candidate.userId} />
 											<button
 												type="submit"
-												class="tap-target press-spring flex items-center gap-2 rounded-sm px-1 text-xs text-fg-muted hover:text-accent-hover"
+												class="tap-target press-spring flex items-center gap-2 rounded-sm px-1 text-xs text-fg-muted hover:text-primary-hover"
 												aria-label="Vote for {candidate.name}"
 												aria-pressed={isMyVote}
 											>
@@ -322,7 +322,7 @@
 							/>
 							<div class="min-w-0">
 								<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">Application for membership</p>
-								<p class="truncate font-serif text-lg font-bold text-fg group-hover:text-accent-hover">
+								<p class="truncate font-serif text-lg font-bold text-fg group-hover:text-primary-hover">
 									{application.state.name}
 								</p>
 							</div>
@@ -347,8 +347,8 @@
 										aria-pressed={application.myVote === value}
 										class="tap-target press-spring flex items-center gap-2 rounded-sm border px-3 py-2 text-sm transition-colors {application.myVote ===
 										value
-											? 'border-accent/50 bg-accent/12 text-accent-fg'
-											: 'border-line/20 text-fg-soft hover:border-accent/40'}"
+											? 'border-primary/50 bg-primary/12 text-primary-fg'
+											: 'border-line/20 text-fg-soft hover:border-primary/40'}"
 									>
 										{@render box(application.myVote === value)}
 										{label}
@@ -379,7 +379,7 @@
 							/>
 							<div class="min-w-0">
 								<p class="text-[10px] uppercase tracking-[0.2em] text-red-300">Motion to expel</p>
-								<p class="truncate font-serif text-lg font-bold text-fg group-hover:text-accent-hover">
+								<p class="truncate font-serif text-lg font-bold text-fg group-hover:text-primary-hover">
 									{expulsion.state.name}
 								</p>
 							</div>
@@ -413,7 +413,7 @@
 											? value === 'pro'
 												? 'border-red-500/50 bg-red-600/10 text-red-300'
 												: 'border-friendly/50 bg-friendly-bg/18 text-friendly-fg'
-											: 'border-line/20 text-fg-soft hover:border-accent/40'}"
+											: 'border-line/20 text-fg-soft hover:border-primary/40'}"
 									>
 										{@render box(expulsion.myVote === value)}
 										{label}
@@ -421,7 +421,7 @@
 								{/each}
 							</form>
 						{:else if expulsion.isTarget}
-							<p class="text-xs text-accent-fg">Your state can't vote on its own expulsion.</p>
+							<p class="text-xs text-primary-fg">Your state can't vote on its own expulsion.</p>
 						{/if}
 					</article>
 				{/each}
@@ -453,7 +453,7 @@
 							<span class="font-bold text-friendly-fg">{war.defender.name}</span>
 						</p>
 						{#if war.activeBattles > 0}
-							<p class="text-[10px] text-accent-fg">
+							<p class="text-[10px] text-primary-fg">
 								{war.activeBattles}
 								{war.activeBattles === 1 ? "battle" : "battles"} on
 							</p>
@@ -489,7 +489,7 @@
 							/>
 						</a>
 						<div class="min-w-0 flex-1">
-							<a href="/state/{state.id}" class="block truncate font-semibold text-fg hover:text-accent-hover">
+							<a href="/state/{state.id}" class="block truncate font-semibold text-fg hover:text-primary-hover">
 								{state.name}
 							</a>
 							<div class="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-fg-muted">

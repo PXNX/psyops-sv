@@ -171,7 +171,7 @@
 
 	<!-- Independent region: founding forms a state -->
 	{#if data.isIndependentRegion}
-		<div class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-center gap-3">
+		<div class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-center gap-3">
 			<FluentWarning20Filled class="size-5 shrink-0" />
 			<p class="text-sm">
 				{data.userRegion.name} has no state. Founding here forms
@@ -192,7 +192,7 @@
 		<!-- Party Name -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentFlag20Filled class="size-5 text-accent" />
+				<FluentFlag20Filled class="size-5 text-primary" />
 				<h2 class="section-title">Name</h2>
 			</div>
 
@@ -246,7 +246,7 @@
 		<!-- Party Logo -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-accent" />
+				<FluentImage20Filled class="size-5 text-primary" />
 				<h2 class="section-title">Emblem</h2>
 			</div>
 
@@ -269,19 +269,19 @@
 					class={[
 						"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200",
 						dragActive
-							? "border-accent bg-accent/12"
+							? "border-primary bg-primary/12"
 							: $form.logo
 								? "border-positive/50 bg-positive-bg/10"
 								: "border-line/20",
-						!$submitting && !$form.logo && canCreate && "hover:border-accent/55 hover:bg-accent/10"
+						!$submitting && !$form.logo && canCreate && "hover:border-primary/55 hover:bg-primary/10"
 					]}
 					class:opacity-50={$submitting || !canCreate}
 					class:border-red-500={$errors.logo}
 				>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-accent/12 p-3">
-								<FluentImage20Filled class="size-8 text-accent-fg" />
+							<div class="rounded-full bg-primary/12 p-3">
+								<FluentImage20Filled class="size-8 text-primary-fg" />
 							</div>
 							<div class="text-center">
 								<p class="text-base font-semibold text-fg">
@@ -353,7 +353,7 @@
 		<!-- Party Color -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentColor20Filled class="size-5 text-accent" />
+				<FluentColor20Filled class="size-5 text-primary" />
 				<h2 class="section-title">Colour</h2>
 			</div>
 
@@ -362,7 +362,7 @@
 					<button
 						type="button"
 						class={[
-							"size-12 rounded-sm border border-line/15 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+							"size-12 rounded-sm border border-line/15 transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary",
 							$form.color === color.value && "ring-2 ring-fg ring-offset-2 ring-offset-surface-6"
 						]}
 						style="background-color: {color.value}"
@@ -418,7 +418,7 @@
 		<!-- Ideology -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentBuildingGovernment20Filled class="size-5 text-accent" />
+				<FluentBuildingGovernment20Filled class="size-5 text-primary" />
 				<h2 class="section-title">Ideology</h2>
 			</div>
 
@@ -448,7 +448,7 @@
 		<!-- Description -->
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-accent" />
+				<FluentDocument20Filled class="size-5 text-primary" />
 				<h2 class="section-title">Manifesto</h2>
 			</div>
 

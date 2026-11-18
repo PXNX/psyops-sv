@@ -37,27 +37,27 @@
 </script>
 
 {#if election?.isInaugural && election.status === "scheduled"}
-	<div class="bg-accent/12 border border-accent/35 rounded-sm p-5 space-y-3">
+	<div class="bg-primary/12 border border-primary/35 rounded-sm p-5 space-y-3">
 		<div class="flex items-start gap-3">
-			<div class="size-12 bg-accent/20 rounded-sm flex items-center justify-center shrink-0">
-				<FluentVote20Filled class="size-6 text-accent-fg" />
+			<div class="size-12 bg-primary/20 rounded-sm flex items-center justify-center shrink-0">
+				<FluentVote20Filled class="size-6 text-primary-fg" />
 			</div>
 			<div class="flex-1 space-y-2">
 				<h3 class="font-bold text-fg text-lg">Inaugural Election Scheduled! 🎉</h3>
-				<p class="text-accent-soft/90 text-sm">
+				<p class="text-primary-soft/90 text-sm">
 					This state is brand new! The first democratic election will establish the founding parliament of
 					<strong>{election.totalSeats} seats</strong>.
 				</p>
 
 				<div class="panel-muted rounded-sm p-3 space-y-2">
 					<div class="flex items-center gap-2 text-sm">
-						<FluentCalendar20Filled class="size-4 text-accent-fg" />
-						<span class="text-accent-soft">
+						<FluentCalendar20Filled class="size-4 text-primary-fg" />
+						<span class="text-primary-soft">
 							<strong>Voting starts in:</strong>
 							{timeUntil || "Starting soon!"}
 						</span>
 					</div>
-					<div class="text-xs text-accent-soft/70">
+					<div class="text-xs text-primary-soft/70">
 						<strong>Start:</strong>
 						{new Date(election.startDate).toLocaleString()}<br />
 						<strong>End:</strong>

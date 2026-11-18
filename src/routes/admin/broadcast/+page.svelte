@@ -38,12 +38,12 @@
 
 	<!-- Current Active Broadcast -->
 	{#if data.activeBroadcast}
-		<div class="bg-accent/12 rounded-sm border border-accent/35 p-5">
+		<div class="bg-primary/12 rounded-sm border border-primary/35 p-5">
 			<div class="flex items-start justify-between gap-3">
 				<div class="flex-1">
 					<div class="flex items-center gap-2 mb-2">
-						<FluentMegaphone20Filled class="size-5 text-accent-fg" />
-						<h3 class="font-semibold text-accent-fg">Active Broadcast</h3>
+						<FluentMegaphone20Filled class="size-5 text-primary-fg" />
+						<h3 class="font-semibold text-primary-fg">Active Broadcast</h3>
 					</div>
 					<h4 class="text-fg font-bold text-lg mb-1">{data.activeBroadcast.title}</h4>
 					<p class="text-fg-soft whitespace-pre-wrap text-sm">{data.activeBroadcast.content}</p>
@@ -178,7 +178,7 @@
 			<h3 class="section-title mb-4">Recent Broadcasts</h3>
 			<div class="space-y-3">
 				{#each data.recentBroadcasts as broadcast (broadcast.id)}
-					<div out:vanish class="panel-muted rounded-sm p-4 {broadcast.isActive ? 'border-accent/35' : ''}">
+					<div out:vanish class="panel-muted rounded-sm p-4 {broadcast.isActive ? 'border-primary/35' : ''}">
 						<div class="flex items-start justify-between gap-2">
 							<div class="flex-1">
 								<div class="flex items-center gap-2">

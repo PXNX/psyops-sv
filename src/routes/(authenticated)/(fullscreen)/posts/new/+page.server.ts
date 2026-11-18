@@ -45,7 +45,7 @@ export const actions: Actions = {
 		const account = locals.account!;
 
 		const formData = await request.formData();
-		const title = formData.get("title")?.toString();
+		const title = formData.get("title")?.toString().trim();
 		const content = formData.get("content")?.toString();
 		const newspaperId = formData.get("newspaperId")?.toString();
 
@@ -59,7 +59,19 @@ export const actions: Actions = {
 			});
 		}
 
+		if (content.length < SCHEMA_LIMITS.MIN_CONTENT_LENGTH) {
+			return fail(400, { error: `Please write at least ${SCHEMA_LIMITS.MIN_CONTENT_LENGTH} characters of content` });
+		}
+
+		if (content.length > SCHEMA_LIMITS.ARTICLE_CONTENT_MAX) {
+			return fail(400, { error: `Content must be ${SCHEMA_LIMITS.ARTICLE_CONTENT_MAX} characters or less` });
+		}
+
 		// If newspaperId provided, verify user is a journalist
+		if (newspaperId && !Number.isInteger(Number(newspaperId))) {
+			return fail(400, { error: "Unknown newspaper" });
+		}
+
 		if (newspaperId) {
 			const journalist = await db
 				.select()

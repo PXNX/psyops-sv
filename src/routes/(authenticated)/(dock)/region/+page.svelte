@@ -107,7 +107,7 @@
 					<li>
 						<a
 							href="/region/{region.id}"
-							class="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/5"
+							class="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-primary/5"
 						>
 							<span class="w-7 shrink-0 text-right font-mono text-xs text-fg-muted">{i + 1}</span>
 							<img
@@ -120,7 +120,7 @@
 							<div class="min-w-0 flex-1">
 								<p class="flex items-center gap-2">
 									<span
-										class="truncate font-serif font-bold text-fg group-hover:text-accent-hover transition-colors"
+										class="truncate font-serif font-bold text-fg group-hover:text-primary-hover transition-colors"
 										>{region.name}</span
 									>
 									{#if data.userRegionIds.includes(region.id)}
@@ -131,7 +131,7 @@
 									{#if region.stateName}
 										<span class="truncate">{region.stateName}</span>
 									{:else}
-										<span class="text-accent-fg">Independent</span>
+										<span class="text-primary-fg">Independent</span>
 									{/if}
 									<span class="flex items-center gap-1"
 										><FluentPeople20Filled class="size-3 text-friendly" />{region.population.toLocaleString()}</span

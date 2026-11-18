@@ -14,7 +14,7 @@
 					<a
 						href={`/docs/${doc.slug}`}
 						class="rounded-sm px-3 py-2 text-sm transition-colors {active
-							? 'bg-accent/12 text-accent-fg'
+							? 'bg-primary/12 text-primary-fg'
 							: 'text-fg-dim hover:bg-surface-9 hover:text-fg'}"
 						aria-current={active ? "page" : undefined}
 					>
@@ -27,7 +27,7 @@
 
 	<main class="min-w-0 flex-1">
 		<article
-			class="panel prose prose-invert max-w-none rounded-sm p-6 prose-headings:text-fg prose-p:text-fg-soft prose-a:text-accent-fg hover:prose-a:text-accent-hover"
+			class="panel prose prose-invert max-w-none rounded-sm p-6 prose-headings:text-fg prose-p:text-fg-soft prose-a:text-primary-fg hover:prose-a:text-primary-hover"
 		>
 			{@render children()}
 		</article>

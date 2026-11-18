@@ -198,7 +198,7 @@
 							name="visaRequired"
 							value="true"
 							checked={data.visaSettings.visaRequired}
-							class="toggle border-line/25 checked:border-accent checked:bg-accent checked:text-[#ffffff]"
+							class="toggle border-line/25 checked:border-primary checked:bg-primary checked:text-[#ffffff]"
 						/>
 						<div>
 							<span class="text-sm font-medium text-fg-body">Require Visa for Entry</span>
@@ -234,7 +234,7 @@
 							name="autoApprove"
 							value="true"
 							checked={data.visaSettings.autoApprove}
-							class="toggle border-line/25 checked:border-accent checked:bg-accent checked:text-[#ffffff]"
+							class="toggle border-line/25 checked:border-primary checked:bg-primary checked:text-[#ffffff]"
 						/>
 						<div>
 							<span class="text-sm font-medium text-fg-body">Auto-Approve Visas</span>
@@ -250,7 +250,7 @@
 				<div class="collapse collapse-arrow panel rounded-sm" class:collapse-open={pendingVisasExpanded}>
 					<input type="checkbox" bind:checked={pendingVisasExpanded} />
 					<div class="collapse-title font-semibold text-fg flex items-center gap-2">
-						<FluentClock20Filled class="size-5 text-accent-fg" />
+						<FluentClock20Filled class="size-5 text-primary-fg" />
 						<span>Pending Visa Applications</span>
 						<Badge tone="amber">{data.pendingVisaApplications.length}</Badge>
 					</div>

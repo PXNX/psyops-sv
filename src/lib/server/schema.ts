@@ -236,6 +236,8 @@ export const regions = pgTable("regions", {
 	tungsten: integer("tungsten").default(0),
 	steel: integer("steel").default(0),
 	chromium: integer("chromium").default(0),
+	// Ground cover for recon and battles; null = derived (regionTerrain in recon.config.ts).
+	terrain: terrainTypeEnum("terrain"),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -3058,3 +3060,117 @@ export const broadcastsRelations = relations(broadcasts, ({ one }) => ({
 }));
 
 export type Broadcast = typeof broadcasts.$inferSelect;
+
+// --- RECONNAISSANCE ---
+// A player flies one sensor (drone, satellite pass or radar sweep) over a
+// region; once it is done (completesAt) it files an intel report that the
+// player's whole side (state and its bloc) can read until the report goes
+// stale (expiresAt). Reports are fused into one picture per region, which
+// also drives targeting in battle. Rules in services/military/recon.ts, all
+// tunables in config/game/recon.config.ts.
+export const reconMissionStatusEnum = pgEnum("recon_mission_status", ["in_progress", "completed"]);
+export const reconSensorEnum = pgEnum("recon_sensor", [
+	"drone_eo",
+	"drone_ir",
+	"sat_eo",
+	"sat_ir",
+	"sat_sar",
+	"ground_radar"
+]);
+
+export const reconMissions = pgTable(
+	"recon_missions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		launchedBy: text("launched_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		// The launcher's state at launch; the report belongs to it.
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetRegionId: integer("target_region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id").references(() => states.id, { onDelete: "set null" }),
+		sensor: reconSensorEnum("sensor").notNull(),
+		cost: integer("cost").notNull(),
+		status: reconMissionStatusEnum("status").notNull().default("in_progress"),
+		launchedAt: timestamp("launched_at").defaultNow().notNull(),
+		completesAt: timestamp("completes_at").notNull(),
+		completedAt: timestamp("completed_at")
+	},
+	(t) => ({
+		dueIdx: index("idx_recon_mission_due").on(t.status, t.completesAt),
+		launcherIdx: index("idx_recon_mission_launcher").on(t.launchedBy, t.sensor, t.launchedAt),
+		stateIdx: index("idx_recon_mission_state").on(t.stateId, t.sensor, t.launchedAt)
+	})
+);
+
+/** What one recon pass saw. Counts may carry an estimation error. */
+export interface IntelFindings {
+	sensor: string;
+	/** "obscured": weather/darkness blinded the sensor; "intercepted": the drone was shot down. */
+	outcome: "ok" | "obscured" | "intercepted";
+	conditions: { weather: string; night: boolean; cover: string };
+	ownerStateId: number | null;
+	ownerStateName: string | null;
+	/** Enemy air-defence units the drone flew into and its chance of being shot down. */
+	airDefence: { units: number; interceptChance: number } | null;
+	/** Detection chance per category (0 = not observed). Count 0 with coverage means "none seen". */
+	coverage: Record<string, number>;
+	categories: { category: string; count: number; estimated: boolean; confidence: number }[];
+	/** Exact types, from visual passes only. */
+	unitTypes: { unitType: string; count: number; estimated: boolean }[] | null;
+	/** Recently fired artillery positions picked up by thermal sensors. */
+	firingPositions: { count: number; confidence: number } | null;
+	buildings: {
+		infrastructure: number;
+		economy: number;
+		education: number;
+		hospitals: number;
+		fortifications: number;
+		underConstruction: number;
+	} | null;
+	battle: {
+		id: number;
+		phase: string;
+		attackerStateId: number;
+		attackerStateName: string | null;
+		defenderStateId: number;
+		defenderStateName: string | null;
+		attacker: { units: number; strength: number };
+		defender: { units: number; strength: number };
+	} | null;
+}
+
+export const intelReports = pgTable(
+	"intel_reports",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		missionId: integer("mission_id")
+			.notNull()
+			.references(() => reconMissions.id, { onDelete: "cascade" }),
+		// The side that owns the report (the launcher's state); its bloc can read it too.
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id").references(() => states.id, { onDelete: "set null" }),
+		filedBy: text("filed_by").references(() => accounts.id, { onDelete: "set null" }),
+		sensor: reconSensorEnum("sensor").notNull(),
+		findings: jsonb("findings").$type<IntelFindings>().notNull(),
+		observedAt: timestamp("observed_at").defaultNow().notNull(),
+		expiresAt: timestamp("expires_at").notNull()
+	},
+	(t) => ({
+		missionIdx: uniqueIndex("idx_intel_report_mission").on(t.missionId),
+		stateRegionIdx: index("idx_intel_report_state_region").on(t.stateId, t.regionId, t.observedAt),
+		expiresIdx: index("idx_intel_report_expires").on(t.expiresAt)
+	})
+);
+
+export type ReconMission = typeof reconMissions.$inferSelect;
+export type IntelReport = typeof intelReports.$inferSelect;

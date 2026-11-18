@@ -38,8 +38,8 @@
 		purple: "bg-politics-bg/15 text-politics-fg",
 		green: "bg-positive-bg/18 text-positive-fg",
 		emerald: "bg-positive-bg/18 text-positive-fg",
-		amber: "bg-accent/12 text-accent-fg",
-		yellow: "bg-accent/12 text-accent-fg",
+		amber: "bg-primary/12 text-primary-fg",
+		yellow: "bg-primary/12 text-primary-fg",
 		red: "bg-red-600/10 text-red-400",
 		slate: "bg-surface-4/70 text-fg-soft"
 	};

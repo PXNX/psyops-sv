@@ -1,10 +1,12 @@
 // src/routes/api/cron/battles/+server.ts
 // Hourly: move battles out of preparation, then fight one round of every
-// active battle (rules in services/military/battle-engine.ts).
+// active battle (rules in services/military/battle-engine.ts). Finished recon
+// passes are filed first, so the round fights with the latest intel.
 
 import type { RequestHandler } from "./$types";
 import { cronCrash, cronResponse } from "#lib/server/cron.js";
 import { PREPARATION_HOURS, processCombatRound } from "#lib/server/services/military/battle-engine.js";
+import { resolveReconMissions } from "#lib/server/services/military/recon.js";
 import { db } from "#lib/server/db.js";
 import { battles, regions, states, residences } from "#lib/server/schema.js";
 import { eq } from "drizzle-orm";
@@ -17,6 +19,16 @@ export const GET: RequestHandler = async ({ request }) => {
 		let roundsProcessed = 0;
 		let battlesEnded = 0;
 		let failed = 0;
+		let reconReportsFiled = 0;
+
+		// 0. File intel reports for recon passes that are done (pages also do
+		// this lazily on read; this keeps battles current without visitors).
+		try {
+			reconReportsFiled = (await resolveReconMissions(db)).length;
+		} catch (error) {
+			failed++;
+			console.error("❌ Failed to resolve recon missions:", error);
+		}
 
 		// 1. Find preparation phase battles that should transition to active
 		const preparationBattles = await db.query.battles.findMany({
@@ -67,7 +79,13 @@ export const GET: RequestHandler = async ({ request }) => {
 
 		return cronResponse(
 			"battles",
-			{ phasesTransitioned, roundsProcessed, battlesEnded, totalProcessed: phasesTransitioned + roundsProcessed },
+			{
+				phasesTransitioned,
+				roundsProcessed,
+				battlesEnded,
+				reconReportsFiled,
+				totalProcessed: phasesTransitioned + roundsProcessed
+			},
 			failed
 		);
 	} catch (error) {

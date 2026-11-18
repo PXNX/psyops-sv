@@ -38,8 +38,8 @@
 			icon: FluentNewspaper20Filled,
 			title: "Media & Journalism",
 			description: "Create newspapers, publish articles, and influence public opinion through investigative reporting.",
-			wrapClass: "bg-accent/12 border border-accent/35",
-			iconClass: "text-accent-fg"
+			wrapClass: "bg-primary/12 border border-primary/35",
+			iconClass: "text-primary-fg"
 		}
 	];
 
@@ -59,8 +59,8 @@
 	<!-- Logo & Title -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>
 		<div class="flex justify-center">
-			<div class="size-24 bg-accent/12 border border-accent/35 rounded-sm flex items-center justify-center">
-				<PsyopsLogo class="size-14 text-accent-fg" />
+			<div class="size-24 bg-primary/12 border border-primary/35 rounded-sm flex items-center justify-center">
+				<PsyopsLogo class="size-14 text-primary-fg" />
 			</div>
 		</div>
 		<h1 class="text-5xl font-bold text-fg">Welcome to PsyOps!</h1>

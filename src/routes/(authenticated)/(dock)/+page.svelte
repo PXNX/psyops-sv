@@ -67,23 +67,23 @@
 
 	<!-- Birthday Reward Banner -->
 	{#if data.birthdayInfo.uncollectedYears.length > 0}
-		<div class="bg-accent/12 border border-accent/35 rounded-sm p-5">
+		<div class="bg-primary/12 border border-primary/35 rounded-sm p-5">
 			<div class="flex items-start gap-4">
 				<div
-					class="size-12 shrink-0 bg-accent/12 border border-accent/35 rounded-sm flex items-center justify-center text-2xl"
+					class="size-12 shrink-0 bg-primary/12 border border-primary/35 rounded-sm flex items-center justify-center text-2xl"
 				>
 					🎂
 				</div>
 				<div class="flex-1 min-w-0">
 					{#if data.birthdayInfo.isBirthday}
-						<h3 class="text-lg font-bold text-accent-fg">
+						<h3 class="text-lg font-bold text-primary-fg">
 							🎉 Happy Birthday, {data.account.profile?.name || "friend"}! 🎉
 						</h3>
 						<p class="text-sm text-fg-soft mt-1">
 							Your account turns {data.birthdayInfo.totalYears} today. Here's a gift to celebrate!
 						</p>
 					{:else}
-						<h3 class="text-lg font-bold text-accent-fg">🎁 A birthday gift is waiting!</h3>
+						<h3 class="text-lg font-bold text-primary-fg">🎁 A birthday gift is waiting!</h3>
 						<p class="text-sm text-fg-soft mt-1">
 							{#if data.birthdayInfo.uncollectedYears.length === 1}
 								Your year {data.birthdayInfo.uncollectedYears[0]} anniversary reward is ready to collect.
@@ -128,7 +128,7 @@
 			{#if data.userLocation}
 				<a
 					href="/region/{data.userLocation.regionId}"
-					class="text-xs text-fg-body/70 hover:text-accent-hover transition-colors flex items-center gap-1"
+					class="text-xs text-fg-body/70 hover:text-primary-hover transition-colors flex items-center gap-1"
 				>
 					Region details <FluentArrowRight20Filled class="size-3" />
 				</a>
@@ -149,7 +149,7 @@
 					<div class="flex items-center gap-2 flex-wrap">
 						<a
 							href="/state/{data.stateSnapshot.id}"
-							class="text-lg font-bold text-fg hover:text-accent-hover transition-colors truncate"
+							class="text-lg font-bold text-fg hover:text-primary-hover transition-colors truncate"
 						>
 							{data.stateSnapshot.name}
 						</a>
@@ -163,7 +163,7 @@
 							{data.stateSnapshot.population.toLocaleString()}
 						</span>
 						<span class="flex items-center gap-1">
-							<FluentStar20Filled class="size-3.5 text-accent-fg" />
+							<FluentStar20Filled class="size-3.5 text-primary-fg" />
 							{data.stateSnapshot.rating.toLocaleString()}
 						</span>
 					</div>
@@ -174,7 +174,7 @@
 				<FluentGlobe20Filled class="size-5 shrink-0" />
 				<span>
 					{regionName ? `${regionName} is not controlled by any state.` : "You have not settled in a region yet."}
-					<a href="/map" class="text-accent-fg hover:text-accent-hover transition-colors">Explore the map</a>.
+					<a href="/map" class="text-primary-fg hover:text-primary-hover transition-colors">Explore the map</a>.
 				</span>
 			</div>
 		{/if}
@@ -307,7 +307,7 @@
 							<!-- Attacker -->
 							<div class="flex items-center gap-2 flex-1 min-w-0 justify-end text-right">
 								<div class="min-w-0">
-									<div class="text-sm font-bold text-fg group-hover:text-accent-hover transition-colors truncate">
+									<div class="text-sm font-bold text-fg group-hover:text-primary-hover transition-colors truncate">
 										{war.attacker.name}
 									</div>
 									{#if war.attackerBloc}
@@ -337,7 +337,7 @@
 									placeholderGradient="from-friendly to-friendly-bg"
 								/>
 								<div class="min-w-0">
-									<div class="text-sm font-bold text-fg group-hover:text-accent-hover transition-colors truncate">
+									<div class="text-sm font-bold text-fg group-hover:text-primary-hover transition-colors truncate">
 										{war.defender.name}
 									</div>
 									{#if war.defenderBloc}
@@ -370,11 +370,11 @@
 
 	<!-- Ongoing Battles in Region -->
 	{#if data.ongoingBattles.length > 0}
-		<div class="panel rounded-sm overflow-hidden border-accent/35">
-			<div class="bg-accent/12 border-b border-accent/35 px-4 sm:px-5 py-3">
+		<div class="panel rounded-sm overflow-hidden border-primary/35">
+			<div class="bg-primary/12 border-b border-primary/35 px-4 sm:px-5 py-3">
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-2">
-						<div class="size-2 bg-accent rounded-full animate-pulse"></div>
+						<div class="size-2 bg-primary rounded-full animate-pulse"></div>
 						<h2 class="text-lg font-semibold text-fg">Active Battles</h2>
 					</div>
 					<Badge tone="amber"><span class="font-mono">{data.ongoingBattles.length}</span> ONGOING</Badge>
@@ -384,18 +384,18 @@
 				{#each data.ongoingBattles as battle (battle.id)}
 					<a
 						href="/battle/{battle.id}"
-						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-accent/55 hover:bg-surface-9 transition-all group"
+						class="flex items-center gap-3 sm:gap-4 panel-muted rounded-sm p-3 sm:p-4 hover:border-primary/55 hover:bg-surface-9 transition-all group"
 					>
 						<Logo
 							src={regionCoatUrl(battle.regionId)}
 							alt={getRegionName(battle.regionId)}
 							class="size-10 sm:size-12 rounded-sm border border-line/15"
 							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-accent to-red-600"
+							placeholderGradient="from-primary to-red-600"
 						/>
 						<div class="flex-1 min-w-0">
 							<div
-								class="text-sm sm:text-base font-bold text-fg group-hover:text-accent-hover transition-colors truncate"
+								class="text-sm sm:text-base font-bold text-fg group-hover:text-primary-hover transition-colors truncate"
 							>
 								{getRegionName(battle.regionId)}
 							</div>

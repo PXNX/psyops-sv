@@ -160,11 +160,11 @@
 	/** A box on the form: ticked when chosen. */
 	const box = (on: boolean) =>
 		`size-5 shrink-0 rounded-[2px] border-2 flex items-center justify-center transition-colors ${
-			on ? "border-accent bg-accent/20 text-accent-fg" : "border-line/40 text-transparent"
+			on ? "border-primary bg-primary/20 text-primary-fg" : "border-line/40 text-transparent"
 		}`;
 	const option = (on: boolean) =>
 		`press-spring tap-target w-full flex items-center gap-3 rounded-sm border px-3 py-2.5 text-left transition-colors ${
-			on ? "border-accent/60 bg-accent/10" : "border-line/15 bg-surface-4/60 hover:border-accent/40"
+			on ? "border-primary/60 bg-primary/10" : "border-line/15 bg-surface-4/60 hover:border-primary/40"
 		}`;
 </script>
 
@@ -261,7 +261,7 @@
 						<label for="taxRate" class="field-label flex items-baseline justify-between">
 							<span><span class="font-serif text-fg-muted mr-1">§ 3</span> Rate</span>
 							{#key $formData.taxRate}
-								<span class="font-mono text-lg font-bold text-accent-fg animate-tick">{$formData.taxRate || 0}%</span>
+								<span class="font-mono text-lg font-bold text-primary-fg animate-tick">{$formData.taxRate || 0}%</span>
 							{/key}
 						</label>
 						<input
@@ -271,7 +271,7 @@
 							min="1"
 							max="50"
 							bind:value={$formData.taxRate}
-							class="range range-sm w-full text-accent"
+							class="range range-sm w-full text-primary"
 							disabled={$submitting}
 						/>
 						<div class="flex justify-between text-[10px] font-mono text-fg-muted px-1 mt-1">
@@ -375,7 +375,7 @@
 									</span>
 									<span class="block text-xs font-mono">
 										<span class="text-positive-fg">output ×{policy.outputMultiplier}</span>
-										<span class="text-accent-fg ml-2">drain ×{policy.depletionMultiplier}</span>
+										<span class="text-primary-fg ml-2">drain ×{policy.depletionMultiplier}</span>
 									</span>
 								</span>
 							</button>
@@ -448,13 +448,13 @@
 										class="h-2 flex-1 rounded-full {i < progress.level
 											? 'bg-positive'
 											: i === progress.level && !blocked
-												? 'bg-accent animate-pulse'
+												? 'bg-primary animate-pulse'
 												: 'bg-surface-4'}"
 									></div>
 								{/each}
 							</div>
 							{#if progress.pending}
-								<p class="text-xs text-accent-fg">Level {progress.level + 1} is still under construction.</p>
+								<p class="text-xs text-primary-fg">Level {progress.level + 1} is still under construction.</p>
 							{:else if progress.infrastructure < progress.infrastructureRequired}
 								<p class="text-xs text-red-300">
 									Needs infrastructure {progress.infrastructureRequired} (has {progress.infrastructure}).

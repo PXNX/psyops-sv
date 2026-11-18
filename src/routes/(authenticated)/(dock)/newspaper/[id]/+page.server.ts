@@ -16,27 +16,14 @@ import { getLogoUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { newspaperSchema } from "./schema";
+import { coverImage, excerpt, readingMinutes } from "#lib/server/services/content/article-text.js";
 
 // Cost to edit a newspaper's details (name/background/logo). Charged on each successful edit.
 const EDIT_COST = 2500;
 
-/** First words of an article's HTML body as plain text, for the front page. */
-function excerpt(html: string | null, max = 220): string {
-	const text = (html ?? "")
-		.replace(/<[^>]+>/g, " ")
-		.replace(/&nbsp;/g, " ")
-		.replace(/&amp;/g, "&")
-		.replace(/&lt;/g, "<")
-		.replace(/&gt;/g, ">")
-		.replace(/&quot;/g, '"')
-		.replace(/&#39;/g, "'")
-		.replace(/\s+/g, " ")
-		.trim();
-	return text.length > max ? `${text.slice(0, max).replace(/\s+\S*$/, "")}…` : text;
-}
-
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const newspaperId = parseInt(params.id);
+	const newspaperId = Number(params.id);
+	if (!Number.isInteger(newspaperId)) throw error(404, "Newspaper not found");
 	const account = locals.account;
 
 	// Get newspaper with owner information
@@ -95,10 +82,22 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					}))
 				);
 			})(),
-			// Get staff count
-			db.query.journalists.findMany({
-				where: eq(journalists.newspaperId, newspaperId)
-			}),
+			// Get the staff, for the masthead's list of writers
+			db.query.journalists
+				.findMany({
+					where: eq(journalists.newspaperId, newspaperId),
+					with: { user: { with: { profile: true } } }
+				})
+				.then((staff) =>
+					Promise.all(
+						staff.map(async (member) => ({
+							id: member.userId,
+							name: member.user.profile?.name ?? "Unknown",
+							logo: await getLogoUrl(member.user.profile?.logo),
+							role: member.rank
+						}))
+					)
+				),
 			// Get subscriber count
 			db.query.newspaperSubscriptions.findMany({
 				where: eq(newspaperSubscriptions.newspaperId, newspaperId)
@@ -120,7 +119,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				: undefined
 		]);
 
-	const staffCount = allStaff.length;
+	const roleOrder = { owner: 0, editor: 1, author: 2 } as const;
+	const staff = allStaff.sort((a, b) => roleOrder[a.role] - roleOrder[b.role]);
 	const subscriberCount = subscriptions.length;
 	const userRole: "owner" | "editor" | "author" | null = membership?.rank ?? null;
 	const isSubscribed = !!subscription;
@@ -164,15 +164,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		articles: articlesWithLogos.map((article) => ({
 			id: article.id,
 			title: article.title,
-			publishDate: article.createdAt,
+			createdAt: article.createdAt,
 			upvoteCount: article.upvotes.length,
 			excerpt: excerpt(article.content),
+			cover: coverImage(article.content),
+			minutes: readingMinutes(article.content),
+			authorId: article.authorId,
 			authorName: article.author.profile?.name ?? "Unknown",
 			authorLogo: article.authorLogoUrl
 		})),
 		userRole,
 		isSubscribed,
-		staffCount,
+		staff,
 		subscriberCount,
 		editForm,
 		editCost: EDIT_COST,

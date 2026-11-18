@@ -101,7 +101,7 @@
 					type="button"
 					onclick={clearSearch}
 					aria-label="Clear search"
-					class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-fg-muted hover:text-fg hover:bg-accent/10 transition-colors"
+					class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-fg-muted hover:text-fg hover:bg-primary/10 transition-colors"
 				>
 					<FluentDismiss20Filled class="size-4" />
 				</button>
@@ -153,7 +153,7 @@
 							</div>
 							<div class="flex-1 min-w-0">
 								<h2
-									class="font-serif text-lg font-bold leading-tight text-fg group-hover:text-accent-hover transition-colors truncate"
+									class="font-serif text-lg font-bold leading-tight text-fg group-hover:text-primary-hover transition-colors truncate"
 								>
 									{bloc.name}
 								</h2>
@@ -196,7 +196,7 @@
 								{bloc.memberCount === 1 ? "state" : "states"}</span
 							>
 							<span class="flex items-center gap-1"
-								><FluentPeople20Filled class="size-3.5 text-accent-fg" />
+								><FluentPeople20Filled class="size-3.5 text-primary-fg" />
 								<span class="font-bold text-fg">{formatPopulation(bloc.totalPopulation)}</span> citizens</span
 							>
 						</p>

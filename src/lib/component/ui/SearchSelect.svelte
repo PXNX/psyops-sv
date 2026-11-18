@@ -184,8 +184,8 @@
 						role="option"
 						aria-selected={isSelected}
 						data-index={i}
-						class="flex items-center gap-3 px-3 py-2 cursor-pointer {i === active ? 'bg-accent/12' : ''} {isSelected
-							? 'text-accent-fg'
+						class="flex items-center gap-3 px-3 py-2 cursor-pointer {i === active ? 'bg-primary/12' : ''} {isSelected
+							? 'text-primary-fg'
 							: 'text-fg'}"
 						onpointermove={() => (active = i)}
 						onclick={() => pick(item)}

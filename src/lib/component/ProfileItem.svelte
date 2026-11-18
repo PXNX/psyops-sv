@@ -1,5 +1,9 @@
 <!-- src/lib/component/ProfileItem.svelte -->
+<!-- One row of a profile list: logo (or emoji tile), title, subtitle, an
+     optional key figure on the right and a chevron when the row links somewhere.
+     Meant to sit in a `divide-y` list inside a panel. -->
 <script lang="ts">
+	import type { Component, Snippet } from "svelte";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import Logo from "#lib/component/Logo.svelte";
 	import PartyTag from "#lib/component/PartyTag.svelte";
@@ -7,80 +11,82 @@
 	interface Props {
 		href?: string;
 		logo?: string | null;
-		logoAlt?: string;
-		placeholderIcon?: any;
+		logoAlt?: string | null;
+		placeholderIcon?: Component;
 		placeholderGradient?: string;
 		title: string;
-		subtitle: string;
-		hoverColor?: string;
+		subtitle?: string | null;
 		icon?: string;
 		onclick?: () => void;
 		partyAbbreviation?: string | null;
 		partyColor?: string | null;
+		/** Optional content on the right (a key figure, a badge). */
+		aside?: Snippet;
 	}
 
 	let {
 		href,
-		logo = null,
+		logo = undefined,
 		logoAlt = "",
 		placeholderIcon,
-		placeholderGradient,
+		placeholderGradient = "from-[#1c2330] to-[#151a23]",
 		title,
 		subtitle,
-		hoverColor = "purple",
 		icon,
 		onclick,
 		partyAbbreviation,
-		partyColor
+		partyColor,
+		aside
 	}: Props = $props();
 
-	const hoverColors: Record<string, string> = {
-		yellow: "group-hover:text-[#ffcb6b]",
-		blue: "group-hover:text-[#c3dbff]",
-		purple: "group-hover:text-[#e6dcff]",
-		emerald: "group-hover:text-[#aef3c9]",
-		red: "group-hover:text-red-400"
-	};
-
-	const tileColors: Record<string, string> = {
-		yellow: "bg-[#f5a524]/15",
-		blue: "bg-[#2f6be0]/18",
-		purple: "bg-[#7451e6]/15",
-		emerald: "bg-[#1f9d62]/18",
-		red: "bg-red-600/20"
-	};
-
-	const Component = href ? "a" : "div";
+	const tag = $derived(href ? "a" : onclick ? "button" : "div");
+	const interactive = $derived(!!(href || onclick));
 </script>
 
 <svelte:element
-	this={Component}
+	this={tag}
 	{href}
 	{onclick}
-	class="flex items-center gap-3 group hover:bg-[#233154] rounded-sm p-2 -m-2 transition-all"
-	class:cursor-pointer={onclick}
+	type={tag === "button" ? "button" : undefined}
+	class="group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors {interactive
+		? 'hover:bg-white/[0.03]'
+		: ''}"
 >
 	{#if logo !== undefined}
-		<Logo src={logo} alt={logoAlt} {placeholderIcon} {placeholderGradient} />
+		<Logo
+			src={logo}
+			alt={logoAlt ?? ""}
+			{placeholderIcon}
+			{placeholderGradient}
+			class="size-9! rounded-sm! shrink-0 border border-white/10"
+		/>
 	{:else if icon}
-		<div class="size-12 {tileColors[hoverColor] ?? tileColors.purple} rounded-sm flex items-center justify-center">
-			<span class="text-2xl">{icon}</span>
+		<div class="size-9 shrink-0 rounded-sm border border-white/10 flex items-center justify-center">
+			<span class="text-lg">{icon}</span>
 		</div>
 	{/if}
 
 	<div class="flex-1 min-w-0">
-		<p class="font-semibold text-[#eef2ff] {hoverColors[hoverColor]} transition-colors truncate">
+		<p
+			class="truncate text-sm font-medium text-[#d0d7de] transition-colors {interactive
+				? 'group-hover:text-[#e6edf3] group-hover:underline'
+				: ''}"
+		>
 			{#if partyAbbreviation}
 				<PartyTag abbreviation={partyAbbreviation} color={partyColor} />
 			{/if}
 			{title}
 		</p>
-		<p class="text-xs text-[#8e9abb] truncate">
-			{subtitle}
-		</p>
+		{#if subtitle}
+			<p class="truncate text-xs text-[#8b949e]">{subtitle}</p>
+		{/if}
 	</div>
 
-	{#if href || onclick}
-		<FluentChevronRight20Filled class="size-5 text-[#8e9abb] {hoverColors[hoverColor]} transition-colors" />
+	{#if aside}
+		<div class="shrink-0 text-right">{@render aside()}</div>
+	{/if}
+
+	{#if interactive}
+		<FluentChevronRight20Filled class="size-4 shrink-0 text-[#8b949e]" />
 	{/if}
 </svelte:element>

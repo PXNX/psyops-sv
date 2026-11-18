@@ -1,47 +1,47 @@
 <!-- src/routes/(authenticated)/(dock)/newspaper/[id]/+page.svelte -->
+<!-- A newspaper's front page: masthead, lead story, the rest of the edition
+     and the newsroom. -->
 <script lang="ts">
-	import MdiHeart from "~icons/mdi/heart";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
-	import Logo from "#lib/component/Logo.svelte";
-	import MdiNewspaper from "~icons/mdi/newspaper";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentChartMultiple20Regular from "~icons/fluent/chart-multiple-20-regular";
 	import FluentBell20Filled from "~icons/fluent/alert-20-filled";
 	import FluentBellOff20Filled from "~icons/fluent/alert-off-20-filled";
+	import FluentSettings20Filled from "~icons/fluent/settings-20-filled";
+	import MdiNewspaper from "~icons/mdi/newspaper";
 	import { enhance } from "$app/forms";
+	import Logo from "#lib/component/Logo.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import Button from "#lib/component/ui/Button.svelte";
-	import IconButton from "#lib/component/ui/IconButton.svelte";
-	import EditNewspaperSheet from "./EditNewspaperSheet.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
+	import { Button, IconButton } from "#lib/component/ui/index.js";
+	import ArticleCard from "#lib/component/press/ArticleCard.svelte";
+	import { formatDate } from "#lib/utils/formatting.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import EditNewspaperSheet from "./EditNewspaperSheet.svelte";
 
 	let { data } = $props();
 	let isSubscribing = $state(false);
 	let showEditNewspaperSheet = $state(false);
+	let subscribeForm = $state<HTMLFormElement>();
 
-	function formatDate(date: Date) {
-		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
-	}
+	const description = $derived(data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`);
+	const canWrite = $derived(!!data.userRole);
+	const canSeeStats = $derived(data.userRole === "owner" || data.userRole === "editor");
+	const lead = $derived(data.articles[0]);
+	const rest = $derived(data.articles.slice(1));
+	const roleLabel = { owner: "Publisher", editor: "Editor", author: "Writer" } as const;
 </script>
 
 <svelte:head>
-	<title>{data.newspaper.name}</title>
-	<meta
-		name="description"
-		content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`}
-	/>
+	<title>{data.newspaper.name} · PsyOps</title>
+	<meta name="description" content={description} />
 
 	<!-- Open Graph -->
-	<meta property="og:type" content="article" />
+	<meta property="og:type" content="website" />
 	<meta property="og:title" content={data.newspaper.name} />
-	<meta
-		property="og:description"
-		content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`}
-	/>
+	<meta property="og:description" content={description} />
 	{#if data.newspaper.logoUrl}
 		<meta property="og:image" content={data.newspaper.logoUrl} />
 	{/if}
@@ -49,10 +49,7 @@
 	<!-- Twitter Card -->
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content={data.newspaper.name} />
-	<meta
-		name="twitter:description"
-		content={data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`}
-	/>
+	<meta name="twitter:description" content={description} />
 	{#if data.newspaper.logoUrl}
 		<meta name="twitter:image" content={data.newspaper.logoUrl} />
 	{/if}
@@ -60,11 +57,11 @@
 
 <PageContainer maxWidth="5xl">
 	<!-- Masthead -->
-	<header class="panel rounded-sm px-5 pt-6 pb-4 relative text-center">
+	<header class="panel rounded-sm relative px-4 pt-6 pb-4 sm:px-8 sm:pt-8 text-center">
 		{#if data.userRole === "owner"}
 			<IconButton
-				icon={FluentEdit20Filled}
-				label="Edit Newspaper"
+				icon={FluentSettings20Filled}
+				label="Edit newspaper"
 				variant="secondary"
 				size="sm"
 				class="absolute top-3 right-3"
@@ -72,156 +69,134 @@
 			/>
 		{/if}
 
-		<div class="mx-auto mb-3 size-16 sm:size-20 rounded-sm overflow-hidden border border-[#8ea6e0]/25 bg-[#131c33]">
-			{#if data.newspaper.logoUrl}
-				<img src={data.newspaper.logoUrl} alt="" class="size-full object-cover" decoding="async" />
-			{:else}
-				<div class="size-full flex items-center justify-center">
-					<MdiNewspaper class="size-9 text-[#c3dbff]" />
-				</div>
-			{/if}
-		</div>
+		<Logo
+			src={data.newspaper.logoUrl}
+			alt=""
+			class="mx-auto size-14 sm:size-16 rounded-sm border border-white/10"
+			placeholderIcon={MdiNewspaper}
+			placeholderGradient="from-surface-6 to-surface-6"
+		/>
 
-		<div class="border-y-2 border-double border-[#8ea6e0]/40 py-2">
-			<h1 class="font-serif text-3xl sm:text-5xl font-black tracking-tight text-[#eef2ff] break-words leading-tight">
-				{data.newspaper.name}
-			</h1>
-		</div>
-		<p
-			class="mt-2 text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#8e9abb] flex flex-wrap justify-center gap-x-3 gap-y-1"
+		<h1
+			class="mt-3 pb-3 border-b border-white/10 font-serif text-[2.25rem] sm:text-5xl leading-[1.05] tracking-tight text-fg break-words"
 		>
-			<span>Est. {formatDate(data.newspaper.createdAt)}</span>
-			<span aria-hidden="true">·</span>
-			<span>{data.subscriberCount} {data.subscriberCount === 1 ? "subscriber" : "subscribers"}</span>
-			<span aria-hidden="true">·</span>
-			<span>{data.staffCount} staff</span>
-		</p>
+			{data.newspaper.name}
+		</h1>
+
 		{#if data.newspaper.background}
-			<p class="mt-3 mx-auto max-w-2xl font-serif italic text-[#c2cbe3] text-sm sm:text-base">
+			<p class="mt-3 mx-auto max-w-xl text-sm sm:text-base text-fg-soft leading-relaxed">
 				{data.newspaper.background}
 			</p>
 		{/if}
 
-		<!-- Owner + actions -->
-		<div class="mt-4 pt-4 border-t border-[#8ea6e0]/15 flex flex-wrap items-center justify-center gap-2">
-			<a
-				href="/user/{data.owner.id}"
-				class="inline-flex items-center gap-2 mr-auto sm:mr-2 text-sm text-[#c2cbe3] hover:text-[#ffc857] transition-colors"
-			>
-				<Logo
-					src={data.owner.logoUrl}
-					alt={data.owner.name}
-					class="size-7"
-					placeholderIcon={FluentPerson20Filled}
-					placeholderGradient="from-[#7451e6]/40 to-[#7451e6]/40"
-				/>
-				<span><span class="text-[#8e9abb]">Publisher</span> {data.owner.name}</span>
-			</a>
-			{#if data.userRole}
-				<Button size="sm" variant="primary" href="/posts/new" icon={FluentEdit20Filled}>Write</Button>
+		<dl class="mt-4 grid grid-cols-3 divide-x divide-white/10 border border-white/10 rounded-sm text-left">
+			<div class="px-3 py-2">
+				<dt class="text-[10px] uppercase tracking-wide text-fg-muted">Subscribers</dt>
+				<dd class="font-mono text-sm text-fg">{data.subscriberCount}</dd>
+			</div>
+			<div class="px-3 py-2">
+				<dt class="text-[10px] uppercase tracking-wide text-fg-muted">Staff</dt>
+				<dd class="font-mono text-sm text-fg">{data.staff.length}</dd>
+			</div>
+			<div class="px-3 py-2 min-w-0">
+				<dt class="text-[10px] uppercase tracking-wide text-fg-muted">Founded</dt>
+				<dd class="font-mono text-sm text-fg truncate">{formatDate(data.newspaper.createdAt)}</dd>
+			</div>
+		</dl>
+
+		<div class="mt-4 flex flex-wrap items-center justify-center gap-2">
+			{#if canWrite}
+				<Button variant="primary" href="/posts/new?newspaper={data.newspaper.id}" icon={FluentEdit20Filled}>
+					Write
+				</Button>
 			{/if}
 			<form
+				bind:this={subscribeForm}
 				method="POST"
 				action="?/{data.isSubscribed ? 'unsubscribe' : 'subscribe'}"
 				use:enhance={() => {
 					isSubscribing = true;
+					const subscribing = !data.isSubscribed;
 					return async ({ update, result }) => {
 						await update();
 						isSubscribing = false;
 						toastResult(result);
+						if (result.type === "success" && subscribing) celebrate(subscribeForm);
 					};
 				}}
+				class="rounded-sm"
 			>
 				<Button
 					type="submit"
-					size="sm"
-					variant={data.isSubscribed ? "secondary" : data.userRole ? "soft-blue" : "primary"}
+					variant={data.isSubscribed ? "soft-emerald" : canWrite ? "soft-blue" : "primary"}
 					loading={isSubscribing}
 					icon={data.isSubscribed ? FluentBellOff20Filled : FluentBell20Filled}
 				>
 					{data.isSubscribed ? "Subscribed" : "Subscribe"}
 				</Button>
 			</form>
-			<IconButton
-				icon={FluentPeople20Filled}
-				label="Staff"
-				variant="secondary"
-				size="sm"
-				href="/newspaper/{data.newspaper.id}/staff"
-			/>
-			{#if data.userRole === "owner" || data.userRole === "editor"}
+			{#if canSeeStats}
 				<IconButton
 					icon={FluentChartMultiple20Regular}
 					label="Statistics"
 					variant="secondary"
-					size="sm"
 					href="/newspaper/{data.newspaper.id}/statistics"
 				/>
 			{/if}
+			<IconButton
+				icon={FluentPeople20Filled}
+				label="Staff"
+				variant="secondary"
+				href="/newspaper/{data.newspaper.id}/staff"
+			/>
 		</div>
 	</header>
 
-	{#if data.articles.length === 0}
-		<EmptyState icon={MdiNewspaper} title="No articles yet" subtitle="The first edition is still being written." />
-	{:else}
-		{@const [lead, ...rest] = data.articles}
-		<!-- Lead story -->
-		<a href="/posts/{lead.id}" class="panel-interactive rounded-sm p-5 sm:p-6 block group">
-			<p class="text-[10px] uppercase tracking-[0.2em] text-[#ffcb6b] mb-2">Latest</p>
-			<h2
-				class="font-serif text-2xl sm:text-3xl font-bold leading-snug text-[#eef2ff] group-hover:text-[#ffc857] transition-colors"
-			>
-				{lead.title}
-			</h2>
-			{#if lead.excerpt}
-				<p
-					class="mt-3 text-[#c2cbe3] leading-relaxed first-letter:float-left first-letter:mr-2 first-letter:font-serif first-letter:text-5xl first-letter:leading-[0.85] first-letter:text-[#eef2ff]"
-				>
-					{lead.excerpt}
-				</p>
+	<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_16rem] items-start">
+		<!-- The edition -->
+		<div class="flex flex-col gap-2 min-w-0">
+			{#if lead}
+				<ArticleCard article={lead} lead showNewspaper={false} />
+				{#if rest.length}
+					<div class="grid gap-2 sm:grid-cols-2">
+						{#each rest as article (article.id)}
+							<ArticleCard {article} showNewspaper={false} />
+						{/each}
+					</div>
+				{/if}
+			{:else}
+				<EmptyState icon={MdiNewspaper} title="No stories yet">
+					{#snippet actions()}
+						{#if canWrite}
+							<Button variant="primary" href="/posts/new?newspaper={data.newspaper.id}" icon={FluentEdit20Filled}>
+								Write the first story
+							</Button>
+						{/if}
+					{/snippet}
+				</EmptyState>
 			{/if}
-			<div class="mt-4 flex items-center gap-3 text-xs text-[#8e9abb]">
-				<Logo src={lead.authorLogo} alt={lead.authorName} class="size-6" placeholderIcon={FluentPerson20Filled} />
-				<span class="text-[#dbe2f4]">{lead.authorName}</span>
-				<span>{formatDate(lead.publishDate)}</span>
-				<span class="ml-auto flex items-center gap-1"><MdiHeart class="size-3.5 text-red-400" />{lead.upvoteCount}</span
-				>
-			</div>
-		</a>
+		</div>
 
-		{#if rest.length}
-			<section>
-				<h2 class="section-title mb-3">More from {data.newspaper.name}</h2>
-				<div class="grid gap-3 sm:grid-cols-2">
-					{#each rest as article (article.id)}
-						<a href="/posts/{article.id}" class="panel-interactive rounded-sm p-4 flex flex-col group">
-							<h3
-								class="font-serif text-lg font-bold leading-snug text-[#eef2ff] group-hover:text-[#ffc857] transition-colors"
-							>
-								{article.title}
-							</h3>
-							{#if article.excerpt}
-								<p class="mt-1.5 text-sm text-[#8e9abb] line-clamp-3">{article.excerpt}</p>
-							{/if}
-							<div class="mt-auto pt-3 flex items-center gap-2 text-xs text-[#8e9abb]">
-								<Logo
-									src={article.authorLogo}
-									alt={article.authorName}
-									class="size-5"
-									placeholderIcon={FluentPerson20Filled}
-								/>
-								<span class="text-[#c2cbe3] truncate">{article.authorName}</span>
-								<span class="shrink-0">· {formatDate(article.publishDate)}</span>
-								<span class="ml-auto flex items-center gap-1 shrink-0"
-									><MdiHeart class="size-3.5 text-red-400" />{article.upvoteCount}</span
-								>
-							</div>
-						</a>
-					{/each}
-				</div>
-			</section>
-		{/if}
-	{/if}
+		<!-- Newsroom -->
+		<aside class="panel rounded-sm p-4 space-y-3 lg:sticky lg:top-6">
+			<div class="flex items-center justify-between gap-2">
+				<h2 class="section-title">Newsroom</h2>
+				<a
+					href="/newspaper/{data.newspaper.id}/staff"
+					class="font-mono text-xs text-friendly hover:text-friendly-fg transition-colors"
+				>
+					{data.staff.length}
+				</a>
+			</div>
+			<ul class="space-y-3">
+				{#each data.staff.slice(0, 6) as member (member.id)}
+					<li>
+						<UserLink id={member.id} name={member.name} avatar={member.logo} subtitle={roleLabel[member.role]} />
+					</li>
+				{/each}
+			</ul>
+		</aside>
+	</div>
 </PageContainer>
 
 <!-- Edit Newspaper Bottom Sheet -->

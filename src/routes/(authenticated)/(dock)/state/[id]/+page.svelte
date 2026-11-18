@@ -101,7 +101,7 @@
 			href: `/state/${data.state.id}/construction`,
 			label: "Construction",
 			icon: FluentBuilding20Filled,
-			tone: "text-accent-fg"
+			tone: "text-primary-fg"
 		});
 		list.push({
 			href: `/state/${data.state.id}/budget`,
@@ -274,11 +274,11 @@
 					this={href ? "a" : "div"}
 					{href}
 					class="group flex items-center gap-2 py-2 border-b border-dashed border-line/15 {href
-						? 'hover:text-accent-hover'
+						? 'hover:text-primary-hover'
 						: ''}"
 				>
 					<Icon class="size-4 shrink-0 {tone}" />
-					<dt class="text-sm text-fg-muted {href ? 'group-hover:text-accent-hover' : ''} transition-colors">{label}</dt>
+					<dt class="text-sm text-fg-muted {href ? 'group-hover:text-primary-hover' : ''} transition-colors">{label}</dt>
 					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
 					<dd class="text-sm font-bold font-mono text-fg">{value}</dd>
 				</svelte:element>
@@ -299,7 +299,7 @@
 			)}
 			{@render fact("Power rating", String(data.state.rating || 0), FluentShield20Filled, "text-positive")}
 			{#if data.energy}
-				{@render fact("Energy available", `${data.energy.available} MW`, FluentLightbulb20Filled, "text-accent-fg")}
+				{@render fact("Energy available", `${data.energy.available} MW`, FluentLightbulb20Filled, "text-primary-fg")}
 			{/if}
 		</dl>
 	</section>
@@ -402,7 +402,7 @@
 					</span>
 					{#if data.residencePermit.hasPendingApp}
 						<span
-							class="animate-stamp border-2 border-accent/70 text-accent-fg rounded-sm px-2.5 py-0.5 font-serif text-xs font-black uppercase tracking-widest"
+							class="animate-stamp border-2 border-primary/70 text-primary-fg rounded-sm px-2.5 py-0.5 font-serif text-xs font-black uppercase tracking-widest"
 							style="--stamp-tilt: 4deg"
 						>
 							Pending
@@ -488,10 +488,10 @@
 							/>
 						{/each}
 					</div>
-					<span class="flex-1 min-w-0 text-sm text-fg-soft group-hover:text-accent-hover transition-colors">
+					<span class="flex-1 min-w-0 text-sm text-fg-soft group-hover:text-primary-hover transition-colors">
 						{data.parliamentMembers.length}{data.parliamentMembers.length >= 20 ? "+" : ""} seats in parliament
 					</span>
-					<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-accent-hover" />
+					<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />
 				</a>
 			{/if}
 
@@ -500,10 +500,10 @@
 				<a
 					href="/state/{data.state.id}/election/{data.nextElection.id}"
 					class="group flex items-center gap-3 rounded-sm p-3 border transition-colors {isActive
-						? 'bg-accent/12 border-accent/35 hover:border-accent/60'
-						: 'bg-surface-4/60 border-line/15 hover:border-accent/40'}"
+						? 'bg-primary/12 border-primary/35 hover:border-primary/60'
+						: 'bg-surface-4/60 border-line/15 hover:border-primary/40'}"
 				>
-					<FluentVote20Filled class="size-5 shrink-0 {isActive ? 'text-accent-fg' : 'text-friendly'}" />
+					<FluentVote20Filled class="size-5 shrink-0 {isActive ? 'text-primary-fg' : 'text-friendly'}" />
 					<div class="flex-1 min-w-0">
 						<p class="text-sm font-bold text-fg flex items-center gap-2 flex-wrap">
 							{data.nextElection.isInaugural ? "Founding election" : "Parliamentary election"}
@@ -519,9 +519,9 @@
 						</p>
 					</div>
 					{#if isActive}
-						<span class="shrink-0 text-xs font-semibold text-accent-fg group-hover:text-accent-soft">Vote →</span>
+						<span class="shrink-0 text-xs font-semibold text-primary-fg group-hover:text-primary-soft">Vote →</span>
 					{:else}
-						<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-accent-hover" />
+						<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />
 					{/if}
 				</a>
 				{#if data.nextElection.isInaugural && !isActive}
@@ -536,7 +536,7 @@
 		{#each offices as office (office.href)}
 			<a href={office.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-2 min-w-0">
 				<office.icon class="size-5 shrink-0 {office.tone}" />
-				<span class="text-sm font-semibold text-fg-body group-hover:text-accent-hover transition-colors truncate">
+				<span class="text-sm font-semibold text-fg-body group-hover:text-primary-hover transition-colors truncate">
 					{office.label}
 				</span>
 			</a>
@@ -548,7 +548,7 @@
 		<section class="space-y-3">
 			<div class="flex items-baseline justify-between gap-3">
 				<h2 class="section-title">Regions</h2>
-				<a href="/state/{data.state.id}/region" class="text-xs text-fg-muted hover:text-accent-hover">All →</a>
+				<a href="/state/{data.state.id}/region" class="text-xs text-fg-muted hover:text-primary-hover">All →</a>
 			</div>
 			<ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
 				{#each sortedRegions.slice(0, 9) as region (region.id)}
@@ -565,7 +565,7 @@
 							/>
 							<span class="flex-1 min-w-0">
 								<span
-									class="block text-sm font-semibold text-fg truncate group-hover:text-accent-hover transition-colors"
+									class="block text-sm font-semibold text-fg truncate group-hover:text-primary-hover transition-colors"
 								>
 									{region.name}
 								</span>
@@ -616,7 +616,7 @@
 								<span class="text-sm text-fg-body">{taxNames[tax.taxType] ?? tax.taxType.replace(/_/g, " ")} tax</span
 								>
 								<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
-								<span class="text-sm font-bold font-mono text-accent-fg">{tax.taxRate}%</span>
+								<span class="text-sm font-bold font-mono text-primary-fg">{tax.taxRate}%</span>
 							</li>
 						{/each}
 					</ul>

@@ -63,9 +63,9 @@
 	{#if data.userCompany}
 		<a
 			href="/company/{data.userCompany.id}"
-			class="block panel-interactive rounded-sm p-4 sm:p-5 group border-l-4 border-l-accent"
+			class="block panel-interactive rounded-sm p-4 sm:p-5 group border-l-4 border-l-primary"
 		>
-			<p class="text-[10px] uppercase tracking-[0.2em] text-accent-fg mb-2">
+			<p class="text-[10px] uppercase tracking-[0.2em] text-primary-fg mb-2">
 				Your firm · <span class="font-mono">{entryNo(data.userCompany.id)}</span>
 			</p>
 			<div class="flex items-center gap-4">
@@ -78,7 +78,7 @@
 				/>
 				<div class="min-w-0 flex-1">
 					<h2
-						class="font-serif text-xl sm:text-2xl font-bold text-fg group-hover:text-accent-hover transition-colors truncate"
+						class="font-serif text-xl sm:text-2xl font-bold text-fg group-hover:text-primary-hover transition-colors truncate"
 					>
 						{data.userCompany.name}
 					</h2>
@@ -138,7 +138,7 @@
 			<ul class="divide-y divide-line/10">
 				{#each filteredCompanies as company (company.id)}
 					<li
-						class="relative group px-4 sm:px-5 py-3 transition-colors hover:bg-accent/6 sm:grid sm:grid-cols-[6rem_1fr_12rem_9rem] sm:gap-4 sm:items-center"
+						class="relative group px-4 sm:px-5 py-3 transition-colors hover:bg-primary/6 sm:grid sm:grid-cols-[6rem_1fr_12rem_9rem] sm:gap-4 sm:items-center"
 					>
 						<span class="hidden sm:block font-mono text-xs text-fg-muted">{entryNo(company.id)}</span>
 
@@ -153,7 +153,7 @@
 							<div class="min-w-0">
 								<a
 									href="/company/{company.id}"
-									class="font-bold text-fg group-hover:text-accent-hover transition-colors truncate block after:absolute after:inset-0"
+									class="font-bold text-fg group-hover:text-primary-hover transition-colors truncate block after:absolute after:inset-0"
 								>
 									{company.name}
 								</a>

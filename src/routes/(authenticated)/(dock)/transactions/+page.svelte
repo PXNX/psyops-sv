@@ -205,7 +205,7 @@
 				</div>
 				{#each groupedTransactions as group (group.day)}
 					<div
-						class="px-4 py-1.5 border-t border-line/15 bg-surface-4/80 text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-fg/80"
+						class="px-4 py-1.5 border-t border-line/15 bg-surface-4/80 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary-fg/80"
 					>
 						{group.label}
 					</div>
@@ -227,7 +227,7 @@
 										/>
 									{:else if tx.entity.name}
 										{#if tx.entity.href}
-											<a href={tx.entity.href} class="truncate hover:text-accent-hover transition-colors">
+											<a href={tx.entity.href} class="truncate hover:text-primary-hover transition-colors">
 												{tx.entity.name}
 											</a>
 										{:else}

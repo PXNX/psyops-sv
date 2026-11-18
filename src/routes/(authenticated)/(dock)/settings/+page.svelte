@@ -144,7 +144,7 @@
 					type="checkbox"
 					checked={settings.loadImages}
 					onchange={toggleLoadImages}
-					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 				/>
 			</label>
 		</div>
@@ -174,7 +174,7 @@
 				type="checkbox"
 				bind:checked={notifyDirectMessages}
 				onchange={() => toggleNotification("notifyDirectMessages", notifyDirectMessages)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 
@@ -190,7 +190,7 @@
 				type="checkbox"
 				bind:checked={notifyNewspaperPosts}
 				onchange={() => toggleNotification("notifyNewspaperPosts", notifyNewspaperPosts)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 
@@ -208,7 +208,7 @@
 				type="checkbox"
 				bind:checked={notifyWarDeclarations}
 				onchange={() => toggleNotification("notifyWarDeclarations", notifyWarDeclarations)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 
@@ -224,7 +224,7 @@
 				type="checkbox"
 				bind:checked={notifyBattleResults}
 				onchange={() => toggleNotification("notifyBattleResults", notifyBattleResults)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 
@@ -240,7 +240,7 @@
 				type="checkbox"
 				bind:checked={notifyElections}
 				onchange={() => toggleNotification("notifyElections", notifyElections)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 
@@ -256,7 +256,7 @@
 				type="checkbox"
 				bind:checked={notifyNewProposals}
 				onchange={() => toggleNotification("notifyNewProposals", notifyNewProposals)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 
@@ -272,7 +272,7 @@
 				type="checkbox"
 				bind:checked={notifyTravelComplete}
 				onchange={() => toggleNotification("notifyTravelComplete", notifyTravelComplete)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 
@@ -288,7 +288,7 @@
 				type="checkbox"
 				bind:checked={notifyShiftComplete}
 				onchange={() => toggleNotification("notifyShiftComplete", notifyShiftComplete)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 
@@ -304,7 +304,7 @@
 				type="checkbox"
 				bind:checked={notifyMarketSales}
 				onchange={() => toggleNotification("notifyMarketSales", notifyMarketSales)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-accent/60 checked:bg-accent/20 checked:text-accent-fg"
+				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 			/>
 		</label>
 	</div>
@@ -312,17 +312,17 @@
 	<!-- Premium Membership Link -->
 	<a href="/premium" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
 		<div class="flex items-center gap-3">
-			<div class="bg-accent/12 border border-accent/35 p-2 rounded-sm">
-				<FluentStar20Filled class="size-5 text-accent-fg" />
+			<div class="bg-primary/12 border border-primary/35 p-2 rounded-sm">
+				<FluentStar20Filled class="size-5 text-primary-fg" />
 			</div>
 			<div>
-				<p class="text-sm font-medium text-fg group-hover:text-accent-hover transition-colors">
+				<p class="text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">
 					Premium Membership
 				</p>
 				<p class="text-xs text-fg-muted">Automate production, training & factory work</p>
 			</div>
 		</div>
-		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-accent-hover transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-primary-hover transition-colors" />
 	</a>
 
 	<!-- Gift Code Link -->
@@ -332,11 +332,11 @@
 				<FluentGift20Filled class="size-5 text-politics" />
 			</div>
 			<div>
-				<p class="text-sm font-medium text-fg group-hover:text-accent-hover transition-colors">Gift Codes</p>
+				<p class="text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">Gift Codes</p>
 				<p class="text-xs text-fg-muted">Redeem codes for exclusive rewards and bonuses</p>
 			</div>
 		</div>
-		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-accent-hover transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-primary-hover transition-colors" />
 	</a>
 
 	<!-- About Link -->
@@ -346,13 +346,13 @@
 				<FluentInfo20Filled class="size-5 text-friendly" />
 			</div>
 			<div>
-				<p class="text-sm font-medium text-fg group-hover:text-accent-hover transition-colors">
+				<p class="text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">
 					About This Application
 				</p>
 				<p class="text-xs text-fg-muted">Learn more about features, version, and terms</p>
 			</div>
 		</div>
-		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-accent-hover transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-primary-hover transition-colors" />
 	</a>
 
 	<!-- Account Actions -->

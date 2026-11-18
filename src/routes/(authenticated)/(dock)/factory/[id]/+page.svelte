@@ -167,7 +167,7 @@
 				<dd>
 					<a
 						href="/company/{data.factory.companyId}"
-						class="font-semibold text-politics-fg hover:text-accent-hover transition-colors truncate block"
+						class="font-semibold text-politics-fg hover:text-primary-hover transition-colors truncate block"
 					>
 						{data.factory.companyName}
 					</a>
@@ -188,7 +188,7 @@
 							alt=""
 							class="size-5 object-contain shrink-0"
 						/>
-						<span class="truncate text-fg group-hover:text-accent-hover transition-colors">
+						<span class="truncate text-fg group-hover:text-primary-hover transition-colors">
 							{regionName}<span class="text-fg-muted">, {data.factory.stateName}</span>
 						</span>
 					</a>
@@ -211,7 +211,7 @@
 				<path
 					d="M12 62 A48 48 0 0 1 108 62"
 					fill="none"
-					stroke={isFull ? "var(--color-positive)" : "var(--color-accent)"}
+					stroke={isFull ? "var(--color-positive)" : "var(--color-primary)"}
 					stroke-width="9"
 					stroke-linecap="round"
 					pathLength="100"
@@ -261,12 +261,12 @@
 				<div class="mt-3 w-full">
 					<div class="flex items-center justify-between text-xs mb-1">
 						<span class="flex items-center gap-1 text-fg-muted">
-							<FluentFlash20Filled class="size-3.5 text-accent-fg" /> Grid
+							<FluentFlash20Filled class="size-3.5 text-primary-fg" /> Grid
 						</span>
 						<span class="font-mono text-fg-soft">{energyFree}/{data.stateEnergy.totalProduction} MW</span>
 					</div>
 					<div class="h-1.5 bg-surface-4 rounded-full overflow-hidden border border-line/10">
-						<div class="h-full bg-accent rounded-full transition-all duration-700" style="width: {energyPct}%"></div>
+						<div class="h-full bg-primary rounded-full transition-all duration-700" style="width: {energyPct}%"></div>
 					</div>
 				</div>
 			{/if}
@@ -285,7 +285,7 @@
 				<h2 class="section-title">Time card</h2>
 				{#if data.isCurrentlyWorking}
 					<Badge tone="amber">
-						<span class="size-1.5 rounded-full bg-accent animate-pulse"></span>
+						<span class="size-1.5 rounded-full bg-primary animate-pulse"></span>
 						On shift
 					</Badge>
 				{:else if data.isWorkingHere}
@@ -326,11 +326,11 @@
 				<div class="mt-4">
 					<div class="flex items-center justify-between text-xs mb-1.5">
 						<span class="text-fg-muted">8h shift</span>
-						<span class="font-mono font-bold text-accent-fg">{data.shiftProgress >= 100 ? "Done" : timeRemaining}</span>
+						<span class="font-mono font-bold text-primary-fg">{data.shiftProgress >= 100 ? "Done" : timeRemaining}</span>
 					</div>
-					<div class="h-2.5 bg-surface-4 rounded-full overflow-hidden border border-accent/20">
+					<div class="h-2.5 bg-surface-4 rounded-full overflow-hidden border border-primary/20">
 						<div
-							class="h-full bg-accent transition-all duration-1000 rounded-full"
+							class="h-full bg-primary transition-all duration-1000 rounded-full"
 							style="width: {data.shiftProgress}%"
 						></div>
 					</div>
@@ -345,7 +345,7 @@
 				{/if}
 			{:else}
 				{#if data.currentUserJob && !data.isWorkingHere && !blocker}
-					<p class="mt-3 text-xs text-accent-fg">Starting here ends your current job.</p>
+					<p class="mt-3 text-xs text-primary-fg">Starting here ends your current job.</p>
 				{/if}
 				{#if blocker}
 					<p class="mt-3 text-xs text-red-300 flex items-center gap-1.5">

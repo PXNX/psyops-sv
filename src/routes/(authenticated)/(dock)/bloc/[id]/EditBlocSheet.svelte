@@ -124,11 +124,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
 			dragActive
-				? "border-accent bg-accent/10"
+				? "border-primary bg-primary/10"
 				: previewUrl
 					? "border-positive/50 bg-positive-bg/10"
-					: "border-accent/30",
-			!$submitting && !previewUrl ? "hover:border-accent/50 hover:bg-accent/10" : "",
+					: "border-primary/30",
+			!$submitting && !previewUrl ? "hover:border-primary/50 hover:bg-primary/10" : "",
 			$submitting ? "opacity-50" : "",
 			$errors.logo ? "input-error" : ""
 		]
@@ -143,7 +143,7 @@
 			<!-- Bloc Name -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentFlag20Filled class="size-4 text-accent-fg" />
+					<FluentFlag20Filled class="size-4 text-primary-fg" />
 					<h2 class="text-sm font-semibold text-fg">Bloc Details</h2>
 				</div>
 				<div>
@@ -172,7 +172,7 @@
 			<!-- Bloc Logo -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentImage20Filled class="size-4 text-accent-fg" />
+					<FluentImage20Filled class="size-4 text-primary-fg" />
 					<h2 class="text-sm font-semibold text-fg">Bloc Logo</h2>
 				</div>
 
@@ -191,8 +191,8 @@
 					<button type="button" onclick={() => fileInput?.click()} disabled={$submitting} class={dropzoneClass}>
 						{#if !previewUrl}
 							<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-								<div class="rounded-full bg-accent/15 p-3 transition-colors group-hover:bg-accent/20">
-									<FluentImage20Filled class="size-8 text-accent-fg" />
+								<div class="rounded-full bg-primary/15 p-3 transition-colors group-hover:bg-primary/20">
+									<FluentImage20Filled class="size-8 text-primary-fg" />
 								</div>
 								<div class="text-center">
 									<p class="text-sm font-semibold text-fg">
@@ -260,7 +260,7 @@
 			<!-- Bloc Color -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentColor20Filled class="size-4 text-accent-fg" />
+					<FluentColor20Filled class="size-4 text-primary-fg" />
 					<h2 class="text-sm font-semibold text-fg">Bloc Color</h2>
 				</div>
 
@@ -268,7 +268,7 @@
 					{#each colorPresets as color}
 						<button
 							type="button"
-							class="size-10 rounded-sm transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+							class="size-10 rounded-sm transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
 							style="background-color: {color.value}"
 							class:ring-4={$form.color === color.value}
 							class:ring-fg={$form.color === color.value}
@@ -348,7 +348,7 @@
 			<!-- Description -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentDocument20Filled class="size-4 text-accent-fg" />
+					<FluentDocument20Filled class="size-4 text-primary-fg" />
 					<h2 class="text-sm font-semibold text-fg">Bloc Description</h2>
 				</div>
 

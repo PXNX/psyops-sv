@@ -37,7 +37,7 @@
 				</p>
 			</div>
 
-			<div class="panel-muted border-accent/30 rounded-sm p-4">
+			<div class="panel-muted border-primary/30 rounded-sm p-4">
 				<p class="text-sm text-fg-soft font-medium mb-2">Blocking will:</p>
 				<ul class="list-disc list-inside text-sm text-fg-muted space-y-1">
 					<li>Hide their messages from you</li>

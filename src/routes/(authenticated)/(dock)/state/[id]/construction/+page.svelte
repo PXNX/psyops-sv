@@ -65,7 +65,7 @@
 								<td class="px-1 py-1.5">
 									<a href="/region/{r.id}/construction" class="flex items-center gap-2 min-w-0 group">
 										<img src={regionCoatUrl(r.id)} alt="" class="size-6 shrink-0" loading="lazy" />
-										<span class="truncate text-fg-body group-hover:text-accent-hover">{r.name}</span>
+										<span class="truncate text-fg-body group-hover:text-primary-hover">{r.name}</span>
 									</a>
 								</td>
 								{#each columns as c (c.type)}

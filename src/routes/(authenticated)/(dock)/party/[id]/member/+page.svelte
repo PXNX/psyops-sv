@@ -116,10 +116,10 @@
 
 		<!-- Pending Applications -->
 		{#if canManageMembers && data.pendingApplications.length > 0}
-			<div class="panel rounded-sm p-5 space-y-3 border-accent/35">
+			<div class="panel rounded-sm p-5 space-y-3 border-primary/35">
 				<div class="flex items-center justify-between">
 					<h2 class="section-title">
-						<FluentPersonAvailable20Filled class="size-5 text-accent-fg" />
+						<FluentPersonAvailable20Filled class="size-5 text-primary-fg" />
 						Applications
 					</h2>
 					<Badge tone="amber">{data.pendingApplications.length}</Badge>
@@ -355,7 +355,7 @@
 			</div>
 		{:else if data.hasApplied}
 			<div
-				class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-center justify-center gap-3"
+				class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-center justify-center gap-3"
 			>
 				<span class="text-sm">Application pending review</span>
 			</div>

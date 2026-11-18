@@ -69,7 +69,7 @@
 <div class="shell" class:no-nav={hideNav}>
 	<header class="topbar">
 		<a href="/" class="flex items-center gap-2 min-w-0">
-			<span class="size-2 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)]" aria-hidden="true"></span>
+			<span class="size-2 rounded-full bg-primary shadow-[0_0_8px_var(--color-primary)]" aria-hidden="true"></span>
 			<span class="text-sm font-semibold tracking-[0.3em] text-fg">PSYOPS</span>
 			<span class="text-fg-faint">/</span>
 			<span class="text-xs uppercase tracking-[0.2em] text-fg-muted truncate">{section}</span>
@@ -165,11 +165,11 @@
 		@apply text-fg;
 	}
 	.rail-item.active {
-		@apply text-accent-fg;
+		@apply text-primary-fg;
 	}
 	.rail-item.active::before {
 		content: "";
-		@apply absolute top-0 left-1/4 right-1/4 h-0.5 bg-accent;
+		@apply absolute top-0 left-1/4 right-1/4 h-0.5 bg-primary;
 	}
 	.rail-label {
 		@apply text-[10px] font-medium tracking-wide;
@@ -215,7 +215,7 @@
 			@apply bg-surface-7;
 		}
 		.rail-item.active {
-			@apply bg-accent/12;
+			@apply bg-primary/12;
 		}
 		.rail-item.active::before {
 			@apply top-2 bottom-2 left-0 right-auto w-0.5 h-auto;
@@ -231,7 +231,7 @@
 	}
 
 	.nav-progress {
-		@apply fixed top-0 left-0 right-0 z-50 h-0.5 overflow-hidden bg-accent/10;
+		@apply fixed top-0 left-0 right-0 z-50 h-0.5 overflow-hidden bg-primary/10;
 	}
 
 	.nav-progress::after {
@@ -239,7 +239,7 @@
 		display: block;
 		height: 100%;
 		width: 40%;
-		background: var(--color-accent);
+		background: var(--color-primary);
 		animation: nav-progress-slide 0.9s ease-in-out infinite;
 	}
 

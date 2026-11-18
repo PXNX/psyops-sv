@@ -240,21 +240,21 @@
 				onclick={() => fileInput?.click()}
 				disabled={disabled || uploading}
 				class="group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 {dragActive
-					? 'border-accent bg-accent/10'
+					? 'border-primary bg-primary/10'
 					: croppedDataUrl || selectedFile
 						? 'border-positive/50 bg-positive-bg/10'
-						: 'border-line/20'} {!uploading && !disabled ? 'hover:border-accent/50' : ''} {!uploading &&
+						: 'border-line/20'} {!uploading && !disabled ? 'hover:border-primary/50' : ''} {!uploading &&
 				!disabled &&
 				!croppedDataUrl &&
 				!selectedFile
-					? 'hover:bg-accent/10'
+					? 'hover:bg-primary/10'
 					: ''}"
 				class:opacity-50={uploading || disabled}
 			>
 				{#if !croppedDataUrl && !selectedFile}
 					<div class="flex min-h-[140px] flex-col items-center justify-center gap-2 p-4">
-						<div class="rounded-full bg-accent/12 border border-accent/35 p-3">
-							<IconImage class="h-8 w-8 text-accent-fg" />
+						<div class="rounded-full bg-primary/12 border border-primary/35 p-3">
+							<IconImage class="h-8 w-8 text-primary-fg" />
 						</div>
 						<div class="text-center">
 							<p class="text-sm font-semibold text-fg">
@@ -318,7 +318,7 @@
 								<button
 									type="button"
 									onclick={() => (showCropper = true)}
-									class="text-xs text-accent-fg hover:text-accent-hover hover:underline mt-1"
+									class="text-xs text-primary-fg hover:text-primary-hover hover:underline mt-1"
 								>
 									Re-crop
 								</button>

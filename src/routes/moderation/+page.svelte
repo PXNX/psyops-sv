@@ -79,9 +79,9 @@
 
 	<!-- Statistics -->
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-		<div class="bg-accent/12 rounded-sm border border-accent/35 p-4">
+		<div class="bg-primary/12 rounded-sm border border-primary/35 p-4">
 			<div class="flex items-center gap-3">
-				<FluentWarning20Filled class="size-6 text-accent-fg shrink-0" />
+				<FluentWarning20Filled class="size-6 text-primary-fg shrink-0" />
 				<div>
 					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Pending Reports</p>
 					<p class="text-2xl font-bold text-fg">{data.stats.pending}</p>
@@ -160,7 +160,7 @@
 						out:vanish
 						onclick={() => (selectedReport = report)}
 						class="w-full panel-interactive rounded-sm p-4 text-left {selectedReport?.reportId === report.reportId
-							? 'border-accent/55 ring-1 ring-accent/40'
+							? 'border-primary/55 ring-1 ring-primary/40'
 							: ''}"
 					>
 						<div class="flex items-start gap-3">

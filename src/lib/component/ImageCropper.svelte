@@ -98,7 +98,7 @@
 		ctx.clearRect(cropX, cropY, cropWidth, cropHeight);
 
 		// Draw crop border
-		ctx.strokeStyle = "var(--color-accent)";
+		ctx.strokeStyle = "var(--color-primary)";
 		ctx.lineWidth = 2;
 		ctx.strokeRect(cropX, cropY, cropWidth, cropHeight);
 
@@ -121,7 +121,7 @@
 		// Draw resize handle
 		const handleX = cropX + cropWidth;
 		const handleY = cropY + cropHeight;
-		ctx.fillStyle = "var(--color-accent)";
+		ctx.fillStyle = "var(--color-primary)";
 		ctx.beginPath();
 		ctx.arc(handleX, handleY, HANDLE_SIZE / 2, 0, Math.PI * 2);
 		ctx.fill();

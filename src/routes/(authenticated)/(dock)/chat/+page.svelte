@@ -51,7 +51,7 @@
 					{@render opts.title()}
 				</div>
 				{#if opts.time}
-					<span class="shrink-0 font-mono text-[11px] tabular-nums {opts.unread ? 'text-accent-fg' : 'text-fg-muted'}">
+					<span class="shrink-0 font-mono text-[11px] tabular-nums {opts.unread ? 'text-primary-fg' : 'text-fg-muted'}">
 						{opts.time}
 					</span>
 				{/if}
@@ -61,7 +61,7 @@
 					{@render opts.preview()}
 				</p>
 				{#if opts.unread}
-					<span class="size-2.5 shrink-0 rounded-full bg-[var(--color-accent-hi)]" aria-label="Unread"></span>
+					<span class="size-2.5 shrink-0 rounded-full bg-[var(--color-primary-hi)]" aria-label="Unread"></span>
 				{/if}
 			</div>
 		</div>
@@ -201,6 +201,6 @@
 	}
 
 	.chan-icon {
-		@apply flex size-11 shrink-0 items-center justify-center rounded-sm border border-[var(--color-accent-hi)]/35 bg-[var(--color-accent-hi)]/12 text-accent-fg;
+		@apply flex size-11 shrink-0 items-center justify-center rounded-sm border border-[var(--color-primary-hi)]/35 bg-[var(--color-primary-hi)]/12 text-primary-fg;
 	}
 </style>

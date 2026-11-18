@@ -44,7 +44,7 @@
 				/>
 				<div class="min-w-0 leading-tight">
 					<h1
-						class="truncate font-sans text-[15px] font-semibold text-fg transition-colors group-hover:text-accent-fg"
+						class="truncate font-sans text-[15px] font-semibold text-fg transition-colors group-hover:text-primary-fg"
 					>
 						#{party.name}
 					</h1>

@@ -19,6 +19,8 @@ import {
 } from "#lib/config/index.js";
 import { selectEngagedUnits } from "./combat";
 import { applyConquestDamage } from "../politics/construction.service";
+import { battleIntel, type BattleIntel } from "./recon";
+import { unitIntelFactor, type SideModifiers } from "./intel";
 
 /** Frontage per terrain: how much combat width each side may put in the line. */
 export const TERRAIN_DATA = {
@@ -46,6 +48,8 @@ export interface RoundResult {
 	winner: "attacker" | "defender" | null;
 	/** Region levels destroyed when the attacker took the region. */
 	buildingsDestroyed: Partial<Record<string, number>> | null;
+	/** The intel modifiers each side fought with this round. */
+	intel: { attacker: SideModifiers; defender: SideModifiers };
 }
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -89,15 +93,30 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 			await tx.update(battleParticipants).set({ isEngaged: true }).where(inArray(battleParticipants.id, engagedIds));
 		}
 
+		// Intel: each side's fresh picture of the enemy sharpens its fire;
+		// artillery and air strikes need targeting data, air defence blunts
+		// air strikes, thermal fixes on firing positions enable counter-battery.
+		const intel: BattleIntel = await battleIntel(tx, battle, { attackers, defenders });
+
 		// Each engaged unit's output this round.
-		const output = (p: (typeof attackers)[number], stat: "baseAttack" | "baseDefense") =>
+		const output = (
+			p: (typeof attackers)[number],
+			stat: "baseAttack" | "baseDefense",
+			own: SideModifiers,
+			enemy: SideModifiers
+		) =>
 			Math.floor(
-				(MILITARY_UNIT_TEMPLATES[p.unit.unitType]?.[stat] ?? 0) * getExperienceCombatModifier(p.unit.experience ?? 0)
+				(MILITARY_UNIT_TEMPLATES[p.unit.unitType]?.[stat] ?? 0) *
+					getExperienceCombatModifier(p.unit.experience ?? 0) *
+					unitIntelFactor(p.unit.unitType, own, enemy)
 			);
 		const fortLevel = battle.region.fortifications ?? 0;
 		const fortFactor = 1 - fortificationReduction(fortLevel) / 100;
-		const attackerOutput = attackers.map((p) => Math.floor(output(p, "baseAttack") * fortFactor));
-		const defenderOutput = defenders.map((p) => output(p, "baseDefense"));
+		const attackerOutput = attackers.map((p) =>
+			Math.floor(output(p, "baseAttack", intel.attacker, intel.defender) * fortFactor)
+		);
+		const defenderOutput = defenders.map((p) => output(p, "baseDefense", intel.defender, intel.attacker));
+		const roundIntel = { attacker: intel.attacker, defender: intel.defender };
 		const attackerDamage = attackerOutput.reduce((a, b) => a + b, 0);
 		const defenderDamage = defenderOutput.reduce((a, b) => a + b, 0);
 
@@ -175,10 +194,18 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 					buildingsDestroyed
 				})
 				.where(eq(battles.id, battleId));
-			return { roundNumber, attackerDamage, defenderDamage, battleEnded: true, winner, buildingsDestroyed };
+			return { roundNumber, attackerDamage, defenderDamage, battleEnded: true, winner, buildingsDestroyed, intel: roundIntel };
 		}
 
-		return { roundNumber, attackerDamage, defenderDamage, battleEnded: false, winner, buildingsDestroyed: null };
+		return {
+			roundNumber,
+			attackerDamage,
+			defenderDamage,
+			battleEnded: false,
+			winner,
+			buildingsDestroyed: null,
+			intel: roundIntel
+		};
 	});
 }
 

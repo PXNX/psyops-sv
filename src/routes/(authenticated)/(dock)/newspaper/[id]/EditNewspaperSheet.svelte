@@ -121,8 +121,8 @@
 
 	const dropzoneClass = $derived(
 		[
-			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 hover:border-[#f5a524]/55",
-			dragActive ? "border-[#f5a524] bg-[#f5a524]/10" : previewUrl ? "border-[#4fd88a]/60" : "border-[#8ea6e0]/25",
+			"group relative w-full overflow-hidden rounded-sm border border-dashed transition-colors duration-200 hover:border-friendly/55",
+			dragActive ? "border-friendly bg-friendly-bg/10" : previewUrl ? "border-positive/60" : "border-white/15",
 			$submitting || !canEdit ? "opacity-50" : "",
 			$errors.logo ? "border-red-500" : ""
 		]
@@ -135,14 +135,14 @@
 	<div class="space-y-5">
 		<!-- Insufficient Funds Warning -->
 		{#if !canAfford}
-			<div class="bg-[#f5a524]/12 border border-[#f5a524]/35 rounded-sm p-4 space-y-2">
+			<div class="bg-primary/12 border border-primary/35 rounded-sm p-4 space-y-2">
 				<div class="flex items-start gap-3">
-					<FluentMoney20Filled class="size-5 text-[#ffcb6b] shrink-0 mt-0.5" />
+					<FluentMoney20Filled class="size-5 text-primary-fg shrink-0 mt-0.5" />
 					<div class="space-y-1.5 flex-1">
-						<h3 class="font-semibold text-[#ffcb6b] text-sm">Insufficient Funds</h3>
-						<p class="text-[#dbe2f4] text-xs leading-relaxed">
-							You need <strong>{editCost.toLocaleString()}</strong> currency to edit the newspaper. You currently have
-							<strong>{userBalance.toLocaleString()}</strong>.
+						<h3 class="font-semibold text-primary-fg text-sm">Insufficient Funds</h3>
+						<p class="text-fg-body text-xs leading-relaxed">
+							You need <strong class="font-mono">{editCost.toLocaleString()}</strong> currency to edit the newspaper. You currently have
+							<strong class="font-mono">{userBalance.toLocaleString()}</strong>.
 						</p>
 					</div>
 				</div>
@@ -153,8 +153,8 @@
 			<!-- Basic Information -->
 			<div class="space-y-4">
 				<div class="flex items-center gap-2">
-					<FluentDocument20Filled class="size-4 text-[#6aa8ff]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Basic Information</h2>
+					<FluentDocument20Filled class="size-4 text-friendly" />
+					<h2 class="text-sm font-semibold text-fg">Basic Information</h2>
 				</div>
 
 				<div>
@@ -195,8 +195,8 @@
 			<!-- Logo Upload -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentImage20Filled class="size-4 text-[#6aa8ff]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Newspaper Logo</h2>
+					<FluentImage20Filled class="size-4 text-friendly" />
+					<h2 class="text-sm font-semibold text-fg">Newspaper Logo</h2>
 				</div>
 
 				<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -219,11 +219,9 @@
 					>
 						{#if !previewUrl}
 							<div class="flex min-h-[140px] flex-col items-center justify-center gap-2 p-6">
-								<div class="rounded-full bg-[#2f6be0]/18 border border-[#6aa8ff]/30 p-3">
-									<FluentImage20Filled class="size-8 text-[#6aa8ff]" />
-								</div>
+								<FluentImage20Filled class="size-8 text-friendly" />
 								<div class="text-center">
-									<p class="text-sm font-semibold text-[#eef2ff]">
+									<p class="text-sm font-semibold text-fg">
 										{#if dragActive}
 											Drop logo here
 										{:else if $submitting}
@@ -233,13 +231,13 @@
 										{/if}
 									</p>
 									{#if !$submitting && canEdit}
-										<p class="mt-1 text-xs text-[#8e9abb]">Images only • 5MB max</p>
+										<p class="mt-1 text-xs text-fg-muted">Images only • 5MB max</p>
 									{/if}
 								</div>
 							</div>
 						{:else}
 							<div class="relative">
-								<div class="flex items-center justify-center p-6 bg-[#131c33]/70">
+								<div class="flex items-center justify-center p-6 bg-surface-4/70">
 									<img
 										loading="lazy"
 										decoding="async"
@@ -249,9 +247,9 @@
 									/>
 								</div>
 								<div
-									class="absolute inset-0 flex items-center justify-center bg-[#0c1222]/70 opacity-0 transition-opacity group-hover:opacity-100"
+									class="absolute inset-0 flex items-center justify-center bg-surface-1/70 opacity-0 transition-opacity group-hover:opacity-100"
 								>
-									<p class="text-sm font-semibold text-[#eef2ff]">Tap to change</p>
+									<p class="text-sm font-semibold text-fg">Tap to change</p>
 								</div>
 								{#if $form.logo && canEdit}
 									<button
@@ -302,7 +300,7 @@
 
 		<!-- Success Message -->
 		{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("Insufficient")}
-			<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">
+			<div class="bg-positive-bg/18 border border-positive/30 text-positive-fg rounded-sm p-4 flex items-center gap-3">
 				<p class="text-sm font-medium">{$message}</p>
 			</div>
 		{/if}

@@ -121,11 +121,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
 			dragActive
-				? "border-accent bg-accent/10"
+				? "border-primary bg-primary/10"
 				: previewUrl
 					? "border-positive/50 bg-positive-bg/10"
-					: "border-accent/30",
-			!$submitting && !previewUrl ? "hover:border-accent/50 hover:bg-accent/10" : "",
+					: "border-primary/30",
+			!$submitting && !previewUrl ? "hover:border-primary/50 hover:bg-primary/10" : "",
 			$submitting || data.onCooldown ? "opacity-50" : "",
 			$errors.logo ? "input-error" : ""
 		]
@@ -144,8 +144,8 @@
 	/>
 
 	{#if data.onCooldown}
-		<div class="bg-accent/12 border border-accent/35 rounded-sm p-4 flex items-center gap-3">
-			<p class="text-accent-fg text-sm font-medium">
+		<div class="bg-primary/12 border border-primary/35 rounded-sm p-4 flex items-center gap-3">
+			<p class="text-primary-fg text-sm font-medium">
 				⏰ {data.timeRemaining}h until your state may found, join or leave a bloc.
 			</p>
 		</div>
@@ -164,7 +164,7 @@
 	<form method="POST" enctype="multipart/form-data" use:enhance class="space-y-6">
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentFlag20Filled class="size-5 text-accent-fg" />
+				<FluentFlag20Filled class="size-5 text-primary-fg" />
 				<h2 class="section-title">Name</h2>
 			</div>
 
@@ -193,7 +193,7 @@
 
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-accent-fg" />
+				<FluentImage20Filled class="size-5 text-primary-fg" />
 				<h2 class="section-title">Seal</h2>
 			</div>
 
@@ -217,8 +217,8 @@
 				>
 					{#if !previewUrl}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-accent/15 p-3 transition-colors group-hover:bg-accent/20">
-								<FluentImage20Filled class="size-8 text-accent-fg" />
+							<div class="rounded-full bg-primary/15 p-3 transition-colors group-hover:bg-primary/20">
+								<FluentImage20Filled class="size-8 text-primary-fg" />
 							</div>
 							<div class="text-center">
 								<p class="text-base font-semibold text-fg">
@@ -293,7 +293,7 @@
 
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentColor20Filled class="size-5 text-accent-fg" />
+				<FluentColor20Filled class="size-5 text-primary-fg" />
 				<h2 class="section-title">Colour</h2>
 			</div>
 
@@ -348,7 +348,7 @@
 
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-accent-fg" />
+				<FluentDocument20Filled class="size-5 text-primary-fg" />
 				<h2 class="section-title">Preamble</h2>
 			</div>
 

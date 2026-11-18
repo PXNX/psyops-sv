@@ -90,7 +90,7 @@
 					type="button"
 					onclick={clearSearch}
 					aria-label="Clear search"
-					class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-fg-muted hover:text-fg hover:bg-accent/10 transition-colors"
+					class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-fg-muted hover:text-fg hover:bg-primary/10 transition-colors"
 				>
 					<FluentDismiss20Filled class="size-4" />
 				</button>
@@ -149,7 +149,7 @@
 						<div class="min-w-0 flex-1 space-y-1">
 							<div class="flex items-center gap-2">
 								<h2
-									class="truncate font-serif text-lg font-bold leading-tight text-fg group-hover:text-accent-hover transition-colors"
+									class="truncate font-serif text-lg font-bold leading-tight text-fg group-hover:text-primary-hover transition-colors"
 								>
 									{state.name}
 								</h2>
@@ -170,7 +170,7 @@
 									{state.regionCount === 1 ? "region" : "regions"}</span
 								>
 								<span class="flex items-center gap-1"
-									><FluentStar20Filled class="size-3.5 text-accent-fg" /><span class="text-fg-body"
+									><FluentStar20Filled class="size-3.5 text-primary-fg" /><span class="text-fg-body"
 										>{state.rating || 0}</span
 									></span
 								>

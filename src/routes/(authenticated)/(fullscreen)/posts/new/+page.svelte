@@ -1,16 +1,17 @@
 <!-- src/routes/(authenticated)/(fullscreen)/posts/new/+page.svelte -->
 <script lang="ts">
-	import { toast } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
-	import FluentSave20Filled from "~icons/fluent/save-20-filled";
-	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import FluentArrowHookUpLeft20Regular from "~icons/fluent/arrow-hook-up-left-20-regular";
-	import FluentArrowHookUpRight20Regular from "~icons/fluent/arrow-hook-up-right-20-regular";
-	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
+	import { page } from "$app/state";
+	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
+	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
+	import MdiNewspaper from "~icons/mdi/newspaper";
 	import WysiwygEditor from "#lib/component/WysiwygEditor.svelte";
 	import Modal from "#lib/component/Modal.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import PostEditor from "#lib/component/press/PostEditor.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 	import { SCHEMA_LIMITS } from "#lib/config/validation/schema-limits.js";
-	import { buttonClass } from "#lib/component/ui/styles.js";
+	import { toast, toastResult } from "#lib/ui/toast.svelte.js";
 
 	const { data } = $props();
 
@@ -18,24 +19,31 @@
 	let isPublishModalOpen = $state(false);
 	let isCancelModalOpen = $state(false);
 	let title = $state("");
-	let selectedNewspaperId = $state("");
+	let content = $state("");
+	// "Write" on a newspaper's front page links here with ?newspaper=<id>.
+	const requested = page.url.searchParams.get("newspaper") ?? "";
+	let selectedNewspaperId = $state(data.newspapers.some((n) => String(n.id) === requested) ? requested : "");
 	let isSubmitting = $state(false);
 
-	const handlePublish = async () => {
-		const content = editorComponent?.getContent();
+	const rankLabel = { owner: "Publisher", editor: "Editor", author: "Writer" } as const;
+	const publishOptions = $derived([
+		{ id: "", name: "Personal post", logo: null as string | null, rank: null as keyof typeof rankLabel | null },
+		...data.newspapers.map((n) => ({ id: String(n.id), name: n.name, logo: n.logo, rank: n.rank }))
+	]);
+
+	const handlePublish = () => {
+		content = editorComponent?.getContent() ?? content;
 
 		if (!title.trim()) {
-			toast.error("Please enter a title");
+			toast.error("Please enter a headline");
 			return;
 		}
-
-		if (!content || content.trim().length < 50) {
-			toast.error("Please write at least 50 characters of content");
+		if (content.trim().length < SCHEMA_LIMITS.MIN_CONTENT_LENGTH) {
+			toast.error(`Please write at least ${SCHEMA_LIMITS.MIN_CONTENT_LENGTH} characters of content`);
 			return;
 		}
-
 		if (title.length > SCHEMA_LIMITS.ARTICLE_TITLE_MAX) {
-			toast.error(`Title must be ${SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters or less`);
+			toast.error(`Headline must be ${SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters or less`);
 			return;
 		}
 
@@ -43,164 +51,100 @@
 	};
 
 	const handleCancel = () => {
-		if (title || editorComponent?.getContent()) {
+		if (title.trim() || editorComponent?.getContent().replace(/<[^>]*>/g, "").trim()) {
 			isCancelModalOpen = true;
 		} else {
 			history.back();
 		}
 	};
-
-	const confirmDiscard = () => {
-		history.back();
-	};
 </script>
 
 <svelte:head>
-	<title>Create Post</title>
+	<title>New post · PsyOps</title>
 </svelte:head>
 
-<div class="min-h-dvh flex flex-col">
-	<!-- Editor Header -->
-	<header class="sticky top-0 z-10 border-b border-[#8ea6e0]/15 bg-[#111a2e]/95 backdrop-blur-md">
-		<div class="w-full px-3 sm:px-6 py-3 sm:py-4">
-			<div class="flex items-center gap-2 sm:gap-3">
-				<button onclick={handlePublish} class={buttonClass({ variant: "primary", shape: "square" })} title="Publish">
-					<FluentSave20Filled class="size-5" />
-				</button>
+<PostEditor
+	bind:title
+	bind:content
+	bind:editor={editorComponent}
+	actionLabel="Publish"
+	onAction={handlePublish}
+	onCancel={handleCancel}
+	disabled={isSubmitting}
+/>
 
-				{#if editorComponent}
-					<button
-						class={buttonClass({ variant: "secondary", shape: "square" })}
-						onclick={() => editorComponent?.undo()}
-						title="Undo"
-					>
-						<FluentArrowHookUpLeft20Regular class="size-5" />
-					</button>
-					<button
-						class={buttonClass({ variant: "secondary", shape: "square" })}
-						onclick={() => editorComponent?.redo()}
-						title="Redo"
-					>
-						<FluentArrowHookUpRight20Regular class="size-5" />
-					</button>
-				{/if}
-
-				<div class="flex-1"></div>
-
-				<span class="text-xs text-[#8e9abb] font-mono hidden sm:inline">
-					{title.length}/{SCHEMA_LIMITS.ARTICLE_TITLE_MAX}
-				</span>
-
-				<button
-					onclick={handleCancel}
-					class={buttonClass({
-						variant: "secondary",
-						shape: "square",
-						class: "hover:border-red-500/30 hover:text-red-300"
-					})}
-					title="Cancel"
-				>
-					<FluentDismiss20Filled class="size-5" />
-				</button>
-			</div>
-		</div>
-	</header>
-
-	<!-- Editor Content -->
-	<main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-		<!-- Title Input -->
-		<input
-			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#eef2ff] placeholder:text-[#8794b5]/55 border-none outline-none mb-2"
-			placeholder="Enter your title..."
-			type="text"
-			bind:value={title}
-			maxlength={SCHEMA_LIMITS.ARTICLE_TITLE_MAX}
-		/>
-
-		<div class="text-xs text-[#8e9abb] font-mono mb-6">
-			{title.length}/{SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters
-		</div>
-
-		<!-- Divider -->
-		<div class="border-t border-[#8ea6e0]/15 mb-6"></div>
-
-		<!-- Editor -->
-		<div class="min-h-[50vh]">
-			<WysiwygEditor bind:this={editorComponent} placeholder="Start writing your article..." />
-		</div>
-	</main>
-</div>
-
-<!-- Publish Modal -->
-<Modal bind:open={isPublishModalOpen} title="Ready to publish?">
+<!-- Publish -->
+<Modal bind:open={isPublishModalOpen} title="Publish">
 	<form
 		method="POST"
 		action="?/publish"
+		class="space-y-4"
 		use:enhance={() => {
 			isSubmitting = true;
-			return async ({ update }) => {
+			return async ({ update, result }) => {
+				toastResult(result);
 				await update();
 				isSubmitting = false;
 			};
 		}}
 	>
 		<input type="hidden" name="title" value={title} />
-		<input type="hidden" name="content" value={editorComponent?.getContent() || ""} />
+		<input type="hidden" name="content" value={content} />
 
-		<!-- Preview -->
-		<div class="panel-muted rounded-sm p-3 mb-4">
-			<p class="text-sm font-bold text-[#eef2ff] line-clamp-2">{title || "Untitled"}</p>
-		</div>
+		<p class="font-serif text-xl leading-tight text-fg break-words">{title}</p>
 
 		{#if data.newspapers.length > 0}
-			<div class="mb-4">
-				<label class="field-label">Publish as</label>
-				<select
-					class="field-control w-full rounded-sm px-3 py-2.5 text-sm"
-					name="newspaperId"
-					bind:value={selectedNewspaperId}
-				>
-					<option value="">Personal Post</option>
-					{#each data.newspapers as newspaper}
-						<option value={newspaper.id}>
-							{newspaper.name}
-							{#if newspaper.rank === "owner"}
-								— Owner
-							{:else if newspaper.rank === "editor"}
-								— Editor
+			<fieldset class="space-y-2">
+				<legend class="field-label">Publish as</legend>
+				{#each publishOptions as option (option.id)}
+					<label
+						class="flex items-center gap-3 rounded-sm border px-3 py-2 cursor-pointer transition-colors {selectedNewspaperId ===
+						option.id
+							? 'border-friendly/50 bg-friendly-bg/15'
+							: 'border-white/10 hover:border-white/20'}"
+					>
+						<input
+							type="radio"
+							name="newspaperId"
+							value={option.id}
+							bind:group={selectedNewspaperId}
+							class="sr-only"
+						/>
+						{#if option.id}
+							<Logo
+								src={option.logo}
+								alt=""
+								class="size-8 shrink-0 rounded-sm"
+								placeholderIcon={MdiNewspaper}
+								placeholderGradient="from-surface-6 to-surface-6"
+							/>
+						{:else}
+							<span class="size-8 shrink-0 rounded-sm border border-white/10 flex items-center justify-center">
+								<FluentPerson20Filled class="size-4 text-fg-soft" />
+							</span>
+						{/if}
+						<span class="min-w-0 flex-1">
+							<span class="block text-sm font-semibold text-fg truncate">{option.name}</span>
+							{#if option.rank}
+								<span class="block text-xs text-fg-muted">{rankLabel[option.rank]}</span>
 							{/if}
-						</option>
-					{/each}
-				</select>
-			</div>
-
-			{#if selectedNewspaperId}
-				{@const selectedNewspaper = data.newspapers.find((n) => n.id === parseInt(selectedNewspaperId))}
-				{#if selectedNewspaper}
-					<div class="flex items-center gap-3 bg-[#2f6be0]/18 border border-[#6aa8ff]/30 rounded-sm p-3 mb-4">
-						<FluentEmojiRolledUpNewspaper class="size-5 flex-shrink-0" />
-						<span class="text-sm text-[#c3dbff]">
-							Publishing to <span class="font-bold">{selectedNewspaper.name}</span>
 						</span>
-					</div>
-				{/if}
-			{/if}
+						{#if selectedNewspaperId === option.id}
+							<FluentCheckmarkCircle20Filled class="size-5 shrink-0 text-friendly" />
+						{/if}
+					</label>
+				{/each}
+			</fieldset>
 		{/if}
 
-		<button class={buttonClass({ variant: "primary", block: true })} type="submit" disabled={isSubmitting}>
-			{isSubmitting ? "Publishing..." : "Publish Article"}
-		</button>
+		<Button type="submit" variant="primary" block loading={isSubmitting} loadingText="Publishing…">Publish</Button>
 	</form>
 </Modal>
 
-<!-- Cancel Modal -->
-<Modal bind:open={isCancelModalOpen} title="Discard changes?">
-	<p class="text-sm text-[#8e9abb] mb-4">Your unsaved work will be lost.</p>
-
+<!-- Discard -->
+<Modal bind:open={isCancelModalOpen} title="Discard this draft?" size="small">
 	<div class="flex gap-2 justify-end">
-		<button class={buttonClass({ variant: "secondary", size: "sm" })} onclick={() => (isCancelModalOpen = false)}>
-			Keep Editing
-		</button>
-		<button class={buttonClass({ variant: "soft-red", size: "sm" })} onclick={confirmDiscard}> Discard </button>
+		<Button variant="secondary" size="sm" onclick={() => (isCancelModalOpen = false)}>Keep writing</Button>
+		<Button variant="soft-red" size="sm" onclick={() => history.back()}>Discard</Button>
 	</div>
 </Modal>

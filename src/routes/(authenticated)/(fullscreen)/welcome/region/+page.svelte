@@ -27,8 +27,8 @@
 	function getPopulationColor(count: number): string {
 		if (count === 0) return "text-positive-fg";
 		if (count < 10) return "text-positive";
-		if (count < 50) return "text-accent-fg";
-		if (count < 100) return "text-accent";
+		if (count < 50) return "text-primary-fg";
+		if (count < 100) return "text-primary";
 		return "text-red-400";
 	}
 </script>
@@ -111,7 +111,7 @@
 
 							<!-- Region Info -->
 							<div class="flex-1 min-w-0">
-								<h3 class="text-lg font-bold text-fg group-hover:text-accent-hover transition-colors truncate">
+								<h3 class="text-lg font-bold text-fg group-hover:text-primary-hover transition-colors truncate">
 									{getRegionName(region.id)}
 								</h3>
 
@@ -142,7 +142,7 @@
 
 							<!-- Chevron -->
 							<FluentChevronRight20Filled
-								class="size-5 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+								class="size-5 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 							/>
 						</div>
 					</button>

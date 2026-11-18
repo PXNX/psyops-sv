@@ -1,29 +1,31 @@
 // src/routes/(authenticated)/(dock)/user/[id]/articles/+page.server.ts
 import { db } from "#lib/server/db.js";
 import { articles, newspapers, upvotes, accounts, userProfiles, files } from "#lib/server/schema.js";
-import { eq, desc, asc, sql, count, and, like, inArray } from "drizzle-orm";
+import { eq, desc, asc, count, and, ilike, inArray } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { coverImage, excerpt, readingMinutes } from "#lib/server/services/content/article-text.js";
 
 const PAGE_SIZE = 20;
 
 export const load: PageServerLoad = async ({ params, url, locals }) => {
 	const userId = params.id; // This is a string (text type in DB)
 
-	const sortBy = (url.searchParams.get("sort") || "date") as "date" | "rating";
-	const sortOrder = (url.searchParams.get("order") || "desc") as "asc" | "desc";
+	const sortBy: "date" | "rating" = url.searchParams.get("sort") === "rating" ? "rating" : "date";
+	const sortOrder: "asc" | "desc" = url.searchParams.get("order") === "asc" ? "asc" : "desc";
 	const searchQuery = url.searchParams.get("q") || "";
-	const currentPage = parseInt(url.searchParams.get("page") || "1");
+	const currentPage = Number(url.searchParams.get("page") || "1");
 
-	if (currentPage < 1) {
+	if (!Number.isInteger(currentPage) || currentPage < 1) {
 		error(400, "Invalid page number");
 	}
 
 	// Build where conditions
 	const whereConditions = [eq(articles.authorId, userId)];
 	if (searchQuery) {
-		whereConditions.push(like(articles.title, `%${searchQuery}%`));
+		// Case-insensitive; % and _ in the query match literally.
+		whereConditions.push(ilike(articles.title, `%${searchQuery.replace(/[\\%_]/g, "\\$&")}%`));
 	}
 
 	// Calculate offset
@@ -40,7 +42,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 					title: articles.title,
 					createdAt: articles.createdAt,
 					newspaperId: articles.newspaperId,
-					newspaperName: newspapers.name
+					newspaperName: newspapers.name,
+					newspaperLogoId: newspapers.logo
 				})
 				.from(articles)
 				.leftJoin(newspapers, eq(articles.newspaperId, newspapers.id))
@@ -77,7 +80,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 				title: articles.title,
 				createdAt: articles.createdAt,
 				newspaperId: articles.newspaperId,
-				newspaperName: newspapers.name
+				newspaperName: newspapers.name,
+				newspaperLogoId: newspapers.logo
 			})
 			.from(articles)
 			.leftJoin(newspapers, eq(articles.newspaperId, newspapers.id))
@@ -146,15 +150,37 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
 		userLogo = await getSignedDownloadUrl(userAccount.profile.logoFile.key);
 	}
 
-	// Combine articles with upvote counts
-	const articlesWithUpvotes = articlesData.map((article) => ({
-		id: article.id,
-		title: article.title,
-		createdAt: article.createdAt.toISOString(),
-		newspaperId: article.newspaperId,
-		newspaperName: article.newspaperName,
-		upvoteCount: article.upvoteCount
-	}));
+	// Bodies only for the articles on this page, for excerpts.
+	const bodies = articlesData.length
+		? await db
+				.select({ id: articles.id, content: articles.content })
+				.from(articles)
+				.where(
+					inArray(
+						articles.id,
+						articlesData.map((a) => a.id)
+					)
+				)
+		: [];
+	const bodyOf = new Map(bodies.map((b) => [b.id, b.content]));
+
+	const articlesWithUpvotes = await Promise.all(
+		articlesData.map(async (article) => {
+			const body = bodyOf.get(article.id);
+			return {
+				id: article.id,
+				title: article.title,
+				excerpt: excerpt(body, 160),
+				cover: coverImage(body),
+				minutes: readingMinutes(body),
+				createdAt: article.createdAt.toISOString(),
+				newspaperId: article.newspaperId,
+				newspaperName: article.newspaperName,
+				newspaperLogo: article.newspaperId ? await getLogoUrl(article.newspaperLogoId) : null,
+				upvoteCount: article.upvoteCount
+			};
+		})
+	);
 
 	return {
 		user: {

@@ -1,13 +1,15 @@
-// src/routes/(authenticated)/(fullscreen)/posts/[id]/+page.server.ts
+// src/routes/(authenticated)/(dock)/posts/[id]/+page.server.ts
 import { db } from "#lib/server/db.js";
 import { articles, accounts, newspapers, upvotes, files, userProfiles, articleViews } from "#lib/server/schema.js";
 import { eq, sql, and } from "drizzle-orm";
 import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
-import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
+import { readingMinutes } from "#lib/server/services/content/article-text.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
-	const articleId = parseInt(params.id);
+	const articleId = Number(params.id);
+	if (!Number.isInteger(articleId)) throw error(404, "Article not found");
 
 	const [articleData] = await db
 		.select({
@@ -20,6 +22,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			authorLogoKey: files.key,
 			newspaperId: articles.newspaperId,
 			newspaperName: newspapers.name,
+			newspaperLogoId: newspapers.logo,
 			upvoteCount: sql<number>`cast(count(${upvotes.id}) as int)`
 		})
 		.from(articles)
@@ -29,7 +32,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		.leftJoin(newspapers, eq(articles.newspaperId, newspapers.id))
 		.leftJoin(upvotes, eq(articles.id, upvotes.articleId))
 		.where(eq(articles.id, articleId))
-		.groupBy(articles.id, userProfiles.name, files.key, newspapers.name)
+		.groupBy(articles.id, userProfiles.name, files.key, newspapers.name, newspapers.logo)
 		.limit(1);
 
 	if (!articleData) {
@@ -37,7 +40,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	// Upvote check, view tracking and author logo are independent, so run them in parallel
-	const [hasUpvoted, , authorLogo] = await Promise.all([
+	const [hasUpvoted, , authorLogo, newspaperLogo] = await Promise.all([
 		// Check if user has upvoted
 		(async () => {
 			if (!locals.account) return false;
@@ -60,13 +63,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}
 		})(),
 
-		articleData.authorLogoKey ? getSignedDownloadUrl(articleData.authorLogoKey) : null
+		articleData.authorLogoKey ? getSignedDownloadUrl(articleData.authorLogoKey) : null,
+
+		articleData.newspaperId ? getLogoUrl(articleData.newspaperLogoId) : null
 	]);
 
 	return {
 		article: {
 			...articleData,
-			authorLogo
+			authorLogo,
+			newspaperLogo,
+			minutes: readingMinutes(articleData.content)
 		},
 		hasUpvoted,
 		isAuthor: locals.account?.id === articleData.authorId
@@ -77,7 +84,8 @@ export const actions: Actions = {
 	upvote: async ({ locals, params }) => {
 		const account = locals.account!;
 
-		const articleId = parseInt(params.id);
+		const articleId = Number(params.id);
+		if (!Number.isInteger(articleId)) return fail(404, { error: "Article not found" });
 
 		try {
 			// Check if already upvoted

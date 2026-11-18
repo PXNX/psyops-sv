@@ -25,7 +25,7 @@
 	function getStatusColor(status: string) {
 		switch (status) {
 			case "pending":
-				return "bg-accent/12 border-accent/35 text-accent-fg";
+				return "bg-primary/12 border-primary/35 text-primary-fg";
 			case "resolved":
 				return "bg-positive-bg/18 border-positive/30 text-positive-fg";
 			case "dismissed":
@@ -139,7 +139,7 @@
 	<!-- Timeline -->
 	<div class="panel rounded-sm p-5">
 		<h2 class="section-title mb-4">
-			<FluentCalendar20Filled class="size-5 text-accent-fg" />
+			<FluentCalendar20Filled class="size-5 text-primary-fg" />
 			Timeline
 		</h2>
 		<ul class="timeline timeline-vertical">
@@ -172,13 +172,13 @@
 				</li>
 			{:else}
 				<li>
-					<hr class="bg-accent" />
+					<hr class="bg-primary" />
 					<div class="timeline-start"></div>
 					<div class="timeline-middle">
-						<div class="size-4 rounded-full bg-accent animate-pulse"></div>
+						<div class="size-4 rounded-full bg-primary animate-pulse"></div>
 					</div>
-					<div class="timeline-end timeline-box rounded-sm bg-accent/12 border-accent/35">
-						<div class="font-semibold text-accent-fg">Awaiting Review</div>
+					<div class="timeline-end timeline-box rounded-sm bg-primary/12 border-primary/35">
+						<div class="font-semibold text-primary-fg">Awaiting Review</div>
 						<div class="text-sm text-fg-soft">A moderator will review this soon</div>
 					</div>
 				</li>
@@ -218,7 +218,7 @@
 							/>
 						</div>
 						<div class="flex-1 min-w-0">
-							<p class="font-semibold text-fg group-hover:text-accent-hover transition-colors truncate">
+							<p class="font-semibold text-fg group-hover:text-primary-hover transition-colors truncate">
 								{data.report.target.name}
 							</p>
 							<p class="text-sm text-fg-muted">Political Party</p>
@@ -257,7 +257,7 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-center gap-3">
+			<div class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-center gap-3">
 				<FluentWarning20Filled class="size-5 shrink-0" />
 				<span>Target information is no longer available</span>
 			</div>
@@ -267,7 +267,7 @@
 	<!-- Report Details -->
 	<div class="panel rounded-sm p-5">
 		<h2 class="section-title mb-4">
-			<FluentInfo20Filled class="size-5 text-accent-fg" />
+			<FluentInfo20Filled class="size-5 text-primary-fg" />
 			Report Details
 		</h2>
 
@@ -325,7 +325,7 @@
 					</div>
 				{/if}
 			{:else}
-				<div class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-center gap-3">
+				<div class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-center gap-3">
 					<FluentClock20Filled class="size-5 shrink-0" />
 					<div>
 						<h3 class="font-bold">Pending Review</h3>

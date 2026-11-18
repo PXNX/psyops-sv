@@ -68,7 +68,7 @@
 			</h2>
 			<div>
 				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Cash in hand</p>
-				<p class="font-mono text-3xl font-bold text-accent-fg animate-tick truncate">
+				<p class="font-mono text-3xl font-bold text-primary-fg animate-tick truncate">
 					{money.format(data.treasury.balance)}
 				</p>
 			</div>
@@ -89,7 +89,7 @@
 		<!-- Power grid gauge -->
 		<section class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentFlash20Filled class="size-5 text-accent-fg" />
+				<FluentFlash20Filled class="size-5 text-primary-fg" />
 				Power Grid
 			</h2>
 			<div class="flex items-end justify-between gap-3">
@@ -99,7 +99,7 @@
 						class="font-mono text-3xl font-bold {energyUtilization >= 90
 							? 'text-red-300'
 							: energyUtilization >= 70
-								? 'text-accent-fg'
+								? 'text-primary-fg'
 								: 'text-fg'}"
 					>
 						{energyUtilization}%
@@ -114,7 +114,7 @@
 					class="h-full rounded-full transition-all duration-700 {energyUtilization >= 90
 						? 'bg-red-500'
 						: energyUtilization >= 70
-							? 'bg-accent'
+							? 'bg-primary'
 							: 'bg-positive'}"
 					style="width: {Math.min(energyUtilization, 100)}%"
 				></div>
@@ -162,11 +162,11 @@
 	<nav class="grid grid-cols-1 sm:grid-cols-3 gap-2" aria-label="Ministry tools">
 		{#each drawers as drawer (drawer.href)}
 			<a href={drawer.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-3 min-w-0">
-				<drawer.icon class="size-5 shrink-0 text-accent-fg" />
-				<span class="flex-1 text-sm font-semibold text-fg-body group-hover:text-accent-hover transition-colors truncate">
+				<drawer.icon class="size-5 shrink-0 text-primary-fg" />
+				<span class="flex-1 text-sm font-semibold text-fg-body group-hover:text-primary-hover transition-colors truncate">
 					{drawer.label}
 				</span>
-				<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-accent-hover" />
+				<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />
 			</a>
 		{/each}
 	</nav>

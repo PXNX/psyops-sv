@@ -113,7 +113,7 @@
 			<span
 				class="hidden sm:inline-block shrink-0 self-center animate-stamp border-2 rounded-sm px-3 py-1 font-serif text-sm font-black uppercase tracking-widest {data.shares
 					? 'border-positive/70 text-positive-fg'
-					: 'border-accent/60 text-accent-fg'}"
+					: 'border-primary/60 text-primary-fg'}"
 				style="transform: rotate(-8deg)"
 			>
 				{data.shares ? "Listed" : "Private"}
@@ -140,7 +140,7 @@
 					{#if data.company.stateName}
 						<a
 							href="/state/{data.company.stateId}"
-							class="flex items-center gap-2 text-sm text-fg-body hover:text-accent-hover transition-colors"
+							class="flex items-center gap-2 text-sm text-fg-body hover:text-primary-hover transition-colors"
 						>
 							{#if data.company.regionId}
 								<img
@@ -206,7 +206,7 @@
 				<dd class="flex flex-wrap gap-1.5">
 					{#each data.uniqueStates as state (state.id)}
 						<a href="/state/{state.id}">
-							<Badge tone="neutral" size="xs" class="hover:text-accent-hover">{state.name}</Badge>
+							<Badge tone="neutral" size="xs" class="hover:text-primary-hover">{state.name}</Badge>
 						</a>
 					{:else}
 						<span class="text-sm text-fg-muted">—</span>
@@ -401,10 +401,10 @@
 			{#if data.myHolding > 0}
 				<div
 					bind:this={certificateEl}
-					class="relative rounded-sm border-4 border-double border-line/50 bg-accent/5 p-4 sm:p-6 text-center animate-rise-in"
+					class="relative rounded-sm border-4 border-double border-line/50 bg-primary/5 p-4 sm:p-6 text-center animate-rise-in"
 				>
 					<div class="absolute inset-1.5 rounded-sm border border-line/15 pointer-events-none"></div>
-					<p class="mt-1 font-serif text-xl sm:text-2xl font-black uppercase tracking-widest text-accent-fg">
+					<p class="mt-1 font-serif text-xl sm:text-2xl font-black uppercase tracking-widest text-primary-fg">
 						Share Certificate
 					</p>
 					<p class="mt-3 font-serif italic text-sm sm:text-base text-fg-soft">
@@ -449,7 +449,7 @@
 				</div>
 				<div class="panel-muted rounded-sm p-3">
 					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Issue price</dt>
-					<dd class="font-mono text-base font-bold text-accent-fg">${data.shares.ipoPrice.toLocaleString()}</dd>
+					<dd class="font-mono text-base font-bold text-primary-fg">${data.shares.ipoPrice.toLocaleString()}</dd>
 				</div>
 				<div class="panel-muted rounded-sm p-3">
 					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">On offer</dt>
@@ -468,12 +468,12 @@
 								<div class="min-w-0 flex-1">
 									<UserLink id={holder.userId} name={holder.name} avatar={holder.avatar} size="sm" />
 									<div class="mt-1 h-1 rounded-full bg-surface-4 overflow-hidden">
-										<div class="h-full rounded-full bg-accent/70" style="width: {holder.percent}%"></div>
+										<div class="h-full rounded-full bg-primary/70" style="width: {holder.percent}%"></div>
 									</div>
 								</div>
 								<div class="text-right shrink-0">
 									<p class="font-mono text-sm text-fg-body">{holder.quantity.toLocaleString()}</p>
-									<p class="font-mono text-xs text-accent-fg">{holder.percent}%</p>
+									<p class="font-mono text-xs text-primary-fg">{holder.percent}%</p>
 								</div>
 							</li>
 						{/each}
@@ -495,7 +495,7 @@
 						{#each data.listings as listing (listing.id)}
 							<li out:vanish class="panel-muted rounded-sm px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
 								<div class="min-w-0 flex-1">
-									<p class="font-mono text-base font-bold text-accent-fg">
+									<p class="font-mono text-base font-bold text-primary-fg">
 										${listing.pricePerUnit.toLocaleString()}
 										<span class="font-sans text-xs font-normal text-fg-muted"
 											>× {listing.quantity.toLocaleString()}</span
@@ -630,7 +630,7 @@
 						</div>
 						<div class="mt-1 h-2 rounded-full bg-surface-4 overflow-hidden">
 							<div
-								class="h-full rounded-full bg-accent/75"
+								class="h-full rounded-full bg-primary/75"
 								style="width: {(resource.productionRate / maxRate) * 100}%"
 							></div>
 						</div>
@@ -668,7 +668,7 @@
 								class="size-9 object-contain shrink-0"
 							/>
 							<div class="min-w-0 flex-1">
-								<h3 class="font-bold text-fg group-hover:text-accent-hover transition-colors truncate">
+								<h3 class="font-bold text-fg group-hover:text-primary-hover transition-colors truncate">
 									{factory.name}
 								</h3>
 								<p class="text-xs text-fg-muted truncate">

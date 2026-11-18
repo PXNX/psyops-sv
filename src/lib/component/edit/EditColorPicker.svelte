@@ -46,7 +46,7 @@
 		{#each colorPresets as colorOption}
 			<button
 				type="button"
-				class="size-12 rounded-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+				class="size-12 rounded-sm transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
 				style="background-color: {colorOption.value}"
 				class:ring-4={color === colorOption.value}
 				class:ring-fg={color === colorOption.value}

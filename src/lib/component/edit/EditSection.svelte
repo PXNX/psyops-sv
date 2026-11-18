@@ -14,7 +14,7 @@
 <div class="panel rounded-sm p-5 space-y-3">
 	<div class="flex items-center gap-2">
 		{#if Icon}
-			<Icon class="size-5 text-accent" />
+			<Icon class="size-5 text-primary" />
 		{/if}
 		<h2 class="text-lg font-semibold text-fg">{title}</h2>
 	</div>

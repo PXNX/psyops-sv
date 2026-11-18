@@ -98,13 +98,13 @@
 							onclick={() => (selectedResource = resource)}
 							aria-pressed={isSelected}
 							class="tap-target w-full grid grid-cols-[minmax(0,1fr)_3.5rem_4.5rem_4.5rem] items-center gap-2 px-4 py-2.5 text-left transition-colors border-l-2 {isSelected
-								? 'bg-accent/12 border-accent'
+								? 'bg-primary/12 border-primary'
 								: 'border-transparent hover:bg-surface-9'}"
 						>
 							<span class="flex items-center gap-2 min-w-0">
 								<ResourceIcon name={resource} class="size-5 shrink-0" />
 								<span
-									class="capitalize truncate text-sm {isSelected ? 'text-accent-fg font-semibold' : 'text-fg-soft'}"
+									class="capitalize truncate text-sm {isSelected ? 'text-primary-fg font-semibold' : 'text-fg-soft'}"
 									>{resource}</span
 								>
 							</span>

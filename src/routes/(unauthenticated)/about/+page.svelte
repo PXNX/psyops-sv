@@ -99,12 +99,12 @@
 			<h1 class="text-4xl font-bold text-fg">About</h1>
 			<p class="text-fg-muted max-w-md mx-auto">A global political simulation platform</p>
 			<button
-				class="inline-flex items-center gap-2 px-4 py-2 panel-muted rounded-sm cursor-pointer hover:bg-surface-9 hover:border-accent/40 transition-colors"
+				class="inline-flex items-center gap-2 px-4 py-2 panel-muted rounded-sm cursor-pointer hover:bg-surface-9 hover:border-primary/40 transition-colors"
 				onclick={() => (changelogSheetOpen = true)}
 			>
-				<FluentInfo20Filled class="size-4 text-accent-fg" />
+				<FluentInfo20Filled class="size-4 text-primary-fg" />
 				<span class="text-sm text-fg-soft">Version {data.version}</span>
-				<span class="text-xs text-accent-fg">View Changelog</span>
+				<span class="text-xs text-primary-fg">View Changelog</span>
 			</button>
 		</div>
 	</div>
@@ -128,11 +128,11 @@
 						<FluentMail20Filled class="size-5 text-politics-fg" />
 					</div>
 					<div class="flex-1 min-w-0 text-left">
-						<p class="font-medium text-fg group-hover:text-accent-hover transition-colors">Contact Us</p>
+						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Contact Us</p>
 						<p class="text-xs text-fg-muted">Get help from our team</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 					/>
 				</button>
 
@@ -146,11 +146,11 @@
 						<FluentBug20Filled class="size-5 text-politics-fg" />
 					</div>
 					<div class="flex-1 min-w-0 text-left">
-						<p class="font-medium text-fg group-hover:text-accent-hover transition-colors">Report Bug</p>
+						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Report Bug</p>
 						<p class="text-xs text-fg-muted">Help us improve</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 					/>
 				</button>
 
@@ -161,11 +161,11 @@
 						<FluentDocument20Filled class="size-5 text-friendly-fg" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-fg group-hover:text-accent-hover transition-colors">Documentation</p>
+						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Documentation</p>
 						<p class="text-xs text-fg-muted">Learn how it works</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 					/>
 				</a>
 
@@ -176,11 +176,11 @@
 						<FluentBookInformation20Filled class="size-5 text-positive-fg" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-fg group-hover:text-accent-hover transition-colors">Wiki</p>
+						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Wiki</p>
 						<p class="text-xs text-fg-muted">Community knowledge</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 					/>
 				</a>
 			</div>
@@ -200,11 +200,11 @@
 						<FluentDocumentText20Filled class="size-5 text-politics-fg" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-fg group-hover:text-accent-hover transition-colors">Terms of Service</p>
+						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Terms of Service</p>
 						<p class="text-xs text-fg-muted">User agreement</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 					/>
 				</a>
 
@@ -215,11 +215,11 @@
 						<FluentPersonShield24Regular class="size-5 text-politics-fg" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-fg group-hover:text-accent-hover transition-colors">Privacy Policy</p>
+						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Privacy Policy</p>
 						<p class="text-xs text-fg-muted">Your data rights</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 					/>
 				</a>
 
@@ -233,11 +233,11 @@
 						<FluentCertificate20Filled class="size-5 text-friendly-fg" />
 					</div>
 					<div class="flex-1 min-w-0 text-left">
-						<p class="font-medium text-fg group-hover:text-accent-hover transition-colors">Licenses</p>
+						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Licenses</p>
 						<p class="text-xs text-fg-muted">{data.licenses.length} open source packages</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 					/>
 				</button>
 
@@ -251,11 +251,11 @@
 						<FluentImage20Filled class="size-5 text-positive-fg" />
 					</div>
 					<div class="flex-1 min-w-0 text-left">
-						<p class="font-medium text-fg group-hover:text-accent-hover transition-colors">Icons & Assets</p>
+						<p class="font-medium text-fg group-hover:text-primary-hover transition-colors">Icons & Assets</p>
 						<p class="text-xs text-fg-muted">Design credits</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
+						class="size-4 text-fg-muted group-hover:text-primary-hover transition-colors shrink-0"
 					/>
 				</button>
 			</div>
@@ -278,7 +278,7 @@
 						<ul class="space-y-1">
 							{#each section.items as item}
 								<li class="text-sm text-fg-soft flex items-start gap-2">
-									<span class="text-accent-fg mt-1">•</span>
+									<span class="text-primary-fg mt-1">•</span>
 									<span>{item}</span>
 								</li>
 							{/each}
@@ -421,7 +421,7 @@
 								href={pkg.url}
 								target="_blank"
 								rel="noopener noreferrer"
-								class="text-fg font-medium truncate flex items-center gap-1 hover:text-accent-hover transition-colors"
+								class="text-fg font-medium truncate flex items-center gap-1 hover:text-primary-hover transition-colors"
 							>
 								<span class="truncate">{pkg.name}</span>
 								<FluentOpen20Filled class="size-3.5 shrink-0 text-fg-muted" />
@@ -467,7 +467,7 @@
 					<p class="text-xs text-fg-muted">
 						{#if set.author}
 							{#if set.authorUrl}
-								<a href={set.authorUrl} target="_blank" rel="noopener noreferrer" class="hover:text-accent-hover"
+								<a href={set.authorUrl} target="_blank" rel="noopener noreferrer" class="hover:text-primary-hover"
 									>{set.author}</a
 								>
 							{:else}

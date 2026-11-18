@@ -42,13 +42,13 @@
 			case "message_delete":
 				return "bg-red-600/10 border-red-500/30 text-red-300";
 			case "warning":
-				return "bg-accent/12 border-accent/35 text-accent-fg";
+				return "bg-primary/12 border-primary/35 text-primary-fg";
 			case "restriction":
 				return "bg-red-600/10 border-red-500/30 text-red-300";
 			case "report_action":
 				return "bg-friendly-bg/18 border-friendly/30 text-friendly-fg";
 			case "content_flag":
-				return "bg-accent/12 border-accent/35 text-accent-fg";
+				return "bg-primary/12 border-primary/35 text-primary-fg";
 			default:
 				return "bg-surface-4/70 border-line/15 text-fg-soft";
 		}
@@ -156,7 +156,7 @@
 	<!-- Action Details -->
 	<div class="panel rounded-sm p-5">
 		<h2 class="section-title mb-4">
-			<FluentInfo20Filled class="size-5 text-accent-fg" />
+			<FluentInfo20Filled class="size-5 text-primary-fg" />
 			Action Details
 		</h2>
 
@@ -202,7 +202,7 @@
 			{#if data.action.type === "warning"}
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 text-sm">
-						<FluentCalendar20Filled class="size-4 text-accent-fg" />
+						<FluentCalendar20Filled class="size-4 text-primary-fg" />
 						<span class="text-fg-muted">Issued:</span>
 						<span class="text-fg">{formatDate(data.action.issuedAt)}</span>
 					</div>
@@ -310,7 +310,7 @@
 			{#if data.action.type === "content_flag"}
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 text-sm">
-						<FluentCalendar20Filled class="size-4 text-accent-fg" />
+						<FluentCalendar20Filled class="size-4 text-primary-fg" />
 						<span class="text-fg-muted">Flagged:</span>
 						<span class="text-fg">{formatDate(data.action.flaggedAt)}</span>
 					</div>

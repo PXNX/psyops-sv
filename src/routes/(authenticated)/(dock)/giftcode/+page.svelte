@@ -75,12 +75,12 @@
 							{#if form.rewards.premiumDays > 0}
 								<div class="flex justify-between text-xs items-center">
 									<span class="text-fg-muted flex items-center gap-1.5">
-										<span class="text-accent-fg">⭐</span>
+										<span class="text-primary-fg">⭐</span>
 										<span>premium</span>
 									</span>
-									<span class="font-mono text-xs text-accent-fg">
+									<span class="font-mono text-xs text-primary-fg">
 										+{formatNumber(form.rewards.premiumDays)} days
-										<span class="text-accent-fg ml-1">✓</span>
+										<span class="text-primary-fg ml-1">✓</span>
 									</span>
 								</div>
 							{/if}
@@ -188,12 +188,12 @@
 								{#if redemption.premiumDaysReceived > 0}
 									<div class="flex justify-between text-xs items-center">
 										<span class="text-fg-muted flex items-center gap-1.5">
-											<span class="text-accent-fg">⭐</span>
+											<span class="text-primary-fg">⭐</span>
 											<span>premium</span>
 										</span>
-										<span class="font-mono text-xs text-accent-fg">
+										<span class="font-mono text-xs text-primary-fg">
 											+{formatNumber(redemption.premiumDaysReceived)} days
-											<span class="text-accent-fg ml-1">✓</span>
+											<span class="text-primary-fg ml-1">✓</span>
 										</span>
 									</div>
 								{/if}

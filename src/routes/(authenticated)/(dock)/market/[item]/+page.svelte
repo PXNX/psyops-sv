@@ -1,6 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/market/[item]/+page.svelte -->
-<!-- One commodity on the exchange: the quote board, the order book of asks
-     and your own sell order ticket. -->
+<!-- One commodity: a large price chart with time ranges and key stats, the
+     order book of asks and your own sell order. -->
 <script lang="ts">
 	import type { SubmitFunction } from "$app/forms";
 	import { enhance } from "$app/forms";
@@ -15,7 +15,8 @@
 	import FluentDelete20Filled from "~icons/fluent/delete-20-regular";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import MarketChart from "./MarketChart.svelte";
+	import PriceChart from "../PriceChart.svelte";
+	import { buildSeries, changePct, DAY, HOUR, money, type SeriesPoint } from "../series";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
@@ -56,18 +57,51 @@
 	let cooldownTimeRemaining = $state(data.cooldownRemaining);
 
 	let ticketEl = $state<HTMLElement>();
-	const rowEls: Record<number, HTMLElement> = {};
+	const rowEls: Record<number, HTMLElement> = $state({});
 
-	const currentPrice = $derived(
-		data.priceHistory.length > 0
-			? data.priceHistory[data.priceHistory.length - 1].pricePerUnit
-			: (data.statistics?.currentAvgPrice ?? 0)
-	);
+	const RANGES = {
+		"24h": { span: DAY, bucket: HOUR },
+		"7d": { span: 7 * DAY, bucket: 4 * HOUR },
+		"30d": { span: 30 * DAY, bucket: 12 * HOUR }
+	} as const;
+	type Range = keyof typeof RANGES;
+	let range = $state<Range>("7d");
+	let hover = $state<SeriesPoint | null>(null);
+
+	const rangeStart = $derived(data.now - RANGES[range].span);
+	const series = $derived(buildSeries(data.candles, data.openingPrice, rangeStart, data.now, RANGES[range].bucket));
+	const traded = $derived(series.filter((p) => p.volume > 0));
+	const rangeLow = $derived(traded.length ? Math.min(...traded.map((p) => p.low)) : null);
+	const rangeHigh = $derived(traded.length ? Math.max(...traded.map((p) => p.high)) : null);
+	const rangeVolume = $derived(traded.reduce((s, p) => s + p.volume, 0));
+	const rangeChange = $derived(changePct(series));
+
+	const lastTrade = $derived(data.candles.at(-1)?.close ?? data.openingPrice);
+	const currentPrice = $derived(lastTrade ?? data.otherListings[0]?.pricePerUnit ?? null);
+	const shownPrice = $derived(hover?.price ?? currentPrice);
+
+	const pad = (n: number) => String(n).padStart(2, "0");
+	const clock = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+	const weekday = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short" });
+	const dayMonth = (d: Date) => d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+	const axisTime = $derived((t: number) => {
+		const d = new Date(t);
+		return range === "24h" ? clock(d) : range === "7d" ? weekday(d) : dayMonth(d);
+	});
+	const pointTime = $derived((t: number) => {
+		const d = new Date(t);
+		return range === "24h"
+			? clock(d)
+			: range === "7d"
+				? `${weekday(d)} ${clock(d)}`
+				: `${dayMonth(d)} ${clock(d)}`;
+	});
+
 	const bestAsk = $derived(data.otherListings[0]?.pricePerUnit ?? null);
 	const unitsOnOffer = $derived(data.otherListings.reduce((sum, l) => sum + l.quantity, 0));
 	const totalAvailableForListing = $derived(data.userItemQuantity + (data.myListing?.quantity ?? 0));
 	const visibleOffers = $derived(showAllOffers ? data.otherListings : data.otherListings.slice(0, OFFERS_SHOWN));
-	const symbol = $derived(data.itemName.slice(0, 3).toUpperCase());
+	const deepest = $derived(Math.max(1, ...data.otherListings.map((l) => l.quantity)));
 
 	const cooldownDisplay = $derived.by(() => {
 		if (cooldownTimeRemaining <= 0) return null;
@@ -155,67 +189,95 @@
 {/snippet}
 
 <PageContainer maxWidth="5xl">
-	<BackLink href="/market" label="Exchange" class="-ml-3 -mb-2 self-start" />
+	<BackLink href="/market" label="Market" class="-ml-3 self-start" />
 
-	<!-- Quote board -->
-	<header class="panel rounded-sm overflow-hidden">
-		<div
-			class="flex items-center justify-between gap-3 px-4 py-2 border-b border-[#8ea6e0]/15 bg-[#131c33]/70 text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]"
-		>
-			<span>Commodity Exchange · {data.itemType === "resource" ? "Raw materials" : "Goods"}</span>
-			<span class="font-mono tracking-normal text-[#c2cbe3]">${data.wallet.balance.toLocaleString()}</span>
-		</div>
-		<div class="p-4 sm:p-5 flex items-center gap-4">
-			<div class="size-14 shrink-0 flex items-center justify-center panel-muted rounded-sm animate-pop-in">
-				<ResourceIcon name={data.itemName} class="size-8" />
-			</div>
-			<div class="min-w-0 flex-1">
-				<div class="flex items-center gap-2">
-					<span
-						class="font-mono text-xs font-bold px-1.5 py-0.5 rounded-sm border border-[#f5a524]/35 bg-[#f5a524]/12 text-[#ffcb6b]"
-						>{symbol}</span
-					>
-					<h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#eef2ff] capitalize truncate">{data.itemName}</h1>
+	<section class="panel rounded-sm overflow-hidden">
+		<div class="px-4 pt-4 sm:px-5 sm:pt-5 flex flex-wrap items-center justify-between gap-3">
+			<div class="flex items-center gap-3 min-w-0">
+				<div
+					class="size-12 shrink-0 flex items-center justify-center rounded-sm panel-muted"
+				>
+					<ResourceIcon name={data.itemName} class="size-7" />
 				</div>
-				<p class="mt-1 text-xs text-[#8e9abb]">
-					<span class="font-mono text-[#c2cbe3]">{unitsOnOffer.toLocaleString()}</span> units on offer ·
-					<span class="font-mono text-[#c2cbe3]">{data.userItemQuantity.toLocaleString()}</span> in your stock
-				</p>
-			</div>
-			<div class="text-right shrink-0">
-				<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Last</p>
-				{#key currentPrice}
-					<p class="animate-tick font-mono text-xl sm:text-2xl font-bold text-[#eef2ff] tabular-nums">
-						${currentPrice.toLocaleString()}
+				<div class="min-w-0">
+					<h1 class="font-sans text-xl sm:text-2xl font-semibold text-[#eef2ff] capitalize truncate">{data.itemName}</h1>
+					<p class="text-xs text-[#8e9abb]">
+						{data.itemType === "resource" ? "Raw material" : "Goods"} ·
+						<span class="font-mono text-[#c2cbe3]">{data.userItemQuantity.toLocaleString()}</span> in stock
 					</p>
-				{/key}
+				</div>
+			</div>
+			<div class="flex rounded-sm bg-white/[0.04] border border-white/10 p-1" role="tablist" aria-label="Time range">
+				{#each Object.keys(RANGES) as Range[] as r}
+					<button
+						type="button"
+						role="tab"
+						aria-selected={range === r}
+						class="tap-target press-spring rounded-xs px-3 py-1 font-mono text-xs font-semibold transition-colors {range ===
+						r
+							? 'bg-[#2f6be0] text-white'
+							: 'text-[#8e9abb] hover:text-[#eef2ff]'}"
+						onclick={() => {
+							range = r;
+							hover = null;
+						}}>{r}</button
+					>
+				{/each}
 			</div>
 		</div>
-		{#if data.statistics}
-			<dl class="grid grid-cols-2 sm:grid-cols-4 border-t border-[#8ea6e0]/15 text-center">
-				{#each [{ label: "Low", value: `$${data.statistics.lowestPrice.toLocaleString()}`, cls: "text-[#aef3c9]" }, { label: "High", value: `$${data.statistics.highestPrice.toLocaleString()}`, cls: "text-red-300" }, { label: "Average", value: `$${data.statistics.currentAvgPrice.toLocaleString()}`, cls: "text-[#eef2ff]" }, { label: "Orders", value: String(data.statistics.activeListings), cls: "text-[#eef2ff]" }] as cell, i}
-					<div
-						class="px-2 py-2.5 border-[#8ea6e0]/10 {i % 2 === 1 ? 'border-l' : ''} {i >= 2
-							? 'border-t sm:border-t-0'
-							: ''} {i === 2 ? 'sm:border-l' : ''}"
-					>
-						<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb]">{cell.label}</dt>
-						<dd class="font-mono text-sm font-bold tabular-nums truncate {cell.cls}">{cell.value}</dd>
-					</div>
-				{/each}
-			</dl>
-		{/if}
-	</header>
 
-	{#if data.priceHistory.length > 1}
-		<MarketChart priceHistory={data.priceHistory} {currentPrice} />
-	{/if}
+		<div class="px-4 sm:px-5 mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+			{#key shownPrice}
+				<p class="animate-tick font-mono text-3xl sm:text-4xl font-bold tabular-nums text-[#eef2ff]">
+					{shownPrice !== null ? money(shownPrice) : "—"}
+				</p>
+			{/key}
+			{#if hover}
+				<p class="font-mono text-xs text-[#8e9abb]">
+					<span>{pointTime(hover.t)}</span>
+					{#if hover.volume}
+						<span>· {hover.volume.toLocaleString()} {hover.volume === 1 ? "unit" : "units"}</span>
+					{/if}
+				</p>
+			{:else if rangeChange !== null}
+				<p
+					class="rounded-sm px-2 py-0.5 font-mono text-xs font-semibold tabular-nums {rangeChange >= 0
+						? 'bg-[#1f9d62]/18 text-[#aef3c9]'
+						: 'bg-red-600/10 text-red-300'}"
+				>
+					{rangeChange >= 0 ? "▲" : "▼"}
+					{Math.abs(rangeChange).toFixed(1)}% <span class="font-sans font-normal opacity-70">{range}</span>
+				</p>
+			{/if}
+		</div>
+
+		<div class="mt-2 px-1 sm:px-2">
+			<PriceChart
+				points={series}
+				start={rangeStart}
+				end={data.now}
+				height={260}
+				reference={bestAsk !== null ? { value: bestAsk, label: "Ask" } : null}
+				formatTime={hover ? pointTime : axisTime}
+				bind:active={hover}
+			/>
+		</div>
+
+		<dl class="grid grid-cols-3 sm:grid-cols-6 gap-y-4 border-t border-white/10 px-2 py-4">
+			{#each [{ label: "Last", value: lastTrade !== null ? money(lastTrade) : "—", cls: "text-[#eef2ff]" }, { label: `Low ${range}`, value: rangeLow !== null ? money(rangeLow) : "—", cls: "text-red-300" }, { label: `High ${range}`, value: rangeHigh !== null ? money(rangeHigh) : "—", cls: "text-[#aef3c9]" }, { label: `Volume ${range}`, value: rangeVolume.toLocaleString(), cls: "text-[#eef2ff]" }, { label: "Best ask", value: bestAsk !== null ? money(bestAsk) : "—", cls: "text-[#ffcb6b]" }, { label: "On offer", value: unitsOnOffer.toLocaleString(), cls: "text-[#eef2ff]" }] as cell}
+				<div class="px-2 text-center min-w-0">
+					<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb] truncate">{cell.label}</dt>
+					<dd class="font-mono text-sm font-bold tabular-nums truncate {cell.cls}">{cell.value}</dd>
+				</div>
+			{/each}
+		</dl>
+	</section>
 
 	<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] items-start">
 		<!-- Order book -->
 		<section class="panel rounded-sm overflow-hidden">
-			<div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#8ea6e0]/15">
-				<h2 class="section-title">Order book · Asks</h2>
+			<div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10">
+				<h2 class="section-title">Order book</h2>
 				{#if data.taxRate}
 					<span class="text-xs text-[#ffcb6b]">+{data.taxRate}% tax</span>
 				{/if}
@@ -224,7 +286,7 @@
 			{#if data.otherListings.length === 0}
 				<p class="px-4 py-8 text-center text-sm text-[#8e9abb]">No asks on the board.</p>
 			{:else}
-				<ol class="divide-y divide-[#8ea6e0]/10">
+				<ol class="divide-y divide-white/[0.06]">
 					{#each visibleOffers as listing, i (listing.id)}
 						{@const isBest = i === 0}
 						{@const buyQty = buyQuantities[listing.id] || 1}
@@ -233,12 +295,17 @@
 						<li
 							out:vanish
 							bind:this={rowEls[listing.id]}
-							class="animate-rise-in px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4 {isBest
-								? 'bg-[#1f9d62]/10'
-								: ''}"
+							class="relative animate-rise-in px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-4"
 							style="--rise-delay: {Math.min(i, 8) * 40}ms"
 						>
-							<div class="flex items-center gap-3 min-w-0 flex-1">
+							<span
+								aria-hidden="true"
+								class="pointer-events-none absolute inset-y-1 right-0 transition-[width] duration-500 {isBest
+									? 'bg-[#4fd88a]/[0.09]'
+									: 'bg-[#8ea6e0]/[0.06]'}"
+								style="width: {Math.max(4, (listing.quantity / deepest) * 100)}%"
+							></span>
+							<div class="relative flex items-center gap-3 min-w-0 flex-1">
 								<div class="w-24 shrink-0">
 									<p
 										class="font-mono text-lg font-bold tabular-nums leading-tight {isBest
@@ -257,7 +324,7 @@
 								{/if}
 							</div>
 
-							<div class="flex items-center gap-2">
+							<div class="relative flex items-center gap-2">
 								<form
 									method="POST"
 									action="?/buyListing"
@@ -308,7 +375,7 @@
 				{#if data.otherListings.length > OFFERS_SHOWN}
 					<button
 						type="button"
-						class="tap-target w-full px-4 py-2.5 border-t border-[#8ea6e0]/10 text-xs text-[#8e9abb] hover:text-[#ffc857] transition-colors"
+						class="tap-target w-full px-4 py-2.5 border-t border-white/[0.06] text-xs text-[#8e9abb] hover:text-[#ffc857] transition-colors"
 						onclick={() => (showAllOffers = !showAllOffers)}
 					>
 						{showAllOffers ? "Show fewer" : `Show ${data.otherListings.length - OFFERS_SHOWN} more asks`}
@@ -319,10 +386,11 @@
 
 		<!-- Your sell order ticket -->
 		<section bind:this={ticketEl} class="panel rounded-sm overflow-hidden">
-			<div
-				class="flex items-center justify-between gap-2 px-4 py-3 border-b border-dashed border-[#8ea6e0]/30 bg-[#131c33]/60"
-			>
+			<div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10">
 				<h2 class="section-title">Sell order</h2>
+				{#if data.myListing}
+					<span class="font-mono text-xs text-[#8e9abb]">No. {String(data.myListing.id).padStart(5, "0")}</span>
+				{/if}
 			</div>
 
 			<div class="p-4">
@@ -340,7 +408,7 @@
 								{#if cmp}<span class="block text-xs {cmp.cls}">{cmp.label}</span>{/if}
 							</dd>
 						</div>
-						<div class="flex justify-between gap-3 pt-2 border-t border-[#8ea6e0]/15">
+						<div class="flex justify-between gap-3 pt-2 border-t border-white/10">
 							<dt class="text-[#8e9abb]">Value</dt>
 							<dd class="font-mono font-bold text-[#eef2ff]">
 								${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
@@ -387,7 +455,7 @@
 							(n) => (editPrice = n)
 						)}
 						{#if cmp}<p class="text-xs {cmp.cls}">{cmp.label}</p>{/if}
-						<p class="flex justify-between text-sm pt-2 border-t border-[#8ea6e0]/15">
+						<p class="flex justify-between text-sm pt-2 border-t border-white/10">
 							<span class="text-[#8e9abb]">Value</span>
 							<span class="font-mono font-bold text-[#eef2ff]">${(editQty * editPrice).toLocaleString()}</span>
 						</p>
@@ -416,7 +484,7 @@
 							(n) => (createPrice = n)
 						)}
 						{#if cmp}<p class="text-xs {cmp.cls}">{cmp.label}</p>{/if}
-						<p class="flex justify-between text-sm pt-2 border-t border-[#8ea6e0]/15">
+						<p class="flex justify-between text-sm pt-2 border-t border-white/10">
 							<span class="text-[#8e9abb]">Value</span>
 							<span class="font-mono font-bold text-[#eef2ff]">${(createQty * createPrice).toLocaleString()}</span>
 						</p>

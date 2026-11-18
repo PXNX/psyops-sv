@@ -148,7 +148,7 @@
 							/>
 							<div class="min-w-0">
 								<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">Time card</p>
-								<h2 class="font-bold text-fg group-hover:text-accent-hover transition-colors truncate">
+								<h2 class="font-bold text-fg group-hover:text-primary-hover transition-colors truncate">
 									{data.currentJob.factoryName}
 								</h2>
 								<p class="text-xs text-fg-muted truncate">{data.currentJob.companyName}</p>
@@ -156,7 +156,7 @@
 						</a>
 						{#if jobStatus.status === "working"}
 							<Badge tone="amber">
-								<span class="size-1.5 rounded-full bg-accent animate-pulse"></span>
+								<span class="size-1.5 rounded-full bg-primary animate-pulse"></span>
 								On shift
 							</Badge>
 						{:else if jobStatus.status === "complete"}
@@ -187,11 +187,11 @@
 						<div class="mt-4">
 							<div class="flex justify-between items-center text-xs mb-1.5">
 								<span class="text-fg-muted">8h shift</span>
-								<span class="font-bold text-accent-fg font-mono">{jobStatus.left} left</span>
+								<span class="font-bold text-primary-fg font-mono">{jobStatus.left} left</span>
 							</div>
 							<div class="h-2.5 bg-surface-4 rounded-full overflow-hidden border border-line/10">
 								<div
-									class="h-full bg-accent rounded-full transition-all duration-500"
+									class="h-full bg-primary rounded-full transition-all duration-500"
 									style="width: {jobStatus.progress}%"
 								></div>
 							</div>
@@ -263,7 +263,7 @@
 							<span class="font-bold text-positive-fg font-mono">{betterWageFactory.workerWage.toLocaleString()}</span>
 						</p>
 						<FluentArrowRight20Filled
-							class="size-4 text-fg-muted group-hover:text-accent-hover group-hover:translate-x-0.5 transition-all"
+							class="size-4 text-fg-muted group-hover:text-primary-hover group-hover:translate-x-0.5 transition-all"
 						/>
 					</a>
 				{/if}
@@ -289,7 +289,7 @@
 						</div>
 						<div class="text-right shrink-0">
 							<p class="text-[10px] text-fg-muted uppercase tracking-wide">Ready in</p>
-							<p class="text-xl sm:text-2xl font-bold text-accent-fg font-mono">{timeRemaining}</p>
+							<p class="text-xl sm:text-2xl font-bold text-primary-fg font-mono">{timeRemaining}</p>
 						</div>
 					</div>
 
@@ -297,7 +297,7 @@
 					<div class="mt-4">
 						<div class="conveyor h-4 rounded-full overflow-hidden border border-line/15 bg-surface-4 relative">
 							<div
-								class="h-full bg-accent/80 rounded-full transition-all duration-1000"
+								class="h-full bg-primary/80 rounded-full transition-all duration-1000"
 								style="width: {productionProgress}%"
 							></div>
 						</div>
@@ -331,7 +331,7 @@
 							{@const selected = selectedProduct === product}
 							<label
 								class="press-spring cursor-pointer p-2.5 rounded-sm border text-center transition-colors {selected
-									? 'bg-accent/12 border-accent/55'
+									? 'bg-primary/12 border-primary/55'
 									: 'bg-surface-4/70 border-line/15 hover:border-line/35'}"
 							>
 								<input
@@ -344,7 +344,7 @@
 								/>
 								<ResourceIcon name={product} class="size-8 mx-auto mb-1" />
 								<span
-									class="block text-xs font-medium capitalize truncate {selected ? 'text-accent-fg' : 'text-fg-muted'}"
+									class="block text-xs font-medium capitalize truncate {selected ? 'text-primary-fg' : 'text-fg-muted'}"
 								>
 									{product}
 								</span>
@@ -365,7 +365,7 @@
 							min="1"
 							max="10"
 							bind:value={productionQuantity}
-							class="w-full accent-accent cursor-pointer"
+							class="w-full accent-primary cursor-pointer"
 						/>
 					</div>
 
@@ -422,7 +422,7 @@
 							<a
 								href="/market/{item}"
 								title="{item} — market"
-								class="panel-muted rounded-sm p-2 flex flex-col items-center gap-0.5 hover:border-accent/55 transition-colors {quantity ===
+								class="panel-muted rounded-sm p-2 flex flex-col items-center gap-0.5 hover:border-primary/55 transition-colors {quantity ===
 								0
 									? 'opacity-50'
 									: ''}"

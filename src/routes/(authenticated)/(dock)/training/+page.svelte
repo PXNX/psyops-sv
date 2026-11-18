@@ -145,7 +145,7 @@
 	const bars = [
 		{ key: "organization", label: "ORG", color: "var(--color-friendly)" },
 		{ key: "health", label: "STR", color: "var(--color-positive)" },
-		{ key: "supplyLevel", label: "SUP", color: "var(--color-accent)" }
+		{ key: "supplyLevel", label: "SUP", color: "var(--color-primary)" }
 	] as const;
 </script>
 
@@ -154,7 +154,7 @@
 
 	{#if trainingDisabled}
 		<p
-			class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm px-4 py-3 text-sm flex items-center gap-2"
+			class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm px-4 py-3 text-sm flex items-center gap-2"
 		>
 			<FluentWarning20Filled class="size-4 shrink-0" />
 			{trainingDisabledReason}
@@ -346,8 +346,8 @@
 						<button
 							type="button"
 							class="press-spring tap-target p-3 rounded-sm border transition-colors text-center {isSelected
-								? 'bg-accent/12 border-accent/55'
-								: 'bg-surface-4/70 border-line/15 hover:border-accent/45'} disabled:opacity-50 disabled:cursor-not-allowed"
+								? 'bg-primary/12 border-primary/55'
+								: 'bg-surface-4/70 border-line/15 hover:border-primary/45'} disabled:opacity-50 disabled:cursor-not-allowed"
 							aria-pressed={isSelected}
 							onclick={() => (selectedTemplate = template)}
 							disabled={isSubmitting || trainingDisabled}
@@ -361,7 +361,7 @@
 							/>
 							<span
 								class="mt-1.5 block text-sm font-medium leading-tight {isSelected
-									? 'text-accent-fg'
+									? 'text-primary-fg'
 									: 'text-fg-soft'}">{unitLabel(template.unitType)}</span
 							>
 							<span class="mt-0.5 block text-[10px] font-mono text-fg-muted">
@@ -434,7 +434,7 @@
 			{#if activeTrainingUnit}
 				{@const isComplete =
 					activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt).getTime() <= now}
-				<div class="bg-accent/12 border border-accent/35 rounded-sm p-3">
+				<div class="bg-primary/12 border border-primary/35 rounded-sm p-3">
 					<div class="flex items-center gap-2 mb-2">
 						<img
 							loading="lazy"
@@ -445,12 +445,12 @@
 						/>
 						<div class="flex-1 min-w-0">
 							<h3 class="font-semibold text-fg text-sm truncate">{activeTrainingUnit.name}</h3>
-							<p class="text-xs text-accent-fg font-mono">{timeLeft(activeTrainingUnit.trainingCompletesAt)}</p>
+							<p class="text-xs text-primary-fg font-mono">{timeLeft(activeTrainingUnit.trainingCompletesAt)}</p>
 						</div>
 					</div>
 					<div class="h-1.5 bg-surface-0/70 rounded-full overflow-hidden border border-line/10">
 						<div
-							class="h-full rounded-full bg-accent transition-all duration-700"
+							class="h-full rounded-full bg-primary transition-all duration-700"
 							style="width: {progressBetween(
 								activeTrainingUnit.trainingStartedAt,
 								activeTrainingUnit.trainingCompletesAt

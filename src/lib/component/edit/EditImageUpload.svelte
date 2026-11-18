@@ -46,11 +46,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200",
 			dragActive
-				? "border-accent bg-accent/10"
+				? "border-primary bg-primary/10"
 				: previewUrl
 					? "border-positive/50 bg-positive-bg/10"
-					: "border-accent/30",
-			!disabled && !previewUrl ? "hover:border-accent/50 hover:bg-accent/10" : "",
+					: "border-primary/30",
+			!disabled && !previewUrl ? "hover:border-primary/50 hover:bg-primary/10" : "",
 			disabled ? "opacity-50" : "",
 			error ? "border-red-500/50" : ""
 		]
@@ -138,8 +138,8 @@
 	<button type="button" onclick={onClickUpload} {disabled} class={dropzoneClass}>
 		{#if !previewUrl}
 			<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-				<div class="rounded-full bg-accent/15 p-3">
-					<FluentImage20Filled class="size-8 text-accent-fg" />
+				<div class="rounded-full bg-primary/15 p-3">
+					<FluentImage20Filled class="size-8 text-primary-fg" />
 				</div>
 				<div class="text-center">
 					<p class="text-base font-semibold text-fg">

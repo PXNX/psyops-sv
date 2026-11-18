@@ -131,11 +131,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200",
 			dragActive
-				? "border-accent bg-accent/12"
+				? "border-primary bg-primary/12"
 				: $form.logo
 					? "border-positive/50 bg-positive-bg/10"
 					: "border-line/20",
-			!$submitting && !$form.logo && canCreate ? "hover:border-accent/55 hover:bg-accent/10" : "",
+			!$submitting && !$form.logo && canCreate ? "hover:border-primary/55 hover:bg-primary/10" : "",
 			$submitting || !canCreate ? "opacity-50" : "",
 			$errors.logo ? "border-red-500" : ""
 		]
@@ -242,7 +242,7 @@
 					>
 						{#if !$form.logo}
 							<div class="size-full flex flex-col items-center justify-center gap-1 p-2 text-center">
-								<FluentImage20Filled class="size-7 text-accent-fg" />
+								<FluentImage20Filled class="size-7 text-primary-fg" />
 								<span class="text-[10px] text-fg-muted leading-tight">
 									{dragActive ? "Drop here" : "Optional"}
 								</span>

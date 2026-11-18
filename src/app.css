@@ -5,7 +5,44 @@
 @plugin "@tailwindcss/typography";
 @plugin "@tailwindcss/forms";
 @plugin 'daisyui' {
-	themes: dark --default;
+	themes: false;
+}
+
+/* The one theme. Every other colour token below is derived from these, so
+   retheming means editing this block only. */
+@plugin "daisyui/theme" {
+	name: "psyops";
+	default: true;
+	prefersdark: true;
+	color-scheme: dark;
+	--color-base-100: #0d1117;
+	--color-base-200: #10141b;
+	--color-base-300: #151a22;
+	--color-base-content: #e6edf3;
+	--color-primary: #2f81f7;
+	--color-primary-content: #ffffff;
+	--color-secondary: #6aa8ff;
+	--color-secondary-content: #0a0d12;
+	--color-accent: #d29922;
+	--color-accent-content: #0a0d12;
+	--color-neutral: #262e3a;
+	--color-neutral-content: #d0d7de;
+	--color-info: #6aa8ff;
+	--color-info-content: #0a0d12;
+	--color-success: #3fb950;
+	--color-success-content: #0a0d12;
+	--color-warning: #d29922;
+	--color-warning-content: #0a0d12;
+	--color-error: #f85149;
+	--color-error-content: #ffffff;
+	--radius-selector: 0.25rem;
+	--radius-field: 0.25rem;
+	--radius-box: 0.375rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 0;
+	--noise: 0;
 }
 
 @theme {
@@ -22,55 +59,54 @@
 	--radius-2xl: 0.625rem;
 	--radius-3xl: 0.75rem;
 
-	/* @tokens-start — the whole palette. Change the theme here only; use the
-	   names (text-fg, bg-surface-4, border-line/15, text-accent-fg, …) in markup. */
-	--color-fg: #e6edf3;
-	--color-fg-body: #d0d7de;
-	--color-fg-soft: #b6bfca;
-	--color-fg-dim: #9da7b3;
-	--color-fg-muted: #8b949e;
-	--color-fg-faint: #7d8590;
+	/* @tokens-start — derived from the daisyUI theme above; use the names
+	   (text-fg, bg-surface-4, border-line/15, text-primary-fg, …) in markup. */
+	--color-fg: var(--color-base-content);
+	--color-fg-body: color-mix(in oklab, var(--color-base-content) 90%, var(--color-base-100));
+	--color-fg-soft: color-mix(in oklab, var(--color-base-content) 78%, var(--color-base-100));
+	--color-fg-dim: color-mix(in oklab, var(--color-base-content) 68%, var(--color-base-100));
+	--color-fg-muted: color-mix(in oklab, var(--color-base-content) 60%, var(--color-base-100));
+	--color-fg-faint: color-mix(in oklab, var(--color-base-content) 52%, var(--color-base-100));
 
-	--color-line: #9aa7b8;
+	--color-line: color-mix(in oklab, var(--color-base-content) 70%, var(--color-base-100));
 
-	--color-surface-0: #0a0d12;
-	--color-surface-1: #0d1117;
-	--color-surface-2: #10141b;
-	--color-surface-3: #12171f;
-	--color-surface-4: #151a22;
-	--color-surface-5: #181e27;
-	--color-surface-6: #1b222c;
-	--color-surface-7: #1f2631;
-	--color-surface-8: #222a35;
-	--color-surface-9: #262e3a;
-	--color-surface-10: #283040;
-	--color-surface-11: #2d3542;
-	--color-surface-12: #2f3846;
-	--color-surface-13: #3a4352;
+	--color-surface-0: color-mix(in oklab, var(--color-base-100) 80%, black);
+	--color-surface-1: var(--color-base-100);
+	--color-surface-2: var(--color-base-200);
+	--color-surface-3: color-mix(in oklab, var(--color-base-200) 50%, var(--color-base-300));
+	--color-surface-4: var(--color-base-300);
+	--color-surface-5: color-mix(in oklab, var(--color-base-300) 96%, var(--color-base-content));
+	--color-surface-6: color-mix(in oklab, var(--color-base-300) 93%, var(--color-base-content));
+	--color-surface-7: color-mix(in oklab, var(--color-base-300) 90%, var(--color-base-content));
+	--color-surface-8: color-mix(in oklab, var(--color-base-300) 88%, var(--color-base-content));
+	--color-surface-9: color-mix(in oklab, var(--color-base-300) 85%, var(--color-base-content));
+	--color-surface-10: color-mix(in oklab, var(--color-base-300) 83%, var(--color-base-content));
+	--color-surface-11: color-mix(in oklab, var(--color-base-300) 80%, var(--color-base-content));
+	--color-surface-12: color-mix(in oklab, var(--color-base-300) 78%, var(--color-base-content));
+	--color-surface-13: color-mix(in oklab, var(--color-base-300) 72%, var(--color-base-content));
 
-	--color-accent: #2f81f7;
-	--color-accent-fg: #79b8ff;
-	--color-accent-hover: #8cc4ff;
-	--color-accent-soft: #cae3ff;
-	--color-accent-hi: #4c9bff;
-	--color-accent-lo: #1f6feb;
-	--color-accent-mid: #388bfd;
+	--color-primary-fg: color-mix(in oklab, var(--color-primary) 55%, white);
+	--color-primary-hover: color-mix(in oklab, var(--color-primary) 45%, white);
+	--color-primary-soft: color-mix(in oklab, var(--color-primary) 22%, white);
+	--color-primary-hi: color-mix(in oklab, var(--color-primary) 85%, white);
+	--color-primary-lo: color-mix(in oklab, var(--color-primary) 85%, black);
+	--color-primary-mid: color-mix(in oklab, var(--color-primary) 93%, white);
 
-	--color-friendly: #6aa8ff;
-	--color-friendly-fg: #c3dbff;
-	--color-friendly-bg: #2f6be0;
-	--color-friendly-deep: #2148a8;
-	--color-friendly-hi: #e6f0ff;
+	--color-friendly: var(--color-secondary);
+	--color-friendly-fg: color-mix(in oklab, var(--color-secondary) 45%, white);
+	--color-friendly-bg: color-mix(in oklab, var(--color-secondary) 70%, black);
+	--color-friendly-deep: color-mix(in oklab, var(--color-secondary) 50%, black);
+	--color-friendly-hi: color-mix(in oklab, var(--color-secondary) 15%, white);
 
-	--color-hostile: #f85149;
-	--color-hostile-fg: #ffa198;
+	--color-hostile: var(--color-error);
+	--color-hostile-fg: color-mix(in oklab, var(--color-error) 50%, white);
 
-	--color-positive: #4fd88a;
-	--color-positive-fg: #aef3c9;
-	--color-positive-bg: #1f9d62;
-	--color-positive-deep: #177a4b;
-	--color-positive-mid: #2bb673;
-	--color-positive-hi: #e3fff0;
+	--color-positive: var(--color-success);
+	--color-positive-fg: color-mix(in oklab, var(--color-success) 45%, white);
+	--color-positive-bg: color-mix(in oklab, var(--color-success) 75%, black);
+	--color-positive-deep: color-mix(in oklab, var(--color-success) 55%, black);
+	--color-positive-mid: color-mix(in oklab, var(--color-success) 88%, black);
+	--color-positive-hi: color-mix(in oklab, var(--color-success) 12%, white);
 
 	--color-politics: #b9a1ff;
 	--color-politics-fg: #e6dcff;
@@ -100,7 +136,7 @@
 
 /* Interactive panel (list rows, clickable cards): the line lights up on hover. */
 @utility panel-interactive {
-	@apply press-spring rounded-md border border-line/15 bg-surface-4 hover:border-accent/60 hover:bg-surface-5;
+	@apply press-spring rounded-md border border-line/15 bg-surface-4 hover:border-primary/60 hover:bg-surface-5;
 	--press-scale: 0.99;
 }
 
@@ -416,7 +452,7 @@
 /* Numbers that just changed glow briefly. */
 @keyframes tick-glow {
 	from {
-		color: var(--color-accent-fg);
+		color: var(--color-primary-fg);
 		text-shadow: 0 0 10px rgb(47 129 247 / 0.6);
 	}
 }
@@ -440,7 +476,7 @@
 
 /* Form controls: one consistent look for text inputs, selects and textareas. */
 @utility field-control {
-	@apply rounded-sm border border-line/20 bg-surface-1 text-fg transition-colors duration-150 placeholder:text-fg-faint/70 focus:border-accent focus:ring-1 focus:ring-accent/40 focus:outline-none;
+	@apply rounded-sm border border-line/20 bg-surface-1 text-fg transition-colors duration-150 placeholder:text-fg-faint/70 focus:border-primary focus:ring-1 focus:ring-primary/40 focus:outline-none;
 }
 
 @utility field-label {
@@ -552,7 +588,7 @@
 		@apply mb-3;
 	}
 	.wysiwyg-editor blockquote {
-		@apply border-l-4 border-accent pl-4 italic my-4 text-fg-muted;
+		@apply border-l-4 border-primary pl-4 italic my-4 text-fg-muted;
 	}
 	.wysiwyg-editor code {
 		@apply bg-surface-4 px-1 py-0.5 rounded-sm text-sm;
@@ -616,7 +652,7 @@
 		margin-bottom: 1rem;
 	}
 	.article-content blockquote {
-		border-left: 4px solid var(--color-accent);
+		border-left: 4px solid var(--color-primary);
 		padding-left: 1rem;
 		margin: 1.5rem 0;
 		font-style: italic;

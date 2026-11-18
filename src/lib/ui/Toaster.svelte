@@ -23,9 +23,9 @@
 		info: { icon: FluentInfo20Filled, box: "border-friendly/45", icon_: "text-friendly", bar: "bg-friendly" },
 		warning: {
 			icon: FluentWarning20Filled,
-			box: "border-accent/55",
-			icon_: "text-accent-fg",
-			bar: "bg-accent"
+			box: "border-primary/55",
+			icon_: "text-primary-fg",
+			bar: "bg-primary"
 		}
 	};
 
@@ -60,7 +60,7 @@
 				<p class="min-w-0 flex-1 text-sm font-medium break-words text-fg">{item.message}</p>
 				<button
 					type="button"
-					class="press-spring -my-1 grid size-8 shrink-0 place-items-center rounded-sm text-fg-muted hover:bg-accent/10 hover:text-fg"
+					class="press-spring -my-1 grid size-8 shrink-0 place-items-center rounded-sm text-fg-muted hover:bg-primary/10 hover:text-fg"
 					aria-label="Dismiss"
 					onclick={() => toast.dismiss(item.id)}
 				>

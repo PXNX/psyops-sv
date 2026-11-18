@@ -29,16 +29,16 @@ const BUTTON_BASE =
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 	// Solid — one per intent. Use for the primary action of a screen or dialog.
-	primary: "bg-accent hover:bg-accent-mid border border-accent-hi/60 text-white font-semibold focus-visible:ring-accent",
+	primary: "bg-primary hover:bg-primary-mid border border-primary-hi/60 text-white font-semibold focus-visible:ring-primary",
 	danger: "bg-[#da3633] hover:bg-[#e5534b] border border-[#f85149]/60 text-white font-semibold focus-visible:ring-red-400",
 	success: "bg-positive-deep hover:bg-positive-bg border border-positive/50 text-white font-semibold focus-visible:ring-positive",
 	info: "bg-friendly-deep hover:bg-friendly-bg border border-friendly/50 text-white font-semibold focus-visible:ring-friendly",
 	premium: "bg-[#bb8009] hover:bg-[#d29922] border border-[#e3b341]/60 text-white font-semibold focus-visible:ring-[#e3b341]",
 
 	// Neutral — the default for anything that is not the primary action.
-	secondary: "bg-surface-8 hover:bg-surface-10 border border-line/20 hover:border-line/35 text-fg-body hover:text-fg focus-visible:ring-accent",
-	subtle: "bg-surface-4 hover:bg-surface-7 border border-line/12 text-fg-soft hover:text-fg focus-visible:ring-accent",
-	ghost: "btn-ghost border-0 text-fg-dim hover:text-fg hover:bg-surface-7 focus-visible:ring-accent",
+	secondary: "bg-surface-8 hover:bg-surface-10 border border-line/20 hover:border-line/35 text-fg-body hover:text-fg focus-visible:ring-primary",
+	subtle: "bg-surface-4 hover:bg-surface-7 border border-line/12 text-fg-soft hover:text-fg focus-visible:ring-primary",
+	ghost: "btn-ghost border-0 text-fg-dim hover:text-fg hover:bg-surface-7 focus-visible:ring-primary",
 
 	// Soft/tinted — a coloured hint without competing with the primary action.
 	"soft-purple":
@@ -48,7 +48,7 @@ const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 	"soft-emerald":
 		"bg-positive-bg/18 hover:bg-positive-bg/28 border border-positive/30 text-positive-fg hover:text-positive-hi focus-visible:ring-positive",
 	"soft-amber":
-		"bg-accent/12 hover:bg-accent/20 border border-accent/35 text-accent-fg hover:text-accent-soft focus-visible:ring-accent",
+		"bg-primary/12 hover:bg-primary/20 border border-primary/35 text-primary-fg hover:text-primary-soft focus-visible:ring-primary",
 	"soft-red":
 		"bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-300 hover:text-red-200 focus-visible:ring-red-400"
 };
@@ -107,7 +107,7 @@ const BADGE_TONES: Record<BadgeTone, string> = {
 	purple: "bg-politics-bg/20 text-politics-fg border-politics/30",
 	blue: "bg-friendly-bg/20 text-friendly-fg border-friendly/30",
 	green: "bg-positive-bg/20 text-positive-fg border-positive/30",
-	amber: "bg-accent/15 text-accent-fg border-accent/35",
+	amber: "bg-primary/15 text-primary-fg border-primary/35",
 	orange: "bg-orange-600/20 text-orange-300 border-orange-500/30",
 	red: "bg-red-600/20 text-red-300 border-red-500/30",
 	cyan: "bg-cyan-600/20 text-cyan-300 border-cyan-500/30",

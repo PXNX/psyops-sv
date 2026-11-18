@@ -51,7 +51,7 @@
 						/>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 flex-wrap">
-								<span class="font-bold text-fg group-hover:text-accent-hover transition-colors truncate"
+								<span class="font-bold text-fg group-hover:text-primary-hover transition-colors truncate"
 									>{state.name}</span
 								>
 								{#if state.bloc}

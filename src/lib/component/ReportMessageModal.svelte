@@ -42,9 +42,9 @@
 		<div class="space-y-4">
 			<div class="flex items-center gap-3">
 				<div
-					class="size-12 bg-accent/12 border border-accent/35 rounded-sm flex items-center justify-center shrink-0"
+					class="size-12 bg-primary/12 border border-primary/35 rounded-sm flex items-center justify-center shrink-0"
 				>
-					<FluentWarning20Filled class="size-6 text-accent-fg" />
+					<FluentWarning20Filled class="size-6 text-primary-fg" />
 				</div>
 				<p class="text-sm text-fg-soft">Help us understand what's wrong with this message.</p>
 			</div>
