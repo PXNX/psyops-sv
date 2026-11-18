@@ -333,7 +333,7 @@
 							<div
 								class="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]"
 							>
-								<span class="font-serif">Bill No. {proposal.id}</span>
+								<span></span>
 								<span
 									class="font-mono normal-case tracking-normal flex items-center gap-1"
 									title="Voting ends {formatDateTime(proposal.votingEndsAt)}"

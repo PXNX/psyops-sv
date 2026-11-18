@@ -158,7 +158,7 @@
 									{bloc.name}
 								</h2>
 								<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]">
-									Treaty of {new Date(bloc.createdAt).getFullYear()}
+									Since {new Date(bloc.createdAt).getFullYear()}
 								</p>
 							</div>
 							{#if bloc.isUserMember}

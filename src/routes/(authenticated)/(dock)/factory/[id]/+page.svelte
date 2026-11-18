@@ -138,8 +138,7 @@
 			/>
 		{/if}
 
-		<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb] font-mono">Works No. {data.factory.id}</p>
-		<div class="mt-2 flex items-center gap-4 pr-10">
+		<div class="flex items-center gap-4 pr-10">
 			<Logo
 				src={data.companyLogoUrl}
 				alt={data.factory.companyName}

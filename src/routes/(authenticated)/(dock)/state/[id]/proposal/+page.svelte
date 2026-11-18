@@ -90,7 +90,7 @@
 					</span>
 
 					<p class="font-serif text-[10px] uppercase tracking-[0.2em] text-[#8e9abb] pr-28">
-						Bill No. {proposal.id} · {formatDate(proposal.createdAt)}
+						{formatDate(proposal.createdAt)}
 					</p>
 					<h3 class="mt-1 font-serif text-lg font-black text-[#eef2ff] leading-snug break-words pr-24 sm:pr-32">
 						{proposal.changeTitle}

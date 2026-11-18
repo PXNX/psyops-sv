@@ -121,7 +121,6 @@
 				{/if}
 			</div>
 
-			<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">Charter of the</p>
 			<h1 class="mx-auto max-w-2xl break-words font-serif text-3xl font-black leading-tight text-[#eef2ff] sm:text-4xl">
 				{data.bloc.name}
 			</h1>

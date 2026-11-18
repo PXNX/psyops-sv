@@ -193,7 +193,7 @@
 							</div>
 							<div class="flex-1 min-w-0">
 								<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb] font-mono">
-									No. {String(unit.id).padStart(4, "0")} · {unitLabel(unit.unitType)}
+									{unitLabel(unit.unitType)}
 								</p>
 								<h3 class="font-bold text-[#eef2ff] truncate">{unit.name}</h3>
 								<div class="mt-1 flex flex-wrap items-center gap-1.5">

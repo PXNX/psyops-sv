@@ -55,7 +55,7 @@
 </script>
 
 <PageContainer maxWidth="6xl">
-	<PageHeader title="Gazetteer of Regions" subtitle="{data.regions.length} regions" />
+	<PageHeader title="Regions" subtitle="{data.regions.length} regions" />
 
 	<div class="flex flex-col sm:flex-row gap-3">
 		<div class="flex-1 relative">

@@ -338,7 +338,6 @@
 							<FluentFlag20Filled class="size-7" style="color: {$form.color}" />
 						{/if}
 					</div>
-					<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">Charter of the</p>
 					<p class="font-serif text-xl font-black text-[#eef2ff] break-words">{$form.name || "Your Alliance"}</p>
 					{#if $form.description}
 						<p class="mt-2 font-serif text-sm italic text-[#c2cbe3] line-clamp-3">{$form.description}</p>

@@ -194,7 +194,6 @@
 	<!-- The application form, laid out like a registry filing -->
 	<form method="POST" enctype="multipart/form-data" use:enhance class="panel rounded-sm p-5 sm:p-7">
 		<div class="text-center border-b-2 border-double border-[#8ea6e0]/40 pb-3">
-			<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">Commercial Register · Form HR-1</p>
 			<h2 class="mt-1 font-serif text-xl sm:text-2xl font-bold text-[#eef2ff]">Application for Registration</h2>
 		</div>
 

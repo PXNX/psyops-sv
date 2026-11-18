@@ -323,9 +323,6 @@
 				class="flex items-center justify-between gap-2 px-4 py-3 border-b border-dashed border-[#8ea6e0]/30 bg-[#131c33]/60"
 			>
 				<h2 class="section-title">Sell order</h2>
-				{#if data.myListing}
-					<span class="font-mono text-xs text-[#8e9abb]">No. {String(data.myListing.id).padStart(5, "0")}</span>
-				{/if}
 			</div>
 
 			<div class="p-4">

@@ -270,9 +270,9 @@
 		<div
 			class="flex items-center justify-between gap-3 border-b border-[#8ea6e0]/15 bg-[#131c33]/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]"
 		>
-			<span>Battle report</span>
+			<span></span>
 			<a href="/war/{data.battle.warId}" class="flex items-center gap-1 hover:text-[#ffc857]">
-				War No. {data.battle.warId}
+				The war
 				<FluentArrowRight20Filled class="size-3" />
 			</a>
 		</div>

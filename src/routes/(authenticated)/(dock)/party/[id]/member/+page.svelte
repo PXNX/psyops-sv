@@ -229,7 +229,6 @@
 								<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
 								<span class="truncate">Member card</span>
 							</span>
-							<span class="font-mono shrink-0">No. {String(i + 1).padStart(3, "0")}</span>
 						</div>
 						<div class="flex items-center gap-3 p-3">
 							<UserLink

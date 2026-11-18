@@ -128,12 +128,6 @@
 <PageContainer maxWidth="5xl">
 	<!-- Record header -->
 	<header class="panel rounded-sm overflow-hidden">
-		<div
-			class="px-4 py-2 border-b border-[#8ea6e0]/15 bg-[#0b1120]/50 flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]"
-		>
-			<span>Service Record</span>
-			<span class="ml-auto font-mono normal-case tracking-wider truncate max-w-[50%]">No. {data.user.id}</span>
-		</div>
 		<div class="p-4 sm:p-5 flex flex-wrap items-center gap-4">
 			<UserLink
 				id={data.user.id}

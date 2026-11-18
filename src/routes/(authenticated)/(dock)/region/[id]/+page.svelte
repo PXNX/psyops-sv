@@ -147,9 +147,6 @@
 				placeholderGradient="from-[#7451e6]/40 to-[#7451e6]/40"
 			/>
 			<div class="flex-1 min-w-0">
-				<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">
-					Region · No. {data.region.id}
-				</p>
 				<h1 class="font-serif text-3xl sm:text-4xl font-bold text-[#eef2ff] break-words leading-tight">
 					{data.region.name}
 				</h1>

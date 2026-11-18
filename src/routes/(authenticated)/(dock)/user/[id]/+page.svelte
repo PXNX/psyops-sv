@@ -195,10 +195,6 @@
 				{:else}
 					<span>Stateless</span>
 				{/if}
-				<span class="hidden sm:inline text-[#8e9abb]/60">· Identity Card</span>
-				<span class="ml-auto font-mono tracking-wider normal-case text-[#8e9abb]/80 truncate max-w-[40%]"
-					>No. {data.user.id}</span
-				>
 			</header>
 
 			<div class="p-4 sm:p-5 flex gap-4 sm:gap-6">

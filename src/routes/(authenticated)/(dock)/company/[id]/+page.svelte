@@ -50,7 +50,6 @@
 	let capitalEl = $state<HTMLElement | null>(null);
 	let certificateEl = $state<HTMLElement | null>(null);
 
-	const entryNo = $derived(`HRB ${String(data.company.id).padStart(4, "0")}`);
 	const maxRate = $derived(Math.max(1, ...data.resourceProduction.map((r) => r.productionRate)));
 	const myPercent = $derived(data.shares ? Math.round((data.myHolding / data.shares.totalShares) * 1000) / 10 : 0);
 	const today = formatDate(new Date());
@@ -90,11 +89,7 @@
 			/>
 		{/if}
 
-		<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb] pr-12">
-			Commercial Register · Extract <span class="font-mono text-[#c2cbe3]">{entryNo}</span>
-		</p>
-
-		<div class="mt-3 flex items-start gap-4">
+		<div class="flex items-start gap-4 pr-12">
 			<Logo
 				src={data.company.logo}
 				alt=""
@@ -409,9 +404,6 @@
 					class="relative rounded-sm border-4 border-double border-[#8ea6e0]/50 bg-[#f5a524]/5 p-4 sm:p-6 text-center animate-rise-in"
 				>
 					<div class="absolute inset-1.5 rounded-sm border border-[#8ea6e0]/15 pointer-events-none"></div>
-					<p class="text-[10px] uppercase tracking-[0.3em] text-[#8e9abb]">
-						No. <span class="font-mono">{entryNo}-{data.myHolding}</span>
-					</p>
 					<p class="mt-1 font-serif text-xl sm:text-2xl font-black uppercase tracking-widest text-[#ffcb6b]">
 						Share Certificate
 					</p>

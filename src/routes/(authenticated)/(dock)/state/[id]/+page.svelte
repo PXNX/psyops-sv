@@ -167,11 +167,7 @@
 			/>
 		{/if}
 
-		<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb] pr-12">
-			State dossier · No. {String(data.state.id).padStart(3, "0")}
-		</p>
-
-		<div class="mt-3 flex items-start gap-4">
+		<div class="flex items-start gap-4 pr-12">
 			<!-- Flag with the bloc seal pinned to its corner -->
 			<div class="relative shrink-0">
 				<div

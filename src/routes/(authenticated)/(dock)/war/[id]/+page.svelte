@@ -110,13 +110,6 @@
 <PageContainer maxWidth="5xl">
 	<!-- Dispatch header -->
 	<article class="panel relative overflow-hidden rounded-sm">
-		<div
-			class="flex items-center justify-between gap-3 border-b border-[#8ea6e0]/15 bg-[#131c33]/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]"
-		>
-			<span>Situation report</span>
-			<span class="font-mono">War No. {data.war.id}</span>
-		</div>
-
 		<div class="space-y-5 p-5">
 			<div class="relative flex items-start gap-3">
 				{@render belligerent("attacker")}

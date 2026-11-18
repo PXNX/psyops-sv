@@ -48,7 +48,7 @@
 
 <PageContainer maxWidth="6xl">
 	<PageHeader
-		title="Commercial Register"
+		title="Companies"
 		subtitle="{data.companies.length} {data.companies.length === 1 ? 'company' : 'companies'} on file"
 		icon={FluentBuilding20Filled}
 	>

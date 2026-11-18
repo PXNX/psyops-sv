@@ -63,7 +63,7 @@
 	<!-- Header -->
 	<PageHeader
 		documentTitle={false}
-		title="Atlas of States"
+		title="States"
 		subtitle="{data.regions.length} {data.regions.length === 1 ? 'state' : 'states'}"
 	>
 		{#snippet actions()}
