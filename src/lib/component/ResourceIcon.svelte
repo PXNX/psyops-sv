@@ -17,7 +17,7 @@
 		// Raw regional resources (region/state pages)
 		oil: "text-[#caa23c]",
 		chromium: "text-[#8ec6e0]",
-		tungsten: "text-[#c08cf0]",
+		tungsten: "text-[#b9a1ff]",
 		rubber: "text-[#7fc25c]",
 		aluminium: "text-[#b0b4ba]"
 	};

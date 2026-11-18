@@ -35,18 +35,18 @@
 	}: Props = $props();
 
 	const hoverColors: Record<string, string> = {
-		yellow: "group-hover:text-[#ffd35c]",
-		blue: "group-hover:text-[#b3dcff]",
-		purple: "group-hover:text-[#e3cbfb]",
-		emerald: "group-hover:text-[#b9f29a]",
+		yellow: "group-hover:text-[#ffcb6b]",
+		blue: "group-hover:text-[#c3dbff]",
+		purple: "group-hover:text-[#e6dcff]",
+		emerald: "group-hover:text-[#aef3c9]",
 		red: "group-hover:text-red-400"
 	};
 
 	const tileColors: Record<string, string> = {
-		yellow: "bg-[#f2b01e]/15",
-		blue: "bg-[#2369b5]/18",
-		purple: "bg-[#8a4fc0]/15",
-		emerald: "bg-[#3f8a2a]/18",
+		yellow: "bg-[#f5a524]/15",
+		blue: "bg-[#2f6be0]/18",
+		purple: "bg-[#7451e6]/15",
+		emerald: "bg-[#1f9d62]/18",
 		red: "bg-red-600/20"
 	};
 
@@ -57,7 +57,7 @@
 	this={Component}
 	{href}
 	{onclick}
-	class="flex items-center gap-3 group hover:bg-[#2e3524] rounded-sm p-2 -m-2 transition-all"
+	class="flex items-center gap-3 group hover:bg-[#233154] rounded-sm p-2 -m-2 transition-all"
 	class:cursor-pointer={onclick}
 >
 	{#if logo !== undefined}
@@ -69,18 +69,18 @@
 	{/if}
 
 	<div class="flex-1 min-w-0">
-		<p class="font-semibold text-[#f5efd8] {hoverColors[hoverColor]} transition-colors truncate">
+		<p class="font-semibold text-[#eef2ff] {hoverColors[hoverColor]} transition-colors truncate">
 			{#if partyAbbreviation}
 				<PartyTag abbreviation={partyAbbreviation} color={partyColor} />
 			{/if}
 			{title}
 		</p>
-		<p class="text-xs text-[#a8a083] truncate">
+		<p class="text-xs text-[#8e9abb] truncate">
 			{subtitle}
 		</p>
 	</div>
 
 	{#if href || onclick}
-		<FluentChevronRight20Filled class="size-5 text-[#a8a083] {hoverColors[hoverColor]} transition-colors" />
+		<FluentChevronRight20Filled class="size-5 text-[#8e9abb] {hoverColors[hoverColor]} transition-colors" />
 	{/if}
 </svelte:element>

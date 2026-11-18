@@ -44,7 +44,7 @@
 
 <main
 	bind:this={mainEl}
-	class="flex flex-col h-[calc(100dvh-3.5rem)] md:h-[calc(100dvh-4rem)] overflow-y-auto overflow-x-hidden"
+	class="flex flex-col h-[calc(100dvh-4.75rem)] md:h-[calc(100dvh-5.25rem)] overflow-y-auto overflow-x-hidden"
 >
 	{@render children()}
 </main>
@@ -76,7 +76,7 @@
 	}
 
 	.nav-progress {
-		@apply fixed top-0 left-0 right-0 z-50 h-0.5 overflow-hidden bg-[#f2b01e]/10;
+		@apply fixed top-0 left-0 right-0 z-50 h-0.5 overflow-hidden bg-[#f5a524]/10;
 	}
 
 	.nav-progress::after {
@@ -84,7 +84,7 @@
 		display: block;
 		height: 100%;
 		width: 40%;
-		background: #f2b01e;
+		background: #f5a524;
 		animation: nav-progress-slide 0.9s ease-in-out infinite;
 	}
 

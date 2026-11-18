@@ -21,11 +21,11 @@
 		state: {
 			label: "State Broadcast",
 			icon: FluentBuildingGovernment20Filled,
-			accent: "border-[#c08cf0]",
-			text: "text-[#e3cbfb]"
+			accent: "border-[#b9a1ff]",
+			text: "text-[#e6dcff]"
 		},
-		party: { label: "Party Broadcast", icon: FluentPeople20Filled, accent: "border-[#6fd14a]", text: "text-[#b9f29a]" },
-		bloc: { label: "Bloc Broadcast", icon: FluentFlag20Filled, accent: "border-[#5eaef5]", text: "text-[#b3dcff]" }
+		party: { label: "Party Broadcast", icon: FluentPeople20Filled, accent: "border-[#4fd88a]", text: "text-[#aef3c9]" },
+		bloc: { label: "Bloc Broadcast", icon: FluentFlag20Filled, accent: "border-[#6aa8ff]", text: "text-[#c3dbff]" }
 	} as const;
 </script>
 
@@ -38,15 +38,15 @@
 
 	{#if data.broadcasts.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<FluentMegaphone20Filled class="size-12 text-[#a8a083] mx-auto mb-3" />
-			<p class="text-[#a8a083]">No broadcasts yet</p>
+			<FluentMegaphone20Filled class="size-12 text-[#8e9abb] mx-auto mb-3" />
+			<p class="text-[#8e9abb]">No broadcasts yet</p>
 		</div>
 	{:else}
 		<div class="space-y-3">
 			{#each data.broadcasts as broadcast (broadcast.id)}
 				{@const meta = typeMeta[broadcast.broadcastType]}
 				<div
-					class="relative overflow-hidden rounded-sm border-l-4 {meta.accent} bg-[#141810] p-5 {broadcast.isActive
+					class="relative overflow-hidden rounded-sm border-l-4 {meta.accent} bg-[#0f1628] p-5 {broadcast.isActive
 						? ''
 						: 'opacity-70'}"
 				>
@@ -63,9 +63,9 @@
 							<Badge tone="neutral">Revoked</Badge>
 						{/if}
 					</div>
-					<h3 class="text-[#f5efd8] font-bold uppercase tracking-wide">{broadcast.title}</h3>
-					<p class="text-[#d3caa9] text-sm whitespace-pre-wrap mt-1">{broadcast.content}</p>
-					<p class="text-xs font-mono text-[#a8a083] mt-2">
+					<h3 class="text-[#eef2ff] font-bold uppercase tracking-wide">{broadcast.title}</h3>
+					<p class="text-[#c2cbe3] text-sm whitespace-pre-wrap mt-1">{broadcast.content}</p>
+					<p class="text-xs font-mono text-[#8e9abb] mt-2">
 						FROM: {broadcast.issuerName || "Unknown"} · {formatDateTime(broadcast.createdAt)}
 					</p>
 				</div>

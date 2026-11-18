@@ -18,7 +18,7 @@
 	<div
 		class="rounded-sm p-4 border {isError
 			? 'bg-red-600/10 border-red-500/30 text-red-300'
-			: 'bg-[#3f8a2a]/18 border-[#6fd14a]/30 text-[#b9f29a]'}"
+			: 'bg-[#1f9d62]/18 border-[#4fd88a]/30 text-[#aef3c9]'}"
 	>
 		<p class="text-sm font-medium">
 			{message}

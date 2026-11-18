@@ -13,31 +13,31 @@ export const MEDALS: Record<MedalType, { label: string; for: string; ribbon: str
 	honor: {
 		label: "Medal of Honor",
 		for: "Outstanding achievement",
-		ribbon: stripes("#7a1712", "#f2b01e", "#7a1712", "#f2b01e", "#7a1712"),
+		ribbon: stripes("#7a1712", "#f5a524", "#7a1712", "#f5a524", "#7a1712"),
 		emoji: "🏆"
 	},
 	valor: {
 		label: "Cross of Valor",
 		for: "Courage and bravery",
-		ribbon: stripes("#1d4f8a", "#f5efd8", "#a8221a", "#f5efd8", "#1d4f8a"),
+		ribbon: stripes("#2148a8", "#eef2ff", "#a8221a", "#eef2ff", "#2148a8"),
 		emoji: "🛡️"
 	},
 	excellence: {
 		label: "Star of Excellence",
 		for: "Exceptional quality",
-		ribbon: stripes("#5a2f86", "#c08cf0", "#f5efd8", "#c08cf0", "#5a2f86"),
+		ribbon: stripes("#4a32a6", "#b9a1ff", "#eef2ff", "#b9a1ff", "#4a32a6"),
 		emoji: "⭐"
 	},
 	service: {
 		label: "Service Medal",
 		for: "Dedicated service",
-		ribbon: stripes("#2f7020", "#f2b01e", "#2f7020", "#2f7020", "#f2b01e", "#2f7020"),
+		ribbon: stripes("#177a4b", "#f5a524", "#177a4b", "#177a4b", "#f5a524", "#177a4b"),
 		emoji: "🎖️"
 	},
 	leadership: {
 		label: "Order of Leadership",
 		for: "Exceptional leadership",
-		ribbon: stripes("#a8221a", "#a8221a", "#f2b01e", "#1b1708", "#f2b01e", "#a8221a", "#a8221a"),
+		ribbon: stripes("#a8221a", "#a8221a", "#f5a524", "#1a1305", "#f5a524", "#a8221a", "#a8221a"),
 		emoji: "👑"
 	}
 };
@@ -47,7 +47,7 @@ export function medalInfo(type: string) {
 		MEDALS[type as MedalType] ?? {
 			label: "Medal",
 			for: "",
-			ribbon: stripes("#4a5238", "#c8b47a", "#4a5238"),
+			ribbon: stripes("#33456f", "#8ea6e0", "#33456f"),
 			emoji: "🏅"
 		}
 	);

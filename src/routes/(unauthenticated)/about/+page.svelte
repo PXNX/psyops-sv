@@ -96,15 +96,15 @@
 			<img loading="lazy" decoding="async" alt="app logo" class="w-24 h-24" src="/logo.svg" />
 		</div>
 		<div class="text-center space-y-3">
-			<h1 class="text-4xl font-bold text-[#f5efd8]">About</h1>
-			<p class="text-[#a8a083] max-w-md mx-auto">A global political simulation platform</p>
+			<h1 class="text-4xl font-bold text-[#eef2ff]">About</h1>
+			<p class="text-[#8e9abb] max-w-md mx-auto">A global political simulation platform</p>
 			<button
-				class="inline-flex items-center gap-2 px-4 py-2 panel-muted rounded-sm cursor-pointer hover:bg-[#2e3524] hover:border-[#f2b01e]/40 transition-colors"
+				class="inline-flex items-center gap-2 px-4 py-2 panel-muted rounded-sm cursor-pointer hover:bg-[#233154] hover:border-[#f5a524]/40 transition-colors"
 				onclick={() => (changelogSheetOpen = true)}
 			>
-				<FluentInfo20Filled class="size-4 text-[#ffd35c]" />
-				<span class="text-sm text-[#d3caa9]">Version {data.version}</span>
-				<span class="text-xs text-[#ffd35c]">View Changelog</span>
+				<FluentInfo20Filled class="size-4 text-[#ffcb6b]" />
+				<span class="text-sm text-[#c2cbe3]">Version {data.version}</span>
+				<span class="text-xs text-[#ffcb6b]">View Changelog</span>
 			</button>
 		</div>
 	</div>
@@ -114,7 +114,7 @@
 		<!-- Support Card -->
 		<section class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentMail20Filled class="size-5 text-[#c08cf0]" />
+				<FluentMail20Filled class="size-5 text-[#b9a1ff]" />
 				Support
 			</h2>
 			<div class="space-y-2">
@@ -123,16 +123,16 @@
 					onclick={() => (contactSheetOpen = true)}
 				>
 					<div
-						class="size-10 bg-[#8a4fc0]/15 border-[#c08cf0]/30 border rounded-sm flex items-center justify-center shrink-0"
+						class="size-10 bg-[#7451e6]/15 border-[#b9a1ff]/30 border rounded-sm flex items-center justify-center shrink-0"
 					>
-						<FluentMail20Filled class="size-5 text-[#e3cbfb]" />
+						<FluentMail20Filled class="size-5 text-[#e6dcff]" />
 					</div>
 					<div class="flex-1 min-w-0 text-left">
-						<p class="font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Contact Us</p>
-						<p class="text-xs text-[#a8a083]">Get help from our team</p>
+						<p class="font-medium text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">Contact Us</p>
+						<p class="text-xs text-[#8e9abb]">Get help from our team</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors shrink-0"
+						class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
 					/>
 				</button>
 
@@ -141,46 +141,46 @@
 					onclick={() => (bugSheetOpen = true)}
 				>
 					<div
-						class="size-10 bg-[#8a4fc0]/15 border-[#c08cf0]/30 border rounded-sm flex items-center justify-center shrink-0"
+						class="size-10 bg-[#7451e6]/15 border-[#b9a1ff]/30 border rounded-sm flex items-center justify-center shrink-0"
 					>
-						<FluentBug20Filled class="size-5 text-[#e3cbfb]" />
+						<FluentBug20Filled class="size-5 text-[#e6dcff]" />
 					</div>
 					<div class="flex-1 min-w-0 text-left">
-						<p class="font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Report Bug</p>
-						<p class="text-xs text-[#a8a083]">Help us improve</p>
+						<p class="font-medium text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">Report Bug</p>
+						<p class="text-xs text-[#8e9abb]">Help us improve</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors shrink-0"
+						class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
 					/>
 				</button>
 
 				<a class="group panel-interactive rounded-sm p-4 flex items-center gap-3" href="/docs">
 					<div
-						class="size-10 bg-[#2369b5]/18 border-[#5eaef5]/30 border rounded-sm flex items-center justify-center shrink-0"
+						class="size-10 bg-[#2f6be0]/18 border-[#6aa8ff]/30 border rounded-sm flex items-center justify-center shrink-0"
 					>
-						<FluentDocument20Filled class="size-5 text-[#b3dcff]" />
+						<FluentDocument20Filled class="size-5 text-[#c3dbff]" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Documentation</p>
-						<p class="text-xs text-[#a8a083]">Learn how it works</p>
+						<p class="font-medium text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">Documentation</p>
+						<p class="text-xs text-[#8e9abb]">Learn how it works</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors shrink-0"
+						class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
 					/>
 				</a>
 
 				<a class="group panel-interactive rounded-sm p-4 flex items-center gap-3" href="/docs/intro">
 					<div
-						class="size-10 bg-[#3f8a2a]/18 border-[#6fd14a]/30 border rounded-sm flex items-center justify-center shrink-0"
+						class="size-10 bg-[#1f9d62]/18 border-[#4fd88a]/30 border rounded-sm flex items-center justify-center shrink-0"
 					>
-						<FluentBookInformation20Filled class="size-5 text-[#b9f29a]" />
+						<FluentBookInformation20Filled class="size-5 text-[#aef3c9]" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Wiki</p>
-						<p class="text-xs text-[#a8a083]">Community knowledge</p>
+						<p class="font-medium text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">Wiki</p>
+						<p class="text-xs text-[#8e9abb]">Community knowledge</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors shrink-0"
+						class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
 					/>
 				</a>
 			</div>
@@ -189,37 +189,37 @@
 		<!-- Legal Card -->
 		<section class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentDocumentText20Filled class="size-5 text-[#5eaef5]" />
+				<FluentDocumentText20Filled class="size-5 text-[#6aa8ff]" />
 				Legal
 			</h2>
 			<div class="space-y-2">
 				<a class="group panel-interactive rounded-sm p-4 flex items-center gap-3" href="/about/terms">
 					<div
-						class="size-10 bg-[#8a4fc0]/15 border-[#c08cf0]/30 border rounded-sm flex items-center justify-center shrink-0"
+						class="size-10 bg-[#7451e6]/15 border-[#b9a1ff]/30 border rounded-sm flex items-center justify-center shrink-0"
 					>
-						<FluentDocumentText20Filled class="size-5 text-[#e3cbfb]" />
+						<FluentDocumentText20Filled class="size-5 text-[#e6dcff]" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Terms of Service</p>
-						<p class="text-xs text-[#a8a083]">User agreement</p>
+						<p class="font-medium text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">Terms of Service</p>
+						<p class="text-xs text-[#8e9abb]">User agreement</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors shrink-0"
+						class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
 					/>
 				</a>
 
 				<a class="group panel-interactive rounded-sm p-4 flex items-center gap-3" href="/about/privacy">
 					<div
-						class="size-10 bg-[#8a4fc0]/15 border-[#c08cf0]/30 border rounded-sm flex items-center justify-center shrink-0"
+						class="size-10 bg-[#7451e6]/15 border-[#b9a1ff]/30 border rounded-sm flex items-center justify-center shrink-0"
 					>
-						<FluentPersonShield24Regular class="size-5 text-[#e3cbfb]" />
+						<FluentPersonShield24Regular class="size-5 text-[#e6dcff]" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Privacy Policy</p>
-						<p class="text-xs text-[#a8a083]">Your data rights</p>
+						<p class="font-medium text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">Privacy Policy</p>
+						<p class="text-xs text-[#8e9abb]">Your data rights</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors shrink-0"
+						class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
 					/>
 				</a>
 
@@ -228,16 +228,16 @@
 					onclick={() => (licensesSheetOpen = true)}
 				>
 					<div
-						class="size-10 bg-[#2369b5]/18 border-[#5eaef5]/30 border rounded-sm flex items-center justify-center shrink-0"
+						class="size-10 bg-[#2f6be0]/18 border-[#6aa8ff]/30 border rounded-sm flex items-center justify-center shrink-0"
 					>
-						<FluentCertificate20Filled class="size-5 text-[#b3dcff]" />
+						<FluentCertificate20Filled class="size-5 text-[#c3dbff]" />
 					</div>
 					<div class="flex-1 min-w-0 text-left">
-						<p class="font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Licenses</p>
-						<p class="text-xs text-[#a8a083]">{data.licenses.length} open source packages</p>
+						<p class="font-medium text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">Licenses</p>
+						<p class="text-xs text-[#8e9abb]">{data.licenses.length} open source packages</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors shrink-0"
+						class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
 					/>
 				</button>
 
@@ -246,16 +246,16 @@
 					onclick={() => (iconsSheetOpen = true)}
 				>
 					<div
-						class="size-10 bg-[#3f8a2a]/18 border-[#6fd14a]/30 border rounded-sm flex items-center justify-center shrink-0"
+						class="size-10 bg-[#1f9d62]/18 border-[#4fd88a]/30 border rounded-sm flex items-center justify-center shrink-0"
 					>
-						<FluentImage20Filled class="size-5 text-[#b9f29a]" />
+						<FluentImage20Filled class="size-5 text-[#aef3c9]" />
 					</div>
 					<div class="flex-1 min-w-0 text-left">
-						<p class="font-medium text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">Icons & Assets</p>
-						<p class="text-xs text-[#a8a083]">Design credits</p>
+						<p class="font-medium text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">Icons & Assets</p>
+						<p class="text-xs text-[#8e9abb]">Design credits</p>
 					</div>
 					<FluentChevronRight20Filled
-						class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] transition-colors shrink-0"
+						class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
 					/>
 				</button>
 			</div>
@@ -270,15 +270,15 @@
 			<div class="space-y-3">
 				<div class="flex items-center gap-3">
 					<Badge tone="amber" size="md" class="font-mono font-semibold rounded-sm">v{entry.version}</Badge>
-					<span class="text-xs text-[#a8a083]">{entry.date}</span>
+					<span class="text-xs text-[#8e9abb]">{entry.date}</span>
 				</div>
 				{#each entry.sections as section}
 					<div>
-						<h4 class="text-sm font-semibold text-[#f5efd8] mb-1.5">{section.title}</h4>
+						<h4 class="text-sm font-semibold text-[#eef2ff] mb-1.5">{section.title}</h4>
 						<ul class="space-y-1">
 							{#each section.items as item}
-								<li class="text-sm text-[#d3caa9] flex items-start gap-2">
-									<span class="text-[#ffd35c] mt-1">•</span>
+								<li class="text-sm text-[#c2cbe3] flex items-start gap-2">
+									<span class="text-[#ffcb6b] mt-1">•</span>
 									<span>{item}</span>
 								</li>
 							{/each}
@@ -287,7 +287,7 @@
 				{/each}
 			</div>
 		{:else}
-			<p class="text-[#a8a083] text-sm">No changelog entries available.</p>
+			<p class="text-[#8e9abb] text-sm">No changelog entries available.</p>
 		{/each}
 	</div>
 </BottomSheet>
@@ -295,7 +295,7 @@
 <!-- Contact Sheet -->
 <BottomSheet bind:open={contactSheetOpen} title="Contact Us">
 	<div class="space-y-4">
-		<p class="text-sm text-[#a8a083]">Have a question or need help? Send us a message and we'll get back to you.</p>
+		<p class="text-sm text-[#8e9abb]">Have a question or need help? Send us a message and we'll get back to you.</p>
 
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 			<div>
@@ -409,7 +409,7 @@
 <!-- Licenses Sheet -->
 <BottomSheet bind:open={licensesSheetOpen} title="Open Source Licenses">
 	<div class="space-y-3">
-		<p class="text-sm text-[#a8a083]">
+		<p class="text-sm text-[#8e9abb]">
 			PsyOps is built with {data.licenses.length} open source packages. Thanks to all their maintainers.
 		</p>
 		<div class="space-y-2">
@@ -421,20 +421,20 @@
 								href={pkg.url}
 								target="_blank"
 								rel="noopener noreferrer"
-								class="text-[#f5efd8] font-medium truncate flex items-center gap-1 hover:text-[#ffcf47] transition-colors"
+								class="text-[#eef2ff] font-medium truncate flex items-center gap-1 hover:text-[#ffc857] transition-colors"
 							>
 								<span class="truncate">{pkg.name}</span>
-								<FluentOpen20Filled class="size-3.5 shrink-0 text-[#a8a083]" />
+								<FluentOpen20Filled class="size-3.5 shrink-0 text-[#8e9abb]" />
 							</a>
 						{:else}
-							<p class="text-[#f5efd8] font-medium truncate">{pkg.name}</p>
+							<p class="text-[#eef2ff] font-medium truncate">{pkg.name}</p>
 						{/if}
-						<p class="text-xs text-[#a8a083] truncate">
+						<p class="text-xs text-[#8e9abb] truncate">
 							v{pkg.version}{pkg.author ? ` • ${pkg.author}` : ""}
 						</p>
 					</div>
 					<span
-						class="shrink-0 px-2 py-1 text-xs font-mono rounded-sm bg-[#3f8a2a]/18 text-[#b9f29a] border border-[#6fd14a]/30"
+						class="shrink-0 px-2 py-1 text-xs font-mono rounded-sm bg-[#1f9d62]/18 text-[#aef3c9] border border-[#4fd88a]/30"
 						>{pkg.license}</span
 					>
 				</div>
@@ -446,14 +446,14 @@
 <!-- Icons & Assets Sheet -->
 <BottomSheet bind:open={iconsSheetOpen} title="Icons & Assets">
 	<div class="space-y-3">
-		<p class="text-sm text-[#a8a083]">Icons are provided by the following open source icon sets via Iconify.</p>
+		<p class="text-sm text-[#8e9abb]">Icons are provided by the following open source icon sets via Iconify.</p>
 		<div class="space-y-2">
 			{#each data.iconSets as set}
 				<div class="p-4 rounded-sm panel-muted space-y-1">
 					<div class="flex items-center justify-between gap-3">
-						<p class="text-[#f5efd8] font-medium">{set.name}</p>
+						<p class="text-[#eef2ff] font-medium">{set.name}</p>
 						<span
-							class="shrink-0 px-2 py-1 text-xs font-mono rounded-sm bg-[#3f8a2a]/18 text-[#b9f29a] border border-[#6fd14a]/30"
+							class="shrink-0 px-2 py-1 text-xs font-mono rounded-sm bg-[#1f9d62]/18 text-[#aef3c9] border border-[#4fd88a]/30"
 						>
 							{#if set.licenseUrl}
 								<a href={set.licenseUrl} target="_blank" rel="noopener noreferrer" class="hover:underline"
@@ -464,10 +464,10 @@
 							{/if}
 						</span>
 					</div>
-					<p class="text-xs text-[#a8a083]">
+					<p class="text-xs text-[#8e9abb]">
 						{#if set.author}
 							{#if set.authorUrl}
-								<a href={set.authorUrl} target="_blank" rel="noopener noreferrer" class="hover:text-[#ffcf47]"
+								<a href={set.authorUrl} target="_blank" rel="noopener noreferrer" class="hover:text-[#ffc857]"
 									>{set.author}</a
 								>
 							{:else}
@@ -480,7 +480,7 @@
 					</p>
 				</div>
 			{:else}
-				<p class="text-[#a8a083] text-sm">No icon sets found.</p>
+				<p class="text-[#8e9abb] text-sm">No icon sets found.</p>
 			{/each}
 		</div>
 	</div>

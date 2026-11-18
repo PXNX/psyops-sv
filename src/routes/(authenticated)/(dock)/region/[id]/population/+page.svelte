@@ -43,16 +43,16 @@
 				alt={data.region.name}
 				class="size-14 sm:size-16 rounded-sm"
 				placeholderIcon={FluentShield20Filled}
-				placeholderGradient="from-[#8a4fc0]/40 to-[#8a4fc0]/40"
+				placeholderGradient="from-[#7451e6]/40 to-[#7451e6]/40"
 			/>
 		</a>
 		<div class="flex-1 min-w-0">
-			<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083]">Civil register</p>
-			<h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#f5efd8] truncate">
-				<a href="/region/{data.region.id}" class="hover:text-[#ffcf47] transition-colors">{data.region.name}</a>
+			<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">Civil register</p>
+			<h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#eef2ff] truncate">
+				<a href="/region/{data.region.id}" class="hover:text-[#ffc857] transition-colors">{data.region.name}</a>
 			</h1>
-			<p class="text-sm text-[#a8a083]">
-				<span class="font-mono text-[#e6ddbf]">{data.totalResidents.toLocaleString()}</span>
+			<p class="text-sm text-[#8e9abb]">
+				<span class="font-mono text-[#dbe2f4]">{data.totalResidents.toLocaleString()}</span>
 				{data.totalResidents === 1 ? "resident" : "residents"}
 			</p>
 		</div>
@@ -64,15 +64,15 @@
 
 	{#if data.residents.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<FluentPeople20Filled class="size-10 text-[#a8a083] mx-auto mb-3 animate-idle-float" />
-			<p class="text-[#a8a083]">Nobody registered yet</p>
+			<FluentPeople20Filled class="size-10 text-[#8e9abb] mx-auto mb-3 animate-idle-float" />
+			<p class="text-[#8e9abb]">Nobody registered yet</p>
 		</div>
 	{:else}
-		<ol class="panel rounded-sm divide-y divide-[#c8b47a]/10">
+		<ol class="panel rounded-sm divide-y divide-[#8ea6e0]/10">
 			{#each data.residents as resident, i (resident.userId)}
 				{@const isYou = resident.userId === data.currentUserId}
-				<li class="flex items-center gap-3 px-3 sm:px-4 py-2.5 {isYou ? 'bg-[#2369b5]/12' : ''}">
-					<span class="w-10 shrink-0 font-mono text-xs text-[#a8a083]/70 text-right">
+				<li class="flex items-center gap-3 px-3 sm:px-4 py-2.5 {isYou ? 'bg-[#2f6be0]/12' : ''}">
+					<span class="w-10 shrink-0 font-mono text-xs text-[#8e9abb]/70 text-right">
 						{(data.currentPage - 1) * data.pageSize + i + 1}
 					</span>
 					<UserLink
@@ -84,7 +84,7 @@
 					{#if isYou}
 						<Badge tone="blue" size="xs">You</Badge>
 					{/if}
-					<span class="shrink-0 font-mono text-xs text-[#a8a083]">{formatDate(resident.movedInAt)}</span>
+					<span class="shrink-0 font-mono text-xs text-[#8e9abb]">{formatDate(resident.movedInAt)}</span>
 				</li>
 			{/each}
 		</ol>
@@ -99,7 +99,7 @@
 					onclick={() => goToPage(data.currentPage - 1)}
 				/>
 
-				<span class="text-sm font-mono text-[#a8a083]">
+				<span class="text-sm font-mono text-[#8e9abb]">
 					{data.currentPage} / {totalPages}
 				</span>
 

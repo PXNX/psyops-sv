@@ -138,22 +138,22 @@
 			/>
 		{/if}
 
-		<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083] font-mono">Works No. {data.factory.id}</p>
+		<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb] font-mono">Works No. {data.factory.id}</p>
 		<div class="mt-2 flex items-center gap-4 pr-10">
 			<Logo
 				src={data.companyLogoUrl}
 				alt={data.factory.companyName}
-				class="size-14 sm:size-16 rounded-sm border border-[#c8b47a]/20 shrink-0"
+				class="size-14 sm:size-16 rounded-sm border border-[#8ea6e0]/20 shrink-0"
 				placeholderIcon={FluentImageOff20Filled}
 			/>
 			<div class="min-w-0">
-				<h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#f5efd8] break-words leading-tight">
+				<h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#eef2ff] break-words leading-tight">
 					{data.factory.name}
 				</h1>
 				<div class="mt-1 flex flex-wrap items-center gap-2">
 					<Badge tone="purple" class="capitalize">{data.factory.factoryType}</Badge>
 					{#if data.output}
-						<span class="inline-flex items-center gap-1 text-xs text-[#d3caa9] capitalize">
+						<span class="inline-flex items-center gap-1 text-xs text-[#c2cbe3] capitalize">
 							<ResourceIcon name={data.output.name} class="size-4" />
 							{data.output.name}
 						</span>
@@ -162,24 +162,24 @@
 			</div>
 		</div>
 
-		<dl class="mt-4 pt-4 border-t border-[#c8b47a]/15 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+		<dl class="mt-4 pt-4 border-t border-[#8ea6e0]/15 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
 			<div class="min-w-0">
-				<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Operator</dt>
+				<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide mb-1">Operator</dt>
 				<dd>
 					<a
 						href="/company/{data.factory.companyId}"
-						class="font-semibold text-[#e3cbfb] hover:text-[#ffcf47] transition-colors truncate block"
+						class="font-semibold text-[#e6dcff] hover:text-[#ffc857] transition-colors truncate block"
 					>
 						{data.factory.companyName}
 					</a>
 				</dd>
 			</div>
 			<div class="min-w-0">
-				<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Proprietor</dt>
+				<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide mb-1">Proprietor</dt>
 				<dd><UserLink id={data.owner.id} name={data.owner.name} avatar={data.owner.avatar} size="xs" /></dd>
 			</div>
 			<div class="min-w-0">
-				<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Site</dt>
+				<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide mb-1">Site</dt>
 				<dd>
 					<a href="/region/{data.factory.regionId}" class="group inline-flex items-center gap-2 min-w-0">
 						<img
@@ -189,8 +189,8 @@
 							alt=""
 							class="size-5 object-contain shrink-0"
 						/>
-						<span class="truncate text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
-							{regionName}<span class="text-[#a8a083]">, {data.factory.stateName}</span>
+						<span class="truncate text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">
+							{regionName}<span class="text-[#8e9abb]">, {data.factory.stateName}</span>
 						</span>
 					</a>
 				</dd>
@@ -208,11 +208,11 @@
 				role="img"
 				aria-label="Crew {data.workers} of {data.maxWorkers}"
 			>
-				<path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#1a1f15" stroke-width="9" stroke-linecap="round" />
+				<path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="#131c33" stroke-width="9" stroke-linecap="round" />
 				<path
 					d="M12 62 A48 48 0 0 1 108 62"
 					fill="none"
-					stroke={isFull ? "#6fd14a" : "#f2b01e"}
+					stroke={isFull ? "#4fd88a" : "#f5a524"}
 					stroke-width="9"
 					stroke-linecap="round"
 					pathLength="100"
@@ -225,25 +225,25 @@
 						y1="8"
 						x2="60"
 						y2="13"
-						stroke="#a8a083"
+						stroke="#8e9abb"
 						stroke-width="1"
 						transform="rotate({-90 + t * 1.8} 60 62)"
 					/>
 				{/each}
 				<g class="gauge-needle" style="transform: rotate({needleDeg}deg)">
-					<line x1="60" y1="62" x2="60" y2="22" stroke="#f5efd8" stroke-width="2" stroke-linecap="round" />
+					<line x1="60" y1="62" x2="60" y2="22" stroke="#eef2ff" stroke-width="2" stroke-linecap="round" />
 				</g>
-				<circle cx="60" cy="62" r="4" fill="#2e3524" stroke="#c8b47a" stroke-width="1" />
+				<circle cx="60" cy="62" r="4" fill="#233154" stroke="#8ea6e0" stroke-width="1" />
 			</svg>
-			<p class="-mt-1 text-2xl font-bold text-[#f5efd8] font-mono">
-				{data.workers}<span class="text-[#a8a083] text-base">/{data.maxWorkers}</span>
+			<p class="-mt-1 text-2xl font-bold text-[#eef2ff] font-mono">
+				{data.workers}<span class="text-[#8e9abb] text-base">/{data.maxWorkers}</span>
 			</p>
-			<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Crew on the books</p>
+			<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Crew on the books</p>
 
 			<div class="mt-4 w-full grid grid-cols-2 gap-2">
 				<div class="panel-muted rounded-sm p-3">
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Output / shift</p>
-					<p class="mt-0.5 flex items-center gap-1.5 text-sm font-bold text-[#f5efd8]">
+					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Output / shift</p>
+					<p class="mt-0.5 flex items-center gap-1.5 text-sm font-bold text-[#eef2ff]">
 						{#if data.output}
 							<ResourceIcon name={data.output.name} class="size-4" />
 							<span class="font-mono">{data.output.amount}</span>
@@ -253,21 +253,21 @@
 					</p>
 				</div>
 				<div class="panel-muted rounded-sm p-3">
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Wage / shift</p>
-					<p class="mt-0.5 text-sm font-bold text-[#b9f29a] font-mono">{data.factory.workerWage.toLocaleString()}</p>
+					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Wage / shift</p>
+					<p class="mt-0.5 text-sm font-bold text-[#aef3c9] font-mono">{data.factory.workerWage.toLocaleString()}</p>
 				</div>
 			</div>
 
 			{#if data.stateEnergy}
 				<div class="mt-3 w-full">
 					<div class="flex items-center justify-between text-xs mb-1">
-						<span class="flex items-center gap-1 text-[#a8a083]">
-							<FluentFlash20Filled class="size-3.5 text-[#ffd35c]" /> Grid
+						<span class="flex items-center gap-1 text-[#8e9abb]">
+							<FluentFlash20Filled class="size-3.5 text-[#ffcb6b]" /> Grid
 						</span>
-						<span class="font-mono text-[#d3caa9]">{energyFree}/{data.stateEnergy.totalProduction} MW</span>
+						<span class="font-mono text-[#c2cbe3]">{energyFree}/{data.stateEnergy.totalProduction} MW</span>
 					</div>
-					<div class="h-1.5 bg-[#1a1f15] rounded-full overflow-hidden border border-[#c8b47a]/10">
-						<div class="h-full bg-[#f2b01e] rounded-full transition-all duration-700" style="width: {energyPct}%"></div>
+					<div class="h-1.5 bg-[#131c33] rounded-full overflow-hidden border border-[#8ea6e0]/10">
+						<div class="h-full bg-[#f5a524] rounded-full transition-all duration-700" style="width: {energyPct}%"></div>
 					</div>
 				</div>
 			{/if}
@@ -286,7 +286,7 @@
 				<h2 class="section-title">Time card</h2>
 				{#if data.isCurrentlyWorking}
 					<Badge tone="amber">
-						<span class="size-1.5 rounded-full bg-[#f2b01e] animate-pulse"></span>
+						<span class="size-1.5 rounded-full bg-[#f5a524] animate-pulse"></span>
 						On shift
 					</Badge>
 				{:else if data.isWorkingHere}
@@ -294,28 +294,28 @@
 				{/if}
 			</div>
 
-			<div class="mt-3 panel-muted rounded-sm font-mono text-sm divide-y divide-dashed divide-[#c8b47a]/20">
+			<div class="mt-3 panel-muted rounded-sm font-mono text-sm divide-y divide-dashed divide-[#8ea6e0]/20">
 				<div class="flex items-center justify-between px-3 py-2">
-					<span class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">In</span>
-					<span class="text-[#f5efd8]">{data.isCurrentlyWorking ? hhmm(clockIn) : "--:--"}</span>
+					<span class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-sans">In</span>
+					<span class="text-[#eef2ff]">{data.isCurrentlyWorking ? hhmm(clockIn) : "--:--"}</span>
 				</div>
 				<div class="flex items-center justify-between px-3 py-2">
-					<span class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">Out</span>
-					<span class="text-[#f5efd8]">{data.isCurrentlyWorking ? hhmm(clockOut) : "--:--"}</span>
+					<span class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-sans">Out</span>
+					<span class="text-[#eef2ff]">{data.isCurrentlyWorking ? hhmm(clockOut) : "--:--"}</span>
 				</div>
 				<div class="flex items-center justify-between px-3 py-2">
-					<span class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">Rate</span>
-					<span class="flex items-center gap-1.5 text-[#b9f29a]">
+					<span class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-sans">Rate</span>
+					<span class="flex items-center gap-1.5 text-[#aef3c9]">
 						{#if hasLockedWage}
-							<FluentLockClosed20Filled class="size-3.5 text-[#c08cf0]" />
+							<FluentLockClosed20Filled class="size-3.5 text-[#b9a1ff]" />
 						{/if}
 						{displayWage.toLocaleString()}
 					</span>
 				</div>
 				{#if data.output}
 					<div class="flex items-center justify-between px-3 py-2">
-						<span class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">Yield</span>
-						<span class="flex items-center gap-1.5 text-[#f5efd8]">
+						<span class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-sans">Yield</span>
+						<span class="flex items-center gap-1.5 text-[#eef2ff]">
 							<ResourceIcon name={data.output.name} class="size-4" />
 							{data.output.amount}
 						</span>
@@ -326,12 +326,12 @@
 			{#if data.isCurrentlyWorking}
 				<div class="mt-4">
 					<div class="flex items-center justify-between text-xs mb-1.5">
-						<span class="text-[#a8a083]">8h shift</span>
-						<span class="font-mono font-bold text-[#ffd35c]">{data.shiftProgress >= 100 ? "Done" : timeRemaining}</span>
+						<span class="text-[#8e9abb]">8h shift</span>
+						<span class="font-mono font-bold text-[#ffcb6b]">{data.shiftProgress >= 100 ? "Done" : timeRemaining}</span>
 					</div>
-					<div class="h-2.5 bg-[#1a1f15] rounded-full overflow-hidden border border-[#f2b01e]/20">
+					<div class="h-2.5 bg-[#131c33] rounded-full overflow-hidden border border-[#f5a524]/20">
 						<div
-							class="h-full bg-[#f2b01e] transition-all duration-1000 rounded-full"
+							class="h-full bg-[#f5a524] transition-all duration-1000 rounded-full"
 							style="width: {data.shiftProgress}%"
 						></div>
 					</div>
@@ -346,7 +346,7 @@
 				{/if}
 			{:else}
 				{#if data.currentUserJob && !data.isWorkingHere && !blocker}
-					<p class="mt-3 text-xs text-[#ffd35c]">Starting here ends your current job.</p>
+					<p class="mt-3 text-xs text-[#ffcb6b]">Starting here ends your current job.</p>
 				{/if}
 				{#if blocker}
 					<p class="mt-3 text-xs text-red-300 flex items-center gap-1.5">
@@ -363,7 +363,7 @@
 
 			{#if justPaid && !data.isCurrentlyWorking}
 				<span
-					class="animate-stamp pointer-events-none absolute top-10 right-4 border-2 border-[#6fd14a]/70 text-[#b9f29a] rounded-sm px-2 py-0.5 font-serif text-sm font-black uppercase tracking-widest"
+					class="animate-stamp pointer-events-none absolute top-10 right-4 border-2 border-[#4fd88a]/70 text-[#aef3c9] rounded-sm px-2 py-0.5 font-serif text-sm font-black uppercase tracking-widest"
 					style="--stamp-tilt: -12deg; transform: rotate(-12deg)"
 				>
 					Paid

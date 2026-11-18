@@ -38,7 +38,7 @@
 	/>
 
 	{#if !data.state}
-		<div class="panel-muted rounded-sm p-4 text-sm text-[#d3caa9]">
+		<div class="panel-muted rounded-sm p-4 text-sm text-[#c2cbe3]">
 			Independent regions can't build. Once a state governs {regionName}, its leaders can build here.
 		</div>
 	{:else}
@@ -46,24 +46,24 @@
 		<div class="panel rounded-sm p-4">
 			<div class="flex flex-wrap items-center justify-between gap-3">
 				<div>
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Treasury of {data.state.name}</p>
-					<p class="text-2xl font-bold font-mono text-[#b9f29a]">${data.treasury.toLocaleString()}</p>
+					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Treasury of {data.state.name}</p>
+					<p class="text-2xl font-bold font-mono text-[#aef3c9]">${data.treasury.toLocaleString()}</p>
 				</div>
 				<div class="flex flex-wrap gap-2">
 					{#each Object.entries(data.stockpile).filter(([, q]) => q > 0) as [resource, quantity]}
-						<span class="panel-muted rounded-sm px-2 py-1 text-xs text-[#e6ddbf] flex items-center gap-1">
+						<span class="panel-muted rounded-sm px-2 py-1 text-xs text-[#dbe2f4] flex items-center gap-1">
 							<ResourceIcon name={resource} class="size-4" />
 							<span class="font-mono">{quantity.toLocaleString()}</span>
 						</span>
 					{:else}
-						<span class="text-xs text-[#a8a083]">The state stockpile is empty. Buy materials on the state market.</span>
+						<span class="text-xs text-[#8e9abb]">The state stockpile is empty. Buy materials on the state market.</span>
 					{/each}
 				</div>
 			</div>
 			{#if !canOrderAny && data.canPropose}
-				<p class="text-xs text-[#a8a083] mt-3">
+				<p class="text-xs text-[#8e9abb] mt-3">
 					Only the president, governor and responsible ministers build directly. You can
-					<a href="/state/{data.state.id}/proposal/create" class="text-[#ffd35c] hover:text-[#ffcf47]"
+					<a href="/state/{data.state.id}/proposal/create" class="text-[#ffcb6b] hover:text-[#ffc857]"
 						>propose a building to parliament</a
 					>.
 				</p>
@@ -75,26 +75,26 @@
 				{@const full = b.level >= b.maxLevel}
 				<div
 					id="building-{b.type}"
-					class="panel rounded-sm p-4 flex flex-col gap-3 transition-colors {b.underway ? 'border-[#f2b01e]/45' : ''}"
+					class="panel rounded-sm p-4 flex flex-col gap-3 transition-colors {b.underway ? 'border-[#f5a524]/45' : ''}"
 				>
 					<div class="flex items-start gap-3">
 						<div
 							class="size-12 shrink-0 rounded-sm border flex items-center justify-center text-3xl {b.underway
-								? 'bg-[#f2b01e]/12 border-[#f2b01e]/35'
-								: 'bg-[#1a1f15] border-[#c8b47a]/15'}"
+								? 'bg-[#f5a524]/12 border-[#f5a524]/35'
+								: 'bg-[#131c33] border-[#8ea6e0]/15'}"
 							aria-hidden="true"
 						>
 							{b.icon}
 						</div>
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center justify-between gap-2">
-								<h2 class="font-bold text-[#f5efd8]">{b.name}</h2>
-								<span class="font-mono text-sm text-[#f5efd8] shrink-0">
-									<span class="text-[10px] text-[#a8a083] uppercase tracking-wide font-sans">Lv</span>
-									{b.level}<span class="text-[#a8a083]">/{b.maxLevel}</span>
+								<h2 class="font-bold text-[#eef2ff]">{b.name}</h2>
+								<span class="font-mono text-sm text-[#eef2ff] shrink-0">
+									<span class="text-[10px] text-[#8e9abb] uppercase tracking-wide font-sans">Lv</span>
+									{b.level}<span class="text-[#8e9abb]">/{b.maxLevel}</span>
 								</span>
 							</div>
-							<p class="text-sm text-[#a8a083]">{b.description}</p>
+							<p class="text-sm text-[#8e9abb]">{b.description}</p>
 						</div>
 					</div>
 
@@ -103,10 +103,10 @@
 						{#each Array(b.maxLevel) as _, i}
 							<div
 								class="h-2 flex-1 rounded-full transition-colors {i < b.level
-									? 'bg-[#6fd14a]'
+									? 'bg-[#4fd88a]'
 									: i === b.level && b.underway
-										? 'bg-[#f2b01e] animate-pulse'
-										: 'bg-[#1a1f15]'}"
+										? 'bg-[#f5a524] animate-pulse'
+										: 'bg-[#131c33]'}"
 							></div>
 						{/each}
 					</div>
@@ -121,7 +121,7 @@
 						</div>
 					{/if}
 
-					<ul class="text-sm text-[#d3caa9] space-y-0.5">
+					<ul class="text-sm text-[#c2cbe3] space-y-0.5">
 						{#each b.benefits as benefit}
 							<li>• {benefit}</li>
 						{/each}
@@ -134,7 +134,7 @@
 								<span
 									class="rounded-sm border px-2 py-0.5 text-xs flex items-center gap-1 {short
 										? 'bg-red-600/10 border-red-500/30 text-red-300'
-										: 'panel-muted text-[#e6ddbf]'}"
+										: 'panel-muted text-[#dbe2f4]'}"
 									title="{c.available.toLocaleString()} available"
 								>
 									{#if c.resource === "currency"}💰{:else}<ResourceIcon name={c.resource} class="size-3.5" />{/if}
@@ -154,9 +154,9 @@
 						{#if full}
 							<Button variant="subtle" block disabled>Maximum level reached</Button>
 						{:else if b.underway}
-							<p class="text-xs text-[#a8a083]">The next level can be ordered once this one is finished.</p>
+							<p class="text-xs text-[#8e9abb]">The next level can be ordered once this one is finished.</p>
 						{:else if !b.canOrder}
-							<p class="text-xs text-[#a8a083]">{b.problems[0] ?? "Built by the state's government."}</p>
+							<p class="text-xs text-[#8e9abb]">{b.problems[0] ?? "Built by the state's government."}</p>
 						{:else if b.problems.length}
 							<p class="text-xs text-red-300">{b.problems.join(" ")}</p>
 						{:else}
@@ -199,11 +199,11 @@
 		{#if data.finished.length}
 			<SectionCard>
 				<h2 class="section-title mb-3">Recently finished</h2>
-				<ul class="divide-y divide-[#c8b47a]/10">
+				<ul class="divide-y divide-[#8ea6e0]/10">
 					{#each data.finished as f (f.id)}
 						<li class="py-2 flex items-center justify-between gap-3 text-sm">
-							<span class="text-[#e6ddbf] truncate">{f.name}</span>
-							<span class="text-xs text-[#a8a083] shrink-0">{f.at ? formatDate(f.at) : ""}</span>
+							<span class="text-[#dbe2f4] truncate">{f.name}</span>
+							<span class="text-xs text-[#8e9abb] shrink-0">{f.at ? formatDate(f.at) : ""}</span>
 						</li>
 					{/each}
 				</ul>

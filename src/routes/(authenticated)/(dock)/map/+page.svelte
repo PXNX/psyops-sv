@@ -35,9 +35,9 @@
 
 	// War-room map palette (see docs/UI_STYLE_GUIDE.md): olive land, dark
 	// borders, gold highlights; layers use the guide's signal colours.
-	const LAND = "#2b3322";
-	const BORDER = "#0f120c";
-	const HIGHLIGHT = "#ffd35c";
+	const LAND = "#212e4d";
+	const BORDER = "#0b1120";
+	const HIGHLIGHT = "#ffcb6b";
 	const ATTACKER = "#dc2626";
 	const DEFENDER = "#2f7fd6";
 
@@ -51,7 +51,7 @@
 
 	// Heatmap ramps, low → high.
 	const RAMPS = {
-		resource: ["#3a3f22", "#ffd35c"],
+		resource: ["#3a3f22", "#ffcb6b"],
 		residents: ["#24361c", "#8ae35f"],
 		powerplants: ["#3d3015", "#ffb02e"]
 	} as const;
@@ -636,7 +636,7 @@
 >
 	<form class="flex-1 relative min-w-0" onsubmit={handleSearchSubmit}>
 		<div class="flex items-center gap-2">
-			<IconSearch class="size-4 flex-shrink-0 text-[#a8a083]" />
+			<IconSearch class="size-4 flex-shrink-0 text-[#8e9abb]" />
 			<input
 				type="search"
 				bind:value={searchQuery}
@@ -644,7 +644,7 @@
 				oninput={handleSearchInput}
 				onfocus={handleSearchFocus}
 				placeholder="Search regions…"
-				class="flex-1 w-full min-w-0 bg-transparent border-none outline-none text-sm font-medium text-[#f5efd8] placeholder:text-[#ab9f7c]/55 px-0 py-1.5 tracking-tight leading-none"
+				class="flex-1 w-full min-w-0 bg-transparent border-none outline-none text-sm font-medium text-[#eef2ff] placeholder:text-[#8794b5]/55 px-0 py-1.5 tracking-tight leading-none"
 			/>
 		</div>
 
@@ -654,21 +654,21 @@
 			>
 				{#each searchResults() as result, i}
 					<button
-						class="flex items-center gap-2.5 w-full px-3.5 py-2.5 bg-transparent border-b border-[#c8b47a]/10 last:border-b-0 cursor-pointer text-left text-[#f5efd8] transition-colors hover:bg-[#2e3524] hover:text-[#ffcf47] animate-in fade-in slide-in-from-top-1"
+						class="flex items-center gap-2.5 w-full px-3.5 py-2.5 bg-transparent border-b border-[#8ea6e0]/10 last:border-b-0 cursor-pointer text-left text-[#eef2ff] transition-colors hover:bg-[#233154] hover:text-[#ffc857] animate-in fade-in slide-in-from-top-1"
 						style="animation-delay: {i * 0.03}s"
 						onclick={() => selectSearchResult(result.id)}
 					>
-						<IconMapPin class="w-4 h-4 flex-shrink-0 text-[#a8a083]" />
+						<IconMapPin class="w-4 h-4 flex-shrink-0 text-[#8e9abb]" />
 						<div class="flex flex-col gap-px min-w-0">
 							<span class="text-[13.5px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
 								>{result.name}</span
 							>
 							{#if result.stateName}
-								<span class="text-[11.5px] text-[#a8a083] whitespace-nowrap overflow-hidden text-ellipsis"
+								<span class="text-[11.5px] text-[#8e9abb] whitespace-nowrap overflow-hidden text-ellipsis"
 									>{result.stateName}</span
 								>
 							{:else}
-								<span class="text-[11.5px] text-[#a8a083] italic whitespace-nowrap overflow-hidden text-ellipsis"
+								<span class="text-[11.5px] text-[#8e9abb] italic whitespace-nowrap overflow-hidden text-ellipsis"
 									>Independent</span
 								>
 							{/if}
@@ -686,7 +686,7 @@
 			style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white' opacity='.4'/%3E%3C/svg%3E&quot;)"
 		>
 			{#each filterOptions as option}
-				<option value={option.value} class="bg-[#0f120c] text-[#f5efd8]">{option.label}</option>
+				<option value={option.value} class="bg-[#0b1120] text-[#eef2ff]">{option.label}</option>
 			{/each}
 		</select>
 	</div>
@@ -715,14 +715,14 @@
 		<IconButton icon={IconZoomIn} label="Zoom in" shape="square" size="sm" onclick={() => zoomBy(1.6)} />
 		<IconButton icon={IconZoomOut} label="Zoom out" shape="square" size="sm" onclick={() => zoomBy(1 / 1.6)} />
 		{#if data.currentUserRegionId}
-			<div class="mx-1 h-px bg-[#c8b47a]/20"></div>
+			<div class="mx-1 h-px bg-[#8ea6e0]/20"></div>
 			<IconButton icon={IconMyLocation} label="Go to my region" shape="square" size="sm" onclick={focusMyRegion} />
 		{/if}
 	</div>
 
 	<!-- Layer legend -->
 	{#if legend}
-		<div class="panel animate-pop-in absolute left-3 bottom-3 z-10 rounded-sm px-3 py-2 text-[11px] text-[#d3caa9]">
+		<div class="panel animate-pop-in absolute left-3 bottom-3 z-10 rounded-sm px-3 py-2 text-[11px] text-[#c2cbe3]">
 			{#if legend.kind === "sides"}
 				<div class="flex items-center gap-3">
 					<span class="flex items-center gap-1.5"
@@ -733,12 +733,12 @@
 					>
 				</div>
 			{:else}
-				<p class="mb-1 font-semibold uppercase tracking-wide text-[10px] text-[#a8a083]">{legend.label}</p>
+				<p class="mb-1 font-semibold uppercase tracking-wide text-[10px] text-[#8e9abb]">{legend.label}</p>
 				<div
 					class="h-1.5 w-28 rounded-full"
 					style:background="linear-gradient(90deg, {legend.ramp[0]}, {legend.ramp[1]})"
 				></div>
-				<div class="mt-0.5 flex justify-between text-[10px] text-[#a8a083]"><span>Low</span><span>High</span></div>
+				<div class="mt-0.5 flex justify-between text-[10px] text-[#8e9abb]"><span>Low</span><span>High</span></div>
 			{/if}
 		</div>
 	{/if}
@@ -749,7 +749,7 @@
 	{#if selectedRegion}
 		<a
 			href="/region/{selectedRegion.id}"
-			class="group w-full flex items-center gap-4 hover:bg-[#2e3524] transition-colors rounded-sm p-2 -mx-2"
+			class="group w-full flex items-center gap-4 hover:bg-[#233154] transition-colors rounded-sm p-2 -mx-2"
 		>
 			<Logo
 				src={regionCoatUrl(selectedRegion.id)}
@@ -758,11 +758,11 @@
 			/>
 
 			<div class="flex-1 text-left">
-				<h2 class="text-xl font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">{regionName()}</h2>
+				<h2 class="text-xl font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">{regionName()}</h2>
 				{#if selectedState}
-					<p class="text-[#d3caa9]" style="color: {stateColor}">{selectedState.name}</p>
+					<p class="text-[#c2cbe3]" style="color: {stateColor}">{selectedState.name}</p>
 				{:else}
-					<p class="text-[#ffd35c] italic">Independent</p>
+					<p class="text-[#ffcb6b] italic">Independent</p>
 				{/if}
 			</div>
 
@@ -775,61 +775,61 @@
 				{#if mapFilter === "political"}
 					<div class="grid grid-cols-2 gap-2">
 						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Rating</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.rating)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Rating</p>
+							<p class="text-lg font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.rating)}</p>
 						</div>
 						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Economy</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.economy)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Economy</p>
+							<p class="text-lg font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.economy)}</p>
 						</div>
 						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Infrastructure</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.infrastructure)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Infrastructure</p>
+							<p class="text-lg font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.infrastructure)}</p>
 						</div>
 						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Education</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.education)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Education</p>
+							<p class="text-lg font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.education)}</p>
 						</div>
 					</div>
 				{:else if mapFilter === "blocs"}
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Bloc</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Bloc</p>
 						{#if selectedBlocName()}
 							<div class="mt-1 flex items-center gap-2">
 								<span class="inline-block size-3 rounded-full" style="background-color: {stateColor || 'currentColor'}"
 								></span>
-								<p class="text-lg font-bold text-[#f5efd8]">{selectedBlocName()}</p>
+								<p class="text-lg font-bold text-[#eef2ff]">{selectedBlocName()}</p>
 							</div>
 						{:else}
-							<p class="text-lg font-bold italic text-[#a8a083]">Non-aligned</p>
+							<p class="text-lg font-bold italic text-[#8e9abb]">Non-aligned</p>
 						{/if}
 					</div>
 				{:else if mapFilter === "wars"}
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">War status</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">War status</p>
 						{#if selectedWarRole() === "attacker"}
 							<Badge tone="red" class="mt-1">Attacking in an active war</Badge>
 						{:else if selectedWarRole() === "defender"}
 							<Badge tone="blue" class="mt-1">Defending in an active war</Badge>
 						{:else}
-							<p class="text-lg font-bold text-[#a8a083]">At peace</p>
+							<p class="text-lg font-bold text-[#8e9abb]">At peace</p>
 						{/if}
 					</div>
 				{:else if mapFilter === "residents"}
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Residents</p>
-						<p class="text-2xl font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.residentCount)}</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Residents</p>
+						<p class="text-2xl font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.residentCount)}</p>
 					</div>
 				{:else if mapFilter === "powerplants"}
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Power plants (state-wide)</p>
-						<p class="text-2xl font-bold text-[#f5efd8]">{formatNumber(selectedRegionData.powerplantCount)}</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Power plants (state-wide)</p>
+						<p class="text-2xl font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.powerplantCount)}</p>
 					</div>
 				{:else if resourceLabels[mapFilter]}
 					<!-- Resource layer: highlight the active resource -->
 					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">{resourceLabels[mapFilter]}</p>
-						<p class="text-2xl font-bold text-[#f5efd8]">
+						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">{resourceLabels[mapFilter]}</p>
+						<p class="text-2xl font-bold text-[#eef2ff]">
 							{formatNumber((selectedRegionData.resources as Record<string, number>)[mapFilter] ?? 0)}
 						</p>
 					</div>
@@ -845,13 +845,13 @@
 					{#each Object.entries(selectedRegionData.resources) as [key, value]}
 						<div
 							class="rounded-sm border p-2 text-center {key === mapFilter
-								? 'bg-[#f2b01e]/12 border-[#f2b01e]/35'
-								: 'bg-[#1a1f15]/70 border-[#c8b47a]/10'}"
+								? 'bg-[#f5a524]/12 border-[#f5a524]/35'
+								: 'bg-[#131c33]/70 border-[#8ea6e0]/10'}"
 						>
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">
+							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">
 								{resourceLabels[key] ?? key}
 							</p>
-							<p class="text-sm font-bold text-[#f5efd8]">{formatNumber(value)}</p>
+							<p class="text-sm font-bold text-[#eef2ff]">{formatNumber(value)}</p>
 						</div>
 					{/each}
 				</div>
@@ -870,11 +870,11 @@
 
 	/* Sea: a deep, slightly cool green-black under the olive land. */
 	.map-viewport {
-		background: radial-gradient(ellipse at 50% 40%, rgba(70, 90, 70, 0.18), transparent 70%), #0b100d;
+		background: radial-gradient(ellipse at 50% 40%, rgba(50, 70, 120, 0.18), transparent 70%), #0b100d;
 	}
 
 	:global(#panzoom-element path) {
-		stroke: #0f120c;
+		stroke: #0b1120;
 		stroke-width: 0.3;
 		transition:
 			filter 0.15s ease,
@@ -897,7 +897,7 @@
 
 	@keyframes region-pulse {
 		50% {
-			filter: brightness(1.6) drop-shadow(0 0 2px #ffd35c);
+			filter: brightness(1.6) drop-shadow(0 0 2px #ffcb6b);
 		}
 	}
 

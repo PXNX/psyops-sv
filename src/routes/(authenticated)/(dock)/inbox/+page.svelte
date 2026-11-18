@@ -73,9 +73,9 @@
 {#if !data.canBroadcastState && !data.canBroadcastParty && !data.canBroadcastBloc}
 	<PageContainer maxWidth="3xl">
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<FluentMail20Filled class="size-10 text-[#a8a083] mx-auto mb-3 animate-idle-float" />
-			<h2 class="text-xl font-bold text-[#f5efd8] mb-1">No telegraph access</h2>
-			<p class="text-sm text-[#a8a083]">For presidents, party leaders and bloc leaders.</p>
+			<FluentMail20Filled class="size-10 text-[#8e9abb] mx-auto mb-3 animate-idle-float" />
+			<h2 class="text-xl font-bold text-[#eef2ff] mb-1">No telegraph access</h2>
+			<p class="text-sm text-[#8e9abb]">For presidents, party leaders and bloc leaders.</p>
 		</div>
 	</PageContainer>
 {:else}
@@ -119,7 +119,7 @@
 		<!-- Telegram blank -->
 		<section class="panel rounded-sm overflow-hidden">
 			<div
-				class="px-4 py-2 border-b border-[#c8b47a]/15 bg-[#0f120c]/50 font-mono text-[10px] uppercase tracking-[0.3em] text-[#a8a083]"
+				class="px-4 py-2 border-b border-[#8ea6e0]/15 bg-[#0b1120]/50 font-mono text-[10px] uppercase tracking-[0.3em] text-[#8e9abb]"
 			>
 				New telegram
 			</div>
@@ -187,7 +187,7 @@
 						</div>
 					</div>
 				{:else}
-					<p class="text-xs font-mono uppercase tracking-[0.2em] text-[#a8a083]">To: {recipients[broadcastType]}</p>
+					<p class="text-xs font-mono uppercase tracking-[0.2em] text-[#8e9abb]">To: {recipients[broadcastType]}</p>
 				{/if}
 
 				<div>

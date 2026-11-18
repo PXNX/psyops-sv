@@ -41,11 +41,11 @@
 		<div class="space-y-4">
 			<div class="flex items-center gap-3">
 				<div
-					class="size-12 bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm flex items-center justify-center shrink-0"
+					class="size-12 bg-[#f5a524]/12 border border-[#f5a524]/35 rounded-sm flex items-center justify-center shrink-0"
 				>
-					<FluentWarning20Filled class="size-6 text-[#ffd35c]" />
+					<FluentWarning20Filled class="size-6 text-[#ffcb6b]" />
 				</div>
-				<p class="text-sm text-[#d3caa9]">Help us understand what's wrong with this message.</p>
+				<p class="text-sm text-[#c2cbe3]">Help us understand what's wrong with this message.</p>
 			</div>
 
 			<form

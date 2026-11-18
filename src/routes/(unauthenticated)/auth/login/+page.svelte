@@ -30,8 +30,8 @@
 			</div>
 
 			<div class="text-center space-y-2">
-				<h1 class="text-4xl font-bold text-[#f5efd8]">Welcome</h1>
-				<p class="text-[#a8a083] text-sm">Sign in to continue your journey</p>
+				<h1 class="text-4xl font-bold text-[#eef2ff]">Welcome</h1>
+				<p class="text-[#8e9abb] text-sm">Sign in to continue your journey</p>
 			</div>
 		</div>
 
@@ -48,13 +48,13 @@
 
 			<!-- Terms & Privacy -->
 			<div>
-				<p class="text-xs text-center text-[#a8a083] leading-relaxed">
+				<p class="text-xs text-center text-[#8e9abb] leading-relaxed">
 					By signing up you agree to our
-					<a class="font-semibold text-[#ffd35c] hover:text-[#ffcf47] hover:underline" href="/about/terms">
+					<a class="font-semibold text-[#ffcb6b] hover:text-[#ffc857] hover:underline" href="/about/terms">
 						{m.termsOfService()}
 					</a>
 					and
-					<a class="font-semibold text-[#ffd35c] hover:text-[#ffcf47] hover:underline" href="/about/privacy">
+					<a class="font-semibold text-[#ffcb6b] hover:text-[#ffc857] hover:underline" href="/about/privacy">
 						{m.privacyPolicy()}
 					</a>.
 				</p>

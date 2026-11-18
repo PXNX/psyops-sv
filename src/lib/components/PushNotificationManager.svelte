@@ -188,8 +188,8 @@
 	<div class="flex items-center gap-3">
 		<span class="text-lg">📲</span>
 		<div>
-			<p class="text-sm font-medium text-[#d3caa9]">Push Notifications</p>
-			<p class="text-xs text-[#a8a083]">
+			<p class="text-sm font-medium text-[#c2cbe3]">Push Notifications</p>
+			<p class="text-xs text-[#8e9abb]">
 				{#if notificationPermission === "denied"}
 					Blocked — enable them in your browser's site settings
 				{:else if notificationPermission === "granted" && isSubscribed}
@@ -205,7 +205,7 @@
 		<span class="text-xs text-red-400 font-medium">Blocked</span>
 	{:else if notificationPermission === "granted" && isSubscribed}
 		<button
-			class="text-xs font-medium text-[#a8a083] hover:text-[#f5efd8] transition-colors disabled:opacity-50"
+			class="text-xs font-medium text-[#8e9abb] hover:text-[#eef2ff] transition-colors disabled:opacity-50"
 			onclick={unsubscribeFromPushNotifications}
 			disabled={isLoading}
 		>

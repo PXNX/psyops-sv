@@ -19,14 +19,14 @@
 	let { wars }: { wars: War[] } = $props();
 
 	const stamp = {
-		won: { label: "Won", cls: "text-[#b9f29a] border-[#6fd14a]/60" },
+		won: { label: "Won", cls: "text-[#aef3c9] border-[#4fd88a]/60" },
 		lost: { label: "Lost", cls: "text-red-300 border-red-500/60" },
-		draw: { label: "Draw", cls: "text-[#d3caa9] border-[#c8b47a]/50" }
+		draw: { label: "Draw", cls: "text-[#c2cbe3] border-[#8ea6e0]/50" }
 	} as const;
 </script>
 
 {#if wars.length === 0}
-	<p class="text-sm text-[#a8a083]">No wars fought yet.</p>
+	<p class="text-sm text-[#8e9abb]">No wars fought yet.</p>
 {:else}
 	<ul class="space-y-2">
 		{#each wars as war, i (war.id)}
@@ -39,11 +39,11 @@
 				>
 					<span class="text-xl shrink-0" aria-hidden="true">{war.side === "attacker" ? "⚔️" : "🛡️"}</span>
 					<div class="min-w-0 flex-1">
-						<p class="text-sm font-semibold text-[#f5efd8] truncate">
+						<p class="text-sm font-semibold text-[#eef2ff] truncate">
 							{war.side === "attacker" ? "Against" : "Defending against"}
 							{opponent.name}
 						</p>
-						<p class="text-xs text-[#a8a083] truncate">
+						<p class="text-xs text-[#8e9abb] truncate">
 							{formatDate(war.declaredAt)}{war.endedAt ? ` – ${formatDate(war.endedAt)}` : " – today"} ·
 							{war.battles}
 							{war.battles === 1 ? "battle" : "battles"}

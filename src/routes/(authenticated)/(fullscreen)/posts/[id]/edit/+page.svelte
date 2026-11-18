@@ -92,7 +92,7 @@
 
 <div class="min-h-dvh flex flex-col">
 	<!-- Editor Header -->
-	<header class="sticky top-0 z-10 border-b border-[#c8b47a]/15 bg-[#171b12]/95 backdrop-blur-md">
+	<header class="sticky top-0 z-10 border-b border-[#8ea6e0]/15 bg-[#111a2e]/95 backdrop-blur-md">
 		<div class="w-full px-3 sm:px-6 py-3 sm:py-4">
 			<div class="flex items-center gap-2 sm:gap-3">
 				<button
@@ -125,7 +125,7 @@
 
 				<div class="flex-1"></div>
 
-				<span class="text-xs text-[#a8a083] font-mono hidden sm:inline">
+				<span class="text-xs text-[#8e9abb] font-mono hidden sm:inline">
 					{$formData.title.length}/200
 				</span>
 
@@ -149,7 +149,7 @@
 	<main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 		<!-- Title Input -->
 		<input
-			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#f5efd8] placeholder:text-[#ab9f7c]/55 border-none outline-none mb-2"
+			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#eef2ff] placeholder:text-[#8794b5]/55 border-none outline-none mb-2"
 			class:text-red-400={$errors.title}
 			placeholder="Enter your title..."
 			type="text"
@@ -162,12 +162,12 @@
 			<div class="field-error mb-3">{$errors.title[0]}</div>
 		{/if}
 
-		<div class="text-xs text-[#a8a083] font-mono mb-6">
+		<div class="text-xs text-[#8e9abb] font-mono mb-6">
 			{$formData.title.length}/200 characters
 		</div>
 
 		<!-- Divider -->
-		<div class="border-t border-[#c8b47a]/15 mb-6"></div>
+		<div class="border-t border-[#8ea6e0]/15 mb-6"></div>
 
 		<!-- Editor -->
 		<div class="min-h-[50vh]">
@@ -191,7 +191,7 @@
 		<input type="hidden" name="content" value={editorComponent?.getContent() || ""} />
 
 		<div class="panel-muted rounded-sm p-3 mb-4">
-			<p class="text-sm font-bold text-[#f5efd8] line-clamp-2">{$formData.title}</p>
+			<p class="text-sm font-bold text-[#eef2ff] line-clamp-2">{$formData.title}</p>
 		</div>
 
 		<button
@@ -210,7 +210,7 @@
 
 <!-- Cancel Modal -->
 <Modal bind:open={isCancelModalOpen} title="Discard changes?">
-	<p class="text-sm text-[#a8a083] mb-4">Your unsaved work will be lost.</p>
+	<p class="text-sm text-[#8e9abb] mb-4">Your unsaved work will be lost.</p>
 
 	<div class="flex gap-2 justify-end">
 		<button class={buttonClass({ variant: "secondary", size: "sm" })} onclick={() => (isCancelModalOpen = false)}>

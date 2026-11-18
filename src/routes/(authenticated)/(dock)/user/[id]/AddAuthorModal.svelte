@@ -60,7 +60,7 @@
 
 			{#if newspapers.length === 0}
 				<div
-					class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3 text-sm"
+					class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm p-4 flex items-center gap-3 text-sm"
 				>
 					<span>You don't own any newspapers. Create one first to add authors.</span>
 				</div>

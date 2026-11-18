@@ -119,7 +119,7 @@
 
 	<!-- Success/Error Messages -->
 	{#if $message && !$message.includes("error") && !$message.includes("failed")}
-		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3">
+		<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">
 			<p class="text-sm font-medium">{$message}</p>
 		</div>
 	{/if}
@@ -135,7 +135,7 @@
 		<!-- Newspaper Name -->
 		<div class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentDocument20Filled class="size-5 text-[#5eaef5]" />
+				<FluentDocument20Filled class="size-5 text-[#6aa8ff]" />
 				Basic Information
 			</h2>
 
@@ -177,7 +177,7 @@
 		<!-- Logo Upload -->
 		<div class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentImage20Filled class="size-5 text-[#5eaef5]" />
+				<FluentImage20Filled class="size-5 text-[#6aa8ff]" />
 				Newspaper Logo
 			</h2>
 
@@ -198,22 +198,22 @@
 					onclick={() => fileInput?.click()}
 					disabled={$submitting}
 					class="group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 {dragActive
-						? 'border-[#f2b01e]/70 bg-[#f2b01e]/10'
+						? 'border-[#f5a524]/70 bg-[#f5a524]/10'
 						: previewUrl
-							? 'border-[#6fd14a]/40 bg-[#3f8a2a]/10'
-							: 'border-[#c8b47a]/20 bg-[#1a1f15]/70'} {!$submitting && !previewUrl
-						? 'hover:border-[#f2b01e]/55 hover:bg-[#2e3524]'
+							? 'border-[#4fd88a]/40 bg-[#1f9d62]/10'
+							: 'border-[#8ea6e0]/20 bg-[#131c33]/70'} {!$submitting && !previewUrl
+						? 'hover:border-[#f5a524]/55 hover:bg-[#233154]'
 						: ''}"
 					class:opacity-50={$submitting}
 					class:border-red-500={$errors.logo}
 				>
 					{#if !previewUrl}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#2369b5]/18 border border-[#5eaef5]/30 p-3">
-								<FluentImage20Filled class="size-8 text-[#5eaef5]" />
+							<div class="rounded-full bg-[#2f6be0]/18 border border-[#6aa8ff]/30 p-3">
+								<FluentImage20Filled class="size-8 text-[#6aa8ff]" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-[#f5efd8]">
+								<p class="text-base font-semibold text-[#eef2ff]">
 									{#if dragActive}
 										Drop logo here
 									{:else if $submitting}
@@ -223,13 +223,13 @@
 									{/if}
 								</p>
 								{#if !$submitting}
-									<p class="mt-1 text-sm text-[#a8a083]">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-[#8e9abb]">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-[#1a1f15]/70">
+							<div class="flex items-center justify-center p-6 bg-[#131c33]/70">
 								<img
 									loading="lazy"
 									decoding="async"
@@ -239,9 +239,9 @@
 								/>
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-[#12150f]/70 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-[#0c1222]/70 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-[#f5efd8]">Tap to change</p>
+								<p class="text-base font-semibold text-[#eef2ff]">Tap to change</p>
 							</div>
 							{#if $form.logo}
 								<button
@@ -263,11 +263,11 @@
 							{/if}
 						</div>
 						{#if $form.logo}
-							<div class="border-t border-[#c8b47a]/15 p-3 bg-[#1a1f15]/70">
-								<p class="truncate text-sm font-medium text-[#f5efd8]" title={$form.logo.name}>
+							<div class="border-t border-[#8ea6e0]/15 p-3 bg-[#131c33]/70">
+								<p class="truncate text-sm font-medium text-[#eef2ff]" title={$form.logo.name}>
 									{$form.logo.name}
 								</p>
-								<p class="text-xs text-[#a8a083]">
+								<p class="text-xs text-[#8e9abb]">
 									{Math.round($form.logo.size / 1024)} KB
 								</p>
 							</div>

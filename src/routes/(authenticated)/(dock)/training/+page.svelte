@@ -143,9 +143,9 @@
 	}
 
 	const bars = [
-		{ key: "organization", label: "ORG", color: "#5eaef5" },
-		{ key: "health", label: "STR", color: "#6fd14a" },
-		{ key: "supplyLevel", label: "SUP", color: "#f2b01e" }
+		{ key: "organization", label: "ORG", color: "#6aa8ff" },
+		{ key: "health", label: "STR", color: "#4fd88a" },
+		{ key: "supplyLevel", label: "SUP", color: "#f5a524" }
 	] as const;
 </script>
 
@@ -154,7 +154,7 @@
 
 	{#if trainingDisabled}
 		<p
-			class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm px-4 py-3 text-sm flex items-center gap-2"
+			class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm px-4 py-3 text-sm flex items-center gap-2"
 		>
 			<FluentWarning20Filled class="size-4 shrink-0" />
 			{trainingDisabledReason}
@@ -192,10 +192,10 @@
 								/>
 							</div>
 							<div class="flex-1 min-w-0">
-								<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083] font-mono">
+								<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb] font-mono">
 									No. {String(unit.id).padStart(4, "0")} · {unitLabel(unit.unitType)}
 								</p>
-								<h3 class="font-bold text-[#f5efd8] truncate">{unit.name}</h3>
+								<h3 class="font-bold text-[#eef2ff] truncate">{unit.name}</h3>
 								<div class="mt-1 flex flex-wrap items-center gap-1.5">
 									<Badge tone="red" size="xs">ATK {tpl.baseAttack}</Badge>
 									<Badge tone="blue" size="xs">DEF {tpl.baseDefense}</Badge>
@@ -225,7 +225,7 @@
 									variant="ghost"
 									size="sm"
 									shape="square"
-									class="text-[#a8a083] hover:text-red-400 hover:bg-red-500/10"
+									class="text-[#8e9abb] hover:text-red-400 hover:bg-red-500/10"
 								/>
 							</form>
 						</div>
@@ -233,12 +233,12 @@
 						<!-- Condition -->
 						<div class="mt-4">
 							<div class="flex items-center justify-between text-xs mb-1">
-								<span class="text-[#a8a083]">EXP</span>
-								<span class="font-mono text-[#d3caa9]">{unit.experience ?? 0}%</span>
+								<span class="text-[#8e9abb]">EXP</span>
+								<span class="font-mono text-[#c2cbe3]">{unit.experience ?? 0}%</span>
 							</div>
-							<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
+							<div class="h-1.5 bg-[#0b1120]/70 rounded-full overflow-hidden border border-[#8ea6e0]/10">
 								<div
-									class="h-full rounded-full bg-[#c08cf0] transition-all duration-500"
+									class="h-full rounded-full bg-[#b9a1ff] transition-all duration-500"
 									style="width: {unit.experience ?? 0}%"
 								></div>
 							</div>
@@ -247,10 +247,10 @@
 							{#each bars as bar}
 								<div>
 									<div class="flex items-center justify-between text-xs mb-1">
-										<span class="text-[#a8a083]">{bar.label}</span>
-										<span class="font-mono text-[#d3caa9]">{unit[bar.key]}%</span>
+										<span class="text-[#8e9abb]">{bar.label}</span>
+										<span class="font-mono text-[#c2cbe3]">{unit[bar.key]}%</span>
 									</div>
-									<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
+									<div class="h-1.5 bg-[#0b1120]/70 rounded-full overflow-hidden border border-[#8ea6e0]/10">
 										<div
 											class="h-full rounded-full transition-all duration-500"
 											style="width: {unit[bar.key]}%; background: {bar.color}"
@@ -261,16 +261,16 @@
 						</div>
 
 						<!-- Exercise -->
-						<div class="mt-4 pt-3 border-t border-dashed border-[#c8b47a]/20">
+						<div class="mt-4 pt-3 border-t border-dashed border-[#8ea6e0]/20">
 							{#if unit.isExercising}
 								{@const exComplete = unit.exerciseCompletesAt && new Date(unit.exerciseCompletesAt).getTime() <= now}
 								<div class="flex items-center justify-between text-xs mb-1">
-									<span class="text-[#e3cbfb]">On exercise</span>
-									<span class="text-[#a8a083] font-mono">{timeLeft(unit.exerciseCompletesAt)}</span>
+									<span class="text-[#e6dcff]">On exercise</span>
+									<span class="text-[#8e9abb] font-mono">{timeLeft(unit.exerciseCompletesAt)}</span>
 								</div>
-								<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10 mb-3">
+								<div class="h-1.5 bg-[#0b1120]/70 rounded-full overflow-hidden border border-[#8ea6e0]/10 mb-3">
 									<div
-										class="h-full rounded-full bg-[#c08cf0] transition-all duration-700"
+										class="h-full rounded-full bg-[#b9a1ff] transition-all duration-700"
 										style="width: {progressBetween(unit.exerciseStartedAt, unit.exerciseCompletesAt)}%"
 									></div>
 								</div>
@@ -318,7 +318,7 @@
 										Exercise ({data.exerciseConfig.DURATION_HOURS}h)
 									</Button>
 								</form>
-								<p class="mt-1.5 text-[11px] leading-snug text-[#a8a083]">
+								<p class="mt-1.5 text-[11px] leading-snug text-[#8e9abb]">
 									{#if lowOrg}
 										Needs {data.exerciseConfig.MIN_ORG_TO_START}% ORG
 									{:else}
@@ -346,8 +346,8 @@
 						<button
 							type="button"
 							class="press-spring tap-target p-3 rounded-sm border transition-colors text-center {isSelected
-								? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
-								: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/45'} disabled:opacity-50 disabled:cursor-not-allowed"
+								? 'bg-[#f5a524]/12 border-[#f5a524]/55'
+								: 'bg-[#131c33]/70 border-[#8ea6e0]/15 hover:border-[#f5a524]/45'} disabled:opacity-50 disabled:cursor-not-allowed"
 							aria-pressed={isSelected}
 							onclick={() => (selectedTemplate = template)}
 							disabled={isSubmitting || trainingDisabled}
@@ -361,10 +361,10 @@
 							/>
 							<span
 								class="mt-1.5 block text-sm font-medium leading-tight {isSelected
-									? 'text-[#ffd35c]'
-									: 'text-[#d3caa9]'}">{unitLabel(template.unitType)}</span
+									? 'text-[#ffcb6b]'
+									: 'text-[#c2cbe3]'}">{unitLabel(template.unitType)}</span
 							>
-							<span class="mt-0.5 block text-[10px] font-mono text-[#a8a083]">
+							<span class="mt-0.5 block text-[10px] font-mono text-[#8e9abb]">
 								{template.baseAttack}/{template.baseDefense} · {template.trainingDuration}h
 							</span>
 						</button>
@@ -375,7 +375,7 @@
 					{#key selectedTemplate.id}
 						<!-- Enlistment form -->
 						<div class="panel-muted rounded-sm p-4 space-y-4 animate-rise-in">
-							<div class="flex items-center gap-3 pb-3 border-b border-dashed border-[#c8b47a]/20">
+							<div class="flex items-center gap-3 pb-3 border-b border-dashed border-[#8ea6e0]/20">
 								<img
 									loading="lazy"
 									decoding="async"
@@ -384,12 +384,12 @@
 									class="size-12 object-contain shrink-0 {INK}"
 								/>
 								<div class="min-w-0 flex-1">
-									<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083]">Enlistment order</p>
-									<h3 class="font-serif text-lg font-bold text-[#f5efd8] truncate">{selectedTemplate.displayName}</h3>
+									<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]">Enlistment order</p>
+									<h3 class="font-serif text-lg font-bold text-[#eef2ff] truncate">{selectedTemplate.displayName}</h3>
 								</div>
 								<div class="text-right shrink-0">
-									<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Drill</p>
-									<p class="font-mono font-bold text-[#f5efd8]">{selectedTemplate.trainingDuration}h</p>
+									<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Drill</p>
+									<p class="font-mono font-bold text-[#eef2ff]">{selectedTemplate.trainingDuration}h</p>
 								</div>
 							</div>
 
@@ -434,7 +434,7 @@
 			{#if activeTrainingUnit}
 				{@const isComplete =
 					activeTrainingUnit.trainingCompletesAt && new Date(activeTrainingUnit.trainingCompletesAt).getTime() <= now}
-				<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3">
+				<div class="bg-[#f5a524]/12 border border-[#f5a524]/35 rounded-sm p-3">
 					<div class="flex items-center gap-2 mb-2">
 						<img
 							loading="lazy"
@@ -444,13 +444,13 @@
 							class="size-10 object-contain shrink-0 {INK}"
 						/>
 						<div class="flex-1 min-w-0">
-							<h3 class="font-semibold text-[#f5efd8] text-sm truncate">{activeTrainingUnit.name}</h3>
-							<p class="text-xs text-[#ffd35c] font-mono">{timeLeft(activeTrainingUnit.trainingCompletesAt)}</p>
+							<h3 class="font-semibold text-[#eef2ff] text-sm truncate">{activeTrainingUnit.name}</h3>
+							<p class="text-xs text-[#ffcb6b] font-mono">{timeLeft(activeTrainingUnit.trainingCompletesAt)}</p>
 						</div>
 					</div>
-					<div class="h-1.5 bg-[#0f120c]/70 rounded-full overflow-hidden border border-[#c8b47a]/10">
+					<div class="h-1.5 bg-[#0b1120]/70 rounded-full overflow-hidden border border-[#8ea6e0]/10">
 						<div
-							class="h-full rounded-full bg-[#f2b01e] transition-all duration-700"
+							class="h-full rounded-full bg-[#f5a524] transition-all duration-700"
 							style="width: {progressBetween(
 								activeTrainingUnit.trainingStartedAt,
 								activeTrainingUnit.trainingCompletesAt
@@ -472,7 +472,7 @@
 				<ol class="space-y-1.5">
 					{#each queuedUnits as unit, index (unit.id)}
 						<li out:vanish class="panel-muted rounded-sm px-2.5 py-2 flex items-center gap-2">
-							<span class="text-xs font-mono text-[#a8a083] w-5 shrink-0">{index + 2}.</span>
+							<span class="text-xs font-mono text-[#8e9abb] w-5 shrink-0">{index + 2}.</span>
 							<img
 								loading="lazy"
 								decoding="async"
@@ -480,15 +480,15 @@
 								alt=""
 								class="size-6 object-contain shrink-0 {INK}"
 							/>
-							<span class="text-sm text-[#e6ddbf] truncate flex-1">{unit.name}</span>
-							<span class="text-[10px] uppercase tracking-wide text-[#a8a083]">Waiting</span>
+							<span class="text-sm text-[#dbe2f4] truncate flex-1">{unit.name}</span>
+							<span class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Waiting</span>
 						</li>
 					{/each}
 				</ol>
 			{/if}
 
 			{#if trainingUnits.length === 0}
-				<p class="py-6 text-center text-sm text-[#a8a083]">The yard is empty.</p>
+				<p class="py-6 text-center text-sm text-[#8e9abb]">The yard is empty.</p>
 			{/if}
 		</aside>
 	</div>

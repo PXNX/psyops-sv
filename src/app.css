@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/* PsyOps style reminder: grand-strategy war room — olive field-grey metal, brass trim, saturated gold/green/blue signals, serif hierarchy. */
+/* PsyOps style reminder: night-blue glass — soft rounded surfaces on deep navy, warm amber signal, serif headlines. */
 @import "layerchart/daisyui-5.css";
 
 @plugin "@tailwindcss/typography";
@@ -11,6 +11,13 @@
 @theme {
 	--font-sans: "DM Sans", "HPSimplified", system-ui, sans-serif;
 	--font-editorial: "DM Serif Display", Georgia, serif;
+	/* Rounder everywhere: the radius scale is shifted up so `rounded-sm`
+	   (the house default) reads as a soft card corner, not a box. */
+	--radius-xs: 0.375rem;
+	--radius-sm: 0.75rem;
+	--radius-md: 1rem;
+	--radius-lg: 1.25rem;
+	--radius-xl: 1.5rem;
 }
 
 @font-face {
@@ -27,35 +34,33 @@
    <Button>/<Badge> components still lands on the same surfaces.
    -------------------------------------------------------------------------- */
 
-/* War-room surfaces: brushed field-grey metal plate with a brass frame and bevel. */
+/* Surfaces: frosted night-blue glass with a hairline edge and a soft drop shadow. */
 @utility panel {
-	@apply border border-[#c8b47a]/30;
-	background: linear-gradient(180deg, rgba(46, 53, 36, 0.96) 0%, rgba(30, 35, 24, 0.96) 100%);
+	@apply border border-white/[0.07] rounded-2xl;
+	background: linear-gradient(160deg, rgba(30, 42, 74, 0.72) 0%, rgba(17, 25, 46, 0.78) 100%);
+	backdrop-filter: blur(14px);
 	box-shadow:
-		0 10px 28px rgba(0, 0, 0, 0.45),
-		0 0 0 1px rgba(0, 0, 0, 0.55),
-		inset 0 1px 0 rgba(255, 244, 200, 0.1),
-		inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+		0 12px 32px -12px rgba(2, 6, 23, 0.7),
+		inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-/* Interactive panel (list rows, clickable cards). */
+/* Interactive panel (list rows, clickable cards): lifts and brightens on hover. */
 @utility panel-interactive {
-	@apply press-spring border border-[#c8b47a]/30 hover:border-[#f2b01e]/80;
+	@apply press-spring border border-white/[0.07] rounded-2xl;
 	--press-scale: 0.985;
-	background: linear-gradient(180deg, rgba(46, 53, 36, 0.96) 0%, rgba(30, 35, 24, 0.96) 100%);
+	background: linear-gradient(160deg, rgba(30, 42, 74, 0.72) 0%, rgba(17, 25, 46, 0.78) 100%);
+	backdrop-filter: blur(14px);
 	box-shadow:
-		0 10px 28px rgba(0, 0, 0, 0.45),
-		0 0 0 1px rgba(0, 0, 0, 0.55),
-		inset 0 1px 0 rgba(255, 244, 200, 0.1),
-		inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+		0 12px 32px -12px rgba(2, 6, 23, 0.7),
+		inset 0 1px 0 rgba(255, 255, 255, 0.05);
 	&:hover {
-		background: linear-gradient(180deg, rgba(56, 64, 42, 0.98) 0%, rgba(38, 44, 30, 0.98) 100%);
+		border-color: rgba(142, 166, 224, 0.28);
+		background: linear-gradient(160deg, rgba(38, 53, 92, 0.8) 0%, rgba(21, 31, 57, 0.85) 100%);
 		box-shadow:
-			0 10px 28px rgba(0, 0, 0, 0.45),
-			0 0 0 1px rgba(0, 0, 0, 0.55),
-			0 0 14px rgba(242, 176, 30, 0.18),
-			inset 0 1px 0 rgba(255, 244, 200, 0.14),
-			inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+			0 16px 36px -12px rgba(2, 6, 23, 0.8),
+			0 0 0 1px rgba(142, 166, 224, 0.08),
+			inset 0 1px 0 rgba(255, 255, 255, 0.08);
+		transform: translateY(-1px);
 	}
 }
 
@@ -116,8 +121,7 @@
 
 /* Muted panel for secondary/inset content. */
 @utility panel-muted {
-	@apply border border-[#c8b47a]/15 bg-[#14180f]/80;
-	box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+	@apply border border-white/[0.05] bg-white/[0.03] rounded-xl;
 }
 
 /* Under-attack alarm: a pulsing red outline, like a klaxon light sweeping the border. */
@@ -330,17 +334,17 @@
 @keyframes celebrate {
 	0% {
 		transform: none;
-		box-shadow: 0 0 0 0 rgb(242 176 30 / 0);
+		box-shadow: 0 0 0 0 rgb(245 165 36 / 0);
 	}
 	35% {
 		transform: translateY(-2px) scale(1.012);
 		box-shadow:
-			0 0 0 3px rgb(242 176 30 / 0.45),
-			0 0 22px rgb(242 176 30 / 0.35);
+			0 0 0 3px rgb(245 165 36 / 0.45),
+			0 0 22px rgb(245 165 36 / 0.35);
 	}
 	100% {
 		transform: none;
-		box-shadow: 0 0 0 0 rgb(242 176 30 / 0);
+		box-shadow: 0 0 0 0 rgb(245 165 36 / 0);
 	}
 }
 
@@ -372,8 +376,8 @@
 /* Numbers that just changed glow briefly. */
 @keyframes tick-glow {
 	from {
-		color: #ffd35c;
-		text-shadow: 0 0 10px rgb(242 176 30 / 0.6);
+		color: #ffcb6b;
+		text-shadow: 0 0 10px rgb(245 165 36 / 0.6);
 	}
 }
 
@@ -396,41 +400,34 @@
 
 /* Form controls: one consistent look for text inputs, selects and textareas. */
 @utility field-control {
-	@apply border border-[#c8b47a]/30 bg-[#0f120c] shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)] text-[#f5efd8] transition-colors duration-200 placeholder:text-[#ab9f7c]/55 focus:border-[#f2b01e]/70 focus:ring-2 focus:ring-[#f2b01e]/15 focus:outline-none;
+	@apply rounded-xl border border-white/10 bg-[#0b1120]/70 text-[#eef2ff] transition-colors duration-200 placeholder:text-[#8794b5]/60 focus:border-[#f5a524]/60 focus:ring-4 focus:ring-[#f5a524]/12 focus:outline-none;
 }
 
 @utility field-label {
-	@apply mb-1.5 block text-sm font-medium text-[#e6ddbf];
+	@apply mb-1.5 block text-sm font-medium text-[#dbe2f4];
 }
 
 @utility field-hint {
-	@apply mt-1.5 text-xs text-[#a8a083];
+	@apply mt-1.5 text-xs text-[#8e9abb];
 }
 
 @utility field-error {
 	@apply mt-1.5 text-xs text-red-400;
 }
 
-/* Section heading used above grouped content: gold stencilled small caps. */
+/* Section heading above grouped content: quiet small caps with an amber dot. */
 @utility section-title {
-	@apply flex items-center gap-2 text-sm font-bold uppercase tracking-[0.14em] text-[#ffd35c];
-	text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+	@apply flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#a9b4d0];
 }
 
 @layer base {
 	body {
-		color: #f5efd8;
-		background-color: #12150f;
+		color: #eef2ff;
+		background-color: #0a1020;
 		background-image:
-			radial-gradient(ellipse at 50% 0%, rgba(120, 140, 70, 0.16) 0%, transparent 60%),
-			radial-gradient(ellipse at 50% 120%, rgba(0, 0, 0, 0.6) 0%, transparent 60%),
-			linear-gradient(90deg, rgba(200, 180, 122, 0.05) 1px, transparent 1px),
-			linear-gradient(0deg, rgba(200, 180, 122, 0.04) 1px, transparent 1px);
-		background-size:
-			100% 100%,
-			100% 100%,
-			44px 44px,
-			44px 44px;
+			radial-gradient(60rem 40rem at 10% -10%, rgba(79, 110, 255, 0.18), transparent 60%),
+			radial-gradient(50rem 36rem at 100% 0%, rgba(168, 85, 247, 0.1), transparent 60%),
+			radial-gradient(60rem 40rem at 50% 120%, rgba(14, 165, 233, 0.08), transparent 60%);
 		background-attachment: fixed;
 	}
 
@@ -440,7 +437,6 @@
 	.editorial-title {
 		font-family: var(--font-editorial);
 		letter-spacing: -0.01em;
-		text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
 	}
 	@keyframes slide-up {
 		from {
@@ -495,11 +491,11 @@
 	/* Editorial dock navigation — shares the panel system's border/shadow recipe
 	   so it reads as the same surface language as the rest of the UI. */
 	.dock {
-		@apply fixed bottom-0 left-0 right-0 h-16 backdrop-blur-md border-t-2 border-[#c8b47a]/45 flex items-center justify-around px-2;
-		background: linear-gradient(180deg, rgba(48, 55, 38, 0.97) 0%, rgba(22, 26, 17, 0.98) 100%);
+		@apply fixed h-16 rounded-3xl backdrop-blur-xl border border-white/10 flex items-center justify-around px-2;
+		background: rgba(14, 21, 40, 0.78);
 		box-shadow:
-			0 -10px 28px rgba(0, 0, 0, 0.5),
-			inset 0 1px 0 rgba(255, 244, 200, 0.12);
+			0 18px 40px -12px rgba(2, 6, 23, 0.85),
+			inset 0 1px 0 rgba(255, 255, 255, 0.06);
 		z-index: 40;
 		/* Its own view-transition group so page navigation never fades/flashes
 		   the persistent nav bar — only the content area crossfades. */
@@ -507,17 +503,14 @@
 	}
 
 	.dock a {
-		@apply relative flex items-center justify-center w-12 h-12 rounded-sm transition-colors duration-200 text-[#d3caa9];
+		@apply relative flex items-center justify-center w-12 h-12 rounded-2xl transition-colors duration-200 text-[#a9b4d0] hover:text-[#eef2ff];
 	}
 
 	.dock a.active {
-		@apply text-[#ffd35c] bg-[#f2b01e]/20 border border-[#f2b01e]/60;
-		box-shadow:
-			0 0 12px rgba(242, 176, 30, 0.35),
-			inset 0 1px 0 rgba(255, 244, 200, 0.2);
+		@apply text-[#ffcb6b] bg-[#f5a524]/12;
 	}
 
-	/* Brass pip under the active dock target — springs in when it activates.
+	/* Amber pip under the active dock target — springs in when it activates.
 	   The dock keeps its own view-transition group, so this plays live and
 	   never gets frozen into a page-swap snapshot. */
 	.dock a.active::after {
@@ -529,8 +522,8 @@
 		width: 4px;
 		height: 4px;
 		border-radius: 9999px;
-		background: #ffd35c;
-		box-shadow: 0 0 8px rgba(242, 176, 30, 0.9);
+		background: #ffcb6b;
+		box-shadow: 0 0 8px rgba(245, 165, 36, 0.7);
 		animation: dock-dot-pop 320ms cubic-bezier(0.34, 1.8, 0.5, 1) backwards;
 	}
 
@@ -565,10 +558,10 @@
 
 	@media (max-width: 480px) {
 		.dock {
-			@apply h-12 px-0;
+			@apply h-14 bottom-2 px-1;
 		}
 		.dock a {
-			@apply w-full h-12 rounded-none;
+			@apply w-full h-12;
 		}
 	}
 
@@ -578,7 +571,7 @@
 	.wysiwyg-editor .ProseMirror p.is-editor-empty:first-child::before {
 		content: attr(data-placeholder);
 		float: left;
-		color: #a8a083;
+		color: #8e9abb;
 		pointer-events: none;
 		height: 0;
 	}
@@ -595,29 +588,29 @@
 		@apply mb-3;
 	}
 	.wysiwyg-editor blockquote {
-		@apply border-l-4 border-[#f2b01e] pl-4 italic my-4 text-[#a8a083];
+		@apply border-l-4 border-[#f5a524] pl-4 italic my-4 text-[#8e9abb];
 	}
 	.wysiwyg-editor code {
-		@apply bg-[#1a1f15] px-1 py-0.5 rounded-sm text-sm;
+		@apply bg-[#131c33] px-1 py-0.5 rounded-sm text-sm;
 	}
 	.wysiwyg-editor pre {
-		@apply bg-[#1a1f15] p-4 rounded-sm overflow-x-auto my-4;
+		@apply bg-[#131c33] p-4 rounded-sm overflow-x-auto my-4;
 	}
 	.wysiwyg-editor pre code {
 		@apply bg-transparent p-0;
 	}
 	.wysiwyg-editor hr {
-		@apply my-6 border-t-2 border-[#c8b47a]/15;
+		@apply my-6 border-t-2 border-[#8ea6e0]/15;
 	}
 	.wysiwyg-editor table {
 		@apply border-collapse w-full my-4;
 	}
 	.wysiwyg-editor th,
 	.wysiwyg-editor td {
-		@apply border border-[#c8b47a]/15 px-3 py-2;
+		@apply border border-[#8ea6e0]/15 px-3 py-2;
 	}
 	.wysiwyg-editor th {
-		@apply bg-[#1a1f15] font-semibold;
+		@apply bg-[#131c33] font-semibold;
 	}
 
 	@media (max-width: 640px) {
@@ -659,20 +652,20 @@
 		margin-bottom: 1rem;
 	}
 	.article-content blockquote {
-		border-left: 4px solid #f2b01e;
+		border-left: 4px solid #f5a524;
 		padding-left: 1rem;
 		margin: 1.5rem 0;
 		font-style: italic;
-		color: #a8a083;
+		color: #8e9abb;
 	}
 	.article-content code {
-		background: #1a1f15;
+		background: #131c33;
 		padding: 0.125rem 0.25rem;
 		border-radius: 0.25rem;
 		font-size: 0.9em;
 	}
 	.article-content pre {
-		background: #1a1f15;
+		background: #131c33;
 		padding: 1rem;
 		border-radius: 0.25rem;
 		overflow-x: auto;
@@ -695,12 +688,30 @@
 	}
 	.article-content th,
 	.article-content td {
-		border: 1px solid rgb(200 180 122 / 15%);
+		border: 1px solid rgb(142 166 224 / 15%);
 		padding: 0.5rem 1rem;
 		text-align: left;
 	}
 	.article-content th {
-		background: #1a1f15;
+		background: #131c33;
 		font-weight: 600;
+	}
+}
+
+/* Floating nav island. Unlayered and more specific than daisyUI's own
+   `.dock` component, which would otherwise pin it full-width. */
+nav.dock {
+	left: 50%;
+	right: auto;
+	bottom: 0.75rem;
+	width: min(40rem, calc(100% - 1.5rem));
+	transform: translateX(-50%);
+	color: inherit;
+}
+
+@media (max-width: 480px) {
+	nav.dock {
+		bottom: 0.5rem;
+		width: calc(100% - 1rem);
 	}
 }

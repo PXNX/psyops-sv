@@ -20,7 +20,7 @@
 	type Side = "attacker" | "defender";
 	const SIDE = {
 		attacker: { label: "Attackers", text: "text-red-300", ring: "border-red-500/50" },
-		defender: { label: "Defenders", text: "text-[#b3dcff]", ring: "border-[#5eaef5]/50" }
+		defender: { label: "Defenders", text: "text-[#c3dbff]", ring: "border-[#6aa8ff]/50" }
 	} as const;
 
 	let now = $state(Date.now());
@@ -57,15 +57,15 @@
 			alt={s?.name ?? ""}
 			class="size-16 rounded-sm border-2 sm:size-20 transition-transform group-hover:-translate-y-0.5 {SIDE[side].ring}"
 			placeholderIcon={FluentBuildingGovernment20Filled}
-			placeholderGradient={side === "attacker" ? "from-red-700 to-red-900" : "from-[#2369b5] to-[#1d4f88]"}
+			placeholderGradient={side === "attacker" ? "from-red-700 to-red-900" : "from-[#2f6be0] to-[#2148a8]"}
 		/>
 		<div class="min-w-0">
 			<p class="text-[10px] font-semibold uppercase tracking-[0.2em] {SIDE[side].text}">{SIDE[side].label}</p>
-			<p class="line-clamp-2 font-serif text-lg font-bold leading-tight text-[#f5efd8] group-hover:text-[#ffcf47]">
+			<p class="line-clamp-2 font-serif text-lg font-bold leading-tight text-[#eef2ff] group-hover:text-[#ffc857]">
 				{s?.name}
 			</p>
 			{#if data[side].bloc}
-				<p class="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#a8a083]">
+				<p class="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#8e9abb]">
 					<span class="size-2 rounded-full" style:background={data[side].bloc!.color}></span>
 					{data[side].bloc!.name}
 				</p>
@@ -80,9 +80,9 @@
 		<a href="/battle/{b.id}" class="panel-interactive flex items-center gap-3 rounded-sm p-3">
 			<img src={regionCoatUrl(b.regionId)} alt="" class="size-10 shrink-0 object-contain" />
 			<div class="min-w-0 flex-1">
-				<p class="truncate font-semibold text-[#f5efd8]">Battle of {getRegionName(b.regionId)}</p>
-				<p class="truncate text-xs text-[#a8a083]">
-					<span class="text-red-300">{b.attackerName}</span> → <span class="text-[#b3dcff]">{b.defenderName}</span>
+				<p class="truncate font-semibold text-[#eef2ff]">Battle of {getRegionName(b.regionId)}</p>
+				<p class="truncate text-xs text-[#8e9abb]">
+					<span class="text-red-300">{b.attackerName}</span> → <span class="text-[#c3dbff]">{b.defenderName}</span>
 					· <span class="font-mono">{formatDateTime(b.startedAt)}</span>
 				</p>
 			</div>
@@ -91,7 +91,7 @@
 					class="shrink-0 animate-stamp rounded-sm border-2 px-2 py-0.5 font-serif text-[11px] font-black uppercase tracking-widest {won ===
 					'attacker'
 						? 'border-red-500/60 text-red-300'
-						: 'border-[#5eaef5]/60 text-[#b3dcff]'}"
+						: 'border-[#6aa8ff]/60 text-[#c3dbff]'}"
 					style="--stamp-tilt: -5deg"
 				>
 					{won === "attacker" ? "Taken" : "Held"}
@@ -111,7 +111,7 @@
 	<!-- Dispatch header -->
 	<article class="panel relative overflow-hidden rounded-sm">
 		<div
-			class="flex items-center justify-between gap-3 border-b border-[#c8b47a]/15 bg-[#1a1f15]/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#a8a083]"
+			class="flex items-center justify-between gap-3 border-b border-[#8ea6e0]/15 bg-[#131c33]/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]"
 		>
 			<span>Situation report</span>
 			<span class="font-mono">War No. {data.war.id}</span>
@@ -121,7 +121,7 @@
 			<div class="relative flex items-start gap-3">
 				{@render belligerent("attacker")}
 				<div class="flex shrink-0 flex-col items-center gap-2 pt-6">
-					<span class="font-serif text-xl font-black italic text-[#a8a083]">vs</span>
+					<span class="font-serif text-xl font-black italic text-[#8e9abb]">vs</span>
 				</div>
 				{@render belligerent("defender")}
 			</div>
@@ -130,7 +130,7 @@
 				<span
 					class="animate-stamp rounded-sm border-2 border-double px-3 py-1 font-serif text-sm font-black uppercase tracking-[0.25em] {active
 						? 'border-red-500/70 text-red-300'
-						: 'border-[#c8b47a]/60 text-[#e6ddbf]'}"
+						: 'border-[#8ea6e0]/60 text-[#dbe2f4]'}"
 					style="--stamp-tilt: -4deg"
 				>
 					{active ? "At war" : (data.war.endedReason ?? "Ended")}
@@ -138,9 +138,9 @@
 			</div>
 
 			<p
-				class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-y border-[#c8b47a]/15 py-2 text-xs text-[#a8a083]"
+				class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 border-y border-[#8ea6e0]/15 py-2 text-xs text-[#8e9abb]"
 			>
-				<span>Declared <span class="font-mono text-[#d3caa9]">{formatDateTime(data.war.declaredAt)}</span></span>
+				<span>Declared <span class="font-mono text-[#c2cbe3]">{formatDateTime(data.war.declaredAt)}</span></span>
 				{#if data.war.declaredBy}
 					<span class="inline-flex items-center gap-1"
 						>by <UserLink
@@ -152,32 +152,32 @@
 					>
 				{/if}
 				<span aria-hidden="true">·</span>
-				<span>{active ? "Day" : "Lasted"} <span class="font-mono text-[#d3caa9]">{duration}</span></span>
+				<span>{active ? "Day" : "Lasted"} <span class="font-mono text-[#c2cbe3]">{duration}</span></span>
 				{#if !active && data.war.endedAt}
 					<span aria-hidden="true">·</span>
-					<span>Ended <span class="font-mono text-[#d3caa9]">{formatDateTime(data.war.endedAt)}</span></span>
+					<span>Ended <span class="font-mono text-[#c2cbe3]">{formatDateTime(data.war.endedAt)}</span></span>
 					{#if data.war.surrenderedByName}<span>· {data.war.surrenderedByName} gave up</span>{/if}
 				{/if}
 			</p>
 
 			{#if active}
 				<div>
-					<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-[#a8a083]">
+					<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-[#8e9abb]">
 						<span>War exhaustion</span>
-						<span class="font-mono text-[#e6ddbf]">{data.war.exhaustion} / {data.war.exhaustionLimit}</span>
+						<span class="font-mono text-[#dbe2f4]">{data.war.exhaustion} / {data.war.exhaustionLimit}</span>
 					</div>
-					<div class="relative h-2.5 overflow-hidden rounded-full bg-[#0f120c]">
+					<div class="relative h-2.5 overflow-hidden rounded-full bg-[#0b1120]">
 						<div
 							class="h-full rounded-full transition-[width] duration-700 {exhaustionPct > 80
 								? 'bg-red-500'
-								: 'bg-[#f2b01e]'}"
+								: 'bg-[#f5a524]'}"
 							style:width="{exhaustionPct}%"
 						></div>
 						{#each [25, 50, 75] as tick (tick)}
-							<span class="absolute inset-y-0 w-px bg-[#12150f]/80" style:left="{tick}%"></span>
+							<span class="absolute inset-y-0 w-px bg-[#0c1222]/80" style:left="{tick}%"></span>
 						{/each}
 					</div>
-					<p class="mt-1 text-right text-[10px] text-[#a8a083]">
+					<p class="mt-1 text-right text-[10px] text-[#8e9abb]">
 						White peace at {data.war.exhaustionLimit} or after {data.war.stalemateDays} quiet days
 					</p>
 				</div>
@@ -187,17 +187,17 @@
 			<div class="grid grid-cols-3 gap-2 text-center">
 				{#each [["Battles won", data.attacker.battlesWon, data.defender.battlesWon], ["Regions held", data.attacker.regionsHeld, data.defender.regionsHeld]] as [label, a, d] (label)}
 					<div class="panel-muted rounded-sm p-2.5">
-						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">{label}</p>
+						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">{label}</p>
 						<p class="font-mono text-lg font-bold">
-							<span class="text-red-300">{a}</span><span class="text-[#a8a083]"> : </span><span class="text-[#b3dcff]"
+							<span class="text-red-300">{a}</span><span class="text-[#8e9abb]"> : </span><span class="text-[#c3dbff]"
 								>{d}</span
 							>
 						</p>
 					</div>
 				{/each}
 				<div class="panel-muted rounded-sm p-2.5">
-					<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Battles on</p>
-					<p class="font-mono text-lg font-bold {ongoing.length ? 'text-[#ffd35c]' : 'text-[#f5efd8]'}">
+					<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Battles on</p>
+					<p class="font-mono text-lg font-bold {ongoing.length ? 'text-[#ffcb6b]' : 'text-[#eef2ff]'}">
 						{ongoing.length}
 					</p>
 				</div>
@@ -211,13 +211,13 @@
 			<h2 class="section-title">
 				Front line
 				{#if data.frontLine.length}
-					<span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#a8a083]"
+					<span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#8e9abb]"
 						>{data.frontLine.length} sectors</span
 					>
 				{/if}
 			</h2>
 			{#if data.frontLine.length === 0}
-				<p class="text-sm text-[#a8a083]">No shared border. Nothing to attack yet.</p>
+				<p class="text-sm text-[#8e9abb]">No shared border. Nothing to attack yet.</p>
 			{:else}
 				<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 					{#each data.frontLine as r (r.regionId)}
@@ -229,20 +229,20 @@
 						>
 							<img src={regionCoatUrl(r.regionId)} alt="" class="size-9 shrink-0 object-contain" />
 							<div class="min-w-0">
-								<p class="truncate text-sm font-semibold text-[#f5efd8]">{getRegionName(r.regionId)}</p>
+								<p class="truncate text-sm font-semibold text-[#eef2ff]">{getRegionName(r.regionId)}</p>
 								{#if r.battleId}
 									<p class="flex items-center gap-1 text-[11px] text-red-300">
 										<span class="size-1.5 rounded-full bg-red-500 animate-pulse"></span>Under fire
 									</p>
 								{:else}
-									<p class="truncate text-[11px] text-[#a8a083]">{r.stateName}</p>
+									<p class="truncate text-[11px] text-[#8e9abb]">{r.stateName}</p>
 								{/if}
 							</div>
 						</a>
 					{/each}
 				</div>
 				{#if data.me.canAttack}
-					<p class="text-[11px] text-[#a8a083]">Attack from a bordering region of yours.</p>
+					<p class="text-[11px] text-[#8e9abb]">Attack from a bordering region of yours.</p>
 				{/if}
 			{/if}
 		</section>
@@ -251,16 +251,16 @@
 	<!-- Engagements -->
 	<section class="panel rounded-sm p-5 space-y-3">
 		<h2 class="section-title">
-			Engagements <span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#a8a083]"
+			Engagements <span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#8e9abb]"
 				>{data.battles.length}</span
 			>
 		</h2>
 		{#if data.battles.length === 0}
-			<p class="py-4 text-center text-sm text-[#a8a083]">No shots fired yet.</p>
+			<p class="py-4 text-center text-sm text-[#8e9abb]">No shots fired yet.</p>
 		{:else}
 			<ul class="space-y-2">
 				{#each ongoing as b (b.id)}{@render battleRow(b)}{/each}
-				{#if ongoing.length && finished.length}<li class="h-px bg-[#c8b47a]/10" aria-hidden="true"></li>{/if}
+				{#if ongoing.length && finished.length}<li class="h-px bg-[#8ea6e0]/10" aria-hidden="true"></li>{/if}
 				{#each finished as b (b.id)}{@render battleRow(b)}{/each}
 			</ul>
 		{/if}
@@ -272,11 +272,11 @@
 			<section class="panel rounded-sm p-4 space-y-2">
 				<h2 class="section-title {SIDE[side].text}">
 					{SIDE[side].label}
-					<span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#a8a083]"
+					<span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#8e9abb]"
 						>{data[side].states.length}</span
 					>
 				</h2>
-				<ul class="divide-y divide-[#c8b47a]/10">
+				<ul class="divide-y divide-[#8ea6e0]/10">
 					{#each data[side].states as s (s.id)}
 						<li>
 							<a href="/state/{s.id}" class="group flex items-center gap-2.5 py-2 {s.capitulated ? 'opacity-60' : ''}">
@@ -287,7 +287,7 @@
 									placeholderIcon={FluentBuildingGovernment20Filled}
 								/>
 								<span
-									class="min-w-0 flex-1 truncate text-sm text-[#f5efd8] group-hover:text-[#ffcf47] {s.capitulated
+									class="min-w-0 flex-1 truncate text-sm text-[#eef2ff] group-hover:text-[#ffc857] {s.capitulated
 										? 'line-through'
 										: ''}">{s.name}</span
 								>
@@ -305,12 +305,12 @@
 		<section class="panel rounded-sm p-5 space-y-2">
 			<h2 class="section-title">Communiqués</h2>
 			{#each data.surrenders as s, i (i)}
-				<blockquote class="border-l-2 border-[#c8b47a]/40 pl-3">
-					<p class="text-sm text-[#f5efd8]">
-						<FluentFlag20Filled class="mr-1 inline size-4 text-[#e6ddbf]" />{s.stateName} surrendered
-						<span class="font-mono text-xs text-[#a8a083]">· {formatDateTime(s.at)}</span>
+				<blockquote class="border-l-2 border-[#8ea6e0]/40 pl-3">
+					<p class="text-sm text-[#eef2ff]">
+						<FluentFlag20Filled class="mr-1 inline size-4 text-[#dbe2f4]" />{s.stateName} surrendered
+						<span class="font-mono text-xs text-[#8e9abb]">· {formatDateTime(s.at)}</span>
 					</p>
-					{#if s.reason}<p class="mt-1 font-serif text-sm italic text-[#d3caa9]">“{s.reason}”</p>{/if}
+					{#if s.reason}<p class="mt-1 font-serif text-sm italic text-[#c2cbe3]">“{s.reason}”</p>{/if}
 				</blockquote>
 			{/each}
 		</section>
@@ -347,13 +347,13 @@
 				/>
 				<div class="flex flex-wrap items-center gap-3">
 					<Button type="submit" variant="danger" icon={FluentFlag20Filled} loading={surrendering}>Surrender</Button>
-					<span class="text-xs text-[#a8a083]">Lost regions stay lost.</span>
+					<span class="text-xs text-[#8e9abb]">Lost regions stay lost.</span>
 				</div>
 			</form>
 		</section>
 	{/if}
 
-	<a href="/map" class="flex items-center justify-center gap-1 text-xs text-[#a8a083] hover:text-[#ffcf47]">
+	<a href="/map" class="flex items-center justify-center gap-1 text-xs text-[#8e9abb] hover:text-[#ffc857]">
 		See the front on the map <FluentArrowRight20Filled class="size-3" />
 	</a>
 </PageContainer>

@@ -39,7 +39,7 @@
 {#if borderingRegions && borderingRegions.length > 0}
 	<section class="space-y-3">
 		<h2 class="section-title">
-			Neighbours <span class="text-[#a8a083] font-normal">· {borderingRegions.length}</span>
+			Neighbours <span class="text-[#8e9abb] font-normal">· {borderingRegions.length}</span>
 		</h2>
 		<div class="grid gap-2 sm:grid-cols-2">
 			{#each [...borderingRegions].sort((a, b) => a.distanceKm - b.distanceKm) as borderRegion (borderRegion.id)}
@@ -55,19 +55,19 @@
 						alt=""
 						class="size-11 rounded-sm shrink-0"
 						placeholderIcon={FluentShield20Filled}
-						placeholderGradient="from-[#2369b5]/40 to-[#2369b5]/40"
+						placeholderGradient="from-[#2f6be0]/40 to-[#2f6be0]/40"
 					/>
 					<div class="flex-1 min-w-0">
 						<div class="flex items-center gap-2">
-							<h3 class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
+							<h3 class="font-semibold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate">
 								{borderRegion.name}
 							</h3>
 							{#if borderRegion.underAttackByUs}
 								<FluentFire20Filled class="size-4 text-red-400 shrink-0" aria-label="Attack underway" />
 							{/if}
 						</div>
-						<p class="text-xs text-[#a8a083] flex items-center gap-2 min-w-0">
-							<span class="truncate {borderRegion.stateName ? '' : 'text-[#ffd35c]'}"
+						<p class="text-xs text-[#8e9abb] flex items-center gap-2 min-w-0">
+							<span class="truncate {borderRegion.stateName ? '' : 'text-[#ffcb6b]'}"
 								>{borderRegion.stateName ?? "Unclaimed"}</span
 							>
 							<span class="flex items-center gap-1 shrink-0">
@@ -78,15 +78,15 @@
 						{#if resources.length}
 							<div class="flex flex-wrap gap-2 mt-1">
 								{#each resources as [name, value] (name)}
-									<span class="flex items-center gap-1 text-[11px] font-mono text-[#d3caa9]" title={name}>
+									<span class="flex items-center gap-1 text-[11px] font-mono text-[#c2cbe3]" title={name}>
 										<ResourceIcon {name} class="size-3.5" />{value}
 									</span>
 								{/each}
 							</div>
 						{/if}
 					</div>
-					<span class="shrink-0 text-right font-mono text-xs text-[#b3dcff]">
-						{Math.round(borderRegion.distanceKm)}<span class="text-[#a8a083]"> km</span>
+					<span class="shrink-0 text-right font-mono text-xs text-[#c3dbff]">
+						{Math.round(borderRegion.distanceKm)}<span class="text-[#8e9abb]"> km</span>
 					</span>
 				</a>
 			{/each}

@@ -48,7 +48,7 @@
 </script>
 
 <div class="space-y-2 md:space-y-3">
-	<h4 class="text-xs font-medium text-[#a8a083] uppercase tracking-wide">
+	<h4 class="text-xs font-medium text-[#8e9abb] uppercase tracking-wide">
 		{costs.currency ? "Cost" : "Resources Required"}
 	</h4>
 
@@ -57,16 +57,16 @@
 			<div class="flex justify-between text-xs items-center">
 				<a
 					href="/market/{req.resource}"
-					class="text-[#a8a083] hover:text-[#f5efd8] flex items-center gap-1.5 transition-colors"
+					class="text-[#8e9abb] hover:text-[#eef2ff] flex items-center gap-1.5 transition-colors"
 				>
-					<req.IconComponent class="size-3.5 {req.isCurrency ? 'text-[#6fd14a]' : req.iconColor}" />
+					<req.IconComponent class="size-3.5 {req.isCurrency ? 'text-[#4fd88a]' : req.iconColor}" />
 					<span class="capitalize">{req.resource}</span>
 				</a>
-				<span class="font-mono text-xs" class:text-[#f5efd8]={req.hasEnough} class:text-red-400={!req.hasEnough}>
+				<span class="font-mono text-xs" class:text-[#eef2ff]={req.hasEnough} class:text-red-400={!req.hasEnough}>
 					{req.needed.toLocaleString()}
-					<span class="text-[#a8a083]/70">/ {req.available.toLocaleString()}</span>
+					<span class="text-[#8e9abb]/70">/ {req.available.toLocaleString()}</span>
 					{#if req.hasEnough}
-						<span class="text-[#6fd14a] ml-1">✓</span>
+						<span class="text-[#4fd88a] ml-1">✓</span>
 					{:else}
 						<span class="text-red-400 ml-1">✗</span>
 					{/if}

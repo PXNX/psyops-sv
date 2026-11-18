@@ -151,13 +151,13 @@
 {#if data.userNotFound}
 	<PageContainer maxWidth="5xl">
 		<div class="panel-muted rounded-sm p-12 flex flex-col items-center justify-center gap-4">
-			<div class="size-16 bg-[#1a1f15] rounded-full flex items-center justify-center">
-				<FluentImageOff20Filled class="size-8 text-[#a8a083]" />
+			<div class="size-16 bg-[#131c33] rounded-full flex items-center justify-center">
+				<FluentImageOff20Filled class="size-8 text-[#8e9abb]" />
 			</div>
 			<div class="text-center space-y-2">
-				<h1 class="text-xl font-bold text-[#f5efd8]">User Not Found</h1>
-				<p class="text-sm text-[#a8a083]">
-					No citizen <code class="px-1.5 py-0.5 rounded-sm bg-[#0f120c] text-[#d3caa9] font-mono text-xs"
+				<h1 class="text-xl font-bold text-[#eef2ff]">User Not Found</h1>
+				<p class="text-sm text-[#8e9abb]">
+					No citizen <code class="px-1.5 py-0.5 rounded-sm bg-[#0b1120] text-[#c2cbe3] font-mono text-xs"
 						>#{data.userId}</code
 					> on record.
 				</p>
@@ -169,34 +169,34 @@
 	<PageContainer maxWidth="5xl">
 		<!-- Identity card -->
 		<article
-			class="panel rounded-sm overflow-hidden relative {data.user.isPremium ? 'border-[#f2b01e]/55' : ''}"
+			class="panel rounded-sm overflow-hidden relative {data.user.isPremium ? 'border-[#f5a524]/55' : ''}"
 			style={data.party?.color
-				? `background-image: linear-gradient(90deg, ${data.party.color}26 0, transparent 45%), linear-gradient(180deg, rgba(46, 53, 36, 0.96) 0%, rgba(30, 35, 24, 0.96) 100%);`
+				? `background-image: linear-gradient(90deg, ${data.party.color}26 0, transparent 45%), linear-gradient(180deg, rgba(28, 38, 66, 0.96) 0%, rgba(19, 27, 49, 0.96) 100%);`
 				: undefined}
 		>
 			<!-- Issuing authority strip -->
 			<header
-				class="flex items-center gap-2 px-4 py-2 border-b border-[#c8b47a]/15 bg-[#0f120c]/50 text-[10px] uppercase tracking-[0.25em] text-[#a8a083]"
+				class="flex items-center gap-2 px-4 py-2 border-b border-[#8ea6e0]/15 bg-[#0b1120]/50 text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]"
 			>
 				{#if data.citizenship}
 					<a
 						href="/state/{data.citizenship.id}"
-						class="flex items-center gap-2 min-w-0 hover:text-[#ffcf47] transition-colors"
+						class="flex items-center gap-2 min-w-0 hover:text-[#ffc857] transition-colors"
 					>
 						<Logo
 							src={data.citizenship.logo}
 							alt=""
 							class="size-4 shrink-0"
 							placeholderIcon={FluentFlag20Filled}
-							placeholderGradient="from-[#4a5238] to-[#252b1e]"
+							placeholderGradient="from-[#33456f] to-[#1b2641]"
 						/>
 						<span class="truncate">{data.citizenship.name}</span>
 					</a>
 				{:else}
 					<span>Stateless</span>
 				{/if}
-				<span class="hidden sm:inline text-[#a8a083]/60">· Identity Card</span>
-				<span class="ml-auto font-mono tracking-wider normal-case text-[#a8a083]/80 truncate max-w-[40%]"
+				<span class="hidden sm:inline text-[#8e9abb]/60">· Identity Card</span>
+				<span class="ml-auto font-mono tracking-wider normal-case text-[#8e9abb]/80 truncate max-w-[40%]"
 					>No. {data.user.id}</span
 				>
 			</header>
@@ -205,18 +205,18 @@
 				<!-- Photo -->
 				<div class="shrink-0 flex flex-col items-center gap-2">
 					<div
-						class="relative w-24 h-32 sm:w-32 sm:h-40 p-1 bg-[#0f120c] border border-[#c8b47a]/30 shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)]"
+						class="relative w-24 h-32 sm:w-32 sm:h-40 p-1 bg-[#0b1120] border border-[#8ea6e0]/30 shadow-[inset_0_1px_3px_rgba(0,0,0,0.6)]"
 					>
 						<Logo
 							src={data.user.logo}
 							alt={data.user.name || "Portrait"}
 							placeholderIcon={FluentPerson20Filled}
-							placeholderGradient="from-[#4a5238] to-[#252b1e]"
+							placeholderGradient="from-[#33456f] to-[#1b2641]"
 							class="size-full"
 						/>
 						{#if data.user.isPremium}
 							<div
-								class="animate-stamp absolute -bottom-3 -right-3 size-14 rounded-full border-2 border-[#f2b01e]/80 bg-[#1b1708]/80 flex flex-col items-center justify-center text-[#ffd35c] shadow-[0_0_12px_rgba(242,176,30,0.3)]"
+								class="animate-stamp absolute -bottom-3 -right-3 size-14 rounded-full border-2 border-[#f5a524]/80 bg-[#1a1305]/80 flex flex-col items-center justify-center text-[#ffcb6b] shadow-[0_0_12px_rgba(245,165,36,0.3)]"
 								style="--stamp-tilt: -14deg"
 								title="Premium citizen"
 							>
@@ -231,8 +231,8 @@
 				<div class="flex-1 min-w-0">
 					<div class="flex items-start gap-2">
 						<div class="min-w-0 flex-1">
-							<p class="text-[9px] uppercase tracking-[0.2em] text-[#a8a083]">Name</p>
-							<h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#f5efd8] break-words leading-tight">
+							<p class="text-[9px] uppercase tracking-[0.2em] text-[#8e9abb]">Name</p>
+							<h1 class="font-serif text-2xl sm:text-3xl font-bold text-[#eef2ff] break-words leading-tight">
 								{data.user.name || "Anonymous"}
 							</h1>
 						</div>
@@ -250,56 +250,56 @@
 
 					<dl class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-2.5 text-sm">
 						<div class="min-w-0">
-							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#a8a083]">Residence</dt>
+							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#8e9abb]">Residence</dt>
 							<dd class="truncate">
 								{#if data.homeRegion}
 									<a
 										href="/region/{data.homeRegion.id}"
-										class="font-semibold text-[#e6ddbf] hover:text-[#ffcf47] transition-colors"
+										class="font-semibold text-[#dbe2f4] hover:text-[#ffc857] transition-colors"
 										>{data.homeRegion.name}</a
 									>
-									<span class="text-xs text-[#a8a083]">since {formatDate(data.homeRegion.changedAt)}</span>
+									<span class="text-xs text-[#8e9abb]">since {formatDate(data.homeRegion.changedAt)}</span>
 								{:else}
-									<span class="text-[#a8a083]">None</span>
+									<span class="text-[#8e9abb]">None</span>
 								{/if}
 							</dd>
 						</div>
 						<div class="min-w-0">
-							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#a8a083]">Present in</dt>
+							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#8e9abb]">Present in</dt>
 							<dd class="truncate">
 								{#if data.residence}
 									<a
 										href="/region/{data.residence.region.id}"
-										class="font-semibold text-[#e6ddbf] hover:text-[#ffcf47] transition-colors"
+										class="font-semibold text-[#dbe2f4] hover:text-[#ffc857] transition-colors"
 										>{data.residence.region.name}</a
 									>
-									<span class="text-xs text-[#a8a083]">
+									<span class="text-xs text-[#8e9abb]">
 										{data.residence.region.state?.name ?? "Independent"}
 									</span>
 								{:else}
-									<span class="text-[#a8a083]">Unknown</span>
+									<span class="text-[#8e9abb]">Unknown</span>
 								{/if}
 							</dd>
 						</div>
 						<div class="min-w-0">
-							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#a8a083]">Party</dt>
+							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#8e9abb]">Party</dt>
 							<dd class="truncate">
 								{#if data.party}
 									<a href="/party/{data.party.id}" class="inline-flex items-center gap-1.5 min-w-0 group">
 										<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
-										<span class="font-semibold text-[#e6ddbf] group-hover:text-[#ffcf47] transition-colors truncate"
+										<span class="font-semibold text-[#dbe2f4] group-hover:text-[#ffc857] transition-colors truncate"
 											>{data.party.name}</span
 										>
 									</a>
-									<span class="text-xs text-[#a8a083]">{partyRole(data.party.role)}</span>
+									<span class="text-xs text-[#8e9abb]">{partyRole(data.party.role)}</span>
 								{:else}
-									<span class="text-[#a8a083]">Independent</span>
+									<span class="text-[#8e9abb]">Independent</span>
 								{/if}
 							</dd>
 						</div>
 						<div class="min-w-0">
-							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#a8a083]">Date of issue</dt>
-							<dd class="font-mono text-[#e6ddbf]">{formatDate(data.user.createdAt)}</dd>
+							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#8e9abb]">Date of issue</dt>
+							<dd class="font-mono text-[#dbe2f4]">{formatDate(data.user.createdAt)}</dd>
 						</div>
 					</dl>
 				</div>
@@ -307,7 +307,7 @@
 
 			{#if data.user.bio}
 				<p
-					class="mx-4 sm:mx-5 mb-4 pt-3 border-t border-dashed border-[#c8b47a]/20 font-serif italic text-sm text-[#d3caa9] break-words"
+					class="mx-4 sm:mx-5 mb-4 pt-3 border-t border-dashed border-[#8ea6e0]/20 font-serif italic text-sm text-[#c2cbe3] break-words"
 				>
 					“{data.user.bio}”
 				</p>
@@ -320,7 +320,7 @@
 					class="group mx-4 sm:mx-5 mb-4 flex items-center gap-3"
 					aria-label="{data.medals.length} decorations"
 				>
-					<FluentRibbon20Filled class="size-4 text-[#ffd35c] shrink-0" />
+					<FluentRibbon20Filled class="size-4 text-[#ffcb6b] shrink-0" />
 					<span class="flex flex-wrap gap-1">
 						{#each data.medals as medal, i (medal.id)}
 							{@const info = medalInfo(medal.medalType)}
@@ -337,10 +337,10 @@
 			<!-- Machine-readable zone -->
 			<pre
 				aria-hidden="true"
-				class="px-4 sm:px-5 py-2 bg-[#0f120c]/60 border-t border-[#c8b47a]/10 font-mono text-[10px] sm:text-[11px] leading-snug tracking-[0.18em] text-[#a8a083]/55 overflow-hidden whitespace-pre">{mrz}</pre>
+				class="px-4 sm:px-5 py-2 bg-[#0b1120]/60 border-t border-[#8ea6e0]/10 font-mono text-[10px] sm:text-[11px] leading-snug tracking-[0.18em] text-[#8e9abb]/55 overflow-hidden whitespace-pre">{mrz}</pre>
 
 			<!-- Actions -->
-			<div class="flex flex-wrap gap-2 px-4 sm:px-5 py-3 border-t border-[#c8b47a]/10">
+			<div class="flex flex-wrap gap-2 px-4 sm:px-5 py-3 border-t border-[#8ea6e0]/10">
 				{#if data.user.id !== data.account?.id}
 					<Button variant="soft-purple" size="sm" href="/chat/user/{data.user.id}" icon={FluentChat20Filled}>
 						Message
@@ -449,7 +449,7 @@
 				{/if}
 
 				{#if data.user.id !== data.account?.id}
-					<div class="my-2 border-t border-[#c8b47a]/10"></div>
+					<div class="my-2 border-t border-[#8ea6e0]/10"></div>
 					<ActionListItem
 						icon={FluentAccessibilityError20Filled}
 						tone="red"
@@ -469,15 +469,15 @@
 		{#if data.isOwnProfile && data.birthdayInfo.totalYears >= 1 && (data.birthdayInfo.isBirthday || data.birthdayInfo.uncollectedYears.length > 0)}
 			<section
 				id="birthday-card"
-				class="animate-rise-in rounded-sm border border-[#f2b01e]/35 bg-[#f2b01e]/12 p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+				class="animate-rise-in rounded-sm border border-[#f5a524]/35 bg-[#f5a524]/12 p-4 flex flex-col sm:flex-row sm:items-center gap-3"
 			>
 				<div class="flex items-center gap-3 flex-1 min-w-0">
 					<span class="text-3xl animate-pop-in" aria-hidden="true">🎂</span>
 					<div class="min-w-0">
-						<p class="font-serif text-lg font-bold text-[#ffd35c] leading-tight">
+						<p class="font-serif text-lg font-bold text-[#ffcb6b] leading-tight">
 							{data.birthdayInfo.isBirthday ? "Happy Birthday!" : "Belated birthday wishes"}
 						</p>
-						<p class="text-xs text-[#d3caa9]">
+						<p class="text-xs text-[#c2cbe3]">
 							{data.birthdayInfo.totalYears} year{data.birthdayInfo.totalYears !== 1 ? "s" : ""} of service
 							{#if data.birthdayInfo.uncollectedYears.length > 1}
 								· {data.birthdayInfo.uncollectedYears.length} gifts waiting
@@ -516,13 +516,13 @@
 						{#if data.blocLeadership}
 							<div class="flex items-center gap-3">
 								<div
-									class="size-12 bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm flex items-center justify-center shrink-0"
+									class="size-12 bg-[#f5a524]/12 border border-[#f5a524]/35 rounded-sm flex items-center justify-center shrink-0"
 								>
-									<FluentCrown20Filled class="size-6 text-[#ffd35c]" />
+									<FluentCrown20Filled class="size-6 text-[#ffcb6b]" />
 								</div>
 								<div class="flex-1 min-w-0">
-									<p class="font-semibold text-[#f5efd8] truncate">Leader of {data.blocLeadership.blocName}</p>
-									<p class="text-xs text-[#a8a083] truncate">
+									<p class="font-semibold text-[#eef2ff] truncate">Leader of {data.blocLeadership.blocName}</p>
+									<p class="text-xs text-[#8e9abb] truncate">
 										Elected {formatDate(data.blocLeadership.appointedAt)}
 									</p>
 								</div>
@@ -532,13 +532,13 @@
 						{#each data.blocDiplomacies as diplomacy (diplomacy.id)}
 							<div class="flex items-center gap-3" out:vanish>
 								<div
-									class="size-12 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex items-center justify-center shrink-0"
+									class="size-12 bg-[#2f6be0]/18 border border-[#6aa8ff]/30 rounded-sm flex items-center justify-center shrink-0"
 								>
-									<FluentGlobeShield20Filled class="size-6 text-[#b3dcff]" />
+									<FluentGlobeShield20Filled class="size-6 text-[#c3dbff]" />
 								</div>
 								<div class="flex-1 min-w-0">
-									<p class="font-semibold text-[#f5efd8] truncate">Diplomat of {diplomacy.blocName}</p>
-									<p class="text-xs text-[#a8a083] truncate">Since {formatDate(diplomacy.appointedAt)}</p>
+									<p class="font-semibold text-[#eef2ff] truncate">Diplomat of {diplomacy.blocName}</p>
+									<p class="text-xs text-[#8e9abb] truncate">Since {formatDate(diplomacy.appointedAt)}</p>
 								</div>
 								{#if data.viewerBlocId === diplomacy.blocId}
 									<form
@@ -563,7 +563,7 @@
 								logo={data.presidency.stateLogo}
 								logoAlt={data.presidency.stateName}
 								placeholderIcon={FluentFlag20Filled}
-								placeholderGradient="from-[#f2b01e]/40 to-[#f2b01e]/25"
+								placeholderGradient="from-[#f5a524]/40 to-[#f5a524]/25"
 								title="President of {data.presidency.stateName}"
 								subtitle="Term {data.presidency.term} • Since {formatDate(data.presidency.electedAt)}"
 								hoverColor="yellow"
@@ -583,13 +583,13 @@
 						{#each data.ministries as ministry (ministry.id)}
 							<div class="flex items-center gap-3" out:vanish>
 								<div
-									class="size-12 bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm flex items-center justify-center shrink-0"
+									class="size-12 bg-[#7451e6]/15 border border-[#b9a1ff]/30 rounded-sm flex items-center justify-center shrink-0"
 								>
 									<span class="text-2xl">{ministryIcons[ministry.ministry]}</span>
 								</div>
 								<div class="flex-1 min-w-0">
-									<p class="font-semibold text-[#f5efd8] truncate">{ministryNames[ministry.ministry]} Minister</p>
-									<p class="text-xs text-[#a8a083] truncate">
+									<p class="font-semibold text-[#eef2ff] truncate">{ministryNames[ministry.ministry]} Minister</p>
+									<p class="text-xs text-[#8e9abb] truncate">
 										{ministry.stateName} • Since {formatDate(ministry.appointedAt)}
 									</p>
 								</div>
@@ -626,7 +626,7 @@
 							logo={company.logo}
 							logoAlt={company.name}
 							placeholderIcon={FluentBuilding20Filled}
-							placeholderGradient="from-[#3f8a2a] to-[#1f4a14]"
+							placeholderGradient="from-[#1f9d62] to-[#1f4a14]"
 							title={company.name}
 							subtitle="Company • Owner since {formatDate(company.foundedAt)}"
 							hoverColor="emerald"
@@ -639,7 +639,7 @@
 							logo={newspaper.logo}
 							logoAlt={newspaper.name}
 							placeholderIcon={FluentBriefcase20Filled}
-							placeholderGradient="from-[#2369b5] to-[#123a6b]"
+							placeholderGradient="from-[#2f6be0] to-[#123a6b]"
 							title={newspaper.name}
 							subtitle="Newspaper • {newspaper.rank.charAt(0).toUpperCase() +
 								newspaper.rank.slice(1)} since {formatDate(newspaper.joinedAt)}"
@@ -653,7 +653,7 @@
 							logo={data.party.logo}
 							logoAlt={data.party.name}
 							placeholderIcon={FluentPeople20Filled}
-							placeholderGradient="from-[#8a4fc0] to-[#2369b5]"
+							placeholderGradient="from-[#7451e6] to-[#2f6be0]"
 							title={data.party.name}
 							subtitle="Party • {partyRole(data.party.role)} since {formatDate(data.party.joinedAt)}"
 							hoverColor={data.party.color}
@@ -671,7 +671,7 @@
 					{/if}
 
 					{#if data.organizations.companies.length === 0 && data.organizations.newspapers.length === 0 && !data.party && !data.isOwnProfile}
-						<p class="text-sm text-[#a8a083] text-center py-2">No affiliations</p>
+						<p class="text-sm text-[#8e9abb] text-center py-2">No affiliations</p>
 					{/if}
 				</div>
 			</section>
@@ -679,21 +679,21 @@
 			<!-- Records -->
 			<section class="grid grid-cols-2 gap-3 {hasOffices ? 'lg:col-span-2' : ''}">
 				<a href="/user/{data.user.id}/articles" class="panel-interactive rounded-sm p-4 flex items-center gap-3 group">
-					<FluentDocument20Filled class="size-5 text-[#c08cf0] shrink-0" />
+					<FluentDocument20Filled class="size-5 text-[#b9a1ff] shrink-0" />
 					<div class="min-w-0">
-						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Bylines</p>
-						<p class="text-lg font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
+						<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Bylines</p>
+						<p class="text-lg font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">
 							{data.articleCount}
 						</p>
 					</div>
 				</a>
 				<a href="/user/{data.user.id}/career" class="panel-interactive rounded-sm p-4 flex items-center gap-3 group">
-					<FluentRibbon20Filled class="size-5 text-[#ffd35c] shrink-0" />
+					<FluentRibbon20Filled class="size-5 text-[#ffcb6b] shrink-0" />
 					<div class="min-w-0">
-						<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Service record</p>
-						<p class="text-lg font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
+						<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Service record</p>
+						<p class="text-lg font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">
 							{data.medals.length}
-							<span class="text-xs font-normal text-[#a8a083]">medal{data.medals.length === 1 ? "" : "s"}</span>
+							<span class="text-xs font-normal text-[#8e9abb]">medal{data.medals.length === 1 ? "" : "s"}</span>
 						</p>
 					</div>
 				</a>
@@ -755,7 +755,7 @@
 
 				{#if data.availableMinistries.length === 0}
 					<div
-						class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3 text-sm"
+						class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm p-4 flex items-center gap-3 text-sm"
 					>
 						<span>All ministries are currently occupied.</span>
 					</div>
@@ -843,7 +843,7 @@
 
 				{#if data.availableBlocRoles.length === 0}
 					<div
-						class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3 text-sm"
+						class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm p-4 flex items-center gap-3 text-sm"
 					>
 						<span> Nothing open: nominations run 2 days before an election, both diplomat seats are filled. </span>
 					</div>

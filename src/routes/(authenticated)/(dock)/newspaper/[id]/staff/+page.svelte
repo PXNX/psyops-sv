@@ -51,7 +51,7 @@
 		<BackLink href="/newspaper/{data.newspaper.id}" />
 
 		{#if data.newspaper.logoUrl}
-			<div class="size-10 rounded-sm overflow-hidden bg-[#1a1f15] flex-shrink-0">
+			<div class="size-10 rounded-sm overflow-hidden bg-[#131c33] flex-shrink-0">
 				<img
 					loading="lazy"
 					decoding="async"
@@ -62,15 +62,15 @@
 			</div>
 		{:else}
 			<div
-				class="size-10 rounded-sm bg-[#2369b5]/18 border border-[#5eaef5]/30 flex items-center justify-center flex-shrink-0"
+				class="size-10 rounded-sm bg-[#2f6be0]/18 border border-[#6aa8ff]/30 flex items-center justify-center flex-shrink-0"
 			>
-				<MdiNewspaper class="size-5 text-[#b3dcff]" />
+				<MdiNewspaper class="size-5 text-[#c3dbff]" />
 			</div>
 		{/if}
 
 		<div class="min-w-0">
-			<h1 class="text-xl font-bold text-[#f5efd8] truncate">Staff Members</h1>
-			<p class="text-sm text-[#a8a083] truncate">
+			<h1 class="text-xl font-bold text-[#eef2ff] truncate">Staff Members</h1>
+			<p class="text-sm text-[#8e9abb] truncate">
 				{data.newspaper.name} · {data.staff.length}
 				{data.staff.length === 1 ? "member" : "members"}
 			</p>
@@ -79,11 +79,11 @@
 
 	{#if data.staff.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
-				<FluentPerson20Filled class="size-8 text-[#a8a083]" />
+			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#131c33] mb-4">
+				<FluentPerson20Filled class="size-8 text-[#8e9abb]" />
 			</div>
-			<h4 class="text-xl font-bold text-[#f5efd8] mb-2">No staff members</h4>
-			<p class="text-[#a8a083] text-sm">This newspaper doesn't have any staff members yet</p>
+			<h4 class="text-xl font-bold text-[#eef2ff] mb-2">No staff members</h4>
+			<p class="text-[#8e9abb] text-sm">This newspaper doesn't have any staff members yet</p>
 		</div>
 	{:else}
 		<div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -96,12 +96,12 @@
 							alt={member.name}
 							class="size-14"
 							placeholderIcon={FluentPerson20Filled}
-							placeholderGradient="from-[#2369b5]/40 to-[#2369b5]/40"
+							placeholderGradient="from-[#2f6be0]/40 to-[#2f6be0]/40"
 						/>
 
 						<!-- Info -->
 						<div class="flex-1 min-w-0">
-							<h3 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate mb-2">
+							<h3 class="font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate mb-2">
 								{member.name}
 							</h3>
 

@@ -66,12 +66,12 @@
 	<!-- Header -->
 	<header class="space-y-3">
 		<BackLink href="/user/{data.user.id}" label={data.user.name || "Anonymous"} class="-ml-3" />
-		<div class="flex flex-wrap items-end justify-between gap-3 border-b-2 border-double border-[#c8b47a]/35 pb-3">
+		<div class="flex flex-wrap items-end justify-between gap-3 border-b-2 border-double border-[#8ea6e0]/35 pb-3">
 			<div class="min-w-0">
-				<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083]">Bylines</p>
+				<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">Bylines</p>
 				<UserLink id={data.user.id} name={data.user.name || "Anonymous"} avatar={data.user.logo} size="md" />
 			</div>
-			<p class="font-serif text-sm text-[#a8a083]">
+			<p class="font-serif text-sm text-[#8e9abb]">
 				{data.totalArticles}
 				{data.totalArticles === 1 ? "article" : "articles"}
 			</p>
@@ -81,7 +81,7 @@
 		{#if data.totalArticles > 1}
 			<div class="flex flex-col sm:flex-row gap-3">
 				<div class="relative flex-1">
-					<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a8a083]" />
+					<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#8e9abb]" />
 					<input
 						class="field-control w-full rounded-sm pl-11 pr-4 py-2.5"
 						placeholder="Search headlines…"
@@ -123,8 +123,8 @@
 	<!-- Clippings -->
 	{#if data.articles.length === 0}
 		<div class="panel-muted rounded-sm p-12 text-center">
-			<FluentDocument20Filled class="size-10 text-[#a8a083] mx-auto mb-3 animate-idle-float" />
-			<p class="text-[#a8a083]">
+			<FluentDocument20Filled class="size-10 text-[#8e9abb] mx-auto mb-3 animate-idle-float" />
+			<p class="text-[#8e9abb]">
 				{#if data.searchQuery}
 					No headline matches “{data.searchQuery}”
 				{:else}
@@ -146,18 +146,18 @@
 						? 'sm:col-span-2'
 						: ''}"
 				>
-					<p class="text-[10px] uppercase tracking-[0.2em] text-[#ffd35c]/80 truncate">
+					<p class="text-[10px] uppercase tracking-[0.2em] text-[#ffcb6b]/80 truncate">
 						{article.newspaperName ?? "Independent"}
 					</p>
 					<h3
-						class="mt-1 font-serif font-bold leading-snug text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors break-words {i ===
+						class="mt-1 font-serif font-bold leading-snug text-[#eef2ff] group-hover:text-[#ffc857] transition-colors break-words {i ===
 							0 && data.currentPage === 1
 							? 'text-2xl'
 							: 'text-lg'}"
 					>
 						{article.title}
 					</h3>
-					<div class="mt-auto pt-3 flex items-center gap-3 text-xs text-[#a8a083]">
+					<div class="mt-auto pt-3 flex items-center gap-3 text-xs text-[#8e9abb]">
 						<span class="font-mono">{formatDateTime(article.createdAt)}</span>
 						<span class="ml-auto flex items-center gap-1">
 							<FluentHeart20Filled class="size-3.5 text-red-400" />
@@ -180,7 +180,7 @@
 					onclick={() => goToPage(data.currentPage - 1)}
 				/>
 
-				<span class="text-sm font-mono text-[#a8a083]">{data.currentPage} / {totalPages}</span>
+				<span class="text-sm font-mono text-[#8e9abb]">{data.currentPage} / {totalPages}</span>
 
 				<IconButton
 					icon={FluentChevronRight20Filled}

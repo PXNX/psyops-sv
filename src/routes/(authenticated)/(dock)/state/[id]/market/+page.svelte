@@ -69,26 +69,26 @@
 	<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] items-start">
 		<!-- Stockpile ledger -->
 		<section class="panel rounded-sm overflow-hidden">
-			<div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#c8b47a]/15">
+			<div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#8ea6e0]/15">
 				<h2 class="section-title">State stockpile</h2>
 				<div class="text-right">
-					<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Treasury</p>
+					<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Treasury</p>
 					{#key data.treasury.balance}
-						<p class="animate-tick font-mono text-sm font-bold text-[#b9f29a] tabular-nums">
+						<p class="animate-tick font-mono text-sm font-bold text-[#aef3c9] tabular-nums">
 							{formatCurrency(data.treasury.balance)}
 						</p>
 					{/key}
 				</div>
 			</div>
 			<div
-				class="grid grid-cols-[minmax(0,1fr)_3.5rem_4.5rem_4.5rem] gap-2 px-4 py-1.5 text-[10px] uppercase tracking-wide text-[#a8a083] bg-[#1a1f15]/70"
+				class="grid grid-cols-[minmax(0,1fr)_3.5rem_4.5rem_4.5rem] gap-2 px-4 py-1.5 text-[10px] uppercase tracking-wide text-[#8e9abb] bg-[#131c33]/70"
 			>
 				<span>Item</span>
 				<span class="text-right">Held</span>
 				<span class="text-right">Buy</span>
 				<span class="text-right">Sell</span>
 			</div>
-			<ul class="divide-y divide-[#c8b47a]/10">
+			<ul class="divide-y divide-[#8ea6e0]/10">
 				{#each allResources as resource}
 					{@const quantity = resourceMap.get(resource) || 0}
 					{@const isSelected = selectedResource === resource}
@@ -98,25 +98,25 @@
 							onclick={() => (selectedResource = resource)}
 							aria-pressed={isSelected}
 							class="tap-target w-full grid grid-cols-[minmax(0,1fr)_3.5rem_4.5rem_4.5rem] items-center gap-2 px-4 py-2.5 text-left transition-colors border-l-2 {isSelected
-								? 'bg-[#f2b01e]/12 border-[#f2b01e]'
-								: 'border-transparent hover:bg-[#2e3524]'}"
+								? 'bg-[#f5a524]/12 border-[#f5a524]'
+								: 'border-transparent hover:bg-[#233154]'}"
 						>
 							<span class="flex items-center gap-2 min-w-0">
 								<ResourceIcon name={resource} class="size-5 shrink-0" />
 								<span
-									class="capitalize truncate text-sm {isSelected ? 'text-[#ffd35c] font-semibold' : 'text-[#d3caa9]'}"
+									class="capitalize truncate text-sm {isSelected ? 'text-[#ffcb6b] font-semibold' : 'text-[#c2cbe3]'}"
 									>{resource}</span
 								>
 							</span>
 							<span
 								class="text-right font-mono text-sm tabular-nums {quantity > 0
-									? 'text-[#f5efd8]'
-									: 'text-[#a8a083]/60'}">{quantity.toLocaleString()}</span
+									? 'text-[#eef2ff]'
+									: 'text-[#8e9abb]/60'}">{quantity.toLocaleString()}</span
 							>
-							<span class="text-right font-mono text-xs tabular-nums text-[#d3caa9]"
+							<span class="text-right font-mono text-xs tabular-nums text-[#c2cbe3]"
 								>{formatCurrency(data.marketPrices[resource] || 0)}</span
 							>
-							<span class="text-right font-mono text-xs tabular-nums text-[#a8a083]"
+							<span class="text-right font-mono text-xs tabular-nums text-[#8e9abb]"
 								>{formatCurrency(data.sellPrices[resource] ?? 0)}</span
 							>
 						</button>
@@ -140,7 +140,7 @@
 		>
 			<input type="hidden" name="resourceName" value={selectedResource} />
 
-			<div class="grid grid-cols-2 border-b border-[#c8b47a]/15" role="tablist">
+			<div class="grid grid-cols-2 border-b border-[#8ea6e0]/15" role="tablist">
 				{#each [{ mode: "buy", label: "Purchase order" }, { mode: "sell", label: "Disposal order" }] as tab}
 					{@const active = tradeMode === tab.mode}
 					<button
@@ -151,9 +151,9 @@
 						onclick={() => (tradeMode = tab.mode as "buy" | "sell")}
 						class="tap-target py-3 text-xs font-semibold uppercase tracking-wide border-b-2 transition-colors disabled:opacity-50 {active
 							? tab.mode === 'buy'
-								? 'text-[#b9f29a] border-[#6fd14a]'
-								: 'text-[#b3dcff] border-[#5eaef5]'
-							: 'text-[#a8a083] border-transparent hover:text-[#d3caa9]'}"
+								? 'text-[#aef3c9] border-[#4fd88a]'
+								: 'text-[#c3dbff] border-[#6aa8ff]'
+							: 'text-[#8e9abb] border-transparent hover:text-[#c2cbe3]'}"
 					>
 						{tab.label}
 					</button>
@@ -168,10 +168,10 @@
 						</div>
 					{/key}
 					<div class="min-w-0">
-						<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">
+						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">
 							{tradeMode === "buy" ? "Requisition of" : "Release of"}
 						</p>
-						<p class="font-serif text-xl font-bold capitalize text-[#f5efd8]">{selectedResource}</p>
+						<p class="font-serif text-xl font-bold capitalize text-[#eef2ff]">{selectedResource}</p>
 					</div>
 				</div>
 
@@ -179,7 +179,7 @@
 					<div class="min-w-0">
 						<label for="quantity" class="field-label">
 							Units
-							{#if tradeMode === "sell"}<span class="font-normal text-[#a8a083]">max {availableQuantity}</span>{/if}
+							{#if tradeMode === "sell"}<span class="font-normal text-[#8e9abb]">max {availableQuantity}</span>{/if}
 						</label>
 						<div class="join w-full">
 							<input
@@ -207,7 +207,7 @@
 					</div>
 					<div class="min-w-0">
 						<p class="field-label">Unit price</p>
-						<p class="field-control rounded-sm px-3 py-2.5 font-mono text-[#f5efd8] truncate">
+						<p class="field-control rounded-sm px-3 py-2.5 font-mono text-[#eef2ff] truncate">
 							{formatCurrency(tradePrice)}
 						</p>
 						{#if tradeMode === "sell"}<p class="field-hint">70% of market</p>{/if}
@@ -216,14 +216,14 @@
 
 				<dl class="panel-muted rounded-sm p-3 text-sm space-y-1.5">
 					<div class="flex justify-between gap-3">
-						<dt class="text-[#a8a083]">{tradeQuantity || 0} × {formatCurrency(tradePrice)}</dt>
-						<dd class="font-mono text-[#d3caa9]">{formatCurrency(totalCost)}</dd>
+						<dt class="text-[#8e9abb]">{tradeQuantity || 0} × {formatCurrency(tradePrice)}</dt>
+						<dd class="font-mono text-[#c2cbe3]">{formatCurrency(totalCost)}</dd>
 					</div>
-					<div class="flex justify-between items-baseline gap-3 pt-1.5 border-t border-[#c8b47a]/15">
-						<dt class="font-semibold text-[#d3caa9]">
+					<div class="flex justify-between items-baseline gap-3 pt-1.5 border-t border-[#8ea6e0]/15">
+						<dt class="font-semibold text-[#c2cbe3]">
 							{tradeMode === "buy" ? "Charged to treasury" : "Paid to treasury"}
 						</dt>
-						<dd class="font-mono text-xl font-bold {tradeMode === 'buy' ? 'text-red-300' : 'text-[#b9f29a]'}">
+						<dd class="font-mono text-xl font-bold {tradeMode === 'buy' ? 'text-red-300' : 'text-[#aef3c9]'}">
 							{tradeMode === "buy" ? "−" : "+"}{formatCurrency(totalCost)}
 						</dd>
 					</div>

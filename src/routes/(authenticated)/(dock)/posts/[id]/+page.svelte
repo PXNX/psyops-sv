@@ -102,13 +102,13 @@
 					{#if data.article.newspaperName}
 						<a
 							href="/newspaper/{data.article.newspaperId}"
-							class="flex items-center gap-1 text-xs text-[#a8a083] hover:text-[#ffcf47] transition-colors"
+							class="flex items-center gap-1 text-xs text-[#8e9abb] hover:text-[#ffc857] transition-colors"
 						>
 							<FluentEmojiRolledUpNewspaper class="size-3" />
 							{data.article.newspaperName}
 						</a>
 					{/if}
-					<span class="flex items-center gap-1 text-xs text-[#a8a083]">
+					<span class="flex items-center gap-1 text-xs text-[#8e9abb]">
 						<FluentClock20Regular class="size-3" />
 						{formatDateTime(data.article.createdAt)}
 					</span>
@@ -129,20 +129,20 @@
 	<!-- Article Content -->
 	<article class="space-y-8 px-1 sm:px-2 py-2">
 		<!-- Headline -->
-		<h1 class="text-3xl lg:text-4xl font-bold text-[#f5efd8] leading-tight">
+		<h1 class="text-3xl lg:text-4xl font-bold text-[#eef2ff] leading-tight">
 			{data.article.title}
 		</h1>
 
 		<!-- Divider -->
-		<div class="border-t border-[#c8b47a]/15"></div>
+		<div class="border-t border-[#8ea6e0]/15"></div>
 
 		<!-- Article Body -->
-		<div class="article-content text-[#d3caa9]">
+		<div class="article-content text-[#c2cbe3]">
 			{@html data.article.content}
 		</div>
 
 		<!-- Bottom Divider -->
-		<div class="border-t border-[#c8b47a]/15"></div>
+		<div class="border-t border-[#8ea6e0]/15"></div>
 
 		<!-- Bottom Actions -->
 		<div class="flex items-center justify-between">

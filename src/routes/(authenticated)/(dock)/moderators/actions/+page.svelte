@@ -41,15 +41,15 @@
 			case "message_delete":
 				return "text-red-400";
 			case "warning":
-				return "text-[#ffd35c]";
+				return "text-[#ffcb6b]";
 			case "restriction":
 				return "text-red-400";
 			case "report_action":
-				return "text-[#5eaef5]";
+				return "text-[#6aa8ff]";
 			case "content_flag":
-				return "text-[#ffd35c]";
+				return "text-[#ffcb6b]";
 			default:
-				return "text-[#a8a083]";
+				return "text-[#8e9abb]";
 		}
 	}
 
@@ -105,9 +105,9 @@
 	<!-- Filter Info -->
 	{#if data.filterUserId}
 		<div
-			class="bg-[#2369b5]/18 border border-[#5eaef5]/30 text-[#b3dcff] rounded-sm p-4 flex flex-wrap items-center gap-3"
+			class="bg-[#2f6be0]/18 border border-[#6aa8ff]/30 text-[#c3dbff] rounded-sm p-4 flex flex-wrap items-center gap-3"
 		>
-			<FluentFilter20Filled class="size-5 text-[#5eaef5] shrink-0" />
+			<FluentFilter20Filled class="size-5 text-[#6aa8ff] shrink-0" />
 			<div class="flex-1 min-w-0">
 				<p class="font-semibold">Filtered View</p>
 				<p class="text-sm">
@@ -126,12 +126,12 @@
 
 	<!-- Stats -->
 	<div class="flex items-center gap-4 rounded-sm panel p-5 w-full sm:w-auto sm:inline-flex">
-		<div class="size-12 rounded-sm flex items-center justify-center bg-[#8a4fc0]/15 border border-[#c08cf0]/30">
-			<FluentShield20Filled class="size-6 text-[#c08cf0]" />
+		<div class="size-12 rounded-sm flex items-center justify-center bg-[#7451e6]/15 border border-[#b9a1ff]/30">
+			<FluentShield20Filled class="size-6 text-[#b9a1ff]" />
 		</div>
 		<div>
-			<div class="text-3xl font-bold text-[#e3cbfb] leading-none">{data.actions.length}</div>
-			<div class="text-sm text-[#a8a083] mt-1">Total Actions</div>
+			<div class="text-3xl font-bold text-[#e6dcff] leading-none">{data.actions.length}</div>
+			<div class="text-sm text-[#8e9abb] mt-1">Total Actions</div>
 		</div>
 	</div>
 
@@ -139,7 +139,7 @@
 	<div class="space-y-3">
 		{#each data.actions as action}
 			{@const ActionIcon = getActionIcon(action.type)}
-			<div class="panel rounded-sm p-5 hover:border-[#c8b47a]/25 transition-all">
+			<div class="panel rounded-sm p-5 hover:border-[#8ea6e0]/25 transition-all">
 				<div class="flex items-start gap-4">
 					<!-- Action Icon -->
 					<div class="shrink-0">
@@ -153,13 +153,13 @@
 						<!-- Header -->
 						<div class="flex items-center gap-3 mb-3 flex-wrap">
 							<span
-								class="badge badge-sm rounded-sm border border-[#c8b47a]/15 {getActionColor(
+								class="badge badge-sm rounded-sm border border-[#8ea6e0]/15 {getActionColor(
 									action.type
-								)} bg-[#1a1f15]/70"
+								)} bg-[#131c33]/70"
 							>
 								{getActionLabel(action.type)}
 							</span>
-							<div class="flex items-center gap-1 text-xs text-[#a8a083]">
+							<div class="flex items-center gap-1 text-xs text-[#8e9abb]">
 								<FluentCalendar20Filled class="size-3" />
 								<span>{formatDate(action.timestamp)}</span>
 							</div>
@@ -169,7 +169,7 @@
 						<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
 							<!-- Target User -->
 							<div class="flex items-center gap-3">
-								<div class="text-xs text-[#a8a083] font-medium min-w-[60px]">Target:</div>
+								<div class="text-xs text-[#8e9abb] font-medium min-w-[60px]">Target:</div>
 								<UserLink
 									id={action.target.id}
 									name={action.target.name}
@@ -180,7 +180,7 @@
 
 							<!-- Moderator -->
 							<div class="flex items-center gap-3">
-								<div class="text-xs text-[#a8a083] font-medium min-w-[60px]">Moderator:</div>
+								<div class="text-xs text-[#8e9abb] font-medium min-w-[60px]">Moderator:</div>
 								<UserLink id={action.moderator.id} name={action.moderator.name} avatar={action.moderator.logoUrl} />
 								{#if action.moderator.role === "admin"}
 									<Badge tone="red" size="xs">Admin</Badge>
@@ -195,14 +195,14 @@
 							<div class="panel-muted rounded-sm p-3 space-y-2">
 								{#if action.reason}
 									<div>
-										<span class="text-xs text-[#a8a083] font-medium">Reason:</span>
-										<span class="text-sm text-[#d3caa9] ml-2">{action.reason}</span>
+										<span class="text-xs text-[#8e9abb] font-medium">Reason:</span>
+										<span class="text-sm text-[#c2cbe3] ml-2">{action.reason}</span>
 									</div>
 								{/if}
 								{#if action.note}
 									<div>
-										<span class="text-xs text-[#a8a083] font-medium">Note:</span>
-										<p class="text-sm text-[#d3caa9] mt-1">{action.note}</p>
+										<span class="text-xs text-[#8e9abb] font-medium">Note:</span>
+										<p class="text-sm text-[#c2cbe3] mt-1">{action.note}</p>
 									</div>
 								{/if}
 							</div>

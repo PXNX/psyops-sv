@@ -147,16 +147,16 @@
 								placeholderIcon={FluentImageOff20Filled}
 							/>
 							<div class="min-w-0">
-								<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083]">Time card</p>
-								<h2 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
+								<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]">Time card</p>
+								<h2 class="font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate">
 									{data.currentJob.factoryName}
 								</h2>
-								<p class="text-xs text-[#a8a083] truncate">{data.currentJob.companyName}</p>
+								<p class="text-xs text-[#8e9abb] truncate">{data.currentJob.companyName}</p>
 							</div>
 						</a>
 						{#if jobStatus.status === "working"}
 							<Badge tone="amber">
-								<span class="size-1.5 rounded-full bg-[#f2b01e] animate-pulse"></span>
+								<span class="size-1.5 rounded-full bg-[#f5a524] animate-pulse"></span>
 								On shift
 							</Badge>
 						{:else if jobStatus.status === "complete"}
@@ -167,31 +167,31 @@
 					</div>
 
 					<div
-						class="mt-4 grid grid-cols-3 panel-muted rounded-sm font-mono text-center divide-x divide-dashed divide-[#c8b47a]/20"
+						class="mt-4 grid grid-cols-3 panel-muted rounded-sm font-mono text-center divide-x divide-dashed divide-[#8ea6e0]/20"
 					>
 						<div class="py-2.5">
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">In</p>
-							<p class="text-sm sm:text-base text-[#f5efd8]">{hhmm(clockIn)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-sans">In</p>
+							<p class="text-sm sm:text-base text-[#eef2ff]">{hhmm(clockIn)}</p>
 						</div>
 						<div class="py-2.5">
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">Out</p>
-							<p class="text-sm sm:text-base text-[#f5efd8]">{hhmm(clockOut)}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-sans">Out</p>
+							<p class="text-sm sm:text-base text-[#eef2ff]">{hhmm(clockOut)}</p>
 						</div>
 						<div class="py-2.5">
-							<p class="text-[10px] uppercase tracking-wide text-[#a8a083] font-sans">Rate</p>
-							<p class="text-sm sm:text-base text-[#b9f29a]">{data.currentJob.wage.toLocaleString()}</p>
+							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-sans">Rate</p>
+							<p class="text-sm sm:text-base text-[#aef3c9]">{data.currentJob.wage.toLocaleString()}</p>
 						</div>
 					</div>
 
 					{#if jobStatus.status === "working"}
 						<div class="mt-4">
 							<div class="flex justify-between items-center text-xs mb-1.5">
-								<span class="text-[#a8a083]">8h shift</span>
-								<span class="font-bold text-[#ffd35c] font-mono">{jobStatus.left} left</span>
+								<span class="text-[#8e9abb]">8h shift</span>
+								<span class="font-bold text-[#ffcb6b] font-mono">{jobStatus.left} left</span>
 							</div>
-							<div class="h-2.5 bg-[#1a1f15] rounded-full overflow-hidden border border-[#c8b47a]/10">
+							<div class="h-2.5 bg-[#131c33] rounded-full overflow-hidden border border-[#8ea6e0]/10">
 								<div
-									class="h-full bg-[#f2b01e] rounded-full transition-all duration-500"
+									class="h-full bg-[#f5a524] rounded-full transition-all duration-500"
 									style="width: {jobStatus.progress}%"
 								></div>
 							</div>
@@ -244,7 +244,7 @@
 
 					{#if justPaid && jobStatus.status === "ready"}
 						<span
-							class="animate-stamp pointer-events-none absolute top-4 right-24 border-2 border-[#6fd14a]/70 text-[#b9f29a] rounded-sm px-2 py-0.5 font-serif text-sm font-black uppercase tracking-widest"
+							class="animate-stamp pointer-events-none absolute top-4 right-24 border-2 border-[#4fd88a]/70 text-[#aef3c9] rounded-sm px-2 py-0.5 font-serif text-sm font-black uppercase tracking-widest"
 							style="--stamp-tilt: -12deg; transform: rotate(-12deg)"
 						>
 							Paid
@@ -257,13 +257,13 @@
 						href="/region/{data.currentJob.regionId}"
 						class="panel-interactive rounded-sm px-4 py-3 flex items-center gap-3 group"
 					>
-						<FluentFactory20Filled class="size-5 text-[#6fd14a] shrink-0" />
-						<p class="flex-1 text-sm text-[#d3caa9]">
+						<FluentFactory20Filled class="size-5 text-[#4fd88a] shrink-0" />
+						<p class="flex-1 text-sm text-[#c2cbe3]">
 							Hiring nearby at up to
-							<span class="font-bold text-[#b9f29a] font-mono">{betterWageFactory.workerWage.toLocaleString()}</span>
+							<span class="font-bold text-[#aef3c9] font-mono">{betterWageFactory.workerWage.toLocaleString()}</span>
 						</p>
 						<FluentArrowRight20Filled
-							class="size-4 text-[#a8a083] group-hover:text-[#ffcf47] group-hover:translate-x-0.5 transition-all"
+							class="size-4 text-[#8e9abb] group-hover:text-[#ffc857] group-hover:translate-x-0.5 transition-all"
 						/>
 					</a>
 				{/if}
@@ -282,26 +282,26 @@
 							<ResourceIcon name={activeProduction.productType} class="size-10 sm:size-12" />
 						</div>
 						<div class="min-w-0 flex-1">
-							<p class="text-lg sm:text-xl font-bold text-[#f5efd8] capitalize truncate">
+							<p class="text-lg sm:text-xl font-bold text-[#eef2ff] capitalize truncate">
 								{activeProduction.productType}
 							</p>
-							<p class="text-xs text-[#a8a083]">Batch of {activeProduction.quantity}</p>
+							<p class="text-xs text-[#8e9abb]">Batch of {activeProduction.quantity}</p>
 						</div>
 						<div class="text-right shrink-0">
-							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Ready in</p>
-							<p class="text-xl sm:text-2xl font-bold text-[#ffd35c] font-mono">{timeRemaining}</p>
+							<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Ready in</p>
+							<p class="text-xl sm:text-2xl font-bold text-[#ffcb6b] font-mono">{timeRemaining}</p>
 						</div>
 					</div>
 
 					<!-- Conveyor -->
 					<div class="mt-4">
-						<div class="conveyor h-4 rounded-full overflow-hidden border border-[#c8b47a]/15 bg-[#1a1f15] relative">
+						<div class="conveyor h-4 rounded-full overflow-hidden border border-[#8ea6e0]/15 bg-[#131c33] relative">
 							<div
-								class="h-full bg-[#f2b01e]/80 rounded-full transition-all duration-1000"
+								class="h-full bg-[#f5a524]/80 rounded-full transition-all duration-1000"
 								style="width: {productionProgress}%"
 							></div>
 						</div>
-						<div class="mt-1 flex justify-between text-xs text-[#a8a083] font-mono">
+						<div class="mt-1 flex justify-between text-xs text-[#8e9abb] font-mono">
 							<span>{Math.floor(productionProgress)}%</span>
 							<span>{activeProduction.quantity} units</span>
 						</div>
@@ -331,8 +331,8 @@
 							{@const selected = selectedProduct === product}
 							<label
 								class="press-spring cursor-pointer p-2.5 rounded-sm border text-center transition-colors {selected
-									? 'bg-[#f2b01e]/12 border-[#f2b01e]/55'
-									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#c8b47a]/35'}"
+									? 'bg-[#f5a524]/12 border-[#f5a524]/55'
+									: 'bg-[#131c33]/70 border-[#8ea6e0]/15 hover:border-[#8ea6e0]/35'}"
 							>
 								<input
 									type="radio"
@@ -344,11 +344,11 @@
 								/>
 								<ResourceIcon name={product} class="size-8 mx-auto mb-1" />
 								<span
-									class="block text-xs font-medium capitalize truncate {selected ? 'text-[#ffd35c]' : 'text-[#a8a083]'}"
+									class="block text-xs font-medium capitalize truncate {selected ? 'text-[#ffcb6b]' : 'text-[#8e9abb]'}"
 								>
 									{product}
 								</span>
-								<span class="block text-[10px] font-mono text-[#a8a083]">{productMap.get(product) || 0} in stock</span>
+								<span class="block text-[10px] font-mono text-[#8e9abb]">{productMap.get(product) || 0} in stock</span>
 							</label>
 						{/each}
 					</fieldset>
@@ -356,7 +356,7 @@
 					<div>
 						<div class="flex items-center justify-between">
 							<label for="quantity" class="field-label">Batches</label>
-							<span class="text-sm font-bold text-[#f5efd8] font-mono">×{productionQuantity}</span>
+							<span class="text-sm font-bold text-[#eef2ff] font-mono">×{productionQuantity}</span>
 						</div>
 						<input
 							type="range"
@@ -365,7 +365,7 @@
 							min="1"
 							max="10"
 							bind:value={productionQuantity}
-							class="w-full accent-[#f2b01e] cursor-pointer"
+							class="w-full accent-[#f5a524] cursor-pointer"
 						/>
 					</div>
 
@@ -379,10 +379,10 @@
 						<ResourceRequirements {costs} available={availableResources} />
 
 						<p class="flex items-center justify-between text-sm">
-							<span class="flex items-center gap-1.5 text-[#a8a083]">
+							<span class="flex items-center gap-1.5 text-[#8e9abb]">
 								<FluentClock20Filled class="size-4" /> Takes
 							</span>
-							<span class="font-bold text-[#f5efd8] font-mono">
+							<span class="font-bold text-[#eef2ff] font-mono">
 								{Math.floor((recipe.duration * productionQuantity) / 60)} min
 							</span>
 						</p>
@@ -407,29 +407,29 @@
 		<aside class="panel rounded-sm p-5 space-y-5">
 			<div class="flex items-center justify-between gap-2">
 				<h2 class="section-title">Storeroom</h2>
-				<span class="text-xs text-[#a8a083] flex items-center gap-1">
-					<FluentMoney20Filled class="size-3.5 text-[#6fd14a]" />
-					<span class="font-mono text-[#b9f29a] font-bold">{data.wallet.balance.toLocaleString()}</span>
+				<span class="text-xs text-[#8e9abb] flex items-center gap-1">
+					<FluentMoney20Filled class="size-3.5 text-[#4fd88a]" />
+					<span class="font-mono text-[#aef3c9] font-bold">{data.wallet.balance.toLocaleString()}</span>
 				</span>
 			</div>
 
 			{#each [{ label: "Raw materials", items: RAW, map: resourceMap }, { label: "Goods", items: GOODS, map: productMap }] as shelf}
 				<div>
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1.5">{shelf.label}</p>
+					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide mb-1.5">{shelf.label}</p>
 					<div class="grid grid-cols-3 gap-1.5 pb-1.5 border-b-4 border-[#5a4a2a] shadow-[0_3px_0_rgba(0,0,0,0.45)]">
 						{#each shelf.items as item}
 							{@const quantity = shelf.map.get(item) || 0}
 							<a
 								href="/market/{item}"
 								title="{item} — market"
-								class="panel-muted rounded-sm p-2 flex flex-col items-center gap-0.5 hover:border-[#f2b01e]/55 transition-colors {quantity ===
+								class="panel-muted rounded-sm p-2 flex flex-col items-center gap-0.5 hover:border-[#f5a524]/55 transition-colors {quantity ===
 								0
 									? 'opacity-50'
 									: ''}"
 							>
 								<ResourceIcon name={item} class="size-6" />
-								<span class="text-[10px] capitalize text-[#d3caa9] truncate max-w-full">{item}</span>
-								<span class="text-sm font-bold font-mono {quantity > 0 ? 'text-[#f5efd8]' : 'text-[#a8a083]'}"
+								<span class="text-[10px] capitalize text-[#c2cbe3] truncate max-w-full">{item}</span>
+								<span class="text-sm font-bold font-mono {quantity > 0 ? 'text-[#eef2ff]' : 'text-[#8e9abb]'}"
 									>{quantity}</span
 								>
 							</a>
@@ -444,7 +444,7 @@
 <style>
 	/* Moving belt stripes under the fill, so a running line looks alive. */
 	.conveyor {
-		background-image: repeating-linear-gradient(-45deg, rgb(200 180 122 / 0.08) 0 6px, transparent 6px 12px);
+		background-image: repeating-linear-gradient(-45deg, rgb(142 166 224 / 0.08) 0 6px, transparent 6px 12px);
 		background-size: 17px 17px;
 		animation: belt 1.6s linear infinite;
 	}

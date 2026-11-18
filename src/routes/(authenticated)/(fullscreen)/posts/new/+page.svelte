@@ -61,7 +61,7 @@
 
 <div class="min-h-dvh flex flex-col">
 	<!-- Editor Header -->
-	<header class="sticky top-0 z-10 border-b border-[#c8b47a]/15 bg-[#171b12]/95 backdrop-blur-md">
+	<header class="sticky top-0 z-10 border-b border-[#8ea6e0]/15 bg-[#111a2e]/95 backdrop-blur-md">
 		<div class="w-full px-3 sm:px-6 py-3 sm:py-4">
 			<div class="flex items-center gap-2 sm:gap-3">
 				<button onclick={handlePublish} class={buttonClass({ variant: "primary", shape: "square" })} title="Publish">
@@ -87,7 +87,7 @@
 
 				<div class="flex-1"></div>
 
-				<span class="text-xs text-[#a8a083] font-mono hidden sm:inline">
+				<span class="text-xs text-[#8e9abb] font-mono hidden sm:inline">
 					{title.length}/{SCHEMA_LIMITS.ARTICLE_TITLE_MAX}
 				</span>
 
@@ -110,19 +110,19 @@
 	<main class="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 		<!-- Title Input -->
 		<input
-			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#f5efd8] placeholder:text-[#ab9f7c]/55 border-none outline-none mb-2"
+			class="w-full bg-transparent text-xl sm:text-3xl font-bold text-[#eef2ff] placeholder:text-[#8794b5]/55 border-none outline-none mb-2"
 			placeholder="Enter your title..."
 			type="text"
 			bind:value={title}
 			maxlength={SCHEMA_LIMITS.ARTICLE_TITLE_MAX}
 		/>
 
-		<div class="text-xs text-[#a8a083] font-mono mb-6">
+		<div class="text-xs text-[#8e9abb] font-mono mb-6">
 			{title.length}/{SCHEMA_LIMITS.ARTICLE_TITLE_MAX} characters
 		</div>
 
 		<!-- Divider -->
-		<div class="border-t border-[#c8b47a]/15 mb-6"></div>
+		<div class="border-t border-[#8ea6e0]/15 mb-6"></div>
 
 		<!-- Editor -->
 		<div class="min-h-[50vh]">
@@ -149,7 +149,7 @@
 
 		<!-- Preview -->
 		<div class="panel-muted rounded-sm p-3 mb-4">
-			<p class="text-sm font-bold text-[#f5efd8] line-clamp-2">{title || "Untitled"}</p>
+			<p class="text-sm font-bold text-[#eef2ff] line-clamp-2">{title || "Untitled"}</p>
 		</div>
 
 		{#if data.newspapers.length > 0}
@@ -177,9 +177,9 @@
 			{#if selectedNewspaperId}
 				{@const selectedNewspaper = data.newspapers.find((n) => n.id === parseInt(selectedNewspaperId))}
 				{#if selectedNewspaper}
-					<div class="flex items-center gap-3 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-3 mb-4">
+					<div class="flex items-center gap-3 bg-[#2f6be0]/18 border border-[#6aa8ff]/30 rounded-sm p-3 mb-4">
 						<FluentEmojiRolledUpNewspaper class="size-5 flex-shrink-0" />
-						<span class="text-sm text-[#b3dcff]">
+						<span class="text-sm text-[#c3dbff]">
 							Publishing to <span class="font-bold">{selectedNewspaper.name}</span>
 						</span>
 					</div>
@@ -195,7 +195,7 @@
 
 <!-- Cancel Modal -->
 <Modal bind:open={isCancelModalOpen} title="Discard changes?">
-	<p class="text-sm text-[#a8a083] mb-4">Your unsaved work will be lost.</p>
+	<p class="text-sm text-[#8e9abb] mb-4">Your unsaved work will be lost.</p>
 
 	<div class="flex gap-2 justify-end">
 		<button class={buttonClass({ variant: "secondary", size: "sm" })} onclick={() => (isCancelModalOpen = false)}>

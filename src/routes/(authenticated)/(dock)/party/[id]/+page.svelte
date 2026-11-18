@@ -84,20 +84,20 @@
 					<img decoding="async" src={data.party.logoUrl} alt={data.party.name} class="size-full object-cover" />
 				{:else}
 					<div class="flex size-full items-center justify-center">
-						<FluentPeople20Filled class="size-10 text-[#f5efd8]" />
+						<FluentPeople20Filled class="size-10 text-[#eef2ff]" />
 					</div>
 				{/if}
 			</div>
 
 			<h1
-				class="mx-auto max-w-3xl break-words font-serif text-3xl font-black uppercase leading-none tracking-tight text-[#f5efd8] sm:text-5xl"
+				class="mx-auto max-w-3xl break-words font-serif text-3xl font-black uppercase leading-none tracking-tight text-[#eef2ff] sm:text-5xl"
 			>
 				{data.party.name}
 			</h1>
-			<div class="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-[#a8a083]">
+			<div class="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs text-[#8e9abb]">
 				<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
 				{#if data.party.ideology}<Badge tone="purple" size="xs">{data.party.ideology}</Badge>{/if}
-				<a href="/state/{data.party.state.id}" class="flex items-center gap-1 hover:text-[#ffcf47]">
+				<a href="/state/{data.party.state.id}" class="flex items-center gap-1 hover:text-[#ffc857]">
 					{#if data.party.state.logo}
 						<img decoding="async" src={data.party.state.logo} alt="" class="size-4 rounded-sm" />
 					{:else}
@@ -109,11 +109,11 @@
 			</div>
 
 			{#if data.party.description}
-				<figure class="mx-auto mt-5 max-w-2xl border-y border-[#c8b47a]/15 py-4">
+				<figure class="mx-auto mt-5 max-w-2xl border-y border-[#8ea6e0]/15 py-4">
 					<figcaption class="mb-2 text-[10px] uppercase tracking-[0.25em]" style:color={data.party.color}>
 						Manifesto
 					</figcaption>
-					<blockquote class="whitespace-pre-line font-serif text-base italic leading-relaxed text-[#e6ddbf]">
+					<blockquote class="whitespace-pre-line font-serif text-base italic leading-relaxed text-[#dbe2f4]">
 						{data.party.description}
 					</blockquote>
 				</figure>
@@ -151,18 +151,18 @@
 		</div>
 
 		<!-- Stats strip -->
-		<div class="grid grid-cols-3 divide-x divide-[#c8b47a]/15 border-t border-[#c8b47a]/15 text-center">
-			<a href="/party/{data.party.id}/member" class="p-3 hover:bg-[#f2b01e]/5">
-				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Members</p>
-				<p class="text-xl font-bold text-[#f5efd8]">{data.party.memberCount}</p>
+		<div class="grid grid-cols-3 divide-x divide-[#8ea6e0]/15 border-t border-[#8ea6e0]/15 text-center">
+			<a href="/party/{data.party.id}/member" class="p-3 hover:bg-[#f5a524]/5">
+				<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Members</p>
+				<p class="text-xl font-bold text-[#eef2ff]">{data.party.memberCount}</p>
 			</a>
-			<a href="/state/{data.party.state.id}/parliament" class="p-3 hover:bg-[#f2b01e]/5">
-				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Seats</p>
-				<p class="text-xl font-bold text-[#f5efd8]">{data.parliamentSeats || 0}</p>
+			<a href="/state/{data.party.state.id}/parliament" class="p-3 hover:bg-[#f5a524]/5">
+				<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Seats</p>
+				<p class="text-xl font-bold text-[#eef2ff]">{data.parliamentSeats || 0}</p>
 			</a>
 			<div class="p-3">
-				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Rank</p>
-				<p class="text-xl font-bold text-[#f5efd8]">#{data.partyRank || "—"}</p>
+				<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Rank</p>
+				<p class="text-xl font-bold text-[#eef2ff]">#{data.partyRank || "—"}</p>
 			</div>
 		</div>
 	</article>
@@ -175,7 +175,7 @@
 	{/if}
 	{#if form?.success}
 		<div
-			class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3 text-sm animate-rise-in"
+			class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3 text-sm animate-rise-in"
 		>
 			{form.success}
 		</div>
@@ -223,12 +223,12 @@
 				{/each}
 			</ul>
 			{#if roster.length > ROSTER_LIMIT}
-				<a href="/party/{data.party.id}/member" class="block text-center text-xs text-[#a8a083] hover:text-[#ffcf47]">
+				<a href="/party/{data.party.id}/member" class="block text-center text-xs text-[#8e9abb] hover:text-[#ffc857]">
 					+{roster.length - ROSTER_LIMIT} more
 				</a>
 			{/if}
 		{:else if !leader}
-			<p class="text-sm text-[#a8a083]">No members yet.</p>
+			<p class="text-sm text-[#8e9abb]">No members yet.</p>
 		{/if}
 	</section>
 
@@ -238,7 +238,7 @@
 			method="POST"
 			action="?/leave"
 			use:enhance
-			class="flex items-center justify-between gap-3 px-1 text-xs text-[#a8a083]"
+			class="flex items-center justify-between gap-3 px-1 text-xs text-[#8e9abb]"
 		>
 			<span>Member since {formatDate(data.memberSince!)}</span>
 			<Button type="submit" variant="soft-red" size="xs" icon={FluentDismiss20Filled}>Leave party</Button>

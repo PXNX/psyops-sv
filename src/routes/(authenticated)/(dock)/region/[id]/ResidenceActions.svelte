@@ -62,17 +62,17 @@
 
 <section
 	class="panel rounded-sm p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-3 {isIndependent
-		? 'border-[#f2b01e]/45'
+		? 'border-[#f5a524]/45'
 		: ''}"
 >
 	<div class="flex-1 min-w-0">
-		<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083]">
+		<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">
 			{isIndependent ? "Unclaimed territory" : "Travel desk"}
 		</p>
 		<p
 			class="text-sm mt-0.5 flex items-center gap-1.5 {hasPendingResidenceApp && !isIndependent
-				? 'text-[#ffd35c]'
-				: 'text-[#d3caa9]'}"
+				? 'text-[#ffcb6b]'
+				: 'text-[#c2cbe3]'}"
 		>
 			{#if hasPendingResidenceApp && !isIndependent}
 				<FluentClock20Filled class="size-4 shrink-0" />
@@ -90,7 +90,7 @@
 				Found a State
 			</Button>
 		{:else}
-			<p class="text-xs text-[#a8a083]">Leave your party to found a state here.</p>
+			<p class="text-xs text-[#8e9abb]">Leave your party to found a state here.</p>
 		{/if}
 	{:else}
 		<Button
@@ -108,29 +108,29 @@
 <!-- Ticket -->
 <Modal bind:open={showTravelSheet} title="Book Travel" size="default">
 	<div class="space-y-4">
-		<div class="flex rounded-sm overflow-hidden border border-[#c8b47a]/25 bg-[#1a1f15]">
+		<div class="flex rounded-sm overflow-hidden border border-[#8ea6e0]/25 bg-[#131c33]">
 			<div class="flex-1 min-w-0 p-4">
-				<p class="text-[9px] uppercase tracking-[0.25em] text-[#a8a083]">Ticket · To</p>
-				<p class="font-serif text-xl font-bold text-[#f5efd8] truncate">{regionName}</p>
+				<p class="text-[9px] uppercase tracking-[0.25em] text-[#8e9abb]">Ticket · To</p>
+				<p class="font-serif text-xl font-bold text-[#eef2ff] truncate">{regionName}</p>
 				{#if travelInfo}
 					<dl class="mt-3 grid grid-cols-2 gap-3 text-sm">
 						<div>
-							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#a8a083]">Duration</dt>
-							<dd class="font-mono text-[#e6ddbf]">{travelInfo.timeHours} h</dd>
+							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#8e9abb]">Duration</dt>
+							<dd class="font-mono text-[#dbe2f4]">{travelInfo.timeHours} h</dd>
 						</div>
 						<div>
-							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#a8a083]">Distance</dt>
-							<dd class="font-mono text-[#e6ddbf]">{travelInfo.distanceKm} km</dd>
+							<dt class="text-[9px] uppercase tracking-[0.2em] text-[#8e9abb]">Distance</dt>
+							<dd class="font-mono text-[#dbe2f4]">{travelInfo.distanceKm} km</dd>
 						</div>
 					</dl>
 				{/if}
 			</div>
 			{#if travelInfo}
 				<div
-					class="w-24 shrink-0 border-l-2 border-dashed border-[#c8b47a]/25 p-3 flex flex-col items-center justify-center"
+					class="w-24 shrink-0 border-l-2 border-dashed border-[#8ea6e0]/25 p-3 flex flex-col items-center justify-center"
 				>
-					<p class="text-[9px] uppercase tracking-[0.2em] text-[#a8a083]">Fare</p>
-					<p class="font-mono text-lg font-bold text-[#ffd35c]">${travelInfo.cost.toLocaleString()}</p>
+					<p class="text-[9px] uppercase tracking-[0.2em] text-[#8e9abb]">Fare</p>
+					<p class="font-mono text-lg font-bold text-[#ffcb6b]">${travelInfo.cost.toLocaleString()}</p>
 				</div>
 			{/if}
 		</div>

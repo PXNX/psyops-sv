@@ -17,7 +17,7 @@
 		alt,
 		class: className = "",
 		placeholderIcon: PlaceholderIcon = FluentImage24Regular,
-		placeholderGradient = "from-[#2369b5] to-[#2b3322]"
+		placeholderGradient = "from-[#2f6be0] to-[#212e4d]"
 	}: Props = $props();
 
 	let loaded = $state(false);
@@ -55,12 +55,12 @@
 		/>
 		{#if !loaded}
 			<div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br {placeholderGradient}">
-				<PlaceholderIcon class="size-12 animate-pulse text-[#f5efd8]/70" />
+				<PlaceholderIcon class="size-12 animate-pulse text-[#eef2ff]/70" />
 			</div>
 		{/if}
 	{:else}
 		<div class="flex size-full items-center justify-center bg-gradient-to-br {placeholderGradient}">
-			<PlaceholderIcon class="size-10 text-[#f5efd8]/90" />
+			<PlaceholderIcon class="size-10 text-[#eef2ff]/90" />
 		</div>
 	{/if}
 </div>

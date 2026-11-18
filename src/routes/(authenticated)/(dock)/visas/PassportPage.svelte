@@ -17,7 +17,7 @@
 <div
 	class="relative overflow-hidden rounded-sm text-[#3b2a14] {className}"
 	style="background:
-		radial-gradient(circle at 80% 20%, rgba(120, 160, 140, 0.12), transparent 55%),
+		radial-gradient(circle at 80% 20%, rgba(110, 140, 220, 0.12), transparent 55%),
 		repeating-radial-gradient(circle at 15% 110%, transparent 0 7px, rgba(91, 61, 26, 0.045) 7px 8px),
 		linear-gradient(145deg, #f5f0e4 0%, #ece5d3 55%, #e5dcc6 100%);
 		box-shadow: 0 2px 14px rgba(0, 0, 0, 0.4), inset 0 0 50px rgba(91, 61, 26, 0.06);"

@@ -78,7 +78,7 @@
 <PageContainer maxWidth="3xl">
 	<article bind:this={ballotEl} class="panel rounded-sm overflow-hidden relative">
 		<!-- Ballot heading -->
-		<header class="px-5 pt-5 pb-4 text-center border-b-2 border-double border-[#c8b47a]/30">
+		<header class="px-5 pt-5 pb-4 text-center border-b-2 border-double border-[#8ea6e0]/30">
 			<a href="/state/{data.state.id}" class="inline-block">
 				<Logo
 					src={data.state.logo}
@@ -87,36 +87,36 @@
 					placeholderIcon={FluentBuildingGovernment20Filled}
 				/>
 			</a>
-			<p class="mt-2 text-[10px] uppercase tracking-[0.3em] text-[#a8a083]">Official Ballot</p>
+			<p class="mt-2 text-[10px] uppercase tracking-[0.3em] text-[#8e9abb]">Official Ballot</p>
 			<h1
 				class="mt-1 font-serif text-2xl sm:text-3xl font-black leading-tight {data.election.isInaugural
-					? 'text-[#ffd35c]'
-					: 'text-[#f5efd8]'}"
+					? 'text-[#ffcb6b]'
+					: 'text-[#eef2ff]'}"
 			>
 				{data.election.isInaugural ? "Founding" : "General"} Election
 			</h1>
-			<p class="mt-1 text-sm text-[#d3caa9]">
-				Parliament of <a href="/state/{data.state.id}" class="hover:text-[#ffcf47]">{data.state.name}</a>
+			<p class="mt-1 text-sm text-[#c2cbe3]">
+				Parliament of <a href="/state/{data.state.id}" class="hover:text-[#ffc857]">{data.state.name}</a>
 				· {data.election.totalSeats} seats
 			</p>
-			<p class="mt-3 flex items-center justify-center gap-2 flex-wrap text-xs text-[#a8a083]">
+			<p class="mt-3 flex items-center justify-center gap-2 flex-wrap text-xs text-[#8e9abb]">
 				{#if hasEnded}
 					<Badge tone="neutral" size="xs">Polls closed</Badge>
 					<span>{data.totalVotes.toLocaleString()} ballots counted</span>
 				{:else if countdown}
 					<Badge tone={hasStarted ? "amber" : "blue"} size="xs">{hasStarted ? "Polls open" : "Opens soon"}</Badge>
 					<span>{hasStarted ? "closes in" : "opens in"}</span>
-					<span class="font-mono text-sm text-[#f5efd8] tabular-nums">{countdown}</span>
+					<span class="font-mono text-sm text-[#eef2ff] tabular-nums">{countdown}</span>
 				{/if}
 			</p>
-			<p class="mt-1 text-[10px] text-[#a8a083]/80">
+			<p class="mt-1 text-[10px] text-[#8e9abb]/80">
 				{formatDateTime(data.election.startDate)} – {formatDateTime(data.election.endDate)}
 			</p>
 		</header>
 
 		{#if data.userVote}
 			<span
-				class="animate-stamp absolute top-4 right-3 border-[3px] border-[#6fd14a]/75 text-[#b9f29a] rounded-sm px-2 py-0.5 font-serif text-base font-black uppercase tracking-[0.25em] pointer-events-none"
+				class="animate-stamp absolute top-4 right-3 border-[3px] border-[#4fd88a]/75 text-[#aef3c9] rounded-sm px-2 py-0.5 font-serif text-base font-black uppercase tracking-[0.25em] pointer-events-none"
 				style="--stamp-tilt: 9deg"
 			>
 				Voted
@@ -129,7 +129,7 @@
 			</div>
 		{:else}
 			<!-- Instruction line, as printed on real ballots -->
-			<p class="px-5 py-2 text-center text-[10px] uppercase tracking-[0.2em] text-[#a8a083] bg-[#1a1f15]/60">
+			<p class="px-5 py-2 text-center text-[10px] uppercase tracking-[0.2em] text-[#8e9abb] bg-[#131c33]/60">
 				{#if data.resultsVisible}
 					Result
 				{:else if data.userVote}
@@ -151,12 +151,12 @@
 					{@const selectable = canVote && hasEnoughMembers && !data.userVote}
 					{@const marked = isUserVote || isSelected}
 					<li
-						class="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 border-b border-dashed border-[#c8b47a]/20 last:border-0 transition-colors {isUserVote
-							? 'bg-[#3f8a2a]/10'
+						class="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 border-b border-dashed border-[#8ea6e0]/20 last:border-0 transition-colors {isUserVote
+							? 'bg-[#1f9d62]/10'
 							: isSelected
-								? 'bg-[#f2b01e]/8'
+								? 'bg-[#f5a524]/8'
 								: selectable
-									? 'hover:bg-[#2e3524]/60 cursor-pointer'
+									? 'hover:bg-[#233154]/60 cursor-pointer'
 									: ''} {!hasEnoughMembers ? 'opacity-60' : ''}"
 						role={selectable ? "radio" : undefined}
 						aria-checked={selectable ? isSelected : undefined}
@@ -171,7 +171,7 @@
 								}
 							: undefined}
 					>
-						<span class="w-5 shrink-0 text-center font-serif text-sm font-bold text-[#a8a083]">{index + 1}</span>
+						<span class="w-5 shrink-0 text-center font-serif text-sm font-bold text-[#8e9abb]">{index + 1}</span>
 
 						<a href="/party/{party.id}" class="shrink-0" onclick={(e) => e.stopPropagation()}>
 							{#if party.logo}
@@ -183,7 +183,7 @@
 								/>
 							{:else}
 								<span
-									class="size-11 sm:size-12 rounded-sm flex items-center justify-center text-sm font-bold text-[#f5efd8]"
+									class="size-11 sm:size-12 rounded-sm flex items-center justify-center text-sm font-bold text-[#eef2ff]"
 									style="background-color: {party.color}"
 								>
 									{party.abbreviation || party.name.substring(0, 2)}
@@ -194,12 +194,12 @@
 						<div class="flex-1 min-w-0 space-y-1">
 							<a
 								href="/party/{party.id}"
-								class="block font-serif text-base sm:text-lg font-black text-[#f5efd8] hover:text-[#ffcf47] transition-colors truncate"
+								class="block font-serif text-base sm:text-lg font-black text-[#eef2ff] hover:text-[#ffc857] transition-colors truncate"
 								onclick={(e) => e.stopPropagation()}
 							>
 								{party.name}
 							</a>
-							<div class="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-[#a8a083]">
+							<div class="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-[#8e9abb]">
 								{#if party.leader?.accountId}
 									<span class="min-w-0" onclick={(e) => e.stopPropagation()} role="presentation">
 										<UserLink
@@ -220,13 +220,13 @@
 							</div>
 							{#if data.resultsVisible && data.totalVotes}
 								<div class="flex items-center gap-2 pt-0.5">
-									<div class="flex-1 h-1.5 rounded-full bg-[#0f120c] overflow-hidden">
+									<div class="flex-1 h-1.5 rounded-full bg-[#0b1120] overflow-hidden">
 										<div
 											class="h-full rounded-full transition-all duration-700 ease-out"
 											style="width: {percentage}%; background: {party.color}"
 										></div>
 									</div>
-									<span class="shrink-0 font-mono text-xs text-[#f5efd8]">
+									<span class="shrink-0 font-mono text-xs text-[#eef2ff]">
 										{votes} · {percentage.toFixed(1)}%
 									</span>
 								</div>
@@ -237,10 +237,10 @@
 						{#if !data.resultsVisible || isUserVote}
 							<span
 								class="shrink-0 size-9 rounded-[2px] border-2 flex items-center justify-center {isUserVote
-									? 'border-[#6fd14a] text-[#b9f29a]'
+									? 'border-[#4fd88a] text-[#aef3c9]'
 									: isSelected
-										? 'border-[#f2b01e] text-[#ffd35c]'
-										: 'border-[#c8b47a]/45 text-transparent'}"
+										? 'border-[#f5a524] text-[#ffcb6b]'
+										: 'border-[#8ea6e0]/45 text-transparent'}"
 								aria-hidden="true"
 							>
 								{#if marked}
@@ -295,7 +295,7 @@
 				{/if}
 			</Button>
 			{#if selectedParty}
-				<p class="mt-1.5 text-center text-[10px] text-[#a8a083]">Final once cast</p>
+				<p class="mt-1.5 text-center text-[10px] text-[#8e9abb]">Final once cast</p>
 			{/if}
 		</form>
 	{/if}

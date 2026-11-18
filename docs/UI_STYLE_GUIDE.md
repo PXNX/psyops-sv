@@ -1,6 +1,6 @@
 # UI Style Guide
 
-> One visual language for every PsyOps screen: a **grand-strategy war room** in the spirit of Hearts of Iron IV — olive field-grey metal panels with brass frames and bevels, saturated gold / green / blue signal colours, gold small-caps section headers.
+> One visual language for every PsyOps screen: **night-blue glass**. Deep navy background with soft colour glows, frosted rounded cards with hairline edges, a warm amber signal colour for the one thing that matters, serif headlines. Modern, calm and a little joyful, never boxy: generous radius (`rounded-sm` is already a soft card corner), soft shadows instead of bevels, no metal or brass.
 
 The tokens live in `src/app.css` (`panel`, `panel-interactive`, `panel-muted`, `field-control`, `field-label`, `field-hint`, `field-error`, `section-title`) and `src/lib/component/ui/styles.ts` (buttons, badges). Reference implementations: `src/routes/(authenticated)/(dock)/state/+page.svelte` and `bloc/+page.svelte`.
 
@@ -30,7 +30,7 @@ Every dock page uses `PageContainer` + `PageHeader`. Never hand-roll `max-w-* mx
 
 Exceptions: full-height layouts (chat threads, map, fullscreen editors) keep their own shell but use the same tokens inside.
 
-Entity detail pages (state, company, user, party, bloc, battle, war) may use a **hero panel** instead of `PageHeader`: a `panel rounded-sm p-5` with logo, `h1 text-3xl font-bold text-[#f5efd8]`, metadata line in `text-[#a8a083]`, and actions in the top-right corner.
+Entity detail pages (state, company, user, party, bloc, battle, war) may use a **hero panel** instead of `PageHeader`: a `panel rounded-sm p-5` with logo, `h1 text-3xl font-bold text-[#eef2ff]`, metadata line in `text-[#8e9abb]`, and actions in the top-right corner.
 
 ---
 
@@ -38,25 +38,25 @@ Entity detail pages (state, company, user, party, bloc, battle, war) may use a *
 
 | Role                 | Value                                                |
 | -------------------- | ---------------------------------------------------- |
-| Text — primary       | `text-[#f5efd8]` (never `text-white`)                |
-| Text — strong body   | `text-[#e6ddbf]`                                     |
-| Text — body          | `text-[#d3caa9]`                                     |
-| Text — muted / label | `text-[#a8a083]`                                     |
-| Rule / border        | `border-[#c8b47a]/15` (`/10` subtle, `/20` form)     |
-| Inset surface        | `bg-[#1a1f15]` / `panel-muted`                       |
-| Accent (signal)      | gold `#f2b01e`, text `#ffd35c`, hover text `#ffcf47` |
+| Text — primary       | `text-[#eef2ff]` (never `text-white`)                |
+| Text — strong body   | `text-[#dbe2f4]`                                     |
+| Text — body          | `text-[#c2cbe3]`                                     |
+| Text — muted / label | `text-[#8e9abb]`                                     |
+| Rule / border        | `border-[#8ea6e0]/15` (`/10` subtle, `/20` form)     |
+| Inset surface        | `bg-[#131c33]` / `panel-muted`                       |
+| Accent (signal)      | gold `#f5a524`, text `#ffcb6b`, hover text `#ffc857` |
 
 Tinted accents — always the trio _background / border / text_:
 
 | Tone   | Background        | Border                | Text             | Use for                        |
 | ------ | ----------------- | --------------------- | ---------------- | ------------------------------ |
-| gold   | `bg-[#f2b01e]/12` | `border-[#f2b01e]/35` | `text-[#ffd35c]` | highlight, pending, warning    |
-| green  | `bg-[#3f8a2a]/18` | `border-[#6fd14a]/30` | `text-[#b9f29a]` | success, money, positive       |
-| blue   | `bg-[#2369b5]/18` | `border-[#5eaef5]/30` | `text-[#b3dcff]` | info, defenders, population    |
-| purple | `bg-[#8a4fc0]/15` | `border-[#c08cf0]/30` | `text-[#e3cbfb]` | politics, parties, premium-ish |
+| gold   | `bg-[#f5a524]/12` | `border-[#f5a524]/35` | `text-[#ffcb6b]` | highlight, pending, warning    |
+| green  | `bg-[#1f9d62]/18` | `border-[#4fd88a]/30` | `text-[#aef3c9]` | success, money, positive       |
+| blue   | `bg-[#2f6be0]/18` | `border-[#6aa8ff]/30` | `text-[#c3dbff]` | info, defenders, population    |
+| purple | `bg-[#7451e6]/15` | `border-[#b9a1ff]/30` | `text-[#e6dcff]` | politics, parties, premium-ish |
 | red    | `bg-red-600/10`   | `border-red-500/30`   | `text-red-300`   | errors, destructive, attackers |
 
-Icon accents use the border hue (`text-[#6fd14a]`, `text-[#5eaef5]`, `text-[#c08cf0]`, `text-[#ffd35c]`, `text-red-400`).
+Icon accents use the border hue (`text-[#4fd88a]`, `text-[#6aa8ff]`, `text-[#b9a1ff]`, `text-[#ffcb6b]`, `text-red-400`).
 
 Do **not** use raw Tailwind hues (`blue-*`, `emerald-*`, `green-*`, `purple-*`, `violet-*`, `indigo-*`, `amber-*`, `yellow-*`, `slate-*`, `gray-*`, `zinc-*`) — map them to the table above. Signal colours are deliberately saturated so states, sides and outcomes read at a glance, like a strategy-game HUD. `red-*` is the one allowed raw hue. User-chosen colours (state/party/bloc colour via inline `style`) are fine.
 
@@ -88,13 +88,13 @@ Don't nest `panel` in `panel` — use `panel-muted` for the inner level.
 
 | Element         | Classes                                                        |
 | --------------- | -------------------------------------------------------------- |
-| Page title      | `PageHeader` (`text-3xl font-bold text-[#f5efd8]`, serif)      |
+| Page title      | `PageHeader` (`text-3xl font-bold text-[#eef2ff]`, serif)      |
 | Section heading | `h2.section-title` (gold uppercase, tracked)                   |
-| Card title      | `font-bold text-[#f5efd8]`, hover `group-hover:text-[#ffcf47]` |
-| Stat label      | `text-[10px] text-[#a8a083] uppercase tracking-wide`           |
-| Stat value      | `text-sm`–`text-2xl font-bold text-[#f5efd8]`                  |
-| Body            | `text-sm text-[#d3caa9]`                                       |
-| Metadata        | `text-xs text-[#a8a083]`                                       |
+| Card title      | `font-bold text-[#eef2ff]`, hover `group-hover:text-[#ffc857]` |
+| Stat label      | `text-[10px] text-[#8e9abb] uppercase tracking-wide`           |
+| Stat value      | `text-sm`–`text-2xl font-bold text-[#eef2ff]`                  |
+| Body            | `text-sm text-[#c2cbe3]`                                       |
+| Metadata        | `text-xs text-[#8e9abb]`                                       |
 
 `font-mono` only for numbers that tick (countdowns, IDs, codes, prices) — not for labels or headings.
 
@@ -110,7 +110,7 @@ Don't nest `panel` in `panel` — use `panel-muted` for the inner level.
 ### Feedback messages
 
 ```svelte
-<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3">…</div>
+<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">…</div>
 <div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">…</div>
 ```
 
@@ -120,10 +120,10 @@ Don't nest `panel` in `panel` — use `panel-muted` for the inner level.
 
 ```svelte
 <div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-	<FluentPeople20Filled class="size-4 text-[#5eaef5] shrink-0" />
+	<FluentPeople20Filled class="size-4 text-[#6aa8ff] shrink-0" />
 	<div class="min-w-0">
-		<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Population</p>
-		<p class="text-sm font-bold text-[#f5efd8] truncate">{population.toLocaleString()}</p>
+		<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Population</p>
+		<p class="text-sm font-bold text-[#eef2ff] truncate">{population.toLocaleString()}</p>
 	</div>
 </div>
 ```

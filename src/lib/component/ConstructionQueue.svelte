@@ -26,18 +26,18 @@
 		<li class="panel-muted rounded-sm p-3 space-y-3 animate-rise-in">
 			<div class="flex items-center gap-3">
 				<div
-					class="size-11 shrink-0 rounded-sm bg-[#f2b01e]/12 border border-[#f2b01e]/35 flex items-center justify-center text-2xl"
+					class="size-11 shrink-0 rounded-sm bg-[#f5a524]/12 border border-[#f5a524]/35 flex items-center justify-center text-2xl"
 					aria-hidden="true"
 				>
 					{template?.icon ?? "🏗️"}
 				</div>
 				<div class="min-w-0 flex-1">
-					<p class="font-bold text-[#f5efd8] truncate">{template?.name ?? item.name}</p>
-					<p class="text-xs text-[#a8a083] truncate">
+					<p class="font-bold text-[#eef2ff] truncate">{template?.name ?? item.name}</p>
+					<p class="text-xs text-[#8e9abb] truncate">
 						{#if item.regionId && item.regionName}
 							<a
 								href="/region/{item.regionId}/construction"
-								class="inline-flex items-center gap-1 text-[#b3dcff] hover:text-[#f5efd8]"
+								class="inline-flex items-center gap-1 text-[#c3dbff] hover:text-[#eef2ff]"
 							>
 								<img src={regionCoatUrl(item.regionId)} alt="" class="size-3.5" loading="lazy" />
 								{item.regionName}

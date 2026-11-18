@@ -34,18 +34,18 @@
 	}: Props = $props();
 
 	const tones: Record<Tone, string> = {
-		blue: "bg-[#2369b5]/18 text-[#b3dcff]",
-		purple: "bg-[#8a4fc0]/15 text-[#e3cbfb]",
-		green: "bg-[#3f8a2a]/18 text-[#b9f29a]",
-		emerald: "bg-[#3f8a2a]/18 text-[#b9f29a]",
-		amber: "bg-[#f2b01e]/12 text-[#ffd35c]",
-		yellow: "bg-[#f2b01e]/12 text-[#ffd35c]",
+		blue: "bg-[#2f6be0]/18 text-[#c3dbff]",
+		purple: "bg-[#7451e6]/15 text-[#e6dcff]",
+		green: "bg-[#1f9d62]/18 text-[#aef3c9]",
+		emerald: "bg-[#1f9d62]/18 text-[#aef3c9]",
+		amber: "bg-[#f5a524]/12 text-[#ffcb6b]",
+		yellow: "bg-[#f5a524]/12 text-[#ffcb6b]",
 		red: "bg-red-600/10 text-red-400",
-		slate: "bg-[#1a1f15]/70 text-[#d3caa9]"
+		slate: "bg-[#131c33]/70 text-[#c2cbe3]"
 	};
 
 	const rowClass =
-		"flex w-full items-center gap-3 rounded-sm px-4 py-3 text-left transition-colors hover:bg-[#2e3524] disabled:opacity-50";
+		"flex w-full items-center gap-3 rounded-sm px-4 py-3 text-left transition-colors hover:bg-[#233154] disabled:opacity-50";
 	const tile = $derived(iconTileClass ?? tones[tone]);
 </script>
 
@@ -54,9 +54,9 @@
 		<Icon class="size-5" />
 	</div>
 	<div class="min-w-0">
-		<p class="font-medium {danger ? 'text-red-300' : 'text-[#f5efd8]'}">{title}</p>
+		<p class="font-medium {danger ? 'text-red-300' : 'text-[#eef2ff]'}">{title}</p>
 		{#if description}
-			<p class="text-xs text-[#a8a083]">{description}</p>
+			<p class="text-xs text-[#8e9abb]">{description}</p>
 		{/if}
 	</div>
 {/snippet}

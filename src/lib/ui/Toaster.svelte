@@ -15,17 +15,17 @@
 	const tones: Record<ToastTone, { icon: typeof FluentInfo20Filled; box: string; icon_: string; bar: string }> = {
 		success: {
 			icon: FluentCheckmarkCircle20Filled,
-			box: "border-[#6fd14a]/45",
-			icon_: "text-[#6fd14a]",
-			bar: "bg-[#6fd14a]"
+			box: "border-[#4fd88a]/45",
+			icon_: "text-[#4fd88a]",
+			bar: "bg-[#4fd88a]"
 		},
 		error: { icon: FluentErrorCircle20Filled, box: "border-red-500/50", icon_: "text-red-400", bar: "bg-red-500" },
-		info: { icon: FluentInfo20Filled, box: "border-[#5eaef5]/45", icon_: "text-[#5eaef5]", bar: "bg-[#5eaef5]" },
+		info: { icon: FluentInfo20Filled, box: "border-[#6aa8ff]/45", icon_: "text-[#6aa8ff]", bar: "bg-[#6aa8ff]" },
 		warning: {
 			icon: FluentWarning20Filled,
-			box: "border-[#f2b01e]/55",
-			icon_: "text-[#ffd35c]",
-			bar: "bg-[#f2b01e]"
+			box: "border-[#f5a524]/55",
+			icon_: "text-[#ffcb6b]",
+			bar: "bg-[#f5a524]"
 		}
 	};
 
@@ -57,10 +57,10 @@
 		>
 			<div class="flex items-start gap-3 py-3 pr-2 pl-3.5">
 				<tone.icon class="mt-0.5 size-5 shrink-0 toast-icon {tone.icon_}" />
-				<p class="min-w-0 flex-1 text-sm font-medium break-words text-[#f5efd8]">{item.message}</p>
+				<p class="min-w-0 flex-1 text-sm font-medium break-words text-[#eef2ff]">{item.message}</p>
 				<button
 					type="button"
-					class="press-spring -my-1 grid size-8 shrink-0 place-items-center rounded-sm text-[#a8a083] hover:bg-[#f2b01e]/10 hover:text-[#f5efd8]"
+					class="press-spring -my-1 grid size-8 shrink-0 place-items-center rounded-sm text-[#8e9abb] hover:bg-[#f5a524]/10 hover:text-[#eef2ff]"
 					aria-label="Dismiss"
 					onclick={() => toast.dismiss(item.id)}
 				>
@@ -82,10 +82,10 @@
 	@reference "../../app.css";
 
 	.toast-plate {
-		background: linear-gradient(180deg, rgba(46, 53, 36, 0.98) 0%, rgba(26, 31, 21, 0.98) 100%);
+		background: linear-gradient(180deg, rgba(28, 38, 66, 0.98) 0%, rgba(19, 28, 51, 0.98) 100%);
 		box-shadow:
 			0 12px 30px rgba(0, 0, 0, 0.55),
-			inset 0 1px 0 rgba(255, 244, 200, 0.12);
+			inset 0 1px 0 rgba(220, 230, 255, 0.12);
 	}
 
 	.toast-fuse {

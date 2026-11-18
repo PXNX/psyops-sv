@@ -81,9 +81,9 @@
 
 	function getWageColor(): string {
 		const position = getWagePosition();
-		if (position === "Highest") return "text-[#b9f29a]";
-		if (position === "Above Average") return "text-[#b3dcff]";
-		if (position === "Average") return "text-[#ffd35c]";
+		if (position === "Highest") return "text-[#aef3c9]";
+		if (position === "Above Average") return "text-[#c3dbff]";
+		if (position === "Average") return "text-[#ffcb6b]";
 		return "text-red-300";
 	}
 
@@ -100,12 +100,12 @@
 					<div class="space-y-1.5 flex-1">
 						<h3 class="font-semibold text-red-300 text-sm">Edit Cooldown Active</h3>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-[#d3caa9] font-medium">Time Remaining:</span>
+							<span class="text-[#c2cbe3] font-medium">Time Remaining:</span>
 							<span class="text-red-300 font-bold font-mono">{formatTimeRemaining(cooldownEndsAt)}</span>
 						</div>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-[#a8a083]">Available on:</span>
-							<span class="text-[#d3caa9]">{formatCooldownDate(cooldownEndsAt)}</span>
+							<span class="text-[#8e9abb]">Available on:</span>
+							<span class="text-[#c2cbe3]">{formatCooldownDate(cooldownEndsAt)}</span>
 						</div>
 					</div>
 				</div>
@@ -116,8 +116,8 @@
 			<!-- Factory Details -->
 			<div class="space-y-4">
 				<div class="flex items-center gap-2">
-					<FluentFactory20Filled class="size-4 text-[#c08cf0]" />
-					<h2 class="text-sm font-semibold text-[#f5efd8]">Factory Details</h2>
+					<FluentFactory20Filled class="size-4 text-[#b9a1ff]" />
+					<h2 class="text-sm font-semibold text-[#eef2ff]">Factory Details</h2>
 				</div>
 
 				<div>
@@ -147,7 +147,7 @@
 						Worker Wage per Shift <span class="text-red-400">*</span>
 					</label>
 					<div class="relative">
-						<FluentMoney20Filled class="size-4 text-[#a8a083] absolute left-3 top-1/2 -translate-y-1/2" />
+						<FluentMoney20Filled class="size-4 text-[#8e9abb] absolute left-3 top-1/2 -translate-y-1/2" />
 						<input
 							type="number"
 							id="edit-factory-wage"
@@ -164,7 +164,7 @@
 					{#if $errors.workerWage}
 						<p class="field-error">{$errors.workerWage}</p>
 					{:else}
-						<div class="flex items-center justify-between text-xs text-[#a8a083] mt-1">
+						<div class="flex items-center justify-between text-xs text-[#8e9abb] mt-1">
 							<span>Min: 100 • Max: 1,000,000</span>
 							{#if wageStats.highestInRegion}
 								<span class={getWageColor()}>{getWagePosition()}</span>
@@ -175,18 +175,18 @@
 					{#if factory.currentWorkers > 0}
 						<div class="mt-3 panel-muted rounded-sm p-3">
 							<div class="flex items-center gap-2 mb-2">
-								<FluentChartMultiple20Filled class="size-3.5 text-[#a8a083]" />
-								<p class="text-xs text-[#a8a083]">Cost Impact per Shift</p>
+								<FluentChartMultiple20Filled class="size-3.5 text-[#8e9abb]" />
+								<p class="text-xs text-[#8e9abb]">Cost Impact per Shift</p>
 							</div>
 							<div class="flex items-center justify-between">
-								<span class="text-sm text-[#d3caa9]">Current:</span>
-								<span class="text-sm font-semibold text-[#f5efd8] font-mono">
+								<span class="text-sm text-[#c2cbe3]">Current:</span>
+								<span class="text-sm font-semibold text-[#eef2ff] font-mono">
 									{(factory.workerWage * factory.currentWorkers).toLocaleString()}
 								</span>
 							</div>
 							<div class="flex items-center justify-between">
-								<span class="text-sm text-[#d3caa9]">New:</span>
-								<span class="text-sm font-semibold text-[#b9f29a] font-mono">
+								<span class="text-sm text-[#c2cbe3]">New:</span>
+								<span class="text-sm font-semibold text-[#aef3c9] font-mono">
 									{($form.workerWage * factory.currentWorkers).toLocaleString()}
 								</span>
 							</div>
@@ -212,7 +212,7 @@
 
 		<!-- Success Message -->
 		{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("wait") && !$message.includes("Insufficient")}
-			<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3">
+			<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">
 				<p class="text-sm font-medium">{$message}</p>
 			</div>
 		{/if}

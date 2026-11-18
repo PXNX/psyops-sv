@@ -131,11 +131,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200",
 			dragActive
-				? "border-[#f2b01e] bg-[#f2b01e]/12"
+				? "border-[#f5a524] bg-[#f5a524]/12"
 				: $form.logo
-					? "border-[#6fd14a]/50 bg-[#3f8a2a]/10"
-					: "border-[#c8b47a]/20",
-			!$submitting && !$form.logo && canCreate ? "hover:border-[#f2b01e]/55 hover:bg-[#f2b01e]/10" : "",
+					? "border-[#4fd88a]/50 bg-[#1f9d62]/10"
+					: "border-[#8ea6e0]/20",
+			!$submitting && !$form.logo && canCreate ? "hover:border-[#f5a524]/55 hover:bg-[#f5a524]/10" : "",
 			$submitting || !canCreate ? "opacity-50" : "",
 			$errors.logo ? "border-red-500" : ""
 		]
@@ -177,7 +177,7 @@
 			<FluentClock20Filled class="size-5 text-red-400 shrink-0 mt-0.5" />
 			<div class="min-w-0 text-sm">
 				<p class="font-semibold">You can register again in {formatTimeRemaining(data.cooldownEndsAt)}</p>
-				<p class="text-xs text-[#d3caa9] mt-0.5">
+				<p class="text-xs text-[#c2cbe3] mt-0.5">
 					From <span class="font-mono">{formatCooldownDate(data.cooldownEndsAt)}</span>
 				</p>
 			</div>
@@ -193,15 +193,15 @@
 
 	<!-- The application form, laid out like a registry filing -->
 	<form method="POST" enctype="multipart/form-data" use:enhance class="panel rounded-sm p-5 sm:p-7">
-		<div class="text-center border-b-2 border-double border-[#c8b47a]/40 pb-3">
-			<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083]">Commercial Register · Form HR-1</p>
-			<h2 class="mt-1 font-serif text-xl sm:text-2xl font-bold text-[#f5efd8]">Application for Registration</h2>
+		<div class="text-center border-b-2 border-double border-[#8ea6e0]/40 pb-3">
+			<p class="text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]">Commercial Register · Form HR-1</p>
+			<h2 class="mt-1 font-serif text-xl sm:text-2xl font-bold text-[#eef2ff]">Application for Registration</h2>
 		</div>
 
 		<div class="mt-5 grid grid-cols-[1fr_auto] gap-4 items-start">
 			<!-- 1. Name -->
 			<div class="min-w-0">
-				<label for="name" class="field-label"><span class="font-mono text-[#a8a083]">1.</span> Company name</label>
+				<label for="name" class="field-label"><span class="font-mono text-[#8e9abb]">1.</span> Company name</label>
 				<input
 					type="text"
 					id="name"
@@ -222,7 +222,7 @@
 
 			<!-- 2. Seal / logo -->
 			<div class="w-24 sm:w-28">
-				<span class="field-label"><span class="font-mono text-[#a8a083]">2.</span> Seal</span>
+				<span class="field-label"><span class="font-mono text-[#8e9abb]">2.</span> Seal</span>
 				<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
 					<input
 						bind:this={fileInput}
@@ -243,8 +243,8 @@
 					>
 						{#if !$form.logo}
 							<div class="size-full flex flex-col items-center justify-center gap-1 p-2 text-center">
-								<FluentImage20Filled class="size-7 text-[#ffd35c]" />
-								<span class="text-[10px] text-[#a8a083] leading-tight">
+								<FluentImage20Filled class="size-7 text-[#ffcb6b]" />
+								<span class="text-[10px] text-[#8e9abb] leading-tight">
 									{dragActive ? "Drop here" : "Optional"}
 								</span>
 							</div>
@@ -283,7 +283,7 @@
 		<!-- 3. Objects -->
 		<div class="mt-4">
 			<label for="description" class="field-label">
-				<span class="font-mono text-[#a8a083]">3.</span> Objects of the company
+				<span class="font-mono text-[#8e9abb]">3.</span> Objects of the company
 			</label>
 			<textarea
 				id="description"
@@ -303,14 +303,14 @@
 		</div>
 
 		<!-- Fee -->
-		<div class="mt-5 pt-3 border-t border-dashed border-[#c8b47a]/25 space-y-1 text-sm">
+		<div class="mt-5 pt-3 border-t border-dashed border-[#8ea6e0]/25 space-y-1 text-sm">
 			<div class="flex justify-between gap-3">
-				<span class="text-[#d3caa9]">Registration fee</span>
-				<span class="font-mono font-bold text-[#f5efd8]">{data.companyCost.toLocaleString()}</span>
+				<span class="text-[#c2cbe3]">Registration fee</span>
+				<span class="font-mono font-bold text-[#eef2ff]">{data.companyCost.toLocaleString()}</span>
 			</div>
 			<div class="flex justify-between gap-3 text-xs">
-				<span class="text-[#a8a083]">Your wallet</span>
-				<span class="font-mono {data.canAfford ? 'text-[#b9f29a]' : 'text-red-300'}">
+				<span class="text-[#8e9abb]">Your wallet</span>
+				<span class="font-mono {data.canAfford ? 'text-[#aef3c9]' : 'text-red-300'}">
 					{data.userBalance.toLocaleString()}
 				</span>
 			</div>

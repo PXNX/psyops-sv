@@ -81,7 +81,7 @@
 						<IconButton icon={IconArrowLeft} label="Go back" size="sm" onclick={onBack} />
 					{/if}
 					{#if title}
-						<h3 class="text-xl font-bold text-[#f5efd8]">{title}</h3>
+						<h3 class="text-xl font-bold text-[#eef2ff]">{title}</h3>
 					{/if}
 				</div>
 				<IconButton icon={IconDismiss} label="Close" size="sm" onclick={handleClose} />

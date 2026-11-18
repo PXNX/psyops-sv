@@ -160,11 +160,11 @@
 	/** A box on the form: ticked when chosen. */
 	const box = (on: boolean) =>
 		`size-5 shrink-0 rounded-[2px] border-2 flex items-center justify-center transition-colors ${
-			on ? "border-[#f2b01e] bg-[#f2b01e]/20 text-[#ffd35c]" : "border-[#c8b47a]/40 text-transparent"
+			on ? "border-[#f5a524] bg-[#f5a524]/20 text-[#ffcb6b]" : "border-[#8ea6e0]/40 text-transparent"
 		}`;
 	const option = (on: boolean) =>
 		`press-spring tap-target w-full flex items-center gap-3 rounded-sm border px-3 py-2.5 text-left transition-colors ${
-			on ? "border-[#f2b01e]/60 bg-[#f2b01e]/10" : "border-[#c8b47a]/15 bg-[#1a1f15]/60 hover:border-[#f2b01e]/40"
+			on ? "border-[#f5a524]/60 bg-[#f5a524]/10" : "border-[#8ea6e0]/15 bg-[#131c33]/60 hover:border-[#f5a524]/40"
 		}`;
 </script>
 
@@ -179,9 +179,9 @@
 
 	<form method="POST" action="?/createProposal" use:enhance class="panel rounded-sm overflow-hidden">
 		<!-- Paper heading -->
-		<div class="px-5 pt-5 pb-4 text-center border-b-2 border-double border-[#c8b47a]/30">
-			<p class="text-[10px] uppercase tracking-[0.3em] text-[#a8a083]">Parliament of {data.state.name}</p>
-			<h2 class="mt-1 font-serif text-2xl font-black text-[#f5efd8]">
+		<div class="px-5 pt-5 pb-4 text-center border-b-2 border-double border-[#8ea6e0]/30">
+			<p class="text-[10px] uppercase tracking-[0.3em] text-[#8e9abb]">Parliament of {data.state.name}</p>
+			<h2 class="mt-1 font-serif text-2xl font-black text-[#eef2ff]">
 				{#if $formData.proposalType}
 					{#key $formData.proposalType}
 						<span class="inline-block animate-pop-in">{typeLabel($formData.proposalType)} Bill</span>
@@ -196,7 +196,7 @@
 			<!-- Clause 1: subject -->
 			<fieldset>
 				<legend class="field-label">
-					<span class="font-serif text-[#a8a083] mr-1">§ 1</span> Subject <span class="text-red-400">*</span>
+					<span class="font-serif text-[#8e9abb] mr-1">§ 1</span> Subject <span class="text-red-400">*</span>
 				</legend>
 				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
 					{#each PROPOSAL_TYPES as { type, label } (type)}
@@ -212,10 +212,10 @@
 							<span
 								class="flex-1 min-w-0 text-sm font-semibold truncate {type === 'declare_war'
 									? 'text-red-300'
-									: 'text-[#f5efd8]'}">{label}</span
+									: 'text-[#eef2ff]'}">{label}</span
 							>
 							{#if autoFor(type)}
-								<span class="shrink-0 text-[10px] uppercase tracking-wide text-[#b9f29a]">Decree</span>
+								<span class="shrink-0 text-[10px] uppercase tracking-wide text-[#aef3c9]">Decree</span>
 							{/if}
 						</button>
 					{/each}
@@ -228,10 +228,10 @@
 
 			<!-- Clause 2: provisions -->
 			{#if isTaxProposal}
-				<div class="pt-6 border-t border-dashed border-[#c8b47a]/20 space-y-5 animate-rise-in">
+				<div class="pt-6 border-t border-dashed border-[#8ea6e0]/20 space-y-5 animate-rise-in">
 					<fieldset>
 						<legend class="field-label">
-							<span class="font-serif text-[#a8a083] mr-1">§ 2</span> Tax <span class="text-red-400">*</span>
+							<span class="font-serif text-[#8e9abb] mr-1">§ 2</span> Tax <span class="text-red-400">*</span>
 						</legend>
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 							{#each TAX_TYPES as tax (tax.type)}
@@ -245,8 +245,8 @@
 								>
 									<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
 									<span class="min-w-0">
-										<span class="block text-sm font-semibold text-[#f5efd8]">{tax.label}</span>
-										<span class="block text-xs text-[#a8a083]">{tax.hint}</span>
+										<span class="block text-sm font-semibold text-[#eef2ff]">{tax.label}</span>
+										<span class="block text-xs text-[#8e9abb]">{tax.hint}</span>
 									</span>
 								</button>
 							{/each}
@@ -259,9 +259,9 @@
 
 					<div>
 						<label for="taxRate" class="field-label flex items-baseline justify-between">
-							<span><span class="font-serif text-[#a8a083] mr-1">§ 3</span> Rate</span>
+							<span><span class="font-serif text-[#8e9abb] mr-1">§ 3</span> Rate</span>
 							{#key $formData.taxRate}
-								<span class="font-mono text-lg font-bold text-[#ffd35c] animate-tick">{$formData.taxRate || 0}%</span>
+								<span class="font-mono text-lg font-bold text-[#ffcb6b] animate-tick">{$formData.taxRate || 0}%</span>
 							{/key}
 						</label>
 						<input
@@ -271,10 +271,10 @@
 							min="1"
 							max="50"
 							bind:value={$formData.taxRate}
-							class="range range-sm w-full text-[#f2b01e]"
+							class="range range-sm w-full text-[#f5a524]"
 							disabled={$submitting}
 						/>
-						<div class="flex justify-between text-[10px] font-mono text-[#a8a083] px-1 mt-1">
+						<div class="flex justify-between text-[10px] font-mono text-[#8e9abb] px-1 mt-1">
 							<span>1%</span>
 							<span>25%</span>
 							<span>50%</span>
@@ -289,7 +289,7 @@
 			{#if isWarProposal}
 				<div class="pt-6 border-t border-dashed border-red-500/30 space-y-2 animate-rise-in">
 					<label for="targetStateId" class="field-label">
-						<span class="font-serif text-[#a8a083] mr-1">§ 2</span> War is declared on
+						<span class="font-serif text-[#8e9abb] mr-1">§ 2</span> War is declared on
 						<span class="text-red-400">*</span>
 					</label>
 					{#if data.warTargets.length}
@@ -307,15 +307,15 @@
 							<p class="field-error">{$errors.targetStateId}</p>
 						{/if}
 					{:else}
-						<p class="text-sm text-[#a8a083]">No state you could declare war on.</p>
+						<p class="text-sm text-[#8e9abb]">No state you could declare war on.</p>
 					{/if}
 				</div>
 			{/if}
 
 			{#if isBorderControlProposal}
-				<fieldset class="pt-6 border-t border-dashed border-[#c8b47a]/20 animate-rise-in">
+				<fieldset class="pt-6 border-t border-dashed border-[#8ea6e0]/20 animate-rise-in">
 					<legend class="field-label">
-						<span class="font-serif text-[#a8a083] mr-1">§ 2</span> The borders shall be
+						<span class="font-serif text-[#8e9abb] mr-1">§ 2</span> The borders shall be
 						<span class="text-red-400">*</span>
 					</legend>
 					<div class="grid grid-cols-2 gap-2">
@@ -330,13 +330,13 @@
 							>
 								<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
 								<span class="min-w-0">
-									<span class="block text-sm font-semibold text-[#f5efd8]">
+									<span class="block text-sm font-semibold text-[#eef2ff]">
 										{opt.label}
 										{#if data.border?.status === opt.v}
-											<span class="text-[10px] font-normal uppercase tracking-wide text-[#a8a083]"> · now</span>
+											<span class="text-[10px] font-normal uppercase tracking-wide text-[#8e9abb]"> · now</span>
 										{/if}
 									</span>
-									<span class="block text-xs text-[#a8a083] truncate">{opt.hint}</span>
+									<span class="block text-xs text-[#8e9abb] truncate">{opt.hint}</span>
 								</span>
 							</button>
 						{/each}
@@ -349,9 +349,9 @@
 			{/if}
 
 			{#if isExploitationProposal}
-				<fieldset class="pt-6 border-t border-dashed border-[#c8b47a]/20 animate-rise-in">
+				<fieldset class="pt-6 border-t border-dashed border-[#8ea6e0]/20 animate-rise-in">
 					<legend class="field-label">
-						<span class="font-serif text-[#a8a083] mr-1">§ 2</span> Mines may work deposits under
+						<span class="font-serif text-[#8e9abb] mr-1">§ 2</span> Mines may work deposits under
 						<span class="text-red-400">*</span>
 					</legend>
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -367,15 +367,15 @@
 							>
 								<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
 								<span class="min-w-0 flex-1">
-									<span class="block text-sm font-semibold text-[#f5efd8]">
+									<span class="block text-sm font-semibold text-[#eef2ff]">
 										{policy.label}
 										{#if data.exploitationPolicy === key}
-											<span class="text-[10px] font-normal uppercase tracking-wide text-[#a8a083]"> · in force</span>
+											<span class="text-[10px] font-normal uppercase tracking-wide text-[#8e9abb]"> · in force</span>
 										{/if}
 									</span>
 									<span class="block text-xs font-mono">
-										<span class="text-[#b9f29a]">output ×{policy.outputMultiplier}</span>
-										<span class="text-[#ffd35c] ml-2">drain ×{policy.depletionMultiplier}</span>
+										<span class="text-[#aef3c9]">output ×{policy.outputMultiplier}</span>
+										<span class="text-[#ffcb6b] ml-2">drain ×{policy.depletionMultiplier}</span>
 									</span>
 								</span>
 							</button>
@@ -389,10 +389,10 @@
 			{/if}
 
 			{#if isBuildingProposal}
-				<div class="pt-6 border-t border-dashed border-[#c8b47a]/20 space-y-5 animate-rise-in">
+				<div class="pt-6 border-t border-dashed border-[#8ea6e0]/20 space-y-5 animate-rise-in">
 					<fieldset>
 						<legend class="field-label">
-							<span class="font-serif text-[#a8a083] mr-1">§ 2</span> To be built in
+							<span class="font-serif text-[#8e9abb] mr-1">§ 2</span> To be built in
 							<span class="text-red-400">*</span>
 						</legend>
 						<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -415,8 +415,8 @@
 										class="size-8 rounded-sm shrink-0"
 									/>
 									<span class="min-w-0">
-										<span class="block text-sm font-semibold text-[#f5efd8] truncate">{getRegionName(region.id)}</span>
-										<span class="block text-xs text-[#a8a083] truncate">
+										<span class="block text-sm font-semibold text-[#eef2ff] truncate">{getRegionName(region.id)}</span>
+										<span class="block text-xs text-[#8e9abb] truncate">
 											Infra {region.infrastructure ?? 0}{#if p && $formData.proposalType !== "infrastructure"}
 												· level {p.level}/{p.max}{/if}{#if p && p.infrastructure < p.infrastructureRequired}
 												<span class="text-red-300"> · needs infra {p.infrastructureRequired}</span>{/if}
@@ -435,26 +435,26 @@
 						{@const statLabel = data.buildingTemplates[$formData.proposalType as BuildingType].statLabel}
 						<div class="panel-muted rounded-sm p-3 space-y-2">
 							<div class="flex items-center justify-between gap-3">
-								<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">{statLabel}</span>
-								<span class="font-mono text-sm text-[#f5efd8]">
+								<span class="text-[10px] text-[#8e9abb] uppercase tracking-wide">{statLabel}</span>
+								<span class="font-mono text-sm text-[#eef2ff]">
 									Level {progress.level}
-									{#if !blocked}<span class="text-[#6fd14a]"> → {progress.level + 1}</span>{/if}
-									<span class="text-[#a8a083]">/ {progress.max}</span>
+									{#if !blocked}<span class="text-[#4fd88a]"> → {progress.level + 1}</span>{/if}
+									<span class="text-[#8e9abb]">/ {progress.max}</span>
 								</span>
 							</div>
 							<div class="flex gap-0.5" aria-hidden="true">
 								{#each Array(progress.max) as _, i (i)}
 									<div
 										class="h-2 flex-1 rounded-full {i < progress.level
-											? 'bg-[#6fd14a]'
+											? 'bg-[#4fd88a]'
 											: i === progress.level && !blocked
-												? 'bg-[#f2b01e] animate-pulse'
-												: 'bg-[#1a1f15]'}"
+												? 'bg-[#f5a524] animate-pulse'
+												: 'bg-[#131c33]'}"
 									></div>
 								{/each}
 							</div>
 							{#if progress.pending}
-								<p class="text-xs text-[#ffd35c]">Level {progress.level + 1} is still under construction.</p>
+								<p class="text-xs text-[#ffcb6b]">Level {progress.level + 1} is still under construction.</p>
 							{:else if progress.infrastructure < progress.infrastructureRequired}
 								<p class="text-xs text-red-300">
 									Needs infrastructure {progress.infrastructureRequired} (has {progress.infrastructure}).
@@ -479,16 +479,16 @@
 						{#if template}
 							<dl class="grid grid-cols-3 gap-2 text-xs">
 								<div class="panel-muted rounded-sm p-2.5">
-									<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">Build time</dt>
-									<dd class="font-mono text-[#f5efd8]">{template.constructionTime} days</dd>
+									<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Build time</dt>
+									<dd class="font-mono text-[#eef2ff]">{template.constructionTime} days</dd>
 								</div>
 								<div class="panel-muted rounded-sm p-2.5">
-									<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">Infra needed</dt>
-									<dd class="font-mono text-[#f5efd8]">{template.infrastructureRequired}</dd>
+									<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Infra needed</dt>
+									<dd class="font-mono text-[#eef2ff]">{template.infrastructureRequired}</dd>
 								</div>
 								<div class="panel-muted rounded-sm p-2.5 min-w-0">
-									<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">Adds</dt>
-									<dd class="text-[#f5efd8] truncate">+1 {template.statLabel.toLowerCase()}</dd>
+									<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Adds</dt>
+									<dd class="text-[#eef2ff] truncate">+1 {template.statLabel.toLowerCase()}</dd>
 								</div>
 							</dl>
 						{/if}
@@ -499,7 +499,7 @@
 
 		<!-- Signature line -->
 		<div
-			class="px-5 py-4 border-t-2 border-double border-[#c8b47a]/30 bg-[#1a1f15]/50 flex flex-col-reverse sm:flex-row gap-3"
+			class="px-5 py-4 border-t-2 border-double border-[#8ea6e0]/30 bg-[#131c33]/50 flex flex-col-reverse sm:flex-row gap-3"
 		>
 			<Button href="/state/{data.state.id}/parliament" variant="secondary" grow>Cancel</Button>
 			<Button

@@ -46,16 +46,16 @@
 		<Logo
 			src={avatar}
 			alt=""
-			class="{avatarSize} shrink-0 rounded-full ring-1 ring-[#c8b47a]/20 transition-transform duration-200 group-hover:scale-105 group-hover:ring-[#f2b01e]/55"
+			class="{avatarSize} shrink-0 rounded-full ring-1 ring-[#8ea6e0]/20 transition-transform duration-200 group-hover:scale-105 group-hover:ring-[#f5a524]/55"
 			placeholderIcon={FluentPerson20Filled}
-			placeholderGradient="from-[#4a5238] to-[#252b1e]"
+			placeholderGradient="from-[#33456f] to-[#1b2641]"
 		/>
 	{/if}
 	<span class="min-w-0 {subtitle ? 'flex flex-col leading-tight' : 'inline-flex items-center gap-1.5'}">
 		<span class="inline-flex items-center gap-1.5 min-w-0">
 			<span
-				class="{nameSize} font-semibold text-[#f5efd8] truncate transition-colors {id
-					? 'group-hover:text-[#ffcf47]'
+				class="{nameSize} font-semibold text-[#eef2ff] truncate transition-colors {id
+					? 'group-hover:text-[#ffc857]'
 					: ''}">{label}</span
 			>
 			{#if party?.abbreviation}
@@ -63,7 +63,7 @@
 			{/if}
 		</span>
 		{#if subtitle}
-			<span class="text-xs text-[#a8a083] truncate">{subtitle}</span>
+			<span class="text-xs text-[#8e9abb] truncate">{subtitle}</span>
 		{/if}
 	</span>
 </svelte:element>

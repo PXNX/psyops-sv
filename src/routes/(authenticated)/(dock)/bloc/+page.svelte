@@ -86,7 +86,7 @@
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Search -->
 		<div class="relative flex-1">
-			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a8a083]" />
+			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#8e9abb]" />
 			<input
 				type="text"
 				bind:value={searchInput}
@@ -101,7 +101,7 @@
 					type="button"
 					onclick={clearSearch}
 					aria-label="Clear search"
-					class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-[#a8a083] hover:text-[#f5efd8] hover:bg-[#f2b01e]/10 transition-colors"
+					class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-[#8e9abb] hover:text-[#eef2ff] hover:bg-[#f5a524]/10 transition-colors"
 				>
 					<FluentDismiss20Filled class="size-4" />
 				</button>
@@ -123,11 +123,11 @@
 
 	<!-- Active search indicator -->
 	{#if data.search}
-		<div class="flex items-center gap-2 text-sm text-[#a8a083]">
+		<div class="flex items-center gap-2 text-sm text-[#8e9abb]">
 			<span>
 				{data.blocs.length}
 				{data.blocs.length === 1 ? "result" : "results"} for
-				<span class="font-semibold text-[#f5efd8]">"{data.search}"</span>
+				<span class="font-semibold text-[#eef2ff]">"{data.search}"</span>
 			</span>
 			<Button variant="ghost" size="xs" icon={FluentDismiss20Filled} onclick={clearSearch}>Clear</Button>
 		</div>
@@ -139,7 +139,7 @@
 			{#each data.blocs as bloc (bloc.id)}
 				<article
 					class="panel-interactive rounded-sm flex flex-col overflow-hidden {bloc.isUserMember
-						? 'border-[#6fd14a]/40'
+						? 'border-[#4fd88a]/40'
 						: ''}"
 				>
 					<div class="h-1.5 shrink-0" style:background-color={bloc.color}></div>
@@ -153,11 +153,11 @@
 							</div>
 							<div class="flex-1 min-w-0">
 								<h2
-									class="font-serif text-lg font-bold leading-tight text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate"
+									class="font-serif text-lg font-bold leading-tight text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate"
 								>
 									{bloc.name}
 								</h2>
-								<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083]">
+								<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]">
 									Treaty of {new Date(bloc.createdAt).getFullYear()}
 								</p>
 							</div>
@@ -167,7 +167,7 @@
 						</div>
 
 						{#if bloc.description}
-							<p class="font-serif text-sm italic text-[#d3caa9] line-clamp-2">{bloc.description}</p>
+							<p class="font-serif text-sm italic text-[#c2cbe3] line-clamp-2">{bloc.description}</p>
 						{/if}
 
 						<!-- Member flags -->
@@ -178,32 +178,32 @@
 										<Logo
 											src={m.logo}
 											alt={m.name}
-											class="size-7 rounded-sm ring-2 ring-[#1a1f15]"
+											class="size-7 rounded-sm ring-2 ring-[#131c33]"
 											placeholderIcon={FluentBuildingGovernment20Filled}
 										/>
 									{/each}
 								</div>
 								{#if bloc.members.length > 8}
-									<span class="ml-2 text-xs text-[#a8a083]">+{bloc.members.length - 8}</span>
+									<span class="ml-2 text-xs text-[#8e9abb]">+{bloc.members.length - 8}</span>
 								{/if}
 							</div>
 						{/if}
 
-						<p class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#a8a083]">
+						<p class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#8e9abb]">
 							<span class="flex items-center gap-1"
-								><FluentBuildingGovernment20Filled class="size-3.5 text-[#5eaef5]" />
-								<span class="font-bold text-[#f5efd8]">{bloc.memberCount}</span>
+								><FluentBuildingGovernment20Filled class="size-3.5 text-[#6aa8ff]" />
+								<span class="font-bold text-[#eef2ff]">{bloc.memberCount}</span>
 								{bloc.memberCount === 1 ? "state" : "states"}</span
 							>
 							<span class="flex items-center gap-1"
-								><FluentPeople20Filled class="size-3.5 text-[#ffd35c]" />
-								<span class="font-bold text-[#f5efd8]">{formatPopulation(bloc.totalPopulation)}</span> citizens</span
+								><FluentPeople20Filled class="size-3.5 text-[#ffcb6b]" />
+								<span class="font-bold text-[#eef2ff]">{formatPopulation(bloc.totalPopulation)}</span> citizens</span
 							>
 						</p>
 					</a>
 
 					{#if bloc.leader || bloc.isPendingApplication || (data.userPresidency && !data.userPresidency.blocId && !data.pendingApplicationBlocId)}
-						<div class="flex items-center justify-between gap-2 border-t border-[#c8b47a]/10 px-4 py-2.5">
+						<div class="flex items-center justify-between gap-2 border-t border-[#8ea6e0]/10 px-4 py-2.5">
 							{#if bloc.leader}
 								<UserLink
 									size="sm"
@@ -213,7 +213,7 @@
 									subtitle="Bloc leader"
 								/>
 							{:else}
-								<span class="text-xs text-[#a8a083]">No leader elected</span>
+								<span class="text-xs text-[#8e9abb]">No leader elected</span>
 							{/if}
 
 							{#if bloc.isPendingApplication}

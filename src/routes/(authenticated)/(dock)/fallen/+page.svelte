@@ -26,15 +26,15 @@
 
 	<!-- Fallen States -->
 	<section class="space-y-3">
-		<h2 class="text-sm font-bold text-[#a8a083] uppercase tracking-wide flex items-center gap-2">
+		<h2 class="text-sm font-bold text-[#8e9abb] uppercase tracking-wide flex items-center gap-2">
 			<FluentBuildingGovernment20Filled class="size-4" />
 			Fallen States
-			<span class="text-[#a8a083]/70">({data.fallenStates.length})</span>
+			<span class="text-[#8e9abb]/70">({data.fallenStates.length})</span>
 		</h2>
 
 		{#if data.fallenStates.length === 0}
 			<SectionCard>
-				<p class="text-[#a8a083] text-sm text-center py-4">
+				<p class="text-[#8e9abb] text-sm text-center py-4">
 					No states have fallen yet. The map still belongs to the living.
 				</p>
 			</SectionCard>
@@ -45,13 +45,13 @@
 						<Logo
 							src={state.logo}
 							alt={state.name}
-							class="size-12 rounded-sm border border-[#c8b47a]/15 grayscale opacity-80"
+							class="size-12 rounded-sm border border-[#8ea6e0]/15 grayscale opacity-80"
 							placeholderIcon={FluentBuildingGovernment20Filled}
-							placeholderGradient="from-[#3a3a3a] to-[#3a3a3a]"
+							placeholderGradient="from-[#2a3654] to-[#2a3654]"
 						/>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 flex-wrap">
-								<span class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate"
+								<span class="font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate"
 									>{state.name}</span
 								>
 								{#if state.bloc}
@@ -63,7 +63,7 @@
 									</span>
 								{/if}
 							</div>
-							<div class="flex items-center gap-3 mt-1 text-xs text-[#a8a083]">
+							<div class="flex items-center gap-3 mt-1 text-xs text-[#8e9abb]">
 								<span class="flex items-center gap-1">
 									<FluentPeople20Filled class="size-3.5" />
 									{state.population.toLocaleString()}
@@ -74,8 +74,8 @@
 							</div>
 						</div>
 						<div class="text-right shrink-0">
-							<div class="text-[10px] text-[#a8a083] uppercase tracking-wide">Existed</div>
-							<div class="text-sm font-bold text-[#d3caa9]">
+							<div class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Existed</div>
+							<div class="text-sm font-bold text-[#c2cbe3]">
 								{getDurationText(state.createdAt, state.capitulatedAt)}
 							</div>
 						</div>
@@ -87,15 +87,15 @@
 
 	<!-- Fallen Blocs -->
 	<section class="space-y-3">
-		<h2 class="text-sm font-bold text-[#a8a083] uppercase tracking-wide flex items-center gap-2">
+		<h2 class="text-sm font-bold text-[#8e9abb] uppercase tracking-wide flex items-center gap-2">
 			<FluentFlag20Filled class="size-4" />
 			Dissolved Blocs
-			<span class="text-[#a8a083]/70">({data.fallenBlocs.length})</span>
+			<span class="text-[#8e9abb]/70">({data.fallenBlocs.length})</span>
 		</h2>
 
 		{#if data.fallenBlocs.length === 0}
 			<SectionCard>
-				<p class="text-[#a8a083] text-sm text-center py-4">No blocs have been dissolved yet.</p>
+				<p class="text-[#8e9abb] text-sm text-center py-4">No blocs have been dissolved yet.</p>
 			</SectionCard>
 		{:else}
 			<div class="grid gap-2">
@@ -104,13 +104,13 @@
 						<Logo
 							src={bloc.logo}
 							alt={bloc.name}
-							class="size-12 rounded-sm border border-[#c8b47a]/15 grayscale opacity-80"
+							class="size-12 rounded-sm border border-[#8ea6e0]/15 grayscale opacity-80"
 							placeholderIcon={FluentFlag20Filled}
-							placeholderGradient="from-[#3a3a3a] to-[#3a3a3a]"
+							placeholderGradient="from-[#2a3654] to-[#2a3654]"
 						/>
 						<div class="flex-1 min-w-0">
-							<span class="font-bold text-[#f5efd8] truncate">{bloc.name}</span>
-							<div class="flex items-center gap-3 mt-1 text-xs text-[#a8a083]">
+							<span class="font-bold text-[#eef2ff] truncate">{bloc.name}</span>
+							<div class="flex items-center gap-3 mt-1 text-xs text-[#8e9abb]">
 								<span class="flex items-center gap-1">
 									<FluentBuildingGovernment20Filled class="size-3.5" />
 									{bloc.memberStates} member{bloc.memberStates === 1 ? "" : "s"}
@@ -121,8 +121,8 @@
 							</div>
 						</div>
 						<div class="text-right shrink-0">
-							<div class="text-[10px] text-[#a8a083] uppercase tracking-wide">Existed</div>
-							<div class="text-sm font-bold text-[#d3caa9]">
+							<div class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Existed</div>
+							<div class="text-sm font-bold text-[#c2cbe3]">
 								{getDurationText(bloc.createdAt, bloc.capitulatedAt)}
 							</div>
 						</div>

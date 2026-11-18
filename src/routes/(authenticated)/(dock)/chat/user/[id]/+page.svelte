@@ -223,10 +223,10 @@
 
 <Modal bind:open={showExternalLinkWarning} title="External Link Warning" size="small">
 	<div class="space-y-4">
-		<p class="text-[#d3caa9]">
+		<p class="text-[#c2cbe3]">
 			You are about to visit an external website. Please be careful and make sure you trust this link.
 		</p>
-		<div class="panel-muted rounded-sm p-3 break-all text-sm text-[#a8a083]">
+		<div class="panel-muted rounded-sm p-3 break-all text-sm text-[#8e9abb]">
 			{pendingExternalLink}
 		</div>
 		<div class="flex gap-2 justify-end">
@@ -247,8 +247,8 @@
 {#if !data.otherUser}
 	<PageContainer maxWidth="5xl">
 		<div class="panel rounded-sm p-8 text-center">
-			<h2 class="text-2xl font-bold text-[#f5efd8] mb-2">User Not Found</h2>
-			<p class="text-[#a8a083] mb-4">This user doesn't exist or you don't have permission to message them.</p>
+			<h2 class="text-2xl font-bold text-[#eef2ff] mb-2">User Not Found</h2>
+			<p class="text-[#8e9abb] mb-4">This user doesn't exist or you don't have permission to message them.</p>
 			<Button variant="primary" onclick={() => goto("/chat")}>Back to Messages</Button>
 		</div>
 	</PageContainer>
@@ -257,7 +257,7 @@
 	<div class="flex flex-col h-full min-h-0">
 		<!-- Header -->
 		<div
-			class="bg-[#171b12]/90 backdrop-blur-sm border-b border-[#c8b47a]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
+			class="bg-[#111a2e]/90 backdrop-blur-sm border-b border-[#8ea6e0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
 		>
 			<div class="flex items-center gap-2 md:gap-3">
 				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
@@ -278,23 +278,23 @@
 		<div
 			bind:this={chatContainer}
 			onscroll={handleScroll}
-			class="flex-1 min-h-0 bg-[#12150f]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#c8b47a]/20 scrollbar-track-transparent"
+			class="flex-1 min-h-0 bg-[#0c1222]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#8ea6e0]/20 scrollbar-track-transparent"
 		>
 			{#if allMessages.length === 0}
 				<div class="flex items-center justify-center h-full">
-					<p class="text-[#a8a083] text-center">No messages yet.</p>
+					<p class="text-[#8e9abb] text-center">No messages yet.</p>
 				</div>
 			{:else}
 				{#each messagesByDay as day}
 					<!-- Day Divider -->
 					<div class="flex items-center gap-4 my-6">
-						<div class="flex-1 h-px bg-[#c8b47a]/15"></div>
+						<div class="flex-1 h-px bg-[#8ea6e0]/15"></div>
 						<span
-							class="text-[10px] uppercase tracking-wide text-[#a8a083] font-semibold px-3 py-1 panel-muted rounded-sm"
+							class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-semibold px-3 py-1 panel-muted rounded-sm"
 						>
 							{formatDayDivider(day.date)}
 						</span>
-						<div class="flex-1 h-px bg-[#c8b47a]/15"></div>
+						<div class="flex-1 h-px bg-[#8ea6e0]/15"></div>
 					</div>
 
 					{#each day.groups as group}
@@ -304,7 +304,7 @@
 								<div class="flex flex-col gap-1 items-end w-full">
 									{#each group.messages as msg}
 										<div
-											class="chat-bubble before:hidden bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#f5efd8] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
+											class="chat-bubble before:hidden bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#eef2ff] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
@@ -322,7 +322,7 @@
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-[#ffcf47]"
+															class="underline hover:text-[#ffc857]"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -336,7 +336,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer text-[#a8a083] text-xs mt-1">
+								<div class="chat-footer text-[#8e9abb] text-xs mt-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -346,7 +346,7 @@
 								<div class="flex flex-col gap-1 items-start w-full">
 									{#each group.messages as msg}
 										<div
-											class="chat-bubble before:hidden bg-[#1a1f15]/70 border border-[#c8b47a]/10 text-[#e6ddbf] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
+											class="chat-bubble before:hidden bg-[#131c33]/70 border border-[#8ea6e0]/10 text-[#dbe2f4] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
@@ -364,7 +364,7 @@
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-[#ffcf47]"
+															class="underline hover:text-[#ffc857]"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -378,7 +378,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer text-[#a8a083] text-xs mt-1">
+								<div class="chat-footer text-[#8e9abb] text-xs mt-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -389,9 +389,9 @@
 		</div>
 
 		<!-- Blocked notice instead of input -->
-		<div class="bg-[#171b12]/90 backdrop-blur-sm border-t border-[#c8b47a]/15 p-3 md:p-4 flex-shrink-0">
+		<div class="bg-[#111a2e]/90 backdrop-blur-sm border-t border-[#8ea6e0]/15 p-3 md:p-4 flex-shrink-0">
 			<div class="panel-muted rounded-sm p-4 text-center">
-				<p class="text-[#d3caa9] mb-3">
+				<p class="text-[#c2cbe3] mb-3">
 					{#if data.blockedByCurrentUser}
 						You have blocked this user. Unblock them to send messages.
 					{:else}
@@ -412,7 +412,7 @@
 	<div class="flex flex-col h-full min-h-0">
 		<!-- Header -->
 		<div
-			class="bg-[#171b12]/90 backdrop-blur-sm border-b border-[#c8b47a]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
+			class="bg-[#111a2e]/90 backdrop-blur-sm border-b border-[#8ea6e0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
 		>
 			<div class="flex items-center gap-2 md:gap-3">
 				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
@@ -434,7 +434,7 @@
 					</label>
 					<ul
 						tabindex="0"
-						class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#242a1d] border border-[#c8b47a]/15 rounded-sm w-52 mt-2"
+						class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#1b2641] border border-[#8ea6e0]/15 rounded-sm w-52 mt-2"
 					>
 						<li>
 							<button
@@ -453,27 +453,27 @@
 		<div
 			bind:this={chatContainer}
 			onscroll={handleScroll}
-			class="flex-1 min-h-0 bg-[#12150f]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#c8b47a]/20 scrollbar-track-transparent"
+			class="flex-1 min-h-0 bg-[#0c1222]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#8ea6e0]/20 scrollbar-track-transparent"
 		>
 			{#if allMessages.length === 0}
 				<div class="flex items-center justify-center h-full">
 					<div class="text-center">
-						<FluentPerson20Filled class="size-16 text-[#a8a083]/70 mx-auto mb-4" />
-						<p class="text-[#a8a083] text-base">No messages yet</p>
-						<p class="text-[#a8a083] text-sm mt-1">Start the conversation!</p>
+						<FluentPerson20Filled class="size-16 text-[#8e9abb]/70 mx-auto mb-4" />
+						<p class="text-[#8e9abb] text-base">No messages yet</p>
+						<p class="text-[#8e9abb] text-sm mt-1">Start the conversation!</p>
 					</div>
 				</div>
 			{:else}
 				{#each messagesByDay as day}
 					<!-- Day Divider -->
 					<div class="flex items-center gap-3 my-6">
-						<div class="flex-1 h-px bg-[#c8b47a]/15"></div>
+						<div class="flex-1 h-px bg-[#8ea6e0]/15"></div>
 						<span
-							class="text-[10px] uppercase tracking-wide text-[#a8a083] font-semibold px-3 py-1 panel-muted rounded-sm"
+							class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-semibold px-3 py-1 panel-muted rounded-sm"
 						>
 							{formatDayDivider(day.date)}
 						</span>
-						<div class="flex-1 h-px bg-[#c8b47a]/15"></div>
+						<div class="flex-1 h-px bg-[#8ea6e0]/15"></div>
 					</div>
 
 					{#each day.groups as group}
@@ -483,7 +483,7 @@
 								<div class="flex flex-col gap-1 items-end w-full max-w-[85%] md:max-w-md ml-auto">
 									{#each group.messages as msg}
 										<div
-											class="chat-bubble before:hidden bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#f5efd8] {msg.isOptimistic
+											class="chat-bubble before:hidden bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#eef2ff] {msg.isOptimistic
 												? 'opacity-70'
 												: ''} text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 										>
@@ -503,7 +503,7 @@
 														<a
 															href={part.content}
 															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-[#ffcf47] break-all"
+															class="underline hover:text-[#ffc857] break-all"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -517,7 +517,7 @@
 										</div>
 									{/each}
 								</div>
-								<div class="chat-footer text-[#a8a083] text-xs mt-0.5 px-1">
+								<div class="chat-footer text-[#8e9abb] text-xs mt-0.5 px-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -528,7 +528,7 @@
 									{#each group.messages as msg}
 										<button
 											onclick={() => handleReportMessage(msg.id, msg.senderId)}
-											class="chat-bubble before:hidden bg-[#1a1f15]/70 border border-[#c8b47a]/10 text-[#e6ddbf] hover:bg-[#2e3524] hover:border-[#f2b01e]/35 transition-colors text-left cursor-pointer text-sm md:text-base px-4 py-2.5 rounded-md break-words"
+											class="chat-bubble before:hidden bg-[#131c33]/70 border border-[#8ea6e0]/10 text-[#dbe2f4] hover:bg-[#233154] hover:border-[#f5a524]/35 transition-colors text-left cursor-pointer text-sm md:text-base px-4 py-2.5 rounded-md break-words"
 										>
 											{#each renderMessageContent(msg.content) as part}
 												{#if part.type === "url"}
@@ -549,7 +549,7 @@
 																e.stopPropagation();
 																handleLinkClick(e, part.content);
 															}}
-															class="underline hover:text-[#ffcf47] break-all"
+															class="underline hover:text-[#ffc857] break-all"
 															target="_blank"
 															rel="noopener noreferrer"
 														>
@@ -563,7 +563,7 @@
 										</button>
 									{/each}
 								</div>
-								<div class="chat-footer text-[#a8a083] text-xs mt-0.5 px-1">
+								<div class="chat-footer text-[#8e9abb] text-xs mt-0.5 px-1">
 									{formatGroupTime(group.lastMessageTime)}
 								</div>
 							</div>
@@ -574,7 +574,7 @@
 		</div>
 
 		<!-- Message input - Fixed to bottom -->
-		<div class="bg-[#171b12]/90 backdrop-blur-sm border-t border-[#c8b47a]/15 p-3 md:p-4 flex-shrink-0">
+		<div class="bg-[#111a2e]/90 backdrop-blur-sm border-t border-[#8ea6e0]/15 p-3 md:p-4 flex-shrink-0">
 			{#if form?.error}
 				<div
 					class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
@@ -585,7 +585,7 @@
 
 			{#if form?.success && form?.message}
 				<div
-					class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
+					class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
 				>
 					<p>{form.message}</p>
 				</div>
@@ -656,8 +656,8 @@
 					<span class="hidden md:inline">{isSubmitting ? "Sending" : "Send"}</span>
 				</Button>
 			</form>
-			<p class="text-xs text-[#a8a083] mt-2 px-1">
-				<span class="font-mono {message.length > 450 ? 'text-[#ffd35c] font-semibold' : ''}">{message.length}/500</span>
+			<p class="text-xs text-[#8e9abb] mt-2 px-1">
+				<span class="font-mono {message.length > 450 ? 'text-[#ffcb6b] font-semibold' : ''}">{message.length}/500</span>
 				<span class="hidden md:inline"> • Press Enter to send, Shift+Enter for new line</span>
 			</p>
 		</div>

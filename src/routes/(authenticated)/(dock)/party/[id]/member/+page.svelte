@@ -58,7 +58,7 @@
 		{#snippet actions()}
 			<a href="/party/{data.party.id}" class="shrink-0" aria-label={data.party.name}>
 				<div
-					class="size-12 rounded-sm overflow-hidden border border-[#c8b47a]/15 flex items-center justify-center"
+					class="size-12 rounded-sm overflow-hidden border border-[#8ea6e0]/15 flex items-center justify-center"
 					style="background-color: {data.party.color}"
 				>
 					{#if data.party.logoUrl}
@@ -70,7 +70,7 @@
 							class="size-10 object-contain"
 						/>
 					{:else}
-						<FluentShield20Filled class="size-6 text-[#f5efd8]" />
+						<FluentShield20Filled class="size-6 text-[#eef2ff]" />
 					{/if}
 				</div>
 			</a>
@@ -83,10 +83,10 @@
 			<div class="panel rounded-sm p-4">
 				<div class="flex items-center justify-between gap-3">
 					<div class="flex items-center gap-3">
-						<FluentSettings20Filled class="size-4 text-[#5eaef5] shrink-0" />
+						<FluentSettings20Filled class="size-4 text-[#6aa8ff] shrink-0" />
 						<div>
-							<span class="text-sm font-bold text-[#f5efd8]">Auto-accept</span>
-							<p class="text-xs text-[#a8a083] mt-0.5">
+							<span class="text-sm font-bold text-[#eef2ff]">Auto-accept</span>
+							<p class="text-xs text-[#8e9abb] mt-0.5">
 								{data.party.autoAcceptMembers ? "Members join instantly" : "Requires approval"}
 							</p>
 						</div>
@@ -104,7 +104,7 @@
 					>
 						<input
 							type="checkbox"
-							class="toggle toggle-sm border-[#c8b47a]/25 checked:border-[#6fd14a]/50 checked:bg-[#3f8a2a] checked:text-[#b9f29a]"
+							class="toggle toggle-sm border-[#8ea6e0]/25 checked:border-[#4fd88a]/50 checked:bg-[#1f9d62] checked:text-[#aef3c9]"
 							checked={data.party.autoAcceptMembers}
 							disabled={togglingAutoAccept}
 							onchange={(e) => e.currentTarget.form?.requestSubmit()}
@@ -116,10 +116,10 @@
 
 		<!-- Pending Applications -->
 		{#if canManageMembers && data.pendingApplications.length > 0}
-			<div class="panel rounded-sm p-5 space-y-3 border-[#f2b01e]/35">
+			<div class="panel rounded-sm p-5 space-y-3 border-[#f5a524]/35">
 				<div class="flex items-center justify-between">
 					<h2 class="section-title">
-						<FluentPersonAvailable20Filled class="size-5 text-[#ffd35c]" />
+						<FluentPersonAvailable20Filled class="size-5 text-[#ffcb6b]" />
 						Applications
 					</h2>
 					<Badge tone="amber">{data.pendingApplications.length}</Badge>
@@ -253,7 +253,7 @@
 						</div>
 
 						{#if canManageMembers && member.userId !== data.members.find((m) => m.role === "leader")?.userId}
-							<div class="mt-auto flex items-center justify-end gap-1 border-t border-[#c8b47a]/10 px-3 py-2">
+							<div class="mt-auto flex items-center justify-end gap-1 border-t border-[#8ea6e0]/10 px-3 py-2">
 								{#if data.isLeader && member.role !== "leader"}
 									{#if member.role === "member"}
 										<form
@@ -342,8 +342,8 @@
 				>
 					<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div class="text-center sm:text-left">
-							<span class="text-sm font-bold text-[#f5efd8]">Join {data.party.name}</span>
-							<p class="text-xs text-[#a8a083] mt-0.5">
+							<span class="text-sm font-bold text-[#eef2ff]">Join {data.party.name}</span>
+							<p class="text-xs text-[#8e9abb] mt-0.5">
 								{data.party.autoAcceptMembers ? "Instant membership" : "Leadership approves"}
 							</p>
 						</div>
@@ -355,7 +355,7 @@
 			</div>
 		{:else if data.hasApplied}
 			<div
-				class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center justify-center gap-3"
+				class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm p-4 flex items-center justify-center gap-3"
 			>
 				<span class="text-sm">Application pending review</span>
 			</div>

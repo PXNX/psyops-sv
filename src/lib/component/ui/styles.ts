@@ -25,36 +25,36 @@ export type ButtonShape = "default" | "circle" | "square";
 
 /** Shared by every button: consistent motion, focus ring and disabled treatment. */
 const BUTTON_BASE =
-	"btn press-spring tap-target gap-2 font-medium rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#12150f] disabled:opacity-50 disabled:cursor-not-allowed";
+	"btn press-spring tap-target gap-2 font-medium rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c1222] disabled:opacity-50 disabled:cursor-not-allowed";
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 	// Solid — one per intent. Use for the primary action of a screen or dialog.
 	primary:
-		"bg-gradient-to-b from-[#ffc940] to-[#d99410] hover:from-[#ffd65e] hover:to-[#eaa51c] border border-[#ffe08a] text-[#1b1708] font-semibold [text-shadow:0_1px_0_rgba(255,240,190,0.5)] shadow-[inset_0_1px_0_rgba(255,250,220,0.6),inset_0_-2px_0_rgba(120,70,0,0.45),0_3px_10px_rgba(0,0,0,0.45),0_0_14px_rgba(242,176,30,0.25)] focus-visible:ring-[#f2b01e]",
+		"bg-gradient-to-b from-[#ffc457] to-[#f59e0b] hover:from-[#ffd27a] hover:to-[#f7a928] border-0 text-[#1a1305] font-semibold shadow-[0_8px_20px_-6px_rgba(245,165,36,0.55)] hover:shadow-[0_10px_26px_-6px_rgba(245,165,36,0.7)] focus-visible:ring-[#f5a524]",
 	danger:
-		"bg-gradient-to-b from-[#e0453a] to-[#a8221a] hover:from-[#f05a4e] hover:to-[#bd2a20] border border-[#ff8a7a]/60 text-[#fff1ec] font-semibold shadow-[inset_0_1px_0_rgba(255,244,200,0.12),inset_0_-1px_0_rgba(0,0,0,0.45),0_2px_6px_rgba(0,0,0,0.4)] focus-visible:ring-red-400",
+		"bg-gradient-to-b from-[#f2645a] to-[#d93a30] hover:from-[#f77a70] hover:to-[#e2483d] border-0 text-white font-semibold shadow-[0_8px_20px_-8px_rgba(239,68,68,0.6)] focus-visible:ring-red-400",
 	success:
-		"bg-gradient-to-b from-[#58b032] to-[#2f7020] hover:from-[#68c63e] hover:to-[#378127] border border-[#9ef07a]/60 text-[#f0ffe6] font-semibold shadow-[inset_0_1px_0_rgba(255,244,200,0.12),inset_0_-1px_0_rgba(0,0,0,0.45),0_2px_6px_rgba(0,0,0,0.4)] focus-visible:ring-[#6fd14a]",
-	info: "bg-gradient-to-b from-[#3a8ae0] to-[#1d5a9e] hover:from-[#4c9cf0] hover:to-[#2468b4] border border-[#8cc6ff]/60 text-[#eef7ff] font-semibold shadow-[inset_0_1px_0_rgba(255,244,200,0.12),inset_0_-1px_0_rgba(0,0,0,0.45),0_2px_6px_rgba(0,0,0,0.4)] focus-visible:ring-[#5eaef5]",
+		"bg-gradient-to-b from-[#34c97f] to-[#16a05e] hover:from-[#46d78e] hover:to-[#1aae67] border-0 text-white font-semibold shadow-[0_8px_20px_-8px_rgba(34,197,94,0.55)] focus-visible:ring-[#4fd88a]",
+	info: "bg-gradient-to-b from-[#5b8cff] to-[#3563e9] hover:from-[#6e9bff] hover:to-[#416ff0] border-0 text-white font-semibold shadow-[0_8px_20px_-8px_rgba(79,110,255,0.6)] focus-visible:ring-[#6aa8ff]",
 	premium:
-		"bg-gradient-to-b from-[#ffe27a] via-[#f2b01e] to-[#b97a08] hover:from-[#fff0a8] hover:to-[#d08c0e] border border-[#fff0b0] text-[#1b1708] font-semibold shadow-[inset_0_1px_0_rgba(255,255,230,0.7),0_0_18px_rgba(255,200,60,0.4)] focus-visible:ring-[#ffd35c]",
+		"bg-gradient-to-br from-[#ffe1a6] via-[#f5a524] to-[#e07a1a] hover:from-[#ffeac0] hover:to-[#ea8a24] border-0 text-[#1a1305] font-semibold shadow-[0_8px_24px_-6px_rgba(245,165,36,0.6)] focus-visible:ring-[#ffcb6b]",
 
 	// Neutral — the default for anything that is not the primary action.
 	secondary:
-		"bg-gradient-to-b from-[#353d29] to-[#20261a] hover:from-[#414a32] hover:to-[#29301f] border border-[#c8b47a]/40 hover:border-[#f2b01e]/60 text-[#e6ddbf] hover:text-[#f5efd8] shadow-[inset_0_1px_0_rgba(255,244,200,0.12),inset_0_-1px_0_rgba(0,0,0,0.45),0_2px_6px_rgba(0,0,0,0.4)] focus-visible:ring-[#f2b01e]",
+		"bg-white/[0.06] hover:bg-white/[0.1] border border-white/10 hover:border-white/20 text-[#dbe2f4] hover:text-[#eef2ff] focus-visible:ring-[#8ea6e0]",
 	subtle:
-		"bg-[#1a1f15]/80 hover:bg-[#2e3524] border border-[#c8b47a]/25 text-[#d3caa9] hover:text-[#f5efd8] shadow-[inset_0_1px_0_rgba(255,244,200,0.06)] focus-visible:ring-[#f2b01e]",
-	ghost: "btn-ghost border-0 text-[#c0b897] hover:text-[#f5efd8] hover:bg-[#f2b01e]/10 focus-visible:ring-[#f2b01e]",
+		"bg-white/[0.03] hover:bg-white/[0.07] border border-white/[0.06] text-[#c2cbe3] hover:text-[#eef2ff] focus-visible:ring-[#8ea6e0]",
+	ghost: "btn-ghost border-0 text-[#a9b4d0] hover:text-[#eef2ff] hover:bg-white/[0.06] focus-visible:ring-[#8ea6e0]",
 
 	// Soft/tinted — a coloured hint without competing with the primary action.
 	"soft-purple":
-		"bg-[#8a4fc0]/15 hover:bg-[#8a4fc0]/25 border border-[#c08cf0]/30 text-[#e3cbfb] hover:text-[#f4eaff] focus-visible:ring-[#c08cf0]",
+		"bg-[#7451e6]/15 hover:bg-[#7451e6]/25 border border-[#b9a1ff]/30 text-[#e6dcff] hover:text-[#f4eaff] focus-visible:ring-[#b9a1ff]",
 	"soft-blue":
-		"bg-[#2369b5]/18 hover:bg-[#2369b5]/28 border border-[#5eaef5]/30 text-[#b3dcff] hover:text-[#e3f2ff] focus-visible:ring-[#5eaef5]",
+		"bg-[#2f6be0]/18 hover:bg-[#2f6be0]/28 border border-[#6aa8ff]/30 text-[#c3dbff] hover:text-[#e6f0ff] focus-visible:ring-[#6aa8ff]",
 	"soft-emerald":
-		"bg-[#3f8a2a]/18 hover:bg-[#3f8a2a]/28 border border-[#6fd14a]/30 text-[#b9f29a] hover:text-[#eaffdd] focus-visible:ring-[#6fd14a]",
+		"bg-[#1f9d62]/18 hover:bg-[#1f9d62]/28 border border-[#4fd88a]/30 text-[#aef3c9] hover:text-[#e3fff0] focus-visible:ring-[#4fd88a]",
 	"soft-amber":
-		"bg-[#f2b01e]/12 hover:bg-[#f2b01e]/20 border border-[#f2b01e]/35 text-[#ffd35c] hover:text-[#ffe58f] focus-visible:ring-[#f2b01e]",
+		"bg-[#f5a524]/12 hover:bg-[#f5a524]/20 border border-[#f5a524]/35 text-[#ffcb6b] hover:text-[#ffe1a6] focus-visible:ring-[#f5a524]",
 	"soft-red":
 		"bg-red-600/10 hover:bg-red-600/20 border border-red-500/20 text-red-300 hover:text-red-200 focus-visible:ring-red-400"
 };
@@ -109,11 +109,11 @@ export type BadgeTone = "neutral" | "purple" | "blue" | "green" | "amber" | "ora
 export type BadgeSize = "xs" | "sm" | "md";
 
 const BADGE_TONES: Record<BadgeTone, string> = {
-	neutral: "bg-[#242a1d] text-[#d3caa9] border-[#c8b47a]/20",
-	purple: "bg-[#8a4fc0]/20 text-[#e3cbfb] border-[#c08cf0]/30",
-	blue: "bg-[#2369b5]/20 text-[#b3dcff] border-[#5eaef5]/30",
-	green: "bg-[#3f8a2a]/20 text-[#b9f29a] border-[#6fd14a]/30",
-	amber: "bg-[#f2b01e]/15 text-[#ffd35c] border-[#f2b01e]/35",
+	neutral: "bg-[#1b2641] text-[#c2cbe3] border-[#8ea6e0]/20",
+	purple: "bg-[#7451e6]/20 text-[#e6dcff] border-[#b9a1ff]/30",
+	blue: "bg-[#2f6be0]/20 text-[#c3dbff] border-[#6aa8ff]/30",
+	green: "bg-[#1f9d62]/20 text-[#aef3c9] border-[#4fd88a]/30",
+	amber: "bg-[#f5a524]/15 text-[#ffcb6b] border-[#f5a524]/35",
 	orange: "bg-orange-600/20 text-orange-300 border-orange-500/30",
 	red: "bg-red-600/20 text-red-300 border-red-500/30",
 	cyan: "bg-cyan-600/20 text-cyan-300 border-cyan-500/30",

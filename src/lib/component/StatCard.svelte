@@ -17,34 +17,34 @@
 
 	const colorMap: Record<string, { bg: string; border: string; iconColor: string; labelColor: string }> = {
 		blue: {
-			bg: "bg-[#2369b5]/18",
-			border: "border-[#5eaef5]/30 hover:border-[#5eaef5]/45",
-			iconColor: "text-[#5eaef5]",
-			labelColor: "text-[#b3dcff]"
+			bg: "bg-[#2f6be0]/18",
+			border: "border-[#6aa8ff]/30 hover:border-[#6aa8ff]/45",
+			iconColor: "text-[#6aa8ff]",
+			labelColor: "text-[#c3dbff]"
 		},
 		purple: {
-			bg: "bg-[#8a4fc0]/15",
-			border: "border-[#c08cf0]/30 hover:border-[#c08cf0]/45",
-			iconColor: "text-[#c08cf0]",
-			labelColor: "text-[#e3cbfb]"
+			bg: "bg-[#7451e6]/15",
+			border: "border-[#b9a1ff]/30 hover:border-[#b9a1ff]/45",
+			iconColor: "text-[#b9a1ff]",
+			labelColor: "text-[#e6dcff]"
 		},
 		green: {
-			bg: "bg-[#3f8a2a]/18",
-			border: "border-[#6fd14a]/30 hover:border-[#6fd14a]/45",
-			iconColor: "text-[#6fd14a]",
-			labelColor: "text-[#b9f29a]"
+			bg: "bg-[#1f9d62]/18",
+			border: "border-[#4fd88a]/30 hover:border-[#4fd88a]/45",
+			iconColor: "text-[#4fd88a]",
+			labelColor: "text-[#aef3c9]"
 		},
 		emerald: {
-			bg: "bg-[#3f8a2a]/18",
-			border: "border-[#6fd14a]/30 hover:border-[#6fd14a]/45",
-			iconColor: "text-[#6fd14a]",
-			labelColor: "text-[#b9f29a]"
+			bg: "bg-[#1f9d62]/18",
+			border: "border-[#4fd88a]/30 hover:border-[#4fd88a]/45",
+			iconColor: "text-[#4fd88a]",
+			labelColor: "text-[#aef3c9]"
 		},
 		amber: {
-			bg: "bg-[#f2b01e]/12",
-			border: "border-[#f2b01e]/35 hover:border-[#f2b01e]/50",
-			iconColor: "text-[#ffd35c]",
-			labelColor: "text-[#ffd35c]"
+			bg: "bg-[#f5a524]/12",
+			border: "border-[#f5a524]/35 hover:border-[#f5a524]/50",
+			iconColor: "text-[#ffcb6b]",
+			labelColor: "text-[#ffcb6b]"
 		},
 		red: {
 			bg: "bg-red-600/15",
@@ -75,7 +75,7 @@
 		{/if}
 		<p class="text-xs sm:text-sm {colors.labelColor} font-medium">{label}</p>
 	</div>
-	<p class="text-2xl sm:text-4xl font-bold text-[#f5efd8]">
+	<p class="text-2xl sm:text-4xl font-bold text-[#eef2ff]">
 		{typeof value === "number" ? value.toLocaleString() : value}
 	</p>
 </svelte:element>

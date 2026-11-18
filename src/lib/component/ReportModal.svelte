@@ -40,8 +40,8 @@
 			<div class="size-12 bg-red-600/10 border border-red-500/30 rounded-sm flex items-center justify-center shrink-0">
 				<FluentWarning20Filled class="size-6 text-red-400" />
 			</div>
-			<p class="text-[#d3caa9]">
-				Reporting: <strong class="text-[#f5efd8]">{targetName}</strong>
+			<p class="text-[#c2cbe3]">
+				Reporting: <strong class="text-[#eef2ff]">{targetName}</strong>
 			</p>
 		</div>
 
