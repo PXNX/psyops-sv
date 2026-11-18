@@ -8,5 +8,6 @@ export { default as FormActions } from "./FormActions.svelte";
 export { default as ActionListItem } from "./ActionListItem.svelte";
 export { default as BackLink } from "./BackLink.svelte";
 export { default as ToolbarButton } from "./ToolbarButton.svelte";
+export { default as SearchSelect } from "./SearchSelect.svelte";
 export { buttonClass, badgeClass } from "./styles";
 export type { ButtonVariant, ButtonSize, ButtonShape, BadgeTone, BadgeSize } from "./styles";

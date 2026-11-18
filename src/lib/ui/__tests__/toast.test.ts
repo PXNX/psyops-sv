@@ -67,12 +67,8 @@ describe("toast", () => {
 });
 
 describe("toastResult", () => {
-	it("toasts a success message", () => {
+	it("doesn't toast successes; the page shows what changed", () => {
 		toastResult({ type: "success", data: { message: "Visa purchased" } });
-		expect(toast.items).toMatchObject([{ tone: "success", message: "Visa purchased" }]);
-	});
-
-	it("stays quiet on a success without a message", () => {
 		toastResult({ type: "success", data: {} });
 		expect(toast.items).toEqual([]);
 	});

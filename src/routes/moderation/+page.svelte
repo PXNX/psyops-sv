@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/moderation/+page.svelte -->
 <script lang="ts">
+	import { vanish } from "#lib/utils/motion.js";
 	import { enhance } from "$app/forms";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
@@ -152,9 +153,10 @@
 			{#if filteredReports().length === 0}
 				<EmptyState icon={FluentCheckmark20Filled} title="No reports to show" />
 			{:else}
-				{#each filteredReports() as report}
+				{#each filteredReports() as report (report.reportId)}
 					{@const MessageIcon = getMessageTypeIcon(report.messageType)}
 					<button
+						out:vanish
 						onclick={() => (selectedReport = report)}
 						class="w-full panel-interactive rounded-sm p-4 text-left {selectedReport?.reportId === report.reportId
 							? 'border-[#f2b01e]/55 ring-1 ring-[#f2b01e]/40'

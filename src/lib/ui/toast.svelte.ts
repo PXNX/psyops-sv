@@ -118,15 +118,19 @@ class ToastStore {
 export const toast = new ToastStore();
 
 /**
- * Toast the `message` / `error` a form action returned. Pass it the result
- * inside a `use:enhance` callback:
+ * Toast the `error` a form action returned. Pass it the result inside a
+ * `use:enhance` callback:
  *
  *   use:enhance={() => async ({ result, update }) => { await update(); toastResult(result); }}
+ *
+ * Successes don't toast: the page already updates to show what changed (glow
+ * it with celebrate() if it deserves a moment), so a toast would only repeat
+ * it. They still get the success sound/haptic.
  */
 export function toastResult(result: { type: string; data?: unknown; error?: unknown }) {
 	const data = (result.data ?? {}) as { message?: unknown; error?: unknown };
 	if (result.type === "success") {
-		if (typeof data.message === "string") toast.success(data.message);
+		if (typeof window !== "undefined") feedback("success");
 	} else if (result.type === "failure") {
 		const text = typeof data.error === "string" ? data.error : typeof data.message === "string" ? data.message : null;
 		toast.error(text ?? "That didn't work. Please try again.");

@@ -66,8 +66,7 @@ async function warRecords(db: Database, where: SQL, isOurs: (w: typeof wars.$inf
 		if (war.status === "ended") {
 			if (war.endedReason === "surrender" || war.endedReason === "capitulation") {
 				// The side that gave up (or ran out of land) lost.
-				const loserIsAttacker =
-					war.surrenderedBy != null ? war.surrenderedBy === war.attackerId : attackerCapitulated;
+				const loserIsAttacker = war.surrenderedBy != null ? war.surrenderedBy === war.attackerId : attackerCapitulated;
 				result = (side === "attacker") === loserIsAttacker ? "lost" : "won";
 			} else {
 				result = "draw";
@@ -90,7 +89,11 @@ async function warRecords(db: Database, where: SQL, isOurs: (w: typeof wars.$inf
 
 /** Every war a state fought, newest first. */
 export function warsOfState(db: Database, stateId: number) {
-	return warRecords(db, or(eq(wars.attackerId, stateId), eq(wars.defenderId, stateId))!, (w) => w.attackerId === stateId);
+	return warRecords(
+		db,
+		or(eq(wars.attackerId, stateId), eq(wars.defenderId, stateId))!,
+		(w) => w.attackerId === stateId
+	);
 }
 
 /** Every war a bloc took part in as a coalition, newest first. */

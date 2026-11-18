@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { vanish } from "#lib/utils/motion.js";
 	import { enhance } from "$app/forms";
 	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
@@ -176,8 +177,8 @@
 		<div class="panel rounded-sm p-5">
 			<h3 class="section-title mb-4">Recent Broadcasts</h3>
 			<div class="space-y-3">
-				{#each data.recentBroadcasts as broadcast}
-					<div class="panel-muted rounded-sm p-4 {broadcast.isActive ? 'border-[#f2b01e]/35' : ''}">
+				{#each data.recentBroadcasts as broadcast (broadcast.id)}
+					<div out:vanish class="panel-muted rounded-sm p-4 {broadcast.isActive ? 'border-[#f2b01e]/35' : ''}">
 						<div class="flex items-start justify-between gap-2">
 							<div class="flex-1">
 								<div class="flex items-center gap-2">

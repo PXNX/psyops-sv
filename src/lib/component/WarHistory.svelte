@@ -50,9 +50,7 @@
 						</p>
 					</div>
 					{#if war.status === "active"}
-						<span
-							class="shrink-0 text-[10px] uppercase tracking-widest text-red-300 flex items-center gap-1.5"
-						>
+						<span class="shrink-0 text-[10px] uppercase tracking-widest text-red-300 flex items-center gap-1.5">
 							<span class="size-1.5 rounded-full bg-red-500 animate-pulse"></span>At war
 						</span>
 					{:else if war.result}

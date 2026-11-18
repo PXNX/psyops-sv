@@ -16,7 +16,7 @@
 
 	let { battles }: { battles: Battle[] } = $props();
 
-	const lost = (b: Battle) => Object.values(b.buildingsDestroyed ?? {}).reduce((s, n) => s + (n ?? 0), 0);
+	const lost = (b: Battle) => Object.values(b.buildingsDestroyed ?? {}).reduce<number>((s, n) => s + (n ?? 0), 0);
 </script>
 
 {#if battles.length === 0}

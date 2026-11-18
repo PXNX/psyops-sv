@@ -40,9 +40,6 @@
 				setTimeout(handleTravelComplete, result.timeRemaining * 1000 + 500);
 				return;
 			}
-			if (result.success) {
-				toast.success("You have arrived.");
-			}
 		} catch {
 			toast.error("Couldn't confirm your arrival. Try again in a moment.");
 		}
@@ -107,8 +104,8 @@
 						use:enhance={() => {
 							return async ({ result, update }) => {
 								await update();
-								toastResult(result);
 								if (result.type === "success") feedback("win");
+								else toastResult(result);
 							};
 						}}
 						class="mt-3"
