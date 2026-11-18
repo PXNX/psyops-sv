@@ -16,9 +16,9 @@
 	{#if Icon}
 		<Icon class="size-14 sm:size-16 mx-auto mb-4 opacity-20 animate-idle-float" />
 	{/if}
-	<p class="text-[#c2cbe3] text-base sm:text-lg">{title}</p>
+	<p class="text-fg-soft text-base sm:text-lg">{title}</p>
 	{#if subtitle}
-		<p class="text-sm text-[#8e9abb] mt-2">{subtitle}</p>
+		<p class="text-sm text-fg-muted mt-2">{subtitle}</p>
 	{/if}
 	{#if actions}
 		<div class="mt-4 flex flex-wrap justify-center gap-2">

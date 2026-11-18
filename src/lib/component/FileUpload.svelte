@@ -240,24 +240,24 @@
 				onclick={() => fileInput?.click()}
 				disabled={disabled || uploading}
 				class="group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 {dragActive
-					? 'border-[#f5a524] bg-[#f5a524]/10'
+					? 'border-accent bg-accent/10'
 					: croppedDataUrl || selectedFile
-						? 'border-[#4fd88a]/50 bg-[#1f9d62]/10'
-						: 'border-[#8ea6e0]/20'} {!uploading && !disabled ? 'hover:border-[#f5a524]/50' : ''} {!uploading &&
+						? 'border-positive/50 bg-positive-bg/10'
+						: 'border-line/20'} {!uploading && !disabled ? 'hover:border-accent/50' : ''} {!uploading &&
 				!disabled &&
 				!croppedDataUrl &&
 				!selectedFile
-					? 'hover:bg-[#f5a524]/10'
+					? 'hover:bg-accent/10'
 					: ''}"
 				class:opacity-50={uploading || disabled}
 			>
 				{#if !croppedDataUrl && !selectedFile}
 					<div class="flex min-h-[140px] flex-col items-center justify-center gap-2 p-4">
-						<div class="rounded-full bg-[#f5a524]/12 border border-[#f5a524]/35 p-3">
-							<IconImage class="h-8 w-8 text-[#ffcb6b]" />
+						<div class="rounded-full bg-accent/12 border border-accent/35 p-3">
+							<IconImage class="h-8 w-8 text-accent-fg" />
 						</div>
 						<div class="text-center">
-							<p class="text-sm font-semibold text-[#eef2ff]">
+							<p class="text-sm font-semibold text-fg">
 								{#if dragActive}
 									Drop file here
 								{:else if uploading}
@@ -269,7 +269,7 @@
 								{/if}
 							</p>
 							{#if !uploading && !disabled}
-								<p class="mt-1 text-xs text-[#8e9abb]">
+								<p class="mt-1 text-xs text-fg-muted">
 									{acceptedTypes.replace("image/*", "Images")} • {maxSizeMB}MB max
 								</p>
 							{/if}
@@ -303,22 +303,22 @@
 								</div>
 							</div>
 						{:else}
-							<div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-sm bg-[#131c33]">
-								<IconImage class="h-8 w-8 text-[#8e9abb]" />
+							<div class="flex h-24 w-24 shrink-0 items-center justify-center rounded-sm bg-surface-4">
+								<IconImage class="h-8 w-8 text-fg-muted" />
 							</div>
 						{/if}
 						<div class="flex min-w-0 flex-1 flex-col justify-center text-left">
-							<p class="truncate text-sm font-medium text-[#eef2ff]" title={selectedFile?.name}>
+							<p class="truncate text-sm font-medium text-fg" title={selectedFile?.name}>
 								{selectedFile?.name}
 							</p>
-							<p class="text-xs text-[#8e9abb]">
+							<p class="text-xs text-fg-muted">
 								{Math.round((selectedFile?.size || 0) / 1024)} KB
 							</p>
 							{#if enableCrop && croppedDataUrl}
 								<button
 									type="button"
 									onclick={() => (showCropper = true)}
-									class="text-xs text-[#ffcb6b] hover:text-[#ffc857] hover:underline mt-1"
+									class="text-xs text-accent-fg hover:text-accent-hover hover:underline mt-1"
 								>
 									Re-crop
 								</button>

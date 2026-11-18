@@ -30,8 +30,8 @@
 			</div>
 
 			<div class="text-center space-y-2">
-				<h1 class="text-4xl font-bold text-[#eef2ff]">Welcome</h1>
-				<p class="text-[#8e9abb] text-sm">Sign in to continue your journey</p>
+				<h1 class="text-4xl font-bold text-fg">Welcome</h1>
+				<p class="text-fg-muted text-sm">Sign in to continue your journey</p>
 			</div>
 		</div>
 
@@ -48,13 +48,13 @@
 
 			<!-- Terms & Privacy -->
 			<div>
-				<p class="text-xs text-center text-[#8e9abb] leading-relaxed">
+				<p class="text-xs text-center text-fg-muted leading-relaxed">
 					By signing up you agree to our
-					<a class="font-semibold text-[#ffcb6b] hover:text-[#ffc857] hover:underline" href="/about/terms">
+					<a class="font-semibold text-accent-fg hover:text-accent-hover hover:underline" href="/about/terms">
 						{m.termsOfService()}
 					</a>
 					and
-					<a class="font-semibold text-[#ffcb6b] hover:text-[#ffc857] hover:underline" href="/about/privacy">
+					<a class="font-semibold text-accent-fg hover:text-accent-hover hover:underline" href="/about/privacy">
 						{m.privacyPolicy()}
 					</a>.
 				</p>

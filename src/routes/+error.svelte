@@ -24,39 +24,39 @@
 		{#if page.status === 404}
 			<FluentEmojiEyes class="w-12 h-12" />
 			<h1 class="mt-2 text-xl font-semibold text-red-300">Not found</h1>
-			<p class="mt-1 text-sm text-[#c2cbe3]">
-				The page <code class="px-1.5 py-0.5 rounded-sm bg-[#131c33] border border-[#8ea6e0]/15 font-mono text-[#dbe2f4]"
+			<p class="mt-1 text-sm text-fg-soft">
+				The page <code class="px-1.5 py-0.5 rounded-sm bg-surface-4 border border-line/15 font-mono text-fg-body"
 					>{page.url.pathname}</code
 				> does not exist.
 			</p>
 		{:else if page.status === 403}
 			<FluentEmojiEyes class="w-12 h-12" />
 			<h1 class="mt-2 text-xl font-semibold text-red-300">Access denied</h1>
-			<p class="mt-1 text-sm text-[#c2cbe3]">
+			<p class="mt-1 text-sm text-fg-soft">
 				{page.error?.message || "You don't have permission to access this page."}
 			</p>
 		{:else if page.status === 500}
 			<FluentEmojiKnockedOutFace class="w-12 h-12" />
 
 			<h1 class="text-xl font-semibold text-red-300">Internal Error</h1>
-			<p class="text-sm text-[#c2cbe3]">
+			<p class="text-sm text-fg-soft">
 				Something unexpected happened when trying to access <code
-					class="px-1.5 py-0.5 rounded-sm bg-[#131c33] border border-[#8ea6e0]/15 font-mono text-[#dbe2f4]"
+					class="px-1.5 py-0.5 rounded-sm bg-surface-4 border border-line/15 font-mono text-fg-body"
 					>{page.url.pathname}</code
 				>.
 			</p>
 			{#if page.error?.requestId}
 				<div class="mt-4 p-3 panel-muted rounded-sm">
-					<p class="text-xs text-[#a9b4d0] font-mono">
-						Request ID: <span class="text-[#c2cbe3] font-semibold">{page.error.requestId}</span>
+					<p class="text-xs text-fg-dim font-mono">
+						Request ID: <span class="text-fg-soft font-semibold">{page.error.requestId}</span>
 					</p>
-					<p class="text-xs text-[#8e9abb] mt-2">Please provide this ID when reporting the issue.</p>
+					<p class="text-xs text-fg-muted mt-2">Please provide this ID when reporting the issue.</p>
 				</div>
 			{/if}
 		{:else}
 			<FluentEmojiKnockedOutFace class="w-12 h-12" />
 			<h1 class="mt-2 text-xl font-semibold text-red-300">Error {page.status}</h1>
-			<p class="mt-1 text-sm text-[#c2cbe3]">
+			<p class="mt-1 text-sm text-fg-soft">
 				{page.error?.message || "Something went wrong while loading this page."}
 			</p>
 		{/if}

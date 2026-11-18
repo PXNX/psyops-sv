@@ -9,3 +9,4 @@ export * from "./game/production.config";
 export * from "./features/party.config";
 export * from "./features/premium.config";
 export * from "./game/resources.config";
+export * from "./game/recon.config";

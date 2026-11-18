@@ -1,523 +1,59 @@
 <!-- src/routes/(authenticated)/chat/party/+page.svelte -->
 <script lang="ts">
-	import UserLink from "#lib/component/UserLink.svelte";
-	import { enhance } from "$app/forms";
-	import { goto, invalidate } from "$app/navigation";
-	import { onMount, onDestroy } from "svelte";
-	import FluentSend20Filled from "~icons/fluent/send-20-filled";
-	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
-	import Modal from "#lib/component/Modal.svelte";
-	import ReportModal from "#lib/component/ReportModal.svelte";
-	import { settings } from "#lib/settings.svelte.js";
+	import ChatRoom from "#lib/component/chat/ChatRoom.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Button, IconButton, Badge, buttonClass } from "#lib/component/ui/index.js";
+	import EmptyState from "#lib/component/EmptyState.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 
-	const { data, form } = $props();
-
-	let message = $state("");
-	let isSubmitting = $state(false);
-	let chatContainer: HTMLDivElement;
-	let shouldAutoScroll = $state(true);
-	let eventSource: EventSource | null = null;
-
-	let showReportModal = $state(false);
-	let reportMessageId = $state<number | null>(null);
-	let reportUserId = $state<string | null>(null);
-	let reportUserName = $state<string | null>(null);
-
-	let showExternalLinkWarning = $state(false);
-	let pendingExternalLink = $state<string | null>(null);
-
-	// Optimistic messages
-	let optimisticMessages = $state<any[]>([]);
-
-	// Combine real and optimistic messages
-	let allMessages = $derived([...data.messages, ...optimisticMessages]);
-
-	// Group messages by sender and time proximity
-	let groupedMessages = $derived.by(() => {
-		const grouped: any[] = [];
-		let currentGroup: any = null;
-
-		allMessages.forEach((msg) => {
-			const msgTime = new Date(msg.sentAt);
-
-			if (
-				currentGroup &&
-				currentGroup.senderId === msg.senderId &&
-				Math.abs(new Date(currentGroup.lastMessageTime).getTime() - msgTime.getTime()) < 60000
-			) {
-				currentGroup.messages.push(msg);
-				currentGroup.lastMessageTime = msg.sentAt;
-			} else {
-				if (currentGroup) grouped.push(currentGroup);
-				currentGroup = {
-					senderId: msg.senderId,
-					senderName: msg.senderName,
-					senderLogo: msg.senderLogo,
-					isFromCurrentUser: msg.isFromCurrentUser,
-					isLeader: msg.isLeader,
-					messages: [msg],
-					firstMessageTime: msg.sentAt,
-					lastMessageTime: msg.sentAt
-				};
-			}
-		});
-
-		if (currentGroup) grouped.push(currentGroup);
-		return grouped;
-	});
-
-	// Group messages by day
-	let messagesByDay = $derived.by(() => {
-		const days: { date: string; groups: any[] }[] = [];
-		let currentDay: { date: string; groups: any[] } | null = null;
-
-		groupedMessages.forEach((group) => {
-			const msgDate = new Date(group.firstMessageTime);
-			const p = (n: number) => String(n).padStart(2, "0");
-			const dateStr = `${p(msgDate.getDate())}.${p(msgDate.getMonth() + 1)}.${msgDate.getFullYear()}`;
-
-			if (!currentDay || currentDay.date !== dateStr) {
-				if (currentDay) days.push(currentDay);
-				currentDay = { date: dateStr, groups: [group] };
-			} else {
-				currentDay.groups.push(group);
-			}
-		});
-
-		if (currentDay) days.push(currentDay);
-		return days;
-	});
-
-	$effect(() => {
-		if (chatContainer && allMessages.length > 0 && shouldAutoScroll) {
-			setTimeout(() => {
-				chatContainer.scrollTop = chatContainer.scrollHeight;
-			}, 50);
-		}
-	});
-
-	function handleScroll() {
-		if (!chatContainer) return;
-		const isAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 50;
-		shouldAutoScroll = isAtBottom;
-	}
-
-	onMount(() => {
-		eventSource = new EventSource("/chat/stream");
-
-		eventSource.addEventListener("message", (event) => {
-			const sseData = JSON.parse(event.data);
-			if (sseData.type === "new_messages") {
-				optimisticMessages = [];
-				invalidate("app:chat");
-			}
-		});
-
-		eventSource.addEventListener("error", () => {
-			console.log("SSE connection lost, reconnecting...");
-		});
-	});
-
-	onDestroy(() => {
-		if (eventSource) {
-			eventSource.close();
-		}
-	});
-
-	function formatGroupTime(dateString: string) {
-		const date = new Date(dateString);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(date.getHours())}:${pad(date.getMinutes())}`;
-	}
-
-	function formatDayDivider(dateStr: string) {
-		const date = new Date(dateStr);
-		const today = new Date();
-		const yesterday = new Date(today);
-		yesterday.setDate(yesterday.getDate() - 1);
-
-		if (date.toDateString() === today.toDateString()) return "Today";
-		if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-		const p = (n: number) => String(n).padStart(2, "0");
-		return `${p(date.getDate())}.${p(date.getMonth() + 1)}.${date.getFullYear()}`;
-	}
-
-	function handleReport(messageId: number, userId: string, userName: string) {
-		reportMessageId = messageId;
-		reportUserId = userId;
-		reportUserName = userName;
-		showReportModal = true;
-	}
-
-	function isImageUrl(url: string): boolean {
-		return /\.(png|jpg|jpeg|gif|webp)$/i.test(url);
-	}
-
-	function isLocalhost(url: string): boolean {
-		try {
-			const urlObj = new URL(url);
-			return urlObj.hostname === "localhost" || urlObj.hostname === "127.0.0.1" || urlObj.port === "5173";
-		} catch {
-			return false;
-		}
-	}
-
-	function handleLinkClick(e: MouseEvent, url: string) {
-		if (!isLocalhost(url)) {
-			e.preventDefault();
-			pendingExternalLink = url;
-			showExternalLinkWarning = true;
-		}
-	}
-
-	function proceedToExternalLink() {
-		if (pendingExternalLink) {
-			window.open(pendingExternalLink, "_blank");
-			pendingExternalLink = null;
-			showExternalLinkWarning = false;
-		}
-	}
-
-	function renderMessageContent(content: string) {
-		const urlRegex = /(https?:\/\/[^\s]+)/g;
-		const parts = content.split(urlRegex);
-
-		return parts.map((part, index) => {
-			if (urlRegex.test(part)) {
-				return { type: "url", content: part, index };
-			}
-			return { type: "text", content: part, index };
-		});
-	}
+	const { data } = $props();
 </script>
 
 <svelte:head>
-	<title>{`${data.party?.name ?? "Party"} chat · PsyOps`}</title>
+	<title>{`${data.party?.name ?? "Party"} · PsyOps`}</title>
 </svelte:head>
 
-<ReportModal
-	bind:show={showReportModal}
-	targetType="account"
-	targetId={reportUserId || ""}
-	targetName={reportUserName || "User"}
-/>
-
-<Modal bind:open={showExternalLinkWarning} title="External Link Warning" size="small">
-	<div class="space-y-4">
-		<p class="text-[#c2cbe3]">
-			You are about to visit an external website. Please be careful and make sure you trust this link.
-		</p>
-		<div class="panel-muted rounded-sm p-3 break-all text-sm text-[#8e9abb]">
-			{pendingExternalLink}
-		</div>
-		<div class="flex gap-2 justify-end">
-			<Button
-				variant="ghost"
-				onclick={() => {
-					showExternalLinkWarning = false;
-					pendingExternalLink = null;
-				}}
-			>
-				Cancel
-			</Button>
-			<Button variant="primary" onclick={proceedToExternalLink}>Continue</Button>
-		</div>
-	</div>
-</Modal>
-
 {#if !data.party}
-	<PageContainer maxWidth="5xl">
-		<div class="panel rounded-sm p-8 text-center">
-			<FluentPeople20Filled class="size-16 text-[#8e9abb] mx-auto mb-4" />
-			<h2 class="text-2xl font-bold text-[#eef2ff] mb-2">No Party Membership</h2>
-			<p class="text-[#8e9abb] mb-4">You need to be a member of a political party to access party chat.</p>
-			<Button variant="primary" onclick={() => goto("/party")}>Browse Parties</Button>
-		</div>
+	<PageContainer maxWidth="3xl">
+		<EmptyState icon={FluentPeople20Filled} title="You're not in a party">
+			{#snippet actions()}
+				<Button variant="primary" href="/party">Browse parties</Button>
+			{/snippet}
+		</EmptyState>
 	</PageContainer>
 {:else}
-	<div class="flex flex-col h-full min-h-0">
-		<!-- Header -->
-		<div
-			class="bg-[#111a2e]/90 backdrop-blur-sm border-b border-[#8ea6e0]/15 p-3 md:p-4 flex-shrink-0 sticky top-0 z-10"
-		>
-			<div class="flex items-center gap-2 md:gap-3">
-				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
-
-				<a href="/party/{data.party.id}" class="group flex items-center gap-2 md:gap-3 flex-1 min-w-0">
-					{#if data.party.logo}
-						<img
-							loading="lazy"
-							decoding="async"
-							src={data.party.logo}
-							alt={data.party.name}
-							class="size-11 md:size-10 rounded-full shrink-0"
-						/>
-					{:else}
-						<div
-							class="size-11 md:size-10 rounded-full bg-[#1f9d62]/18 border border-[#4fd88a]/30 flex items-center justify-center shrink-0"
-						>
-							<FluentPeople20Filled class="size-6 md:size-5 text-[#4fd88a]" />
-						</div>
-					{/if}
-
-					<div class="min-w-0">
-						<h1
-							class="text-lg md:text-xl font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate"
-						>
-							{data.party.name}
-						</h1>
-						<p class="text-xs md:text-sm text-[#8e9abb] truncate">{data.party.memberCount} members • Party Chat</p>
-					</div>
-				</a>
-			</div>
-		</div>
-
-		<!-- Messages container -->
-		<div
-			bind:this={chatContainer}
-			onscroll={handleScroll}
-			class="flex-1 min-h-0 bg-[#0c1222]/50 p-3 md:p-4 overflow-y-auto scrollbar-thin scrollbar-thumb-[#8ea6e0]/20 scrollbar-track-transparent"
-		>
-			{#if allMessages.length === 0}
-				<div class="flex items-center justify-center h-full">
-					<div class="text-center">
-						<FluentPeople20Filled class="size-16 text-[#8e9abb]/70 mx-auto mb-4" />
-						<p class="text-[#8e9abb] text-base">No messages yet</p>
-						<p class="text-[#8e9abb] text-sm mt-1">Be the first to say something!</p>
-					</div>
+	{@const party = data.party}
+	<ChatRoom
+		conversation="party:{party.id}"
+		messages={data.messages}
+		currentUserId={data.currentUserId}
+		canModerate={data.canModerate}
+		sendAction="?/send"
+		allowBlock
+		placeholder="Message #{party.name}"
+		emptyIcon={FluentPeople20Filled}
+	>
+		{#snippet header()}
+			<a href="/party/{party.id}" class="group flex min-w-0 items-center gap-3">
+				<Logo
+					src={party.logo}
+					alt=""
+					class="size-9 shrink-0 rounded-sm border border-white/10"
+					placeholderIcon={FluentPeople20Filled}
+				/>
+				<div class="min-w-0 leading-tight">
+					<h1
+						class="truncate font-sans text-[15px] font-semibold text-fg transition-colors group-hover:text-accent-fg"
+					>
+						#{party.name}
+					</h1>
+					<p class="truncate font-mono text-[11px] tracking-wide text-fg-muted uppercase">
+						Party channel · {party.memberCount}
+						{party.memberCount === 1 ? "member" : "members"}
+					</p>
 				</div>
-			{:else}
-				{#each messagesByDay as day}
-					<!-- Day Divider -->
-					<div class="flex items-center gap-3 my-6">
-						<div class="flex-1 h-px bg-[#8ea6e0]/15"></div>
-						<span
-							class="text-[10px] uppercase tracking-wide text-[#8e9abb] font-semibold px-3 py-1 panel-muted rounded-sm"
-						>
-							{formatDayDivider(day.date)}
-						</span>
-						<div class="flex-1 h-px bg-[#8ea6e0]/15"></div>
-					</div>
-
-					{#each day.groups as group}
-						{#if group.isFromCurrentUser}
-							<!-- My messages group -->
-							<div class="chat chat-end mb-3 md:mb-4">
-								<div class="flex flex-col gap-1 items-end w-full max-w-[85%] md:max-w-md ml-auto">
-									{#each group.messages as msg}
-										<div
-											class="chat-bubble before:hidden bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#eef2ff] {msg.isOptimistic
-												? 'opacity-70'
-												: ''} text-sm md:text-base px-4 py-2.5 rounded-md break-words"
-										>
-											{#each renderMessageContent(msg.content) as part}
-												{#if part.type === "url"}
-													{#if isImageUrl(part.content)}
-														<div class="my-2">
-															<img
-																loading="lazy"
-																decoding="async"
-																src={part.content}
-																alt="Shared image"
-																class="max-w-full rounded-sm"
-															/>
-														</div>
-													{:else}
-														<a
-															href={part.content}
-															onclick={(e) => handleLinkClick(e, part.content)}
-															class="underline hover:text-[#ffc857] break-all"
-															target="_blank"
-															rel="noopener noreferrer"
-														>
-															{part.content}
-														</a>
-													{/if}
-												{:else}
-													{part.content}
-												{/if}
-											{/each}
-										</div>
-									{/each}
-								</div>
-								<div class="chat-footer text-[#8e9abb] text-xs mt-0.5 px-1">
-									{formatGroupTime(group.lastMessageTime)}
-								</div>
-							</div>
-						{:else}
-							<!-- Other user's messages group -->
-							<div class="chat chat-start mb-3 md:mb-4">
-								<div class="chat-header text-xs md:text-sm mb-1 flex items-center gap-2 px-1">
-									<UserLink
-										id={group.senderId}
-										name={group.senderName || "Anonymous"}
-										avatar={settings.loadImages ? group.senderLogo : null}
-										size="xs"
-									/>
-									{#if group.isLeader}
-										<Badge tone="amber" size="xs" icon={FluentShield20Filled}>
-											<span class="hidden sm:inline">Leader</span>
-										</Badge>
-									{/if}
-								</div>
-								<div class="flex flex-col gap-1 items-start w-full max-w-[85%] md:max-w-md">
-									{#each group.messages as msg}
-										<div class="relative group/msg">
-											<div
-												class="chat-bubble before:hidden bg-[#131c33]/70 border border-[#8ea6e0]/10 text-[#dbe2f4] text-sm md:text-base px-4 py-2.5 rounded-md break-words"
-											>
-												{#each renderMessageContent(msg.content) as part}
-													{#if part.type === "url"}
-														{#if isImageUrl(part.content)}
-															<div class="my-2">
-																<img
-																	loading="lazy"
-																	decoding="async"
-																	src={part.content}
-																	alt="Shared image"
-																	class="max-w-full rounded-sm"
-																/>
-															</div>
-														{:else}
-															<a
-																href={part.content}
-																onclick={(e) => handleLinkClick(e, part.content)}
-																class="underline hover:text-[#ffc857] break-all"
-																target="_blank"
-																rel="noopener noreferrer"
-															>
-																{part.content}
-															</a>
-														{/if}
-													{:else}
-														{part.content}
-													{/if}
-												{/each}
-											</div>
-											<div
-												class="absolute -right-8 top-0 opacity-0 group-hover/msg:opacity-100 transition-opacity hidden md:block"
-											>
-												<div class="dropdown dropdown-end">
-													<label tabindex="0" class={buttonClass({ variant: "ghost", size: "xs", shape: "circle" })}>
-														<FluentMoreVertical20Filled class="size-4" />
-													</label>
-													<ul
-														tabindex="0"
-														class="dropdown-content z-[1] menu p-2 shadow-lg bg-[#1b2641] border border-[#8ea6e0]/15 rounded-sm w-48"
-													>
-														<li>
-															<button
-																onclick={() => handleReport(msg.id, group.senderId, group.senderName || "Anonymous")}
-																class="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-															>
-																Report Message
-															</button>
-														</li>
-													</ul>
-												</div>
-											</div>
-										</div>
-									{/each}
-								</div>
-								<div class="chat-footer text-[#8e9abb] text-xs mt-0.5 px-1">
-									{formatGroupTime(group.lastMessageTime)}
-								</div>
-							</div>
-						{/if}
-					{/each}
-				{/each}
-			{/if}
-		</div>
-
-		<!-- Message input -->
-		<div class="bg-[#111a2e]/90 backdrop-blur-sm border-t border-[#8ea6e0]/15 p-3 md:p-4 flex-shrink-0">
-			{#if form?.error}
-				<div
-					class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
-				>
-					<p>{form.error}</p>
-				</div>
-			{/if}
-
-			{#if form?.success && form?.message}
-				<div
-					class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
-				>
-					<p>{form.message}</p>
-				</div>
-			{/if}
-
-			<form
-				method="POST"
-				use:enhance={() => {
-					const messageContent = message.trim();
-
-					if (!messageContent) return;
-
-					const optimisticMsg = {
-						id: `temp-${Date.now()}`,
-						content: messageContent,
-						sentAt: new Date().toISOString(),
-						senderId: data.currentUserId,
-						isFromCurrentUser: true,
-						senderName: "You",
-						senderLogo: null,
-						isLeader: false,
-						isOptimistic: true
-					};
-
-					optimisticMessages = [...optimisticMessages, optimisticMsg];
-					isSubmitting = true;
-					shouldAutoScroll = true;
-					message = "";
-
-					return async ({ result, update }) => {
-						if (result.type === "success") {
-							// SSE will trigger reload
-						} else {
-							optimisticMessages = optimisticMessages.filter((m) => m.id !== optimisticMsg.id);
-							message = messageContent;
-							await update();
-						}
-						isSubmitting = false;
-					};
-				}}
-				class="flex gap-2 md:gap-3"
-			>
-				<textarea
-					name="content"
-					bind:value={message}
-					placeholder="Type a message..."
-					maxlength="500"
-					rows="1"
-					class="field-control rounded-sm px-3 py-2.5 flex-1 resize-none min-h-[2.75rem] md:min-h-[2.5rem] max-h-32 text-base"
-					disabled={isSubmitting}
-					onkeydown={(e) => {
-						if (e.key === "Enter" && !e.shiftKey) {
-							e.preventDefault();
-							e.currentTarget.form?.requestSubmit();
-						}
-					}}></textarea>
-				<Button
-					type="submit"
-					variant="primary"
-					icon={FluentSend20Filled}
-					loading={isSubmitting}
-					disabled={!message.trim()}
-					class="min-w-[80px] md:min-w-[100px] self-end"
-				>
-					<span class="hidden md:inline">{isSubmitting ? "Sending" : "Send"}</span>
-				</Button>
-			</form>
-			<p class="text-xs text-[#8e9abb] mt-2 px-1">
-				<span class="font-mono {message.length > 450 ? 'text-[#ffcb6b] font-semibold' : ''}">{message.length}/500</span>
-				<span class="hidden md:inline"> • Press Enter to send, Shift+Enter for new line</span>
-			</p>
-		</div>
-	</div>
+			</a>
+		{/snippet}
+	</ChatRoom>
 {/if}

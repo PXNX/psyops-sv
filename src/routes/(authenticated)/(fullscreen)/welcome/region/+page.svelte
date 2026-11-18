@@ -25,10 +25,10 @@
 	}
 
 	function getPopulationColor(count: number): string {
-		if (count === 0) return "text-[#aef3c9]";
-		if (count < 10) return "text-[#4fd88a]";
-		if (count < 50) return "text-[#ffcb6b]";
-		if (count < 100) return "text-[#f5a524]";
+		if (count === 0) return "text-positive-fg";
+		if (count < 10) return "text-positive";
+		if (count < 50) return "text-accent-fg";
+		if (count < 100) return "text-accent";
 		return "text-red-400";
 	}
 </script>
@@ -41,12 +41,12 @@
 	<!-- Header -->
 	<div class="text-center space-y-4" in:fly={{ y: -20, duration: 500, delay: 100 }}>
 		<div class="flex justify-center">
-			<div class="size-20 bg-[#2f6be0]/18 border border-[#6aa8ff]/30 rounded-sm flex items-center justify-center">
-				<FluentGlobe20Filled class="size-10 text-[#6aa8ff]" />
+			<div class="size-20 bg-friendly-bg/18 border border-friendly/30 rounded-sm flex items-center justify-center">
+				<FluentGlobe20Filled class="size-10 text-friendly" />
 			</div>
 		</div>
-		<h1 class="text-4xl font-bold text-[#eef2ff]">Choose Your Starting Region</h1>
-		<p class="text-lg text-[#c2cbe3] max-w-2xl mx-auto">
+		<h1 class="text-4xl font-bold text-fg">Choose Your Starting Region</h1>
+		<p class="text-lg text-fg-soft max-w-2xl mx-auto">
 			Pick a region to call home. These are the closest regions to your location.
 		</p>
 	</div>
@@ -54,18 +54,18 @@
 	<!-- User Location Info -->
 	{#if data.userLocation}
 		<div
-			class="bg-[#2f6be0]/18 border border-[#6aa8ff]/30 rounded-sm p-5"
+			class="bg-friendly-bg/18 border border-friendly/30 rounded-sm p-5"
 			in:fly={{ y: 20, duration: 500, delay: 200 }}
 		>
 			<div class="flex items-start gap-3">
-				<div class="size-10 bg-[#2f6be0]/28 rounded-sm flex items-center justify-center shrink-0">
-					<FluentLocation20Filled class="size-5 text-[#6aa8ff]" />
+				<div class="size-10 bg-friendly-bg/28 rounded-sm flex items-center justify-center shrink-0">
+					<FluentLocation20Filled class="size-5 text-friendly" />
 				</div>
 				<div class="space-y-1">
-					<p class="text-sm font-medium text-[#c3dbff]">
+					<p class="text-sm font-medium text-friendly-fg">
 						We've detected you're in {data.userLocation.city}, {data.userLocation.country}
 					</p>
-					<p class="text-xs text-[#c3dbff]/70">
+					<p class="text-xs text-friendly-fg/70">
 						Below are the {data.nearbyRegions.length} closest regions to your location. Choose one to establish your residence
 						and begin your political journey.
 					</p>
@@ -105,24 +105,24 @@
 									alt={getRegionName(region.id)}
 									class="size-full"
 									placeholderIcon={FluentGlobe20Filled}
-									placeholderGradient="from-[#1b2641] to-[#131c33]"
+									placeholderGradient="from-surface-6 to-surface-4"
 								/>
 							</div>
 
 							<!-- Region Info -->
 							<div class="flex-1 min-w-0">
-								<h3 class="text-lg font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate">
+								<h3 class="text-lg font-bold text-fg group-hover:text-accent-hover transition-colors truncate">
 									{getRegionName(region.id)}
 								</h3>
 
 								<div class="flex items-center gap-3 mt-1">
 									<!-- State or Independent -->
-									<div class="flex items-center gap-1.5 text-sm text-[#c2cbe3]">
+									<div class="flex items-center gap-1.5 text-sm text-fg-soft">
 										{#if region.state}
 											<FluentBuildingGovernment20Filled class="size-4" />
 											<span>{region.state.name}</span>
 										{:else}
-											<span class="text-[#e6dcff]">Independent</span>
+											<span class="text-politics-fg">Independent</span>
 										{/if}
 									</div>
 
@@ -142,7 +142,7 @@
 
 							<!-- Chevron -->
 							<FluentChevronRight20Filled
-								class="size-5 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors shrink-0"
+								class="size-5 text-fg-muted group-hover:text-accent-hover transition-colors shrink-0"
 							/>
 						</div>
 					</button>
@@ -153,6 +153,6 @@
 
 	<!-- Info Footer -->
 	<div class="text-center space-y-2 pt-4" in:fly={{ y: 20, duration: 500, delay: 900 }}>
-		<p class="text-sm text-[#8e9abb]">You can travel to other regions later from the map</p>
+		<p class="text-sm text-fg-muted">You can travel to other regions later from the map</p>
 	</div>
 </div>

@@ -82,17 +82,17 @@
 	>
 		<img src="/icon-192.png" alt="" class="size-10 rounded-sm shrink-0" />
 		<div class="flex-1 min-w-0">
-			<p class="text-sm font-semibold text-[#eef2ff]">Install PsyOps</p>
+			<p class="text-sm font-semibold text-fg">Install PsyOps</p>
 			{#if deferredPrompt}
-				<p class="text-xs text-[#8e9abb] mt-0.5">Add it to your home screen for a faster, full-screen experience.</p>
+				<p class="text-xs text-fg-muted mt-0.5">Add it to your home screen for a faster, full-screen experience.</p>
 				<div class="flex gap-2 mt-3">
 					<Button size="sm" onclick={install}>Install</Button>
 					<Button size="sm" variant="ghost" onclick={dismiss}>Not now</Button>
 				</div>
 			{:else}
-				<p class="text-xs text-[#8e9abb] mt-0.5">
-					Tap <span class="font-semibold text-[#c2cbe3]">Share</span>, then
-					<span class="font-semibold text-[#c2cbe3]">Add to Home Screen</span>.
+				<p class="text-xs text-fg-muted mt-0.5">
+					Tap <span class="font-semibold text-fg-soft">Share</span>, then
+					<span class="font-semibold text-fg-soft">Add to Home Screen</span>.
 				</p>
 				<Button size="sm" variant="ghost" class="mt-3" onclick={dismiss}>Got it</Button>
 			{/if}

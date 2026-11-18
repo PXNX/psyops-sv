@@ -26,15 +26,15 @@
 
 	<!-- Fallen States -->
 	<section class="space-y-3">
-		<h2 class="text-sm font-bold text-[#8e9abb] uppercase tracking-wide flex items-center gap-2">
+		<h2 class="text-sm font-bold text-fg-muted uppercase tracking-wide flex items-center gap-2">
 			<FluentBuildingGovernment20Filled class="size-4" />
 			Fallen States
-			<span class="text-[#8e9abb]/70">({data.fallenStates.length})</span>
+			<span class="text-fg-muted/70">({data.fallenStates.length})</span>
 		</h2>
 
 		{#if data.fallenStates.length === 0}
 			<SectionCard>
-				<p class="text-[#8e9abb] text-sm text-center py-4">
+				<p class="text-fg-muted text-sm text-center py-4">
 					No states have fallen yet. The map still belongs to the living.
 				</p>
 			</SectionCard>
@@ -45,13 +45,13 @@
 						<Logo
 							src={state.logo}
 							alt={state.name}
-							class="size-12 rounded-sm border border-[#8ea6e0]/15 grayscale opacity-80"
+							class="size-12 rounded-sm border border-line/15 grayscale opacity-80"
 							placeholderIcon={FluentBuildingGovernment20Filled}
-							placeholderGradient="from-[#2a3654] to-[#2a3654]"
+							placeholderGradient="from-surface-11 to-surface-11"
 						/>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-center gap-2 flex-wrap">
-								<span class="font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate"
+								<span class="font-bold text-fg group-hover:text-accent-hover transition-colors truncate"
 									>{state.name}</span
 								>
 								{#if state.bloc}
@@ -63,7 +63,7 @@
 									</span>
 								{/if}
 							</div>
-							<div class="flex items-center gap-3 mt-1 text-xs text-[#8e9abb]">
+							<div class="flex items-center gap-3 mt-1 text-xs text-fg-muted">
 								<span class="flex items-center gap-1">
 									<FluentPeople20Filled class="size-3.5" />
 									{state.population.toLocaleString()}
@@ -74,8 +74,8 @@
 							</div>
 						</div>
 						<div class="text-right shrink-0">
-							<div class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Existed</div>
-							<div class="text-sm font-bold text-[#c2cbe3]">
+							<div class="text-[10px] text-fg-muted uppercase tracking-wide">Existed</div>
+							<div class="text-sm font-bold text-fg-soft">
 								{getDurationText(state.createdAt, state.capitulatedAt)}
 							</div>
 						</div>
@@ -87,15 +87,15 @@
 
 	<!-- Fallen Blocs -->
 	<section class="space-y-3">
-		<h2 class="text-sm font-bold text-[#8e9abb] uppercase tracking-wide flex items-center gap-2">
+		<h2 class="text-sm font-bold text-fg-muted uppercase tracking-wide flex items-center gap-2">
 			<FluentFlag20Filled class="size-4" />
 			Dissolved Blocs
-			<span class="text-[#8e9abb]/70">({data.fallenBlocs.length})</span>
+			<span class="text-fg-muted/70">({data.fallenBlocs.length})</span>
 		</h2>
 
 		{#if data.fallenBlocs.length === 0}
 			<SectionCard>
-				<p class="text-[#8e9abb] text-sm text-center py-4">No blocs have been dissolved yet.</p>
+				<p class="text-fg-muted text-sm text-center py-4">No blocs have been dissolved yet.</p>
 			</SectionCard>
 		{:else}
 			<div class="grid gap-2">
@@ -104,13 +104,13 @@
 						<Logo
 							src={bloc.logo}
 							alt={bloc.name}
-							class="size-12 rounded-sm border border-[#8ea6e0]/15 grayscale opacity-80"
+							class="size-12 rounded-sm border border-line/15 grayscale opacity-80"
 							placeholderIcon={FluentFlag20Filled}
-							placeholderGradient="from-[#2a3654] to-[#2a3654]"
+							placeholderGradient="from-surface-11 to-surface-11"
 						/>
 						<div class="flex-1 min-w-0">
-							<span class="font-bold text-[#eef2ff] truncate">{bloc.name}</span>
-							<div class="flex items-center gap-3 mt-1 text-xs text-[#8e9abb]">
+							<span class="font-bold text-fg truncate">{bloc.name}</span>
+							<div class="flex items-center gap-3 mt-1 text-xs text-fg-muted">
 								<span class="flex items-center gap-1">
 									<FluentBuildingGovernment20Filled class="size-3.5" />
 									{bloc.memberStates} member{bloc.memberStates === 1 ? "" : "s"}
@@ -121,8 +121,8 @@
 							</div>
 						</div>
 						<div class="text-right shrink-0">
-							<div class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Existed</div>
-							<div class="text-sm font-bold text-[#c2cbe3]">
+							<div class="text-[10px] text-fg-muted uppercase tracking-wide">Existed</div>
+							<div class="text-sm font-bold text-fg-soft">
 								{getDurationText(bloc.createdAt, bloc.capitulatedAt)}
 							</div>
 						</div>

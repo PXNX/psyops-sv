@@ -130,7 +130,7 @@
 
 	<!-- Success/Error Messages -->
 	{#if form?.success}
-		<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">
+		<div class="bg-positive-bg/18 border border-positive/30 text-positive-fg rounded-sm p-4 flex items-center gap-3">
 			<FluentCheckmark20Filled class="size-5 shrink-0" />
 			<p class="font-medium">{form.message || "Operation successful"}</p>
 		</div>
@@ -147,28 +147,28 @@
 	{#if data.giftCodes && data.giftCodes.length > 0}
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 			<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-				<FluentGift20Filled class="size-5 text-[#6aa8ff] shrink-0" />
+				<FluentGift20Filled class="size-5 text-friendly shrink-0" />
 				<div class="min-w-0">
-					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Total Codes</p>
-					<p class="text-2xl font-bold text-[#eef2ff]">{data.giftCodes.length}</p>
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Total Codes</p>
+					<p class="text-2xl font-bold text-fg">{data.giftCodes.length}</p>
 				</div>
 			</div>
 
 			<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-				<FluentCheckmark20Filled class="size-5 text-[#4fd88a] shrink-0" />
+				<FluentCheckmark20Filled class="size-5 text-positive shrink-0" />
 				<div class="min-w-0">
-					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Active Codes</p>
-					<p class="text-2xl font-bold text-[#eef2ff]">
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Active Codes</p>
+					<p class="text-2xl font-bold text-fg">
 						{data.giftCodes.filter((c) => c.isActive).length}
 					</p>
 				</div>
 			</div>
 
 			<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-				<FluentPeople20Filled class="size-5 text-[#b9a1ff] shrink-0" />
+				<FluentPeople20Filled class="size-5 text-politics shrink-0" />
 				<div class="min-w-0">
-					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Total Redemptions</p>
-					<p class="text-2xl font-bold text-[#eef2ff]">
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Total Redemptions</p>
+					<p class="text-2xl font-bold text-fg">
 						{data.giftCodes.reduce((sum, c) => sum + c.currentRedemptions, 0)}
 					</p>
 				</div>
@@ -180,8 +180,8 @@
 	<div class="panel rounded-sm overflow-hidden">
 		<div class="overflow-x-auto">
 			<table class="table w-full">
-				<thead class="bg-[#131c33]/70">
-					<tr class="text-[#c2cbe3]">
+				<thead class="bg-surface-4/70">
+					<tr class="text-fg-soft">
 						<th class="font-semibold">Code</th>
 						<th class="font-semibold">Description</th>
 						<th class="font-semibold">Rewards</th>
@@ -193,12 +193,12 @@
 				</thead>
 				<tbody>
 					{#each data.giftCodes as code}
-						<tr class="hover:bg-[#233154]/40 transition-colors">
+						<tr class="hover:bg-surface-9/40 transition-colors">
 							<td>
-								<code class="text-[#e6dcff] font-mono font-semibold text-xs sm:text-sm">{code.code}</code>
+								<code class="text-politics-fg font-mono font-semibold text-xs sm:text-sm">{code.code}</code>
 							</td>
 							<td>
-								<p class="text-sm text-[#c2cbe3] max-w-xs truncate">
+								<p class="text-sm text-fg-soft max-w-xs truncate">
 									{code.description || "—"}
 								</p>
 							</td>
@@ -217,20 +217,20 @@
 										</Badge>
 									{/each}
 									{#if code.currencyAmount === 0 && code.premiumDays === 0 && code.resources.length === 0}
-										<span class="text-[#8e9abb] text-xs">No rewards</span>
+										<span class="text-fg-muted text-xs">No rewards</span>
 									{/if}
 								</div>
 							</td>
 							<td>
 								<div class="text-sm">
-									<span class="text-[#eef2ff] font-medium">{code.currentRedemptions}</span>
-									<span class="text-[#8e9abb]">
+									<span class="text-fg font-medium">{code.currentRedemptions}</span>
+									<span class="text-fg-muted">
 										/ {code.maxRedemptions ? code.maxRedemptions : "∞"}
 									</span>
 								</div>
 							</td>
 							<td>
-								<div class="text-xs sm:text-sm text-[#c2cbe3] whitespace-nowrap">
+								<div class="text-xs sm:text-sm text-fg-soft whitespace-nowrap">
 									{formatDate(code.expiresAt)}
 								</div>
 							</td>
@@ -278,7 +278,7 @@
 						</tr>
 					{:else}
 						<tr>
-							<td colspan="7" class="text-center py-8 text-[#8e9abb]">
+							<td colspan="7" class="text-center py-8 text-fg-muted">
 								No gift codes created yet. Click "Create Code" to get started.
 							</td>
 						</tr>
@@ -297,7 +297,7 @@
 			if (e.target === e.currentTarget && !submitting) resetForm();
 		}}
 	>
-		<div class="panel bg-[#1b2641] rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+		<div class="panel bg-surface-6 rounded-sm max-w-2xl w-full max-h-[90vh] overflow-y-auto">
 			<form
 				method="POST"
 				action="?/create"
@@ -311,12 +311,12 @@
 				class="p-6 space-y-5"
 			>
 				<!-- Header -->
-				<div class="flex items-center justify-between border-b border-[#8ea6e0]/10 pb-4">
+				<div class="flex items-center justify-between border-b border-line/10 pb-4">
 					<div class="flex items-center gap-3">
-						<div class="bg-[#7451e6]/15 border border-[#b9a1ff]/30 p-2 rounded-sm shrink-0">
-							<FluentGift20Filled class="size-6 text-[#b9a1ff]" />
+						<div class="bg-politics-bg/15 border border-politics/30 p-2 rounded-sm shrink-0">
+							<FluentGift20Filled class="size-6 text-politics" />
 						</div>
-						<h2 class="text-xl sm:text-2xl font-bold text-[#eef2ff]">Create Gift Code</h2>
+						<h2 class="text-xl sm:text-2xl font-bold text-fg">Create Gift Code</h2>
 					</div>
 					<IconButton
 						type="button"
@@ -434,8 +434,8 @@
 					{#if newCode.resources.length > 0}
 						<div class="flex flex-wrap gap-2 mt-2">
 							{#each newCode.resources as resource, index}
-								<div class="flex items-center gap-2 px-3 py-1.5 rounded-sm bg-[#2f6be0]/18 border border-[#6aa8ff]/30">
-									<span class="flex items-center gap-1 text-sm text-[#c3dbff] font-medium">
+								<div class="flex items-center gap-2 px-3 py-1.5 rounded-sm bg-friendly-bg/18 border border-friendly/30">
+									<span class="flex items-center gap-1 text-sm text-friendly-fg font-medium">
 										<ResourceIcon name={resource.type} class="size-3.5" />
 										{formatNumber(resource.quantity)}
 										{resource.type}
@@ -489,7 +489,7 @@
 				</div>
 
 				<!-- Actions -->
-				<div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#8ea6e0]/10">
+				<div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-line/10">
 					<Button type="button" variant="secondary" grow onclick={resetForm} disabled={submitting}>Cancel</Button>
 					<Button
 						type="submit"

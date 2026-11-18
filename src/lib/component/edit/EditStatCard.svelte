@@ -11,11 +11,11 @@
 	let { label, value, icon: Icon, color = "purple" }: Props = $props();
 
 	const colorClasses = {
-		green: "bg-[#1f9d62]/20 text-[#aef3c9]",
-		purple: "bg-[#7451e6]/20 text-[#e6dcff]",
-		blue: "bg-[#2f6be0]/20 text-[#c3dbff]",
+		green: "bg-positive-bg/20 text-positive-fg",
+		purple: "bg-politics-bg/20 text-politics-fg",
+		blue: "bg-friendly-bg/20 text-friendly-fg",
 		red: "bg-red-600/20 text-red-300",
-		amber: "bg-[#f5a524]/15 text-[#ffcb6b]"
+		amber: "bg-accent/15 text-accent-fg"
 	};
 </script>
 
@@ -25,8 +25,8 @@
 			<Icon class="size-5" />
 		</div>
 		<div>
-			<p class="text-xs text-[#8e9abb]">{label}</p>
-			<p class="text-lg font-bold text-[#eef2ff]">{typeof value === "number" ? value.toLocaleString() : value}</p>
+			<p class="text-xs text-fg-muted">{label}</p>
+			<p class="text-lg font-bold text-fg">{typeof value === "number" ? value.toLocaleString() : value}</p>
 		</div>
 	</div>
 </div>

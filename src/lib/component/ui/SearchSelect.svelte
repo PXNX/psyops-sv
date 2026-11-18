@@ -143,22 +143,22 @@
 			{#if selected.logo !== undefined}
 				<Logo src={selected.logo} alt="" class="size-7 shrink-0 rounded-sm" />
 			{/if}
-			<span class="flex-1 min-w-0 truncate text-[#eef2ff] font-medium">{selected.name}</span>
+			<span class="flex-1 min-w-0 truncate text-fg font-medium">{selected.name}</span>
 		{:else}
-			<span class="flex-1 text-[#8794b5]/75">{placeholder}</span>
+			<span class="flex-1 text-fg-faint/75">{placeholder}</span>
 		{/if}
 		<FluentChevronDown20Filled
-			class="size-4 shrink-0 text-[#8e9abb] transition-transform duration-200 {open ? 'rotate-180' : ''}"
+			class="size-4 shrink-0 text-fg-muted transition-transform duration-200 {open ? 'rotate-180' : ''}"
 		/>
 	</button>
 
 	{#if open}
 		<div
-			class="absolute z-30 left-0 right-0 mt-1 rounded-sm border border-[#8ea6e0]/30 bg-[#0f1628] shadow-[0_12px_32px_rgba(0,0,0,0.55)] overflow-hidden"
+			class="absolute z-30 left-0 right-0 mt-1 rounded-sm border border-line/30 bg-surface-2 shadow-[0_12px_32px_rgba(0,0,0,0.55)] overflow-hidden"
 			transition:fly={{ y: -6, duration: prefersReducedMotion.current ? 0 : 140, easing: cubicOut }}
 		>
-			<div class="flex items-center gap-2 px-3 border-b border-[#8ea6e0]/15">
-				<FluentSearch20Filled class="size-4 shrink-0 text-[#8e9abb]" />
+			<div class="flex items-center gap-2 px-3 border-b border-line/15">
+				<FluentSearch20Filled class="size-4 shrink-0 text-fg-muted" />
 				<input
 					bind:this={search}
 					bind:value={query}
@@ -171,7 +171,7 @@
 					autocomplete="off"
 					spellcheck="false"
 					placeholder={searchPlaceholder}
-					class="flex-1 bg-transparent py-2.5 text-sm text-[#eef2ff] placeholder:text-[#8794b5]/55 outline-none"
+					class="flex-1 bg-transparent py-2.5 text-sm text-fg placeholder:text-fg-faint/55 outline-none"
 					oninput={() => (active = 0)}
 					onkeydown={onKey}
 				/>
@@ -184,9 +184,9 @@
 						role="option"
 						aria-selected={isSelected}
 						data-index={i}
-						class="flex items-center gap-3 px-3 py-2 cursor-pointer {i === active ? 'bg-[#f5a524]/12' : ''} {isSelected
-							? 'text-[#ffcb6b]'
-							: 'text-[#eef2ff]'}"
+						class="flex items-center gap-3 px-3 py-2 cursor-pointer {i === active ? 'bg-accent/12' : ''} {isSelected
+							? 'text-accent-fg'
+							: 'text-fg'}"
 						onpointermove={() => (active = i)}
 						onclick={() => pick(item)}
 					>
@@ -195,12 +195,12 @@
 						{/if}
 						<span class="flex-1 min-w-0">
 							<span class="block truncate text-sm font-medium">{item.name}</span>
-							{#if item.hint}<span class="block truncate text-xs text-[#8e9abb]">{item.hint}</span>{/if}
+							{#if item.hint}<span class="block truncate text-xs text-fg-muted">{item.hint}</span>{/if}
 						</span>
 						{#if isSelected}<FluentCheckmark20Filled class="size-4 shrink-0" />{/if}
 					</li>
 				{:else}
-					<li class="px-3 py-3 text-sm text-[#8e9abb]">{empty}</li>
+					<li class="px-3 py-3 text-sm text-fg-muted">{empty}</li>
 				{/each}
 			</ul>
 		</div>

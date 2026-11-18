@@ -53,24 +53,24 @@
 
 {#snippet tally(pro: number, contra: number, of: number, proLabel: string, contraLabel: string, proTone: string)}
 	<div>
-		<div class="flex h-2 overflow-hidden rounded-full bg-[#0b1120]">
+		<div class="flex h-2 overflow-hidden rounded-full bg-surface-0">
 			<div class="{proTone} transition-[width] duration-500" style:width="{(pro / Math.max(1, of)) * 100}%"></div>
 			<div
-				class="ml-auto bg-[#8e9abb]/50 transition-[width] duration-500"
+				class="ml-auto bg-fg-muted/50 transition-[width] duration-500"
 				style:width="{(contra / Math.max(1, of)) * 100}%"
 			></div>
 		</div>
-		<div class="mt-1 flex justify-between text-[11px] text-[#8e9abb]">
-			<span><span class="font-mono font-bold text-[#eef2ff]">{pro}</span> {proLabel}</span>
+		<div class="mt-1 flex justify-between text-[11px] text-fg-muted">
+			<span><span class="font-mono font-bold text-fg">{pro}</span> {proLabel}</span>
 			<span>of {of}</span>
-			<span>{contraLabel} <span class="font-mono font-bold text-[#eef2ff]">{contra}</span></span>
+			<span>{contraLabel} <span class="font-mono font-bold text-fg">{contra}</span></span>
 		</div>
 	</div>
 {/snippet}
 
 {#snippet box(marked: boolean)}
 	<span
-		class="grid size-6 shrink-0 place-items-center rounded-sm border-2 border-[#8ea6e0]/50 bg-[#0b1120] font-serif text-base font-black leading-none text-[#ffcb6b]"
+		class="grid size-6 shrink-0 place-items-center rounded-sm border-2 border-line/50 bg-surface-0 font-serif text-base font-black leading-none text-accent-fg"
 	>
 		{#if marked}<span class="animate-stamp" style="--stamp-tilt: -10deg; --rise-delay: 0ms">✗</span>{/if}
 	</span>
@@ -121,16 +121,16 @@
 				{/if}
 			</div>
 
-			<h1 class="mx-auto max-w-2xl break-words font-serif text-3xl font-black leading-tight text-[#eef2ff] sm:text-4xl">
+			<h1 class="mx-auto max-w-2xl break-words font-serif text-3xl font-black leading-tight text-fg sm:text-4xl">
 				{data.bloc.name}
 			</h1>
-			<p class="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]">
+			<p class="mt-1 text-[10px] uppercase tracking-[0.2em] text-fg-muted">
 				Signed {formatDate(data.bloc.createdAt)} · {data.memberCount}
 				{data.memberCount === 1 ? "signatory" : "signatories"}
 			</p>
 			{#if data.bloc.description}
 				<p
-					class="mx-auto mt-4 max-w-xl border-t border-[#8ea6e0]/15 pt-4 font-serif text-sm italic text-[#c2cbe3] sm:text-base"
+					class="mx-auto mt-4 max-w-xl border-t border-line/15 pt-4 font-serif text-sm italic text-fg-soft sm:text-base"
 				>
 					{data.bloc.description}
 				</p>
@@ -149,7 +149,7 @@
 							<Logo
 								src={state.logo}
 								alt={state.name}
-								class="size-9 rounded-sm ring-1 ring-[#8ea6e0]/25"
+								class="size-9 rounded-sm ring-1 ring-line/25"
 								placeholderIcon={FluentBuildingGovernment20Filled}
 							/>
 						</a>
@@ -167,7 +167,7 @@
 	{/if}
 	{#if form?.success}
 		<div
-			class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3 text-sm animate-rise-in"
+			class="bg-positive-bg/18 border border-positive/30 text-positive-fg rounded-sm p-4 flex items-center gap-3 text-sm animate-rise-in"
 		>
 			{form.message ?? "Bloc membership updated"}
 		</div>
@@ -179,7 +179,7 @@
 			<form method="POST" action="?/withdrawApplication" use:enhance>
 				<div class="flex flex-col sm:flex-row sm:items-center gap-3">
 					<div class="flex-1 space-y-2">
-						<p class="text-sm font-bold text-[#eef2ff]">
+						<p class="text-sm font-bold text-fg">
 							Application of {data.userState?.name ?? "your state"}
 							<Badge tone="amber" size="xs">Pending</Badge>
 						</p>
@@ -189,9 +189,9 @@
 							data.memberCount,
 							"admit",
 							"refuse",
-							"bg-[#4fd88a]"
+							"bg-positive"
 						)}
-						<p class="text-[11px] text-[#8e9abb]">
+						<p class="text-[11px] text-fg-muted">
 							Closes <span class="font-mono">{formatDateTime(data.myApplication.expiresAt)}</span>
 						</p>
 					</div>
@@ -213,9 +213,9 @@
 							/>
 						{/if}
 						<div>
-							<p class="text-sm font-bold text-[#eef2ff]">Sign the charter</p>
+							<p class="text-sm font-bold text-fg">Sign the charter</p>
 							{#if data.userState}
-								<p class="text-xs text-[#8e9abb]">As {data.userState.name} · members vote on admission</p>
+								<p class="text-xs text-fg-muted">As {data.userState.name} · members vote on admission</p>
 							{/if}
 						</div>
 					</div>
@@ -239,7 +239,7 @@
 					subtitle="Bloc leader · elected {formatDate(data.leader.appointedAt)}"
 				/>
 			{:else}
-				<p class="text-sm text-[#8e9abb]">No leader elected yet.</p>
+				<p class="text-sm text-fg-muted">No leader elected yet.</p>
 			{/if}
 			{#each data.diplomats as diplomat (diplomat.id)}
 				<UserLink size="sm" id={diplomat.userId} name={diplomat.name} avatar={diplomat.logo} subtitle="Diplomat" />
@@ -251,19 +251,19 @@
 				<!-- Ballot paper -->
 				<div class="panel-muted rounded-sm p-4 space-y-3">
 					<div
-						class="flex flex-wrap items-baseline justify-between gap-2 border-b border-dashed border-[#8ea6e0]/25 pb-2"
+						class="flex flex-wrap items-baseline justify-between gap-2 border-b border-dashed border-line/25 pb-2"
 					>
-						<p class="font-serif text-base font-bold uppercase tracking-wide text-[#eef2ff]">Ballot · Bloc leader</p>
-						<p class="text-[11px] text-[#8e9abb]">
+						<p class="font-serif text-base font-bold uppercase tracking-wide text-fg">Ballot · Bloc leader</p>
+						<p class="text-[11px] text-fg-muted">
 							<span class="font-mono">{data.blocLeaderVotesCast}</span> cast · closes
 							<span class="font-mono">{formatDateTime(data.election.votingEndsAt)}</span>
 						</p>
 					</div>
 
 					{#if data.candidates.length === 0}
-						<p class="text-sm text-[#8e9abb]">No candidates yet. Presidents nominate from a citizen's profile.</p>
+						<p class="text-sm text-fg-muted">No candidates yet. Presidents nominate from a citizen's profile.</p>
 					{:else}
-						<ul class="divide-y divide-dashed divide-[#8ea6e0]/15">
+						<ul class="divide-y divide-dashed divide-line/15">
 							{#each data.candidates as candidate (candidate.userId)}
 								{@const isMyVote = data.myBlocLeaderVote === candidate.userId}
 								<li class="flex items-center gap-3 rounded-sm py-2" data-ballot>
@@ -279,7 +279,7 @@
 											<input type="hidden" name="candidateUserId" value={candidate.userId} />
 											<button
 												type="submit"
-												class="tap-target press-spring flex items-center gap-2 rounded-sm px-1 text-xs text-[#8e9abb] hover:text-[#ffc857]"
+												class="tap-target press-spring flex items-center gap-2 rounded-sm px-1 text-xs text-fg-muted hover:text-accent-hover"
 												aria-label="Vote for {candidate.name}"
 												aria-pressed={isMyVote}
 											>
@@ -294,12 +294,12 @@
 							{/each}
 						</ul>
 					{/if}
-					<p class="text-[11px] text-[#8e9abb]">
+					<p class="text-[11px] text-fg-muted">
 						{data.canVoteForBlocLeader ? "Secret until it closes." : "Member presidents vote."}
 					</p>
 				</div>
 			{:else}
-				<p class="text-xs text-[#8e9abb]">
+				<p class="text-xs text-fg-muted">
 					Next election · nominations open <span class="font-mono">{formatDateTime(data.election.votingStartsAt)}</span>
 				</p>
 			{/if}
@@ -321,14 +321,14 @@
 								placeholderIcon={FluentBuildingGovernment20Filled}
 							/>
 							<div class="min-w-0">
-								<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]">Application for membership</p>
-								<p class="truncate font-serif text-lg font-bold text-[#eef2ff] group-hover:text-[#ffc857]">
+								<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">Application for membership</p>
+								<p class="truncate font-serif text-lg font-bold text-fg group-hover:text-accent-hover">
 									{application.state.name}
 								</p>
 							</div>
 						</a>
-						{@render tally(application.pro, application.contra, data.memberCount, "admit", "refuse", "bg-[#4fd88a]")}
-						<p class="text-[11px] text-[#8e9abb]">
+						{@render tally(application.pro, application.contra, data.memberCount, "admit", "refuse", "bg-positive")}
+						<p class="text-[11px] text-fg-muted">
 							Majority admits · closes <span class="font-mono">{formatDateTime(application.expiresAt)}</span>
 						</p>
 						{#if data.isMemberPresident}
@@ -336,7 +336,7 @@
 								method="POST"
 								action="?/voteApplication"
 								use:enhance={castBallot}
-								class="grid grid-cols-2 gap-2 border-t border-dashed border-[#8ea6e0]/20 pt-3"
+								class="grid grid-cols-2 gap-2 border-t border-dashed border-line/20 pt-3"
 							>
 								<input type="hidden" name="applicationId" value={application.id} />
 								{#each [["pro", "Admit"], ["contra", "Refuse"]] as [value, label] (value)}
@@ -347,8 +347,8 @@
 										aria-pressed={application.myVote === value}
 										class="tap-target press-spring flex items-center gap-2 rounded-sm border px-3 py-2 text-sm transition-colors {application.myVote ===
 										value
-											? 'border-[#f5a524]/50 bg-[#f5a524]/12 text-[#ffcb6b]'
-											: 'border-[#8ea6e0]/20 text-[#c2cbe3] hover:border-[#f5a524]/40'}"
+											? 'border-accent/50 bg-accent/12 text-accent-fg'
+											: 'border-line/20 text-fg-soft hover:border-accent/40'}"
 									>
 										{@render box(application.myVote === value)}
 										{label}
@@ -379,18 +379,18 @@
 							/>
 							<div class="min-w-0">
 								<p class="text-[10px] uppercase tracking-[0.2em] text-red-300">Motion to expel</p>
-								<p class="truncate font-serif text-lg font-bold text-[#eef2ff] group-hover:text-[#ffc857]">
+								<p class="truncate font-serif text-lg font-bold text-fg group-hover:text-accent-hover">
 									{expulsion.state.name}
 								</p>
 							</div>
 						</a>
 						{#if expulsion.reason}
-							<p class="border-l-2 border-red-500/40 pl-2 font-serif text-sm italic text-[#c2cbe3]">
+							<p class="border-l-2 border-red-500/40 pl-2 font-serif text-sm italic text-fg-soft">
 								“{expulsion.reason}”
 							</p>
 						{/if}
 						{@render tally(expulsion.pro, expulsion.contra, expulsion.voters, "expel", "keep", "bg-red-400")}
-						<p class="text-[11px] text-[#8e9abb]">
+						<p class="text-[11px] text-fg-muted">
 							{needed} of {expulsion.voters} needed · closes
 							<span class="font-mono">{formatDateTime(expulsion.expiresAt)}</span>
 						</p>
@@ -399,7 +399,7 @@
 								method="POST"
 								action="?/voteExpulsion"
 								use:enhance={withToast}
-								class="grid grid-cols-2 gap-2 border-t border-dashed border-[#8ea6e0]/20 pt-3"
+								class="grid grid-cols-2 gap-2 border-t border-dashed border-line/20 pt-3"
 							>
 								<input type="hidden" name="expulsionId" value={expulsion.id} />
 								{#each [["pro", "Expel"], ["contra", "Keep"]] as [value, label] (value)}
@@ -412,8 +412,8 @@
 										value
 											? value === 'pro'
 												? 'border-red-500/50 bg-red-600/10 text-red-300'
-												: 'border-[#6aa8ff]/50 bg-[#2f6be0]/18 text-[#c3dbff]'
-											: 'border-[#8ea6e0]/20 text-[#c2cbe3] hover:border-[#f5a524]/40'}"
+												: 'border-friendly/50 bg-friendly-bg/18 text-friendly-fg'
+											: 'border-line/20 text-fg-soft hover:border-accent/40'}"
 									>
 										{@render box(expulsion.myVote === value)}
 										{label}
@@ -421,7 +421,7 @@
 								{/each}
 							</form>
 						{:else if expulsion.isTarget}
-							<p class="text-xs text-[#ffcb6b]">Your state can't vote on its own expulsion.</p>
+							<p class="text-xs text-accent-fg">Your state can't vote on its own expulsion.</p>
 						{/if}
 					</article>
 				{/each}
@@ -449,11 +449,11 @@
 						</p>
 						<p class="truncate text-sm">
 							<span class="font-bold text-red-300">{war.attacker.name}</span>
-							<span class="mx-1 font-serif italic text-[#8e9abb]">vs</span>
-							<span class="font-bold text-[#c3dbff]">{war.defender.name}</span>
+							<span class="mx-1 font-serif italic text-fg-muted">vs</span>
+							<span class="font-bold text-friendly-fg">{war.defender.name}</span>
 						</p>
 						{#if war.activeBattles > 0}
-							<p class="text-[10px] text-[#ffcb6b]">
+							<p class="text-[10px] text-accent-fg">
 								{war.activeBattles}
 								{war.activeBattles === 1 ? "battle" : "battles"} on
 							</p>
@@ -474,10 +474,10 @@
 	<section class="panel rounded-sm p-5 space-y-3">
 		<h2 class="section-title">
 			Signatories
-			<span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#8e9abb]">{data.memberCount}</span>
+			<span class="ml-auto text-xs font-normal normal-case tracking-normal text-fg-muted">{data.memberCount}</span>
 		</h2>
 		{#if data.memberStates.length}
-			<ul class="divide-y divide-[#8ea6e0]/10">
+			<ul class="divide-y divide-line/10">
 				{#each data.memberStates as state (state.id)}
 					<li out:vanish class="flex items-center gap-3 py-2.5">
 						<a href="/state/{state.id}" class="shrink-0">
@@ -489,10 +489,10 @@
 							/>
 						</a>
 						<div class="min-w-0 flex-1">
-							<a href="/state/{state.id}" class="block truncate font-semibold text-[#eef2ff] hover:text-[#ffc857]">
+							<a href="/state/{state.id}" class="block truncate font-semibold text-fg hover:text-accent-hover">
 								{state.name}
 							</a>
-							<div class="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-[#8e9abb]">
+							<div class="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-fg-muted">
 								{#if state.president}
 									<UserLink
 										size="xs"
@@ -531,7 +531,7 @@
 				{/each}
 			</ul>
 		{:else}
-			<p class="py-4 text-center text-sm text-[#8e9abb]">No signatories yet.</p>
+			<p class="py-4 text-center text-sm text-fg-muted">No signatories yet.</p>
 		{/if}
 	</section>
 

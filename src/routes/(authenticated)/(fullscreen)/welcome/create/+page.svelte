@@ -75,10 +75,10 @@
 			$errors.logo
 				? "border-red-500/50"
 				: dragActive
-					? "border-[#f5a524] bg-[#f5a524]/10"
+					? "border-accent bg-accent/10"
 					: $form.logo
-						? "border-[#1f9d62]/60 bg-[#1f9d62]/5"
-						: `border-[#f5a524]/30${$submitting ? "" : " hover:border-[#f5a524]/50 hover:bg-[#f5a524]/10"}`,
+						? "border-positive-bg/60 bg-positive-bg/5"
+						: `border-accent/30${$submitting ? "" : " hover:border-accent/50 hover:bg-accent/10"}`,
 			$submitting ? "opacity-50" : ""
 		]
 			.filter(Boolean)
@@ -149,12 +149,12 @@
 	<!-- Header -->
 	<div class="text-center space-y-3">
 		<div class="flex justify-center">
-			<div class="size-16 bg-[#7451e6]/15 border border-[#b9a1ff]/30 rounded-sm flex items-center justify-center">
-				<PsyopsLogo class="size-10 text-[#b9a1ff]" />
+			<div class="size-16 bg-politics-bg/15 border border-politics/30 rounded-sm flex items-center justify-center">
+				<PsyopsLogo class="size-10 text-politics" />
 			</div>
 		</div>
-		<h1 class="text-3xl font-bold text-[#eef2ff]">Complete Your Profile</h1>
-		<p class="text-[#c2cbe3] max-w-md mx-auto">Tell us about yourself to get started in PsyOps</p>
+		<h1 class="text-3xl font-bold text-fg">Complete Your Profile</h1>
+		<p class="text-fg-soft max-w-md mx-auto">Tell us about yourself to get started in PsyOps</p>
 	</div>
 
 	<!-- Error Message -->
@@ -169,7 +169,7 @@
 		<!-- Profile Picture -->
 		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentImage20Filled class="size-5 text-[#b9a1ff]" />
+				<FluentImage20Filled class="size-5 text-politics" />
 				<h2 class="section-title">Profile Picture (Optional)</h2>
 			</div>
 
@@ -188,11 +188,11 @@
 				<button type="button" onclick={() => fileInput?.click()} disabled={$submitting} class={uploadBoxClass}>
 					{#if !$form.logo}
 						<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-							<div class="rounded-full bg-[#f5a524]/12 border border-[#f5a524]/35 p-3">
-								<FluentPerson20Filled class="size-8 text-[#ffcb6b]" />
+							<div class="rounded-full bg-accent/12 border border-accent/35 p-3">
+								<FluentPerson20Filled class="size-8 text-accent-fg" />
 							</div>
 							<div class="text-center">
-								<p class="text-base font-semibold text-[#eef2ff]">
+								<p class="text-base font-semibold text-fg">
 									{#if dragActive}
 										Drop image here
 									{:else if $submitting}
@@ -202,13 +202,13 @@
 									{/if}
 								</p>
 								{#if !$submitting}
-									<p class="mt-1 text-sm text-[#8e9abb]">Images only • 5MB max</p>
+									<p class="mt-1 text-sm text-fg-muted">Images only • 5MB max</p>
 								{/if}
 							</div>
 						</div>
 					{:else}
 						<div class="relative">
-							<div class="flex items-center justify-center p-6 bg-[#131c33]/70">
+							<div class="flex items-center justify-center p-6 bg-surface-4/70">
 								<img
 									loading="lazy"
 									decoding="async"
@@ -218,9 +218,9 @@
 								/>
 							</div>
 							<div
-								class="absolute inset-0 flex items-center justify-center bg-[#0c1222]/70 opacity-0 transition-opacity group-hover:opacity-100"
+								class="absolute inset-0 flex items-center justify-center bg-surface-1/70 opacity-0 transition-opacity group-hover:opacity-100"
 							>
-								<p class="text-base font-semibold text-[#eef2ff]">Tap to change</p>
+								<p class="text-base font-semibold text-fg">Tap to change</p>
 							</div>
 							<button
 								type="button"
@@ -239,11 +239,11 @@
 								✕
 							</button>
 						</div>
-						<div class="border-t border-[#8ea6e0]/15 p-3 bg-[#131c33]/70">
-							<p class="truncate text-sm font-medium text-[#eef2ff]" title={$form.logo.name}>
+						<div class="border-t border-line/15 p-3 bg-surface-4/70">
+							<p class="truncate text-sm font-medium text-fg" title={$form.logo.name}>
 								{$form.logo.name}
 							</p>
-							<p class="text-xs text-[#8e9abb]">
+							<p class="text-xs text-fg-muted">
 								{Math.round($form.logo.size / 1024)} KB
 							</p>
 						</div>
@@ -261,7 +261,7 @@
 		<!-- Username -->
 		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentPerson20Filled class="size-5 text-[#b9a1ff]" />
+				<FluentPerson20Filled class="size-5 text-politics" />
 				<h2 class="section-title">Your Identity</h2>
 			</div>
 
@@ -291,7 +291,7 @@
 		<!-- Political Views -->
 		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentBuildingGovernment20Filled class="size-5 text-[#b9a1ff]" />
+				<FluentBuildingGovernment20Filled class="size-5 text-politics" />
 				<h2 class="section-title">Political Alignment (Optional)</h2>
 			</div>
 
@@ -316,7 +316,7 @@
 		<!-- Bio -->
 		<div class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center gap-2">
-				<FluentDocument20Filled class="size-5 text-[#b9a1ff]" />
+				<FluentDocument20Filled class="size-5 text-politics" />
 				<h2 class="section-title">About You (Optional)</h2>
 			</div>
 

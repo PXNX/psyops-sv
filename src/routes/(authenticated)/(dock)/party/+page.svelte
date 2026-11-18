@@ -54,7 +54,7 @@
 	<div class="flex flex-col sm:flex-row gap-3">
 		<!-- Search -->
 		<div class="relative flex-1">
-			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#8e9abb]" />
+			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-fg-muted" />
 			<input
 				type="text"
 				bind:value={searchQuery}
@@ -124,12 +124,12 @@
 									{#if party.logoUrl}
 										<img loading="lazy" decoding="async" src={party.logoUrl} alt="" class="size-full object-cover" />
 									{:else}
-										<FluentPeople20Filled class="size-7 text-[#eef2ff]" />
+										<FluentPeople20Filled class="size-7 text-fg" />
 									{/if}
 								</div>
 								<div class="flex-1 min-w-0">
 									<h3
-										class="font-serif text-lg font-black uppercase leading-tight text-[#eef2ff] group-hover:text-[#ffc857] transition-colors line-clamp-2"
+										class="font-serif text-lg font-black uppercase leading-tight text-fg group-hover:text-accent-hover transition-colors line-clamp-2"
 									>
 										{party.name}
 									</h3>
@@ -143,13 +143,13 @@
 							</div>
 
 							{#if party.description}
-								<p class="font-serif text-sm italic text-[#c2cbe3] line-clamp-2">“{party.description}”</p>
+								<p class="font-serif text-sm italic text-fg-soft line-clamp-2">“{party.description}”</p>
 							{/if}
 
-							<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8e9abb]">
+							<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
 								<span class="flex items-center gap-1">
-									<FluentPeople20Filled class="size-3.5 text-[#b9a1ff]" />
-									<span class="font-bold text-[#eef2ff]">{party.memberCount}</span>
+									<FluentPeople20Filled class="size-3.5 text-politics" />
+									<span class="font-bold text-fg">{party.memberCount}</span>
 									{party.memberCount === 1 ? "member" : "members"}
 								</span>
 								{#if data.scope === "global" && party.stateName}
@@ -161,7 +161,7 @@
 						</div>
 					</a>
 					{#if party.leader}
-						<div class="border-t border-[#8ea6e0]/10 px-4 py-2.5 pl-6">
+						<div class="border-t border-line/10 px-4 py-2.5 pl-6">
 							<UserLink
 								size="sm"
 								id={party.leader.id}

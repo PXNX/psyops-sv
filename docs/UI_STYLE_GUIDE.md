@@ -30,7 +30,7 @@ Every dock page uses `PageContainer` + `PageHeader`. Never hand-roll `max-w-* mx
 
 Exceptions: full-height layouts (chat threads, map, fullscreen editors) keep their own shell but use the same tokens inside.
 
-Entity detail pages (state, company, user, party, bloc, battle, war) may use a **hero panel** instead of `PageHeader`: a `panel rounded-sm p-5` with logo, `h1 text-3xl font-bold text-[#eef2ff]`, metadata line in `text-[#8e9abb]`, and actions in the top-right corner.
+Entity detail pages (state, company, user, party, bloc, battle, war) may use a **hero panel** instead of `PageHeader`: a `panel rounded-sm p-5` with logo, `h1 text-3xl font-bold text-[#e6edf3]`, metadata line in `text-[#8b949e]`, and actions in the top-right corner.
 
 ---
 
@@ -38,25 +38,25 @@ Entity detail pages (state, company, user, party, bloc, battle, war) may use a *
 
 | Role                 | Value                                                |
 | -------------------- | ---------------------------------------------------- |
-| Text — primary       | `text-[#eef2ff]` (never `text-white`)                |
-| Text — strong body   | `text-[#dbe2f4]`                                     |
-| Text — body          | `text-[#c2cbe3]`                                     |
-| Text — muted / label | `text-[#8e9abb]`                                     |
-| Rule / border        | `border-[#8ea6e0]/15` (`/10` subtle, `/20` form)     |
-| Inset surface        | `bg-[#131c33]` / `panel-muted`                       |
-| Accent (signal)      | gold `#f5a524`, text `#ffcb6b`, hover text `#ffc857` |
+| Text — primary       | `text-[#e6edf3]` (never `text-white`)                |
+| Text — strong body   | `text-[#d0d7de]`                                     |
+| Text — body          | `text-[#b6bfca]`                                     |
+| Text — muted / label | `text-[#8b949e]`                                     |
+| Rule / border        | `border-[#9aa7b8]/15` (`/10` subtle, `/20` form)     |
+| Inset surface        | `bg-[#151a22]` / `panel-muted`                       |
+| Accent (signal)      | gold `#2f81f7`, text `#79b8ff`, hover text `#8cc4ff` |
 
 Tinted accents — always the trio _background / border / text_:
 
 | Tone   | Background        | Border                | Text             | Use for                        |
 | ------ | ----------------- | --------------------- | ---------------- | ------------------------------ |
-| gold   | `bg-[#f5a524]/12` | `border-[#f5a524]/35` | `text-[#ffcb6b]` | highlight, pending, warning    |
+| gold   | `bg-[#2f81f7]/12` | `border-[#2f81f7]/35` | `text-[#79b8ff]` | highlight, pending, warning    |
 | green  | `bg-[#1f9d62]/18` | `border-[#4fd88a]/30` | `text-[#aef3c9]` | success, money, positive       |
 | blue   | `bg-[#2f6be0]/18` | `border-[#6aa8ff]/30` | `text-[#c3dbff]` | info, defenders, population    |
 | purple | `bg-[#7451e6]/15` | `border-[#b9a1ff]/30` | `text-[#e6dcff]` | politics, parties, premium-ish |
 | red    | `bg-red-600/10`   | `border-red-500/30`   | `text-red-300`   | errors, destructive, attackers |
 
-Icon accents use the border hue (`text-[#4fd88a]`, `text-[#6aa8ff]`, `text-[#b9a1ff]`, `text-[#ffcb6b]`, `text-red-400`).
+Icon accents use the border hue (`text-[#4fd88a]`, `text-[#6aa8ff]`, `text-[#b9a1ff]`, `text-[#79b8ff]`, `text-red-400`).
 
 Do **not** use raw Tailwind hues (`blue-*`, `emerald-*`, `green-*`, `purple-*`, `violet-*`, `indigo-*`, `amber-*`, `yellow-*`, `slate-*`, `gray-*`, `zinc-*`) — map them to the table above. Signal colours are deliberately saturated so states, sides and outcomes read at a glance, like a strategy-game HUD. `red-*` is the one allowed raw hue. User-chosen colours (state/party/bloc colour via inline `style`) are fine.
 
@@ -88,13 +88,13 @@ Don't nest `panel` in `panel` — use `panel-muted` for the inner level.
 
 | Element         | Classes                                                        |
 | --------------- | -------------------------------------------------------------- |
-| Page title      | `PageHeader` (`text-3xl font-bold text-[#eef2ff]`, serif)      |
+| Page title      | `PageHeader` (`text-3xl font-bold text-[#e6edf3]`, serif)      |
 | Section heading | `h2.section-title` (gold uppercase, tracked)                   |
-| Card title      | `font-bold text-[#eef2ff]`, hover `group-hover:text-[#ffc857]` |
-| Stat label      | `text-[10px] text-[#8e9abb] uppercase tracking-wide`           |
-| Stat value      | `text-sm`–`text-2xl font-bold text-[#eef2ff]`                  |
-| Body            | `text-sm text-[#c2cbe3]`                                       |
-| Metadata        | `text-xs text-[#8e9abb]`                                       |
+| Card title      | `font-bold text-[#e6edf3]`, hover `group-hover:text-[#8cc4ff]` |
+| Stat label      | `text-[10px] text-[#8b949e] uppercase tracking-wide`           |
+| Stat value      | `text-sm`–`text-2xl font-bold text-[#e6edf3]`                  |
+| Body            | `text-sm text-[#b6bfca]`                                       |
+| Metadata        | `text-xs text-[#8b949e]`                                       |
 
 `font-mono` only for numbers that tick (countdowns, IDs, codes, prices) — not for labels or headings.
 
@@ -122,8 +122,8 @@ Don't nest `panel` in `panel` — use `panel-muted` for the inner level.
 <div class="panel-muted rounded-sm p-3 flex items-center gap-2">
 	<FluentPeople20Filled class="size-4 text-[#6aa8ff] shrink-0" />
 	<div class="min-w-0">
-		<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Population</p>
-		<p class="text-sm font-bold text-[#eef2ff] truncate">{population.toLocaleString()}</p>
+		<p class="text-[10px] text-[#8b949e] uppercase tracking-wide">Population</p>
+		<p class="text-sm font-bold text-[#e6edf3] truncate">{population.toLocaleString()}</p>
 	</div>
 </div>
 ```

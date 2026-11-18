@@ -95,33 +95,33 @@
 				href: `/state/${data.state.id}/parliament`,
 				label: "Parliament",
 				icon: FluentOrganization20Filled,
-				tone: "text-[#b9a1ff]"
+				tone: "text-politics"
 			});
 		list.push({
 			href: `/state/${data.state.id}/construction`,
 			label: "Construction",
 			icon: FluentBuilding20Filled,
-			tone: "text-[#ffcb6b]"
+			tone: "text-accent-fg"
 		});
 		list.push({
 			href: `/state/${data.state.id}/budget`,
 			label: "Treasury",
 			icon: FluentReceiptMoney20Filled,
-			tone: "text-[#4fd88a]"
+			tone: "text-positive"
 		});
 		if (hasGovernment && (data.isPresident || data.isOwnEconomyMinister))
 			list.push({
 				href: `/state/${data.state.id}/economy`,
 				label: "Economy",
 				icon: FluentMoney20Filled,
-				tone: "text-[#4fd88a]"
+				tone: "text-positive"
 			});
 		if (hasGovernment && (data.isPresident || data.isOwnForeignMinister))
 			list.push({
 				href: `/state/${data.state.id}/foreign-affairs`,
 				label: "Foreign Affairs",
 				icon: FluentGlobe20Filled,
-				tone: "text-[#6aa8ff]"
+				tone: "text-friendly"
 			});
 		return list;
 	});
@@ -154,7 +154,7 @@
 	<!-- Dossier cover -->
 	<header
 		class="panel rounded-sm p-5 relative overflow-hidden border-t-4"
-		style="border-top-color: {data.state.background || '#8ea6e0'}"
+		style="border-top-color: {data.state.background || 'var(--color-line)'}"
 	>
 		{#if data.isPresident}
 			<IconButton
@@ -171,7 +171,7 @@
 			<!-- Flag with the bloc seal pinned to its corner -->
 			<div class="relative shrink-0">
 				<div
-					class="size-20 sm:size-24 rounded-sm overflow-hidden bg-[#131c33] border border-[#8ea6e0]/25 shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
+					class="size-20 sm:size-24 rounded-sm overflow-hidden bg-surface-4 border border-line/25 shadow-[0_2px_8px_rgba(0,0,0,0.45)]"
 				>
 					{#if data.state.logo}
 						<img
@@ -183,14 +183,14 @@
 						/>
 					{:else}
 						<div class="size-full flex items-center justify-center">
-							<FluentFlag20Filled class="size-8 text-[#8e9abb]/60" />
+							<FluentFlag20Filled class="size-8 text-fg-muted/60" />
 						</div>
 					{/if}
 				</div>
 				{#if data.bloc}
 					<a
 						href="/bloc/{data.bloc.id}"
-						class="animate-stamp absolute -bottom-2 -right-2 size-9 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-[#1b2641]"
+						class="animate-stamp absolute -bottom-2 -right-2 size-9 rounded-full overflow-hidden flex items-center justify-center ring-2 ring-surface-6"
 						style="background-color: {data.bloc.color}; --stamp-tilt: 8deg"
 						title={data.bloc.name}
 					>
@@ -203,17 +203,17 @@
 								class="w-full h-full object-cover"
 							/>
 						{:else}
-							<FluentFlag20Filled class="size-4 text-[#eef2ff]" />
+							<FluentFlag20Filled class="size-4 text-fg" />
 						{/if}
 					</a>
 				{/if}
 			</div>
 
 			<div class="min-w-0 flex-1">
-				<h1 class="font-serif text-3xl sm:text-4xl font-black text-[#eef2ff] break-words leading-tight">
+				<h1 class="font-serif text-3xl sm:text-4xl font-black text-fg break-words leading-tight">
 					{data.state.name}
 				</h1>
-				<p class="mt-1 text-xs text-[#8e9abb] flex flex-wrap gap-x-2 gap-y-0.5">
+				<p class="mt-1 text-xs text-fg-muted flex flex-wrap gap-x-2 gap-y-0.5">
 					<span>Est. {formatDate(data.state.createdAt)}</span>
 					{#if data.bloc}
 						<span aria-hidden="true">·</span>
@@ -226,11 +226,11 @@
 		</div>
 
 		{#if data.state.description}
-			<p class="mt-4 font-serif italic text-sm sm:text-base text-[#c2cbe3] max-w-2xl">{data.state.description}</p>
+			<p class="mt-4 font-serif italic text-sm sm:text-base text-fg-soft max-w-2xl">{data.state.description}</p>
 		{/if}
 
 		{#if data.isPresident || data.canDeclareWar || data.isForeignMinister}
-			<div class="mt-4 pt-4 border-t border-[#8ea6e0]/15 flex flex-wrap gap-2">
+			<div class="mt-4 pt-4 border-t border-line/15 flex flex-wrap gap-2">
 				{#if data.isPresident}
 					{#if !data.bloc}
 						<Button href="/bloc" variant="soft-purple" size="sm" icon={FluentFlag20Filled}>Join Bloc</Button>
@@ -273,33 +273,33 @@
 				<svelte:element
 					this={href ? "a" : "div"}
 					{href}
-					class="group flex items-center gap-2 py-2 border-b border-dashed border-[#8ea6e0]/15 {href
-						? 'hover:text-[#ffc857]'
+					class="group flex items-center gap-2 py-2 border-b border-dashed border-line/15 {href
+						? 'hover:text-accent-hover'
 						: ''}"
 				>
 					<Icon class="size-4 shrink-0 {tone}" />
-					<dt class="text-sm text-[#8e9abb] {href ? 'group-hover:text-[#ffc857]' : ''} transition-colors">{label}</dt>
-					<span class="flex-1 border-b border-dotted border-[#8ea6e0]/20 translate-y-1" aria-hidden="true"></span>
-					<dd class="text-sm font-bold font-mono text-[#eef2ff]">{value}</dd>
+					<dt class="text-sm text-fg-muted {href ? 'group-hover:text-accent-hover' : ''} transition-colors">{label}</dt>
+					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
+					<dd class="text-sm font-bold font-mono text-fg">{value}</dd>
 				</svelte:element>
 			{/snippet}
 			{@render fact(
 				"Population",
 				data.state.population.toLocaleString(),
 				FluentPeople20Filled,
-				"text-[#6aa8ff]",
+				"text-friendly",
 				"/state?sort=population"
 			)}
 			{@render fact(
 				"Regions",
 				String(data.regions.length),
 				FluentHome20Filled,
-				"text-[#b9a1ff]",
+				"text-politics",
 				`/state/${data.state.id}/region`
 			)}
-			{@render fact("Power rating", String(data.state.rating || 0), FluentShield20Filled, "text-[#4fd88a]")}
+			{@render fact("Power rating", String(data.state.rating || 0), FluentShield20Filled, "text-positive")}
 			{#if data.energy}
-				{@render fact("Energy available", `${data.energy.available} MW`, FluentLightbulb20Filled, "text-[#ffcb6b]")}
+				{@render fact("Energy available", `${data.energy.available} MW`, FluentLightbulb20Filled, "text-accent-fg")}
 			{/if}
 		</dl>
 	</section>
@@ -314,27 +314,27 @@
 					href="/war/{war.id}"
 					class="group flex items-center gap-3 rounded-sm p-3 sm:p-4 transition-colors {war.isAttacker
 						? 'bg-red-600/10 border border-red-500/30 hover:border-red-400/50'
-						: 'bg-[#2f6be0]/18 border border-[#6aa8ff]/30 hover:border-[#6aa8ff]/50'}"
+						: 'bg-friendly-bg/18 border border-friendly/30 hover:border-friendly/50'}"
 				>
 					<Logo
 						src={opponent.logo}
 						alt={opponent.name}
 						class="size-10 shrink-0"
 						placeholderIcon={FluentShield20Filled}
-						placeholderGradient={war.isAttacker ? "from-red-600/40 to-red-600/40" : "from-[#2f6be0]/40 to-[#2f6be0]/40"}
+						placeholderGradient={war.isAttacker ? "from-red-600/40 to-red-600/40" : "from-friendly-bg/40 to-friendly-bg/40"}
 					/>
 					<div class="flex-1 min-w-0">
 						<p
 							class="flex items-center gap-1.5 text-[10px] uppercase tracking-wide {war.isAttacker
 								? 'text-red-300/80'
-								: 'text-[#c3dbff]/80'}"
+								: 'text-friendly-fg/80'}"
 						>
-							<span class="size-1.5 rounded-full animate-pulse {war.isAttacker ? 'bg-red-500' : 'bg-[#6aa8ff]'}"></span>
+							<span class="size-1.5 rounded-full animate-pulse {war.isAttacker ? 'bg-red-500' : 'bg-friendly'}"></span>
 							{war.isAttacker ? "Attacking" : "Defending against"}
 						</p>
-						<p class="text-sm font-bold text-[#eef2ff] truncate">{opponent.name}</p>
+						<p class="text-sm font-bold text-fg truncate">{opponent.name}</p>
 					</div>
-					<FluentChevronRight20Filled class="size-4 shrink-0 text-[#8e9abb] group-hover:text-[#eef2ff]" />
+					<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-fg" />
 				</a>
 			{/each}
 		</section>
@@ -347,21 +347,21 @@
 
 			{#if !data.visa.isResident}
 				{@const visaStamp = data.visa.blocVisaFree
-					? { label: "Visa free", sub: "Bloc member", cls: "border-[#4fd88a]/70 text-[#aef3c9]" }
+					? { label: "Visa free", sub: "Bloc member", cls: "border-positive/70 text-positive-fg" }
 					: !data.visa.visaRequired
-						? { label: "Open border", sub: "No visa needed", cls: "border-[#4fd88a]/70 text-[#aef3c9]" }
+						? { label: "Open border", sub: "No visa needed", cls: "border-positive/70 text-positive-fg" }
 						: data.visa.hasActiveVisa && data.visa.activeVisa
 							? {
 									label: "Visa valid",
 									sub: `until ${formatDate(data.visa.activeVisa.expiresAt)}`,
-									cls: "border-[#6aa8ff]/70 text-[#c3dbff]"
+									cls: "border-friendly/70 text-friendly-fg"
 								}
 							: data.visa.blockedReason
 								? { label: "Denied", sub: data.visa.blockedReason, cls: "border-red-500/70 text-red-300" }
 								: null}
 				<div class="flex items-center gap-3 flex-wrap">
-					<FluentBookCompass24Filled class="size-5 shrink-0 text-[#b9a1ff]" />
-					<span class="text-sm text-[#dbe2f4] mr-auto">Travel visa</span>
+					<FluentBookCompass24Filled class="size-5 shrink-0 text-politics" />
+					<span class="text-sm text-fg-body mr-auto">Travel visa</span>
 					{#if visaStamp}
 						<span
 							class="animate-stamp inline-flex flex-col items-center border-2 rounded-sm px-2.5 py-0.5 font-serif uppercase {visaStamp.cls}"
@@ -390,19 +390,19 @@
 			{#if data.residencePermit.canApply}
 				<div
 					class="flex items-center gap-3 flex-wrap {!data.visa.isResident
-						? 'pt-3 border-t border-dashed border-[#8ea6e0]/15'
+						? 'pt-3 border-t border-dashed border-line/15'
 						: ''}"
 				>
-					<FluentHome20Filled class="size-5 shrink-0 text-[#6aa8ff]" />
-					<span class="text-sm text-[#dbe2f4] mr-auto min-w-0">
+					<FluentHome20Filled class="size-5 shrink-0 text-friendly" />
+					<span class="text-sm text-fg-body mr-auto min-w-0">
 						Residence permit
 						{#if !data.residencePermit.hasPendingApp && data.residencePermit.currentRegionName}
-							<span class="block text-xs text-[#8e9abb]">You're in {data.residencePermit.currentRegionName}</span>
+							<span class="block text-xs text-fg-muted">You're in {data.residencePermit.currentRegionName}</span>
 						{/if}
 					</span>
 					{#if data.residencePermit.hasPendingApp}
 						<span
-							class="animate-stamp border-2 border-[#f5a524]/70 text-[#ffcb6b] rounded-sm px-2.5 py-0.5 font-serif text-xs font-black uppercase tracking-widest"
+							class="animate-stamp border-2 border-accent/70 text-accent-fg rounded-sm px-2.5 py-0.5 font-serif text-xs font-black uppercase tracking-widest"
 							style="--stamp-tilt: 4deg"
 						>
 							Pending
@@ -458,7 +458,7 @@
 			{/if}
 
 			{#if data.ministers.length > 0}
-				<ul class="grid sm:grid-cols-2 gap-x-6 gap-y-3 pt-3 border-t border-[#8ea6e0]/10">
+				<ul class="grid sm:grid-cols-2 gap-x-6 gap-y-3 pt-3 border-t border-line/10">
 					{#each data.ministers as minister (minister.userId)}
 						<li class="min-w-0">
 							<UserLink
@@ -476,22 +476,22 @@
 			{#if data.parliamentMembers.length > 0}
 				<a
 					href="/state/{data.state.id}/parliament"
-					class="group flex items-center gap-3 pt-3 border-t border-[#8ea6e0]/10"
+					class="group flex items-center gap-3 pt-3 border-t border-line/10"
 				>
 					<div class="flex -space-x-2 shrink-0">
 						{#each data.parliamentMembers.slice(0, 5) as member (member.userId)}
 							<Logo
 								src={member.logo}
 								alt=""
-								class="size-7 rounded-full ring-2 ring-[#1b2641]"
-								placeholderGradient="from-[#33456f] to-[#1b2641]"
+								class="size-7 rounded-full ring-2 ring-surface-6"
+								placeholderGradient="from-surface-13 to-surface-6"
 							/>
 						{/each}
 					</div>
-					<span class="flex-1 min-w-0 text-sm text-[#c2cbe3] group-hover:text-[#ffc857] transition-colors">
+					<span class="flex-1 min-w-0 text-sm text-fg-soft group-hover:text-accent-hover transition-colors">
 						{data.parliamentMembers.length}{data.parliamentMembers.length >= 20 ? "+" : ""} seats in parliament
 					</span>
-					<FluentChevronRight20Filled class="size-4 shrink-0 text-[#8e9abb] group-hover:text-[#ffc857]" />
+					<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-accent-hover" />
 				</a>
 			{/if}
 
@@ -500,16 +500,16 @@
 				<a
 					href="/state/{data.state.id}/election/{data.nextElection.id}"
 					class="group flex items-center gap-3 rounded-sm p-3 border transition-colors {isActive
-						? 'bg-[#f5a524]/12 border-[#f5a524]/35 hover:border-[#f5a524]/60'
-						: 'bg-[#131c33]/60 border-[#8ea6e0]/15 hover:border-[#f5a524]/40'}"
+						? 'bg-accent/12 border-accent/35 hover:border-accent/60'
+						: 'bg-surface-4/60 border-line/15 hover:border-accent/40'}"
 				>
-					<FluentVote20Filled class="size-5 shrink-0 {isActive ? 'text-[#ffcb6b]' : 'text-[#6aa8ff]'}" />
+					<FluentVote20Filled class="size-5 shrink-0 {isActive ? 'text-accent-fg' : 'text-friendly'}" />
 					<div class="flex-1 min-w-0">
-						<p class="text-sm font-bold text-[#eef2ff] flex items-center gap-2 flex-wrap">
+						<p class="text-sm font-bold text-fg flex items-center gap-2 flex-wrap">
 							{data.nextElection.isInaugural ? "Founding election" : "Parliamentary election"}
 							{#if isActive}<Badge tone="amber" size="xs">Polls open</Badge>{/if}
 						</p>
-						<p class="text-xs text-[#8e9abb] truncate">
+						<p class="text-xs text-fg-muted truncate">
 							{data.nextElection.totalSeats} seats ·
 							{#if isActive}
 								closes in {getTimeRemaining(data.nextElection.endDate) ?? "moments"}
@@ -519,9 +519,9 @@
 						</p>
 					</div>
 					{#if isActive}
-						<span class="shrink-0 text-xs font-semibold text-[#ffcb6b] group-hover:text-[#ffe1a6]">Vote →</span>
+						<span class="shrink-0 text-xs font-semibold text-accent-fg group-hover:text-accent-soft">Vote →</span>
 					{:else}
-						<FluentChevronRight20Filled class="size-4 shrink-0 text-[#8e9abb] group-hover:text-[#ffc857]" />
+						<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-accent-hover" />
 					{/if}
 				</a>
 				{#if data.nextElection.isInaugural && !isActive}
@@ -536,7 +536,7 @@
 		{#each offices as office (office.href)}
 			<a href={office.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-2 min-w-0">
 				<office.icon class="size-5 shrink-0 {office.tone}" />
-				<span class="text-sm font-semibold text-[#dbe2f4] group-hover:text-[#ffc857] transition-colors truncate">
+				<span class="text-sm font-semibold text-fg-body group-hover:text-accent-hover transition-colors truncate">
 					{office.label}
 				</span>
 			</a>
@@ -548,7 +548,7 @@
 		<section class="space-y-3">
 			<div class="flex items-baseline justify-between gap-3">
 				<h2 class="section-title">Regions</h2>
-				<a href="/state/{data.state.id}/region" class="text-xs text-[#8e9abb] hover:text-[#ffc857]">All →</a>
+				<a href="/state/{data.state.id}/region" class="text-xs text-fg-muted hover:text-accent-hover">All →</a>
 			</div>
 			<ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
 				{#each sortedRegions.slice(0, 9) as region (region.id)}
@@ -565,11 +565,11 @@
 							/>
 							<span class="flex-1 min-w-0">
 								<span
-									class="block text-sm font-semibold text-[#eef2ff] truncate group-hover:text-[#ffc857] transition-colors"
+									class="block text-sm font-semibold text-fg truncate group-hover:text-accent-hover transition-colors"
 								>
 									{region.name}
 								</span>
-								<span class="block text-xs text-[#8e9abb]">
+								<span class="block text-xs text-fg-muted">
 									{region.population.toLocaleString()} residents · rating {region.rating ?? 0}
 								</span>
 							</span>
@@ -597,8 +597,8 @@
 						{#each resourceEntries as resource (resource.name)}
 							<li class="panel-muted rounded-sm px-3 py-2 flex items-center gap-2 min-w-0">
 								<ResourceIcon name={resource.name} class="size-5 shrink-0" />
-								<span class="text-xs text-[#8e9abb] capitalize truncate">{resource.name}</span>
-								<span class="ml-auto text-sm font-bold font-mono text-[#eef2ff]">
+								<span class="text-xs text-fg-muted capitalize truncate">{resource.name}</span>
+								<span class="ml-auto text-sm font-bold font-mono text-fg">
 									{resource.value.toLocaleString()}
 								</span>
 							</li>
@@ -612,11 +612,11 @@
 					<h2 class="section-title mb-3">Tax Schedule</h2>
 					<ul>
 						{#each data.taxes as tax (tax.id)}
-							<li class="flex items-center gap-2 py-2 border-b border-dashed border-[#8ea6e0]/15 last:border-0">
-								<span class="text-sm text-[#dbe2f4]">{taxNames[tax.taxType] ?? tax.taxType.replace(/_/g, " ")} tax</span
+							<li class="flex items-center gap-2 py-2 border-b border-dashed border-line/15 last:border-0">
+								<span class="text-sm text-fg-body">{taxNames[tax.taxType] ?? tax.taxType.replace(/_/g, " ")} tax</span
 								>
-								<span class="flex-1 border-b border-dotted border-[#8ea6e0]/20 translate-y-1" aria-hidden="true"></span>
-								<span class="text-sm font-bold font-mono text-[#ffcb6b]">{tax.taxRate}%</span>
+								<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
+								<span class="text-sm font-bold font-mono text-accent-fg">{tax.taxRate}%</span>
 							</li>
 						{/each}
 					</ul>
@@ -649,7 +649,7 @@
 			/>
 			<div class="min-w-0">
 				<p class="text-[10px] uppercase tracking-[0.2em] text-red-300">Declaration of war against</p>
-				<p class="font-serif text-xl font-black text-[#eef2ff] truncate">{data.state.name}</p>
+				<p class="font-serif text-xl font-black text-fg truncate">{data.state.name}</p>
 			</div>
 		</div>
 		<p class="text-sm text-red-300 flex items-start gap-2">
@@ -706,7 +706,7 @@
 		<div class="space-y-4">
 			<div
 				class="panel-muted rounded-sm p-4 border-l-4"
-				style="border-left-color: {data.state.background || '#b9a1ff'}"
+				style="border-left-color: {data.state.background || 'var(--color-politics)'}"
 			>
 				<div class="flex items-center gap-3">
 					<Logo
@@ -716,24 +716,24 @@
 						placeholderIcon={FluentFlag20Filled}
 					/>
 					<div class="min-w-0">
-						<p class="text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]">Entry visa · 14 days</p>
-						<p class="font-serif text-xl font-black text-[#eef2ff] truncate">{data.state.name}</p>
+						<p class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">Entry visa · 14 days</p>
+						<p class="font-serif text-xl font-black text-fg truncate">{data.state.name}</p>
 					</div>
 				</div>
 				<dl class="mt-4 space-y-1.5 text-sm">
 					<div class="flex justify-between gap-3">
-						<dt class="text-[#8e9abb]">Fee</dt>
-						<dd class="font-mono font-bold text-[#eef2ff]">${data.visa.visaCost.toLocaleString()}</dd>
+						<dt class="text-fg-muted">Fee</dt>
+						<dd class="font-mono font-bold text-fg">${data.visa.visaCost.toLocaleString()}</dd>
 					</div>
 					<div class="flex justify-between gap-3">
-						<dt class="text-[#8e9abb]">of which tax ({data.visa.visaTaxRate}%)</dt>
-						<dd class="font-mono text-[#c2cbe3]">
+						<dt class="text-fg-muted">of which tax ({data.visa.visaTaxRate}%)</dt>
+						<dd class="font-mono text-fg-soft">
 							${Math.floor((data.visa.visaCost * data.visa.visaTaxRate) / 100).toLocaleString()}
 						</dd>
 					</div>
-					<div class="flex justify-between gap-3 pt-1.5 border-t border-dashed border-[#8ea6e0]/20">
-						<dt class="text-[#8e9abb]">Your wallet</dt>
-						<dd class="font-mono {data.walletBalance < data.visa.visaCost ? 'text-red-300' : 'text-[#aef3c9]'}">
+					<div class="flex justify-between gap-3 pt-1.5 border-t border-dashed border-line/20">
+						<dt class="text-fg-muted">Your wallet</dt>
+						<dd class="font-mono {data.walletBalance < data.visa.visaCost ? 'text-red-300' : 'text-positive-fg'}">
 							${data.walletBalance.toLocaleString()}
 						</dd>
 					</div>
@@ -769,7 +769,7 @@
 				{#if data.walletBalance < data.visa.visaCost}
 					<p class="text-xs text-red-300 text-center mt-2">Not enough money</p>
 				{:else if !data.visa.autoApprove}
-					<p class="text-xs text-[#8e9abb] text-center mt-2">Reviewed by the Foreign Minister</p>
+					<p class="text-xs text-fg-muted text-center mt-2">Reviewed by the Foreign Minister</p>
 				{/if}
 			</form>
 		</div>

@@ -39,9 +39,9 @@
 	}
 
 	const stamps: Record<Outcome, { label: string; cls: string; tilt: string }> = {
-		passed: { label: "Passed", cls: "border-[#4fd88a]/75 text-[#aef3c9]", tilt: "-9deg" },
+		passed: { label: "Passed", cls: "border-positive/75 text-positive-fg", tilt: "-9deg" },
 		rejected: { label: "Rejected", cls: "border-red-500/75 text-red-300", tilt: "7deg" },
-		failed: { label: "Failed", cls: "border-[#f5a524]/75 text-[#ffcb6b]", tilt: "-5deg" }
+		failed: { label: "Failed", cls: "border-accent/75 text-accent-fg", tilt: "-5deg" }
 	};
 </script>
 
@@ -55,7 +55,7 @@
 	/>
 
 	<!-- Drawer tabs -->
-	<div class="flex gap-1 border-b border-[#8ea6e0]/20" role="tablist">
+	<div class="flex gap-1 border-b border-line/20" role="tablist">
 		{#each tabs as tab (tab.key)}
 			<button
 				type="button"
@@ -64,11 +64,11 @@
 				onclick={() => (selectedTab = tab.key)}
 				class="tap-target flex-1 sm:flex-none px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap {selectedTab ===
 				tab.key
-					? 'text-[#eef2ff] border-[#f5a524]'
-					: 'text-[#8e9abb] border-transparent hover:text-[#eef2ff]'}"
+					? 'text-fg border-accent'
+					: 'text-fg-muted border-transparent hover:text-fg'}"
 			>
 				{tab.label}
-				<span class="font-mono text-xs text-[#8e9abb]">{tab.count}</span>
+				<span class="font-mono text-xs text-fg-muted">{tab.count}</span>
 			</button>
 		{/each}
 	</div>
@@ -89,19 +89,19 @@
 						{stamp.label}
 					</span>
 
-					<p class="font-serif text-[10px] uppercase tracking-[0.2em] text-[#8e9abb] pr-28">
-						{formatDate(proposal.createdAt)}
+					<p class="font-serif text-[10px] uppercase tracking-[0.2em] text-fg-muted pr-28">
+						Bill No. {proposal.id} · {formatDate(proposal.createdAt)}
 					</p>
-					<h3 class="mt-1 font-serif text-lg font-black text-[#eef2ff] leading-snug break-words pr-24 sm:pr-32">
+					<h3 class="mt-1 font-serif text-lg font-black text-fg leading-snug break-words pr-24 sm:pr-32">
 						{proposal.changeTitle}
 					</h3>
-					<p class="mt-1 text-sm text-[#c2cbe3]">
-						<span class="font-serif font-bold text-[#8e9abb] mr-1">§ 1</span
+					<p class="mt-1 text-sm text-fg-soft">
+						<span class="font-serif font-bold text-fg-muted mr-1">§ 1</span
 						>{proposal.changeDescription}{#if proposal.region}
 							in
 							<a
 								href="/region/{proposal.region.id}"
-								class="inline-flex items-center gap-1 align-middle text-[#c3dbff] hover:text-[#e6f0ff]"
+								class="inline-flex items-center gap-1 align-middle text-friendly-fg hover:text-friendly-hi"
 							>
 								<Logo
 									src={regionCoatUrl(proposal.region.id)}
@@ -112,7 +112,7 @@
 							>{/if}.
 					</p>
 
-					<div class="mt-3 flex items-center gap-2 flex-wrap text-xs text-[#8e9abb]">
+					<div class="mt-3 flex items-center gap-2 flex-wrap text-xs text-fg-muted">
 						<span>Sponsored by</span>
 						<UserLink
 							id={proposal.proposedBy.id}
@@ -124,24 +124,24 @@
 					</div>
 
 					<!-- Final tally -->
-					<div class="mt-3 pt-3 border-t border-dashed border-[#8ea6e0]/15 space-y-1.5">
-						<div class="relative h-2 rounded-full bg-[#0b1120] flex overflow-hidden">
-							<div class="bg-[#4fd88a] h-full" style="width: {proposal.percentageFor}%"></div>
+					<div class="mt-3 pt-3 border-t border-dashed border-line/15 space-y-1.5">
+						<div class="relative h-2 rounded-full bg-surface-0 flex overflow-hidden">
+							<div class="bg-positive h-full" style="width: {proposal.percentageFor}%"></div>
 							<div class="bg-red-500 h-full ml-auto" style="width: {proposal.percentageAgainst}%"></div>
 							<div
-								class="absolute inset-y-0 w-0.5 bg-[#eef2ff]/80"
+								class="absolute inset-y-0 w-0.5 bg-fg/80"
 								style="left: {proposal.requiredMajority ?? 50}%"
 							></div>
 						</div>
 						<p class="flex items-center justify-between gap-2 text-xs font-mono">
-							<span class="text-[#aef3c9]">Ayes {proposal.voteCounts.for}</span>
-							<span class="text-[#8e9abb]">
+							<span class="text-positive-fg">Ayes {proposal.voteCounts.for}</span>
+							<span class="text-fg-muted">
 								{proposal.percentageFor.toFixed(0)}% · {proposal.requiredMajority ?? 50}% needed
 							</span>
 							<span class="text-red-300">Noes {proposal.voteCounts.against}</span>
 						</p>
 						{#if outcome === "failed"}
-							<p class="text-xs text-[#ffcb6b]">Passed the vote, but couldn't be carried out.</p>
+							<p class="text-xs text-accent-fg">Passed the vote, but couldn't be carried out.</p>
 						{/if}
 					</div>
 				</li>

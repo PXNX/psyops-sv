@@ -42,15 +42,15 @@
 			case "message_delete":
 				return "bg-red-600/10 border-red-500/30 text-red-300";
 			case "warning":
-				return "bg-[#f5a524]/12 border-[#f5a524]/35 text-[#ffcb6b]";
+				return "bg-accent/12 border-accent/35 text-accent-fg";
 			case "restriction":
 				return "bg-red-600/10 border-red-500/30 text-red-300";
 			case "report_action":
-				return "bg-[#2f6be0]/18 border-[#6aa8ff]/30 text-[#c3dbff]";
+				return "bg-friendly-bg/18 border-friendly/30 text-friendly-fg";
 			case "content_flag":
-				return "bg-[#f5a524]/12 border-[#f5a524]/35 text-[#ffcb6b]";
+				return "bg-accent/12 border-accent/35 text-accent-fg";
 			default:
-				return "bg-[#131c33]/70 border-[#8ea6e0]/15 text-[#c2cbe3]";
+				return "bg-surface-4/70 border-line/15 text-fg-soft";
 		}
 	}
 
@@ -96,7 +96,7 @@
 				<ActionIcon class="size-8" />
 			</div>
 			<div class="flex-1 min-w-0">
-				<h2 class="text-3xl font-bold text-[#eef2ff]">{getActionTitle(data.action.type)}</h2>
+				<h2 class="text-3xl font-bold text-fg">{getActionTitle(data.action.type)}</h2>
 			</div>
 		</div>
 	</div>
@@ -106,7 +106,7 @@
 		<!-- Target User -->
 		{#if data.action.target}
 			<div class="panel rounded-sm p-5">
-				<h3 class="text-[10px] text-[#8e9abb] uppercase tracking-wide mb-3">Target User</h3>
+				<h3 class="text-[10px] text-fg-muted uppercase tracking-wide mb-3">Target User</h3>
 				<UserLink
 					id={data.action.target.id}
 					name={data.action.target.name}
@@ -118,8 +118,8 @@
 
 		<!-- Moderator -->
 		{#if data.action.moderator}
-			<div class="panel rounded-sm p-5 border-[#b9a1ff]/30">
-				<h3 class="text-[10px] text-[#8e9abb] uppercase tracking-wide mb-3">
+			<div class="panel rounded-sm p-5 border-politics/30">
+				<h3 class="text-[10px] text-fg-muted uppercase tracking-wide mb-3">
 					{data.action.type === "report_action" ? "Reviewed By" : "Moderator"}
 				</h3>
 				<div class="flex items-center gap-2 flex-wrap">
@@ -141,7 +141,7 @@
 		<!-- Reporter (for report actions) -->
 		{#if data.action.type === "report_action" && data.action.reporter}
 			<div class="panel rounded-sm p-5">
-				<h3 class="text-[10px] text-[#8e9abb] uppercase tracking-wide mb-3">Reported By</h3>
+				<h3 class="text-[10px] text-fg-muted uppercase tracking-wide mb-3">Reported By</h3>
 				<UserLink
 					id={data.action.reporter.id}
 					name={data.action.reporter.name}
@@ -156,7 +156,7 @@
 	<!-- Action Details -->
 	<div class="panel rounded-sm p-5">
 		<h2 class="section-title mb-4">
-			<FluentInfo20Filled class="size-5 text-[#ffcb6b]" />
+			<FluentInfo20Filled class="size-5 text-accent-fg" />
 			Action Details
 		</h2>
 
@@ -165,33 +165,33 @@
 			{#if data.action.type === "message_delete"}
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 text-sm">
-						<FluentCalendar20Filled class="size-4 text-[#8e9abb]" />
-						<span class="text-[#8e9abb]">Message sent:</span>
-						<span class="text-[#eef2ff]">{formatDate(data.action.sentAt)}</span>
+						<FluentCalendar20Filled class="size-4 text-fg-muted" />
+						<span class="text-fg-muted">Message sent:</span>
+						<span class="text-fg">{formatDate(data.action.sentAt)}</span>
 					</div>
 					<div class="flex items-center gap-2 text-sm">
 						<FluentCalendar20Filled class="size-4 text-red-400" />
-						<span class="text-[#8e9abb]">Deleted:</span>
-						<span class="text-[#eef2ff]">{formatDate(data.action.deletedAt)}</span>
+						<span class="text-fg-muted">Deleted:</span>
+						<span class="text-fg">{formatDate(data.action.deletedAt)}</span>
 					</div>
-					<div class="border-t border-[#8ea6e0]/15"></div>
+					<div class="border-t border-line/15"></div>
 					<div>
-						<p class="text-sm text-[#8e9abb] mb-2">Message Content:</p>
+						<p class="text-sm text-fg-muted mb-2">Message Content:</p>
 						<div class="panel-muted rounded-sm p-4">
-							<p class="text-[#eef2ff]">{data.action.messageContent}</p>
+							<p class="text-fg">{data.action.messageContent}</p>
 						</div>
 					</div>
 					{#if data.action.deletionReason}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Deletion Reason:</p>
+							<p class="text-sm text-fg-muted mb-2">Deletion Reason:</p>
 							<Badge tone="red">{data.action.deletionReason}</Badge>
 						</div>
 					{/if}
 					{#if data.action.deletionNote}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Moderator Note:</p>
+							<p class="text-sm text-fg-muted mb-2">Moderator Note:</p>
 							<div class="panel-muted rounded-sm p-4">
-								<p class="text-[#c2cbe3]">{data.action.deletionNote}</p>
+								<p class="text-fg-soft">{data.action.deletionNote}</p>
 							</div>
 						</div>
 					{/if}
@@ -202,21 +202,21 @@
 			{#if data.action.type === "warning"}
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 text-sm">
-						<FluentCalendar20Filled class="size-4 text-[#ffcb6b]" />
-						<span class="text-[#8e9abb]">Issued:</span>
-						<span class="text-[#eef2ff]">{formatDate(data.action.issuedAt)}</span>
+						<FluentCalendar20Filled class="size-4 text-accent-fg" />
+						<span class="text-fg-muted">Issued:</span>
+						<span class="text-fg">{formatDate(data.action.issuedAt)}</span>
 					</div>
 					{#if data.action.reason}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Violation Type:</p>
+							<p class="text-sm text-fg-muted mb-2">Violation Type:</p>
 							<Badge tone="amber">{data.action.reason}</Badge>
 						</div>
 					{/if}
 					{#if data.action.description}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Description:</p>
+							<p class="text-sm text-fg-muted mb-2">Description:</p>
 							<div class="panel-muted rounded-sm p-4">
-								<p class="text-[#c2cbe3]">{data.action.description}</p>
+								<p class="text-fg-soft">{data.action.description}</p>
 							</div>
 						</div>
 					{/if}
@@ -228,11 +228,11 @@
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 text-sm">
 						<FluentCalendar20Filled class="size-4 text-red-400" />
-						<span class="text-[#8e9abb]">Restricted:</span>
-						<span class="text-[#eef2ff]">{formatDate(data.action.restrictedAt)}</span>
+						<span class="text-fg-muted">Restricted:</span>
+						<span class="text-fg">{formatDate(data.action.restrictedAt)}</span>
 					</div>
 					<div>
-						<p class="text-sm text-[#8e9abb] mb-2">Duration:</p>
+						<p class="text-sm text-fg-muted mb-2">Duration:</p>
 						{#if data.action.isPermanent}
 							<Badge tone="red" icon={FluentWarning20Filled}>Permanent</Badge>
 						{:else if data.action.expiresAt}
@@ -241,9 +241,9 @@
 					</div>
 					{#if data.action.reason}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Reason:</p>
+							<p class="text-sm text-fg-muted mb-2">Reason:</p>
 							<div class="panel-muted rounded-sm p-4">
-								<p class="text-[#c2cbe3]">{data.action.reason}</p>
+								<p class="text-fg-soft">{data.action.reason}</p>
 							</div>
 						</div>
 					{/if}
@@ -254,19 +254,19 @@
 			{#if data.action.type === "report_action"}
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 text-sm">
-						<FluentCalendar20Filled class="size-4 text-[#6aa8ff]" />
-						<span class="text-[#8e9abb]">Reported:</span>
-						<span class="text-[#eef2ff]">{formatDate(data.action.reportedAt)}</span>
+						<FluentCalendar20Filled class="size-4 text-friendly" />
+						<span class="text-fg-muted">Reported:</span>
+						<span class="text-fg">{formatDate(data.action.reportedAt)}</span>
 					</div>
 					{#if data.action.reviewedAt}
 						<div class="flex items-center gap-2 text-sm">
-							<FluentCalendar20Filled class="size-4 text-[#4fd88a]" />
-							<span class="text-[#8e9abb]">Reviewed:</span>
-							<span class="text-[#eef2ff]">{formatDate(data.action.reviewedAt)}</span>
+							<FluentCalendar20Filled class="size-4 text-positive" />
+							<span class="text-fg-muted">Reviewed:</span>
+							<span class="text-fg">{formatDate(data.action.reviewedAt)}</span>
 						</div>
 					{/if}
 					<div class="flex items-center gap-2">
-						<p class="text-sm text-[#8e9abb]">Status:</p>
+						<p class="text-sm text-fg-muted">Status:</p>
 						{#if data.action.status === "pending"}
 							<Badge tone="amber">Pending</Badge>
 						{:else if data.action.status === "resolved"}
@@ -277,29 +277,29 @@
 					</div>
 					{#if data.action.violationType}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Violation Type:</p>
+							<p class="text-sm text-fg-muted mb-2">Violation Type:</p>
 							<Badge tone="red">{data.action.violationType}</Badge>
 						</div>
 					{/if}
 					{#if data.action.reportReason}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Report Reason:</p>
+							<p class="text-sm text-fg-muted mb-2">Report Reason:</p>
 							<div class="panel-muted rounded-sm p-4">
-								<p class="text-[#c2cbe3]">{data.action.reportReason}</p>
+								<p class="text-fg-soft">{data.action.reportReason}</p>
 							</div>
 						</div>
 					{/if}
 					{#if data.action.actionTaken}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Action Taken:</p>
+							<p class="text-sm text-fg-muted mb-2">Action Taken:</p>
 							<Badge tone="green">{data.action.actionTaken}</Badge>
 						</div>
 					{/if}
 					{#if data.action.reviewNote}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Review Note:</p>
+							<p class="text-sm text-fg-muted mb-2">Review Note:</p>
 							<div class="panel-muted rounded-sm p-4">
-								<p class="text-[#c2cbe3]">{data.action.reviewNote}</p>
+								<p class="text-fg-soft">{data.action.reviewNote}</p>
 							</div>
 						</div>
 					{/if}
@@ -310,31 +310,31 @@
 			{#if data.action.type === "content_flag"}
 				<div class="space-y-3">
 					<div class="flex items-center gap-2 text-sm">
-						<FluentCalendar20Filled class="size-4 text-[#ffcb6b]" />
-						<span class="text-[#8e9abb]">Flagged:</span>
-						<span class="text-[#eef2ff]">{formatDate(data.action.flaggedAt)}</span>
+						<FluentCalendar20Filled class="size-4 text-accent-fg" />
+						<span class="text-fg-muted">Flagged:</span>
+						<span class="text-fg">{formatDate(data.action.flaggedAt)}</span>
 					</div>
 					{#if data.action.resolvedAt}
 						<div class="flex items-center gap-2 text-sm">
-							<FluentCalendar20Filled class="size-4 text-[#4fd88a]" />
-							<span class="text-[#8e9abb]">Resolved:</span>
-							<span class="text-[#eef2ff]">{formatDate(data.action.resolvedAt)}</span>
+							<FluentCalendar20Filled class="size-4 text-positive" />
+							<span class="text-fg-muted">Resolved:</span>
+							<span class="text-fg">{formatDate(data.action.resolvedAt)}</span>
 						</div>
 					{/if}
 					<div>
-						<p class="text-sm text-[#8e9abb] mb-2">Flag Type:</p>
+						<p class="text-sm text-fg-muted mb-2">Flag Type:</p>
 						<Badge tone="amber">{data.action.flagType}</Badge>
 					</div>
 					{#if data.action.reason}
 						<div>
-							<p class="text-sm text-[#8e9abb] mb-2">Reason:</p>
+							<p class="text-sm text-fg-muted mb-2">Reason:</p>
 							<div class="panel-muted rounded-sm p-4">
-								<p class="text-[#c2cbe3]">{data.action.reason}</p>
+								<p class="text-fg-soft">{data.action.reason}</p>
 							</div>
 						</div>
 					{/if}
 					<div class="flex items-center gap-2">
-						<p class="text-sm text-[#8e9abb]">Status:</p>
+						<p class="text-sm text-fg-muted">Status:</p>
 						{#if data.action.isResolved}
 							<Badge tone="green" icon={FluentCheckmark20Filled}>Resolved</Badge>
 						{:else}

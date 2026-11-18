@@ -63,9 +63,9 @@
 	{#if data.userCompany}
 		<a
 			href="/company/{data.userCompany.id}"
-			class="block panel-interactive rounded-sm p-4 sm:p-5 group border-l-4 border-l-[#f5a524]"
+			class="block panel-interactive rounded-sm p-4 sm:p-5 group border-l-4 border-l-accent"
 		>
-			<p class="text-[10px] uppercase tracking-[0.2em] text-[#ffcb6b] mb-2">
+			<p class="text-[10px] uppercase tracking-[0.2em] text-accent-fg mb-2">
 				Your firm · <span class="font-mono">{entryNo(data.userCompany.id)}</span>
 			</p>
 			<div class="flex items-center gap-4">
@@ -73,23 +73,23 @@
 					src={data.userCompany.logo}
 					alt=""
 					placeholderIcon={FluentBuilding20Filled}
-					placeholderGradient="from-[#33456f] to-[#1b2641]"
+					placeholderGradient="from-surface-13 to-surface-6"
 					class="size-14 sm:size-16 rounded-sm shrink-0"
 				/>
 				<div class="min-w-0 flex-1">
 					<h2
-						class="font-serif text-xl sm:text-2xl font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate"
+						class="font-serif text-xl sm:text-2xl font-bold text-fg group-hover:text-accent-hover transition-colors truncate"
 					>
 						{data.userCompany.name}
 					</h2>
-					<p class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs sm:text-sm text-[#8e9abb]">
+					<p class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs sm:text-sm text-fg-muted">
 						<span class="flex items-center gap-1.5">
-							<FluentFactory20Filled class="size-4 text-[#b9a1ff]" />
+							<FluentFactory20Filled class="size-4 text-politics" />
 							{data.userCompany.factoryCount}
 							{data.userCompany.factoryCount === 1 ? "factory" : "factories"}
 						</span>
 						<span class="flex items-center gap-1.5">
-							<FluentPeople20Filled class="size-4 text-[#6aa8ff]" />
+							<FluentPeople20Filled class="size-4 text-friendly" />
 							{data.userCompany.workerCount}
 							{data.userCompany.workerCount === 1 ? "worker" : "workers"}
 						</span>
@@ -105,7 +105,7 @@
 		<label class="relative block">
 			<span class="sr-only">Search company or owner</span>
 			<FluentSearch20Filled
-				class="size-4 text-[#8e9abb] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+				class="size-4 text-fg-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
 			/>
 			<input
 				type="search"
@@ -128,36 +128,36 @@
 	{#if filteredCompanies.length > 0}
 		<section class="panel rounded-sm overflow-hidden">
 			<div
-				class="hidden sm:grid grid-cols-[6rem_1fr_12rem_9rem] gap-4 px-5 py-2 border-b border-[#8ea6e0]/20 text-[10px] uppercase tracking-wide text-[#8e9abb]"
+				class="hidden sm:grid grid-cols-[6rem_1fr_12rem_9rem] gap-4 px-5 py-2 border-b border-line/20 text-[10px] uppercase tracking-wide text-fg-muted"
 			>
 				<span>Entry</span>
 				<span>Company</span>
 				<span>Proprietor</span>
 				<span class="text-right">Works · Staff</span>
 			</div>
-			<ul class="divide-y divide-[#8ea6e0]/10">
+			<ul class="divide-y divide-line/10">
 				{#each filteredCompanies as company (company.id)}
 					<li
-						class="relative group px-4 sm:px-5 py-3 transition-colors hover:bg-[#f5a524]/6 sm:grid sm:grid-cols-[6rem_1fr_12rem_9rem] sm:gap-4 sm:items-center"
+						class="relative group px-4 sm:px-5 py-3 transition-colors hover:bg-accent/6 sm:grid sm:grid-cols-[6rem_1fr_12rem_9rem] sm:gap-4 sm:items-center"
 					>
-						<span class="hidden sm:block font-mono text-xs text-[#8e9abb]">{entryNo(company.id)}</span>
+						<span class="hidden sm:block font-mono text-xs text-fg-muted">{entryNo(company.id)}</span>
 
 						<div class="flex items-center gap-3 min-w-0">
 							<Logo
 								src={company.logo}
 								alt=""
 								placeholderIcon={FluentBuilding20Filled}
-								placeholderGradient="from-[#33456f] to-[#1b2641]"
+								placeholderGradient="from-surface-13 to-surface-6"
 								class="size-10 sm:size-11 rounded-sm shrink-0"
 							/>
 							<div class="min-w-0">
 								<a
 									href="/company/{company.id}"
-									class="font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate block after:absolute after:inset-0"
+									class="font-bold text-fg group-hover:text-accent-hover transition-colors truncate block after:absolute after:inset-0"
 								>
 									{company.name}
 								</a>
-								<p class="text-xs text-[#8e9abb] truncate">
+								<p class="text-xs text-fg-muted truncate">
 									<span class="sm:hidden font-mono">{entryNo(company.id)} · </span>Est. {formatDate(
 										company.foundedAt
 									)}{#if company.states.length > 0}
@@ -174,28 +174,28 @@
 								party={{ abbreviation: company.ownerPartyAbbreviation, color: company.ownerPartyColor }}
 								size="sm"
 							/>
-							<span class="sm:hidden shrink-0 flex items-center gap-3 text-xs text-[#8e9abb]">
+							<span class="sm:hidden shrink-0 flex items-center gap-3 text-xs text-fg-muted">
 								<span class="flex items-center gap-1"
-									><FluentFactory20Filled class="size-3.5 text-[#b9a1ff]" />{company.factoryCount}</span
+									><FluentFactory20Filled class="size-3.5 text-politics" />{company.factoryCount}</span
 								>
 								<span class="flex items-center gap-1"
-									><FluentPeople20Filled class="size-3.5 text-[#6aa8ff]" />{company.workerCount}</span
+									><FluentPeople20Filled class="size-3.5 text-friendly" />{company.workerCount}</span
 								>
 							</span>
 						</div>
 
 						<div class="hidden sm:flex justify-end items-center gap-4 text-sm">
-							<span class="flex items-center gap-1.5 text-[#dbe2f4]" title="Factories">
-								<FluentFactory20Filled class="size-4 text-[#b9a1ff]" />{company.factoryCount}
+							<span class="flex items-center gap-1.5 text-fg-body" title="Factories">
+								<FluentFactory20Filled class="size-4 text-politics" />{company.factoryCount}
 							</span>
-							<span class="flex items-center gap-1.5 text-[#dbe2f4]" title="Workers">
-								<FluentPeople20Filled class="size-4 text-[#6aa8ff]" />{company.workerCount}
+							<span class="flex items-center gap-1.5 text-fg-body" title="Workers">
+								<FluentPeople20Filled class="size-4 text-friendly" />{company.workerCount}
 							</span>
 						</div>
 					</li>
 				{/each}
 			</ul>
-			<p class="px-5 py-2 border-t border-[#8ea6e0]/15 text-xs text-[#8e9abb]">
+			<p class="px-5 py-2 border-t border-line/15 text-xs text-fg-muted">
 				{filteredCompanies.length} of {data.companies.length} entries
 			</p>
 		</section>

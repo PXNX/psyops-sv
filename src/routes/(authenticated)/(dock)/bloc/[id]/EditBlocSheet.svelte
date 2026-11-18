@@ -124,11 +124,11 @@
 		[
 			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-all duration-200 active:scale-[0.98]",
 			dragActive
-				? "border-[#f5a524] bg-[#f5a524]/10"
+				? "border-accent bg-accent/10"
 				: previewUrl
-					? "border-[#4fd88a]/50 bg-[#1f9d62]/10"
-					: "border-[#f5a524]/30",
-			!$submitting && !previewUrl ? "hover:border-[#f5a524]/50 hover:bg-[#f5a524]/10" : "",
+					? "border-positive/50 bg-positive-bg/10"
+					: "border-accent/30",
+			!$submitting && !previewUrl ? "hover:border-accent/50 hover:bg-accent/10" : "",
 			$submitting ? "opacity-50" : "",
 			$errors.logo ? "input-error" : ""
 		]
@@ -143,8 +143,8 @@
 			<!-- Bloc Name -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentFlag20Filled class="size-4 text-[#ffcb6b]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Bloc Details</h2>
+					<FluentFlag20Filled class="size-4 text-accent-fg" />
+					<h2 class="text-sm font-semibold text-fg">Bloc Details</h2>
 				</div>
 				<div>
 					<label for="edit-bloc-name" class="field-label">
@@ -172,8 +172,8 @@
 			<!-- Bloc Logo -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentImage20Filled class="size-4 text-[#ffcb6b]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Bloc Logo</h2>
+					<FluentImage20Filled class="size-4 text-accent-fg" />
+					<h2 class="text-sm font-semibold text-fg">Bloc Logo</h2>
 				</div>
 
 				<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -191,11 +191,11 @@
 					<button type="button" onclick={() => fileInput?.click()} disabled={$submitting} class={dropzoneClass}>
 						{#if !previewUrl}
 							<div class="flex min-h-[120px] flex-col items-center justify-center gap-3 p-6">
-								<div class="rounded-full bg-[#f5a524]/15 p-3 transition-colors group-hover:bg-[#f5a524]/20">
-									<FluentImage20Filled class="size-8 text-[#ffcb6b]" />
+								<div class="rounded-full bg-accent/15 p-3 transition-colors group-hover:bg-accent/20">
+									<FluentImage20Filled class="size-8 text-accent-fg" />
 								</div>
 								<div class="text-center">
-									<p class="text-sm font-semibold text-[#eef2ff]">
+									<p class="text-sm font-semibold text-fg">
 										{#if dragActive}
 											Drop logo here
 										{:else if $submitting}
@@ -205,13 +205,13 @@
 										{/if}
 									</p>
 									{#if !$submitting}
-										<p class="mt-1 text-xs text-[#8e9abb]">Images only • 5MB max</p>
+										<p class="mt-1 text-xs text-fg-muted">Images only • 5MB max</p>
 									{/if}
 								</div>
 							</div>
 						{:else}
 							<div class="relative">
-								<div class="flex items-center justify-center p-6 bg-[#131c33]/70">
+								<div class="flex items-center justify-center p-6 bg-surface-4/70">
 									<img
 										loading="lazy"
 										decoding="async"
@@ -221,9 +221,9 @@
 									/>
 								</div>
 								<div
-									class="absolute inset-0 flex items-center justify-center bg-[#0c1222]/60 opacity-0 transition-opacity group-hover:opacity-100"
+									class="absolute inset-0 flex items-center justify-center bg-surface-1/60 opacity-0 transition-opacity group-hover:opacity-100"
 								>
-									<p class="text-sm font-semibold text-[#eef2ff]">Tap to change</p>
+									<p class="text-sm font-semibold text-fg">Tap to change</p>
 								</div>
 								{#if $form.logo}
 									<button
@@ -260,18 +260,18 @@
 			<!-- Bloc Color -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentColor20Filled class="size-4 text-[#ffcb6b]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Bloc Color</h2>
+					<FluentColor20Filled class="size-4 text-accent-fg" />
+					<h2 class="text-sm font-semibold text-fg">Bloc Color</h2>
 				</div>
 
 				<div class="grid grid-cols-5 gap-2">
 					{#each colorPresets as color}
 						<button
 							type="button"
-							class="size-10 rounded-sm transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f5a524]"
+							class="size-10 rounded-sm transition-all hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent"
 							style="background-color: {color.value}"
 							class:ring-4={$form.color === color.value}
-							class:ring-[#eef2ff]={$form.color === color.value}
+							class:ring-fg={$form.color === color.value}
 							title={color.name}
 							onclick={() => ($form.color = color.value)}
 							disabled={$submitting}
@@ -280,7 +280,7 @@
 				</div>
 
 				<div class="flex items-center gap-3 pt-1">
-					<label for="edit-bloc-color" class="text-sm font-medium text-[#c2cbe3]">Custom:</label>
+					<label for="edit-bloc-color" class="text-sm font-medium text-fg-soft">Custom:</label>
 					<input
 						type="color"
 						id="edit-bloc-color"
@@ -289,7 +289,7 @@
 						class="field-control h-10 w-20 rounded-sm cursor-pointer"
 						disabled={$submitting}
 					/>
-					<span class="text-sm text-[#8e9abb]">{$form.color}</span>
+					<span class="text-sm text-fg-muted">{$form.color}</span>
 				</div>
 
 				{#if $errors.color}
@@ -309,11 +309,11 @@
 									class="size-8 object-contain"
 								/>
 							{:else}
-								<FluentFlag20Filled class="size-5 text-[#eef2ff]" />
+								<FluentFlag20Filled class="size-5 text-fg" />
 							{/if}
 						</div>
 						<div>
-							<p class="text-sm font-semibold text-[#eef2ff]">{$form.name || "Your Bloc Name"}</p>
+							<p class="text-sm font-semibold text-fg">{$form.name || "Your Bloc Name"}</p>
 							<p class="text-xs" style="color: {$form.color}">Political-Military Alliance</p>
 						</div>
 					</div>
@@ -323,8 +323,8 @@
 			<!-- Visa-Free for Members -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentBookCompass24Filled class="size-4 text-[#4fd88a]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Visa Policy</h2>
+					<FluentBookCompass24Filled class="size-4 text-positive" />
+					<h2 class="text-sm font-semibold text-fg">Visa Policy</h2>
 				</div>
 
 				<label class="flex items-start gap-3 cursor-pointer">
@@ -336,8 +336,8 @@
 						disabled={$submitting}
 					/>
 					<div>
-						<span class="text-sm font-medium text-[#eef2ff]">Visa-Free Travel for Member States</span>
-						<p class="text-xs text-[#8e9abb] mt-1">
+						<span class="text-sm font-medium text-fg">Visa-Free Travel for Member States</span>
+						<p class="text-xs text-fg-muted mt-1">
 							When enabled, residents of member states can travel to any other member state without a visa, overriding
 							individual state visa policies.
 						</p>
@@ -348,8 +348,8 @@
 			<!-- Description -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentDocument20Filled class="size-4 text-[#ffcb6b]" />
-					<h2 class="text-sm font-semibold text-[#eef2ff]">Bloc Description</h2>
+					<FluentDocument20Filled class="size-4 text-accent-fg" />
+					<h2 class="text-sm font-semibold text-fg">Bloc Description</h2>
 				</div>
 
 				<textarea
@@ -377,7 +377,7 @@
 
 		<!-- Success Message -->
 		{#if $message && !$message.includes("error") && !$message.includes("failed")}
-			<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">
+			<div class="bg-positive-bg/18 border border-positive/30 text-positive-fg rounded-sm p-4 flex items-center gap-3">
 				<p class="text-sm font-medium">{$message}</p>
 			</div>
 		{/if}

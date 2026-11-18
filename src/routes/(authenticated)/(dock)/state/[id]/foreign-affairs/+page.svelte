@@ -93,17 +93,17 @@
 
 				<!-- Currently Sanctioned States -->
 				{#if data.sanctionedStates.length > 0}
-					<div class="border-t border-[#8ea6e0]/10 my-5"></div>
-					<h3 class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Currently Sanctioned</h3>
+					<div class="border-t border-line/10 my-5"></div>
+					<h3 class="text-[10px] text-fg-muted uppercase tracking-wide">Currently Sanctioned</h3>
 					<div class="space-y-3 mt-2">
 						{#each data.sanctionedStates as sanction (sanction.id)}
 							<div out:vanish class="bg-red-600/10 border border-red-500/30 rounded-sm p-4 flex items-start gap-3">
 								<div class="flex-1 min-w-0">
 									<p class="font-semibold text-red-300">{sanction.targetState?.name}</p>
-									<p class="text-xs text-[#8e9abb] mt-1">
+									<p class="text-xs text-fg-muted mt-1">
 										Sanctioned {formatDate(sanction.sanctionedAt)}
 									</p>
-									<p class="text-sm text-[#c2cbe3] mt-2">{sanction.reason}</p>
+									<p class="text-sm text-fg-soft mt-2">{sanction.reason}</p>
 								</div>
 								<form method="POST" action="?/liftSanction" use:enhance={withToast}>
 									<input type="hidden" name="sanctionId" value={sanction.id} />
@@ -120,21 +120,21 @@
 		{#if data.pendingApplications.length > 0}
 			<div class="collapse collapse-arrow panel rounded-sm" class:collapse-open={pendingResidenceExpanded}>
 				<input type="checkbox" bind:checked={pendingResidenceExpanded} />
-				<div class="collapse-title font-semibold text-[#eef2ff] flex items-center gap-2">
-					<FluentPeople20Filled class="size-5 text-[#6aa8ff]" />
+				<div class="collapse-title font-semibold text-fg flex items-center gap-2">
+					<FluentPeople20Filled class="size-5 text-friendly" />
 					<span>Pending Residence Applications</span>
 					<Badge tone="blue">{data.pendingApplications.length}</Badge>
 				</div>
 				<div class="collapse-content">
-					<p class="text-sm text-[#8e9abb] mb-3">
+					<p class="text-sm text-fg-muted mb-3">
 						These users have applied for residence permits (citizenship) in your state.
 					</p>
 					<div class="space-y-3 pt-2">
 						{#each data.pendingApplications as application (application.id)}
 							<div out:vanish class="panel-muted rounded-sm p-4">
 								<div class="mb-3">
-									<p class="font-semibold text-[#eef2ff]">{application.user?.profile?.name || "Unknown User"}</p>
-									<p class="text-xs text-[#8e9abb]">
+									<p class="font-semibold text-fg">{application.user?.profile?.name || "Unknown User"}</p>
+									<p class="text-xs text-fg-muted">
 										Applied {formatDate(application.appliedAt)}
 									</p>
 								</div>
@@ -166,22 +166,22 @@
 			<!-- Visa Policy Settings -->
 			<div class="panel rounded-sm p-5">
 				<h2 class="section-title">
-					<FluentBookCompass24Filled class="size-5 text-[#b9a1ff]" />
+					<FluentBookCompass24Filled class="size-5 text-politics" />
 					Visa Policy
 				</h2>
-				<p class="text-sm text-[#8e9abb] mt-1">
+				<p class="text-sm text-fg-muted mt-1">
 					Enable visa requirements for foreign visitors. Visas are valid for 2 weeks. Users without regional residency
 					need this to work.
 				</p>
 
 				{#if data.blocVisaOverride && data.blocInfo}
-					<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 rounded-sm p-4 mt-4">
+					<div class="bg-positive-bg/18 border border-positive/30 rounded-sm p-4 mt-4">
 						<div class="flex items-start gap-3">
-							<FluentFlag20Filled class="size-5 text-[#4fd88a] mt-0.5 flex-shrink-0" />
+							<FluentFlag20Filled class="size-5 text-positive mt-0.5 flex-shrink-0" />
 							<div>
-								<p class="font-semibold text-[#aef3c9]">Bloc Visa-Free Override Active</p>
-								<p class="text-sm text-[#aef3c9]/70 mt-1">
-									<a href="/bloc/{data.blocInfo.id}" class="underline hover:text-[#e3fff0]">{data.blocInfo.name}</a>
+								<p class="font-semibold text-positive-fg">Bloc Visa-Free Override Active</p>
+								<p class="text-sm text-positive-fg/70 mt-1">
+									<a href="/bloc/{data.blocInfo.id}" class="underline hover:text-positive-hi">{data.blocInfo.name}</a>
 									has visa-free travel enabled for member states. Residents of other member states can travel here without
 									a visa, regardless of the visa policy below.
 								</p>
@@ -198,12 +198,12 @@
 							name="visaRequired"
 							value="true"
 							checked={data.visaSettings.visaRequired}
-							class="toggle border-[#8ea6e0]/25 checked:border-[#f5a524] checked:bg-[#f5a524] checked:text-[#1a1305]"
+							class="toggle border-line/25 checked:border-accent checked:bg-accent checked:text-[#ffffff]"
 						/>
 						<div>
-							<span class="text-sm font-medium text-[#dbe2f4]">Require Visa for Entry</span>
+							<span class="text-sm font-medium text-fg-body">Require Visa for Entry</span>
 							{#if data.blocVisaOverride}
-								<span class="text-xs text-[#4fd88a] ml-2">(overridden for bloc members)</span>
+								<span class="text-xs text-positive ml-2">(overridden for bloc members)</span>
 							{/if}
 						</div>
 					</label>
@@ -212,7 +212,7 @@
 					<div>
 						<label class="field-label" for="visaCost">Visa Application Cost</label>
 						<div class="relative">
-							<span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#8e9abb]">$</span>
+							<span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-fg-muted">$</span>
 							<input
 								id="visaCost"
 								type="number"
@@ -234,10 +234,10 @@
 							name="autoApprove"
 							value="true"
 							checked={data.visaSettings.autoApprove}
-							class="toggle border-[#8ea6e0]/25 checked:border-[#f5a524] checked:bg-[#f5a524] checked:text-[#1a1305]"
+							class="toggle border-line/25 checked:border-accent checked:bg-accent checked:text-[#ffffff]"
 						/>
 						<div>
-							<span class="text-sm font-medium text-[#dbe2f4]">Auto-Approve Visas</span>
+							<span class="text-sm font-medium text-fg-body">Auto-Approve Visas</span>
 						</div>
 					</label>
 
@@ -249,8 +249,8 @@
 			{#if data.pendingVisaApplications.length > 0}
 				<div class="collapse collapse-arrow panel rounded-sm" class:collapse-open={pendingVisasExpanded}>
 					<input type="checkbox" bind:checked={pendingVisasExpanded} />
-					<div class="collapse-title font-semibold text-[#eef2ff] flex items-center gap-2">
-						<FluentClock20Filled class="size-5 text-[#ffcb6b]" />
+					<div class="collapse-title font-semibold text-fg flex items-center gap-2">
+						<FluentClock20Filled class="size-5 text-accent-fg" />
 						<span>Pending Visa Applications</span>
 						<Badge tone="amber">{data.pendingVisaApplications.length}</Badge>
 					</div>
@@ -259,12 +259,12 @@
 							{#each data.pendingVisaApplications as application (application.id)}
 								<div out:vanish class="panel-muted rounded-sm p-4">
 									<div class="mb-3">
-										<p class="font-semibold text-[#eef2ff]">{application.user?.profile?.name || "Unknown User"}</p>
-										<p class="text-xs text-[#8e9abb]">
+										<p class="font-semibold text-fg">{application.user?.profile?.name || "Unknown User"}</p>
+										<p class="text-xs text-fg-muted">
 											Applied {formatDate(application.appliedAt)}
 										</p>
 										{#if application.purpose}
-											<p class="text-sm text-[#c2cbe3] mt-2">{application.purpose}</p>
+											<p class="text-sm text-fg-soft mt-2">{application.purpose}</p>
 										{/if}
 									</div>
 
@@ -295,8 +295,8 @@
 			<!-- Active Visas -->
 			<div class="collapse collapse-arrow panel rounded-sm" class:collapse-open={activeVisasExpanded}>
 				<input type="checkbox" bind:checked={activeVisasExpanded} />
-				<div class="collapse-title font-semibold text-[#eef2ff] flex items-center gap-2">
-					<FluentPeople20Filled class="size-5 text-[#4fd88a]" />
+				<div class="collapse-title font-semibold text-fg flex items-center gap-2">
+					<FluentPeople20Filled class="size-5 text-positive" />
 					<span>Active Visas</span>
 					<Badge tone="green">{data.activeVisas.length}</Badge>
 				</div>
@@ -306,8 +306,8 @@
 							{@const daysLeft = getDaysRemaining(visa.expiresAt)}
 							<div out:vanish class="panel-muted rounded-sm p-3 flex items-center justify-between gap-3">
 								<div class="min-w-0">
-									<p class="font-medium text-sm text-[#eef2ff]">{visa.user?.profile?.name || "Unknown User"}</p>
-									<p class="text-xs text-[#8e9abb]">
+									<p class="font-medium text-sm text-fg">{visa.user?.profile?.name || "Unknown User"}</p>
+									<p class="text-xs text-fg-muted">
 										Expires {formatDate(visa.expiresAt)} ({daysLeft}d left)
 									</p>
 								</div>

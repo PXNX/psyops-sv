@@ -1,25 +1,29 @@
 // src/routes/(authenticated)/chat/en/+page.server.ts
 import { db, messageNotifier } from "#lib/server/db.js";
-import { chatMessages, accounts, userProfiles, politicalParties, partyMembers } from "#lib/server/schema.js";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { chatMessages, userProfiles, politicalParties, partyMembers } from "#lib/server/schema.js";
+import { eq, and, desc, inArray, notInArray } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import {
+	blockUser,
+	blockedIdsOf,
+	canModerate,
+	checkCanSend,
+	deleteMessage,
+	readContent,
+	reportMessage
+} from "../chat.server";
 import type { Actions, PageServerLoad } from "./$types";
 
 const PAGE_SIZE = 100;
-
-// Sanitize input to prevent XSS
-function sanitizeInput(input: string): string {
-	return input
-		.replace(/[<>]/g, "") // Remove < and > to prevent HTML injection
-		.trim();
-}
 
 export const load: PageServerLoad = async ({ locals, depends }) => {
 	depends("app:chat");
 	const account = locals.account!;
 
-	// Get latest messages
+	// Messages from people this user blocked are hidden, as the block sheet promises.
+	const blockedIds = await blockedIdsOf(account.id);
+
 	const messages = await db
 		.select({
 			id: chatMessages.id,
@@ -31,7 +35,13 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 		})
 		.from(chatMessages)
 		.leftJoin(userProfiles, eq(chatMessages.senderId, userProfiles.accountId))
-		.where(and(eq(chatMessages.messageType, "global"), eq(chatMessages.isDeleted, false)))
+		.where(
+			and(
+				eq(chatMessages.messageType, "global"),
+				eq(chatMessages.isDeleted, false),
+				blockedIds.length > 0 ? notInArray(chatMessages.senderId, blockedIds) : undefined
+			)
+		)
 		.orderBy(desc(chatMessages.sentAt))
 		.limit(PAGE_SIZE);
 
@@ -60,7 +70,6 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 		Promise.all(messages.map((msg) => getLogoUrl(msg.senderLogo)))
 	]);
 
-	// Process messages
 	const processedMessages = messages.map((msg, i) => ({
 		id: msg.id,
 		content: msg.content,
@@ -75,69 +84,55 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 
 	return {
 		messages: processedMessages.reverse(),
-		currentUserId: account.id
+		currentUserId: account.id,
+		canModerate: canModerate(account)
 	};
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals }) => {
+	send: async ({ request, locals }) => {
 		const account = locals.account;
-		if (!account) {
-			return fail(401, { error: "Not authenticated" });
-		}
+		if (!account) return fail(401, { error: "Not authenticated" });
 
-		const formData = await request.formData();
-		const rawContent = formData.get("content") as string;
+		const { content, error } = readContent(await request.formData());
+		if (error) return error;
 
-		if (!rawContent || rawContent.trim().length === 0) {
-			return fail(400, { error: "Message cannot be empty" });
-		}
+		const blocked = await checkCanSend(account, "global");
+		if (blocked) return blocked;
 
-		// Sanitize input to prevent XSS
-		const content = sanitizeInput(rawContent);
+		const [inserted] = await db
+			.insert(chatMessages)
+			.values({ senderId: account.id, messageType: "global", content })
+			.returning({ id: chatMessages.id });
 
-		if (content.length === 0) {
-			return fail(400, { error: "Message contains invalid characters" });
-		}
+		// Everyone with an open chat stream sees the global channel, not only
+		// people who posted in it before.
+		messageNotifier.notifyAll({ messageType: "global" });
 
-		if (content.length > 500) {
-			return fail(400, { error: "Message too long (max 500 characters)" });
-		}
+		return { success: true, id: inserted.id };
+	},
 
-		// Basic rate limiting check
-		const recentMessage = await db.query.chatMessages.findFirst({
-			where: and(eq(chatMessages.senderId, account.id), eq(chatMessages.messageType, "global")),
-			orderBy: desc(chatMessages.sentAt)
-		});
+	deleteMessage: async ({ request, locals }) => {
+		const account = locals.account;
+		if (!account) return fail(401, { error: "Not authenticated" });
 
-		if (recentMessage) {
-			const timeSinceLastMessage = Date.now() - recentMessage.sentAt.getTime();
-			if (timeSinceLastMessage < 2000) {
-				// 2 second cooldown
-				return fail(429, { error: "Please wait before sending another message" });
-			}
-		}
+		const { error } = await deleteMessage(account, await request.formData(), { type: "global" });
+		if (error) return error;
 
-		await db.insert(chatMessages).values({
-			senderId: account.id,
-			messageType: "global",
-			content
-		});
-
-		// Get all active users to notify (simplified - in production you'd want to track active connections)
-		const recentActiveUsers = await db
-			.selectDistinct({ userId: chatMessages.senderId })
-			.from(chatMessages)
-			.where(eq(chatMessages.messageType, "global"))
-			.limit(100); // Notify last 100 active users
-
-		const userIds = recentActiveUsers.map((u) => u.userId);
-
-		// Notify all recently active users
-		messageNotifier.notify(userIds, {
-			messageType: "global"
-		});
-
+		messageNotifier.notifyAll({ messageType: "global" });
 		return { success: true };
+	},
+
+	reportMessage: async ({ request, locals }) => {
+		const account = locals.account;
+		if (!account) return fail(401, { error: "Not authenticated" });
+		return reportMessage(account, await request.formData(), { type: "global" });
+	},
+
+	blockUser: async ({ request, locals }) => {
+		const account = locals.account;
+		if (!account) return fail(401, { error: "Not authenticated" });
+		const formData = await request.formData();
+		return blockUser(account, (formData.get("blockedUserId") as string) || null);
 	}
 };

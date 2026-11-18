@@ -1,5 +1,5 @@
 @import "tailwindcss";
-/* PsyOps style reminder: night-blue glass — soft rounded surfaces on deep navy, warm amber signal, serif headlines. */
+/* PsyOps style reminder: tactical situational-awareness console (DELTA-like) — flat dark steel panels, 1px lines, small corners, blue friendly / red hostile, monospace data. */
 @import "layerchart/daisyui-5.css";
 
 @plugin "@tailwindcss/typography";
@@ -10,14 +10,73 @@
 
 @theme {
 	--font-sans: "DM Sans", "HPSimplified", system-ui, sans-serif;
-	--font-editorial: "DM Serif Display", Georgia, serif;
-	/* Rounder everywhere: the radius scale is shifted up so `rounded-sm`
-	   (the house default) reads as a soft card corner, not a box. */
-	--radius-xs: 0.375rem;
-	--radius-sm: 0.75rem;
-	--radius-md: 1rem;
-	--radius-lg: 1.25rem;
-	--radius-xl: 1.5rem;
+	--font-editorial: "DM Sans", "HPSimplified", system-ui, sans-serif;
+	--font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+	/* Tactical, flat: small corners everywhere. */
+	--radius-xs: 0.125rem;
+	--radius-sm: 0.25rem;
+	--radius-md: 0.375rem;
+	--radius-lg: 0.5rem;
+	--radius-xl: 0.5rem;
+	--radius-2xl: 0.625rem;
+	--radius-3xl: 0.75rem;
+
+	/* @tokens-start — the whole palette. Change the theme here only; use the
+	   names (text-fg, bg-surface-4, border-line/15, text-accent-fg, …) in markup. */
+	--color-fg: #e6edf3;
+	--color-fg-body: #d0d7de;
+	--color-fg-soft: #b6bfca;
+	--color-fg-dim: #9da7b3;
+	--color-fg-muted: #8b949e;
+	--color-fg-faint: #7d8590;
+
+	--color-line: #9aa7b8;
+
+	--color-surface-0: #0a0d12;
+	--color-surface-1: #0d1117;
+	--color-surface-2: #10141b;
+	--color-surface-3: #12171f;
+	--color-surface-4: #151a22;
+	--color-surface-5: #181e27;
+	--color-surface-6: #1b222c;
+	--color-surface-7: #1f2631;
+	--color-surface-8: #222a35;
+	--color-surface-9: #262e3a;
+	--color-surface-10: #283040;
+	--color-surface-11: #2d3542;
+	--color-surface-12: #2f3846;
+	--color-surface-13: #3a4352;
+
+	--color-accent: #2f81f7;
+	--color-accent-fg: #79b8ff;
+	--color-accent-hover: #8cc4ff;
+	--color-accent-soft: #cae3ff;
+	--color-accent-hi: #4c9bff;
+	--color-accent-lo: #1f6feb;
+	--color-accent-mid: #388bfd;
+
+	--color-friendly: #6aa8ff;
+	--color-friendly-fg: #c3dbff;
+	--color-friendly-bg: #2f6be0;
+	--color-friendly-deep: #2148a8;
+	--color-friendly-hi: #e6f0ff;
+
+	--color-hostile: #f85149;
+	--color-hostile-fg: #ffa198;
+
+	--color-positive: #4fd88a;
+	--color-positive-fg: #aef3c9;
+	--color-positive-bg: #1f9d62;
+	--color-positive-deep: #177a4b;
+	--color-positive-mid: #2bb673;
+	--color-positive-hi: #e3fff0;
+
+	--color-politics: #b9a1ff;
+	--color-politics-fg: #e6dcff;
+	--color-politics-bg: #7451e6;
+	--color-politics-deep: #4a32a6;
+	/* @tokens-end */
 }
 
 @font-face {
@@ -34,34 +93,15 @@
    <Button>/<Badge> components still lands on the same surfaces.
    -------------------------------------------------------------------------- */
 
-/* Surfaces: frosted night-blue glass with a hairline edge and a soft drop shadow. */
+/* Surfaces: flat console panels with a 1px steel line. */
 @utility panel {
-	@apply border border-white/[0.07] rounded-2xl;
-	background: linear-gradient(160deg, rgba(30, 42, 74, 0.72) 0%, rgba(17, 25, 46, 0.78) 100%);
-	backdrop-filter: blur(14px);
-	box-shadow:
-		0 12px 32px -12px rgba(2, 6, 23, 0.7),
-		inset 0 1px 0 rgba(255, 255, 255, 0.05);
+	@apply rounded-md border border-line/15 bg-surface-4;
 }
 
-/* Interactive panel (list rows, clickable cards): lifts and brightens on hover. */
+/* Interactive panel (list rows, clickable cards): the line lights up on hover. */
 @utility panel-interactive {
-	@apply press-spring border border-white/[0.07] rounded-2xl;
-	--press-scale: 0.985;
-	background: linear-gradient(160deg, rgba(30, 42, 74, 0.72) 0%, rgba(17, 25, 46, 0.78) 100%);
-	backdrop-filter: blur(14px);
-	box-shadow:
-		0 12px 32px -12px rgba(2, 6, 23, 0.7),
-		inset 0 1px 0 rgba(255, 255, 255, 0.05);
-	&:hover {
-		border-color: rgba(142, 166, 224, 0.28);
-		background: linear-gradient(160deg, rgba(38, 53, 92, 0.8) 0%, rgba(21, 31, 57, 0.85) 100%);
-		box-shadow:
-			0 16px 36px -12px rgba(2, 6, 23, 0.8),
-			0 0 0 1px rgba(142, 166, 224, 0.08),
-			inset 0 1px 0 rgba(255, 255, 255, 0.08);
-		transform: translateY(-1px);
-	}
+	@apply press-spring rounded-md border border-line/15 bg-surface-4 hover:border-accent/60 hover:bg-surface-5;
+	--press-scale: 0.99;
 }
 
 /* Tactile press: squish fast on press, spring back with a small overshoot on release. */
@@ -121,7 +161,7 @@
 
 /* Muted panel for secondary/inset content. */
 @utility panel-muted {
-	@apply border border-white/[0.05] bg-white/[0.03] rounded-xl;
+	@apply rounded-sm border border-line/10 bg-surface-2;
 }
 
 /* Under-attack alarm: a pulsing red outline, like a klaxon light sweeping the border. */
@@ -334,17 +374,17 @@
 @keyframes celebrate {
 	0% {
 		transform: none;
-		box-shadow: 0 0 0 0 rgb(245 165 36 / 0);
+		box-shadow: 0 0 0 0 rgb(47 129 247 / 0);
 	}
 	35% {
 		transform: translateY(-2px) scale(1.012);
 		box-shadow:
-			0 0 0 3px rgb(245 165 36 / 0.45),
-			0 0 22px rgb(245 165 36 / 0.35);
+			0 0 0 3px rgb(47 129 247 / 0.45),
+			0 0 22px rgb(47 129 247 / 0.35);
 	}
 	100% {
 		transform: none;
-		box-shadow: 0 0 0 0 rgb(245 165 36 / 0);
+		box-shadow: 0 0 0 0 rgb(47 129 247 / 0);
 	}
 }
 
@@ -376,8 +416,8 @@
 /* Numbers that just changed glow briefly. */
 @keyframes tick-glow {
 	from {
-		color: #ffcb6b;
-		text-shadow: 0 0 10px rgb(245 165 36 / 0.6);
+		color: var(--color-accent-fg);
+		text-shadow: 0 0 10px rgb(47 129 247 / 0.6);
 	}
 }
 
@@ -400,42 +440,43 @@
 
 /* Form controls: one consistent look for text inputs, selects and textareas. */
 @utility field-control {
-	@apply rounded-xl border border-white/10 bg-[#0b1120]/70 text-[#eef2ff] transition-colors duration-200 placeholder:text-[#8794b5]/60 focus:border-[#f5a524]/60 focus:ring-4 focus:ring-[#f5a524]/12 focus:outline-none;
+	@apply rounded-sm border border-line/20 bg-surface-1 text-fg transition-colors duration-150 placeholder:text-fg-faint/70 focus:border-accent focus:ring-1 focus:ring-accent/40 focus:outline-none;
 }
 
 @utility field-label {
-	@apply mb-1.5 block text-sm font-medium text-[#dbe2f4];
+	@apply mb-1.5 block text-sm font-medium text-fg-body;
 }
 
 @utility field-hint {
-	@apply mt-1.5 text-xs text-[#8e9abb];
+	@apply mt-1.5 text-xs text-fg-muted;
 }
 
 @utility field-error {
 	@apply mt-1.5 text-xs text-red-400;
 }
 
-/* Section heading above grouped content: quiet small caps with an amber dot. */
+/* Section heading above grouped content: small uppercase console label. */
 @utility section-title {
-	@apply flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[#a9b4d0];
+	@apply flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-muted;
+}
+
+/* Numbers, times, coordinates: tabular monospace. */
+@utility data {
+	@apply font-mono tabular-nums;
 }
 
 @layer base {
 	body {
-		color: #eef2ff;
-		background-color: #0a1020;
-		background-image:
-			radial-gradient(60rem 40rem at 10% -10%, rgba(79, 110, 255, 0.18), transparent 60%),
-			radial-gradient(50rem 36rem at 100% 0%, rgba(168, 85, 247, 0.1), transparent 60%),
-			radial-gradient(60rem 40rem at 50% 120%, rgba(14, 165, 233, 0.08), transparent 60%);
-		background-attachment: fixed;
+		color: var(--color-fg);
+		background-color: var(--color-surface-1);
 	}
 
 	h1,
 	h2,
 	h3,
 	.editorial-title {
-		font-family: var(--font-editorial);
+		font-family: var(--font-sans);
+		font-weight: 600;
 		letter-spacing: -0.01em;
 	}
 	@keyframes slide-up {
@@ -488,90 +529,13 @@
 		}
 	}
 
-	/* Editorial dock navigation — shares the panel system's border/shadow recipe
-	   so it reads as the same surface language as the rest of the UI. */
-	.dock {
-		@apply fixed h-16 rounded-3xl backdrop-blur-xl border border-white/10 flex items-center justify-around px-2;
-		background: rgba(14, 21, 40, 0.78);
-		box-shadow:
-			0 18px 40px -12px rgba(2, 6, 23, 0.85),
-			inset 0 1px 0 rgba(255, 255, 255, 0.06);
-		z-index: 40;
-		/* Its own view-transition group so page navigation never fades/flashes
-		   the persistent nav bar — only the content area crossfades. */
-		view-transition-name: dock-nav;
-	}
-
-	.dock a {
-		@apply relative flex items-center justify-center w-12 h-12 rounded-2xl transition-colors duration-200 text-[#a9b4d0] hover:text-[#eef2ff];
-	}
-
-	.dock a.active {
-		@apply text-[#ffcb6b] bg-[#f5a524]/12;
-	}
-
-	/* Amber pip under the active dock target — springs in when it activates.
-	   The dock keeps its own view-transition group, so this plays live and
-	   never gets frozen into a page-swap snapshot. */
-	.dock a.active::after {
-		content: "";
-		position: absolute;
-		bottom: 2px;
-		left: 50%;
-		translate: -50% 0;
-		width: 4px;
-		height: 4px;
-		border-radius: 9999px;
-		background: #ffcb6b;
-		box-shadow: 0 0 8px rgba(245, 165, 36, 0.7);
-		animation: dock-dot-pop 320ms cubic-bezier(0.34, 1.8, 0.5, 1) backwards;
-	}
-
-	@keyframes dock-dot-pop {
-		from {
-			transform: scale(0);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.dock a.active::after {
-			animation: none;
-		}
-	}
-
-	.dock a:active {
-		transform: scale(0.95);
-	}
-
-	/* Mobile space optimization */
-	@media (max-width: 768px) {
-		.dock {
-			@apply h-14 px-1;
-		}
-		.dock a {
-			@apply w-10 h-10;
-		}
-		.dock a svg {
-			@apply size-5;
-		}
-	}
-
-	@media (max-width: 480px) {
-		.dock {
-			@apply h-14 bottom-2 px-1;
-		}
-		.dock a {
-			@apply w-full h-12;
-		}
-	}
-
 	.wysiwyg-editor .ProseMirror {
 		outline: none;
 	}
 	.wysiwyg-editor .ProseMirror p.is-editor-empty:first-child::before {
 		content: attr(data-placeholder);
 		float: left;
-		color: #8e9abb;
+		color: var(--color-fg-muted);
 		pointer-events: none;
 		height: 0;
 	}
@@ -588,29 +552,29 @@
 		@apply mb-3;
 	}
 	.wysiwyg-editor blockquote {
-		@apply border-l-4 border-[#f5a524] pl-4 italic my-4 text-[#8e9abb];
+		@apply border-l-4 border-accent pl-4 italic my-4 text-fg-muted;
 	}
 	.wysiwyg-editor code {
-		@apply bg-[#131c33] px-1 py-0.5 rounded-sm text-sm;
+		@apply bg-surface-4 px-1 py-0.5 rounded-sm text-sm;
 	}
 	.wysiwyg-editor pre {
-		@apply bg-[#131c33] p-4 rounded-sm overflow-x-auto my-4;
+		@apply bg-surface-4 p-4 rounded-sm overflow-x-auto my-4;
 	}
 	.wysiwyg-editor pre code {
 		@apply bg-transparent p-0;
 	}
 	.wysiwyg-editor hr {
-		@apply my-6 border-t-2 border-[#8ea6e0]/15;
+		@apply my-6 border-t-2 border-line/15;
 	}
 	.wysiwyg-editor table {
 		@apply border-collapse w-full my-4;
 	}
 	.wysiwyg-editor th,
 	.wysiwyg-editor td {
-		@apply border border-[#8ea6e0]/15 px-3 py-2;
+		@apply border border-line/15 px-3 py-2;
 	}
 	.wysiwyg-editor th {
-		@apply bg-[#131c33] font-semibold;
+		@apply bg-surface-4 font-semibold;
 	}
 
 	@media (max-width: 640px) {
@@ -652,20 +616,20 @@
 		margin-bottom: 1rem;
 	}
 	.article-content blockquote {
-		border-left: 4px solid #f5a524;
+		border-left: 4px solid var(--color-accent);
 		padding-left: 1rem;
 		margin: 1.5rem 0;
 		font-style: italic;
-		color: #8e9abb;
+		color: var(--color-fg-muted);
 	}
 	.article-content code {
-		background: #131c33;
+		background: var(--color-surface-4);
 		padding: 0.125rem 0.25rem;
 		border-radius: 0.25rem;
 		font-size: 0.9em;
 	}
 	.article-content pre {
-		background: #131c33;
+		background: var(--color-surface-4);
 		padding: 1rem;
 		border-radius: 0.25rem;
 		overflow-x: auto;
@@ -693,25 +657,7 @@
 		text-align: left;
 	}
 	.article-content th {
-		background: #131c33;
+		background: var(--color-surface-4);
 		font-weight: 600;
-	}
-}
-
-/* Floating nav island. Unlayered and more specific than daisyUI's own
-   `.dock` component, which would otherwise pin it full-width. */
-nav.dock {
-	left: 50%;
-	right: auto;
-	bottom: 0.75rem;
-	width: min(40rem, calc(100% - 1.5rem));
-	transform: translateX(-50%);
-	color: inherit;
-}
-
-@media (max-width: 480px) {
-	nav.dock {
-		bottom: 0.5rem;
-		width: calc(100% - 1rem);
 	}
 }

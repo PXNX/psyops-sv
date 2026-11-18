@@ -63,24 +63,24 @@
 		<!-- Treasury book -->
 		<section class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentMoney20Filled class="size-5 text-[#4fd88a]" />
+				<FluentMoney20Filled class="size-5 text-positive" />
 				Treasury
 			</h2>
 			<div>
-				<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Cash in hand</p>
-				<p class="font-mono text-3xl font-bold text-[#ffcb6b] animate-tick truncate">
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Cash in hand</p>
+				<p class="font-mono text-3xl font-bold text-accent-fg animate-tick truncate">
 					{money.format(data.treasury.balance)}
 				</p>
 			</div>
 			<dl class="space-y-1.5 text-sm">
 				<div class="flex items-center gap-2">
-					<dt class="text-[#8e9abb]">Collected to date</dt>
-					<span class="flex-1 border-b border-dotted border-[#8ea6e0]/20 translate-y-1" aria-hidden="true"></span>
-					<dd class="font-mono text-[#aef3c9]">+{money.format(data.treasury.totalCollected)}</dd>
+					<dt class="text-fg-muted">Collected to date</dt>
+					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
+					<dd class="font-mono text-positive-fg">+{money.format(data.treasury.totalCollected)}</dd>
 				</div>
 				<div class="flex items-center gap-2">
-					<dt class="text-[#8e9abb]">Spent to date</dt>
-					<span class="flex-1 border-b border-dotted border-[#8ea6e0]/20 translate-y-1" aria-hidden="true"></span>
+					<dt class="text-fg-muted">Spent to date</dt>
+					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
 					<dd class="font-mono text-red-300">−{money.format(data.treasury.totalSpent)}</dd>
 				</div>
 			</dl>
@@ -89,33 +89,33 @@
 		<!-- Power grid gauge -->
 		<section class="panel rounded-sm p-5 space-y-4">
 			<h2 class="section-title">
-				<FluentFlash20Filled class="size-5 text-[#ffcb6b]" />
+				<FluentFlash20Filled class="size-5 text-accent-fg" />
 				Power Grid
 			</h2>
 			<div class="flex items-end justify-between gap-3">
 				<div>
-					<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Load</p>
+					<p class="text-[10px] uppercase tracking-wide text-fg-muted">Load</p>
 					<p
 						class="font-mono text-3xl font-bold {energyUtilization >= 90
 							? 'text-red-300'
 							: energyUtilization >= 70
-								? 'text-[#ffcb6b]'
-								: 'text-[#eef2ff]'}"
+								? 'text-accent-fg'
+								: 'text-fg'}"
 					>
 						{energyUtilization}%
 					</p>
 				</div>
-				<p class="text-right font-mono text-xs text-[#8e9abb]">
+				<p class="text-right font-mono text-xs text-fg-muted">
 					{data.energyInfo.usedProduction} / {data.energyInfo.totalProduction} MW
 				</p>
 			</div>
-			<div class="h-2.5 rounded-full bg-[#0b1120] overflow-hidden">
+			<div class="h-2.5 rounded-full bg-surface-0 overflow-hidden">
 				<div
 					class="h-full rounded-full transition-all duration-700 {energyUtilization >= 90
 						? 'bg-red-500'
 						: energyUtilization >= 70
-							? 'bg-[#f5a524]'
-							: 'bg-[#4fd88a]'}"
+							? 'bg-accent'
+							: 'bg-positive'}"
 					style="width: {Math.min(energyUtilization, 100)}%"
 				></div>
 			</div>
@@ -124,16 +124,16 @@
 					{#each data.powerPlants as plant (plant.id)}
 						<li class="flex items-center gap-2 min-w-0">
 							<span
-								class="size-1.5 shrink-0 rounded-full {plant.isOperational ? 'bg-[#4fd88a]' : 'bg-red-500'}"
+								class="size-1.5 shrink-0 rounded-full {plant.isOperational ? 'bg-positive' : 'bg-red-500'}"
 								title={plant.isOperational ? "Running" : "Offline"}
 							></span>
-							<span class="text-[#dbe2f4] truncate">{plant.name}</span>
-							<span class="text-xs text-[#8e9abb] capitalize">{plant.plantType}</span>
-							<span class="ml-auto font-mono text-xs text-[#eef2ff]">{plant.powerOutput} MW</span>
+							<span class="text-fg-body truncate">{plant.name}</span>
+							<span class="text-xs text-fg-muted capitalize">{plant.plantType}</span>
+							<span class="ml-auto font-mono text-xs text-fg">{plant.powerOutput} MW</span>
 						</li>
 					{/each}
 				</ul>
-				<p class="text-xs text-[#8e9abb]">{totalPowerOutput} MW from {data.powerPlants.length} plants</p>
+				<p class="text-xs text-fg-muted">{totalPowerOutput} MW from {data.powerPlants.length} plants</p>
 			{/if}
 		</section>
 	</div>
@@ -141,16 +141,16 @@
 	<!-- Stockpile manifest -->
 	<section class="panel rounded-sm p-5 space-y-3">
 		<h2 class="section-title">
-			<FluentBox20Filled class="size-5 text-[#b9a1ff]" />
+			<FluentBox20Filled class="size-5 text-politics" />
 			State Stockpile
 		</h2>
 		<ul class="grid grid-cols-2 sm:grid-cols-3 gap-x-6">
 			{#each allResources as resource (resource)}
 				{@const quantity = resourceMap.get(resource) || 0}
-				<li class="flex items-center gap-2 py-2 border-b border-dashed border-[#8ea6e0]/15 min-w-0">
+				<li class="flex items-center gap-2 py-2 border-b border-dashed border-line/15 min-w-0">
 					<ResourceIcon name={resource} class="size-5 shrink-0" />
-					<span class="text-sm text-[#c2cbe3] capitalize truncate">{resource}</span>
-					<span class="ml-auto font-mono text-sm font-bold {quantity > 0 ? 'text-[#eef2ff]' : 'text-[#8e9abb]/60'}">
+					<span class="text-sm text-fg-soft capitalize truncate">{resource}</span>
+					<span class="ml-auto font-mono text-sm font-bold {quantity > 0 ? 'text-fg' : 'text-fg-muted/60'}">
 						{quantity.toLocaleString()}
 					</span>
 				</li>
@@ -162,11 +162,11 @@
 	<nav class="grid grid-cols-1 sm:grid-cols-3 gap-2" aria-label="Ministry tools">
 		{#each drawers as drawer (drawer.href)}
 			<a href={drawer.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-3 min-w-0">
-				<drawer.icon class="size-5 shrink-0 text-[#ffcb6b]" />
-				<span class="flex-1 text-sm font-semibold text-[#dbe2f4] group-hover:text-[#ffc857] transition-colors truncate">
+				<drawer.icon class="size-5 shrink-0 text-accent-fg" />
+				<span class="flex-1 text-sm font-semibold text-fg-body group-hover:text-accent-hover transition-colors truncate">
 					{drawer.label}
 				</span>
-				<FluentChevronRight20Filled class="size-4 shrink-0 text-[#8e9abb] group-hover:text-[#ffc857]" />
+				<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-accent-hover" />
 			</a>
 		{/each}
 	</nav>

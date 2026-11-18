@@ -4,6 +4,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
 	import FormActions from "#lib/component/ui/FormActions.svelte";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 
 	interface Props {
 		open: boolean;
@@ -41,11 +42,11 @@
 		<div class="space-y-4">
 			<div class="flex items-center gap-3">
 				<div
-					class="size-12 bg-[#f5a524]/12 border border-[#f5a524]/35 rounded-sm flex items-center justify-center shrink-0"
+					class="size-12 bg-accent/12 border border-accent/35 rounded-sm flex items-center justify-center shrink-0"
 				>
-					<FluentWarning20Filled class="size-6 text-[#ffcb6b]" />
+					<FluentWarning20Filled class="size-6 text-accent-fg" />
 				</div>
-				<p class="text-sm text-[#c2cbe3]">Help us understand what's wrong with this message.</p>
+				<p class="text-sm text-fg-soft">Help us understand what's wrong with this message.</p>
 			</div>
 
 			<form
@@ -55,6 +56,7 @@
 					isSubmitting = true;
 					return async ({ result, update }) => {
 						await update();
+						toastResult(result);
 						if (result.type === "success") {
 							handleClose();
 						}

@@ -104,25 +104,25 @@
 	<!-- Statement summary -->
 	<section class="panel rounded-sm overflow-hidden">
 		<div
-			class="flex items-center gap-2 px-4 py-2 border-b border-[#8ea6e0]/15 bg-[#0b1120]/50 text-[10px] uppercase tracking-[0.25em] text-[#8e9abb]"
+			class="flex items-center gap-2 px-4 py-2 border-b border-line/15 bg-surface-0/50 text-[10px] uppercase tracking-[0.25em] text-fg-muted"
 		>
 			<span>Current account</span>
 			<span class="ml-auto font-mono normal-case tracking-normal">Last 30 days</span>
 		</div>
 		<div class="p-4 sm:p-5 flex flex-wrap items-end justify-between gap-4">
 			<div>
-				<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Closing balance</p>
-				<p class="text-3xl font-bold font-mono text-[#eef2ff] animate-tick">
+				<p class="text-[10px] text-fg-muted uppercase tracking-wide">Closing balance</p>
+				<p class="text-3xl font-bold font-mono text-fg animate-tick">
 					{formatCurrency(data.analytics.currentBalance)}
 				</p>
 			</div>
 			<dl class="flex gap-5 font-mono text-sm">
 				<div>
-					<dt class="text-[10px] font-sans text-[#8e9abb] uppercase tracking-wide">Credits</dt>
-					<dd class="font-bold text-[#aef3c9]">+{formatCurrency(data.analytics.totalIncome)}</dd>
+					<dt class="text-[10px] font-sans text-fg-muted uppercase tracking-wide">Credits</dt>
+					<dd class="font-bold text-positive-fg">+{formatCurrency(data.analytics.totalIncome)}</dd>
 				</div>
 				<div>
-					<dt class="text-[10px] font-sans text-[#8e9abb] uppercase tracking-wide">Debits</dt>
+					<dt class="text-[10px] font-sans text-fg-muted uppercase tracking-wide">Debits</dt>
 					<dd class="font-bold text-red-300">-{formatCurrency(data.analytics.totalExpenses)}</dd>
 				</div>
 			</dl>
@@ -130,7 +130,7 @@
 
 		<!-- Breakdown by category: tap to filter -->
 		{#if incomeCategories.length > 0 || expenseCategories.length > 0}
-			<div class="grid sm:grid-cols-2 border-t border-[#8ea6e0]/10 sm:divide-x divide-[#8ea6e0]/10">
+			<div class="grid sm:grid-cols-2 border-t border-line/10 sm:divide-x divide-line/10">
 				{#each [{ cats: incomeCategories, income: true }, { cats: expenseCategories, income: false }] as col}
 					{#if col.cats.length > 0}
 						<ul class="px-3 py-2 space-y-0.5">
@@ -143,14 +143,14 @@
 										class="tap-target flex items-center justify-between gap-3 w-full py-1.5 px-2 rounded-sm text-xs transition-colors {activeFilter ===
 										cat.type
 											? col.income
-												? 'bg-[#1f9d62]/18'
+												? 'bg-positive-bg/18'
 												: 'bg-red-600/10'
-											: 'hover:bg-[#233154]'}"
+											: 'hover:bg-surface-9'}"
 									>
-										<span class={activeFilter === cat.type ? "text-[#eef2ff] font-semibold" : "text-[#8e9abb]"}>
+										<span class={activeFilter === cat.type ? "text-fg font-semibold" : "text-fg-muted"}>
 											{typeLabels[cat.type] || cat.type}
 										</span>
-										<span class="font-mono {col.income ? 'text-[#aef3c9]' : 'text-red-300'}">
+										<span class="font-mono {col.income ? 'text-positive-fg' : 'text-red-300'}">
 											{col.income ? "+" : "-"}{formatCurrency(col.income ? cat.income : cat.expenses)}
 										</span>
 									</button>
@@ -179,13 +179,13 @@
 						{typeLabels[activeFilter] || activeFilter}
 					</Button>
 				{/if}
-				<span class="text-xs font-mono text-[#8e9abb]">{filteredTransactions.length}/{data.pagination.totalCount}</span>
+				<span class="text-xs font-mono text-fg-muted">{filteredTransactions.length}/{data.pagination.totalCount}</span>
 			</div>
 		</div>
 
 		{#if groupedTransactions.length === 0}
 			<div class="panel-muted rounded-sm p-10 text-center">
-				<p class="font-mono text-sm text-[#8e9abb]">— no entries —</p>
+				<p class="font-mono text-sm text-fg-muted">— no entries —</p>
 				{#if activeFilter}
 					<Button type="button" variant="secondary" size="sm" class="mt-3" onclick={() => (activeFilter = null)}>
 						Clear filter
@@ -196,7 +196,7 @@
 			<div class="panel rounded-sm overflow-hidden">
 				<!-- Column heads (wider screens) -->
 				<div
-					class="hidden sm:grid grid-cols-[3.5rem_1fr_7.5rem_7.5rem] gap-3 px-4 py-2 bg-[#0b1120]/60 text-[10px] uppercase tracking-wide text-[#8e9abb]"
+					class="hidden sm:grid grid-cols-[3.5rem_1fr_7.5rem_7.5rem] gap-3 px-4 py-2 bg-surface-0/60 text-[10px] uppercase tracking-wide text-fg-muted"
 				>
 					<span>Time</span>
 					<span>Particulars</span>
@@ -205,18 +205,18 @@
 				</div>
 				{#each groupedTransactions as group (group.day)}
 					<div
-						class="px-4 py-1.5 border-t border-[#8ea6e0]/15 bg-[#131c33]/80 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ffcb6b]/80"
+						class="px-4 py-1.5 border-t border-line/15 bg-surface-4/80 text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-fg/80"
 					>
 						{group.label}
 					</div>
 					{#each group.transactions as tx (tx.id)}
 						<div
-							class="grid grid-cols-[1fr_auto] sm:grid-cols-[3.5rem_1fr_7.5rem_7.5rem] gap-x-3 gap-y-0.5 px-4 py-2.5 border-t border-[#8ea6e0]/8 hover:bg-[#233154]/60 transition-colors items-center"
+							class="grid grid-cols-[1fr_auto] sm:grid-cols-[3.5rem_1fr_7.5rem_7.5rem] gap-x-3 gap-y-0.5 px-4 py-2.5 border-t border-line/8 hover:bg-surface-9/60 transition-colors items-center"
 						>
-							<span class="hidden sm:block font-mono text-[11px] text-[#8e9abb]">{formatTime(tx.createdAt)}</span>
+							<span class="hidden sm:block font-mono text-[11px] text-fg-muted">{formatTime(tx.createdAt)}</span>
 							<div class="min-w-0">
-								<p class="text-sm text-[#dbe2f4] truncate">{typeLabels[tx.type] || tx.type}</p>
-								<div class="text-xs text-[#8e9abb] flex items-center gap-1.5 min-w-0">
+								<p class="text-sm text-fg-body truncate">{typeLabels[tx.type] || tx.type}</p>
+								<div class="text-xs text-fg-muted flex items-center gap-1.5 min-w-0">
 									<span class="sm:hidden font-mono shrink-0">{formatTime(tx.createdAt)}</span>
 									{#if tx.relatedUser && tx.entity.href?.startsWith("/user/")}
 										<UserLink
@@ -227,7 +227,7 @@
 										/>
 									{:else if tx.entity.name}
 										{#if tx.entity.href}
-											<a href={tx.entity.href} class="truncate hover:text-[#ffc857] transition-colors">
+											<a href={tx.entity.href} class="truncate hover:text-accent-hover transition-colors">
 												{tx.entity.name}
 											</a>
 										{:else}
@@ -238,13 +238,13 @@
 							</div>
 							<p
 								class="text-right font-mono text-sm font-bold whitespace-nowrap {tx.isIncome
-									? 'text-[#aef3c9]'
+									? 'text-positive-fg'
 									: 'text-red-300'}"
 							>
 								{tx.isIncome ? "+" : ""}{formatCurrency(tx.amount)}
 							</p>
 							<p
-								class="col-span-2 sm:col-span-1 text-right font-mono text-[11px] text-[#8e9abb] whitespace-nowrap -mt-0.5 sm:mt-0"
+								class="col-span-2 sm:col-span-1 text-right font-mono text-[11px] text-fg-muted whitespace-nowrap -mt-0.5 sm:mt-0"
 							>
 								{formatCurrency(tx.balanceAfter)}
 							</p>
@@ -282,7 +282,7 @@
 							{pageNum}
 						</Button>
 					{:else if Math.abs(pageNum - data.pagination.currentPage) === 3}
-						<span class="text-[#8e9abb]/60 px-1">…</span>
+						<span class="text-fg-muted/60 px-1">…</span>
 					{/if}
 				{/each}
 			</div>

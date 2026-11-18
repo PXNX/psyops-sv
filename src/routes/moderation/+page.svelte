@@ -79,32 +79,32 @@
 
 	<!-- Statistics -->
 	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-		<div class="bg-[#f5a524]/12 rounded-sm border border-[#f5a524]/35 p-4">
+		<div class="bg-accent/12 rounded-sm border border-accent/35 p-4">
 			<div class="flex items-center gap-3">
-				<FluentWarning20Filled class="size-6 text-[#ffcb6b] shrink-0" />
+				<FluentWarning20Filled class="size-6 text-accent-fg shrink-0" />
 				<div>
-					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Pending Reports</p>
-					<p class="text-2xl font-bold text-[#eef2ff]">{data.stats.pending}</p>
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Pending Reports</p>
+					<p class="text-2xl font-bold text-fg">{data.stats.pending}</p>
 				</div>
 			</div>
 		</div>
 
-		<div class="bg-[#1f9d62]/18 rounded-sm border border-[#4fd88a]/30 p-4">
+		<div class="bg-positive-bg/18 rounded-sm border border-positive/30 p-4">
 			<div class="flex items-center gap-3">
-				<FluentCheckmark20Filled class="size-6 text-[#4fd88a] shrink-0" />
+				<FluentCheckmark20Filled class="size-6 text-positive shrink-0" />
 				<div>
-					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Resolved</p>
-					<p class="text-2xl font-bold text-[#eef2ff]">{data.stats.resolved}</p>
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Resolved</p>
+					<p class="text-2xl font-bold text-fg">{data.stats.resolved}</p>
 				</div>
 			</div>
 		</div>
 
 		<div class="panel-muted rounded-sm p-4">
 			<div class="flex items-center gap-3">
-				<FluentDismiss20Filled class="size-6 text-[#8e9abb] shrink-0" />
+				<FluentDismiss20Filled class="size-6 text-fg-muted shrink-0" />
 				<div>
-					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Dismissed</p>
-					<p class="text-2xl font-bold text-[#eef2ff]">{data.stats.dismissed}</p>
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">Dismissed</p>
+					<p class="text-2xl font-bold text-fg">{data.stats.dismissed}</p>
 				</div>
 			</div>
 		</div>
@@ -160,7 +160,7 @@
 						out:vanish
 						onclick={() => (selectedReport = report)}
 						class="w-full panel-interactive rounded-sm p-4 text-left {selectedReport?.reportId === report.reportId
-							? 'border-[#f5a524]/55 ring-1 ring-[#f5a524]/40'
+							? 'border-accent/55 ring-1 ring-accent/40'
 							: ''}"
 					>
 						<div class="flex items-start gap-3">
@@ -173,15 +173,15 @@
 									class="size-10 rounded-full"
 								/>
 							{:else}
-								<div class="size-10 rounded-full bg-[#131c33] flex items-center justify-center">
-									<FluentImageOff20Filled class="size-5 text-[#8e9abb]" />
+								<div class="size-10 rounded-full bg-surface-4 flex items-center justify-center">
+									<FluentImageOff20Filled class="size-5 text-fg-muted" />
 								</div>
 							{/if}
 
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2 mb-1">
-									<MessageIcon class="size-4 text-[#8e9abb]" />
-									<p class="font-semibold text-[#eef2ff] text-sm">{report.messageSenderName}</p>
+									<MessageIcon class="size-4 text-fg-muted" />
+									<p class="font-semibold text-fg text-sm">{report.messageSenderName}</p>
 									<Badge
 										tone={report.status === "pending"
 											? "amber"
@@ -195,8 +195,8 @@
 										{report.status}
 									</Badge>
 								</div>
-								<p class="text-sm text-[#c2cbe3] line-clamp-2 mb-2">{report.messageContent}</p>
-								<p class="text-xs text-[#8e9abb]">
+								<p class="text-sm text-fg-soft line-clamp-2 mb-2">{report.messageContent}</p>
+								<p class="text-xs text-fg-muted">
 									Reported by {report.reporterName} • {formatDateTime(report.reportedAt)}
 								</p>
 							</div>
@@ -222,14 +222,14 @@
 							size="md"
 							class="mb-3"
 						/>
-						<p class="text-[#c2cbe3]">{selectedReport.messageContent}</p>
+						<p class="text-fg-soft">{selectedReport.messageContent}</p>
 					</div>
 
 					<!-- Report Info -->
 					<div class="mb-6">
-						<h3 class="text-[10px] text-[#8e9abb] uppercase tracking-wide mb-2">Report Reason</h3>
-						<p class="text-[#c2cbe3] panel-muted rounded-sm p-3">{selectedReport.reason}</p>
-						<p class="text-xs text-[#8e9abb] mt-2">
+						<h3 class="text-[10px] text-fg-muted uppercase tracking-wide mb-2">Report Reason</h3>
+						<p class="text-fg-soft panel-muted rounded-sm p-3">{selectedReport.reason}</p>
+						<p class="text-xs text-fg-muted mt-2">
 							Reported by <UserLink id={selectedReport.reporterId} name={selectedReport.reporterName} size="xs" plain />
 						</p>
 					</div>
@@ -257,7 +257,7 @@
 
 							<label class="flex cursor-pointer items-center justify-start gap-3">
 								<input type="checkbox" bind:checked={issueWarning} class="checkbox checkbox-warning" />
-								<span class="text-sm text-[#dbe2f4]">Issue warning to user (3 warnings = auto-restriction)</span>
+								<span class="text-sm text-fg-body">Issue warning to user (3 warnings = auto-restriction)</span>
 							</label>
 
 							<form method="POST" action="?/deleteMessage" use:enhance>
@@ -271,10 +271,10 @@
 								</Button>
 							</form>
 
-							<div class="flex items-center gap-3 text-xs text-[#8e9abb] uppercase tracking-wide">
-								<span class="flex-1 border-t border-[#8ea6e0]/15"></span>
+							<div class="flex items-center gap-3 text-xs text-fg-muted uppercase tracking-wide">
+								<span class="flex-1 border-t border-line/15"></span>
 								OR
-								<span class="flex-1 border-t border-[#8ea6e0]/15"></span>
+								<span class="flex-1 border-t border-line/15"></span>
 							</div>
 
 							<div>
@@ -292,7 +292,7 @@
 						</div>
 					{:else}
 						<div class="panel-muted rounded-sm p-4 text-center">
-							<p class="text-[#8e9abb] capitalize">This report has been {selectedReport.status}</p>
+							<p class="text-fg-muted capitalize">This report has been {selectedReport.status}</p>
 						</div>
 					{/if}
 				</div>

@@ -15,17 +15,17 @@
 	const tones: Record<ToastTone, { icon: typeof FluentInfo20Filled; box: string; icon_: string; bar: string }> = {
 		success: {
 			icon: FluentCheckmarkCircle20Filled,
-			box: "border-[#4fd88a]/45",
-			icon_: "text-[#4fd88a]",
-			bar: "bg-[#4fd88a]"
+			box: "border-positive/45",
+			icon_: "text-positive",
+			bar: "bg-positive"
 		},
 		error: { icon: FluentErrorCircle20Filled, box: "border-red-500/50", icon_: "text-red-400", bar: "bg-red-500" },
-		info: { icon: FluentInfo20Filled, box: "border-[#6aa8ff]/45", icon_: "text-[#6aa8ff]", bar: "bg-[#6aa8ff]" },
+		info: { icon: FluentInfo20Filled, box: "border-friendly/45", icon_: "text-friendly", bar: "bg-friendly" },
 		warning: {
 			icon: FluentWarning20Filled,
-			box: "border-[#f5a524]/55",
-			icon_: "text-[#ffcb6b]",
-			bar: "bg-[#f5a524]"
+			box: "border-accent/55",
+			icon_: "text-accent-fg",
+			bar: "bg-accent"
 		}
 	};
 
@@ -57,10 +57,10 @@
 		>
 			<div class="flex items-start gap-3 py-3 pr-2 pl-3.5">
 				<tone.icon class="mt-0.5 size-5 shrink-0 toast-icon {tone.icon_}" />
-				<p class="min-w-0 flex-1 text-sm font-medium break-words text-[#eef2ff]">{item.message}</p>
+				<p class="min-w-0 flex-1 text-sm font-medium break-words text-fg">{item.message}</p>
 				<button
 					type="button"
-					class="press-spring -my-1 grid size-8 shrink-0 place-items-center rounded-sm text-[#8e9abb] hover:bg-[#f5a524]/10 hover:text-[#eef2ff]"
+					class="press-spring -my-1 grid size-8 shrink-0 place-items-center rounded-sm text-fg-muted hover:bg-accent/10 hover:text-fg"
 					aria-label="Dismiss"
 					onclick={() => toast.dismiss(item.id)}
 				>

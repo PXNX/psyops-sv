@@ -19,14 +19,14 @@
 		<div class="flex flex-col items-center space-y-5">
 			<div class="relative">
 				<div class="panel size-32 rounded-sm flex items-center justify-center">
-					<FluentDocumentText20Filled class="size-16 text-[#f5a524]" />
+					<FluentDocumentText20Filled class="size-16 text-accent" />
 				</div>
 			</div>
 			<div class="text-center space-y-3">
-				<h1 class="text-4xl font-bold text-[#eef2ff]">Terms of Service</h1>
-				<p class="text-[#8e9abb] max-w-md mx-auto">Rules and guidelines for using our platform</p>
+				<h1 class="text-4xl font-bold text-fg">Terms of Service</h1>
+				<p class="text-fg-muted max-w-md mx-auto">Rules and guidelines for using our platform</p>
 				<div class="inline-flex items-center gap-2 px-4 py-2 panel-muted rounded-sm">
-					<span class="text-sm text-[#c2cbe3]">Effective: January 2025</span>
+					<span class="text-sm text-fg-soft">Effective: January 2025</span>
 				</div>
 			</div>
 		</div>
@@ -38,13 +38,13 @@
 				<div class="p-5 md:p-6 flex flex-col gap-3">
 					<h2 class="section-title text-2xl gap-3">
 						<div
-							class="size-10 bg-[#2f6be0]/18 border border-[#6aa8ff]/30 rounded-sm flex items-center justify-center shrink-0"
+							class="size-10 bg-friendly-bg/18 border border-friendly/30 rounded-sm flex items-center justify-center shrink-0"
 						>
-							<FluentCheckmark20Filled class="size-5 text-[#6aa8ff]" />
+							<FluentCheckmark20Filled class="size-5 text-friendly" />
 						</div>
 						Acceptance of Terms
 					</h2>
-					<p class="text-sm text-[#c2cbe3]">
+					<p class="text-sm text-fg-soft">
 						By accessing or using PsyOps, you agree to be bound by these Terms of Service and all applicable laws and
 						regulations. If you do not agree with any of these terms, you are prohibited from using this platform.
 					</p>
@@ -56,31 +56,31 @@
 				<div class="p-5 md:p-6 flex flex-col gap-3">
 					<h2 class="section-title text-2xl gap-3">
 						<div
-							class="size-10 bg-[#7451e6]/15 border border-[#b9a1ff]/30 rounded-sm flex items-center justify-center shrink-0"
+							class="size-10 bg-politics-bg/15 border border-politics/30 rounded-sm flex items-center justify-center shrink-0"
 						>
-							<FluentShield20Filled class="size-5 text-[#e6dcff]" />
+							<FluentShield20Filled class="size-5 text-politics-fg" />
 						</div>
 						User Accounts & Responsibilities
 					</h2>
-					<div class="space-y-3 text-[#c2cbe3]">
+					<div class="space-y-3 text-fg-soft">
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-[#4fd88a] shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-positive shrink-0 mt-0.5" />
 							<p class="text-sm">You must be at least 13 years old to create an account</p>
 						</div>
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-[#4fd88a] shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-positive shrink-0 mt-0.5" />
 							<p class="text-sm">You are responsible for maintaining the security of your account credentials</p>
 						</div>
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-[#4fd88a] shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-positive shrink-0 mt-0.5" />
 							<p class="text-sm">You must provide accurate and truthful information during registration</p>
 						</div>
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-[#4fd88a] shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-positive shrink-0 mt-0.5" />
 							<p class="text-sm">One person may only maintain one account at a time</p>
 						</div>
 						<div class="flex items-start gap-3">
-							<FluentCheckmark20Filled class="size-5 text-[#4fd88a] shrink-0 mt-0.5" />
+							<FluentCheckmark20Filled class="size-5 text-positive shrink-0 mt-0.5" />
 							<p class="text-sm">
 								You are responsible for all activities that occur under your account, including actions taken by others
 								with access to your credentials
@@ -101,7 +101,7 @@
 						</div>
 						Prohibited Conduct
 					</h2>
-					<div class="space-y-3 text-[#c2cbe3]">
+					<div class="space-y-3 text-fg-soft">
 						<p class="text-sm">You agree NOT to engage in any of the following activities:</p>
 						<div class="flex items-start gap-3">
 							<FluentDismiss20Filled class="size-5 text-red-400 shrink-0 mt-0.5" />
@@ -135,16 +135,16 @@
 			<div class="panel rounded-sm">
 				<div class="p-5 md:p-6 flex flex-col gap-3">
 					<h2 class="section-title text-2xl">Content & Intellectual Property</h2>
-					<div class="space-y-4 text-[#c2cbe3]">
+					<div class="space-y-4 text-fg-soft">
 						<div class="space-y-2">
-							<h3 class="font-semibold text-[#eef2ff]">User-Generated Content</h3>
+							<h3 class="font-semibold text-fg">User-Generated Content</h3>
 							<p class="text-sm">
 								You retain ownership of content you create (articles, party descriptions, etc.), but grant us a license
 								to display and distribute it within the platform.
 							</p>
 						</div>
 						<div class="space-y-2">
-							<h3 class="font-semibold text-[#eef2ff]">Platform Content</h3>
+							<h3 class="font-semibold text-fg">Platform Content</h3>
 							<p class="text-sm">
 								All platform code, design, mechanics, and original content are owned by PsyOps and protected by
 								intellectual property laws.
@@ -158,15 +158,15 @@
 			<div class="panel rounded-sm">
 				<div class="p-5 md:p-6 flex flex-col gap-3">
 					<h2 class="section-title text-2xl">Virtual Currency & Items</h2>
-					<div class="space-y-3 text-[#c2cbe3]">
+					<div class="space-y-3 text-fg-soft">
 						<p class="text-sm">
 							All in-game currency, resources, and items are virtual and have no real-world monetary value. They cannot
 							be exchanged for real money or transferred outside the platform.
 						</p>
 						<div
-							class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm p-4 flex items-start gap-3"
+							class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-start gap-3"
 						>
-							<FluentWarning20Filled class="size-5 text-[#ffcb6b] shrink-0 mt-0.5" />
+							<FluentWarning20Filled class="size-5 text-accent-fg shrink-0 mt-0.5" />
 							<span class="text-sm">
 								We reserve the right to modify, suspend, or terminate virtual items or currency at any time for any
 								reason.
@@ -180,7 +180,7 @@
 			<div class="panel rounded-sm">
 				<div class="p-5 md:p-6 flex flex-col gap-3">
 					<h2 class="section-title text-2xl">Account Termination</h2>
-					<p class="text-sm text-[#c2cbe3]">
+					<p class="text-sm text-fg-soft">
 						We reserve the right to suspend or terminate your account at any time for violations of these Terms, illegal
 						activity, or behavior that harms the platform or other users. You may also delete your account at any time
 						through account settings.
@@ -192,7 +192,7 @@
 			<div class="panel rounded-sm">
 				<div class="p-5 md:p-6 flex flex-col gap-3">
 					<h2 class="section-title text-2xl">Disclaimers & Limitation of Liability</h2>
-					<div class="space-y-3 text-[#c2cbe3]">
+					<div class="space-y-3 text-fg-soft">
 						<p class="text-sm">
 							The platform is provided "as is" without warranties of any kind. We do not guarantee uninterrupted
 							service, bug-free operation, or that the platform will meet your expectations.
@@ -209,7 +209,7 @@
 			<div class="panel rounded-sm">
 				<div class="p-5 md:p-6 flex flex-col gap-3">
 					<h2 class="section-title text-2xl">Changes to These Terms</h2>
-					<p class="text-sm text-[#c2cbe3]">
+					<p class="text-sm text-fg-soft">
 						We may update these Terms of Service from time to time. We will notify you of significant changes through
 						the platform or via email. Continued use of the platform after changes constitutes acceptance of the updated
 						terms.
@@ -218,10 +218,10 @@
 			</div>
 
 			<!-- Contact -->
-			<div class="rounded-sm bg-[#7451e6]/15 border border-[#b9a1ff]/30">
+			<div class="rounded-sm bg-politics-bg/15 border border-politics/30">
 				<div class="p-5 md:p-6 flex flex-col gap-3">
 					<h2 class="section-title text-xl">Questions About These Terms?</h2>
-					<p class="text-sm text-[#c2cbe3]">
+					<p class="text-sm text-fg-soft">
 						If you have any questions about these Terms of Service, please contact our support team.
 					</p>
 					<div class="flex justify-end pt-2">

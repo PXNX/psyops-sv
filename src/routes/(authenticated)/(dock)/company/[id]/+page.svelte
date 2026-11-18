@@ -94,35 +94,35 @@
 				src={data.company.logo}
 				alt=""
 				placeholderIcon={FluentBuilding20Filled}
-				placeholderGradient="from-[#33456f] to-[#1b2641]"
+				placeholderGradient="from-surface-13 to-surface-6"
 				class="size-16 sm:size-20 rounded-sm shrink-0"
 			/>
 			<div class="min-w-0 flex-1">
-				<h1 class="font-serif text-2xl sm:text-4xl font-black text-[#eef2ff] leading-tight break-words">
+				<h1 class="font-serif text-2xl sm:text-4xl font-black text-fg leading-tight break-words">
 					{data.company.name}
 				</h1>
 				<Badge tone={data.shares ? "green" : "amber"} size="xs" class="sm:hidden mt-1 uppercase tracking-widest">
 					{data.shares ? "Listed" : "Private"}
 				</Badge>
 				{#if data.company.description}
-					<p class="mt-1.5 font-serif italic text-sm sm:text-base text-[#c2cbe3] max-w-2xl">
+					<p class="mt-1.5 font-serif italic text-sm sm:text-base text-fg-soft max-w-2xl">
 						{data.company.description}
 					</p>
 				{/if}
 			</div>
 			<span
 				class="hidden sm:inline-block shrink-0 self-center animate-stamp border-2 rounded-sm px-3 py-1 font-serif text-sm font-black uppercase tracking-widest {data.shares
-					? 'border-[#4fd88a]/70 text-[#aef3c9]'
-					: 'border-[#f5a524]/60 text-[#ffcb6b]'}"
+					? 'border-positive/70 text-positive-fg'
+					: 'border-accent/60 text-accent-fg'}"
 				style="transform: rotate(-8deg)"
 			>
 				{data.shares ? "Listed" : "Private"}
 			</span>
 		</div>
 
-		<dl class="mt-5 grid grid-cols-1 sm:grid-cols-2 border-t border-[#8ea6e0]/20">
-			<div class="py-3 sm:pr-4 border-b border-[#8ea6e0]/10">
-				<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb] mb-1.5">Proprietor</dt>
+		<dl class="mt-5 grid grid-cols-1 sm:grid-cols-2 border-t border-line/20">
+			<div class="py-3 sm:pr-4 border-b border-line/10">
+				<dt class="text-[10px] uppercase tracking-wide text-fg-muted mb-1.5">Proprietor</dt>
 				<dd>
 					<UserLink
 						id={data.company.ownerId}
@@ -134,13 +134,13 @@
 				</dd>
 			</div>
 
-			<div class="py-3 sm:pl-4 border-b border-[#8ea6e0]/10 sm:border-l">
-				<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb] mb-1.5">Registered office</dt>
+			<div class="py-3 sm:pl-4 border-b border-line/10 sm:border-l">
+				<dt class="text-[10px] uppercase tracking-wide text-fg-muted mb-1.5">Registered office</dt>
 				<dd class="space-y-2">
 					{#if data.company.stateName}
 						<a
 							href="/state/{data.company.stateId}"
-							class="flex items-center gap-2 text-sm text-[#dbe2f4] hover:text-[#ffc857] transition-colors"
+							class="flex items-center gap-2 text-sm text-fg-body hover:text-accent-hover transition-colors"
 						>
 							{#if data.company.regionId}
 								<img
@@ -151,15 +151,15 @@
 									decoding="async"
 								/>
 							{:else}
-								<FluentHome20Filled class="size-5 text-[#6aa8ff] shrink-0" />
+								<FluentHome20Filled class="size-5 text-friendly shrink-0" />
 							{/if}
 							<span class="truncate">
 								<span class="font-semibold">{data.company.regionName ?? data.company.stateName}</span>
-								{#if data.company.regionName}<span class="text-[#8e9abb]">, {data.company.stateName}</span>{/if}
+								{#if data.company.regionName}<span class="text-fg-muted">, {data.company.stateName}</span>{/if}
 							</span>
 						</a>
 					{:else}
-						<p class="text-sm text-[#8e9abb]">None on file</p>
+						<p class="text-sm text-fg-muted">None on file</p>
 					{/if}
 
 					{#if data.isOwner}
@@ -181,35 +181,35 @@
 								</Button>
 							</form>
 						{:else if !data.residenceRegion}
-							<p class="text-xs text-[#8e9abb]">Needs a residence to register an office.</p>
+							<p class="text-xs text-fg-muted">Needs a residence to register an office.</p>
 						{/if}
 					{/if}
 				</dd>
 			</div>
 
-			<div class="py-3 sm:pr-4 border-b sm:border-b-0 border-[#8ea6e0]/10 grid grid-cols-2 gap-3">
+			<div class="py-3 sm:pr-4 border-b sm:border-b-0 border-line/10 grid grid-cols-2 gap-3">
 				<div>
-					<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Established</dt>
-					<dd class="text-sm font-semibold text-[#eef2ff]">{formatDate(data.company.foundedAt)}</dd>
+					<dt class="text-[10px] uppercase tracking-wide text-fg-muted">Established</dt>
+					<dd class="text-sm font-semibold text-fg">{formatDate(data.company.foundedAt)}</dd>
 				</div>
 				<div>
-					<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Workforce</dt>
-					<dd class="text-sm font-semibold text-[#eef2ff]">
+					<dt class="text-[10px] uppercase tracking-wide text-fg-muted">Workforce</dt>
+					<dd class="text-sm font-semibold text-fg">
 						{data.totalWorkers} in {data.factories.length}
 						{data.factories.length === 1 ? "factory" : "factories"}
 					</dd>
 				</div>
 			</div>
 
-			<div class="py-3 sm:pl-4 sm:border-l border-[#8ea6e0]/10">
-				<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb] mb-1">Operating in</dt>
+			<div class="py-3 sm:pl-4 sm:border-l border-line/10">
+				<dt class="text-[10px] uppercase tracking-wide text-fg-muted mb-1">Operating in</dt>
 				<dd class="flex flex-wrap gap-1.5">
 					{#each data.uniqueStates as state (state.id)}
 						<a href="/state/{state.id}">
-							<Badge tone="neutral" size="xs" class="hover:text-[#ffc857]">{state.name}</Badge>
+							<Badge tone="neutral" size="xs" class="hover:text-accent-hover">{state.name}</Badge>
 						</a>
 					{:else}
-						<span class="text-sm text-[#8e9abb]">—</span>
+						<span class="text-sm text-fg-muted">—</span>
 					{/each}
 				</dd>
 			</div>
@@ -226,40 +226,40 @@
 	<!-- Balance sheet (owner only) -->
 	{#if data.isOwner}
 		<section class="panel rounded-sm p-5 sm:p-6" bind:this={balanceEl}>
-			<div class="flex items-baseline justify-between gap-3 border-b-2 border-double border-[#8ea6e0]/40 pb-2">
-				<h2 class="font-serif text-xl font-bold text-[#eef2ff]">Balance Sheet</h2>
-				<span class="text-xs text-[#8e9abb]">as of {today}</span>
+			<div class="flex items-baseline justify-between gap-3 border-b-2 border-double border-line/40 pb-2">
+				<h2 class="font-serif text-xl font-bold text-fg">Balance Sheet</h2>
+				<span class="text-xs text-fg-muted">as of {today}</span>
 			</div>
 
 			<div class="grid sm:grid-cols-2 sm:gap-8 font-mono text-sm">
 				<div>
-					<h3 class="mt-3 mb-1 font-sans text-[10px] uppercase tracking-wide text-[#8e9abb]">Paid in</h3>
-					<div class="flex justify-between py-1.5 border-b border-dashed border-[#8ea6e0]/15">
-						<span class="font-sans text-[#c2cbe3]">Capital deposited</span>
-						<span class="text-[#aef3c9]">{money(data.budget.totalDeposited)}</span>
+					<h3 class="mt-3 mb-1 font-sans text-[10px] uppercase tracking-wide text-fg-muted">Paid in</h3>
+					<div class="flex justify-between py-1.5 border-b border-dashed border-line/15">
+						<span class="font-sans text-fg-soft">Capital deposited</span>
+						<span class="text-positive-fg">{money(data.budget.totalDeposited)}</span>
 					</div>
-					<div class="flex justify-between py-1.5 border-b border-dashed border-[#8ea6e0]/15">
-						<span class="font-sans text-[#c2cbe3]">Wages &amp; costs paid</span>
+					<div class="flex justify-between py-1.5 border-b border-dashed border-line/15">
+						<span class="font-sans text-fg-soft">Wages &amp; costs paid</span>
 						<span class="text-red-300">−{money(data.budget.totalSpent)}</span>
 					</div>
 				</div>
 				<div>
-					<h3 class="mt-3 mb-1 font-sans text-[10px] uppercase tracking-wide text-[#8e9abb]">Running costs</h3>
-					<div class="flex justify-between py-1.5 border-b border-dashed border-[#8ea6e0]/15">
-						<span class="font-sans text-[#c2cbe3]">Wage bill per shift</span>
-						<span class="text-[#dbe2f4]">{money(data.totalWageCost)}</span>
+					<h3 class="mt-3 mb-1 font-sans text-[10px] uppercase tracking-wide text-fg-muted">Running costs</h3>
+					<div class="flex justify-between py-1.5 border-b border-dashed border-line/15">
+						<span class="font-sans text-fg-soft">Wage bill per shift</span>
+						<span class="text-fg-body">{money(data.totalWageCost)}</span>
 					</div>
-					<div class="flex justify-between py-1.5 border-b border-dashed border-[#8ea6e0]/15">
-						<span class="font-sans text-[#c2cbe3]">Shifts covered</span>
-						<span class="text-[#dbe2f4]">{data.totalWageCost > 0 ? data.shiftsAffordable : "—"}</span>
+					<div class="flex justify-between py-1.5 border-b border-dashed border-line/15">
+						<span class="font-sans text-fg-soft">Shifts covered</span>
+						<span class="text-fg-body">{data.totalWageCost > 0 ? data.shiftsAffordable : "—"}</span>
 					</div>
 				</div>
 			</div>
 
-			<div class="mt-3 pt-2 border-t-2 border-double border-[#8ea6e0]/40 flex items-baseline justify-between gap-3">
-				<span class="text-xs uppercase tracking-wide text-[#8e9abb]">Cash at bank</span>
+			<div class="mt-3 pt-2 border-t-2 border-double border-line/40 flex items-baseline justify-between gap-3">
+				<span class="text-xs uppercase tracking-wide text-fg-muted">Cash at bank</span>
 				{#key data.budget.balance}
-					<span class="font-mono text-2xl font-bold text-[#eef2ff] animate-tick">{money(data.budget.balance)}</span>
+					<span class="font-mono text-2xl font-bold text-fg animate-tick">{money(data.budget.balance)}</span>
 				{/key}
 			</div>
 
@@ -279,7 +279,7 @@
 				>
 					<label class="field-label flex justify-between" for="amount">
 						<span>Pay in from wallet</span>
-						<span class="text-[#aef3c9] flex items-center gap-1"
+						<span class="text-positive-fg flex items-center gap-1"
 							><FluentMoney20Filled class="size-3.5" />{money(data.ownerBalance)}</span
 						>
 					</label>
@@ -321,7 +321,7 @@
 				>
 					<label class="field-label flex justify-between" for="shifts">
 						<span>Pay wages in advance</span>
-						<span class="font-mono text-[#8e9abb]">{money(data.totalWageCost * (fundShifts || 0))}</span>
+						<span class="font-mono text-fg-muted">{money(data.totalWageCost * (fundShifts || 0))}</span>
 					</label>
 					<div class="flex gap-2">
 						<input
@@ -358,11 +358,11 @@
 
 		{#if !data.shares}
 			{#if data.isOwner}
-				<div class="border-2 border-dashed border-[#8ea6e0]/30 rounded-sm p-4 sm:p-5 text-center">
-					<p class="font-serif text-lg text-[#dbe2f4]">
+				<div class="border-2 border-dashed border-line/30 rounded-sm p-4 sm:p-5 text-center">
+					<p class="font-serif text-lg text-fg-body">
 						{data.ipoConfig.totalShares.toLocaleString()} shares, unissued
 					</p>
-					<p class="mt-1 text-xs text-[#8e9abb]">
+					<p class="mt-1 text-xs text-fg-muted">
 						You keep a locked {data.ipoConfig.founderLockedPercent}% block; the rest lists at your price.
 					</p>
 					<form
@@ -394,40 +394,40 @@
 					</form>
 				</div>
 			{:else}
-				<p class="text-sm text-[#8e9abb]">Privately held. No shares issued.</p>
+				<p class="text-sm text-fg-muted">Privately held. No shares issued.</p>
 			{/if}
 		{:else}
 			<!-- Your certificate -->
 			{#if data.myHolding > 0}
 				<div
 					bind:this={certificateEl}
-					class="relative rounded-sm border-4 border-double border-[#8ea6e0]/50 bg-[#f5a524]/5 p-4 sm:p-6 text-center animate-rise-in"
+					class="relative rounded-sm border-4 border-double border-line/50 bg-accent/5 p-4 sm:p-6 text-center animate-rise-in"
 				>
-					<div class="absolute inset-1.5 rounded-sm border border-[#8ea6e0]/15 pointer-events-none"></div>
-					<p class="mt-1 font-serif text-xl sm:text-2xl font-black uppercase tracking-widest text-[#ffcb6b]">
+					<div class="absolute inset-1.5 rounded-sm border border-line/15 pointer-events-none"></div>
+					<p class="mt-1 font-serif text-xl sm:text-2xl font-black uppercase tracking-widest text-accent-fg">
 						Share Certificate
 					</p>
-					<p class="mt-3 font-serif italic text-sm sm:text-base text-[#c2cbe3]">
+					<p class="mt-3 font-serif italic text-sm sm:text-base text-fg-soft">
 						This certifies that you are the holder of
 					</p>
 					{#key data.myHolding}
-						<p class="mt-1 font-mono text-3xl font-bold text-[#eef2ff] animate-tick">
+						<p class="mt-1 font-mono text-3xl font-bold text-fg animate-tick">
 							{data.myHolding.toLocaleString()}
 						</p>
 					{/key}
-					<p class="font-serif italic text-sm sm:text-base text-[#c2cbe3]">
-						shares of <span class="not-italic font-semibold text-[#eef2ff]">{data.company.name}</span>
+					<p class="font-serif italic text-sm sm:text-base text-fg-soft">
+						shares of <span class="not-italic font-semibold text-fg">{data.company.name}</span>
 						· {myPercent}% of the issued capital
 					</p>
 					<div
-						class="mx-auto mt-4 size-12 rounded-full border-2 border-[#8ea6e0]/50 overflow-hidden animate-stamp"
+						class="mx-auto mt-4 size-12 rounded-full border-2 border-line/50 overflow-hidden animate-stamp"
 						style="transform: rotate(-8deg)"
 					>
 						<Logo
 							src={data.company.logo}
 							alt=""
 							placeholderIcon={FluentBuilding20Filled}
-							placeholderGradient="from-[#33456f] to-[#1b2641]"
+							placeholderGradient="from-surface-13 to-surface-6"
 							class="size-full"
 						/>
 					</div>
@@ -436,44 +436,44 @@
 
 			<dl class="grid grid-cols-2 sm:grid-cols-4 gap-2">
 				<div class="panel-muted rounded-sm p-3">
-					<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Issued</dt>
-					<dd class="font-mono text-base font-bold text-[#eef2ff]">{data.shares.totalShares.toLocaleString()}</dd>
+					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Issued</dt>
+					<dd class="font-mono text-base font-bold text-fg">{data.shares.totalShares.toLocaleString()}</dd>
 				</div>
 				<div class="panel-muted rounded-sm p-3">
-					<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide flex items-center gap-1">
+					<dt class="text-[10px] text-fg-muted uppercase tracking-wide flex items-center gap-1">
 						<FluentLockClosed20Filled class="size-3" /> Founder
 					</dt>
-					<dd class="font-mono text-base font-bold text-[#eef2ff]">
+					<dd class="font-mono text-base font-bold text-fg">
 						{data.shares.founderLockedShares.toLocaleString()}
 					</dd>
 				</div>
 				<div class="panel-muted rounded-sm p-3">
-					<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Issue price</dt>
-					<dd class="font-mono text-base font-bold text-[#ffcb6b]">${data.shares.ipoPrice.toLocaleString()}</dd>
+					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Issue price</dt>
+					<dd class="font-mono text-base font-bold text-accent-fg">${data.shares.ipoPrice.toLocaleString()}</dd>
 				</div>
 				<div class="panel-muted rounded-sm p-3">
-					<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide">On offer</dt>
-					<dd class="font-mono text-base font-bold text-[#eef2ff]">{data.floatOutstanding.toLocaleString()}</dd>
+					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">On offer</dt>
+					<dd class="font-mono text-base font-bold text-fg">{data.floatOutstanding.toLocaleString()}</dd>
 				</div>
 			</dl>
 
 			<!-- Shareholder register -->
 			{#if data.topHolders.length > 0}
 				<div>
-					<h3 class="text-[10px] uppercase tracking-wide text-[#8e9abb] mb-2">Register of shareholders</h3>
-					<ol class="divide-y divide-[#8ea6e0]/10 border-y border-[#8ea6e0]/15">
+					<h3 class="text-[10px] uppercase tracking-wide text-fg-muted mb-2">Register of shareholders</h3>
+					<ol class="divide-y divide-line/10 border-y border-line/15">
 						{#each data.topHolders as holder, i (holder.userId)}
 							<li class="py-2 flex items-center gap-3">
-								<span class="w-5 text-right font-mono text-xs text-[#8e9abb] shrink-0">{i + 1}</span>
+								<span class="w-5 text-right font-mono text-xs text-fg-muted shrink-0">{i + 1}</span>
 								<div class="min-w-0 flex-1">
 									<UserLink id={holder.userId} name={holder.name} avatar={holder.avatar} size="sm" />
-									<div class="mt-1 h-1 rounded-full bg-[#131c33] overflow-hidden">
-										<div class="h-full rounded-full bg-[#f5a524]/70" style="width: {holder.percent}%"></div>
+									<div class="mt-1 h-1 rounded-full bg-surface-4 overflow-hidden">
+										<div class="h-full rounded-full bg-accent/70" style="width: {holder.percent}%"></div>
 									</div>
 								</div>
 								<div class="text-right shrink-0">
-									<p class="font-mono text-sm text-[#dbe2f4]">{holder.quantity.toLocaleString()}</p>
-									<p class="font-mono text-xs text-[#ffcb6b]">{holder.percent}%</p>
+									<p class="font-mono text-sm text-fg-body">{holder.quantity.toLocaleString()}</p>
+									<p class="font-mono text-xs text-accent-fg">{holder.percent}%</p>
 								</div>
 							</li>
 						{/each}
@@ -484,7 +484,7 @@
 			<!-- Order book -->
 			<div>
 				<div class="flex items-baseline justify-between mb-2">
-					<h3 class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Offers to sell</h3>
+					<h3 class="text-[10px] uppercase tracking-wide text-fg-muted">Offers to sell</h3>
 					{#if data.embargoReason}
 						<span class="text-xs text-red-300">Buying blocked by embargo</span>
 					{/if}
@@ -495,9 +495,9 @@
 						{#each data.listings as listing (listing.id)}
 							<li out:vanish class="panel-muted rounded-sm px-3 py-2.5 flex flex-wrap items-center gap-x-3 gap-y-2">
 								<div class="min-w-0 flex-1">
-									<p class="font-mono text-base font-bold text-[#ffcb6b]">
+									<p class="font-mono text-base font-bold text-accent-fg">
 										${listing.pricePerUnit.toLocaleString()}
-										<span class="font-sans text-xs font-normal text-[#8e9abb]"
+										<span class="font-sans text-xs font-normal text-fg-muted"
 											>× {listing.quantity.toLocaleString()}</span
 										>
 									</p>
@@ -563,7 +563,7 @@
 						{/each}
 					</ul>
 				{:else}
-					<p class="text-sm text-[#8e9abb]">No shares on offer.</p>
+					<p class="text-sm text-fg-muted">No shares on offer.</p>
 				{/if}
 			</div>
 
@@ -625,16 +625,16 @@
 				{#each data.resourceProduction as resource (resource.type)}
 					<li>
 						<div class="flex items-baseline justify-between gap-3 text-sm">
-							<span class="capitalize font-semibold text-[#dbe2f4]">{resource.type}</span>
-							<span class="font-mono text-[#eef2ff]">{resource.productionRate.toLocaleString()}</span>
+							<span class="capitalize font-semibold text-fg-body">{resource.type}</span>
+							<span class="font-mono text-fg">{resource.productionRate.toLocaleString()}</span>
 						</div>
-						<div class="mt-1 h-2 rounded-full bg-[#131c33] overflow-hidden">
+						<div class="mt-1 h-2 rounded-full bg-surface-4 overflow-hidden">
 							<div
-								class="h-full rounded-full bg-[#f5a524]/75"
+								class="h-full rounded-full bg-accent/75"
 								style="width: {(resource.productionRate / maxRate) * 100}%"
 							></div>
 						</div>
-						<p class="mt-0.5 text-xs text-[#8e9abb]">
+						<p class="mt-0.5 text-xs text-fg-muted">
 							{resource.factoryCount}
 							{resource.factoryCount === 1 ? "factory" : "factories"} · {resource.totalWorkers}
 							{resource.totalWorkers === 1 ? "worker" : "workers"}
@@ -668,10 +668,10 @@
 								class="size-9 object-contain shrink-0"
 							/>
 							<div class="min-w-0 flex-1">
-								<h3 class="font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate">
+								<h3 class="font-bold text-fg group-hover:text-accent-hover transition-colors truncate">
 									{factory.name}
 								</h3>
-								<p class="text-xs text-[#8e9abb] truncate">
+								<p class="text-xs text-fg-muted truncate">
 									{getRegionName(factory.regionId)}, {factory.stateName}
 								</p>
 							</div>
@@ -681,24 +681,24 @@
 						</div>
 
 						<div class="mt-3">
-							<div class="flex justify-between text-xs text-[#8e9abb]">
+							<div class="flex justify-between text-xs text-fg-muted">
 								<span class="flex items-center gap-1"><FluentPeople20Filled class="size-3.5" /> Workers</span>
-								<span class="font-mono text-[#dbe2f4]">{factory.workerCount}/{factory.maxWorkers}</span>
+								<span class="font-mono text-fg-body">{factory.workerCount}/{factory.maxWorkers}</span>
 							</div>
-							<div class="mt-1 h-1.5 rounded-full bg-[#131c33] overflow-hidden">
-								<div class="h-full rounded-full bg-[#6aa8ff]/70" style="width: {fill}%"></div>
+							<div class="mt-1 h-1.5 rounded-full bg-surface-4 overflow-hidden">
+								<div class="h-full rounded-full bg-friendly/70" style="width: {fill}%"></div>
 							</div>
 						</div>
 
-						<div class="mt-3 pt-3 border-t border-[#8ea6e0]/10 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-							<span class="text-[#8e9abb]"
-								>Wage <span class="font-mono text-[#aef3c9]">{factory.workerWage.toLocaleString()}</span></span
+						<div class="mt-3 pt-3 border-t border-line/10 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+							<span class="text-fg-muted"
+								>Wage <span class="font-mono text-positive-fg">{factory.workerWage.toLocaleString()}</span></span
 							>
-							<span class="text-[#8e9abb]"
-								>Output <span class="font-mono text-[#c3dbff]">{factory.productionRate}/shift</span></span
+							<span class="text-fg-muted"
+								>Output <span class="font-mono text-friendly-fg">{factory.productionRate}/shift</span></span
 							>
 							{#if data.isOwner && factory.lastWorked}
-								<span class="text-[#8e9abb] sm:ml-auto">Last shift {formatDate(factory.lastWorked)}</span>
+								<span class="text-fg-muted sm:ml-auto">Last shift {formatDate(factory.lastWorked)}</span>
 							{/if}
 						</div>
 					</a>
@@ -706,8 +706,8 @@
 			</div>
 		{:else}
 			<div class="panel-muted rounded-sm p-8 text-center">
-				<FluentFactory20Filled class="size-10 mx-auto text-[#8e9abb]/40 mb-2 animate-idle-float" />
-				<p class="text-sm text-[#8e9abb]">No works yet.</p>
+				<FluentFactory20Filled class="size-10 mx-auto text-fg-muted/40 mb-2 animate-idle-float" />
+				<p class="text-sm text-fg-muted">No works yet.</p>
 			</div>
 		{/if}
 	</section>

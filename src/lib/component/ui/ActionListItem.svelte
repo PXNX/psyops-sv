@@ -34,18 +34,18 @@
 	}: Props = $props();
 
 	const tones: Record<Tone, string> = {
-		blue: "bg-[#2f6be0]/18 text-[#c3dbff]",
-		purple: "bg-[#7451e6]/15 text-[#e6dcff]",
-		green: "bg-[#1f9d62]/18 text-[#aef3c9]",
-		emerald: "bg-[#1f9d62]/18 text-[#aef3c9]",
-		amber: "bg-[#f5a524]/12 text-[#ffcb6b]",
-		yellow: "bg-[#f5a524]/12 text-[#ffcb6b]",
+		blue: "bg-friendly-bg/18 text-friendly-fg",
+		purple: "bg-politics-bg/15 text-politics-fg",
+		green: "bg-positive-bg/18 text-positive-fg",
+		emerald: "bg-positive-bg/18 text-positive-fg",
+		amber: "bg-accent/12 text-accent-fg",
+		yellow: "bg-accent/12 text-accent-fg",
 		red: "bg-red-600/10 text-red-400",
-		slate: "bg-[#131c33]/70 text-[#c2cbe3]"
+		slate: "bg-surface-4/70 text-fg-soft"
 	};
 
 	const rowClass =
-		"flex w-full items-center gap-3 rounded-sm px-4 py-3 text-left transition-colors hover:bg-[#233154] disabled:opacity-50";
+		"flex w-full items-center gap-3 rounded-sm px-4 py-3 text-left transition-colors hover:bg-surface-9 disabled:opacity-50";
 	const tile = $derived(iconTileClass ?? tones[tone]);
 </script>
 
@@ -54,9 +54,9 @@
 		<Icon class="size-5" />
 	</div>
 	<div class="min-w-0">
-		<p class="font-medium {danger ? 'text-red-300' : 'text-[#eef2ff]'}">{title}</p>
+		<p class="font-medium {danger ? 'text-red-300' : 'text-fg'}">{title}</p>
 		{#if description}
-			<p class="text-xs text-[#8e9abb]">{description}</p>
+			<p class="text-xs text-fg-muted">{description}</p>
 		{/if}
 	</div>
 {/snippet}

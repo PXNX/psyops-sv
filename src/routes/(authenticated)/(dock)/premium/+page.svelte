@@ -32,23 +32,23 @@
 	/>
 
 	<!-- Status -->
-	<div class="rounded-sm p-5 space-y-4 {data.status.active ? 'border border-[#f5a524]/35 bg-[#f5a524]/12' : 'panel'}">
+	<div class="rounded-sm p-5 space-y-4 {data.status.active ? 'border border-accent/35 bg-accent/12' : 'panel'}">
 		<div class="flex items-center justify-between gap-3">
 			<div>
-				<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Membership status</p>
+				<p class="text-[10px] text-fg-muted uppercase tracking-wide">Membership status</p>
 				{#if data.status.active}
-					<p class="text-lg font-bold text-[#ffcb6b]">Active</p>
-					<p class="text-xs text-[#8e9abb]">Expires {formatDate(data.status.premiumUntil)}</p>
+					<p class="text-lg font-bold text-accent-fg">Active</p>
+					<p class="text-xs text-fg-muted">Expires {formatDate(data.status.premiumUntil)}</p>
 				{:else}
-					<p class="text-lg font-bold text-[#c2cbe3]">Inactive</p>
+					<p class="text-lg font-bold text-fg-soft">Inactive</p>
 				{/if}
 			</div>
 			<div
 				class="size-12 rounded-sm flex items-center justify-center {data.status.active
-					? 'bg-[#f5a524] border border-[#ffc857]'
-					: 'bg-[#131c33] border border-[#8ea6e0]/15'}"
+					? 'bg-accent border border-accent-hover'
+					: 'bg-surface-4 border border-line/15'}"
 			>
-				<FluentStar20Filled class="size-6 {data.status.active ? 'text-[#1a1305]' : 'text-[#8e9abb]'}" />
+				<FluentStar20Filled class="size-6 {data.status.active ? 'text-[#ffffff]' : 'text-fg-muted'}" />
 			</div>
 		</div>
 
@@ -63,12 +63,12 @@
 				<input type="hidden" name="enabled" value={(!automation).toString()} />
 				<label class="flex items-center justify-between cursor-pointer group">
 					<div>
-						<p class="text-sm font-medium text-[#dbe2f4]">Automation</p>
-						<p class="text-xs text-[#8e9abb]">Automatically run production, training and factory shifts</p>
+						<p class="text-sm font-medium text-fg-body">Automation</p>
+						<p class="text-xs text-fg-muted">Automatically run production, training and factory shifts</p>
 					</div>
 					<input
 						type="checkbox"
-						class="toggle border-[#8ea6e0]/25 checked:border-[#f5a524]/60 checked:bg-[#f5a524] checked:text-[#1a1305]"
+						class="toggle border-line/25 checked:border-accent/60 checked:bg-accent checked:text-[#ffffff]"
 						bind:checked={automation}
 						onchange={(e) => e.currentTarget.form?.requestSubmit()}
 					/>
@@ -81,8 +81,8 @@
 	<div class="panel rounded-sm p-5 space-y-2">
 		<h2 class="section-title mb-2">What automation does for you</h2>
 		{#each ["Collects factory wages and starts new shifts", "Collects finished production and starts new affordable batches", "Completes finished military training and trains new affordable units"] as feature}
-			<div class="flex items-center gap-3 text-sm text-[#c2cbe3]">
-				<FluentCheckmarkCircle20Filled class="size-5 text-[#4fd88a] shrink-0" />
+			<div class="flex items-center gap-3 text-sm text-fg-soft">
+				<FluentCheckmarkCircle20Filled class="size-5 text-positive shrink-0" />
 				<span>{feature}</span>
 			</div>
 		{/each}
@@ -91,31 +91,31 @@
 	<!-- Get premium via Telegram -->
 	<div class="panel rounded-sm p-5 space-y-3">
 		<h2 class="section-title">
-			<FluentBot20Filled class="size-5 text-[#6aa8ff]" />
+			<FluentBot20Filled class="size-5 text-friendly" />
 			Get premium via Telegram
 		</h2>
-		<p class="text-xs text-[#ffcb6b]/80">Payments are mocked for now — premium via the bot is free.</p>
+		<p class="text-xs text-accent-fg/80">Payments are mocked for now — premium via the bot is free.</p>
 		<div class="grid gap-2 sm:grid-cols-2">
 			{#each data.plans as plan}
 				<div class="panel-muted rounded-sm p-3">
-					<p class="font-semibold text-[#eef2ff]">{plan.label}</p>
-					<p class="text-xs text-[#8e9abb]">
+					<p class="font-semibold text-fg">{plan.label}</p>
+					<p class="text-xs text-fg-muted">
 						{plan.days} days — send
-						<code class="px-1 rounded-sm bg-[#1b2641] text-[#c2cbe3] font-mono">/premium {plan.id}</code>
+						<code class="px-1 rounded-sm bg-surface-6 text-fg-soft font-mono">/premium {plan.id}</code>
 					</p>
 				</div>
 			{/each}
 		</div>
 		{#if !data.telegramLinked}
-			<p class="text-sm text-[#8e9abb]">
+			<p class="text-sm text-fg-muted">
 				Connect your Telegram account in <a
 					href="/settings"
-					class="text-[#ffcb6b] underline hover:text-[#ffc857] transition-colors">Settings</a
+					class="text-accent-fg underline hover:text-accent-hover transition-colors">Settings</a
 				> first, then request premium directly in the bot.
 			</p>
 		{:else}
-			<p class="text-sm text-[#8e9abb]">
-				Open the bot and send <code class="px-1.5 py-0.5 rounded-sm bg-[#131c33] text-[#c2cbe3] font-mono"
+			<p class="text-sm text-fg-muted">
+				Open the bot and send <code class="px-1.5 py-0.5 rounded-sm bg-surface-4 text-fg-soft font-mono"
 					>/premium</code
 				> to activate premium for free.
 			</p>
@@ -135,7 +135,7 @@
 		{/if}
 	</div>
 
-	<p class="text-center text-xs text-[#8e9abb]">
+	<p class="text-center text-xs text-fg-muted">
 		Want to gift premium to someone? Open their profile and use the "Gift Premium" action.
 	</p>
 </PageContainer>

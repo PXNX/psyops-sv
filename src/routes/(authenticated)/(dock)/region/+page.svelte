@@ -59,7 +59,7 @@
 
 	<div class="flex flex-col sm:flex-row gap-3">
 		<div class="flex-1 relative">
-			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#8e9abb]" />
+			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-fg-muted" />
 			<input
 				type="text"
 				bind:value={searchInput}
@@ -72,7 +72,7 @@
 					type="button"
 					onclick={() => (searchInput = "")}
 					aria-label="Clear search"
-					class="tap-target absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-[#8e9abb] hover:text-[#eef2ff]"
+					class="tap-target absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-fg-muted hover:text-fg"
 				>
 					<FluentDismiss20Filled class="size-4" />
 				</button>
@@ -95,21 +95,21 @@
 	{:else}
 		<section class="panel rounded-sm overflow-hidden">
 			<div
-				class="flex items-center gap-3 border-b border-[#8ea6e0]/15 bg-[#131c33]/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]"
+				class="flex items-center gap-3 border-b border-line/15 bg-surface-4/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-fg-muted"
 			>
 				<span class="w-7 text-right">No.</span>
 				<span class="flex-1">Region</span>
 				<span class="w-20 text-right">{sortLabel}</span>
 			</div>
-			<ol class="divide-y divide-[#8ea6e0]/10">
+			<ol class="divide-y divide-line/10">
 				{#each filtered as region, i (region.id)}
 					{@const resources = RESOURCES.filter((k) => region[k])}
 					<li>
 						<a
 							href="/region/{region.id}"
-							class="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[#f5a524]/5"
+							class="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-accent/5"
 						>
-							<span class="w-7 shrink-0 text-right font-mono text-xs text-[#8e9abb]">{i + 1}</span>
+							<span class="w-7 shrink-0 text-right font-mono text-xs text-fg-muted">{i + 1}</span>
 							<img
 								loading="lazy"
 								decoding="async"
@@ -120,28 +120,28 @@
 							<div class="min-w-0 flex-1">
 								<p class="flex items-center gap-2">
 									<span
-										class="truncate font-serif font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors"
+										class="truncate font-serif font-bold text-fg group-hover:text-accent-hover transition-colors"
 										>{region.name}</span
 									>
 									{#if data.userRegionIds.includes(region.id)}
 										<Badge tone="green" size="xs">Home</Badge>
 									{/if}
 								</p>
-								<p class="flex flex-wrap items-center gap-x-2 text-xs text-[#8e9abb]">
+								<p class="flex flex-wrap items-center gap-x-2 text-xs text-fg-muted">
 									{#if region.stateName}
 										<span class="truncate">{region.stateName}</span>
 									{:else}
-										<span class="text-[#ffcb6b]">Independent</span>
+										<span class="text-accent-fg">Independent</span>
 									{/if}
 									<span class="flex items-center gap-1"
-										><FluentPeople20Filled class="size-3 text-[#6aa8ff]" />{region.population.toLocaleString()}</span
+										><FluentPeople20Filled class="size-3 text-friendly" />{region.population.toLocaleString()}</span
 									>
 									{#each resources as k (k)}
-										<span class="hidden capitalize text-[#c2cbe3] sm:inline">· {k} {region[k]}</span>
+										<span class="hidden capitalize text-fg-soft sm:inline">· {k} {region[k]}</span>
 									{/each}
 								</p>
 							</div>
-							<span class="w-20 shrink-0 text-right font-mono text-sm font-bold text-[#eef2ff]">
+							<span class="w-20 shrink-0 text-right font-mono text-sm font-bold text-fg">
 								{sortValue(region).toLocaleString()}
 							</span>
 						</a>

@@ -38,23 +38,23 @@
 	<div class="space-y-4">
 		<!-- Warning Icon -->
 		<div class="flex justify-center">
-			<div class="rounded-full bg-[#f5a524]/12 border border-[#f5a524]/35 p-4">
-				<FluentWarning20Filled class="size-8 text-[#ffcb6b]" />
+			<div class="rounded-full bg-accent/12 border border-accent/35 p-4">
+				<FluentWarning20Filled class="size-8 text-accent-fg" />
 			</div>
 		</div>
 
 		<!-- Warning Message -->
 		<div class="space-y-2 text-center">
-			<p class="text-[#c2cbe3]">You are about to leave this site and visit an external link:</p>
+			<p class="text-fg-soft">You are about to leave this site and visit an external link:</p>
 			<div class="panel-muted rounded-sm p-3">
-				<p class="break-all text-sm font-mono text-[#c3dbff]">{getDomain(url)}</p>
+				<p class="break-all text-sm font-mono text-friendly-fg">{getDomain(url)}</p>
 			</div>
 		</div>
 
 		<!-- Safety Notice -->
-		<div class="panel-muted rounded-sm border-[#f5a524]/30 p-4">
-			<p class="text-sm text-[#8e9abb]">
-				<strong class="text-[#ffcb6b]">Safety Notice:</strong> This link leads to an external website. We cannot guarantee
+		<div class="panel-muted rounded-sm border-accent/30 p-4">
+			<p class="text-sm text-fg-muted">
+				<strong class="text-accent-fg">Safety Notice:</strong> This link leads to an external website. We cannot guarantee
 				the safety or content of external sites. Please exercise caution when sharing personal information.
 			</p>
 		</div>

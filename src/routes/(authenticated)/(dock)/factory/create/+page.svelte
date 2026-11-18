@@ -136,11 +136,11 @@
 			class="panel rounded-sm p-5 sm:p-6 space-y-6"
 		>
 			<!-- Form head -->
-			<div class="text-center border-b-2 border-double border-[#8ea6e0]/30 pb-4">
-				<p class="text-[10px] uppercase tracking-[0.3em] text-[#8e9abb]">Application for a</p>
-				<h2 class="font-serif text-2xl font-black text-[#eef2ff]">Works Licence</h2>
+			<div class="text-center border-b-2 border-double border-line/30 pb-4">
+				<p class="text-[10px] uppercase tracking-[0.3em] text-fg-muted">Application for a</p>
+				<h2 class="font-serif text-2xl font-black text-fg">Works Licence</h2>
 				{#if data.region}
-					<p class="mt-1 text-xs text-[#8e9abb]">
+					<p class="mt-1 text-xs text-fg-muted">
 						{data.region.name} · {data.region.stateName}
 					</p>
 				{/if}
@@ -165,21 +165,21 @@
 								<div class="panel-muted rounded-sm p-2.5">
 									<div class="flex items-center gap-1.5">
 										<ResourceIcon name={resource.resourceType} class="size-4" />
-										<span class="text-sm font-medium text-[#eef2ff] capitalize truncate">{resource.resourceType}</span>
+										<span class="text-sm font-medium text-fg capitalize truncate">{resource.resourceType}</span>
 									</div>
-									<p class="mt-0.5 text-xs text-[#8e9abb]">
-										<span class="font-mono text-[#e6dcff]">{resource.remaining.toLocaleString()}</span> left · {resource.amount}%
+									<p class="mt-0.5 text-xs text-fg-muted">
+										<span class="font-mono text-politics-fg">{resource.remaining.toLocaleString()}</span> left · {resource.amount}%
 									</p>
 								</div>
 							{/each}
 						</div>
 					{:else}
-						<p class="text-xs text-[#ffcb6b]">No deposits to mine here.</p>
+						<p class="text-xs text-accent-fg">No deposits to mine here.</p>
 					{/if}
-					<p class="text-xs text-[#8e9abb]">
-						Taxes: income <span class="text-[#ffcb6b] font-mono">{data.regionalTaxes?.incomeTax || 0}%</span> · sales
-						<span class="text-[#ffcb6b] font-mono">{data.regionalTaxes?.salesTax || 0}%</span> · property
-						<span class="text-[#ffcb6b] font-mono">{data.regionalTaxes?.propertyTax || 0}%</span>
+					<p class="text-xs text-fg-muted">
+						Taxes: income <span class="text-accent-fg font-mono">{data.regionalTaxes?.incomeTax || 0}%</span> · sales
+						<span class="text-accent-fg font-mono">{data.regionalTaxes?.salesTax || 0}%</span> · property
+						<span class="text-accent-fg font-mono">{data.regionalTaxes?.propertyTax || 0}%</span>
 					</p>
 				</fieldset>
 			{/if}
@@ -206,8 +206,8 @@
 							type="button"
 							aria-pressed={selected}
 							class="press-spring p-3 rounded-sm border text-center transition-colors {selected
-								? 'bg-[#f5a524]/12 border-[#f5a524]/55'
-								: 'bg-[#131c33]/70 border-[#8ea6e0]/15 hover:border-[#8ea6e0]/35'}"
+								? 'bg-accent/12 border-accent/55'
+								: 'bg-surface-4/70 border-line/15 hover:border-line/35'}"
 							onclick={() => {
 								selectedFactoryType = type.value;
 								selectedOutput = "";
@@ -215,8 +215,8 @@
 							disabled={isOnCooldown}
 						>
 							<type.icon class="size-7 mb-1 mx-auto" />
-							<span class="block font-bold text-sm {selected ? 'text-[#ffcb6b]' : 'text-[#eef2ff]'}">{type.label}</span>
-							<span class="block text-[11px] text-[#8e9abb] leading-tight">{type.desc}</span>
+							<span class="block font-bold text-sm {selected ? 'text-accent-fg' : 'text-fg'}">{type.label}</span>
+							<span class="block text-[11px] text-fg-muted leading-tight">{type.desc}</span>
 						</button>
 					{/each}
 				</div>
@@ -230,14 +230,14 @@
 							type="button"
 							aria-pressed={selected}
 							class="press-spring p-2 rounded-sm border text-center transition-colors disabled:opacity-40 {selected
-								? 'bg-[#f5a524]/12 border-[#f5a524]/55'
-								: 'bg-[#131c33]/70 border-[#8ea6e0]/15 hover:border-[#8ea6e0]/35'}"
+								? 'bg-accent/12 border-accent/55'
+								: 'bg-surface-4/70 border-line/15 hover:border-line/35'}"
 							onclick={() => (selectedOutput = output)}
 							disabled={isOnCooldown || !minable}
 							title={minable ? undefined : "No deposit in this region"}
 						>
 							<ResourceIcon name={output} class="size-6 mx-auto" />
-							<span class="block text-[11px] capitalize mt-1 truncate {selected ? 'text-[#ffcb6b]' : 'text-[#c2cbe3]'}"
+							<span class="block text-[11px] capitalize mt-1 truncate {selected ? 'text-accent-fg' : 'text-fg-soft'}"
 								>{output}</span
 							>
 						</button>
@@ -252,8 +252,8 @@
 				<div class="grid sm:grid-cols-2 gap-4">
 					<div>
 						<div class="flex items-center justify-between text-sm">
-							<label for="maxWorkers" class="text-[#c2cbe3]">Posts</label>
-							<span class="font-mono font-bold text-[#eef2ff]">{maxWorkers}</span>
+							<label for="maxWorkers" class="text-fg-soft">Posts</label>
+							<span class="font-mono font-bold text-fg">{maxWorkers}</span>
 						</div>
 						<input
 							type="range"
@@ -263,14 +263,14 @@
 							max="50"
 							step="5"
 							bind:value={maxWorkers}
-							class="w-full accent-[#f5a524] cursor-pointer"
+							class="w-full accent-accent cursor-pointer"
 							disabled={isOnCooldown}
 						/>
 					</div>
 					<div>
 						<div class="flex items-center justify-between text-sm">
-							<label for="workerWage" class="text-[#c2cbe3]">Wage / shift</label>
-							<span class="font-mono font-bold text-[#aef3c9]">{workerWage.toLocaleString()}</span>
+							<label for="workerWage" class="text-fg-soft">Wage / shift</label>
+							<span class="font-mono font-bold text-positive-fg">{workerWage.toLocaleString()}</span>
 						</div>
 						<input
 							type="range"
@@ -280,16 +280,16 @@
 							max="5000"
 							step="100"
 							bind:value={workerWage}
-							class="w-full accent-[#f5a524] cursor-pointer"
+							class="w-full accent-accent cursor-pointer"
 							disabled={isOnCooldown}
 						/>
 					</div>
 				</div>
 				<p
-					class="flex items-center justify-between text-xs text-[#8e9abb] border-t border-dashed border-[#8ea6e0]/20 pt-2"
+					class="flex items-center justify-between text-xs text-fg-muted border-t border-dashed border-line/20 pt-2"
 				>
 					Full crew per shift
-					<span class="font-mono font-bold text-[#eef2ff]">{(maxWorkers * workerWage).toLocaleString()}</span>
+					<span class="font-mono font-bold text-fg">{(maxWorkers * workerWage).toLocaleString()}</span>
 				</p>
 			</fieldset>
 
@@ -301,7 +301,7 @@
 				</fieldset>
 			{/if}
 
-			<div class="flex gap-3 pt-2 border-t border-[#8ea6e0]/15">
+			<div class="flex gap-3 pt-2 border-t border-line/15">
 				<Button variant="secondary" grow href="/production">Cancel</Button>
 				<Button
 					type="submit"

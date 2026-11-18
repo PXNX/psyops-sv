@@ -192,10 +192,10 @@
 			<!-- Logo Preview -->
 			{#if imageUpload.previewUrl}
 				<div class="panel rounded-sm p-5">
-					<h3 class="text-sm font-semibold text-[#dbe2f4] mb-3">Preview</h3>
-					<div class="bg-[#7451e6]/15 border border-[#b9a1ff]/30 rounded-sm p-6">
+					<h3 class="text-sm font-semibold text-fg-body mb-3">Preview</h3>
+					<div class="bg-politics-bg/15 border border-politics/30 rounded-sm p-6">
 						<div class="flex items-center gap-4">
-							<div class="size-16 rounded-sm bg-[#0b1120] border border-[#8ea6e0]/20 flex items-center justify-center">
+							<div class="size-16 rounded-sm bg-surface-0 border border-line/20 flex items-center justify-center">
 								<img
 									loading="lazy"
 									decoding="async"
@@ -205,8 +205,8 @@
 								/>
 							</div>
 							<div>
-								<p class="font-bold text-[#eef2ff] text-xl">{$form.name || "Your Company Name"}</p>
-								<p class="text-sm text-[#c2cbe3]">Founded {formatDate(foundedAt)}</p>
+								<p class="font-bold text-fg text-xl">{$form.name || "Your Company Name"}</p>
+								<p class="text-sm text-fg-soft">Founded {formatDate(foundedAt)}</p>
 							</div>
 						</div>
 					</div>

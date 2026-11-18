@@ -66,19 +66,19 @@
 	}
 </script>
 
-<div class="bg-[#2f6be0]/18 border border-[#6aa8ff]/30 rounded-sm p-4">
+<div class="bg-friendly-bg/18 border border-friendly/30 rounded-sm p-4">
 	<div class="flex items-start gap-3">
 		<!-- Airplane Icon -->
-		<div class="size-10 bg-[#2f6be0]/30 rounded-sm flex items-center justify-center shrink-0 animate-pulse">
-			<FluentVehicleAirplaneTakeOff20Filled class="size-5 text-[#c3dbff]" />
+		<div class="size-10 bg-friendly-bg/30 rounded-sm flex items-center justify-center shrink-0 animate-pulse">
+			<FluentVehicleAirplaneTakeOff20Filled class="size-5 text-friendly-fg" />
 		</div>
 
 		<div class="flex-1 space-y-3">
 			<!-- Header -->
 			<div class="flex items-start justify-between">
 				<div>
-					<p class="font-semibold text-[#eef2ff]">Traveling to {toRegionName()}</p>
-					<p class="text-sm text-[#8e9abb]">From {fromRegionName()}</p>
+					<p class="font-semibold text-fg">Traveling to {toRegionName()}</p>
+					<p class="text-sm text-fg-muted">From {fromRegionName()}</p>
 				</div>
 				{#if showCancel}
 					<IconButton
@@ -100,19 +100,19 @@
 						decoding="async"
 						src={regionCoatUrl(travel.fromRegionId)}
 						alt="From"
-						class="size-8 rounded-sm border-2 border-[#6aa8ff] bg-[#131c33]"
+						class="size-8 rounded-sm border-2 border-friendly bg-surface-4"
 					/>
 				</div>
 
 				<!-- Progress Bar -->
-				<div class="h-3 bg-[#131c33]/70 rounded-full overflow-hidden mx-6">
+				<div class="h-3 bg-surface-4/70 rounded-full overflow-hidden mx-6">
 					<div
-						class="h-full bg-[#2f6be0] rounded-full transition-all duration-1000 relative"
+						class="h-full bg-friendly-bg rounded-full transition-all duration-1000 relative"
 						style="width: {progressPercent}%"
 					>
 						<!-- Animated Arrow -->
 						<div
-							class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-[#eef2ff] rounded-full size-5 flex items-center justify-center shadow-lg animate-bounce"
+							class="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-fg rounded-full size-5 flex items-center justify-center shadow-lg animate-bounce"
 						>
 							<span class="text-xs">✈️</span>
 						</div>
@@ -126,7 +126,7 @@
 						decoding="async"
 						src={regionCoatUrl(travel.toRegionId)}
 						alt="To"
-						class="size-8 rounded-sm border-2 border-[#6aa8ff] bg-[#131c33]"
+						class="size-8 rounded-sm border-2 border-friendly bg-surface-4"
 					/>
 				</div>
 			</div>
@@ -135,17 +135,17 @@
 			<div class="flex items-center justify-between text-sm">
 				<div class="flex items-center gap-4">
 					<div>
-						<span class="text-[#8e9abb]">Progress:</span>
-						<span class="text-[#eef2ff] font-semibold ml-1">{progressPercent}%</span>
+						<span class="text-fg-muted">Progress:</span>
+						<span class="text-fg font-semibold ml-1">{progressPercent}%</span>
 					</div>
 					<div>
-						<span class="text-[#8e9abb]">Distance:</span>
-						<span class="text-[#eef2ff] font-semibold ml-1">{travel.distanceKm} km</span>
+						<span class="text-fg-muted">Distance:</span>
+						<span class="text-fg font-semibold ml-1">{travel.distanceKm} km</span>
 					</div>
 				</div>
 				<div>
-					<span class="text-[#8e9abb]">ETA:</span>
-					<span class="text-[#c3dbff] font-semibold ml-1">{formatDuration(timeRemaining)}</span>
+					<span class="text-fg-muted">ETA:</span>
+					<span class="text-friendly-fg font-semibold ml-1">{formatDuration(timeRemaining)}</span>
 				</div>
 			</div>
 		</div>

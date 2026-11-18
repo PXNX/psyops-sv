@@ -1,27 +1,38 @@
 // src/routes/(authenticated)/chat/user/[id]/+page.server.ts
 import { db, messageNotifier } from "#lib/server/db.js";
-import {
-	chatMessages,
-	accounts,
-	userProfiles,
-	generalReports,
-	userBlocks,
-	residences,
-	partyMembers,
-	politicalParties
-} from "#lib/server/schema.js";
+import { chatMessages, accounts, userProfiles, userBlocks, partyMembers, politicalParties } from "#lib/server/schema.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { eq, and, or, desc } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import {
+	blockUser,
+	canModerate,
+	checkCanSend,
+	deleteMessage,
+	readContent,
+	reportMessage,
+	unblockUser
+} from "../../chat.server";
 import type { Actions, PageServerLoad } from "./$types";
+
+function findBlock(a: string, b: string) {
+	return db.query.userBlocks.findFirst({
+		where: or(
+			and(eq(userBlocks.userId, a), eq(userBlocks.blockedUserId, b)),
+			and(eq(userBlocks.userId, b), eq(userBlocks.blockedUserId, a))
+		)
+	});
+}
 
 export const load: PageServerLoad = async ({ locals, params, depends }) => {
 	depends("app:chat");
 	const account = locals.account!;
 	const otherUserId = params.id;
 
-	// Verify other user exists
+	// There is no conversation with yourself.
+	if (otherUserId === account.id) redirect(303, "/chat");
+
 	const otherUserAccount = await db.query.accounts.findFirst({
 		where: eq(accounts.id, otherUserId)
 	});
@@ -31,6 +42,7 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 			otherUser: null,
 			messages: [],
 			currentUserId: account.id,
+			canModerate: canModerate(account),
 			isBlocked: false,
 			blockedByCurrentUser: false
 		};
@@ -44,7 +56,6 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 		messages,
 		{ profile: currentUserProfile, logo: currentUserLogo }
 	] = await Promise.all([
-		// Get other user's profile and logo
 		(async () => {
 			const profile = await db.query.userProfiles.findFirst({
 				where: eq(userProfiles.accountId, otherUserId)
@@ -63,15 +74,9 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 			});
 		})(),
 
-		// Check if user has blocked the other user or vice versa
-		db.query.userBlocks?.findFirst({
-			where: or(
-				and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, otherUserId)),
-				and(eq(userBlocks.userId, otherUserId), eq(userBlocks.blockedUserId, account.id))
-			)
-		}),
+		findBlock(account.id, otherUserId),
 
-		// Get messages between the two users (even if blocked, so users can see history)
+		// Messages between the two users (even if blocked, so users can see history)
 		db
 			.select({
 				id: chatMessages.id,
@@ -94,7 +99,6 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 			.orderBy(desc(chatMessages.sentAt))
 			.limit(100),
 
-		// Get current user profile and logo
 		(async () => {
 			const profile = await db.query.userProfiles.findFirst({
 				where: eq(userProfiles.accountId, account.id)
@@ -103,7 +107,6 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 		})()
 	]);
 
-	// Process messages
 	const processedMessages = messages
 		.map((msg) => ({
 			...msg,
@@ -115,10 +118,6 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 		}))
 		.reverse();
 
-	// Determine if blocked and by whom
-	const isBlocked = !!blockCheck;
-	const blockedByCurrentUser = blockCheck ? blockCheck.userId === account.id : false;
-
 	return {
 		otherUser: {
 			id: otherUserId,
@@ -129,8 +128,9 @@ export const load: PageServerLoad = async ({ locals, params, depends }) => {
 		},
 		messages: processedMessages,
 		currentUserId: account.id,
-		isBlocked,
-		blockedByCurrentUser
+		canModerate: canModerate(account),
+		isBlocked: !!blockCheck,
+		blockedByCurrentUser: blockCheck ? blockCheck.userId === account.id : false
 	};
 };
 
@@ -139,70 +139,29 @@ export const actions: Actions = {
 		const account = locals.account!;
 		const otherUserId = params.id;
 
-		console.log("MESSAGE ACTION CALLED", { from: account.id, to: otherUserId });
+		if (otherUserId === account.id) return fail(400, { error: "You cannot message yourself" });
 
-		// Check if blocked
-		const blockCheck = await db.query.userBlocks?.findFirst({
-			where: or(
-				and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, otherUserId)),
-				and(eq(userBlocks.userId, otherUserId), eq(userBlocks.blockedUserId, account.id))
-			)
-		});
+		const [blockCheck, otherUser] = await Promise.all([
+			findBlock(account.id, otherUserId),
+			db.query.accounts.findFirst({ where: eq(accounts.id, otherUserId) })
+		]);
+		if (!otherUser) return fail(404, { error: "User not found" });
+		if (blockCheck) return fail(403, { error: "Cannot send messages to this user" });
 
-		if (blockCheck) {
-			console.log("BLOCKED");
-			return fail(403, { error: "Cannot send messages to this user" });
-		}
+		const { content, error } = readContent(await request.formData());
+		if (error) return error;
 
-		// Verify other user exists
-		const otherUser = await db.query.accounts.findFirst({
-			where: eq(accounts.id, otherUserId)
-		});
+		const blocked = await checkCanSend(account, "direct");
+		if (blocked) return blocked;
 
-		if (!otherUser) {
-			console.log("USER NOT FOUND");
-			return fail(404, { error: "User not found" });
-		}
-
-		// Can't message yourself
-		if (otherUserId === account.id) {
-			console.log("SELF MESSAGE");
-			return fail(400, { error: "You cannot message yourself" });
-		}
-
-		const formData = await request.formData();
-		const content = formData.get("content") as string;
-
-		console.log("MESSAGE CONTENT:", content);
-
-		if (!content || content.trim().length === 0) {
-			console.log("EMPTY MESSAGE");
-			return fail(400, { error: "Message cannot be empty" });
-		}
-
-		if (content.length > 500) {
-			console.log("MESSAGE TOO LONG");
-			return fail(400, { error: "Message too long (max 500 characters)" });
-		}
-
-		// Insert message
-		console.log("INSERTING MESSAGE");
-		await db.insert(chatMessages).values({
-			senderId: account.id,
-			recipientId: otherUserId,
-			messageType: "direct",
-			content: content.trim()
-		});
-		console.log("MESSAGE INSERTED");
+		const [inserted] = await db
+			.insert(chatMessages)
+			.values({ senderId: account.id, recipientId: otherUserId, messageType: "direct", content })
+			.returning({ id: chatMessages.id });
 
 		// Notify both users (sender and recipient) instantly
-		console.log("NOTIFYING USERS:", [account.id, otherUserId]);
-		messageNotifier.notify([account.id, otherUserId], {
-			messageType: "direct"
-		});
-		console.log("NOTIFICATION SENT");
+		messageNotifier.notify([account.id, otherUserId], { messageType: "direct" });
 
-		// Get sender's display name for the push notification
 		const senderProfile = await db.query.userProfiles.findFirst({
 			where: eq(userProfiles.accountId, account.id)
 		});
@@ -210,7 +169,7 @@ export const actions: Actions = {
 
 		await sendNotificationIfEnabled(otherUserId, "notifyDirectMessages", {
 			title: "💬 New Message",
-			body: `${senderName}: ${content.trim().slice(0, 100)}${content.trim().length > 100 ? "…" : ""}`,
+			body: `${senderName}: ${content.slice(0, 100)}${content.length > 100 ? "…" : ""}`,
 			icon: "/favicon.png",
 			badge: "/badge.png",
 			data: {
@@ -219,85 +178,44 @@ export const actions: Actions = {
 			}
 		});
 
+		return { success: true, id: inserted.id };
+	},
+
+	deleteMessage: async ({ request, locals, params }) => {
+		const account = locals.account!;
+		const { error } = await deleteMessage(account, await request.formData(), {
+			type: "direct",
+			userIds: [account.id, params.id]
+		});
+		if (error) return error;
+
+		messageNotifier.notify([account.id, params.id], { messageType: "direct" });
 		return { success: true };
 	},
 
-	reportMessage: async ({ request, locals }) => {
+	// Reports a single message. The old handler expected account-report fields
+	// (targetId/reason) that the report sheet never sent, so every report failed.
+	reportMessage: async ({ request, locals, params }) => {
 		const account = locals.account!;
-
-		const formData = await request.formData();
-		const targetId = formData.get("targetId") as string;
-		const violationType = formData.get("violationType") as string;
-		const reason = formData.get("reason") as string;
-
-		if (!targetId || !violationType || !reason) {
-			return fail(400, { error: "Missing required fields" });
-		}
-
-		await db.insert(generalReports).values({
-			targetType: "account",
-			targetId: targetId,
-			reporterId: account.id,
-			reason: reason.trim(),
-			violationType: violationType as any,
-			status: "pending"
+		return reportMessage(account, await request.formData(), {
+			type: "direct",
+			userIds: [account.id, params.id]
 		});
-
-		return { success: true, message: "Report submitted successfully" };
 	},
 
 	blockUser: async ({ request, locals, params }) => {
 		const account = locals.account!;
-
 		const formData = await request.formData();
-		const blockedUserId = (formData.get("blockedUserId") as string) || params.id;
-
-		if (!blockedUserId) {
-			return fail(400, { error: "Missing user ID" });
-		}
-
-		if (blockedUserId === account.id) {
-			return fail(400, { error: "You cannot block yourself" });
-		}
-
-		// Check if already blocked
-		const existing = await db.query.userBlocks?.findFirst({
-			where: and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, blockedUserId))
-		});
-
-		if (existing) {
-			return fail(400, { error: "User is already blocked" });
-		}
-
-		await db.insert(userBlocks).values({
-			userId: account.id,
-			blockedUserId: blockedUserId
-		});
-
-		return { success: true, message: "User blocked successfully" };
+		const result = await blockUser(account, (formData.get("blockedUserId") as string) || params.id);
+		messageNotifier.notify([account.id, params.id], { messageType: "direct" });
+		return result;
 	},
 
 	unblockUser: async ({ request, locals, params }) => {
 		const account = locals.account!;
-
 		const formData = await request.formData();
-		const blockedUserId = (formData.get("blockedUserId") as string) || params.id;
-
-		if (!blockedUserId) {
-			return fail(400, { error: "Missing user ID" });
-		}
-
-		// Find and delete the block
-		const existing = await db.query.userBlocks?.findFirst({
-			where: and(eq(userBlocks.userId, account.id), eq(userBlocks.blockedUserId, blockedUserId))
-		});
-
-		if (!existing) {
-			return fail(400, { error: "User is not blocked" });
-		}
-
-		await db.delete(userBlocks).where(eq(userBlocks.id, existing.id));
-
-		return { success: true, message: "User unblocked successfully" };
+		const result = await unblockUser(account, (formData.get("blockedUserId") as string) || params.id);
+		messageNotifier.notify([account.id, params.id], { messageType: "direct" });
+		return result;
 	}
 };

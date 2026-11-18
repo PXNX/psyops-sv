@@ -76,12 +76,12 @@
 			<div
 				bind:this={panel}
 				tabindex="-1"
-				class="outline-none bg-gradient-to-b from-[#2a3121] to-[#111a2e] border-t-2 border-[#8ea6e0]/50 shadow-[0_-12px_32px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(220,230,255,0.12)] rounded-t-md max-h-[calc(85vh+3rem)] pb-12 flex flex-col"
+				class="outline-none bg-gradient-to-b from-[#2a3121] to-surface-3 border-t-2 border-line/50 shadow-[0_-12px_32px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(220,230,255,0.12)] rounded-t-md max-h-[calc(85vh+3rem)] pb-12 flex flex-col"
 			>
 				<div class="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
-					<div class="mx-auto w-10 h-1 rounded-full bg-[#8ea6e0]/25 absolute top-2 left-1/2 -translate-x-1/2"></div>
+					<div class="mx-auto w-10 h-1 rounded-full bg-line/25 absolute top-2 left-1/2 -translate-x-1/2"></div>
 					{#if title}
-						<h3 class="text-lg font-bold text-[#eef2ff]">{title}</h3>
+						<h3 class="text-lg font-bold text-fg">{title}</h3>
 					{:else}
 						<div></div>
 					{/if}

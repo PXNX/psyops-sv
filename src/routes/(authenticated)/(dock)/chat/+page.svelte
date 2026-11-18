@@ -1,234 +1,206 @@
 <!-- src/routes/(authenticated)/chat/+page.svelte -->
 <script lang="ts">
-	import { goto, invalidate } from "$app/navigation";
-	import { onMount, onDestroy } from "svelte";
+	import { invalidate } from "$app/navigation";
+	import { onMount, type Snippet } from "svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import FluentChat20Filled from "~icons/fluent/chat-20-filled";
-	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
-	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
-	import FluentProhibited20Filled from "~icons/fluent/prohibited-20-filled";
-	import { formatTime } from "#lib/utils/formatting.js";
-	import { settings } from "#lib/settings.svelte.js";
 	import PartyTag from "#lib/component/PartyTag.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import { Badge } from "#lib/component/ui/index.js";
+	import { settings } from "#lib/settings.svelte.js";
+	import { listTime, readSeen } from "#lib/component/chat/chat.js";
 
 	const { data } = $props();
 
-	let eventSource: EventSource | null = null;
+	// Unread = the newest message is someone else's and newer than when this
+	// browser last had the conversation open.
+	let seen = $state<Record<string, string> | null>(null);
+	const isUnread = (key: string, last: { sentAt: string; isFromCurrentUser: boolean } | null | undefined) =>
+		!!seen && !!last && !last.isFromCurrentUser && (!seen[key] || seen[key] < last.sentAt);
 
 	onMount(() => {
-		// Connect to SSE endpoint
-		eventSource = new EventSource("/chat/stream");
-
-		eventSource.addEventListener("message", (event) => {
-			const data = JSON.parse(event.data);
-
-			if (data.type === "new_messages") {
-				// Refresh only chat data when new messages arrive
-				invalidate("app:chat");
-			}
+		seen = readSeen();
+		const source = new EventSource("/chat/stream");
+		source.addEventListener("message", (event) => {
+			if (JSON.parse(event.data).type === "new_messages") invalidate("app:chat");
 		});
-
-		eventSource.addEventListener("error", () => {
-			console.log("SSE connection lost, reconnecting...");
-			// Auto-reconnect is handled by EventSource
-		});
-	});
-
-	onDestroy(() => {
-		if (eventSource) {
-			eventSource.close();
-		}
+		return () => source.close();
 	});
 </script>
 
-<PageContainer maxWidth="4xl">
+{#snippet row(opts: {
+	href: string;
+	name: string;
+	unread: boolean;
+	time: string | null;
+	muted?: boolean;
+	avatar: Snippet;
+	title: Snippet;
+	preview: Snippet;
+})}
+	<a href={opts.href} class="conv group" class:opacity-60={opts.muted} aria-label={opts.name}>
+		{@render opts.avatar()}
+		<div class="min-w-0 flex-1">
+			<div class="flex items-baseline gap-2">
+				<div class="flex min-w-0 flex-1 items-center gap-1.5 text-[15px] font-semibold text-fg">
+					{@render opts.title()}
+				</div>
+				{#if opts.time}
+					<span class="shrink-0 font-mono text-[11px] tabular-nums {opts.unread ? 'text-accent-fg' : 'text-fg-muted'}">
+						{opts.time}
+					</span>
+				{/if}
+			</div>
+			<div class="mt-0.5 flex items-center gap-2">
+				<p class="min-w-0 flex-1 truncate text-sm {opts.unread ? 'text-fg-body' : 'text-fg-muted'}">
+					{@render opts.preview()}
+				</p>
+				{#if opts.unread}
+					<span class="size-2.5 shrink-0 rounded-full bg-[var(--color-accent-hi)]" aria-label="Unread"></span>
+				{/if}
+			</div>
+		</div>
+	</a>
+{/snippet}
+
+<PageContainer maxWidth="3xl">
 	<PageHeader title="Messages" icon={FluentChat20Filled} />
 
-	<div class="space-y-4">
-		<!-- Global Chat -->
-		<button onclick={() => goto("/chat/en")} class="w-full panel-interactive rounded-sm p-4 text-left group">
-			<div class="flex items-center gap-3 md:gap-4">
-				<div
-					class="size-14 md:size-12 rounded-full bg-[#2f6be0]/18 border border-[#6aa8ff]/30 flex items-center justify-center flex-shrink-0"
-				>
-					<FluentEarth20Filled class="size-6 md:size-5 text-[#6aa8ff]" />
+	<section class="space-y-2">
+		<h2 class="section-title px-1">Channels</h2>
+		<div class="panel divide-y divide-white/[0.06] overflow-hidden rounded-sm">
+			<!-- Global -->
+			{#snippet globalAvatar()}
+				<div class="chan-icon">
+					<FluentEarth20Filled class="size-5" />
 				</div>
-
-				<div class="flex-1 min-w-0">
-					<div class="flex items-center gap-2 mb-1.5">
-						<h3 class="font-semibold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors text-base md:text-sm">
-							Global Chat (English)
-						</h3>
-						<Badge tone="blue" size="xs" class="hidden sm:inline-flex">Global</Badge>
-					</div>
-					{#if data.globalChat?.lastMessage}
-						<p class="text-sm md:text-xs text-[#8e9abb] truncate leading-relaxed">
-							<span class="font-medium text-[#c2cbe3]"
-								>{#if data.globalChat.lastMessage.senderPartyAbbreviation}<PartyTag
-										abbreviation={data.globalChat.lastMessage.senderPartyAbbreviation}
-										color={data.globalChat.lastMessage.senderPartyColor}
-									/>{/if}{data.globalChat.lastMessage.senderName}:</span
-							>
-							{data.globalChat.lastMessage.content}
-						</p>
-						<p class="text-xs text-[#8e9abb] mt-1">{formatTime(data.globalChat.lastMessage.sentAt)}</p>
-					{:else}
-						<p class="text-sm md:text-xs text-[#8e9abb]">No messages yet</p>
-					{/if}
-				</div>
-
-				<div class="flex items-center gap-2 flex-shrink-0">
-					{#if data.globalChat?.unreadCount > 0}
-						<div
-							class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#f5a524] text-[#1a1305] text-xs font-bold"
-						>
-							{data.globalChat.unreadCount > 99 ? "99+" : data.globalChat.unreadCount}
-						</div>
-					{/if}
-					<FluentChevronRight20Filled class="size-5 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors" />
-				</div>
-			</div>
-		</button>
-
-		<!-- Party Chat -->
-		{#if data.partyChat}
-			<button onclick={() => goto("/chat/party")} class="w-full panel-interactive rounded-sm p-4 text-left group">
-				<div class="flex items-center gap-3 md:gap-4">
-					{#if data.partyChat.logo}
-						<img
-							loading="lazy"
-							decoding="async"
-							src={data.partyChat.logo}
-							alt={data.partyChat.name}
-							class="size-14 md:size-12 rounded-full flex-shrink-0"
-						/>
-					{:else}
-						<div
-							class="size-14 md:size-12 rounded-full bg-[#1f9d62]/18 border border-[#4fd88a]/30 flex items-center justify-center flex-shrink-0"
-						>
-							<FluentPeople20Filled class="size-6 md:size-5 text-[#4fd88a]" />
-						</div>
-					{/if}
-
-					<div class="flex-1 min-w-0">
-						<div class="flex items-center gap-2 mb-1.5">
-							<h3
-								class="font-semibold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors text-base md:text-sm truncate"
-							>
-								{data.partyChat.name}
-							</h3>
-							<Badge tone="green" size="xs" class="hidden sm:inline-flex flex-shrink-0">Party</Badge>
-						</div>
-						{#if data.partyChat.lastMessage}
-							<p class="text-sm md:text-xs text-[#8e9abb] truncate leading-relaxed">
-								<span class="font-medium text-[#c2cbe3]">{data.partyChat.lastMessage.senderName}:</span>
-								{data.partyChat.lastMessage.content}
-							</p>
-							<p class="text-xs text-[#8e9abb] mt-1">{formatTime(data.partyChat.lastMessage.sentAt)}</p>
-						{:else}
-							<p class="text-sm md:text-xs text-[#8e9abb]">No messages yet</p>
-						{/if}
-					</div>
-
-					<div class="flex items-center gap-2 flex-shrink-0">
-						{#if data.partyChat.unreadCount > 0}
-							<div
-								class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#f5a524] text-[#1a1305] text-xs font-bold"
-							>
-								{data.partyChat.unreadCount > 99 ? "99+" : data.partyChat.unreadCount}
-							</div>
-						{/if}
-						<FluentChevronRight20Filled class="size-5 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors" />
-					</div>
-				</div>
-			</button>
-		{/if}
-
-		<!-- Direct Messages -->
-		<div class="space-y-3">
-			<h2 class="section-title mt-6 px-1">
-				<FluentPerson20Filled class="size-5 text-[#ffcb6b]" />
-				Direct Messages
-			</h2>
-
-			{#if data.directChats.length === 0}
-				<EmptyState
-					icon={FluentPerson20Filled}
-					title="No direct messages yet"
-					subtitle="Start a conversation with someone!"
-				/>
-			{:else}
-				{#each data.directChats as chat}
-					<button
-						onclick={() => goto(`/chat/user/${chat.otherUserId}`)}
-						class="w-full panel-interactive rounded-sm p-4 text-left group {chat.isBlocked ? 'opacity-60' : ''}"
+			{/snippet}
+			{#snippet globalTitle()}
+				<span class="truncate">#global</span>
+				<span class="font-mono text-[10px] font-medium tracking-wider text-fg-muted uppercase">EN</span>
+			{/snippet}
+			{#snippet globalPreview()}
+				{#if data.globalChat.lastMessage}
+					{@const last = data.globalChat.lastMessage}
+					<span class="font-medium text-fg-soft"
+						>{last.isFromCurrentUser ? "You" : last.senderName}{#if !last.isFromCurrentUser && last.senderPartyAbbreviation}
+							<PartyTag abbreviation={last.senderPartyAbbreviation} color={last.senderPartyColor} />{/if}:</span
 					>
-						<div class="flex items-center gap-3 md:gap-4">
-							{#if chat.otherUserLogo && settings.loadImages}
-								<img
-									loading="lazy"
-									decoding="async"
-									src={chat.otherUserLogo}
-									alt={chat.otherUserName}
-									class="size-14 md:size-12 rounded-full flex-shrink-0 {chat.isBlocked ? 'opacity-50' : ''}"
-								/>
-							{:else}
-								<div
-									class="size-14 md:size-12 rounded-full bg-[#131c33] flex items-center justify-center flex-shrink-0 {chat.isBlocked
-										? 'opacity-50'
-										: ''}"
-								>
-									<FluentImageOff20Filled class="size-6 md:size-5 text-[#8e9abb]" />
-								</div>
-							{/if}
+					{last.content}
+				{:else}
+					No traffic yet
+				{/if}
+			{/snippet}
+			{@render row({
+				href: "/chat/en",
+				name: "Global channel",
+				unread: isUnread("global", data.globalChat.lastMessage),
+				time: data.globalChat.lastMessage ? listTime(data.globalChat.lastMessage.sentAt) : null,
+				avatar: globalAvatar,
+				title: globalTitle,
+				preview: globalPreview
+			})}
 
-							<div class="flex-1 min-w-0">
-								<div class="flex items-center gap-2 mb-1.5">
-									<h3
-										class="font-semibold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors text-base md:text-sm truncate"
-									>
-										{#if chat.otherUserPartyAbbreviation}
-											<PartyTag abbreviation={chat.otherUserPartyAbbreviation} color={chat.otherUserPartyColor} />
-										{/if}
-										{chat.otherUserName || "Anonymous"}
-									</h3>
-									{#if chat.isBlocked}
-										<Badge tone="red" size="xs" icon={FluentProhibited20Filled} class="flex-shrink-0">Blocked</Badge>
-									{/if}
-								</div>
-								{#if chat.lastMessage}
-									<p class="text-sm md:text-xs text-[#8e9abb] truncate leading-relaxed">
-										{#if chat.lastMessage.isFromCurrentUser}<span class="font-medium text-[#c2cbe3]">You:</span>
-										{/if}{chat.lastMessage.content}
-									</p>
-									<p class="text-xs text-[#8e9abb] mt-1">{formatTime(chat.lastMessage.sentAt)}</p>
-								{:else}
-									<p class="text-sm md:text-xs text-[#8e9abb]">No messages yet</p>
-								{/if}
-							</div>
-
-							<div class="flex items-center gap-2 flex-shrink-0">
-								{#if chat.unreadCount > 0 && !chat.isBlocked}
-									<div
-										class="flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full bg-[#f5a524] text-[#1a1305] text-xs font-bold"
-									>
-										{chat.unreadCount > 99 ? "99+" : chat.unreadCount}
-									</div>
-								{/if}
-								<FluentChevronRight20Filled
-									class="size-5 text-[#8e9abb] group-hover:text-[#ffc857] transition-colors"
-								/>
-							</div>
-						</div>
-					</button>
-				{/each}
+			<!-- Party -->
+			{#if data.partyChat}
+				{@const party = data.partyChat}
+				{#snippet partyAvatar()}
+					<Logo
+						src={party.logo}
+						alt=""
+						class="size-11 shrink-0 rounded-sm border border-white/10"
+						placeholderIcon={FluentPeople20Filled}
+					/>
+				{/snippet}
+				{#snippet partyTitle()}
+					<span class="truncate">#{party.name}</span>
+					<Badge tone="green" size="xs" class="shrink-0">Party</Badge>
+				{/snippet}
+				{#snippet partyPreview()}
+					{#if party.lastMessage}
+						<span class="font-medium text-fg-soft"
+							>{party.lastMessage.isFromCurrentUser ? "You" : party.lastMessage.senderName}:</span
+						>
+						{party.lastMessage.content}
+					{:else}
+						No traffic yet
+					{/if}
+				{/snippet}
+				{@render row({
+					href: "/chat/party",
+					name: `${party.name} channel`,
+					unread: isUnread(`party:${party.partyId}`, party.lastMessage),
+					time: party.lastMessage ? listTime(party.lastMessage.sentAt) : null,
+					avatar: partyAvatar,
+					title: partyTitle,
+					preview: partyPreview
+				})}
 			{/if}
 		</div>
-	</div>
+	</section>
+
+	<section class="mt-6 space-y-2">
+		<h2 class="section-title px-1">Direct</h2>
+		{#if data.directChats.length === 0}
+			<EmptyState icon={FluentPerson20Filled} title="No direct messages yet" />
+		{:else}
+			<div class="panel divide-y divide-white/[0.06] overflow-hidden rounded-sm">
+				{#each data.directChats as chat (chat.otherUserId)}
+					{#snippet avatar()}
+						<Logo
+							src={settings.loadImages ? chat.otherUserLogo : null}
+							alt=""
+							class="size-11 shrink-0 rounded-full border border-white/10"
+							placeholderIcon={FluentPerson20Filled}
+							placeholderGradient="from-surface-11 to-surface-5"
+						/>
+					{/snippet}
+					{#snippet title()}
+						<span class="truncate">{chat.otherUserName}</span>
+						{#if chat.otherUserPartyAbbreviation}
+							<PartyTag abbreviation={chat.otherUserPartyAbbreviation} color={chat.otherUserPartyColor} />
+						{/if}
+						{#if chat.isBlocked}
+							<Badge tone="red" size="xs" class="shrink-0">Blocked</Badge>
+						{/if}
+					{/snippet}
+					{#snippet preview()}
+						{#if chat.lastMessage.isFromCurrentUser}<span class="font-medium text-fg-soft">You:</span>{/if}
+						{chat.lastMessage.content}
+					{/snippet}
+					{@render row({
+						href: `/chat/user/${chat.otherUserId}`,
+						name: chat.otherUserName,
+						unread: !chat.isBlocked && isUnread(`user:${chat.otherUserId}`, chat.lastMessage),
+						time: listTime(chat.lastMessage.sentAt),
+						muted: chat.isBlocked,
+						avatar,
+						title,
+						preview
+					})}
+				{/each}
+			</div>
+		{/if}
+	</section>
 </PageContainer>
+
+<style>
+	@reference "../../../../app.css";
+
+	.conv {
+		@apply flex items-center gap-3 px-3 py-2.5 transition-colors duration-150 hover:bg-white/[0.04] focus-visible:bg-white/[0.06] focus-visible:outline-none;
+		-webkit-tap-highlight-color: transparent;
+	}
+	.conv:active {
+		@apply bg-white/[0.07];
+	}
+
+	.chan-icon {
+		@apply flex size-11 shrink-0 items-center justify-center rounded-sm border border-[var(--color-accent-hi)]/35 bg-[var(--color-accent-hi)]/12 text-accent-fg;
+	}
+</style>

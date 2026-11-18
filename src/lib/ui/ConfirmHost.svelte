@@ -13,7 +13,7 @@
 >
 	{#if current}
 		{#if current.body}
-			<p class="text-sm text-[#c2cbe3]">{current.body}</p>
+			<p class="text-sm text-fg-soft">{current.body}</p>
 		{/if}
 		<div class="mt-5 flex gap-3">
 			<Button variant="secondary" grow onclick={() => confirmStore.answer(false)}>

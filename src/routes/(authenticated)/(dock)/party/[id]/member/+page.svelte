@@ -58,7 +58,7 @@
 		{#snippet actions()}
 			<a href="/party/{data.party.id}" class="shrink-0" aria-label={data.party.name}>
 				<div
-					class="size-12 rounded-sm overflow-hidden border border-[#8ea6e0]/15 flex items-center justify-center"
+					class="size-12 rounded-sm overflow-hidden border border-line/15 flex items-center justify-center"
 					style="background-color: {data.party.color}"
 				>
 					{#if data.party.logoUrl}
@@ -70,7 +70,7 @@
 							class="size-10 object-contain"
 						/>
 					{:else}
-						<FluentShield20Filled class="size-6 text-[#eef2ff]" />
+						<FluentShield20Filled class="size-6 text-fg" />
 					{/if}
 				</div>
 			</a>
@@ -83,10 +83,10 @@
 			<div class="panel rounded-sm p-4">
 				<div class="flex items-center justify-between gap-3">
 					<div class="flex items-center gap-3">
-						<FluentSettings20Filled class="size-4 text-[#6aa8ff] shrink-0" />
+						<FluentSettings20Filled class="size-4 text-friendly shrink-0" />
 						<div>
-							<span class="text-sm font-bold text-[#eef2ff]">Auto-accept</span>
-							<p class="text-xs text-[#8e9abb] mt-0.5">
+							<span class="text-sm font-bold text-fg">Auto-accept</span>
+							<p class="text-xs text-fg-muted mt-0.5">
 								{data.party.autoAcceptMembers ? "Members join instantly" : "Requires approval"}
 							</p>
 						</div>
@@ -104,7 +104,7 @@
 					>
 						<input
 							type="checkbox"
-							class="toggle toggle-sm border-[#8ea6e0]/25 checked:border-[#4fd88a]/50 checked:bg-[#1f9d62] checked:text-[#aef3c9]"
+							class="toggle toggle-sm border-line/25 checked:border-positive/50 checked:bg-positive-bg checked:text-positive-fg"
 							checked={data.party.autoAcceptMembers}
 							disabled={togglingAutoAccept}
 							onchange={(e) => e.currentTarget.form?.requestSubmit()}
@@ -116,10 +116,10 @@
 
 		<!-- Pending Applications -->
 		{#if canManageMembers && data.pendingApplications.length > 0}
-			<div class="panel rounded-sm p-5 space-y-3 border-[#f5a524]/35">
+			<div class="panel rounded-sm p-5 space-y-3 border-accent/35">
 				<div class="flex items-center justify-between">
 					<h2 class="section-title">
-						<FluentPersonAvailable20Filled class="size-5 text-[#ffcb6b]" />
+						<FluentPersonAvailable20Filled class="size-5 text-accent-fg" />
 						Applications
 					</h2>
 					<Badge tone="amber">{data.pendingApplications.length}</Badge>
@@ -229,6 +229,7 @@
 								<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
 								<span class="truncate">Member card</span>
 							</span>
+							<span class="font-mono shrink-0">No. {String(i + 1).padStart(3, "0")}</span>
 						</div>
 						<div class="flex items-center gap-3 p-3">
 							<UserLink
@@ -252,7 +253,7 @@
 						</div>
 
 						{#if canManageMembers && member.userId !== data.members.find((m) => m.role === "leader")?.userId}
-							<div class="mt-auto flex items-center justify-end gap-1 border-t border-[#8ea6e0]/10 px-3 py-2">
+							<div class="mt-auto flex items-center justify-end gap-1 border-t border-line/10 px-3 py-2">
 								{#if data.isLeader && member.role !== "leader"}
 									{#if member.role === "member"}
 										<form
@@ -341,8 +342,8 @@
 				>
 					<div class="flex flex-col sm:flex-row items-center justify-between gap-3">
 						<div class="text-center sm:text-left">
-							<span class="text-sm font-bold text-[#eef2ff]">Join {data.party.name}</span>
-							<p class="text-xs text-[#8e9abb] mt-0.5">
+							<span class="text-sm font-bold text-fg">Join {data.party.name}</span>
+							<p class="text-xs text-fg-muted mt-0.5">
 								{data.party.autoAcceptMembers ? "Instant membership" : "Leadership approves"}
 							</p>
 						</div>
@@ -354,7 +355,7 @@
 			</div>
 		{:else if data.hasApplied}
 			<div
-				class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm p-4 flex items-center justify-center gap-3"
+				class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-center justify-center gap-3"
 			>
 				<span class="text-sm">Application pending review</span>
 			</div>

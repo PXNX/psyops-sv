@@ -20,9 +20,9 @@
 </script>
 
 {#if battles.length === 0}
-	<p class="text-sm text-[#8e9abb]">No battles have been fought here.</p>
+	<p class="text-sm text-fg-muted">No battles have been fought here.</p>
 {:else}
-	<ol class="relative border-l border-[#8ea6e0]/20 ml-2 space-y-3">
+	<ol class="relative border-l border-line/20 ml-2 space-y-3">
 		{#each battles as b (b.id)}
 			{@const won = b.status === "attacker_won" ? b.attacker : b.status === "defender_won" ? b.defender : null}
 			<li class="pl-4 relative">
@@ -31,20 +31,20 @@
 						? 'bg-red-500 animate-pulse'
 						: b.status === 'attacker_won'
 							? 'bg-red-400'
-							: 'bg-[#6aa8ff]'}"
+							: 'bg-friendly'}"
 				></span>
 				<a href="/battle/{b.id}" class="panel-interactive rounded-sm p-3 block">
-					<p class="text-sm text-[#eef2ff]">
+					<p class="text-sm text-fg">
 						<span class="font-semibold text-red-300">{b.attacker.name}</span>
-						<span class="text-[#8e9abb]">attacked</span>
-						<span class="font-semibold text-[#c3dbff]">{b.defender.name}</span>
+						<span class="text-fg-muted">attacked</span>
+						<span class="font-semibold text-friendly-fg">{b.defender.name}</span>
 					</p>
-					<p class="text-xs text-[#8e9abb] mt-0.5">
+					<p class="text-xs text-fg-muted mt-0.5">
 						{formatDate(b.startedAt)} ·
 						{#if b.status === "ongoing"}
 							<span class="text-red-300">fighting</span>
 						{:else if won}
-							<span class="text-[#dbe2f4]">{won.name} won</span>
+							<span class="text-fg-body">{won.name} won</span>
 						{/if}
 						{#if lost(b)}
 							· <span class="text-red-300">{lost(b)} building levels destroyed</span>

@@ -17,34 +17,34 @@
 
 	const colorMap: Record<string, { bg: string; border: string; iconColor: string; labelColor: string }> = {
 		blue: {
-			bg: "bg-[#2f6be0]/18",
-			border: "border-[#6aa8ff]/30 hover:border-[#6aa8ff]/45",
-			iconColor: "text-[#6aa8ff]",
-			labelColor: "text-[#c3dbff]"
+			bg: "bg-friendly-bg/18",
+			border: "border-friendly/30 hover:border-friendly/45",
+			iconColor: "text-friendly",
+			labelColor: "text-friendly-fg"
 		},
 		purple: {
-			bg: "bg-[#7451e6]/15",
-			border: "border-[#b9a1ff]/30 hover:border-[#b9a1ff]/45",
-			iconColor: "text-[#b9a1ff]",
-			labelColor: "text-[#e6dcff]"
+			bg: "bg-politics-bg/15",
+			border: "border-politics/30 hover:border-politics/45",
+			iconColor: "text-politics",
+			labelColor: "text-politics-fg"
 		},
 		green: {
-			bg: "bg-[#1f9d62]/18",
-			border: "border-[#4fd88a]/30 hover:border-[#4fd88a]/45",
-			iconColor: "text-[#4fd88a]",
-			labelColor: "text-[#aef3c9]"
+			bg: "bg-positive-bg/18",
+			border: "border-positive/30 hover:border-positive/45",
+			iconColor: "text-positive",
+			labelColor: "text-positive-fg"
 		},
 		emerald: {
-			bg: "bg-[#1f9d62]/18",
-			border: "border-[#4fd88a]/30 hover:border-[#4fd88a]/45",
-			iconColor: "text-[#4fd88a]",
-			labelColor: "text-[#aef3c9]"
+			bg: "bg-positive-bg/18",
+			border: "border-positive/30 hover:border-positive/45",
+			iconColor: "text-positive",
+			labelColor: "text-positive-fg"
 		},
 		amber: {
-			bg: "bg-[#f5a524]/12",
-			border: "border-[#f5a524]/35 hover:border-[#f5a524]/50",
-			iconColor: "text-[#ffcb6b]",
-			labelColor: "text-[#ffcb6b]"
+			bg: "bg-accent/12",
+			border: "border-accent/35 hover:border-accent/50",
+			iconColor: "text-accent-fg",
+			labelColor: "text-accent-fg"
 		},
 		red: {
 			bg: "bg-red-600/15",
@@ -75,7 +75,7 @@
 		{/if}
 		<p class="text-xs sm:text-sm {colors.labelColor} font-medium">{label}</p>
 	</div>
-	<p class="text-2xl sm:text-4xl font-bold text-[#eef2ff]">
+	<p class="text-2xl sm:text-4xl font-bold text-fg">
 		{typeof value === "number" ? value.toLocaleString() : value}
 	</p>
 </svelte:element>

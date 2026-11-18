@@ -4,6 +4,7 @@
 	import FluentPersonProhibited20Filled from "~icons/fluent/person-prohibited-20-filled";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
 	import FormActions from "#lib/component/ui/FormActions.svelte";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
 
 	interface Props {
 		open: boolean;
@@ -31,14 +32,14 @@
 				>
 					<FluentPersonProhibited20Filled class="size-6 text-red-400" />
 				</div>
-				<p class="text-[#c2cbe3]">
-					Are you sure you want to block <strong class="text-[#eef2ff]">{userName || "this user"}</strong>?
+				<p class="text-fg-soft">
+					Are you sure you want to block <strong class="text-fg">{userName || "this user"}</strong>?
 				</p>
 			</div>
 
-			<div class="panel-muted border-[#f5a524]/30 rounded-sm p-4">
-				<p class="text-sm text-[#c2cbe3] font-medium mb-2">Blocking will:</p>
-				<ul class="list-disc list-inside text-sm text-[#8e9abb] space-y-1">
+			<div class="panel-muted border-accent/30 rounded-sm p-4">
+				<p class="text-sm text-fg-soft font-medium mb-2">Blocking will:</p>
+				<ul class="list-disc list-inside text-sm text-fg-muted space-y-1">
 					<li>Hide their messages from you</li>
 					<li>Prevent them from sending you direct messages</li>
 					<li>You can unblock them later from your settings</li>
@@ -52,6 +53,7 @@
 					isSubmitting = true;
 					return async ({ result, update }) => {
 						await update();
+						toastResult(result);
 						if (result.type === "success") {
 							handleClose();
 						}

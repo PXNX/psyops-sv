@@ -25,13 +25,13 @@
 	function getStatusColor(status: string) {
 		switch (status) {
 			case "pending":
-				return "bg-[#f5a524]/12 border-[#f5a524]/35 text-[#ffcb6b]";
+				return "bg-accent/12 border-accent/35 text-accent-fg";
 			case "resolved":
-				return "bg-[#1f9d62]/18 border-[#4fd88a]/30 text-[#aef3c9]";
+				return "bg-positive-bg/18 border-positive/30 text-positive-fg";
 			case "dismissed":
-				return "bg-[#131c33]/70 border-[#8ea6e0]/15 text-[#c2cbe3]";
+				return "bg-surface-4/70 border-line/15 text-fg-soft";
 			default:
-				return "bg-[#131c33]/70 border-[#8ea6e0]/15 text-[#c2cbe3]";
+				return "bg-surface-4/70 border-line/15 text-fg-soft";
 		}
 	}
 
@@ -131,7 +131,7 @@
 				<StatusIcon class="size-8" />
 			</div>
 			<div class="flex-1 min-w-0">
-				<h2 class="text-3xl font-bold text-[#eef2ff]">{getStatusTitle(data.report.status)}</h2>
+				<h2 class="text-3xl font-bold text-fg">{getStatusTitle(data.report.status)}</h2>
 			</div>
 		</div>
 	</div>
@@ -139,47 +139,47 @@
 	<!-- Timeline -->
 	<div class="panel rounded-sm p-5">
 		<h2 class="section-title mb-4">
-			<FluentCalendar20Filled class="size-5 text-[#ffcb6b]" />
+			<FluentCalendar20Filled class="size-5 text-accent-fg" />
 			Timeline
 		</h2>
 		<ul class="timeline timeline-vertical">
 			<li>
-				<div class="timeline-start text-sm text-[#8e9abb]">{formatDate(data.report.reportedAt)}</div>
+				<div class="timeline-start text-sm text-fg-muted">{formatDate(data.report.reportedAt)}</div>
 				<div class="timeline-middle">
-					<div class="size-4 rounded-full bg-[#6aa8ff]"></div>
+					<div class="size-4 rounded-full bg-friendly"></div>
 				</div>
-				<div class="timeline-end timeline-box rounded-sm bg-[#2f6be0]/18 border-[#6aa8ff]/30">
-					<div class="font-semibold text-[#c3dbff]">Report Filed</div>
-					<div class="text-sm text-[#c2cbe3]">You submitted this report</div>
+				<div class="timeline-end timeline-box rounded-sm bg-friendly-bg/18 border-friendly/30">
+					<div class="font-semibold text-friendly-fg">Report Filed</div>
+					<div class="text-sm text-fg-soft">You submitted this report</div>
 				</div>
-				<hr class="bg-[#6aa8ff]" />
+				<hr class="bg-friendly" />
 			</li>
 			{#if data.report.reviewedAt}
 				<li>
-					<hr class="bg-[#4fd88a]" />
-					<div class="timeline-start text-sm text-[#8e9abb]">{formatDate(data.report.reviewedAt)}</div>
+					<hr class="bg-positive" />
+					<div class="timeline-start text-sm text-fg-muted">{formatDate(data.report.reviewedAt)}</div>
 					<div class="timeline-middle">
-						<div class="size-4 rounded-full bg-[#4fd88a]"></div>
+						<div class="size-4 rounded-full bg-positive"></div>
 					</div>
-					<div class="timeline-end timeline-box rounded-sm bg-[#1f9d62]/18 border-[#4fd88a]/30">
-						<div class="font-semibold text-[#aef3c9]">
+					<div class="timeline-end timeline-box rounded-sm bg-positive-bg/18 border-positive/30">
+						<div class="font-semibold text-positive-fg">
 							{data.report.status === "resolved" ? "Resolved" : "Reviewed"}
 						</div>
 						{#if data.report.reviewer}
-							<div class="text-sm text-[#c2cbe3]">By {data.report.reviewer.name}</div>
+							<div class="text-sm text-fg-soft">By {data.report.reviewer.name}</div>
 						{/if}
 					</div>
 				</li>
 			{:else}
 				<li>
-					<hr class="bg-[#f5a524]" />
+					<hr class="bg-accent" />
 					<div class="timeline-start"></div>
 					<div class="timeline-middle">
-						<div class="size-4 rounded-full bg-[#f5a524] animate-pulse"></div>
+						<div class="size-4 rounded-full bg-accent animate-pulse"></div>
 					</div>
-					<div class="timeline-end timeline-box rounded-sm bg-[#f5a524]/12 border-[#f5a524]/35">
-						<div class="font-semibold text-[#ffcb6b]">Awaiting Review</div>
-						<div class="text-sm text-[#c2cbe3]">A moderator will review this soon</div>
+					<div class="timeline-end timeline-box rounded-sm bg-accent/12 border-accent/35">
+						<div class="font-semibold text-accent-fg">Awaiting Review</div>
+						<div class="text-sm text-fg-soft">A moderator will review this soon</div>
 					</div>
 				</li>
 			{/if}
@@ -189,7 +189,7 @@
 	<!-- Reported Target -->
 	<div class="panel rounded-sm p-5">
 		<h2 class="section-title mb-4">
-			<TargetIcon class="size-5 text-[#6aa8ff]" />
+			<TargetIcon class="size-5 text-friendly" />
 			Reported {data.report.targetType === "account"
 				? "User"
 				: data.report.targetType === "party"
@@ -214,21 +214,21 @@
 								alt={data.report.target.name}
 								class="size-full"
 								placeholderIcon={FluentShield20Filled}
-								placeholderGradient="from-[#33456f] to-[#1b2641]"
+								placeholderGradient="from-surface-13 to-surface-6"
 							/>
 						</div>
 						<div class="flex-1 min-w-0">
-							<p class="font-semibold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate">
+							<p class="font-semibold text-fg group-hover:text-accent-hover transition-colors truncate">
 								{data.report.target.name}
 							</p>
-							<p class="text-sm text-[#8e9abb]">Political Party</p>
+							<p class="text-sm text-fg-muted">Political Party</p>
 						</div>
 					</a>
 				{:else if data.report.targetType === "message"}
 					<div class="space-y-3">
 						{#if data.report.target.sender}
 							<div class="flex items-center gap-2">
-								<span class="text-sm text-[#8e9abb]">From:</span>
+								<span class="text-sm text-fg-muted">From:</span>
 								<UserLink
 									id={data.report.target.sender.id}
 									name={data.report.target.sender.name}
@@ -237,13 +237,13 @@
 							</div>
 						{/if}
 						{#if data.report.target.sentAt}
-							<div class="flex items-center gap-2 text-sm text-[#8e9abb]">
+							<div class="flex items-center gap-2 text-sm text-fg-muted">
 								<FluentCalendar20Filled class="size-4" />
 								<span>Sent {formatDate(data.report.target.sentAt)}</span>
 							</div>
 						{/if}
-						<div class="bg-[#0b1120] rounded-sm p-4 border border-[#8ea6e0]/10">
-							<p class="text-[#c2cbe3]" class:italic={data.report.target.isDeleted}>
+						<div class="bg-surface-0 rounded-sm p-4 border border-line/10">
+							<p class="text-fg-soft" class:italic={data.report.target.isDeleted}>
 								{data.report.target.content}
 							</p>
 							{#if data.report.target.isDeleted}
@@ -257,7 +257,7 @@
 				{/if}
 			</div>
 		{:else}
-			<div class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm p-4 flex items-center gap-3">
+			<div class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-center gap-3">
 				<FluentWarning20Filled class="size-5 shrink-0" />
 				<span>Target information is no longer available</span>
 			</div>
@@ -267,31 +267,31 @@
 	<!-- Report Details -->
 	<div class="panel rounded-sm p-5">
 		<h2 class="section-title mb-4">
-			<FluentInfo20Filled class="size-5 text-[#ffcb6b]" />
+			<FluentInfo20Filled class="size-5 text-accent-fg" />
 			Report Details
 		</h2>
 
 		<div class="space-y-4">
 			<!-- Violation Type -->
 			<div>
-				<p class="text-sm text-[#8e9abb] mb-2">Violation Type:</p>
+				<p class="text-sm text-fg-muted mb-2">Violation Type:</p>
 				<Badge tone="red" size="md">{getViolationLabel(data.report.violationType)}</Badge>
 			</div>
 
 			<!-- Your Report -->
 			<div>
-				<p class="text-sm text-[#8e9abb] mb-2">Your Report:</p>
+				<p class="text-sm text-fg-muted mb-2">Your Report:</p>
 				<div class="panel-muted rounded-sm p-4">
-					<p class="text-[#c2cbe3]">{data.report.reason}</p>
+					<p class="text-fg-soft">{data.report.reason}</p>
 				</div>
 			</div>
 
 			<!-- Review Information -->
 			{#if data.report.status !== "pending"}
-				<div class="border-t border-[#8ea6e0]/15"></div>
+				<div class="border-t border-line/15"></div>
 
-				<h3 class="font-semibold text-[#eef2ff] flex items-center gap-2 mt-4">
-					<FluentShield20Filled class="size-5 text-[#b9a1ff]" />
+				<h3 class="font-semibold text-fg flex items-center gap-2 mt-4">
+					<FluentShield20Filled class="size-5 text-politics" />
 					Moderator Review
 				</h3>
 
@@ -309,7 +309,7 @@
 
 				{#if data.report.actionTaken}
 					<div class="mt-4">
-						<p class="text-sm text-[#8e9abb] mb-2">Action Taken:</p>
+						<p class="text-sm text-fg-muted mb-2">Action Taken:</p>
 						<Badge tone="green" size="md" icon={FluentCheckmark20Filled}>
 							{getActionLabel(data.report.actionTaken)}
 						</Badge>
@@ -318,18 +318,18 @@
 
 				{#if data.report.reviewNote}
 					<div class="mt-4">
-						<p class="text-sm text-[#8e9abb] mb-2">Moderator's Note:</p>
+						<p class="text-sm text-fg-muted mb-2">Moderator's Note:</p>
 						<div class="panel-muted rounded-sm p-4">
-							<p class="text-[#c2cbe3]">{data.report.reviewNote}</p>
+							<p class="text-fg-soft">{data.report.reviewNote}</p>
 						</div>
 					</div>
 				{/if}
 			{:else}
-				<div class="bg-[#f5a524]/12 border border-[#f5a524]/35 text-[#ffcb6b] rounded-sm p-4 flex items-center gap-3">
+				<div class="bg-accent/12 border border-accent/35 text-accent-fg rounded-sm p-4 flex items-center gap-3">
 					<FluentClock20Filled class="size-5 shrink-0" />
 					<div>
 						<h3 class="font-bold">Pending Review</h3>
-						<p class="text-sm text-[#c2cbe3]">
+						<p class="text-sm text-fg-soft">
 							A moderator will review your report soon. You'll be able to see the outcome here.
 						</p>
 					</div>

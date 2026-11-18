@@ -37,27 +37,27 @@
 </script>
 
 {#if election?.isInaugural && election.status === "scheduled"}
-	<div class="bg-[#f5a524]/12 border border-[#f5a524]/35 rounded-sm p-5 space-y-3">
+	<div class="bg-accent/12 border border-accent/35 rounded-sm p-5 space-y-3">
 		<div class="flex items-start gap-3">
-			<div class="size-12 bg-[#f5a524]/20 rounded-sm flex items-center justify-center shrink-0">
-				<FluentVote20Filled class="size-6 text-[#ffcb6b]" />
+			<div class="size-12 bg-accent/20 rounded-sm flex items-center justify-center shrink-0">
+				<FluentVote20Filled class="size-6 text-accent-fg" />
 			</div>
 			<div class="flex-1 space-y-2">
-				<h3 class="font-bold text-[#eef2ff] text-lg">Inaugural Election Scheduled! 🎉</h3>
-				<p class="text-[#ffe1a6]/90 text-sm">
+				<h3 class="font-bold text-fg text-lg">Inaugural Election Scheduled! 🎉</h3>
+				<p class="text-accent-soft/90 text-sm">
 					This state is brand new! The first democratic election will establish the founding parliament of
 					<strong>{election.totalSeats} seats</strong>.
 				</p>
 
 				<div class="panel-muted rounded-sm p-3 space-y-2">
 					<div class="flex items-center gap-2 text-sm">
-						<FluentCalendar20Filled class="size-4 text-[#ffcb6b]" />
-						<span class="text-[#ffe1a6]">
+						<FluentCalendar20Filled class="size-4 text-accent-fg" />
+						<span class="text-accent-soft">
 							<strong>Voting starts in:</strong>
 							{timeUntil || "Starting soon!"}
 						</span>
 					</div>
-					<div class="text-xs text-[#ffe1a6]/70">
+					<div class="text-xs text-accent-soft/70">
 						<strong>Start:</strong>
 						{new Date(election.startDate).toLocaleString()}<br />
 						<strong>End:</strong>
@@ -75,13 +75,13 @@
 		</div>
 	</div>
 {:else if election?.isInaugural && election.status === "active"}
-	<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 rounded-sm p-4">
+	<div class="bg-positive-bg/18 border border-positive/30 rounded-sm p-4">
 		<div class="flex items-center justify-between gap-4">
 			<div class="flex items-center gap-3">
-				<FluentVote20Filled class="size-6 text-[#4fd88a] animate-pulse" />
+				<FluentVote20Filled class="size-6 text-positive animate-pulse" />
 				<div>
-					<p class="font-semibold text-[#eef2ff]">Inaugural Election Now Active!</p>
-					<p class="text-sm text-[#aef3c9]">Help establish the founding parliament - vote now!</p>
+					<p class="font-semibold text-fg">Inaugural Election Now Active!</p>
+					<p class="text-sm text-positive-fg">Help establish the founding parliament - vote now!</p>
 				</div>
 			</div>
 			<Button

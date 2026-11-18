@@ -1,7 +1,10 @@
 // src/routes/(authenticated)/chat/+page.server.ts
+// Conversation list. unreadCount stays 0: there is no read-receipt table, the
+// page marks unread conversations from the last-seen times kept in the browser.
 import { db } from "#lib/server/db.js";
 import { chatMessages, partyMembers, politicalParties, userProfiles, userBlocks } from "#lib/server/schema.js";
-import { eq, and, desc, or } from "drizzle-orm";
+import { eq, and, desc, or, notInArray } from "drizzle-orm";
+import { redirect } from "@sveltejs/kit";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import type { PageServerLoad } from "./$types";
 
@@ -18,9 +21,16 @@ async function getPartyTag(userId: string) {
 	return { abbreviation: party?.abbreviation ?? null, color: party?.color ?? null };
 }
 
-export const load: PageServerLoad = async ({ locals, depends }) => {
+export const load: PageServerLoad = async ({ locals, depends, url }) => {
+	// The party page links to /chat?type=party.
+	if (url.searchParams.get("type") === "party") redirect(303, "/chat/party");
+
 	depends("app:chat");
 	const account = locals.account!;
+	const blockedIds = (
+		await db.query.userBlocks.findMany({ where: eq(userBlocks.userId, account.id) })
+	).map((b) => b.blockedUserId);
+	const notBlocked = blockedIds.length > 0 ? notInArray(chatMessages.senderId, blockedIds) : undefined;
 
 	// Global, party and direct chat overviews are independent, so build them in parallel
 	const [globalChat, partyChat, directChats] = await Promise.all([
@@ -33,6 +43,7 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 					senderPartyAbbreviation: string | null;
 					senderPartyColor: string | null;
 					sentAt: string;
+					isFromCurrentUser: boolean;
 				} | null,
 				unreadCount: 0
 			};
@@ -46,7 +57,7 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 					senderId: chatMessages.senderId
 				})
 				.from(chatMessages)
-				.where(and(eq(chatMessages.messageType, "global"), eq(chatMessages.isDeleted, false)))
+				.where(and(eq(chatMessages.messageType, "global"), eq(chatMessages.isDeleted, false), notBlocked))
 				.orderBy(desc(chatMessages.sentAt))
 				.limit(1);
 
@@ -64,7 +75,8 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 					senderName: senderProfile?.name || "Anonymous",
 					senderPartyAbbreviation: senderParty.abbreviation,
 					senderPartyColor: senderParty.color,
-					sentAt: msg.sentAt.toISOString()
+					sentAt: msg.sentAt.toISOString(),
+					isFromCurrentUser: msg.senderId === account.id
 				};
 			}
 
@@ -98,7 +110,8 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 							and(
 								eq(chatMessages.messageType, "party"),
 								eq(chatMessages.partyId, partyMembership.partyId),
-								eq(chatMessages.isDeleted, false)
+								eq(chatMessages.isDeleted, false),
+								notBlocked
 							)
 						)
 						.orderBy(desc(chatMessages.sentAt))
@@ -113,7 +126,8 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 					return {
 						content: msg.content,
 						senderName: senderProfile?.name || "Anonymous",
-						sentAt: msg.sentAt.toISOString()
+						sentAt: msg.sentAt.toISOString(),
+						isFromCurrentUser: msg.senderId === account.id
 					};
 				})()
 			]);
