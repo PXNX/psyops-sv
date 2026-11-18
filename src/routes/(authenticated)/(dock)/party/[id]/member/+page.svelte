@@ -1,10 +1,10 @@
 <!-- src/routes/party/[id]/member/+page.svelte -->
 <script lang="ts">
+	import { vanish } from "#lib/utils/motion.js";
 	import { toast, toastResult } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentPersonAdd20Filled from "~icons/fluent/person-add-20-filled";
-	import FluentCrown20Filled from "~icons/fluent/crown-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentArrowUp20Filled from "~icons/fluent/arrow-up-20-filled";
@@ -14,7 +14,9 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentSettings20Filled from "~icons/fluent/settings-20-filled";
 	import FluentPersonAvailable20Filled from "~icons/fluent/person-available-20-filled";
-	import Logo from "#lib/component/Logo.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import PartyTag from "#lib/component/PartyTag.svelte";
+	import { celebrate } from "#lib/utils/celebrate.js";
 	import Modal from "#lib/component/Modal.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
@@ -47,7 +49,7 @@
 <PageContainer maxWidth="4xl">
 	<!-- Header -->
 	<PageHeader
-		title="Members"
+		title="Roster"
 		subtitle="{data.members.length} {data.members.length === 1 ? 'member' : 'members'}"
 		icon={FluentPeople20Filled}
 		backHref="/party/{data.party.id}"
@@ -118,33 +120,31 @@
 				<div class="flex items-center justify-between">
 					<h2 class="section-title">
 						<FluentPersonAvailable20Filled class="size-5 text-[#ffd35c]" />
-						Pending
+						Applications
 					</h2>
 					<Badge tone="amber">{data.pendingApplications.length}</Badge>
 				</div>
 				<div class="space-y-2">
-					{#each data.pendingApplications as application}
-						<div class="flex items-center gap-3 panel-muted rounded-sm p-3">
-							<Logo
-								src={application.user.logo}
-								alt={application.user.name}
-								class="size-10"
-								placeholderIcon={FluentPeople20Filled}
-								placeholderGradient="from-[#4a5238] to-[#252b1e]"
+					{#each data.pendingApplications as application (application.id)}
+						<div out:vanish class="flex items-center gap-3 panel-muted rounded-sm p-3">
+							<UserLink
+								size="sm"
+								id={application.userId}
+								name={application.user.name}
+								avatar={application.user.logo}
+								subtitle="Applied {formatDate(application.appliedAt)}"
+								class="flex-1"
 							/>
-							<div class="flex-1 min-w-0">
-								<p class="text-sm font-bold text-[#f5efd8] truncate">{application.user.name}</p>
-								<p class="text-xs text-[#a8a083]">{formatDate(application.appliedAt)}</p>
-							</div>
 							<div class="flex items-center gap-1.5">
 								<form
 									method="POST"
 									action="?/acceptApplication"
 									use:enhance={() => {
 										processingApplicationId = application.id;
-										return async ({ update }) => {
+										return async ({ result, update }) => {
 											await update();
 											processingApplicationId = null;
+											if (result.type === "success") celebrate(document.getElementById("party-roster"));
 										};
 									}}
 								>
@@ -212,74 +212,48 @@
 			</div>
 		{/if}
 
-		<!-- Members List -->
-		<div class="panel rounded-sm p-5 space-y-3">
+		<!-- Membership cards -->
+		<section id="party-roster" class="space-y-3">
 			<h2 class="section-title">
 				<FluentPeople20Filled class="size-5" style="color: {data.party.color}" />
-				All Members
+				Membership cards
 			</h2>
-			<div class="space-y-2">
-				{#each data.members as member}
-					<div class="flex items-center gap-3 panel-muted rounded-sm p-3 hover:border-[#c8b47a]/25 transition-colors">
-						<!-- Avatar -->
-						<a href="/user/{member.userId}" class="relative shrink-0">
-							<Logo
-								src={member.user.logo}
-								alt={member.user.name || "Member"}
-								class="size-10 sm:size-12"
-								placeholderIcon={FluentPeople20Filled}
-								placeholderGradient="from-[#4a5238] to-[#252b1e]"
+			<ul class="grid gap-3 sm:grid-cols-2">
+				{#each data.members as member, i (member.userId)}
+					<li out:vanish class="panel rounded-sm overflow-hidden flex flex-col">
+						<div
+							class="flex items-center justify-between gap-2 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em]"
+							style="background-color: {data.party.color}33; color: {data.party.color}"
+						>
+							<span class="flex min-w-0 items-center gap-1.5 font-bold">
+								<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
+								<span class="truncate">Member card</span>
+							</span>
+							<span class="font-mono shrink-0">No. {String(i + 1).padStart(3, "0")}</span>
+						</div>
+						<div class="flex items-center gap-3 p-3">
+							<UserLink
+								size="md"
+								id={member.userId}
+								name={member.user.name || "Anonymous"}
+								avatar={member.user.logo}
+								subtitle="Since {formatDate(member.joinedAt)}{member.acceptedByName
+									? ` · by ${member.acceptedByName}`
+									: ''}"
+								class="flex-1"
 							/>
-							{#if member.role === "leader"}
-								<div
-									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#12150f]"
-									style="background-color: {data.party.color}"
+							{#if member.role === "leader" || member.role === "deputy"}
+								<span
+									class="shrink-0 animate-stamp rounded-sm border-2 px-1.5 py-0.5 font-serif text-[10px] font-black uppercase tracking-widest"
+									style="border-color: {data.party.color}; color: {data.party.color}; --stamp-tilt: -8deg"
 								>
-									<FluentCrown20Filled class="size-2.5 text-[#f5efd8]" />
-								</div>
-							{:else if member.role === "deputy"}
-								<div
-									class="absolute -top-1 -right-1 size-5 rounded-full flex items-center justify-center ring-2 ring-[#12150f]"
-									style="background-color: {data.party.color}CC"
-								>
-									<FluentShield20Filled class="size-2.5 text-[#f5efd8]" />
-								</div>
+									{member.role === "leader" ? "Leader" : "Deputy"}
+								</span>
 							{/if}
-						</a>
-
-						<!-- Info -->
-						<div class="flex-1 min-w-0">
-							<a href="/user/{member.userId}" class="group">
-								<p class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-									{member.user.name || "Anonymous"}
-								</p>
-							</a>
-							<div class="flex items-center gap-2 mt-0.5 flex-wrap">
-								{#if member.role === "leader"}
-									<span
-										class="text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wide"
-										style="background-color: {data.party.color}25; color: {data.party.color}"
-									>
-										LEADER
-									</span>
-								{:else if member.role === "deputy"}
-									<span
-										class="text-[10px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wide"
-										style="background-color: {data.party.color}18; color: {data.party.color}CC"
-									>
-										DEPUTY
-									</span>
-								{/if}
-								<span class="text-[10px] text-[#a8a083]">{formatDate(member.joinedAt)}</span>
-								{#if member.acceptedByName}
-									<span class="text-[10px] text-[#a8a083]/70">by {member.acceptedByName}</span>
-								{/if}
-							</div>
 						</div>
 
-						<!-- Actions -->
 						{#if canManageMembers && member.userId !== data.members.find((m) => m.role === "leader")?.userId}
-							<div class="flex items-center gap-1 shrink-0">
+							<div class="mt-auto flex items-center justify-end gap-1 border-t border-[#c8b47a]/10 px-3 py-2">
 								{#if data.isLeader && member.role !== "leader"}
 									{#if member.role === "member"}
 										<form
@@ -342,10 +316,10 @@
 								{/if}
 							</div>
 						{/if}
-					</div>
+					</li>
 				{/each}
-			</div>
-		</div>
+			</ul>
+		</section>
 
 		<!-- Join CTA -->
 		{#if data.canJoin && !data.isMember}
@@ -358,10 +332,11 @@
 					method="POST"
 					action="/party/{data.party.id}?/join"
 					use:enhance={() => {
-						return async ({ update }) => {
+						return async ({ result, update }) => {
 							// The action lives on the parent /party/[id] route; stay on this
 							// member list page instead of navigating there after joining.
 							await update({ navigate: false });
+							if (result.type === "success") celebrate(document.getElementById("party-roster"));
 						};
 					}}
 				>
@@ -369,7 +344,7 @@
 						<div class="text-center sm:text-left">
 							<span class="text-sm font-bold text-[#f5efd8]">Join {data.party.name}</span>
 							<p class="text-xs text-[#a8a083] mt-0.5">
-								{data.party.autoAcceptMembers ? "Instant membership" : "Application reviewed by leadership"}
+								{data.party.autoAcceptMembers ? "Instant membership" : "Leadership approves"}
 							</p>
 						</div>
 						<Button type="submit" variant="primary" icon={FluentPersonAdd20Filled} class="w-full sm:w-auto">

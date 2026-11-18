@@ -65,6 +65,15 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: battleSide(db, account.id, battle)
 	]);
 
+	// Avatars of everyone with a unit in the fight, for the force lists.
+	const ownerAvatars = new Map(
+		await Promise.all(
+			[...new Map(battle.participants.map((p) => [p.unit.ownerId, p.unit.owner?.profile?.logo])).entries()].map(
+				async ([id, logo]) => [id, logo ? await getLogoUrl(logo) : null] as const
+			)
+		)
+	);
+
 	const width = TERRAIN_DATA[battle.terrain as Terrain]?.combatWidth ?? TERRAIN_DATA.plains.combatWidth;
 
 	const forces = (side: "attacker" | "defender") => {
@@ -78,6 +87,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					unitType: p.unit.unitType,
 					ownerId: p.unit.ownerId,
 					ownerName: p.unit.owner?.profile?.name ?? "Unknown",
+					ownerAvatar: ownerAvatars.get(p.unit.ownerId) ?? null,
 					isMine: p.unit.ownerId === account.id,
 					strength: p.currentStrength,
 					maxStrength: p.maxStrength,

@@ -136,8 +136,8 @@
 
 <PageContainer maxWidth="3xl">
 	<PageHeader
-		title="Create New Bloc"
-		subtitle="Found a political-military alliance"
+		title="Draft a Charter"
+		subtitle="Found an alliance of states"
 		icon={FluentFlag20Filled}
 		backHref="/bloc"
 		backLabel="Blocs"
@@ -146,7 +146,7 @@
 	{#if data.onCooldown}
 		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-4 flex items-center gap-3">
 			<p class="text-[#ffd35c] text-sm font-medium">
-				⏰ You must wait {data.timeRemaining} hours before creating, joining, or leaving a bloc.
+				⏰ {data.timeRemaining}h until your state may found, join or leave a bloc.
 			</p>
 		</div>
 	{/if}
@@ -165,7 +165,7 @@
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentFlag20Filled class="size-5 text-[#ffd35c]" />
-				<h2 class="section-title">Bloc Details</h2>
+				<h2 class="section-title">Name</h2>
 			</div>
 
 			<div>
@@ -186,7 +186,7 @@
 				{#if $errors.name}
 					<p class="field-error">{$errors.name}</p>
 				{:else}
-					<p class="field-hint">{$form.name?.length || 0}/100 characters</p>
+					<p class="field-hint">{$form.name?.length || 0}/100</p>
 				{/if}
 			</div>
 		</div>
@@ -194,7 +194,7 @@
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentImage20Filled class="size-5 text-[#ffd35c]" />
-				<h2 class="section-title">Bloc Logo</h2>
+				<h2 class="section-title">Seal</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -287,14 +287,14 @@
 			{#if $errors.logo}
 				<p class="field-error">{$errors.logo}</p>
 			{:else}
-				<p class="field-hint">Optional • Will be converted to 96x96 WebP • Max 5MB</p>
+				<p class="field-hint">Optional · max 5MB</p>
 			{/if}
 		</div>
 
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentColor20Filled class="size-5 text-[#ffd35c]" />
-				<h2 class="section-title">Bloc Color</h2>
+				<h2 class="section-title">Colour</h2>
 			</div>
 
 			<div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
@@ -324,20 +324,25 @@
 				<span class="text-sm text-[#a8a083]">{$form.color}</span>
 			</div>
 
-			<!-- Preview -->
-			<div class="p-4 rounded-sm mt-4" style="background-color: {$form.color}20; border: 2px solid {$form.color}40">
-				<div class="flex items-center gap-3">
-					<div class="size-12 rounded-sm flex items-center justify-center" style="background-color: {$form.color}">
+			<!-- Charter preview -->
+			<div class="panel-muted rounded-sm overflow-hidden mt-4 text-center">
+				<div class="h-1.5" style:background-color={$form.color}></div>
+				<div class="p-4">
+					<div
+						class="mx-auto mb-2 size-14 overflow-hidden rounded-full border-2 flex items-center justify-center"
+						style="border-color: {$form.color}; background-color: {$form.color}26"
+					>
 						{#if previewUrl}
-							<img loading="lazy" decoding="async" src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
+							<img decoding="async" src={previewUrl} alt="Logo preview" class="size-full object-cover" />
 						{:else}
-							<FluentFlag20Filled class="size-6 text-[#f5efd8]" />
+							<FluentFlag20Filled class="size-7" style="color: {$form.color}" />
 						{/if}
 					</div>
-					<div>
-						<p class="font-semibold text-[#f5efd8]">{$form.name || "Your Bloc Name"}</p>
-						<p class="text-sm" style="color: {$form.color}">Political-Military Alliance</p>
-					</div>
+					<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083]">Charter of the</p>
+					<p class="font-serif text-xl font-black text-[#f5efd8] break-words">{$form.name || "Your Alliance"}</p>
+					{#if $form.description}
+						<p class="mt-2 font-serif text-sm italic text-[#d3caa9] line-clamp-3">{$form.description}</p>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -345,7 +350,7 @@
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentDocument20Filled class="size-5 text-[#ffd35c]" />
-				<h2 class="section-title">Description</h2>
+				<h2 class="section-title">Preamble</h2>
 			</div>
 
 			<textarea
@@ -353,7 +358,7 @@
 				name="description"
 				bind:value={$form.description}
 				rows="6"
-				placeholder="Describe the bloc's purpose, values, and strategic objectives..."
+				placeholder="We, the undersigned states…"
 				class="field-control rounded-sm px-3 py-2.5 w-full"
 				disabled={$submitting || data.onCooldown}></textarea>
 		</div>
@@ -366,7 +371,7 @@
 			loadingText="Creating..."
 			icon={FluentCheckmark20Filled}
 		>
-			Create Bloc
+			Sign the charter
 		</Button>
 	</form>
 </PageContainer>

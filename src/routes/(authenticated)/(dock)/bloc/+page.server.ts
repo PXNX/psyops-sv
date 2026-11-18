@@ -1,6 +1,16 @@
 // src/routes/(authenticated)/(dock)/bloc/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { blocs, states, regions, residences, presidents, blocApplications } from "#lib/server/schema.js";
+import {
+	blocs,
+	states,
+	regions,
+	residences,
+	presidents,
+	blocApplications,
+	blocLeaders,
+	userProfiles
+} from "#lib/server/schema.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { sql, eq, and } from "drizzle-orm";
 import { applyToBloc } from "#lib/server/service/blocApplication.js";
 import { fail, redirect } from "@sveltejs/kit";
@@ -68,6 +78,40 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 					.limit(1)
 			: [];
 
+	// Member flags and the elected leader of each bloc, for the cards.
+	const [memberFlagRows, leaderRows] = await Promise.all([
+		db
+			.select({ id: states.id, name: states.name, logo: states.logo, blocId: states.blocId })
+			.from(states)
+			.where(sql`${states.blocId} IS NOT NULL`)
+			.orderBy(states.name),
+		db
+			.select({
+				blocId: blocLeaders.blocId,
+				userId: blocLeaders.userId,
+				name: userProfiles.name,
+				logo: userProfiles.logo
+			})
+			.from(blocLeaders)
+			.leftJoin(userProfiles, eq(userProfiles.accountId, blocLeaders.userId))
+	]);
+	const memberFlags = new Map<number, { id: number; name: string; logo: string | null }[]>();
+	await Promise.all(
+		memberFlagRows.map(async (m) => {
+			const list = memberFlags.get(m.blocId!) ?? [];
+			memberFlags.set(m.blocId!, list);
+			list.push({ id: m.id, name: m.name, logo: null });
+			list[list.length - 1].logo = await getLogoUrl(m.logo);
+		})
+	);
+	const leaders = new Map(
+		await Promise.all(
+			leaderRows.map(
+				async (l) => [l.blocId, { id: l.userId, name: l.name ?? "Unknown", avatar: await getLogoUrl(l.logo) }] as const
+			)
+		)
+	);
+
 	const memberCountMap = new Map(memberCounts.map((m) => [m.blocId, m.count]));
 	const populationMap = new Map(blocPopulations.map((p) => [p.blocId, p.totalPopulation]));
 
@@ -77,7 +121,9 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 		memberCount: memberCountMap.get(b.id) || 0,
 		totalPopulation: populationMap.get(b.id) || 0,
 		isUserMember: userPresidency?.blocId === b.id,
-		isPendingApplication: pendingApplication?.blocId === b.id
+		isPendingApplication: pendingApplication?.blocId === b.id,
+		members: memberFlags.get(b.id) ?? [],
+		leader: leaders.get(b.id) ?? null
 	}));
 
 	// Apply search filter

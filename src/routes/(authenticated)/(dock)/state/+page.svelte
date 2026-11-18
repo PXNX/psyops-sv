@@ -5,7 +5,7 @@
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentStar20Filled from "~icons/fluent/star-20-filled";
-	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentMap20Filled from "~icons/fluent/map-20-filled";
 	import FluentBuildingMultiple20Filled from "~icons/fluent/building-multiple-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentBuildingBank20Filled from "~icons/fluent/building-bank-20-filled";
@@ -13,6 +13,8 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import Badge from "#lib/component/ui/Badge.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 
 	const { data } = $props();
 
@@ -61,8 +63,8 @@
 	<!-- Header -->
 	<PageHeader
 		documentTitle={false}
-		title="All States"
-		subtitle="{data.regions.length} {data.regions.length === 1 ? 'state' : 'states'} available"
+		title="Atlas of States"
+		subtitle="{data.regions.length} {data.regions.length === 1 ? 'state' : 'states'}"
 	>
 		{#snippet actions()}
 			<Button variant="secondary" href="/fallen" icon={FluentBuildingBank20Filled}>Fallen States</Button>
@@ -120,99 +122,86 @@
 		</div>
 	{/if}
 
-	<!-- States Grid -->
+	<!-- Atlas index -->
 	{#if data.regions.length > 0}
-		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-			{#each data.regions as state}
-				<a href="/state/{state.id}" class="group panel-interactive rounded-sm p-5 relative">
-					{#if data.userRegionIds.includes(state.id)}
-						<div class="absolute top-4 right-4">
-							<Badge tone="green">Resident</Badge>
-						</div>
-					{/if}
-
-					<!-- State Header -->
-					<div class="flex items-center gap-3 mb-3">
-						{#if state.logo}
-							<div class="size-12 rounded-sm overflow-hidden bg-[#1a1f15] shrink-0">
-								<img
-									loading="lazy"
-									decoding="async"
-									src={state.logo}
-									alt={state.name}
-									class="w-full h-full object-cover"
-								/>
-							</div>
-						{:else}
-							<div
-								class="size-12 rounded-sm flex items-center justify-center shrink-0"
-								style="background-color: {state.stateColor || '#2369b5'}30;"
-							>
-								{#if state.stateColor}
-									<span class="text-xl font-bold text-[#f5efd8]">{state.name.charAt(0)}</span>
-								{:else}
+		<ol class="grid grid-cols-1 md:grid-cols-2 gap-3">
+			{#each data.regions as state, i (state.id)}
+				<li>
+					<a
+						href="/state/{state.id}"
+						class="group panel-interactive rounded-sm p-4 flex items-start gap-3 {data.userRegionIds.includes(state.id)
+							? 'border-[#6fd14a]/40'
+							: ''}"
+					>
+						<span class="w-7 shrink-0 pt-1 text-right font-mono text-xs text-[#a8a083]">{i + 1}.</span>
+						<div class="size-14 shrink-0 overflow-hidden rounded-sm border border-[#c8b47a]/25 bg-[#1a1f15]">
+							{#if state.logo}
+								<img loading="lazy" decoding="async" src={state.logo} alt="" class="size-full object-cover" />
+							{:else}
+								<div
+									class="flex size-full items-center justify-center"
+									style="background-color: {state.stateColor || '#2369b5'}30;"
+								>
 									<FluentFlag20Filled class="size-6 text-[#b3dcff]" />
+								</div>
+							{/if}
+						</div>
+						<div class="min-w-0 flex-1 space-y-1">
+							<div class="flex items-center gap-2">
+								<h2
+									class="truncate font-serif text-lg font-bold leading-tight text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors"
+								>
+									{state.name}
+								</h2>
+								{#if data.userRegionIds.includes(state.id)}
+									<Badge tone="green" size="xs">Home</Badge>
 								{/if}
 							</div>
-						{/if}
-						<div class="flex-1 min-w-0">
-							<h2 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-								{state.name}
-							</h2>
-							<p class="text-xs text-[#a8a083]">#{state.rating || 0} rated</p>
+							<p class="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#a8a083]">
+								<span class="flex items-center gap-1"
+									><FluentPeople20Filled class="size-3.5 text-[#5eaef5]" /><span class="text-[#e6ddbf]"
+										>{state.population.toLocaleString()}</span
+									></span
+								>
+								<span class="flex items-center gap-1"
+									><FluentMap20Filled class="size-3.5 text-[#6fd14a]" /><span class="text-[#e6ddbf]"
+										>{state.regionCount}</span
+									>
+									{state.regionCount === 1 ? "region" : "regions"}</span
+								>
+								<span class="flex items-center gap-1"
+									><FluentStar20Filled class="size-3.5 text-[#ffd35c]" /><span class="text-[#e6ddbf]"
+										>{state.rating || 0}</span
+									></span
+								>
+								{#if state.bloc}
+									<span class="flex items-center gap-1">
+										<span class="size-2 rounded-full" style:background-color={state.bloc.color}></span>
+										<span class="truncate">{state.bloc.name}</span>
+									</span>
+								{/if}
+							</p>
 						</div>
-					</div>
-
-					<!-- Description -->
-					{#if state.description}
-						<p class="text-sm text-[#a8a083] mb-4 line-clamp-2">{state.description}</p>
+					</a>
+					{#if state.president}
+						<div class="-mt-px flex items-center gap-2 px-4 pt-1.5 pl-[3.25rem] text-[11px] text-[#a8a083]">
+							<span class="uppercase tracking-wide">Head of state</span>
+							<UserLink size="xs" id={state.president.id} name={state.president.name} avatar={state.president.avatar} />
+						</div>
 					{/if}
-
-					<!-- Stats -->
-					<div class="grid grid-cols-2 gap-2">
-						<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-							<FluentPeople20Filled class="size-4 text-[#b3dcff] shrink-0" />
-							<div class="min-w-0">
-								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Population</p>
-								<p class="text-sm font-bold text-[#f5efd8] truncate">{state.population.toLocaleString()}</p>
-							</div>
-						</div>
-						<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-							<FluentStar20Filled class="size-4 text-[#ffd35c] shrink-0" />
-							<div class="min-w-0">
-								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Rating</p>
-								<p class="text-sm font-bold text-[#f5efd8] truncate">{state.rating || 0}</p>
-							</div>
-						</div>
-					</div>
-
-					<!-- View Details Link -->
-					<div
-						class="flex items-center justify-end gap-1 text-xs text-[#e6ddbf]/70 group-hover:text-[#ffcf47] transition-colors mt-3"
-					>
-						<span>View Details</span>
-						<FluentChevronRight20Filled class="size-3.5" />
-					</div>
-				</a>
+				</li>
 			{/each}
-		</div>
+		</ol>
 	{:else}
-		<!-- Empty State -->
-		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
-				<FluentBuildingMultiple20Filled class="size-8 text-[#a8a083]" />
-			</div>
-			<h2 class="text-xl font-bold text-[#f5efd8] mb-2">No states found</h2>
-			<p class="text-[#a8a083] mb-4">
+		<EmptyState
+			icon={FluentBuildingMultiple20Filled}
+			title={data.search ? `No states match "${data.search}"` : "No states found"}
+		>
+			{#snippet actions()}
 				{#if data.search}
-					No states match "{data.search}". Try a different search.
-				{:else}
-					Try adjusting your search or filters.
+					<Button variant="secondary" size="sm" onclick={clearSearch}>Clear search</Button>
 				{/if}
-			</p>
-			{#if data.search}
-				<Button variant="secondary" size="sm" onclick={clearSearch}>Clear search</Button>
-			{/if}
-		</div>
+			{/snippet}
+		</EmptyState>
 	{/if}
 </PageContainer>

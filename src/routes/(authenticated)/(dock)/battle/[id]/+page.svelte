@@ -14,6 +14,7 @@
 	import { feedback } from "#lib/utils/feedback.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Logo from "#lib/component/Logo.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
 	import { Badge, Button } from "#lib/component/ui/index.js";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
@@ -235,13 +236,15 @@
 									<Badge size="xs">Reserve</Badge>
 								{/if}
 							</div>
-							<p class="truncate text-[11px] text-[#a8a083]">
-								{unitName(u.unitType)} ·
-								{#if u.isMine}<span class="text-[#ffd35c]">yours</span>{:else}<a
-										href="/user/{u.ownerId}"
-										class="hover:text-[#ffcf47]">{u.ownerName}</a
-									>{/if}
-								· ⚔ {u.attack} 🛡 {u.defense}
+							<p class="flex min-w-0 items-center gap-1 text-[11px] text-[#a8a083]">
+								<span class="shrink-0">{unitName(u.unitType)} ·</span>
+								{#if u.isMine}<span class="shrink-0 text-[#ffd35c]">yours</span>{:else}<UserLink
+										size="xs"
+										id={u.ownerId}
+										name={u.ownerName}
+										avatar={u.ownerAvatar}
+									/>{/if}
+								<span class="shrink-0">· ⚔ {u.attack} 🛡 {u.defense}</span>
 							</p>
 							{#if !u.destroyed}
 								<div class="grid grid-cols-2 gap-2">
@@ -262,44 +265,64 @@
 {/snippet}
 
 <PageContainer maxWidth="5xl">
-	<!-- Header -->
-	<div id="battle-hero" class="panel rounded-sm p-5">
-		<div class="flex items-start gap-4">
-			<a href="/region/{data.battle.regionId}" class="shrink-0">
-				<img src={regionCoatUrl(data.battle.regionId)} alt={regionName} class="size-16 object-contain sm:size-20" />
+	<!-- Battle report header -->
+	<div id="battle-hero" class="panel relative overflow-hidden rounded-sm">
+		<div
+			class="flex items-center justify-between gap-3 border-b border-[#c8b47a]/15 bg-[#1a1f15]/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#a8a083]"
+		>
+			<span>Battle report</span>
+			<a href="/war/{data.battle.warId}" class="flex items-center gap-1 hover:text-[#ffcf47]">
+				War No. {data.battle.warId}
+				<FluentArrowRight20Filled class="size-3" />
 			</a>
-			<div class="min-w-0 flex-1 space-y-1.5">
-				<div class="flex flex-wrap items-center gap-2">
-					<h1 class="text-2xl font-bold text-[#f5efd8] sm:text-3xl">Battle of {regionName}</h1>
-					<Badge tone={status.tone} size="md">{status.label}</Badge>
-				</div>
-				<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#a8a083]">
-					<span class="flex items-center gap-1"
-						><FluentLocation20Filled class="size-3.5" /> <span class="capitalize">{data.battle.terrain}</span></span
-					>
-					<span>Started {formatDateTime(data.battle.startedAt)}</span>
-					{#if data.battle.endedAt}<span>Ended {formatDateTime(data.battle.endedAt)}</span>{/if}
-					<a href="/war/{data.battle.warId}" class="flex items-center gap-1 text-[#e6ddbf] hover:text-[#ffcf47]">
-						Part of war <FluentArrowRight20Filled class="size-3" />
-					</a>
-				</p>
-			</div>
 		</div>
-
-		{#if countdownTarget}
-			<div
-				class="mt-4 flex items-center justify-between gap-3 rounded-sm border px-4 py-3 {data.battle.phase === 'active'
-					? SIDE.attacker.soft
-					: 'border-[#f2b01e]/35 bg-[#f2b01e]/12'}"
-			>
-				<span class="flex items-center gap-2 text-sm text-[#e6ddbf]">
-					<FluentClock20Filled class="size-4 {data.battle.phase === 'active' ? 'text-red-400' : 'text-[#ffd35c]'}" />
-					{data.battle.phase === "active" ? "Next round" : "Fighting starts"}
-					<span class="hidden text-[#a8a083] sm:inline">· rounds are fought every hour</span>
-				</span>
-				<span class="font-mono text-xl font-bold text-[#f5efd8] tabular-nums">{remaining > 0 ? clock : "now"}</span>
+		<div class="p-5">
+			<div class="flex items-start gap-4">
+				<a href="/region/{data.battle.regionId}" class="shrink-0">
+					<img src={regionCoatUrl(data.battle.regionId)} alt={regionName} class="size-16 object-contain sm:size-20" />
+				</a>
+				<div class="min-w-0 flex-1 space-y-1.5">
+					<h1 class="font-serif text-2xl font-black text-[#f5efd8] sm:text-3xl">Battle of {regionName}</h1>
+					{#if winner}
+						<span
+							class="inline-block animate-stamp rounded-sm border-2 border-double px-2.5 py-0.5 font-serif text-xs font-black uppercase tracking-[0.2em] {winner ===
+							'attacker'
+								? 'border-red-500/70 text-red-300'
+								: 'border-[#5eaef5]/70 text-[#b3dcff]'}"
+							style="--stamp-tilt: -4deg"
+						>
+							{status.label}
+						</span>
+					{:else}
+						<Badge tone={status.tone} size="md">{status.label}</Badge>
+					{/if}
+					<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#a8a083]">
+						<span class="flex items-center gap-1"
+							><FluentLocation20Filled class="size-3.5" /> <span class="capitalize">{data.battle.terrain}</span></span
+						>
+						<span>Started <span class="font-mono">{formatDateTime(data.battle.startedAt)}</span></span>
+						{#if data.battle.endedAt}<span
+								>Ended <span class="font-mono">{formatDateTime(data.battle.endedAt)}</span></span
+							>{/if}
+					</p>
+				</div>
 			</div>
-		{/if}
+
+			{#if countdownTarget}
+				<div
+					class="mt-4 flex items-center justify-between gap-3 rounded-sm border px-4 py-3 {data.battle.phase ===
+					'active'
+						? SIDE.attacker.soft
+						: 'border-[#f2b01e]/35 bg-[#f2b01e]/12'}"
+				>
+					<span class="flex items-center gap-2 text-sm text-[#e6ddbf]">
+						<FluentClock20Filled class="size-4 {data.battle.phase === 'active' ? 'text-red-400' : 'text-[#ffd35c]'}" />
+						{data.battle.phase === "active" ? "Next round" : "Fighting starts"}
+					</span>
+					<span class="font-mono text-xl font-bold text-[#f5efd8] tabular-nums">{remaining > 0 ? clock : "now"}</span>
+				</div>
+			{/if}
+		</div>
 	</div>
 
 	<!-- Battle line -->
@@ -339,8 +362,7 @@
 						class="flex items-center gap-2 rounded-sm border border-[#5eaef5]/30 bg-[#2369b5]/18 px-3 py-2 text-xs text-[#b3dcff]"
 					>
 						<FluentShield20Filled class="size-4 shrink-0" />
-						Fortified (level {data.battle.fortification}): defenders take {data.battle.fortificationReduction}% less
-						damage
+						Fortified (level {data.battle.fortification}): −{data.battle.fortificationReduction}% damage taken
 					</p>
 				{/if}
 			</div>
@@ -350,10 +372,7 @@
 	<!-- What the conquest wrecked -->
 	{#if destroyed.length}
 		<SectionCard>
-			<h2 class="section-title mb-1">Buildings destroyed</h2>
-			<p class="text-sm text-[#a8a083] mb-3">
-				{data.attacker.name} took the region. The fighting wrecked part of what was built there.
-			</p>
+			<h2 class="section-title mb-3">Buildings destroyed</h2>
 			<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 				{#each destroyed as d (d.stat)}
 					<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 flex items-center gap-2 animate-pop-in">
@@ -370,7 +389,7 @@
 
 	<!-- Your forces -->
 	{#if data.battle.phase !== "ended"}
-		<section class="panel rounded-sm p-5 space-y-4">
+		<section id="your-forces" class="panel rounded-sm p-5 space-y-4">
 			<div class="flex flex-wrap items-center justify-between gap-2">
 				<h2 class="section-title">Your Forces</h2>
 				{#if data.me.side}
@@ -387,14 +406,12 @@
 				>
 			{:else if data.me.deployable.length === 0}
 				<p class="text-sm text-[#d3caa9]">
-					You have no units ready to send in. They must be
-					{data.me.side === "defender" ? `in ${regionName}` : "in your current region"}, finished training and not on
-					exercise.
+					No rested, trained units {data.me.side === "defender" ? `in ${regionName}` : "in your current region"}.
 				</p>
 				<Button href="/training" variant="secondary" size="sm">Train units</Button>
 			{:else}
 				<div class="flex items-center justify-between text-xs text-[#a8a083]">
-					<span>Choose units to send into the battle.</span>
+					<span>{selected.size} of {data.me.deployable.length} selected</span>
 					<button
 						type="button"
 						class="text-[#e6ddbf] hover:text-[#ffcf47]"
@@ -444,7 +461,10 @@
 							await update();
 							deploying = false;
 							toastResult(result);
-							if (result.type === "success") selected = new Set();
+							if (result.type === "success") {
+								selected = new Set();
+								celebrate(document.getElementById("your-forces"));
+							}
 						};
 					}}
 				>

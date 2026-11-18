@@ -1,39 +1,49 @@
 <!-- src/routes/bloc/[id]/+page.svelte -->
+<!-- A bloc as a treaty organisation: the charter with its signatories'
+     flags, the leader, ballots on admissions and expulsions, and its wars. -->
 <script lang="ts">
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
-	import FluentPeopleTeam20Filled from "~icons/fluent/people-team-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
-	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentPersonAdd20Filled from "~icons/fluent/person-add-20-filled";
-	import FluentCrown20Filled from "~icons/fluent/crown-20-filled";
-	import FluentGlobeShield20Filled from "~icons/fluent/globe-shield-20-filled";
-	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
-	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
-	import FluentThumbLike20Filled from "~icons/fluent/thumb-like-20-filled";
-	import FluentThumbDislike20Filled from "~icons/fluent/thumb-dislike-20-filled";
 	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 	import FluentPersonDelete20Filled from "~icons/fluent/person-delete-20-filled";
+	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import type { SubmitFunction } from "$app/forms";
-	import { toastResult } from "#lib/ui/toast.svelte.js";
-
-	const withToast: SubmitFunction =
-		() =>
-		async ({ result, update }) => {
-			await update();
-			toastResult(result);
-		};
 	import { enhance } from "$app/forms";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
+	import { vanish } from "#lib/utils/motion.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Button, IconButton } from "#lib/component/ui/index.js";
-	import ProfileItem from "#lib/component/ProfileItem.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import WarHistory from "#lib/component/WarHistory.svelte";
+	import { Badge, Button, IconButton } from "#lib/component/ui/index.js";
 	import EditBlocSheet from "./EditBlocSheet.svelte";
 	import { formatDate, formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data, form } = $props();
 
 	let showEditBlocSheet = $state(false);
+
+	const withToast: SubmitFunction =
+		({ formElement }) =>
+		async ({ result, update }) => {
+			await update();
+			toastResult(result);
+			if (result.type === "success") celebrate(formElement.closest("[data-ballot]"));
+		};
+
+	/** Marks the ballot that was just cast; feedback for errors stays in the banner. */
+	const castBallot: SubmitFunction =
+		({ formElement }) =>
+		async ({ result, update }) => {
+			await update();
+			if (result.type === "success") celebrate(formElement.closest("[data-ballot]"));
+		};
+
+	const pastWars = $derived(data.warHistory.filter((w) => !data.activeWars.some((a) => a.id === w.id)));
 </script>
 
 <svelte:head>
@@ -41,203 +51,116 @@
 	<meta name="description" content={data.bloc.description || `The ${data.bloc.name} alliance in PsyOps.`} />
 </svelte:head>
 
-<PageContainer maxWidth="5xl">
-	<!-- Hero Section -->
-	<div
-		class="panel rounded-sm p-5 overflow-hidden relative"
-		style="background-color: {data.bloc.color}0d; background-image: radial-gradient(circle at top, {data.bloc
-			.color}40, transparent 70%);"
-	>
-		<div class="flex flex-col sm:flex-row sm:items-start gap-4">
-			<div class="flex items-center gap-4 flex-1 min-w-0">
-				<!-- Bloc Logo -->
-				{#if data.bloc.logo}
-					<div class="size-20 rounded-full overflow-hidden bg-[#1a1f15] shrink-0">
-						<img
-							loading="lazy"
-							decoding="async"
-							src={data.bloc.logo}
-							alt={data.bloc.name}
-							class="w-full h-full object-cover"
-						/>
-					</div>
-				{:else}
-					<div
-						class="size-20 rounded-full flex items-center justify-center shrink-0"
-						style="background-color: {data.bloc.color}30;"
-					>
-						<FluentFlag20Filled class="size-8" style="color: {data.bloc.color}" />
-					</div>
-				{/if}
-
-				<div class="min-w-0 space-y-1">
-					<h1 class="text-3xl font-bold text-[#f5efd8] break-words">{data.bloc.name}</h1>
-					<span class="text-xs text-[#a8a083] uppercase tracking-wider">Alliance</span>
-					{#if data.bloc.description}
-						<p class="text-sm text-[#d3caa9] max-w-xl">{data.bloc.description}</p>
-					{/if}
-					<p class="text-sm text-[#a8a083]">Founded {formatDate(data.bloc.createdAt)}</p>
-				</div>
-			</div>
-
-			{#if data.isLeader}
-				<IconButton
-					icon={FluentEdit20Filled}
-					label="Edit Bloc"
-					variant="secondary"
-					size="sm"
-					shape="square"
-					class="self-end sm:self-start"
-					onclick={() => (showEditBlocSheet = true)}
-				/>
-			{:else if data.isMemberPresident}
-				<form
-					method="POST"
-					action="?/leave"
-					use:confirmSubmit={{
-						title: `Leave ${data.bloc.name}?`,
-						body: "Your state will no longer be part of this bloc.",
-						confirmLabel: "Leave bloc",
-						danger: true
-					}}
-					use:enhance
-					class="self-end sm:self-start"
-				>
-					<IconButton
-						type="submit"
-						icon={FluentDismiss20Filled}
-						label="Leave Bloc"
-						variant="soft-red"
-						size="sm"
-						shape="square"
-					/>
-				</form>
-			{/if}
+{#snippet tally(pro: number, contra: number, of: number, proLabel: string, contraLabel: string, proTone: string)}
+	<div>
+		<div class="flex h-2 overflow-hidden rounded-full bg-[#0f120c]">
+			<div class="{proTone} transition-[width] duration-500" style:width="{(pro / Math.max(1, of)) * 100}%"></div>
+			<div
+				class="ml-auto bg-[#a8a083]/50 transition-[width] duration-500"
+				style:width="{(contra / Math.max(1, of)) * 100}%"
+			></div>
+		</div>
+		<div class="mt-1 flex justify-between text-[11px] text-[#a8a083]">
+			<span><span class="font-mono font-bold text-[#f5efd8]">{pro}</span> {proLabel}</span>
+			<span>of {of}</span>
+			<span>{contraLabel} <span class="font-mono font-bold text-[#f5efd8]">{contra}</span></span>
 		</div>
 	</div>
+{/snippet}
 
-	<!-- Leader Action Buttons -->
-	{#if data.isLeader}
-		<div class="flex gap-2 flex-wrap">
-			<Button href="/inbox" variant="soft-amber" size="sm" icon={FluentMegaphone20Filled}>Broadcast</Button>
-		</div>
-	{/if}
+{#snippet box(marked: boolean)}
+	<span
+		class="grid size-6 shrink-0 place-items-center rounded-sm border-2 border-[#c8b47a]/50 bg-[#0f120c] font-serif text-base font-black leading-none text-[#ffd35c]"
+	>
+		{#if marked}<span class="animate-stamp" style="--stamp-tilt: -10deg; --rise-delay: 0ms">✗</span>{/if}
+	</span>
+{/snippet}
 
-	<!-- Leadership -->
-	<section class="panel rounded-sm p-5 space-y-4">
-		<h2 class="section-title">
-			<FluentPeopleTeam20Filled class="size-5 text-[#ffd35c]" />
-			Leadership
-		</h2>
-
-		{#if data.leader}
-			<ProfileItem
-				href="/user/{data.leader.userId}"
-				logo={data.leader.logo}
-				logoAlt={data.leader.name}
-				placeholderIcon={FluentCrown20Filled}
-				placeholderGradient="from-[#f2b01e]/15 to-[#f2b01e]/10"
-				title={data.leader.name}
-				subtitle="Bloc Leader • elected {formatDate(data.leader.appointedAt)}"
-				hoverColor="yellow"
-			/>
-		{:else}
-			<p class="text-sm text-[#a8a083]">No bloc leader has been elected yet.</p>
-		{/if}
-
-		{#if data.diplomats.length > 0}
-			<div class="space-y-2 pt-2 border-t border-[#c8b47a]/10">
-				<h3 class="text-xs font-semibold text-[#a8a083] uppercase tracking-wider">Diplomats</h3>
-				{#each data.diplomats as diplomat}
-					<ProfileItem
-						href="/user/{diplomat.userId}"
-						logo={diplomat.logo}
-						logoAlt={diplomat.name}
-						placeholderIcon={FluentGlobeShield20Filled}
-						placeholderGradient="from-[#2369b5]/20 to-[#2369b5]/10"
-						title={diplomat.name}
-						subtitle="Diplomat"
-						hoverColor="blue"
+<PageContainer maxWidth="5xl">
+	<!-- Charter -->
+	<article class="panel relative overflow-hidden rounded-sm">
+		<div class="h-2" style:background-color={data.bloc.color}></div>
+		<div class="p-5 text-center">
+			<div class="absolute right-3 top-5 flex gap-2">
+				{#if data.isLeader}
+					<IconButton icon={FluentMegaphone20Filled} label="Broadcast" variant="soft-amber" size="sm" href="/inbox" />
+					<IconButton
+						icon={FluentEdit20Filled}
+						label="Edit Bloc"
+						variant="secondary"
+						size="sm"
+						onclick={() => (showEditBlocSheet = true)}
 					/>
-				{/each}
+				{:else if data.isMemberPresident}
+					<form
+						method="POST"
+						action="?/leave"
+						use:confirmSubmit={{
+							title: `Leave ${data.bloc.name}?`,
+							body: "Your state will no longer be part of this bloc.",
+							confirmLabel: "Leave bloc",
+							danger: true
+						}}
+						use:enhance
+					>
+						<IconButton type="submit" icon={FluentDismiss20Filled} label="Leave Bloc" variant="soft-red" size="sm" />
+					</form>
+				{/if}
 			</div>
-		{/if}
 
-		{#if data.election}
-			<div class="pt-3 border-t border-[#c8b47a]/10 space-y-3">
-				{#if data.election.status === "active"}
-					<div class="flex items-center justify-between gap-2 flex-wrap">
-						<span class="text-xs font-semibold text-[#b9f29a] uppercase tracking-wider flex items-center gap-1.5">
-							<span class="size-1.5 bg-[#6fd14a] rounded-full animate-pulse"></span>
-							Leadership Election — Voting Open
-						</span>
-						<span class="text-[10px] text-[#a8a083] font-mono">
-							{data.blocLeaderVotesCast.toLocaleString()} vote{data.blocLeaderVotesCast === 1 ? "" : "s"} cast · Ends
-							{formatDateTime(data.election.votingEndsAt)}
-						</span>
-					</div>
-
-					{#if data.candidates.length === 0}
-						<p class="text-sm text-[#a8a083]">
-							No candidates nominated yet. A state president can nominate a citizen of any member state (not themselves)
-							from that citizen's profile page.
-						</p>
-					{:else}
-						<div class="space-y-2">
-							{#each data.candidates as candidate}
-								{@const isMyVote = data.myBlocLeaderVote === candidate.userId}
-								<div
-									class="panel-muted rounded-sm overflow-hidden {isMyVote
-										? 'border-[#6fd14a]/50'
-										: 'border-[#c8b47a]/10'}"
-								>
-									<ProfileItem
-										href="/user/{candidate.userId}"
-										logo={candidate.logo}
-										logoAlt={candidate.name}
-										placeholderIcon={FluentPerson20Filled}
-										placeholderGradient="from-[#2369b5] to-[#2369b5]"
-										title={candidate.name}
-										subtitle={isMyVote
-											? "Your vote · results when voting closes"
-											: "Votes are secret until voting closes"}
-										hoverColor="yellow"
-									/>
-									{#if data.canVoteForBlocLeader}
-										<form method="POST" action="?/voteBlocLeader" use:enhance class="border-t border-[#c8b47a]/10 p-2">
-											<input type="hidden" name="candidateUserId" value={candidate.userId} />
-											<Button
-												type="submit"
-												size="xs"
-												block
-												variant={isMyVote ? "soft-emerald" : "subtle"}
-												icon={FluentVote20Filled}
-											>
-												{isMyVote ? "Voted" : "Vote"}
-											</Button>
-										</form>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					{/if}
-
-					{#if !data.canVoteForBlocLeader}
-						<p class="text-xs text-[#a8a083]">Only presidents of this bloc's member states may vote.</p>
-					{/if}
+			<div
+				class="mx-auto mb-3 size-20 overflow-hidden rounded-full border-2 animate-pop-in"
+				style="border-color: {data.bloc.color}; background-color: {data.bloc.color}26;"
+			>
+				{#if data.bloc.logo}
+					<img decoding="async" src={data.bloc.logo} alt={data.bloc.name} class="size-full object-cover" />
 				{:else}
-					<div class="flex items-center justify-between gap-2 flex-wrap">
-						<span class="text-xs font-semibold text-[#a8a083] uppercase tracking-wider">Next Election</span>
-						<span class="text-[10px] text-[#a8a083] font-mono">
-							Nominations open {formatDateTime(data.election.votingStartsAt)}
-						</span>
+					<div class="flex size-full items-center justify-center">
+						<FluentFlag20Filled class="size-9" style="color: {data.bloc.color}" />
 					</div>
 				{/if}
 			</div>
-		{/if}
-	</section>
 
-	<!-- Error/Success -->
+			<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083]">Charter of the</p>
+			<h1 class="mx-auto max-w-2xl break-words font-serif text-3xl font-black leading-tight text-[#f5efd8] sm:text-4xl">
+				{data.bloc.name}
+			</h1>
+			<p class="mt-1 text-[10px] uppercase tracking-[0.2em] text-[#a8a083]">
+				Signed {formatDate(data.bloc.createdAt)} · {data.memberCount}
+				{data.memberCount === 1 ? "signatory" : "signatories"}
+			</p>
+			{#if data.bloc.description}
+				<p
+					class="mx-auto mt-4 max-w-xl border-t border-[#c8b47a]/15 pt-4 font-serif text-sm italic text-[#d3caa9] sm:text-base"
+				>
+					{data.bloc.description}
+				</p>
+			{/if}
+
+			<!-- Signatories' flags -->
+			{#if data.memberStates.length}
+				<div class="mt-5 flex flex-wrap justify-center gap-2">
+					{#each data.memberStates as state, i (state.id)}
+						<a
+							href="/state/{state.id}"
+							title={state.name}
+							class="animate-pop-in transition-transform hover:-translate-y-0.5"
+							style="--rise-delay: {Math.min(i, 10) * 40}ms"
+						>
+							<Logo
+								src={state.logo}
+								alt={state.name}
+								class="size-9 rounded-sm ring-1 ring-[#c8b47a]/25"
+								placeholderIcon={FluentBuildingGovernment20Filled}
+							/>
+						</a>
+					{/each}
+				</div>
+			{/if}
+		</div>
+	</article>
+
+	<!-- Feedback from plain form posts -->
 	{#if form?.error}
 		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3 text-sm">
 			{form.error}
@@ -245,75 +168,197 @@
 	{/if}
 	{#if form?.success}
 		<div
-			class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3 text-sm"
+			class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center gap-3 text-sm animate-rise-in"
 		>
 			{form.message ?? "Bloc membership updated"}
 		</div>
 	{/if}
 
-	<!-- Membership Applications -->
+	<!-- Join / pending application -->
+	{#if data.myApplication}
+		<section class="panel rounded-sm p-4 sm:p-5" style="border-color: {data.bloc.color}55">
+			<form method="POST" action="?/withdrawApplication" use:enhance>
+				<div class="flex flex-col sm:flex-row sm:items-center gap-3">
+					<div class="flex-1 space-y-2">
+						<p class="text-sm font-bold text-[#f5efd8]">
+							Application of {data.userState?.name ?? "your state"}
+							<Badge tone="amber" size="xs">Pending</Badge>
+						</p>
+						{@render tally(
+							data.myApplication.pro,
+							data.myApplication.contra,
+							data.memberCount,
+							"admit",
+							"refuse",
+							"bg-[#6fd14a]"
+						)}
+						<p class="text-[11px] text-[#a8a083]">
+							Closes <span class="font-mono">{formatDateTime(data.myApplication.expiresAt)}</span>
+						</p>
+					</div>
+					<Button type="submit" variant="soft-red" size="sm" icon={FluentDismiss20Filled}>Withdraw</Button>
+				</div>
+			</form>
+		</section>
+	{:else if data.canJoin}
+		<section class="panel rounded-sm p-4 sm:p-5" style="border-color: {data.bloc.color}55">
+			<form method="POST" action="?/join" use:enhance>
+				<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+					<div class="flex items-center gap-3">
+						{#if data.userState}
+							<Logo
+								src={data.userState.logo}
+								alt={data.userState.name}
+								class="size-10 rounded-sm"
+								placeholderIcon={FluentBuildingGovernment20Filled}
+							/>
+						{/if}
+						<div>
+							<p class="text-sm font-bold text-[#f5efd8]">Sign the charter</p>
+							{#if data.userState}
+								<p class="text-xs text-[#a8a083]">As {data.userState.name} · members vote on admission</p>
+							{/if}
+						</div>
+					</div>
+					<Button type="submit" variant="primary" icon={FluentPersonAdd20Filled} class="w-full sm:w-auto">Apply</Button>
+				</div>
+			</form>
+		</section>
+	{/if}
+
+	<!-- Leadership -->
+	<section class="panel rounded-sm p-5 space-y-4">
+		<h2 class="section-title">Leadership</h2>
+
+		<div class="flex flex-wrap items-center gap-x-6 gap-y-3">
+			{#if data.leader}
+				<UserLink
+					size="md"
+					id={data.leader.userId}
+					name={data.leader.name}
+					avatar={data.leader.logo}
+					subtitle="Bloc leader · elected {formatDate(data.leader.appointedAt)}"
+				/>
+			{:else}
+				<p class="text-sm text-[#a8a083]">No leader elected yet.</p>
+			{/if}
+			{#each data.diplomats as diplomat (diplomat.id)}
+				<UserLink size="sm" id={diplomat.userId} name={diplomat.name} avatar={diplomat.logo} subtitle="Diplomat" />
+			{/each}
+		</div>
+
+		{#if data.election}
+			{#if data.election.status === "active"}
+				<!-- Ballot paper -->
+				<div class="panel-muted rounded-sm p-4 space-y-3">
+					<div
+						class="flex flex-wrap items-baseline justify-between gap-2 border-b border-dashed border-[#c8b47a]/25 pb-2"
+					>
+						<p class="font-serif text-base font-bold uppercase tracking-wide text-[#f5efd8]">Ballot · Bloc leader</p>
+						<p class="text-[11px] text-[#a8a083]">
+							<span class="font-mono">{data.blocLeaderVotesCast}</span> cast · closes
+							<span class="font-mono">{formatDateTime(data.election.votingEndsAt)}</span>
+						</p>
+					</div>
+
+					{#if data.candidates.length === 0}
+						<p class="text-sm text-[#a8a083]">No candidates yet. Presidents nominate from a citizen's profile.</p>
+					{:else}
+						<ul class="divide-y divide-dashed divide-[#c8b47a]/15">
+							{#each data.candidates as candidate (candidate.userId)}
+								{@const isMyVote = data.myBlocLeaderVote === candidate.userId}
+								<li class="flex items-center gap-3 rounded-sm py-2" data-ballot>
+									<UserLink
+										size="sm"
+										id={candidate.userId}
+										name={candidate.name}
+										avatar={candidate.logo}
+										class="flex-1"
+									/>
+									{#if data.canVoteForBlocLeader}
+										<form method="POST" action="?/voteBlocLeader" use:enhance={castBallot}>
+											<input type="hidden" name="candidateUserId" value={candidate.userId} />
+											<button
+												type="submit"
+												class="tap-target press-spring flex items-center gap-2 rounded-sm px-1 text-xs text-[#a8a083] hover:text-[#ffcf47]"
+												aria-label="Vote for {candidate.name}"
+												aria-pressed={isMyVote}
+											>
+												{isMyVote ? "Your vote" : "Mark"}
+												{@render box(isMyVote)}
+											</button>
+										</form>
+									{:else}
+										{@render box(isMyVote)}
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					{/if}
+					<p class="text-[11px] text-[#a8a083]">
+						{data.canVoteForBlocLeader ? "Secret until it closes." : "Member presidents vote."}
+					</p>
+				</div>
+			{:else}
+				<p class="text-xs text-[#a8a083]">
+					Next election · nominations open <span class="font-mono">{formatDateTime(data.election.votingStartsAt)}</span>
+				</p>
+			{/if}
+		{/if}
+	</section>
+
+	<!-- Membership applications -->
 	{#if data.applications.length > 0}
 		<section class="space-y-3">
-			<h2 class="section-title">
-				<FluentVote20Filled class="size-5 text-[#c08cf0]" />
-				Membership Applications
-			</h2>
-			<div class="panel rounded-sm p-3 space-y-2">
-				{#each data.applications as application}
-					<div class="panel-muted rounded-sm overflow-hidden">
-						<ProfileItem
-							href="/state/{application.state.id}"
-							logo={application.state.logo}
-							logoAlt={application.state.name}
-							placeholderIcon={FluentGlobe20Filled}
-							placeholderGradient="from-[#4a5238] to-[#252b1e]"
-							title={application.state.name}
-							subtitle="{application.pro} pro • {application.contra} contra • of {data.memberCount} member state{data.memberCount ===
-							1
-								? ''
-								: 's'} • closes {formatDateTime(application.expiresAt)}"
-							hoverColor="blue"
-						/>
+			<h2 class="section-title">Applications</h2>
+			<div class="grid gap-3 sm:grid-cols-2">
+				{#each data.applications as application (application.id)}
+					<article out:vanish class="panel rounded-sm p-4 space-y-3" data-ballot>
+						<a href="/state/{application.state.id}" class="group flex items-center gap-3">
+							<Logo
+								src={application.state.logo}
+								alt={application.state.name}
+								class="size-11 rounded-sm"
+								placeholderIcon={FluentBuildingGovernment20Filled}
+							/>
+							<div class="min-w-0">
+								<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083]">Application for membership</p>
+								<p class="truncate font-serif text-lg font-bold text-[#f5efd8] group-hover:text-[#ffcf47]">
+									{application.state.name}
+								</p>
+							</div>
+						</a>
+						{@render tally(application.pro, application.contra, data.memberCount, "admit", "refuse", "bg-[#6fd14a]")}
+						<p class="text-[11px] text-[#a8a083]">
+							Majority admits · closes <span class="font-mono">{formatDateTime(application.expiresAt)}</span>
+						</p>
 						{#if data.isMemberPresident}
 							<form
 								method="POST"
 								action="?/voteApplication"
-								use:enhance
-								class="border-t border-[#c8b47a]/10 p-2 flex gap-2"
+								use:enhance={castBallot}
+								class="grid grid-cols-2 gap-2 border-t border-dashed border-[#c8b47a]/20 pt-3"
 							>
 								<input type="hidden" name="applicationId" value={application.id} />
-								<Button
-									type="submit"
-									name="vote"
-									value="pro"
-									size="xs"
-									grow
-									variant={application.myVote === "pro" ? "soft-emerald" : "subtle"}
-									icon={FluentThumbLike20Filled}
-								>
-									Pro
-								</Button>
-								<Button
-									type="submit"
-									name="vote"
-									value="contra"
-									size="xs"
-									grow
-									variant={application.myVote === "contra" ? "soft-red" : "subtle"}
-									icon={FluentThumbDislike20Filled}
-								>
-									Contra
-								</Button>
+								{#each [["pro", "Admit"], ["contra", "Refuse"]] as [value, label] (value)}
+									<button
+										type="submit"
+										name="vote"
+										{value}
+										aria-pressed={application.myVote === value}
+										class="tap-target press-spring flex items-center gap-2 rounded-sm border px-3 py-2 text-sm transition-colors {application.myVote ===
+										value
+											? 'border-[#f2b01e]/50 bg-[#f2b01e]/12 text-[#ffd35c]'
+											: 'border-[#c8b47a]/20 text-[#d3caa9] hover:border-[#f2b01e]/40'}"
+									>
+										{@render box(application.myVote === value)}
+										{label}
+									</button>
+								{/each}
 							</form>
 						{/if}
-					</div>
+					</article>
 				{/each}
-				<p class="text-xs text-[#a8a083] px-1">
-					An application passes once more than half of the member states vote pro. When voting closes, the majority of
-					cast votes decides (ties reject).{data.isMemberPresident
-						? ""
-						: " Only presidents of this bloc's member states may vote."}
-				</p>
 			</div>
 		</section>
 	{/if}
@@ -321,210 +366,181 @@
 	<!-- Expulsion votes -->
 	{#if data.expulsions.length > 0}
 		<section class="space-y-3">
-			<h2 class="section-title">
-				<FluentPersonDelete20Filled class="size-5 text-red-400" />
-				Expulsion Votes
-			</h2>
-			<div class="panel rounded-sm p-3 space-y-2">
+			<h2 class="section-title text-red-300">Expulsion votes</h2>
+			<div class="grid gap-3 sm:grid-cols-2">
 				{#each data.expulsions as expulsion (expulsion.id)}
 					{@const needed = Math.floor(expulsion.voters / 2) + 1}
-					<div class="panel-muted rounded-sm overflow-hidden border-red-500/25">
-						<ProfileItem
-							href="/state/{expulsion.state.id}"
-							logo={expulsion.state.logo}
-							logoAlt={expulsion.state.name}
-							placeholderIcon={FluentGlobe20Filled}
-							placeholderGradient="from-[#4a5238] to-[#252b1e]"
-							title="Expel {expulsion.state.name}?"
-							subtitle="{expulsion.pro} pro • {expulsion.contra} contra • {needed} of {expulsion.voters} needed • closes {formatDateTime(
-								expulsion.expiresAt
-							)}"
-							hoverColor="blue"
-						/>
-						<div class="px-3 pb-2">
-							<div class="h-1.5 bg-[#1a1f15] rounded-full overflow-hidden flex">
-								<div class="bg-red-400" style="width: {(expulsion.pro / Math.max(1, expulsion.voters)) * 100}%"></div>
-								<div
-									class="bg-[#5eaef5]/70 ml-auto"
-									style="width: {(expulsion.contra / Math.max(1, expulsion.voters)) * 100}%"
-								></div>
+					<article out:vanish class="panel rounded-sm border-red-500/30 p-4 space-y-3" data-ballot>
+						<a href="/state/{expulsion.state.id}" class="group flex items-center gap-3">
+							<Logo
+								src={expulsion.state.logo}
+								alt={expulsion.state.name}
+								class="size-11 rounded-sm grayscale"
+								placeholderIcon={FluentBuildingGovernment20Filled}
+							/>
+							<div class="min-w-0">
+								<p class="text-[10px] uppercase tracking-[0.2em] text-red-300">Motion to expel</p>
+								<p class="truncate font-serif text-lg font-bold text-[#f5efd8] group-hover:text-[#ffcf47]">
+									{expulsion.state.name}
+								</p>
 							</div>
-							{#if expulsion.reason}
-								<p class="mt-2 text-xs text-[#d3caa9] italic">“{expulsion.reason}”</p>
-							{/if}
-						</div>
+						</a>
+						{#if expulsion.reason}
+							<p class="border-l-2 border-red-500/40 pl-2 font-serif text-sm italic text-[#d3caa9]">
+								“{expulsion.reason}”
+							</p>
+						{/if}
+						{@render tally(expulsion.pro, expulsion.contra, expulsion.voters, "expel", "keep", "bg-red-400")}
+						<p class="text-[11px] text-[#a8a083]">
+							{needed} of {expulsion.voters} needed · closes
+							<span class="font-mono">{formatDateTime(expulsion.expiresAt)}</span>
+						</p>
 						{#if expulsion.canVote}
 							<form
 								method="POST"
 								action="?/voteExpulsion"
 								use:enhance={withToast}
-								class="border-t border-[#c8b47a]/10 p-2 flex gap-2"
+								class="grid grid-cols-2 gap-2 border-t border-dashed border-[#c8b47a]/20 pt-3"
 							>
 								<input type="hidden" name="expulsionId" value={expulsion.id} />
-								<Button
-									type="submit"
-									name="vote"
-									value="pro"
-									size="xs"
-									grow
-									variant={expulsion.myVote === "pro" ? "soft-red" : "subtle"}
-									icon={FluentThumbLike20Filled}
-								>
-									Expel
-								</Button>
-								<Button
-									type="submit"
-									name="vote"
-									value="contra"
-									size="xs"
-									grow
-									variant={expulsion.myVote === "contra" ? "soft-blue" : "subtle"}
-									icon={FluentThumbDislike20Filled}
-								>
-									Keep
-								</Button>
+								{#each [["pro", "Expel"], ["contra", "Keep"]] as [value, label] (value)}
+									<button
+										type="submit"
+										name="vote"
+										{value}
+										aria-pressed={expulsion.myVote === value}
+										class="tap-target press-spring flex items-center gap-2 rounded-sm border px-3 py-2 text-sm transition-colors {expulsion.myVote ===
+										value
+											? value === 'pro'
+												? 'border-red-500/50 bg-red-600/10 text-red-300'
+												: 'border-[#5eaef5]/50 bg-[#2369b5]/18 text-[#b3dcff]'
+											: 'border-[#c8b47a]/20 text-[#d3caa9] hover:border-[#f2b01e]/40'}"
+									>
+										{@render box(expulsion.myVote === value)}
+										{label}
+									</button>
+								{/each}
 							</form>
 						{:else if expulsion.isTarget}
-							<p class="border-t border-[#c8b47a]/10 px-3 py-2 text-xs text-[#ffd35c]">
-								Your state can't vote on its own expulsion.
-							</p>
+							<p class="text-xs text-[#ffd35c]">Your state can't vote on its own expulsion.</p>
 						{/if}
-					</div>
+					</article>
 				{/each}
 			</div>
 		</section>
 	{/if}
 
-	<!-- Active Wars -->
+	<!-- Active wars -->
 	{#if data.activeWars.length > 0}
 		<section class="space-y-2">
-			{#each data.activeWars as war}
+			{#each data.activeWars as war (war.id)}
 				<a
 					href="/war/{war.id}"
-					class="flex items-center gap-3 sm:gap-4 bg-red-600/10 border border-red-500/30 rounded-sm p-4 hover:border-red-400/50 transition-all group"
+					class="panel-interactive flex items-center gap-3 rounded-sm border-red-500/35 p-3 sm:p-4"
 				>
-					<div class="flex-shrink-0">
-						<div
-							class="size-10 sm:size-12 bg-red-600/15 rounded-sm border border-red-500/30 flex items-center justify-center"
-						>
-							<span class="text-xl sm:text-2xl">⚔️</span>
-						</div>
-					</div>
-					<div class="flex-1 min-w-0">
-						<div class="flex items-center gap-2 mb-0.5">
-							<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
-							<span class="text-[10px] text-red-300 uppercase tracking-widest">Active War</span>
-						</div>
-						<div class="text-sm text-[#d3caa9]">
-							<span class="font-bold text-red-400">{war.attacker.name}</span>
-							<span class="text-[#a8a083] mx-1">vs</span>
+					<Logo
+						src={war.attacker.logo}
+						alt={war.attacker.name}
+						class="size-9 rounded-sm"
+						placeholderIcon={FluentBuildingGovernment20Filled}
+					/>
+					<div class="min-w-0 flex-1 text-center">
+						<p class="flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-widest text-red-300">
+							<span class="size-1.5 rounded-full bg-red-500 animate-pulse"></span>At war
+						</p>
+						<p class="truncate text-sm">
+							<span class="font-bold text-red-300">{war.attacker.name}</span>
+							<span class="mx-1 font-serif italic text-[#a8a083]">vs</span>
 							<span class="font-bold text-[#b3dcff]">{war.defender.name}</span>
-						</div>
+						</p>
 						{#if war.activeBattles > 0}
-							<span class="text-[10px] text-[#ffd35c] mt-0.5 inline-block">
-								{war.activeBattles} active {war.activeBattles === 1 ? "battle" : "battles"}
-							</span>
+							<p class="text-[10px] text-[#ffd35c]">
+								{war.activeBattles}
+								{war.activeBattles === 1 ? "battle" : "battles"} on
+							</p>
 						{/if}
 					</div>
-					<span class="text-[#a8a083] group-hover:text-red-400 transition-colors">→</span>
+					<Logo
+						src={war.defender.logo}
+						alt={war.defender.name}
+						class="size-9 rounded-sm"
+						placeholderIcon={FluentBuildingGovernment20Filled}
+					/>
 				</a>
 			{/each}
 		</section>
 	{/if}
 
-	<!-- Member States -->
-	<section class="space-y-3">
+	<!-- Signatories -->
+	<section class="panel rounded-sm p-5 space-y-3">
 		<h2 class="section-title">
-			<FluentGlobe20Filled class="size-5 text-[#5eaef5]" />
-			Member States
+			Signatories
+			<span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#a8a083]">{data.memberCount}</span>
 		</h2>
-		<div class="panel rounded-sm p-3 space-y-2">
-			{#each data.memberStates as state}
-				<div class="flex items-center gap-2">
-					<div class="min-w-0 flex-1">
-						<ProfileItem
-							href="/state/{state.id}"
-							logo={state.logo}
-							logoAlt={state.name}
-							placeholderIcon={FluentGlobe20Filled}
-							placeholderGradient="from-[#4a5238] to-[#252b1e]"
-							title={state.name}
-							subtitle="{state.population.toLocaleString()} population{state.president
-								? ` • ${state.president.name}`
-								: ''} • #{state.rating || '—'}"
-							hoverColor="blue"
-						/>
-					</div>
-					{#if data.expellableStateIds.includes(state.id)}
-						<form
-							method="POST"
-							action="?/proposeExpulsion"
-							use:confirmSubmit={{
-								title: `Vote on expelling ${state.name}?`,
-								body: "The other member states vote for 3 days. Your state's vote counts as in favour.",
-								confirmLabel: "Open vote",
-								danger: true
-							}}
-							use:enhance={withToast}
-						>
-							<input type="hidden" name="stateId" value={state.id} />
-							<IconButton
-								type="submit"
-								icon={FluentPersonDelete20Filled}
-								label="Propose expelling {state.name}"
-								variant="soft-red"
-								size="sm"
+		{#if data.memberStates.length}
+			<ul class="divide-y divide-[#c8b47a]/10">
+				{#each data.memberStates as state (state.id)}
+					<li out:vanish class="flex items-center gap-3 py-2.5">
+						<a href="/state/{state.id}" class="shrink-0">
+							<Logo
+								src={state.logo}
+								alt={state.name}
+								class="size-10 rounded-sm"
+								placeholderIcon={FluentBuildingGovernment20Filled}
 							/>
-						</form>
-					{/if}
-				</div>
-			{:else}
-				<p class="text-sm text-[#a8a083] text-center py-4">No member states yet</p>
-			{/each}
-		</div>
+						</a>
+						<div class="min-w-0 flex-1">
+							<a href="/state/{state.id}" class="block truncate font-semibold text-[#f5efd8] hover:text-[#ffcf47]">
+								{state.name}
+							</a>
+							<div class="flex min-w-0 flex-wrap items-center gap-x-2 text-xs text-[#a8a083]">
+								{#if state.president}
+									<UserLink
+										size="xs"
+										id={state.president.userId}
+										name={state.president.name}
+										avatar={state.presidentAvatar}
+									/>
+								{/if}
+								<span>{state.population.toLocaleString()} citizens</span>
+								{#if state.rating}<span>· #{state.rating}</span>{/if}
+							</div>
+						</div>
+						{#if data.expellableStateIds.includes(state.id)}
+							<form
+								method="POST"
+								action="?/proposeExpulsion"
+								use:confirmSubmit={{
+									title: `Vote on expelling ${state.name}?`,
+									body: "The other member states vote for 3 days. Your state's vote counts as in favour.",
+									confirmLabel: "Open vote",
+									danger: true
+								}}
+								use:enhance={withToast}
+							>
+								<input type="hidden" name="stateId" value={state.id} />
+								<IconButton
+									type="submit"
+									icon={FluentPersonDelete20Filled}
+									label="Propose expelling {state.name}"
+									variant="soft-red"
+									size="sm"
+								/>
+							</form>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<p class="py-4 text-center text-sm text-[#a8a083]">No signatories yet.</p>
+		{/if}
 	</section>
 
-	<!-- Join -->
-	{#if data.myApplication}
-		<section class="panel rounded-sm p-4 sm:p-5" style="border-color: {data.bloc.color}30">
-			<form method="POST" action="?/withdrawApplication" use:enhance>
-				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-					<div class="flex-1">
-						<span class="text-sm font-bold text-[#f5efd8]">Application Pending</span>
-						<p class="text-xs text-[#a8a083] mt-0.5">
-							{data.myApplication.pro} pro • {data.myApplication.contra} contra • closes {formatDateTime(
-								data.myApplication.expiresAt
-							)}
-						</p>
-					</div>
-					<Button type="submit" variant="soft-red" icon={FluentDismiss20Filled} class="w-full sm:w-auto">
-						Withdraw
-					</Button>
-				</div>
-			</form>
-		</section>
-	{:else if data.canJoin}
-		<section class="panel rounded-sm p-4 sm:p-5" style="border-color: {data.bloc.color}30">
-			<form method="POST" action="?/join" use:enhance>
-				<div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-					<div class="flex-1">
-						<span class="text-sm font-bold text-[#f5efd8]">Apply to join this Bloc</span>
-						{#if data.userState}
-							<p class="text-xs text-[#a8a083] mt-0.5">
-								Apply as president of {data.userState.name} — member states vote on admission
-							</p>
-						{/if}
-					</div>
-					<button
-						type="submit"
-						class="w-full sm:w-auto px-5 py-2.5 rounded-sm font-bold text-sm text-[#f5efd8] transition-all flex items-center justify-center gap-2 hover:brightness-110"
-						style="background-color: {data.bloc.color}"
-					>
-						<FluentPersonAdd20Filled class="size-4" />
-						Apply
-					</button>
-				</div>
-			</form>
+	<!-- War record -->
+	{#if pastWars.length}
+		<section class="panel rounded-sm p-5 space-y-3">
+			<h2 class="section-title">War record</h2>
+			<WarHistory wars={pastWars} />
 		</section>
 	{/if}
 </PageContainer>

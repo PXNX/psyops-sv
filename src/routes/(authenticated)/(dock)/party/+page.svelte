@@ -5,12 +5,14 @@
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
-	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
-	import { Button } from "#lib/component/ui/index.js";
+	import { Badge, Button } from "#lib/component/ui/index.js";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import PartyTag from "#lib/component/PartyTag.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 
 	const { data } = $props();
 
@@ -26,7 +28,7 @@
 	);
 
 	function updateParams(changes: Record<string, string | null>) {
-		const params = new URLSearchParams(page.url.searchParams);
+		const params = new URLSearchParams(page.url.searchParams.toString());
 		for (const [key, value] of Object.entries(changes)) {
 			if (!value) params.delete(key);
 			else params.set(key, value);
@@ -44,7 +46,7 @@
 		}`}
 	>
 		{#snippet actions()}
-			<Button variant="primary" href="/party/create" icon={FluentAdd20Filled}>Create your own party</Button>
+			<Button variant="primary" href="/party/create" icon={FluentAdd20Filled}>Found a party</Button>
 		{/snippet}
 	</PageHeader>
 
@@ -106,80 +108,77 @@
 		</select>
 	</div>
 
-	<!-- Party Grid -->
+	<!-- Party posters -->
 	{#if filteredParties.length > 0}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-			{#each filteredParties as party}
-				<a href="/party/{party.id}" class="group panel-interactive rounded-sm p-5">
-					<!-- Party Header -->
-					<div class="flex items-start gap-3 mb-3">
-						<div
-							class="size-12 rounded-sm flex items-center justify-center shrink-0"
-							style="background-color: {party.color}"
-						>
-							{#if party.logoUrl}
-								<img
-									loading="lazy"
-									decoding="async"
-									src={party.logoUrl}
-									alt={party.name}
-									class="size-10 object-contain"
-								/>
-							{:else}
-								<FluentPeople20Filled class="size-6 text-[#f5efd8]" />
-							{/if}
-						</div>
-
-						<div class="flex-1 min-w-0">
-							<h3 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-								{party.name}
-							</h3>
-							{#if party.abbreviation}
-								<span
-									class="inline-block px-2 py-0.5 rounded-sm text-xs font-semibold mt-1"
-									style="background-color: {party.color}20; color: {party.color}"
+			{#each filteredParties as party (party.id)}
+				<article class="panel-interactive rounded-sm overflow-hidden flex flex-col">
+					<a href="/party/{party.id}" class="group flex-1 flex">
+						<div class="w-2 shrink-0" style:background-color={party.color}></div>
+						<div class="flex-1 min-w-0 p-4 space-y-3">
+							<div class="flex items-start gap-3">
+								<div
+									class="size-14 rounded-full flex items-center justify-center shrink-0 overflow-hidden border-2"
+									style="background-color: {party.color}; border-color: {party.color}"
 								>
-									{party.abbreviation}
-								</span>
-							{/if}
-						</div>
-					</div>
-
-					<!-- Description -->
-					{#if party.description}
-						<p class="text-sm text-[#a8a083] line-clamp-2 mb-3">{party.description}</p>
-					{/if}
-
-					<!-- Stats -->
-					<div class="flex items-center justify-between text-sm flex-wrap gap-2">
-						<div class="flex items-center gap-1 text-[#d3caa9]">
-							<FluentPeople20Filled class="size-4 text-[#c08cf0]" />
-							<span>{party.memberCount} members</span>
-						</div>
-						{#if party.ideology}
-							<div class="flex items-center gap-1 text-[#d3caa9]">
-								<FluentFlag20Filled class="size-4 text-[#c08cf0]" />
-								<span>{party.ideology}</span>
+									{#if party.logoUrl}
+										<img loading="lazy" decoding="async" src={party.logoUrl} alt="" class="size-full object-cover" />
+									{:else}
+										<FluentPeople20Filled class="size-7 text-[#f5efd8]" />
+									{/if}
+								</div>
+								<div class="flex-1 min-w-0">
+									<h3
+										class="font-serif text-lg font-black uppercase leading-tight text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors line-clamp-2"
+									>
+										{party.name}
+									</h3>
+									<div class="mt-1 flex flex-wrap items-center gap-1.5">
+										<PartyTag abbreviation={party.abbreviation} color={party.color} />
+										{#if party.ideology}
+											<Badge tone="purple" size="xs">{party.ideology}</Badge>
+										{/if}
+									</div>
+								</div>
 							</div>
-						{/if}
-					</div>
-					{#if data.scope === "global" && party.stateName}
-						<div class="flex items-center gap-1 text-xs text-[#a8a083] mt-2">
-							<FluentLocation20Filled class="size-3" />
-							<span>{party.stateName}</span>
+
+							{#if party.description}
+								<p class="font-serif text-sm italic text-[#d3caa9] line-clamp-2">“{party.description}”</p>
+							{/if}
+
+							<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#a8a083]">
+								<span class="flex items-center gap-1">
+									<FluentPeople20Filled class="size-3.5 text-[#c08cf0]" />
+									<span class="font-bold text-[#f5efd8]">{party.memberCount}</span>
+									{party.memberCount === 1 ? "member" : "members"}
+								</span>
+								{#if data.scope === "global" && party.stateName}
+									<span class="flex items-center gap-1">
+										<FluentLocation20Filled class="size-3.5" />{party.stateName}
+									</span>
+								{/if}
+							</p>
+						</div>
+					</a>
+					{#if party.leader}
+						<div class="border-t border-[#c8b47a]/10 px-4 py-2.5 pl-6">
+							<UserLink
+								size="sm"
+								id={party.leader.id}
+								name={party.leader.name}
+								avatar={party.leader.avatar}
+								subtitle="Party leader"
+							/>
 						</div>
 					{/if}
-				</a>
+				</article>
 			{/each}
 		</div>
 	{:else}
-		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
-				<FluentPeople20Filled class="size-8 text-[#a8a083]" />
-			</div>
-			<p class="text-xl font-bold text-[#f5efd8] mb-2">No parties found</p>
-			<p class="text-[#a8a083] mb-4">Try adjusting your search or create your own party</p>
-			<Button variant="primary" href="/party/create" icon={FluentAdd20Filled}>Create your own party</Button>
-		</div>
+		<EmptyState icon={FluentPeople20Filled} title="No parties found">
+			{#snippet actions()}
+				<Button variant="primary" href="/party/create" icon={FluentAdd20Filled}>Found a party</Button>
+			{/snippet}
+		</EmptyState>
 	{/if}
 </PageContainer>

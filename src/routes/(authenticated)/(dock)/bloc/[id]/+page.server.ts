@@ -16,10 +16,11 @@ import {
 	blocExpulsionVotes,
 	wars,
 	battles,
-	files
+	files,
+	userProfiles
 } from "#lib/server/schema.js";
 import { error, fail, redirect } from "@sveltejs/kit";
-import { eq, and, or, ne, sql } from "drizzle-orm";
+import { eq, and, or, ne, sql, inArray } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { getLogoUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import {
@@ -37,6 +38,7 @@ import {
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editBlocSchema } from "./schema.js";
+import { warsOfBloc } from "#lib/server/services/military/history.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const blocId = parseInt(params.id);
@@ -360,11 +362,26 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 	if (myApplication) canJoin = false;
 
+	// Avatars of the member states' presidents, for the signatory list.
+	const presidentProfiles = memberStates.some((s) => s.presidentUserId)
+		? await db
+				.select({ accountId: userProfiles.accountId, logo: userProfiles.logo })
+				.from(userProfiles)
+				.where(
+					inArray(
+						userProfiles.accountId,
+						memberStates.flatMap((s) => (s.presidentUserId ? [s.presidentUserId] : []))
+					)
+				)
+		: [];
+	const presidentAvatar = (userId: string) => getLogoUrl(presidentProfiles.find((p) => p.accountId === userId)?.logo);
+
 	// Resolve all logo URLs in parallel
-	const [blocLogo, memberStatesWithLogos, leaderLogo, diplomats, activeWarsWithLogos] = await Promise.all([
+	const [blocLogo, memberStatesWithLogos, leaderLogo, diplomats, activeWarsWithLogos, warHistory] = await Promise.all([
 		getLogoUrl(bloc.logo),
 		Promise.all(
 			memberStates.map(async (state) => ({
+				presidentAvatar: state.presidentUserId ? await presidentAvatar(state.presidentUserId) : null,
 				id: state.id,
 				name: state.name,
 				logo: await getLogoUrl(state.logo),
@@ -408,7 +425,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					}
 				};
 			})
-		)
+		),
+		warsOfBloc(db, blocId)
 	]);
 
 	return {
@@ -457,7 +475,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				? memberStates.map((m) => m.id).filter((id) => id !== myStateInBloc && !pendingExpulsionStateIds.has(id))
 				: [],
 		memberCount: memberStates.length,
-		activeWars: activeWarsWithLogos
+		activeWars: activeWarsWithLogos,
+		warHistory
 	};
 };
 

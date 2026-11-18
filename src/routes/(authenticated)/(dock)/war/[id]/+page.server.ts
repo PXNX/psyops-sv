@@ -123,6 +123,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		describeSide("defender", defenderStates, war.defenderId, defenderBloc ?? null)
 	]);
 	const nameOf = new Map([...attackerStates, ...defenderStates].map((s) => [s.id, s.name]));
+	const declarerAvatar = declarer?.logo ? await getLogoUrl(declarer.logo) : null;
 
 	// Which side the viewer's state is on, and whether they may surrender for it.
 	const myStateId = myPresidency?.stateId ?? null;
@@ -141,7 +142,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			exhaustion: war.status === "active" ? exhaustionAt(war.declaredAt, new Date()) : war.exhaustion,
 			exhaustionLimit: WAR_CONFIG.EXHAUSTION_LIMIT,
 			stalemateDays: WAR_CONFIG.STALEMATE_DAYS,
-			declaredBy: war.declaredBy ? { id: war.declaredBy, name: declarer?.name ?? "Unknown" } : null
+			declaredBy: war.declaredBy
+				? { id: war.declaredBy, name: declarer?.name ?? "Unknown", avatar: declarerAvatar }
+				: null
 		},
 		attacker,
 		defender,

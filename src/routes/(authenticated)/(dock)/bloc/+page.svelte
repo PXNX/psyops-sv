@@ -7,7 +7,6 @@
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
 	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
@@ -15,6 +14,9 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import Badge from "#lib/component/ui/Badge.svelte";
+	import Logo from "#lib/component/Logo.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 
 	const { data } = $props();
 
@@ -71,11 +73,11 @@
 	<PageHeader
 		documentTitle={false}
 		title="Political Blocs"
-		subtitle="{data.blocs.length} {data.blocs.length === 1 ? 'bloc' : 'blocs'} • Political-military alliances"
+		subtitle="{data.blocs.length} {data.blocs.length === 1 ? 'alliance' : 'alliances'} in force"
 	>
 		{#snippet actions()}
 			{#if data.canCreateBloc}
-				<Button href="/bloc/create" icon={FluentAdd20Filled}>Create Bloc</Button>
+				<Button href="/bloc/create" icon={FluentAdd20Filled}>Found a bloc</Button>
 			{/if}
 		{/snippet}
 	</PageHeader>
@@ -131,131 +133,111 @@
 		</div>
 	{/if}
 
-	<!-- User State Info Banner -->
-	{#if data.userPresidency && !data.userPresidency.blocId}
-		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-5">
-			<div class="flex items-center gap-3">
-				<div class="size-12 bg-[#2369b5]/25 rounded-sm flex items-center justify-center flex-shrink-0">
-					<FluentFlag20Filled class="size-6 text-[#b3dcff]" />
-				</div>
-				<div class="flex-1">
-					<h3 class="text-lg font-semibold text-[#f5efd8]">You're the President of {data.userPresidency.stateName}</h3>
-					<p class="text-sm text-[#a8a083]">
-						Select a bloc below to apply for membership — its member states vote on your admission
-					</p>
-				</div>
-			</div>
-		</div>
-	{:else if data.userPresidency?.blocId}
-		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-5">
-			<div class="flex items-center gap-3">
-				<div class="size-12 bg-[#3f8a2a]/25 rounded-sm flex items-center justify-center flex-shrink-0">
-					<FluentCheckmarkCircle20Filled class="size-6 text-[#b9f29a]" />
-				</div>
-				<div class="flex-1">
-					<h3 class="text-lg font-semibold text-[#f5efd8]">Your state is already in a bloc</h3>
-					<a href="/bloc/{data.userPresidency.blocId}" class="text-sm text-[#b9f29a] hover:underline">
-						View your bloc
-					</a>
-				</div>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Blocs Grid -->
+	<!-- Blocs -->
 	{#if data.blocs.length > 0}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-			{#each data.blocs as bloc}
-				<div class="panel-interactive rounded-sm p-5 flex flex-col">
-					<!-- Bloc Header -->
-					<div class="flex items-center gap-3 mb-3">
-						<div
-							class="size-12 rounded-sm flex items-center justify-center shrink-0"
-							style="background-color: {bloc.color}30;"
-						>
-							<FluentFlag20Filled class="size-6" style="color: {bloc.color}" />
-						</div>
-						<div class="flex-1 min-w-0">
-							<h2 class="font-bold text-[#f5efd8] truncate">{bloc.name}</h2>
+			{#each data.blocs as bloc (bloc.id)}
+				<article
+					class="panel-interactive rounded-sm flex flex-col overflow-hidden {bloc.isUserMember
+						? 'border-[#6fd14a]/40'
+						: ''}"
+				>
+					<div class="h-1.5 shrink-0" style:background-color={bloc.color}></div>
+					<a href="/bloc/{bloc.id}" class="group flex-1 p-4 space-y-3">
+						<div class="flex items-center gap-3">
+							<div
+								class="size-12 rounded-full flex items-center justify-center shrink-0 border-2"
+								style="border-color: {bloc.color}; background-color: {bloc.color}26;"
+							>
+								<FluentFlag20Filled class="size-6" style="color: {bloc.color}" />
+							</div>
+							<div class="flex-1 min-w-0">
+								<h2
+									class="font-serif text-lg font-bold leading-tight text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate"
+								>
+									{bloc.name}
+								</h2>
+								<p class="text-[10px] uppercase tracking-[0.2em] text-[#a8a083]">
+									Treaty of {new Date(bloc.createdAt).getFullYear()}
+								</p>
+							</div>
 							{#if bloc.isUserMember}
-								<Badge tone="green" icon={FluentCheckmarkCircle20Filled}>Your Bloc</Badge>
+								<Badge tone="green" icon={FluentCheckmarkCircle20Filled}>Yours</Badge>
 							{/if}
 						</div>
-					</div>
 
-					<!-- Description -->
-					{#if bloc.description}
-						<p class="text-sm text-[#a8a083] mb-4 line-clamp-2">{bloc.description}</p>
-					{/if}
-
-					<!-- Stats -->
-					<div class="grid grid-cols-2 gap-2 mb-3">
-						<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-							<FluentBuildingGovernment20Filled class="size-4 text-[#b3dcff] shrink-0" />
-							<div class="min-w-0">
-								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">States</p>
-								<p class="text-sm font-bold text-[#f5efd8] truncate">{bloc.memberCount}</p>
-							</div>
-						</div>
-						<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-							<FluentPeople20Filled class="size-4 text-[#ffd35c] shrink-0" />
-							<div class="min-w-0">
-								<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Population</p>
-								<p class="text-sm font-bold text-[#f5efd8] truncate">{formatPopulation(bloc.totalPopulation)}</p>
-							</div>
-						</div>
-					</div>
-
-					<!-- Actions -->
-					<div class="flex items-center justify-between gap-2 mt-auto pt-3 border-t border-[#c8b47a]/10">
-						<a
-							href="/bloc/{bloc.id}"
-							class="group flex items-center gap-1 text-xs text-[#e6ddbf]/70 hover:text-[#ffcf47] transition-colors"
-						>
-							<span>View Details</span>
-							<FluentChevronRight20Filled class="size-3.5 group-hover:translate-x-0.5 transition-transform" />
-						</a>
-
-						{#if bloc.isPendingApplication}
-							<Badge tone="amber" icon={FluentFlag20Filled}>Application Pending</Badge>
-						{:else if data.userPresidency && !data.userPresidency.blocId && !data.pendingApplicationBlocId}
-							<form method="POST" action="?/apply" use:enhance>
-								<input type="hidden" name="blocId" value={bloc.id} />
-								<button
-									type="submit"
-									class="px-3 py-1.5 rounded-sm text-xs font-bold text-[#f5efd8] transition-all hover:brightness-110 flex items-center gap-1.5"
-									style="background-color: {bloc.color}"
-								>
-									<FluentFlag20Filled class="size-3.5" />
-									Apply to Join
-								</button>
-							</form>
+						{#if bloc.description}
+							<p class="font-serif text-sm italic text-[#d3caa9] line-clamp-2">{bloc.description}</p>
 						{/if}
-					</div>
-				</div>
+
+						<!-- Member flags -->
+						{#if bloc.members.length}
+							<div class="flex items-center">
+								<div class="flex -space-x-1.5">
+									{#each bloc.members.slice(0, 8) as m (m.id)}
+										<Logo
+											src={m.logo}
+											alt={m.name}
+											class="size-7 rounded-sm ring-2 ring-[#1a1f15]"
+											placeholderIcon={FluentBuildingGovernment20Filled}
+										/>
+									{/each}
+								</div>
+								{#if bloc.members.length > 8}
+									<span class="ml-2 text-xs text-[#a8a083]">+{bloc.members.length - 8}</span>
+								{/if}
+							</div>
+						{/if}
+
+						<p class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#a8a083]">
+							<span class="flex items-center gap-1"
+								><FluentBuildingGovernment20Filled class="size-3.5 text-[#5eaef5]" />
+								<span class="font-bold text-[#f5efd8]">{bloc.memberCount}</span>
+								{bloc.memberCount === 1 ? "state" : "states"}</span
+							>
+							<span class="flex items-center gap-1"
+								><FluentPeople20Filled class="size-3.5 text-[#ffd35c]" />
+								<span class="font-bold text-[#f5efd8]">{formatPopulation(bloc.totalPopulation)}</span> citizens</span
+							>
+						</p>
+					</a>
+
+					{#if bloc.leader || bloc.isPendingApplication || (data.userPresidency && !data.userPresidency.blocId && !data.pendingApplicationBlocId)}
+						<div class="flex items-center justify-between gap-2 border-t border-[#c8b47a]/10 px-4 py-2.5">
+							{#if bloc.leader}
+								<UserLink
+									size="sm"
+									id={bloc.leader.id}
+									name={bloc.leader.name}
+									avatar={bloc.leader.avatar}
+									subtitle="Bloc leader"
+								/>
+							{:else}
+								<span class="text-xs text-[#a8a083]">No leader elected</span>
+							{/if}
+
+							{#if bloc.isPendingApplication}
+								<Badge tone="amber" icon={FluentFlag20Filled}>Applied</Badge>
+							{:else if data.userPresidency && !data.userPresidency.blocId && !data.pendingApplicationBlocId}
+								<form method="POST" action="?/apply" use:enhance>
+									<input type="hidden" name="blocId" value={bloc.id} />
+									<Button type="submit" variant="soft-amber" size="xs" icon={FluentFlag20Filled}>Apply</Button>
+								</form>
+							{/if}
+						</div>
+					{/if}
+				</article>
 			{/each}
 		</div>
 	{:else}
-		<!-- Empty State -->
-		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
-				<FluentGlobe20Filled class="size-8 text-[#a8a083]" />
-			</div>
-			<h2 class="text-xl font-bold text-[#f5efd8] mb-2">No blocs found</h2>
-			<p class="text-[#a8a083] mb-4">
+		<EmptyState icon={FluentGlobe20Filled} title={data.search ? `No blocs match "${data.search}"` : "No blocs yet"}>
+			{#snippet actions()}
 				{#if data.search}
-					No blocs match "{data.search}". Try a different search.
+					<Button variant="secondary" size="sm" onclick={clearSearch}>Clear search</Button>
 				{:else if data.canCreateBloc}
-					Be the first to create a political bloc!
-				{:else}
-					No political blocs exist yet
+					<Button href="/bloc/create" icon={FluentAdd20Filled}>Found a bloc</Button>
 				{/if}
-			</p>
-			{#if data.search}
-				<Button variant="secondary" size="sm" onclick={clearSearch}>Clear search</Button>
-			{:else if data.canCreateBloc}
-				<Button href="/bloc/create" icon={FluentAdd20Filled}>Create First Bloc</Button>
-			{/if}
-		</div>
+			{/snippet}
+		</EmptyState>
 	{/if}
 </PageContainer>

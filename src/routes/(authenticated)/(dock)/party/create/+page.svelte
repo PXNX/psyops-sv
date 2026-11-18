@@ -8,15 +8,14 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
-	import FluentEmojiBallotBoxWithBallot from "~icons/fluent-emoji/ballot-box-with-ballot";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentColor20Filled from "~icons/fluent/color-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentImage20Filled from "~icons/fluent/image-20-filled";
-	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import ImageCropper from "#lib/component/ImageCropper.svelte";
+	import PartyTag from "#lib/component/PartyTag.svelte";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import { PARTY_IDEOLOGIES } from "#lib/config/index.js";
 	import { EditCooldownWarning } from "#lib/component/edit/index.js";
@@ -154,8 +153,12 @@
 <PageContainer maxWidth="3xl">
 	<!-- Header -->
 	<PageHeader
-		title="Create Political Party"
-		subtitle="Start your own political movement and shape the future"
+		title="Found a Party"
+		subtitle={data.isIndependentRegion
+			? `Registers in ${data.userRegion.name}`
+			: data.userState
+				? `Registers in ${data.userState.name}`
+				: undefined}
 		icon={FluentPeople20Filled}
 		backHref="/party"
 		backLabel="Parties"
@@ -166,53 +169,14 @@
 		<EditCooldownWarning cooldownEndsAt={data.cooldownEndsAt} entityName="party" />
 	{/if}
 
-	<!-- Independent Region Warning -->
+	<!-- Independent region: founding forms a state -->
 	{#if data.isIndependentRegion}
-		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-5 space-y-3">
-			<div class="flex items-start gap-3">
-				<FluentWarning20Filled class="size-6 text-[#ffd35c] shrink-0 mt-0.5" />
-				<div class="space-y-2 flex-1">
-					<h3 class="font-semibold text-[#ffd35c] text-lg">Independent Region - State Formation</h3>
-					<p class="text-[#d3caa9] text-sm leading-relaxed">
-						{data.userRegion.name} is not part of any state. Creating a party here will automatically establish
-						<strong class="text-[#f5efd8]">the {data.userRegion.newStateName}</strong> with democratic governance.
-					</p>
-					<div class="panel-muted rounded-sm p-3 space-y-3">
-						<div>
-							<p class="text-[#e6ddbf] text-sm font-medium mb-2">What happens when you create this party:</p>
-							<ul class="text-[#d3caa9] text-sm space-y-1 list-disc list-inside">
-								<li>A new state is formed: "{data.userRegion.newStateName}"</li>
-								<li>Your party becomes the founding political party</li>
-								<li>Other citizens can join or create competing parties</li>
-							</ul>
-						</div>
-						<div class="border-t border-[#c8b47a]/15 pt-3">
-							<p class="text-[#e6ddbf] text-sm font-semibold mb-2 flex items-center gap-2">
-								<FluentEmojiBallotBoxWithBallot class="size-4" />
-								Inaugural Election Schedule:
-							</p>
-							<ul class="text-[#d3caa9] text-sm space-y-1 list-disc list-inside">
-								<li><strong>Start:</strong> 3 days after state formation</li>
-								<li><strong>Duration:</strong> 2 days of voting</li>
-								<li><strong>Seats:</strong> 50 parliament seats available</li>
-								<li><strong>Purpose:</strong> Allows other parties time to establish themselves</li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-	{:else if data.userState}
-		<!-- Home (Citizenship) State Info -->
-		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-4">
-			<div class="flex items-center gap-3">
-				<FluentLocation20Filled class="size-5 text-[#5eaef5]" />
-				<div>
-					<p class="text-sm text-[#b3dcff]">Your party will be created in:</p>
-					<p class="font-semibold text-[#f5efd8]">{data.userState.name}</p>
-					<p class="text-xs text-[#a8a083]">Based on your residence in {data.userRegion.name}</p>
-				</div>
-			</div>
+		<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 text-[#ffd35c] rounded-sm p-4 flex items-center gap-3">
+			<FluentWarning20Filled class="size-5 shrink-0" />
+			<p class="text-sm">
+				{data.userRegion.name} has no state. Founding here forms
+				<strong class="text-[#f5efd8]">the {data.userRegion.newStateName}</strong>; first election in 3 days.
+			</p>
 		</div>
 	{/if}
 
@@ -229,7 +193,7 @@
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentFlag20Filled class="size-5 text-[#f2b01e]" />
-				<h2 class="text-lg font-semibold text-[#f5efd8]">Party Details</h2>
+				<h2 class="section-title">Name</h2>
 			</div>
 
 			<div class="space-y-4">
@@ -251,12 +215,12 @@
 					{#if $errors.name}
 						<p class="field-error">{$errors.name}</p>
 					{:else}
-						<p class="field-hint">{$form.name?.length || 0}/100 characters</p>
+						<p class="field-hint">{$form.name?.length || 0}/100</p>
 					{/if}
 				</div>
 
 				<div>
-					<label for="abbreviation" class="field-label"> Abbreviation (Optional) </label>
+					<label for="abbreviation" class="field-label">Abbreviation (optional)</label>
 					<input
 						type="text"
 						id="abbreviation"
@@ -272,7 +236,7 @@
 						<p class="field-error">{$errors.abbreviation}</p>
 					{:else}
 						<p class="field-hint">
-							{$form.abbreviation?.length || 0}/4 characters • Alphanumeric only
+							{$form.abbreviation?.length || 0}/4 · letters and digits
 						</p>
 					{/if}
 				</div>
@@ -283,7 +247,7 @@
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentImage20Filled class="size-5 text-[#f2b01e]" />
-				<h2 class="text-lg font-semibold text-[#f5efd8]">Party Logo (Optional)</h2>
+				<h2 class="section-title">Emblem</h2>
 			</div>
 
 			<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -382,7 +346,7 @@
 			{#if $errors.logo}
 				<p class="field-error">{$errors.logo}</p>
 			{:else}
-				<p class="field-hint">Will be converted to 96x96 WebP • Max 5MB</p>
+				<p class="field-hint">Optional · max 5MB</p>
 			{/if}
 		</div>
 
@@ -390,7 +354,7 @@
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentColor20Filled class="size-5 text-[#f2b01e]" />
-				<h2 class="text-lg font-semibold text-[#f5efd8]">Party Color</h2>
+				<h2 class="section-title">Colour</h2>
 			</div>
 
 			<div class="grid grid-cols-5 sm:grid-cols-10 gap-2">
@@ -427,19 +391,25 @@
 				<p class="field-error">{$errors.color}</p>
 			{/if}
 
-			<!-- Preview -->
-			<div class="p-4 rounded-sm" style="background-color: {$form.color}20; border: 2px solid {$form.color}40">
-				<div class="flex items-center gap-3">
-					<div class="size-12 rounded-sm flex items-center justify-center" style="background-color: {$form.color}">
+			<!-- Poster preview -->
+			<div class="panel-muted rounded-sm overflow-hidden text-center">
+				<div class="h-1.5" style:background-color={$form.color}></div>
+				<div class="p-4">
+					<div
+						class="mx-auto mb-2 size-16 overflow-hidden rounded-full border-4 flex items-center justify-center"
+						style="background-color: {$form.color}; border-color: {$form.color}"
+					>
 						{#if previewUrl}
-							<img loading="lazy" decoding="async" src={previewUrl} alt="Logo preview" class="size-10 object-contain" />
+							<img decoding="async" src={previewUrl} alt="Logo preview" class="size-full object-cover" />
 						{:else}
-							<FluentPeople20Filled class="size-6 text-[#f5efd8]" />
+							<FluentPeople20Filled class="size-7 text-[#f5efd8]" />
 						{/if}
 					</div>
-					<div>
-						<p class="font-semibold text-[#f5efd8]">{$form.name || "Your Party Name"}</p>
-						<p class="text-sm" style="color: {$form.color}">{$form.abbreviation || "Abbreviation"}</p>
+					<p class="font-serif text-2xl font-black uppercase leading-none text-[#f5efd8] break-words">
+						{$form.name || "Your Party"}
+					</p>
+					<div class="mt-2 flex justify-center">
+						<PartyTag abbreviation={$form.abbreviation || "ABC"} color={$form.color} />
 					</div>
 				</div>
 			</div>
@@ -449,7 +419,7 @@
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentBuildingGovernment20Filled class="size-5 text-[#f2b01e]" />
-				<h2 class="text-lg font-semibold text-[#f5efd8]">Political Alignment</h2>
+				<h2 class="section-title">Ideology</h2>
 			</div>
 
 			<div>
@@ -479,7 +449,7 @@
 		<div class="panel rounded-sm p-5 space-y-3">
 			<div class="flex items-center gap-2">
 				<FluentDocument20Filled class="size-5 text-[#f2b01e]" />
-				<h2 class="text-lg font-semibold text-[#f5efd8]">Party Description</h2>
+				<h2 class="section-title">Manifesto</h2>
 			</div>
 
 			<textarea
@@ -487,7 +457,7 @@
 				name="description"
 				bind:value={$form.description}
 				rows="6"
-				placeholder="Describe your party's mission, values, and political platform..."
+				placeholder="We stand for…"
 				class="field-control rounded-sm px-3 py-2.5 w-full"
 				disabled={$submitting || !canCreate}></textarea>
 		</div>

@@ -1,14 +1,16 @@
 <!-- src/routes/(authenticated)/(dock)/region/+page.svelte -->
+<!-- The regions as an atlas gazetteer: coat of arms, name, owning state and
+     the figure the list is sorted by. -->
 <script lang="ts">
-	import { regionCoatUrl } from "#lib/utils/formatting.js";
+	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
-	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
-	import FluentHome20Filled from "~icons/fluent/home-20-filled";
+	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
+	import FluentGlobe20Filled from "~icons/fluent/globe-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 	import { Badge } from "#lib/component/ui/index.js";
-	import * as m from "#lib/paraglide/messages.js";
 	import { goto } from "$app/navigation";
 
 	const { data } = $props();
@@ -30,158 +32,122 @@
 		{ value: "tungsten", label: "Tungsten" },
 		{ value: "steel", label: "Steel" },
 		{ value: "chromium", label: "Chromium" }
-	];
+	] as const;
+	type SortKey = (typeof sortOptions)[number]["value"];
 
-	function applyFilters() {
+	const RESOURCES = ["oil", "steel", "chromium", "tungsten", "rubber", "aluminium"] as const;
+
+	function applySort() {
 		const params = new URLSearchParams();
-		if (searchInput) params.set("search", searchInput);
 		if (selectedSort) params.set("sort", selectedSort);
 		goto(`/region?${params.toString()}`);
 	}
 
-	function handleSortChange(sort: string) {
-		selectedSort = sort;
-		applyFilters();
-	}
+	// Region names live in the translations, so search them here.
+	const filtered = $derived.by(() => {
+		const q = (searchInput ?? "").trim().toLowerCase();
+		const named = data.regions.map((r) => ({ ...r, name: getRegionName(r.id) }));
+		return q ? named.filter((r) => r.name.toLowerCase().includes(q) || r.stateName?.toLowerCase().includes(q)) : named;
+	});
 
-	function getRegionName(id: number) {
-		const key = `region_${id}`;
-		return m[key]();
-	}
-
-	function getRegionColor(region: any) {
-		return region.stateColor || "#f2b01e";
-	}
+	const sortLabel = $derived(sortOptions.find((o) => o.value === selectedSort)?.label ?? "Rating");
+	const sortValue = (r: (typeof data.regions)[number]) => Number(r[(selectedSort as SortKey) ?? "rating"] ?? 0);
 </script>
 
 <PageContainer maxWidth="6xl">
-	<!-- Header -->
-	<PageHeader title="All Regions" subtitle="{data.regions.length} regions available" />
+	<PageHeader title="Gazetteer of Regions" subtitle="{data.regions.length} regions" />
 
-	<!-- Search and Filters -->
 	<div class="flex flex-col sm:flex-row gap-3">
-		<!-- Search -->
 		<div class="flex-1 relative">
 			<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 text-[#a8a083]" />
 			<input
 				type="text"
 				bind:value={searchInput}
-				onkeydown={(e) => e.key === "Enter" && applyFilters()}
-				placeholder="Search regions..."
-				class="field-control w-full rounded-sm pl-11 pr-4 py-2.5"
+				placeholder="Find a region or state…"
+				aria-label="Search regions"
+				class="field-control w-full rounded-sm pl-11 pr-10 py-2.5"
 			/>
+			{#if searchInput}
+				<button
+					type="button"
+					onclick={() => (searchInput = "")}
+					aria-label="Clear search"
+					class="tap-target absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-sm text-[#a8a083] hover:text-[#f5efd8]"
+				>
+					<FluentDismiss20Filled class="size-4" />
+				</button>
+			{/if}
 		</div>
-
-		<!-- Sort Dropdown -->
 		<select
 			bind:value={selectedSort}
-			onchange={() => applyFilters()}
+			onchange={applySort}
+			aria-label="Sort regions"
 			class="field-control rounded-sm px-4 py-2.5 sm:w-auto"
 		>
-			{#each sortOptions as option}
-				<option value={option.value}>{option.label}</option>
+			{#each sortOptions as option (option.value)}
+				<option value={option.value}>By {option.label.toLowerCase()}</option>
 			{/each}
 		</select>
 	</div>
 
-	<!-- Regions Grid -->
-	<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-		{#each data.regions as region}
-			<a
-				href="/region/{region.id}"
-				class="group panel-interactive rounded-sm p-5 relative space-y-3 overflow-hidden"
-				style="background-color: {getRegionColor(
-					region
-				)}0d; background-image: radial-gradient(circle at top, {getRegionColor(region)}40, transparent 70%);"
+	{#if filtered.length === 0}
+		<EmptyState icon={FluentGlobe20Filled} title="No region by that name" />
+	{:else}
+		<section class="panel rounded-sm overflow-hidden">
+			<div
+				class="flex items-center gap-3 border-b border-[#c8b47a]/15 bg-[#1a1f15]/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#a8a083]"
 			>
-				<!-- Residence Badge -->
-				{#if data.userRegionIds.includes(region.id)}
-					<div class="absolute top-4 right-4">
-						<Badge tone="green" icon={FluentHome20Filled}>Resident</Badge>
-					</div>
-				{/if}
-
-				<!-- Region Header -->
-				<div class="flex items-center gap-3">
-					<div
-						class="size-14 rounded-sm overflow-hidden shrink-0 flex items-center justify-center"
-						style="background-color: {getRegionColor(region)}30;"
-					>
-						<img
-							loading="lazy"
-							decoding="async"
-							src={regionCoatUrl(region.id)}
-							alt={getRegionName(region.id)}
-							class="size-12 object-contain"
-						/>
-					</div>
-					<div class="flex-1 min-w-0">
-						<h2 class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-							{getRegionName(region.id)}
-						</h2>
-						<div class="flex items-center gap-2 text-xs text-[#a8a083] mt-0.5">
-							<span>#{region.rating || 0}</span>
-							{#if region.stateName}
-								<span>•</span>
-								<span class="truncate">{region.stateName}</span>
-							{:else}
-								<span class="text-[#ffd35c]">• Independent</span>
-							{/if}
-						</div>
-					</div>
-				</div>
-
-				<!-- Quick Stats -->
-				<div class="grid grid-cols-2 gap-2 text-xs text-[#d3caa9]">
-					<div class="flex items-center gap-1">
-						<FluentPeople20Filled class="size-3 text-[#5eaef5]" />
-						<span>{region.population.toLocaleString()}</span>
-					</div>
-					<div>
-						<span class="text-[#a8a083]">Infrastructure:</span>
-						{region.infrastructure || 0}
-					</div>
-					<div>
-						<span class="text-[#a8a083]">Economy:</span>
-						{region.economy || 0}
-					</div>
-					<div>
-						<span class="text-[#a8a083]">Education:</span>
-						{region.education || 0}
-					</div>
-				</div>
-
-				<!-- Resources (if any) -->
-				{#if region.oil || region.steel || region.chromium || region.tungsten || region.rubber || region.aluminium}
-					<div class="pt-3 border-t border-[#c8b47a]/10">
-						<div class="flex flex-wrap gap-1">
-							{#if region.oil}
-								<Badge tone="amber" size="xs">Oil: {region.oil}</Badge>
-							{/if}
-							{#if region.steel}
-								<Badge tone="neutral" size="xs">Steel: {region.steel}</Badge>
-							{/if}
-							{#if region.chromium}
-								<Badge tone="blue" size="xs">Chromium: {region.chromium}</Badge>
-							{/if}
-							{#if region.tungsten}
-								<Badge tone="purple" size="xs">Tungsten: {region.tungsten}</Badge>
-							{/if}
-						</div>
-					</div>
-				{/if}
-			</a>
-		{/each}
-	</div>
-
-	<!-- Empty State -->
-	{#if data.regions.length === 0}
-		<div class="panel-muted rounded-sm p-12 text-center">
-			<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
-				<FluentSearch20Filled class="size-8 text-[#a8a083]" />
+				<span class="w-7 text-right">No.</span>
+				<span class="flex-1">Region</span>
+				<span class="w-20 text-right">{sortLabel}</span>
 			</div>
-			<h2 class="text-xl font-bold text-[#f5efd8] mb-2">No regions found</h2>
-			<p class="text-[#a8a083]">Try adjusting your search or filters</p>
-		</div>
+			<ol class="divide-y divide-[#c8b47a]/10">
+				{#each filtered as region, i (region.id)}
+					{@const resources = RESOURCES.filter((k) => region[k])}
+					<li>
+						<a
+							href="/region/{region.id}"
+							class="group flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[#f2b01e]/5"
+						>
+							<span class="w-7 shrink-0 text-right font-mono text-xs text-[#a8a083]">{i + 1}</span>
+							<img
+								loading="lazy"
+								decoding="async"
+								src={regionCoatUrl(region.id)}
+								alt=""
+								class="size-10 shrink-0 object-contain transition-transform group-hover:-translate-y-0.5"
+							/>
+							<div class="min-w-0 flex-1">
+								<p class="flex items-center gap-2">
+									<span
+										class="truncate font-serif font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors"
+										>{region.name}</span
+									>
+									{#if data.userRegionIds.includes(region.id)}
+										<Badge tone="green" size="xs">Home</Badge>
+									{/if}
+								</p>
+								<p class="flex flex-wrap items-center gap-x-2 text-xs text-[#a8a083]">
+									{#if region.stateName}
+										<span class="truncate">{region.stateName}</span>
+									{:else}
+										<span class="text-[#ffd35c]">Independent</span>
+									{/if}
+									<span class="flex items-center gap-1"
+										><FluentPeople20Filled class="size-3 text-[#5eaef5]" />{region.population.toLocaleString()}</span
+									>
+									{#each resources as k (k)}
+										<span class="hidden capitalize text-[#d3caa9] sm:inline">· {k} {region[k]}</span>
+									{/each}
+								</p>
+							</div>
+							<span class="w-20 shrink-0 text-right font-mono text-sm font-bold text-[#f5efd8]">
+								{sortValue(region).toLocaleString()}
+							</span>
+						</a>
+					</li>
+				{/each}
+			</ol>
+		</section>
 	{/if}
 </PageContainer>
