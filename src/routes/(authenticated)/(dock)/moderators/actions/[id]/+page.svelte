@@ -1,5 +1,6 @@
 <!-- src/routes/moderators/actions/[id]/+page.svelte -->
 <script lang="ts">
+	import UserLink from "#lib/component/UserLink.svelte";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
@@ -12,7 +13,6 @@
 	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import Logo from "#lib/component/Logo.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
@@ -107,23 +107,12 @@
 		{#if data.action.target}
 			<div class="panel rounded-sm p-5">
 				<h3 class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-3">Target User</h3>
-				<a href="/user/{data.action.target.id}" class="flex items-center gap-3 group">
-					<div class="size-16 rounded-sm overflow-hidden transition-all">
-						<Logo
-							src={data.action.target.logoUrl}
-							alt={data.action.target.name}
-							class="size-full"
-							placeholderIcon={FluentPeople20Filled}
-							placeholderGradient="from-[#242a1d] to-[#1a1f15]"
-						/>
-					</div>
-					<div class="flex-1 min-w-0">
-						<p class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-							{data.action.target.name}
-						</p>
-						<p class="text-sm text-[#a8a083]">Click to view profile</p>
-					</div>
-				</a>
+				<UserLink
+					id={data.action.target.id}
+					name={data.action.target.name}
+					avatar={data.action.target.logoUrl}
+					size="md"
+				/>
 			</div>
 		{/if}
 
@@ -133,29 +122,19 @@
 				<h3 class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-3">
 					{data.action.type === "report_action" ? "Reviewed By" : "Moderator"}
 				</h3>
-				<a href="/user/{data.action.moderator.id}" class="flex items-center gap-3 group">
-					<div class="size-16 rounded-sm overflow-hidden transition-all">
-						<Logo
-							src={data.action.moderator.logoUrl}
-							alt={data.action.moderator.name}
-							class="size-full"
-							placeholderIcon={FluentShield20Filled}
-							placeholderGradient="from-[#8a4fc0] to-[#c08cf0]"
-						/>
-					</div>
-					<div class="flex-1 min-w-0">
-						<p class="font-semibold text-[#e3cbfb] group-hover:text-[#ffcf47] transition-colors truncate">
-							{data.action.moderator.name}
-						</p>
-						<div class="flex items-center gap-2 mt-1">
-							{#if data.action.moderator.role === "admin"}
-								<Badge tone="red" size="xs">Admin</Badge>
-							{:else if data.action.moderator.role === "moderator"}
-								<Badge tone="purple" size="xs">Moderator</Badge>
-							{/if}
-						</div>
-					</div>
-				</a>
+				<div class="flex items-center gap-2 flex-wrap">
+					<UserLink
+						id={data.action.moderator.id}
+						name={data.action.moderator.name}
+						avatar={data.action.moderator.logoUrl}
+						size="md"
+					/>
+					{#if data.action.moderator.role === "admin"}
+						<Badge tone="red" size="xs">Admin</Badge>
+					{:else if data.action.moderator.role === "moderator"}
+						<Badge tone="purple" size="xs">Moderator</Badge>
+					{/if}
+				</div>
 			</div>
 		{/if}
 
@@ -163,23 +142,13 @@
 		{#if data.action.type === "report_action" && data.action.reporter}
 			<div class="panel rounded-sm p-5">
 				<h3 class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-3">Reported By</h3>
-				<a href="/user/{data.action.reporter.id}" class="flex items-center gap-3 group">
-					<div class="size-16 rounded-sm overflow-hidden transition-all">
-						<Logo
-							src={data.action.reporter.logoUrl}
-							alt={data.action.reporter.name}
-							class="size-full"
-							placeholderIcon={FluentPeople20Filled}
-							placeholderGradient="from-[#242a1d] to-[#1a1f15]"
-						/>
-					</div>
-					<div class="flex-1 min-w-0">
-						<p class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-							{data.action.reporter.name}
-						</p>
-						<p class="text-sm text-[#a8a083]">Original reporter</p>
-					</div>
-				</a>
+				<UserLink
+					id={data.action.reporter.id}
+					name={data.action.reporter.name}
+					avatar={data.action.reporter.logoUrl}
+					size="md"
+					subtitle="Original reporter"
+				/>
 			</div>
 		{/if}
 	</div>

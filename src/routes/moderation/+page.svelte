@@ -7,6 +7,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
+	import UserLink from "#lib/component/UserLink.svelte";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
@@ -213,31 +214,14 @@
 
 					<!-- Message Info -->
 					<div class="mb-6 p-4 panel-muted rounded-sm">
-						<div class="flex items-start gap-3 mb-3">
-							{#if selectedReport.messageSenderLogo}
-								<img
-									loading="lazy"
-									decoding="async"
-									src={selectedReport.messageSenderLogo}
-									alt={selectedReport.messageSenderName}
-									class="size-12 rounded-full"
-								/>
-							{:else}
-								<div class="size-12 rounded-full bg-[#1a1f15] flex items-center justify-center">
-									<FluentImageOff20Filled class="size-6 text-[#a8a083]" />
-								</div>
-							{/if}
-
-							<div class="flex-1">
-								<a
-									href="/user/{selectedReport.messageSenderId}"
-									class="font-semibold text-[#f5efd8] hover:text-[#ffcf47] transition-colors"
-								>
-									{selectedReport.messageSenderName}
-								</a>
-								<p class="text-xs text-[#a8a083] capitalize">{selectedReport.messageType} chat</p>
-							</div>
-						</div>
+						<UserLink
+							id={selectedReport.messageSenderId}
+							name={selectedReport.messageSenderName}
+							avatar={selectedReport.messageSenderLogo}
+							subtitle="{selectedReport.messageType} chat"
+							size="md"
+							class="mb-3"
+						/>
 						<p class="text-[#d3caa9]">{selectedReport.messageContent}</p>
 					</div>
 
@@ -246,9 +230,7 @@
 						<h3 class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-2">Report Reason</h3>
 						<p class="text-[#d3caa9] panel-muted rounded-sm p-3">{selectedReport.reason}</p>
 						<p class="text-xs text-[#a8a083] mt-2">
-							Reported by <a href="/user/{selectedReport.reporterId}" class="text-[#ffd35c] hover:underline"
-								>{selectedReport.reporterName}</a
-							>
+							Reported by <UserLink id={selectedReport.reporterId} name={selectedReport.reporterName} size="xs" plain />
 						</p>
 					</div>
 

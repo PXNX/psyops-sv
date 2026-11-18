@@ -297,6 +297,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		return { editForm, userBalance, canAffordProfileEdit, isProfileEditOnCooldown, profileEditCooldownEndsAt };
 	})();
 
+	// Medals for the ribbon bar on the identity card (display only).
+	const medalsPromise = db.query.userMedals.findMany({
+		where: eq(userMedals.userId, params.id),
+		with: { state: true },
+		orderBy: (m, { desc }) => [desc(m.awardedAt)]
+	});
+
 	const [
 		[residence],
 		homeRegionData,
@@ -496,6 +503,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		organizations,
 		account,
 		birthdayInfo,
+		medals: (await medalsPromise).map((m) => ({
+			id: m.id,
+			medalType: m.medalType,
+			reason: m.reason,
+			awardedAt: m.awardedAt,
+			stateName: m.state?.name ?? null
+		})),
+		citizenship: homeRegionData?.stateId
+			? { id: homeRegionData.stateId, name: homeRegionData.stateName, logo: await getLogoUrl(homeRegionData.stateLogo) }
+			: null,
 		premiumPlans: Object.values(PREMIUM_PLANS)
 	};
 };

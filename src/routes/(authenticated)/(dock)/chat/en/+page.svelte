@@ -6,11 +6,10 @@
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentEarth20Filled from "~icons/fluent/earth-20-filled";
-	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
 	import Modal from "#lib/component/Modal.svelte";
 	import ReportModal from "#lib/component/ReportModal.svelte";
-	import PartyTag from "#lib/component/PartyTag.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
 	import { settings } from "#lib/settings.svelte.js";
 	import { Button, IconButton, buttonClass } from "#lib/component/ui/index.js";
 
@@ -326,33 +325,14 @@
 					{:else}
 						<!-- Other user's messages group -->
 						<div class="chat chat-start mb-3 md:mb-4">
-							<div class="chat-image avatar hidden md:block">
-								<a href="/user/{group.senderId}" class="w-10 rounded-full">
-									{#if group.senderLogo && settings.loadImages}
-										<img
-											loading="lazy"
-											decoding="async"
-											src={group.senderLogo}
-											alt={group.senderName || "User"}
-											class=""
-										/>
-									{:else}
-										<div class="w-full h-full bg-[#1a1f15] flex items-center justify-center rounded-full">
-											<FluentImageOff20Filled class="size-5 text-[#a8a083]" />
-										</div>
-									{/if}
-								</a>
-							</div>
 							<div class="chat-header text-xs md:text-sm mb-1 px-1 items-center">
-								{#if group.senderPartyAbbreviation}
-									<PartyTag abbreviation={group.senderPartyAbbreviation} color={group.senderPartyColor} />
-								{/if}
-								<a
-									href="/user/{group.senderId}"
-									class="text-[#e6ddbf] hover:text-[#ffcf47] transition-colors font-semibold"
-								>
-									{group.senderName || "Anonymous"}
-								</a>
+								<UserLink
+									id={group.senderId}
+									name={group.senderName || "Anonymous"}
+									avatar={settings.loadImages ? group.senderLogo : null}
+									party={{ abbreviation: group.senderPartyAbbreviation, color: group.senderPartyColor }}
+									size="xs"
+								/>
 							</div>
 							<div class="flex flex-col gap-1 items-start w-full max-w-[85%] md:max-w-md">
 								{#each group.messages as msg}
@@ -430,14 +410,6 @@
 				class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
 			>
 				<p>{form.error}</p>
-			</div>
-		{/if}
-
-		{#if form?.success && form?.message}
-			<div
-				class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-3 mb-3 flex items-center gap-3 text-sm"
-			>
-				<p>{form.message}</p>
 			</div>
 		{/if}
 

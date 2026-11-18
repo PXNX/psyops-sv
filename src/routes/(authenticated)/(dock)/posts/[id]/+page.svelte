@@ -6,7 +6,7 @@
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentEmojiRolledUpNewspaper from "~icons/fluent-emoji/rolled-up-newspaper";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
-	import Logo from "#lib/component/Logo.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
 	import { formatDateTime } from "#lib/utils/formatting.js";
 	import ShareButton from "#lib/component/ShareButton.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
@@ -91,12 +91,14 @@
 			/>
 
 			<!-- Author Info -->
-			<a href="/user/{data.article.authorId}" class="flex items-center gap-3 group flex-1 min-w-0">
-				<Logo src={data.article.authorLogo} alt={data.article.authorName} class="size-12 sm:size-14 shrink-0" />
-				<div class="flex-1 min-w-0">
-					<p class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-						{data.article.authorName}
-					</p>
+			<div class="flex-1 min-w-0">
+				<UserLink
+					id={data.article.authorId}
+					name={data.article.authorName}
+					avatar={data.article.authorLogo}
+					size="md"
+				/>
+				<div class="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
 					{#if data.article.newspaperName}
 						<a
 							href="/newspaper/{data.article.newspaperId}"
@@ -106,12 +108,12 @@
 							{data.article.newspaperName}
 						</a>
 					{/if}
-					<span class="flex items-center gap-1 text-xs text-[#a8a083] mt-0.5">
+					<span class="flex items-center gap-1 text-xs text-[#a8a083]">
 						<FluentClock20Regular class="size-3" />
 						{formatDateTime(data.article.createdAt)}
 					</span>
 				</div>
-			</a>
+			</div>
 
 			<!-- Actions -->
 			<div class="flex items-center gap-2 flex-shrink-0">

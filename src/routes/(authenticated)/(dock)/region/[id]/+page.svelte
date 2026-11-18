@@ -1,8 +1,10 @@
 <!-- src/routes/(authenticated)/(dock)/region/[id]/+page.svelte -->
+<!-- A region as a gazetteer entry: coat of arms, facts and figures, its
+     governor and industry. Visas are a passport page, travel a ticket. -->
 <script lang="ts">
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
-	import FluentHome20Filled from "~icons/fluent/home-20-filled";
+	import { tick } from "svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentBookCompass24Filled from "~icons/fluent/book-compass-24-filled";
@@ -13,26 +15,41 @@
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentFire20Filled from "~icons/fluent/fire-20-filled";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
+	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 
 	import Logo from "#lib/component/Logo.svelte";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import SectionCard from "#lib/component/SectionCard.svelte";
-	import StatCard from "#lib/component/StatCard.svelte";
 	import Modal from "#lib/component/Modal.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
 
-	import { Button, Badge } from "#lib/component/ui/index.js";
+	import { Button, Badge, SearchSelect } from "#lib/component/ui/index.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
 	import { formatDate, getDaysRemaining, regionCoatUrl } from "#lib/utils/formatting.js";
 	import { BUILDING_TEMPLATES, VALID_BUILDING_TYPES as BUILDING_ORDER } from "#lib/config/index.js";
 	import BorderingRegions from "./BorderingRegions.svelte";
+	import BattleHistory from "#lib/component/BattleHistory.svelte";
 	import ResidenceActions from "./ResidenceActions.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
+	import PassportPage from "../../visas/PassportPage.svelte";
+	import VisaStamp from "../../visas/VisaStamp.svelte";
 
 	const { data, form } = $props();
 
 	let showVisaSheet = $state(false);
 	let visaSubmitting = $state(false);
 	let isAttacking = $state(false);
+	const warItems = $derived(
+		(data.attackableWars as { id: number; attacker: { name: string }; defender: { name: string } }[]).map((w) => ({
+			id: w.id,
+			name: `${w.attacker.name} vs ${w.defender.name}`
+		}))
+	);
+	let attackWarId = $state<string | undefined>(undefined);
+	$effect(() => {
+		if (!attackWarId && warItems.length) attackWarId = String(warItems[0].id);
+	});
 
 	const isIndependent = $derived(!data.region.stateId);
 
@@ -56,6 +73,27 @@
 			data.attackableWars.length > 0 &&
 			data.borderingRegionsForAttack.length > 0
 	);
+
+	const visaFee = $derived(data.visa.settings ? Number(data.visa.settings.visaCost) : 0);
+	const visaTax = $derived(data.visa.settings ? Math.floor((visaFee * data.visa.settings.visaTaxRate) / 100) : 0);
+
+	const resourceEntries = $derived(
+		[
+			{ name: "oil", value: data.region.oil },
+			{ name: "steel", value: data.region.steel },
+			{ name: "chromium", value: data.region.chromium },
+			{ name: "tungsten", value: data.region.tungsten },
+			{ name: "rubber", value: data.region.rubber },
+			{ name: "aluminium", value: data.region.aluminium }
+		].filter((r) => r.value)
+	);
+
+	const facts = $derived([
+		{ label: "Population", value: data.population, href: `/region/${data.region.id}/population` },
+		{ label: "Infrastructure", value: data.region.infrastructure || 0, href: `/region/${data.region.id}/construction` },
+		{ label: "Power", value: data.region.economy || 0, href: `/region/${data.region.id}/construction` },
+		{ label: "Fortifications", value: data.region.fortifications || 0, href: `/region/${data.region.id}/construction` }
+	]);
 </script>
 
 <svelte:head>
@@ -85,12 +123,10 @@
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
-	<!-- Hero Header -->
-	<div
-		class="panel rounded-sm p-5 overflow-hidden relative {data.ongoingBattle ? 'alarm-outline' : ''}"
-		style={data.rulingPartyColor
-			? `background-color: ${data.rulingPartyColor}0d; background-image: radial-gradient(circle at top, ${data.rulingPartyColor}40, transparent 70%);`
-			: undefined}
+	<!-- Gazetteer entry -->
+	<article
+		class="panel rounded-sm overflow-hidden relative {data.ongoingBattle ? 'alarm-outline' : ''}"
+		style={data.rulingPartyColor ? `border-top: 3px solid ${data.rulingPartyColor};` : undefined}
 	>
 		{#if data.region.stateLogo}
 			<img
@@ -99,51 +135,59 @@
 				src={data.region.stateLogo}
 				alt=""
 				aria-hidden="true"
-				class="pointer-events-none absolute -right-6 -top-6 size-40 object-cover opacity-[0.08] rounded-full"
+				class="pointer-events-none absolute -right-6 -top-6 size-40 object-cover opacity-[0.07] rounded-full"
 			/>
 		{/if}
-		<div class="flex items-center gap-5 relative">
+		<div class="relative p-5 flex items-start gap-4 sm:gap-5">
 			<Logo
 				src={regionCoatUrl(data.region.id)}
-				alt={data.region.name}
-				class="size-20 rounded-sm shrink-0"
+				alt="Coat of arms of {data.region.name}"
+				class="size-20 sm:size-24 rounded-sm shrink-0"
 				placeholderIcon={FluentShield20Filled}
 				placeholderGradient="from-[#8a4fc0]/40 to-[#8a4fc0]/40"
 			/>
 			<div class="flex-1 min-w-0">
-				<h1 class="text-3xl font-bold text-[#f5efd8] break-words">{data.region.name}</h1>
-				{#if data.region.stateName}
-					<p class="text-[#a8a083] mt-1">
-						<a href="/state/{data.region.stateId}" class="hover:text-[#ffcf47] transition-colors">
+				<p class="text-[10px] uppercase tracking-[0.25em] text-[#a8a083]">
+					Region · No. {data.region.id}
+				</p>
+				<h1 class="font-serif text-3xl sm:text-4xl font-bold text-[#f5efd8] break-words leading-tight">
+					{data.region.name}
+				</h1>
+				<div class="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
+					{#if data.region.stateName}
+						<a
+							href="/state/{data.region.stateId}"
+							class="font-serif italic text-[#d3caa9] hover:text-[#ffcf47] transition-colors"
+						>
 							{data.region.stateName}
 						</a>
-					</p>
-				{:else}
-					<p class="text-[#ffd35c] mt-1 flex items-center gap-2">
-						<FluentFlag20Filled class="size-5" />
-						Independent Region
-					</p>
-				{/if}
-			</div>
-		</div>
-	</div>
-
-	<!-- Current Region Banner -->
-	{#if data.hasResidence}
-		<div class="bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm p-5">
-			<div class="flex items-start gap-4">
-				<div class="size-12 bg-[#2369b5]/25 rounded-sm flex items-center justify-center flex-shrink-0">
-					<FluentHome20Filled class="size-6 text-[#b3dcff]" />
-				</div>
-				<div class="flex-1">
-					<h2 class="text-lg font-semibold text-[#f5efd8] mb-1">Your Current Region</h2>
-					<p class="text-[#d3caa9] text-sm">You are currently located in this region.</p>
+					{:else}
+						<span class="font-serif italic text-[#ffd35c] flex items-center gap-1.5">
+							<FluentFlag20Filled class="size-4" />
+							Unclaimed territory
+						</span>
+					{/if}
+					{#if data.hasResidence}
+						<Badge tone="blue" icon={FluentLocation20Filled} class="animate-pop-in">You are here</Badge>
+					{/if}
 				</div>
 			</div>
 		</div>
-	{/if}
 
-	<!-- Active Travel Banner -->
+		<!-- Facts and figures -->
+		<div class="relative grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#c8b47a]/12 border-t border-[#c8b47a]/15">
+			{#each facts as fact (fact.label)}
+				<a href={fact.href} class="group px-4 py-3 bg-[#1e2318] hover:bg-[#262c1e] transition-colors">
+					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">{fact.label}</p>
+					<p class="text-xl font-bold font-mono text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
+						{fact.value.toLocaleString()}
+					</p>
+				</a>
+			{/each}
+		</div>
+	</article>
+
+	<!-- On the road -->
 	{#if data.activeTravel}
 		<TravelBanner activeTravel={data.activeTravel} />
 	{/if}
@@ -163,7 +207,7 @@
 		</div>
 	{/if}
 
-	<!-- Residence/Travel Actions -->
+	<!-- Residence / travel -->
 	{#if (isIndependent || !data.hasResidence) && !data.activeTravel}
 		<ResidenceActions
 			regionId={data.region.id}
@@ -180,138 +224,123 @@
 		/>
 	{/if}
 
-	<!-- Visa Status / Requirements -->
-	{#if data.visa.blocVisaFree}
-		<!-- Bloc visa-free: no visa needed -->
-		<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-5">
-			<div class="flex items-center gap-3">
-				<div class="size-12 bg-[#3f8a2a]/25 rounded-sm flex items-center justify-center flex-shrink-0">
-					<FluentCheckmark20Filled class="size-5 text-[#6fd14a]" />
-				</div>
-				<div>
-					<h2 class="text-lg font-semibold text-[#f5efd8]">Visa-Free</h2>
-					<p class="text-sm text-[#b9f29a]">Bloc membership grants visa-free travel to this state</p>
-				</div>
-			</div>
-		</div>
-	{:else if data.visa.blockedReason}
-		<!-- Visa blocked by war or sanctions -->
-		<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-5">
-			<div class="flex items-center gap-3">
-				<div class="size-12 bg-red-600/15 rounded-sm flex items-center justify-center flex-shrink-0">
-					<FluentWarning20Filled class="size-5 text-red-400" />
-				</div>
-				<div>
-					<h2 class="text-lg font-semibold text-[#f5efd8]">Visa Unavailable</h2>
-					<p class="text-sm text-red-300">{data.visa.blockedReason}</p>
-				</div>
-			</div>
-		</div>
-	{:else if data.visa.needsVisa}
-		<div class="panel rounded-sm p-5 space-y-4">
-			<div class="flex flex-wrap items-center gap-3">
-				<div class="size-12 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex items-center justify-center">
-					<FluentBookCompass24Filled class="size-6 text-[#5eaef5]" />
-				</div>
-				<div class="flex-1 min-w-0">
-					<h2 class="text-lg font-semibold text-[#f5efd8]">Visa Required</h2>
-					<p class="text-sm text-[#a8a083]">A visa is required for non-citizens</p>
-				</div>
-				{#if !data.visa.hasActiveVisa && !data.visa.hasPendingApplication && data.visa.settings}
-					<Button
-						type="button"
-						size="sm"
-						variant="soft-blue"
-						icon={FluentBookCompass24Filled}
-						onclick={() => (showVisaSheet = true)}
-					>
-						Request Visa
-					</Button>
-				{/if}
-			</div>
-
-			{#if data.visa.hasActiveVisa && data.visa.activeVisa}
-				{@const daysLeft = getDaysRemaining(data.visa.activeVisa.expiresAt)}
-				<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4">
-					<div class="flex items-start justify-between gap-4">
-						<div class="flex-1">
-							<div class="flex items-center gap-2 mb-2">
-								<FluentCheckmark20Filled class="size-5 text-[#6fd14a]" />
-								<p class="font-semibold text-[#f5efd8]">Active Visa</p>
-							</div>
-							<p class="text-sm text-[#d3caa9]">Expires {formatDate(data.visa.activeVisa.expiresAt)}</p>
-							{#if data.visa.activeVisa.cost > 0}
-								<p class="text-xs text-[#a8a083] mt-1">
-									Cost: ${Number(data.visa.activeVisa.cost).toLocaleString()} (Tax: ${Number(
-										data.visa.activeVisa.taxPaid
-									).toLocaleString()})
-								</p>
+	<!-- Visa: a page of the viewer's passport -->
+	{#if data.visa.blocVisaFree || data.visa.blockedReason || data.visa.needsVisa}
+		<div id="region-visa">
+			<PassportPage heading="Visa · {data.region.stateName ?? data.region.name}">
+				<div class="relative min-h-28 flex flex-col sm:flex-row sm:items-center gap-4">
+					<div class="flex-1 min-w-0">
+						{#if data.visa.blocVisaFree}
+							<p class="font-serif text-lg font-bold">Visa-free</p>
+							<p class="text-sm text-[#7a5427]">Bloc members travel freely.</p>
+						{:else if data.visa.blockedReason}
+							<p class="font-serif text-lg font-bold text-[#a3241b]">Entry refused</p>
+							<p class="text-sm text-[#7a5427] break-words">{data.visa.blockedReason}</p>
+						{:else if data.visa.hasActiveVisa && data.visa.activeVisa}
+							{@const daysLeft = getDaysRemaining(data.visa.activeVisa.expiresAt)}
+							<dl class="grid grid-cols-2 gap-x-4 gap-y-2 max-w-xs">
+								<div>
+									<dt class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#7a5427]/55">Valid until</dt>
+									<dd class="text-sm font-semibold font-mono">{formatDate(data.visa.activeVisa.expiresAt)}</dd>
+								</div>
+								<div>
+									<dt class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#7a5427]/55">Remaining</dt>
+									<dd class="text-sm font-semibold {daysLeft > 3 ? '' : 'text-[#a3241b]'}">
+										{daysLeft} day{daysLeft === 1 ? "" : "s"}
+									</dd>
+								</div>
+								{#if data.visa.activeVisa.cost > 0}
+									<div class="col-span-2">
+										<dt class="text-[9px] font-bold tracking-[0.2em] uppercase text-[#7a5427]/55">Fee paid</dt>
+										<dd class="text-sm font-mono">
+											${Number(data.visa.activeVisa.cost).toLocaleString()}
+											<span class="text-[#7a5427]/70"
+												>incl. ${Number(data.visa.activeVisa.taxPaid).toLocaleString()} tax</span
+											>
+										</dd>
+									</div>
+								{/if}
+							</dl>
+						{:else if data.visa.hasPendingApplication}
+							<p class="font-serif text-lg font-bold">Application lodged</p>
+							<p class="text-sm text-[#7a5427]">Awaiting the Foreign Minister.</p>
+						{:else}
+							<p class="font-serif text-lg font-bold">Visa required</p>
+							{#if data.visa.settings}
+								<Button
+									type="button"
+									size="sm"
+									variant="secondary"
+									class="mt-2"
+									icon={FluentBookCompass24Filled}
+									onclick={() => (showVisaSheet = true)}
+								>
+									Apply for Visa
+								</Button>
 							{/if}
-						</div>
-						<div class="flex flex-col items-end gap-2">
-							<Badge tone={daysLeft > 3 ? "green" : "amber"}>
-								{daysLeft} day{daysLeft === 1 ? "" : "s"} left
-							</Badge>
-						</div>
+						{/if}
+					</div>
+
+					<div class="shrink-0 self-center sm:self-auto">
+						{#if data.visa.blocVisaFree}
+							<VisaStamp label="Free entry" title="Bloc" tone="blue" tilt={-9} />
+						{:else if data.visa.blockedReason}
+							<VisaStamp label="Entry" title="Refused" tone="red" shape="rect" tilt={-7} />
+						{:else if data.visa.hasActiveVisa && data.visa.activeVisa}
+							<VisaStamp
+								label="Approved"
+								title={data.region.stateName}
+								date={formatDate(data.visa.activeVisa.expiresAt)}
+								tone="green"
+								tilt={-13}
+							/>
+						{:else if data.visa.hasPendingApplication}
+							<VisaStamp label="Received" title="Pending" tone="gold" shape="rect" tilt={6} />
+						{:else}
+							<div
+								class="size-24 rounded-full border-2 border-dashed border-[#7a5427]/25 flex items-center justify-center text-[9px] uppercase tracking-[0.2em] text-[#7a5427]/40"
+							>
+								Stamp
+							</div>
+						{/if}
 					</div>
 				</div>
-			{:else if data.visa.hasPendingApplication}
-				<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-4">
-					<div class="flex items-center gap-3">
-						<FluentClock20Filled class="size-5 text-[#ffd35c]" />
-						<div>
-							<p class="font-semibold text-[#f5efd8]">Application Pending</p>
-							<p class="text-sm text-[#a8a083] mt-1">Awaiting approval from Foreign Minister</p>
-						</div>
-					</div>
-				</div>
-			{/if}
+			</PassportPage>
 		</div>
 	{/if}
 
-	<!-- Visa Request Bottom Sheet -->
+	<!-- Visa application -->
 	{#if data.visa.settings && !data.visa.blocVisaFree}
-		<Modal bind:open={showVisaSheet} title="Request Visa" size="default">
-			<div class="space-y-5">
-				<div class="flex items-center gap-4">
-					<div class="size-14 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex items-center justify-center">
-						<FluentBookCompass24Filled class="size-7 text-[#5eaef5]" />
-					</div>
-					<div>
-						<h3 class="text-xl font-bold text-[#f5efd8]">{data.region.stateName}</h3>
-						<p class="text-sm text-[#a8a083]">Travel Visa Application</p>
-					</div>
-				</div>
+		<Modal bind:open={showVisaSheet} title="Visa Application" size="default">
+			<div class="space-y-4">
+				<PassportPage heading="Application · {data.region.stateName}">
+					{#if data.visa.settings.visaRequired}
+						<dl class="space-y-1.5 font-mono text-sm">
+							<div class="flex justify-between gap-3">
+								<dt class="text-[#7a5427]">Visa fee</dt>
+								<dd class="font-bold">${visaFee.toLocaleString()}</dd>
+							</div>
+							<div class="flex justify-between gap-3">
+								<dt class="text-[#7a5427]">of which tax ({data.visa.settings.visaTaxRate}%)</dt>
+								<dd>${visaTax.toLocaleString()}</dd>
+							</div>
+							<div class="flex justify-between gap-3 border-t border-dashed border-[#5b3d1a]/25 pt-1.5">
+								<dt class="text-[#7a5427]">Valid for</dt>
+								<dd>14 days</dd>
+							</div>
+						</dl>
+					{:else}
+						<p class="font-serif font-bold">Open borders</p>
+						<p class="text-sm text-[#7a5427]">Free entry · valid for 14 days</p>
+					{/if}
+				</PassportPage>
 
 				{#if data.visa.settings.visaRequired}
-					<div class="panel-muted rounded-sm p-4 space-y-3">
-						<div class="flex items-center justify-between">
-							<span class="text-sm text-[#a8a083]">Visa Cost</span>
-							<span class="text-xl font-bold font-mono text-[#f5efd8]"
-								>${Number(data.visa.settings.visaCost).toLocaleString()}</span
-							>
-						</div>
-						<div class="flex items-center justify-between">
-							<span class="text-sm text-[#a8a083]">Tax ({data.visa.settings.visaTaxRate}%)</span>
-							<span class="text-sm font-mono text-[#d3caa9]"
-								>${Math.floor(
-									(Number(data.visa.settings.visaCost) * data.visa.settings.visaTaxRate) / 100
-								).toLocaleString()}</span
-							>
-						</div>
-						<div class="border-t border-[#c8b47a]/10 pt-2 flex items-center justify-between">
-							<span class="text-sm text-[#a8a083]">Valid for</span>
-							<span class="text-sm font-medium text-[#f5efd8]">14 days</span>
-						</div>
-					</div>
-
 					{#if !data.visa.settings.autoApprove}
-						<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-3">
-							<p class="text-xs text-[#ffd35c] flex items-center gap-2">
-								<FluentClock20Filled class="size-4" />
-								Manual approval required — Foreign Minister will review your application
-							</p>
-						</div>
+						<p class="field-hint flex items-center gap-1.5">
+							<FluentClock20Filled class="size-4" />
+							Reviewed by the Foreign Minister
+						</p>
 					{/if}
 
 					<form
@@ -323,7 +352,11 @@
 								await update();
 								visaSubmitting = false;
 								toastResult(result);
-								if (result.type === "success") showVisaSheet = false;
+								if (result.type === "success") {
+									showVisaSheet = false;
+									await tick();
+									celebrate(document.getElementById("region-visa"));
+								}
 							};
 						}}
 					>
@@ -332,29 +365,21 @@
 							block
 							icon={FluentBookCompass24Filled}
 							loading={visaSubmitting}
-							disabled={data.walletBalance < Number(data.visa.settings.visaCost)}
+							disabled={data.walletBalance < visaFee}
 						>
 							{#if data.visa.settings.autoApprove}
-								Purchase Visa — ${Number(data.visa.settings.visaCost).toLocaleString()}
+								Purchase Visa — ${visaFee.toLocaleString()}
 							{:else}
 								Apply for Visa
 							{/if}
 						</Button>
-						{#if data.walletBalance < Number(data.visa.settings.visaCost)}
-							<p class="text-xs text-red-400 text-center mt-2">
+						{#if data.walletBalance < visaFee}
+							<p class="field-error text-center">
 								Insufficient funds — you have ${data.walletBalance.toLocaleString()}
 							</p>
 						{/if}
 					</form>
 				{:else}
-					<div class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm p-4">
-						<div class="flex items-center gap-3 mb-1">
-							<FluentCheckmark20Filled class="size-5 text-[#6fd14a]" />
-							<p class="font-semibold text-[#f5efd8]">Open Borders</p>
-						</div>
-						<p class="text-sm text-[#a8a083]">Free entry for all visitors — valid for 14 days</p>
-					</div>
-
 					<form
 						method="POST"
 						action="?/purchaseVisa"
@@ -364,7 +389,11 @@
 								await update();
 								visaSubmitting = false;
 								toastResult(result);
-								if (result.type === "success") showVisaSheet = false;
+								if (result.type === "success") {
+									showVisaSheet = false;
+									await tick();
+									celebrate(document.getElementById("region-visa"));
+								}
 							};
 						}}
 					>
@@ -375,164 +404,96 @@
 		</Modal>
 	{/if}
 
-	<!-- Stats Grid -->
-	<div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
-		<StatCard
-			icon={FluentPeople20Filled}
-			label="Population"
-			value={data.population}
-			color="blue"
-			href="/region/{data.region.id}/population"
-		/>
-		<StatCard
-			label="Infrastructure"
-			value={data.region.infrastructure || 0}
-			color="purple"
-			href="/region/{data.region.id}/construction"
-		/>
-		<StatCard
-			label="Power"
-			value={data.region.economy || 0}
-			color="green"
-			href="/region/{data.region.id}/construction"
-		/>
-		<StatCard
-			label="Fortifications"
-			value={data.region.fortifications || 0}
-			color="red"
-			href="/region/{data.region.id}/construction"
-		/>
-	</div>
-
-	<!-- Governor -->
-	{#if !isIndependent}
-		{#if data.governor}
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+		<!-- Administration -->
+		{#if !isIndependent}
+			{@const underConstruction = data.buildings.filter((b) => b.isUnderConstruction)}
 			<SectionCard>
-				<h2 class="section-title mb-4">
-					<span class="text-xl">👑</span>
-					Governor
-				</h2>
-				<a
-					href="/user/{data.governor.userId}"
-					class="flex items-center gap-3 group panel-muted rounded-sm p-3 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-all"
-				>
-					<div class="size-10 bg-[#f2b01e]/12 rounded-sm flex items-center justify-center">
-						<span class="text-xl">👑</span>
-					</div>
-					<div class="flex-1">
-						<p class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
-							{data.governor.name}
-						</p>
-						<p class="text-xs text-[#a8a083]">Appointed {formatDate(data.governor.appointedAt)}</p>
-					</div>
-				</a>
-			</SectionCard>
-		{:else}
-			<SectionCard>
-				<h2 class="section-title mb-2">
-					<span class="text-xl">👑</span>
-					Governor
-				</h2>
-				<p class="text-sm text-[#a8a083]">No governor appointed</p>
+				<h2 class="section-title mb-3">Administration</h2>
+				<div class="space-y-3">
+					{#if data.governor}
+						<UserLink
+							id={data.governor.userId}
+							name={data.governor.name}
+							avatar={data.governor.logo}
+							subtitle="Governor · since {formatDate(data.governor.appointedAt)}"
+							size="md"
+						/>
+					{:else}
+						<p class="text-sm text-[#a8a083]">No governor appointed</p>
+					{/if}
+					<a
+						href="/region/{data.region.id}/construction"
+						class="panel-interactive rounded-sm p-3 flex items-center gap-3 group"
+					>
+						<FluentBuilding20Filled class="size-5 text-[#5eaef5] shrink-0" />
+						<div class="min-w-0 flex-1">
+							<p class="text-sm font-bold text-[#f5efd8] group-hover:text-[#ffcf47]">Public works</p>
+							<p class="text-xs text-[#a8a083] truncate">
+								{#each BUILDING_ORDER as t, i}{i ? " · " : ""}{BUILDING_TEMPLATES[t].icon}
+									{data.region[BUILDING_TEMPLATES[t].stat] ?? 0}{/each}
+							</p>
+						</div>
+						{#if underConstruction.length}
+							<Badge tone="amber">{underConstruction.length} building</Badge>
+						{/if}
+					</a>
+				</div>
 			</SectionCard>
 		{/if}
-	{/if}
 
-	<!-- Public buildings -->
-	{#if !isIndependent}
-		{@const underConstruction = data.buildings.filter((b) => b.isUnderConstruction)}
-		<a
-			href="/region/{data.region.id}/construction"
-			class="panel-interactive rounded-sm p-4 flex items-center gap-3 group"
-		>
-			<div
-				class="size-10 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex items-center justify-center shrink-0"
-			>
-				<FluentBuilding20Filled class="size-5 text-[#5eaef5]" />
-			</div>
-			<div class="min-w-0 flex-1">
-				<p class="font-bold text-[#f5efd8] group-hover:text-[#ffcf47]">Construction</p>
-				<p class="text-xs text-[#a8a083] truncate">
-					{#each BUILDING_ORDER as t, i}{i ? " · " : ""}{BUILDING_TEMPLATES[t].icon}
-						{data.region[BUILDING_TEMPLATES[t].stat] ?? 0}{/each}
-				</p>
-			</div>
-			{#if underConstruction.length}
-				<Badge tone="amber">{underConstruction.length} building</Badge>
-			{/if}
-		</a>
-	{/if}
-
-	<!-- Factories -->
-	{#if data.factories.length > 0}
-		<SectionCard>
-			<h2 class="section-title mb-4">
-				<FluentBriefcase20Filled class="size-5 text-[#c08cf0]" />
-				Factories
-			</h2>
-			<div class="grid gap-3">
-				{#each data.factories as factory}
-					<a
-						href="/factory/{factory.id}"
-						class="flex items-center gap-3 group panel-muted rounded-sm p-3 hover:border-[#f2b01e]/55 hover:bg-[#2e3524] transition-all"
-					>
-						<div class="size-10 rounded-sm overflow-hidden flex items-center justify-center bg-[#8a4fc0]/15">
-							{#if factory.companyLogoUrl}
-								<Logo
-									src={factory.companyLogoUrl}
-									alt={factory.company?.name || "Company"}
-									class="size-10"
-									placeholderIcon={FluentBriefcase20Filled}
-									placeholderGradient="from-[#8a4fc0]/40 to-[#8a4fc0]/40"
-								/>
-							{:else}
-								<FluentBriefcase20Filled class="size-5 text-[#e3cbfb]" />
-							{/if}
-						</div>
-						<div class="flex-1">
-							<p class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
-								{factory.name}
-							</p>
-							<p class="text-xs text-[#a8a083] capitalize">{factory.factoryType} • {factory.company?.name}</p>
-						</div>
-					</a>
-				{/each}
-			</div>
-		</SectionCard>
-	{/if}
-
-	<!-- Resources -->
-	{#if data.region.oil || data.region.steel || data.region.chromium || data.region.tungsten || data.region.rubber || data.region.aluminium}
-		{@const resourceEntries = [
-			{ name: "oil", value: data.region.oil },
-			{ name: "steel", value: data.region.steel },
-			{ name: "chromium", value: data.region.chromium },
-			{ name: "tungsten", value: data.region.tungsten },
-			{ name: "rubber", value: data.region.rubber },
-			{ name: "aluminium", value: data.region.aluminium }
-		].filter((r) => r.value)}
-		<SectionCard>
-			<h2 class="section-title mb-4">
-				<FluentBuilding20Filled class="size-5 text-[#c8b47a]" />
-				Natural Resources
-			</h2>
-			<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-				{#each resourceEntries as resource}
-					<div class="panel-muted rounded-sm p-3 flex items-center gap-3">
+		<!-- Natural resources -->
+		{#if resourceEntries.length > 0}
+			<SectionCard>
+				<h2 class="section-title mb-3">Resources</h2>
+				<dl class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+					{#each resourceEntries as resource, i (resource.name)}
 						<div
-							class="size-9 shrink-0 flex items-center justify-center bg-[#1a1f15] rounded-full border border-[#c8b47a]/15"
+							class="panel-muted rounded-sm p-2.5 flex items-center gap-2 animate-pop-in"
+							style="--rise-delay: {i * 40}ms"
 						>
-							<ResourceIcon name={resource.name} class="size-5" />
+							<ResourceIcon name={resource.name} class="size-5 shrink-0" />
+							<div class="min-w-0">
+								<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide capitalize">{resource.name}</dt>
+								<dd class="text-sm font-bold font-mono text-[#f5efd8]">{resource.value}</dd>
+							</div>
 						</div>
-						<div>
-							<p class="text-[10px] text-[#a8a083] uppercase tracking-wide capitalize">{resource.name}</p>
-							<p class="text-lg font-bold text-[#f5efd8]">{resource.value}</p>
-						</div>
-					</div>
-				{/each}
-			</div>
-		</SectionCard>
-	{/if}
+					{/each}
+				</dl>
+			</SectionCard>
+		{/if}
+
+		<!-- Industry -->
+		{#if data.factories.length > 0}
+			<SectionCard class="md:col-span-2">
+				<h2 class="section-title mb-3">
+					<FluentBriefcase20Filled class="size-5 text-[#c08cf0]" />
+					Industry
+				</h2>
+				<div class="grid gap-2 sm:grid-cols-2">
+					{#each data.factories as factory}
+						<a href="/factory/{factory.id}" class="flex items-center gap-3 group panel-interactive rounded-sm p-3">
+							<Logo
+								src={factory.companyLogoUrl}
+								alt={factory.company?.name || "Company"}
+								class="size-10 shrink-0"
+								placeholderIcon={FluentBriefcase20Filled}
+								placeholderGradient="from-[#8a4fc0]/40 to-[#8a4fc0]/40"
+							/>
+							<div class="flex-1 min-w-0">
+								<p class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
+									{factory.name}
+								</p>
+								<p class="text-xs text-[#a8a083] capitalize truncate">
+									{factory.factoryType} • {factory.company?.name}
+								</p>
+							</div>
+						</a>
+					{/each}
+				</div>
+			</SectionCard>
+		{/if}
+	</div>
 
 	<!-- Active Wars Section -->
 	{#if data.ongoingBattle}
@@ -633,11 +594,13 @@
 				{#if data.attackableWars.length > 1}
 					<div>
 						<label class="field-label" for="warId">War</label>
-						<select id="warId" name="warId" class="field-control rounded-sm px-3 py-2.5 w-full">
-							{#each data.attackableWars as war}
-								<option value={war.id}>{war.attacker.name} vs {war.defender.name}</option>
-							{/each}
-						</select>
+						<SearchSelect
+							id="warId"
+							name="warId"
+							items={warItems}
+							bind:value={attackWarId}
+							placeholder="Choose a war…"
+						/>
 					</div>
 				{:else}
 					<input type="hidden" name="warId" value={data.attackableWars[0].id} />
@@ -656,6 +619,14 @@
 					{isAttacking ? "Launching Attack..." : "Launch Attack"}
 				</Button>
 			</form>
+		</SectionCard>
+	{/if}
+
+	<!-- Battles fought here -->
+	{#if data.battleHistory.length}
+		<SectionCard>
+			<h2 class="section-title mb-3">Battle history</h2>
+			<BattleHistory battles={data.battleHistory} />
 		</SectionCard>
 	{/if}
 

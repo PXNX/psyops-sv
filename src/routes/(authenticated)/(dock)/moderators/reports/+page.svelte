@@ -1,5 +1,6 @@
 <!-- src/routes/moderators/reports/+page.svelte -->
 <script lang="ts">
+	import UserLink from "#lib/component/UserLink.svelte";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -188,20 +189,7 @@
 							<div class="text-xs text-[#a8a083] font-medium mb-2">Reported {report.targetType}:</div>
 
 							{#if report.targetType === "account" && report.target}
-								<a href="/user/{report.target.id}" class="flex items-center gap-3 group">
-									<div class="size-10 rounded-sm overflow-hidden transition-all">
-										<Logo
-											src={report.target.logoUrl}
-											alt={report.target.name}
-											class="size-full"
-											placeholderIcon={FluentPeople20Filled}
-											placeholderGradient="from-[#4a5238] to-[#252b1e]"
-										/>
-									</div>
-									<span class="text-sm text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors">
-										{report.target.name}
-									</span>
-								</a>
+								<UserLink id={report.target.id} name={report.target.name} avatar={report.target.logoUrl} />
 							{:else if report.targetType === "party" && report.target}
 								<a href="/party/{report.target.id}" class="flex items-center gap-3 group">
 									<div class="size-10 rounded-sm overflow-hidden transition-all">
@@ -225,12 +213,7 @@
 									{#if report.target.sender}
 										<div class="flex items-center gap-2">
 											<span class="text-xs text-[#a8a083]">From:</span>
-											<a
-												href="/user/{report.target.sender.id}"
-												class="text-sm text-[#ffd35c] hover:text-[#ffcf47] transition-colors"
-											>
-												{report.target.sender.name}
-											</a>
+											<UserLink id={report.target.sender.id} name={report.target.sender.name} size="xs" plain />
 										</div>
 									{/if}
 									<div class="bg-[#0f120c] rounded-sm p-3 border border-[#c8b47a]/10">
@@ -258,25 +241,12 @@
 									<!-- Reviewer -->
 									{#if report.reviewer}
 										<div class="flex items-center gap-3">
-											<a href="/user/{report.reviewer.id}" class="flex items-center gap-2 group">
-												<div class="size-8 rounded-sm overflow-hidden transition-all">
-													<Logo
-														src={report.reviewer.logoUrl}
-														alt={report.reviewer.name}
-														class="size-full"
-														placeholderIcon={FluentShield20Filled}
-														placeholderGradient="from-[#8a4fc0] to-[#6b3d96]"
-													/>
-												</div>
-												<div class="min-w-0">
-													<span class="text-xs text-[#a8a083] block">Reviewed by</span>
-													<span
-														class="text-sm text-[#e3cbfb] group-hover:text-[#ffcf47] transition-colors truncate block"
-													>
-														{report.reviewer.name}
-													</span>
-												</div>
-											</a>
+											<UserLink
+												id={report.reviewer.id}
+												name={report.reviewer.name}
+												avatar={report.reviewer.logoUrl}
+												subtitle="Reviewed by"
+											/>
 										</div>
 									{/if}
 

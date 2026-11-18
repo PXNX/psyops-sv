@@ -1,4 +1,5 @@
 <script lang="ts">
+	import UserLink from "#lib/component/UserLink.svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
@@ -10,7 +11,6 @@
 	import FluentFilter20Filled from "~icons/fluent/filter-20-filled";
 	import FluentDismissCircle20Filled from "~icons/fluent/dismiss-circle-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
-	import Logo from "#lib/component/Logo.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
@@ -170,44 +170,23 @@
 							<!-- Target User -->
 							<div class="flex items-center gap-3">
 								<div class="text-xs text-[#a8a083] font-medium min-w-[60px]">Target:</div>
-								<a href="/user/{action.target.id}" class="flex items-center gap-2 group flex-1 min-w-0">
-									<div class="size-8 rounded-sm overflow-hidden transition-all">
-										<Logo
-											src={action.target.logoUrl}
-											alt={action.target.name}
-											class="size-full"
-											placeholderIcon={FluentPeople20Filled}
-											placeholderGradient="from-[#4a5238] to-[#252b1e]"
-										/>
-									</div>
-									<span class="text-sm text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-										{action.target.name}
-									</span>
-								</a>
+								<UserLink
+									id={action.target.id}
+									name={action.target.name}
+									avatar={action.target.logoUrl}
+									class="flex-1"
+								/>
 							</div>
 
 							<!-- Moderator -->
 							<div class="flex items-center gap-3">
 								<div class="text-xs text-[#a8a083] font-medium min-w-[60px]">Moderator:</div>
-								<a href="/user/{action.moderator.id}" class="flex items-center gap-2 group flex-1 min-w-0">
-									<div class="size-8 rounded-sm overflow-hidden transition-all">
-										<Logo
-											src={action.moderator.logoUrl}
-											alt={action.moderator.name}
-											class="size-full"
-											placeholderIcon={FluentShield20Filled}
-											placeholderGradient="from-[#8a4fc0] to-[#6b3d96]"
-										/>
-									</div>
-									<span class="text-sm text-[#e3cbfb] group-hover:text-[#ffcf47] transition-colors truncate">
-										{action.moderator.name}
-									</span>
-									{#if action.moderator.role === "admin"}
-										<Badge tone="red" size="xs">Admin</Badge>
-									{:else if action.moderator.role === "moderator"}
-										<Badge tone="purple" size="xs">Mod</Badge>
-									{/if}
-								</a>
+								<UserLink id={action.moderator.id} name={action.moderator.name} avatar={action.moderator.logoUrl} />
+								{#if action.moderator.role === "admin"}
+									<Badge tone="red" size="xs">Admin</Badge>
+								{:else if action.moderator.role === "moderator"}
+									<Badge tone="purple" size="xs">Mod</Badge>
+								{/if}
 							</div>
 						</div>
 

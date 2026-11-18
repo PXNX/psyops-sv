@@ -173,8 +173,8 @@
 									return async ({ result, update }) => {
 										await update();
 										busy = null;
-										toastResult(result);
 										if (result.type === "success") celebrate(document.getElementById(`building-${b.type}`));
+										else toastResult(result);
 									};
 								}}
 							>

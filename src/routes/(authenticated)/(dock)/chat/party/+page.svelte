@@ -1,12 +1,12 @@
 <!-- src/routes/(authenticated)/chat/party/+page.svelte -->
 <script lang="ts">
+	import UserLink from "#lib/component/UserLink.svelte";
 	import { enhance } from "$app/forms";
 	import { goto, invalidate } from "$app/navigation";
 	import { onMount, onDestroy } from "svelte";
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
 	import Modal from "#lib/component/Modal.svelte";
@@ -352,30 +352,13 @@
 						{:else}
 							<!-- Other user's messages group -->
 							<div class="chat chat-start mb-3 md:mb-4">
-								<div class="chat-image avatar hidden md:block">
-									<a href="/user/{group.senderId}" class="w-10 rounded-full">
-										{#if group.senderLogo && settings.loadImages}
-											<img
-												loading="lazy"
-												decoding="async"
-												src={group.senderLogo}
-												alt={group.senderName || "User"}
-												class=""
-											/>
-										{:else}
-											<div class="w-full h-full bg-[#1a1f15] flex items-center justify-center rounded-full">
-												<FluentImageOff20Filled class="size-5 text-[#a8a083]" />
-											</div>
-										{/if}
-									</a>
-								</div>
 								<div class="chat-header text-xs md:text-sm mb-1 flex items-center gap-2 px-1">
-									<a
-										href="/user/{group.senderId}"
-										class="text-[#e6ddbf] hover:text-[#ffcf47] transition-colors font-semibold"
-									>
-										{group.senderName || "Anonymous"}
-									</a>
+									<UserLink
+										id={group.senderId}
+										name={group.senderName || "Anonymous"}
+										avatar={settings.loadImages ? group.senderLogo : null}
+										size="xs"
+									/>
 									{#if group.isLeader}
 										<Badge tone="amber" size="xs" icon={FluentShield20Filled}>
 											<span class="hidden sm:inline">Leader</span>

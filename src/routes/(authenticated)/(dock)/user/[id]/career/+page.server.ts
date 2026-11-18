@@ -107,6 +107,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		})()
 	]);
 
+	// Avatars of the presidents who awarded the medals (display only)
+	const awarderLogos = new Map(
+		await Promise.all(medals.map(async (m) => [m.id, await getLogoUrl(m.awardedByUser.profile?.logo)] as const))
+	);
+
 	const newspaperLogos = new Map<number, string>();
 	for (const [newspaperId, logo] of newspaperLogoEntries) {
 		if (logo) newspaperLogos.set(newspaperId, logo);
@@ -153,7 +158,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			name: user.profile?.name,
 			logo: logoUrl,
 			bio: user.profile?.bio,
-			createdAt: user.createdAt
+			createdAt: user.createdAt,
+			partyAbbreviation: currentPartyMemberships[0]?.party.abbreviation ?? null,
+			partyColor: currentPartyMemberships[0]?.party.color ?? null
 		},
 		career: {
 			newspaperPositions,
@@ -191,8 +198,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 				reason: m.reason,
 				awardedAt: m.awardedAt,
 				awardedBy: {
+					id: m.awardedBy,
 					name: m.awardedByUser.profile?.name || "Unknown",
-					logo: null // Can be enhanced later
+					logo: awarderLogos.get(m.id) ?? null
 				},
 				stateName: m.state.name
 			})),

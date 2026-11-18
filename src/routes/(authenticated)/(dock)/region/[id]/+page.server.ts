@@ -32,6 +32,7 @@ import { getSignedDownloadUrl, getLogoUrl } from "#lib/server/backblaze.js";
 import { completePendingConstructions } from "#lib/server/services/politics/construction.service.js";
 
 import { checkEntry } from "#lib/server/services/politics/entry.js";
+import { battlesInRegion } from "#lib/server/services/military/history.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -491,6 +492,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		isInParty,
 		allowsFreeMovement,
 		hasInauguralElection,
+		battleHistory: await battlesInRegion(db, regionId),
 		travelInfo,
 		activeTravel: activeTravel
 			? {
@@ -503,6 +505,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			? {
 					userId: region.governor.userId,
 					name: region.governor.user.profile?.name,
+					logo: await getLogoUrl(region.governor.user.profile?.logo),
 					appointedAt: region.governor.appointedAt
 				}
 			: null,

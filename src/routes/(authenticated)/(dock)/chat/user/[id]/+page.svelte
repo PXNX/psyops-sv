@@ -5,13 +5,12 @@
 	import { onMount, onDestroy } from "svelte";
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
 	import FluentArrowLeft20Filled from "~icons/fluent/arrow-left-20-filled";
-	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentMoreVertical20Filled from "~icons/fluent/more-vertical-20-filled";
 	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
 	import Modal from "#lib/component/Modal.svelte";
 	import ReportMessageModal from "#lib/component/ReportMessageModal.svelte";
 	import BlockUserModal from "#lib/component/BlockUserModal.svelte";
-	import PartyTag from "#lib/component/PartyTag.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
 	import { settings } from "#lib/settings.svelte.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Button, IconButton, buttonClass } from "#lib/component/ui/index.js";
@@ -263,34 +262,15 @@
 			<div class="flex items-center gap-2 md:gap-3">
 				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
 
-				<a
-					href="/user/{data.otherUser.id}"
-					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
-				>
-					{#if data.otherUser.logo && settings.loadImages}
-						<img
-							loading="lazy"
-							decoding="async"
-							src={data.otherUser.logo}
-							alt={data.otherUser.name}
-							class="size-11 md:size-10 rounded-full"
-						/>
-					{:else}
-						<div class="size-11 md:size-10 rounded-full bg-[#1a1f15] flex items-center justify-center shrink-0">
-							<FluentImageOff20Filled class="size-6 md:size-5 text-[#a8a083]" />
-						</div>
-					{/if}
-
-					<div class="min-w-0">
-						<h1 class="text-lg md:text-xl font-bold text-[#f5efd8] truncate">
-							{#if data.otherUser.partyAbbreviation}
-								<PartyTag abbreviation={data.otherUser.partyAbbreviation} color={data.otherUser.partyColor} />
-							{/if}
-							{data.otherUser.name || "Anonymous"}
-						</h1>
-						<p class="text-xs md:text-sm text-red-400">Blocked</p>
-					</div>
-				</a>
+				<UserLink
+					id={data.otherUser.id}
+					name={data.otherUser.name || "Anonymous"}
+					avatar={settings.loadImages ? data.otherUser.logo : null}
+					party={{ abbreviation: data.otherUser.partyAbbreviation, color: data.otherUser.partyColor }}
+					subtitle="Blocked"
+					size="md"
+					class="flex-1"
+				/>
 			</div>
 		</div>
 
@@ -437,34 +417,15 @@
 			<div class="flex items-center gap-2 md:gap-3">
 				<IconButton icon={FluentArrowLeft20Filled} label="Back to messages" onclick={() => goto("/chat")} />
 
-				<a
-					href="/user/{data.otherUser.id}"
-					class="flex items-center gap-2 md:gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
-				>
-					{#if data.otherUser.logo && settings.loadImages}
-						<img
-							loading="lazy"
-							decoding="async"
-							src={data.otherUser.logo}
-							alt={data.otherUser.name}
-							class="size-11 md:size-10 rounded-full"
-						/>
-					{:else}
-						<div class="size-11 md:size-10 rounded-full bg-[#1a1f15] flex items-center justify-center shrink-0">
-							<FluentImageOff20Filled class="size-6 md:size-5 text-[#a8a083]" />
-						</div>
-					{/if}
-
-					<div class="min-w-0">
-						<h1 class="text-lg md:text-xl font-bold text-[#f5efd8] truncate">
-							{#if data.otherUser.partyAbbreviation}
-								<PartyTag abbreviation={data.otherUser.partyAbbreviation} color={data.otherUser.partyColor} />
-							{/if}
-							{data.otherUser.name || "Anonymous"}
-						</h1>
-						<p class="text-xs md:text-sm text-[#a8a083] truncate">Direct Message</p>
-					</div>
-				</a>
+				<UserLink
+					id={data.otherUser.id}
+					name={data.otherUser.name || "Anonymous"}
+					avatar={settings.loadImages ? data.otherUser.logo : null}
+					party={{ abbreviation: data.otherUser.partyAbbreviation, color: data.otherUser.partyColor }}
+					subtitle="Direct Message"
+					size="md"
+					class="flex-1"
+				/>
 
 				<!-- Header Menu Dropdown -->
 				<div class="dropdown dropdown-end">

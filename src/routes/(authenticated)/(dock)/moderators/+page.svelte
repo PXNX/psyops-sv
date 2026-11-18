@@ -2,10 +2,9 @@
 <script lang="ts">
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
-	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentEye20Filled from "~icons/fluent/eye-20-filled";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
-	import Logo from "#lib/component/Logo.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
@@ -44,37 +43,8 @@
 		{#each data.moderators as moderator}
 			<div class="panel rounded-sm p-5 hover:border-[#c08cf0]/40 transition-all">
 				<div class="flex items-start gap-4">
-					<!-- Avatar -->
-					<a href="/user/{moderator.id}" class="shrink-0">
-						<div class="relative">
-							<div class="size-16 rounded-sm overflow-hidden transition-all">
-								<Logo
-									src={moderator.logoUrl}
-									alt={moderator.name}
-									class="size-full"
-									placeholderIcon={FluentPeople20Filled}
-									placeholderGradient="from-[#8a4fc0] to-[#6b3d96]"
-								/>
-							</div>
-							<!-- Role Badge -->
-							<div
-								class="absolute -bottom-1 -right-1 size-7 rounded-full flex items-center justify-center shadow-lg ring-2 ring-[#242a1d] {moderator.role ===
-								'admin'
-									? 'bg-red-600'
-									: 'bg-[#8a4fc0]'}"
-							>
-								<FluentShield20Filled class="size-4 text-[#f5efd8]" />
-							</div>
-						</div>
-					</a>
-
-					<!-- Info -->
 					<div class="flex-1 min-w-0">
-						<a href="/user/{moderator.id}" class="block group">
-							<h3 class="font-bold text-[#f5efd8] truncate group-hover:text-[#ffcf47] transition-colors">
-								{moderator.name}
-							</h3>
-						</a>
+						<UserLink id={moderator.id} name={moderator.name} avatar={moderator.logoUrl} size="md" />
 						<div class="mt-1">
 							{#if moderator.role === "admin"}
 								<Badge tone="red" icon={FluentShield20Filled}>Administrator</Badge>

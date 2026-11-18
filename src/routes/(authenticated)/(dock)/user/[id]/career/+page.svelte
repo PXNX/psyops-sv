@@ -1,10 +1,14 @@
 <!-- src/routes/(authenticated)/(dock)/user/[id]/career/+page.svelte -->
+<!-- A citizen's service record: decorations (ribbon rack + citations) and a dated ledger of offices and memberships. -->
 <script lang="ts">
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { enhance } from "$app/forms";
 	import FluentBriefcase20Filled from "~icons/fluent/briefcase-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
-	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
+	import FluentRibbon20Filled from "~icons/fluent/ribbon-20-filled";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import { celebrate } from "#lib/utils/celebrate.js";
+	import { medalInfo } from "../medals.js";
 	import FluentTrophy20Filled from "~icons/fluent/trophy-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
@@ -104,41 +108,7 @@
 		}
 	};
 
-	const getMedalEmoji = (medalType: string) => {
-		switch (medalType) {
-			case "honor":
-				return "🏆"; // Trophy
-			case "valor":
-				return "🛡️"; // Shield
-			case "excellence":
-				return "⭐"; // Star
-			case "service":
-				return "🎖️"; // Military Medal
-			case "leadership":
-				return "👑"; // Crown
-			default:
-				return "🏅"; // Medal
-		}
-	};
-
-	const getMedalColor = (medalType: string) => {
-		switch (medalType) {
-			case "honor":
-				return "bg-[#f2b01e]/12 border-[#f2b01e]/35";
-			case "valor":
-				return "bg-[#2369b5]/18 border-[#5eaef5]/30";
-			case "excellence":
-				return "bg-[#8a4fc0]/15 border-[#c08cf0]/30";
-			case "service":
-				return "bg-[#3f8a2a]/18 border-[#6fd14a]/30";
-			case "leadership":
-				return "bg-red-600/10 border-red-500/30";
-			default:
-				return "bg-[#1a1f15] border-[#c8b47a]/15";
-		}
-	};
-
-	const formatDate = (date: string) => {
+	const formatDate = (date: string | Date) => {
 		const d = new Date(date);
 		const pad = (n: number) => String(n).padStart(2, "0");
 		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
@@ -146,7 +116,7 @@
 
 	let showMedalModal = $state(false);
 	let medalForm = $state({
-		medalType: "honor" as const,
+		medalType: "honor" as string,
 		reason: ""
 	});
 </script>
@@ -156,241 +126,218 @@
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
-	<!-- Hero Section -->
-	<div class="panel rounded-sm p-5">
-		<div class="flex flex-col sm:flex-row items-center gap-5">
-			<div class="relative shrink-0">
-				{#if data.user.logo}
-					<div class="size-24 rounded-full overflow-hidden bg-[#1a1f15]">
-						<img
-							loading="lazy"
-							decoding="async"
-							src={data.user.logo}
-							alt={data.user.name || "User logo"}
-							class="w-full h-full object-cover"
-						/>
-					</div>
-				{:else}
-					<div class="size-24 rounded-full bg-[#1a1f15] flex items-center justify-center">
-						<FluentImageOff20Filled class="size-8 text-[#a8a083]" />
-					</div>
+	<!-- Record header -->
+	<header class="panel rounded-sm overflow-hidden">
+		<div
+			class="px-4 py-2 border-b border-[#c8b47a]/15 bg-[#0f120c]/50 flex items-center gap-2 text-[10px] uppercase tracking-[0.25em] text-[#a8a083]"
+		>
+			<span>Service Record</span>
+			<span class="ml-auto font-mono normal-case tracking-wider truncate max-w-[50%]">No. {data.user.id}</span>
+		</div>
+		<div class="p-4 sm:p-5 flex flex-wrap items-center gap-4">
+			<UserLink
+				id={data.user.id}
+				name={data.user.name || "Anonymous"}
+				avatar={data.user.logo}
+				party={{ abbreviation: data.user.partyAbbreviation, color: data.user.partyColor }}
+				subtitle="Enlisted {formatDate(data.user.createdAt)}"
+				size="md"
+				class="flex-1"
+			/>
+			<dl class="flex gap-5 text-center">
+				<div>
+					<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide">Newspapers</dt>
+					<dd class="text-xl font-bold text-[#f5efd8]">{data.career.stats.newspaperCount}</dd>
+				</div>
+				<div>
+					<dt class="text-[10px] text-[#a8a083] uppercase tracking-wide">Medals</dt>
+					<dd class="text-xl font-bold text-[#ffd35c]">{data.career.stats.medalCount}</dd>
+				</div>
+			</dl>
+		</div>
+	</header>
+
+	<!-- Decorations -->
+	{#if data.career.medals.length > 0 || data.canAwardMedal}
+		<section id="decorations" class="panel rounded-sm p-5 space-y-4">
+			<div class="flex items-center justify-between gap-3">
+				<h2 class="section-title">
+					<FluentRibbon20Filled class="size-5 text-[#ffd35c]" />
+					Decorations
+				</h2>
+				{#if data.canAwardMedal}
+					<Button variant="soft-amber" size="sm" icon={FluentTrophy20Filled} onclick={() => (showMedalModal = true)}>
+						Award Medal
+					</Button>
 				{/if}
+			</div>
 
-				{#if data.career.stats.medalCount > 0}
-					<div
-						class="absolute -bottom-2 -right-2 size-10 rounded-full flex items-center justify-center ring-2 ring-[#242a1d] bg-[#f2b01e]"
-						title="{data.career.stats.medalCount} Medals"
-					>
-						<FluentTrophy20Filled class="size-5 text-[#1b1708]" />
+			{#if data.career.medals.length > 0}
+				<!-- Ribbon rack, three to a row like on a uniform -->
+				<div class="flex justify-center">
+					<div class="grid grid-cols-3 gap-1 p-2 rounded-sm bg-[#0f120c] border border-[#c8b47a]/15">
+						{#each data.career.medals as medal, i (medal.id)}
+							<span
+								class="animate-pop-in block h-4 w-11 rounded-[1px] ring-1 ring-black/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.25),0_1px_2px_rgba(0,0,0,0.5)]"
+								style="background: {medalInfo(medal.medalType).ribbon}; --rise-delay: {100 + i * 50}ms"
+								title={medalInfo(medal.medalType).label}
+							></span>
+						{/each}
 					</div>
-				{/if}
-			</div>
+				</div>
 
-			<div class="text-center sm:text-left space-y-1 min-w-0">
-				<h1 class="text-3xl font-bold text-[#f5efd8]">{data.user.name || "Anonymous User"}</h1>
-				<p class="text-sm text-[#a8a083]">Career Overview</p>
-			</div>
-		</div>
-	</div>
+				<!-- Citations -->
+				<ul class="grid gap-3 sm:grid-cols-2">
+					{#each data.career.medals as medal (medal.id)}
+						{@const info = medalInfo(medal.medalType)}
+						<li class="panel-muted rounded-sm p-3 flex gap-3">
+							<div class="flex flex-col items-center shrink-0 w-11">
+								<span class="block h-3 w-full rounded-[1px] ring-1 ring-black/50" style="background: {info.ribbon}"
+								></span>
+								<span class="text-2xl leading-none -mt-0.5" aria-hidden="true">{info.emoji}</span>
+							</div>
+							<div class="min-w-0 flex-1">
+								<p class="font-serif font-bold text-[#f5efd8] leading-tight">{info.label}</p>
+								<p class="text-sm text-[#d3caa9] mt-1 italic break-words">“{medal.reason}”</p>
+								<p class="text-xs text-[#a8a083] mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+									<UserLink
+										id={medal.awardedBy.id}
+										name={medal.awardedBy.name}
+										avatar={medal.awardedBy.logo}
+										size="xs"
+									/>
+									<span>· {medal.stateName} · {formatDate(medal.awardedAt)}</span>
+								</p>
+							</div>
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="text-sm text-[#a8a083]">No decorations yet.</p>
+			{/if}
+		</section>
+	{/if}
 
-	<!-- Stats Cards -->
-	<div class="grid grid-cols-2 gap-3">
-		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-			<FluentBriefcase20Filled class="size-4 text-[#6fd14a] shrink-0" />
-			<div class="min-w-0">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Newspapers</p>
-				<p class="text-2xl font-bold text-[#f5efd8]">{data.career.stats.newspaperCount}</p>
-			</div>
-		</div>
-		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-			<FluentTrophy20Filled class="size-4 text-[#ffd35c] shrink-0" />
-			<div class="min-w-0">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Medals</p>
-				<p class="text-2xl font-bold text-[#f5efd8]">{data.career.stats.medalCount}</p>
-			</div>
-		</div>
-	</div>
-
-	<!-- Career Timeline -->
+	<!-- Ledger -->
 	<section class="space-y-3">
-		<div class="flex items-center justify-between gap-3">
+		<div class="flex flex-wrap items-center justify-between gap-2">
 			<h2 class="section-title">
 				<FluentCalendar20Filled class="size-5 text-[#5eaef5]" />
-				Career Timeline
+				Record
 			</h2>
-			{#if data.canAwardMedal}
-				<Button variant="soft-amber" size="sm" icon={FluentTrophy20Filled} onclick={() => (showMedalModal = true)}>
-					Award Medal
-				</Button>
-			{/if}
-		</div>
-
-		<!-- Timeline Filters -->
-		{#if hasPoliticalPositions || data.career.medals.length > 0}
-			<div class="flex items-center gap-2 flex-wrap">
-				{#if hasPoliticalPositions}
+			{#if hasPoliticalPositions && data.career.medals.length > 0}
+				<div class="flex items-center gap-2">
 					<Button
 						type="button"
-						size="sm"
+						size="xs"
 						variant={activeFilter === "political" ? "soft-amber" : "subtle"}
 						icon={FluentBuildingGovernment20Filled}
 						onclick={() => toggleFilter("political")}
 					>
-						Political Positions
+						Offices
 					</Button>
-				{/if}
-				{#if data.career.medals.length > 0}
 					<Button
 						type="button"
-						size="sm"
+						size="xs"
 						variant={activeFilter === "medals" ? "soft-amber" : "subtle"}
 						icon={FluentTrophy20Filled}
 						onclick={() => toggleFilter("medals")}
 					>
 						Medals
 					</Button>
-				{/if}
-				{#if activeFilter}
-					<Button type="button" variant="ghost" size="xs" onclick={() => (activeFilter = null)}>Clear filter</Button>
-				{/if}
-			</div>
-		{/if}
+				</div>
+			{/if}
+		</div>
 
-		<div class="panel rounded-sm p-5">
+		<div class="panel rounded-sm divide-y divide-[#c8b47a]/10">
 			{#if timelineEntries.length === 0}
-				<p class="text-sm text-[#a8a083] text-center py-4">
-					{#if activeFilter === "medals"}
-						No medals awarded yet
-					{:else if activeFilter === "political"}
-						No political positions yet
-					{:else}
-						No career activity yet
-					{/if}
-				</p>
+				<p class="text-sm text-[#a8a083] text-center p-6">Nothing on record yet.</p>
 			{:else}
-				<div class="space-y-4">
-					{#each timelineEntries as entry, i (entry.kind + "-" + i)}
-						{@const isLast = i === timelineEntries.length - 1}
-						<div class="flex gap-3">
-							<div class="flex flex-col items-center">
-								{#if entry.kind === "medal"}
-									<div
-										class="size-10 rounded-full flex items-center justify-center border {getMedalColor(
-											entry.medal.medalType
-										)}"
-									>
-										<span class="text-xl">{getMedalEmoji(entry.medal.medalType)}</span>
-									</div>
-								{:else if entry.kind === "state"}
-									<div
-										class="size-10 rounded-full bg-[#f2b01e]/12 border border-[#f2b01e]/35 flex items-center justify-center"
-									>
-										<FluentBuildingGovernment20Filled class="size-5 text-[#ffd35c]" />
-									</div>
-								{:else if entry.kind === "party"}
-									<div
-										class="size-10 rounded-full flex items-center justify-center"
-										style="background-color: {entry.membership.partyColor}20"
-									>
-										<FluentFlag20Filled class="size-5" style="color: {entry.membership.partyColor}" />
-									</div>
-								{:else if entry.kind === "newspaper"}
-									<div
-										class="size-10 rounded-full bg-[#8a4fc0]/15 border border-[#c08cf0]/30 flex items-center justify-center overflow-hidden"
-									>
-										{#if entry.newspaper.newspaperLogo}
-											<img
-												loading="lazy"
-												decoding="async"
-												src={entry.newspaper.newspaperLogo}
-												alt={entry.newspaper.newspaperName}
-												class="w-full h-full object-cover"
-											/>
-										{:else}
-											<FluentBriefcase20Filled class="size-5 text-[#c08cf0]" />
-										{/if}
-									</div>
-								{:else}
-									<div
-										class="size-10 rounded-full bg-[#2369b5]/18 border border-[#5eaef5]/30 flex items-center justify-center"
-									>
-										<FluentCalendar20Filled class="size-5 text-[#5eaef5]" />
-									</div>
-								{/if}
-								{#if !isLast}
-									<div class="w-px flex-1 bg-[#c8b47a]/15 mt-2"></div>
-								{/if}
-							</div>
+				{#each timelineEntries as entry, i (entry.kind + "-" + i)}
+					<div class="flex gap-3 sm:gap-4 p-3 sm:p-4">
+						<!-- Date column -->
+						<div class="w-[4.5rem] shrink-0 pt-0.5 font-mono text-[11px] text-[#a8a083]">
+							{#if entry.kind === "newspaper"}
+								—
+							{:else}
+								{formatDate(new Date(entry.date))}
+							{/if}
+						</div>
 
-							<div class="flex-1 min-w-0 {isLast ? '' : 'pb-4'}">
-								{#if entry.kind === "medal"}
-									<p class="text-sm font-semibold text-[#f5efd8]">
-										Awarded <span class="capitalize">{entry.medal.medalType}</span> Medal
-									</p>
-									<p class="text-xs text-[#d3caa9] mt-1">{entry.medal.reason}</p>
-									<div class="flex items-center gap-2 mt-2 flex-wrap">
-										<Badge size="xs">{entry.medal.stateName}</Badge>
-										<p class="text-xs text-[#a8a083]">By {entry.medal.awardedBy.name}</p>
-									</div>
-									<p class="text-xs text-[#a8a083] mt-1">{formatDate(entry.medal.awardedAt)}</p>
-								{:else if entry.kind === "state"}
-									<p class="text-sm font-semibold text-[#f5efd8]">{entry.position.title}</p>
+						<!-- Mark -->
+						<div class="shrink-0 pt-0.5">
+							{#if entry.kind === "medal"}
+								<span
+									class="block h-3 w-7 mt-0.5 rounded-[1px] ring-1 ring-black/50"
+									style="background: {medalInfo(entry.medal.medalType).ribbon}"
+								></span>
+							{:else if entry.kind === "state"}
+								<FluentBuildingGovernment20Filled class="size-5 text-[#ffd35c]" />
+							{:else if entry.kind === "party"}
+								<FluentFlag20Filled class="size-5" style="color: {entry.membership.partyColor}" />
+							{:else if entry.kind === "newspaper"}
+								<FluentBriefcase20Filled class="size-5 text-[#c08cf0]" />
+							{:else}
+								<FluentCalendar20Filled class="size-5 text-[#5eaef5]" />
+							{/if}
+						</div>
+
+						<!-- Entry -->
+						<div class="flex-1 min-w-0 text-sm">
+							{#if entry.kind === "medal"}
+								<p class="font-semibold text-[#f5efd8]">{medalInfo(entry.medal.medalType).label}</p>
+								<p class="text-xs text-[#a8a083]">{entry.medal.stateName}</p>
+							{:else if entry.kind === "state"}
+								<p class="font-semibold text-[#f5efd8]">
+									{entry.position.title} of
 									<a
 										href="/state/{entry.position.stateId}"
-										class="text-xs text-[#ffd35c] hover:text-[#ffcf47] transition-colors"
+										class="text-[#ffd35c] hover:text-[#ffcf47] transition-colors">{entry.position.stateName}</a
 									>
-										{entry.position.stateName}
-									</a>
-									{#if entry.position.term}
-										<span class="text-xs text-[#a8a083] ml-2">Term {entry.position.term}</span>
-									{/if}
-									<p class="text-xs text-[#a8a083] mt-1">{formatDate(entry.position.appointedAt)}</p>
-								{:else if entry.kind === "party"}
-									<p class="text-sm font-semibold text-[#f5efd8]">
-										<span class="capitalize">{entry.membership.role}</span> of
-										<a
-											href="/party/{entry.membership.partyId}"
-											class="hover:underline"
-											style="color: {entry.membership.partyColor}"
-										>
-											{entry.membership.partyName}{entry.membership.partyAbbreviation
-												? ` (${entry.membership.partyAbbreviation})`
-												: ""}
-										</a>
-									</p>
-									<a
-										href="/state/{entry.membership.stateId}"
-										class="text-xs text-[#a8a083] hover:text-[#d3caa9] transition-colors"
-									>
-										{entry.membership.stateName}
-									</a>
-									<p class="text-xs text-[#a8a083] mt-1">Joined {formatDate(entry.membership.joinedAt)}</p>
-								{:else if entry.kind === "newspaper"}
-									<a
-										href="/newspaper/{entry.newspaper.newspaperId}"
-										class="text-sm font-semibold text-[#f5efd8] hover:text-[#ffcf47] transition-colors"
-									>
-										{entry.newspaper.newspaperName}
-									</a>
-									<div class="flex flex-wrap gap-2 mt-1">
-										{#each entry.newspaper.positions as position}
-											<Badge tone={getRankColor(position.rank)}>
-												<span>{getRankIcon(position.rank)}</span>
-												<span class="capitalize">{position.rank}</span>
-											</Badge>
-										{/each}
-									</div>
-									{#if entry.newspaper.newspaperBackground}
-										<p class="text-xs text-[#a8a083] mt-2 line-clamp-2">{entry.newspaper.newspaperBackground}</p>
-									{/if}
-								{:else}
-									<p class="text-sm font-semibold text-[#f5efd8]">Joined Platform</p>
-									<p class="text-xs text-[#a8a083] mt-1">{formatDate(data.user.createdAt)}</p>
+								</p>
+								{#if entry.position.term}
+									<p class="text-xs text-[#a8a083]">Term {entry.position.term}</p>
 								{/if}
-							</div>
+							{:else if entry.kind === "party"}
+								<p class="font-semibold text-[#f5efd8]">
+									<span class="capitalize">{entry.membership.role}</span> of
+									<a
+										href="/party/{entry.membership.partyId}"
+										class="hover:underline"
+										style="color: {entry.membership.partyColor}"
+									>
+										{entry.membership.partyName}{entry.membership.partyAbbreviation
+											? ` (${entry.membership.partyAbbreviation})`
+											: ""}
+									</a>
+								</p>
+								<a
+									href="/state/{entry.membership.stateId}"
+									class="text-xs text-[#a8a083] hover:text-[#d3caa9] transition-colors"
+								>
+									{entry.membership.stateName}
+								</a>
+							{:else if entry.kind === "newspaper"}
+								<a
+									href="/newspaper/{entry.newspaper.newspaperId}"
+									class="font-semibold text-[#f5efd8] hover:text-[#ffcf47] transition-colors"
+								>
+									{entry.newspaper.newspaperName}
+								</a>
+								<div class="flex flex-wrap gap-1.5 mt-1">
+									{#each entry.newspaper.positions as position}
+										<Badge tone={getRankColor(position.rank)} size="xs">
+											<span>{getRankIcon(position.rank)}</span>
+											<span class="capitalize">{position.rank}</span>
+										</Badge>
+									{/each}
+								</div>
+							{:else}
+								<p class="font-semibold text-[#f5efd8]">Enlisted</p>
+							{/if}
 						</div>
-					{/each}
-				</div>
+					</div>
+				{/each}
 			{/if}
 		</div>
 	</section>
@@ -408,35 +355,41 @@
 				toastResult(result);
 				if (result.type === "success") {
 					showMedalModal = false;
+					celebrate(document.getElementById("decorations"));
 				}
 			};
 		}}
 	>
 		<div>
-			<label class="field-label" for="medalType">Medal Type</label>
+			<label class="field-label" for="medalType">Medal</label>
 			<select
 				id="medalType"
 				name="medalType"
 				class="field-control rounded-sm px-3 py-2.5 w-full"
 				bind:value={medalForm.medalType}
 			>
-				<option value="honor">🏆 Honor - For outstanding achievements</option>
-				<option value="valor">🛡️ Valor - For courage and bravery</option>
-				<option value="excellence">⭐ Excellence - For exceptional quality</option>
-				<option value="service">🎖️ Service - For dedicated service</option>
-				<option value="leadership">👑 Leadership - For exceptional leadership</option>
+				<option value="honor">🏆 Honor — outstanding achievement</option>
+				<option value="valor">🛡️ Valor — courage and bravery</option>
+				<option value="excellence">⭐ Excellence — exceptional quality</option>
+				<option value="service">🎖️ Service — dedicated service</option>
+				<option value="leadership">👑 Leadership — exceptional leadership</option>
 			</select>
+			<span
+				class="mt-2 block h-3 w-14 rounded-[1px] ring-1 ring-black/50"
+				style="background: {medalInfo(medalForm.medalType).ribbon}"
+			></span>
 		</div>
 
 		<div>
-			<label class="field-label" for="reason">Reason</label>
+			<label class="field-label" for="reason">Citation</label>
 			<textarea
 				id="reason"
 				name="reason"
 				class="field-control rounded-sm px-3 py-2.5 w-full h-24"
-				placeholder="Describe why this person deserves this medal..."
+				placeholder="For…"
 				bind:value={medalForm.reason}
 				required></textarea>
+			<p class="field-hint">One medal per month.</p>
 		</div>
 
 		<div class="flex justify-end gap-2">

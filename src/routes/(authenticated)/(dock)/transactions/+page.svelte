@@ -1,58 +1,15 @@
+<!-- src/routes/(authenticated)/(dock)/transactions/+page.svelte -->
+<!-- The wallet as a bank statement: summary, then dated entries with debit/credit and running balance. -->
 <script lang="ts">
 	import type { PageData } from "./$types";
 	import FluentArrowTrendingLines20Filled from "~icons/fluent/arrow-trending-lines-20-filled";
-	import FluentWallet20Filled from "~icons/fluent/wallet-20-filled";
-	import FluentArrowDownload20Filled from "~icons/fluent/arrow-download-20-filled";
-	import FluentArrowUpload20Filled from "~icons/fluent/arrow-upload-20-filled";
-	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
-	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
-	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentChevronLeft20Filled from "~icons/fluent/chevron-left-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import FluentFilterDismiss20Filled from "~icons/fluent/filter-dismiss-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button, buttonClass } from "#lib/component/ui/index.js";
-
-	type TransactionIconType = "player" | "company" | "state" | "default";
-
-	function getTransactionIconType(tx: {
-		type: string;
-		relatedEntity: { type: string; id: number | null } | null;
-	}): TransactionIconType {
-		if (tx.relatedEntity?.type === "factory" || tx.relatedEntity?.type === "company") return "company";
-		if (tx.relatedEntity?.type === "state") return "state";
-		if (tx.relatedEntity?.type === "listing") return "player";
-
-		const companyTypes = ["factory_wage", "company_deposit", "company_withdrawal", "factory_edit", "company_edit"];
-		if (companyTypes.includes(tx.type)) return "company";
-
-		const stateTypes = [
-			"tax_payment",
-			"state_resource_purchase",
-			"state_resource_sale",
-			"state_construction",
-			"visa_purchase"
-		];
-		if (stateTypes.includes(tx.type)) return "state";
-
-		const playerTypes = ["market_purchase", "market_sale"];
-		if (playerTypes.includes(tx.type)) return "player";
-
-		return "default";
-	}
-
-	function getFallbackIcon(iconType: TransactionIconType) {
-		switch (iconType) {
-			case "company":
-				return FluentBuilding20Filled;
-			case "state":
-				return FluentBuildingGovernment20Filled;
-			case "player":
-				return FluentPerson20Filled;
-			default:
-				return FluentWallet20Filled;
-		}
-	}
 
 	let { data }: { data: PageData } = $props();
 
@@ -103,23 +60,6 @@
 		state_construction: "State Construction"
 	};
 
-	const typeColors: Record<string, { bg: string; border: string; text: string }> = {
-		market_purchase: { bg: "bg-[#2369b5]/15", border: "border-[#5eaef5]/25", text: "text-[#b3dcff]" },
-		market_sale: { bg: "bg-[#3f8a2a]/18", border: "border-[#6fd14a]/30", text: "text-[#b9f29a]" },
-		gift_code_redemption: { bg: "bg-[#f2b01e]/15", border: "border-[#f2b01e]/30", text: "text-[#ffd35c]" },
-		factory_wage: { bg: "bg-[#8a4fc0]/15", border: "border-[#c08cf0]/25", text: "text-[#e3cbfb]" },
-		company_deposit: { bg: "bg-[#3f8a2a]/18", border: "border-[#6fd14a]/30", text: "text-[#b9f29a]" },
-		company_withdrawal: { bg: "bg-[#f2b01e]/12", border: "border-[#f2b01e]/35", text: "text-[#ffd35c]" },
-		visa_purchase: { bg: "bg-[#2369b5]/15", border: "border-[#5eaef5]/25", text: "text-[#b3dcff]" },
-		tax_payment: { bg: "bg-red-600/10", border: "border-red-500/30", text: "text-red-300" }
-	};
-
-	const defaultColor = { bg: "bg-[#242a1d]", border: "border-[#c8b47a]/20", text: "text-[#d3caa9]" };
-
-	function getTypeColor(type: string) {
-		return typeColors[type] || defaultColor;
-	}
-
 	function getDayKey(date: Date | string): string {
 		const d = new Date(date);
 		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -159,201 +99,157 @@
 </svelte:head>
 
 <PageContainer maxWidth="4xl">
-	<!-- Header -->
-	<PageHeader
-		documentTitle={false}
-		title="Transactions"
-		subtitle="Your financial activity over the last 30 days"
-		icon={FluentArrowTrendingLines20Filled}
-	/>
+	<PageHeader documentTitle={false} title="Statement of Account" icon={FluentArrowTrendingLines20Filled} />
 
-	<!-- Balance -->
-	<div class="panel rounded-sm p-5">
-		<div class="flex items-center gap-3">
-			<div
-				class="size-11 bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm flex items-center justify-center shrink-0"
-			>
-				<FluentWallet20Filled class="size-6 text-[#6fd14a]" />
-			</div>
-			<div class="flex-1 min-w-0">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Current Balance</p>
-				<p class="text-2xl font-bold text-[#f5efd8] font-mono">{formatCurrency(data.analytics.currentBalance)}</p>
-			</div>
+	<!-- Statement summary -->
+	<section class="panel rounded-sm overflow-hidden">
+		<div
+			class="flex items-center gap-2 px-4 py-2 border-b border-[#c8b47a]/15 bg-[#0f120c]/50 text-[10px] uppercase tracking-[0.25em] text-[#a8a083]"
+		>
+			<span>Current account</span>
+			<span class="ml-auto font-mono normal-case tracking-normal">Last 30 days</span>
 		</div>
-	</div>
-
-	<!-- Income & Expenses Summaries -->
-	<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-		<!-- Income Summary -->
-		<div class="panel rounded-sm overflow-hidden">
-			<div class="p-4">
-				<div class="flex items-center gap-2 mb-1">
-					<div class="size-8 bg-[#3f8a2a]/18 rounded-sm flex items-center justify-center">
-						<FluentArrowDownload20Filled class="size-4 text-[#6fd14a]" />
-					</div>
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Income</p>
-				</div>
-				<p class="text-xl font-bold text-[#b9f29a] font-mono">+{formatCurrency(data.analytics.totalIncome)}</p>
+		<div class="p-4 sm:p-5 flex flex-wrap items-end justify-between gap-4">
+			<div>
+				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Closing balance</p>
+				<p class="text-3xl font-bold font-mono text-[#f5efd8] animate-tick">
+					{formatCurrency(data.analytics.currentBalance)}
+				</p>
 			</div>
-			{#if incomeCategories.length > 0}
-				<div class="border-t border-[#c8b47a]/10 px-4 py-2 space-y-0.5">
-					{#each incomeCategories as cat}
-						<button
-							type="button"
-							onclick={() => toggleFilter(cat.type)}
-							class="flex items-center justify-between w-full py-1.5 px-1 rounded-sm transition-all cursor-pointer {activeFilter ===
-							cat.type
-								? 'bg-[#3f8a2a]/18'
-								: 'hover:bg-[#2e3524]'}"
-						>
-							<span class="text-xs {activeFilter === cat.type ? 'text-[#b9f29a] font-semibold' : 'text-[#a8a083]'}">
-								{typeLabels[cat.type] || cat.type}
-							</span>
-							<span
-								class="text-xs font-mono {activeFilter === cat.type
-									? 'text-[#b9f29a] font-semibold'
-									: 'text-[#b9f29a]/70'}"
-							>
-								+{formatCurrency(cat.income)}
-							</span>
-						</button>
-					{/each}
+			<dl class="flex gap-5 font-mono text-sm">
+				<div>
+					<dt class="text-[10px] font-sans text-[#a8a083] uppercase tracking-wide">Credits</dt>
+					<dd class="font-bold text-[#b9f29a]">+{formatCurrency(data.analytics.totalIncome)}</dd>
 				</div>
-			{/if}
+				<div>
+					<dt class="text-[10px] font-sans text-[#a8a083] uppercase tracking-wide">Debits</dt>
+					<dd class="font-bold text-red-300">-{formatCurrency(data.analytics.totalExpenses)}</dd>
+				</div>
+			</dl>
 		</div>
 
-		<!-- Expenses Summary -->
-		<div class="panel rounded-sm overflow-hidden">
-			<div class="p-4">
-				<div class="flex items-center gap-2 mb-1">
-					<div class="size-8 bg-red-600/10 rounded-sm flex items-center justify-center">
-						<FluentArrowUpload20Filled class="size-4 text-red-400" />
-					</div>
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Expenses</p>
-				</div>
-				<p class="text-xl font-bold text-red-400 font-mono">-{formatCurrency(data.analytics.totalExpenses)}</p>
+		<!-- Breakdown by category: tap to filter -->
+		{#if incomeCategories.length > 0 || expenseCategories.length > 0}
+			<div class="grid sm:grid-cols-2 border-t border-[#c8b47a]/10 sm:divide-x divide-[#c8b47a]/10">
+				{#each [{ cats: incomeCategories, income: true }, { cats: expenseCategories, income: false }] as col}
+					{#if col.cats.length > 0}
+						<ul class="px-3 py-2 space-y-0.5">
+							{#each col.cats as cat (cat.type)}
+								<li>
+									<button
+										type="button"
+										onclick={() => toggleFilter(cat.type)}
+										aria-pressed={activeFilter === cat.type}
+										class="tap-target flex items-center justify-between gap-3 w-full py-1.5 px-2 rounded-sm text-xs transition-colors {activeFilter ===
+										cat.type
+											? col.income
+												? 'bg-[#3f8a2a]/18'
+												: 'bg-red-600/10'
+											: 'hover:bg-[#2e3524]'}"
+									>
+										<span class={activeFilter === cat.type ? "text-[#f5efd8] font-semibold" : "text-[#a8a083]"}>
+											{typeLabels[cat.type] || cat.type}
+										</span>
+										<span class="font-mono {col.income ? 'text-[#b9f29a]' : 'text-red-300'}">
+											{col.income ? "+" : "-"}{formatCurrency(col.income ? cat.income : cat.expenses)}
+										</span>
+									</button>
+								</li>
+							{/each}
+						</ul>
+					{/if}
+				{/each}
 			</div>
-			{#if expenseCategories.length > 0}
-				<div class="border-t border-[#c8b47a]/10 px-4 py-2 space-y-0.5">
-					{#each expenseCategories as cat}
-						<button
-							type="button"
-							onclick={() => toggleFilter(cat.type)}
-							class="flex items-center justify-between w-full py-1.5 px-1 rounded-sm transition-all cursor-pointer {activeFilter ===
-							cat.type
-								? 'bg-red-500/10'
-								: 'hover:bg-[#2e3524]'}"
-						>
-							<span class="text-xs {activeFilter === cat.type ? 'text-red-300 font-semibold' : 'text-[#a8a083]'}">
-								{typeLabels[cat.type] || cat.type}
-							</span>
-							<span
-								class="text-xs font-mono {activeFilter === cat.type ? 'text-red-300 font-semibold' : 'text-red-400/70'}"
-							>
-								-{formatCurrency(cat.expenses)}
-							</span>
-						</button>
-					{/each}
-				</div>
-			{/if}
-		</div>
-	</div>
+		{/if}
+	</section>
 
-	<!-- Transaction History -->
-	<section class="space-y-3">
-		<div class="flex items-center justify-between px-1">
-			<h2 class="section-title">History</h2>
+	<!-- Entries -->
+	<section class="space-y-2">
+		<div class="flex items-center justify-between gap-2 px-1">
+			<h2 class="section-title">Entries</h2>
 			<div class="flex items-center gap-2">
 				{#if activeFilter}
-					<Button type="button" variant="ghost" size="xs" onclick={() => (activeFilter = null)}>Clear filter</Button>
+					<Button
+						type="button"
+						variant="ghost"
+						size="xs"
+						icon={FluentFilterDismiss20Filled}
+						onclick={() => (activeFilter = null)}
+					>
+						{typeLabels[activeFilter] || activeFilter}
+					</Button>
 				{/if}
-				<span class="text-xs text-[#a8a083]">{filteredTransactions.length} of {data.pagination.totalCount}</span>
+				<span class="text-xs font-mono text-[#a8a083]">{filteredTransactions.length}/{data.pagination.totalCount}</span>
 			</div>
 		</div>
 
 		{#if groupedTransactions.length === 0}
-			<div class="panel-muted rounded-sm p-12 text-center">
-				<div class="inline-flex items-center justify-center size-16 rounded-full bg-[#1a1f15] mb-4">
-					<FluentArrowTrendingLines20Filled class="size-8 text-[#a8a083]" />
-				</div>
+			<div class="panel-muted rounded-sm p-10 text-center">
+				<p class="font-mono text-sm text-[#a8a083]">— no entries —</p>
 				{#if activeFilter}
-					<p class="text-[#a8a083] font-medium mb-3">No {typeLabels[activeFilter] || activeFilter} transactions</p>
-					<Button type="button" variant="secondary" size="sm" onclick={() => (activeFilter = null)}>
+					<Button type="button" variant="secondary" size="sm" class="mt-3" onclick={() => (activeFilter = null)}>
 						Clear filter
 					</Button>
-				{:else}
-					<p class="text-[#a8a083] font-medium">No transactions yet</p>
-					<p class="text-[#a8a083]/70 text-sm mt-1">Your financial activity will appear here</p>
 				{/if}
 			</div>
 		{:else}
-			<div class="space-y-5">
-				{#each groupedTransactions as group}
-					<div class="space-y-2">
-						<h3 class="text-[10px] font-semibold text-[#a8a083] uppercase tracking-wide px-1">
-							{group.label}
-						</h3>
-						<div class="panel rounded-sm divide-y divide-[#c8b47a]/10">
-							{#each group.transactions as tx}
-								{@const color = getTypeColor(tx.type)}
-								{@const iconType = getTransactionIconType(tx)}
-								{@const FallbackIcon = getFallbackIcon(iconType)}
-								<div class="p-4 hover:bg-[#2e3524] transition-colors">
-									<div class="flex items-center justify-between gap-3">
-										<!-- Left: Avatar + Details -->
-										<div class="flex items-center gap-3 flex-1 min-w-0">
-											{#if tx.entity.avatarUrl}
-												<img
-													loading="lazy"
-													decoding="async"
-													src={tx.entity.avatarUrl}
-													alt={tx.entity.name || ""}
-													class="size-10 rounded-full object-cover shrink-0"
-												/>
-											{:else}
-												<div
-													class="size-10 rounded-full flex items-center justify-center shrink-0 {tx.isIncome
-														? 'bg-[#3f8a2a]/18'
-														: 'bg-red-600/10'}"
-												>
-													<FallbackIcon class="size-5 {tx.isIncome ? 'text-[#b9f29a]' : 'text-red-400'}" />
-												</div>
-											{/if}
-
-											<div class="flex-1 min-w-0">
-												<div class="flex items-center gap-2">
-													<p class="text-sm font-medium text-[#f5efd8] truncate">{typeLabels[tx.type] || tx.type}</p>
-													<span class="text-[11px] text-[#a8a083]/80 font-mono shrink-0"
-														>{formatTime(tx.createdAt)}</span
-													>
-												</div>
-
-												{#if tx.entity.name}
-													{#if tx.entity.href}
-														<a href={tx.entity.href} class="text-xs {color.text} hover:underline truncate block mt-0.5">
-															{tx.entity.name}
-														</a>
-													{:else}
-														<p class="text-xs {color.text} truncate mt-0.5">{tx.entity.name}</p>
-													{/if}
-												{/if}
-											</div>
-										</div>
-
-										<!-- Right: Amount + Balance -->
-										<div class="text-right shrink-0">
-											<p class="text-sm font-bold {tx.isIncome ? 'text-[#b9f29a]' : 'text-red-400'}">
-												{tx.isIncome ? "+" : ""}{formatCurrency(tx.amount)}
-											</p>
-											<p class="text-[11px] text-[#a8a083]/80 font-mono mt-0.5">
-												Bal: {formatCurrency(tx.balanceAfter)}
-											</p>
-										</div>
-									</div>
-								</div>
-							{/each}
-						</div>
+			<div class="panel rounded-sm overflow-hidden">
+				<!-- Column heads (wider screens) -->
+				<div
+					class="hidden sm:grid grid-cols-[3.5rem_1fr_7.5rem_7.5rem] gap-3 px-4 py-2 bg-[#0f120c]/60 text-[10px] uppercase tracking-wide text-[#a8a083]"
+				>
+					<span>Time</span>
+					<span>Particulars</span>
+					<span class="text-right">Amount</span>
+					<span class="text-right">Balance</span>
+				</div>
+				{#each groupedTransactions as group (group.day)}
+					<div
+						class="px-4 py-1.5 border-t border-[#c8b47a]/15 bg-[#1a1f15]/80 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#ffd35c]/80"
+					>
+						{group.label}
 					</div>
+					{#each group.transactions as tx (tx.id)}
+						<div
+							class="grid grid-cols-[1fr_auto] sm:grid-cols-[3.5rem_1fr_7.5rem_7.5rem] gap-x-3 gap-y-0.5 px-4 py-2.5 border-t border-[#c8b47a]/8 hover:bg-[#2e3524]/60 transition-colors items-center"
+						>
+							<span class="hidden sm:block font-mono text-[11px] text-[#a8a083]">{formatTime(tx.createdAt)}</span>
+							<div class="min-w-0">
+								<p class="text-sm text-[#e6ddbf] truncate">{typeLabels[tx.type] || tx.type}</p>
+								<div class="text-xs text-[#a8a083] flex items-center gap-1.5 min-w-0">
+									<span class="sm:hidden font-mono shrink-0">{formatTime(tx.createdAt)}</span>
+									{#if tx.relatedUser && tx.entity.href?.startsWith("/user/")}
+										<UserLink
+											id={tx.relatedUser.id}
+											name={tx.relatedUser.name}
+											avatar={tx.entity.avatarUrl}
+											size="xs"
+										/>
+									{:else if tx.entity.name}
+										{#if tx.entity.href}
+											<a href={tx.entity.href} class="truncate hover:text-[#ffcf47] transition-colors">
+												{tx.entity.name}
+											</a>
+										{:else}
+											<span class="truncate">{tx.entity.name}</span>
+										{/if}
+									{/if}
+								</div>
+							</div>
+							<p
+								class="text-right font-mono text-sm font-bold whitespace-nowrap {tx.isIncome
+									? 'text-[#b9f29a]'
+									: 'text-red-300'}"
+							>
+								{tx.isIncome ? "+" : ""}{formatCurrency(tx.amount)}
+							</p>
+							<p
+								class="col-span-2 sm:col-span-1 text-right font-mono text-[11px] text-[#a8a083] whitespace-nowrap -mt-0.5 sm:mt-0"
+							>
+								{formatCurrency(tx.balanceAfter)}
+							</p>
+						</div>
+					{/each}
 				{/each}
 			</div>
 		{/if}

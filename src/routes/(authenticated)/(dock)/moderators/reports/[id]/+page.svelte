@@ -1,5 +1,6 @@
 <!-- src/routes/moderators/reports/[id]/+page.svelte -->
 <script lang="ts">
+	import UserLink from "#lib/component/UserLink.svelte";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -199,23 +200,12 @@
 		{#if data.report.target}
 			<div class="panel-muted rounded-sm p-4">
 				{#if data.report.targetType === "account"}
-					<a href="/user/{data.report.target.id}" class="flex items-center gap-3 group">
-						<div class="size-16 rounded-sm overflow-hidden transition-all">
-							<Logo
-								src={data.report.target.logoUrl}
-								alt={data.report.target.name}
-								class="size-full"
-								placeholderIcon={FluentPeople20Filled}
-								placeholderGradient="from-[#4a5238] to-[#252b1e]"
-							/>
-						</div>
-						<div class="flex-1 min-w-0">
-							<p class="font-semibold text-[#f5efd8] group-hover:text-[#ffcf47] transition-colors truncate">
-								{data.report.target.name}
-							</p>
-							<p class="text-sm text-[#a8a083]">Click to view profile</p>
-						</div>
-					</a>
+					<UserLink
+						id={data.report.target.id}
+						name={data.report.target.name}
+						avatar={data.report.target.logoUrl}
+						size="md"
+					/>
 				{:else if data.report.targetType === "party"}
 					<a href="/party/{data.report.target.id}" class="flex items-center gap-3 group">
 						<div class="size-16 rounded-sm overflow-hidden transition-all">
@@ -239,20 +229,11 @@
 						{#if data.report.target.sender}
 							<div class="flex items-center gap-2">
 								<span class="text-sm text-[#a8a083]">From:</span>
-								<a href="/user/{data.report.target.sender.id}" class="flex items-center gap-2 group">
-									<div class="size-8 rounded-sm overflow-hidden transition-all">
-										<Logo
-											src={data.report.target.sender.logoUrl}
-											alt={data.report.target.sender.name}
-											class="size-full"
-											placeholderIcon={FluentPeople20Filled}
-											placeholderGradient="from-[#4a5238] to-[#252b1e]"
-										/>
-									</div>
-									<span class="text-sm text-[#ffd35c] group-hover:text-[#ffcf47] transition-colors">
-										{data.report.target.sender.name}
-									</span>
-								</a>
+								<UserLink
+									id={data.report.target.sender.id}
+									name={data.report.target.sender.name}
+									avatar={data.report.target.sender.logoUrl}
+								/>
 							</div>
 						{/if}
 						{#if data.report.target.sentAt}
@@ -316,23 +297,13 @@
 
 				{#if data.report.reviewer}
 					<div class="flex items-center gap-3 mt-3">
-						<a href="/user/{data.report.reviewer.id}" class="flex items-center gap-3 group">
-							<div class="size-12 rounded-sm overflow-hidden transition-all">
-								<Logo
-									src={data.report.reviewer.logoUrl}
-									alt={data.report.reviewer.name}
-									class="size-full"
-									placeholderIcon={FluentShield20Filled}
-									placeholderGradient="from-[#8a4fc0] to-[#6b3d96]"
-								/>
-							</div>
-							<div class="min-w-0">
-								<p class="text-sm text-[#a8a083]">Reviewed by</p>
-								<p class="font-semibold text-[#e3cbfb] group-hover:text-[#ffcf47] transition-colors truncate">
-									{data.report.reviewer.name}
-								</p>
-							</div>
-						</a>
+						<UserLink
+							id={data.report.reviewer.id}
+							name={data.report.reviewer.name}
+							avatar={data.report.reviewer.logoUrl}
+							size="md"
+							subtitle="Reviewed by"
+						/>
 					</div>
 				{/if}
 
