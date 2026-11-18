@@ -1,68 +1,27 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/economy/+page.svelte -->
+<!-- The finance minister's desk: the treasury book, the power grid gauge,
+     the state stockpile manifest and the drawers that lead elsewhere. -->
 <script lang="ts">
-	import { enhance } from "$app/forms";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentBox20Filled from "~icons/fluent/box-20-filled";
 	import FluentFlash20Filled from "~icons/fluent/flash-20-filled";
-	import FluentBuildingFactory20Filled from "~icons/fluent/building-factory-20-filled";
-	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentAdd20Filled from "~icons/fluent/add-20-filled";
-	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
-	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentCart20Filled from "~icons/fluent/cart-20-filled";
-	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
+	import FluentReceiptMoney20Filled from "~icons/fluent/receipt-money-20-filled";
+	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
+	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
-	import { Button } from "#lib/component/ui/index.js";
+	import { Badge } from "#lib/component/ui/index.js";
 
 	let { data } = $props();
 
-	// Power plant form state
-	let selectedPlantType = $state("coal");
-	let plantName = $state("");
-
-	const plantTypeInfo: Record<string, { icon: string; output: number; cost: number; description: string }> = {
-		coal: {
-			icon: "🏭",
-			output: 100,
-			cost: 500000,
-			description: "Basic coal-fired power plant. Reliable but polluting."
-		},
-		gas: {
-			icon: "🔥",
-			output: 150,
-			cost: 750000,
-			description: "Natural gas plant. Efficient and cleaner than coal."
-		},
-		nuclear: {
-			icon: "⚛️",
-			output: 500,
-			cost: 2500000,
-			description: "Nuclear reactor. Massive output but very expensive."
-		},
-		solar: {
-			icon: "☀️",
-			output: 50,
-			cost: 400000,
-			description: "Solar farm. Clean energy but weather-dependent."
-		},
-		wind: {
-			icon: "💨",
-			output: 75,
-			cost: 600000,
-			description: "Wind turbines. Renewable but variable output."
-		},
-		hydro: {
-			icon: "🌊",
-			output: 200,
-			cost: 1000000,
-			description: "Hydroelectric dam. Excellent output and reliability."
-		}
-	};
-
-	const selectedPlantInfo = $derived(plantTypeInfo[selectedPlantType]);
-	const canBuildPlant = $derived(data.treasury.balance >= selectedPlantInfo.cost && plantName.trim().length >= 3);
+	const money = new Intl.NumberFormat("en-US", {
+		style: "currency",
+		currency: "USD",
+		minimumFractionDigits: 0,
+		maximumFractionDigits: 0
+	});
 
 	const totalPowerOutput = $derived(
 		data.powerPlants.reduce((sum, plant) => sum + (plant.isOperational ? plant.powerOutput : 0), 0)
@@ -75,125 +34,140 @@
 	);
 
 	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
-
 	const allResources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
-
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
+
+	const drawers = $derived([
+		{ href: `/state/${data.state.id}/budget`, label: "Treasury statement", icon: FluentReceiptMoney20Filled },
+		{ href: `/state/${data.state.id}/market`, label: "Government market", icon: FluentCart20Filled },
+		{ href: `/state/${data.state.id}/proposal/create`, label: "Draft a tax bill", icon: FluentDocument20Filled }
+	]);
 </script>
 
-<PageContainer maxWidth="6xl">
-	<!-- Header -->
+<PageContainer maxWidth="5xl">
 	<PageHeader
 		title="Ministry of Economy"
-		subtitle={data.isPresident ? "👑 Accessing as President" : undefined}
+		subtitle={data.state.name}
 		icon={FluentMoney20Filled}
 		backHref="/state/{data.state.id}"
 		backLabel={data.state.name}
-	/>
+	>
+		{#snippet actions()}
+			{#if data.isPresident}
+				<Badge tone="amber">President</Badge>
+			{/if}
+		{/snippet}
+	</PageHeader>
 
-	<!-- Stats Overview -->
-	<div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-		<div class="panel rounded-sm p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-[#3f8a2a]/18 border border-[#6fd14a]/30 rounded-sm flex items-center justify-center">
-					<FluentMoney20Filled class="size-5 text-[#b9f29a]" />
-				</div>
-				<div>
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">State Treasury</p>
-					<p class="text-lg font-bold font-mono text-[#f5efd8]">${(data.treasury.balance / 100).toFixed(2)}</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="panel rounded-sm p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm flex items-center justify-center">
-					<FluentFlash20Filled class="size-5 text-[#ffd35c]" />
-				</div>
-				<div>
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Power Output</p>
-					<p class="text-lg font-bold text-[#f5efd8]">{totalPowerOutput} MW</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="panel rounded-sm p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-[#2369b5]/18 border border-[#5eaef5]/30 rounded-sm flex items-center justify-center">
-					<FluentBuildingFactory20Filled class="size-5 text-[#b3dcff]" />
-				</div>
-				<div>
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Power Plants</p>
-					<p class="text-lg font-bold text-[#f5efd8]">{data.powerPlants.length}</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="panel rounded-sm p-4">
-			<div class="flex items-center gap-3">
-				<div class="size-10 bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm flex items-center justify-center">
-					<span class="text-lg font-bold text-[#e3cbfb]">{energyUtilization}%</span>
-				</div>
-				<div>
-					<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Energy Utilization</p>
-					<p class="text-xs text-[#a8a083]">{data.energyInfo.usedProduction}/{data.energyInfo.totalProduction} MW</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Treasury Overview -->
-	<div class="panel rounded-sm p-5 space-y-4">
-		<div class="section-title">
-			<FluentMoney20Filled class="size-5 text-[#f2b01e]" />
-			Treasury Overview
-		</div>
-
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-			<div class="panel-muted rounded-sm p-4">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Current Balance</p>
-				<p class="text-2xl font-bold font-mono text-[#ffd35c]">${(data.treasury.balance / 100).toLocaleString()}</p>
-			</div>
-			<div class="panel-muted rounded-sm p-4">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Total Collected</p>
-				<p class="text-2xl font-bold font-mono text-[#b3dcff]">
-					${(data.treasury.totalCollected / 100).toLocaleString()}
+	<div class="grid md:grid-cols-2 gap-4">
+		<!-- Treasury book -->
+		<section class="panel rounded-sm p-5 space-y-4">
+			<h2 class="section-title">
+				<FluentMoney20Filled class="size-5 text-[#6fd14a]" />
+				Treasury
+			</h2>
+			<div>
+				<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Cash in hand</p>
+				<p class="font-mono text-3xl font-bold text-[#ffd35c] animate-tick truncate">
+					{money.format(data.treasury.balance)}
 				</p>
 			</div>
-			<div class="panel-muted rounded-sm p-4">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide mb-1">Total Spent</p>
-				<p class="text-2xl font-bold font-mono text-red-300">${(data.treasury.totalSpent / 100).toLocaleString()}</p>
-			</div>
-		</div>
-	</div>
-
-	<!-- State Resources -->
-	<div class="panel rounded-sm p-5 space-y-4">
-		<div class="flex items-center justify-between gap-3 flex-wrap">
-			<div class="section-title">
-				<FluentBox20Filled class="size-5 text-[#f2b01e]" />
-				State Resources
-			</div>
-			<Button
-				href="/state/{data.state.id}/market"
-				variant="soft-purple"
-				size="sm"
-				icon={FluentCart20Filled}
-				iconRight={FluentArrowRight20Filled}
-			>
-				Gov. Market
-			</Button>
-		</div>
-
-		<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
-			{#each allResources as resource}
-				{@const quantity = resourceMap.get(resource) || 0}
-				<div class="panel-muted rounded-sm p-4 text-center space-y-2">
-					<ResourceIcon name={resource} class="size-7 mx-auto" />
-					<p class="text-xs font-medium capitalize text-[#a8a083]">{resource}</p>
-					<p class="text-lg font-bold {quantity > 0 ? 'text-[#e3cbfb]' : 'text-[#a8a083]'}">{quantity}</p>
+			<dl class="space-y-1.5 text-sm">
+				<div class="flex items-center gap-2">
+					<dt class="text-[#a8a083]">Collected to date</dt>
+					<span class="flex-1 border-b border-dotted border-[#c8b47a]/20 translate-y-1" aria-hidden="true"></span>
+					<dd class="font-mono text-[#b9f29a]">+{money.format(data.treasury.totalCollected)}</dd>
 				</div>
-			{/each}
-		</div>
+				<div class="flex items-center gap-2">
+					<dt class="text-[#a8a083]">Spent to date</dt>
+					<span class="flex-1 border-b border-dotted border-[#c8b47a]/20 translate-y-1" aria-hidden="true"></span>
+					<dd class="font-mono text-red-300">−{money.format(data.treasury.totalSpent)}</dd>
+				</div>
+			</dl>
+		</section>
+
+		<!-- Power grid gauge -->
+		<section class="panel rounded-sm p-5 space-y-4">
+			<h2 class="section-title">
+				<FluentFlash20Filled class="size-5 text-[#ffd35c]" />
+				Power Grid
+			</h2>
+			<div class="flex items-end justify-between gap-3">
+				<div>
+					<p class="text-[10px] uppercase tracking-wide text-[#a8a083]">Load</p>
+					<p
+						class="font-mono text-3xl font-bold {energyUtilization >= 90
+							? 'text-red-300'
+							: energyUtilization >= 70
+								? 'text-[#ffd35c]'
+								: 'text-[#f5efd8]'}"
+					>
+						{energyUtilization}%
+					</p>
+				</div>
+				<p class="text-right font-mono text-xs text-[#a8a083]">
+					{data.energyInfo.usedProduction} / {data.energyInfo.totalProduction} MW
+				</p>
+			</div>
+			<div class="h-2.5 rounded-full bg-[#0f120c] overflow-hidden">
+				<div
+					class="h-full rounded-full transition-all duration-700 {energyUtilization >= 90
+						? 'bg-red-500'
+						: energyUtilization >= 70
+							? 'bg-[#f2b01e]'
+							: 'bg-[#6fd14a]'}"
+					style="width: {Math.min(energyUtilization, 100)}%"
+				></div>
+			</div>
+			{#if data.powerPlants.length > 0}
+				<ul class="space-y-1 text-sm">
+					{#each data.powerPlants as plant (plant.id)}
+						<li class="flex items-center gap-2 min-w-0">
+							<span
+								class="size-1.5 shrink-0 rounded-full {plant.isOperational ? 'bg-[#6fd14a]' : 'bg-red-500'}"
+								title={plant.isOperational ? "Running" : "Offline"}
+							></span>
+							<span class="text-[#e6ddbf] truncate">{plant.name}</span>
+							<span class="text-xs text-[#a8a083] capitalize">{plant.plantType}</span>
+							<span class="ml-auto font-mono text-xs text-[#f5efd8]">{plant.powerOutput} MW</span>
+						</li>
+					{/each}
+				</ul>
+				<p class="text-xs text-[#a8a083]">{totalPowerOutput} MW from {data.powerPlants.length} plants</p>
+			{/if}
+		</section>
 	</div>
+
+	<!-- Stockpile manifest -->
+	<section class="panel rounded-sm p-5 space-y-3">
+		<h2 class="section-title">
+			<FluentBox20Filled class="size-5 text-[#c08cf0]" />
+			State Stockpile
+		</h2>
+		<ul class="grid grid-cols-2 sm:grid-cols-3 gap-x-6">
+			{#each allResources as resource (resource)}
+				{@const quantity = resourceMap.get(resource) || 0}
+				<li class="flex items-center gap-2 py-2 border-b border-dashed border-[#c8b47a]/15 min-w-0">
+					<ResourceIcon name={resource} class="size-5 shrink-0" />
+					<span class="text-sm text-[#d3caa9] capitalize truncate">{resource}</span>
+					<span class="ml-auto font-mono text-sm font-bold {quantity > 0 ? 'text-[#f5efd8]' : 'text-[#a8a083]/60'}">
+						{quantity.toLocaleString()}
+					</span>
+				</li>
+			{/each}
+		</ul>
+	</section>
+
+	<!-- Drawers -->
+	<nav class="grid grid-cols-1 sm:grid-cols-3 gap-2" aria-label="Ministry tools">
+		{#each drawers as drawer (drawer.href)}
+			<a href={drawer.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-3 min-w-0">
+				<drawer.icon class="size-5 shrink-0 text-[#ffd35c]" />
+				<span class="flex-1 text-sm font-semibold text-[#e6ddbf] group-hover:text-[#ffcf47] transition-colors truncate">
+					{drawer.label}
+				</span>
+				<FluentChevronRight20Filled class="size-4 shrink-0 text-[#a8a083] group-hover:text-[#ffcf47]" />
+			</a>
+		{/each}
+	</nav>
 </PageContainer>

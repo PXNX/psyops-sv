@@ -3,6 +3,7 @@ import { db } from "#lib/server/db.js";
 import { states, governmentBudgetTransactions, userProfiles, accounts, stateTreasury } from "#lib/server/schema.js";
 import { eq, sql, desc } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import type { PageServerLoad } from "./$types";
 
 const PAGE_SIZE = 20;
@@ -48,7 +49,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 				metadata: governmentBudgetTransactions.metadata,
 				createdAt: governmentBudgetTransactions.createdAt,
 				// User info
-				authorizerName: userProfiles.name
+				authorizerName: userProfiles.name,
+				authorizerLogo: userProfiles.logo
 			})
 			.from(governmentBudgetTransactions)
 			.leftJoin(accounts, eq(governmentBudgetTransactions.authorizedBy, accounts.id))
@@ -101,7 +103,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	}
 
 	// Format transactions for display
-	const formattedTransactions = transactions.map((tx) => ({
+	const authorizerLogos = await Promise.all(transactions.map((tx) => getLogoUrl(tx.authorizerLogo)));
+	const formattedTransactions = transactions.map((tx, i) => ({
 		id: tx.id,
 		type: tx.transactionType,
 		amount: Number(tx.amount),
@@ -109,7 +112,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		description: tx.description,
 		authorizedBy: {
 			id: tx.authorizedBy,
-			name: tx.authorizerName || "Unknown User"
+			name: tx.authorizerName || "Unknown User",
+			logo: authorizerLogos[i]
 		},
 		itemType: tx.itemType,
 		itemName: tx.itemName,

@@ -1,40 +1,35 @@
+<!-- src/routes/(authenticated)/(dock)/state/[id]/election/[electionId]/+page.svelte -->
+<!-- A ballot paper: one box per party to mark, a "VOTED" stamp once cast,
+     and the count printed on the same paper after the polls close. -->
 <script lang="ts">
 	import { invalidateAll } from "$app/navigation";
 	import Logo from "#lib/component/Logo.svelte";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
-	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
-	import FluentPerson20Filled from "~icons/fluent/person-20-filled";
-	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
-	import FluentStar20Filled from "~icons/fluent/star-20-filled";
 	import { enhance } from "$app/forms";
-	import { feedback } from "#lib/utils/feedback.js";
-	import { onMount, onDestroy } from "svelte";
-	import ThreeAnimation from "#lib/component/ThreeAnimation.svelte";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
+	import { onMount } from "svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Badge, Button } from "#lib/component/ui/index.js";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 
 	const { data } = $props();
 
 	let currentTime = $state(new Date());
-	let interval: ReturnType<typeof setInterval>;
-	let showVoteAnim = $state(false);
 	let isSubmittingVote = $state(false);
+	let ballotEl = $state<HTMLElement | null>(null);
 	// Pending selection before the voter confirms — once `data.userVote` is set
 	// server-side, the vote is final and this no longer changes.
 	let selectedPartyId = $state<number | null>(null);
 
 	onMount(() => {
-		interval = setInterval(() => {
-			currentTime = new Date();
-		}, 1000);
-	});
-
-	onDestroy(() => {
-		if (interval) clearInterval(interval);
+		const interval = setInterval(() => (currentTime = new Date()), 1000);
+		return () => clearInterval(interval);
 	});
 
 	const isActive = $derived(
@@ -44,48 +39,31 @@
 	const hasStarted = $derived(currentTime >= new Date(data.election.startDate));
 	const canVote = $derived(data.voterEligible && isActive);
 
-	function getCountdown() {
-		const now = currentTime;
-		const start = new Date(data.election.startDate);
-		const end = new Date(data.election.endDate);
-
-		let targetDate: Date;
-
-		if (now < start) {
-			targetDate = start;
-		} else if (now < end) {
-			targetDate = end;
-		} else {
-			return null;
-		}
-
-		const diff = targetDate.getTime() - now.getTime();
+	const countdown = $derived.by(() => {
+		const target = !hasStarted ? new Date(data.election.startDate) : !hasEnded ? new Date(data.election.endDate) : null;
+		if (!target) return null;
+		const diff = target.getTime() - currentTime.getTime();
 		if (diff <= 0) return null;
+		const pad = (n: number) => String(n).padStart(2, "0");
+		const days = Math.floor(diff / 86_400_000);
+		const hms = `${pad(Math.floor((diff % 86_400_000) / 3_600_000))}:${pad(Math.floor((diff % 3_600_000) / 60_000))}:${pad(Math.floor((diff % 60_000) / 1000))}`;
+		return days > 0 ? `${days}d ${hms}` : hms;
+	});
 
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-		const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-		return { days, hours, minutes, seconds };
-	}
-
-	const countdown = $derived(getCountdown());
-
-	function getVotePercentage(partyId: string) {
-		if (!data.resultsVisible || !data.totalVotes) return 0;
-		return ((data.votesByParty[partyId] || 0) / data.totalVotes) * 100;
-	}
+	const votesByParty = $derived(data.votesByParty as Record<number, number>);
+	const votesFor = (partyId: number) => votesByParty[partyId] || 0;
+	const percentOf = (partyId: number) =>
+		data.resultsVisible && data.totalVotes ? (votesFor(partyId) / data.totalVotes) * 100 : 0;
 
 	// Ranked by votes once results are out; alphabetical before, so the order
 	// itself doesn't give the standings away.
 	const sortedParties = $derived(
 		[...data.parties].sort((a, b) =>
-			data.resultsVisible
-				? (data.votesByParty[b.id] || 0) - (data.votesByParty[a.id] || 0)
-				: a.name.localeCompare(b.name)
+			data.resultsVisible ? votesFor(b.id) - votesFor(a.id) : a.name.localeCompare(b.name)
 		)
 	);
+
+	const selectedParty = $derived(data.parties.find((p) => p.id === selectedPartyId));
 
 	// When the countdown runs out, fetch the results without a manual reload.
 	$effect(() => {
@@ -97,188 +75,89 @@
 	<title>{`Election · ${data.state.name} · PsyOps`}</title>
 </svelte:head>
 
-<PageContainer maxWidth="5xl">
-	<!-- Hero -->
-	<div class="panel rounded-sm p-5 space-y-5">
-		<div class="flex items-center gap-4">
-			<a href="/state/{data.state.id}" class="flex-shrink-0">
+<PageContainer maxWidth="3xl">
+	<article bind:this={ballotEl} class="panel rounded-sm overflow-hidden relative">
+		<!-- Ballot heading -->
+		<header class="px-5 pt-5 pb-4 text-center border-b-2 border-double border-[#c8b47a]/30">
+			<a href="/state/{data.state.id}" class="inline-block">
 				<Logo
 					src={data.state.logo}
 					alt={data.state.name}
-					class="size-14 sm:size-18 rounded-sm"
+					class="size-12 rounded-sm mx-auto"
 					placeholderIcon={FluentBuildingGovernment20Filled}
-					placeholderGradient="from-[#2369b5] to-[#2369b5]"
 				/>
 			</a>
-			<div class="flex-1 min-w-0">
-				<div class="flex flex-wrap items-center gap-2 mb-1">
-					<h1 class="text-3xl font-bold {data.election.isInaugural ? 'text-[#ffd35c]' : 'text-[#f5efd8]'}">
-						{data.election.isInaugural ? "Founding" : "Parliamentary"} Election
-					</h1>
-					{#if hasEnded}
-						<Badge tone="neutral">CONCLUDED</Badge>
-					{/if}
-				</div>
-				<a href="/state/{data.state.id}" class="text-sm text-[#a8a083] hover:text-[#ffcf47] transition-colors">
-					{data.state.name}
-				</a>
-			</div>
-		</div>
-
-		<!-- Founding Election Banner -->
-		{#if data.election.isInaugural}
-			<div class="bg-[#f2b01e]/12 border border-[#f2b01e]/35 rounded-sm p-4 sm:p-5 text-center">
-				<div class="flex items-center justify-center gap-2 text-[#ffd35c]">
-					<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
-					<span class="text-sm sm:text-lg font-bold uppercase tracking-[0.2em]">A Nation Is Born</span>
-					<FluentStar20Filled class="size-4 sm:size-5 animate-pulse" />
-				</div>
-				<p class="mt-2 text-xs sm:text-sm text-[#ffe58f]/80">
-					The first free election of the independent state of
-					<span class="text-[#ffe58f] font-bold">{data.state.name}</span>
-				</p>
-			</div>
-		{/if}
-
-		<!-- Countdown Timer -->
-		{#if countdown}
-			<div class="panel-muted rounded-sm p-3 sm:p-4">
-				<div class="text-[10px] sm:text-xs text-[#a8a083] uppercase tracking-wide text-center mb-2 sm:mb-3">
-					{!hasStarted ? "Voting Opens In" : "Voting Closes In"}
-				</div>
-				<div class="flex items-center justify-center gap-2 sm:gap-3">
-					<div class="text-center">
-						<div
-							class="text-2xl sm:text-4xl font-mono font-bold text-[#f5efd8] bg-[#0f120c] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#c8b47a]/15"
-						>
-							{String(countdown.days).padStart(2, "0")}
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1 sm:mt-1.5">DAYS</div>
-					</div>
-					<div class="text-xl sm:text-2xl font-bold text-[#a8a083]/50">:</div>
-					<div class="text-center">
-						<div
-							class="text-2xl sm:text-4xl font-mono font-bold text-[#f5efd8] bg-[#0f120c] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#c8b47a]/15"
-						>
-							{String(countdown.hours).padStart(2, "0")}
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1 sm:mt-1.5">HRS</div>
-					</div>
-					<div class="text-xl sm:text-2xl font-bold text-[#a8a083]/50">:</div>
-					<div class="text-center">
-						<div
-							class="text-2xl sm:text-4xl font-mono font-bold text-[#f5efd8] bg-[#0f120c] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#c8b47a]/15"
-						>
-							{String(countdown.minutes).padStart(2, "0")}
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1 sm:mt-1.5">MIN</div>
-					</div>
-					<div class="text-xl sm:text-2xl font-bold text-[#a8a083]/50">:</div>
-					<div class="text-center">
-						<div
-							class="text-2xl sm:text-4xl font-mono font-bold text-[#f5efd8] bg-[#0f120c] rounded-sm px-2 sm:px-4 py-1 sm:py-2 min-w-[60px] sm:min-w-[90px] border border-[#c8b47a]/15"
-						>
-							{String(countdown.seconds).padStart(2, "0")}
-						</div>
-						<div class="text-[10px] text-[#a8a083] uppercase tracking-wide mt-1 sm:mt-1.5">SEC</div>
-					</div>
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	<!-- Voter Status -->
-	{#if data.voterIssue && !data.userVote}
-		<div
-			class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center justify-center gap-3"
-		>
-			<p class="text-sm text-center">{data.voterIssue}</p>
-		</div>
-	{:else if data.userVote}
-		<div
-			class="bg-[#3f8a2a]/18 border border-[#6fd14a]/30 text-[#b9f29a] rounded-sm p-4 flex items-center justify-center gap-3"
-		>
-			<FluentCheckmark20Filled class="size-4" />
-			<span class="text-sm">Vote cast. Your vote is final and cannot be changed.</span>
-		</div>
-	{:else if canVote}
-		<div class="bg-[#8a4fc0]/15 border border-[#c08cf0]/30 rounded-sm p-4 text-center">
-			<p class="text-sm text-[#e3cbfb]">
-				{data.election.isInaugural
-					? "Cast your vote in the inaugural election"
-					: "Select a party, then confirm your vote below"}
-				— your choice is final once confirmed.
+			<p class="mt-2 text-[10px] uppercase tracking-[0.3em] text-[#a8a083]">Official Ballot</p>
+			<h1
+				class="mt-1 font-serif text-2xl sm:text-3xl font-black leading-tight {data.election.isInaugural
+					? 'text-[#ffd35c]'
+					: 'text-[#f5efd8]'}"
+			>
+				{data.election.isInaugural ? "Founding" : "General"} Election
+			</h1>
+			<p class="mt-1 text-sm text-[#d3caa9]">
+				Parliament of <a href="/state/{data.state.id}" class="hover:text-[#ffcf47]">{data.state.name}</a>
+				· {data.election.totalSeats} seats
 			</p>
-		</div>
-	{/if}
-
-	<!-- Stats Strip -->
-	<div class="grid grid-cols-3 gap-3">
-		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-			<FluentVote20Filled class="size-4 text-[#c08cf0] shrink-0" />
-			<div class="min-w-0">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Votes</p>
-				<p class="text-sm sm:text-xl font-bold text-[#f5efd8] font-mono truncate">
-					{data.totalVotes.toLocaleString()}
-				</p>
-			</div>
-		</div>
-		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-			<FluentFlag20Filled class="size-4 text-[#5eaef5] shrink-0" />
-			<div class="min-w-0">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Parties</p>
-				<p class="text-sm sm:text-xl font-bold text-[#f5efd8] truncate">{data.parties.length}</p>
-			</div>
-		</div>
-		<div class="panel-muted rounded-sm p-3 flex items-center gap-2">
-			<FluentPeople20Filled class="size-4 text-[#6fd14a] shrink-0" />
-			<div class="min-w-0">
-				<p class="text-[10px] text-[#a8a083] uppercase tracking-wide">Seats</p>
-				<p class="text-sm sm:text-xl font-bold text-[#f5efd8] truncate">{data.election.totalSeats}</p>
-			</div>
-		</div>
-	</div>
-
-	<!-- Parties -->
-	{#if data.parties.length === 0}
-		<div class="panel-muted rounded-sm p-8 sm:p-12 text-center">
-			<div class="text-4xl sm:text-6xl mb-4 opacity-20">🗳️</div>
-			<p class="text-lg text-[#a8a083]">No political parties registered</p>
-		</div>
-	{:else}
-		<!-- Ballot sheet -->
-		<div class="panel rounded-sm overflow-hidden">
-			<div class="bg-[#1a1f15] border-b border-[#c8b47a]/20 px-4 sm:px-5 py-3 flex items-center justify-between gap-3">
-				<div class="flex items-center gap-2 text-[#d3caa9]">
-					<FluentVote20Filled class="size-4 shrink-0" />
-					<span class="text-[10px] sm:text-xs uppercase tracking-[0.25em] font-bold">Official Ballot</span>
-				</div>
-				{#if data.userResidence && !data.userVote}
-					<span class="text-[10px] sm:text-xs text-[#a8a083] uppercase tracking-wide">Mark one choice</span>
+			<p class="mt-3 flex items-center justify-center gap-2 flex-wrap text-xs text-[#a8a083]">
+				{#if hasEnded}
+					<Badge tone="neutral" size="xs">Polls closed</Badge>
+					<span>{data.totalVotes.toLocaleString()} ballots counted</span>
+				{:else if countdown}
+					<Badge tone={hasStarted ? "amber" : "blue"} size="xs">{hasStarted ? "Polls open" : "Opens soon"}</Badge>
+					<span>{hasStarted ? "closes in" : "opens in"}</span>
+					<span class="font-mono text-sm text-[#f5efd8] tabular-nums">{countdown}</span>
 				{/if}
-			</div>
+			</p>
+			<p class="mt-1 text-[10px] text-[#a8a083]/80">
+				{formatDateTime(data.election.startDate)} – {formatDateTime(data.election.endDate)}
+			</p>
+		</header>
 
-			<div role={canVote && !data.userVote ? "radiogroup" : undefined} aria-label="Party ballot">
-				{#each sortedParties as party, index}
-					{@const votes = data.votesByParty[party.id] || 0}
-					{@const percentage = getVotePercentage(party.id)}
+		{#if data.userVote}
+			<span
+				class="animate-stamp absolute top-4 right-3 border-[3px] border-[#6fd14a]/75 text-[#b9f29a] rounded-sm px-2 py-0.5 font-serif text-base font-black uppercase tracking-[0.25em] pointer-events-none"
+				style="--stamp-tilt: 9deg"
+			>
+				Voted
+			</span>
+		{/if}
+
+		{#if data.parties.length === 0}
+			<div class="p-5">
+				<EmptyState icon={FluentFlag20Filled} title="No parties on the ballot" />
+			</div>
+		{:else}
+			<!-- Instruction line, as printed on real ballots -->
+			<p class="px-5 py-2 text-center text-[10px] uppercase tracking-[0.2em] text-[#a8a083] bg-[#1a1f15]/60">
+				{#if data.resultsVisible}
+					Result
+				{:else if data.userVote}
+					Your ballot is in the box
+				{:else if data.voterIssue}
+					<span class="text-red-300 normal-case tracking-normal text-xs">{data.voterIssue}</span>
+				{:else}
+					Mark one box only
+				{/if}
+			</p>
+
+			<ol role={canVote && !data.userVote ? "radiogroup" : undefined} aria-label="Ballot">
+				{#each sortedParties as party, index (party.id)}
+					{@const votes = votesFor(party.id)}
+					{@const percentage = percentOf(party.id)}
 					{@const isUserVote = data.userVote === party.id}
 					{@const isSelected = selectedPartyId === party.id}
 					{@const hasEnoughMembers = party.memberCount >= 3}
-					{@const canVoteForParty = canVote && hasEnoughMembers}
-					{@const selectable = canVoteForParty && !data.userVote}
-
-					<div
-						class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 px-4 sm:px-6 py-5 sm:py-6 transition-colors {index <
-						sortedParties.length - 1
-							? 'border-b border-dashed border-[#c8b47a]/15'
-							: ''} {isUserVote
+					{@const selectable = canVote && hasEnoughMembers && !data.userVote}
+					{@const marked = isUserVote || isSelected}
+					<li
+						class="flex items-center gap-3 sm:gap-4 px-4 sm:px-5 py-4 border-b border-dashed border-[#c8b47a]/20 last:border-0 transition-colors {isUserVote
 							? 'bg-[#3f8a2a]/10'
 							: isSelected
-								? 'bg-[#f2b01e]/10'
+								? 'bg-[#f2b01e]/8'
 								: selectable
-									? 'hover:bg-[#2e3524]'
-									: ''} {selectable ? 'cursor-pointer' : ''}"
+									? 'hover:bg-[#2e3524]/60 cursor-pointer'
+									: ''} {!hasEnoughMembers ? 'opacity-60' : ''}"
 						role={selectable ? "radio" : undefined}
 						aria-checked={selectable ? isSelected : undefined}
 						tabindex={selectable ? 0 : undefined}
@@ -292,199 +171,132 @@
 								}
 							: undefined}
 					>
-						<div class="flex items-center gap-4 sm:gap-5">
-							<!-- Ballot bubble: mark your choice with an X -->
-							<div
-								class="shrink-0 size-8 sm:size-9 rounded-full border-2 flex items-center justify-center {isUserVote
-									? 'border-[#6fd14a] bg-[#3f8a2a]/25 text-[#6fd14a]'
-									: isSelected
-										? 'border-[#f2b01e] bg-[#f2b01e]/15 text-[#f2b01e]'
-										: 'border-dashed border-[#c8b47a]/30 text-transparent'}"
-								title={isUserVote ? "Your vote" : isSelected ? "Selected — not yet confirmed" : undefined}
+						<span class="w-5 shrink-0 text-center font-serif text-sm font-bold text-[#a8a083]">{index + 1}</span>
+
+						<a href="/party/{party.id}" class="shrink-0" onclick={(e) => e.stopPropagation()}>
+							{#if party.logo}
+								<Logo
+									src={party.logo}
+									alt={party.name}
+									class="size-11 sm:size-12 rounded-sm"
+									placeholderIcon={FluentFlag20Filled}
+								/>
+							{:else}
+								<span
+									class="size-11 sm:size-12 rounded-sm flex items-center justify-center text-sm font-bold text-[#f5efd8]"
+									style="background-color: {party.color}"
+								>
+									{party.abbreviation || party.name.substring(0, 2)}
+								</span>
+							{/if}
+						</a>
+
+						<div class="flex-1 min-w-0 space-y-1">
+							<a
+								href="/party/{party.id}"
+								class="block font-serif text-base sm:text-lg font-black text-[#f5efd8] hover:text-[#ffcf47] transition-colors truncate"
+								onclick={(e) => e.stopPropagation()}
 							>
-								<span class="text-base sm:text-lg font-black leading-none">✕</span>
-							</div>
-
-							<!-- Logo -->
-							<a href="/party/{party.id}" class="group/logo shrink-0" onclick={(e) => e.stopPropagation()}>
-								{#if party.logo}
-									<Logo
-										src={party.logo}
-										alt={party.name}
-										class="size-16 sm:size-20 rounded-sm"
-										placeholderIcon={FluentFlag20Filled}
-									/>
-								{:else}
-									<div
-										class="size-16 sm:size-20 rounded-sm flex items-center justify-center text-xl font-bold text-[#f5efd8]"
-										style="background-color: {party.color}"
-									>
-										{party.abbreviation || party.name.substring(0, 2)}
-									</div>
-								{/if}
+								{party.name}
 							</a>
-
-							<!-- Name + rank (mobile: inline with logo; desktop: folded into the info column below) -->
-							<div class="flex-1 min-w-0 sm:hidden">
-								<a href="/party/{party.id}" class="group/link" onclick={(e) => e.stopPropagation()}>
-									<h3
-										class="text-base font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2"
-									>
-										{#if data.resultsVisible && index < 3}
-											<span
-												class="shrink-0 size-4 rounded-full flex items-center justify-center font-bold text-[10px] {index ===
-												0
-													? 'bg-[#f2b01e] text-[#1b1708]'
-													: index === 1
-														? 'bg-[#a8a083] text-[#1b1708]'
-														: 'bg-[#8c6a43] text-[#f5efd8]'}"
-											>
-												{index + 1}
-											</span>
-										{/if}
-										{party.name}
-									</h3>
-								</a>
-								{#if data.resultsVisible}
-									<div class="text-sm font-mono text-[#a8a083] mt-0.5">{votes} votes · {percentage.toFixed(1)}%</div>
-								{/if}
-							</div>
-						</div>
-
-						<!-- Party Info -->
-						<div class="flex-1 min-w-0 space-y-2.5">
-							<div class="hidden sm:flex items-start justify-between gap-4">
-								<a href="/party/{party.id}" class="group/link min-w-0" onclick={(e) => e.stopPropagation()}>
-									<h3
-										class="text-xl font-bold text-[#f5efd8] group-hover/link:text-[#ffcf47] transition-colors flex items-center gap-2 truncate"
-									>
-										{#if data.resultsVisible && index < 3}
-											<span
-												class="shrink-0 size-5 rounded-full flex items-center justify-center font-bold text-[10px] {index ===
-												0
-													? 'bg-[#f2b01e] text-[#1b1708]'
-													: index === 1
-														? 'bg-[#a8a083] text-[#1b1708]'
-														: 'bg-[#8c6a43] text-[#f5efd8]'}"
-											>
-												{index + 1}
-											</span>
-										{/if}
-										{party.name}
-									</h3>
-								</a>
-								{#if data.resultsVisible}
-									<div class="text-right shrink-0">
-										<div class="text-2xl font-bold text-[#f5efd8] font-mono">{votes}</div>
-										<div class="text-xs text-[#a8a083] font-mono">{percentage.toFixed(1)}%</div>
-									</div>
-								{/if}
-							</div>
-
-							<div class="flex items-center gap-3 flex-wrap">
-								{#if party.ideology}
-									<span
-										class="inline-block px-2 py-0.5 rounded-sm text-[10px] sm:text-xs"
-										style="background-color: {party.color}20; color: {party.color}; border: 1px solid {party.color}30"
-									>
-										{party.ideology}
+							<div class="flex items-center gap-x-3 gap-y-1 flex-wrap text-xs text-[#a8a083]">
+								{#if party.leader?.accountId}
+									<span class="min-w-0" onclick={(e) => e.stopPropagation()} role="presentation">
+										<UserLink
+											id={party.leader.accountId}
+											name={party.leader.name}
+											avatar={party.leader.logo}
+											size="xs"
+										/>
 									</span>
 								{/if}
-								{#if party.leader}
-									<a
-										href="/user/{party.leader.accountId}"
-										class="flex items-center gap-2 text-[#d3caa9] hover:text-[#f5efd8] transition-colors"
-										onclick={(e) => e.stopPropagation()}
-									>
-										<Logo
-											src={party.leader.logo}
-											alt={party.leader.name}
-											placeholderIcon={FluentPerson20Filled}
-											class="size-5 sm:size-6 rounded-sm"
-										/>
-										<span class="text-xs sm:text-sm">{party.leader.name}</span>
-									</a>
-								{/if}
-								<span
-									class="text-xs sm:text-sm flex items-center gap-1.5 {hasEnoughMembers
-										? 'text-[#a8a083]'
-										: 'text-red-400'}"
-								>
+								<span class="inline-flex items-center gap-1 {hasEnoughMembers ? '' : 'text-red-300'}">
 									<FluentPeople20Filled class="size-3.5" />
-									{party.memberCount}
-									{#if !hasEnoughMembers}
-										<span class="text-red-400/70">(need {3 - party.memberCount} more)</span>
-									{/if}
+									{party.memberCount}{#if !hasEnoughMembers}&nbsp;· needs 3{/if}
 								</span>
+								{#if party.ideology}
+									<span class="truncate" style="color: {party.color}">{party.ideology}</span>
+								{/if}
 							</div>
-
-							<!-- Vote Bar -->
 							{#if data.resultsVisible && data.totalVotes}
-								<div class="w-full bg-[#0f120c] rounded-full h-2 overflow-hidden">
-									<div
-										class="h-full rounded-full transition-all duration-700 ease-out"
-										style="width: {percentage}%; background: {party.color}"
-									></div>
+								<div class="flex items-center gap-2 pt-0.5">
+									<div class="flex-1 h-1.5 rounded-full bg-[#0f120c] overflow-hidden">
+										<div
+											class="h-full rounded-full transition-all duration-700 ease-out"
+											style="width: {percentage}%; background: {party.color}"
+										></div>
+									</div>
+									<span class="shrink-0 font-mono text-xs text-[#f5efd8]">
+										{votes} · {percentage.toFixed(1)}%
+									</span>
 								</div>
 							{/if}
-
-							{#if data.userResidence && !hasEnoughMembers}
-								<p class="text-[10px] sm:text-xs text-red-400/70">Needs 3+ members to participate</p>
-							{/if}
 						</div>
-					</div>
-				{/each}
-			</div>
-		</div>
 
-		<!-- Confirm Vote -->
-		{#if data.userResidence}
-			{@const selectedParty = data.parties.find((p) => p.id === selectedPartyId)}
-			{#if data.userVote}
-				<p class="text-center text-sm text-[#a8a083]">Your vote has been cast and cannot be changed.</p>
-			{:else}
-				<form
-					method="POST"
-					action="?/vote"
-					use:enhance={() => {
-						isSubmittingVote = true;
-						return async ({ update, result }) => {
-							isSubmittingVote = false;
-							await update();
-							if (result.type === "success") {
-								showVoteAnim = true;
-								feedback("win");
-							}
-						};
-					}}
-					class="sticky bottom-4 z-10"
-				>
-					<input type="hidden" name="partyId" value={selectedPartyId ?? ""} />
-					<Button
-						type="submit"
-						variant="primary"
-						size="lg"
-						block
-						disabled={!canVote || !selectedPartyId || isSubmittingVote}
-						loading={isSubmittingVote}
-						loadingText="Casting Vote..."
-					>
-						{#if !canVote && !hasStarted}
-							Voting Not Open
-						{:else if !canVote && hasEnded}
-							Voting Closed
-						{:else if selectedParty}
-							Confirm Vote for {selectedParty.name}
-						{:else}
-							Select a Party to Vote
+						<!-- The box to mark -->
+						{#if !data.resultsVisible || isUserVote}
+							<span
+								class="shrink-0 size-9 rounded-[2px] border-2 flex items-center justify-center {isUserVote
+									? 'border-[#6fd14a] text-[#b9f29a]'
+									: isSelected
+										? 'border-[#f2b01e] text-[#ffd35c]'
+										: 'border-[#c8b47a]/45 text-transparent'}"
+								aria-hidden="true"
+							>
+								{#if marked}
+									<span
+										class="font-serif text-2xl font-black leading-none animate-stamp"
+										style="--stamp-tilt: -6deg; --rise-delay: 0ms">✕</span
+									>
+								{/if}
+							</span>
 						{/if}
-					</Button>
-				</form>
-			{/if}
+					</li>
+				{/each}
+			</ol>
 		{/if}
+	</article>
+
+	<!-- Cast -->
+	{#if data.userResidence && !data.userVote && data.parties.length > 0}
+		<form
+			method="POST"
+			action="?/vote"
+			use:enhance={() => {
+				isSubmittingVote = true;
+				return async ({ update, result }) => {
+					isSubmittingVote = false;
+					await update();
+					toastResult(result);
+					if (result.type === "success") celebrate(ballotEl);
+				};
+			}}
+			class="sticky bottom-4 z-10"
+		>
+			<input type="hidden" name="partyId" value={selectedPartyId ?? ""} />
+			<Button
+				type="submit"
+				variant="primary"
+				size="lg"
+				block
+				icon={FluentVote20Filled}
+				disabled={!canVote || !selectedPartyId || isSubmittingVote}
+				loading={isSubmittingVote}
+				loadingText="Casting..."
+			>
+				{#if !canVote && !hasStarted}
+					Polls not open yet
+				{:else if !canVote && hasEnded}
+					Polls closed
+				{:else if selectedParty}
+					Cast ballot for {selectedParty.name}
+				{:else}
+					Mark a box
+				{/if}
+			</Button>
+			{#if selectedParty}
+				<p class="mt-1.5 text-center text-[10px] text-[#a8a083]">Final once cast</p>
+			{/if}
+		</form>
 	{/if}
 </PageContainer>
-
-{#if showVoteAnim}
-	<ThreeAnimation variant="vote" onComplete={() => (showVoteAnim = false)} />
-{/if}

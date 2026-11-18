@@ -1,15 +1,14 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/proposal/+page.svelte -->
+<!-- The archive: every decided bill, with its final tally and the rubber
+     stamp it got. -->
 <script lang="ts">
 	import Logo from "#lib/component/Logo.svelte";
-	import PartyTag from "#lib/component/PartyTag.svelte";
-	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
-	import FluentDismiss20Filled from "~icons/fluent/dismiss-20-filled";
+	import UserLink from "#lib/component/UserLink.svelte";
+	import EmptyState from "#lib/component/EmptyState.svelte";
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
-	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
-	import FluentDismissCircle20Filled from "~icons/fluent/dismiss-circle-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
-	import { formatDateTime, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { formatDate, regionCoatUrl } from "#lib/utils/formatting.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 
@@ -17,189 +16,136 @@
 
 	let selectedTab = $state<"all" | "passed" | "rejected">("all");
 
-	const displayedProposals = $derived.by(() => {
-		switch (selectedTab) {
-			case "passed":
-				return data.passedProposals;
-			case "rejected":
-				return data.rejectedProposals;
-			default:
-				return data.allProposals;
-		}
-	});
+	const displayedProposals = $derived(
+		selectedTab === "passed"
+			? data.passedProposals
+			: selectedTab === "rejected"
+				? data.rejectedProposals
+				: data.allProposals
+	);
+
+	const tabs = $derived([
+		{ key: "all" as const, label: "All", count: data.allProposals.length },
+		{ key: "passed" as const, label: "Passed", count: data.passedProposals.length },
+		{ key: "rejected" as const, label: "Rejected", count: data.rejectedProposals.length }
+	]);
+
+	type Outcome = "passed" | "rejected" | "failed";
+	function outcomeOf(p: { status: string; votingEnded: boolean; didPass: boolean }): Outcome {
+		if (p.status === "failed") return "failed";
+		if (p.status === "passed") return "passed";
+		if (p.status === "rejected") return "rejected";
+		return p.votingEnded && p.didPass ? "passed" : "rejected";
+	}
+
+	const stamps: Record<Outcome, { label: string; cls: string; tilt: string }> = {
+		passed: { label: "Passed", cls: "border-[#6fd14a]/75 text-[#b9f29a]", tilt: "-9deg" },
+		rejected: { label: "Rejected", cls: "border-red-500/75 text-red-300", tilt: "7deg" },
+		failed: { label: "Failed", cls: "border-[#f2b01e]/75 text-[#ffd35c]", tilt: "-5deg" }
+	};
 </script>
 
 <PageContainer maxWidth="4xl">
-	<!-- Header -->
 	<PageHeader
-		title="Proposal History"
+		title="Bill Archive"
+		subtitle={data.state.name}
 		icon={FluentHistory20Filled}
 		backHref="/state/{data.state.id}/parliament"
-		backLabel="{data.state.name} — Parliament"
+		backLabel="Parliament"
 	/>
 
-	<!-- Tabs -->
-	<div class="panel rounded-sm overflow-hidden">
-		<div class="flex border-b border-[#c8b47a]/15">
+	<!-- Drawer tabs -->
+	<div class="flex gap-1 border-b border-[#c8b47a]/20" role="tablist">
+		{#each tabs as tab (tab.key)}
 			<button
 				type="button"
-				onclick={() => (selectedTab = "all")}
-				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
-				'all'
-					? 'text-[#f5efd8] border-[#f2b01e] bg-[#f2b01e]/10'
-					: 'text-[#a8a083] border-transparent hover:text-[#f5efd8] hover:bg-[#2e3524]'}"
+				role="tab"
+				aria-selected={selectedTab === tab.key}
+				onclick={() => (selectedTab = tab.key)}
+				class="tap-target flex-1 sm:flex-none px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors whitespace-nowrap {selectedTab ===
+				tab.key
+					? 'text-[#f5efd8] border-[#f2b01e]'
+					: 'text-[#a8a083] border-transparent hover:text-[#f5efd8]'}"
 			>
-				All ({data.allProposals.length})
+				{tab.label}
+				<span class="font-mono text-xs text-[#a8a083]">{tab.count}</span>
 			</button>
-			<button
-				type="button"
-				onclick={() => (selectedTab = "passed")}
-				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
-				'passed'
-					? 'text-[#f5efd8] border-[#6fd14a] bg-[#3f8a2a]/15'
-					: 'text-[#a8a083] border-transparent hover:text-[#f5efd8] hover:bg-[#2e3524]'}"
-			>
-				Passed ({data.passedProposals.length})
-			</button>
-			<button
-				type="button"
-				onclick={() => (selectedTab = "rejected")}
-				class="flex-1 px-3 sm:px-6 py-4 text-sm font-medium text-center transition-colors border-b-2 whitespace-nowrap {selectedTab ===
-				'rejected'
-					? 'text-[#f5efd8] border-red-500 bg-red-600/10'
-					: 'text-[#a8a083] border-transparent hover:text-[#f5efd8] hover:bg-[#2e3524]'}"
-			>
-				Rejected ({data.rejectedProposals.length})
-			</button>
-		</div>
-
-		<!-- Proposals List -->
-		<div class="p-4 space-y-4">
-			{#if displayedProposals.length === 0}
-				<div class="text-center py-12">
-					<FluentDocument20Filled class="size-16 text-[#a8a083]/60 mx-auto mb-3" />
-					<p class="text-[#a8a083]">No proposals in this category</p>
-				</div>
-			{:else}
-				{#each displayedProposals as proposal}
-					<div class="panel-muted rounded-sm overflow-hidden">
-						<!-- Header -->
-						<div class="p-4 border-b border-[#c8b47a]/10">
-							<div class="flex items-start justify-between gap-3 mb-3">
-								<div class="text-right ml-auto">
-									<p class="text-xs text-[#a8a083]/70">Created</p>
-									<p class="text-xs text-[#a8a083]">{formatDateTime(proposal.createdAt)}</p>
-								</div>
-							</div>
-
-							<!-- Proposal Details -->
-							<div class="mb-3">
-								<h3 class="text-lg font-bold text-[#f5efd8] mb-1">{proposal.changeTitle}</h3>
-								<p class="text-sm text-[#a8a083]">{proposal.changeDescription}</p>
-
-								{#if proposal.region}
-									<a
-										href="/region/{proposal.region.id}"
-										class="inline-flex items-center gap-2 mt-2 text-sm text-[#b3dcff] hover:text-[#f5efd8] transition-colors w-fit"
-									>
-										<Logo
-											src={regionCoatUrl(proposal.region.id)}
-											alt={proposal.region.name}
-											class="size-6 rounded-sm"
-											placeholderIcon={FluentShield20Filled}
-											placeholderGradient="from-[#2369b5] to-[#2369b5]"
-										/>
-										<span>in {proposal.region.name}</span>
-									</a>
-								{/if}
-							</div>
-
-							<!-- Proposer -->
-							<a
-								href="/user/{proposal.proposedBy.id}"
-								class="flex items-center gap-2 text-sm text-[#a8a083] hover:text-[#f5efd8] transition-colors w-fit"
-							>
-								<Logo src={proposal.proposedBy.logo} alt={proposal.proposedBy.name} />
-								<span class="inline-flex items-center gap-1.5">
-									by <span class="text-[#f5efd8] font-medium">{proposal.proposedBy.name}</span>
-									{#if proposal.proposedBy.party}
-										<PartyTag
-											abbreviation={proposal.proposedBy.party.abbreviation}
-											color={proposal.proposedBy.party.color}
-										/>
-									{/if}
-								</span>
-							</a>
-						</div>
-
-						<!-- Voting Results -->
-						<div class="p-4 space-y-3">
-							<!-- Combined Vote Bar -->
-							<div>
-								<div class="flex items-center justify-between text-sm mb-1 gap-2">
-									<span class="text-[#b9f29a] font-medium flex items-center gap-1">
-										<FluentCheckmark20Filled class="size-4" />
-										For: {proposal.voteCounts.for} ({proposal.percentageFor.toFixed(1)}%)
-									</span>
-									<span class="text-red-300 font-medium flex items-center gap-1">
-										Against: {proposal.voteCounts.against} ({proposal.percentageAgainst.toFixed(1)}%)
-										<FluentDismiss20Filled class="size-4" />
-									</span>
-								</div>
-								<div class="w-full bg-[#0f120c] rounded-full h-3 flex overflow-hidden">
-									<div class="bg-[#6fd14a] h-full transition-all" style="width: {proposal.percentageFor}%"></div>
-									<div class="bg-red-500 h-full transition-all" style="width: {proposal.percentageAgainst}%"></div>
-								</div>
-							</div>
-
-							<!-- Summary -->
-							<div class="pt-3 border-t border-[#c8b47a]/10">
-								<div class="flex items-center justify-between gap-2 flex-wrap text-xs">
-									<div class="flex items-center gap-4 flex-wrap">
-										<span class="text-[#a8a083]">
-											{proposal.totalVotes} total vote{proposal.totalVotes !== 1 ? "s" : ""}
-										</span>
-										<span class="text-[#a8a083]">{proposal.requiredMajority}% required to pass</span>
-									</div>
-									{#if proposal.votingEnded}
-										<span class="text-[#a8a083]/70">Voting ended {formatDateTime(proposal.votingEndsAt)}</span>
-									{:else}
-										<span class="text-[#b3dcff]">Voting ends {formatDateTime(proposal.votingEndsAt)}</span>
-									{/if}
-								</div>
-
-								<!-- Pass/Fail Indicator (for ended proposals) -->
-								{#if proposal.votingEnded || proposal.status !== "active"}
-									<div class="mt-2">
-										{#if proposal.status === "failed"}
-											<div class="flex items-center gap-2 text-[#ffd35c]">
-												<FluentDismissCircle20Filled class="size-4" />
-												<span class="text-sm font-semibold">
-													Passed with {proposal.percentageFor.toFixed(1)}% support, but it couldn't be carried out
-												</span>
-											</div>
-										{:else if proposal.status === "passed" || (proposal.votingEnded && proposal.didPass)}
-											<div class="flex items-center gap-2 text-[#b9f29a]">
-												<FluentCheckmarkCircle20Filled class="size-4" />
-												<span class="text-sm font-semibold">
-													Proposal passed with {proposal.percentageFor.toFixed(1)}% support
-												</span>
-											</div>
-										{:else if proposal.status === "rejected" || (proposal.votingEnded && !proposal.didPass)}
-											<div class="flex items-center gap-2 text-red-300">
-												<FluentDismissCircle20Filled class="size-4" />
-												<span class="text-sm font-semibold">
-													Proposal rejected with only {proposal.percentageFor.toFixed(1)}% support
-												</span>
-											</div>
-										{/if}
-									</div>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{/each}
-			{/if}
-		</div>
+		{/each}
 	</div>
+
+	{#if displayedProposals.length === 0}
+		<EmptyState icon={FluentDocument20Filled} title="Nothing filed here yet" />
+	{:else}
+		<ol class="space-y-3">
+			{#each displayedProposals as proposal, i (proposal.id)}
+				{@const outcome = outcomeOf(proposal)}
+				{@const stamp = stamps[outcome]}
+				<li class="panel rounded-sm p-4 sm:p-5 relative overflow-hidden">
+					<!-- Rubber stamp -->
+					<span
+						class="animate-stamp absolute top-4 right-3 sm:right-5 border-[3px] rounded-sm px-2 py-0.5 font-serif text-sm sm:text-base font-black uppercase tracking-[0.2em] opacity-90 pointer-events-none {stamp.cls}"
+						style="--stamp-tilt: {stamp.tilt}; --rise-delay: {Math.min(120 + i * 60, 600)}ms"
+					>
+						{stamp.label}
+					</span>
+
+					<p class="font-serif text-[10px] uppercase tracking-[0.2em] text-[#a8a083] pr-28">
+						Bill No. {proposal.id} · {formatDate(proposal.createdAt)}
+					</p>
+					<h3 class="mt-1 font-serif text-lg font-black text-[#f5efd8] leading-snug break-words pr-24 sm:pr-32">
+						{proposal.changeTitle}
+					</h3>
+					<p class="mt-1 text-sm text-[#d3caa9]">
+						<span class="font-serif font-bold text-[#a8a083] mr-1">§ 1</span
+						>{proposal.changeDescription}{#if proposal.region}
+							in
+							<a
+								href="/region/{proposal.region.id}"
+								class="inline-flex items-center gap-1 align-middle text-[#b3dcff] hover:text-[#e3f2ff]"
+							>
+								<Logo
+									src={regionCoatUrl(proposal.region.id)}
+									alt=""
+									class="size-4 rounded-sm"
+									placeholderIcon={FluentShield20Filled}
+								/>{proposal.region.name}</a
+							>{/if}.
+					</p>
+
+					<div class="mt-3 flex items-center gap-2 flex-wrap text-xs text-[#a8a083]">
+						<span>Sponsored by</span>
+						<UserLink
+							id={proposal.proposedBy.id}
+							name={proposal.proposedBy.name}
+							avatar={proposal.proposedBy.logo}
+							party={proposal.proposedBy.party}
+							size="xs"
+						/>
+					</div>
+
+					<!-- Final tally -->
+					<div class="mt-3 pt-3 border-t border-dashed border-[#c8b47a]/15 space-y-1.5">
+						<div class="relative h-2 rounded-full bg-[#0f120c] flex overflow-hidden">
+							<div class="bg-[#6fd14a] h-full" style="width: {proposal.percentageFor}%"></div>
+							<div class="bg-red-500 h-full ml-auto" style="width: {proposal.percentageAgainst}%"></div>
+							<div
+								class="absolute inset-y-0 w-0.5 bg-[#f5efd8]/80"
+								style="left: {proposal.requiredMajority ?? 50}%"
+							></div>
+						</div>
+						<p class="flex items-center justify-between gap-2 text-xs font-mono">
+							<span class="text-[#b9f29a]">Ayes {proposal.voteCounts.for}</span>
+							<span class="text-[#a8a083]">
+								{proposal.percentageFor.toFixed(0)}% · {proposal.requiredMajority ?? 50}% needed
+							</span>
+							<span class="text-red-300">Noes {proposal.voteCounts.against}</span>
+						</p>
+						{#if outcome === "failed"}
+							<p class="text-xs text-[#ffd35c]">Passed the vote, but couldn't be carried out.</p>
+						{/if}
+					</div>
+				</li>
+			{/each}
+		</ol>
+	{/if}
 </PageContainer>

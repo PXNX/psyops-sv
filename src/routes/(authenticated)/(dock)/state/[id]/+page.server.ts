@@ -56,6 +56,7 @@ async function pendingApplicationIn(userId: string, stateId: number) {
 }
 
 import { declareWar, WarDeclarationError } from "#lib/server/services/military/declare-war.js";
+import { warsOfState } from "#lib/server/services/military/history.js";
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
 
@@ -514,6 +515,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	}
 
 	return {
+		warHistory: await warsOfState(db, stateId),
 		state: {
 			id: state.id,
 			name: state.name,

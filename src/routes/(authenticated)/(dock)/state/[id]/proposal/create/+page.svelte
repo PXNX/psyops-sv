@@ -1,7 +1,10 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/proposal/create/+page.svelte -->
+<!-- Drafting a bill: a legislative form with a subject to tick, the
+     provisions for that subject, and the signature line. -->
 <script lang="ts">
 	import FluentDocument20Filled from "~icons/fluent/document-20-filled";
 	import FluentShieldTask20Filled from "~icons/fluent/shield-task-20-filled";
+	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import { superForm } from "sveltekit-superforms";
 	import { valibotClient } from "sveltekit-superforms/adapters";
 	import { createProposalSchema } from "./schema";
@@ -9,7 +12,7 @@
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
-	import { Button } from "#lib/component/ui/index.js";
+	import { Button, SearchSelect } from "#lib/component/ui/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { EXPLOITATION_POLICIES, EXPLOITATION_POLICY_KEYS } from "#lib/config/index.js";
 
@@ -44,6 +47,27 @@
 		| "declare_war";
 	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications";
 
+	const PROPOSAL_TYPES: { type: ProposalType; label: string }[] = [
+		{ type: "tax", label: "Taxation" },
+		{ type: "hospital", label: "Hospital" },
+		{ type: "school", label: "School" },
+		{ type: "power_plant", label: "Power plant" },
+		{ type: "infrastructure", label: "Infrastructure" },
+		{ type: "fortifications", label: "Fortifications" },
+		{ type: "border_control", label: "Border control" },
+		{ type: "exploitation", label: "Resource law" },
+		{ type: "declare_war", label: "Declaration of war" }
+	];
+	const typeLabel = (t: string | undefined) => PROPOSAL_TYPES.find((p) => p.type === t)?.label ?? "";
+
+	const TAX_TYPES: { type: "mining" | "production" | "market_transaction" | "income"; label: string; hint: string }[] =
+		[
+			{ type: "mining", label: "Mining", hint: "on mined resources" },
+			{ type: "production", label: "Production", hint: "on manufactured goods" },
+			{ type: "market_transaction", label: "Market sales", hint: "paid by the seller" },
+			{ type: "income", label: "Income", hint: "on wages" }
+		];
+
 	/** Current level and buildings still under construction for a region. */
 	function regionProgress(regionId: string | undefined, buildingType: string | undefined) {
 		const region = data.regions.find((r) => r.id === Number(regionId));
@@ -57,44 +81,6 @@
 			infrastructureRequired: template.infrastructureRequired
 		};
 	}
-
-	const proposalTypeColors: Record<string, string> = {
-		tax: "bg-[#f2b01e]/15 text-[#ffd35c] border-[#f2b01e]/35",
-		hospital: "bg-red-600/10 text-red-300 border-red-500/30",
-		school: "bg-[#8a4fc0]/20 text-[#e3cbfb] border-[#c08cf0]/30",
-		power_plant: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35",
-		infrastructure: "bg-[#2369b5]/20 text-[#b3dcff] border-[#5eaef5]/30",
-		fortifications: "bg-red-600/10 text-red-300 border-red-500/30",
-		border_control: "bg-[#3f8a2a]/20 text-[#b9f29a] border-[#6fd14a]/30",
-		exploitation: "bg-[#f2b01e]/12 text-[#ffd35c] border-[#f2b01e]/35",
-		declare_war: "bg-red-600/15 text-red-300 border-red-500/45"
-	};
-
-	const proposalTypeIcons: Record<string, string> = {
-		tax: "💰",
-		hospital: "🏥",
-		school: "🏫",
-		power_plant: "⚡",
-		infrastructure: "🛣️",
-		fortifications: "🏰",
-		border_control: "🛂",
-		exploitation: "⛏️",
-		declare_war: "⚔️"
-	};
-
-	const taxTypeIcons: Record<string, string> = {
-		mining: "⛏️",
-		production: "🏭",
-		market_transaction: "🛒",
-		income: "💵"
-	};
-
-	const taxTypeDescriptions: Record<string, string> = {
-		mining: "Tax applied when workers mine resources from factories",
-		production: "Tax applied when manufacturing products",
-		market_transaction: "Tax applied on market sales (paid by seller)",
-		income: "Tax applied on wages and earnings from work"
-	};
 
 	// Presidents enact anything directly, ministers their own portfolio.
 	const MINISTRY_POWERS: Record<string, string[]> = {
@@ -170,45 +156,67 @@
 				progress.level >= progress.max ||
 				progress.infrastructure < progress.infrastructureRequired)
 	);
+
+	/** A box on the form: ticked when chosen. */
+	const box = (on: boolean) =>
+		`size-5 shrink-0 rounded-[2px] border-2 flex items-center justify-center transition-colors ${
+			on ? "border-[#f2b01e] bg-[#f2b01e]/20 text-[#ffd35c]" : "border-[#c8b47a]/40 text-transparent"
+		}`;
+	const option = (on: boolean) =>
+		`press-spring tap-target w-full flex items-center gap-3 rounded-sm border px-3 py-2.5 text-left transition-colors ${
+			on ? "border-[#f2b01e]/60 bg-[#f2b01e]/10" : "border-[#c8b47a]/15 bg-[#1a1f15]/60 hover:border-[#f2b01e]/40"
+		}`;
 </script>
 
 <PageContainer maxWidth="3xl">
-	<!-- Header -->
 	<PageHeader
-		title={canAutoExecute() ? "Enact" : "New Proposal"}
-		subtitle={canAutoExecute() ? "Takes effect immediately" : "Parliament votes for 1 day · 60% to pass"}
+		title={canAutoExecute() ? "Decree" : "Draft a Bill"}
+		subtitle={canAutoExecute() ? "Takes effect on signing" : "1 day of voting · 60% to pass"}
 		icon={canAutoExecute() ? FluentShieldTask20Filled : FluentDocument20Filled}
 		backHref="/state/{data.state.id}/parliament"
-		backLabel="{data.state.name} — Parliament"
+		backLabel="Parliament"
 	/>
 
-	<!-- Form -->
-	<div class="panel rounded-sm p-5">
-		<form method="POST" action="?/createProposal" use:enhance class="space-y-6">
-			<!-- Proposal Type -->
-			<div>
-				<label for="proposalType" class="field-label">
-					Proposal Type <span class="text-red-400">*</span>
-				</label>
-				<div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-					{#each ["tax", "hospital", "school", "power_plant", "infrastructure", "fortifications", "border_control", "exploitation", "declare_war"] as type}
+	<form method="POST" action="?/createProposal" use:enhance class="panel rounded-sm overflow-hidden">
+		<!-- Paper heading -->
+		<div class="px-5 pt-5 pb-4 text-center border-b-2 border-double border-[#c8b47a]/30">
+			<p class="text-[10px] uppercase tracking-[0.3em] text-[#a8a083]">Parliament of {data.state.name}</p>
+			<h2 class="mt-1 font-serif text-2xl font-black text-[#f5efd8]">
+				{#if $formData.proposalType}
+					{#key $formData.proposalType}
+						<span class="inline-block animate-pop-in">{typeLabel($formData.proposalType)} Bill</span>
+					{/key}
+				{:else}
+					A Bill
+				{/if}
+			</h2>
+		</div>
+
+		<div class="p-5 space-y-6">
+			<!-- Clause 1: subject -->
+			<fieldset>
+				<legend class="field-label">
+					<span class="font-serif text-[#a8a083] mr-1">§ 1</span> Subject <span class="text-red-400">*</span>
+				</legend>
+				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+					{#each PROPOSAL_TYPES as { type, label } (type)}
+						{@const on = $formData.proposalType === type}
 						<button
 							type="button"
-							class="p-4 rounded-sm border text-left transition-colors {$formData.proposalType === type
-								? proposalTypeColors[type]
-								: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
-							onclick={() => ($formData.proposalType = type as ProposalType)}
+							class={option(on)}
+							onclick={() => ($formData.proposalType = type)}
 							disabled={$submitting}
+							aria-pressed={on}
 						>
-							<div class="flex flex-col gap-2">
-								<span class="text-2xl">{proposalTypeIcons[type]}</span>
-								<h4 class="font-bold text-[#f5efd8] capitalize text-sm">
-									{type === "declare_war" ? "Declare war" : type.replace("_", " ")}
-								</h4>
-								{#if autoFor(type)}
-									<span class="text-xs text-[#b9f29a]">✓ Immediate</span>
-								{/if}
-							</div>
+							<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
+							<span
+								class="flex-1 min-w-0 text-sm font-semibold truncate {type === 'declare_war'
+									? 'text-red-300'
+									: 'text-[#f5efd8]'}">{label}</span
+							>
+							{#if autoFor(type)}
+								<span class="shrink-0 text-[10px] uppercase tracking-wide text-[#b9f29a]">Decree</span>
+							{/if}
 						</button>
 					{/each}
 				</div>
@@ -216,30 +224,30 @@
 				{#if $errors.proposalType}
 					<p class="field-error">{$errors.proposalType}</p>
 				{/if}
-			</div>
+			</fieldset>
 
-			<!-- Tax-Specific Fields -->
+			<!-- Clause 2: provisions -->
 			{#if isTaxProposal}
-				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
-					<div>
-						<label for="taxType" class="field-label">
-							Tax Type <span class="text-red-400">*</span>
-						</label>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-							{#each ["mining", "production", "market_transaction", "income"] as type}
+				<div class="pt-6 border-t border-dashed border-[#c8b47a]/20 space-y-5 animate-rise-in">
+					<fieldset>
+						<legend class="field-label">
+							<span class="font-serif text-[#a8a083] mr-1">§ 2</span> Tax <span class="text-red-400">*</span>
+						</legend>
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+							{#each TAX_TYPES as tax (tax.type)}
+								{@const on = $formData.taxType === tax.type}
 								<button
 									type="button"
-									class="p-4 rounded-sm border text-left transition-colors {$formData.taxType === type
-										? 'bg-[#f2b01e]/12 border-[#f2b01e]/60'
-										: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
-									onclick={() => ($formData.taxType = type as any)}
+									class={option(on)}
+									onclick={() => ($formData.taxType = tax.type)}
 									disabled={$submitting}
+									aria-pressed={on}
 								>
-									<div class="flex items-center gap-3 mb-2">
-										<span class="text-2xl">{taxTypeIcons[type]}</span>
-										<h4 class="font-bold text-[#f5efd8] capitalize">{type.replace("_", " ")}</h4>
-									</div>
-									<p class="text-xs text-[#a8a083]">{taxTypeDescriptions[type]}</p>
+									<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
+									<span class="min-w-0">
+										<span class="block text-sm font-semibold text-[#f5efd8]">{tax.label}</span>
+										<span class="block text-xs text-[#a8a083]">{tax.hint}</span>
+									</span>
 								</button>
 							{/each}
 						</div>
@@ -247,11 +255,14 @@
 						{#if $errors.taxType}
 							<p class="field-error">{$errors.taxType}</p>
 						{/if}
-					</div>
+					</fieldset>
 
 					<div>
-						<label for="taxRate" class="field-label">
-							Tax Rate: <span class="text-[#f5efd8] font-bold">{$formData.taxRate || 0}%</span>
+						<label for="taxRate" class="field-label flex items-baseline justify-between">
+							<span><span class="font-serif text-[#a8a083] mr-1">§ 3</span> Rate</span>
+							{#key $formData.taxRate}
+								<span class="font-mono text-lg font-bold text-[#ffd35c] animate-tick">{$formData.taxRate || 0}%</span>
+							{/key}
 						</label>
 						<input
 							type="range"
@@ -263,9 +274,8 @@
 							class="range range-sm w-full text-[#f2b01e]"
 							disabled={$submitting}
 						/>
-						<div class="flex justify-between text-xs text-[#a8a083] px-2 mt-1">
+						<div class="flex justify-between text-[10px] font-mono text-[#a8a083] px-1 mt-1">
 							<span>1%</span>
-							<span>10%</span>
 							<span>25%</span>
 							<span>50%</span>
 						</div>
@@ -276,113 +286,98 @@
 				</div>
 			{/if}
 
-			<!-- War declaration -->
 			{#if isWarProposal}
-				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-3">
+				<div class="pt-6 border-t border-dashed border-red-500/30 space-y-2 animate-rise-in">
 					<label for="targetStateId" class="field-label">
-						Declare war on <span class="text-red-400">*</span>
+						<span class="font-serif text-[#a8a083] mr-1">§ 2</span> War is declared on
+						<span class="text-red-400">*</span>
 					</label>
 					{#if data.warTargets.length}
-						<select
+						<SearchSelect
 							id="targetStateId"
 							name="targetStateId"
+							items={data.warTargets}
 							bind:value={$formData.targetStateId}
-							class="field-control rounded-sm px-3 py-2.5 w-full"
+							placeholder="Choose a state…"
+							searchPlaceholder="Search states…"
+							empty="No state by that name."
 							disabled={$submitting}
-						>
-							<option value="" disabled selected>Choose a state…</option>
-							{#each data.warTargets as target (target.id)}
-								<option value={String(target.id)}>{target.name}</option>
-							{/each}
-						</select>
+						/>
+						{#if $errors.targetStateId}
+							<p class="field-error">{$errors.targetStateId}</p>
+						{/if}
 					{:else}
-						<p class="text-sm text-[#a8a083]">There's no state you could declare war on.</p>
+						<p class="text-sm text-[#a8a083]">No state you could declare war on.</p>
 					{/if}
 				</div>
 			{/if}
 
-			<!-- Border Control Fields -->
 			{#if isBorderControlProposal}
-				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
-					<div>
-						<label class="field-label">
-							Border Status <span class="text-red-400">*</span>
-						</label>
-						<div class="grid grid-cols-2 gap-3">
+				<fieldset class="pt-6 border-t border-dashed border-[#c8b47a]/20 animate-rise-in">
+					<legend class="field-label">
+						<span class="font-serif text-[#a8a083] mr-1">§ 2</span> The borders shall be
+						<span class="text-red-400">*</span>
+					</legend>
+					<div class="grid grid-cols-2 gap-2">
+						{#each [{ v: "open" as const, label: "Open", hint: "Visas approved automatically" }, { v: "closed" as const, label: "Closed", hint: `$${data.borderMaintenanceCost.toLocaleString()}/day` }] as opt (opt.v)}
+							{@const on = $formData.borderStatus === opt.v}
 							<button
 								type="button"
-								class="p-4 rounded-sm border text-left transition-colors {$formData.borderStatus === 'open'
-									? 'bg-[#3f8a2a]/18 border-[#6fd14a]/60'
-									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
-								onclick={() => ($formData.borderStatus = "open")}
+								class={option(on)}
+								onclick={() => ($formData.borderStatus = opt.v)}
 								disabled={$submitting}
+								aria-pressed={on}
 							>
-								<div class="flex items-center gap-3 mb-2">
-									<span class="text-2xl">🌍</span>
-									<h4 class="font-bold text-[#f5efd8]">Open Borders</h4>
-								</div>
-								<p class="text-xs text-[#a8a083]">Allow free travel and trade</p>
-								{#if data.border?.status === "open"}
-									<span class="text-xs text-[#b9f29a] mt-2 block">✓ Current status</span>
-								{/if}
+								<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
+								<span class="min-w-0">
+									<span class="block text-sm font-semibold text-[#f5efd8]">
+										{opt.label}
+										{#if data.border?.status === opt.v}
+											<span class="text-[10px] font-normal uppercase tracking-wide text-[#a8a083]"> · now</span>
+										{/if}
+									</span>
+									<span class="block text-xs text-[#a8a083] truncate">{opt.hint}</span>
+								</span>
 							</button>
-
-							<button
-								type="button"
-								class="p-4 rounded-sm border text-left transition-colors {$formData.borderStatus === 'closed'
-									? 'bg-red-600/10 border-red-500/60'
-									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
-								onclick={() => ($formData.borderStatus = "closed")}
-								disabled={$submitting}
-							>
-								<div class="flex items-center gap-3 mb-2">
-									<span class="text-2xl">🚫</span>
-									<h4 class="font-bold text-[#f5efd8]">Closed Borders</h4>
-								</div>
-								<p class="text-xs text-[#a8a083]">Restrict travel and trade</p>
-								<p class="text-xs text-[#ffd35c] mt-1">
-									Costs ${data.borderMaintenanceCost.toLocaleString()}/day
-								</p>
-								{#if data.border?.status === "closed"}
-									<span class="text-xs text-red-400 mt-2 block">✓ Current status</span>
-								{/if}
-							</button>
-						</div>
-						<input type="hidden" name="borderStatus" value={$formData.borderStatus} />
-						{#if $errors.borderStatus}
-							<p class="field-error">{$errors.borderStatus}</p>
-						{/if}
+						{/each}
 					</div>
-				</div>
+					<input type="hidden" name="borderStatus" value={$formData.borderStatus} />
+					{#if $errors.borderStatus}
+						<p class="field-error">{$errors.borderStatus}</p>
+					{/if}
+				</fieldset>
 			{/if}
 
-			<!-- Resource exploitation law -->
 			{#if isExploitationProposal}
-				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-4">
-					<p class="text-sm text-[#d3caa9]">
-						How hard mines in this state may work its deposits. Harsher laws give more per shift now, but use up the
-						deposits disproportionately fast; output also falls as a deposit runs low.
-					</p>
-					<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+				<fieldset class="pt-6 border-t border-dashed border-[#c8b47a]/20 animate-rise-in">
+					<legend class="field-label">
+						<span class="font-serif text-[#a8a083] mr-1">§ 2</span> Mines may work deposits under
+						<span class="text-red-400">*</span>
+					</legend>
+					<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 						{#each EXPLOITATION_POLICY_KEYS as key (key)}
 							{@const policy = EXPLOITATION_POLICIES[key]}
+							{@const on = $formData.exploitationPolicy === key}
 							<button
 								type="button"
-								class="p-4 rounded-sm border text-left transition-colors {$formData.exploitationPolicy === key
-									? 'bg-[#f2b01e]/12 border-[#f2b01e]/60'
-									: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
+								class={option(on)}
 								onclick={() => ($formData.exploitationPolicy = key)}
 								disabled={$submitting}
+								aria-pressed={on}
 							>
-								<h4 class="font-bold text-[#f5efd8]">{policy.label}</h4>
-								<p class="text-xs text-[#a8a083] mt-1">{policy.description}</p>
-								<div class="mt-3 flex gap-4 text-xs">
-									<span class="text-[#b9f29a]">Output ×{policy.outputMultiplier}</span>
-									<span class="text-[#ffd35c]">Deposit drain ×{policy.depletionMultiplier}</span>
-								</div>
-								{#if data.exploitationPolicy === key}
-									<span class="text-xs text-[#b9f29a] mt-2 block">✓ Current law</span>
-								{/if}
+								<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
+								<span class="min-w-0 flex-1">
+									<span class="block text-sm font-semibold text-[#f5efd8]">
+										{policy.label}
+										{#if data.exploitationPolicy === key}
+											<span class="text-[10px] font-normal uppercase tracking-wide text-[#a8a083]"> · in force</span>
+										{/if}
+									</span>
+									<span class="block text-xs font-mono">
+										<span class="text-[#b9f29a]">output ×{policy.outputMultiplier}</span>
+										<span class="text-[#ffd35c] ml-2">drain ×{policy.depletionMultiplier}</span>
+									</span>
+								</span>
 							</button>
 						{/each}
 					</div>
@@ -390,15 +385,55 @@
 					{#if $errors.exploitationPolicy}
 						<p class="field-error">{$errors.exploitationPolicy}</p>
 					{/if}
-				</div>
+				</fieldset>
 			{/if}
 
-			<!-- Building Construction Fields -->
 			{#if isBuildingProposal}
-				<div class="border-t border-[#c8b47a]/10 pt-6 space-y-6">
+				<div class="pt-6 border-t border-dashed border-[#c8b47a]/20 space-y-5 animate-rise-in">
+					<fieldset>
+						<legend class="field-label">
+							<span class="font-serif text-[#a8a083] mr-1">§ 2</span> To be built in
+							<span class="text-red-400">*</span>
+						</legend>
+						<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+							{#each data.regions as region (region.id)}
+								{@const p = regionProgress(region.id.toString(), $formData.proposalType)}
+								{@const on = $formData.regionId === region.id.toString()}
+								<button
+									type="button"
+									class={option(on)}
+									onclick={() => ($formData.regionId = region.id.toString())}
+									disabled={$submitting}
+									aria-pressed={on}
+								>
+									<span class={box(on)}><FluentCheckmark20Filled class="size-4" /></span>
+									<img
+										loading="lazy"
+										decoding="async"
+										src={regionCoatUrl(region.id)}
+										alt=""
+										class="size-8 rounded-sm shrink-0"
+									/>
+									<span class="min-w-0">
+										<span class="block text-sm font-semibold text-[#f5efd8] truncate">{getRegionName(region.id)}</span>
+										<span class="block text-xs text-[#a8a083] truncate">
+											Infra {region.infrastructure ?? 0}{#if p && $formData.proposalType !== "infrastructure"}
+												· level {p.level}/{p.max}{/if}{#if p && p.infrastructure < p.infrastructureRequired}
+												<span class="text-red-300"> · needs infra {p.infrastructureRequired}</span>{/if}
+										</span>
+									</span>
+								</button>
+							{/each}
+						</div>
+						<input type="hidden" name="regionId" value={$formData.regionId} />
+						{#if $errors.regionId}
+							<p class="field-error">{$errors.regionId}</p>
+						{/if}
+					</fieldset>
+
 					{#if progress}
 						{@const statLabel = data.buildingTemplates[$formData.proposalType as BuildingType].statLabel}
-						<div class="panel-muted rounded-sm p-4 space-y-3">
+						<div class="panel-muted rounded-sm p-3 space-y-2">
 							<div class="flex items-center justify-between gap-3">
 								<span class="text-[10px] text-[#a8a083] uppercase tracking-wide">{statLabel}</span>
 								<span class="font-mono text-sm text-[#f5efd8]">
@@ -408,7 +443,7 @@
 								</span>
 							</div>
 							<div class="flex gap-0.5" aria-hidden="true">
-								{#each Array(progress.max) as _, i}
+								{#each Array(progress.max) as _, i (i)}
 									<div
 										class="h-2 flex-1 rounded-full {i < progress.level
 											? 'bg-[#6fd14a]'
@@ -419,64 +454,16 @@
 								{/each}
 							</div>
 							{#if progress.pending}
-								<p class="text-xs text-[#ffd35c]">
-									Level {progress.level + 1} is still under construction. The next level can be ordered once it's finished.
-								</p>
+								<p class="text-xs text-[#ffd35c]">Level {progress.level + 1} is still under construction.</p>
 							{:else if progress.infrastructure < progress.infrastructureRequired}
 								<p class="text-xs text-red-300">
-									Needs infrastructure level {progress.infrastructureRequired} here first (it has {progress.infrastructure}).
+									Needs infrastructure {progress.infrastructureRequired} (has {progress.infrastructure}).
 								</p>
 							{:else if progress.level >= progress.max}
 								<p class="text-xs text-red-300">Already at the maximum level.</p>
-							{:else}
-								<p class="text-xs text-[#a8a083]">Buildings go up one level at a time.</p>
 							{/if}
 						</div>
 					{/if}
-
-					<div>
-						<label for="regionId" class="field-label">
-							Region <span class="text-red-400">*</span>
-						</label>
-						<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-							{#each data.regions as region}
-								{@const p = regionProgress(region.id.toString(), $formData.proposalType)}
-								<button
-									type="button"
-									class="p-4 rounded-sm border text-left transition-colors flex items-center gap-3 {$formData.regionId ===
-									region.id.toString()
-										? 'bg-[#f2b01e]/12 border-[#f2b01e]/60'
-										: 'bg-[#1a1f15]/70 border-[#c8b47a]/15 hover:border-[#f2b01e]/55'}"
-									onclick={() => ($formData.regionId = region.id.toString())}
-									disabled={$submitting}
-								>
-									<img
-										loading="lazy"
-										decoding="async"
-										src={regionCoatUrl(region.id)}
-										alt={getRegionName(region.id)}
-										class="w-12 h-12 rounded-sm"
-									/>
-									<div class="flex-1">
-										<h4 class="font-bold text-[#f5efd8]">{getRegionName(region.id)}</h4>
-										<p class="text-xs text-[#a8a083]">
-											Infrastructure {region.infrastructure ?? 0}
-											{#if p && $formData.proposalType !== "infrastructure"}
-												· {proposalTypeIcons[$formData.proposalType || ""]} level {p.level}/{p.max}
-											{/if}
-											{#if p && p.infrastructure < p.infrastructureRequired}
-												<span class="text-red-300">· needs {p.infrastructureRequired}</span>
-											{/if}
-										</p>
-									</div>
-								</button>
-							{/each}
-						</div>
-						<input type="hidden" name="regionId" value={$formData.regionId} />
-						{#if $errors.regionId}
-							<p class="field-error">{$errors.regionId}</p>
-						{/if}
-					</div>
 
 					<input type="hidden" name="quantity" value="1" />
 
@@ -490,46 +477,48 @@
 					{#if $formData.proposalType && isValidBuildingType($formData.proposalType)}
 						{@const template = data.buildingTemplates[$formData.proposalType]}
 						{#if template}
-							<div class="grid grid-cols-3 gap-2 text-xs text-[#a8a083] panel-muted rounded-sm p-4">
-								<div>
-									<span class="text-[#a8a083]/70">Takes:</span>
-									<div class="text-[#f5efd8]">{template.constructionTime} days</div>
+							<dl class="grid grid-cols-3 gap-2 text-xs">
+								<div class="panel-muted rounded-sm p-2.5">
+									<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">Build time</dt>
+									<dd class="font-mono text-[#f5efd8]">{template.constructionTime} days</dd>
 								</div>
-								<div>
-									<span class="text-[#a8a083]/70">Needs infrastructure:</span>
-									<div class="text-[#f5efd8]">{template.infrastructureRequired}</div>
+								<div class="panel-muted rounded-sm p-2.5">
+									<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">Infra needed</dt>
+									<dd class="font-mono text-[#f5efd8]">{template.infrastructureRequired}</dd>
 								</div>
-								<div>
-									<span class="text-[#a8a083]/70">Each adds:</span>
-									<div class="text-[#f5efd8]">+1 {template.statLabel.toLowerCase()}</div>
+								<div class="panel-muted rounded-sm p-2.5 min-w-0">
+									<dt class="text-[10px] uppercase tracking-wide text-[#a8a083]">Adds</dt>
+									<dd class="text-[#f5efd8] truncate">+1 {template.statLabel.toLowerCase()}</dd>
 								</div>
-							</div>
+							</dl>
 						{/if}
 					{/if}
 				</div>
 			{/if}
+		</div>
 
-			<!-- Actions -->
-			<div class="flex gap-3 pt-4">
-				<Button href="/state/{data.state.id}/parliament" variant="secondary" grow>Cancel</Button>
-				<Button
-					type="submit"
-					variant="primary"
-					grow
-					icon={canAutoExecute() ? FluentShieldTask20Filled : FluentDocument20Filled}
-					loading={$delayed}
-					loadingText={canAutoExecute() ? "Executing..." : "Creating..."}
-					disabled={$submitting ||
-						(isTaxProposal && (!$formData.taxType || !$formData.taxRate)) ||
-						(isBorderControlProposal && !$formData.borderStatus) ||
-						(isWarProposal && !$formData.targetStateId) ||
-						(isExploitationProposal &&
-							(!$formData.exploitationPolicy || $formData.exploitationPolicy === data.exploitationPolicy)) ||
-						(isBuildingProposal && (!$formData.regionId || blocked || (canAutoExecute() && !canAfford())))}
-				>
-					{canAutoExecute() ? "Execute Immediately" : "Submit Proposal"}
-				</Button>
-			</div>
-		</form>
-	</div>
+		<!-- Signature line -->
+		<div
+			class="px-5 py-4 border-t-2 border-double border-[#c8b47a]/30 bg-[#1a1f15]/50 flex flex-col-reverse sm:flex-row gap-3"
+		>
+			<Button href="/state/{data.state.id}/parliament" variant="secondary" grow>Cancel</Button>
+			<Button
+				type="submit"
+				variant="primary"
+				grow
+				icon={canAutoExecute() ? FluentShieldTask20Filled : FluentDocument20Filled}
+				loading={$delayed}
+				loadingText={canAutoExecute() ? "Signing..." : "Tabling..."}
+				disabled={$submitting ||
+					(isTaxProposal && (!$formData.taxType || !$formData.taxRate)) ||
+					(isBorderControlProposal && !$formData.borderStatus) ||
+					(isWarProposal && !$formData.targetStateId) ||
+					(isExploitationProposal &&
+						(!$formData.exploitationPolicy || $formData.exploitationPolicy === data.exploitationPolicy)) ||
+					(isBuildingProposal && (!$formData.regionId || blocked || (canAutoExecute() && !canAfford())))}
+			>
+				{canAutoExecute() ? "Sign into Law" : "Table the Bill"}
+			</Button>
+		</div>
+	</form>
 </PageContainer>

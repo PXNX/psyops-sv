@@ -2,6 +2,7 @@
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { db } from "#lib/server/db.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { eq, and } from "drizzle-orm";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import {
@@ -112,11 +113,29 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		),
 		pendingByRegion,
 		// States this one could declare war on (not itself, not its bloc)
-		warTargets: (
-			await db.select({ id: states.id, name: states.name, blocId: states.blocId }).from(states).orderBy(states.name)
-		)
-			.filter((s) => s.id !== state.id && !(state.blocId && s.blocId === state.blocId))
-			.map((s) => ({ id: s.id, name: s.name })),
+		warTargets: await Promise.all(
+			(
+				await db
+					.select({
+						id: states.id,
+						name: states.name,
+						blocId: states.blocId,
+						logo: states.logo,
+						population: states.population
+					})
+					.from(states)
+					.orderBy(states.name)
+			)
+				.filter((s) => s.id !== state.id && !(state.blocId && s.blocId === state.blocId))
+				.map(async (s) => ({
+					id: s.id,
+					name: s.name,
+					logo: await getLogoUrl(s.logo),
+					hint: `${(s.population ?? 0).toLocaleString("en-US")} citizens`,
+					// Already at war, truce, … — the bill would fail, so don't offer it.
+					blocked: await warBlockedReason(db, state.id, s.id)
+				}))
+		).then((targets) => targets.filter((t) => !t.blocked).map(({ blocked: _, ...t }) => t)),
 		userParty: userMembership?.partyAffiliation || null,
 		userMinistry: userMinistry?.ministry || null,
 		isPresident: !!userPresidency,

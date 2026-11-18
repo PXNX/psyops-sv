@@ -2,6 +2,7 @@
 import { error, redirect, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { creditTreasury, debitWallet, InsufficientFundsError } from "#lib/server/money.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { db } from "#lib/server/db.js";
 import { eq, and, ne, or } from "drizzle-orm";
 import {
@@ -165,7 +166,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		state,
 		regions: stateRegions,
-		otherStates,
+		otherStates: await Promise.all(
+			otherStates
+				.sort((a, b) => a.name.localeCompare(b.name))
+				.map(async (s) => ({ id: s.id, name: s.name, logo: await getLogoUrl(s.logo) }))
+		),
 		sanctionedStates: sanctions,
 		pendingApplications: statePendingApplications,
 		visaSettings,

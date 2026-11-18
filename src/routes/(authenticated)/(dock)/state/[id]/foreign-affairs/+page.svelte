@@ -1,5 +1,6 @@
 <!-- src/routes/(authenticated)/(dock)/state/[id]/foreign-affairs/+page.svelte -->
 <script lang="ts">
+	import { vanish } from "#lib/utils/motion.js";
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import { enhance, type SubmitFunction } from "$app/forms";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -21,7 +22,7 @@
 	import { formatDate, getDaysRemaining } from "#lib/utils/formatting.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
-	import { Button, Badge } from "#lib/component/ui/index.js";
+	import { Button, Badge, SearchSelect } from "#lib/component/ui/index.js";
 
 	let { data } = $props();
 
@@ -56,18 +57,15 @@
 				<form method="POST" action="?/sanctionState" use:enhance={withToast} class="space-y-4 mt-4">
 					<div>
 						<label class="field-label" for="targetState">Select State to Sanction</label>
-						<select
+						<SearchSelect
 							id="targetState"
 							name="targetStateId"
+							items={data.otherStates}
 							bind:value={selectedStateToSanction}
-							class="field-control rounded-sm px-3 py-2.5 w-full"
-							required
-						>
-							<option value="" disabled>Choose a state...</option>
-							{#each data.otherStates as state}
-								<option value={state.id}>{state.name}</option>
-							{/each}
-						</select>
+							placeholder="Choose a state…"
+							searchPlaceholder="Search states…"
+							empty="No state by that name."
+						/>
 					</div>
 
 					<div>
@@ -98,8 +96,8 @@
 					<div class="border-t border-[#c8b47a]/10 my-5"></div>
 					<h3 class="text-[10px] text-[#a8a083] uppercase tracking-wide">Currently Sanctioned</h3>
 					<div class="space-y-3 mt-2">
-						{#each data.sanctionedStates as sanction}
-							<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-4 flex items-start gap-3">
+						{#each data.sanctionedStates as sanction (sanction.id)}
+							<div out:vanish class="bg-red-600/10 border border-red-500/30 rounded-sm p-4 flex items-start gap-3">
 								<div class="flex-1 min-w-0">
 									<p class="font-semibold text-red-300">{sanction.targetState?.name}</p>
 									<p class="text-xs text-[#a8a083] mt-1">
@@ -132,8 +130,8 @@
 						These users have applied for residence permits (citizenship) in your state.
 					</p>
 					<div class="space-y-3 pt-2">
-						{#each data.pendingApplications as application}
-							<div class="panel-muted rounded-sm p-4">
+						{#each data.pendingApplications as application (application.id)}
+							<div out:vanish class="panel-muted rounded-sm p-4">
 								<div class="mb-3">
 									<p class="font-semibold text-[#f5efd8]">{application.user?.profile?.name || "Unknown User"}</p>
 									<p class="text-xs text-[#a8a083]">
@@ -258,8 +256,8 @@
 					</div>
 					<div class="collapse-content">
 						<div class="space-y-3 pt-2">
-							{#each data.pendingVisaApplications as application}
-								<div class="panel-muted rounded-sm p-4">
+							{#each data.pendingVisaApplications as application (application.id)}
+								<div out:vanish class="panel-muted rounded-sm p-4">
 									<div class="mb-3">
 										<p class="font-semibold text-[#f5efd8]">{application.user?.profile?.name || "Unknown User"}</p>
 										<p class="text-xs text-[#a8a083]">
@@ -304,9 +302,9 @@
 				</div>
 				<div class="collapse-content">
 					<div class="space-y-2 pt-2 max-h-96 overflow-y-auto">
-						{#each data.activeVisas as visa}
+						{#each data.activeVisas as visa (visa.id)}
 							{@const daysLeft = getDaysRemaining(visa.expiresAt)}
-							<div class="panel-muted rounded-sm p-3 flex items-center justify-between gap-3">
+							<div out:vanish class="panel-muted rounded-sm p-3 flex items-center justify-between gap-3">
 								<div class="min-w-0">
 									<p class="font-medium text-sm text-[#f5efd8]">{visa.user?.profile?.name || "Unknown User"}</p>
 									<p class="text-xs text-[#a8a083]">
