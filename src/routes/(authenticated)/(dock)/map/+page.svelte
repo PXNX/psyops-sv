@@ -139,35 +139,35 @@
 	function fillFor(id: number, r: (typeof data.regionMap)[number], maxHeat: number): string {
 		switch (base) {
 			case "political":
-				return r.stateId && data.stateColorMap[r.stateId] ? mixOn(data.stateColorMap[r.stateId], 55) : LAND;
+				return r.stateId && data.stateColorMap[r.stateId] ? mixOn(data.stateColorMap[r.stateId], 80) : LAND;
 			case "blocs":
-				return r.stateId && data.blocColorMap?.[r.stateId] ? mixOn(data.blocColorMap[r.stateId], 42) : LAND;
+				return r.stateId && data.blocColorMap?.[r.stateId] ? mixOn(data.blocColorMap[r.stateId], 70) : LAND;
 			case "wars":
 				if (!r.stateId) return LAND;
-				if (sideStates.has(r.stateId)) return mixOn("var(--color-secondary)", 40);
-				if (enemyStates.has(r.stateId)) return mixOn("var(--color-error)", 40);
+				if (sideStates.has(r.stateId)) return mixOn("var(--color-secondary)", 64);
+				if (enemyStates.has(r.stateId)) return mixOn("var(--color-error)", 64);
 				if (data.warAttackerStateIds?.has(r.stateId) || data.warDefenderStateIds?.has(r.stateId))
-					return mixOn("var(--color-warning)", 22);
+					return mixOn("var(--color-warning)", 40);
 				return LAND;
 			case "weather": {
 				const w = weatherAt(id, now);
 				return w === "clear"
 					? LAND
 					: w === "cloudy"
-						? mixOn("var(--color-base-content)", 18)
+						? mixOn("var(--color-base-content)", 28)
 						: w === "rain"
-							? mixOn("var(--color-primary)", 35)
-							: mixOn("var(--color-base-content)", 32);
+							? mixOn("var(--color-primary)", 52)
+							: mixOn("var(--color-base-content)", 46);
 			}
 			case "terrain": {
 				const c = r.cover;
 				return c === "forest"
-					? mixOn("var(--color-success)", 32)
+					? mixOn("var(--color-success)", 50)
 					: c === "urban"
-						? mixOn("var(--color-base-content)", 26)
+						? mixOn("var(--color-base-content)", 40)
 						: c === "mountain"
-							? mixOn("var(--color-warning)", 26)
-							: mixOn("var(--color-success)", 8);
+							? mixOn("var(--color-warning)", 44)
+							: mixOn("var(--color-success)", 14);
 			}
 			default: {
 				const v = heatValue(r);
@@ -178,7 +178,7 @@
 						: base === "powerplants"
 							? "var(--color-warning)"
 							: "var(--color-primary)";
-				return mixOn(color, Math.round(15 + 70 * Math.min(v / maxHeat, 1)));
+				return mixOn(color, Math.round(24 + 76 * Math.min(v / maxHeat, 1)));
 			}
 		}
 	}
@@ -194,7 +194,7 @@
 	 * their edges with the neighbours drawn after them, so stroking the region
 	 * path itself only shows the parts that no later path covers. One overlay
 	 * path, drawn last with the region's whole `d` (every subpath and island),
-	 * shows the full border. Non-scaling stroke keeps it 2.5 px at every zoom.
+	 * shows the full border. Non-scaling stroke keeps it 1.25 px at every zoom.
 	 */
 	let outlineEl: SVGPathElement | null = null;
 	function regionOutline(svg: Element): SVGPathElement {
@@ -1098,9 +1098,9 @@
 		animation: region-pulse 900ms ease-in-out 3;
 	}
 	/* Selection ring: one path over every region, so shared borders do not
-	   clip it. `non-scaling-stroke` keeps it 2.5 px wide at any zoom. */
+	   clip it. `non-scaling-stroke` keeps it 1.25 px wide at any zoom. */
 	:global(#panzoom-element .region-outline) {
-		stroke-width: 2.5px;
+		stroke-width: 1.25px;
 		stroke-linejoin: round;
 		stroke-linecap: round;
 		pointer-events: none;
