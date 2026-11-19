@@ -7,6 +7,8 @@
 	import { SENSORS, UNIT_CATEGORIES, type SensorId } from "#lib/config/index.js";
 	import { ageLabel } from "#lib/utils/military.js";
 	import IconRadar from "~icons/fluent/radar-20-regular";
+	import IconImage from "~icons/fluent/image-multiple-20-regular";
+	import { ImageryStrip, type ImageryItem } from "#lib/component/recon/index.js";
 
 	interface Panel {
 		modifiers: {
@@ -36,9 +38,11 @@
 		/** The viewer's side in this battle, if any (offers recon). */
 		mySide: "attacker" | "defender" | null;
 		ended: boolean;
+		/** The viewer's side's recon frames over the battle region. */
+		imagery?: ImageryItem[];
 	}
 
-	let { attacker, defender, regionId, mySide, ended }: Props = $props();
+	let { attacker, defender, regionId, mySide, ended, imagery = [] }: Props = $props();
 
 	const levelTone = { none: "red", low: "amber", medium: "blue", high: "green" } as const;
 	const CAT: Record<string, string> = { infantry: "INF", vehicle: "VEH", artillery: "ART", air: "AIR" };
@@ -134,6 +138,14 @@
 		{@render column("attacker", attacker, defender)}
 		{@render column("defender", defender, attacker)}
 	</div>
+	{#if imagery.length}
+		<div class="border-t border-line/15 pt-3 space-y-2">
+			<p class="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-fg-muted">
+				<IconImage class="size-4 text-primary-fg" /> Imagery of the battle area
+			</p>
+			<ImageryStrip items={imagery} />
+		</div>
+	{/if}
 	<p class="field-hint">
 		Fresh recon on the enemy sharpens fire: artillery and air strikes need targeting data to hit at full strength,
 		thermal fixes on firing positions enable counter-battery, and air defence blunts air strikes. Intel goes stale after

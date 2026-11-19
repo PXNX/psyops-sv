@@ -380,6 +380,7 @@
 		regionId={data.battle.regionId}
 		mySide={data.me.side}
 		ended={data.battle.phase === "ended"}
+		imagery={data.imagery}
 	/>
 
 	<!-- The air war: strikes on this battle, supply cuts and IHL morale -->

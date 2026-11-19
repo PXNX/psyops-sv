@@ -14,6 +14,8 @@
 	import { ageLabel, countdown } from "#lib/utils/military.js";
 	import IconRadar from "~icons/fluent/radar-20-regular";
 	import IconDocument from "~icons/fluent/document-search-20-regular";
+	import IconImage from "~icons/fluent/image-multiple-20-regular";
+	import { ImageryStrip, type ImageryItem } from "#lib/component/recon/index.js";
 
 	interface SensorOption {
 		id: string;
@@ -42,6 +44,7 @@
 				sensors: { sensor: string }[];
 				latestObservedAt: string | null;
 			} | null;
+			imagery: ImageryItem[];
 			recon: {
 				canTarget: boolean;
 				targetReason: string | null;
@@ -161,6 +164,16 @@
 			</div>
 		{/if}
 	</div>
+
+	<!-- Imagery from the latest passes -->
+	{#if situation.imagery.length}
+		<div class="border-t border-line/15 pt-3 space-y-2">
+			<p class="flex items-center gap-1.5 text-[10px] uppercase tracking-wide text-fg-muted">
+				<IconImage class="size-4 text-primary-fg" /> Imagery
+			</p>
+			<ImageryStrip items={situation.imagery} max={4} />
+		</div>
+	{/if}
 
 	<!-- Recon tasking -->
 	{#if situation.recon.canTarget}

@@ -7,10 +7,13 @@
 	import UserLink from "#lib/component/UserLink.svelte";
 	import { Badge, Button } from "#lib/component/ui/index.js";
 	import { Conditions, UnitBadge } from "#lib/component/tactical/index.js";
+	import { ImageryStrip, type ImageryItem } from "#lib/component/recon/index.js";
+	import { toImageryInput } from "#lib/utils/sensor-image.js";
 	import { SENSORS, UNIT_CATEGORIES, type Cover, type SensorId, type Weather } from "#lib/config/index.js";
 	import { ageLabel, countdown, dtg, formatLatLon } from "#lib/utils/military.js";
 	import IconMap from "~icons/fluent/map-20-regular";
 	import IconRadar from "~icons/fluent/radar-20-regular";
+	import IconImage from "~icons/fluent/image-multiple-20-regular";
 
 	const { data } = $props();
 
@@ -22,6 +25,15 @@
 
 	let showStale = $state(true);
 	const reports = $derived(showStale ? data.reports : data.reports.filter((r) => r.fresh));
+	// Recon frames, newest first: every pass that returned a picture.
+	const imagery: ImageryItem[] = $derived(
+		reports.map((r) => ({
+			input: toImageryInput({ ...r, regionId: r.region.id }, r.imagery),
+			fresh: r.fresh,
+			regionName: r.region.name
+		}))
+	);
+	let strip: ImageryStrip | undefined = $state();
 
 	const sensorLabel = (s: string) => SENSORS[s as SensorId]?.label ?? s;
 	const sensorShort = (s: string) => SENSORS[s as SensorId]?.short ?? s;
@@ -145,6 +157,13 @@
 			</section>
 		{/if}
 
+		{#if imagery.length}
+			<section class="panel rounded-sm p-4">
+				<h2 class="section-title mb-3"><IconImage class="size-5 text-primary-fg" /> Imagery</h2>
+				<ImageryStrip bind:this={strip} items={imagery} showRegion />
+			</section>
+		{/if}
+
 		<div class="flex items-center justify-between gap-3">
 			<h2 class="section-title">Archive <span class="font-mono text-fg-muted">({data.reports.length})</span></h2>
 			<label class="flex items-center gap-2 text-xs text-fg-muted">
@@ -206,6 +225,12 @@
 						</dd>
 						<dt class="text-[10px] uppercase tracking-wide text-fg-muted pt-0.5">Valid to</dt>
 						<dd class="font-mono text-xs text-fg-soft">{dtg(r.expiresAt)}</dd>
+						<dt class="sr-only">Imagery</dt>
+						<dd class="col-span-2">
+							<Button variant="secondary" size="xs" icon={IconImage} onclick={() => strip?.show(r.id)}
+								>View imagery</Button
+							>
+						</dd>
 					</dl>
 
 					<!-- Findings -->

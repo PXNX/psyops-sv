@@ -14,6 +14,7 @@ import {
 	sideReports,
 	viewerSide
 } from "#lib/server/services/military/recon.js";
+import { imageryContexts } from "#lib/server/services/military/imagery.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -41,7 +42,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const userIds = [
 		...new Set([...reports.map((r) => r.filedBy), ...inFlight.map((m) => m.launchedBy)].filter(Boolean))
 	] as string[];
-	const [regionRows, stateRows, profiles] = await Promise.all([
+	const [regionRows, stateRows, profiles, imagery] = await Promise.all([
 		regionIds.length
 			? db
 					.select({ id: regions.id, lat: regions.latitude, lon: regions.longitude, stateId: regions.stateId })
@@ -54,7 +55,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.select({ id: userProfiles.accountId, name: userProfiles.name, logo: userProfiles.logo })
 					.from(userProfiles)
 					.where(inArray(userProfiles.accountId, userIds))
-			: []
+			: [],
+		imageryContexts(db, reports)
 	]);
 	const regionById = new Map(regionRows.map((r) => [r.id, r]));
 	const stateName = new Map(stateRows.map((s) => [s.id, s.name]));
@@ -81,6 +83,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			ownState: stateName.get(r.stateId) ?? null,
 			filedBy: r.filedBy ? { id: r.filedBy, ...(people.get(r.filedBy) ?? { name: null, avatar: null }) } : null,
 			findings: r.findings,
+			imagery: imagery.get(r.id)!,
 			observedAt: r.observedAt.toISOString(),
 			expiresAt: r.expiresAt.toISOString(),
 			fresh: isFresh(r, now)

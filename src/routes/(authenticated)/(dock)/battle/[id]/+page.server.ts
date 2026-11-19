@@ -9,7 +9,16 @@ import { db } from "#lib/server/db.js";
 import { battleParticipants, battleRounds, battles, militaryUnits } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { MILITARY_UNIT_TEMPLATES, regionConditions } from "#lib/config/index.js";
-import { battleIntel, resolveReconMissions, type IntelPicture } from "#lib/server/services/military/recon.js";
+import {
+	battleIntel,
+	isFresh,
+	resolveReconMissions,
+	sideReports,
+	viewerSide,
+	type IntelPicture
+} from "#lib/server/services/military/recon.js";
+import { imageryInputs } from "#lib/server/services/military/imagery.js";
+import { getRegionName } from "#lib/utils/formatting.js";
 import { battleStrikeModifiers, strikeLog } from "#lib/server/services/military/strike.js";
 import {
 	PREPARATION_HOURS,
@@ -163,6 +172,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		sensors: picture?.sensors ?? []
 	});
 
+	// Recon imagery of the battle area: only the viewer's own side's passes.
+	const viewer = await viewerSide(db, account.id);
+	const imageryReports = viewer
+		? await sideReports(db, viewer.stateIds, { regionIds: [battle.regionId], limit: 6 })
+		: [];
+	const imagery = (await imageryInputs(db, imageryReports)).map((input, i) => ({
+		input,
+		fresh: isFresh(imageryReports[i]!),
+		regionName: getRegionName(battle.regionId)
+	}));
+
 	// The air war over this battle: strikes flown on it, and what supply cuts
 	// and IHL morale do to each side's output this round.
 	const [strikes, strikeMods] = await Promise.all([
@@ -172,6 +192,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		conditions: regionConditions(battle.region),
+		imagery,
 		airWar: { log: strikes, modifiers: strikeMods },
 		intel: {
 			attacker: intelPanel(intel.attacker, intel.attackerPicture),

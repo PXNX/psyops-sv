@@ -37,9 +37,12 @@ import {
 	ReconError,
 	launchRecon,
 	picturesByRegion,
+	isFresh,
 	reconOptions,
-	resolveReconMissions
+	resolveReconMissions,
+	sideReports
 } from "#lib/server/services/military/recon.js";
+import { imageryInputs } from "#lib/server/services/military/imagery.js";
 import { militaryUnits } from "#lib/server/schema.js";
 import {
 	regionConditions,
@@ -499,7 +502,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	await resolveReconMissions(db).catch((err) => console.error("Recon resolve failed:", err));
 	const recon = await reconOptions(db, account.id, regionId);
 	const sideStateIds = recon.side?.stateIds ?? [];
-	const [friendlyUnits, picture] = await Promise.all([
+	const [friendlyUnits, picture, imagery] = await Promise.all([
 		sideStateIds.length
 			? db
 					.select({ unitType: militaryUnits.unitType, ownerId: militaryUnits.ownerId, stateId: militaryUnits.stateId })
@@ -514,7 +517,12 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			: Promise.resolve([]),
 		sideStateIds.length
 			? picturesByRegion(db, sideStateIds, { regionIds: [regionId] }).then((m) => m.get(regionId) ?? null)
-			: Promise.resolve(null)
+			: Promise.resolve(null),
+		// Recon imagery: the side's latest passes over this region.
+		sideReports(db, sideStateIds, { regionIds: [regionId], limit: 8 }).then(async (rs) => {
+			const inputs = await imageryInputs(db, rs);
+			return inputs.map((input, i) => ({ input, fresh: isFresh(rs[i]!), regionName: getRegionName(regionId) }));
+		})
 	]);
 	const friendlyByType = new Map<string, { count: number; mine: number }>();
 	for (const u of friendlyUnits) {
@@ -556,6 +564,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			isHostileRegion,
 			friendly: [...friendlyByType].map(([unitType, e]) => ({ unitType, ...e })),
 			picture,
+			imagery,
 			recon: {
 				canTarget: !recon.targetReason,
 				targetReason: recon.targetReason,
