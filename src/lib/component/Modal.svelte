@@ -17,14 +17,15 @@
 		open: boolean;
 		title?: string;
 		onBack?: (() => void) | null;
-		size?: "default" | "small" | "large";
+		size?: "default" | "small" | "large" | "xlarge";
 		children: any;
 	} = $props();
 
 	const sizeClasses = {
 		small: "max-w-sm",
 		default: "max-w-lg",
-		large: "max-w-2xl"
+		large: "max-w-2xl",
+		xlarge: "max-w-5xl"
 	};
 
 	function handleClose() {
