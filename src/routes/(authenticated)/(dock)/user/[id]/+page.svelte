@@ -159,13 +159,25 @@
 	</button>
 {/snippet}
 
-{#snippet roleLine(label: string, href: string | null, logo: string | null | undefined, name: string, detail: string)}
-	<li class="flex min-w-0 items-center gap-2 text-sm">
-		<span class="w-20 shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">{label}</span>
+{#snippet roleLine(
+	label: string,
+	href: string | null,
+	logo: string | null | undefined,
+	name: string,
+	detail: string,
+	placeholder: typeof FluentFlag20Filled = FluentFlag20Filled
+)}
+	<li class="flex min-w-0 items-center gap-2.5 text-[15px]">
+		<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">{label}</span>
 		{#if href}
-			<a {href} class="group flex min-w-0 items-center gap-1.5">
+			<a {href} class="group flex min-w-0 items-center gap-2">
 				{#if logo !== undefined}
-					<Logo src={logo} alt="" class="size-4! rounded-[2px]! shrink-0" placeholderIcon={FluentFlag20Filled} />
+					<Logo
+						src={logo}
+						alt=""
+						class="size-7! rounded-[3px]! shrink-0 ring-1 ring-black/15 transition-transform group-hover:scale-110 group-hover:-rotate-3"
+						placeholderIcon={placeholder}
+					/>
 				{/if}
 				<span class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline">{name}</span>
 			</a>
@@ -173,7 +185,7 @@
 			<span class="truncate font-medium text-fg-body">{name}</span>
 		{/if}
 		{#if detail}
-			<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline">{detail}</span>
+			<span class="hidden shrink-0 font-mono text-xs text-fg-muted sm:inline">{detail}</span>
 		{/if}
 	</li>
 {/snippet}
@@ -206,14 +218,15 @@
 
 				<!-- File heading -->
 				<div
-					class="flex items-center gap-3 border-b-2 border-double border-line/40 px-4 pt-3 pb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-muted"
+					class="flex items-center gap-3 border-b-2 border-double border-line/40 px-4 pt-3 pb-2 font-mono text-[11px] uppercase tracking-[0.2em] text-fg-muted"
 				>
 					<span class="truncate">{data.citizenship?.name ?? "Stateless"}</span>
+					<span class="hidden sm:inline text-fg-faint">File {data.user.id.slice(0, 8).toUpperCase()}</span>
 					<span class="stamp ml-auto text-[10px]! py-0! px-1.5! shrink-0" style="--stamp-tilt: 0deg">Restricted</span>
 				</div>
 
 				<!-- Header: photo, name, roles -->
-				<div class="relative flex flex-wrap gap-4 p-4">
+				<div class="relative flex flex-wrap gap-x-5 gap-y-3 px-4 pt-4 pb-3">
 					{#if data.presidency}
 						<span
 							class="stamp animate-stamp pointer-events-none absolute right-4 top-6 sm:top-auto sm:bottom-3 rounded-full! px-3! py-2! text-center leading-tight"
@@ -233,7 +246,7 @@
 							class="absolute -top-2 left-1/2 z-10 h-5 w-2.5 -translate-x-1/2 rounded-full border-2 border-[#8b8f98]"
 							aria-hidden="true"
 						></span>
-						<div class="size-20 sm:size-24 overflow-hidden">
+						<div class="size-24 sm:size-28 overflow-hidden">
 							<Logo
 								src={data.user.logo}
 								alt={data.user.name || "Portrait"}
@@ -247,9 +260,9 @@
 					<div class="min-w-0 flex-1 basis-[13rem] space-y-2">
 						<div class="flex items-start gap-2">
 							<div class="min-w-0 flex-1">
-								<p class="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-muted">Surname, given name</p>
+								<p class="font-mono text-[11px] uppercase tracking-[0.2em] text-fg-muted">Surname, given name</p>
 								<h1
-									class="break-words font-mono text-xl sm:text-2xl font-bold uppercase leading-tight tracking-wide text-fg"
+									class="break-words font-mono text-2xl sm:text-3xl font-bold uppercase leading-tight tracking-wide text-fg"
 								>
 									{data.user.name || "Anonymous"}
 								</h1>
@@ -267,7 +280,7 @@
 						</div>
 
 						<!-- Roles -->
-						<ul class="space-y-1">
+						<ul class="space-y-1.5">
 							{#if data.presidency}
 								{@render roleLine(
 									"President",
@@ -282,7 +295,8 @@
 										`/bloc/${data.presidency.bloc.id}`,
 										data.presidency.bloc.logo,
 										data.presidency.bloc.name,
-										""
+										"",
+										FluentPeopleTeam20Filled
 									)}
 								{/if}
 							{/if}
@@ -290,9 +304,10 @@
 								{@render roleLine(
 									"Bloc leader",
 									`/bloc/${data.blocLeadership.blocId}`,
-									undefined,
+									data.blocLeadership.blocLogo,
 									data.blocLeadership.blocName,
-									formatDate(data.blocLeadership.appointedAt)
+									formatDate(data.blocLeadership.appointedAt),
+									FluentPeopleTeam20Filled
 								)}
 							{/if}
 							{#if data.governorship}
@@ -305,8 +320,8 @@
 								)}
 							{/if}
 							{#if data.party}
-								<li class="flex min-w-0 items-center gap-2 text-sm">
-									<span class="w-20 shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted"
+								<li class="flex min-w-0 items-center gap-2.5 text-[15px]">
+									<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
 										>Party</span
 									>
 									<a href="/party/{data.party.id}" class="group flex min-w-0 items-center gap-1.5">
@@ -315,11 +330,11 @@
 											>{data.party.name}</span
 										>
 									</a>
-									<span class="shrink-0 text-xs text-fg-muted">{partyRole(data.party.role)}</span>
+									<span class="shrink-0 font-mono text-xs text-fg-muted">{partyRole(data.party.role)}</span>
 								</li>
 							{:else if data.isOwnProfile}
-								<li class="flex items-center gap-2 text-sm">
-									<span class="w-20 shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted"
+								<li class="flex items-center gap-2.5 text-[15px]">
+									<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
 										>Party</span
 									>
 									<Button
@@ -340,15 +355,15 @@
 				{#if data.ministries.length > 0 || data.blocDiplomacies.length > 0}
 					<ul id="offices" class="divide-y divide-line/15 border-t border-line/15">
 						{#each data.ministries as ministry (ministry.id)}
-							<li class="flex items-center gap-3 px-4 py-2" out:vanish>
-								<FluentShieldTask20Filled class="size-4 shrink-0 text-fg-muted" />
-								<a href="/state/{ministry.stateId}" class="group min-w-0 flex-1 text-sm">
+							<li class="flex items-center gap-3 px-4 py-1.5" out:vanish>
+								<FluentShieldTask20Filled class="size-5 shrink-0 text-fg-muted" />
+								<a href="/state/{ministry.stateId}" class="group min-w-0 flex-1 text-[15px]">
 									<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline"
 										>Minister of {ministryNames[ministry.ministry] ?? ministry.ministry}</span
 									>
 									<span class="text-fg-muted">· {ministry.stateName}</span>
 								</a>
-								<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline"
+								<span class="hidden shrink-0 font-mono text-xs text-fg-muted sm:inline"
 									>{formatDate(ministry.appointedAt)}</span
 								>
 								{#if data.currentUserPresidency?.stateId === ministry.stateId}
@@ -374,13 +389,18 @@
 							</li>
 						{/each}
 						{#each data.blocDiplomacies as diplomacy (diplomacy.id)}
-							<li class="flex items-center gap-3 px-4 py-2" out:vanish>
-								<FluentGlobeShield20Filled class="size-4 shrink-0 text-fg-muted" />
-								<a href="/bloc/{diplomacy.blocId}" class="group min-w-0 flex-1 text-sm">
+							<li class="flex items-center gap-3 px-4 py-1.5" out:vanish>
+								<Logo
+									src={diplomacy.blocLogo}
+									alt=""
+									class="size-7! rounded-[3px]! shrink-0 ring-1 ring-black/15"
+									placeholderIcon={FluentGlobeShield20Filled}
+								/>
+								<a href="/bloc/{diplomacy.blocId}" class="group min-w-0 flex-1 text-[15px]">
 									<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline">Diplomat</span>
 									<span class="text-fg-muted">· {diplomacy.blocName}</span>
 								</a>
-								<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline"
+								<span class="hidden shrink-0 font-mono text-xs text-fg-muted sm:inline"
 									>{formatDate(diplomacy.appointedAt)}</span
 								>
 								{#if data.viewerBlocId === diplomacy.blocId}
@@ -406,16 +426,16 @@
 				{/if}
 
 				<!-- Key/value fields -->
-				<dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 border-t border-line/15 px-4 py-3 text-sm">
+				<dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-5 gap-y-2.5 border-t border-line/15 px-4 py-3 text-[15px]">
 					<div class="min-w-0">
-						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Citizenship</dt>
-						<dd class="truncate mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Citizenship</dt>
+						<dd class="truncate border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{#if data.citizenship}
 								<a href="/state/{data.citizenship.id}" class="group inline-flex max-w-full items-center gap-1.5">
 									<Logo
 										src={data.citizenship.logo}
 										alt=""
-										class="size-4! rounded-[2px]! shrink-0"
+										class="size-5! rounded-[2px]! shrink-0 ring-1 ring-black/15"
 										placeholderIcon={FluentFlag20Filled}
 									/>
 									<span class="truncate text-fg-body group-hover:text-fg group-hover:underline"
@@ -428,8 +448,8 @@
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Residence</dt>
-						<dd class="truncate mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Residence</dt>
+						<dd class="truncate border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{#if data.homeRegion}
 								<a href="/region/{data.homeRegion.id}" class="text-fg-body hover:text-fg hover:underline"
 									>{data.homeRegion.name}</a
@@ -440,8 +460,8 @@
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Location</dt>
-						<dd class="truncate mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Location</dt>
+						<dd class="truncate border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{#if data.residence}
 								<a href="/region/{data.residence.region.id}" class="text-fg-body hover:text-fg hover:underline"
 									>{data.residence.region.name}</a
@@ -452,39 +472,39 @@
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Joined</dt>
-						<dd class="font-mono text-fg-body mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Joined</dt>
+						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{formatDate(data.user.createdAt)}
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Articles</dt>
-						<dd class="mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Articles</dt>
+						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
 							<a href="/user/{data.user.id}/articles" class="font-mono text-fg-body hover:text-fg hover:underline"
 								>{data.articleCount}</a
 							>
 						</dd>
 					</div>
 					<div class="min-w-0">
-						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Upvotes</dt>
-						<dd class="font-mono text-fg-body mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Upvotes</dt>
+						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{data.upvoteCount}
 						</dd>
 					</div>
 					<div class="col-span-2 min-w-0">
-						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Medals</dt>
-						<dd class="mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Medals</dt>
+						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
 							<a href="/user/{data.user.id}/career" class="group inline-flex items-center gap-2">
 								<span class="font-mono text-fg-body group-hover:text-fg group-hover:underline"
 									>{data.medals.length}</span
 								>
 								{#if data.medals.length > 0}
 									<span class="flex flex-wrap gap-0.5">
-										{#each data.medals as medal (medal.id)}
+										{#each data.medals as medal, i (medal.id)}
 											{@const info = medalInfo(medal.medalType)}
 											<span
-												class="block h-2.5 w-6 rounded-[1px] border border-black/40"
-												style="background: {info.ribbon}"
+												class="medal-ribbon block h-3 w-7 rounded-[1px] border border-black/40"
+												style="background: {info.ribbon}; animation-delay: {i * 60}ms"
 												title="{info.label}{medal.stateName ? ` — ${medal.stateName}` : ''}, {formatDate(
 													medal.awardedAt
 												)}"
@@ -498,14 +518,14 @@
 				</dl>
 
 				{#if data.user.bio}
-					<div class="border-t border-line/15 px-4 py-3">
-						<p class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Remarks</p>
-						<p class="mt-1 font-mono text-sm text-fg-body break-words">{data.user.bio}</p>
+					<div class="border-t border-line/15 px-4 py-2.5">
+						<p class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Remarks</p>
+						<p class="mt-0.5 font-mono text-[15px] leading-relaxed text-fg-body break-words">{data.user.bio}</p>
 					</div>
 				{/if}
 
 				<!-- Actions -->
-				<div class="flex flex-wrap items-center gap-2 border-t border-line/15 px-4 py-3">
+				<div class="flex flex-wrap items-center gap-2 border-t border-line/15 px-4 py-2.5">
 					{#if !data.isOwnProfile}
 						<Button variant="primary" size="sm" href="/chat/user/{data.user.id}" icon={FluentChat20Filled}>
 							Message
@@ -1056,3 +1076,25 @@
 		/>
 	{/if}
 {/if}
+
+<style>
+	/* Ribbons are pinned onto the sheet one after another. */
+	.medal-ribbon {
+		animation: ribbon-pin 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+	}
+	@keyframes ribbon-pin {
+		from {
+			opacity: 0;
+			transform: translateY(-6px) scale(0.6) rotate(-8deg);
+		}
+		to {
+			opacity: 1;
+			transform: none;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.medal-ribbon {
+			animation: none;
+		}
+	}
+</style>

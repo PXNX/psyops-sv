@@ -455,14 +455,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		availableMinistriesPromise,
 		blocAppointmentPromise,
 		// Bloc leadership positions this user holds (across any bloc)
-		db.query.blocLeaders.findFirst({
-			where: eq(blocLeaders.userId, params.id),
-			with: { bloc: true }
-		}),
-		db.query.blocDiplomats.findMany({
-			where: eq(blocDiplomats.userId, params.id),
-			with: { bloc: true }
-		}),
+		db.query.blocLeaders
+			.findFirst({
+				where: eq(blocLeaders.userId, params.id),
+				with: { bloc: true }
+			})
+			.then(async (l) => (l ? { ...l, logoUrl: await getLogoUrl(l.bloc.logo) } : l)),
+		db.query.blocDiplomats
+			.findMany({
+				where: eq(blocDiplomats.userId, params.id),
+				with: { bloc: true }
+			})
+			.then((rows) => Promise.all(rows.map(async (d) => ({ ...d, logoUrl: await getLogoUrl(d.bloc.logo) })))),
 		// Account birthday (creation anniversary) reward status.
 		getBirthdayInfo(params.id, user.createdAt),
 		ownedNewspapersPromise,
@@ -567,6 +571,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					id: targetBlocLeadership.id,
 					blocId: targetBlocLeadership.blocId,
 					blocName: targetBlocLeadership.bloc.name,
+					blocLogo: targetBlocLeadership.logoUrl,
 					appointedAt: targetBlocLeadership.appointedAt
 				}
 			: null,
@@ -574,6 +579,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			id: d.id,
 			blocId: d.blocId,
 			blocName: d.bloc.name,
+			blocLogo: d.logoUrl,
 			appointedAt: d.appointedAt
 		})),
 		canAppointBlocLeadership,

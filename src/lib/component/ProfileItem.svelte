@@ -58,10 +58,10 @@
 			alt={logoAlt ?? ""}
 			{placeholderIcon}
 			{placeholderGradient}
-			class="size-9! rounded-sm! shrink-0 border border-line/15"
+			class="size-11! rounded-sm! shrink-0 border border-line/15"
 		/>
 	{:else if icon}
-		<div class="size-9 shrink-0 rounded-sm border border-line/15 flex items-center justify-center">
+		<div class="size-11 shrink-0 rounded-sm border border-line/15 flex items-center justify-center">
 			<span class="text-lg">{icon}</span>
 		</div>
 	{/if}
