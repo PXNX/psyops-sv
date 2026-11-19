@@ -189,8 +189,31 @@
 		return (r.resources as Record<string, number>)[base] ?? 0;
 	}
 
+	/**
+	 * The outline of the selected (or searched) region. Region shapes share
+	 * their edges with the neighbours drawn after them, so stroking the region
+	 * path itself only shows the parts that no later path covers. One overlay
+	 * path, drawn last with the region's whole `d` (every subpath and island),
+	 * shows the full border. Non-scaling stroke keeps it 2.5 px at every zoom.
+	 */
+	let outlineEl: SVGPathElement | null = null;
+	function regionOutline(svg: Element): SVGPathElement {
+		if (outlineEl?.parentNode === svg) return outlineEl;
+		outlineEl = document.createElementNS("http://www.w3.org/2000/svg", "path");
+		outlineEl.setAttribute("class", "region-outline");
+		outlineEl.setAttribute("fill", "none");
+		outlineEl.setAttribute("pointer-events", "none");
+		outlineEl.setAttribute("vector-effect", "non-scaling-stroke");
+		svg.appendChild(outlineEl);
+		return outlineEl;
+	}
+
 	function colorRegions(root: Element) {
 		const maxHeat = isHeat ? maxOf(heatValue) : 0;
+		// Selection wins over the transient search flash. An object, not two
+		// `let`s: assignments inside the forEach callback are invisible to
+		// TypeScript's narrowing when read after the loop.
+		const pick: { el: SVGElement | null; color: string } = { el: null, color: "var(--color-primary)" };
 		root.querySelectorAll("path[id]").forEach((path) => {
 			const el = path as SVGElement;
 			const id = parseInt(path.id, 10);
@@ -203,16 +226,32 @@
 			}
 			const r = data.regionMap[id];
 			el.style.fill = r ? fillFor(id, r, maxHeat) : LAND;
-			const selected = id === selectedId;
+			el.style.stroke = BORDER;
 			const flash = id === highlightedId;
-			el.style.stroke = selected ? "var(--color-primary)" : flash ? "var(--color-warning)" : BORDER;
-			el.style.strokeWidth = selected || flash ? String(1.6 * k) : "0.3";
 			el.classList.toggle("region-highlight", flash);
+			if (id === selectedId) {
+				pick.el = el;
+				pick.color = "var(--color-primary)";
+			} else if (flash && !pick.el) {
+				pick.el = el;
+				pick.color = "var(--color-warning)";
+			}
 		});
+		const svg = root.querySelector("#panzoom-element") ?? root;
+		const outline = regionOutline(svg);
+		const d = pick.el?.getAttribute("d");
+		if (d) {
+			if (outline.getAttribute("d") !== d) outline.setAttribute("d", d);
+			outline.style.stroke = pick.color;
+			outline.style.display = "";
+			svg.appendChild(outline); // above every region, whatever the draw order
+		} else {
+			outline.style.display = "none";
+		}
 	}
 
 	$effect(() => {
-		// Re-run on layer, selection, weather tick and zoom (selection stroke).
+		// Re-run on layer, selection and weather tick (fill and outline).
 		void base;
 		void selectedId;
 		void highlightedId;
@@ -547,129 +586,134 @@
 
 <svelte:window onclick={(e) => !(e.target as Element).closest?.(".map-search") && (searchFocused = false)} />
 
-<div
-	bind:this={viewportEl}
-	class="map-viewport relative flex-1 w-full overflow-hidden touch-none"
-	onpointermove={onPointerMove}
-	onpointerleave={() => (cursor = null)}
-	role="presentation"
->
-	<!-- Panned scene: world map + tactical overlay in the same 1400×600 space -->
+<!-- The control panels are siblings of the pan surface, not children of it.
+     Panzoom listens on the pan target's parent and calls preventDefault on
+     touchstart, which would swallow every tap on a control inside it. -->
+<div class="relative flex-1 w-full overflow-hidden">
 	<div
-		use:initPanzoom
-		onpointerdown={onPointerDown}
-		onpointerup={onPointerUp}
-		role="application"
-		aria-label="Situation map. Drag to pan, pinch or scroll to zoom, tap a region for details."
-		class="map-scene absolute top-0 left-0 cursor-crosshair"
-		style:width="{SVG_WIDTH}px"
-		style:height="{SVG_HEIGHT}px"
+		bind:this={viewportEl}
+		class="map-viewport absolute inset-0 touch-none"
+		onpointermove={onPointerMove}
+		onpointerleave={() => (cursor = null)}
+		role="presentation"
 	>
-		{@html WorldMap}
-
-		<svg
-			class="tactical absolute inset-0 pointer-events-none"
-			viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}"
-			width={SVG_WIDTH}
-			height={SVG_HEIGHT}
-			style:--k={k}
-			aria-hidden="true"
+		<!-- Panned scene: world map + tactical overlay in the same 1400×600 space -->
+		<div
+			use:initPanzoom
+			onpointerdown={onPointerDown}
+			onpointerup={onPointerUp}
+			role="application"
+			aria-label="Situation map. Drag to pan, pinch or scroll to zoom, tap a region for details."
+			class="map-scene absolute top-0 left-0 cursor-crosshair"
+			style:width="{SVG_WIDTH}px"
+			style:height="{SVG_HEIGHT}px"
 		>
-			<!-- Graticule -->
-			<g class="graticule">
-				{#each Array.from({ length: 27 }, (_, i) => (i + 1) * 50) as gx}
-					<line x1={gx} y1="0" x2={gx} y2={SVG_HEIGHT} />
-				{/each}
-				{#each Array.from({ length: 11 }, (_, i) => (i + 1) * 50) as gy}
-					<line x1="0" y1={gy} x2={SVG_WIDTH} y2={gy} />
-				{/each}
-			</g>
+			{@html WorldMap}
 
-			{#if overlays.recon}
-				{#each reconMarkers as m (m.id)}
-					<ReconSector
-						x={m.x}
-						y={m.y}
-						r={Math.max(m.r * 1.2, 14 * k)}
-						label={m.age}
-						strength={m.strength}
-						fontSize={9 * k}
-					/>
-				{/each}
-				{#each inFlightMarkers as m, i (i)}
-					<ReconSector x={m.c.x} y={m.c.y} r={Math.max(m.c.r * 1.3, 16 * k)} pending />
-				{/each}
-			{/if}
+			<svg
+				class="tactical absolute inset-0 pointer-events-none"
+				viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}"
+				width={SVG_WIDTH}
+				height={SVG_HEIGHT}
+				style:--k={k}
+				aria-hidden="true"
+			>
+				<!-- Graticule -->
+				<g class="graticule">
+					{#each Array.from({ length: 27 }, (_, i) => (i + 1) * 50) as gx}
+						<line x1={gx} y1="0" x2={gx} y2={SVG_HEIGHT} />
+					{/each}
+					{#each Array.from({ length: 11 }, (_, i) => (i + 1) * 50) as gy}
+						<line x1="0" y1={gy} x2={SVG_WIDTH} y2={gy} />
+					{/each}
+				</g>
 
-			{#if overlays.battles}
-				{#each battleMarkers as b (b.id)}
-					<RangeRing x={b.x} y={b.y} r={Math.max(b.r * 1.1, 16 * k)} />
-				{/each}
-				{#each battleMarkers as b (b.id)}
-					{#if b.ox != null && b.oy != null}
-						<AttackArrow x1={b.ox} y1={b.oy} x2={b.x} y2={b.y} headSize={8 * k} inset={Math.max(b.r * 0.4, 6 * k)} />
-					{/if}
-				{/each}
-			{/if}
-
-			{#if overlays.strikes}
-				{#each strikeMarkers as m (m.id)}
-					<!-- Impact burst, up and to the right of the region's centre -->
-					<g
-						transform="translate({m.x + Math.max(m.r * 0.5, 10 * k)} {m.y - Math.max(m.r * 0.5, 10 * k)}) scale({k})"
-						class="pointer-events-none"
-					>
-						<title>{m.count} strike{m.count === 1 ? "" : "s"}, {m.casualties} civilians killed (24 h)</title>
-						<path
-							d="M0 -7 L2 -2 L7 -2 L3 1 L5 6 L0 3 L-5 6 L-3 1 L-7 -2 L-2 -2 Z"
-							style:fill={m.casualties ? "var(--color-error)" : "var(--color-warning)"}
-							style:stroke="var(--color-surface-0)"
-							stroke-width="1"
+				{#if overlays.recon}
+					{#each reconMarkers as m (m.id)}
+						<ReconSector
+							x={m.x}
+							y={m.y}
+							r={Math.max(m.r * 1.2, 14 * k)}
+							label={m.age}
+							strength={m.strength}
+							fontSize={9 * k}
 						/>
-						{#if m.count > 1}
-							<text
-								x="9"
-								y="3"
-								font-size="8"
-								class="data"
-								style:fill="var(--color-warning)"
-								style:paint-order="stroke"
-								style:stroke="var(--color-surface-0)"
-								stroke-width="2">{m.count}</text
-							>
+					{/each}
+					{#each inFlightMarkers as m, i (i)}
+						<ReconSector x={m.c.x} y={m.c.y} r={Math.max(m.c.r * 1.3, 16 * k)} pending />
+					{/each}
+				{/if}
+
+				{#if overlays.battles}
+					{#each battleMarkers as b (b.id)}
+						<RangeRing x={b.x} y={b.y} r={Math.max(b.r * 1.1, 16 * k)} />
+					{/each}
+					{#each battleMarkers as b (b.id)}
+						{#if b.ox != null && b.oy != null}
+							<AttackArrow x1={b.ox} y1={b.oy} x2={b.x} y2={b.y} headSize={8 * k} inset={Math.max(b.r * 0.4, 6 * k)} />
 						{/if}
-					</g>
-				{/each}
-			{/if}
+					{/each}
+				{/if}
 
-			{#if overlays.friendly}
-				{#each friendlyMarkers as m (m.id)}
-					<UnitSymbol
-						affiliation="friend"
-						unitType={m.unitType}
-						count={m.total}
-						x={m.x - (overlays.hostile && hasHostileAt.has(m.id) ? 16 * k : 0)}
-						y={m.y}
-						scale={0.85 * k}
-						dashed={m.ally}
-					/>
-				{/each}
-			{/if}
+				{#if overlays.strikes}
+					{#each strikeMarkers as m (m.id)}
+						<!-- Impact burst, up and to the right of the region's centre -->
+						<g
+							transform="translate({m.x + Math.max(m.r * 0.5, 10 * k)} {m.y - Math.max(m.r * 0.5, 10 * k)}) scale({k})"
+							class="pointer-events-none"
+						>
+							<title>{m.count} strike{m.count === 1 ? "" : "s"}, {m.casualties} civilians killed (24 h)</title>
+							<path
+								d="M0 -7 L2 -2 L7 -2 L3 1 L5 6 L0 3 L-5 6 L-3 1 L-7 -2 L-2 -2 Z"
+								style:fill={m.casualties ? "var(--color-error)" : "var(--color-warning)"}
+								style:stroke="var(--color-surface-0)"
+								stroke-width="1"
+							/>
+							{#if m.count > 1}
+								<text
+									x="9"
+									y="3"
+									font-size="8"
+									class="data"
+									style:fill="var(--color-warning)"
+									style:paint-order="stroke"
+									style:stroke="var(--color-surface-0)"
+									stroke-width="2">{m.count}</text
+								>
+							{/if}
+						</g>
+					{/each}
+				{/if}
 
-			{#if overlays.hostile}
-				{#each hostileMarkers as m (m.id)}
-					<UnitSymbol
-						affiliation={m.known ? "hostile" : "unknown"}
-						unitType={m.dominant}
-						count={m.known ? m.count : null}
-						estimated={m.estimated}
-						x={m.x + (overlays.friendly && hasFriendlyAt.has(m.id) ? 16 * k : 0)}
-						y={m.y}
-						scale={0.85 * k}
-					/>
-				{/each}
-			{/if}
-		</svg>
+				{#if overlays.friendly}
+					{#each friendlyMarkers as m (m.id)}
+						<UnitSymbol
+							affiliation="friend"
+							unitType={m.unitType}
+							count={m.total}
+							x={m.x - (overlays.hostile && hasHostileAt.has(m.id) ? 16 * k : 0)}
+							y={m.y}
+							scale={0.85 * k}
+							dashed={m.ally}
+						/>
+					{/each}
+				{/if}
+
+				{#if overlays.hostile}
+					{#each hostileMarkers as m (m.id)}
+						<UnitSymbol
+							affiliation={m.known ? "hostile" : "unknown"}
+							unitType={m.dominant}
+							count={m.known ? m.count : null}
+							estimated={m.estimated}
+							x={m.x + (overlays.friendly && hasFriendlyAt.has(m.id) ? 16 * k : 0)}
+							y={m.y}
+							scale={0.85 * k}
+						/>
+					{/each}
+				{/if}
+			</svg>
+		</div>
 	</div>
 
 	<!-- Left rail: base layers, heatmaps, overlays -->
@@ -1052,6 +1096,14 @@
 	}
 	:global(#panzoom-element path.region-highlight) {
 		animation: region-pulse 900ms ease-in-out 3;
+	}
+	/* Selection ring: one path over every region, so shared borders do not
+	   clip it. `non-scaling-stroke` keeps it 2.5 px wide at any zoom. */
+	:global(#panzoom-element .region-outline) {
+		stroke-width: 2.5px;
+		stroke-linejoin: round;
+		stroke-linecap: round;
+		pointer-events: none;
 	}
 	@keyframes region-pulse {
 		50% {
