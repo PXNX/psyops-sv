@@ -145,7 +145,7 @@
 	function fillFor(id: number, r: (typeof data.regionMap)[number], maxHeat: number): string {
 		switch (base) {
 			case "political":
-				return r.stateId && data.stateColorMap[r.stateId] ? mixOn(data.stateColorMap[r.stateId], 38) : LAND;
+				return r.stateId && data.stateColorMap[r.stateId] ? mixOn(data.stateColorMap[r.stateId], 55) : LAND;
 			case "blocs":
 				return r.stateId && data.blocColorMap?.[r.stateId] ? mixOn(data.blocColorMap[r.stateId], 42) : LAND;
 			case "wars":

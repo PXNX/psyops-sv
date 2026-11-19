@@ -248,7 +248,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 						description: states.description,
 						population: states.population,
 						rating: states.rating,
-						blocId: states.blocId
+						blocId: states.blocId,
+						background: states.background
 					})
 					.from(states),
 
@@ -406,8 +407,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 			"#7c3aed",
 			"#2563eb"
 		];
-		allStates.forEach((state, idx) => {
-			stateColorMap[state.id] = colors[idx % colors.length];
+		// A state's own colour when it picked one (the edit form defaults to
+		// #6366f1, so that one doesn't count), otherwise a stable palette pick.
+		allStates.forEach((state) => {
+			const own = state.background && /^#[0-9a-f]{6}$/i.test(state.background) ? state.background : null;
+			stateColorMap[state.id] =
+				own && own.toLowerCase() !== "#6366f1" ? own : colors[state.id % colors.length];
 		});
 
 		return {

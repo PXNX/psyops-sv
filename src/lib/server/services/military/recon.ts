@@ -9,7 +9,7 @@
 //
 // No SvelteKit virtual modules at the top level (tests import this file);
 // push notifications are loaded lazily.
-import { and, desc, eq, gte, inArray, lte, notInArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, inArray, lte, notInArray, or, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import {
 	battleParticipants,
@@ -493,7 +493,7 @@ export async function sideReports(
 		if (!opts.regionIds.length) return [];
 		conds.push(inArray(intelReports.regionId, opts.regionIds));
 	}
-	if (opts.freshOnly) conds.push(sql`${intelReports.expiresAt} > ${now}`);
+	if (opts.freshOnly) conds.push(gt(intelReports.expiresAt, now));
 	const q = db
 		.select()
 		.from(intelReports)
