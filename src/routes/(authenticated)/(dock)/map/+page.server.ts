@@ -2,6 +2,7 @@
 // The situational-awareness map: the political/heatmap base layers plus, for
 // the viewer's side, own forces, hostile forces known through fresh intel
 // (fog of war elsewhere), battles with their axes of attack, and recon cover.
+import type { IntelPicture } from "#lib/server/services/military/intel.js";
 import { db } from "#lib/server/db.js";
 import {
 	regions,
@@ -27,7 +28,7 @@ import {
 	sensorCooldownEndsAt,
 	viewerSide
 } from "#lib/server/services/military/recon.js";
-import { SENSORS, SENSOR_IDS, UNIT_CATEGORIES, type SensorId } from "#lib/config/index.js";
+import { SENSORS, SENSOR_IDS, UNIT_CATEGORIES, regionCover, type SensorId } from "#lib/config/index.js";
 
 type FriendlyForce = { total: number; mine: number; ally: boolean; byType: Record<string, number> };
 type PictureSummary = {
@@ -39,6 +40,7 @@ type PictureSummary = {
 	observedAt: string | null;
 	firing: number;
 	sensors: string[];
+	buildings: IntelPicture["buildings"];
 };
 
 /** What the viewer's side knows: forces, intel, battles and recon in flight. */
@@ -62,9 +64,21 @@ async function situation(userId: string) {
 	const borderRows = await db
 		.select({ a: regionBorders.regionId, b: regionBorders.neighborId, km: regionBorders.distanceKm })
 		.from(regionBorders);
-	const owner = new Map(
-		(await db.select({ id: regions.id, stateId: regions.stateId }).from(regions)).map((r) => [r.id, r.stateId])
-	);
+	const regionRows = await db
+		.select({ id: regions.id, stateId: regions.stateId, lat: regions.latitude, lon: regions.longitude })
+		.from(regions);
+	const owner = new Map(regionRows.map((r) => [r.id, r.stateId]));
+	const coords = new Map(regionRows.map((r) => [r.id, [Number(r.lat), Number(r.lon)] as const]));
+	// Great-circle distance in km, for attacks that don't come from next door.
+	const distanceKm = (a: number, b: number) => {
+		const [la1, lo1] = coords.get(a) ?? [0, 0];
+		const [la2, lo2] = coords.get(b) ?? [0, 0];
+		const rad = Math.PI / 180;
+		const h =
+			Math.sin(((la2 - la1) * rad) / 2) ** 2 +
+			Math.cos(la1 * rad) * Math.cos(la2 * rad) * Math.sin(((lo2 - lo1) * rad) / 2) ** 2;
+		return 12742 * Math.asin(Math.sqrt(h));
+	};
 	const battlesOut = ongoing.map((b) => {
 		let origin: number | null = null;
 		let best = Infinity;
@@ -75,6 +89,18 @@ async function situation(userId: string) {
 			if (km < best) {
 				best = km;
 				origin = other;
+			}
+		}
+		// No bordering region of the attacker's: draw the axis from its nearest
+		// region anywhere (an attack across the sea or from a far front).
+		if (origin == null) {
+			for (const r of regionRows) {
+				if (r.stateId !== b.attackerStateId) continue;
+				const km = distanceKm(r.id, b.regionId);
+				if (km < best) {
+					best = km;
+					origin = r.id;
+				}
 			}
 		}
 		const mine = !side
@@ -162,7 +188,8 @@ async function situation(userId: string) {
 			categories: p.categories,
 			observedAt: p.latestObservedAt,
 			firing: p.firingPositions?.count ?? 0,
-			sensors: [...new Set(p.sensors.map((s) => s.sensor))]
+			sensors: [...new Set(p.sensors.map((s) => s.sensor))],
+			buildings: p.buildings
 		};
 	}
 
@@ -339,11 +366,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 				longitude: number;
 				terrain: string | null;
 				rating: number;
-				education: number;
-				infrastructure: number;
-				economy: number;
-				hospitals: number;
-				fortifications: number;
+				education: number | null;
+				infrastructure: number | null;
+				economy: number | null;
+				hospitals: number | null;
+				fortifications: number | null;
+				cover: string;
 				resources: {
 					oil: number;
 					aluminium: number;
@@ -357,17 +385,29 @@ export const load: PageServerLoad = async ({ locals }) => {
 			}
 		> = {};
 
-		for (const r of allRegions) {
+		// Fog of war: installations in enemy regions are only known through a
+		// fresh recon pass that saw them; otherwise they show as unknown.
+		const enemyStates = new Set(sa?.enemyStateIds ?? []);
+		const seen = (r: (typeof allRegions)[number]) => {
+			if (!r.stateId || !enemyStates.has(r.stateId)) return { ...r, known: true as const };
+			const b = sa?.pictures[r.id]?.buildings;
+			return b ? { ...r, ...b, known: true as const } : { ...r, known: false as const };
+		};
+
+		for (const raw of allRegions) {
+			const r = seen(raw);
 			regionMap[r.id] = {
 				stateId: r.stateId,
 				longitude: Number(r.longitude),
 				terrain: r.terrain,
 				rating: r.rating || 0,
-				education: r.education || 0,
-				infrastructure: r.infrastructure || 0,
-				economy: r.economy || 0,
-				hospitals: r.hospitals || 0,
-				fortifications: r.fortifications || 0,
+				education: r.known ? r.education || 0 : null,
+				infrastructure: r.known ? r.infrastructure || 0 : null,
+				economy: r.known ? r.economy || 0 : null,
+				hospitals: r.known ? r.hospitals || 0 : null,
+				fortifications: r.known ? r.fortifications || 0 : null,
+				// Terrain is public; derived from the real data, not what intel saw.
+				cover: regionCover(raw),
 				resources: {
 					oil: r.oil || 0,
 					aluminium: r.aluminium || 0,
@@ -411,8 +451,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		// #6366f1, so that one doesn't count), otherwise a stable palette pick.
 		allStates.forEach((state) => {
 			const own = state.background && /^#[0-9a-f]{6}$/i.test(state.background) ? state.background : null;
-			stateColorMap[state.id] =
-				own && own.toLowerCase() !== "#6366f1" ? own : colors[state.id % colors.length];
+			stateColorMap[state.id] = own && own.toLowerCase() !== "#6366f1" ? own : colors[state.id % colors.length];
 		});
 
 		return {

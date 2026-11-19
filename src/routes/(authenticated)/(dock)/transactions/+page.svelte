@@ -57,7 +57,12 @@
 		tax_payment: "Tax Payment",
 		state_resource_purchase: "State Purchase",
 		state_resource_sale: "State Sale",
-		state_construction: "State Construction"
+		state_construction: "State Construction",
+		premium_purchase: "Premium",
+		share_purchase: "Share Purchase",
+		share_sale: "Share Sale",
+		dividend_payout: "Dividend",
+		recon_mission: "Recon Mission"
 	};
 
 	function getDayKey(date: Date | string): string {

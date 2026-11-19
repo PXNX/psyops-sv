@@ -2,7 +2,8 @@
 // Building in one region: its levels, what's under construction and, for the
 // people allowed to order it, starting new buildings. Paid from the state
 // treasury and stockpile via the shared construction service.
-import { error, fail } from "@sveltejs/kit";
+import { error, fail, redirect } from "@sveltejs/kit";
+import { reconTargetReason, viewerSide } from "#lib/server/services/military/recon.js";
 import { and, asc, desc, eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
@@ -31,6 +32,19 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	await completePendingConstructions(db, { regionId });
 	const region = await db.query.regions.findFirst({ where: eq(regions.id, regionId), with: { state: true } });
 	if (!region) error(404, "Region not found");
+
+	// Fog of war: an enemy's construction details aren't public. Region page
+	// shows what fresh intel saw instead.
+	if (region.stateId) {
+		const side = await viewerSide(db, account.id);
+		if (
+			side &&
+			!side.stateIds.includes(region.stateId) &&
+			!(await reconTargetReason(db, side, { id: region.id, stateId: region.stateId }))
+		) {
+			redirect(303, `/region/${regionId}`);
+		}
+	}
 
 	const stateId = region.stateId;
 	const [access, canPropose, treasury, stockpile, pending, queue, finished] = await Promise.all([

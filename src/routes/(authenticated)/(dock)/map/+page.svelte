@@ -28,14 +28,7 @@
 		UnitBadge,
 		UnitSymbol
 	} from "#lib/component/tactical/index.js";
-	import {
-		UNIT_CATEGORIES,
-		WEATHER_LABEL,
-		COVER_LABEL,
-		regionConditions,
-		weatherAt,
-		regionCover
-	} from "#lib/config/index.js";
+	import { UNIT_CATEGORIES, WEATHER_LABEL, COVER_LABEL, regionConditions, weatherAt } from "#lib/config/index.js";
 	import IconSearch from "~icons/fluent/search-20-regular";
 	import IconZoomIn from "~icons/fluent/zoom-in-20-regular";
 	import IconZoomOut from "~icons/fluent/zoom-out-20-regular";
@@ -166,7 +159,7 @@
 							: mixOn("var(--color-base-content)", 32);
 			}
 			case "terrain": {
-				const c = regionCover({ id, terrain: r.terrain, infrastructure: r.infrastructure });
+				const c = r.cover;
 				return c === "forest"
 					? mixOn("var(--color-success)", 32)
 					: c === "urban"
@@ -500,10 +493,10 @@
 	const selState = $derived(sel?.stateId ? stateById.get(sel.stateId) : null);
 	const selConditions = $derived(
 		sel && selectedId != null
-			? regionConditions(
-					{ id: selectedId, longitude: sel.longitude, terrain: sel.terrain, infrastructure: sel.infrastructure },
-					now
-				)
+			? {
+					...regionConditions({ id: selectedId, longitude: sel.longitude, terrain: sel.terrain }, now),
+					cover: sel.cover as ReturnType<typeof regionConditions>["cover"]
+				}
 			: null
 	);
 	const selPicture = $derived(selectedId != null ? (sa?.pictures?.[selectedId] ?? null) : null);
@@ -917,14 +910,14 @@
 				{/if}
 			</section>
 
-			<!-- Installations (public) -->
+			<!-- Installations (enemy ones only through fresh intel) -->
 			<section>
 				<h3 class="section-title mb-1.5 text-xs">Installations</h3>
 				<dl class="grid grid-cols-5 gap-1 text-center font-mono">
 					{#each [["FORT", sel.fortifications], ["INFRA", sel.infrastructure], ["PWR", sel.economy], ["EDU", sel.education], ["MED", sel.hospitals]] as [label, v] (label)}
 						<div class="rounded-sm border border-line/15 bg-surface-2 px-1 py-1">
 							<dt class="text-[9px] text-fg-muted">{label}</dt>
-							<dd class="text-sm text-fg">{v}</dd>
+							<dd class="text-sm text-fg">{v ?? "?"}</dd>
 						</div>
 					{/each}
 				</dl>

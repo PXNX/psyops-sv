@@ -95,7 +95,8 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
 	"premium_purchase",
 	"share_purchase",
 	"share_sale",
-	"dividend_payout"
+	"dividend_payout",
+	"recon_mission"
 ]);
 
 export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_transaction_type", [

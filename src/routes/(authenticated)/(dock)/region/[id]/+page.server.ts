@@ -505,6 +505,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		friendlyByType.set(u.unitType, e);
 	}
 	const isHostileRegion = !!region.stateId && !!recon.side && !sideStateIds.includes(region.stateId);
+	// Fog of war: an enemy's installations (a region your side can recon, i.e.
+	// one you're at war with) are only known through a fresh pass that saw them.
+	const hiddenBuildings = isHostileRegion && !recon.targetReason;
+	const seenBuildings = hiddenBuildings ? (picture?.buildings ?? null) : region;
 
 	const result = {
 		situation: {
@@ -523,11 +527,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			id: region.id,
 			name: getRegionName(region.id),
 			rating: region.rating,
-			infrastructure: region.infrastructure,
-			economy: region.economy,
-			education: region.education,
-			hospitals: region.hospitals,
-			fortifications: region.fortifications,
+			infrastructure: seenBuildings ? (seenBuildings.infrastructure ?? 0) : null,
+			economy: seenBuildings ? (seenBuildings.economy ?? 0) : null,
+			education: seenBuildings ? (seenBuildings.education ?? 0) : null,
+			hospitals: seenBuildings ? (seenBuildings.hospitals ?? 0) : null,
+			fortifications: seenBuildings ? (seenBuildings.fortifications ?? 0) : null,
 			oil: region.oil,
 			aluminium: region.aluminium,
 			rubber: region.rubber,

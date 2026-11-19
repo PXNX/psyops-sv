@@ -91,9 +91,21 @@
 
 	const facts = $derived([
 		{ label: "Population", value: data.population, href: `/region/${data.region.id}/population` },
-		{ label: "Infrastructure", value: data.region.infrastructure || 0, href: `/region/${data.region.id}/construction` },
-		{ label: "Power", value: data.region.economy || 0, href: `/region/${data.region.id}/construction` },
-		{ label: "Fortifications", value: data.region.fortifications || 0, href: `/region/${data.region.id}/construction` }
+		{
+			label: "Infrastructure",
+			value: data.region.infrastructure === null ? "?" : data.region.infrastructure || 0,
+			href: `/region/${data.region.id}/construction`
+		},
+		{
+			label: "Power",
+			value: data.region.economy === null ? "?" : data.region.economy || 0,
+			href: `/region/${data.region.id}/construction`
+		},
+		{
+			label: "Fortifications",
+			value: data.region.fortifications === null ? "?" : data.region.fortifications || 0,
+			href: `/region/${data.region.id}/construction`
+		}
 	]);
 </script>
 

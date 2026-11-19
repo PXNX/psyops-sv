@@ -22,6 +22,7 @@ import {
 	residences,
 	stateBuildings,
 	states,
+	transactionHistory,
 	userWallets,
 	wars,
 	type IntelFindings,
@@ -277,8 +278,9 @@ export async function launchRecon(
 			);
 		}
 
+		let balanceAfter: number;
 		try {
-			await debitWallet(tx, input.userId, s.cost);
+			balanceAfter = await debitWallet(tx, input.userId, s.cost);
 		} catch (err) {
 			if (err instanceof InsufficientFundsError) throw new ReconError(`Recon costs $${s.cost.toLocaleString()}.`);
 			throw err;
@@ -297,6 +299,15 @@ export async function launchRecon(
 				completesAt: new Date(now.getTime() + s.durationMinutes * MINUTE)
 			})
 			.returning();
+		await tx.insert(transactionHistory).values({
+			userId: input.userId,
+			transactionType: "recon_mission",
+			amount: -s.cost,
+			balanceAfter,
+			description: `Recon: ${s.label}`,
+			relatedEntityType: "region",
+			relatedEntityId: region.id
+		});
 		return mission!;
 	});
 }
