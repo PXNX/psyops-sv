@@ -37,6 +37,15 @@ export const ECONOMY_CONFIG = {
 	// % of a public company's budget balance paid out to shareholders per
 	// dividend cycle (run by the dividends cron), split pro-rata by holding.
 	DIVIDEND_RATE_PERCENT: 5,
+	// Dividends (services/economy/dividends.ts): paid from the company budget
+	// to every holder pro rata, in whole currency per share, at most once per
+	// cooldown (manual and automatic share it). A payout must be at least
+	// DIVIDEND_MIN_PER_SHARE per share and DIVIDEND_MIN_TOTAL overall.
+	DIVIDEND_COOLDOWN_HOURS: 24,
+	DIVIDEND_MIN_PER_SHARE: 1,
+	DIVIDEND_MIN_TOTAL: 1000,
+	// Window for the dividend yield shown on company and profile pages.
+	DIVIDEND_YIELD_WINDOW_DAYS: 30,
 
 	// Visas
 	DEFAULT_VISA_COST: 5000,

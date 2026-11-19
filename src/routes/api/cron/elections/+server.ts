@@ -16,6 +16,7 @@ import {
 } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
+import { runAutomaticDividends } from "#lib/server/services/economy/dividends.js";
 
 // Give the serverless function enough time to process every state's election in
 // a single run. Without this, Vercel terminates the function at the default
@@ -91,10 +92,20 @@ export const GET: RequestHandler = async ({ request }) => {
 			);
 		}
 
+		// Automatic dividend policies piggyback on this hourly schedule (each
+		// company still pays at most once per dividend cooldown).
+		const dividends = await runAutomaticDividends(db, { now });
+
 		return cronResponse(
 			"elections",
-			{ electionsActivated: activated, electionsProcessed: processed, electionsScheduled: scheduled },
-			0
+			{
+				electionsActivated: activated,
+				electionsProcessed: processed,
+				electionsScheduled: scheduled,
+				dividendsPaid: dividends.paid.length,
+				dividendsSkipped: dividends.skipped
+			},
+			dividends.failures
 		);
 	} catch (error) {
 		return cronCrash("elections", error);

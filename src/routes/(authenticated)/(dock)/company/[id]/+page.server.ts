@@ -29,9 +29,17 @@ import { getRegionName } from "#lib/utils/formatting.js";
 import { getEmbargoReason } from "#lib/server/embargo.js";
 import { getLogoUrl, getSignedDownloadUrl, uploadFileFromForm } from "#lib/server/backblaze.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
-import { superValidate, message } from "sveltekit-superforms";
+import { superValidate, message, type Infer, type SuperValidated } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
-import { editCompanySchema } from "./schema";
+import { editCompanySchema, declareDividendSchema, dividendPolicySchema } from "./schema";
+import {
+	DividendError,
+	declareDividend,
+	dividendCooldownEndsAt,
+	dividendHolders,
+	dividendOverview,
+	setDividendPolicy
+} from "#lib/server/services/economy/dividends.js";
 import type { PageServerLoad, Actions } from "./$types";
 
 // Edit cost/cooldown for the "Edit Company" bottom sheet — ported as-is from the
@@ -295,8 +303,43 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		percent: number;
 	}> = [];
 	let floatOutstanding = 0;
+	let dividends: {
+		overview: Awaited<ReturnType<typeof dividendOverview>>;
+		holderCount: number;
+		heldShares: number;
+		myShares: number;
+		cooldownEndsAt: string | null;
+		payoutRatio: number;
+		reserve: number;
+		declareForm: SuperValidated<Infer<typeof declareDividendSchema>> | null;
+		policyForm: SuperValidated<Infer<typeof dividendPolicySchema>> | null;
+	} | null = null;
 
 	if (shares) {
+		const [overview, holders, declareForm, policyForm] = await Promise.all([
+			dividendOverview(db, companyId, account.id),
+			dividendHolders(db, companyId),
+			isOwner ? superValidate({ perShare: 1 }, valibot(declareDividendSchema), { id: "dividend" }) : null,
+			isOwner
+				? superValidate(
+						{ ratioPercent: shares.dividendPayoutRatio, reserve: Number(shares.dividendReserve) },
+						valibot(dividendPolicySchema),
+						{ id: "dividendPolicy" }
+					)
+				: null
+		]);
+		dividends = {
+			overview,
+			holderCount: holders.length,
+			heldShares: holders.reduce((n, h) => n + h.shares, 0),
+			myShares: holders.find((h) => h.userId === account.id)?.shares ?? 0,
+			cooldownEndsAt: dividendCooldownEndsAt(shares.lastDividendAt, new Date())?.toISOString() ?? null,
+			payoutRatio: shares.dividendPayoutRatio,
+			reserve: Number(shares.dividendReserve),
+			declareForm,
+			policyForm
+		};
+
 		const [[myHoldingRow], rawListings, holderRows] = await Promise.all([
 			db
 				.select({ quantity: shareHoldings.quantity })
@@ -384,6 +427,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		listings,
 		topHolders,
 		floatOutstanding,
+		dividends,
+		dividendConfig: {
+			cooldownHours: ECONOMY_CONFIG.DIVIDEND_COOLDOWN_HOURS,
+			minPerShare: ECONOMY_CONFIG.DIVIDEND_MIN_PER_SHARE,
+			minTotal: ECONOMY_CONFIG.DIVIDEND_MIN_TOTAL,
+			yieldWindowDays: ECONOMY_CONFIG.DIVIDEND_YIELD_WINDOW_DAYS
+		},
 		ipoConfig: {
 			totalShares: ECONOMY_CONFIG.IPO_TOTAL_SHARES,
 			founderLockedPercent: ECONOMY_CONFIG.IPO_FOUNDER_LOCKED_PERCENT,
@@ -881,6 +931,48 @@ export const actions: Actions = {
 		}).catch((err) => console.error("Failed to send share sale notification:", err));
 
 		return { success: true, message: "Purchase successful" };
+	},
+
+	// Pay a dividend per share from the company budget to every shareholder.
+	declareDividend: async ({ params, locals, request }) => {
+		const account = locals.account!;
+		const form = await superValidate(request, valibot(declareDividendSchema), { id: "dividend" });
+		if (!form.valid) return message(form, "Please fix the validation errors", { status: 400 });
+
+		try {
+			const result = await declareDividend(db, {
+				companyId: parseInt(params.id),
+				userId: account.id,
+				perShare: form.data.perShare
+			});
+			return message(
+				form,
+				`Paid $${result.total.toLocaleString()} to ${result.recipients} shareholder${result.recipients === 1 ? "" : "s"}`
+			);
+		} catch (err) {
+			if (err instanceof DividendError) return message(form, err.message, { status: 400 });
+			throw err;
+		}
+	},
+
+	// Set (or switch off, with 0%) the automatic dividend policy.
+	setDividendPolicy: async ({ params, locals, request }) => {
+		const account = locals.account!;
+		const form = await superValidate(request, valibot(dividendPolicySchema), { id: "dividendPolicy" });
+		if (!form.valid) return message(form, "Please fix the validation errors", { status: 400 });
+
+		try {
+			await setDividendPolicy(db, {
+				companyId: parseInt(params.id),
+				userId: account.id,
+				ratioPercent: form.data.ratioPercent,
+				reserve: form.data.reserve
+			});
+			return message(form, "Dividend policy saved");
+		} catch (err) {
+			if (err instanceof DividendError) return message(form, err.message, { status: 400 });
+			throw err;
+		}
 	},
 
 	// Update company details from the "Edit Company" bottom sheet (ported from the

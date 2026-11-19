@@ -30,3 +30,28 @@ export const editCompanySchema = v.pipe(
 );
 
 export type EditCompanySchema = typeof editCompanySchema;
+
+// Declare a dividend: whole currency per share, paid from the company budget.
+export const declareDividendSchema = v.object({
+	perShare: v.pipe(
+		v.number("Enter an amount per share"),
+		v.integer("Dividends are paid in whole currency per share"),
+		v.minValue(1, "At least $1 per share"),
+		v.maxValue(1_000_000_000, "That's more than any budget holds")
+	)
+});
+
+// Automatic dividend policy: pay ratio% of the budget above the reserve each cycle.
+export const dividendPolicySchema = v.object({
+	ratioPercent: v.pipe(
+		v.number("Enter a payout ratio"),
+		v.integer("Whole percent only"),
+		v.minValue(0, "0% to 100%"),
+		v.maxValue(100, "0% to 100%")
+	),
+	reserve: v.pipe(
+		v.number("Enter a reserve"),
+		v.integer("Whole currency only"),
+		v.minValue(0, "The reserve can't be negative")
+	)
+});

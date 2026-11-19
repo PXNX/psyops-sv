@@ -25,6 +25,7 @@
 	import UserLink from "#lib/component/UserLink.svelte";
 	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 	import EditCompanySheet from "./EditCompanySheet.svelte";
+	import DividendsPanel from "./DividendsPanel.svelte";
 
 	let { data } = $props();
 
@@ -613,6 +614,15 @@
 			{/if}
 		{/if}
 	</section>
+
+	{#if data.dividends}
+		<DividendsPanel
+			dividends={data.dividends}
+			config={data.dividendConfig}
+			budgetBalance={data.budget.balance}
+			isOwner={data.isOwner}
+		/>
+	{/if}
 
 	<!-- Output schedule (owner) -->
 	{#if data.isOwner && data.resourceProduction.length > 0}
