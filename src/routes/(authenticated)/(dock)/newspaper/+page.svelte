@@ -40,7 +40,9 @@
 	</PageHeader>
 
 	<div class="relative">
-		<FluentSearch20Filled class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-fg-muted pointer-events-none" />
+		<FluentSearch20Filled
+			class="absolute left-3.5 top-1/2 -translate-y-1/2 size-4.5 text-fg-muted pointer-events-none"
+		/>
 		<input
 			class="field-control w-full rounded-sm pl-10 pr-4 py-2 text-sm"
 			placeholder="Search newspapers"
@@ -89,8 +91,7 @@
 					/>
 					<div class="min-w-0 flex-1">
 						<p class="flex items-center gap-2 min-w-0">
-							<span
-								class="font-semibold text-fg group-hover:text-friendly-fg transition-colors truncate"
+							<span class="font-semibold text-fg group-hover:text-friendly-fg transition-colors truncate"
 								>{newspaper.name}</span
 							>
 							{#if newspaper.rank}

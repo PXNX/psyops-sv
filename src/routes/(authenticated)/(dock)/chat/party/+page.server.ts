@@ -54,10 +54,7 @@ export const load: PageServerLoad = async ({ locals, depends }) => {
 				})
 				.from(chatMessages)
 				.leftJoin(userProfiles, eq(chatMessages.senderId, userProfiles.accountId))
-				.leftJoin(
-					partyMembers,
-					and(eq(partyMembers.userId, chatMessages.senderId), eq(partyMembers.partyId, party.id))
-				)
+				.leftJoin(partyMembers, and(eq(partyMembers.userId, chatMessages.senderId), eq(partyMembers.partyId, party.id)))
 				.where(
 					and(
 						eq(chatMessages.messageType, "party"),

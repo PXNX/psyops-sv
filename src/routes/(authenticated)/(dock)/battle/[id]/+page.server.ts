@@ -8,7 +8,8 @@ import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { battleParticipants, battleRounds, battles, militaryUnits } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
-import { MILITARY_UNIT_TEMPLATES } from "#lib/config/index.js";
+import { MILITARY_UNIT_TEMPLATES, regionConditions } from "#lib/config/index.js";
+import { battleIntel, resolveReconMissions, type IntelPicture } from "#lib/server/services/military/recon.js";
 import {
 	PREPARATION_HOURS,
 	TERRAIN_DATA,
@@ -144,7 +145,29 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}));
 	}
 
+	// Intel and targeting: what each side's fresh recon over the battle region
+	// is worth this round (same rules the battle job fights with).
+	await resolveReconMissions(db).catch((err) => console.error("Recon resolve failed:", err));
+	const engagedOf = (side: "attacker" | "defender") => {
+		const standing = battle.participants.filter((p) => p.side === side && p.currentStrength > 0);
+		const engaged = standing.filter((p) => p.isEngaged);
+		return engaged.length ? engaged : standing;
+	};
+	const intel = await battleIntel(db, battle, { attackers: engagedOf("attacker"), defenders: engagedOf("defender") });
+	const intelPanel = (mods: typeof intel.attacker, picture: IntelPicture | null) => ({
+		modifiers: mods,
+		level: picture?.level ?? "none",
+		coverage: picture ? Object.fromEntries(Object.entries(picture.categories).map(([c, v]) => [c, v.coverage])) : null,
+		firingPositions: picture?.firingPositions ?? null,
+		sensors: picture?.sensors ?? []
+	});
+
 	return {
+		conditions: regionConditions(battle.region),
+		intel: {
+			attacker: intelPanel(intel.attacker, intel.attackerPicture),
+			defender: intelPanel(intel.defender, intel.defenderPicture)
+		},
 		battle: {
 			id: battle.id,
 			warId: battle.warId,

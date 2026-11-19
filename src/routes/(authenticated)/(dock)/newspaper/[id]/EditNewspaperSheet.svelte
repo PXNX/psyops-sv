@@ -141,7 +141,8 @@
 					<div class="space-y-1.5 flex-1">
 						<h3 class="font-semibold text-primary-fg text-sm">Insufficient Funds</h3>
 						<p class="text-fg-body text-xs leading-relaxed">
-							You need <strong class="font-mono">{editCost.toLocaleString()}</strong> currency to edit the newspaper. You currently have
+							You need <strong class="font-mono">{editCost.toLocaleString()}</strong> currency to edit the newspaper.
+							You currently have
 							<strong class="font-mono">{userBalance.toLocaleString()}</strong>.
 						</p>
 					</div>

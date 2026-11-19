@@ -429,9 +429,7 @@
 							>
 								<ResourceIcon name={item} class="size-6" />
 								<span class="text-[10px] capitalize text-fg-soft truncate max-w-full">{item}</span>
-								<span class="text-sm font-bold font-mono {quantity > 0 ? 'text-fg' : 'text-fg-muted'}"
-									>{quantity}</span
-								>
+								<span class="text-sm font-bold font-mono {quantity > 0 ? 'text-fg' : 'text-fg-muted'}">{quantity}</span>
 							</a>
 						{/each}
 					</div>

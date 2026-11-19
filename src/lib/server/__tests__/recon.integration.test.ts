@@ -93,10 +93,7 @@ describe("launching a mission", () => {
 		await handle.db
 			.delete(reconMissions)
 			.where(and(eq(reconMissions.launchedBy, "user-1"), eq(reconMissions.launchedAt, later)));
-		await handle.db
-			.update(userWallets)
-			.set({ balance: before })
-			.where(eq(userWallets.userId, "user-1"));
+		await handle.db.update(userWallets).set({ balance: before }).where(eq(userWallets.userId, "user-1"));
 	});
 
 	it("refuses a player who can't pay", async () => {

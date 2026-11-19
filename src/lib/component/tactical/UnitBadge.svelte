@@ -14,8 +14,15 @@
 		class?: string;
 	}
 
-	let { affiliation, unitType = null, count = null, estimated = false, size = 20, title, class: className = "" }: Props =
-		$props();
+	let {
+		affiliation,
+		unitType = null,
+		count = null,
+		estimated = false,
+		size = 20,
+		title,
+		class: className = ""
+	}: Props = $props();
 
 	const hasLabel = $derived(count != null);
 	// Room for the frame (±13) plus the count to its right.

@@ -24,21 +24,23 @@
 
 	let { weather, night, cover, compact = false, class: className = "" }: Props = $props();
 
-	const WeatherIcon = $derived({ clear: night ? IconMoon : IconSun, cloudy: IconCloud, rain: IconRain, fog: IconFog }[weather]);
+	const WeatherIcon = $derived(
+		{ clear: night ? IconMoon : IconSun, cloudy: IconCloud, rain: IconRain, fog: IconFog }[weather]
+	);
 	const CoverIcon = $derived({ open: IconField, forest: IconTree, urban: IconCity, mountain: IconMountain }[cover]);
 </script>
 
-<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#c2cbe3] {className}">
+<div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-soft {className}">
 	<span class="inline-flex items-center gap-1" title="Weather">
-		<WeatherIcon class="size-4 text-[#9cc7ff]" />
-		{WEATHER_LABEL[weather]}{#if night}<span class="text-[#8e9abb]">· night</span>{/if}
+		<WeatherIcon class="size-4 text-primary-fg" />
+		{WEATHER_LABEL[weather]}{#if night}<span class="text-fg-muted">· night</span>{/if}
 	</span>
 	<span class="inline-flex items-center gap-1" title="Ground cover">
-		<CoverIcon class="size-4 text-[#9cc7ff]" />
+		<CoverIcon class="size-4 text-primary-fg" />
 		{COVER_LABEL[cover]}
 	</span>
 	{#if !compact}
-		<span class="font-mono text-[10px] uppercase tracking-wide text-[#8e9abb]">
+		<span class="font-mono text-[10px] uppercase tracking-wide text-fg-muted">
 			{weather === "cloudy" || weather === "rain" ? "EO sat blocked" : night ? "EO degraded" : "EO clear"}
 		</span>
 	{/if}

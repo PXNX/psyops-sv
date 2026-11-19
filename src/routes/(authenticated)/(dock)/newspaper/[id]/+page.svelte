@@ -26,7 +26,9 @@
 	let showEditNewspaperSheet = $state(false);
 	let subscribeForm = $state<HTMLFormElement>();
 
-	const description = $derived(data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`);
+	const description = $derived(
+		data.newspaper.background || `Read the latest news from ${data.newspaper.name} on PsyOps.`
+	);
 	const canWrite = $derived(!!data.userRole);
 	const canSeeStats = $derived(data.userRole === "owner" || data.userRole === "editor");
 	const lead = $derived(data.articles[0]);

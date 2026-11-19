@@ -124,9 +124,7 @@
 						<div class="pt-2 border-t border-line/10">
 							<div class="flex flex-wrap gap-1">
 								{#if region.oil}
-									<span
-										class="px-2 py-0.5 bg-primary/15 border border-primary/30 rounded-sm text-xs text-primary-fg"
-									>
+									<span class="px-2 py-0.5 bg-primary/15 border border-primary/30 rounded-sm text-xs text-primary-fg">
 										Oil
 									</span>
 								{/if}

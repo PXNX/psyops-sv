@@ -115,9 +115,8 @@
 			</p>
 		{:else}
 			<p class="text-sm text-fg-muted">
-				Open the bot and send <code class="px-1.5 py-0.5 rounded-sm bg-surface-4 text-fg-soft font-mono"
-					>/premium</code
-				> to activate premium for free.
+				Open the bot and send <code class="px-1.5 py-0.5 rounded-sm bg-surface-4 text-fg-soft font-mono">/premium</code> to
+				activate premium for free.
 			</p>
 		{/if}
 		{#if data.botUsername}

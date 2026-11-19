@@ -1,10 +1,9 @@
-<!-- src/lib/component/tactical/ReconSector.svelte -->
 <!-- Recon coverage over a region (SVG group): a translucent blue circle with a
      dashed observation sector and an age label. -->
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import { RECON_BLUE } from "./colors";
+	import { HALO, RECON_BLUE } from "./colors";
 
 	interface Props {
 		x: number;
@@ -32,27 +31,27 @@
 	});
 </script>
 
+<!-- src/lib/component/tactical/ReconSector.svelte -->
+
 <g transform="translate({x} {y})" class="recon-sector">
 	{#if pending}
 		<circle
 			{r}
 			fill="none"
-			stroke={RECON_BLUE}
-			stroke-width="1.2"
-			stroke-dasharray="4 3"
-			vector-effect="non-scaling-stroke"
+			style:stroke={RECON_BLUE}
+			style:stroke-width="calc(var(--k, 1) * 1.2px)"
+			style:stroke-dasharray="calc(var(--k, 1) * 4px) calc(var(--k, 1) * 3px)"
 		/>
 	{:else}
 		<circle
 			{r}
-			fill={RECON_BLUE}
+			style:fill={RECON_BLUE}
 			fill-opacity={0.06 + 0.12 * strength}
-			stroke={RECON_BLUE}
+			style:stroke={RECON_BLUE}
 			stroke-opacity={0.35 + 0.5 * strength}
-			stroke-width="1"
-			vector-effect="non-scaling-stroke"
+			style:stroke-width="calc(var(--k, 1) * 1px)"
 		/>
-		<path d={sector} fill={RECON_BLUE} fill-opacity={0.08 + 0.14 * strength} stroke="none" />
+		<path d={sector} style:fill={RECON_BLUE} fill-opacity={0.08 + 0.14 * strength} stroke="none" />
 	{/if}
 	{#if label}
 		<text
@@ -61,9 +60,9 @@
 			font-size={fontSize}
 			font-family="ui-monospace, SFMono-Regular, monospace"
 			font-weight="700"
-			fill="#9cc7ff"
+			style:fill="var(--color-primary-fg)"
+			style:stroke={HALO}
 			paint-order="stroke"
-			stroke="#05080f"
 			stroke-width={fontSize * 0.3}>{label}</text
 		>
 	{/if}

@@ -88,7 +88,9 @@
 				{#if data.globalChat.lastMessage}
 					{@const last = data.globalChat.lastMessage}
 					<span class="font-medium text-fg-soft"
-						>{last.isFromCurrentUser ? "You" : last.senderName}{#if !last.isFromCurrentUser && last.senderPartyAbbreviation}
+						>{last.isFromCurrentUser
+							? "You"
+							: last.senderName}{#if !last.isFromCurrentUser && last.senderPartyAbbreviation}
 							<PartyTag abbreviation={last.senderPartyAbbreviation} color={last.senderPartyColor} />{/if}:</span
 					>
 					{last.content}

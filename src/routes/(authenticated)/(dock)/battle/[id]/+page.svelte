@@ -22,6 +22,8 @@
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
+	import BattleIntel from "./BattleIntel.svelte";
+	import { Conditions } from "#lib/component/tactical/index.js";
 
 	const { data } = $props();
 
@@ -30,9 +32,9 @@
 		attacker: { label: "Attackers", text: "text-red-300", bar: "bg-red-500", soft: "bg-red-600/10 border-red-500/30" },
 		defender: {
 			label: "Defenders",
-			text: "text-[#c3dbff]",
-			bar: "bg-[#6aa8ff]",
-			soft: "bg-[#2f6be0]/18 border-[#6aa8ff]/30"
+			text: "text-friendly-fg",
+			bar: "bg-friendly",
+			soft: "bg-friendly-bg/18 border-friendly/30"
 		}
 	} as const;
 
@@ -141,13 +143,13 @@
 
 {#snippet bar(value: number, max: number, tone: string)}
 	{@const pct = max > 0 ? Math.max(0, Math.min(100, (value / max) * 100)) : 0}
-	<div class="h-1.5 w-full overflow-hidden rounded-full bg-[#0b1120]">
+	<div class="h-1.5 w-full overflow-hidden rounded-full bg-surface-0">
 		<div class="h-full rounded-full transition-[width] duration-700 ease-out {tone}" style:width="{pct}%"></div>
 	</div>
 {/snippet}
 
 {#snippet unitIcon(type: string, size = "size-9")}
-	<div class="{size} shrink-0 rounded-sm border border-[#8ea6e0]/20 bg-[#0b1120] p-1.5">
+	<div class="{size} shrink-0 rounded-sm border border-line/20 bg-surface-0 p-1.5">
 		<img src="/units/{type}.svg" alt="" class="h-full w-full object-contain opacity-80 invert" />
 	</div>
 {/snippet}
@@ -162,11 +164,11 @@
 			alt={s.name}
 			class="size-11 shrink-0 rounded-sm"
 			placeholderIcon={FluentBuildingGovernment20Filled}
-			placeholderGradient={side === "attacker" ? "from-red-700 to-red-900" : "from-[#2f6be0] to-[#2148a8]"}
+			placeholderGradient={side === "attacker" ? "from-red-700 to-red-900" : "from-friendly-bg to-friendly-deep"}
 		/>
 		<div class="min-w-0">
 			<p class="text-[10px] font-semibold uppercase tracking-wide {SIDE[side].text}">{SIDE[side].label}</p>
-			<p class="line-clamp-2 leading-tight font-bold text-[#eef2ff] transition-colors group-hover:text-[#ffc857]">
+			<p class="line-clamp-2 leading-tight font-bold text-fg transition-colors group-hover:text-primary-hover">
 				{s.name}
 			</p>
 		</div>
@@ -177,29 +179,29 @@
 	<div class="space-y-3">
 		<p class="text-[10px] font-semibold uppercase tracking-wide sm:hidden {SIDE[side].text}">{SIDE[side].label}</p>
 		<div>
-			<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-[#8e9abb]">
-				<span>Strength</span><span class="font-mono text-[#dbe2f4]">{s.strength} / {s.maxStrength}</span>
+			<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-fg-muted">
+				<span>Strength</span><span class="font-mono text-fg-body">{s.strength} / {s.maxStrength}</span>
 			</div>
 			{@render bar(s.strength, s.maxStrength, SIDE[side].bar)}
 		</div>
 		<div>
-			<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-[#8e9abb]">
-				<span>Frontage used</span><span class="font-mono text-[#dbe2f4]">{s.usedWidth} / {s.maxWidth}</span>
+			<div class="mb-1 flex justify-between text-[10px] uppercase tracking-wide text-fg-muted">
+				<span>Frontage used</span><span class="font-mono text-fg-body">{s.usedWidth} / {s.maxWidth}</span>
 			</div>
-			{@render bar(s.usedWidth, s.maxWidth, "bg-[#f5a524]")}
+			{@render bar(s.usedWidth, s.maxWidth, "bg-primary")}
 		</div>
 		<div class="grid grid-cols-3 gap-2 text-center">
 			<div class="panel-muted rounded-sm p-2">
-				<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Standing</p>
-				<p class="font-bold text-[#eef2ff]">{s.standing}</p>
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Standing</p>
+				<p class="font-bold text-fg">{s.standing}</p>
 			</div>
 			<div class="panel-muted rounded-sm p-2">
-				<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Lost</p>
-				<p class="font-bold {s.destroyed ? 'text-red-300' : 'text-[#eef2ff]'}">{s.destroyed}</p>
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Lost</p>
+				<p class="font-bold {s.destroyed ? 'text-red-300' : 'text-fg'}">{s.destroyed}</p>
 			</div>
 			<div class="panel-muted rounded-sm p-2">
-				<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Dealt</p>
-				<p class="font-mono font-bold text-[#eef2ff]">{s.damageDealt}</p>
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Dealt</p>
+				<p class="font-mono font-bold text-fg">{s.damageDealt}</p>
 			</div>
 		</div>
 	</div>
@@ -209,25 +211,25 @@
 	<section class="panel rounded-sm p-4 space-y-3">
 		<h2 class="section-title {SIDE[side].text}">
 			{SIDE[side].label}
-			<span class="ml-auto text-xs font-normal normal-case tracking-normal text-[#8e9abb]"
+			<span class="ml-auto text-xs font-normal normal-case tracking-normal text-fg-muted"
 				>{s.units.length} unit{s.units.length === 1 ? "" : "s"}</span
 			>
 		</h2>
 		{#if s.units.length === 0}
-			<p class="py-6 text-center text-sm text-[#8e9abb]">No units deployed yet.</p>
+			<p class="py-6 text-center text-sm text-fg-muted">No units deployed yet.</p>
 		{:else}
 			<ul class="space-y-2">
 				{#each s.units as u (u.id)}
 					<li
 						animate:flip={{ duration: 250 }}
 						class="flex items-center gap-3 rounded-sm border p-2.5 {u.isMine
-							? 'border-[#f5a524]/45 bg-[#f5a524]/8'
-							: 'border-[#8ea6e0]/10 bg-[#0f1628]/80'} {u.destroyed ? 'opacity-45' : ''}"
+							? 'border-primary/45 bg-primary/8'
+							: 'border-line/10 bg-surface-2/80'} {u.destroyed ? 'opacity-45' : ''}"
 					>
 						{@render unitIcon(u.unitType)}
 						<div class="min-w-0 flex-1 space-y-1.5">
 							<div class="flex items-center gap-2">
-								<p class="truncate text-sm font-semibold text-[#eef2ff]">{u.name}</p>
+								<p class="truncate text-sm font-semibold text-fg">{u.name}</p>
 								{#if u.destroyed}
 									<Badge tone="red" size="xs">Destroyed</Badge>
 								{:else if u.isEngaged}
@@ -236,9 +238,9 @@
 									<Badge size="xs">Reserve</Badge>
 								{/if}
 							</div>
-							<p class="flex min-w-0 items-center gap-1 text-[11px] text-[#8e9abb]">
+							<p class="flex min-w-0 items-center gap-1 text-[11px] text-fg-muted">
 								<span class="shrink-0">{unitName(u.unitType)} ·</span>
-								{#if u.isMine}<span class="shrink-0 text-[#ffcb6b]">yours</span>{:else}<UserLink
+								{#if u.isMine}<span class="shrink-0 text-primary-fg">yours</span>{:else}<UserLink
 										size="xs"
 										id={u.ownerId}
 										name={u.ownerName}
@@ -249,12 +251,12 @@
 							{#if !u.destroyed}
 								<div class="grid grid-cols-2 gap-2">
 									{@render bar(u.strength, u.maxStrength, SIDE[side].bar)}
-									{@render bar(u.organization, 100, "bg-[#4fd88a]")}
+									{@render bar(u.organization, 100, "bg-positive")}
 								</div>
 							{/if}
 						</div>
-						<div class="shrink-0 text-right font-mono text-[11px] text-[#8e9abb]">
-							<p class="text-[#eef2ff]">{u.strength}</p>
+						<div class="shrink-0 text-right font-mono text-[11px] text-fg-muted">
+							<p class="text-fg">{u.strength}</p>
 							<p>↯ {u.damageDealt}</p>
 						</div>
 					</li>
@@ -268,10 +270,10 @@
 	<!-- Battle report header -->
 	<div id="battle-hero" class="panel relative overflow-hidden rounded-sm">
 		<div
-			class="flex items-center justify-between gap-3 border-b border-[#8ea6e0]/15 bg-[#131c33]/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-[#8e9abb]"
+			class="flex items-center justify-between gap-3 border-b border-line/15 bg-surface-4/70 px-4 py-2 text-[10px] uppercase tracking-[0.2em] text-fg-muted"
 		>
 			<span>Battle report</span>
-			<a href="/war/{data.battle.warId}" class="flex items-center gap-1 hover:text-[#ffc857]">
+			<a href="/war/{data.battle.warId}" class="flex items-center gap-1 hover:text-primary-hover">
 				War No. {data.battle.warId}
 				<FluentArrowRight20Filled class="size-3" />
 			</a>
@@ -282,13 +284,13 @@
 					<img src={regionCoatUrl(data.battle.regionId)} alt={regionName} class="size-16 object-contain sm:size-20" />
 				</a>
 				<div class="min-w-0 flex-1 space-y-1.5">
-					<h1 class="font-serif text-2xl font-black text-[#eef2ff] sm:text-3xl">Battle of {regionName}</h1>
+					<h1 class="font-serif text-2xl font-black text-fg sm:text-3xl">Battle of {regionName}</h1>
 					{#if winner}
 						<span
 							class="inline-block animate-stamp rounded-sm border-2 border-double px-2.5 py-0.5 font-serif text-xs font-black uppercase tracking-[0.2em] {winner ===
 							'attacker'
 								? 'border-red-500/70 text-red-300'
-								: 'border-[#6aa8ff]/70 text-[#c3dbff]'}"
+								: 'border-friendly/70 text-friendly-fg'}"
 							style="--stamp-tilt: -4deg"
 						>
 							{status.label}
@@ -296,10 +298,11 @@
 					{:else}
 						<Badge tone={status.tone} size="md">{status.label}</Badge>
 					{/if}
-					<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8e9abb]">
+					<p class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
 						<span class="flex items-center gap-1"
 							><FluentLocation20Filled class="size-3.5" /> <span class="capitalize">{data.battle.terrain}</span></span
 						>
+						<Conditions {...data.conditions} compact />
 						<span>Started <span class="font-mono">{formatDateTime(data.battle.startedAt)}</span></span>
 						{#if data.battle.endedAt}<span
 								>Ended <span class="font-mono">{formatDateTime(data.battle.endedAt)}</span></span
@@ -313,13 +316,13 @@
 					class="mt-4 flex items-center justify-between gap-3 rounded-sm border px-4 py-3 {data.battle.phase ===
 					'active'
 						? SIDE.attacker.soft
-						: 'border-[#f5a524]/35 bg-[#f5a524]/12'}"
+						: 'border-primary/35 bg-primary/12'}"
 				>
-					<span class="flex items-center gap-2 text-sm text-[#dbe2f4]">
-						<FluentClock20Filled class="size-4 {data.battle.phase === 'active' ? 'text-red-400' : 'text-[#ffcb6b]'}" />
+					<span class="flex items-center gap-2 text-sm text-fg-body">
+						<FluentClock20Filled class="size-4 {data.battle.phase === 'active' ? 'text-red-400' : 'text-primary-fg'}" />
 						{data.battle.phase === "active" ? "Next round" : "Fighting starts"}
 					</span>
-					<span class="font-mono text-xl font-bold text-[#eef2ff] tabular-nums">{remaining > 0 ? clock : "now"}</span>
+					<span class="font-mono text-xl font-bold text-fg tabular-nums">{remaining > 0 ? clock : "now"}</span>
 				</div>
 			{/if}
 		</div>
@@ -329,27 +332,27 @@
 	<section class="panel rounded-sm p-5 space-y-5">
 		<div class="flex items-center justify-between gap-4">
 			{@render sideHeader("attacker", data.attacker)}
-			<span class="shrink-0 text-xs font-bold text-[#8e9abb]">VS</span>
+			<span class="shrink-0 text-xs font-bold text-fg-muted">VS</span>
 			{@render sideHeader("defender", data.defender)}
 		</div>
 
 		<!-- Momentum: share of the strength still on the field -->
 		<div>
-			<div class="relative h-4 overflow-hidden rounded-full bg-[#0b1120]">
+			<div class="relative h-4 overflow-hidden rounded-full bg-surface-0">
 				<div
 					class="absolute inset-y-0 left-0 bg-red-500 transition-[width] duration-1000 ease-out"
 					style:width="{momentum}%"
 				></div>
 				<div
-					class="absolute inset-y-0 right-0 bg-[#6aa8ff] transition-[width] duration-1000 ease-out"
+					class="absolute inset-y-0 right-0 bg-friendly transition-[width] duration-1000 ease-out"
 					style:width="{100 - momentum}%"
 				></div>
-				<div class="absolute inset-y-0 left-1/2 w-px bg-[#eef2ff]/40"></div>
+				<div class="absolute inset-y-0 left-1/2 w-px bg-fg/40"></div>
 			</div>
 			<div class="mt-1.5 flex justify-between text-xs">
 				<span class="font-mono text-red-300">{momentum}%</span>
-				<span class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Strength on the field</span>
-				<span class="font-mono text-[#c3dbff]">{100 - momentum}%</span>
+				<span class="text-[10px] uppercase tracking-wide text-fg-muted">Strength on the field</span>
+				<span class="font-mono text-friendly-fg">{100 - momentum}%</span>
 			</div>
 		</div>
 
@@ -359,7 +362,7 @@
 				{@render sideStats("defender", data.defender)}
 				{#if data.battle.fortification > 0}
 					<p
-						class="flex items-center gap-2 rounded-sm border border-[#6aa8ff]/30 bg-[#2f6be0]/18 px-3 py-2 text-xs text-[#c3dbff]"
+						class="flex items-center gap-2 rounded-sm border border-friendly/30 bg-friendly-bg/18 px-3 py-2 text-xs text-friendly-fg"
 					>
 						<FluentShield20Filled class="size-4 shrink-0" />
 						Fortified (level {data.battle.fortification}): −{data.battle.fortificationReduction}% damage taken
@@ -368,6 +371,15 @@
 			</div>
 		</div>
 	</section>
+
+	<!-- Intel and targeting per side -->
+	<BattleIntel
+		attacker={{ ...data.intel.attacker, name: data.attacker.name }}
+		defender={{ ...data.intel.defender, name: data.defender.name }}
+		regionId={data.battle.regionId}
+		mySide={data.me.side}
+		ended={data.battle.phase === "ended"}
+	/>
 
 	<!-- What the conquest wrecked -->
 	{#if destroyed.length}
@@ -378,7 +390,7 @@
 					<div class="bg-red-600/10 border border-red-500/30 rounded-sm p-3 flex items-center gap-2 animate-pop-in">
 						<span class="text-2xl" aria-hidden="true">{d.icon}</span>
 						<div class="min-w-0">
-							<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide truncate">{d.label}</p>
+							<p class="text-[10px] text-fg-muted uppercase tracking-wide truncate">{d.label}</p>
 							<p class="text-sm font-bold text-red-300 font-mono">−{d.lost} level{d.lost === 1 ? "" : "s"}</p>
 						</div>
 					</div>
@@ -400,21 +412,21 @@
 			</div>
 
 			{#if !data.me.side}
-				<p class="text-sm text-[#c2cbe3]">{data.me.reason}</p>
+				<p class="text-sm text-fg-soft">{data.me.reason}</p>
 				<Button href="/region/{data.battle.regionId}" variant="secondary" size="sm" icon={FluentLocation20Filled}
 					>Go to {regionName}</Button
 				>
 			{:else if data.me.deployable.length === 0}
-				<p class="text-sm text-[#c2cbe3]">
+				<p class="text-sm text-fg-soft">
 					No rested, trained units {data.me.side === "defender" ? `in ${regionName}` : "in your current region"}.
 				</p>
 				<Button href="/training" variant="secondary" size="sm">Train units</Button>
 			{:else}
-				<div class="flex items-center justify-between text-xs text-[#8e9abb]">
+				<div class="flex items-center justify-between text-xs text-fg-muted">
 					<span>{selected.size} of {data.me.deployable.length} selected</span>
 					<button
 						type="button"
-						class="text-[#dbe2f4] hover:text-[#ffc857]"
+						class="text-fg-body hover:text-primary-hover"
 						onclick={() => (selected = allSelected ? new Set() : new Set(data.me.deployable.map((u) => u.id)))}
 					>
 						{allSelected ? "Clear" : "Select all"}
@@ -426,26 +438,26 @@
 						<button
 							type="button"
 							class="press-spring flex items-center gap-3 rounded-sm border p-3 text-left {on
-								? 'border-[#4fd88a]/60 bg-[#1f9d62]/18'
-								: 'border-[#8ea6e0]/15 bg-[#131c33]/70 hover:border-[#f5a524]/55'}"
+								? 'border-positive/60 bg-positive-bg/18'
+								: 'border-line/15 bg-surface-4/70 hover:border-primary/55'}"
 							aria-pressed={on}
 							onclick={() => toggle(u.id)}
 						>
 							{@render unitIcon(u.unitType, "size-10")}
 							<div class="min-w-0 flex-1 space-y-1">
-								<p class="truncate text-sm font-semibold text-[#eef2ff]">{u.name}</p>
-								<p class="text-[11px] text-[#8e9abb]">
+								<p class="truncate text-sm font-semibold text-fg">{u.name}</p>
+								<p class="text-[11px] text-fg-muted">
 									{unitName(u.unitType)} · ⚔ {u.attack} 🛡 {u.defense} · {u.experience} XP
 								</p>
 								<div class="grid grid-cols-2 gap-2">
-									{@render bar(u.health, 100, "bg-[#6aa8ff]")}
-									{@render bar(u.organization, 100, "bg-[#4fd88a]")}
+									{@render bar(u.health, 100, "bg-friendly")}
+									{@render bar(u.organization, 100, "bg-positive")}
 								</div>
 							</div>
 							<span
 								class="grid size-5 shrink-0 place-items-center rounded-full border {on
-									? 'border-[#4fd88a] bg-[#4fd88a] text-[#0c1222]'
-									: 'border-[#8ea6e0]/40'}"
+									? 'border-positive bg-positive text-surface-1'
+									: 'border-line/40'}"
 							>
 								{#if on}✓{/if}
 							</span>
@@ -488,7 +500,7 @@
 				<form
 					method="POST"
 					action="?/fightRound"
-					class="border-t border-[#8ea6e0]/10 pt-3"
+					class="border-t border-line/10 pt-3"
 					use:enhance={() => {
 						fighting = true;
 						return async ({ result, update }) => {
@@ -515,7 +527,7 @@
 	<section class="panel rounded-sm p-5 space-y-4">
 		<h2 class="section-title">Course of the Battle</h2>
 		{#if data.rounds.length === 0}
-			<p class="py-6 text-center text-sm text-[#8e9abb]">
+			<p class="py-6 text-center text-sm text-fg-muted">
 				{data.battle.phase === "ended" ? "The battle ended without a fight." : "No rounds fought yet."}
 			</p>
 		{:else}
@@ -529,49 +541,49 @@
 								style:height="{(r.attackerDamage / chartMax) * 100}%"
 							></div>
 						</div>
-						<div class="h-px bg-[#8ea6e0]/30"></div>
+						<div class="h-px bg-line/30"></div>
 						<div class="flex flex-1 items-start">
 							<div
-								class="w-full rounded-b-sm bg-[#6aa8ff]/80"
+								class="w-full rounded-b-sm bg-friendly/80"
 								style:height="{(r.defenderDamage / chartMax) * 100}%"
 							></div>
 						</div>
 						<div
-							class="pointer-events-none absolute -top-1 left-1/2 z-10 hidden -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-sm border border-[#8ea6e0]/30 bg-[#0c1222] px-2 py-1 text-[10px] text-[#dbe2f4] group-hover:block"
+							class="pointer-events-none absolute -top-1 left-1/2 z-10 hidden -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-sm border border-line/30 bg-surface-1 px-2 py-1 text-[10px] text-fg-body group-hover:block"
 						>
 							Round {r.number}: <span class="text-red-300">{r.attackerDamage}</span> /
-							<span class="text-[#c3dbff]">{r.defenderDamage}</span>
+							<span class="text-friendly-fg">{r.defenderDamage}</span>
 						</div>
 					</div>
 				{/each}
 			</div>
-			<div class="flex justify-between text-[10px] text-[#8e9abb]">
+			<div class="flex justify-between text-[10px] text-fg-muted">
 				<span><span class="text-red-300">■</span> Attackers' damage</span>
-				<span><span class="text-[#c3dbff]">■</span> Defenders' damage</span>
+				<span><span class="text-friendly-fg">■</span> Defenders' damage</span>
 			</div>
 
-			<ul class="divide-y divide-[#8ea6e0]/10">
+			<ul class="divide-y divide-line/10">
 				{#each showAllRounds ? data.rounds : data.rounds.slice(0, 6) as r (r.number)}
 					<li class="flex items-center justify-between gap-3 py-2 text-sm">
-						<span class="font-mono text-[#8e9abb]">#{r.number}</span>
-						<span class="flex-1 text-[#c2cbe3]">
+						<span class="font-mono text-fg-muted">#{r.number}</span>
+						<span class="flex-1 text-fg-soft">
 							<span class="text-red-300">{r.attackerDamage}</span> dealt by {r.attackersEngaged} attacker{r.attackersEngaged ===
 							1
 								? ""
 								: "s"},
-							<span class="text-[#c3dbff]">{r.defenderDamage}</span> by {r.defendersEngaged} defender{r.defendersEngaged ===
+							<span class="text-friendly-fg">{r.defenderDamage}</span> by {r.defendersEngaged} defender{r.defendersEngaged ===
 							1
 								? ""
 								: "s"}
 						</span>
-						<span class="hidden text-xs text-[#8e9abb] sm:inline">{formatDateTime(r.at)}</span>
+						<span class="hidden text-xs text-fg-muted sm:inline">{formatDateTime(r.at)}</span>
 					</li>
 				{/each}
 			</ul>
 			{#if data.rounds.length > 6}
 				<button
 					type="button"
-					class="text-xs text-[#dbe2f4] hover:text-[#ffc857]"
+					class="text-xs text-fg-body hover:text-primary-hover"
 					onclick={() => (showAllRounds = !showAllRounds)}
 				>
 					{showAllRounds ? "Show fewer rounds" : `Show all ${data.rounds.length} rounds`}

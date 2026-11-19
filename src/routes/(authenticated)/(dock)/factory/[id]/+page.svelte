@@ -207,7 +207,13 @@
 				role="img"
 				aria-label="Crew {data.workers} of {data.maxWorkers}"
 			>
-				<path d="M12 62 A48 48 0 0 1 108 62" fill="none" stroke="var(--color-surface-4)" stroke-width="9" stroke-linecap="round" />
+				<path
+					d="M12 62 A48 48 0 0 1 108 62"
+					fill="none"
+					stroke="var(--color-surface-4)"
+					stroke-width="9"
+					stroke-linecap="round"
+				/>
 				<path
 					d="M12 62 A48 48 0 0 1 108 62"
 					fill="none"
@@ -326,7 +332,8 @@
 				<div class="mt-4">
 					<div class="flex items-center justify-between text-xs mb-1.5">
 						<span class="text-fg-muted">8h shift</span>
-						<span class="font-mono font-bold text-primary-fg">{data.shiftProgress >= 100 ? "Done" : timeRemaining}</span>
+						<span class="font-mono font-bold text-primary-fg">{data.shiftProgress >= 100 ? "Done" : timeRemaining}</span
+						>
 					</div>
 					<div class="h-2.5 bg-surface-4 rounded-full overflow-hidden border border-primary/20">
 						<div

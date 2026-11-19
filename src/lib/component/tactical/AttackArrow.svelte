@@ -1,11 +1,10 @@
-<!-- src/lib/component/tactical/AttackArrow.svelte -->
 <!-- An axis of attack (SVG group): a slightly curved red arrow from (x1, y1)
      to (x2, y2). `headSize` is in map units, so pass a zoom-compensated value
      to keep the head the same size on screen. -->
 <svelte:options namespace="svg" />
 
 <script lang="ts">
-	import { HOSTILE_RED } from "./colors";
+	import { HALO, HOSTILE_RED } from "./colors";
 
 	interface Props {
 		x1: number;
@@ -45,23 +44,23 @@
 	});
 </script>
 
+<!-- src/lib/component/tactical/AttackArrow.svelte -->
+
 <g class="attack-arrow">
 	<path
 		d={geom.d}
 		fill="none"
-		stroke="#05080f"
+		style:stroke={HALO}
 		stroke-opacity="0.6"
-		stroke-width="4.5"
+		style:stroke-width="calc(var(--k, 1) * 4.5px)"
 		stroke-linecap="round"
-		vector-effect="non-scaling-stroke"
 	/>
 	<path
 		d={geom.d}
 		fill="none"
-		stroke={color}
-		stroke-width="2.2"
+		style:stroke={color}
+		style:stroke-width="calc(var(--k, 1) * 2.2px)"
 		stroke-linecap="round"
-		vector-effect="non-scaling-stroke"
 	/>
-	<polygon points={geom.head} fill={color} />
+	<polygon points={geom.head} style:fill={color} />
 </g>

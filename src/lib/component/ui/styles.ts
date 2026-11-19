@@ -29,14 +29,19 @@ const BUTTON_BASE =
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
 	// Solid — one per intent. Use for the primary action of a screen or dialog.
-	primary: "bg-primary hover:bg-primary-mid border border-primary-hi/60 text-white font-semibold focus-visible:ring-primary",
-	danger: "bg-[#da3633] hover:bg-[#e5534b] border border-[#f85149]/60 text-white font-semibold focus-visible:ring-red-400",
-	success: "bg-positive-deep hover:bg-positive-bg border border-positive/50 text-white font-semibold focus-visible:ring-positive",
+	primary:
+		"bg-primary hover:bg-primary-mid border border-primary-hi/60 text-white font-semibold focus-visible:ring-primary",
+	danger:
+		"bg-[#da3633] hover:bg-[#e5534b] border border-[#f85149]/60 text-white font-semibold focus-visible:ring-red-400",
+	success:
+		"bg-positive-deep hover:bg-positive-bg border border-positive/50 text-white font-semibold focus-visible:ring-positive",
 	info: "bg-friendly-deep hover:bg-friendly-bg border border-friendly/50 text-white font-semibold focus-visible:ring-friendly",
-	premium: "bg-[#bb8009] hover:bg-[#d29922] border border-[#e3b341]/60 text-white font-semibold focus-visible:ring-[#e3b341]",
+	premium:
+		"bg-[#bb8009] hover:bg-[#d29922] border border-[#e3b341]/60 text-white font-semibold focus-visible:ring-[#e3b341]",
 
 	// Neutral — the default for anything that is not the primary action.
-	secondary: "bg-surface-8 hover:bg-surface-10 border border-line/20 hover:border-line/35 text-fg-body hover:text-fg focus-visible:ring-primary",
+	secondary:
+		"bg-surface-8 hover:bg-surface-10 border border-line/20 hover:border-line/35 text-fg-body hover:text-fg focus-visible:ring-primary",
 	subtle: "bg-surface-4 hover:bg-surface-7 border border-line/12 text-fg-soft hover:text-fg focus-visible:ring-primary",
 	ghost: "btn-ghost border-0 text-fg-dim hover:text-fg hover:bg-surface-7 focus-visible:ring-primary",
 

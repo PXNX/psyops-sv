@@ -14,7 +14,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		sql.raw(`(select cast(count(*) as int) from ${table} t where t.newspaper_id = "newspapers"."id")`).mapWith(Number);
 	const subscriberCount = count("newspaper_subscriptions");
 	const latest = (column: string) =>
-		sql.raw(`(select a.${column} from articles a where a.newspaper_id = "newspapers"."id" order by a.created_at desc limit 1)`);
+		sql.raw(
+			`(select a.${column} from articles a where a.newspaper_id = "newspapers"."id" order by a.created_at desc limit 1)`
+		);
 
 	const [rows, memberships, subscriptions] = await Promise.all([
 		db

@@ -198,9 +198,7 @@
 			<div class="flex items-center gap-3">
 				<span class="text-lg">⚔️</span>
 				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
-						War Declarations
-					</p>
+					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">War Declarations</p>
 					<p class="text-xs text-fg-muted">When war is declared on or by your state</p>
 				</div>
 			</div>
@@ -316,9 +314,7 @@
 				<FluentStar20Filled class="size-5 text-primary-fg" />
 			</div>
 			<div>
-				<p class="text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">
-					Premium Membership
-				</p>
+				<p class="text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">Premium Membership</p>
 				<p class="text-xs text-fg-muted">Automate production, training & factory work</p>
 			</div>
 		</div>

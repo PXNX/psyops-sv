@@ -87,12 +87,7 @@
 <PageContainer maxWidth="3xl">
 	<!-- Top bar -->
 	<div class="flex items-center gap-2">
-		<IconButton
-			icon={FluentArrowLeft20Filled}
-			label="Go back"
-			variant="secondary"
-			onclick={() => history.back()}
-		/>
+		<IconButton icon={FluentArrowLeft20Filled} label="Go back" variant="secondary" onclick={() => history.back()} />
 		<div class="ml-auto flex items-center gap-2">
 			{#if data.isAuthor}
 				<Button variant="soft-amber" size="sm" href="/posts/{data.article.id}/edit" icon={FluentEdit20Filled}>

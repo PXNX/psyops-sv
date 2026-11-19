@@ -54,9 +54,8 @@
 	<span class="min-w-0 {subtitle ? 'flex flex-col leading-tight' : 'inline-flex items-center gap-1.5'}">
 		<span class="inline-flex items-center gap-1.5 min-w-0">
 			<span
-				class="{nameSize} font-semibold text-fg truncate transition-colors {id
-					? 'group-hover:text-primary-hover'
-					: ''}">{label}</span
+				class="{nameSize} font-semibold text-fg truncate transition-colors {id ? 'group-hover:text-primary-hover' : ''}"
+				>{label}</span
 			>
 			{#if party?.abbreviation}
 				<PartyTag abbreviation={party.abbreviation} color={party.color} />

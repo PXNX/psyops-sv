@@ -32,6 +32,7 @@
 	import BattleHistory from "#lib/component/BattleHistory.svelte";
 	import ResidenceActions from "./ResidenceActions.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
+	import RegionSituation from "./RegionSituation.svelte";
 	import PassportPage from "../../visas/PassportPage.svelte";
 	import VisaStamp from "../../visas/VisaStamp.svelte";
 
@@ -144,22 +145,22 @@
 				alt="Coat of arms of {data.region.name}"
 				class="size-20 sm:size-24 rounded-sm shrink-0"
 				placeholderIcon={FluentShield20Filled}
-				placeholderGradient="from-[#7451e6]/40 to-[#7451e6]/40"
+				placeholderGradient="from-politics-bg/40 to-politics-bg/40"
 			/>
 			<div class="flex-1 min-w-0">
-				<h1 class="font-serif text-3xl sm:text-4xl font-bold text-[#eef2ff] break-words leading-tight">
+				<h1 class="font-serif text-3xl sm:text-4xl font-bold text-fg break-words leading-tight">
 					{data.region.name}
 				</h1>
 				<div class="mt-1.5 flex flex-wrap items-center gap-2 text-sm">
 					{#if data.region.stateName}
 						<a
 							href="/state/{data.region.stateId}"
-							class="font-serif italic text-[#c2cbe3] hover:text-[#ffc857] transition-colors"
+							class="font-serif italic text-fg-soft hover:text-primary-hover transition-colors"
 						>
 							{data.region.stateName}
 						</a>
 					{:else}
-						<span class="font-serif italic text-[#ffcb6b] flex items-center gap-1.5">
+						<span class="font-serif italic text-primary-fg flex items-center gap-1.5">
 							<FluentFlag20Filled class="size-4" />
 							Unclaimed territory
 						</span>
@@ -172,11 +173,11 @@
 		</div>
 
 		<!-- Facts and figures -->
-		<div class="relative grid grid-cols-2 sm:grid-cols-4 gap-px bg-[#8ea6e0]/12 border-t border-[#8ea6e0]/15">
+		<div class="relative grid grid-cols-2 sm:grid-cols-4 gap-px bg-line/12 border-t border-line/15">
 			{#each facts as fact (fact.label)}
 				<a href={fact.href} class="group px-4 py-3 bg-[#1e2318] hover:bg-[#262c1e] transition-colors">
-					<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">{fact.label}</p>
-					<p class="text-xl font-bold font-mono text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">
+					<p class="text-[10px] text-fg-muted uppercase tracking-wide">{fact.label}</p>
+					<p class="text-xl font-bold font-mono text-fg group-hover:text-primary-hover transition-colors">
 						{fact.value.toLocaleString()}
 					</p>
 				</a>
@@ -197,12 +198,15 @@
 		</div>
 	{/if}
 
-	{#if form?.success}
-		<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">
-			<FluentCheckmark20Filled class="size-5 text-[#4fd88a] flex-shrink-0" />
+	{#if form?.success && form?.message}
+		<div class="bg-positive-bg/18 border border-positive/30 text-positive-fg rounded-sm p-4 flex items-center gap-3">
+			<FluentCheckmark20Filled class="size-5 text-positive flex-shrink-0" />
 			<div class="flex-1 text-sm">{form.message}</div>
 		</div>
 	{/if}
+
+	<!-- Forces, intel and recon tasking -->
+	<RegionSituation situation={data.situation} walletBalance={data.walletBalance} hasBattle={!!data.ongoingBattle} />
 
 	<!-- Residence / travel -->
 	{#if (isIndependent || !data.hasResidence) && !data.activeTravel}
@@ -417,16 +421,16 @@
 							size="md"
 						/>
 					{:else}
-						<p class="text-sm text-[#8e9abb]">No governor appointed</p>
+						<p class="text-sm text-fg-muted">No governor appointed</p>
 					{/if}
 					<a
 						href="/region/{data.region.id}/construction"
 						class="panel-interactive rounded-sm p-3 flex items-center gap-3 group"
 					>
-						<FluentBuilding20Filled class="size-5 text-[#6aa8ff] shrink-0" />
+						<FluentBuilding20Filled class="size-5 text-friendly shrink-0" />
 						<div class="min-w-0 flex-1">
-							<p class="text-sm font-bold text-[#eef2ff] group-hover:text-[#ffc857]">Public works</p>
-							<p class="text-xs text-[#8e9abb] truncate">
+							<p class="text-sm font-bold text-fg group-hover:text-primary-hover">Public works</p>
+							<p class="text-xs text-fg-muted truncate">
 								{#each BUILDING_ORDER as t, i}{i ? " · " : ""}{BUILDING_TEMPLATES[t].icon}
 									{data.region[BUILDING_TEMPLATES[t].stat] ?? 0}{/each}
 							</p>
@@ -451,8 +455,8 @@
 						>
 							<ResourceIcon name={resource.name} class="size-5 shrink-0" />
 							<div class="min-w-0">
-								<dt class="text-[10px] text-[#8e9abb] uppercase tracking-wide capitalize">{resource.name}</dt>
-								<dd class="text-sm font-bold font-mono text-[#eef2ff]">{resource.value}</dd>
+								<dt class="text-[10px] text-fg-muted uppercase tracking-wide capitalize">{resource.name}</dt>
+								<dd class="text-sm font-bold font-mono text-fg">{resource.value}</dd>
 							</div>
 						</div>
 					{/each}
@@ -464,7 +468,7 @@
 		{#if data.factories.length > 0}
 			<SectionCard class="md:col-span-2">
 				<h2 class="section-title mb-3">
-					<FluentBriefcase20Filled class="size-5 text-[#b9a1ff]" />
+					<FluentBriefcase20Filled class="size-5 text-politics" />
 					Industry
 				</h2>
 				<div class="grid gap-2 sm:grid-cols-2">
@@ -475,13 +479,13 @@
 								alt={factory.company?.name || "Company"}
 								class="size-10 shrink-0"
 								placeholderIcon={FluentBriefcase20Filled}
-								placeholderGradient="from-[#7451e6]/40 to-[#7451e6]/40"
+								placeholderGradient="from-politics-bg/40 to-politics-bg/40"
 							/>
 							<div class="flex-1 min-w-0">
-								<p class="font-semibold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors truncate">
+								<p class="font-semibold text-fg group-hover:text-primary-hover transition-colors truncate">
 									{factory.name}
 								</p>
-								<p class="text-xs text-[#8e9abb] capitalize truncate">
+								<p class="text-xs text-fg-muted capitalize truncate">
 									{factory.factoryType} • {factory.company?.name}
 								</p>
 							</div>
@@ -509,30 +513,30 @@
 						<div class="size-2 bg-red-500 rounded-full animate-pulse"></div>
 						<span class="text-xs text-red-300 uppercase tracking-widest font-bold">Battle in Progress</span>
 					</div>
-					<div class="text-sm text-[#c2cbe3]">
+					<div class="text-sm text-fg-soft">
 						<span class="text-red-300 font-bold">{data.ongoingBattle.attackerState.name}</span>
-						<span class="text-[#8e9abb]"> → </span>
-						<span class="text-[#c3dbff] font-bold"
+						<span class="text-fg-muted"> → </span>
+						<span class="text-friendly-fg font-bold"
 							>{data.ongoingBattle.defenderState?.name || data.region.stateName}</span
 						>
 					</div>
 				</div>
-				<span class="text-[#8e9abb] group-hover:text-red-300 transition-colors">→</span>
+				<span class="text-fg-muted group-hover:text-red-300 transition-colors">→</span>
 			</div>
 		</a>
 	{:else if data.recentFailedBattle}
 		{@const cooldown = getCooldownRemaining(data.recentFailedBattle.cooldownEndsAt)}
 		{#if cooldown}
-			<div class="bg-[#f5a524]/12 border border-[#f5a524]/35 rounded-sm p-4 sm:p-5">
+			<div class="bg-primary/12 border border-primary/35 rounded-sm p-4 sm:p-5">
 				<div class="flex items-center gap-3">
 					<div
-						class="size-10 bg-[#f5a524]/15 rounded-sm border border-[#f5a524]/35 flex items-center justify-center flex-shrink-0"
+						class="size-10 bg-primary/15 rounded-sm border border-primary/35 flex items-center justify-center flex-shrink-0"
 					>
 						<span class="text-xl">🛡️</span>
 					</div>
 					<div class="flex-1">
-						<div class="text-sm font-bold text-[#ffcb6b]">Region Under Protection</div>
-						<div class="flex items-center gap-2 text-xs text-[#8e9abb] mt-1">
+						<div class="text-sm font-bold text-primary-fg">Region Under Protection</div>
+						<div class="flex items-center gap-2 text-xs text-fg-muted mt-1">
 							<FluentClock20Filled class="size-3.5" />
 							<span>Attackable in <span class="font-mono">{cooldown.hours}h {cooldown.minutes}m</span></span>
 						</div>
@@ -557,13 +561,13 @@
 							<div class="size-1.5 bg-red-500 rounded-full animate-pulse"></div>
 							<span class="text-[10px] text-red-300 uppercase tracking-widest">Active War</span>
 						</div>
-						<div class="text-sm text-[#c2cbe3]">
+						<div class="text-sm text-fg-soft">
 							<span class="font-bold text-red-300">{war.attacker.name}</span>
-							<span class="text-[#8e9abb] mx-1">vs</span>
-							<span class="font-bold text-[#c3dbff]">{war.defender.name}</span>
+							<span class="text-fg-muted mx-1">vs</span>
+							<span class="font-bold text-friendly-fg">{war.defender.name}</span>
 						</div>
 					</div>
-					<span class="text-[#8e9abb] group-hover:text-red-300 transition-colors text-sm">→</span>
+					<span class="text-fg-muted group-hover:text-red-300 transition-colors text-sm">→</span>
 				</a>
 			{/each}
 		</div>

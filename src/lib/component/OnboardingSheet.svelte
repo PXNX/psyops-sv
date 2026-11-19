@@ -251,9 +251,7 @@
 						<!-- ── Greeting ── -->
 						<div class="text-center space-y-4 py-2" in:fly={{ y: 20, duration: 300 }}>
 							<div class="flex justify-center">
-								<div
-									class="size-16 rounded-sm bg-primary/12 border border-primary/35 flex items-center justify-center"
-								>
+								<div class="size-16 rounded-sm bg-primary/12 border border-primary/35 flex items-center justify-center">
 									<span class="text-3xl">🎖️</span>
 								</div>
 							</div>

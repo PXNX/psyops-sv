@@ -11,9 +11,7 @@ const COOLDOWN_MS = 2000;
 
 type Account = { id: string; role: "user" | "moderator" | "admin" };
 type ChatScope =
-	| { type: "global" }
-	| { type: "party"; partyId: number }
-	| { type: "direct"; userIds: [string, string] };
+	{ type: "global" } | { type: "party"; partyId: number } | { type: "direct"; userIds: [string, string] };
 
 export const canModerate = (account: Account) => account.role === "moderator" || account.role === "admin";
 
@@ -24,7 +22,13 @@ export const canModerate = (account: Account) => account.role === "moderator" ||
  */
 export function readContent(formData: FormData) {
 	const raw = formData.get("content");
-	const content = typeof raw === "string" ? raw.replace(/\r\n?/g, "\n").replace(/\n{3,}/g, "\n\n").trim() : "";
+	const content =
+		typeof raw === "string"
+			? raw
+					.replace(/\r\n?/g, "\n")
+					.replace(/\n{3,}/g, "\n\n")
+					.trim()
+			: "";
 	if (!content) return { error: fail(400, { error: "Message cannot be empty" }) };
 	if (content.length > MAX_MESSAGE_LENGTH) {
 		return { error: fail(400, { error: `Message too long (max ${MAX_MESSAGE_LENGTH} characters)` }) };

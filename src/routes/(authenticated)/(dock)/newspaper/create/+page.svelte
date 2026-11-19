@@ -143,7 +143,9 @@
 			</div>
 
 			<div>
-				<label for="background" class="field-label">Tagline <span class="text-fg-muted font-normal">(optional)</span></label>
+				<label for="background" class="field-label"
+					>Tagline <span class="text-fg-muted font-normal">(optional)</span></label
+				>
 				<textarea
 					id="background"
 					name="background"

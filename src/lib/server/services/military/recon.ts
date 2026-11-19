@@ -177,7 +177,8 @@ export interface SensorOption {
 /** Everything the UI needs to offer recon over a region. */
 export async function reconOptions(db: Db, userId: string, regionId: number, now = new Date()) {
 	const side = await viewerSide(db, userId);
-	if (!side) return { side: null, targetReason: "You need to live in a state to run recon.", sensors: [], inFlight: [] };
+	if (!side)
+		return { side: null, targetReason: "You need to live in a state to run recon.", sensors: [], inFlight: [] };
 	const [region] = await db
 		.select({ id: regions.id, stateId: regions.stateId })
 		.from(regions)

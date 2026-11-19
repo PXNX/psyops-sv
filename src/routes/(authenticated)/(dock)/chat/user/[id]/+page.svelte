@@ -104,9 +104,13 @@
 
 		{#snippet headerActions()}
 			{#if !data.isBlocked}
-				<IconButton icon={FluentMoreVertical20Filled} label="Conversation options" size="sm" onclick={() => (menuOpen = true)} />
+				<IconButton
+					icon={FluentMoreVertical20Filled}
+					label="Conversation options"
+					size="sm"
+					onclick={() => (menuOpen = true)}
+				/>
 			{/if}
 		{/snippet}
-
 	</ChatRoom>
 {/if}

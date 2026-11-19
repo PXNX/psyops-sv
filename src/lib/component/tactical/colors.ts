@@ -1,11 +1,38 @@
 // src/lib/component/tactical/colors.ts
 // Affiliation colours for tactical symbols (APP-6: blue friend, red hostile,
-// amber unknown), tuned for a near-black map.
+// amber unknown), taken from the daisyUI theme. They are CSS values, so set
+// them with style (style:fill / style:stroke), not SVG presentation attributes.
+const tint = (v: string, pct: number) => `color-mix(in oklab, ${v} ${pct}%, transparent)`;
+
 export const TACTICAL = {
-	friend: { fill: "rgba(80, 150, 255, 0.28)", stroke: "#6aa8ff", icon: "#cfe2ff", text: "#9cc7ff" },
-	hostile: { fill: "rgba(255, 70, 70, 0.25)", stroke: "#ff5a5a", icon: "#ffd0d0", text: "#ff8a8a" },
-	unknown: { fill: "rgba(245, 190, 60, 0.18)", stroke: "#f5be3c", icon: "#ffe08a", text: "#ffd166" }
+	friend: {
+		fill: tint("var(--color-secondary)", 28),
+		stroke: "var(--color-secondary)",
+		icon: "var(--color-friendly-hi)",
+		text: "var(--color-friendly-fg)"
+	},
+	hostile: {
+		fill: tint("var(--color-error)", 25),
+		stroke: "var(--color-error)",
+		icon: "var(--color-hostile-fg)",
+		text: "var(--color-hostile-fg)"
+	},
+	unknown: {
+		fill: tint("var(--color-warning)", 18),
+		stroke: "var(--color-warning)",
+		icon: "var(--color-warning)",
+		text: "var(--color-warning)"
+	}
 } as const;
 
-export const RECON_BLUE = "#4f9dff";
-export const HOSTILE_RED = "#ff4d4d";
+export const RECON_BLUE = "var(--color-primary)";
+export const HOSTILE_RED = "var(--color-error)";
+/*
+ * Line widths in RangeRing, AttackArrow and ReconSector are multiplied by the
+ * CSS variable --k (map units per screen pixel; set it on the parent <svg>),
+ * because vector-effect="non-scaling-stroke" ignores CSS transforms such as
+ * panzoom's. Without --k they draw at 1×.
+ */
+
+/** Dark halo behind labels so they read on any fill. */
+export const HALO = "var(--color-surface-0)";

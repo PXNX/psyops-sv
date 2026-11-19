@@ -128,10 +128,7 @@
 						<div class="relative h-2 rounded-full bg-surface-0 flex overflow-hidden">
 							<div class="bg-positive h-full" style="width: {proposal.percentageFor}%"></div>
 							<div class="bg-red-500 h-full ml-auto" style="width: {proposal.percentageAgainst}%"></div>
-							<div
-								class="absolute inset-y-0 w-0.5 bg-fg/80"
-								style="left: {proposal.requiredMajority ?? 50}%"
-							></div>
+							<div class="absolute inset-y-0 w-0.5 bg-fg/80" style="left: {proposal.requiredMajority ?? 50}%"></div>
 						</div>
 						<p class="flex items-center justify-between gap-2 text-xs font-mono">
 							<span class="text-positive-fg">Ayes {proposal.voteCounts.for}</span>

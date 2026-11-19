@@ -51,7 +51,13 @@
 	};
 
 	const handleCancel = () => {
-		if (title.trim() || editorComponent?.getContent().replace(/<[^>]*>/g, "").trim()) {
+		if (
+			title.trim() ||
+			editorComponent
+				?.getContent()
+				.replace(/<[^>]*>/g, "")
+				.trim()
+		) {
 			isCancelModalOpen = true;
 		} else {
 			history.back();
@@ -103,13 +109,7 @@
 							? 'border-friendly/50 bg-friendly-bg/15'
 							: 'border-white/10 hover:border-white/20'}"
 					>
-						<input
-							type="radio"
-							name="newspaperId"
-							value={option.id}
-							bind:group={selectedNewspaperId}
-							class="sr-only"
-						/>
+						<input type="radio" name="newspaperId" value={option.id} bind:group={selectedNewspaperId} class="sr-only" />
 						{#if option.id}
 							<Logo
 								src={option.logo}

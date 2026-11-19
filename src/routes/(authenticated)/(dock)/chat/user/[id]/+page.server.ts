@@ -1,6 +1,13 @@
 // src/routes/(authenticated)/chat/user/[id]/+page.server.ts
 import { db, messageNotifier } from "#lib/server/db.js";
-import { chatMessages, accounts, userProfiles, userBlocks, partyMembers, politicalParties } from "#lib/server/schema.js";
+import {
+	chatMessages,
+	accounts,
+	userProfiles,
+	userBlocks,
+	partyMembers,
+	politicalParties
+} from "#lib/server/schema.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { eq, and, or, desc } from "drizzle-orm";
 import { fail, redirect } from "@sveltejs/kit";

@@ -35,8 +35,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 			.orderBy(reconMissions.completesAt)
 	]);
 
-	const regionIds = [...new Set([...reports.map((r) => r.regionId), ...pictures.keys(), ...inFlight.map((m) => m.targetRegionId)])];
-	const userIds = [...new Set([...reports.map((r) => r.filedBy), ...inFlight.map((m) => m.launchedBy)].filter(Boolean))] as string[];
+	const regionIds = [
+		...new Set([...reports.map((r) => r.regionId), ...pictures.keys(), ...inFlight.map((m) => m.targetRegionId)])
+	];
+	const userIds = [
+		...new Set([...reports.map((r) => r.filedBy), ...inFlight.map((m) => m.launchedBy)].filter(Boolean))
+	] as string[];
 	const [regionRows, stateRows, profiles] = await Promise.all([
 		regionIds.length
 			? db
@@ -55,9 +59,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const regionById = new Map(regionRows.map((r) => [r.id, r]));
 	const stateName = new Map(stateRows.map((s) => [s.id, s.name]));
 	const people = new Map(
-		await Promise.all(
-			profiles.map(async (p) => [p.id, { name: p.name, avatar: await getLogoUrl(p.logo) }] as const)
-		)
+		await Promise.all(profiles.map(async (p) => [p.id, { name: p.name, avatar: await getLogoUrl(p.logo) }] as const))
 	);
 	const where = (regionId: number) => {
 		const r = regionById.get(regionId);

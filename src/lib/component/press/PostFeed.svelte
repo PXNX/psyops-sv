@@ -101,7 +101,10 @@
 	</PageHeader>
 
 	<div class="flex flex-col sm:flex-row sm:items-center gap-3">
-		<nav class="flex self-start rounded-sm border border-white/10 overflow-hidden divide-x divide-white/10" aria-label="Feed">
+		<nav
+			class="flex self-start rounded-sm border border-white/10 overflow-hidden divide-x divide-white/10"
+			aria-label="Feed"
+		>
 			{#each tabs as tab (tab.href)}
 				<a
 					href={tab.href}

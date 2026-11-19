@@ -26,16 +26,7 @@
 	import { toast, toastResult } from "#lib/ui/toast.svelte.js";
 	import { confirmAction } from "#lib/ui/confirm.svelte.js";
 	import { vanish } from "#lib/utils/motion.js";
-	import {
-		type ChatMessage,
-		clockTime,
-		dayKey,
-		dayLabel,
-		isEmojiOnly,
-		isImageUrl,
-		linkify,
-		markSeen
-	} from "./chat";
+	import { type ChatMessage, clockTime, dayKey, dayLabel, isEmojiOnly, isImageUrl, linkify, markSeen } from "./chat";
 
 	interface Props {
 		/** Stable id of the conversation, for unread tracking ("global", "party:3", "user:abc"). */
@@ -461,10 +452,9 @@
 								{@const msg = row.msg}
 								{@const emoji = isEmojiOnly(msg.content)}
 								<div
-									class="flex {row.mine ? 'justify-end' : 'justify-start'} {row.first ? 'mt-2' : 'mt-0.5'} {showSenders &&
-									!row.mine
-										? 'pl-10'
-										: ''}"
+									class="flex {row.mine ? 'justify-end' : 'justify-start'} {row.first
+										? 'mt-2'
+										: 'mt-0.5'} {showSenders && !row.mine ? 'pl-10' : ''}"
 								>
 									<div
 										role="button"
@@ -597,12 +587,9 @@
 						enterkeyhint="send"
 						oninput={resizeInput}
 						onkeydown={onKeydown}
-						class="composer-input"
-					></textarea>
+						class="composer-input"></textarea>
 					{#if draft.length > MAX_LENGTH - 80}
-						<span
-							class="self-center font-mono text-xs {draft.length >= MAX_LENGTH ? 'text-red-400' : 'text-fg-muted'}"
-						>
+						<span class="self-center font-mono text-xs {draft.length >= MAX_LENGTH ? 'text-red-400' : 'text-fg-muted'}">
 							{MAX_LENGTH - draft.length}
 						</span>
 					{/if}

@@ -1,4 +1,3 @@
-<!-- src/lib/component/tactical/RangeRing.svelte -->
 <!-- A threat range ring (SVG group): a red circle with a pulsing outer ring. -->
 <svelte:options namespace="svg" />
 
@@ -17,26 +16,26 @@
 	let { x, y, r, color = HOSTILE_RED, pulse = true }: Props = $props();
 </script>
 
+<!-- src/lib/component/tactical/RangeRing.svelte -->
+
 <g class="range-ring" transform="translate({x} {y})">
-	<circle {r} fill={color} fill-opacity="0.07" stroke={color} stroke-width="1.2" vector-effect="non-scaling-stroke" />
+	<circle
+		{r}
+		style:fill={color}
+		style:stroke={color}
+		fill-opacity="0.07"
+		style:stroke-width="calc(var(--k, 1) * 1.2px)"
+	/>
 	<circle
 		r={r * 0.55}
 		fill="none"
-		stroke={color}
+		style:stroke={color}
 		stroke-opacity="0.5"
-		stroke-width="1"
-		stroke-dasharray="3 3"
-		vector-effect="non-scaling-stroke"
+		style:stroke-width="calc(var(--k, 1) * 1px)"
+		style:stroke-dasharray="calc(var(--k, 1) * 3px) calc(var(--k, 1) * 3px)"
 	/>
 	{#if pulse}
-		<circle
-			{r}
-			fill="none"
-			stroke={color}
-			stroke-width="1.5"
-			vector-effect="non-scaling-stroke"
-			class="ring-pulse"
-		/>
+		<circle {r} fill="none" style:stroke={color} style:stroke-width="calc(var(--k, 1) * 1.5px)" class="ring-pulse" />
 	{/if}
 </g>
 

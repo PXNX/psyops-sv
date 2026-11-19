@@ -360,9 +360,8 @@
 								class="size-12 mx-auto object-contain transition-[filter] {isSelected ? INK_GOLD : INK}"
 							/>
 							<span
-								class="mt-1.5 block text-sm font-medium leading-tight {isSelected
-									? 'text-primary-fg'
-									: 'text-fg-soft'}">{unitLabel(template.unitType)}</span
+								class="mt-1.5 block text-sm font-medium leading-tight {isSelected ? 'text-primary-fg' : 'text-fg-soft'}"
+								>{unitLabel(template.unitType)}</span
 							>
 							<span class="mt-0.5 block text-[10px] font-mono text-fg-muted">
 								{template.baseAttack}/{template.baseDefense} · {template.trainingDuration}h

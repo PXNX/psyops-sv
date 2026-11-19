@@ -250,9 +250,7 @@
 			{#if data.election.status === "active"}
 				<!-- Ballot paper -->
 				<div class="panel-muted rounded-sm p-4 space-y-3">
-					<div
-						class="flex flex-wrap items-baseline justify-between gap-2 border-b border-dashed border-line/25 pb-2"
-					>
+					<div class="flex flex-wrap items-baseline justify-between gap-2 border-b border-dashed border-line/25 pb-2">
 						<p class="font-serif text-base font-bold uppercase tracking-wide text-fg">Ballot · Bloc leader</p>
 						<p class="text-[11px] text-fg-muted">
 							<span class="font-mono">{data.blocLeaderVotesCast}</span> cast · closes

@@ -82,8 +82,7 @@
 			bind:value={title}
 			onkeydown={(e) => e.key === "Enter" && e.preventDefault()}
 			oninput={() => (title = title.replace(/\s*\n\s*/g, " "))}
-			{disabled}
-		></textarea>
+			{disabled}></textarea>
 		<div class="mt-2 flex items-center gap-3 text-xs">
 			{#if titleError}
 				<span class="text-red-400">{titleError}</span>

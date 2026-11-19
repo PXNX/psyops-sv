@@ -33,6 +33,15 @@ import { completePendingConstructions } from "#lib/server/services/politics/cons
 
 import { checkEntry } from "#lib/server/services/politics/entry.js";
 import { battlesInRegion } from "#lib/server/services/military/history.js";
+import {
+	ReconError,
+	launchRecon,
+	picturesByRegion,
+	reconOptions,
+	resolveReconMissions
+} from "#lib/server/services/military/recon.js";
+import { militaryUnits } from "#lib/server/schema.js";
+import { regionConditions, regionTerrain, type SensorId, SENSOR_IDS } from "#lib/config/index.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -465,7 +474,51 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const allowsFreeMovement = !region.stateId || !hasInauguralElection;
 	const { activeWars, attackableWars, borderingRegionsForAttack } = warInfo;
 
+	// Reconnaissance: file any passes that have landed, then what the viewer's
+	// side knows about forces here. Hostile units are only shown through
+	// fresh intel (fog of war); your side's own units are always visible.
+	await resolveReconMissions(db).catch((err) => console.error("Recon resolve failed:", err));
+	const recon = await reconOptions(db, account.id, regionId);
+	const sideStateIds = recon.side?.stateIds ?? [];
+	const [friendlyUnits, picture] = await Promise.all([
+		sideStateIds.length
+			? db
+					.select({ unitType: militaryUnits.unitType, ownerId: militaryUnits.ownerId, stateId: militaryUnits.stateId })
+					.from(militaryUnits)
+					.where(
+						and(
+							eq(militaryUnits.regionId, regionId),
+							inArray(militaryUnits.stateId, sideStateIds),
+							sql`${militaryUnits.health} > 0`
+						)
+					)
+			: Promise.resolve([]),
+		sideStateIds.length
+			? picturesByRegion(db, sideStateIds, { regionIds: [regionId] }).then((m) => m.get(regionId) ?? null)
+			: Promise.resolve(null)
+	]);
+	const friendlyByType = new Map<string, { count: number; mine: number }>();
+	for (const u of friendlyUnits) {
+		const e = friendlyByType.get(u.unitType) ?? { count: 0, mine: 0 };
+		e.count++;
+		if (u.ownerId === account.id) e.mine++;
+		friendlyByType.set(u.unitType, e);
+	}
+	const isHostileRegion = !!region.stateId && !!recon.side && !sideStateIds.includes(region.stateId);
+
 	const result = {
+		situation: {
+			conditions: regionConditions(region),
+			isHostileRegion,
+			friendly: [...friendlyByType].map(([unitType, e]) => ({ unitType, ...e })),
+			picture,
+			recon: {
+				canTarget: !recon.targetReason,
+				targetReason: recon.targetReason,
+				sensors: recon.sensors,
+				inFlight: recon.inFlight
+			}
+		},
 		region: {
 			id: region.id,
 			name: getRegionName(region.id),
@@ -550,6 +603,18 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	launchRecon: async ({ request, params, locals }) => {
+		const formData = await request.formData();
+		const sensor = String(formData.get("sensor") ?? "") as SensorId;
+		if (!SENSOR_IDS.includes(sensor)) return fail(400, { error: "Choose a sensor." });
+		try {
+			await launchRecon(db, { userId: locals.account!.id, regionId: parseInt(params.id), sensor });
+		} catch (err) {
+			if (err instanceof ReconError) return fail(400, { error: err.message });
+			throw err;
+		}
+		return { success: true, recon: true };
+	},
 	startTravel: async ({ params, locals }) => {
 		const account = locals.account!;
 		const regionId = parseInt(params.id);
@@ -1030,6 +1095,7 @@ export const actions: Actions = {
 		await db.insert(battles).values({
 			warId,
 			regionId,
+			terrain: regionTerrain(region) as typeof battles.$inferInsert.terrain,
 			attackerStateId: presidentStateId,
 			defenderStateId: region.stateId,
 			startedBy: account.id

@@ -69,8 +69,6 @@
 	</div>
 	<!-- Brass trim under the title bar; draws itself in on arrival. -->
 	<div
-		class="h-0.5 bg-gradient-to-r from-primary/80 via-line/30 to-transparent {entrance
-			? 'animate-trim-draw'
-			: ''}"
+		class="h-0.5 bg-gradient-to-r from-primary/80 via-line/30 to-transparent {entrance ? 'animate-trim-draw' : ''}"
 	></div>
 </div>

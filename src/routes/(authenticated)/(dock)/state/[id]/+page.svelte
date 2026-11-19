@@ -278,7 +278,9 @@
 						: ''}"
 				>
 					<Icon class="size-4 shrink-0 {tone}" />
-					<dt class="text-sm text-fg-muted {href ? 'group-hover:text-primary-hover' : ''} transition-colors">{label}</dt>
+					<dt class="text-sm text-fg-muted {href ? 'group-hover:text-primary-hover' : ''} transition-colors">
+						{label}
+					</dt>
 					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
 					<dd class="text-sm font-bold font-mono text-fg">{value}</dd>
 				</svelte:element>
@@ -321,7 +323,9 @@
 						alt={opponent.name}
 						class="size-10 shrink-0"
 						placeholderIcon={FluentShield20Filled}
-						placeholderGradient={war.isAttacker ? "from-red-600/40 to-red-600/40" : "from-friendly-bg/40 to-friendly-bg/40"}
+						placeholderGradient={war.isAttacker
+							? "from-red-600/40 to-red-600/40"
+							: "from-friendly-bg/40 to-friendly-bg/40"}
 					/>
 					<div class="flex-1 min-w-0">
 						<p
@@ -474,10 +478,7 @@
 			{/if}
 
 			{#if data.parliamentMembers.length > 0}
-				<a
-					href="/state/{data.state.id}/parliament"
-					class="group flex items-center gap-3 pt-3 border-t border-line/10"
-				>
+				<a href="/state/{data.state.id}/parliament" class="group flex items-center gap-3 pt-3 border-t border-line/10">
 					<div class="flex -space-x-2 shrink-0">
 						{#each data.parliamentMembers.slice(0, 5) as member (member.userId)}
 							<Logo
@@ -613,8 +614,7 @@
 					<ul>
 						{#each data.taxes as tax (tax.id)}
 							<li class="flex items-center gap-2 py-2 border-b border-dashed border-line/15 last:border-0">
-								<span class="text-sm text-fg-body">{taxNames[tax.taxType] ?? tax.taxType.replace(/_/g, " ")} tax</span
-								>
+								<span class="text-sm text-fg-body">{taxNames[tax.taxType] ?? tax.taxType.replace(/_/g, " ")} tax</span>
 								<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
 								<span class="text-sm font-bold font-mono text-primary-fg">{tax.taxRate}%</span>
 							</li>

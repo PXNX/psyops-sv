@@ -99,7 +99,10 @@ export function scanRegion(input: ScanInput): IntelFindings {
 	if (s.identifiesTypes) {
 		base.unitTypes = [...byType]
 			.filter(([t]) => coverage[UNIT_CATEGORY[t] ?? "infantry"] > 0)
-			.map(([unitType, n]) => ({ unitType, ...estimate(n, coverage[UNIT_CATEGORY[unitType] ?? "infantry"], input.rng) }));
+			.map(([unitType, n]) => ({
+				unitType,
+				...estimate(n, coverage[UNIT_CATEGORY[unitType] ?? "infantry"], input.rng)
+			}));
 	}
 	if (s.detectsFiring && coverage.artillery > 0) {
 		base.firingPositions = {

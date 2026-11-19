@@ -108,10 +108,8 @@
 									>{resource}</span
 								>
 							</span>
-							<span
-								class="text-right font-mono text-sm tabular-nums {quantity > 0
-									? 'text-fg'
-									: 'text-fg-muted/60'}">{quantity.toLocaleString()}</span
+							<span class="text-right font-mono text-sm tabular-nums {quantity > 0 ? 'text-fg' : 'text-fg-muted/60'}"
+								>{quantity.toLocaleString()}</span
 							>
 							<span class="text-right font-mono text-xs tabular-nums text-fg-soft"
 								>{formatCurrency(data.marketPrices[resource] || 0)}</span

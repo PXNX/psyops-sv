@@ -330,9 +330,7 @@
 					<article bind:this={billEls[proposal.id]} class="panel rounded-sm overflow-hidden">
 						<!-- Bill heading -->
 						<div class="px-4 sm:px-5 pt-4 pb-3 border-b border-double border-line/25">
-							<div
-								class="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em] text-fg-muted"
-							>
+							<div class="flex items-center justify-between gap-3 text-[10px] uppercase tracking-[0.2em] text-fg-muted">
 								<span class="font-serif">Bill No. {proposal.id}</span>
 								<span
 									class="font-mono normal-case tracking-normal flex items-center gap-1"

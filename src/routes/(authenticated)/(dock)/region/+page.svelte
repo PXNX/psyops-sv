@@ -119,8 +119,7 @@
 							/>
 							<div class="min-w-0 flex-1">
 								<p class="flex items-center gap-2">
-									<span
-										class="truncate font-serif font-bold text-fg group-hover:text-primary-hover transition-colors"
+									<span class="truncate font-serif font-bold text-fg group-hover:text-primary-hover transition-colors"
 										>{region.name}</span
 									>
 									{#if data.userRegionIds.includes(region.id)}

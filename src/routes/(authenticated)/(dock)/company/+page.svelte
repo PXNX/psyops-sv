@@ -104,9 +104,7 @@
 	<div class="grid grid-cols-1 sm:grid-cols-[1fr_14rem] gap-3">
 		<label class="relative block">
 			<span class="sr-only">Search company or owner</span>
-			<FluentSearch20Filled
-				class="size-4 text-fg-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-			/>
+			<FluentSearch20Filled class="size-4 text-fg-muted absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
 			<input
 				type="search"
 				bind:value={searchQuery}

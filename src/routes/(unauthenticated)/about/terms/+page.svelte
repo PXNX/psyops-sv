@@ -163,9 +163,7 @@
 							All in-game currency, resources, and items are virtual and have no real-world monetary value. They cannot
 							be exchanged for real money or transferred outside the platform.
 						</p>
-						<div
-							class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-start gap-3"
-						>
+						<div class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-start gap-3">
 							<FluentWarning20Filled class="size-5 text-primary-fg shrink-0 mt-0.5" />
 							<span class="text-sm">
 								We reserve the right to modify, suspend, or terminate virtual items or currency at any time for any

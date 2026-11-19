@@ -1,625 +1,540 @@
-<!-- src/routes/map/+page.svelte -->
+<!-- src/routes/(authenticated)/(dock)/map/+page.svelte -->
+<!-- The situational-awareness map: a dark world map with a base layer
+     (political, blocs, wars, weather, terrain or a heatmap) and tactical
+     overlays for the viewer's side: own forces (blue frames), hostile forces
+     known through fresh intel (red diamonds; "?" where contested and
+     unknown), battles with range rings and axes of attack, and recon cover.
+     Left: layer rail. Right: search and tools. Bottom: status bar. Tapping a
+     region opens a side panel (desktop) or bottom sheet (phone). -->
 <script lang="ts">
 	import panzoom, { type PanZoom } from "panzoom";
 	import WorldMap from "#lib/assets/worldmap3.svg?raw";
-	import type { Region, State } from "#lib/server/schema.js";
-	import * as m from "#lib/paraglide/messages.js";
+	import { enhance } from "$app/forms";
+	import { invalidateAll } from "$app/navigation";
+	import { onMount, tick } from "svelte";
+	import type { PageData } from "./$types";
+	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { ageLabel, countdown, formatLatLon, kmPerMapUnit, mapToLatLon, niceKm } from "#lib/utils/military.js";
+	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { celebrate } from "#lib/utils/celebrate.js";
+	import Logo from "#lib/component/Logo.svelte";
+	import BottomSheet from "#lib/component/BottomSheet.svelte";
+	import { Badge, Button, IconButton } from "#lib/component/ui/index.js";
+	import {
+		AttackArrow,
+		Conditions,
+		RangeRing,
+		ReconSector,
+		UnitBadge,
+		UnitSymbol
+	} from "#lib/component/tactical/index.js";
+	import {
+		UNIT_CATEGORIES,
+		WEATHER_LABEL,
+		COVER_LABEL,
+		regionConditions,
+		weatherAt,
+		regionCover
+	} from "#lib/config/index.js";
 	import IconSearch from "~icons/fluent/search-20-regular";
 	import IconZoomIn from "~icons/fluent/zoom-in-20-regular";
 	import IconZoomOut from "~icons/fluent/zoom-out-20-regular";
 	import IconMyLocation from "~icons/fluent/my-location-20-regular";
-	import IconButton from "#lib/component/ui/IconButton.svelte";
-	import IconMapPin from "~icons/fluent/location-24-regular";
-	import IconChevronRight from "~icons/fluent/chevron-right-24-regular";
-	import { goto } from "$app/navigation";
-	import type { PageData } from "./$types";
-	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
-	import Logo from "#lib/component/Logo.svelte";
-	import BottomSheet from "#lib/component/BottomSheet.svelte";
-	import { Badge } from "#lib/component/ui/index.js";
+	import IconReset from "~icons/fluent/arrow-reset-20-regular";
+	import IconFlag from "~icons/fluent/flag-20-regular";
+	import IconTeam from "~icons/fluent/people-team-20-regular";
+	import IconFire from "~icons/fluent/fire-20-regular";
+	import IconWeather from "~icons/fluent/weather-partly-cloudy-day-20-regular";
+	import IconMountain from "~icons/fluent/mountain-location-bottom-20-regular";
+	import IconHeat from "~icons/fluent/data-area-20-regular";
+	import IconShield from "~icons/fluent/shield-20-regular";
+	import IconTarget from "~icons/fluent/target-20-regular";
+	import IconFlash from "~icons/fluent/flash-20-regular";
+	import IconRadar from "~icons/fluent/radar-20-regular";
+	import IconDismiss from "~icons/fluent/dismiss-20-regular";
+	import IconDocument from "~icons/fluent/document-search-20-regular";
+	import IconChevronRight from "~icons/fluent/chevron-right-20-regular";
 
 	let { data }: { data: PageData } = $props();
 
-	let selectedRegion = $state<Region | null>(null);
-	let selectedState = $state<State | null>(null);
-	let showSheet = $state(false);
-	let instance: PanZoom | null = $state(null);
-	let searchQuery = $state("");
-	let showSearchResults = $state(false);
-	let mapFilter = $state<string>("political");
-	let searchInputRef: HTMLInputElement | null = $state(null);
-	let highlightedRegionId: number | null = $state(null);
-	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
-	let stateColor = $state<string | null>(null);
-	let selectedRegionData = $state<(typeof data.regionMap)[number] | null>(null);
+	// ── Palette (theme variables; set as inline styles on the SVG) ──────────
+	const LAND = "var(--color-base-300)";
+	const BORDER = "var(--color-base-100)";
+	const mixOn = (color: string, pct: number) => `color-mix(in oklab, ${color} ${pct}%, ${LAND})`;
 
-	// War-room map palette (see docs/UI_STYLE_GUIDE.md): olive land, dark
-	// borders, gold highlights; layers use the guide's signal colours.
-	const LAND = "#212e4d";
-	const BORDER = "#0b1120";
-	const HIGHLIGHT = "#ffcb6b";
-	const ATTACKER = "#dc2626";
-	const DEFENDER = "#2f7fd6";
-
-	/** Mix two hex colours: t=0 → a, t=1 → b. */
-	function mix(a: string, b: string, t: number) {
-		const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
-		const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
-		const [r, g, bl] = pa.map((v, i) => Math.round(v + (pb[i]! - v) * t));
-		return `rgb(${r},${g},${bl})`;
-	}
-
-	// Heatmap ramps, low → high.
-	const RAMPS = {
-		resource: ["#3a3f22", "#ffcb6b"],
-		residents: ["#24361c", "#8ae35f"],
-		powerplants: ["#3d3015", "#ffb02e"]
-	} as const;
-
-	// Size of the world map's viewBox; the panned scene is laid out at exactly
-	// this size (see the markup), so map units and CSS pixels agree at zoom 1.
+	// Scene size = the world map's viewBox, so map units are CSS px at zoom 1.
 	const SVG_WIDTH = 1400;
 	const SVG_HEIGHT = 600;
-
-	// Pointer tracking so we can tell a tap/click apart from a drag/pan.
-	// The sheet should only open on a genuine click, never after panning.
-	let pointerDownX = 0;
-	let pointerDownY = 0;
-	let pointerDownTime = 0;
-	// Movement (in px) beyond which the gesture is treated as a drag.
 	const DRAG_THRESHOLD = 8;
 
-	// Filter options: map layers then resources
-	const filterOptions = [
-		{ value: "political", label: "Political" },
-		{ value: "blocs", label: "Blocs" },
-		{ value: "wars", label: "Active Wars" },
+	// ── Layers ───────────────────────────────────────────────────────────────
+	type Base = "political" | "blocs" | "wars" | "weather" | "terrain" | "residents" | "powerplants" | string;
+	let base = $state<Base>("political");
+	let overlays = $state({ friendly: true, hostile: true, battles: true, recon: true });
+	let heatOpen = $state(false);
+
+	const RESOURCES: Record<string, string> = {
+		oil: "Oil",
+		aluminium: "Aluminium",
+		rubber: "Rubber",
+		tungsten: "Tungsten",
+		steel: "Steel",
+		chromium: "Chromium"
+	};
+	const HEAT_LAYERS = [
 		{ value: "residents", label: "Residents" },
-		{ value: "powerplants", label: "Power Plants" },
-		{ value: "oil", label: "Oil" },
-		{ value: "aluminium", label: "Aluminium" },
-		{ value: "rubber", label: "Rubber" },
-		{ value: "tungsten", label: "Tungsten" },
-		{ value: "steel", label: "Steel" },
-		{ value: "chromium", label: "Chromium" },
-		{ value: "iron", label: "Iron" },
-		{ value: "copper", label: "Copper" },
-		{ value: "coal", label: "Coal" },
-		{ value: "wood", label: "Wood" }
+		{ value: "powerplants", label: "Power plants" },
+		...Object.entries(RESOURCES).map(([value, label]) => ({ value, label }))
 	];
+	const BASE_LAYERS = [
+		{ value: "political", label: "Political", icon: IconFlag },
+		{ value: "blocs", label: "Blocs", icon: IconTeam },
+		{ value: "wars", label: "Wars", icon: IconFire },
+		{ value: "weather", label: "Weather", icon: IconWeather },
+		{ value: "terrain", label: "Terrain & cover", icon: IconMountain }
+	];
+	const OVERLAYS = [
+		{ key: "friendly", label: "Own forces", icon: IconShield },
+		{ key: "hostile", label: "Known hostile forces", icon: IconTarget },
+		{ key: "battles", label: "Battles & axes of attack", icon: IconFlash },
+		{ key: "recon", label: "Recon coverage", icon: IconRadar }
+	] as const;
+	const isHeat = $derived(HEAT_LAYERS.some((l) => l.value === base));
 
-	// Special layers that are not simple numeric resource heatmaps
-	const specialLayers = new Set(["political", "blocs", "wars", "residents", "powerplants"]);
+	// ── Map state ────────────────────────────────────────────────────────────
+	let instance: PanZoom | null = $state(null);
+	let viewportEl = $state<HTMLElement | null>(null);
+	let sceneEl = $state<HTMLElement | null>(null);
+	let panelEl = $state<HTMLElement | null>(null);
+	let transform = $state({ x: 0, y: 0, scale: 1 });
+	let minZoom = 0.1;
+	let centroids = $state<Record<number, { x: number; y: number; r: number }>>({});
+	let cursor = $state<{ x: number; y: number } | null>(null);
+	let selectedId = $state<number | null>(null);
+	let highlightedId = $state<number | null>(null);
+	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
+	let now = $state(new Date());
+	let isDesktop = $state(false);
+	let sheetOpen = $state(false);
 
-	// Get all region names for search
-	const allRegionNames = $derived(() => {
-		const regions: { id: number; name: string; stateName?: string }[] = [];
-		for (const [id, regionData] of Object.entries(data.regionMap)) {
-			const regionId = parseInt(id);
-
-			let stateName: string | undefined;
-			if (regionData.stateId) {
-				const state = data.states.find((s) => s.id === regionData.stateId);
-				if (state) {
-					stateName = state.name;
-				}
-			}
-
-			regions.push({ id: regionId, name: getRegionName(regionId), stateName });
-		}
-		return regions;
-	});
-
-	// Filter regions based on search query
-	const searchResults = $derived(() => {
-		if (!searchQuery.trim()) return [];
-
-		const query = searchQuery.toLowerCase().trim();
-		return allRegionNames()
-			.filter((region) => region.name.toLowerCase().includes(query) || region.stateName?.toLowerCase().includes(query))
-			.slice(0, 8);
-	});
-
-	// The panzoom container is sized by flexbox to fill whatever space its
-	// parent <main> has left (which already accounts for the dock nav and the
-	// mobile-safe dvh viewport). Reading window.innerWidth/innerHeight instead
-	// drifts from that on mobile browsers where the address bar shows/hides
-	// (vh vs dvh), which threw the "centre on my region" math off-screen.
-	function getViewportSize(node: Element) {
-		const rect = (node.parentElement ?? node).getBoundingClientRect();
-		// A 0×0 read can happen on the very first layout pass (mobile dvh units
-		// can take an extra reflow to settle). Falling through that zero would
-		// make minZoomToFit 0, which zooms the whole map down to an invisible
-		// point — fall back to the window size instead of trusting it blindly.
-		if (rect.width < 1 || rect.height < 1) {
-			return { width: window.innerWidth, height: window.innerHeight };
-		}
-		return { width: rect.width, height: rect.height };
-	}
-
-	function initPanzoom(node: HTMLElement | SVGElement) {
-		colorRegions(node);
-
-		const svgWidth = SVG_WIDTH;
-		const svgHeight = SVG_HEIGHT;
-
-		const { width: viewportWidth, height: viewportHeight } = getViewportSize(node);
-
-		const scaleX = viewportWidth / svgWidth;
-		const scaleY = viewportHeight / svgHeight;
-		// Math.max: fill whichever dimension is larger so the map never
-		// shrinks smaller than the screen on tall/narrow mobile viewports.
-		// The overflow on the other axis is handled by constrainToBounds.
-		// Floor it well above 0: a 0 (or near-0) zoom would render the whole
-		// map as an invisible point, which is unrecoverable since every re-fit
-		// (e.g. on resize) keeps computing off the same degenerate viewport.
-		const minZoomToFit = Math.max(scaleX, scaleY, 0.1);
-
-		instance = panzoom(node, {
-			// panzoom's own built-in bounds clamping measures the pannable
-			// element's clientWidth/clientHeight, which for us is just the
-			// viewport size (the div is w-full h-full), not the 1400x600 scene.
-			// Multiplied by the live zoom scale that math is wrong and silently
-			// overrides our moveTo() calls (visible as the map snapping back to
-			// zoomed-out and pinned to one edge). We do our own correct bounds
-			// clamping in constrainToBounds() below, so disable panzoom's.
-			bounds: false,
-			maxZoom: 60,
-			minZoom: minZoomToFit,
-			smoothScroll: false
-		});
-
-		// Open centred on the user's current region, if we know it; otherwise
-		// just fit the whole map.
-		const initialRegionId = data.currentUserRegionId;
-		const initialRegionPath = initialRegionId
-			? (node.querySelector(`path[id="${initialRegionId}"]`) as SVGPathElement | null)
-			: null;
-
-		if (initialRegionPath) {
-			const bbox = initialRegionPath.getBBox();
-			const regionCenterX = bbox.x + bbox.width / 2;
-			const regionCenterY = bbox.y + bbox.height / 2;
-			const targetZoom = Math.max(minZoomToFit, 5);
-
-			instance.zoomAbs(0, 0, targetZoom);
-			instance.moveTo(viewportWidth / 2 - regionCenterX * targetZoom, viewportHeight / 2 - regionCenterY * targetZoom);
-		} else {
-			instance.zoomAbs(0, 0, minZoomToFit);
-			centerMap(minZoomToFit);
-		}
-
-		instance.on("transform", constrainToBounds);
-		instance.on("zoom", constrainToBounds);
-
-		function centerMap(scale?: number) {
-			if (!instance) return;
-
-			const transform = instance.getTransform();
-			const currentScale = scale || transform.scale;
-			const { width: viewportWidth, height: viewportHeight } = getViewportSize(node);
-
-			const scaledWidth = svgWidth * currentScale;
-			const scaledHeight = svgHeight * currentScale;
-
-			const centerX = (viewportWidth - scaledWidth) / 2;
-			const centerY = (viewportHeight - scaledHeight) / 2;
-
-			instance.moveTo(centerX, centerY);
-		}
-
-		function constrainToBounds() {
-			if (!instance) return;
-
-			const transform = instance.getTransform();
-			const { width: viewportWidth, height: viewportHeight } = getViewportSize(node);
-
-			const scaledWidth = svgWidth * transform.scale;
-			const scaledHeight = svgHeight * transform.scale;
-
-			let newX = transform.x;
-			let newY = transform.y;
-
-			if (scaledWidth > viewportWidth) {
-				const maxX = 0;
-				const minX = viewportWidth - scaledWidth;
-				newX = Math.max(minX, Math.min(maxX, transform.x));
-			} else {
-				newX = (viewportWidth - scaledWidth) / 2;
-			}
-
-			if (scaledHeight > viewportHeight) {
-				const maxY = 0;
-				const minY = viewportHeight - scaledHeight;
-				newY = Math.max(minY, Math.min(maxY, transform.y));
-			} else {
-				newY = (viewportHeight - scaledHeight) / 2;
-			}
-
-			if (newX !== transform.x || newY !== transform.y) {
-				instance.moveTo(newX, newY);
-			}
-		}
-
-		constrainToBounds();
-
-		function handleResize() {
-			const { width: newViewportWidth, height: newViewportHeight } = getViewportSize(node);
-
-			const newScaleX = newViewportWidth / svgWidth;
-			const newScaleY = newViewportHeight / svgHeight;
-			// Same Math.max/floor as the initial computation above
-			const newMinZoom = Math.max(newScaleX, newScaleY, 0.1);
-
-			if (instance) {
-				const currentTransform = instance.getTransform();
-
-				if (currentTransform.scale <= minZoomToFit * 1.01) {
-					instance.zoomAbs(0, 0, newMinZoom);
-					centerMap(newMinZoom);
-				}
-			}
-
-			constrainToBounds();
-		}
-
-		window.addEventListener("resize", handleResize);
-		// Mobile browsers resize the visual viewport (address bar show/hide)
-		// without always firing window "resize", so listen for that too.
-		window.visualViewport?.addEventListener("resize", handleResize);
-
-		return {
-			destroy() {
-				window.removeEventListener("resize", handleResize);
-				window.visualViewport?.removeEventListener("resize", handleResize);
-			}
+	onMount(() => {
+		const mq = window.matchMedia("(min-width: 768px)");
+		const set = () => (isDesktop = mq.matches);
+		set();
+		mq.addEventListener("change", set);
+		const t = setInterval(() => (now = new Date()), 60_000);
+		return () => {
+			mq.removeEventListener("change", set);
+			clearInterval(t);
 		};
+	});
+
+	const sa = $derived(data.sa);
+	const sideStates = $derived(new Set(sa?.side?.stateIds ?? []));
+	const enemyStates = $derived(new Set(sa?.enemyStateIds ?? []));
+	const stateById = $derived(new Map(data.states.map((s) => [s.id, s])));
+	const k = $derived(1 / Math.max(transform.scale, 0.05)); // map units per screen px
+
+	// ── Region colouring ─────────────────────────────────────────────────────
+	function maxOf(fn: (r: (typeof data.regionMap)[number]) => number) {
+		let m = 0;
+		for (const r of Object.values(data.regionMap)) m = Math.max(m, fn(r));
+		return m;
 	}
 
-	function colorRegions(svgElement: HTMLElement | SVGElement) {
-		const paths = svgElement.querySelectorAll("path[id]");
-
-		// For numeric heatmap layers, pre-scan to find the max so we can normalise
-		let maxResourceValue = 0;
-		if (!specialLayers.has(mapFilter)) {
-			paths.forEach((path) => {
-				const regionId = parseInt(path.id, 10);
-				if (isNaN(regionId)) return;
-				const regionData = data.regionMap[regionId];
-				if (!regionData) return;
-				const v = getResourceValue(regionData, mapFilter);
-				if (v > maxResourceValue) maxResourceValue = v;
-			});
-		}
-
-		// For residents / powerplants we also need a max for normalisation
-		let maxResidents = 0;
-		let maxPowerplants = 0;
-		if (mapFilter === "residents") {
-			for (const rd of Object.values(data.regionMap)) {
-				const v = rd.residentCount ?? 0;
-				if (v > maxResidents) maxResidents = v;
+	function fillFor(id: number, r: (typeof data.regionMap)[number], maxHeat: number): string {
+		switch (base) {
+			case "political":
+				return r.stateId && data.stateColorMap[r.stateId] ? mixOn(data.stateColorMap[r.stateId], 38) : LAND;
+			case "blocs":
+				return r.stateId && data.blocColorMap?.[r.stateId] ? mixOn(data.blocColorMap[r.stateId], 42) : LAND;
+			case "wars":
+				if (!r.stateId) return LAND;
+				if (sideStates.has(r.stateId)) return mixOn("var(--color-secondary)", 40);
+				if (enemyStates.has(r.stateId)) return mixOn("var(--color-error)", 40);
+				if (data.warAttackerStateIds?.has(r.stateId) || data.warDefenderStateIds?.has(r.stateId))
+					return mixOn("var(--color-warning)", 22);
+				return LAND;
+			case "weather": {
+				const w = weatherAt(id, now);
+				return w === "clear"
+					? LAND
+					: w === "cloudy"
+						? mixOn("var(--color-base-content)", 18)
+						: w === "rain"
+							? mixOn("var(--color-primary)", 35)
+							: mixOn("var(--color-base-content)", 32);
+			}
+			case "terrain": {
+				const c = regionCover({ id, terrain: r.terrain, infrastructure: r.infrastructure });
+				return c === "forest"
+					? mixOn("var(--color-success)", 32)
+					: c === "urban"
+						? mixOn("var(--color-base-content)", 26)
+						: c === "mountain"
+							? mixOn("var(--color-warning)", 26)
+							: mixOn("var(--color-success)", 8);
+			}
+			default: {
+				const v = heatValue(r);
+				if (!v || !maxHeat) return LAND;
+				const color =
+					base === "residents"
+						? "var(--color-success)"
+						: base === "powerplants"
+							? "var(--color-warning)"
+							: "var(--color-primary)";
+				return mixOn(color, Math.round(15 + 70 * Math.min(v / maxHeat, 1)));
 			}
 		}
-		if (mapFilter === "powerplants") {
-			for (const rd of Object.values(data.regionMap)) {
-				const v = rd.powerplantCount ?? 0;
-				if (v > maxPowerplants) maxPowerplants = v;
-			}
-		}
+	}
 
-		paths.forEach((path) => {
+	function heatValue(r: (typeof data.regionMap)[number]) {
+		if (base === "residents") return r.residentCount ?? 0;
+		if (base === "powerplants") return r.powerplantCount ?? 0;
+		return (r.resources as Record<string, number>)[base] ?? 0;
+	}
+
+	function colorRegions(root: Element) {
+		const maxHeat = isHeat ? maxOf(heatValue) : 0;
+		root.querySelectorAll("path[id]").forEach((path) => {
 			const el = path as SVGElement;
-			const regionId = parseInt(path.id, 10);
-			if (isNaN(regionId)) {
-				// Named shapes (e.g. "Malaya") aren't game regions: plain land
-				// that doesn't react to hover or taps.
+			const id = parseInt(path.id, 10);
+			if (isNaN(id)) {
 				if (!path.closest("defs")) {
 					el.style.fill = LAND;
 					el.classList.add("region-inert");
 				}
 				return;
 			}
-
-			const regionData = data.regionMap[regionId];
-			if (!regionData) {
-				// Land the game doesn't track (yet): plain olive.
-				el.style.fill = LAND;
-				return;
-			}
-
-			let color = LAND;
-
-			switch (mapFilter) {
-				// ── Political: state colours ──
-				case "political":
-					color = regionData.stateId ? data.stateColorMap[regionData.stateId] || LAND : LAND;
-					break;
-
-				// ── Blocs: bloc colours, states without a bloc are neutral ──
-				case "blocs":
-					if (regionData.stateId) {
-						color = data.blocColorMap?.[regionData.stateId] || LAND;
-					}
-					break;
-
-				// ── Wars: red = attacker, blue = defender, neutral otherwise ──
-				case "wars":
-					if (regionData.stateId) {
-						if (data.warAttackerStateIds?.has(regionData.stateId)) {
-							color = ATTACKER;
-						} else if (data.warDefenderStateIds?.has(regionData.stateId)) {
-							color = DEFENDER;
-						}
-					}
-					break;
-
-				// ── Residents / power plants: green and amber heatmaps ──
-				case "residents": {
-					const count = regionData.residentCount ?? 0;
-					color = count && maxResidents ? mix(...RAMPS.residents, Math.min(count / maxResidents, 1)) : LAND;
-					break;
-				}
-
-				case "powerplants": {
-					const count = regionData.powerplantCount ?? 0;
-					color = count && maxPowerplants ? mix(...RAMPS.powerplants, Math.min(count / maxPowerplants, 1)) : LAND;
-					break;
-				}
-
-				// ── Resource heatmaps: olive → gold ──
-				default:
-					color = getResourceColor(regionData, mapFilter, maxResourceValue);
-					break;
-			}
-
-			el.style.fill = color;
-
-			if (regionId === highlightedRegionId) {
-				el.style.stroke = HIGHLIGHT;
-				el.style.strokeWidth = "1.2";
-				el.classList.add("region-highlight");
-			} else {
-				el.style.stroke = BORDER;
-				el.style.strokeWidth = "0.3";
-				el.classList.remove("region-highlight");
-			}
+			const r = data.regionMap[id];
+			el.style.fill = r ? fillFor(id, r, maxHeat) : LAND;
+			const selected = id === selectedId;
+			const flash = id === highlightedId;
+			el.style.stroke = selected ? "var(--color-primary)" : flash ? "var(--color-warning)" : BORDER;
+			el.style.strokeWidth = selected || flash ? String(1.6 * k) : "0.3";
+			el.classList.toggle("region-highlight", flash);
 		});
 	}
 
-	function getResourceValue(regionData: any, resource: string): number {
-		if (regionData.resources && regionData.resources[resource] !== undefined) {
-			return regionData.resources[resource] || 0;
-		}
-		if (regionData.regionalResources && regionData.regionalResources[resource]) {
-			return regionData.regionalResources[resource].remaining || 0;
-		}
-		return 0;
-	}
-
-	function getResourceColor(regionData: any, resource: string, maxValue: number): string {
-		const amount = getResourceValue(regionData, resource);
-		if (!amount || !maxValue) return LAND;
-		return mix(...RAMPS.resource, Math.min(amount / maxValue, 1));
-	}
-
 	$effect(() => {
-		if (instance) {
-			const svgElement = document.getElementById("panzoom-element");
-			if (svgElement) {
-				colorRegions(svgElement);
-			}
-		}
+		// Re-run on layer, selection, weather tick and zoom (selection stroke).
+		void base;
+		void selectedId;
+		void highlightedId;
+		void now;
+		void sideStates;
+		if (instance && sceneEl) colorRegions(sceneEl);
 	});
 
-	function onPointerDown(e: PointerEvent) {
-		if (!e.isPrimary) return;
-		pointerDownX = e.clientX;
-		pointerDownY = e.clientY;
-		pointerDownTime = Date.now();
+	// ── Panzoom ──────────────────────────────────────────────────────────────
+	function viewportSize() {
+		const rect = viewportEl?.getBoundingClientRect();
+		if (!rect || rect.width < 1 || rect.height < 1) return { width: window.innerWidth, height: window.innerHeight };
+		return { width: rect.width, height: rect.height };
 	}
 
-	function onPointerUp(e: PointerEvent) {
-		// Only handle primary pointer (left click or single touch)
-		if (!e.isPrimary) return;
-
-		// Distinguish a tap/click from a drag/pan: if the pointer moved more
-		// than DRAG_THRESHOLD px between pointerdown and pointerup, the user was
-		// panning the map, so we must NOT open the region sheet.
-		const dx = e.clientX - pointerDownX;
-		const dy = e.clientY - pointerDownY;
-		const movedDistance = Math.hypot(dx, dy);
-		if (movedDistance > DRAG_THRESHOLD) return;
-
-		e.stopPropagation();
-		const target = e.target as SVGElement;
-		let element: SVGElement | null = target;
-		let regionId: number | null = null;
-		let depth = 0;
-		while (element && element !== e.currentTarget && depth < 5) {
-			if (element && element.id && element.id !== "panzoom-element") {
-				const id = parseInt(element.id, 10);
-				if (!isNaN(id) && id > 0) {
-					regionId = id;
-					break;
-				}
-			}
-			element = element?.parentElement as SVGElement;
-			depth++;
-		}
-		if (regionId !== null) {
-			const regionData = data.regionMap[regionId];
-			if (!regionData) return;
-
-			selectedRegion = {
-				id: regionId,
-				rating: regionData.rating || 0,
-				development: regionData.development || 0,
-				infrastructure: regionData.infrastructure || 0,
-				economy: regionData.economy || 0,
-				oil: regionData.resources.oil,
-				aluminium: regionData.resources.aluminium,
-				rubber: regionData.resources.rubber,
-				tungsten: regionData.resources.tungsten,
-				steel: regionData.resources.steel,
-				chromium: regionData.resources.chromium,
-				stateId: regionData.stateId,
-				createdAt: new Date()
-			} as Region;
-
-			selectedRegionData = regionData;
-
-			if (regionData.stateId) {
-				const stateInfo = data.states.find((s) => s.id === regionData.stateId);
-				if (stateInfo) {
-					selectedState = stateInfo as State;
-					stateColor = data.stateColorMap[regionData.stateId] || null;
-				}
-			} else {
-				selectedState = null;
-				stateColor = null;
-			}
-
-			showSheet = true;
-		}
+	function constrain() {
+		if (!instance) return;
+		const t = instance.getTransform();
+		const { width, height } = viewportSize();
+		const sw = SVG_WIDTH * t.scale;
+		const sh = SVG_HEIGHT * t.scale;
+		const x = sw > width ? Math.max(width - sw, Math.min(0, t.x)) : (width - sw) / 2;
+		const y = sh > height ? Math.max(height - sh, Math.min(0, t.y)) : (height - sh) / 2;
+		if (x !== t.x || y !== t.y) instance.moveTo(x, y);
 	}
 
-	let viewportEl = $state<HTMLElement | null>(null);
+	function initPanzoom(node: HTMLElement) {
+		sceneEl = node;
+		colorRegions(node);
 
-	/** Zoom around the centre of the visible map (buttons, keyboard). */
+		// Centroid and rough radius of every region, for placing symbols.
+		const c: Record<number, { x: number; y: number; r: number }> = {};
+		node.querySelectorAll("path[id]").forEach((p) => {
+			const id = parseInt(p.id, 10);
+			if (isNaN(id) || !data.regionMap[id]) return;
+			const b = (p as SVGGraphicsElement).getBBox();
+			c[id] = { x: b.x + b.width / 2, y: b.y + b.height / 2, r: Math.max(2, Math.hypot(b.width, b.height) / 2) };
+		});
+		centroids = c;
+
+		const { width, height } = viewportSize();
+		minZoom = Math.max(width / SVG_WIDTH, height / SVG_HEIGHT, 0.1);
+		instance = panzoom(node, { bounds: false, maxZoom: 60, minZoom, smoothScroll: false });
+		const sync = () => {
+			constrain();
+			const t = instance!.getTransform();
+			transform = { x: t.x, y: t.y, scale: t.scale };
+		};
+		instance.on("transform", sync);
+
+		const start = data.currentUserRegionId ? c[data.currentUserRegionId] : null;
+		if (start) {
+			const z = Math.max(minZoom, 5);
+			instance.zoomAbs(0, 0, z);
+			instance.moveTo(width / 2 - start.x * z, height / 2 - start.y * z);
+		} else {
+			resetView();
+		}
+		sync();
+
+		const onResize = () => {
+			const { width, height } = viewportSize();
+			const next = Math.max(width / SVG_WIDTH, height / SVG_HEIGHT, 0.1);
+			const wasFit = instance!.getTransform().scale <= minZoom * 1.01;
+			minZoom = next;
+			instance!.setMinZoom(next);
+			if (wasFit) resetView();
+			sync();
+		};
+		window.addEventListener("resize", onResize);
+		window.visualViewport?.addEventListener("resize", onResize);
+		return {
+			destroy() {
+				window.removeEventListener("resize", onResize);
+				window.visualViewport?.removeEventListener("resize", onResize);
+				instance?.dispose();
+			}
+		};
+	}
+
+	function resetView() {
+		if (!instance) return;
+		const { width, height } = viewportSize();
+		instance.zoomAbs(0, 0, minZoom);
+		instance.moveTo((width - SVG_WIDTH * minZoom) / 2, (height - SVG_HEIGHT * minZoom) / 2);
+	}
+
 	function zoomBy(factor: number) {
 		if (!instance || !viewportEl) return;
 		const rect = viewportEl.getBoundingClientRect();
 		instance.smoothZoom(rect.left + rect.width / 2, rect.top + rect.height / 2, factor);
 	}
 
-	function focusMyRegion() {
-		if (data.currentUserRegionId) selectSearchResult(data.currentUserRegionId);
+	/** Fly to a box in map units. */
+	function flyTo(box: { x: number; y: number; w: number; h: number }, maxZoom = 6) {
+		if (!instance) return;
+		const { width, height } = viewportSize();
+		const z = Math.max(
+			minZoom,
+			Math.min(maxZoom, (width * 0.6) / Math.max(box.w, 1), (height * 0.6) / Math.max(box.h, 1))
+		);
+		const cx = box.x + box.w / 2;
+		const cy = box.y + box.h / 2;
+		instance.zoomAbs(0, 0, z);
+		instance.smoothMoveTo(width / 2 - cx * z, height / 2 - cy * z);
 	}
 
-	// Legend for the active layer (political/bloc colours speak for themselves).
-	const legend = $derived.by(() => {
-		if (mapFilter === "wars") return { kind: "sides" as const };
-		if (mapFilter === "residents") return { kind: "ramp" as const, label: "Residents", ramp: RAMPS.residents };
-		if (mapFilter === "powerplants") return { kind: "ramp" as const, label: "Power plants", ramp: RAMPS.powerplants };
-		if (!specialLayers.has(mapFilter)) {
-			return { kind: "ramp" as const, label: resourceLabels[mapFilter] ?? mapFilter, ramp: RAMPS.resource };
+	function focusRegion(id: number, select = true) {
+		const c = centroids[id];
+		if (!c) return;
+		flyTo({ x: c.x - c.r, y: c.y - c.r, w: c.r * 2, h: c.r * 2 }, 6);
+		highlightedId = id;
+		if (highlightTimeout) clearTimeout(highlightTimeout);
+		highlightTimeout = setTimeout(() => (highlightedId = null), 3000);
+		if (select) openRegion(id);
+	}
+
+	function focusState(stateId: number) {
+		let x0 = Infinity,
+			y0 = Infinity,
+			x1 = -Infinity,
+			y1 = -Infinity;
+		for (const [id, r] of Object.entries(data.regionMap)) {
+			const c = centroids[Number(id)];
+			if (r.stateId !== stateId || !c) continue;
+			x0 = Math.min(x0, c.x - c.r);
+			y0 = Math.min(y0, c.y - c.r);
+			x1 = Math.max(x1, c.x + c.r);
+			y1 = Math.max(y1, c.y + c.r);
 		}
-		return null;
+		if (isFinite(x0)) flyTo({ x: x0, y: y0, w: x1 - x0, h: y1 - y0 }, 8);
+	}
+
+	// ── Pointer: tap vs drag, cursor position ───────────────────────────────
+	let downX = 0;
+	let downY = 0;
+	function onPointerDown(e: PointerEvent) {
+		if (!e.isPrimary) return;
+		downX = e.clientX;
+		downY = e.clientY;
+	}
+	function onPointerUp(e: PointerEvent) {
+		if (!e.isPrimary || Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_THRESHOLD) return;
+		let el = e.target as Element | null;
+		for (let d = 0; el && d < 5; d++, el = el.parentElement) {
+			const id = parseInt(el.id, 10);
+			if (!isNaN(id) && id > 0 && data.regionMap[id]) {
+				openRegion(id);
+				return;
+			}
+		}
+	}
+	function onPointerMove(e: PointerEvent) {
+		if (!viewportEl) return;
+		const rect = viewportEl.getBoundingClientRect();
+		cursor = {
+			x: (e.clientX - rect.left - transform.x) / transform.scale,
+			y: (e.clientY - rect.top - transform.y) / transform.scale
+		};
+	}
+
+	function openRegion(id: number) {
+		selectedId = id;
+		sheetOpen = true;
+	}
+	function closeRegion() {
+		selectedId = null;
+		sheetOpen = false;
+	}
+	$effect(() => {
+		if (!sheetOpen && !isDesktop) selectedId = null;
 	});
 
-	function selectSearchResult(regionId: number) {
-		const svgElement = document.getElementById("panzoom-element");
-		if (!svgElement || !instance) return;
-
-		const pathElement = svgElement.querySelector(`path[id="${regionId}"]`) as SVGPathElement;
-		if (!pathElement) {
-			console.error(`Could not find path element with id: ${regionId}`);
-			return;
-		}
-
-		const bbox = pathElement.getBBox();
-		const regionCenterX = bbox.x + bbox.width / 2;
-		const regionCenterY = bbox.y + bbox.height / 2;
-
-		const { width: viewportWidth, height: viewportHeight } = getViewportSize(svgElement.parentElement ?? svgElement);
-
-		const targetZoom = 5;
-
-		const currentTransform = instance.getTransform();
-		const currentScreenX = regionCenterX * currentTransform.scale + currentTransform.x;
-		const currentScreenY = regionCenterY * currentTransform.scale + currentTransform.y;
-
-		instance.smoothZoom(currentScreenX, currentScreenY, targetZoom / currentTransform.scale);
-
-		setTimeout(() => {
-			if (!instance) return;
-
-			const newX = viewportWidth / 2 - regionCenterX * targetZoom;
-			const newY = viewportHeight / 2 - regionCenterY * targetZoom;
-
-			instance.smoothMoveTo(newX, newY);
-		}, 300);
-
-		highlightedRegionId = regionId;
-
-		if (highlightTimeout) {
-			clearTimeout(highlightTimeout);
-		}
-
-		highlightTimeout = setTimeout(() => {
-			highlightedRegionId = null;
-		}, 3000);
-
-		showSearchResults = false;
-		searchQuery = "";
+	// ── Search ───────────────────────────────────────────────────────────────
+	let query = $state("");
+	let searchFocused = $state(false);
+	const results = $derived.by(() => {
+		const q = query.trim().toLowerCase();
+		if (!q) return [];
+		const stateHits = data.states
+			.filter((s) => s.name.toLowerCase().includes(q))
+			.slice(0, 3)
+			.map((s) => ({ kind: "state" as const, id: s.id, name: s.name, sub: "State" }));
+		const regionHits = Object.entries(data.regionMap)
+			.map(([id, r]) => ({
+				kind: "region" as const,
+				id: Number(id),
+				name: getRegionName(Number(id)),
+				sub: r.stateId ? (stateById.get(r.stateId)?.name ?? "") : "Unclaimed"
+			}))
+			.filter((r) => r.name.toLowerCase().includes(q) || r.sub.toLowerCase().includes(q))
+			.slice(0, 8 - stateHits.length);
+		return [...stateHits, ...regionHits];
+	});
+	function pick(r: (typeof results)[number]) {
+		if (r.kind === "state") focusState(r.id);
+		else focusRegion(r.id);
+		query = "";
+		searchFocused = false;
 	}
 
-	function handleSearchFocus() {
-		if (searchQuery.trim()) {
-			showSearchResults = true;
-		}
-	}
-
-	function handleSearchInput() {
-		showSearchResults = searchQuery.trim().length > 0;
-	}
-
-	function handleSearchSubmit(e: Event) {
-		e.preventDefault();
-		if (searchResults().length > 0) {
-			selectSearchResult(searchResults()[0].id);
-		}
-	}
-
-	function handleClickOutside(e: MouseEvent) {
-		if (searchInputRef && !searchInputRef.contains(e.target as Node)) {
-			showSearchResults = false;
-		}
-	}
-
-	const regionName = $derived(() => {
-		if (!selectedRegion) return "";
-		else return getRegionName(selectedRegion.id);
+	// ── Status bar ───────────────────────────────────────────────────────────
+	const statusCoords = $derived(cursor ? mapToLatLon(cursor.x, cursor.y) : null);
+	const scaleBar = $derived.by(() => {
+		const { width, height } = viewportEl ? viewportSize() : { width: 400, height: 400 };
+		const cx = (width / 2 - transform.x) / transform.scale;
+		const cy = (height / 2 - transform.y) / transform.scale;
+		const kmPerPx =
+			kmPerMapUnit(Math.max(0, Math.min(SVG_WIDTH, cx)), Math.max(0, Math.min(SVG_HEIGHT, cy))) / transform.scale;
+		const km = niceKm(80 * kmPerPx);
+		return { km, px: kmPerPx ? km / kmPerPx : 0 };
 	});
 
-	// Human-readable labels for the resource layers.
-	const resourceLabels: Record<string, string> = {
-		oil: "Oil",
-		aluminium: "Aluminium",
-		rubber: "Rubber",
-		tungsten: "Tungsten",
-		steel: "Steel",
-		chromium: "Chromium",
-		iron: "Iron",
-		copper: "Copper",
-		coal: "Coal",
-		wood: "Wood"
+	// ── Tactical overlay data ───────────────────────────────────────────────
+	type Marker = { id: number; x: number; y: number };
+	const friendlyMarkers = $derived(
+		Object.entries(sa?.friendly ?? {})
+			.map(([id, f]) => {
+				const c = centroids[Number(id)];
+				if (!c) return null;
+				const types = Object.entries(f.byType).sort((a, b) => b[1] - a[1]);
+				return {
+					id: Number(id),
+					x: c.x,
+					y: c.y,
+					total: f.total,
+					ally: f.ally,
+					unitType: types.length === 1 ? types[0][0] : types[0]?.[0]
+				};
+			})
+			.filter((m): m is Marker & { total: number; ally: boolean; unitType: string } => !!m)
+	);
+	const hostileMarkers = $derived.by(() => {
+		const out: (Marker & { known: boolean; count: number; estimated: boolean; dominant: string | null })[] = [];
+		const pics = sa?.pictures ?? {};
+		for (const [id, p] of Object.entries(pics)) {
+			const c = centroids[Number(id)];
+			if (!c || !p.knownUnits) continue;
+			const estimated = UNIT_CATEGORIES.some((cat) => p.categories[cat]?.estimated);
+			out.push({ id: Number(id), x: c.x, y: c.y, known: true, count: p.knownUnits, estimated, dominant: p.dominant });
+		}
+		for (const id of sa?.contested ?? []) {
+			const c = centroids[id];
+			if (!c || pics[id]) continue;
+			const owner = data.regionMap[id]?.stateId;
+			if (owner && sideStates.has(owner)) continue; // own region under attack: shown by the battle ring
+			out.push({ id, x: c.x, y: c.y, known: false, count: 0, estimated: false, dominant: null });
+		}
+		return out;
+	});
+	const battleMarkers = $derived(
+		(sa?.battles ?? [])
+			.map((b) => {
+				const c = centroids[b.regionId];
+				if (!c) return null;
+				const o = b.originRegionId ? centroids[b.originRegionId] : null;
+				return { ...b, x: c.x, y: c.y, r: c.r, ox: o?.x ?? null, oy: o?.y ?? null };
+			})
+			.filter((b) => !!b)
+	);
+	const reconMarkers = $derived(
+		Object.entries(sa?.pictures ?? {})
+			.map(([id, p]) => {
+				const c = centroids[Number(id)];
+				return c && p.observedAt
+					? { id: Number(id), x: c.x, y: c.y, r: c.r, age: ageLabel(p.observedAt, now), strength: p.confidence }
+					: null;
+			})
+			.filter((m) => !!m)
+	);
+	const inFlightMarkers = $derived(
+		(sa?.inFlight ?? []).map((m) => ({ ...m, c: centroids[m.regionId] })).filter((m) => !!m.c)
+	);
+	const hasHostileAt = $derived(new Set(hostileMarkers.map((m) => m.id)));
+	const hasFriendlyAt = $derived(new Set(friendlyMarkers.map((m) => m.id)));
+
+	// ── Selected region ──────────────────────────────────────────────────────
+	const sel = $derived(selectedId != null ? data.regionMap[selectedId] : null);
+	const selState = $derived(sel?.stateId ? stateById.get(sel.stateId) : null);
+	const selConditions = $derived(
+		sel && selectedId != null
+			? regionConditions(
+					{ id: selectedId, longitude: sel.longitude, terrain: sel.terrain, infrastructure: sel.infrastructure },
+					now
+				)
+			: null
+	);
+	const selPicture = $derived(selectedId != null ? (sa?.pictures?.[selectedId] ?? null) : null);
+	const selFriendly = $derived(selectedId != null ? (sa?.friendly?.[selectedId] ?? null) : null);
+	const selBattle = $derived(selectedId != null ? (sa?.battles ?? []).find((b) => b.regionId === selectedId) : null);
+	const selOwn = $derived(!!sel?.stateId && sideStates.has(sel.stateId));
+	const selCanRecon = $derived(
+		!!sa?.side && !!sel && ((!!sel.stateId && enemyStates.has(sel.stateId)) || !!selBattle?.mine)
+	);
+	const selInFlight = $derived((sa?.inFlight ?? []).filter((m) => m.regionId === selectedId));
+	let sensor = $state("drone_eo");
+	let launching = $state(false);
+	const chosen = $derived(sa?.sensors?.find((s) => s.id === sensor));
+	const chosenCooldown = $derived(chosen?.cooldownEndsAt ? countdown(chosen.cooldownEndsAt, now) : null);
+
+	const levelTone = { none: "neutral", low: "amber", medium: "blue", high: "green" } as const;
+	const LABEL: Record<string, string> = {
+		infantry: "Infantry",
+		armor: "Armour",
+		mechanized: "Mechanised",
+		artillery: "Artillery",
+		air_defence: "Air defence",
+		fighter_squadron: "Fighters",
+		bomber_squadron: "Bombers",
+		vehicle: "Vehicles",
+		air: "Aircraft"
 	};
-
-	function formatNumber(value: number): string {
-		return new Intl.NumberFormat().format(value);
-	}
-
-	// The war role of the currently selected region's state, if any.
-	const selectedWarRole = $derived(() => {
-		const stateId = selectedRegionData?.stateId;
-		if (!stateId) return null;
-		if (data.warAttackerStateIds?.has(stateId)) return "attacker";
-		if (data.warDefenderStateIds?.has(stateId)) return "defender";
-		return null;
-	});
-
-	// The bloc name of the currently selected region's state, if any.
-	const selectedBlocName = $derived(() => {
-		const stateId = selectedRegionData?.stateId;
-		if (!stateId) return null;
-		return data.blocNameMap?.[stateId] ?? null;
-	});
 </script>
 
 <svelte:head>
-	<title>World Map · PsyOps</title>
+	<title>Situation Map · PsyOps</title>
 	<style>
 		body {
 			overflow: hidden;
@@ -628,279 +543,491 @@
 	</style>
 </svelte:head>
 
-<svelte:window onclick={handleClickOutside} />
+<svelte:window onclick={(e) => !(e.target as Element).closest?.(".map-search") && (searchFocused = false)} />
 
-<!-- Dark Mode Toolbar -->
-<header
-	class="panel fixed top-3 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 px-3.5 py-1.5 w-[calc(100%-24px)] max-w-[520px] rounded-sm backdrop-blur-xl touch-action-pan-x touch-action-pan-y"
+<div
+	bind:this={viewportEl}
+	class="map-viewport relative flex-1 w-full overflow-hidden touch-none"
+	onpointermove={onPointerMove}
+	onpointerleave={() => (cursor = null)}
+	role="presentation"
 >
-	<form class="flex-1 relative min-w-0" onsubmit={handleSearchSubmit}>
-		<div class="flex items-center gap-2">
-			<IconSearch class="size-4 flex-shrink-0 text-[#8e9abb]" />
-			<input
-				type="search"
-				bind:value={searchQuery}
-				bind:this={searchInputRef}
-				oninput={handleSearchInput}
-				onfocus={handleSearchFocus}
-				placeholder="Search regions…"
-				class="flex-1 w-full min-w-0 bg-transparent border-none outline-none text-sm font-medium text-[#eef2ff] placeholder:text-[#8794b5]/55 px-0 py-1.5 tracking-tight leading-none"
-			/>
-		</div>
-
-		{#if showSearchResults && searchResults().length > 0}
-			<div
-				class="panel absolute top-[calc(100%+10px)] -left-3.5 -right-3.5 rounded-sm overflow-hidden max-h-80 overflow-y-auto z-50 animate-in fade-in slide-in-from-top-1 duration-200"
-			>
-				{#each searchResults() as result, i}
-					<button
-						class="flex items-center gap-2.5 w-full px-3.5 py-2.5 bg-transparent border-b border-[#8ea6e0]/10 last:border-b-0 cursor-pointer text-left text-[#eef2ff] transition-colors hover:bg-[#233154] hover:text-[#ffc857] animate-in fade-in slide-in-from-top-1"
-						style="animation-delay: {i * 0.03}s"
-						onclick={() => selectSearchResult(result.id)}
-					>
-						<IconMapPin class="w-4 h-4 flex-shrink-0 text-[#8e9abb]" />
-						<div class="flex flex-col gap-px min-w-0">
-							<span class="text-[13.5px] font-semibold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis"
-								>{result.name}</span
-							>
-							{#if result.stateName}
-								<span class="text-[11.5px] text-[#8e9abb] whitespace-nowrap overflow-hidden text-ellipsis"
-									>{result.stateName}</span
-								>
-							{:else}
-								<span class="text-[11.5px] text-[#8e9abb] italic whitespace-nowrap overflow-hidden text-ellipsis"
-									>Independent</span
-								>
-							{/if}
-						</div>
-					</button>
-				{/each}
-			</div>
-		{/if}
-	</form>
-
-	<div class="flex-shrink-0">
-		<select
-			bind:value={mapFilter}
-			class="field-control appearance-none rounded-sm px-3 pr-7 py-1.5 text-xs font-semibold tracking-wide cursor-pointer bg-[length:10px_6px] bg-no-repeat bg-[right_9px_center]"
-			style="background-image: url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='white' opacity='.4'/%3E%3C/svg%3E&quot;)"
-		>
-			{#each filterOptions as option}
-				<option value={option.value} class="bg-[#0b1120] text-[#eef2ff]">{option.label}</option>
-			{/each}
-		</select>
-	</div>
-</header>
-
-<!-- The viewport: fills the space above the dock and clips the scene. -->
-<div bind:this={viewportEl} class="map-viewport relative flex-1 w-full overflow-hidden touch-none">
-	<!-- The scene panzoom moves. It is exactly SVG_WIDTH x SVG_HEIGHT so one
-	     unit of the map's viewBox is one CSS pixel at zoom 1; every centring
-	     and bounds calculation below relies on that. -->
+	<!-- Panned scene: world map + tactical overlay in the same 1400×600 space -->
 	<div
 		use:initPanzoom
 		onpointerdown={onPointerDown}
 		onpointerup={onPointerUp}
 		role="application"
-		aria-label="World map. Drag to pan, pinch or scroll to zoom, tap a region for details."
-		class="map-scene absolute top-0 left-0 cursor-grab active:cursor-grabbing"
+		aria-label="Situation map. Drag to pan, pinch or scroll to zoom, tap a region for details."
+		class="map-scene absolute top-0 left-0 cursor-crosshair"
 		style:width="{SVG_WIDTH}px"
 		style:height="{SVG_HEIGHT}px"
 	>
 		{@html WorldMap}
+
+		<svg
+			class="tactical absolute inset-0 pointer-events-none"
+			viewBox="0 0 {SVG_WIDTH} {SVG_HEIGHT}"
+			width={SVG_WIDTH}
+			height={SVG_HEIGHT}
+			style:--k={k}
+			aria-hidden="true"
+		>
+			<!-- Graticule -->
+			<g class="graticule">
+				{#each Array.from({ length: 27 }, (_, i) => (i + 1) * 50) as gx}
+					<line x1={gx} y1="0" x2={gx} y2={SVG_HEIGHT} />
+				{/each}
+				{#each Array.from({ length: 11 }, (_, i) => (i + 1) * 50) as gy}
+					<line x1="0" y1={gy} x2={SVG_WIDTH} y2={gy} />
+				{/each}
+			</g>
+
+			{#if overlays.recon}
+				{#each reconMarkers as m (m.id)}
+					<ReconSector
+						x={m.x}
+						y={m.y}
+						r={Math.max(m.r * 1.2, 14 * k)}
+						label={m.age}
+						strength={m.strength}
+						fontSize={9 * k}
+					/>
+				{/each}
+				{#each inFlightMarkers as m, i (i)}
+					<ReconSector x={m.c.x} y={m.c.y} r={Math.max(m.c.r * 1.3, 16 * k)} pending />
+				{/each}
+			{/if}
+
+			{#if overlays.battles}
+				{#each battleMarkers as b (b.id)}
+					<RangeRing x={b.x} y={b.y} r={Math.max(b.r * 1.1, 16 * k)} />
+				{/each}
+				{#each battleMarkers as b (b.id)}
+					{#if b.ox != null && b.oy != null}
+						<AttackArrow x1={b.ox} y1={b.oy} x2={b.x} y2={b.y} headSize={8 * k} inset={Math.max(b.r * 0.4, 6 * k)} />
+					{/if}
+				{/each}
+			{/if}
+
+			{#if overlays.friendly}
+				{#each friendlyMarkers as m (m.id)}
+					<UnitSymbol
+						affiliation="friend"
+						unitType={m.unitType}
+						count={m.total}
+						x={m.x - (overlays.hostile && hasHostileAt.has(m.id) ? 16 * k : 0)}
+						y={m.y}
+						scale={0.85 * k}
+						dashed={m.ally}
+					/>
+				{/each}
+			{/if}
+
+			{#if overlays.hostile}
+				{#each hostileMarkers as m (m.id)}
+					<UnitSymbol
+						affiliation={m.known ? "hostile" : "unknown"}
+						unitType={m.dominant}
+						count={m.known ? m.count : null}
+						estimated={m.estimated}
+						x={m.x + (overlays.friendly && hasFriendlyAt.has(m.id) ? 16 * k : 0)}
+						y={m.y}
+						scale={0.85 * k}
+					/>
+				{/each}
+			{/if}
+		</svg>
 	</div>
 
-	<!-- Zoom / locate controls -->
-	<div class="panel absolute right-3 bottom-3 z-10 flex flex-col rounded-sm p-1 gap-1">
-		<IconButton icon={IconZoomIn} label="Zoom in" shape="square" size="sm" onclick={() => zoomBy(1.6)} />
-		<IconButton icon={IconZoomOut} label="Zoom out" shape="square" size="sm" onclick={() => zoomBy(1 / 1.6)} />
-		{#if data.currentUserRegionId}
-			<div class="mx-1 h-px bg-[#8ea6e0]/20"></div>
-			<IconButton icon={IconMyLocation} label="Go to my region" shape="square" size="sm" onclick={focusMyRegion} />
-		{/if}
-	</div>
-
-	<!-- Layer legend -->
-	{#if legend}
-		<div class="panel animate-pop-in absolute left-3 bottom-3 z-10 rounded-sm px-3 py-2 text-[11px] text-[#c2cbe3]">
-			{#if legend.kind === "sides"}
-				<div class="flex items-center gap-3">
-					<span class="flex items-center gap-1.5"
-						><span class="size-2.5 rounded-full" style:background={ATTACKER}></span>Attacker</span
-					>
-					<span class="flex items-center gap-1.5"
-						><span class="size-2.5 rounded-full" style:background={DEFENDER}></span>Defender</span
-					>
+	<!-- Left rail: base layers, heatmaps, overlays -->
+	<nav class="panel absolute left-2 top-2 z-10 flex flex-col gap-0.5 rounded-sm p-1" aria-label="Map layers">
+		{#each BASE_LAYERS as l (l.value)}
+			<IconButton
+				icon={l.icon}
+				label={l.label}
+				size="sm"
+				shape="square"
+				variant={base === l.value ? "soft-blue" : "ghost"}
+				aria-pressed={base === l.value}
+				onclick={() => {
+					base = l.value;
+					heatOpen = false;
+				}}
+			/>
+		{/each}
+		<div class="relative">
+			<IconButton
+				icon={IconHeat}
+				label="Heatmaps"
+				size="sm"
+				shape="square"
+				variant={isHeat ? "soft-blue" : "ghost"}
+				aria-expanded={heatOpen}
+				onclick={() => (heatOpen = !heatOpen)}
+			/>
+			{#if heatOpen}
+				<div class="panel absolute left-full top-0 ml-2 w-40 rounded-sm p-1 animate-pop-in">
+					{#each HEAT_LAYERS as h (h.value)}
+						<button
+							type="button"
+							class="block w-full rounded-sm px-2 py-1.5 text-left text-xs hover:bg-surface-5 {base === h.value
+								? 'text-primary-fg font-semibold'
+								: 'text-fg-soft'}"
+							onclick={() => {
+								base = h.value;
+								heatOpen = false;
+							}}>{h.label}</button
+						>
+					{/each}
 				</div>
-			{:else}
-				<p class="mb-1 font-semibold uppercase tracking-wide text-[10px] text-[#8e9abb]">{legend.label}</p>
-				<div
-					class="h-1.5 w-28 rounded-full"
-					style:background="linear-gradient(90deg, {legend.ramp[0]}, {legend.ramp[1]})"
-				></div>
-				<div class="mt-0.5 flex justify-between text-[10px] text-[#8e9abb]"><span>Low</span><span>High</span></div>
 			{/if}
 		</div>
+		<div class="mx-1 my-1 h-px bg-line/20"></div>
+		{#each OVERLAYS as o (o.key)}
+			<IconButton
+				icon={o.icon}
+				label={o.label}
+				size="sm"
+				shape="square"
+				variant={overlays[o.key] ? "soft-blue" : "ghost"}
+				aria-pressed={overlays[o.key]}
+				onclick={() => (overlays[o.key] = !overlays[o.key])}
+			/>
+		{/each}
+		<div class="mx-1 my-1 h-px bg-line/20"></div>
+		<IconButton icon={IconDocument} label="Intel reports" size="sm" shape="square" variant="ghost" href="/intel" />
+	</nav>
+
+	<!-- Search, top right -->
+	<form
+		class="map-search panel absolute top-2 right-2 left-16 z-20 rounded-sm md:left-auto md:w-80"
+		onsubmit={(e) => {
+			e.preventDefault();
+			if (results[0]) pick(results[0]);
+		}}
+	>
+		<label class="flex items-center gap-2 px-3">
+			<IconSearch class="size-4 shrink-0 text-fg-muted" />
+			<input
+				type="search"
+				bind:value={query}
+				onfocus={() => (searchFocused = true)}
+				placeholder="Search regions, states…"
+				class="w-full min-w-0 bg-transparent py-2 text-sm text-fg outline-none placeholder:text-fg-faint"
+			/>
+		</label>
+		{#if searchFocused && results.length}
+			<ul class="max-h-72 overflow-y-auto border-t border-line/15">
+				{#each results as r (r.kind + r.id)}
+					<li>
+						<button
+							type="button"
+							class="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-surface-5"
+							onclick={() => pick(r)}
+						>
+							<span class="font-mono text-[10px] uppercase text-fg-faint w-10"
+								>{r.kind === "state" ? "STATE" : "RGN"}</span
+							>
+							<span class="min-w-0 flex-1">
+								<span class="block truncate text-sm text-fg">{r.name}</span>
+								{#if r.kind === "region"}<span class="block truncate text-xs text-fg-muted">{r.sub}</span>{/if}
+							</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</form>
+
+	<!-- Right tool column -->
+	<div class="panel absolute right-2 top-14 z-10 flex flex-col gap-0.5 rounded-sm p-1">
+		<IconButton icon={IconZoomIn} label="Zoom in" size="sm" shape="square" onclick={() => zoomBy(1.6)} />
+		<IconButton icon={IconZoomOut} label="Zoom out" size="sm" shape="square" onclick={() => zoomBy(1 / 1.6)} />
+		{#if data.currentUserRegionId}
+			<IconButton
+				icon={IconMyLocation}
+				label="Locate me"
+				size="sm"
+				shape="square"
+				onclick={() => data.currentUserRegionId && focusRegion(data.currentUserRegionId, false)}
+			/>
+		{/if}
+		<IconButton icon={IconReset} label="Reset view" size="sm" shape="square" onclick={resetView} />
+	</div>
+
+	<!-- Legend -->
+	<div class="panel absolute left-16 bottom-9 z-10 hidden rounded-sm px-2.5 py-1.5 text-[11px] text-fg-soft sm:block">
+		<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+			{#if overlays.friendly}<span class="inline-flex items-center gap-1"
+					><UnitBadge affiliation="friend" size={14} />Own</span
+				>{/if}
+			{#if overlays.hostile}
+				<span class="inline-flex items-center gap-1"><UnitBadge affiliation="hostile" size={14} />Hostile (intel)</span>
+				<span class="inline-flex items-center gap-1"><UnitBadge affiliation="unknown" size={14} />Unknown</span>
+			{/if}
+			{#if overlays.battles}<span class="inline-flex items-center gap-1"
+					><span class="size-2.5 rounded-full border border-error"></span>Battle</span
+				>{/if}
+			{#if overlays.recon}<span class="inline-flex items-center gap-1"
+					><span class="size-2.5 rounded-full bg-primary/40"></span>Recon cover</span
+				>{/if}
+			{#if base === "weather"}<span class="text-fg-muted">· grey cloud/fog, blue rain</span>{/if}
+			{#if base === "terrain"}<span class="text-fg-muted">· green forest, grey urban, amber mountains</span>{/if}
+			{#if isHeat}<span class="text-fg-muted">· {HEAT_LAYERS.find((h) => h.value === base)?.label}: low → high</span
+				>{/if}
+		</div>
+	</div>
+
+	<!-- Status bar -->
+	<div
+		class="absolute inset-x-0 bottom-0 z-10 flex h-7 items-center gap-3 border-t border-line/15 bg-base-200/90 px-3 font-mono text-[11px] text-fg-soft"
+	>
+		<span class="min-w-0 truncate">
+			{statusCoords ? formatLatLon(statusCoords.lat, statusCoords.lon) : "—"}
+		</span>
+		<span class="hidden sm:inline text-fg-faint">
+			{cursor ? `GRID ${Math.round(cursor.x)}/${Math.round(cursor.y)}` : ""}
+		</span>
+		<span class="ml-auto flex items-center gap-1.5">
+			<span class="inline-block h-1.5 border-x border-b border-fg-soft" style:width="{scaleBar.px}px"></span>
+			{scaleBar.km >= 1 ? `${scaleBar.km.toLocaleString()} km` : "<1 km"}
+		</span>
+		<span>Z {transform.scale.toFixed(1)}×</span>
+	</div>
+
+	<!-- Desktop side panel -->
+	{#if isDesktop && sel && selectedId != null}
+		<aside
+			bind:this={panelEl}
+			class="panel absolute right-14 top-14 bottom-9 z-10 w-80 overflow-y-auto rounded-sm p-4 animate-pop-in"
+		>
+			{@render regionPanel()}
+		</aside>
 	{/if}
 </div>
 
-<!-- Region Sheet -->
-<BottomSheet bind:open={showSheet}>
-	{#if selectedRegion}
-		<a
-			href="/region/{selectedRegion.id}"
-			class="group w-full flex items-center gap-4 hover:bg-[#233154] transition-colors rounded-sm p-2 -mx-2"
-		>
-			<Logo
-				src={regionCoatUrl(selectedRegion.id)}
-				alt={getRegionName(selectedRegion.id)}
-				class="size-16 object-cover rounded-sm"
-			/>
+{#if !isDesktop}
+	<BottomSheet bind:open={sheetOpen}>
+		<div bind:this={panelEl}>
+			{#if sel && selectedId != null}{@render regionPanel()}{/if}
+		</div>
+	</BottomSheet>
+{/if}
 
-			<div class="flex-1 text-left">
-				<h2 class="text-xl font-bold text-[#eef2ff] group-hover:text-[#ffc857] transition-colors">{regionName()}</h2>
-				{#if selectedState}
-					<p class="text-[#c2cbe3]" style="color: {stateColor}">{selectedState.name}</p>
-				{:else}
-					<p class="text-[#ffcb6b] italic">Independent</p>
+{#snippet regionPanel()}
+	{#if sel && selectedId != null}
+		<div class="space-y-4">
+			<header class="flex items-start gap-3">
+				<Logo
+					src={regionCoatUrl(selectedId)}
+					alt={getRegionName(selectedId)}
+					class="size-12 shrink-0 rounded-sm object-cover"
+				/>
+				<div class="min-w-0 flex-1">
+					<h2 class="truncate text-lg font-bold text-fg">{getRegionName(selectedId)}</h2>
+					{#if selState}
+						<a href="/state/{selState.id}" class="flex items-center gap-1.5 text-sm text-fg-soft hover:text-primary-fg">
+							<span class="size-2.5 shrink-0" style:background={data.stateColorMap[selState.id]}></span>
+							<span class="truncate">{selState.name}</span>
+							{#if selOwn}<Badge tone="blue" size="xs">own side</Badge
+								>{:else if sel.stateId && enemyStates.has(sel.stateId)}<Badge tone="red" size="xs">hostile</Badge>{/if}
+						</a>
+					{:else}
+						<p class="text-sm italic text-fg-muted">Unclaimed</p>
+					{/if}
+				</div>
+				{#if isDesktop}
+					<IconButton icon={IconDismiss} label="Close" size="xs" shape="square" onclick={closeRegion} />
 				{/if}
-			</div>
+			</header>
 
-			<IconChevronRight class="text-2xl flex-shrink-0" style="color: {stateColor || 'currentColor'}" />
-		</a>
+			{#if selConditions}
+				<Conditions {...selConditions} />
+			{/if}
 
-		<!-- Filter-dependent info -->
-		{#if selectedRegionData}
-			<div class="mt-4 space-y-4">
-				{#if mapFilter === "political"}
-					<div class="grid grid-cols-2 gap-2">
-						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Rating</p>
-							<p class="text-lg font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.rating)}</p>
-						</div>
-						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Economy</p>
-							<p class="text-lg font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.economy)}</p>
-						</div>
-						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Infrastructure</p>
-							<p class="text-lg font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.infrastructure)}</p>
-						</div>
-						<div class="panel-muted rounded-sm p-3">
-							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Education</p>
-							<p class="text-lg font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.education)}</p>
-						</div>
+			{#if selBattle}
+				<a
+					href="/battle/{selBattle.id}"
+					class="flex items-center gap-2 rounded-sm border border-error/30 bg-error/10 px-3 py-2 text-sm hover:border-error/60"
+				>
+					<span class="size-2 animate-pulse rounded-full bg-error"></span>
+					<span class="min-w-0 flex-1 truncate text-hostile-fg">
+						Battle · {stateById.get(selBattle.attackerStateId)?.name} → {stateById.get(selBattle.defenderStateId)?.name}
+					</span>
+					<IconChevronRight class="size-4 text-fg-muted" />
+				</a>
+			{/if}
+
+			<!-- Forces -->
+			<section class="space-y-2">
+				<h3 class="section-title text-xs">Forces</h3>
+				{#if selFriendly}
+					<div class="flex flex-wrap gap-2">
+						{#each Object.entries(selFriendly.byType) as [t, n] (t)}
+							<span class="inline-flex items-center gap-1 text-xs text-fg-soft" title={LABEL[t]}>
+								<UnitBadge affiliation="friend" unitType={t} count={n} size={18} />
+							</span>
+						{/each}
 					</div>
-				{:else if mapFilter === "blocs"}
-					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Bloc</p>
-						{#if selectedBlocName()}
-							<div class="mt-1 flex items-center gap-2">
-								<span class="inline-block size-3 rounded-full" style="background-color: {stateColor || 'currentColor'}"
-								></span>
-								<p class="text-lg font-bold text-[#eef2ff]">{selectedBlocName()}</p>
-							</div>
-						{:else}
-							<p class="text-lg font-bold italic text-[#8e9abb]">Non-aligned</p>
-						{/if}
-					</div>
-				{:else if mapFilter === "wars"}
-					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">War status</p>
-						{#if selectedWarRole() === "attacker"}
-							<Badge tone="red" class="mt-1">Attacking in an active war</Badge>
-						{:else if selectedWarRole() === "defender"}
-							<Badge tone="blue" class="mt-1">Defending in an active war</Badge>
-						{:else}
-							<p class="text-lg font-bold text-[#8e9abb]">At peace</p>
-						{/if}
-					</div>
-				{:else if mapFilter === "residents"}
-					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Residents</p>
-						<p class="text-2xl font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.residentCount)}</p>
-					</div>
-				{:else if mapFilter === "powerplants"}
-					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">Power plants (state-wide)</p>
-						<p class="text-2xl font-bold text-[#eef2ff]">{formatNumber(selectedRegionData.powerplantCount)}</p>
-					</div>
-				{:else if resourceLabels[mapFilter]}
-					<!-- Resource layer: highlight the active resource -->
-					<div class="panel-muted rounded-sm p-4">
-						<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">{resourceLabels[mapFilter]}</p>
-						<p class="text-2xl font-bold text-[#eef2ff]">
-							{formatNumber((selectedRegionData.resources as Record<string, number>)[mapFilter] ?? 0)}
-						</p>
-					</div>
+				{:else if selOwn}
+					<p class="text-xs text-fg-muted">No own units stationed.</p>
 				{/if}
-			</div>
-		{/if}
 
-		<!-- Resources: always shown regardless of the active map layer -->
-		{#if selectedRegionData}
-			<div class="mt-4">
-				<h3 class="section-title mb-2 text-xs">Resources</h3>
-				<div class="grid grid-cols-3 gap-2">
-					{#each Object.entries(selectedRegionData.resources) as [key, value]}
-						<div
-							class="rounded-sm border p-2 text-center {key === mapFilter
-								? 'bg-[#f5a524]/12 border-[#f5a524]/35'
-								: 'bg-[#131c33]/70 border-[#8ea6e0]/10'}"
-						>
-							<p class="text-[10px] uppercase tracking-wide text-[#8e9abb]">
-								{resourceLabels[key] ?? key}
+				{#if !selOwn || selBattle}
+					{#if selPicture}
+						<div class="flex items-center gap-2 text-xs">
+							<Badge tone={levelTone[selPicture.level as keyof typeof levelTone] ?? "neutral"} size="xs">
+								Intel {selPicture.level} · {Math.round(selPicture.confidence * 100)}%
+							</Badge>
+							{#if selPicture.observedAt}<span class="font-mono text-fg-muted"
+									>{ageLabel(selPicture.observedAt, now) === "now"
+										? "just now"
+										: `${ageLabel(selPicture.observedAt, now)} ago`}</span
+								>{/if}
+						</div>
+						<div class="flex flex-wrap gap-2">
+							{#each UNIT_CATEGORIES as c}
+								{@const cat = selPicture.categories[c]}
+								{#if !cat?.coverage}
+									<UnitBadge affiliation="unknown" size={18} title="{LABEL[c]}: not observed" />
+								{:else if cat.count}
+									<UnitBadge
+										affiliation="hostile"
+										unitType={c}
+										count={cat.count}
+										estimated={cat.estimated}
+										size={18}
+										title={LABEL[c]}
+									/>
+								{/if}
+							{/each}
+							{#if !selPicture.knownUnits}<span class="text-xs text-fg-muted">No hostile units seen.</span>{/if}
+						</div>
+						{#if selPicture.firing}
+							<p class="text-xs text-hostile-fg">
+								{selPicture.firing} firing position{selPicture.firing === 1 ? "" : "s"} (thermal)
 							</p>
-							<p class="text-sm font-bold text-[#eef2ff]">{formatNumber(value)}</p>
+						{/if}
+					{:else if sel.stateId && !selOwn}
+						<p class="flex items-center gap-2 text-xs text-fg-muted">
+							<UnitBadge affiliation="unknown" size={18} /> Hostile forces unknown: no fresh intel.
+						</p>
+					{/if}
+				{/if}
+			</section>
+
+			<!-- Installations (public) -->
+			<section>
+				<h3 class="section-title mb-1.5 text-xs">Installations</h3>
+				<dl class="grid grid-cols-5 gap-1 text-center font-mono">
+					{#each [["FORT", sel.fortifications], ["INFRA", sel.infrastructure], ["PWR", sel.economy], ["EDU", sel.education], ["MED", sel.hospitals]] as [label, v] (label)}
+						<div class="rounded-sm border border-line/15 bg-surface-2 px-1 py-1">
+							<dt class="text-[9px] text-fg-muted">{label}</dt>
+							<dd class="text-sm text-fg">{v}</dd>
 						</div>
 					{/each}
-				</div>
+				</dl>
+				{#if isHeat}
+					<p class="mt-1.5 text-xs text-fg-muted">
+						{HEAT_LAYERS.find((h) => h.value === base)?.label}:
+						<span class="font-mono text-fg">{heatValue(sel).toLocaleString()}</span>
+					</p>
+				{:else if base === "weather" && selConditions}
+					<p class="mt-1.5 text-xs text-fg-muted">{WEATHER_LABEL[selConditions.weather]} for up to 3 h.</p>
+				{:else if base === "terrain" && selConditions}
+					<p class="mt-1.5 text-xs text-fg-muted">{COVER_LABEL[selConditions.cover]} cover.</p>
+				{/if}
+			</section>
+
+			<!-- Recon -->
+			{#if selCanRecon && sa}
+				<section class="space-y-2 border-t border-line/15 pt-3">
+					<h3 class="section-title text-xs">Launch recon</h3>
+					<form
+						method="POST"
+						action="?/launchRecon"
+						class="flex gap-2"
+						use:enhance={() => {
+							launching = true;
+							return async ({ result }) => {
+								launching = false;
+								toastResult(result);
+								if (result.type === "success") {
+									await invalidateAll();
+									await tick();
+									celebrate(panelEl);
+								}
+							};
+						}}
+					>
+						<input type="hidden" name="regionId" value={selectedId} />
+						<select
+							name="sensor"
+							bind:value={sensor}
+							class="field-control min-w-0 flex-1 rounded-sm px-2 py-1.5 text-xs"
+						>
+							{#each sa.sensors as s (s.id)}
+								<option value={s.id}>{s.short} · ${s.cost.toLocaleString()} · {s.durationMinutes}m</option>
+							{/each}
+						</select>
+						<Button type="submit" size="sm" icon={IconRadar} loading={launching} disabled={!!chosenCooldown}>
+							{chosenCooldown ?? "Launch"}
+						</Button>
+					</form>
+					{#if chosen}<p class="field-hint">{chosen.label}</p>{/if}
+					{#each selInFlight as m, i (i)}
+						<p class="font-mono text-xs text-primary-fg">
+							{sa.sensors.find((s) => s.id === m.sensor)?.short ?? m.sensor} en route · {countdown(
+								m.completesAt,
+								now
+							) ?? "landing"}
+						</p>
+					{/each}
+				</section>
+			{/if}
+
+			<div class="flex gap-2">
+				<Button href="/region/{selectedId}" size="sm" variant="secondary" grow>Region page</Button>
+				<Button href="/intel" size="sm" variant="ghost" icon={IconDocument}>Intel</Button>
 			</div>
-		{/if}
+		</div>
 	{/if}
-</BottomSheet>
+{/snippet}
 
 <style>
-	/* ─── SVG Styles ─── */
 	:global(#panzoom-element) {
 		display: block;
 		width: 100%;
 		height: 100%;
 	}
-
-	/* Sea: a deep, slightly cool green-black under the olive land. */
 	.map-viewport {
-		background: radial-gradient(ellipse at 50% 40%, rgba(50, 70, 120, 0.18), transparent 70%), #0b100d;
+		background: var(--color-surface-0);
 	}
-
 	:global(#panzoom-element path) {
-		stroke: #0b1120;
 		stroke-width: 0.3;
-		transition:
-			filter 0.15s ease,
-			opacity 0.15s ease;
+		transition: filter 0.15s ease;
 	}
-
 	:global(#panzoom-element path.region-inert) {
 		pointer-events: none;
 	}
-
 	:global(#panzoom-element path:hover) {
-		filter: brightness(1.25) saturate(1.1);
+		filter: brightness(1.3);
 		cursor: pointer;
 	}
-
-	/* The region you searched for / jumped to pulses gold for a moment. */
 	:global(#panzoom-element path.region-highlight) {
 		animation: region-pulse 900ms ease-in-out 3;
 	}
-
 	@keyframes region-pulse {
 		50% {
-			filter: brightness(1.6) drop-shadow(0 0 2px #ffcb6b);
+			filter: brightness(1.7);
 		}
 	}
-
+	.graticule line {
+		stroke: var(--color-base-content);
+		stroke-opacity: 0.05;
+		stroke-width: calc(var(--k, 1) * 1px);
+	}
 	@media (prefers-reduced-motion: reduce) {
 		:global(#panzoom-element path.region-highlight) {
 			animation: none;

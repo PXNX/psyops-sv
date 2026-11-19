@@ -42,7 +42,11 @@
 	let { article, liked = false, lead = false, showNewspaper = true, class: className = "" }: Props = $props();
 </script>
 
-<article class="group panel-interactive rounded-sm relative overflow-hidden {article.own ? 'border-friendly/35' : ''} {className}">
+<article
+	class="group panel-interactive rounded-sm relative overflow-hidden {article.own
+		? 'border-friendly/35'
+		: ''} {className}"
+>
 	{#if article.cover && lead}
 		<div class="aspect-[16/7] overflow-hidden border-b border-white/10 bg-surface-4">
 			<img src={article.cover} alt="" loading="lazy" decoding="async" class="size-full object-cover" />
@@ -99,9 +103,7 @@
 	</div>
 
 	<div
-		class="flex items-center gap-3 min-w-0 border-t border-white/[0.06] {lead
-			? 'px-4 sm:px-5'
-			: 'px-3 sm:px-4'} py-2"
+		class="flex items-center gap-3 min-w-0 border-t border-white/[0.06] {lead ? 'px-4 sm:px-5' : 'px-3 sm:px-4'} py-2"
 	>
 		<UserLink
 			id={article.authorId}
@@ -114,7 +116,10 @@
 			{#if article.minutes}
 				<span class="hidden min-[400px]:inline">{article.minutes} min</span>
 			{/if}
-			<span class="inline-flex items-center gap-1 {liked ? 'text-red-300' : ''}" aria-label="{article.upvoteCount} likes">
+			<span
+				class="inline-flex items-center gap-1 {liked ? 'text-red-300' : ''}"
+				aria-label="{article.upvoteCount} likes"
+			>
 				{#if liked}
 					<FluentHeart20Filled class="size-3.5 text-red-400" />
 				{:else}

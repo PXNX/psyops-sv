@@ -1,13 +1,212 @@
-// src/routes/map/+page.server.ts
+// src/routes/(authenticated)/(dock)/map/+page.server.ts
+// The situational-awareness map: the political/heatmap base layers plus, for
+// the viewer's side, own forces, hostile forces known through fresh intel
+// (fog of war elsewhere), battles with their axes of attack, and recon cover.
 import { db } from "#lib/server/db.js";
-import { regions, states, blocs, wars, residences, powerPlants } from "#lib/server/schema.js";
-import { sql, eq } from "drizzle-orm";
-import type { PageServerLoad } from "./$types";
+import {
+	regions,
+	states,
+	blocs,
+	wars,
+	residences,
+	powerPlants,
+	militaryUnits,
+	battles,
+	regionBorders,
+	reconMissions
+} from "#lib/server/schema.js";
+import { sql, eq, and, inArray } from "drizzle-orm";
+import { fail } from "@sveltejs/kit";
+import type { Actions, PageServerLoad } from "./$types";
+import {
+	ReconError,
+	enemiesOf,
+	launchRecon,
+	picturesByRegion,
+	resolveReconMissions,
+	sensorCooldownEndsAt,
+	viewerSide
+} from "#lib/server/services/military/recon.js";
+import { SENSORS, SENSOR_IDS, UNIT_CATEGORIES, type SensorId } from "#lib/config/index.js";
+
+type FriendlyForce = { total: number; mine: number; ally: boolean; byType: Record<string, number> };
+type PictureSummary = {
+	confidence: number;
+	level: string;
+	knownUnits: number;
+	dominant: string | null;
+	categories: Record<string, { coverage: number; count: number | null; estimated: boolean }>;
+	observedAt: string | null;
+	firing: number;
+	sensors: string[];
+};
+
+/** What the viewer's side knows: forces, intel, battles and recon in flight. */
+async function situation(userId: string) {
+	await resolveReconMissions(db).catch((err) => console.error("Recon resolve failed:", err));
+	const side = await viewerSide(db, userId);
+	const now = new Date();
+
+	const ongoing = await db
+		.select({
+			id: battles.id,
+			regionId: battles.regionId,
+			attackerStateId: battles.attackerStateId,
+			defenderStateId: battles.defenderStateId,
+			phase: battles.phase
+		})
+		.from(battles)
+		.where(eq(battles.status, "ongoing"));
+
+	// Axis of attack: the attacker's nearest region bordering the battle.
+	const borderRows = await db
+		.select({ a: regionBorders.regionId, b: regionBorders.neighborId, km: regionBorders.distanceKm })
+		.from(regionBorders);
+	const owner = new Map(
+		(await db.select({ id: regions.id, stateId: regions.stateId }).from(regions)).map((r) => [r.id, r.stateId])
+	);
+	const battlesOut = ongoing.map((b) => {
+		let origin: number | null = null;
+		let best = Infinity;
+		for (const r of borderRows) {
+			const other = r.a === b.regionId ? r.b : r.b === b.regionId ? r.a : null;
+			if (other == null || owner.get(other) !== b.attackerStateId) continue;
+			const km = Number(r.km);
+			if (km < best) {
+				best = km;
+				origin = other;
+			}
+		}
+		const mine = !side
+			? null
+			: side.stateIds.includes(b.attackerStateId)
+				? ("attacker" as const)
+				: side.stateIds.includes(b.defenderStateId)
+					? ("defender" as const)
+					: null;
+		return { ...b, originRegionId: origin, mine };
+	});
+
+	if (!side) {
+		return {
+			side: null,
+			enemyStateIds: [] as number[],
+			friendly: {} as Record<number, FriendlyForce>,
+			pictures: {} as Record<number, PictureSummary>,
+			contested: [] as number[],
+			battles: battlesOut,
+			inFlight: [] as { regionId: number; sensor: string; completesAt: string }[],
+			sensors: [] as {
+				id: string;
+				label: string;
+				short: string;
+				cost: number;
+				durationMinutes: number;
+				cooldownEndsAt: string | null;
+			}[]
+		};
+	}
+
+	const [enemies, friendlyRows, pictures, inFlight, sensors] = await Promise.all([
+		enemiesOf(db, side),
+		db
+			.select({
+				regionId: militaryUnits.regionId,
+				unitType: militaryUnits.unitType,
+				stateId: militaryUnits.stateId,
+				ownerId: militaryUnits.ownerId
+			})
+			.from(militaryUnits)
+			.where(and(inArray(militaryUnits.stateId, side.stateIds), sql`${militaryUnits.health} > 0`)),
+		picturesByRegion(db, side.stateIds, { now }),
+		db
+			.select({
+				regionId: reconMissions.targetRegionId,
+				sensor: reconMissions.sensor,
+				completesAt: reconMissions.completesAt
+			})
+			.from(reconMissions)
+			.where(and(inArray(reconMissions.stateId, side.stateIds), eq(reconMissions.status, "in_progress"))),
+		Promise.all(
+			SENSOR_IDS.map(async (id) => ({
+				id,
+				label: SENSORS[id].label,
+				short: SENSORS[id].short,
+				cost: SENSORS[id].cost,
+				durationMinutes: SENSORS[id].durationMinutes,
+				cooldownEndsAt: (await sensorCooldownEndsAt(db, userId, side, id, now))?.toISOString() ?? null
+			}))
+		)
+	]);
+
+	const friendly: Record<number, FriendlyForce> = {};
+	for (const u of friendlyRows) {
+		const f = (friendly[u.regionId] ??= { total: 0, mine: 0, ally: false, byType: {} });
+		f.total++;
+		if (u.ownerId === userId) f.mine++;
+		if (u.stateId !== side.stateId) f.ally = true;
+		f.byType[u.unitType] = (f.byType[u.unitType] ?? 0) + 1;
+	}
+
+	const picturesOut: Record<number, PictureSummary> = {};
+	for (const [regionId, p] of pictures) {
+		const dominant =
+			UNIT_CATEGORIES.map((c) => [c, p.categories[c].count ?? 0] as const)
+				.filter(([, n]) => n > 0)
+				.sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+		picturesOut[regionId] = {
+			confidence: p.confidence,
+			level: p.level,
+			knownUnits: p.knownUnits,
+			dominant,
+			categories: p.categories,
+			observedAt: p.latestObservedAt,
+			firing: p.firingPositions?.count ?? 0,
+			sensors: [...new Set(p.sensors.map((s) => s.sensor))]
+		};
+	}
+
+	// Contested: enemy regions on your side's border, and battles you're in.
+	const contested = new Set<number>();
+	for (const r of borderRows) {
+		const [sa, sb] = [owner.get(r.a), owner.get(r.b)];
+		if (sa && sb && side.stateIds.includes(sa) && enemies.has(sb)) contested.add(r.b);
+		if (sa && sb && side.stateIds.includes(sb) && enemies.has(sa)) contested.add(r.a);
+	}
+	for (const b of battlesOut) if (b.mine) contested.add(b.regionId);
+
+	return {
+		side: { stateId: side.stateId, stateIds: side.stateIds },
+		enemyStateIds: [...enemies],
+		friendly,
+		pictures: picturesOut,
+		contested: [...contested],
+		battles: battlesOut,
+		inFlight: inFlight.map((m) => ({ ...m, completesAt: m.completesAt.toISOString() })),
+		sensors
+	};
+}
+
+export const actions: Actions = {
+	launchRecon: async ({ request, locals }) => {
+		const form = await request.formData();
+		const sensor = String(form.get("sensor") ?? "") as SensorId;
+		const regionId = Number(form.get("regionId"));
+		if (!SENSOR_IDS.includes(sensor) || !Number.isInteger(regionId)) return fail(400, { error: "Choose a sensor." });
+		try {
+			await launchRecon(db, { userId: locals.account!.id, regionId, sensor });
+		} catch (err) {
+			if (err instanceof ReconError) return fail(400, { error: err.message });
+			throw err;
+		}
+		return { success: true };
+	}
+};
 
 export const load: PageServerLoad = async ({ locals }) => {
 	try {
 		// All map queries are independent, so run them in parallel
-		const [currentUserRegionId, allRegions, allStates, allBlocs, activeWars, residentCounts, ppByState] =
+		const [currentUserRegionId, allRegions, allStates, allBlocs, activeWars, residentCounts, ppByState, sa] =
 			await Promise.all([
 				// ── Current user's region, so the map can open centred on it ────
 				(async () => {
@@ -25,6 +224,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.select({
 						id: regions.id,
 						stateId: regions.stateId,
+						longitude: regions.longitude,
+						terrain: regions.terrain,
 						rating: regions.rating,
 						education: regions.education,
 						infrastructure: regions.infrastructure,
@@ -90,7 +291,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 						count: sql<number>`count(*)`.as("count")
 					})
 					.from(powerPlants)
-					.groupBy(powerPlants.stateId)
+					.groupBy(powerPlants.stateId),
+
+				// ── Situational awareness for the viewer's side ────────────────
+				locals.account ? situation(locals.account.id) : Promise.resolve(null)
 			]);
 
 		// blocColorMap: stateId → bloc colour string.
@@ -131,6 +335,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			number,
 			{
 				stateId: number | null;
+				longitude: number;
+				terrain: string | null;
 				rating: number;
 				education: number;
 				infrastructure: number;
@@ -153,6 +359,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		for (const r of allRegions) {
 			regionMap[r.id] = {
 				stateId: r.stateId,
+				longitude: Number(r.longitude),
+				terrain: r.terrain,
 				rating: r.rating || 0,
 				education: r.education || 0,
 				infrastructure: r.infrastructure || 0,
@@ -211,7 +419,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			blocNameMap,
 			warAttackerStateIds,
 			warDefenderStateIds,
-			currentUserRegionId
+			currentUserRegionId,
+			sa
 		};
 	} catch (error) {
 		console.error("Error loading map data:", error);
@@ -223,7 +432,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			blocNameMap: {},
 			warAttackerStateIds: new Set<number>(),
 			warDefenderStateIds: new Set<number>(),
-			currentUserRegionId: null
+			currentUserRegionId: null,
+			sa: null
 		};
 	}
 };

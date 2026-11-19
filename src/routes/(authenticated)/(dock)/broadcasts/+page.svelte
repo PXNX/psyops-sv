@@ -24,7 +24,12 @@
 			accent: "border-politics",
 			text: "text-politics-fg"
 		},
-		party: { label: "Party Broadcast", icon: FluentPeople20Filled, accent: "border-positive", text: "text-positive-fg" },
+		party: {
+			label: "Party Broadcast",
+			icon: FluentPeople20Filled,
+			accent: "border-positive",
+			text: "text-positive-fg"
+		},
 		bloc: { label: "Bloc Broadcast", icon: FluentFlag20Filled, accent: "border-friendly", text: "text-friendly-fg" }
 	} as const;
 </script>

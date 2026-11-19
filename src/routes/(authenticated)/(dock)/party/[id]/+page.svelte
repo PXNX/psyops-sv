@@ -223,7 +223,10 @@
 				{/each}
 			</ul>
 			{#if roster.length > ROSTER_LIMIT}
-				<a href="/party/{data.party.id}/member" class="block text-center text-xs text-fg-muted hover:text-primary-hover">
+				<a
+					href="/party/{data.party.id}/member"
+					class="block text-center text-xs text-fg-muted hover:text-primary-hover"
+				>
 					+{roster.length - ROSTER_LIMIT} more
 				</a>
 			{/if}

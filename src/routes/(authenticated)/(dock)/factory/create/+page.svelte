@@ -285,9 +285,7 @@
 						/>
 					</div>
 				</div>
-				<p
-					class="flex items-center justify-between text-xs text-fg-muted border-t border-dashed border-line/20 pt-2"
-				>
+				<p class="flex items-center justify-between text-xs text-fg-muted border-t border-dashed border-line/20 pt-2">
 					Full crew per shift
 					<span class="font-mono font-bold text-fg">{(maxWorkers * workerWage).toLocaleString()}</span>
 				</p>

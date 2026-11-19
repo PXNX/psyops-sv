@@ -194,7 +194,15 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 					buildingsDestroyed
 				})
 				.where(eq(battles.id, battleId));
-			return { roundNumber, attackerDamage, defenderDamage, battleEnded: true, winner, buildingsDestroyed, intel: roundIntel };
+			return {
+				roundNumber,
+				attackerDamage,
+				defenderDamage,
+				battleEnded: true,
+				winner,
+				buildingsDestroyed,
+				intel: roundIntel
+			};
 		}
 
 		return {

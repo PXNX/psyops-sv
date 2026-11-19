@@ -163,7 +163,9 @@
 		{#each drawers as drawer (drawer.href)}
 			<a href={drawer.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-3 min-w-0">
 				<drawer.icon class="size-5 shrink-0 text-primary-fg" />
-				<span class="flex-1 text-sm font-semibold text-fg-body group-hover:text-primary-hover transition-colors truncate">
+				<span
+					class="flex-1 text-sm font-semibold text-fg-body group-hover:text-primary-hover transition-colors truncate"
+				>
 					{drawer.label}
 				</span>
 				<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-primary-hover" />

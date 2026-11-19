@@ -27,9 +27,9 @@ export const load: PageServerLoad = async ({ locals, depends, url }) => {
 
 	depends("app:chat");
 	const account = locals.account!;
-	const blockedIds = (
-		await db.query.userBlocks.findMany({ where: eq(userBlocks.userId, account.id) })
-	).map((b) => b.blockedUserId);
+	const blockedIds = (await db.query.userBlocks.findMany({ where: eq(userBlocks.userId, account.id) })).map(
+		(b) => b.blockedUserId
+	);
 	const notBlocked = blockedIds.length > 0 ? notInArray(chatMessages.senderId, blockedIds) : undefined;
 
 	// Global, party and direct chat overviews are independent, so build them in parallel
