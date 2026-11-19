@@ -16,8 +16,12 @@ import {
 	UNIT_CATEGORY,
 	airStrikeFactor,
 	confidenceLevel,
+	deceivedCount,
 	detectionChance,
 	droneInterceptChance,
+	seesThrough,
+	PSYOPS,
+	type Deception,
 	type SensorId,
 	type UnitCategory,
 	type ViewConditions
@@ -47,6 +51,10 @@ export interface ScanInput {
 	battle: IntelFindings["battle"];
 	/** Random source in [0, 1); seeded per mission so a pass is reproducible. */
 	rng: () => number;
+	/** C2 disruption on the observer: share (0-1) of detection lost to jammed sensor links. */
+	degradation?: number;
+	/** Disinformation planted for the observer over this region (psyops.config.ts). */
+	deception?: Deception | null;
 }
 
 /** One sensor pass over a region. */
@@ -78,7 +86,7 @@ export function scanRegion(input: ScanInput): IntelFindings {
 	}
 
 	for (const c of UNIT_CATEGORIES) {
-		const p = detectionChance(input.sensor, c, input.conditions) * evasion;
+		const p = detectionChance(input.sensor, c, input.conditions) * evasion * (1 - (input.degradation ?? 0));
 		coverage[c] = p >= DETECTION_THRESHOLD ? round2(p) : 0;
 	}
 	if (UNIT_CATEGORIES.every((c) => coverage[c] === 0)) return { ...base, outcome: "obscured" };
@@ -89,6 +97,25 @@ export function scanRegion(input: ScanInput): IntelFindings {
 	for (const [t, n] of byType) {
 		const c = UNIT_CATEGORY[t] ?? "infantry";
 		byCategory.set(c, (byCategory.get(c) ?? 0) + n);
+	}
+
+	// Planted intel: categories the pass doesn't see through come out inflated
+	// (plus decoy vehicles) or thinned out. The coverage stays honest, so the
+	// sharpest pass in the fused picture usually carries the truth.
+	if (input.deception) {
+		const fooled = (c: UnitCategory) => coverage[c] > 0 && !seesThrough(input.deception!, coverage[c]);
+		for (const [t, n] of byType) {
+			if (fooled(UNIT_CATEGORY[t] ?? "infantry")) byType.set(t, deceivedCount(n, input.deception.magnitude));
+		}
+		if (input.deception.magnitude > 0 && fooled("vehicle")) {
+			byType.set("armor", (byType.get("armor") ?? 0) + PSYOPS.DECOY_VEHICLES);
+		}
+		for (const [t, n] of [...byType]) if (n <= 0) byType.delete(t);
+		byCategory.clear();
+		for (const [t, n] of byType) {
+			const c = UNIT_CATEGORY[t] ?? "infantry";
+			byCategory.set(c, (byCategory.get(c) ?? 0) + n);
+		}
 	}
 
 	for (const c of UNIT_CATEGORIES) {

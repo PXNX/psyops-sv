@@ -10,3 +10,8 @@ export * from "./features/party.config";
 export * from "./features/premium.config";
 export * from "./game/resources.config";
 export * from "./game/recon.config";
+export * from "./game/cyber.config";
+export * from "./game/psyops.config";
+export * from "./game/population.config";
+export * from "./game/strike.config";
+export * from "./game/ihl.config";

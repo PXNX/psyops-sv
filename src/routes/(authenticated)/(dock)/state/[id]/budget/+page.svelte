@@ -23,7 +23,9 @@
 		tax_collection: "Tax revenue",
 		infrastructure: "Infrastructure",
 		military: "Military",
-		other: "Other"
+		other: "Other",
+		airstrike: "Airstrike",
+		reparations: "Reparations"
 	};
 	const labelOf = (type: string) => transactionTypeLabels[type] ?? type.replace(/_/g, " ");
 

@@ -16,7 +16,9 @@ import { sendNotificationIfEnabled } from "#lib/server/services/push-notificatio
 import { and, eq, sql } from "drizzle-orm";
 import { extractFromDeposit, isMineable } from "#lib/server/services/economy/mining.js";
 import { addUserItem, takeUserItem } from "#lib/server/services/economy/inventory.js";
-import { SHIFT_RECIPES } from "#lib/config/index.js";
+import { SHIFT_RECIPES, gridFactor } from "#lib/config/index.js";
+import { gridDegradation } from "#lib/server/services/military/state-effects.js";
+import { strikeProductionFactor } from "#lib/server/services/military/strike.js";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 
@@ -304,13 +306,18 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			let resourcesProduced = 0;
 			let netResourceQuantity = 0;
 			let deposit: { remaining: number; capacity: number } | null = null;
+			// A grid attack on the state browns out its factories: less output per shift.
+			const grid =
+				gridFactor(await gridDegradation(tx, factory.stateId)) *
+				// Airstrikes on the grid and on the region's industry do the same.
+				(await strikeProductionFactor(tx, factory.stateId, factory.regionId));
 			if (factory.factoryType === "mine" && isMineable(factory.resourceOutput)) {
 				// Output depends on the region's deposit and the state's exploitation law.
 				const extraction = await extractFromDeposit(
 					tx,
 					factory.regionId,
 					factory.resourceOutput,
-					factory.productionRate
+					Math.max(1, Math.round(factory.productionRate * grid))
 				);
 				deposit = { remaining: extraction.remaining, capacity: extraction.capacity };
 				if (extraction.produced > 0) {
@@ -396,8 +403,9 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 						output = { item, quantity: 0, missing };
 					} else {
 						const type = factory.productOutput ? "product" : "resource";
-						await addUserItem(tx, factory.ownerId, type, item, recipe.output);
-						output = { item, quantity: recipe.output };
+						const quantity = Math.max(1, Math.round(recipe.output * grid));
+						await addUserItem(tx, factory.ownerId, type, item, quantity);
+						output = { item, quantity };
 					}
 				}
 			}

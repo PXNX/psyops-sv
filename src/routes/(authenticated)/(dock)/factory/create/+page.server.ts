@@ -14,6 +14,8 @@ import {
 } from "#lib/server/schema.js";
 import { ECONOMY_CONFIG, MINEABLE_RESOURCES } from "#lib/config/index.js";
 import { getRegionName } from "#lib/utils/formatting.js";
+import { effectiveEnergy } from "#lib/server/services/military/state-effects.js";
+import { withStrikeEnergy } from "#lib/server/services/military/strike.js";
 import { fail, redirect } from "@sveltejs/kit";
 import { and, eq, gte, sql } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -199,7 +201,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		cooldownEndsAt,
 		region: regionWithResources,
 		companyId: company.id,
-		stateEnergy: stateEnergyData || { totalProduction: 0, usedProduction: 0 },
+		// A grid attack takes part of the capacity offline for a while.
+		stateEnergy: await withStrikeEnergy(
+			db,
+			region.stateId,
+			await effectiveEnergy(db, region.stateId, stateEnergyData || { totalProduction: 0, usedProduction: 0 })
+		),
 		regionalTaxes,
 		userInventory: inventoryMap,
 		factoryCost: FACTORY_COST
@@ -323,10 +330,19 @@ export const actions: Actions = {
 		}
 
 		// Check state energy
-		const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId));
+		const [storedEnergy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, region.stateId));
+		const energy =
+			storedEnergy &&
+			(await withStrikeEnergy(db, region.stateId, await effectiveEnergy(db, region.stateId, storedEnergy)));
 
 		if (!energy || energy.totalProduction - energy.usedProduction < ENERGY_REQUIRED) {
-			return fail(400, { error: "Insufficient state energy capacity" });
+			return fail(400, {
+				error: energy?.gridDegraded
+					? `Insufficient state energy capacity: the grid is down ${energy.gridDegraded}% after a cyber attack.`
+					: energy?.strikeDamaged
+						? `Insufficient state energy capacity: airstrikes knocked out ${energy.strikeDamaged}% of the grid.`
+						: "Insufficient state energy capacity"
+			});
 		}
 
 		// Create factory

@@ -716,7 +716,7 @@
 											placeholderIcon={FluentBuilding20Filled}
 											title={company.name}
 											subtitle={company.marketValue !== null
-												? `Listed · value ${money(company.marketValue)}`
+												? `Listed · value ${money(company.marketValue)}${company.dividendYield ? ` · yield ${company.dividendYield}%` : ""}`
 												: `Private · founded ${formatDate(company.foundedAt)}`}
 										>
 											{#snippet aside()}

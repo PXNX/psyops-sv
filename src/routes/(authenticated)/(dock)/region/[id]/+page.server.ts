@@ -41,7 +41,26 @@ import {
 	resolveReconMissions
 } from "#lib/server/services/military/recon.js";
 import { militaryUnits } from "#lib/server/schema.js";
-import { regionConditions, regionTerrain, type SensorId, SENSOR_IDS } from "#lib/config/index.js";
+import {
+	regionConditions,
+	regionTerrain,
+	type SensorId,
+	SENSOR_IDS,
+	TARGETS,
+	WEAPONS,
+	EFFECT_LABEL,
+	regionPopulation,
+	regionDensity,
+	type StrikeTarget,
+	type StrikeWeapon
+} from "#lib/config/index.js";
+import {
+	StrikeError,
+	activeEffects,
+	launchStrike,
+	strikeLog,
+	strikeOptions
+} from "#lib/server/services/military/strike.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -510,7 +529,28 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const hiddenBuildings = isHostileRegion && !recon.targetReason;
 	const seenBuildings = hiddenBuildings ? (picture?.buildings ?? null) : region;
 
+	// Airstrikes: the planner for leaders of a state at war with this region's
+	// owner, the strikes logged here, and the effects still working on it.
+	const [strikePlan, strikes, effects] = await Promise.all([
+		isHostileRegion ? strikeOptions(db, account.id, regionId) : Promise.resolve(null),
+		strikeLog(db, { regionId }, 15),
+		activeEffects(db, [regionId])
+	]);
+
 	const result = {
+		strike: {
+			// Only offered to someone who could order it (a leader at war with the owner).
+			options: strikePlan && !strikePlan.reason ? strikePlan : null,
+			log: strikes,
+			effects: effects.map((e) => ({
+				id: e.id,
+				kind: e.kind,
+				label: EFFECT_LABEL[e.kind],
+				magnitude: e.magnitude,
+				expiresAt: e.expiresAt.toISOString()
+			}))
+		},
+		civilians: { population: regionPopulation(region), density: Math.round(regionDensity(region)) },
 		situation: {
 			conditions: regionConditions(region),
 			isHostileRegion,
@@ -607,6 +647,47 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 };
 
 export const actions: Actions = {
+	launchStrike: async ({ request, params, locals }) => {
+		const formData = await request.formData();
+		const target = String(formData.get("target") ?? "") as StrikeTarget;
+		const weapon = String(formData.get("weapon") ?? "") as StrikeWeapon;
+		if (!TARGETS[target] || !WEAPONS[weapon]) return fail(400, { error: "Choose a target and a weapon." });
+		try {
+			const { strike, violations } = await launchStrike(db, {
+				userId: locals.account!.id,
+				regionId: parseInt(params.id),
+				target,
+				weapon
+			});
+			const d = strike.damage;
+			const summary = [
+				...Object.entries(d.levels ?? {}).map(
+					([stat, n]) => `${n} ${stat === "economy" ? "power" : stat} level${n === 1 ? "" : "s"} destroyed`
+				),
+				...(d.effect
+					? [`${EFFECT_LABEL[d.effect.kind as keyof typeof EFFECT_LABEL]} −${Math.round(d.effect.magnitude * 100)}%`]
+					: []),
+				...(d.units ?? []).map((u) => `${u.name} −${u.damage}${u.destroyed ? " (destroyed)" : ""}`),
+				...(d.aircraftLost ? [`${d.aircraftLost.name} hit by air defence`] : []),
+				...(d.reparations ? [`$${d.reparations.toLocaleString("en-US")} reparations paid`] : [])
+			];
+			return {
+				success: true,
+				strikeResult: {
+					id: strike.id,
+					outcome: strike.outcome,
+					civilianCasualties: strike.civilianCasualties,
+					expectedCasualties: strike.expectedCasualties,
+					cost: strike.cost,
+					summary,
+					violations
+				}
+			};
+		} catch (err) {
+			if (err instanceof StrikeError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
 	launchRecon: async ({ request, params, locals }) => {
 		const formData = await request.formData();
 		const sensor = String(formData.get("sensor") ?? "") as SensorId;

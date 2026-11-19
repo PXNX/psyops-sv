@@ -63,7 +63,7 @@
 	// ── Layers ───────────────────────────────────────────────────────────────
 	type Base = "political" | "blocs" | "wars" | "weather" | "terrain" | "residents" | "powerplants" | string;
 	let base = $state<Base>("political");
-	let overlays = $state({ friendly: true, hostile: true, battles: true, recon: true });
+	let overlays = $state({ friendly: true, hostile: true, battles: true, recon: true, strikes: true });
 	let heatOpen = $state(false);
 
 	const RESOURCES: Record<string, string> = {
@@ -90,7 +90,8 @@
 		{ key: "friendly", label: "Own forces", icon: IconShield },
 		{ key: "hostile", label: "Known hostile forces", icon: IconTarget },
 		{ key: "battles", label: "Battles & axes of attack", icon: IconFlash },
-		{ key: "recon", label: "Recon coverage", icon: IconRadar }
+		{ key: "recon", label: "Recon coverage", icon: IconRadar },
+		{ key: "strikes", label: "Airstrikes (24 h)", icon: IconFire }
 	] as const;
 	const isHeat = $derived(HEAT_LAYERS.some((l) => l.value === base));
 
@@ -482,6 +483,14 @@
 			})
 			.filter((m) => !!m)
 	);
+	const strikeMarkers = $derived(
+		Object.entries(data.strikes ?? {})
+			.map(([id, st]) => {
+				const c = centroids[Number(id)];
+				return c ? { id: Number(id), x: c.x, y: c.y, r: c.r, ...st } : null;
+			})
+			.filter((m) => !!m)
+	);
 	const inFlightMarkers = $derived(
 		(sa?.inFlight ?? []).map((m) => ({ ...m, c: centroids[m.regionId] })).filter((m) => !!m.c)
 	);
@@ -600,6 +609,36 @@
 					{#if b.ox != null && b.oy != null}
 						<AttackArrow x1={b.ox} y1={b.oy} x2={b.x} y2={b.y} headSize={8 * k} inset={Math.max(b.r * 0.4, 6 * k)} />
 					{/if}
+				{/each}
+			{/if}
+
+			{#if overlays.strikes}
+				{#each strikeMarkers as m (m.id)}
+					<!-- Impact burst, up and to the right of the region's centre -->
+					<g
+						transform="translate({m.x + Math.max(m.r * 0.5, 10 * k)} {m.y - Math.max(m.r * 0.5, 10 * k)}) scale({k})"
+						class="pointer-events-none"
+					>
+						<title>{m.count} strike{m.count === 1 ? "" : "s"}, {m.casualties} civilians killed (24 h)</title>
+						<path
+							d="M0 -7 L2 -2 L7 -2 L3 1 L5 6 L0 3 L-5 6 L-3 1 L-7 -2 L-2 -2 Z"
+							style:fill={m.casualties ? "var(--color-error)" : "var(--color-warning)"}
+							style:stroke="var(--color-surface-0)"
+							stroke-width="1"
+						/>
+						{#if m.count > 1}
+							<text
+								x="9"
+								y="3"
+								font-size="8"
+								class="data"
+								style:fill="var(--color-warning)"
+								style:paint-order="stroke"
+								style:stroke="var(--color-surface-0)"
+								stroke-width="2">{m.count}</text
+							>
+						{/if}
+					</g>
 				{/each}
 			{/if}
 
@@ -764,6 +803,9 @@
 				>{/if}
 			{#if overlays.recon}<span class="inline-flex items-center gap-1"
 					><span class="size-2.5 rounded-full bg-primary/40"></span>Recon cover</span
+				>{/if}
+			{#if overlays.strikes && strikeMarkers.length}<span class="inline-flex items-center gap-1"
+					><span class="size-2.5 rotate-45 bg-warning"></span>Airstrike</span
 				>{/if}
 			{#if base === "weather"}<span class="text-fg-muted">· grey cloud/fog, blue rain</span>{/if}
 			{#if base === "terrain"}<span class="text-fg-muted">· green forest, grey urban, amber mountains</span>{/if}

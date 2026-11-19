@@ -33,8 +33,12 @@
 	import Badge from "#lib/component/ui/Badge.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
+	import { EFFECT_TONE, effectLabel } from "#lib/utils/covert.js";
+	import { countdown } from "#lib/utils/military.js";
 	import { enhance } from "$app/forms";
 	import EditStateSheet from "./EditStateSheet.svelte";
+	import { IhlRecord } from "#lib/component/strike/index.js";
+	import { formatPopulation } from "#lib/config/index.js";
 
 	const { data } = $props();
 
@@ -285,8 +289,9 @@
 					<dd class="text-sm font-bold font-mono text-fg">{value}</dd>
 				</svelte:element>
 			{/snippet}
+			{@render fact("Civilians", formatPopulation(data.civilians), FluentPeople20Filled, "text-friendly")}
 			{@render fact(
-				"Population",
+				"Residents",
 				data.state.population.toLocaleString(),
 				FluentPeople20Filled,
 				"text-friendly",
@@ -305,6 +310,9 @@
 			{/if}
 		</dl>
 	</section>
+
+	<!-- Conduct in war: public international humanitarian law record -->
+	<IhlRecord record={data.ihl} />
 
 	<!-- At war: front reports -->
 	{#if data.activeWars && data.activeWars.length > 0}
@@ -341,6 +349,30 @@
 					<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-fg" />
 				</a>
 			{/each}
+		</section>
+	{/if}
+
+	<!-- Covert operations: only what the viewer knows (see knownEffects) -->
+	{#if data.covertEffects.length > 0}
+		<section class="space-y-2">
+			<h2 class="section-title">Covert activity</h2>
+			<ul class="panel divide-y divide-line/10 rounded-sm">
+				{#each data.covertEffects as e (e.id)}
+					<li class="flex flex-wrap items-center justify-between gap-2 px-3 py-2.5">
+						<div class="flex min-w-0 flex-wrap items-center gap-2">
+							<Badge tone={EFFECT_TONE[e.kind]}>{effectLabel(e.kind, e.magnitude, e.region)}</Badge>
+							<span class="text-xs text-fg-muted">
+								{#if e.kind === "casus_belli"}
+									against {e.source ?? "an unknown state"}
+								{:else if e.kind !== "morale_boost"}
+									{e.source ? `by ${e.source}` : "origin unknown"}
+								{/if}
+							</span>
+						</div>
+						<span class="data text-xs text-fg-soft">{countdown(e.expiresAt) ?? "ending"} left</span>
+					</li>
+				{/each}
+			</ul>
 		</section>
 	{/if}
 

@@ -21,6 +21,8 @@ import { selectEngagedUnits } from "./combat";
 import { applyConquestDamage } from "../politics/construction.service";
 import { battleIntel, type BattleIntel } from "./recon";
 import { unitIntelFactor, type SideModifiers } from "./intel";
+import { battlePsyops } from "./state-effects";
+import { battleStrikeModifiers, type BattleStrikeModifiers } from "./strike";
 
 /** Frontage per terrain: how much combat width each side may put in the line. */
 export const TERRAIN_DATA = {
@@ -50,6 +52,8 @@ export interface RoundResult {
 	buildingsDestroyed: Partial<Record<string, number>> | null;
 	/** The intel modifiers each side fought with this round. */
 	intel: { attacker: SideModifiers; defender: SideModifiers };
+	/** Supply cut by strikes and IHL morale, per side (strike.ts). */
+	strikes: BattleStrikeModifiers;
 }
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -97,6 +101,11 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 		// artillery and air strikes need targeting data, air defence blunts
 		// air strikes, thermal fixes on firing positions enable counter-battery.
 		const intel: BattleIntel = await battleIntel(tx, battle, { attackers, defenders });
+		// Covert ops (additive, see state-effects.ts): morale campaigns, counter-
+		// propaganda and C2 disruption scale each side's whole output.
+		const psy = await battlePsyops(tx, battle);
+		// Airstrikes: supply cut in and around the region, and IHL morale penalties.
+		const strikeMods = await battleStrikeModifiers(tx, battle);
 
 		// Each engaged unit's output this round.
 		const output = (
@@ -113,9 +122,13 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 		const fortLevel = battle.region.fortifications ?? 0;
 		const fortFactor = 1 - fortificationReduction(fortLevel) / 100;
 		const attackerOutput = attackers.map((p) =>
-			Math.floor(output(p, "baseAttack", intel.attacker, intel.defender) * fortFactor)
+			Math.floor(
+				output(p, "baseAttack", intel.attacker, intel.defender) * fortFactor * psy.attacker.factor * strikeMods.attacker
+			)
 		);
-		const defenderOutput = defenders.map((p) => output(p, "baseDefense", intel.defender, intel.attacker));
+		const defenderOutput = defenders.map((p) =>
+			Math.floor(output(p, "baseDefense", intel.defender, intel.attacker) * psy.defender.factor * strikeMods.defender)
+		);
 		const roundIntel = { attacker: intel.attacker, defender: intel.defender };
 		const attackerDamage = attackerOutput.reduce((a, b) => a + b, 0);
 		const defenderDamage = defenderOutput.reduce((a, b) => a + b, 0);
@@ -201,7 +214,8 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 				battleEnded: true,
 				winner,
 				buildingsDestroyed,
-				intel: roundIntel
+				intel: roundIntel,
+				strikes: strikeMods
 			};
 		}
 
@@ -212,7 +226,8 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 			battleEnded: false,
 			winner,
 			buildingsDestroyed: null,
-			intel: roundIntel
+			intel: roundIntel,
+			strikes: strikeMods
 		};
 	});
 }

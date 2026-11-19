@@ -41,6 +41,7 @@ import {
 	type ViewConditions
 } from "#lib/config/index.js";
 import { fuseIntel, scanRegion, sideModifiers, type IntelPicture, type SideModifiers } from "./intel";
+import { c2Degradation, deceptionFor, reconDelayFactor } from "./state-effects";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Db = Database | Tx;
@@ -296,7 +297,10 @@ export async function launchRecon(
 				sensor: input.sensor,
 				cost: s.cost,
 				launchedAt: now,
-				completesAt: new Date(now.getTime() + s.durationMinutes * MINUTE)
+				// Sensor links jammed by a C2 disruption: the pass takes longer.
+				completesAt: new Date(
+					now.getTime() + s.durationMinutes * MINUTE * (await reconDelayFactor(tx, side.stateId, now))
+				)
 			})
 			.returning();
 		await tx.insert(transactionHistory).values({
@@ -381,6 +385,12 @@ async function observe(
 	}
 
 	const airDefenceUnits = [...units.values()].filter((u) => u.unitType === "air_defence" && !u.isTraining).length;
+	// Covert ops: jammed sensors see less; planted intel may fool the pass.
+	const [jammed, planted] = await Promise.all([
+		c2Degradation(tx, mission.stateId, mission.completesAt),
+		deceptionFor(tx, side.stateIds, mission.targetRegionId, mission.completesAt)
+	]);
+
 	const [{ value: underConstruction }] = await tx
 		.select({ value: sql<number>`count(*)::int` })
 		.from(stateBuildings)
@@ -406,7 +416,10 @@ async function observe(
 				}
 			: null,
 		battle: battleSnapshot,
-		rng: opts.rng
+		rng: opts.rng,
+		degradation: jammed / 100,
+		// Its own draw, so planted intel doesn't shift the pass's other rolls.
+		deception: planted ? { magnitude: planted, roll: seededRandom(hash32(mission.id, 0xdec0))() } : null
 	});
 }
 

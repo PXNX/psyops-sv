@@ -9,6 +9,7 @@ import {
 	jsonb,
 	pgEnum,
 	pgTable,
+	real,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -106,7 +107,14 @@ export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_tra
 	"tax_collection",
 	"infrastructure",
 	"military",
-	"other"
+	"other",
+	// Cyber operations and psyops (services/military/covert-ops.ts)
+	"covert_operation",
+	"cyber_defence",
+	"covert_theft",
+	// Airstrikes and the reparations paid for IHL violations (services/military/strike.ts)
+	"airstrike",
+	"reparations"
 ]);
 
 export const battlePhaseEnum = pgEnum("battle_phase", [
@@ -239,6 +247,10 @@ export const regions = pgTable("regions", {
 	chromium: integer("chromium").default(0),
 	// Ground cover for recon and battles; null = derived (regionTerrain in recon.config.ts).
 	terrain: terrainTypeEnum("terrain"),
+	// Civilians living here; null until something changes them (strike
+	// casualties). Read it through regionPopulation() in population.config.ts,
+	// which derives a figure from the region when this is null.
+	population: integer("population"),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -2643,7 +2655,12 @@ export const companyShares = pgTable("company_shares", {
 	founderLockedShares: integer("founder_locked_shares").notNull(),
 	ipoPrice: bigint("ipo_price", { mode: "number" }).notNull(),
 	ipoAt: timestamp("ipo_at").defaultNow().notNull(),
-	lastDividendAt: timestamp("last_dividend_at")
+	lastDividendAt: timestamp("last_dividend_at"),
+	// Automatic dividend policy, run by an hourly cron at most once per dividend
+	// cooldown: pay out this percentage (0-100) of the budget above
+	// dividendReserve. 0 means dividends are only declared by hand.
+	dividendPayoutRatio: integer("dividend_payout_ratio").default(0).notNull(),
+	dividendReserve: bigint("dividend_reserve", { mode: "number" }).default(0).notNull()
 });
 
 export const companySharesRelations = relations(companyShares, ({ one }) => ({
@@ -2745,6 +2762,10 @@ export const dividendPayouts = pgTable(
 			.references(() => accounts.id, { onDelete: "cascade" }),
 		amount: bigint("amount", { mode: "number" }).notNull(),
 		sharesHeld: integer("shares_held").notNull(),
+		// Per-share rate of the payout this row belongs to; every row of one
+		// payout shares the same paidAt.
+		perShare: bigint("per_share", { mode: "number" }).default(0).notNull(),
+		automatic: boolean("automatic").default(false).notNull(),
 		paidAt: timestamp("paid_at").defaultNow().notNull()
 	},
 	(t) => ({
@@ -3175,3 +3196,253 @@ export const intelReports = pgTable(
 
 export type ReconMission = typeof reconMissions.$inferSelect;
 export type IntelReport = typeof intelReports.$inferSelect;
+
+// --- COVERT OPERATIONS: CYBER & PSYOPS ---
+// A state's leadership (president, defence or foreign minister) launches a
+// cyber operation or a psyops campaign against another state, paid from the
+// treasury. It resolves at once: success, whether the target noticed
+// (detected) and whether it knows who did it (attributed). A successful
+// operation leaves a time-limited state effect (grid down, sensors jammed,
+// morale shaken, false intel planted, ...). Rules in
+// services/military/covert-ops.ts, tunables in config/game/cyber.config.ts
+// and config/game/psyops.config.ts.
+export const covertOpKindEnum = pgEnum("covert_op_kind", [
+	// cyber
+	"grid_attack",
+	"c2_disruption",
+	"financial_theft",
+	// psyops
+	"morale_campaign",
+	"disinformation",
+	"counter_propaganda",
+	"leaflet_drop"
+]);
+export const stateEffectKindEnum = pgEnum("state_effect_kind", [
+	"grid_degraded", // energy capacity and factory output down by magnitude %
+	"c2_degraded", // recon coverage down, passes slower, battle coordination worse
+	"morale_shaken", // battle output down (stacks with diminishing returns)
+	"deception", // recon of regionId sees counts × (100 + magnitude)%
+	"morale_boost", // own battle output up, resists enemy psyops
+	"casus_belli" // sourceStateId was caught attacking in peacetime
+]);
+
+export const covertOperations = pgTable(
+	"covert_operations",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		kind: covertOpKindEnum("kind").notNull(),
+		launchedBy: text("launched_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		// The launching state and its target (the launcher itself for counter-propaganda).
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		// Disinformation: the region whose recon picture is falsified.
+		targetRegionId: integer("target_region_id").references(() => regions.id, { onDelete: "set null" }),
+		cost: integer("cost").notNull(),
+		// Odds at launch, in percent, and how it went.
+		successChance: integer("success_chance").notNull(),
+		attributionChance: integer("attribution_chance").notNull(),
+		succeeded: boolean("succeeded").notNull(),
+		detected: boolean("detected").notNull(),
+		attributed: boolean("attributed").notNull(),
+		atWar: boolean("at_war").notNull(),
+		// Effect strength in percent (signed for disinformation: + inflate, - conceal).
+		magnitude: integer("magnitude").default(0).notNull(),
+		// Financial theft: what was taken from the target's treasury.
+		amount: bigint("amount", { mode: "number" }).default(0).notNull(),
+		// Leaflet drop: the leaflet's text, shown to the target's residents.
+		message: text("message"),
+		launchedAt: timestamp("launched_at").defaultNow().notNull(),
+		effectEndsAt: timestamp("effect_ends_at")
+	},
+	(t) => ({
+		stateKindIdx: index("idx_covert_op_state_kind").on(t.stateId, t.kind, t.launchedAt),
+		targetIdx: index("idx_covert_op_target").on(t.targetStateId, t.launchedAt)
+	})
+);
+
+export const stateEffects = pgTable(
+	"state_effects",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		// The state the effect works on.
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		// Deception only: the region whose picture is falsified for stateId.
+		regionId: integer("region_id").references(() => regions.id, { onDelete: "cascade" }),
+		kind: stateEffectKindEnum("kind").notNull(),
+		magnitude: integer("magnitude").notNull(),
+		sourceStateId: integer("source_state_id").references(() => states.id, { onDelete: "set null" }),
+		operationId: integer("operation_id").references(() => covertOperations.id, { onDelete: "cascade" }),
+		startsAt: timestamp("starts_at").defaultNow().notNull(),
+		expiresAt: timestamp("expires_at").notNull()
+	},
+	(t) => ({
+		activeIdx: index("idx_state_effect_active").on(t.stateId, t.kind, t.expiresAt),
+		regionIdx: index("idx_state_effect_region").on(t.regionId, t.expiresAt)
+	})
+);
+
+export const stateCyberDefence = pgTable("state_cyber_defence", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	stateId: integer("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" })
+		.unique(),
+	level: integer("level").default(0).notNull(),
+	upgradedBy: text("upgraded_by").references(() => accounts.id, { onDelete: "set null" }),
+	upgradedAt: timestamp("upgraded_at").defaultNow().notNull()
+});
+
+export type CovertOperation = typeof covertOperations.$inferSelect;
+export type StateEffect = typeof stateEffects.$inferSelect;
+
+// --- AIRSTRIKES & INTERNATIONAL HUMANITARIAN LAW ---
+// The president or defence minister of a state at war orders a strike on an
+// enemy region: strategic (power grid, industry), operational (logistics,
+// bridges, fortifications, air defence) or tactical (units in battle). Each
+// strike is resolved at once and logged with its odds, outcome, damage and
+// civilian casualties. Lasting effects (supply cut, grid damaged, industry
+// disrupted) live in region_effects until they expire; IHL violations in
+// ihl_violations, from which a state's standing is computed on read. Rules in
+// services/military/strike.ts, tunables in config/game/strike.config.ts and
+// config/game/ihl.config.ts.
+export const strikeTierEnum = pgEnum("strike_tier", ["strategic", "operational", "tactical"]);
+export const strikeTargetEnum = pgEnum("strike_target", [
+	"power_grid",
+	"industry",
+	"hospital",
+	"logistics",
+	"bridges",
+	"fortifications",
+	"air_defence",
+	"units"
+]);
+export const strikeWeaponEnum = pgEnum("strike_weapon", [
+	"cruise_missile",
+	"ballistic_missile",
+	"guided_bomb",
+	"gps_bomb",
+	"unguided_bombs",
+	"attack_drone",
+	"close_air_support"
+]);
+export const strikeOutcomeEnum = pgEnum("strike_outcome", ["hit", "partial", "miss", "intercepted"]);
+export const regionEffectKindEnum = pgEnum("region_effect_kind", ["supply", "energy", "industry"]);
+export const ihlViolationKindEnum = pgEnum("ihl_violation_kind", [
+	"protected_target",
+	"indiscriminate",
+	"disproportionate"
+]);
+
+/** What a strike did, for the log. */
+export interface StrikeDamage {
+	/** Region levels knocked down, e.g. { economy: 1 }. */
+	levels?: Partial<Record<string, number>>;
+	/** Effect left on the region's owner. */
+	effect?: { kind: string; magnitude: number; expiresAt: string } | null;
+	/** Strength taken off enemy units. */
+	units?: { unitId: number; name: string; unitType: string; damage: number; destroyed: boolean }[];
+	/** The attacker's aircraft hit by air defence. */
+	aircraftLost?: { unitId: number; name: string; damage: number } | null;
+	/** Reparations paid to the victim state. */
+	reparations?: number;
+}
+
+export const strikes = pgTable(
+	"strikes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		attackerStateId: integer("attacker_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		// The region's owner when it was struck.
+		targetStateId: integer("target_state_id").references(() => states.id, { onDelete: "set null" }),
+		warId: integer("war_id").references(() => wars.id, { onDelete: "set null" }),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		battleId: integer("battle_id").references(() => battles.id, { onDelete: "set null" }),
+		orderedBy: text("ordered_by").references(() => accounts.id, { onDelete: "set null" }),
+		tier: strikeTierEnum("tier").notNull(),
+		target: strikeTargetEnum("target").notNull(),
+		weapon: strikeWeaponEnum("weapon").notNull(),
+		// The aircraft that flew the sortie (null for missiles and drones).
+		unitId: integer("unit_id").references(() => militaryUnits.id, { onDelete: "set null" }),
+		cost: integer("cost").notNull(),
+		outcome: strikeOutcomeEnum("outcome").notNull(),
+		// Odds at launch, in percent, and what they rested on.
+		interceptChance: integer("intercept_chance").notNull(),
+		accuracy: integer("accuracy").notNull(),
+		intelConfidence: integer("intel_confidence").notNull(),
+		conditions: jsonb("conditions").$type<{ weather: string; night: boolean; cover: string }>().notNull(),
+		exposedCivilians: integer("exposed_civilians").default(0).notNull(),
+		expectedCasualties: integer("expected_casualties").default(0).notNull(),
+		civilianCasualties: integer("civilian_casualties").default(0).notNull(),
+		protectedTarget: boolean("protected_target").default(false).notNull(),
+		damage: jsonb("damage").$type<StrikeDamage>().notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		regionIdx: index("idx_strike_region").on(t.regionId, t.createdAt),
+		attackerTierIdx: index("idx_strike_attacker_tier").on(t.attackerStateId, t.tier, t.createdAt),
+		warIdx: index("idx_strike_war").on(t.warId, t.createdAt),
+		unitIdx: index("idx_strike_unit").on(t.unitId, t.createdAt)
+	})
+);
+
+export const regionEffects = pgTable(
+	"region_effects",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		// The state that suffers it (the region's owner when it was struck).
+		stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
+		kind: regionEffectKindEnum("kind").notNull(),
+		// Share taken off (0-1); effects of one kind stack up to EFFECT_CAP.
+		magnitude: real("magnitude").notNull(),
+		strikeId: integer("strike_id").references(() => strikes.id, { onDelete: "cascade" }),
+		startsAt: timestamp("starts_at").defaultNow().notNull(),
+		expiresAt: timestamp("expires_at").notNull()
+	},
+	(t) => ({
+		regionIdx: index("idx_region_effect_region").on(t.regionId, t.kind, t.expiresAt),
+		stateIdx: index("idx_region_effect_state").on(t.stateId, t.kind, t.expiresAt)
+	})
+);
+
+export const ihlViolations = pgTable(
+	"ihl_violations",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		victimStateId: integer("victim_state_id").references(() => states.id, { onDelete: "set null" }),
+		warId: integer("war_id").references(() => wars.id, { onDelete: "set null" }),
+		strikeId: integer("strike_id").references(() => strikes.id, { onDelete: "cascade" }),
+		kind: ihlViolationKindEnum("kind").notNull(),
+		// 1 minor, 2 serious, 3 grave.
+		severity: integer("severity").notNull(),
+		// Standing points at the time (base + casualties); they decay on read.
+		points: integer("points").notNull(),
+		casualties: integer("casualties").default(0).notNull(),
+		reason: text("reason").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_ihl_violation_state").on(t.stateId, t.createdAt)
+	})
+);
+
+export type Strike = typeof strikes.$inferSelect;
+export type RegionEffect = typeof regionEffects.$inferSelect;
+export type IhlViolation = typeof ihlViolations.$inferSelect;

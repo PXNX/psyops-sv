@@ -33,6 +33,9 @@
 	import ResidenceActions from "./ResidenceActions.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
 	import RegionSituation from "./RegionSituation.svelte";
+	import { StrikeLog, StrikePlanner } from "#lib/component/strike/index.js";
+	import { formatPopulation } from "#lib/config/index.js";
+	import { countdown } from "#lib/utils/military.js";
 	import PassportPage from "../../visas/PassportPage.svelte";
 	import VisaStamp from "../../visas/VisaStamp.svelte";
 
@@ -90,7 +93,14 @@
 	);
 
 	const facts = $derived([
-		{ label: "Population", value: data.population, href: `/region/${data.region.id}/population` },
+		{
+			label: "Civilians",
+			value: formatPopulation(data.civilians.population),
+			href: "#strikes",
+			title: `${data.civilians.population.toLocaleString("en-US")} civilians · ${data.civilians.density}/km²`,
+			wide: true
+		},
+		{ label: "Residents", value: data.population, href: `/region/${data.region.id}/population` },
 		{
 			label: "Infrastructure",
 			value: data.region.infrastructure === null ? "?" : data.region.infrastructure || 0,
@@ -185,9 +195,15 @@
 		</div>
 
 		<!-- Facts and figures -->
-		<div class="relative grid grid-cols-2 sm:grid-cols-4 gap-px bg-line/12 border-t border-line/15">
+		<div class="relative grid grid-cols-2 sm:grid-cols-5 gap-px bg-line/12 border-t border-line/15">
 			{#each facts as fact (fact.label)}
-				<a href={fact.href} class="group px-4 py-3 bg-[#1e2318] hover:bg-[#262c1e] transition-colors">
+				<a
+					href={fact.href}
+					title={"title" in fact ? fact.title : undefined}
+					class="group px-4 py-3 bg-[#1e2318] hover:bg-[#262c1e] transition-colors {'wide' in fact
+						? 'col-span-2 sm:col-span-1'
+						: ''}"
+				>
 					<p class="text-[10px] text-fg-muted uppercase tracking-wide">{fact.label}</p>
 					<p class="text-xl font-bold font-mono text-fg group-hover:text-primary-hover transition-colors">
 						{fact.value.toLocaleString()}
@@ -219,6 +235,22 @@
 
 	<!-- Forces, intel and recon tasking -->
 	<RegionSituation situation={data.situation} walletBalance={data.walletBalance} hasBattle={!!data.ongoingBattle} />
+
+	<!-- Airstrikes: lasting damage, the planner for leaders at war with the owner -->
+	{#if data.strike.effects.length}
+		<div class="panel rounded-sm px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" id="strike-effects">
+			<span class="section-title">Strike damage</span>
+			{#each data.strike.effects as e (e.id)}
+				<span class="text-hostile-fg">
+					{e.label} <span class="data">−{Math.round(e.magnitude * 100)}%</span>
+					<span class="data text-xs text-fg-muted">· {countdown(e.expiresAt) ?? "ending"}</span>
+				</span>
+			{/each}
+		</div>
+	{/if}
+	{#if data.strike.options}
+		<StrikePlanner options={data.strike.options} regionName={data.region.name} />
+	{/if}
 
 	<!-- Residence / travel -->
 	{#if (isIndependent || !data.hasResidence) && !data.activeTravel}
@@ -633,6 +665,14 @@
 				</Button>
 			</form>
 		</SectionCard>
+	{/if}
+
+	<!-- Strikes on this region -->
+	{#if data.strike.log.length}
+		<section class="panel rounded-sm p-4" id="strikes">
+			<h2 class="section-title mb-3">Strike log</h2>
+			<StrikeLog entries={data.strike.log} showRegion={false} />
+		</section>
 	{/if}
 
 	<!-- Battles fought here -->

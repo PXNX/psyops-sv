@@ -57,6 +57,11 @@ async function pendingApplicationIn(userId: string, stateId: number) {
 
 import { declareWar, WarDeclarationError } from "#lib/server/services/military/declare-war.js";
 import { warsOfState } from "#lib/server/services/military/history.js";
+import { ihlRecord } from "#lib/server/services/military/ihl.js";
+import { statePopulation } from "#lib/server/services/population.js";
+import { knownEffects, opsAuthority } from "#lib/server/services/military/covert-ops.js";
+import { sideOf, viewerSide } from "#lib/server/services/military/recon.js";
+import { effectiveEnergy } from "#lib/server/services/military/state-effects.js";
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
 
@@ -486,7 +491,35 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		})
 	]);
 
+	// Covert operations: the effects on this state the viewer knows about
+	// (attributed to the world, detected to the state, its own to the culprit).
+	const covertEffectsPromise = (async () => {
+		const [side, authority] = accountId
+			? await Promise.all([viewerSide(db, accountId), opsAuthority(db, accountId)])
+			: [null, null];
+		const viewerIds = new Set(side?.stateIds ?? []);
+		if (authority) for (const id of (await sideOf(db, authority.stateId)).stateIds) viewerIds.add(id);
+		const effects = await knownEffects(db, stateId, [...viewerIds]);
+		const sourceIds = [...new Set(effects.map((e) => e.sourceStateId).filter((id): id is number => !!id))];
+		const names = sourceIds.length
+			? await db.select({ id: states.id, name: states.name }).from(states).where(inArray(states.id, sourceIds))
+			: [];
+		return effects.map((e) => ({
+			...e,
+			source: names.find((n) => n.id === e.sourceStateId)?.name ?? null,
+			region: e.regionId ? getRegionName(e.regionId) : null
+		}));
+	})();
+	// A grid attack takes part of the capacity offline for a while.
+	const [covertEffects, liveEnergy] = await Promise.all([
+		covertEffectsPromise,
+		energyData ? effectiveEnergy(db, stateId, energyData) : null
+	]);
+
 	const actualPopulation = populationResult[0]?.total || 0;
+
+	// Civilians (sum over the state's regions) and its public IHL record.
+	const [civilians, ihl] = await Promise.all([statePopulation(db, stateId), ihlRecord(db, stateId)]);
 
 	// Check if current user is president of this state
 	const isPresident = presidentData?.userId === locals.account?.id;
@@ -608,13 +641,17 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			taxRate: tax.taxRate,
 			implementedAt: tax.implementedAt
 		})),
-		energy: energyData
+		energy: liveEnergy
 			? {
-					totalProduction: energyData.totalProduction,
-					usedProduction: energyData.usedProduction,
-					available: energyData.totalProduction - energyData.usedProduction
+					totalProduction: liveEnergy.totalProduction,
+					usedProduction: liveEnergy.usedProduction,
+					available: liveEnergy.totalProduction - liveEnergy.usedProduction,
+					gridDegraded: liveEnergy.gridDegraded
 				}
 			: null,
+		covertEffects,
+		civilians,
+		ihl,
 		powerPlants: plants.length,
 		isPresident,
 		isForeignMinister,

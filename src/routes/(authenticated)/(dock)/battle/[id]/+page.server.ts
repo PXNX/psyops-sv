@@ -10,6 +10,7 @@ import { battleParticipants, battleRounds, battles, militaryUnits } from "#lib/s
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { MILITARY_UNIT_TEMPLATES, regionConditions } from "#lib/config/index.js";
 import { battleIntel, resolveReconMissions, type IntelPicture } from "#lib/server/services/military/recon.js";
+import { battleStrikeModifiers, strikeLog } from "#lib/server/services/military/strike.js";
 import {
 	PREPARATION_HOURS,
 	TERRAIN_DATA,
@@ -162,8 +163,16 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		sensors: picture?.sensors ?? []
 	});
 
+	// The air war over this battle: strikes flown on it, and what supply cuts
+	// and IHL morale do to each side's output this round.
+	const [strikes, strikeMods] = await Promise.all([
+		strikeLog(db, { battleId: battle.id }, 15),
+		battle.status === "ongoing" ? battleStrikeModifiers(db, battle) : Promise.resolve(null)
+	]);
+
 	return {
 		conditions: regionConditions(battle.region),
+		airWar: { log: strikes, modifiers: strikeMods },
 		intel: {
 			attacker: intelPanel(intel.attacker, intel.attackerPicture),
 			defender: intelPanel(intel.defender, intel.defenderPicture)

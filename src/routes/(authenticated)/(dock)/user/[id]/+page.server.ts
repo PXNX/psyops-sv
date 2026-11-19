@@ -1,5 +1,6 @@
 // src/routes/(authenticated)/(dock)/user/[id]/+page.server.ts
 import { db } from "#lib/server/db.js";
+import { dividendYieldPercent, dividendYields } from "#lib/server/services/economy/dividends.js";
 import {
 	accounts,
 	partyMembers,
@@ -284,6 +285,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		const lastTradeByCompany = new Map(lastTrades.map((t) => [t.companyId, t]));
 		const factoriesByCompany = new Map(factoryCounts.map((f) => [f.companyId, f.count]));
 		const subscribersByNewspaper = new Map(subscriberCounts.map((s) => [s.newspaperId, s.count]));
+		const dividendsByCompany = await dividendYields(
+			db,
+			shareRows.map((r) => r.companyId)
+		);
 
 		const rankOrder = { owner: 0, editor: 1, author: 2 } as const;
 
@@ -303,7 +308,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					foundedAt: c.foundedAt,
 					factoryCount: factoriesByCompany.get(c.id) ?? 0,
 					sharePrice,
-					marketValue: shares && sharePrice !== null ? sharePrice * shares.totalShares : null
+					marketValue: shares && sharePrice !== null ? sharePrice * shares.totalShares : null,
+					dividendYield: dividendYieldPercent(dividendsByCompany.get(c.id)?.paidPerShare ?? 0, sharePrice)
 				};
 			}),
 			newspapers: journalistRecords

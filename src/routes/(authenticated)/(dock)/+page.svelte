@@ -200,6 +200,24 @@
 		</div>
 	{/if}
 
+	<!-- Enemy propaganda leaflets dropped over the user's state (psyops) -->
+	{#each data.leaflets as leaflet, i (leaflet.id)}
+		<article
+			class="paper relative rounded-sm p-5 pr-24"
+			style:--stamp-tilt="{i % 2 ? 6 : -8}deg"
+			aria-label="Enemy propaganda leaflet"
+		>
+			<span class="stamp absolute right-3 top-3">Propaganda</span>
+			<p class="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-muted">
+				Leaflet found in the streets · {formatDate(leaflet.droppedAt)}
+			</p>
+			<p class="mt-2 font-serif text-base leading-snug text-fg whitespace-pre-wrap">{leaflet.message}</p>
+			<p class="mt-2 text-xs text-fg-muted">
+				{leaflet.from ? `Dropped by ${leaflet.from}.` : "Sender unknown."} Enemy psychological operation.
+			</p>
+		</article>
+	{/each}
+
 	<!-- Broadcasts: the latest standing order from each chain of command you're under -->
 	<section class="space-y-3">
 		<div class="flex items-center justify-between gap-3">

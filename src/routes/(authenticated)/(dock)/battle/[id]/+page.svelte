@@ -23,6 +23,7 @@
 	import FluentLocation20Filled from "~icons/fluent/location-20-filled";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import BattleIntel from "./BattleIntel.svelte";
+	import { StrikeLog } from "#lib/component/strike/index.js";
 	import { Conditions } from "#lib/component/tactical/index.js";
 
 	const { data } = $props();
@@ -380,6 +381,35 @@
 		mySide={data.me.side}
 		ended={data.battle.phase === "ended"}
 	/>
+
+	<!-- The air war: strikes on this battle, supply cuts and IHL morale -->
+	{#if data.airWar.log.length || (data.airWar.modifiers && (data.airWar.modifiers.attacker < 1 || data.airWar.modifiers.defender < 1))}
+		<section class="panel rounded-sm p-4 space-y-3" id="air-war">
+			<h2 class="section-title">Air war</h2>
+			{#if data.airWar.modifiers}
+				{@const m = data.airWar.modifiers}
+				<div class="grid grid-cols-2 gap-3 text-xs">
+					{#each [{ name: data.attacker.name, side: "attacker" as const }, { name: data.defender.name, side: "defender" as const }] as s (s.side)}
+						<div class="rounded-sm border border-line/15 bg-surface-2 px-3 py-2">
+							<p class="truncate text-fg-soft">{s.name}</p>
+							<p class="data text-fg">
+								Supply <span class={m.supply[s.side] < 1 ? "text-hostile-fg" : ""}
+									>{Math.round(m.supply[s.side] * 100)}%</span
+								>
+								· Morale
+								<span class={m.morale[s.side] < 1 ? "text-hostile-fg" : ""}>{Math.round(m.morale[s.side] * 100)}%</span>
+							</p>
+						</div>
+					{/each}
+				</div>
+				<p class="field-hint -mt-1">
+					Strikes on logistics and bridges in or next to the region cut a side's supply; a state with a poor IHL record
+					fights with lower morale.
+				</p>
+			{/if}
+			<StrikeLog entries={data.airWar.log} empty="No strikes flown on this battle yet." />
+		</section>
+	{/if}
 
 	<!-- What the conquest wrecked -->
 	{#if destroyed.length}

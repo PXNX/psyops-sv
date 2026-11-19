@@ -13,7 +13,8 @@
 import { db } from "#lib/server/db.js";
 import { wars, battles, warSurrenders, states, regions, residences } from "#lib/server/schema.js";
 import { and, count, desc, eq, max, sql } from "drizzle-orm";
-import { exhaustionAt, isWarExhausted, isWarStale } from "#lib/config/index.js";
+import { WAR_CONFIG, exhaustionAt, isWarExhausted, isWarStale } from "#lib/config/index.js";
+import { warPsyopsExhaustion } from "#lib/server/services/military/state-effects.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 export type WarEndReason = "exhaustion" | "stalemate" | "capitulation" | "surrender";
@@ -54,7 +55,12 @@ export async function resolveWars(now: Date = new Date()): Promise<WarResolution
 			// Recompute from the declaration date every run, so the integer
 			// column never loses (or overshoots) accrued weariness. (Adding the
 			// elapsed time to the stored value instead compounded it hourly.)
-			const next = exhaustionAt(war.declaredAt, now);
+			// Successful morale campaigns and leaflet drops between the two
+			// belligerents add weariness on top (capped, see psyops.config.ts).
+			const next = Math.min(
+				WAR_CONFIG.EXHAUSTION_LIMIT,
+				exhaustionAt(war.declaredAt, now) + (await warPsyopsExhaustion(db, war, now))
+			);
 			const outcome = await findWarEnd(war, now, next);
 
 			if (outcome) {

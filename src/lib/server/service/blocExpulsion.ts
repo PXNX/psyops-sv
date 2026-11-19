@@ -16,6 +16,7 @@ import {
 	presidents,
 	states
 } from "#lib/server/schema.js";
+import { expulsionPassShare } from "#lib/server/services/military/ihl.js";
 
 export const BLOC_EXPULSION_DAYS = 3;
 
@@ -23,11 +24,22 @@ export type ExpulsionOutcome = "pending" | "expelled" | "rejected" | "cancelled"
 
 export class ExpulsionError extends Error {}
 
-/** The decision for a tally, or null while it's still open. Pure. */
-export function decideExpulsion(t: { pro: number; contra: number; voters: number; expired: boolean }) {
-	if (t.voters > 0 && t.pro * 2 > t.voters) return "expelled" as const;
-	if (t.voters === 0 || t.contra * 2 >= t.voters) return "rejected" as const;
-	if (t.expired) return t.pro > t.contra ? ("expelled" as const) : ("rejected" as const);
+/**
+ * The decision for a tally, or null while it's still open. Pure. It passes
+ * once more than `passShare` of the voters are pro (a majority by default; a
+ * third against a state with a violator IHL record, see ihl.config.ts).
+ */
+export function decideExpulsion(t: {
+	pro: number;
+	contra: number;
+	voters: number;
+	expired: boolean;
+	passShare?: number;
+}) {
+	const share = t.passShare ?? 0.5;
+	if (t.voters > 0 && t.pro > t.voters * share) return "expelled" as const;
+	if (t.voters === 0 || t.contra >= t.voters * (1 - share)) return "rejected" as const;
+	if (t.expired) return t.pro > (t.pro + t.contra) * share ? ("expelled" as const) : ("rejected" as const);
 	return null;
 }
 
@@ -154,7 +166,10 @@ export async function resolveExpulsion(db: Database, expulsionId: number): Promi
 		.where(and(eq(states.id, expulsion.stateId), eq(states.blocId, expulsion.blocId)));
 
 	const tally = await expulsionTally(db, expulsion.id, expulsion.blocId, expulsion.stateId);
-	const decision = stillMember ? decideExpulsion({ ...tally, expired: expulsion.expiresAt <= now }) : "cancelled";
+	const passShare = await expulsionPassShare(db, expulsion.stateId, now);
+	const decision = stillMember
+		? decideExpulsion({ ...tally, expired: expulsion.expiresAt <= now, passShare })
+		: "cancelled";
 	if (!decision) return "pending";
 
 	const applied = await db.transaction(async (tx) => {

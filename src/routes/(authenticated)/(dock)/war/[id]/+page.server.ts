@@ -18,6 +18,7 @@ import {
 	wars
 } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import { strikeLog } from "#lib/server/services/military/strike.js";
 import {
 	surrenderWar,
 	WAR_END_REASON_LABELS,
@@ -130,7 +131,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	const mySide: Side | null =
 		myStateId === war.attackerId ? "attacker" : myStateId === war.defenderId ? "defender" : null;
 
+	// Every airstrike flown in this war, either way round.
+	const strikes = await strikeLog(db, { warId: war.id }, 25);
+
 	return {
+		strikes,
 		war: {
 			id: war.id,
 			status: war.status,

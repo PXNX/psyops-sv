@@ -12,6 +12,7 @@ import {
 } from "#lib/server/schema.js";
 import { eq, and, or, desc } from "drizzle-orm";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import { activeLeaflets } from "#lib/server/services/military/state-effects.js";
 import { getBirthdayInfo, collectBirthdayRewards } from "#lib/server/service/birthday.js";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
@@ -217,12 +218,33 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	})();
 
-	const [stateBroadcast, blocBroadcast, ongoingBattles, activeWars, stateSnapshot] = await Promise.all([
+	// --- Enemy leaflets dropped over the user's state (psyops) ---
+	const leafletsPromise = (async () => {
+		if (!homeState) return [];
+		const rows = await activeLeaflets(db, homeState.id);
+		const sources = rows.filter((r) => r.attributed).map((r) => r.sourceStateId);
+		const names = sources.length
+			? await db.query.states.findMany({
+					where: (s, { inArray }) => inArray(s.id, sources),
+					columns: { id: true, name: true }
+				})
+			: [];
+		return rows.slice(0, 2).map((r) => ({
+			id: r.id,
+			message: r.message ?? "",
+			// Signed only when traced back to its sender.
+			from: r.attributed ? (names.find((n) => n.id === r.sourceStateId)?.name ?? null) : null,
+			droppedAt: r.launchedAt
+		}));
+	})();
+
+	const [stateBroadcast, blocBroadcast, ongoingBattles, activeWars, stateSnapshot, leaflets] = await Promise.all([
 		stateBroadcastPromise,
 		blocBroadcastPromise,
 		ongoingBattlesPromise,
 		activeWarsPromise,
-		stateSnapshotPromise
+		stateSnapshotPromise,
+		leafletsPromise
 	]);
 
 	return {
@@ -241,6 +263,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		blocBroadcast,
 		ongoingBattles,
 		activeWars,
+		leaflets,
 		birthdayInfo
 	};
 };

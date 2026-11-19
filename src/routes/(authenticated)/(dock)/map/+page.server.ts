@@ -3,6 +3,7 @@
 // the viewer's side, own forces, hostile forces known through fresh intel
 // (fog of war elsewhere), battles with their axes of attack, and recon cover.
 import type { IntelPicture } from "#lib/server/services/military/intel.js";
+import { recentlyStruckRegions } from "#lib/server/services/military/strike.js";
 import { db } from "#lib/server/db.js";
 import {
 	regions,
@@ -464,7 +465,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warAttackerStateIds,
 			warDefenderStateIds,
 			currentUserRegionId,
-			sa
+			sa,
+			// Airstrikes in the last 24 h (public: an air raid is no secret).
+			strikes: Object.fromEntries(await recentlyStruckRegions(db))
 		};
 	} catch (error) {
 		console.error("Error loading map data:", error);
@@ -477,7 +480,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warAttackerStateIds: new Set<number>(),
 			warDefenderStateIds: new Set<number>(),
 			currentUserRegionId: null,
-			sa: null
+			sa: null,
+			strikes: {}
 		};
 	}
 };

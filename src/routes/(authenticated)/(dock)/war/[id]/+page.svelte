@@ -11,6 +11,7 @@
 	import Logo from "#lib/component/Logo.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
 	import { Badge, Button } from "#lib/component/ui/index.js";
+	import { StrikeLog } from "#lib/component/strike/index.js";
 	import FluentBuildingGovernment20Filled from "~icons/fluent/building-government-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
 	import FluentArrowRight20Filled from "~icons/fluent/arrow-right-20-filled";
@@ -265,6 +266,21 @@
 			</ul>
 		{/if}
 	</section>
+
+	<!-- Air war -->
+	{#if data.strikes.length}
+		{@const killed = data.strikes.reduce((n, s) => n + s.civilianCasualties, 0)}
+		<section class="panel rounded-sm p-5 space-y-3" id="strikes">
+			<h2 class="section-title">
+				Air war
+				<span class="ml-auto text-xs font-normal normal-case tracking-normal text-fg-muted">
+					{data.strikes.length} strike{data.strikes.length === 1 ? "" : "s"} · {killed.toLocaleString("en-US")} civilians
+					killed
+				</span>
+			</h2>
+			<StrikeLog entries={data.strikes} />
+		</section>
+	{/if}
 
 	<!-- Order of battle -->
 	<div class="grid gap-4 sm:grid-cols-2">
