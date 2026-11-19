@@ -18,6 +18,7 @@ import {
 import {
 	ReconError,
 	launchRecon,
+	pruneIntelReports,
 	picturesByRegion,
 	reportForSide,
 	resolveReconMissions,
@@ -225,6 +226,73 @@ describe("sensors and conditions", () => {
 		expect(picture.categories.artillery.count).toBe(1);
 		expect(picture.unitTypes).toEqual([{ unitType: "artillery", count: 1, estimated: false }]);
 		expect(picture.confidence).toBeGreaterThan(0.5);
+	});
+
+	it("sends satellites over any enemy region, not just the front", async () => {
+		// A disconnected region beyond any friendly border: only satellites
+		// have the reach to image it.
+		const [remote] = await handle.db
+			.insert(regions)
+			.values({ latitude: "10.0000", longitude: "20.0000", terrain: "desert", stateId: sylvania })
+			.returning();
+		await handle.db.update(userWallets).set({ balance: 1_000_000 }).where(eq(userWallets.userId, "user-2"));
+		const before = await balance("user-2");
+		const mission = await launchRecon(handle.db, {
+			userId: "user-2",
+			regionId: remote!.id,
+			sensor: "sat_sar",
+			now: new Date(Date.now() + 10 * HOUR)
+		});
+		expect(mission.targetRegionId).toBe(remote!.id);
+		expect(await balance("user-2")).toBe(before - SENSORS.sat_sar.cost);
+	});
+
+	it("keeps two weeks of reports and deletes older ones", async () => {
+		const oldAt = new Date(Date.now() - 15 * 24 * HOUR);
+		const [mission] = await handle.db
+			.insert(reconMissions)
+			.values({
+				launchedBy: "user-1",
+				stateId: freedonia,
+				targetRegionId: targetRegion,
+				targetStateId: sylvania,
+				sensor: "sat_eo",
+				cost: 0,
+				status: "completed",
+				launchedAt: oldAt,
+				completesAt: oldAt,
+				completedAt: oldAt
+			})
+			.returning();
+		const old = await handle.db
+			.insert(intelReports)
+			.values({
+				missionId: mission!.id,
+				stateId: freedonia,
+				regionId: targetRegion,
+				sensor: "sat_eo",
+				findings: {
+					sensor: "sat_eo",
+					outcome: "ok",
+					conditions: clearDay(),
+					ownerStateId: sylvania,
+					ownerStateName: null,
+					airDefence: null,
+					coverage: { infantry: 0, vehicle: 0, artillery: 0, air: 0 },
+					categories: [],
+					unitTypes: null,
+					firingPositions: null,
+					buildings: null,
+					battle: null
+				},
+				observedAt: oldAt,
+				expiresAt: new Date(oldAt.getTime() + INTEL_VALID_HOURS * HOUR)
+			})
+			.returning();
+		const [fresh] = await sideReports(handle.db, [freedonia], { regionIds: [targetRegion] });
+		expect(await pruneIntelReports(handle.db, new Date())).toBe(1);
+		expect(await reportForSide(handle.db, [freedonia], old[0]!.id)).toBeNull();
+		expect(await reportForSide(handle.db, [freedonia], fresh!.id)).toBeTruthy();
 	});
 });
 

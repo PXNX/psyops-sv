@@ -17,7 +17,12 @@ export const COMBAT_CONFIG = {
 		mountain: 0.5,
 		urban: 0.6,
 		desert: 0.9,
-		jungle: 0.6
+		jungle: 0.6,
+		lake: 0.3,
+		shore: 0.7,
+		city: 0.45,
+		town: 0.6,
+		fields: 1.05
 	},
 
 	// Organization and strength

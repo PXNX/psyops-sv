@@ -66,20 +66,20 @@ notify the citizens of both states.
 
 A battle is a fight over a specific region within a war.
 
-| Field               | Type          | Notes                                                                |
-| ------------------- | ------------- | -------------------------------------------------------------------- |
-| `id`                | int PK        |                                                                      |
-| `warId`             | FK → wars     | Parent war                                                           |
-| `regionId`          | FK → regions  | The contested region                                                 |
-| `attackerStateId`   | FK → states   |                                                                      |
-| `defenderStateId`   | FK → states   | Owner of the region                                                  |
-| `phase`             | enum          | `preparation` → `planning` → `active` → `ended`                      |
-| `terrain`           | enum          | `plains`, `forest`, `hills`, `mountain`, `urban`, `desert`, `jungle` |
-| `status`            | enum          | `ongoing`, `attacker_won`, `defender_won`                            |
-| `startedBy`         | FK → accounts |                                                                      |
-| `preparationEndsAt` | timestamp     | 24h after battle start                                               |
-| `startedAt`         | timestamp     |                                                                      |
-| `endedAt`           | timestamp     |                                                                      |
+| Field               | Type          | Notes                                                                                                           |
+| ------------------- | ------------- | --------------------------------------------------------------------------------------------------------------- |
+| `id`                | int PK        |                                                                                                                 |
+| `warId`             | FK → wars     | Parent war                                                                                                      |
+| `regionId`          | FK → regions  | The contested region                                                                                            |
+| `attackerStateId`   | FK → states   |                                                                                                                 |
+| `defenderStateId`   | FK → states   | Owner of the region                                                                                             |
+| `phase`             | enum          | `preparation` → `planning` → `active` → `ended`                                                                 |
+| `terrain`           | enum          | `plains`, `forest`, `hills`, `mountain`, `urban`, `desert`, `jungle`, `lake`, `shore`, `city`, `town`, `fields` |
+| `status`            | enum          | `ongoing`, `attacker_won`, `defender_won`                                                                       |
+| `startedBy`         | FK → accounts |                                                                                                                 |
+| `preparationEndsAt` | timestamp     | 24h after battle start                                                                                          |
+| `startedAt`         | timestamp     |                                                                                                                 |
+| `endedAt`           | timestamp     |                                                                                                                 |
 
 ### Battle Phases
 
@@ -220,6 +220,11 @@ Each terrain type has a **max combat width**. Only units whose combined width fi
 | `urban`    | 96           |
 | `desert`   | 90           |
 | `jungle`   | 84           |
+| `lake`     | 30           |
+| `shore`    | 60           |
+| `city`     | 40           |
+| `town`     | 55           |
+| `fields`   | 95           |
 
 Units are selected for engagement by **earliest join time** (FIFO).
 

@@ -132,7 +132,12 @@ export const terrainTypeEnum = pgEnum("terrain_type", [
 	"mountain",
 	"urban",
 	"desert",
-	"jungle"
+	"jungle",
+	"lake",
+	"shore",
+	"city",
+	"town",
+	"fields"
 ]);
 
 // --- AUTH ---

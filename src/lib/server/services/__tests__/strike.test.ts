@@ -71,6 +71,11 @@ describe("civilian population", () => {
 		expect(derivedPopulation({ id: 7, terrain: "plains", infrastructure: 4, education: 2 })).toBeGreaterThan(bare);
 		expect(derivedPopulation({ id: 7, terrain: "urban" })).toBeGreaterThan(bare);
 		expect(derivedPopulation({ id: 7, terrain: "mountain" })).toBeLessThan(bare);
+		expect(derivedPopulation({ id: 7, terrain: "city" })).toBeGreaterThan(
+			derivedPopulation({ id: 7, terrain: "town" })
+		);
+		expect(derivedPopulation({ id: 7, terrain: "fields" })).toBeLessThan(bare);
+		expect(derivedPopulation({ id: 7, terrain: "lake" })).toBeLessThan(derivedPopulation({ id: 7, terrain: "shore" }));
 	});
 
 	it("prefers the stored figure", () => {

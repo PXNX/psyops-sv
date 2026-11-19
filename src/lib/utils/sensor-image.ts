@@ -425,7 +425,7 @@ class Painter {
 
 interface Cell {
 	pts: Pt[];
-	use: "field" | "forest" | "urban" | "park" | "bare" | "rock";
+	use: "field" | "forest" | "urban" | "park" | "bare" | "rock" | "water" | "sand";
 	tone: number;
 	furrow: number;
 }
@@ -435,13 +435,17 @@ interface Road {
 	paved: boolean;
 }
 interface Terrain {
-	kind: "plains" | "desert" | "forest" | "urban" | "hills" | "mountain";
+	kind: "plains" | "desert" | "forest" | "urban" | "hills" | "mountain" | "lake" | "shore" | "city" | "town" | "fields";
 	cells: Cell[];
 	roads: Road[];
 	river: { pts: Pt[]; width: number } | null;
 	bridge: Pt | null;
 	buildings: { x: number; y: number; w: number; h: number; rot: number; tone: number }[];
 	dunes: Pt[][];
+	/** A lake or the sea off one edge: a smooth shoreline over the cell patchwork. */
+	waterbody: Pt[] | null;
+	/** Contour lines on ridges and surf lines along a shore. */
+	contours: Pt[][];
 }
 
 const TERRAIN_KIND: Record<string, Terrain["kind"]> = {
@@ -451,11 +455,19 @@ const TERRAIN_KIND: Record<string, Terrain["kind"]> = {
 	jungle: "forest",
 	urban: "urban",
 	hills: "hills",
-	mountain: "mountain"
+	mountain: "mountain",
+	lake: "lake",
+	shore: "shore",
+	city: "city",
+	town: "town",
+	fields: "fields"
 };
 
-const COLS = 8;
-const ROWS = 5;
+// Finer patchwork than the first version: more detail in the frame without
+// storing an image. Every scene is still drawn procedurally from a seed, so
+// imagery costs a few SVG nodes and zero database bytes.
+const COLS = 12;
+const ROWS = 7;
 const MARGIN = 120;
 
 function makeTerrain(regionId: number, terrainName: string): Terrain {
@@ -507,6 +519,34 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 			["rock", 0.45],
 			["forest", 0.4],
 			["field", 0.15]
+		],
+		lake: [
+			["water", 0.64],
+			["forest", 0.14],
+			["field", 0.14],
+			["bare", 0.08]
+		],
+		shore: [
+			["water", 0.34],
+			["sand", 0.34],
+			["field", 0.18],
+			["forest", 0.14]
+		],
+		city: [
+			["urban", 0.86],
+			["park", 0.08],
+			["field", 0.06]
+		],
+		town: [
+			["urban", 0.5],
+			["field", 0.32],
+			["park", 0.1],
+			["forest", 0.08]
+		],
+		fields: [
+			["field", 0.88],
+			["forest", 0.06],
+			["bare", 0.06]
 		]
 	};
 	const cells: Cell[] = [];
@@ -543,15 +583,18 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 		}
 		return { pts, width, paved };
 	};
-	const roads: Road[] = [road(rng() < 0.6, kind === "urban" ? 6 : 4, true, 40)];
-	if (rng() < (kind === "urban" ? 0.9 : 0.55)) roads.push(road(!(roads[0]!.pts[0]![0] < 0), 3.5, true, 50));
-	const tracks = kind === "urban" ? 0 : 1 + Math.floor(rng() * 2);
+	const dense = kind === "urban" || kind === "city" || kind === "town";
+	const roads: Road[] = [road(rng() < 0.6, dense ? 6 : 4, true, 40)];
+	if (rng() < (dense ? 0.95 : 0.55)) roads.push(road(!(roads[0]!.pts[0]![0] < 0), 3.5, true, 50));
+	if (dense && rng() < 0.7) roads.push(road(rng() < 0.5, 3, true, 60));
+	const tracks = dense ? 0 : 1 + Math.floor(rng() * 2);
 	for (let k = 0; k < tracks; k++) roads.push(road(rng() < 0.5, 2, false, 80));
 
-	// A river in about a third of the regions (never in the mountains' rock).
+	// A river in about a third of the regions (never in the mountains' rock,
+	// and lakes and shores already have a waterbody).
 	let river: Terrain["river"] = null;
 	let bridge: Pt | null = null;
-	if (kind !== "mountain" && rng() < 0.4) {
+	if (kind !== "mountain" && kind !== "lake" && kind !== "shore" && rng() < 0.4) {
 		const pts: Pt[] = [];
 		const x0 = range(rng, 140, 500);
 		for (let k = 0; k <= 9; k++) {
@@ -569,12 +612,62 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 		}
 	}
 
+	// A lake is a closed basin; a shore puts the sea along one edge of view.
+	let waterbody: Pt[] | null = null;
+	if (kind === "lake") {
+		const cx = range(rng, FRAME_W * 0.35, FRAME_W * 0.65);
+		const cy = range(rng, FRAME_H * 0.35, FRAME_H * 0.65);
+		const rx = range(rng, 130, 190);
+		const ry = range(rng, 80, 125);
+		waterbody = [];
+		for (let k = 0; k < 24; k++) {
+			const a = (k / 24) * Math.PI * 2;
+			const wobble = range(rng, 0.88, 1.12);
+			waterbody.push([cx + Math.cos(a) * rx * wobble, cy + Math.sin(a) * ry * wobble]);
+		}
+	} else if (kind === "shore") {
+		const left = rng() < 0.5;
+		const edge = left ? -MARGIN : FRAME_W + MARGIN;
+		const coast: Pt[] = [
+			[edge, -MARGIN],
+			[edge, FRAME_H + MARGIN]
+		];
+		for (let k = 0; k <= 16; k++) {
+			const y = -MARGIN + (k / 16) * (FRAME_H + 2 * MARGIN);
+			const x = (left ? 70 : FRAME_W - 70) + Math.sin(k * 0.8 + rng()) * 34 + range(rng, -14, 14);
+			coast.push([x, y]);
+		}
+		waterbody = left
+			? [[edge, -MARGIN], ...coast.slice(2), [edge, FRAME_H + MARGIN]]
+			: [[edge, -MARGIN], [edge, FRAME_H + MARGIN], ...coast.slice(2).reverse()];
+	}
+
+	// Contour ridges in the hills and mountains, surf lines along a shore.
+	const contours: Pt[][] = [];
+	if (kind === "hills" || kind === "mountain") {
+		for (let k = 0; k < (kind === "mountain" ? 7 : 4); k++) {
+			const y = range(rng, -20, FRAME_H + 20);
+			const pts: Pt[] = [];
+			for (let s = 0; s <= 12; s++) pts.push([-40 + (s / 12) * (FRAME_W + 80), y + Math.sin(s * 0.7 + k * 1.9) * 16]);
+			contours.push(pts);
+		}
+	} else if (kind === "shore") {
+		for (let k = 0; k < 4; k++) {
+			const pts: Pt[] = [];
+			for (let s = 0; s <= 12; s++) {
+				const y = -30 + (s / 12) * (FRAME_H + 60);
+				pts.push([range(rng, 80, FRAME_W - 80) + Math.sin(s * 0.9 + k) * 12, y]);
+			}
+			contours.push(pts);
+		}
+	}
+
 	// City blocks: buildings in a rotated grid, inside urban cells.
 	const buildings: Terrain["buildings"] = [];
-	if (kind === "urban" || kind === "plains" || kind === "hills") {
+	if (dense || kind === "plains" || kind === "hills" || kind === "fields" || kind === "shore") {
 		const rot = range(rng, -12, 12);
-		const step = kind === "urban" ? 22 : 30;
-		const cap = kind === "urban" ? 140 : 26;
+		const step = kind === "city" ? 17 : kind === "town" ? 22 : dense ? 20 : 30;
+		const cap = kind === "city" ? 220 : kind === "town" ? 110 : dense ? 160 : 26;
 		for (let y = 10; y < FRAME_H - 5 && buildings.length < cap; y += step) {
 			for (let x = 10; x < FRAME_W - 5 && buildings.length < cap; x += step) {
 				const p: Pt = [x + range(rng, -3, 3), y + range(rng, -3, 3)];
@@ -610,7 +703,7 @@ function makeTerrain(regionId: number, terrainName: string): Terrain {
 		}
 	}
 
-	return { kind, cells, roads, river, bridge, buildings, dunes };
+	return { kind, cells, roads, river, bridge, buildings, dunes, waterbody, contours };
 }
 
 // ── Building the frame ──────────────────────────────────────────────────────
@@ -714,7 +807,12 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 
 	// ── Ground ──
 	const kind = terrain.kind;
-	const baseMat: Material = kind === "desert" ? "sand" : kind === "urban" ? "urban" : "grass";
+	const baseMat: Material =
+		kind === "desert" || kind === "shore"
+			? "sand"
+			: kind === "urban" || kind === "city" || kind === "town"
+				? "urban"
+				: "grass";
 	const base = P.c(baseMat, 0, kind === "mountain" ? EO.rock : undefined);
 	const forestIn = (p: Pt) => terrain.cells.some((c) => c.use === "forest" && inPolygon(p, c.pts));
 	for (const cell of terrain.cells) {
@@ -723,10 +821,24 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 		switch (cell.use) {
 			case "field": {
 				const hex = kind === "desert" ? "#7c8450" : EO_FIELDS[Math.floor(cell.tone * EO_FIELDS.length)]!;
-				ground.push({ k: "path", d, fill: P.c("field", v, hex), stroke: P.c("dirt", -0.3), sw: 0.6 });
+				// A darker boundary reads as a hedgerow in the photo while the
+				// same geometry stays identical in IR and SAR.
+				ground.push({
+					k: "path",
+					d,
+					fill: P.c("field", v, hex),
+					stroke: P.c(mode === "eo" && cell.tone > 0.35 ? "grass" : "dirt", -0.4),
+					sw: 0.6
+				});
 				if (mode !== "sar" || cell.tone > 0.5) ground.push({ k: "path", d, fill: `pat:furrow${cell.furrow}` });
 				break;
 			}
+			case "water":
+				ground.push({ k: "path", d, fill: P.c("water", v * 0.3), stroke: P.c("dirt", 0.1), sw: 0.8 });
+				break;
+			case "sand":
+				ground.push({ k: "path", d, fill: P.c("sand", v, EO_DESERT[Math.floor(cell.tone * EO_DESERT.length)]!) });
+				break;
 			case "forest":
 				ground.push({ k: "path", d, fill: "pat:canopy" });
 				break;
@@ -748,6 +860,34 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 				});
 				break;
 		}
+	}
+	if (terrain.waterbody) {
+		const d = pathOf(terrain.waterbody, true);
+		ground.push({ k: "path", d, fill: P.c("water", 0) });
+		// A bright shoreline and a few reeds make the edge readable in every band.
+		features.push({ k: "path", d, stroke: P.c("dirt", 0.35), sw: 2.4, fill: "none", op: 0.75 });
+		features.push({ k: "path", d, stroke: P.c("sand", 0.5), sw: 1, fill: "none", op: 0.6 });
+		for (let k = 0; k < terrain.waterbody.length; k += 2) {
+			const [x, y] = terrain.waterbody[k]!;
+			features.push({
+				k: "path",
+				d: `M${r1(x - 2)} ${r1(y)}l1 -4M${r1(x + 1)} ${r1(y)}l1 -5`,
+				stroke: P.c("grass", -0.4),
+				sw: 0.8,
+				fill: "none",
+				op: 0.5
+			});
+		}
+	}
+	for (const contour of terrain.contours) {
+		ground.push({
+			k: "path",
+			d: smoothPath(contour),
+			stroke: P.c(kind === "shore" ? "sand" : "rock", 0.4),
+			sw: 1.1,
+			fill: "none",
+			op: kind === "shore" ? 0.5 : 0.45
+		});
 	}
 	for (const dune of terrain.dunes) {
 		ground.push({ k: "path", d: smoothPath(dune), stroke: P.c("sand", 0.6), sw: 2, op: 0.5, fill: "none" });
@@ -807,6 +947,16 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 			});
 		}
 		features.push({ k: "rect", x: r1(b.x), y: r1(b.y), w: r1(b.w), h: r1(b.h), fill: P.c("roof", b.tone * 2 - 1), tf });
+		if (mode === "eo" && b.w > 8)
+			features.push({
+				k: "path",
+				d: `M${r1(b.x + 1)} ${r1(b.y + b.h - 1.5)}h${r1(b.w - 2)}`,
+				stroke: P.c("concrete", 0.6),
+				sw: 0.8,
+				fill: "none",
+				op: 0.5,
+				tf
+			});
 		if (mode === "sar") {
 			// Double-bounce: bright facade facing the radar (west), shadow behind.
 			features.push({ k: "rect", x: r1(b.x - 1), y: r1(b.y), w: 1.6, h: r1(b.h), fill: grey(1), tf });
@@ -816,7 +966,10 @@ function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 
 	// ── Placement ──
 	const placed: { p: Pt; r: number }[] = [];
-	const onWater = (p: Pt) => !!terrain.river && distToPolyline(p, terrain.river.pts) < terrain.river.width / 2 + 6;
+	const onWater = (p: Pt) =>
+		(!!terrain.river && distToPolyline(p, terrain.river.pts) < terrain.river.width / 2 + 6) ||
+		(!!terrain.waterbody && inPolygon(p, terrain.waterbody)) ||
+		terrain.cells.some((c) => c.use === "water" && inPolygon(p, c.pts));
 	const onBuilding = (p: Pt) =>
 		terrain.buildings.some((b) => Math.abs(b.x + b.w / 2 - p[0]) < b.w && Math.abs(b.y + b.h / 2 - p[1]) < b.h);
 	function spot(r: number, prefer?: (p: Pt) => boolean): Pt {

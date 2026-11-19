@@ -32,7 +32,12 @@ export const TERRAIN_DATA = {
 	mountain: { combatWidth: 75 },
 	urban: { combatWidth: 96 },
 	desert: { combatWidth: 90 },
-	jungle: { combatWidth: 84 }
+	jungle: { combatWidth: 84 },
+	lake: { combatWidth: 30 },
+	shore: { combatWidth: 60 },
+	city: { combatWidth: 40 },
+	town: { combatWidth: 55 },
+	fields: { combatWidth: 95 }
 } as const;
 export type Terrain = keyof typeof TERRAIN_DATA;
 

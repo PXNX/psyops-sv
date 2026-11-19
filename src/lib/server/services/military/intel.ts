@@ -194,6 +194,22 @@ export function reportWeight(observedAt: Date | string, now = new Date()) {
 	return Math.max(0, 1 - INTEL_AGE_DECAY * Math.min(1, ageH / INTEL_VALID_HOURS));
 }
 
+/**
+ * Best fresh UAV (drone) spotting over a region, 0-1. Only passes that returned
+ * imagery count, and their value decays with age exactly like picture weight.
+ * Satellites don't spot for the guns: they can't hand over targets in time.
+ */
+export function uavCoverage(picture: Pick<IntelPicture, "sensors"> | null): number {
+	if (!picture) return 0;
+	let best = 0;
+	for (const pass of picture.sensors) {
+		if (pass.outcome !== "ok") continue;
+		if (!SENSORS[pass.sensor as SensorId] || SENSORS[pass.sensor as SensorId]!.platform !== "drone") continue;
+		best = Math.max(best, Math.max(0, Math.min(1, pass.weight)));
+	}
+	return round2(best);
+}
+
 /** Fuse a side's fresh passes over one region into one picture. */
 export function fuseIntel(reports: ReportLike[], now = new Date()): IntelPicture {
 	const fresh = reports
@@ -278,13 +294,21 @@ export function sideModifiers(input: {
 	picture: Pick<IntelPicture, "confidence" | "firingPositions"> | null;
 	ownArtilleryEngaged: boolean;
 	enemyAirDefenceUnits: number;
+	/** Best fresh drone pass over the target (0-1). */
+	uavCoverage?: number;
+	/** Drone spotting only reaches the guns near the front line. */
+	nearFront?: boolean;
 }): SideModifiers {
 	const conf = Math.max(0, Math.min(1, input.picture?.confidence ?? 0));
 	const fp = input.picture?.firingPositions;
+	// UAV calls for fire are a bonus on top of the picture, and only when the
+	// region is next to the front: deep in enemy territory the link is gone.
+	const spot = input.nearFront ? Math.max(0, Math.min(1, input.uavCoverage ?? 0)) : 0;
+	const indirect = COMBAT_INTEL.INDIRECT_FIRE_BLIND + (1 - COMBAT_INTEL.INDIRECT_FIRE_BLIND) * conf;
 	return {
 		confidence: conf,
 		general: round2(COMBAT_INTEL.GENERAL_BLIND + (COMBAT_INTEL.GENERAL_FULL - COMBAT_INTEL.GENERAL_BLIND) * conf),
-		indirect: round2(COMBAT_INTEL.INDIRECT_FIRE_BLIND + (1 - COMBAT_INTEL.INDIRECT_FIRE_BLIND) * conf),
+		indirect: round2(Math.min(COMBAT_INTEL.INDIRECT_FIRE_MAX, indirect * (1 + COMBAT_INTEL.UAV_SPOTTING_BONUS * spot))),
 		airStrike: round2(airStrikeFactor(input.enemyAirDefenceUnits)),
 		counterBattery:
 			input.ownArtilleryEngaged && fp && fp.count > 0 ? round2(COMBAT_INTEL.COUNTER_BATTERY_MAX * fp.confidence) : 0,

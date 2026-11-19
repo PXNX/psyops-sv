@@ -14,7 +14,12 @@ const COMBAT_CONFIG = {
 		mountain: 0.5,
 		urban: 0.6,
 		desert: 0.9,
-		jungle: 0.6
+		jungle: 0.6,
+		lake: 0.3,
+		shore: 0.7,
+		city: 0.45,
+		town: 0.6,
+		fields: 1.05
 	} as Record<string, number>,
 	ORG_THRESHOLD_EXHAUSTED: 20,
 	STRENGTH_THRESHOLD_DESTROYED: 0,
@@ -93,6 +98,14 @@ describe("BattleService - Combat Width", () => {
 
 	it("should calculate jungle combat width (60%)", () => {
 		expect(calculateCombatWidth("jungle")).toBe(48);
+	});
+
+	it("narrows the front on water and in cities, widens it over open fields", () => {
+		expect(calculateCombatWidth("lake")).toBe(24);
+		expect(calculateCombatWidth("shore")).toBe(56);
+		expect(calculateCombatWidth("city")).toBe(36);
+		expect(calculateCombatWidth("town")).toBe(48);
+		expect(calculateCombatWidth("fields")).toBe(84);
 	});
 });
 

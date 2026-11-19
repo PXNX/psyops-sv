@@ -199,8 +199,13 @@ export const TERRAIN_COVER: Record<string, Cover> = {
 	forest: "forest",
 	jungle: "forest",
 	urban: "urban",
+	city: "urban",
+	town: "urban",
 	hills: "mountain",
-	mountain: "mountain"
+	mountain: "mountain",
+	lake: "open",
+	shore: "open",
+	fields: "open"
 };
 
 // ── Detection ───────────────────────────────────────────────────────────────
@@ -239,6 +244,8 @@ export function airDefenceStrength(adUnits: number, radarLevels = 0): number {
 export const INTEL_VALID_HOURS = 24;
 /** A report loses up to this share of its weight as it ages towards stale. */
 export const INTEL_AGE_DECAY = 0.5;
+/** Reports are archived two weeks, then deleted (the fresh window is much shorter). */
+export const INTEL_RETENTION_DAYS = 14;
 /** Picture confidence thresholds for the low / medium / high labels. */
 export const CONFIDENCE_LEVELS = { low: 0.15, medium: 0.45, high: 0.75 } as const;
 
@@ -251,6 +258,13 @@ export const AIR_STRIKE_TYPES = ["bomber_squadron", "fighter_squadron"] as const
 export const COMBAT_INTEL = {
 	/** Indirect fire output with no targeting intel; rises linearly to 1 at full confidence. */
 	INDIRECT_FIRE_BLIND: 0.5,
+	/**
+	 * Fresh UAV spotting adds up to this share of indirect fire, but only where
+	 * the front is close enough for the drone to hand targets to the guns.
+	 */
+	UAV_SPOTTING_BONUS: 0.35,
+	/** Cap on the resulting indirect-fire multiplier. */
+	INDIRECT_FIRE_MAX: 1.4,
 	/** Every unit's output: blind attacks at the low end, full intel at the high end. */
 	GENERAL_BLIND: 0.9,
 	GENERAL_FULL: 1.1,
@@ -322,7 +336,21 @@ export function isNight(longitude: number, at: Date = new Date()): boolean {
 export function regionTerrain(region: { id: number; terrain?: string | null; infrastructure?: number | null }) {
 	if (region.terrain) return region.terrain;
 	if ((region.infrastructure ?? 0) >= 4) return "urban";
-	const pool = ["plains", "plains", "forest", "forest", "hills", "mountain", "plains", "forest"];
+	const pool = [
+		"plains",
+		"plains",
+		"fields",
+		"forest",
+		"forest",
+		"hills",
+		"mountain",
+		"desert",
+		"town",
+		"shore",
+		"lake",
+		"city",
+		"jungle"
+	];
 	return pool[hash32(region.id, 0x7e44) % pool.length]!;
 }
 

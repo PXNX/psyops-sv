@@ -33,13 +33,26 @@ export const TERRAIN_POPULATION: Record<string, number> = {
 	forest: 0.7,
 	jungle: 0.6,
 	hills: 0.8,
-	mountain: 0.5
+	mountain: 0.5,
+	city: 1.9,
+	town: 1.3,
+	shore: 1.1,
+	lake: 0.35,
+	fields: 0.9
 };
 
 /** Land area bounds in km²; urban regions are compact. */
 export const AREA_MIN_KM2 = 2_000;
 export const AREA_SPAN_KM2 = 10_000;
 export const URBAN_AREA_FACTOR = 0.5;
+/** Cities are compact, towns a little less, and a lake is mostly water. */
+export const DENSE_AREA_FACTOR: Record<string, number> = {
+	urban: 0.5,
+	city: 0.4,
+	town: 0.65,
+	lake: 0.7,
+	shore: 0.85
+};
 
 export interface PopulationRegion {
 	id: number;
@@ -74,7 +87,8 @@ export function regionPopulation(region: PopulationRegion): number {
 /** A region's land area in km² (deterministic). */
 export function regionAreaKm2(region: { id: number; terrain?: string | null; infrastructure?: number | null }): number {
 	const area = AREA_MIN_KM2 + (hash32(region.id, 0xa4ea) % AREA_SPAN_KM2);
-	return Math.round(regionTerrain(region) === "urban" ? area * URBAN_AREA_FACTOR : area);
+	const factor = DENSE_AREA_FACTOR[regionTerrain(region)] ?? 1;
+	return Math.round(area * factor);
 }
 
 /** Civilians per km². */

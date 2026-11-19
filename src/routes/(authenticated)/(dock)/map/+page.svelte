@@ -1015,7 +1015,11 @@
 				{:else if base === "weather" && selConditions}
 					<p class="mt-1.5 text-xs text-fg-muted">{WEATHER_LABEL[selConditions.weather]} for up to 3 h.</p>
 				{:else if base === "terrain" && selConditions}
-					<p class="mt-1.5 text-xs text-fg-muted">{COVER_LABEL[selConditions.cover]} cover.</p>
+					<p class="mt-1.5 text-xs text-fg-muted">
+						{sel.terrain ? sel.terrain[0]!.toUpperCase() + sel.terrain.slice(1).replace("_", " ") : "Unknown"} · {COVER_LABEL[
+							selConditions.cover
+						]} cover.
+					</p>
 				{/if}
 			</section>
 
@@ -1055,6 +1059,9 @@
 						</Button>
 					</form>
 					{#if chosen}<p class="field-hint">{chosen.label}</p>{/if}
+					<p class="text-[10px] text-fg-muted">
+						Satellites reach any enemy region. Fresh UAV passes spot for artillery near the front.
+					</p>
 					{#each selInFlight as m, i (i)}
 						<p class="font-mono text-xs text-primary-fg">
 							{sa.sensors.find((s) => s.id === m.sensor)?.short ?? m.sensor} en route · {countdown(

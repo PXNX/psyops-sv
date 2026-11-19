@@ -166,12 +166,114 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		})
 		.returning();
 
+	// A spread of the other terrains, so the map, imagery and combat rules
+	// have somewhere to show what a lake, a coast or a city actually does.
+	const [region6, region7, region8, region9, region10, region11, region12, region13] = await db
+		.insert(regions)
+		.values([
+			{
+				latitude: "48.8600",
+				terrain: "city",
+				longitude: "2.3500",
+				stateId: state1!.id,
+				rating: 6,
+				infrastructure: 5,
+				economy: 4,
+				education: 3,
+				hospitals: 3
+			},
+			{
+				latitude: "49.1000",
+				terrain: "fields",
+				longitude: "4.0000",
+				stateId: state1!.id,
+				rating: 2,
+				infrastructure: 1,
+				economy: 2,
+				education: 1
+			},
+			{
+				latitude: "54.0000",
+				terrain: "lake",
+				longitude: "27.5000",
+				stateId: state2!.id,
+				rating: 3,
+				infrastructure: 2,
+				economy: 1,
+				education: 2,
+				hospitals: 1
+			},
+			{
+				latitude: "54.5000",
+				terrain: "shore",
+				longitude: "18.5000",
+				stateId: state2!.id,
+				rating: 4,
+				infrastructure: 3,
+				economy: 3,
+				education: 2,
+				fortifications: 1,
+				radar: 1
+			},
+			{
+				latitude: "46.0000",
+				terrain: "town",
+				longitude: "19.3000",
+				stateId: state3!.id,
+				rating: 3,
+				infrastructure: 2,
+				economy: 2,
+				education: 1,
+				hospitals: 1
+			},
+			{
+				latitude: "45.3000",
+				terrain: "desert",
+				longitude: "35.0000",
+				stateId: state3!.id,
+				rating: 1,
+				infrastructure: 1,
+				economy: 1,
+				education: 1
+			},
+			{
+				latitude: "46.9000",
+				terrain: "mountain",
+				longitude: "25.0000",
+				stateId: state3!.id,
+				rating: 2,
+				infrastructure: 1,
+				education: 1,
+				fortifications: 2
+			},
+			{
+				latitude: "5.5000",
+				terrain: "jungle",
+				longitude: "-4.0000",
+				stateId: state3!.id,
+				rating: 1,
+				infrastructure: 1,
+				education: 1
+			}
+		])
+		.returning();
+
 	// ============ Region Borders ============
 	const borders = [
 		[region1!.id, region2!.id, "450.00"],
 		[region2!.id, region4!.id, "280.00"],
 		[region4!.id, region5!.id, "350.00"],
-		[region3!.id, region4!.id, "1200.00"]
+		[region3!.id, region4!.id, "1200.00"],
+		[region1!.id, region6!.id, "80.00"],
+		[region6!.id, region7!.id, "160.00"],
+		[region7!.id, region2!.id, "220.00"],
+		[region3!.id, region8!.id, "680.00"],
+		[region8!.id, region9!.id, "540.00"],
+		[region9!.id, region4!.id, "410.00"],
+		[region5!.id, region10!.id, "190.00"],
+		[region10!.id, region11!.id, "720.00"],
+		[region10!.id, region12!.id, "380.00"],
+		[region11!.id, region13!.id, "3400.00"]
 	] as [number, number, string][];
 	for (const [a, b, km] of borders) {
 		await db.insert(regionBorders).values({

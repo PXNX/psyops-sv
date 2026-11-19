@@ -9,7 +9,7 @@
 //
 // No SvelteKit virtual modules at the top level (tests import this file);
 // push notifications are loaded lazily.
-import { and, desc, eq, gt, gte, inArray, lte, notInArray, or, sql } from "drizzle-orm";
+import { and, desc, eq, gt, gte, inArray, lt, lte, notInArray, or, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import {
 	battleParticipants,
@@ -31,6 +31,7 @@ import {
 } from "../../schema";
 import { debitWallet, InsufficientFundsError } from "../../money";
 import {
+	INTEL_RETENTION_DAYS,
 	INTEL_VALID_HOURS,
 	SENSORS,
 	SENSOR_IDS,
@@ -41,7 +42,7 @@ import {
 	type SensorId,
 	type ViewConditions
 } from "#lib/config/index.js";
-import { fuseIntel, scanRegion, sideModifiers, type IntelPicture, type SideModifiers } from "./intel";
+import { fuseIntel, scanRegion, sideModifiers, uavCoverage, type IntelPicture, type SideModifiers } from "./intel";
 import { c2Degradation, deceptionFor, reconDelayFactor } from "./state-effects";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -246,6 +247,7 @@ export async function launchRecon(
 	if (!s) throw new ReconError("Unknown sensor.");
 
 	return db.transaction(async (tx) => {
+		await pruneIntelReports(tx, now);
 		const [wallet] = await tx
 			.select({ userId: userWallets.userId })
 			.from(userWallets)
@@ -447,6 +449,7 @@ export interface ResolveOptions {
  */
 export async function resolveReconMissions(db: Database, opts: ResolveOptions = {}): Promise<IntelReport[]> {
 	const now = opts.now ?? new Date();
+	await pruneIntelReports(db, now);
 	const due = await db
 		.select({ id: reconMissions.id })
 		.from(reconMissions)
@@ -509,6 +512,20 @@ export async function resolveReconMissions(db: Database, opts: ResolveOptions = 
 }
 
 // ── Reading ─────────────────────────────────────────────────────────────────
+
+/**
+ * Keep two weeks of archives, then drop the reports. Called whenever recon is
+ * launched or resolved, so the table doesn't grow without bound. Freshness for
+ * combat is a much shorter window (INTEL_VALID_HOURS).
+ */
+export async function pruneIntelReports(db: Db, now = new Date()): Promise<number> {
+	const cutoff = new Date(now.getTime() - INTEL_RETENTION_DAYS * 24 * HOUR);
+	const deleted = await db
+		.delete(intelReports)
+		.where(lt(intelReports.observedAt, cutoff))
+		.returning({ id: intelReports.id });
+	return deleted.length;
+}
 
 /** Reports a side may read, newest first. */
 export async function sideReports(
@@ -580,10 +597,11 @@ export async function battleIntel(
 		sideOf(db, battle.attackerStateId),
 		sideOf(db, battle.defenderStateId)
 	]);
-	const [attackerPics, defenderPics, regionRows] = await Promise.all([
+	const [attackerPics, defenderPics, regionRows, attackerAtFront] = await Promise.all([
 		picturesByRegion(db, attackerSide.stateIds, { regionIds: [battle.regionId], now }),
 		picturesByRegion(db, defenderSide.stateIds, { regionIds: [battle.regionId], now }),
-		db.select({ radar: regions.radar }).from(regions).where(eq(regions.id, battle.regionId))
+		db.select({ radar: regions.radar }).from(regions).where(eq(regions.id, battle.regionId)),
+		sideBorders(db, attackerSide, battle.regionId)
 	]);
 	const regionRadar = regionRows[0]?.radar ?? 0;
 
@@ -622,12 +640,17 @@ export async function battleIntel(
 			enemyAirDefenceUnits: airDefenceStrength(
 				count(engaged.defenders, "air_defence") + stationedAA.length,
 				regionRadar
-			)
+			),
+			uavCoverage: uavCoverage(attackerPicture),
+			nearFront: attackerAtFront
 		}),
 		defender: sideModifiers({
 			picture: defenderPicture,
 			ownArtilleryEngaged: count(engaged.defenders, "artillery") > 0,
-			enemyAirDefenceUnits: count(engaged.attackers, "air_defence")
+			enemyAirDefenceUnits: count(engaged.attackers, "air_defence"),
+			uavCoverage: uavCoverage(defenderPicture),
+			// Fighting on your own soil is the front by definition.
+			nearFront: true
 		}),
 		attackerPicture,
 		defenderPicture

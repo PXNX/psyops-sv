@@ -147,8 +147,8 @@
 		</div>
 	{/if}
 	<p class="field-hint">
-		Fresh recon on the enemy sharpens fire: artillery and air strikes need targeting data to hit at full strength,
-		thermal fixes on firing positions enable counter-battery, and air defence blunts air strikes. Intel goes stale after
-		24 h.
+		Fresh recon on the enemy sharpens fire: artillery and air strikes need targeting data to hit at full strength. A
+		fresh UAV pass also calls for fire — but only next to the front. Thermal fixes enable counter-battery, and air
+		defence blunts air strikes. Intel goes stale after 24 h and is archived for two weeks.
 	</p>
 </section>

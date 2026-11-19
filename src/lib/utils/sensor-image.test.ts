@@ -66,6 +66,20 @@ describe("sensor imagery", () => {
 		expect(shapes(a)).toEqual(shapes(b));
 	});
 
+	it("gives lakes, shores, fields and cities their own ground detail", () => {
+		const sceneFor = (terrain: string) => buildScene(input("sat_eo", findings(), { terrain }));
+		const plains = sceneFor("plains");
+		const ground = (s: typeof plains) => JSON.stringify(s.ground);
+		expect(ground(sceneFor("lake"))).not.toBe(ground(plains));
+		expect(ground(sceneFor("shore"))).not.toBe(ground(plains));
+		expect(ground(sceneFor("fields"))).not.toBe(ground(plains));
+		// The shoreline and its reeds are drawn as vector features, not images.
+		expect(sceneFor("shore").features.length).toBeGreaterThan(plains.features.length);
+		// Denser settlement: more roofs in a city than a town.
+		const roofs = (s: typeof plains) => s.features.filter((p) => p.k === "rect").length;
+		expect(roofs(sceneFor("city"))).toBeGreaterThan(roofs(sceneFor("town")));
+	});
+
 	it("clouds occlude EO but not SAR", () => {
 		const cloudy = { weather: "cloudy", night: false, cover: "open" };
 		const eo = buildScene(input("sat_eo", findings({ outcome: "obscured", conditions: cloudy, categories: [] })));
