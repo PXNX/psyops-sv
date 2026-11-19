@@ -112,6 +112,12 @@
 	--color-politics-fg: #e6dcff;
 	--color-politics-bg: #7451e6;
 	--color-politics-deep: #4a32a6;
+	/* Paper documents (case files, passports): see the `paper` utility. */
+	--color-paper: #ebe5d3;
+	--color-paper-shade: #ddd5be;
+	--color-ink: #22252c;
+	--color-ink-link: #1f4fbf;
+	--color-stamp: #b42318;
 	/* @tokens-end */
 }
 
@@ -494,6 +500,44 @@
 /* Section heading above grouped content: small uppercase console label. */
 @utility section-title {
 	@apply flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-fg-muted;
+}
+
+/* A sheet of paper inside the console. Redefines the text, line and surface
+   tokens for everything inside it, so ordinary markup (text-fg, border-line/15,
+   bg-surface-2, Button) prints as ink on paper without per-element classes. */
+@utility paper {
+	--color-fg: var(--color-ink);
+	--color-fg-body: color-mix(in oklab, var(--color-ink) 92%, var(--color-paper));
+	--color-fg-soft: color-mix(in oklab, var(--color-ink) 82%, var(--color-paper));
+	--color-fg-dim: color-mix(in oklab, var(--color-ink) 72%, var(--color-paper));
+	--color-fg-muted: color-mix(in oklab, var(--color-ink) 64%, var(--color-paper));
+	--color-fg-faint: color-mix(in oklab, var(--color-ink) 55%, var(--color-paper));
+	--color-line: var(--color-ink);
+	--color-primary-fg: var(--color-ink-link);
+	--color-surface-1: var(--color-paper);
+	--color-surface-2: color-mix(in oklab, var(--color-paper) 70%, var(--color-paper-shade));
+	--color-surface-4: var(--color-paper-shade);
+	--color-surface-7: color-mix(in oklab, var(--color-paper-shade) 85%, var(--color-ink));
+	--color-surface-8: var(--color-paper-shade);
+	--color-surface-10: color-mix(in oklab, var(--color-paper-shade) 85%, var(--color-ink));
+	color: var(--color-ink);
+	background-color: var(--color-paper);
+	background-image:
+		radial-gradient(120% 90% at 50% 0%, transparent 60%, rgb(0 0 0 / 0.06)),
+		repeating-linear-gradient(0deg, transparent 0 27px, rgb(0 0 0 / 0.025) 27px 28px);
+	box-shadow:
+		0 1px 0 rgb(255 255 255 / 0.4) inset,
+		0 18px 40px -18px rgb(0 0 0 / 0.8);
+}
+
+/* Rubber stamp ink on paper: tilted, double-ruled, slightly faded. */
+@utility stamp {
+	@apply inline-block border-2 px-2 py-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.2em];
+	color: var(--color-stamp);
+	border-color: color-mix(in oklab, var(--color-stamp) 80%, transparent);
+	opacity: 0.82;
+	transform: rotate(var(--stamp-tilt, -8deg));
+	mix-blend-mode: multiply;
 }
 
 /* Numbers, times, coordinates: tabular monospace. */

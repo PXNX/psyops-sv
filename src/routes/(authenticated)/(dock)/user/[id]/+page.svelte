@@ -42,7 +42,7 @@
 	import { shareLink } from "#lib/util.js";
 	import { formatDate } from "#lib/utils/formatting.js";
 	import Logo from "#lib/component/Logo.svelte";
-	import { Button, IconButton, Badge, ActionListItem } from "#lib/component/ui/index.js";
+	import { Button, IconButton, ActionListItem } from "#lib/component/ui/index.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { medalInfo } from "./medals.js";
 
@@ -161,7 +161,7 @@
 
 {#snippet roleLine(label: string, href: string | null, logo: string | null | undefined, name: string, detail: string)}
 	<li class="flex min-w-0 items-center gap-2 text-sm">
-		<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-fg-muted">{label}</span>
+		<span class="w-20 shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">{label}</span>
 		{#if href}
 			<a {href} class="group flex min-w-0 items-center gap-1.5">
 				{#if logo !== undefined}
@@ -189,305 +189,364 @@
 	</PageContainer>
 {:else}
 	<PageContainer maxWidth="5xl">
-		<!-- Personnel file -->
-		<article id="profile-card" class="panel rounded-sm">
-			<!-- Header: photo, name, roles -->
-			<div class="flex gap-4 p-4">
-				<div class="size-20 sm:size-24 shrink-0 overflow-hidden rounded-sm border border-line/15">
-					<Logo
-						src={data.user.logo}
-						alt={data.user.name || "Portrait"}
-						placeholderIcon={FluentPerson20Filled}
-						placeholderGradient="from-surface-4 to-surface-2"
-						class="size-full! rounded-none!"
-					/>
+		<!-- Personnel file: a paper case file in a folder -->
+		<div class="relative pt-5">
+			<!-- Folder tab -->
+			<div
+				class="absolute left-6 top-0 h-6 rounded-t-md border border-b-0 border-line/20 bg-surface-6 px-3 pt-1 font-mono text-[10px] uppercase tracking-[0.25em] text-fg-muted"
+				aria-hidden="true"
+			>
+				Personnel file
+			</div>
+			<article id="profile-card" class="paper relative rounded-[3px] pl-5 sm:pl-7">
+				<!-- Punch holes -->
+				<span class="absolute left-2 top-16 size-2.5 rounded-full bg-surface-1 shadow-inner" aria-hidden="true"></span>
+				<span class="absolute left-2 bottom-16 size-2.5 rounded-full bg-surface-1 shadow-inner" aria-hidden="true"
+				></span>
+
+				<!-- File heading -->
+				<div
+					class="flex items-center gap-3 border-b-2 border-double border-line/40 px-4 pt-3 pb-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-muted"
+				>
+					<span class="truncate">{data.citizenship?.name ?? "Stateless"}</span>
+					<span class="stamp ml-auto text-[10px]! py-0! px-1.5! shrink-0" style="--stamp-tilt: 0deg">Restricted</span>
 				</div>
 
-				<div class="min-w-0 flex-1 space-y-2">
-					<div class="flex items-start gap-2">
-						<h1 class="min-w-0 flex-1 break-words text-xl sm:text-2xl font-semibold leading-tight text-fg">
-							{data.user.name || "Anonymous"}
-						</h1>
-						{#if data.user.isPremium}
-							<Badge tone="amber" size="xs" icon={FluentStar20Filled}>Premium</Badge>
-						{/if}
-						{#if data.isOwnProfile}
-							<IconButton
-								icon={FluentEdit20Filled}
-								label="Edit Profile"
-								variant="secondary"
-								size="xs"
-								class="shrink-0"
-								onclick={() => (showEditProfileSheet = true)}
+				<!-- Header: photo, name, roles -->
+				<div class="relative flex flex-wrap gap-4 p-4">
+					{#if data.presidency}
+						<span
+							class="stamp animate-stamp pointer-events-none absolute right-4 top-6 sm:top-auto sm:bottom-3 rounded-full! px-3! py-2! text-center leading-tight"
+							style="--stamp-tilt: -12deg"
+							aria-hidden="true">Head<br />of state</span
+						>
+					{:else if data.user.isPremium}
+						<span
+							class="stamp animate-stamp pointer-events-none absolute right-4 top-6 sm:top-auto sm:bottom-3"
+							style="--stamp-tilt: -10deg"
+							aria-hidden="true">Premium</span
+						>
+					{/if}
+					<!-- Photo, clipped to the sheet -->
+					<div class="relative shrink-0 -rotate-2 bg-white p-1.5 pb-4 shadow-md">
+						<span
+							class="absolute -top-2 left-1/2 z-10 h-5 w-2.5 -translate-x-1/2 rounded-full border-2 border-[#8b8f98]"
+							aria-hidden="true"
+						></span>
+						<div class="size-20 sm:size-24 overflow-hidden">
+							<Logo
+								src={data.user.logo}
+								alt={data.user.name || "Portrait"}
+								placeholderIcon={FluentPerson20Filled}
+								placeholderGradient="from-surface-4 to-surface-2"
+								class="size-full! rounded-none! grayscale-[35%] contrast-110"
 							/>
-						{/if}
+						</div>
 					</div>
 
-					<!-- Roles -->
-					<ul class="space-y-1">
-						{#if data.presidency}
-							{@render roleLine(
-								"President",
-								`/state/${data.presidency.stateId}`,
-								data.presidency.stateLogo,
-								data.presidency.stateName,
-								`T${data.presidency.term} · ${formatDate(data.presidency.electedAt)}`
-							)}
-							{#if data.presidency.bloc}
-								{@render roleLine(
-									"Bloc",
-									`/bloc/${data.presidency.bloc.id}`,
-									data.presidency.bloc.logo,
-									data.presidency.bloc.name,
-									""
-								)}
-							{/if}
-						{/if}
-						{#if data.blocLeadership}
-							{@render roleLine(
-								"Bloc leader",
-								`/bloc/${data.blocLeadership.blocId}`,
-								undefined,
-								data.blocLeadership.blocName,
-								formatDate(data.blocLeadership.appointedAt)
-							)}
-						{/if}
-						{#if data.governorship}
-							{@render roleLine(
-								"Governor",
-								`/region/${data.governorship.regionId}`,
-								undefined,
-								data.governorship.regionName,
-								formatDate(data.governorship.appointedAt)
-							)}
-						{/if}
-						{#if data.party}
-							<li class="flex min-w-0 items-center gap-2 text-sm">
-								<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-fg-muted">Party</span>
-								<a href="/party/{data.party.id}" class="group flex min-w-0 items-center gap-1.5">
-									<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
-									<span class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline"
-										>{data.party.name}</span
-									>
-								</a>
-								<span class="shrink-0 text-xs text-fg-muted">{partyRole(data.party.role)}</span>
-							</li>
-						{:else if data.isOwnProfile}
-							<li class="flex items-center gap-2 text-sm">
-								<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-fg-muted">Party</span>
-								<Button
-									href={data.isIndependentRegion ? "/party/create" : "/party"}
+					<div class="min-w-0 flex-1 basis-[13rem] space-y-2">
+						<div class="flex items-start gap-2">
+							<div class="min-w-0 flex-1">
+								<p class="font-mono text-[10px] uppercase tracking-[0.2em] text-fg-muted">Surname, given name</p>
+								<h1
+									class="break-words font-mono text-xl sm:text-2xl font-bold uppercase leading-tight tracking-wide text-fg"
+								>
+									{data.user.name || "Anonymous"}
+								</h1>
+							</div>
+							{#if data.isOwnProfile}
+								<IconButton
+									icon={FluentEdit20Filled}
+									label="Edit Profile"
 									variant="secondary"
 									size="xs"
-									icon={data.isIndependentRegion ? FluentAdd20Filled : FluentSearch20Filled}
-								>
-									{data.isIndependentRegion ? "Create a Party" : "Find a Party"}
-								</Button>
-							</li>
-						{/if}
-					</ul>
-				</div>
-			</div>
-
-			<!-- Ministries and diplomatic posts: each with its dismiss control -->
-			{#if data.ministries.length > 0 || data.blocDiplomacies.length > 0}
-				<ul id="offices" class="divide-y divide-line/15 border-t border-line/15">
-					{#each data.ministries as ministry (ministry.id)}
-						<li class="flex items-center gap-3 px-4 py-2" out:vanish>
-							<FluentShieldTask20Filled class="size-4 shrink-0 text-fg-muted" />
-							<a href="/state/{ministry.stateId}" class="group min-w-0 flex-1 text-sm">
-								<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline"
-									>Minister of {ministryNames[ministry.ministry] ?? ministry.ministry}</span
-								>
-								<span class="text-fg-muted">· {ministry.stateName}</span>
-							</a>
-							<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline"
-								>{formatDate(ministry.appointedAt)}</span
-							>
-							{#if data.currentUserPresidency?.stateId === ministry.stateId}
-								<form
-									method="POST"
-									action="?/dismissMinister"
-									use:confirmSubmit={{
-										title: `Dismiss the ${ministryNames[ministry.ministry]} Minister?`,
-										confirmLabel: "Dismiss",
-										danger: true
-									}}
-									use:enhance={() =>
-										async ({ result, update }) => {
-											toastResult(result);
-											await update();
-										}}
-								>
-									<input type="hidden" name="ministerId" value={ministry.id} />
-									<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>Dismiss</Button>
-								</form>
-							{/if}
-						</li>
-					{/each}
-					{#each data.blocDiplomacies as diplomacy (diplomacy.id)}
-						<li class="flex items-center gap-3 px-4 py-2" out:vanish>
-							<FluentGlobeShield20Filled class="size-4 shrink-0 text-fg-muted" />
-							<a href="/bloc/{diplomacy.blocId}" class="group min-w-0 flex-1 text-sm">
-								<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline">Diplomat</span>
-								<span class="text-fg-muted">· {diplomacy.blocName}</span>
-							</a>
-							<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline"
-								>{formatDate(diplomacy.appointedAt)}</span
-							>
-							{#if data.viewerBlocId === diplomacy.blocId}
-								<form
-									method="POST"
-									action="?/dismissBlocLeadership"
-									use:confirmSubmit={{ title: "Dismiss this diplomat?", confirmLabel: "Dismiss", danger: true }}
-									use:enhance={() =>
-										async ({ result, update }) => {
-											toastResult(result);
-											await update();
-										}}
-								>
-									<input type="hidden" name="role" value="diplomat" />
-									<input type="hidden" name="id" value={diplomacy.id} />
-									<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>Dismiss</Button>
-								</form>
-							{/if}
-						</li>
-					{/each}
-				</ul>
-			{/if}
-
-			<!-- Key/value fields -->
-			<dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 border-t border-line/15 px-4 py-3 text-sm">
-				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Citizenship</dt>
-					<dd class="truncate">
-						{#if data.citizenship}
-							<a href="/state/{data.citizenship.id}" class="group inline-flex max-w-full items-center gap-1.5">
-								<Logo
-									src={data.citizenship.logo}
-									alt=""
-									class="size-4! rounded-[2px]! shrink-0"
-									placeholderIcon={FluentFlag20Filled}
+									class="shrink-0"
+									onclick={() => (showEditProfileSheet = true)}
 								/>
-								<span class="truncate text-fg-body group-hover:text-fg group-hover:underline"
-									>{data.citizenship.name}</span
-								>
-							</a>
-						{:else}
-							<span class="text-fg-muted">Stateless</span>
-						{/if}
-					</dd>
-				</div>
-				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Residence</dt>
-					<dd class="truncate">
-						{#if data.homeRegion}
-							<a href="/region/{data.homeRegion.id}" class="text-fg-body hover:text-fg hover:underline"
-								>{data.homeRegion.name}</a
-							>
-						{:else}
-							<span class="text-fg-muted">None</span>
-						{/if}
-					</dd>
-				</div>
-				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Location</dt>
-					<dd class="truncate">
-						{#if data.residence}
-							<a href="/region/{data.residence.region.id}" class="text-fg-body hover:text-fg hover:underline"
-								>{data.residence.region.name}</a
-							>
-						{:else}
-							<span class="text-fg-muted">Unknown</span>
-						{/if}
-					</dd>
-				</div>
-				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Joined</dt>
-					<dd class="font-mono text-fg-body">{formatDate(data.user.createdAt)}</dd>
-				</div>
-				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Articles</dt>
-					<dd>
-						<a href="/user/{data.user.id}/articles" class="font-mono text-fg-body hover:text-fg hover:underline"
-							>{data.articleCount}</a
-						>
-					</dd>
-				</div>
-				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Upvotes</dt>
-					<dd class="font-mono text-fg-body">{data.upvoteCount}</dd>
-				</div>
-				<div class="col-span-2 min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Medals</dt>
-					<dd>
-						<a href="/user/{data.user.id}/career" class="group inline-flex items-center gap-2">
-							<span class="font-mono text-fg-body group-hover:text-fg group-hover:underline">{data.medals.length}</span>
-							{#if data.medals.length > 0}
-								<span class="flex flex-wrap gap-0.5">
-									{#each data.medals as medal (medal.id)}
-										{@const info = medalInfo(medal.medalType)}
-										<span
-											class="block h-2.5 w-6 rounded-[1px] border border-black/40"
-											style="background: {info.ribbon}"
-											title="{info.label}{medal.stateName ? ` — ${medal.stateName}` : ''}, {formatDate(
-												medal.awardedAt
-											)}"
-										></span>
-									{/each}
-								</span>
 							{/if}
-						</a>
-					</dd>
+						</div>
+
+						<!-- Roles -->
+						<ul class="space-y-1">
+							{#if data.presidency}
+								{@render roleLine(
+									"President",
+									`/state/${data.presidency.stateId}`,
+									data.presidency.stateLogo,
+									data.presidency.stateName,
+									`T${data.presidency.term} · ${formatDate(data.presidency.electedAt)}`
+								)}
+								{#if data.presidency.bloc}
+									{@render roleLine(
+										"Bloc",
+										`/bloc/${data.presidency.bloc.id}`,
+										data.presidency.bloc.logo,
+										data.presidency.bloc.name,
+										""
+									)}
+								{/if}
+							{/if}
+							{#if data.blocLeadership}
+								{@render roleLine(
+									"Bloc leader",
+									`/bloc/${data.blocLeadership.blocId}`,
+									undefined,
+									data.blocLeadership.blocName,
+									formatDate(data.blocLeadership.appointedAt)
+								)}
+							{/if}
+							{#if data.governorship}
+								{@render roleLine(
+									"Governor",
+									`/region/${data.governorship.regionId}`,
+									undefined,
+									data.governorship.regionName,
+									formatDate(data.governorship.appointedAt)
+								)}
+							{/if}
+							{#if data.party}
+								<li class="flex min-w-0 items-center gap-2 text-sm">
+									<span class="w-20 shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted"
+										>Party</span
+									>
+									<a href="/party/{data.party.id}" class="group flex min-w-0 items-center gap-1.5">
+										<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
+										<span class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline"
+											>{data.party.name}</span
+										>
+									</a>
+									<span class="shrink-0 text-xs text-fg-muted">{partyRole(data.party.role)}</span>
+								</li>
+							{:else if data.isOwnProfile}
+								<li class="flex items-center gap-2 text-sm">
+									<span class="w-20 shrink-0 font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted"
+										>Party</span
+									>
+									<Button
+										href={data.isIndependentRegion ? "/party/create" : "/party"}
+										variant="secondary"
+										size="xs"
+										icon={data.isIndependentRegion ? FluentAdd20Filled : FluentSearch20Filled}
+									>
+										{data.isIndependentRegion ? "Create a Party" : "Find a Party"}
+									</Button>
+								</li>
+							{/if}
+						</ul>
+					</div>
 				</div>
-			</dl>
 
-			{#if data.user.bio}
-				<p class="border-t border-line/15 px-4 py-3 text-sm text-fg-soft break-words">{data.user.bio}</p>
-			{/if}
-
-			<!-- Actions -->
-			<div class="flex flex-wrap items-center gap-2 border-t border-line/15 px-4 py-3">
-				{#if !data.isOwnProfile}
-					<Button variant="primary" size="sm" href="/chat/user/{data.user.id}" icon={FluentChat20Filled}>
-						Message
-					</Button>
+				<!-- Ministries and diplomatic posts: each with its dismiss control -->
+				{#if data.ministries.length > 0 || data.blocDiplomacies.length > 0}
+					<ul id="offices" class="divide-y divide-line/15 border-t border-line/15">
+						{#each data.ministries as ministry (ministry.id)}
+							<li class="flex items-center gap-3 px-4 py-2" out:vanish>
+								<FluentShieldTask20Filled class="size-4 shrink-0 text-fg-muted" />
+								<a href="/state/{ministry.stateId}" class="group min-w-0 flex-1 text-sm">
+									<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline"
+										>Minister of {ministryNames[ministry.ministry] ?? ministry.ministry}</span
+									>
+									<span class="text-fg-muted">· {ministry.stateName}</span>
+								</a>
+								<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline"
+									>{formatDate(ministry.appointedAt)}</span
+								>
+								{#if data.currentUserPresidency?.stateId === ministry.stateId}
+									<form
+										method="POST"
+										action="?/dismissMinister"
+										use:confirmSubmit={{
+											title: `Dismiss the ${ministryNames[ministry.ministry]} Minister?`,
+											confirmLabel: "Dismiss",
+											danger: true
+										}}
+										use:enhance={() =>
+											async ({ result, update }) => {
+												toastResult(result);
+												await update();
+											}}
+									>
+										<input type="hidden" name="ministerId" value={ministry.id} />
+										<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>Dismiss</Button
+										>
+									</form>
+								{/if}
+							</li>
+						{/each}
+						{#each data.blocDiplomacies as diplomacy (diplomacy.id)}
+							<li class="flex items-center gap-3 px-4 py-2" out:vanish>
+								<FluentGlobeShield20Filled class="size-4 shrink-0 text-fg-muted" />
+								<a href="/bloc/{diplomacy.blocId}" class="group min-w-0 flex-1 text-sm">
+									<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline">Diplomat</span>
+									<span class="text-fg-muted">· {diplomacy.blocName}</span>
+								</a>
+								<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline"
+									>{formatDate(diplomacy.appointedAt)}</span
+								>
+								{#if data.viewerBlocId === diplomacy.blocId}
+									<form
+										method="POST"
+										action="?/dismissBlocLeadership"
+										use:confirmSubmit={{ title: "Dismiss this diplomat?", confirmLabel: "Dismiss", danger: true }}
+										use:enhance={() =>
+											async ({ result, update }) => {
+												toastResult(result);
+												await update();
+											}}
+									>
+										<input type="hidden" name="role" value="diplomat" />
+										<input type="hidden" name="id" value={diplomacy.id} />
+										<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>Dismiss</Button
+										>
+									</form>
+								{/if}
+							</li>
+						{/each}
+					</ul>
 				{/if}
 
-				{#if data.isOwnProfile}
-					<Button href="/visas" variant="secondary" size="sm" icon={FluentBookCompass24Filled}>Passport</Button>
+				<!-- Key/value fields -->
+				<dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 border-t border-line/15 px-4 py-3 text-sm">
+					<div class="min-w-0">
+						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Citizenship</dt>
+						<dd class="truncate mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+							{#if data.citizenship}
+								<a href="/state/{data.citizenship.id}" class="group inline-flex max-w-full items-center gap-1.5">
+									<Logo
+										src={data.citizenship.logo}
+										alt=""
+										class="size-4! rounded-[2px]! shrink-0"
+										placeholderIcon={FluentFlag20Filled}
+									/>
+									<span class="truncate text-fg-body group-hover:text-fg group-hover:underline"
+										>{data.citizenship.name}</span
+									>
+								</a>
+							{:else}
+								<span class="text-fg-muted">Stateless</span>
+							{/if}
+						</dd>
+					</div>
+					<div class="min-w-0">
+						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Residence</dt>
+						<dd class="truncate mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+							{#if data.homeRegion}
+								<a href="/region/{data.homeRegion.id}" class="text-fg-body hover:text-fg hover:underline"
+									>{data.homeRegion.name}</a
+								>
+							{:else}
+								<span class="text-fg-muted">None</span>
+							{/if}
+						</dd>
+					</div>
+					<div class="min-w-0">
+						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Location</dt>
+						<dd class="truncate mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+							{#if data.residence}
+								<a href="/region/{data.residence.region.id}" class="text-fg-body hover:text-fg hover:underline"
+									>{data.residence.region.name}</a
+								>
+							{:else}
+								<span class="text-fg-muted">Unknown</span>
+							{/if}
+						</dd>
+					</div>
+					<div class="min-w-0">
+						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Joined</dt>
+						<dd class="font-mono text-fg-body mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+							{formatDate(data.user.createdAt)}
+						</dd>
+					</div>
+					<div class="min-w-0">
+						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Articles</dt>
+						<dd class="mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+							<a href="/user/{data.user.id}/articles" class="font-mono text-fg-body hover:text-fg hover:underline"
+								>{data.articleCount}</a
+							>
+						</dd>
+					</div>
+					<div class="min-w-0">
+						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Upvotes</dt>
+						<dd class="font-mono text-fg-body mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+							{data.upvoteCount}
+						</dd>
+					</div>
+					<div class="col-span-2 min-w-0">
+						<dt class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Medals</dt>
+						<dd class="mt-0.5 border-b border-dotted border-line/40 pb-0.5 font-mono">
+							<a href="/user/{data.user.id}/career" class="group inline-flex items-center gap-2">
+								<span class="font-mono text-fg-body group-hover:text-fg group-hover:underline"
+									>{data.medals.length}</span
+								>
+								{#if data.medals.length > 0}
+									<span class="flex flex-wrap gap-0.5">
+										{#each data.medals as medal (medal.id)}
+											{@const info = medalInfo(medal.medalType)}
+											<span
+												class="block h-2.5 w-6 rounded-[1px] border border-black/40"
+												style="background: {info.ribbon}"
+												title="{info.label}{medal.stateName ? ` — ${medal.stateName}` : ''}, {formatDate(
+													medal.awardedAt
+												)}"
+											></span>
+										{/each}
+									</span>
+								{/if}
+							</a>
+						</dd>
+					</div>
+				</dl>
+
+				{#if data.user.bio}
+					<div class="border-t border-line/15 px-4 py-3">
+						<p class="font-mono text-[10px] uppercase tracking-[0.15em] text-fg-muted">Remarks</p>
+						<p class="mt-1 font-mono text-sm text-fg-body break-words">{data.user.bio}</p>
+					</div>
 				{/if}
 
-				<IconButton
-					icon={FluentShareAndroid20Filled}
-					label="Share"
-					variant="secondary"
-					size="sm"
-					onclick={() => shareLink(data.user.name || "User", window.location.href)}
-				/>
+				<!-- Actions -->
+				<div class="flex flex-wrap items-center gap-2 border-t border-line/15 px-4 py-3">
+					{#if !data.isOwnProfile}
+						<Button variant="primary" size="sm" href="/chat/user/{data.user.id}" icon={FluentChat20Filled}>
+							Message
+						</Button>
+					{/if}
 
-				{#if data.isOwnProfile}
+					{#if data.isOwnProfile}
+						<Button href="/visas" variant="secondary" size="sm" icon={FluentBookCompass24Filled}>Passport</Button>
+					{/if}
+
 					<IconButton
-						icon={FluentSettingsCogMultiple20Filled}
-						label="Settings"
+						icon={FluentShareAndroid20Filled}
+						label="Share"
 						variant="secondary"
 						size="sm"
-						href="/settings"
+						onclick={() => shareLink(data.user.name || "User", window.location.href)}
 					/>
-				{/if}
 
-				{#if !data.isOwnProfile || data.canAppointMinister || data.ownedNewspapers.length > 0}
-					<IconButton
-						icon={FluentMoreHorizontal20Filled}
-						label="More"
-						variant="secondary"
-						size="sm"
-						class="ml-auto"
-						onclick={() => (showActionsSheet = true)}
-					/>
-				{/if}
-			</div>
-		</article>
+					{#if data.isOwnProfile}
+						<IconButton
+							icon={FluentSettingsCogMultiple20Filled}
+							label="Settings"
+							variant="secondary"
+							size="sm"
+							href="/settings"
+						/>
+					{/if}
+
+					{#if !data.isOwnProfile || data.canAppointMinister || data.ownedNewspapers.length > 0}
+						<IconButton
+							icon={FluentMoreHorizontal20Filled}
+							label="More"
+							variant="secondary"
+							size="sm"
+							class="ml-auto"
+							onclick={() => (showActionsSheet = true)}
+						/>
+					{/if}
+				</div>
+			</article>
+		</div>
 
 		<!-- More Actions Bottom Sheet -->
 		<BottomSheet bind:open={showActionsSheet} title="Actions">
