@@ -244,7 +244,7 @@
 							</p>
 						{:else if f.outcome === "obscured"}
 							<p class="text-sm text-warning">
-								Sensor could not see the ground ({f.conditions.weather}{f.conditions.night ? ", night" : ""}). Try radar
+								Sensor could not see the ground ({f.conditions.weather}{f.conditions.night ? ", night" : ""}). Try SAR
 								or a thermal pass.
 							</p>
 						{:else}
@@ -308,7 +308,8 @@
 								<p class="font-mono text-xs text-fg-soft">
 									<span class="font-sans font-semibold text-fg">Installations:</span>
 									FORT {f.buildings.fortifications} · INFRA {f.buildings.infrastructure} · PWR {f.buildings.economy} · EDU
-									{f.buildings.education} · MED {f.buildings.hospitals}{f.buildings.underConstruction
+									{f.buildings.education} · MED {f.buildings.hospitals} · RADAR {f.buildings.radar ?? 0}{f.buildings
+										.underConstruction
 										? ` · ${f.buildings.underConstruction} under construction`
 										: ""}
 								</p>

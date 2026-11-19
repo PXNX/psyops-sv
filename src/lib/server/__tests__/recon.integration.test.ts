@@ -26,7 +26,7 @@ import {
 } from "../services/military/recon";
 import { fuseIntel, isFresh } from "../services/military/intel";
 import { processCombatRound } from "../services/military/battle-engine";
-import { INTEL_VALID_HOURS, SENSORS } from "#lib/config/index.js";
+import { INTEL_VALID_HOURS, SENSORS, airDefenceStrength, droneInterceptChance } from "#lib/config/index.js";
 
 let handle: MockDbHandle;
 let freedonia: number; // user-1 and user-2 live here; at war with both others
@@ -47,6 +47,9 @@ const balance = async (userId: string) =>
 
 beforeAll(async () => {
 	handle = await createMockDb();
+	// The demo world ships with its own recon passes; these tests file theirs.
+	await handle.db.delete(intelReports);
+	await handle.db.delete(reconMissions);
 	const all = await handle.db.select().from(states);
 	freedonia = all.find((s) => s.name === "Republic of Freedonia")!.id;
 	sylvania = all.find((s) => s.name === "Empire of Sylvania")!.id;
@@ -179,6 +182,12 @@ describe("sensors and conditions", () => {
 		expect(sar.findings.coverage.infantry).toBe(0);
 	});
 
+	it("radar coverage adds to the air-defence strength", () => {
+		// Each radar level cues the air defence like half an AA unit.
+		expect(airDefenceStrength(3, 2)).toBe(4);
+		expect(droneInterceptChance(4)).toBe(0.9);
+	});
+
 	it("satellite revisit time is shared by the whole state", async () => {
 		await expect(
 			launchRecon(handle.db, { userId: "user-1", regionId: targetRegion, sensor: "sat_eo" })
@@ -204,7 +213,8 @@ describe("sensors and conditions", () => {
 			notify: false
 		});
 		expect(report!.findings.outcome).toBe("intercepted");
-		expect(report!.findings.airDefence).toEqual({ units: 3, interceptChance: 0.75 });
+		// Three AA units plus region 4's two radar levels (half a unit each).
+		expect(report!.findings.airDefence).toEqual({ units: 3, radar: 2, interceptChance: 0.9 });
 		expect(report!.findings.categories).toHaveLength(0);
 	});
 

@@ -116,7 +116,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			infrastructure: 2,
 			economy: 1,
 			education: 1,
-			fortifications: 1
+			fortifications: 1,
+			radar: 1
 		})
 		.returning();
 	const [region3] = await db
@@ -131,7 +132,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			economy: 3,
 			education: 3,
 			hospitals: 2,
-			fortifications: 2
+			fortifications: 2,
+			radar: 2
 		})
 		.returning();
 	const [region4] = await db
@@ -146,7 +148,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			economy: 2,
 			education: 1,
 			hospitals: 1,
-			fortifications: 3
+			fortifications: 3,
+			radar: 2
 		})
 		.returning();
 	const [region5] = await db
@@ -651,27 +654,48 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 
 	// ============ Recon: intel reports with imagery ============
 	// Freedonia's passes over enemy regions (and its own embattled region 2)
-	// in a spread of sensors and conditions, plus a recent strike on region
-	// 4's fortifications, so /intel and the region pages show recon imagery.
+	// in a spread of sensors and conditions, plus a recent SEAD strike on
+	// region 4's radar and a strike on its fortifications, so /intel and the
+	// region pages show recon imagery including the damage.
 	const hour = 3600_000;
-	await db.insert(strikes).values({
-		attackerStateId: state1!.id,
-		targetStateId: state2!.id,
-		warId: war1!.id,
-		regionId: region4!.id,
-		orderedBy: "user-1",
-		tier: "operational",
-		target: "fortifications",
-		weapon: "guided_bomb",
-		cost: 40000,
-		outcome: "hit",
-		interceptChance: 20,
-		accuracy: 80,
-		intelConfidence: 60,
-		conditions: { weather: "clear", night: false, cover: "mountain" },
-		damage: { levels: { fortifications: 1 } },
-		createdAt: new Date(Date.now() - 3 * hour)
-	});
+	await db.insert(strikes).values([
+		{
+			attackerStateId: state1!.id,
+			targetStateId: state2!.id,
+			warId: war1!.id,
+			regionId: region4!.id,
+			orderedBy: "user-1",
+			tier: "operational",
+			target: "radar",
+			weapon: "cruise_missile",
+			cost: 90000,
+			outcome: "hit",
+			interceptChance: 40,
+			accuracy: 85,
+			intelConfidence: 70,
+			conditions: { weather: "clear", night: false, cover: "mountain" },
+			damage: { levels: { radar: 1 } },
+			createdAt: new Date(Date.now() - 5 * hour)
+		},
+		{
+			attackerStateId: state1!.id,
+			targetStateId: state2!.id,
+			warId: war1!.id,
+			regionId: region4!.id,
+			orderedBy: "user-1",
+			tier: "operational",
+			target: "fortifications",
+			weapon: "guided_bomb",
+			cost: 40000,
+			outcome: "hit",
+			interceptChance: 20,
+			accuracy: 80,
+			intelConfidence: 60,
+			conditions: { weather: "clear", night: false, cover: "mountain" },
+			damage: { levels: { fortifications: 1 } },
+			createdAt: new Date(Date.now() - 3 * hour)
+		}
+	]);
 	const r4Units = [
 		...Array(5).fill("armor"),
 		...Array(3).fill("mechanized"),
@@ -749,7 +773,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		{
 			region: region2,
 			owner: state1,
-			sensor: "ground_radar",
+			sensor: "sat_sar",
 			hoursAgo: 0.7,
 			conditions: { weather: "rain", night: false, cover: "open" },
 			units: [...Array(6).fill("armor"), ...Array(3).fill("artillery"), "fighter_squadron"],
@@ -789,6 +813,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			hostileUnitTypes: pass.units,
 			recentlyFired: pass.battle ? 2 : 0,
 			airDefenceUnits: pass.units.filter((u) => u === "air_defence").length,
+			radarLevels: r.radar ?? 0,
 			owner: { id: pass.owner!.id, name: pass.owner!.name },
 			buildings: {
 				infrastructure: r.infrastructure ?? 0,
@@ -796,6 +821,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 				education: r.education ?? 0,
 				hospitals: r.hospitals ?? 0,
 				fortifications: r.fortifications ?? 0,
+				radar: r.radar ?? 0,
 				underConstruction: i % 4 === 0 ? 1 : 0
 			},
 			battle: pass.battle

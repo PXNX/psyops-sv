@@ -999,8 +999,8 @@
 			<!-- Installations (enemy ones only through fresh intel) -->
 			<section>
 				<h3 class="section-title mb-1.5 text-xs">Installations</h3>
-				<dl class="grid grid-cols-5 gap-1 text-center font-mono">
-					{#each [["FORT", sel.fortifications], ["INFRA", sel.infrastructure], ["PWR", sel.economy], ["EDU", sel.education], ["MED", sel.hospitals]] as [label, v] (label)}
+				<dl class="grid grid-cols-3 gap-1 text-center font-mono">
+					{#each [["FORT", sel.fortifications], ["INFRA", sel.infrastructure], ["PWR", sel.economy], ["EDU", sel.education], ["MED", sel.hospitals], ["RADAR", sel.radar]] as [label, v] (label)}
 						<div class="rounded-sm border border-line/15 bg-surface-2 px-1 py-1">
 							<dt class="text-[9px] text-fg-muted">{label}</dt>
 							<dd class="text-sm text-fg">{v ?? "?"}</dd>

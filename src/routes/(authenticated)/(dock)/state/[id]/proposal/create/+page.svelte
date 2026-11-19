@@ -42,10 +42,11 @@
 		| "power_plant"
 		| "infrastructure"
 		| "fortifications"
+		| "radar"
 		| "border_control"
 		| "exploitation"
 		| "declare_war";
-	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications";
+	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "radar";
 
 	const PROPOSAL_TYPES: { type: ProposalType; label: string }[] = [
 		{ type: "tax", label: "Taxation" },
@@ -54,6 +55,7 @@
 		{ type: "power_plant", label: "Power plant" },
 		{ type: "infrastructure", label: "Infrastructure" },
 		{ type: "fortifications", label: "Fortifications" },
+		{ type: "radar", label: "Air-defence radar" },
 		{ type: "border_control", label: "Border control" },
 		{ type: "exploitation", label: "Resource law" },
 		{ type: "declare_war", label: "Declaration of war" }
@@ -86,7 +88,7 @@
 	const MINISTRY_POWERS: Record<string, string[]> = {
 		economy: ["tax", "exploitation", "infrastructure", "school", "hospital", "power_plant"],
 		foreign_affairs: ["border_control"],
-		defense: ["fortifications"]
+		defense: ["fortifications", "radar"]
 	};
 	const autoFor = (type: string) =>
 		data.isPresident || (!!data.userMinistry && (MINISTRY_POWERS[data.userMinistry]?.includes(type) ?? false));
@@ -97,12 +99,15 @@
 	const isWarProposal = $derived($formData.proposalType === "declare_war");
 	const isExploitationProposal = $derived($formData.proposalType === "exploitation");
 	const isBuildingProposal = $derived(
-		["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes($formData.proposalType || "")
+		["hospital", "school", "power_plant", "infrastructure", "fortifications", "radar"].includes(
+			$formData.proposalType || ""
+		)
 	);
 
 	const isValidBuildingType = (type: string | undefined): type is BuildingType => {
 		return (
-			type !== undefined && ["hospital", "school", "power_plant", "infrastructure", "fortifications"].includes(type)
+			type !== undefined &&
+			["hospital", "school", "power_plant", "infrastructure", "fortifications", "radar"].includes(type)
 		);
 	};
 

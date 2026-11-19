@@ -14,6 +14,7 @@ import {
 	SENSORS,
 	UNIT_CATEGORIES,
 	UNIT_CATEGORY,
+	airDefenceStrength,
 	airStrikeFactor,
 	confidenceLevel,
 	deceivedCount,
@@ -46,6 +47,8 @@ export interface ScanInput {
 	recentlyFired: number;
 	/** Enemy air-defence units that can engage a drone. */
 	airDefenceUnits: number;
+	/** Enemy radar coverage levels in the region (they cue the air defence). */
+	radarLevels?: number;
 	owner: { id: number | null; name: string | null };
 	buildings: IntelFindings["buildings"];
 	battle: IntelFindings["battle"];
@@ -76,11 +79,16 @@ export function scanRegion(input: ScanInput): IntelFindings {
 		battle: null
 	};
 
-	// Drones can be shot down; satellites and radar can't.
+	// Drones can be shot down; satellites can't. Radar cueing counts towards
+	// the interception chance, so SEAD on the radars opens the airspace.
 	let evasion = 1;
 	if (s.platform === "drone") {
-		const interceptChance = droneInterceptChance(input.airDefenceUnits);
-		base.airDefence = { units: input.airDefenceUnits, interceptChance: round2(interceptChance) };
+		const interceptChance = droneInterceptChance(airDefenceStrength(input.airDefenceUnits, input.radarLevels ?? 0));
+		base.airDefence = {
+			units: input.airDefenceUnits,
+			radar: input.radarLevels ?? 0,
+			interceptChance: round2(interceptChance)
+		};
 		if (input.rng() < interceptChance) return { ...base, outcome: "intercepted" };
 		evasion = 1 - interceptChance * AD_DRONE_EVASION_PENALTY;
 	}

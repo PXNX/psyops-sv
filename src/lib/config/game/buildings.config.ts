@@ -2,10 +2,10 @@
 // building raises one of the region's levels by one (see
 // services/politics/construction.service.ts); a region needs some
 // infrastructure before it can host the bigger projects.
-export type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications";
+export type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "radar";
 
 /** The `regions` column a building type raises. */
-export type RegionStat = "infrastructure" | "education" | "hospitals" | "economy" | "fortifications";
+export type RegionStat = "infrastructure" | "education" | "hospitals" | "economy" | "fortifications" | "radar";
 
 export interface BuildingCosts {
 	currency: number;
@@ -100,6 +100,24 @@ export const BUILDING_TEMPLATES: Record<BuildingType, BuildingTemplate> = {
 		infrastructureRequired: 3,
 		description: "Bunkers and defensive lines.",
 		benefits: ["+1 fortification level", "Attackers deal 2% less damage per level in battles here"]
+	},
+	radar: {
+		type: "radar",
+		name: "Air-defence radar",
+		icon: "📡",
+		stat: "radar",
+		statLabel: "Radar coverage",
+		maxLevel: 3,
+		costs: { currency: 90000, steel: 200, copper: 150 },
+		constructionTime: 4,
+		infrastructureRequired: 2,
+		description: "Early-warning and fire-control radars for the region's air defence.",
+		benefits: [
+			"+1 radar coverage level",
+			"Cues air defence: each level counts as half an air-defence unit",
+			"Shooting down drones and incoming strikes",
+			"Enemy SEAD can knock the radars out"
+		]
 	}
 };
 

@@ -37,6 +37,7 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"school",
 	"power_plant",
 	"fortifications",
+	"radar",
 	"border_control",
 	"exploitation",
 	"declare_war"
@@ -239,6 +240,9 @@ export const regions = pgTable("regions", {
 	education: integer("education").default(0),
 	hospitals: integer("hospitals").default(0),
 	fortifications: integer("fortifications").default(0),
+	// Air-defence radar coverage (0-3), raised by the radar installation and
+	// knocked down by a strike on it. Cues the air defence (recon.config.ts).
+	radar: integer("radar").default(0),
 	oil: integer("oil").default(0),
 	aluminium: integer("aluminium").default(0),
 	rubber: integer("rubber").default(0),
@@ -2013,7 +2017,8 @@ export const buildingTypeEnum = pgEnum("building_type", [
 	"road",
 	"bridge",
 	"infrastructure",
-	"fortifications"
+	"fortifications",
+	"radar"
 ]);
 
 export const stateBuildings = pgTable("state_buildings", {
@@ -3097,6 +3102,8 @@ export const reconSensorEnum = pgEnum("recon_sensor", [
 	"sat_eo",
 	"sat_ir",
 	"sat_sar",
+	// Retired: ground radar is air defence now, not a recon sensor. Kept in
+	// the enum so reports filed before the switch still load (as SAR frames).
 	"ground_radar"
 ]);
 
@@ -3137,8 +3144,8 @@ export interface IntelFindings {
 	conditions: { weather: string; night: boolean; cover: string };
 	ownerStateId: number | null;
 	ownerStateName: string | null;
-	/** Enemy air-defence units the drone flew into and its chance of being shot down. */
-	airDefence: { units: number; interceptChance: number } | null;
+	/** Enemy air-defence units and radar levels the drone flew into, and its chance of being shot down. */
+	airDefence: { units: number; radar: number; interceptChance: number } | null;
 	/** Detection chance per category (0 = not observed). Count 0 with coverage means "none seen". */
 	coverage: Record<string, number>;
 	categories: { category: string; count: number; estimated: boolean; confidence: number }[];
@@ -3152,6 +3159,8 @@ export interface IntelFindings {
 		education: number;
 		hospitals: number;
 		fortifications: number;
+		/** Air-defence radar coverage levels seen in the region. */
+		radar: number;
 		underConstruction: number;
 	} | null;
 	battle: {
@@ -3322,6 +3331,7 @@ export const strikeTargetEnum = pgEnum("strike_target", [
 	"bridges",
 	"fortifications",
 	"air_defence",
+	"radar",
 	"units"
 ]);
 export const strikeWeaponEnum = pgEnum("strike_weapon", [

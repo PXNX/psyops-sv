@@ -260,6 +260,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 						economy: regions.economy,
 						hospitals: regions.hospitals,
 						fortifications: regions.fortifications,
+						radar: regions.radar,
 						oil: regions.oil,
 						aluminium: regions.aluminium,
 						rubber: regions.rubber,
@@ -372,6 +373,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				economy: number | null;
 				hospitals: number | null;
 				fortifications: number | null;
+				radar: number | null;
 				cover: string;
 				resources: {
 					oil: number;
@@ -407,6 +409,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 				economy: r.known ? r.economy || 0 : null,
 				hospitals: r.known ? r.hospitals || 0 : null,
 				fortifications: r.known ? r.fortifications || 0 : null,
+				radar: r.known ? r.radar || 0 : null,
 				// Terrain is public; derived from the real data, not what intel saw.
 				cover: regionCover(raw),
 				resources: {

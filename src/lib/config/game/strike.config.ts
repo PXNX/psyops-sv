@@ -50,7 +50,15 @@ export const TIER_CONFIG: Record<StrikeTier, { label: string; blurb: string; coo
 // ── Targets ─────────────────────────────────────────────────────────────────
 
 export type StrikeTarget =
-	"power_grid" | "industry" | "hospital" | "logistics" | "bridges" | "fortifications" | "air_defence" | "units";
+	| "power_grid"
+	| "industry"
+	| "hospital"
+	| "logistics"
+	| "bridges"
+	| "fortifications"
+	| "air_defence"
+	| "radar"
+	| "units";
 
 /** Time-limited effects a strike leaves on the region's owner. */
 export type StrikeEffectKind = "supply" | "energy" | "industry";
@@ -64,7 +72,7 @@ export interface TargetConfig {
 	/** "building" targets wreck region levels / leave effects; "forces" targets damage units. */
 	kind: "building" | "forces";
 	/** Region level a direct hit knocks down (repairable through construction). */
-	stat?: "economy" | "infrastructure" | "fortifications" | "hospitals";
+	stat?: "economy" | "infrastructure" | "fortifications" | "hospitals" | "radar";
 	levelsOnHit?: number;
 	/** Effect left on the region's owner on a hit (half on a partial hit). */
 	effect?: { kind: StrikeEffectKind; magnitude: number; hours: number };
@@ -155,6 +163,18 @@ export const TARGETS: Record<StrikeTarget, TargetConfig> = {
 		kind: "forces",
 		militaryValue: 60,
 		footprintKm2: 3
+	},
+	radar: {
+		label: "Radar installations",
+		tier: "operational",
+		blurb:
+			"Air-defence radars: knocks down a radar coverage level so drones and later strikes get through more easily.",
+		protected: false,
+		kind: "building",
+		stat: "radar",
+		levelsOnHit: 1,
+		militaryValue: 55,
+		footprintKm2: 2
 	},
 	units: {
 		label: "Enemy units",

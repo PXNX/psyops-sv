@@ -10,6 +10,7 @@ export const createProposalSchema = v.object({
 			"power_plant",
 			"infrastructure",
 			"fortifications",
+			"radar",
 			"border_control",
 			"exploitation",
 			"declare_war"

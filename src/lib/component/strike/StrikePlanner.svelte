@@ -138,7 +138,7 @@
 			<span>
 				Air defence:
 				{#if options.adKnown}
-					<span class="data">{ctx.adUnits}</span> seen
+					<span class="data">{Math.round(ctx.adUnits * 10) / 10}</span> strength
 				{:else}
 					<span class="text-warning">unknown</span>
 				{/if}
@@ -258,8 +258,8 @@
 						</p>
 						<p class="text-[11px] text-fg-muted">
 							{options.adKnown
-								? `${options.context.adUnits} AD unit${options.context.adUnits === 1 ? "" : "s"} × ${pct(WEAPONS[weapon].adExposure)} exposure`
-								: "no visual pass on air defence"}
+								? `AD strength ${Math.round(options.context.adUnits * 10) / 10} × ${pct(WEAPONS[weapon].adExposure)} exposure`
+								: "no intel on air defence"}
 						</p>
 					</div>
 					<div>

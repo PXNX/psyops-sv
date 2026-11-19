@@ -4,14 +4,14 @@ export const PERMISSIONS_CONFIG = {
 	MINISTRY_PERMISSIONS: {
 		economy: ["tax"],
 		foreign_affairs: ["border_control"],
-		defense: ["fortifications"],
+		defense: ["fortifications", "radar"],
 		infrastructure: ["infrastructure"],
 		education: ["school"],
 		health: ["hospital"]
 	},
 
 	// Presidential auto-execute permissions
-	PRESIDENTIAL_PERMISSIONS: ["tax", "border_control", "fortifications"],
+	PRESIDENTIAL_PERMISSIONS: ["tax", "border_control", "fortifications", "radar"],
 
 	// Moderator actions
 	MODERATOR_ACTIONS: ["delete_message", "warn_user", "restrict_user", "review_report", "flag_content"],

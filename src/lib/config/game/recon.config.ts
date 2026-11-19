@@ -11,9 +11,12 @@
 
 // ── Sensors ─────────────────────────────────────────────────────────────────
 
-export type SensorId = "drone_eo" | "drone_ir" | "sat_eo" | "sat_ir" | "sat_sar" | "ground_radar";
+// Radar is not a recon sensor: ground radar belongs to air defence (see
+// RADAR_AD_EQUIVALENT below and the radar installation in buildings.config.ts).
+// The only radar imagery is the satellite's SAR pass.
+export type SensorId = "drone_eo" | "drone_ir" | "sat_eo" | "sat_ir" | "sat_sar";
 export type SensorKind = "visual" | "thermal" | "radar";
-export type SensorPlatform = "drone" | "satellite" | "radar";
+export type SensorPlatform = "drone" | "satellite";
 
 /** What a sensor can tell apart. Units are grouped by signature. */
 export type UnitCategory = "infantry" | "vehicle" | "artillery" | "air";
@@ -51,7 +54,7 @@ export interface SensorConfig {
 	seesBuildings: boolean;
 	/** Thermal passes pick up recently fired artillery positions. */
 	detectsFiring: boolean;
-	/** Ground radar must be launched from a region your side owns next door. */
+	/** Whether the sensor needs a friendly region next door (none today). */
 	requiresBorder: boolean;
 }
 
@@ -130,21 +133,6 @@ export const SENSORS: Record<SensorId, SensorConfig> = {
 		seesBuildings: true,
 		detectsFiring: false,
 		requiresBorder: false
-	},
-	ground_radar: {
-		label: "Ground/air radar",
-		short: "RADAR",
-		platform: "radar",
-		kind: "radar",
-		cost: 1000,
-		durationMinutes: 5,
-		cooldownMinutes: 15,
-		cooldownScope: "user",
-		base: { infantry: 0.05, vehicle: 0.6, artillery: 0.5, air: 0.95 },
-		identifiesTypes: false,
-		seesBuildings: false,
-		detectsFiring: false,
-		requiresBorder: true
 	}
 };
 
@@ -185,8 +173,7 @@ export const WEATHER_FACTOR: Record<SensorId, Record<Weather, number>> = {
 	sat_eo: { clear: 1, cloudy: 0, rain: 0, fog: 0.3 },
 	sat_ir: { clear: 1, cloudy: 0.35, rain: 0.3, fog: 0.7 },
 	// Radar sees through all of it.
-	sat_sar: { clear: 1, cloudy: 1, rain: 0.95, fog: 1 },
-	ground_radar: { clear: 1, cloudy: 1, rain: 0.9, fog: 1 }
+	sat_sar: { clear: 1, cloudy: 1, rain: 0.95, fog: 1 }
 };
 
 /** Detection multiplier at night. Thermal works better in the cold dark. */
@@ -195,8 +182,7 @@ export const NIGHT_FACTOR: Record<SensorId, number> = {
 	drone_ir: 1.1,
 	sat_eo: 0,
 	sat_ir: 1.1,
-	sat_sar: 1,
-	ground_radar: 1
+	sat_sar: 1
 };
 
 /** Detection multiplier per sensor kind and ground cover. */
@@ -229,11 +215,23 @@ export const ESTIMATE_ERROR = 0.6;
 
 // ── Air defence ─────────────────────────────────────────────────────────────
 
+/**
+ * Radar installations cue the air defence. Each radar-coverage level in a
+ * region counts as this many air-defence units for interception, so knocking
+ * the radars down opens the airspace (see the radar building and strike target).
+ */
+export const RADAR_AD_EQUIVALENT = 0.5;
+
 /** Chance each enemy air-defence unit in the region adds to shooting a drone down. */
 export const AD_DRONE_INTERCEPT_PER_UNIT = 0.25;
 export const AD_DRONE_INTERCEPT_MAX = 0.9;
 /** A drone that survives still flies evasively: its detection drops by this share of the intercept chance. */
 export const AD_DRONE_EVASION_PENALTY = 0.5;
+
+/** Air-defence units a region can bring to bear, radar cueing included. */
+export function airDefenceStrength(adUnits: number, radarLevels = 0): number {
+	return Math.max(0, adUnits) + Math.max(0, radarLevels) * RADAR_AD_EQUIVALENT;
+}
 
 // ── Intel lifetime and fusion ───────────────────────────────────────────────
 

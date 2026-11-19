@@ -233,6 +233,7 @@ export async function completePendingConstructions(
  */
 export const CONQUEST_DAMAGE: Record<RegionStat, number> = {
 	fortifications: 0.5,
+	radar: 0.5,
 	infrastructure: 0.25,
 	economy: 0.25,
 	hospitals: 0.2,

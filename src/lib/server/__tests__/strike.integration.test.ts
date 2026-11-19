@@ -10,8 +10,10 @@ import {
 	battles,
 	governmentBudgetTransactions,
 	ihlViolations,
+	intelReports,
 	militaryUnits,
 	ministers,
+	reconMissions,
 	regionEffects,
 	regions,
 	states,
@@ -59,6 +61,13 @@ const region = async (id: number) => (await handle.db.select().from(regions).whe
 
 beforeAll(async () => {
 	handle = await createMockDb();
+	// The demo world ships with strikes, effects and intel of its own; these
+	// tests start from a clean slate so cooldowns and intel are theirs alone.
+	await handle.db.delete(regionEffects);
+	await handle.db.delete(ihlViolations);
+	await handle.db.delete(strikes);
+	await handle.db.delete(intelReports);
+	await handle.db.delete(reconMissions);
 	const all = await handle.db.select().from(states);
 	freedonia = all.find((s) => s.name === "Republic of Freedonia")!.id;
 	sylvania = all.find((s) => s.name === "Empire of Sylvania")!.id;

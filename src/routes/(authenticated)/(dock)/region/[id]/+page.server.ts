@@ -581,6 +581,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			education: seenBuildings ? (seenBuildings.education ?? 0) : null,
 			hospitals: seenBuildings ? (seenBuildings.hospitals ?? 0) : null,
 			fortifications: seenBuildings ? (seenBuildings.fortifications ?? 0) : null,
+			radar: seenBuildings ? (seenBuildings.radar ?? 0) : null,
 			oil: region.oil,
 			aluminium: region.aluminium,
 			rubber: region.rubber,

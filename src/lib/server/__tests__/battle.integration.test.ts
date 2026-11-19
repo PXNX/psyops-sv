@@ -75,7 +75,7 @@ describe("processCombatRound", () => {
 		expect(result!.winner).toBe("attacker");
 		expect(region!.fortifications).toBe(3);
 		expect(region!.infrastructure).toBe(3);
-		expect(battle!.buildingsDestroyed).toEqual({ fortifications: 3, infrastructure: 1 });
+		expect(battle!.buildingsDestroyed).toEqual({ fortifications: 3, infrastructure: 1, radar: 1 });
 
 		const participants = await handle.db
 			.select()

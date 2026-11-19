@@ -115,6 +115,12 @@
 			label: "Fortifications",
 			value: data.region.fortifications === null ? "?" : data.region.fortifications || 0,
 			href: `/region/${data.region.id}/construction`
+		},
+		{
+			label: "Radar",
+			value: data.region.radar === null ? "?" : data.region.radar || 0,
+			href: `/region/${data.region.id}/construction`,
+			title: "Air-defence radar coverage"
 		}
 	]);
 </script>

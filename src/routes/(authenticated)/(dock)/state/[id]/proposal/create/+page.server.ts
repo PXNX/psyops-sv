@@ -158,7 +158,7 @@ function canAutoExecute(proposalType: string, userMinistry: string | null, isPre
 	const ministryPermissions: Record<string, string[]> = {
 		economy: ["tax", "exploitation", "infrastructure", "school", "hospital", "power_plant"],
 		foreign_affairs: ["border_control"],
-		defense: ["fortifications"]
+		defense: ["fortifications", "radar"]
 	};
 
 	return ministryPermissions[userMinistry]?.includes(proposalType) || false;

@@ -30,7 +30,10 @@ export async function canOrderConstruction(
 	const types = new Set<BuildingType>();
 	if (president || governor) VALID_BUILDING_TYPES.forEach((t) => types.add(t));
 	if (roles.includes("economy")) CIVILIAN.forEach((t) => types.add(t));
-	if (roles.includes("defense")) types.add("fortifications");
+	if (roles.includes("defense")) {
+		types.add("fortifications");
+		types.add("radar");
+	}
 	return { roles, types: [...types] };
 }
 

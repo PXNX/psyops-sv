@@ -9,6 +9,7 @@ import {
 	IHL_MORALE_MAX,
 	POPULATION_MAX,
 	POPULATION_MIN,
+	TARGETS,
 	WEAPONS,
 	assessIhl,
 	derivedPopulation,
@@ -305,5 +306,14 @@ describe("IHL standing", () => {
 		expect(decideExpulsion({ pro: 1, contra: 2, voters: 4, expired: false, passShare: 1 / 3 })).toBeNull();
 		expect(decideExpulsion({ pro: 1, contra: 3, voters: 4, expired: false, passShare: 1 / 3 })).toBe("rejected");
 		expect(decideExpulsion({ pro: 1, contra: 1, voters: 4, expired: true, passShare: 1 / 3 })).toBe("expelled");
+	});
+});
+
+describe("radar installations", () => {
+	it("are a destructible building target", () => {
+		expect(TARGETS.radar.kind).toBe("building");
+		expect(TARGETS.radar.stat).toBe("radar");
+		expect(levelsDestroyed("radar", "cruise_missile", { outcome: "hit" })).toBeGreaterThan(0);
+		expect(levelsDestroyed("radar", "guided_bomb", { outcome: "partial" })).toBe(0);
 	});
 });

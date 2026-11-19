@@ -7,7 +7,7 @@
 // - terrain (per region, so every pass over a region shows the same roads,
 //   fields, forest and river) and the report's cover/weather/night;
 // - the sensor: EO is a muted colour photo, IR a white-hot temperature map,
-//   SAR a speckled radar backscatter map, ground radar a sector scope;
+//   SAR a speckled radar backscatter map;
 // - what the report says, decoys and estimation errors included (never the
 //   ground truth): unit counts by category, exact types for visual passes,
 //   firing positions, fortifications and other installations, air defence;
@@ -21,7 +21,7 @@ import { SENSORS, hash32, localHour, seededRandom, type SensorId } from "#lib/co
 export const FRAME_W = 640;
 export const FRAME_H = 400;
 
-export type ImageMode = "eo" | "ir" | "sar" | "ppi";
+export type ImageMode = "eo" | "ir" | "sar";
 export type ImageStatus = "ok" | "obscured" | "intercepted";
 
 /** A strike on the region before the pass. */
@@ -37,7 +37,7 @@ export interface ImageryStrike {
 export interface ImageryFindings {
 	outcome: ImageStatus;
 	conditions: { weather: string; night: boolean; cover: string };
-	airDefence: { units: number; interceptChance?: number } | null;
+	airDefence: { units: number; radar?: number; interceptChance?: number } | null;
 	coverage: Record<string, number>;
 	categories: { category: string; count: number; estimated: boolean; confidence: number }[];
 	unitTypes: { unitType: string; count: number; estimated: boolean }[] | null;
@@ -48,6 +48,8 @@ export interface ImageryFindings {
 		education?: number;
 		hospitals: number;
 		fortifications: number;
+		/** Air-defence radar coverage levels (drawn as radar stations). */
+		radar?: number;
 		underConstruction: number;
 	} | null;
 	battle: { id?: number; phase: string } | null;
@@ -110,6 +112,7 @@ export type DetectionIcon =
 	| "infantry"
 	| "air"
 	| "sam"
+	| "radar"
 	| "fort"
 	| "fire"
 	| "crater"
@@ -133,7 +136,7 @@ export interface Detection {
 export interface Scene {
 	mode: ImageMode;
 	status: ImageStatus;
-	platform: "drone" | "satellite" | "radar";
+	platform: "drone" | "satellite";
 	w: number;
 	h: number;
 	/** Seed for the renderer's noise filters. */
@@ -413,7 +416,7 @@ class Painter {
 	}
 	/** Explicit temperature (IR) or reflectance (SAR); EO uses the material. */
 	hot(m: Material, value: number, v = 0): string {
-		if (this.mode === "eo" || this.mode === "ppi") return this.c(m, v);
+		if (this.mode === "eo") return this.c(m, v);
 		return grey(value + v * 0.03);
 	}
 }
@@ -635,17 +638,17 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export function imageMode(sensor: string): ImageMode {
-	if (sensor === "ground_radar") return "ppi";
+	// Reports filed before ground radar was retired render as SAR frames.
+	if (sensor === "ground_radar") return "sar";
 	const kind = SENSORS[sensor as SensorId]?.kind;
 	return kind === "thermal" ? "ir" : kind === "radar" ? "sar" : "eo";
 }
 
 export function buildScene(input: ImageryInput): Scene {
-	const mode = imageMode(input.sensor);
-	return mode === "ppi" ? buildPpi(input) : buildImage(input, mode);
+	return buildImage(input, imageMode(input.sensor));
 }
 
-function buildImage(input: ImageryInput, mode: Exclude<ImageMode, "ppi">): Scene {
+function buildImage(input: ImageryInput, mode: ImageMode): Scene {
 	const f = input.findings;
 	const platform = SENSORS[input.sensor as SensorId]?.platform === "drone" ? "drone" : "satellite";
 	const weather = f.conditions.weather;
@@ -1000,7 +1003,14 @@ function buildImage(input: ImageryInput, mode: Exclude<ImageMode, "ppi">): Scene
 	if (samGroup) samSites = Math.min(3, Math.ceil(samGroup.count / 2));
 	else if (f.airDefence?.units && f.outcome !== "obscured") samSites = Math.min(3, Math.ceil(f.airDefence.units / 2));
 
-	const anchors: Record<string, Pt[]> = { units: [], sam: [], fort: [], industry: [], hospital: [] };
+	const anchors: Record<string, Pt[]> = {
+		units: [],
+		sam: [],
+		fort: [],
+		industry: [],
+		hospital: [],
+		radar: []
+	};
 
 	// ── SAM sites: hexagonal revetments with launchers and a radar ──
 	for (let s = 0; s < samSites; s++) {
@@ -1510,6 +1520,44 @@ function buildImage(input: ImageryInput, mode: Exclude<ImageMode, "ppi">): Scene
 			prio: 2
 		});
 	}
+	if (bld && bld.radar && bld.radar > 0) {
+		// Air-defence radars: a dish on a pad with its shelter beside it, one
+		// station per coverage level. They are what SEAD comes for.
+		const stations = Math.min(3, bld.radar);
+		const pts: Pt[] = [];
+		for (let k = 0; k < stations; k++) {
+			const c = spot(34, (p) => !forestIn(p));
+			anchors.radar!.push(c);
+			pts.push(c);
+			features.push({ k: "circle", x: r1(c[0]), y: r1(c[1]), r: 10, fill: P.c("dirt", 0.3) });
+			features.push({ k: "rect", x: r1(c[0] + 8), y: r1(c[1] - 4), w: 9, h: 8, fill: P.c("roof", 0.55) });
+			features.push({
+				k: "circle",
+				x: r1(c[0]),
+				y: r1(c[1]),
+				r: 6.5,
+				fill: mode === "ir" ? grey(0.82) : mode === "sar" ? grey(0.9) : P.c("concrete", -0.1),
+				stroke: P.c("concrete"),
+				sw: 1
+			});
+			features.push({
+				k: "path",
+				d: `M${r1(c[0] - 6.5)} ${r1(c[1])}a6.5 6.5 0 0 1 13 0`,
+				stroke: mode === "ir" ? grey(1) : "#e8e4dc",
+				sw: 1.4,
+				fill: "none"
+			});
+			features.push({ k: "circle", x: r1(c[0]), y: r1(c[1] + 2), r: 1.4, fill: P.c("metal", 0.4) });
+		}
+		detections.push({
+			...box(pts, 12),
+			label: stations > 1 ? `AIR DEFENCE RADAR ×${stations}` : "AIR DEFENCE RADAR",
+			detail: `RADAR L${bld.radar}`,
+			kind: "structure",
+			icon: "radar",
+			prio: 1
+		});
+	}
 	if (bld && bld.underConstruction > 0) {
 		const c = spot(16);
 		const pts: Pt[] = [];
@@ -1614,13 +1662,15 @@ function buildImage(input: ImageryInput, mode: Exclude<ImageMode, "ppi">): Scene
 					? anchors.fort
 					: s.target === "air_defence"
 						? anchors.sam
-						: s.target === "power_grid" || s.target === "industry"
-							? anchors.industry
-							: s.target === "hospital"
-								? anchors.hospital
-								: s.target === "units"
-									? anchors.units
-									: undefined;
+						: s.target === "radar"
+							? anchors.radar
+							: s.target === "power_grid" || s.target === "industry"
+								? anchors.industry
+								: s.target === "hospital"
+									? anchors.hospital
+									: s.target === "units"
+										? anchors.units
+										: undefined;
 			let c: Pt | undefined = anchorList?.length ? anchorList[Math.floor(sr() * anchorList.length)] : undefined;
 			if (!c && s.target === "bridges" && terrain.bridge && inView(terrain.bridge)) c = terrain.bridge;
 			if (!c && (s.target === "logistics" || s.target === "bridges")) {
@@ -1842,178 +1892,5 @@ function buildImage(input: ImageryInput, mode: Exclude<ImageMode, "ppi">): Scene
 		scale: { meters, px: meters / metersPerPx },
 		sprites,
 		notes
-	};
-}
-
-// ── Ground radar: a sector scope of moving-target returns ──────────────────
-
-function buildPpi(input: ImageryInput): Scene {
-	const f = input.findings;
-	const rng = seededRandom(hash32(input.reportId, 0x99e));
-	const ox = FRAME_W / 2;
-	const oy = FRAME_H - 14;
-	const R = 360;
-	const span = (62 * Math.PI) / 180;
-	const green = (a: number) => `rgba(110,255,140,${a})`;
-	const polar = (r: number, a: number): Pt => [ox + Math.sin(a) * r, oy - Math.cos(a) * r];
-
-	const ground: Prim[] = [];
-	const effects: Prim[] = [];
-	const objects: Prim[] = [];
-	const detections: Detection[] = [];
-	const [l, rr] = [polar(R, -span), polar(R, span)];
-	ground.push({
-		k: "path",
-		d: `M${ox} ${oy}L${r1(l[0])} ${r1(l[1])}A${R} ${R} 0 0 1 ${r1(rr[0])} ${r1(rr[1])}Z`,
-		fill: "#04140a",
-		stroke: green(0.5),
-		sw: 1
-	});
-	for (let k = 1; k <= 4; k++) {
-		const r = (R * k) / 4;
-		const a = polar(r, -span);
-		const b = polar(r, span);
-		ground.push({
-			k: "path",
-			d: `M${r1(a[0])} ${r1(a[1])}A${r} ${r} 0 0 1 ${r1(b[0])} ${r1(b[1])}`,
-			stroke: green(0.28),
-			sw: 0.7,
-			fill: "none",
-			dash: k < 4 ? "3 4" : undefined
-		});
-	}
-	for (let k = -3; k <= 3; k++) {
-		const p = polar(R, (k / 3) * span);
-		ground.push({ k: "path", d: `M${ox} ${oy}L${r1(p[0])} ${r1(p[1])}`, stroke: green(0.18), sw: 0.6, fill: "none" });
-	}
-
-	// Clutter: terrain returns near the radar, rain cells further out.
-	const terrain = TERRAIN_KIND[input.terrain] ?? "plains";
-	const clutter = terrain === "mountain" ? 14 : terrain === "hills" || terrain === "urban" ? 9 : 4;
-	for (let k = 0; k < clutter; k++) {
-		const p = polar(range(rng, 30, R * 0.55), range(rng, -span, span) * 0.95);
-		effects.push({
-			k: "ellipse",
-			x: r1(p[0]),
-			y: r1(p[1]),
-			rx: r1(range(rng, 4, 14)),
-			ry: r1(range(rng, 2, 6)),
-			fill: green(0.22),
-			fx: "soft"
-		});
-	}
-	if (f.conditions.weather === "rain") {
-		for (let k = 0; k < 5; k++) {
-			const p = polar(range(rng, R * 0.45, R * 0.9), range(rng, -span, span) * 0.85);
-			effects.push({
-				k: "ellipse",
-				x: r1(p[0]),
-				y: r1(p[1]),
-				rx: r1(range(rng, 24, 46)),
-				ry: r1(range(rng, 12, 22)),
-				fill: green(0.14),
-				fx: "cloud"
-			});
-		}
-	}
-
-	let sprites = 0;
-	let trk = hash32(input.reportId) % 800;
-	const moving = !!f.battle;
-	if (f.outcome === "ok") {
-		for (const c of f.categories) {
-			if (!c.count || c.category === "infantry") continue;
-			const shown = Math.min(c.count, CATEGORY_CAP[c.category] ?? 8);
-			const clusters = Math.min(3, Math.max(1, Math.ceil(shown / 5)));
-			let left = c.count;
-			for (let k = 0; k < clusters; k++) {
-				const n = Math.max(1, Math.round(shown / clusters));
-				const air = c.category === "air";
-				const centre = polar(range(rng, R * (air ? 0.5 : 0.25), R * (air ? 0.92 : 0.8)), range(rng, -span, span) * 0.8);
-				const pts: Pt[] = [];
-				const hdg = range(rng, 0, Math.PI * 2);
-				for (let v = 0; v < n; v++) {
-					const p: Pt = [centre[0] + range(rng, -10, 10), centre[1] + range(rng, -7, 7)];
-					pts.push(p);
-					const mover = air || moving || v % 2 === 0;
-					objects.push({
-						k: "circle",
-						x: r1(p[0]),
-						y: r1(p[1]),
-						r: air ? 2.2 : 1.6,
-						fill: green(mover ? 1 : 0.5),
-						fx: "glow"
-					});
-					if (mover) {
-						const len = air ? 18 : 7;
-						objects.push({
-							k: "path",
-							d: `M${r1(p[0])} ${r1(p[1])}l${r1(Math.cos(hdg) * len)} ${r1(Math.sin(hdg) * len)}`,
-							stroke: green(0.8),
-							sw: 0.8,
-							fill: "none"
-						});
-						if (air)
-							for (let h = 1; h <= 3; h++)
-								objects.push({
-									k: "circle",
-									x: r1(p[0] - Math.cos(hdg) * h * 7),
-									y: r1(p[1] - Math.sin(hdg) * h * 7),
-									r: 0.9,
-									fill: green(0.5 - h * 0.12)
-								});
-					}
-					sprites++;
-				}
-				const share = k === clusters - 1 ? left : Math.round(c.count / clusters);
-				left -= share;
-				const xs = pts.map((p) => p[0]);
-				const ys = pts.map((p) => p[1]);
-				trk = (trk + 37) % 1000;
-				detections.push({
-					x: r1(Math.min(...xs) - 6),
-					y: r1(Math.min(...ys) - 6),
-					w: r1(Math.max(...xs) - Math.min(...xs) + 12),
-					h: r1(Math.max(...ys) - Math.min(...ys) + 12),
-					label: `TRK ${String(trk).padStart(3, "0")} · ${air ? "AIR" : c.category === "artillery" ? "ARTY" : "GMTI"}`,
-					detail: `×${c.estimated ? "~" : ""}${Math.max(1, share)} · ${Math.round(c.confidence * 100)}%`,
-					kind: "track",
-					icon: air ? "air" : c.category === "artillery" ? "artillery" : "track"
-				});
-			}
-		}
-	}
-
-	return {
-		mode: "ppi",
-		status: f.outcome,
-		platform: "radar",
-		w: FRAME_W,
-		h: FRAME_H,
-		seed: hash32(input.regionId) % 1000,
-		view: "",
-		heading: 0,
-		base: "#020905",
-		relief: 0,
-		reliefAzimuth: 0,
-		reliefElevation: 0,
-		canopy: { base: "#000", light: "#000", dark: "#000" },
-		furrow: "#000",
-		ground,
-		features: [],
-		objects,
-		effects,
-		atmosphere: [],
-		lights: [],
-		detections: detections.slice(0, MAX_DETECTIONS),
-		tone: { darkness: 0, haze: 0, hazeColor: "#000", grain: 0.15, blur: 0, vignette: 0.3, speckle: 0, static: 0 },
-		visibility: 1,
-		brightness: 0.08,
-		scale: { meters: 2000, px: R / 4 },
-		sprites,
-		notes: [
-			f.conditions.weather === "rain" ? "Rain: weather clutter on the scope" : "Ground radar: moving targets",
-			terrain === "mountain" || terrain === "hills" ? "Terrain clutter at short range" : "Low ground clutter"
-		]
 	};
 }

@@ -39,6 +39,7 @@ import {
 	WEAPONS,
 	WEAPON_IDS,
 	STRIKE_TIERS,
+	airDefenceStrength,
 	effectMagnitude,
 	hash32,
 	ihlEmbargoFactor,
@@ -256,10 +257,23 @@ async function strikeContexts(
 		density: population / regionAreaKm2(region)
 	};
 	const activeAd = hostile.units.filter((u) => u.unitType === "air_defence" && !u.isTraining).length;
-	// Air defence is only known from a visual pass that identified unit types.
-	const knownAd = picture?.unitTypes ? (picture.unitTypes.find((t) => t.unitType === "air_defence")?.count ?? 0) : null;
-	const known: StrikeContext = { ...shared, adUnits: knownAd ?? 0, enemyUnits: picture?.knownUnits ?? 0 };
-	const truth: StrikeContext = { ...shared, adUnits: activeAd, enemyUnits: hostile.units.length };
+	// Air defence is known from a visual pass that identified unit types, and
+	// radar coverage from any pass that imaged the installations.
+	const knownAdUnits = picture?.unitTypes
+		? (picture.unitTypes.find((t) => t.unitType === "air_defence")?.count ?? 0)
+		: null;
+	const knownRadar = picture?.buildings?.radar ?? 0;
+	const knownAd = knownAdUnits === null && knownRadar === 0 ? null : airDefenceStrength(knownAdUnits ?? 0, knownRadar);
+	const known: StrikeContext = {
+		...shared,
+		adUnits: knownAd ?? 0,
+		enemyUnits: picture?.knownUnits ?? 0
+	};
+	const truth: StrikeContext = {
+		...shared,
+		adUnits: airDefenceStrength(activeAd, region.radar ?? 0),
+		enemyUnits: hostile.units.length
+	};
 	return { known, truth, knownAd, picture, hostile };
 }
 

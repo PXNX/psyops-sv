@@ -105,7 +105,7 @@ describe("sensor imagery", () => {
 			],
 			unitTypes: null
 		});
-		for (const sensor of ["sat_eo", "drone_ir", "sat_sar", "ground_radar"]) {
+		for (const sensor of ["sat_eo", "drone_ir", "sat_sar"]) {
 			const s = buildScene(input(sensor, big));
 			expect(s.sprites).toBeLessThanOrEqual(70);
 			expect(s.detections.length).toBeLessThanOrEqual(12);
@@ -122,6 +122,16 @@ describe("sensor imagery", () => {
 		expect(units(lost)).toHaveLength(0);
 		expect(lost.tone.static).toBeGreaterThan(0);
 		expect(lost.detections.some((d) => d.label === "SAM SITE")).toBe(true);
+	});
+
+	it("draws the air-defence radars the report saw, and nothing when it saw none", () => {
+		const site = { infrastructure: 2, economy: 3, hospitals: 1, fortifications: 4, underConstruction: 0 };
+		const seen = buildScene(input("sat_eo", findings({ buildings: { ...site, radar: 2 } })));
+		const radar = seen.detections.filter((d) => d.icon === "radar");
+		expect(radar).toHaveLength(1);
+		expect(radar[0]!.label).toContain("×2");
+		expect(radar[0]!.detail).toBe("RADAR L2");
+		expect(buildScene(input("sat_eo", findings())).detections.some((d) => d.icon === "radar")).toBe(false);
 	});
 
 	it("moving units in a battle leave dust and tracks; static ones dig in", () => {

@@ -34,6 +34,7 @@ import {
 	INTEL_VALID_HOURS,
 	SENSORS,
 	SENSOR_IDS,
+	airDefenceStrength,
 	hash32,
 	regionConditions,
 	seededRandom,
@@ -396,14 +397,18 @@ async function observe(
 		.from(stateBuildings)
 		.where(and(eq(stateBuildings.regionId, mission.targetRegionId), eq(stateBuildings.isUnderConstruction, true)));
 
+	// Ground radar no longer flies: any legacy in-progress pass is rendered
+	// and scored as the satellite's SAR sensor.
+	const sensor: SensorId = mission.sensor === "ground_radar" ? "sat_sar" : (mission.sensor as SensorId);
 	return scanRegion({
-		sensor: mission.sensor,
+		sensor,
 		conditions: region
 			? (opts.conditions?.(region) ?? regionConditions(region, mission.completesAt))
 			: { weather: "clear", night: false, cover: "open" },
 		hostileUnitTypes: [...units.values()].map((u) => u.unitType),
 		recentlyFired,
 		airDefenceUnits,
+		radarLevels: region?.radar ?? 0,
 		owner: { id: owner?.id ?? null, name: owner?.name ?? null },
 		buildings: region
 			? {
@@ -412,6 +417,7 @@ async function observe(
 					education: region.education ?? 0,
 					hospitals: region.hospitals ?? 0,
 					fortifications: region.fortifications ?? 0,
+					radar: region.radar ?? 0,
 					underConstruction
 				}
 			: null,
@@ -574,10 +580,12 @@ export async function battleIntel(
 		sideOf(db, battle.attackerStateId),
 		sideOf(db, battle.defenderStateId)
 	]);
-	const [attackerPics, defenderPics] = await Promise.all([
+	const [attackerPics, defenderPics, regionRows] = await Promise.all([
 		picturesByRegion(db, attackerSide.stateIds, { regionIds: [battle.regionId], now }),
-		picturesByRegion(db, defenderSide.stateIds, { regionIds: [battle.regionId], now })
+		picturesByRegion(db, defenderSide.stateIds, { regionIds: [battle.regionId], now }),
+		db.select({ radar: regions.radar }).from(regions).where(eq(regions.id, battle.regionId))
 	]);
+	const regionRadar = regionRows[0]?.radar ?? 0;
 
 	const participantIds = await db
 		.select({ unitId: battleParticipants.unitId })
@@ -611,7 +619,10 @@ export async function battleIntel(
 		attacker: sideModifiers({
 			picture: attackerPicture,
 			ownArtilleryEngaged: count(engaged.attackers, "artillery") > 0,
-			enemyAirDefenceUnits: count(engaged.defenders, "air_defence") + stationedAA.length
+			enemyAirDefenceUnits: airDefenceStrength(
+				count(engaged.defenders, "air_defence") + stationedAA.length,
+				regionRadar
+			)
 		}),
 		defender: sideModifiers({
 			picture: defenderPicture,

@@ -65,13 +65,10 @@
 		{
 			eo: "EO",
 			ir: irPalette === "black" ? "IR BH" : irPalette === "iron" ? "IR IRON" : "IR WH",
-			sar: "SAR X-BAND",
-			ppi: "GMTI"
+			sar: "SAR X-BAND"
 		}[scene.mode]
 	);
-	const PlatformIcon = $derived(
-		scene.platform === "drone" ? IconDrone : scene.platform === "satellite" ? IconSatellite : IconRadar
-	);
+	const PlatformIcon = $derived(scene.platform === "drone" ? IconDrone : IconSatellite);
 	const w = $derived(input.findings.conditions.weather);
 	const WeatherIcon = $derived(
 		w === "rain"
@@ -95,15 +92,16 @@
 		crater: IconCrater,
 		industry: IconFactory,
 		hospital: IconHospital,
+		radar: IconRadar,
 		track: IconTarget,
 		build: IconCrane
 	};
 	const stamp = (d: string) => d.replace("T", " ").slice(0, 19) + "Z";
 	const latlon = $derived(input.lat != null && input.lon != null ? formatLatLon(input.lat, input.lon, 3) : "GRID UNK");
 
-	// HUD colours: phosphor green on the radar scope, amber boxes elsewhere.
-	const hud = $derived(scene.mode === "ppi" ? "#7dffa0" : "#e8f0e8");
-	const box = $derived(scene.mode === "ppi" ? "#7dffa0" : "#ffcf3f");
+	// HUD colours: a cool white frame with amber target boxes.
+	const hud = "#e8f0e8";
+	const box = "#ffcf3f";
 	const hostileBox = "#ff6b5a";
 	const boxColor = (kind: string) => (kind === "damage" ? hostileBox : kind === "structure" ? "#8fd3ff" : box);
 
@@ -302,10 +300,6 @@
 			<stop offset="55%" stop-color="#000" stop-opacity="0" />
 			<stop offset="100%" stop-color="#000" stop-opacity="1" />
 		</radialGradient>
-		<linearGradient id={id("sweep")} x1="0" x2="1" y1="0" y2="0">
-			<stop offset="0" stop-color="#7dffa0" stop-opacity="0" />
-			<stop offset="1" stop-color="#7dffa0" stop-opacity="0.35" />
-		</linearGradient>
 	</defs>
 
 	<g clip-path={url("frame")}>
@@ -355,36 +349,24 @@
 			<rect width={FRAME_W} height={FRAME_H} fill={url("vignette")} opacity={scene.tone.vignette} />
 		{/if}
 
-		{#if scene.mode === "ppi"}
-			<g class="sweep" style="transform-origin: {FRAME_W / 2}px {FRAME_H - 14}px">
-				<path
-					d="M{FRAME_W / 2} {FRAME_H - 14}L{FRAME_W / 2 + 190} {FRAME_H - 320}A360 360 0 0 1 {FRAME_W / 2 +
-						290} {FRAME_H - 228}Z"
-					fill={url("sweep")}
-				/>
-			</g>
-		{/if}
-
 		<!-- ── HUD ── -->
 		<g fill="none" stroke={hud} stroke-width={full ? 1.4 : 2.4} opacity="0.85">
 			{#each [[10, 10, 1, 1], [FRAME_W - 10, 10, -1, 1], [10, FRAME_H - 10, 1, -1], [FRAME_W - 10, FRAME_H - 10, -1, -1]] as [x, y, sx, sy] (`${x}-${y}`)}
 				<path d="M{x} {y + sy * 22}V{y}H{x + sx * 22}" />
 			{/each}
-			{#if scene.mode !== "ppi"}
-				{#if scene.platform === "drone"}
-					<circle cx={FRAME_W / 2} cy={FRAME_H / 2} r="16" stroke-width="1" opacity="0.7" />
-					<path
-						d="M{FRAME_W / 2 - 34} {FRAME_H / 2}h22M{FRAME_W / 2 + 12} {FRAME_H / 2}h22M{FRAME_W / 2} {FRAME_H / 2 -
-							34}v22M{FRAME_W / 2} {FRAME_H / 2 + 12}v22"
-						stroke-width="1"
-					/>
-				{:else}
-					<path
-						d="M{FRAME_W / 2 - 8} {FRAME_H / 2}h5M{FRAME_W / 2 + 3} {FRAME_H / 2}h5M{FRAME_W / 2} {FRAME_H / 2 -
-							8}v5M{FRAME_W / 2} {FRAME_H / 2 + 3}v5"
-						stroke-width="1"
-					/>
-				{/if}
+			{#if scene.platform === "drone"}
+				<circle cx={FRAME_W / 2} cy={FRAME_H / 2} r="16" stroke-width="1" opacity="0.7" />
+				<path
+					d="M{FRAME_W / 2 - 34} {FRAME_H / 2}h22M{FRAME_W / 2 + 12} {FRAME_H / 2}h22M{FRAME_W / 2} {FRAME_H / 2 -
+						34}v22M{FRAME_W / 2} {FRAME_H / 2 + 12}v22"
+					stroke-width="1"
+				/>
+			{:else}
+				<path
+					d="M{FRAME_W / 2 - 8} {FRAME_H / 2}h5M{FRAME_W / 2 + 3} {FRAME_H / 2}h5M{FRAME_W / 2} {FRAME_H / 2 -
+						8}v5M{FRAME_W / 2} {FRAME_H / 2 + 3}v5"
+					stroke-width="1"
+				/>
 			{/if}
 		</g>
 
@@ -450,40 +432,30 @@
 				>
 				<!-- Position -->
 				<text x="16" y={FRAME_H - 16}>{latlon}</text>
-				{#if scene.mode !== "ppi"}
-					<text x="16" y={FRAME_H - 28} font-size="7.5" opacity="0.75"
-						>GSD {scene.platform === "drone" ? "0.1" : "0.5"} M · {input.findings.conditions.cover.toUpperCase()}</text
-					>
-				{/if}
+				<text x="16" y={FRAME_H - 28} font-size="7.5" opacity="0.75"
+					>GSD {scene.platform === "drone" ? "0.1" : "0.5"} M · {input.findings.conditions.cover.toUpperCase()}</text
+				>
 			</g>
 			<!-- Scale bar and north arrow -->
-			{#if scene.mode !== "ppi"}
-				{@const sx = FRAME_W - 26 - scene.scale.px}
-				<g stroke={hud} stroke-width="1.2" fill="none">
-					<path
-						d="M{sx} {FRAME_H - 20}v-5M{sx} {FRAME_H - 22.5}h{scene.scale.px}M{sx + scene.scale.px} {FRAME_H - 20}v-5"
-					/>
-					<path d="M{sx + scene.scale.px / 2} {FRAME_H - 21}v-3" stroke-width="0.8" />
-				</g>
-				<text x={sx + scene.scale.px / 2} y={FRAME_H - 28} font-size="7.5" fill={hud} text-anchor="middle"
-					>{scene.scale.meters} M</text
-				>
-				<g transform="translate({FRAME_W - 24} 58) rotate({-scene.heading})">
-					<path d="M0 -11L4 4L0 1L-4 4Z" fill={hud} opacity="0.85" />
-					<text y="-14" font-size="7.5" fill={hud} text-anchor="middle">N</text>
-				</g>
-			{:else}
-				{#each [1, 2, 3, 4] as k (k)}
-					<text x={FRAME_W / 2 + 4} y={FRAME_H - 14 - k * 90 + 10} font-size="7" fill={hud} opacity="0.6"
-						>{k * 2} KM</text
-					>
-				{/each}
-			{/if}
+			{@const sx = FRAME_W - 26 - scene.scale.px}
+			<g stroke={hud} stroke-width="1.2" fill="none">
+				<path
+					d="M{sx} {FRAME_H - 20}v-5M{sx} {FRAME_H - 22.5}h{scene.scale.px}M{sx + scene.scale.px} {FRAME_H - 20}v-5"
+				/>
+				<path d="M{sx + scene.scale.px / 2} {FRAME_H - 21}v-3" stroke-width="0.8" />
+			</g>
+			<text x={sx + scene.scale.px / 2} y={FRAME_H - 28} font-size="7.5" fill={hud} text-anchor="middle"
+				>{scene.scale.meters} M</text
+			>
+			<g transform="translate({FRAME_W - 24} 58) rotate({-scene.heading})">
+				<path d="M0 -11L4 4L0 1L-4 4Z" fill={hud} opacity="0.85" />
+				<text y="-14" font-size="7.5" fill={hud} text-anchor="middle">N</text>
+			</g>
 		{:else}
 			<g>
 				<rect x="0" y="0" width="92" height="24" fill="#000" opacity="0.55" />
 				<PlatformIcon x="5" y="4" width="16" height="16" color={hud} />
-				<text x="25" y="17" font-size="13" fill={hud}>{scene.mode === "ppi" ? "RDR" : scene.mode.toUpperCase()}</text>
+				<text x="25" y="17" font-size="13" fill={hud}>{scene.mode.toUpperCase()}</text>
 				{#if input.findings.conditions.night}<IconNight x="70" y="5" width="15" height="15" color={hud} />{/if}
 			</g>
 		{/if}
@@ -531,17 +503,6 @@
 		stroke-width: 2px;
 		stroke-linejoin: round;
 	}
-	.sensor-image .sweep {
-		animation: sweep 4s linear infinite;
-	}
-	@keyframes sweep {
-		from {
-			transform: rotate(-95deg);
-		}
-		to {
-			transform: rotate(35deg);
-		}
-	}
 	.developing .develop {
 		animation: develop 1.1s ease-out both;
 	}
@@ -569,7 +530,6 @@
 		}
 	}
 	@media (prefers-reduced-motion: reduce) {
-		.sensor-image .sweep,
 		.developing .develop,
 		.scanline {
 			animation: none;
