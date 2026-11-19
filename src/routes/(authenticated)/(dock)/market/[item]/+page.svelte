@@ -90,11 +90,7 @@
 	});
 	const pointTime = $derived((t: number) => {
 		const d = new Date(t);
-		return range === "24h"
-			? clock(d)
-			: range === "7d"
-				? `${weekday(d)} ${clock(d)}`
-				: `${dayMonth(d)} ${clock(d)}`;
+		return range === "24h" ? clock(d) : range === "7d" ? `${weekday(d)} ${clock(d)}` : `${dayMonth(d)} ${clock(d)}`;
 	});
 
 	const bestAsk = $derived(data.otherListings[0]?.pricePerUnit ?? null);
@@ -129,9 +125,9 @@
 		const low = data.statistics?.lowestPrice;
 		if (!low) return null;
 		const diff = price - low;
-		if (diff < 0) return { label: `$${Math.abs(diff).toLocaleString()} under the low`, cls: "text-[#aef3c9]" };
-		if (diff > 0) return { label: `$${diff.toLocaleString()} over the low`, cls: "text-[#ffcb6b]" };
-		return { label: "At the market low", cls: "text-[#c3dbff]" };
+		if (diff < 0) return { label: `$${Math.abs(diff).toLocaleString()} under the low`, cls: "text-positive-fg" };
+		if (diff > 0) return { label: `$${diff.toLocaleString()} over the low`, cls: "text-warning" };
+		return { label: "At the market low", cls: "text-primary-fg" };
 	}
 </script>
 
@@ -150,7 +146,7 @@
 )}
 	<div class="grid grid-cols-2 gap-3">
 		<div class="min-w-0">
-			<label for={qtyId} class="field-label">Units <span class="font-normal text-[#8e9abb]">max {max}</span></label>
+			<label for={qtyId} class="field-label">Units <span class="font-normal text-fg-muted">max {max}</span></label>
 			<div class="join w-full">
 				<input
 					type="number"
@@ -171,7 +167,7 @@
 			<label for={priceId} class="field-label">Price / unit</label>
 			<div class="join w-full">
 				<span
-					class="join-item h-9 px-2.5 flex items-center border border-[#8ea6e0]/20 bg-[#131c33] text-[#8e9abb] text-sm font-mono rounded-sm"
+					class="join-item h-9 px-2.5 flex items-center border border-line/20 bg-base-200 text-fg-muted text-sm font-mono rounded-sm"
 					>$</span
 				>
 				<input
@@ -194,16 +190,14 @@
 	<section class="panel rounded-sm overflow-hidden">
 		<div class="px-4 pt-4 sm:px-5 sm:pt-5 flex flex-wrap items-center justify-between gap-3">
 			<div class="flex items-center gap-3 min-w-0">
-				<div
-					class="size-12 shrink-0 flex items-center justify-center rounded-sm panel-muted"
-				>
+				<div class="size-12 shrink-0 flex items-center justify-center rounded-sm panel-muted">
 					<ResourceIcon name={data.itemName} class="size-7" />
 				</div>
 				<div class="min-w-0">
-					<h1 class="font-sans text-xl sm:text-2xl font-semibold text-[#eef2ff] capitalize truncate">{data.itemName}</h1>
-					<p class="text-xs text-[#8e9abb]">
+					<h1 class="font-sans text-xl sm:text-2xl font-semibold text-fg capitalize truncate">{data.itemName}</h1>
+					<p class="text-xs text-fg-muted">
 						{data.itemType === "resource" ? "Raw material" : "Goods"} ·
-						<span class="font-mono text-[#c2cbe3]">{data.userItemQuantity.toLocaleString()}</span> in stock
+						<span class="font-mono text-fg-soft">{data.userItemQuantity.toLocaleString()}</span> in stock
 					</p>
 				</div>
 			</div>
@@ -215,8 +209,8 @@
 						aria-selected={range === r}
 						class="tap-target press-spring rounded-xs px-3 py-1 font-mono text-xs font-semibold transition-colors {range ===
 						r
-							? 'bg-[#2f6be0] text-white'
-							: 'text-[#8e9abb] hover:text-[#eef2ff]'}"
+							? 'bg-primary text-primary-content'
+							: 'text-fg-muted hover:text-fg'}"
 						onclick={() => {
 							range = r;
 							hover = null;
@@ -228,12 +222,12 @@
 
 		<div class="px-4 sm:px-5 mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
 			{#key shownPrice}
-				<p class="animate-tick font-mono text-3xl sm:text-4xl font-bold tabular-nums text-[#eef2ff]">
+				<p class="animate-tick font-mono text-3xl sm:text-4xl font-bold tabular-nums text-fg">
 					{shownPrice !== null ? money(shownPrice) : "—"}
 				</p>
 			{/key}
 			{#if hover}
-				<p class="font-mono text-xs text-[#8e9abb]">
+				<p class="font-mono text-xs text-fg-muted">
 					<span>{pointTime(hover.t)}</span>
 					{#if hover.volume}
 						<span>· {hover.volume.toLocaleString()} {hover.volume === 1 ? "unit" : "units"}</span>
@@ -242,8 +236,8 @@
 			{:else if rangeChange !== null}
 				<p
 					class="rounded-sm px-2 py-0.5 font-mono text-xs font-semibold tabular-nums {rangeChange >= 0
-						? 'bg-[#1f9d62]/18 text-[#aef3c9]'
-						: 'bg-red-600/10 text-red-300'}"
+						? 'bg-success/15 text-positive-fg'
+						: 'bg-error/10 text-hostile-fg'}"
 				>
 					{rangeChange >= 0 ? "▲" : "▼"}
 					{Math.abs(rangeChange).toFixed(1)}% <span class="font-sans font-normal opacity-70">{range}</span>
@@ -264,9 +258,9 @@
 		</div>
 
 		<dl class="grid grid-cols-3 sm:grid-cols-6 gap-y-4 border-t border-white/10 px-2 py-4">
-			{#each [{ label: "Last", value: lastTrade !== null ? money(lastTrade) : "—", cls: "text-[#eef2ff]" }, { label: `Low ${range}`, value: rangeLow !== null ? money(rangeLow) : "—", cls: "text-red-300" }, { label: `High ${range}`, value: rangeHigh !== null ? money(rangeHigh) : "—", cls: "text-[#aef3c9]" }, { label: `Volume ${range}`, value: rangeVolume.toLocaleString(), cls: "text-[#eef2ff]" }, { label: "Best ask", value: bestAsk !== null ? money(bestAsk) : "—", cls: "text-[#ffcb6b]" }, { label: "On offer", value: unitsOnOffer.toLocaleString(), cls: "text-[#eef2ff]" }] as cell}
+			{#each [{ label: "Last", value: lastTrade !== null ? money(lastTrade) : "—", cls: "text-fg" }, { label: `Low ${range}`, value: rangeLow !== null ? money(rangeLow) : "—", cls: "text-hostile-fg" }, { label: `High ${range}`, value: rangeHigh !== null ? money(rangeHigh) : "—", cls: "text-positive-fg" }, { label: `Volume ${range}`, value: rangeVolume.toLocaleString(), cls: "text-fg" }, { label: "Best ask", value: bestAsk !== null ? money(bestAsk) : "—", cls: "text-warning" }, { label: "On offer", value: unitsOnOffer.toLocaleString(), cls: "text-fg" }] as cell}
 				<div class="px-2 text-center min-w-0">
-					<dt class="text-[10px] uppercase tracking-wide text-[#8e9abb] truncate">{cell.label}</dt>
+					<dt class="text-[10px] uppercase tracking-wide text-fg-muted truncate">{cell.label}</dt>
 					<dd class="font-mono text-sm font-bold tabular-nums truncate {cell.cls}">{cell.value}</dd>
 				</div>
 			{/each}
@@ -279,12 +273,12 @@
 			<div class="flex items-center justify-between gap-3 px-4 py-3 border-b border-white/10">
 				<h2 class="section-title">Order book</h2>
 				{#if data.taxRate}
-					<span class="text-xs text-[#ffcb6b]">+{data.taxRate}% tax</span>
+					<span class="text-xs text-warning">+{data.taxRate}% tax</span>
 				{/if}
 			</div>
 
 			{#if data.otherListings.length === 0}
-				<p class="px-4 py-8 text-center text-sm text-[#8e9abb]">No asks on the board.</p>
+				<p class="px-4 py-8 text-center text-sm text-fg-muted">No asks on the board.</p>
 			{:else}
 				<ol class="divide-y divide-white/[0.06]">
 					{#each visibleOffers as listing, i (listing.id)}
@@ -301,20 +295,20 @@
 							<span
 								aria-hidden="true"
 								class="pointer-events-none absolute inset-y-1 right-0 transition-[width] duration-500 {isBest
-									? 'bg-[#4fd88a]/[0.09]'
-									: 'bg-[#8ea6e0]/[0.06]'}"
+									? 'bg-success/10'
+									: 'bg-line/5'}"
 								style="width: {Math.max(4, (listing.quantity / deepest) * 100)}%"
 							></span>
 							<div class="relative flex items-center gap-3 min-w-0 flex-1">
 								<div class="w-24 shrink-0">
 									<p
 										class="font-mono text-lg font-bold tabular-nums leading-tight {isBest
-											? 'text-[#aef3c9]'
-											: 'text-[#eef2ff]'}"
+											? 'text-positive-fg'
+											: 'text-fg'}"
 									>
 										${listing.pricePerUnit.toLocaleString()}
 									</p>
-									<p class="text-xs text-[#8e9abb]">
+									<p class="text-xs text-fg-muted">
 										<span class="font-mono">{listing.quantity.toLocaleString()}</span> units
 									</p>
 								</div>
@@ -345,7 +339,7 @@
 										}}
 									/>
 									<span
-										class="flex-1 sm:w-24 text-right font-mono text-sm tabular-nums text-[#eef2ff]"
+										class="flex-1 sm:w-24 text-right font-mono text-sm tabular-nums text-fg"
 										title={taxAmount ? `incl. $${taxAmount.toLocaleString()} tax` : undefined}
 									>
 										${(itemCost + taxAmount).toLocaleString()}
@@ -375,7 +369,7 @@
 				{#if data.otherListings.length > OFFERS_SHOWN}
 					<button
 						type="button"
-						class="tap-target w-full px-4 py-2.5 border-t border-white/[0.06] text-xs text-[#8e9abb] hover:text-[#ffc857] transition-colors"
+						class="tap-target w-full px-4 py-2.5 border-t border-white/[0.06] text-xs text-fg-muted hover:text-primary-fg transition-colors"
 						onclick={() => (showAllOffers = !showAllOffers)}
 					>
 						{showAllOffers ? "Show fewer" : `Show ${data.otherListings.length - OFFERS_SHOWN} more asks`}
@@ -389,7 +383,7 @@
 			<div class="flex items-center justify-between gap-2 px-4 py-3 border-b border-white/10">
 				<h2 class="section-title">Sell order</h2>
 				{#if data.myListing}
-					<span class="font-mono text-xs text-[#8e9abb]">No. {String(data.myListing.id).padStart(5, "0")}</span>
+					<span class="font-mono text-xs text-fg-muted">No. {String(data.myListing.id).padStart(5, "0")}</span>
 				{/if}
 			</div>
 
@@ -398,19 +392,19 @@
 					{@const cmp = priceVsMarket(data.myListing.pricePerUnit)}
 					<dl class="space-y-2 text-sm">
 						<div class="flex justify-between gap-3">
-							<dt class="text-[#8e9abb]">Units</dt>
-							<dd class="font-mono text-[#eef2ff]">{data.myListing.quantity.toLocaleString()}</dd>
+							<dt class="text-fg-muted">Units</dt>
+							<dd class="font-mono text-fg">{data.myListing.quantity.toLocaleString()}</dd>
 						</div>
 						<div class="flex justify-between gap-3">
-							<dt class="text-[#8e9abb]">Ask</dt>
+							<dt class="text-fg-muted">Ask</dt>
 							<dd class="text-right">
-								<span class="font-mono font-bold text-[#ffcb6b]">${data.myListing.pricePerUnit.toLocaleString()}</span>
+								<span class="font-mono font-bold text-warning">${data.myListing.pricePerUnit.toLocaleString()}</span>
 								{#if cmp}<span class="block text-xs {cmp.cls}">{cmp.label}</span>{/if}
 							</dd>
 						</div>
 						<div class="flex justify-between gap-3 pt-2 border-t border-white/10">
-							<dt class="text-[#8e9abb]">Value</dt>
-							<dd class="font-mono font-bold text-[#eef2ff]">
+							<dt class="text-fg-muted">Value</dt>
+							<dd class="font-mono font-bold text-fg">
 								${(data.myListing.quantity * data.myListing.pricePerUnit).toLocaleString()}
 							</dd>
 						</div>
@@ -456,8 +450,8 @@
 						)}
 						{#if cmp}<p class="text-xs {cmp.cls}">{cmp.label}</p>{/if}
 						<p class="flex justify-between text-sm pt-2 border-t border-white/10">
-							<span class="text-[#8e9abb]">Value</span>
-							<span class="font-mono font-bold text-[#eef2ff]">${(editQty * editPrice).toLocaleString()}</span>
+							<span class="text-fg-muted">Value</span>
+							<span class="font-mono font-bold text-fg">${(editQty * editPrice).toLocaleString()}</span>
 						</p>
 						<div class="flex gap-2">
 							<Button
@@ -485,8 +479,8 @@
 						)}
 						{#if cmp}<p class="text-xs {cmp.cls}">{cmp.label}</p>{/if}
 						<p class="flex justify-between text-sm pt-2 border-t border-white/10">
-							<span class="text-[#8e9abb]">Value</span>
-							<span class="font-mono font-bold text-[#eef2ff]">${(createQty * createPrice).toLocaleString()}</span>
+							<span class="text-fg-muted">Value</span>
+							<span class="font-mono font-bold text-fg">${(createQty * createPrice).toLocaleString()}</span>
 						</p>
 						<Button
 							type="submit"
@@ -499,12 +493,12 @@
 						</Button>
 					</form>
 				{:else if cooldownTimeRemaining > 0}
-					<p class="flex items-center gap-2 text-sm text-[#ffcb6b]">
+					<p class="flex items-center gap-2 text-sm text-warning">
 						<FluentClock20Filled class="size-4 shrink-0" />
 						Next order in <span class="font-mono">{cooldownDisplay}</span>
 					</p>
 				{:else}
-					<p class="text-sm text-[#8e9abb]">No {data.itemName} in stock to sell.</p>
+					<p class="text-sm text-fg-muted">No {data.itemName} in stock to sell.</p>
 				{/if}
 			</div>
 		</section>

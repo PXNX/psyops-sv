@@ -410,17 +410,17 @@
 @keyframes celebrate {
 	0% {
 		transform: none;
-		box-shadow: 0 0 0 0 rgb(47 129 247 / 0);
+		box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 0%, transparent);
 	}
 	35% {
 		transform: translateY(-2px) scale(1.012);
 		box-shadow:
-			0 0 0 3px rgb(47 129 247 / 0.45),
-			0 0 22px rgb(47 129 247 / 0.35);
+			0 0 0 3px color-mix(in oklab, var(--color-primary) 45%, transparent),
+			0 0 22px color-mix(in oklab, var(--color-primary) 35%, transparent);
 	}
 	100% {
 		transform: none;
-		box-shadow: 0 0 0 0 rgb(47 129 247 / 0);
+		box-shadow: 0 0 0 0 color-mix(in oklab, var(--color-primary) 0%, transparent);
 	}
 }
 
@@ -453,7 +453,7 @@
 @keyframes tick-glow {
 	from {
 		color: var(--color-primary-fg);
-		text-shadow: 0 0 10px rgb(47 129 247 / 0.6);
+		text-shadow: 0 0 10px color-mix(in oklab, var(--color-primary) 60%, transparent);
 	}
 }
 

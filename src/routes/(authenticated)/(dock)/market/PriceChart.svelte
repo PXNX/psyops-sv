@@ -40,7 +40,7 @@
 	const plotBottom = $derived(height - PAD.bottom - volH - (volume ? 4 : 0));
 
 	const up = $derived(points.length < 2 || points[points.length - 1].price >= points[0].price);
-	const stroke = $derived(up ? "#4fd88a" : "#f87171");
+	const stroke = $derived(up ? "var(--color-success)" : "var(--color-error)");
 
 	const yDomain = $derived.by(() => {
 		const vals = points.flatMap((p) => [p.price, p.low, p.high]);
@@ -61,9 +61,7 @@
 			(points.length ? `L${sx(end).toFixed(1)},${sy(points[points.length - 1].price).toFixed(1)}` : "")
 	);
 	const area = $derived(
-		points.length
-			? `${line}L${sx(end).toFixed(1)},${plotBottom}L${sx(points[0].t).toFixed(1)},${plotBottom}Z`
-			: ""
+		points.length ? `${line}L${sx(end).toFixed(1)},${plotBottom}L${sx(points[0].t).toFixed(1)},${plotBottom}Z` : ""
 	);
 
 	const maxVol = $derived(Math.max(1, ...points.map((p) => p.volume)));
@@ -116,16 +114,37 @@
 		{#if width}
 			<!-- grid -->
 			{#each yTicks as v}
-				<line x1="0" x2={plotRight} y1={sy(v)} y2={sy(v)} stroke="#8ea6e0" stroke-opacity="0.09" />
+				<line x1="0" x2={plotRight} y1={sy(v)} y2={sy(v)} stroke="var(--color-line)" stroke-opacity="0.09" />
 				{#if points.length || reference}
-					<text x={plotRight + 6} y={sy(v) + 3} class="fill-[#8e9abb] text-[10px]">{money(v)}</text>
+					<text x={plotRight + 6} y={sy(v) + 3} class="fill-fg-muted text-[10px]">{money(v)}</text>
 				{/if}
 			{/each}
 			{#each xTicks as t}
-				<line x1={sx(t)} x2={sx(t)} y1={PAD.top} y2={height - PAD.bottom} stroke="#8ea6e0" stroke-opacity="0.06" />
+				<line
+					x1={sx(t)}
+					x2={sx(t)}
+					y1={PAD.top}
+					y2={height - PAD.bottom}
+					stroke="var(--color-line)"
+					stroke-opacity="0.06"
+				/>
 			{/each}
-			<line x1={plotRight} x2={plotRight} y1="0" y2={height - PAD.bottom} stroke="#8ea6e0" stroke-opacity="0.2" />
-			<line x1="0" x2={W} y1={height - PAD.bottom} y2={height - PAD.bottom} stroke="#8ea6e0" stroke-opacity="0.2" />
+			<line
+				x1={plotRight}
+				x2={plotRight}
+				y1="0"
+				y2={height - PAD.bottom}
+				stroke="var(--color-line)"
+				stroke-opacity="0.2"
+			/>
+			<line
+				x1="0"
+				x2={W}
+				y1={height - PAD.bottom}
+				y2={height - PAD.bottom}
+				stroke="var(--color-line)"
+				stroke-opacity="0.2"
+			/>
 
 			{#if volume}
 				{#each points as p (p.t)}
@@ -136,7 +155,7 @@
 							y={height - PAD.bottom - h}
 							width={barW}
 							height={h}
-							fill={active?.t === p.t ? "#6aa8ff" : "#8ea6e0"}
+							fill={active?.t === p.t ? "var(--color-primary-fg)" : "var(--color-line)"}
 							fill-opacity={active?.t === p.t ? 0.9 : 0.35}
 						/>
 					{/if}
@@ -149,11 +168,11 @@
 					x2={plotRight}
 					y1={sy(reference.value)}
 					y2={sy(reference.value)}
-					stroke="#ffcb6b"
+					stroke="var(--color-warning)"
 					stroke-opacity="0.7"
 					stroke-dasharray="2 3"
 				/>
-				<text x={plotRight - 4} y={sy(reference.value) - 4} text-anchor="end" class="fill-[#ffcb6b] text-[10px]"
+				<text x={plotRight - 4} y={sy(reference.value) - 4} text-anchor="end" class="fill-warning text-[10px]"
 					>{reference.label.toUpperCase()}</text
 				>
 			{/if}
@@ -166,7 +185,7 @@
 					x={plotRight / 2}
 					y={(PAD.top + plotBottom) / 2}
 					text-anchor="middle"
-					class="fill-[#8e9abb] text-[11px] tracking-widest">NO TRADES</text
+					class="fill-fg-muted text-[11px] tracking-widest">NO TRADES</text
 				>
 			{/if}
 
@@ -177,7 +196,7 @@
 					x2={sx(active.t)}
 					y1={PAD.top}
 					y2={height - PAD.bottom}
-					stroke="#dbe2f4"
+					stroke="var(--color-fg-body)"
 					stroke-opacity="0.45"
 					stroke-dasharray="3 3"
 				/>
@@ -186,32 +205,55 @@
 					x2={plotRight}
 					y1={sy(active.price)}
 					y2={sy(active.price)}
-					stroke="#dbe2f4"
+					stroke="var(--color-fg-body)"
 					stroke-opacity="0.45"
 					stroke-dasharray="3 3"
 				/>
-				<circle cx={sx(active.t)} cy={sy(active.price)} r="3" fill={stroke} stroke="#0b0f17" stroke-width="1.5" />
+				<circle
+					cx={sx(active.t)}
+					cy={sy(active.price)}
+					r="3"
+					fill={stroke}
+					stroke="var(--color-base-100)"
+					stroke-width="1.5"
+				/>
 			{:else if last}
 				<circle cx={sx(end)} cy={sy(last.price)} r="2.5" fill={stroke} />
 			{/if}
 
 			<!-- price tag on the scale -->
 			{#if tagPrice !== null}
-				<rect x={plotRight + 1} y={sy(tagPrice) - 8} width={AXIS_W - 1} height="16" rx="2" fill={active ? "#2f6be0" : stroke} />
-				<text x={plotRight + 6} y={sy(tagPrice) + 3.5} class="text-[10px] font-semibold {active ? 'fill-white' : 'fill-[#0b0f17]'}"
-					>{money(tagPrice)}</text
+				<rect
+					x={plotRight + 1}
+					y={sy(tagPrice) - 8}
+					width={AXIS_W - 1}
+					height="16"
+					rx="2"
+					fill={active ? "var(--color-primary)" : stroke}
+				/>
+				<text
+					x={plotRight + 6}
+					y={sy(tagPrice) + 3.5}
+					class="text-[10px] font-semibold {active ? 'fill-primary-content' : 'fill-base-100'}">{money(tagPrice)}</text
 				>
 			{/if}
 
 			<!-- time scale -->
 			{#if active}
-				<rect x={timeX - TIME_W / 2} y={height - PAD.bottom + 3} width={TIME_W} height="16" rx="2" fill="#2f6be0" />
-				<text x={timeX} y={height - PAD.bottom + 14.5} text-anchor="middle" class="fill-white text-[10px]"
+				<rect
+					x={timeX - TIME_W / 2}
+					y={height - PAD.bottom + 3}
+					width={TIME_W}
+					height="16"
+					rx="2"
+					fill="var(--color-primary)"
+				/>
+				<text x={timeX} y={height - PAD.bottom + 14.5} text-anchor="middle" class="fill-primary-content text-[10px]"
 					>{formatTime(active.t)}</text
 				>
 			{:else}
 				{#each xTicks as t}
-					<text x={sx(t)} y={height - 7} text-anchor="middle" class="fill-[#8e9abb] text-[10px]">{formatTime(t)}</text>
+					<text x={sx(t)} y={height - 7} text-anchor="middle" class="fill-fg-muted text-[10px]">{formatTime(t)}</text>
 				{/each}
 			{/if}
 		{/if}

@@ -6,7 +6,9 @@
 	const H = 32;
 
 	const up = $derived(prices.length < 2 || prices[prices.length - 1] >= prices[0]);
-	const stroke = $derived(prices.length < 2 ? "#8e9abb" : up ? "#4fd88a" : "#f87171");
+	const stroke = $derived(
+		prices.length < 2 ? "var(--color-fg-muted)" : up ? "var(--color-success)" : "var(--color-error)"
+	);
 	const flat = $derived(prices.every((p) => p === prices[0]));
 	const path = $derived.by(() => {
 		if (!prices.length) return "";
@@ -27,20 +29,14 @@
 <svg viewBox="0 0 {W} {H}" preserveAspectRatio="none" class={className} aria-hidden="true">
 	{#if path}
 		{#if !flat}<path d="{path}L{W},{H}L0,{H}Z" fill={stroke} fill-opacity="0.07" />{/if}
-		<path
-			d={path}
-			fill="none"
-			{stroke}
-			stroke-width="1.25"
-						vector-effect="non-scaling-stroke"
-		/>
+		<path d={path} fill="none" {stroke} stroke-width="1.25" vector-effect="non-scaling-stroke" />
 	{:else}
 		<line
 			x1="0"
 			x2={W}
 			y1={H / 2}
 			y2={H / 2}
-			stroke="#8e9abb"
+			stroke="var(--color-fg-muted)"
 			stroke-opacity="0.35"
 			stroke-dasharray="3 4"
 			vector-effect="non-scaling-stroke"

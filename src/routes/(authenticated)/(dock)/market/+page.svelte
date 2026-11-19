@@ -49,8 +49,8 @@
 		<span
 			class="inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 font-mono text-xs font-semibold tabular-nums {pct >=
 			0
-				? 'bg-[#1f9d62]/18 text-[#aef3c9]'
-				: 'bg-red-600/10 text-red-300'}"
+				? 'bg-success/15 text-positive-fg'
+				: 'bg-error/10 text-hostile-fg'}"
 		>
 			{pct >= 0 ? "▲" : "▼"}
 			{Math.abs(pct).toFixed(1)}%{#if label}<span class="font-sans font-normal opacity-70">{label}</span>{/if}
@@ -62,8 +62,8 @@
 	<PageHeader title="Market">
 		{#snippet actions()}
 			<div class="panel-muted rounded-sm px-3 py-2 text-right">
-				<p class="text-[10px] text-[#8e9abb] uppercase tracking-wide">Cash</p>
-				<p class="text-sm sm:text-base font-bold text-[#eef2ff] font-mono">${data.wallet.balance.toLocaleString()}</p>
+				<p class="text-[10px] text-fg-muted uppercase tracking-wide">Cash</p>
+				<p class="text-sm sm:text-base font-bold text-fg font-mono">${data.wallet.balance.toLocaleString()}</p>
 			</div>
 		{/snippet}
 	</PageHeader>
@@ -72,24 +72,22 @@
 		<section class="panel rounded-sm overflow-hidden">
 			<div class="px-4 pt-4 sm:px-5 sm:pt-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
 				<a href="/market/{hero.name}" class="group flex items-center gap-3 min-w-0">
-					<span
-						class="size-12 shrink-0 flex items-center justify-center rounded-sm panel-muted"
-					>
+					<span class="size-12 shrink-0 flex items-center justify-center rounded-sm panel-muted">
 						<ResourceIcon name={hero.name} class="size-7" />
 					</span>
 					<span class="min-w-0">
 						<span
-							class="block font-sans text-lg sm:text-xl font-semibold capitalize text-[#eef2ff] group-hover:text-[#c3dbff] transition-colors truncate"
+							class="block font-sans text-lg sm:text-xl font-semibold capitalize text-fg group-hover:text-primary-fg transition-colors truncate"
 							>{hero.name}</span
 						>
 						<span class="flex items-center gap-2">
 							{#key heroPrice}
-								<span class="animate-tick font-mono text-lg font-bold tabular-nums text-[#eef2ff]"
+								<span class="animate-tick font-mono text-lg font-bold tabular-nums text-fg"
 									>{heroPrice !== null ? money(heroPrice) : "—"}</span
 								>
 							{/key}
 							{#if hover}
-								<span class="font-mono text-xs text-[#8e9abb]">{weekTime(hover.t)}</span>
+								<span class="font-mono text-xs text-fg-muted">{weekTime(hover.t)}</span>
 							{:else}
 								{@render change(hero.change24h ?? hero.change7d, hero.change24h !== null ? "24h" : "7d")}
 							{/if}
@@ -106,8 +104,8 @@
 								role="tab"
 								aria-selected={on}
 								class="tap-target press-spring flex items-center gap-1.5 rounded-sm border px-2.5 py-1.5 text-xs transition-colors {on
-									? 'border-[#6aa8ff]/40 bg-[#2f6be0]/18 text-[#c3dbff]'
-									: 'border-white/10 bg-white/[0.03] text-[#c2cbe3] hover:border-white/20 hover:text-[#eef2ff]'}"
+									? 'border-primary/40 bg-primary/15 text-primary-fg'
+									: 'border-white/10 bg-white/[0.03] text-fg-soft hover:border-white/20 hover:text-fg'}"
 								onclick={() => {
 									picked = m.name;
 									hover = null;
@@ -116,7 +114,7 @@
 								<ResourceIcon name={m.name} class="size-4" />
 								<span class="capitalize">{m.name}</span>
 								{#if pct !== null}
-									<span class="font-mono tabular-nums {pct >= 0 ? 'text-[#4fd88a]' : 'text-red-400'}"
+									<span class="font-mono tabular-nums {pct >= 0 ? 'text-positive' : 'text-hostile'}"
 										>{pct >= 0 ? "+" : ""}{pct.toFixed(1)}%</span
 									>
 								{/if}
@@ -156,17 +154,17 @@
 								style="--press-scale: 0.985"
 							>
 								<span
-									class="size-10 shrink-0 flex items-center justify-center rounded-sm bg-white/[0.04] border border-white/10 transition-colors group-hover:border-[#6aa8ff]/45"
+									class="size-10 shrink-0 flex items-center justify-center rounded-sm bg-white/[0.04] border border-white/10 transition-colors group-hover:border-primary/45"
 								>
 									<ResourceIcon name={q.name} class="size-6" />
 								</span>
 								<span class="min-w-0 flex-1">
 									<span
-										class="block text-sm font-semibold capitalize text-[#eef2ff] group-hover:text-[#c3dbff] transition-colors truncate"
+										class="block text-sm font-semibold capitalize text-fg group-hover:text-primary-fg transition-colors truncate"
 										>{q.name}</span
 									>
-									<span class="block text-xs text-[#8e9abb] truncate">
-										{#if q.held}<span class="font-mono text-[#c2cbe3]">{q.held.toLocaleString()}</span> held{/if}
+									<span class="block text-xs text-fg-muted truncate">
+										{#if q.held}<span class="font-mono text-fg-soft">{q.held.toLocaleString()}</span> held{/if}
 										{#if q.held && q.unitsOnOffer}·{/if}
 										{#if q.unitsOnOffer}<span class="font-mono">{q.unitsOnOffer.toLocaleString()}</span> on offer{/if}
 										{#if !q.held && !q.unitsOnOffer}No asks{/if}
@@ -175,19 +173,21 @@
 								<Sparkline prices={q.week.map((p) => p.price)} class="h-8 w-14 sm:w-24 shrink-0" />
 								<span class="w-[5.5rem] shrink-0 text-right">
 									{#if price !== null}
-										<span class="block font-mono text-sm font-bold tabular-nums text-[#eef2ff]">{money(price)}</span>
+										<span class="block font-mono text-sm font-bold tabular-nums text-fg">{money(price)}</span>
 										{#if q.change24h !== null}
 											<span
-												class="block font-mono text-xs tabular-nums {q.change24h >= 0 ? 'text-[#4fd88a]' : 'text-red-400'}"
+												class="block font-mono text-xs tabular-nums {q.change24h >= 0
+													? 'text-positive'
+													: 'text-hostile'}"
 											>
 												{q.change24h >= 0 ? "▲" : "▼"}
 												{Math.abs(q.change24h).toFixed(1)}%
 											</span>
 										{:else if q.last === null}
-											<span class="block text-[11px] text-[#8e9abb]">ask</span>
+											<span class="block text-[11px] text-fg-muted">ask</span>
 										{/if}
 									{:else}
-										<span class="text-xs text-[#8e9abb]">—</span>
+										<span class="text-xs text-fg-muted">—</span>
 									{/if}
 								</span>
 							</a>

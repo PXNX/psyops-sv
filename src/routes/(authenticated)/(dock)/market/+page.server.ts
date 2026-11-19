@@ -29,8 +29,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const dayAgo = new Date(now - DAY);
 	const weekAgo = new Date(now - 7 * DAY);
 
-	const [[wallet], resources, products, asks, weekCandles, dayCandles, openWeek, openDay, lastEver] =
-		await Promise.all([
+	const [[wallet], resources, products, asks, weekCandles, dayCandles, openWeek, openDay, lastEver] = await Promise.all(
+		[
 			db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
 			db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
 			db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
@@ -47,7 +47,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			loadLastPricesBefore(weekAgo),
 			loadLastPricesBefore(dayAgo),
 			loadLastPricesBefore(new Date(now + 60_000))
-		]);
+		]
+	);
 
 	const askMap = new Map(asks.map((a) => [a.itemName, a]));
 	const held = new Map<string, number>([
