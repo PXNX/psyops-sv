@@ -170,7 +170,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			where: eq(ministers.stateId, currentUserPresidency.stateId)
 		});
 
-		const allMinistries = ["economy", "defense", "foreign_affairs"];
+		const allMinistries = ["economy", "defense", "foreign_affairs"] as const;
 
 		const occupied = occupiedMinistries.map((m) => m.ministry);
 		return allMinistries.filter((m) => !occupied.includes(m));

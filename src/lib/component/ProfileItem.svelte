@@ -29,7 +29,7 @@
 		logo = undefined,
 		logoAlt = "",
 		placeholderIcon,
-		placeholderGradient = "from-[#1c2330] to-[#151a23]",
+		placeholderGradient = "from-surface-4 to-surface-2",
 		title,
 		subtitle,
 		icon,
@@ -49,7 +49,7 @@
 	{onclick}
 	type={tag === "button" ? "button" : undefined}
 	class="group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors {interactive
-		? 'hover:bg-white/[0.03]'
+		? 'hover:bg-surface-5'
 		: ''}"
 >
 	{#if logo !== undefined}
@@ -58,18 +58,18 @@
 			alt={logoAlt ?? ""}
 			{placeholderIcon}
 			{placeholderGradient}
-			class="size-9! rounded-sm! shrink-0 border border-white/10"
+			class="size-9! rounded-sm! shrink-0 border border-line/15"
 		/>
 	{:else if icon}
-		<div class="size-9 shrink-0 rounded-sm border border-white/10 flex items-center justify-center">
+		<div class="size-9 shrink-0 rounded-sm border border-line/15 flex items-center justify-center">
 			<span class="text-lg">{icon}</span>
 		</div>
 	{/if}
 
 	<div class="flex-1 min-w-0">
 		<p
-			class="truncate text-sm font-medium text-[#d0d7de] transition-colors {interactive
-				? 'group-hover:text-[#e6edf3] group-hover:underline'
+			class="truncate text-sm font-medium text-fg-body transition-colors {interactive
+				? 'group-hover:text-fg group-hover:underline'
 				: ''}"
 		>
 			{#if partyAbbreviation}
@@ -78,7 +78,7 @@
 			{title}
 		</p>
 		{#if subtitle}
-			<p class="truncate text-xs text-[#8b949e]">{subtitle}</p>
+			<p class="truncate text-xs text-fg-muted">{subtitle}</p>
 		{/if}
 	</div>
 
@@ -87,6 +87,6 @@
 	{/if}
 
 	{#if interactive}
-		<FluentChevronRight20Filled class="size-4 shrink-0 text-[#8b949e]" />
+		<FluentChevronRight20Filled class="size-4 shrink-0 text-fg-muted" />
 	{/if}
 </svelte:element>

@@ -43,7 +43,7 @@
 				if (result.type === "success") {
 					closeModal();
 				} else if (result.type === "failure") {
-					error = result.data?.error || "Failed to add author";
+					error = typeof result.data?.error === "string" ? result.data.error : "Failed to add author";
 				}
 				await update();
 			};
@@ -60,7 +60,7 @@
 
 			{#if newspapers.length === 0}
 				<div
-					class="bg-[#2f81f7]/12 border border-[#2f81f7]/35 text-[#79b8ff] rounded-sm p-4 flex items-center gap-3 text-sm"
+					class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-center gap-3 text-sm"
 				>
 					<span>You don't own any newspapers. Create one first to add authors.</span>
 				</div>

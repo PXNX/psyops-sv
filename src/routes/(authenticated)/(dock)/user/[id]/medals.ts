@@ -13,31 +13,58 @@ export const MEDALS: Record<MedalType, { label: string; for: string; ribbon: str
 	honor: {
 		label: "Medal of Honor",
 		for: "Outstanding achievement",
-		ribbon: stripes("#7a1712", "#f5a524", "#7a1712", "#f5a524", "#7a1712"),
+		ribbon: stripes("#7a1712", "var(--color-primary)", "#7a1712", "var(--color-primary)", "#7a1712"),
 		emoji: "🏆"
 	},
 	valor: {
 		label: "Cross of Valor",
 		for: "Courage and bravery",
-		ribbon: stripes("#2148a8", "#eef2ff", "#a8221a", "#eef2ff", "#2148a8"),
+		ribbon: stripes(
+			"var(--color-friendly-deep)",
+			"var(--color-fg)",
+			"#a8221a",
+			"var(--color-fg)",
+			"var(--color-friendly-deep)"
+		),
 		emoji: "🛡️"
 	},
 	excellence: {
 		label: "Star of Excellence",
 		for: "Exceptional quality",
-		ribbon: stripes("#4a32a6", "#b9a1ff", "#eef2ff", "#b9a1ff", "#4a32a6"),
+		ribbon: stripes(
+			"var(--color-politics-deep)",
+			"var(--color-politics)",
+			"var(--color-fg)",
+			"var(--color-politics)",
+			"var(--color-politics-deep)"
+		),
 		emoji: "⭐"
 	},
 	service: {
 		label: "Service Medal",
 		for: "Dedicated service",
-		ribbon: stripes("#177a4b", "#f5a524", "#177a4b", "#177a4b", "#f5a524", "#177a4b"),
+		ribbon: stripes(
+			"var(--color-positive-deep)",
+			"var(--color-primary)",
+			"var(--color-positive-deep)",
+			"var(--color-positive-deep)",
+			"var(--color-primary)",
+			"var(--color-positive-deep)"
+		),
 		emoji: "🎖️"
 	},
 	leadership: {
 		label: "Order of Leadership",
 		for: "Exceptional leadership",
-		ribbon: stripes("#a8221a", "#a8221a", "#f5a524", "#1a1305", "#f5a524", "#a8221a", "#a8221a"),
+		ribbon: stripes(
+			"#a8221a",
+			"#a8221a",
+			"var(--color-primary)",
+			"#ffffff",
+			"var(--color-primary)",
+			"#a8221a",
+			"#a8221a"
+		),
 		emoji: "👑"
 	}
 };
@@ -47,7 +74,7 @@ export function medalInfo(type: string) {
 		MEDALS[type as MedalType] ?? {
 			label: "Medal",
 			for: "",
-			ribbon: stripes("#33456f", "#8ea6e0", "#33456f"),
+			ribbon: stripes("var(--color-surface-13)", "var(--color-line)", "var(--color-surface-13)"),
 			emoji: "🏅"
 		}
 	);

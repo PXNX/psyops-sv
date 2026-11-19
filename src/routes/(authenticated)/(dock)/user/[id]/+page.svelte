@@ -106,7 +106,6 @@
 		feedback("win");
 	}
 
-
 	const companies = $derived(data.userNotFound ? [] : data.organizations.companies);
 	const newspapers = $derived(data.userNotFound ? [] : data.organizations.newspapers);
 	const visibleCompanies = $derived(showAllCompanies ? companies : companies.slice(0, LIST_PREVIEW));
@@ -153,7 +152,7 @@
 	<button
 		type="button"
 		onclick={toggle}
-		class="tap-target flex w-full items-center justify-center gap-1.5 border-t border-white/10 py-2 text-xs text-[#8b949e] hover:text-[#e6edf3] hover:bg-white/[0.03] transition-colors"
+		class="tap-target flex w-full items-center justify-center gap-1.5 border-t border-line/15 py-2 text-xs text-fg-muted hover:text-fg hover:bg-surface-5 transition-colors"
 	>
 		{expanded ? "Show fewer" : `Show all ${total}`}
 		<FluentChevronDown20Filled class="size-4 transition-transform {expanded ? 'rotate-180' : ''}" />
@@ -162,21 +161,19 @@
 
 {#snippet roleLine(label: string, href: string | null, logo: string | null | undefined, name: string, detail: string)}
 	<li class="flex min-w-0 items-center gap-2 text-sm">
-		<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-[#8b949e]">{label}</span>
+		<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-fg-muted">{label}</span>
 		{#if href}
-			<a href={href} class="group flex min-w-0 items-center gap-1.5">
+			<a {href} class="group flex min-w-0 items-center gap-1.5">
 				{#if logo !== undefined}
 					<Logo src={logo} alt="" class="size-4! rounded-[2px]! shrink-0" placeholderIcon={FluentFlag20Filled} />
 				{/if}
-				<span class="truncate font-medium text-[#d0d7de] group-hover:text-[#e6edf3] group-hover:underline"
-					>{name}</span
-				>
+				<span class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline">{name}</span>
 			</a>
 		{:else}
-			<span class="truncate font-medium text-[#d0d7de]">{name}</span>
+			<span class="truncate font-medium text-fg-body">{name}</span>
 		{/if}
 		{#if detail}
-			<span class="hidden shrink-0 font-mono text-[11px] text-[#8b949e] sm:inline">{detail}</span>
+			<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline">{detail}</span>
 		{/if}
 	</li>
 {/snippet}
@@ -184,9 +181,9 @@
 {#if data.userNotFound}
 	<PageContainer maxWidth="5xl">
 		<div class="panel rounded-sm p-10 flex flex-col items-center justify-center gap-3">
-			<FluentImageOff20Filled class="size-8 text-[#8b949e]" />
-			<h1 class="text-lg font-semibold text-[#e6edf3]">User not found</h1>
-			<p class="text-sm text-[#8b949e]">No citizen with this ID.</p>
+			<FluentImageOff20Filled class="size-8 text-fg-muted" />
+			<h1 class="text-lg font-semibold text-fg">User not found</h1>
+			<p class="text-sm text-fg-muted">No citizen with this ID.</p>
 			<Button variant="secondary" size="sm" class="mt-1" onclick={() => history.back()}>Go Back</Button>
 		</div>
 	</PageContainer>
@@ -196,19 +193,19 @@
 		<article id="profile-card" class="panel rounded-sm">
 			<!-- Header: photo, name, roles -->
 			<div class="flex gap-4 p-4">
-				<div class="size-20 sm:size-24 shrink-0 overflow-hidden rounded-sm border border-white/10">
+				<div class="size-20 sm:size-24 shrink-0 overflow-hidden rounded-sm border border-line/15">
 					<Logo
 						src={data.user.logo}
 						alt={data.user.name || "Portrait"}
 						placeholderIcon={FluentPerson20Filled}
-						placeholderGradient="from-[#1c2330] to-[#151a23]"
+						placeholderGradient="from-surface-4 to-surface-2"
 						class="size-full! rounded-none!"
 					/>
 				</div>
 
 				<div class="min-w-0 flex-1 space-y-2">
 					<div class="flex items-start gap-2">
-						<h1 class="min-w-0 flex-1 break-words text-xl sm:text-2xl font-semibold leading-tight text-[#e6edf3]">
+						<h1 class="min-w-0 flex-1 break-words text-xl sm:text-2xl font-semibold leading-tight text-fg">
 							{data.user.name || "Anonymous"}
 						</h1>
 						{#if data.user.isPremium}
@@ -266,18 +263,18 @@
 						{/if}
 						{#if data.party}
 							<li class="flex min-w-0 items-center gap-2 text-sm">
-								<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-[#8b949e]">Party</span>
+								<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-fg-muted">Party</span>
 								<a href="/party/{data.party.id}" class="group flex min-w-0 items-center gap-1.5">
 									<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
-									<span class="truncate font-medium text-[#d0d7de] group-hover:text-[#e6edf3] group-hover:underline"
+									<span class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline"
 										>{data.party.name}</span
 									>
 								</a>
-								<span class="shrink-0 text-xs text-[#8b949e]">{partyRole(data.party.role)}</span>
+								<span class="shrink-0 text-xs text-fg-muted">{partyRole(data.party.role)}</span>
 							</li>
 						{:else if data.isOwnProfile}
 							<li class="flex items-center gap-2 text-sm">
-								<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-[#8b949e]">Party</span>
+								<span class="w-20 shrink-0 text-[11px] uppercase tracking-wide text-fg-muted">Party</span>
 								<Button
 									href={data.isIndependentRegion ? "/party/create" : "/party"}
 									variant="secondary"
@@ -294,17 +291,17 @@
 
 			<!-- Ministries and diplomatic posts: each with its dismiss control -->
 			{#if data.ministries.length > 0 || data.blocDiplomacies.length > 0}
-				<ul id="offices" class="divide-y divide-white/10 border-t border-white/10">
+				<ul id="offices" class="divide-y divide-line/15 border-t border-line/15">
 					{#each data.ministries as ministry (ministry.id)}
 						<li class="flex items-center gap-3 px-4 py-2" out:vanish>
-							<FluentShieldTask20Filled class="size-4 shrink-0 text-[#8b949e]" />
+							<FluentShieldTask20Filled class="size-4 shrink-0 text-fg-muted" />
 							<a href="/state/{ministry.stateId}" class="group min-w-0 flex-1 text-sm">
-								<span class="font-medium text-[#d0d7de] group-hover:text-[#e6edf3] group-hover:underline"
+								<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline"
 									>Minister of {ministryNames[ministry.ministry] ?? ministry.ministry}</span
 								>
-								<span class="text-[#8b949e]">· {ministry.stateName}</span>
+								<span class="text-fg-muted">· {ministry.stateName}</span>
 							</a>
-							<span class="hidden shrink-0 font-mono text-[11px] text-[#8b949e] sm:inline"
+							<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline"
 								>{formatDate(ministry.appointedAt)}</span
 							>
 							{#if data.currentUserPresidency?.stateId === ministry.stateId}
@@ -323,23 +320,19 @@
 										}}
 								>
 									<input type="hidden" name="ministerId" value={ministry.id} />
-									<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>
-										Dismiss
-									</Button>
+									<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>Dismiss</Button>
 								</form>
 							{/if}
 						</li>
 					{/each}
 					{#each data.blocDiplomacies as diplomacy (diplomacy.id)}
 						<li class="flex items-center gap-3 px-4 py-2" out:vanish>
-							<FluentGlobeShield20Filled class="size-4 shrink-0 text-[#8b949e]" />
+							<FluentGlobeShield20Filled class="size-4 shrink-0 text-fg-muted" />
 							<a href="/bloc/{diplomacy.blocId}" class="group min-w-0 flex-1 text-sm">
-								<span class="font-medium text-[#d0d7de] group-hover:text-[#e6edf3] group-hover:underline"
-									>Diplomat</span
-								>
-								<span class="text-[#8b949e]">· {diplomacy.blocName}</span>
+								<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline">Diplomat</span>
+								<span class="text-fg-muted">· {diplomacy.blocName}</span>
 							</a>
-							<span class="hidden shrink-0 font-mono text-[11px] text-[#8b949e] sm:inline"
+							<span class="hidden shrink-0 font-mono text-[11px] text-fg-muted sm:inline"
 								>{formatDate(diplomacy.appointedAt)}</span
 							>
 							{#if data.viewerBlocId === diplomacy.blocId}
@@ -355,9 +348,7 @@
 								>
 									<input type="hidden" name="role" value="diplomat" />
 									<input type="hidden" name="id" value={diplomacy.id} />
-									<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>
-										Dismiss
-									</Button>
+									<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>Dismiss</Button>
 								</form>
 							{/if}
 						</li>
@@ -366,9 +357,9 @@
 			{/if}
 
 			<!-- Key/value fields -->
-			<dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 border-t border-white/10 px-4 py-3 text-sm">
+			<dl class="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 border-t border-line/15 px-4 py-3 text-sm">
 				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-[#8b949e]">Citizenship</dt>
+					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Citizenship</dt>
 					<dd class="truncate">
 						{#if data.citizenship}
 							<a href="/state/{data.citizenship.id}" class="group inline-flex max-w-full items-center gap-1.5">
@@ -378,63 +369,60 @@
 									class="size-4! rounded-[2px]! shrink-0"
 									placeholderIcon={FluentFlag20Filled}
 								/>
-								<span class="truncate text-[#d0d7de] group-hover:text-[#e6edf3] group-hover:underline"
+								<span class="truncate text-fg-body group-hover:text-fg group-hover:underline"
 									>{data.citizenship.name}</span
 								>
 							</a>
 						{:else}
-							<span class="text-[#8b949e]">Stateless</span>
+							<span class="text-fg-muted">Stateless</span>
 						{/if}
 					</dd>
 				</div>
 				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-[#8b949e]">Residence</dt>
+					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Residence</dt>
 					<dd class="truncate">
 						{#if data.homeRegion}
-							<a href="/region/{data.homeRegion.id}" class="text-[#d0d7de] hover:text-[#e6edf3] hover:underline"
+							<a href="/region/{data.homeRegion.id}" class="text-fg-body hover:text-fg hover:underline"
 								>{data.homeRegion.name}</a
 							>
 						{:else}
-							<span class="text-[#8b949e]">None</span>
+							<span class="text-fg-muted">None</span>
 						{/if}
 					</dd>
 				</div>
 				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-[#8b949e]">Location</dt>
+					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Location</dt>
 					<dd class="truncate">
 						{#if data.residence}
-							<a href="/region/{data.residence.region.id}" class="text-[#d0d7de] hover:text-[#e6edf3] hover:underline"
+							<a href="/region/{data.residence.region.id}" class="text-fg-body hover:text-fg hover:underline"
 								>{data.residence.region.name}</a
 							>
 						{:else}
-							<span class="text-[#8b949e]">Unknown</span>
+							<span class="text-fg-muted">Unknown</span>
 						{/if}
 					</dd>
 				</div>
 				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-[#8b949e]">Joined</dt>
-					<dd class="font-mono text-[#d0d7de]">{formatDate(data.user.createdAt)}</dd>
+					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Joined</dt>
+					<dd class="font-mono text-fg-body">{formatDate(data.user.createdAt)}</dd>
 				</div>
 				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-[#8b949e]">Articles</dt>
+					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Articles</dt>
 					<dd>
-						<a
-							href="/user/{data.user.id}/articles"
-							class="font-mono text-[#d0d7de] hover:text-[#e6edf3] hover:underline">{data.articleCount}</a
+						<a href="/user/{data.user.id}/articles" class="font-mono text-fg-body hover:text-fg hover:underline"
+							>{data.articleCount}</a
 						>
 					</dd>
 				</div>
 				<div class="min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-[#8b949e]">Upvotes</dt>
-					<dd class="font-mono text-[#d0d7de]">{data.upvoteCount}</dd>
+					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Upvotes</dt>
+					<dd class="font-mono text-fg-body">{data.upvoteCount}</dd>
 				</div>
 				<div class="col-span-2 min-w-0">
-					<dt class="text-[11px] uppercase tracking-wide text-[#8b949e]">Medals</dt>
+					<dt class="text-[11px] uppercase tracking-wide text-fg-muted">Medals</dt>
 					<dd>
 						<a href="/user/{data.user.id}/career" class="group inline-flex items-center gap-2">
-							<span class="font-mono text-[#d0d7de] group-hover:text-[#e6edf3] group-hover:underline"
-								>{data.medals.length}</span
-							>
+							<span class="font-mono text-fg-body group-hover:text-fg group-hover:underline">{data.medals.length}</span>
 							{#if data.medals.length > 0}
 								<span class="flex flex-wrap gap-0.5">
 									{#each data.medals as medal (medal.id)}
@@ -455,11 +443,11 @@
 			</dl>
 
 			{#if data.user.bio}
-				<p class="border-t border-white/10 px-4 py-3 text-sm text-[#b6bfca] break-words">{data.user.bio}</p>
+				<p class="border-t border-line/15 px-4 py-3 text-sm text-fg-soft break-words">{data.user.bio}</p>
 			{/if}
 
 			<!-- Actions -->
-			<div class="flex flex-wrap items-center gap-2 border-t border-white/10 px-4 py-3">
+			<div class="flex flex-wrap items-center gap-2 border-t border-line/15 px-4 py-3">
 				{#if !data.isOwnProfile}
 					<Button variant="primary" size="sm" href="/chat/user/{data.user.id}" icon={FluentChat20Filled}>
 						Message
@@ -568,7 +556,7 @@
 				{/if}
 
 				{#if !data.isOwnProfile}
-					<div class="my-2 border-t border-white/10"></div>
+					<div class="my-2 border-t border-line/15"></div>
 					<ActionListItem
 						icon={FluentAccessibilityError20Filled}
 						tone="red"
@@ -588,15 +576,15 @@
 		{#if data.isOwnProfile && data.birthdayInfo.totalYears >= 1 && (data.birthdayInfo.isBirthday || data.birthdayInfo.uncollectedYears.length > 0)}
 			<section
 				id="birthday-card"
-				class="rounded-sm border border-[#2f81f7]/35 bg-[#2f81f7]/10 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
+				class="rounded-sm border border-primary/35 bg-primary/10 px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3"
 			>
 				<div class="flex items-center gap-3 flex-1 min-w-0">
 					<span class="text-2xl" aria-hidden="true">🎂</span>
 					<div class="min-w-0">
-						<p class="text-sm font-semibold text-[#79b8ff]">
+						<p class="text-sm font-semibold text-primary-fg">
 							{data.birthdayInfo.isBirthday ? "Happy Birthday!" : "Belated birthday wishes"}
 						</p>
-						<p class="text-xs text-[#b6bfca]">
+						<p class="text-xs text-fg-soft">
 							<span class="font-mono">{data.birthdayInfo.totalYears}</span>
 							year{data.birthdayInfo.totalYears !== 1 ? "s" : ""} in service
 							{#if data.birthdayInfo.uncollectedYears.length > 1}
@@ -634,12 +622,12 @@
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 				{#if companies.length > 0 || data.isOwnProfile}
 					<section class="panel rounded-sm overflow-hidden">
-						<header class="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+						<header class="flex items-center justify-between border-b border-line/15 px-4 py-2.5">
 							<h2 class="section-title">Companies</h2>
-							<span class="font-mono text-xs text-[#8b949e]">{companies.length}</span>
+							<span class="font-mono text-xs text-fg-muted">{companies.length}</span>
 						</header>
 						{#if companies.length > 0}
-							<ul class="divide-y divide-white/10">
+							<ul class="divide-y divide-line/15">
 								{#each visibleCompanies as company (company.id)}
 									<li>
 										<ProfileItem
@@ -650,15 +638,15 @@
 											title={company.name}
 											subtitle={company.marketValue !== null
 												? `Listed · value ${money(company.marketValue)}`
-												: `Private · ${company.factoryCount} ${company.factoryCount === 1 ? "factory" : "factories"}`}
+												: `Private · founded ${formatDate(company.foundedAt)}`}
 										>
 											{#snippet aside()}
 												{#if company.sharePrice !== null}
-													<p class="font-mono text-sm text-[#e6edf3]">{money(company.sharePrice)}</p>
-													<p class="text-[10px] uppercase tracking-wide text-[#8b949e]">per share</p>
+													<p class="font-mono text-sm text-fg">{money(company.sharePrice)}</p>
+													<p class="text-[10px] uppercase tracking-wide text-fg-muted">per share</p>
 												{:else}
-													<p class="font-mono text-sm text-[#e6edf3]">{company.factoryCount}</p>
-													<p class="text-[10px] uppercase tracking-wide text-[#8b949e]">
+													<p class="font-mono text-sm text-fg">{company.factoryCount}</p>
+													<p class="text-[10px] uppercase tracking-wide text-fg-muted">
 														{company.factoryCount === 1 ? "factory" : "factories"}
 													</p>
 												{/if}
@@ -668,7 +656,11 @@
 								{/each}
 							</ul>
 							{#if companies.length > LIST_PREVIEW}
-								{@render showAllToggle(showAllCompanies, companies.length, () => (showAllCompanies = !showAllCompanies))}
+								{@render showAllToggle(
+									showAllCompanies,
+									companies.length,
+									() => (showAllCompanies = !showAllCompanies)
+								)}
 							{/if}
 						{:else}
 							<div class="p-4">
@@ -682,12 +674,12 @@
 
 				{#if newspapers.length > 0 || data.isOwnProfile}
 					<section class="panel rounded-sm overflow-hidden">
-						<header class="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+						<header class="flex items-center justify-between border-b border-line/15 px-4 py-2.5">
 							<h2 class="section-title">Newspapers</h2>
-							<span class="font-mono text-xs text-[#8b949e]">{newspapers.length}</span>
+							<span class="font-mono text-xs text-fg-muted">{newspapers.length}</span>
 						</header>
 						{#if newspapers.length > 0}
-							<ul class="divide-y divide-white/10">
+							<ul class="divide-y divide-line/15">
 								{#each visibleNewspapers as newspaper (newspaper.newspaperId)}
 									<li>
 										<ProfileItem
@@ -699,8 +691,8 @@
 											subtitle="{rankNames[newspaper.rank] ?? newspaper.rank} · since {formatDate(newspaper.joinedAt)}"
 										>
 											{#snippet aside()}
-												<p class="font-mono text-sm text-[#e6edf3]">{compact.format(newspaper.subscribers)}</p>
-												<p class="text-[10px] uppercase tracking-wide text-[#8b949e]">
+												<p class="font-mono text-sm text-fg">{compact.format(newspaper.subscribers)}</p>
+												<p class="text-[10px] uppercase tracking-wide text-fg-muted">
 													subscriber{newspaper.subscribers === 1 ? "" : "s"}
 												</p>
 											{/snippet}
@@ -783,7 +775,7 @@
 
 				{#if data.availableMinistries.length === 0}
 					<div
-						class="bg-[#2f81f7]/12 border border-[#2f81f7]/35 text-[#79b8ff] rounded-sm p-4 flex items-center gap-3 text-sm"
+						class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-center gap-3 text-sm"
 					>
 						<span>All ministries are currently occupied.</span>
 					</div>
@@ -866,10 +858,9 @@
 					</select>
 				</div>
 
-
 				{#if data.availableBlocRoles.length === 0}
 					<div
-						class="bg-[#2f81f7]/12 border border-[#2f81f7]/35 text-[#79b8ff] rounded-sm p-4 flex items-center gap-3 text-sm"
+						class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm p-4 flex items-center gap-3 text-sm"
 					>
 						<span>Nothing open: nominations run 2 days before an election, both diplomat seats are filled.</span>
 					</div>

@@ -140,12 +140,12 @@
 			/>
 			<dl class="flex gap-5 text-center">
 				<div>
-					<dt class="text-[10px] text-[#8b949e] uppercase tracking-wide">Newspapers</dt>
-					<dd class="font-mono text-xl font-semibold text-[#e6edf3]">{data.career.stats.newspaperCount}</dd>
+					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Newspapers</dt>
+					<dd class="font-mono text-xl font-semibold text-fg">{data.career.stats.newspaperCount}</dd>
 				</div>
 				<div>
-					<dt class="text-[10px] text-[#8b949e] uppercase tracking-wide">Medals</dt>
-					<dd class="font-mono text-xl font-semibold text-[#79b8ff]">{data.career.stats.medalCount}</dd>
+					<dt class="text-[10px] text-fg-muted uppercase tracking-wide">Medals</dt>
+					<dd class="font-mono text-xl font-semibold text-primary-fg">{data.career.stats.medalCount}</dd>
 				</div>
 			</dl>
 		</div>
@@ -156,7 +156,7 @@
 		<section id="decorations" class="panel rounded-sm p-5 space-y-4">
 			<div class="flex items-center justify-between gap-3">
 				<h2 class="section-title">
-					<FluentRibbon20Filled class="size-5 text-[#79b8ff]" />
+					<FluentRibbon20Filled class="size-5 text-primary-fg" />
 					Decorations
 				</h2>
 				{#if data.canAwardMedal}
@@ -169,7 +169,7 @@
 			{#if data.career.medals.length > 0}
 				<!-- Ribbon rack, three to a row like on a uniform -->
 				<div class="flex justify-center">
-					<div class="grid grid-cols-3 gap-1 p-2 rounded-sm bg-[#151a22] border border-[#9aa7b8]/15">
+					<div class="grid grid-cols-3 gap-1 p-2 rounded-sm bg-surface-2 border border-line/15">
 						{#each data.career.medals as medal, i (medal.id)}
 							<span
 								class="animate-pop-in block h-4 w-11 rounded-[1px] border border-black/40"
@@ -191,9 +191,9 @@
 								<span class="text-2xl leading-none -mt-0.5" aria-hidden="true">{info.emoji}</span>
 							</div>
 							<div class="min-w-0 flex-1">
-								<p class="font-semibold text-[#e6edf3] leading-tight">{info.label}</p>
-								<p class="text-sm text-[#b6bfca] mt-1 italic break-words">“{medal.reason}”</p>
-								<p class="text-xs text-[#8b949e] mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
+								<p class="font-semibold text-fg leading-tight">{info.label}</p>
+								<p class="text-sm text-fg-soft mt-1 italic break-words">“{medal.reason}”</p>
+								<p class="text-xs text-fg-muted mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1">
 									<UserLink
 										id={medal.awardedBy.id}
 										name={medal.awardedBy.name}
@@ -207,7 +207,7 @@
 					{/each}
 				</ul>
 			{:else}
-				<p class="text-sm text-[#8b949e]">No decorations yet.</p>
+				<p class="text-sm text-fg-muted">No decorations yet.</p>
 			{/if}
 		</section>
 	{/if}
@@ -216,7 +216,7 @@
 	<section class="space-y-3">
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<h2 class="section-title">
-				<FluentCalendar20Filled class="size-5 text-[#6aa8ff]" />
+				<FluentCalendar20Filled class="size-5 text-secondary" />
 				Record
 			</h2>
 			{#if hasPoliticalPositions && data.career.medals.length > 0}
@@ -243,14 +243,14 @@
 			{/if}
 		</div>
 
-		<div class="panel rounded-sm divide-y divide-[#9aa7b8]/10">
+		<div class="panel rounded-sm divide-y divide-line/10">
 			{#if timelineEntries.length === 0}
-				<p class="text-sm text-[#8b949e] text-center p-6">Nothing on record yet.</p>
+				<p class="text-sm text-fg-muted text-center p-6">Nothing on record yet.</p>
 			{:else}
 				{#each timelineEntries as entry, i (entry.kind + "-" + i)}
 					<div class="flex gap-3 sm:gap-4 p-3 sm:p-4">
 						<!-- Date column -->
-						<div class="w-[4.5rem] shrink-0 pt-0.5 font-mono text-[11px] text-[#8b949e]">
+						<div class="w-[4.5rem] shrink-0 pt-0.5 font-mono text-[11px] text-fg-muted">
 							{#if entry.kind === "newspaper"}
 								—
 							{:else}
@@ -266,34 +266,34 @@
 									style="background: {medalInfo(entry.medal.medalType).ribbon}"
 								></span>
 							{:else if entry.kind === "state"}
-								<FluentBuildingGovernment20Filled class="size-5 text-[#79b8ff]" />
+								<FluentBuildingGovernment20Filled class="size-5 text-primary-fg" />
 							{:else if entry.kind === "party"}
 								<FluentFlag20Filled class="size-5" style="color: {entry.membership.partyColor}" />
 							{:else if entry.kind === "newspaper"}
-								<FluentBriefcase20Filled class="size-5 text-[#b9a1ff]" />
+								<FluentBriefcase20Filled class="size-5 text-secondary" />
 							{:else}
-								<FluentCalendar20Filled class="size-5 text-[#6aa8ff]" />
+								<FluentCalendar20Filled class="size-5 text-secondary" />
 							{/if}
 						</div>
 
 						<!-- Entry -->
 						<div class="flex-1 min-w-0 text-sm">
 							{#if entry.kind === "medal"}
-								<p class="font-semibold text-[#e6edf3]">{medalInfo(entry.medal.medalType).label}</p>
-								<p class="text-xs text-[#8b949e]">{entry.medal.stateName}</p>
+								<p class="font-semibold text-fg">{medalInfo(entry.medal.medalType).label}</p>
+								<p class="text-xs text-fg-muted">{entry.medal.stateName}</p>
 							{:else if entry.kind === "state"}
-								<p class="font-semibold text-[#e6edf3]">
+								<p class="font-semibold text-fg">
 									{entry.position.title} of
 									<a
 										href="/state/{entry.position.stateId}"
-										class="text-[#79b8ff] hover:text-[#8cc4ff] transition-colors">{entry.position.stateName}</a
+										class="text-primary-fg hover:text-primary-fg transition-colors">{entry.position.stateName}</a
 									>
 								</p>
 								{#if entry.position.term}
-									<p class="text-xs text-[#8b949e]">Term {entry.position.term}</p>
+									<p class="text-xs text-fg-muted">Term {entry.position.term}</p>
 								{/if}
 							{:else if entry.kind === "party"}
-								<p class="font-semibold text-[#e6edf3]">
+								<p class="font-semibold text-fg">
 									<span class="capitalize">{entry.membership.role}</span> of
 									<a
 										href="/party/{entry.membership.partyId}"
@@ -307,14 +307,14 @@
 								</p>
 								<a
 									href="/state/{entry.membership.stateId}"
-									class="text-xs text-[#8b949e] hover:text-[#b6bfca] transition-colors"
+									class="text-xs text-fg-muted hover:text-fg-soft transition-colors"
 								>
 									{entry.membership.stateName}
 								</a>
 							{:else if entry.kind === "newspaper"}
 								<a
 									href="/newspaper/{entry.newspaper.newspaperId}"
-									class="font-semibold text-[#e6edf3] hover:text-[#8cc4ff] transition-colors"
+									class="font-semibold text-fg hover:text-primary-fg transition-colors"
 								>
 									{entry.newspaper.newspaperName}
 								</a>
@@ -327,7 +327,7 @@
 									{/each}
 								</div>
 							{:else}
-								<p class="font-semibold text-[#e6edf3]">Enlisted</p>
+								<p class="font-semibold text-fg">Enlisted</p>
 							{/if}
 						</div>
 					</div>

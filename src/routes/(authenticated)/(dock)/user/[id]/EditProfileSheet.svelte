@@ -149,8 +149,8 @@
 
 	const dropzoneClass = $derived(
 		[
-			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 hover:border-[#2f81f7]/55",
-			dragActive ? "border-[#2f81f7] bg-[#2f81f7]/10" : previewUrl ? "border-[#4fd88a]/60" : "border-[#9aa7b8]/25",
+			"group relative w-full overflow-hidden rounded-sm border-2 border-dashed transition-colors duration-200 hover:border-primary/55",
+			dragActive ? "border-primary bg-primary/10" : previewUrl ? "border-success/60" : "border-line/25",
 			$submitting || !canEdit ? "opacity-50" : "",
 			$errors.logo ? "border-red-500" : ""
 		]
@@ -169,12 +169,12 @@
 					<div class="space-y-1.5 flex-1">
 						<h3 class="font-semibold text-red-300 text-sm">Profile Edit Cooldown Active</h3>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-[#b6bfca] font-medium">Time Remaining:</span>
+							<span class="text-fg-soft font-medium">Time Remaining:</span>
 							<span class="text-red-300 font-bold font-mono">{formatTimeRemaining(cooldownEndsAt)}</span>
 						</div>
 						<div class="flex items-center justify-between text-xs">
-							<span class="text-[#8b949e]">Available on:</span>
-							<span class="text-[#b6bfca]">{formatCooldownDate(cooldownEndsAt)}</span>
+							<span class="text-fg-muted">Available on:</span>
+							<span class="text-fg-soft">{formatCooldownDate(cooldownEndsAt)}</span>
 						</div>
 					</div>
 				</div>
@@ -185,8 +185,8 @@
 			<!-- Profile Picture -->
 			<div class="space-y-2">
 				<div class="flex items-center gap-2">
-					<FluentImage20Filled class="size-4 text-[#b9a1ff]" />
-					<h2 class="text-sm font-semibold text-[#e6edf3]">Profile Picture</h2>
+					<FluentImage20Filled class="size-4 text-secondary" />
+					<h2 class="text-sm font-semibold text-fg">Profile Picture</h2>
 				</div>
 
 				<div class="relative" ondrop={handleDrop} ondragover={handleDragOver} ondragleave={handleDragLeave}>
@@ -209,11 +209,11 @@
 					>
 						{#if !previewUrl}
 							<div class="flex min-h-[140px] flex-col items-center justify-center gap-2 p-6">
-								<div class="rounded-full bg-[#7451e6]/15 border border-[#b9a1ff]/30 p-3">
-									<FluentImageOff20Filled class="size-8 text-[#b9a1ff]" />
+								<div class="rounded-full bg-secondary/15 border border-secondary/30 p-3">
+									<FluentImageOff20Filled class="size-8 text-secondary" />
 								</div>
 								<div class="text-center">
-									<p class="text-sm font-semibold text-[#e6edf3]">
+									<p class="text-sm font-semibold text-fg">
 										{#if dragActive}
 											Drop image here
 										{:else if $submitting}
@@ -223,13 +223,13 @@
 										{/if}
 									</p>
 									{#if !$submitting && canEdit}
-										<p class="mt-1 text-xs text-[#8b949e]">Images only • 5MB max</p>
+										<p class="mt-1 text-xs text-fg-muted">Images only • 5MB max</p>
 									{/if}
 								</div>
 							</div>
 						{:else}
 							<div class="relative">
-								<div class="flex items-center justify-center p-6 bg-[#151a22]/70">
+								<div class="flex items-center justify-center p-6 bg-surface-2/70">
 									<img
 										loading="lazy"
 										decoding="async"
@@ -239,9 +239,9 @@
 									/>
 								</div>
 								<div
-									class="absolute inset-0 flex items-center justify-center bg-[#0c1222]/70 opacity-0 transition-opacity group-hover:opacity-100"
+									class="absolute inset-0 flex items-center justify-center bg-surface-0/70 opacity-0 transition-opacity group-hover:opacity-100"
 								>
-									<p class="text-sm font-semibold text-[#e6edf3]">Tap to change</p>
+									<p class="text-sm font-semibold text-fg">Tap to change</p>
 								</div>
 								{#if previewUrl !== currentLogo && canEdit}
 									<button
@@ -276,8 +276,8 @@
 			<!-- Name & Bio -->
 			<div class="space-y-4">
 				<div class="flex items-center gap-2">
-					<FluentPerson20Filled class="size-4 text-[#b9a1ff]" />
-					<h2 class="text-sm font-semibold text-[#e6edf3]">Profile Information</h2>
+					<FluentPerson20Filled class="size-4 text-secondary" />
+					<h2 class="text-sm font-semibold text-fg">Profile Information</h2>
 				</div>
 
 				<div>
@@ -339,7 +339,7 @@
 
 		<!-- Success Message -->
 		{#if $message && !$message.includes("error") && !$message.includes("failed") && !$message.includes("wait") && !$message.includes("Insufficient")}
-			<div class="bg-[#1f9d62]/18 border border-[#4fd88a]/30 text-[#aef3c9] rounded-sm p-4 flex items-center gap-3">
+			<div class="bg-success/18 border border-success/30 text-positive-fg rounded-sm p-4 flex items-center gap-3">
 				<p class="text-sm font-medium">{$message}</p>
 			</div>
 		{/if}
