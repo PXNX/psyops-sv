@@ -31,9 +31,14 @@ import {
 	regionDeposits,
 	governors,
 	presidents,
-	stateResourceInventory
+	stateResourceInventory,
+	reconMissions,
+	intelReports,
+	strikes
 } from "./schema";
 import type { PgDatabase } from "drizzle-orm/pg-core";
+import { hash32, seededRandom, SENSORS, type SensorId, type ViewConditions } from "#lib/config/index.js";
+import { scanRegion } from "./services/military/intel";
 
 export async function seedMockDatabase(db: PgDatabase<any>) {
 	// ============ Blocs ============
@@ -643,6 +648,182 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			taxPaid: 150
 		}
 	]);
+
+	// ============ Recon: intel reports with imagery ============
+	// Freedonia's passes over enemy regions (and its own embattled region 2)
+	// in a spread of sensors and conditions, plus a recent strike on region
+	// 4's fortifications, so /intel and the region pages show recon imagery.
+	const hour = 3600_000;
+	await db.insert(strikes).values({
+		attackerStateId: state1!.id,
+		targetStateId: state2!.id,
+		warId: war1!.id,
+		regionId: region4!.id,
+		orderedBy: "user-1",
+		tier: "operational",
+		target: "fortifications",
+		weapon: "guided_bomb",
+		cost: 40000,
+		outcome: "hit",
+		interceptChance: 20,
+		accuracy: 80,
+		intelConfidence: 60,
+		conditions: { weather: "clear", night: false, cover: "mountain" },
+		damage: { levels: { fortifications: 1 } },
+		createdAt: new Date(Date.now() - 3 * hour)
+	});
+	const r4Units = [
+		...Array(5).fill("armor"),
+		...Array(3).fill("mechanized"),
+		...Array(4).fill("artillery"),
+		...Array(2).fill("air_defence"),
+		...Array(6).fill("infantry")
+	];
+	const r3Units = [...Array(3).fill("armor"), ...Array(8).fill("infantry"), ...Array(2).fill("fighter_squadron")];
+	const passes: {
+		region: typeof region1;
+		owner: typeof state1;
+		sensor: SensorId;
+		hoursAgo: number;
+		conditions: ViewConditions;
+		units: string[];
+		battle?: boolean;
+	}[] = [
+		{
+			region: region4,
+			owner: state2,
+			sensor: "sat_eo",
+			hoursAgo: 1,
+			conditions: { weather: "clear", night: false, cover: "mountain" },
+			units: r4Units
+		},
+		{
+			region: region4,
+			owner: state2,
+			sensor: "sat_ir",
+			hoursAgo: 1.2,
+			conditions: { weather: "clear", night: false, cover: "mountain" },
+			units: r4Units
+		},
+		{
+			region: region4,
+			owner: state2,
+			sensor: "sat_sar",
+			hoursAgo: 1.4,
+			conditions: { weather: "cloudy", night: false, cover: "mountain" },
+			units: r4Units
+		},
+		{
+			region: region4,
+			owner: state2,
+			sensor: "drone_ir",
+			hoursAgo: 9,
+			conditions: { weather: "clear", night: true, cover: "mountain" },
+			units: r4Units
+		},
+		{
+			region: region3,
+			owner: state2,
+			sensor: "drone_eo",
+			hoursAgo: 2,
+			conditions: { weather: "clear", night: false, cover: "forest" },
+			units: r3Units
+		},
+		{
+			region: region3,
+			owner: state2,
+			sensor: "sat_eo",
+			hoursAgo: 5,
+			conditions: { weather: "cloudy", night: false, cover: "forest" },
+			units: r3Units
+		},
+		{
+			region: region2,
+			owner: state1,
+			sensor: "drone_eo",
+			hoursAgo: 0.5,
+			conditions: { weather: "clear", night: false, cover: "open" },
+			units: [...Array(6).fill("armor"), ...Array(3).fill("artillery")],
+			battle: true
+		},
+		{
+			region: region2,
+			owner: state1,
+			sensor: "ground_radar",
+			hoursAgo: 0.7,
+			conditions: { weather: "rain", night: false, cover: "open" },
+			units: [...Array(6).fill("armor"), ...Array(3).fill("artillery"), "fighter_squadron"],
+			battle: true
+		},
+		{
+			region: region5,
+			owner: state3,
+			sensor: "drone_eo",
+			hoursAgo: 3,
+			conditions: { weather: "fog", night: false, cover: "open" },
+			units: ["infantry", "infantry", "armor", "armor", "air_defence", "air_defence", "air_defence"]
+		}
+	];
+	for (const [i, pass] of passes.entries()) {
+		const at = new Date(Date.now() - pass.hoursAgo * hour);
+		const s = SENSORS[pass.sensor];
+		const [mission] = await db
+			.insert(reconMissions)
+			.values({
+				launchedBy: "user-1",
+				stateId: state1!.id,
+				targetRegionId: pass.region!.id,
+				targetStateId: pass.owner!.id,
+				sensor: pass.sensor,
+				cost: s.cost,
+				status: "completed",
+				launchedAt: new Date(at.getTime() - s.durationMinutes * 60_000),
+				completesAt: at,
+				completedAt: at
+			})
+			.returning();
+		const r = pass.region!;
+		const findings = scanRegion({
+			sensor: pass.sensor,
+			conditions: pass.conditions,
+			hostileUnitTypes: pass.units,
+			recentlyFired: pass.battle ? 2 : 0,
+			airDefenceUnits: pass.units.filter((u) => u === "air_defence").length,
+			owner: { id: pass.owner!.id, name: pass.owner!.name },
+			buildings: {
+				infrastructure: r.infrastructure ?? 0,
+				economy: r.economy ?? 0,
+				education: r.education ?? 0,
+				hospitals: r.hospitals ?? 0,
+				fortifications: r.fortifications ?? 0,
+				underConstruction: i % 4 === 0 ? 1 : 0
+			},
+			battle: pass.battle
+				? {
+						id: battle1!.id,
+						phase: "active",
+						attackerStateId: state2!.id,
+						attackerStateName: state2!.name,
+						defenderStateId: state1!.id,
+						defenderStateName: state1!.name,
+						attacker: { units: 2, strength: 180 },
+						defender: { units: 1, strength: 90 }
+					}
+				: null,
+			rng: seededRandom(hash32(i, 0x4ec0))
+		});
+		await db.insert(intelReports).values({
+			missionId: mission!.id,
+			stateId: state1!.id,
+			regionId: r.id,
+			targetStateId: pass.owner!.id,
+			filedBy: "user-1",
+			sensor: pass.sensor,
+			findings,
+			observedAt: at,
+			expiresAt: new Date(at.getTime() + 24 * hour)
+		});
+	}
 
 	console.log("🌱 Mock database seeded successfully");
 }
