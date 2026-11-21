@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Conscription bands derived from the share of a state under arms now reduce the
+  available workforce and birth rate, raise mortality and sour regime stability
+- Hospital capacity can be overwhelmed by wounded soldiers and recent strike
+  casualties or switched off by grid hacks and disrupted supplies; shortfalls
+  raise mortality, cut births and workforce participation, and hurt stability
 - Civilian manpower: recruiting a unit draws people from its home region, and
   a region without enough spare civilians above the population floor cannot raise it
 - Civilian workers fill factories' free shifts each week, earning wages from the

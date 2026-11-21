@@ -135,6 +135,17 @@ takes income tax on their wages (`services/economy/civilian-work.ts`,
 `/api/cron/workforce`). A company that cannot pay employs fewer people; a
 region whose people have been drafted or killed has fewer to give.
 
+Conscription is not a free army. The share of a state's people under arms
+defines the band it lives under — volunteer, limited, general or total war —
+and a drafted population works less, has fewer children and dies more often
+(`conscription.config.ts`). Healthcare is the other limit: wounded soldiers,
+recent strike casualties, grid blackouts caused by a hack and disrupted medical
+supplies all consume hospital capacity. When hospitals are overwhelmed, extra
+civilians die, fewer are born, fewer are well enough to work and the government
+is blamed for it. Both pressures are derived on read in
+`services/civilians/pressure.ts` and feed the population tick, the workforce
+and regime stability together.
+
 ## Setup
 
 ### Prerequisites
