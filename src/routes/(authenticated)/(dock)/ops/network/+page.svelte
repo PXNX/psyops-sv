@@ -9,6 +9,7 @@
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
 	import CameraFeed from "#lib/component/infiltration/CameraFeed.svelte";
 	import IntrusionConsole from "#lib/component/infiltration/IntrusionConsole.svelte";
+	import FileSystemExplorer from "#lib/component/infiltration/FileSystemExplorer.svelte";
 	import {
 		ASSET_KINDS,
 		COVERT_OPS,
@@ -85,6 +86,9 @@
 		chosenSite && selectedAsset
 			? (data.sessions.find((s: any) => s.assetId === selectedAsset.id && s.siteId === chosenSite.id) ?? null)
 			: null
+	);
+	const copiedIds = $derived(
+		chosenSite ? data.files.filter((f: any) => f.siteId === chosenSite.id).map((f: any) => f.recordId) : []
 	);
 	const chosenFile = $derived(data.files.find((f: any) => f.id === openFileId) ?? null);
 	const atCapacity = $derived(activeAssets.length >= INFILTRATION.MAX_ASSETS_PER_TARGET);
@@ -420,6 +424,21 @@
 										</div>
 									{/if}
 
+									{#if siteSession?.stage === "pivot" && selectedAsset}
+										<div>
+											<h4 class="section-title mb-2">Inside the host · {site.code}</h4>
+											<FileSystemExplorer
+												{site}
+												assetId={selectedAsset.id}
+												targetName={data.targets.find((t: any) => t.id === data.selectedTargetId)?.name ?? "the target"}
+												{copiedIds}
+												onResult={(d) => {
+													if (d?.exfil) focusTerminal();
+												}}
+											/>
+										</div>
+									{/if}
+
 									<div class="grid gap-2 sm:grid-cols-3">
 										{#each ["probe", "camera", "files"] as const as kind (kind)}
 											{@const spec = INFILTRATION_ACTIONS[kind]}
@@ -463,7 +482,9 @@
 							>
 								<span class="min-w-0">
 									<span class="block truncate text-sm font-medium text-fg">{file.title}</span>
-									<span class="data block text-[11px] text-fg-muted">{file.siteId} · {dtg(file.capturedAt)}</span>
+									<span class="data block text-[11px] text-fg-muted">
+										{file.path ?? file.siteId} · {dtg(file.capturedAt)}
+									</span>
 								</span>
 								<Badge
 									size="xs"

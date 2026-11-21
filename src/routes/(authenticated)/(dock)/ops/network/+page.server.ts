@@ -21,10 +21,14 @@ import {
 	InfiltrationError,
 	actionsFor,
 	assetsFor,
+	browseSystem,
+	exfilRecord,
 	filesFor,
+	grepSystem,
 	isPivoted,
 	networkTargets,
 	plantAsset,
+	readSystemRecord,
 	runAction,
 	runIntrusion,
 	sitesFor,
@@ -187,6 +191,66 @@ export const actions: Actions = {
 			if (err instanceof InfiltrationError || err instanceof CovertOpError) {
 				return fail(400, { error: err.message });
 			}
+			throw err;
+		}
+	},
+
+	browse: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			const result = await browseSystem(db, locals.account!.id, {
+				assetId: int(form.get("assetId")),
+				siteId: str(form.get("siteId")),
+				path: str(form.get("path"))
+			});
+			return { browse: result };
+		} catch (err) {
+			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	read: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			const result = await readSystemRecord(db, locals.account!.id, {
+				assetId: int(form.get("assetId")),
+				siteId: str(form.get("siteId")),
+				recordId: str(form.get("recordId"))
+			});
+			return { read: result };
+		} catch (err) {
+			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	grep: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			const result = await grepSystem(db, locals.account!.id, {
+				assetId: int(form.get("assetId")),
+				siteId: str(form.get("siteId")),
+				query: str(form.get("query"))
+			});
+			return { grep: result };
+		} catch (err) {
+			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	exfil: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			const result = await exfilRecord(db, locals.account!.id, {
+				assetId: int(form.get("assetId")),
+				siteId: str(form.get("siteId")),
+				recordId: str(form.get("recordId"))
+			});
+			return { exfil: result };
+		} catch (err) {
+			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
 			throw err;
 		}
 	}

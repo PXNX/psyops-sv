@@ -5,7 +5,18 @@ import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
 import { eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
 import { infiltrationAssets, states } from "../schema";
-import { isPivoted, plantAsset, runAction, runIntrusion, sessionFor } from "../services/military/infiltration";
+import {
+	browseSystem,
+	exfilRecord,
+	filesFor,
+	grepSystem,
+	isPivoted,
+	plantAsset,
+	readSystemRecord,
+	runAction,
+	runIntrusion,
+	sessionFor
+} from "../services/military/infiltration";
 import { launchOperation } from "../services/military/covert-ops";
 import { INTRUSION, actionChance, sitesForTarget } from "#lib/config/index.js";
 
@@ -92,5 +103,79 @@ describe("an intrusion chain", () => {
 		const r = await runIntrusion(handle.db, "user-1", { assetId, siteId, step: "reset", now: now(), rng: always });
 		expect(r.session).toBeNull();
 		expect(await sessionFor(handle.db, assetId, siteId)).toBeUndefined();
+	});
+});
+
+describe("life inside the host", () => {
+	let operator: number;
+
+	beforeAll(async () => {
+		operator = (await plantAsset(handle.db, "user-1", { targetStateId: sylvania, kind: "insider", now: now() }))
+			.assetId;
+		for (const step of ["scan", "access", "escalate", "pivot"] as const) {
+			await runIntrusion(handle.db, "user-1", {
+				assetId: operator,
+				siteId,
+				step,
+				vector: step === "access" ? "phished_operator" : undefined,
+				now: now(),
+				rng: always
+			});
+		}
+	});
+
+	it("walks directories without needing a new intrusion", async () => {
+		const root = await browseSystem(handle.db, "user-1", { assetId: operator, siteId, path: "/", now: now() });
+		expect(root.dirs.some((d) => d === "/srv")).toBe(true);
+		expect(root.files.length).toBe(0);
+		const finance = await browseSystem(handle.db, "user-1", {
+			assetId: operator,
+			siteId,
+			path: "/srv/shared/finance",
+			now: now()
+		});
+		expect(finance.files.length).toBeGreaterThan(0);
+		expect(finance.lines.some((l) => l.line.startsWith("$ ls -la"))).toBe(true);
+	});
+
+	it("reads a partially redacted record", async () => {
+		const listing = await browseSystem(handle.db, "user-1", { assetId: operator, siteId, path: "/mail", now: now() });
+		const record = await readSystemRecord(handle.db, "user-1", {
+			assetId: operator,
+			siteId,
+			recordId: listing.files[0]!.id,
+			now: now()
+		});
+		expect(record.record.body.length).toBeGreaterThan(40);
+		expect(record.lines.some((l) => l.line.startsWith("$ cat"))).toBe(true);
+	});
+
+	it("greps for a keyword across the host", async () => {
+		const hits = await grepSystem(handle.db, "user-1", { assetId: operator, siteId, query: "REDACTED", now: now() });
+		expect(hits.matches.length).toBeGreaterThan(0);
+		expect(hits.lines.some((l) => l.line.startsWith("$ grep"))).toBe(true);
+	});
+
+	it("copies a record into the dossier once, with heat", async () => {
+		const listing = await browseSystem(handle.db, "user-1", {
+			assetId: operator,
+			siteId,
+			path: "/srv/shared/legal",
+			now: now()
+		});
+		const record = listing.files[0]!;
+		const copied = await exfilRecord(handle.db, "user-1", {
+			assetId: operator,
+			siteId,
+			recordId: record.id,
+			now: now()
+		});
+		expect(copied.file.path).toBe(record.path);
+		expect(copied.file.recordId).toBe(record.id);
+		const dossier = await filesFor(handle.db, freedonia, sylvania);
+		expect(dossier.some((f) => f.recordId === record.id)).toBe(true);
+		await expect(
+			exfilRecord(handle.db, "user-1", { assetId: operator, siteId, recordId: record.id, now: now() })
+		).rejects.toThrow(/already in the dossier/);
 	});
 });

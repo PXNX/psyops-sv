@@ -40,7 +40,10 @@ import {
 	type IntrusionStage,
 	type LogLine,
 	type ScanReport,
-	type Site
+	type Site,
+	fileSystemFor,
+	listDirectory,
+	findRecords
 } from "#lib/config/index.js";
 import { opsAuthority } from "./covert-ops";
 import { sideOf } from "./recon";
@@ -658,5 +661,195 @@ export async function runIntrusion(
 			})
 			.returning();
 		return { session, success, lines };
+	});
+}
+
+// ── Life inside the system ──────────────────────────────────────────────────
+
+/** The file system of a site, stable for every visitor and every visit. */
+export function recordsFor(site: Site, target: string) {
+	return fileSystemFor(site, target);
+}
+
+/** Append operator commands to the session transcript. */
+async function trace(tx: Tx, sessionId: number, lines: LogLine[], now: Date) {
+	const [current] = await tx
+		.select({ log: intrusionSessions.log })
+		.from(intrusionSessions)
+		.where(eq(intrusionSessions.id, sessionId));
+	await tx
+		.update(intrusionSessions)
+		.set({ log: [...(current?.log ?? []), ...lines], updatedAt: now })
+		.where(eq(intrusionSessions.id, sessionId));
+}
+
+/** Require an established pivot before the player can work inside the host. */
+async function requirePivot(tx: Tx, userId: string, assetId: number, siteId: string) {
+	const authority = await opsAuthority(tx, userId);
+	if (!authority) throw new InfiltrationError("Only your state's leadership can work inside a host.");
+	const [row] = await tx
+		.select({ asset: infiltrationAssets })
+		.from(infiltrationAssets)
+		.where(eq(infiltrationAssets.id, assetId))
+		.for("update");
+	const asset = row?.asset;
+	if (!asset || asset.stateId !== authority.stateId) throw new InfiltrationError("That asset isn't yours.");
+	if (asset.status !== "active") throw new InfiltrationError(`${asset.codename} has been burned.`);
+	const [session] = await tx
+		.select()
+		.from(intrusionSessions)
+		.where(and(eq(intrusionSessions.assetId, assetId), eq(intrusionSessions.siteId, siteId)))
+		.limit(1);
+	if (!session || session.stage !== "pivot") throw new InfiltrationError("You need a pivot into this site first.");
+	const targetName = await assertTarget(tx, authority.stateId, asset.targetStateId);
+	return { asset, session, targetName, stateId: authority.stateId };
+}
+
+export interface BrowseResult {
+	path: string;
+	dirs: string[];
+	files: ReturnType<typeof listDirectory>["files"];
+	lines: LogLine[];
+}
+
+/** List a directory inside the compromised host. */
+export async function browseSystem(
+	db: Database,
+	userId: string,
+	input: { assetId: number; siteId: string; path: string; now?: Date }
+): Promise<BrowseResult> {
+	const now = input.now ?? new Date();
+	return db.transaction(async (tx) => {
+		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
+		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
+		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		const listing = listDirectory(recordsFor(site, targetName), input.path || "/");
+		const t = dtg(now);
+		const lines: LogLine[] = [
+			{ t, line: `$ ls -la ${listing.path}`, tone: "info" },
+			...listing.dirs.map((d) => ({ t, line: `drwxr-xr-x  ${d.split("/").pop()}/`, tone: "ok" as const })),
+			...listing.files.map((f) => ({
+				t,
+				line: `-rw-------  ${String(f.size).padStart(7)}  ${f.name}  [${f.classification}]`,
+				tone: "info" as const
+			}))
+		];
+		await trace(tx, session.id, lines, now);
+		return { ...listing, lines };
+	});
+}
+
+/** Open one record: the full, partially redacted text. */
+export async function readSystemRecord(
+	db: Database,
+	userId: string,
+	input: { assetId: number; siteId: string; recordId: string; now?: Date }
+) {
+	const now = input.now ?? new Date();
+	return db.transaction(async (tx) => {
+		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
+		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
+		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		const record = recordsFor(site, targetName).files.find((f) => f.id === input.recordId);
+		if (!record) throw new InfiltrationError("That file no longer exists on the host.");
+		const t = dtg(now);
+		const lines: LogLine[] = [
+			{ t, line: `$ cat ${record.path}`, tone: "info" },
+			{ t, line: `${record.body.split("\n")[0] ?? ""} …`, tone: "ok" },
+			{ t, line: `${record.body.split("\n").length} lines · ${record.classification}`, tone: "info" }
+		];
+		await trace(tx, session.id, lines, now);
+		return { record, lines };
+	});
+}
+
+/** Search the file system for a keyword. */
+export async function grepSystem(
+	db: Database,
+	userId: string,
+	input: { assetId: number; siteId: string; query: string; now?: Date }
+) {
+	const now = input.now ?? new Date();
+	return db.transaction(async (tx) => {
+		const { session, targetName } = await requirePivot(tx, userId, input.assetId, input.siteId);
+		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
+		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		const matches = findRecords(recordsFor(site, targetName), input.query);
+		const t = dtg(now);
+		const lines: LogLine[] = [
+			{ t, line: `$ grep -ri "${input.query.replace(/"/g, "")}" .`, tone: "info" },
+			...matches.map((m) => ({ t, line: `${m.record.path}: ${m.match}`, tone: "ok" as const })),
+			{ t, line: `${matches.length} file${matches.length === 1 ? "" : "s"} matched`, tone: "info" as const }
+		];
+		await trace(tx, session.id, lines, now);
+		return { matches, lines };
+	});
+}
+
+/** Copy one record out of the host and into the state's dossier. */
+export async function exfilRecord(
+	db: Database,
+	userId: string,
+	input: { assetId: number; siteId: string; recordId: string; now?: Date }
+) {
+	const now = input.now ?? new Date();
+	return db.transaction(async (tx) => {
+		const { asset, session, targetName, stateId } = await requirePivot(tx, userId, input.assetId, input.siteId);
+		const site = (await sitesIn(tx, session.targetStateId)).find((s) => s.id === input.siteId);
+		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		const record = recordsFor(site, targetName).files.find((f) => f.id === input.recordId);
+		if (!record) throw new InfiltrationError("That file no longer exists on the host.");
+		const [duplicate] = await tx
+			.select({ id: infiltrationFiles.id })
+			.from(infiltrationFiles)
+			.where(
+				and(
+					eq(infiltrationFiles.stateId, stateId),
+					eq(infiltrationFiles.siteId, input.siteId),
+					eq(infiltrationFiles.recordId, record.id)
+				)
+			)
+			.limit(1);
+		if (duplicate) throw new InfiltrationError("That record is already in the dossier.");
+
+		const cost = 300 + record.heat * 120;
+		await tx
+			.select({ id: stateTreasury.id })
+			.from(stateTreasury)
+			.where(eq(stateTreasury.stateId, stateId))
+			.for("update");
+		await charge(tx, stateId, cost, `Copy ${record.name} via ${asset.codename}`, userId, now);
+		const heat = effectiveHeat(asset, now);
+		const nextHeat = clamp(heat + record.heat, 0, INFILTRATION.HEAT_MAX);
+		await tx
+			.update(infiltrationAssets)
+			.set({ heat: nextHeat, status: nextHeat >= INFILTRATION.HEAT_MAX ? "burned" : "active", lastActionAt: now })
+			.where(eq(infiltrationAssets.id, asset.id));
+		const [file] = await tx
+			.insert(infiltrationFiles)
+			.values({
+				stateId,
+				targetStateId: asset.targetStateId,
+				siteId: input.siteId,
+				assetId: asset.id,
+				title: record.name,
+				classification: record.classification,
+				body: record.body,
+				path: record.path,
+				recordId: record.id,
+				capturedAt: now
+			})
+			.returning();
+		const t = dtg(now);
+		await trace(
+			tx,
+			session.id,
+			[
+				{ t, line: `$ scp ${record.path} ./dossier/`, tone: "info" },
+				{ t, line: `[+] ${record.name} copied · ${record.classification} · +${record.heat} heat`, tone: "ok" }
+			],
+			now
+		);
+		return { file: file!, heat: nextHeat, burned: nextHeat >= INFILTRATION.HEAT_MAX, cost };
 	});
 }
