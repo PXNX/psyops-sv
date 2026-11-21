@@ -5,6 +5,7 @@ import { compileModule } from "svelte/compiler";
 export default defineConfig({
 	include: ["src/**/*.test.ts", "packages/**/*.test.ts", "tools/**/*.test.ts"],
 	exclude: ["node_modules", ".svelte-kit"],
+	pool: { maxWorkers: 2 },
 	plugins: [
 		{
 			// Rune modules (*.svelte.ts) need the Svelte compiler, just like in
