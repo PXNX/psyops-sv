@@ -37,14 +37,14 @@
 		}
 	}
 
-	const filters = [
+	const filters = $derived([
 		{ value: "all", label: "All activity", count: data.actions.length },
 		{ value: "message_delete", label: "Removed messages", count: data.counts.message_delete },
 		{ value: "warning", label: "Warnings", count: data.counts.warning },
 		{ value: "restriction", label: "Restrictions", count: data.counts.restriction },
 		{ value: "report_action", label: "Report outcomes", count: data.counts.report_action },
 		{ value: "content_flag", label: "Content flags", count: data.counts.content_flag }
-	];
+	]);
 
 	const visibleActions = $derived(activeType === "all" ? data.actions : data.actions.filter((a) => a.type === activeType));
 </script>

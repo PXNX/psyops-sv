@@ -317,8 +317,8 @@
 					{#if selectedReport.status === "pending"}
 						<div class="space-y-4">
 							<div>
-								<label class="field-label">Violation Reason</label>
-								<select bind:value={deletionReason} class="field-control rounded-sm px-3 py-2.5 w-full">
+								<label for="deletionReason" class="field-label">Violation Reason</label>
+								<select id="deletionReason" bind:value={deletionReason} class="field-control rounded-sm px-3 py-2.5 w-full">
 									{#each violationReasons as reason}
 										<option value={reason.value}>{reason.label}</option>
 									{/each}
@@ -326,8 +326,9 @@
 							</div>
 
 							<div>
-								<label class="field-label">Note (visible to user)</label>
+								<label for="deletionNote" class="field-label">Note (visible to user)</label>
 								<textarea
+									id="deletionNote"
 									bind:value={deletionNote}
 									placeholder="Explain why this message was deleted..."
 									rows="3"

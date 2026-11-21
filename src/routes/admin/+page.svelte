@@ -16,7 +16,7 @@
 
 	const { data } = $props();
 
-	const sections = [
+	const sections = $derived([
 		{
 			href: "/admin/users",
 			icon: FluentPeople20Filled,
@@ -52,7 +52,7 @@
 			description: "Create and manage promotional codes and their rewards.",
 			badge: 0
 		}
-	];
+	]);
 
 	const cronJobs = [
 		{ href: "/api/cron/battles", label: "Battles", icon: FluentBuildingGovernment20Filled },
@@ -61,14 +61,14 @@
 		{ href: "/api/cron/elections", label: "Elections", icon: FluentShield20Filled }
 	];
 
-	const stats = [
+	const stats = $derived([
 		{ label: "Players", value: data.stats.users, tone: "text-fg" },
 		{ label: "Moderators", value: data.stats.moderators, tone: "text-purple-300" },
 		{ label: "Open reports", value: data.stats.pendingReports, tone: "text-primary-fg" },
 		{ label: "Open flags", value: data.stats.pendingFlags, tone: "text-red-300" },
 		{ label: "Gift codes", value: data.stats.giftCodes, tone: "text-fg" },
 		{ label: "Moderation actions", value: data.stats.moderationActions, tone: "text-fg" }
-	];
+	]);
 </script>
 
 <PageContainer maxWidth="6xl">

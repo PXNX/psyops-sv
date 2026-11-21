@@ -86,12 +86,13 @@
 		>
 			<div class="space-y-4">
 				<div>
-					<label class="field-label flex items-center justify-between">
+					<label for="broadcastSubject" class="field-label flex items-center justify-between">
 						<span>Subject</span>
 						<span class="text-xs font-normal text-fg-muted font-mono">{subject.length}/200</span>
 					</label>
 					<input
 						type="text"
+						id="broadcastSubject"
 						name="subject"
 						bind:value={subject}
 						placeholder="Enter broadcast subject..."
@@ -103,11 +104,12 @@
 				</div>
 
 				<div>
-					<label class="field-label flex items-center justify-between">
+					<label for="broadcastContent" class="field-label flex items-center justify-between">
 						<span>Message</span>
 						<span class="text-xs font-normal text-fg-muted font-mono">{content.length}/2000</span>
 					</label>
 					<textarea
+						id="broadcastContent"
 						name="content"
 						bind:value={content}
 						placeholder="Enter your broadcast message..."

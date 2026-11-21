@@ -17,11 +17,11 @@
 
 	let { data, form } = $props();
 
-	const tabs = [
+	const tabs = $derived([
 		{ value: "pending", label: "Pending", count: data.pendingCount },
 		{ value: "resolved", label: "Resolved", count: data.resolvedCount },
 		{ value: "all", label: "All", count: data.pendingCount + data.resolvedCount }
-	];
+	]);
 </script>
 
 <svelte:head><title>Content flags · Admin · PsyOps</title></svelte:head>

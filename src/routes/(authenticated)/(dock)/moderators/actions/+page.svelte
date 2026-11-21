@@ -57,14 +57,14 @@
 
 	const isFilteringCurrentUser = $derived(!!data.currentUserId && data.filterUserId === data.currentUserId);
 
-	const types = [
+	const types = $derived([
 		{ value: null, label: "All types", count: data.total },
 		{ value: "message_delete", label: "Message removals", count: data.counts.message_delete },
 		{ value: "warning", label: "Warnings", count: data.counts.warning },
 		{ value: "restriction", label: "Restrictions", count: data.counts.restriction },
 		{ value: "report_action", label: "Report resolutions", count: data.counts.report_action },
 		{ value: "content_flag", label: "Content flags", count: data.counts.content_flag }
-	];
+	]);
 
 	const filteredActions = $derived.by(() => {
 		const term = search.trim().toLowerCase();

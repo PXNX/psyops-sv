@@ -15,7 +15,7 @@
 
 	const { data } = $props();
 
-	const areas = [
+	const areas = $derived([
 		{
 			href: "/moderation",
 			icon: FluentShield20Filled,
@@ -44,7 +44,7 @@
 			description: "Every moderation action taken against your account.",
 			badge: 0
 		}
-	];
+	]);
 </script>
 
 <svelte:head><title>Moderators - PsyOps</title></svelte:head>
