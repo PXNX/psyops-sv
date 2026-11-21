@@ -31,6 +31,7 @@ import {
 	type StrikeDamage
 } from "../../schema";
 import { creditTreasury } from "../../money";
+import { commsInterceptAgainst, defenceBlindness } from "./state-effects";
 import {
 	SORTIE_COOLDOWN_HOURS,
 	INTERCEPTED_AIRCRAFT_DAMAGE,
@@ -40,6 +41,7 @@ import {
 	WEAPON_IDS,
 	STRIKE_TIERS,
 	airDefenceStrength,
+	blindedRadar,
 	effectMagnitude,
 	hash32,
 	ihlEmbargoFactor,
@@ -66,6 +68,8 @@ import {
 } from "#lib/config/index.js";
 import { picturesByRegion, sideOf, type Side } from "./recon";
 import { ihlScoreOf, ihlScores } from "./ihl";
+import { STANCE_CONFIG } from "#lib/config/index.js";
+import { adjustCivilianStance, casualtyStancePenalty } from "../politics/civilian-stance.js";
 import { spaceBonuses } from "./space";
 import { reduceRegionPopulation } from "../population";
 
@@ -243,9 +247,11 @@ async function strikeContexts(
 	now: Date,
 	conditions?: (region: RegionRow) => ViewConditions
 ) {
-	const [hostile, pictures] = await Promise.all([
+	const [hostile, pictures, blinded, intercepted] = await Promise.all([
 		hostileUnits(db, side, region.id),
-		picturesByRegion(db, side.stateIds, { regionIds: [region.id], now })
+		picturesByRegion(db, side.stateIds, { regionIds: [region.id], now }),
+		region.stateId ? defenceBlindness(db, region.stateId, now) : Promise.resolve(0),
+		region.stateId ? commsInterceptAgainst(db, side.stateIds, region.stateId, now) : Promise.resolve(0)
 	]);
 	const picture = pictures.get(region.id) ?? null;
 	const population = regionPopulation(region);
@@ -260,23 +266,28 @@ async function strikeContexts(
 		population,
 		density: population / regionAreaKm2(region)
 	};
+	// A spoofed radar network stops cueing the guns: the defender's real
+	// strength is lower, and our picture of it is lower by the same amount.
+	const radar = Math.max(0, (region.radar ?? 0) - blindedRadar(blinded));
 	const activeAd = hostile.units.filter((u) => u.unitType === "air_defence" && !u.isTraining).length;
 	// Air defence is known from a visual pass that identified unit types, and
 	// radar coverage from any pass that imaged the installations.
 	const knownAdUnits = picture?.unitTypes
 		? (picture.unitTypes.find((t) => t.unitType === "air_defence")?.count ?? 0)
 		: null;
-	const knownRadar = picture?.buildings?.radar ?? 0;
+	const knownRadar = Math.max(0, (picture?.buildings?.radar ?? 0) - blindedRadar(blinded));
 	const knownAd = knownAdUnits === null && knownRadar === 0 ? null : airDefenceStrength(knownAdUnits ?? 0, knownRadar);
-	const known: StrikeContext = {
+	const truth: StrikeContext = {
+		...shared,
+		adUnits: airDefenceStrength(activeAd, radar),
+		enemyUnits: hostile.units.length
+	};
+	// Intercepted traffic is a live order-of-battle feed: the planner sees the
+	// truth instead of whatever the last camera pass happened to catch.
+	const known: StrikeContext = intercepted > 0 ? truth : {
 		...shared,
 		adUnits: knownAd ?? 0,
 		enemyUnits: picture?.knownUnits ?? 0
-	};
-	const truth: StrikeContext = {
-		...shared,
-		adUnits: airDefenceStrength(activeAd, region.radar ?? 0),
-		enemyUnits: hostile.units.length
 	};
 	return { known, truth, knownAd, picture, hostile };
 }
@@ -616,6 +627,17 @@ export async function launchStrike(db: Database, input: LaunchInput): Promise<La
 		if (hit.length) damage.units = hit;
 
 		if (roll.civilianCasualties > 0) await reduceRegionPopulation(tx, region.id, roll.civilianCasualties);
+
+		// Whoever lives under the strike blames the state that sent it. Casualties
+		// matter more than the sortie itself, but even a clean strike is resented.
+		if (region.stateId && region.stateId !== authority.stateId) {
+			const swing = STANCE_CONFIG.STRIKE + casualtyStancePenalty(roll.civilianCasualties);
+			try {
+				await adjustCivilianStance(tx, region.stateId, authority.stateId, swing, now);
+			} catch (err) {
+				console.error("Could not record the civilian stance after a strike:", err);
+			}
+		}
 
 		const [strike] = await tx
 			.insert(strikes)

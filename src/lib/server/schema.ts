@@ -43,9 +43,12 @@ export const productTypeEnum = pgEnum("product_type", [
 	"vehicles",
 	"explosives",
 	"chips",
-	"electronics"
+	"electronics",
+	// Industrial equipment (equipment.config.ts): built before other plants.
+	"machine_tools",
+	"fab_equipment"
 ]);
-export const factoryTypeEnum = pgEnum("factory_type", ["mine", "refinery", "armaments", "fabrication", "general"]);
+export const factoryTypeEnum = pgEnum("factory_type", ["mine", "refinery", "armaments", "fabrication", "equipment", "general"]);
 export const jobTypeEnum = pgEnum("job_type", ["miner", "refiner", "assembler", "general_worker"]);
 export const visaStatusEnum = pgEnum("visa_status", ["active", "expired", "revoked"]);
 // "failed": voted through, but it couldn't be carried out (e.g. the treasury
@@ -812,6 +815,11 @@ export const factories = pgTable("factories", {
 	maxWorkers: integer("max_workers").default(10).notNull(),
 	workerWage: bigint("worker_wage", { mode: "number" }).default(1500).notNull(),
 	productionRate: integer("production_rate").default(10).notNull(),
+	// Know-how and build quality grow with supplied shifts and fall when the
+	// grid, supply line or tools fail (equipment.config.ts).
+	efficiency: integer("efficiency").default(50).notNull(),
+	quality: integer("quality").default(90).notNull(),
+	shiftsCompleted: integer("shifts_completed").default(0).notNull(),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -1056,8 +1064,73 @@ export const stateTreasury = pgTable("state_treasury", {
 	balance: bigint("balance", { mode: "number" }).default(0).notNull(),
 	totalCollected: bigint("total_collected", { mode: "number" }).default(0).notNull(),
 	totalSpent: bigint("total_spent", { mode: "number" }).default(0).notNull(),
+	// Money the state owes: bond principal lent by players, less what it has
+	// repaid or been bailed out of. Shown on the state's economy page.
+	debt: bigint("debt", { mode: "number" }).default(0).notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
+
+// What a state's civilians think of a foreign state. One row per pair, created
+// only when something happens (war, strikes, a bailout); an absent row is
+// neutral. `observerStateId` owns the civilians, `targetStateId` is judged.
+export const civilianStances = pgTable(
+	"civilian_stances",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		observerStateId: integer("observer_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		stance: integer("stance").default(0).notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		pairIdx: uniqueIndex("idx_civilian_stance_pair").on(t.observerStateId, t.targetStateId),
+		targetIdx: index("idx_civilian_stance_target").on(t.targetStateId)
+	})
+);
+
+// A transfer from one state's treasury to another's. Kept as a ledger so the
+// goodwill a bailout bought can be traced back to the transfer that earned it.
+export const stateBailouts = pgTable(
+	"state_bailouts",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		donorStateId: integer("donor_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		recipientStateId: integer("recipient_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		amount: bigint("amount", { mode: "number" }).notNull(),
+		debtRelieved: bigint("debt_relieved", { mode: "number" }).default(0).notNull(),
+		authorizedBy: text("authorized_by").references(() => accounts.id, { onDelete: "set null" }),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		recipientIdx: index("idx_bailout_recipient").on(t.recipientStateId),
+		donorIdx: index("idx_bailout_donor").on(t.donorStateId)
+	})
+);
+
+// One-off explainers shown the first time a player opens a company or takes
+// office. A row exists once the milestone has been reached; `seenAt` is set
+// when the page actually showed the detail, so it is never shown twice.
+export const userFirsts = pgTable(
+	"user_firsts",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		kind: varchar("kind", { length: 40 }).notNull(),
+		reachedAt: timestamp("reached_at").defaultNow().notNull(),
+		seenAt: timestamp("seen_at")
+	},
+	(t) => ({ userKindIdx: uniqueIndex("idx_user_first_user_kind").on(t.userId, t.kind) })
+);
 
 export const taxRevenue = pgTable("tax_revenue", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
@@ -3275,6 +3348,9 @@ export const covertOpKindEnum = pgEnum("covert_op_kind", [
 	"grid_attack",
 	"c2_disruption",
 	"financial_theft",
+	"comms_intercept",
+	"air_defence_spoof",
+	"supply_chain",
 	// psyops
 	"morale_campaign",
 	"disinformation",
@@ -3287,7 +3363,10 @@ export const stateEffectKindEnum = pgEnum("state_effect_kind", [
 	"morale_shaken", // battle output down (stacks with diminishing returns)
 	"deception", // recon of regionId sees counts × (100 + magnitude)%
 	"morale_boost", // own battle output up, resists enemy psyops
-	"casus_belli" // sourceStateId was caught attacking in peacetime
+	"casus_belli", // sourceStateId was caught attacking in peacetime
+	"comms_intercept", // observer reads enemy traffic: sharper recon, true strike picture
+	"defence_blinded", // spoofed radars: less AD cueing, drones and strikes get through
+	"supply_disrupted" // poisoned supply chains: factory output down
 ]);
 
 export const covertOperations = pgTable(
@@ -3464,6 +3543,44 @@ export const infiltrationFiles = pgTable(
 export type InfiltrationAsset = typeof infiltrationAssets.$inferSelect;
 export type InfiltrationAction = typeof infiltrationActions.$inferSelect;
 export type InfiltrationFile = typeof infiltrationFiles.$inferSelect;
+
+// An interactive intrusion into one site by one asset: the scan, the chosen
+// attack vector, escalation and lateral movement, with a transcript of what
+// the operator saw. One session per asset/site pair, kept until it is reset.
+export const intrusionStageEnum = pgEnum("intrusion_stage", ["scan", "access", "escalate", "pivot"]);
+export const intrusionSessions = pgTable(
+	"intrusion_sessions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		assetId: integer("asset_id")
+			.notNull()
+			.references(() => infiltrationAssets.id, { onDelete: "cascade" }),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		siteId: text("site_id").notNull(),
+		stage: intrusionStageEnum("stage").notNull().default("scan"),
+		host: text("host").notNull(),
+		ip: text("ip").notNull(),
+		os: text("os").notNull(),
+		ports: jsonb("ports").$type<{ port: number; service: string; version: string; vector?: string }[]>().notNull(),
+		vector: text("vector"),
+		privileges: text("privileges").default("unauthenticated").notNull(),
+		segment: text("segment"),
+		log: jsonb("log").$type<{ t: string; line: string; tone: "info" | "ok" | "warn" | "bad" }[]>().notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		assetSiteIdx: uniqueIndex("idx_intrusion_asset_site").on(t.assetId, t.siteId),
+		ownerIdx: index("idx_intrusion_owner").on(t.stateId, t.targetStateId)
+	})
+);
+
+export type IntrusionSession = typeof intrusionSessions.$inferSelect;
 
 // --- AIRSTRIKES & INTERNATIONAL HUMANITARIAN LAW ---
 // The president or defence minister of a state at war orders a strike on an

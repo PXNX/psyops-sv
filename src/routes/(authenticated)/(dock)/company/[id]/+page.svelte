@@ -20,6 +20,7 @@
 	import FluentArrowDownload20Filled from "~icons/fluent/arrow-download-20-filled";
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentLockClosed20Filled from "~icons/fluent/lock-closed-20-filled";
+	import FluentLightbulb20Filled from "~icons/fluent/lightbulb-20-filled";
 
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import Logo from "#lib/component/Logo.svelte";
@@ -77,6 +78,24 @@
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
+	{#if data.firstCompanyDetail}
+		<aside
+			class="panel rounded-sm p-4 mb-4 border-l-4 border-positive/60 flex items-start gap-3"
+			role="note"
+			aria-label="Your first company"
+		>
+			<FluentLightbulb20Filled class="size-5 mt-0.5 shrink-0 text-positive" />
+			<div class="text-sm text-fg-body space-y-1">
+				<p class="font-serif font-bold text-fg">Your first company — a field note</p>
+				<p>
+					A company is a separate purse from your wallet: deposit funds here to pay workers, who produce resources
+					on your shifts. Build factories in regions, sell on the market, and issue shares once you are ready to
+					go public. Dividends and civic works are other ways to make your name. This note appears only once.
+				</p>
+			</div>
+		</aside>
+	{/if}
+
 	<!-- Register extract -->
 	<header class="panel rounded-sm p-5 sm:p-6 relative">
 		{#if data.isOwner}

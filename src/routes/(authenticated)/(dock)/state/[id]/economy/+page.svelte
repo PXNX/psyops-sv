@@ -13,6 +13,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Badge } from "#lib/component/ui/index.js";
+	import { STANCE_TONE } from "#lib/config/index.js";
 
 	let { data } = $props();
 
@@ -110,7 +111,29 @@
 					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
 					<dd class="font-mono text-red-300">−{money.format(data.treasury.totalSpent)}</dd>
 				</div>
+				<div class="flex items-center gap-2">
+					<dt class="text-fg-muted">State debt</dt>
+					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
+					<dd class="font-mono {data.debt > 0 ? 'text-amber-300' : 'text-fg-muted'}">
+						{data.debt > 0 ? `−${money.format(data.debt)}` : "None"}
+					</dd>
+				</div>
 			</dl>
+			{#if data.stances.length}
+				<div class="pt-3 border-t border-line/15">
+					<p class="text-[10px] uppercase tracking-wide text-fg-muted mb-2">Public opinion abroad</p>
+					<ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+						{#each data.stances as stance (stance.stateId)}
+							<li>
+								<a href="/state/{stance.stateId}" class="hover:text-primary-hover">{stance.name}</a>
+								<span class="font-mono {STANCE_TONE[stance.label]}">
+									{stance.stance > 0 ? "+" : ""}{stance.stance} · {stance.label}
+								</span>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			{/if}
 		</section>
 
 		<!-- Power grid gauge -->

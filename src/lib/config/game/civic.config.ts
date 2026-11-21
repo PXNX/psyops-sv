@@ -110,6 +110,8 @@ export const STANCE_CONFIG = {
 	DEFAULT: 0,
 	/** A declaration of war turns the defender's civilians against the aggressor. */
 	WAR_DECLARATION: -18,
+	/** Merely being struck (even with no casualties) sours civilians. */
+	STRIKE: -5,
 	/** Each thousand casualties a strike inflicts costs this much stance. */
 	CASUALTY_PENALTY_PER_THOUSAND: OPINION_CONFIG.CASUALTY_PENALTY_PER_THOUSAND,
 	MAX_CASUALTY_PENALTY: OPINION_CONFIG.MAX_CASUALTY_PENALTY,

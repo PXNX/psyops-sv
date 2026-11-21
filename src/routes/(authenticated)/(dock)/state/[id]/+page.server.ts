@@ -26,7 +26,8 @@ import {
 	residenceApplications,
 	partyMembers,
 	politicalParties,
-	stateEditCooldowns
+	stateEditCooldowns,
+	stateBailouts
 } from "#lib/server/schema.js";
 import { error, fail } from "@sveltejs/kit";
 import { eq, and, gte, sql, or, inArray } from "drizzle-orm";
@@ -62,6 +63,34 @@ import { statePopulation } from "#lib/server/services/population.js";
 import { knownEffects, opsAuthority } from "#lib/server/services/military/covert-ops.js";
 import { sideOf, viewerSide } from "#lib/server/services/military/recon.js";
 import { effectiveEnergy } from "#lib/server/services/military/state-effects.js";
+import { stancesHeldBy, stancesToward } from "#lib/server/services/politics/civilian-stance.js";
+import { stateDebt, bailoutState, BailoutError } from "#lib/server/services/economy/bailout.js";
+import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
+import { ECONOMY_CONFIG } from "#lib/config/index.js";
+
+/** The state an account can spend on: its president, else its economy minister. */
+async function bailoutAuthority(userId: string, targetStateId: number) {
+	const [presidency] = await db
+		.select({ stateId: presidents.stateId })
+		.from(presidents)
+		.where(eq(presidents.userId, userId))
+		.limit(1);
+	const ministry = presidency
+		? null
+		: await db
+				.select({ stateId: ministers.stateId })
+				.from(ministers)
+				.where(and(eq(ministers.userId, userId), eq(ministers.ministry, "economy")))
+				.limit(1)
+				.then((rows) => rows[0] ?? null);
+	const stateId = presidency?.stateId ?? ministry?.stateId;
+	if (!stateId || stateId === targetStateId) return null;
+	const [[state], [treasury]] = await Promise.all([
+		db.select({ name: states.name }).from(states).where(eq(states.id, stateId)).limit(1),
+		db.select({ balance: stateTreasury.balance }).from(stateTreasury).where(eq(stateTreasury.stateId, stateId)).limit(1)
+	]);
+	return { stateId, name: state?.name ?? "your state", balance: Number(treasury?.balance ?? 0) };
+}
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const stateId = parseInt(params.id);
 
@@ -521,8 +550,45 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Civilians (sum over the state's regions) and its public IHL record.
 	const [civilians, ihl] = await Promise.all([statePopulation(db, stateId), ihlRecord(db, stateId)]);
 
+	// Civilian sentiment toward this state, this state's own view of others,
+	// its debt and the last few rescues it received. The viewer's own treasury
+	// decides whether a bailout button belongs on the dossier at all.
+	const [stancesAbout, stancesHeld, debt, bailoutHistory, donor] = await Promise.all([
+		stancesToward(db, stateId),
+		stancesHeldBy(db, stateId),
+		stateDebt(db, stateId),
+		db
+			.select({
+				amount: stateBailouts.amount,
+				donorStateId: stateBailouts.donorStateId,
+				createdAt: stateBailouts.createdAt
+			})
+			.from(stateBailouts)
+			.where(eq(stateBailouts.recipientStateId, stateId))
+			.orderBy(sql`${stateBailouts.createdAt} desc`)
+			.limit(5)
+			.then(async (rows) =>
+				Promise.all(
+					rows.map(async (row) => {
+						const [donorState] = await db
+							.select({ name: states.name })
+							.from(states)
+							.where(eq(states.id, row.donorStateId))
+							.limit(1);
+						return {
+							amount: Number(row.amount),
+							from: donorState?.name ?? "another state",
+							date: row.createdAt.toISOString()
+						};
+					})
+				)
+			),
+		accountId ? bailoutAuthority(accountId, stateId) : null
+	]);
+
 	// Check if current user is president of this state
 	const isPresident = presidentData?.userId === locals.account?.id;
+	const firstPresidentDetail = isPresident && accountId ? await takeFirstTimeDetail(db, accountId, "president") : false;
 
 	const hasActiveVisa = !!userActiveVisa && new Date(userActiveVisa.expiresAt) > new Date();
 
@@ -652,6 +718,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		covertEffects,
 		civilians,
 		ihl,
+		debt,
+		stancesAbout,
+		stancesHeld,
+		bailoutHistory,
+		bailoutDonor: donor,
+		bailoutMinimum: ECONOMY_CONFIG.BAILOUT_MIN_AMOUNT,
+		firstPresidentDetail,
 		powerPlants: plants.length,
 		isPresident,
 		isForeignMinister,
@@ -814,6 +887,31 @@ export const actions: Actions = {
 		});
 
 		return { success: true, message: "Sanction applied successfully" };
+	},
+
+	bailout: async ({ request, params, locals }) => {
+		const account = locals.account!;
+		const recipientStateId = parseInt(params.id);
+		const donor = await bailoutAuthority(account.id, recipientStateId);
+		if (!donor) return fail(403, { error: "Only a president or economy minister of another state can bail it out." });
+
+		const formData = await request.formData();
+		const amount = Number(formData.get("amount"));
+		try {
+			const result = await bailoutState(db, {
+				donorStateId: donor.stateId,
+				recipientStateId,
+				amount,
+				authorizedBy: account.id
+			});
+			return {
+				success: true,
+				message: `Bailout sent: ${result.amount.toLocaleString()} transferred, ${result.debtRelieved.toLocaleString()} of debt cleared. Civilians now see ${donor.name} more favourably.`
+			};
+		} catch (err) {
+			if (err instanceof BailoutError) return fail(400, { error: err.message });
+			throw err;
+		}
 	},
 
 	declareWar: async ({ params, locals }) => {

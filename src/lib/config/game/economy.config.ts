@@ -47,6 +47,10 @@ export const ECONOMY_CONFIG = {
 	// Window for the dividend yield shown on company and profile pages.
 	DIVIDEND_YIELD_WINDOW_DAYS: 30,
 
+	// State bailouts: one treasury transferring funds to another. The aid
+	// relieves the recipient's debt first and buys civilian goodwill.
+	BAILOUT_MIN_AMOUNT: 10_000,
+
 	// Visas
 	DEFAULT_VISA_COST: 5000,
 	DEFAULT_VISA_DURATION_DAYS: 30,
@@ -71,6 +75,15 @@ export type ResourceType =
 	| "silicon"
 	| "fuel"
 	| "enriched_uranium";
-export type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives" | "chips" | "electronics";
-export type FactoryType = "mine" | "refinery" | "armaments" | "fabrication" | "general";
+export type ProductType =
+	| "rifles"
+	| "ammunition"
+	| "artillery"
+	| "vehicles"
+	| "explosives"
+	| "chips"
+	| "electronics"
+	| "machine_tools"
+	| "fab_equipment";
+export type FactoryType = "mine" | "refinery" | "armaments" | "fabrication" | "equipment" | "general";
 export type JobType = "miner" | "refiner" | "assembler" | "general_worker";

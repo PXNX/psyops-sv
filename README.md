@@ -9,7 +9,8 @@ A SvelteKit application with Google OAuth, PostgreSQL and Bun, presented through
 - **PostgreSQL**: Robust and scalable database management using Drizzle ORM.
 - **Bun**: Fast JavaScript runtime and package manager.
 - **Editorial field-ledger UI**: A restrained midnight-ink interface with parchment rules, serif headings and amber interaction cues. State and region dropdowns show the corresponding coat of arms.
-- **Player-driven cyber & psyops**: Under `/ops/network`, a state's leadership plants assets inside a target, probes its sites, watches the security cameras of power plants and air bases, copies sensitive files into a dossier and covers tracks before the asset's heat burns it. Live footholds improve the odds of ordinary cyber operations and psyops in `/ops`.
+- **Player-driven cyber & psyops**: Under `/ops/network`, a state's leadership plants assets inside a target, probes its sites, watches the security cameras of power plants and air bases, copies sensitive files into a dossier and covers tracks before the asset's heat burns it. Intrusions are interactive: scan a host, pick an exposed service, escalate, pivot into the right segment, then tap cameras, copy files or deploy a cyber payload. Live footholds improve the odds of ordinary operations in `/ops`.
+- **Cascading cyber effects**: communications intercept sharpens recon and gives strike planners the target's true order of battle; air-defence spoofing blinds radars so drones and strikes get through; supply-chain attacks throttle factory output. Grid and C2 attacks still brown out industry and jam sensors.
 - **Mobile Optimized**: Responsive layout for seamless experience across devices.
 - **Five-domain warfare**: Land, sea, air, space and cyber all shape the same war, from amphibious landings to GPS-guided strikes. See [Five domains](#five-domains).
 
@@ -51,6 +52,13 @@ the victim a casus belli. See `space.config.ts` and `services/military/space.ts`
 It adds a little cyber offence and defence, intel fusion, factory efficiency
 and customs detection at every level. See `ai.config.ts` and
 `services/military/ai.ts`.
+
+**State debt and bailouts.** Bond principal is carried as state debt until it is
+repaid. A president or economy minister can bail out another state from their own
+treasury: the aid lands in the recipient's account, clears its debt first, and
+makes that state's civilians view the donor more favourably. War declarations and
+strikes on civilians sour their stance toward the aggressor. See
+`civic.config.ts` and `services/economy/bailout.ts`.
 
 **Smuggling.** Sanctions and blockades create a shadow economy: states open
 routes for chips, fuel, rare earths, uranium and weapons, and citizens run

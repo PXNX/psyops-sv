@@ -13,6 +13,8 @@ import {
 	stateResourceInventory
 } from "#lib/server/schema.js";
 import { POWER_PLANTS, type PowerPlantType } from "#lib/config/index.js";
+import { stateDebt } from "#lib/server/services/economy/bailout.js";
+import { stancesHeldBy } from "#lib/server/services/politics/civilian-stance.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -95,6 +97,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			totalCollected: Number(treasury.totalCollected),
 			totalSpent: Number(treasury.totalSpent)
 		},
+		debt: await stateDebt(db, stateId),
+		// How this state's civilians view foreign governments: aid and warfare
+		// move these numbers, so the finance desk shows them next to the books.
+		stances: await stancesHeldBy(db, stateId),
 		powerPlants: statePowerPlants,
 		energyInfo,
 		resources: stateResources.map((r) => ({

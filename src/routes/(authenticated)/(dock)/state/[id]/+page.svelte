@@ -3,7 +3,7 @@
      and cabinet, regions, resources, tax schedule and the travel papers the
      viewer holds for this state. -->
 <script lang="ts">
-	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { toast, toastResult } from "#lib/ui/toast.svelte.js";
 	import WarHistory from "#lib/component/WarHistory.svelte";
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import FluentHome20Filled from "~icons/fluent/home-20-filled";
@@ -38,12 +38,14 @@
 	import { enhance } from "$app/forms";
 	import EditStateSheet from "./EditStateSheet.svelte";
 	import { IhlRecord } from "#lib/component/strike/index.js";
-	import { formatPopulation } from "#lib/config/index.js";
+	import { formatPopulation, STANCE_TONE, stanceLabel } from "#lib/config/index.js";
 
 	const { data } = $props();
 
 	let showWarModal = $state(false);
 	let isDeclaringWar = $state(false);
+	let showBailoutModal = $state(false);
+	let isBailingOut = $state(false);
 	let showVisaSheet = $state(false);
 	let isApplyingResidence = $state(false);
 	let showEditStateSheet = $state(false);
@@ -90,6 +92,12 @@
 	};
 
 	const sortedRegions = $derived([...data.regions].sort((a, b) => b.population - a.population));
+
+	const donorStance = $derived(
+		data.bailoutDonor ? (data.stancesAbout.find((s) => s.stateId === data.bailoutDonor!.stateId)?.stance ?? 0) : 0
+	);
+	const stanceTone = (stance: number) => STANCE_TONE[stanceLabel(stance)];
+	const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
 
 	type Office = { href: string; label: string; icon: typeof FluentBuilding20Filled; tone: string };
 	const offices = $derived.by(() => {
@@ -155,6 +163,24 @@
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
+	{#if data.firstPresidentDetail}
+		<aside
+			class="panel rounded-sm p-4 mb-4 border-l-4 border-positive/60 flex items-start gap-3"
+			role="note"
+			aria-label="Your first presidency"
+		>
+			<FluentLightbulb20Filled class="size-5 mt-0.5 shrink-0 text-positive" />
+			<div class="text-sm text-fg-body space-y-1">
+				<p class="font-serif font-bold text-fg">You are President — a field note</p>
+				<p>
+					You speak for this state: declare war, appoint ministers and governors, and spend the treasury through
+					your Economy Minister. Other states' civilians judge those actions — a declaration of war turns them
+					against you, while a bailout buys goodwill. This note appears only once.
+				</p>
+			</div>
+		</aside>
+	{/if}
+
 	<!-- Dossier cover -->
 	<header
 		class="panel rounded-sm p-5 relative overflow-hidden border-t-4"
@@ -233,8 +259,19 @@
 			<p class="mt-4 font-serif italic text-sm sm:text-base text-fg-soft max-w-2xl">{data.state.description}</p>
 		{/if}
 
-		{#if data.isPresident || data.canDeclareWar || data.isForeignMinister}
+		{#if data.isPresident || data.canDeclareWar || data.isForeignMinister || data.bailoutDonor}
 			<div class="mt-4 pt-4 border-t border-line/15 flex flex-wrap gap-2">
+				{#if data.bailoutDonor}
+					<Button
+						type="button"
+						variant="soft-amber"
+						size="sm"
+						icon={FluentMoney20Filled}
+						onclick={() => (showBailoutModal = true)}
+					>
+						Bail Out
+					</Button>
+				{/if}
 				{#if data.isPresident}
 					{#if !data.bloc}
 						<Button href="/bloc" variant="soft-purple" size="sm" icon={FluentFlag20Filled}>Join Bloc</Button>
@@ -305,6 +342,7 @@
 				`/state/${data.state.id}/region`
 			)}
 			{@render fact("Power rating", String(data.state.rating || 0), FluentShield20Filled, "text-positive")}
+			{@render fact("State debt", data.debt.toLocaleString(), FluentMoney20Filled, "text-amber-300")}
 			{#if data.energy}
 				{@render fact("Energy available", `${data.energy.available} MW`, FluentLightbulb20Filled, "text-primary-fg")}
 			{/if}
@@ -313,6 +351,67 @@
 
 	<!-- Conduct in war: public international humanitarian law record -->
 	<IhlRecord record={data.ihl} />
+
+	<!-- Civilian opinion: populations remember who attacked them and who helped -->
+	<section class="panel rounded-sm p-4 sm:p-5 space-y-4">
+		<div class="flex flex-wrap items-baseline justify-between gap-2">
+			<h2 class="section-title">Civilian Stance</h2>
+			<span class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">opinion of foreign states</span>
+		</div>
+		<div class="grid gap-4 sm:grid-cols-2">
+			<div>
+				<h3 class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">Toward {data.state.name}</h3>
+				{#if data.stancesAbout.length}
+					<ul class="divide-y divide-line/10">
+						{#each data.stancesAbout as stance (stance.stateId)}
+							<li class="flex items-center justify-between gap-3 py-2 text-sm">
+								<a href="/state/{stance.stateId}" class="truncate text-fg hover:text-primary-hover">
+									{stance.name}
+								</a>
+								<span class="font-mono shrink-0 {STANCE_TONE[stance.label]}">
+										{signed(stance.stance)} · {stance.label}
+								</span>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="text-xs text-fg-muted">No foreign state has drawn a strong reaction yet.</p>
+				{/if}
+			</div>
+			<div>
+				<h3 class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">How its civilians see others</h3>
+				{#if data.stancesHeld.length}
+					<ul class="divide-y divide-line/10">
+						{#each data.stancesHeld as stance (stance.stateId)}
+							<li class="flex items-center justify-between gap-3 py-2 text-sm">
+								<a href="/state/{stance.stateId}" class="truncate text-fg hover:text-primary-hover">
+									{stance.name}
+								</a>
+								<span class="font-mono shrink-0 {STANCE_TONE[stance.label]}">
+										{signed(stance.stance)} · {stance.label}
+								</span>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="text-xs text-fg-muted">Neutral toward every state so far.</p>
+				{/if}
+			</div>
+		</div>
+		{#if data.bailoutHistory.length}
+			<div class="pt-3 border-t border-line/15">
+				<h3 class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">Recent bailouts received</h3>
+				<ul class="space-y-1 text-xs text-fg-body">
+					{#each data.bailoutHistory as bailout}
+						<li class="flex justify-between gap-3">
+							<span>{bailout.from} · {formatDate(bailout.date)}</span>
+							<span class="font-mono text-positive">{bailout.amount.toLocaleString()}</span>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{/if}
+	</section>
 
 	<!-- At war: front reports -->
 	{#if data.activeWars && data.activeWars.length > 0}
@@ -667,6 +766,72 @@
 		onCooldown={data.editOnCooldown}
 		cooldownEndsAt={data.editCooldownEndsAt}
 	/>
+{/if}
+
+<!-- Bailout: a treasury-to-treasury transfer that buys civilian goodwill -->
+{#if data.bailoutDonor}
+	<Modal bind:open={showBailoutModal} title="Bail Out {data.state.name}" size="default">
+		<div class="space-y-4">
+			<p class="text-sm text-fg-body">
+				Send money from <strong>{data.bailoutDonor.name}</strong>'s treasury (available:
+				<span class="font-mono">{data.bailoutDonor.balance.toLocaleString()}</span>) to this state. The aid clears its
+				debt first and its civilians will see {data.bailoutDonor.name} more favourably
+				<span class="font-mono {stanceTone(donorStance)}">({signed(donorStance)} today)</span>.
+			</p>
+			<form
+				method="POST"
+				action="?/bailout"
+				use:enhance={() => {
+					isBailingOut = true;
+					return async ({ result, update }) => {
+						isBailingOut = false;
+						await update();
+						toastResult(result);
+						if (result.type === "success") {
+							toast.success(String(result.data?.message ?? "Bailout sent"), { duration: 6000 });
+							showBailoutModal = false;
+						}
+					};
+				}}
+			>
+				<label class="block text-xs uppercase tracking-[0.2em] text-fg-muted mb-2" for="bailout-amount">
+					Amount (minimum {data.bailoutMinimum.toLocaleString()})
+				</label>
+				<input
+					id="bailout-amount"
+					name="amount"
+					type="number"
+					min={data.bailoutMinimum}
+					step="1000"
+					max={data.bailoutDonor.balance}
+					required
+					class="input w-full"
+					placeholder={String(data.bailoutMinimum)}
+				/>
+				<div class="flex gap-3 justify-end pt-4">
+					<Button
+						type="button"
+						variant="secondary"
+						size="sm"
+						onclick={() => (showBailoutModal = false)}
+						disabled={isBailingOut}
+					>
+						Cancel
+					</Button>
+					<Button
+						type="submit"
+						variant="soft-amber"
+						size="sm"
+						icon={FluentMoney20Filled}
+						loading={isBailingOut}
+						loadingText="Sending..."
+					>
+						Send Bailout
+					</Button>
+				</div>
+			</form>
+		</div>
+	</Modal>
 {/if}
 
 <!-- War declaration -->

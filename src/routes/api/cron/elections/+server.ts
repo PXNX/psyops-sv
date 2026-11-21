@@ -17,6 +17,7 @@ import {
 import { eq, and, lte } from "drizzle-orm";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { runAutomaticDividends } from "#lib/server/services/economy/dividends.js";
+import { reachFirstTime } from "#lib/server/services/politics/first-time.js";
 import { dtg } from "#lib/utils/dtg.js";
 
 // Give the serverless function enough time to process every state's election in
@@ -261,10 +262,13 @@ async function processElectionResults(election: any) {
 
 		if (leaderMember.length > 0) {
 			const leader = leaderMember[0];
-			await db.delete(presidents).where(eq(presidents.stateId, election.stateId));
-
+			// Count the outgoing term before deleting it, so a re-election is
+			// recorded as term 2 and a first presidency as term 1.
 			const previousPresidents = await db.select().from(presidents).where(eq(presidents.userId, leader.userId));
+			const firstPresidency = previousPresidents.length === 0;
 			const newTerm = previousPresidents.length + 1;
+
+			await db.delete(presidents).where(eq(presidents.stateId, election.stateId));
 
 			await db.insert(presidents).values({
 				userId: leader.userId,
@@ -272,6 +276,7 @@ async function processElectionResults(election: any) {
 				electedAt: new Date(),
 				term: newTerm
 			});
+			if (firstPresidency) await reachFirstTime(db, leader.userId, "president");
 
 			console.log(
 				`🎉 ${winningParty.name} (${winningParty.memberCount} members) leader appointed as President - no votes cast`
@@ -407,10 +412,13 @@ async function processElectionResults(election: any) {
 
 		if (leaderMember.length > 0) {
 			const leader = leaderMember[0];
-			await db.delete(presidents).where(eq(presidents.stateId, election.stateId));
-
+			// Count the outgoing term before deleting it, so a re-election is
+			// recorded as term 2 and a first presidency as term 1.
 			const previousPresidents = await db.select().from(presidents).where(eq(presidents.userId, leader.userId));
+			const firstPresidency = previousPresidents.length === 0;
 			const newTerm = previousPresidents.length + 1;
+
+			await db.delete(presidents).where(eq(presidents.stateId, election.stateId));
 
 			await db.insert(presidents).values({
 				userId: leader.userId,
@@ -418,6 +426,7 @@ async function processElectionResults(election: any) {
 				electedAt: new Date(),
 				term: newTerm
 			});
+			if (firstPresidency) await reachFirstTime(db, leader.userId, "president");
 
 			console.log(
 				`🎉 ${winningParty.partyName} leader (user ${leader.userId}) appointed as President of state ${election.stateId}`

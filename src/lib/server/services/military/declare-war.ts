@@ -4,6 +4,8 @@
 import { and, eq, or } from "drizzle-orm";
 import type { Database } from "#lib/server/db.js";
 import { regions, residences, states, wars } from "#lib/server/schema.js";
+import { STANCE_CONFIG } from "#lib/config/index.js";
+import { adjustCivilianStance } from "../politics/civilian-stance.js";
 
 export class WarDeclarationError extends Error {}
 
@@ -56,6 +58,14 @@ export async function declareWar(
 			status: "active"
 		})
 		.returning({ id: wars.id });
+
+	// The population that was just attacked blames the aggressor. Recorded
+	// separately from the war itself so the stance survives the peace.
+	try {
+		await adjustCivilianStance(db, input.targetStateId, input.attackerStateId, STANCE_CONFIG.WAR_DECLARATION);
+	} catch (err) {
+		console.error("Could not record the civilian stance after a war declaration:", err);
+	}
 
 	// Tell everyone living in either state, without holding up the request.
 	if (input.notify === false) return { warId: war.id };

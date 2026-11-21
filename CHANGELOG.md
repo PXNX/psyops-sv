@@ -16,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- State debt: bond principal is recorded as debt on the treasury and cleared when
+  the bond is repaid or the state is bailed out; the balance and debt show on the
+  state dossier and the finance desk
+- Bailouts: a president or economy minister can transfer treasury funds to another
+  state, clearing its debt and winning over its civilians; the aid, the debt
+  relieved and the goodwill gained are all shown on the recipient's dossier
+- Civilian stances toward foreign states: declaring war and striking civilians turn
+  a population against the aggressor, aid turns it friendly, and both are shown on
+  the state dossier and economy page
+- One-off field notes explaining a first company and a first presidency, shown once
+  on the company dossier and the state dossier respectively
 - Civilian opinion now drives a derived regime stability score (0–100): war crimes,
   environmental policy, conscription pressure, education, wages, cyberattacks and
   propaganda all move it, and defending the homeland rallies support. The least

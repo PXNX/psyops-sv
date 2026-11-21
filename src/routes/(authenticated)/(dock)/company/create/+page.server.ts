@@ -8,6 +8,7 @@ import { uploadFileFromForm } from "#lib/server/backblaze.js";
 import { superValidate, message } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createCompanySchema } from "./schema";
+import { reachFirstTime } from "#lib/server/services/politics/first-time.js";
 
 const COMPANY_COST = 100000;
 const COOLDOWN_DAYS = 30;
@@ -177,6 +178,9 @@ export const actions: Actions = {
 					ownerId: account.id
 				})
 				.returning();
+
+			// The first company earns a one-off explainer on its dossier.
+			await reachFirstTime(tx, account.id, "company");
 
 			return company;
 		});

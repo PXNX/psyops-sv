@@ -244,6 +244,28 @@ Unique: (proposalId, voterId).
 | `balance`        | int         | Current treasury balance |
 | `totalCollected` | int         | Lifetime revenue         |
 | `totalSpent`     | int         | Lifetime spending        |
+| `debt`           | int         | Outstanding bond principal |
+
+Bond purchases add to `debt`; repayment (at maturity or early redemption) and
+bailouts pay it down. The balance and debt are visible on the state dossier and
+the Ministry of Economy page.
+
+### Bailouts
+
+A president or economy minister can transfer treasury funds to another state
+(minimum 10,000). The amount is debited from the donor with a balance check,
+credited to the recipient, then applied to the recipient's debt. One row per
+bailout is kept in `state_bailouts` with the debt relieved and the official who
+authorised it. The rescued state's civilians gain stance toward the donor; the
+amount of goodwill scales with the size of the aid and is capped.
+
+### Civilian stance
+
+Civilians hold a separate numeric stance (−100…100) toward each foreign state,
+stored per `(observerStateId, targetStateId)` in `civilian_stances`. A missing
+row is neutral. Declaring war and striking a state's civilians move its stance
+toward the attacker into negative territory; bailouts move it positive. The
+state dossier lists who holds which stance, with a short label per score.
 
 ### Active Taxes
 

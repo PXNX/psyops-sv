@@ -41,6 +41,7 @@ import {
 	setDividendPolicy
 } from "#lib/server/services/economy/dividends.js";
 import { companyEarnings } from "#lib/server/services/economy/earnings.js";
+import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
 import type { PageServerLoad, Actions } from "./$types";
 
 // Edit cost/cooldown for the "Edit Company" bottom sheet — ported as-is from the
@@ -446,7 +447,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		companyEditCost: COMPANY_EDIT_COST,
 		companyEditCooldownHours: COMPANY_EDIT_COOLDOWN_HOURS,
 		isCompanyEditOnCooldown,
-		companyEditCooldownEndsAt
+		companyEditCooldownEndsAt,
+		// Claimed on load so the field note is shown exactly once, to the owner.
+		firstCompanyDetail: isOwner ? await takeFirstTimeDetail(db, account.id, "company") : false
 	};
 };
 

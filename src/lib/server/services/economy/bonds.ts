@@ -53,12 +53,14 @@ export async function buyStateBond(
 		await debitWallet(tx, userId, principal);
 		await tx
 			.insert(stateTreasury)
-			.values({ stateId, balance: principal, totalCollected: principal, totalSpent: 0 })
+			.values({ stateId, balance: principal, totalCollected: principal, totalSpent: 0, debt: principal })
 			.onConflictDoUpdate({
 				target: stateTreasury.stateId,
 				set: {
 					balance: sql`${stateTreasury.balance} + ${principal}`,
 					totalCollected: sql`${stateTreasury.totalCollected} + ${principal}`,
+					// A bond is a loan: the treasury gains cash and gains debt.
+					debt: sql`${stateTreasury.debt} + ${principal}`,
 					updatedAt: now
 				}
 			});
@@ -124,6 +126,7 @@ export async function runBondCoupons(db: Database, now = new Date()) {
 						.set({
 							balance: sql`${stateTreasury.balance} - ${bond.principal}`,
 							totalSpent: sql`${stateTreasury.totalSpent} + ${bond.principal}`,
+							debt: sql`greatest(0, ${stateTreasury.debt} - ${bond.principal})`,
 							updatedAt: now
 						})
 						.where(and(eq(stateTreasury.stateId, bond.stateId), gte(stateTreasury.balance, bond.principal)))
@@ -165,6 +168,7 @@ export async function redeemBond(
 			.set({
 				balance: sql`${stateTreasury.balance} - ${bond.principal}`,
 				totalSpent: sql`${stateTreasury.totalSpent} + ${bond.principal}`,
+				debt: sql`greatest(0, ${stateTreasury.debt} - ${bond.principal})`,
 				updatedAt: now
 			})
 			.where(and(eq(stateTreasury.stateId, bond.stateId), gte(stateTreasury.balance, bond.principal)))
