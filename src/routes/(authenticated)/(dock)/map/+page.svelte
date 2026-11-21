@@ -75,32 +75,32 @@
 	const mapSteps = [
 		{
 			id: "naval",
-			title: "1. See-Modus wählen",
-			body: "Klicken Sie oben links auf das Schiff. Jetzt sehen Sie nur die See und die Küstenregionen; das Binnenland wird ausgeblendet.",
+			title: "1. Naval mode",
+			body: "Click the ship icon in the top-left rail. You will now see only the sea and coastal regions; the inland fades out.",
 			target: '[data-tutorial="naval-mode"]',
 			done: "mode-naval",
-			manual: "Modus anzeigen"
+			manual: "Show mode"
 		},
 		{
 			id: "hex",
-			title: "2. Hex auswählen",
-			body: "Klicken Sie auf ein farbiges Sechskant. Das Panel zeigt Koordinaten, EEZ, Hafen, Schiffe und Minen – und einen Link ins Navy-Console.",
+			title: "2. Select a hex",
+			body: "Click a coloured hexagon. The panel shows coordinates, EEZ, port, ships and mines — plus a link to the navy console.",
 			target: '[data-tutorial="hex-cell"]',
 			done: "hex-selected"
 		},
 		{
 			id: "aerial",
-			title: "3. Luftraum ansehen",
-			body: "Klicken Sie auf das Flugzeug. Mehrere Hexfelder und die Regionen darüber werden zu Sektoren LR-A1 … zusammengefasst.",
+			title: "3. Airspace view",
+			body: "Click the aircraft icon. Several hexes and the regions above them become sectors LR-A1 … with unit counts.",
 			target: '[data-tutorial="aerial-mode"]',
 			done: "mode-aerial",
-			manual: "Modus anzeigen"
+			manual: "Show mode"
 		},
 		{
 			id: "done",
-			title: "4. Fertig",
-			body: "Die technischen Hintergründe stehen in /docs/map-modes und /docs/navy. Der ? Button unten rechts startet diese Anleitung erneut.",
-			manual: "Verstanden"
+			title: "4. Done",
+			body: "The technical background is in /docs/map-modes and /docs/navy. Restart the tour from your profile or the docs index.",
+			manual: "Finish"
 		}
 	];
 

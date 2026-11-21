@@ -1,91 +1,83 @@
 ---
-title: Luftwaffe und Einsätze
-description: Flugzeuge ausbilden, Treibstoff und Erfahrung nutzen und Einsätze beauftragen.
-order: 5
+title: Air power and missions
+description: Train squadrons, manage fuel and experience, and task missions.
+order: 23
+category: "Conflict & forces"
 ---
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
 </script>
 
-# Luftwaffe und Einsätze
+# Air power and missions
 
-> **Interaktiv lernen:** [Luftwaffen-Tutorial jetzt starten](/navy?tutorial=air) – die Anleitung führt Sie durch Geschwader, Einsätze und Ziele.
+Aircraft are trained under **Forces** (`/training`) and controlled in the navy
+console under **Air operations**. Every squadron has a role, burns fuel and
+gains experience.
 
-Die Luftwaffe wird unter **Forces** (/training) ausgebildet und im Navy-Console
-unter **Air operations** gesteuert. Jedes Geschwader hat eine Rolle, verbraucht
-Treibstoff und sammelt Erfahrung.
+<Mermaid label="Life cycle of a sortie" chart={"flowchart LR\nT[Forces: train squadron] --> E[Experience + fuel]\nE --> A[Air operations: choose task]\nA --> R{Role matches?}\nR -->|no| X[rejected]\nR -->|yes| L[Launch mission — fuel spent now]\nL --> C[Cron: flight time]\nC --> W[Effect + experience gain]"} />
 
-<Mermaid
-  label="Lebenszyklus eines Einsatzes"
-  chart={"flowchart LR\n  T[Forces: Geschwader trainieren] --> E[Erfahrung + Treibstoff]\n  E --> A[Air operations: Aufgabe wählen]\n  A --> R{Rolle passt?}\n  R -->|nein| X[abgelehnt]\n  R -->|ja| L[Launch mission — Treibstoff sofort weg]\n  L --> C[Cron: Flugzeit abwarten]\n  C --> W[Wirkung + Erfahrungsgewinn]"}
-/>
+![Luftraum sectors on the map](/images/docs/luftraum.svg)
 
-![Luftraum-Sektoren auf der Karte](/images/docs/luftraum.svg)
+## 1. Train squadrons
 
-## 1. Geschwader ausbilden
+On the **Forces** page choose one of these types. Training takes several hours
+and costs money and materials.
 
-Auf der Seite **Forces** wählen Sie einen der folgenden Typen. Die Ausbildung
-dauert mehrere Stunden und kostet Geld und Material.
-
-| Typ | Rolle | Was er kann |
+| Type | Role | What it does |
 | --- | --- | --- |
-| Transportflugzeug | Airlift | Truppen und Versorgung between Regionen |
-| Bomber | Strategische Bombardierung | Industrie und Infrastruktur einer Region |
-| Tanker | Luftbetankung | Treibstoff an Schiffe/Hex oder Einheiten |
-| Fighterjet | Lufthoheit | Abfangen feindlicher Flugzeuge |
-| Close air support | Nahunterstützung | Entlastet Fronten im Gefecht |
-| Naval bomber | Seezielbekämpfung | Greift Schiffe von Küstenflugplätzen an |
-| Helikopter | Utility / U-Boot-Jagd | Kleine Lasten, beste ASW-Wirkung |
+| Transport aircraft | Airlift | Moves troops and supply between regions |
+| Bomber | Strategic bombing | Hits industry and infrastructure |
+| Tanker aircraft | Refuelling | Passes fuel to ships or units |
+| Fighter jet | Air superiority | Intercepts enemy aircraft |
+| Close air support | Close support | Eases pressure on a front line |
+| Naval bomber | Naval strike | Attacks ships from coastal airfields |
+| Helicopter | Utility / ASW | Small loads, best submarine hunter |
 
-## 2. Treibstoff und Erfahrung
+## 2. Fuel and experience
 
-- **Treibstoff** wird beim Gefecht und bei Einsätzen verbraucht. Ein leeres
-  Geschwader kämpft nur noch mit halber Kraft. Der Cron füllt Tanks aus der
-  staatlichen militärischen Reserve langsam wieder auf; die Anzeige in
-  **Forces** zeigt den aktuellen Stand (FUEL-Balken).
-- **Erfahrung** steigt durch Übungen (+10) und durch jeden Einsatz, in dem das
-  Geschwader Feuer erhalten hat. Erfahrene Besatzungen richten mehr Schaden an
-  (Rekrut 1,0 → Elite 1,2). Verluste im Gefecht kosten Erfahrung.
+- **Fuel** is burned in combat and on missions. An empty squadron fights at
+  half strength. The cron refills tanks from the state's military reserve; the
+  FUEL bar on the Forces page shows the current level.
+- **Experience** rises through exercises (+10) and every mission or battle in
+  which the squadron fired. Veterans deal more damage (recruit 1.0 → elite
+  1.2). Casualties dilute experience.
 
-## 3. Einsatz beauftragen
+## 3. Task a mission
 
-Im Navy-Console öffnen Sie **Air operations**:
+In the navy console open **Air operations**:
 
-1. Geschwader auswählen (mit Treibstoff- und Erfahrungsanzeige),
-2. Einsatzart wählen,
-3. Ziel auswählen – Regionen per Dropdown, Seeziele per Hex auf der Karte,
-4. **Launch mission** klicken.
+1. select a ready squadron (fuel and experience shown),
+2. choose a mission type,
+3. pick a target — regions via the dropdown, sea targets via a map hex,
+4. click **Launch mission**.
 
-Der Einsatz braucht die passende Rolle. Ein Fighterjet kann z. B. keine
-strategische Bombardierung fliegen. Der Treibstoff wird sofort abgezogen, die
-Wirkung tritt ein, wenn der Flugtimer abläuft.
+The mission requires the matching role; a fighter jet cannot fly strategic
+bombing, for example. Fuel is deducted immediately and the effect lands when
+the flight timer completes.
 
-| Einsatz | Ziel | Wirkung |
+| Mission | Target | Effect |
 | --- | --- | --- |
-| Strategic bombing | Region | Infrastruktur und Wirtschaft sinken |
-| Logistic strike | Region | Versorgung 12 h lang gekürzt |
-| Naval bombing | Hex | feindliches Schiff im Hex wird beschädigt |
-| Airlift | eigene Region | Versorgungsschub 12 h |
-| Reconnaissance | Hex | Seeaufklärungsbericht mit Kontakten und Minen |
-| Refuel | eigene Region | Schiffe im Hafenhex werden betankt |
-| Battlefield support | Region | Versorgung 6 h lang entlastet |
+| Strategic bombing | Region | Infrastructure and economy reduced |
+| Logistic strike | Region | Supply cut for 12 h |
+| Naval bombing | Hex | Enemy ship in the hex damaged |
+| Airlift | Own region | Supply boost for 12 h |
+| Reconnaissance | Hex | Sea intel report with contacts and mines |
+| Refuel | Own region | Ships at the port refuelled |
+| Battlefield support | Region | Supply pressure eased for 6 h |
 
-<Mermaid
-  label="Rolle bestimmt den Einsatz"
-  chart={"flowchart TD\n  B[Bomber] --> SB[Strategic bombing]\n  B --> LS[Logistic strike]\n  N[Naval bomber / Helikopter] --> NB[Naval bombing]\n  N --> ASW[U-Boot-Jagd auf See]\n  TR[Transportflugzeug] --> AL[Airlift]\n  TK[Tanker] --> RF[Refuel]\n  F[Fighterjet] --> AO[Air superiority]\n  CS[Close air support] --> BS[Battlefield support]\n  H[Helikopter · utility] --> RC[Reconnaissance]"}
-/>
+<Mermaid label="Role determines mission" chart={"flowchart TD\nB[Bomber] --> SB[Strategic bombing]\nB --> LS[Logistic strike]\nN[Naval bomber / helicopter] --> NB[Naval bombing]\nN --> ASW[Submarine hunt at sea]\nTR[Transport aircraft] --> AL[Airlift]\nTK[Tanker] --> RF[Refuel]\nF[Fighter jet] --> AO[Air superiority]\nCS[Close air support] --> BS[Battlefield support]\nH[Helicopter · utility] --> RC[Reconnaissance]"} />
 
-## 4. Luftraum auf der Karte
+## 4. Airspace on the map
 
-Im **Aerial**-Modus der [Karte](/map) werden mehrere Hexfelder und die Regionen
-darüber zu einem **Luftraum** (LR-A1 …) zusammengefasst. Die Beschriftung zeigt
-Regionen, Schiffe und einsatzbereite Flugzeuge pro Sektor.
+In **Aerial** mode on the [map](/map), several hexes and the regions above them
+are grouped into one **Luftraum** sector (LR-A1 …). The label counts regions,
+ships and ready aircraft.
 
-## 5. Typische Einstiegsroute
+## 5. A typical opening
 
-1. Zuerst ein Tanker- und ein Transportgeschwader ausbilden.
-2. Seeaufklärung über einem Hex starten (`sonar` für U-Boote).
-3. Naval bomber gegen das entdeckte Schiff schicken.
-4. Nach dem Gefecht Treibstoff auffüllen und Erfahrung prüfen.
-5. Minen legen, um feindliche Frachtschiffe an der Einfahrt zu hindern.
+1. Train a tanker and a transport squadron first.
+2. Start sea reconnaissance over a hex (sonar for submarines).
+3. Send a naval bomber against the detected ship.
+4. Refuel and check experience after combat.
+5. Lay mines to stop enemy merchant traffic at the entrance.

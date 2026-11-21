@@ -1,67 +1,53 @@
 ---
-title: Karte und Luftraum
-description: See-, Land- und Luftmodus nutzen und Hexfelder auswählen.
-order: 6
+title: Map and airspace
+description: Use the naval, land and aerial modes and select hexes.
+order: 24
+category: "Conflict & forces"
 ---
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
 </script>
 
-# Karte und Luftraum
+# Map and airspace
 
-> **Interaktiv lernen:** [Karten-Tutorial jetzt starten](/map?tutorial=map) – die Anleitung führt Sie durch Modi und Hex-Auswahl.
+The [map](/map) has three modes in the top-left corner. Each shows a different
+view of the same world.
 
-<Mermaid
-  label="Welcher Modus für welche Frage"
-  chart={"flowchart TD\n  Q[Was will ich wissen?] --> S[Wo sind Schiffe und Minen?]\n  Q --> L[Wo kämpfen meine Heere?]\n  Q --> A[Wo deckt meine Luftwaffe?]\n  S --> NM[See-Modus: EEZ, Hex, Hafen]\n  L --> LM[Land-Modus: Regionen, Einheiten, Schlachten]\n  A --> AM[Luft-Modus: Luftraum-Sektoren LR-A1 …]\n  NM --> H[Hex anklicken → Detailpanel → Navy-Console]\n  AM --> H"}
-/>
+<Mermaid label="Which mode for which question" chart={"flowchart TD\nQ[What do I want to know?] --> S[Where are ships and mines?]\nQ --> L[Where are my armies fighting?]\nQ --> A[Where does my air force cover?]\nS --> NM[Naval mode: EEZ, hexes, ports]\nL --> LM[Land mode: regions, units, battles]\nA --> AM[Aerial mode: Luftraum sectors LR-A1 …]\nNM --> H[Click a hex → detail panel → navy console]\nAM --> H"} />
 
-![Luftraum-Sektoren](/images/docs/luftraum.svg)
+![Luftraum sectors](/images/docs/luftraum.svg)
 
-Die [Karte](/map) hat links oben drei Modi. Jeder Modus zeigt eine andere
-Sicht auf dieselbe Welt.
+## Naval mode
 
-## Naval-Modus (See)
+- Shows only the sea and coastal regions. Inland regions fade out and land
+  units, battles and army intel are hidden.
+- Hexes exist only inside a coastal state's EEZ and are clipped to the real
+  coastline — there are no hexes on land.
+- Ports (⚓), ships and minefields (✳) sit on their hexes.
+- Clicking a hex opens a panel with coordinates, EEZ owner, port, ships and
+  mines, plus a link to the navy console.
 
-- Zeigt nur das Meer und die Küstenregionen. Binnenregionen werden stark
-  ausgeblendet, Landeinheiten, Schlachten und Heeresaufklärung sind verborgen.
-- Die Sechskante liegen **innerhalb der EEZ** der Küstenstaaten und werden an
-  der echten Küstenlinie abgeschnitten – es gibt keine Hexfelder auf Land.
-- Häfen (⚓), Schiffe und Minen (✳) sitzen auf ihren Hexfeldern.
-- Ein Klick auf ein Hex öffnet ein Panel mit Koordinaten, EEZ-Eigentümer,
-  Hafen, Schiffen und Minen sowie einem Link ins Navy-Console.
+## Land mode
 
-## Land-Modus
+Shows regions, land and air forces, battles, reconnaissance and airstrikes as
+before. Sea overlays are hidden.
 
-- Zeigt Regionen, Heeres- und Luftstreitkräfte, Schlachten, Aufklärung und
-  Luftangriffe wie gehabt.
-- Die See-Overlays sind ausgeblendet.
+## Aerial mode
 
-## Aerial-Modus (Luft)
+Several hexes and the regions above them are grouped into a **Luftraum**
+(LR-A1 … LR-C4). Each sector shows the number of regions, ships and ready
+aircraft.
 
-- Mehrere Hexfelder und die Regionen darüber werden zu einem **Luftraum**
-  (`LR-A1` bis `LR-C4`) gruppiert.
-- Jeder Sektor zeigt die Anzahl Regionen, Schiffe und einsatzbereiter Flugzeuge.
-- Nutzen Sie die Sektoren, um Luftoperationen zu planen – Details in
-  [Luftwaffe und Einsätze](/docs/air).
+## Selecting a hex
 
-## Hex auswählen
+1. Switch to **Naval** or **Aerial**.
+2. Click a hex (not a region).
+3. The panel shows coordinates `q,r`, the EEZ owner and all contacts.
+4. "Open in fleet console →" opens `/navy?hex=q,r` with that hex preselected.
 
-1. Schalten Sie auf **Naval** oder **Aerial**.
-2. Klicken Sie auf ein Hex (nicht auf eine Region).
-3. Das Panel zeigt die Koordinaten `q,r`, die EEZ-Zugehörigkeit und alle
-   Kontakte auf diesem Feld.
-4. „Open in fleet console →" öffnet `/navy?hex=q,r` mit vorausgewähltem Hex.
-   Dort können Sie Seeaufklärung starten, Schiffe hinschicken oder Minen legen.
+<Mermaid label="Fog of war" chart={"sequenceDiagram\nparticipant P as Player\nparticipant M as Map\nparticipant S as Sea intel\nP->>S: Launch sonar sweep over hex\nS-->>P: Report (valid 12 h)\nP->>M: Open naval mode\nM->>M: Filter enemy ships by fresh report\nM-->>P: Contacts visible, rest hidden"} />
 
-## Tipp: Fog of War
-
-<Mermaid
-  label="Fog of War"
-  chart={"sequenceDiagram\n  participant P as Spieler\n  participant K as Karte\n  participant S as Seeaufklärung\n  P->>S: Sonar-Sweep über Hex starten\n  S-->>P: Bericht (12 h gültig)\n  P->>K: See-Modus öffnen\n  K->>K: feindliche Schiffe mit frischem Bericht filtern\n  K-->>P: Kontakte sichtbar, Rest verborgen"}
-/>
-
-Feindliche Schiffe erscheinen auf der Karte nur, wenn ein frischer
-Seeaufklärungsbericht (Sonar, Radar, SAR oder Luftaufklärung) ihr Hex in den
-letzten 12 Stunden gesehen hat. Ohne Aufklärung ist die See „blank".
+Enemy ships only appear if a fresh sea intel report (sonar, radar, SAR or air
+reconnaissance) saw their hex in the last 12 hours. Without reconnaissance the
+sea is blank.

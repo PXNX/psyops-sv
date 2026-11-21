@@ -7,6 +7,8 @@ export interface DocMeta {
 	description?: string;
 	/** Sort order in the docs navigation. Lower comes first. */
 	order: number;
+	/** Navigation group; docs without one land in "Weitere Themen". */
+	category?: string;
 }
 
 export interface LoadedDoc {
@@ -60,7 +62,8 @@ function toMeta(path: string, raw: Record<string, unknown> | undefined): DocMeta
 		slug,
 		title: typeof m.title === "string" ? m.title : slug,
 		description: typeof m.description === "string" ? m.description : undefined,
-		order: typeof m.order === "number" ? m.order : 999
+		order: typeof m.order === "number" ? m.order : 999,
+		category: typeof m.category === "string" ? m.category : undefined
 	};
 }
 
@@ -68,6 +71,18 @@ function toMeta(path: string, raw: Record<string, unknown> | undefined): DocMeta
 export const docs: DocMeta[] = Object.entries(metaModules)
 	.map(([path, meta]) => toMeta(path, meta))
 	.sort((a, b) => a.order - b.order || a.title.localeCompare(b.title));
+
+/** Docs grouped by category, in `order`, for the index and sidebar. */
+export function groupedDocs(all: DocMeta[] = docs): { category: string; items: DocMeta[] }[] {
+	const groups = new Map<string, DocMeta[]>();
+	for (const doc of all) {
+		const category = doc.category ?? "Weitere Themen";
+		const list = groups.get(category) ?? [];
+		list.push(doc);
+		groups.set(category, list);
+	}
+	return [...groups.entries()].map(([category, items]) => ({ category, items }));
+}
 
 export function getDocMeta(slug: string): DocMeta | undefined {
 	return docs.find((d) => d.slug === slug);

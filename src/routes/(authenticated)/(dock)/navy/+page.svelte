@@ -42,76 +42,76 @@
 	const navySteps = [
 		{
 			id: "hex",
-			title: "1. Hex auswählen",
-			body: "Klicken Sie auf ein Sechskant auf der Karte. Das Panel zeigt dann Hafen, Schiffe und Minen dieses Feldes.",
+			title: "1. Select a hex",
+			body: "Click one of the sea hexagons. The panel then shows the port, ships and mines on that tile.",
 			target: '[data-tutorial="navy-hex"]',
 			done: "hex-selected"
 		},
 		{
 			id: "port",
-			title: "2. Hafen bauen",
-			body: "Im markierten Formular einen Namen eingeben, eine Küstenregion wählen und absenden. Nur eine Region kann einen Hafen haben – er entsteht in ihrer EEZ.",
+			title: "2. Build a port",
+			body: "Enter a name in the highlighted form, pick a coastal region and submit. Each region can hold exactly one port, placed inside its EEZ.",
 			target: '[data-tutorial="build-port"]',
 			done: "port-built",
-			manual: "Formular anzeigen"
+			manual: "Show form"
 		},
 		{
 			id: "dock",
-			title: "3. Dock bauen",
-			body: "Klicken Sie auf den markierten Button, um im Hafen ein Dock zu errichten oder seine Stufe zu erhöhen. Mehr Stufen bedeuten mehr Baubays.",
+			title: "3. Build a dock",
+			body: "Click the highlighted button to build a dock or raise its level. More levels mean more construction bays.",
 			target: '[data-tutorial="dock-button"]',
 			done: "dock-built",
-			manual: "Button anzeigen"
+			manual: "Show button"
 		},
 		{
 			id: "shipyard",
-			title: "4. Schiff ordern",
-			body: "Wählen Sie im Shipyard ein Dock und eine Schiffsklasse und klicken Sie auf „Add to queue“. Das Schiff erscheint nach dem Bau im Hafen.",
+			title: "4. Order a ship",
+			body: "In the Shipyard pick a dock and a class, then click “Add to queue”. The hull appears in the port once construction finishes.",
 			target: '[data-tutorial="shipyard"]',
 			done: "ship-ordered",
-			manual: "Shipyard anzeigen"
+			manual: "Show shipyard"
 		},
 		{
 			id: "intel",
-			title: "5. Seeaufklärung",
-			body: "Starten Sie im markierten Panel einen Sonar-Durchgang über dem ausgewählten Hex. Sonar ist der einzige Sensor, der zuverlässig U-Boote findet.",
+			title: "5. Sea reconnaissance",
+			body: "Launch a sonar sweep over the selected hex. Sonar is the only sensor that reliably finds submarines; the details are in /docs/navy.",
 			target: '[data-tutorial="sea-intel"]',
 			done: "sea-intel",
-			manual: "Panel anzeigen"
+			manual: "Show panel"
 		},
 		{
 			id: "air",
-			title: "6. Luftoperation",
-			body: "Weisen Sie im Panel Air operations ein Geschwader einer Aufgabe zu – zum Beispiel Seezielbekämpfung oder Aufklärung. Die Details stehen in /docs/air.",
+			title: "6. Air operations",
+			body: "Task a squadron with a mission in the Air operations panel — naval strike or reconnaissance, for example. See /docs/air for the rules.",
 			target: '[data-tutorial="air-ops"]',
-			manual: "Verstanden"
+			manual: "Finish"
 		}
 	];
 
 	const airSteps = [
 		{
 			id: "panel",
-			title: "1. Air operations öffnen",
-			body: "Hier stehen alle einsatzbereiten Geschwader mit Treibstoff und Erfahrung. Klicken Sie in das Formular, um zu beginnen.",
+			title: "1. Open Air operations",
+			body: "This panel lists every ready squadron with its fuel and experience. Click inside the form to begin.",
 			target: '[data-tutorial="air-ops"]',
 			done: "air-panel-open",
-			manual: "Formular anzeigen"
+			manual: "Show form"
 		},
 		{
 			id: "kind",
-			title: "2. Einsatz wählen",
-			body: "Wählen Sie eine Einsatzart. Jede verlangt eine bestimmte Rolle: Bomber für Bombardierung, Naval bomber für Seeziele, Tanker für Betankung.",
+			title: "2. Choose a mission",
+			body: "Pick a mission type. Each requires a role: bombers for bombing, naval bombers for sea targets, tankers for refuelling.",
 			target: '[data-tutorial="air-kind"]',
 			done: "air-kind-changed",
-			manual: "Auswahl anzeigen"
+			manual: "Show selector"
 		},
 		{
 			id: "launch",
-			title: "3. Starten",
-			body: "Ziel wählen und „Launch mission“ klicken. Der Treibstoff wird sofort abgezogen, die Wirkung kommt nach dem Flug – Details in /docs/air.",
+			title: "3. Launch",
+			body: "Choose a target and click “Launch mission”. Fuel is spent immediately and the effect lands after the flight — see /docs/air.",
 			target: '[data-tutorial="air-ops"]',
 			done: "air-mission",
-			manual: "Formular anzeigen"
+			manual: "Show form"
 		}
 	];
 

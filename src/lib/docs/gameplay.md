@@ -1,33 +1,35 @@
 ---
-title: Spielablauf
-description: Die wichtigsten Systeme von Psyops im Überblick.
+title: Gameplay overview
+description: The core systems of Psyops at a glance.
 order: 2
+category: "Getting started"
 ---
 
-# Spielablauf
+# Gameplay overview
 
-Psyops verbindet Wirtschaft, Politik und Militär in einer gemeinsamen Welt.
-Dieser Abschnitt fasst die zentralen Systeme zusammen.
+Psyops combines economics, politics and warfare in one shared world. This page
+summarises the central systems; each one has its own tutorial.
 
-## Wirtschaft
+| Area | Tutorial |
+| --- | --- |
+| Making money, factories, companies, market | [Economy](/docs/economy) |
+| Regions, residence, travel, population | [Society](/docs/society) |
+| Parties, elections, proposals, cabinet | [Politics](/docs/politics) |
+| Chat, posts, newspapers | [Community](/docs/community) |
+| Armies, battles, wars, strikes | [Conflict](/docs/conflict) |
+| Reconnaissance, cyber, infiltration | [Intelligence](/docs/intel) |
+| Hex sea, ports, docks, ships, mines | [Naval warfare](/docs/navy) |
+| Aircraft types and directed missions | [Air power](/docs/air) |
+| Map modes and hex selection | [Map & airspace](/docs/map-modes) |
 
-- **Fabriken** produzieren Waren, die Sie auf dem **Markt** verkaufen können.
-- **Unternehmen** bündeln Ihre Produktion und Mitarbeiter.
-- **Transaktionen** dokumentieren jeden Geldfluss transparent.
+## How the world ticks
 
-## Politik
+Background jobs advance production, elections, battles, travel, energy and the
+fleet every few minutes. You can see the schedule in `vercel.json` and the
+implementation under `src/routes/api/cron/`.
 
-- Treten Sie einer **Partei** bei oder gründen Sie eine eigene.
-- Nehmen Sie an **Wahlen** teil und stellen Sie **Vorschläge** zur Abstimmung.
-- Verwalten Sie als Amtsträger das **Budget** und die **Außenpolitik** Ihres Staates.
+## Domains
 
-## Militär
-
-- Beteiligen Sie sich an **Schlachten** und unterstützen Sie Ihre Verbündeten.
-- Koordinieren Sie größere Konflikte über das **Kriegs**-System.
-- **Training** verbessert Ihre Kampfkraft für kommende Einsätze.
-
-## Kommunikation
-
-- Diskutieren Sie in **Chats** und über **Beiträge** mit anderen Spielern.
-- Bleiben Sie über den **Posteingang** und Benachrichtigungen auf dem Laufenden.
+Every action belongs to one of five domains: land, sea, air, space and cyber.
+A side that fields several domains fights better than a one-domain army. See
+`domains.config.ts` for the details.

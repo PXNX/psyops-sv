@@ -4,7 +4,6 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 	import { page } from "$app/state";
-	import IconInfo from "~icons/fluent/question-circle-24-regular";
 	import IconClose from "~icons/fluent/dismiss-20-regular";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
 
@@ -28,7 +27,7 @@
 		title?: string;
 		steps: TutorialStep[];
 	}
-	let { id, title = "Interaktive Anleitung", steps }: Props = $props();
+	let { id, title = "Interactive guide", steps }: Props = $props();
 
 	let open = $state(false);
 	let index = $state(0);
@@ -167,30 +166,23 @@
 					<div class="text-[10px] uppercase tracking-[0.18em] text-fg-muted">{title} · {index + 1}/{steps.length}</div>
 					<h3 class="truncate text-sm font-semibold text-heading">{step?.title}</h3>
 				</div>
-				<IconButton icon={IconClose} label="Anleitung beenden" size="xs" shape="square" variant="ghost" onclick={finish} />
+				<IconButton icon={IconClose} label="End guide" size="xs" shape="square" variant="ghost" onclick={finish} />
 			</div>
 			<p class="mt-2 text-xs leading-relaxed text-fg-soft">{step?.body}</p>
 			<div class="mt-3 flex items-center justify-between gap-2">
-				<button class="text-[11px] text-fg-muted hover:underline" onclick={finish}>Überspringen</button>
+				<button class="text-[11px] text-fg-muted hover:underline" onclick={finish}>Skip</button>
 				<div class="flex items-center gap-1">
-					{#if index > 0}<Button size="xs" variant="ghost" onclick={back}>Zurück</Button>{/if}
-					<Button size="xs" onclick={advance}>{step?.manual ?? (index < steps.length - 1 ? "Weiter" : "Fertig")}</Button>
+					{#if index > 0}<Button size="xs" variant="ghost" onclick={back}>Back</Button>{/if}
+					<Button size="xs" onclick={advance}>{step?.manual ?? (index < steps.length - 1 ? "Next" : "Finish")}</Button>
 				</div>
 			</div>
 		</div>
-	{:else}
-		<button class="tour-help" onclick={restart} title="{title} erneut starten" aria-label={title}>
-			<IconInfo class="size-5" />
-		</button>
 	{/if}
 {/if}
 
 <style>
 	@reference "../../app.css";
 
-	.tour-help {
-		@apply fixed bottom-10 right-3 z-40 grid size-9 place-items-center rounded-full border border-line/30 bg-surface-2 text-fg-muted shadow-lg transition-colors hover:text-primary-fg md:bottom-12 md:right-4;
-	}
 	.tour-spotlight {
 		@apply pointer-events-none fixed z-40 rounded-md border-2 border-primary;
 		box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);

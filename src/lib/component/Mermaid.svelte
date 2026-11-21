@@ -32,7 +32,7 @@
 	{:else if failed}
 		<pre class="mermaid-fallback">{chart}</pre>
 	{:else}
-		<div class="mermaid-loading">Diagramm wird geladen …</div>
+		<div class="mermaid-loading">Loading diagram …</div>
 	{/if}
 	{#if label}<figcaption>{label}</figcaption>{/if}
 </figure>

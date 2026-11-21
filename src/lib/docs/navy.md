@@ -1,112 +1,102 @@
 ---
-title: Seekrieg – Schiffe, Häfen und Docks
-description: "Schritt-für-Schritt: vom ersten Hafen bis zur blockierten See."
-order: 4
+title: Naval warfare — ships, ports and docks
+description: "Step by step: from your first port to a blockaded sea."
+order: 22
+category: "Conflict & forces"
 ---
 
 <script>
   import Mermaid from "../component/Mermaid.svelte";
 </script>
 
-# Seekrieg – Schiffe, Häfen und Docks
+# Naval warfare — ships, ports and docks
 
-> **Interaktiv lernen:** [Flotten-Tutorial jetzt starten](/navy?tutorial=navy) – die Anleitung führt Sie Schritt für Schritt durch die echten Bedienelemente.
+The **Navy** console (`/navy`) is the command centre for everything that
+happens on the water. The ocean is divided into a hexagonal grid. Each move
+takes hours and burns fuel; the fleet cron advances every leg every 15 minutes.
 
-Das **Navy**-Console (`/navy`) ist die Kommandozentrale für alles, was auf dem
-Wasser passiert. Die Welt ist dort in ein Sechskant-Raster (Hexfelder) unterteilt.
-Ein Zug dauert je nach Schiff ein bis mehrere Stunden; der Cron
-`/api/cron/fleet` rückt alle 15 Minuten einen Schritt weiter.
+<Mermaid label="From a port to a ready ship" chart={"flowchart LR\nC[Coastal region] -->|one port per region| P[Port in its EEZ]\nP -->|build dock| D[Dock with build bays]\nD -->|queue order| Q[Ship under construction]\nQ -->|cron tick| S[Ready ship]\nS -->|move + target hex| F[Hex movement]\nS -->|sonar / SAR| I[Sea intel report]"} />
 
-<Mermaid
-  label="Vom Hafen zum einsatzbereiten Schiff"
-  chart={"flowchart LR\n  K[Küstenregion] -->|1 Hafen pro Region| H[Hafen in der EEZ]\n  H -->|Dock bauen| D[Dock mit Baubays]\n  D -->|Auftrag in Queue| Q[Schiff im Bau]\n  Q -->|Cron-Tick| S[Einsatzbereites Schiff]\n  S -->|Move + Zielhex| F[Hex-Bewegung]\n  S -->|Sonar/SAR| I[Seeaufklärung]"}
-/>
+![Hex sea with EEZ, port, ship and minefield](/images/docs/hex-sea.svg)
 
-![Hex-Meer mit EEZ, Hafen, Schiff und Minenfeld](/images/docs/hex-sea.svg)
+## 1. Find a coast
 
-## 1. Küste finden
+Open the [map](/map) and switch to **Naval** mode. Only the sea and coastal
+regions (terrain "shore") are visible; inland regions fade out. Each coastal
+region claims an **EEZ** — two rings of offshore water clipped to the real
+coastline.
 
-Öffnen Sie die [Karte](/map) und schalten Sie in den **See-Modus**. Nur Küsten-
-regionen (Gelände „Küste") und die See sind sichtbar; Binnenregionen werden
-ausgeblendet. Jede Küstenregion beansprucht eine **EEZ** – zwei Hex-Ringe
-Offshorewasser, die bis zur echten Küstenlinie zugeschnitten sind.
+Click a hex to see its EEZ owner, ships, mines and port. "Open in fleet
+console" takes you straight to the navy console with that hex selected.
 
-Klicken Sie auf ein Hex, sehen Sie dessen EEZ-Eigentümer, Schiffe, Minen und
-Hafen. Über „Open in fleet console" landen Sie direkt im Navy-Console.
+## 2. Build a port
 
-## 2. Hafen bauen
+In the navy console pick **Build port**, enter a name and choose one of your
+coastal regions. There is exactly **one port per region**; it is placed on the
+nearest free hex inside the region's EEZ. A port:
 
-Im Navy-Console wählen Sie unten im Panel **Port errichten** und eine eigene
-Küstenregion. Es gibt **genau einen Hafen pro Region**; er entsteht auf dem
-nächstgelegenen freien Hex innerhalb ihrer EEZ. Ein Hafen:
+- stores fuel (slowly refilled from the state's military reserve),
+- holds cargo for loading and unloading,
+- can be expanded to level 5 for more fuel storage.
 
-- speichert Treibstoff (wird langsam aus der militärischen Reserve aufgefüllt),
-- lagert Fracht zum Be- und Entladen,
-- lässt sich mit **Hafen erweitern** bis Stufe 5 ausbauen (mehr Tankkapazität).
+## 3. Build and expand a dock
 
-## 3. Dock bauen und ausbauen
+Click **Build dock** in the same panel. A dock has as many build bays as its
+level (up to 4). Each level costs more money and steel, but runs more jobs in
+parallel and repairs hulls faster.
 
-Im selben Panel klicken Sie auf **Dock bauen**. Ein Dock hat Baubays in Höhe
-seiner Stufe (maximal 4). Jede weitere Stufe kostet mehr Geld und Stahl, dafür
-laufen mehr Aufträge gleichzeitig und Reparaturen gehen schneller.
+## 4. Order ships
 
-## 4. Schiffe bestellen
+In the **Shipyard** choose a dock and a ship class. The order enters the queue;
+work starts as soon as a bay is free. When the timer ends, the ship appears in
+the port at full health with fuel.
 
-Wählen Sie im **Shipyard** ein Dock und einen Schiffstyp. Der Auftrag wandert in
-die Warteschlange; sobald ein Bay frei ist, beginnt der Bau. Wenn der Timer
-abläuft, erscheint das Schiff mit voller Rumpfstärke und Treibstoff im Hafen.
-
-| Klasse | Aufgabe |
+| Class | Role |
 | --- | --- |
-| Flugzeugträger | Jagdflugzeuge, grosse Reichweite |
-| Fregatte | VLS, kann Minen legen |
-| Helipad-Kreuzer | U-Boot-Jagd mit Hubschraubern |
-| Versorger / Tanker | Treibstoff auf See weitergeben |
-| Korvette / Zerstörer / leichte Flak | Geleitschutz, VLS, Luftabwehr |
-| Torpedo-/VLS-U-Boot | getarnt, Torpedos oder Lenkflugkörper |
-| Container / Ro-Ro / Tanker | Fracht zwischen Häfen transportieren |
+| Carrier | Fighters, long aerial reach |
+| Frigate | VLS, can lay mines |
+| Helipad cruiser | Anti-submarine helicopters |
+| Support ship / tanker | Refuel other ships at sea |
+| Corvette / destroyer / light AA | Escort, VLS, air defence |
+| Torpedo / VLS submarine | Stealth, torpedoes or missiles |
+| Container / Ro-Ro / tanker | Cargo between ports |
 
-## 5. Schiffe bewegen
+## 5. Move ships
 
-Wählen Sie ein Schiff auf der Karte oder in der Flottenliste und klicken Sie auf
-**Move**; danach klicken Sie auf ein Zielhex. Das Schiff legt pro Takt ein Hex
-zurück und verbraucht Treibstoff. Mit **Hold** brechen Sie den Auftrag ab.
-Zivile Schiffe umgehen feindliche Minenfelder; Kriegsschiffe fahren hindurch,
-nehmen aber Schaden.
+Select a ship on the map or in the fleet list, click **Move**, then click a
+destination hex. The ship advances one hex per tick and burns fuel. **Hold**
+cancels the order. Civilian hulls route around foreign minefields; warships
+sail through and take damage.
 
-## 6. Versorgen und Fracht
+<Mermaid label="How a blockade works" chart={"flowchart TD\nM[Minelayer in a hex] -->|Lay mines| F[Minefield, 48 h]\nF --> Z{Civilian or warship?}\nZ -->|civilian| S[Passage denied — port blockaded]\nZ -->|warship| D[Damage on entry]\nD -->|strength spent| X[Minefield disappears]"} />
 
-Steht das Schiff im eigenen Hafen, können Sie **Refuel** klicken. Frachtschiffe
-laden und entladen Waren mit dem Formular „Goods / Amount / Load–Unload".
-Tanker und Versorger können benachbarte Schiffe ausserdem auf See betanken.
+## 6. Refuel and cargo
 
-## 7. Minen und Blockade
+At one of your ports click **Refuel**. Cargo ships load and unload goods with
+the Goods / Amount / Load–Unload form. Tankers and support ships can also
+refuel neighbouring ships at sea.
 
-<Mermaid
-  label="Wie eine Blockade entsteht"
-  chart={"flowchart TD\n  M[Minenschiff im Hex] -->|Lay mines| F[Minefeld 48 h]\n  F --> Z{Zivil oder Kriegsschiff?}\n  Z -->|zivil| S[Passage verweigert — Hafen blockiert]\n  Z -->|Kriegsschiff| D[Schaden beim Einlaufen]\n  D -->|Stärke aufgebraucht| X[Minefeld verschwindet]"}
-/>
+## 7. Mines and blockade
 
-Schiffe mit Minenlegeschutz (Fregatte, U-Boot) können **Lay mines** auf ihrem
-aktuellen Hex ausführen. Zivile Schiffe weigern sich, ein vermintes Hex zu
-passieren – ein Ring um einen Hafen blockiert ihn. Kriegsschiffe, die hindurch
-fahren, erleiden Schaden. Minen verfallen nach 48 Stunden.
+Ships with minelaying gear (frigate, submarine) can **Lay mines** on their
+current hex. Merchant hulls refuse to enter a mined hex, so a ring around a
+port blockades it. Warships that push through take damage. Mines expire after
+48 hours.
 
-## 8. GNSS-Störung
+## 8. GNSS jamming
 
-GNSS-Jamming kann aus drei Domänen kommen: ein Störschiff auf See, eine
-Flugabwehr-Einheit an Land oder Jagdflugzeuge mit EW-Pods in der Luft. Alle
-feindlichen Sender in Reichweite addieren sich pro Hex. Ein gestörtes Schiff
-fährt langsamer und trifft seltener. Die Stärke sehen Sie auf der Schiffskarte.
+GNSS jamming can come from a jammer ship at sea, an air-defence battalion on
+land or fighter squadrons with EW pods in the air. All hostile emitters in
+range add up per hex. A jammed ship steams slower and hits less often; the
+strength is shown on its ship card.
 
-## 9. Seeaufklärung
+## 9. Sea intelligence
 
-Wählen Sie ein Hex und starten Sie unter **Sea intel** einen Sonar-, Radar-
-oder SAR-Durchgang. Sonar findet U-Boote, Radar und SAR sehen Oberflächenschiffe
-und Minen. Berichte verfallen nach 12 Stunden und bestimmen auf der Karte,
-welche feindlichen Schiffe sichtbar sind.
+Select a hex and launch a sonar, radar or SAR sweep under **Sea intel**. Sonar
+finds submarines; radar and SAR find surface hulls and mines. Reports expire
+after 12 hours and drive the map's fog of war.
 
-## 10. Weiter geht es
+## 10. Next steps
 
-Luftwaffe und direkte Einsätze sind in [Luftwaffe und Einsätze](/docs/air)
-beschrieben; die Kartenmodus-Details in [Karte und Luftraum](/docs/map-modes).
+Aircraft and directed sorties are covered in [Air power](/docs/air), map modes
+in [Map & airspace](/docs/map-modes).

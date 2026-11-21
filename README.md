@@ -358,15 +358,15 @@ Only account/telegram ids are exported — never emails, usernames, tokens or pa
 
 ## Tutorials
 
-The documentation in `src/lib/docs/` (reachable under `/docs`) has step-by-step
-guides for the new naval layer: [Seekrieg](/docs/navy),
-[Luftwaffe und Einsätze](/docs/air) and [Karte und Luftraum](/docs/map-modes).
-On `/navy` and `/map` an **interactive** tour opens on the first visit: it
-highlights the real control for each step and advances when you use it (with a
-manual fallback); progress is stored in the browser and the ? button restarts
-it. Every docs page has a launch link (and the docs index has three cards), so
-a tour can be restarted from `/docs` with `?tutorial=navy`, `?tutorial=air` or
-`?tutorial=map`. The docs are the technical explanation behind those steps and
+The documentation in `src/lib/docs/` (English only, reachable under `/docs`) is
+grouped into Getting started, Everyday life & economy, Politics & state,
+Conflict & forces and Reference. It covers the whole game — economy, society,
+politics, community, conflict, intelligence, naval warfare, air power and map
+modes. On `/navy` and `/map` an **interactive** tour opens on the first visit:
+it highlights the real control for each step and advances when you use it (with
+a manual fallback); progress is stored in the browser. Tours are launched from
+your profile, the docs index or the relevant docs page with `?tutorial=navy`,
+`?tutorial=air` or `?tutorial=map` — there is no floating help button. The docs are the technical explanation behind those steps and
 include Mermaid flowcharts/sequence diagrams and SVG illustrations under
 `static/images/docs/`.
 

@@ -823,6 +823,32 @@
 				{/if}
 			</div>
 		{/if}
+
+		<!-- Tutorials are presented here, so no floating help button is needed -->
+		<section class="panel mt-5 rounded-sm p-4">
+			<h2 class="section-title flex items-center gap-2 text-base">
+				<FluentBookCompass24Filled class="size-5 text-primary" />
+				Tutorials &amp; guides
+			</h2>
+			<p class="mt-1 text-xs text-fg-muted">
+				Relaunch an interactive tour or read the full explanation in the documentation.
+			</p>
+			<div class="mt-3 grid gap-2 sm:grid-cols-3">
+				<a href="/navy?tutorial=navy" class="panel-interactive block rounded-sm p-3 no-underline">
+					<h3 class="text-sm font-semibold text-heading">Fleet tour</h3>
+					<p class="mt-1 text-xs text-fg-muted">Ports, docks, ships, mines and sea intel.</p>
+				</a>
+				<a href="/navy?tutorial=air" class="panel-interactive block rounded-sm p-3 no-underline">
+					<h3 class="text-sm font-semibold text-heading">Air force tour</h3>
+					<p class="mt-1 text-xs text-fg-muted">Squadrons and directed missions.</p>
+				</a>
+				<a href="/map?tutorial=map" class="panel-interactive block rounded-sm p-3 no-underline">
+					<h3 class="text-sm font-semibold text-heading">Map tour</h3>
+					<p class="mt-1 text-xs text-fg-muted">Naval, land and airspace modes.</p>
+				</a>
+			</div>
+			<a href="/docs" class="mt-3 inline-block text-xs text-primary-fg hover:underline">All documentation →</a>
+		</section>
 	</PageContainer>
 
 	<!-- Appoint Minister Modal -->

@@ -1,19 +1,20 @@
 ---
-title: Einführung in Psyops
-description: Ein kurzer Überblick, um mit Psyops zu starten.
+title: Introduction to Psyops
+description: A short overview to get you started.
 order: 1
+category: "Getting started"
 ---
 
-# Willkommen bei Psyops
+# Welcome to Psyops
 
-Dies ist ein einfaches Tutorial, um Ihnen den Einstieg in Psyops zu erleichtern.
+This quick tutorial helps you take your first steps in Psyops.
 
-## Erste Schritte
+## First steps
 
-1.  **Registrieren Sie sich und melden Sie sich an:** Erstellen Sie Ihr Konto und treten Sie der Welt von Psyops bei.
-2.  **Erkunden Sie die Benutzeroberfläche:** Machen Sie sich mit den verschiedenen Abschnitten des Spiels vertraut, wie z.B. dem Dock und den Vollbildansichten.
-3.  **Verwalten Sie Ihre Ressourcen:** Lernen Sie, wie Sie Geld verdienen und ausgeben, um Ihre Operationen zu finanzieren.
-4.  **Interagieren Sie mit der Welt:** Nehmen Sie an Wahlen teil, erstellen Sie Vorschläge und beteiligen Sie sich an militärischen Aktionen.
-5.  **Bauen Sie Ihr Imperium auf:** Errichten Sie Fabriken und andere Gebäude, um Ihre Wirtschaft zu stärken und Ihren Einfluss zu erweitern.
+1. **Register and sign in:** create an account and join the world.
+2. **Explore the interface:** get to know the command console, the dock and the full-screen views.
+3. **Manage your resources:** learn how to earn and spend money to fund your operations.
+4. **Take part in the world:** vote, submit proposals and join military actions.
+5. **Build your empire:** construct factories and other buildings to grow your economy and influence.
 
-Wir hoffen, Sie haben viel Spaß beim Spielen von Psyops!
+The [gameplay guide](/docs/gameplay) explains the main systems, and the [documentation index](/docs) lists every tutorial.
