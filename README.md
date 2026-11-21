@@ -66,6 +66,32 @@ and fusion alongside coal, gas, nuclear, solar, wind and hydro, and a diverse
 grid runs more efficiently than a single-source one. See `energy.config.ts`,
 `industry.config.ts` and `resources.config.ts`.
 
+## Civilians, opinion and regime stability
+
+Every region holds a civilian population on top of its buildings
+(`population.config.ts`). What a state does to those civilians is gathered into
+a **regime stability** score (0–100), derived on read by
+`services/stability.ts` from the rules in `stability.config.ts`:
+
+- **Civilian opinion** in each region — civic projects, state services,
+  fortifications and strike casualties — is the backbone.
+- **War crimes** (the decaying IHL score) and **cyberattacks** (active grid,
+  C2, supply and radar disruption) pull it down.
+- **Environmental policy**: conservation buys goodwill, unrestricted
+  extraction costs it.
+- **Conscription pressure**: a large standing army relative to the population
+  means more draftees and less support at home.
+- **Education** and **good factory wages** buy backing; enemy propaganda erodes
+  it and your own counter-propaganda steadies it.
+- **Rally-round-the-flag**: defending against an attack grants a base bonus.
+
+Stability is not cosmetic: the least stable belligerent sets how much war
+weariness a war can absorb, so an unstable regime is forced to the peace table
+sooner. A weekly cron (`/api/cron/population`) moves the population itself —
+births against mortality from war, harsh extraction, conscription and
+instability-driven emigration. Strike casualties are applied at once by
+`reduceRegionPopulation`, and a floor keeps a region from ever emptying fully.
+
 ## Setup
 
 ### Prerequisites
@@ -134,6 +160,7 @@ The game's background ticks run on [Vercel Schedules](https://vercel.com/docs/sc
 | `battles`        | `/api/cron/battles`        | hourly        | Moves battles between phases and resolves one combat round per active battle |
 | `bloc-elections` | `/api/cron/bloc-elections` | daily         | Opens and closes bloc leader elections and bloc membership applications      |
 | `elections`      | `/api/cron/elections`      | hourly        | Activates and tallies state parliament elections                             |
+| `population`     | `/api/cron/population`     | weekly        | Advances regional civilian populations from births and mortality             |
 | `premium`        | `/api/cron/premium`        | every 15 min  | Runs the premium automation (production, training, factory shifts)           |
 | `proposals`      | `/api/cron/proposals`      | every 15 min  | Closes finished parliament proposals and applies passed ones                 |
 | `travels`        | `/api/cron/travels`        | every 15 min  | Completes travels whose arrival time has passed                              |

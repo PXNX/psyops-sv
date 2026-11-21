@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Civilian opinion now drives a derived regime stability score (0–100): war crimes,
+  environmental policy, conscription pressure, education, wages, cyberattacks and
+  propaganda all move it, and defending the homeland rallies support. The least
+  stable belligerent sets how much war weariness a war can absorb
+- Weekly population tick grows or shrinks each region's civilians from births and
+  mortality (war, environment, conscription, emigration), respecting the population floor
 - Five-domain warfare: air, land, sea, space and cyber. Units carry a domain,
   the edge matrix and combined-arms bonus feed into battles, and the README
   documents what each domain can and cannot do
