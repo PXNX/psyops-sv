@@ -33,6 +33,7 @@
 	import ResidenceActions from "./ResidenceActions.svelte";
 	import TravelBanner from "./TravelBanner.svelte";
 	import RegionSituation from "./RegionSituation.svelte";
+	import CivilianNeeds from "./CivilianNeeds.svelte";
 	import { StrikeLog, StrikePlanner } from "#lib/component/strike/index.js";
 	import { formatPopulation } from "#lib/config/index.js";
 	import { countdown } from "#lib/utils/military.js";
@@ -492,6 +493,9 @@
 				</div>
 			</SectionCard>
 		{/if}
+
+		<!-- What the civilians here live on -->
+		<CivilianNeeds needs={data.civilianNeeds} />
 
 		<!-- Natural resources -->
 		{#if resourceEntries.length > 0}

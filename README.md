@@ -92,6 +92,15 @@ a **regime stability** score (0–100), derived on read by
 - **Education** and **good factory wages** buy backing; enemy propaganda erodes
   it and your own counter-propaganda steadies it.
 - **Rally-round-the-flag**: defending against an attack grants a base bonus.
+- **Basic supplies**: food, electricity, heat and water are things civilians
+  actually need. A region's land, imports, share of the state grid and water
+  infrastructure decide how much of each reaches its households; a blockade,
+  a degraded grid or unrestricted extraction that poisons the water table all
+  cause shortages. Unmet needs cost opinion and stability, and severe hardship
+  raises mortality and drives emigration. Water is shared with industry —
+  steel, refineries and fabrication plants draw on the same supply and throttle
+  when it runs short. See `civilian-supply.config.ts` and
+  `services/civilians/supply.ts`.
 
 Stability is not cosmetic: the least stable belligerent sets how much war
 weariness a war can absorb, so an unstable regime is forced to the peace table

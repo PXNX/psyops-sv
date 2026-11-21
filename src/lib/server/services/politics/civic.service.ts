@@ -15,6 +15,8 @@ import {
 	isCivicBuildingType,
 	type CivicBuildingType
 } from "#lib/config/game/civic.config.js";
+import { opinionLossFromHardship, type RegionNeeds } from "#lib/config/game/civilian-supply.config.js";
+import { regionsCivilianNeeds } from "../civilians/supply.js";
 
 const DAY = 86_400_000;
 
@@ -76,7 +78,12 @@ export async function completeCivicProjects(db: Database, now = new Date()) {
  * Civilian opinion 0-100: a neutral baseline, state services and private
  * patronage lifting it, fortifications and civilian casualties dragging it down.
  */
-export async function regionOpinion(db: Database, regionId: number, now = new Date()): Promise<number> {
+export async function regionOpinion(
+	db: Database,
+	regionId: number,
+	now = new Date(),
+	needs?: RegionNeeds
+): Promise<number> {
 	await completeCivicProjects(db, now);
 	const [region] = await db.select().from(regions).where(eq(regions.id, regionId)).limit(1);
 	if (!region) return OPINION_CONFIG.BASE;
@@ -106,13 +113,21 @@ export async function regionOpinion(db: Database, regionId: number, now = new Da
 		OPINION_CONFIG.MAX_CASUALTY_PENALTY,
 		((casualties[0]?.total ?? 0) / 1000) * OPINION_CONFIG.CASUALTY_PENALTY_PER_THOUSAND
 	);
-	return clamp(score - casualtyPenalty);
+	return clamp(score - casualtyPenalty - opinionLossFromHardship(needs?.hardship ?? 0));
 }
 
 /** Opinion across several regions in one pass (for lists and the map). */
-export async function regionOpinions(db: Database, regionIds: number[], now = new Date()) {
+export async function regionOpinions(
+	db: Database,
+	regionIds: number[],
+	now = new Date(),
+	sharedNeeds?: Map<number, RegionNeeds>
+) {
+	// One batched pass supplies every region's basic needs for the penalty,
+	// unless a caller that also needs the hardship has already done it.
+	const needs = sharedNeeds ?? (await regionsCivilianNeeds(db, regionIds, now));
 	const out = new Map<number, number>();
-	for (const id of new Set(regionIds)) out.set(id, await regionOpinion(db, id, now));
+	for (const id of new Set(regionIds)) out.set(id, await regionOpinion(db, id, now, needs.get(id)));
 	return out;
 }
 

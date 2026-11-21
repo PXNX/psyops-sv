@@ -13,6 +13,7 @@
 // The population side *is* stored: regions.population is the one number that
 // moves as people are born, die, leave or are killed, and a daily cron writes
 // it back (services/stability.ts#populationTick).
+import { hardshipExtraDeaths, hardshipExtraEmigration } from "./civilian-supply.config";
 
 /** The four resource/exploitation laws a state can vote for (see schema.ts). */
 export type ExploitationPolicyLike = "conservation" | "standard" | "industrial" | "unrestricted";
@@ -63,7 +64,10 @@ export const STABILITY = {
 	PROPAGANDA_AGAINST_CAP: -12,
 
 	/** Rally-round-the-flag: defending against an attack buys goodwill. */
-	RALLY_DEFENCE: 8
+	RALLY_DEFENCE: 8,
+
+	/** Unmet food, electricity, heat and water needs — civilians blame the state. */
+	SERVICES_PENALTY: -14
 } as const;
 
 export type StabilityLabel = "collapsing" | "unrest" | "uneasy" | "stable" | "loyal";
@@ -120,6 +124,8 @@ export interface StabilityFactors {
 	propagandaAgainst: number;
 	/** The state is currently defending in an active war. */
 	defending: boolean;
+	/** Mean share of the four basic needs civilians go without (0-1). */
+	hardship: number;
 }
 
 /** One labelled, signed contribution to the score (for tooltips and panels). */
@@ -203,6 +209,11 @@ export function regimeStability(f: StabilityFactors): StabilityResult {
 			key: "defence",
 			label: "Defending the homeland",
 			value: f.defending ? STABILITY.RALLY_DEFENCE : 0
+		},
+		{
+			key: "services",
+			label: "Food, power, heat & water",
+			value: round1(Math.min(0, f.hardship * STABILITY.SERVICES_PENALTY))
 		}
 	];
 
@@ -269,6 +280,8 @@ export interface PopulationPressure {
 	conscription: number;
 	/** Regime stability (0-100): low stability drives emigration. */
 	stability: number;
+	/** Share of basic needs civilians go without (0-1): hunger, thirst and cold kill. */
+	hardship: number;
 }
 
 /**
@@ -287,6 +300,10 @@ export function populationDelta(population: number, p: PopulationPressure): numb
 	if (p.stability < d.EMIGRATION_BELOW_STABILITY) {
 		annual -= d.EMIGRATION_PER_YEAR * ((d.EMIGRATION_BELOW_STABILITY - p.stability) / d.EMIGRATION_BELOW_STABILITY);
 	}
+	// A region that cannot feed, water or warm its people loses them faster
+	// than a merely unhappy one. Imported from the supply rules to keep the
+	// thresholds in one place.
+	annual -= hardshipExtraDeaths(p.hardship) + hardshipExtraEmigration(p.hardship);
 	annual = clamp(annual, -d.MAX_ANNUAL_CHANGE, d.MAX_ANNUAL_CHANGE);
 	return Math.round(population * annual * (p.days / 365));
 }

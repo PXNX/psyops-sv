@@ -23,7 +23,8 @@ const neutral: StabilityFactors = {
 	cyber: 0,
 	propagandaFor: 0,
 	propagandaAgainst: 0,
-	defending: false
+	defending: false,
+	hardship: 0
 };
 
 describe("regimeStability", () => {
@@ -31,7 +32,7 @@ describe("regimeStability", () => {
 		const r = regimeStability(neutral);
 		expect(r.score).toBe(50);
 		expect(r.label).toBe("stable");
-		expect(r.breakdown).toHaveLength(10);
+		expect(r.breakdown).toHaveLength(11);
 		expect(r.breakdown.reduce((s, c) => s + c.value, 0)).toBe(0);
 	});
 
@@ -78,6 +79,12 @@ describe("regimeStability", () => {
 		const defending = regimeStability({ ...neutral, defending: true });
 		expect(defending.score - regimeStability(neutral).score).toBe(STABILITY.RALLY_DEFENCE);
 	});
+
+	it("punishes unmet food, power, heat and water needs", () => {
+		const short = regimeStability({ ...neutral, hardship: 0.8 });
+		expect(short.score).toBeLessThan(regimeStability(neutral).score);
+		expect(short.breakdown.find((c) => c.key === "services")!.value).toBe(-11.2);
+	});
 });
 
 describe("stability labels and morale", () => {
@@ -107,7 +114,14 @@ describe("stability labels and morale", () => {
 });
 
 describe("populationDelta", () => {
-	const base = { days: 365, atWar: false, environment: "standard" as const, conscription: 0, stability: 60 };
+	const base = {
+		days: 365,
+		atWar: false,
+		environment: "standard" as const,
+		conscription: 0,
+		stability: 60,
+		hardship: 0
+	};
 
 	it("grows a settled, healthy region slowly", () => {
 		expect(populationDelta(100_000, base)).toBeGreaterThan(0);
@@ -127,6 +141,11 @@ describe("populationDelta", () => {
 	it("clamps runaway growth and collapse", () => {
 		const boom = populationDelta(1_000, { ...base, environment: "conservation", stability: 100 });
 		expect(boom).toBeLessThanOrEqual(1_000 * POPULATION_DYNAMICS.MAX_ANNUAL_CHANGE);
+	});
+
+	it("loses people when basic needs are not met", () => {
+		expect(populationDelta(100_000, { ...base, hardship: 1 })).toBeLessThan(populationDelta(100_000, base));
+		expect(populationDelta(100_000, { ...base, hardship: 0.2 })).toBe(populationDelta(100_000, base));
 	});
 
 	it("leaves empty or invalid populations alone", () => {

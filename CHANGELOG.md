@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Civilian supply: food, electricity, heat and water are now basic needs that
+  regions must meet for their people. Shortages from blockades, grid attacks,
+  cold terrain and poisoned water sour opinion and stability and, when severe,
+  kill or drive out civilians; water is also drawn by water-hungry companies,
+  whose output throttles when the region runs dry. The region page shows each
+  need as a share of demand met
 - State debt: bond principal is recorded as debt on the treasury and cleared when
   the bond is repaid or the state is bailed out; the balance and debt show on the
   state dossier and the finance desk

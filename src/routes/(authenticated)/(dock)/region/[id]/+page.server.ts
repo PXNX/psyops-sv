@@ -54,6 +54,8 @@ import {
 	EFFECT_LABEL,
 	regionPopulation,
 	regionDensity,
+	CIVILIAN_NEEDS,
+	NEED_META,
 	type StrikeTarget,
 	type StrikeWeapon
 } from "#lib/config/index.js";
@@ -64,6 +66,7 @@ import {
 	strikeLog,
 	strikeOptions
 } from "#lib/server/services/military/strike.js";
+import { regionCivilianNeeds } from "#lib/server/services/civilians/supply.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -545,6 +548,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		activeEffects(db, [regionId])
 	]);
 
+	// What this region's civilians can actually get today: food from the land
+	// and imports, power and heat from the grid, water from the local supply.
+	const civilianNeeds = await regionCivilianNeeds(db, regionId);
+
 	const result = {
 		strike: {
 			// Only offered to someone who could order it (a leader at war with the owner).
@@ -559,6 +566,21 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			}))
 		},
 		civilians: { population: regionPopulation(region), density: Math.round(regionDensity(region)) },
+		civilianNeeds: civilianNeeds
+			? {
+					hardship: civilianNeeds.hardship,
+					shortages: civilianNeeds.shortages,
+					reasons: civilianNeeds.reasons,
+					supplies: CIVILIAN_NEEDS.map((key) => ({
+						key,
+						label: NEED_META[key].label,
+						icon: NEED_META[key].icon,
+						demand: civilianNeeds[key].demand,
+						capacity: civilianNeeds[key].capacity,
+						sufficiency: civilianNeeds[key].sufficiency
+					}))
+				}
+			: null,
 		situation: {
 			conditions: regionConditions(region),
 			isHostileRegion,

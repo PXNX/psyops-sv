@@ -23,6 +23,7 @@ import {
 	type StabilityResult
 } from "#lib/config/index.js";
 import { regionOpinions } from "./politics/civic.service";
+import { regionsCivilianNeeds } from "./civilians/supply";
 import { ihlScores } from "./military/ihl";
 import { activeEffects } from "./military/state-effects";
 
@@ -51,6 +52,8 @@ export interface StateStabilityInfo {
 	conscription: number;
 	/** Current civilian population of the state. */
 	population: number;
+	/** Mean share of food, power, heat and water the civilians go without. */
+	hardship: number;
 	environment: ExploitationPolicyLike;
 }
 
@@ -108,11 +111,9 @@ export async function stateStabilitiesInfo(
 		ihlScores(db, ids, now)
 	]);
 
-	const opinions = await regionOpinions(
-		db,
-		regionRows.map((r) => r.id),
-		now
-	);
+	const regionIds = regionRows.map((r) => r.id);
+	const needs = await regionsCivilianNeeds(db, regionIds, now);
+	const opinions = await regionOpinions(db, regionIds, now, needs);
 	const regionsByState = group(regionRows, (r) => r.stateId);
 	const unitsByState = new Map(unitRows.map((r) => [r.stateId, Number(r.n)]));
 	const wagesByState = group(wageRows, (r) => r.stateId);
@@ -122,6 +123,7 @@ export async function stateStabilitiesInfo(
 		const population = rs.reduce((sum, r) => sum + regionPopulation(r), 0);
 		const conscription = population > 0 ? ((unitsByState.get(s.id) ?? 0) / population) * 1000 : 0;
 		const opinion = avg(rs.map((r) => opinions.get(r.id) ?? STABILITY.BASE));
+		const hardship = avg(rs.map((r) => needs.get(r.id)?.hardship ?? 0));
 		const education = avg(rs.map((r) => Number(r.education ?? 0)));
 		const wages = avg((wagesByState.get(s.id) ?? []).map((r) => Number(r.wage)));
 
@@ -152,10 +154,19 @@ export async function stateStabilitiesInfo(
 			cyber,
 			propagandaFor,
 			propagandaAgainst,
-			defending
+			defending,
+			hardship
 		});
 
-		out.set(s.id, { stability, atWar: attacking, defending, conscription, population, environment: s.policy });
+		out.set(s.id, {
+			stability,
+			atWar: attacking,
+			defending,
+			conscription,
+			population,
+			hardship,
+			environment: s.policy
+		});
 	}
 	return out;
 }
@@ -212,11 +223,14 @@ export async function populationTick(
 			.from(regions),
 		db.select({ id: states.id }).from(states)
 	]);
-	const info = await stateStabilitiesInfo(
-		db,
-		statesWithId.map((s) => s.id),
-		now
-	);
+	const [info, needs] = await Promise.all([
+		stateStabilitiesInfo(db, statesWithId.map((s) => s.id), now),
+		regionsCivilianNeeds(
+			db,
+			regionRows.map((r) => r.id),
+			now
+		)
+	]);
 
 	const result: PopulationTickResult = { regionsChanged: 0, gained: 0, lost: 0, net: 0, days };
 	for (const row of regionRows) {
@@ -227,7 +241,8 @@ export async function populationTick(
 			atWar: s?.atWar ?? false,
 			environment: s?.environment ?? "standard",
 			conscription: s?.conscription ?? 0,
-			stability: s?.stability.score ?? 60
+			stability: s?.stability.score ?? 60,
+			hardship: needs.get(row.id)?.hardship ?? 0
 		});
 		if (!delta) continue;
 		const next = Math.max(POPULATION_FLOOR, current + delta);

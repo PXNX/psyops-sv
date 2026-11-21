@@ -30,7 +30,7 @@ describe("regime stability", () => {
 		expect(result).not.toBeNull();
 		expect(result!.score).toBeGreaterThanOrEqual(0);
 		expect(result!.score).toBeLessThanOrEqual(100);
-		expect(result!.breakdown).toHaveLength(10);
+		expect(result!.breakdown).toHaveLength(11);
 	});
 
 	it("computes many states at once", async () => {
