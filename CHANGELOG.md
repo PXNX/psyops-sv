@@ -16,6 +16,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Five-domain warfare: air, land, sea, space and cyber. Units carry a domain,
+  the edge matrix and combined-arms bonus feed into battles, and the README
+  documents what each domain can and cannot do
+- Naval warfare: frigate, submarine, carrier, landing ship and marine units;
+  sea control from coastal fleets; blockades (trade, energy and smuggling
+  effects), shore bombardment, amphibious assaults that open real battles,
+  sea-lane raids and minelaying
+- Space programme: reconnaissance, navigation, comms and early-warning
+  satellites with GPS/recon/C2/early-warning bonuses; anti-satellite, uplink
+  jamming and orbital sabotage operations with attribution and casus belli
+- Artificial intelligence capability (levels 0–5) bought with money, chips and
+  rare earths; improves cyber offence/defence, intel fusion, factory output
+  and customs detection
+- Smuggling: state-run routes and citizen-run cargoes around sanctions and
+  blockades, with interception risk, premiums and fines
+- Strategic resources (oil, gas, uranium, rare earths, silicon), fuel and
+  enriched-uranium refining, fabrication plants for chips and electronics,
+  plus geothermal and fusion power and a grid-diversity efficiency bonus
 - Vercel Schedules for the game ticks: battles, bloc elections, elections, premium
   automation, proposals and travels run on the cadences declared in `vercel.json` instead
   of an external scheduler
@@ -32,6 +50,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   links the Telegram account to a psyops-sv account, `/premium` grants or extends a premium
   membership (mocked for free, or real payment via Telegram Stars / TON)
 - Agent rules in `agents.md` (concurrent sessions, committing, git workflow)
+- Observability: OpenTelemetry request tracing plus structured, shareable event
+  telemetry in the web app and the Telegram bot (`auth.login.*`, `premium.granted`,
+  `cron.run`, …), with request IDs and account/Telegram IDs for correlation
+- State bonds with fortnightly coupon returns, a bond desk, company earnings
+  reports and an earnings dashboard panel
+- NATO DTG timestamps across the interface
+- UAV artillery spotting, report retention and more varied terrain imagery;
+  destructible air-defence radar and SAR-only reconnaissance imagery
+- Company dividends (declared payouts, automatic policy, yield) and market
+  quotes at the lowest live offer
 
 ## [0.0.1] - 2026-07-06
 
