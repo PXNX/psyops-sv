@@ -4,12 +4,25 @@ description: "Schritt-für-Schritt: vom ersten Hafen bis zur blockierten See."
 order: 4
 ---
 
+<script>
+  import Mermaid from "../component/Mermaid.svelte";
+</script>
+
 # Seekrieg – Schiffe, Häfen und Docks
+
+> **Interaktiv lernen:** [Flotten-Tutorial jetzt starten](/navy?tutorial=navy) – die Anleitung führt Sie Schritt für Schritt durch die echten Bedienelemente.
 
 Das **Navy**-Console (`/navy`) ist die Kommandozentrale für alles, was auf dem
 Wasser passiert. Die Welt ist dort in ein Sechskant-Raster (Hexfelder) unterteilt.
 Ein Zug dauert je nach Schiff ein bis mehrere Stunden; der Cron
 `/api/cron/fleet` rückt alle 15 Minuten einen Schritt weiter.
+
+<Mermaid
+  label="Vom Hafen zum einsatzbereiten Schiff"
+  chart={"flowchart LR\n  K[Küstenregion] -->|1 Hafen pro Region| H[Hafen in der EEZ]\n  H -->|Dock bauen| D[Dock mit Baubays]\n  D -->|Auftrag in Queue| Q[Schiff im Bau]\n  Q -->|Cron-Tick| S[Einsatzbereites Schiff]\n  S -->|Move + Zielhex| F[Hex-Bewegung]\n  S -->|Sonar/SAR| I[Seeaufklärung]"}
+/>
+
+![Hex-Meer mit EEZ, Hafen, Schiff und Minenfeld](/images/docs/hex-sea.svg)
 
 ## 1. Küste finden
 
@@ -68,6 +81,11 @@ laden und entladen Waren mit dem Formular „Goods / Amount / Load–Unload".
 Tanker und Versorger können benachbarte Schiffe ausserdem auf See betanken.
 
 ## 7. Minen und Blockade
+
+<Mermaid
+  label="Wie eine Blockade entsteht"
+  chart={"flowchart TD\n  M[Minenschiff im Hex] -->|Lay mines| F[Minefeld 48 h]\n  F --> Z{Zivil oder Kriegsschiff?}\n  Z -->|zivil| S[Passage verweigert — Hafen blockiert]\n  Z -->|Kriegsschiff| D[Schaden beim Einlaufen]\n  D -->|Stärke aufgebraucht| X[Minefeld verschwindet]"}
+/>
 
 Schiffe mit Minenlegeschutz (Fregatte, U-Boot) können **Lay mines** auf ihrem
 aktuellen Hex ausführen. Zivile Schiffe weigern sich, ein vermintes Hex zu

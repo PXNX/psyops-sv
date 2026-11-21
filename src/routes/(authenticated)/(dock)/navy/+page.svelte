@@ -84,8 +84,34 @@
 			title: "6. Luftoperation",
 			body: "Weisen Sie im Panel Air operations ein Geschwader einer Aufgabe zu – zum Beispiel Seezielbekämpfung oder Aufklärung. Die Details stehen in /docs/air.",
 			target: '[data-tutorial="air-ops"]',
+			manual: "Verstanden"
+		}
+	];
+
+	const airSteps = [
+		{
+			id: "panel",
+			title: "1. Air operations öffnen",
+			body: "Hier stehen alle einsatzbereiten Geschwader mit Treibstoff und Erfahrung. Klicken Sie in das Formular, um zu beginnen.",
+			target: '[data-tutorial="air-ops"]',
+			done: "air-panel-open",
+			manual: "Formular anzeigen"
+		},
+		{
+			id: "kind",
+			title: "2. Einsatz wählen",
+			body: "Wählen Sie eine Einsatzart. Jede verlangt eine bestimmte Rolle: Bomber für Bombardierung, Naval bomber für Seeziele, Tanker für Betankung.",
+			target: '[data-tutorial="air-kind"]',
+			done: "air-kind-changed",
+			manual: "Auswahl anzeigen"
+		},
+		{
+			id: "launch",
+			title: "3. Starten",
+			body: "Ziel wählen und „Launch mission“ klicken. Der Treibstoff wird sofort abgezogen, die Wirkung kommt nach dem Flug – Details in /docs/air.",
+			target: '[data-tutorial="air-ops"]',
 			done: "air-mission",
-			manual: "Panel anzeigen"
+			manual: "Formular anzeigen"
 		}
 	];
 
@@ -435,7 +461,14 @@
 							{/each}
 						</div>
 						{#if data.canCommand}
-							<form method="POST" action="?/launchAirMission" use:enhance={enhanceForm} data-tutorial="air-ops" class="mt-3 space-y-2">
+							<form
+								method="POST"
+								action="?/launchAirMission"
+								use:enhance={enhanceForm}
+								data-tutorial="air-ops"
+								class="mt-3 space-y-2"
+								onclick={() => window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: "air-panel-open" }))}
+							>
 								<select name="unitId" bind:value={airUnitId} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
 									{#each data.airSupport.units as unit}
 										<option value={unit.id}>
@@ -443,7 +476,13 @@
 										</option>
 									{/each}
 								</select>
-								<select name="kind" bind:value={airMissionKind} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+								<select
+									name="kind"
+									bind:value={airMissionKind}
+									data-tutorial="air-kind"
+									class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+									onchange={() => window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: "air-kind-changed" }))}
+								>
 									{#each AIR_MISSION_IDS as kind}
 										<option value={kind}>{AIR_MISSIONS[kind].label}</option>
 									{/each}
@@ -687,4 +726,5 @@
 		</form>
 	{/if}
 	<Tutorial id="navy" title="Flotten-Kurzanleitung" steps={navySteps} />
+	<Tutorial id="air" title="Luftwaffen-Kurzanleitung" steps={airSteps} />
 </PageContainer>

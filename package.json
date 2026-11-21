@@ -136,6 +136,7 @@
 		"@tiptap/extension-text-style": "3.35.0",
 		"date-fns": "4.4.0",
 		"isomorphic-dompurify": "^4.8.0",
+		"mermaid": "^12.3.0",
 		"prosemirror-model": "1.25.13",
 		"prosemirror-state": "1.4.4",
 		"prosemirror-view": "1.43.0",

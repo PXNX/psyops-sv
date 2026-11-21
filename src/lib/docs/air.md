@@ -4,11 +4,24 @@ description: Flugzeuge ausbilden, Treibstoff und Erfahrung nutzen und Einsätze 
 order: 5
 ---
 
+<script>
+  import Mermaid from "../component/Mermaid.svelte";
+</script>
+
 # Luftwaffe und Einsätze
+
+> **Interaktiv lernen:** [Luftwaffen-Tutorial jetzt starten](/navy?tutorial=air) – die Anleitung führt Sie durch Geschwader, Einsätze und Ziele.
 
 Die Luftwaffe wird unter **Forces** (/training) ausgebildet und im Navy-Console
 unter **Air operations** gesteuert. Jedes Geschwader hat eine Rolle, verbraucht
 Treibstoff und sammelt Erfahrung.
+
+<Mermaid
+  label="Lebenszyklus eines Einsatzes"
+  chart={"flowchart LR\n  T[Forces: Geschwader trainieren] --> E[Erfahrung + Treibstoff]\n  E --> A[Air operations: Aufgabe wählen]\n  A --> R{Rolle passt?}\n  R -->|nein| X[abgelehnt]\n  R -->|ja| L[Launch mission — Treibstoff sofort weg]\n  L --> C[Cron: Flugzeit abwarten]\n  C --> W[Wirkung + Erfahrungsgewinn]"}
+/>
+
+![Luftraum-Sektoren auf der Karte](/images/docs/luftraum.svg)
 
 ## 1. Geschwader ausbilden
 
@@ -57,6 +70,11 @@ Wirkung tritt ein, wenn der Flugtimer abläuft.
 | Reconnaissance | Hex | Seeaufklärungsbericht mit Kontakten und Minen |
 | Refuel | eigene Region | Schiffe im Hafenhex werden betankt |
 | Battlefield support | Region | Versorgung 6 h lang entlastet |
+
+<Mermaid
+  label="Rolle bestimmt den Einsatz"
+  chart={"flowchart TD\n  B[Bomber] --> SB[Strategic bombing]\n  B --> LS[Logistic strike]\n  N[Naval bomber / Helikopter] --> NB[Naval bombing]\n  N --> ASW[U-Boot-Jagd auf See]\n  TR[Transportflugzeug] --> AL[Airlift]\n  TK[Tanker] --> RF[Refuel]\n  F[Fighterjet] --> AO[Air superiority]\n  CS[Close air support] --> BS[Battlefield support]\n  H[Helikopter · utility] --> RC[Reconnaissance]"}
+/>
 
 ## 4. Luftraum auf der Karte
 

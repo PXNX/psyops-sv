@@ -3,9 +3,13 @@
      per browser. The /docs pages remain the technical reference. -->
 <script lang="ts">
 	import { onMount } from "svelte";
+	import { page } from "$app/state";
 	import IconInfo from "~icons/fluent/question-circle-24-regular";
 	import IconClose from "~icons/fluent/dismiss-20-regular";
 	import { Button, IconButton } from "#lib/component/ui/index.js";
+
+	/** Only one tour runs at a time; the docs links can launch a specific one. */
+	let activeTour: string | null = null;
 
 	export interface TutorialStep {
 		id: string;
@@ -42,6 +46,12 @@
 		}
 	}
 
+	function takeOver() {
+		if (activeTour && activeTour !== id)
+			window.dispatchEvent(new CustomEvent("psyops:tutorial-takeover", { detail: id }));
+		activeTour = id;
+	}
+
 	function advance() {
 		if (index < steps.length - 1) index++;
 		else finish();
@@ -54,6 +64,7 @@
 	function finish() {
 		open = false;
 		index = 0;
+		if (activeTour === id) activeTour = null;
 		try {
 			localStorage.setItem(key, JSON.stringify({ index: 0, done: true }));
 		} catch {
@@ -63,6 +74,7 @@
 	function restart() {
 		index = 0;
 		save();
+		takeOver();
 		open = true;
 	}
 
@@ -72,9 +84,11 @@
 			if (saved?.done) ready = true;
 			else {
 				if (saved && typeof saved.index === "number") index = saved.index;
+				takeOver();
 				open = true;
 			}
 		} catch {
+			takeOver();
 			open = true;
 		}
 		ready = true;
@@ -83,8 +97,22 @@
 			const detail = (e as CustomEvent<string>).detail;
 			if (open && step?.done && detail === step.done) advance();
 		};
+		const onTakeover = (e: Event) => {
+			if ((e as CustomEvent<string>).detail !== id) open = false;
+		};
 		window.addEventListener("psyops:tutorial", onEvent);
-		return () => window.removeEventListener("psyops:tutorial", onEvent);
+		window.addEventListener("psyops:tutorial-takeover", onTakeover);
+		return () => {
+			window.removeEventListener("psyops:tutorial", onEvent);
+			window.removeEventListener("psyops:tutorial-takeover", onTakeover);
+		};
+	});
+
+	// Links from /docs use ?tutorial=<id> (or "restart") to relaunch a tour.
+	$effect(() => {
+		const request = page.url.searchParams.get("tutorial");
+		if (!ready || !request || (request !== id && request !== "restart" && request !== "start")) return;
+		restart();
 	});
 
 	$effect(() => {
