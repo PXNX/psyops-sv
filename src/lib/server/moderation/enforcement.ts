@@ -65,16 +65,24 @@ export async function issueWarning(params: {
 		const existing = await db.query.chatRestrictions.findFirst({
 			where: eq(chatRestrictions.userId, userId)
 		});
-		if (!existing) {
+		const stillActive =
+			existing && (existing.isPermanent || !existing.expiresAt || existing.expiresAt > new Date());
+		if (!stillActive) {
 			const expiresAt = new Date();
 			expiresAt.setDate(expiresAt.getDate() + AUTO_RESTRICT_DAYS);
-			await db.insert(chatRestrictions).values({
+			const values = {
 				userId,
 				reason: `Accumulated ${AUTO_RESTRICT_AFTER} warnings`,
 				restrictedBy: issuedBy,
 				expiresAt,
-				isPermanent: false
-			});
+				isPermanent: false,
+				restrictedAt: new Date()
+			};
+			if (existing) {
+				await db.update(chatRestrictions).set(values).where(eq(chatRestrictions.userId, userId));
+			} else {
+				await db.insert(chatRestrictions).values(values);
+			}
 			restricted = true;
 			await notifyAction({
 				recipientId: userId,

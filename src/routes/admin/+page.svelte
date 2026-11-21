@@ -21,7 +21,8 @@
 			href: "/admin/users",
 			icon: FluentPeople20Filled,
 			title: "Users & roles",
-			description: "Find a player, change their role, issue warnings or restrictions, reset flagged content."
+			description: "Find a player, change their role, issue warnings or restrictions, reset flagged content.",
+			badge: 0
 		},
 		{
 			href: "/admin/flags",
@@ -34,19 +35,22 @@
 			href: "/moderation",
 			icon: FluentShield20Filled,
 			title: "Report queue",
-			description: "Review incoming reports, remove content and close cases."
+			description: "Review incoming reports, remove content and close cases.",
+			badge: data.stats.pendingReports
 		},
 		{
 			href: "/admin/broadcast",
 			icon: FluentMegaphone20Filled,
 			title: "Broadcasts",
-			description: "Publish or revoke a message shown across the platform."
+			description: "Publish or revoke a message shown across the platform.",
+			badge: 0
 		},
 		{
 			href: "/admin/giftcode",
 			icon: FluentGift20Filled,
 			title: "Gift codes",
-			description: "Create and manage promotional codes and their rewards."
+			description: "Create and manage promotional codes and their rewards.",
+			badge: 0
 		}
 	];
 

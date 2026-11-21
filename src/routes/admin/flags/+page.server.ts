@@ -28,7 +28,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			: [],
 		partyIds.length
 			? db.query.politicalParties.findMany({
-					where: (p, { inArray: in }) => in(p.id, partyIds)
+					where: (p, { inArray }) => inArray(p.id, partyIds)
 				})
 			: []
 	]);
