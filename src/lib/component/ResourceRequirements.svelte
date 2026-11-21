@@ -1,14 +1,7 @@
 <!-- /lib/component/ResourceRequirements.svelte -->
 <script lang="ts">
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
-	import GameIconsOre from "~icons/game-icons/ore";
-	import GameIconsMinerals from "~icons/game-icons/minerals";
-	import GameIconsMetalBar from "~icons/game-icons/metal-bar";
-	import GameIconsPowderBag from "~icons/game-icons/powder-bag";
-	import GameIconsWoodPile from "~icons/game-icons/wood-pile";
-	import GameIconsCoalPile from "~icons/game-icons/coal-pile";
-	import FluentEmojiPackage from "~icons/fluent-emoji/package";
-	import { resourceColors } from "#lib/component/ResourceIcon.svelte";
+	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 
 	type Props = {
 		costs: Record<string, number>;
@@ -17,16 +10,6 @@
 
 	let { costs, available }: Props = $props();
 
-	const resourceIconComponents: Record<string, any> = {
-		iron: GameIconsOre,
-		copper: GameIconsMinerals,
-		steel: GameIconsMetalBar,
-		gunpowder: GameIconsPowderBag,
-		wood: GameIconsWoodPile,
-		coal: GameIconsCoalPile,
-		currency: FluentMoney20Filled
-	};
-
 	const requirements = $derived.by(() => {
 		return Object.entries(costs).map(([resource, needed]) => {
 			const availableAmount = available[resource] || 0;
@@ -34,8 +17,6 @@
 
 			return {
 				resource,
-				IconComponent: resourceIconComponents[resource] || FluentEmojiPackage,
-				iconColor: resourceColors[resource] ?? "",
 				needed,
 				available: availableAmount,
 				hasEnough,
@@ -59,7 +40,11 @@
 					href="/market/{req.resource}"
 					class="text-fg-muted hover:text-fg flex items-center gap-1.5 transition-colors"
 				>
-					<req.IconComponent class="size-3.5 {req.isCurrency ? 'text-positive' : req.iconColor}" />
+					{#if req.isCurrency}
+						<FluentMoney20Filled class="size-3.5 text-positive" />
+					{:else}
+						<ResourceIcon name={req.resource} class="size-3.5 shrink-0" />
+					{/if}
 					<span class="capitalize">{req.resource}</span>
 				</a>
 				<span class="font-mono text-xs" class:text-fg={req.hasEnough} class:text-red-400={!req.hasEnough}>
