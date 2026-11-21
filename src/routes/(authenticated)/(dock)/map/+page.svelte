@@ -36,7 +36,9 @@
 		eezHexes,
 		hexFromLatLon,
 		hexKey,
+		hexDistance,
 		hexPolygonLatLon,
+		parseHexKey,
 		hexToLatLon,
 		UNIT_CATEGORIES,
 		WEATHER_LABEL,
@@ -127,6 +129,10 @@
 	let centroids = $state<Record<number, { x: number; y: number; r: number }>>({});
 	let cursor = $state<{ x: number; y: number } | null>(null);
 	let selectedId = $state<number | null>(null);
+	let selectedHexKey = $state<string | null>(null);
+	/** Hexes whose centre falls inside a land path — filled in once the SVG mounts. */
+	let landHexKeys = $state<Set<string>>(new Set());
+	let seaGeometryReady = $state(false);
 	let highlightedId = $state<number | null>(null);
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
 	let now = $state(new Date());
@@ -331,6 +337,22 @@
 		});
 		centroids = c;
 
+		// Clip the sea grid to the real coastline: a hex only counts as water
+		// when its centre is outside every land polygon in the world SVG.
+		const landPaths = [...node.querySelectorAll("path[id]")].filter(
+			(p): p is SVGPathElement => !p.closest("defs") && !isNaN(parseInt(p.id, 10))
+		);
+		const land = new Set<string>();
+		for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
+			for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
+				const point = hexCentre({ q, r });
+				const p = new DOMPoint(point.x, point.y);
+				if (landPaths.some((path) => path.isPointInFill(p))) land.add(hexKey({ q, r }));
+			}
+		}
+		landHexKeys = land;
+		seaGeometryReady = true;
+
 		const { width, height } = viewportSize();
 		minZoom = Math.max(width / SVG_WIDTH, height / SVG_HEIGHT, 0.1);
 		instance = panzoom(node, { bounds: false, maxZoom: 60, minZoom, smoothScroll: false });
@@ -434,6 +456,13 @@
 	}
 	function onPointerUp(e: PointerEvent) {
 		if (!e.isPrimary || Math.hypot(e.clientX - downX, e.clientY - downY) > DRAG_THRESHOLD) return;
+		const hexEl = (e.target as Element | null)?.closest?.("[data-hex]");
+		if (hexEl) {
+			selectedHexKey = hexEl.getAttribute("data-hex");
+			selectedId = null;
+			sheetOpen = false;
+			return;
+		}
 		let el = e.target as Element | null;
 		for (let d = 0; el && d < 5; d++, el = el.parentElement) {
 			const id = parseInt(el.id, 10);
@@ -454,6 +483,7 @@
 
 	function openRegion(id: number) {
 		selectedId = id;
+		selectedHexKey = null;
 		sheetOpen = true;
 	}
 	function closeRegion() {
@@ -589,8 +619,27 @@
 			})
 			.join(" ");
 
+	/** Only water hexes inside a coastal state's EEZ are drawn. Land is tested
+	 *  against the actual region polygons, so the grid stops at the coast and
+	 *  neighbouring EEZs hand over to the closest coastal region. */
+	const eezByHex = $derived.by(() => {
+		const owner = new Map<string, { regionId: number; stateId: number; color: string; distance: number }>();
+		if (!seaGeometryReady) return owner;
+		for (const region of data.sea.coastalRegions) {
+			const centre = hexFromLatLon(region.latitude, region.longitude);
+			const color = data.stateColorMap[region.stateId] ?? "#38bdf8";
+			for (const h of eezHexes(region, data.sea.regionsForEez)) {
+				const key = hexKey(h);
+				if (landHexKeys.has(key)) continue;
+				const distance = hexDistance(h, centre);
+				const prev = owner.get(key);
+				if (!prev || distance < prev.distance) owner.set(key, { regionId: region.id, stateId: region.stateId, color, distance });
+			}
+		}
+		return owner;
+	});
 	const seaHexes = $derived.by(() => {
-		const out: { key: string; points: string; x: number; y: number; active: boolean }[] = [];
+		const out: { key: string; q: number; r: number; points: string; x: number; y: number; active: boolean; color: string; regionId: number }[] = [];
 		const active = new Set([
 			...data.sea.ports.map((p) => hexKey(p)),
 			...data.sea.ships.filter((s) => s.status !== "sunk").map((s) => hexKey(s)),
@@ -599,47 +648,70 @@
 		for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
 			for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
 				const h = { q, r };
+				const key = hexKey(h);
+				const owner = eezByHex.get(key);
+				if (!owner) continue;
 				const c = hexCentre(h);
-				out.push({ key: hexKey(h), points: hexPoints(h), x: c.x, y: c.y, active: active.has(hexKey(h)) });
+				out.push({
+					key,
+					q,
+					r,
+					points: hexPoints(h),
+					x: c.x,
+					y: c.y,
+					active: active.has(key),
+					color: owner.color,
+					regionId: owner.regionId
+				});
 			}
 		}
 		return out;
 	});
-	const eezZones = $derived.by(() =>
-		data.sea.coastalRegions.map((region) => ({
-			id: region.id,
-			stateId: region.stateId,
-			color: data.stateColorMap[region.stateId] ?? "#38bdf8",
-			hexes: eezHexes(region, data.sea.regionsForEez).map((h) => hexPoints(h))
-		}))
-	);
-	const portMarkers = $derived(data.sea.ports.map((p) => ({ ...p, ...hexCentre(p) })));
+	/** Show a vessel on water even if its stored hex sits under a land path. */
+	function displayHex(h: { q: number; r: number }) {
+		if (eezByHex.has(hexKey(h))) return h;
+		const nearest = [...eezByHex.keys()]
+			.map(parseHexKey)
+			.sort((a, b) => hexDistance(a, h) - hexDistance(b, h))[0];
+		return nearest ?? h;
+	}
+	const portMarkers = $derived(data.sea.ports.map((p) => ({ ...p, ...hexCentre(displayHex(p)) })));
 	const shipMarkers = $derived(
 		data.sea.ships
 			.filter((s) => s.status !== "sunk")
-			.map((s) => ({ ...s, ...hexCentre(s), short: SHIP_CLASSES[s.shipClass]?.short ?? "?" }))
+			.map((s) => ({ ...s, ...hexCentre(displayHex(s)), short: SHIP_CLASSES[s.shipClass]?.short ?? "?" }))
 	);
-	const mineMarkers = $derived(data.sea.mines.map((m) => ({ ...m, ...hexCentre(m) })));
+	const mineMarkers = $derived(data.sea.mines.map((m) => ({ ...m, ...hexCentre(displayHex(m)) })));
 
-	/** The hex sea is part of the world SVG itself, not a second floating canvas. */
+	const selectedHexInfo = $derived.by(() => {
+		if (!selectedHexKey) return null;
+		const h = parseHexKey(selectedHexKey);
+		const owner = eezByHex.get(selectedHexKey);
+		return {
+			q: h.q,
+			r: h.r,
+			owner: owner ? { regionId: owner.regionId, stateName: stateById.get(owner.stateId)?.name ?? `State ${owner.stateId}` } : null,
+			port: data.sea.ports.find((p) => p.q === h.q && p.r === h.r) ?? null,
+			ships: data.sea.ships.filter((s) => s.q === h.q && s.r === h.r && s.status !== "sunk"),
+			mines: data.sea.mines.filter((m) => m.q === h.q && m.r === h.r)
+		};
+	});
+
+	/** The hex sea is part of the world SVG itself, not a second floating canvas.
+	 *  Each cell carries its coordinate so it can be tapped and selected. */
 	const worldSvg = $derived.by(() => {
 		if (!showSea || !overlays.sea) return WorldMap;
-		const eez = eezZones
-			.flatMap((z) => z.hexes.map((points) => `<polygon points='${points}' fill='${z.color}' fill-opacity='0.07'/>`))
+		const cells = seaHexes
+			.map((h) => {
+				const picked = h.key === selectedHexKey;
+				return `<polygon data-hex='${h.key}' points='${h.points}' fill='${h.color}' fill-opacity='${
+					picked ? 0.34 : h.active ? 0.18 : 0.08
+				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.8 : 0.42}' stroke-width='${
+					picked ? 2 : h.active ? 1 : 0.6
+				}' style='cursor:pointer'/>`;
+			})
 			.join("");
-		const grid = seaHexes
-			.map(
-				(h) =>
-					`<polygon points='${h.points}' fill='${h.active ? "#22d3ee" : "none"}' fill-opacity='${
-						h.active ? 0.14 : 0
-					}' stroke='${h.active ? "#67e8f9" : "#38bdf8"}' stroke-opacity='${h.active ? 0.85 : 0.25}' stroke-width='${
-						h.active ? 1.3 : 0.6
-					}'/>`
-			)
-			.join("");
-		const group = `<g id='world-hex-sea' pointer-events='none'><title>EEZ · ${
-			EEZ.radiusHexes
-		} hex rings</title>${eez}${grid}</g>`;
+		const group = `<g id='world-hex-sea'><title>EEZ sea grid · ${EEZ.radiusHexes} hex rings</title>${cells}</g>`;
 		return WorldMap.replace("</svg>", `${group}</svg>`);
 	});
 
@@ -998,6 +1070,38 @@
 		<div class="mx-1 my-1 h-px bg-line/20"></div>
 		<IconButton icon={IconDocument} label="Intel reports" size="sm" shape="square" variant="ghost" href="/intel" />
 	</nav>
+
+	<!-- Selected sea hex -->
+	{#if selectedHexInfo}
+		<div class="panel absolute right-2 top-28 z-20 w-64 rounded-sm p-3 text-xs shadow-lg animate-pop-in">
+			<div class="flex items-center justify-between gap-2">
+				<h3 class="font-semibold text-heading">Sea hex {selectedHexInfo.q},{selectedHexInfo.r}</h3>
+				<IconButton icon={IconDismiss} label="Close" size="xs" shape="square" variant="ghost" onclick={() => (selectedHexKey = null)} />
+			</div>
+			<div class="mt-1 text-fg-muted">
+				{#if selectedHexInfo.owner}
+					EEZ of {selectedHexInfo.owner.stateName} · region #{selectedHexInfo.owner.regionId}
+				{:else}
+					Outside a coastal EEZ
+				{/if}
+			</div>
+			{#if selectedHexInfo.port}
+				<div class="mt-2">⚓ <span class="font-medium">{selectedHexInfo.port.name}</span></div>
+			{/if}
+			{#if selectedHexInfo.ships.length}
+				<div class="mt-1">Ships: {selectedHexInfo.ships.map((s) => SHIP_CLASSES[s.shipClass]?.short ?? s.shipClass).join(", ")}</div>
+			{/if}
+			{#if selectedHexInfo.mines.length}
+				<div class="mt-1 text-error">✳ {selectedHexInfo.mines.length} minefield(s)</div>
+			{/if}
+			<a
+				href="/navy?hex={selectedHexInfo.q},{selectedHexInfo.r}"
+				class="mt-3 inline-block rounded-sm bg-primary/20 px-2 py-1 text-primary-fg hover:bg-primary/30"
+			>
+				Open in fleet console →
+			</a>
+		</div>
+	{/if}
 
 	<!-- Search, top right -->
 	<form

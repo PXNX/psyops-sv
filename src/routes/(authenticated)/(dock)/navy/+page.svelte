@@ -4,7 +4,7 @@
 <script lang="ts">
 	import { tick } from "svelte";
 	import { enhance, type SubmitFunction } from "$app/forms";
-	import { invalidateAll } from "$app/navigation";
+	import { page } from "$app/state";
 	import type { PageData } from "./$types";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
@@ -111,6 +111,12 @@
 	}
 	$effect(() => {
 		pickOrderDock();
+	});
+	$effect(() => {
+		const value = page.url.searchParams.get("hex");
+		if (!value) return;
+		const [q, r] = value.split(",").map(Number);
+		if (Number.isInteger(q) && Number.isInteger(r)) selectedHex = { q, r };
 	});
 
 	const pct = (value: number, max: number) => Math.max(0, Math.min(100, max ? (value / max) * 100 : 0));

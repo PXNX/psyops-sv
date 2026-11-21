@@ -51,9 +51,12 @@ the **dock queue** (`/api/cron/fleet` advances every leg, job and engagement).
 A coastal region claims an EEZ — two hex rings of offshore water — and can
 hold exactly one port, placed on the nearest free hex inside that zone; ports
 and docks expand by level (more fuel storage, more build bays). The hex grid
-and EEZs are drawn inside the world SVG on `/map`, which has three modes:
-**naval** (sea and coasts only), **land** (regions and forces) and **aerial**
-(hexes and regions grouped into Luftraum sectors). Hulls come in four families: capital ships (carrier with fighters, VLS frigate,
+and EEZs are drawn inside the world SVG on `/map`, clipped to the real
+coastline (only water hexes inside a coastal state's EEZ are shown) and
+selectable by tap — the selected hex opens its owner, ships, mines and port,
+with a link into the fleet console. The map has three modes: **naval** (sea
+and coasts only), **land** (regions and forces) and **aerial** (hexes and
+regions grouped into Luftraum sectors). Hulls come in four families: capital ships (carrier with fighters, VLS frigate,
 ASW helipad cruiser), escorts (support ship, corvette, destroyer, light AA and
 a GNSS jammer), submarines (torpedo and VLS) and civilians (container ship,
 Ro-Ro ferry, tanker). Minefields can be laid from frigates and submarines:
