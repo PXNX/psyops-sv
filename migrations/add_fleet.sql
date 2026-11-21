@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS sea_ports (
   created_at timestamp NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS uq_sea_port_hex ON sea_ports (q, r);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_sea_port_region ON sea_ports (region_id);
 CREATE INDEX IF NOT EXISTS idx_sea_port_state ON sea_ports (state_id);
 
 CREATE TABLE IF NOT EXISTS sea_docks (

@@ -39,6 +39,33 @@ export function hexKey(h: Hex): string {
 	return `${h.q},${h.r}`;
 }
 
+/** Centre of a hex in real coordinates, the exact inverse of `hexFromLatLon`. */
+export function hexToLatLon(h: Hex): { lat: number; lon: number } {
+	const spanQ = HEX_BOUNDS.maxQ - HEX_BOUNDS.minQ;
+	const spanR = HEX_BOUNDS.maxR - HEX_BOUNDS.minR;
+	return {
+		lat: 90 - ((h.r - HEX_BOUNDS.minR) / spanR) * 180,
+		lon: -180 + ((h.q - HEX_BOUNDS.minQ) / spanQ) * 360
+	};
+}
+
+/** The six corners of a hex as lat/lon, for drawing it on the world map. */
+export function hexPolygonLatLon(h: Hex): { lat: number; lon: number }[] {
+	const centre = hexToLatLon(h);
+	const spanR = HEX_BOUNDS.maxR - HEX_BOUNDS.minR;
+	// Pointy-top: row spacing is 1.5 × the centre-to-corner radius.
+	const size = 180 / spanR / 1.5;
+	const corners: { lat: number; lon: number }[] = [];
+	for (let i = 0; i < 6; i++) {
+		const angle = ((60 * i - 30) * Math.PI) / 180;
+		corners.push({
+			lat: Math.max(-89.9, Math.min(89.9, centre.lat + size * Math.sin(angle))),
+			lon: centre.lon + size * Math.cos(angle)
+		});
+	}
+	return corners;
+}
+
 /** Map a region's map coordinates onto the sea grid (for shore-based effects). */
 export function hexFromLatLon(latitude: number, longitude: number): Hex {
 	const spanQ = HEX_BOUNDS.maxQ - HEX_BOUNDS.minQ;
@@ -102,7 +129,7 @@ export function hexPolygon(h: Hex, size = HEX_SIZE): string {
 }
 
 /** Bounds of the drawn map, for an SVG viewBox. */
-export function hexMapViewBox(size = HEX_SIZE): { width: number; height: number } {
+export function hexMapViewBox(size = HEX_SIZE): { minX: number; minY: number; width: number; height: number } {
 	const corners = [
 		hexToPixel({ q: HEX_BOUNDS.minQ, r: HEX_BOUNDS.minR }, size),
 		hexToPixel({ q: HEX_BOUNDS.maxQ, r: HEX_BOUNDS.minR }, size),
@@ -577,6 +604,41 @@ export function shipClass(id: string): ShipClassDef | undefined {
 /** A ship's bare hull type for combat targeting. */
 export function targetKind(id: ShipClassId): TargetKind {
 	return SHIP_CLASSES[id].category === "submarine" ? "sub" : SHIP_CLASSES[id].category === "civilian" ? "surface" : "surface";
+}
+
+// ── Exclusive economic zones ────────────────────────────────────────────────
+// Regions are not hexagons: a coastal region has an irregular outline, and its
+// maritime claim is the seawater offshore. Since the world map only stores a
+// region centroid, we approximate its EEZ by the ring of sea hexes around that
+// centroid that do not contain another region. Ports are placed on the nearest
+// free hex in that ring, so every coastal region's EEZ is at least large
+// enough to hold its port and the neighbouring sea lanes.
+
+export const EEZ = {
+	/** How many hex rings the maritime claim reaches from the coastline. */
+	radiusHexes: 2,
+	/** The port itself sits one hex offshore (inside the EEZ). */
+	portDistanceHexes: 1
+} as const;
+
+type GeoRegion = { id: number; latitude: unknown; longitude: unknown };
+
+/** The sea hexes claimed by a coastal region, excluding land and neighbours' claims. */
+export function eezHexes(region: GeoRegion, allRegions: GeoRegion[]): Hex[] {
+	const centre = hexFromLatLon(Number(region.latitude), Number(region.longitude));
+	const land = new Set(allRegions.map((r) => hexKey(hexFromLatLon(Number(r.latitude), Number(r.longitude)))));
+	return hexesInRange(centre, EEZ.radiusHexes).filter(
+		(h) => hexKey(h) !== hexKey(centre) && !land.has(hexKey(h))
+	);
+}
+
+/** Pick a port hex inside the region's EEZ that no other port occupies. */
+export function portHexForRegion(region: GeoRegion, allRegions: GeoRegion[], taken: Set<string>): Hex | null {
+	const centre = hexFromLatLon(Number(region.latitude), Number(region.longitude));
+	const candidates = eezHexes(region, allRegions).sort(
+		(a, b) => hexDistance(a, centre) - hexDistance(b, centre) || a.q - b.q || a.r - b.r
+	);
+	return candidates.find((h) => !taken.has(hexKey(h))) ?? null;
 }
 
 // ── Facilities and costs ────────────────────────────────────────────────────

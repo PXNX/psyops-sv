@@ -3973,7 +3973,8 @@ export const seaPorts = pgTable(
 	},
 	(t) => ({
 		stateIdx: index("idx_sea_port_state").on(t.stateId),
-		hexIdx: uniqueIndex("uq_sea_port_hex").on(t.q, t.r)
+		hexIdx: uniqueIndex("uq_sea_port_hex").on(t.q, t.r),
+		regionIdx: uniqueIndex("uq_sea_port_region").on(t.regionId)
 	})
 );
 

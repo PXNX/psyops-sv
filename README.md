@@ -48,7 +48,9 @@ sea-lane raid (seizes treasury) and minelaying. See `naval.config.ts` and
 layer. The ocean is a bounded axial hex grid; ships steam one hex per leg, burn
 fuel, and can be refuelled and loaded at **ports** or built and repaired through
 the **dock queue** (`/api/cron/fleet` advances every leg, job and engagement).
-Hulls come in four families: capital ships (carrier with fighters, VLS frigate,
+A coastal region claims an EEZ — two hex rings of offshore water — and can
+hold exactly one port, placed on the nearest free hex inside that zone; the
+hex grid and EEZs are drawn as an overlay on `/map`. Hulls come in four families: capital ships (carrier with fighters, VLS frigate,
 ASW helipad cruiser), escorts (support ship, corvette, destroyer, light AA and
 a GNSS jammer), submarines (torpedo and VLS) and civilians (container ship,
 Ro-Ro ferry, tanker). Minefields can be laid from frigates and submarines:

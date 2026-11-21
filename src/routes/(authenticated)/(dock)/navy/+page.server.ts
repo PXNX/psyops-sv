@@ -5,8 +5,6 @@
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
-import { regions } from "#lib/server/schema.js";
-import { eq } from "drizzle-orm";
 import { viewerSide } from "#lib/server/services/military/recon.js";
 import {
 	FleetError,
@@ -18,13 +16,13 @@ import {
 	loadFleetWorld,
 	moveShip,
 	orderShip,
+	portCandidates,
 	refuelShip,
 	repairShip,
 	stopShip,
 	transportCargo,
 	transferFuel
 } from "#lib/server/services/military/fleet.js";
-import { inBounds } from "#lib/config/index.js";
 
 function message(err: unknown) {
 	return err instanceof FleetError ? err.message : err instanceof Error ? err.message : "Something went wrong.";
@@ -37,12 +35,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const userId = locals.account!.id;
 	const side = await viewerSide(db, userId);
 	const world = await loadFleetWorld(db, side?.stateId);
-	const myRegions = side
-		? await db
-				.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude })
-				.from(regions)
-				.where(eq(regions.stateId, side.stateId))
-		: [];
 	let canCommand = false;
 	if (side) canCommand = (await fleetAuthority(db, userId).catch(() => null)) !== null;
 
@@ -70,20 +62,17 @@ export const load: PageServerLoad = async ({ locals }) => {
 		jamming: world.jamming,
 		enemyStateIds: world.enemyStateIds,
 		alliedStateIds: world.side?.stateIds ?? [],
-		myRegions: myRegions.map((r) => ({ id: r.id, label: `Region #${r.id} (${r.latitude}, ${r.longitude})` }))
+		portCandidates: side ? await portCandidates(db, side.stateId) : []
 	};
 };
 
 export const actions: Actions = {
 	buildPort: async ({ request, locals }) => {
 		const f = await request.formData();
-		const q = Number(f.get("q"));
-		const r = Number(f.get("r"));
 		const name = String(f.get("name") ?? "");
-		const regionId = f.get("regionId") ? Number(f.get("regionId")) : null;
+		const regionId = Number(f.get("regionId"));
 		try {
-			if (!inBounds({ q, r })) throw new FleetError("That hex is outside the naval theatre.");
-			await buildPort(db, locals.account!.id, { name, q, r, regionId });
+			await buildPort(db, locals.account!.id, { name, regionId });
 			return { success: true, message: `Port ${name} established.` };
 		} catch (err) {
 			return fail(400, { error: message(err) });

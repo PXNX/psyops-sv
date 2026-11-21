@@ -58,6 +58,38 @@ export function mapToLatLon(x: number, y: number): { lat: number; lon: number } 
 	return { lat: Math.max(-89.9, Math.min(89.9, dot(LAT_COEF))), lon };
 }
 
+/**
+ * Latitude/longitude → map units: the numerical inverse of `mapToLatLon`.
+ * The projection is a calibrated cubic fit, so Newton iteration with a
+ * finite-difference Jacobian is the simplest stable inversion.
+ */
+export function latLonToMap(lat: number, lon: number): { x: number; y: number } {
+	const wrap = (d: number) => ((d + 540) % 360) - 180;
+	let x = 700 + (wrap(lon) / 180) * 700;
+	let y = 300 - (lat / 90) * 300;
+	for (let i = 0; i < 24; i++) {
+		const here = mapToLatLon(x, y);
+		const dLat = lat - here.lat;
+		const dLon = wrap(lon - here.lon);
+		if (Math.abs(dLat) < 1e-4 && Math.abs(dLon) < 1e-4) break;
+		const e = 0.5;
+		const east = mapToLatLon(x + e, y);
+		const south = mapToLatLon(x, y + e);
+		const a = (east.lat - here.lat) / e;
+		const b = (south.lat - here.lat) / e;
+		const c = wrap(east.lon - here.lon) / e;
+		const d = wrap(south.lon - here.lon) / e;
+		const det = a * d - b * c;
+		if (Math.abs(det) < 1e-9) break;
+		const dx = (dLat * d - b * dLon) / det;
+		const dy = (a * dLon - dLat * c) / det;
+		if (!Number.isFinite(dx) || !Number.isFinite(dy)) break;
+		x = Math.max(0, Math.min(1400, x + Math.max(-250, Math.min(250, dx))));
+		y = Math.max(0, Math.min(600, y + Math.max(-250, Math.min(250, dy))));
+	}
+	return { x, y };
+}
+
 export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
 	const toRad = (d: number) => (d * Math.PI) / 180;
 	const a =

@@ -42,7 +42,15 @@ import {
 	fleetEvents
 } from "./schema";
 import type { PgDatabase } from "drizzle-orm/pg-core";
-import { hash32, seededRandom, SENSORS, type SensorId, type ViewConditions } from "#lib/config/index.js";
+import {
+	hash32,
+	hexKey,
+	portHexForRegion,
+	seededRandom,
+	SENSORS,
+	type SensorId,
+	type ViewConditions
+} from "#lib/config/index.js";
 import { scanRegion } from "./services/military/intel";
 
 export async function seedMockDatabase(db: PgDatabase<any>) {
@@ -261,6 +269,23 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 				education: 1
 			}
 		])
+		.returning();
+
+	// An Atlantic coast for Freedonia, so the admin has a maritime region to
+	// build a port on (terrain drives `isCoastal`).
+	const [freedoniaCoast] = await db
+		.insert(regions)
+		.values({
+			latitude: "48.6000",
+			terrain: "shore",
+			longitude: "-1.5000",
+			stateId: state1!.id,
+			rating: 4,
+			infrastructure: 3,
+			economy: 3,
+			education: 2,
+			hospitals: 1
+		})
 		.returning();
 
 	// ============ Region Borders ============
@@ -959,15 +984,20 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 	}
 
 	// ============ Fleet at sea ============
-	// A shell demo theatre: two hostile ports far apart, a dock and a few hulls
-	// so the navy console is immediately explorable in mock mode.
+	// Ports sit on the sea hex offshore of a coastal region, so they land in
+	// the same place on the world map's hex layer and in the navy console.
+	const seedRegions = await db.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
+	const occupiedHexes = new Set<string>();
+	const libHex = portHexForRegion(freedoniaCoast!, seedRegions, occupiedHexes)!;
+	occupiedHexes.add(hexKey(libHex));
+	const sylHex = portHexForRegion(region9!, seedRegions, occupiedHexes)!;
 	const [libertyPort] = await db
 		.insert(seaPorts)
 		.values({
 			stateId: state1!.id,
-			regionId: region1!.id,
-			q: 3,
-			r: 4,
+			regionId: freedoniaCoast!.id,
+			q: libHex.q,
+			r: libHex.r,
 			name: "Port Liberty",
 			level: 1,
 			fuelStock: 650,
@@ -977,7 +1007,7 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		.returning();
 	const [libertyDock] = await db
 		.insert(seaDocks)
-		.values({ portId: libertyPort!.id, stateId: state1!.id, q: 3, r: 4, level: 1, builtBy: "user-1" })
+		.values({ portId: libertyPort!.id, stateId: state1!.id, q: libHex.q, r: libHex.r, level: 1, builtBy: "user-1" })
 		.returning();
 	await db.insert(fleetShips).values([
 		{
@@ -986,8 +1016,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			dockId: libertyDock!.id,
 			name: "FNS Vanguard",
 			shipClass: "frigate",
-			q: 3,
-			r: 4,
+			q: libHex.q,
+			r: libHex.r,
 			health: 100,
 			fuel: 160,
 			status: "idle"
@@ -998,8 +1028,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			dockId: libertyDock!.id,
 			name: "FNS Meridian",
 			shipClass: "carrier",
-			q: 3,
-			r: 4,
+			q: libHex.q,
+			r: libHex.r,
 			health: 220,
 			fuel: 240,
 			status: "idle"
@@ -1010,8 +1040,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			dockId: libertyDock!.id,
 			name: "MV Freelancer",
 			shipClass: "container_ship",
-			q: 3,
-			r: 4,
+			q: libHex.q,
+			r: libHex.r,
 			health: 80,
 			fuel: 140,
 			status: "idle"
@@ -1021,9 +1051,9 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		.insert(seaPorts)
 		.values({
 			stateId: state2!.id,
-			regionId: region2!.id,
-			q: 11,
-			r: 6,
+			regionId: region9!.id,
+			q: sylHex.q,
+			r: sylHex.r,
 			name: "Sylvan Naval Base",
 			level: 1,
 			fuelStock: 500,
@@ -1033,15 +1063,15 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 		.returning();
 	await db
 		.insert(seaDocks)
-		.values({ portId: sylvanPort!.id, stateId: state2!.id, q: 11, r: 6, level: 1, builtBy: "user-3" });
+		.values({ portId: sylvanPort!.id, stateId: state2!.id, q: sylHex.q, r: sylHex.r, level: 1, builtBy: "user-3" });
 	await db.insert(fleetShips).values([
 		{
 			stateId: state2!.id,
 			ownerId: "user-3",
 			name: "SNS Ironclad",
 			shipClass: "destroyer",
-			q: 11,
-			r: 6,
+			q: sylHex.q,
+			r: sylHex.r,
 			health: 130,
 			fuel: 150,
 			status: "idle"
@@ -1051,8 +1081,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			ownerId: "user-3",
 			name: "SNS Silent",
 			shipClass: "torpedo_sub",
-			q: 11,
-			r: 6,
+			q: sylHex.q,
+			r: sylHex.r,
 			health: 70,
 			fuel: 120,
 			status: "idle"
@@ -1060,8 +1090,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 	]);
 	await db.insert(navalMines).values({
 		stateId: state2!.id,
-		q: 5,
-		r: 5,
+		q: Math.max(0, sylHex.q - 1),
+		r: sylHex.r,
 		strength: 100,
 		laidBy: "user-3",
 		expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000)
@@ -1069,8 +1099,8 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 	await db.insert(fleetEvents).values({
 		stateId: state1!.id,
 		kind: "port_built",
-		q: 3,
-		r: 4,
+		q: libHex.q,
+		r: libHex.r,
 		message: "Port Liberty commissioned. The sea lanes are open.",
 		createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000)
 	});

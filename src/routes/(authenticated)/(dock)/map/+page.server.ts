@@ -15,7 +15,10 @@ import {
 	militaryUnits,
 	battles,
 	regionBorders,
-	reconMissions
+	reconMissions,
+	seaPorts,
+	fleetShips,
+	navalMines
 } from "#lib/server/schema.js";
 import { sql, eq, and, inArray } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
@@ -234,7 +237,7 @@ export const actions: Actions = {
 export const load: PageServerLoad = async ({ locals }) => {
 	try {
 		// All map queries are independent, so run them in parallel
-		const [currentUserRegionId, allRegions, allStates, allBlocs, activeWars, residentCounts, ppByState, sa] =
+		const [currentUserRegionId, allRegions, allStates, allBlocs, activeWars, residentCounts, ppByState, sa, seaFleet] =
 			await Promise.all([
 				// ── Current user's region, so the map can open centred on it ────
 				(async () => {
@@ -252,6 +255,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.select({
 						id: regions.id,
 						stateId: regions.stateId,
+						latitude: regions.latitude,
 						longitude: regions.longitude,
 						terrain: regions.terrain,
 						rating: regions.rating,
@@ -324,7 +328,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.groupBy(powerPlants.stateId),
 
 				// ── Situational awareness for the viewer's side ────────────────
-				locals.account ? situation(locals.account.id) : Promise.resolve(null)
+				locals.account ? situation(locals.account.id) : Promise.resolve(null),
+
+				// ── The spatial naval layer: ports, ships and minefields ───────
+				Promise.all([
+					db.select().from(seaPorts),
+					db.select().from(fleetShips),
+					db.select().from(navalMines)
+				]).then(([ports, ships, mines]) => ({ ports, ships, mines }))
 			]);
 
 		// blocColorMap: stateId → bloc colour string.
@@ -470,7 +481,24 @@ export const load: PageServerLoad = async ({ locals }) => {
 			currentUserRegionId,
 			sa,
 			// Airstrikes in the last 24 h (public: an air raid is no secret).
-			strikes: Object.fromEntries(await recentlyStruckRegions(db))
+			strikes: Object.fromEntries(await recentlyStruckRegions(db)),
+			sea: {
+				ports: seaFleet.ports.map((p) => ({ id: p.id, stateId: p.stateId, regionId: p.regionId, q: p.q, r: p.r, name: p.name })),
+				ships: seaFleet.ships.map((s) => ({
+					id: s.id,
+					stateId: s.stateId,
+					shipClass: s.shipClass,
+					q: s.q,
+					r: s.r,
+					health: s.health,
+					status: s.status
+				})),
+				mines: seaFleet.mines.map((m) => ({ id: m.id, stateId: m.stateId, q: m.q, r: m.r, strength: m.strength })),
+				regionsForEez: allRegions.map((r) => ({ id: r.id, latitude: Number(r.latitude), longitude: Number(r.longitude) })),
+				coastalRegions: allRegions
+					.filter((r) => r.terrain === "shore" && r.stateId)
+					.map((r) => ({ id: r.id, stateId: r.stateId!, latitude: Number(r.latitude), longitude: Number(r.longitude) }))
+			}
 		};
 	} catch (error) {
 		console.error("Error loading map data:", error);
@@ -484,7 +512,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			warDefenderStateIds: new Set<number>(),
 			currentUserRegionId: null,
 			sa: null,
-			strikes: {}
+			strikes: {},
+			sea: { ports: [], ships: [], mines: [], regionsForEez: [], coastalRegions: [] }
 		};
 	}
 };

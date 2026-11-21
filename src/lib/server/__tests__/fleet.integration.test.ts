@@ -21,6 +21,7 @@ import {
 	FleetError,
 	buildDock,
 	buildPort,
+	portCandidates,
 	gnssJammingAt,
 	layMines,
 	loadFleetWorld,
@@ -85,6 +86,14 @@ async function reset() {
 
 beforeEach(reset);
 
+async function coastalRegion(stateId: number, terrain: "shore" | "plains" = "shore") {
+	const [row] = await handle.db
+		.insert(regions)
+		.values({ latitude: "45.0", longitude: "10.0", stateId, terrain })
+		.returning();
+	return row!;
+}
+
 async function port(stateId: number, q: number, r: number, fuel = 500, stock: Record<string, number> = {}) {
 	const [row] = await handle.db
 		.insert(seaPorts)
@@ -146,16 +155,29 @@ describe("hex geometry", () => {
 
 describe("fleet service", () => {
 	it("refuses orders from anyone but the president or defence minister", async () => {
-		await expect(
-			buildPort(handle.db, "user-2", { name: "Wrong", q: 1, r: 1 })
-		).rejects.toBeInstanceOf(FleetError);
+		const region = await coastalRegion(freedonia);
+		await expect(buildPort(handle.db, "user-2", { name: "Wrong", regionId: region.id })).rejects.toBeInstanceOf(
+			FleetError
+		);
 		const before = await balance(freedonia);
-		await buildPort(handle.db, alice, { name: "Right", q: 1, r: 1 });
+		await buildPort(handle.db, alice, { name: "Right", regionId: region.id });
 		expect(await balance(freedonia)).toBeLessThan(before);
 	});
 
+	it("allows one port per coastal region, never inland", async () => {
+		const inland = await coastalRegion(freedonia, "plains");
+		await expect(buildPort(handle.db, alice, { name: "Inland", regionId: inland.id })).rejects.toThrow("maritime");
+		const coast = await coastalRegion(freedonia);
+		await buildPort(handle.db, alice, { name: "Only port", regionId: coast.id });
+		await expect(buildPort(handle.db, alice, { name: "Second", regionId: coast.id })).rejects.toThrow("already has a port");
+		const candidates = await portCandidates(handle.db, freedonia);
+		expect(candidates.some((c) => c.id === coast.id)).toBe(false);
+		expect(candidates.some((c) => c.id === inland.id)).toBe(false);
+	});
+
 	it("builds a port and dock, then constructs and repairs through the queue", async () => {
-		const built = await buildPort(handle.db, alice, { name: "New Port", q: 2, r: 2 });
+		const region = await coastalRegion(freedonia);
+		const built = await buildPort(handle.db, alice, { name: "New Port", regionId: region.id });
 		expect(built.name).toBe("New Port");
 		const builtDock = await buildDock(handle.db, alice, built.id);
 		expect(builtDock.level).toBe(1);
@@ -172,7 +194,8 @@ describe("fleet service", () => {
 		const ships = await handle.db.select().from(fleetShips);
 		expect(ships).toHaveLength(1);
 		expect(ships[0]!.shipClass).toBe("corvette");
-		expect(ships[0]!.q).toBe(2);
+		expect(ships[0]!.q).toBe(built.q);
+		expect(ships[0]!.r).toBe(built.r);
 		expect(ships[0]!.health).toBe(90);
 
 		await handle.db.update(fleetShips).set({ health: 30 });

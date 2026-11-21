@@ -37,7 +37,10 @@ import {
 	hexDistance,
 	hexFromLatLon,
 	hexKey,
+	hexToLatLon,
 	hitChance,
+	isCoastal,
+	portHexForRegion,
 	inBounds,
 	mineDamage,
 	shipRepairCost,
@@ -130,41 +133,60 @@ async function log(db: Db, stateId: number | null, kind: string, hex: Hex | null
 
 export interface BuildPortInput {
 	name: string;
-	q: number;
-	r: number;
-	regionId?: number | null;
+	/** A port belongs to exactly one coastal region. */
+	regionId: number;
 }
 
-/** Establish a port on an empty sea hex, optionally tied to a coastal region. */
+/**
+ * Establish a port on the sea hex offshore of one of your coastal regions.
+ * A region gets at most one port; its coordinates decide which hex that is.
+ */
 export async function buildPort(db: Database, userId: string, input: BuildPortInput) {
 	const authority = await fleetAuthority(db, userId);
 	const name = input.name?.trim();
 	if (!name || name.length > 100) throw new FleetError("Give the port a name (up to 100 characters).");
-	if (!inBounds({ q: input.q, r: input.r })) throw new FleetError("That hex is outside the naval theatre.");
-	if (input.regionId) {
-		const [region] = await db.select().from(regions).where(eq(regions.id, input.regionId));
-		if (!region || region.stateId !== authority.stateId) throw new FleetError("The home region must be one of yours.");
-	}
+	const [region] = await db.select().from(regions).where(eq(regions.id, input.regionId));
+	if (!region || region.stateId !== authority.stateId) throw new FleetError("The home region must be one of yours.");
+	if (!isCoastal(region)) throw new FleetError("Only a region with maritime access can hold a port.");
+	const allRegions = await db.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
+	const occupied = await db.select({ q: seaPorts.q, r: seaPorts.r }).from(seaPorts);
+	const hex = portHexForRegion(region, allRegions, new Set(occupied.map((p) => hexKey(p))));
+	if (!hex) throw new FleetError("That region's EEZ has no free sea hex for a port.");
 	return db.transaction(async (tx) => {
-		const [existing] = await tx.select({ id: seaPorts.id }).from(seaPorts).where(and(eq(seaPorts.q, input.q), eq(seaPorts.r, input.r)));
+		const [byRegion] = await tx.select({ id: seaPorts.id }).from(seaPorts).where(eq(seaPorts.regionId, region.id));
+		if (byRegion) throw new FleetError("That region already has a port.");
+		const [existing] = await tx.select({ id: seaPorts.id }).from(seaPorts).where(and(eq(seaPorts.q, hex.q), eq(seaPorts.r, hex.r)));
 		if (existing) throw new FleetError("There is already a port on that hex.");
 		await pay(tx, authority, userId, FACILITY.port.money, FACILITY.port.steel, `Port ${name}`);
 		const [port] = await tx
 			.insert(seaPorts)
 			.values({
 				stateId: authority.stateId,
-				regionId: input.regionId ?? null,
-				q: input.q,
-				r: input.r,
+				regionId: region.id,
+				q: hex.q,
+				r: hex.r,
 				name,
 				level: 1,
 				fuelStock: FACILITY.portFuelBase,
 				builtBy: userId
 			})
 			.returning();
-		await log(tx, authority.stateId, "port_built", { q: input.q, r: input.r }, `Built port ${name}.`);
+		await log(tx, authority.stateId, "port_built", hex, `Built port ${name}.`);
 		return port;
 	});
+}
+
+/** Coastal regions of a state that do not have a port yet. */
+export async function portCandidates(db: Db, stateId: number) {
+	const rows = await db
+		.select({ id: regions.id, latitude: regions.latitude, longitude: regions.longitude, terrain: regions.terrain })
+		.from(regions)
+		.where(eq(regions.stateId, stateId));
+	const ports = await db.select({ regionId: seaPorts.regionId }).from(seaPorts);
+	const taken = new Set(ports.map((p) => p.regionId));
+	return rows
+		.filter((r) => isCoastal(r) && !taken.has(r.id))
+		.map((r) => ({ id: r.id, label: `Region #${r.id} (${r.latitude}, ${r.longitude})`, hex: hexToLatLon(hexFromLatLon(Number(r.latitude), Number(r.longitude))) }));
 }
 
 /** Build a dock at one of your ports, or upgrade an existing one. */

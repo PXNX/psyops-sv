@@ -14,7 +14,7 @@
 	import { onMount, tick } from "svelte";
 	import type { PageData } from "./$types";
 	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
-	import { ageLabel, countdown, formatLatLon, kmPerMapUnit, mapToLatLon, niceKm } from "#lib/utils/military.js";
+	import { ageLabel, countdown, formatLatLon, kmPerMapUnit, latLonToMap, mapToLatLon, niceKm } from "#lib/utils/military.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import Logo from "#lib/component/Logo.svelte";
@@ -28,7 +28,20 @@
 		UnitBadge,
 		UnitSymbol
 	} from "#lib/component/tactical/index.js";
-	import { UNIT_CATEGORIES, WEATHER_LABEL, COVER_LABEL, regionConditions, weatherAt } from "#lib/config/index.js";
+	import {
+		EEZ,
+		HEX_BOUNDS,
+		SHIP_CLASSES,
+		eezHexes,
+		hexKey,
+		hexPolygonLatLon,
+		hexToLatLon,
+		UNIT_CATEGORIES,
+		WEATHER_LABEL,
+		COVER_LABEL,
+		regionConditions,
+		weatherAt
+	} from "#lib/config/index.js";
 	import IconSearch from "~icons/fluent/search-20-regular";
 	import IconZoomIn from "~icons/fluent/zoom-in-20-regular";
 	import IconZoomOut from "~icons/fluent/zoom-out-20-regular";
@@ -47,6 +60,7 @@
 	import IconDismiss from "~icons/fluent/dismiss-20-regular";
 	import IconDocument from "~icons/fluent/document-search-20-regular";
 	import IconChevronRight from "~icons/fluent/chevron-right-20-regular";
+	import IconSea from "~icons/fluent/water-24-regular";
 
 	let { data }: { data: PageData } = $props();
 
@@ -63,7 +77,7 @@
 	// ── Layers ───────────────────────────────────────────────────────────────
 	type Base = "political" | "blocs" | "wars" | "weather" | "terrain" | "residents" | "powerplants" | string;
 	let base = $state<Base>("political");
-	let overlays = $state({ friendly: true, hostile: true, battles: true, recon: true, strikes: true });
+	let overlays = $state({ friendly: true, hostile: true, battles: true, recon: true, strikes: true, sea: true });
 	let heatOpen = $state(false);
 
 	const RESOURCES: Record<string, string> = {
@@ -91,7 +105,8 @@
 		{ key: "hostile", label: "Known hostile forces", icon: IconTarget },
 		{ key: "battles", label: "Battles & axes of attack", icon: IconFlash },
 		{ key: "recon", label: "Recon coverage", icon: IconRadar },
-		{ key: "strikes", label: "Airstrikes (24 h)", icon: IconFire }
+		{ key: "strikes", label: "Airstrikes (24 h)", icon: IconFire },
+		{ key: "sea", label: "Hex sea, EEZ & ports", icon: IconSea }
 	] as const;
 	const isHeat = $derived(HEAT_LAYERS.some((l) => l.value === base));
 
@@ -536,6 +551,52 @@
 	const hasHostileAt = $derived(new Set(hostileMarkers.map((m) => m.id)));
 	const hasFriendlyAt = $derived(new Set(friendlyMarkers.map((m) => m.id)));
 
+	// ── Naval hex sea: geographic centres and EEZ rings ──────────────────────
+	const mapPoint = (lat: number, lon: number) => latLonToMap(lat, lon);
+	const hexCentre = (h: { q: number; r: number }) => {
+		const { lat, lon } = hexToLatLon(h);
+		return mapPoint(lat, lon);
+	};
+	const hexPoints = (h: { q: number; r: number }) =>
+		hexPolygonLatLon(h)
+			.map((c) => {
+				const p = mapPoint(c.lat, c.lon);
+				return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
+			})
+			.join(" ");
+
+	const seaHexes = $derived.by(() => {
+		const out: { key: string; points: string; x: number; y: number; active: boolean }[] = [];
+		const active = new Set([
+			...data.sea.ports.map((p) => hexKey(p)),
+			...data.sea.ships.filter((s) => s.status !== "sunk").map((s) => hexKey(s)),
+			...data.sea.mines.map((m) => hexKey(m))
+		]);
+		for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
+			for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
+				const h = { q, r };
+				const c = hexCentre(h);
+				out.push({ key: hexKey(h), points: hexPoints(h), x: c.x, y: c.y, active: active.has(hexKey(h)) });
+			}
+		}
+		return out;
+	});
+	const eezZones = $derived.by(() =>
+		data.sea.coastalRegions.map((region) => ({
+			id: region.id,
+			stateId: region.stateId,
+			color: data.stateColorMap[region.stateId] ?? "#38bdf8",
+			hexes: eezHexes(region, data.sea.regionsForEez).map((h) => hexPoints(h))
+		}))
+	);
+	const portMarkers = $derived(data.sea.ports.map((p) => ({ ...p, ...hexCentre(p) })));
+	const shipMarkers = $derived(
+		data.sea.ships
+			.filter((s) => s.status !== "sunk")
+			.map((s) => ({ ...s, ...hexCentre(s), short: SHIP_CLASSES[s.shipClass]?.short ?? "?" }))
+	);
+	const mineMarkers = $derived(data.sea.mines.map((m) => ({ ...m, ...hexCentre(m) })));
+
 	// ── Selected region ──────────────────────────────────────────────────────
 	const sel = $derived(selectedId != null ? data.regionMap[selectedId] : null);
 	const selState = $derived(sel?.stateId ? stateById.get(sel.stateId) : null);
@@ -627,6 +688,66 @@
 						<line x1="0" y1={gy} x2={SVG_WIDTH} y2={gy} />
 					{/each}
 				</g>
+
+				{#if overlays.sea}
+					<!-- EEZ claims: a few hex rings of coastal water per maritime region -->
+					<g class="sea-eez" pointer-events="none">
+						<title>Exclusive economic zones · {EEZ.radiusHexes} hex rings of coastal water</title>
+						{#each eezZones as zone (zone.id)}
+							{#each zone.hexes as points, i (i)}
+								<polygon points={points} style:fill={zone.color} fill-opacity="0.07" stroke="none" />
+							{/each}
+						{/each}
+					</g>
+					<!-- The strategic sea grid itself -->
+					<g class="sea-hexes" pointer-events="none">
+						{#each seaHexes as h (h.key)}
+							<polygon
+								points={h.points}
+								style:fill={h.active ? "#22d3ee" : "transparent"}
+								fill-opacity={h.active ? 0.16 : 0}
+								style:stroke={h.active ? "#67e8f9" : "#38bdf8"}
+								stroke-opacity={h.active ? 0.85 : 0.22}
+								stroke-width={h.active ? 1.4 : 0.6}
+							/>
+						{/each}
+					</g>
+					<!-- Ports, ships and minefields -->
+					<g class="sea-markers" pointer-events="none">
+						{#each mineMarkers as m (m.id)}
+							<text
+								x={m.x}
+								y={m.y - 6 * k}
+								text-anchor="middle"
+								font-size={11 * k}
+								style:fill="var(--color-error)"
+							>✳</text>
+						{/each}
+						{#each portMarkers as p (p.id)}
+							<g transform="translate({p.x} {p.y}) scale({k})">
+								<title>{p.name} · hex {p.q},{p.r}</title>
+								<rect x="-9" y="-9" width="18" height="18" rx="3" style:fill="var(--color-surface-0)" stroke="#38bdf8" />
+								<text x="0" y="4" text-anchor="middle" font-size="10" style:fill="#7dd3fc">⚓</text>
+								<text x="12" y="3" font-size="8" style:fill="#7dd3fc">{p.name}</text>
+							</g>
+						{/each}
+						{#each shipMarkers as s (s.id)}
+							<g transform="translate({s.x} {s.y + 11 * k}) scale({k})">
+								<title>{s.short} · hex {s.q},{s.r} · {s.health} hp</title>
+								<circle
+									r="5"
+									style:fill={s.stateId === data.sa?.side?.stateId
+										? "#4ade80"
+										: data.sa?.enemyStateIds?.includes(s.stateId)
+											? "#f87171"
+											: "#38bdf8"}
+									stroke="#04121f"
+								/>
+								<text x="0" y="2" text-anchor="middle" font-size="5" font-weight="bold" fill="#04121f">{s.short}</text>
+							</g>
+						{/each}
+					</g>
+				{/if}
 
 				{#if overlays.recon}
 					{#each reconMarkers as m (m.id)}

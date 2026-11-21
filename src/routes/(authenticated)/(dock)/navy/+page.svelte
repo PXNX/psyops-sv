@@ -270,11 +270,11 @@
 								</form>
 							</div>
 						{/if}
-					{:else if selectedHex && data.canCommand}
+					{:else if data.canCommand && data.portCandidates.length}
 						<form method="POST" action="?/buildPort" use:enhance={enhanceForm} class="mt-2 space-y-2">
-							<p class="text-xs text-fg-muted">Establish a new port here.</p>
-							<input type="hidden" name="q" value={selectedHex.q} />
-							<input type="hidden" name="r" value={selectedHex.r} />
+							<p class="text-xs text-fg-muted">
+								Establish a port in the EEZ of one of your coastal regions (one per region).
+							</p>
 							<input
 								name="name"
 								required
@@ -282,14 +282,15 @@
 								placeholder="Port name"
 								class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-sm"
 							/>
-							<select name="regionId" class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
-								<option value="">No home region</option>
-								{#each data.myRegions as region}
+							<select name="regionId" required class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+								{#each data.portCandidates as region}
 									<option value={region.id}>{region.label}</option>
 								{/each}
 							</select>
 							<Button type="submit" size="sm">Build port</Button>
 						</form>
+					{:else if selectedHex && data.canCommand}
+						<p class="mt-2 text-xs text-fg-muted">Every maritime region you own already has a port.</p>
 					{/if}
 					{#if selectedDock}
 						<div class="mt-2 text-xs text-fg-muted">Dock level {selectedDock.level} · {selectedDock.level} build bay(s)</div>
