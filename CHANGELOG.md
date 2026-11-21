@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Supply autonomy: factory inputs are sourced domestically, from bloc partners, via trade lanes or not at all; dependence cuts output and quality, and blockade/closure throttles lane-reliant lines
 - Conscription bands derived from the share of a state under arms now reduce the
   available workforce and birth rate, raise mortality and sour regime stability
 - Hospital capacity can be overwhelmed by wounded soldiers and recent strike

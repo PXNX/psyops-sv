@@ -80,6 +80,14 @@ temporarily raises the destination's carrying capacity. Strategic strikes can
 knock down infrastructure for good, but it can be rebuilt with treasury and
 machine tools. See `services/military/convoys.ts`.
 
+**Supply autonomy.** Factory inputs are sourced from the state's own stockpile
+or producers first, then bloc partners, then paid trade lanes. Domestic supply
+runs a line at full output; bloc and trade inputs cost efficiency, and a
+blockade or closure throttles the lanes further. Goods nobody can supply leave
+a line limping and degrade its quality, so self-sufficient industry — or
+reliable bloc partners — is worth far more than fragile imports. See
+`autonomy.config.ts` and `services/economy/autonomy.ts`.
+
 **Air and sea trade.** States open air corridors and sea lanes that pay
 treasury every six hours. A rival can close its airspace or declare an EEZ
 closure (globally or against one state), grounding air freight, choking
