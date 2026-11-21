@@ -10,8 +10,8 @@
 // dividends, published for shareholders and the market pulse.
 
 import { relations } from "drizzle-orm";
-import { index, integer, pgTable, timestamp, text, uniqueIndex } from "drizzle-orm/pg-core";
-import { accounts, companies, states } from "./schema";
+import { boolean, index, integer, pgTable, timestamp, text, uniqueIndex, varchar } from "drizzle-orm/pg-core";
+import { accounts, companies, regions, states } from "./schema";
 
 export const stateBonds = pgTable(
 	"state_bonds",
@@ -89,3 +89,35 @@ export const companyEarningsReportsRelations = relations(companyEarningsReports,
 }));
 
 export type CompanyEarningsReport = typeof companyEarningsReports.$inferSelect;
+
+// --- CIVIC PATRONAGE ---
+// Buildings a player pays for personally. Completing one raises civilian
+// opinion in its region, so wealth can be turned into local influence.
+export const civicProjects = pgTable(
+	"civic_projects",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		buildingType: varchar("building_type", { length: 40 }).notNull(),
+		completed: boolean("completed").default(false).notNull(),
+		startedAt: timestamp("started_at").defaultNow().notNull(),
+		completesAt: timestamp("completes_at").notNull(),
+		completedAt: timestamp("completed_at")
+	},
+	(t) => ({
+		userIdx: index("idx_civic_project_user").on(t.userId),
+		regionIdx: index("idx_civic_project_region").on(t.regionId)
+	})
+);
+
+export const civicProjectsRelations = relations(civicProjects, ({ one }) => ({
+	user: one(accounts, { fields: [civicProjects.userId], references: [accounts.id] }),
+	region: one(regions, { fields: [civicProjects.regionId], references: [regions.id] })
+}));
+
+export type CivicProject = typeof civicProjects.$inferSelect;
