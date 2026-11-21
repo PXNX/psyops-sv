@@ -18,6 +18,7 @@
 	import PriceChart from "../PriceChart.svelte";
 	import { buildSeries, changePct, DAY, HOUR, money, type SeriesPoint } from "../series";
 	import { dtgShortDate, dtgTime } from "#lib/utils/dtg.js";
+	import { bestAsk, offeredQuantity } from "#lib/utils/market-price.js";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
@@ -78,7 +79,8 @@
 	const rangeChange = $derived(changePct(series));
 
 	const lastTrade = $derived(data.candles.at(-1)?.close ?? data.openingPrice);
-	const currentPrice = $derived(lastTrade ?? data.otherListings[0]?.pricePerUnit ?? null);
+	const liveOffers = $derived([...(data.myListing ? [data.myListing] : []), ...data.otherListings]);
+	const currentPrice = $derived(bestAsk(liveOffers) ?? lastTrade);
 	const shownPrice = $derived(hover?.price ?? currentPrice);
 
 	const clock = (d: Date) => dtgTime(d);
@@ -93,8 +95,8 @@
 		return range === "24h" ? clock(d) : range === "7d" ? `${weekday(d)} ${clock(d)}` : `${dayMonth(d)} ${clock(d)}`;
 	});
 
-	const bestAsk = $derived(data.otherListings[0]?.pricePerUnit ?? null);
-	const unitsOnOffer = $derived(data.otherListings.reduce((sum, l) => sum + l.quantity, 0));
+	const bestAskPrice = $derived(bestAsk(liveOffers));
+	const unitsOnOffer = $derived(offeredQuantity(liveOffers));
 	const totalAvailableForListing = $derived(data.userItemQuantity + (data.myListing?.quantity ?? 0));
 	const visibleOffers = $derived(showAllOffers ? data.otherListings : data.otherListings.slice(0, OFFERS_SHOWN));
 	const deepest = $derived(Math.max(1, ...data.otherListings.map((l) => l.quantity)));
@@ -251,14 +253,14 @@
 				start={rangeStart}
 				end={data.now}
 				height={260}
-				reference={bestAsk !== null ? { value: bestAsk, label: "Ask" } : null}
+				reference={bestAskPrice !== null ? { value: bestAskPrice, label: "Ask" } : null}
 				formatTime={hover ? pointTime : axisTime}
 				bind:active={hover}
 			/>
 		</div>
 
 		<dl class="grid grid-cols-3 sm:grid-cols-6 gap-y-4 border-t border-white/10 px-2 py-4">
-			{#each [{ label: "Last", value: lastTrade !== null ? money(lastTrade) : "—", cls: "text-fg" }, { label: `Low ${range}`, value: rangeLow !== null ? money(rangeLow) : "—", cls: "text-hostile-fg" }, { label: `High ${range}`, value: rangeHigh !== null ? money(rangeHigh) : "—", cls: "text-positive-fg" }, { label: `Volume ${range}`, value: rangeVolume.toLocaleString(), cls: "text-fg" }, { label: "Best ask", value: bestAsk !== null ? money(bestAsk) : "—", cls: "text-warning" }, { label: "On offer", value: unitsOnOffer.toLocaleString(), cls: "text-fg" }] as cell}
+			{#each [{ label: "Last", value: lastTrade !== null ? money(lastTrade) : "—", cls: "text-fg" }, { label: `Low ${range}`, value: rangeLow !== null ? money(rangeLow) : "—", cls: "text-hostile-fg" }, { label: `High ${range}`, value: rangeHigh !== null ? money(rangeHigh) : "—", cls: "text-positive-fg" }, { label: `Volume ${range}`, value: rangeVolume.toLocaleString(), cls: "text-fg" }, { label: "Best ask", value: bestAskPrice !== null ? money(bestAskPrice) : "—", cls: "text-warning" }, { label: "On offer", value: unitsOnOffer.toLocaleString(), cls: "text-fg" }] as cell}
 				<div class="px-2 text-center min-w-0">
 					<dt class="text-[10px] uppercase tracking-wide text-fg-muted truncate">{cell.label}</dt>
 					<dd class="font-mono text-sm font-bold tabular-nums truncate {cell.cls}">{cell.value}</dd>

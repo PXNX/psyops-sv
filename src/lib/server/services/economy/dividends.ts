@@ -15,7 +15,7 @@
 //
 // No SvelteKit virtual modules at the top level (tests import this file);
 // push notifications are loaded lazily.
-import { and, desc, eq, gt, gte, inArray, isNull, lte, or, sql, sum } from "drizzle-orm";
+import { and, desc, eq, gt, gte, inArray, isNull, lte, min, or, sql, sum } from "drizzle-orm";
 import type { Database } from "../../db";
 import {
 	companies,
@@ -405,14 +405,19 @@ export async function runAutomaticDividends(
 
 // ============ Reading ============
 
-/** Current quote per share: the latest trade's price, else the IPO price. */
+/** Current quote per share: the lowest live offer, else the last trade, else the IPO price. */
 async function sharePrices(db: Database, companyIds: number[]) {
 	if (!companyIds.length) return new Map<number, number>();
-	const [shares, trades] = await Promise.all([
+	const [shares, asks, trades] = await Promise.all([
 		db
 			.select({ companyId: companyShares.companyId, ipoPrice: companyShares.ipoPrice })
 			.from(companyShares)
 			.where(inArray(companyShares.companyId, companyIds)),
+		db
+			.select({ companyId: shareListings.companyId, lowest: min(shareListings.pricePerUnit).as("lowest") })
+			.from(shareListings)
+			.where(and(inArray(shareListings.companyId, companyIds), gt(shareListings.quantity, 0)))
+			.groupBy(shareListings.companyId),
 		db
 			.selectDistinctOn([shareTransactions.companyId], {
 				companyId: shareTransactions.companyId,
@@ -426,6 +431,10 @@ async function sharePrices(db: Database, companyIds: number[]) {
 	const prices = new Map(shares.map((s) => [s.companyId, Number(s.ipoPrice)]));
 	for (const t of trades) {
 		if (t.quantity > 0) prices.set(t.companyId, Math.round(Number(t.totalPrice) / t.quantity));
+	}
+	// A share is worth what you can buy it for right now, not what someone paid earlier.
+	for (const ask of asks) {
+		if (ask.lowest !== null) prices.set(ask.companyId, Number(ask.lowest));
 	}
 	return prices;
 }

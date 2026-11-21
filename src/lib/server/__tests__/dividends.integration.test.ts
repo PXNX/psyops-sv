@@ -2,7 +2,7 @@
 // pro-rata split and its rounding, the cooldown, the minimums, budget checks,
 // and the automatic payout policy.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "@rstest/core";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
 import {
 	companies,
@@ -224,8 +224,28 @@ describe("paying dividends", () => {
 		expect(overview.history[0]!.total).toBe(5_000);
 		expect(overview.history[0]!.recipients).toBe(3);
 		expect(overview.myTotalReceived).toBe(1_500);
-		expect(overview.sharePrice).toBe(50); // no trades yet: IPO price
-		expect(overview.yieldPercent).toBe(10);
+		expect(overview.sharePrice).toBe(60); // lowest live ask, ahead of the IPO price
+		expect(overview.yieldPercent).toBe(8.3); // 5 paid per share against a 60 ask
+	});
+
+	it("quotes a share at the lowest live offer, not a sold-out ask", async () => {
+		const extra = await handle.db
+			.insert(shareListings)
+			.values([
+				{ companyId, sellerId: "user-2", quantity: 5, pricePerUnit: 40 },
+				{ companyId, sellerId: "user-3", quantity: 0, pricePerUnit: 1 }
+			])
+			.returning({ id: shareListings.id });
+		try {
+			expect((await dividendOverview(handle.db, companyId, "user-2")).sharePrice).toBe(40);
+		} finally {
+			await handle.db.delete(shareListings).where(
+				inArray(
+					shareListings.id,
+					extra.map((r) => r.id)
+				)
+			);
+		}
 	});
 
 	it("pays the automatic policy from the budget above the reserve, keeping the remainder", async () => {

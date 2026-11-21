@@ -29,7 +29,7 @@
 	let picked = $state<string | null>(null);
 	const hero = $derived(movers.find((m) => m.name === picked) ?? movers[0] ?? null);
 	let hover = $state<SeriesPoint | null>(null);
-	const heroPrice = $derived(hover?.price ?? hero?.last ?? null);
+	const heroPrice = $derived(hover?.price ?? hero?.ask ?? hero?.last ?? null);
 
 	const now = $derived(data.now);
 	// Zoom to the traded part of the week so a young market isn't a dot at the edge.
@@ -142,7 +142,7 @@
 				<h2 class="section-title mb-2 px-1">{group.title}</h2>
 				<ul class="panel rounded-sm p-1.5">
 					{#each group.quotes as q, i (q.name)}
-						{@const price = q.last ?? q.ask}
+						{@const price = q.ask ?? q.last}
 						<li class="animate-rise-in" style="--rise-delay: {i * 35}ms">
 							<a
 								href="/market/{q.name}"
@@ -179,7 +179,7 @@
 												{q.change24h >= 0 ? "▲" : "▼"}
 												{Math.abs(q.change24h).toFixed(1)}%
 											</span>
-										{:else if q.last === null}
+										{:else if q.ask !== null}
 											<span class="block text-[11px] text-fg-muted">ask</span>
 										{/if}
 									{:else}
