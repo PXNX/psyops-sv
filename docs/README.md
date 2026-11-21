@@ -1,4 +1,4 @@
-# PsyOps SV — Project Reference for Claude
+# Psyops — Project Reference for Claude
 
 > **Purpose**: This document gives Claude (or any AI assistant) a complete overview of the project's tech stack, directory structure, conventions, and how to navigate the codebase. Read this first before working on any task.
 

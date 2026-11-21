@@ -3,11 +3,11 @@
 </script>
 
 <svelte:head>
-	<title>Dokumentation – PsyOps SV</title>
+	<title>Dokumentation – Psyops</title>
 </svelte:head>
 
 <h1>Dokumentation</h1>
-<p>Willkommen in der Dokumentation von PsyOps-SV. Wählen Sie ein Thema aus.</p>
+<p>Willkommen in der Dokumentation von Psyops. Wählen Sie ein Thema aus.</p>
 
 <div class="not-prose mt-6 grid gap-4 sm:grid-cols-2">
 	{#each data.docs as doc (doc.slug)}

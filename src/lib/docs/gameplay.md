@@ -1,12 +1,12 @@
 ---
 title: Spielablauf
-description: Die wichtigsten Systeme von PsyOps-SV im Überblick.
+description: Die wichtigsten Systeme von Psyops im Überblick.
 order: 2
 ---
 
 # Spielablauf
 
-PsyOps-SV verbindet Wirtschaft, Politik und Militär in einer gemeinsamen Welt.
+Psyops verbindet Wirtschaft, Politik und Militär in einer gemeinsamen Welt.
 Dieser Abschnitt fasst die zentralen Systeme zusammen.
 
 ## Wirtschaft

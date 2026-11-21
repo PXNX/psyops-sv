@@ -23,6 +23,14 @@ const additionalIconNames = [
 	"sat_eo",
 	"sat_ir",
 	"sat_sar",
+	// Naval hulls and airframes
+	"capital_ship",
+	"supply_ship",
+	"corvette",
+	"submarine",
+	"fighter",
+	"bomber",
+	"ucav",
 	// Laws, proposals and state business
 	"law",
 	"exploitation",
