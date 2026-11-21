@@ -194,7 +194,7 @@
 	 * their edges with the neighbours drawn after them, so stroking the region
 	 * path itself only shows the parts that no later path covers. One overlay
 	 * path, drawn last with the region's whole `d` (every subpath and island),
-	 * shows the full border. Non-scaling stroke keeps it 1.25 px at every zoom.
+	 * shows the full border. Non-scaling stroke keeps it 0.75 px at every zoom.
 	 */
 	let outlineEl: SVGPathElement | null = null;
 	function regionOutline(svg: Element): SVGPathElement {
@@ -1105,9 +1105,9 @@
 		animation: region-pulse 900ms ease-in-out 3;
 	}
 	/* Selection ring: one path over every region, so shared borders do not
-	   clip it. `non-scaling-stroke` keeps it 1.25 px wide at any zoom. */
+	   clip it. `non-scaling-stroke` keeps it 0.75 px wide at any zoom. */
 	:global(#panzoom-element .region-outline) {
-		stroke-width: 1.25px;
+		stroke-width: 0.75px;
 		stroke-linejoin: round;
 		stroke-linecap: round;
 		pointer-events: none;
