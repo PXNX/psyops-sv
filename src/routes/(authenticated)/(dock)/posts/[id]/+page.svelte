@@ -14,6 +14,7 @@
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toast } from "#lib/ui/toast.svelte.js";
 	import { stamp } from "#lib/component/press/time.js";
+	import { dtgDate } from "#lib/utils/dtg.js";
 
 	const { data } = $props();
 
@@ -98,13 +99,13 @@
 		</div>
 	</div>
 
-	<article class="panel rounded-sm px-5 py-6 sm:px-10 sm:py-10">
+	<article class="paper rounded-sm px-5 py-6 sm:px-10 sm:py-10">
 		<header class="mx-auto max-w-[42rem]">
 			<!-- Masthead -->
 			{#if data.article.newspaperId && data.article.newspaperName}
 				<a
 					href="/newspaper/{data.article.newspaperId}"
-					class="group flex items-center gap-2 pb-3 mb-5 border-b border-white/10 min-w-0"
+					class="group flex items-center gap-2 pb-3 mb-5 border-b-2 border-ink/25 min-w-0"
 				>
 					<Logo
 						src={data.article.newspaperLogo}
@@ -121,7 +122,10 @@
 				</a>
 			{/if}
 
-			<h1 class="font-serif text-[2rem] sm:text-[2.75rem] leading-[1.12] text-fg break-words">
+			<p class="mt-4 font-mono text-[10px] uppercase tracking-[0.2em] opacity-60">
+				Printed edition · {dtgDate(data.article.createdAt)}
+			</p>
+			<h1 class="mt-1 font-serif text-[2rem] sm:text-[2.75rem] leading-[1.12] text-fg break-words">
 				{data.article.title}
 			</h1>
 
@@ -136,13 +140,13 @@
 		</header>
 
 		<div
-			class="article-content mx-auto mt-8 max-w-[42rem] text-[1.0625rem] text-fg-body break-words [&_a]:text-friendly [&_a]:underline [&_a]:underline-offset-2 [&_h1]:text-fg [&_h2]:text-fg [&_h3]:text-fg [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_hr]:my-8 [&_hr]:border-white/10"
+			class="article-content drop-cap mx-auto mt-8 max-w-[42rem] text-[1.0625rem] text-fg-body break-words [&_a]:text-ink-link [&_a]:underline [&_a]:underline-offset-2 [&_h1]:text-fg [&_h2]:text-fg [&_h3]:text-fg [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_hr]:my-8 [&_hr]:border-ink/20"
 		>
 			{@html data.article.content}
 		</div>
 
 		<!-- Reactions -->
-		<footer class="mx-auto mt-10 max-w-[42rem] pt-4 border-t border-white/10 flex items-center gap-3">
+		<footer class="mx-auto mt-10 max-w-[42rem] pt-4 border-t border-ink/20 flex items-center gap-3">
 			<button
 				bind:this={likeButton}
 				type="button"
@@ -152,7 +156,7 @@
 				aria-label={hasUpvoted ? "Remove like" : "Like"}
 				class="press-spring tap-target inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-sm font-semibold transition-colors {hasUpvoted
 					? 'bg-red-600/15 border-red-500/35 text-red-200'
-					: 'border-white/10 text-fg-body hover:border-red-500/35 hover:text-red-200'}"
+					: 'border-ink/25 text-fg-body hover:border-red-500/35 hover:text-red-200'}"
 			>
 				{#if hasUpvoted}
 					<FluentHeart20Filled class="size-4 text-red-400" />

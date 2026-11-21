@@ -48,6 +48,7 @@
 @theme {
 	--font-sans: "DM Sans", "HPSimplified", system-ui, sans-serif;
 	--font-editorial: "DM Sans", "HPSimplified", system-ui, sans-serif;
+	--font-serif: "DM Serif Display", Georgia, "Times New Roman", serif;
 	--font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 
 	/* Tactical, flat: small corners everywhere. */
@@ -538,6 +539,19 @@
 	opacity: 0.82;
 	transform: rotate(var(--stamp-tilt, -8deg));
 	mix-blend-mode: multiply;
+}
+
+/* A newspaper's first paragraph: an oversized serif initial sunk into two
+   lines of text. Only used on the printed-clipping article view. */
+@utility drop-cap {
+	& > p:first-of-type::first-letter {
+		float: left;
+		margin: 0.08em 0.09em 0 0;
+		font-family: var(--font-serif);
+		font-size: 3.6em;
+		line-height: 0.78;
+		color: var(--color-ink);
+	}
 }
 
 /* Numbers, times, coordinates: tabular monospace. */

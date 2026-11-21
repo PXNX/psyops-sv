@@ -17,6 +17,7 @@
 	import { Button, IconButton } from "#lib/component/ui/index.js";
 	import ArticleCard from "#lib/component/press/ArticleCard.svelte";
 	import { formatDate } from "#lib/utils/formatting.js";
+	import { dtgDate } from "#lib/utils/dtg.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import EditNewspaperSheet from "./EditNewspaperSheet.svelte";
@@ -80,10 +81,14 @@
 		/>
 
 		<h1
-			class="mt-3 pb-3 border-b border-white/10 font-serif text-[2.25rem] sm:text-5xl leading-[1.05] tracking-tight text-fg break-words"
+			class="mt-3 pb-3 border-b-2 border-white/20 font-serif text-[2.25rem] sm:text-5xl leading-[1.05] tracking-tight text-fg break-words"
 		>
 			{data.newspaper.name}
 		</h1>
+		<p class="mt-2 font-mono text-[10px] uppercase tracking-[0.2em] text-fg-muted">
+			No. {String(data.newspaper.id).padStart(4, "0")} · Established {dtgDate(data.newspaper.createdAt)} ·
+			{data.subscriberCount} subscribers
+		</p>
 
 		{#if data.newspaper.background}
 			<p class="mt-3 mx-auto max-w-xl text-sm sm:text-base text-fg-soft leading-relaxed">
