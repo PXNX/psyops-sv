@@ -36,7 +36,15 @@ export const UNIT_CATEGORY: Record<string, UnitCategory> = {
 	frigate: "vehicle",
 	submarine: "vehicle",
 	carrier: "vehicle",
-	landing_ship: "vehicle"
+	landing_ship: "vehicle",
+	// Air arm (aircraft.config.ts)
+	transport_aircraft: "air",
+	bomber: "air",
+	tanker_aircraft: "air",
+	fighterjet: "air",
+	close_air_support: "air",
+	naval_bomber: "air",
+	helicopter: "air"
 };
 
 export interface SensorConfig {
@@ -144,6 +152,70 @@ export const SENSORS: Record<SensorId, SensorConfig> = {
 };
 
 export const SENSOR_IDS = Object.keys(SENSORS) as SensorId[];
+
+// ── Sea reconnaissance ──────────────────────────────────────────────────────
+// Sea passes target a hex instead of a region. Sonar is the only sensor that
+// reliably finds submarines; radar and SAR see the surface and minelays.
+
+export type SeaSensorId = "sonar" | "naval_radar" | "sat_sar";
+
+export interface SeaSensorConfig {
+	label: string;
+	short: string;
+	kind: "sonar" | "radar" | "visual";
+	cost: number;
+	durationMinutes: number;
+	cooldownMinutes: number;
+	cooldownScope: "user" | "state";
+	/** How many hexes around the target the pass sweeps. */
+	radius: number;
+	identifiesTypes: boolean;
+	/** Base detection chance by contact type. */
+	detects: { surface: number; sub: number; mine: number };
+}
+
+export const SEA_SENSORS: Record<SeaSensorId, SeaSensorConfig> = {
+	sonar: {
+		label: "Sonar sweep",
+		short: "SONAR",
+		kind: "sonar",
+		cost: 4_000,
+		durationMinutes: 15,
+		cooldownMinutes: 30,
+		cooldownScope: "user",
+		radius: 1,
+		identifiesTypes: false,
+		detects: { surface: 0.25, sub: 0.9, mine: 0.65 }
+	},
+	naval_radar: {
+		label: "Maritime patrol radar",
+		short: "MRAD",
+		kind: "radar",
+		cost: 6_000,
+		durationMinutes: 20,
+		cooldownMinutes: 45,
+		cooldownScope: "user",
+		radius: 2,
+		identifiesTypes: true,
+		detects: { surface: 0.9, sub: 0, mine: 0.35 }
+	},
+	sat_sar: {
+		label: "Satellite SAR",
+		short: "SAR",
+		kind: "visual",
+		cost: 8_000,
+		durationMinutes: 30,
+		cooldownMinutes: 180,
+		cooldownScope: "state",
+		radius: 2,
+		identifiesTypes: false,
+		detects: { surface: 0.8, sub: 0, mine: 0.25 }
+	}
+};
+
+export const SEA_SENSOR_IDS = Object.keys(SEA_SENSORS) as SeaSensorId[];
+/** How long a sea contact stays valid on the map. */
+export const SEA_INTEL_VALID_HOURS = 12;
 
 // ── Weather, daylight and cover ─────────────────────────────────────────────
 

@@ -6,6 +6,8 @@ import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { viewerSide } from "#lib/server/services/military/recon.js";
+import { airSupportOf } from "#lib/server/services/military/fleet.js";
+import { launchSeaIntel, seaIntelOptions, seaPicture } from "#lib/server/services/military/sea-intel.js";
 import {
 	FleetError,
 	buildDock,
@@ -38,8 +40,16 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const world = await loadFleetWorld(db, side?.stateId);
 	let canCommand = false;
 	if (side) canCommand = (await fleetAuthority(db, userId).catch(() => null)) !== null;
+	const [sensorOptions, picture, air] = await Promise.all([
+		seaIntelOptions(db, userId, { q: 0, r: 0 }),
+		side ? seaPicture(db, world.side?.stateIds ?? []) : Promise.resolve({}),
+		side ? airSupportOf(db, side.stateId) : Promise.resolve({ units: [], byType: {}, roles: {} })
+	]);
 
 	return {
+		seaSensors: sensorOptions.sensors,
+		seaIntel: picture,
+		airSupport: air,
 		myStateId: side?.stateId ?? null,
 		canCommand,
 		ports: world.ports.map((p) => ({ ...p, createdAt: iso(p.createdAt) })),
@@ -174,6 +184,20 @@ export const actions: Actions = {
 				direction: String(f.get("direction")) === "unload" ? "unload" : "load"
 			});
 			return { success: true, message: "Cargo handled." };
+		} catch (err) {
+			return fail(400, { error: message(err) });
+		}
+	},
+	launchSeaIntel: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			await launchSeaIntel(db, {
+				userId: locals.account!.id,
+				q: Number(f.get("q")),
+				r: Number(f.get("r")),
+				sensor: String(f.get("sensor")) as never
+			});
+			return { success: true, message: "Sea reconnaissance pass launched." };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}

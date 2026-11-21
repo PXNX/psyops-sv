@@ -29,7 +29,16 @@ export const EXERCISE_CONFIG = {
 	// When a unit takes casualties in battle, experienced soldiers are lost and
 	// replaced by green reinforcements. This factor scales how much experience is
 	// diluted relative to the fraction of the unit that was destroyed.
-	COMBAT_EXPERIENCE_LOSS_FACTOR: 0.8
+	COMBAT_EXPERIENCE_LOSS_FACTOR: 0.8,
+
+	// A unit that actually fires in a battle gains experience, up to 100.
+	COMBAT_EXPERIENCE_GAIN: 3,
+	MAX_COMBAT_EXPERIENCE: 100,
+	// Fuel burned by one round of combat / one air sortie.
+	COMBAT_FUEL_COST: 4,
+	SORTIE_FUEL_COST: 12,
+	// Fuel restored per unit each cron tick while the state has a reserve.
+	REFUEL_PER_TICK: 15
 } as const;
 
 // Experience levels ordered from lowest to highest. `min` is the inclusive
@@ -61,6 +70,17 @@ export function getExperienceLevel(experience: number): ExperienceLevel {
  */
 export function getExperienceCombatModifier(experience: number): number {
 	return 1 + getExperienceLevel(experience).combatBonus;
+}
+
+/** Experience after a unit has dealt damage in battle. */
+export function gainCombatExperience(current: number, damage: number): number {
+	if (damage <= 0) return current;
+	return Math.min(EXERCISE_CONFIG.MAX_COMBAT_EXPERIENCE, current + EXERCISE_CONFIG.COMBAT_EXPERIENCE_GAIN);
+}
+
+/** A dry tank halves a unit's output; a full one fights at full strength. */
+export function unitFuelFactor(fuel: number): number {
+	return fuel > 0 ? 1 : 0.5;
 }
 
 /**

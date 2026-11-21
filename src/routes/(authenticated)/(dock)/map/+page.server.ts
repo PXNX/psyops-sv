@@ -21,6 +21,7 @@ import {
 	navalMines
 } from "#lib/server/schema.js";
 import { sql, eq, and, inArray } from "drizzle-orm";
+import { seaPicture } from "#lib/server/services/military/sea-intel.js";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import {
@@ -32,7 +33,7 @@ import {
 	sensorCooldownEndsAt,
 	viewerSide
 } from "#lib/server/services/military/recon.js";
-import { SENSORS, SENSOR_IDS, UNIT_CATEGORIES, regionCover, type SensorId } from "#lib/config/index.js";
+import { AIRCRAFT_IDS, SENSORS, SENSOR_IDS, UNIT_CATEGORIES, regionCover, type SensorId } from "#lib/config/index.js";
 
 type FriendlyForce = { total: number; mine: number; ally: boolean; byType: Record<string, number> };
 type PictureSummary = {
@@ -334,8 +335,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 				Promise.all([
 					db.select().from(seaPorts),
 					db.select().from(fleetShips),
-					db.select().from(navalMines)
-				]).then(([ports, ships, mines]) => ({ ports, ships, mines }))
+					db.select().from(navalMines),
+					db
+						.select({ regionId: militaryUnits.regionId, unitType: militaryUnits.unitType, stateId: militaryUnits.stateId, fuel: militaryUnits.fuel })
+						.from(militaryUnits)
+						.where(inArray(militaryUnits.unitType, AIRCRAFT_IDS))
+				]).then(([ports, ships, mines, aircraft]) => ({ ports, ships, mines, aircraft }))
 			]);
 
 		// blocColorMap: stateId → bloc colour string.
@@ -469,6 +474,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 			stateColorMap[state.id] = own && own.toLowerCase() !== "#6366f1" ? own : colors[state.id % colors.length];
 		});
 
+		const seaIntel = sa?.side?.stateIds ? await seaPicture(db, sa.side.stateIds) : {};
+		const visibleSeaShips = seaFleet.ships.filter(
+			(s) => !(sa?.enemyStateIds ?? []).includes(s.stateId) || !!seaIntel[`${s.q},${s.r}`]
+		);
+
 		return {
 			regionMap,
 			stateColorMap,
@@ -484,7 +494,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 			strikes: Object.fromEntries(await recentlyStruckRegions(db)),
 			sea: {
 				ports: seaFleet.ports.map((p) => ({ id: p.id, stateId: p.stateId, regionId: p.regionId, q: p.q, r: p.r, name: p.name })),
-				ships: seaFleet.ships.map((s) => ({
+				intel: seaIntel,
+				aircraft: seaFleet.aircraft,
+				ships: visibleSeaShips.map((s) => ({
 					id: s.id,
 					stateId: s.stateId,
 					shipClass: s.shipClass,
@@ -513,7 +525,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			currentUserRegionId: null,
 			sa: null,
 			strikes: {},
-			sea: { ports: [], ships: [], mines: [], regionsForEez: [], coastalRegions: [] }
+			sea: { intel: {}, aircraft: [], ports: [], ships: [], mines: [], regionsForEez: [], coastalRegions: [] }
 		};
 	}
 };

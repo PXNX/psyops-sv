@@ -13,6 +13,13 @@
 	"air_defence": "Air Defence",
 	"bomber_squadron": "Bomber Squadron",
 	"fighter_squadron": "Fighter Squadron",
+	"transport_aircraft": "Transport Aircraft",
+	"bomber": "Bomber",
+	"tanker_aircraft": "Tanker Aircraft",
+	"fighterjet": "Fighter Jet",
+	"close_air_support": "Close Air Support",
+	"naval_bomber": "Naval Bomber",
+	"helicopter": "Helicopter",
 
 	"region_1": "Corsica",
 	"region_2": "Latium",

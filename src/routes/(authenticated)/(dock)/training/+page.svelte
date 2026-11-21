@@ -146,7 +146,8 @@
 	const bars = [
 		{ key: "organization", label: "ORG", color: "var(--color-friendly)" },
 		{ key: "health", label: "STR", color: "var(--color-positive)" },
-		{ key: "supplyLevel", label: "SUP", color: "var(--color-primary)" }
+		{ key: "supplyLevel", label: "SUP", color: "var(--color-primary)" },
+		{ key: "fuel", label: "FUEL", color: "var(--color-warning)" }
 	] as const;
 </script>
 

@@ -111,7 +111,15 @@ export const militaryUnitTypeEnum = pgEnum("military_unit_type", [
 	"submarine",
 	"carrier",
 	"landing_ship",
-	"marine"
+	"marine",
+	// Air arm (aircraft.config.ts)
+	"transport_aircraft",
+	"bomber",
+	"tanker_aircraft",
+	"fighterjet",
+	"close_air_support",
+	"naval_bomber",
+	"helicopter"
 ]);
 export const travelStatusEnum = pgEnum("travel_status", ["in_progress", "completed", "cancelled"]);
 export const giftCodeResourceTypeEnum = pgEnum("gift_code_resource_type", [
@@ -1328,6 +1336,8 @@ export const militaryUnits = pgTable("military_units", {
 	unitType: militaryUnitTypeEnum("unit_type").notNull(),
 	organization: integer("organization").default(100).notNull(),
 	supplyLevel: integer("supply_level").default(100).notNull(),
+	/** Fuel for aircraft and other vehicles; restored from the state reserve. */
+	fuel: integer("fuel").default(100).notNull(),
 	health: integer("health").default(100).notNull(),
 	experience: integer("experience").default(0).notNull(),
 	isTraining: boolean("is_training").default(true).notNull(),
@@ -4103,6 +4113,46 @@ export const fleetEvents = pgTable(
 	(t) => ({
 		stateIdx: index("idx_fleet_event_state").on(t.stateId, t.createdAt),
 		hexIdx: index("idx_fleet_event_hex").on(t.q, t.r)
+	})
+);
+
+// --- SEA RECONNAISSANCE ---
+// Sea passes target a hex, not a region. Sonar finds submarines; maritime
+// radar and satellite SAR find surface ships and minefields.
+export const seaIntelStatusEnum = pgEnum("sea_intel_status", ["in_progress", "completed"]);
+
+export interface SeaIntelFindings {
+	/** Ship-class counts when the sensor identified types, else category counts. */
+	contacts: Record<string, number>;
+	mines: number;
+	/** 0-100 confidence in the picture. */
+	confidence: number;
+}
+
+export const seaIntelMissions = pgTable(
+	"sea_intel_missions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		launchedBy: text("launched_by")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		sensor: varchar("sensor", { length: 30 }).notNull(),
+		q: integer("q").notNull(),
+		r: integer("r").notNull(),
+		cost: integer("cost").notNull(),
+		status: seaIntelStatusEnum("status").default("in_progress").notNull(),
+		findings: jsonb("findings").$type<SeaIntelFindings>(),
+		launchedAt: timestamp("launched_at").defaultNow().notNull(),
+		completesAt: timestamp("completes_at").notNull(),
+		observedAt: timestamp("observed_at")
+	},
+	(t) => ({
+		stateIdx: index("idx_sea_intel_state").on(t.stateId, t.launchedAt),
+		hexIdx: index("idx_sea_intel_hex").on(t.q, t.r, t.observedAt),
+		dueIdx: index("idx_sea_intel_due").on(t.status, t.completesAt)
 	})
 );
 

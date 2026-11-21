@@ -27,12 +27,17 @@ import {
 import {
 	MINEFIELD,
 	SHIP_CLASSES,
+	AIRCRAFT,
+	AIRCRAFT_IDS,
+	aircraft,
 	FLEET_WEAPONS,
 	FACILITY,
+	EXERCISE_CONFIG,
 	GNSS,
 	buildCost,
 	constructionHours,
 	dockUpgradeCost,
+	gainCombatExperience,
 	findPath,
 	gnssSpeedFactor,
 	hexDistance,
@@ -47,6 +52,7 @@ import {
 	mineDamage,
 	shipRepairCost,
 	repairHours,
+	roleStrength,
 	shipClass,
 	targetKind,
 	weaponCanTarget,
@@ -57,6 +63,7 @@ import {
 	type WeaponId
 } from "#lib/config/index.js";
 import { navalAuthority } from "./naval";
+import { resolveSeaIntelMissions } from "./sea-intel";
 import { enemiesOf, sideOf } from "./recon";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -882,6 +889,145 @@ export async function resolveCombats(db: Database, now: Date, rng: () => number 
 	return { engagements, hits, sunk };
 }
 
+// ── Air arm ─────────────────────────────────────────────────────────────────
+
+/** Ready aircraft of a state, grouped by type. */
+export async function airUnitsOf(db: Db, stateId: number) {
+	return db
+		.select({
+			id: militaryUnits.id,
+			unitType: militaryUnits.unitType,
+			regionId: militaryUnits.regionId,
+			health: militaryUnits.health,
+			fuel: militaryUnits.fuel,
+			experience: militaryUnits.experience
+		})
+		.from(militaryUnits)
+		.where(
+			and(
+				eq(militaryUnits.stateId, stateId),
+				inArray(militaryUnits.unitType, [...AIRCRAFT_IDS] as never),
+				eq(militaryUnits.isTraining, false),
+				sql`${militaryUnits.health} > 0`,
+				sql`${militaryUnits.fuel} > 0`
+			)
+		);
+}
+
+/** A state's air picture: counts by type and the strength of each role. */
+export async function airSupportOf(db: Db, stateId: number) {
+	const units = await airUnitsOf(db, stateId);
+	const byType: Record<string, number> = {};
+	for (const unit of units) byType[unit.unitType] = (byType[unit.unitType] ?? 0) + 1;
+	const types = units.map((u) => u.unitType);
+	const roles = Object.fromEntries(
+		(["transport", "bombing", "refuel", "air_superiority", "close_support", "naval_strike", "utility"] as const).map((role) => [
+			role,
+			roleStrength(types, role)
+		])
+	);
+	return { units, byType, roles };
+}
+
+/** Coastal airfields can strike enemy ships; helicopters and naval bombers hunt subs. */
+export async function resolveAirAtSea(db: Database, now: Date, rng: () => number = Math.random) {
+	let strikes = 0;
+	let hits = 0;
+	const regionsAll = await db.select({ id: regions.id, stateId: regions.stateId, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
+	const regionHex = new Map(regionsAll.map((r) => [r.id, hexFromLatLon(Number(r.latitude), Number(r.longitude))]));
+	const ships = await db.select().from(fleetShips).where(and(ne(fleetShips.status, "sunk"), sql`${fleetShips.health} > 0`));
+	if (!ships.length) return { strikes, hits };
+
+	const stateIds = [...new Set(regionsAll.map((r) => r.stateId).filter((id): id is number => id != null))];
+	const air = new Map<number, Awaited<ReturnType<typeof airSupportOf>>>();
+	for (const id of stateIds) air.set(id, await airSupportOf(db, id));
+	const enemySets = new Map<number, Set<number>>();
+	for (const id of stateIds) enemySets.set(id, await enemiesOf(db, await sideOf(db, id)));
+
+	for (const [stateId, picture] of air) {
+		const strikePower = picture.roles.naval_strike;
+		if (strikePower <= 0) continue;
+		const enemies = enemySets.get(stateId) ?? new Set<number>();
+		const bases = picture.units
+			.filter((u) => aircraft(u.unitType)?.roles.includes("naval_strike"))
+			.map((u) => ({ hex: regionHex.get(u.regionId), range: aircraft(u.unitType)!.rangeHexes }))
+			.filter((b): b is { hex: Hex; range: number } => !!b.hex);
+		const targets = ships.filter(
+			(s) => enemies.has(s.stateId) && bases.some((b) => hexDistance(b.hex, s) <= b.range)
+		);
+		if (!targets.length) continue;
+		const target = targets.sort((a, b) => a.health - b.health)[0]!;
+		const targetDef = shipClass(target.shipClass);
+		if (!targetDef) continue;
+		const defenderAir = air.get(target.stateId)?.roles.air_superiority ?? 0;
+		const attackerAir = picture.roles.air_superiority;
+		const chance = Math.max(0.15, Math.min(0.95, 0.7 + attackerAir / 500 - defenderAir / 400 - targetDef.aa / 200));
+		strikes++;
+		if (rng() >= chance) continue;
+		const damage = Math.max(5, Math.round(strikePower / 8));
+		const health = Math.max(0, target.health - damage);
+		await db
+			.update(fleetShips)
+			.set({
+				health,
+				status: health <= 0 ? "sunk" : target.status,
+				orderPath: health <= 0 ? [] : target.orderPath,
+				legArrivesAt: health <= 0 ? null : target.legArrivesAt,
+				updatedAt: now
+			})
+			.where(eq(fleetShips.id, target.id));
+		hits++;
+		await log(
+			db,
+			stateId,
+			"air_strike",
+			{ q: target.q, r: target.r },
+			`Air strike hit ${target.name} for ${damage}${health <= 0 ? " and sank it" : ""}.`,
+			{ targetId: target.id, damage }
+		);
+		// Every aircraft in the strike burns fuel and learns from the sortie.
+		for (const unit of picture.units) {
+			const def = aircraft(unit.unitType);
+			if (!def?.roles.includes("naval_strike")) continue;
+			await db
+				.update(militaryUnits)
+				.set({
+					fuel: sql`greatest(0, ${militaryUnits.fuel} - ${def.fuelPerSortie})`,
+					experience: gainCombatExperience(unit.experience, damage)
+				})
+				.where(eq(militaryUnits.id, unit.id));
+		}
+	}
+	return { strikes, hits };
+}
+
+/** Restore unit fuel from the state's military reserve, a little per tick. */
+export async function tickUnitFuel(db: Database) {
+	let refilled = 0;
+	const units = await db.select().from(militaryUnits).where(sql`${militaryUnits.fuel} < 100`);
+	const reserves = new Map<number, number>();
+	for (const unit of units) {
+		let available = reserves.get(unit.stateId);
+		if (available === undefined) {
+			const [energy] = await db.select().from(stateEnergy).where(eq(stateEnergy.stateId, unit.stateId));
+			available = Math.max(0, Math.floor(Number(energy?.militaryFuel ?? 0)));
+		}
+		const amount = Math.min(100 - unit.fuel, EXERCISE_CONFIG.REFUEL_PER_TICK, available);
+		if (amount <= 0) {
+			reserves.set(unit.stateId, available);
+			continue;
+		}
+		await db.update(militaryUnits).set({ fuel: unit.fuel + amount }).where(eq(militaryUnits.id, unit.id));
+		available -= amount;
+		reserves.set(unit.stateId, available);
+		refilled += amount;
+	}
+	for (const [stateId, left] of reserves) {
+		await db.update(stateEnergy).set({ militaryFuel: left }).where(eq(stateEnergy.stateId, stateId));
+	}
+	return { refilled };
+}
+
 /** Slowly refill ports from the state's military fuel reserve. */
 export async function tickPorts(db: Database, now: Date) {
 	let refilled = 0;
@@ -912,6 +1058,10 @@ export interface FleetTickSummary {
 	sunkInCombat: number;
 	fuelRefilled: number;
 	minesExpired: number;
+	seaIntelResolved: number;
+	airStrikes: number;
+	airHits: number;
+	unitFuelRefilled: number;
 }
 
 /** One cron tick: expire mines, move ships, work the docks, fight, refuel. */
@@ -920,7 +1070,10 @@ export async function processFleetTick(db: Database, now: Date = new Date(), rng
 	const movement = await advanceMovements(db, now, rng);
 	const docks = await processDockQueues(db, now);
 	const combat = await resolveCombats(db, now, rng);
+	const seaIntelResolved = await resolveSeaIntelMissions(db, now, rng);
+	const air = await resolveAirAtSea(db, now, rng);
 	const ports = await tickPorts(db, now);
+	const unitFuel = await tickUnitFuel(db);
 	return {
 		moved: movement.moved,
 		blocked: movement.blocked,
@@ -932,7 +1085,11 @@ export async function processFleetTick(db: Database, now: Date = new Date(), rng
 		hits: combat.hits,
 		sunkInCombat: combat.sunk,
 		fuelRefilled: ports.refilled,
-		minesExpired
+		minesExpired,
+		seaIntelResolved,
+		airStrikes: air.strikes,
+		airHits: air.hits,
+		unitFuelRefilled: unitFuel.refilled
 	};
 }
 

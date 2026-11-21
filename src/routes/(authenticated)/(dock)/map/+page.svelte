@@ -728,7 +728,11 @@
 			const height = Math.max(...ys) - y + 4;
 			const regions = data.sea.regionsForEez.filter((r) => sector.hexes.some((h) => hexKey(h) === hexKeyFromCoords(r))).length;
 			const ships = data.sea.ships.filter((s) => sector.hexes.some((h) => hexKey(h) === hexKey(s))).length;
-			return { id: sector.id, x, y, width, height, regions, ships };
+			const air = data.sea.aircraft.filter((a) => {
+				const region = data.sea.regionsForEez.find((r) => r.id === a.regionId);
+				return a.fuel > 0 && region && sector.hexes.some((h) => hexKey(h) === hexKeyFromCoords(region));
+			}).length;
+			return { id: sector.id, x, y, width, height, regions, ships, air };
 		});
 	});
 	function hexKeyFromCoords(r: { latitude: number; longitude: number }) {
@@ -852,7 +856,7 @@
 								style:paint-order="stroke"
 								style:stroke="var(--color-surface-0)"
 								stroke-width={2 * k}
-							>{sector.id} · {sector.regions}R {sector.ships}S</text>
+							>{sector.id} · {sector.regions}R {sector.ships}S {sector.air}✈</text>
 						{/each}
 					</g>
 				{/if}

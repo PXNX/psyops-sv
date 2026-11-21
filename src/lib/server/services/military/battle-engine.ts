@@ -15,9 +15,12 @@ import {
 import {
 	MILITARY_UNIT_TEMPLATES,
 	calculateCombatExperienceLoss,
+	EXERCISE_CONFIG,
+	gainCombatExperience,
 	getExperienceCombatModifier,
 	sideDomainMultiplier,
 	roundSupplyCost,
+	unitFuelFactor,
 	unitSupplyModifier
 } from "#lib/config/index.js";
 import { regionSupplies } from "./logistics";
@@ -130,6 +133,7 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 			Math.floor(
 				(MILITARY_UNIT_TEMPLATES[p.unit.unitType]?.[stat] ?? 0) *
 					getExperienceCombatModifier(p.unit.experience ?? 0) *
+					unitFuelFactor(p.unit.fuel ?? 100) *
 					unitIntelFactor(p.unit.unitType, own, enemy) *
 					unitSupplyModifier(p.unit.supplyLevel ?? 100, regionFactor)
 			);
@@ -187,6 +191,14 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 						.update(battleParticipants)
 						.set({ damageDealt: sql`${battleParticipants.damageDealt} + ${amounts[i]}`, lastActionAt: new Date() })
 						.where(eq(battleParticipants.id, p.id));
+					// Firing makes veterans: experience rises, tanks drain.
+					await tx
+						.update(militaryUnits)
+						.set({
+							experience: gainCombatExperience(p.unit.experience ?? 0, amounts[i]!),
+							fuel: sql`greatest(0, ${militaryUnits.fuel} - ${EXERCISE_CONFIG.COMBAT_FUEL_COST})`
+						})
+						.where(eq(militaryUnits.id, p.unitId));
 				}
 			}
 		};

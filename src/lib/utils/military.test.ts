@@ -1,6 +1,7 @@
 // The world-map projection must round-trip: hex centres and ports are placed
 // by lat/lon, so the inverse fit has to land back on the same map pixel.
 import { describe, expect, it } from "@rstest/core";
+import { EXERCISE_CONFIG, gainCombatExperience, getExperienceCombatModifier, unitFuelFactor } from "#lib/config/index.js";
 import { latLonToMap, mapToLatLon } from "./military.js";
 import {
 	AIRSPACE,
@@ -25,6 +26,13 @@ describe("world-map projection", () => {
 			expect(back.x).toBeCloseTo(x, 0);
 			expect(back.y).toBeCloseTo(y, 0);
 		}
+	});
+
+	it("rewards combat experience and punishes dry tanks", () => {
+		expect(gainCombatExperience(0, 50)).toBe(EXERCISE_CONFIG.COMBAT_EXPERIENCE_GAIN);
+		expect(gainCombatExperience(99, 10)).toBe(EXERCISE_CONFIG.MAX_COMBAT_EXPERIENCE);
+		expect(getExperienceCombatModifier(80)).toBeGreaterThan(getExperienceCombatModifier(0));
+		expect(unitFuelFactor(0)).toBeLessThan(unitFuelFactor(100));
 	});
 
 	it("groups hexes into Luftraum sectors", () => {

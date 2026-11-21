@@ -15,6 +15,7 @@
 	import FluentClock from "~icons/fluent/clock-24-filled";
 	import FluentWarning from "~icons/fluent/warning-20-filled";
 	import {
+		AIRCRAFT,
 		HEX_BOUNDS,
 		SHIP_CLASSES,
 		SHIP_CATEGORY_LABEL,
@@ -59,6 +60,7 @@
 	let cargoResource = $state("steel");
 	let cargoAmount = $state(100);
 	let cargoDirection = $state<"load" | "unload">("load");
+	let seaSensor = $state("sonar");
 	let now = $state(Date.now());
 
 	$effect(() => {
@@ -325,6 +327,50 @@
 					{#if selectedHex && minesAt(selectedHex).length}
 						<div class="mt-2 text-xs text-danger">
 							{minesAt(selectedHex).length} minefield(s) · strength {minesAt(selectedHex).map((m) => m.strength).join(", ")}
+						</div>
+					{/if}
+				</section>
+
+				<!-- Sea reconnaissance -->
+				{#if selectedHex}
+					{@const reading = data.seaIntel[hexKey(selectedHex)]}
+					<section class="rounded-lg border border-line/20 bg-surface-1 p-3">
+						<h2 class="text-sm font-semibold text-heading">Sea intel · {selectedHex.q},{selectedHex.r}</h2>
+						{#if reading}
+							<div class="mt-1 text-[11px] text-fg-muted">
+								{reading.sensor} sweep · {Object.entries(reading.contacts).map(([k, v]) => `${k} ×${v}`).join(", ") || "no contacts"} ·
+								{reading.mines} mines · {reading.confidence}% confidence
+							</div>
+						{:else}
+							<div class="mt-1 text-[11px] text-fg-muted">No fresh pass over this hex.</div>
+						{/if}
+						<form method="POST" action="?/launchSeaIntel" use:enhance={enhanceForm} class="mt-2 flex flex-wrap items-end gap-2">
+							<input type="hidden" name="q" value={selectedHex.q} />
+							<input type="hidden" name="r" value={selectedHex.r} />
+							<label class="text-xs">Sensor
+								<select name="sensor" bind:value={seaSensor} class="mt-1 rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+									{#each data.seaSensors as sensor}
+										<option value={sensor.id} disabled={!!sensor.cooldownEndsAt}>
+											{sensor.label}{sensor.cooldownEndsAt ? " · cooling down" : ""}
+										</option>
+									{/each}
+								</select>
+							</label>
+							<Button type="submit" size="sm" variant="ghost">Launch sweep</Button>
+						</form>
+					</section>
+				{/if}
+
+				<!-- Air arm -->
+				<section class="rounded-lg border border-line/20 bg-surface-1 p-3">
+					<h2 class="text-sm font-semibold text-heading">Air arm</h2>
+					{#if Object.entries(data.airSupport.byType).length === 0}
+						<p class="mt-1 text-xs text-fg-muted">No aircraft trained yet.</p>
+					{:else}
+						<div class="mt-1 flex flex-wrap gap-1">
+							{#each Object.entries(data.airSupport.byType) as [type, count]}
+								<Badge tone="blue">{AIRCRAFT[type as keyof typeof AIRCRAFT]?.short ?? type} ×{count}</Badge>
+							{/each}
 						</div>
 					{/if}
 				</section>

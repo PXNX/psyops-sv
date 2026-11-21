@@ -65,6 +65,19 @@ port, while warships that push through take damage. Hostile fleets in range
 exchange fire using each class's weapons — fighters, VLS, ASW helicopters,
 light guns, light AA and torpedoes.
 
+**Air arm and progression.** Seven squadron types can be trained — transport,
+bomber, tanker aircraft, fighter jet, close air support, naval bomber and
+helicopter. Each has a role (airlift, bombing, refuelling, air superiority,
+close support, naval strike, ASW), burns fuel on sorties and in battle, and
+gains experience from exercises and combat; veterans hit harder. Naval bombers
+and helicopters can strike enemy ships from coastal airfields, and the aerial
+map mode counts aircraft in each Luftraum sector.
+
+**Sea intel.** Sonar sweeps, maritime patrol radar and satellite SAR target a
+hex. Sonar is the only sensor that reliably finds submarines; radar sees
+surface hulls and mines. Fresh reports expire after 12 h and drive the map's
+fog of war — enemy ships stay hidden until a pass sees them.
+
 **GNSS jamming.** Satellite navigation can be denied from all three domains: a
 GNSS jammer ship at sea, air-defence battalions ashore, and fighter squadrons
 carrying EW pods in the air. Jamming is summed per hex from every hostile

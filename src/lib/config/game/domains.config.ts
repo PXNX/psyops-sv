@@ -80,7 +80,17 @@ export const DOMAIN_IDS = Object.keys(DOMAINS) as Domain[];
 export const DOMAIN_UNITS: Record<Domain, string[]> = {
 	land: ["infantry", "armor", "mechanized", "artillery", "air_defence", "marine"],
 	sea: ["frigate", "submarine", "carrier", "landing_ship"],
-	air: ["fighter_squadron", "bomber_squadron"],
+	air: [
+		"fighter_squadron",
+		"bomber_squadron",
+		"transport_aircraft",
+		"bomber",
+		"tanker_aircraft",
+		"fighterjet",
+		"close_air_support",
+		"naval_bomber",
+		"helicopter"
+	],
 	space: [],
 	cyber: []
 };
