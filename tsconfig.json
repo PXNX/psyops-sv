@@ -7,5 +7,5 @@
 		"types": ["$app/types", "unplugin-icons/types/svelte"]
 	},
 	"include": ["src", "vite.config.ts", "drizzle.config.ts"],
-	"exclude": ["src/service-worker"]
+	"exclude": ["src/service-worker", "src/service-worker.js"]
 }

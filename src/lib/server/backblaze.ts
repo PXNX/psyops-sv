@@ -52,7 +52,15 @@ function getS3Client(): S3Client | null {
 	});
 }
 
-const s3Client = getS3Client();
+// Built lazily: SvelteKit imports server modules while analysing routes, and
+// throwing on import would break `bun run build` on machines without storage
+// credentials (mock mode and CI). The first real upload or signed URL creates
+// the client, and missing credentials are reported then.
+let cachedClient: S3Client | null | undefined;
+function client(): S3Client | null {
+	if (cachedClient === undefined) cachedClient = getS3Client();
+	return cachedClient;
+}
 const BACKBLAZE_BUCKET_NAME = RAW_BACKBLAZE_BUCKET_NAME || "mock-bucket";
 
 export interface UploadResult {
@@ -117,7 +125,7 @@ export async function uploadFile(buffer: Buffer, fileName: string): Promise<Uplo
 			}
 		});
 
-		await s3Client!.send(command);
+		await client()!.send(command);
 
 		return {
 			success: true,
@@ -184,7 +192,7 @@ export async function getPresignedUploadUrl(key: string): Promise<string> {
 		CacheControl: "public, max-age=31536000, immutable"
 	});
 
-	return await getSignedUrl(s3Client!, command, { expiresIn: 3600 });
+	return await getSignedUrl(client()!, command, { expiresIn: 3600 });
 }
 
 /**
@@ -218,7 +226,7 @@ export async function getSignedDownloadUrl(
 		ResponseCacheControl: `public, max-age=${expiresIn}, immutable`
 	});
 
-	const url = await getSignedUrl(s3Client!, command, { expiresIn });
+	const url = await getSignedUrl(client()!, command, { expiresIn });
 	if (signedUrlCache.size >= MAX_CACHE_ENTRIES) signedUrlCache.clear();
 	signedUrlCache.set(cacheKey, { url, reuseUntil: Date.now() + (expiresIn * 1000) / 2 });
 	return url;
@@ -245,7 +253,7 @@ export async function getSignedDownloadUrlShort(key: string): Promise<string> {
 		ResponseCacheControl: "public, max-age=3600"
 	});
 
-	return await getSignedUrl(s3Client!, command, { expiresIn: 3600 });
+	return await getSignedUrl(client()!, command, { expiresIn: 3600 });
 }
 
 export async function getLogoUrl(logoId: number | null | undefined): Promise<string | null> {
@@ -291,7 +299,7 @@ export async function deleteFile(key: string): Promise<boolean> {
 			Key: key
 		});
 
-		await s3Client!.send(command);
+		await client()!.send(command);
 		return true;
 	} catch (error) {
 		console.error("Delete failed:", error);

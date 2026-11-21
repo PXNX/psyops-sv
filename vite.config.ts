@@ -10,6 +10,9 @@ import { defineConfig } from "vite";
 
 export default defineConfig({
 	plugins: [
+		// mdsvex 1.x is a Vite plugin (not a preprocessor): it compiles .md into
+		// Svelte components and serves the ?metadata modules the docs nav uses.
+		mdsvex({ extensions: [".md", ".svx"] }),
 		paraglideVitePlugin({
 			project: "./project.inlang",
 			outdir: "./src/lib/paraglide",
@@ -22,8 +25,7 @@ export default defineConfig({
 			// for more information about preprocessors
 			preprocess: [
 				//https://svelte.dev/docs/svelte/typescript
-				vitePreprocess({ script: true }),
-				mdsvex({ extensions: [".md", ".svx"] })
+				vitePreprocess({ script: true })
 			],
 			compilerOptions: {
 				runes: true

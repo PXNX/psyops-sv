@@ -15,14 +15,33 @@ export interface LoadedDoc {
 	meta: DocMeta;
 }
 
-// Eagerly import only the frontmatter of every markdown doc so the navigation
+// Eagerly read only the frontmatter of every markdown doc so the navigation
 // and index page can be built without loading the full page components.
-// mdsvex 1 exposes frontmatter through a `?metadata` query module rather than
-// a named export on the compiled component.
-const metaModules = import.meta.glob<Record<string, unknown>>("./*.md?metadata", {
-	eager: true,
-	import: "metadata"
-});
+// Reading the raw text keeps this independent of mdsvex's query-module API,
+// which has changed between versions (and made the docs nav empty at build,
+// leaving its prerenderable slug routes with no links to crawl).
+const rawModules = import.meta.glob<string>("./*.md", { eager: true, query: "?raw", import: "default" });
+
+function parseFrontmatter(raw: string): Record<string, unknown> {
+	const block = /^---\r?\n([\s\S]*?)\r?\n---/.exec(raw);
+	if (!block) return {};
+	const meta: Record<string, unknown> = {};
+	for (const line of block[1]!.split(/\r?\n/)) {
+		const colon = line.indexOf(":");
+		if (colon < 0) continue;
+		const key = line.slice(0, colon).trim();
+		let value = line.slice(colon + 1).trim();
+		if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+			value = value.slice(1, -1);
+		}
+		meta[key] = /^-?\d+$/.test(value) ? Number(value) : value;
+	}
+	return meta;
+}
+
+const metaModules = Object.fromEntries(
+	Object.entries(rawModules).map(([path, raw]) => [path, parseFrontmatter(raw)])
+);
 
 // Lazily import the actual components; only the requested doc is loaded.
 const componentModules = import.meta.glob<{
