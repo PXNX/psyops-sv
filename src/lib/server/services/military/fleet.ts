@@ -64,6 +64,7 @@ import {
 } from "#lib/config/index.js";
 import { navalAuthority } from "./naval";
 import { resolveSeaIntelMissions } from "./sea-intel";
+import { resolveAirMissions } from "./air-missions";
 import { enemiesOf, sideOf } from "./recon";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -1062,6 +1063,7 @@ export interface FleetTickSummary {
 	airStrikes: number;
 	airHits: number;
 	unitFuelRefilled: number;
+	airMissionsResolved: number;
 }
 
 /** One cron tick: expire mines, move ships, work the docks, fight, refuel. */
@@ -1074,6 +1076,7 @@ export async function processFleetTick(db: Database, now: Date = new Date(), rng
 	const air = await resolveAirAtSea(db, now, rng);
 	const ports = await tickPorts(db, now);
 	const unitFuel = await tickUnitFuel(db);
+	const airMissionsResolved = await resolveAirMissions(db, now, rng);
 	return {
 		moved: movement.moved,
 		blocked: movement.blocked,
@@ -1089,7 +1092,8 @@ export async function processFleetTick(db: Database, now: Date = new Date(), rng
 		seaIntelResolved,
 		airStrikes: air.strikes,
 		airHits: air.hits,
-		unitFuelRefilled: unitFuel.refilled
+		unitFuelRefilled: unitFuel.refilled,
+		airMissionsResolved
 	};
 }
 

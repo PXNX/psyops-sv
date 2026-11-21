@@ -69,7 +69,10 @@ light guns, light AA and torpedoes.
 bomber, tanker aircraft, fighter jet, close air support, naval bomber and
 helicopter. Each has a role (airlift, bombing, refuelling, air superiority,
 close support, naval strike, ASW), burns fuel on sorties and in battle, and
-gains experience from exercises and combat; veterans hit harder. Naval bombers
+gains experience from exercises and combat; veterans hit harder. Squadrons can
+be tasked directly with strategic bombing, logistic strikes, naval bombing,
+airlift, reconnaissance, refuelling and battlefield support from the `/navy`
+console — each has a target, flight time, fuel cost and effect. Naval bombers
 and helicopters can strike enemy ships from coastal airfields, and the aerial
 map mode counts aircraft in each Luftraum sector.
 

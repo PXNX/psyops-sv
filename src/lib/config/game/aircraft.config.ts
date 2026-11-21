@@ -168,6 +168,102 @@ export function aircraft(id: string): AircraftDef | undefined {
 }
 
 /** Sum of a role's attack strength for a list of unit types. */
+// ── Directed missions ───────────────────────────────────────────────────────
+// A player picks a squadron, a mission and a target; the resolver applies the
+// effect when the sortie returns. Every mission consumes fuel and pays the
+// flying crew experience.
+
+export type AirMissionKind =
+	| "strategic_bombing"
+	| "logistic_strike"
+	| "naval_bombing"
+	| "transport"
+	| "recon"
+	| "refuel"
+	| "battlefield_support";
+
+export type AirTargetKind = "region" | "hex" | "friendly_region";
+
+export interface AirMissionDef {
+	label: string;
+	blurb: string;
+	/** The role the flying squadron must have. */
+	role: AirRole;
+	target: AirTargetKind;
+	durationHours: number;
+	fuelCost: number;
+	/** Damage/supply/fuel magnitude of the sortie. */
+	magnitude: number;
+}
+
+export const AIR_MISSIONS: Record<AirMissionKind, AirMissionDef> = {
+	strategic_bombing: {
+		label: "Strategic bombing",
+		blurb: "Hits a region's industry and infrastructure from the air.",
+		role: "bombing",
+		target: "region",
+		durationHours: 3,
+		fuelCost: 40,
+		magnitude: 2
+	},
+	logistic_strike: {
+		label: "Logistic strike",
+		blurb: "Cuts the region's roads and supply stocks; convoys and fronts suffer.",
+		role: "bombing",
+		target: "region",
+		durationHours: 2,
+		fuelCost: 30,
+		magnitude: 25
+	},
+	naval_bombing: {
+		label: "Naval bombing",
+		blurb: "Attacks enemy ships in a sea hex from a coastal airfield.",
+		role: "naval_strike",
+		target: "hex",
+		durationHours: 2,
+		fuelCost: 35,
+		magnitude: 45
+	},
+	transport: {
+		label: "Airlift",
+		blurb: "Ferries troops and supply from one of your regions to another.",
+		role: "transport",
+		target: "friendly_region",
+		durationHours: 2,
+		fuelCost: 25,
+		magnitude: 120
+	},
+	recon: {
+		label: "Reconnaissance",
+		blurb: "Sweeps a sea hex for ships and mines, or photographs a region.",
+		role: "utility",
+		target: "hex",
+		durationHours: 1,
+		fuelCost: 20,
+		magnitude: 100
+	},
+	refuel: {
+		label: "Refuel mission",
+		blurb: "Tanker aircraft pass fuel to ships or squadrons at the destination.",
+		role: "refuel",
+		target: "friendly_region",
+		durationHours: 1,
+		fuelCost: 15,
+		magnitude: 200
+	},
+	battlefield_support: {
+		label: "Battlefield support",
+		blurb: "Flies close support over a battle, easing the front line's supply pressure.",
+		role: "close_support",
+		target: "region",
+		durationHours: 1,
+		fuelCost: 25,
+		magnitude: 20
+	}
+};
+
+export const AIR_MISSION_IDS = Object.keys(AIR_MISSIONS) as AirMissionKind[];
+
 export function roleStrength(types: string[], role: AirRole): number {
 	return types.reduce((sum, t) => {
 		const def = aircraft(t);

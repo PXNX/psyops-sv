@@ -4156,6 +4156,45 @@ export const seaIntelMissions = pgTable(
 	})
 );
 
+// Directed air missions: a squadron flies a named task to a region or hex.
+export const airMissionStatusEnum = pgEnum("air_mission_status", ["in_progress", "completed", "cancelled"]);
+
+export interface AirMissionResult {
+	message: string;
+	damage?: number;
+	supply?: number;
+	fuel?: number;
+	contacts?: Record<string, number>;
+}
+
+export const airMissions = pgTable(
+	"air_missions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		unitId: integer("unit_id")
+			.notNull()
+			.references(() => militaryUnits.id, { onDelete: "cascade" }),
+		orderedBy: text("ordered_by").references(() => accounts.id, { onDelete: "set null" }),
+		kind: varchar("kind", { length: 40 }).notNull(),
+		sourceRegionId: integer("source_region_id").references(() => regions.id, { onDelete: "set null" }),
+		targetRegionId: integer("target_region_id").references(() => regions.id, { onDelete: "set null" }),
+		q: integer("q"),
+		r: integer("r"),
+		fuelCost: integer("fuel_cost").notNull(),
+		status: airMissionStatusEnum("status").default("in_progress").notNull(),
+		result: jsonb("result").$type<AirMissionResult>(),
+		launchedAt: timestamp("launched_at").defaultNow().notNull(),
+		completesAt: timestamp("completes_at").notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_air_mission_state").on(t.stateId, t.launchedAt),
+		dueIdx: index("idx_air_mission_due").on(t.status, t.completesAt)
+	})
+);
+
 // --- SPACE ---
 // A state's constellation of satellites, its space defence, and the
 // operations that blind a rival's. Rules in config/game/space.config.ts;

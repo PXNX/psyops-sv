@@ -16,6 +16,8 @@
 	import FluentWarning from "~icons/fluent/warning-20-filled";
 	import {
 		AIRCRAFT,
+		AIR_MISSIONS,
+		AIR_MISSION_IDS,
 		HEX_BOUNDS,
 		SHIP_CLASSES,
 		SHIP_CATEGORY_LABEL,
@@ -61,6 +63,9 @@
 	let cargoAmount = $state(100);
 	let cargoDirection = $state<"load" | "unload">("load");
 	let seaSensor = $state("sonar");
+	let airUnitId = $state<number | null>(null);
+	let airMissionKind = $state<(typeof AIR_MISSION_IDS)[number]>("strategic_bombing");
+	let airTargetRegion = $state<number | null>(null);
 	let now = $state(Date.now());
 
 	$effect(() => {
@@ -363,8 +368,8 @@
 
 				<!-- Air arm -->
 				<section class="rounded-lg border border-line/20 bg-surface-1 p-3">
-					<h2 class="text-sm font-semibold text-heading">Air arm</h2>
-					{#if Object.entries(data.airSupport.byType).length === 0}
+					<h2 class="text-sm font-semibold text-heading">Air operations</h2>
+					{#if data.airSupport.units.length === 0}
 						<p class="mt-1 text-xs text-fg-muted">No aircraft trained yet.</p>
 					{:else}
 						<div class="mt-1 flex flex-wrap gap-1">
@@ -372,6 +377,51 @@
 								<Badge tone="blue">{AIRCRAFT[type as keyof typeof AIRCRAFT]?.short ?? type} ×{count}</Badge>
 							{/each}
 						</div>
+						{#if data.canCommand}
+							<form method="POST" action="?/launchAirMission" use:enhance={enhanceForm} class="mt-3 space-y-2">
+								<select name="unitId" bind:value={airUnitId} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+									{#each data.airSupport.units as unit}
+										<option value={unit.id}>
+											{AIRCRAFT[unit.unitType as keyof typeof AIRCRAFT]?.label ?? unit.unitType} · {unit.fuel} fuel · {unit.experience} exp
+										</option>
+									{/each}
+								</select>
+								<select name="kind" bind:value={airMissionKind} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+									{#each AIR_MISSION_IDS as kind}
+										<option value={kind}>{AIR_MISSIONS[kind].label}</option>
+									{/each}
+								</select>
+								{#if AIR_MISSIONS[airMissionKind].target !== "hex"}
+									<select
+										name="targetRegionId"
+										bind:value={airTargetRegion}
+										class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs"
+									>
+										{#each data.regionList.filter((r) => AIR_MISSIONS[airMissionKind].target !== "friendly_region" || r.stateId === data.myStateId) as region}
+											<option value={region.id}>{region.label}</option>
+										{/each}
+									</select>
+								{:else}
+									<p class="text-[11px] text-fg-muted">Target hex: {selectedHex ? `${selectedHex.q},${selectedHex.r}` : "select a hex on the map"}</p>
+									<input type="hidden" name="q" value={selectedHex?.q ?? ""} />
+									<input type="hidden" name="r" value={selectedHex?.r ?? ""} />
+								{/if}
+								<p class="text-[11px] text-fg-muted">
+									{AIR_MISSIONS[airMissionKind].blurb} · {AIR_MISSIONS[airMissionKind].fuelCost} fuel · ~{AIR_MISSIONS[airMissionKind].durationHours}h
+								</p>
+								<Button type="submit" size="sm">Launch mission</Button>
+							</form>
+						{/if}
+					{/if}
+					{#if data.airMissions.length}
+						<ul class="mt-3 space-y-1 border-t border-line/15 pt-2 text-[11px]">
+							{#each data.airMissions as mission}
+								<li class="flex justify-between gap-2">
+									<span>{AIR_MISSIONS[mission.kind as keyof typeof AIR_MISSIONS]?.label ?? mission.kind}</span>
+									<span class="text-fg-muted">{mission.status} · {timeLeft(mission.completesAt)}</span>
+								</li>
+							{/each}
+						</ul>
 					{/if}
 				</section>
 

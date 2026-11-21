@@ -7,6 +7,9 @@ import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { viewerSide } from "#lib/server/services/military/recon.js";
 import { airSupportOf } from "#lib/server/services/military/fleet.js";
+import { airMissionLedger, launchAirMission } from "#lib/server/services/military/air-missions.js";
+import { eq } from "drizzle-orm";
+import { regions } from "#lib/server/schema.js";
 import { launchSeaIntel, seaIntelOptions, seaPicture } from "#lib/server/services/military/sea-intel.js";
 import {
 	FleetError,
@@ -40,6 +43,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const world = await loadFleetWorld(db, side?.stateId);
 	let canCommand = false;
 	if (side) canCommand = (await fleetAuthority(db, userId).catch(() => null)) !== null;
+	const regionRows = await db.select({ id: regions.id, stateId: regions.stateId, latitude: regions.latitude, longitude: regions.longitude }).from(regions);
 	const [sensorOptions, picture, air] = await Promise.all([
 		seaIntelOptions(db, userId, { q: 0, r: 0 }),
 		side ? seaPicture(db, world.side?.stateIds ?? []) : Promise.resolve({}),
@@ -50,6 +54,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 		seaSensors: sensorOptions.sensors,
 		seaIntel: picture,
 		airSupport: air,
+		regionList: regionRows.map((r) => ({ id: r.id, stateId: r.stateId, label: `Region #${r.id} (${r.latitude}, ${r.longitude})` })),
+		airMissions: side ? (await airMissionLedger(db, side.stateId)).map((m) => ({
+			...m,
+			launchedAt: iso(m.launchedAt),
+			completesAt: iso(m.completesAt)
+		})) : [],
 		myStateId: side?.stateId ?? null,
 		canCommand,
 		ports: world.ports.map((p) => ({ ...p, createdAt: iso(p.createdAt) })),
@@ -184,6 +194,22 @@ export const actions: Actions = {
 				direction: String(f.get("direction")) === "unload" ? "unload" : "load"
 			});
 			return { success: true, message: "Cargo handled." };
+		} catch (err) {
+			return fail(400, { error: message(err) });
+		}
+	},
+	launchAirMission: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			await launchAirMission(db, {
+				userId: locals.account!.id,
+				unitId: Number(f.get("unitId")),
+				kind: String(f.get("kind")) as never,
+				targetRegionId: f.get("targetRegionId") ? Number(f.get("targetRegionId")) : null,
+				q: f.get("q") ? Number(f.get("q")) : undefined,
+				r: f.get("r") ? Number(f.get("r")) : undefined
+			});
+			return { success: true, message: "Air mission launched." };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}

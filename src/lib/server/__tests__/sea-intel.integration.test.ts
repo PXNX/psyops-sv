@@ -2,9 +2,19 @@
 // radar sees the surface but not subs, cooldowns hold, and reports feed the
 // map's fog-of-war. The air arm's fuel and experience are checked here too.
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "@rstest/core";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
-import { fleetShips, militaryUnits, navalMines, seaIntelMissions, stateEnergy, stateTreasury, userWallets } from "../schema";
+import {
+	airMissions,
+	fleetShips,
+	militaryUnits,
+	navalMines,
+	regions,
+	seaIntelMissions,
+	stateEnergy,
+	stateTreasury,
+	userWallets
+} from "../schema";
 import {
 	SeaIntelError,
 	launchSeaIntel,
@@ -13,6 +23,7 @@ import {
 	seaPicture
 } from "../services/military/sea-intel";
 import { airSupportOf, tickUnitFuel } from "../services/military/fleet";
+import { AirMissionError, launchAirMission, resolveAirMissions } from "../services/military/air-missions";
 import { hexKey } from "#lib/config/index.js";
 
 let handle: MockDbHandle;
@@ -38,6 +49,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
+	await handle.db.delete(airMissions);
 	await handle.db.delete(seaIntelMissions);
 	await handle.db.delete(fleetShips);
 	await handle.db.delete(navalMines);
@@ -83,6 +95,48 @@ describe("sea reconnaissance", () => {
 		});
 		const picture = await seaPicture(handle.db, [freedonia], NOW);
 		expect(picture[hexKey({ q: 6, r: 5 })]?.contacts.surface).toBe(2);
+	});
+
+	it("directs a bomber's strategic bombing and enforces role requirements", async () => {
+		const [bomber] = await handle.db
+			.insert(militaryUnits)
+			.values({
+				name: "Test bomber",
+				ownerId: alice,
+				stateId: freedonia,
+				regionId: 1,
+				unitType: "bomber",
+				isTraining: false,
+				health: 100,
+				fuel: 100
+			})
+			.returning();
+		const [fighter] = await handle.db
+			.insert(militaryUnits)
+			.values({
+				name: "Test fighter",
+				ownerId: alice,
+				stateId: freedonia,
+				regionId: 1,
+				unitType: "fighterjet",
+				isTraining: false,
+				health: 100,
+				fuel: 100
+			})
+			.returning();
+		const [target] = await handle.db.select().from(regions).where(eq(regions.stateId, sylvania)).limit(1);
+		await expect(
+			launchAirMission(handle.db, { userId: alice, unitId: fighter!.id, kind: "strategic_bombing", targetRegionId: target!.id })
+		).rejects.toBeInstanceOf(AirMissionError);
+
+		await launchAirMission(handle.db, { userId: alice, unitId: bomber!.id, kind: "strategic_bombing", targetRegionId: target!.id });
+		await handle.db.execute(sql`update air_missions set completes_at = now() - interval '1 second'`);
+		expect(await resolveAirMissions(handle.db, new Date())).toBe(1);
+		const missions = await handle.db.select().from(airMissions);
+		expect(missions[0]!.result?.damage).toBeGreaterThan(0);
+		const after = (await handle.db.select().from(militaryUnits).where(eq(militaryUnits.id, bomber!.id)))[0]!;
+		expect(after.fuel).toBeLessThan(100);
+		expect(after.experience).toBeGreaterThan(0);
 	});
 
 	it("counts air roles and refuels units from the state reserve", async () => {
