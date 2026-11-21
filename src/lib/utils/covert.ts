@@ -16,6 +16,12 @@ export function effectLabel(kind: StateEffectKind | string, magnitude: number, r
 			return `Planted intel over ${region ?? "a region"} (${magnitude > 0 ? "inflated" : "concealed"} counts)`;
 		case "morale_boost":
 			return `Counter-propaganda: morale +${magnitude}%`;
+		case "comms_intercept":
+			return `Reading their traffic: intel +${magnitude}%`;
+		case "defence_blinded":
+			return `Radars blinded by false tracks (−${magnitude} levels)`;
+		case "supply_disrupted":
+			return `Supply chains compromised −${magnitude}%`;
 		case "casus_belli":
 			return "Casus belli";
 		default:
@@ -29,5 +35,8 @@ export const EFFECT_TONE: Record<StateEffectKind, BadgeTone> = {
 	morale_shaken: "red",
 	deception: "purple",
 	morale_boost: "green",
-	casus_belli: "orange"
+	casus_belli: "orange",
+	comms_intercept: "cyan",
+	defence_blinded: "red",
+	supply_disrupted: "amber"
 };

@@ -15,6 +15,7 @@ import {
 	infiltrationActions,
 	infiltrationAssets,
 	infiltrationFiles,
+	intrusionSessions,
 	powerPlants,
 	stateTreasury,
 	states
@@ -29,12 +30,21 @@ import {
 	effectiveHeat,
 	fileFor,
 	sitesForTarget,
+	INTRUSION,
+	ATTACK_VECTORS,
+	intrusionChance,
+	scanFor,
+	stageLines,
 	type AssetKind,
 	type InfiltrationActionKind,
+	type IntrusionStage,
+	type LogLine,
+	type ScanReport,
 	type Site
 } from "#lib/config/index.js";
 import { opsAuthority } from "./covert-ops";
 import { sideOf } from "./recon";
+import { dtg } from "#lib/utils/military.js";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Db = Database | Tx;
@@ -361,7 +371,30 @@ export async function runAction(
 			.for("update");
 		await charge(tx, stateId, spec.cost, `${spec.label} via ${asset.codename}`, userId, now);
 
-		const chance = input.action === "cover" ? 1 : actionChance(input.action, { access: asset.access, heat }, site!);
+		// An operator who has pivoted into the right segment knows the system:
+		// cameras and file shares are easier to take from there.
+		const [pivoted] =
+			input.action === "cover"
+				? [null]
+				: await tx
+						.select({ id: intrusionSessions.id })
+						.from(intrusionSessions)
+						.where(
+							and(
+								eq(intrusionSessions.assetId, asset.id),
+								eq(intrusionSessions.siteId, input.siteId ?? ""),
+								eq(intrusionSessions.stage, "pivot")
+							)
+						)
+						.limit(1);
+		const chance =
+			input.action === "cover"
+				? 1
+				: Math.min(
+						0.98,
+						actionChance(input.action, { access: asset.access, heat }, site!) +
+							(pivoted ? INTRUSION.PIVOT_ACTION_BONUS : 0)
+					);
 		const success = rng() < chance;
 		const nextHeat = clamp(heat + spec.heat, 0, INFILTRATION.HEAT_MAX);
 		const burned = nextHeat >= INFILTRATION.HEAT_MAX;
@@ -432,4 +465,198 @@ export const canRunNetworks = (role: string) =>
 /** Number of live footholds, for the odds preview and the network console. */
 export function liveFootholds(assets: { status: string; heat: number }[]): number {
 	return assets.filter((a) => a.status === "active" && a.heat < INFILTRATION.HEAT_MAX).length;
+}
+
+// ── Interactive intrusion ───────────────────────────────────────────────────
+
+export type IntrusionStep = IntrusionStage | "reset";
+
+async function sitesIn(db: Db, targetStateId: number): Promise<Site[]> {
+	const plants = await db
+		.select({ id: powerPlants.id, name: powerPlants.name, plantType: powerPlants.plantType })
+		.from(powerPlants)
+		.where(eq(powerPlants.stateId, targetStateId));
+	return sitesForTarget(
+		targetStateId,
+		plants.map((p) => ({ id: p.id, name: p.name, plantType: p.plantType }))
+	);
+}
+
+/** The current intrusion session for an asset/site pair, if any. */
+export function sessionFor(db: Db, assetId: number, siteId: string) {
+	return db.query.intrusionSessions.findFirst({
+		where: (s, { eq: is, and: both }) => both(is(s.assetId, assetId), is(s.siteId, siteId))
+	});
+}
+
+/** True when an operator has pivoted into this site's systems. */
+export async function isPivoted(db: Db, assetId: number, siteId: string): Promise<boolean> {
+	const session = await sessionFor(db, assetId, siteId);
+	return session?.stage === "pivot";
+}
+
+export interface IntrusionResult {
+	session: null | Awaited<ReturnType<typeof sessionFor>>;
+	success: boolean | null;
+	lines: { t: string; line: string; tone: "info" | "ok" | "warn" | "bad" }[];
+}
+
+/**
+ * Advance an intrusion one step. Each step pays for itself and leaves heat;
+ * a failed step leaves more. The transcript is kept on the session so the
+ * console can replay exactly what the operator saw.
+ */
+export async function runIntrusion(
+	db: Database,
+	userId: string,
+	input: { assetId: number; siteId: string; step: IntrusionStep; vector?: string; now?: Date; rng?: () => number }
+): Promise<IntrusionResult> {
+	const now = input.now ?? new Date();
+	const rng = input.rng ?? Math.random;
+	const stamp = dtg(now);
+	return db.transaction(async (tx) => {
+		const authority = await opsAuthority(tx, userId);
+		if (!authority) throw new InfiltrationError("Only your state's leadership can direct an intrusion.");
+		const stateId = authority.stateId;
+		const [row] = await tx
+			.select({ asset: infiltrationAssets })
+			.from(infiltrationAssets)
+			.where(eq(infiltrationAssets.id, input.assetId))
+			.for("update");
+		const asset = row?.asset;
+		if (!asset || asset.stateId !== stateId) throw new InfiltrationError("That asset isn't yours.");
+		if (asset.status !== "active") throw new InfiltrationError(`${asset.codename} has been burned.`);
+		const heat = effectiveHeat(asset, now);
+		if (heat >= INFILTRATION.HEAT_MAX) throw new InfiltrationError(`${asset.codename} is too exposed to continue.`);
+
+		const targetName = await assertTarget(tx, stateId, asset.targetStateId);
+		const site = (await sitesIn(tx, asset.targetStateId)).find((s) => s.id === input.siteId);
+		if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
+		const [existing] = await tx
+			.select()
+			.from(intrusionSessions)
+			.where(and(eq(intrusionSessions.assetId, asset.id), eq(intrusionSessions.siteId, site.id)))
+			.limit(1);
+
+		if (input.step === "reset") {
+			if (existing) await tx.delete(intrusionSessions).where(eq(intrusionSessions.id, existing.id));
+			return { session: null, success: null, lines: [] };
+		}
+
+		const stageOrder: Record<IntrusionStage, number> = { scan: 0, access: 1, escalate: 2, pivot: 3 };
+		if (existing && stageOrder[input.step as IntrusionStage] <= stageOrder[existing.stage as IntrusionStage]) {
+			throw new InfiltrationError(
+				`That step is already done. ${input.step === "scan" ? "Reset the session to scan again." : "Move to the next step."}`
+			);
+		}
+		// Each step needs the previous one to have succeeded: a failed access
+		// cannot be skipped by escalating straight away.
+		const required: Record<"access" | "escalate" | "pivot", IntrusionStage> = {
+			access: "scan",
+			escalate: "access",
+			pivot: "escalate"
+		};
+		if (input.step !== "scan" && (!existing || existing.stage !== required[input.step])) {
+			throw new InfiltrationError(`Finish the ${required[input.step]} step first.`);
+		}
+
+		const report: ScanReport = existing
+			? {
+					host: existing.host,
+					ip: existing.ip,
+					os: existing.os,
+					subnet: existing.segment ?? "",
+					ports: existing.ports,
+					notes: []
+				}
+			: scanFor(site, targetName);
+		let cost: number = INTRUSION.SCAN_COST;
+		let heatDelta: number = INTRUSION.SCAN_HEAT;
+		let success = true;
+		let lines: LogLine[] = [];
+		let stage: IntrusionStage = "scan";
+		let privileges = "unauthenticated";
+		let segment: string | null = null;
+		let vector: string | null = null;
+
+		if (input.step === "scan") {
+			lines = stageLines("scan", report, undefined, true, targetName, stamp);
+		} else {
+			if (!existing) throw new InfiltrationError("Scan the site first.");
+			if (!report.ports.some((p) => p.vector)) throw new InfiltrationError("No exposed service to attack here.");
+			const vectorId = input.vector ?? report.ports.find((p) => p.vector)?.vector;
+			const spec = vectorId ? ATTACK_VECTORS[vectorId] : undefined;
+			if (!vectorId || !spec) throw new InfiltrationError("Choose an exposed service to attack.");
+			if (asset.access < spec.accessNeeded) {
+				throw new InfiltrationError(`${spec.label} needs level ${spec.accessNeeded} access.`);
+			}
+			if (input.step === "access" && !report.ports.some((p) => p.vector === vectorId)) {
+				throw new InfiltrationError("That service wasn't found in the scan.");
+			}
+			cost =
+				input.step === "access"
+					? INTRUSION.ACCESS_COST
+					: input.step === "escalate"
+						? INTRUSION.ESCALATE_COST
+						: INTRUSION.PIVOT_COST;
+			const chance = intrusionChance(
+				input.step,
+				{ access: asset.access, heat },
+				site,
+				input.step === "access" ? vectorId : undefined
+			);
+			success = rng() < chance;
+			heatDelta = success ? INTRUSION.SUCCESS_HEAT : INTRUSION.FAIL_HEAT;
+			lines = stageLines(input.step, report, vectorId, success, targetName, stamp);
+			if (success) lines.push({ t: stamp, line: `> roll ${Math.round(chance * 100)}% · accepted`, tone: "ok" });
+			else lines.push({ t: stamp, line: `> roll ${Math.round(chance * 100)}% · logged by target SOC`, tone: "bad" });
+			stage = success ? input.step : (existing.stage as IntrusionStage);
+			vector = existing.vector;
+			privileges = existing.privileges;
+			segment = existing.segment;
+			if (success && input.step === "access") {
+				vector = vectorId;
+				privileges = "user";
+			}
+			if (success && input.step === "escalate") privileges = "SYSTEM";
+			if (success && input.step === "pivot") segment = `10.${(asset.targetStateId % 40) + 20}.7.0/24`;
+		}
+
+		await tx
+			.select({ id: stateTreasury.id })
+			.from(stateTreasury)
+			.where(eq(stateTreasury.stateId, stateId))
+			.for("update");
+		await charge(tx, stateId, cost, `${input.step} via ${asset.codename} on ${site.code}`, userId, now);
+		const nextHeat = clamp(heat + heatDelta, 0, INFILTRATION.HEAT_MAX);
+		await tx
+			.update(infiltrationAssets)
+			.set({ heat: nextHeat, status: nextHeat >= INFILTRATION.HEAT_MAX ? "burned" : "active", lastActionAt: now })
+			.where(eq(infiltrationAssets.id, asset.id));
+
+		const log = [...(existing?.log ?? []), ...lines];
+		const [session] = await tx
+			.insert(intrusionSessions)
+			.values({
+				assetId: asset.id,
+				stateId,
+				targetStateId: asset.targetStateId,
+				siteId: site.id,
+				stage,
+				host: report.host,
+				ip: report.ip,
+				os: report.os,
+				ports: report.ports,
+				vector,
+				privileges,
+				segment,
+				log
+			})
+			.onConflictDoUpdate({
+				target: [intrusionSessions.assetId, intrusionSessions.siteId],
+				set: { stage, vector, privileges, segment, log, updatedAt: now }
+			})
+			.returning();
+		return { session, success, lines };
+	});
 }

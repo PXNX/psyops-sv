@@ -45,7 +45,7 @@ export async function activeEffects(
 		);
 }
 
-const strongest = (effects: StateEffect[]) => effects.reduce((m, e) => Math.max(m, e.magnitude), 0);
+const strongest = (effects: { magnitude: number }[]) => effects.reduce((m, e) => Math.max(m, e.magnitude), 0);
 
 /** Percent the state's grid is degraded by (0 = intact). */
 export async function gridDegradation(db: Db, stateId: number | null, now = new Date()): Promise<number> {
@@ -56,6 +56,44 @@ export async function gridDegradation(db: Db, stateId: number | null, now = new 
 /** Percent the state's sensors and command links are jammed by (0 = clear). */
 export async function c2Degradation(db: Db, stateId: number, now = new Date()): Promise<number> {
 	return strongest(await activeEffects(db, [stateId], { now, kinds: ["c2_degraded"] }));
+}
+
+/** Radar levels an air-defence spoof has blinded on a state (0 = intact). */
+export async function defenceBlindness(db: Db, stateId: number, now = new Date()): Promise<number> {
+	return strongest(await activeEffects(db, [stateId], { now, kinds: ["defence_blinded"] }));
+}
+
+/** Percent a supply-chain attack has cut from a state's factory output. */
+export async function supplyDisruption(db: Db, stateId: number | null, now = new Date()): Promise<number> {
+	if (!stateId) return 0;
+	return strongest(await activeEffects(db, [stateId], { now, kinds: ["supply_disrupted"] }));
+}
+
+/**
+ * Strongest comms intercept an observer side is running against `targetStateId`.
+ * The effect sits on the target (source = the eavesdropper), so it is read by
+ * source here: the observer may be one of several states in its bloc.
+ */
+export async function commsInterceptAgainst(
+	db: Db,
+	observerStateIds: number[],
+	targetStateId: number,
+	now = new Date()
+): Promise<number> {
+	if (!observerStateIds.length) return 0;
+	const rows = await db
+		.select({ magnitude: stateEffects.magnitude })
+		.from(stateEffects)
+		.where(
+			and(
+				eq(stateEffects.stateId, targetStateId),
+				eq(stateEffects.kind, "comms_intercept"),
+				inArray(stateEffects.sourceStateId, observerStateIds),
+				lte(stateEffects.startsAt, now),
+				gt(stateEffects.expiresAt, now)
+			)
+		);
+	return strongest(rows);
 }
 
 /** Recon pass duration multiplier for a state (C2 disruption slows it). */

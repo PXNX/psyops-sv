@@ -135,6 +135,12 @@
 				return `Your battle output +${spec.magnitude}%; enemy campaigns land at half strength and ${Math.round(PSYOPS.RESILIENCE_SUCCESS * 100)}% less often, for ${spec.durationHours} h.`;
 			case "leaflet_drop":
 				return `Every resident of ${t} finds your leaflet on their overview for ${spec.durationHours} h; morale −${spec.magnitude}%, +${PSYOPS.EXHAUSTION.leaflet_drop} war exhaustion if at war.`;
+			case "comms_intercept":
+				return `Your recon over ${t} detects more and counts more accurately; strike planners see their true air defences. Unnoticed unless traced, for ${spec.durationHours} h.`;
+			case "air_defence_spoof":
+				return `${t}'s radar cueing drops by ${spec.magnitude} levels: drones survive interception and strikes get through, for ${spec.durationHours} h.`;
+			case "supply_chain":
+				return `${t}'s factories produce −${spec.magnitude}% while poisoned suppliers and invoices are untangled, for ${spec.durationHours} h.`;
 		}
 	}
 
@@ -352,9 +358,9 @@
 												<span class="data">
 													<span class:text-hostile-fg={f.success < 0}>{f.success ? signed(f.success) : "±0"}</span>
 													/
-													<span class:text-warning={f.attribution > 0}
-														>{f.attribution ? signed(f.attribution) : "±0"}</span
-													>
+													<span class:text-warning={f.attribution > 0}>
+														{f.attribution ? signed(f.attribution) : "±0"}
+													</span>
 												</span>
 											</li>
 										{/each}
@@ -403,9 +409,9 @@
 							{#each effectsOnUs as e (e.id)}
 								<li class="panel flex items-start justify-between gap-3 p-3" out:vanish>
 									<div class="min-w-0">
-										<Badge tone={EFFECT_TONE[e.kind as StateEffectKind]}
-											>{effectLabel(e.kind, e.magnitude, e.region)}</Badge
-										>
+										<Badge tone={EFFECT_TONE[e.kind as StateEffectKind]}>
+											{effectLabel(e.kind, e.magnitude, e.region)}
+										</Badge>
 										<p class="mt-1 text-xs text-fg-muted">
 											{#if e.kind === "casus_belli"}
 												against {e.source ?? "an unknown state"}: we may strike it as if at war
@@ -433,9 +439,9 @@
 								{#each running as e (e.id)}
 									<li class="panel flex items-start justify-between gap-3 p-3" out:vanish>
 										<div class="min-w-0">
-											<Badge tone={EFFECT_TONE[e.kind as StateEffectKind]}
-												>{effectLabel(e.kind, e.magnitude, e.region)}</Badge
-											>
+											<Badge tone={EFFECT_TONE[e.kind as StateEffectKind]}>
+												{effectLabel(e.kind, e.magnitude, e.region)}
+											</Badge>
 											<p class="mt-1 text-xs text-fg-muted">on {e.target}</p>
 										</div>
 										<span class="data shrink-0 text-xs text-fg-soft">{countdown(e.expiresAt, now) ?? "ended"}</span>
@@ -528,9 +534,9 @@
 									</td>
 									<td class="px-3 py-2">
 										<div class="flex flex-wrap gap-1">
-											<Badge size="xs" tone={o.succeeded ? (o.ours ? "green" : "red") : "neutral"}
-												>{o.succeeded ? "success" : o.ours ? "failed" : "thwarted"}</Badge
-											>
+											<Badge size="xs" tone={o.succeeded ? (o.ours ? "green" : "red") : "neutral"}>
+												{o.succeeded ? "success" : o.ours ? "failed" : "thwarted"}
+											</Badge>
 											{#if o.ours && !o.self}
 												{#if o.attributed}<Badge size="xs" tone="orange">traced</Badge>
 												{:else if o.detected}<Badge size="xs" tone="amber">noticed</Badge>

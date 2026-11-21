@@ -20,12 +20,23 @@ export type CovertOpKind =
 	| "grid_attack"
 	| "c2_disruption"
 	| "financial_theft"
+	| "comms_intercept"
+	| "air_defence_spoof"
+	| "supply_chain"
 	| "morale_campaign"
 	| "disinformation"
 	| "counter_propaganda"
 	| "leaflet_drop";
 export type StateEffectKind =
-	"grid_degraded" | "c2_degraded" | "morale_shaken" | "deception" | "morale_boost" | "casus_belli";
+	| "grid_degraded"
+	| "c2_degraded"
+	| "morale_shaken"
+	| "deception"
+	| "morale_boost"
+	| "casus_belli"
+	| "comms_intercept"
+	| "defence_blinded"
+	| "supply_disrupted";
 
 export interface CovertOpSpec {
 	domain: CovertDomain;
@@ -99,6 +110,51 @@ export const CYBER_OPS = {
 		effect: null,
 		needsWar: false,
 		visible: true
+	},
+	comms_intercept: {
+		domain: "cyber",
+		label: "Communications intercept",
+		blurb:
+			"Tap the target's military and government traffic: your recon sees more, counts more accurately, and strike planners read their true air defences.",
+		cost: 38_000,
+		baseSuccess: 0.62,
+		baseAttribution: 0.28,
+		durationHours: 12,
+		cooldownHours: 18,
+		magnitude: 20,
+		effect: "comms_intercept",
+		needsWar: false,
+		visible: false
+	},
+	air_defence_spoof: {
+		domain: "cyber",
+		label: "Air-defence spoof",
+		blurb:
+			"Feed false tracks to the target's radar network: its radars and SAMs stop cueing properly, opening the airspace to drones and strikes.",
+		cost: 52_000,
+		baseSuccess: 0.55,
+		baseAttribution: 0.4,
+		durationHours: 8,
+		cooldownHours: 24,
+		magnitude: 3,
+		effect: "defence_blinded",
+		needsWar: true,
+		visible: true
+	},
+	supply_chain: {
+		domain: "cyber",
+		label: "Supply-chain attack",
+		blurb:
+			"Poison the software and invoices the target's factories depend on: shifts produce less and replacements arrive late.",
+		cost: 48_000,
+		baseSuccess: 0.58,
+		baseAttribution: 0.35,
+		durationHours: 18,
+		cooldownHours: 30,
+		magnitude: 20,
+		effect: "supply_disrupted",
+		needsWar: false,
+		visible: true
 	}
 } as const satisfies Record<string, CovertOpSpec>;
 
@@ -127,7 +183,11 @@ export const CYBER = {
 	SUCCESS_MIN: 0.05,
 	SUCCESS_MAX: 0.95,
 	ATTRIBUTION_MIN: 0.02,
-	ATTRIBUTION_MAX: 0.95
+	ATTRIBUTION_MAX: 0.95,
+	/** Comms intercept: share of the effect magnitude returned as detection. */
+	SIGNAL_DETECTION_SHARE: 0.6,
+	/** Comms intercept: cap on that detection bonus (0-1). */
+	SIGNAL_BONUS_CAP: 0.35
 } as const;
 
 // ── Cyber defence ───────────────────────────────────────────────────────────
@@ -289,3 +349,17 @@ export function theftAmount(balance: number, percent: number = CYBER_OPS.financi
 
 /** Factor on a state's energy capacity and factory output while its grid is degraded by `percent`. */
 export const gridFactor = (percent: number) => clamp(1 - percent / 100, 0, 1);
+
+/**
+ * A comms-intercept effect gives intercepted traffic back as sensor detection.
+ * `magnitude` is in percent; the returned share is added to detection chance,
+ * which also tightens the estimate error in intel.ts.
+ */
+export const signalBonus = (magnitude: number) =>
+	clamp((Math.max(0, magnitude) / 100) * CYBER.SIGNAL_DETECTION_SHARE, 0, CYBER.SIGNAL_BONUS_CAP);
+
+/** Radar levels a spoofed air-defence network effectively loses. */
+export const blindedRadar = (magnitude: number) => Math.max(0, Math.round(magnitude));
+
+/** Factory output left while a supply-chain attack of `percent` runs. */
+export const supplyFactor = (percent: number) => clamp(1 - percent / 100, 0, 1);

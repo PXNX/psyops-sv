@@ -4,22 +4,31 @@
 // live in services/military/infiltration.ts.
 
 import { fail } from "@sveltejs/kit";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
-import { states } from "#lib/server/schema.js";
+import { intrusionSessions, states } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
-import { OPS_ROLE_LABEL, opsAuthority } from "#lib/server/services/military/covert-ops.js";
+import { COVERT_OPS, INTRUSION, type CovertOpKind } from "#lib/config/index.js";
+import {
+	CovertOpError,
+	OPS_ROLE_LABEL,
+	launchOperation,
+	opsAuthority
+} from "#lib/server/services/military/covert-ops.js";
 import { viewerSide } from "#lib/server/services/military/recon.js";
 import {
 	InfiltrationError,
 	actionsFor,
 	assetsFor,
 	filesFor,
+	isPivoted,
 	networkTargets,
 	plantAsset,
 	runAction,
-	sitesFor
+	runIntrusion,
+	sitesFor,
+	type IntrusionStep
 } from "#lib/server/services/military/infiltration.js";
 import {
 	ASSET_KINDS,
@@ -38,8 +47,16 @@ const empty = {
 	sites: [] as Awaited<ReturnType<typeof sitesFor>>,
 	files: [] as Awaited<ReturnType<typeof filesFor>>,
 	actions: [] as Awaited<ReturnType<typeof actionsFor>>,
+	sessions: [] as Awaited<ReturnType<typeof loadSessions>>,
 	treasury: null as number | null
 };
+
+function loadSessions(stateId: number, targetStateId: number) {
+	return db.query.intrusionSessions.findMany({
+		where: and(eq(intrusionSessions.stateId, stateId), eq(intrusionSessions.targetStateId, targetStateId)),
+		orderBy: (s, { desc }) => [desc(s.updatedAt)]
+	});
+}
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const account = locals.account!;
@@ -51,13 +68,14 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const requested = url.searchParams.get("target");
 	const selectedTargetId = targets.find((t) => String(t.id) === requested)?.id ?? targets[0]?.id ?? null;
 
-	const [treasury, targetNames, assets, sites, files, actions] = await Promise.all([
+	const [treasury, targetNames, assets, sites, files, actions, sessions] = await Promise.all([
 		db.query.stateTreasury.findFirst({ where: (t, { eq }) => eq(t.stateId, stateId) }),
 		Promise.all(targets.map(async (t) => ({ ...t, logo: await getLogoUrl(t.logo) }))),
 		selectedTargetId ? assetsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? sitesFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? filesFor(db, stateId, selectedTargetId) : Promise.resolve([]),
-		selectedTargetId ? actionsFor(db, stateId, selectedTargetId) : Promise.resolve([])
+		selectedTargetId ? actionsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
+		selectedTargetId ? loadSessions(stateId, selectedTargetId) : Promise.resolve([])
 	]);
 	const [state] = await db.select({ id: states.id, name: states.name }).from(states).where(eq(states.id, stateId));
 
@@ -70,6 +88,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		sites,
 		files,
 		actions,
+		sessions,
 		treasury: authority ? (treasury?.balance ?? 0) : null,
 		maxAssets: INFILTRATION.MAX_ASSETS_PER_TARGET
 	};
@@ -108,6 +127,66 @@ export const actions: Actions = {
 			return { outcome: result };
 		} catch (err) {
 			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	intrude: async ({ request, locals }) => {
+		const form = await request.formData();
+		const step = str(form.get("step")) as IntrusionStep;
+		if (!["scan", "access", "escalate", "pivot", "reset"].includes(step)) {
+			return fail(400, { error: "Unknown intrusion step." });
+		}
+		try {
+			const result = await runIntrusion(db, locals.account!.id, {
+				assetId: int(form.get("assetId")),
+				siteId: str(form.get("siteId")),
+				step,
+				vector: str(form.get("vector")) || undefined
+			});
+			return { intrusion: result, assetId: int(form.get("assetId")), siteId: str(form.get("siteId")) };
+		} catch (err) {
+			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	payload: async ({ request, locals }) => {
+		const form = await request.formData();
+		const kind = str(form.get("kind")) as CovertOpKind;
+		if (!COVERT_OPS[kind] || COVERT_OPS[kind].domain !== "cyber") {
+			return fail(400, { error: "Choose a cyber payload." });
+		}
+		const assetId = int(form.get("assetId"));
+		const siteId = str(form.get("siteId"));
+		const targetStateId = int(form.get("targetStateId"));
+		try {
+			if (!(await isPivoted(db, assetId, siteId))) {
+				throw new InfiltrationError("The operator must pivot into the site before deploying a payload.");
+			}
+			const result = await launchOperation(db, {
+				userId: locals.account!.id,
+				kind,
+				targetStateId,
+				extraFootholds: INTRUSION.PAYLOAD_FOOTHOLDS,
+				notify: false
+			});
+			return {
+				payload: {
+					kind,
+					target: result.targetName,
+					succeeded: result.operation.succeeded,
+					detected: result.operation.detected,
+					attributed: result.operation.attributed,
+					successChance: result.operation.successChance,
+					attributionChance: result.operation.attributionChance,
+					stolen: result.stolen
+				}
+			};
+		} catch (err) {
+			if (err instanceof InfiltrationError || err instanceof CovertOpError) {
+				return fail(400, { error: err.message });
+			}
 			throw err;
 		}
 	}

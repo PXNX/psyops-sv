@@ -8,11 +8,14 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
 	import CameraFeed from "#lib/component/infiltration/CameraFeed.svelte";
+	import IntrusionConsole from "#lib/component/infiltration/IntrusionConsole.svelte";
 	import {
 		ASSET_KINDS,
+		COVERT_OPS,
 		INFILTRATION,
 		INFILTRATION_ACTIONS,
 		INFILTRATION_ASSETS,
+		INTRUSION,
 		NETWORK_ASSET_BONUS,
 		SITE_TYPES,
 		actionChance,
@@ -60,6 +63,7 @@
 	let openSiteId = $state<string | null>(null);
 	let openFileId = $state<number | null>(null);
 	let lastAction = $state<Outcome | null>(null);
+	let lastPayload = $state<any>(null);
 	let planting = $state(false);
 	let acting = $state<string | null>(null);
 	let terminalEl: HTMLElement | undefined = $state();
@@ -77,6 +81,11 @@
 	);
 	const footholds = $derived(Math.min(networkFootholdCap, activeAssets.length));
 	const chosenSite = $derived(data.sites.find((s: any) => s.id === openSiteId) ?? null);
+	const siteSession = $derived(
+		chosenSite && selectedAsset
+			? (data.sessions.find((s: any) => s.assetId === selectedAsset.id && s.siteId === chosenSite.id) ?? null)
+			: null
+	);
 	const chosenFile = $derived(data.files.find((f: any) => f.id === openFileId) ?? null);
 	const atCapacity = $derived(activeAssets.length >= INFILTRATION.MAX_ASSETS_PER_TARGET);
 
@@ -102,7 +111,11 @@
 
 	function oddsFor(kind: InfiltrationActionKind, site: any): number | null {
 		if (!selectedAsset) return null;
-		return Math.round(actionChance(kind, { access: selectedAsset.access, heat: selectedAsset.heat }, site) * 100);
+		const session = data.sessions.find((s: any) => s.assetId === selectedAsset.id && s.siteId === site.id);
+		const bonus = session?.stage === "pivot" && kind !== "cover" ? INTRUSION.PIVOT_ACTION_BONUS : 0;
+		return Math.round(
+			(actionChance(kind, { access: selectedAsset.access, heat: selectedAsset.heat }, site) + bonus) * 100
+		);
 	}
 	function blockedFor(kind: InfiltrationActionKind, site: any): string | null {
 		if (!selectedAsset) return "Choose a live asset first.";
@@ -389,6 +402,24 @@
 										<CameraFeed {site} observedAt={site.lastSeen ?? undefined} />
 									{/if}
 
+									{#if selectedAsset}
+										<div>
+											<h4 class="section-title mb-2">Operator terminal · {selectedAsset.codename}</h4>
+											<IntrusionConsole
+												session={siteSession}
+												{site}
+												asset={selectedAsset}
+												treasury={data.treasury ?? 0}
+												onResult={(d) => {
+													if (d?.payload) {
+														lastPayload = d.payload;
+														focusTerminal();
+													}
+												}}
+											/>
+										</div>
+									{/if}
+
 									<div class="grid gap-2 sm:grid-cols-3">
 										{#each ["probe", "camera", "files"] as const as kind (kind)}
 											{@const spec = INFILTRATION_ACTIONS[kind]}
@@ -457,6 +488,23 @@
 					</div>
 				{:else}
 					<p class="panel p-4 text-sm text-fg-muted">Nothing copied yet. Pull files from a site to fill the dossier.</p>
+				{/if}
+
+				<!-- Payload result -->
+				{#if lastPayload}
+					<div class="panel p-4" in:fade={{ duration: 150 }}>
+						<div class="flex items-center justify-between gap-2">
+							<h3 class="section-title">Payload · {lastPayload.kind.replace(/_/g, " ")}</h3>
+							<Badge size="xs" tone={lastPayload.succeeded ? "green" : "red"}>
+								{lastPayload.succeeded ? "deployed" : "blocked"}
+							</Badge>
+						</div>
+						<p class="mt-2 text-sm text-fg-body">
+							{COVERT_OPS[lastPayload.kind as keyof typeof COVERT_OPS]?.label ?? lastPayload.kind}
+							against {lastPayload.target}: success {lastPayload.successChance}% · attribution {lastPayload.attributionChance}%.
+							{#if lastPayload.stolen}${lastPayload.stolen.kept.toLocaleString()} reached our treasury.{/if}
+						</p>
+					</div>
 				{/if}
 
 				<!-- Last action -->

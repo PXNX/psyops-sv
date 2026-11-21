@@ -43,7 +43,7 @@ import {
 	type ViewConditions
 } from "#lib/config/index.js";
 import { fuseIntel, scanRegion, sideModifiers, uavCoverage, type IntelPicture, type SideModifiers } from "./intel";
-import { c2Degradation, deceptionFor, reconDelayFactor } from "./state-effects";
+import { c2Degradation, commsInterceptAgainst, deceptionFor, reconDelayFactor } from "./state-effects";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Db = Database | Tx;
@@ -389,9 +389,10 @@ async function observe(
 
 	const airDefenceUnits = [...units.values()].filter((u) => u.unitType === "air_defence" && !u.isTraining).length;
 	// Covert ops: jammed sensors see less; planted intel may fool the pass.
-	const [jammed, planted] = await Promise.all([
+	const [jammed, planted, intercepted] = await Promise.all([
 		c2Degradation(tx, mission.stateId, mission.completesAt),
-		deceptionFor(tx, side.stateIds, mission.targetRegionId, mission.completesAt)
+		deceptionFor(tx, side.stateIds, mission.targetRegionId, mission.completesAt),
+		commsInterceptAgainst(tx, side.stateIds, mission.stateId, mission.completesAt)
 	]);
 
 	const [{ value: underConstruction }] = await tx
@@ -426,6 +427,7 @@ async function observe(
 		battle: battleSnapshot,
 		rng: opts.rng,
 		degradation: jammed / 100,
+		signalIntel: intercepted,
 		// Its own draw, so planted intel doesn't shift the pass's other rolls.
 		deception: planted ? { magnitude: planted, roll: seededRandom(hash32(mission.id, 0xdec0))() } : null
 	});

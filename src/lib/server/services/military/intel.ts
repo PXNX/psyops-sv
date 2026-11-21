@@ -21,6 +21,7 @@ import {
 	detectionChance,
 	droneInterceptChance,
 	seesThrough,
+	signalBonus,
 	PSYOPS,
 	type Deception,
 	type SensorId,
@@ -56,6 +57,8 @@ export interface ScanInput {
 	rng: () => number;
 	/** C2 disruption on the observer: share (0-1) of detection lost to jammed sensor links. */
 	degradation?: number;
+	/** Comms intercept on the target: adds detection and tightens the estimates. */
+	signalIntel?: number;
 	/** Disinformation planted for the observer over this region (psyops.config.ts). */
 	deception?: Deception | null;
 }
@@ -93,8 +96,14 @@ export function scanRegion(input: ScanInput): IntelFindings {
 		evasion = 1 - interceptChance * AD_DRONE_EVASION_PENALTY;
 	}
 
+	// Intercepted traffic gives the analyst a second source: detection rises
+	// and, through `estimate`, the count error narrows with it.
+	const intercepted = signalBonus(input.signalIntel ?? 0);
 	for (const c of UNIT_CATEGORIES) {
-		const p = detectionChance(input.sensor, c, input.conditions) * evasion * (1 - (input.degradation ?? 0));
+		const p = Math.min(
+			1,
+			detectionChance(input.sensor, c, input.conditions) * evasion * (1 - (input.degradation ?? 0)) + intercepted
+		);
 		coverage[c] = p >= DETECTION_THRESHOLD ? round2(p) : 0;
 	}
 	if (UNIT_CATEGORIES.every((c) => coverage[c] === 0)) return { ...base, outcome: "obscured" };

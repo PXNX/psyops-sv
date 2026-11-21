@@ -32,16 +32,74 @@
 	const cyber = $derived(spec.domain === "cyber");
 	const money = (n: number) => `$${n.toLocaleString()}`;
 
+	// Stable, fictional artefacts for the trace so the same op always reads the same.
+	const host = $derived(
+		`${outcome.kind}-${String(outcome.id).padStart(3, "0")}.${outcome.target.toLowerCase().replace(/[^a-z0-9]+/g, "")}.gov`
+	);
+	const ip = $derived(`198.51.100.${((outcome.id * 37) % 200) + 20}`);
+	const port = $derived(
+		(
+			{
+				grid_attack: 502,
+				c2_disruption: 5060,
+				financial_theft: 443,
+				comms_intercept: 5060,
+				air_defence_spoof: 161,
+				supply_chain: 445,
+				morale_campaign: 80,
+				disinformation: 80,
+				counter_propaganda: 80,
+				leaflet_drop: 80
+			} as Record<import("#lib/config/index.js").CovertOpKind, number>
+		)[outcome.kind] ?? 22
+	);
+	const service = $derived(
+		(
+			{
+				grid_attack: "modbus",
+				c2_disruption: "sip",
+				financial_theft: "https",
+				comms_intercept: "sip",
+				air_defence_spoof: "snmp",
+				supply_chain: "smb",
+				morale_campaign: "http",
+				disinformation: "http",
+				counter_propaganda: "http",
+				leaflet_drop: "http"
+			} as Record<import("#lib/config/index.js").CovertOpKind, string>
+		)[outcome.kind] ?? "ssh"
+	);
+
 	const lines = $derived.by((): Line[] => {
 		const o = outcome;
 		const ok = o.succeeded;
 		const tag = o.kind.toUpperCase();
+		const cascade: Record<string, string> = {
+			grid_attack: "grid SCADA offline → factories brown out, radar cueing degraded",
+			c2_disruption: "sensor links dropped → recon slower, units fight uncoordinated",
+			financial_theft: "shell accounts settled → ledger reconciled at both ends",
+			comms_intercept: "SIGINT feed live → recon coverage and estimate accuracy up",
+			air_defence_spoof: "false tracks injected → radar cueing and SAM effectiveness down",
+			supply_chain: "compromised vendor updates → factory output down"
+		};
 		const head: Line[] = cyber
 			? [
-					{ text: `$ opctl launch ${tag} --target "${o.target}"` },
-					{ text: "> mapping exposed services", status: "ok", tone: "ok" },
-					{ text: "> routing through relay chain", status: "3 hops", tone: "ok" },
-					{ text: "> delivering payload", status: ok ? "ok" : "rejected", tone: ok ? "ok" : "bad" }
+					{ text: `$ opctl launch ${tag.toLowerCase()} --target "${o.target}" --relay 3` },
+					{ text: `> resolving ${host} → ${ip}`, status: "ok", tone: "ok" },
+					{ text: `> scan ${ip}: ${port}/tcp open (${service})`, status: "mapped", tone: "ok" },
+					{ text: "> weaponise: stage payload in relay chain", status: "ok", tone: "ok" },
+					{ text: "> deliver: signed session, 3 hops", status: "ok", tone: "ok" },
+					{
+						text: "> exploit: command channel on " + service,
+						status: ok ? "accepted" : "rejected",
+						tone: ok ? "ok" : "bad"
+					},
+					{ text: "> install: persistence token", status: ok ? "seeded" : "denied", tone: ok ? "ok" : "bad" },
+					{
+						text: "> execute: " + (cascade[o.kind] ?? tag.toLowerCase()),
+						status: ok ? "live" : "aborted",
+						tone: ok ? "ok" : "bad"
+					}
 				]
 			: [
 					{ text: `$ ioctl campaign ${tag} --audience "${o.self ? "home front" : o.target}"` },

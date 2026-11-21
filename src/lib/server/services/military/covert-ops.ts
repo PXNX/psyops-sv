@@ -216,6 +216,8 @@ export interface LaunchInput {
 	rng?: () => number;
 	/** Notify the target's leadership (default true). */
 	notify?: boolean;
+	/** Extra footholds from an interactive intrusion, added to the network bonus. */
+	extraFootholds?: number;
 }
 
 export interface LaunchResult {
@@ -351,7 +353,7 @@ export async function launchOperation(db: Database, input: LaunchInput): Promise
 			targetResilient: resilient,
 			attackerAiLevel: attackerAi,
 			defenderAiLevel: defenderAi,
-			networkAssets
+			networkAssets: networkAssets + Math.max(0, input.extraFootholds ?? 0)
 		});
 		const roll = spec.self
 			? { succeeded: true, detected: true, attributed: true }
@@ -512,7 +514,10 @@ const DETECTED_SUBJECT: Record<CovertOpKind, string> = {
 	morale_campaign: "Enemy influence campaign",
 	disinformation: "Planted intelligence uncovered",
 	counter_propaganda: "Counter-propaganda",
-	leaflet_drop: "Propaganda leaflets dropped"
+	leaflet_drop: "Propaganda leaflets dropped",
+	comms_intercept: "Unauthorised intercept on government traffic",
+	air_defence_spoof: "Radar network fed false tracks",
+	supply_chain: "Compromised supplier software"
 };
 
 /** Tell the target's president and ministers what hit them (and who, if attributed). */

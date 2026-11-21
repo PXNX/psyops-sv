@@ -284,11 +284,14 @@ async function strikeContexts(
 	};
 	// Intercepted traffic is a live order-of-battle feed: the planner sees the
 	// truth instead of whatever the last camera pass happened to catch.
-	const known: StrikeContext = intercepted > 0 ? truth : {
-		...shared,
-		adUnits: knownAd ?? 0,
-		enemyUnits: picture?.knownUnits ?? 0
-	};
+	const known: StrikeContext =
+		intercepted > 0
+			? truth
+			: {
+					...shared,
+					adUnits: knownAd ?? 0,
+					enemyUnits: picture?.knownUnits ?? 0
+				};
 	return { known, truth, knownAd, picture, hostile };
 }
 
