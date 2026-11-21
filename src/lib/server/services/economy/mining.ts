@@ -65,4 +65,12 @@ export async function extractFromDeposit(
 }
 
 export const isMineable = (r: string | null | undefined): r is MineableResource =>
-	r === "iron" || r === "copper" || r === "coal" || r === "wood";
+	r === "iron" ||
+	r === "copper" ||
+	r === "coal" ||
+	r === "wood" ||
+	r === "oil" ||
+	r === "gas" ||
+	r === "uranium" ||
+	r === "rare_earth" ||
+	r === "silicon";
