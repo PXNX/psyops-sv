@@ -66,6 +66,7 @@ import {
 } from "#lib/config/index.js";
 import { picturesByRegion, sideOf, type Side } from "./recon";
 import { ihlScoreOf, ihlScores } from "./ihl";
+import { spaceBonuses } from "./space";
 import { reduceRegionPopulation } from "../population";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -248,8 +249,11 @@ async function strikeContexts(
 	]);
 	const picture = pictures.get(region.id) ?? null;
 	const population = regionPopulation(region);
+	// Space domain: a navigation constellation improves GPS/laser guidance.
+	const gps = (await spaceBonuses(db, side.stateId)).gps;
 	const shared = {
 		conditions: conditions?.(region) ?? regionConditions(region, now),
+		gpsAccuracy: gps,
 		intelConfidence: picture?.confidence ?? 0,
 		buildingsSeen: !!picture?.buildings,
 		ownTroopsEngaged: hostile.ownTroopsEngaged,
