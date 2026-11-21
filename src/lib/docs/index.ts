@@ -17,7 +17,9 @@ export interface LoadedDoc {
 
 // Eagerly import only the frontmatter of every markdown doc so the navigation
 // and index page can be built without loading the full page components.
-const metaModules = import.meta.glob<Record<string, unknown>>("./*.md", {
+// mdsvex 1 exposes frontmatter through a `?metadata` query module rather than
+// a named export on the compiled component.
+const metaModules = import.meta.glob<Record<string, unknown>>("./*.md?metadata", {
 	eager: true,
 	import: "metadata"
 });
@@ -29,7 +31,7 @@ const componentModules = import.meta.glob<{
 }>("./*.md");
 
 function slugFromPath(path: string): string {
-	return path.replace(/^\.\//, "").replace(/\.md$/, "");
+	return path.replace(/^\.\//, "").replace(/\.md$/, "").replace(/\?.*$/, "");
 }
 
 function toMeta(path: string, raw: Record<string, unknown> | undefined): DocMeta {
