@@ -9,6 +9,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { regions, stateBuildings, stateTreasury } from "#lib/server/schema.js";
 import { BUILDING_TEMPLATES, VALID_BUILDING_TYPES, isBuildingType, type BuildingType } from "#lib/config/index.js";
+import { formatDateTime } from "#lib/utils/formatting.js";
 import {
 	ConstructionError,
 	checkConstruction,
@@ -145,7 +146,7 @@ export const actions: Actions = {
 			const template = BUILDING_TEMPLATES[type];
 			return {
 				success: true,
-				message: `${quantity > 1 ? `${quantity} × ` : ""}${template.name} under construction, done ${completesAt.toLocaleDateString("en-GB")}.`
+				message: `${quantity > 1 ? `${quantity} × ` : ""}${template.name} under construction, done ${formatDateTime(completesAt)}.`
 			};
 		} catch (err) {
 			if (err instanceof ConstructionError) return fail(400, { error: err.message });

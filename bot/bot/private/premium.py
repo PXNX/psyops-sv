@@ -47,6 +47,7 @@ from telegram.ext import (
 )
 
 from data.game_db import find_account_by_telegram_id, grant_premium
+from util.dtg import dtg
 from settings.config import (
     APP_URL,
     MOCK_STARS_PAYMENTS,
@@ -196,7 +197,7 @@ async def buy_with_stars(update: Update, context: CallbackContext) -> None:
             return
         await query.message.reply_text(
             f"✅ Your <b>{plan.label}</b> premium (currently free) is active until "
-            f"{premium_until:%Y-%m-%d %H:%M} UTC. Automation is now working for you."
+            f"{dtg(premium_until)}. Automation is now working for you."
         )
         return
 
@@ -365,7 +366,7 @@ async def _settle_ton_payments(application: Application) -> None:
             await application.bot.send_message(
                 payment["chat_id"],
                 f"✅ TON payment received! Your <b>{plan.label}</b> premium is "
-                f"active until {premium_until:%Y-%m-%d %H:%M} UTC. Automation is "
+                f"active until {dtg(premium_until)}. Automation is "
                 f"now working for you.",
             )
         except Exception as e:  # noqa: BLE001

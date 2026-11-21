@@ -4,10 +4,7 @@
 // closes, so nobody can move in at the last minute just to vote.
 // (Pure: the database lookup lives in residency.ts so this stays testable.)
 
-const pad = (n: number) => String(n).padStart(2, "0");
-/** Same format as formatDateTime: dd.mm.yyyy, hh:mm. */
-const formatDateTime = (d: Date) =>
-	`${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+import { dtg as formatDateTime } from "#lib/utils/dtg.js";
 
 export const RESIDENCY_BEFORE_CLOSE_MS = 24 * 60 * 60 * 1000;
 

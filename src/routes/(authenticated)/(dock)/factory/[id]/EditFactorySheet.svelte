@@ -6,6 +6,7 @@
 	import FluentMoney20Filled from "~icons/fluent/money-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 	import FluentChartMultiple20Filled from "~icons/fluent/chart-multiple-20-filled";
 	import { editFactorySchema } from "./schema.js";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
@@ -59,13 +60,7 @@
 	}
 
 	function formatCooldownDate(cooldownEnd: string): string {
-		return new Date(cooldownEnd).toLocaleString("en-US", {
-			month: "short",
-			day: "numeric",
-			hour: "numeric",
-			minute: "2-digit",
-			hour12: true
-		});
+		return formatDateTime(cooldownEnd);
 	}
 
 	function getWagePosition(): string {

@@ -6,7 +6,7 @@
 <script lang="ts">
 	import { prefersReducedMotion } from "svelte/motion";
 	import { SENSORS, type SensorId } from "#lib/config/index.js";
-	import { formatLatLon } from "#lib/utils/military.js";
+	import { dtgCompact, formatLatLon } from "#lib/utils/military.js";
 	import {
 		buildScene,
 		FRAME_H,
@@ -96,7 +96,7 @@
 		track: IconTarget,
 		build: IconCrane
 	};
-	const stamp = (d: string) => d.replace("T", " ").slice(0, 19) + "Z";
+	const stamp = (d: string) => dtgCompact(d);
 	const latlon = $derived(input.lat != null && input.lon != null ? formatLatLon(input.lat, input.lon, 3) : "GRID UNK");
 
 	// HUD colours: a cool white frame with amber target boxes.

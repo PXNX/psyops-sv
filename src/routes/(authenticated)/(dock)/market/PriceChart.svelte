@@ -4,6 +4,7 @@
 <script lang="ts">
 	import type { SeriesPoint } from "./series";
 	import { money } from "./series";
+	import { dtgShortDate } from "#lib/utils/dtg.js";
 
 	interface Props {
 		points: SeriesPoint[];
@@ -25,7 +26,7 @@
 		height = 240,
 		reference = null,
 		volume = true,
-		formatTime = (t) => new Date(t).toLocaleDateString(undefined, { day: "numeric", month: "short" }),
+		formatTime = (t) => dtgShortDate(t),
 		active = $bindable(null)
 	}: Props = $props();
 

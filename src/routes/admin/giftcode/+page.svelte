@@ -15,6 +15,7 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button, IconButton, Badge, badgeClass } from "#lib/component/ui/index.js";
 	import { enhance } from "$app/forms";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 
 	let { data, form } = $props();
 
@@ -86,9 +87,7 @@
 
 	function formatDate(date: Date | string | null) {
 		if (!date) return "Never";
-		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		return formatDateTime(date);
 	}
 
 	function formatNumber(num: number) {

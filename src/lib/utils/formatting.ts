@@ -1,28 +1,20 @@
 // src/lib/utils/formatting.ts
 import * as m from "#lib/paraglide/messages.js";
+import { dtg, dtgDate, dtgTime } from "./dtg.js";
 
-function pad(n: number) {
-	return String(n).padStart(2, "0");
-}
-
-function ddmmyyyyhhmm(d: Date) {
-	return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function ddmmyyyy(d: Date) {
-	return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
-}
-
+/** "12 NOV 2026" — NATO DTG in UTC. */
 export function formatDate(date: Date | string) {
-	return ddmmyyyy(new Date(date));
+	return dtgDate(date);
 }
 
+/** "12 NOV 2026, 13:44" — NATO DTG in UTC. */
 export function formatDateTime(dateString: Date | string) {
-	return ddmmyyyyhhmm(new Date(dateString));
+	return dtg(dateString);
 }
 
-export function formatTime(dateString: string) {
-	return ddmmyyyyhhmm(new Date(dateString));
+/** "13:44" — NATO DTG time in UTC. */
+export function formatTime(dateString: Date | string) {
+	return dtgTime(dateString);
 }
 
 export function getDaysRemaining(expiresAt: Date | string) {

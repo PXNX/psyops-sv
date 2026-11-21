@@ -1,4 +1,5 @@
 // Client helpers shared by the chat list and the conversation views.
+import { dtgDate, dtgDayKey, dtgDaysAgo, dtgTime } from "#lib/utils/dtg.js";
 
 export interface ChatMessage {
 	id: number;
@@ -13,42 +14,26 @@ export interface ChatMessage {
 	isLeader?: boolean;
 }
 
-const pad = (n: number) => String(n).padStart(2, "0");
+export const clockTime = (iso: string) => dtgTime(iso);
 
-export const clockTime = (iso: string) => {
-	const d = new Date(iso);
-	return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-};
+export const dayKey = (iso: string) => dtgDayKey(iso);
 
-export const dayKey = (iso: string) => {
-	const d = new Date(iso);
-	return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
-
-function daysAgo(d: Date) {
-	const start = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
-	return Math.round((start(new Date()) - start(d)) / 86_400_000);
-}
-
-/** Day separator in a conversation: Today, Yesterday, Monday, 3 March, 3 March 2024. */
+/** Day separator in a conversation: Today, Yesterday, weekday, or a NATO date. */
 export function dayLabel(iso: string) {
-	const d = new Date(iso);
-	const ago = daysAgo(d);
+	const ago = dtgDaysAgo(iso);
 	if (ago === 0) return "Today";
 	if (ago === 1) return "Yesterday";
-	if (ago > 1 && ago < 7) return d.toLocaleDateString("en-GB", { weekday: "long" });
-	const sameYear = d.getFullYear() === new Date().getFullYear();
-	return d.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: sameYear ? undefined : "numeric" });
+	if (ago > 1 && ago < 7) return new Date(iso).toLocaleDateString("en-GB", { weekday: "long", timeZone: "UTC" });
+	return dtgDate(iso);
 }
 
-/** Time in the conversation list: 14:05, Yesterday, Mon, 03.03.24. */
+/** Time in the conversation list: 14:05, Yesterday, Mon, or 03 NOV 2026. */
 export function listTime(iso: string) {
-	const d = new Date(iso);
-	const ago = daysAgo(d);
-	if (ago === 0) return clockTime(iso);
+	const ago = dtgDaysAgo(iso);
+	if (ago === 0) return dtgTime(iso);
 	if (ago === 1) return "Yesterday";
-	if (ago > 1 && ago < 7) return d.toLocaleDateString("en-GB", { weekday: "short" });
-	return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`;
+	if (ago > 1 && ago < 7) return new Date(iso).toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" });
+	return dtgDate(iso);
 }
 
 /** Splits text into plain runs and http(s) links. */

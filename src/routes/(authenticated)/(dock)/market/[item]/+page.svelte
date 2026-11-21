@@ -17,6 +17,7 @@
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
 	import PriceChart from "../PriceChart.svelte";
 	import { buildSeries, changePct, DAY, HOUR, money, type SeriesPoint } from "../series";
+	import { dtgShortDate, dtgTime } from "#lib/utils/dtg.js";
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
@@ -80,10 +81,9 @@
 	const currentPrice = $derived(lastTrade ?? data.otherListings[0]?.pricePerUnit ?? null);
 	const shownPrice = $derived(hover?.price ?? currentPrice);
 
-	const pad = (n: number) => String(n).padStart(2, "0");
-	const clock = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-	const weekday = (d: Date) => d.toLocaleDateString(undefined, { weekday: "short" });
-	const dayMonth = (d: Date) => d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
+	const clock = (d: Date) => dtgTime(d);
+	const weekday = (d: Date) => d.toLocaleDateString("en-GB", { weekday: "short", timeZone: "UTC" });
+	const dayMonth = (d: Date) => dtgShortDate(d);
 	const axisTime = $derived((t: number) => {
 		const d = new Date(t);
 		return range === "24h" ? clock(d) : range === "7d" ? weekday(d) : dayMonth(d);

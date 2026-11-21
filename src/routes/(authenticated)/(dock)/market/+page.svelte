@@ -8,6 +8,7 @@
 	import PriceChart from "./PriceChart.svelte";
 	import Sparkline from "./Sparkline.svelte";
 	import { DAY, HOUR, money, type SeriesPoint } from "./series";
+	import { dtgShortDate, dtgTime } from "#lib/utils/dtg.js";
 
 	let { data } = $props();
 
@@ -35,13 +36,8 @@
 	const heroStart = $derived(
 		hero?.week.length ? Math.min(Math.max(now - 7 * DAY, hero.week[0].t), now - 6 * HOUR) : now - 7 * DAY
 	);
-	const weekTime = (t: number) =>
-		new Date(t).toLocaleString(undefined, { weekday: "short", hour: "2-digit", minute: "2-digit" });
-	const weekAxis = $derived((t: number) =>
-		now - heroStart < 2 * DAY
-			? new Date(t).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })
-			: new Date(t).toLocaleDateString(undefined, { weekday: "short" })
-	);
+	const weekTime = (t: number) => `${dtgShortDate(t)} ${dtgTime(t)}`;
+	const weekAxis = $derived((t: number) => (now - heroStart < 2 * DAY ? dtgTime(t) : dtgShortDate(t)));
 </script>
 
 {#snippet change(pct: number | null, label?: string)}

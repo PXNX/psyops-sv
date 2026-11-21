@@ -3,13 +3,10 @@
 // coordinates, ages, and the world map's projection (map units ↔ lat/lon).
 
 const pad = (n: number, w = 2) => String(Math.floor(n)).padStart(w, "0");
-const MONTHS = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
 
-/** Military date-time group in UTC, e.g. "181640Z NOV 26". */
-export function dtg(date: Date | string): string {
-	const d = new Date(date);
-	return `${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}Z ${MONTHS[d.getUTCMonth()]} ${pad(d.getUTCFullYear() % 100)}`;
-}
+// The canonical NATO DTG ("12 NOV 2026, 13:44") lives in dtg.ts so every
+// screen uses the same UTC format. Re-exported here for tactical screens.
+export { dtg, dtgCompact } from "./dtg.js";
 
 /** "48.86°N 2.35°E" */
 export function formatLatLon(lat: number, lon: number, digits = 2): string {

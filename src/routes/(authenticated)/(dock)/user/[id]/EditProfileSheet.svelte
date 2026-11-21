@@ -7,6 +7,7 @@
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
 	import FluentImageOff20Filled from "~icons/fluent/image-off-20-filled";
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 	import { updateProfileSchema } from "./schema.js";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
 	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
@@ -65,13 +66,7 @@
 	}
 
 	function formatCooldownDate(cooldownEnd: string): string {
-		return new Date(cooldownEnd).toLocaleString("en-US", {
-			month: "short",
-			day: "numeric",
-			hour: "numeric",
-			minute: "2-digit",
-			hour12: true
-		});
+		return formatDateTime(cooldownEnd);
 	}
 
 	function handleFileSelect(event: Event) {

@@ -17,6 +17,7 @@ import {
 import { eq, and, lte } from "drizzle-orm";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { runAutomaticDividends } from "#lib/server/services/economy/dividends.js";
+import { dtg } from "#lib/utils/dtg.js";
 
 // Give the serverless function enough time to process every state's election in
 // a single run. Without this, Vercel terminates the function at the default
@@ -87,9 +88,7 @@ export const GET: RequestHandler = async ({ request }) => {
 			});
 
 			scheduled++;
-			console.log(
-				`📅 Scheduled next election for state ${election.stateId} - starts ${nextElectionStart.toISOString()}`
-			);
+			console.log(`📅 Scheduled next election for state ${election.stateId} - starts ${dtg(nextElectionStart)}`);
 		}
 
 		// Automatic dividend policies piggyback on this hourly schedule (each

@@ -8,13 +8,12 @@
 	import { scaleBand, scaleTime, scaleLinear } from "d3-scale";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { dtgShortDate } from "#lib/utils/dtg.js";
 
 	let { data } = $props();
 
 	function formatDate(date: Date | string) {
-		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
+		return dtgShortDate(date);
 	}
 
 	function formatNumber(num: number) {

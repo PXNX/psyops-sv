@@ -13,7 +13,7 @@ import {
 	userWallets
 } from "#lib/server/schema.js";
 import { ECONOMY_CONFIG, MINEABLE_RESOURCES } from "#lib/config/index.js";
-import { getRegionName } from "#lib/utils/formatting.js";
+import { getRegionName, formatDateTime } from "#lib/utils/formatting.js";
 import { effectiveEnergy } from "#lib/server/services/military/state-effects.js";
 import { withStrikeEnergy } from "#lib/server/services/military/strike.js";
 import { fail, redirect } from "@sveltejs/kit";
@@ -262,7 +262,7 @@ export const actions: Actions = {
 			cooldownEnd.setDate(cooldownEnd.getDate() + COOLDOWN_DAYS);
 			if (new Date() < cooldownEnd) {
 				return fail(400, {
-					error: `Factory creation is on cooldown. Try again after ${String(cooldownEnd.getDate()).padStart(2, "0")}.${String(cooldownEnd.getMonth() + 1).padStart(2, "0")}.${cooldownEnd.getFullYear()}, ${String(cooldownEnd.getHours()).padStart(2, "0")}:${String(cooldownEnd.getMinutes()).padStart(2, "0")}`
+					error: `Factory creation is on cooldown. Try again after ${formatDateTime(cooldownEnd)}`
 				});
 			}
 		}

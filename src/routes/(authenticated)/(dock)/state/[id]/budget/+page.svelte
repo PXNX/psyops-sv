@@ -13,6 +13,7 @@
 	import FluentReceiptMoney20Filled from "~icons/fluent/receipt-money-20-filled";
 	import FluentChevronLeft20Filled from "~icons/fluent/chevron-left-20-filled";
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
+	import { dtgDate, dtgTime } from "#lib/utils/dtg.js";
 
 	let { data } = $props();
 
@@ -37,15 +38,8 @@
 	});
 	const fmt = (amount: number) => money.format(amount);
 
-	const pad = (n: number) => String(n).padStart(2, "0");
-	const dayOf = (date: Date | string) => {
-		const d = new Date(date);
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${String(d.getFullYear()).slice(2)}`;
-	};
-	const timeOf = (date: Date | string) => {
-		const d = new Date(date);
-		return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-	};
+	const dayOf = (date: Date | string) => dtgDate(date);
+	const timeOf = (date: Date | string) => dtgTime(date);
 
 	function goToPage(pageNum: number) {
 		const url = new URL(page.url.href);

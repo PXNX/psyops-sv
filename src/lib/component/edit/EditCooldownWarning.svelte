@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FluentClock20Filled from "~icons/fluent/clock-20-filled";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 
 	interface Props {
 		cooldownEndsAt: string;
@@ -28,9 +29,7 @@
 	}
 
 	function formatCooldownDate(cooldownEnd: string): string {
-		const d = new Date(cooldownEnd);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		return formatDateTime(cooldownEnd);
 	}
 </script>
 

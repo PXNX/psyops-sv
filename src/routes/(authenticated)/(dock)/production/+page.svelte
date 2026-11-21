@@ -6,6 +6,7 @@
 	import { enhance } from "$app/forms";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
+	import { dtgTime } from "#lib/utils/dtg.js";
 	import Logo from "#lib/component/Logo.svelte";
 	import FluentProduction20Filled from "~icons/fluent/production-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -106,7 +107,7 @@
 	});
 
 	function hhmm(d: Date | null) {
-		return d ? d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "--:--";
+		return d ? dtgTime(d) : "--:--";
 	}
 
 	// Refresh the page data once the running production finishes, instead of

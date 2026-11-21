@@ -16,6 +16,7 @@
 	import Modal from "#lib/component/Modal.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import Badge from "#lib/component/ui/Badge.svelte";
+	import { formatDate as dtgDate } from "#lib/utils/formatting.js";
 	const { data } = $props();
 
 	type Medal = (typeof data.career.medals)[number];
@@ -108,11 +109,7 @@
 		}
 	};
 
-	const formatDate = (date: string | Date) => {
-		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
-	};
+	const formatDate = (date: string | Date) => dtgDate(date);
 
 	let showMedalModal = $state(false);
 	let medalForm = $state({

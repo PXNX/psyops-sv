@@ -10,6 +10,7 @@
 	import UserLink from "#lib/component/UserLink.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button, buttonClass } from "#lib/component/ui/index.js";
+	import { dtgDate, dtgDayKey, dtgTime } from "#lib/utils/dtg.js";
 
 	let { data }: { data: PageData } = $props();
 
@@ -36,9 +37,7 @@
 	}
 
 	function formatTime(date: Date | string): string {
-		const d = new Date(date);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		return dtgTime(date);
 	}
 
 	const typeLabels: Record<string, string> = {
@@ -66,18 +65,15 @@
 	};
 
 	function getDayKey(date: Date | string): string {
-		const d = new Date(date);
-		return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+		return dtgDayKey(date);
 	}
 
 	function formatDayHeader(dayKey: string): string {
 		const today = getDayKey(new Date());
-		const yesterday = getDayKey(new Date(Date.now() - 86400000));
+		const yesterday = getDayKey(new Date(Date.now() - 86_400_000));
 		if (dayKey === today) return "Today";
 		if (dayKey === yesterday) return "Yesterday";
-		const d = new Date(dayKey + "T12:00:00");
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+		return dtgDate(dayKey + "T12:00:00Z");
 	}
 
 	let filteredTransactions = $derived(

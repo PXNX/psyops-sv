@@ -15,6 +15,7 @@
 	import Button from "#lib/component/ui/Button.svelte";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 
 	let { data } = $props();
 
@@ -61,9 +62,7 @@
 	}
 
 	function formatCooldownDate(cooldownEnd: string): string {
-		const d = new Date(cooldownEnd);
-		const pad = (n: number) => String(n).padStart(2, "0");
-		return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+		return formatDateTime(cooldownEnd);
 	}
 
 	function handleFileSelect(event: Event) {

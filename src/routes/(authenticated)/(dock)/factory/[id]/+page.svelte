@@ -6,6 +6,7 @@
 	import type { SubmitFunction } from "$app/forms";
 	import { refreshAll } from "$app/navigation";
 	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { dtgTime } from "#lib/utils/dtg.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import Logo from "#lib/component/Logo.svelte";
@@ -90,8 +91,7 @@
 	);
 
 	function hhmm(d: Date | null) {
-		if (!d) return "--:--";
-		return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+		return d ? dtgTime(d) : "--:--";
 	}
 
 	const onShift: SubmitFunction = () => {

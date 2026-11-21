@@ -7,6 +7,7 @@ import { blocs, blocLeaders, blocLeaderElections, blocLeaderCandidates, blocLead
 import { eq, and, lte } from "drizzle-orm";
 import { resolveExpiredBlocApplications } from "#lib/server/service/blocApplication.js";
 import { nextCycleWindow } from "#lib/server/service/blocElectionCycle.js";
+import { dtg } from "#lib/utils/dtg.js";
 
 export const config = {
 	maxDuration: 60
@@ -79,8 +80,8 @@ async function scheduleNextCycle(blocId: number, from: Date) {
 
 	console.log(
 		window.status === "active"
-			? `🗳️ Bloc ${blocId} has no leader - nominations and voting open until ${window.votingEndsAt.toISOString()}`
-			: `📅 Scheduled next bloc leader election for bloc ${blocId} - voting opens ${window.votingStartsAt.toISOString()}`
+			? `🗳️ Bloc ${blocId} has no leader - nominations and voting open until ${dtg(window.votingEndsAt)}`
+			: `📅 Scheduled next bloc leader election for bloc ${blocId} - voting opens ${dtg(window.votingStartsAt)}`
 	);
 }
 

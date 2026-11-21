@@ -4,6 +4,7 @@
 	import FluentVote20Filled from "~icons/fluent/vote-20-filled";
 	import FluentCalendar20Filled from "~icons/fluent/calendar-20-filled";
 	import { Button } from "#lib/component/ui/index.js";
+	import { dtg } from "#lib/utils/dtg.js";
 
 	// Props passed from page data
 	let { election, stateId } = $props<{
@@ -59,9 +60,9 @@
 					</div>
 					<div class="text-xs text-primary-soft/70">
 						<strong>Start:</strong>
-						{new Date(election.startDate).toLocaleString()}<br />
+						{dtg(election.startDate)}<br />
 						<strong>End:</strong>
-						{new Date(election.endDate).toLocaleString()}
+						{dtg(election.endDate)}
 					</div>
 				</div>
 

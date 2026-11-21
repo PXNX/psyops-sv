@@ -7,6 +7,7 @@
 	import { Button } from "#lib/component/ui/index.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
+	import { formatDateTime } from "#lib/utils/formatting.js";
 
 	let { data } = $props();
 
@@ -14,7 +15,7 @@
 
 	function formatDate(value: string | Date | null): string {
 		if (!value) return "";
-		return new Date(value).toLocaleString();
+		return formatDateTime(value);
 	}
 </script>
 
