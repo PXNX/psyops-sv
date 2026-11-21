@@ -32,6 +32,7 @@ import {
 } from "../../schema";
 import { creditTreasury } from "../../money";
 import { commsInterceptAgainst, defenceBlindness } from "./state-effects";
+import { zoneStrengthOn } from "../economy/trade";
 import {
 	SORTIE_COOLDOWN_HOURS,
 	INTERCEPTED_AIRCRAFT_DAMAGE,
@@ -559,10 +560,19 @@ export async function launchStrike(db: Database, input: LaunchInput): Promise<La
 			.returning({ balance: stateTreasury.balance });
 		if (!paid) throw new StrikeError(`The treasury can't pay for this strike ($${cost.toLocaleString("en-US")}).`);
 
+		const rng = input.rng ?? seededRandom(hash32(authority.stateId, region.id, Math.floor(now.getTime() / 1000)));
+		// A closed airspace is not just scenery: aircraft cannot transit it
+		// without being traced and engaged. Only stealthy drones might slip in.
+		if (region.stateId) {
+			const closure = await zoneStrengthOn(tx, region.stateId, "airspace", now);
+			const stealth = input.weapon === "attack_drone" ? 0.4 : 0;
+			if (closure > 0 && rng() > Math.max(0, 1 - closure + stealth))
+				throw new StrikeError("The target's airspace is closed; only a stealthy drone could slip through.");
+		}
+
 		// What the commander saw decides IHL; the truth decides the outcome.
 		const seen = planStrike(input.target, input.weapon, contexts.known);
 		const actual = planStrike(input.target, input.weapon, contexts.truth);
-		const rng = input.rng ?? seededRandom(hash32(authority.stateId, region.id, Math.floor(now.getTime() / 1000)));
 		const roll = rollStrike(actual, rng);
 
 		const damage: StrikeDamage = {};

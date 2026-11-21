@@ -165,7 +165,12 @@ export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_tra
 	"satellite_launch",
 	"space_operation",
 	"ai_research",
-	"smuggling_route"
+	"smuggling_route",
+	"supply_convoy",
+	"infrastructure_repair",
+	"trade_lane",
+	"zone_closure",
+	"trade_revenue"
 ]);
 
 export const battlePhaseEnum = pgEnum("battle_phase", [
@@ -3614,7 +3619,8 @@ export const strikeWeaponEnum = pgEnum("strike_weapon", [
 	"close_air_support"
 ]);
 export const strikeOutcomeEnum = pgEnum("strike_outcome", ["hit", "partial", "miss", "intercepted"]);
-export const regionEffectKindEnum = pgEnum("region_effect_kind", ["supply", "energy", "industry"]);
+export const regionEffectKindEnum = pgEnum("region_effect_kind", ["supply", "energy", "industry", "supply_boost"]);
+export const convoyOutcomeEnum = pgEnum("convoy_outcome", ["delivered", "intercepted", "lost"]);
 export const ihlViolationKindEnum = pgEnum("ihl_violation_kind", [
 	"protected_target",
 	"indiscriminate",
@@ -3961,3 +3967,90 @@ export type StateAi = typeof stateAi.$inferSelect;
 export type SmugglingRoute = typeof smugglingRoutes.$inferSelect;
 export type SmugglingRun = typeof smugglingRuns.$inferSelect;
 
+
+// --- SUPPLY CONVOYS ---
+// Player-ordered relief and resupply runs. A delivered convoy leaves a timed
+// supply_boost effect on the region, which the logistics service folds into
+// the region's carrying capacity. Escorts come from the state's sea control.
+export const supplyConvoys = pgTable(
+	"supply_convoys",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		originRegionId: integer("origin_region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		targetRegionId: integer("target_region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		orderedBy: text("ordered_by").references(() => accounts.id, { onDelete: "set null" }),
+		cargo: integer("cargo").notNull(),
+		escortPoints: integer("escort_points").default(0).notNull(),
+		interceptionChance: integer("interception_chance").notNull(),
+		travelHours: integer("travel_hours").notNull(),
+		cost: integer("cost").notNull(),
+		outcome: convoyOutcomeEnum("outcome").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_supply_convoy_state").on(t.stateId, t.createdAt),
+		targetIdx: index("idx_supply_convoy_target").on(t.targetRegionId, t.createdAt)
+	})
+);
+
+export type SupplyConvoy = typeof supplyConvoys.$inferSelect;
+
+// --- AERIAL AND MARITIME TRADE ---
+// Legal trade lanes pay treasury each collection cycle. Closing airspace or
+// an EEZ denies a rival the lane and raises the risk of running it anyway.
+export const tradeLaneKindEnum = pgEnum("trade_lane_kind", ["air", "sea"]);
+export const closureKindEnum = pgEnum("closure_kind", ["airspace", "eez"]);
+
+export const tradeLanes = pgTable(
+	"trade_lanes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		partnerStateId: integer("partner_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		kind: tradeLaneKindEnum("kind").notNull(),
+		capacity: integer("capacity").notNull(),
+		active: boolean("active").default(true).notNull(),
+		openedBy: text("opened_by").references(() => accounts.id, { onDelete: "set null" }),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		ownerIdx: index("idx_trade_lane_owner").on(t.stateId, t.kind),
+		pairIdx: index("idx_trade_lane_pair").on(t.stateId, t.partnerStateId, t.kind)
+	})
+);
+
+export const closedZones = pgTable(
+	"closed_zones",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		kind: closureKindEnum("kind").notNull(),
+		/** Null closes the zone to everyone; otherwise only to this state. */
+		targetStateId: integer("target_state_id").references(() => states.id, { onDelete: "cascade" }),
+		strength: integer("strength").default(100).notNull(),
+		orderedBy: text("ordered_by").references(() => accounts.id, { onDelete: "set null" }),
+		startsAt: timestamp("starts_at").defaultNow().notNull(),
+		expiresAt: timestamp("expires_at").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		targetIdx: index("idx_closed_zone_target").on(t.targetStateId, t.kind, t.expiresAt),
+		ownerIdx: index("idx_closed_zone_owner").on(t.stateId, t.kind, t.expiresAt)
+	})
+);
+
+export type TradeLane = typeof tradeLanes.$inferSelect;
+export type ClosedZone = typeof closedZones.$inferSelect;

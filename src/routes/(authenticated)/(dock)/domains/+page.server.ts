@@ -8,6 +8,7 @@ import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import {
+	regions,
 	productInventory,
 	resourceInventory,
 	states,
@@ -59,25 +60,46 @@ import {
 } from "#lib/server/services/economy/smuggling.js";
 import { viewerSide } from "#lib/server/services/military/recon.js";
 import { stateSupply } from "#lib/server/services/military/logistics.js";
+import {
+	ConvoyError,
+	convoyAuthority,
+	convoyLedger,
+	launchSupplyConvoy,
+	repairInfrastructure
+} from "#lib/server/services/military/convoys.js";
+import { REPAIR, convoyCost, convoyCargoLimit, repairCost, TRADE_LANES, CLOSURES } from "#lib/config/index.js";
+import {
+	TradeError,
+	tradeAuthority,
+	closureAuthority,
+	closeZone,
+	closuresBy,
+	lanesOf,
+	openTradeLane,
+	tradeFactors
+} from "#lib/server/services/economy/trade.js";
 
 const nameOfState = (rows: { id: number; name: string }[], id: number | null | undefined) =>
 	id ? (rows.find((s) => s.id === id)?.name ?? `State ${id}`) : null;
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
-	const [naval, space, ai, smuggler, side] = await Promise.all([
+	const [naval, space, ai, smuggler, side, convoy, trade, closure] = await Promise.all([
 		navalAuthority(db, account.id),
 		spaceAuthority(db, account.id),
 		aiAuthority(db, account.id),
 		smugglingAuthority(db, account.id),
-		viewerSide(db, account.id)
+		viewerSide(db, account.id),
+		convoyAuthority(db, account.id),
+		tradeAuthority(db, account.id),
+		closureAuthority(db, account.id)
 	]);
 	const stateId = naval?.stateId ?? space?.stateId ?? ai?.stateId ?? smuggler?.stateId ?? side?.stateId ?? null;
 	if (!stateId) return { state: null, planner: null, civilian: null };
 
 	const stateRows = await db.select({ id: states.id, name: states.name }).from(states);
 	const state = stateRows.find((s) => s.id === stateId) ?? null;
-	const [fleet, seaControl, blockades, navalOps, sats, bonuses, defence, spaceOps, aiInfo, routes, runs, wallet, resources, products, supply] =
+	const [fleet, seaControl, blockades, navalOps, sats, bonuses, defence, spaceOps, aiInfo, routes, runs, wallet, resources, products, supply, convoys, ownRegions, lanes, zones, factors] =
 		await Promise.all([
 			navalFleet(db, stateId),
 			seaControlOf(db, stateId),
@@ -93,14 +115,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 			db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)),
 			db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
 			db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
-			stateSupply(db, stateId)
+			stateSupply(db, stateId),
+			convoyLedger(db, stateId),
+			db.select({ id: regions.id, infrastructure: regions.infrastructure }).from(regions).where(eq(regions.stateId, stateId)).limit(60),
+			lanesOf(db, stateId),
+			closuresBy(db, stateId),
+			tradeFactors(db, stateId)
 		]);
 
 	return {
 		state: { id: stateId, name: state?.name ?? "Unknown state" },
-		planner: naval || space || ai || smuggler
+		planner: naval || space || ai || smuggler || convoy || trade || closure
 			? {
-					roles: { naval, space, ai, smuggler },
+					roles: { naval, space, ai, smuggler, convoy, trade, closure },
+					trade: { lanes, zones, factors, laneSpecs: TRADE_LANES, closureSpecs: CLOSURES },
+					convoys,
+					ownRegions,
 					supply,
 					fleet,
 					seaControl,
@@ -238,6 +268,67 @@ export const actions: Actions = {
 			return { success: true, message: result.message };
 		} catch (e) {
 			return fail(400, { error: e instanceof SmugglingError ? e.message : "The run failed." });
+		}
+	},
+	convoy: async ({ request, locals }) => {
+		const authority = await convoyAuthority(db, locals.account!.id);
+		if (!authority) return fail(403, { error: "Only the president or economy minister can order convoys." });
+		const fd = await request.formData();
+		const cargo = int(fd, "cargo");
+		try {
+			const result = await launchSupplyConvoy(db, {
+				stateId: authority.stateId,
+				orderedBy: locals.account!.id,
+				originRegionId: int(fd, "originRegionId"),
+				targetRegionId: int(fd, "targetRegionId"),
+				cargo
+			});
+			return { success: true, message: result.message, cost: result.cost };
+		} catch (e) {
+			return fail(400, { error: e instanceof ConvoyError ? e.message : "The convoy could not be dispatched." });
+		}
+	},
+	repair: async ({ request, locals }) => {
+		const fd = await request.formData();
+		try {
+			const result = await repairInfrastructure(db, int(fd, "regionId"), locals.account!.id);
+			return { success: true, message: result.message, cost: result.cost };
+		} catch (e) {
+			return fail(400, { error: e instanceof ConvoyError ? e.message : "The repair could not be funded." });
+		}
+	},
+	openLane: async ({ request, locals }) => {
+		const authority = await tradeAuthority(db, locals.account!.id);
+		if (!authority) return fail(403, { error: "Only the president or an economy/foreign minister can open lanes." });
+		const fd = await request.formData();
+		try {
+			const result = await openTradeLane(db, {
+				stateId: authority.stateId,
+				openedBy: locals.account!.id,
+				partnerStateId: int(fd, "partnerStateId"),
+				kind: form(fd, "kind") as "air" | "sea",
+				capacity: int(fd, "capacity")
+			});
+			return { success: true, message: `Trade lane opened at ${Math.round(result.flow * 100)}% flow.`, cost: result.cost };
+		} catch (e) {
+			return fail(400, { error: e instanceof TradeError ? e.message : "The lane could not be opened." });
+		}
+	},
+	closeZone: async ({ request, locals }) => {
+		const authority = await closureAuthority(db, locals.account!.id);
+		if (!authority) return fail(403, { error: "Only the president or a foreign/defence minister can close a zone." });
+		const fd = await request.formData();
+		try {
+			const result = await closeZone(db, {
+				stateId: authority.stateId,
+				orderedBy: locals.account!.id,
+				kind: form(fd, "kind") as "airspace" | "eez",
+				targetStateId: int(fd, "targetStateId") || null,
+				hours: int(fd, "hours")
+			});
+			return { success: true, message: result.message, cost: result.cost };
+		} catch (e) {
+			return fail(400, { error: e instanceof TradeError ? e.message : "The zone could not be closed." });
 		}
 	}
 };

@@ -40,6 +40,19 @@ import {
 	fightsOnLand,
 	gpsFactor,
 	convoySurvival,
+	canRepair,
+	CLOSURES,
+	closureCost,
+	closureStrength,
+	laneCost,
+	laneRevenue,
+	convoyBoost,
+	convoyCargoLimit,
+	convoyCost,
+	tradeFlow,
+	tradeLoss,
+	transitChance,
+	convoyTravelHours,
 	dueForWear,
 	disruptionFactor,
 	efficiencyFactor,
@@ -51,6 +64,8 @@ import {
 	maxCargo,
 	qualityFactor,
 	regionSupplyCapacity,
+	repairCost,
+	supplyBoost,
 	roundSupplyCost,
 	navalInterdictChance,
 	navalSuccessChance,
@@ -345,5 +360,49 @@ describe("equipment, efficiency and quality", () => {
 		expect(dueForWear(1)).toBe(false);
 		expect(dueForWear(5)).toBe(true);
 		expect(dueForWear(10)).toBe(true);
+	});
+});
+
+describe("convoys and repairs", () => {
+	it("scales convoy cost, cargo and travel time", () => {
+		expect(convoyCost(100)).toBeGreaterThan(convoyCost(10));
+		expect(convoyTravelHours(1000)).toBeGreaterThan(convoyTravelHours(100));
+		expect(convoyCargoLimit(1000, 100)).toBeGreaterThan(convoyCargoLimit(1000, 900));
+		expect(convoyCargoLimit(10, 100)).toBe(0);
+	});
+
+	it("turns delivered cargo into a bounded supply boost", () => {
+		expect(supplyBoost([-0.3, 0.2])).toBeCloseTo(0.3);
+		expect(supplyBoost([0.5])).toBe(0);
+		expect(convoyBoost(100, 200)).toBeGreaterThan(0);
+		expect(convoyBoost(100_000, 1)).toBeLessThanOrEqual(0.8);
+	});
+
+	it("makes repairs more expensive the more broken the region is", () => {
+		expect(repairCost(0)).toBeGreaterThan(repairCost(8));
+		expect(canRepair(10)).toBe(false);
+		expect(canRepair(9)).toBe(true);
+	});
+});
+
+describe("air and sea trade", () => {
+	it("prices air lanes and closures higher than sea ones", () => {
+		expect(laneCost("air", 50)).toBeGreaterThan(laneCost("sea", 50));
+		expect(closureCost("airspace", 24)).toBeGreaterThan(closureCost("eez", 24));
+		expect(CLOSURES.eez.flowCut).toBeLessThan(CLOSURES.airspace.flowCut);
+	});
+
+	it("cuts air lanes with airspace closures and sea lanes with EEZ and blockade", () => {
+		expect(tradeFlow("air", 1)).toBeLessThan(tradeFlow("sea", 1));
+		expect(tradeFlow("sea", 0, 1)).toBeLessThan(tradeFlow("sea", 0, 0));
+		expect(laneRevenue("air", 100, 0.5)).toBeCloseTo(laneRevenue("air", 100, 1) * 0.5);
+		expect(tradeLoss("air", 100, 0)).toBeGreaterThan(0);
+	});
+
+	it("stacks closures with diminishing returns and lets stealth through", () => {
+		expect(closureStrength([1, 1])).toBeLessThan(1.5);
+		expect(closureStrength([1, 1])).toBe(1);
+		expect(transitChance(0.9)).toBeLessThan(transitChance(0.2));
+		expect(transitChance(0.9, 0.4)).toBeGreaterThan(transitChance(0.9));
 	});
 });

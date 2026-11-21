@@ -24,6 +24,7 @@ export * from "./game/energy.config";
 export * from "./game/industry.config";
 export * from "./game/logistics.config";
 export * from "./game/equipment.config";
+export * from "./game/trade.config";
 export * from "./game/infiltration.config";
 export * from "./game/intrusion.config";
 export * from "./game/civic.config";

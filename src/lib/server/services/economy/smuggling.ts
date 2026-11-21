@@ -40,6 +40,7 @@ import {
 } from "#lib/config/index.js";
 import { blockadeEffectsOn, blockadeStrengthOn, seaControlOf } from "../military/naval";
 import { aiLevel } from "../military/ai";
+import { zoneStrengthOn } from "./trade";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type Db = Database | Tx;
@@ -141,14 +142,11 @@ export async function openSmugglingRoute(db: Database, input: OpenRouteInput): P
 		const blockaded = (await blockadeStrengthOn(tx, input.targetStateId)) > 0;
 		const enforcement = await aiLevel(tx, input.targetStateId);
 		const seaControl = await seaControlOf(tx, input.targetStateId);
-		const risk = smuggleInterceptChance({
-			bulk: SMUGGLING_GOODS[input.good].bulk,
-			sanctioned,
-			blockaded,
-			enforcement,
-			aiLevel: enforcement,
-			seaControl
-		});
+		const eez = await zoneStrengthOn(tx, input.targetStateId, "eez", new Date());
+		const risk = Math.min(
+			SMUGGLING.MAX_INTERCEPT,
+			Math.round(smuggleInterceptChance({ bulk: SMUGGLING_GOODS[input.good].bulk, sanctioned, blockaded, enforcement, aiLevel: enforcement, seaControl }) * (1 + eez * 0.6) * 1000) / 1000
+		);
 
 		await tx
 			.update(stateTreasury)
@@ -296,9 +294,10 @@ export async function runSmuggling(db: Database, input: RunInput): Promise<RunRe
 		const seaControl = await seaControlOf(tx, route.targetStateId);
 		// A blockade is not just a flag: the tighter it is, the more cargo its
 		// patrols pull in (naval.config.ts's SMUGGLING_CUT).
+		const eez = await zoneStrengthOn(tx, route.targetStateId, "eez", now);
 		const risk = Math.min(
 			SMUGGLING.MAX_INTERCEPT,
-			Math.round(smuggleInterceptChance({ bulk: spec.bulk, sanctioned, blockaded, enforcement, aiLevel: enforcement, seaControl }) * blockade.smugglingFactor * 1000) / 1000
+			Math.round(smuggleInterceptChance({ bulk: spec.bulk, sanctioned, blockaded, enforcement, aiLevel: enforcement, seaControl }) * blockade.smugglingFactor * (1 + eez * 0.6) * 1000) / 1000
 		);
 		// Cargo flows to the state the runner does not live in. That is the
 		// whole point of the route: it supplies a starved or sanctioned state.

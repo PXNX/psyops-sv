@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   stable belligerent sets how much war weariness a war can absorb
 - Weekly population tick grows or shrinks each region's civilians from births and
   mortality (war, environment, conscription, emigration), respecting the population floor
+- Air/sea trade and closures: open trade lanes pay treasury every six hours; airspace closures ground air freight and block intruding aircraft, EEZ closures and blockades choke shipping and raise smuggling risk
+- Relief convoys and repairs: escorted convoys boost a region's supply capacity; strike-damaged infrastructure can be rebuilt with money and machine tools
 - Supply chains and logistics: region capacity from infrastructure, terrain, borders and ports; strikes, blockades and cyber disruption throttle supply, weakening combat output, burning unit supply and cutting factory shifts. Smuggled cargo now reaches the destination's stockpile and seized fines fund the intercepting state
 - Industrial equipment and learning: plants require machine tools (fabrication also needs fab equipment) produced in a new equipment plant; efficiency and quality grow with clean shifts and degrade under shortages, strikes, grid damage and blockade
 - Five-domain warfare: air, land, sea, space and cyber. Units carry a domain,

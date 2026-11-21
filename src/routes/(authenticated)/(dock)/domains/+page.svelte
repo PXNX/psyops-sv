@@ -65,6 +65,99 @@
 				</p>
 			</section>
 
+			<!-- ── Convoy operations ───────────────────────────────────────── -->
+			<section class="panel p-4" aria-labelledby="convoy-title">
+				<h2 id="convoy-title" class="section-title mb-3">🚚 Convoy operations</h2>
+				{#if p?.roles.convoy}
+					<form method="POST" action="?/convoy" use:enhance={handleSubmit} class="grid gap-2 sm:grid-cols-4">
+						<select class="field-control w-full" name="originRegionId">
+							<option value="">Origin region</option>
+							{#each p.ownRegions as r}<option value={r.id}>Region {r.id}</option>{/each}
+						</select>
+						<select class="field-control w-full" name="targetRegionId">
+							<option value="">Target region</option>
+							{#each p.ownRegions as r}<option value={r.id}>Region {r.id}</option>{/each}
+						</select>
+						<input class="field-control w-full" type="number" name="cargo" value="100" min="1" />
+						<Button type="submit" size="sm">Dispatch convoy</Button>
+					</form>
+					<form method="POST" action="?/repair" use:enhance={handleSubmit} class="mt-3 flex flex-wrap items-center gap-2">
+						<select class="field-control w-auto" name="regionId">
+							{#each p.ownRegions as r}<option value={r.id}>Region {r.id} (infra {r.infrastructure ?? 0})</option>{/each}
+						</select>
+						<Button type="submit" size="sm" variant="secondary">Rebuild infrastructure (2 machine tools)</Button>
+					</form>
+					{#if p.convoys.length}
+						<ul class="mt-3 space-y-1 text-xs text-fg-muted">
+							{#each p.convoys.slice(0, 5) as c}<li>
+									Region {c.originRegionId} → {c.targetRegionId}: {c.cargo} units · {label(c.outcome)} ·
+									{c.interceptionChance}% intercept risk
+								</li>{/each}
+						</ul>
+					{/if}
+				{:else}
+					<p class="text-sm text-fg-muted">Only the president or economy minister can fund convoys and repairs.</p>
+				{/if}
+			</section>
+
+			<!-- ── Air & sea trade ─────────────────────────────────────────── -->
+			<section class="panel p-4" aria-labelledby="trade-title">
+				<h2 id="trade-title" class="section-title mb-3">✈️🚢 Air &amp; sea trade</h2>
+				<p class="mb-3 text-xs text-fg-muted">
+					Air flow {Math.round((p?.trade.factors.air ?? 1) * 100)}% · sea flow {Math.round((p?.trade.factors.sea ?? 1) * 100)}%.
+					Lanes earn treasury every six hours; a closed airspace grounds air freight, and an EEZ closure or blockade
+					chokes shipping.
+				</p>
+				{#if p?.roles.trade || p?.roles.closure}
+					<div class="grid gap-4 lg:grid-cols-2">
+						{#if p.roles.trade}
+							<form method="POST" action="?/openLane" use:enhance={handleSubmit} class="space-y-2">
+								<h3 class="section-title">Open a trade lane</h3>
+								<select class="field-control w-full" name="kind">
+									{#each ["air", "sea"] as kind}
+										{@const laneSpec = p.trade.laneSpecs[kind as "air" | "sea"]}
+										<option value={kind}>{label(laneSpec.label)} · {laneSpec.revenuePerPoint.toLocaleString()}/point</option>
+									{/each}
+								</select>
+								<select class="field-control w-full" name="partnerStateId">
+									<option value="">Partner state</option>
+									{#each targets as t}<option value={t.id}>{t.name}</option>{/each}
+								</select>
+								<input class="field-control w-full" type="number" name="capacity" value="50" min="10" />
+								<Button type="submit" size="sm">Open lane</Button>
+							</form>
+						{/if}
+						{#if p.roles.closure}
+							<form method="POST" action="?/closeZone" use:enhance={handleSubmit} class="space-y-2">
+								<h3 class="section-title">Close a zone</h3>
+								<select class="field-control w-full" name="kind">
+									{#each ["airspace", "eez"] as kind}
+										{@const closureSpec = p.trade.closureSpecs[kind as "airspace" | "eez"]}
+										<option value={kind}>{label(closureSpec.label)} · {closureSpec.costPerHour.toLocaleString()}/h</option>
+									{/each}
+								</select>
+								<select class="field-control w-full" name="targetStateId">
+									<option value="">Everyone</option>
+									{#each targets as t}<option value={t.id}>{t.name} only</option>{/each}
+								</select>
+								<input class="field-control w-full" type="number" name="hours" value="24" min="6" />
+								<Button type="submit" size="sm" variant="secondary">Declare closure</Button>
+							</form>
+						{/if}
+					</div>
+					{#if p.trade.lanes.length || p.trade.zones.length}
+						<ul class="mt-3 space-y-1 text-xs text-fg-muted">
+							{#each p.trade.lanes.slice(0, 5) as lane}<li>
+									{label(p.trade.laneSpecs[lane.kind as "air" | "sea"].label)} · capacity {lane.capacity} · partner state {lane.partnerStateId}
+								</li>{/each}
+							{#each p.trade.zones.slice(0, 5) as zone}<li>
+									{label(zone.kind)} · {zone.targetStateId ? `against state ${zone.targetStateId}` : "all traffic"} · strength {zone.strength}%
+								</li>{/each}
+						</ul>
+					{/if}
+				{/if}
+			</section>
+
 			<!-- ── Sea ─────────────────────────────────────────────────────── -->
 			<section class="panel p-4" aria-labelledby="sea-title">
 				<h2 id="sea-title" class="section-title mb-3">⚓ Sea — {p?.seaControl ?? 0} sea-control points</h2>

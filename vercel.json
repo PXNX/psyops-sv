@@ -52,6 +52,11 @@
 			"schedule": "0 2 * * 1",
 			"path": "/api/cron/workforce",
 			"requestMethod": "GET"
+		},
+		"trade": {
+			"schedule": "0 */6 * * *",
+			"path": "/api/cron/trade",
+			"requestMethod": "GET"
 		}
 	}
 }

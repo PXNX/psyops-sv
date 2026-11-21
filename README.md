@@ -74,6 +74,19 @@ faster each round and cuts factory shifts. Smuggled cargo lands in the
 destination's strategic stockpile, and seized cargo pays a fine to the
 intercepting state. See `logistics.config.ts` and `services/military/logistics.ts`.
 
+**Convoys and repairs.** Leaders can dispatch relief convoys between their own
+regions: escorts from the fleet cut interception risk, and a delivered cargo
+temporarily raises the destination's carrying capacity. Strategic strikes can
+knock down infrastructure for good, but it can be rebuilt with treasury and
+machine tools. See `services/military/convoys.ts`.
+
+**Air and sea trade.** States open air corridors and sea lanes that pay
+treasury every six hours. A rival can close its airspace or declare an EEZ
+closure (globally or against one state), grounding air freight, choking
+shipping, making smuggling riskier and stopping intruding aircraft. Naval
+blockades throttle sea lanes as well. See `trade.config.ts` and
+`services/economy/trade.ts`.
+
 **Industrial equipment and learning.** A new plant cannot be built without
 machine tools (and a fabrication line needs specialized fab equipment), both
 made first in an equipment plant. Plants gain efficiency with every clean,

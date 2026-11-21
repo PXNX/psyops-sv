@@ -148,3 +148,73 @@ export function convoyInterdictionChance(blockadeStrength: number, escorts: numb
 export function convoySurvival(blockadeStrength: number, escorts: number): number {
 	return Math.round((1 - convoyInterdictionChance(blockadeStrength, escorts)) * 1000) / 1000;
 }
+
+// ── Convoy operations and repairs ───────────────────────────────────────────
+
+export const CONVOY = {
+	/** Treasury cost of dispatching one convoy, before cargo. */
+	BASE_COST: 20_000,
+	/** Treasury cost per cargo point. */
+	COST_PER_UNIT: 80,
+	/** Cargo a convoy can carry at once. */
+	MAX_CARGO: 500,
+	/** Hours of travel per 100 km of distance. */
+	HOURS_PER_100KM: 0.5,
+	/** Hours a delivered cargo keeps a region's supply boosted. */
+	BOOST_HOURS: 36,
+	/** Capacity multiplier one full cargo gives a region. */
+	BOOST_PER_CARGO: 0.0008,
+	/** Cap on the combined convoy boost. */
+	BOOST_MAX: 0.8,
+	/** A convoy cannot exceed this share of the origin's spare capacity. */
+	ORIGIN_SPARE_SHARE: 0.8
+} as const;
+
+/** Treasury cost of a convoy of `cargo` supply units. */
+export function convoyCost(cargo: number): number {
+	return CONVOY.BASE_COST + Math.max(0, Math.floor(cargo)) * CONVOY.COST_PER_UNIT;
+}
+
+/** Travel time from the distance between origin and destination. */
+export function convoyTravelHours(distanceKm: number): number {
+	return Math.max(2, Math.round(distanceKm / 100 * CONVOY.HOURS_PER_100KM));
+}
+
+/** Cargo a region can spare without starving itself. */
+export function convoyCargoLimit(capacity: number, demand: number): number {
+	const spare = Math.max(0, capacity * CONVOY.ORIGIN_SPARE_SHARE - demand);
+	return Math.max(0, Math.min(CONVOY.MAX_CARGO, Math.floor(spare)));
+}
+
+/** Supply boost from delivered convoys (negative effect magnitudes). */
+export function supplyBoost(magnitudes: number[]): number {
+	const best = magnitudes.reduce((min, m) => Math.min(min, m), 0);
+	return Math.round(Math.min(CONVOY.BOOST_MAX, Math.max(0, -best)) * 1000) / 1000;
+}
+
+/** Region capacity multiplier from a delivered convoy's cargo. */
+export function convoyBoost(cargo: number, demand: number): number {
+	const ratio = demand > 0 ? cargo / demand : 0;
+	return Math.round(Math.min(CONVOY.BOOST_MAX, ratio * CONVOY.BOOST_PER_CARGO * 100) * 1000) / 1000;
+}
+
+// ── Infrastructure repair ───────────────────────────────────────────────────
+
+export const REPAIR = {
+	/** Treasury cost of one infrastructure level, scaled by how broken it is. */
+	BASE_COST: 80_000,
+	/** Extra cost per missing level (a wrecked region is harder to fix). */
+	COST_PER_MISSING_LEVEL: 25_000,
+	/** Machine tools needed for the repair crews. */
+	TOOLS: 2,
+	MAX_LEVEL: 10
+} as const;
+
+export function repairCost(currentLevel: number): number {
+	const missing = Math.max(0, REPAIR.MAX_LEVEL - currentLevel);
+	return REPAIR.BASE_COST + missing * REPAIR.COST_PER_MISSING_LEVEL;
+}
+
+export function canRepair(currentLevel: number): boolean {
+	return currentLevel < REPAIR.MAX_LEVEL;
+}

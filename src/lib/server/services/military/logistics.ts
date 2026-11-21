@@ -8,7 +8,7 @@
 // (factoryWork), and is shown to the player on the joint command page.
 //
 // No SvelteKit virtual modules at the top level (tests import this file).
-import { and, eq, gt, lte, or, sql } from "drizzle-orm";
+import { and, eq, gt, inArray, lte, or, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import { factories, militaryUnits, regionBorders, regionEffects, regions } from "../../schema";
 import {
@@ -16,6 +16,7 @@ import {
 	isCoastal,
 	regionSupplyCapacity,
 	supplyDemand,
+	supplyBoost,
 	logisticsSupplyFactor,
 	disruptionFactor,
 	type LogisticsRegion
@@ -63,18 +64,20 @@ export async function regionSupply(db: Db, regionId: number, now = new Date()): 
 			.where(
 				and(
 					eq(regionEffects.regionId, regionId),
-					eq(regionEffects.kind, "supply"),
+					inArray(regionEffects.kind, ["supply", "supply_boost"]),
 					lte(regionEffects.startsAt, now),
 					gt(regionEffects.expiresAt, now)
 				)
 			),
 		region.stateId ? blockadeStrengthOn(db, region.stateId, now) : Promise.resolve(0)
 	]);
-	const capacity = regionSupplyCapacity(
+	const baseCapacity = regionSupplyCapacity(
 		region as LogisticsRegion,
 		neighbours[0]?.n ?? 0,
 		isCoastal(region as LogisticsRegion)
 	);
+	const boost = supplyBoost(effects.map((e) => e.magnitude));
+	const capacity = Math.round(baseCapacity * (1 + boost));
 	const demand = supplyDemand(
 		units.map((u) => u.unitType),
 		plants.map((f) => f.factoryType)
@@ -84,7 +87,9 @@ export async function regionSupply(db: Db, regionId: number, now = new Date()): 
 		blockade
 	);
 	const reasons: string[] = [];
-	if (effects.length) reasons.push(`${effects.length} strike(s) on bridges and logistics`);
+	const strikes = effects.filter((e) => e.magnitude > 0).length;
+	if (strikes) reasons.push(`${strikes} strike(s) on bridges and logistics`);
+	if (boost > 0) reasons.push(`relief convoy +${Math.round(boost * 100)}% capacity`);
 	if (blockade > 0) reasons.push(`blockade at ${Math.round(blockade * 100)}%`);
 	if (demand > capacity * disruption) reasons.push("demand exceeds what the roads can carry");
 	return {
