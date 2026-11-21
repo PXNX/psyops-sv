@@ -12,9 +12,12 @@ import { PGlite } from "@electric-sql/pglite";
 import { drizzle } from "drizzle-orm/pglite";
 import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import * as schema from "./schema";
+import * as investments from "./schema-investments";
 import { seedMockDatabase } from "./mock-seed";
 
-export type MockDatabase = PostgresJsDatabase<typeof schema>;
+const fullSchema = { ...schema, ...investments };
+
+export type MockDatabase = PostgresJsDatabase<typeof fullSchema>;
 
 export interface MockDbOptions {
 	/** Fill the database with the demo world from mock-seed.ts. Default true. */
@@ -30,12 +33,12 @@ export interface MockDbHandle {
 /** Boot a fresh in-memory Postgres, create every table and optionally seed it. */
 export async function createMockDb({ seed = true }: MockDbOptions = {}): Promise<MockDbHandle> {
 	const client = new PGlite();
-	const pglite = drizzle(client, { schema });
+	const pglite = drizzle(client, { schema: fullSchema });
 
 	// drizzle-kit is a dev-only dependency and fairly heavy, so only load it
 	// when a mock database is actually being created.
 	const { pushSchema } = await import("drizzle-kit/api");
-	const { apply } = await pushSchema(schema, pglite as never);
+	const { apply } = await pushSchema(fullSchema, pglite as never);
 	await apply();
 
 	// The PGlite and postgres-js drivers expose the same query builder API; the

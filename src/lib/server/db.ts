@@ -3,8 +3,11 @@ import { drizzle, type PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { DATABASE_URL, USE_MOCK } from "$app/env/private";
 import * as schema from "./schema";
+import * as investments from "./schema-investments";
 
-export type Database = PostgresJsDatabase<typeof schema>;
+const fullSchema = { ...schema, ...investments };
+
+export type Database = PostgresJsDatabase<typeof fullSchema>;
 
 /**
  * Mock mode (`bun run dev:mock`): the app runs against an in-memory Postgres
@@ -29,7 +32,7 @@ function createRealDb(): Database {
 		throw new Error("DATABASE_URL environment variable is required (or run `bun run dev:mock`)");
 	}
 	const queryClient = postgres(DATABASE_URL);
-	return drizzle(queryClient, { schema });
+	return drizzle(queryClient, { schema: fullSchema });
 }
 
 // The condition is spelled out (not `isMockMode`) so the bundler can fold it
