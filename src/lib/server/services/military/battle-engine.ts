@@ -15,7 +15,8 @@ import {
 import {
 	MILITARY_UNIT_TEMPLATES,
 	calculateCombatExperienceLoss,
-	getExperienceCombatModifier
+	getExperienceCombatModifier,
+	sideDomainMultiplier
 } from "#lib/config/index.js";
 import { selectEngagedUnits } from "./combat";
 import { applyConquestDamage } from "../politics/construction.service";
@@ -126,13 +127,26 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 			);
 		const fortLevel = battle.region.fortifications ?? 0;
 		const fortFactor = 1 - fortificationReduction(fortLevel) / 100;
+		// Five-domain doctrine (domains.config.ts): air, land and sea units each
+		// have an edge against the other, and a side that fields all three
+		// fights better. Space and cyber support the fight elsewhere.
+		const attackerTypes = battle.participants.filter((p) => p.side === "attacker").map((p) => p.unit.unitType);
+		const defenderTypes = battle.participants.filter((p) => p.side === "defender").map((p) => p.unit.unitType);
+		const attackerDomain = sideDomainMultiplier(attackerTypes, defenderTypes);
+		const defenderDomain = sideDomainMultiplier(defenderTypes, attackerTypes);
 		const attackerOutput = attackers.map((p) =>
 			Math.floor(
-				output(p, "baseAttack", intel.attacker, intel.defender) * fortFactor * psy.attacker.factor * strikeMods.attacker
+				output(p, "baseAttack", intel.attacker, intel.defender) *
+					fortFactor *
+					psy.attacker.factor *
+					strikeMods.attacker *
+					attackerDomain
 			)
 		);
 		const defenderOutput = defenders.map((p) =>
-			Math.floor(output(p, "baseDefense", intel.defender, intel.attacker) * psy.defender.factor * strikeMods.defender)
+			Math.floor(
+				output(p, "baseDefense", intel.defender, intel.attacker) * psy.defender.factor * strikeMods.defender * defenderDomain
+			)
 		);
 		const roundIntel = { attacker: intel.attacker, defender: intel.defender };
 		const attackerDamage = attackerOutput.reduce((a, b) => a + b, 0);

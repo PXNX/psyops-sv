@@ -188,9 +188,14 @@ export async function effectiveEnergy<T extends { totalProduction: number; usedP
 	now = new Date()
 ): Promise<T & { gridDegraded: number }> {
 	const degraded = await gridDegradation(db, stateId, now);
+	// Sea domain: a blockade cuts imported fuel, so part of the grid goes dark.
+	// Imported lazily to avoid a module cycle (naval.ts uses hasCasusBelli here).
+	const { blockadeEffectsOn } = await import("./naval");
+	const blockade = stateId ? await blockadeEffectsOn(db, stateId, now) : null;
 	return {
 		...energy,
-		totalProduction: Math.floor(energy.totalProduction * gridFactor(degraded)),
-		gridDegraded: degraded
+		totalProduction: Math.floor(energy.totalProduction * gridFactor(degraded) * (blockade?.energyFactor ?? 1)),
+		gridDegraded: degraded,
+		blockadeTradeFactor: blockade?.tradeFactor ?? 1
 	};
 }
