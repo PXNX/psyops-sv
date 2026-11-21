@@ -19,6 +19,8 @@ import { addUserItem, takeUserItem } from "#lib/server/services/economy/inventor
 import { SHIFT_RECIPES, gridFactor } from "#lib/config/index.js";
 import { gridDegradation } from "#lib/server/services/military/state-effects.js";
 import { strikeProductionFactor } from "#lib/server/services/military/strike.js";
+import { aiLevel } from "#lib/server/services/military/ai.js";
+import { aiProductionFactor } from "#lib/config/index.js";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 
@@ -310,7 +312,9 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			const grid =
 				gridFactor(await gridDegradation(tx, factory.stateId)) *
 				// Airstrikes on the grid and on the region's industry do the same.
-				(await strikeProductionFactor(tx, factory.stateId, factory.regionId));
+				(await strikeProductionFactor(tx, factory.stateId, factory.regionId)) *
+				// AI-assisted planning wastes less material (ai.config.ts).
+				aiProductionFactor(await aiLevel(tx, factory.stateId));
 			if (factory.factoryType === "mine" && isMineable(factory.resourceOutput)) {
 				// Output depends on the region's deposit and the state's exploitation law.
 				const extraction = await extractFromDeposit(

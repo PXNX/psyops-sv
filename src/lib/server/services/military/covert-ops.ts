@@ -43,6 +43,7 @@ import {
 } from "#lib/config/index.js";
 import { enemiesOf, sideOf } from "./recon";
 import { activeEffects, hasCasusBelli, isResilient } from "./state-effects";
+import { aiLevel } from "./ai";
 import { statePopulation, statePopulations } from "../population";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -312,16 +313,20 @@ export async function launchOperation(db: Database, input: LaunchInput): Promise
 		});
 
 		// Roll.
-		const [defenceLevel, recent, resilient] = await Promise.all([
+		const [defenceLevel, recent, resilient, attackerAi, defenderAi] = await Promise.all([
 			spec.self ? 0 : cyberDefenceLevel(tx, target.id),
 			spec.self ? 0 : recentOps(tx, stateId, target.id, now),
-			spec.self || spec.domain !== "psyops" ? false : isResilient(tx, target.id, now)
+			spec.self || spec.domain !== "psyops" ? false : isResilient(tx, target.id, now),
+			spec.self ? 0 : aiLevel(tx, stateId),
+			spec.self ? 0 : aiLevel(tx, target.id)
 		]);
 		const odds = covertOdds(input.kind, {
 			defenceLevel,
 			atWar: atWar || casusBelli,
 			recentOps: recent,
-			targetResilient: resilient
+			targetResilient: resilient,
+			attackerAiLevel: attackerAi,
+			defenderAiLevel: defenderAi
 		});
 		const roll = spec.self
 			? { succeeded: true, detected: true, attributed: true }
