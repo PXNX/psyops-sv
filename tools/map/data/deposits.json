@@ -15,6 +15,11 @@
 		"capacity": 12600
 	},
 	{
+		"regionId": 2,
+		"resourceType": "oil",
+		"capacity": 3900
+	},
+	{
 		"regionId": 3,
 		"resourceType": "iron",
 		"capacity": 2600
@@ -28,6 +33,11 @@
 		"regionId": 4,
 		"resourceType": "copper",
 		"capacity": 1800
+	},
+	{
+		"regionId": 4,
+		"resourceType": "silicon",
+		"capacity": 3300
 	},
 	{
 		"regionId": 5,
@@ -73,6 +83,11 @@
 		"regionId": 9,
 		"resourceType": "wood",
 		"capacity": 7500
+	},
+	{
+		"regionId": 9,
+		"resourceType": "silicon",
+		"capacity": 15400
 	},
 	{
 		"regionId": 10,
@@ -170,6 +185,11 @@
 		"capacity": 4700
 	},
 	{
+		"regionId": 21,
+		"resourceType": "uranium",
+		"capacity": 2000
+	},
+	{
 		"regionId": 22,
 		"resourceType": "iron",
 		"capacity": 11500
@@ -180,14 +200,34 @@
 		"capacity": 4200
 	},
 	{
+		"regionId": 22,
+		"resourceType": "uranium",
+		"capacity": 5500
+	},
+	{
+		"regionId": 22,
+		"resourceType": "silicon",
+		"capacity": 2200
+	},
+	{
 		"regionId": 23,
 		"resourceType": "coal",
 		"capacity": 6200
 	},
 	{
+		"regionId": 23,
+		"resourceType": "oil",
+		"capacity": 5200
+	},
+	{
 		"regionId": 24,
 		"resourceType": "wood",
 		"capacity": 14300
+	},
+	{
+		"regionId": 24,
+		"resourceType": "oil",
+		"capacity": 25400
 	},
 	{
 		"regionId": 25,
@@ -198,6 +238,16 @@
 		"regionId": 25,
 		"resourceType": "wood",
 		"capacity": 7000
+	},
+	{
+		"regionId": 25,
+		"resourceType": "oil",
+		"capacity": 5400
+	},
+	{
+		"regionId": 26,
+		"resourceType": "gas",
+		"capacity": 9700
 	},
 	{
 		"regionId": 27,
@@ -213,6 +263,11 @@
 		"regionId": 28,
 		"resourceType": "wood",
 		"capacity": 5600
+	},
+	{
+		"regionId": 29,
+		"resourceType": "silicon",
+		"capacity": 3800
 	},
 	{
 		"regionId": 30,
@@ -240,6 +295,11 @@
 		"capacity": 6300
 	},
 	{
+		"regionId": 31,
+		"resourceType": "oil",
+		"capacity": 7000
+	},
+	{
 		"regionId": 32,
 		"resourceType": "iron",
 		"capacity": 2200
@@ -260,9 +320,19 @@
 		"capacity": 16000
 	},
 	{
+		"regionId": 32,
+		"resourceType": "oil",
+		"capacity": 26600
+	},
+	{
 		"regionId": 33,
 		"resourceType": "coal",
 		"capacity": 4500
+	},
+	{
+		"regionId": 33,
+		"resourceType": "gas",
+		"capacity": 8000
 	},
 	{
 		"regionId": 34,
@@ -283,6 +353,11 @@
 		"regionId": 35,
 		"resourceType": "wood",
 		"capacity": 8000
+	},
+	{
+		"regionId": 35,
+		"resourceType": "oil",
+		"capacity": 10500
 	},
 	{
 		"regionId": 36,
@@ -325,9 +400,24 @@
 		"capacity": 3500
 	},
 	{
+		"regionId": 39,
+		"resourceType": "oil",
+		"capacity": 3200
+	},
+	{
 		"regionId": 40,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 40,
+		"resourceType": "silicon",
+		"capacity": 3900
+	},
+	{
+		"regionId": 41,
+		"resourceType": "oil",
+		"capacity": 4100
 	},
 	{
 		"regionId": 42,
@@ -350,9 +440,24 @@
 		"capacity": 14400
 	},
 	{
+		"regionId": 43,
+		"resourceType": "silicon",
+		"capacity": 1500
+	},
+	{
 		"regionId": 44,
 		"resourceType": "iron",
 		"capacity": 4000
+	},
+	{
+		"regionId": 44,
+		"resourceType": "oil",
+		"capacity": 18700
+	},
+	{
+		"regionId": 44,
+		"resourceType": "silicon",
+		"capacity": 3100
 	},
 	{
 		"regionId": 45,
@@ -395,6 +500,11 @@
 		"capacity": 11700
 	},
 	{
+		"regionId": 48,
+		"resourceType": "oil",
+		"capacity": 15200
+	},
+	{
 		"regionId": 50,
 		"resourceType": "wood",
 		"capacity": 15400
@@ -415,9 +525,34 @@
 		"capacity": 12700
 	},
 	{
+		"regionId": 52,
+		"resourceType": "oil",
+		"capacity": 5800
+	},
+	{
+		"regionId": 52,
+		"resourceType": "silicon",
+		"capacity": 6700
+	},
+	{
 		"regionId": 53,
 		"resourceType": "wood",
 		"capacity": 11400
+	},
+	{
+		"regionId": 53,
+		"resourceType": "gas",
+		"capacity": 7100
+	},
+	{
+		"regionId": 53,
+		"resourceType": "rare_earth",
+		"capacity": 2200
+	},
+	{
+		"regionId": 53,
+		"resourceType": "silicon",
+		"capacity": 12800
 	},
 	{
 		"regionId": 54,
@@ -470,6 +605,11 @@
 		"capacity": 17100
 	},
 	{
+		"regionId": 58,
+		"resourceType": "oil",
+		"capacity": 3300
+	},
+	{
 		"regionId": 59,
 		"resourceType": "wood",
 		"capacity": 7600
@@ -485,6 +625,11 @@
 		"capacity": 6600
 	},
 	{
+		"regionId": 60,
+		"resourceType": "oil",
+		"capacity": 26300
+	},
+	{
 		"regionId": 61,
 		"resourceType": "iron",
 		"capacity": 2100
@@ -493,6 +638,11 @@
 		"regionId": 61,
 		"resourceType": "wood",
 		"capacity": 19900
+	},
+	{
+		"regionId": 61,
+		"resourceType": "uranium",
+		"capacity": 2400
 	},
 	{
 		"regionId": 62,
@@ -505,6 +655,11 @@
 		"capacity": 6800
 	},
 	{
+		"regionId": 62,
+		"resourceType": "rare_earth",
+		"capacity": 1900
+	},
+	{
 		"regionId": 63,
 		"resourceType": "copper",
 		"capacity": 4600
@@ -513,6 +668,16 @@
 		"regionId": 63,
 		"resourceType": "wood",
 		"capacity": 11500
+	},
+	{
+		"regionId": 63,
+		"resourceType": "oil",
+		"capacity": 7200
+	},
+	{
+		"regionId": 63,
+		"resourceType": "silicon",
+		"capacity": 5300
 	},
 	{
 		"regionId": 64,
@@ -548,6 +713,11 @@
 		"regionId": 66,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 66,
+		"resourceType": "rare_earth",
+		"capacity": 600
 	},
 	{
 		"regionId": 67,
@@ -590,6 +760,11 @@
 		"capacity": 21600
 	},
 	{
+		"regionId": 70,
+		"resourceType": "uranium",
+		"capacity": 1000
+	},
+	{
 		"regionId": 71,
 		"resourceType": "coal",
 		"capacity": 9500
@@ -598,6 +773,11 @@
 		"regionId": 71,
 		"resourceType": "wood",
 		"capacity": 12100
+	},
+	{
+		"regionId": 71,
+		"resourceType": "rare_earth",
+		"capacity": 1300
 	},
 	{
 		"regionId": 72,
@@ -610,6 +790,11 @@
 		"capacity": 15200
 	},
 	{
+		"regionId": 73,
+		"resourceType": "oil",
+		"capacity": 6700
+	},
+	{
 		"regionId": 74,
 		"resourceType": "iron",
 		"capacity": 13000
@@ -618,6 +803,16 @@
 		"regionId": 74,
 		"resourceType": "wood",
 		"capacity": 12700
+	},
+	{
+		"regionId": 74,
+		"resourceType": "gas",
+		"capacity": 18300
+	},
+	{
+		"regionId": 74,
+		"resourceType": "silicon",
+		"capacity": 16200
 	},
 	{
 		"regionId": 75,
@@ -660,6 +855,11 @@
 		"capacity": 8100
 	},
 	{
+		"regionId": 78,
+		"resourceType": "gas",
+		"capacity": 20400
+	},
+	{
 		"regionId": 79,
 		"resourceType": "copper",
 		"capacity": 1500
@@ -668,6 +868,16 @@
 		"regionId": 79,
 		"resourceType": "wood",
 		"capacity": 6700
+	},
+	{
+		"regionId": 80,
+		"resourceType": "oil",
+		"capacity": 7200
+	},
+	{
+		"regionId": 80,
+		"resourceType": "rare_earth",
+		"capacity": 600
 	},
 	{
 		"regionId": 81,
@@ -700,6 +910,11 @@
 		"capacity": 16900
 	},
 	{
+		"regionId": 83,
+		"resourceType": "silicon",
+		"capacity": 3800
+	},
+	{
 		"regionId": 84,
 		"resourceType": "coal",
 		"capacity": 9900
@@ -723,6 +938,11 @@
 		"regionId": 86,
 		"resourceType": "wood",
 		"capacity": 7900
+	},
+	{
+		"regionId": 86,
+		"resourceType": "gas",
+		"capacity": 5800
 	},
 	{
 		"regionId": 87,
@@ -765,9 +985,24 @@
 		"capacity": 20600
 	},
 	{
+		"regionId": 89,
+		"resourceType": "rare_earth",
+		"capacity": 2400
+	},
+	{
+		"regionId": 89,
+		"resourceType": "silicon",
+		"capacity": 8500
+	},
+	{
 		"regionId": 90,
 		"resourceType": "wood",
 		"capacity": 21600
+	},
+	{
+		"regionId": 90,
+		"resourceType": "silicon",
+		"capacity": 2500
 	},
 	{
 		"regionId": 91,
@@ -783,6 +1018,11 @@
 		"regionId": 92,
 		"resourceType": "wood",
 		"capacity": 20300
+	},
+	{
+		"regionId": 92,
+		"resourceType": "oil",
+		"capacity": 6600
 	},
 	{
 		"regionId": 93,
@@ -805,6 +1045,11 @@
 		"capacity": 3000
 	},
 	{
+		"regionId": 94,
+		"resourceType": "uranium",
+		"capacity": 800
+	},
+	{
 		"regionId": 95,
 		"resourceType": "coal",
 		"capacity": 13100
@@ -823,6 +1068,16 @@
 		"regionId": 96,
 		"resourceType": "wood",
 		"capacity": 9400
+	},
+	{
+		"regionId": 96,
+		"resourceType": "oil",
+		"capacity": 17100
+	},
+	{
+		"regionId": 96,
+		"resourceType": "uranium",
+		"capacity": 2400
 	},
 	{
 		"regionId": 97,
@@ -850,6 +1105,11 @@
 		"capacity": 16100
 	},
 	{
+		"regionId": 98,
+		"resourceType": "oil",
+		"capacity": 5200
+	},
+	{
 		"regionId": 99,
 		"resourceType": "iron",
 		"capacity": 2100
@@ -865,8 +1125,18 @@
 		"capacity": 3300
 	},
 	{
+		"regionId": 99,
+		"resourceType": "silicon",
+		"capacity": 4000
+	},
+	{
 		"regionId": 100,
 		"resourceType": "wood",
+		"capacity": 3400
+	},
+	{
+		"regionId": 101,
+		"resourceType": "oil",
 		"capacity": 3400
 	},
 	{
@@ -883,6 +1153,11 @@
 		"regionId": 103,
 		"resourceType": "wood",
 		"capacity": 11600
+	},
+	{
+		"regionId": 103,
+		"resourceType": "oil",
+		"capacity": 18800
 	},
 	{
 		"regionId": 104,
@@ -903,6 +1178,11 @@
 		"regionId": 106,
 		"resourceType": "coal",
 		"capacity": 5800
+	},
+	{
+		"regionId": 106,
+		"resourceType": "uranium",
+		"capacity": 1500
 	},
 	{
 		"regionId": 107,
@@ -928,6 +1208,11 @@
 		"regionId": 110,
 		"resourceType": "wood",
 		"capacity": 9000
+	},
+	{
+		"regionId": 110,
+		"resourceType": "silicon",
+		"capacity": 14800
 	},
 	{
 		"regionId": 111,
@@ -980,6 +1265,11 @@
 		"capacity": 3300
 	},
 	{
+		"regionId": 115,
+		"resourceType": "rare_earth",
+		"capacity": 2100
+	},
+	{
 		"regionId": 116,
 		"resourceType": "wood",
 		"capacity": 16200
@@ -1010,6 +1300,11 @@
 		"capacity": 8400
 	},
 	{
+		"regionId": 119,
+		"resourceType": "rare_earth",
+		"capacity": 1000
+	},
+	{
 		"regionId": 120,
 		"resourceType": "copper",
 		"capacity": 10700
@@ -1035,6 +1330,11 @@
 		"capacity": 6700
 	},
 	{
+		"regionId": 122,
+		"resourceType": "oil",
+		"capacity": 22100
+	},
+	{
 		"regionId": 123,
 		"resourceType": "coal",
 		"capacity": 19200
@@ -1043,6 +1343,11 @@
 		"regionId": 123,
 		"resourceType": "wood",
 		"capacity": 11200
+	},
+	{
+		"regionId": 123,
+		"resourceType": "uranium",
+		"capacity": 4200
 	},
 	{
 		"regionId": 124,
@@ -1073,6 +1378,11 @@
 		"regionId": 125,
 		"resourceType": "wood",
 		"capacity": 23900
+	},
+	{
+		"regionId": 125,
+		"resourceType": "uranium",
+		"capacity": 1000
 	},
 	{
 		"regionId": 126,
@@ -1123,6 +1433,11 @@
 		"regionId": 130,
 		"resourceType": "wood",
 		"capacity": 3100
+	},
+	{
+		"regionId": 130,
+		"resourceType": "silicon",
+		"capacity": 3400
 	},
 	{
 		"regionId": 131,
@@ -1195,6 +1510,16 @@
 		"capacity": 15300
 	},
 	{
+		"regionId": 138,
+		"resourceType": "oil",
+		"capacity": 24300
+	},
+	{
+		"regionId": 138,
+		"resourceType": "uranium",
+		"capacity": 3500
+	},
+	{
 		"regionId": 139,
 		"resourceType": "wood",
 		"capacity": 21200
@@ -1223,6 +1548,26 @@
 		"regionId": 142,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 142,
+		"resourceType": "oil",
+		"capacity": 20700
+	},
+	{
+		"regionId": 142,
+		"resourceType": "gas",
+		"capacity": 44600
+	},
+	{
+		"regionId": 143,
+		"resourceType": "oil",
+		"capacity": 24400
+	},
+	{
+		"regionId": 143,
+		"resourceType": "silicon",
+		"capacity": 3300
 	},
 	{
 		"regionId": 144,
@@ -1260,6 +1605,11 @@
 		"capacity": 11900
 	},
 	{
+		"regionId": 146,
+		"resourceType": "silicon",
+		"capacity": 15800
+	},
+	{
 		"regionId": 147,
 		"resourceType": "coal",
 		"capacity": 3000
@@ -1268,6 +1618,11 @@
 		"regionId": 147,
 		"resourceType": "wood",
 		"capacity": 18800
+	},
+	{
+		"regionId": 147,
+		"resourceType": "uranium",
+		"capacity": 5000
 	},
 	{
 		"regionId": 148,
@@ -1285,6 +1640,11 @@
 		"capacity": 10300
 	},
 	{
+		"regionId": 149,
+		"resourceType": "rare_earth",
+		"capacity": 500
+	},
+	{
 		"regionId": 150,
 		"resourceType": "copper",
 		"capacity": 1500
@@ -1293,6 +1653,11 @@
 		"regionId": 150,
 		"resourceType": "wood",
 		"capacity": 17100
+	},
+	{
+		"regionId": 150,
+		"resourceType": "silicon",
+		"capacity": 16800
 	},
 	{
 		"regionId": 151,
@@ -1305,6 +1670,11 @@
 		"capacity": 10000
 	},
 	{
+		"regionId": 151,
+		"resourceType": "gas",
+		"capacity": 3600
+	},
+	{
 		"regionId": 152,
 		"resourceType": "iron",
 		"capacity": 2000
@@ -1315,6 +1685,16 @@
 		"capacity": 5300
 	},
 	{
+		"regionId": 152,
+		"resourceType": "gas",
+		"capacity": 2400
+	},
+	{
+		"regionId": 152,
+		"resourceType": "silicon",
+		"capacity": 16900
+	},
+	{
 		"regionId": 153,
 		"resourceType": "copper",
 		"capacity": 2500
@@ -1323,6 +1703,16 @@
 		"regionId": 153,
 		"resourceType": "wood",
 		"capacity": 13600
+	},
+	{
+		"regionId": 153,
+		"resourceType": "uranium",
+		"capacity": 2000
+	},
+	{
+		"regionId": 153,
+		"resourceType": "silicon",
+		"capacity": 4300
 	},
 	{
 		"regionId": 154,
@@ -1338,6 +1728,21 @@
 		"regionId": 155,
 		"resourceType": "wood",
 		"capacity": 10500
+	},
+	{
+		"regionId": 155,
+		"resourceType": "oil",
+		"capacity": 3200
+	},
+	{
+		"regionId": 155,
+		"resourceType": "silicon",
+		"capacity": 8300
+	},
+	{
+		"regionId": 156,
+		"resourceType": "oil",
+		"capacity": 4100
 	},
 	{
 		"regionId": 158,
@@ -1365,6 +1770,11 @@
 		"capacity": 11300
 	},
 	{
+		"regionId": 160,
+		"resourceType": "silicon",
+		"capacity": 4300
+	},
+	{
 		"regionId": 161,
 		"resourceType": "iron",
 		"capacity": 3200
@@ -1383,6 +1793,11 @@
 		"regionId": 162,
 		"resourceType": "wood",
 		"capacity": 5600
+	},
+	{
+		"regionId": 163,
+		"resourceType": "oil",
+		"capacity": 8600
 	},
 	{
 		"regionId": 164,
@@ -1405,9 +1820,24 @@
 		"capacity": 11100
 	},
 	{
+		"regionId": 165,
+		"resourceType": "oil",
+		"capacity": 8800
+	},
+	{
 		"regionId": 166,
 		"resourceType": "wood",
 		"capacity": 24100
+	},
+	{
+		"regionId": 166,
+		"resourceType": "gas",
+		"capacity": 18100
+	},
+	{
+		"regionId": 166,
+		"resourceType": "uranium",
+		"capacity": 900
 	},
 	{
 		"regionId": 167,
@@ -1460,14 +1890,29 @@
 		"capacity": 13800
 	},
 	{
+		"regionId": 175,
+		"resourceType": "oil",
+		"capacity": 23500
+	},
+	{
 		"regionId": 176,
 		"resourceType": "wood",
 		"capacity": 10600
 	},
 	{
+		"regionId": 177,
+		"resourceType": "oil",
+		"capacity": 3200
+	},
+	{
 		"regionId": 178,
 		"resourceType": "copper",
 		"capacity": 3800
+	},
+	{
+		"regionId": 178,
+		"resourceType": "oil",
+		"capacity": 3700
 	},
 	{
 		"regionId": 179,
@@ -1490,6 +1935,11 @@
 		"capacity": 9300
 	},
 	{
+		"regionId": 180,
+		"resourceType": "oil",
+		"capacity": 17400
+	},
+	{
 		"regionId": 181,
 		"resourceType": "iron",
 		"capacity": 12500
@@ -1498,6 +1948,11 @@
 		"regionId": 181,
 		"resourceType": "wood",
 		"capacity": 6300
+	},
+	{
+		"regionId": 181,
+		"resourceType": "oil",
+		"capacity": 3300
 	},
 	{
 		"regionId": 182,
@@ -1510,6 +1965,11 @@
 		"capacity": 6900
 	},
 	{
+		"regionId": 183,
+		"resourceType": "rare_earth",
+		"capacity": 900
+	},
+	{
 		"regionId": 184,
 		"resourceType": "iron",
 		"capacity": 5900
@@ -1518,6 +1978,11 @@
 		"regionId": 184,
 		"resourceType": "copper",
 		"capacity": 1500
+	},
+	{
+		"regionId": 185,
+		"resourceType": "gas",
+		"capacity": 2700
 	},
 	{
 		"regionId": 186,
@@ -1565,6 +2030,11 @@
 		"capacity": 2800
 	},
 	{
+		"regionId": 192,
+		"resourceType": "uranium",
+		"capacity": 1100
+	},
+	{
 		"regionId": 193,
 		"resourceType": "copper",
 		"capacity": 4400
@@ -1573,6 +2043,11 @@
 		"regionId": 193,
 		"resourceType": "wood",
 		"capacity": 23200
+	},
+	{
+		"regionId": 193,
+		"resourceType": "silicon",
+		"capacity": 4000
 	},
 	{
 		"regionId": 194,
@@ -1595,6 +2070,11 @@
 		"capacity": 15300
 	},
 	{
+		"regionId": 195,
+		"resourceType": "silicon",
+		"capacity": 6000
+	},
+	{
 		"regionId": 196,
 		"resourceType": "iron",
 		"capacity": 2000
@@ -1613,6 +2093,11 @@
 		"regionId": 198,
 		"resourceType": "wood",
 		"capacity": 7200
+	},
+	{
+		"regionId": 198,
+		"resourceType": "rare_earth",
+		"capacity": 3500
 	},
 	{
 		"regionId": 199,
@@ -1640,6 +2125,11 @@
 		"capacity": 8000
 	},
 	{
+		"regionId": 201,
+		"resourceType": "oil",
+		"capacity": 3100
+	},
+	{
 		"regionId": 202,
 		"resourceType": "wood",
 		"capacity": 3100
@@ -1665,6 +2155,11 @@
 		"capacity": 4100
 	},
 	{
+		"regionId": 205,
+		"resourceType": "silicon",
+		"capacity": 2500
+	},
+	{
 		"regionId": 206,
 		"resourceType": "iron",
 		"capacity": 6000
@@ -1673,6 +2168,11 @@
 		"regionId": 206,
 		"resourceType": "wood",
 		"capacity": 9800
+	},
+	{
+		"regionId": 206,
+		"resourceType": "gas",
+		"capacity": 2900
 	},
 	{
 		"regionId": 207,
@@ -1705,6 +2205,11 @@
 		"capacity": 7200
 	},
 	{
+		"regionId": 210,
+		"resourceType": "gas",
+		"capacity": 17300
+	},
+	{
 		"regionId": 211,
 		"resourceType": "wood",
 		"capacity": 5900
@@ -1720,9 +2225,19 @@
 		"capacity": 3900
 	},
 	{
+		"regionId": 212,
+		"resourceType": "gas",
+		"capacity": 12200
+	},
+	{
 		"regionId": 213,
 		"resourceType": "coal",
 		"capacity": 2200
+	},
+	{
+		"regionId": 213,
+		"resourceType": "rare_earth",
+		"capacity": 500
 	},
 	{
 		"regionId": 214,
@@ -1745,6 +2260,16 @@
 		"capacity": 3000
 	},
 	{
+		"regionId": 215,
+		"resourceType": "gas",
+		"capacity": 9300
+	},
+	{
+		"regionId": 215,
+		"resourceType": "silicon",
+		"capacity": 6300
+	},
+	{
 		"regionId": 216,
 		"resourceType": "copper",
 		"capacity": 10100
@@ -1758,6 +2283,11 @@
 		"regionId": 216,
 		"resourceType": "wood",
 		"capacity": 17700
+	},
+	{
+		"regionId": 216,
+		"resourceType": "silicon",
+		"capacity": 8600
 	},
 	{
 		"regionId": 217,
@@ -1790,6 +2320,11 @@
 		"capacity": 22400
 	},
 	{
+		"regionId": 219,
+		"resourceType": "rare_earth",
+		"capacity": 2600
+	},
+	{
 		"regionId": 220,
 		"resourceType": "iron",
 		"capacity": 5200
@@ -1798,6 +2333,11 @@
 		"regionId": 220,
 		"resourceType": "wood",
 		"capacity": 20500
+	},
+	{
+		"regionId": 220,
+		"resourceType": "silicon",
+		"capacity": 1500
 	},
 	{
 		"regionId": 221,
@@ -1823,6 +2363,16 @@
 		"regionId": 222,
 		"resourceType": "wood",
 		"capacity": 6300
+	},
+	{
+		"regionId": 222,
+		"resourceType": "oil",
+		"capacity": 16900
+	},
+	{
+		"regionId": 222,
+		"resourceType": "silicon",
+		"capacity": 2100
 	},
 	{
 		"regionId": 223,
@@ -1855,6 +2405,11 @@
 		"capacity": 3100
 	},
 	{
+		"regionId": 225,
+		"resourceType": "uranium",
+		"capacity": 3000
+	},
+	{
 		"regionId": 226,
 		"resourceType": "coal",
 		"capacity": 2100
@@ -1875,6 +2430,11 @@
 		"capacity": 25000
 	},
 	{
+		"regionId": 227,
+		"resourceType": "gas",
+		"capacity": 19500
+	},
+	{
 		"regionId": 228,
 		"resourceType": "wood",
 		"capacity": 16600
@@ -1893,6 +2453,16 @@
 		"regionId": 229,
 		"resourceType": "wood",
 		"capacity": 14200
+	},
+	{
+		"regionId": 229,
+		"resourceType": "oil",
+		"capacity": 38800
+	},
+	{
+		"regionId": 229,
+		"resourceType": "gas",
+		"capacity": 14500
 	},
 	{
 		"regionId": 231,
@@ -1930,6 +2500,21 @@
 		"capacity": 8800
 	},
 	{
+		"regionId": 235,
+		"resourceType": "gas",
+		"capacity": 4300
+	},
+	{
+		"regionId": 236,
+		"resourceType": "oil",
+		"capacity": 6600
+	},
+	{
+		"regionId": 236,
+		"resourceType": "silicon",
+		"capacity": 8400
+	},
+	{
 		"regionId": 237,
 		"resourceType": "coal",
 		"capacity": 6200
@@ -1938,6 +2523,16 @@
 		"regionId": 237,
 		"resourceType": "wood",
 		"capacity": 10600
+	},
+	{
+		"regionId": 237,
+		"resourceType": "oil",
+		"capacity": 11300
+	},
+	{
+		"regionId": 237,
+		"resourceType": "uranium",
+		"capacity": 4300
 	},
 	{
 		"regionId": 238,
@@ -1958,6 +2553,11 @@
 		"regionId": 239,
 		"resourceType": "wood",
 		"capacity": 14200
+	},
+	{
+		"regionId": 239,
+		"resourceType": "oil",
+		"capacity": 30100
 	},
 	{
 		"regionId": 240,
@@ -1988,6 +2588,11 @@
 		"regionId": 242,
 		"resourceType": "wood",
 		"capacity": 5200
+	},
+	{
+		"regionId": 242,
+		"resourceType": "oil",
+		"capacity": 9300
 	},
 	{
 		"regionId": 243,
@@ -2030,9 +2635,19 @@
 		"capacity": 4700
 	},
 	{
+		"regionId": 247,
+		"resourceType": "gas",
+		"capacity": 7500
+	},
+	{
 		"regionId": 248,
 		"resourceType": "wood",
 		"capacity": 14200
+	},
+	{
+		"regionId": 248,
+		"resourceType": "gas",
+		"capacity": 3500
 	},
 	{
 		"regionId": 249,
@@ -2045,6 +2660,11 @@
 		"capacity": 15300
 	},
 	{
+		"regionId": 249,
+		"resourceType": "rare_earth",
+		"capacity": 600
+	},
+	{
 		"regionId": 250,
 		"resourceType": "coal",
 		"capacity": 11100
@@ -2055,9 +2675,24 @@
 		"capacity": 6600
 	},
 	{
+		"regionId": 250,
+		"resourceType": "oil",
+		"capacity": 8600
+	},
+	{
 		"regionId": 251,
 		"resourceType": "wood",
 		"capacity": 13000
+	},
+	{
+		"regionId": 251,
+		"resourceType": "oil",
+		"capacity": 28400
+	},
+	{
+		"regionId": 251,
+		"resourceType": "uranium",
+		"capacity": 1100
 	},
 	{
 		"regionId": 252,
@@ -2125,6 +2760,11 @@
 		"capacity": 7200
 	},
 	{
+		"regionId": 256,
+		"resourceType": "oil",
+		"capacity": 9100
+	},
+	{
 		"regionId": 257,
 		"resourceType": "wood",
 		"capacity": 16200
@@ -2180,6 +2820,16 @@
 		"capacity": 10700
 	},
 	{
+		"regionId": 263,
+		"resourceType": "gas",
+		"capacity": 8700
+	},
+	{
+		"regionId": 263,
+		"resourceType": "rare_earth",
+		"capacity": 3700
+	},
+	{
 		"regionId": 264,
 		"resourceType": "iron",
 		"capacity": 5300
@@ -2190,6 +2840,11 @@
 		"capacity": 7600
 	},
 	{
+		"regionId": 264,
+		"resourceType": "uranium",
+		"capacity": 5000
+	},
+	{
 		"regionId": 265,
 		"resourceType": "iron",
 		"capacity": 2300
@@ -2198,6 +2853,26 @@
 		"regionId": 265,
 		"resourceType": "wood",
 		"capacity": 21100
+	},
+	{
+		"regionId": 265,
+		"resourceType": "silicon",
+		"capacity": 1500
+	},
+	{
+		"regionId": 266,
+		"resourceType": "oil",
+		"capacity": 7800
+	},
+	{
+		"regionId": 266,
+		"resourceType": "gas",
+		"capacity": 29900
+	},
+	{
+		"regionId": 266,
+		"resourceType": "uranium",
+		"capacity": 5500
 	},
 	{
 		"regionId": 267,
@@ -2215,6 +2890,11 @@
 		"capacity": 17500
 	},
 	{
+		"regionId": 268,
+		"resourceType": "gas",
+		"capacity": 4000
+	},
+	{
 		"regionId": 269,
 		"resourceType": "iron",
 		"capacity": 4400
@@ -2228,6 +2908,11 @@
 		"regionId": 269,
 		"resourceType": "wood",
 		"capacity": 17900
+	},
+	{
+		"regionId": 269,
+		"resourceType": "gas",
+		"capacity": 4100
 	},
 	{
 		"regionId": 270,
@@ -2265,6 +2950,11 @@
 		"capacity": 13500
 	},
 	{
+		"regionId": 272,
+		"resourceType": "silicon",
+		"capacity": 4600
+	},
+	{
 		"regionId": 273,
 		"resourceType": "coal",
 		"capacity": 2000
@@ -2273,6 +2963,11 @@
 		"regionId": 273,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 273,
+		"resourceType": "silicon",
+		"capacity": 6200
 	},
 	{
 		"regionId": 274,
@@ -2285,6 +2980,11 @@
 		"capacity": 15000
 	},
 	{
+		"regionId": 274,
+		"resourceType": "rare_earth",
+		"capacity": 600
+	},
+	{
 		"regionId": 275,
 		"resourceType": "iron",
 		"capacity": 15400
@@ -2293,6 +2993,16 @@
 		"regionId": 275,
 		"resourceType": "coal",
 		"capacity": 2000
+	},
+	{
+		"regionId": 275,
+		"resourceType": "oil",
+		"capacity": 8900
+	},
+	{
+		"regionId": 275,
+		"resourceType": "uranium",
+		"capacity": 7300
 	},
 	{
 		"regionId": 277,
@@ -2350,6 +3060,16 @@
 		"capacity": 3000
 	},
 	{
+		"regionId": 283,
+		"resourceType": "oil",
+		"capacity": 21400
+	},
+	{
+		"regionId": 283,
+		"resourceType": "gas",
+		"capacity": 7600
+	},
+	{
 		"regionId": 284,
 		"resourceType": "copper",
 		"capacity": 9400
@@ -2363,6 +3083,16 @@
 		"regionId": 285,
 		"resourceType": "wood",
 		"capacity": 16100
+	},
+	{
+		"regionId": 285,
+		"resourceType": "oil",
+		"capacity": 8400
+	},
+	{
+		"regionId": 285,
+		"resourceType": "gas",
+		"capacity": 12600
 	},
 	{
 		"regionId": 286,
@@ -2380,6 +3110,11 @@
 		"capacity": 7200
 	},
 	{
+		"regionId": 288,
+		"resourceType": "uranium",
+		"capacity": 1300
+	},
+	{
 		"regionId": 289,
 		"resourceType": "copper",
 		"capacity": 4500
@@ -2395,9 +3130,19 @@
 		"capacity": 5000
 	},
 	{
+		"regionId": 289,
+		"resourceType": "oil",
+		"capacity": 3000
+	},
+	{
 		"regionId": 290,
 		"resourceType": "coal",
 		"capacity": 8500
+	},
+	{
+		"regionId": 290,
+		"resourceType": "oil",
+		"capacity": 3100
 	},
 	{
 		"regionId": 293,
@@ -2430,6 +3175,11 @@
 		"capacity": 4300
 	},
 	{
+		"regionId": 297,
+		"resourceType": "oil",
+		"capacity": 33900
+	},
+	{
 		"regionId": 298,
 		"resourceType": "coal",
 		"capacity": 16900
@@ -2438,6 +3188,11 @@
 		"regionId": 298,
 		"resourceType": "wood",
 		"capacity": 16500
+	},
+	{
+		"regionId": 298,
+		"resourceType": "gas",
+		"capacity": 11700
 	},
 	{
 		"regionId": 299,
@@ -2500,6 +3255,11 @@
 		"capacity": 18800
 	},
 	{
+		"regionId": 307,
+		"resourceType": "gas",
+		"capacity": 3400
+	},
+	{
 		"regionId": 308,
 		"resourceType": "coal",
 		"capacity": 11200
@@ -2508,6 +3268,11 @@
 		"regionId": 308,
 		"resourceType": "wood",
 		"capacity": 9100
+	},
+	{
+		"regionId": 308,
+		"resourceType": "silicon",
+		"capacity": 1500
 	},
 	{
 		"regionId": 309,
@@ -2540,6 +3305,11 @@
 		"capacity": 9000
 	},
 	{
+		"regionId": 312,
+		"resourceType": "uranium",
+		"capacity": 900
+	},
+	{
 		"regionId": 314,
 		"resourceType": "wood",
 		"capacity": 10200
@@ -2555,6 +3325,11 @@
 		"capacity": 2800
 	},
 	{
+		"regionId": 316,
+		"resourceType": "oil",
+		"capacity": 14900
+	},
+	{
 		"regionId": 317,
 		"resourceType": "coal",
 		"capacity": 5300
@@ -2563,6 +3338,11 @@
 		"regionId": 317,
 		"resourceType": "wood",
 		"capacity": 5400
+	},
+	{
+		"regionId": 318,
+		"resourceType": "silicon",
+		"capacity": 1700
 	},
 	{
 		"regionId": 319,
@@ -2580,9 +3360,19 @@
 		"capacity": 7900
 	},
 	{
+		"regionId": 320,
+		"resourceType": "rare_earth",
+		"capacity": 4400
+	},
+	{
 		"regionId": 321,
 		"resourceType": "iron",
 		"capacity": 2800
+	},
+	{
+		"regionId": 321,
+		"resourceType": "oil",
+		"capacity": 5200
 	},
 	{
 		"regionId": 322,
@@ -2593,6 +3383,16 @@
 		"regionId": 322,
 		"resourceType": "coal",
 		"capacity": 2000
+	},
+	{
+		"regionId": 322,
+		"resourceType": "oil",
+		"capacity": 3600
+	},
+	{
+		"regionId": 322,
+		"resourceType": "uranium",
+		"capacity": 5100
 	},
 	{
 		"regionId": 323,
@@ -2615,9 +3415,19 @@
 		"capacity": 17200
 	},
 	{
+		"regionId": 326,
+		"resourceType": "oil",
+		"capacity": 3100
+	},
+	{
 		"regionId": 328,
 		"resourceType": "coal",
 		"capacity": 12900
+	},
+	{
+		"regionId": 328,
+		"resourceType": "rare_earth",
+		"capacity": 2000
 	},
 	{
 		"regionId": 329,
@@ -2625,14 +3435,34 @@
 		"capacity": 4100
 	},
 	{
+		"regionId": 329,
+		"resourceType": "oil",
+		"capacity": 4000
+	},
+	{
+		"regionId": 330,
+		"resourceType": "silicon",
+		"capacity": 1700
+	},
+	{
 		"regionId": 331,
 		"resourceType": "wood",
 		"capacity": 15200
 	},
 	{
+		"regionId": 331,
+		"resourceType": "oil",
+		"capacity": 3000
+	},
+	{
 		"regionId": 332,
 		"resourceType": "wood",
 		"capacity": 7600
+	},
+	{
+		"regionId": 332,
+		"resourceType": "oil",
+		"capacity": 3300
 	},
 	{
 		"regionId": 333,
@@ -2653,6 +3483,11 @@
 		"regionId": 334,
 		"resourceType": "wood",
 		"capacity": 17500
+	},
+	{
+		"regionId": 334,
+		"resourceType": "oil",
+		"capacity": 25200
 	},
 	{
 		"regionId": 335,
@@ -2680,6 +3515,16 @@
 		"capacity": 10400
 	},
 	{
+		"regionId": 336,
+		"resourceType": "oil",
+		"capacity": 15400
+	},
+	{
+		"regionId": 336,
+		"resourceType": "gas",
+		"capacity": 2000
+	},
+	{
 		"regionId": 337,
 		"resourceType": "iron",
 		"capacity": 2800
@@ -2700,9 +3545,24 @@
 		"capacity": 7400
 	},
 	{
+		"regionId": 338,
+		"resourceType": "gas",
+		"capacity": 8600
+	},
+	{
+		"regionId": 338,
+		"resourceType": "uranium",
+		"capacity": 5900
+	},
+	{
 		"regionId": 339,
 		"resourceType": "wood",
 		"capacity": 8500
+	},
+	{
+		"regionId": 339,
+		"resourceType": "oil",
+		"capacity": 6600
 	},
 	{
 		"regionId": 341,
@@ -2730,6 +3590,11 @@
 		"capacity": 6800
 	},
 	{
+		"regionId": 343,
+		"resourceType": "gas",
+		"capacity": 4000
+	},
+	{
 		"regionId": 344,
 		"resourceType": "iron",
 		"capacity": 2300
@@ -2738,6 +3603,11 @@
 		"regionId": 344,
 		"resourceType": "wood",
 		"capacity": 16700
+	},
+	{
+		"regionId": 344,
+		"resourceType": "oil",
+		"capacity": 3100
 	},
 	{
 		"regionId": 345,
@@ -2775,6 +3645,11 @@
 		"capacity": 4500
 	},
 	{
+		"regionId": 348,
+		"resourceType": "rare_earth",
+		"capacity": 500
+	},
+	{
 		"regionId": 349,
 		"resourceType": "copper",
 		"capacity": 12700
@@ -2788,6 +3663,11 @@
 		"regionId": 350,
 		"resourceType": "wood",
 		"capacity": 4800
+	},
+	{
+		"regionId": 350,
+		"resourceType": "gas",
+		"capacity": 17800
 	},
 	{
 		"regionId": 351,
@@ -2835,6 +3715,11 @@
 		"capacity": 15100
 	},
 	{
+		"regionId": 356,
+		"resourceType": "silicon",
+		"capacity": 3700
+	},
+	{
 		"regionId": 357,
 		"resourceType": "wood",
 		"capacity": 20500
@@ -2848,6 +3733,21 @@
 		"regionId": 358,
 		"resourceType": "wood",
 		"capacity": 8200
+	},
+	{
+		"regionId": 358,
+		"resourceType": "oil",
+		"capacity": 4200
+	},
+	{
+		"regionId": 358,
+		"resourceType": "uranium",
+		"capacity": 5000
+	},
+	{
+		"regionId": 358,
+		"resourceType": "silicon",
+		"capacity": 8800
 	},
 	{
 		"regionId": 359,
@@ -2915,6 +3815,11 @@
 		"capacity": 3000
 	},
 	{
+		"regionId": 364,
+		"resourceType": "uranium",
+		"capacity": 1700
+	},
+	{
 		"regionId": 365,
 		"resourceType": "coal",
 		"capacity": 2100
@@ -2938,6 +3843,11 @@
 		"regionId": 367,
 		"resourceType": "iron",
 		"capacity": 9400
+	},
+	{
+		"regionId": 367,
+		"resourceType": "oil",
+		"capacity": 27300
 	},
 	{
 		"regionId": 368,
@@ -2965,9 +3875,34 @@
 		"capacity": 12300
 	},
 	{
+		"regionId": 370,
+		"resourceType": "oil",
+		"capacity": 16200
+	},
+	{
+		"regionId": 371,
+		"resourceType": "oil",
+		"capacity": 6600
+	},
+	{
+		"regionId": 371,
+		"resourceType": "gas",
+		"capacity": 36600
+	},
+	{
 		"regionId": 372,
 		"resourceType": "copper",
 		"capacity": 5500
+	},
+	{
+		"regionId": 372,
+		"resourceType": "oil",
+		"capacity": 52200
+	},
+	{
+		"regionId": 372,
+		"resourceType": "gas",
+		"capacity": 8500
 	},
 	{
 		"regionId": 373,
@@ -2975,14 +3910,44 @@
 		"capacity": 3200
 	},
 	{
+		"regionId": 373,
+		"resourceType": "oil",
+		"capacity": 26900
+	},
+	{
 		"regionId": 374,
 		"resourceType": "wood",
 		"capacity": 21600
 	},
 	{
+		"regionId": 374,
+		"resourceType": "oil",
+		"capacity": 18000
+	},
+	{
+		"regionId": 374,
+		"resourceType": "gas",
+		"capacity": 9800
+	},
+	{
 		"regionId": 375,
 		"resourceType": "wood",
 		"capacity": 22600
+	},
+	{
+		"regionId": 375,
+		"resourceType": "oil",
+		"capacity": 8700
+	},
+	{
+		"regionId": 375,
+		"resourceType": "gas",
+		"capacity": 27500
+	},
+	{
+		"regionId": 375,
+		"resourceType": "uranium",
+		"capacity": 4000
 	},
 	{
 		"regionId": 377,
@@ -3005,6 +3970,26 @@
 		"capacity": 3300
 	},
 	{
+		"regionId": 379,
+		"resourceType": "gas",
+		"capacity": 2000
+	},
+	{
+		"regionId": 379,
+		"resourceType": "uranium",
+		"capacity": 3600
+	},
+	{
+		"regionId": 379,
+		"resourceType": "rare_earth",
+		"capacity": 6600
+	},
+	{
+		"regionId": 379,
+		"resourceType": "silicon",
+		"capacity": 5900
+	},
+	{
 		"regionId": 380,
 		"resourceType": "iron",
 		"capacity": 8400
@@ -3018,6 +4003,11 @@
 		"regionId": 380,
 		"resourceType": "wood",
 		"capacity": 8600
+	},
+	{
+		"regionId": 380,
+		"resourceType": "rare_earth",
+		"capacity": 3300
 	},
 	{
 		"regionId": 381,
@@ -3040,9 +4030,19 @@
 		"capacity": 7200
 	},
 	{
+		"regionId": 382,
+		"resourceType": "uranium",
+		"capacity": 2100
+	},
+	{
 		"regionId": 383,
 		"resourceType": "wood",
 		"capacity": 16500
+	},
+	{
+		"regionId": 383,
+		"resourceType": "oil",
+		"capacity": 12600
 	},
 	{
 		"regionId": 384,
@@ -3060,9 +4060,24 @@
 		"capacity": 14400
 	},
 	{
+		"regionId": 384,
+		"resourceType": "silicon",
+		"capacity": 1500
+	},
+	{
 		"regionId": 385,
 		"resourceType": "iron",
 		"capacity": 7400
+	},
+	{
+		"regionId": 385,
+		"resourceType": "oil",
+		"capacity": 20300
+	},
+	{
+		"regionId": 385,
+		"resourceType": "silicon",
+		"capacity": 8800
 	},
 	{
 		"regionId": 386,
@@ -3085,6 +4100,11 @@
 		"capacity": 3800
 	},
 	{
+		"regionId": 387,
+		"resourceType": "silicon",
+		"capacity": 3500
+	},
+	{
 		"regionId": 388,
 		"resourceType": "copper",
 		"capacity": 8300
@@ -3098,6 +4118,11 @@
 		"regionId": 389,
 		"resourceType": "wood",
 		"capacity": 22600
+	},
+	{
+		"regionId": 389,
+		"resourceType": "rare_earth",
+		"capacity": 2900
 	},
 	{
 		"regionId": 390,
@@ -3118,6 +4143,11 @@
 		"regionId": 392,
 		"resourceType": "wood",
 		"capacity": 20300
+	},
+	{
+		"regionId": 392,
+		"resourceType": "gas",
+		"capacity": 2600
 	},
 	{
 		"regionId": 393,
@@ -3150,14 +4180,39 @@
 		"capacity": 14200
 	},
 	{
+		"regionId": 396,
+		"resourceType": "oil",
+		"capacity": 17400
+	},
+	{
 		"regionId": 397,
 		"resourceType": "wood",
 		"capacity": 6800
 	},
 	{
+		"regionId": 397,
+		"resourceType": "gas",
+		"capacity": 2300
+	},
+	{
+		"regionId": 397,
+		"resourceType": "uranium",
+		"capacity": 1000
+	},
+	{
 		"regionId": 398,
 		"resourceType": "wood",
 		"capacity": 3800
+	},
+	{
+		"regionId": 398,
+		"resourceType": "gas",
+		"capacity": 30500
+	},
+	{
+		"regionId": 398,
+		"resourceType": "rare_earth",
+		"capacity": 1600
 	},
 	{
 		"regionId": 399,
@@ -3180,6 +4235,11 @@
 		"capacity": 9700
 	},
 	{
+		"regionId": 400,
+		"resourceType": "gas",
+		"capacity": 2000
+	},
+	{
 		"regionId": 401,
 		"resourceType": "coal",
 		"capacity": 6300
@@ -3188,6 +4248,11 @@
 		"regionId": 401,
 		"resourceType": "wood",
 		"capacity": 8700
+	},
+	{
+		"regionId": 401,
+		"resourceType": "oil",
+		"capacity": 18600
 	},
 	{
 		"regionId": 402,
@@ -3200,6 +4265,11 @@
 		"capacity": 14600
 	},
 	{
+		"regionId": 402,
+		"resourceType": "oil",
+		"capacity": 6700
+	},
+	{
 		"regionId": 403,
 		"resourceType": "coal",
 		"capacity": 7200
@@ -3210,9 +4280,39 @@
 		"capacity": 3100
 	},
 	{
+		"regionId": 403,
+		"resourceType": "oil",
+		"capacity": 24300
+	},
+	{
+		"regionId": 403,
+		"resourceType": "gas",
+		"capacity": 16800
+	},
+	{
+		"regionId": 403,
+		"resourceType": "rare_earth",
+		"capacity": 1600
+	},
+	{
+		"regionId": 404,
+		"resourceType": "uranium",
+		"capacity": 5100
+	},
+	{
+		"regionId": 404,
+		"resourceType": "silicon",
+		"capacity": 5000
+	},
+	{
 		"regionId": 405,
 		"resourceType": "coal",
 		"capacity": 11500
+	},
+	{
+		"regionId": 405,
+		"resourceType": "oil",
+		"capacity": 15800
 	},
 	{
 		"regionId": 406,
@@ -3230,6 +4330,11 @@
 		"capacity": 18000
 	},
 	{
+		"regionId": 406,
+		"resourceType": "oil",
+		"capacity": 17900
+	},
+	{
 		"regionId": 407,
 		"resourceType": "copper",
 		"capacity": 1500
@@ -3240,6 +4345,11 @@
 		"capacity": 14100
 	},
 	{
+		"regionId": 407,
+		"resourceType": "oil",
+		"capacity": 11600
+	},
+	{
 		"regionId": 408,
 		"resourceType": "iron",
 		"capacity": 10900
@@ -3248,6 +4358,11 @@
 		"regionId": 408,
 		"resourceType": "wood",
 		"capacity": 6200
+	},
+	{
+		"regionId": 408,
+		"resourceType": "oil",
+		"capacity": 7500
 	},
 	{
 		"regionId": 409,
@@ -3265,9 +4380,24 @@
 		"capacity": 14500
 	},
 	{
+		"regionId": 409,
+		"resourceType": "oil",
+		"capacity": 6300
+	},
+	{
 		"regionId": 410,
 		"resourceType": "coal",
 		"capacity": 2600
+	},
+	{
+		"regionId": 410,
+		"resourceType": "gas",
+		"capacity": 4500
+	},
+	{
+		"regionId": 410,
+		"resourceType": "silicon",
+		"capacity": 3900
 	},
 	{
 		"regionId": 411,
@@ -3278,6 +4408,16 @@
 		"regionId": 411,
 		"resourceType": "wood",
 		"capacity": 4500
+	},
+	{
+		"regionId": 412,
+		"resourceType": "oil",
+		"capacity": 37800
+	},
+	{
+		"regionId": 412,
+		"resourceType": "gas",
+		"capacity": 28300
 	},
 	{
 		"regionId": 414,
@@ -3295,9 +4435,19 @@
 		"capacity": 6400
 	},
 	{
+		"regionId": 415,
+		"resourceType": "gas",
+		"capacity": 16700
+	},
+	{
 		"regionId": 416,
 		"resourceType": "iron",
 		"capacity": 7000
+	},
+	{
+		"regionId": 416,
+		"resourceType": "oil",
+		"capacity": 25900
 	},
 	{
 		"regionId": 417,
@@ -3320,6 +4470,11 @@
 		"capacity": 16400
 	},
 	{
+		"regionId": 419,
+		"resourceType": "oil",
+		"capacity": 20900
+	},
+	{
 		"regionId": 420,
 		"resourceType": "coal",
 		"capacity": 5400
@@ -3328,6 +4483,11 @@
 		"regionId": 420,
 		"resourceType": "wood",
 		"capacity": 3100
+	},
+	{
+		"regionId": 420,
+		"resourceType": "gas",
+		"capacity": 4400
 	},
 	{
 		"regionId": 421,
@@ -3355,6 +4515,16 @@
 		"capacity": 9200
 	},
 	{
+		"regionId": 423,
+		"resourceType": "gas",
+		"capacity": 2300
+	},
+	{
+		"regionId": 423,
+		"resourceType": "rare_earth",
+		"capacity": 7000
+	},
+	{
 		"regionId": 424,
 		"resourceType": "iron",
 		"capacity": 3900
@@ -3365,9 +4535,29 @@
 		"capacity": 23200
 	},
 	{
+		"regionId": 424,
+		"resourceType": "oil",
+		"capacity": 13300
+	},
+	{
+		"regionId": 424,
+		"resourceType": "rare_earth",
+		"capacity": 1200
+	},
+	{
 		"regionId": 425,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 425,
+		"resourceType": "oil",
+		"capacity": 13200
+	},
+	{
+		"regionId": 425,
+		"resourceType": "rare_earth",
+		"capacity": 1200
 	},
 	{
 		"regionId": 426,
@@ -3435,6 +4625,16 @@
 		"capacity": 1600
 	},
 	{
+		"regionId": 433,
+		"resourceType": "gas",
+		"capacity": 38000
+	},
+	{
+		"regionId": 433,
+		"resourceType": "rare_earth",
+		"capacity": 1100
+	},
+	{
 		"regionId": 434,
 		"resourceType": "coal",
 		"capacity": 9200
@@ -3453,6 +4653,11 @@
 		"regionId": 437,
 		"resourceType": "iron",
 		"capacity": 7900
+	},
+	{
+		"regionId": 437,
+		"resourceType": "silicon",
+		"capacity": 7500
 	},
 	{
 		"regionId": 439,
@@ -3480,6 +4685,11 @@
 		"capacity": 17800
 	},
 	{
+		"regionId": 441,
+		"resourceType": "oil",
+		"capacity": 16100
+	},
+	{
 		"regionId": 442,
 		"resourceType": "iron",
 		"capacity": 14000
@@ -3495,9 +4705,19 @@
 		"capacity": 17500
 	},
 	{
+		"regionId": 442,
+		"resourceType": "oil",
+		"capacity": 5400
+	},
+	{
 		"regionId": 443,
 		"resourceType": "coal",
 		"capacity": 6000
+	},
+	{
+		"regionId": 443,
+		"resourceType": "gas",
+		"capacity": 5100
 	},
 	{
 		"regionId": 444,
@@ -3505,9 +4725,19 @@
 		"capacity": 1500
 	},
 	{
+		"regionId": 444,
+		"resourceType": "gas",
+		"capacity": 29100
+	},
+	{
 		"regionId": 445,
 		"resourceType": "wood",
 		"capacity": 6300
+	},
+	{
+		"regionId": 445,
+		"resourceType": "silicon",
+		"capacity": 1700
 	},
 	{
 		"regionId": 446,
@@ -3525,6 +4755,11 @@
 		"capacity": 11600
 	},
 	{
+		"regionId": 447,
+		"resourceType": "gas",
+		"capacity": 4200
+	},
+	{
 		"regionId": 448,
 		"resourceType": "copper",
 		"capacity": 2800
@@ -3533,6 +4768,11 @@
 		"regionId": 448,
 		"resourceType": "coal",
 		"capacity": 15600
+	},
+	{
+		"regionId": 448,
+		"resourceType": "gas",
+		"capacity": 3200
 	},
 	{
 		"regionId": 450,
@@ -3570,8 +4810,28 @@
 		"capacity": 11900
 	},
 	{
+		"regionId": 458,
+		"resourceType": "oil",
+		"capacity": 11800
+	},
+	{
 		"regionId": 459,
 		"resourceType": "iron",
+		"capacity": 2800
+	},
+	{
+		"regionId": 459,
+		"resourceType": "oil",
+		"capacity": 29800
+	},
+	{
+		"regionId": 460,
+		"resourceType": "gas",
+		"capacity": 19400
+	},
+	{
+		"regionId": 460,
+		"resourceType": "rare_earth",
 		"capacity": 2800
 	},
 	{
@@ -3583,6 +4843,11 @@
 		"regionId": 462,
 		"resourceType": "iron",
 		"capacity": 15400
+	},
+	{
+		"regionId": 462,
+		"resourceType": "gas",
+		"capacity": 10000
 	},
 	{
 		"regionId": 463,
@@ -3630,6 +4895,11 @@
 		"capacity": 14400
 	},
 	{
+		"regionId": 467,
+		"resourceType": "uranium",
+		"capacity": 3700
+	},
+	{
 		"regionId": 468,
 		"resourceType": "iron",
 		"capacity": 3300
@@ -3665,6 +4935,11 @@
 		"capacity": 3300
 	},
 	{
+		"regionId": 469,
+		"resourceType": "silicon",
+		"capacity": 8600
+	},
+	{
 		"regionId": 470,
 		"resourceType": "iron",
 		"capacity": 2100
@@ -3680,6 +4955,11 @@
 		"capacity": 5600
 	},
 	{
+		"regionId": 470,
+		"resourceType": "oil",
+		"capacity": 6200
+	},
+	{
 		"regionId": 471,
 		"resourceType": "coal",
 		"capacity": 7100
@@ -3688,6 +4968,16 @@
 		"regionId": 471,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 471,
+		"resourceType": "oil",
+		"capacity": 8400
+	},
+	{
+		"regionId": 471,
+		"resourceType": "uranium",
+		"capacity": 3100
 	},
 	{
 		"regionId": 472,
@@ -3710,9 +5000,19 @@
 		"capacity": 6700
 	},
 	{
+		"regionId": 473,
+		"resourceType": "oil",
+		"capacity": 13900
+	},
+	{
 		"regionId": 474,
 		"resourceType": "copper",
 		"capacity": 7200
+	},
+	{
+		"regionId": 474,
+		"resourceType": "gas",
+		"capacity": 4700
 	},
 	{
 		"regionId": 475,
@@ -3735,6 +5035,16 @@
 		"capacity": 6600
 	},
 	{
+		"regionId": 477,
+		"resourceType": "oil",
+		"capacity": 24100
+	},
+	{
+		"regionId": 479,
+		"resourceType": "gas",
+		"capacity": 2200
+	},
+	{
 		"regionId": 480,
 		"resourceType": "iron",
 		"capacity": 5300
@@ -3755,9 +5065,19 @@
 		"capacity": 14000
 	},
 	{
+		"regionId": 481,
+		"resourceType": "silicon",
+		"capacity": 4800
+	},
+	{
 		"regionId": 482,
 		"resourceType": "coal",
 		"capacity": 2100
+	},
+	{
+		"regionId": 482,
+		"resourceType": "rare_earth",
+		"capacity": 500
 	},
 	{
 		"regionId": 483,
@@ -3795,6 +5115,11 @@
 		"capacity": 6400
 	},
 	{
+		"regionId": 485,
+		"resourceType": "oil",
+		"capacity": 6200
+	},
+	{
 		"regionId": 486,
 		"resourceType": "wood",
 		"capacity": 13000
@@ -3825,6 +5150,11 @@
 		"capacity": 13600
 	},
 	{
+		"regionId": 488,
+		"resourceType": "uranium",
+		"capacity": 1900
+	},
+	{
 		"regionId": 490,
 		"resourceType": "coal",
 		"capacity": 14200
@@ -3833,6 +5163,11 @@
 		"regionId": 490,
 		"resourceType": "wood",
 		"capacity": 9500
+	},
+	{
+		"regionId": 490,
+		"resourceType": "uranium",
+		"capacity": 2200
 	},
 	{
 		"regionId": 491,
@@ -3945,6 +5280,11 @@
 		"capacity": 3100
 	},
 	{
+		"regionId": 498,
+		"resourceType": "uranium",
+		"capacity": 3200
+	},
+	{
 		"regionId": 499,
 		"resourceType": "iron",
 		"capacity": 3900
@@ -3965,9 +5305,29 @@
 		"capacity": 13300
 	},
 	{
+		"regionId": 500,
+		"resourceType": "rare_earth",
+		"capacity": 6600
+	},
+	{
+		"regionId": 500,
+		"resourceType": "silicon",
+		"capacity": 15200
+	},
+	{
 		"regionId": 501,
 		"resourceType": "wood",
 		"capacity": 8100
+	},
+	{
+		"regionId": 501,
+		"resourceType": "rare_earth",
+		"capacity": 7100
+	},
+	{
+		"regionId": 501,
+		"resourceType": "silicon",
+		"capacity": 5000
 	},
 	{
 		"regionId": 502,
@@ -4005,6 +5365,21 @@
 		"capacity": 7300
 	},
 	{
+		"regionId": 504,
+		"resourceType": "uranium",
+		"capacity": 800
+	},
+	{
+		"regionId": 504,
+		"resourceType": "rare_earth",
+		"capacity": 600
+	},
+	{
+		"regionId": 504,
+		"resourceType": "silicon",
+		"capacity": 1500
+	},
+	{
 		"regionId": 506,
 		"resourceType": "copper",
 		"capacity": 9700
@@ -4025,6 +5400,16 @@
 		"capacity": 3800
 	},
 	{
+		"regionId": 508,
+		"resourceType": "oil",
+		"capacity": 12600
+	},
+	{
+		"regionId": 508,
+		"resourceType": "silicon",
+		"capacity": 4700
+	},
+	{
 		"regionId": 509,
 		"resourceType": "coal",
 		"capacity": 13000
@@ -4035,6 +5420,11 @@
 		"capacity": 2400
 	},
 	{
+		"regionId": 510,
+		"resourceType": "gas",
+		"capacity": 2000
+	},
+	{
 		"regionId": 511,
 		"resourceType": "copper",
 		"capacity": 19000
@@ -4043,6 +5433,11 @@
 		"regionId": 511,
 		"resourceType": "coal",
 		"capacity": 7000
+	},
+	{
+		"regionId": 511,
+		"resourceType": "gas",
+		"capacity": 2700
 	},
 	{
 		"regionId": 512,
@@ -4065,6 +5460,21 @@
 		"capacity": 1500
 	},
 	{
+		"regionId": 514,
+		"resourceType": "rare_earth",
+		"capacity": 3900
+	},
+	{
+		"regionId": 514,
+		"resourceType": "silicon",
+		"capacity": 4400
+	},
+	{
+		"regionId": 515,
+		"resourceType": "uranium",
+		"capacity": 2000
+	},
+	{
 		"regionId": 516,
 		"resourceType": "copper",
 		"capacity": 3700
@@ -4080,14 +5490,39 @@
 		"capacity": 6200
 	},
 	{
+		"regionId": 516,
+		"resourceType": "gas",
+		"capacity": 4500
+	},
+	{
+		"regionId": 517,
+		"resourceType": "oil",
+		"capacity": 6800
+	},
+	{
 		"regionId": 518,
 		"resourceType": "wood",
 		"capacity": 3800
 	},
 	{
+		"regionId": 518,
+		"resourceType": "rare_earth",
+		"capacity": 800
+	},
+	{
 		"regionId": 519,
 		"resourceType": "iron",
 		"capacity": 16000
+	},
+	{
+		"regionId": 519,
+		"resourceType": "rare_earth",
+		"capacity": 1100
+	},
+	{
+		"regionId": 520,
+		"resourceType": "gas",
+		"capacity": 10200
 	},
 	{
 		"regionId": 521,
@@ -4098,6 +5533,11 @@
 		"regionId": 521,
 		"resourceType": "coal",
 		"capacity": 22200
+	},
+	{
+		"regionId": 522,
+		"resourceType": "rare_earth",
+		"capacity": 3800
 	},
 	{
 		"regionId": 523,
@@ -4120,6 +5560,11 @@
 		"capacity": 4800
 	},
 	{
+		"regionId": 524,
+		"resourceType": "rare_earth",
+		"capacity": 1600
+	},
+	{
 		"regionId": 525,
 		"resourceType": "copper",
 		"capacity": 2900
@@ -4133,6 +5578,16 @@
 		"regionId": 525,
 		"resourceType": "wood",
 		"capacity": 17900
+	},
+	{
+		"regionId": 525,
+		"resourceType": "oil",
+		"capacity": 29000
+	},
+	{
+		"regionId": 526,
+		"resourceType": "oil",
+		"capacity": 15100
 	},
 	{
 		"regionId": 527,
@@ -4150,6 +5605,11 @@
 		"capacity": 6100
 	},
 	{
+		"regionId": 527,
+		"resourceType": "silicon",
+		"capacity": 8300
+	},
+	{
 		"regionId": 528,
 		"resourceType": "iron",
 		"capacity": 2300
@@ -4158,6 +5618,11 @@
 		"regionId": 528,
 		"resourceType": "wood",
 		"capacity": 9000
+	},
+	{
+		"regionId": 528,
+		"resourceType": "oil",
+		"capacity": 3900
 	},
 	{
 		"regionId": 529,
@@ -4180,6 +5645,11 @@
 		"capacity": 4400
 	},
 	{
+		"regionId": 531,
+		"resourceType": "oil",
+		"capacity": 3100
+	},
+	{
 		"regionId": 532,
 		"resourceType": "coal",
 		"capacity": 18000
@@ -4193,6 +5663,11 @@
 		"regionId": 534,
 		"resourceType": "wood",
 		"capacity": 3500
+	},
+	{
+		"regionId": 535,
+		"resourceType": "oil",
+		"capacity": 18700
 	},
 	{
 		"regionId": 536,
@@ -4235,6 +5710,16 @@
 		"capacity": 18900
 	},
 	{
+		"regionId": 539,
+		"resourceType": "oil",
+		"capacity": 31400
+	},
+	{
+		"regionId": 539,
+		"resourceType": "uranium",
+		"capacity": 1600
+	},
+	{
 		"regionId": 540,
 		"resourceType": "iron",
 		"capacity": 2000
@@ -4243,6 +5728,11 @@
 		"regionId": 540,
 		"resourceType": "wood",
 		"capacity": 23000
+	},
+	{
+		"regionId": 540,
+		"resourceType": "rare_earth",
+		"capacity": 700
 	},
 	{
 		"regionId": 541,
@@ -4270,6 +5760,16 @@
 		"capacity": 21800
 	},
 	{
+		"regionId": 543,
+		"resourceType": "oil",
+		"capacity": 4900
+	},
+	{
+		"regionId": 544,
+		"resourceType": "silicon",
+		"capacity": 4400
+	},
+	{
 		"regionId": 545,
 		"resourceType": "copper",
 		"capacity": 8400
@@ -4278,6 +5778,11 @@
 		"regionId": 545,
 		"resourceType": "wood",
 		"capacity": 20500
+	},
+	{
+		"regionId": 545,
+		"resourceType": "uranium",
+		"capacity": 4900
 	},
 	{
 		"regionId": 546,
@@ -4300,6 +5805,11 @@
 		"capacity": 14100
 	},
 	{
+		"regionId": 547,
+		"resourceType": "uranium",
+		"capacity": 4000
+	},
+	{
 		"regionId": 548,
 		"resourceType": "iron",
 		"capacity": 13000
@@ -4320,6 +5830,11 @@
 		"capacity": 7300
 	},
 	{
+		"regionId": 550,
+		"resourceType": "oil",
+		"capacity": 21800
+	},
+	{
 		"regionId": 551,
 		"resourceType": "iron",
 		"capacity": 2000
@@ -4335,9 +5850,19 @@
 		"capacity": 6600
 	},
 	{
+		"regionId": 553,
+		"resourceType": "silicon",
+		"capacity": 7600
+	},
+	{
 		"regionId": 554,
 		"resourceType": "coal",
 		"capacity": 15200
+	},
+	{
+		"regionId": 555,
+		"resourceType": "oil",
+		"capacity": 5500
 	},
 	{
 		"regionId": 556,
@@ -4348,6 +5873,11 @@
 		"regionId": 557,
 		"resourceType": "coal",
 		"capacity": 10800
+	},
+	{
+		"regionId": 557,
+		"resourceType": "silicon",
+		"capacity": 6300
 	},
 	{
 		"regionId": 558,
@@ -4480,14 +6010,44 @@
 		"capacity": 4700
 	},
 	{
+		"regionId": 569,
+		"resourceType": "uranium",
+		"capacity": 1900
+	},
+	{
+		"regionId": 569,
+		"resourceType": "rare_earth",
+		"capacity": 800
+	},
+	{
 		"regionId": 570,
 		"resourceType": "wood",
 		"capacity": 13500
 	},
 	{
+		"regionId": 570,
+		"resourceType": "oil",
+		"capacity": 7800
+	},
+	{
+		"regionId": 570,
+		"resourceType": "gas",
+		"capacity": 6700
+	},
+	{
 		"regionId": 571,
 		"resourceType": "wood",
 		"capacity": 5200
+	},
+	{
+		"regionId": 571,
+		"resourceType": "oil",
+		"capacity": 17300
+	},
+	{
+		"regionId": 571,
+		"resourceType": "rare_earth",
+		"capacity": 1100
 	},
 	{
 		"regionId": 572,
@@ -4498,6 +6058,21 @@
 		"regionId": 572,
 		"resourceType": "wood",
 		"capacity": 4100
+	},
+	{
+		"regionId": 572,
+		"resourceType": "oil",
+		"capacity": 65400
+	},
+	{
+		"regionId": 572,
+		"resourceType": "gas",
+		"capacity": 6100
+	},
+	{
+		"regionId": 572,
+		"resourceType": "rare_earth",
+		"capacity": 6300
 	},
 	{
 		"regionId": 573,
@@ -4515,6 +6090,16 @@
 		"capacity": 11400
 	},
 	{
+		"regionId": 573,
+		"resourceType": "gas",
+		"capacity": 14900
+	},
+	{
+		"regionId": 573,
+		"resourceType": "rare_earth",
+		"capacity": 2100
+	},
+	{
 		"regionId": 574,
 		"resourceType": "iron",
 		"capacity": 16800
@@ -4523,6 +6108,11 @@
 		"regionId": 574,
 		"resourceType": "wood",
 		"capacity": 5500
+	},
+	{
+		"regionId": 574,
+		"resourceType": "oil",
+		"capacity": 28300
 	},
 	{
 		"regionId": 575,
@@ -4535,6 +6125,16 @@
 		"capacity": 4000
 	},
 	{
+		"regionId": 575,
+		"resourceType": "oil",
+		"capacity": 7500
+	},
+	{
+		"regionId": 575,
+		"resourceType": "uranium",
+		"capacity": 4100
+	},
+	{
 		"regionId": 576,
 		"resourceType": "coal",
 		"capacity": 2000
@@ -4543,6 +6143,11 @@
 		"regionId": 576,
 		"resourceType": "wood",
 		"capacity": 4600
+	},
+	{
+		"regionId": 576,
+		"resourceType": "uranium",
+		"capacity": 2300
 	},
 	{
 		"regionId": 577,
@@ -4555,6 +6160,16 @@
 		"capacity": 3400
 	},
 	{
+		"regionId": 577,
+		"resourceType": "oil",
+		"capacity": 11000
+	},
+	{
+		"regionId": 577,
+		"resourceType": "gas",
+		"capacity": 40100
+	},
+	{
 		"regionId": 578,
 		"resourceType": "coal",
 		"capacity": 7100
@@ -4563,6 +6178,16 @@
 		"regionId": 578,
 		"resourceType": "wood",
 		"capacity": 21800
+	},
+	{
+		"regionId": 578,
+		"resourceType": "gas",
+		"capacity": 30600
+	},
+	{
+		"regionId": 578,
+		"resourceType": "uranium",
+		"capacity": 1900
 	},
 	{
 		"regionId": 579,
@@ -4580,6 +6205,16 @@
 		"capacity": 20900
 	},
 	{
+		"regionId": 579,
+		"resourceType": "oil",
+		"capacity": 63000
+	},
+	{
+		"regionId": 579,
+		"resourceType": "gas",
+		"capacity": 4700
+	},
+	{
 		"regionId": 580,
 		"resourceType": "coal",
 		"capacity": 2000
@@ -4590,9 +6225,34 @@
 		"capacity": 16800
 	},
 	{
+		"regionId": 580,
+		"resourceType": "oil",
+		"capacity": 6900
+	},
+	{
+		"regionId": 580,
+		"resourceType": "rare_earth",
+		"capacity": 7700
+	},
+	{
 		"regionId": 581,
 		"resourceType": "wood",
 		"capacity": 4200
+	},
+	{
+		"regionId": 581,
+		"resourceType": "oil",
+		"capacity": 28200
+	},
+	{
+		"regionId": 581,
+		"resourceType": "gas",
+		"capacity": 28400
+	},
+	{
+		"regionId": 581,
+		"resourceType": "rare_earth",
+		"capacity": 7900
 	},
 	{
 		"regionId": 582,
@@ -4608,6 +6268,16 @@
 		"regionId": 582,
 		"resourceType": "wood",
 		"capacity": 13300
+	},
+	{
+		"regionId": 582,
+		"resourceType": "oil",
+		"capacity": 28500
+	},
+	{
+		"regionId": 582,
+		"resourceType": "uranium",
+		"capacity": 5300
 	},
 	{
 		"regionId": 583,
@@ -4635,6 +6305,16 @@
 		"capacity": 4900
 	},
 	{
+		"regionId": 587,
+		"resourceType": "oil",
+		"capacity": 6700
+	},
+	{
+		"regionId": 587,
+		"resourceType": "gas",
+		"capacity": 41700
+	},
+	{
 		"regionId": 588,
 		"resourceType": "wood",
 		"capacity": 3400
@@ -4648,6 +6328,11 @@
 		"regionId": 592,
 		"resourceType": "wood",
 		"capacity": 17000
+	},
+	{
+		"regionId": 592,
+		"resourceType": "oil",
+		"capacity": 13600
 	},
 	{
 		"regionId": 593,
@@ -4675,6 +6360,11 @@
 		"capacity": 2600
 	},
 	{
+		"regionId": 596,
+		"resourceType": "oil",
+		"capacity": 4600
+	},
+	{
 		"regionId": 597,
 		"resourceType": "coal",
 		"capacity": 13700
@@ -4683,6 +6373,11 @@
 		"regionId": 597,
 		"resourceType": "wood",
 		"capacity": 7100
+	},
+	{
+		"regionId": 597,
+		"resourceType": "silicon",
+		"capacity": 5200
 	},
 	{
 		"regionId": 598,
@@ -4700,9 +6395,24 @@
 		"capacity": 3700
 	},
 	{
+		"regionId": 598,
+		"resourceType": "uranium",
+		"capacity": 2900
+	},
+	{
 		"regionId": 599,
 		"resourceType": "wood",
 		"capacity": 24300
+	},
+	{
+		"regionId": 600,
+		"resourceType": "oil",
+		"capacity": 13900
+	},
+	{
+		"regionId": 600,
+		"resourceType": "silicon",
+		"capacity": 4400
 	},
 	{
 		"regionId": 601,
@@ -4718,6 +6428,16 @@
 		"regionId": 601,
 		"resourceType": "wood",
 		"capacity": 8900
+	},
+	{
+		"regionId": 601,
+		"resourceType": "oil",
+		"capacity": 13000
+	},
+	{
+		"regionId": 601,
+		"resourceType": "gas",
+		"capacity": 19400
 	},
 	{
 		"regionId": 602,
@@ -4750,6 +6470,16 @@
 		"capacity": 3200
 	},
 	{
+		"regionId": 606,
+		"resourceType": "rare_earth",
+		"capacity": 500
+	},
+	{
+		"regionId": 606,
+		"resourceType": "silicon",
+		"capacity": 17500
+	},
+	{
 		"regionId": 607,
 		"resourceType": "copper",
 		"capacity": 12200
@@ -4765,6 +6495,11 @@
 		"capacity": 11800
 	},
 	{
+		"regionId": 607,
+		"resourceType": "silicon",
+		"capacity": 8800
+	},
+	{
 		"regionId": 608,
 		"resourceType": "copper",
 		"capacity": 1500
@@ -4773,6 +6508,11 @@
 		"regionId": 608,
 		"resourceType": "coal",
 		"capacity": 4800
+	},
+	{
+		"regionId": 608,
+		"resourceType": "rare_earth",
+		"capacity": 3100
 	},
 	{
 		"regionId": 609,
@@ -4785,6 +6525,11 @@
 		"capacity": 11200
 	},
 	{
+		"regionId": 609,
+		"resourceType": "rare_earth",
+		"capacity": 1700
+	},
+	{
 		"regionId": 610,
 		"resourceType": "coal",
 		"capacity": 17900
@@ -4795,9 +6540,24 @@
 		"capacity": 7700
 	},
 	{
+		"regionId": 610,
+		"resourceType": "uranium",
+		"capacity": 800
+	},
+	{
+		"regionId": 610,
+		"resourceType": "rare_earth",
+		"capacity": 1200
+	},
+	{
 		"regionId": 611,
 		"resourceType": "coal",
 		"capacity": 36400
+	},
+	{
+		"regionId": 611,
+		"resourceType": "rare_earth",
+		"capacity": 2900
 	},
 	{
 		"regionId": 612,
@@ -4808,6 +6568,11 @@
 		"regionId": 612,
 		"resourceType": "coal",
 		"capacity": 11800
+	},
+	{
+		"regionId": 612,
+		"resourceType": "rare_earth",
+		"capacity": 2800
 	},
 	{
 		"regionId": 613,
@@ -4830,9 +6595,29 @@
 		"capacity": 12700
 	},
 	{
+		"regionId": 614,
+		"resourceType": "rare_earth",
+		"capacity": 600
+	},
+	{
+		"regionId": 614,
+		"resourceType": "silicon",
+		"capacity": 15200
+	},
+	{
 		"regionId": 615,
 		"resourceType": "coal",
 		"capacity": 22100
+	},
+	{
+		"regionId": 615,
+		"resourceType": "silicon",
+		"capacity": 5700
+	},
+	{
+		"regionId": 616,
+		"resourceType": "rare_earth",
+		"capacity": 900
 	},
 	{
 		"regionId": 617,
@@ -4855,6 +6640,11 @@
 		"capacity": 3700
 	},
 	{
+		"regionId": 620,
+		"resourceType": "silicon",
+		"capacity": 8900
+	},
+	{
 		"regionId": 621,
 		"resourceType": "copper",
 		"capacity": 1600
@@ -4863,6 +6653,11 @@
 		"regionId": 621,
 		"resourceType": "coal",
 		"capacity": 11000
+	},
+	{
+		"regionId": 621,
+		"resourceType": "rare_earth",
+		"capacity": 8400
 	},
 	{
 		"regionId": 622,
@@ -4875,9 +6670,24 @@
 		"capacity": 9900
 	},
 	{
+		"regionId": 622,
+		"resourceType": "oil",
+		"capacity": 3700
+	},
+	{
+		"regionId": 622,
+		"resourceType": "silicon",
+		"capacity": 14300
+	},
+	{
 		"regionId": 623,
 		"resourceType": "iron",
 		"capacity": 8700
+	},
+	{
+		"regionId": 623,
+		"resourceType": "gas",
+		"capacity": 6300
 	},
 	{
 		"regionId": 624,
@@ -4895,9 +6705,19 @@
 		"capacity": 3600
 	},
 	{
+		"regionId": 626,
+		"resourceType": "gas",
+		"capacity": 20100
+	},
+	{
 		"regionId": 627,
 		"resourceType": "iron",
 		"capacity": 3600
+	},
+	{
+		"regionId": 627,
+		"resourceType": "oil",
+		"capacity": 17900
 	},
 	{
 		"regionId": 628,
@@ -4920,6 +6740,26 @@
 		"capacity": 1500
 	},
 	{
+		"regionId": 629,
+		"resourceType": "oil",
+		"capacity": 21200
+	},
+	{
+		"regionId": 629,
+		"resourceType": "gas",
+		"capacity": 2200
+	},
+	{
+		"regionId": 629,
+		"resourceType": "uranium",
+		"capacity": 900
+	},
+	{
+		"regionId": 630,
+		"resourceType": "gas",
+		"capacity": 18800
+	},
+	{
 		"regionId": 631,
 		"resourceType": "iron",
 		"capacity": 2400
@@ -4940,6 +6780,11 @@
 		"capacity": 4700
 	},
 	{
+		"regionId": 633,
+		"resourceType": "silicon",
+		"capacity": 7700
+	},
+	{
 		"regionId": 634,
 		"resourceType": "iron",
 		"capacity": 2400
@@ -4958,6 +6803,11 @@
 		"regionId": 634,
 		"resourceType": "wood",
 		"capacity": 3500
+	},
+	{
+		"regionId": 634,
+		"resourceType": "gas",
+		"capacity": 3900
 	},
 	{
 		"regionId": 635,
@@ -4985,6 +6835,11 @@
 		"capacity": 4700
 	},
 	{
+		"regionId": 639,
+		"resourceType": "oil",
+		"capacity": 3600
+	},
+	{
 		"regionId": 641,
 		"resourceType": "wood",
 		"capacity": 3600
@@ -4998,6 +6853,11 @@
 		"regionId": 642,
 		"resourceType": "wood",
 		"capacity": 20300
+	},
+	{
+		"regionId": 642,
+		"resourceType": "gas",
+		"capacity": 2500
 	},
 	{
 		"regionId": 643,
@@ -5080,6 +6940,11 @@
 		"capacity": 14600
 	},
 	{
+		"regionId": 651,
+		"resourceType": "oil",
+		"capacity": 8700
+	},
+	{
 		"regionId": 652,
 		"resourceType": "copper",
 		"capacity": 5400
@@ -5093,6 +6958,16 @@
 		"regionId": 652,
 		"resourceType": "wood",
 		"capacity": 17000
+	},
+	{
+		"regionId": 652,
+		"resourceType": "oil",
+		"capacity": 15600
+	},
+	{
+		"regionId": 652,
+		"resourceType": "silicon",
+		"capacity": 5100
 	},
 	{
 		"regionId": 653,
@@ -5110,9 +6985,39 @@
 		"capacity": 11500
 	},
 	{
+		"regionId": 653,
+		"resourceType": "oil",
+		"capacity": 56400
+	},
+	{
+		"regionId": 653,
+		"resourceType": "gas",
+		"capacity": 5500
+	},
+	{
+		"regionId": 653,
+		"resourceType": "rare_earth",
+		"capacity": 3100
+	},
+	{
 		"regionId": 654,
 		"resourceType": "wood",
 		"capacity": 19500
+	},
+	{
+		"regionId": 654,
+		"resourceType": "gas",
+		"capacity": 6600
+	},
+	{
+		"regionId": 656,
+		"resourceType": "oil",
+		"capacity": 64800
+	},
+	{
+		"regionId": 656,
+		"resourceType": "gas",
+		"capacity": 7600
 	},
 	{
 		"regionId": 657,
@@ -5125,6 +7030,16 @@
 		"capacity": 3100
 	},
 	{
+		"regionId": 658,
+		"resourceType": "oil",
+		"capacity": 16200
+	},
+	{
+		"regionId": 658,
+		"resourceType": "gas",
+		"capacity": 9700
+	},
+	{
 		"regionId": 660,
 		"resourceType": "wood",
 		"capacity": 3500
@@ -5133,6 +7048,16 @@
 		"regionId": 661,
 		"resourceType": "coal",
 		"capacity": 2000
+	},
+	{
+		"regionId": 661,
+		"resourceType": "silicon",
+		"capacity": 5200
+	},
+	{
+		"regionId": 662,
+		"resourceType": "oil",
+		"capacity": 14700
 	},
 	{
 		"regionId": 663,
@@ -5155,6 +7080,11 @@
 		"capacity": 12300
 	},
 	{
+		"regionId": 666,
+		"resourceType": "silicon",
+		"capacity": 3400
+	},
+	{
 		"regionId": 667,
 		"resourceType": "coal",
 		"capacity": 12800
@@ -5163,6 +7093,11 @@
 		"regionId": 667,
 		"resourceType": "wood",
 		"capacity": 5500
+	},
+	{
+		"regionId": 667,
+		"resourceType": "oil",
+		"capacity": 11900
 	},
 	{
 		"regionId": 668,
@@ -5190,6 +7125,11 @@
 		"capacity": 2300
 	},
 	{
+		"regionId": 671,
+		"resourceType": "uranium",
+		"capacity": 3300
+	},
+	{
 		"regionId": 672,
 		"resourceType": "wood",
 		"capacity": 3000
@@ -5205,9 +7145,24 @@
 		"capacity": 4800
 	},
 	{
+		"regionId": 674,
+		"resourceType": "uranium",
+		"capacity": 3700
+	},
+	{
+		"regionId": 674,
+		"resourceType": "rare_earth",
+		"capacity": 600
+	},
+	{
 		"regionId": 676,
 		"resourceType": "coal",
 		"capacity": 2200
+	},
+	{
+		"regionId": 676,
+		"resourceType": "oil",
+		"capacity": 6500
 	},
 	{
 		"regionId": 677,
@@ -5218,6 +7173,16 @@
 		"regionId": 677,
 		"resourceType": "wood",
 		"capacity": 9400
+	},
+	{
+		"regionId": 678,
+		"resourceType": "uranium",
+		"capacity": 1100
+	},
+	{
+		"regionId": 678,
+		"resourceType": "silicon",
+		"capacity": 2500
 	},
 	{
 		"regionId": 679,
@@ -5233,6 +7198,11 @@
 		"regionId": 680,
 		"resourceType": "wood",
 		"capacity": 15600
+	},
+	{
+		"regionId": 680,
+		"resourceType": "rare_earth",
+		"capacity": 600
 	},
 	{
 		"regionId": 681,
@@ -5295,6 +7265,11 @@
 		"capacity": 24000
 	},
 	{
+		"regionId": 688,
+		"resourceType": "rare_earth",
+		"capacity": 1200
+	},
+	{
 		"regionId": 689,
 		"resourceType": "coal",
 		"capacity": 2800
@@ -5305,6 +7280,11 @@
 		"capacity": 2100
 	},
 	{
+		"regionId": 690,
+		"resourceType": "gas",
+		"capacity": 7600
+	},
+	{
 		"regionId": 691,
 		"resourceType": "coal",
 		"capacity": 15400
@@ -5313,6 +7293,16 @@
 		"regionId": 691,
 		"resourceType": "wood",
 		"capacity": 4600
+	},
+	{
+		"regionId": 691,
+		"resourceType": "gas",
+		"capacity": 2300
+	},
+	{
+		"regionId": 691,
+		"resourceType": "rare_earth",
+		"capacity": 1100
 	},
 	{
 		"regionId": 693,
@@ -5335,6 +7325,11 @@
 		"capacity": 16300
 	},
 	{
+		"regionId": 694,
+		"resourceType": "gas",
+		"capacity": 17500
+	},
+	{
 		"regionId": 696,
 		"resourceType": "copper",
 		"capacity": 9000
@@ -5348,6 +7343,11 @@
 		"regionId": 697,
 		"resourceType": "copper",
 		"capacity": 5700
+	},
+	{
+		"regionId": 697,
+		"resourceType": "rare_earth",
+		"capacity": 3700
 	},
 	{
 		"regionId": 699,
@@ -5380,6 +7380,11 @@
 		"capacity": 16600
 	},
 	{
+		"regionId": 701,
+		"resourceType": "oil",
+		"capacity": 10700
+	},
+	{
 		"regionId": 702,
 		"resourceType": "wood",
 		"capacity": 11600
@@ -5400,6 +7405,16 @@
 		"capacity": 12400
 	},
 	{
+		"regionId": 705,
+		"resourceType": "oil",
+		"capacity": 13700
+	},
+	{
+		"regionId": 705,
+		"resourceType": "uranium",
+		"capacity": 1000
+	},
+	{
 		"regionId": 706,
 		"resourceType": "coal",
 		"capacity": 15000
@@ -5408,6 +7423,11 @@
 		"regionId": 706,
 		"resourceType": "wood",
 		"capacity": 23100
+	},
+	{
+		"regionId": 707,
+		"resourceType": "silicon",
+		"capacity": 8800
 	},
 	{
 		"regionId": 709,
@@ -5425,14 +7445,34 @@
 		"capacity": 15600
 	},
 	{
+		"regionId": 709,
+		"resourceType": "gas",
+		"capacity": 3000
+	},
+	{
 		"regionId": 710,
 		"resourceType": "wood",
 		"capacity": 8500
 	},
 	{
+		"regionId": 710,
+		"resourceType": "gas",
+		"capacity": 5400
+	},
+	{
 		"regionId": 711,
 		"resourceType": "wood",
 		"capacity": 3400
+	},
+	{
+		"regionId": 712,
+		"resourceType": "silicon",
+		"capacity": 2100
+	},
+	{
+		"regionId": 713,
+		"resourceType": "rare_earth",
+		"capacity": 1500
 	},
 	{
 		"regionId": 714,
@@ -5443,6 +7483,11 @@
 		"regionId": 714,
 		"resourceType": "wood",
 		"capacity": 22800
+	},
+	{
+		"regionId": 714,
+		"resourceType": "gas",
+		"capacity": 19100
 	},
 	{
 		"regionId": 715,
@@ -5465,6 +7510,11 @@
 		"capacity": 4100
 	},
 	{
+		"regionId": 715,
+		"resourceType": "gas",
+		"capacity": 13500
+	},
+	{
 		"regionId": 716,
 		"resourceType": "iron",
 		"capacity": 4100
@@ -5480,9 +7530,19 @@
 		"capacity": 14400
 	},
 	{
+		"regionId": 716,
+		"resourceType": "gas",
+		"capacity": 13000
+	},
+	{
 		"regionId": 717,
 		"resourceType": "wood",
 		"capacity": 22000
+	},
+	{
+		"regionId": 717,
+		"resourceType": "oil",
+		"capacity": 23100
 	},
 	{
 		"regionId": 718,
@@ -5498,6 +7558,16 @@
 		"regionId": 718,
 		"resourceType": "wood",
 		"capacity": 3500
+	},
+	{
+		"regionId": 718,
+		"resourceType": "rare_earth",
+		"capacity": 800
+	},
+	{
+		"regionId": 719,
+		"resourceType": "silicon",
+		"capacity": 2900
 	},
 	{
 		"regionId": 720,
@@ -5550,14 +7620,49 @@
 		"capacity": 8500
 	},
 	{
+		"regionId": 725,
+		"resourceType": "oil",
+		"capacity": 7400
+	},
+	{
 		"regionId": 726,
 		"resourceType": "wood",
 		"capacity": 7300
 	},
 	{
+		"regionId": 726,
+		"resourceType": "silicon",
+		"capacity": 7900
+	},
+	{
+		"regionId": 727,
+		"resourceType": "oil",
+		"capacity": 8800
+	},
+	{
+		"regionId": 727,
+		"resourceType": "uranium",
+		"capacity": 4900
+	},
+	{
+		"regionId": 728,
+		"resourceType": "oil",
+		"capacity": 6900
+	},
+	{
+		"regionId": 728,
+		"resourceType": "silicon",
+		"capacity": 4100
+	},
+	{
 		"regionId": 729,
 		"resourceType": "coal",
 		"capacity": 3500
+	},
+	{
+		"regionId": 729,
+		"resourceType": "uranium",
+		"capacity": 1000
 	},
 	{
 		"regionId": 730,
@@ -5573,6 +7678,11 @@
 		"regionId": 731,
 		"resourceType": "wood",
 		"capacity": 18100
+	},
+	{
+		"regionId": 731,
+		"resourceType": "oil",
+		"capacity": 3400
 	},
 	{
 		"regionId": 733,
@@ -5610,6 +7720,11 @@
 		"capacity": 2400
 	},
 	{
+		"regionId": 737,
+		"resourceType": "gas",
+		"capacity": 2600
+	},
+	{
 		"regionId": 738,
 		"resourceType": "wood",
 		"capacity": 8200
@@ -5628,6 +7743,11 @@
 		"regionId": 740,
 		"resourceType": "wood",
 		"capacity": 6700
+	},
+	{
+		"regionId": 740,
+		"resourceType": "silicon",
+		"capacity": 7600
 	},
 	{
 		"regionId": 741,
@@ -5650,6 +7770,11 @@
 		"capacity": 5600
 	},
 	{
+		"regionId": 743,
+		"resourceType": "gas",
+		"capacity": 20600
+	},
+	{
 		"regionId": 744,
 		"resourceType": "iron",
 		"capacity": 2300
@@ -5670,9 +7795,29 @@
 		"capacity": 22400
 	},
 	{
+		"regionId": 745,
+		"resourceType": "oil",
+		"capacity": 11800
+	},
+	{
 		"regionId": 746,
 		"resourceType": "coal",
 		"capacity": 33000
+	},
+	{
+		"regionId": 746,
+		"resourceType": "uranium",
+		"capacity": 5100
+	},
+	{
+		"regionId": 746,
+		"resourceType": "rare_earth",
+		"capacity": 7900
+	},
+	{
+		"regionId": 747,
+		"resourceType": "silicon",
+		"capacity": 2400
 	},
 	{
 		"regionId": 748,
@@ -5685,6 +7830,11 @@
 		"capacity": 2000
 	},
 	{
+		"regionId": 748,
+		"resourceType": "oil",
+		"capacity": 29800
+	},
+	{
 		"regionId": 749,
 		"resourceType": "iron",
 		"capacity": 3700
@@ -5693,6 +7843,11 @@
 		"regionId": 749,
 		"resourceType": "wood",
 		"capacity": 5200
+	},
+	{
+		"regionId": 749,
+		"resourceType": "silicon",
+		"capacity": 12800
 	},
 	{
 		"regionId": 750,
@@ -5750,6 +7905,11 @@
 		"capacity": 3100
 	},
 	{
+		"regionId": 757,
+		"resourceType": "silicon",
+		"capacity": 2000
+	},
+	{
 		"regionId": 758,
 		"resourceType": "coal",
 		"capacity": 3900
@@ -5785,9 +7945,24 @@
 		"capacity": 10100
 	},
 	{
+		"regionId": 762,
+		"resourceType": "oil",
+		"capacity": 12900
+	},
+	{
+		"regionId": 762,
+		"resourceType": "silicon",
+		"capacity": 3300
+	},
+	{
 		"regionId": 764,
 		"resourceType": "wood",
 		"capacity": 3100
+	},
+	{
+		"regionId": 764,
+		"resourceType": "oil",
+		"capacity": 61000
 	},
 	{
 		"regionId": 765,
@@ -5800,9 +7975,19 @@
 		"capacity": 24600
 	},
 	{
+		"regionId": 766,
+		"resourceType": "oil",
+		"capacity": 13600
+	},
+	{
 		"regionId": 767,
 		"resourceType": "iron",
 		"capacity": 12900
+	},
+	{
+		"regionId": 767,
+		"resourceType": "silicon",
+		"capacity": 14200
 	},
 	{
 		"regionId": 768,
@@ -5830,6 +8015,11 @@
 		"capacity": 6800
 	},
 	{
+		"regionId": 770,
+		"resourceType": "uranium",
+		"capacity": 800
+	},
+	{
 		"regionId": 771,
 		"resourceType": "iron",
 		"capacity": 15800
@@ -5848,6 +8038,11 @@
 		"regionId": 773,
 		"resourceType": "copper",
 		"capacity": 2000
+	},
+	{
+		"regionId": 773,
+		"resourceType": "oil",
+		"capacity": 27600
 	},
 	{
 		"regionId": 774,
@@ -5870,6 +8065,11 @@
 		"capacity": 11100
 	},
 	{
+		"regionId": 776,
+		"resourceType": "silicon",
+		"capacity": 3700
+	},
+	{
 		"regionId": 777,
 		"resourceType": "copper",
 		"capacity": 3600
@@ -5880,6 +8080,16 @@
 		"capacity": 15300
 	},
 	{
+		"regionId": 777,
+		"resourceType": "oil",
+		"capacity": 34700
+	},
+	{
+		"regionId": 778,
+		"resourceType": "rare_earth",
+		"capacity": 900
+	},
+	{
 		"regionId": 779,
 		"resourceType": "iron",
 		"capacity": 11500
@@ -5888,6 +8098,16 @@
 		"regionId": 779,
 		"resourceType": "coal",
 		"capacity": 23100
+	},
+	{
+		"regionId": 779,
+		"resourceType": "gas",
+		"capacity": 16200
+	},
+	{
+		"regionId": 779,
+		"resourceType": "silicon",
+		"capacity": 9200
 	},
 	{
 		"regionId": 780,
@@ -5903,6 +8123,16 @@
 		"regionId": 781,
 		"resourceType": "wood",
 		"capacity": 13900
+	},
+	{
+		"regionId": 781,
+		"resourceType": "oil",
+		"capacity": 3600
+	},
+	{
+		"regionId": 781,
+		"resourceType": "gas",
+		"capacity": 3100
 	},
 	{
 		"regionId": 782,
@@ -5925,6 +8155,11 @@
 		"capacity": 2000
 	},
 	{
+		"regionId": 783,
+		"resourceType": "rare_earth",
+		"capacity": 2300
+	},
+	{
 		"regionId": 784,
 		"resourceType": "coal",
 		"capacity": 17500
@@ -5935,9 +8170,19 @@
 		"capacity": 8100
 	},
 	{
+		"regionId": 785,
+		"resourceType": "silicon",
+		"capacity": 5800
+	},
+	{
 		"regionId": 786,
 		"resourceType": "coal",
 		"capacity": 10200
+	},
+	{
+		"regionId": 786,
+		"resourceType": "rare_earth",
+		"capacity": 1200
 	},
 	{
 		"regionId": 787,
@@ -5955,9 +8200,24 @@
 		"capacity": 11400
 	},
 	{
+		"regionId": 787,
+		"resourceType": "rare_earth",
+		"capacity": 500
+	},
+	{
 		"regionId": 788,
 		"resourceType": "wood",
 		"capacity": 21900
+	},
+	{
+		"regionId": 788,
+		"resourceType": "oil",
+		"capacity": 20900
+	},
+	{
+		"regionId": 789,
+		"resourceType": "oil",
+		"capacity": 8600
 	},
 	{
 		"regionId": 790,
@@ -5968,6 +8228,16 @@
 		"regionId": 791,
 		"resourceType": "iron",
 		"capacity": 14300
+	},
+	{
+		"regionId": 791,
+		"resourceType": "oil",
+		"capacity": 3500
+	},
+	{
+		"regionId": 791,
+		"resourceType": "silicon",
+		"capacity": 8000
 	},
 	{
 		"regionId": 792,
@@ -5985,9 +8255,24 @@
 		"capacity": 3000
 	},
 	{
+		"regionId": 793,
+		"resourceType": "gas",
+		"capacity": 48200
+	},
+	{
+		"regionId": 795,
+		"resourceType": "uranium",
+		"capacity": 1500
+	},
+	{
 		"regionId": 796,
 		"resourceType": "iron",
 		"capacity": 7400
+	},
+	{
+		"regionId": 796,
+		"resourceType": "rare_earth",
+		"capacity": 3300
 	},
 	{
 		"regionId": 797,
@@ -6000,6 +8285,16 @@
 		"capacity": 3100
 	},
 	{
+		"regionId": 797,
+		"resourceType": "uranium",
+		"capacity": 2500
+	},
+	{
+		"regionId": 798,
+		"resourceType": "rare_earth",
+		"capacity": 500
+	},
+	{
 		"regionId": 799,
 		"resourceType": "copper",
 		"capacity": 3000
@@ -6010,9 +8305,19 @@
 		"capacity": 3800
 	},
 	{
+		"regionId": 799,
+		"resourceType": "gas",
+		"capacity": 18100
+	},
+	{
 		"regionId": 801,
 		"resourceType": "wood",
 		"capacity": 3100
+	},
+	{
+		"regionId": 801,
+		"resourceType": "oil",
+		"capacity": 28900
 	},
 	{
 		"regionId": 802,
@@ -6035,9 +8340,24 @@
 		"capacity": 3900
 	},
 	{
+		"regionId": 803,
+		"resourceType": "gas",
+		"capacity": 45600
+	},
+	{
+		"regionId": 803,
+		"resourceType": "silicon",
+		"capacity": 2900
+	},
+	{
 		"regionId": 804,
 		"resourceType": "iron",
 		"capacity": 2400
+	},
+	{
+		"regionId": 804,
+		"resourceType": "gas",
+		"capacity": 23400
 	},
 	{
 		"regionId": 805,
@@ -6050,6 +8370,16 @@
 		"capacity": 5000
 	},
 	{
+		"regionId": 806,
+		"resourceType": "gas",
+		"capacity": 36900
+	},
+	{
+		"regionId": 807,
+		"resourceType": "rare_earth",
+		"capacity": 2600
+	},
+	{
 		"regionId": 808,
 		"resourceType": "copper",
 		"capacity": 2700
@@ -6060,9 +8390,24 @@
 		"capacity": 23700
 	},
 	{
+		"regionId": 808,
+		"resourceType": "gas",
+		"capacity": 24100
+	},
+	{
 		"regionId": 809,
 		"resourceType": "wood",
 		"capacity": 8900
+	},
+	{
+		"regionId": 809,
+		"resourceType": "oil",
+		"capacity": 10000
+	},
+	{
+		"regionId": 809,
+		"resourceType": "gas",
+		"capacity": 45500
 	},
 	{
 		"regionId": 810,
@@ -6075,14 +8420,54 @@
 		"capacity": 17400
 	},
 	{
+		"regionId": 810,
+		"resourceType": "gas",
+		"capacity": 8100
+	},
+	{
 		"regionId": 811,
 		"resourceType": "coal",
 		"capacity": 3000
 	},
 	{
+		"regionId": 811,
+		"resourceType": "oil",
+		"capacity": 7200
+	},
+	{
+		"regionId": 811,
+		"resourceType": "gas",
+		"capacity": 25100
+	},
+	{
+		"regionId": 811,
+		"resourceType": "silicon",
+		"capacity": 1600
+	},
+	{
+		"regionId": 812,
+		"resourceType": "oil",
+		"capacity": 42000
+	},
+	{
+		"regionId": 812,
+		"resourceType": "gas",
+		"capacity": 8600
+	},
+	{
+		"regionId": 812,
+		"resourceType": "rare_earth",
+		"capacity": 1700
+	},
+	{
 		"regionId": 813,
 		"resourceType": "copper",
 		"capacity": 12400
+	},
+	{
+		"regionId": 813,
+		"resourceType": "silicon",
+		"capacity": 6500
 	},
 	{
 		"regionId": 815,
@@ -6125,9 +8510,24 @@
 		"capacity": 3000
 	},
 	{
+		"regionId": 820,
+		"resourceType": "oil",
+		"capacity": 9100
+	},
+	{
+		"regionId": 820,
+		"resourceType": "gas",
+		"capacity": 10600
+	},
+	{
 		"regionId": 821,
 		"resourceType": "copper",
 		"capacity": 7600
+	},
+	{
+		"regionId": 821,
+		"resourceType": "silicon",
+		"capacity": 1700
 	},
 	{
 		"regionId": 822,
@@ -6165,9 +8565,19 @@
 		"capacity": 4100
 	},
 	{
+		"regionId": 827,
+		"resourceType": "rare_earth",
+		"capacity": 2600
+	},
+	{
 		"regionId": 828,
 		"resourceType": "wood",
 		"capacity": 19800
+	},
+	{
+		"regionId": 828,
+		"resourceType": "silicon",
+		"capacity": 16200
 	},
 	{
 		"regionId": 829,
@@ -6178,6 +8588,11 @@
 		"regionId": 829,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 829,
+		"resourceType": "oil",
+		"capacity": 15700
 	},
 	{
 		"regionId": 830,
@@ -6215,6 +8630,11 @@
 		"capacity": 4400
 	},
 	{
+		"regionId": 834,
+		"resourceType": "uranium",
+		"capacity": 4900
+	},
+	{
 		"regionId": 835,
 		"resourceType": "wood",
 		"capacity": 7100
@@ -6230,6 +8650,11 @@
 		"capacity": 11100
 	},
 	{
+		"regionId": 836,
+		"resourceType": "gas",
+		"capacity": 15300
+	},
+	{
 		"regionId": 837,
 		"resourceType": "coal",
 		"capacity": 6600
@@ -6243,6 +8668,11 @@
 		"regionId": 838,
 		"resourceType": "wood",
 		"capacity": 4200
+	},
+	{
+		"regionId": 838,
+		"resourceType": "uranium",
+		"capacity": 2600
 	},
 	{
 		"regionId": 839,
@@ -6263,6 +8693,11 @@
 		"regionId": 839,
 		"resourceType": "wood",
 		"capacity": 5000
+	},
+	{
+		"regionId": 839,
+		"resourceType": "gas",
+		"capacity": 6400
 	},
 	{
 		"regionId": 840,
@@ -6290,6 +8725,11 @@
 		"capacity": 11100
 	},
 	{
+		"regionId": 842,
+		"resourceType": "silicon",
+		"capacity": 4500
+	},
+	{
 		"regionId": 843,
 		"resourceType": "coal",
 		"capacity": 18400
@@ -6298,6 +8738,11 @@
 		"regionId": 843,
 		"resourceType": "wood",
 		"capacity": 3700
+	},
+	{
+		"regionId": 843,
+		"resourceType": "silicon",
+		"capacity": 16100
 	},
 	{
 		"regionId": 844,
@@ -6320,6 +8765,11 @@
 		"capacity": 4200
 	},
 	{
+		"regionId": 846,
+		"resourceType": "silicon",
+		"capacity": 3500
+	},
+	{
 		"regionId": 847,
 		"resourceType": "copper",
 		"capacity": 4500
@@ -6328,6 +8778,21 @@
 		"regionId": 847,
 		"resourceType": "wood",
 		"capacity": 5300
+	},
+	{
+		"regionId": 847,
+		"resourceType": "oil",
+		"capacity": 37300
+	},
+	{
+		"regionId": 847,
+		"resourceType": "gas",
+		"capacity": 40500
+	},
+	{
+		"regionId": 847,
+		"resourceType": "rare_earth",
+		"capacity": 1200
 	},
 	{
 		"regionId": 848,
@@ -6348,6 +8813,26 @@
 		"regionId": 849,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 849,
+		"resourceType": "uranium",
+		"capacity": 1200
+	},
+	{
+		"regionId": 849,
+		"resourceType": "silicon",
+		"capacity": 9300
+	},
+	{
+		"regionId": 850,
+		"resourceType": "gas",
+		"capacity": 4600
+	},
+	{
+		"regionId": 850,
+		"resourceType": "silicon",
+		"capacity": 3300
 	},
 	{
 		"regionId": 851,
@@ -6373,6 +8858,11 @@
 		"regionId": 852,
 		"resourceType": "wood",
 		"capacity": 17600
+	},
+	{
+		"regionId": 852,
+		"resourceType": "silicon",
+		"capacity": 10400
 	},
 	{
 		"regionId": 853,
@@ -6420,9 +8910,29 @@
 		"capacity": 5100
 	},
 	{
+		"regionId": 857,
+		"resourceType": "oil",
+		"capacity": 11300
+	},
+	{
 		"regionId": 858,
 		"resourceType": "wood",
 		"capacity": 7400
+	},
+	{
+		"regionId": 858,
+		"resourceType": "uranium",
+		"capacity": 4900
+	},
+	{
+		"regionId": 858,
+		"resourceType": "silicon",
+		"capacity": 6800
+	},
+	{
+		"regionId": 859,
+		"resourceType": "rare_earth",
+		"capacity": 1500
 	},
 	{
 		"regionId": 860,
@@ -6460,14 +8970,29 @@
 		"capacity": 5400
 	},
 	{
+		"regionId": 862,
+		"resourceType": "gas",
+		"capacity": 20600
+	},
+	{
 		"regionId": 863,
 		"resourceType": "wood",
 		"capacity": 18800
 	},
 	{
+		"regionId": 863,
+		"resourceType": "silicon",
+		"capacity": 5300
+	},
+	{
 		"regionId": 864,
 		"resourceType": "wood",
 		"capacity": 7100
+	},
+	{
+		"regionId": 864,
+		"resourceType": "oil",
+		"capacity": 4200
 	},
 	{
 		"regionId": 865,
@@ -6515,6 +9040,11 @@
 		"capacity": 24700
 	},
 	{
+		"regionId": 869,
+		"resourceType": "gas",
+		"capacity": 13600
+	},
+	{
 		"regionId": 870,
 		"resourceType": "wood",
 		"capacity": 17100
@@ -6530,6 +9060,11 @@
 		"capacity": 3200
 	},
 	{
+		"regionId": 871,
+		"resourceType": "oil",
+		"capacity": 29200
+	},
+	{
 		"regionId": 872,
 		"resourceType": "wood",
 		"capacity": 13700
@@ -6538,6 +9073,16 @@
 		"regionId": 873,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 873,
+		"resourceType": "oil",
+		"capacity": 4500
+	},
+	{
+		"regionId": 873,
+		"resourceType": "uranium",
+		"capacity": 2500
 	},
 	{
 		"regionId": 874,
@@ -6570,9 +9115,24 @@
 		"capacity": 3500
 	},
 	{
+		"regionId": 876,
+		"resourceType": "oil",
+		"capacity": 6200
+	},
+	{
+		"regionId": 876,
+		"resourceType": "silicon",
+		"capacity": 3600
+	},
+	{
 		"regionId": 878,
 		"resourceType": "wood",
 		"capacity": 4100
+	},
+	{
+		"regionId": 878,
+		"resourceType": "gas",
+		"capacity": 2600
 	},
 	{
 		"regionId": 879,
@@ -6583,6 +9143,11 @@
 		"regionId": 879,
 		"resourceType": "wood",
 		"capacity": 5000
+	},
+	{
+		"regionId": 879,
+		"resourceType": "rare_earth",
+		"capacity": 3400
 	},
 	{
 		"regionId": 880,
@@ -6600,9 +9165,29 @@
 		"capacity": 10200
 	},
 	{
+		"regionId": 881,
+		"resourceType": "silicon",
+		"capacity": 18100
+	},
+	{
 		"regionId": 882,
 		"resourceType": "wood",
 		"capacity": 7300
+	},
+	{
+		"regionId": 882,
+		"resourceType": "oil",
+		"capacity": 8100
+	},
+	{
+		"regionId": 882,
+		"resourceType": "gas",
+		"capacity": 19200
+	},
+	{
+		"regionId": 882,
+		"resourceType": "silicon",
+		"capacity": 1500
 	},
 	{
 		"regionId": 883,
@@ -6615,9 +9200,19 @@
 		"capacity": 10100
 	},
 	{
+		"regionId": 883,
+		"resourceType": "silicon",
+		"capacity": 1600
+	},
+	{
 		"regionId": 884,
 		"resourceType": "wood",
 		"capacity": 6400
+	},
+	{
+		"regionId": 884,
+		"resourceType": "silicon",
+		"capacity": 6300
 	},
 	{
 		"regionId": 885,
@@ -6640,6 +9235,21 @@
 		"capacity": 7100
 	},
 	{
+		"regionId": 887,
+		"resourceType": "oil",
+		"capacity": 6400
+	},
+	{
+		"regionId": 887,
+		"resourceType": "silicon",
+		"capacity": 2500
+	},
+	{
+		"regionId": 888,
+		"resourceType": "rare_earth",
+		"capacity": 2200
+	},
+	{
 		"regionId": 889,
 		"resourceType": "copper",
 		"capacity": 1800
@@ -6648,6 +9258,16 @@
 		"regionId": 889,
 		"resourceType": "wood",
 		"capacity": 3300
+	},
+	{
+		"regionId": 889,
+		"resourceType": "oil",
+		"capacity": 9000
+	},
+	{
+		"regionId": 889,
+		"resourceType": "gas",
+		"capacity": 17000
 	},
 	{
 		"regionId": 890,
@@ -6660,9 +9280,24 @@
 		"capacity": 3000
 	},
 	{
+		"regionId": 892,
+		"resourceType": "oil",
+		"capacity": 24600
+	},
+	{
+		"regionId": 892,
+		"resourceType": "gas",
+		"capacity": 28700
+	},
+	{
 		"regionId": 894,
 		"resourceType": "copper",
 		"capacity": 3000
+	},
+	{
+		"regionId": 894,
+		"resourceType": "rare_earth",
+		"capacity": 600
 	},
 	{
 		"regionId": 895,
@@ -6673,6 +9308,11 @@
 		"regionId": 895,
 		"resourceType": "wood",
 		"capacity": 18600
+	},
+	{
+		"regionId": 895,
+		"resourceType": "silicon",
+		"capacity": 5000
 	},
 	{
 		"regionId": 896,
@@ -6700,6 +9340,11 @@
 		"capacity": 9000
 	},
 	{
+		"regionId": 898,
+		"resourceType": "gas",
+		"capacity": 6600
+	},
+	{
 		"regionId": 899,
 		"resourceType": "iron",
 		"capacity": 2000
@@ -6710,9 +9355,19 @@
 		"capacity": 18900
 	},
 	{
+		"regionId": 901,
+		"resourceType": "uranium",
+		"capacity": 1800
+	},
+	{
 		"regionId": 902,
 		"resourceType": "iron",
 		"capacity": 2600
+	},
+	{
+		"regionId": 903,
+		"resourceType": "uranium",
+		"capacity": 7900
 	},
 	{
 		"regionId": 904,
@@ -6738,6 +9393,11 @@
 		"regionId": 905,
 		"resourceType": "wood",
 		"capacity": 7700
+	},
+	{
+		"regionId": 906,
+		"resourceType": "silicon",
+		"capacity": 1800
 	},
 	{
 		"regionId": 907,
@@ -6768,6 +9428,16 @@
 		"regionId": 911,
 		"resourceType": "wood",
 		"capacity": 7500
+	},
+	{
+		"regionId": 911,
+		"resourceType": "oil",
+		"capacity": 3300
+	},
+	{
+		"regionId": 911,
+		"resourceType": "gas",
+		"capacity": 18400
 	},
 	{
 		"regionId": 912,
@@ -6805,6 +9475,11 @@
 		"capacity": 15100
 	},
 	{
+		"regionId": 915,
+		"resourceType": "silicon",
+		"capacity": 6000
+	},
+	{
 		"regionId": 916,
 		"resourceType": "wood",
 		"capacity": 16300
@@ -6823,6 +9498,11 @@
 		"regionId": 917,
 		"resourceType": "coal",
 		"capacity": 7400
+	},
+	{
+		"regionId": 917,
+		"resourceType": "oil",
+		"capacity": 3200
 	},
 	{
 		"regionId": 918,
@@ -6855,6 +9535,11 @@
 		"capacity": 8400
 	},
 	{
+		"regionId": 921,
+		"resourceType": "oil",
+		"capacity": 20600
+	},
+	{
 		"regionId": 923,
 		"resourceType": "wood",
 		"capacity": 3600
@@ -6865,9 +9550,24 @@
 		"capacity": 13600
 	},
 	{
+		"regionId": 925,
+		"resourceType": "gas",
+		"capacity": 3600
+	},
+	{
 		"regionId": 926,
 		"resourceType": "coal",
 		"capacity": 13400
+	},
+	{
+		"regionId": 926,
+		"resourceType": "oil",
+		"capacity": 20700
+	},
+	{
+		"regionId": 926,
+		"resourceType": "gas",
+		"capacity": 12000
 	},
 	{
 		"regionId": 927,
@@ -6880,6 +9580,16 @@
 		"capacity": 16500
 	},
 	{
+		"regionId": 927,
+		"resourceType": "oil",
+		"capacity": 6800
+	},
+	{
+		"regionId": 927,
+		"resourceType": "gas",
+		"capacity": 21500
+	},
+	{
 		"regionId": 928,
 		"resourceType": "copper",
 		"capacity": 2800
@@ -6890,9 +9600,19 @@
 		"capacity": 5700
 	},
 	{
+		"regionId": 930,
+		"resourceType": "silicon",
+		"capacity": 1600
+	},
+	{
 		"regionId": 931,
 		"resourceType": "coal",
 		"capacity": 18700
+	},
+	{
+		"regionId": 931,
+		"resourceType": "gas",
+		"capacity": 14300
 	},
 	{
 		"regionId": 932,
@@ -6908,6 +9628,11 @@
 		"regionId": 932,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 932,
+		"resourceType": "rare_earth",
+		"capacity": 700
 	},
 	{
 		"regionId": 933,
@@ -6940,6 +9665,11 @@
 		"capacity": 6500
 	},
 	{
+		"regionId": 935,
+		"resourceType": "rare_earth",
+		"capacity": 1500
+	},
+	{
 		"regionId": 936,
 		"resourceType": "copper",
 		"capacity": 2300
@@ -6953,6 +9683,11 @@
 		"regionId": 936,
 		"resourceType": "wood",
 		"capacity": 13400
+	},
+	{
+		"regionId": 936,
+		"resourceType": "uranium",
+		"capacity": 1100
 	},
 	{
 		"regionId": 937,
@@ -6970,6 +9705,11 @@
 		"capacity": 7800
 	},
 	{
+		"regionId": 937,
+		"resourceType": "uranium",
+		"capacity": 5400
+	},
+	{
 		"regionId": 938,
 		"resourceType": "coal",
 		"capacity": 5500
@@ -6978,6 +9718,11 @@
 		"regionId": 938,
 		"resourceType": "wood",
 		"capacity": 9300
+	},
+	{
+		"regionId": 938,
+		"resourceType": "oil",
+		"capacity": 21100
 	},
 	{
 		"regionId": 939,
@@ -6990,6 +9735,11 @@
 		"capacity": 3800
 	},
 	{
+		"regionId": 939,
+		"resourceType": "uranium",
+		"capacity": 5400
+	},
+	{
 		"regionId": 940,
 		"resourceType": "copper",
 		"capacity": 8800
@@ -7000,6 +9750,11 @@
 		"capacity": 14700
 	},
 	{
+		"regionId": 940,
+		"resourceType": "gas",
+		"capacity": 3100
+	},
+	{
 		"regionId": 941,
 		"resourceType": "copper",
 		"capacity": 1600
@@ -7008,6 +9763,11 @@
 		"regionId": 941,
 		"resourceType": "wood",
 		"capacity": 14700
+	},
+	{
+		"regionId": 941,
+		"resourceType": "rare_earth",
+		"capacity": 1100
 	},
 	{
 		"regionId": 942,
@@ -7065,6 +9825,11 @@
 		"capacity": 17600
 	},
 	{
+		"regionId": 948,
+		"resourceType": "oil",
+		"capacity": 14900
+	},
+	{
 		"regionId": 949,
 		"resourceType": "iron",
 		"capacity": 4100
@@ -7093,6 +9858,11 @@
 		"regionId": 953,
 		"resourceType": "wood",
 		"capacity": 19700
+	},
+	{
+		"regionId": 953,
+		"resourceType": "uranium",
+		"capacity": 2200
 	},
 	{
 		"regionId": 954,
@@ -7145,6 +9915,11 @@
 		"capacity": 6300
 	},
 	{
+		"regionId": 957,
+		"resourceType": "uranium",
+		"capacity": 900
+	},
+	{
 		"regionId": 958,
 		"resourceType": "iron",
 		"capacity": 7500
@@ -7153,6 +9928,16 @@
 		"regionId": 958,
 		"resourceType": "copper",
 		"capacity": 6900
+	},
+	{
+		"regionId": 958,
+		"resourceType": "oil",
+		"capacity": 8100
+	},
+	{
+		"regionId": 958,
+		"resourceType": "gas",
+		"capacity": 4700
 	},
 	{
 		"regionId": 959,
@@ -7173,6 +9958,11 @@
 		"regionId": 960,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 960,
+		"resourceType": "gas",
+		"capacity": 21700
 	},
 	{
 		"regionId": 961,
@@ -7200,6 +9990,11 @@
 		"capacity": 13600
 	},
 	{
+		"regionId": 962,
+		"resourceType": "rare_earth",
+		"capacity": 1200
+	},
+	{
 		"regionId": 963,
 		"resourceType": "wood",
 		"capacity": 3000
@@ -7213,6 +10008,11 @@
 		"regionId": 964,
 		"resourceType": "wood",
 		"capacity": 7400
+	},
+	{
+		"regionId": 964,
+		"resourceType": "uranium",
+		"capacity": 3200
 	},
 	{
 		"regionId": 965,
@@ -7275,9 +10075,24 @@
 		"capacity": 1500
 	},
 	{
+		"regionId": 971,
+		"resourceType": "gas",
+		"capacity": 14800
+	},
+	{
+		"regionId": 971,
+		"resourceType": "uranium",
+		"capacity": 4300
+	},
+	{
 		"regionId": 972,
 		"resourceType": "wood",
 		"capacity": 3100
+	},
+	{
+		"regionId": 972,
+		"resourceType": "oil",
+		"capacity": 54200
 	},
 	{
 		"regionId": 973,
@@ -7288,6 +10103,11 @@
 		"regionId": 973,
 		"resourceType": "wood",
 		"capacity": 19200
+	},
+	{
+		"regionId": 974,
+		"resourceType": "gas",
+		"capacity": 4900
 	},
 	{
 		"regionId": 975,
@@ -7310,9 +10130,24 @@
 		"capacity": 4600
 	},
 	{
+		"regionId": 976,
+		"resourceType": "uranium",
+		"capacity": 2300
+	},
+	{
 		"regionId": 977,
 		"resourceType": "copper",
 		"capacity": 12900
+	},
+	{
+		"regionId": 977,
+		"resourceType": "uranium",
+		"capacity": 1100
+	},
+	{
+		"regionId": 977,
+		"resourceType": "rare_earth",
+		"capacity": 1600
 	},
 	{
 		"regionId": 978,
@@ -7348,6 +10183,16 @@
 		"regionId": 980,
 		"resourceType": "wood",
 		"capacity": 3000
+	},
+	{
+		"regionId": 980,
+		"resourceType": "uranium",
+		"capacity": 4700
+	},
+	{
+		"regionId": 981,
+		"resourceType": "gas",
+		"capacity": 2700
 	},
 	{
 		"regionId": 982,
@@ -7395,6 +10240,11 @@
 		"capacity": 3000
 	},
 	{
+		"regionId": 985,
+		"resourceType": "oil",
+		"capacity": 4200
+	},
+	{
 		"regionId": 986,
 		"resourceType": "coal",
 		"capacity": 6500
@@ -7403,6 +10253,11 @@
 		"regionId": 987,
 		"resourceType": "wood",
 		"capacity": 3100
+	},
+	{
+		"regionId": 987,
+		"resourceType": "uranium",
+		"capacity": 11500
 	},
 	{
 		"regionId": 988,
@@ -7423,6 +10278,16 @@
 		"regionId": 989,
 		"resourceType": "wood",
 		"capacity": 6400
+	},
+	{
+		"regionId": 989,
+		"resourceType": "uranium",
+		"capacity": 6100
+	},
+	{
+		"regionId": 989,
+		"resourceType": "silicon",
+		"capacity": 2700
 	},
 	{
 		"regionId": 990,
@@ -7525,6 +10390,11 @@
 		"capacity": 7000
 	},
 	{
+		"regionId": 1000,
+		"resourceType": "silicon",
+		"capacity": 1500
+	},
+	{
 		"regionId": 1001,
 		"resourceType": "iron",
 		"capacity": 2100
@@ -7560,6 +10430,16 @@
 		"capacity": 2100
 	},
 	{
+		"regionId": 1004,
+		"resourceType": "rare_earth",
+		"capacity": 4300
+	},
+	{
+		"regionId": 1004,
+		"resourceType": "silicon",
+		"capacity": 15100
+	},
+	{
 		"regionId": 1005,
 		"resourceType": "copper",
 		"capacity": 4900
@@ -7580,6 +10460,11 @@
 		"capacity": 18100
 	},
 	{
+		"regionId": 1006,
+		"resourceType": "gas",
+		"capacity": 17600
+	},
+	{
 		"regionId": 1007,
 		"resourceType": "copper",
 		"capacity": 6100
@@ -7595,6 +10480,11 @@
 		"capacity": 8700
 	},
 	{
+		"regionId": 1007,
+		"resourceType": "oil",
+		"capacity": 17400
+	},
+	{
 		"regionId": 1008,
 		"resourceType": "wood",
 		"capacity": 24500
@@ -7608,6 +10498,11 @@
 		"regionId": 1010,
 		"resourceType": "wood",
 		"capacity": 3300
+	},
+	{
+		"regionId": 1010,
+		"resourceType": "silicon",
+		"capacity": 2700
 	},
 	{
 		"regionId": 1012,
@@ -7660,9 +10555,19 @@
 		"capacity": 9000
 	},
 	{
+		"regionId": 1019,
+		"resourceType": "rare_earth",
+		"capacity": 1200
+	},
+	{
 		"regionId": 1020,
 		"resourceType": "wood",
 		"capacity": 3100
+	},
+	{
+		"regionId": 1020,
+		"resourceType": "gas",
+		"capacity": 12300
 	},
 	{
 		"regionId": 1021,
@@ -7673,6 +10578,16 @@
 		"regionId": 1021,
 		"resourceType": "wood",
 		"capacity": 4400
+	},
+	{
+		"regionId": 1021,
+		"resourceType": "uranium",
+		"capacity": 9500
+	},
+	{
+		"regionId": 1021,
+		"resourceType": "silicon",
+		"capacity": 1800
 	},
 	{
 		"regionId": 1022,
@@ -7688,6 +10603,11 @@
 		"regionId": 1023,
 		"resourceType": "wood",
 		"capacity": 17500
+	},
+	{
+		"regionId": 1023,
+		"resourceType": "silicon",
+		"capacity": 6200
 	},
 	{
 		"regionId": 1024,
@@ -7713,6 +10633,11 @@
 		"regionId": 1026,
 		"resourceType": "wood",
 		"capacity": 13800
+	},
+	{
+		"regionId": 1026,
+		"resourceType": "uranium",
+		"capacity": 3400
 	},
 	{
 		"regionId": 1027,
@@ -7745,6 +10670,11 @@
 		"capacity": 15600
 	},
 	{
+		"regionId": 1030,
+		"resourceType": "oil",
+		"capacity": 4900
+	},
+	{
 		"regionId": 1031,
 		"resourceType": "coal",
 		"capacity": 7100
@@ -7758,6 +10688,11 @@
 		"regionId": 1033,
 		"resourceType": "wood",
 		"capacity": 8400
+	},
+	{
+		"regionId": 1033,
+		"resourceType": "silicon",
+		"capacity": 4100
 	},
 	{
 		"regionId": 1034,
@@ -7783,6 +10718,21 @@
 		"regionId": 1036,
 		"resourceType": "coal",
 		"capacity": 8400
+	},
+	{
+		"regionId": 1036,
+		"resourceType": "oil",
+		"capacity": 38400
+	},
+	{
+		"regionId": 1036,
+		"resourceType": "gas",
+		"capacity": 31400
+	},
+	{
+		"regionId": 1036,
+		"resourceType": "silicon",
+		"capacity": 2300
 	},
 	{
 		"regionId": 1038,

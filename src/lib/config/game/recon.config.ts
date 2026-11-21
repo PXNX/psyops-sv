@@ -24,12 +24,19 @@ export const UNIT_CATEGORIES: UnitCategory[] = ["infantry", "vehicle", "artiller
 
 export const UNIT_CATEGORY: Record<string, UnitCategory> = {
 	infantry: "infantry",
+	marine: "infantry",
 	armor: "vehicle",
 	mechanized: "vehicle",
 	air_defence: "vehicle",
 	artillery: "artillery",
 	fighter_squadron: "air",
-	bomber_squadron: "air"
+	bomber_squadron: "air",
+	// Naval hulls: surface ships and submarines show up as vehicles to SAR
+	// and thermal sensors; a carrier's air wing is counted with the air.
+	frigate: "vehicle",
+	submarine: "vehicle",
+	carrier: "vehicle",
+	landing_ship: "vehicle"
 };
 
 export interface SensorConfig {

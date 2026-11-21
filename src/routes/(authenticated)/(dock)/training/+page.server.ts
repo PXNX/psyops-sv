@@ -25,8 +25,21 @@ import {
 	calculateExerciseExperienceGain
 } from "#lib/config/index.js";
 
-type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
-type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
+type ResourceType =
+	| "iron"
+	| "copper"
+	| "steel"
+	| "gunpowder"
+	| "wood"
+	| "coal"
+	| "oil"
+	| "gas"
+	| "uranium"
+	| "rare_earth"
+	| "silicon"
+	| "fuel"
+	| "enriched_uranium";
+type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives" | "chips" | "electronics";
 
 // Standardized unit names - no NATO variety, just consistent naming
 const unitTypeNames: Record<string, string> = {

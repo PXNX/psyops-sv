@@ -57,7 +57,20 @@ export const ECONOMY_CONFIG = {
 	DEFAULT_GIFT_CODE_EXPIRATION_DAYS: 30
 } as const;
 
-export type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
-export type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
-export type FactoryType = "mine" | "refinery" | "armaments" | "general";
+export type ResourceType =
+	| "iron"
+	| "copper"
+	| "steel"
+	| "gunpowder"
+	| "wood"
+	| "coal"
+	| "oil"
+	| "gas"
+	| "uranium"
+	| "rare_earth"
+	| "silicon"
+	| "fuel"
+	| "enriched_uranium";
+export type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives" | "chips" | "electronics";
+export type FactoryType = "mine" | "refinery" | "armaments" | "fabrication" | "general";
 export type JobType = "miner" | "refiner" | "assembler" | "general_worker";

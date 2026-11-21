@@ -429,6 +429,8 @@ export interface StrikeContext {
 	density: number;
 	/** Enemy units known (or present, on resolution) in the region, for the military value of a units strike. */
 	enemyUnits: number;
+	/** Navigation-satellite accuracy multiplier (1 = no GPS constellation). Optional so existing callers are unchanged. */
+	gpsAccuracy?: number;
 }
 
 /** Targeting confidence for this target given the side's intel. */
@@ -473,6 +475,11 @@ export function strikeAccuracy(
 			note: intel.note
 		}
 	];
+	// Space domain (space.config.ts): a GPS constellation sharpens guided
+	// weapons even through cloud and at night. Unguided munitions gain nothing.
+	if ((w.guidance === "gps" || w.guidance === "laser") && ctx.gpsAccuracy && ctx.gpsAccuracy > 1) {
+		factors.push({ label: "GPS constellation", value: ctx.gpsAccuracy, note: "navigation satellites" });
+	}
 	const raw = factors.reduce((p, f) => p * f.value, 1);
 	return {
 		value: Math.min(ACCURACY_MAX, Math.max(ACCURACY_MIN, raw)),

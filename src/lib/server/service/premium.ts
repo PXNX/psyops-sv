@@ -130,8 +130,21 @@ export async function giftPremium(gifterId: string, recipientId: string, planId:
 
 // --- AUTOMATION ---------------------------------------------------------------
 
-type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
-type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives";
+type ResourceType =
+	| "iron"
+	| "copper"
+	| "steel"
+	| "gunpowder"
+	| "wood"
+	| "coal"
+	| "oil"
+	| "gas"
+	| "uranium"
+	| "rare_earth"
+	| "silicon"
+	| "fuel"
+	| "enriched_uranium";
+type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives" | "chips" | "electronics";
 
 export interface AutomationSummary {
 	accountId: string;
@@ -367,7 +380,12 @@ const UNIT_TYPE_NAMES: Record<string, string> = {
 	artillery: "Artillery Battalion",
 	infantry: "Infantry Battalion",
 	bomber_squadron: "Bomber Squadron",
-	fighter_squadron: "Fighter Squadron"
+	fighter_squadron: "Fighter Squadron",
+	frigate: "Frigate",
+	submarine: "Submarine",
+	carrier: "Carrier",
+	landing_ship: "Landing Ship",
+	marine: "Marine Battalion"
 };
 
 function generateUnitName(unitType: string, existingUnits: { name: string; unitType: string }[]): string {

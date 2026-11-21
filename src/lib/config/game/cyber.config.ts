@@ -162,6 +162,10 @@ export interface OddsInput {
 	targetResilient: boolean;
 	/** psyops.config's success penalty for a resilient target (passed in to keep this file standalone). */
 	resilienceSuccess?: number;
+	/** Attacker's AI capability level (ai.config.ts), for cyber offence. */
+	attackerAiLevel?: number;
+	/** Target's AI capability level (ai.config.ts), for cyber defence. */
+	defenderAiLevel?: number;
 }
 
 export interface OddsFactor {
@@ -202,6 +206,21 @@ export function operationOdds(input: OddsInput): Odds {
 			success: -CYBER.HEAT_SUCCESS * heat,
 			attribution: CYBER.HEAT_ATTRIBUTION * heat
 		});
+	}
+	// AI capability (ai.config.ts): sharper exploit discovery on offence,
+	// anomaly detection on defence. Both are deliberately small.
+	if (input.spec.domain === "cyber") {
+		const attack = Math.max(0, input.attackerAiLevel ?? 0);
+		const defend = Math.max(0, input.defenderAiLevel ?? 0);
+		if (attack > 0 || defend > 0) {
+			const offence = Math.min(0.24, attack * 0.048);
+			const defence = Math.min(0.22, defend * 0.044);
+			factors.push({
+				label: `AI capability (attacker ${attack}, defender ${defend})`,
+				success: offence - defence,
+				attribution: defence * 0.5
+			});
+		}
 	}
 	if (input.spec.domain === "psyops" && input.targetResilient) {
 		factors.push({ label: "Target runs counter-propaganda", success: -(input.resilienceSuccess ?? 0), attribution: 0 });

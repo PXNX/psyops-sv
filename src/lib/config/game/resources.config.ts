@@ -7,8 +7,49 @@
 //   3. how much of the deposit is left (rich seams yield fully, nearly
 //      exhausted ones only a fraction, empty ones nothing).
 
-export const MINEABLE_RESOURCES = ["iron", "copper", "coal", "wood"] as const;
+export const MINEABLE_RESOURCES = [
+	"iron",
+	"copper",
+	"coal",
+	"wood",
+	// Strategic resources: rarer, region-specific, and the input to the
+	// energy and chip chains (see energy.config.ts and industry.config.ts).
+	"oil",
+	"gas",
+	"uranium",
+	"rare_earth",
+	"silicon"
+] as const;
 export type MineableResource = (typeof MINEABLE_RESOURCES)[number];
+
+/** Display names for every extractable resource. */
+export const RESOURCE_LABELS: Record<MineableResource, string> = {
+	iron: "Iron ore",
+	copper: "Copper",
+	coal: "Coal",
+	wood: "Timber",
+	oil: "Crude oil",
+	gas: "Natural gas",
+	uranium: "Uranium",
+	rare_earth: "Rare earths",
+	silicon: "Silicon"
+};
+
+/** Resources the world fights over: they feed chips, satellites and power. */
+export const STRATEGIC_RESOURCES: MineableResource[] = ["oil", "gas", "uranium", "rare_earth", "silicon"];
+
+/** How much one unit is worth on the world market (rough, for planning). */
+export const RESOURCE_VALUE: Record<MineableResource, number> = {
+	iron: 20,
+	copper: 30,
+	coal: 15,
+	wood: 10,
+	oil: 45,
+	gas: 40,
+	uranium: 120,
+	rare_earth: 90,
+	silicon: 60
+};
 
 export const EXPLOITATION_POLICIES = {
 	conservation: {

@@ -5,10 +5,14 @@
 //   - wood follows forest belts (tropics, temperate and boreal latitudes) and
 //     is scarce in the big deserts and the far north;
 //   - coal, iron and copper can turn up anywhere, but are much likelier and
-//     larger in the world's well-known basins and mining districts.
+//     larger in the world's well-known basins and mining districts;
+//   - oil and gas follow sedimentary basins (and are the prize of the Gulf,
+//     Siberia, the Caspian and the North Sea);
+//   - uranium, rare earths and silicon are rarer still and cluster in a few
+//     well-known districts, so control of them is worth a war.
 // Capacities are in resource units; a standard mine takes ~10 per shift.
 
-export type Resource = "iron" | "copper" | "coal" | "wood";
+export type Resource = "iron" | "copper" | "coal" | "wood" | "oil" | "gas" | "uranium" | "rare_earth" | "silicon";
 export interface Deposit {
 	regionId: number;
 	resourceType: Resource;
@@ -57,6 +61,52 @@ const BASINS: Record<Exclude<Resource, "wood">, Box[]> = {
 		[31, 47, -114, -108], // Arizona to Montana
 		[52, 60, 57, 62], // Urals
 		[34.5, 35.7, 32, 34.5] // Cyprus
+	],
+	oil: [
+		[24, 31, 46, 57], // Persian Gulf
+		[55, 70, 55, 85], // West Siberia
+		[36, 47, 47, 55], // Caspian
+		[56, 62, -2, 8], // North Sea
+		[28, 38, -103, -88], // US Gulf Coast and Texas
+		[18, 24, -98, -90], // Mexico
+		[-10, 5, 5, 15], // Gulf of Guinea
+		[45, 55, 45, 60], // Volga-Ural
+		[-38, -25, 140, 150], // Bass Strait
+		[0, 8, 100, 115] // South China Sea
+	],
+	gas: [
+		[24, 31, 46, 57], // Persian Gulf
+		[55, 70, 55, 85], // West Siberia
+		[36, 47, 47, 55], // Caspian
+		[56, 62, -2, 8], // North Sea
+		[28, 38, -103, -88], // US Gulf Coast
+		[-38, -25, 140, 150], // Bass Strait
+		[25, 35, 60, 75] // Iran/Pakistan
+	],
+	uranium: [
+		[-26, -19, 128, 140], // South Australia
+		[52, 62, -110, -95], // Athabasca
+		[42, 50, 62, 75], // Kazakhstan
+		[14, 20, 4, 12], // Niger
+		[35, 40, -110, -105], // Colorado
+		[-30, -20, 25, 32], // Karoo
+		[58, 65, 95, 115] // Siberia
+	],
+	rare_earth: [
+		[38, 45, 105, 120], // Inner Mongolia
+		[33, 38, -118, -114], // Mountain Pass
+		[-32, -24, 115, 125], // Western Australia
+		[-22, -12, -50, -42], // Brazil
+		[55, 65, 55, 75], // Urals/Siberia
+		[8, 16, 76, 82] // India
+	],
+	silicon: [
+		[58, 64, 5, 12], // Norway quartz
+		[-22, -14, -50, -42], // Brazil quartz
+		[30, 38, 108, 120], // China quartz
+		[38, 44, -122, -114], // US West
+		[46, 50, 10, 16], // Alps
+		[60, 66, 25, 35] // Fennoscandia
 	]
 };
 
@@ -65,7 +115,12 @@ const BASE: Record<Resource, { chance: number; min: number; max: number }> = {
 	wood: { chance: 0, min: 3000, max: 25_000 }, // chance comes from the forest model
 	coal: { chance: 0.32, min: 2000, max: 20_000 },
 	iron: { chance: 0.28, min: 2000, max: 18_000 },
-	copper: { chance: 0.22, min: 1500, max: 14_000 }
+	copper: { chance: 0.22, min: 1500, max: 14_000 },
+	oil: { chance: 0.14, min: 3000, max: 30_000 },
+	gas: { chance: 0.1, min: 2000, max: 22_000 },
+	uranium: { chance: 0.06, min: 800, max: 6_000 },
+	rare_earth: { chance: 0.05, min: 500, max: 4_000 },
+	silicon: { chance: 0.08, min: 1500, max: 9_000 }
 };
 const BASIN_CHANCE = 0.92;
 const BASIN_RICHNESS = 2.2;
@@ -89,10 +144,22 @@ function rng(regionId: number, resource: Resource): () => number {
 	};
 }
 
+const ALL_RESOURCES: Resource[] = [
+	"iron",
+	"copper",
+	"coal",
+	"wood",
+	"oil",
+	"gas",
+	"uranium",
+	"rare_earth",
+	"silicon"
+];
+
 export function generateDeposits(regions: { id: number; latitude: number; longitude: number }[]): Deposit[] {
 	const out: Deposit[] = [];
 	for (const r of regions) {
-		for (const resource of ["iron", "copper", "coal", "wood"] as const) {
+		for (const resource of ALL_RESOURCES) {
 			const rand = rng(r.id, resource);
 			const { min, max } = BASE[resource];
 			const inBasin = resource !== "wood" && BASINS[resource].some((b) => inBox(r.latitude, r.longitude, b));

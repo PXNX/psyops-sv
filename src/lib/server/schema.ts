@@ -20,9 +20,32 @@ import {
 export const journalistRankEnum = pgEnum("journalist_rank", ["author", "editor", "owner"]);
 export const userRoleEnum = pgEnum("user_role", ["user", "moderator", "admin"]);
 export const ministryTypeEnum = pgEnum("ministry_type", ["economy", "defense", "foreign_affairs"]);
-export const resourceTypeEnum = pgEnum("resource_type", ["iron", "copper", "steel", "gunpowder", "wood", "coal"]);
-export const productTypeEnum = pgEnum("product_type", ["rifles", "ammunition", "artillery", "vehicles", "explosives"]);
-export const factoryTypeEnum = pgEnum("factory_type", ["mine", "refinery", "armaments", "general"]);
+export const resourceTypeEnum = pgEnum("resource_type", [
+	"iron",
+	"copper",
+	"steel",
+	"gunpowder",
+	"wood",
+	"coal",
+	// Strategic resources (resources.config.ts, industry.config.ts)
+	"oil",
+	"gas",
+	"uranium",
+	"rare_earth",
+	"silicon",
+	"fuel",
+	"enriched_uranium"
+]);
+export const productTypeEnum = pgEnum("product_type", [
+	"rifles",
+	"ammunition",
+	"artillery",
+	"vehicles",
+	"explosives",
+	"chips",
+	"electronics"
+]);
+export const factoryTypeEnum = pgEnum("factory_type", ["mine", "refinery", "armaments", "fabrication", "general"]);
 export const jobTypeEnum = pgEnum("job_type", ["miner", "refiner", "assembler", "general_worker"]);
 export const visaStatusEnum = pgEnum("visa_status", ["active", "expired", "revoked"]);
 // "failed": voted through, but it couldn't be carried out (e.g. the treasury
@@ -59,7 +82,13 @@ export const militaryUnitTypeEnum = pgEnum("military_unit_type", [
 	"artillery",
 	"infantry",
 	"bomber_squadron",
-	"fighter_squadron"
+	"fighter_squadron",
+	// Sea domain (naval.config.ts): surface, undersea, aviation and amphibious.
+	"frigate",
+	"submarine",
+	"carrier",
+	"landing_ship",
+	"marine"
 ]);
 export const travelStatusEnum = pgEnum("travel_status", ["in_progress", "completed", "cancelled"]);
 export const giftCodeResourceTypeEnum = pgEnum("gift_code_resource_type", [
@@ -76,7 +105,16 @@ export const giftCodeResourceTypeEnum = pgEnum("gift_code_resource_type", [
 	"explosives",
 	"currency"
 ]);
-export const powerPlantTypeEnum = pgEnum("power_plant_type", ["coal", "gas", "nuclear", "solar", "wind", "hydro"]);
+export const powerPlantTypeEnum = pgEnum("power_plant_type", [
+	"coal",
+	"gas",
+	"nuclear",
+	"solar",
+	"wind",
+	"hydro",
+	"geothermal",
+	"fusion"
+]);
 export const transactionTypeEnum = pgEnum("transaction_type", [
 	"market_purchase",
 	"market_sale",
@@ -98,7 +136,10 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
 	"share_purchase",
 	"share_sale",
 	"dividend_payout",
-	"recon_mission"
+	"recon_mission",
+	// Smuggling (services/economy/smuggling.ts)
+	"smuggling_run",
+	"smuggling_fine"
 ]);
 
 export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_transaction_type", [
@@ -115,7 +156,13 @@ export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_tra
 	"covert_theft",
 	// Airstrikes and the reparations paid for IHL violations (services/military/strike.ts)
 	"airstrike",
-	"reparations"
+	"reparations",
+	// Naval operations, space and AI (naval.ts, space.ts, ai.ts)
+	"naval_operation",
+	"satellite_launch",
+	"space_operation",
+	"ai_research",
+	"smuggling_route"
 ]);
 
 export const battlePhaseEnum = pgEnum("battle_phase", [
@@ -2369,7 +2416,10 @@ export const battles = pgTable("battles", {
 
 	// Region levels destroyed when the attacker took the region, e.g.
 	// { fortifications: 3, infrastructure: 1 }. Null if nothing was lost.
-	buildingsDestroyed: jsonb("buildings_destroyed").$type<Partial<Record<string, number>>>()
+	buildingsDestroyed: jsonb("buildings_destroyed").$type<Partial<Record<string, number>>>(),
+	// Opened by an amphibious assault (naval.config.ts): the attackers landed
+	// from the sea, so no land border was needed.
+	amphibious: boolean("amphibious").default(false).notNull()
 });
 
 // Battle participants - links military units to battles
@@ -3461,3 +3511,238 @@ export const ihlViolations = pgTable(
 export type Strike = typeof strikes.$inferSelect;
 export type RegionEffect = typeof regionEffects.$inferSelect;
 export type IhlViolation = typeof ihlViolations.$inferSelect;
+
+// --- NAVAL OPERATIONS ---
+// Sea power beyond the land battle: blockades, shore bombardments,
+// amphibious assaults, sea-lane raids and minefields. Rules and numbers live
+// in config/game/naval.config.ts; resolution in services/military/naval.ts.
+// A blockade is its own row because it works on the target state (trade,
+// energy, smuggling) rather than on one region.
+export const navalOpKindEnum = pgEnum("naval_op_kind", [
+	"blockade",
+	"shore_bombardment",
+	"amphibious_assault",
+	"sea_lane_raid",
+	"minelaying"
+]);
+export const navalOpOutcomeEnum = pgEnum("naval_op_outcome", ["success", "partial", "failed", "intercepted"]);
+
+/** What a naval operation did, for the log. */
+export interface NavalDamage {
+	/** Region levels knocked down, e.g. { infrastructure: 1 }. */
+	levels?: Partial<Record<string, number>>;
+	/** Units damaged or destroyed, by side. */
+	units?: { unitId: number; name: string; damage: number; destroyed: boolean; side: "own" | "enemy" }[];
+	/** Treasury or resources taken by a sea-lane raid. */
+	haul?: number;
+	/** The battle an amphibious assault opened. */
+	battleId?: number;
+	/** Civilians harmed by a bombardment. */
+	civilians?: number;
+}
+
+export const navalOperations = pgTable(
+	"naval_operations",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id").references(() => states.id, { onDelete: "set null" }),
+		regionId: integer("region_id").references(() => regions.id, { onDelete: "set null" }),
+		battleId: integer("battle_id").references(() => battles.id, { onDelete: "set null" }),
+		orderedBy: text("ordered_by").references(() => accounts.id, { onDelete: "set null" }),
+		kind: navalOpKindEnum("kind").notNull(),
+		outcome: navalOpOutcomeEnum("outcome").notNull(),
+		cost: integer("cost").notNull(),
+		/** Sea control the fleet brought, 0-100. */
+		seaControl: integer("sea_control").notNull(),
+		/** How strongly a blockade bites or a raid lands, 0-100. */
+		strength: integer("strength").notNull(),
+		damage: jsonb("damage").$type<NavalDamage>(),
+		message: text("message"),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_naval_op_state").on(t.stateId, t.createdAt),
+		targetIdx: index("idx_naval_op_target").on(t.targetStateId, t.createdAt)
+	})
+);
+
+export const navalBlockades = pgTable(
+	"naval_blockades",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		blockaderStateId: integer("blockader_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		operationId: integer("operation_id").references(() => navalOperations.id, { onDelete: "cascade" }),
+		/** Strength 0-100. */
+		strength: integer("strength").notNull(),
+		startsAt: timestamp("starts_at").defaultNow().notNull(),
+		expiresAt: timestamp("expires_at").notNull()
+	},
+	(t) => ({
+		activeIdx: index("idx_blockade_active").on(t.targetStateId, t.expiresAt),
+		blockaderIdx: index("idx_blockade_blockader").on(t.blockaderStateId, t.expiresAt)
+	})
+);
+
+// --- SPACE ---
+// A state's constellation of satellites, its space defence, and the
+// operations that blind a rival's. Rules in config/game/space.config.ts;
+// resolution in services/military/space.ts.
+export const satelliteKindEnum = pgEnum("satellite_kind", ["recon", "navigation", "comms", "early_warning"]);
+export const satelliteOrbitEnum = pgEnum("satellite_orbit", ["leo", "meo", "geo"]);
+export const satelliteStatusEnum = pgEnum("satellite_status", ["operational", "damaged", "destroyed"]);
+
+export const satellites = pgTable(
+	"satellites",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		name: varchar("name", { length: 100 }).notNull(),
+		kind: satelliteKindEnum("kind").notNull(),
+		orbit: satelliteOrbitEnum("orbit").notNull(),
+		health: integer("health").default(100).notNull(),
+		status: satelliteStatusEnum("status").default("operational").notNull(),
+		launchedBy: text("launched_by").references(() => accounts.id, { onDelete: "set null" }),
+		operationalAt: timestamp("operational_at").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateKindIdx: index("idx_satellite_state_kind").on(t.stateId, t.kind, t.status)
+	})
+);
+
+export const spaceOpKindEnum = pgEnum("space_op_kind", ["asat_strike", "uplink_jam", "orbital_sabotage"]);
+export const spaceOpOutcomeEnum = pgEnum("space_op_outcome", ["success", "partial", "failed"]);
+
+export const spaceOperations = pgTable(
+	"space_operations",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id").references(() => states.id, { onDelete: "set null" }),
+		satelliteId: integer("satellite_id").references(() => satellites.id, { onDelete: "set null" }),
+		orderedBy: text("ordered_by").references(() => accounts.id, { onDelete: "set null" }),
+		kind: spaceOpKindEnum("kind").notNull(),
+		outcome: spaceOpOutcomeEnum("outcome").notNull(),
+		cost: integer("cost").notNull(),
+		successChance: integer("success_chance").notNull(),
+		attributionChance: integer("attribution_chance").notNull(),
+		attributed: boolean("attributed").default(false).notNull(),
+		damage: integer("damage").default(0).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_space_op_state").on(t.stateId, t.createdAt),
+		targetIdx: index("idx_space_op_target").on(t.targetStateId, t.createdAt)
+	})
+);
+
+export const stateSpaceDefence = pgTable("state_space_defence", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	stateId: integer("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" })
+		.unique(),
+	level: integer("level").default(0).notNull(),
+	upgradedBy: text("upgraded_by").references(() => accounts.id, { onDelete: "set null" }),
+	upgradedAt: timestamp("upgraded_at").defaultNow().notNull()
+});
+
+// --- ARTIFICIAL INTELLIGENCE ---
+// A state's computing capability. Rules in config/game/ai.config.ts;
+// resolution in services/military/ai.ts. Level 0 means no programme.
+export const stateAi = pgTable("state_ai", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	stateId: integer("state_id")
+		.notNull()
+		.references(() => states.id, { onDelete: "cascade" })
+		.unique(),
+	level: integer("level").default(0).notNull(),
+	researchPoints: integer("research_points").default(0).notNull(),
+	upgradedBy: text("upgraded_by").references(() => accounts.id, { onDelete: "set null" }),
+	updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+// --- SMUGGLING ---
+// Shadow trade around sanctions and blockades. A route is opened by a state
+// and run by its citizens. Rules in config/game/smuggling.config.ts;
+// resolution in services/economy/smuggling.ts.
+export const smugglingOutcomeEnum = pgEnum("smuggling_outcome", ["delivered", "seized", "lost"]);
+// A cargo may be a raw resource or a finished product (smuggling.config.ts).
+export const smugglingGoodEnum = pgEnum("smuggling_good", [
+	"chips",
+	"electronics",
+	"rare_earth",
+	"fuel",
+	"uranium",
+	"rifles",
+	"explosives"
+]);
+
+export const smugglingRoutes = pgTable(
+	"smuggling_routes",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		originStateId: integer("origin_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		good: smugglingGoodEnum("good").notNull(),
+		active: boolean("active").default(true).notNull(),
+		/** Base interception risk in percent, set when the route opens. */
+		risk: integer("risk").default(0).notNull(),
+		openedBy: text("opened_by").references(() => accounts.id, { onDelete: "set null" }),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		routeIdx: index("idx_smuggling_route").on(t.originStateId, t.targetStateId, t.good),
+		activeIdx: index("idx_smuggling_route_active").on(t.active)
+	})
+);
+
+export const smugglingRuns = pgTable(
+	"smuggling_runs",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		routeId: integer("route_id")
+			.notNull()
+			.references(() => smugglingRoutes.id, { onDelete: "cascade" }),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		good: smugglingGoodEnum("good").notNull(),
+		quantity: integer("quantity").notNull(),
+		outcome: smugglingOutcomeEnum("outcome").notNull(),
+		/** What the run paid (delivered) or cost in fines (seized). */
+		payout: integer("payout").default(0).notNull(),
+		fine: integer("fine").default(0).notNull(),
+		risk: integer("risk").notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		userIdx: index("idx_smuggling_run_user").on(t.userId, t.createdAt),
+		routeIdx: index("idx_smuggling_run_route").on(t.routeId, t.createdAt)
+	})
+);
+
+export type NavalOperation = typeof navalOperations.$inferSelect;
+export type NavalBlockade = typeof navalBlockades.$inferSelect;
+export type Satellite = typeof satellites.$inferSelect;
+export type SpaceOperation = typeof spaceOperations.$inferSelect;
+export type StateAi = typeof stateAi.$inferSelect;
+export type SmugglingRoute = typeof smugglingRoutes.$inferSelect;
+export type SmugglingRun = typeof smugglingRuns.$inferSelect;
+
