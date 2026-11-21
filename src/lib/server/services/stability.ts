@@ -10,9 +10,9 @@
 // tick writes (regions.population, already used for strike casualties).
 //
 // No SvelteKit virtual modules here (tests import this file).
-import { count, eq, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { Database } from "../db";
-import { factories, militaryUnits, regions, states, wars } from "../schema";
+import { factories, regions, states, wars } from "../schema";
 import {
 	POPULATION_FLOOR,
 	STABILITY,
@@ -24,6 +24,7 @@ import {
 } from "#lib/config/index.js";
 import { regionOpinions } from "./politics/civic.service";
 import { regionsCivilianNeeds } from "./civilians/supply";
+import { statesPressure } from "./civilians/pressure";
 import { ihlScores } from "./military/ihl";
 import { activeEffects } from "./military/state-effects";
 
@@ -70,7 +71,7 @@ export async function stateStabilitiesInfo(
 	const out = new Map<number, StateStabilityInfo>();
 	if (!ids.length) return out;
 
-	const [stateRows, regionRows, unitRows, wageRows, effects, activeWars, ihl] = await Promise.all([
+	const [stateRows, regionRows, wageRows, effects, activeWars, ihl, pressure] = await Promise.all([
 		db
 			.select({ id: states.id, policy: states.exploitationPolicy, blocId: states.blocId })
 			.from(states)
@@ -89,11 +90,6 @@ export async function stateStabilitiesInfo(
 			.from(regions)
 			.where(inArray(regions.stateId, ids)),
 		db
-			.select({ stateId: militaryUnits.stateId, n: count() })
-			.from(militaryUnits)
-			.where(inArray(militaryUnits.stateId, ids))
-			.groupBy(militaryUnits.stateId),
-		db
 			.select({ stateId: regions.stateId, wage: factories.workerWage })
 			.from(factories)
 			.innerJoin(regions, eq(factories.regionId, regions.id))
@@ -108,20 +104,22 @@ export async function stateStabilitiesInfo(
 			})
 			.from(wars)
 			.where(eq(wars.status, "active")),
-		ihlScores(db, ids, now)
+		ihlScores(db, ids, now),
+		statesPressure(db, ids, now)
 	]);
 
 	const regionIds = regionRows.map((r) => r.id);
 	const needs = await regionsCivilianNeeds(db, regionIds, now);
 	const opinions = await regionOpinions(db, regionIds, now, needs);
 	const regionsByState = group(regionRows, (r) => r.stateId);
-	const unitsByState = new Map(unitRows.map((r) => [r.stateId, Number(r.n)]));
 	const wagesByState = group(wageRows, (r) => r.stateId);
 
 	for (const s of stateRows) {
 		const rs = regionsByState.get(s.id) ?? [];
 		const population = rs.reduce((sum, r) => sum + regionPopulation(r), 0);
-		const conscription = population > 0 ? ((unitsByState.get(s.id) ?? 0) / population) * 1000 : 0;
+		// Use the same soldiers-per-1,000 metric the population and workforce
+		// ticks use, so a drafted state is punished consistently everywhere.
+		const conscription = pressure.get(s.id)?.pressure ?? 0;
 		const opinion = avg(rs.map((r) => opinions.get(r.id) ?? STABILITY.BASE));
 		const hardship = avg(rs.map((r) => needs.get(r.id)?.hardship ?? 0));
 		const education = avg(rs.map((r) => Number(r.education ?? 0)));
@@ -155,7 +153,8 @@ export async function stateStabilitiesInfo(
 			propagandaFor,
 			propagandaAgainst,
 			defending,
-			hardship
+			hardship,
+			hospital: pressure.get(s.id)?.hospital
 		});
 
 		out.set(s.id, {
@@ -223,11 +222,16 @@ export async function populationTick(
 			.from(regions),
 		db.select({ id: states.id }).from(states)
 	]);
-	const [info, needs] = await Promise.all([
+	const [info, needs, pressure] = await Promise.all([
 		stateStabilitiesInfo(db, statesWithId.map((s) => s.id), now),
 		regionsCivilianNeeds(
 			db,
 			regionRows.map((r) => r.id),
+			now
+		),
+		statesPressure(
+			db,
+			statesWithId.map((s) => s.id),
 			now
 		)
 	]);
@@ -235,14 +239,18 @@ export async function populationTick(
 	const result: PopulationTickResult = { regionsChanged: 0, gained: 0, lost: 0, net: 0, days };
 	for (const row of regionRows) {
 		const s = row.stateId != null ? info.get(row.stateId) : undefined;
+		const strain = row.stateId != null ? pressure.get(row.stateId) : undefined;
 		const current = regionPopulation(row);
 		const delta = populationDelta(current, {
 			days,
 			atWar: s?.atWar ?? false,
 			environment: s?.environment ?? "standard",
-			conscription: s?.conscription ?? 0,
+			conscription: strain?.pressure ?? s?.conscription ?? 0,
 			stability: s?.stability.score ?? 60,
-			hardship: needs.get(row.id)?.hardship ?? 0
+			hardship: needs.get(row.id)?.hardship ?? 0,
+			replicationFactor: strain?.band.replicationFactor,
+			conscriptionMortality: strain?.band.mortalityAdd,
+			hospital: strain?.hospital
 		});
 		if (!delta) continue;
 		const next = Math.max(POPULATION_FLOOR, current + delta);

@@ -30,4 +30,6 @@ export * from "./game/civic.config";
 export * from "./game/stability.config";
 export * from "./game/manpower.config";
 export * from "./game/workforce.config";
+export * from "./game/conscription.config";
+export * from "./game/hospitals.config";
 export * from "./game/civilian-supply.config";

@@ -10,8 +10,11 @@ import { and, count, eq, gte, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import { companyBudgets, companies, factories, factoryWorkers, regions } from "../../schema";
 import { calculateAndCollectTax } from "../../taxes";
+import { statesPressure } from "../civilians/pressure";
 import {
 	CIVILIAN_WORK,
+	conscriptionWorkforce,
+	healthyWorkforce,
 	civilianLabour,
 	civilianRevenue,
 	civilianWage,
@@ -70,8 +73,19 @@ export async function runCivilianWork(
 		db.select({ id: companies.id, ownerId: companies.ownerId }).from(companies)
 	]);
 
+	const pressure = await statesPressure(
+		db,
+		regionRows.map((r) => r.stateId).filter((id): id is number => id != null),
+		now
+	);
+	// Draftees are not in the factories, and the sick do not work either:
+	// conscription and hospital strain both shrink the effective labour pool.
 	const labour = new Map<number, number>(
-		regionRows.map((r) => [r.id, civilianLabour(regionPopulation(r))])
+		regionRows.map((r) => {
+			const strain = r.stateId != null ? pressure.get(r.stateId) : undefined;
+			const participation = (strain ? conscriptionWorkforce(strain.pressure) : 1) * healthyWorkforce(strain?.hospital ?? 1);
+			return [r.id, Math.floor(civilianLabour(regionPopulation(r)) * participation)];
+		})
 	);
 	const stateOfRegion = new Map<number, number | null>(regionRows.map((r) => [r.id, r.stateId]));
 	const playerWorkers = new Map<number, number>(workerCounts.map((r) => [r.factoryId, Number(r.n)]));

@@ -32,7 +32,7 @@ describe("regimeStability", () => {
 		const r = regimeStability(neutral);
 		expect(r.score).toBe(50);
 		expect(r.label).toBe("stable");
-		expect(r.breakdown).toHaveLength(11);
+		expect(r.breakdown).toHaveLength(12);
 		expect(r.breakdown.reduce((s, c) => s + c.value, 0)).toBe(0);
 	});
 

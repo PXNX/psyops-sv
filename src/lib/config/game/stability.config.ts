@@ -14,6 +14,7 @@
 // moves as people are born, die, leave or are killed, and a daily cron writes
 // it back (services/stability.ts#populationTick).
 import { hardshipExtraDeaths, hardshipExtraEmigration } from "./civilian-supply.config";
+import { hospitalDeaths, hospitalReplication } from "./hospitals.config";
 
 /** The four resource/exploitation laws a state can vote for (see schema.ts). */
 export type ExploitationPolicyLike = "conservation" | "standard" | "industrial" | "unrestricted";
@@ -67,7 +68,9 @@ export const STABILITY = {
 	RALLY_DEFENCE: 8,
 
 	/** Unmet food, electricity, heat and water needs — civilians blame the state. */
-	SERVICES_PENALTY: -14
+	SERVICES_PENALTY: -14,
+	/** A population that cannot get care blames its government too. */
+	HOSPITAL_SHORTFALL_PENALTY: -12
 } as const;
 
 export type StabilityLabel = "collapsing" | "unrest" | "uneasy" | "stable" | "loyal";
@@ -126,6 +129,8 @@ export interface StabilityFactors {
 	defending: boolean;
 	/** Mean share of the four basic needs civilians go without (0-1). */
 	hardship: number;
+	/** Share of hospital demand that can be met (0-1); 1 = no strain. */
+	hospital?: number;
 }
 
 /** One labelled, signed contribution to the score (for tooltips and panels). */
@@ -214,6 +219,11 @@ export function regimeStability(f: StabilityFactors): StabilityResult {
 			key: "services",
 			label: "Food, power, heat & water",
 			value: round1(Math.min(0, f.hardship * STABILITY.SERVICES_PENALTY))
+		},
+		{
+			key: "hospital",
+			label: "Healthcare availability",
+			value: round1(Math.min(0, (1 - (f.hospital ?? 1)) * STABILITY.HOSPITAL_SHORTFALL_PENALTY))
 		}
 	];
 
@@ -282,6 +292,12 @@ export interface PopulationPressure {
 	stability: number;
 	/** Share of basic needs civilians go without (0-1): hunger, thirst and cold kill. */
 	hardship: number;
+	/** Birth multiplier from the conscription band (1 = no effect). */
+	replicationFactor?: number;
+	/** Extra annual deaths from the conscription band, replacing the per-mille toll. */
+	conscriptionMortality?: number;
+	/** Share of hospital demand that can be met (0-1). */
+	hospital?: number;
 }
 
 /**
@@ -293,10 +309,14 @@ export interface PopulationPressure {
 export function populationDelta(population: number, p: PopulationPressure): number {
 	if (!Number.isFinite(population) || population <= 0 || p.days <= 0) return 0;
 	const d = POPULATION_DYNAMICS;
-	let annual = d.BIRTHS_PER_YEAR - d.DEATHS_PER_YEAR;
+	const care = p.hospital ?? 1;
+	let annual =
+		d.BIRTHS_PER_YEAR * (p.replicationFactor ?? 1) * hospitalReplication(care) - d.DEATHS_PER_YEAR;
 	if (p.atWar) annual -= d.WAR_DEATHS_PER_YEAR;
 	annual -= d.ENVIRONMENT_DEATHS_PER_YEAR[p.environment] ?? 0;
-	annual -= Math.max(0, p.conscription) * d.CONSCRIPTION_DEATHS_PER_PERMILLE;
+	annual -=
+		p.conscriptionMortality ?? Math.max(0, p.conscription) * d.CONSCRIPTION_DEATHS_PER_PERMILLE;
+	annual -= hospitalDeaths(care);
 	if (p.stability < d.EMIGRATION_BELOW_STABILITY) {
 		annual -= d.EMIGRATION_PER_YEAR * ((d.EMIGRATION_BELOW_STABILITY - p.stability) / d.EMIGRATION_BELOW_STABILITY);
 	}
