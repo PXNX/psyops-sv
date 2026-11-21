@@ -234,19 +234,19 @@ export const POPULATION_DYNAMICS = {
 	BIRTHS_PER_YEAR: 0.012,
 	DEATHS_PER_YEAR: 0.009,
 	/** Extra deaths while the state's homeland is an active warzone. */
-	WAR_DEATHS_PER_YEAR: 0.004,
+	WAR_DEATHS_PER_YEAR: 0.02,
 	/** Environmental health: harsh extraction shortens lives. */
 	ENVIRONMENT_DEATHS_PER_YEAR: {
 		conservation: 0,
 		standard: 0,
-		industrial: 0.0005,
-		unrestricted: 0.002
+		industrial: 0.003,
+		unrestricted: 0.008
 	} as Record<ExploitationPolicyLike, number>,
 	/** Each per-mille of the population under arms takes a small toll. */
-	CONSCRIPTION_DEATHS_PER_PERMILLE: 0.0002,
+	CONSCRIPTION_DEATHS_PER_PERMILLE: 0.0005,
 	/** Below this stability, people vote with their feet. */
 	EMIGRATION_BELOW_STABILITY: 35,
-	EMIGRATION_PER_YEAR: 0.006,
+	EMIGRATION_PER_YEAR: 0.02,
 	/** No single year moves a region by more than this share, either way. */
 	MAX_ANNUAL_CHANGE: 0.05
 } as const;
