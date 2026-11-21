@@ -2,6 +2,10 @@
 <script lang="ts">
 	import { vanish } from "#lib/utils/motion.js";
 	import { enhance } from "$app/forms";
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
+	import { REPORT_ACTION_LABELS, humanize } from "#lib/utils/moderation.js";
+	import FluentSearch20Filled from "~icons/fluent/search-20-filled";
+	import FluentInfo20Filled from "~icons/fluent/info-20-filled";
 	import FluentShield20Filled from "~icons/fluent/shield-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import FluentCheckmark20Filled from "~icons/fluent/checkmark-20-filled";
@@ -23,6 +27,8 @@
 	let selectedReport = $state<any>(null);
 	let dismissNote = $state("");
 	let filterStatus = $state<string>("all");
+	let filterReason = $state<string>("all");
+	let search = $state("");
 	let deletionReason = $state<string>("other");
 	let deletionNote = $state("");
 	let issueWarning = $state(true);
@@ -64,8 +70,31 @@
 	}
 
 	const filteredReports = $derived(() => {
-		if (filterStatus === "all") return data.reports;
-		return data.reports.filter((r) => r.status === filterStatus);
+		const term = search.trim().toLowerCase();
+		return data.reports.filter((report) => {
+			if (filterStatus !== "all" && report.status !== filterStatus) return false;
+			if (filterReason !== "all" && report.violationType !== filterReason) return false;
+			if (!term) return true;
+			return [
+				report.messageSenderName,
+				report.reporterName,
+				report.messageContent,
+				report.reason,
+				report.violationType
+			]
+				.filter(Boolean)
+				.join(" ")
+				.toLowerCase()
+				.includes(term);
+		});
+	});
+
+	$effect(() => {
+		if (form?.success) {
+			selectedReport = null;
+			deletionNote = "";
+			dismissNote = "";
+		}
 	});
 </script>
 
@@ -138,10 +167,36 @@
 		</Button>
 	</div>
 
+	<!-- Reason + text filters -->
+	<div class="flex flex-wrap items-center gap-3">
+		<select bind:value={filterReason} class="field-control rounded-sm px-3 py-2 w-full sm:w-64 text-sm">
+			<option value="all">All violation types</option>
+			{#each violationReasons as reason}
+				<option value={reason.value}>{reason.label}</option>
+			{/each}
+		</select>
+		<div class="relative w-full sm:w-72">
+			<FluentSearch20Filled class="size-4 text-fg-muted absolute left-3 top-1/2 -translate-y-1/2" />
+			<input
+				type="search"
+				bind:value={search}
+				placeholder="Search reports, users, messages…"
+				class="field-control rounded-sm pl-9 pr-3 py-2 w-full text-sm"
+			/>
+		</div>
+	</div>
+
 	{#if form?.error}
 		<div class="bg-red-600/10 border border-red-500/30 text-red-300 rounded-sm p-4 flex items-center gap-3">
 			<FluentWarning20Filled class="size-5 shrink-0" />
 			<p>{form.error}</p>
+		</div>
+	{/if}
+
+	{#if form?.success}
+		<div class="bg-positive-bg/18 border border-positive/30 text-positive-fg rounded-sm p-4 flex items-center gap-3">
+			<FluentCheckmark20Filled class="size-5 shrink-0" />
+			<p>{form.message || "Report updated."}</p>
 		</div>
 	{/if}
 
@@ -234,6 +289,30 @@
 						</p>
 					</div>
 
+					<!-- What happened after review -->
+					{#if selectedReport.status !== "pending"}
+						<div class="mb-6 bg-positive-bg/12 border border-positive/25 rounded-sm p-4 space-y-2">
+							<div class="flex items-center gap-2">
+								<FluentInfo20Filled class="size-4 text-positive" />
+								<h3 class="text-[10px] text-fg-muted uppercase tracking-wide">Review outcome</h3>
+							</div>
+							{#if selectedReport.actionTaken}
+								<p class="text-sm text-fg-soft">
+									Action: <span class="font-semibold">{REPORT_ACTION_LABELS[selectedReport.actionTaken] ?? humanize(selectedReport.actionTaken)}</span>
+								</p>
+							{/if}
+							{#if selectedReport.reviewNote}
+								<p class="text-sm text-fg-soft whitespace-pre-wrap">Note: {selectedReport.reviewNote}</p>
+							{/if}
+							{#if selectedReport.reviewedBy}
+								<p class="text-xs text-fg-muted">
+									Reviewed by user {selectedReport.reviewedBy}
+									{#if selectedReport.reviewedAt} · {formatDateTime(selectedReport.reviewedAt)}{/if}
+								</p>
+							{/if}
+						</div>
+					{/if}
+
 					<!-- Actions -->
 					{#if selectedReport.status === "pending"}
 						<div class="space-y-4">
@@ -260,7 +339,12 @@
 								<span class="text-sm text-fg-body">Issue warning to user (3 warnings = auto-restriction)</span>
 							</label>
 
-							<form method="POST" action="?/deleteMessage" use:enhance>
+							<form
+								method="POST"
+								action="?/deleteMessage"
+								use:confirmSubmit={{ title: "Remove this message?", confirmLabel: "Remove & resolve", danger: true }}
+								use:enhance
+							>
 								<input type="hidden" name="reportId" value={selectedReport.reportId} />
 								<input type="hidden" name="messageId" value={selectedReport.messageId} />
 								<input type="hidden" name="reason" value={deletionReason} />
@@ -283,7 +367,12 @@
 									placeholder="Optional: Add a note explaining why this report is being dismissed..."
 									rows="3"
 									class="field-control rounded-sm px-3 py-2.5 w-full mb-2"></textarea>
-								<form method="POST" action="?/dismissReport" use:enhance>
+								<form
+									method="POST"
+									action="?/dismissReport"
+									use:confirmSubmit={{ title: "Dismiss this report?", confirmLabel: "Dismiss", body: "The reporter will be notified of the outcome." }}
+									use:enhance
+								>
 									<input type="hidden" name="reportId" value={selectedReport.reportId} />
 									<input type="hidden" name="reviewNote" value={dismissNote} />
 									<Button type="submit" variant="secondary" block icon={FluentDismiss20Filled}>Dismiss Report</Button>

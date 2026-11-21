@@ -45,11 +45,11 @@ export async function sendModerationNotification(params: {
 	switch (action) {
 		case "warning":
 			subject = "⚠️ Moderation Warning";
-			content = `You have received a warning from the moderation team.\n\nReason: ${reason}\n\nPlease review our community guidelines to avoid further action.`;
+			content = `You have received a warning from the moderation team.\n\nReason: ${reason}${details ? `\n\nModerator note: ${details}` : ""}\n\nPlease review our community guidelines to avoid further action. You can see your full history under "My moderation record".`;
 			break;
 		case "message_delete":
 			subject = "🗑️ Message Removed";
-			content = `One of your messages has been removed by a moderator.\n\nReason: ${reason}\n\nPlease ensure your messages comply with community guidelines.`;
+			content = `One of your messages has been removed by a moderator.\n\nReason: ${reason}${details ? `\n\nModerator note: ${details}` : ""}\n\nPlease ensure your messages comply with community guidelines. You can see your full history under "My moderation record".`;
 			break;
 		case "restriction":
 			subject = "🚫 Chat Restriction";
@@ -62,6 +62,22 @@ export async function sendModerationNotification(params: {
 		case "logo_reset":
 			subject = "🖼️ Logo Reset Required";
 			content = `Your profile logo has been flagged and must be changed.\n\nReason: ${reason}\n\nPlease upload a new appropriate logo.`;
+			break;
+		case "restriction_lifted":
+			subject = "✅ Chat Restriction Lifted";
+			content = `Your chat access has been restored.\n\nReason: ${reason}${details ? `\n\n${details}` : ""}`;
+			break;
+		case "report_resolved":
+			subject = "📋 Your Report Was Reviewed";
+			content = `Thank you for your report. A moderator reviewed it and took action.\n\nOutcome: ${reason}${details ? `\n\nModerator note: ${details}` : ""}\n\nYou can see the full report under "My reports".`;
+			break;
+		case "report_dismissed":
+			subject = "📋 Your Report Was Reviewed";
+			content = `Thank you for your report. A moderator reviewed it and decided no action was necessary.\n\nOutcome: ${reason}${details ? `\n\nModerator note: ${details}` : ""}\n\nYou can see the full report under "My reports".`;
+			break;
+		case "role_change":
+			subject = "🛡️ Your Role Has Changed";
+			content = `Your account role has been updated.\n\nNew role: ${reason}${details ? `\n\n${details}` : ""}`;
 			break;
 		default:
 			subject = "⚖️ Moderation Action";

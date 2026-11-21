@@ -1,19 +1,11 @@
 // src/routes/(authenticated)/moderation/+page.server.ts
 import { db } from "#lib/server/db.js";
-import {
-	generalReports,
-	chatMessages,
-	accounts,
-	userProfiles,
-	files,
-	userWarnings,
-	chatRestrictions
-} from "#lib/server/schema.js";
-import { eq, and, desc, sql } from "drizzle-orm";
-import { error, fail, redirect } from "@sveltejs/kit";
+import { generalReports, chatMessages, accounts, userProfiles } from "#lib/server/schema.js";
+import { eq, desc } from "drizzle-orm";
+import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import { getLogoUrl } from "#lib/server/backblaze.js";
-import { sendModerationNotification } from "#lib/server/service/inbox.js";
+import { isViolationReason, issueWarning as recordWarning, notifyAction } from "#lib/server/moderation/enforcement.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -109,14 +101,15 @@ export const actions: Actions = {
 		const formData = await request.formData();
 		const reportId = parseInt(formData.get("reportId") as string);
 		const messageId = parseInt(formData.get("messageId") as string);
-		const reason = formData.get("reason") as string;
+		const reason = isViolationReason(formData.get("reason")) ? (formData.get("reason") as any) : "other";
 		const note = formData.get("note") as string;
 		const issueWarning = formData.get("issueWarning") === "true";
 
-		// Get message to find sender
-		const message = await db.query.chatMessages.findFirst({
-			where: eq(chatMessages.id, messageId)
-		});
+		// Get message and report so everyone affected can be notified
+		const [message, report] = await Promise.all([
+			db.query.chatMessages.findFirst({ where: eq(chatMessages.id, messageId) }),
+			db.query.generalReports.findFirst({ where: eq(generalReports.id, reportId) })
+		]);
 
 		if (!message) {
 			return fail(404, { error: "Message not found" });
@@ -134,65 +127,18 @@ export const actions: Actions = {
 			})
 			.where(eq(chatMessages.id, messageId));
 
-		// Issue warning if requested
+		// Issue warning if requested (includes the automatic 7-day restriction at 3 warnings)
 		if (issueWarning) {
-			await db.insert(userWarnings).values({
+			await recordWarning({
 				userId: message.senderId,
-				reason: reason as any,
+				reason: isViolationReason(reason) ? reason : "other",
 				description: note || "Message violated community guidelines",
 				issuedBy: account.id
 			});
-
-			// Check warning count
-			const warningCount = await db
-				.select({ count: sql<number>`count(*)::int` })
-				.from(userWarnings)
-				.where(eq(userWarnings.userId, message.senderId));
-
-			const totalWarnings = warningCount[0]?.count || 0;
-
-			// Auto-restrict after 3 warnings
-			if (totalWarnings >= 3) {
-				// Check if already restricted
-				const existingRestriction = await db.query.chatRestrictions.findFirst({
-					where: eq(chatRestrictions.userId, message.senderId)
-				});
-
-				if (!existingRestriction) {
-					const expiresAt = new Date();
-					expiresAt.setDate(expiresAt.getDate() + 7); // 7 day restriction
-
-					await db.insert(chatRestrictions).values({
-						userId: message.senderId,
-						reason: "Accumulated 3 warnings",
-						restrictedBy: account.id,
-						expiresAt,
-						isPermanent: false
-					});
-
-					// Send restriction notification
-					await sendModerationNotification({
-						recipientId: message.senderId,
-						moderatorId: account.id,
-						action: "restriction",
-						reason: "Accumulated 3 warnings",
-						details: "This restriction will expire in 7 days. Further violations may result in a permanent ban."
-					});
-				}
-			} else {
-				// Send warning notification
-				await sendModerationNotification({
-					recipientId: message.senderId,
-					moderatorId: account.id,
-					action: "warning",
-					reason,
-					details: note || undefined
-				});
-			}
 		}
 
 		// Send message deletion notification
-		await sendModerationNotification({
+		await notifyAction({
 			recipientId: message.senderId,
 			moderatorId: account.id,
 			action: "message_delete",
@@ -207,11 +153,23 @@ export const actions: Actions = {
 				status: "resolved",
 				reviewedBy: account.id,
 				reviewedAt: new Date(),
-				actionTaken: "message_delete"
+				actionTaken: "message_delete",
+				reviewNote: note || null
 			})
 			.where(eq(generalReports.id, reportId));
 
-		return { success: true };
+		// Tell the reporter what happened to their report
+		if (report && report.reporterId !== message.senderId) {
+			await notifyAction({
+				recipientId: report.reporterId,
+				moderatorId: account.id,
+				action: "report_resolved",
+				reason: "The reported message was removed",
+				details: note || undefined
+			});
+		}
+
+		return { success: true, message: "Message removed and report resolved." };
 	},
 
 	dismissReport: async ({ request, locals }) => {
@@ -228,6 +186,8 @@ export const actions: Actions = {
 		const reportId = parseInt(formData.get("reportId") as string);
 		const reviewNote = formData.get("reviewNote") as string;
 
+		const report = await db.query.generalReports.findFirst({ where: eq(generalReports.id, reportId) });
+
 		await db
 			.update(generalReports)
 			.set({
@@ -238,6 +198,16 @@ export const actions: Actions = {
 			})
 			.where(eq(generalReports.id, reportId));
 
-		return { success: true };
+		if (report) {
+			await notifyAction({
+				recipientId: report.reporterId,
+				moderatorId: account.id,
+				action: "report_dismissed",
+				reason: "No action was necessary",
+				details: reviewNote || undefined
+			});
+		}
+
+		return { success: true, message: "Report dismissed and the reporter notified." };
 	}
 };
