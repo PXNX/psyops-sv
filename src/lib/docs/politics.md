@@ -97,7 +97,7 @@ A blockade additionally cuts sea flow by `blockadeStrength × 0.6`.
 Research cost is `baseCost × growth^level` rounded to 1,000, with effects from
 3% to 5% per level. Labs produce `labs × (1 + 0.25 × aiLevel)` research points
 per day. The full tree and prerequisites are listed in the
-[economy reference](/docs/economy#deep-dive-exact-numbers).
+[economy reference](/docs/economy).
 
 ### Worked example — funding a law
 
