@@ -28,9 +28,24 @@ import {
 	amphibiousPenalty,
 	blockadeEffects,
 	blockadeStrength,
+	BUILDING_TEMPLATES,
 	canAmphibiousAssault,
 	chipReadiness,
 	combinedArmsBonus,
+	ALLOCATION,
+	allocateFuel,
+	exportRevenue,
+	fuelHeatRelief,
+	validShares,
+	gridCapacity,
+	storageCapacity,
+	intermittencyLoss,
+	importedPartsCost,
+	partPrice,
+	plantOutput,
+	plantSiting,
+	sitingProblems,
+	PLANT_GRID_REQUIRED,
 	covertOdds,
 	dailyFuelUse,
 	domainEdge,
@@ -42,6 +57,9 @@ import {
 	convoySurvival,
 	canRepair,
 	CLOSURES,
+	autonomyScore,
+	combinedSourcingFactor,
+	dependenceLoss,
 	closureCost,
 	closureStrength,
 	laneCost,
@@ -49,6 +67,8 @@ import {
 	convoyBoost,
 	convoyCargoLimit,
 	convoyCost,
+	SOURCING,
+	sourcingFactor,
 	tradeFlow,
 	tradeLoss,
 	transitChance,
@@ -299,6 +319,65 @@ describe("energy and industry", () => {
 	});
 });
 
+describe("regional energy and fuel allocation", () => {
+	const desert = { latitude: 20, terrain: "desert", grid: 4, storage: 4 };
+	const arctic = { latitude: 70, terrain: "forest", grid: 4, storage: 4 };
+	const coast = { latitude: 50, terrain: "shore", grid: 4, storage: 4 };
+
+	it("makes solar work better near the equator and wind better on a coast", () => {
+		expect(plantSiting("solar", desert).factor).toBeGreaterThan(plantSiting("solar", arctic).factor);
+		expect(plantSiting("wind", coast).factor).toBeGreaterThan(plantSiting("wind", { ...desert, terrain: "urban" }).factor);
+		expect(plantSiting("hydro", { ...desert, terrain: "lake" }).factor).toBeGreaterThan(plantSiting("hydro", desert).factor);
+		expect(plantSiting("geothermal", { ...desert, terrain: "mountain" }).factor).toBeGreaterThan(
+			plantSiting("geothermal", desert).factor
+		);
+	});
+
+	it("gates plants on grid level and cooling water", () => {
+		expect(sitingProblems("nuclear", { latitude: 50, terrain: "plains", grid: 0 })).toContainEqual(
+			expect.stringContaining("grid-network level")
+		);
+		expect(sitingProblems("nuclear", { latitude: 50, terrain: "plains", grid: 5 })).toContainEqual(
+			expect.stringContaining("cooling water")
+		);
+		expect(sitingProblems("nuclear", coast)).toEqual([]);
+		expect(PLANT_GRID_REQUIRED.fusion).toBeGreaterThan(PLANT_GRID_REQUIRED.solar);
+	});
+
+	it("turns grid and storage levels into capacity and smoothing", () => {
+		expect(gridCapacity(0)).toBe(0);
+		expect(gridCapacity(3)).toBeGreaterThan(gridCapacity(1));
+		expect(storageCapacity(2)).toBeGreaterThan(0);
+		expect(intermittencyLoss(0)).toBeGreaterThan(intermittencyLoss(4));
+		expect(plantOutput("solar", { ...desert, storage: 4 })).toBeGreaterThanOrEqual(
+			plantOutput("solar", { ...desert, storage: 0 })
+		);
+		expect(plantOutput("solar", { ...desert, grid: 0 })).toBe(0);
+	});
+
+	it("prices imported plant components higher under blockade", () => {
+		expect(partPrice("solar_panels", true)).toBeGreaterThan(partPrice("solar_panels"));
+		expect(importedPartsCost("nuclear")).toBeGreaterThan(importedPartsCost("solar"));
+		expect(BUILDING_TEMPLATES.grid.stat).toBe("grid");
+		expect(BUILDING_TEMPLATES.energy_storage.stat).toBe("storage");
+	});
+
+	it("splits refined fuel and validates the policy", () => {
+		const shares = { civilian: 50, military: 30, export: 20 };
+		expect(validShares(shares)).toBe(true);
+		expect(validShares({ civilian: 60, military: 30, export: 20 })).toBe(false);
+		const pools = allocateFuel(100, shares);
+		expect(pools.civilian).toBe(50);
+		expect(pools.military).toBe(30);
+		expect(pools.export).toBe(20);
+		expect(pools.civilian + pools.military + pools.export).toBe(100);
+		expect(exportRevenue(10, true)).toBeLessThan(exportRevenue(10));
+		expect(fuelHeatRelief(1000, 1000)).toBeGreaterThan(0);
+		expect(fuelHeatRelief(0, 1000)).toBe(0);
+		expect(ALLOCATION.FUEL_WORLD_PRICE).toBeGreaterThan(0);
+	});
+});
+
 describe("logistics and supply chains", () => {
 	it("derives capacity from infrastructure, borders, ports and terrain", () => {
 		const bare = regionSupplyCapacity({ id: 1, terrain: "plains", infrastructure: 0 }, 0, false);
@@ -404,5 +483,28 @@ describe("air and sea trade", () => {
 		expect(closureStrength([1, 1])).toBe(1);
 		expect(transitChance(0.9)).toBeLessThan(transitChance(0.2));
 		expect(transitChance(0.9, 0.4)).toBeGreaterThan(transitChance(0.9));
+	});
+});
+
+describe("supply autonomy", () => {
+	it("ranks domestic, bloc, trade and shortage sources", () => {
+		expect(sourcingFactor("domestic")).toBe(1);
+		expect(sourcingFactor("bloc")).toBeLessThan(1);
+		expect(sourcingFactor("trade")).toBeLessThan(sourcingFactor("bloc"));
+		expect(sourcingFactor("shortage")).toBeLessThan(0.5);
+		expect(SOURCING.shortage.factor).toBeLessThan(SOURCING.trade.factor);
+	});
+
+	it("makes trade reliance suffer when lanes are throttled", () => {
+		expect(sourcingFactor("trade", 1)).toBeGreaterThan(sourcingFactor("trade", 0.2));
+		expect(dependenceLoss("trade", 0.2)).toBeGreaterThan(dependenceLoss("trade", 1));
+		expect(sourcingFactor("domestic", 0.2)).toBe(1);
+	});
+
+	it("lets the bottleneck dominate combined output and scores autonomy", () => {
+		expect(combinedSourcingFactor([1, 1])).toBe(1);
+		expect(combinedSourcingFactor([0.4, 1])).toBeLessThan(combinedSourcingFactor([0.8, 1]));
+		expect(autonomyScore(3, 4)).toBeCloseTo(0.75);
+		expect(autonomyScore(0, 0)).toBe(1);
 	});
 });

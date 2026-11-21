@@ -99,7 +99,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const stateRows = await db.select({ id: states.id, name: states.name }).from(states);
 	const state = stateRows.find((s) => s.id === stateId) ?? null;
-	const [fleet, seaControl, blockades, navalOps, sats, bonuses, defence, spaceOps, aiInfo, routes, runs, wallet, resources, products, supply, convoys, ownRegions, lanes, zones, factors] =
+	const [fleet, seaControl, blockades, navalOps, sats, bonuses, defence, spaceOps, aiInfo, routes, runs, wallet, resources, products, supply, convoys, ownRegions, lanes, zones, factors, autonomy] =
 		await Promise.all([
 			navalFleet(db, stateId),
 			seaControlOf(db, stateId),
@@ -120,7 +120,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			db.select({ id: regions.id, infrastructure: regions.infrastructure }).from(regions).where(eq(regions.stateId, stateId)).limit(60),
 			lanesOf(db, stateId),
 			closuresBy(db, stateId),
-			tradeFactors(db, stateId)
+			tradeFactors(db, stateId),
+			stateAutonomy(db, stateId)
 		]);
 
 	return {
@@ -129,6 +130,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			? {
 					roles: { naval, space, ai, smuggler, convoy, trade, closure },
 					trade: { lanes, zones, factors, laneSpecs: TRADE_LANES, closureSpecs: CLOSURES },
+					autonomy,
 					convoys,
 					ownRegions,
 					supply,

@@ -65,6 +65,20 @@
 				</p>
 			</section>
 
+			<section class="panel p-4" aria-labelledby="autonomy-title">
+				<h2 id="autonomy-title" class="section-title mb-2">🏭 Supply autonomy {Math.round((p?.autonomy.score ?? 1) * 100)}%</h2>
+				<p class="text-xs text-fg-muted">
+					{p?.autonomy.domestic ?? 0} of {p?.autonomy.total ?? 0} strategic inputs sourced at home ·
+					{p?.autonomy.bloc ?? 0} from bloc partners · {p?.autonomy.trade ?? 0} via trade lanes ·
+					<span class:text-warning={(p?.autonomy.shortage ?? 0) > 0}>{p?.autonomy.shortage ?? 0} unsourced</span>
+				</p>
+				<p class="mt-1 text-xs text-fg-muted">
+					Factories drawing on domestic stock run at full output; bloc partners and trade lanes cost a little
+					efficiency, and a blockade or closure throttles the lanes further. Unsourced inputs leave a line limping
+					along and degrade its quality.
+				</p>
+			</section>
+
 			<!-- ── Convoy operations ───────────────────────────────────────── -->
 			<section class="panel p-4" aria-labelledby="convoy-title">
 				<h2 id="convoy-title" class="section-title mb-3">🚚 Convoy operations</h2>

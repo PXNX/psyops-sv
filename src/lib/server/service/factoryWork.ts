@@ -22,6 +22,7 @@ import { strikeProductionFactor } from "#lib/server/services/military/strike.js"
 import { aiLevel } from "#lib/server/services/military/ai.js";
 import { aiProductionFactor } from "#lib/config/index.js";
 import { regionSupply } from "#lib/server/services/military/logistics.js";
+import { factorySourcing } from "#lib/server/services/economy/autonomy.js";
 import { factoryWaterFactor } from "#lib/config/index.js";
 import { regionsCivilianNeeds } from "#lib/server/services/civilians/supply.js";
 import {
@@ -414,7 +415,13 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			// Refineries and armaments factories turn the owner's materials into
 			// output, one recipe per shift; without the materials the shift is
 			// paid but produces nothing.
-			let output: { item: string; quantity: number; missing?: string } | null = null;
+			let output: {
+				item: string;
+				quantity: number;
+				missing?: string;
+				source?: string;
+				shortage?: string[];
+			} | null = null;
 			if (factory.factoryType !== "mine") {
 				const item = factory.productOutput ?? factory.resourceOutput;
 				const recipe = item ? SHIFT_RECIPES[item] : undefined;
@@ -438,9 +445,13 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 						output = { item, quantity: 0, missing };
 					} else {
 						const type = factory.productOutput ? "product" : "resource";
-						const quantity = Math.max(1, Math.round(recipe.output * grid));
+						// Where the state can source this recipe's inputs decides
+						// how much of the line actually runs: own stock first, then
+						// bloc partners, then paid lanes (hurt by closures/blockade).
+						const sourcing = await factorySourcing(tx, factory.stateId ?? 0, Object.keys(recipe.inputs));
+						const quantity = Math.max(1, Math.round(recipe.output * grid * sourcing.factor));
 						await addUserItem(tx, factory.ownerId, type, item, quantity);
-						output = { item, quantity };
+						output = { item, quantity, source: sourcing.label, shortage: sourcing.missing };
 					}
 				}
 			}
@@ -454,7 +465,7 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				toolsWorn = await takeUserItem(tx, factory.ownerId, "product", "machine_tools", 1);
 			}
 			const produced = factory.factoryType === "mine" ? resourcesProduced > 0 : (output?.quantity ?? 0) > 0;
-			const supplied = produced && toolsWorn;
+			const supplied = produced && toolsWorn && !(output?.shortage?.length ?? 0);
 			const newEfficiency = nextEfficiency(factory.efficiency ?? 50, {
 				supplied,
 				disruptions: disruptionFactors
