@@ -52,7 +52,52 @@ function mix(a: Hex, b: Hex, t: number): Hex {
 const light = (c: Hex, t = 0.2) => mix(c, "#ffffff", t);
 const dark = (c: Hex, t = 0.2) => mix(c, "#0a0d12", t);
 
+/**
+ * Gradients are registered per base colour while an icon is being built and
+ * emitted once into that icon's <defs>. Faces then reference them instead of
+ * flat fills, which is what makes the art read as rendered material rather
+ * than flat vector drawing.
+ */
+let activeDefs: Map<string, string> | null = null;
+
 function palette(base: Hex) {
+	const key = base.slice(1);
+	if (activeDefs && !activeDefs.has(`grad-${key}`)) {
+		activeDefs.set(
+			`grad-${key}`,
+			`<linearGradient id="grad-${key}" x1="0%" y1="0%" x2="55%" y2="100%">` +
+				`<stop offset="0%" stop-color="${light(base, 0.52)}"/>` +
+				`<stop offset="22%" stop-color="${light(base, 0.24)}"/>` +
+				`<stop offset="62%" stop-color="${base}"/>` +
+				`<stop offset="100%" stop-color="${dark(base, 0.12)}"/>` +
+				`</linearGradient>`
+		);
+		activeDefs.set(
+			`gradL-${key}`,
+			`<linearGradient id="gradL-${key}" x1="0%" y1="0%" x2="25%" y2="100%">` +
+				`<stop offset="0%" stop-color="${light(base, 0.12)}"/>` +
+				`<stop offset="55%" stop-color="${base}"/>` +
+				`<stop offset="100%" stop-color="${dark(base, 0.22)}"/>` +
+				`</linearGradient>`
+		);
+		activeDefs.set(
+			`gradR-${key}`,
+			`<linearGradient id="gradR-${key}" x1="0%" y1="0%" x2="0%" y2="100%">` +
+				`<stop offset="0%" stop-color="${dark(base, 0.1)}"/>` +
+				`<stop offset="100%" stop-color="${dark(base, 0.44)}"/>` +
+				`</linearGradient>`
+		);
+	}
+	if (activeDefs) {
+		return {
+			top: `url(#grad-${key})`,
+			left: `url(#gradL-${key})`,
+			right: `url(#gradR-${key})`,
+			edge: dark(base, 0.58),
+			hi: light(base, 0.44)
+		};
+	}
+	// Standalone use (outside isometricIconMarkup) still gets solid shading.
 	return {
 		top: light(base, 0.15),
 		left: base,
@@ -77,11 +122,13 @@ const line = (x1: number, y1: number, x2: number, y2: number, stroke: string, sw
 	`<line x1="${n(x1)}" y1="${n(y1)}" x2="${n(x2)}" y2="${n(y2)}" stroke="${stroke}" stroke-width="${n(sw)}" stroke-linecap="round" ${extra}/>`;
 const path = (d: string, fill: string, extra = "") => `<path d="${d}" fill="${fill}" ${extra}/>`;
 const group = (inner: string, transform = "") => `<g${transform ? ` transform="${transform}"` : ""}>${inner}</g>`;
-const stroke = (color: string, w = 0.6) => `stroke="${color}" stroke-width="${w}" stroke-linejoin="round"`;
+// No ink outlines: hard dark edges are what make an icon look hand-drawn.
+// Faces are separated by their own gradient shading instead.
+const stroke = (_color: string, _w = 0.6) => `stroke-linejoin="round"`;
 
 /* ---------- shared primitives ---------- */
 
-const ground = () => ellipse(32, 54, 19, 3, "#000000", 'opacity="0.2"');
+const ground = () => ellipse(32, 54, 19, 3, "#000000", 'opacity="0.28" filter="url(#iso-shadow)"');
 
 /** Solid box with the standard three-face shading. */
 function cube(cx: number, cy: number, w: number, d: number, h: number, base: Hex): string {
@@ -790,7 +837,16 @@ function crystal(cx: number, baseY: number, h: number, w: number, base: Hex): st
 
 /** Raw SVG markup for one resource/product. Falls back to a supply crate. */
 export function isometricIconMarkup(name: string): string {
-	return (icons[name] ?? icons.package)!();
+	activeDefs = new Map();
+	const body = (icons[name] ?? icons.package)!();
+	const defs =
+		"<defs>" +
+		[...activeDefs.values()].join("") +
+		'<filter id="iso-shadow" x="-50%" y="-100%" width="200%" height="300%"><feGaussianBlur stdDeviation="1.3"/></filter>' +
+		'<filter id="iso-lift" x="-30%" y="-30%" width="170%" height="180%"><feDropShadow dx="0" dy="2" stdDeviation="1.6" flood-color="#04070b" flood-opacity="0.4"/></filter>' +
+		"</defs>";
+	activeDefs = null;
+	return defs + `<g filter="url(#iso-lift)">${body}</g>`;
 }
 
 export const isometricIconNames = Object.keys(icons);
