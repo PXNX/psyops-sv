@@ -1,9 +1,16 @@
 // src/lib/server/taxes.ts
-import { db } from "#lib/server/db.js";
+import type { db } from "#lib/server/db.js";
 import { stateTaxes, taxRevenue, stateTreasury, governmentBudgetTransactions } from "#lib/server/schema.js";
 import { eq, and, sql } from "drizzle-orm";
 
 export type DbClient = typeof db | Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+// Resolve the live database only when a caller did not pass one. Keeping the
+// import type-only lets services and tests import this module without loading
+// the SvelteKit runtime just to get a default parameter.
+async function resolveDb(dbClient?: DbClient): Promise<DbClient> {
+	return dbClient ?? (await import("#lib/server/db.js")).db;
+}
 
 export interface TaxCalculation {
 	grossAmount: number;
@@ -38,8 +45,9 @@ export async function calculateAndCollectTax(
 	taxType: "mining" | "production" | "market_transaction" | "income",
 	grossAmount: number,
 	userId: string,
-	dbClient: DbClient = db
+	clientOpt?: DbClient
 ): Promise<TaxCalculation> {
+	const dbClient = await resolveDb(clientOpt);
 	// No state (e.g. independent region) means no taxes are collected
 	if (stateId === null) {
 		return {
@@ -136,7 +144,8 @@ export async function calculateAndCollectTax(
 /**
  * Get all active taxes for a state
  */
-export async function getActiveTaxes(stateId: number, dbClient: DbClient = db) {
+export async function getActiveTaxes(stateId: number, clientOpt?: DbClient) {
+	const dbClient = await resolveDb(clientOpt);
 	return await dbClient
 		.select()
 		.from(stateTaxes)
@@ -150,8 +159,9 @@ export async function previewTax(
 	stateId: number,
 	taxType: "mining" | "production" | "market_transaction" | "income",
 	grossAmount: number,
-	dbClient: DbClient = db
+	clientOpt?: DbClient
 ): Promise<{ taxAmount: number; netAmount: number }> {
+	const dbClient = await resolveDb(clientOpt);
 	const activeTaxes = await dbClient
 		.select()
 		.from(stateTaxes)

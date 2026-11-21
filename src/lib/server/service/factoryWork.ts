@@ -21,6 +21,8 @@ import { gridDegradation } from "#lib/server/services/military/state-effects.js"
 import { strikeProductionFactor } from "#lib/server/services/military/strike.js";
 import { aiLevel } from "#lib/server/services/military/ai.js";
 import { aiProductionFactor } from "#lib/config/index.js";
+import { factoryWaterFactor } from "#lib/config/index.js";
+import { regionsCivilianNeeds } from "#lib/server/services/civilians/supply.js";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 
@@ -308,9 +310,13 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			let resourcesProduced = 0;
 			let netResourceQuantity = 0;
 			let deposit: { remaining: number; capacity: number } | null = null;
-			// A grid attack on the state browns out its factories: less output per shift.
+			// Water-hungry companies (steel, refining, fabs) draw on the same
+			// supply as households and throttle when the region runs short.
+			const waterSufficiency =
+				(await regionsCivilianNeeds(tx, [factory.regionId])).get(factory.regionId)?.water.sufficiency ?? 1;
 			const grid =
 				gridFactor(await gridDegradation(tx, factory.stateId)) *
+				factoryWaterFactor(factory.productOutput ?? factory.resourceOutput, waterSufficiency) *
 				// Airstrikes on the grid and on the region's industry do the same.
 				(await strikeProductionFactor(tx, factory.stateId, factory.regionId)) *
 				// AI-assisted planning wastes less material (ai.config.ts).
