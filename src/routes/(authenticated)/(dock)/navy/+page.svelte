@@ -39,7 +39,7 @@
 
 	const viewBox = $derived.by(() => {
 		const vb = hexMapViewBox();
-		return `0 0 ${vb.width} ${vb.height}`;
+		return `${vb.minX} ${vb.minY} ${vb.width} ${vb.height}`;
 	});
 	const hexes: Hex[] = [];
 	for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {

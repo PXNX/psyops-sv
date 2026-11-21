@@ -114,7 +114,7 @@ export function hexMapViewBox(size = HEX_SIZE): { width: number; height: number 
 	const maxX = Math.max(...corners.map((c) => c.x)) + pad;
 	const minY = Math.min(...corners.map((c) => c.y)) - pad;
 	const maxY = Math.max(...corners.map((c) => c.y)) + pad;
-	return { width: Math.ceil(maxX - minX), height: Math.ceil(maxY - minY) };
+	return { minX: Math.floor(minX), minY: Math.floor(minY), width: Math.ceil(maxX - minX), height: Math.ceil(maxY - minY) };
 }
 
 function cubeLerp(a: Hex, b: Hex, t: number): { x: number; y: number; z: number } {
