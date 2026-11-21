@@ -8,10 +8,11 @@
 	themes: false;
 }
 
-/* The one theme. Every other colour token below is derived from these, so
-   retheming means editing this block only. */
+/* Dark — the original PsyOps tactical console. It stays the default so the
+   app boots dark before a stored preference is known. All other colour tokens
+   below are derived from these base values. */
 @plugin "daisyui/theme" {
-	name: "psyops";
+	name: "dark";
 	default: true;
 	prefersdark: true;
 	color-scheme: dark;
@@ -43,6 +44,56 @@
 	--border: 1px;
 	--depth: 0;
 	--noise: 0;
+	/* Warm cream page titles are part of the console look. */
+	--color-heading: #fff4d6;
+}
+
+/* Light — same layout and components, inverted steel/paper palette. Derived
+   text tokens are re-pointed at the dark end of the ramp so links and icons
+   keep their contrast on white surfaces. */
+@plugin "daisyui/theme" {
+	name: "light";
+	color-scheme: light;
+	--color-base-100: #ffffff;
+	--color-base-200: #f6f8fa;
+	--color-base-300: #e6eaef;
+	--color-base-content: #1f2328;
+	--color-primary: #0969da;
+	--color-primary-content: #ffffff;
+	--color-secondary: #0550ae;
+	--color-secondary-content: #ffffff;
+	--color-accent: #9a6700;
+	--color-accent-content: #ffffff;
+	--color-neutral: #d8dee4;
+	--color-neutral-content: #1f2328;
+	--color-info: #0969da;
+	--color-info-content: #ffffff;
+	--color-success: #1a7f37;
+	--color-success-content: #ffffff;
+	--color-warning: #9a6700;
+	--color-warning-content: #ffffff;
+	--color-error: #cf222e;
+	--color-error-content: #ffffff;
+	--radius-selector: 0.25rem;
+	--radius-field: 0.25rem;
+	--radius-box: 0.375rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 0;
+	--noise: 0;
+	--color-heading: var(--color-base-content);
+	--color-primary-fg: #0550ae;
+	--color-primary-hover: #093d80;
+	--color-primary-soft: #cfe3fb;
+	--color-friendly-fg: #0550ae;
+	--color-friendly-hi: #0550ae;
+	--color-positive-fg: #1a7f37;
+	--color-positive-hi: #1a7f37;
+	--color-hostile-fg: #cf222e;
+	--color-politics: #7451e6;
+	--color-politics-fg: #4a32a6;
+	--color-politics-bg: #b9a1ff;
 }
 
 @theme {
@@ -63,6 +114,8 @@
 	/* @tokens-start — derived from the daisyUI theme above; use the names
 	   (text-fg, bg-surface-4, border-line/15, text-primary-fg, …) in markup. */
 	--color-fg: var(--color-base-content);
+	/* Page titles: warm cream in dark mode, base ink in light mode. */
+	--color-heading: var(--color-base-content);
 	--color-fg-body: color-mix(in oklab, var(--color-base-content) 90%, var(--color-base-100));
 	--color-fg-soft: color-mix(in oklab, var(--color-base-content) 78%, var(--color-base-100));
 	--color-fg-dim: color-mix(in oklab, var(--color-base-content) 68%, var(--color-base-100));

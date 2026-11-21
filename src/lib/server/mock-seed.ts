@@ -295,14 +295,14 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 	// ============ User Profiles ============
 	await db.insert(userProfiles).values([
 		{ accountId: "user-1", name: "Alice Admin", bio: "Server administrator and Freedonia patriot", theme: "dark" },
-		{ accountId: "user-2", name: "Bob Moderator", bio: "Keeping things civil since day one", theme: "cyberpunk" },
-		{ accountId: "user-3", name: "Charlie Citizen", bio: "Just a regular citizen trying to make it", theme: "nord" },
+		{ accountId: "user-2", name: "Bob Moderator", bio: "Keeping things civil since day one", theme: "light" },
+		{ accountId: "user-3", name: "Charlie Citizen", bio: "Just a regular citizen trying to make it", theme: "dark" },
 		{ accountId: "user-4", name: "Diana Diplomat", bio: "Foreign affairs specialist", theme: "dark" },
 		{
 			accountId: "user-5",
 			name: "Eve Entrepreneur",
 			bio: "Building the economy one factory at a time",
-			theme: "business"
+			theme: "light"
 		}
 	]);
 

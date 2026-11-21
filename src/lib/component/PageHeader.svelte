@@ -51,7 +51,7 @@
 	{/if}
 	<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 		<div class="min-w-0">
-			<h1 class="text-3xl font-bold text-[#fff4d6] flex items-center gap-3 flex-wrap">
+			<h1 class="text-3xl font-bold text-heading flex items-center gap-3 flex-wrap">
 				{#if Icon}
 					<Icon class="size-7 shrink-0 text-primary {entrance ? 'animate-pop-in' : ''}" />
 				{/if}

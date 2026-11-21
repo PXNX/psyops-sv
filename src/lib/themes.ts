@@ -1,34 +1,7 @@
-export const themes = [
-	"acid",
-	"aqua",
-	"autumn",
-	"black",
-	"bumblebee",
-	"business",
-	"cmyk",
-	"coffee",
-	"corporate",
-	"cupcake",
-	"cyberpunk",
-	"dark",
-	"dim",
-	"dracula",
-	"emerald",
-	"fantasy",
-	"forest",
-	"garden",
-	"halloween",
-	"lemonade",
-	"light",
-	"lofi",
-	"luxury",
-	"night",
-	"nord",
-	"pastel",
-	"retro",
-	"sunset",
-	"synthwave",
-	"valentine",
-	"winter",
-	"wireframe"
-];
+/** Colour themes compiled into the stylesheet (see app.css).
+ *
+ * Keep this in sync with the `@plugin "daisyui/theme"` blocks. Two are enough:
+ * the tactical dark console and a light counterpart. The stored profile and
+ * the SSR cookie are both validated against this list.
+ */
+export const themes: string[] = ["dark", "light"];

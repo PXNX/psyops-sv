@@ -11,7 +11,12 @@
 	import FluentChevronRight20Filled from "~icons/fluent/chevron-right-20-filled";
 	import FluentAlert20Filled from "~icons/fluent/alert-20-filled";
 	import FluentDelete20Filled from "~icons/fluent/delete-20-filled";
-	import { themes } from "#lib/themes.js";
+	import FluentEye20Filled from "~icons/fluent/eye-20-filled";
+	import FluentEyeOff20Filled from "~icons/fluent/eye-off-20-filled";
+	import FluentMail20Filled from "~icons/fluent/mail-20-filled";
+	import FluentWeatherMoon20Filled from "~icons/fluent/weather-moon-20-filled";
+	import FluentWeatherSunny20Filled from "~icons/fluent/weather-sunny-20-filled";
+	import FluentCheckmarkCircle20Filled from "~icons/fluent/checkmark-circle-20-filled";
 	import { settings } from "#lib/settings.svelte.js";
 	import TelegramLoginWidget from "#lib/components/TelegramLoginWidget.svelte";
 	import PushNotificationManager from "#lib/components/PushNotificationManager.svelte";
@@ -25,6 +30,7 @@
 	let showDeleteModal = $state(false);
 	let deleteConfirmation = $state("");
 	let isDeleting = $state(false);
+	let emailRevealed = $state(false);
 
 	let notifyNewspaperPosts = $state(data.profile.notifyNewspaperPosts);
 	let notifyDirectMessages = $state(data.profile.notifyDirectMessages);
@@ -35,6 +41,26 @@
 	let notifyShiftComplete = $state(data.profile.notifyShiftComplete);
 	let notifyMarketSales = $state(data.profile.notifyMarketSales);
 	let notifyNewProposals = $state(data.profile.notifyNewProposals);
+
+	const displayName = $derived(data.profile.name?.trim() || data.profile.email.split("@")[0] || "Agent");
+	const initials = $derived(
+		displayName
+			.split(/\s+/)
+			.slice(0, 2)
+			.map((part) => part[0]?.toUpperCase() ?? "")
+			.join("") || "?"
+	);
+	const emailClass = $derived(
+		`truncate font-mono text-sm text-fg-soft transition-[filter] duration-200 ${emailRevealed ? "" : "blur-[5px] select-none"}`
+	);
+
+	function themeButtonClass(theme: "dark" | "light") {
+		return `press-spring flex flex-col items-center gap-2 rounded-sm border px-4 py-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 ${
+			settings.theme === theme
+				? "border-primary/70 bg-primary/12 text-primary-fg"
+				: "border-line/15 bg-surface-1 text-fg-soft hover:border-line/30 hover:bg-surface-2"
+		}`;
+	}
 
 	async function updateSettings() {
 		const formData = new FormData();
@@ -47,13 +73,12 @@
 		});
 	}
 
-	function set_theme(event: Event) {
-		const select = event.target as HTMLSelectElement;
-		const theme = select.value;
-		if (themes.includes(theme)) {
-			settings.setTheme(theme);
-			updateSettings();
-		}
+	function setTheme(theme: "dark" | "light") {
+		if (settings.theme === theme) return;
+		// Updates the <html data-theme> attribute immediately via the root layout;
+		// persistence happens both client-side (cookie/storage) and on the server.
+		settings.setTheme(theme);
+		updateSettings();
 	}
 
 	function toggleLoadImages(event: Event) {
@@ -74,322 +99,411 @@
 </script>
 
 <PageContainer maxWidth="3xl">
-	<!-- Header -->
-	<PageHeader title="Settings" subtitle="Manage your account preferences" icon={FluentSettings20Filled} />
+	<PageHeader title="Settings" subtitle="Manage your account and preferences" icon={FluentSettings20Filled} />
 
-	<!-- Telegram Connection -->
-	<div class="panel rounded-sm p-5 space-y-4">
-		<div class="flex items-center gap-2">
-			<svg class="size-5 text-friendly" fill="currentColor" viewBox="0 0 24 24">
-				<path
-					d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
-				/>
-			</svg>
-			<h2 class="section-title">Telegram Account</h2>
-		</div>
-
-		{#if data.profile.telegramUsername}
-			<div class="panel-muted rounded-sm p-4 space-y-3">
-				<div class="flex items-center justify-between">
-					<div>
-						<p class="text-sm text-fg-muted">Connected Telegram Account</p>
-						<p class="text-base font-semibold text-fg mt-1">@{data.profile.telegramUsername}</p>
+	<div class="space-y-5">
+		<!-- Account / switch account -->
+		<section class="panel rounded-sm p-5 sm:p-6" aria-labelledby="account-heading">
+			<div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+				<div class="flex min-w-0 items-center gap-4">
+					<div
+						class="grid size-14 shrink-0 place-items-center rounded-sm border border-primary/40 bg-primary/12 font-serif text-xl font-bold text-primary-fg"
+						aria-hidden="true"
+					>
+						{initials}
 					</div>
-					<Badge tone="green">Connected</Badge>
+					<div class="min-w-0">
+						<div class="flex flex-wrap items-center gap-2">
+							<h2 id="account-heading" class="truncate text-lg font-semibold text-fg">{displayName}</h2>
+							<Badge tone="green">Signed in</Badge>
+						</div>
+
+						<button
+							type="button"
+							class="group mt-1.5 inline-flex max-w-full items-center gap-2 rounded-sm px-1.5 py-1 -ml-1.5 text-left transition-colors hover:bg-surface-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50"
+							aria-label={emailRevealed ? "Hide email address" : "Reveal email address"}
+							aria-pressed={emailRevealed}
+							title={emailRevealed ? "Tap to hide email" : "Tap to reveal email"}
+							onclick={() => (emailRevealed = !emailRevealed)}
+						>
+							<FluentMail20Filled class="size-4 shrink-0 text-fg-muted" />
+							<span aria-hidden={!emailRevealed} class={emailClass}>
+								{data.profile.email}
+							</span>
+							{#if emailRevealed}
+								<FluentEye20Filled class="size-4 shrink-0 text-primary-fg" />
+							{:else}
+								<FluentEyeOff20Filled class="size-4 shrink-0 text-fg-muted group-hover:text-fg-soft" />
+							{/if}
+						</button>
+					</div>
 				</div>
-				<form method="POST" action="?/disconnectTelegram" use:enhance>
-					<Button type="submit" variant="soft-red" size="sm" block>Disconnect Telegram</Button>
+
+				<form method="POST" action="?/logout" use:enhance class="shrink-0">
+					<Button type="submit" variant="secondary" icon={FluentArrowExit20Filled} class="justify-start">
+						Switch account
+					</Button>
 				</form>
 			</div>
-		{:else}
-			<p class="text-sm text-fg-muted">
-				Connect your Telegram account to receive notifications and use Telegram-based features.
+			<p class="mt-4 border-t border-line/10 pt-3 text-xs text-fg-muted">
+				Switching accounts signs you out so you can sign in with a different one.
 			</p>
-			<TelegramLoginWidget next="/settings" label="Connect Telegram Account" />
-		{/if}
-	</div>
+		</section>
 
-	<!-- Application Settings -->
-	<div class="panel rounded-sm p-5 space-y-4">
-		<div class="flex items-center gap-2">
-			<FluentPaint20Filled class="size-5 text-politics" />
-			<h2 class="section-title">Appearance</h2>
-		</div>
+		<!-- Connected accounts -->
+		<section class="panel rounded-sm p-5 sm:p-6 space-y-4" aria-labelledby="telegram-heading">
+			<div class="flex items-center gap-2">
+				<svg class="size-5 text-friendly" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+					<path
+						d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.16.16-.295.295-.605.295-.042 0-.084 0-.126-.01l.21-3.051 5.56-5.023c.242-.213-.054-.328-.373-.115L6.765 13.08l-2.994-.924c-.651-.204-.666-.651.136-.968l11.708-4.514c.54-.203 1.01.122.84.953z"
+					/>
+				</svg>
+				<h2 id="telegram-heading" class="section-title">Connected Accounts</h2>
+			</div>
 
-		<div>
-			<label for="theme" class="field-label">Theme</label>
-			<select
-				id="theme"
-				value={settings.theme}
-				data-choose-theme
-				class="field-control rounded-sm px-3 py-2.5 w-full capitalize"
-				onchange={set_theme}
-			>
-				{#each themes as theme}
-					<option value={theme} class="capitalize">{theme}</option>
-				{/each}
-			</select>
-		</div>
-
-		<div class="pt-2">
-			<label class="flex items-center justify-between cursor-pointer group">
-				<div class="flex items-center gap-3">
-					<FluentDataUsage20Filled class="size-5 text-politics" />
+			{#if data.profile.telegramUsername}
+				<div class="panel-muted rounded-sm p-4 flex flex-wrap items-center justify-between gap-3">
 					<div>
-						<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Load Images</p>
-						<p class="text-xs text-fg-muted">Disable to save data and improve performance</p>
+						<p class="text-xs text-fg-muted">Telegram</p>
+						<p class="font-semibold text-fg mt-0.5">@{data.profile.telegramUsername}</p>
+					</div>
+					<div class="flex items-center gap-3">
+						<Badge tone="blue">Connected</Badge>
+						<form method="POST" action="?/disconnectTelegram" use:enhance>
+							<Button type="submit" variant="soft-red" size="sm">Disconnect</Button>
+						</form>
 					</div>
 				</div>
+			{:else}
+				<p class="text-sm text-fg-muted">Connect Telegram to receive notifications and use Telegram-based features.</p>
+				<TelegramLoginWidget next="/settings" label="Connect Telegram Account" />
+			{/if}
+		</section>
+
+		<!-- Appearance -->
+		<section class="panel rounded-sm p-5 sm:p-6 space-y-5" aria-labelledby="appearance-heading">
+			<div class="flex items-center gap-2">
+				<FluentPaint20Filled class="size-5 text-politics" />
+				<h2 id="appearance-heading" class="section-title">Appearance</h2>
+			</div>
+
+			<div>
+				<p class="field-label">Theme</p>
+				<div class="grid grid-cols-2 gap-3" role="group" aria-label="Colour theme">
+					<button
+						type="button"
+						aria-pressed={settings.theme === "dark"}
+						onclick={() => setTheme("dark")}
+						class={themeButtonClass("dark")}
+					>
+						<FluentWeatherMoon20Filled class="size-6" />
+						<span class="flex items-center gap-1.5">
+							Dark
+							{#if settings.theme === "dark"}
+								<FluentCheckmarkCircle20Filled class="size-4" />
+							{/if}
+						</span>
+					</button>
+					<button
+						type="button"
+						aria-pressed={settings.theme === "light"}
+						onclick={() => setTheme("light")}
+						class={themeButtonClass("light")}
+					>
+						<FluentWeatherSunny20Filled class="size-6" />
+						<span class="flex items-center gap-1.5">
+							Light
+							{#if settings.theme === "light"}
+								<FluentCheckmarkCircle20Filled class="size-4" />
+							{/if}
+						</span>
+					</button>
+				</div>
+				<p class="field-hint">Applies instantly and is saved to your account.</p>
+			</div>
+
+			<div class="border-t border-line/10 pt-4">
+				<label class="flex cursor-pointer items-center justify-between gap-4 group">
+					<span class="flex items-center gap-3">
+						<FluentDataUsage20Filled class="size-5 text-politics" />
+						<span>
+							<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+								Load Images
+							</span>
+							<span class="block text-xs text-fg-muted">Disable to save data and improve performance</span>
+						</span>
+					</span>
+					<input
+						type="checkbox"
+						checked={settings.loadImages}
+						onchange={toggleLoadImages}
+						class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+					/>
+				</label>
+			</div>
+		</section>
+
+		<!-- Notifications -->
+		<section class="panel rounded-sm p-5 sm:p-6 space-y-1" aria-labelledby="notifications-heading">
+			<div class="flex items-center gap-2">
+				<FluentAlert20Filled class="size-5 text-friendly" />
+				<h2 id="notifications-heading" class="section-title">Notifications</h2>
+			</div>
+			<p class="field-hint mb-3">Choose which events send you push notifications</p>
+
+			<div class="border-b border-line/10">
+				<PushNotificationManager />
+			</div>
+
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5 border-b border-line/10">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">💬</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+							Direct Messages
+						</span>
+						<span class="block text-xs text-fg-muted">When someone sends you a private message</span>
+					</span>
+				</span>
 				<input
 					type="checkbox"
-					checked={settings.loadImages}
-					onchange={toggleLoadImages}
+					bind:checked={notifyDirectMessages}
+					onchange={() => toggleNotification("notifyDirectMessages", notifyDirectMessages)}
 					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
 				/>
 			</label>
-		</div>
-	</div>
 
-	<!-- Notification Settings -->
-	<div class="panel rounded-sm p-5 space-y-1">
-		<div class="flex items-center gap-2 mb-3">
-			<FluentAlert20Filled class="size-5 text-friendly" />
-			<h2 class="section-title">Notifications</h2>
-		</div>
-		<p class="text-xs text-fg-muted mb-3">Choose which events send you push notifications</p>
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5 border-b border-line/10">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">📰</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+							Newspaper Posts
+						</span>
+						<span class="block text-xs text-fg-muted">When a subscribed newspaper publishes an article</span>
+					</span>
+				</span>
+				<input
+					type="checkbox"
+					bind:checked={notifyNewspaperPosts}
+					onchange={() => toggleNotification("notifyNewspaperPosts", notifyNewspaperPosts)}
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+				/>
+			</label>
 
-		<div class="border-b border-line/10">
-			<PushNotificationManager />
-		</div>
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5 border-b border-line/10">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">⚔️</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+							War Declarations
+						</span>
+						<span class="block text-xs text-fg-muted">When war is declared on or by your state</span>
+					</span>
+				</span>
+				<input
+					type="checkbox"
+					bind:checked={notifyWarDeclarations}
+					onchange={() => toggleNotification("notifyWarDeclarations", notifyWarDeclarations)}
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+				/>
+			</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-line/10">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">💬</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Direct Messages</p>
-					<p class="text-xs text-fg-muted">When someone sends you a private message</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyDirectMessages}
-				onchange={() => toggleNotification("notifyDirectMessages", notifyDirectMessages)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5 border-b border-line/10">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">🏁</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+							Battle Results
+						</span>
+						<span class="block text-xs text-fg-muted">When a battle involving your state ends</span>
+					</span>
+				</span>
+				<input
+					type="checkbox"
+					bind:checked={notifyBattleResults}
+					onchange={() => toggleNotification("notifyBattleResults", notifyBattleResults)}
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+				/>
+			</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-line/10">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">📰</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Newspaper Posts</p>
-					<p class="text-xs text-fg-muted">When a subscribed newspaper publishes an article</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyNewspaperPosts}
-				onchange={() => toggleNotification("notifyNewspaperPosts", notifyNewspaperPosts)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5 border-b border-line/10">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">🗳️</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Elections</span>
+						<span class="block text-xs text-fg-muted">When an election starts or results are announced</span>
+					</span>
+				</span>
+				<input
+					type="checkbox"
+					bind:checked={notifyElections}
+					onchange={() => toggleNotification("notifyElections", notifyElections)}
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+				/>
+			</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-line/10">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">⚔️</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">War Declarations</p>
-					<p class="text-xs text-fg-muted">When war is declared on or by your state</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyWarDeclarations}
-				onchange={() => toggleNotification("notifyWarDeclarations", notifyWarDeclarations)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5 border-b border-line/10">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">📜</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+							New Proposals
+						</span>
+						<span class="block text-xs text-fg-muted">When a new parliamentary proposal needs your vote</span>
+					</span>
+				</span>
+				<input
+					type="checkbox"
+					bind:checked={notifyNewProposals}
+					onchange={() => toggleNotification("notifyNewProposals", notifyNewProposals)}
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+				/>
+			</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-line/10">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">🏁</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Battle Results</p>
-					<p class="text-xs text-fg-muted">When a battle involving your state ends</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyBattleResults}
-				onchange={() => toggleNotification("notifyBattleResults", notifyBattleResults)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5 border-b border-line/10">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">✈️</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+							Travel Arrived
+						</span>
+						<span class="block text-xs text-fg-muted">When you arrive at your travel destination</span>
+					</span>
+				</span>
+				<input
+					type="checkbox"
+					bind:checked={notifyTravelComplete}
+					onchange={() => toggleNotification("notifyTravelComplete", notifyTravelComplete)}
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+				/>
+			</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-line/10">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">🗳️</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Elections</p>
-					<p class="text-xs text-fg-muted">When an election starts or results are announced</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyElections}
-				onchange={() => toggleNotification("notifyElections", notifyElections)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5 border-b border-line/10">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">🏭</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+							Shift Complete
+						</span>
+						<span class="block text-xs text-fg-muted">When your factory shift is done and wages are ready</span>
+					</span>
+				</span>
+				<input
+					type="checkbox"
+					bind:checked={notifyShiftComplete}
+					onchange={() => toggleNotification("notifyShiftComplete", notifyShiftComplete)}
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+				/>
+			</label>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-line/10">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">📜</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">New Proposals</p>
-					<p class="text-xs text-fg-muted">When a new parliamentary proposal needs your vote</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyNewProposals}
-				onchange={() => toggleNotification("notifyNewProposals", notifyNewProposals)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
+			<label class="flex items-center justify-between gap-4 cursor-pointer group py-2.5">
+				<span class="flex items-center gap-3">
+					<span class="text-lg">💰</span>
+					<span>
+						<span class="block text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">
+							Market Sales
+						</span>
+						<span class="block text-xs text-fg-muted">When someone buys from your market listing</span>
+					</span>
+				</span>
+				<input
+					type="checkbox"
+					bind:checked={notifyMarketSales}
+					onchange={() => toggleNotification("notifyMarketSales", notifyMarketSales)}
+					class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
+				/>
+			</label>
+		</section>
 
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-line/10">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">✈️</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Travel Arrived</p>
-					<p class="text-xs text-fg-muted">When you arrive at your travel destination</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyTravelComplete}
-				onchange={() => toggleNotification("notifyTravelComplete", notifyTravelComplete)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
-
-		<label class="flex items-center justify-between cursor-pointer group py-2.5 border-b border-line/10">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">🏭</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Shift Complete</p>
-					<p class="text-xs text-fg-muted">When your factory shift is done and wages are ready</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyShiftComplete}
-				onchange={() => toggleNotification("notifyShiftComplete", notifyShiftComplete)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
-
-		<label class="flex items-center justify-between cursor-pointer group py-2.5">
-			<div class="flex items-center gap-3">
-				<span class="text-lg">💰</span>
-				<div>
-					<p class="text-sm font-medium text-fg-soft group-hover:text-fg transition-colors">Market Sales</p>
-					<p class="text-xs text-fg-muted">When someone buys from your market listing</p>
-				</div>
-			</div>
-			<input
-				type="checkbox"
-				bind:checked={notifyMarketSales}
-				onchange={() => toggleNotification("notifyMarketSales", notifyMarketSales)}
-				class="toggle border-line/25 bg-surface-0 text-fg-muted checked:border-primary/60 checked:bg-primary/20 checked:text-primary-fg"
-			/>
-		</label>
-	</div>
-
-	<!-- Premium Membership Link -->
-	<a href="/premium" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
-		<div class="flex items-center gap-3">
-			<div class="bg-primary/12 border border-primary/35 p-2 rounded-sm">
-				<FluentStar20Filled class="size-5 text-primary-fg" />
-			</div>
-			<div>
-				<p class="text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">Premium Membership</p>
-				<p class="text-xs text-fg-muted">Automate production, training & factory work</p>
-			</div>
-		</div>
-		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-primary-hover transition-colors" />
-	</a>
-
-	<!-- Gift Code Link -->
-	<a href="/giftcode" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
-		<div class="flex items-center gap-3">
-			<div class="bg-politics-bg/15 border border-politics/30 p-2 rounded-sm">
-				<FluentGift20Filled class="size-5 text-politics" />
-			</div>
-			<div>
-				<p class="text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">Gift Codes</p>
-				<p class="text-xs text-fg-muted">Redeem codes for exclusive rewards and bonuses</p>
-			</div>
-		</div>
-		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-primary-hover transition-colors" />
-	</a>
-
-	<!-- About Link -->
-	<a href="/about" class="group panel-interactive rounded-sm p-5 flex items-center justify-between">
-		<div class="flex items-center gap-3">
-			<div class="bg-friendly-bg/18 border border-friendly/30 p-2 rounded-sm">
-				<FluentInfo20Filled class="size-5 text-friendly" />
-			</div>
-			<div>
-				<p class="text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">
-					About This Application
-				</p>
-				<p class="text-xs text-fg-muted">Learn more about features, version, and terms</p>
-			</div>
-		</div>
-		<FluentChevronRight20Filled class="size-5 text-fg-muted group-hover:text-primary-hover transition-colors" />
-	</a>
-
-	<!-- Account Actions -->
-	<div class="panel rounded-sm p-5 space-y-3">
-		<h2 class="section-title">Account</h2>
-
-		<div class="panel-muted rounded-sm p-4 text-sm text-fg-soft break-all">
-			{data.profile.email}
-		</div>
-
-		<form method="POST" action="?/logout" use:enhance>
-			<Button type="submit" variant="soft-red" block icon={FluentArrowExit20Filled} class="justify-start"
-				>Sign Out</Button
+		<!-- Shortcuts -->
+		<section class="panel rounded-sm divide-y divide-line/10" aria-label="More settings">
+			<a
+				href="/premium"
+				class="group press-spring rounded-sm border border-transparent p-4 sm:p-5 flex items-center justify-between gap-4 hover:border-line/20 hover:bg-surface-3"
 			>
-		</form>
-	</div>
+				<span class="flex items-center gap-3">
+					<span class="grid size-9 shrink-0 place-items-center rounded-sm border border-primary/35 bg-primary/12">
+						<FluentStar20Filled class="size-5 text-primary-fg" />
+					</span>
+					<span>
+						<span class="block text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">
+							Premium Membership
+						</span>
+						<span class="block text-xs text-fg-muted">Automate production, training & factory work</span>
+					</span>
+				</span>
+				<FluentChevronRight20Filled
+					class="size-5 shrink-0 text-fg-muted group-hover:text-primary-hover transition-colors"
+				/>
+			</a>
 
-	<!-- Danger Zone -->
-	<div class="bg-red-600/10 rounded-sm border border-red-500/30 p-5 space-y-3">
-		<h2 class="section-title">
-			<FluentDelete20Filled class="size-5 text-red-400" />
-			<span class="text-red-300">Danger Zone</span>
-		</h2>
+			<a
+				href="/giftcode"
+				class="group press-spring rounded-sm border border-transparent p-4 sm:p-5 flex items-center justify-between gap-4 hover:border-line/20 hover:bg-surface-3"
+			>
+				<span class="flex items-center gap-3">
+					<span class="grid size-9 shrink-0 place-items-center rounded-sm border border-politics/30 bg-politics-bg/15">
+						<FluentGift20Filled class="size-5 text-politics" />
+					</span>
+					<span>
+						<span class="block text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">
+							Gift Codes
+						</span>
+						<span class="block text-xs text-fg-muted">Redeem codes for exclusive rewards and bonuses</span>
+					</span>
+				</span>
+				<FluentChevronRight20Filled
+					class="size-5 shrink-0 text-fg-muted group-hover:text-primary-hover transition-colors"
+				/>
+			</a>
 
-		<p class="text-sm text-fg-muted">
-			Permanently delete your account and all associated data. This action cannot be undone.
-		</p>
+			<a
+				href="/about"
+				class="group press-spring rounded-sm border border-transparent p-4 sm:p-5 flex items-center justify-between gap-4 hover:border-line/20 hover:bg-surface-3"
+			>
+				<span class="flex items-center gap-3">
+					<span class="grid size-9 shrink-0 place-items-center rounded-sm border border-friendly/30 bg-friendly-bg/18">
+						<FluentInfo20Filled class="size-5 text-friendly" />
+					</span>
+					<span>
+						<span class="block text-sm font-medium text-fg group-hover:text-primary-hover transition-colors">
+							About This Application
+						</span>
+						<span class="block text-xs text-fg-muted">Learn more about features, version, and terms</span>
+					</span>
+				</span>
+				<FluentChevronRight20Filled
+					class="size-5 shrink-0 text-fg-muted group-hover:text-primary-hover transition-colors"
+				/>
+			</a>
+		</section>
 
-		<Button
-			type="button"
-			variant="soft-red"
-			block
-			icon={FluentDelete20Filled}
-			class="justify-start"
-			onclick={() => {
-				showDeleteModal = true;
-				deleteConfirmation = "";
-			}}
+		<!-- Danger zone -->
+		<section
+			class="rounded-sm border border-red-500/30 bg-red-600/10 p-5 sm:p-6 space-y-3"
+			aria-labelledby="danger-heading"
 		>
-			Delete Account
-		</Button>
+			<h2 id="danger-heading" class="section-title">
+				<FluentDelete20Filled class="size-5 text-red-400" />
+				<span class="text-red-300">Danger Zone</span>
+			</h2>
+			<p class="text-sm text-fg-muted">
+				Permanently delete your account and all associated data. This action cannot be undone.
+			</p>
+			<Button
+				type="button"
+				variant="soft-red"
+				icon={FluentDelete20Filled}
+				class="justify-start"
+				onclick={() => {
+					showDeleteModal = true;
+					deleteConfirmation = "";
+				}}
+			>
+				Delete Account
+			</Button>
+		</section>
 	</div>
 </PageContainer>
 

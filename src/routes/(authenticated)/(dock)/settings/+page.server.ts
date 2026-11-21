@@ -1,6 +1,7 @@
 // src/routes/(authenticated)/(dock)/settings/+page.server.ts
 import { db } from "#lib/server/db.js";
 import { userProfiles, accounts } from "#lib/server/schema.js";
+import { themes } from "#lib/themes.js";
 import { redirect, fail } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
 import type { Actions, PageServerLoad } from "./$types";
@@ -94,14 +95,15 @@ export const actions: Actions = {
 	updateSettings: async ({ request, locals }) => {
 		const account = locals.account!;
 		const formData = await request.formData();
-		const theme = formData.get("theme") as string;
+		const requestedTheme = formData.get("theme") as string;
+		const theme = themes.includes(requestedTheme) ? requestedTheme : "dark";
 		const loadImages = formData.get("loadImages") === "true";
 
 		try {
 			await db
 				.update(userProfiles)
 				.set({
-					theme: theme || "dark",
+					theme,
 					loadImages,
 					updatedAt: new Date()
 				})
