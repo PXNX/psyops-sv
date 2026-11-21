@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { vanish } from "#lib/utils/motion.js";
 	import { enhance } from "$app/forms";
+	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import FluentMegaphone20Filled from "~icons/fluent/megaphone-20-filled";
 	import FluentSend20Filled from "~icons/fluent/send-20-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
@@ -53,7 +54,12 @@
 						)}
 					</p>
 				</div>
-				<form method="POST" action="?/revokeBroadcast" use:enhance>
+				<form
+					method="POST"
+					action="?/revokeBroadcast"
+					use:enhance
+					use:confirmSubmit={{ title: "Revoke this broadcast?", body: "It will immediately disappear from all users' dashboards.", danger: true }}
+				>
 					<input type="hidden" name="broadcastId" value={data.activeBroadcast.id} />
 					<Button type="submit" variant="soft-red" size="sm" icon={FluentDismiss20Filled}>Revoke</Button>
 				</form>

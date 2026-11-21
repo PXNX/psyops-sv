@@ -1,7 +1,8 @@
 // src/routes/moderators/+page.server.ts
 import { db } from "#lib/server/db.js";
-import { accounts, userProfiles, files } from "#lib/server/schema.js";
-import { eq } from "drizzle-orm";
+import { accounts, userProfiles, contentFlags, generalReports } from "#lib/server/schema.js";
+import { listModerationActions } from "#lib/server/moderation/actions.js";
+import { eq, sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 
@@ -33,7 +34,24 @@ export const load: PageServerLoad = async () => {
 		})
 	);
 
+	const [[pendingReports], [pendingFlags], actions] = await Promise.all([
+		db
+			.select({ count: sql<number>`count(*)::int` })
+			.from(generalReports)
+			.where(eq(generalReports.status, "pending")),
+		db
+			.select({ count: sql<number>`count(*)::int` })
+			.from(contentFlags)
+			.where(eq(contentFlags.isResolved, false)),
+		listModerationActions({ limit: 1 })
+	]);
+
 	return {
-		moderators: moderatorsWithLogos
+		moderators: moderatorsWithLogos,
+		stats: {
+			pendingReports: pendingReports?.count ?? 0,
+			pendingFlags: pendingFlags?.count ?? 0,
+			actions: actions.total
+		}
 	};
 };

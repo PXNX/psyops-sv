@@ -447,6 +447,9 @@
 			{/if}
 			<Button href="/market" variant="subtle" icon={FluentMoney20Filled} class="justify-start">Market</Button>
 			<Button href="/chat" variant="subtle" icon={FluentPeople20Filled} class="justify-start">Chat</Button>
+			<Button href="/my-moderation" variant="subtle" icon={FluentHistory20Filled} class="justify-start">
+				My record
+			</Button>
 			{#if data.account.role === "admin" || data.account.role === "moderator"}
 				<Button href="/moderators" variant="subtle" icon={FluentShield20Filled} class="justify-start">
 					Moderator Panel
