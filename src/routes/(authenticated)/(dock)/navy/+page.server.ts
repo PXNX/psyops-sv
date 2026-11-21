@@ -94,7 +94,7 @@ export const actions: Actions = {
 		const regionId = Number(f.get("regionId"));
 		try {
 			await buildPort(db, locals.account!.id, { name, regionId });
-			return { success: true, message: `Port ${name} established.` };
+			return { success: true, message: `Port ${name} established.`, tutorial: "port-built" };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}
@@ -112,7 +112,7 @@ export const actions: Actions = {
 		const f = await request.formData();
 		try {
 			const dock = await buildDock(db, locals.account!.id, Number(f.get("portId")));
-			return { success: true, message: `Dock is now level ${dock.level}.` };
+			return { success: true, message: `Dock is now level ${dock.level}.`, tutorial: "dock-built" };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}
@@ -121,7 +121,7 @@ export const actions: Actions = {
 		const f = await request.formData();
 		try {
 			await orderShip(db, locals.account!.id, Number(f.get("dockId")), String(f.get("shipClass")) as never);
-			return { success: true, message: "Ship added to the construction queue." };
+			return { success: true, message: "Ship added to the construction queue.", tutorial: "ship-ordered" };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}
@@ -209,7 +209,7 @@ export const actions: Actions = {
 				q: f.get("q") ? Number(f.get("q")) : undefined,
 				r: f.get("r") ? Number(f.get("r")) : undefined
 			});
-			return { success: true, message: "Air mission launched." };
+			return { success: true, message: "Air mission launched.", tutorial: "air-mission" };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}
@@ -223,7 +223,7 @@ export const actions: Actions = {
 				r: Number(f.get("r")),
 				sensor: String(f.get("sensor")) as never
 			});
-			return { success: true, message: "Sea reconnaissance pass launched." };
+			return { success: true, message: "Sea reconnaissance pass launched.", tutorial: "sea-intel" };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}

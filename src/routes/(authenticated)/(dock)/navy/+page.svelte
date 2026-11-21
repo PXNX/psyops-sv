@@ -41,34 +41,61 @@
 
 	const navySteps = [
 		{
-			title: "Willkommen bei der Flotte",
-			body: "Hier befehligen Sie Schiffe auf einem Sechskant-Meer. Jeder Zug dauert Stunden und verbraucht Treibstoff; der Fleet-Cron rückt alle 15 Minuten einen Schritt weiter."
+			id: "hex",
+			title: "1. Hex auswählen",
+			body: "Klicken Sie auf ein Sechskant auf der Karte. Das Panel zeigt dann Hafen, Schiffe und Minen dieses Feldes.",
+			target: '[data-tutorial="navy-hex"]',
+			done: "hex-selected"
 		},
 		{
-			title: "1. Hafen und Dock",
-			body: "Wählen Sie ein Hex und bauen Sie einen Hafen in einer Ihrer Küstenregionen – nur eine pro Region. Danach errichten oder erweitern Sie ein Dock mit mehr Baubays."
+			id: "port",
+			title: "2. Hafen bauen",
+			body: "Im markierten Formular einen Namen eingeben, eine Küstenregion wählen und absenden. Nur eine Region kann einen Hafen haben – er entsteht in ihrer EEZ.",
+			target: '[data-tutorial="build-port"]',
+			done: "port-built",
+			manual: "Formular anzeigen"
 		},
 		{
-			title: "2. Schiffe bestellen",
-			body: "Im Shipyard wählen Sie Dock und Schiffsklasse. Der Auftrag läuft durch die Queue. Capital Ships, Escorts, U-Boote und zivile Schiffe haben unterschiedliche Rollen."
+			id: "dock",
+			title: "3. Dock bauen",
+			body: "Klicken Sie auf den markierten Button, um im Hafen ein Dock zu errichten oder seine Stufe zu erhöhen. Mehr Stufen bedeuten mehr Baubays.",
+			target: '[data-tutorial="dock-button"]',
+			done: "dock-built",
+			manual: "Button anzeigen"
 		},
 		{
-			title: "3. Bewegung und Versorgung",
-			body: "Wählen Sie ein Schiff, klicken Sie auf Move und danach auf ein Zielhex. Im eigenen Hafen können Sie auftanken und Fracht laden oder löschen."
+			id: "shipyard",
+			title: "4. Schiff ordern",
+			body: "Wählen Sie im Shipyard ein Dock und eine Schiffsklasse und klicken Sie auf „Add to queue“. Das Schiff erscheint nach dem Bau im Hafen.",
+			target: '[data-tutorial="shipyard"]',
+			done: "ship-ordered",
+			manual: "Shipyard anzeigen"
 		},
 		{
-			title: "4. Seeaufklärung und Minen",
-			body: "Starten Sie einen Sonar-/Radar-/SAR-Durchgang über dem ausgewählten Hex. Sonar findet U-Boote. Fregatten und U-Boote können Minen legen, die Frachtschiffe blockieren."
+			id: "intel",
+			title: "5. Seeaufklärung",
+			body: "Starten Sie im markierten Panel einen Sonar-Durchgang über dem ausgewählten Hex. Sonar ist der einzige Sensor, der zuverlässig U-Boote findet.",
+			target: '[data-tutorial="sea-intel"]',
+			done: "sea-intel",
+			manual: "Panel anzeigen"
 		},
 		{
-			title: "5. Luftwaffe",
-			body: "Im Panel Air operations weisen Sie Geschwader Aufgaben zu: Bomben, Seezielbekämpfung, Transport, Aufklärung, Betankung und Nahunterstützung. Jeder Einsatz kostet Treibstoff und bringt Erfahrung."
+			id: "air",
+			title: "6. Luftoperation",
+			body: "Weisen Sie im Panel Air operations ein Geschwader einer Aufgabe zu – zum Beispiel Seezielbekämpfung oder Aufklärung. Die Details stehen in /docs/air.",
+			target: '[data-tutorial="air-ops"]',
+			done: "air-mission",
+			manual: "Panel anzeigen"
 		}
 	];
 
 	const enhanceForm: SubmitFunction = () => async ({ result, update }) => {
 		await update();
 		toastResult(result);
+		if (result.type === "success") {
+			const tutorial = (result.data as { tutorial?: string } | null)?.tutorial;
+			if (tutorial) window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: tutorial }));
+		}
 	};
 
 	const viewBox = $derived.by(() => {
@@ -132,6 +159,7 @@
 		const ship = shipsAt(h)[0];
 		if (ship) selectedShipId = ship.id;
 		if (movingShipId != null) moveTarget = h;
+		window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: "hex-selected" }));
 	}
 
 	function beginMove(shipId: number) {
@@ -214,6 +242,7 @@
 						<g
 							role="button"
 							tabindex="0"
+							data-tutorial="navy-hex"
 							onclick={() => hexClicked(h)}
 							onkeydown={(e) => (e.key === "Enter" || e.key === " ") && hexClicked(h)}
 							class="cursor-pointer"
@@ -315,7 +344,7 @@
 									</form>
 								{/if}
 								{#if !selectedDock || selectedDock.level < FACILITY.maxDockLevel}
-									<form method="POST" action="?/buildDock" use:enhance={enhanceForm}>
+									<form method="POST" action="?/buildDock" use:enhance={enhanceForm} data-tutorial="dock-button">
 										<input type="hidden" name="portId" value={selectedPort.id} />
 										<Button type="submit" size="sm">
 											{selectedDock ? `Expand dock → L${selectedDock.level + 1}` : "Build dock"}
@@ -333,7 +362,7 @@
 							</p>
 						{/if}
 					{:else if data.canCommand && data.portCandidates.length}
-						<form method="POST" action="?/buildPort" use:enhance={enhanceForm} class="mt-2 space-y-2">
+						<form method="POST" action="?/buildPort" use:enhance={enhanceForm} data-tutorial="build-port" class="mt-2 space-y-2">
 							<p class="text-xs text-fg-muted">
 								Establish a port in the EEZ of one of your coastal regions (one per region).
 							</p>
@@ -377,7 +406,7 @@
 						{:else}
 							<div class="mt-1 text-[11px] text-fg-muted">No fresh pass over this hex.</div>
 						{/if}
-						<form method="POST" action="?/launchSeaIntel" use:enhance={enhanceForm} class="mt-2 flex flex-wrap items-end gap-2">
+						<form method="POST" action="?/launchSeaIntel" use:enhance={enhanceForm} data-tutorial="sea-intel" class="mt-2 flex flex-wrap items-end gap-2">
 							<input type="hidden" name="q" value={selectedHex.q} />
 							<input type="hidden" name="r" value={selectedHex.r} />
 							<label class="text-xs">Sensor
@@ -406,7 +435,7 @@
 							{/each}
 						</div>
 						{#if data.canCommand}
-							<form method="POST" action="?/launchAirMission" use:enhance={enhanceForm} class="mt-3 space-y-2">
+							<form method="POST" action="?/launchAirMission" use:enhance={enhanceForm} data-tutorial="air-ops" class="mt-3 space-y-2">
 								<select name="unitId" bind:value={airUnitId} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
 									{#each data.airSupport.units as unit}
 										<option value={unit.id}>
@@ -544,7 +573,7 @@
 				{#if data.canCommand && myDocks.length}
 					<section class="rounded-lg border border-line/20 bg-surface-1 p-3">
 						<h2 class="text-sm font-semibold text-heading">Shipyard</h2>
-						<form method="POST" action="?/orderShip" use:enhance={enhanceForm} class="mt-2 space-y-2">
+						<form method="POST" action="?/orderShip" use:enhance={enhanceForm} data-tutorial="shipyard" class="mt-2 space-y-2">
 							<select name="dockId" bind:value={orderDockId} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
 								{#each myDocks as dock}
 									<option value={dock.id}>Dock L{dock.level} · hex {dock.q},{dock.r}</option>

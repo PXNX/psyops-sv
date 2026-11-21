@@ -74,24 +74,33 @@
 
 	const mapSteps = [
 		{
-			title: "Drei Sichten auf die Welt",
-			body: "Oben links wechseln Sie zwischen Naval (nur See und Küsten), Land (Regionen und Heere) und Aerial (Luftraum-Sektoren). Der See-Modus blendet das Binnenland aus."
+			id: "naval",
+			title: "1. See-Modus wählen",
+			body: "Klicken Sie oben links auf das Schiff. Jetzt sehen Sie nur die See und die Küstenregionen; das Binnenland wird ausgeblendet.",
+			target: '[data-tutorial="naval-mode"]',
+			done: "mode-naval",
+			manual: "Modus anzeigen"
 		},
 		{
-			title: "Hexfelder auswählen",
-			body: "Klicken Sie im See- oder Luftmodus auf ein Sechskant. Das Panel zeigt Koordinaten, EEZ-Eigentümer, Hafen, Schiffe und Minen. „Open in fleet console“ öffnet das Navy-Console mit diesem Hex."
+			id: "hex",
+			title: "2. Hex auswählen",
+			body: "Klicken Sie auf ein farbiges Sechskant. Das Panel zeigt Koordinaten, EEZ, Hafen, Schiffe und Minen – und einen Link ins Navy-Console.",
+			target: '[data-tutorial="hex-cell"]',
+			done: "hex-selected"
 		},
 		{
-			title: "EEZ und Küstenlinie",
-			body: "Die Hexfelder liegen nur im Offshorewasser einer Küstenregion und werden an der echten Küste abgeschnitten. Benachbarte EEZs übergeben an die nächstgelegene Küstenregion."
+			id: "aerial",
+			title: "3. Luftraum ansehen",
+			body: "Klicken Sie auf das Flugzeug. Mehrere Hexfelder und die Regionen darüber werden zu Sektoren LR-A1 … zusammengefasst.",
+			target: '[data-tutorial="aerial-mode"]',
+			done: "mode-aerial",
+			manual: "Modus anzeigen"
 		},
 		{
-			title: "Luftraum",
-			body: "Im Aerial-Modus fassen mehrere Hexfelder und die Regionen darüber einen Sektor (LR-A1 …) zusammen. Die Beschriftung zählt Regionen, Schiffe und einsatzbereite Flugzeuge."
-		},
-		{
-			title: "Fog of War",
-			body: "Feindliche Schiffe erscheinen nur, wenn ein frischer Seeaufklärungsbericht ihr Hex gesehen hat. Ohne Sonar, Radar oder SAR bleibt die See blank."
+			id: "done",
+			title: "4. Fertig",
+			body: "Die technischen Hintergründe stehen in /docs/map-modes und /docs/navy. Der ? Button unten rechts startet diese Anleitung erneut.",
+			manual: "Verstanden"
 		}
 	];
 
@@ -485,6 +494,7 @@
 			selectedHexKey = hexEl.getAttribute("data-hex");
 			selectedId = null;
 			sheetOpen = false;
+			window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: "hex-selected" }));
 			return;
 		}
 		let el = e.target as Element | null;
@@ -728,7 +738,7 @@
 		const cells = seaHexes
 			.map((h) => {
 				const picked = h.key === selectedHexKey;
-				return `<polygon data-hex='${h.key}' points='${h.points}' fill='${h.color}' fill-opacity='${
+				return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
 					picked ? 0.34 : h.active ? 0.18 : 0.08
 				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.8 : 0.42}' stroke-width='${
 					picked ? 2 : h.active ? 1 : 0.6
@@ -1021,7 +1031,11 @@
 				shape="square"
 				variant={mode === "naval" ? "soft-blue" : "ghost"}
 				aria-pressed={mode === "naval"}
-				onclick={() => (mode = "naval")}
+				data-tutorial="naval-mode"
+				onclick={() => {
+					mode = "naval";
+					window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: "mode-naval" }));
+				}}
 			/>
 			<IconButton
 				icon={IconLandMode}
@@ -1039,7 +1053,11 @@
 				shape="square"
 				variant={mode === "aerial" ? "soft-blue" : "ghost"}
 				aria-pressed={mode === "aerial"}
-				onclick={() => (mode = "aerial")}
+				data-tutorial="aerial-mode"
+				onclick={() => {
+					mode = "aerial";
+					window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: "mode-aerial" }));
+				}}
 			/>
 		</div>
 		{#each BASE_LAYERS as l (l.value)}

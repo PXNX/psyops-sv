@@ -361,8 +361,10 @@ Only account/telegram ids are exported — never emails, usernames, tokens or pa
 The documentation in `src/lib/docs/` (reachable under `/docs`) has step-by-step
 guides for the new naval layer: [Seekrieg](/docs/navy),
 [Luftwaffe und Einsätze](/docs/air) and [Karte und Luftraum](/docs/map-modes).
-On `/navy` and `/map` a short guided tour opens on the first visit and can be
-reopened with the ? button; its progress is stored in the browser.
+On `/navy` and `/map` an **interactive** tour opens on the first visit: it
+highlights the real control for each step and advances when you use it (with a
+manual fallback); progress is stored in the browser and the ? button restarts
+it. The docs are the technical explanation behind those steps.
 
 ## Tests
 
