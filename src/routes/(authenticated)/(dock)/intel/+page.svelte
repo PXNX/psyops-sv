@@ -179,7 +179,17 @@
 
 		{#each reports as r (r.id)}
 			{@const f = r.findings}
-			<article id="report-{r.id}" class="panel rounded-sm overflow-hidden {r.fresh ? '' : 'opacity-70'}">
+			<article
+				id="report-{r.id}"
+				class="panel rounded-sm overflow-hidden border-error/25 {r.fresh ? '' : 'opacity-70'}"
+			>
+				<!-- Classification banner, top and bottom, like a printed INTREP. -->
+				<div
+					class="flex flex-wrap items-center justify-between gap-2 border-b border-error/25 bg-error/10 px-4 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-hostile-fg"
+				>
+					<span>Restricted // Eyes only</span>
+					<span>J2 · {reportNo(r.id)}</span>
+				</div>
 				<!-- Message header -->
 				<header class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line/15 bg-surface-3 px-4 py-2">
 					<span class="font-mono text-sm font-bold tracking-wider text-fg">{reportNo(r.id)}</span>
@@ -189,7 +199,7 @@
 					{:else if f.outcome === "obscured"}
 						<Badge tone="amber" size="xs">NO OBSERVATION</Badge>
 					{/if}
-					<span class="ml-auto font-mono text-xs text-fg-soft" title={new Date(r.observedAt).toLocaleString()}>
+					<span class="ml-auto font-mono text-xs text-fg-soft">
 						DTG {dtg(r.observedAt)}
 					</span>
 				</header>
@@ -227,9 +237,9 @@
 						<dd class="font-mono text-xs text-fg-soft">{dtg(r.expiresAt)}</dd>
 						<dt class="sr-only">Imagery</dt>
 						<dd class="col-span-2">
-							<Button variant="secondary" size="xs" icon={IconImage} onclick={() => strip?.show(r.id)}
-								>View imagery</Button
-							>
+							<Button variant="secondary" size="xs" icon={IconImage} onclick={() => strip?.show(r.id)}>
+								View imagery
+							</Button>
 						</dd>
 					</dl>
 
@@ -328,6 +338,17 @@
 							{/if}
 						{/if}
 					</div>
+				</div>
+
+				<div
+					class="flex flex-wrap items-center justify-between gap-2 border-t border-error/25 bg-error/10 px-4 py-1 font-mono text-[10px] uppercase tracking-[0.2em] text-hostile-fg"
+				>
+					<span>End of report · {reportNo(r.id)}</span>
+					{#if !r.fresh}
+						<span class="stamp" style="--stamp-tilt: -6deg">Superseded</span>
+					{:else}
+						<span class="opacity-70">Distribution: J2 · allied cells</span>
+					{/if}
 				</div>
 			</article>
 		{/each}
