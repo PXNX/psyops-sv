@@ -356,6 +356,14 @@ Key events and their attributes:
 
 Only account/telegram ids are exported — never emails, usernames, tokens or payment details. Locally, no OTLP endpoint is configured, so only the structured console events are produced (no connection errors).
 
+## Tutorials
+
+The documentation in `src/lib/docs/` (reachable under `/docs`) has step-by-step
+guides for the new naval layer: [Seekrieg](/docs/navy),
+[Luftwaffe und Einsätze](/docs/air) and [Karte und Luftraum](/docs/map-modes).
+On `/navy` and `/map` a short guided tour opens on the first visit and can be
+reopened with the ? button; its progress is stored in the browser.
+
 ## Tests
 
 ```bash

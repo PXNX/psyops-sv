@@ -9,6 +9,7 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
+	import Tutorial from "#lib/component/Tutorial.svelte";
 	import { Button, Badge } from "#lib/component/ui/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentMap from "~icons/fluent/map-24-regular";
@@ -37,6 +38,33 @@
 	} from "#lib/config/index.js";
 
 	let { data }: { data: PageData } = $props();
+
+	const navySteps = [
+		{
+			title: "Willkommen bei der Flotte",
+			body: "Hier befehligen Sie Schiffe auf einem Sechskant-Meer. Jeder Zug dauert Stunden und verbraucht Treibstoff; der Fleet-Cron rückt alle 15 Minuten einen Schritt weiter."
+		},
+		{
+			title: "1. Hafen und Dock",
+			body: "Wählen Sie ein Hex und bauen Sie einen Hafen in einer Ihrer Küstenregionen – nur eine pro Region. Danach errichten oder erweitern Sie ein Dock mit mehr Baubays."
+		},
+		{
+			title: "2. Schiffe bestellen",
+			body: "Im Shipyard wählen Sie Dock und Schiffsklasse. Der Auftrag läuft durch die Queue. Capital Ships, Escorts, U-Boote und zivile Schiffe haben unterschiedliche Rollen."
+		},
+		{
+			title: "3. Bewegung und Versorgung",
+			body: "Wählen Sie ein Schiff, klicken Sie auf Move und danach auf ein Zielhex. Im eigenen Hafen können Sie auftanken und Fracht laden oder löschen."
+		},
+		{
+			title: "4. Seeaufklärung und Minen",
+			body: "Starten Sie einen Sonar-/Radar-/SAR-Durchgang über dem ausgewählten Hex. Sonar findet U-Boote. Fregatten und U-Boote können Minen legen, die Frachtschiffe blockieren."
+		},
+		{
+			title: "5. Luftwaffe",
+			body: "Im Panel Air operations weisen Sie Geschwader Aufgaben zu: Bomben, Seezielbekämpfung, Transport, Aufklärung, Betankung und Nahunterstützung. Jeder Einsatz kostet Treibstoff und bringt Erfahrung."
+		}
+	];
 
 	const enhanceForm: SubmitFunction = () => async ({ result, update }) => {
 		await update();
@@ -629,4 +657,5 @@
 			<button type="submit">Move</button>
 		</form>
 	{/if}
+	<Tutorial id="navy" title="Flotten-Kurzanleitung" steps={navySteps} />
 </PageContainer>

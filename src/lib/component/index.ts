@@ -21,3 +21,4 @@ export { default as EmptyState } from "./EmptyState.svelte";
 export { default as Modal } from "./Modal.svelte";
 export { default as BottomSheet } from "./BottomSheet.svelte";
 export { default as ShareButton } from "./ShareButton.svelte";
+export { default as Tutorial } from "./Tutorial.svelte";

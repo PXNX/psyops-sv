@@ -18,6 +18,7 @@
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import Logo from "#lib/component/Logo.svelte";
+	import Tutorial from "#lib/component/Tutorial.svelte";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
 	import { Badge, Button, IconButton } from "#lib/component/ui/index.js";
 	import {
@@ -70,6 +71,29 @@
 	import IconAerialMode from "~icons/fluent/airplane-24-regular";
 
 	let { data }: { data: PageData } = $props();
+
+	const mapSteps = [
+		{
+			title: "Drei Sichten auf die Welt",
+			body: "Oben links wechseln Sie zwischen Naval (nur See und Küsten), Land (Regionen und Heere) und Aerial (Luftraum-Sektoren). Der See-Modus blendet das Binnenland aus."
+		},
+		{
+			title: "Hexfelder auswählen",
+			body: "Klicken Sie im See- oder Luftmodus auf ein Sechskant. Das Panel zeigt Koordinaten, EEZ-Eigentümer, Hafen, Schiffe und Minen. „Open in fleet console“ öffnet das Navy-Console mit diesem Hex."
+		},
+		{
+			title: "EEZ und Küstenlinie",
+			body: "Die Hexfelder liegen nur im Offshorewasser einer Küstenregion und werden an der echten Küste abgeschnitten. Benachbarte EEZs übergeben an die nächstgelegene Küstenregion."
+		},
+		{
+			title: "Luftraum",
+			body: "Im Aerial-Modus fassen mehrere Hexfelder und die Regionen darüber einen Sektor (LR-A1 …) zusammen. Die Beschriftung zählt Regionen, Schiffe und einsatzbereite Flugzeuge."
+		},
+		{
+			title: "Fog of War",
+			body: "Feindliche Schiffe erscheinen nur, wenn ein frischer Seeaufklärungsbericht ihr Hex gesehen hat. Ohne Sonar, Radar oder SAR bleibt die See blank."
+		}
+	];
 
 	// ── Palette (theme variables; set as inline styles on the SVG) ──────────
 	const LAND = "var(--color-base-300)";
@@ -1419,6 +1443,8 @@
 		</div>
 	{/if}
 {/snippet}
+
+<Tutorial id="map" title="Karten-Kurzanleitung" steps={mapSteps} />
 
 <style>
 	:global(#panzoom-element) {
