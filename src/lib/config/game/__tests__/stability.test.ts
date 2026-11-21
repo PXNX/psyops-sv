@@ -9,6 +9,7 @@ import {
 	regimeStability,
 	stabilityLabel,
 	stabilityMoraleFactor,
+	stabilityWarLimitFactor,
 	type StabilityFactors
 } from "../stability.config";
 
@@ -96,6 +97,12 @@ describe("stability labels and morale", () => {
 		expect(stabilityMoraleFactor(100)).toBeGreaterThan(1);
 		expect(stabilityMoraleFactor(100)).toBeLessThanOrEqual(1.1);
 		expect(stabilityMoraleFactor(0)).toBeGreaterThanOrEqual(0.9);
+	});
+
+	it("scales the war-exhaustion limit from unrest to loyalty", () => {
+		expect(stabilityWarLimitFactor(0)).toBe(0.8);
+		expect(stabilityWarLimitFactor(50)).toBe(1);
+		expect(stabilityWarLimitFactor(100)).toBe(1.2);
 	});
 });
 
