@@ -30,7 +30,8 @@ import {
 	processFleetTick,
 	refuelShip,
 	repairShip,
-	transportCargo
+	transportCargo,
+	upgradePort
 } from "../services/military/fleet";
 import {
 	GNSS,
@@ -205,6 +206,18 @@ describe("fleet service", () => {
 		summary = await processFleetTick(handle.db, NOW);
 		expect(summary.repaired).toBe(1);
 		expect((await handle.db.select().from(fleetShips))[0]!.health).toBe(90);
+	});
+
+	it("expands ports and docks by level", async () => {
+		const region = await coastalRegion(freedonia);
+		const p = await buildPort(handle.db, alice, { name: "Growth Port", regionId: region.id });
+		expect(p.level).toBe(1);
+		const upgraded = await upgradePort(handle.db, alice, p.id);
+		expect(upgraded.level).toBe(2);
+		const d1 = await buildDock(handle.db, alice, p.id);
+		const d2 = await buildDock(handle.db, alice, p.id);
+		expect([d1.level, d2.level]).toEqual([1, 2]);
+		await expect(upgradePort(handle.db, "user-2", p.id)).rejects.toBeInstanceOf(FleetError);
 	});
 
 	it("moves a ship one hex per leg and burns fuel", async () => {

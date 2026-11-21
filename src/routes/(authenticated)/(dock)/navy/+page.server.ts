@@ -21,7 +21,8 @@ import {
 	repairShip,
 	stopShip,
 	transportCargo,
-	transferFuel
+	transferFuel,
+	upgradePort
 } from "#lib/server/services/military/fleet.js";
 
 function message(err: unknown) {
@@ -74,6 +75,15 @@ export const actions: Actions = {
 		try {
 			await buildPort(db, locals.account!.id, { name, regionId });
 			return { success: true, message: `Port ${name} established.` };
+		} catch (err) {
+			return fail(400, { error: message(err) });
+		}
+	},
+	upgradePort: async ({ request, locals }) => {
+		const f = await request.formData();
+		try {
+			const port = await upgradePort(db, locals.account!.id, Number(f.get("portId")));
+			return { success: true, message: `Port expanded to level ${port.level}.` };
 		} catch (err) {
 			return fail(400, { error: message(err) });
 		}

@@ -22,7 +22,10 @@
 		FLEET_WEAPONS,
 		buildCost,
 		constructionHours,
+		dockUpgradeCost,
+		FACILITY,
 		hexKey,
+		portUpgradeCost,
 		hexMapViewBox,
 		hexPolygon,
 		hexToPixel,
@@ -262,13 +265,31 @@
 						{/if}
 						{#if data.canCommand && selectedPort.stateId === data.myStateId}
 							<div class="mt-3 flex flex-wrap gap-2">
-								<form method="POST" action="?/buildDock" use:enhance={enhanceForm}>
-									<input type="hidden" name="portId" value={selectedPort.id} />
-									<Button type="submit" size="sm">
-										{selectedDock ? `Upgrade dock to L${selectedDock.level + 1}` : "Build dock"}
-									</Button>
-								</form>
+								{#if selectedPort.level < FACILITY.maxPortLevel}
+									<form method="POST" action="?/upgradePort" use:enhance={enhanceForm}>
+										<input type="hidden" name="portId" value={selectedPort.id} />
+										<Button type="submit" size="sm" variant="secondary" title="More fuel storage and cargo capacity">
+											Expand port → L{selectedPort.level + 1}
+										</Button>
+									</form>
+								{/if}
+								{#if !selectedDock || selectedDock.level < FACILITY.maxDockLevel}
+									<form method="POST" action="?/buildDock" use:enhance={enhanceForm}>
+										<input type="hidden" name="portId" value={selectedPort.id} />
+										<Button type="submit" size="sm">
+											{selectedDock ? `Expand dock → L${selectedDock.level + 1}` : "Build dock"}
+										</Button>
+									</form>
+								{/if}
 							</div>
+							<p class="mt-1 text-[11px] text-fg-muted">
+								{#if selectedPort.level < FACILITY.maxPortLevel}
+									Port upgrade: {portUpgradeCost(selectedPort.level).money.toLocaleString()} · {portUpgradeCost(selectedPort.level).steel} steel
+								{/if}
+								{#if !selectedDock || selectedDock.level < FACILITY.maxDockLevel}
+									<br />Dock: {dockUpgradeCost(selectedDock?.level ?? 1).money.toLocaleString()} · {dockUpgradeCost(selectedDock?.level ?? 1).steel} steel
+								{/if}
+							</p>
 						{/if}
 					{:else if data.canCommand && data.portCandidates.length}
 						<form method="POST" action="?/buildPort" use:enhance={enhanceForm} class="mt-2 space-y-2">

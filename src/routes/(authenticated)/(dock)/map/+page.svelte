@@ -32,7 +32,9 @@
 		EEZ,
 		HEX_BOUNDS,
 		SHIP_CLASSES,
+		airspaceSectors,
 		eezHexes,
+		hexFromLatLon,
 		hexKey,
 		hexPolygonLatLon,
 		hexToLatLon,
@@ -61,6 +63,9 @@
 	import IconDocument from "~icons/fluent/document-search-20-regular";
 	import IconChevronRight from "~icons/fluent/chevron-right-20-regular";
 	import IconSea from "~icons/fluent/water-24-regular";
+	import IconNavalMode from "~icons/fluent/vehicle-ship-24-regular";
+	import IconLandMode from "~icons/fluent/map-24-regular";
+	import IconAerialMode from "~icons/fluent/airplane-24-regular";
 
 	let { data }: { data: PageData } = $props();
 
@@ -76,6 +81,8 @@
 
 	// ── Layers ───────────────────────────────────────────────────────────────
 	type Base = "political" | "blocs" | "wars" | "weather" | "terrain" | "residents" | "powerplants" | string;
+	type MapMode = "naval" | "land" | "aerial";
+	let mode = $state<MapMode>("naval");
 	let base = $state<Base>("political");
 	let overlays = $state({ friendly: true, hostile: true, battles: true, recon: true, strikes: true, sea: true });
 	let heatOpen = $state(false);
@@ -141,6 +148,9 @@
 	const sa = $derived(data.sa);
 	const sideStates = $derived(new Set(sa?.side?.stateIds ?? []));
 	const enemyStates = $derived(new Set(sa?.enemyStateIds ?? []));
+	const coastalIds = $derived(new Set(data.sea.coastalRegions.map((r) => r.id)));
+	const showSea = $derived(mode !== "land");
+	const showLand = $derived(mode !== "naval");
 	const stateById = $derived(new Map(data.states.map((s) => [s.id, s])));
 	const k = $derived(1 / Math.max(transform.scale, 0.05)); // map units per screen px
 
@@ -240,7 +250,11 @@
 				return;
 			}
 			const r = data.regionMap[id];
-			el.style.fill = r ? fillFor(id, r, maxHeat) : LAND;
+			// Naval mode only knows the sea and the coasts: inland regions fade
+			// into the background so the EEZ overlay is readable.
+			const offshoreOnly = mode === "naval" && !coastalIds.has(id);
+			el.style.fill = offshoreOnly ? LAND : r ? fillFor(id, r, maxHeat) : LAND;
+			el.style.opacity = offshoreOnly ? "0.18" : "1";
 			el.style.stroke = BORDER;
 			const flash = id === highlightedId;
 			el.classList.toggle("region-highlight", flash);
@@ -272,7 +286,17 @@
 		void highlightedId;
 		void now;
 		void sideStates;
+		void mode;
+		void coastalIds;
 		if (instance && sceneEl) colorRegions(sceneEl);
+	});
+
+	$effect(() => {
+		// {@html worldSvg} replaces the world-map DOM; restore its fills after.
+		void worldSvg;
+		void tick().then(() => {
+			if (instance && sceneEl) colorRegions(sceneEl);
+		});
 	});
 
 	// ── Panzoom ──────────────────────────────────────────────────────────────
@@ -497,20 +521,20 @@
 					unitType: types.length === 1 ? types[0][0] : types[0]?.[0]
 				};
 			})
-			.filter((m): m is Marker & { total: number; ally: boolean; unitType: string } => !!m)
+			.filter((m): m is Marker & { total: number; ally: boolean; unitType: string } => !!m && (showLand || coastalIds.has(m.id)))
 	);
 	const hostileMarkers = $derived.by(() => {
 		const out: (Marker & { known: boolean; count: number; estimated: boolean; dominant: string | null })[] = [];
 		const pics = sa?.pictures ?? {};
 		for (const [id, p] of Object.entries(pics)) {
 			const c = centroids[Number(id)];
-			if (!c || !p.knownUnits) continue;
+			if (!c || !p.knownUnits || (!showLand && !coastalIds.has(Number(id)))) continue;
 			const estimated = UNIT_CATEGORIES.some((cat) => p.categories[cat]?.estimated);
 			out.push({ id: Number(id), x: c.x, y: c.y, known: true, count: p.knownUnits, estimated, dominant: p.dominant });
 		}
 		for (const id of sa?.contested ?? []) {
 			const c = centroids[id];
-			if (!c || pics[id]) continue;
+			if (!c || pics[id] || (!showLand && !coastalIds.has(id))) continue;
 			const owner = data.regionMap[id]?.stateId;
 			if (owner && sideStates.has(owner)) continue; // own region under attack: shown by the battle ring
 			out.push({ id, x: c.x, y: c.y, known: false, count: 0, estimated: false, dominant: null });
@@ -521,7 +545,7 @@
 		(sa?.battles ?? [])
 			.map((b) => {
 				const c = centroids[b.regionId];
-				if (!c) return null;
+				if (!c || (!showLand && !coastalIds.has(b.regionId))) return null;
 				const o = b.originRegionId ? centroids[b.originRegionId] : null;
 				return { ...b, x: c.x, y: c.y, r: c.r, ox: o?.x ?? null, oy: o?.y ?? null };
 			})
@@ -597,6 +621,48 @@
 	);
 	const mineMarkers = $derived(data.sea.mines.map((m) => ({ ...m, ...hexCentre(m) })));
 
+	/** The hex sea is part of the world SVG itself, not a second floating canvas. */
+	const worldSvg = $derived.by(() => {
+		if (!showSea || !overlays.sea) return WorldMap;
+		const eez = eezZones
+			.flatMap((z) => z.hexes.map((points) => `<polygon points='${points}' fill='${z.color}' fill-opacity='0.07'/>`))
+			.join("");
+		const grid = seaHexes
+			.map(
+				(h) =>
+					`<polygon points='${h.points}' fill='${h.active ? "#22d3ee" : "none"}' fill-opacity='${
+						h.active ? 0.14 : 0
+					}' stroke='${h.active ? "#67e8f9" : "#38bdf8"}' stroke-opacity='${h.active ? 0.85 : 0.25}' stroke-width='${
+						h.active ? 1.3 : 0.6
+					}'/>`
+			)
+			.join("");
+		const group = `<g id='world-hex-sea' pointer-events='none'><title>EEZ · ${
+			EEZ.radiusHexes
+		} hex rings</title>${eez}${grid}</g>`;
+		return WorldMap.replace("</svg>", `${group}</svg>`);
+	});
+
+	/** Aerial mode: several hexes and the regions above them become one Luftraum. */
+	const airspaces = $derived.by(() => {
+		if (mode !== "aerial") return [];
+		return airspaceSectors().map((sector) => {
+			const points = sector.hexes.flatMap((h) => hexPolygonLatLon(h).map((c) => mapPoint(c.lat, c.lon)));
+			const xs = points.map((p) => p.x);
+			const ys = points.map((p) => p.y);
+			const x = Math.min(...xs) - 4;
+			const y = Math.min(...ys) - 4;
+			const width = Math.max(...xs) - x + 4;
+			const height = Math.max(...ys) - y + 4;
+			const regions = data.sea.regionsForEez.filter((r) => sector.hexes.some((h) => hexKey(h) === hexKeyFromCoords(r))).length;
+			const ships = data.sea.ships.filter((s) => sector.hexes.some((h) => hexKey(h) === hexKey(s))).length;
+			return { id: sector.id, x, y, width, height, regions, ships };
+		});
+	});
+	function hexKeyFromCoords(r: { latitude: number; longitude: number }) {
+		return hexKey(hexFromLatLon(r.latitude, r.longitude));
+	}
+
 	// ── Selected region ──────────────────────────────────────────────────────
 	const sel = $derived(selectedId != null ? data.regionMap[selectedId] : null);
 	const selState = $derived(sel?.stateId ? stateById.get(sel.stateId) : null);
@@ -669,7 +735,7 @@
 			style:width="{SVG_WIDTH}px"
 			style:height="{SVG_HEIGHT}px"
 		>
-			{@html WorldMap}
+			{@html worldSvg}
 
 			<svg
 				class="tactical absolute inset-0 pointer-events-none"
@@ -689,30 +755,38 @@
 					{/each}
 				</g>
 
-				{#if overlays.sea}
-					<!-- EEZ claims: a few hex rings of coastal water per maritime region -->
-					<g class="sea-eez" pointer-events="none">
-						<title>Exclusive economic zones · {EEZ.radiusHexes} hex rings of coastal water</title>
-						{#each eezZones as zone (zone.id)}
-							{#each zone.hexes as points, i (i)}
-								<polygon points={points} style:fill={zone.color} fill-opacity="0.07" stroke="none" />
-							{/each}
-						{/each}
-					</g>
-					<!-- The strategic sea grid itself -->
-					<g class="sea-hexes" pointer-events="none">
-						{#each seaHexes as h (h.key)}
-							<polygon
-								points={h.points}
-								style:fill={h.active ? "#22d3ee" : "transparent"}
-								fill-opacity={h.active ? 0.16 : 0}
-								style:stroke={h.active ? "#67e8f9" : "#38bdf8"}
-								stroke-opacity={h.active ? 0.85 : 0.22}
-								stroke-width={h.active ? 1.4 : 0.6}
+				{#if mode === "aerial"}
+					<!-- Luftraum: several hexes and the regions over them, one sector -->
+					<g pointer-events="none">
+						{#each airspaces as sector (sector.id)}
+							<rect
+								x={sector.x}
+								y={sector.y}
+								width={sector.width}
+								height={sector.height}
+								rx="4"
+								style:stroke="var(--color-primary)"
+								stroke-opacity="0.55"
+								stroke-width={1.2 * k}
+								stroke-dasharray="{6 * k} {3 * k}"
+								style:fill="var(--color-primary)"
+								fill-opacity="0.04"
 							/>
+							<text
+								x={sector.x + 4 * k}
+								y={sector.y + 11 * k}
+								font-size={9 * k}
+								style:fill="var(--color-primary)"
+								style:paint-order="stroke"
+								style:stroke="var(--color-surface-0)"
+								stroke-width={2 * k}
+							>{sector.id} · {sector.regions}R {sector.ships}S</text>
 						{/each}
 					</g>
-					<!-- Ports, ships and minefields -->
+				{/if}
+
+				{#if showSea && overlays.sea}
+					<!-- Ports, ships and minefields (hexes + EEZ live in the world SVG) -->
 					<g class="sea-markers" pointer-events="none">
 						{#each mineMarkers as m (m.id)}
 							<text
@@ -749,7 +823,7 @@
 					</g>
 				{/if}
 
-				{#if overlays.recon}
+				{#if overlays.recon && showLand}
 					{#each reconMarkers as m (m.id)}
 						<ReconSector
 							x={m.x}
@@ -765,7 +839,7 @@
 					{/each}
 				{/if}
 
-				{#if overlays.battles}
+				{#if overlays.battles && showLand}
 					{#each battleMarkers as b (b.id)}
 						<RangeRing x={b.x} y={b.y} r={Math.max(b.r * 1.1, 16 * k)} />
 					{/each}
@@ -776,7 +850,7 @@
 					{/each}
 				{/if}
 
-				{#if overlays.strikes}
+				{#if overlays.strikes && showLand}
 					{#each strikeMarkers as m (m.id)}
 						<!-- Impact burst, up and to the right of the region's centre -->
 						<g
@@ -806,7 +880,7 @@
 					{/each}
 				{/if}
 
-				{#if overlays.friendly}
+				{#if overlays.friendly && showLand}
 					{#each friendlyMarkers as m (m.id)}
 						<UnitSymbol
 							affiliation="friend"
@@ -820,7 +894,7 @@
 					{/each}
 				{/if}
 
-				{#if overlays.hostile}
+				{#if overlays.hostile && showLand}
 					{#each hostileMarkers as m (m.id)}
 						<UnitSymbol
 							affiliation={m.known ? "hostile" : "unknown"}
@@ -839,6 +913,35 @@
 
 	<!-- Left rail: base layers, heatmaps, overlays -->
 	<nav class="panel absolute left-2 top-2 z-10 flex flex-col gap-0.5 rounded-sm p-1" aria-label="Map layers">
+		<div class="mb-1 flex flex-col gap-0.5 border-b border-line/20 pb-1" aria-label="Map mode">
+			<IconButton
+				icon={IconNavalMode}
+				label="Naval mode · sea and coasts only"
+				size="sm"
+				shape="square"
+				variant={mode === "naval" ? "soft-blue" : "ghost"}
+				aria-pressed={mode === "naval"}
+				onclick={() => (mode = "naval")}
+			/>
+			<IconButton
+				icon={IconLandMode}
+				label="Land mode · regions and forces"
+				size="sm"
+				shape="square"
+				variant={mode === "land" ? "soft-blue" : "ghost"}
+				aria-pressed={mode === "land"}
+				onclick={() => (mode = "land")}
+			/>
+			<IconButton
+				icon={IconAerialMode}
+				label="Aerial mode · grouped Luftraum sectors"
+				size="sm"
+				shape="square"
+				variant={mode === "aerial" ? "soft-blue" : "ghost"}
+				aria-pressed={mode === "aerial"}
+				onclick={() => (mode = "aerial")}
+			/>
+		</div>
 		{#each BASE_LAYERS as l (l.value)}
 			<IconButton
 				icon={l.icon}
@@ -956,20 +1059,27 @@
 	<!-- Legend -->
 	<div class="panel absolute left-16 bottom-9 z-10 hidden rounded-sm px-2.5 py-1.5 text-[11px] text-fg-soft sm:block">
 		<div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-			{#if overlays.friendly}<span class="inline-flex items-center gap-1"
+			<span class="inline-flex items-center gap-1 text-fg">
+				{mode === "naval" ? "NAVAL · sea + coasts" : mode === "aerial" ? "AERIAL · Luftraum sectors" : "LAND · regions + forces"}
+			</span>
+			{#if showSea && overlays.sea}
+				<span class="inline-flex items-center gap-1"><span class="size-2.5 border border-sky-400"></span>Sea hex / EEZ</span>
+				<span class="inline-flex items-center gap-1">⚓ Port</span>
+			{/if}
+			{#if mode !== "naval" && overlays.friendly}<span class="inline-flex items-center gap-1"
 					><UnitBadge affiliation="friend" size={14} />Own</span
 				>{/if}
-			{#if overlays.hostile}
+			{#if mode !== "naval" && overlays.hostile}
 				<span class="inline-flex items-center gap-1"><UnitBadge affiliation="hostile" size={14} />Hostile (intel)</span>
 				<span class="inline-flex items-center gap-1"><UnitBadge affiliation="unknown" size={14} />Unknown</span>
 			{/if}
-			{#if overlays.battles}<span class="inline-flex items-center gap-1"
+			{#if mode !== "naval" && overlays.battles}<span class="inline-flex items-center gap-1"
 					><span class="size-2.5 rounded-full border border-error"></span>Battle</span
 				>{/if}
-			{#if overlays.recon}<span class="inline-flex items-center gap-1"
+			{#if mode !== "naval" && overlays.recon}<span class="inline-flex items-center gap-1"
 					><span class="size-2.5 rounded-full bg-primary/40"></span>Recon cover</span
 				>{/if}
-			{#if overlays.strikes && strikeMarkers.length}<span class="inline-flex items-center gap-1"
+			{#if mode !== "naval" && overlays.strikes && strikeMarkers.length}<span class="inline-flex items-center gap-1"
 					><span class="size-2.5 rotate-45 bg-warning"></span>Airstrike</span
 				>{/if}
 			{#if base === "weather"}<span class="text-fg-muted">· grey cloud/fog, blue rain</span>{/if}

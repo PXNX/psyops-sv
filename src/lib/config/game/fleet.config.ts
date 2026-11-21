@@ -641,6 +641,35 @@ export function portHexForRegion(region: GeoRegion, allRegions: GeoRegion[], tak
 	return candidates.find((h) => !taken.has(hexKey(h))) ?? null;
 }
 
+// ── Airspace (Luftraum) ─────────────────────────────────────────────────────
+// Aerial mode thinks in sectors, not single hexes: several sea hexes and the
+// regions above them are grouped into one airspace block for planning.
+
+export const AIRSPACE = { cols: 4, rows: 3 } as const;
+
+export function airspaceSectorOf(h: Hex): string {
+	const qSpan = HEX_BOUNDS.maxQ - HEX_BOUNDS.minQ + 1;
+	const rSpan = HEX_BOUNDS.maxR - HEX_BOUNDS.minR + 1;
+	const col = Math.max(0, Math.min(AIRSPACE.cols - 1, Math.floor(((h.q - HEX_BOUNDS.minQ) / qSpan) * AIRSPACE.cols)));
+	const row = Math.max(0, Math.min(AIRSPACE.rows - 1, Math.floor(((h.r - HEX_BOUNDS.minR) / rSpan) * AIRSPACE.rows)));
+	return `LR-${String.fromCharCode(65 + row)}${col + 1}`;
+}
+
+/** All airspace sectors with the sea hexes they contain. */
+export function airspaceSectors(): { id: string; hexes: Hex[] }[] {
+	const sectors = new Map<string, Hex[]>();
+	for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
+		for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
+			const h = { q, r };
+			const id = airspaceSectorOf(h);
+			const list = sectors.get(id) ?? [];
+			list.push(h);
+			sectors.set(id, list);
+		}
+	}
+	return [...sectors.entries()].map(([id, hexes]) => ({ id, hexes }));
+}
+
 // ── Facilities and costs ────────────────────────────────────────────────────
 
 /** Treasury/materials costs for building facilities and laying mines. */
@@ -649,6 +678,9 @@ export const FACILITY = {
 	dock: { money: 1_000_000, steel: 900 },
 	/** Per dock level: one construction slot and faster repairs. */
 	maxDockLevel: 4,
+	/** Ports expand by level too: each level adds fuel storage. */
+	maxPortLevel: 5,
+	portUpgrade: { money: 600_000, steel: 500 },
 	/** Fuel units a level-1 port holds, and how much per extra level. */
 	portFuelBase: 400,
 	portFuelPerLevel: 250,
@@ -656,6 +688,18 @@ export const FACILITY = {
 	portFuelRegenPerHour: 12,
 	mine: { money: 40_000, steel: 20 }
 } as const;
+
+/** Cost of taking a port from `level` to `level + 1`. */
+export function portUpgradeCost(level: number): { money: number; steel: number } {
+	const next = Math.max(1, level) + 1;
+	return { money: FACILITY.portUpgrade.money * next, steel: FACILITY.portUpgrade.steel * next };
+}
+
+/** Cost of building a dock (level 1) or expanding it to the next level. */
+export function dockUpgradeCost(level: number): { money: number; steel: number } {
+	const next = Math.max(1, level);
+	return { money: FACILITY.dock.money * next, steel: FACILITY.dock.steel * next };
+}
 
 /** Price to order one hull, including the steel taken from the state stockpile. */
 export function buildCost(id: ShipClassId): { money: number; steel: number; hours: number } {

@@ -2,7 +2,15 @@
 // by lat/lon, so the inverse fit has to land back on the same map pixel.
 import { describe, expect, it } from "@rstest/core";
 import { latLonToMap, mapToLatLon } from "./military.js";
-import { hexFromLatLon, hexToLatLon, hexPolygonLatLon, inBounds } from "#lib/config/index.js";
+import {
+	AIRSPACE,
+	airspaceSectorOf,
+	airspaceSectors,
+	hexFromLatLon,
+	hexToLatLon,
+	hexPolygonLatLon,
+	inBounds
+} from "#lib/config/index.js";
 
 describe("world-map projection", () => {
 	it("inverts mapToLatLon to within a map pixel", () => {
@@ -17,6 +25,14 @@ describe("world-map projection", () => {
 			expect(back.x).toBeCloseTo(x, 0);
 			expect(back.y).toBeCloseTo(y, 0);
 		}
+	});
+
+	it("groups hexes into Luftraum sectors", () => {
+		const sectors = airspaceSectors();
+		expect(sectors).toHaveLength(AIRSPACE.cols * AIRSPACE.rows);
+		expect(sectors.every((s) => s.hexes.length > 0)).toBe(true);
+		expect(new Set(sectors.map((s) => s.id)).size).toBe(sectors.length);
+		expect(airspaceSectorOf({ q: 0, r: 0 })).toBe("LR-A1");
 	});
 
 	it("places hex centres in bounds and back on their own hex", () => {

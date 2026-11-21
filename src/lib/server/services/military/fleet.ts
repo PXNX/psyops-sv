@@ -32,6 +32,7 @@ import {
 	GNSS,
 	buildCost,
 	constructionHours,
+	dockUpgradeCost,
 	findPath,
 	gnssSpeedFactor,
 	hexDistance,
@@ -41,6 +42,7 @@ import {
 	hitChance,
 	isCoastal,
 	portHexForRegion,
+	portUpgradeCost,
 	inBounds,
 	mineDamage,
 	shipRepairCost,
@@ -189,6 +191,29 @@ export async function portCandidates(db: Db, stateId: number) {
 		.map((r) => ({ id: r.id, label: `Region #${r.id} (${r.latitude}, ${r.longitude})`, hex: hexToLatLon(hexFromLatLon(Number(r.latitude), Number(r.longitude))) }));
 }
 
+/** Expand a port by one level: larger fuel tanks and a bigger cargo yard. */
+export async function upgradePort(db: Database, userId: string, portId: number) {
+	const authority = await fleetAuthority(db, userId);
+	return db.transaction(async (tx) => {
+		const [port] = await tx.select().from(seaPorts).where(eq(seaPorts.id, portId));
+		if (!port || port.stateId !== authority.stateId) throw new FleetError("You can only expand one of your own ports.");
+		if (port.level >= FACILITY.maxPortLevel) throw new FleetError(`That port is already at level ${FACILITY.maxPortLevel}.`);
+		const next = port.level + 1;
+		const cost = portUpgradeCost(port.level);
+		await pay(tx, authority, userId, cost.money, cost.steel, `Expanding port ${port.name} to level ${next}`);
+		const [updated] = await tx.update(seaPorts).set({ level: next }).where(eq(seaPorts.id, portId)).returning();
+		await log(
+			tx,
+			authority.stateId,
+			"port_expanded",
+			{ q: port.q, r: port.r },
+			`${port.name} expanded to level ${next}.`,
+			{ level: next }
+		);
+		return updated;
+	});
+}
+
 /** Build a dock at one of your ports, or upgrade an existing one. */
 export async function buildDock(db: Database, userId: string, portId: number) {
 	const authority = await fleetAuthority(db, userId);
@@ -198,8 +223,7 @@ export async function buildDock(db: Database, userId: string, portId: number) {
 		const [dock] = await tx.select().from(seaDocks).where(eq(seaDocks.portId, portId));
 		if (dock && dock.level >= FACILITY.maxDockLevel) throw new FleetError("That dock is already at the maximum level.");
 		const level = dock ? dock.level + 1 : 1;
-		const money = FACILITY.dock.money * level;
-		const steel = FACILITY.dock.steel * level;
+		const { money, steel } = dockUpgradeCost(level);
 		await pay(tx, authority, userId, money, steel, `${dock ? "Upgrading" : "Building"} dock at ${port.name}`);
 		const [result] = dock
 			? await tx.update(seaDocks).set({ level }).where(eq(seaDocks.id, dock.id)).returning()
