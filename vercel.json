@@ -37,6 +37,11 @@
 			"schedule": "0 * * * *",
 			"path": "/api/cron/wars",
 			"requestMethod": "GET"
+		},
+		"earnings": {
+			"schedule": "0 0 * * 1",
+			"path": "/api/cron/earnings",
+			"requestMethod": "GET"
 		}
 	}
 }
