@@ -34,7 +34,12 @@ import {
 	stateResourceInventory,
 	reconMissions,
 	intelReports,
-	strikes
+	strikes,
+	seaPorts,
+	seaDocks,
+	fleetShips,
+	navalMines,
+	fleetEvents
 } from "./schema";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 import { hash32, seededRandom, SENSORS, type SensorId, type ViewConditions } from "#lib/config/index.js";
@@ -952,6 +957,123 @@ export async function seedMockDatabase(db: PgDatabase<any>) {
 			expiresAt: new Date(at.getTime() + 24 * hour)
 		});
 	}
+
+	// ============ Fleet at sea ============
+	// A shell demo theatre: two hostile ports far apart, a dock and a few hulls
+	// so the navy console is immediately explorable in mock mode.
+	const [libertyPort] = await db
+		.insert(seaPorts)
+		.values({
+			stateId: state1!.id,
+			regionId: region1!.id,
+			q: 3,
+			r: 4,
+			name: "Port Liberty",
+			level: 1,
+			fuelStock: 650,
+			stock: { steel: 600, container: 240, fuel: 300 },
+			builtBy: "user-1"
+		})
+		.returning();
+	const [libertyDock] = await db
+		.insert(seaDocks)
+		.values({ portId: libertyPort!.id, stateId: state1!.id, q: 3, r: 4, level: 1, builtBy: "user-1" })
+		.returning();
+	await db.insert(fleetShips).values([
+		{
+			stateId: state1!.id,
+			ownerId: "user-1",
+			dockId: libertyDock!.id,
+			name: "FNS Vanguard",
+			shipClass: "frigate",
+			q: 3,
+			r: 4,
+			health: 100,
+			fuel: 160,
+			status: "idle"
+		},
+		{
+			stateId: state1!.id,
+			ownerId: "user-1",
+			dockId: libertyDock!.id,
+			name: "FNS Meridian",
+			shipClass: "carrier",
+			q: 3,
+			r: 4,
+			health: 220,
+			fuel: 240,
+			status: "idle"
+		},
+		{
+			stateId: state1!.id,
+			ownerId: "user-1",
+			dockId: libertyDock!.id,
+			name: "MV Freelancer",
+			shipClass: "container_ship",
+			q: 3,
+			r: 4,
+			health: 80,
+			fuel: 140,
+			status: "idle"
+		}
+	]);
+	const [sylvanPort] = await db
+		.insert(seaPorts)
+		.values({
+			stateId: state2!.id,
+			regionId: region2!.id,
+			q: 11,
+			r: 6,
+			name: "Sylvan Naval Base",
+			level: 1,
+			fuelStock: 500,
+			stock: { steel: 300 },
+			builtBy: "user-3"
+		})
+		.returning();
+	await db
+		.insert(seaDocks)
+		.values({ portId: sylvanPort!.id, stateId: state2!.id, q: 11, r: 6, level: 1, builtBy: "user-3" });
+	await db.insert(fleetShips).values([
+		{
+			stateId: state2!.id,
+			ownerId: "user-3",
+			name: "SNS Ironclad",
+			shipClass: "destroyer",
+			q: 11,
+			r: 6,
+			health: 130,
+			fuel: 150,
+			status: "idle"
+		},
+		{
+			stateId: state2!.id,
+			ownerId: "user-3",
+			name: "SNS Silent",
+			shipClass: "torpedo_sub",
+			q: 11,
+			r: 6,
+			health: 70,
+			fuel: 120,
+			status: "idle"
+		}
+	]);
+	await db.insert(navalMines).values({
+		stateId: state2!.id,
+		q: 5,
+		r: 5,
+		strength: 100,
+		laidBy: "user-3",
+		expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000)
+	});
+	await db.insert(fleetEvents).values({
+		stateId: state1!.id,
+		kind: "port_built",
+		q: 3,
+		r: 4,
+		message: "Port Liberty commissioned. The sea lanes are open.",
+		createdAt: new Date(Date.now() - 3 * 60 * 60 * 1000)
+	});
 
 	console.log("🌱 Mock database seeded successfully");
 }

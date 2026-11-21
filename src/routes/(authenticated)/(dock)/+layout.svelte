@@ -3,6 +3,7 @@
 <script lang="ts">
 	import FluentChartMultiple from "~icons/fluent/chart-multiple-24-regular";
 	import FluentMap from "~icons/fluent/map-24-regular";
+	import FluentShip from "~icons/fluent/vehicle-ship-24-regular";
 	import FluentEye from "~icons/fluent/eye-tracking-24-regular";
 	import FluentIncognito from "~icons/fluent/incognito-24-regular";
 	import FluentNews from "~icons/fluent/news-24-regular";
@@ -33,6 +34,7 @@
 	const navItems: NavItem[] = $derived([
 		{ href: "/", icon: FluentChartMultiple, label: "Overview", mobile: true },
 		{ href: "/map", icon: FluentMap, label: "Map", mobile: true },
+		{ href: "/navy", icon: FluentShip, label: "Navy", mobile: true },
 		{ href: "/intel", icon: FluentEye, label: "Intel" },
 		{ href: "/ops", icon: FluentIncognito, label: "Ops" },
 		{ href: "/posts", icon: FluentNews, label: "Posts", mobile: true },

@@ -3924,6 +3924,187 @@ export const navalBlockades = pgTable(
 	})
 );
 
+// --- FLEET AT SEA ---
+// The spatial layer under the older naval operations: a bounded axial hex sea,
+// ships that actually move across it, ports that refuel and transship cargo,
+// docks with construction/repair queues, and minefields that blockade a port.
+// Pure rules live in config/game/fleet.config.ts; resolution in
+// services/military/fleet.ts.
+
+/** Every hull class from fleet.config.ts. Keep the two lists in sync. */
+export const shipClassEnum = pgEnum("ship_class", [
+	"carrier",
+	"frigate",
+	"helipad",
+	"support_ship",
+	"corvette",
+	"destroyer",
+	"light_aa",
+	"gnss_jammer",
+	"torpedo_sub",
+	"vls_sub",
+	"container_ship",
+	"roro_ferry",
+	"tanker"
+]);
+export const shipStatusEnum = pgEnum("ship_status", ["idle", "moving", "repairing", "sunk"]);
+export const dockQueueKindEnum = pgEnum("dock_queue_kind", ["construct", "repair"]);
+export const dockQueueStatusEnum = pgEnum("dock_queue_status", ["queued", "building", "done", "cancelled"]);
+
+/** A port: refuels ships and holds cargo for loading/unloading. */
+export const seaPorts = pgTable(
+	"sea_ports",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		regionId: integer("region_id").references(() => regions.id, { onDelete: "set null" }),
+		q: integer("q").notNull(),
+		r: integer("r").notNull(),
+		name: varchar("name", { length: 100 }).notNull(),
+		level: integer("level").default(1).notNull(),
+		/** Fuel units currently in the port's tanks. */
+		fuelStock: integer("fuel_stock").default(0).notNull(),
+		/** Cargo stockpiles by resource/product key, e.g. { steel: 400 }. */
+		stock: jsonb("stock").$type<Record<string, number>>().default({}).notNull(),
+		builtBy: text("built_by").references(() => accounts.id, { onDelete: "set null" }),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_sea_port_state").on(t.stateId),
+		hexIdx: uniqueIndex("uq_sea_port_hex").on(t.q, t.r)
+	})
+);
+
+/** A dock at a port: builds and repairs ships through a queue. */
+export const seaDocks = pgTable(
+	"sea_docks",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		portId: integer("port_id")
+			.notNull()
+			.references(() => seaPorts.id, { onDelete: "cascade" }),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		q: integer("q").notNull(),
+		r: integer("r").notNull(),
+		/** Each level adds a build/repair slot and speeds the work. */
+		level: integer("level").default(1).notNull(),
+		builtBy: text("built_by").references(() => accounts.id, { onDelete: "set null" }),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		portIdx: uniqueIndex("uq_sea_dock_port").on(t.portId),
+		stateIdx: index("idx_sea_dock_state").on(t.stateId)
+	})
+);
+
+/** One ship: its class, hex position, condition, fuel and current cargo. */
+export const fleetShips = pgTable(
+	"fleet_ships",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		ownerId: text("owner_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		dockId: integer("dock_id").references(() => seaDocks.id, { onDelete: "set null" }),
+		name: varchar("name", { length: 100 }).notNull(),
+		shipClass: shipClassEnum("ship_class").notNull(),
+		q: integer("q").notNull(),
+		r: integer("r").notNull(),
+		health: integer("health").default(100).notNull(),
+		fuel: integer("fuel").default(0).notNull(),
+		/** Cargo carried, if the hull has a hold (container/vehicle/fuel). */
+		cargoType: varchar("cargo_type", { length: 40 }),
+		cargoAmount: integer("cargo_amount").default(0).notNull(),
+		status: shipStatusEnum("status").default("idle").notNull(),
+		/** Remaining legs of a movement order, starting with the next hex. */
+		orderPath: jsonb("order_path").$type<{ q: number; r: number }[]>(),
+		/** When the current leg began/ends; the cron advances one leg at a time. */
+		legStartsAt: timestamp("leg_starts_at"),
+		legArrivesAt: timestamp("leg_arrives_at"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_fleet_ship_state").on(t.stateId),
+		hexIdx: index("idx_fleet_ship_hex").on(t.q, t.r)
+	})
+);
+
+/** The construction and repair queue of a single dock. */
+export const fleetDockQueue = pgTable(
+	"fleet_dock_queue",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		dockId: integer("dock_id")
+			.notNull()
+			.references(() => seaDocks.id, { onDelete: "cascade" }),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		kind: dockQueueKindEnum("kind").notNull(),
+		shipClass: shipClassEnum("ship_class"),
+		shipId: integer("ship_id").references(() => fleetShips.id, { onDelete: "set null" }),
+		orderedBy: text("ordered_by").references(() => accounts.id, { onDelete: "set null" }),
+		cost: integer("cost").notNull(),
+		status: dockQueueStatusEnum("status").default("queued").notNull(),
+		queuedAt: timestamp("queued_at").defaultNow().notNull(),
+		startsAt: timestamp("starts_at"),
+		completesAt: timestamp("completes_at")
+	},
+	(t) => ({
+		dockIdx: index("idx_fleet_queue_dock").on(t.dockId, t.status, t.id),
+		stateIdx: index("idx_fleet_queue_state").on(t.stateId)
+	})
+);
+
+/** A minefield on one hex. Merchant traffic is denied; warships take damage. */
+export const navalMines = pgTable(
+	"naval_mines",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		q: integer("q").notNull(),
+		r: integer("r").notNull(),
+		/** Remaining strength; each detonation spends some of it. */
+		strength: integer("strength").default(100).notNull(),
+		laidBy: text("laid_by").references(() => accounts.id, { onDelete: "set null" }),
+		laidAt: timestamp("laid_at").defaultNow().notNull(),
+		expiresAt: timestamp("expires_at").notNull()
+	},
+	(t) => ({
+		hexIdx: index("idx_naval_mine_hex").on(t.q, t.r),
+		stateIdx: index("idx_naval_mine_state").on(t.stateId)
+	})
+);
+
+/** Combat, mining, cargo and blockade events for the fleet log. */
+export const fleetEvents = pgTable(
+	"fleet_events",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id").references(() => states.id, { onDelete: "cascade" }),
+		kind: varchar("kind", { length: 40 }).notNull(),
+		q: integer("q"),
+		r: integer("r"),
+		message: text("message"),
+		data: jsonb("data").$type<Record<string, unknown>>(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateIdx: index("idx_fleet_event_state").on(t.stateId, t.createdAt),
+		hexIdx: index("idx_fleet_event_hex").on(t.q, t.r)
+	})
+);
+
 // --- SPACE ---
 // A state's constellation of satellites, its space defence, and the
 // operations that blind a rival's. Rules in config/game/space.config.ts;

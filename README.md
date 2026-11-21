@@ -44,6 +44,26 @@ bombardment, amphibious assault (opens a real battle without a land border),
 sea-lane raid (seizes treasury) and minelaying. See `naval.config.ts` and
 `services/military/naval.ts`.
 
+**Fleet at sea (`/navy`).** The strategic operations above now have a spatial
+layer. The ocean is a bounded axial hex grid; ships steam one hex per leg, burn
+fuel, and can be refuelled and loaded at **ports** or built and repaired through
+the **dock queue** (`/api/cron/fleet` advances every leg, job and engagement).
+Hulls come in four families: capital ships (carrier with fighters, VLS frigate,
+ASW helipad cruiser), escorts (support ship, corvette, destroyer, light AA and
+a GNSS jammer), submarines (torpedo and VLS) and civilians (container ship,
+Ro-Ro ferry, tanker). Minefields can be laid from frigates and submarines:
+merchant hulls refuse to enter a mined hex, so a ring of mines blockades a
+port, while warships that push through take damage. Hostile fleets in range
+exchange fire using each class's weapons — fighters, VLS, ASW helicopters,
+light guns, light AA and torpedoes.
+
+**GNSS jamming.** Satellite navigation can be denied from all three domains: a
+GNSS jammer ship at sea, air-defence battalions ashore, and fighter squadrons
+carrying EW pods in the air. Jamming is summed per hex from every hostile
+emitter in range; a jammed ship steams slower and its weapons miss more often.
+The effect is shared by the planner and the resolver in `fleet.config.ts` and
+`services/military/fleet.ts`.
+
 **Space.** States build constellations of reconnaissance, navigation, comms
 and early-warning satellites. Navigation satellites sharpen GPS/laser strikes,
 recon satellites improve the intel picture, comms satellites resist C2
@@ -281,6 +301,7 @@ The game's background ticks run on [Vercel Schedules](https://vercel.com/docs/sc
 | `battles`        | `/api/cron/battles`        | hourly        | Moves battles between phases and resolves one combat round per active battle |
 | `bloc-elections` | `/api/cron/bloc-elections` | daily         | Opens and closes bloc leader elections and bloc membership applications      |
 | `elections`      | `/api/cron/elections`      | hourly        | Activates and tallies state parliament elections                             |
+| `fleet`          | `/api/cron/fleet`          | every 15 min  | Advances ship movements, dock queues, engagements, port fuel and minefields  |
 | `population`     | `/api/cron/population`     | weekly        | Advances regional civilian populations from births and mortality             |
 | `premium`        | `/api/cron/premium`        | every 15 min  | Runs the premium automation (production, training, factory shifts)           |
 | `proposals`      | `/api/cron/proposals`      | every 15 min  | Closes finished parliament proposals and applies passed ones                 |
