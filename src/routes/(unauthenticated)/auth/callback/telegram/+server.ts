@@ -12,6 +12,7 @@ import { eq } from "drizzle-orm";
 import type { RequestHandler } from "./$types";
 import { createHash, createHmac } from "crypto";
 import { redirect } from "@sveltejs/kit";
+import { trackEvent } from "#lib/server/telemetry.js";
 
 // Verification algorithm for Telegram's Login Widget family (login_url
 // buttons and Telegram.Login.auth()), per
@@ -32,7 +33,11 @@ function verifyTelegramData(data: Record<string, string>, botToken: string): boo
 	return hash === data.hash;
 }
 
-async function handleTelegramAuth(telegramUser: TelegramUser, cookies: any) {
+async function handleTelegramAuth(
+	telegramUser: TelegramUser,
+	cookies: any,
+	source: "telegram_bot" | "telegram_widget"
+) {
 	// Check if account exists with this Telegram ID
 	const existingProfile = await db.query.userProfiles.findFirst({
 		where: eq(userProfiles.telegramId, telegramUser.id)
@@ -120,6 +125,15 @@ async function handleTelegramAuth(telegramUser: TelegramUser, cookies: any) {
 		path: "/"
 	});
 
+	// The bot's /login button and the website's login widget both land here;
+	// `source` keeps their funnels distinguishable in telemetry.
+	trackEvent("auth.login.success", {
+		provider: "telegram",
+		source,
+		account_id: account.id,
+		telegram_id: telegramUser.id,
+		is_new_user: isNewUser
+	});
 	console.log("✅ Telegram login successful");
 	console.log("👤 User role (Permission):", account.role);
 
@@ -150,17 +164,20 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	}
 
 	if (!telegramData.hash || !telegramData.auth_date) {
+		trackEvent("auth.login.failure", { provider: "telegram", source: "telegram_bot", reason: "missing_params" });
 		console.error("❌ Missing required Telegram parameters");
 		redirect(302, "/auth/login?error=missing_params");
 	}
 
 	if (!verifyTelegramData(telegramData, TELEGRAM_BOT_TOKEN)) {
+		trackEvent("auth.login.failure", { provider: "telegram", source: "telegram_bot", reason: "invalid_signature" });
 		console.error("❌ Invalid Telegram data signature");
 		redirect(302, "/auth/login?error=invalid_signature");
 	}
 
 	const authTime = parseInt(telegramData.auth_date) * 1000;
 	if (Date.now() - authTime > 5 * 60 * 1000) {
+		trackEvent("auth.login.failure", { provider: "telegram", source: "telegram_bot", reason: "auth_expired" });
 		console.error("❌ Auth data too old");
 		redirect(302, "/auth/login?error=auth_expired");
 	}
@@ -178,8 +195,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 	let result: Awaited<ReturnType<typeof handleTelegramAuth>>;
 	try {
-		result = await handleTelegramAuth(telegramUser, cookies);
+		result = await handleTelegramAuth(telegramUser, cookies, "telegram_bot");
 	} catch (e) {
+		trackEvent("auth.login.failure", { provider: "telegram", source: "telegram_bot", reason: "server_error" });
 		console.error("❌ Error during Telegram authentication:", e);
 		redirect(302, "/auth/login?error=server_error");
 	}
@@ -203,6 +221,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		};
 
 		if (!verifyTelegramData(dataToVerify, TELEGRAM_BOT_TOKEN)) {
+			trackEvent("auth.login.failure", {
+				provider: "telegram",
+				source: "telegram_widget",
+				reason: "invalid_signature"
+			});
 			console.error("❌ Invalid Telegram data signature");
 			return new Response(JSON.stringify({ error: "Invalid signature" }), { status: 400 });
 		}
@@ -211,6 +234,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 		const authTime = auth_date * 1000;
 		const now = Date.now();
 		if (now - authTime > 5 * 60 * 1000) {
+			trackEvent("auth.login.failure", { provider: "telegram", source: "telegram_widget", reason: "auth_expired" });
 			console.error("❌ Auth data too old");
 			return new Response(JSON.stringify({ error: "Auth data expired" }), { status: 400 });
 		}
@@ -226,10 +250,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
 		console.log("👤 Telegram user:", telegramUser.username || telegramUser.first_name);
 
-		const result = await handleTelegramAuth(telegramUser, cookies);
+		const result = await handleTelegramAuth(telegramUser, cookies, "telegram_widget");
 
 		return new Response(JSON.stringify(result), { status: 200 });
 	} catch (e) {
+		trackEvent("auth.login.failure", { provider: "telegram", source: "telegram_widget", reason: "server_error" });
 		console.error("❌ Error during Telegram authentication:", e);
 		return new Response(JSON.stringify({ error: "Server error" }), { status: 500 });
 	}

@@ -28,6 +28,7 @@ import {
 import { calculateShiftStatus, collectWages, startWorkShift } from "#lib/server/service/factoryWork.js";
 import { sendSystemNotification } from "#lib/server/service/inbox.js";
 import { and, eq, sql, gt, isNotNull } from "drizzle-orm";
+import { trackEvent } from "#lib/server/telemetry.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -54,6 +55,10 @@ export async function grantPremium(accountId: string, days: number, tx: any = db
 		.update(userProfiles)
 		.set({ premiumUntil: newUntil, updatedAt: new Date() })
 		.where(eq(userProfiles.accountId, accountId));
+
+	// Same event name the Telegram bot emits when it grants Premium; `source`
+	// tells the two paths apart (gift/admin grant here vs. bot purchase).
+	trackEvent("premium.granted", { account_id: accountId, days, source: "web" });
 
 	return newUntil;
 }
@@ -427,6 +432,10 @@ export async function runPremiumAutomation(): Promise<AutomationSummary[]> {
 	for (const member of members) {
 		summaries.push(await runPremiumAutomationForUser(member.accountId));
 	}
+	trackEvent("premium.automation.run", {
+		members: summaries.length,
+		errors: summaries.reduce((total, summary) => total + summary.errors, 0)
+	});
 	return summaries;
 }
 

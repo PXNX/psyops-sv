@@ -4,6 +4,7 @@ import { db } from "#lib/server/db.js";
 import { accounts, userProfiles } from "#lib/server/schema.js";
 import { OAuth2RequestError } from "arctic";
 import { eq } from "drizzle-orm";
+import { trackEvent } from "#lib/server/telemetry.js";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
@@ -16,6 +17,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 	console.log("🔍 Callback - Stored state from cookie:", storedStateWithRedirect);
 
 	if (!code || !state || !storedStateWithRedirect || !codeVerifier) {
+		trackEvent("auth.login.failure", { provider: "google", reason: "missing_params" });
 		console.error("❌ Missing required parameters");
 		return new Response("Invalid request", { status: 400 });
 	}
@@ -28,6 +30,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
 	// Validate the state matches (only the random part)
 	if (state !== storedState) {
+		trackEvent("auth.login.failure", { provider: "google", reason: "state_mismatch" });
 		console.error("❌ State mismatch");
 		return new Response("Invalid state", { status: 400 });
 	}
@@ -45,8 +48,10 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		const existingAccount = await db.select().from(accounts).where(eq(accounts.email, googleUser.email)).limit(1);
 
 		let account;
+		let isNewUser = false;
 
 		if (existingAccount.length === 0) {
+			isNewUser = true;
 			console.log("✨ Creating new account");
 
 			// Create new account with user role (default permission)
@@ -103,6 +108,11 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		cookies.delete("google_oauth_state", { path: "/" });
 		cookies.delete("google_code_verifier", { path: "/" });
 
+		trackEvent("auth.login.success", {
+			provider: "google",
+			account_id: account.id,
+			is_new_user: isNewUser
+		});
 		console.log("✅ Login successful, redirecting to:", redirectTo);
 		console.log("👤 User role (Permission):", account.role);
 
@@ -111,6 +121,10 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			headers: { Location: redirectTo }
 		});
 	} catch (e) {
+		trackEvent("auth.login.failure", {
+			provider: "google",
+			reason: e instanceof OAuth2RequestError ? "oauth_error" : "server_error"
+		});
 		console.error("❌ Error during authentication:", e);
 
 		// Clear OAuth cookies on error

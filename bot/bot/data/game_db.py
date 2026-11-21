@@ -22,6 +22,7 @@ from typing import Optional
 from asyncpg import Pool, create_pool
 
 from settings.config import GAME_DATABASE_URL, GAME_DB_SSL
+from util.telemetry import emit
 
 
 def _get_ssl():
@@ -39,6 +40,7 @@ class GameDBPool:
     @classmethod
     async def get_pool(cls) -> Optional[Pool]:
         if not GAME_DATABASE_URL:
+            emit("db.unavailable", reason="not_configured")
             logging.error("GAME_DATABASE_URL is not configured; premium/login DB access disabled.")
             return None
         if cls._pool is None:

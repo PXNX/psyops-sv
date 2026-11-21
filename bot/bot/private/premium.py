@@ -48,6 +48,7 @@ from telegram.ext import (
 
 from data.game_db import find_account_by_telegram_id, grant_premium
 from util.dtg import dtg
+from util.telemetry import emit
 from settings.config import (
     APP_URL,
     MOCK_STARS_PAYMENTS,
@@ -75,6 +76,18 @@ PREMIUM_PLANS: Dict[str, PremiumPlan] = {
     "semiannual": PremiumPlan("semiannual", "6 Months", 180, 2500, 7.0),
 }
 
+
+def _emit_granted(account_id: str, telegram_id: int, plan: PremiumPlan, method: str) -> None:
+    """Emit the same `premium.granted` event the web app emits on a grant."""
+    emit(
+        "premium.granted",
+        account_id=account_id,
+        telegram_id=telegram_id,
+        plan=plan.plan_id,
+        days=plan.days,
+        method=method,
+    )
+
 # Pending TON payments live in ``bot_data`` under this key so PicklePersistence
 # keeps them across restarts. Maps a unique comment code -> payment details.
 TON_PENDING_KEY = "ton_pending"
@@ -97,6 +110,7 @@ def _parse_payload(payload: str) -> Optional[tuple[str, str]]:
 # ─── /login ──────────────────────────────────────────────────────────────────
 async def login_cmd(update: Update, _: CallbackContext) -> None:
     """Send a Telegram login button that authenticates the user on the website."""
+    emit("telegram.command", command="/login", telegram_id=update.effective_user.id)
     button = InlineKeyboardButton(
         "🎮 Log in to the game",
         login_url=LoginUrl(url=f"{APP_URL}/auth/callback/telegram"),
@@ -142,6 +156,7 @@ def _login_keyboard() -> InlineKeyboardMarkup:
 async def premium_cmd(update: Update, _: CallbackContext) -> None:
     user_id = update.effective_user.id
     account_id = await find_account_by_telegram_id(user_id)
+    emit("telegram.command", command="/premium", telegram_id=user_id, linked=bool(account_id))
 
     if not account_id:
         await update.message.reply_text(
@@ -179,6 +194,13 @@ async def buy_with_stars(update: Update, context: CallbackContext) -> None:
 
     account_id = await find_account_by_telegram_id(query.from_user.id)
     if not account_id:
+        emit(
+            "premium.checkout.failed",
+            telegram_id=query.from_user.id,
+            plan=plan_id,
+            method="stars",
+            reason="not_linked",
+        )
         await query.answer()
         await query.message.reply_text(
             "Please log in to the game first.", reply_markup=_login_keyboard()
@@ -186,6 +208,13 @@ async def buy_with_stars(update: Update, context: CallbackContext) -> None:
         return
 
     await query.answer()
+    emit(
+        "premium.checkout.started",
+        account_id=account_id,
+        telegram_id=query.from_user.id,
+        plan=plan_id,
+        method="mock_stars" if MOCK_STARS_PAYMENTS else "stars",
+    )
 
     if MOCK_STARS_PAYMENTS:
         # MOCK: grant premium immediately for free instead of charging Stars.
@@ -193,8 +222,17 @@ async def buy_with_stars(update: Update, context: CallbackContext) -> None:
         # disabled. Flip MOCK_STARS_PAYMENTS=false to charge for real.
         premium_until = await grant_premium(account_id, plan.days)
         if premium_until is None:
+            emit(
+                "premium.grant.failed",
+                account_id=account_id,
+                telegram_id=query.from_user.id,
+                plan=plan_id,
+                method="mock_stars",
+                reason="db_update_failed",
+            )
             await query.message.reply_text("⚠️ Something went wrong updating your account. Please try again.")
             return
+        _emit_granted(account_id, query.from_user.id, plan, "mock_stars")
         await query.message.reply_text(
             f"✅ Your <b>{plan.label}</b> premium (currently free) is active until "
             f"{dtg(premium_until)}. Automation is now working for you."
@@ -217,9 +255,13 @@ async def buy_with_stars(update: Update, context: CallbackContext) -> None:
 
 async def precheckout(update: Update, _: CallbackContext) -> None:
     query = update.pre_checkout_query
-    if _parse_payload(query.invoice_payload) is None:
+    parsed = _parse_payload(query.invoice_payload)
+    if parsed is None:
+        emit("premium.checkout.failed", telegram_id=update.effective_user.id, reason="invalid_payload")
         await query.answer(ok=False, error_message="This purchase is no longer valid.")
         return
+    plan_id, account_id = parsed
+    emit("premium.checkout.validated", account_id=account_id, telegram_id=update.effective_user.id, plan=plan_id)
     await query.answer(ok=True)
 
 
@@ -227,20 +269,37 @@ async def successful_payment(update: Update, _: CallbackContext) -> None:
     payment = update.message.successful_payment
     parsed = _parse_payload(payment.invoice_payload)
     if parsed is None:
+        emit("premium.payment.invalid", telegram_id=update.effective_user.id, method="stars")
         logger.error("Successful payment with invalid payload: %s", payment.invoice_payload)
         return
 
     plan_id, account_id = parsed
     plan = PREMIUM_PLANS[plan_id]
+    emit(
+        "premium.payment.success",
+        account_id=account_id,
+        telegram_id=update.effective_user.id,
+        plan=plan_id,
+        method="stars",
+    )
     premium_until = await grant_premium(account_id, plan.days)
 
     if premium_until is None:
+        emit(
+            "premium.grant.failed",
+            account_id=account_id,
+            telegram_id=update.effective_user.id,
+            plan=plan_id,
+            method="stars",
+            reason="db_update_failed",
+        )
         await update.message.reply_text(
             "⚠️ Payment received but your account could not be updated. "
             "Please contact support with your payment reference."
         )
         return
 
+    _emit_granted(account_id, update.effective_user.id, plan, "stars")
     await update.message.reply_text(
         f"✅ Thank you! Your <b>{plan.label}</b> premium is active until "
         f"{premium_until:%Y-%m-%d %H:%M} UTC. Automation is now working for you."
@@ -257,11 +316,19 @@ async def buy_with_ton(update: Update, context: CallbackContext) -> None:
     plan_id = query.data[len("prem_ton_"):]
     plan = PREMIUM_PLANS.get(plan_id)
     if plan is None or not TON_WALLET_ADDRESS:
+        emit("premium.checkout.failed", telegram_id=query.from_user.id, plan=plan_id, method="ton", reason="unavailable")
         await query.answer("TON payments are not available.", show_alert=True)
         return
 
     account_id = await find_account_by_telegram_id(query.from_user.id)
     if not account_id:
+        emit(
+            "premium.checkout.failed",
+            telegram_id=query.from_user.id,
+            plan=plan_id,
+            method="ton",
+            reason="not_linked",
+        )
         await query.answer()
         await query.message.reply_text(
             "Please log in to the game first.", reply_markup=_login_keyboard()
@@ -271,6 +338,14 @@ async def buy_with_ton(update: Update, context: CallbackContext) -> None:
     await query.answer()
 
     comment = f"MNP-{secrets.token_hex(4)}"
+    emit(
+        "premium.checkout.started",
+        account_id=account_id,
+        telegram_id=query.from_user.id,
+        plan=plan_id,
+        method="ton",
+        reference=comment,
+    )
     nano = int(round(plan.ton * NANO))
     _ton_pending(context)[comment] = {
         "plan_id": plan_id,
@@ -346,6 +421,7 @@ async def _settle_ton_payments(application: Application) -> None:
     try:
         received = await _fetch_ton_transactions()
     except Exception as e:  # noqa: BLE001 - network errors shouldn't kill the job
+        emit("ton.verification.failed", error_type=type(e).__name__)
         logger.warning("TON verification: failed to fetch transactions: %s", e)
         return
 
@@ -355,13 +431,30 @@ async def _settle_ton_payments(application: Application) -> None:
             continue
 
         plan = PREMIUM_PLANS[payment["plan_id"]]
+        emit(
+            "premium.payment.success",
+            account_id=payment["account_id"],
+            telegram_id=payment["user_id"],
+            plan=plan.plan_id,
+            method="ton",
+            reference=comment,
+        )
         premium_until = await grant_premium(payment["account_id"], plan.days)
         pending.pop(comment, None)
 
         if premium_until is None:
+            emit(
+                "premium.grant.failed",
+                account_id=payment["account_id"],
+                telegram_id=payment["user_id"],
+                plan=plan.plan_id,
+                method="ton",
+                reason="db_update_failed",
+            )
             logger.error("TON payment %s could not update account %s", comment, payment["account_id"])
             continue
 
+        _emit_granted(payment["account_id"], payment["user_id"], plan, "ton")
         try:
             await application.bot.send_message(
                 payment["chat_id"],
@@ -378,6 +471,7 @@ async def check_ton_now(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     comment = query.data[len("prem_toncheck_"):]
     pending = _ton_pending(context)
+    emit("ton.check.requested", telegram_id=query.from_user.id, reference=comment)
 
     if comment not in pending:
         await query.answer("This payment was already processed or has expired.", show_alert=True)

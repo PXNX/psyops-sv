@@ -44,3 +44,9 @@ TON_API_KEY: Final[str] = getenv("TON_API_KEY", "")
 # (0) to disable and only log to the console.
 LOG_GROUP_ID: Final[int] = int(getenv("LOG_GROUP_ID", "0"))
 THREAD_ID: Final[int] = int(getenv("THREAD_ID", "0"))
+
+# --- Telemetry ---------------------------------------------------------------
+# Optional HTTP endpoint that receives one JSON object per event. Events are
+# always written to the container logs as structured JSON as well; set this to
+# forward them to the same collector the web app's OTEL_EXPORTER_OTLP_* targets.
+TELEMETRY_ENDPOINT: Final[str] = getenv("TELEMETRY_ENDPOINT", "").strip()

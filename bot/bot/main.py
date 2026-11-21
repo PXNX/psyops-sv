@@ -18,6 +18,7 @@ from telegram.ext import ApplicationBuilder, ContextTypes, Defaults, PicklePersi
 from private.premium import register_premium, schedule_ton_verification
 from settings.config import CONTAINER, TOKEN
 from util.error_logger import get_error_logger
+from util.telemetry import emit
 
 
 def add_logging() -> None:
@@ -59,12 +60,19 @@ def main() -> None:
     schedule_ton_verification(application)
 
     async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+        emit(
+            "app.error",
+            error_type=type(context.error).__name__ if context.error else "Unknown",
+            update_type=type(update).__name__,
+            context="update_handler",
+        )
         logging.error("Exception while handling an update:", exc_info=context.error)
         error_logger = get_error_logger()
         await error_logger.log_error(context.error, "Error in update handler")
 
     application.add_error_handler(error_handler)
 
+    emit("app.started")
     logging.info("### PTB-PSYOPS (Auth + Premium Purchases) RUNNING ###")
     application.run_polling(poll_interval=1, drop_pending_updates=False)
 

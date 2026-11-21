@@ -86,6 +86,28 @@ The game's background ticks run on [Vercel Schedules](https://vercel.com/docs/sc
 
 Set `CRON_SECRET` in the project's environment variables on Vercel — without it every schedule gets a 403. Schedules apply when a deployment becomes current; each one can be run manually from the dashboard's **Schedules** tab or with `vercel schedules invoke <name>`. The cadences respect the Hobby plan's 15-minute minimum interval; on Pro/Enterprise runs land within the jitter window (default 1 minute) of the scheduled time.
 
+## Telemetry
+
+The web app and the Telegram bot emit **the same event names** with a `source` field (`web` / `telegram_bot`), so a user journey — bot `/login` → web session → bot premium purchase — can be followed across both. No vendor or extra service is required: every event is a structured JSON log line, and web events additionally increment OpenTelemetry counters.
+
+- `src/instrumentation.server.ts` registers `@vercel/otel`. Set the standard `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_PROTOCOL` and `OTEL_EXPORTER_OTLP_HEADERS` variables (or use a Vercel observability integration) to ship traces and metrics to a collector. `OTEL_SERVICE_NAME` overrides the default service name.
+- `src/lib/server/telemetry.ts` is the web emitter; `bot/bot/util/telemetry.py` is the bot emitter. The bot can also forward its JSON events to an HTTP collector via `TELEMETRY_ENDPOINT` (see [bot/README.md](bot/README.md)).
+- `handleError` and each response share a `request_id` (also returned as `X-Request-Id`); events carry it plus the active OTel `trace_id`/`span_id` when tracing is enabled.
+
+Key events and their attributes:
+
+| Event                                                                     | Emitted by              | Attributes                                                                                                             |
+| ------------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `auth.login.success` / `auth.login.failure`                               | web                     | `provider`, `source` (`telegram_bot`, `telegram_widget`, `web`), `account_id`, `telegram_id`, `is_new_user` / `reason` |
+| `premium.granted`                                                         | web + bot               | `account_id`, `telegram_id` (bot), `days`, `plan` (bot), `method` (bot), `source`                                      |
+| `premium.checkout.*`, `premium.payment.*`, `premium.grant.failed`         | bot                     | `account_id`, `telegram_id`, `plan`, `method`, `reason`                                                                |
+| `premium.automation.run`                                                  | web                     | `members`, `errors`                                                                                                    |
+| `cron.run`                                                                | web (all `/api/cron/*`) | `job`, `method`, `route`, `status`, `outcome`                                                                          |
+| `http.server.request` (histogram) + `app.error`                           | web                     | `method`, `route`, `status`, `request_id`, `kind`, `account_id`                                                        |
+| `telegram.command`, `ton.*`, `app.started`, `app.error`, `db.unavailable` | bot                     | `command`, `telegram_id`, `reference`, `error_type`, …                                                                 |
+
+Only account/telegram ids are exported — never emails, usernames, tokens or payment details. Locally, no OTLP endpoint is configured, so only the structured console events are produced (no connection errors).
+
 ## Tests
 
 ```bash

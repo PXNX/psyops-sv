@@ -81,7 +81,12 @@ Domain gegen `APP_URL`.
 | `TON_API_KEY`         | Optional: API-Key für toncenter                                                       |
 | `LOG_GROUP_ID`        | Optional: Telegram-Gruppe für Fehler-Reports                                          |
 | `THREAD_ID`           | Optional: Thema/Topic in der Fehler-Report-Gruppe                                     |
+| `TELEMETRY_ENDPOINT`  | Optional: HTTP-Endpunkt, an den jede Telemetrie-Veranstaltung als JSON gesendet wird  |
 | `CONTAINER`           | `true` wenn im Container ausgeführt                                                   |
+
+## Telemetry
+
+Der Bot schreibt jede Veranstaltung (`/login`, `/premium`, Zahlungen, Fehler, …) als strukturierte JSON-Zeile mit `source: "telegram_bot"` in die Container-Logs. Mit `TELEMETRY_ENDPOINT` wird kopiert zusätzlich per HTTP-POST an einen Collector gesendet (Fire-and-forget; Telemetrie darf den Bot nie beeinträchtigen). Die Ereignisnamen und Attribute entsprechen `src/lib/server/telemetry.ts` der Web-App — siehe [Telemetry im Haupt-README](../README.md#telemetry). Über `account_id` / `telegram_id` lassen sich Bot- und Web-Aktivitäten desselben Nutzers korrelieren. Es werden keine E-Mails, Usernames oder Zahlungsdaten exportiert.
 
 The premium plans in `private/premium.py` mirror `PREMIUM_PLANS` in
 `src/lib/config/features/premium.config.ts`, and the granting logic in `data/game_db.py` mirrors

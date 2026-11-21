@@ -9,9 +9,54 @@ import { themes } from "#lib/themes.js";
 import { isMockMode } from "#lib/server/db.js";
 import { CRON_SECRET, NODE_ENV } from "$app/env/private";
 import { isAllowedCronRequest } from "#lib/server/cron-auth.js";
+import { incrementCounter, recordDuration, setSpanAttributes, trackEvent } from "#lib/server/telemetry.js";
 import "@valibot/i18n/de/schema";
 
 const bucket = new TokenBucket<string>(100, 1);
+
+// Outermost handle: gives every request an id, times it and records the
+// outcome. Cron endpoints get their own event so scheduled-job health is
+// visible without instrumenting each of the seven routes separately.
+const telemetryHandle: Handle = async ({ event, resolve }) => {
+	const startedAt = performance.now();
+	const requestId = event.request.headers.get("x-request-id") ?? crypto.randomUUID();
+	event.locals.requestId = requestId;
+
+	let status = 500;
+	try {
+		const response = await resolve(event);
+		status = response.status;
+		response.headers.set("x-request-id", requestId);
+		return response;
+	} catch (thrown) {
+		const thrownStatus =
+			typeof thrown === "object" && thrown !== null && "status" in thrown ? Number(thrown.status) : NaN;
+		status = Number.isFinite(thrownStatus) && thrownStatus > 0 ? thrownStatus : 500;
+		throw thrown;
+	} finally {
+		const durationMs = performance.now() - startedAt;
+		const metricAttributes = {
+			method: event.request.method,
+			route: event.route.id ?? "unmatched",
+			status
+		};
+		// Keep high-cardinality ids out of metric labels; they belong on events.
+		const eventAttributes = { ...metricAttributes, request_id: requestId };
+		recordDuration("http.server.request", durationMs, metricAttributes);
+		if (durationMs > 1000) {
+			trackEvent("http.request.slow", { ...eventAttributes, duration_ms: Math.round(durationMs) });
+		}
+
+		if (event.url.pathname.startsWith("/api/cron/")) {
+			trackEvent("cron.run", {
+				...eventAttributes,
+				job: event.url.pathname.split("/")[3] ?? "unknown",
+				outcome: status < 400 ? "ok" : "error",
+				duration_ms: Math.round(durationMs)
+			});
+		}
+	}
+};
 
 const rateLimitHandle: Handle = async ({ event, resolve }) => {
 	// Note: Assumes X-Forwarded-For will always be defined.
@@ -26,6 +71,7 @@ const rateLimitHandle: Handle = async ({ event, resolve }) => {
 		cost = 3;
 	}
 	if (!bucket.consume(clientIP, cost)) {
+		incrementCounter("app.rate_limit.rejected", 1, { route: event.route.id ?? "unmatched" });
 		throw error(429, "Too many requests");
 	}
 	return resolve(event);
@@ -88,6 +134,7 @@ function createRealAuthHandle(): Handle {
 
 		event.locals.account = account;
 		event.locals.session = session;
+		setSpanAttributes({ "app.account.id": account.id });
 
 		return resolve(event);
 	};
@@ -111,7 +158,9 @@ const cronGuardHandle: Handle = async ({ event, resolve }) => {
 };
 
 export const handleError: HandleServerError = async ({ kind, error, event }) => {
-	const requestId = crypto.randomUUID();
+	// Reuse the id from telemetryHandle so logs, traces and the user-facing
+	// error page all point at the same request.
+	const requestId = event.locals.requestId ?? crypto.randomUUID();
 	// Only truly unexpected (kind === "unknown") errors are JS exceptions; app/framework/validation
 	// errors carry their own safe { status, message } that must stay intact for the error page.
 	const err = kind === "unknown" && error instanceof Error ? error : undefined;
@@ -137,7 +186,16 @@ export const handleError: HandleServerError = async ({ kind, error, event }) => 
 		sessionExpiresAt: session?.expiresAt ?? null
 	};
 
-	// Log error with request ID and user/session context for debugging
+	// Log error with request ID and user/session context for debugging.
+	// Only identifiers go into telemetry — the email in `context` stays in the
+	// console log and is never shipped as a metric/event attribute.
+	trackEvent("app.error", {
+		request_id: requestId,
+		kind,
+		method: event.request.method,
+		route: event.route.id ?? event.url.pathname,
+		account_id: account?.id ?? "anonymous"
+	});
 	console.error(`[ERROR ${requestId}] ${safeMessage}`, context);
 	if (err?.stack) {
 		console.error(`[STACK ${requestId}]`, err.stack);
@@ -184,4 +242,11 @@ const paraglideHandle: Handle = ({ event, resolve }) =>
 		});
 	});
 
-export const handle = sequence(rateLimitHandle, authHandle, cronGuardHandle, paraglideHandle, themesHandle);
+export const handle = sequence(
+	telemetryHandle,
+	rateLimitHandle,
+	authHandle,
+	cronGuardHandle,
+	paraglideHandle,
+	themesHandle
+);
