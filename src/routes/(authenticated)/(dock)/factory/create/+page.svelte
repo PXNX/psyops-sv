@@ -47,13 +47,21 @@
 			icon: FluentFactory20Filled,
 			desc: "Builds weapons",
 			costs: { currency: data.factoryCost, energy: 50, iron: 100, steel: 50, gunpowder: 25 } as Record<string, number>
+		},
+		{
+			value: "fabrication",
+			label: "Fabrication",
+			icon: FluentFactory20Filled,
+			desc: "Makes chips and electronics",
+			costs: { currency: data.factoryCost, energy: 100 } as Record<string, number>
 		}
 	]);
 
 	const outputsByType: Record<string, string[]> = {
-		mine: ["iron", "copper", "coal", "wood"],
-		refinery: ["steel", "gunpowder"],
-		armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"]
+		mine: ["iron", "copper", "coal", "wood", "oil", "gas", "uranium", "rare_earth", "silicon"],
+		refinery: ["steel", "gunpowder", "fuel", "enriched_uranium"],
+		armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"],
+		fabrication: ["chips", "electronics"]
 	};
 
 	const selectedFactoryTypeData = $derived(factoryTypes.find((t) => t.value === selectedFactoryType));

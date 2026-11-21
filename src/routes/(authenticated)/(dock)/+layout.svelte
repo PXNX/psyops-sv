@@ -10,6 +10,7 @@
 	import FluentDataTrending from "~icons/fluent/data-trending-24-regular";
 	import FluentMoney from "~icons/fluent/money-20-filled";
 	import FluentTarget from "~icons/fluent/target-24-regular";
+	import FluentGlobeShield from "~icons/fluent/globe-shield-20-filled";
 	import FluentBuildingFactory from "~icons/fluent/building-factory-24-regular";
 	import FluentContactCard from "~icons/fluent/contact-card-24-regular";
 	import FluentMail from "~icons/fluent/mail-24-regular";
@@ -38,6 +39,7 @@
 		{ href: "/market", icon: FluentDataTrending, label: "Market" },
 		{ href: "/bonds", icon: FluentMoney, label: "Bonds" },
 		{ href: "/training", icon: FluentTarget, label: "Forces", mobile: true },
+		{ href: "/domains", icon: FluentGlobeShield, label: "Domains" },
 		{ href: "/production", icon: FluentBuildingFactory, label: "Production", mobile: true },
 		{ href: "/user/" + data.account.id, icon: FluentContactCard, label: "Profile", mobile: true }
 	]);

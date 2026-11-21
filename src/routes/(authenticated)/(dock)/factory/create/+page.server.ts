@@ -23,9 +23,12 @@ import type { Actions, PageServerLoad } from "./$types";
 const FACTORY_COST = ECONOMY_CONFIG.FACTORY_CREATION_COST;
 const OUTPUTS: Record<string, readonly string[]> = {
 	mine: MINEABLE_RESOURCES,
-	refinery: ["steel", "gunpowder"],
-	armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"]
+	refinery: ["steel", "gunpowder", "fuel", "enriched_uranium"],
+	armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"],
+	fabrication: ["chips", "electronics"]
 };
+/** Factory types whose output is a manufactured product rather than a resource. */
+const PRODUCT_FACTORY_TYPES = new Set(["armaments", "fabrication"]);
 const COOLDOWN_DAYS = 7;
 const ENERGY_REQUIRED = 50;
 
@@ -392,10 +395,10 @@ export const actions: Actions = {
 
 			if (factoryType === "mine") {
 				factoryData.resourceOutput = output;
-			} else if (factoryType === "armaments") {
+			} else if (PRODUCT_FACTORY_TYPES.has(factoryType)) {
 				factoryData.productOutput = output;
 			} else {
-				factoryData.resourceOutput = output; // For refinery
+				factoryData.resourceOutput = output; // Refinery
 			}
 
 			await tx.insert(factories).values(factoryData);

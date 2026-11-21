@@ -12,6 +12,7 @@ import {
 	stateEnergy,
 	stateResourceInventory
 } from "#lib/server/schema.js";
+import { POWER_PLANTS, type PowerPlantType } from "#lib/config/index.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -133,24 +134,17 @@ export const actions: Actions = {
 		}
 
 		// Get plant costs and output
-		const plantSpecs: Record<string, { output: number; cost: number }> = {
-			coal: { output: 100, cost: 500000 },
-			gas: { output: 150, cost: 750000 },
-			nuclear: { output: 500, cost: 2500000 },
-			solar: { output: 50, cost: 400000 },
-			wind: { output: 75, cost: 600000 },
-			hydro: { output: 200, cost: 1000000 }
-		};
-
-		const specs = plantSpecs[plantType];
+		const specs = POWER_PLANTS[plantType as PowerPlantType];
 		if (!specs) {
 			return fail(400, { error: "Invalid plant type" });
 		}
+		const plantCost = specs.cost;
+		const plantOutput = specs.output;
 
 		// Check treasury balance
 		const [treasury] = await db.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId));
 
-		if (!treasury || Number(treasury.balance) < specs.cost) {
+		if (!treasury || Number(treasury.balance) < plantCost) {
 			return fail(400, { error: "Insufficient treasury funds" });
 		}
 
@@ -161,8 +155,8 @@ export const actions: Actions = {
 		await db
 			.update(stateTreasury)
 			.set({
-				balance: treasuryBalance - specs.cost,
-				totalSpent: totalSpent + specs.cost,
+				balance: treasuryBalance - plantCost,
+				totalSpent: totalSpent + plantCost,
 				updatedAt: new Date()
 			})
 			.where(eq(stateTreasury.stateId, stateId));
@@ -171,9 +165,9 @@ export const actions: Actions = {
 		await db.insert(powerPlants).values({
 			stateId: stateId,
 			name: name.trim(),
-			plantType: plantType as any,
-			powerOutput: specs.output,
-			constructionCost: specs.cost,
+			plantType: plantType as PowerPlantType,
+			powerOutput: plantOutput,
+			constructionCost: plantCost,
 			isOperational: true,
 			builtBy: account.id
 		});
@@ -185,14 +179,14 @@ export const actions: Actions = {
 			await db
 				.update(stateEnergy)
 				.set({
-					totalProduction: energyInfo.totalProduction + specs.output,
+					totalProduction: energyInfo.totalProduction + plantOutput,
 					updatedAt: new Date()
 				})
 				.where(eq(stateEnergy.stateId, stateId));
 		} else {
 			await db.insert(stateEnergy).values({
 				stateId: stateId,
-				totalProduction: specs.output,
+				totalProduction: plantOutput,
 				usedProduction: 0
 			});
 		}

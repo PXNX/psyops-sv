@@ -15,14 +15,41 @@
 
 	let { data } = $props();
 
-	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
+	type ResourceType =
+		| "iron"
+		| "copper"
+		| "steel"
+		| "gunpowder"
+		| "wood"
+		| "coal"
+		| "oil"
+		| "gas"
+		| "uranium"
+		| "rare_earth"
+		| "silicon"
+		| "fuel"
+		| "enriched_uranium";
 
 	let tradeMode = $state<"buy" | "sell">("buy");
 	let selectedResource = $state<ResourceType>("iron");
 	let tradeQuantity = $state(1);
 	let orderEl = $state<HTMLElement>();
 
-	const allResources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
+	const allResources: ResourceType[] = [
+		"iron",
+		"copper",
+		"steel",
+		"gunpowder",
+		"wood",
+		"coal",
+		"oil",
+		"gas",
+		"uranium",
+		"rare_earth",
+		"silicon",
+		"fuel",
+		"enriched_uranium"
+	];
 
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
 	const availableQuantity = $derived(tradeMode === "sell" ? resourceMap.get(selectedResource) || 0 : Infinity);

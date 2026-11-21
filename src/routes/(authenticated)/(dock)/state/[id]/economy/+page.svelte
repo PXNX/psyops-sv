@@ -33,8 +33,35 @@
 			: 0
 	);
 
-	type ResourceType = "iron" | "copper" | "steel" | "gunpowder" | "wood" | "coal";
-	const allResources: ResourceType[] = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
+	type ResourceType =
+		| "iron"
+		| "copper"
+		| "steel"
+		| "gunpowder"
+		| "wood"
+		| "coal"
+		| "oil"
+		| "gas"
+		| "uranium"
+		| "rare_earth"
+		| "silicon"
+		| "fuel"
+		| "enriched_uranium";
+	const allResources: ResourceType[] = [
+		"iron",
+		"copper",
+		"steel",
+		"gunpowder",
+		"wood",
+		"coal",
+		"oil",
+		"gas",
+		"uranium",
+		"rare_earth",
+		"silicon",
+		"fuel",
+		"enriched_uranium"
+	];
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
 
 	const drawers = $derived([

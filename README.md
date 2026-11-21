@@ -8,8 +8,63 @@ A SvelteKit application with Google OAuth, PostgreSQL and Bun, presented through
 - **Telegram bot**: [@BotFather-style auth linking and premium purchases](bot/README.md) — `/login` and `/premium` via a long-polling bot in `bot/` that talks to the same Postgres database.
 - **PostgreSQL**: Robust and scalable database management using Drizzle ORM.
 - **Bun**: Fast JavaScript runtime and package manager.
-- **Editorial field-ledger UI**: A restrained midnight-ink interface with parchment rules, serif headings and amber interaction cues.
+- **Editorial field-ledger UI**: A restrained midnight-ink interface with parchment rules, serif headings and amber interaction cues. State and region dropdowns show the corresponding coat of arms.
+- **Player-driven cyber & psyops**: Under `/ops/network`, a state's leadership plants assets inside a target, probes its sites, watches the security cameras of power plants and air bases, copies sensitive files into a dossier and covers tracks before the asset's heat burns it. Live footholds improve the odds of ordinary cyber operations and psyops in `/ops`.
 - **Mobile Optimized**: Responsive layout for seamless experience across devices.
+- **Five-domain warfare**: Land, sea, air, space and cyber all shape the same war, from amphibious landings to GPS-guided strikes. See [Five domains](#five-domains).
+
+## Five domains
+
+Every action in the game belongs to one of five domains. The first three fight;
+the last two decide how well the first three see, communicate and strike.
+
+| Domain | What it does | What it cannot do |
+| --- | --- | --- |
+| 🪖 **Land** | Takes and holds regions, digs into terrain, cheapest boots on the ground | Cannot cross water without the navy; slow to redeploy |
+| ⚓ **Sea** | Blockades coasts, raids shipping, bombards shore positions and lands marines | Only projects power onto the coast; vulnerable to land-based air |
+| ✈️ **Air** | Deep strikes on industry, reconnaissance, interdiction | Needs fuel and airfields; cannot hold ground |
+| 🛰️ **Space** | GPS precision, wide-area recon, early warning, ASAT and uplink attacks | No direct combat power; constellations are fragile |
+| 🕸️ **Cyber** | Grid, C2 and treasury attacks, influence and deception | No territorial control; effects expire and can be traced |
+
+**Combined arms.** Units carry a domain (`domains.config.ts`). Air has an edge
+against ships, sea power softens coastal defenders, and land forces with good
+air defence blunt air attack. A side fielding land, sea *and* air units gets a
+combined-arms bonus in every battle, so a one-domain army is brittle even when
+it is large.
+
+**Sea power.** Six hull types (frigate, submarine, carrier, landing ship, plus
+marines for the land domain) can be trained like any other unit. Hulls in a
+coastal port generate sea control, which drives five naval operations:
+blockade (cuts the target's trade, energy imports and smuggling), shore
+bombardment, amphibious assault (opens a real battle without a land border),
+sea-lane raid (seizes treasury) and minelaying. See `naval.config.ts` and
+`services/military/naval.ts`.
+
+**Space.** States build constellations of reconnaissance, navigation, comms
+and early-warning satellites. Navigation satellites sharpen GPS/laser strikes,
+recon satellites improve the intel picture, comms satellites resist C2
+disruption and early warning reduces strike casualties. Rivals can blind them
+with ASAT strikes, uplink jamming or orbital sabotage, and attribution hands
+the victim a casus belli. See `space.config.ts` and `services/military/space.ts`.
+
+**AI.** A state's AI level (0–5) is bought with treasury, chips and rare earths.
+It adds a little cyber offence and defence, intel fusion, factory efficiency
+and customs detection at every level. See `ai.config.ts` and
+`services/military/ai.ts`.
+
+**Smuggling.** Sanctions and blockades create a shadow economy: states open
+routes for chips, fuel, rare earths, uranium and weapons, and citizens run
+cargo along them. Interception rises with sanctions, blockades, enforcement
+and naval patrols; a delivered run pays a premium, a seized one pays a fine.
+See `smuggling.config.ts` and `services/economy/smuggling.ts`.
+
+**Resources, energy and chips.** Mines can now produce oil, gas, uranium,
+rare earths and silicon in the regions that have them. Refineries turn oil into
+fuel and uranium into enriched uranium; new fabrication plants turn silicon
+and rare earths into chips, then electronics. Power plants include geothermal
+and fusion alongside coal, gas, nuclear, solar, wind and hydro, and a diverse
+grid runs more efficiently than a single-source one. See `energy.config.ts`,
+`industry.config.ts` and `resources.config.ts`.
 
 ## Setup
 
