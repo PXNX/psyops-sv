@@ -22,3 +22,5 @@ export * from "./game/ai.config";
 export * from "./game/smuggling.config";
 export * from "./game/energy.config";
 export * from "./game/industry.config";
+export * from "./game/infiltration.config";
+export * from "./game/civic.config";

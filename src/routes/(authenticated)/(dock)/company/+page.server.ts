@@ -146,14 +146,14 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const [userCompanyStats, companiesWithStats, allStates] = await Promise.all([
 		userCompanyPromise,
 		companiesPromise,
-		// Get all states for filter
-		db
-			.select({
-				id: states.id,
-				name: states.name
-			})
-			.from(states)
-			.orderBy(states.name)
+		// Get all states for the filter, with their coat of arms for the dropdown.
+		(async () => {
+			const rows = await db
+				.select({ id: states.id, name: states.name, logo: states.logo })
+				.from(states)
+				.orderBy(states.name);
+			return Promise.all(rows.map(async (s) => ({ id: s.id, name: s.name, logo: await getLogoUrl(s.logo) })));
+		})()
 	]);
 
 	return {

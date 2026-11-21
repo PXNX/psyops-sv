@@ -25,15 +25,17 @@ import {
 	upgradeCyberDefence
 } from "#lib/server/services/military/covert-ops.js";
 import { sideOf, viewerSide } from "#lib/server/services/military/recon.js";
-import { getRegionName } from "#lib/utils/formatting.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
+import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
 	const account = locals.account!;
 	const now = new Date();
 	const [authority, residentSide] = await Promise.all([opsAuthority(db, account.id), viewerSide(db, account.id)]);
 	// Leaders plan for the state they serve; everyone else sees their home state.
 	const stateId = authority?.stateId ?? residentSide?.stateId ?? null;
-	if (!stateId) return { authority: null, state: null, planner: null, effectsOnUs: [], ledger: [] };
+	if (!stateId) return { authority: null, state: null, planner: null, effectsOnUs: [], ledger: [], targetId: null };
+	const urlTargetId = parseInt(url.searchParams.get("target") ?? "", 10) || null;
 
 	const side = authority ? await sideOf(db, stateId) : residentSide!;
 	const [stateRows, [treasury], defenceLevel, effectsOnUs, ledger] = await Promise.all([
@@ -62,10 +64,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 					effectsCausedBy(db, stateId, now)
 				]);
 				return {
-					targets,
+					targets: await Promise.all(targets.map(async (t) => ({ ...t, logo: await getLogoUrl(t.logo) }))),
 					regions: ownRegions.map((r) => ({
 						id: r.id,
 						name: getRegionName(r.id),
+						logo: regionCoatUrl(r.id),
 						hint: r.stateId === stateId ? null : nameOf(r.stateId)
 					})),
 					cooldowns: Object.fromEntries(cooldowns) as Record<CovertOpKind, string | null>,
@@ -103,6 +106,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	});
 
 	return {
+		targetId: planner?.targets.some((t) => t.id === urlTargetId) ? urlTargetId : null,
 		authority: authority ? { role: authority.role, roleLabel: OPS_ROLE_LABEL[authority.role] } : null,
 		state: {
 			id: stateId,

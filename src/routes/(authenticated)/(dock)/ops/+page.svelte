@@ -28,6 +28,7 @@
 	import { vanish } from "#lib/utils/motion.js";
 	import OpsTerminal from "./OpsTerminal.svelte";
 	import IconShield from "~icons/fluent/shield-keyhole-20-regular";
+	import IconNetwork from "~icons/mdi/network";
 
 	const { data, form } = $props();
 
@@ -41,6 +42,15 @@
 	let domain = $state<CovertDomain>("cyber");
 	let kind = $state<CovertOpKind>("grid_attack");
 	let targetId = $state<string | undefined>(undefined);
+	// A network console link can preselect the target; don't overwrite a manual
+	// pick on later data refreshes.
+	let appliedUrlTarget = $state<number | null>(null);
+	$effect(() => {
+		if (data.targetId && data.targetId !== appliedUrlTarget) {
+			targetId = String(data.targetId);
+			appliedUrlTarget = data.targetId;
+		}
+	});
 	let regionId = $state<string | undefined>(undefined);
 	let posture = $state<"inflate" | "conceal">("inflate");
 	let message = $state("");
@@ -60,6 +70,7 @@
 		targets.map((t) => ({
 			id: t.id,
 			name: t.name,
+			logo: t.logo,
 			hint: t.ally ? "bloc partner" : t.atWar ? "at war" : t.casusBelli ? "casus belli" : "peace"
 		}))
 	);
@@ -71,7 +82,8 @@
 						defenceLevel: target.defenceLevel,
 						atWar: target.atWar || target.casusBelli,
 						recentOps: target.recentOps,
-						targetResilient: target.resilient
+						targetResilient: target.resilient,
+						networkAssets: target.networkAssets
 					})
 				: null
 	);
@@ -151,18 +163,26 @@
 			{/if}
 		</div>
 		{#if data.state}
-			<dl class="flex gap-5 text-right">
-				{#if data.state.treasury !== null}
-					<div>
-						<dt class="section-title justify-end">Treasury</dt>
-						<dd class="data text-lg text-fg">${data.state.treasury.toLocaleString()}</dd>
-					</div>
+			<div class="flex flex-wrap items-end justify-end gap-5">
+				{#if data.planner}
+					<span class="data hidden text-xs text-fg-muted sm:block">
+						{targets.reduce((n, t) => n + (t.networkAssets ?? 0), 0)} footholds abroad
+					</span>
 				{/if}
-				<div>
-					<dt class="section-title justify-end">Cyber defence</dt>
-					<dd class="data text-lg text-fg">L{data.state.defenceLevel}/{CYBER_DEFENCE.MAX_LEVEL}</dd>
-				</div>
-			</dl>
+				<dl class="flex gap-5 text-right">
+					{#if data.state.treasury !== null}
+						<div>
+							<dt class="section-title justify-end">Treasury</dt>
+							<dd class="data text-lg text-fg">${data.state.treasury.toLocaleString()}</dd>
+						</div>
+					{/if}
+					<div>
+						<dt class="section-title justify-end">Cyber defence</dt>
+						<dd class="data text-lg text-fg">L{data.state.defenceLevel}/{CYBER_DEFENCE.MAX_LEVEL}</dd>
+					</div>
+				</dl>
+				<Button variant="secondary" size="sm" href="/ops/network" icon={IconNetwork}>Network</Button>
+			</div>
 		{/if}
 	</header>
 

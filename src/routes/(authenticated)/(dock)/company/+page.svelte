@@ -40,7 +40,7 @@
 
 	const stateItems = $derived([
 		{ id: "all", name: "All states" },
-		...data.states.map((s) => ({ id: s.id, name: s.name }))
+		...data.states.map((s) => ({ id: s.id, name: s.name, logo: s.logo }))
 	]);
 
 	const entryNo = (id: number) => `HRB ${String(id).padStart(4, "0")}`;

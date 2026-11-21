@@ -3367,6 +3367,104 @@ export const stateCyberDefence = pgTable("state_cyber_defence", {
 export type CovertOperation = typeof covertOperations.$inferSelect;
 export type StateEffect = typeof stateEffects.$inferSelect;
 
+// --- INFILTRATION NETWORKS ---
+// The player-driven layer under cyber ops and psyops. A state plants assets
+// in a target, uses them to probe sites, watch their security cameras and
+// pull sensitive files, and spends money to cover its tracks. Each action
+// adds heat; a burned asset is lost. Live footholds improve the odds of the
+// ordinary covert operations (see cyber.config.ts's network bonus).
+// Rules: config/game/infiltration.config.ts, service:
+// services/military/infiltration.ts.
+export const infiltrationAssetKindEnum = pgEnum("infiltration_asset_kind", [
+	"relay",
+	"agent",
+	"botnet",
+	"implant",
+	"insider"
+]);
+export const infiltrationAssetStatusEnum = pgEnum("infiltration_asset_status", ["active", "burned"]);
+export const infiltrationActionKindEnum = pgEnum("infiltration_action_kind", ["probe", "camera", "files", "cover"]);
+
+export const infiltrationAssets = pgTable(
+	"infiltration_assets",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		/** The state that owns the network. */
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		/** The state the asset operates inside. */
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		kind: infiltrationAssetKindEnum("kind").notNull(),
+		codename: text("codename").notNull(),
+		access: integer("access").notNull(),
+		heat: integer("heat").default(0).notNull(),
+		status: infiltrationAssetStatusEnum("status").default("active").notNull(),
+		plantedBy: text("planted_by").references(() => accounts.id, { onDelete: "set null" }),
+		plantedAt: timestamp("planted_at").defaultNow().notNull(),
+		lastActionAt: timestamp("last_action_at").defaultNow().notNull()
+	},
+	(t) => ({
+		ownerTargetIdx: index("idx_infiltration_asset_owner_target").on(t.stateId, t.targetStateId),
+		targetIdx: index("idx_infiltration_asset_target").on(t.targetStateId, t.status)
+	})
+);
+
+export const infiltrationActions = pgTable(
+	"infiltration_actions",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		assetId: integer("asset_id")
+			.notNull()
+			.references(() => infiltrationAssets.id, { onDelete: "cascade" }),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		/** Site catalogue key (sites are generated from the target state). */
+		siteId: text("site_id").notNull(),
+		action: infiltrationActionKindEnum("action").notNull(),
+		success: boolean("success").notNull(),
+		chance: integer("chance").notNull(),
+		detail: text("detail"),
+		heatAfter: integer("heat_after").default(0).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull()
+	},
+	(t) => ({
+		ownerIdx: index("idx_infiltration_action_owner").on(t.stateId, t.targetStateId, t.createdAt)
+	})
+);
+
+export const infiltrationFiles = pgTable(
+	"infiltration_files",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		targetStateId: integer("target_state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		siteId: text("site_id").notNull(),
+		assetId: integer("asset_id").references(() => infiltrationAssets.id, { onDelete: "set null" }),
+		title: text("title").notNull(),
+		classification: text("classification").notNull(),
+		body: text("body").notNull(),
+		capturedAt: timestamp("captured_at").defaultNow().notNull()
+	},
+	(t) => ({
+		ownerIdx: index("idx_infiltration_file_owner").on(t.stateId, t.targetStateId, t.capturedAt)
+	})
+);
+
+export type InfiltrationAsset = typeof infiltrationAssets.$inferSelect;
+export type InfiltrationAction = typeof infiltrationActions.$inferSelect;
+export type InfiltrationFile = typeof infiltrationFiles.$inferSelect;
+
 // --- AIRSTRIKES & INTERNATIONAL HUMANITARIAN LAW ---
 // The president or defence minister of a state at war orders a strike on an
 // enemy region: strategic (power grid, industry), operational (logistics,

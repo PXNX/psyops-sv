@@ -166,7 +166,20 @@ export interface OddsInput {
 	attackerAiLevel?: number;
 	/** Target's AI capability level (ai.config.ts), for cyber defence. */
 	defenderAiLevel?: number;
+	/** Active infiltration assets your network holds in the target (0 when none). */
+	networkAssets?: number;
 }
+
+/**
+ * Each active foothold your network holds in a target makes an operation a
+ * little likelier to work and a little harder to trace. The numbers live here
+ * so the odds stay a standalone function; infiltration.config.ts displays them.
+ */
+export const NETWORK_ASSET_BONUS = {
+	SUCCESS_PER_ASSET: 0.04,
+	ATTRIBUTION_PER_ASSET: 0.03,
+	CAP: 3
+} as const;
 
 export interface OddsFactor {
 	label: string;
@@ -213,6 +226,8 @@ export function operationOdds(input: OddsInput): Odds {
 		const attack = Math.max(0, input.attackerAiLevel ?? 0);
 		const defend = Math.max(0, input.defenderAiLevel ?? 0);
 		if (attack > 0 || defend > 0) {
+			// Levels 0-5 map to roughly +0.04..+0.24 / -0.22; the numbers come
+			// from AI_LEVELS, passed as fractions to keep this config standalone.
 			const offence = Math.min(0.24, attack * 0.048);
 			const defence = Math.min(0.22, defend * 0.044);
 			factors.push({
@@ -224,6 +239,14 @@ export function operationOdds(input: OddsInput): Odds {
 	}
 	if (input.spec.domain === "psyops" && input.targetResilient) {
 		factors.push({ label: "Target runs counter-propaganda", success: -(input.resilienceSuccess ?? 0), attribution: 0 });
+	}
+	const footholds = Math.min(NETWORK_ASSET_BONUS.CAP, Math.max(0, input.networkAssets ?? 0));
+	if (!input.spec.self && footholds > 0) {
+		factors.push({
+			label: `Network footholds (${footholds})`,
+			success: NETWORK_ASSET_BONUS.SUCCESS_PER_ASSET * footholds,
+			attribution: -NETWORK_ASSET_BONUS.ATTRIBUTION_PER_ASSET * footholds
+		});
 	}
 	const success = factors.reduce((s, f) => s + f.success, input.spec.baseSuccess);
 	const attribution = factors.reduce((s, f) => s + f.attribution, input.spec.baseAttribution);

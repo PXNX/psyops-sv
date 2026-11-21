@@ -15,6 +15,7 @@ import type { Database } from "../../db";
 import {
 	covertOperations,
 	governmentBudgetTransactions,
+	infiltrationAssets,
 	inboxMessages,
 	ministers,
 	presidents,
@@ -129,6 +130,8 @@ export async function opCooldownEndsAt(db: Db, stateId: number, kind: CovertOpKi
 export interface TargetIntel {
 	id: number;
 	name: string;
+	/** The state's coat of arms file id, for the planner's dropdown. */
+	logo: number | null;
 	/** At war with it (bloc wars included). */
 	atWar: boolean;
 	/** Holding a casus belli on it: may strike as if at war. */
@@ -140,13 +143,15 @@ export interface TargetIntel {
 	resilient: boolean;
 	recentOps: number;
 	population: number;
+	/** Active network assets your state holds inside the target. */
+	networkAssets: number;
 }
 
 /** The planner's view of every other state. */
 export async function targetsFor(db: Db, stateId: number, now = new Date()): Promise<TargetIntel[]> {
 	const side = await sideOf(db, stateId);
-	const [all, enemies, defence, boosts, beliCause, heat, populations] = await Promise.all([
-		db.select({ id: states.id, name: states.name }).from(states),
+	const [all, enemies, defence, boosts, beliCause, heat, populations, footholds] = await Promise.all([
+		db.select({ id: states.id, name: states.name, logo: states.logo }).from(states),
 		enemiesOf(db, side),
 		db.select({ stateId: stateCyberDefence.stateId, level: stateCyberDefence.level }).from(stateCyberDefence),
 		db
@@ -169,7 +174,11 @@ export async function targetsFor(db: Db, stateId: number, now = new Date()): Pro
 					gte(covertOperations.launchedAt, new Date(now.getTime() - CYBER.HEAT_WINDOW_HOURS * HOUR))
 				)
 			),
-		statePopulations(db)
+		statePopulations(db),
+		db
+			.select({ target: infiltrationAssets.targetStateId })
+			.from(infiltrationAssets)
+			.where(and(eq(infiltrationAssets.stateId, stateId), eq(infiltrationAssets.status, "active")))
 	]);
 	const level = new Map(defence.map((d) => [d.stateId, d.level]));
 	const resilient = new Set(boosts.map((b) => b.stateId));
@@ -179,13 +188,15 @@ export async function targetsFor(db: Db, stateId: number, now = new Date()): Pro
 		.map((s) => ({
 			id: s.id,
 			name: s.name,
+			logo: s.logo,
 			atWar: enemies.has(s.id),
 			casusBelli: cb.has(s.id),
 			ally: side.stateIds.includes(s.id),
 			defenceLevel: level.get(s.id) ?? 0,
 			resilient: resilient.has(s.id),
 			recentOps: heat.filter((h) => h.target === s.id).length,
-			population: populations.get(s.id) ?? 0
+			population: populations.get(s.id) ?? 0,
+			networkAssets: footholds.filter((f) => f.target === s.id).length
 		}))
 		.sort((a, b) => Number(b.atWar) - Number(a.atWar) || a.name.localeCompare(b.name));
 }
@@ -313,12 +324,25 @@ export async function launchOperation(db: Database, input: LaunchInput): Promise
 		});
 
 		// Roll.
-		const [defenceLevel, recent, resilient, attackerAi, defenderAi] = await Promise.all([
+		const [defenceLevel, recent, resilient, attackerAi, defenderAi, networkAssets] = await Promise.all([
 			spec.self ? 0 : cyberDefenceLevel(tx, target.id),
 			spec.self ? 0 : recentOps(tx, stateId, target.id, now),
 			spec.self || spec.domain !== "psyops" ? false : isResilient(tx, target.id, now),
 			spec.self ? 0 : aiLevel(tx, stateId),
-			spec.self ? 0 : aiLevel(tx, target.id)
+			spec.self ? 0 : aiLevel(tx, target.id),
+			spec.self
+				? Promise.resolve(0)
+				: tx
+						.select({ id: infiltrationAssets.id })
+						.from(infiltrationAssets)
+						.where(
+							and(
+								eq(infiltrationAssets.stateId, stateId),
+								eq(infiltrationAssets.targetStateId, target.id),
+								eq(infiltrationAssets.status, "active")
+							)
+						)
+						.then((rows) => rows.length)
 		]);
 		const odds = covertOdds(input.kind, {
 			defenceLevel,
@@ -326,7 +350,8 @@ export async function launchOperation(db: Database, input: LaunchInput): Promise
 			recentOps: recent,
 			targetResilient: resilient,
 			attackerAiLevel: attackerAi,
-			defenderAiLevel: defenderAi
+			defenderAiLevel: defenderAi,
+			networkAssets
 		});
 		const roll = spec.self
 			? { succeeded: true, detected: true, attributed: true }
