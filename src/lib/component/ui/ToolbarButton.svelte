@@ -24,7 +24,7 @@
 		class: className = ""
 	}: Props = $props();
 
-	const sizeClass = $derived(size === "xs" ? "size-7" : "size-7 sm:size-8");
+	const sizeClass = $derived(size === "xs" ? "size-9 sm:size-7" : "size-10 sm:size-8");
 </script>
 
 <button

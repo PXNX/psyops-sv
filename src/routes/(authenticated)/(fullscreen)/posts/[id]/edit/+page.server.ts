@@ -7,6 +7,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { editArticleSchema } from "./schema";
+import { sanitizeArticleHtml } from "#lib/utils/safe-html.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -85,7 +86,7 @@ export const actions: Actions = {
 				.update(articles)
 				.set({
 					title: form.data.title,
-					content: form.data.content
+					content: sanitizeArticleHtml(form.data.content)
 				})
 				.where(eq(articles.id, articleId));
 		} catch (error) {

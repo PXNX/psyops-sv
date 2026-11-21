@@ -22,8 +22,12 @@ async function logoUrl(fileId: number | null): Promise<string | null> {
 	return file ? getSignedDownloadUrl(file.key) : null;
 }
 
-export async function fetchFeed(accountId: string, opts: { cursor?: string | null; subscribed?: boolean } = {}) {
+export async function fetchFeed(
+	accountId: string,
+	opts: { cursor?: string | null; subscribed?: boolean; limit?: number } = {}
+) {
 	const conditions: SQL[] = [];
+	const pageSize = opts.limit && opts.limit > 0 ? Math.min(opts.limit, FEED_PAGE_SIZE) : FEED_PAGE_SIZE;
 
 	if (opts.subscribed) {
 		const subscriptions = await db
@@ -65,10 +69,10 @@ export async function fetchFeed(accountId: string, opts: { cursor?: string | nul
 		.where(conditions.length ? and(...conditions) : undefined)
 		.groupBy(articles.id, userProfiles.name, userProfiles.logo, newspapers.name, newspapers.logo)
 		.orderBy(desc(articles.createdAt))
-		.limit(FEED_PAGE_SIZE + 1); // one extra tells us whether there's a next page
+		.limit(pageSize + 1); // one extra tells us whether there's a next page
 
-	const hasMore = rows.length > FEED_PAGE_SIZE;
-	const page = hasMore ? rows.slice(0, FEED_PAGE_SIZE) : rows;
+	const hasMore = rows.length > pageSize;
+	const page = hasMore ? rows.slice(0, pageSize) : rows;
 
 	const items = await Promise.all(
 		page.map(async (a) => {

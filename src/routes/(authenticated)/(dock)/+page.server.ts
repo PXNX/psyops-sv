@@ -7,6 +7,9 @@ import {
 	userProfiles,
 	broadcasts,
 	partyMembers,
+	politicalParties,
+	journalists,
+	userWallets,
 	battles,
 	wars
 } from "#lib/server/schema.js";
@@ -14,6 +17,7 @@ import { eq, and, or, desc } from "drizzle-orm";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import { activeLeaflets } from "#lib/server/services/military/state-effects.js";
 import { getBirthdayInfo, collectBirthdayRewards } from "#lib/server/service/birthday.js";
+import { fetchFeed } from "#lib/server/services/content/feed.js";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -70,7 +74,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		activeTravel,
 		systemBroadcast,
 		{ primaryResidence, region, homeState },
-		partyBroadcast
+		partyBroadcast,
+		personal
 	] = await Promise.all([
 		db.query.userProfiles.findFirst({
 			where: eq(userProfiles.accountId, account.id)
@@ -87,7 +92,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			with: { issuer: { with: { profile: true } } }
 		}),
 		residenceChain,
-		partyBroadcastPromise
+		partyBroadcastPromise,
+		personalPromise
 	]);
 
 	// State broadcast (visible to residents of the user's state)
@@ -218,6 +224,30 @@ export const load: PageServerLoad = async ({ locals }) => {
 		};
 	})();
 
+	// --- Personal at-a-glance stats and the latest dispatches ---
+	// These are the numbers a player actually comes back to check: money,
+	// their groups, and what's been printed recently.
+	const personalPromise = (async () => {
+		const [wallet, membership, journalistRows, feed] = await Promise.all([
+			db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)).limit(1),
+			db
+				.select({ partyId: partyMembers.partyId, partyName: politicalParties.name })
+				.from(partyMembers)
+				.leftJoin(politicalParties, eq(partyMembers.partyId, politicalParties.id))
+				.where(eq(partyMembers.userId, account.id))
+				.limit(1),
+			db.select({ id: journalists.id }).from(journalists).where(eq(journalists.userId, account.id)),
+			fetchFeed(account.id, { limit: 3 })
+		]);
+
+		return {
+			balance: wallet[0]?.balance ?? 0,
+			party: membership[0] ? { id: membership[0].partyId, name: membership[0].partyName } : null,
+			newspaperCount: journalistRows.length,
+			recentArticles: feed.articles.slice(0, 3)
+		};
+	})();
+
 	// --- Enemy leaflets dropped over the user's state (psyops) ---
 	const leafletsPromise = (async () => {
 		if (!homeState) return [];
@@ -264,7 +294,11 @@ export const load: PageServerLoad = async ({ locals }) => {
 		ongoingBattles,
 		activeWars,
 		leaflets,
-		birthdayInfo
+		birthdayInfo,
+		personal: {
+			...personal,
+			isPremium: !!profile?.premiumUntil && profile.premiumUntil > new Date()
+		}
 	};
 };
 

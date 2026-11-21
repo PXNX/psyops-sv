@@ -15,6 +15,7 @@
 	import { toast } from "#lib/ui/toast.svelte.js";
 	import { stamp } from "#lib/component/press/time.js";
 	import { dtgDate } from "#lib/utils/dtg.js";
+	import SafeHtml from "#lib/component/press/SafeHtml.svelte";
 
 	const { data } = $props();
 
@@ -139,11 +140,10 @@
 			</div>
 		</header>
 
-		<div
+		<SafeHtml
+			html={data.article.content}
 			class="article-content drop-cap mx-auto mt-8 max-w-[42rem] text-[1.0625rem] text-fg-body break-words [&_a]:text-ink-link [&_a]:underline [&_a]:underline-offset-2 [&_h1]:text-fg [&_h2]:text-fg [&_h3]:text-fg [&_h1]:font-serif [&_h2]:font-serif [&_h3]:font-serif [&_h1]:text-3xl [&_h2]:text-2xl [&_h3]:text-xl [&_hr]:my-8 [&_hr]:border-ink/20"
-		>
-			{@html data.article.content}
-		</div>
+		/>
 
 		<!-- Reactions -->
 		<footer class="mx-auto mt-10 max-w-[42rem] pt-4 border-t border-ink/20 flex items-center gap-3">

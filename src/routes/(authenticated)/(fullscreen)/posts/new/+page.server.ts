@@ -7,6 +7,7 @@ import type { PageServerLoad, Actions } from "./$types";
 import { getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { notifyNewspaperSubscribers } from "#lib/server/services/push-notification.service.js";
 import { SCHEMA_LIMITS } from "#lib/config/validation/schema-limits.js";
+import { sanitizeArticleHtml } from "#lib/utils/safe-html.js";
 
 export const load: PageServerLoad = async ({ locals }) => {
 	const account = locals.account!;
@@ -67,6 +68,10 @@ export const actions: Actions = {
 			return fail(400, { error: `Content must be ${SCHEMA_LIMITS.ARTICLE_CONTENT_MAX} characters or less` });
 		}
 
+		// Store only safe markup: external images are fine, scripts and
+		// javascript:/data: URLs are not.
+		const safeContent = sanitizeArticleHtml(content);
+
 		// If newspaperId provided, verify user is a journalist
 		if (newspaperId && !Number.isInteger(Number(newspaperId))) {
 			return fail(400, { error: "Unknown newspaper" });
@@ -91,7 +96,7 @@ export const actions: Actions = {
 				.insert(articles)
 				.values({
 					title,
-					content,
+					content: safeContent,
 					authorId: account.id,
 					newspaperId: newspaperId ? parseInt(newspaperId) : null
 				})

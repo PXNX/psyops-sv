@@ -72,7 +72,7 @@
 		</div>
 	</header>
 
-	<main class="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+	<main class="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-5 sm:py-12">
 		<textarea
 			class="block w-full resize-none overflow-hidden bg-transparent font-serif text-[2rem] sm:text-5xl leading-[1.1] text-fg placeholder:text-fg-muted/45 border-none outline-none [field-sizing:content]"
 			placeholder="Headline"
@@ -90,7 +90,7 @@
 			<span class="ml-auto font-mono {left <= 5 ? 'text-primary-fg' : 'text-fg-muted'}">{title.length}/{max}</span>
 		</div>
 
-		<div class="mt-6 min-h-[50vh]">
+		<div class="mt-4 min-h-[50vh] sm:mt-6">
 			<WysiwygEditor
 				bind:this={editor}
 				{initialContent}

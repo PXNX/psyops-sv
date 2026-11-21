@@ -24,6 +24,11 @@
 	import FluentGiftCardArrowRight20Filled from "~icons/fluent/gift-card-arrow-right-20-filled";
 	import FluentShieldLock20Filled from "~icons/fluent/shield-lock-20-filled";
 	import FluentHistory20Filled from "~icons/fluent/history-20-filled";
+	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
+	import FluentWallet20Filled from "~icons/fluent/wallet-20-filled";
+	import MdiNewspaper from "~icons/mdi/newspaper";
+	import { timeAgo } from "#lib/component/press/time.js";
+	import { settings } from "#lib/settings.svelte.js";
 	import { formatDate, getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
 	import type { PageData } from "./$types";
 
@@ -119,6 +124,72 @@
 		</div>
 	{/if}
 
+	<!-- Your standing at a glance: the numbers worth checking every visit -->
+	<section class="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-4" aria-label="Your standing">
+		<div class="panel rounded-sm p-3 sm:p-4">
+			<div class="flex items-center gap-2 text-fg-muted">
+				<FluentWallet20Filled class="size-4 text-primary-fg" />
+				<span class="text-[10px] font-bold uppercase tracking-wide">Wallet</span>
+			</div>
+			<a
+				href="/transactions"
+				class="mt-1 block truncate text-lg font-bold text-fg hover:text-primary-hover transition-colors"
+			>
+				{data.personal.balance.toLocaleString()}
+			</a>
+			<p class="text-[10px] text-fg-muted">currency on hand</p>
+		</div>
+
+		<div class="panel rounded-sm p-3 sm:p-4">
+			<div class="flex items-center gap-2 text-fg-muted">
+				<FluentPeople20Filled class="size-4 text-positive" />
+				<span class="text-[10px] font-bold uppercase tracking-wide">Party</span>
+			</div>
+			{#if data.personal.party}
+				<a
+					href="/party/{data.personal.party.id}"
+					class="mt-1 block truncate text-base font-bold text-fg hover:text-primary-hover transition-colors"
+				>
+					{data.personal.party.name}
+				</a>
+				<p class="text-[10px] text-fg-muted">your party</p>
+			{:else}
+				<a href="/party" class="mt-1 block text-base font-bold text-fg-muted hover:text-fg transition-colors">
+					Unaligned
+				</a>
+				<p class="text-[10px] text-fg-muted">find a party</p>
+			{/if}
+		</div>
+
+		<div class="panel rounded-sm p-3 sm:p-4">
+			<div class="flex items-center gap-2 text-fg-muted">
+				<MdiNewspaper class="size-4 text-friendly" />
+				<span class="text-[10px] font-bold uppercase tracking-wide">Press</span>
+			</div>
+			<a
+				href="/newspaper"
+				class="mt-1 block truncate text-lg font-bold text-fg hover:text-primary-hover transition-colors"
+			>
+				{data.personal.newspaperCount}
+			</a>
+			<p class="text-[10px] text-fg-muted">papers you write for</p>
+		</div>
+
+		<div class="panel rounded-sm p-3 sm:p-4">
+			<div class="flex items-center gap-2 text-fg-muted">
+				<FluentStar20Filled class="size-4 text-primary-fg" />
+				<span class="text-[10px] font-bold uppercase tracking-wide">Status</span>
+			</div>
+			<a
+				href="/premium"
+				class="mt-1 block truncate text-base font-bold text-fg hover:text-primary-hover transition-colors"
+			>
+				{data.personal.isPremium ? "Premium" : "Free"}
+			</a>
+			<p class="text-[10px] text-fg-muted">{data.personal.isPremium ? "supporter active" : "see benefits"}</p>
+		</div>
+	</section>
+
 	<!-- Location & State snapshot -->
 	<SectionCard>
 		<div class="flex items-center justify-between mb-4">
@@ -180,6 +251,53 @@
 		{/if}
 	</SectionCard>
 
+	<!-- What's been printed lately -->
+	<SectionCard>
+		<div class="flex items-center justify-between gap-3 mb-3">
+			<h2 class="section-title">
+				<MdiNewspaper class="size-4" />
+				Latest dispatches
+			</h2>
+			<Button href="/posts" variant="ghost" size="sm" icon={FluentArrowRight20Filled}>All posts</Button>
+		</div>
+
+		{#if data.personal.recentArticles.length === 0}
+			<p class="panel-muted rounded-sm p-5 text-sm text-fg-muted text-center">
+				Nothing in print yet. <a href="/posts/new" class="text-primary-fg hover:underline">Write the first dispatch</a>.
+			</p>
+		{:else}
+			<ul class="divide-y divide-white/[0.06]">
+				{#each data.personal.recentArticles as article (article.id)}
+					<li class="py-2.5 first:pt-0 last:pb-0">
+						<a href="/posts/{article.id}" class="group flex items-center gap-3">
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-sm font-semibold text-fg group-hover:text-primary-hover transition-colors">
+									{article.title}
+								</p>
+								<p class="truncate text-xs text-fg-muted">
+									{article.newspaperName ?? article.authorName ?? "Unknown"} · {timeAgo(
+										article.createdAt
+									)}{#if article.minutes}
+										· {article.minutes} min{/if}
+								</p>
+							</div>
+							{#if settings.loadImages && article.cover}
+								<img
+									src={article.cover}
+									alt=""
+									loading="lazy"
+									decoding="async"
+									referrerpolicy="no-referrer"
+									class="size-10 shrink-0 rounded-sm border border-line/15 object-cover"
+								/>
+							{/if}
+						</a>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</SectionCard>
+
 	<!-- System Broadcast: shown separately, outranks everything below -->
 	{#if data.systemBroadcast}
 		<div class="relative overflow-hidden rounded-sm border-l-4 border-red-500 bg-surface-2 p-5">
@@ -188,9 +306,9 @@
 					<FluentMegaphone20Filled class="size-4 text-red-400" />
 					<span class="text-[10px] font-bold text-red-300 uppercase tracking-[0.2em]">System Broadcast</span>
 				</div>
-				<span class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-red-600/20 text-red-300"
-					>Order</span
-				>
+				<span class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-red-600/20 text-red-300">
+					Order
+				</span>
 			</div>
 			<h3 class="text-fg font-bold uppercase tracking-wide">{data.systemBroadcast.title}</h3>
 			<p class="text-fg-soft text-sm whitespace-pre-wrap mt-1">{data.systemBroadcast.content}</p>
@@ -239,8 +357,9 @@
 					</div>
 					<span
 						class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-politics-bg/25 text-politics-fg"
-						>Order</span
 					>
+						Order
+					</span>
 				</div>
 				<h3 class="text-fg font-bold uppercase tracking-wide">{data.stateBroadcast.title}</h3>
 				<p class="text-fg-soft text-sm whitespace-pre-wrap mt-1">{data.stateBroadcast.content}</p>
@@ -261,8 +380,9 @@
 					</div>
 					<span
 						class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-positive-bg/25 text-positive-fg"
-						>Order</span
 					>
+						Order
+					</span>
 				</div>
 				<h3 class="text-fg font-bold uppercase tracking-wide">{data.partyBroadcast.title}</h3>
 				<p class="text-fg-soft text-sm whitespace-pre-wrap mt-1">{data.partyBroadcast.content}</p>
@@ -285,8 +405,9 @@
 					</div>
 					<span
 						class="px-2 py-0.5 rounded-sm text-[10px] font-bold uppercase tracking-widest bg-friendly-bg/25 text-friendly-fg"
-						>Order</span
 					>
+						Order
+					</span>
 				</div>
 				<h3 class="text-fg font-bold uppercase tracking-wide">{data.blocBroadcast.title}</h3>
 				<p class="text-fg-soft text-sm whitespace-pre-wrap mt-1">{data.blocBroadcast.content}</p>
@@ -434,6 +555,8 @@
 	<SectionCard>
 		<h2 class="section-title mb-4">Quick Actions</h2>
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+			<Button href="/posts/new" variant="subtle" icon={FluentEdit20Filled} class="justify-start">Write a Post</Button>
+			<Button href="/newspaper" variant="subtle" icon={MdiNewspaper} class="justify-start">Newspapers</Button>
 			<Button href="/map" variant="subtle" icon={FluentHome20Filled} class="justify-start">Explore Map</Button>
 			{#if data.stateSnapshot}
 				<Button

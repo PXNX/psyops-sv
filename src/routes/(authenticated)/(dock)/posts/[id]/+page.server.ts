@@ -6,6 +6,7 @@ import { error, fail } from "@sveltejs/kit";
 import type { PageServerLoad, Actions } from "./$types";
 import { getLogoUrl, getSignedDownloadUrl } from "#lib/server/backblaze.js";
 import { readingMinutes } from "#lib/server/services/content/article-text.js";
+import { sanitizeArticleHtml } from "#lib/utils/safe-html.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const articleId = Number(params.id);
@@ -71,6 +72,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	return {
 		article: {
 			...articleData,
+			// Never hand raw stored HTML to the browser — sanitise it here as
+			// well as in SafeHtml, so even SSR output is safe.
+			content: sanitizeArticleHtml(articleData.content),
 			authorLogo,
 			newspaperLogo,
 			minutes: readingMinutes(articleData.content)

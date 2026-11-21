@@ -21,11 +21,16 @@
 	import Code from "@tiptap/extension-code";
 	import Heading from "@tiptap/extension-heading";
 	import History from "@tiptap/extension-history";
+	import Image from "@tiptap/extension-image";
+	import Link from "@tiptap/extension-link";
 
 	import { onMount, onDestroy } from "svelte";
 	import type { Component } from "svelte";
 	import ToolbarButton from "#lib/component/ui/ToolbarButton.svelte";
+	import Modal from "#lib/component/Modal.svelte";
+	import { Button } from "#lib/component/ui/index.js";
 	import { Editor, EditorContent, BubbleMenu } from "svelte-tiptap";
+	import { isSafeHttpUrl, isSafeLinkUrl } from "#lib/utils/url-safety.js";
 
 	import MdiFormatBold from "~icons/mdi/format-bold";
 	import MdiFormatItalic from "~icons/mdi/format-italic";
@@ -39,6 +44,8 @@
 	import MdiFormatQuoteClose from "~icons/mdi/format-quote-close";
 	import MdiMinus from "~icons/mdi/minus";
 	import MdiTable from "~icons/mdi/table";
+	import MdiImage from "~icons/mdi/image";
+	import MdiLink from "~icons/mdi/link";
 
 	interface Props {
 		initialContent?: string;
@@ -50,6 +57,49 @@
 
 	let editor = $state<Editor>();
 	let _transaction = $state(0);
+
+	// Insert-by-URL dialog, used for both remote images and links.
+	type InsertKind = "image" | "link";
+	let insertKind = $state<InsertKind>("image");
+	let insertOpen = $state(false);
+	let urlInput = $state("");
+	let urlError = $state("");
+
+	function openInsert(kind: InsertKind) {
+		insertKind = kind;
+		urlInput = "";
+		urlError = "";
+		insertOpen = true;
+	}
+
+	function insertUrl() {
+		const url = urlInput.trim();
+		if (!editor) return;
+
+		if (insertKind === "image") {
+			if (!isSafeHttpUrl(url)) {
+				urlError = "Enter a full http:// or https:// image URL.";
+				return;
+			}
+			editor.chain().focus().setImage({ src: url, alt: "" }).run();
+		} else {
+			if (!isSafeLinkUrl(url)) {
+				urlError = "Enter an http(s), mailto: or relative (/) link.";
+				return;
+			}
+			const { empty } = editor.state.selection;
+			if (empty) {
+				editor
+					.chain()
+					.focus()
+					.insertContent({ type: "text", text: url, marks: [{ type: "link", attrs: { href: url } }] })
+					.run();
+			} else {
+				editor.chain().focus().setLink({ href: url }).run();
+			}
+		}
+		insertOpen = false;
+	}
 
 	let isEditorEmpty = $derived.by(() => {
 		void _transaction;
@@ -85,12 +135,29 @@
 				Table.configure({ resizable: true }),
 				TableRow,
 				TableHeader,
-				TableCell
+				TableCell,
+				// Images are always remote — no local upload, no base64 payloads.
+				Image.configure({
+					inline: false,
+					allowBase64: false,
+					HTMLAttributes: {
+						loading: "lazy",
+						decoding: "async",
+						referrerpolicy: "no-referrer"
+					}
+				}),
+				Link.configure({
+					openOnClick: false,
+					autolink: true,
+					protocols: ["http", "https", "mailto"],
+					HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" }
+				})
 			],
 			content: initialContent,
 			editorProps: {
 				attributes: {
-					class: "prose prose-sm sm:prose prose-invert max-w-none focus:outline-none min-h-[300px] py-3 sm:py-4"
+					class:
+						"prose prose-sm sm:prose prose-invert max-w-none focus:outline-none min-h-[220px] py-3 sm:min-h-[300px] sm:py-4"
 				}
 			},
 			onUpdate: ({ editor: e }) => {
@@ -216,16 +283,26 @@
 		}
 	];
 
-	const toolbarGroups: ToolbarItem[][] = [inlineMarks, headings, lists, blocks];
+	const inserts: ToolbarItem[] = [
+		{ icon: MdiImage, label: "Insert image from URL", run: () => openInsert("image") },
+		{ icon: MdiLink, label: "Insert link", run: () => openInsert("link") }
+	];
+
+	const toolbarGroups: ToolbarItem[][] = [inlineMarks, headings, lists, blocks, inserts];
 </script>
 
 <div class="wysiwyg-editor">
-	<!-- Toolbar -->
-	<div class="mb-2 border-b border-line/15 pb-2">
-		<div class="flex flex-wrap items-center gap-1">
+	<!-- Toolbar: a single swipeable row on mobile (sticky below the top bar),
+	     grouped as normal on larger screens. -->
+	<div
+		class="sticky top-14 z-5 mb-2 border-b border-line/15 bg-surface-0/95 pb-2 backdrop-blur-sm sm:static sm:bg-transparent sm:backdrop-blur-none"
+	>
+		<div
+			class="flex flex-nowrap items-center gap-0.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap sm:gap-1 sm:overflow-visible sm:pb-0"
+		>
 			{#each toolbarGroups as group, i (i)}
 				{#if i > 0}
-					<div class="mx-1 h-6 w-px bg-line/15"></div>
+					<div class="mx-0.5 h-6 w-px shrink-0 bg-line/15 sm:mx-1"></div>
 				{/if}
 				<div class="flex items-center gap-0.5">
 					{#each group as item (item.label)}
@@ -247,9 +324,9 @@
 		{#if editor}
 			<EditorContent {editor} />
 
-			<!-- Bubble Menu for Text Selection (Desktop) -->
+			<!-- Bubble Menu for Text Selection -->
 			<BubbleMenu
-				class="hidden gap-0.5 rounded-sm border border-line/15 bg-surface-6 p-1 shadow-xl sm:flex"
+				class="flex gap-0.5 rounded-sm border border-line/15 bg-surface-6 p-1 shadow-xl"
 				tippyOptions={{ duration: 100 }}
 				{editor}
 			>
@@ -272,3 +349,48 @@
 		{/if}
 	</div>
 </div>
+
+<!-- Remote image / link insertion. Images are embedded by URL only. -->
+<Modal bind:open={insertOpen} title={insertKind === "image" ? "Insert image" : "Insert link"} size="small">
+	<form
+		class="space-y-3"
+		onsubmit={(e) => {
+			e.preventDefault();
+			insertUrl();
+		}}
+	>
+		<label class="field-label" for="insert-url">
+			{insertKind === "image" ? "Image URL" : "Link URL"}
+		</label>
+		<input
+			id="insert-url"
+			class="field-control w-full rounded-sm px-3 py-2.5 text-base sm:py-2 sm:text-sm"
+			type="url"
+			inputmode="url"
+			bind:value={urlInput}
+			placeholder={insertKind === "image" ? "https://example.com/photo.jpg" : "https://example.com"}
+			autocomplete="off"
+			oninput={() => (urlError = "")}
+			onkeydown={(e) => {
+				if (e.key === "Enter") {
+					e.preventDefault();
+					insertUrl();
+				}
+			}}
+		/>
+		<p class="text-xs text-fg-muted">
+			{#if insertKind === "image"}
+				Paste a public http(s) image address. The image is loaded from that site, never uploaded here.
+			{:else}
+				http(s), mailto: and relative links are supported.
+			{/if}
+		</p>
+		{#if urlError}
+			<p class="field-error">{urlError}</p>
+		{/if}
+		<div class="flex justify-end gap-2 pt-1">
+			<Button type="button" variant="secondary" onclick={() => (insertOpen = false)}>Cancel</Button>
+			<Button type="submit" variant="primary">Insert</Button>
+		</div>
+	</form>
+</Modal>
