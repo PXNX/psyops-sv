@@ -231,14 +231,18 @@
 						<span
 							class="stamp animate-stamp pointer-events-none absolute right-4 top-6 sm:top-auto sm:bottom-3 rounded-full! px-3! py-2! text-center leading-tight"
 							style="--stamp-tilt: -12deg"
-							aria-hidden="true">Head<br />of state</span
+							aria-hidden="true"
 						>
+							Head<br />of state
+						</span>
 					{:else if data.user.isPremium}
 						<span
 							class="stamp animate-stamp pointer-events-none absolute right-4 top-6 sm:top-auto sm:bottom-3"
 							style="--stamp-tilt: -10deg"
-							aria-hidden="true">Premium</span
+							aria-hidden="true"
 						>
+							Premium
+						</span>
 					{/if}
 					<!-- Photo, clipped to the sheet -->
 					<div class="relative shrink-0 -rotate-2 bg-white p-1.5 pb-4 shadow-md">
@@ -321,22 +325,22 @@
 							{/if}
 							{#if data.party}
 								<li class="flex min-w-0 items-center gap-2.5 text-[15px]">
-									<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
-										>Party</span
-									>
+									<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">
+										Party
+									</span>
 									<a href="/party/{data.party.id}" class="group flex min-w-0 items-center gap-1.5">
 										<PartyTag abbreviation={data.party.abbreviation} color={data.party.color} />
-										<span class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline"
-											>{data.party.name}</span
-										>
+										<span class="truncate font-medium text-fg-body group-hover:text-fg group-hover:underline">
+											{data.party.name}
+										</span>
 									</a>
 									<span class="shrink-0 font-mono text-xs text-fg-muted">{partyRole(data.party.role)}</span>
 								</li>
 							{:else if data.isOwnProfile}
 								<li class="flex items-center gap-2.5 text-[15px]">
-									<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted"
-										>Party</span
-									>
+									<span class="w-24 shrink-0 font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">
+										Party
+									</span>
 									<Button
 										href={data.isIndependentRegion ? "/party/create" : "/party"}
 										variant="secondary"
@@ -358,14 +362,14 @@
 							<li class="flex items-center gap-3 px-4 py-1.5" out:vanish>
 								<FluentShieldTask20Filled class="size-5 shrink-0 text-fg-muted" />
 								<a href="/state/{ministry.stateId}" class="group min-w-0 flex-1 text-[15px]">
-									<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline"
-										>Minister of {ministryNames[ministry.ministry] ?? ministry.ministry}</span
-									>
+									<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline">
+										Minister of {ministryNames[ministry.ministry] ?? ministry.ministry}
+									</span>
 									<span class="text-fg-muted">· {ministry.stateName}</span>
 								</a>
-								<span class="hidden shrink-0 font-mono text-xs text-fg-muted sm:inline"
-									>{formatDate(ministry.appointedAt)}</span
-								>
+								<span class="hidden shrink-0 font-mono text-xs text-fg-muted sm:inline">
+									{formatDate(ministry.appointedAt)}
+								</span>
 								{#if data.currentUserPresidency?.stateId === ministry.stateId}
 									<form
 										method="POST"
@@ -382,8 +386,9 @@
 											}}
 									>
 										<input type="hidden" name="ministerId" value={ministry.id} />
-										<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>Dismiss</Button
-										>
+										<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>
+											Dismiss
+										</Button>
 									</form>
 								{/if}
 							</li>
@@ -400,9 +405,9 @@
 									<span class="font-medium text-fg-body group-hover:text-fg group-hover:underline">Diplomat</span>
 									<span class="text-fg-muted">· {diplomacy.blocName}</span>
 								</a>
-								<span class="hidden shrink-0 font-mono text-xs text-fg-muted sm:inline"
-									>{formatDate(diplomacy.appointedAt)}</span
-								>
+								<span class="hidden shrink-0 font-mono text-xs text-fg-muted sm:inline">
+									{formatDate(diplomacy.appointedAt)}
+								</span>
 								{#if data.viewerBlocId === diplomacy.blocId}
 									<form
 										method="POST"
@@ -416,8 +421,9 @@
 									>
 										<input type="hidden" name="role" value="diplomat" />
 										<input type="hidden" name="id" value={diplomacy.id} />
-										<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>Dismiss</Button
-										>
+										<Button type="submit" variant="soft-red" size="xs" icon={FluentPersonDelete20Filled}>
+											Dismiss
+										</Button>
 									</form>
 								{/if}
 							</li>
@@ -438,9 +444,9 @@
 										class="size-5! rounded-[2px]! shrink-0 ring-1 ring-black/15"
 										placeholderIcon={FluentFlag20Filled}
 									/>
-									<span class="truncate text-fg-body group-hover:text-fg group-hover:underline"
-										>{data.citizenship.name}</span
-									>
+									<span class="truncate text-fg-body group-hover:text-fg group-hover:underline">
+										{data.citizenship.name}
+									</span>
 								</a>
 							{:else}
 								<span class="text-fg-muted">Stateless</span>
@@ -451,9 +457,9 @@
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Residence</dt>
 						<dd class="truncate border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{#if data.homeRegion}
-								<a href="/region/{data.homeRegion.id}" class="text-fg-body hover:text-fg hover:underline"
-									>{data.homeRegion.name}</a
-								>
+								<a href="/region/{data.homeRegion.id}" class="text-fg-body hover:text-fg hover:underline">
+									{data.homeRegion.name}
+								</a>
 							{:else}
 								<span class="text-fg-muted">None</span>
 							{/if}
@@ -463,9 +469,9 @@
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Location</dt>
 						<dd class="truncate border-b border-dotted border-line/40 pb-0.5 font-mono">
 							{#if data.residence}
-								<a href="/region/{data.residence.region.id}" class="text-fg-body hover:text-fg hover:underline"
-									>{data.residence.region.name}</a
-								>
+								<a href="/region/{data.residence.region.id}" class="text-fg-body hover:text-fg hover:underline">
+									{data.residence.region.name}
+								</a>
 							{:else}
 								<span class="text-fg-muted">Unknown</span>
 							{/if}
@@ -480,9 +486,9 @@
 					<div class="min-w-0">
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Articles</dt>
 						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
-							<a href="/user/{data.user.id}/articles" class="font-mono text-fg-body hover:text-fg hover:underline"
-								>{data.articleCount}</a
-							>
+							<a href="/user/{data.user.id}/articles" class="font-mono text-fg-body hover:text-fg hover:underline">
+								{data.articleCount}
+							</a>
 						</dd>
 					</div>
 					<div class="min-w-0">
@@ -495,9 +501,9 @@
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Medals</dt>
 						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
 							<a href="/user/{data.user.id}/career" class="group inline-flex items-center gap-2">
-								<span class="font-mono text-fg-body group-hover:text-fg group-hover:underline"
-									>{data.medals.length}</span
-								>
+								<span class="font-mono text-fg-body group-hover:text-fg group-hover:underline">
+									{data.medals.length}
+								</span>
 								{#if data.medals.length > 0}
 									<span class="flex flex-wrap gap-0.5">
 										{#each data.medals as medal, i (medal.id)}
@@ -705,6 +711,26 @@
 							<h2 class="section-title">Companies</h2>
 							<span class="font-mono text-xs text-fg-muted">{companies.length}</span>
 						</header>
+						{#if data.organizations.returns.length > 0}
+							<div class="grid grid-cols-2 divide-x divide-line/15 border-b border-line/15">
+								<div class="px-4 py-2.5">
+									<p class="text-[10px] uppercase tracking-wide text-fg-muted">Total return</p>
+									<p
+										class="font-mono text-sm font-bold {data.organizations.returns.reduce((s, r) => s + r.gain, 0) >= 0
+											? 'text-positive-fg'
+											: 'text-hostile-fg'}"
+									>
+										${data.organizations.returns.reduce((s, r) => s + r.gain, 0).toLocaleString()}
+									</p>
+								</div>
+								<div class="px-4 py-2.5">
+									<p class="text-[10px] uppercase tracking-wide text-fg-muted">Dividends received</p>
+									<p class="font-mono text-sm font-bold text-fg">
+										${data.organizations.returns.reduce((s, r) => s + r.dividends, 0).toLocaleString()}
+									</p>
+								</div>
+							</div>
+						{/if}
 						{#if companies.length > 0}
 							<ul class="divide-y divide-line/15">
 								{#each visibleCompanies as company (company.id)}
@@ -716,7 +742,7 @@
 											placeholderIcon={FluentBuilding20Filled}
 											title={company.name}
 											subtitle={company.marketValue !== null
-												? `Listed · value ${money(company.marketValue)}${company.dividendYield ? ` · yield ${company.dividendYield}%` : ""}`
+												? `Listed · value ${money(company.marketValue)}${company.roiPercent !== null ? ` · ROI ${company.roiPercent >= 0 ? "+" : ""}${company.roiPercent}%` : ""}`
 												: `Private · founded ${formatDate(company.foundedAt)}`}
 										>
 											{#snippet aside()}

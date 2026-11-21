@@ -406,7 +406,7 @@ export async function runAutomaticDividends(
 // ============ Reading ============
 
 /** Current quote per share: the lowest live offer, else the last trade, else the IPO price. */
-async function sharePrices(db: Database, companyIds: number[]) {
+export async function sharePrices(db: Database, companyIds: number[]) {
 	if (!companyIds.length) return new Map<number, number>();
 	const [shares, asks, trades] = await Promise.all([
 		db
