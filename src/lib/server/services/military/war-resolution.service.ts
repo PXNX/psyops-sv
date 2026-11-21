@@ -13,8 +13,9 @@
 import { db } from "#lib/server/db.js";
 import { wars, battles, warSurrenders, states, regions, residences } from "#lib/server/schema.js";
 import { and, count, desc, eq, max, sql } from "drizzle-orm";
-import { WAR_CONFIG, exhaustionAt, isWarExhausted, isWarStale } from "#lib/config/index.js";
+import { WAR_CONFIG, exhaustionAt, isWarExhausted, isWarStale, stabilityWarLimitFactor } from "#lib/config/index.js";
 import { warPsyopsExhaustion } from "#lib/server/services/military/state-effects.js";
+import { stateStabilities } from "#lib/server/services/stability.js";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 
 export type WarEndReason = "exhaustion" | "stalemate" | "capitulation" | "surrender";
@@ -57,11 +58,19 @@ export async function resolveWars(now: Date = new Date()): Promise<WarResolution
 			// elapsed time to the stored value instead compounded it hourly.)
 			// Successful morale campaigns and leaflet drops between the two
 			// belligerents add weariness on top (capped, see psyops.config.ts).
+			// An unstable regime cannot absorb as much weariness: its people
+			// force peace sooner. A loyal one can see the war through longer.
+			const stabilities = await stateStabilities(db, [war.attackerId, war.defenderId], now);
+			const leastStable = Math.min(
+				stabilities.get(war.attackerId)?.score ?? WAR_CONFIG.EXHAUSTION_LIMIT / 2,
+				stabilities.get(war.defenderId)?.score ?? WAR_CONFIG.EXHAUSTION_LIMIT / 2
+			);
+			const exhaustionLimit = Math.round(WAR_CONFIG.EXHAUSTION_LIMIT * stabilityWarLimitFactor(leastStable));
 			const next = Math.min(
-				WAR_CONFIG.EXHAUSTION_LIMIT,
+				exhaustionLimit,
 				exhaustionAt(war.declaredAt, now) + (await warPsyopsExhaustion(db, war, now))
 			);
-			const outcome = await findWarEnd(war, now, next);
+			const outcome = await findWarEnd(war, now, next, exhaustionLimit);
 
 			if (outcome) {
 				await endWar(war.id, outcome.reason, outcome.surrenderedBy, now);
@@ -90,7 +99,8 @@ export async function resolveWars(now: Date = new Date()): Promise<WarResolution
 async function findWarEnd(
 	war: typeof wars.$inferSelect,
 	now: Date,
-	nextExhaustion: number
+	nextExhaustion: number,
+	exhaustionLimit: number = WAR_CONFIG.EXHAUSTION_LIMIT
 ): Promise<{ reason: WarEndReason; surrenderedBy: number | null } | null> {
 	// 1. A recorded surrender ends the war.
 	const [surrender] = await db
@@ -118,7 +128,7 @@ async function findWarEnd(
 	}
 
 	// 4. War weariness reached its limit — white peace, borders unchanged.
-	if (isWarExhausted(nextExhaustion)) {
+	if (isWarExhausted(nextExhaustion, exhaustionLimit)) {
 		return { reason: "exhaustion", surrenderedBy: null };
 	}
 

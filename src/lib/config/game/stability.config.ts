@@ -227,6 +227,15 @@ export function stabilityMoraleFactor(score: number): number {
 	return Math.round((1 + delta) * 1000) / 1000;
 }
 
+/**
+ * How much war weariness a regime can absorb before its people force peace.
+ * 0.8 at collapsing stability, 1 at the neutral base, 1.2 when loyal. Applied
+ * to a war's exhaustion limit using its least stable belligerent.
+ */
+export function stabilityWarLimitFactor(score: number): number {
+	return Math.round((0.8 + clamp(score, STABILITY.MIN, STABILITY.MAX) / 250) * 1000) / 1000;
+}
+
 // ── Population dynamics ─────────────────────────────────────────────────────
 
 /** Annual, per-capita rates behind the daily population tick. */
