@@ -142,7 +142,9 @@ export async function regionsCivilianNeeds(
 			infrastructure: Number(row.infrastructure ?? 0),
 			gridCapacity: grid?.totalProduction ?? 0,
 			gridUsed: grid?.usedProduction ?? 0,
-			populationShare: statePop > 0 ? round3(pop / statePop) : 0,
+			// Keep the full precision: a small region in a huge state still
+			// deserves its sliver of the grid.
+			populationShare: statePop > 0 ? pop / statePop : 0,
 			waterWorks: waterWorksByRegion.get(row.id) ?? 0,
 			factoryWaterDemand: factoryWaterByRegion.get(row.id) ?? 0,
 			tradeFactor: blockade?.tradeFactor ?? 1,
