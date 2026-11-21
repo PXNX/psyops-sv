@@ -20,6 +20,7 @@ import {
 	presidents,
 	ministers,
 	regions,
+	stateEnergy,
 	stateTreasury,
 	states,
 	wars,
@@ -28,6 +29,7 @@ import {
 import {
 	AMPHIBIOUS,
 	BOMBARDMENT,
+	NAVAL_FUEL_PER_OP,
 	NAVAL_OPS,
 	RAID,
 	amphibiousPenalty,
@@ -279,6 +281,23 @@ export async function launchNavalOperation(db: Database, input: LaunchNavalInput
 				updatedAt: now
 			})
 			.where(eq(stateTreasury.stateId, input.stateId));
+
+		// Fuel: operations draw from the military pool the daily energy tick
+		// fills from the state's refined-fuel policy.
+		const fuelNeeded = NAVAL_FUEL_PER_OP[input.kind] ?? 0;
+		if (fuelNeeded > 0) {
+			const [energy] = await tx.select().from(stateEnergy).where(eq(stateEnergy.stateId, input.stateId)).limit(1);
+			if (!energy || energy.militaryFuel < fuelNeeded)
+				throw new NavalOpError(
+					`This operation needs ${fuelNeeded} fuel in the military reserve. Raise the military share of the refined-fuel policy.`
+				);
+			const [spent] = await tx
+				.update(stateEnergy)
+				.set({ militaryFuel: sql`${stateEnergy.militaryFuel} - ${fuelNeeded}`, updatedAt: now })
+				.where(and(eq(stateEnergy.stateId, input.stateId), sql`${stateEnergy.militaryFuel} >= ${fuelNeeded}`))
+				.returning({ stateId: stateEnergy.stateId });
+			if (!spent) throw new NavalOpError("The military fuel reserve was spent elsewhere.");
+		}
 
 		// Odds: our sea control against their air and sea power, plus coastal forts.
 		const ownPoints = usable.reduce(

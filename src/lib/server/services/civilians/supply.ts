@@ -13,6 +13,7 @@ import { civicProjects } from "../../schema-investments";
 import {
 	NEED_META,
 	factoryWaterDraw,
+	fuelHeatRelief,
 	gridFactor,
 	regionNeeds,
 	regionPopulation,
@@ -109,6 +110,9 @@ export async function regionsCivilianNeeds(
 	}
 	const blockadeByState = new Map(blockades);
 	const degradationByState = new Map(degradations);
+	const fuelReliefByState = new Map(
+		energyRows.map((e) => [e.stateId, fuelHeatRelief(e.civilianFuel, populationByState.get(e.stateId) ?? 0)] as const)
+	);
 	const gridByState = new Map<number, { totalProduction: number; usedProduction: number; gridDegraded: number }>();
 	for (const id of stateIds) {
 		const row = energyRows.find((e) => e.stateId === id);
@@ -148,7 +152,8 @@ export async function regionsCivilianNeeds(
 			waterWorks: waterWorksByRegion.get(row.id) ?? 0,
 			factoryWaterDemand: factoryWaterByRegion.get(row.id) ?? 0,
 			tradeFactor: blockade?.tradeFactor ?? 1,
-			environment: stateId != null ? (policyByState.get(stateId) ?? "standard") : "standard"
+			environment: stateId != null ? (policyByState.get(stateId) ?? "standard") : "standard",
+			fuelHeatRelief: stateId != null ? (fuelReliefByState.get(stateId) ?? 0) : 0
 		};
 		const needs = regionNeeds(input);
 		const reasons: string[] = [];

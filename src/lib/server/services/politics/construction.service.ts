@@ -13,8 +13,10 @@ type Region = typeof regions.$inferSelect;
 
 const DAY = 24 * 60 * 60 * 1000;
 
+type RegionLevels = Partial<Pick<Region, RegionStat>>;
+
 /** A region's current level for a stat (power plants live in `economy`). */
-export const regionLevel = (region: Pick<Region, RegionStat>, stat: RegionStat) => region[stat] ?? 0;
+export const regionLevel = (region: RegionLevels, stat: RegionStat) => region[stat] ?? 0;
 
 export class ConstructionError extends Error {}
 
@@ -36,7 +38,7 @@ export interface ConstructionCheck {
 export function checkConstruction(input: {
 	type: BuildingType;
 	quantity: number;
-	region: Pick<Region, RegionStat>;
+	region: RegionLevels;
 	pending: number;
 	treasury: number;
 	stockpile: Record<string, number>;
@@ -234,6 +236,8 @@ export async function completePendingConstructions(
 export const CONQUEST_DAMAGE: Record<RegionStat, number> = {
 	fortifications: 0.5,
 	radar: 0.5,
+	grid: 0.4,
+	storage: 0.4,
 	infrastructure: 0.25,
 	economy: 0.25,
 	hospitals: 0.2,
@@ -241,7 +245,7 @@ export const CONQUEST_DAMAGE: Record<RegionStat, number> = {
 };
 
 /** Levels lost per stat when a region is conquered (at least one of anything built). */
-export function conquestLosses(region: Pick<Region, RegionStat>): Partial<Record<RegionStat, number>> {
+export function conquestLosses(region: RegionLevels): Partial<Record<RegionStat, number>> {
 	const losses: Partial<Record<RegionStat, number>> = {};
 	for (const [stat, share] of Object.entries(CONQUEST_DAMAGE) as [RegionStat, number][]) {
 		const level = regionLevel(region, stat);

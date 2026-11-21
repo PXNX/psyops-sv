@@ -20,7 +20,17 @@ const BUY_PRICES: Record<string, number> = {
 	steel: 1500,
 	gunpowder: 2000,
 	wood: 800,
-	coal: 900
+	coal: 900,
+	// Strategic and energy goods procured on the world market. A blockade does
+	// not change this house price; the energy desk prices imported plant parts
+	// separately and adds a blockade surcharge there.
+	oil: 3000,
+	gas: 2500,
+	uranium: 9000,
+	rare_earth: 6000,
+	silicon: 4000,
+	fuel: 5000,
+	enriched_uranium: 40000
 };
 const SELL_RATIO = 0.7;
 const sellPrice = (resource: string) => Math.floor((BUY_PRICES[resource] ?? 0) * SELL_RATIO);

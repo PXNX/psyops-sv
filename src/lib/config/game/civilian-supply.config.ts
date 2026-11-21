@@ -161,6 +161,8 @@ export interface NeedsInput {
 	tradeFactor: number;
 	/** The state's extraction law — unrestricted extraction poisons water. */
 	environment: string;
+	/** Relief from the civilian fuel pool, 0..1 (share of heat demand covered). */
+	fuelHeatRelief?: number;
 }
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, Number.isFinite(n) ? n : 0));
@@ -191,8 +193,13 @@ export function regionNeeds(input: NeedsInput): RegionNeeds {
 	const availableGrid = Math.max(0, input.gridCapacity - input.gridUsed) * clamp01(input.populationShare);
 	const electricity = supply(elecDemand, availableGrid);
 
-	// Heat rides on the same grid; colder terrain simply asks more of it.
-	const heatDemand = pop * CIVILIAN_SUPPLY.HEAT_PER_CAPITA_MW * (HEAT_CLIMATE[terrain] ?? 1);
+	// Heat rides on the same grid; colder terrain simply asks more of it. A
+	// state that voted to burn its refined fuel at home eases that demand.
+	const heatDemand =
+		pop *
+		CIVILIAN_SUPPLY.HEAT_PER_CAPITA_MW *
+		(HEAT_CLIMATE[terrain] ?? 1) *
+		(1 - Math.max(0, Math.min(1, input.fuelHeatRelief ?? 0)));
 	const heat = supply(heatDemand, availableGrid);
 
 	const needs = { food, electricity, heat, water };

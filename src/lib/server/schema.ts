@@ -59,7 +59,14 @@ export const productTypeEnum = pgEnum("product_type", [
 	"machine_tools",
 	"fab_equipment"
 ]);
-export const factoryTypeEnum = pgEnum("factory_type", ["mine", "refinery", "armaments", "fabrication", "equipment", "general"]);
+export const factoryTypeEnum = pgEnum("factory_type", [
+	"mine",
+	"refinery",
+	"armaments",
+	"fabrication",
+	"equipment",
+	"general"
+]);
 export const jobTypeEnum = pgEnum("job_type", ["miner", "refiner", "assembler", "general_worker"]);
 export const visaStatusEnum = pgEnum("visa_status", ["active", "expired", "revoked"]);
 // "failed": voted through, but it couldn't be carried out (e.g. the treasury
@@ -75,6 +82,8 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"power_plant",
 	"fortifications",
 	"radar",
+	"grid",
+	"energy_storage",
 	"border_control",
 	"exploitation",
 	"declare_war"
@@ -313,6 +322,11 @@ export const regions = pgTable("regions", {
 	education: integer("education").default(0),
 	hospitals: integer("hospitals").default(0),
 	fortifications: integer("fortifications").default(0),
+	// Energy network: grid = transmission/distribution levels, storage =
+	// grid-scale batteries. Both are raised by public construction and decide
+	// how much power regional plants can actually deliver (energy.config.ts).
+	grid: integer("grid").default(0),
+	storage: integer("storage").default(0),
 	// Air-defence radar coverage (0-3), raised by the radar installation and
 	// knocked down by a strike on it. Cues the air defence (recon.config.ts).
 	radar: integer("radar").default(0),
@@ -417,6 +431,7 @@ export const regionsRelations = relations(regions, ({ one, many }) => ({
 		references: [governors.regionId]
 	}),
 	factories: many(factories),
+	plants: many(powerPlants),
 	residences: many(residences, { relationName: "residenceRegion" }),
 	homeResidences: many(residences, { relationName: "homeRegion" }),
 
@@ -1259,6 +1274,18 @@ export const stateEnergy = pgTable("state_energy", {
 		.unique(),
 	totalProduction: integer("total_production").default(1000).notNull(),
 	usedProduction: integer("used_production").default(0).notNull(),
+	/** Refined-fuel policy: whole percentages adding to 100. */
+	civilianShare: integer("civilian_share").default(50).notNull(),
+	militaryShare: integer("military_share").default(30).notNull(),
+	exportShare: integer("export_share").default(20).notNull(),
+	/** Pools set by the daily energy tick. */
+	civilianFuel: integer("civilian_fuel").default(0).notNull(),
+	militaryFuel: integer("military_fuel").default(0).notNull(),
+	exportedFuel: integer("exported_fuel").default(0).notNull(),
+	/** Fuel and upkeep shortfalls, in percent (100 = fully supplied). */
+	fuelFactor: integer("fuel_factor").default(100).notNull(),
+	maintenanceFactor: integer("maintenance_factor").default(100).notNull(),
+	lastEnergyTickAt: timestamp("last_energy_tick_at"),
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
@@ -1271,6 +1298,13 @@ export const powerPlants = pgTable("power_plants", {
 	plantType: powerPlantTypeEnum("plant_type").notNull(),
 	powerOutput: integer("power_output").notNull(),
 	constructionCost: bigint("construction_cost", { mode: "number" }).notNull(),
+	// Where the plant stands. Legacy state-level plants keep this null and
+	// their recorded output; new plants are sited in a specific region.
+	regionId: integer("region_id").references(() => regions.id, { onDelete: "set null" }),
+	/** Siting multiplier in basis points (1000 = nameplate output). */
+	sitingFactor: integer("siting_factor").default(1000),
+	isUnderConstruction: boolean("is_under_construction").default(false).notNull(),
+	constructionCompletesAt: timestamp("construction_completes_at"),
 	isOperational: boolean("is_operational").default(true).notNull(),
 	builtBy: text("built_by")
 		.notNull()
@@ -1640,6 +1674,11 @@ export const blocHighRepresentatives = pgTable(
 export const blocLeadersRelations = relations(blocLeaders, ({ one }) => ({
 	user: one(accounts, { fields: [blocLeaders.userId], references: [accounts.id] }),
 	bloc: one(blocs, { fields: [blocLeaders.blocId], references: [blocs.id] })
+}));
+
+export const blocHighRepresentativesRelations = relations(blocHighRepresentatives, ({ one }) => ({
+	user: one(accounts, { fields: [blocHighRepresentatives.userId], references: [accounts.id] }),
+	bloc: one(blocs, { fields: [blocHighRepresentatives.blocId], references: [blocs.id] })
 }));
 
 export const blocDiplomatsRelations = relations(blocDiplomats, ({ one }) => ({
@@ -2211,7 +2250,9 @@ export const buildingTypeEnum = pgEnum("building_type", [
 	"bridge",
 	"infrastructure",
 	"fortifications",
-	"radar"
+	"radar",
+	"grid",
+	"energy_storage"
 ]);
 
 export const stateBuildings = pgTable("state_buildings", {
@@ -2457,6 +2498,10 @@ export const powerPlantsRelations = relations(powerPlants, ({ one }) => ({
 	state: one(states, {
 		fields: [powerPlants.stateId],
 		references: [states.id]
+	}),
+	region: one(regions, {
+		fields: [powerPlants.regionId],
+		references: [regions.id]
 	}),
 	builder: one(accounts, {
 		fields: [powerPlants.builtBy],
@@ -3602,6 +3647,9 @@ export const infiltrationFiles = pgTable(
 		title: text("title").notNull(),
 		classification: text("classification").notNull(),
 		body: text("body").notNull(),
+		/** Filled when the file was copied from an intrusion's file system. */
+		path: text("path"),
+		recordId: text("record_id"),
 		capturedAt: timestamp("captured_at").defaultNow().notNull()
 	},
 	(t) => ({
@@ -4030,7 +4078,6 @@ export type SpaceOperation = typeof spaceOperations.$inferSelect;
 export type StateAi = typeof stateAi.$inferSelect;
 export type SmugglingRoute = typeof smugglingRoutes.$inferSelect;
 export type SmugglingRun = typeof smugglingRuns.$inferSelect;
-
 
 // --- SUPPLY CONVOYS ---
 // Player-ordered relief and resupply runs. A delivered convoy leaves a timed

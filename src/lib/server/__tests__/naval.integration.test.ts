@@ -15,6 +15,7 @@ import {
 	navalOperations,
 	regions,
 	states,
+	stateEnergy,
 	stateTreasury,
 	wars
 } from "../schema";
@@ -73,8 +74,12 @@ beforeAll(async () => {
 		.returning({ id: regions.id });
 	homePort = port.id;
 	enemyCoast = coast.id;
-	// Keep the treasuries solvent for every test.
+	// Keep the treasuries and the military fuel reserve solvent for every test.
 	await handle.db.update(stateTreasury).set({ balance: 100_000_000 }).where(eq(stateTreasury.stateId, freedonia));
+	await handle.db
+		.insert(stateEnergy)
+		.values({ stateId: freedonia, totalProduction: 1000, usedProduction: 0, militaryFuel: 100_000 })
+		.onConflictDoNothing();
 	await handle.db.delete(navalBlockades);
 	await handle.db.delete(navalOperations);
 }, 900_000);

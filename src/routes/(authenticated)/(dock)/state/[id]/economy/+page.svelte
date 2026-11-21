@@ -66,6 +66,7 @@
 	const resourceMap = $derived(new Map(data.resources.map((r) => [r.resourceType, r.quantity])));
 
 	const drawers = $derived([
+		{ href: `/state/${data.state.id}/energy`, label: "Energy desk", icon: FluentFlash20Filled },
 		{ href: `/state/${data.state.id}/budget`, label: "Treasury statement", icon: FluentReceiptMoney20Filled },
 		{ href: `/state/${data.state.id}/market`, label: "Government market", icon: FluentCart20Filled },
 		{ href: `/state/${data.state.id}/proposal/create`, label: "Draft a tax bill", icon: FluentDocument20Filled }
@@ -209,7 +210,7 @@
 	</section>
 
 	<!-- Drawers -->
-	<nav class="grid grid-cols-1 sm:grid-cols-3 gap-2" aria-label="Ministry tools">
+	<nav class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2" aria-label="Ministry tools">
 		{#each drawers as drawer (drawer.href)}
 			<a href={drawer.href} class="group panel-interactive rounded-sm p-3 flex items-center gap-3 min-w-0">
 				<drawer.icon class="size-5 shrink-0 text-primary-fg" />

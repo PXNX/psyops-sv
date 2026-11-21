@@ -2,10 +2,26 @@
 // building raises one of the region's levels by one (see
 // services/politics/construction.service.ts); a region needs some
 // infrastructure before it can host the bigger projects.
-export type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "radar";
+export type BuildingType =
+	| "hospital"
+	| "school"
+	| "power_plant"
+	| "infrastructure"
+	| "fortifications"
+	| "radar"
+	| "grid"
+	| "energy_storage";
 
 /** The `regions` column a building type raises. */
-export type RegionStat = "infrastructure" | "education" | "hospitals" | "economy" | "fortifications" | "radar";
+export type RegionStat =
+	| "infrastructure"
+	| "education"
+	| "hospitals"
+	| "economy"
+	| "fortifications"
+	| "radar"
+	| "grid"
+	| "storage";
 
 export interface BuildingCosts {
 	currency: number;
@@ -15,6 +31,8 @@ export interface BuildingCosts {
 	gunpowder?: number;
 	wood?: number;
 	coal?: number;
+	rare_earth?: number;
+	silicon?: number;
 }
 
 export interface BuildingTemplate {
@@ -117,6 +135,40 @@ export const BUILDING_TEMPLATES: Record<BuildingType, BuildingTemplate> = {
 			"Cues air defence: each level counts as half an air-defence unit",
 			"Shooting down drones and incoming strikes",
 			"Enemy SEAD can knock the radars out"
+		]
+	},
+	grid: {
+		type: "grid",
+		name: "Grid network",
+		icon: "🔌",
+		stat: "grid",
+		statLabel: "Grid network",
+		maxLevel: 12,
+		costs: { currency: 120000, steel: 250, copper: 300, coal: 100 },
+		constructionTime: 4,
+		infrastructureRequired: 2,
+		description: "Substations, transformers and transmission lines. Every regional plant needs a network to reach its customers.",
+		benefits: [
+			"+120 MW of transmission capacity per level",
+			"Unlocks bigger plants: nuclear needs level 3, fusion level 4",
+			"Plants above the local capacity are curtailed"
+		]
+	},
+	energy_storage: {
+		type: "energy_storage",
+		name: "Battery storage",
+		icon: "🔋",
+		stat: "storage",
+		statLabel: "Energy storage",
+		maxLevel: 8,
+		costs: { currency: 180000, steel: 150, copper: 250, rare_earth: 40 },
+		constructionTime: 5,
+		infrastructureRequired: 3,
+		description: "Grid-scale batteries and pumped storage. They soak up surplus and smooth the dips of solar and wind.",
+		benefits: [
+			"+60 MW of dispatchable capacity per level",
+			"Removes up to 32% of the intermittency loss on renewables",
+			"Keeps the lights on when the sun sets"
 		]
 	}
 };

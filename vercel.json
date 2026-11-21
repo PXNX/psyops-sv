@@ -57,6 +57,11 @@
 			"schedule": "0 */6 * * *",
 			"path": "/api/cron/trade",
 			"requestMethod": "GET"
+		},
+		"energy": {
+			"schedule": "0 3 * * *",
+			"path": "/api/cron/energy",
+			"requestMethod": "GET"
 		}
 	}
 }

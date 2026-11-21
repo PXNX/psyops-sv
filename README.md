@@ -1,8 +1,8 @@
-# PsyOps SV
+# Psyops
 
 A SvelteKit application with Google OAuth, PostgreSQL and Bun, presented through a dark editorial field-ledger interface and optimized for mobile devices.
 
-**PsyOps** stands for _psychological operations_ — the name reflects the game's focus on influence, deception and intelligence as much as on combat. **PsyOps SV** is a World War III simulation: players run a state through a global conflict across land, sea, air, space and cyber, managing industry, diplomacy, covert action and information warfare while the world's armies fight.
+**Psyops** stands for _psychological operations_ — the name reflects the game's focus on influence, deception and intelligence as much as on combat. **Psyops** is a World War III simulation: players run a state through a global conflict across land, sea, air, space and cyber, managing industry, diplomacy, covert action and information warfare while the world's armies fight.
 
 ## Features
 
@@ -22,17 +22,17 @@ A SvelteKit application with Google OAuth, PostgreSQL and Bun, presented through
 Every action in the game belongs to one of five domains. The first three fight;
 the last two decide how well the first three see, communicate and strike.
 
-| Domain | What it does | What it cannot do |
-| --- | --- | --- |
-| 🪖 **Land** | Takes and holds regions, digs into terrain, cheapest boots on the ground | Cannot cross water without the navy; slow to redeploy |
-| ⚓ **Sea** | Blockades coasts, raids shipping, bombards shore positions and lands marines | Only projects power onto the coast; vulnerable to land-based air |
-| ✈️ **Air** | Deep strikes on industry, reconnaissance, interdiction | Needs fuel and airfields; cannot hold ground |
-| 🛰️ **Space** | GPS precision, wide-area recon, early warning, ASAT and uplink attacks | No direct combat power; constellations are fragile |
-| 🕸️ **Cyber** | Grid, C2 and treasury attacks, influence and deception | No territorial control; effects expire and can be traced |
+| Domain       | What it does                                                                 | What it cannot do                                                |
+| ------------ | ---------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 🪖 **Land**  | Takes and holds regions, digs into terrain, cheapest boots on the ground     | Cannot cross water without the navy; slow to redeploy            |
+| ⚓ **Sea**   | Blockades coasts, raids shipping, bombards shore positions and lands marines | Only projects power onto the coast; vulnerable to land-based air |
+| ✈️ **Air**   | Deep strikes on industry, reconnaissance, interdiction                       | Needs fuel and airfields; cannot hold ground                     |
+| 🛰️ **Space** | GPS precision, wide-area recon, early warning, ASAT and uplink attacks       | No direct combat power; constellations are fragile               |
+| 🕸️ **Cyber** | Grid, C2 and treasury attacks, influence and deception                       | No territorial control; effects expire and can be traced         |
 
 **Combined arms.** Units carry a domain (`domains.config.ts`). Air has an edge
 against ships, sea power softens coastal defenders, and land forces with good
-air defence blunt air attack. A side fielding land, sea *and* air units gets a
+air defence blunt air attack. A side fielding land, sea _and_ air units gets a
 combined-arms bonus in every battle, so a one-domain army is brittle even when
 it is large.
 
@@ -113,6 +113,24 @@ and rare earths into chips, then electronics. Power plants include geothermal
 and fusion alongside coal, gas, nuclear, solar, wind and hydro, and a diverse
 grid runs more efficiently than a single-source one. See `energy.config.ts`,
 `industry.config.ts` and `resources.config.ts`.
+
+**Regional energy, grids and fuel policy.** Power plants are no longer bought
+as an instant line item. A leader sites each plant in a region and it is built
+over days from domestic steel, copper and strategic materials plus imported
+components bought at fixed world-market prices (a blockade makes those
+components 35% dearer). Where it stands decides what it produces: solar peaks
+in deserts and low latitudes, wind on coasts and plains, hydro needs water or
+a mountain valley, and geothermal needs the right geology. A region's
+**grid-network level** is its transmission and distribution system — every
+plant needs one, bigger plants need more, and output beyond the grid's capacity
+is curtailed. **Battery storage** adds dispatchable capacity and smooths the
+dips of solar and wind. Both are built through the ordinary construction
+office. Each day the energy tick burns plant fuel, charges upkeep from the
+treasury, and splits refined fuel between **civilian heating, a military reserve
+that funds naval operations, and export** for treasury, according to a
+president's or economy minister's policy. See `energy.config.ts`,
+`allocation.config.ts`, `buildings.config.ts` and
+`services/economy/energy.ts`; the controls live at `/state/[id]/energy`.
 
 ## Cabinet and research
 

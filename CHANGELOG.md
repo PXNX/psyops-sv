@@ -24,7 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   Health, Economy & Energy, Foreign & Trade, Defence & Interior) drawn from eight
   ministries. Blocs mirror them with a leader and four High Representatives, and
   one person may hold several offices at once
-- Supply autonomy: factory inputs are sourced domestically, from bloc partners, via trade lanes or not at all; dependence cuts output and quality, and blockade/closure throttles lane-reliant lines
+- Regional energy: power plants are sited in a region, built over days from domestic
+  materials and imported world-market components, and their output depends on latitude
+  and terrain (solar, wind, hydro, geothermal and thermal plants each favour different sites)
+- Grid-network and battery-storage buildings: regional transmission capacity unlocks
+  bigger plants and curtails surplus; storage adds dispatchable power and smooths renewables
+- Refined-fuel policy: presidents and economy ministers set civilian / military / export
+  shares; a daily tick burns plant fuel and upkeep, fills the civilian heating and military
+  reserves and converts exported fuel into treasury. Naval operations draw the military reserve
+- Government market now trades strategic energy goods (oil, gas, uranium, rare earths,
+  silicon, fuel, enriched uranium) as well as the basic materials
 - Conscription bands derived from the share of a state under arms now reduce the
   available workforce and birth rate, raise mortality and sour regime stability
 - Hospital capacity can be overwhelmed by wounded soldiers and recent strike
@@ -57,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   stable belligerent sets how much war weariness a war can absorb
 - Weekly population tick grows or shrinks each region's civilians from births and
   mortality (war, environment, conscription, emigration), respecting the population floor
+- Supply autonomy: factory inputs are sourced domestically, from bloc partners, via trade lanes or not at all; dependence cuts output and quality, and blockade/closure throttles lane-reliant lines
 - Air/sea trade and closures: open trade lanes pay treasury every six hours; airspace closures ground air freight and block intruding aircraft, EEZ closures and blockades choke shipping and raise smuggling risk
 - Relief convoys and repairs: escorted convoys boost a region's supply capacity; strike-damaged infrastructure can be rebuilt with money and machine tools
 - Supply chains and logistics: region capacity from infrastructure, terrain, borders and ports; strikes, blockades and cyber disruption throttle supply, weakening combat output, burning unit supply and cutting factory shifts. Smuggled cargo now reaches the destination's stockpile and seized fines fund the intercepting state
