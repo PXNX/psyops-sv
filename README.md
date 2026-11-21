@@ -362,7 +362,9 @@ The documentation in `src/lib/docs/` (English only, reachable under `/docs`) is
 grouped into Getting started, Everyday life & economy, Politics & state,
 Conflict & forces and Reference. It covers the whole game — economy, society,
 politics, community, conflict, intelligence, naval warfare, air power and map
-modes. On `/navy` and `/map` an **interactive** tour opens on the first visit:
+modes. Each guide has a "Deep dive" section quoting the exact costs, durations,
+damage values, odds and formulas from the corresponding `config.ts` file, plus
+worked examples. On `/navy` and `/map` an **interactive** tour opens on the first visit:
 it highlights the real control for each step and advances when you use it (with
 a manual fallback); progress is stored in the browser. Tours are launched from
 your profile, the docs index or the relevant docs page with `?tutorial=navy`,

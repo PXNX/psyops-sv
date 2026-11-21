@@ -51,3 +51,23 @@ aircraft.
 Enemy ships only appear if a fresh sea intel report (sonar, radar, SAR or air
 reconnaissance) saw their hex in the last 12 hours. Without reconnaissance the
 sea is blank.
+
+
+## Deep dive: exact numbers
+
+- Sea grid (`fleet.config.ts`): `HEX_BOUNDS` q **0–15**, r **0–10** = **176**
+  hexes; SVG radius `HEX_SIZE = 30`.
+- EEZ (`EEZ`): `radiusHexes = 2`; a port is placed one hex offshore
+  (`portDistanceHexes = 1`) on the nearest free water hex.
+- Airspace (`AIRSPACE`): **4 columns × 3 rows = 12** sectors, labelled
+  LR-A1 … LR-C4.
+- Projection (`src/lib/utils/military.ts`): the map is 1400×600; `latLonToMap`
+  inverts a cubic fit of `mapToLatLon` (median error about 90 km).
+- Fog of war (`SEA_INTEL_VALID_HOURS`): a sea report is fresh for **12 h**; only
+  hexes covered by a fresh report reveal enemy ships.
+- Ship positions are derived from `hexFromLatLon(lat, lon)`, which maps longitude
+  −180…180 onto q 0…15 and latitude 90…−90 onto r 0…10.
+
+Example: a port built for a region at 45°N, 10°E lands on
+`q = round((190/360)×15) = 8`, `r = round((45/180)×10) = 3` — hex **8,3**,
+with its EEZ covering hexes within two steps of it that are not on land.

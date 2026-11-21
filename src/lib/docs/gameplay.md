@@ -33,3 +33,23 @@ implementation under `src/routes/api/cron/`.
 Every action belongs to one of five domains: land, sea, air, space and cyber.
 A side that fields several domains fights better than a one-domain army. See
 `domains.config.ts` for the details.
+
+
+## Deep dive: the numbers behind the loop
+
+Every tutorial links to a config file with the exact values. A few anchors:
+
+| System | Concrete value | Source |
+| --- | --- | --- |
+| Starting wallet | 10,000 | `economy.config.ts` |
+| Default factory wage | 1,500 | `economy.config.ts` |
+| Default tax rates | mining 10%, production 15%, market 5%, income 20% | `economy.config.ts` |
+| Battle preparation / planning | 24 h / 48 h | `combat.config.ts` |
+| Combat round | 1 h | `combat.config.ts` |
+| War exhaustion | +0.5/hour, forced peace at 100 | `war.config.ts` |
+| Exercise | 8 h, +10 experience (cap 50) | `exercise.config.ts` |
+| Fleet tick | every 15 minutes | `vercel.json` |
+| Sea intel freshness | 12 hours | `recon.config.ts` |
+| Hex sea grid | 16 × 11 hexes | `fleet.config.ts` |
+
+See the [Reference](/docs/reference) for the full config map.

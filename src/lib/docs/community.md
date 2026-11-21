@@ -41,3 +41,29 @@ which helps in elections and when applying for offices.
 
 Your profile (reachable from the menu) collects medals, offices, companies and
 the interactive tutorial launchers.
+
+
+## Deep dive: exact numbers
+
+Community actions feed the same opinion and stability systems as politics.
+The relevant constants are in `civic.config.ts` and `stability.config.ts`.
+
+| Key | Value | Source |
+| --- | --- | --- |
+| `OPINION_CONFIG.BASE` | 50 | civic.config.ts |
+| `CASUALTY_PENALTY_PER_THOUSAND` | 2 (cap 25) | civic.config.ts |
+| Opinion from a clinic | +9 for 55,000 over 10 days | civic.config.ts |
+| Opinion from a school annex | +7 for 45,000 over 9 days | civic.config.ts |
+| Propaganda for | +0.4 per point (cap +8) | stability.config.ts |
+| Propaganda against | −0.35 per point (cap −12) | stability.config.ts |
+| `STABILITY.OPINION_WEIGHT` | 0.4 | stability.config.ts |
+| Rally defence | +8 stability | stability.config.ts |
+
+A post or article that changes public opinion by 20 points moves stability by
+roughly `20 × 0.4 = 8` points. Because stability labels change at 70, 48, 32
+and 18, a well-timed campaign can move a state from "uneasy" to "stable"
+without firing a shot.
+
+The moderation rules and chat restrictions are enforced in
+`src/lib/server/moderation/`; the numeric thresholds for warnings and mutes
+live there rather than in the game config.

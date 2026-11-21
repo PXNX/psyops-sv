@@ -81,3 +81,57 @@ ships and ready aircraft.
 3. Send a naval bomber against the detected ship.
 4. Refuel and check experience after combat.
 5. Lay mines to stop enemy merchant traffic at the entrance.
+
+
+## Deep dive: exact numbers
+
+Values come from `aircraft.config.ts`, `military.config.ts` and
+`exercise.config.ts`.
+
+### Squadron stats (`AIRCRAFT`)
+
+| Type | Attack / defence | Range (hexes) | Special | Fuel capacity / per sortie |
+| --- | --- | --- | --- | --- |
+| transport aircraft | 8 / 20 | 7 | transport 400 | 160 / 20 |
+| bomber | 80 / 22 | 9 | bombing | 240 / 40 |
+| tanker aircraft | 6 / 25 | 8 | refuel 300 | 200 / 25 |
+| fighter jet | 65 / 45 | 6 | air superiority | 180 / 30 |
+| close air support | 55 / 30 | 4 | close support | 140 / 22 |
+| naval bomber | 75 / 28 | 8 | ASW 8, naval strike | 220 / 36 |
+| helicopter | 22 / 24 | 3 | ASW 10, transport 80 | 120 / 18 |
+
+### Directed missions (`AIR_MISSIONS`)
+
+| Mission | Role | Target | Duration | Fuel | Magnitude |
+| --- | --- | --- | --- | --- | --- |
+| strategic bombing | bombing | region | 3 h | 40 | 2 levels |
+| logistic strike | bombing | region | 2 h | 30 | 25 supply |
+| naval bombing | naval strike | hex | 2 h | 35 | 45 damage |
+| airlift | transport | own region | 2 h | 25 | 120 supply |
+| reconnaissance | utility | hex | 1 h | 20 | full picture |
+| refuel | refuel | own region | 1 h | 15 | 200 fuel |
+| battlefield support | close support | region | 1 h | 25 | 20 supply |
+
+Only the helicopter carries the **utility** role, so it is the squadron that
+can fly the reconnaissance mission. Strategic bombing removes 2 infrastructure
+and 1 economy from the target region; naval bombing has an 80% hit chance and
+deals 45 damage (or 15 on a miss).
+
+### Training and experience (`exercise.config.ts`)
+
+- Exercise: **8 h**, **+10** experience, requires organization ≥ **30**,
+  costs **25** organization, **20** supply and **15%** of build cost.
+- Exercise experience cap: **50**. Combat can push to **100**.
+- Combat grants **+3** experience per firing round and burns **4** fuel;
+  air sorties burn **12** fuel.
+- Levels: recruit 0 (×1.00), trained 20 (×1.05), regular 40 (×1.10), veteran
+  60 (×1.15), elite 80 (×1.20).
+- Refuelling restores **15** fuel per unit per cron tick from the state reserve.
+
+### Worked example — one naval bombing run
+
+A naval bomber (220 fuel, 36 per sortie) can fly **6 sorties** before needing
+refuel. Each sortie takes 2 h and deals 45 damage on an 80% roll — expected
+**36 damage per sortie**. After three hits a frigate (140 HP) is down to 12 HP;
+a fourth sortie sinks it. The crew gains +3 experience per strike, reaching
+veteran (60) after twenty successful missions.

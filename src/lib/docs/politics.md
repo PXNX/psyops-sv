@@ -53,3 +53,56 @@ trade lanes and declarations of war (`/bloc` and
 
 Public opinion, supply and internal tension decide whether your state stays
 stable. The current values are shown on `/state/[id]`.
+
+
+## Deep dive: exact numbers
+
+### Government structure (`government.config.ts`)
+
+One president and **4** paired portfolios (**science_health**,
+**economy_energy**, **foreign_trade**, **defence_interior**) covering **8**
+ministries. Blocs mirror this with High Representatives and a leader. Holding
+multiple roles is allowed (`MULTIPLE_ROLES_ALLOWED: true`).
+
+### Opinion and stance (`civic.config.ts`)
+
+`OPINION_CONFIG` starts at **50**; casualties cost **2** opinion per 1,000
+(cap 25). State buildings add opinion: infrastructure +1, education +2,
+hospitals +3, economy +1, fortifications **−2**, radar 0.
+
+`STANCE_CONFIG` runs from −100 to +100, default 0: declaring war **−18**, an
+airstrike **−5**, a bailout **+12** plus +1 per 10,000 above the 10,000 minimum
+(cap +30). Labels: hostile ≤−50, unfriendly ≤−10, friendly ≥10, warm ≥50.
+
+### Stability as a political constraint (`stability.config.ts`)
+
+Stability starts at **50** and is labelled loyal ≥70, stable ≥48, uneasy ≥32,
+unrest ≥18, collapsing ≥0. War crimes cost −0.4 per point (cap −25),
+conscription −1.2 per permille (cap −18), cyber events −0.25 per point (cap
+−10). Education adds +1.2 per level (cap +12); rallying defence adds +8.
+Stability scales morale 0.9–1.1× and the war exhaustion limit 0.8–1.2× — so a
+collapsing state cannot sustain a long war.
+
+### Trade closures (`trade.config.ts`)
+
+| Closure | Cost per hour | Duration | Cooldown | Flow cut | Attribution |
+| --- | --- | --- | --- | --- | --- |
+| airspace | 9,000 | 6–168 h | 24 h | 95% | 25% |
+| EEZ | 6,000 | 6–168 h | 24 h | 80% | 15% |
+
+A blockade additionally cuts sea flow by `blockadeStrength × 0.6`.
+
+### Research as policy (`research.config.ts`)
+
+Research cost is `baseCost × growth^level` rounded to 1,000, with effects from
+3% to 5% per level. Labs produce `labs × (1 + 0.25 × aiLevel)` research points
+per day. The full tree and prerequisites are listed in the
+[economy reference](/docs/economy#deep-dive-exact-numbers).
+
+### Worked example — funding a law
+
+A proposal that raises the mining tax from **10%** to **15%**
+(`DEFAULT_TAX_RATES`) needs a parliamentary majority. Once passed, every mined
+unit yields 5% more to the treasury, but the stability modifier for harsh
+environment policies can still apply if exploitation is set to unrestricted
+(−12 stability).
