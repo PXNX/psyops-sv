@@ -1,6 +1,7 @@
 <!-- /lib/component/ResourceIcon.svelte -->
 <script lang="ts">
-	import { isometricIconMarkup, isometricIconNames } from "#lib/icons/isometric";
+	import { isometricIconMarkup } from "#lib/icons/isometric";
+	import { resourceIconNames } from "#lib/icons/names";
 
 	type Props = {
 		name: string;
@@ -11,7 +12,7 @@
 
 	// Every resource/product has a 3D-rendered raster icon. Unknown names fall
 	// back to the vector set so an unexpected resource never renders blank.
-	const hasRaster = $derived(name !== "package" && isometricIconNames.includes(name));
+	const hasRaster = $derived(resourceIconNames.has(name));
 	const markup = $derived(hasRaster ? "" : isometricIconMarkup(name));
 </script>
 
