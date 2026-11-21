@@ -49,6 +49,22 @@
 		{#if !data.state}
 			<div class="panel p-6 text-sm text-fg-muted">Settle in a state to see its command picture.</div>
 		{:else}
+			<!-- ── Logistics ───────────────────────────────────────────────── -->
+			<section class="panel p-4" aria-labelledby="supply-title">
+				<h2 id="supply-title" class="section-title mb-2">🚚 Supply chains</h2>
+				<p class="text-sm">
+					Average supply <strong>{Math.round((p?.supply.average ?? 1) * 100)}%</strong> · worst region
+					{Math.round((p?.supply.worst ?? 1) * 100)}% · {p?.supply.regions ?? 0} active region(s){#if p?.supply.blockaded}<span
+							class="text-warning"> · under blockade</span
+						>{/if}
+				</p>
+				<p class="mt-1 text-xs text-fg-muted">
+					Roads, rails and ports decide how much food, fuel and ammunition reach a region. Strikes on bridges
+					and a naval blockade throttle the flow: units fight weaker and factories run slower. Smuggled cargo
+					lands directly in the destination's strategic stockpile.
+				</p>
+			</section>
+
 			<!-- ── Sea ─────────────────────────────────────────────────────── -->
 			<section class="panel p-4" aria-labelledby="sea-title">
 				<h2 id="sea-title" class="section-title mb-3">⚓ Sea — {p?.seaControl ?? 0} sea-control points</h2>

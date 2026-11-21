@@ -12,6 +12,7 @@ import {
 	MILITARY_UNIT_TEMPLATES,
 	NAVAL_OPS,
 	POWER_PLANTS,
+	PRODUCTION_QUALITY,
 	RAID,
 	SATELLITE_KINDS,
 	SMUGGLING,
@@ -38,9 +39,19 @@ import {
 	energyDiversityFactor,
 	fightsOnLand,
 	gpsFactor,
+	convoySurvival,
+	dueForWear,
+	disruptionFactor,
+	efficiencyFactor,
+	equipmentForFactory,
 	gridConcentration,
+	nextEfficiency,
+	nextQuality,
 	isNavalUnit,
 	maxCargo,
+	qualityFactor,
+	regionSupplyCapacity,
+	roundSupplyCost,
 	navalInterdictChance,
 	navalSuccessChance,
 	raidHaul,
@@ -51,6 +62,10 @@ import {
 	smuggleInterceptChance,
 	smugglePayout,
 	smugglePremium,
+	supplyDemand,
+	logisticsSupplyFactor,
+	stackedDisruption,
+	unitSupplyModifier,
 	spaceOpOdds,
 	spaceOpDamage,
 	strikeAccuracy
@@ -266,5 +281,69 @@ describe("energy and industry", () => {
 		expect(FABRICATION.electronics.inputs.chips).toBeGreaterThan(0);
 		expect(chipReadiness(0, 0)).toBe(0);
 		expect(chipReadiness(1000, 1000)).toBe(1);
+	});
+});
+
+describe("logistics and supply chains", () => {
+	it("derives capacity from infrastructure, borders, ports and terrain", () => {
+		const bare = regionSupplyCapacity({ id: 1, terrain: "plains", infrastructure: 0 }, 0, false);
+		const rich = regionSupplyCapacity({ id: 2, terrain: "plains", infrastructure: 5 }, 3, true);
+		expect(rich).toBeGreaterThan(bare);
+		expect(regionSupplyCapacity({ id: 3, terrain: "mountain", infrastructure: 5 }, 3, true)).toBeLessThan(rich);
+		expect(regionSupplyCapacity({ id: 4, terrain: "shore", infrastructure: 5 }, 3, true)).toBeGreaterThan(
+			regionSupplyCapacity({ id: 5, terrain: "shore", infrastructure: 5 }, 3, false)
+		);
+	});
+
+	it("counts the draw of units and factories", () => {
+		const demand = supplyDemand(["infantry", "armor", "frigate"], ["armaments", "fabrication"]);
+		expect(demand).toBeGreaterThan(supplyDemand(["infantry"], []));
+		expect(supplyDemand([], ["fabrication"])).toBeGreaterThan(supplyDemand([], ["armaments"]));
+	});
+
+	it("stacks disruptions with diminishing returns and adds blockade cuts", () => {
+		expect(disruptionFactor([0.5], 0)).toBeCloseTo(0.5);
+		expect(disruptionFactor([0.5, 0.5], 0)).toBeLessThan(0.5);
+		expect(disruptionFactor([0], 1)).toBeLessThan(1);
+		expect(stackedDisruption([1, 1, 1])).toBeLessThanOrEqual(0.8);
+	});
+
+	it("ties combat output and production to supply", () => {
+		expect(logisticsSupplyFactor(100, 50)).toBe(1);
+		expect(logisticsSupplyFactor(100, 200)).toBe(0.5);
+		expect(logisticsSupplyFactor(100, 200, 0.5)).toBe(0.25);
+		expect(unitSupplyModifier(100, 1)).toBe(1);
+		expect(unitSupplyModifier(0, 1)).toBeLessThan(0.5);
+		expect(unitSupplyModifier(100, 0.5)).toBe(0.5);
+		expect(roundSupplyCost(0.25)).toBeGreaterThan(roundSupplyCost(1));
+	});
+
+	it("makes escorts matter against a blockade", () => {
+		expect(convoySurvival(1, 0)).toBeLessThan(convoySurvival(1, 5));
+		expect(convoySurvival(0, 0)).toBe(1);
+	});
+});
+
+describe("equipment, efficiency and quality", () => {
+	it("requires shared tools, plus specialized kit for fabrication", () => {
+		expect(equipmentForFactory("mine").machine_tools).toBeGreaterThan(0);
+		expect(equipmentForFactory("fabrication").fab_equipment).toBeGreaterThan(0);
+		expect(equipmentForFactory("armaments").fab_equipment).toBeUndefined();
+	});
+
+	it("learns on clean shifts and loses know-how on shortages and attacks", () => {
+		expect(efficiencyFactor(50)).toBeGreaterThan(0.7);
+		expect(efficiencyFactor(100)).toBeGreaterThan(efficiencyFactor(50));
+		expect(qualityFactor(100)).toBeGreaterThan(qualityFactor(0));
+		expect(nextEfficiency(50, { supplied: true, disruptions: [1, 1] })).toBeGreaterThan(50);
+		expect(nextEfficiency(50, { supplied: true, disruptions: [0.4, 1] })).toBeLessThan(50);
+		expect(nextEfficiency(50, { supplied: false, disruptions: [1] })).toBe(50 - PRODUCTION_QUALITY.LOSS_ON_SHORTAGE);
+		expect(nextQuality(90, 70, true)).toBeLessThan(90);
+	});
+
+	it("grinds machine tools every few shifts", () => {
+		expect(dueForWear(1)).toBe(false);
+		expect(dueForWear(5)).toBe(true);
+		expect(dueForWear(10)).toBe(true);
 	});
 });

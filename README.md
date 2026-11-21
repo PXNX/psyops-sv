@@ -66,6 +66,22 @@ cargo along them. Interception rises with sanctions, blockades, enforcement
 and naval patrols; a delivered run pays a premium, a seized one pays a fine.
 See `smuggling.config.ts` and `services/economy/smuggling.ts`.
 
+**Supply chains and logistics.** Every region has a carrying capacity from
+its infrastructure, borders, port and terrain. Units and factories draw on it;
+strikes on bridges, cyber disruption of supplies and naval blockades throttle
+it. The resulting supply factor weakens combat output, burns unit supply
+faster each round and cuts factory shifts. Smuggled cargo lands in the
+destination's strategic stockpile, and seized cargo pays a fine to the
+intercepting state. See `logistics.config.ts` and `services/military/logistics.ts`.
+
+**Industrial equipment and learning.** A new plant cannot be built without
+machine tools (and a fabrication line needs specialized fab equipment), both
+made first in an equipment plant. Plants gain efficiency with every clean,
+supplied shift and lose it when inputs, tools, power or transport fail; quality
+follows efficiency and directly scales output. Strikes and blockades therefore
+have a lasting effect long after their immediate damage. See
+`equipment.config.ts`.
+
 **Resources, energy and chips.** Mines can now produce oil, gas, uranium,
 rare earths and silicon in the regions that have them. Refineries turn oil into
 fuel and uranium into enriched uranium; new fabrication plants turn silicon

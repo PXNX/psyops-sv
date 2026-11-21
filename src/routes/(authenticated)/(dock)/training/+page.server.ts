@@ -40,7 +40,16 @@ type ResourceType =
 	| "silicon"
 	| "fuel"
 	| "enriched_uranium";
-type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives" | "chips" | "electronics";
+type ProductType =
+	| "rifles"
+	| "ammunition"
+	| "artillery"
+	| "vehicles"
+	| "explosives"
+	| "chips"
+	| "electronics"
+	| "machine_tools"
+	| "fab_equipment";
 
 // Standardized unit names - no NATO variety, just consistent naming
 const unitTypeNames: Record<string, string> = {

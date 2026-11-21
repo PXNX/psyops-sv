@@ -151,6 +151,9 @@
 				</h1>
 				<div class="mt-1 flex flex-wrap items-center gap-2">
 					<Badge tone="purple" class="capitalize">{data.factory.factoryType}</Badge>
+					<Badge tone={data.factory.quality >= 80 ? "green" : "orange"}>
+						Quality {data.factory.quality}% · Efficiency {data.factory.efficiency}%
+					</Badge>
 					{#if data.output}
 						<span class="inline-flex items-center gap-1 text-xs text-fg-soft capitalize">
 							<ResourceIcon name={data.output.name} class="size-4" />

@@ -58,6 +58,7 @@ import {
 	smugglingAuthority
 } from "#lib/server/services/economy/smuggling.js";
 import { viewerSide } from "#lib/server/services/military/recon.js";
+import { stateSupply } from "#lib/server/services/military/logistics.js";
 
 const nameOfState = (rows: { id: number; name: string }[], id: number | null | undefined) =>
 	id ? (rows.find((s) => s.id === id)?.name ?? `State ${id}`) : null;
@@ -76,7 +77,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const stateRows = await db.select({ id: states.id, name: states.name }).from(states);
 	const state = stateRows.find((s) => s.id === stateId) ?? null;
-	const [fleet, seaControl, blockades, navalOps, sats, bonuses, defence, spaceOps, aiInfo, routes, runs, wallet, resources, products] =
+	const [fleet, seaControl, blockades, navalOps, sats, bonuses, defence, spaceOps, aiInfo, routes, runs, wallet, resources, products, supply] =
 		await Promise.all([
 			navalFleet(db, stateId),
 			seaControlOf(db, stateId),
@@ -91,7 +92,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			runsByUser(db, account.id),
 			db.select({ balance: userWallets.balance }).from(userWallets).where(eq(userWallets.userId, account.id)),
 			db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
-			db.select().from(productInventory).where(eq(productInventory.userId, account.id))
+			db.select().from(productInventory).where(eq(productInventory.userId, account.id)),
+			stateSupply(db, stateId)
 		]);
 
 	return {
@@ -99,6 +101,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		planner: naval || space || ai || smuggler
 			? {
 					roles: { naval, space, ai, smuggler },
+					supply,
 					fleet,
 					seaControl,
 					blockades: blockades.map((b) => ({

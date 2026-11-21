@@ -146,7 +146,16 @@ type ResourceType =
 	| "silicon"
 	| "fuel"
 	| "enriched_uranium";
-type ProductType = "rifles" | "ammunition" | "artillery" | "vehicles" | "explosives" | "chips" | "electronics";
+type ProductType =
+	| "rifles"
+	| "ammunition"
+	| "artillery"
+	| "vehicles"
+	| "explosives"
+	| "chips"
+	| "electronics"
+	| "machine_tools"
+	| "fab_equipment";
 
 export interface AutomationSummary {
 	accountId: string;

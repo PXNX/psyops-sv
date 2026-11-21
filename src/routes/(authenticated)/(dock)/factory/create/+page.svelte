@@ -54,6 +54,13 @@
 			icon: FluentFactory20Filled,
 			desc: "Makes chips and electronics",
 			costs: { currency: data.factoryCost, energy: 100 } as Record<string, number>
+		},
+		{
+			value: "equipment",
+			label: "Equipment",
+			icon: FluentFactory20Filled,
+			desc: "Makes the machine tools and fab kit every plant needs",
+			costs: { currency: data.factoryCost, energy: 100 } as Record<string, number>
 		}
 	]);
 
@@ -61,7 +68,8 @@
 		mine: ["iron", "copper", "coal", "wood", "oil", "gas", "uranium", "rare_earth", "silicon"],
 		refinery: ["steel", "gunpowder", "fuel", "enriched_uranium"],
 		armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"],
-		fabrication: ["chips", "electronics"]
+		fabrication: ["chips", "electronics"],
+		equipment: ["machine_tools", "fab_equipment"]
 	};
 
 	const selectedFactoryTypeData = $derived(factoryTypes.find((t) => t.value === selectedFactoryType));
@@ -229,6 +237,13 @@
 					{/each}
 				</div>
 				<input type="hidden" name="factoryType" value={selectedFactoryType} />
+				<p class="text-xs text-fg-muted">
+					Requires {data.equipmentRules?.machine_tools ?? 5} machine tools{#if data.equipmentRules?.fab_equipment}
+						and {data.equipmentRules.fab_equipment} fab equipment{/if}. You own
+					{data.userEquipment?.machine_tools ?? 0} machine tools{#if data.equipmentRules?.fab_equipment},
+						{data.userEquipment?.fab_equipment ?? 0} fab equipment{/if}. Tools wear out every
+					{data.equipmentRules?.wearEvery ?? 5} shifts — build an equipment plant first.
+				</p>
 
 				<div class="grid grid-cols-4 sm:grid-cols-5 gap-2">
 					{#each outputsByType[selectedFactoryType] as output (output)}

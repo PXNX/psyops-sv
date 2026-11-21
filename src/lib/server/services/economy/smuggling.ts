@@ -20,6 +20,8 @@ import {
 	regions,
 	smugglingRoutes,
 	smugglingRuns,
+	stateProductInventory,
+	stateResourceInventory,
 	stateSanctions,
 	stateTreasury,
 	states,
@@ -36,7 +38,7 @@ import {
 	smugglePayout,
 	type SmugglingGood
 } from "#lib/config/index.js";
-import { blockadeStrengthOn, seaControlOf } from "../military/naval";
+import { blockadeEffectsOn, blockadeStrengthOn, seaControlOf } from "../military/naval";
 import { aiLevel } from "../military/ai";
 
 type Tx = Parameters<Parameters<Database["transaction"]>[0]>[0];
@@ -205,6 +207,8 @@ export interface RunResult {
 	payout: number;
 	fine: number;
 	risk: number;
+	/** State that received a delivered cargo (or kept a seized fine). */
+	destinationStateId: number;
 	message: string;
 }
 
@@ -286,17 +290,19 @@ export async function runSmuggling(db: Database, input: RunInput): Promise<RunRe
 		}
 
 		const sanctioned = await sanctionsBetween(tx, route.originStateId, route.targetStateId);
-		const blockaded = (await blockadeStrengthOn(tx, route.targetStateId, now)) > 0;
+		const blockade = await blockadeEffectsOn(tx, route.targetStateId, now);
+		const blockaded = blockade.smugglingFactor > 1;
 		const enforcement = await aiLevel(tx, route.targetStateId);
 		const seaControl = await seaControlOf(tx, route.targetStateId);
-		const risk = smuggleInterceptChance({
-			bulk: spec.bulk,
-			sanctioned,
-			blockaded,
-			enforcement,
-			aiLevel: enforcement,
-			seaControl
-		});
+		// A blockade is not just a flag: the tighter it is, the more cargo its
+		// patrols pull in (naval.config.ts's SMUGGLING_CUT).
+		const risk = Math.min(
+			SMUGGLING.MAX_INTERCEPT,
+			Math.round(smuggleInterceptChance({ bulk: spec.bulk, sanctioned, blockaded, enforcement, aiLevel: enforcement, seaControl }) * blockade.smugglingFactor * 1000) / 1000
+		);
+		// Cargo flows to the state the runner does not live in. That is the
+		// whole point of the route: it supplies a starved or sanctioned state.
+		const destinationStateId = stateId === route.originStateId ? route.targetStateId : route.originStateId;
 
 		const intercepted = rng() < risk;
 		// A caught run may still vanish rather than be seized, depending on the navy.
@@ -313,13 +319,38 @@ export async function runSmuggling(db: Database, input: RunInput): Promise<RunRe
 					target: userWallets.userId,
 					set: { balance: sql`${userWallets.balance} + ${payout}`, updatedAt: now }
 				});
-			message = `Delivered ${quantity} ${spec.label.toLowerCase()} for ${payout.toLocaleString()}.`;
+			// The cargo lands in the destination's strategic stockpile: this is
+			// how a blockaded state keeps its AI, satellites and factories fed.
+			if (spec.kind === "resource") {
+				await tx
+					.insert(stateResourceInventory)
+					.values({ stateId: destinationStateId, resourceType: good as never, quantity, updatedAt: now })
+					.onConflictDoUpdate({
+						target: [stateResourceInventory.stateId, stateResourceInventory.resourceType],
+						set: { quantity: sql`${stateResourceInventory.quantity} + ${quantity}`, updatedAt: now }
+					});
+			} else {
+				await tx
+					.insert(stateProductInventory)
+					.values({ stateId: destinationStateId, productType: good as never, quantity, updatedAt: now })
+					.onConflictDoUpdate({
+						target: [stateProductInventory.stateId, stateProductInventory.productType],
+						set: { quantity: sql`${stateProductInventory.quantity} + ${quantity}`, updatedAt: now }
+					});
+			}
+			message = `Delivered ${quantity} ${spec.label.toLowerCase()} for ${payout.toLocaleString()}; the cargo reached state ${destinationStateId}.`;
 		} else if (outcome === "seized") {
 			fine = smuggleFine(good, quantity);
 			await tx
 				.update(userWallets)
 				.set({ balance: sql`greatest(0, ${userWallets.balance} - ${fine})`, updatedAt: now })
 				.where(eq(userWallets.userId, input.userId));
+			// Customs keeps the fine: interception is a real source of revenue
+			// for the state doing the seizing.
+			await tx
+				.update(stateTreasury)
+				.set({ balance: sql`${stateTreasury.balance} + ${fine}`, updatedAt: now })
+				.where(eq(stateTreasury.stateId, destinationStateId));
 			message = `Cargo seized: the ${quantity} ${spec.label.toLowerCase()} are gone and the fine is ${fine.toLocaleString()}.`;
 		} else {
 			message = `The cargo vanished at sea: ${quantity} ${spec.label.toLowerCase()} lost, no fine.`;
@@ -351,7 +382,7 @@ export async function runSmuggling(db: Database, input: RunInput): Promise<RunRe
 			})
 			.returning({ id: smugglingRuns.id });
 
-		return { runId: run.id, outcome, payout, fine, risk: Math.round(risk * 100), message };
+		return { runId: run.id, outcome, payout, fine, risk: Math.round(risk * 100), destinationStateId, message };
 	});
 }
 

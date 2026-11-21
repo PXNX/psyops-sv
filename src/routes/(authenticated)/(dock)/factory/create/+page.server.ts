@@ -10,9 +10,10 @@ import {
 	stateEnergy,
 	states,
 	regionDeposits,
+	productInventory,
 	userWallets
 } from "#lib/server/schema.js";
-import { ECONOMY_CONFIG, MINEABLE_RESOURCES } from "#lib/config/index.js";
+import { ECONOMY_CONFIG, EQUIPMENT, EQUIPMENT_PRODUCTS, FACTORY_EQUIPMENT, MINEABLE_RESOURCES, equipmentForFactory } from "#lib/config/index.js";
 import { getRegionName, formatDateTime } from "#lib/utils/formatting.js";
 import { effectiveEnergy } from "#lib/server/services/military/state-effects.js";
 import { withStrikeEnergy } from "#lib/server/services/military/strike.js";
@@ -25,10 +26,11 @@ const OUTPUTS: Record<string, readonly string[]> = {
 	mine: MINEABLE_RESOURCES,
 	refinery: ["steel", "gunpowder", "fuel", "enriched_uranium"],
 	armaments: ["rifles", "ammunition", "artillery", "vehicles", "explosives"],
-	fabrication: ["chips", "electronics"]
+	fabrication: ["chips", "electronics"],
+	equipment: EQUIPMENT_PRODUCTS
 };
 /** Factory types whose output is a manufactured product rather than a resource. */
-const PRODUCT_FACTORY_TYPES = new Set(["armaments", "fabrication"]);
+const PRODUCT_FACTORY_TYPES = new Set(["armaments", "fabrication", "equipment"]);
 const COOLDOWN_DAYS = 7;
 const ENERGY_REQUIRED = 50;
 
@@ -37,7 +39,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	// All lookups are harmless reads keyed by the account, so run them in parallel;
 	// the checks below still apply in their original order.
-	const [[company], { residence, region }, [wallet], [cooldown], userInventory] = await Promise.all([
+	const [[company], { residence, region }, [wallet], [cooldown], userInventory, userProducts] = await Promise.all([
 		// Get user's company (must own a company to create factories)
 		db.select().from(companies).where(eq(companies.ownerId, account.id)),
 		(async () => {
@@ -79,7 +81,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		// Check cooldown
 		db.select().from(factoryCreationCooldown).where(eq(factoryCreationCooldown.userId, account.id)),
 		// Get user's resource inventory for material requirements
-		db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id))
+		db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
+		db.select().from(productInventory).where(eq(productInventory.userId, account.id))
 	]);
 
 	if (!company) {
@@ -212,6 +215,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 		),
 		regionalTaxes,
 		userInventory: inventoryMap,
+		userEquipment: Object.fromEntries(userProducts.map((p) => [p.productType, p.quantity])),
+		equipmentRules: { ...equipmentForFactory("mine"), wearEvery: FACTORY_EQUIPMENT.WEAR_EVERY_SHIFTS },
 		factoryCost: FACTORY_COST
 	};
 };
@@ -275,6 +280,22 @@ export const actions: Actions = {
 
 		if (!wallet || wallet.balance < FACTORY_COST) {
 			return fail(400, { error: "Insufficient funds" });
+		}
+
+		// A plant cannot be built without the tools to build it. Equipment is a
+		// real product made in an equipment plant (equipment.config.ts).
+		const neededTools = equipmentForFactory(factoryType);
+		const ownedTools = await db.select().from(productInventory).where(eq(productInventory.userId, account.id));
+		const toolCount = (name: string) => ownedTools.find((p) => p.productType === name)?.quantity ?? 0;
+		if (toolCount("machine_tools") < neededTools.machine_tools) {
+			return fail(400, {
+				error: `You need ${neededTools.machine_tools} machine tools to build this plant. Have an equipment plant make them first.`
+			});
+		}
+		if (neededTools.fab_equipment && toolCount("fab_equipment") < neededTools.fab_equipment) {
+			return fail(400, {
+				error: `A fabrication line also needs ${neededTools.fab_equipment} fab equipment.`
+			});
 		}
 
 		// Check resource requirements for armaments factory
@@ -360,6 +381,18 @@ export const actions: Actions = {
 				.where(and(eq(userWallets.userId, account.id), gte(userWallets.balance, FACTORY_COST)))
 				.returning({ id: userWallets.id });
 			if (!paid) return false;
+
+			// The tools are consumed as the plant is assembled.
+			const tools = await tx.select().from(productInventory).where(eq(productInventory.userId, account.id));
+			for (const [name, needed] of Object.entries(neededTools)) {
+				if ((tools.find((p) => p.productType === name)?.quantity ?? 0) < needed) return false;
+			}
+			for (const [name, needed] of Object.entries(neededTools)) {
+				await tx
+					.update(productInventory)
+					.set({ quantity: sql`${productInventory.quantity} - ${needed}`, updatedAt: new Date() })
+					.where(and(eq(productInventory.userId, account.id), eq(productInventory.productType, name as never)));
+			}
 
 			// Deduct resources for armaments factory
 			if (factoryType === "armaments") {

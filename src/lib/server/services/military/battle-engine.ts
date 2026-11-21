@@ -16,8 +16,11 @@ import {
 	MILITARY_UNIT_TEMPLATES,
 	calculateCombatExperienceLoss,
 	getExperienceCombatModifier,
-	sideDomainMultiplier
+	sideDomainMultiplier,
+	roundSupplyCost,
+	unitSupplyModifier
 } from "#lib/config/index.js";
+import { regionSupplies } from "./logistics";
 import { selectEngagedUnits } from "./combat";
 import { applyConquestDamage } from "../politics/construction.service";
 import { battleIntel, type BattleIntel } from "./recon";
@@ -107,6 +110,10 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 		// artillery and air strikes need targeting data, air defence blunts
 		// air strikes, thermal fixes on firing positions enable counter-battery.
 		const intel: BattleIntel = await battleIntel(tx, battle, { attackers, defenders });
+		// Logistics: strikes on bridges and a blockade at sea strangle the flow
+		// into this region. Troops burn their own supply level as they fight.
+		const supplies = await regionSupplies(tx, [battle.regionId]);
+		const regionFactor = supplies.get(battle.regionId)?.factor ?? 1;
 		// Covert ops (additive, see state-effects.ts): morale campaigns, counter-
 		// propaganda and C2 disruption scale each side's whole output.
 		const psy = await battlePsyops(tx, battle);
@@ -123,7 +130,8 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 			Math.floor(
 				(MILITARY_UNIT_TEMPLATES[p.unit.unitType]?.[stat] ?? 0) *
 					getExperienceCombatModifier(p.unit.experience ?? 0) *
-					unitIntelFactor(p.unit.unitType, own, enemy)
+					unitIntelFactor(p.unit.unitType, own, enemy) *
+					unitSupplyModifier(p.unit.supplyLevel ?? 100, regionFactor)
 			);
 		const fortLevel = battle.region.fortifications ?? 0;
 		const fortFactor = 1 - fortificationReduction(fortLevel) / 100;
@@ -188,6 +196,19 @@ export async function processCombatRound(db: Database, battleId: number): Promis
 		// Damage hits the earliest-deployed engaged units first.
 		await applyDamage(tx, defenders, attackerDamage);
 		await applyDamage(tx, attackers, defenderDamage);
+
+		// Every round eats supply; the worse the roads, the faster it runs out.
+		// Units away from their depots get duly weaker in the rounds that follow.
+		const burn = roundSupplyCost(regionFactor);
+		await tx
+			.update(militaryUnits)
+			.set({ supplyLevel: sql`greatest(0, ${militaryUnits.supplyLevel} - ${burn})`, updatedAt: new Date() })
+			.where(
+				inArray(
+					militaryUnits.id,
+					[...attackers, ...defenders].map((p) => p.unit.id)
+				)
+			);
 
 		// Victory: one side has nothing left standing.
 		const standing = async (side: "attacker" | "defender") =>

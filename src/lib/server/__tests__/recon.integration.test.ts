@@ -307,7 +307,7 @@ describe("intel in battle", () => {
 			.where(eq(battleParticipants.battleId, battleId));
 		await handle.db
 			.update(militaryUnits)
-			.set({ experience: 0 })
+			.set({ experience: 0, supplyLevel: 100 })
 			.where(
 				inArray(
 					militaryUnits.id,

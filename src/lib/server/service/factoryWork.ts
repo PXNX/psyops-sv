@@ -16,13 +16,21 @@ import { sendNotificationIfEnabled } from "#lib/server/services/push-notificatio
 import { and, eq, sql } from "drizzle-orm";
 import { extractFromDeposit, isMineable } from "#lib/server/services/economy/mining.js";
 import { addUserItem, takeUserItem } from "#lib/server/services/economy/inventory.js";
-import { SHIFT_RECIPES, gridFactor } from "#lib/config/index.js";
-import { gridDegradation } from "#lib/server/services/military/state-effects.js";
+import { SHIFT_RECIPES, gridFactor, supplyFactor } from "#lib/config/index.js";
+import { gridDegradation, supplyDisruption } from "#lib/server/services/military/state-effects.js";
 import { strikeProductionFactor } from "#lib/server/services/military/strike.js";
 import { aiLevel } from "#lib/server/services/military/ai.js";
 import { aiProductionFactor } from "#lib/config/index.js";
+import { regionSupply } from "#lib/server/services/military/logistics.js";
 import { factoryWaterFactor } from "#lib/config/index.js";
 import { regionsCivilianNeeds } from "#lib/server/services/civilians/supply.js";
+import {
+	efficiencyFactor,
+	dueForWear,
+	nextEfficiency,
+	nextQuality,
+	qualityFactor
+} from "#lib/config/index.js";
 
 const SHIFT_DURATION = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
 
@@ -227,6 +235,9 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			productOutput: factories.productOutput,
 			workerWage: factories.workerWage,
 			productionRate: factories.productionRate,
+			efficiency: factories.efficiency,
+			quality: factories.quality,
+			shiftsCompleted: factories.shiftsCompleted,
 			regionId: factories.regionId,
 			stateId: regions.stateId
 		})
@@ -310,17 +321,28 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 			let resourcesProduced = 0;
 			let netResourceQuantity = 0;
 			let deposit: { remaining: number; capacity: number } | null = null;
-			// Water-hungry companies (steel, refining, fabs) draw on the same
-			// supply as households and throttle when the region runs short.
+			// A grid attack, a poisoned supply chain, an airstrike and a severed
+			// road all cut output. The individual factors are kept so a plant's
+			// efficiency and quality can degrade when any of them bites.
+			// Water-hungry companies (steel, refining, fabs) share the region's
+			// supply with its households and throttle when the taps run low.
 			const waterSufficiency =
 				(await regionsCivilianNeeds(tx, [factory.regionId])).get(factory.regionId)?.water.sufficiency ?? 1;
+			const disruptionFactors = [
+				gridFactor(await gridDegradation(tx, factory.stateId)),
+				supplyFactor(await supplyDisruption(tx, factory.stateId)),
+				await strikeProductionFactor(tx, factory.stateId, factory.regionId),
+				(await regionSupply(tx, factory.regionId)).factor,
+				factoryWaterFactor(factory.productOutput ?? factory.resourceOutput, waterSufficiency)
+			];
 			const grid =
-				gridFactor(await gridDegradation(tx, factory.stateId)) *
-				factoryWaterFactor(factory.productOutput ?? factory.resourceOutput, waterSufficiency) *
-				// Airstrikes on the grid and on the region's industry do the same.
-				(await strikeProductionFactor(tx, factory.stateId, factory.regionId)) *
+				disruptionFactors.reduce((product, f) => product * f, 1) *
 				// AI-assisted planning wastes less material (ai.config.ts).
-				aiProductionFactor(await aiLevel(tx, factory.stateId));
+				aiProductionFactor(await aiLevel(tx, factory.stateId)) *
+				// A plant learns from every clean shift; a worn-out one makes less.
+				efficiencyFactor(factory.efficiency ?? 50) *
+				// Damage and shortages lower the quality of what it makes.
+				qualityFactor(factory.quality ?? 90);
 			if (factory.factoryType === "mine" && isMineable(factory.resourceOutput)) {
 				// Output depends on the region's deposit and the state's exploitation law.
 				const extraction = await extractFromDeposit(
@@ -398,18 +420,21 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				const recipe = item ? SHIFT_RECIPES[item] : undefined;
 				if (item && recipe) {
 					let missing: string | undefined;
-					for (const [resource, needed] of Object.entries(recipe.inputs)) {
-						if (!(await takeUserItem(tx, factory.ownerId, "resource", resource, needed!))) {
-							missing = resource;
+					const taken: { type: "resource" | "product"; name: string; amount: number }[] = [];
+					for (const [input, needed] of Object.entries(recipe.inputs)) {
+						// Inputs may be raw materials or finished products (e.g.
+						// fab equipment needs chips and machine tools).
+						const asResource = await takeUserItem(tx, factory.ownerId, "resource", input, needed!);
+						const asProduct = asResource ? false : await takeUserItem(tx, factory.ownerId, "product", input, needed!);
+						if (!asResource && !asProduct) {
+							missing = input;
 							break;
 						}
+						taken.push({ type: asResource ? "resource" : "product", name: input, amount: needed! });
 					}
 					if (missing) {
 						// Put back anything already taken: all or nothing.
-						for (const [resource, needed] of Object.entries(recipe.inputs)) {
-							if (resource === missing) break;
-							await addUserItem(tx, factory.ownerId, "resource", resource, needed!);
-						}
+						for (const t of taken) await addUserItem(tx, factory.ownerId, t.type, t.name, t.amount);
 						output = { item, quantity: 0, missing };
 					} else {
 						const type = factory.productOutput ? "product" : "resource";
@@ -419,6 +444,30 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 					}
 				}
 			}
+
+			// A plant learns from clean shifts and loses know-how when its inputs
+			// or its tools run out. Attacks on the grid or the supply line chip
+			// away both output and quality (equipment.config.ts).
+			const shiftsCompleted = (factory.shiftsCompleted ?? 0) + 1;
+			let toolsWorn = true;
+			if (dueForWear(shiftsCompleted)) {
+				toolsWorn = await takeUserItem(tx, factory.ownerId, "product", "machine_tools", 1);
+			}
+			const produced = factory.factoryType === "mine" ? resourcesProduced > 0 : (output?.quantity ?? 0) > 0;
+			const supplied = produced && toolsWorn;
+			const newEfficiency = nextEfficiency(factory.efficiency ?? 50, {
+				supplied,
+				disruptions: disruptionFactors
+			});
+			const newQuality = nextQuality(factory.quality ?? 90, newEfficiency, supplied);
+			await tx
+				.update(factories)
+				.set({
+					efficiency: newEfficiency,
+					quality: newQuality,
+					shiftsCompleted
+				})
+				.where(eq(factories.id, factory.id));
 
 			// Record transaction for worker
 			const [currentWallet] = await tx
@@ -435,7 +484,7 @@ export async function collectWages(userId: string, factoryId: number): Promise<C
 				relatedEntityId: factoryId
 			});
 
-			return { incomeTaxResult, miningTaxResult, resourcesProduced, deposit, output };
+			return { incomeTaxResult, miningTaxResult, resourcesProduced, deposit, output, efficiency: newEfficiency, quality: newQuality };
 		});
 	} catch (err) {
 		if (err instanceof AlreadyCollected) return { success: false, error: "This shift has already been collected." };

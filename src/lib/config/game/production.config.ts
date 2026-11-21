@@ -33,6 +33,18 @@ export const PRODUCTION_RECIPES = {
 		inputs: { silicon: 8, rare_earth: 3, copper: 2 },
 		output: 5,
 		duration: 4 * 60 * 60
+	},
+	// Industrial equipment: the shared and specialized kit every plant needs
+	// before it can be built, and wears out while it runs.
+	machine_tools: {
+		inputs: { steel: 20, iron: 10, copper: 5 },
+		output: 3,
+		duration: 6 * 60 * 60
+	},
+	fab_equipment: {
+		inputs: { machine_tools: 2, chips: 5, rare_earth: 3 },
+		output: 1,
+		duration: 10 * 60 * 60
 	}
 } as const;
 

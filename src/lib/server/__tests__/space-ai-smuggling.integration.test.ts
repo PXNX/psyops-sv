@@ -3,7 +3,7 @@
 // attribution, AI levels paid in chips and rare earths, and smuggling routes
 // whose runs can be delivered or seized.
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
 import {
 	governmentBudgetTransactions,
@@ -58,6 +58,8 @@ const draws = (...xs: number[]) => {
 	let i = 0;
 	return () => xs[Math.min(i++, xs.length - 1)]!;
 };
+
+const resultTargetState = () => sylvania;
 
 const balance = async (stateId: number) =>
 	Number((await handle.db.select().from(stateTreasury).where(eq(stateTreasury.stateId, stateId)))[0]!.balance);
@@ -210,22 +212,34 @@ describe("smuggling", () => {
 	it("delivers a run: cargo is taken and the runner is paid", async () => {
 		const route = (await routesForState(handle.db, freedonia))[0]!;
 		const walletBefore = Number((await handle.db.select().from(userWallets).where(eq(userWallets.userId, runner)))[0]?.balance ?? 0);
+		const [targetStockBefore] = await handle.db
+			.select({ quantity: stateProductInventory.quantity })
+			.from(stateProductInventory)
+			.where(and(eq(stateProductInventory.stateId, sylvania), eq(stateProductInventory.productType, "chips")));
 		const result = await runSmuggling(handle.db, { userId: runner, routeId: route.id, quantity: 10, rng: draws(0.99, 0.5), now: at(10) });
 		expect(result.outcome).toBe("delivered");
 		expect(result.payout).toBeGreaterThan(0);
 		const walletAfter = Number((await handle.db.select().from(userWallets).where(eq(userWallets.userId, runner)))[0]?.balance ?? 0);
 		expect(walletAfter).toBe(walletBefore + result.payout);
 		expect((await runsByUser(handle.db, runner)).length).toBe(1);
+		const [targetStockAfter] = await handle.db
+			.select({ quantity: stateProductInventory.quantity })
+			.from(stateProductInventory)
+			.where(and(eq(stateProductInventory.stateId, sylvania), eq(stateProductInventory.productType, "chips")));
+		expect(targetStockAfter?.quantity ?? 0).toBe((targetStockBefore?.quantity ?? 0) + 10);
+		expect(result.destinationStateId).toBe(route.originStateId === freedonia ? sylvania : freedonia);
 	});
 
 	it("seizes a run: the cargo is lost and a fine is paid", async () => {
 		const route = (await routesForState(handle.db, freedonia))[0]!;
 		const walletBefore = Number((await handle.db.select().from(userWallets).where(eq(userWallets.userId, runner)))[0]?.balance ?? 0);
+		const targetBefore = await balance(resultTargetState());
 		const result = await runSmuggling(handle.db, { userId: runner, routeId: route.id, quantity: 5, rng: draws(0, 0), now: at(20) });
 		expect(result.outcome).toBe("seized");
 		expect(result.fine).toBeGreaterThan(0);
 		const walletAfter = Number((await handle.db.select().from(userWallets).where(eq(userWallets.userId, runner)))[0]?.balance ?? 0);
 		expect(walletAfter).toBe(Math.max(0, walletBefore - result.fine));
+		expect(await balance(resultTargetState())).toBe(targetBefore + result.fine);
 		expect((await handle.db.select().from(transactionHistory).where(eq(transactionHistory.transactionType, "smuggling_fine"))).length).toBe(1);
 	});
 
