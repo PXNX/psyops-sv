@@ -13,7 +13,7 @@
 	import IconClock from "~icons/fluent/clock-24-filled";
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import * as m from "#lib/paraglide/messages.js";
-	import { getExperienceLevel } from "#lib/config/index.js";
+	import { canCoverManpower, getExperienceLevel, manpowerCostOf } from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { confirmSubmit } from "#lib/ui/confirm-submit.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
@@ -70,7 +70,8 @@
 			(data.inventory.products.ammunition || 0) >= template.ammunitionCost &&
 			(data.inventory.products.artillery || 0) >= template.artilleryCost &&
 			(data.inventory.products.vehicles || 0) >= template.vehiclesCost &&
-			(data.inventory.products.explosives || 0) >= template.explosivesCost
+			(data.inventory.products.explosives || 0) >= template.explosivesCost &&
+			canCoverManpower(data.availableManpower ?? 0, manpowerCostOf(template.unitType))
 		);
 	}
 
@@ -393,6 +394,12 @@
 							</div>
 
 							<ResourceRequirements costs={getTemplateCosts(selectedTemplate)} available={getAvailableResources()} />
+
+							<p class="mt-3 text-[10px] uppercase tracking-[0.2em] text-fg-muted">
+								Manpower
+								<span class="font-mono text-fg">{manpowerCostOf(selectedTemplate.unitType).toLocaleString()} civilians</span>
+								· {data.availableManpower.toLocaleString()} in region
+							</p>
 
 							<form
 								method="POST"

@@ -24,6 +24,7 @@ import {
 	EXERCISE_CONFIG,
 	calculateExerciseExperienceGain
 } from "#lib/config/index.js";
+import { manpowerCheck, regionManpower, reserveManpower } from "#lib/server/services/military/manpower.js";
 
 type ResourceType =
 	| "iron"
@@ -145,10 +146,12 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	const isIndependentRegion = !residence.stateId;
 	const isTraveling = !!activeTravel;
+	const availableManpower = await regionManpower(db, residence.regionId);
 
 	return {
 		units,
 		templates: MILITARY_UNIT_TEMPLATES,
+		availableManpower,
 		exerciseConfig: EXERCISE_CONFIG,
 		residence: {
 			regionId: residence.regionId,
@@ -382,6 +385,15 @@ export const actions: Actions = {
 			return fail(400, { error: availabilityCheck.error });
 		}
 
+		// Recruiting also costs civilians: the region must have enough people
+		// above the population floor to spare for a new unit.
+		const manpower = await manpowerCheck(db, residence.regionId, unitType);
+		if (!manpower.enough) {
+			return fail(400, {
+				error: `Not enough civilians to recruit this unit. It needs ${manpower.cost.toLocaleString()} people; the region has ${manpower.available.toLocaleString()} spare.`
+			});
+		}
+
 		// Get existing units for name generation
 		const existingUnits = await db.select().from(militaryUnits).where(eq(militaryUnits.ownerId, account.id));
 		const unitName = generateUnitName(template.unitType, existingUnits);
@@ -389,6 +401,7 @@ export const actions: Actions = {
 		try {
 			await db.transaction(async (tx) => {
 				await deductResources(tx, account.id, template);
+				await reserveManpower(tx, residence.regionId, manpower.cost);
 
 				const trainingStartedAt = new Date();
 				const trainingCompletesAt = new Date(trainingStartedAt.getTime() + template.trainingDuration * 3600000);

@@ -25,6 +25,8 @@ import {
 	MILITARY_UNIT_TEMPLATES,
 	type MilitaryUnitTemplate
 } from "#lib/config/index.js";
+import { canCoverManpower, manpowerCostOf } from "#lib/config/index.js";
+import { reserveManpower, regionManpower } from "#lib/server/services/military/manpower.js";
 import { calculateShiftStatus, collectWages, startWorkShift } from "#lib/server/service/factoryWork.js";
 import { sendSystemNotification } from "#lib/server/service/inbox.js";
 import { and, eq, sql, gt, isNotNull } from "drizzle-orm";
@@ -309,8 +311,13 @@ async function automateTraining(accountId: string, summary: AutomationSummary): 
 	const resourceMap = new Map(resources.map((r) => [r.resourceType, r.quantity]));
 	const productMap = new Map(products.map((p) => [p.productType, p.quantity]));
 
+	// A unit also needs bodies: the region's civilian manpower pool must be
+	// able to spare the recruits above the population floor.
+	const civilians = await regionManpower(db, residence.regionId);
 	const affordable = Object.values(MILITARY_UNIT_TEMPLATES)
-		.filter((t) => canAffordUnit(t, balance, resourceMap, productMap))
+		.filter(
+			(t) => canAffordUnit(t, balance, resourceMap, productMap) && canCoverManpower(civilians, manpowerCostOf(t.unitType))
+		)
 		.sort((a, b) => a.currencyCost - b.currencyCost)[0];
 	if (!affordable) return;
 
@@ -353,6 +360,8 @@ async function automateTraining(accountId: string, summary: AutomationSummary): 
 				.set({ quantity: sql`${productInventory.quantity} - ${amount}`, updatedAt: new Date() })
 				.where(and(eq(productInventory.userId, accountId), eq(productInventory.productType, type)));
 		}
+
+		await reserveManpower(tx, residence.regionId, manpowerCostOf(affordable.unitType));
 
 		const startedAt = new Date();
 		await tx.insert(militaryUnits).values({
