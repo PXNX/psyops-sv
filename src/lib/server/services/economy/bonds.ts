@@ -7,7 +7,7 @@
 // No SvelteKit virtual modules at the top level: integration tests import this
 // file directly.
 
-import { and, eq, gte, innerJoin, isNull, lte, sql } from "drizzle-orm";
+import { and, eq, gte, isNull, lte, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import { states, stateTreasury } from "../../schema";
 import { bondCoupons, stateBonds } from "../../schema-investments";
@@ -149,7 +149,10 @@ export async function runBondCoupons(db: Database, now = new Date()) {
 }
 
 /** Cash in a bond early: the principal comes back, but no coupon is earned. */
-export async function redeemBond(db: Database, { bondId, userId, now = new Date() }) {
+export async function redeemBond(
+	db: Database,
+	{ bondId, userId, now = new Date() }: { bondId: number; userId: string; now?: Date }
+) {
 	return db.transaction(async (tx) => {
 		const [bond] = await tx
 			.select()

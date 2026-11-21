@@ -20,7 +20,7 @@ export const GET: RequestHandler = async () => {
 		}
 		const bonds = await runBondCoupons(db, now);
 		const earnings = await generateEarningsReports(db, now);
-		return cronResponse("earnings", { skipped: false, ...bonds, ...earnings }, bonds.skipped);
+		return cronResponse("earnings", { ...bonds, ...earnings }, bonds.skipped);
 	} catch (error) {
 		return cronCrash("earnings", error);
 	}

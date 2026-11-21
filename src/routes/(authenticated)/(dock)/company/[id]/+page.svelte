@@ -9,6 +9,7 @@
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { getRegionName, formatDate, regionCoatUrl } from "#lib/utils/formatting.js";
+	import { dtgDate } from "#lib/utils/dtg.js";
 	import FluentBuilding20Filled from "~icons/fluent/building-20-filled";
 	import FluentFactory20Filled from "~icons/fluent/building-factory-20-filled";
 	import FluentEdit20Filled from "~icons/fluent/edit-20-filled";
@@ -280,9 +281,9 @@
 				>
 					<label class="field-label flex justify-between" for="amount">
 						<span>Pay in from wallet</span>
-						<span class="text-positive-fg flex items-center gap-1"
-							><FluentMoney20Filled class="size-3.5" />{money(data.ownerBalance)}</span
-						>
+						<span class="text-positive-fg flex items-center gap-1">
+							<FluentMoney20Filled class="size-3.5" />{money(data.ownerBalance)}
+						</span>
 					</label>
 					<div class="flex gap-2">
 						<input
@@ -498,9 +499,9 @@
 								<div class="min-w-0 flex-1">
 									<p class="font-mono text-base font-bold text-primary-fg">
 										${listing.pricePerUnit.toLocaleString()}
-										<span class="font-sans text-xs font-normal text-fg-muted"
-											>× {listing.quantity.toLocaleString()}</span
-										>
+										<span class="font-sans text-xs font-normal text-fg-muted">
+											× {listing.quantity.toLocaleString()}
+										</span>
 									</p>
 									{#if listing.isMine}
 										<Badge tone="amber" size="xs">Your offer</Badge>
@@ -624,6 +625,45 @@
 		/>
 	{/if}
 
+	<!-- Fortnightly earnings, published by the investment cron. -->
+	<section class="panel rounded-sm p-4">
+		<h2 class="section-title mb-3">Earnings reports</h2>
+		{#if !data.earnings.length}
+			<p class="text-sm text-fg-muted">The next report is published at the fortnightly close.</p>
+		{:else}
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm">
+					<thead>
+						<tr class="text-left text-[10px] uppercase tracking-wide text-fg-muted">
+							<th class="py-1.5 pr-3 font-medium">Period ended</th>
+							<th class="py-1.5 pr-3 font-medium text-right">Revenue</th>
+							<th class="py-1.5 pr-3 font-medium text-right">Costs</th>
+							<th class="py-1.5 pr-3 font-medium text-right">Profit</th>
+							<th class="py-1.5 font-medium text-right">Dividends</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-line/15">
+						{#each data.earnings as report (report.id)}
+							<tr>
+								<td class="py-2 pr-3 font-mono text-xs text-fg-soft">{dtgDate(report.periodEnd)}</td>
+								<td class="py-2 pr-3 text-right font-mono text-xs">{report.revenue.toLocaleString()}</td>
+								<td class="py-2 pr-3 text-right font-mono text-xs text-fg-muted">{report.expenses.toLocaleString()}</td>
+								<td
+									class="py-2 pr-3 text-right font-mono text-xs {report.profit >= 0
+										? 'text-positive-fg'
+										: 'text-hostile-fg'}"
+								>
+									{report.profit.toLocaleString()}
+								</td>
+								<td class="py-2 text-right font-mono text-xs">{report.dividendsPaid.toLocaleString()}</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			</div>
+		{/if}
+	</section>
+
 	<!-- Output schedule (owner) -->
 	{#if data.isOwner && data.resourceProduction.length > 0}
 		<section class="panel rounded-sm p-5 sm:p-6">
@@ -701,12 +741,12 @@
 						</div>
 
 						<div class="mt-3 pt-3 border-t border-line/10 flex flex-wrap gap-x-4 gap-y-1 text-xs">
-							<span class="text-fg-muted"
-								>Wage <span class="font-mono text-positive-fg">{factory.workerWage.toLocaleString()}</span></span
-							>
-							<span class="text-fg-muted"
-								>Output <span class="font-mono text-friendly-fg">{factory.productionRate}/shift</span></span
-							>
+							<span class="text-fg-muted">
+								Wage <span class="font-mono text-positive-fg">{factory.workerWage.toLocaleString()}</span>
+							</span>
+							<span class="text-fg-muted">
+								Output <span class="font-mono text-friendly-fg">{factory.productionRate}/shift</span>
+							</span>
 							{#if data.isOwner && factory.lastWorked}
 								<span class="text-fg-muted sm:ml-auto">Last shift {formatDate(factory.lastWorked)}</span>
 							{/if}

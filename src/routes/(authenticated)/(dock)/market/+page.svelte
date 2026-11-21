@@ -8,7 +8,7 @@
 	import PriceChart from "./PriceChart.svelte";
 	import Sparkline from "./Sparkline.svelte";
 	import { DAY, HOUR, money, type SeriesPoint } from "./series";
-	import { dtgShortDate, dtgTime } from "#lib/utils/dtg.js";
+	import { dtgDate, dtgShortDate, dtgTime } from "#lib/utils/dtg.js";
 
 	let { data } = $props();
 
@@ -74,13 +74,14 @@
 					<span class="min-w-0">
 						<span
 							class="block font-sans text-lg sm:text-xl font-semibold capitalize text-fg group-hover:text-primary-fg transition-colors truncate"
-							>{hero.name}</span
 						>
+							{hero.name}
+						</span>
 						<span class="flex items-center gap-2">
 							{#key heroPrice}
-								<span class="animate-tick font-mono text-lg font-bold tabular-nums text-fg"
-									>{heroPrice !== null ? money(heroPrice) : "—"}</span
-								>
+								<span class="animate-tick font-mono text-lg font-bold tabular-nums text-fg">
+									{heroPrice !== null ? money(heroPrice) : "—"}
+								</span>
 							{/key}
 							{#if hover}
 								<span class="font-mono text-xs text-fg-muted">{weekTime(hover.t)}</span>
@@ -110,9 +111,9 @@
 								<ResourceIcon name={m.name} class="size-4" />
 								<span class="capitalize">{m.name}</span>
 								{#if pct !== null}
-									<span class="font-mono tabular-nums {pct >= 0 ? 'text-positive' : 'text-hostile'}"
-										>{pct >= 0 ? "+" : ""}{pct.toFixed(1)}%</span
-									>
+									<span class="font-mono tabular-nums {pct >= 0 ? 'text-positive' : 'text-hostile'}">
+										{pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
+									</span>
 								{/if}
 							</button>
 						{/each}
@@ -157,8 +158,9 @@
 								<span class="min-w-0 flex-1">
 									<span
 										class="block text-sm font-semibold capitalize text-fg group-hover:text-primary-fg transition-colors truncate"
-										>{q.name}</span
 									>
+										{q.name}
+									</span>
 									<span class="block text-xs text-fg-muted truncate">
 										{#if q.held}<span class="font-mono text-fg-soft">{q.held.toLocaleString()}</span> held{/if}
 										{#if q.held && q.unitsOnOffer}·{/if}
@@ -193,4 +195,28 @@
 			</section>
 		{/each}
 	</div>
+
+	<!-- Earnings pulse: the fortnightly reports that move the quotes above. -->
+	{#if data.earnings.length}
+		<section class="panel rounded-sm p-4">
+			<h2 class="section-title mb-3">Earnings pulse</h2>
+			<ul class="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+				{#each data.earnings as report (report.id)}
+					<li class="panel-muted rounded-sm p-3 min-w-0">
+						<a
+							href="/company/{report.companyId}"
+							class="block truncate text-sm font-semibold text-fg hover:text-primary-fg"
+						>
+							{report.companyName}
+						</a>
+						<p class="font-mono text-[10px] text-fg-muted">{dtgDate(report.periodEnd)}</p>
+						<p class="mt-2 font-mono text-sm font-bold {report.profit >= 0 ? 'text-positive-fg' : 'text-hostile-fg'}">
+							{report.profit >= 0 ? "+" : ""}{money(report.profit)}
+						</p>
+						<p class="text-[11px] text-fg-muted">dividends {money(report.dividendsPaid)}</p>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
 </PageContainer>

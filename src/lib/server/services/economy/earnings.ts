@@ -85,7 +85,7 @@ export async function generateEarningsReports(db: Database, now = new Date()) {
 			// A worker on the payroll for the window runs one shift a day.
 			const shifts = workers.filter((w) => new Date(w.hiredAt) <= periodEnd).length * EARNINGS_PERIOD_DAYS;
 			const output = factory.productionRate * shifts;
-			for (const worker of workers) expenses += worker.wageAtShiftStart * EARNINGS_PERIOD_DAYS;
+			for (const worker of workers) expenses += (worker.wageAtShiftStart ?? 0) * EARNINGS_PERIOD_DAYS;
 			revenue += (BASE_VALUES[factory.resourceOutput ?? ""] ?? 0) * output;
 			if (factory.productOutput) revenue += (BASE_VALUES[factory.productOutput] ?? 0) * output;
 		}

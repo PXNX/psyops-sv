@@ -40,6 +40,7 @@ import {
 	dividendOverview,
 	setDividendPolicy
 } from "#lib/server/services/economy/dividends.js";
+import { companyEarnings } from "#lib/server/services/economy/earnings.js";
 import type { PageServerLoad, Actions } from "./$types";
 
 // Edit cost/cooldown for the "Edit Company" bottom sheet — ported as-is from the
@@ -428,6 +429,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		topHolders,
 		floatOutstanding,
 		dividends,
+		earnings: await companyEarnings(db, companyId),
 		dividendConfig: {
 			cooldownHours: ECONOMY_CONFIG.DIVIDEND_COOLDOWN_HOURS,
 			minPerShare: ECONOMY_CONFIG.DIVIDEND_MIN_PER_SHARE,

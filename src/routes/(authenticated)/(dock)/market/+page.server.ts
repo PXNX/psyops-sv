@@ -4,6 +4,7 @@ import { eq, min, sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 import { loadCandles, loadLastPricesBefore } from "./price-history.server";
 import { buildSeries, changePct, DAY, HOUR, type SeriesPoint } from "./series";
+import { earningsPulse } from "#lib/server/services/economy/earnings.js";
 
 const RESOURCES = ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as const;
 const PRODUCTS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as const;
@@ -75,6 +76,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
 	return {
 		now,
+		earnings: await earningsPulse(db),
 		wallet: wallet || { balance: 10000, userId: account.id },
 		groups: [
 			{ title: "Raw materials", quotes: RESOURCES.map(quote) },
