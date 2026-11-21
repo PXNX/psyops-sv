@@ -59,6 +59,7 @@ import {
 	smugglingAuthority
 } from "#lib/server/services/economy/smuggling.js";
 import { viewerSide } from "#lib/server/services/military/recon.js";
+import { stateAutonomy } from "#lib/server/services/economy/autonomy.js";
 import { stateSupply } from "#lib/server/services/military/logistics.js";
 import {
 	ConvoyError,
