@@ -1,0 +1,22 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"skipLibCheck": true
+	},
+	"include": [
+		".svelte-kit/**/*.d.ts",
+		"src/lib/server/moderation/**/*.ts",
+		"src/lib/utils/moderation.ts",
+		"src/lib/server/service/inbox.ts",
+		"src/routes/moderation/+page.server.ts",
+		"src/routes/admin/+layout.server.ts",
+		"src/routes/admin/+page.server.ts",
+		"src/routes/admin/flags/+page.server.ts",
+		"src/routes/admin/users/+page.server.ts",
+		"src/routes/(authenticated)/(dock)/my-moderation/+page.server.ts",
+		"src/routes/(authenticated)/(dock)/moderators/+page.server.ts",
+		"src/routes/(authenticated)/(dock)/moderators/actions/+page.server.ts"
+	],
+	"exclude": []
+}
