@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Civilian manpower: recruiting a unit draws people from its home region, and
+  a region without enough spare civilians above the population floor cannot raise it
+- Civilian workers fill factories' free shifts each week, earning wages from the
+  company budget, generating revenue and paying income tax into the state treasury
 - Civilian supply: food, electricity, heat and water are now basic needs that
   regions must meet for their people. Shortages from blockades, grid attacks,
   cold terrain and poisoned water sour opinion and stability and, when severe,

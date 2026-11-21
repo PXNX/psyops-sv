@@ -109,6 +109,16 @@ births against mortality from war, harsh extraction, conscription and
 instability-driven emigration. Strike casualties are applied at once by
 `reduceRegionPopulation`, and a floor keeps a region from ever emptying fully.
 
+Civilians are also the workforce and the army. Raising a unit pulls a fixed
+number of people out of its home region (`manpower.config.ts`), so a large
+standing army drains the same pool that works the factories — and pushes the
+conscription pressure that sours stability. Each week, every factory fills the
+shifts its player roster cannot with civilians from its region: the company
+earns revenue from their output, pays them out of its budget, and the state
+takes income tax on their wages (`services/economy/civilian-work.ts`,
+`/api/cron/workforce`). A company that cannot pay employs fewer people; a
+region whose people have been drafted or killed has fewer to give.
+
 ## Setup
 
 ### Prerequisites
