@@ -147,6 +147,7 @@ interface Vars {
 	who: string;
 	dept: string;
 	word: string;
+	dateLine: () => string;
 }
 
 const CONTENT: Content[] = [
