@@ -13,6 +13,7 @@ A SvelteKit application with Google OAuth, PostgreSQL and Bun, presented through
 - **Cascading cyber effects**: communications intercept sharpens recon and gives strike planners the target's true order of battle; air-defence spoofing blinds radars so drones and strikes get through; supply-chain attacks throttle factory output. Grid and C2 attacks still brown out industry and jam sensors.
 - **Mobile Optimized**: Responsive layout for seamless experience across devices.
 - **Five-domain warfare**: Land, sea, air, space and cyber all shape the same war, from amphibious landings to GPS-guided strikes. See [Five domains](#five-domains).
+- **Cabinet and research**: presidents and paired minister portfolios run the state, blocs add High Representatives, and research buys lasting advantages in health, defence, AI, power and industry. See [Cabinet and research](#cabinet-and-research).
 
 ## Five domains
 
@@ -110,6 +111,31 @@ and rare earths into chips, then electronics. Power plants include geothermal
 and fusion alongside coal, gas, nuclear, solar, wind and hydro, and a diverse
 grid runs more efficiently than a single-source one. See `energy.config.ts`,
 `industry.config.ts` and `resources.config.ts`.
+
+## Cabinet and research
+
+A state is run by a **president** and four **ministers**, each covering a pair
+of ministries: **Science & Health**, **Economy & Energy**, **Foreign & Trade**
+and **Defence & Interior**. A person may hold several ministries — even from
+different portfolios — without giving up any of them. A bloc has a leader and
+four **High Representatives** mirroring the same portfolios; a representative
+speaks for their own field, while the leader speaks for the whole bloc. The
+offices, their titles and the ministry mapping live in `government.config.ts`,
+and `services/government/authority.ts` derives every office a player holds
+from one place.
+
+**Research** (`research.config.ts`) is the long game behind the domains.
+Fourteen fields — public health, antivirus and bio-defence, pharmaceuticals,
+power efficiency, production methods, fabrication, AI, trade networks, supply
+chains, land/air/naval defence, space systems and interior security — advance in
+levels. Each field has a rising treasury cost and a few fields require another
+field first, so a state has to choose what to study. Levels give a compounding
+bonus to the matching domain: healthier civilians, better epidemic defences,
+cheaper power, more factory output, sharper AI and space systems. Presidents
+and the minister responsible for a portfolio can fund a field; the treasury is
+charged and every level is recorded in the government ledger
+(`services/government/research.ts`). Labs and a good AI programme also bank
+research points for the daily tick.
 
 ## Civilians, opinion and regime stability
 

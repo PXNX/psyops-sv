@@ -19,7 +19,18 @@ import {
 // --- ENUMS ---
 export const journalistRankEnum = pgEnum("journalist_rank", ["author", "editor", "owner"]);
 export const userRoleEnum = pgEnum("user_role", ["user", "moderator", "admin"]);
-export const ministryTypeEnum = pgEnum("ministry_type", ["economy", "defense", "foreign_affairs"]);
+// Four cabinet portfolios, each covering a pair of ministries. The first three
+// are the historic values kept for existing rows; the rest are additive.
+export const ministryTypeEnum = pgEnum("ministry_type", [
+	"economy",
+	"defense",
+	"foreign_affairs",
+	"science",
+	"health",
+	"energy",
+	"trade",
+	"interior"
+]);
 export const resourceTypeEnum = pgEnum("resource_type", [
 	"iron",
 	"copper",
@@ -170,7 +181,9 @@ export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_tra
 	"infrastructure_repair",
 	"trade_lane",
 	"zone_closure",
-	"trade_revenue"
+	"trade_revenue",
+	// Research levels funded from the treasury (services/government/research.ts)
+	"research"
 ]);
 
 export const battlePhaseEnum = pgEnum("battle_phase", [
@@ -1075,6 +1088,29 @@ export const stateTreasury = pgTable("state_treasury", {
 	updatedAt: timestamp("updated_at").defaultNow().notNull()
 });
 
+// Completed research levels and banked points, one row per state and area.
+// An absent row means level zero with no progress.
+export const stateResearch = pgTable(
+	"state_research",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		stateId: integer("state_id")
+			.notNull()
+			.references(() => states.id, { onDelete: "cascade" }),
+		area: text("area").notNull(),
+		level: integer("level").default(0).notNull(),
+		points: integer("points").default(0).notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull()
+	},
+	(t) => ({
+		stateAreaIdx: uniqueIndex("idx_state_research_unique").on(t.stateId, t.area)
+	})
+);
+
+export const stateResearchRelations = relations(stateResearch, ({ one }) => ({
+	state: one(states, { fields: [stateResearch.stateId], references: [states.id] })
+}));
+
 // What a state's civilians think of a foreign state. One row per pair, created
 // only when something happens (war, strikes, a bailout); an absent row is
 // neutral. `observerStateId` owns the civilians, `targetStateId` is judged.
@@ -1357,6 +1393,7 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 	governorships: many(governors),
 	presidencies: many(presidents),
 	ministries: many(ministers),
+	blocHighRepresentatives: many(blocHighRepresentatives),
 	parliamentSeats: many(parliamentMembers),
 	medalsReceived: many(userMedals, { relationName: "medal_recipient" }),
 	medalsAwarded: many(userMedals, { relationName: "medal_awarder" }),
@@ -1384,6 +1421,7 @@ export const statesRelations = relations(states, ({ one, many }) => ({
 		references: [presidents.stateId]
 	}),
 	ministers: many(ministers),
+	research: many(stateResearch),
 	parliamentMembers: many(parliamentMembers),
 	parties: many(politicalParties),
 	treasury: one(stateTreasury, {
@@ -1543,7 +1581,10 @@ export const blocs = pgTable("blocs", {
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
-export const blocsRelations = relations(blocs, ({ many }) => ({ states: many(states) }));
+export const blocsRelations = relations(blocs, ({ many }) => ({
+	states: many(states),
+	highRepresentatives: many(blocHighRepresentatives)
+}));
 
 export const blocLeaders = pgTable("bloc_leaders", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
@@ -1571,6 +1612,28 @@ export const blocDiplomats = pgTable(
 	},
 	(t) => ({
 		userBlocIdx: uniqueIndex("idx_bloc_diplomat_unique").on(t.userId, t.blocId)
+	})
+);
+
+// A bloc mirrors the four cabinet portfolios with High Representatives. One
+// person may hold several portfolios, and may also lead a member state's
+// government — the unique indexes only stop two people holding the same seat.
+export const blocHighRepresentatives = pgTable(
+	"bloc_high_representatives",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		userId: text("user_id")
+			.notNull()
+			.references(() => accounts.id, { onDelete: "cascade" }),
+		blocId: integer("bloc_id")
+			.notNull()
+			.references(() => blocs.id, { onDelete: "cascade" }),
+		portfolio: text("portfolio").notNull(),
+		appointedAt: timestamp("appointed_at").defaultNow().notNull()
+	},
+	(t) => ({
+		userBlocPortfolioIdx: uniqueIndex("idx_bloc_high_rep_unique").on(t.userId, t.blocId, t.portfolio),
+		blocPortfolioIdx: uniqueIndex("idx_bloc_high_rep_portfolio_unique").on(t.blocId, t.portfolio)
 	})
 );
 
@@ -2224,6 +2287,7 @@ export const statesRelationsUpdated = relations(states, ({ one, many }) => ({
 		references: [presidents.stateId]
 	}),
 	ministers: many(ministers),
+	research: many(stateResearch),
 	parliamentMembers: many(parliamentMembers),
 	parties: many(politicalParties),
 	treasury: one(stateTreasury, {

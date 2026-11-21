@@ -35,3 +35,5 @@ export * from "./game/workforce.config";
 export * from "./game/conscription.config";
 export * from "./game/hospitals.config";
 export * from "./game/civilian-supply.config";
+export * from "./game/government.config";
+export * from "./game/research.config";

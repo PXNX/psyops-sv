@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Research: fourteen fields across public health, bio-defence, power efficiency,
+  production, AI, trade, land/air/naval defence, space and interior security.
+  Fields have rising costs and prerequisites, are paid from the treasury and
+  give a compounding effect to the domain they study
+- Cabinet government: a president and four paired minister portfolios (Science &
+  Health, Economy & Energy, Foreign & Trade, Defence & Interior) drawn from eight
+  ministries. Blocs mirror them with a leader and four High Representatives, and
+  one person may hold several offices at once
 - Supply autonomy: factory inputs are sourced domestically, from bloc partners, via trade lanes or not at all; dependence cuts output and quality, and blockade/closure throttles lane-reliant lines
 - Conscription bands derived from the share of a state under arms now reduce the
   available workforce and birth rate, raise mortality and sour regime stability
