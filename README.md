@@ -2,6 +2,8 @@
 
 A SvelteKit application with Google OAuth, PostgreSQL and Bun, presented through a dark editorial field-ledger interface and optimized for mobile devices.
 
+**PsyOps** stands for _psychological operations_ — the name reflects the game's focus on influence, deception and intelligence as much as on combat. **PsyOps SV** is a World War III simulation: players run a state through a global conflict across land, sea, air, space and cyber, managing industry, diplomacy, covert action and information warfare while the world's armies fight.
+
 ## Features
 
 - **Google OAuth**: Secure authentication via Google.
