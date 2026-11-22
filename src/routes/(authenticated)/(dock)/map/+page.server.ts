@@ -21,7 +21,7 @@ import {
 	navalMines
 } from "#lib/server/schema.js";
 import { sql, eq, and, inArray } from "drizzle-orm";
-import { seaPicture } from "#lib/server/services/military/sea-intel.js";
+import { SeaIntelError, launchSeaIntel, seaIntelOptions, seaPicture } from "#lib/server/services/military/sea-intel.js";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
 import {
@@ -232,6 +232,25 @@ export const actions: Actions = {
 			throw err;
 		}
 		return { success: true };
+	},
+	launchSeaIntel: async ({ request, locals }) => {
+		const form = await request.formData();
+		const sensor = String(form.get("sensor") ?? "");
+		const q = Number(form.get("q"));
+		const r = Number(form.get("r"));
+		if (!Number.isInteger(q) || !Number.isInteger(r)) return fail(400, { error: "Choose a hex first." });
+		try {
+			await launchSeaIntel(db, {
+				userId: locals.account!.id,
+				q,
+				r,
+				sensor: sensor as never
+			});
+			return { success: true, message: `Intel pass launched over hex ${q},${r}.` };
+		} catch (err) {
+			if (err instanceof SeaIntelError) return fail(400, { error: err.message });
+			throw err;
+		}
 	}
 };
 
@@ -475,6 +494,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		});
 
 		const seaIntel = sa?.side?.stateIds ? await seaPicture(db, sa.side.stateIds) : {};
+		// Sensor menu for the selected-hex intel form (cooldowns are per player).
+		const seaSensorOptions = locals.account
+			? await seaIntelOptions(db, locals.account.id, { q: 0, r: 0 })
+			: { sensors: [], inFlight: [] };
 		const visibleSeaShips = seaFleet.ships.filter(
 			(s) => !(sa?.enemyStateIds ?? []).includes(s.stateId) || !!seaIntel[`${s.q},${s.r}`]
 		);
@@ -495,6 +518,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			sea: {
 				ports: seaFleet.ports.map((p) => ({ id: p.id, stateId: p.stateId, regionId: p.regionId, q: p.q, r: p.r, name: p.name })),
 				intel: seaIntel,
+				sensors: seaSensorOptions.sensors,
 				aircraft: seaFleet.aircraft,
 				ships: visibleSeaShips.map((s) => ({
 					id: s.id,
@@ -525,7 +549,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			currentUserRegionId: null,
 			sa: null,
 			strikes: {},
-			sea: { intel: {}, aircraft: [], ports: [], ships: [], mines: [], regionsForEez: [], coastalRegions: [] }
+			sea: { intel: {}, sensors: [], aircraft: [], ports: [], ships: [], mines: [], regionsForEez: [], coastalRegions: [] }
 		};
 	}
 };

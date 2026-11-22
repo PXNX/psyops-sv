@@ -171,6 +171,7 @@
 	}
 
 	// Army and Aviation each see only their own service's units and templates.
+	const seaUnits = $derived(data.units.filter((u) => data.templates[u.unitType]?.domain === "sea"));
 	const domain = $derived(view === "army" ? "land" : view === "aviation" ? "air" : "sea");
 	const domainUnits = $derived(data.units.filter((u) => data.templates[u.unitType]?.domain === domain));
 	const domainTemplates = $derived(Object.values(data.templates).filter((t) => t.domain === domain));
@@ -178,6 +179,13 @@
 		const d = service === "army" ? "land" : service === "aviation" ? "air" : "sea";
 		return data.units.filter((u) => data.templates[u.unitType]?.domain === d).length;
 	};
+	// Show every unit of the branch, including those still in the drill yard —
+	// otherwise a freshly trained ship or squadron looks like it vanished.
+	const rosterUnits = $derived(
+		[...domainUnits].sort(
+			(a, b) => Number(a.isTraining) - Number(b.isTraining) || new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+		)
+	);
 	const activeUnits = $derived(domainUnits.filter((u) => !u.isTraining));
 	const trainingUnits = $derived(
 		domainUnits
@@ -232,7 +240,7 @@
 			>
 				{service === "navy" ? "Navy" : service === "army" ? "Army" : "Aviation"}
 				<span class="ml-1 text-[10px] font-mono opacity-70">
-					{service === "navy" ? data.navy.ships.length : countFor(service)}
+					{service === "navy" ? data.navy.ships.length + seaUnits.length : countFor(service)}
 				</span>
 			</button>
 		{/each}
@@ -248,6 +256,30 @@
 	{/if}
 
 	{#if view === "navy"}
+		<!-- Ships trained as military units are not fleet hulls: show both, so a
+		     carrier that is still drilling is just as visible as a frigate at sea. -->
+		<section class="panel rounded-sm p-5 space-y-3">
+			<div class="flex items-center justify-between">
+				<h2 class="section-title">Naval units</h2>
+				<Badge tone="green">{seaUnits.length}</Badge>
+			</div>
+			{#if seaUnits.length}
+				<ul class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+					{#each seaUnits as unit (unit.id)}
+						<li class="panel-muted rounded-sm flex items-center gap-2 px-3 py-2">
+							<img src={getUnitIconPath(unit.unitType)} alt="" class="size-8 object-contain {INK}" />
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-sm font-medium text-fg">{unit.name}</p>
+								<p class="text-[10px] uppercase tracking-wide text-fg-muted">{unitLabel(unit.unitType)}</p>
+							</div>
+							{#if unit.isTraining}<Badge tone="amber" size="xs">Training</Badge>{/if}
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="text-sm text-fg-muted">No naval units in service yet.</p>
+			{/if}
+		</section>
 		<!-- The fleet console used to be /navy. It now lives here as its own tab. -->
 		<NavyConsole data={data.navy} embedded />
 	{:else}
@@ -271,12 +303,12 @@
 			<section bind:this={roster} class="space-y-3">
 				<div class="flex items-center justify-between">
 					<h2 class="section-title">Roster</h2>
-					{#if activeUnits.length > 0}
-						<Badge tone="green">{activeUnits.length} in service</Badge>
+					{#if rosterUnits.length > 0}
+						<Badge tone="green">{activeUnits.length} in service{trainingUnits.length ? ` · ${trainingUnits.length} training` : ""}</Badge>
 					{/if}
 				</div>
 
-				{#each activeUnits as unit, i (unit.id)}
+				{#each rosterUnits as unit, i (unit.id)}
 					{@const tpl = data.templates[unit.unitType]}
 					{@const level = getExperienceLevel(unit.experience ?? 0)}
 					<article
@@ -301,6 +333,7 @@
 								</p>
 								<h3 class="font-bold text-fg truncate">{unit.name}</h3>
 								<div class="mt-1 flex flex-wrap items-center gap-1.5">
+									{#if unit.isTraining}<Badge tone="amber" size="xs">In training</Badge>{/if}
 									<Badge tone="red" size="xs">ATK {tpl.baseAttack}</Badge>
 									<Badge tone="blue" size="xs">DEF {tpl.baseDefense}</Badge>
 									<Badge tone="purple" size="xs">{level.label}</Badge>
@@ -435,8 +468,8 @@
 					</article>
 				{/each}
 
-				{#if activeUnits.length === 0}
-					<EmptyState icon={FluentTarget} title="No units in service" />
+				{#if rosterUnits.length === 0}
+					<EmptyState icon={FluentTarget} title="No units in this branch" />
 				{/if}
 			</section>
 

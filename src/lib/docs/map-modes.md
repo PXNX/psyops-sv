@@ -48,7 +48,10 @@ aircraft.
 
 <Mermaid label="Fog of war" chart={"sequenceDiagram\nparticipant P as Player\nparticipant M as Map\nparticipant S as Sea intel\nP->>S: Launch sonar sweep over hex\nS-->>P: Report (valid 12 h)\nP->>M: Open naval mode\nM->>M: Filter enemy ships by fresh report\nM-->>P: Contacts visible, rest hidden"} />
 
-Enemy ships only appear if a fresh sea intel report (sonar, radar, SAR or air
+Click a hex and use **Sea intel** in its panel to launch EO, IR, SAR, sonar or
+radar over it. EO identifies hulls, IR works at night, SAR sees through cloud,
+sonar finds submarines and radar sweeps wide. Enemy ships only appear if a fresh
+sea intel report (EO, IR, SAR, sonar, radar or air
 reconnaissance) saw their hex in the last 12 hours. Without reconnaissance the
 sea is blank.
 

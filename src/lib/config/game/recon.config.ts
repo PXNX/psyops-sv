@@ -155,9 +155,11 @@ export const SENSOR_IDS = Object.keys(SENSORS) as SensorId[];
 
 // ── Sea reconnaissance ──────────────────────────────────────────────────────
 // Sea passes target a hex instead of a region. Sonar is the only sensor that
-// reliably finds submarines; radar and SAR see the surface and minelays.
+// reliably finds submarines; radar sees the surface at range, EO identifies
+// hull types in clear conditions, IR works at night but identifies less, and
+// SAR sees through cloud. All of them can be launched from a selected hex.
 
-export type SeaSensorId = "sonar" | "naval_radar" | "sat_sar";
+export type SeaSensorId = "sonar" | "naval_radar" | "sat_eo" | "sat_ir" | "sat_sar";
 
 export interface SeaSensorConfig {
 	label: string;
@@ -198,6 +200,30 @@ export const SEA_SENSORS: Record<SeaSensorId, SeaSensorConfig> = {
 		radius: 2,
 		identifiesTypes: true,
 		detects: { surface: 0.9, sub: 0, mine: 0.35 }
+	},
+	sat_eo: {
+		label: "Satellite EO",
+		short: "EO",
+		kind: "visual",
+		cost: 6_500,
+		durationMinutes: 25,
+		cooldownMinutes: 120,
+		cooldownScope: "state",
+		radius: 2,
+		identifiesTypes: true,
+		detects: { surface: 0.85, sub: 0, mine: 0.45 }
+	},
+	sat_ir: {
+		label: "Satellite IR",
+		short: "IR",
+		kind: "visual",
+		cost: 7_000,
+		durationMinutes: 25,
+		cooldownMinutes: 120,
+		cooldownScope: "state",
+		radius: 2,
+		identifiesTypes: false,
+		detects: { surface: 0.78, sub: 0, mine: 0.35 }
 	},
 	sat_sar: {
 		label: "Satellite SAR",

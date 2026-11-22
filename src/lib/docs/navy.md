@@ -92,8 +92,10 @@ strength is shown on its ship card.
 
 ## 9. Sea intelligence
 
-Select a hex and launch a sonar, radar or SAR sweep under **Sea intel**. Sonar
-finds submarines; radar and SAR find surface hulls and mines. Reports expire
+Select a hex and launch an EO, IR, SAR, sonar or radar sweep under **Sea intel**
+— either here in the Navy tab or from a hex's panel on the [map](/map). EO names
+hull types in clear conditions, IR works at night, SAR sees through cloud, sonar
+finds submarines, and maritime radar sweeps a wide area. Reports expire
 after 12 hours and drive the map's fog of war.
 
 ## 10. Next steps

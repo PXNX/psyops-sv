@@ -45,6 +45,7 @@
 		hexUnionPath,
 		parseHexKey,
 		UNIT_CATEGORIES,
+		MILITARY_UNIT_TEMPLATES,
 		WEATHER_LABEL,
 		COVER_LABEL,
 		regionConditions,
@@ -166,6 +167,10 @@
 	let cursor = $state<{ x: number; y: number } | null>(null);
 	let selectedId = $state<number | null>(null);
 	let selectedHexKey = $state<string | null>(null);
+	let seaSensor = $state("");
+	$effect(() => {
+		if (!seaSensor && data.sea.sensors?.length) seaSensor = data.sea.sensors[0]!.id;
+	});
 	/** Hexes whose centre falls inside a land path — filled in once the SVG mounts. */
 	let landHexKeys = $state<Set<string>>(new Set());
 	/** Hexes with at least one water sample: coastal hexes count too. */
@@ -688,6 +693,40 @@
 	const hasHostileAt = $derived(new Set(hostileMarkers.map((m) => m.id)));
 	const hasFriendlyAt = $derived(new Set(friendlyMarkers.map((m) => m.id)));
 
+	// Ships and aircraft are military units as well as (for hulls) fleet contacts.
+	// In naval/aerial modes draw the ones we own at their region, even when the
+	// region is inland — a squadron still at its airfield is still our squadron.
+	const UNIT_GLYPH: Record<string, string> = {
+		carrier: "CV",
+		frigate: "FF",
+		submarine: "SS",
+		landing_ship: "LS",
+		marine: "MAR",
+		bomber_squadron: "BOM",
+		fighter_squadron: "FTR",
+		transport_aircraft: "AIR",
+		bomber: "BOM",
+		tanker_aircraft: "TNK",
+		fighterjet: "FTR",
+		close_air_support: "CAS",
+		naval_bomber: "NB",
+		helicopter: "HELI"
+	};
+	const domainUnitMarkers = $derived.by(() => {
+		if (mode === "land") return [];
+		const out: { id: number; x: number; y: number; glyph: string; count: number }[] = [];
+		for (const [regionId, force] of Object.entries(sa?.friendly ?? {})) {
+			const c = centroids[Number(regionId)];
+			if (!c) continue;
+			for (const [type, count] of Object.entries(force.byType)) {
+				const domain = MILITARY_UNIT_TEMPLATES[type as keyof typeof MILITARY_UNIT_TEMPLATES]?.domain;
+				if (mode === "naval" ? domain !== "sea" : domain !== "air") continue;
+				out.push({ id: Number(regionId), x: c.x, y: c.y, glyph: UNIT_GLYPH[type] ?? type.slice(0, 3).toUpperCase(), count });
+			}
+		}
+		return out;
+	});
+
 	// ── Naval hex sea: a grid on the map, with coast-anchored EEZs ──────────
 	const hexCentre = (h: { q: number; r: number }) => hexToMap(h);
 	const hexPoints = (h: { q: number; r: number }) =>
@@ -844,7 +883,8 @@
 			owner: owner ? { regionId: owner.regionId, stateName: stateById.get(owner.stateId)?.name ?? `State ${owner.stateId}` } : null,
 			port: data.sea.ports.find((p) => p.q === h.q && p.r === h.r) ?? null,
 			ships: data.sea.ships.filter((s) => s.q === h.q && s.r === h.r && s.status !== "sunk"),
-			mines: data.sea.mines.filter((m) => m.q === h.q && m.r === h.r)
+			mines: data.sea.mines.filter((m) => m.q === h.q && m.r === h.r),
+			intel: data.sea.intel?.[selectedHexKey] ?? null
 		};
 	});
 
@@ -1028,6 +1068,16 @@
 					</g>
 					<!-- Ports, ships and minefields (hexes live in the world SVG) -->
 					<g class="sea-markers" pointer-events="none">
+						{#if overlays.friendly}
+							{#each domainUnitMarkers as u (u.id + ":" + u.glyph)}
+								<g transform="translate({u.x} {u.y - 16 * k}) scale({k})">
+									<title>{u.glyph} ×{u.count}</title>
+									<rect x="-9" y="-6" width="27" height="12" rx="3" style:fill="var(--color-surface-0)" stroke="#7dd3fc" stroke-opacity="0.8" />
+									<text x="1" y="3" text-anchor="middle" font-size="6" font-weight="bold" style:fill="#7dd3fc">{u.glyph}</text>
+									<text x="14" y="3" font-size="6" style:fill="#7dd3fc">×{u.count}</text>
+								</g>
+							{/each}
+						{/if}
 						{#each mineMarkers as m (m.id)}
 							<text
 								x={m.x}
@@ -1270,6 +1320,42 @@
 			{#if selectedHexInfo.mines.length}
 				<div class="mt-1 text-error">✳ {selectedHexInfo.mines.length} minefield(s)</div>
 			{/if}
+			<div class="mt-2 border-t border-line/20 pt-2">
+				<div class="mb-1 font-semibold text-heading">Sea intel</div>
+				{#if selectedHexInfo.intel}
+					<div class="text-fg-muted">
+						{selectedHexInfo.intel.sensor} · {Object.entries(selectedHexInfo.intel.contacts ?? {}).map(([kind, n]) => `${kind} ×${n}`).join(", ") || "no contacts"} ·
+						{selectedHexInfo.intel.mines} mines · {selectedHexInfo.intel.confidence}% confidence
+					</div>
+				{:else}
+					<div class="text-fg-muted">No fresh pass over this hex.</div>
+				{/if}
+				{#if data.sea.sensors?.length}
+					<form
+						method="POST"
+						action="?/launchSeaIntel"
+						use:enhance={() => async ({ result, update }) => {
+							await update();
+							toastResult(result);
+						}}
+						class="mt-2 space-y-1.5"
+					>
+						<input type="hidden" name="q" value={selectedHexInfo.q} />
+						<input type="hidden" name="r" value={selectedHexInfo.r} />
+						<select name="sensor" bind:value={seaSensor} class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs">
+							{#each data.sea.sensors as sensor (sensor.id)}
+								<option value={sensor.id} disabled={!!sensor.cooldownEndsAt}>
+									{sensor.label} · ${sensor.cost.toLocaleString()} · {sensor.durationMinutes}m{sensor.cooldownEndsAt ? " · cooling down" : ""}
+								</option>
+							{/each}
+						</select>
+						<p class="text-[10px] leading-tight text-fg-muted">
+							EO names hulls · IR sees at night · SAR sees through cloud · sonar finds submarines · radar sweeps wide.
+						</p>
+						<Button type="submit" size="sm" variant="ghost" block>Collect intel</Button>
+					</form>
+				{/if}
+			</div>
 			<a
 				href="/training?view=navy&hex={selectedHexInfo.q},{selectedHexInfo.r}"
 				class="mt-3 inline-block rounded-sm bg-primary/20 px-2 py-1 text-primary-fg hover:bg-primary/30"
