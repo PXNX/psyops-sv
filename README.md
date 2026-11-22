@@ -44,19 +44,21 @@ bombardment, amphibious assault (opens a real battle without a land border),
 sea-lane raid (seizes treasury) and minelaying. See `naval.config.ts` and
 `services/military/naval.ts`.
 
-**Fleet at sea (`/navy`).** The strategic operations above now have a spatial
-layer. The ocean is a bounded axial hex grid; ships steam one hex per leg, burn
-fuel, and can be refuelled and loaded at **ports** or built and repaired through
-the **dock queue** (`/api/cron/fleet` advances every leg, job and engagement).
-A coastal region claims an EEZ — two hex rings of offshore water — and can
-hold exactly one port, placed on the nearest free hex inside that zone; ports
-and docks expand by level (more fuel storage, more build bays). The hex grid
-and EEZs are drawn inside the world SVG on `/map`, clipped to the real
-coastline (only water hexes inside a coastal state's EEZ are shown) and
-selectable by tap — the selected hex opens its owner, ships, mines and port,
-with a link into the fleet console. The map has three modes: **naval** (sea
-and coasts only), **land** (regions and forces) and **aerial** (hexes and
-regions grouped into Luftraum sectors). Hulls come in four families: capital ships (carrier with fighters, VLS frigate,
+**Fleet at sea ([Forces](/training) → Navy tab).** The strategic operations above now have a spatial
+layer. The ocean is a bounded axial hex grid (90 × 45 cells, roughly one
+region per hex); ships steam one hex per leg, burn fuel, and can be refuelled
+and loaded at **ports** or built and repaired through the **dock queue**
+(`/api/cron/fleet` advances every leg, job and engagement).
+A coastal region claims an EEZ — two hex rings of offshore water grown out
+from its actual coastline — and can hold exactly one port, placed on the
+nearest free hex inside that zone; ports and docks expand by level (more fuel
+storage, more build bays). The hex grid and EEZs are drawn *under* the land in
+the world SVG on `/map`: the real, non-hexagonal coast clips them, so a
+partial hex hugs the shore instead of covering it. Hexes are selectable by tap
+— the selected hex opens its owner, ships, mines and port, with a link into
+the fleet console. The map has three modes: **naval** (sea and coasts only),
+**land** (regions and forces) and **aerial** (hexes, EEZs and the regions above
+them grouped into one Luftraum region per sector). Hulls come in four families: capital ships (carrier with fighters, VLS frigate,
 ASW helipad cruiser), escorts (support ship, corvette, destroyer, light AA and
 a GNSS jammer), submarines (torpedo and VLS) and civilians (container ship,
 Ro-Ro ferry, tanker). Minefields can be laid from frigates and submarines:
@@ -71,7 +73,7 @@ helicopter. Each has a role (airlift, bombing, refuelling, air superiority,
 close support, naval strike, ASW), burns fuel on sorties and in battle, and
 gains experience from exercises and combat; veterans hit harder. Squadrons can
 be tasked directly with strategic bombing, logistic strikes, naval bombing,
-airlift, reconnaissance, refuelling and battlefield support from the `/navy`
+airlift, reconnaissance, refuelling and battlefield support from the Forces page
 console — each has a target, flight time, fuel cost and effect. Naval bombers
 and helicopters can strike enemy ships from coastal airfields, and the aerial
 map mode counts aircraft in each Luftraum sector.
@@ -364,7 +366,7 @@ Conflict & forces and Reference. It covers the whole game — economy, society,
 politics, community, conflict, intelligence, naval warfare, air power and map
 modes. Each guide has a "Deep dive" section quoting the exact costs, durations,
 damage values, odds and formulas from the corresponding `config.ts` file, plus
-worked examples. On `/navy` and `/map` an **interactive** tour opens on the first visit:
+worked examples. On the Forces page and `/map` an **interactive** tour opens on the first visit:
 it highlights the real control for each step and advances when you use it (with
 a manual fallback); progress is stored in the browser. Tours are launched from
 your profile, the docs index or the relevant docs page with `?tutorial=navy`,

@@ -14,7 +14,7 @@
 	import { onMount, tick } from "svelte";
 	import type { PageData } from "./$types";
 	import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
-	import { ageLabel, countdown, formatLatLon, kmPerMapUnit, latLonToMap, mapToLatLon, niceKm } from "#lib/utils/military.js";
+	import { ageLabel, countdown, formatLatLon, kmPerMapUnit, mapToLatLon, niceKm } from "#lib/utils/military.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import Logo from "#lib/component/Logo.svelte";
@@ -38,9 +38,12 @@
 		hexFromLatLon,
 		hexKey,
 		hexDistance,
-		hexPolygonLatLon,
+		hexesInRange,
+		hexToMap,
+		mapHexSize,
+		hexPolygonMap,
+		hexUnionPath,
 		parseHexKey,
-		hexToLatLon,
 		UNIT_CATEGORIES,
 		WEATHER_LABEL,
 		COVER_LABEL,
@@ -165,6 +168,10 @@
 	let selectedHexKey = $state<string | null>(null);
 	/** Hexes whose centre falls inside a land path — filled in once the SVG mounts. */
 	let landHexKeys = $state<Set<string>>(new Set());
+	/** Hexes with at least one water sample: coastal hexes count too. */
+	let waterHexKeys = $state<Set<string>>(new Set());
+	/** Outline samples of each coastal region, in world-map units. */
+	let coastlines = $state<{ regionId: number; stateId: number; color: string; points: { x: number; y: number }[] }[]>([]);
 	let seaGeometryReady = $state(false);
 	let highlightedId = $state<number | null>(null);
 	let highlightTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -360,30 +367,72 @@
 		sceneEl = node;
 		colorRegions(node);
 
-		// Centroid and rough radius of every region, for placing symbols.
+		// Centroid and rough radius of every region, for placing symbols. Keep
+		// each path and its bbox: together they are an exact land test for the
+		// sea grid, and the outlines give us real coastlines for EEZ claims.
 		const c: Record<number, { x: number; y: number; r: number }> = {};
+		const landBoxes: { el: SVGPathElement; x0: number; y0: number; x1: number; y1: number }[] = [];
+		const pathById = new Map<number, SVGPathElement>();
 		node.querySelectorAll("path[id]").forEach((p) => {
+			const el = p as SVGPathElement;
 			const id = parseInt(p.id, 10);
-			if (isNaN(id) || !data.regionMap[id]) return;
-			const b = (p as SVGGraphicsElement).getBBox();
+			if (isNaN(id) || !data.regionMap[id] || el.closest("defs")) return;
+			const b = el.getBBox();
 			c[id] = { x: b.x + b.width / 2, y: b.y + b.height / 2, r: Math.max(2, Math.hypot(b.width, b.height) / 2) };
+			landBoxes.push({ el, x0: b.x - 0.5, y0: b.y - 0.5, x1: b.x + b.width + 0.5, y1: b.y + b.height + 0.5 });
+			pathById.set(id, el);
 		});
 		centroids = c;
 
-		// Clip the sea grid to the real coastline: a hex only counts as water
-		// when its centre is outside every land polygon in the world SVG.
-		const landPaths = [...node.querySelectorAll("path[id]")].filter(
-			(p): p is SVGPathElement => !p.closest("defs") && !isNaN(parseInt(p.id, 10))
-		);
+		const probe = new DOMPoint(0, 0);
+		const isLand = (x: number, y: number) => {
+			probe.x = x;
+			probe.y = y;
+			for (const b of landBoxes) {
+				if (x < b.x0 || x > b.x1 || y < b.y0 || y > b.y1) continue;
+				if (b.el.isPointInFill(probe)) return true;
+			}
+			return false;
+		};
 		const land = new Set<string>();
+		const water = new Set<string>();
+		const radius = mapHexSize() * 0.7;
 		for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
 			for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
-				const point = hexCentre({ q, r });
-				const p = new DOMPoint(point.x, point.y);
-				if (landPaths.some((path) => path.isPointInFill(p))) land.add(hexKey({ q, r }));
+				const key = hexKey({ q, r });
+				const centre = hexToMap({ q, r });
+				if (isLand(centre.x, centre.y)) land.add(key);
+				let wet = !land.has(key);
+				for (let i = 0; i < 6 && !wet; i++) {
+					const a = ((60 * i - 30) * Math.PI) / 180;
+					if (!isLand(centre.x + radius * Math.cos(a), centre.y + radius * Math.sin(a))) wet = true;
+				}
+				if (wet) water.add(key);
 			}
 		}
 		landHexKeys = land;
+		waterHexKeys = water;
+
+		// Sample the actual outline of each coastal region. EEZs grow out from
+		// these points, so an irregular coast produces an irregular EEZ and
+		// neighbouring claims meet at the coast instead of at a centroid.
+		coastlines = data.sea.coastalRegions.map((region) => {
+			const path = pathById.get(region.id);
+			const points: { x: number; y: number }[] = [];
+			if (path) {
+				const length = path.getTotalLength();
+				const step = Math.max(3, length / 120);
+				for (let d = 0; d <= length; d += step) {
+					const p = path.getPointAtLength(d);
+					points.push({ x: p.x, y: p.y });
+				}
+			}
+			if (!points.length) {
+				const centre = hexToMap(hexFromLatLon(region.latitude, region.longitude));
+				points.push(centre);
+			}
+			return { regionId: region.id, stateId: region.stateId, color: data.stateColorMap[region.stateId] ?? "#38bdf8", points };
+		});
 		seaGeometryReady = true;
 
 		const { width, height } = viewportSize();
@@ -639,46 +688,97 @@
 	const hasHostileAt = $derived(new Set(hostileMarkers.map((m) => m.id)));
 	const hasFriendlyAt = $derived(new Set(friendlyMarkers.map((m) => m.id)));
 
-	// ── Naval hex sea: geographic centres and EEZ rings ──────────────────────
-	const mapPoint = (lat: number, lon: number) => latLonToMap(lat, lon);
-	const hexCentre = (h: { q: number; r: number }) => {
-		const { lat, lon } = hexToLatLon(h);
-		return mapPoint(lat, lon);
-	};
+	// ── Naval hex sea: a grid on the map, with coast-anchored EEZs ──────────
+	const hexCentre = (h: { q: number; r: number }) => hexToMap(h);
 	const hexPoints = (h: { q: number; r: number }) =>
-		hexPolygonLatLon(h)
-			.map((c) => {
-				const p = mapPoint(c.lat, c.lon);
-				return `${p.x.toFixed(1)},${p.y.toFixed(1)}`;
-			})
+		hexPolygonMap(h)
+			.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`)
 			.join(" ");
+	const activeHexKeys = $derived(
+		new Set([
+			...data.sea.ports.map((p) => hexKey(p)),
+			...data.sea.ships.filter((s) => s.status !== "sunk").map((s) => hexKey(s)),
+			...data.sea.mines.map((m) => hexKey(m))
+		])
+	);
 
-	/** Only water hexes inside a coastal state's EEZ are drawn. Land is tested
-	 *  against the actual region polygons, so the grid stops at the coast and
-	 *  neighbouring EEZs hand over to the closest coastal region. */
+	/** Coast points bucketed by map cell, so an EEZ claim can find the nearest
+	 *  coastline without comparing every hex with every sampled point. */
+	const coastGrid = $derived.by(() => {
+		const cell = mapHexSize() * 2;
+		const grid = new Map<string, { index: number; x: number; y: number }[]>();
+		coastlines.forEach((coast, index) => {
+			for (const p of coast.points) {
+				const key = `${Math.floor(p.x / cell)},${Math.floor(p.y / cell)}`;
+				const bucket = grid.get(key) ?? [];
+				bucket.push({ index, x: p.x, y: p.y });
+				grid.set(key, bucket);
+			}
+		});
+		return { grid, cell };
+	});
+
+	/** EEZs are claimed by the nearest *coastline*, not by a region centroid.
+	 *  Candidates are the water hexes within a couple of rings of any coast
+	 *  sample; a hex belongs to the coastal region whose outline is closest.
+	 *  That makes each zone an extension of its (non-hexagonal) shoreline. */
 	const eezByHex = $derived.by(() => {
 		const owner = new Map<string, { regionId: number; stateId: number; color: string; distance: number }>();
 		if (!seaGeometryReady) return owner;
-		for (const region of data.sea.coastalRegions) {
-			const centre = hexFromLatLon(region.latitude, region.longitude);
-			const color = data.stateColorMap[region.stateId] ?? "#38bdf8";
-			for (const h of eezHexes(region, data.sea.regionsForEez)) {
-				const key = hexKey(h);
-				if (landHexKeys.has(key)) continue;
-				const distance = hexDistance(h, centre);
-				const prev = owner.get(key);
-				if (!prev || distance < prev.distance) owner.set(key, { regionId: region.id, stateId: region.stateId, color, distance });
+		if (!coastlines.length) {
+			// Fallback for worlds whose region outlines are not in the base SVG.
+			for (const region of data.sea.coastalRegions) {
+				const centre = hexFromLatLon(region.latitude, region.longitude);
+				const color = data.stateColorMap[region.stateId] ?? "#38bdf8";
+				for (const h of eezHexes(region, data.sea.regionsForEez)) {
+					const key = hexKey(h);
+					if (landHexKeys.has(key)) continue;
+					const distance = hexDistance(h, centre);
+					const prev = owner.get(key);
+					if (!prev || distance < prev.distance) owner.set(key, { regionId: region.id, stateId: region.stateId, color, distance });
+				}
 			}
+			return owner;
+		}
+
+		const candidates = new Set<string>(activeHexKeys);
+		for (const coast of coastlines) {
+			for (const p of coast.points) {
+				const { lat, lon } = mapToLatLon(p.x, p.y);
+				for (const h of hexesInRange(hexFromLatLon(lat, lon), EEZ.radiusHexes)) {
+					const key = hexKey(h);
+					if (waterHexKeys.has(key)) candidates.add(key);
+				}
+			}
+		}
+
+		const { grid, cell } = coastGrid;
+		const maxDistance = mapHexSize() * (EEZ.radiusHexes + 0.8);
+		for (const key of candidates) {
+			const centre = hexToMap(parseHexKey(key));
+			const bx = Math.floor(centre.x / cell);
+			const by = Math.floor(centre.y / cell);
+			let best = -1;
+			let bestDistance = Infinity;
+			for (let dx = -2; dx <= 2; dx++) {
+				for (let dy = -2; dy <= 2; dy++) {
+					for (const item of grid.get(`${bx + dx},${by + dy}`) ?? []) {
+						const d = Math.hypot(centre.x - item.x, centre.y - item.y);
+						if (d < bestDistance) {
+							bestDistance = d;
+							best = item.index;
+						}
+					}
+				}
+			}
+			if (best < 0 || bestDistance > maxDistance) continue;
+			const coast = coastlines[best]!;
+			owner.set(key, { regionId: coast.regionId, stateId: coast.stateId, color: coast.color, distance: bestDistance });
 		}
 		return owner;
 	});
 	const seaHexes = $derived.by(() => {
 		const out: { key: string; q: number; r: number; points: string; x: number; y: number; active: boolean; color: string; regionId: number }[] = [];
-		const active = new Set([
-			...data.sea.ports.map((p) => hexKey(p)),
-			...data.sea.ships.filter((s) => s.status !== "sunk").map((s) => hexKey(s)),
-			...data.sea.mines.map((m) => hexKey(m))
-		]);
 		for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
 			for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
 				const h = { q, r };
@@ -693,13 +793,30 @@
 					points: hexPoints(h),
 					x: c.x,
 					y: c.y,
-					active: active.has(key),
+					active: activeHexKeys.has(key),
 					color: owner.color,
 					regionId: owner.regionId
 				});
 			}
 		}
 		return out;
+	});
+
+	/** One outline per coastal region: the hexes of its EEZ merged into a
+	 *  single zone that reads as an extension of the coastline. */
+	const eezZones = $derived.by(() => {
+		const groups = new Map<number, { color: string; hexes: { q: number; r: number }[] }>();
+		for (const [key, info] of eezByHex) {
+			const group = groups.get(info.regionId) ?? { color: info.color, hexes: [] };
+			group.hexes.push(parseHexKey(key));
+			groups.set(info.regionId, group);
+		}
+		return [...groups.entries()].map(([regionId, group]) => ({
+			regionId,
+			color: group.color,
+			path: hexUnionPath(group.hexes),
+			name: data.regionMap[regionId] ? `#${regionId}` : `region ${regionId}`
+		}));
 	});
 	/** Show a vessel on water even if its stored hex sits under a land path. */
 	function displayHex(h: { q: number; r: number }) {
@@ -732,41 +849,45 @@
 	});
 
 	/** The hex sea is part of the world SVG itself, not a second floating canvas.
-	 *  Each cell carries its coordinate so it can be tapped and selected. */
+	 *  It is inserted *before* the region paths: the opaque land then clips each
+	 *  coastal hex to the real, non-hexagonal shoreline. Each cell still carries
+	 *  its coordinate so it can be tapped and selected. */
 	const worldSvg = $derived.by(() => {
 		if (!showSea || !overlays.sea) return WorldMap;
 		const cells = seaHexes
 			.map((h) => {
 				const picked = h.key === selectedHexKey;
 				return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
-					picked ? 0.34 : h.active ? 0.18 : 0.08
-				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.8 : 0.42}' stroke-width='${
-					picked ? 2 : h.active ? 1 : 0.6
+					picked ? 0.36 : h.active ? 0.2 : 0.14
+				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.9 : 0.65}' stroke-width='${
+					picked ? 2 : h.active ? 1 : 0.8
 				}' style='cursor:pointer'/>`;
 			})
 			.join("");
 		const group = `<g id='world-hex-sea'><title>EEZ sea grid · ${EEZ.radiusHexes} hex rings</title>${cells}</g>`;
-		return WorldMap.replace("</svg>", `${group}</svg>`);
+		return WorldMap.replace("</defs>", `</defs>${group}`);
 	});
 
-	/** Aerial mode: several hexes and the regions above them become one Luftraum. */
+	/** Aerial mode: a Luftraum is one region-shaped union of its hexes, their
+	 *  EEZs and the land regions above them — not a rectangle around them. */
 	const airspaces = $derived.by(() => {
 		if (mode !== "aerial") return [];
 		return airspaceSectors().map((sector) => {
-			const points = sector.hexes.flatMap((h) => hexPolygonLatLon(h).map((c) => mapPoint(c.lat, c.lon)));
-			const xs = points.map((p) => p.x);
-			const ys = points.map((p) => p.y);
-			const x = Math.min(...xs) - 4;
-			const y = Math.min(...ys) - 4;
-			const width = Math.max(...xs) - x + 4;
-			const height = Math.max(...ys) - y + 4;
-			const regions = data.sea.regionsForEez.filter((r) => sector.hexes.some((h) => hexKey(h) === hexKeyFromCoords(r))).length;
-			const ships = data.sea.ships.filter((s) => sector.hexes.some((h) => hexKey(h) === hexKey(s))).length;
+			const hexSet = new Set(sector.hexes.map(hexKey));
+			const path = hexUnionPath(sector.hexes);
+			const centres = sector.hexes.map(hexCentre);
+			const x = Math.min(...centres.map((p) => p.x));
+			const y = Math.min(...centres.map((p) => p.y));
+			const width = Math.max(...centres.map((p) => p.x)) - x;
+			const height = Math.max(...centres.map((p) => p.y)) - y;
+			const regions = data.sea.regionsForEez.filter((r) => hexSet.has(hexKeyFromCoords(r))).length;
+			const ships = data.sea.ships.filter((s) => hexSet.has(hexKey(s))).length;
+			const eez = [...hexSet].filter((key) => eezByHex.has(key)).length;
 			const air = data.sea.aircraft.filter((a) => {
 				const region = data.sea.regionsForEez.find((r) => r.id === a.regionId);
-				return a.fuel > 0 && region && sector.hexes.some((h) => hexKey(h) === hexKeyFromCoords(region));
+				return a.fuel > 0 && region && hexSet.has(hexKeyFromCoords(region));
 			}).length;
-			return { id: sector.id, x, y, width, height, regions, ships, air };
+			return { id: sector.id, path, x, y, width, height, regions, ships, eez, air };
 		});
 	});
 	function hexKeyFromCoords(r: { latitude: number; longitude: number }) {
@@ -869,12 +990,8 @@
 					<!-- Luftraum: several hexes and the regions over them, one sector -->
 					<g pointer-events="none">
 						{#each airspaces as sector (sector.id)}
-							<rect
-								x={sector.x}
-								y={sector.y}
-								width={sector.width}
-								height={sector.height}
-								rx="4"
+							<path
+								d={sector.path}
 								style:stroke="var(--color-primary)"
 								stroke-opacity="0.55"
 								stroke-width={1.2 * k}
@@ -890,13 +1007,26 @@
 								style:paint-order="stroke"
 								style:stroke="var(--color-surface-0)"
 								stroke-width={2 * k}
-							>{sector.id} · {sector.regions}R {sector.ships}S {sector.air}✈</text>
+							>{sector.id} · {sector.regions}R {sector.eez}H {sector.ships}S {sector.air}✈</text>
 						{/each}
 					</g>
 				{/if}
 
 				{#if showSea && overlays.sea}
-					<!-- Ports, ships and minefields (hexes + EEZ live in the world SVG) -->
+					<!-- Each EEZ is a single zone grown out of its coastline. -->
+					<g pointer-events="none">
+						{#each eezZones as zone (zone.regionId)}
+							<path
+								d={zone.path}
+								stroke={zone.color}
+								stroke-opacity="0.38"
+								stroke-width={0.9 * k}
+								stroke-dasharray="{3 * k} {2 * k}"
+								fill="none"
+							><title>EEZ of region {zone.name}</title></path>
+						{/each}
+					</g>
+					<!-- Ports, ships and minefields (hexes live in the world SVG) -->
 					<g class="sea-markers" pointer-events="none">
 						{#each mineMarkers as m (m.id)}
 							<text
@@ -1141,7 +1271,7 @@
 				<div class="mt-1 text-error">✳ {selectedHexInfo.mines.length} minefield(s)</div>
 			{/if}
 			<a
-				href="/navy?hex={selectedHexInfo.q},{selectedHexInfo.r}"
+				href="/training?view=navy&hex={selectedHexInfo.q},{selectedHexInfo.r}"
 				class="mt-3 inline-block rounded-sm bg-primary/20 px-2 py-1 text-primary-fg hover:bg-primary/30"
 			>
 				Open in fleet console →

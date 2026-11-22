@@ -22,7 +22,7 @@ Join a [party](/docs/politics), run in elections and submit your own proposals.
 
 ## How do I command ships or aircraft?
 
-Open the [navy console](/navy). The [naval](/docs/navy), [air](/docs/air) and
+Open the [navy console](/training?view=navy). The [naval](/docs/navy), [air](/docs/air) and
 [map](/docs/map-modes) tutorials explain the controls step by step. You can
 relaunch the interactive tours from your profile or the [docs index](/docs).
 

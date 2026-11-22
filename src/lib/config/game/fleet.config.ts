@@ -11,6 +11,8 @@
 // same ideas are spatial — a minefield sits on a hex, a carrier's air wing
 // reaches three hexes, a blockade is a ring of mines around a port.
 
+import { latLonToMap, mapToLatLon } from "../../utils/military.js";
+
 // ── Hex grid ────────────────────────────────────────────────────────────────
 
 /** An axial hex coordinate (pointy-top orientation). */
@@ -19,8 +21,15 @@ export interface Hex {
 	r: number;
 }
 
-/** The whole theatre is a bounded axial grid. Hexes outside do not exist. */
-export const HEX_BOUNDS = { minQ: 0, maxQ: 15, minR: 0, maxR: 10 } as const;
+/**
+ * The whole theatre is a bounded axial grid. Hexes outside do not exist.
+ *
+ * The grid is calibrated to the world map: 90 columns × 45 rows gives cells
+ * of about 4° × 4°, so one hex is roughly the size of one region. At that
+ * scale an EEZ really can reach out from a coastline instead of being a
+ * handful of continent-sized blocks.
+ */
+export const HEX_BOUNDS = { minQ: 0, maxQ: 89, minR: 0, maxR: 44 } as const;
 
 /** Radius of one hex in the SVG map, in pixels. */
 export const HEX_SIZE = 30;
@@ -41,39 +50,146 @@ export function hexKey(h: Hex): string {
 
 /** Centre of a hex in real coordinates, the exact inverse of `hexFromLatLon`. */
 export function hexToLatLon(h: Hex): { lat: number; lon: number } {
+	const p = hexToMap(h);
+	const ll = mapToLatLon(p.x, p.y);
+	// The map projection wraps longitude at ±180°. Hexes on the right-hand
+	// seam would otherwise come back as -179° and round-trip to the far left
+	// of the grid. Report them as 179.9°E instead.
+	if (p.x > WORLD_MAP_SIZE.width - 30 && ll.lon < -170) ll.lon = 179.9;
+	return ll;
+}
+
+/** The six corners of a hex as lat/lon, for tools that think geographically. */
+export function hexPolygonLatLon(h: Hex): { lat: number; lon: number }[] {
+	return hexPolygonMap(h).map((p) => mapToLatLon(p.x, p.y));
+}
+
+/** The world map's viewBox, in SVG units. */
+export const WORLD_MAP_SIZE = { width: 1400, height: 600 } as const;
+
+/** In-plane offsets of the grid: pointy-top columns √3r apart, rows 1.5r. */
+function gridMetrics() {
 	const spanQ = HEX_BOUNDS.maxQ - HEX_BOUNDS.minQ;
 	const spanR = HEX_BOUNDS.maxR - HEX_BOUNDS.minR;
+	const rows = spanR + 1;
+	// Axial rows skew to the right by r/2 columns. The widest row spans
+	// spanQ + spanR/2 hexes, so size the grid against that, not just `cols`.
+	const size = Math.min(WORLD_MAP_SIZE.width / (spanQ + spanR / 2 + 1) / Math.sqrt(3), WORLD_MAP_SIZE.height / rows / 1.5);
 	return {
-		lat: 90 - ((h.r - HEX_BOUNDS.minR) / spanR) * 180,
-		lon: -180 + ((h.q - HEX_BOUNDS.minQ) / spanQ) * 360
+		size,
+		colStep: Math.sqrt(3) * size,
+		rowStep: 1.5 * size,
+		x0: 0,
+		y0: (WORLD_MAP_SIZE.height - rows * 1.5 * size) / 2
 	};
 }
 
-/** The six corners of a hex as lat/lon, for drawing it on the world map. */
-export function hexPolygonLatLon(h: Hex): { lat: number; lon: number }[] {
-	const centre = hexToLatLon(h);
-	const spanR = HEX_BOUNDS.maxR - HEX_BOUNDS.minR;
-	// Pointy-top: row spacing is 1.5 × the centre-to-corner radius.
-	const size = 180 / spanR / 1.5;
-	const corners: { lat: number; lon: number }[] = [];
+/** Hex radius in world-map SVG units. */
+export function mapHexSize(): number {
+	return gridMetrics().size;
+}
+
+/** A hex centre in world-map SVG units. The grid lives on the map, so it
+ *  tiles evenly even though the world-map projection distorts lat/lon. */
+export function hexToMap(h: Hex): { x: number; y: number } {
+	const { colStep, rowStep, x0, y0 } = gridMetrics();
+	return {
+		x: x0 + colStep * (h.q - HEX_BOUNDS.minQ + (h.r - HEX_BOUNDS.minR) / 2),
+		y: y0 + rowStep * (h.r - HEX_BOUNDS.minR)
+	};
+}
+
+/** The hex containing a point in world-map SVG units. */
+export function mapToHex(x: number, y: number): Hex {
+	const { colStep, rowStep, x0, y0 } = gridMetrics();
+	const rf = (y - y0) / rowStep;
+	const qf = (x - x0) / colStep - rf / 2;
+	// Cube rounding keeps the result on a proper axial lattice.
+	let rx = Math.round(qf);
+	let ry = Math.round(rf);
+	let rz = Math.round(-qf - rf);
+	const dx = Math.abs(rx - qf);
+	const dy = Math.abs(ry - rf);
+	const dz = Math.abs(rz + qf + rf);
+	if (dx > dy && dx > dz) rx = -ry - rz;
+	else if (dy > dz) ry = -rx - rz;
+	else rz = -rx - ry;
+	return {
+		q: Math.max(HEX_BOUNDS.minQ, Math.min(HEX_BOUNDS.maxQ, rx)),
+		r: Math.max(HEX_BOUNDS.minR, Math.min(HEX_BOUNDS.maxR, ry))
+	};
+}
+
+/** The six corners of a hex in world-map SVG units, for drawing. */
+export function hexPolygonMap(h: Hex): { x: number; y: number }[] {
+	const centre = hexToMap(h);
+	const size = mapHexSize();
+	const corners: { x: number; y: number }[] = [];
 	for (let i = 0; i < 6; i++) {
 		const angle = ((60 * i - 30) * Math.PI) / 180;
-		corners.push({
-			lat: Math.max(-89.9, Math.min(89.9, centre.lat + size * Math.sin(angle))),
-			lon: centre.lon + size * Math.cos(angle)
-		});
+		corners.push({ x: centre.x + size * Math.cos(angle), y: centre.y + size * Math.sin(angle) });
 	}
 	return corners;
 }
 
-/** Map a region's map coordinates onto the sea grid (for shore-based effects). */
+/**
+ * Outline of a group of hexes as SVG path data in world-map units.
+ *
+ * Every hex edge shared by two members is internal and is dropped; the
+ * remaining edges are chained into loops. The result is one region-shaped
+ * outline that follows the hex grid, which is how both EEZs and airspace
+ * sectors are drawn. Returns an empty string for an empty group.
+ */
+export function hexUnionPath(hexes: Hex[]): string {
+	type Pt = { x: number; y: number };
+	const key = (p: Pt) => `${p.x.toFixed(2)},${p.y.toFixed(2)}`;
+	const edges = new Map<string, { from: Pt; to: Pt; used: boolean }>();
+	for (const h of hexes) {
+		const corners = hexPolygonMap(h);
+		for (let i = 0; i < 6; i++) {
+			const from = corners[i]!;
+			const to = corners[(i + 1) % 6]!;
+			const a = key(from);
+			const b = key(to);
+			const id = a < b ? `${a}|${b}` : `${b}|${a}`;
+			const existing = edges.get(id);
+			if (existing) existing.used = true;
+			else edges.set(id, { from, to, used: false });
+		}
+	}
+	const boundary = [...edges.values()].filter((e) => !e.used);
+	if (!boundary.length) return "";
+	const byStart = new Map<string, number[]>();
+	boundary.forEach((e, i) => {
+		const k = key(e.from);
+		const list = byStart.get(k) ?? [];
+		list.push(i);
+		byStart.set(k, list);
+	});
+	const used = new Set<number>();
+	const loops: Pt[][] = [];
+	for (let i = 0; i < boundary.length; i++) {
+		if (used.has(i)) continue;
+		const loop: Pt[] = [];
+		let cursor = i;
+		let guard = 0;
+		while (!used.has(cursor) && guard++ <= boundary.length) {
+			used.add(cursor);
+			const edge = boundary[cursor]!;
+			loop.push(edge.from);
+			const next = byStart.get(key(edge.to))?.find((n) => !used.has(n));
+			if (next == null) break;
+			cursor = next;
+		}
+		if (loop.length >= 3) loops.push(loop);
+	}
+	return loops.map((loop) => `M${loop.map((p) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join("L")}Z`).join("");
+}
+
+/** Map a geographic position onto the sea grid (for shore-based effects). */
 export function hexFromLatLon(latitude: number, longitude: number): Hex {
-	const spanQ = HEX_BOUNDS.maxQ - HEX_BOUNDS.minQ;
-	const spanR = HEX_BOUNDS.maxR - HEX_BOUNDS.minR;
-	return {
-		q: Math.max(HEX_BOUNDS.minQ, Math.min(HEX_BOUNDS.maxQ, HEX_BOUNDS.minQ + Math.round(((longitude + 180) / 360) * spanQ))),
-		r: Math.max(HEX_BOUNDS.minR, Math.min(HEX_BOUNDS.maxR, HEX_BOUNDS.minR + Math.round(((90 - latitude) / 180) * spanR)))
-	};
+	const p = latLonToMap(latitude, longitude);
+	return mapToHex(p.x, p.y);
 }
 
 export function parseHexKey(key: string): Hex {

@@ -9,7 +9,10 @@ import {
 	airspaceSectors,
 	hexFromLatLon,
 	hexToLatLon,
+	hexToMap,
+	mapToHex,
 	hexPolygonLatLon,
+	hexUnionPath,
 	inBounds
 } from "#lib/config/index.js";
 
@@ -46,15 +49,26 @@ describe("world-map projection", () => {
 	it("places hex centres in bounds and back on their own hex", () => {
 		for (const hex of [
 			{ q: 0, r: 0 },
-			{ q: 15, r: 10 },
-			{ q: 8, r: 3 }
+			{ q: 89, r: 44 },
+			{ q: 45, r: 22 }
 		]) {
 			const { lat, lon } = hexToLatLon(hex);
 			expect(inBounds(hexFromLatLon(lat, lon))).toBe(true);
 			expect(hexFromLatLon(lat, lon)).toEqual(hex);
+			const p = hexToMap(hex);
+			expect(mapToHex(p.x, p.y)).toEqual(hex);
 			const corners = hexPolygonLatLon(hex);
 			expect(corners).toHaveLength(6);
 			for (const corner of corners) expect(Number.isFinite(latLonToMap(corner.lat, corner.lon).x)).toBe(true);
 		}
+	});
+
+	it("merges neighbouring hexes into one outline", () => {
+		const one = hexUnionPath([{ q: 10, r: 10 }]);
+		const two = hexUnionPath([{ q: 10, r: 10 }, { q: 11, r: 10 }]);
+		// A lone hex has 6 edges; the shared edge of a pair is dropped, leaving 10.
+		expect((one.match(/L/g) ?? []).length).toBe(5);
+		expect((two.match(/L/g) ?? []).length).toBe(9);
+		expect(hexUnionPath([])).toBe("");
 	});
 });

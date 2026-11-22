@@ -11,7 +11,7 @@ category: "Conflict & forces"
 
 # Naval warfare — ships, ports and docks
 
-The **Navy** console (`/navy`) is the command centre for everything that
+The **Navy** tab of [Forces](/training) (`/training?view=navy`) is the command centre for everything that
 happens on the water. The ocean is divided into a hexagonal grid. Each move
 takes hours and burns fuel; the fleet cron advances every leg every 15 minutes.
 
@@ -105,8 +105,11 @@ in [Map & airspace](/docs/map-modes).
 ## Deep dive: exact numbers
 
 All values below come from `fleet.config.ts` and `naval.config.ts`.
-The sea grid is `q = 0–15`, `r = 0–10` with `HEX_SIZE = 30` on the navy map;
-an EEZ reaches `EEZ.radiusHexes = 2` rings and a port sits one hex offshore.
+The sea grid is `q = 0–89`, `r = 0–44` (4,050 cells, about one region per hex);
+`HEX_SIZE = 30` is only the radius of the separate fleet-console view. The grid
+is laid out in the world map's 1400×600 space, so `hexToLatLon` reads positions
+off the map projection. An EEZ reaches `EEZ.radiusHexes = 2` rings from the
+sampled coastline and a port sits one hex offshore.
 
 ### Ship classes (`SHIP_CLASSES`)
 

@@ -4,8 +4,8 @@
 	const { data } = $props();
 	const groups = $derived(groupedDocs(data.docs));
 	const launches = [
-		{ href: "/navy?tutorial=navy", title: "Flotten-Tutorial", text: "Hafen, Dock, Schiffe, Minen und Seeaufklärung interaktiv üben." },
-		{ href: "/navy?tutorial=air", title: "Luftwaffen-Tutorial", text: "Geschwader auswählen und Einsätze beauftragen." },
+		{ href: "/training?view=navy&tutorial=navy", title: "Flotten-Tutorial", text: "Hafen, Dock, Schiffe, Minen und Seeaufklärung interaktiv üben." },
+		{ href: "/training?view=aviation&tutorial=air", title: "Luftwaffen-Tutorial", text: "Geschwader auswählen und Einsätze beauftragen." },
 		{ href: "/map?tutorial=map", title: "Karten-Tutorial", text: "See-, Land- und Luftraum-Modus sowie Hex-Auswahl." }
 	];
 </script>

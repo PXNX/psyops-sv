@@ -4,6 +4,7 @@
 <script lang="ts">
 	import { vanish } from "#lib/utils/motion.js";
 	import { enhance } from "$app/forms";
+	import { page } from "$app/state";
 	import type { SubmitFunction } from "$app/forms";
 	import type { PageData } from "./$types";
 	import FluentTarget from "~icons/fluent/target-24-regular";
@@ -22,9 +23,54 @@
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
+	import NavyConsole from "#lib/component/forces/NavyConsole.svelte";
+	import AirOperations from "#lib/component/forces/AirOperations.svelte";
+	import Tutorial from "#lib/component/Tutorial.svelte";
 	import { Button, IconButton, Badge } from "#lib/component/ui/index.js";
 
 	let { data }: { data: PageData } = $props();
+
+	// All three services live on this page, but each keeps its own view.
+	type View = "army" | "navy" | "aviation";
+	const VIEWS: View[] = ["army", "navy", "aviation"];
+	let view = $state<View>(VIEWS.includes(page.url.searchParams.get("view") as View) ? (page.url.searchParams.get("view") as View) : "army");
+	$effect(() => {
+		const fromUrl = page.url.searchParams.get("view") as View | null;
+		if (fromUrl && VIEWS.includes(fromUrl)) view = fromUrl;
+	});
+	function setView(next: View) {
+		view = next;
+		const url = new URL(page.url.href);
+		url.searchParams.set("view", next);
+		history.replaceState(history.state, "", url);
+	}
+
+	const airSteps = [
+		{
+			id: "panel",
+			title: "1. Open Air operations",
+			body: "This panel lists every ready squadron with its fuel and experience. Click inside the form to begin.",
+			target: '[data-tutorial="air-ops"]',
+			done: "air-panel-open",
+			manual: "Show form"
+		},
+		{
+			id: "kind",
+			title: "2. Choose a mission",
+			body: "Pick a mission type. Each requires a role: bombers for bombing, naval bombers for sea targets, tankers for refuelling.",
+			target: '[data-tutorial="air-kind"]',
+			done: "air-kind-changed",
+			manual: "Show selector"
+		},
+		{
+			id: "launch",
+			title: "3. Launch",
+			body: "Choose a target and click “Launch mission”. Fuel is spent immediately and the effect lands after the flight — see /docs/air.",
+			target: '[data-tutorial="air-ops"]',
+			done: "air-mission",
+			manual: "Show form"
+		}
+	];
 
 	// Unit type names are paraglide messages keyed by the unit type.
 	const unitLabel = (unitType: string) => (m as unknown as Record<string, () => string>)[unitType]?.() ?? unitType;
@@ -38,6 +84,11 @@
 	$effect(() => {
 		const t = setInterval(() => (now = Date.now()), 30000);
 		return () => clearInterval(t);
+	});
+	// A template picked in one branch must not follow the player into another.
+	$effect(() => {
+		void view;
+		selectedTemplate = null;
 	});
 
 	const trainingDisabled = $derived(data.isIndependentRegion || data.isTraveling);
@@ -119,9 +170,17 @@
 		return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
 	}
 
-	const activeUnits = $derived(data.units.filter((u) => !u.isTraining));
+	// Army and Aviation each see only their own service's units and templates.
+	const domain = $derived(view === "army" ? "land" : view === "aviation" ? "air" : "sea");
+	const domainUnits = $derived(data.units.filter((u) => data.templates[u.unitType]?.domain === domain));
+	const domainTemplates = $derived(Object.values(data.templates).filter((t) => t.domain === domain));
+	const countFor = (service: View) => {
+		const d = service === "army" ? "land" : service === "aviation" ? "air" : "sea";
+		return data.units.filter((u) => data.templates[u.unitType]?.domain === d).length;
+	};
+	const activeUnits = $derived(domainUnits.filter((u) => !u.isTraining));
 	const trainingUnits = $derived(
-		data.units
+		domainUnits
 			.filter((u) => u.isTraining)
 			.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
 	);
@@ -152,9 +211,34 @@
 </script>
 
 <PageContainer maxWidth="6xl">
-	<PageHeader title="Barracks" documentTitle="Training" icon={FluentTarget} />
+	<PageHeader
+		title="Forces"
+		documentTitle="Forces"
+		subtitle="Navy, army and aviation — one service record, kept apart"
+		icon={FluentTarget}
+	/>
 
-	{#if trainingDisabled}
+	<!-- Tabs keep the three services on one page without mixing their units. -->
+	<div class="flex flex-wrap gap-2 border-b border-line/20 pb-2" role="tablist" aria-label="Service branch">
+		{#each VIEWS as service (service)}
+			<button
+				type="button"
+				role="tab"
+				aria-selected={view === service}
+				class="rounded-sm px-4 py-2 text-sm font-medium capitalize transition-colors {view === service
+					? 'bg-primary/15 text-primary-fg border border-primary/45'
+					: 'text-fg-muted hover:text-fg border border-transparent'}"
+				onclick={() => setView(service)}
+			>
+				{service === "navy" ? "Navy" : service === "army" ? "Army" : "Aviation"}
+				<span class="ml-1 text-[10px] font-mono opacity-70">
+					{service === "navy" ? data.navy.ships.length : countFor(service)}
+				</span>
+			</button>
+		{/each}
+	</div>
+
+	{#if trainingDisabled && view !== "navy"}
 		<p
 			class="bg-primary/12 border border-primary/35 text-primary-fg rounded-sm px-4 py-3 text-sm flex items-center gap-2"
 		>
@@ -163,7 +247,25 @@
 		</p>
 	{/if}
 
-	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+	{#if view === "navy"}
+		<!-- The fleet console used to be /navy. It now lives here as its own tab. -->
+		<NavyConsole data={data.navy} embedded />
+	{:else}
+		{#if view === "aviation"}
+			<section class="panel rounded-sm p-5 space-y-3">
+				<h2 class="section-title">Air operations</h2>
+				<AirOperations
+					airSupport={data.navy.airSupport}
+					airMissions={data.navy.airMissions}
+					regionList={data.navy.regionList}
+					myStateId={data.navy.myStateId}
+					canCommand={data.navy.canCommand}
+				/>
+			</section>
+			<Tutorial id="air" title="Luftwaffen-Kurzanleitung" steps={airSteps} />
+		{/if}
+
+		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 		<div class="lg:col-span-2 space-y-6">
 			<!-- Roster -->
 			<section bind:this={roster} class="space-y-3">
@@ -343,7 +445,7 @@
 				<h2 class="section-title">Recruitment office</h2>
 
 				<div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
-					{#each Object.values(data.templates) as template (template.id)}
+					{#each domainTemplates as template (template.id)}
 						{@const isSelected = selectedTemplate?.id === template.id}
 						<button
 							type="button"
@@ -498,5 +600,6 @@
 				<p class="py-6 text-center text-sm text-fg-muted">The yard is empty.</p>
 			{/if}
 		</aside>
-	</div>
+		</div>
+	{/if}
 </PageContainer>
