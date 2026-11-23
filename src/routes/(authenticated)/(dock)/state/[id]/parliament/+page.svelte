@@ -23,6 +23,7 @@
 	import { celebrate } from "#lib/utils/celebrate.js";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
+	import ParliamentArt from "./ParliamentArt.svelte";
 	import { Button, Badge } from "#lib/component/ui/index.js";
 	import { formatDateTime, regionCoatUrl } from "#lib/utils/formatting.js";
 
@@ -145,24 +146,29 @@
 </script>
 
 <PageContainer maxWidth="6xl">
-	<PageHeader
-		title="Parliament"
-		subtitle={data.totalSeats > 0 ? `${data.totalSeats} seats · ${partyOrder.length} groups` : undefined}
-		icon={FluentPeople20Filled}
-		backHref="/state/{data.state.id}"
-		backLabel={data.state.name}
-	>
-		{#snippet actions()}
-			<Button href="/state/{data.state.id}/proposal" variant="secondary" size="sm" icon={FluentHistory20Filled}>
-				Archive
-			</Button>
-			{#if canDraft}
-				<Button href="/state/{data.state.id}/proposal/create" variant="primary" size="sm" icon={FluentAdd20Filled}>
-					Draft Bill
-				</Button>
-			{/if}
-		{/snippet}
-	</PageHeader>
+	<div class="panel relative mb-4 overflow-hidden rounded-sm">
+		<ParliamentArt class="pointer-events-none absolute inset-x-0 top-0 h-full w-full opacity-85" />
+		<div class="relative">
+			<PageHeader
+				title="Parliament"
+				subtitle={data.totalSeats > 0 ? `${data.totalSeats} seats · ${partyOrder.length} groups` : undefined}
+				icon={FluentPeople20Filled}
+				backHref="/state/{data.state.id}"
+				backLabel={data.state.name}
+			>
+				{#snippet actions()}
+					<Button href="/state/{data.state.id}/proposal" variant="secondary" size="sm" icon={FluentHistory20Filled}>
+						Archive
+					</Button>
+					{#if canDraft}
+						<Button href="/state/{data.state.id}/proposal/create" variant="primary" size="sm" icon={FluentAdd20Filled}>
+							Draft Bill
+						</Button>
+					{/if}
+				{/snippet}
+			</PageHeader>
+		</div>
+	</div>
 
 	<!-- Election notice -->
 	{#if data.nextElection && electionPhase}
@@ -193,6 +199,7 @@
 	{/if}
 
 	{#if data.totalSeats > 0}
+		<div class="mt-4 grid items-start gap-6 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
 		<!-- The chamber -->
 		<section class="panel rounded-sm p-4 sm:p-5 space-y-4">
 			<div class="flex items-center justify-between gap-3">
@@ -234,13 +241,14 @@
 						type="button"
 						onclick={() => (selectedParty = active ? null : key)}
 						aria-pressed={active}
-						class="press-spring tap-target inline-flex items-center gap-2 rounded-sm border px-2.5 py-1.5 text-xs transition-colors {active
+						class="press-spring tap-target relative inline-flex items-center gap-2 overflow-hidden rounded-sm border px-2.5 py-1.5 text-xs transition-colors {active
 							? 'border-primary/60 bg-primary/12 text-fg'
 							: 'border-line/20 bg-surface-4/60 text-fg-soft hover:border-primary/40'}"
 					>
-						<span class="size-2.5 rounded-full shrink-0" style="background-color: {colorOf(key)}"></span>
-						<span class="font-semibold truncate max-w-32">{party?.abbreviation || party?.name || "Independent"}</span>
-						<span class="font-mono text-fg-muted">{count}</span>
+						<span class="absolute inset-y-0 left-0 z-0 opacity-15" style="width: {Math.round((count / data.totalSeats) * 100)}%; background-color: {colorOf(key)}" aria-hidden="true"></span>
+						<span class="relative z-10 size-2.5 rounded-full shrink-0" style="background-color: {colorOf(key)}"></span>
+						<span class="relative z-10 font-semibold truncate max-w-32">{party?.abbreviation || party?.name || "Independent"}</span>
+						<span class="relative z-10 font-mono text-fg-muted">{count}</span>
 					</button>
 				{/each}
 			</div>
@@ -274,7 +282,7 @@
 			{/if}
 
 			<!-- Members -->
-			<ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2.5 pt-4 border-t border-line/10">
+			<ul class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5 pt-4 border-t border-line/10">
 				{#each members as member (member.userId)}
 					{@const key = partyKeyOf(member)}
 					{@const party = partyOf(key)}
@@ -495,6 +503,7 @@
 				{/each}
 			{/if}
 		</section>
+		</div>
 	{:else}
 		<EmptyState
 			icon={FluentPeople20Filled}
