@@ -135,7 +135,9 @@ export async function buyStateBond(
 		if (!claimed) throw new BondError("That offering no longer has enough left.");
 		// The coupon is fixed for the life of this bond, but priced from the
 		// borrowing state's risk at the moment it is bought.
-		const risk = await bondRiskFor(db, claimed.stateId, now);
+		// Use the transaction executor: PGlite has one connection, so a query
+		// on the outer `db` here would deadlock against the open transaction.
+		const risk = await bondRiskFor(tx, claimed.stateId, now);
 
 		await debitWallet(tx, userId, principal);
 		await tx

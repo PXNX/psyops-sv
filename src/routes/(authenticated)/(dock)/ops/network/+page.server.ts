@@ -80,7 +80,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		db.query.stateTreasury.findFirst({ where: (t, { eq }) => eq(t.stateId, stateId) }),
 		Promise.all(targets.map(async (t) => ({ ...t, logo: await getLogoUrl(t.logo) }))),
 		selectedTargetId ? assetsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
-		selectedTargetId ? sitesFor(db, stateId, selectedTargetId) : Promise.resolve([]),
+		selectedTargetId ? sitesFor(db, stateId, selectedTargetId, now, getRegionName) : Promise.resolve([]),
 		selectedTargetId ? filesFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? actionsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? loadSessions(stateId, selectedTargetId) : Promise.resolve([]),

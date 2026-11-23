@@ -104,12 +104,21 @@ export const SPY_TRAIT_IDS = Object.keys(SPY_TRAITS) as SpyTraitId[];
 const FIRST_NAMES = [
 	"Anja", "Boris", "Celia", "Dmitri", "Elena", "Farid", "Greta", "Hugo", "Ines", "Jonas",
 	"Katarina", "Lars", "Mira", "Niko", "Orla", "Pavel", "Quentin", "Rosa", "Soren", "Talia",
-	"Ulrich", "Vera", "Willem", "Yara"
+	"Ulrich", "Vera", "Willem", "Yara", "Zoltan", "Alina", "Bram", "Cora", "Elise", "Freya",
+	"Goran", "Helena", "Ivo", "Jana", "Kiril", "Leonie", "Mateo", "Nadia", "Otto", "Petra",
+	"Radim", "Sabine", "Tomas", "Ulla", "Viktor", "Wren", "Xenia", "Yusuf", "Zara", "Antonia",
+	"Casimir", "Daria", "Emil", "Fiona", "Gustav", "Hana", "Ilya", "Julia", "Klemens", "Lena",
+	"Marin", "Nora", "Oskar", "Paloma", "Rafael", "Silje", "Teodor", "Valentina", "Waldemar"
 ];
 const LAST_NAMES = [
 	"Adler", "Bauer", "Castellan", "Dahl", "Eberhardt", "Ferrand", "Gatto", "Hoffmann", "Ivanov",
 	"Jansen", "Kovacs", "Lindqvist", "Moreau", "Navarro", "Ostrowski", "Petrov", "Quintana",
-	"Reinhardt", "Sato", "Thornton", "Ueda", "Voss", "Weber", "Xiang", "Zeller"
+	"Reinhardt", "Sato", "Thornton", "Ueda", "Voss", "Weber", "Xiang", "Zeller", "Ahlgren",
+	"Beaumont", "Czerny", "Delacroix", "Eriksen", "Falk", "Grimaldi", "Havel", "Ibarra",
+	"Jorgensen", "Kaminska", "Lombardi", "Marchetti", "Novak", "Okafor", "Pallesen", "Rasmussen",
+	"Salazar", "Takahashi", "Uhlig", "Varga", "Wojcik", "Yamamoto", "Zimmermann", "Bergstrom",
+	"Cardoso", "Dumont", "Engel", "Forsberg", "Glowacki", "Hartmann", "Ionescu", "Jankowski",
+	"Keller", "Lindberg", "Meyer", "Nyman", "Ortega", "Pappas", "Rossi", "Sandberg"
 ];
 
 /** Deterministic name for an asset: the same index always yields the same person. */
@@ -120,9 +129,9 @@ export function spyName(seed: number): string {
 }
 
 /** Number of portraits in the generated face pool. */
-export const SPY_PORTRAIT_COUNT = 24;
+export const SPY_PORTRAIT_COUNT = 72;
 export function spyPortrait(seed: number): number {
-	return Math.abs(seed * 13 + 7) % SPY_PORTRAIT_COUNT;
+	return Math.abs(seed * 13 + Math.floor(seed / 7) * 29 + 7) % SPY_PORTRAIT_COUNT;
 }
 
 /**
