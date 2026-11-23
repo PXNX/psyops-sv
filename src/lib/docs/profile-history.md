@@ -79,3 +79,13 @@ stability, cyber, elections and more), `TutorialArt.svelte` draws small scenes
 for the interactive tours, and `DocPhoto.svelte` frames photographic plates.
 Tutorial panels also show step dots so you can see how far through a walkthrough
 you are. All artwork uses active theme colours, including in dark mode.
+
+The same treatment now reaches the consoles. `/ops` opens with an animated radar
+banner, uses small cyber/psyops glyphs on its domain tabs, draws a signal trace
+behind the live odds and a breathing shield beside the defence level. The
+network console's assets show their generated faces and trait badges. On the
+patronage desk, a town skyline lights up behind the header, each civic building
+has its own SVG illustration, a goodwill gauge tracks your standing and every
+certificate carries a slowly turning seal. Every animation is ambient — it
+never blanks a page during a view transition — and all of it stops under
+`prefers-reduced-motion`.
