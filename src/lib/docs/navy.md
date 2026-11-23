@@ -128,9 +128,13 @@ sampled coastline and a port sits one hex offshore.
 Navy tab; Ctrl/Cmd-click hexes on `/map` and assign the fleet to hold them. The
 state officer academy graduates commanders (24 h, 75,000 credits and 250
 steel); each has 0–3 traits, ten small experience levels and can be wounded or
-killed when ships under their command are lost. Assign one to a fleet,
-airgroup or division from that group's panel. Coastal regions can be stormed
-by naval landing or paradrop when sea or air dominance is established.
+killed when ships under their command are lost. Ground battalions and aircraft
+are grouped into named divisions and airgroups on the Force tab: pick unit
+icons from the unassigned pool, move them into a formation (or create one) and
+choose its commander at the same time. A commander's traits then scale every
+unit in that formation. Assign one to a fleet from its panel. Coastal regions
+can be stormed by naval landing or paradrop when sea or air dominance is
+established.
 
 ### Ship classes (`SHIP_CLASSES`)
 

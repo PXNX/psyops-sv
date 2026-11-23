@@ -36,7 +36,8 @@ export const commanderActions: import("@sveltejs/kit").Actions = {
 			const group = await formUnitGroup(db, locals.account!.id, {
 				kind: String(f.get("kind")) === "division" ? "division" : "airgroup",
 				name: String(f.get("name") ?? ""),
-				unitIds: f.getAll("unitIds").map(Number)
+				unitIds: f.getAll("unitIds").map(Number),
+				commanderId: String(f.get("commanderId") ?? "") ? Number(f.get("commanderId")) : null
 			});
 			return { success: true, message: `${group.name} formed.` };
 		} catch (err) {

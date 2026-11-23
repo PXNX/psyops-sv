@@ -15,6 +15,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import * as m from "#lib/paraglide/messages.js";
 	import CommanderBadge from "#lib/component/CommanderBadge.svelte";
+	import UnitIcon from "./UnitIcon.svelte";
 	import { ACADEMY, AIRCRAFT_IDS, DOMAIN_UNITS } from "#lib/config/index.js";
 	import { canCoverManpower, getExperienceLevel, manpowerCostOf } from "#lib/config/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
@@ -79,6 +80,8 @@
 
 	// Unit type names are paraglide messages keyed by the unit type.
 	const unitLabel = (unitType: string) => (m as unknown as Record<string, () => string>)[unitType]?.() ?? unitType;
+	const officersById = $derived(new Map((data.officers ?? []).map((o) => [o.id, o])));
+	const unitsOf = (groupId: number) => (data.officerUnits ?? []).filter((u) => u.groupId === groupId);
 
 	let isSubmitting = $state(false);
 	let selectedTemplate = $state<any>(null);
@@ -284,6 +287,7 @@
 			</div>
 		{/if}
 		{#if (data.officers ?? []).length}
+			<p class="text-[10px] uppercase tracking-wide text-fg-muted">Officer corps</p>
 			<div class="flex flex-wrap gap-2">
 				{#each (data.officers ?? []) as officer (officer.id)}
 					<div class="soft-lift rounded-sm border border-line/20 bg-surface-1 px-2 py-1">
@@ -292,42 +296,105 @@
 				{/each}
 			</div>
 		{/if}
+
+		<!-- Formations: a card per group with its commander and icon-bearing roster.
+		     Unassigned units are picked as icon tiles, then moved into a group or
+		     used to create one. -->
 		{#each (["airgroup", "division"] as const) as kind}
 			{@const pool = (data.officerUnits ?? []).filter((u) => !u.groupId && (kind === "airgroup" ? (AIRCRAFT_IDS as readonly string[]).includes(u.unitType) : (DOMAIN_UNITS.land as readonly string[]).includes(u.unitType)))}
-			<div class="rounded-sm border border-line/20 p-3">
-				<div class="text-xs font-semibold text-heading">{kind === "airgroup" ? "Airgroups" : "Divisions"}</div>
-				{#each (data.unitGroups ?? []).filter((g) => g.kind === kind) as group (group.id)}
-					<div class="mt-2 flex flex-wrap items-center gap-2 border-t border-line/15 pt-2 text-[11px]">
-						<span class="font-medium">{group.name}</span>
-						<span class="text-fg-muted">{(data.officerUnits ?? []).filter((u) => u.groupId === group.id).length} units</span>
-						<form method="POST" action="?/assignCommander" use:enhance class="flex items-center gap-1">
+			{@const groups = (data.unitGroups ?? []).filter((g) => g.kind === kind)}
+			<div class="animate-soft-in rounded-sm border border-line/20 p-3 space-y-3">
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<div class="flex items-center gap-2 text-xs font-semibold text-heading">
+						<span class="text-base">{kind === "airgroup" ? "🛩️" : "🛡️"}</span>
+						{kind === "airgroup" ? "Airgroups" : "Divisions"}
+						<Badge tone="neutral" size="xs">{groups.length}</Badge>
+					</div>
+					<span class="text-[10px] text-fg-muted">{pool.length} unassigned</span>
+				</div>
+
+				{#each groups as group (group.id)}
+					{@const members = unitsOf(group.id)}
+					{@const officer = officersById.get(group.commanderId ?? -1)}
+					<div class="rounded-sm border border-line/15 bg-surface-1/50 p-3">
+						<div class="flex flex-wrap items-center gap-2">
+							<span class="font-semibold text-fg">{group.name}</span>
+							<Badge tone="neutral" size="xs">{members.length} units</Badge>
+							{#if officer}
+								<span class="ml-1 flex items-center gap-1 text-[10px] text-fg-muted">
+									<span class="size-1.5 rounded-full bg-positive"></span> commanded by {officer.name}
+								</span>
+							{/if}
+							<form method="POST" action="?/disbandUnitGroup" use:enhance class="ml-auto">
+								<input type="hidden" name="groupId" value={group.id} />
+								<Button type="submit" size="xs" variant="ghost">Disband</Button>
+							</form>
+						</div>
+
+						<div class="mt-2 flex flex-wrap gap-1.5">
+							{#each members as unit (unit.id)}
+								<div class="group flex items-center gap-1 rounded-sm border border-line/20 bg-surface-2 px-1.5 py-1" title="{unitLabel(unit.unitType)} · {unit.name}">
+									<UnitIcon unitType={unit.unitType} size={22} />
+									<span class="max-w-24 truncate text-[10px] text-fg-soft">{unit.name}</span>
+									<form method="POST" action="?/setUnitGroup" use:enhance={handleSubmit}>
+										<input type="hidden" name="unitIds" value={unit.id} />
+										<input type="hidden" name="groupId" value="" />
+										<button type="submit" class="text-fg-faint transition-colors hover:text-error" title="Detach from {group.name}">×</button>
+									</form>
+								</div>
+							{:else}
+								<p class="text-xs text-fg-muted">Empty formation — move units in below.</p>
+							{/each}
+						</div>
+
+						<form method="POST" action="?/assignCommander" use:enhance class="mt-2 flex flex-wrap items-center gap-1.5">
 							<input type="hidden" name="kind" value={kind} />
 							<input type="hidden" name="id" value={group.id} />
-							<select name="commanderId" class="rounded border border-line/30 bg-surface-2 px-1 py-0.5">
+							<select name="commanderId" class="field-control rounded-sm px-1.5 py-1 text-[11px]">
 								<option value="">No commander</option>
 								{#each (data.officers ?? []).filter((o) => o.alive) as o (o.id)}
 									<option value={o.id} selected={o.id === group.commanderId}>{o.name}</option>
 								{/each}
 							</select>
-							<Button type="submit" size="xs" variant="ghost">Set</Button>
-						</form>
-						<form method="POST" action="?/disbandUnitGroup" use:enhance>
-							<input type="hidden" name="groupId" value={group.id} />
-							<Button type="submit" size="xs" variant="ghost">Disband</Button>
+							<Button type="submit" size="xs" variant="ghost">Set commander</Button>
 						</form>
 					</div>
 				{/each}
+
 				{#if pool.length}
-					<form method="POST" action="?/formUnitGroup" use:enhance class="mt-2 space-y-1">
-						<input type="hidden" name="kind" value={kind} />
-						<input name="name" required maxlength="100" placeholder="New {kind} name" class="w-full rounded border border-line/30 bg-surface-2 px-2 py-1 text-xs" />
-						<div class="max-h-16 space-y-0.5 overflow-y-auto rounded border border-line/20 p-1">
-							{#each pool as unit (unit.id)}
-								<label class="flex items-center gap-1"><input type="checkbox" name="unitIds" value={unit.id} /> {unit.name} · {unit.unitType}</label>
-							{/each}
-						</div>
-						<Button type="submit" size="xs" variant="secondary">Form {kind}</Button>
-					</form>
+					<div class="rounded-sm border border-dashed border-line/25 p-2">
+						<p class="mb-2 text-[10px] uppercase tracking-wide text-fg-muted">Unassigned {kind === "airgroup" ? "aircraft" : "battalions"}</p>
+						<form method="POST" action="?/setUnitGroup" use:enhance={handleSubmit}>
+							<div class="grid max-h-52 grid-cols-2 gap-1.5 overflow-y-auto sm:grid-cols-3 lg:grid-cols-4">
+								{#each pool as unit (unit.id)}
+									<label class="flex cursor-pointer items-center gap-1.5 rounded-sm border border-line/15 bg-surface-2/60 px-2 py-1.5 transition-colors hover:border-primary/40">
+										<input type="checkbox" name="unitIds" value={unit.id} class="checkbox checkbox-xs" />
+										<UnitIcon unitType={unit.unitType} size={22} />
+										<span class="min-w-0 flex-1 truncate text-[10px] text-fg-soft" title="{unitLabel(unit.unitType)} · {unit.name}">{unit.name}</span>
+									</label>
+								{/each}
+							</div>
+							<div class="mt-2 flex flex-wrap items-center gap-2">
+								<select name="groupId" class="field-control rounded-sm px-2 py-1 text-[11px]">
+									<option value="">Unassigned</option>
+									{#each groups as g (g.id)}<option value={g.id}>{g.name}</option>{/each}
+								</select>
+								<Button type="submit" size="xs" variant="secondary">Move selected</Button>
+							</div>
+						</form>
+						<form method="POST" action="?/formUnitGroup" use:enhance={handleSubmit} class="mt-2 flex flex-wrap gap-2">
+							<input type="hidden" name="kind" value={kind} />
+							<input name="name" required maxlength="100" placeholder="New {kind} name" class="field-control min-w-40 flex-1 rounded-sm px-2 py-1 text-[11px]" />
+							<select name="commanderId" class="field-control rounded-sm px-2 py-1 text-[11px]" title="Place the new formation under a commander">
+								<option value="">No commander yet</option>
+								{#each (data.officers ?? []).filter((o) => o.alive) as o (o.id)}
+									<option value={o.id}>{o.name}</option>
+								{/each}
+							</select>
+							<Button type="submit" size="xs" variant="secondary">Form {kind}</Button>
+						</form>
+						<p class="mt-1 text-[10px] text-fg-muted">Tick units above, then move them into a group or form a new one.</p>
+					</div>
 				{/if}
 			</div>
 		{/each}

@@ -127,7 +127,7 @@ export async function resolveCommanderTrainings(db: Database, now = new Date()) 
 export async function formUnitGroup(
 	db: Database,
 	userId: string,
-	input: { kind: "airgroup" | "division"; name: string; unitIds: number[] }
+	input: { kind: "airgroup" | "division"; name: string; unitIds: number[]; commanderId?: number | null }
 ) {
 	const authority = await commandAuthority(db, userId);
 	const name = input.name.trim();
@@ -144,9 +144,24 @@ export async function formUnitGroup(
 			if (unit.isTraining || unit.health <= 0) throw new CommanderError("Only ready units can join a group.");
 		}
 		if (units.length !== ids.length) throw new CommanderError("One of those units does not exist.");
+		let commanderId: number | null = null;
+		if (input.commanderId != null) {
+			const [officer] = await tx
+				.select()
+				.from(commanders)
+				.where(eq(commanders.id, input.commanderId));
+			if (!officer || officer.stateId !== authority.stateId) throw new CommanderError("That commander is not yours.");
+			commanderId = officer.id;
+		}
 		const [group] = await tx
 			.insert(unitGroups)
-			.values({ stateId: authority.stateId, ownerId: userId, kind: input.kind, name: name.slice(0, 100) })
+			.values({
+				stateId: authority.stateId,
+				ownerId: userId,
+				kind: input.kind,
+				name: name.slice(0, 100),
+				commanderId
+			})
 			.returning();
 		await tx.update(militaryUnits).set({ groupId: group!.id }).where(inArray(militaryUnits.id, ids));
 		return group!;
