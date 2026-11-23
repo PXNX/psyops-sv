@@ -29,8 +29,10 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      # `--bun` makes bunx run the CLI with Bun's TypeScript-aware runtime;
+      # plain `bun x` uses Node on the runner and cannot resolve .ts/.js imports.
       - name: Run unit and integration tests
-        run: bun x rstest run
+        run: bun --bun x rstest run
 
   quality:
     name: typecheck and build
@@ -51,3 +53,6 @@ jobs:
       # The build still catches broken routes, imports and prerender failures.
       - name: Production build
         run: bun run build
+        env:
+          # The build only needs the variable to exist; it never connects.
+          DATABASE_URL: postgres://psyops:psyops@localhost:5432/psyops

@@ -2,10 +2,22 @@
 
 All notable changes to PsyOps will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/),
-and this project adheres to [Semantic Versioning](https://semver.org/).
+Releases are labelled by date and build number (`YYYY-MM-DD.build`), so every
+entry says when it shipped rather than implying a semver contract.
 
 ## [Unreleased]
+
+### Fixed
+
+- fix(map): end the hex grid before each coast so the EEZ reads as a band of water between shore and hexes
+- fix(map): clip coastal hexes to the real shoreline and keep regions visible in naval mode
+- fix(mermaid): resolve theme CSS variables to hex so diagrams render with readable colours
+- fix(navy): offset the standalone hex-map viewBox so edge hexes are not clipped
+- fix(population): keep full precision in a region's share of the grid
+- fix(domains): import stateAutonomy used by the domains dashboard
+- fix(cyber): type the record date helper used by file templates
+- fix(dock): declare personalPromise before the load uses it
+- fix(build): build without storage credentials and prerender docs reliably
 
 ### Changed
 
@@ -15,6 +27,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   the scheduler reaches them without a session; they are gated by `CRON_SECRET` only
 
 ### Added
+
+- feat(bloc): set a defence-spending guideline and see which member states meet it
+- feat(bloc): declare and lift trade embargoes that block cross-state work
+- feat(changelog): in-app changelog grouped by change type and component
+- feat(posts): Mermaid diagrams, polls, comments with upvotes and reports, safe YouTube players and internal link previews
+- feat(users): community karma from upvotes shown separately from civilian reputation
+- feat(site): history timelines for states, blocs and parties
+- feat(site): redesigned about hub with dedicated licenses, support and changelog pages
+- feat(pwa): generated app icon, theme-colour sync, notifications test and install shortcuts
+- feat(commander): academy graduates officers with random traits, portraits and ten experience levels
+- feat(navy): fleets, airgroups and divisions; commanders can be wounded or killed in battle
+- feat(navy): naval landings and paradrops gated on sea/air dominance, with AA and fortification risk
+- feat(map): larger hexes, sea states on every cell and hover conditions in the status bar
+- feat(map): multi-select sea hexes and assign a fleet to hold them
+- feat(intel): procedural sea and coastal sensor imagery from reports
+- feat(air): directable bombing, logistics, naval, transport, recon, refuel and support missions
+- feat(industry): hardware and datacenter chain with power and water constraints
+- feat(trade): air and sea lanes, closures and relief convoys
+- feat(government): cabinet portfolios, bloc representatives and research fields
+- feat(civilians): conscription, hospital strain and basic-need shortages shape population
+- feat(cyber): realistic intrusions with cascading attack effects
+
 
 - Computing chain: fabrication now builds server hardware from chips and
   electronics, and datacenters from hardware, machine tools and fab equipment.
@@ -123,7 +157,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Company dividends (declared payouts, automatic policy, yield) and market
   quotes at the lowest live offer
 
-## [0.0.1] - 2026-07-06
+## [2026-07-06.1]
 
 ### Added
 
@@ -147,7 +181,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Rich text editor stability and build issues
 - Training-related bug fixes
 
-## [0.0.1-rc.1] - 2026-06-12
+## [2026-06-12.1]
 
 ### Added
 
@@ -166,7 +200,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Tailwind v4 build error
 
-## [0.0.1-beta.3] - 2026-03-12
+## [2026-03-12.1]
 
 ### Added
 
@@ -188,7 +222,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Removed hardcoded Telegram bot token in favour of environment variables
 
-## [0.0.1-beta.2] - 2026-03-02
+## [2026-03-02.1]
 
 ### Added
 
@@ -203,7 +237,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Nicer chat interface
 - Require residence to be set
 
-## [0.0.1-beta.1] - 2026-02-19
+## [2026-02-19.1]
 
 ### Added
 
@@ -214,7 +248,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Reworked the trade system
 - Editor page fixes and refinements
 
-## [0.0.1-alpha] - 2024-12-26
+## [2024-12-26.1]
 
 ### Added
 

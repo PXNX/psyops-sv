@@ -11,6 +11,12 @@
 
 	let { data }: { data: PageData } = $props();
 
+	/** Releases are labelled YYYY-MM-DD.build; split them for display. */
+	const releaseLabel = (version: string) => {
+		const match = version.match(/^(\d{4}-\d{2}-\d{2})\.(\d+)$/);
+		return match ? { date: match[1]!, build: match[2]! } : null;
+	};
+
 	const iconName = (type: string) =>
 		type === "feature"
 			? "rocket"
@@ -63,8 +69,14 @@
 					<li class="relative mb-10 ml-6">
 						<span class="absolute -left-[31px] top-2 size-3 rounded-full ring-4 ring-surface-0 {i === 0 ? 'bg-primary' : 'bg-surface-9'}"></span>
 						<div class="flex flex-wrap items-baseline gap-3">
-							<h2 class="font-serif text-2xl text-heading">{release.version}</h2>
-							{#if release.date}<span class="font-mono text-xs text-fg-faint">{release.date}</span>{/if}
+							<h2 class="font-serif text-2xl text-heading">
+								{releaseLabel(release.version)?.date ?? release.version}
+							</h2>
+							{#if releaseLabel(release.version)}
+								<Badge tone="neutral" size="xs">build {releaseLabel(release.version)!.build}</Badge>
+							{:else if release.date}
+								<span class="font-mono text-xs text-fg-faint">{release.date}</span>
+							{/if}
 							{#if i === 0}<Badge tone="green" size="xs">latest</Badge>{/if}
 						</div>
 
@@ -94,12 +106,11 @@
 									<div class="ml-1 space-y-3 border-l-2 border-line/20 pl-4">
 										{#each group.components as component (component.name)}
 											<div>
-												{#if component.name !== "General"}
-													<div class="mb-1.5 flex items-center gap-2">
-														<Badge tone="neutral" size="xs">{component.name}</Badge>
-														<span class="text-[10px] uppercase tracking-[0.16em] text-fg-faint">component</span>
-													</div>
-												{/if}
+												<div class="mb-1.5 flex items-center gap-2">
+													<Badge tone={component.name === "General" ? "neutral" : "blue"} size="xs">{component.name}</Badge>
+													<span class="text-[10px] uppercase tracking-[0.16em] text-fg-faint">scope</span>
+													<span class="text-[10px] text-fg-faint">{component.items.length} {component.items.length === 1 ? "entry" : "entries"}</span>
+												</div>
 												<ul class="ml-1 space-y-1.5">
 													{#each component.items as item}
 														<li class="flex gap-2 text-sm leading-relaxed text-fg-soft">
