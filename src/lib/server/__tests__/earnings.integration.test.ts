@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
 import { companies, companyShares } from "../schema";
 import { companyEarningsReports } from "../schema-investments";
+import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
 import {
 	companyEarnings,
 	earningsPulse,
@@ -25,9 +26,9 @@ describe("biweekly guard", () => {
 		expect(isBiweeklyDue(new Date("2025-12-29T00:00:00Z"), anchor)).toBe(false);
 	});
 
-	it("uses a 14-day window ending at the run time", () => {
+	it("uses a half-game-year window ending at the run time", () => {
 		const window = earningsWindow(now);
-		expect(window.periodEnd.getTime() - window.periodStart.getTime()).toBe(14 * DAY);
+		expect(window.periodEnd.getTime() - window.periodStart.getTime()).toBe(INVESTMENTS_CONFIG.EARNINGS_PERIOD_DAYS * DAY);
 	});
 });
 

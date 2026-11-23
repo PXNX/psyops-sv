@@ -1,10 +1,12 @@
-// State bonds against the real in-memory Postgres: purchase, fortnightly
-// coupons, early redemption and maturity all move wallet and treasury money.
+// State bonds against the real in-memory Postgres: purchase, coupons on the
+// game calendar, early redemption and maturity all move wallet and treasury
+// money. One real week is one game year, so a coupon is half a game year.
 import { afterAll, beforeAll, describe, expect, it } from "@rstest/core";
 import { eq } from "drizzle-orm";
 import { createMockDb, type MockDbHandle } from "../mock-db";
 import { stateTreasury, states, userWallets } from "../schema";
 import { bondCoupons, stateBonds } from "../schema-investments";
+import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
 import {
 	BondError,
 	bondPortfolio,
@@ -15,13 +17,19 @@ import {
 } from "../services/economy/bonds";
 
 const DAY = 86_400_000;
+const PERIOD_DAYS = INVESTMENTS_CONFIG.COUPON_PERIOD_DAYS;
+const TERM_DAYS = INVESTMENTS_CONFIG.BOND_TERM_DAYS;
 const t0 = new Date("2026-03-02T09:00:00Z");
 
 describe("coupon math", () => {
-	it("pays 5% a year in fortnightly slices", () => {
-		expect(couponAmount(1_000, 5)).toBe(2);
-		expect(couponAmount(10_000, 5)).toBe(19);
+	it("pays 5% a game year in half-year slices", () => {
+		expect(couponAmount(1_000, 5)).toBe(25);
+		expect(couponAmount(10_000, 5)).toBe(250);
 		expect(couponAmount(1_000, 0)).toBe(0);
+	});
+	it("pays two coupons per game year", () => {
+		expect(INVESTMENTS_CONFIG.COUPON_PERIOD_DAYS).toBe(3.5);
+		expect(INVESTMENTS_CONFIG.BOND_TERM_DAYS).toBe(84);
 	});
 });
 
@@ -57,19 +65,19 @@ describe("state bonds", () => {
 		expect(await wallet()).toBe(before - 10_000);
 		expect(await treasury()).toBe(beforeTreasury + 10_000);
 
-		// Nothing is due in the first fortnight.
-		expect((await runBondCoupons(handle.db, new Date(t0.getTime() + 13 * DAY))).couponsPaid).toBe(0);
+		// Nothing is due before half a game year has passed.
+		expect((await runBondCoupons(handle.db, new Date(t0.getTime() + (PERIOD_DAYS - 0.5) * DAY))).couponsPaid).toBe(0);
 
-		const first = await runBondCoupons(handle.db, new Date(t0.getTime() + 15 * DAY));
+		const first = await runBondCoupons(handle.db, new Date(t0.getTime() + (PERIOD_DAYS + 0.5) * DAY));
 		expect(first.couponsPaid).toBe(1);
-		expect(first.interest).toBe(19);
-		expect(await wallet()).toBe(before - 10_000 + 19);
-		expect((await bondPortfolio(handle.db, "user-1"))[0]!.earned).toBe(19);
+		expect(first.interest).toBe(250);
+		expect(await wallet()).toBe(before - 10_000 + 250);
+		expect((await bondPortfolio(handle.db, "user-1"))[0]!.earned).toBe(250);
 
-		// At 90 days the final coupon and the principal come back together.
-		const final = await runBondCoupons(handle.db, new Date(t0.getTime() + 91 * DAY));
+		// At maturity the final coupon and the principal come back together.
+		const final = await runBondCoupons(handle.db, new Date(t0.getTime() + (TERM_DAYS + 1) * DAY));
 		expect(final.matured).toBe(1);
-		expect(await wallet()).toBe(before - 10_000 + 19 + 19 + 10_000);
+		expect(await wallet()).toBe(before - 10_000 + 250 + 250 + 10_000);
 		const coupons = await handle.db.select().from(bondCoupons).where(eq(bondCoupons.bondId, bond.id));
 		expect(coupons).toHaveLength(2);
 		expect((await bondPortfolio(handle.db, "user-1"))[0]!.status).toBe("redeemed");

@@ -2,6 +2,7 @@
 <script lang="ts">
 	import type { HistoryEntry } from "#lib/server/services/military/history.js";
 	import { Badge } from "#lib/component/ui/index.js";
+	import UserLink from "#lib/component/UserLink.svelte";
 
 	let { entries }: { entries: HistoryEntry[] } = $props();
 
@@ -32,7 +33,12 @@
 				<div class="flex flex-wrap items-center gap-2">
 					<time class="font-mono text-[11px] text-fg-faint" datetime={new Date(entry.at).toISOString()}>{format(entry.at)}</time>
 					<Badge tone={tone[entry.tone]} size="xs">{entry.kind}</Badge>
-					<span class="text-sm font-medium text-heading">{entry.title}</span>
+				</div>
+				<div class="mt-1 flex flex-wrap items-center gap-2 text-sm">
+					{#if entry.person}
+						<UserLink id={entry.person.id} name={entry.person.name} size="xs" plain />
+					{/if}
+					<span class="font-medium text-heading">{entry.title}</span>
 				</div>
 				{#if entry.detail}
 					<p class="mt-1 text-xs text-fg-muted">{entry.detail}</p>

@@ -1,18 +1,22 @@
 // src/lib/config/game/investments.config.ts
-// The oligarch's money instruments: state bonds and the fortnightly report
-// cycle that pays their coupons and publishes company earnings.
+// The oligarch's money instruments. Durations are expressed in game years:
+// one real week is one in-game year (see utils/game-time.ts).
+
+import { gameYearsToMs } from "#lib/utils/game-time.js";
+
+const YEAR = gameYearsToMs(1);
 
 export const INVESTMENTS_CONFIG = {
 	/** Smallest bond a player can buy. */
 	BOND_MIN_PRINCIPAL: 1_000,
 	/** Annual coupon, in percent of principal. */
 	BOND_COUPON_PERCENT: 5,
-	/** Bonds mature after 90 days; the principal is returned automatically. */
-	BOND_TERM_DAYS: 90,
-	/** Coupons are paid every 14 days (26 periods a year). */
-	COUPON_PERIOD_DAYS: 14,
-	/** How many days of earnings one report covers. */
-	EARNINGS_PERIOD_DAYS: 14,
-	/** Anchor for the every-other-week schedule (a Monday, UTC). */
+	/** Bonds mature after 12 game years — about three real months. */
+	BOND_TERM_DAYS: Math.round((12 * YEAR) / 86_400_000),
+	/** Coupons are paid twice a game year — every 3.5 real days. */
+	COUPON_PERIOD_DAYS: (0.5 * YEAR) / 86_400_000,
+	/** Earnings reports cover half a game year. */
+	EARNINGS_PERIOD_DAYS: (0.5 * YEAR) / 86_400_000,
+	/** Anchor for the twice-a-game-year schedule (a Monday, UTC). */
 	BIWEEKLY_ANCHOR: "2026-01-05T00:00:00.000Z"
 } as const;

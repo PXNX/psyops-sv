@@ -13,17 +13,19 @@ import { states, stateTreasury } from "../../schema";
 import { bondCoupons, stateBonds } from "../../schema-investments";
 import { creditWallet, debitWallet, type Executor } from "../../money";
 import { INVESTMENTS_CONFIG } from "#lib/config/game/investments.config.js";
+import { REAL_DAY_MS, gameYearsToMs } from "#lib/utils/game-time.js";
 
-const DAY = 86_400_000;
+const DAY = REAL_DAY_MS;
 const { BOND_MIN_PRINCIPAL, BOND_COUPON_PERCENT, BOND_TERM_DAYS, COUPON_PERIOD_DAYS } = INVESTMENTS_CONFIG;
 
 /** A bond operation the user should see as a validation error. */
 export class BondError extends Error {}
 
-/** One coupon: 5% a year, paid in 26 fortnightly slices. */
+/** One coupon: the annual rate split by how many periods fit in a game year. */
 export function couponAmount(principal: number, ratePercent: number): number {
 	if (principal <= 0 || ratePercent <= 0) return 0;
-	return Math.round((principal * ratePercent) / 100 / (365 / COUPON_PERIOD_DAYS));
+	const periodsPerGameYear = gameYearsToMs(1) / (COUPON_PERIOD_DAYS * DAY);
+	return Math.round((principal * ratePercent) / 100 / periodsPerGameYear);
 }
 
 /** When the next coupon falls due. */
