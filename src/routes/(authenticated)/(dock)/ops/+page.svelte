@@ -9,6 +9,7 @@
 	import { fade } from "svelte/transition";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import {
 		COVERT_OPS,
 		COVERT_OP_KINDS,
@@ -108,9 +109,13 @@
 		return null;
 	});
 
+	/** Everything this operation spends, read from the same config used to
+	 *  charge and schedule it. */
+	const specCosts = $derived({ currency: spec.cost, hours: spec.durationHours, cooldown: spec.cooldownHours });
+	const opsAvailable = $derived({ currency: data.state?.treasury ?? 0 });
+
 	const pct = (n: number) => `${Math.round(n * 100)}%`;
 	const signed = (n: number) => `${n > 0 ? "+" : n < 0 ? "−" : "±"}${Math.abs(Math.round(n * 100))}`;
-	const hours = (h: number) => (h ? `${h} h` : "instant");
 
 	const capitalise = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 	const effectPreview = $derived(capitalise(effectText()));
@@ -250,15 +255,14 @@
 									class="panel-interactive flex cursor-pointer flex-col gap-1 p-3 has-[:checked]:border-primary/70 has-[:checked]:bg-surface-6"
 								>
 									<input type="radio" name="kind" value={k} bind:group={kind} class="sr-only" />
-									<span class="flex items-center justify-between gap-2">
-										<span class="font-semibold text-fg">{s.label}</span>
-										<span class="data text-xs text-fg-soft">${s.cost.toLocaleString()}</span>
-									</span>
+									<span class="font-semibold text-fg">{s.label}</span>
 									<span class="text-xs text-fg-muted">{s.blurb}</span>
-									<span class="data mt-auto text-[11px] text-fg-faint">
-										{hours(s.durationHours)} · cooldown {s.cooldownHours} h
-										{#if cd}<span class="text-warning"> · ready in {cd}</span>{/if}
-									</span>
+									<ResourceRequirements
+										compact
+										costs={{ currency: s.cost, hours: s.durationHours, cooldown: s.cooldownHours }}
+										available={data.state ? { currency: data.state.treasury ?? 0 } : {}}
+									/>
+									{#if cd}<span class="data mt-auto text-[11px] text-warning">Ready in {cd}</span>{/if}
 								</label>
 							{/each}
 						</fieldset>
@@ -376,10 +380,10 @@
 							{/if}
 						</div>
 
+						<ResourceRequirements title="Operation cost" costs={specCosts} available={opsAvailable} />
+
 						<div class="flex flex-wrap items-center justify-between gap-3">
-							<p class="text-xs text-fg-muted">
-								{blocked ?? `Paid from the treasury: $${spec.cost.toLocaleString()}.`}
-							</p>
+							{#if blocked}<p class="text-xs text-error">{blocked}</p>{/if}
 							<Button
 								type="submit"
 								variant={domain === "cyber" ? "primary" : "soft-purple"}
@@ -466,6 +470,12 @@
 						{Math.round(CYBER_DEFENCE.ATTRIBUTION_PER_LEVEL * 100)}% likelier to be traced.
 					</p>
 					{#if data.state.canUpgrade && data.state.upgradeCost !== null}
+						<ResourceRequirements
+							title="Defence upgrade cost"
+							compact
+							costs={{ currency: data.state.upgradeCost }}
+							available={{ currency: data.state.treasury ?? 0 }}
+						/>
 						<form
 							method="POST"
 							action="?/upgradeDefence"
@@ -487,7 +497,7 @@
 								loading={upgrading}
 								disabled={(data.state.treasury ?? 0) < data.state.upgradeCost}
 							>
-								Raise to level {data.state.defenceLevel + 1} · ${data.state.upgradeCost.toLocaleString()}
+								Raise to level {data.state.defenceLevel + 1}
 							</Button>
 						</form>
 					{/if}

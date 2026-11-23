@@ -9,8 +9,10 @@ import {
 	generalReports,
 	pollVotes,
 	polls,
-	userProfiles
+	userProfiles,
+	violationReasonEnum
 } from "#lib/server/schema.js";
+import { alreadyReported } from "#lib/server/services/moderation/report-dedupe.js";
 
 export class SocialError extends Error {}
 
@@ -129,13 +131,24 @@ export async function toggleCommentVote(db: Database, userId: string, commentId:
 	return { voted: true };
 }
 
-export async function reportComment(db: Database, userId: string, commentId: number, reason: string) {
+export async function reportComment(
+	db: Database,
+	userId: string,
+	commentId: number,
+	violationType: string,
+	description: string
+) {
 	const [comment] = await db.select().from(comments).where(eq(comments.id, commentId));
 	if (!comment) throw new SocialError("That comment does not exist.");
+	if (comment.authorId === userId) throw new SocialError("You can't report your own comment.");
+	if (await alreadyReported(db, userId, "comment", String(commentId)))
+		throw new SocialError("You already reported this comment.");
 	await db.insert(generalReports).values({
 		targetType: "comment",
 		targetId: String(commentId),
 		reporterId: userId,
-		reason: reason.slice(0, 500) || "Reported by a reader"
+		reason: description.trim().slice(0, 500) || `Reported for ${violationType}`,
+		violationType: violationType as (typeof violationReasonEnum.enumValues)[number],
+		status: "pending"
 	});
 }

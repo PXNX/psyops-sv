@@ -508,6 +508,14 @@
 				{/if}
 			</div>
 			<Sparkline values={data.civilians.trend ?? []} label="Civilian population over the last 90 days" color="var(--color-positive)" />
+			<div class="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-line/10 pt-2 text-xs">
+				<span class="text-fg-muted" title="Share set by the region's education level: {(data.civilians.workforce.share * 100).toFixed(0)}%">
+					Civilian workforce · {(data.civilians.workforce.share * 100).toFixed(0)}% at education level {data.civilians.workforce.education}
+				</span>
+				<span class="font-mono text-fg-body" title="Civilians available to take a company shift">
+					{data.civilians.workforce.available.toLocaleString()} workers
+				</span>
+			</div>
 			{#if data.civilians.report?.contributions.length}
 				<div class="mt-2 grid gap-1 text-xs sm:grid-cols-2">
 					{#each data.civilians.report.contributions as c}

@@ -5,6 +5,7 @@ import { db } from "#lib/server/db.js";
 import { chatMessages, chatRestrictions, generalReports, userBlocks, violationReasonEnum } from "#lib/server/schema.js";
 import { and, desc, eq } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
+import { alreadyReported } from "#lib/server/services/moderation/report-dedupe.js";
 
 export const MAX_MESSAGE_LENGTH = 500;
 const COOLDOWN_MS = 2000;
@@ -105,6 +106,8 @@ export async function reportMessage(account: Account, formData: FormData, scope:
 	const message = await db.query.chatMessages.findFirst({ where: eq(chatMessages.id, id) });
 	if (!message || message.isDeleted || !inScope(message, scope)) return fail(404, { error: "Message not found" });
 	if (message.senderId === account.id) return fail(400, { error: "You can't report your own message" });
+	if (await alreadyReported(db, account.id, "message", String(id)))
+		return fail(400, { error: "You already reported this message" });
 
 	await db.insert(generalReports).values({
 		targetType: "message",

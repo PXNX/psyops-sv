@@ -4,6 +4,7 @@
 	import FluentWarning20Filled from "~icons/fluent/warning-20-filled";
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
 	import FormActions from "#lib/component/ui/FormActions.svelte";
+	import { REPORT_REASONS } from "./report/reasons.js";
 
 	interface Props {
 		show: boolean;
@@ -16,16 +17,6 @@
 
 	let reason = $state("");
 	let violationType = $state("other");
-
-	const violationTypes = [
-		{ value: "insult", label: "Insults / Harassment" },
-		{ value: "spam", label: "Spam" },
-		{ value: "pornography", label: "Pornographic Content" },
-		{ value: "hate_speech", label: "Hate Speech / Illegal Symbols" },
-		{ value: "graphic_violence", label: "Graphic Violence" },
-		{ value: "privacy_violation", label: "Privacy Violation" },
-		{ value: "other", label: "Other" }
-	];
 
 	function closeModal() {
 		show = false;
@@ -70,7 +61,7 @@
 						bind:value={violationType}
 						class="field-control rounded-sm px-3 py-2.5 w-full"
 					>
-						{#each violationTypes as type}
+						{#each REPORT_REASONS as type}
 							<option value={type.value}>{type.label}</option>
 						{/each}
 					</select>

@@ -14,6 +14,7 @@
 	import CommanderBadge from "#lib/component/CommanderBadge.svelte";
 	
 	import { Button, Badge } from "#lib/component/ui/index.js";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
 	import FluentMap from "~icons/fluent/map-24-regular";
 	import FluentClock from "~icons/fluent/clock-24-filled";
@@ -31,6 +32,8 @@
 		hexKey,
 		inBounds,
 		portUpgradeCost,
+		repairHours,
+		shipRepairCost,
 		type Hex,
 		type ShipClassId
 	} from "#lib/config/index.js";
@@ -44,7 +47,8 @@
 			title: "1. Select a hex",
 			body: "Enter q,r here or click a hex on the map's naval mode. The panel then shows the port, ships and mines on that tile.",
 			target: '[data-tutorial="navy-hex"]',
-			done: "hex-selected"
+			done: "hex-selected",
+			art: "hex" as const
 		},
 		{
 			id: "port",
@@ -52,7 +56,8 @@
 			body: "Enter a name in the highlighted form, pick a coastal region and submit. Each region can hold exactly one port, placed inside its EEZ.",
 			target: '[data-tutorial="build-port"]',
 			done: "port-built",
-			manual: "Show form"
+			manual: "Show form",
+			art: "port" as const
 		},
 		{
 			id: "dock",
@@ -60,7 +65,8 @@
 			body: "Click the highlighted button to build a dock or raise its level. More levels mean more construction bays.",
 			target: '[data-tutorial="dock-button"]',
 			done: "dock-built",
-			manual: "Show button"
+			manual: "Show button",
+			art: "dock" as const
 		},
 		{
 			id: "shipyard",
@@ -68,7 +74,8 @@
 			body: "In the Shipyard pick a dock and a class, then click “Add to queue”. The hull appears in the port once construction finishes.",
 			target: '[data-tutorial="shipyard"]',
 			done: "ship-ordered",
-			manual: "Show shipyard"
+			manual: "Show shipyard",
+			art: "ship" as const
 		},
 		{
 			id: "intel",
@@ -76,14 +83,16 @@
 			body: "Launch a sonar sweep over the selected hex. Sonar is the only sensor that reliably finds submarines; the details are in /docs/navy.",
 			target: '[data-tutorial="sea-intel"]',
 			done: "sea-intel",
-			manual: "Show panel"
+			manual: "Show panel",
+			art: "intel" as const
 		},
 		{
 			id: "air",
 			title: "6. Air operations",
 			body: "Task a squadron with a mission in the Air operations panel — naval strike or reconnaissance, for example. See /docs/air for the rules.",
 			target: '[data-tutorial="air-ops"]',
-			manual: "Finish"
+			manual: "Finish",
+			art: "mission" as const
 		}
 	];
 
@@ -120,6 +129,25 @@
 	const minesAt = (h: Hex) => data.mines.filter((m) => m.q === h.q && m.r === h.r);
 	const shipsAt = (h: Hex) => data.ships.filter((s) => s.q === h.q && s.r === h.r && s.status !== "sunk");
 	const def = (id: string) => SHIP_CLASSES[id as ShipClassId];
+
+	/** Cost overviews read from fleet.config.ts — the same numbers the server
+	 *  deducts — so a new required material there also appears in the UI. */
+	const facilityCost = (cost: { money: number; steel: number }) => ({ currency: cost.money, steel: cost.steel });
+	const portBuildCost = facilityCost(FACILITY.port);
+	const portUpgradeCosts = $derived(facilityCost(portUpgradeCost(selectedPort?.level ?? 1)));
+	const dockCosts = $derived(facilityCost(dockUpgradeCost(selectedDock?.level ?? 1)));
+	const mineCosts = facilityCost(FACILITY.mine);
+	const shipOrderCosts = $derived.by(() => {
+		const build = buildCost(orderClass);
+		const dockLevel = myDocks.find((d) => d.id === orderDockId)?.level ?? 1;
+		return { currency: build.money, steel: build.steel, hours: constructionHours(orderClass, dockLevel) };
+	});
+	const repairCosts = $derived.by(() => {
+		if (!selectedShip) return {};
+		const shipClass = selectedShip.shipClass as ShipClassId;
+		const missing = Math.max(0, (def(shipClass)?.hp ?? 0) - selectedShip.health);
+		return { currency: shipRepairCost(shipClass, missing), hours: repairHours(shipClass, missing, selectedDock?.level ?? 1) };
+	});
 
 	const myShips = $derived(data.ships.filter((s) => s.stateId === data.myStateId && s.status !== "sunk"));
 	const myPorts = $derived(data.ports.filter((p) => p.stateId === data.myStateId));
@@ -310,14 +338,14 @@
 									</form>
 								{/if}
 							</div>
-							<p class="mt-1 text-[11px] text-fg-muted">
+							<div class="mt-2 grid gap-2 sm:grid-cols-2">
 								{#if selectedPort.level < FACILITY.maxPortLevel}
-									Port upgrade: {portUpgradeCost(selectedPort.level).money.toLocaleString()} · {portUpgradeCost(selectedPort.level).steel} steel
+									<ResourceRequirements title="Port expansion" compact costs={portUpgradeCosts} available={{}} />
 								{/if}
 								{#if !selectedDock || selectedDock.level < FACILITY.maxDockLevel}
-									<br />Dock: {dockUpgradeCost(selectedDock?.level ?? 1).money.toLocaleString()} · {dockUpgradeCost(selectedDock?.level ?? 1).steel} steel
+									<ResourceRequirements title="Dock construction" compact costs={dockCosts} available={{}} />
 								{/if}
-							</p>
+							</div>
 						{/if}
 					{:else if data.canCommand && data.portCandidates.length}
 						<form method="POST" action="?/buildPort" use:enhance={enhanceForm} data-tutorial="build-port" class="mt-2 space-y-2">
@@ -336,6 +364,7 @@
 									<option value={region.id}>{region.label}</option>
 								{/each}
 							</select>
+							<ResourceRequirements title="Build port" compact costs={portBuildCost} available={{}} />
 							<Button type="submit" size="sm">Build port</Button>
 						</form>
 					{:else if selectedHex && data.canCommand}
@@ -466,6 +495,15 @@
 									</form>
 								{/if}
 							</div>
+							<div class="mt-2 grid gap-2 sm:grid-cols-2">
+								<ResourceRequirements title="Move · per hex" compact costs={{ fuel: shipDef?.fuelPerHex ?? 0 }} available={{}} />
+								{#if selectedDock && selectedDock.stateId === data.myStateId && selectedShip.health < (shipDef?.hp ?? 0)}
+									<ResourceRequirements title="Repair" compact costs={repairCosts} available={{}} />
+								{/if}
+								{#if shipDef?.minelayer && selectedShip.status === "idle"}
+									<ResourceRequirements title="Lay mines" compact costs={mineCosts} available={{}} />
+								{/if}
+							</div>
 							{#if shipDef?.cargo.kind && selectedPort && selectedPort.stateId === data.myStateId}
 								<form method="POST" action="?/cargo" use:enhance={enhanceForm} class="mt-3 flex flex-wrap items-end gap-2 border-t border-line/15 pt-3">
 									<input type="hidden" name="shipId" value={selectedShip.id} />
@@ -508,12 +546,7 @@
 									</optgroup>
 								{/each}
 							</select>
-							<p class="text-[11px] text-fg-muted">
-								{buildCost(orderClass).money.toLocaleString()} credits · {buildCost(orderClass).steel} steel · ~{constructionHours(
-									orderClass,
-									myDocks.find((d) => d.id === orderDockId)?.level ?? 1
-								)}h at this dock
-							</p>
+							<ResourceRequirements title="Ship order" compact costs={shipOrderCosts} available={{}} />
 							<Button type="submit" size="sm">Add to queue</Button>
 						</form>
 					</section>

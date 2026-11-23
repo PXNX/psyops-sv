@@ -7,6 +7,7 @@
 	import { fade } from "svelte/transition";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
+	import ResourceRequirements from "#lib/component/ResourceRequirements.svelte";
 	import CameraFeed from "#lib/component/infiltration/CameraFeed.svelte";
 	import IntrusionConsole from "#lib/component/infiltration/IntrusionConsole.svelte";
 	import FileSystemExplorer from "#lib/component/infiltration/FileSystemExplorer.svelte";
@@ -61,6 +62,10 @@
 
 	let plantKind = $state<AssetKind>("agent");
 	let selectedAssetId = $state<number | null>(null);
+
+	/** Planting cost shown from the same config the action charges. */
+	const plantCosts = $derived({ currency: INFILTRATION_ASSETS[plantKind].cost });
+	const plantAvailable = $derived({ currency: data.treasury ?? 0 });
 	let openSiteId = $state<string | null>(null);
 	let openFileId = $state<number | null>(null);
 	let lastAction = $state<Outcome | null>(null);
@@ -145,7 +150,10 @@
 			}
 		};
 	};
-	const actForm = (kind: InfiltrationActionKind, siteId: string) => {
+	// `enhance` calls the outer function on submit; the inner one handles the
+	// result. Setting `acting` outside that wrapper disabled the button during
+	// render, which made "Cover tracks" (and every site action) look dead.
+	const actForm = (kind: InfiltrationActionKind, siteId: string) => () => {
 		acting = `${kind}-${siteId}`;
 		return async ({ result, update }: any) => {
 			acting = null;
@@ -277,6 +285,12 @@
 									</div>
 								</button>
 								{#if asset.usable}
+									<ResourceRequirements
+										compact
+										title="Cover tracks"
+										costs={{ currency: INFILTRATION_ACTIONS.cover.cost, heat: INFILTRATION_ACTIONS.cover.heat }}
+										available={{ currency: data.treasury ?? 0 }}
+									/>
 									<form method="POST" action="?/act" class="mt-1 flex justify-end" use:enhance={actForm("cover", "")}>
 										<input type="hidden" name="assetId" value={asset.id} />
 										<input type="hidden" name="action" value="cover" />
@@ -285,7 +299,7 @@
 											disabled={(data.treasury ?? 0) < INFILTRATION_ACTIONS.cover.cost || acting === `cover-`}
 											class="inline-flex items-center gap-1.5 text-[11px] text-fg-muted hover:text-primary disabled:opacity-40"
 										>
-											<IconCover class="size-3.5" /> Cover tracks · ${INFILTRATION_ACTIONS.cover.cost.toLocaleString()}
+											<IconCover class="size-3.5" /> Cover tracks
 										</button>
 									</form>
 								{/if}
@@ -322,6 +336,7 @@
 							</label>
 						{/each}
 					</fieldset>
+					<ResourceRequirements title="Planting cost" costs={plantCosts} available={plantAvailable} />
 					<Button
 						type="submit"
 						variant="primary"
@@ -458,9 +473,15 @@
 												>
 													{spec.label}{#if chance !== null}<span class="data ml-1 opacity-70">≈{chance}%</span>{/if}
 												</Button>
-												<p class="field-hint mt-1 text-center text-[10px]">
-													{blocked ?? `$${spec.cost.toLocaleString()} · +${spec.heat} heat`}
-												</p>
+												{#if blocked}
+													<p class="field-hint mt-1 text-center text-[10px] text-error">{blocked}</p>
+												{:else}
+													<ResourceRequirements
+														compact
+														costs={{ currency: spec.cost, heat: spec.heat }}
+														available={{ currency: data.treasury ?? 0 }}
+													/>
+												{/if}
 											</form>
 										{/each}
 									</div>

@@ -23,6 +23,7 @@ import {
 	seesThrough,
 	signalBonus,
 	PSYOPS,
+	UNIT_CATEGORIES,
 	type Deception,
 	type SensorId,
 	type UnitCategory,
@@ -39,7 +40,12 @@ export function redactPicture(
 ): IntelPicture {
 	const out: IntelPicture = { ...picture };
 	if (!fields.has("unitCounts")) {
-		out.categories = {} as IntelPicture["categories"];
+		// Keep every category present but unobserved. Consumers index all of
+		// UNIT_CATEGORIES (the intel table renders one badge per category), so
+		// an empty object here makes the page throw on `cat.coverage`.
+		out.categories = Object.fromEntries(
+			UNIT_CATEGORIES.map((c) => [c, { coverage: 0, count: null, estimated: false }])
+		) as IntelPicture["categories"];
 		out.knownUnits = 0;
 		out.confidence = 0;
 		out.level = "none";

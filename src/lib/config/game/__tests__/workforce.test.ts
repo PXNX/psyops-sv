@@ -6,14 +6,27 @@ import {
 	civilianLabour,
 	civilianRevenue,
 	civilianWage,
-	employableCivilians
+	employableCivilians,
+	labourShare
 } from "../workforce.config";
 
 describe("civilian labour", () => {
-	it("offers a fixed share of the population as workers", () => {
-		expect(civilianLabour(100_000)).toBe(40_000);
-		expect(civilianLabour(0)).toBe(0);
-		expect(civilianLabour(-5)).toBe(0);
+	it("grows the workforce with the region's education level", () => {
+		// No schools: only uneducated manual labour is available.
+		expect(labourShare(0)).toBe(CIVILIAN_WORK.LABOUR_SHARE_BASE);
+		expect(civilianLabour(100_000, 0)).toBe(20_000);
+		expect(civilianLabour(100_000, 4)).toBe(40_000);
+		// More schooling means more civilians can take a factory job.
+		expect(labourShare(5)).toBeGreaterThan(labourShare(0));
+		expect(civilianLabour(100_000, 10)).toBeGreaterThan(civilianLabour(100_000, 0));
+	});
+
+	it("caps the educated share and tolerates missing/negative levels", () => {
+		expect(labourShare(50)).toBe(CIVILIAN_WORK.LABOUR_SHARE_MAX);
+		expect(labourShare(Number.NaN)).toBe(CIVILIAN_WORK.LABOUR_SHARE_BASE);
+		expect(labourShare(-3)).toBe(CIVILIAN_WORK.LABOUR_SHARE_BASE);
+		expect(civilianLabour(0, 5)).toBe(0);
+		expect(civilianLabour(-5, 5)).toBe(0);
 	});
 
 	it("pays civilians a fraction of the posted wage, never zero", () => {

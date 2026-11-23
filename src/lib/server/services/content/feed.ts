@@ -5,6 +5,7 @@ import { db } from "#lib/server/db.js";
 import {
 	accounts,
 	articles,
+	comments,
 	files,
 	newspaperSubscriptions,
 	newspapers,
@@ -59,7 +60,8 @@ export async function fetchFeed(
 			newspaperId: articles.newspaperId,
 			newspaperName: newspapers.name,
 			newspaperLogoFileId: newspapers.logo,
-			upvoteCount: sql<number>`cast(count(${upvotes.id}) as int)`
+			upvoteCount: sql<number>`cast(count(${upvotes.id}) as int)`,
+			commentCount: sql<number>`cast((select count(*) from ${comments} where ${comments.articleId} = ${articles.id}) as int)`
 		})
 		.from(articles)
 		.leftJoin(accounts, eq(articles.authorId, accounts.id))
@@ -94,6 +96,7 @@ export async function fetchFeed(
 				newspaperName: a.newspaperName,
 				newspaperLogo,
 				upvoteCount: a.upvoteCount,
+				commentCount: a.commentCount,
 				own: accountId === a.authorId
 			};
 		})

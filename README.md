@@ -404,6 +404,18 @@ Starts the app in mock mode, requests every page route and fails if any of them 
 
 The application uses a dark editorial interface inspired by operational field notes: midnight-ink surfaces, parchment-toned rules, serif hierarchy and carefully reserved amber feedback. It remains optimized for mobile screens with responsive navigation and content layouts.
 
+## Design rules
+
+### Always show the full cost
+
+Every action that spends money, fuel or materials must show a **complete cost overview** in the UI *before* the player commits to it. The overview belongs wherever the action is initiated — operations, navy and fleet orders, factory and production orders, construction, research, and anywhere else a price is paid. Use the shared `ResourceRequirements` component (`src/lib/component/ResourceRequirements.svelte`) rather than building another one.
+
+- Show **all** currencies an action consumes, not just the headline price: credits, steel and other resources, fuel, energy, manpower/civilians and time.
+- Include **additional or alternative materials required by a recipe** — for example a factory that needs machine tools (plus fab equipment for fabrication lines) beyond its base build cost. Build the `costs` map from the config helpers the server uses too (`equipmentForFactory`, `buildCost`, `FACILITY`, …) so a newly required material shows up automatically; do not hard-code a partial list in the UI.
+- List all cost components together in one overview so affordability can be judged at a glance, and pass the player's balances as `available` for a ✓/✗ check. When a balance is not loaded on that page, omit it rather than showing a misleading zero.
+- Costs that have no market page (credits, time, manpower, energy) are labelled and formatted by the component — never link them to `/market/…`.
+- When a cost cannot be shown (unknown dynamic value), say so explicitly rather than silently omitting it.
+
 ## Development
 
 - **Removed `.vscode`**: Editor-specific configurations have been removed to ensure consistency across different development environments.

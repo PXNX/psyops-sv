@@ -165,7 +165,13 @@ export const actions: Actions = {
 	reportComment: async ({ request, locals }) => {
 		const f = await request.formData();
 		try {
-			await reportComment(db, locals.account!.id, Number(f.get("commentId")), String(f.get("reason") ?? ""));
+			await reportComment(
+				db,
+				locals.account!.id,
+				Number(f.get("commentId")),
+				String(f.get("violationType") ?? ""),
+				String(f.get("description") ?? "")
+			);
 			return { success: true, message: "Report sent to the moderators." };
 		} catch (err) {
 			return fail(400, { error: err instanceof SocialError ? err.message : "Report failed" });

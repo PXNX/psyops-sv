@@ -1,7 +1,7 @@
 // src/routes/(authenticated)/(dock)/state/[id]/budget/+page.server.ts
 import { db } from "#lib/server/db.js";
 import { states, governmentBudgetTransactions, userProfiles, accounts, stateTreasury } from "#lib/server/schema.js";
-import { eq, sql, desc } from "drizzle-orm";
+import { and, eq, gte, sql, desc } from "drizzle-orm";
 import { error } from "@sveltejs/kit";
 import { getLogoUrl } from "#lib/server/backblaze.js";
 import type { PageServerLoad } from "./$types";
@@ -78,7 +78,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			})
 			.from(governmentBudgetTransactions)
 			.where(
-				sql`${governmentBudgetTransactions.stateId} = ${stateId} AND ${governmentBudgetTransactions.createdAt} >= ${thirtyDaysAgo}`
+				and(
+					eq(governmentBudgetTransactions.stateId, stateId),
+					gte(governmentBudgetTransactions.createdAt, thirtyDaysAgo)
+				)
 			)
 			.orderBy(desc(governmentBudgetTransactions.createdAt))
 	]);

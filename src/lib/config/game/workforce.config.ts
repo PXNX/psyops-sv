@@ -12,8 +12,12 @@
 //
 // Pure data and pure functions only (client and server).
 export const CIVILIAN_WORK = {
-	/** Share of a region's civilians available for factory work. */
-	LABOUR_SHARE: 0.4,
+	/** Share of civilians who can work with no schools at all (manual labour). */
+	LABOUR_SHARE_BASE: 0.2,
+	/** Extra share for each level of the region's schools/universities. */
+	LABOUR_SHARE_PER_LEVEL: 0.05,
+	/** Hard ceiling on the share, however educated the region becomes. */
+	LABOUR_SHARE_MAX: 0.7,
 	/** A civilian's weekly wage as a share of the factory's posted worker wage. */
 	WAGE_FACTOR: 0.4,
 	/** Units a civilian makes per week as a share of the factory's productionRate. */
@@ -49,9 +53,23 @@ export const CIVILIAN_WORK = {
 	DEFAULT_GOOD_VALUE: 20
 } as const;
 
-/** Civilians of `population` who can take a factory job. */
-export function civilianLabour(population: number): number {
-	return Math.max(0, Math.floor(population * CIVILIAN_WORK.LABOUR_SHARE));
+/**
+ * Share of a region's civilians who can take a factory job. Schools turn a
+ * larger part of the population into a usable workforce: without any education
+ * only `LABOUR_SHARE_BASE` can work, each school level adds
+ * `LABOUR_SHARE_PER_LEVEL`, and the share never exceeds `LABOUR_SHARE_MAX`.
+ */
+export function labourShare(educationLevel: number): number {
+	const level = Number.isFinite(educationLevel) ? Math.max(0, educationLevel) : 0;
+	return Math.min(
+		CIVILIAN_WORK.LABOUR_SHARE_MAX,
+		CIVILIAN_WORK.LABOUR_SHARE_BASE + level * CIVILIAN_WORK.LABOUR_SHARE_PER_LEVEL
+	);
+}
+
+/** Civilians of `population` who can take a factory job at `educationLevel`. */
+export function civilianLabour(population: number, educationLevel = 0): number {
+	return Math.max(0, Math.floor(population * labourShare(educationLevel)));
 }
 
 /** Weekly wage of one civilian worker at a factory paying `postedWage`. */

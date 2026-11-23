@@ -41,7 +41,9 @@
 	const listing = $derived(listDirectory(fs, path));
 	const copied = $derived(new Set(copiedIds));
 
-	const submit = (key: string, cmd: string) => {
+	// `enhance` invokes the outer function on submit; doing this work in the
+	// factory would set `busy` (and disable the buttons) during render.
+	const submit = (key: string, cmd: string) => () => {
 		command = cmd;
 		busy = key;
 		return async ({ result, update }: any) => {

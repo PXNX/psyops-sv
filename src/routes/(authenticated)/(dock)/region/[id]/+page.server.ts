@@ -54,6 +54,8 @@ import {
 	EFFECT_LABEL,
 	regionPopulation,
 	regionDensity,
+	civilianLabour,
+	labourShare,
 	CIVILIAN_NEEDS,
 	NEED_META,
 	type StrikeTarget,
@@ -575,7 +577,14 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			population: regionPopulation(region),
 			density: Math.round(regionDensity(region)),
 			report: populationReport,
-			trend: populationTrend.map((p) => p.value)
+			trend: populationTrend.map((p) => p.value),
+			// The share of people who can work a company shift is set by the
+			// region's education level (schools/universities).
+			workforce: {
+				available: civilianLabour(regionPopulation(region), region.education ?? 0),
+				share: labourShare(region.education ?? 0),
+				education: region.education ?? 0
+			}
 		},
 		civilianNeeds: civilianNeeds
 			? {

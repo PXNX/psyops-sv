@@ -9,6 +9,7 @@
 	import FluentMore20Filled from "~icons/fluent/more-20-filled";
 	import FluentLink20Filled from "~icons/fluent/link-20-filled";
 	import FluentFlag20Filled from "~icons/fluent/flag-20-filled";
+	import { REPORT_REASONS } from "#lib/component/report/reasons.js";
 	import { stamp } from "./time.js";
 
 	export interface CommentNode {
@@ -27,7 +28,8 @@
 
 	let replyingTo = $state<number | null>(null);
 	let sheetComment = $state<CommentNode | null>(null);
-	let reason = $state("");
+	let violationType = $state("");
+	let description = $state("");
 	let copied = $state(false);
 
 	const enhanceToast = () => async ({ result, update }: { result: any; update: () => Promise<void> }) => {
@@ -72,7 +74,7 @@
 					size="xs"
 					shape="square"
 					variant="ghost"
-					onclick={() => { sheetComment = comment; reason = ""; }}
+					onclick={() => { sheetComment = comment; violationType = ""; description = ""; }}
 				/>
 			</div>
 		</div>
@@ -129,10 +131,19 @@
 			<form method="POST" action="?/reportComment" use:enhance={enhanceToast} class="space-y-2">
 				<input type="hidden" name="commentId" value={sheetComment.id} />
 				<label class="block">
-					<span class="field-label">Why report this comment?</span>
-					<textarea name="reason" rows="3" maxlength="500" bind:value={reason} placeholder="Spam, harassment, misinformation…" class="field-control mt-1 w-full rounded-sm px-3 py-2 text-sm"></textarea>
+					<span class="field-label">Reason *</span>
+					<select name="violationType" bind:value={violationType} required class="field-control mt-1 w-full rounded-sm px-3 py-2 text-sm">
+						<option value="" disabled>Select a reason</option>
+						{#each REPORT_REASONS as r}
+							<option value={r.value}>{r.label}</option>
+						{/each}
+					</select>
 				</label>
-				<Button type="submit" size="sm" variant="ghost" icon={FluentFlag20Filled}>Report to moderators</Button>
+				<label class="block">
+					<span class="field-label">Additional details (optional)</span>
+					<textarea name="description" rows="3" maxlength="500" bind:value={description} placeholder="Provide any additional context…" class="field-control mt-1 w-full rounded-sm px-3 py-2 text-sm"></textarea>
+				</label>
+				<Button type="submit" size="sm" variant="ghost" icon={FluentFlag20Filled} disabled={!violationType}>Report to moderators</Button>
 			</form>
 		</div>
 	{/if}

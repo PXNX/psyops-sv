@@ -37,6 +37,14 @@ jobs.
 
 <DocArt kind="needs" label="Four needs, one threshold" caption="Food, water, electricity and heat are weighted 35/30/20/15. Below 0.85 coverage, hardship grows." />
 
+A region's **education level** decides how many of its civilians can work in a
+company: **20%** with no schools, **+5 percentage points per school level**, up
+to **70%**. Each weekly tick (`/api/cron/workforce`) fills a factory's free
+shifts from that pool, pays a wage out of the company budget, books the output
+as revenue for the company and collects income tax for the state. A company
+that cannot pay the wage simply employs fewer civilians; a drafted or sick
+population shrinks the pool (see [Conflict](/docs/conflict)).
+
 ## 4. Visas and migration
 
 States set visa rules (`/visas`). Citizens of other states need an approved
@@ -65,6 +73,15 @@ hospitals **30,000**, economy **20,000**. Terrain multipliers include city
 **1.9**, urban **1.6**, town **1.3**, shore **1.1**, plains **1.0**, forest
 **0.7**, mountain **0.5**, desert **0.45**, lake **0.35**. The base roll is
 `60,000 + roll² × 900,000`, rounded to 100.
+
+### Civilian work (`workforce.config.ts`)
+
+`labourShare(educationLevel)` = **min(0.70, 0.20 + 0.05 × education)**. The
+weekly cron passes that share of each region's population (further reduced by
+conscription and hospital strain) into its factories' free slots. A civilian
+earns **40%** of the factory's posted wage (`civilianWage`); their output is
+valued per good (`civilianRevenue`, 60% of the posted production rate) and
+credited to the company budget, while the wage is taxed as state income.
 
 ### Civilian needs (`civilian-supply.config.ts`)
 

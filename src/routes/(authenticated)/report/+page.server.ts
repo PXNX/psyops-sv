@@ -3,6 +3,7 @@ import { db } from "#lib/server/db.js";
 import { generalReports, contentFlags, accounts, politicalParties } from "#lib/server/schema.js";
 import { eq, and } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
+import { alreadyReported } from "#lib/server/services/moderation/report-dedupe.js";
 import type { Actions } from "./$types";
 
 export const actions: Actions = {
@@ -33,6 +34,10 @@ export const actions: Actions = {
 		// Cannot report yourself
 		if (account.id === targetId) {
 			return fail(400, { error: "Cannot report yourself" });
+		}
+
+		if (await alreadyReported(db, account.id, "account", targetId)) {
+			return fail(400, { error: "You already reported this account" });
 		}
 
 		await db.insert(generalReports).values({
@@ -69,6 +74,10 @@ export const actions: Actions = {
 
 		if (!party) {
 			return fail(404, { error: "Party not found" });
+		}
+
+		if (await alreadyReported(db, account.id, "party", targetId)) {
+			return fail(400, { error: "You already reported this party" });
 		}
 
 		await db.insert(generalReports).values({

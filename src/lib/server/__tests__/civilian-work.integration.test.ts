@@ -38,7 +38,11 @@ beforeAll(async () => {
 		.set({ maxWorkers: 10, productionRate: 10, workerWage: 1500 })
 		.where(eq(factories.id, factoryId));
 	await handle.db.delete(factoryWorkers).where(eq(factoryWorkers.factoryId, factoryId));
-	await handle.db.update(regions).set({ population: 100_000 }).where(eq(regions.id, regionId));
+	// A mid-level school gives a known, education-driven labour pool.
+	await handle.db
+		.update(regions)
+		.set({ population: 100_000, education: 4 })
+		.where(eq(regions.id, regionId));
 	await handle.db.update(companyBudgets).set({ balance: 1_000_000 }).where(eq(companyBudgets.companyId, companyId));
 	if (stateId != null) {
 		await handle.db.insert(stateTaxes).values({ stateId, taxType: "income", taxRate: 10, isActive: true });

@@ -84,7 +84,9 @@ export async function runCivilianWork(
 		regionRows.map((r) => {
 			const strain = r.stateId != null ? pressure.get(r.stateId) : undefined;
 			const participation = (strain ? conscriptionWorkforce(strain.pressure) : 1) * healthyWorkforce(strain?.hospital ?? 1);
-			return [r.id, Math.floor(civilianLabour(regionPopulation(r)) * participation)];
+			// A region's school level decides how much of its population can work
+			// a factory shift in the first place.
+			return [r.id, Math.floor(civilianLabour(regionPopulation(r), r.education ?? 0) * participation)];
 		})
 	);
 	const stateOfRegion = new Map<number, number | null>(regionRows.map((r) => [r.id, r.stateId]));

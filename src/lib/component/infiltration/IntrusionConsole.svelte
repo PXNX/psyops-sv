@@ -37,7 +37,9 @@
 	let payloadKind = $state<(typeof payloads)[number]>("grid_attack");
 	let busy = $state<string | null>(null);
 
-	const submit = (key: string) => {
+	// `enhance` invokes the outer function on submit. Setting `busy` when this
+	// factory is called would disable every button as soon as the page renders.
+	const submit = (key: string) => () => {
 		busy = key;
 		return async ({ result, update }: any) => {
 			busy = null;

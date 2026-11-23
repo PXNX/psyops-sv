@@ -17,6 +17,8 @@
 		newspaperName?: string | null;
 		newspaperLogo?: string | null;
 		upvoteCount: number;
+		/** Reader comments, when the feed supplies it. */
+		commentCount?: number;
 		own?: boolean;
 	}
 </script>
@@ -24,6 +26,7 @@
 <script lang="ts">
 	import FluentHeart20Filled from "~icons/fluent/heart-20-filled";
 	import FluentHeart20Regular from "~icons/fluent/heart-20-regular";
+	import FluentChat20Regular from "~icons/fluent/chat-20-regular";
 	import MdiNewspaper from "~icons/mdi/newspaper";
 	import Logo from "#lib/component/Logo.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
@@ -127,6 +130,12 @@
 				{/if}
 				{article.upvoteCount}
 			</span>
+			{#if article.commentCount != null}
+				<span class="inline-flex items-center gap-1" aria-label="{article.commentCount} comments">
+					<FluentChat20Regular class="size-3.5" />
+					{article.commentCount}
+				</span>
+			{/if}
 		</span>
 	</div>
 </article>

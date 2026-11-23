@@ -3,7 +3,7 @@
 // bombing, airlift, reconnaissance, tanker runs and battlefield support.
 // A squadron is assigned a mission and a target; the resolver applies the
 // effect when the sortie returns and pays the crew in experience.
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, lte, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import {
 	airMissions,
@@ -277,7 +277,7 @@ export async function resolveAirMissions(db: Database, now = new Date(), rng: ()
 	const due = await db
 		.select()
 		.from(airMissions)
-		.where(and(eq(airMissions.status, "in_progress"), sql`${airMissions.completesAt} <= ${now}`));
+		.where(and(eq(airMissions.status, "in_progress"), lte(airMissions.completesAt, now)));
 	for (const mission of due) {
 		const result = await applyMission(db, mission, now, rng);
 		const [unit] = await db.select().from(militaryUnits).where(eq(militaryUnits.id, mission.unitId));

@@ -5,6 +5,7 @@
 	import BottomSheet from "#lib/component/BottomSheet.svelte";
 	import FormActions from "#lib/component/ui/FormActions.svelte";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
+	import { REPORT_REASONS } from "./report/reasons.js";
 
 	interface Props {
 		open: boolean;
@@ -18,16 +19,6 @@
 	let violationType = $state("");
 	let description = $state("");
 	let isSubmitting = $state(false);
-
-	const reasons = [
-		{ value: "insult", label: "Insults or harassment" },
-		{ value: "spam", label: "Spam or advertising" },
-		{ value: "hate_speech", label: "Hate speech" },
-		{ value: "pornography", label: "Pornography or sexual content" },
-		{ value: "graphic_violence", label: "Graphic violence" },
-		{ value: "privacy_violation", label: "Privacy violation" },
-		{ value: "other", label: "Other" }
-	];
 
 	function handleClose() {
 		open = false;
@@ -78,7 +69,7 @@
 							required
 						>
 							<option value="" disabled>Select a reason</option>
-							{#each reasons as r}
+							{#each REPORT_REASONS as r}
 								<option value={r.value}>{r.label}</option>
 							{/each}
 						</select>

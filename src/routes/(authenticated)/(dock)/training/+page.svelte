@@ -265,11 +265,17 @@
 		<div class="flex flex-wrap items-center justify-between gap-2">
 			<h2 class="section-title">Commanders & formations</h2>
 			{#if data.navy.canCommand}
-				<form method="POST" action="?/startTraining" use:enhance>
-					<Button type="submit" size="sm" variant="secondary">
-						Academy · ${ACADEMY.money.toLocaleString()} + {ACADEMY.steel} steel · {ACADEMY.durationHours}h
-					</Button>
-				</form>
+				<div class="w-full sm:w-auto sm:min-w-56">
+					<ResourceRequirements
+						title="Academy cost"
+						compact
+						costs={{ currency: ACADEMY.money, steel: ACADEMY.steel, hours: ACADEMY.durationHours }}
+						available={{}}
+					/>
+					<form method="POST" action="?/startTraining" use:enhance class="mt-2">
+						<Button type="submit" size="sm" variant="secondary">Train a commander</Button>
+					</form>
+				</div>
 			{/if}
 		</div>
 		{#if (data.commanderTrainings ?? []).length}
