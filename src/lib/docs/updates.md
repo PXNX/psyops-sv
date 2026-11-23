@@ -52,10 +52,14 @@ the offering. Until then the company page shows a pending-listing notice with
 the date.
 
 Once listed, shares trade on the **market page** (`/market`) as well as on the
-company page. The Stocks board shows each company's quote, cheapest ask, shares
-on offer and your holding. Buy the cheapest open offer or post your own sell
-order; the same service (`services/economy/stock-market.ts`) enforces the
-embargo, wallet, founder locked-block and transaction rules for both screens.
+company page. Public companies appear as a **Company stocks** group alongside
+raw materials and goods, with the same sparklines, price charts, cheapest ask
+and change figures; share purchases are written to the market price history so
+their charts show real trades. Clicking a stock opens the company's order book.
+The market now lists **every** resource and product in the game, not just the
+starter set. Buy the cheapest open offer or post your own sell order; the same
+service (`services/economy/stock-market.ts`) enforces the embargo, wallet,
+founder locked-block and transaction rules for both screens.
 
 | Stage | Who acts | Delay |
 | --- | --- | --- |
@@ -180,6 +184,11 @@ the current conscription regime and soldiers under arms, and a labelled list of
 everything that moves the population: births, natural and war mortality,
 environmental and conscription tolls, healthcare shortfalls, hardship,
 emigration and disease.
+
+The region and state lists on that page carry their coats of arms and logos,
+and can be searched by name. Civilians give **+10 stance** to states in the same
+bloc as their own: the bonus is applied when stances are read, so it appears
+immediately for existing opinion records.
 
 Biological diseases add an outbreak pressure of their own. Three illnesses —
 influenza, cholera and typhus — each have a **daily spread rate**, a **daily

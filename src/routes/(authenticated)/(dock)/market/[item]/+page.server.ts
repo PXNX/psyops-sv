@@ -11,6 +11,8 @@ import {
 	stateProductInventory,
 	stateTreasury,
 	governmentBudgetTransactions,
+	resourceTypeEnum,
+	productTypeEnum,
 	userWallets,
 	residences,
 	regions,
@@ -36,8 +38,8 @@ class PurchaseError extends Error {}
 
 const isCount = (n: number) => Number.isInteger(n) && n >= 1 && n <= 1_000_000_000;
 
-const RESOURCES = ["iron", "copper", "steel", "gunpowder", "wood", "coal"];
-const PRODUCTS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"];
+const RESOURCES: readonly string[] = resourceTypeEnum.enumValues;
+const PRODUCTS: readonly string[] = productTypeEnum.enumValues;
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const account = locals.account!;

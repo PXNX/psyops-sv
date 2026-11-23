@@ -6,7 +6,8 @@ import { desc, eq, sql } from "drizzle-orm";
 import type { PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { regions, stateBailouts, states } from "#lib/server/schema.js";
-import { getRegionName } from "#lib/utils/formatting.js";
+import { getRegionName, regionCoatUrl } from "#lib/utils/formatting.js";
+import { getLogoUrl } from "#lib/server/backblaze.js";
 import { civilianLabour, labourShare, regionDensity, regionPopulation } from "#lib/config/index.js";
 import { statePopulation } from "#lib/server/services/population.js";
 import { statePopulationReport } from "#lib/server/services/population-report.js";
@@ -26,28 +27,33 @@ export const load: PageServerLoad = async ({ params }) => {
 		.limit(1);
 	if (!state) error(404, "State not found");
 
-	const [civilians, regionRows, series, stancesAbout, stancesHeld, bailoutRows, report, pressure, outbreaks] =
+	const [civilians, regionRows, series, stancesAbout, stancesHeld, bailoutRows, report, pressure, outbreaks, stateRows] =
 		await Promise.all([
 			statePopulation(db, stateId),
 			db.select().from(regions).where(eq(regions.stateId, stateId)),
 			stateSeries(stateId, 90),
 			stancesToward(db, stateId),
 			stancesHeldBy(db, stateId),
-		db
-			.select({
-				amount: stateBailouts.amount,
-				from: states.name,
-				createdAt: stateBailouts.createdAt
-			})
-			.from(stateBailouts)
-			.innerJoin(states, eq(stateBailouts.donorStateId, states.id))
-			.where(eq(stateBailouts.recipientStateId, stateId))
-			.orderBy(desc(stateBailouts.createdAt))
+			db
+				.select({
+					amount: stateBailouts.amount,
+					donorId: stateBailouts.donorStateId,
+					from: states.name,
+					createdAt: stateBailouts.createdAt
+				})
+				.from(stateBailouts)
+				.innerJoin(states, eq(stateBailouts.donorStateId, states.id))
+				.where(eq(stateBailouts.recipientStateId, stateId))
+				.orderBy(desc(stateBailouts.createdAt))
 				.limit(5),
 			statePopulationReport(db, stateId),
 			statesPressure(db, [stateId]),
-			stateOutbreaks(db, stateId)
+			stateOutbreaks(db, stateId),
+			db.select({ id: states.id, logo: states.logo }).from(states)
 		]);
+
+	const logoUrls = new Map<number, string | null>();
+	for (const row of stateRows) logoUrls.set(row.id, await getLogoUrl(row.logo));
 
 	const byRegion = regionRows
 		.map((r) => {
@@ -56,6 +62,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			return {
 				id: r.id,
 				name: getRegionName(r.id),
+				logo: regionCoatUrl(r.id),
 				population,
 				density: Math.round(regionDensity(r)),
 				workforce: Math.round(civilianLabour(population, education)),
@@ -92,11 +99,13 @@ export const load: PageServerLoad = async ({ params }) => {
 			startedAt: o.startedAt.toISOString(),
 			updatedAt: o.updatedAt.toISOString()
 		})),
-		stancesAbout,
-		stancesHeld,
+		stancesAbout: stancesAbout.map((s) => ({ ...s, logo: logoUrls.get(s.stateId) ?? null })),
+		stancesHeld: stancesHeld.map((s) => ({ ...s, logo: logoUrls.get(s.stateId) ?? null })),
 		bailoutHistory: bailoutRows.map((b) => ({
 			amount: Number(b.amount),
+			donorId: b.donorId,
 			from: b.from,
+			logo: logoUrls.get(b.donorId) ?? null,
 			date: b.createdAt.toISOString()
 		}))
 	};

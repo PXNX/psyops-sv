@@ -12,6 +12,7 @@
 	import Sparkline from "./Sparkline.svelte";
 	import { DAY, HOUR, money, type SeriesPoint } from "./series";
 	import { dtgDate, dtgShortDate, dtgTime } from "#lib/utils/dtg.js";
+	import { goodLabel } from "#lib/config/index.js";
 
 	let { data, form } = $props();
 	let buyingStock = $state<number | null>(null);
@@ -83,15 +84,15 @@
 	{#if hero}
 		<section class="panel rounded-sm overflow-hidden">
 			<div class="px-4 pt-4 sm:px-5 sm:pt-5 flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-				<a href="/market/{hero.name}" class="group flex items-center gap-3 min-w-0">
+				<a href={hero.href ?? `/market/${hero.name}`} class="group flex items-center gap-3 min-w-0">
 					<span class="size-12 shrink-0 flex items-center justify-center rounded-sm panel-muted">
-						<ResourceIcon name={hero.name} class="size-7" />
+						{#if hero.kind === "stock"}<span class="text-2xl">📈</span>{:else}<ResourceIcon name={hero.name} class="size-7" />{/if}
 					</span>
 					<span class="min-w-0">
 						<span
 							class="block font-sans text-lg sm:text-xl font-semibold capitalize text-fg group-hover:text-primary-fg transition-colors truncate"
 						>
-							{hero.name}
+							{goodLabel(hero.label ?? hero.name)}
 						</span>
 						<span class="flex items-center gap-2">
 							{#key heroPrice}
@@ -124,8 +125,8 @@
 									hover = null;
 								}}
 							>
-								<ResourceIcon name={m.name} class="size-4" />
-								<span class="capitalize">{m.name}</span>
+								{#if m.kind === "stock"}<span class="text-sm">📈</span>{:else}<ResourceIcon name={m.name} class="size-4" />{/if}
+								<span>{goodLabel(m.label ?? m.name)}</span>
 								{#if pct !== null}
 									<span class="font-mono tabular-nums {pct >= 0 ? 'text-positive' : 'text-hostile'}">
 										{pct >= 0 ? "+" : ""}{pct.toFixed(1)}%
@@ -162,20 +163,20 @@
 						{@const price = q.ask ?? q.last}
 						<li class="animate-rise-in" style="--rise-delay: {i * 35}ms">
 							<a
-								href="/market/{q.name}"
+								href={q.href ?? `/market/${q.name}`}
 								class="group press-spring flex items-center gap-3 rounded-sm px-2.5 py-2.5 hover:bg-white/[0.04] transition-colors"
 								style="--press-scale: 0.985"
 							>
 								<span
 									class="size-10 shrink-0 flex items-center justify-center rounded-sm bg-white/[0.04] border border-white/10 transition-colors group-hover:border-primary/45"
 								>
-									<ResourceIcon name={q.name} class="size-6" />
+									{#if q.kind === "stock"}<span class="text-xl">📈</span>{:else}<ResourceIcon name={q.name} class="size-6" />{/if}
 								</span>
 								<span class="min-w-0 flex-1">
 									<span
 										class="block text-sm font-semibold capitalize text-fg group-hover:text-primary-fg transition-colors truncate"
 									>
-										{q.name}
+										{goodLabel(q.label ?? q.name)}
 									</span>
 									<span class="block text-xs text-fg-muted truncate">
 										{#if q.held}<span class="font-mono text-fg-soft">{q.held.toLocaleString()}</span> held{/if}

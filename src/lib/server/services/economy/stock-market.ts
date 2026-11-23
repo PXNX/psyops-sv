@@ -10,6 +10,7 @@ import type { Database } from "../../db";
 import {
 	companies,
 	companyShares,
+	marketPriceHistory,
 	regions,
 	shareHoldings,
 	shareListings,
@@ -180,12 +181,14 @@ export async function buyShares(
 		userId,
 		listingId,
 		quantity,
+		now = new Date(),
 		checkEmbargo = defaultEmbargoCheck,
 		notify = defaultNotifier
 	}: {
 		userId: string;
 		listingId: number;
 		quantity: number;
+		now?: Date;
 		checkEmbargo?: EmbargoCheck;
 		notify?: SaleNotifier;
 	}
@@ -264,6 +267,16 @@ export async function buyShares(
 			relatedUserId: listing.sellerId,
 			relatedEntityType: "company",
 			relatedEntityId: listing.companyId
+		});
+		// Share trades feed the same price-history table as goods, under a
+		// `stock:<companyId>` key, so the market charts can plot them.
+		await tx.insert(marketPriceHistory).values({
+			itemType: "stock",
+			itemName: `stock:${listing.companyId}`,
+			pricePerUnit: Number(listing.pricePerUnit),
+			quantity,
+			transactionType: "sale",
+			recordedAt: now
 		});
 		await tx.insert(transactionHistory).values({
 			userId: listing.sellerId,

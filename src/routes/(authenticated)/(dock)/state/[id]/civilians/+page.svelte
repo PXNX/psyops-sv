@@ -5,6 +5,7 @@
 	import FluentPeople20Filled from "~icons/fluent/people-20-filled";
 	import PageContainer from "#lib/component/PageContainer.svelte";
 	import PageHeader from "#lib/component/PageHeader.svelte";
+	import Logo from "#lib/component/Logo.svelte";
 	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import { formatDate, getRegionName } from "#lib/utils/formatting.js";
@@ -21,6 +22,13 @@
 	const stanceTone = (stance: number) => STANCE_TONE[stanceLabel(stance)];
 	const signed = (n: number) => (n > 0 ? `+${n}` : String(n));
 	const percent = (n: number) => `${n > 0 ? "+" : ""}${(n * 100).toFixed(1)}%`;
+
+	let regionQuery = $state("");
+	let stanceQuery = $state("");
+	const matches = (name: string, query: string) => name.toLowerCase().includes(query.trim().toLowerCase());
+	const filteredRegions = $derived(data.regions.filter((r) => matches(`${r.name} #${r.id}`, regionQuery)));
+	const filteredAbout = $derived(data.stancesAbout.filter((s) => matches(s.name, stanceQuery)));
+	const filteredHeld = $derived(data.stancesHeld.filter((s) => matches(s.name, stanceQuery)));
 </script>
 
 <svelte:head>
@@ -154,16 +162,26 @@
 	</section>
 
 	<section class="panel rounded-sm p-4 sm:p-5 mt-4 space-y-3">
-		<h2 class="section-title">By region</h2>
-		{#if data.regions.length}
+		<div class="flex flex-wrap items-baseline justify-between gap-2">
+			<h2 class="section-title">By region</h2>
+			<input
+				type="search"
+				bind:value={regionQuery}
+				placeholder="Search regions…"
+				aria-label="Search regions"
+				class="field-control rounded-sm px-2 py-1 text-xs w-48"
+			/>
+		</div>
+		{#if filteredRegions.length}
 			<div class="rounded-sm border border-line/20">
 				<div class="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 border-b border-line/20 bg-surface-2/50 px-3 py-2 text-[10px] uppercase tracking-wide text-fg-muted">
 					<span>Region</span><span class="text-right">Civilians</span><span class="text-right">/km²</span><span class="text-right">Workers</span>
 				</div>
-				{#each data.regions as region (region.id)}
+				{#each filteredRegions as region (region.id)}
 					<div class="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 border-b border-line/10 px-3 py-2 text-sm last:border-0">
-						<a href="/region/{region.id}" class="min-w-0 truncate text-fg hover:text-primary-hover">
-							{region.name} <span class="text-xs text-fg-faint">#{region.id}</span>
+						<a href="/region/{region.id}" class="flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover">
+							<Logo src={region.logo} alt="" class="size-6 shrink-0" />
+							<span class="min-w-0 truncate">{region.name} <span class="text-xs text-fg-faint">#{region.id}</span></span>
 						</a>
 						<span class="text-right font-mono text-fg-soft">{formatPopulation(region.population)}</span>
 						<span class="text-right font-mono text-fg-muted">{region.density}</span>
@@ -174,23 +192,35 @@
 				{/each}
 			</div>
 		{:else}
-			<EmptyState title="No regions" subtitle="This state does not hold any regions yet." />
+			<EmptyState
+				title={regionQuery ? "No matching regions" : "No regions"}
+				subtitle={regionQuery ? "Try a different region name." : "This state does not hold any regions yet."}
+			/>
 		{/if}
 	</section>
 
 	<section class="panel rounded-sm p-4 sm:p-5 mt-4 space-y-4">
 		<div class="flex flex-wrap items-baseline justify-between gap-2">
 			<h2 class="section-title">Civilian Stance</h2>
-			<span class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">opinion of foreign states</span>
+			<input
+				type="search"
+				bind:value={stanceQuery}
+				placeholder="Search states…"
+				aria-label="Search states in civilian stances"
+				class="field-control rounded-sm px-2 py-1 text-xs w-48"
+			/>
 		</div>
 		<div class="grid gap-4 sm:grid-cols-2">
 			<div>
 				<h3 class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">Toward {data.state.name}</h3>
-				{#if data.stancesAbout.length}
+				{#if filteredAbout.length}
 					<ul class="divide-y divide-line/10">
-						{#each data.stancesAbout as stance (stance.stateId)}
+						{#each filteredAbout as stance (stance.stateId)}
 							<li class="flex items-center justify-between gap-3 py-2 text-sm">
-								<a href="/state/{stance.stateId}" class="truncate text-fg hover:text-primary-hover">{stance.name}</a>
+								<a href="/state/{stance.stateId}" class="flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover">
+									<Logo src={stance.logo} alt="" class="size-6 shrink-0" />
+									<span class="truncate">{stance.name}</span>
+								</a>
 								<span class="font-mono shrink-0 {STANCE_TONE[stanceLabel(stance.stance)]}">
 									{signed(stance.stance)} · {stance.label}
 								</span>
@@ -203,11 +233,14 @@
 			</div>
 			<div>
 				<h3 class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">How its civilians see others</h3>
-				{#if data.stancesHeld.length}
+				{#if filteredHeld.length}
 					<ul class="divide-y divide-line/10">
-						{#each data.stancesHeld as stance (stance.stateId)}
+						{#each filteredHeld as stance (stance.stateId)}
 							<li class="flex items-center justify-between gap-3 py-2 text-sm">
-								<a href="/state/{stance.stateId}" class="truncate text-fg hover:text-primary-hover">{stance.name}</a>
+								<a href="/state/{stance.stateId}" class="flex min-w-0 items-center gap-2 truncate text-fg hover:text-primary-hover">
+									<Logo src={stance.logo} alt="" class="size-6 shrink-0" />
+									<span class="truncate">{stance.name}</span>
+								</a>
 								<span class="font-mono shrink-0 {stanceTone(stance.stance)}">
 									{signed(stance.stance)} · {stance.label}
 								</span>
@@ -225,7 +258,10 @@
 				<ul class="space-y-1 text-xs text-fg-body">
 					{#each data.bailoutHistory as bailout}
 						<li class="flex justify-between gap-3">
-							<span>{bailout.from} · {formatDate(bailout.date)}</span>
+							<span class="flex min-w-0 items-center gap-2">
+								<Logo src={bailout.logo} alt="" class="size-5 shrink-0" />
+								<span class="truncate">{bailout.from} · {formatDate(bailout.date)}</span>
+							</span>
 							<span class="font-mono text-positive">{bailout.amount.toLocaleString()}</span>
 						</li>
 					{/each}

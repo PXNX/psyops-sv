@@ -108,6 +108,8 @@ export const STANCE_CONFIG = {
 	MIN: -100,
 	MAX: 100,
 	DEFAULT: 0,
+	/** Shared bloc membership earns a baseline of goodwill between civilians. */
+	BLOC_MEMBER: 10,
 	/** A declaration of war turns the defender's civilians against the aggressor. */
 	WAR_DECLARATION: -18,
 	/** Merely being struck (even with no casualties) sours civilians. */

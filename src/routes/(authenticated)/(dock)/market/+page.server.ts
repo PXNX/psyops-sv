@@ -1,5 +1,12 @@
 import { db } from "#lib/server/db.js";
-import { marketListings, resourceInventory, productInventory, userWallets } from "#lib/server/schema.js";
+import {
+	marketListings,
+	resourceInventory,
+	productInventory,
+	userWallets,
+	resourceTypeEnum,
+	productTypeEnum
+} from "#lib/server/schema.js";
 import { eq, min, sql } from "drizzle-orm";
 import { fail } from "@sveltejs/kit";
 import type { Actions, PageServerLoad } from "./$types";
@@ -8,11 +15,18 @@ import { buildSeries, changePct, DAY, HOUR, type SeriesPoint } from "./series";
 import { earningsPulse } from "#lib/server/services/economy/earnings.js";
 import { StockError, buyShares, listShares, stockBoard } from "#lib/server/services/economy/stock-market.js";
 
-const RESOURCES = ["iron", "copper", "steel", "gunpowder", "wood", "coal"] as const;
-const PRODUCTS = ["rifles", "ammunition", "artillery", "vehicles", "explosives"] as const;
+// Every tradeable good, not just the starter set: the enums are the single
+// source of truth for what can appear on the market.
+const RESOURCES = resourceTypeEnum.enumValues;
+const PRODUCTS = productTypeEnum.enumValues;
 
 export type Quote = {
 	name: string;
+	/** Display name (company name for stocks). */
+	label?: string;
+	/** Where the row links; goods link to their item page, stocks to the company. */
+	href?: string;
+	kind?: "resource" | "product" | "stock";
 	/** Last traded price, or null if it never traded. */
 	last: number | null;
 	/** Cheapest ask on the board right now. */
@@ -32,7 +46,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 	const dayAgo = new Date(now - DAY);
 	const weekAgo = new Date(now - 7 * DAY);
 
-	const [[wallet], resources, products, asks, weekCandles, dayCandles, openWeek, openDay, lastEver] = await Promise.all(
+	const [[wallet], resources, products, asks, weekCandles, dayCandles, openWeek, openDay, lastEver, stocks] = await Promise.all(
 		[
 			db.select().from(userWallets).where(eq(userWallets.userId, account.id)),
 			db.select().from(resourceInventory).where(eq(resourceInventory.userId, account.id)),
@@ -49,7 +63,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 			loadCandles(dayAgo, 3600),
 			loadLastPricesBefore(weekAgo),
 			loadLastPricesBefore(dayAgo),
-			loadLastPricesBefore(new Date(now + 60_000))
+			loadLastPricesBefore(new Date(now + 60_000)),
+			stockBoard(db, account.id)
 		]
 	);
 
@@ -59,7 +74,10 @@ export const load: PageServerLoad = async ({ locals }) => {
 		...products.map((p) => [p.productType, p.quantity] as [string, number])
 	]);
 
-	const quote = (name: string): Quote => {
+	const quote = (
+		name: string,
+		overrides: Partial<Pick<Quote, "label" | "href" | "kind" | "ask" | "unitsOnOffer" | "held" | "last">> = {}
+	): Quote => {
 		const week = buildSeries(weekCandles.get(name) ?? [], openWeek.get(name) ?? null, +weekAgo, now, 6 * HOUR);
 		const day = buildSeries(dayCandles.get(name) ?? [], openDay.get(name) ?? null, +dayAgo, now, HOUR);
 		const ask = askMap.get(name);
@@ -72,9 +90,22 @@ export const load: PageServerLoad = async ({ locals }) => {
 			change24h: changePct(day),
 			change7d: changePct(week),
 			volume24h: day.reduce((s, p) => s + p.volume, 0),
-			week
+			week,
+			...overrides
 		};
 	};
+
+	const stockQuotes: Quote[] = stocks.map((s) =>
+		quote(`stock:${s.companyId}`, {
+			label: s.name,
+			href: `/company/${s.companyId}`,
+			kind: "stock",
+			ask: s.ask,
+			unitsOnOffer: s.unitsOnOffer,
+			held: s.held,
+			last: s.price
+		})
+	);
 
 	return {
 		now,
@@ -82,8 +113,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		stocks: await stockBoard(db, account.id),
 		wallet: wallet || { balance: 10000, userId: account.id },
 		groups: [
-			{ title: "Raw materials", quotes: RESOURCES.map(quote) },
-			{ title: "Goods", quotes: PRODUCTS.map(quote) }
+			{ title: "Raw materials", quotes: RESOURCES.map((r) => quote(r)) },
+			{ title: "Goods", quotes: PRODUCTS.map((p) => quote(p)) },
+			{ title: "Company stocks", quotes: stockQuotes }
 		]
 	};
 };
