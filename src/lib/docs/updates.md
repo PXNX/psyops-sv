@@ -171,7 +171,35 @@ tactical symbol, so every unit has a visible glyph.
 - Passport **stamps** use speckled ink, rough edges and a multiply blend, so
   they read as rubber-stamped rather than as flat text.
 
-## 9. Energy usage, explained like the power rating
+## 9. Civilian vitals and biological diseases
+
+The state's civilian page now explains its people, not just counts them. It
+shows **fertility** and **mortality** per 1,000 per year, the total **workforce**
+(the educated share able to take a job), the **manpower available for war** with
+the current conscription regime and soldiers under arms, and a labelled list of
+everything that moves the population: births, natural and war mortality,
+environmental and conscription tolls, healthcare shortfalls, hardship,
+emigration and disease.
+
+Biological diseases add an outbreak pressure of their own. Three illnesses —
+influenza, cholera and typhus — each have a **daily spread rate**, a **daily
+mortality rate** and a recovery rate, plus weights saying which protection
+actually helps against them. A daily cron grows active cases, kills civilians,
+lets people recover and can pass an infection to neighbouring regions. Outbreaks
+emerge where water and food are failing, so broken water works and empty markets
+have a real epidemiological cost.
+
+| Protection | What it is | Effect |
+| --- | --- | --- |
+| Hospitals | State hospital levels, plus completed field clinics | Treats the sick, cutting spread and deaths |
+| Clean water | Water sufficiency, improved by water works | Strongest against cholera |
+| Nutrition | Food sufficiency | Strengthens the workforce against typhus |
+| Field clinics | Completed civic `clinic` projects | Extra capacity where state hospitals are thin |
+
+The disease rules live in `game/diseases.config.ts`, the simulation in
+`services/civilians/diseases.ts`, and the daily tick is `/api/cron/diseases`.
+
+## 10. Energy usage, explained like the power rating
 
 The state dossier now has an **Energy usage** page next to the power rating.
 It opens the energy ledger and shows how consumed power splits between homes,
@@ -182,7 +210,7 @@ generation and consumption, and a ranking compares every state by total and
 per-capita use. The figures are derived from the same live tables as the energy
 desk, so the two pages never disagree.
 
-## 10. Animated consoles
+## 11. Animated consoles
 
 The Domains and Intel pages were rebuilt as visual consoles: small theme-aware
 SVG vignettes (rolling convoys, sweeping radars, orbiting satellites, pulsing
@@ -200,6 +228,7 @@ visuals never get in the way of the information.
 | `share-listings` | Hourly | Lists IPO floats after their 72-hour window |
 | `earnings` | Weekly | Publishes fortnightly reports, including EBITDA |
 | `world-snapshot` | Daily | Captures the map day replayed by `?history=` |
+| `diseases` | Daily (00:30) | Spreads/recovers outbreaks, applies mortality, seeds new ones |
 
 See [Society](/docs/society) for population, [Economy](/docs/economy) for
 companies and money, [Conflict](/docs/conflict) for how commanders change

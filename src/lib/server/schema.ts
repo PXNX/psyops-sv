@@ -371,6 +371,28 @@ export const regions = pgTable("regions", {
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
+// An active disease outbreak in a region. Cases rise with the disease's spread
+// rate, fall with recoveries, and kill civilians each day; hospitals, clean
+// water and nutrition blunt both the spread and the mortality.
+export const diseaseOutbreaks = pgTable(
+	"disease_outbreaks",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		regionId: integer("region_id")
+			.notNull()
+			.references(() => regions.id, { onDelete: "cascade" }),
+		diseaseId: varchar("disease_id", { length: 30 }).notNull(),
+		cases: integer("cases").notNull(),
+		startedAt: timestamp("started_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+		active: boolean("active").default(true).notNull()
+	},
+	(t) => ({
+		regionIdx: index("idx_disease_outbreak_region").on(t.regionId),
+		activeIdx: index("idx_disease_outbreak_active").on(t.active)
+	})
+);
+
 export const files = pgTable("files", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	key: text("key").notNull().unique(),

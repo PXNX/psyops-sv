@@ -9,6 +9,9 @@ import { regions, stateBailouts, states } from "#lib/server/schema.js";
 import { getRegionName } from "#lib/utils/formatting.js";
 import { civilianLabour, labourShare, regionDensity, regionPopulation } from "#lib/config/index.js";
 import { statePopulation } from "#lib/server/services/population.js";
+import { statePopulationReport } from "#lib/server/services/population-report.js";
+import { statesPressure } from "#lib/server/services/civilians/pressure.js";
+import { stateOutbreaks } from "#lib/server/services/civilians/diseases.js";
 import { stancesHeldBy, stancesToward } from "#lib/server/services/politics/civilian-stance.js";
 import { stateSeries } from "#lib/server/services/snapshot-history.js";
 
@@ -23,12 +26,13 @@ export const load: PageServerLoad = async ({ params }) => {
 		.limit(1);
 	if (!state) error(404, "State not found");
 
-	const [civilians, regionRows, series, stancesAbout, stancesHeld, bailoutRows] = await Promise.all([
-		statePopulation(db, stateId),
-		db.select().from(regions).where(eq(regions.stateId, stateId)),
-		stateSeries(stateId, 90),
-		stancesToward(db, stateId),
-		stancesHeldBy(db, stateId),
+	const [civilians, regionRows, series, stancesAbout, stancesHeld, bailoutRows, report, pressure, outbreaks] =
+		await Promise.all([
+			statePopulation(db, stateId),
+			db.select().from(regions).where(eq(regions.stateId, stateId)),
+			stateSeries(stateId, 90),
+			stancesToward(db, stateId),
+			stancesHeldBy(db, stateId),
 		db
 			.select({
 				amount: stateBailouts.amount,
@@ -39,8 +43,11 @@ export const load: PageServerLoad = async ({ params }) => {
 			.innerJoin(states, eq(stateBailouts.donorStateId, states.id))
 			.where(eq(stateBailouts.recipientStateId, stateId))
 			.orderBy(desc(stateBailouts.createdAt))
-			.limit(5)
-	]);
+				.limit(5),
+			statePopulationReport(db, stateId),
+			statesPressure(db, [stateId]),
+			stateOutbreaks(db, stateId)
+		]);
 
 	const byRegion = regionRows
 		.map((r) => {
@@ -57,11 +64,34 @@ export const load: PageServerLoad = async ({ params }) => {
 		})
 		.sort((a, b) => b.population - a.population);
 
+	const strain = pressure.get(stateId);
+	const workforce = byRegion.reduce((sum, r) => sum + r.workforce, 0);
+
 	return {
 		state: { id: state.id, name: state.name },
 		civilians,
 		trend: series.map((p) => p.civilians),
 		regions: byRegion,
+		demographics: {
+			fertility: report.fertility,
+			mortality: report.mortality,
+			annualRate: report.annualRate,
+			netPerYear: report.netPerYear,
+			contributions: report.contributions
+		},
+		manpower: {
+			underArms: strain?.soldiers ?? 0,
+			perThousand: strain?.pressure ?? 0,
+			regime: strain?.band.label ?? "Volunteer army",
+			available: Math.max(0, civilians - (strain?.soldiers ?? 0)),
+			hospital: strain?.hospital ?? 1
+		},
+		workforce,
+		outbreaks: outbreaks.map((o) => ({
+			...o,
+			startedAt: o.startedAt.toISOString(),
+			updatedAt: o.updatedAt.toISOString()
+		})),
 		stancesAbout,
 		stancesHeld,
 		bailoutHistory: bailoutRows.map((b) => ({

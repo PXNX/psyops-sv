@@ -8,6 +8,7 @@ export * from "./game/officials.config";
 export * from "./game/stocks.config";
 export * from "./game/investments.config";
 export * from "./game/factory-finance.config";
+export * from "./game/diseases.config";
 export * from "./game/buildings.config";
 export * from "./game/production.config";
 export * from "./features/party.config";
