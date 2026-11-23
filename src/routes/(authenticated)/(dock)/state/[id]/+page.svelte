@@ -306,6 +306,13 @@
 		{/if}
 	</header>
 
+	{#if data.state.martialLawUntil && new Date(data.state.martialLawUntil) > new Date()}
+		<div class="panel mb-4 border border-red-500/40 bg-red-500/10 p-3 text-sm text-red-200">
+			<strong class="font-semibold">Martial law is in force.</strong> Parliamentary elections are suspended
+			until {formatDate(data.state.martialLawUntil)}.
+		</div>
+	{/if}
+
 	<!-- Key figures: an almanac fact sheet -->
 	<section class="panel rounded-sm p-4 sm:p-5">
 		<h2 class="section-title mb-3">Key Figures</h2>

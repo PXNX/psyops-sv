@@ -78,6 +78,11 @@
 			"path": "/api/cron/strikes",
 			"requestMethod": "GET"
 		},
+		"salaries": {
+			"schedule": "0 5 * * 1",
+			"path": "/api/cron/salaries",
+			"requestMethod": "GET"
+		},
 		"trade": {
 			"schedule": "0 */6 * * *",
 			"path": "/api/cron/trade",

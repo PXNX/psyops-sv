@@ -15,7 +15,9 @@ export const createProposalSchema = v.object({
 			"energy_storage",
 			"border_control",
 			"exploitation",
-			"declare_war"
+			"declare_war",
+			"salary",
+			"martial_law"
 		],
 		"Please select a valid proposal type"
 	),
@@ -43,6 +45,11 @@ export const createProposalSchema = v.object({
 	// Resource exploitation law
 	exploitationPolicy: v.optional(
 		v.picklist(["conservation", "standard", "industrial", "unrestricted"], "Please select an exploitation policy")
+	),
+
+	// Parliament-set weekly salary for a parliament member
+	salaryAmount: v.optional(
+		v.pipe(v.number(), v.minValue(0, "Salary cannot be negative"), v.maxValue(100_000, "Salary is too high"))
 	)
 });
 

@@ -25,8 +25,12 @@ import { warBlockedReason } from "#lib/server/services/military/declare-war.js";
 import { superValidate } from "sveltekit-superforms";
 import { valibot } from "sveltekit-superforms/adapters";
 import { createProposalSchema } from "./schema";
-import { BUILDING_TEMPLATES, BORDER_MAINTENANCE, isBuildingType } from "#lib/config/index.js";
-import { proposalExploitationDetails } from "#lib/server/schema.js";
+import { BUILDING_TEMPLATES, BORDER_MAINTENANCE, OFFICIALS_CONFIG, isBuildingType } from "#lib/config/index.js";
+import {
+	proposalExploitationDetails,
+	proposalSalaryDetails,
+	proposalMartialLawDetails
+} from "#lib/server/schema.js";
 import { executeProposal } from "#lib/server/services/politics/execute-proposal.js";
 import {
 	checkConstruction,
@@ -104,6 +108,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		treasury: state.treasury,
 		border: state.border,
 		exploitationPolicy: state.exploitationPolicy,
+		officialSalary: state.officialSalary,
+		martialLawUntil: state.martialLawUntil?.toISOString() ?? null,
 		stateResources: stateResources.reduce(
 			(acc, r) => {
 				acc[r.resourceType] = r.quantity;
@@ -156,9 +162,9 @@ function canAutoExecute(proposalType: string, userMinistry: string | null, isPre
 
 	// Ministers enact their own portfolio directly.
 	const ministryPermissions: Record<string, string[]> = {
-		economy: ["tax", "exploitation", "infrastructure", "school", "hospital", "power_plant"],
-		foreign_affairs: ["border_control"],
-		defense: ["fortifications", "radar"]
+		economy: ["tax", "exploitation", "infrastructure", "school", "hospital", "power_plant", "salary"],
+		foreign_affairs: ["border_control", "martial_law"],
+		defense: ["fortifications", "radar", "martial_law"]
 	};
 
 	return ministryPermissions[userMinistry]?.includes(proposalType) || false;
@@ -200,6 +206,9 @@ export const actions: Actions = {
 		}
 		if (proposalType === "exploitation" && !form.data.exploitationPolicy) {
 			return fail(400, { form, error: "Choose an exploitation policy." });
+		}
+		if (proposalType === "salary" && form.data.salaryAmount == null) {
+			return fail(400, { form, error: "Set the weekly salary for a parliament member." });
 		}
 		if (isBuildingType(proposalType)) {
 			const regionId = Number(form.data.regionId);
@@ -263,6 +272,16 @@ export const actions: Actions = {
 			await db.insert(proposalBorderDetails).values({
 				proposalId: proposal.id,
 				borderStatus: form.data.borderStatus as any
+			});
+		} else if (proposalType === "salary") {
+			await db.insert(proposalSalaryDetails).values({
+				proposalId: proposal.id,
+				salaryAmount: form.data.salaryAmount!
+			});
+		} else if (proposalType === "martial_law") {
+			await db.insert(proposalMartialLawDetails).values({
+				proposalId: proposal.id,
+				durationDays: OFFICIALS_CONFIG.MARTIAL_LAW_DAYS
 			});
 		} else if (isBuildingType(proposalType)) {
 			await db.insert(proposalBuildingDetails).values({

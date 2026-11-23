@@ -16,6 +16,7 @@ import {
 	partyMembers
 } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import { isMartialLaw } from "#lib/server/services/politics/martial-law.js";
 
 export const load: PageServerLoad = async ({ params, locals }) => {
 	const account = locals.account!;
@@ -190,6 +191,16 @@ export const actions: Actions = {
 		const now = new Date();
 		const startDate = new Date(election.startDate);
 		const endDate = new Date(election.endDate);
+
+		// Martial law suspends the poll even if the voting window is open.
+		const [pollingState] = await db
+			.select({ martialLawUntil: states.martialLawUntil })
+			.from(states)
+			.where(eq(states.id, parseInt(params.id)))
+			.limit(1);
+		if (isMartialLaw(pollingState?.martialLawUntil, now)) {
+			return fail(403, { error: "Elections are suspended under martial law." });
+		}
 
 		// Check if voting hasn't started yet
 		if (now < startDate) {

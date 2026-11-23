@@ -35,7 +35,9 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 				buildingDetails: true,
 				borderDetails: true,
 				exploitationDetails: true,
-				warDetails: { with: { target: true } }
+				warDetails: { with: { target: true } },
+				salaryDetails: true,
+				martialLawDetails: true
 			},
 			orderBy: desc(parliamentaryProposals.createdAt)
 		})
@@ -165,6 +167,20 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 			case "budget": {
 				title = "State Budget Allocation";
 				description = "Allocate state funds";
+				break;
+			}
+
+			case "salary": {
+				title = "Official salaries";
+				description = proposal.salaryDetails
+					? `Set the weekly parliament-member salary to ${proposal.salaryDetails.salaryAmount.toLocaleString()} (ministers 3×, president 5×)`
+					: "Set official salaries";
+				break;
+			}
+
+			case "martial_law": {
+				title = "Martial law";
+				description = `Suspend parliamentary elections for ${proposal.martialLawDetails?.durationDays ?? 7} days`;
 				break;
 			}
 		}

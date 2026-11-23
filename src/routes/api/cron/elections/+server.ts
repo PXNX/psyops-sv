@@ -12,14 +12,17 @@ import {
 	partyMembers,
 	presidents,
 	residences,
-	regions
+	regions,
+	states
 } from "#lib/server/schema.js";
 import { eq, and, lte } from "drizzle-orm";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { runAutomaticDividends } from "#lib/server/services/economy/dividends.js";
 import { reachFirstTime } from "#lib/server/services/politics/first-time.js";
 import { effectiveVotesByParty } from "#lib/server/services/politics/election-scoring.js";
+import { isMartialLaw } from "#lib/server/services/politics/martial-law.js";
 import { dtg } from "#lib/utils/dtg.js";
+import { REAL_DAY_MS } from "#lib/utils/game-time.js";
 
 // Give the serverless function enough time to process every state's election in
 // a single run. Without this, Vercel terminates the function at the default
@@ -35,6 +38,14 @@ export const GET: RequestHandler = async ({ request }) => {
 		let processed = 0;
 		let activated = 0;
 		let scheduled = 0;
+		let suspended = 0;
+
+		// A declaration is self-expiring: the timestamp alone says whether
+		// elections are paused, so no cron has to switch a flag back off.
+		const stateRows = await db
+			.select({ id: states.id, martialLawUntil: states.martialLawUntil })
+			.from(states);
+		const martialUntil = new Map(stateRows.map((s) => [s.id, s.martialLawUntil]));
 
 		// 1. Update scheduled elections to active
 		const scheduledElections = await db
@@ -43,6 +54,10 @@ export const GET: RequestHandler = async ({ request }) => {
 			.where(and(eq(parliamentaryElections.status, "scheduled"), lte(parliamentaryElections.startDate, now)));
 
 		for (const election of scheduledElections) {
+			if (isMartialLaw(martialUntil.get(election.stateId), now)) {
+				suspended++;
+				continue;
+			}
 			await db
 				.update(parliamentaryElections)
 				.set({ status: "active" })
@@ -70,12 +85,22 @@ export const GET: RequestHandler = async ({ request }) => {
 			.where(and(eq(parliamentaryElections.status, "active"), lte(parliamentaryElections.endDate, now)));
 
 		for (const election of finishedElections) {
+			// Defer the count-out until martial law lifts; the next hourly tick
+			// picks it up, so a missed run cannot extend the suspension.
+			if (isMartialLaw(martialUntil.get(election.stateId), now)) {
+				suspended++;
+				continue;
+			}
 			await processElectionResults(election);
 			processed++;
 
-			// 3. Schedule next election (1 week from now)
+			// 3. Schedule next election (1 week from now, never inside martial law)
 			const nextElectionStart = new Date(now);
 			nextElectionStart.setDate(nextElectionStart.getDate() + 7);
+			const until = martialUntil.get(election.stateId);
+			if (until && isMartialLaw(until, nextElectionStart)) {
+				nextElectionStart.setTime(until.getTime() + REAL_DAY_MS);
+			}
 
 			const nextElectionEnd = new Date(nextElectionStart);
 			nextElectionEnd.setDate(nextElectionEnd.getDate() + 3);
@@ -103,6 +128,7 @@ export const GET: RequestHandler = async ({ request }) => {
 				electionsActivated: activated,
 				electionsProcessed: processed,
 				electionsScheduled: scheduled,
+				electionsSuspended: suspended,
 				dividendsPaid: dividends.paid.length,
 				dividendsSkipped: dividends.skipped
 			},

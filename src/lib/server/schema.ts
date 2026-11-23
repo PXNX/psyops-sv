@@ -91,7 +91,9 @@ export const proposalTypeEnum = pgEnum("proposal_type", [
 	"energy_storage",
 	"border_control",
 	"exploitation",
-	"declare_war"
+	"declare_war",
+	"salary",
+	"martial_law"
 ]);
 // How hard a state lets its natural resources be mined (see resources.config.ts).
 export const exploitationPolicyEnum = pgEnum("exploitation_policy", [
@@ -173,6 +175,7 @@ export const transactionTypeEnum = pgEnum("transaction_type", [
 	"share_sale",
 	"dividend_payout",
 	"recon_mission",
+	"official_salary",
 	// Smuggling (services/economy/smuggling.ts)
 	"smuggling_run",
 	"smuggling_fine"
@@ -205,7 +208,9 @@ export const governmentBudgetTransactionTypeEnum = pgEnum("government_budget_tra
 	"zone_closure",
 	"trade_revenue",
 	// Research levels funded from the treasury (services/government/research.ts)
-	"research"
+	"research",
+	// Weekly pay for the president, ministers and parliament
+	"salary"
 ]);
 
 export const battlePhaseEnum = pgEnum("battle_phase", [
@@ -323,6 +328,12 @@ export const states = pgTable("states", {
 	capitulated_at: timestamp("capitulated_at"),
 	blocId: integer("bloc_id").references(() => blocs.id, { onDelete: "set null" }),
 	exploitationPolicy: exploitationPolicyEnum("exploitation_policy").default("standard").notNull(),
+	// Weekly pay for a parliament member, set by parliament. Ministers earn 3x,
+	// the president 5x. Null/zero disables official pay.
+	officialSalary: integer("official_salary").default(1000).notNull(),
+	lastSalaryPaidAt: timestamp("last_salary_paid_at"),
+	// While in the future, parliamentary elections cannot start or be voted in.
+	martialLawUntil: timestamp("martial_law_until"),
 	createdAt: timestamp("created_at").defaultNow().notNull()
 });
 
@@ -3236,6 +3247,28 @@ export const proposalWarDetailsRelations = relations(proposalWarDetails, ({ one 
 	target: one(states, { fields: [proposalWarDetails.targetStateId], references: [states.id] })
 }));
 
+// Parliament-set weekly salary for a parliament member (ministers 3x, president 5x).
+export const proposalSalaryDetails = pgTable("proposal_salary_details", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	proposalId: integer("proposal_id")
+		.notNull()
+		.references(() => parliamentaryProposals.id, { onDelete: "cascade" })
+		.unique(),
+	salaryAmount: integer("salary_amount").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
+// A one-week suspension of parliamentary elections.
+export const proposalMartialLawDetails = pgTable("proposal_martial_law_details", {
+	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+	proposalId: integer("proposal_id")
+		.notNull()
+		.references(() => parliamentaryProposals.id, { onDelete: "cascade" })
+		.unique(),
+	durationDays: integer("duration_days").notNull(),
+	createdAt: timestamp("created_at").defaultNow().notNull()
+});
+
 export const proposalExploitationDetails = pgTable("proposal_exploitation_details", {
 	id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
 	proposalId: integer("proposal_id")
@@ -3294,6 +3327,14 @@ export const parliamentaryProposalsRelations = relations(parliamentaryProposals,
 	exploitationDetails: one(proposalExploitationDetails, {
 		fields: [parliamentaryProposals.id],
 		references: [proposalExploitationDetails.proposalId]
+	}),
+	salaryDetails: one(proposalSalaryDetails, {
+		fields: [parliamentaryProposals.id],
+		references: [proposalSalaryDetails.proposalId]
+	}),
+	martialLawDetails: one(proposalMartialLawDetails, {
+		fields: [parliamentaryProposals.id],
+		references: [proposalMartialLawDetails.proposalId]
 	})
 }));
 

@@ -68,7 +68,9 @@
 			fortifications: { label: "Defence", tone: "red" },
 			border_control: { label: "Borders", tone: "green" },
 			exploitation: { label: "Resources", tone: "amber" },
-			declare_war: { label: "War", tone: "red" }
+			declare_war: { label: "War", tone: "red" },
+			salary: { label: "Salaries", tone: "green" },
+			martial_law: { label: "Martial law", tone: "red" }
 		};
 
 	function getTimeRemaining(endDate: string | Date) {

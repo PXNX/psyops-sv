@@ -14,11 +14,14 @@ import {
 	proposalBuildingDetails,
 	proposalExploitationDetails,
 	proposalWarDetails,
+	proposalSalaryDetails,
+	proposalMartialLawDetails,
 	states
 } from "#lib/server/schema.js";
 import { isBuildingType } from "#lib/config/index.js";
 import { ConstructionError, startConstruction } from "./construction.service.js";
 import { declareWar, WarDeclarationError } from "../military/declare-war.js";
+import { martialLawEndsAt } from "./martial-law.js";
 
 export async function executeProposal(stateId: number, proposalType: string, accountId: string, proposalId: number) {
 	if (proposalType === "declare_war") {
@@ -39,6 +42,24 @@ export async function executeProposal(stateId: number, proposalType: string, acc
 		});
 		if (!details) throw new Error("Exploitation proposal details not found");
 		await db.update(states).set({ exploitationPolicy: details.policy }).where(eq(states.id, stateId));
+	} else if (proposalType === "salary") {
+		const details = await db.query.proposalSalaryDetails.findFirst({
+			where: eq(proposalSalaryDetails.proposalId, proposalId)
+		});
+		if (!details) throw new Error("Salary proposal details not found");
+		await db
+			.update(states)
+			.set({ officialSalary: details.salaryAmount, lastSalaryPaidAt: null })
+			.where(eq(states.id, stateId));
+	} else if (proposalType === "martial_law") {
+		const details = await db.query.proposalMartialLawDetails.findFirst({
+			where: eq(proposalMartialLawDetails.proposalId, proposalId)
+		});
+		if (!details) throw new Error("Martial law proposal details not found");
+		await db
+			.update(states)
+			.set({ martialLawUntil: martialLawEndsAt() })
+			.where(eq(states.id, stateId));
 	} else if (proposalType === "tax") {
 		const taxDetails = await db.query.proposalTaxDetails.findFirst({
 			where: eq(proposalTaxDetails.proposalId, proposalId)

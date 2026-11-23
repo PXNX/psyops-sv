@@ -14,7 +14,7 @@
 	import PageHeader from "#lib/component/PageHeader.svelte";
 	import { Button, SearchSelect } from "#lib/component/ui/index.js";
 	import { toastResult } from "#lib/ui/toast.svelte.js";
-	import { EXPLOITATION_POLICIES, EXPLOITATION_POLICY_KEYS } from "#lib/config/index.js";
+	import { EXPLOITATION_POLICIES, EXPLOITATION_POLICY_KEYS, OFFICIALS_CONFIG } from "#lib/config/index.js";
 
 	const { data } = $props();
 
@@ -45,7 +45,9 @@
 		| "radar"
 		| "border_control"
 		| "exploitation"
-		| "declare_war";
+		| "declare_war"
+		| "salary"
+		| "martial_law";
 	type BuildingType = "hospital" | "school" | "power_plant" | "infrastructure" | "fortifications" | "radar";
 
 	const PROPOSAL_TYPES: { type: ProposalType; label: string }[] = [
@@ -58,7 +60,9 @@
 		{ type: "radar", label: "Air-defence radar" },
 		{ type: "border_control", label: "Border control" },
 		{ type: "exploitation", label: "Resource law" },
-		{ type: "declare_war", label: "Declaration of war" }
+		{ type: "declare_war", label: "Declaration of war" },
+		{ type: "salary", label: "Official salaries" },
+		{ type: "martial_law", label: "Martial law" }
 	];
 	const typeLabel = (t: string | undefined) => PROPOSAL_TYPES.find((p) => p.type === t)?.label ?? "";
 
@@ -86,9 +90,9 @@
 
 	// Presidents enact anything directly, ministers their own portfolio.
 	const MINISTRY_POWERS: Record<string, string[]> = {
-		economy: ["tax", "exploitation", "infrastructure", "school", "hospital", "power_plant"],
-		foreign_affairs: ["border_control"],
-		defense: ["fortifications", "radar"]
+		economy: ["tax", "exploitation", "infrastructure", "school", "hospital", "power_plant", "salary"],
+		foreign_affairs: ["border_control", "martial_law"],
+		defense: ["fortifications", "radar", "martial_law"]
 	};
 	const autoFor = (type: string) =>
 		data.isPresident || (!!data.userMinistry && (MINISTRY_POWERS[data.userMinistry]?.includes(type) ?? false));
@@ -98,6 +102,8 @@
 	const isBorderControlProposal = $derived($formData.proposalType === "border_control");
 	const isWarProposal = $derived($formData.proposalType === "declare_war");
 	const isExploitationProposal = $derived($formData.proposalType === "exploitation");
+	const isSalaryProposal = $derived($formData.proposalType === "salary");
+	const isMartialLawProposal = $derived($formData.proposalType === "martial_law");
 	const isBuildingProposal = $derived(
 		["hospital", "school", "power_plant", "infrastructure", "fortifications", "radar"].includes(
 			$formData.proposalType || ""
@@ -393,6 +399,58 @@
 				</fieldset>
 			{/if}
 
+			{#if isSalaryProposal}
+				<fieldset class="pt-6 border-t border-dashed border-line/20 animate-rise-in">
+					<legend class="field-label">
+						<span class="font-serif text-fg-muted mr-1">§ 3</span> Weekly pay for public office
+					</legend>
+					<p class="mb-3 text-xs text-fg-muted">
+						This is what a parliament member earns each week. A minister earns
+						{OFFICIALS_CONFIG.MINISTER_MULTIPLIER}× and the president {OFFICIALS_CONFIG.PRESIDENT_MULTIPLIER}×.
+						The treasury pays every office holder at the start of each week.
+					</p>
+					<div class="flex flex-wrap items-center gap-3">
+						<input
+							class="field-control w-40 font-mono"
+							type="number"
+							name="salaryAmount"
+							min="0"
+							max={OFFICIALS_CONFIG.MAX_MP_SALARY}
+							bind:value={$formData.salaryAmount}
+						/>
+						<span class="text-sm text-fg-muted">credits / member / week</span>
+					</div>
+					{#if $errors.salaryAmount}<p class="field-error">{$errors.salaryAmount}</p>{/if}
+					<div class="mt-3 grid gap-1 text-xs sm:grid-cols-3">
+						<p class="text-fg-muted">Parliament member <span class="font-mono text-fg">{(Number($formData.salaryAmount) || 0).toLocaleString()}</span></p>
+						<p class="text-fg-muted">Minister <span class="font-mono text-fg">{(Number($formData.salaryAmount) * OFFICIALS_CONFIG.MINISTER_MULTIPLIER || 0).toLocaleString()}</span></p>
+						<p class="text-fg-muted">President <span class="font-mono text-fg">{(Number($formData.salaryAmount) * OFFICIALS_CONFIG.PRESIDENT_MULTIPLIER || 0).toLocaleString()}</span></p>
+					</div>
+					<p class="mt-2 text-xs text-fg-muted">Currently in force: <span class="font-mono">{data.officialSalary.toLocaleString()}</span> per member.</p>
+				</fieldset>
+			{/if}
+
+			{#if isMartialLawProposal}
+				<fieldset class="pt-6 border-t border-dashed border-line/20 animate-rise-in">
+					<legend class="field-label">
+						<span class="font-serif text-fg-muted mr-1">§ 4</span> Suspension of elections
+					</legend>
+					<div class="rounded-sm border border-red-500/30 bg-red-500/5 p-4 text-sm text-fg-body">
+						<p class="font-semibold text-red-300">Martial law for one week</p>
+						<p class="mt-1">
+							Parliamentary elections cannot start and no citizen can cast a vote while martial law is in
+							force. It expires automatically after {OFFICIALS_CONFIG.MARTIAL_LAW_DAYS} days. Any election
+							already scheduled begins once the week is over.
+						</p>
+						{#if data.martialLawUntil && new Date(data.martialLawUntil) > new Date()}
+							<p class="mt-2 text-xs text-warning">
+								Martial law is already in force until {new Date(data.martialLawUntil).toLocaleString()}.
+							</p>
+						{/if}
+					</div>
+				</fieldset>
+			{/if}
+
 			{#if isBuildingProposal}
 				<div class="pt-6 border-t border-dashed border-line/20 space-y-5 animate-rise-in">
 					<fieldset>
@@ -520,6 +578,8 @@
 					(isWarProposal && !$formData.targetStateId) ||
 					(isExploitationProposal &&
 						(!$formData.exploitationPolicy || $formData.exploitationPolicy === data.exploitationPolicy)) ||
+					(isSalaryProposal && $formData.salaryAmount == null) ||
+					(isMartialLawProposal && !!data.martialLawUntil && new Date(data.martialLawUntil) > new Date()) ||
 					(isBuildingProposal && (!$formData.regionId || blocked || (canAutoExecute() && !canAfford())))}
 			>
 				{canAutoExecute() ? "Sign into Law" : "Table the Bill"}

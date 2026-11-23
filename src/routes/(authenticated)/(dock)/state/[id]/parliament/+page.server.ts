@@ -91,7 +91,9 @@ export const load = async ({ params, locals }: Parameters<PageServerLoad>[0]) =>
 				},
 				borderDetails: true,
 				exploitationDetails: true,
-				warDetails: { with: { target: true } }
+				warDetails: { with: { target: true } },
+				salaryDetails: true,
+				martialLawDetails: true
 			},
 			orderBy: desc(parliamentaryProposals.createdAt)
 		})

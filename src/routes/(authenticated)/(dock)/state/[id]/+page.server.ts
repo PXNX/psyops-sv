@@ -104,6 +104,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			background: states.background,
 			description: states.description,
 			rating: states.rating,
+			martialLawUntil: states.martialLawUntil,
 			createdAt: states.createdAt,
 			blocId: blocs.id,
 			blocName: blocs.name,
@@ -630,6 +631,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 			description: state.description,
 			population: actualPopulation,
 			rating: state.rating,
+			martialLawUntil: state.martialLawUntil?.toISOString() ?? null,
 			createdAt: state.createdAt
 		},
 		editForm: editFormData.editForm,
