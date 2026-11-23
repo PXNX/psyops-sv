@@ -1,8 +1,8 @@
-<!-- The fleet console: a hex sea you can actually sail. Select a hex to inspect
-     it, select one of your ships and click "Move" then a destination hex, refuel
-     at ports, load cargo, queue hulls and repairs at docks, and lay minefields. -->
+<!-- The fleet console: the fleet overview and its orders. The hex grid itself
+     lives on the map in naval mode; pick a hex there (or by q,r / a contact
+     below) to inspect it, then move ships, refuel, load cargo, queue hulls and
+     repairs at docks, and lay minefields. -->
 <script lang="ts">
-	import { tick } from "svelte";
 	import { enhance, type SubmitFunction } from "$app/forms";
 	import { page } from "$app/state";
 	import type { FleetPageData } from "#lib/types/fleet-page.js";
@@ -27,10 +27,8 @@
 		dockUpgradeCost,
 		FACILITY,
 		hexKey,
+		inBounds,
 		portUpgradeCost,
-		hexMapViewBox,
-		hexPolygon,
-		hexToPixel,
 		type Hex,
 		type ShipClassId
 	} from "#lib/config/index.js";
@@ -42,7 +40,7 @@
 		{
 			id: "hex",
 			title: "1. Select a hex",
-			body: "Click one of the sea hexagons. The panel then shows the port, ships and mines on that tile.",
+			body: "Enter q,r here or click a hex on the map's naval mode. The panel then shows the port, ships and mines on that tile.",
 			target: '[data-tutorial="navy-hex"]',
 			done: "hex-selected"
 		},
@@ -96,20 +94,12 @@
 		}
 	};
 
-	const viewBox = $derived.by(() => {
-		const vb = hexMapViewBox();
-		return `${vb.minX} ${vb.minY} ${vb.width} ${vb.height}`;
-	});
-	const hexes: Hex[] = [];
-	for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
-		for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) hexes.push({ q, r });
-	}
-
 	let selectedHex = $state<Hex | null>(null);
 	let selectedShipId = $state<number | null>(null);
-	let movingShipId = $state<number | null>(null);
-	let moveTarget = $state<Hex | null>(null);
-	let moveForm = $state<HTMLFormElement>();
+	let hexQ = $state<number | string>("");
+	let hexR = $state<number | string>("");
+	let moveQ = $state<number | string>("");
+	let moveR = $state<number | string>("");
 	let orderClass = $state<ShipClassId>("corvette");
 	let orderDockId = $state<number | null>(null);
 	let cargoResource = $state("steel");
@@ -122,24 +112,12 @@
 		const t = setInterval(() => (now = Date.now()), 1000);
 		return () => clearInterval(t);
 	});
-	$effect(() => {
-		if (!moveTarget) return;
-		const target = moveTarget;
-		moveTarget = null;
-		void tick().then(() => moveForm?.requestSubmit());
-		void target;
-	});
 
-	const key = (h: Hex) => hexKey(h);
 	const portAt = (h: Hex) => data.ports.find((p) => p.q === h.q && p.r === h.r);
 	const dockAt = (h: Hex) => data.docks.find((d) => d.q === h.q && d.r === h.r);
 	const minesAt = (h: Hex) => data.mines.filter((m) => m.q === h.q && m.r === h.r);
 	const shipsAt = (h: Hex) => data.ships.filter((s) => s.q === h.q && s.r === h.r && s.status !== "sunk");
 	const def = (id: string) => SHIP_CLASSES[id as ShipClassId];
-	const mineColor = (stateId: number) => (data.enemyStateIds.includes(stateId) ? "#ef4444" : "#22d3ee");
-	const shipColor = (stateId: number) =>
-		stateId === data.myStateId ? "#4ade80" : data.alliedStateIds.includes(stateId) ? "#38bdf8" : "#f87171";
-	const isEnemy = (stateId: number) => data.enemyStateIds.includes(stateId);
 
 	const myShips = $derived(data.ships.filter((s) => s.stateId === data.myStateId && s.status !== "sunk"));
 	const myPorts = $derived(data.ports.filter((p) => p.stateId === data.myStateId));
@@ -148,22 +126,36 @@
 	const selectedPort = $derived(selectedHex ? portAt(selectedHex) : null);
 	const selectedDock = $derived(selectedHex ? dockAt(selectedHex) : null);
 	const activeMoves = $derived(data.ships.filter((s) => s.status === "moving"));
+	/** Hexes worth jumping to: anything with a port, dock, ship or mine. The
+	 *  full grid lives on /map in naval mode, not in this console. */
+	const activeHexes = $derived.by(() => {
+		const seen = new Map<string, Hex>();
+		const add = (h: Hex) => seen.set(hexKey(h), { q: h.q, r: h.r });
+		for (const p of data.ports) add(p);
+		for (const d of data.docks) add(d);
+		for (const s of data.ships) add(s);
+		for (const m of data.mines) add(m);
+		return [...seen.values()].sort((a, b) => a.r - b.r || a.q - b.q);
+	});
 
 	function hexClicked(h: Hex) {
 		selectedHex = h;
+		hexQ = h.q;
+		hexR = h.r;
+		moveQ = h.q;
+		moveR = h.r;
 		const ship = shipsAt(h)[0];
 		if (ship) selectedShipId = ship.id;
-		if (movingShipId != null) moveTarget = h;
 		window.dispatchEvent(new CustomEvent("psyops:tutorial", { detail: "hex-selected" }));
 	}
 
-	function beginMove(shipId: number) {
-		movingShipId = movingShipId === shipId ? null : shipId;
-		selectedShipId = shipId;
+	function selectHexFromInput() {
+		const q = Number(hexQ);
+		const r = Number(hexR);
+		if (!inBounds({ q, r })) return;
+		hexClicked({ q, r });
 	}
-	function cancelMove() {
-		movingShipId = null;
-	}
+
 	function pickOrderDock() {
 		if (!orderDockId && myDocks.length) orderDockId = myDocks[0]!.id;
 	}
@@ -174,7 +166,7 @@
 		const value = page.url.searchParams.get("hex");
 		if (!value) return;
 		const [q, r] = value.split(",").map(Number);
-		if (Number.isInteger(q) && Number.isInteger(r)) selectedHex = { q, r };
+		if (Number.isInteger(q) && Number.isInteger(r)) hexClicked({ q, r });
 	});
 
 	const pct = (value: number, max: number) => Math.max(0, Math.min(100, max ? (value / max) * 100 : 0));
@@ -214,103 +206,70 @@
 		{/if}
 
 		<div class="grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-			<!-- ── The hex sea ──────────────────────────────────────────────── -->
-			<section class="min-w-0 rounded-lg border border-line/20 bg-surface-2 p-2">
-				<div class="mb-2 flex flex-wrap items-center gap-3 px-1 text-xs text-fg-muted">
-					<span class="flex items-center gap-1.5"><i class="size-2.5 rounded-sm bg-[#4ade80]"></i>Yours</span>
-					<span class="flex items-center gap-1.5"><i class="size-2.5 rounded-sm bg-[#38bdf8]"></i>Allied</span>
-					<span class="flex items-center gap-1.5"><i class="size-2.5 rounded-sm bg-[#f87171]"></i>Hostile</span>
-					<span class="flex items-center gap-1.5"><i class="size-2.5 rounded-full bg-[#ef4444]"></i>Mines</span>
-					<span class="flex items-center gap-1.5"><i class="size-2.5 rounded-full bg-[#c084fc]"></i>GNSS jammer</span>
-					{#if movingShipId != null}
-						<button class="ml-auto rounded bg-primary/20 px-2 py-1 text-primary-fg" onclick={cancelMove}>Cancel move</button>
-					{:else}
-						<span class="ml-auto">Click a hex to inspect it</span>
-					{/if}
+			<!-- ── Hex selection (the grid itself lives on /map) ────────────── -->
+			<section class="min-w-0 rounded-lg border border-line/20 bg-surface-2 p-3">
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<h2 class="text-sm font-semibold text-heading">Select a hex</h2>
+					<a href="/map" class="text-xs text-primary-fg hover:underline">Open the hex map →</a>
 				</div>
-				<svg viewBox={viewBox} class="w-full h-auto max-h-[62vh]" role="img" aria-label="Naval hex map">
-					{#each hexes as h (key(h))}
-						{@const port = portAt(h)}
-						{@const dock = dockAt(h)}
-						{@const ships = shipsAt(h)}
-						{@const mines = minesAt(h)}
-						{@const selected = selectedHex && key(selectedHex) === key(h)}
-						{@const hostileMine = mines.some((m) => isEnemy(m.stateId))}
-						<g
-							role="button"
-							tabindex="0"
-							data-tutorial="navy-hex"
-							onclick={() => hexClicked(h)}
-							onkeydown={(e) => (e.key === "Enter" || e.key === " ") && hexClicked(h)}
-							class="cursor-pointer"
+				<p class="mt-1 text-xs text-fg-muted">
+					The hex grid is drawn on the real world map in naval mode. Pick a hex there, or jump to one with
+					contacts below.
+				</p>
+				<form
+					class="mt-2 flex flex-wrap items-end gap-2"
+					onsubmit={(e) => {
+						e.preventDefault();
+						selectHexFromInput();
+					}}
+					data-tutorial="navy-hex"
+				>
+					<label class="text-[11px] text-fg-muted">Q
+						<input
+							type="number"
+							min={HEX_BOUNDS.minQ}
+							max={HEX_BOUNDS.maxQ}
+							bind:value={hexQ}
+							class="mt-1 w-20 rounded border border-line/30 bg-surface-2 px-2 py-1 text-sm"
+						/>
+					</label>
+					<label class="text-[11px] text-fg-muted">R
+						<input
+							type="number"
+							min={HEX_BOUNDS.minR}
+							max={HEX_BOUNDS.maxR}
+							bind:value={hexR}
+							class="mt-1 w-20 rounded border border-line/30 bg-surface-2 px-2 py-1 text-sm"
+						/>
+					</label>
+					<Button type="submit" size="sm" variant="secondary">Inspect</Button>
+					{#if selectedHex}
+						<button
+							type="button"
+							class="ml-auto text-xs text-primary-fg hover:underline"
+							onclick={() => hexClicked(selectedHex!)}
+						>Reopen {selectedHex.q},{selectedHex.r}</button
 						>
-							<polygon
-								points={hexPolygon(h)}
-								fill={selected ? "#1d4ed8" : hostileMine ? "#451a1a" : port ? "#0e3a2a" : "#0b2036"}
-								stroke={selected ? "#93c5fd" : "#1e3a5f"}
-								stroke-width={selected ? 2 : 0.8}
-							/>
-							{#if port}
-								<text
-									x={hexToPixel(h).x}
-									y={hexToPixel(h).y + 8}
-									text-anchor="middle"
-									font-size="9"
-									fill="#7dd3fc"
-								>
-									⚓{port.name.slice(0, 6)}
-								</text>
-							{/if}
-							{#if dock}
-								<circle cx={hexToPixel(h).x + 19} cy={hexToPixel(h).y - 16} r="5" fill="#fbbf24" />
-							{/if}
-							{#each mines as mine, i}
-								<text
-									x={hexToPixel(h).x - 16 + i * 8}
-									y={hexToPixel(h).y - 8}
-									text-anchor="middle"
-									font-size="11"
-									fill={mineColor(mine.stateId)}
-								>✳</text
+					{/if}
+				</form>
+				{#if activeHexes.length}
+					<div class="mt-3 border-t border-line/15 pt-2">
+						<div class="mb-1 text-[11px] uppercase tracking-wide text-fg-muted">Hexes with contacts</div>
+						<div class="flex flex-wrap gap-1">
+							{#each activeHexes as h (hexKey(h))}
+								<button
+									type="button"
+									class="rounded-sm border border-line/20 bg-surface-1 px-2 py-1 font-mono text-[11px] text-fg-soft hover:border-primary/50 {selectedHex &&
+									hexKey(selectedHex) === hexKey(h)
+										? 'border-primary text-primary-fg'
+										: ''}"
+									onclick={() => hexClicked(h)}
+								>{h.q},{h.r}</button
 								>
 							{/each}
-							{#each ships as ship, i}
-								{#if ship.shipClass === "gnss_jammer"}
-									<text
-										x={hexToPixel(h).x - 7 + i * 14}
-										y={hexToPixel(h).y + 9}
-										text-anchor="middle"
-										font-size="9"
-										font-weight="bold"
-										fill="#c084fc"
-									>J</text>
-								{/if}
-								<circle
-									cx={hexToPixel(h).x - 7 + i * 14}
-									cy={hexToPixel(h).y + 18}
-									r="7"
-									fill={shipColor(ship.stateId)}
-									stroke="#04121f"
-									stroke-width="1"
-								/>
-								<text
-									x={hexToPixel(h).x - 7 + i * 14}
-									y={hexToPixel(h).y + 21}
-									text-anchor="middle"
-									font-size="6"
-									font-weight="bold"
-									fill="#04121f"
-								>{def(ship.shipClass)?.short ?? "?"}</text
-								>
-							{/each}
-							<title>
-								{h.q},{h.r}{port ? ` · ${port.name}` : ""}{ships.length ? ` · ${ships.length} ship(s)` : ""}{mines.length
-									? ` · ${mines.length} minefield(s)`
-									: ""}
-							</title>
-						</g>
-					{/each}
-				</svg>
+						</div>
+					</div>
+				{/if}
 			</section>
 
 			<!-- ── Side panels ───────────────────────────────────────────────── -->
@@ -470,9 +429,16 @@
 						</div>
 						{#if data.canCommand && selectedShip.status !== "sunk"}
 							<div class="mt-3 flex flex-wrap gap-2">
-								<Button size="sm" onclick={() => beginMove(selectedShip.id)} disabled={selectedShip.status === "repairing"}>
-									{movingShipId === selectedShip.id ? "Pick a hex…" : "Move"}
-								</Button>
+								<form method="POST" action="?/moveShip" use:enhance={enhanceForm} class="flex flex-wrap items-end gap-1">
+									<input type="hidden" name="shipId" value={selectedShip.id} />
+									<label class="text-[11px] text-fg-muted">To Q
+										<input type="number" name="q" min={HEX_BOUNDS.minQ} max={HEX_BOUNDS.maxQ} bind:value={moveQ} class="mt-1 w-16 rounded border border-line/30 bg-surface-2 px-1 py-1 text-xs" />
+									</label>
+									<label class="text-[11px] text-fg-muted">R
+										<input type="number" name="r" min={HEX_BOUNDS.minR} max={HEX_BOUNDS.maxR} bind:value={moveR} class="mt-1 w-16 rounded border border-line/30 bg-surface-2 px-1 py-1 text-xs" />
+									</label>
+									<Button type="submit" size="sm" disabled={selectedShip.status === "repairing"}>Move</Button>
+								</form>
 								{#if selectedShip.status === "moving"}
 									<form method="POST" action="?/stopShip" use:enhance={enhanceForm}>
 										<input type="hidden" name="shipId" value={selectedShip.id} />
@@ -565,10 +531,7 @@
 							<li>
 								<button
 									class="flex w-full items-center justify-between rounded px-2 py-1 text-left hover:bg-surface-3"
-									onclick={() => {
-										selectedShipId = ship.id;
-										selectedHex = { q: ship.q, r: ship.r };
-									}}
+									onclick={() => hexClicked({ q: ship.q, r: ship.r })}
 								>
 									<span><span class="font-medium">{ship.name}</span> <span class="text-fg-muted">· {ship.q},{ship.r}</span></span>
 									<span class="text-fg-muted">{ship.status} · {ship.health}hp · {ship.fuel}fuel</span>
@@ -630,13 +593,6 @@
 		{#if activeMoves.length}
 			<p class="mt-3 text-xs text-fg-muted">{activeMoves.length} ship(s) under way — they advance on the next fleet tick.</p>
 		{/if}
-
-		<form bind:this={moveForm} method="POST" action="?/moveShip" use:enhance={enhanceForm} class="hidden">
-			<input type="hidden" name="shipId" value={movingShipId ?? ""} />
-			<input type="hidden" name="q" value={moveTarget?.q ?? selectedHex?.q ?? ""} />
-			<input type="hidden" name="r" value={moveTarget?.r ?? selectedHex?.r ?? ""} />
-			<button type="submit">Move</button>
-		</form>
 	{/if}
 	<Tutorial id="navy" title="Flotten-Kurzanleitung" steps={navySteps} />
 </PageContainer>

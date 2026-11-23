@@ -22,8 +22,9 @@ view of the same world.
 
 - Shows only the sea and coastal regions. Inland regions fade out and land
   units, battles and army intel are hidden.
-- Hexes exist only inside a coastal state's EEZ and are clipped to the real
-  coastline — there are no hexes on land.
+- The full hex grid is drawn over the real world map and clipped to the
+  coastline, so there are no hexes on land. Hexes inside a coastal state's EEZ
+  carry that state's colour; the rest of the sea grid is drawn faintly.
 - Ports (⚓), ships and minefields (✳) sit on their hexes.
 - Clicking a hex opens a panel with coordinates, EEZ owner, port, ships and
   mines, plus a link to the navy console.

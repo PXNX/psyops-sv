@@ -821,13 +821,16 @@
 		return owner;
 	});
 	const seaHexes = $derived.by(() => {
-		const out: { key: string; q: number; r: number; points: string; x: number; y: number; active: boolean; color: string; regionId: number }[] = [];
+		const out: { key: string; q: number; r: number; points: string; x: number; y: number; active: boolean; color: string; regionId: number | null; inEez: boolean }[] = [];
 		for (let r = HEX_BOUNDS.minR; r <= HEX_BOUNDS.maxR; r++) {
 			for (let q = HEX_BOUNDS.minQ; q <= HEX_BOUNDS.maxQ; q++) {
 				const h = { q, r };
 				const key = hexKey(h);
 				const owner = eezByHex.get(key);
-				if (!owner) continue;
+				// The whole sea grid is drawn on the real map in naval/aerial
+				// mode. Until the mount-time geometry sample knows which hexes
+				// are water, keep the smaller EEZ-only set so SSR stays lean.
+				if (!owner && (!seaGeometryReady || !waterHexKeys.has(key))) continue;
 				const c = hexCentre(h);
 				out.push({
 					key,
@@ -837,8 +840,9 @@
 					x: c.x,
 					y: c.y,
 					active: activeHexKeys.has(key),
-					color: owner.color,
-					regionId: owner.regionId
+					color: owner?.color ?? "#38bdf8",
+					regionId: owner?.regionId ?? null,
+					inEez: !!owner
 				});
 			}
 		}
@@ -966,23 +970,25 @@
 		];
 	}
 
-	/** The hex sea is part of the world SVG itself, not a second floating canvas.
-	 *  It is inserted *before* the region paths: the opaque land then clips each
-	 *  coastal hex to the real, non-hexagonal shoreline. Each cell still carries
-	 *  its coordinate so it can be tapped and selected. */
+	/** The hex map is part of the world SVG itself, not a second floating canvas.
+	 *  It is inserted *before* the region paths: the opaque land clips every
+	 *  hex that falls on shore, so the grid only shows over water. Hexes inside
+	 *  an EEZ carry the owner's colour; the rest of the sea grid is drawn faintly
+	 *  so the whole map can be navigated by hex. Each cell keeps its coordinate
+	 *  so it can be tapped and selected. */
 	const worldSvg = $derived.by(() => {
 		if (!showSea || !overlays.sea) return WorldMap;
 		const cells = seaHexes
 			.map((h) => {
 				const picked = h.key === selectedHexKey;
 				return `<polygon data-hex='${h.key}' data-tutorial='hex-cell' points='${h.points}' fill='${h.color}' fill-opacity='${
-					picked ? 0.36 : h.active ? 0.2 : 0.14
-				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.9 : 0.65}' stroke-width='${
+					picked ? 0.36 : h.active ? 0.2 : h.inEez ? 0.14 : 0.05
+				}' stroke='${picked ? "#f8fafc" : h.color}' stroke-opacity='${picked ? 1 : h.active ? 0.9 : h.inEez ? 0.65 : 0.22}' stroke-width='${
 					picked ? 2 : h.active ? 1 : 0.8
 				}' style='cursor:pointer'/>`;
 			})
 			.join("");
-		const group = `<g id='world-hex-sea'><title>EEZ sea grid · ${EEZ.radiusHexes} hex rings</title>${cells}</g>`;
+		const group = `<g id='world-hex-sea'><title>Hex sea grid · EEZ ${EEZ.radiusHexes} hex rings</title>${cells}</g>`;
 		return WorldMap.replace("</defs>", `</defs>${group}`);
 	});
 
