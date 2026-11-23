@@ -22,7 +22,9 @@ import {
 	actionsFor,
 	assetsFor,
 	browseSystem,
+	enemyAssetsIn,
 	exfilRecord,
+	flipAsset,
 	filesFor,
 	grepSystem,
 	isPivoted,
@@ -48,6 +50,7 @@ const empty = {
 	targets: [] as { id: number; name: string; logo: string | null }[],
 	selectedTargetId: null as number | null,
 	assets: [] as Awaited<ReturnType<typeof assetsFor>>,
+	enemyAssets: [] as Awaited<ReturnType<typeof enemyAssetsIn>>,
 	sites: [] as Awaited<ReturnType<typeof sitesFor>>,
 	files: [] as Awaited<ReturnType<typeof filesFor>>,
 	actions: [] as Awaited<ReturnType<typeof actionsFor>>,
@@ -64,6 +67,7 @@ function loadSessions(stateId: number, targetStateId: number) {
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const account = locals.account!;
+	const now = new Date();
 	const [authority, side] = await Promise.all([opsAuthority(db, account.id), viewerSide(db, account.id)]);
 	const stateId = authority?.stateId ?? side?.stateId ?? null;
 	if (!stateId) return { ...empty, targets: [] };
@@ -72,14 +76,15 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const requested = url.searchParams.get("target");
 	const selectedTargetId = targets.find((t) => String(t.id) === requested)?.id ?? targets[0]?.id ?? null;
 
-	const [treasury, targetNames, assets, sites, files, actions, sessions] = await Promise.all([
+	const [treasury, targetNames, assets, sites, files, actions, sessions, enemyAssets] = await Promise.all([
 		db.query.stateTreasury.findFirst({ where: (t, { eq }) => eq(t.stateId, stateId) }),
 		Promise.all(targets.map(async (t) => ({ ...t, logo: await getLogoUrl(t.logo) }))),
 		selectedTargetId ? assetsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? sitesFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? filesFor(db, stateId, selectedTargetId) : Promise.resolve([]),
 		selectedTargetId ? actionsFor(db, stateId, selectedTargetId) : Promise.resolve([]),
-		selectedTargetId ? loadSessions(stateId, selectedTargetId) : Promise.resolve([])
+		selectedTargetId ? loadSessions(stateId, selectedTargetId) : Promise.resolve([]),
+		enemyAssetsIn(db, stateId, now)
 	]);
 	const [state] = await db.select({ id: states.id, name: states.name }).from(states).where(eq(states.id, stateId));
 
@@ -89,6 +94,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		targets: targetNames,
 		selectedTargetId,
 		assets,
+		enemyAssets,
 		sites,
 		files,
 		actions,
@@ -112,6 +118,17 @@ export const actions: Actions = {
 				kind
 			});
 			return { planted: result };
+		} catch (err) {
+			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
+			throw err;
+		}
+	},
+
+	flip: async ({ request, locals }) => {
+		const form = await request.formData();
+		try {
+			const result = await flipAsset(db, locals.account!.id, { assetId: int(form.get("assetId")) });
+			return { flipped: result, message: result.detail };
 		} catch (err) {
 			if (err instanceof InfiltrationError) return fail(400, { error: err.message });
 			throw err;

@@ -7,7 +7,7 @@
 // defence/foreign minister runs operations). Everything that spends or changes
 // state happens in one transaction with the treasury row locked.
 
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import {
 	userProfiles,
@@ -43,7 +43,12 @@ import {
 	type Site,
 	fileSystemFor,
 	listDirectory,
-	findRecords
+	findRecords,
+	hash32,
+	spyName,
+	spyPortrait,
+	rollSpyTraits,
+	spyTraitModifiers
 } from "#lib/config/index.js";
 import { opsAuthority } from "./covert-ops";
 import { sideOf, viewerSide } from "./recon";
@@ -72,6 +77,12 @@ export async function networkTargets(db: Db, stateId: number) {
 export interface NetworkAsset {
 	id: number;
 	codename: string;
+	/** The person's own name, distinct from the operation codename. */
+	name: string;
+	portrait: number;
+	traitIds: string[];
+	/** True when another state has turned this asset against us. */
+	compromised: boolean;
 	kind: AssetKind;
 	access: number;
 	heat: number;
@@ -103,6 +114,10 @@ export async function assetsFor(
 		return {
 			id: asset.id,
 			codename: asset.codename,
+			name: asset.name ?? asset.codename,
+			portrait: asset.portrait ?? asset.id,
+			traitIds: asset.traitIds ?? [],
+			compromised: asset.doubleAgentForStateId != null && asset.doubleAgentForStateId !== asset.stateId,
 			kind: asset.kind as AssetKind,
 			access: asset.access,
 			heat,
@@ -229,9 +244,137 @@ async function assertTarget(tx: Tx, stateId: number, targetStateId: number): Pro
 	return target.name;
 }
 
+/** Enemy assets working inside our state, as seen by counter-intelligence. */
+export async function enemyAssetsIn(db: Db, stateId: number, now = new Date()) {
+	const rows = await db
+		.select({ asset: infiltrationAssets, owner: states.name })
+		.from(infiltrationAssets)
+		.innerJoin(states, eq(infiltrationAssets.stateId, states.id))
+		.where(
+			and(
+				eq(infiltrationAssets.targetStateId, stateId),
+				ne(infiltrationAssets.stateId, stateId),
+				eq(infiltrationAssets.status, "active")
+			)
+		);
+	return rows.map(({ asset, owner }) => ({
+		id: asset.id,
+		codename: asset.codename,
+		name: asset.name ?? asset.codename,
+		portrait: asset.portrait ?? asset.id,
+		owner,
+		ownerStateId: asset.stateId,
+		kind: asset.kind as AssetKind,
+		access: asset.access,
+		heat: effectiveHeat(asset, now),
+		doubleAgent: asset.doubleAgentForStateId === stateId
+	}));
+}
+
+export interface FlipResult {
+	success: boolean;
+	chance: number;
+	secrets: number;
+	detail: string;
+}
+
+/**
+ * Try to turn an enemy asset in our state into a double agent. A success
+ * hands over a handful of files about its former owner; a failure leaves the
+ * asset hot and possibly burned. The cost and 3% chance are in the config.
+ */
+export async function flipAsset(
+	db: Database,
+	userId: string,
+	input: { assetId: number; now?: Date; rng?: () => number }
+): Promise<FlipResult> {
+	const now = input.now ?? new Date();
+	const rng = input.rng ?? Math.random;
+	return db.transaction(async (tx) => {
+		const authority = await opsAuthority(tx, userId);
+		if (!authority) throw new InfiltrationError("Only your state's leadership can run double agents.");
+		const stateId = authority.stateId;
+		const [row] = await tx
+			.select({ asset: infiltrationAssets, owner: states.name })
+			.from(infiltrationAssets)
+			.innerJoin(states, eq(infiltrationAssets.stateId, states.id))
+			.where(eq(infiltrationAssets.id, input.assetId))
+			.for("update");
+		const asset = row?.asset;
+		if (!asset || asset.targetStateId !== stateId || asset.stateId === stateId) {
+			throw new InfiltrationError("That asset is not an enemy operating in our state.");
+		}
+		if (asset.doubleAgentForStateId === stateId) throw new InfiltrationError("That asset is already ours.");
+
+		await charge(tx, stateId, INFILTRATION.FLIP_COST, `Turn ${asset.codename}`, userId, now);
+		const chance = INFILTRATION.FLIP_CHANCE;
+		const success = rng() < chance;
+		const heat = effectiveHeat(asset, now);
+		const nextHeat = clamp(
+			heat + (success ? 4 : INFILTRATION.FLIP_HEAT_ON_FAILURE),
+			0,
+			INFILTRATION.HEAT_MAX
+		);
+		let secrets = 0;
+		let detail: string;
+		if (success) {
+			await tx
+				.update(infiltrationAssets)
+				.set({
+					doubleAgentForStateId: stateId,
+					flippedAt: now,
+					heat: nextHeat,
+					status: nextHeat >= INFILTRATION.HEAT_MAX ? "burned" : "active",
+					lastActionAt: now
+				})
+				.where(eq(infiltrationAssets.id, asset.id));
+
+			// The new double agent hands over what it can reach in its old state.
+			const plantRows = await tx
+				.select({ id: powerPlants.id, name: powerPlants.name, plantType: powerPlants.plantType })
+				.from(powerPlants)
+				.where(eq(powerPlants.stateId, asset.stateId));
+			const sites = sitesForTarget(
+				asset.stateId,
+				plantRows.map((p) => ({ id: p.id, name: p.name, plantType: p.plantType }))
+			);
+			for (let i = 0; i < INFILTRATION.FLIP_SECRETS && sites.length; i++) {
+				const site = sites[i % sites.length]!;
+				const dossier = fileFor(site, row.owner, Math.floor(rng() * 1_000_000), now);
+				await tx.insert(infiltrationFiles).values({
+					stateId,
+					targetStateId: asset.stateId,
+					siteId: site.id,
+					assetId: asset.id,
+					title: dossier.title,
+					classification: dossier.classification,
+					body: dossier.body,
+					capturedAt: now
+				});
+				secrets++;
+			}
+			detail = `${asset.name} (“${asset.codename}”) is now a double agent and passed ${secrets} file${secrets === 1 ? "" : "s"} from ${row.owner}.`;
+		} else {
+			await tx
+				.update(infiltrationAssets)
+				.set({
+					heat: nextHeat,
+					status: nextHeat >= INFILTRATION.HEAT_MAX ? "burned" : "active",
+					lastActionAt: now
+				})
+				.where(eq(infiltrationAssets.id, asset.id));
+			detail = `${asset.name} refused the approach and the attempt was reported. Heat is now ${nextHeat}.`;
+		}
+		return { success, chance, secrets, detail };
+	});
+}
+
 export interface PlantResult {
 	assetId: number;
 	codename: string;
+	name: string;
+	portrait: number;
+	traitIds: string[];
 	cost: number;
 }
 
@@ -275,7 +418,12 @@ export async function plantAsset(
 			.select({ n: sql<number>`count(*)::int` })
 			.from(infiltrationAssets)
 			.where(and(eq(infiltrationAssets.stateId, stateId), eq(infiltrationAssets.targetStateId, input.targetStateId)));
-		const codename = assetCodename(stateId, input.targetStateId, all?.n ?? 0);
+		const index = all?.n ?? 0;
+		const codename = assetCodename(stateId, input.targetStateId, index);
+		const seed = hash32(stateId, input.targetStateId, index);
+		const name = spyName(seed);
+		const portrait = spyPortrait(seed);
+		const traitIds = rollSpyTraits();
 		const [asset] = await tx
 			.insert(infiltrationAssets)
 			.values({
@@ -283,6 +431,9 @@ export async function plantAsset(
 				targetStateId: input.targetStateId,
 				kind: input.kind,
 				codename,
+				name,
+				portrait,
+				traitIds,
 				access: spec.access,
 				heat: spec.plantHeat,
 				status: "active",
@@ -291,7 +442,7 @@ export async function plantAsset(
 				lastActionAt: now
 			})
 			.returning({ id: infiltrationAssets.id });
-		return { assetId: asset!.id, codename, cost: spec.cost };
+		return { assetId: asset!.id, codename, name, portrait, traitIds, cost: spec.cost };
 	});
 }
 
@@ -337,6 +488,8 @@ export async function runAction(
 		const asset = row?.asset;
 		if (!asset || asset.stateId !== stateId) throw new InfiltrationError("That asset isn't yours.");
 		if (asset.status !== "active") throw new InfiltrationError(`${asset.codename} has been burned.`);
+		const traits = spyTraitModifiers(asset.traitIds ?? []);
+		const effectiveAccess = asset.access + traits.access;
 
 		const heat = effectiveHeat(asset, now);
 		if (heat >= INFILTRATION.HEAT_MAX)
@@ -358,9 +511,9 @@ export async function runAction(
 			);
 			site = sites.find((s) => s.id === input.siteId) ?? null;
 			if (!site) throw new InfiltrationError("That site is not in the target's catalogue.");
-			if (asset.access < site.accessRequired) {
+			if (effectiveAccess < site.accessRequired) {
 				throw new InfiltrationError(
-					`${site.code} needs access level ${site.accessRequired}; ${asset.codename} has ${asset.access}.`
+					`${site.code} needs access level ${site.accessRequired}; ${asset.codename} has ${effectiveAccess}.`
 				);
 			}
 		} else {
@@ -395,11 +548,13 @@ export async function runAction(
 				? 1
 				: Math.min(
 						0.98,
-						actionChance(input.action, { access: asset.access, heat }, site!) +
+						actionChance(input.action, { access: effectiveAccess, heat }, site!) +
+							traits.success +
 							(pivoted ? INTRUSION.PIVOT_ACTION_BONUS : 0)
 					);
 		const success = rng() < chance;
-		const nextHeat = clamp(heat + spec.heat, 0, INFILTRATION.HEAT_MAX);
+		const heatGain = spec.heat > 0 ? Math.round(spec.heat * traits.heat) : spec.heat;
+		const nextHeat = clamp(heat + heatGain, 0, INFILTRATION.HEAT_MAX);
 		const burned = nextHeat >= INFILTRATION.HEAT_MAX;
 
 		let detail: string;

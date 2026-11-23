@@ -11,6 +11,7 @@
 	import CameraFeed from "#lib/component/infiltration/CameraFeed.svelte";
 	import IntrusionConsole from "#lib/component/infiltration/IntrusionConsole.svelte";
 	import FileSystemExplorer from "#lib/component/infiltration/FileSystemExplorer.svelte";
+	import CommanderPortrait from "#lib/component/CommanderPortrait.svelte";
 	import {
 		ASSET_KINDS,
 		COVERT_OPS,
@@ -20,6 +21,7 @@
 		INTRUSION,
 		NETWORK_ASSET_BONUS,
 		SITE_TYPES,
+		SPY_TRAITS,
 		actionChance,
 		networkFootholdCap,
 		type AssetKind,
@@ -137,6 +139,8 @@
 	function focusTerminal() {
 		queueMicrotask(() => terminalEl?.scrollIntoView({ block: "nearest", behavior: "smooth" }));
 	}
+
+	let flippingId = $state<number | null>(null);
 
 	const plantForm = () => {
 		planting = true;
@@ -258,11 +262,19 @@
 										: ''}"
 								>
 									<div class="flex items-start gap-3">
-										<div class="rounded-sm bg-surface-4 p-2 text-primary"><Icon class="size-4" /></div>
+										<CommanderPortrait
+											seed={asset.portrait}
+											alive={asset.status === "active"}
+											size={40}
+										/>
 										<div class="min-w-0 flex-1">
 											<div class="flex items-center justify-between gap-2">
-												<p class="truncate font-semibold text-fg">{asset.codename}</p>
-												{#if asset.status === "burned"}
+												<p class="truncate font-semibold text-fg">
+													{asset.name} <span class="font-normal text-fg-muted">· “{asset.codename}”</span>
+												</p>
+												{#if asset.compromised}
+													<Badge size="xs" tone="red">double agent</Badge>
+												{:else if asset.status === "burned"}
 													<Badge size="xs" tone="red">burned</Badge>
 												{:else}
 													<Badge size="xs" tone="blue">L{asset.access}</Badge>
@@ -272,6 +284,18 @@
 												{INFILTRATION_ASSETS[asset.kind as AssetKind]?.label ?? asset.kind} · {asset.handler ??
 													"unknown handler"}
 											</p>
+											{#if asset.traitIds.length}
+												<div class="mt-1 flex flex-wrap gap-1">
+													{#each asset.traitIds as traitId (traitId)}
+														{@const trait = SPY_TRAITS[traitId as keyof typeof SPY_TRAITS]}
+														{#if trait}
+															<span class="rounded-sm border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary-fg" title={trait.description}>
+																{trait.label}
+															</span>
+														{/if}
+													{/each}
+												</div>
+											{/if}
 											<div class="mt-2 flex items-center gap-2">
 												<div class="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-6">
 													<div
@@ -313,7 +337,60 @@
 				{/if}
 
 				<!-- Plant a new asset -->
-				<form method="POST" action="?/plant" class="panel space-y-3 p-4" use:enhance={plantForm}>
+				<section class="panel space-y-3 p-4" aria-labelledby="enemy-title">
+			<div class="flex flex-wrap items-baseline justify-between gap-2">
+				<h3 id="enemy-title" class="section-title">Enemy assets in {data.state.name}</h3>
+				<span class="text-[11px] text-fg-muted">a very long shot, but a turned agent brings files</span>
+			</div>
+			{#if data.enemyAssets.length}
+				<ul class="space-y-2">
+					{#each data.enemyAssets as enemy (enemy.id)}
+						<li class="flex flex-wrap items-center gap-3 rounded-sm border border-line/20 p-2.5">
+							<CommanderPortrait seed={enemy.portrait} alive={!enemy.doubleAgent} size={36} />
+							<div class="min-w-0 flex-1">
+								<p class="truncate text-sm font-semibold text-fg">
+									{enemy.name} <span class="font-normal text-fg-muted">· “{enemy.codename}”</span>
+								</p>
+								<p class="text-xs text-fg-muted">
+									{INFILTRATION_ASSETS[enemy.kind as AssetKind]?.label ?? enemy.kind} · {enemy.owner}
+									· heat {enemy.heat}
+								</p>
+							</div>
+							{#if enemy.doubleAgent}
+								<Badge size="xs" tone="green">our double agent</Badge>
+							{:else if data.authority}
+								<form
+									method="POST"
+									action="?/flip"
+									use:enhance={() => {
+										flippingId = enemy.id;
+										return async ({ result, update }) => {
+											flippingId = null;
+											await update({ reset: false });
+											toastResult(result);
+										};
+									}}
+								>
+									<input type="hidden" name="assetId" value={enemy.id} />
+									<Button
+										type="submit"
+										size="sm"
+										variant="secondary"
+										disabled={(data.treasury ?? 0) < INFILTRATION.FLIP_COST || flippingId === enemy.id}
+									>
+										Turn · ${INFILTRATION.FLIP_COST.toLocaleString()}
+									</Button>
+								</form>
+							{/if}
+						</li>
+					{/each}
+				</ul>
+			{:else}
+				<p class="text-sm text-fg-muted">No hostile assets are known to be operating here.</p>
+			{/if}
+		</section>
+
+		<form method="POST" action="?/plant" class="panel space-y-3 p-4" use:enhance={plantForm}>
 					<input type="hidden" name="targetStateId" value={data.selectedTargetId} />
 					<h3 class="section-title">Plant an asset</h3>
 					<fieldset class="space-y-2">

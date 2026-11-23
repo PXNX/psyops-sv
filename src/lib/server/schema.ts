@@ -3742,10 +3742,17 @@ export const infiltrationAssets = pgTable(
 			.references(() => states.id, { onDelete: "cascade" }),
 		kind: infiltrationAssetKindEnum("kind").notNull(),
 		codename: text("codename").notNull(),
+		/** The person behind the cover: a generated name and face, with traits. */
+		name: text("name"),
+		portrait: integer("portrait").default(0).notNull(),
+		traitIds: jsonb("trait_ids").$type<string[]>().default([]).notNull(),
 		access: integer("access").notNull(),
 		heat: integer("heat").default(0).notNull(),
 		status: infiltrationAssetStatusEnum("status").default("active").notNull(),
 		plantedBy: text("planted_by").references(() => accounts.id, { onDelete: "set null" }),
+		/** Set when this asset is turned: it now reports to another state. */
+		doubleAgentForStateId: integer("double_agent_for_state_id").references(() => states.id, { onDelete: "set null" }),
+		flippedAt: timestamp("flipped_at"),
 		plantedAt: timestamp("planted_at").defaultNow().notNull(),
 		lastActionAt: timestamp("last_action_at").defaultNow().notNull()
 	},

@@ -120,7 +120,13 @@ export const INFILTRATION = {
 	/** A found file's body is capped so the ledger stays readable. */
 	FILE_MAX_CHARS: 4_000,
 	/** Number of operations ledger entries to keep in the console. */
-	LOG_LIMIT: 30
+	LOG_LIMIT: 30,
+	/** Turning an enemy asset is expensive and very unlikely to work. */
+	FLIP_COST: 120_000,
+	FLIP_CHANCE: 0.03,
+	FLIP_HEAT_ON_FAILURE: 22,
+	/** Secrets a successful double agent hands over. */
+	FLIP_SECRETS: 2
 } as const;
 
 /** Cap the visible odds factor at the same place the planner caps its bonus. */

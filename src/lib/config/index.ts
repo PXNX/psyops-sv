@@ -39,6 +39,7 @@ export * from "./game/equipment.config";
 export * from "./game/trade.config";
 export * from "./game/autonomy.config";
 export * from "./game/infiltration.config";
+export * from "./game/spy-traits.config";
 export * from "./game/intrusion.config";
 export * from "./game/records.config";
 export * from "./game/civic.config";
