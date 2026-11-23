@@ -5,7 +5,7 @@
 // operations so the rules cannot drift apart.
 //
 // No SvelteKit virtual modules here (tests import this file).
-import { and, eq, gt, isNotNull, sql } from "drizzle-orm";
+import { and, eq, gt, gte, isNotNull, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import {
 	companies,
@@ -215,17 +215,21 @@ export async function buyShares(
 
 	await db.transaction(async (tx) => {
 		const [sellerWallet] = await tx.select().from(userWallets).where(eq(userWallets.userId, listing.sellerId));
-		const buyerBalanceAfter = Number(buyerWallet.balance) - totalPrice;
+		// Claim the buyer's funds with a guarded decrement: a concurrent spend
+		// cannot overdraw the wallet between the earlier read and this update.
+		const [paid] = await tx
+			.update(userWallets)
+			.set({ balance: sql`${userWallets.balance} - ${totalPrice}`, updatedAt: new Date() })
+			.where(and(eq(userWallets.userId, userId), gte(userWallets.balance, totalPrice)))
+			.returning({ balance: userWallets.balance });
+		if (!paid) throw new StockError("Insufficient funds.");
+		const buyerBalanceAfter = Number(paid.balance);
 		const sellerBalanceAfter = Number(sellerWallet?.balance ?? 0) + totalPrice;
 
-		await tx
-			.update(userWallets)
-			.set({ balance: buyerBalanceAfter, updatedAt: new Date() })
-			.where(eq(userWallets.userId, userId));
 		if (sellerWallet) {
 			await tx
 				.update(userWallets)
-				.set({ balance: sellerBalanceAfter, updatedAt: new Date() })
+				.set({ balance: sql`${userWallets.balance} + ${totalPrice}`, updatedAt: new Date() })
 				.where(eq(userWallets.userId, listing.sellerId));
 		}
 

@@ -2,7 +2,7 @@
 // The arms market. Hardware moved to a state outside the seller's bloc stays
 // pending until the seller's defence minister (or president) approves it.
 // No SvelteKit virtual modules here (tests import this file).
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, gte, isNull, sql } from "drizzle-orm";
 import type { Database } from "../../db";
 import {
 	accounts,
@@ -214,10 +214,12 @@ export async function buyArms(
 			.returning({ id: armsListings.id });
 		if (!claimed) throw new ArmsError("That offer has just changed.");
 
-		await tx
+		const [paid] = await tx
 			.update(userWallets)
-			.set({ balance: Number(wallet.balance) - total, updatedAt: new Date() })
-			.where(eq(userWallets.userId, userId));
+			.set({ balance: sql`${userWallets.balance} - ${total}`, updatedAt: new Date() })
+			.where(and(eq(userWallets.userId, userId), gte(userWallets.balance, total)))
+			.returning({ id: userWallets.id });
+		if (!paid) throw new ArmsError("Insufficient funds.");
 		await tx
 			.insert(userWallets)
 			.values({ userId: listing.sellerId, balance: total })
