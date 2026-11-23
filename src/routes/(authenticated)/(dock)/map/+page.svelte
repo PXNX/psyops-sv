@@ -81,6 +81,7 @@
 	import { buildSeaScene, seaFrameInput, type SeaImageryInput } from "#lib/utils/sea-image.js";
 
 	let { data }: { data: PageData } = $props();
+	let historyOpen = $state(false);
 
 	const mapSteps = [
 		{
@@ -112,7 +113,7 @@
 		{
 			id: "history",
 			title: "4. Map history",
-			body: "Use the History button in the right-hand toolbar to replay any saved day. Enter a date at the top of the history page, or pick one from the snapshot strip.",
+			body: "Use the History button in the right-hand toolbar to open the date picker, then pick any saved day. The same map replays who held what on that day.",
 			target: '[data-tutorial="map-history"]',
 			manual: "Open history",
 			art: "history" as const
@@ -1610,13 +1611,13 @@
 	<!-- Right tool column -->
 	<div class="panel absolute right-2 top-14 z-10 flex flex-col gap-0.5 rounded-sm p-1">
 		<Button
-			href="/map/history"
 			size="xs"
-			variant="ghost"
+			variant={data.history?.requested || historyOpen ? "primary" : "ghost"}
 			icon={IconHistory}
 			title="Map history · replay a saved day"
 			class="mb-0.5 whitespace-nowrap"
 			data-tutorial="map-history"
+			onclick={() => (historyOpen = !historyOpen)}
 		>History</Button>
 		<div class="mx-1 h-px bg-line/20"></div>
 		<IconButton icon={IconZoomIn} label="Zoom in" size="sm" shape="square" onclick={() => zoomBy(1.6)} />
@@ -1632,6 +1633,72 @@
 		{/if}
 		<IconButton icon={IconReset} label="Reset view" size="sm" shape="square" onclick={resetView} />
 	</div>
+
+	{#if data.history?.requested}
+		<div
+			class="panel absolute bottom-12 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-sm px-3 py-1.5 text-xs {data
+				.history.nearest
+				? 'text-warning'
+				: 'text-fg-body'}"
+		>
+			<IconHistory class="size-3.5 shrink-0" />
+			<span>
+				{data.history.nearest ? "Nearest saved day" : "Historic map"} ·
+				<span class="font-mono">{data.history.selected?.at.slice(0, 10) ?? data.history.requested}</span>
+			</span>
+			<Button href="/map" size="xs" variant="ghost">Back to live</Button>
+		</div>
+	{/if}
+
+	{#if historyOpen && data.history}
+		<div class="panel absolute right-14 top-14 z-20 w-72 space-y-2 rounded-sm p-3">
+			<div class="flex items-center justify-between">
+				<h2 class="section-title text-sm">Map history</h2>
+				<IconButton
+					icon={IconDismiss}
+					label="Close history"
+					size="xs"
+					shape="square"
+					onclick={() => (historyOpen = false)}
+				/>
+			</div>
+			<form method="GET" action="/map" class="flex items-end gap-2">
+				<label class="min-w-0 flex-1">
+					<span class="section-title text-[10px] uppercase tracking-wide">Saved day</span>
+					<input
+						type="date"
+						name="history"
+						value={data.history.requested || data.history.selected?.at.slice(0, 10) || ""}
+						min={data.history.minDate || undefined}
+						max={data.history.maxDate || undefined}
+						class="field-control w-full rounded-sm px-2 py-1.5 text-sm"
+					/>
+				</label>
+				<Button type="submit" size="sm">Show</Button>
+			</form>
+			{#if data.history.nearest && data.history.requested}
+				<p class="text-xs text-fg-muted">
+					No snapshot for {data.history.requested} — showing {data.history.selected?.at.slice(0, 10)}.
+				</p>
+			{/if}
+			<div class="flex gap-1 overflow-x-auto pb-1">
+				{#each data.history.dates as date (date)}
+					<a
+						href="/map?history={date}"
+						class="press-spring shrink-0 rounded-sm border px-2 py-1 text-xs {data.history.selected?.at.startsWith(date)
+							? 'border-primary bg-primary/12 text-primary-fg'
+							: 'border-line/20 text-fg-muted hover:border-primary/40'}"
+					>
+						{date}
+					</a>
+				{/each}
+			</div>
+			{#if !data.history.dates.length}
+				<p class="text-xs text-fg-muted">No snapshots yet — the first is captured at midnight.</p>
+			{/if}
+			<Button href="/map" size="sm" variant="ghost" block>Latest (live map)</Button>
+		</div>
+	{/if}
 
 	<!-- Legend -->
 	<div class="panel absolute left-16 bottom-9 z-10 hidden rounded-sm px-2.5 py-1.5 text-[11px] text-fg-soft sm:block">

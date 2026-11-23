@@ -39,6 +39,7 @@ import {
 	viewerSide
 } from "#lib/server/services/military/recon.js";
 import { AIRCRAFT_IDS, SENSORS, SENSOR_IDS, UNIT_CATEGORIES, regionCover, type SensorId } from "#lib/config/index.js";
+import { listSnapshots } from "#lib/server/services/world-snapshots.js";
 
 type FriendlyForce = { total: number; mine: number; ally: boolean; byType: Record<string, number> };
 type PictureSummary = {
@@ -263,7 +264,38 @@ export const actions: Actions = {
 	}
 };
 
-export const load: PageServerLoad = async ({ locals }) => {
+/** Pick an exact snapshot for a day, else the closest one saved. */
+function pickSnapshot(
+	snapshots: Awaited<ReturnType<typeof listSnapshots>>,
+	requested: string
+): { selected: (typeof snapshots)[number] | null; nearest: boolean } {
+	if (!requested || !snapshots.length) return { selected: snapshots[0] ?? null, nearest: false };
+	const exact = snapshots.find((s) => s.capturedAt.toISOString().startsWith(requested));
+	if (exact) return { selected: exact, nearest: false };
+	const wanted = Date.parse(`${requested}T00:00:00Z`);
+	if (!Number.isFinite(wanted)) return { selected: snapshots[0]!, nearest: false };
+	const selected = snapshots.reduce((best, s) =>
+		Math.abs(s.capturedAt.getTime() - wanted) < Math.abs(best.capturedAt.getTime() - wanted) ? s : best
+	);
+	return { selected, nearest: true };
+}
+
+export const load: PageServerLoad = async ({ locals, url }) => {
+	const requested = /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("history") ?? "")
+		? url.searchParams.get("history")!.slice(0, 10)
+		: "";
+	const snapshots = await listSnapshots(db, 365).catch(() => []);
+	const { selected, nearest } = pickSnapshot(snapshots, requested);
+	const dates = snapshots.map((s) => s.capturedAt.toISOString().slice(0, 10));
+	const history = {
+		requested,
+		selected: requested && selected ? { id: selected.id, at: selected.capturedAt.toISOString() } : null,
+		nearest,
+		dates,
+		minDate: dates.at(-1) ?? "",
+		maxDate: dates[0] ?? ""
+	};
+
 	try {
 		// All map queries are independent, so run them in parallel
 		const [currentUserRegionId, allRegions, allStates, allBlocs, activeWars, residentCounts, ppByState, sa, seaFleet] =
@@ -523,7 +555,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 			(s) => !(sa?.enemyStateIds ?? []).includes(s.stateId) || !!seaIntel[`${s.q},${s.r}`]
 		);
 
-		return {
+		const result = {
 			regionMap,
 			stateColorMap,
 			states: allStates,
@@ -559,11 +591,82 @@ export const load: PageServerLoad = async ({ locals }) => {
 					.map((r) => ({ id: r.id, stateId: r.stateId!, latitude: Number(r.latitude), longitude: Number(r.longitude) })),
 				fleets: viewerFleets,
 				fleetHexes: viewerFleetHexes
-			}
+			},
+			history
 		};
+
+		// ── History mode: replay a saved day on the same map ───────────────
+		// Terrain and coordinates are static, so keep the live geometry and
+		// swap in the snapshot's owners, people and allegiances. Tactical data
+		// is hidden because it has no meaning for a past day.
+		if (requested && selected) {
+			const owners = new Map(selected.regions.map((r) => [r.id, r.stateId]));
+			const residents = new Map(selected.regions.map((r) => [r.id, r.residents ?? 0]));
+			const snapshotStates = new Set(selected.states.map((s) => s.id));
+			for (const [id, r] of Object.entries(result.regionMap)) {
+				const rid = Number(id);
+				const owner = owners.has(rid) ? owners.get(rid)! : null;
+				result.regionMap[rid] = {
+					...r,
+					stateId: owner && snapshotStates.has(owner) ? owner : null,
+					residentCount: residents.get(rid) ?? 0,
+					education: 0,
+					infrastructure: 0,
+					economy: 0,
+					hospitals: 0,
+					fortifications: 0,
+					radar: 0,
+					powerplantCount: 0,
+					resources: { oil: 0, aluminium: 0, rubber: 0, tungsten: 0, steel: 0, chromium: 0 }
+				};
+			}
+			const blocById = new Map(selected.blocs.map((b) => [b.id, b]));
+			const historicColors: Record<number, string> = {};
+			const historicBlocColors: Record<number, string> = {};
+			const historicBlocNames: Record<number, string> = {};
+			for (const s of selected.states) {
+				const bloc = s.blocId ? blocById.get(s.blocId) : undefined;
+				if (bloc) {
+					historicBlocColors[s.id] = bloc.color;
+					historicBlocNames[s.id] = bloc.name;
+				}
+				historicColors[s.id] = bloc?.color ?? stateColorMap[s.id] ?? "#6366f1";
+			}
+			result.stateColorMap = historicColors;
+			result.blocColorMap = historicBlocColors;
+			result.blocNameMap = historicBlocNames;
+			result.states = selected.states.map((s) => ({
+				id: s.id,
+				name: s.name,
+				description: null,
+				population: s.population,
+				rating: 0,
+				blocId: s.blocId ?? null,
+				background: null
+			}));
+			result.sa = null;
+			result.canCommand = false;
+			result.strikes = {};
+			result.warAttackerStateIds = new Set<number>();
+			result.warDefenderStateIds = new Set<number>();
+			result.sea = {
+				...result.sea,
+				ports: [],
+				ships: [],
+				mines: [],
+				intel: {},
+				sensors: [],
+				aircraft: [],
+				fleets: [],
+				fleetHexes: []
+			};
+		}
+
+		return result;
 	} catch (error) {
 		console.error("Error loading map data:", error);
 		return {
+			history,
 			regionMap: {},
 			stateColorMap: {},
 			states: [],

@@ -66,13 +66,16 @@ sea is blank.
 
 ## Historic maps
 
-The **History** button in the map toolbar opens [map history](/map/history). A
-snapshot is saved every day at midnight; enter a date at the top of the history
-page to replay who held what, and see the state of the world on that day.
+The **History** button in the map toolbar opens a date picker right on the
+[map](/map). A snapshot is saved every day at midnight; enter a date or pick one
+from the strip to replay who held what. The same map is recoloured with that
+day's owners and the state ledger, with live tactical overlays hidden. The URL
+carries the day as `?history=YYYY-MM-DD`, so a historic view can be shared or
+bookmarked; if that day has no snapshot, the nearest saved one is shown.
 
-<DocArt kind="history" label="Daily snapshots" caption="One saved world per day. Pick any date on the history page; if that day has no snapshot, the nearest one is shown." />
+<DocArt kind="history" label="Daily snapshots" caption="One saved world per day. Pick any date in the History panel; if that day has no snapshot, the nearest one is shown." />
 
-<Mermaid label="Opening a historic map" chart={"sequenceDiagram\nparticipant P as Player\nparticipant M as Map\nparticipant H as Map history\nP->>M: Click History in the toolbar\nM->>H: Open /map/history\nP->>H: Enter a date\nH-->>P: Regions coloured by that day's owner, plus the state ledger"} />
+<Mermaid label="Opening a historic map" chart={"sequenceDiagram\nparticipant P as Player\nparticipant M as Map\nP->>M: Click History in the toolbar\nP->>M: Choose a saved day\nM-->>M: Reload with ?history=YYYY-MM-DD\nM-->>P: Regions recoloured by that day's owner"} />
 
 
 ## Deep dive: exact numbers
