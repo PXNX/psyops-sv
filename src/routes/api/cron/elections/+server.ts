@@ -18,6 +18,7 @@ import { eq, and, lte } from "drizzle-orm";
 import { sendNotificationIfEnabled } from "#lib/server/services/push-notification.service.js";
 import { runAutomaticDividends } from "#lib/server/services/economy/dividends.js";
 import { reachFirstTime } from "#lib/server/services/politics/first-time.js";
+import { effectiveVotesByParty } from "#lib/server/services/politics/election-scoring.js";
 import { dtg } from "#lib/utils/dtg.js";
 
 // Give the serverless function enough time to process every state's election in
@@ -128,13 +129,17 @@ async function processElectionResults(election: any) {
 	}
 
 	const votes = await db.select().from(electionVotes).where(eq(electionVotes.electionId, election.id));
-	const votesByParty: Record<number, number> = {};
-	votes.forEach((vote) => {
-		votesByParty[vote.partyId] = (votesByParty[vote.partyId] || 0) + 1;
-	});
-
-	const totalVotes = votes.length;
 	const parties = await db.select().from(politicalParties).where(eq(politicalParties.stateId, election.stateId));
+
+	// Half the vote is cast by citizens, half is weighted by the oligarchs who
+	// fund parties. Reputation, the president, ideology, the economy and
+	// propaganda all move the oligarch half.
+	const votesByParty = await effectiveVotesByParty(db, {
+		electionId: election.id,
+		stateId: election.stateId
+	});
+	const totalVotes = Object.values(votesByParty).reduce((a, b) => a + b, 0);
+
 
 	if (parties.length === 0) {
 		console.warn(`No parties found for state ${election.stateId}`);

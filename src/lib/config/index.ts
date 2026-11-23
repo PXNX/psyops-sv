@@ -26,6 +26,7 @@ export * from "./game/energy.config";
 export * from "./game/allocation.config";
 export * from "./game/industry.config";
 export * from "./game/datacenter.config";
+export * from "./game/election.config";
 export * from "./game/commander.config";
 export * from "./game/academy.config";
 export * from "./game/amphibious.config";

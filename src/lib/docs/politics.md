@@ -28,6 +28,14 @@ Elections run on two levels:
 - **Parliamentary elections** in your state (`/state/[id]/election`),
 - **Bloc elections** for bloc leadership (`/bloc/[id]`).
 
+A parliamentary result is half ballot box, half balance sheet. Cast ballots by
+residents make up half of the effective vote; the other half comes from the
+state's oligarchs, weighted by their wealth and loyalty to a party. Who they
+back depends on the party's appeal: public goodwill, the reputation of its
+president, the current economic mood, the party's ideology relative to the
+state's political orientation, and any propaganda working for or against it.
+Winning the room is often a better investment than winning the argument.
+
 Help your side by writing posts and reaching voters. Results appear in
 `/election/[id]`.
 
