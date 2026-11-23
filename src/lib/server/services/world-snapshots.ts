@@ -8,6 +8,7 @@ import {
 	militaryUnits,
 	mapSnapshots,
 	regions,
+	residences,
 	stateEnergy,
 	stateResourceInventory,
 	stateTreasury,
@@ -19,19 +20,26 @@ import { AIRCRAFT_IDS, regionPopulation } from "#lib/config/index.js";
 /** Capture one snapshot at midnight UTC, idempotent per day. */
 export async function captureWorldSnapshot(db: Database, at: Date = new Date()) {
 	const day = new Date(Date.UTC(at.getUTCFullYear(), at.getUTCMonth(), at.getUTCDate()));
-	const [allRegions, allStates, allBlocs, ships, units, steelRows, energyRows, treasuries] = await Promise.all([
-		db.select().from(regions),
-		db.select().from(states),
-		db.select().from(blocs),
-		db.select({ stateId: fleetShips.stateId, id: fleetShips.id }).from(fleetShips),
-		db.select({ stateId: militaryUnits.stateId, unitType: militaryUnits.unitType }).from(militaryUnits),
-		db
-			.select({ stateId: stateResourceInventory.stateId, quantity: stateResourceInventory.quantity })
-			.from(stateResourceInventory)
-			.where(eq(stateResourceInventory.resourceType, "steel")),
-		db.select().from(stateEnergy),
-		db.select().from(stateTreasury)
-	]);
+	const [allRegions, allStates, allBlocs, ships, units, steelRows, energyRows, treasuries, residentRows] =
+		await Promise.all([
+			db.select().from(regions),
+			db.select().from(states),
+			db.select().from(blocs),
+			db.select({ stateId: fleetShips.stateId, id: fleetShips.id }).from(fleetShips),
+			db.select({ stateId: militaryUnits.stateId, unitType: militaryUnits.unitType }).from(militaryUnits),
+			db
+				.select({ stateId: stateResourceInventory.stateId, quantity: stateResourceInventory.quantity })
+				.from(stateResourceInventory)
+				.where(eq(stateResourceInventory.resourceType, "steel")),
+			db.select().from(stateEnergy),
+			db.select().from(stateTreasury),
+			db
+				.select({ regionId: residences.regionId, total: sql<number>`count(*)::int` })
+				.from(residences)
+				.groupBy(residences.regionId)
+		]);
+
+	const residentsByRegion = new Map(residentRows.map((r) => [r.regionId, Number(r.total)]));
 
 	const regionSnapshots = allRegions.map((r) => ({
 		id: r.id,
@@ -46,7 +54,8 @@ export async function captureWorldSnapshot(db: Database, at: Date = new Date()) 
 			education: r.education,
 			hospitals: r.hospitals,
 			population: r.population
-		})
+		}),
+		residents: residentsByRegion.get(r.id) ?? 0
 	}));
 
 	const stateSnapshots: MapSnapshotState[] = allStates.map((s) => {
@@ -64,6 +73,9 @@ export async function captureWorldSnapshot(db: Database, at: Date = new Date()) 
 			civilians: regionSnapshots
 				.filter((r) => r.stateId === s.id)
 				.reduce((sum, r) => sum + (r.population ?? 0), 0),
+			residents: regionSnapshots
+				.filter((r) => r.stateId === s.id)
+				.reduce((sum, r) => sum + (r.residents ?? 0), 0),
 			power: energy?.totalProduction ?? 0,
 			usedPower: energy?.usedProduction ?? 0,
 			fuelFactor: energy?.fuelFactor ?? 100,

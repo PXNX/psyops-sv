@@ -4679,7 +4679,10 @@ export interface MapSnapshotRegion {
 	stateId: number | null;
 	blocId: number | null;
 	terrain: string | null;
+	/** Civilians living here at capture time. */
 	population?: number;
+	/** Player residents living here at capture time (absent in older snapshots). */
+	residents?: number;
 }
 
 export interface MapSnapshotState {
@@ -4694,6 +4697,8 @@ export interface MapSnapshotState {
 	/** Legacy figure; civilian population is on regions. */
 	population: number;
 	civilians: number;
+	/** Player residents in the state's regions (absent in older snapshots). */
+	residents?: number;
 	power: number;
 	usedPower: number;
 	fuelFactor: number;

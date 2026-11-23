@@ -74,19 +74,34 @@ export async function completeCivicProjects(db: Database, now = new Date()) {
 	return { completed: finished.length, projects: finished };
 }
 
+export interface OpinionComponent {
+	key: string;
+	label: string;
+	detail: string;
+	points: number;
+}
+
+export interface OpinionBreakdown {
+	score: number;
+	raw: number;
+	components: OpinionComponent[];
+}
+
 /**
- * Civilian opinion 0-100: a neutral baseline, state services and private
- * patronage lifting it, fortifications and civilian casualties dragging it down.
+ * Civilian opinion 0-100 with the arithmetic behind it: a neutral baseline,
+ * state services and private patronage lifting it, fortifications and civilian
+ * casualties dragging it down. Every caller of `regionOpinion` shares this
+ * computation, so a breakdown can never drift from the number on the profile.
  */
-export async function regionOpinion(
+export async function regionOpinionBreakdown(
 	db: Database,
 	regionId: number,
 	now = new Date(),
 	needs?: RegionNeeds
-): Promise<number> {
+): Promise<OpinionBreakdown | null> {
 	await completeCivicProjects(db, now);
 	const [region] = await db.select().from(regions).where(eq(regions.id, regionId)).limit(1);
-	if (!region) return OPINION_CONFIG.BASE;
+	if (!region) return null;
 	const [civic, casualties] = await Promise.all([
 		db
 			.select({ buildingType: civicProjects.buildingType, total: sql<number>`count(*)`.mapWith(Number) })
@@ -99,21 +114,78 @@ export async function regionOpinion(
 			.where(eq(strikes.regionId, regionId))
 	]);
 
-	// State ratings are stored as decimals in the DB; coerce them to numbers.
 	const levels = ["infrastructure", "economy", "education", "hospitals", "fortifications", "radar"] as const;
+	const components: OpinionComponent[] = [
+		{ key: "base", label: "Neutral baseline", detail: "everyone starts here", points: OPINION_CONFIG.BASE }
+	];
 	let score = OPINION_CONFIG.BASE;
+
+	// State ratings are stored as decimals in the DB; coerce them to numbers.
 	for (const key of levels) {
-		score += (Number(region[key] ?? 0) || 0) * (OPINION_FROM_STATE_BUILDINGS[key] ?? 0);
+		const level = Number(region[key] ?? 0) || 0;
+		const weight = OPINION_FROM_STATE_BUILDINGS[key] ?? 0;
+		if (!weight) continue;
+		const points = level * weight;
+		score += points;
+		components.push({
+			key: `state_${key}`,
+			label: `State ${key}`,
+			detail: `level ${level} × ${weight}`,
+			points
+		});
 	}
 	for (const row of civic) {
 		if (!isCivicBuildingType(row.buildingType)) continue;
-		score += row.total * CIVIC_BUILDINGS[row.buildingType as CivicBuildingType].opinion;
+		const building = CIVIC_BUILDINGS[row.buildingType as CivicBuildingType];
+		const points = row.total * building.opinion;
+		score += points;
+		components.push({
+			key: `civic_${row.buildingType}`,
+			label: `${building.icon} ${building.name}`,
+			detail: `${row.total} built × ${building.opinion}`,
+			points
+		});
 	}
+
+	const casualtyCount = casualties[0]?.total ?? 0;
 	const casualtyPenalty = Math.min(
 		OPINION_CONFIG.MAX_CASUALTY_PENALTY,
-		((casualties[0]?.total ?? 0) / 1000) * OPINION_CONFIG.CASUALTY_PENALTY_PER_THOUSAND
+		(casualtyCount / 1000) * OPINION_CONFIG.CASUALTY_PENALTY_PER_THOUSAND
 	);
-	return clamp(score - casualtyPenalty - opinionLossFromHardship(needs?.hardship ?? 0));
+	if (casualtyPenalty) {
+		components.push({
+			key: "casualties",
+			label: "Civilian casualties",
+			detail: `${casualtyCount.toLocaleString()} casualties (capped)`,
+			points: -Math.round(casualtyPenalty)
+		});
+	}
+	const hardship = opinionLossFromHardship(needs?.hardship ?? 0);
+	if (hardship) {
+		components.push({
+			key: "hardship",
+			label: "Civilian hardship",
+			detail: "shortages in the region",
+			points: -hardship
+		});
+	}
+
+	const raw = score - casualtyPenalty - hardship;
+	return { score: clamp(raw), raw, components };
+}
+
+/**
+ * Civilian opinion 0-100: a neutral baseline, state services and private
+ * patronage lifting it, fortifications and civilian casualties dragging it down.
+ */
+export async function regionOpinion(
+	db: Database,
+	regionId: number,
+	now = new Date(),
+	needs?: RegionNeeds
+): Promise<number> {
+	const breakdown = await regionOpinionBreakdown(db, regionId, now, needs);
+	return breakdown?.score ?? OPINION_CONFIG.BASE;
 }
 
 /** Opinion across several regions in one pass (for lists and the map). */

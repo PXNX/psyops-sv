@@ -485,10 +485,8 @@
 					</div>
 					<div class="min-w-0">
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted">Articles</dt>
-						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
-							<a href="/user/{data.user.id}/articles" class="font-mono text-fg-body hover:text-fg hover:underline">
-								{data.articleCount}
-							</a>
+						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
+							{data.articleCount}
 						</dd>
 					</div>
 					<div class="min-w-0">
@@ -499,14 +497,26 @@
 					</div>
 					<div class="min-w-0">
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted" title="Earned from community upvotes on posts and comments">Karma</dt>
-						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
-							{data.karma}
+						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
+							<a
+								href="/user/{data.user.id}/karma"
+								class="font-mono text-fg-body hover:text-fg hover:underline"
+								title="See how this was earned"
+							>
+								{data.karma}
+							</a>
 						</dd>
 					</div>
 					<div class="min-w-0">
 						<dt class="font-mono text-[11px] uppercase tracking-[0.15em] text-fg-muted" title="How much civilians in the home region like you">Reputation</dt>
-						<dd class="text-fg-body border-b border-dotted border-line/40 pb-0.5 font-mono">
-							{data.reputation ?? "—"}
+						<dd class="border-b border-dotted border-line/40 pb-0.5 font-mono">
+							<a
+								href="/user/{data.user.id}/reputation"
+								class="font-mono text-fg-body hover:text-fg hover:underline"
+								title="See how this is calculated"
+							>
+								{data.reputation ?? "—"}
+							</a>
 						</dd>
 					</div>
 					<div class="col-span-2 min-w-0">

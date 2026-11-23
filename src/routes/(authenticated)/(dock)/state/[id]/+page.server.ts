@@ -66,6 +66,7 @@ import { effectiveEnergy } from "#lib/server/services/military/state-effects.js"
 import { stancesHeldBy, stancesToward } from "#lib/server/services/politics/civilian-stance.js";
 import { stateDebt, bailoutState, BailoutError } from "#lib/server/services/economy/bailout.js";
 import { stateDebtCreditors, stateGdp, statePowerReport } from "#lib/server/services/economy/state-metrics.js";
+import { residentHistory } from "#lib/server/services/snapshot-history.js";
 import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
 
@@ -622,6 +623,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
 	return {
 		warHistory: await warsOfState(db, stateId),
+		residentHistory: await residentHistory(stateId, 90),
 		state: {
 			id: state.id,
 			name: state.name,

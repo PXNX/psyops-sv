@@ -28,6 +28,7 @@
 	import ResourceIcon from "#lib/component/ResourceIcon.svelte";
 	import UserLink from "#lib/component/UserLink.svelte";
 	import Modal from "#lib/component/Modal.svelte";
+	import Sparkline from "#lib/component/charts/Sparkline.svelte";
 	import Button from "#lib/component/ui/Button.svelte";
 	import IconButton from "#lib/component/ui/IconButton.svelte";
 	import Badge from "#lib/component/ui/Badge.svelte";
@@ -366,6 +367,44 @@
 
 	<!-- Conduct in war: public international humanitarian law record -->
 	<IhlRecord record={data.ihl} />
+
+	<!-- Residents: the players who live here, where they live, and how that grew -->
+	<section class="panel rounded-sm p-4 sm:p-5 space-y-4">
+		<div class="flex flex-wrap items-baseline justify-between gap-2">
+			<h2 class="section-title">Residents</h2>
+			<span class="text-[10px] uppercase tracking-[0.2em] text-fg-muted">where the people live</span>
+		</div>
+		<div class="grid gap-5 sm:grid-cols-2">
+			<div>
+				<h3 class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">By region</h3>
+				{#if data.regions.length}
+					<ul class="divide-y divide-line/10">
+						{#each [...data.regions].sort((a, b) => b.population - a.population) as r (r.id)}
+							<li class="flex items-center justify-between gap-3 py-2 text-sm">
+								<a href="/region/{r.id}/population" class="min-w-0 truncate text-fg hover:text-primary-hover">
+									{r.name} <span class="text-xs text-fg-faint">#{r.id}</span>
+								</a>
+								<span class="font-mono text-fg-soft">{r.population.toLocaleString()}</span>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<p class="text-xs text-fg-muted">This state holds no regions yet.</p>
+				{/if}
+			</div>
+			<div>
+				<h3 class="text-[10px] uppercase tracking-[0.2em] text-fg-muted mb-2">Over time</h3>
+				<Sparkline
+					values={data.residentHistory.map((p) => p.value)}
+					label="Residents of {data.state.name} over the last 90 days"
+					color="var(--color-primary)"
+				/>
+				<p class="mt-1 text-xs text-fg-muted">
+					Based on when current residents arrived; daily snapshots make recent days exact.
+				</p>
+			</div>
+		</div>
+	</section>
 
 	<!-- Civilian opinion: populations remember who attacked them and who helped -->
 	<section class="panel rounded-sm p-4 sm:p-5 space-y-4">
