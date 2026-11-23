@@ -105,6 +105,7 @@
 				<span class="text-sm text-fg-soft">Version {data.version}</span>
 				<span class="text-xs text-primary-fg">View Changelog</span>
 			</button>
+			<a href="/changelog" class="block text-xs text-primary-fg hover:underline">Full changelog →</a>
 		</div>
 	</div>
 
