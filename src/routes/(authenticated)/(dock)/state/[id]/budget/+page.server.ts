@@ -8,6 +8,15 @@ import type { PageServerLoad } from "./$types";
 
 const PAGE_SIZE = 20;
 
+/** A malformed or non-JSON ledger note must never take down the page. */
+function parseMetadata(raw: string): unknown {
+	try {
+		return JSON.parse(raw);
+	} catch {
+		return raw;
+	}
+}
+
 export const load: PageServerLoad = async ({ params, url }) => {
 	const stateId = parseInt(params.id);
 
@@ -119,7 +128,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		itemName: tx.itemName,
 		quantity: tx.quantity,
 		pricePerUnit: tx.pricePerUnit ? Number(tx.pricePerUnit) : null,
-		metadata: tx.metadata ? JSON.parse(tx.metadata) : null,
+		metadata: tx.metadata ? parseMetadata(tx.metadata) : null,
 		createdAt: tx.createdAt,
 		isIncome: Number(tx.amount) > 0
 	}));

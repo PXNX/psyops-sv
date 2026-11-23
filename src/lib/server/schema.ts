@@ -740,6 +740,8 @@ export const comments = pgTable(
 		authorId: text("author_id")
 			.notNull()
 			.references(() => accounts.id, { onDelete: "cascade" }),
+		/** Parent comment for reddit-style threaded replies. */
+		parentId: integer("parent_id").references(() => comments.id, { onDelete: "cascade" }),
 		content: text("content").notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull()
 	},
@@ -4649,3 +4651,49 @@ export const closedZones = pgTable(
 
 export type TradeLane = typeof tradeLanes.$inferSelect;
 export type ClosedZone = typeof closedZones.$inferSelect;
+
+/** A daily snapshot of the world: who held what, and the numbers behind it. */
+export const mapSnapshots = pgTable(
+	"map_snapshots",
+	{
+		id: integer("id").generatedByDefaultAsIdentity().primaryKey(),
+		capturedAt: timestamp("captured_at").notNull(),
+		/** Region-level state/bloc ownership at capture time. */
+		regions: jsonb("regions").$type<MapSnapshotRegion[]>().notNull(),
+		/** State-level economy and military statistics. */
+		states: jsonb("states").$type<MapSnapshotState[]>().notNull(),
+		/** Bloc membership and names. */
+		blocs: jsonb("blocs").$type<MapSnapshotBloc[]>().notNull()
+	},
+	(t) => ({ capturedIdx: uniqueIndex("uq_map_snapshot_day").on(t.capturedAt) })
+);
+
+export interface MapSnapshotRegion {
+	id: number;
+	stateId: number | null;
+	blocId: number | null;
+	terrain: string | null;
+}
+
+export interface MapSnapshotState {
+	id: number;
+	name: string;
+	blocId: number | null;
+	population: number;
+	regionCount: number;
+	army: number;
+	ships: number;
+	aircraft: number;
+	steel: number;
+	power: number;
+	treasury: number;
+	debt: number;
+}
+
+export interface MapSnapshotBloc {
+	id: number;
+	name: string;
+	color: string;
+	memberStateIds: number[];
+}
+

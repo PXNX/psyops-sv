@@ -63,6 +63,7 @@ export async function loadComments(db: Database, articleId: number, userId?: str
 			content: comments.content,
 			createdAt: comments.createdAt,
 			authorId: comments.authorId,
+			parentId: comments.parentId,
 			authorName: userProfiles.name,
 			votes: sql<number>`cast(count(${commentVotes.id}) as int)`
 		})
@@ -71,8 +72,8 @@ export async function loadComments(db: Database, articleId: number, userId?: str
 		.leftJoin(commentVotes, eq(comments.id, commentVotes.commentId))
 		.where(eq(comments.articleId, articleId))
 		.groupBy(comments.id, userProfiles.name)
-		.orderBy(desc(comments.createdAt))
-		.limit(100);
+		.orderBy(comments.createdAt)
+		.limit(300);
 	const mine = userId
 		? new Set(
 				(
@@ -86,13 +87,27 @@ export async function loadComments(db: Database, articleId: number, userId?: str
 	return rows.map((row) => ({ ...row, hasVoted: mine.has(row.id) }));
 }
 
-export async function addComment(db: Database, userId: string, articleId: number, raw: string) {
+export async function addComment(
+	db: Database,
+	userId: string,
+	articleId: number,
+	raw: string,
+	parentId: number | null = null
+) {
 	const content = raw.trim();
 	if (content.length < 2) throw new SocialError("Write a comment first.");
 	if (content.length > 2000) throw new SocialError("Comments are limited to 2000 characters.");
 	const [article] = await db.select({ authorId: articles.authorId }).from(articles).where(eq(articles.id, articleId));
 	if (!article) throw new SocialError("That post does not exist.");
-	const [row] = await db.insert(comments).values({ articleId, authorId: userId, content }).returning();
+	if (parentId != null) {
+		const [parent] = await db
+			.select({ id: comments.id })
+			.from(comments)
+			.where(and(eq(comments.id, parentId), eq(comments.articleId, articleId)))
+			.limit(1);
+		if (!parent) throw new SocialError("That comment is not on this post.");
+	}
+	const [row] = await db.insert(comments).values({ articleId, authorId: userId, content, parentId }).returning();
 	return row!;
 }
 

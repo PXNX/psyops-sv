@@ -33,6 +33,7 @@
 	const navItems: NavItem[] = $derived([
 		{ href: "/", icon: FluentChartMultiple, label: "Overview", mobile: true },
 		{ href: "/map", icon: FluentMap, label: "Map", mobile: true },
+		{ href: "/map/history", icon: FluentMap, label: "History" },
 		{ href: "/intel", icon: FluentEye, label: "Intel" },
 		{ href: "/ops", icon: FluentIncognito, label: "Ops" },
 		{ href: "/posts", icon: FluentNews, label: "Posts", mobile: true },

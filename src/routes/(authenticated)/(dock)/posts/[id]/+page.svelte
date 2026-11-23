@@ -18,6 +18,7 @@
 	import { stamp } from "#lib/component/press/time.js";
 	import { dtgDate } from "#lib/utils/dtg.js";
 	import SafeHtml from "#lib/component/press/SafeHtml.svelte";
+	import CommentThread from "#lib/component/press/CommentThread.svelte";
 	import { countUp } from "#lib/utils/count-up.js";
 
 	const { data } = $props();
@@ -211,31 +212,7 @@
 				<textarea name="content" rows="3" maxlength="2000" required placeholder="Add a comment…" class="field-control w-full rounded-sm px-3 py-2 text-sm"></textarea>
 				<Button type="submit" size="sm" variant="secondary">Post comment</Button>
 			</form>
-			{#each data.comments as comment (comment.id)}
-				<article class="panel animate-soft-in rounded-sm p-3 text-sm">
-					<div class="flex flex-wrap items-center gap-2 text-xs text-fg-muted">
-						<UserLink id={comment.authorId} name={comment.authorName ?? "Reader"} size="xs" plain />
-						<span>· {stamp(comment.createdAt)}</span>
-					</div>
-					<p class="mt-2 whitespace-pre-wrap text-fg-body">{comment.content}</p>
-					<div class="mt-2 flex items-center gap-2">
-						<form method="POST" action="?/commentVote" use:enhance={() => async ({ result, update }) => { toastResult(result); await update(); }}>
-							<input type="hidden" name="commentId" value={comment.id} />
-							<button type="submit" class="press-spring rounded-sm border px-2 py-1 text-xs {comment.hasVoted ? 'border-primary/50 bg-primary/12 text-primary-fg' : 'border-line/25 text-fg-muted hover:border-primary/40'}">
-								▲ {comment.votes}
-							</button>
-						</form>
-						<details class="ml-auto">
-							<summary class="cursor-pointer text-xs text-fg-muted hover:text-fg">Report</summary>
-							<form method="POST" action="?/reportComment" use:enhance={() => async ({ result, update }) => { toastResult(result); await update(); }} class="mt-2 flex gap-1">
-								<input type="hidden" name="commentId" value={comment.id} />
-								<input name="reason" placeholder="Reason" class="field-control min-w-0 flex-1 rounded-sm px-2 py-1 text-xs" />
-								<Button type="submit" size="xs" variant="ghost">Send</Button>
-							</form>
-						</details>
-					</div>
-				</article>
-			{/each}
+			<CommentThread comments={data.comments} articleId={data.article.id} />
 		</section>
 	</article>
 </PageContainer>

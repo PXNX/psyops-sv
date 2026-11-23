@@ -141,7 +141,14 @@ export const actions: Actions = {
 	addComment: async ({ request, locals, params }) => {
 		const f = await request.formData();
 		try {
-			await addComment(db, locals.account!.id, Number(params.id), String(f.get("content") ?? ""));
+			const parentRaw = String(f.get("parentId") ?? "");
+			await addComment(
+				db,
+				locals.account!.id,
+				Number(params.id),
+				String(f.get("content") ?? ""),
+				parentRaw ? Number(parentRaw) : null
+			);
 			return { success: true, message: "Comment posted." };
 		} catch (err) {
 			return fail(400, { error: err instanceof SocialError ? err.message : "Comment failed" });

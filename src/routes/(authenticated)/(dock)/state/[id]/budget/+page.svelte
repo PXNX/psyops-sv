@@ -65,6 +65,11 @@
 		backLabel={data.state.name}
 	/>
 
+	<div class="mx-auto flex max-w-4xl flex-wrap gap-2">
+		<Button href="/state/{data.state.id}/market" size="sm" variant="secondary">Buy resources →</Button>
+		<Button href="/market" size="sm" variant="ghost">World market</Button>
+	</div>
+
 	<!-- Statement head -->
 	<section class="panel rounded-sm overflow-hidden">
 		<div class="px-5 pt-5 pb-4 flex items-start justify-between gap-4 border-b-2 border-double border-line/30">
