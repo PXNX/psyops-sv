@@ -4,7 +4,7 @@
 <script lang="ts">
 	import { enhance } from "$app/forms";
 	import PageContainer from "#lib/component/PageContainer.svelte";
-	import { Badge, Button } from "#lib/component/ui/index.js";
+	import { Badge, Button, SearchSelect } from "#lib/component/ui/index.js";
 	import {
 		NAVAL_OPS,
 		NAVAL_OP_KINDS,
@@ -25,6 +25,13 @@
 		toastResult(result);
 	};
 	const label = (v: string) => v.replace(/_/g, " ");
+
+	// State and region ids are always picked from a searchable dropdown that
+	// shows `Name (#id)` — never typed into a number field.
+	let convoyOrigin = $state("");
+	let convoyTarget = $state("");
+	let repairRegion = $state("");
+	let navalRegion = $state("");
 </script>
 
 <PageContainer>
@@ -84,21 +91,34 @@
 				<h2 id="convoy-title" class="section-title mb-3">🚚 Convoy operations</h2>
 				{#if p?.roles.convoy}
 					<form method="POST" action="?/convoy" use:enhance={handleSubmit} class="grid gap-2 sm:grid-cols-4">
-						<select class="field-control w-full" name="originRegionId">
-							<option value="">Origin region</option>
-							{#each p.ownRegions as r}<option value={r.id}>Region {r.id}</option>{/each}
-						</select>
-						<select class="field-control w-full" name="targetRegionId">
-							<option value="">Target region</option>
-							{#each p.ownRegions as r}<option value={r.id}>Region {r.id}</option>{/each}
-						</select>
+						<SearchSelect
+							name="originRegionId"
+							items={p.ownRegions}
+							bind:value={convoyOrigin}
+							showId
+							placeholder="Origin region"
+							searchPlaceholder="Search your regions…"
+						/>
+						<SearchSelect
+							name="targetRegionId"
+							items={p.ownRegions}
+							bind:value={convoyTarget}
+							showId
+							placeholder="Target region"
+							searchPlaceholder="Search your regions…"
+						/>
 						<input class="field-control w-full" type="number" name="cargo" value="100" min="1" />
 						<Button type="submit" size="sm">Dispatch convoy</Button>
 					</form>
 					<form method="POST" action="?/repair" use:enhance={handleSubmit} class="mt-3 flex flex-wrap items-center gap-2">
-						<select class="field-control w-auto" name="regionId">
-							{#each p.ownRegions as r}<option value={r.id}>Region {r.id} (infra {r.infrastructure ?? 0})</option>{/each}
-						</select>
+						<SearchSelect
+							name="regionId"
+							items={p.ownRegions.map((r) => ({ ...r, hint: `infrastructure ${r.infrastructure ?? 0}` }))}
+							bind:value={repairRegion}
+							showId
+							placeholder="Region to rebuild"
+							searchPlaceholder="Search your regions…"
+						/>
 						<Button type="submit" size="sm" variant="secondary">Rebuild infrastructure (2 machine tools)</Button>
 					</form>
 					{#if p.convoys.length}
@@ -135,7 +155,7 @@
 								</select>
 								<select class="field-control w-full" name="partnerStateId">
 									<option value="">Partner state</option>
-									{#each targets as t}<option value={t.id}>{t.name}</option>{/each}
+									{#each targets as t}<option value={t.id}>{t.name} (#{t.id})</option>{/each}
 								</select>
 								<input class="field-control w-full" type="number" name="capacity" value="50" min="10" />
 								<Button type="submit" size="sm">Open lane</Button>
@@ -152,7 +172,7 @@
 								</select>
 								<select class="field-control w-full" name="targetStateId">
 									<option value="">Everyone</option>
-									{#each targets as t}<option value={t.id}>{t.name} only</option>{/each}
+									{#each targets as t}<option value={t.id}>{t.name} (#{t.id}) only</option>{/each}
 								</select>
 								<input class="field-control w-full" type="number" name="hours" value="24" min="6" />
 								<Button type="submit" size="sm" variant="secondary">Declare closure</Button>
@@ -189,12 +209,20 @@
 							<label class="field-label" for="naval-target">Target state</label>
 							<select class="field-control w-full" name="targetStateId" id="naval-target">
 								<option value="">—</option>
-								{#each targets as t}<option value={t.id}>{t.name}</option>{/each}
+								{#each targets as t}<option value={t.id}>{t.name} (#{t.id})</option>{/each}
 							</select>
 						</div>
 						<div>
-							<label class="field-label" for="naval-region">Coastal region ID</label>
-							<input class="field-control w-full" type="number" name="regionId" id="naval-region" min="1" />
+							<label class="field-label" for="naval-region">Coastal region</label>
+							<SearchSelect
+								id="naval-region"
+								name="regionId"
+								items={p.ownRegions}
+								bind:value={navalRegion}
+								showId
+								placeholder="Choose a coastal region…"
+								searchPlaceholder="Search your regions…"
+							/>
 						</div>
 						<div class="flex items-end"><Button type="submit" size="sm" block>Launch</Button></div>
 					</form>
@@ -246,7 +274,7 @@
 							</select>
 							<select class="field-control w-full" name="targetStateId">
 								<option value="">Target state</option>
-								{#each targets as t}<option value={t.id}>{t.name}</option>{/each}
+								{#each targets as t}<option value={t.id}>{t.name} (#{t.id})</option>{/each}
 							</select>
 							<select class="field-control w-full" name="satelliteId">
 								<option value="">Random target satellite</option>
@@ -301,7 +329,7 @@
 						</select>
 						<select class="field-control w-full" name="targetStateId">
 							<option value="">Partner state</option>
-							{#each targets as t}<option value={t.id}>{t.name}</option>{/each}
+							{#each targets as t}<option value={t.id}>{t.name} (#{t.id})</option>{/each}
 						</select>
 						<Button type="submit" size="sm" variant="secondary">Open route (25,000)</Button>
 					</form>

@@ -24,6 +24,9 @@
 		searchPlaceholder?: string;
 		empty?: string;
 		disabled?: boolean;
+		/** Append `(#id)` to every option and to the selected value. Use for
+		 *  state/region pickers so the numeric id is visible without typing it. */
+		showId?: boolean;
 	}
 
 	let {
@@ -34,8 +37,11 @@
 		placeholder = "Choose…",
 		searchPlaceholder = "Search…",
 		empty = "Nothing matches.",
-		disabled = false
+		disabled = false,
+		showId = false
 	}: Props = $props();
+
+	const label = (item: T) => (showId ? `${item.name} (#${item.id})` : item.name);
 
 	let open = $state(false);
 	let query = $state("");
@@ -143,7 +149,7 @@
 			{#if selected.logo !== undefined}
 				<Logo src={selected.logo} alt="" class="size-7 shrink-0 rounded-sm" />
 			{/if}
-			<span class="flex-1 min-w-0 truncate text-fg font-medium">{selected.name}</span>
+			<span class="flex-1 min-w-0 truncate text-fg font-medium">{label(selected)}</span>
 		{:else}
 			<span class="flex-1 text-fg-faint/75">{placeholder}</span>
 		{/if}
@@ -194,7 +200,7 @@
 							<Logo src={item.logo} alt="" class="size-7 shrink-0 rounded-sm" />
 						{/if}
 						<span class="flex-1 min-w-0">
-							<span class="block truncate text-sm font-medium">{item.name}</span>
+							<span class="block truncate text-sm font-medium">{label(item)}</span>
 							{#if item.hint}<span class="block truncate text-xs text-fg-muted">{item.hint}</span>{/if}
 						</span>
 						{#if isSelected}<FluentCheckmark20Filled class="size-4 shrink-0" />{/if}

@@ -65,6 +65,7 @@ import { sideOf, viewerSide } from "#lib/server/services/military/recon.js";
 import { effectiveEnergy } from "#lib/server/services/military/state-effects.js";
 import { stancesHeldBy, stancesToward } from "#lib/server/services/politics/civilian-stance.js";
 import { stateDebt, bailoutState, BailoutError } from "#lib/server/services/economy/bailout.js";
+import { stateDebtCreditors, stateGdp, statePowerReport } from "#lib/server/services/economy/state-metrics.js";
 import { takeFirstTimeDetail } from "#lib/server/services/politics/first-time.js";
 import { ECONOMY_CONFIG } from "#lib/config/index.js";
 
@@ -553,10 +554,11 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 	// Civilian sentiment toward this state, this state's own view of others,
 	// its debt and the last few rescues it received. The viewer's own treasury
 	// decides whether a bailout button belongs on the dossier at all.
-	const [stancesAbout, stancesHeld, debt, bailoutHistory, donor] = await Promise.all([
+	const debtPromise = stateDebt(db, stateId);
+	const [stancesAbout, stancesHeld, debt, bailoutHistory, donor, powerReport, creditors] = await Promise.all([
 		stancesToward(db, stateId),
 		stancesHeldBy(db, stateId),
-		stateDebt(db, stateId),
+		debtPromise,
 		db
 			.select({
 				amount: stateBailouts.amount,
@@ -583,8 +585,13 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 					})
 				)
 			),
-		accountId ? bailoutAuthority(accountId, stateId) : null
+		accountId ? bailoutAuthority(accountId, stateId) : null,
+		statePowerReport(db, stateId),
+		stateDebtCreditors(db, stateId)
 	]);
+
+	// GDP depends on the outstanding debt figure computed above.
+	const gdpReport = await stateGdp(db, stateId, debt);
 
 	// Check if current user is president of this state
 	const isPresident = presidentData?.userId === locals.account?.id;
@@ -719,6 +726,10 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 		civilians,
 		ihl,
 		debt,
+		power: powerReport.focus,
+		powerRanking: powerReport.ranking,
+		gdp: gdpReport,
+		creditors,
 		stancesAbout,
 		stancesHeld,
 		bailoutHistory,

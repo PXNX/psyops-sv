@@ -46,6 +46,8 @@
 	let isDeclaringWar = $state(false);
 	let showBailoutModal = $state(false);
 	let isBailingOut = $state(false);
+	let showPowerModal = $state(false);
+	let showDebtModal = $state(false);
 	let showVisaSheet = $state(false);
 	let isApplyingResidence = $state(false);
 	let showEditStateSheet = $state(false);
@@ -310,20 +312,23 @@
 	<section class="panel rounded-sm p-4 sm:p-5">
 		<h2 class="section-title mb-3">Key Figures</h2>
 		<dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-			{#snippet fact(label: string, value: string, Icon: typeof FluentPeople20Filled, tone: string, href?: string)}
+			{#snippet fact(label: string, value: string, Icon: typeof FluentPeople20Filled, tone: string, href?: string, onclick?: () => void, hint?: string)}
 				<svelte:element
-					this={href ? "a" : "div"}
+					this={onclick ? "button" : href ? "a" : "div"}
 					{href}
-					class="group flex items-center gap-2 py-2 border-b border-dashed border-line/15 {href
-						? 'hover:text-primary-hover'
-						: ''}"
+					{onclick}
+					type={onclick ? "button" : undefined}
+					title={hint}
+					class="group flex w-full items-center gap-2 py-2 border-b border-dashed border-line/15 text-left {(href ||
+						onclick) ? 'hover:text-primary-hover' : ''}"
 				>
 					<Icon class="size-4 shrink-0 {tone}" />
-					<dt class="text-sm text-fg-muted {href ? 'group-hover:text-primary-hover' : ''} transition-colors">
+					<dt class="text-sm text-fg-muted {(href || onclick) ? 'group-hover:text-primary-hover' : ''} transition-colors">
 						{label}
 					</dt>
 					<span class="flex-1 border-b border-dotted border-line/20 translate-y-1" aria-hidden="true"></span>
 					<dd class="text-sm font-bold font-mono text-fg">{value}</dd>
+					{#if onclick}<FluentChevronRight20Filled class="size-3.5 shrink-0 text-fg-faint" />{/if}
 				</svelte:element>
 			{/snippet}
 			{@render fact("Civilians", formatPopulation(data.civilians), FluentPeople20Filled, "text-friendly")}
@@ -341,8 +346,18 @@
 				"text-politics",
 				`/state/${data.state.id}/region`
 			)}
-			{@render fact("Power rating", String(data.state.rating || 0), FluentShield20Filled, "text-positive")}
-			{@render fact("State debt", data.debt.toLocaleString(), FluentMoney20Filled, "text-amber-300")}
+			{@render fact(
+				"Power rating",
+				(data.power?.score ?? 0).toLocaleString(),
+				FluentShield20Filled,
+				"text-positive",
+				undefined,
+				() => (showPowerModal = true),
+				"See the breakdown and compare every state"
+			)}
+			{@render fact("State debt", data.debt.toLocaleString(), FluentMoney20Filled, "text-amber-300", undefined, () => (showDebtModal = true), "See who lent the money")}
+			{@render fact("GDP (est.)", data.gdp.gdp.toLocaleString(), FluentBuilding20Filled, "text-friendly")}
+			{@render fact("Debt / GDP", data.gdp.debtToGdp == null ? "—" : `${data.gdp.debtToGdp}%`, FluentReceiptMoney20Filled, "text-amber-300")}
 			{#if data.energy}
 				{@render fact("Energy available", `${data.energy.available} MW`, FluentLightbulb20Filled, "text-primary-fg")}
 			{/if}
@@ -771,6 +786,86 @@
 		cooldownEndsAt={data.editCooldownEndsAt}
 	/>
 {/if}
+
+<!-- Power rating: an explainable score plus a ranking of every state -->
+<Modal bind:open={showPowerModal} title="Power rating · {data.state.name}" size="large">
+	<div class="space-y-4">
+		<p class="text-sm text-fg-body">
+			The rating is an explainable score from the state's territory, people, forces, fleet, industry and
+			grid. The stored dossier rating (<span class="font-mono">{data.power?.storedRating ?? 0}</span>) is
+			set separately and may be edited by officials.
+		</p>
+		<div class="rounded-sm border border-line/20">
+			<div class="grid grid-cols-[1fr_auto_auto] gap-x-3 border-b border-line/20 bg-surface-2/50 px-3 py-2 text-[10px] uppercase tracking-wide text-fg-muted">
+				<span>Component</span><span class="text-right">Value</span><span class="text-right">Points</span>
+			</div>
+			{#each data.power?.components ?? [] as c (c.key)}
+				<div class="grid grid-cols-[1fr_auto_auto] gap-x-3 px-3 py-2 text-sm border-b border-line/10 last:border-0">
+					<span><strong class="font-medium text-fg">{c.label}</strong><span class="block text-xs text-fg-muted">{c.detail}</span></span>
+					<span class="text-right font-mono text-fg-soft">{c.value.toLocaleString()}</span>
+					<span class="text-right font-mono text-fg">+{c.points.toLocaleString()}</span>
+				</div>
+			{/each}
+			<div class="flex justify-between bg-primary/10 px-3 py-2 text-sm font-semibold text-fg">
+				<span>Total score</span><span class="font-mono">{(data.power?.score ?? 0).toLocaleString()}</span>
+			</div>
+		</div>
+		<div>
+			<h3 class="section-title mb-2 text-xs">All states, ranked</h3>
+			<div class="max-h-64 overflow-y-auto rounded-sm border border-line/20">
+				{#each data.powerRanking as row, i (row.id)}
+					<a
+						href="/state/{row.id}"
+						class="flex items-center gap-3 px-3 py-2 text-sm border-b border-line/10 last:border-0 hover:bg-surface-5 {row.id === data.state.id
+							? 'bg-primary/10 text-primary-fg'
+							: ''}"
+					>
+						<span class="w-5 shrink-0 font-mono text-xs text-fg-faint">#{i + 1}</span>
+						<span class="min-w-0 flex-1 truncate">{row.name}</span>
+						<span class="font-mono text-xs text-fg-muted">{row.regions}R · {formatPopulation(row.population)}</span>
+						<span class="w-16 text-right font-mono font-semibold">{row.score.toLocaleString()}</span>
+						<span class="w-12 text-right font-mono text-xs text-fg-faint" title="Stored dossier rating">{row.rating}</span>
+					</a>
+				{/each}
+			</div>
+		</div>
+	</div>
+</Modal>
+
+<!-- State debt: trace the outstanding bonds back to their lenders -->
+<Modal bind:open={showDebtModal} title="Who holds {data.state.name}'s debt" size="default">
+	<div class="space-y-3">
+		<p class="text-sm text-fg-body">
+			Outstanding treasury debt: <strong class="font-mono">{data.debt.toLocaleString()}</strong>. Creditors
+			bought state bonds; they receive a coupon every two game weeks and are repaid at maturity.
+		</p>
+		{#if data.creditors.creditors.length}
+			<div class="max-h-72 overflow-y-auto rounded-sm border border-line/20">
+				{#each data.creditors.creditors as c (c.userId)}
+					<div class="px-3 py-2 border-b border-line/10 last:border-0">
+						<div class="flex items-center justify-between gap-2 text-sm">
+							<UserLink id={c.userId} name={c.name} size="xs" />
+							<span class="font-mono font-semibold text-amber-300">{c.principal.toLocaleString()}</span>
+						</div>
+						<p class="mt-0.5 text-xs text-fg-muted">
+							{c.bonds} bond{c.bonds === 1 ? "" : "s"} · first {formatDate(c.firstAt)} · matures {formatDate(c.maturesAt)}
+						</p>
+					</div>
+				{/each}
+			</div>
+			<div class="flex justify-between text-sm font-semibold">
+				<span>Total from lenders</span><span class="font-mono">{data.creditors.total.toLocaleString()}</span>
+			</div>
+		{:else}
+			<p class="text-sm text-fg-muted">No outstanding bonds — this state's treasury owes nobody right now.</p>
+		{/if}
+		<p class="text-xs text-fg-muted">
+			GDP (estimated from a year of tax receipts, grossed up by the tax rate, plus household consumption):
+			<span class="font-mono text-fg">{data.gdp.gdp.toLocaleString()}</span> · debt/GDP
+			<span class="font-mono text-fg">{data.gdp.debtToGdp == null ? "—" : `${data.gdp.debtToGdp}%`}</span>.
+		</p>
+	</div>
+</Modal>
 
 <!-- Bailout: a treasury-to-treasury transfer that buys civilian goodwill -->
 {#if data.bailoutDonor}

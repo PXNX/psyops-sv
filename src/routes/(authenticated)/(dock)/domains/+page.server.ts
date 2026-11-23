@@ -5,6 +5,7 @@
 // services imports below), so this file is only permission checks and forms.
 import { fail } from "@sveltejs/kit";
 import { eq } from "drizzle-orm";
+import { getRegionName } from "#lib/utils/formatting.js";
 import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import {
@@ -133,7 +134,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 					trade: { lanes, zones, factors, laneSpecs: TRADE_LANES, closureSpecs: CLOSURES },
 					autonomy,
 					convoys,
-					ownRegions,
+					ownRegions: ownRegions.map((r) => ({ ...r, name: getRegionName(r.id) })),
 					supply,
 					fleet,
 					seaControl,
