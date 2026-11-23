@@ -9,6 +9,7 @@
 	import EmptyState from "#lib/component/EmptyState.svelte";
 	import { Button } from "#lib/component/ui/index.js";
 	import ConstructionProgress from "#lib/component/ConstructionProgress.svelte";
+	import CivicArt from "./CivicArt.svelte";
 	import { dtgDate } from "#lib/utils/dtg.js";
 
 	let { data, form } = $props();
@@ -24,18 +25,30 @@
 </svelte:head>
 
 <PageContainer maxWidth="5xl">
-	<PageHeader title="Civic patronage" subtitle="Build with your own money. Buy goodwill where it counts.">
-		{#snippet actions()}
-			<span class="panel-muted rounded-sm px-3 py-2 font-mono text-xs text-fg-soft">
-				Wallet <span class="text-positive-fg">{money(data.walletBalance)}</span>
-			</span>
-		{/snippet}
-	</PageHeader>
+	<div class="panel relative mb-4 overflow-hidden rounded-sm">
+		<CivicArt
+			kind="skyline"
+			class="pointer-events-none absolute inset-x-0 top-0 h-full w-full opacity-80"
+			label="A town lit by private patronage"
+		/>
+		<div class="relative">
+			<PageHeader title="Civic patronage" subtitle="Build with your own money. Buy goodwill where it counts.">
+				{#snippet actions()}
+					<span class="panel-muted rounded-sm px-3 py-2 font-mono text-xs text-fg-soft">
+						Wallet <span class="text-positive-fg">{money(data.walletBalance)}</span>
+					</span>
+				{/snippet}
+			</PageHeader>
+		</div>
+	</div>
 
 	<div class="grid gap-2 sm:grid-cols-3">
-		<div class="panel rounded-sm p-3">
-			<p class="text-[10px] uppercase tracking-wide text-fg-muted">Goodwill bought</p>
-			<p class="font-mono text-lg font-bold text-positive-fg">+{data.goodwill}</p>
+		<div class="panel flex items-center gap-3 rounded-sm p-3">
+			<CivicArt kind="gauge" value={data.goodwill} class="size-11 shrink-0" label="Goodwill {data.goodwill} of 100" />
+			<div>
+				<p class="text-[10px] uppercase tracking-wide text-fg-muted">Goodwill bought</p>
+				<p class="font-mono text-lg font-bold text-positive-fg">+{data.goodwill}</p>
+			</div>
 		</div>
 		<div class="panel rounded-sm p-3">
 			<p class="text-[10px] uppercase tracking-wide text-fg-muted">Projects funded</p>
@@ -65,15 +78,16 @@
 								{row.score}/100
 							</span>
 						</div>
-						<div class="mt-1 h-1.5 rounded-full bg-surface-4 overflow-hidden">
+						<div class="relative mt-1 h-1.5 rounded-full bg-surface-4 overflow-hidden">
 							<div
-								class="h-full rounded-full {row.score >= 60
+								class="h-full rounded-full transition-[width] duration-700 {row.score >= 60
 									? 'bg-positive'
 									: row.score < 35
 										? 'bg-hostile'
 										: 'bg-primary'}"
 								style="width: {row.score}%"
 							></div>
+							<div class="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-pulse bg-gradient-to-r from-transparent via-white/10 to-transparent" aria-hidden="true"></div>
 						</div>
 					</li>
 				{/each}
@@ -95,8 +109,8 @@
 						? 'border-primary/60 bg-primary/10'
 						: 'hover:border-primary/40'}"
 				>
-					<span class="text-xl">{item.icon}</span>
-					<span class="block mt-1 font-semibold text-sm text-fg">{item.name}</span>
+					<CivicArt kind="building" variant={item.type} class="size-10" label={item.name} />
+					<span class="block mt-1 font-semibold text-sm text-fg">{item.icon} {item.name}</span>
 					<span class="block text-xs text-fg-muted">{item.description}</span>
 					<span class="mt-2 flex justify-between font-mono text-[11px]">
 						<span class="text-fg-soft">{money(item.cost)}</span>
@@ -141,12 +155,15 @@
 					{@const item = data.buildings.find((b) => b.type === project.buildingType)}
 					<li class="paper rounded-sm p-4">
 						<div class="flex flex-wrap items-start justify-between gap-3">
-							<div>
+							<div class="flex items-start gap-3">
+								<CivicArt kind="seal" class="size-10 shrink-0" label="Patronage seal" />
+								<div>
 								<p class="font-mono text-[10px] uppercase tracking-[0.2em]">
 									Patronage certificate no. {String(project.id).padStart(5, "0")}
 								</p>
 								<p class="mt-1 font-semibold text-lg">{item?.icon ?? "🏗️"} {item?.name ?? project.buildingType}</p>
 								<p class="text-xs opacity-70">Opened {dtgDate(project.completesAt)}</p>
+								</div>
 							</div>
 							<p class="font-mono text-sm {project.completedAt ? 'text-positive-fg' : ''}">
 								{project.completedAt ? `+${item?.opinion ?? 0} opinion` : "Under construction"}
