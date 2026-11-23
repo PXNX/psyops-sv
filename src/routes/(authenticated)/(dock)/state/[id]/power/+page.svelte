@@ -25,8 +25,9 @@
 
 	<section class="panel rounded-sm p-4 sm:p-5 space-y-3">
 		<p class="text-sm text-fg-body">
-			The rating is an explainable score from the state's territory, people, forces, fleet, industry and
-			grid. The stored dossier rating (<span class="font-mono">{data.power?.storedRating ?? 0}</span>) is
+			The rating is an explainable score from the state's territory, people, forces, fleet, industry,
+			energy network and public buildings. The stored dossier rating
+			(<span class="font-mono">{data.power?.storedRating ?? 0}</span>) is
 			set separately and may be edited by officials.
 		</p>
 		<div class="rounded-sm border border-line/20">

@@ -80,16 +80,60 @@ export const POWER_WEIGHTS = {
 	military: 2,
 	ships: 15,
 	industry: 20,
-	energy: 0.5
+	energy: 0.5,
+	infrastructure: 8,
+	education: 6,
+	hospitals: 6,
+	fortifications: 5,
+	radar: 4,
+	grid: 7,
+	storage: 5
 } as const;
+
+/** Region building levels that contribute to power, with their report labels.
+ *  `economy` (the power-plant level) is deliberately absent: its output is
+ *  already counted by the Industry and Energy components above. */
+export const POWER_BUILDINGS = [
+	{ key: "infrastructure", label: "Infrastructure", weight: POWER_WEIGHTS.infrastructure },
+	{ key: "education", label: "Education", weight: POWER_WEIGHTS.education },
+	{ key: "hospitals", label: "Hospitals", weight: POWER_WEIGHTS.hospitals },
+	{ key: "fortifications", label: "Fortifications", weight: POWER_WEIGHTS.fortifications },
+	{ key: "radar", label: "Radar coverage", weight: POWER_WEIGHTS.radar },
+	{ key: "grid", label: "Power grid", weight: POWER_WEIGHTS.grid },
+	{ key: "storage", label: "Energy storage", weight: POWER_WEIGHTS.storage }
+] as const;
 
 /** Credits of annual consumption attributed to each civilian. */
 export const GDP_PER_CAPITA = 1200;
 /** Fallback tax rate when a state has no active taxes (fraction, 0–1). */
 export const GDP_DEFAULT_TAX_RATE = 0.15;
 
-type Acc = { regions: number; regionRating: number; population: number; military: number; ships: number; industry: number; energy: number };
-const emptyAcc = (): Acc => ({ regions: 0, regionRating: 0, population: 0, military: 0, ships: 0, industry: 0, energy: 0 });
+type Acc = {
+	regions: number;
+	regionRating: number;
+	population: number;
+	military: number;
+	ships: number;
+	industry: number;
+	energy: number;
+} & Record<(typeof POWER_BUILDINGS)[number]["key"], number>;
+
+const emptyAcc = (): Acc => ({
+	regions: 0,
+	regionRating: 0,
+	population: 0,
+	military: 0,
+	ships: 0,
+	industry: 0,
+	energy: 0,
+	infrastructure: 0,
+	education: 0,
+	hospitals: 0,
+	fortifications: 0,
+	radar: 0,
+	grid: 0,
+	storage: 0
+});
 
 function componentsFor(a: Acc, population: number): PowerComponent[] {
 	return [
@@ -140,7 +184,15 @@ function componentsFor(a: Acc, population: number): PowerComponent[] {
 			detail: `${a.energy} MW produced`,
 			weight: POWER_WEIGHTS.energy,
 			points: Math.round(a.energy * POWER_WEIGHTS.energy)
-		}
+		},
+		...POWER_BUILDINGS.map((b) => ({
+			key: b.key,
+			label: b.label,
+			value: a[b.key],
+			detail: `${a[b.key]} level${a[b.key] === 1 ? "" : "s"} across ${a.regions} region${a.regions === 1 ? "" : "s"}`,
+			weight: b.weight,
+			points: a[b.key] * b.weight
+		}))
 	];
 }
 
@@ -168,7 +220,11 @@ export async function statePowerReport(db: Database, focusStateId: number): Prom
 				infrastructure: regions.infrastructure,
 				economy: regions.economy,
 				education: regions.education,
-				hospitals: regions.hospitals
+				hospitals: regions.hospitals,
+				fortifications: regions.fortifications,
+				radar: regions.radar,
+				grid: regions.grid,
+				storage: regions.storage
 			})
 			.from(regions),
 		db.select({ stateId: militaryUnits.stateId, unitType: militaryUnits.unitType }).from(militaryUnits),
@@ -191,6 +247,7 @@ export async function statePowerReport(db: Database, focusStateId: number): Prom
 			a.regions += 1;
 			a.regionRating += r.rating ?? 0;
 			a.population += r.population ?? 0;
+			for (const b of POWER_BUILDINGS) a[b.key] += Number(r[b.key] ?? 0);
 		}
 		const derived = regionPopulation(r);
 		if (r.stateId != null) derivedPop.set(r.stateId, (derivedPop.get(r.stateId) ?? 0) + derived);
