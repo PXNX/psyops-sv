@@ -9,6 +9,7 @@ import type { Actions, PageServerLoad } from "./$types";
 import { db } from "#lib/server/db.js";
 import { intrusionSessions, states } from "#lib/server/schema.js";
 import { getLogoUrl } from "#lib/server/backblaze.js";
+import { getRegionName } from "#lib/utils/formatting.js";
 import { COVERT_OPS, INTRUSION, type CovertOpKind } from "#lib/config/index.js";
 import {
 	CovertOpError,
